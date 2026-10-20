@@ -55,3 +55,4 @@ export * as _20261008T000000000Z from './20261008T000000000Z-add-report-priority
 export * as _20261008T000000001Z from './20261008T000000001Z-add-report-closure-target-stats.js'
 export * as _20261012T000000000Z from './20261012T000000000Z-inbox-notification-categories.js'
 export * as _20261016T000000000Z from './20261016T000000000Z-add-report-queue-tag-criteria.js'
+export * as _20261016T174053481Z from './20261016T174053481Z-add-safelink-rule-source.js'

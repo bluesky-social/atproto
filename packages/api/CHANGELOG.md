@@ -1,5 +1,27 @@
 # @atproto/api
 
+## 0.28.1
+
+### Patch Changes
+
+- [#5686](https://github.com/bluesky-social/atproto/pull/5686) [`58f14d6`](https://github.com/bluesky-social/atproto/commit/58f14d60273b1ccb7f187b882624c9e2045aed59) Thanks [@gcwill70](https://github.com/gcwill70)! - Add source-aware SafeLink rule synchronization and return rule sources in the API.
+
+## 0.28.0
+
+### Minor Changes
+
+- [#5675](https://github.com/bluesky-social/atproto/pull/5675) [`95a4cd5`](https://github.com/bluesky-social/atproto/commit/95a4cd57f958d981d5648e964e9aa584150c47b5) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Update Atmosphere Explore recommendations and curated content selection:
+  
+  - **Breaking:** `app.bsky.unspecced.getAtmosphereExploreTab` returns `articles`, `publications`, `photos`, and `livestreams` as `{ items, recIdStr? }` section objects instead of arrays.
+  - Add the `app.bsky.unspecced.getAtmosphereExploreArticleRecommendations` skeleton lexicon and source articles from Iris behind the `atmosphere_explore:articles:iris:enable` gate, returning the recommendation ID on `articles.recIdStr`. If the Iris request fails or returns a malformed response, fall back to worker-curated articles without a recommendation ID. With the gate off, retain worker-curated articles.
+  - Select curated content by location and request topics, prioritize active featured windows, and cap each curated section at 10 groups before hydrating each group's `canonicalUri`. Every list, including apps, returns at most 10 items, Iris is asked for 10 articles, and each selected list is shuffled with featured items first.
+  - Skip malformed worker banners, content entries, and app cards instead of failing the request, keeping valid items and sections.
+  - Select a single active announcement banner by location, falling back to the untargeted banner with the latest expiration.
+
+### Patch Changes
+
+- [#5672](https://github.com/bluesky-social/atproto/pull/5672) [`5816c4f`](https://github.com/bluesky-social/atproto/commit/5816c4fefe896422c59f3de9f0602528c64bea82) Thanks [@gcwill70](https://github.com/gcwill70)! - Expose complete lifecycle counts and duration metrics in queue statistics.
+
 ## 0.27.1
 
 ### Patch Changes

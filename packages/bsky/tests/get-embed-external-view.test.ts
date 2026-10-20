@@ -404,6 +404,12 @@ describe('app.bsky.embed.getEmbedExternalView', () => {
         uris: [docUri, pubUri],
       })
       expect(fixture.roots()).toEqual([[galleryUri]])
+      expect(fixture.spies.hydrate).toHaveBeenCalledWith(
+        [galleryUri],
+        expect.objectContaining({
+          xrpcEndpoint: app.bsky.embed.getEmbedExternalView.$lxm,
+        }),
+      )
       expect(fixture.lookedUp()).not.toContain(docUri)
       expect(fixture.lookedUp()).not.toContain(pubUri)
       expect(body.data?.$type).toBe(app.bsky.embed.external.viewGallery.$type)
@@ -733,6 +739,39 @@ describe('app.bsky.embed.getEmbedExternalView', () => {
         fixtureRecord(fixture, itemUri),
         fixtureRecord(fixture, photoUri),
       ])
+    })
+
+    it('persists a gallery photo that omits alt exactly as stored', async () => {
+      await using fixture = await setup()
+      fixture.records.set(
+        photoUri,
+        grainPhoto.$build({
+          photo: blob,
+          aspectRatio: { width: 3, height: 2 },
+          createdAt: publishedAt,
+        }),
+      )
+      const { body } = await fixture.query({
+        url: 'https://good.com/gallery/1',
+        canonicalUri: galleryUri,
+      })
+      expect(app.bsky.embed.external.viewGallery.$matches(body.data)).toBe(true)
+      expect(body.data).toMatchObject({
+        items: [{ aspectRatio: { width: 3, height: 2 } }],
+      })
+      expect((body.data as { items: object[] }).items[0]).not.toHaveProperty(
+        'alt',
+      )
+      expectPersisted(body.associatedRefs, body.associatedRecords, [
+        galleryUri,
+        itemUri,
+        photoUri,
+      ])
+      const persistedPhoto = body.associatedRecords?.[2]
+      expect(persistedPhoto).not.toHaveProperty('alt')
+      expect(JSON.stringify(persistedPhoto)).toBe(
+        lexStringify(fixture.records.get(photoUri)!),
+      )
     })
 
     test.each([

@@ -1,6 +1,7 @@
 import * as jose from 'jose'
 import type { AtpAgent } from '@atproto/api'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
+import { com } from '../src/lexicons/index.js'
 
 describe('com.atproto.server.getServiceAuth', () => {
   let network: TestNetworkNoAppView
@@ -76,6 +77,19 @@ describe('com.atproto.server.getServiceAuth', () => {
     })
     await expect(attempt).rejects.toThrow(
       /aud must be a valid atproto DID or did#serviceId reference/,
+    )
+  })
+
+  it.each([
+    com.atproto.server.getSession.$lxm,
+    com.atproto.server.getSession.$lxm.toUpperCase(),
+  ])('rejects service auth for protected method %s', async (lxm) => {
+    const attempt = agent.api.com.atproto.server.getServiceAuth({
+      aud: pdsDid,
+      lxm,
+    })
+    await expect(attempt).rejects.toThrow(
+      `cannot request a service auth token for the following protected method: ${lxm}`,
     )
   })
 })

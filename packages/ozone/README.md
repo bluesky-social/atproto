@@ -5,6 +5,14 @@ Backend service for moderating the Bluesky network.
 [![NPM](https://img.shields.io/npm/v/@atproto/ozone)](https://www.npmjs.com/package/@atproto/ozone)
 [![Github CI Status](https://github.com/bluesky-social/atproto/actions/workflows/repo.yaml/badge.svg)](https://github.com/bluesky-social/atproto/actions/workflows/repo.yaml)
 
+## Report tags
+
+Reports automatically add a reason tag such as `report:spam` to their subject by default. Set `OZONE_REPORT_TAGS_DISABLED=true` and restart the API to disable these automatic report tags. Unset or `false` keeps them enabled.
+
+The setting applies to reports submitted through both `com.atproto.moderation.createReport` and `tools.ozone.moderation.emitEvent`.
+
+Language and embed tags, manually applied tags, and existing report tags are unaffected.
+
 ## Wildcard label queries
 
 Wildcard patterns in `com.atproto.label.queryLabels` are disabled by default, including `*` and requests mixing wildcard and exact patterns. They return HTTP 400 (`InvalidRequest`) with the message "Support for wildcard label queries is temporarily disabled" before accessing the database. Exact URI queries remain available.
@@ -30,6 +38,14 @@ Account standing and current enforcement remain live: active restrictions, strik
 Notification producers skip activity before the date and skip transitions on reports or appeal subjects that would be hidden. Lists and unread counts independently enforce the date and target visibility, including existing stored notifications. API and daemon must use the same value. Source reports/actions continue to be recorded normally. Moving the date earlier can reveal more source history, but skipped notifications are not backfilled. Complete the writer rollout before the chosen start date to avoid a notification gap.
 
 Report-first pagination requires the `reporterDid` backfill and the post-retirement catch-up sweep to finish before deploying this reader. Pre-create the reporter/time indexes and `idx_moderation_event_inbox_public_created` concurrently in production before the inbox migration. The latter indexes `(subjectDid, createdAt DESC, id DESC)` so subject history can seek the configured date.
+
+## Strike expiry
+
+Clients supply strike amounts and expiry timestamps from severity settings.
+The backend stores them and excludes expired strikes from active totals.
+
+Legacy events without expiry require a separate repair. Changing expiry does
+not undo takedowns, suspensions, or lifetime strike totals.
 
 ## License
 

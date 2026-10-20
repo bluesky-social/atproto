@@ -410,6 +410,62 @@ describe('record modality views', () => {
     ])
   })
 
+  it('renders gallery photos that omit alt', () => {
+    const state = createState()
+    addGallery(state)
+    const withAlt = addPhoto(state, 'with-alt', 0)
+    const withoutAlt = addPhoto(state, 'without-alt', 1)
+    delete state.externalRecords.get(withoutAlt.photoUri)!.record.alt
+
+    const view = views.externalRecordView(galleryUri, state)
+    assert(view && app.bsky.embed.external.viewGallery.$isTypeOf(view))
+    assertValid(view)
+    const items = view.items.filter(
+      app.bsky.embed.external.viewGalleryImage.$isTypeOf,
+    )
+    expect(items).toHaveLength(2)
+    expect(items[0].alt).toBe('with-alt')
+    expect(items[1].alt).toBeUndefined()
+    expect(items[1]).toMatchObject({
+      fullsize: `https://cdn.example.com/img/feed_fullsize/plain/${did}/${blob.ref}`,
+      aspectRatio: { width: 3, height: 2 },
+    })
+    expect(view.associatedRefs?.map((ref) => ref.uri)).toEqual([
+      galleryUri,
+      withAlt.linkUri,
+      withAlt.photoUri,
+      withoutAlt.linkUri,
+      withoutAlt.photoUri,
+    ])
+  })
+
+  test.each([
+    { note: 'an oversized blob', photo: { ...blob, size: 1_000_001 } },
+    { note: 'a non-image blob', photo: { ...blob, mimeType: 'text/plain' } },
+  ])('still drops a photo without alt but with $note', ({ photo }) => {
+    const state = createState()
+    addGallery(state)
+    const good = addPhoto(state, 'good', 0)
+    const bad = addPhoto(state, 'bad', 1)
+    const record = state.externalRecords.get(bad.photoUri)!.record
+    delete record.alt
+    record.photo = photo
+
+    const view = views.externalRecordView(galleryUri, state)
+    assert(view && app.bsky.embed.external.viewGallery.$isTypeOf(view))
+    assertValid(view)
+    expect(
+      view.items
+        .filter(app.bsky.embed.external.viewGalleryImage.$isTypeOf)
+        .map((item) => item.alt),
+    ).toEqual(['good'])
+    expect(view.associatedRefs?.map((ref) => ref.uri)).toEqual([
+      galleryUri,
+      good.linkUri,
+      good.photoUri,
+    ])
+  })
+
   it('allows an empty gallery', () => {
     const state = createState()
     addGallery(state)

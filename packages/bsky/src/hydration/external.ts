@@ -1,3 +1,5 @@
+import { performance } from 'node:perf_hooks'
+import { chunkArray } from '@atproto/common'
 import {
   type AtUriString,
   type DidString,
@@ -20,6 +22,7 @@ import {
   type ExternalHydrationOutcome,
   type ExternalHydrationRoot,
   type ExternalHydrationWork,
+  type HydrationXrpcEndpoint,
   events,
 } from '../telemetry/events.js'
 import { uriToDid } from '../util/uris.js'
@@ -108,41 +111,62 @@ export class ExternalHydrator {
   static readonly MAX_BACKLINK_FANOUT = 8
   /** Hard cap on generic batches per traversal, counting the root as pass 1. */
   static readonly MAX_EXTERNAL_HYDRATION_PASSES = 8
+  /**
+   * Entries per generic record RPC. The dataplane rejects larger URI lookups;
+   * exact-ref lookups use the same bound defensively.
+   */
+  static readonly MAX_RECORDS_PER_REQUEST = 100
 
   constructor(public dataplane: DataPlaneClient) {}
 
-  /** Fetch exact record versions; unavailable records are represented by null. */
+  /**
+   * Fetch exact record versions; unavailable records are represented by null.
+   * Large inputs are fetched in sequential bounded requests; any failed request
+   * rejects the whole call.
+   */
   async getRecordsByRef(
     refs: Required<ItemRef>[],
     includeTakedowns = false,
   ): Promise<ExternalRecordsByRef> {
     const map: ExternalRecordsByRef = new HydrationMap()
-    if (!refs.length) return map
-
-    const res = await this.dataplane.getRecordsByRef({ refs })
-    for (let i = 0; i < refs.length; i++) {
-      map.set(
-        genericRecordKey(refs[i]),
-        parseGenericRecord(res.results[i], includeTakedowns) ?? null,
-      )
+    for (const chunk of chunkArray(
+      refs,
+      ExternalHydrator.MAX_RECORDS_PER_REQUEST,
+    )) {
+      const res = await this.dataplane.getRecordsByRef({ refs: chunk })
+      // Results are positional within each request.
+      for (let i = 0; i < chunk.length; i++) {
+        map.set(
+          genericRecordKey(chunk[i]),
+          parseGenericRecord(res.results[i], includeTakedowns) ?? null,
+        )
+      }
     }
     return map
   }
 
-  /** Fetch the latest indexed versions without collection-specific validation. */
+  /**
+   * Fetch the latest indexed versions without collection-specific validation.
+   * Large inputs are fetched in sequential bounded requests; any failed request
+   * rejects the whole call.
+   */
   async getRecordsByURI(
     uris: AtUriString[],
     includeTakedowns = false,
   ): Promise<ExternalRecords> {
     const map: ExternalRecords = new HydrationMap()
-    if (!uris.length) return map
-
-    const res = await this.dataplane.getRecordsByURI({ uris })
-    for (let i = 0; i < uris.length; i++) {
-      map.set(
-        uris[i],
-        parseGenericRecord(res.results[i], includeTakedowns) ?? null,
-      )
+    for (const chunk of chunkArray(
+      uris,
+      ExternalHydrator.MAX_RECORDS_PER_REQUEST,
+    )) {
+      const res = await this.dataplane.getRecordsByURI({ uris: chunk })
+      // Results are positional within each request.
+      for (let i = 0; i < chunk.length; i++) {
+        map.set(
+          chunk[i],
+          parseGenericRecord(res.results[i], includeTakedowns) ?? null,
+        )
+      }
     }
     return map
   }
@@ -329,39 +353,67 @@ export function actionExternalRecordTakedowns(
 
 /**
  * Generic lookup work of one external hydration traversal, shared by reference
- * through its nested passes. `capped` records hitting the pass limit.
+ * through its nested passes. `capped` records hitting the pass limit; `partial`
+ * records a recovered best-effort dependency failure.
  */
 export type ExternalHydrationTracker = ExternalHydrationWork & {
   capped: boolean
+  partial: boolean
+  /**
+   * Internal: set by the traversal's first dependency discovery, whose refs
+   * are its roots.
+   */
+  rootsCounted: boolean
 }
 
 /**
  * Run `fn` with the caller's tracker, or as the owner of a new traversal when
- * there is none. Only the owner reports, once, including on failure. Owners
- * that completed without scheduling a batch did no work and are not reported;
- * caps and failures always are.
+ * there is none. Only the owner reports, once, including on failure, with the
+ * context's XRPC endpoint (`'unknown'` if unset) and the traversal's wall time. A
+ * returned traversal is `capped` if it hit the pass limit, else `partial` if
+ * it recovered from a dependency failure. Owners that completed without
+ * scheduling a batch did no work and are not reported; other outcomes always
+ * are.
  */
 export async function trackExternalHydration<T>(
   root: ExternalHydrationRoot,
+  xrpcEndpoint: HydrationXrpcEndpoint | undefined,
   hydrationMetrics: ExternalHydrationTracker | undefined,
   fn: (hydrationMetrics: ExternalHydrationTracker) => Promise<T>,
 ): Promise<T> {
   if (hydrationMetrics) return fn(hydrationMetrics)
-  const owned = { recordLookups: 0, batches: 0, maxPass: 0, capped: false }
+  const owned: ExternalHydrationTracker = {
+    recordLookups: 0,
+    batches: 0,
+    maxPass: 0,
+    roots: 0,
+    rootsResolved: 0,
+    dependencies: 0,
+    dependenciesResolved: 0,
+    capped: false,
+    partial: false,
+    rootsCounted: false,
+  }
   let outcome: ExternalHydrationOutcome = 'failed'
+  const start = performance.now()
   try {
     const state = await fn(owned)
-    outcome = owned.capped ? 'capped' : 'completed'
+    outcome = owned.capped ? 'capped' : owned.partial ? 'partial' : 'completed'
     return state
   } finally {
     if (owned.batches || outcome !== 'completed') {
-      const { recordLookups, batches, maxPass } = owned
       events.externalHydrationTraversal({
+        xrpcEndpoint: xrpcEndpoint ?? 'unknown',
         root,
         outcome,
-        recordLookups,
-        batches,
-        maxPass,
+        durationMs: performance.now() - start,
+        recordLookups: owned.recordLookups,
+        batches: owned.batches,
+        maxPass: owned.maxPass,
+        roots: owned.roots,
+        rootsResolved: owned.rootsResolved,
+        dependencies: owned.dependencies,
+        dependenciesResolved: owned.dependenciesResolved,
       })
     }
   }

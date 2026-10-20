@@ -1,5 +1,47 @@
 # @atproto/bsky
 
+## 0.3.2
+
+### Patch Changes
+
+- [#5688](https://github.com/bluesky-social/atproto/pull/5688) [`8f324e2`](https://github.com/bluesky-social/atproto/commit/8f324e2293f438bd436c4324efb43237dfcbc4fe) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Use saved, validated starter-pack attribution in follow notifications.
+
+- [#5686](https://github.com/bluesky-social/atproto/pull/5686) [`58f14d6`](https://github.com/bluesky-social/atproto/commit/58f14d60273b1ccb7f187b882624c9e2045aed59) Thanks [@gcwill70](https://github.com/gcwill70)! - Add source-aware SafeLink rule synchronization and return rule sources in the API.
+
+- [#5679](https://github.com/bluesky-social/atproto/pull/5679) [`3380a6c`](https://github.com/bluesky-social/atproto/commit/3380a6c2f80b127de8ac13e7202760c9532a1398) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Gate the Atmosphere Explore tab endpoint and return 403 when disabled.
+
+- [#5680](https://github.com/bluesky-social/atproto/pull/5680) [`9f66a7e`](https://github.com/bluesky-social/atproto/commit/9f66a7e54b030700c03eda0bdbf35ffe756f4cd8) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add a `social.grain.photo` compatibility override that no longer requires `alt`, so the AppView renders Grain gallery photos that omit it. Ozone resolves the override; the PDS keeps validating writes against the published lexicon.
+- Updated dependencies [[`58f14d6`](https://github.com/bluesky-social/atproto/commit/58f14d60273b1ccb7f187b882624c9e2045aed59)]:
+  - @atproto/api@0.28.1
+
+## 0.3.1
+
+### Patch Changes
+
+- [#5677](https://github.com/bluesky-social/atproto/pull/5677) [`9354e5d`](https://github.com/bluesky-social/atproto/commit/9354e5d9b12ebf1add5ebccf36596031992abc1a) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Report external view hydration XRPC endpoint, duration, and root/dependency resolution.
+
+- [#5677](https://github.com/bluesky-social/atproto/pull/5677) [`9354e5d`](https://github.com/bluesky-social/atproto/commit/9354e5d9b12ebf1add5ebccf36596031992abc1a) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Fetch generic external records in requests of at most 100 entries so large dependency passes, such as Atmosphere Explore galleries, no longer exceed the dataplane limit, and report external hydration traversals that recovered from dependency failures with a `partial` outcome.
+
+## 0.3.0
+
+### Minor Changes
+
+- [#5675](https://github.com/bluesky-social/atproto/pull/5675) [`95a4cd5`](https://github.com/bluesky-social/atproto/commit/95a4cd57f958d981d5648e964e9aa584150c47b5) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Update Atmosphere Explore recommendations and curated content selection:
+  
+  - **Breaking:** `app.bsky.unspecced.getAtmosphereExploreTab` returns `articles`, `publications`, `photos`, and `livestreams` as `{ items, recIdStr? }` section objects instead of arrays.
+  - Add the `app.bsky.unspecced.getAtmosphereExploreArticleRecommendations` skeleton lexicon and source articles from Iris behind the `atmosphere_explore:articles:iris:enable` gate, returning the recommendation ID on `articles.recIdStr`. If the Iris request fails or returns a malformed response, fall back to worker-curated articles without a recommendation ID. With the gate off, retain worker-curated articles.
+  - Select curated content by location and request topics, prioritize active featured windows, and cap each curated section at 10 groups before hydrating each group's `canonicalUri`. Every list, including apps, returns at most 10 items, Iris is asked for 10 articles, and each selected list is shuffled with featured items first.
+  - Skip malformed worker banners, content entries, and app cards instead of failing the request, keeping valid items and sections.
+  - Select a single active announcement banner by location, falling back to the untargeted banner with the latest expiration.
+
+### Patch Changes
+
+- [#5611](https://github.com/bluesky-social/atproto/pull/5611) [`5218d17`](https://github.com/bluesky-social/atproto/commit/5218d179dcbf8b6bdb5ecc8120e42d4ed9926ef8) Thanks [@iwsmith](https://github.com/iwsmith)! - Route logged-out `getFeed` requests for allowlisted feeds to Iris behind the new `iris:feed:logged_out:enable` feature gate. Logged-out viewers are bucketed by their stable device id (stable_id) instead of a DID.
+
+- [#5672](https://github.com/bluesky-social/atproto/pull/5672) [`5816c4f`](https://github.com/bluesky-social/atproto/commit/5816c4fefe896422c59f3de9f0602528c64bea82) Thanks [@gcwill70](https://github.com/gcwill70)! - Expose complete lifecycle counts and duration metrics in queue statistics.
+- Updated dependencies [[`95a4cd5`](https://github.com/bluesky-social/atproto/commit/95a4cd57f958d981d5648e964e9aa584150c47b5), [`5816c4f`](https://github.com/bluesky-social/atproto/commit/5816c4fefe896422c59f3de9f0602528c64bea82)]:
+  - @atproto/api@0.28.0
+
 ## 0.2.3
 
 ### Patch Changes

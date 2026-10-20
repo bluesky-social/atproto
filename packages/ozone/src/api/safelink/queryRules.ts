@@ -48,6 +48,7 @@ export default function (server: Server, ctx: AppContext) {
             pattern: rule.pattern,
             action: rule.action,
             reason: rule.reason,
+            source: rule.source,
             createdBy: rule.createdBy,
             createdAt: toDatetimeString(rule.createdAt),
             updatedAt: toDatetimeString(rule.updatedAt),

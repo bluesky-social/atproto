@@ -294,11 +294,11 @@ const handleModerationEvent = async ({
       moderationTxn,
     )
 
-    const initialTags = tools.ozone.moderation.defs.modEventReport.$isTypeOf(
-      event,
-    )
-      ? [getTagForReport(event.reportType)]
-      : undefined
+    const initialTags =
+      !ctx.cfg.service.reportTagsDisabled &&
+      tools.ozone.moderation.defs.modEventReport.$isTypeOf(event)
+        ? [getTagForReport(event.reportType)]
+        : undefined
     await tagService.evaluateForSubject(initialTags)
 
     if (subject.isRepo()) {
