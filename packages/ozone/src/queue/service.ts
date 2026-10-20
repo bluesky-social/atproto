@@ -855,7 +855,7 @@ export class QueueService {
     maxEventId: number
   }> {
     this.db.assertTransaction()
-    
+
     const { queues } = await this.list({ limit: 1000, enabled: true })
 
     let query = this.db.db
