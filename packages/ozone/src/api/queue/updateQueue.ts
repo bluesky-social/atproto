@@ -70,6 +70,8 @@ export default function (server: Server, ctx: AppContext) {
           subjectTypes: existing.subjectTypes,
           collection: existing.collection,
           reportTypes: existing.reportTypes,
+          reporterTags: existing.reporterTags,
+          accountTags: existing.accountTags,
           recommendedLabels: recommendedLabels ?? existing.recommendedLabels,
           excludeId: queueId,
         })

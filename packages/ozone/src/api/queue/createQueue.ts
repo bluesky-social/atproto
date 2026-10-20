@@ -23,6 +23,8 @@ export default function (server: Server, ctx: AppContext) {
         subjectTypes = [],
         collection,
         reportTypes = [],
+        reporterTags = [],
+        accountTags = [],
         description,
         recommendedPolicies = [],
         recommendedLabels = [],
@@ -55,6 +57,8 @@ export default function (server: Server, ctx: AppContext) {
           subjectTypes,
           collection,
           reportTypes,
+          reporterTags,
+          accountTags,
           recommendedLabels,
         })
         return queueService.create({
@@ -62,6 +66,8 @@ export default function (server: Server, ctx: AppContext) {
           subjectTypes,
           collection,
           reportTypes,
+          reporterTags,
+          accountTags,
           description,
           recommendedPolicies,
           recommendedLabels,

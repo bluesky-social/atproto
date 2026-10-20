@@ -168,7 +168,7 @@ export class AppContext {
       cfg.appview.did,
       createAuthHeaders,
     )
-    const queueService = QueueService.creator()
+    const queueService = QueueService.creator(cfg.service.did)
     const reportStatsService = ReportStatsService.creator()
     const setService = SetService.creator()
     const settingService = SettingService.creator()
