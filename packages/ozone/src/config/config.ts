@@ -33,6 +33,7 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
     version: env.version,
     devMode: env.devMode,
     serviceRecordCacheTTL: env.serviceRecordCacheTTL ?? 5 * MINUTE, // default 5 mins
+    labelStreamBackfillRate: env.labelStreamBackfillRate ?? 2000,
     labelQueryWildcardsEnabled: env.labelQueryWildcardsEnabled ?? false,
     reportTagsDisabled: env.reportTagsDisabled ?? false,
   }
@@ -193,6 +194,8 @@ export type ServiceConfig = {
   version?: string
   devMode?: boolean
   serviceRecordCacheTTL: number // in ms, default 5 mins
+  /** Historical labels per second across subscriptions on one API process. */
+  labelStreamBackfillRate?: number
   /** Allow wildcard label queries; disabled by default. */
   labelQueryWildcardsEnabled?: boolean
   /** Disable automatic report-reason tags; false by default. */
