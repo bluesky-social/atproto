@@ -70,16 +70,6 @@ export type SpaceCredentialOutput = {
   }
 }
 
-export type SpaceCredentialRequestOutput = {
-  credentials: {
-    type: 'space_credential_request'
-    keyId: DidString
-    // Absent when the request carries no delegation token.
-    userDid?: DidString
-    space?: SpaceRefString
-  }
-}
-
 export function isSpaceCredentialOutput<
   T extends { credentials: { type: string } },
 >(

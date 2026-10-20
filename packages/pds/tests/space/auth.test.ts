@@ -2,7 +2,7 @@ import { request } from 'node:http'
 import { jest } from '@jest/globals'
 import { decodeJwt } from 'jose'
 import { HOUR } from '@atproto/common'
-import { P256Keypair } from '@atproto/crypto'
+import { P256Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
 import {
   createSpaceSigHeaders,
@@ -224,9 +224,31 @@ describe('space auth', () => {
           alice.client.call(
             com.atproto.space.getLatestCommit,
             { space, repo: alice.did },
-            { headers: { authorization: `Atproto-Space ${cred.credential}` } },
+            {
+              headers: {
+                authorization: `Atproto-Space-Credential ${cred.credential}`,
+              },
+            },
           ),
         ).rejects.toMatchObject({ error: 'BadSpaceSignature' })
+      })
+
+      it('recognizes the credential scheme regardless of case', async () => {
+        const space = await sc.createSpace(alice, { members: [carol] })
+        await sc.write(alice, space)
+        const cred = await sc.credentialFor(carol, space)
+        const headers = await createSpaceSigHeaders(cred.key, {
+          authorization: `atproto-space-credential ${cred.credential}`,
+          audience: alice.did,
+        })
+
+        await expect(
+          alice.client.call(
+            com.atproto.space.getLatestCommit,
+            { space, repo: alice.did },
+            { headers },
+          ),
+        ).resolves.toBeDefined()
       })
 
       it.each([
@@ -248,7 +270,7 @@ describe('space auth', () => {
           await sc.write(alice, space)
           const cred = await sc.credentialFor(alice, space)
           const headers = await createSpaceSigHeaders(cred.key, {
-            authorization: `Atproto-Space ${cred.credential}`,
+            authorization: `Atproto-Space-Credential ${cred.credential}`,
             audience: alice.did,
           })
           const url = new URL(
@@ -310,7 +332,7 @@ describe('space auth', () => {
           await sc.write(alice, space)
           const cred = await sc.credentialFor(carol, space)
           const headers = await createSpaceSigHeaders(cred.key, {
-            authorization: `Atproto-Space ${cred.credential}`,
+            authorization: `Atproto-Space-Credential ${cred.credential}`,
             audience: other.did,
           })
 
@@ -328,7 +350,7 @@ describe('space auth', () => {
         const space = await sc.createSpace(alice, { members: [bob] })
         const cred = await sc.credentialFor(bob, space)
         const headers = await createSpaceSigHeaders(cred.key, {
-          authorization: `Atproto-Space ${cred.credential}`,
+          authorization: `Atproto-Space-Credential ${cred.credential}`,
           audience: bob.did,
         })
         await expect(
@@ -352,7 +374,7 @@ describe('space auth', () => {
         await sc.write(alice, space)
         const cred = await sc.credentialFor(carol, space)
         const headers = await createSpaceSigHeaders(cred.key, {
-          authorization: `Atproto-Space ${cred.credential}`,
+          authorization: `Atproto-Space-Credential ${cred.credential}`,
           audience: alice.did,
         })
         for (let i = 0; i < 2; i++) {
@@ -702,53 +724,26 @@ describe('space auth', () => {
       // mint against. The error names the space rather than leaking that as a
       // missing repo.
       await expect(
-        bob.client.call(
-          com.atproto.space.getSpaceCredential,
-          { space },
-          {
-            headers: await createSpaceSigHeaders(key, {
-              authorization: `Bearer ${token}`,
-            }),
-          },
-        ),
+        bob.client.call(com.atproto.space.getSpaceCredential, {
+          space,
+          credentialKid: key.did(),
+          delegationToken: token,
+        }),
       ).rejects.toMatchObject({ error: 'SpaceNotFound' })
     })
 
-    it('requires proof of possession when exchanging a delegation token', async () => {
-      const space = await sc.createSpace(alice, { members: [carol] })
-      const token = await sc.delegationTokenFor(carol, space)
-
-      await expect(
-        alice.client.call(
-          com.atproto.space.getSpaceCredential,
-          { space },
-          { headers: { authorization: `Bearer ${token}` } },
-        ),
-      ).rejects.toMatchObject({ error: 'BadSpaceSignature' })
-    })
-
-    it('requires proof of possession for a request without a delegation token', async () => {
-      const space = await sc.createSpace(alice, {
-        readPolicy: com.atproto.simplespace.defs.publicPolicy.build({}),
-      })
-
-      await expect(
-        alice.client.call(com.atproto.space.getSpaceCredential, { space }),
-      ).rejects.toMatchObject({ error: 'BadSpaceSignature' })
-    })
-
-    it('binds the credential to the key that signed the exchange', async () => {
+    it('binds the credential to the requested key', async () => {
       const space = await sc.createSpace(alice, { members: [carol] })
       const token = await sc.delegationTokenFor(carol, space)
       const key = await P256Keypair.create()
-      const headers = await createSpaceSigHeaders(key, {
-        authorization: `Bearer ${token}`,
-      })
 
       const { credential } = await alice.client.call(
         com.atproto.space.getSpaceCredential,
-        { space },
-        { headers },
+        {
+          space,
+          credentialKid: key.did(),
+          delegationToken: token,
+        },
       )
 
       expect(decodeJwt(credential).cnf).toEqual({
@@ -756,38 +751,18 @@ describe('space auth', () => {
       })
     })
 
-    it('binds the exchange signature to the delegation token', async () => {
+    it('refuses to bind the credential to a key that is not P-256', async () => {
       const space = await sc.createSpace(alice, { members: [carol] })
       const token = await sc.delegationTokenFor(carol, space)
-      const otherToken = await sc.delegationTokenFor(carol, space)
-      const key = await P256Keypair.create()
-      const headers = await createSpaceSigHeaders(key, {
-        authorization: `Bearer ${token}`,
-      })
-      await expect(
-        alice.client.call(
-          com.atproto.space.getSpaceCredential,
-          { space },
-          { headers: { ...headers, authorization: `Bearer ${otherToken}` } },
-        ),
-      ).rejects.toMatchObject({ error: 'BadSpaceSignature' })
-    })
+      const key = await Secp256k1Keypair.create()
 
-    it('refuses a replayed credential exchange', async () => {
-      const space = await sc.createSpace(alice, { members: [carol] })
-      const token = await sc.delegationTokenFor(carol, space)
-      const key = await P256Keypair.create()
-      const headers = await createSpaceSigHeaders(key, {
-        authorization: `Bearer ${token}`,
-      })
-      const exchange = () =>
-        alice.client.call(
-          com.atproto.space.getSpaceCredential,
-          { space },
-          { headers },
-        )
-      await expect(exchange()).resolves.toBeDefined()
-      await expect(exchange()).rejects.toMatchObject({ error: 'JwtReplayed' })
+      await expect(
+        alice.client.call(com.atproto.space.getSpaceCredential, {
+          space,
+          credentialKid: key.did(),
+          delegationToken: token,
+        }),
+      ).rejects.toThrow(/P-256/)
     })
 
     it('are refused when the audience names another authority', async () => {
@@ -805,29 +780,25 @@ describe('space auth', () => {
         carolKeypair,
       )
 
-      await expect(sc.mintCredential(space, misaddressed)).rejects.toThrow(
-        /audience does not match the space authority/,
-      )
+      await expect(
+        sc.mintCredential(space, misaddressed),
+      ).rejects.toMatchObject({
+        error: 'InvalidDelegationToken',
+        message: expect.stringMatching(
+          /audience does not match the space authority/,
+        ),
+      })
     })
 
     it('are single-use — a replayed jti is refused', async () => {
       const space = await sc.createSpace(alice, { members: [carol] })
       const token = await sc.delegationTokenFor(carol, space)
-      const exchange = async () => {
-        const key = await P256Keypair.create()
-        return alice.client.call(
-          com.atproto.space.getSpaceCredential,
-          { space },
-          {
-            headers: await createSpaceSigHeaders(key, {
-              authorization: `Bearer ${token}`,
-            }),
-          },
-        )
-      }
 
-      await expect(exchange()).resolves.toBeDefined()
-      await expect(exchange()).rejects.toThrow(/already been used/)
+      await expect(sc.mintCredential(space, token)).resolves.toBeDefined()
+      await expect(sc.mintCredential(space, token)).rejects.toMatchObject({
+        error: 'InvalidDelegationToken',
+        message: expect.stringMatching(/already been used/),
+      })
     })
 
     it('are refused for a space other than their subject', async () => {

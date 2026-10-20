@@ -11,62 +11,36 @@ import { SpaceSignatureError } from './error.js'
 
 type HttpHeaders = Record<string, string | string[] | undefined>
 
-/**
- * Signs a `getSpaceCredential` request. The delegation token is only sent when
- * the space requires one.
- */
-export type CredentialRequestSigOptions = {
-  authorization?: string
-  audience?: undefined
-}
-
 /** Signs a request authorized by a space credential. */
-export type CredentialSigOptions = {
+export type SpaceSignatureOptions = {
   authorization: string
   audience: DidString
 }
-
-export type SpaceSignatureOptions =
-  CredentialRequestSigOptions | CredentialSigOptions
 
 export type SpaceSignature = {
   signatureInput: string
   signature: Uint8Array
 }
 
-const SIGNATURE_LABEL = 'atproto-space'
+const SIGNATURE_LABEL = 'atproto-space-credential'
 const SIGNATURE_ALG = 'ecdsa-p256-sha256'
-const CREDENTIAL_REQUEST_TAG = 'atproto-space-credential-request'
-const CREDENTIAL_TAG = 'atproto-space-credential'
+const SIGNATURE_TAG = 'atproto-space-credential'
 
 /** A covered header: its name and value. */
 type Component = [name: string, value: string]
 
-/**
- * Sign a space request. A credential request covers its delegation token (if
- * any) and names the key to bind; a credential use covers the credential and
- * its audience DID.
- */
+/** Sign a request authorized by a space credential, covering the credential and its audience DID. */
 export async function createSpaceSig(
   key: Keypair,
   { authorization, audience }: SpaceSignatureOptions,
 ): Promise<SpaceSignature> {
-  const keyId = key.did()
-  assertP256DidKey(keyId)
+  assertP256DidKey(key.did())
 
-  const components: Component[] = []
-  if (authorization !== undefined) {
-    components.push(['authorization', authorization])
-  }
-  if (audience !== undefined) {
-    components.push(['atproto-space-audience', audience])
-  }
-
-  const componentList = formatComponentList(components)
-  const signatureInput =
-    audience === undefined
-      ? `${componentList};keyid="${keyId}";tag="${CREDENTIAL_REQUEST_TAG}"`
-      : `${componentList};tag="${CREDENTIAL_TAG}"`
+  const components: Component[] = [
+    ['authorization', authorization],
+    ['atproto-space-audience', audience],
+  ]
+  const signatureInput = `${formatComponentList(components)};tag="${SIGNATURE_TAG}"`
   return {
     signatureInput,
     signature: await key.sign(signatureBase(components, signatureInput)),
@@ -80,32 +54,11 @@ export async function createSpaceSigHeaders(
 ): Promise<Record<string, string>> {
   const { signatureInput, signature } = await createSpaceSig(key, opts)
   return {
-    ...(opts.authorization !== undefined
-      ? { authorization: opts.authorization }
-      : undefined),
-    ...(opts.audience !== undefined
-      ? { 'atproto-space-audience': opts.audience }
-      : undefined),
+    authorization: opts.authorization,
+    'atproto-space-audience': opts.audience,
     'signature-input': `${SIGNATURE_LABEL}=${signatureInput}`,
     signature: `${SIGNATURE_LABEL}=:${toBase64(signature)}:`,
   }
-}
-
-/**
- * Verify the signature on a `getSpaceCredential` request, returning the key it
- * names in `keyid`: the key the issued credential will be bound to.
- */
-export async function verifyCredentialRequestSig(
-  headers: HttpHeaders,
-): Promise<DidString> {
-  const components = credentialRequestComponents(headers)
-  const sig = parseSpaceSig(headers, components, CREDENTIAL_REQUEST_TAG)
-  const keyId = sig.params.get('keyid')
-  if (typeof keyId !== 'string') {
-    throw new SpaceSignatureError('signature key must be a P-256 did:key')
-  }
-  await verifySpaceSig(keyId, components, sig)
-  return keyId as DidString
 }
 
 /**
@@ -117,7 +70,7 @@ export async function verifyCredentialSig(
   keyId: DidString,
 ): Promise<void> {
   const components = credentialComponents(headers)
-  const sig = parseSpaceSig(headers, components, CREDENTIAL_TAG)
+  const sig = parseSpaceSig(headers, components)
   if (sig.params.has('keyid') && sig.params.get('keyid') !== keyId) {
     throw new SpaceSignatureError(
       'signature keyid does not match the credential key',
@@ -132,11 +85,10 @@ type ParsedSpaceSig = {
   signature: Uint8Array
 }
 
-/** Parse the `atproto-space` signature, checking what it covers and its parameters. */
+/** Parse the `atproto-space-credential` signature, checking what it covers and its parameters. */
 function parseSpaceSig(
   headers: HttpHeaders,
   components: Component[],
-  tag: string,
 ): ParsedSpaceSig {
   const inputHeader = headers['signature-input']
   const signatureHeader = headers['signature']
@@ -161,7 +113,7 @@ function parseSpaceSig(
     signature[1].size !== 0
   ) {
     throw new SpaceSignatureError(
-      'missing or malformed atproto-space signature',
+      `missing or malformed ${SIGNATURE_LABEL} signature`,
     )
   }
 
@@ -172,8 +124,8 @@ function parseSpaceSig(
       `signature must cover exactly ${expectedList}, in order`,
     )
   }
-  if (params.get('tag') !== tag) {
-    throw new SpaceSignatureError(`signature tag must be "${tag}"`)
+  if (params.get('tag') !== SIGNATURE_TAG) {
+    throw new SpaceSignatureError(`signature tag must be "${SIGNATURE_TAG}"`)
   }
   if (params.has('alg') && params.get('alg') !== SIGNATURE_ALG) {
     throw new SpaceSignatureError(
@@ -206,16 +158,17 @@ async function verifySpaceSig(
   }
 }
 
-function assertP256DidKey(keyId: string): void {
-  let jwtAlg: string
+/** Whether `keyId` is a P-256 did:key, the only kind a space credential can be bound to. */
+export function isP256DidKey(keyId: string): keyId is DidString {
   try {
-    jwtAlg = parseDidKey(keyId).jwtAlg
-  } catch (cause) {
-    throw new SpaceSignatureError('signature key must be a P-256 did:key', {
-      cause,
-    })
+    return parseDidKey(keyId).jwtAlg === 'ES256'
+  } catch {
+    return false
   }
-  if (jwtAlg !== 'ES256') {
+}
+
+function assertP256DidKey(keyId: string): void {
+  if (!isP256DidKey(keyId)) {
     throw new SpaceSignatureError('signature key must be a P-256 did:key')
   }
 }
@@ -236,18 +189,6 @@ function credentialComponents(headers: HttpHeaders): Component[] {
     ['authorization', authorization],
     ['atproto-space-audience', audience],
   ]
-}
-
-/** A credential request covers its delegation token, if it sent one. */
-function credentialRequestComponents(headers: HttpHeaders): Component[] {
-  const authorization = headers['authorization']
-  if (authorization === undefined) {
-    return []
-  }
-  if (typeof authorization !== 'string') {
-    throw new SpaceSignatureError('malformed "authorization" field')
-  }
-  return [['authorization', authorization]]
 }
 
 function formatComponentList(components: Component[]): string {
