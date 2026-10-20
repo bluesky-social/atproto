@@ -16,6 +16,7 @@ import { PolicyListSettingKey } from '../setting/constants.js'
 import { resolveReportPriorities } from '../setting/report.js'
 import { SettingService } from '../setting/service.js'
 import type { ResolvedReportPriority } from '../setting/types.js'
+import type { QueueAccess } from './access.js'
 
 type SubjectType = 'account' | 'record' | 'message' | 'conversation'
 
@@ -345,6 +346,7 @@ export class QueueService {
     recommendedPolicies,
     recommendedLabels = [],
     createdBy,
+    strictAccess = false,
   }: {
     name: string
     subjectTypes: string[]
@@ -356,6 +358,7 @@ export class QueueService {
     recommendedPolicies: string[]
     recommendedLabels?: string[]
     createdBy: DidString | 'admin_token'
+    strictAccess?: boolean
   }): Promise<Selectable<ReportQueue>> {
     const now = currentDatetimeString()
     return await this.db.db
@@ -372,6 +375,7 @@ export class QueueService {
         recommendedLabels: jsonb(recommendedLabels),
         createdBy,
         enabled: true,
+        strictAccess,
         createdAt: now,
         updatedAt: now,
       })
@@ -379,12 +383,17 @@ export class QueueService {
       .executeTakeFirstOrThrow()
   }
 
-  async getById(id: number): Promise<Selectable<ReportQueue> | undefined> {
+  async getById(
+    id: number,
+    lock = false,
+  ): Promise<Selectable<ReportQueue> | undefined> {
+    if (lock) this.db.assertTransaction()
     return await this.db.db
       .selectFrom('report_queue')
       .selectAll()
       .where('id', '=', id)
       .where('deletedAt', 'is', null)
+      .$if(lock, (qb) => qb.forUpdate())
       .executeTakeFirst()
   }
 
@@ -419,6 +428,7 @@ export class QueueService {
     updates: {
       name?: string
       enabled?: boolean
+      strictAccess?: boolean
       description?: string
       recommendedPolicies?: string[]
       recommendedLabels?: string[]
@@ -478,8 +488,10 @@ export class QueueService {
     subjectType,
     collection,
     reportTypes,
+    access,
   }: {
     limit: number
+    access?: QueueAccess
     cursor?: string
     enabled?: boolean
     subjectType?: string
@@ -491,6 +503,8 @@ export class QueueService {
       .selectFrom('report_queue')
       .selectAll()
       .where('deletedAt', 'is', null)
+
+    if (access) qb = qb.where(access.filter('report_queue.id'))
 
     if (enabled !== undefined) {
       qb = qb.where('enabled', '=', enabled)
@@ -545,6 +559,7 @@ export class QueueService {
       createdAt: queue.createdAt,
       updatedAt: queue.updatedAt,
       enabled: queue.enabled,
+      strictAccess: queue.strictAccess,
       deletedAt: (queue.deletedAt as DatetimeString | null) ?? undefined,
       stats: {
         pendingCount: 0,
