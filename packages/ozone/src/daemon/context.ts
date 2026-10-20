@@ -134,7 +134,7 @@ export class DaemonContext {
       cfg.inbox.startAt,
     )
 
-    const queueService = QueueService.creator()
+    const queueService = QueueService.creator(cfg.service.did)
     const queueRouter = new QueueRouter(db, queueService, register)
     const reportReporterDidBackfiller = new ReportReporterDidBackfiller(db)
 

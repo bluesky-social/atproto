@@ -64,6 +64,8 @@ type AssignmentRowWithQueue = Selectable<ModeratorAssignment> & {
   queueCollection: NsidString | null
   queueDescription: string | null
   queueReportTypes: string[] | null
+  queueReporterTags: string[] | null
+  queueAccountTags: string[] | null
   queueRecommendedPolicies: string[] | null
   queueRecommendedLabels: string[] | null
   queueCreatedBy: DidString | 'admin_token' | null
@@ -124,6 +126,8 @@ export class AssignmentService {
         'report_queue.collection as queueCollection',
         'report_queue.description as queueDescription',
         'report_queue.reportTypes as queueReportTypes',
+        'report_queue.reporterTags as queueReporterTags',
+        'report_queue.accountTags as queueAccountTags',
         'report_queue.recommendedPolicies as queueRecommendedPolicies',
         'report_queue.recommendedLabels as queueRecommendedLabels',
         'report_queue.createdBy as queueCreatedBy',
@@ -196,6 +200,8 @@ export class AssignmentService {
         'report_queue.collection as queueCollection',
         'report_queue.description as queueDescription',
         'report_queue.reportTypes as queueReportTypes',
+        'report_queue.reporterTags as queueReporterTags',
+        'report_queue.accountTags as queueAccountTags',
         'report_queue.recommendedPolicies as queueRecommendedPolicies',
         'report_queue.recommendedLabels as queueRecommendedLabels',
         'report_queue.createdBy as queueCreatedBy',
@@ -326,6 +332,8 @@ export class AssignmentService {
         'report_queue.collection as queueCollection',
         'report_queue.description as queueDescription',
         'report_queue.reportTypes as queueReportTypes',
+        'report_queue.reporterTags as queueReporterTags',
+        'report_queue.accountTags as queueAccountTags',
         'report_queue.recommendedPolicies as queueRecommendedPolicies',
         'report_queue.recommendedLabels as queueRecommendedLabels',
         'report_queue.createdBy as queueCreatedBy',
@@ -677,6 +685,8 @@ export class AssignmentService {
         'report_queue.collection as queueCollection',
         'report_queue.description as queueDescription',
         'report_queue.reportTypes as queueReportTypes',
+        'report_queue.reporterTags as queueReporterTags',
+        'report_queue.accountTags as queueAccountTags',
         'report_queue.recommendedPolicies as queueRecommendedPolicies',
         'report_queue.recommendedLabels as queueRecommendedLabels',
         'report_queue.createdBy as queueCreatedBy',
@@ -705,6 +715,8 @@ export class AssignmentService {
       subjectTypes: row.queueSubjectTypes ?? [],
       collection: row.queueCollection,
       reportTypes: row.queueReportTypes ?? [],
+      reporterTags: row.queueReporterTags ?? [],
+      accountTags: row.queueAccountTags ?? [],
       recommendedPolicies: row.queueRecommendedPolicies ?? [],
       recommendedLabels: row.queueRecommendedLabels ?? [],
       description: row.queueDescription ?? null,
