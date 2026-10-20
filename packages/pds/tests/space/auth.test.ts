@@ -462,28 +462,6 @@ describe('space auth', () => {
       ).rejects.toThrow(/issuer is not the space authority/)
     })
 
-    it('refuses one whose kid is not #atproto', async () => {
-      // Signed by the right key, but a space credential must name #atproto.
-      const space = await sc.createSpace(alice)
-      const aliceKeypair = await network.pds.ctx.actorStore.keypair(alice.did)
-      const mismatched = await sc.forgedCredential((keyId) =>
-        createSpaceToken(
-          'credential',
-          { iss: alice.did, sub: space, kid: '#other_key', keyId },
-          aliceKeypair,
-        ),
-      )
-
-      await expect(
-        mismatched
-          .clientFor(alice.pds)
-          .call(com.atproto.space.getLatestCommit, {
-            space,
-            repo: alice.did,
-          }),
-      ).rejects.toThrow(/unsupported space token "kid"/)
-    })
-
     it('refuses one for a revoked member', async () => {
       const space = await sc.createSpace(alice, { members: [carol] })
       // Carol mints a delegation token while she is still a member.

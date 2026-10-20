@@ -485,8 +485,8 @@ export class AuthVerifier {
   private async verifySpaceToken(jwtStr: string, type: SpaceTokenType) {
     try {
       return await verifySpaceToken(type, jwtStr, {
-        getSigningKey: (iss, kid, forceRefresh) =>
-          this.resolveSpaceKey(iss, kid, forceRefresh),
+        getSigningKey: (iss, forceRefresh) =>
+          this.resolveSpaceKey(iss, forceRefresh),
       })
     } catch (err) {
       if (err instanceof AuthRequiredError) throw err
@@ -502,19 +502,8 @@ export class AuthVerifier {
 
   private async resolveSpaceKey(
     iss: string,
-    kid: string | undefined,
     forceRefresh: boolean,
   ): Promise<string> {
-    if (!kid) {
-      throw new AuthRequiredError('missing token "kid"', 'BadJwt')
-    }
-    if (kid !== '#atproto') {
-      throw new AuthRequiredError(
-        `unsupported space token "kid": ${kid}`,
-        'BadJwt',
-      )
-    }
-
     const didDoc = await this.idResolver.did.resolve(iss, forceRefresh)
     if (!didDoc) {
       throw new AuthRequiredError(`could not resolve DID: ${iss}`, 'BadJwtIss')

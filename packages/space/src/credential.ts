@@ -72,6 +72,7 @@ export type CreateSpaceTokenOpts = {
   aud?: string
   keyId?: DidString
   expiresInSec?: number
+  /** Only for a client attestation. Other token types always use `#atproto`. */
   kid?: string
 }
 
@@ -86,6 +87,9 @@ export const createSpaceToken = async (
   }
   if (spec.requireCnf && !opts.keyId) {
     throw new SpaceTokenError(`a ${type} token requires a "keyId"`)
+  }
+  if (spec.kid && opts.kid) {
+    throw new SpaceTokenError(`a ${type} token's "kid" is always "${spec.kid}"`)
   }
   const expiresInSec = opts.expiresInSec ?? spec.expiresInSec
   if (
@@ -143,6 +147,12 @@ export const parseSpaceToken = (
   if (typeof header.alg !== 'string' || !header.alg) {
     throw new SpaceTokenError('missing token "alg"', 'BadJwt')
   }
+  if (spec.kid && header.kid !== spec.kid) {
+    throw new SpaceTokenError(
+      `wrong token "kid": expected "${spec.kid}", got "${header.kid}"`,
+      'BadJwt',
+    )
+  }
   if (!payload.iss) {
     throw new SpaceTokenError('missing token "iss"', 'BadJwtIss')
   }
@@ -185,10 +195,8 @@ export const parseSpaceToken = (
 }
 
 export type VerifySpaceTokenOpts = {
-  /** Passed `kid` so a verifier can honour the key id. */
   getSigningKey: (
     iss: string,
-    kid: string | undefined,
     forceRefresh: boolean,
   ) => string | Promise<string>
   aud?: string
@@ -221,13 +229,13 @@ export const verifySpaceToken = async (
       'BadJwtSub',
     )
   }
-  const didKey = await opts.getSigningKey(payload.iss, header.kid, false)
+  const didKey = await opts.getSigningKey(payload.iss, false)
   if (await matchesSignature(didKey, header, signingInput, sig)) {
     return { header, payload }
   }
 
   // The signing key may have rotated since the one we hold was cached.
-  const freshDidKey = await opts.getSigningKey(payload.iss, header.kid, true)
+  const freshDidKey = await opts.getSigningKey(payload.iss, true)
   if (
     freshDidKey !== didKey &&
     (await matchesSignature(freshDidKey, header, signingInput, sig))
