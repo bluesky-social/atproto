@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Create a new moderation queue. A queue can have optional matching criteria that ozone's queue router will use to match reports. A queue with no criteria must have reports assigned to it manually via (1) `modTool.meta.queueId` in `tools.ozone.moderation.emitEvent` or (2) `tools.ozone.report.reassignQueue`.",
+      "description": "Create a new moderation queue. A queue with omitted or empty subjectTypes or reportTypes must have reports assigned to it manually via (1) `modTool.meta.queueId` in `tools.ozone.moderation.emitEvent` or (2) `tools.ozone.report.reassignQueue`.",
       "input": {
         "encoding": "application/json",
         "schema": {
@@ -26,15 +26,32 @@
             "collection": {
               "type": "string",
               "format": "nsid",
-              "description": "Collection name for record subjects. Required if subjectTypes includes 'record'."
+              "description": "Collection name for record subjects. Omit to accept every collection."
             },
             "reportTypes": {
               "type": "array",
               "items": {
                 "type": "string"
               },
-              "maxLength": 25,
               "description": "Report reason types (fully qualified NSIDs)"
+            },
+            "reporterTags": {
+              "type": "array",
+              "maxLength": 25,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "description": "Match any listed tag on the account submitting the report."
+            },
+            "accountTags": {
+              "type": "array",
+              "maxLength": 25,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "description": "Match any of these tags on the account that is being reported against."
             },
             "description": {
               "type": "string",
@@ -42,12 +59,16 @@
             },
             "recommendedPolicies": {
               "type": "array",
-              "items": { "type": "string" },
+              "items": {
+                "type": "string"
+              },
               "description": "Policy keys to recommend when actioning reports in this queue"
             },
             "recommendedLabels": {
               "type": "array",
-              "items": { "type": "string" },
+              "items": {
+                "type": "string"
+              },
               "description": "Labels to recommend for this queue and use as fallback appeal routing mappings"
             }
           }
