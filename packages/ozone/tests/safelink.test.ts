@@ -1225,4 +1225,111 @@ describe('safelink management', () => {
       })
     })
   })
+
+  describe('queryRules source filtering', () => {
+    const source = 'sourceA/query-filter'
+    const fixtures = [
+      { source, pattern: 'domain', action: 'block', reason: 'phishing' },
+      {
+        source: 'sourceB/query-filter',
+        pattern: 'domain',
+        action: 'block',
+        reason: 'phishing',
+      },
+      { source, pattern: 'url', action: 'warn', reason: 'spam' },
+      {
+        source: `${source}/nested`,
+        pattern: 'domain',
+        action: 'block',
+        reason: 'phishing',
+      },
+      { source, pattern: 'url', action: 'block', reason: 'phishing' },
+    ].map((rule, index) => ({
+      ...rule,
+      url: `https://query-source-${index}.example.test`,
+    }))
+
+    beforeAll(async () => {
+      const headers = await getAdminHeaders(ids.ToolsOzoneSafelinkAddRule)
+      for (const rule of fixtures) {
+        await adminAgent.tools.ozone.safelink.addRule(rule, headers)
+      }
+    })
+
+    it('matches the exact source and includes all sources when omitted', async () => {
+      const headers = await getAdminHeaders(ids.ToolsOzoneSafelinkQueryRules)
+      const { data: filtered } =
+        await adminAgent.tools.ozone.safelink.queryRules({ source }, headers)
+      expect(filtered.rules.map((rule) => rule.url)).toEqual([
+        fixtures[4].url,
+        fixtures[2].url,
+        fixtures[0].url,
+      ])
+      expect(filtered.rules.every((rule) => rule.source === source)).toBe(true)
+
+      const { data: all } = await adminAgent.tools.ozone.safelink.queryRules(
+        { urls: fixtures.map((rule) => rule.url) },
+        headers,
+      )
+      expect(all.rules).toHaveLength(fixtures.length)
+
+      for (const unmatched of ['sourceA/missing', source.toUpperCase(), '']) {
+        const { data } = await adminAgent.tools.ozone.safelink.queryRules(
+          { source: unmatched },
+          headers,
+        )
+        expect(data.rules).toEqual([])
+        expect(data.cursor).toBeUndefined()
+      }
+    })
+
+    it('combines source with other rule filters', async () => {
+      const { data } = await adminAgent.tools.ozone.safelink.queryRules(
+        {
+          source,
+          urls: fixtures.map((rule) => rule.url),
+          actions: ['block'],
+          reason: 'phishing',
+          patternType: 'url',
+        },
+        await getAdminHeaders(ids.ToolsOzoneSafelinkQueryRules),
+      )
+      expect(data.rules).toEqual([expect.objectContaining(fixtures[4])])
+    })
+
+    it.each(['asc', 'desc'])(
+      'filters before pagination in %s order',
+      async (sortDirection) => {
+        const headers = {
+          headers: await network.ozone.modHeaders(
+            ids.ToolsOzoneSafelinkQueryRules,
+            'moderator',
+          ),
+        }
+        const query = { source, sortDirection, limit: 2 }
+        const { data: first } = await modAgent.tools.ozone.safelink.queryRules(
+          query,
+          headers,
+        )
+        expect(first.rules).toHaveLength(2)
+        expect(first.cursor).toBeDefined()
+        const { data: second } = await modAgent.tools.ozone.safelink.queryRules(
+          { ...query, cursor: first.cursor },
+          headers,
+        )
+        expect(second.rules).toHaveLength(1)
+        const expected = [fixtures[0].url, fixtures[2].url, fixtures[4].url]
+        if (sortDirection === 'desc') expected.reverse()
+        expect(
+          [...first.rules, ...second.rules].map((rule) => rule.url),
+        ).toEqual(expected)
+        const { data: end } = await modAgent.tools.ozone.safelink.queryRules(
+          { ...query, cursor: second.cursor },
+          headers,
+        )
+        expect(end.rules).toEqual([])
+        expect(end.cursor).toBeUndefined()
+      },
+    )
+  })
 })
