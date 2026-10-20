@@ -23,6 +23,10 @@
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
+    },
+    "./emudhra-preload": {
+      "types": "./dist/emudhra-preload.d.mts",
+      "default": "./dist/emudhra-preload.mjs"
     }
   },
   "engines": {
