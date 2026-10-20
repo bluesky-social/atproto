@@ -194,9 +194,11 @@ export function SignInForm({
               variant="link"
               className="text-foreground h-auto p-0 text-sm font-normal"
               onClick={() => {
-                const value = formRef.current?.querySelector<HTMLInputElement>(
+                const input = formRef.current?.querySelector<HTMLInputElement>(
                   'input[name="username"]',
-                )?.value
+                )
+                const value =
+                  input && normalizeSignInIdentifier(input.value, domains)
                 onForgotPassword(value?.includes('@') ? value : undefined)
               }}
               aria-label={t`Reset your password`}
