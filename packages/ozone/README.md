@@ -39,6 +39,14 @@ Notification producers skip activity before the date and skip transitions on rep
 
 Report-first pagination requires the `reporterDid` backfill and the post-retirement catch-up sweep to finish before deploying this reader. Pre-create the reporter/time indexes and `idx_moderation_event_inbox_public_created` concurrently in production before the inbox migration. The latter indexes `(subjectDid, createdAt DESC, id DESC)` so subject history can seek the configured date.
 
+## Strike expiry
+
+Clients supply strike amounts and expiry timestamps from severity settings.
+The backend stores them and excludes expired strikes from active totals.
+
+Legacy events without expiry require a separate repair. Changing expiry does
+not undo takedowns, suspensions, or lifetime strike totals.
+
 ## License
 
 This project is dual-licensed under MIT and Apache 2.0 terms:
