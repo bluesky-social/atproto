@@ -44,7 +44,12 @@ beforeAll(async () => {
       createHash('sha256').update(spki).digest('hex'),
     ),
   )
-  await writeFile(tracing, 'globalThis.tracingLoaded = true\n')
+  await writeFile(
+    tracing,
+    `import { connect } from 'node:tls'
+     globalThis.tracingLoaded = true
+     globalThis.tracingConnect = connect\n`,
+  )
   await writeFile(join(directory, 'root.pem'), fixture.root)
   allowedUrl = await listen(fixture.allowed.cert, false)
   blockedUrl = await listen(fixture.blocked.cert, true)
@@ -81,12 +86,18 @@ async function listen(cert: string, blocked: boolean): Promise<string> {
 async function request(
   client: string,
   url: string,
-  options: { mitigation?: boolean; trust?: boolean } = {},
+  options: {
+    mitigation?: boolean
+    trust?: boolean
+    preloadViaNodeOptions?: boolean
+  } = {},
 ): Promise<{ body?: string; code?: string; tracing: boolean }> {
   const { stdout } = await run(
     execPath,
     [
-      ...(options.mitigation === false ? [] : [`--import=${testPreload}`]),
+      ...(options.mitigation === false || options.preloadViaNodeOptions
+        ? []
+        : [`--import=${testPreload}`]),
       `--import=${tracing}`,
       '--input-type=module',
       '--eval',
@@ -105,6 +116,9 @@ async function request(
               ...(client.includes('custom-check') ? { checkServerIdentity() {} } : {}),
               ...(client.includes('bad-hostname') ? { servername: 'wrong.example' } : {}),
             })
+            if (client.includes('from-tracing')) {
+              agent.createConnection = globalThis.tracingConnect
+            }
             try {
               body = await new Promise((resolve, reject) => {
                 const req = request(url, { agent, method: 'POST' }, async (res) => {
@@ -139,7 +153,9 @@ async function request(
       timeout: 10_000,
       env: {
         ...process.env,
-        NODE_OPTIONS: '',
+        NODE_OPTIONS: options.preloadViaNodeOptions
+          ? `--import=${testPreload}`
+          : '',
         NODE_EXTRA_CA_CERTS:
           options.trust === false ? '' : join(directory, 'root.pem'),
         NODE_TLS_REJECT_UNAUTHORIZED: '1',
@@ -165,6 +181,22 @@ test.each([
       tracing: true,
     })
     expect(await request(client, allowedUrl)).toEqual({
+      body: 'ok',
+      tracing: true,
+    })
+    expect(blockedRequests).toBe(0)
+  },
+)
+
+test.each(['https-from-tracing', 'fetch', 'undici_v7'])(
+  '%s uses the preload from NODE_OPTIONS before tracing',
+  async (client) => {
+    const options = { preloadViaNodeOptions: true }
+    expect(await request(client, blockedUrl, options)).toEqual({
+      code: 'CERT_REVOKED',
+      tracing: true,
+    })
+    expect(await request(client, allowedUrl, options)).toEqual({
       body: 'ok',
       tracing: true,
     })
