@@ -30,7 +30,7 @@ describe('space notification retries', () => {
     outsider = await sc.createActor('outsider', network.pds)
     localSpace = await sc.createSpace(writer, { skey: 'notifications' })
     host = await MockService.create(network, {
-      serviceId: 'atproto_space_host',
+      serviceId: 'atproto_pds',
       respond: () => ({ status, body: error ? { error } : {} }),
     })
     space =
