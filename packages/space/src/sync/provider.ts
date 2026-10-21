@@ -4,13 +4,12 @@ import type { NsidString, RecordKeyString } from '@atproto/syntax'
 import { type StarPair, writeStar } from '../star.js'
 import {
   REPO_STAR_TYPE,
-  type RecordPath,
   type RecordPathParts,
   type RepoStarMeta,
   type SignedCommit,
   type SpaceRecord,
 } from '../types.js'
-import { formatRecordPath } from '../util.js'
+import { compareBytes, formatRecordPath } from '../util.js'
 
 export type SerializedRecord = RecordPathParts & {
   bytes: Uint8Array
@@ -39,15 +38,15 @@ async function* toStarPairs(
   records: AsyncIterable<SerializedRecord> | Iterable<SerializedRecord>,
 ): AsyncGenerator<StarPair> {
   const encoder = new TextEncoder()
-  let prevPath: RecordPath | undefined
+  let prevKey: Uint8Array | undefined
   for await (const { collection, rkey, bytes } of records) {
     const path = formatRecordPath(collection, rkey)
-    // Record paths are ASCII, so string order is the same as byte order.
-    if (prevPath !== undefined && path <= prevPath) {
-      throw new Error(`records out of order: ${path} after ${prevPath}`)
+    const key = encoder.encode(path)
+    if (prevKey !== undefined && compareBytes(key, prevKey) <= 0) {
+      throw new Error(`records out of order at ${path}`)
     }
-    prevPath = path
-    yield { key: encoder.encode(path), value: bytes }
+    prevKey = key
+    yield { key, value: bytes }
   }
 }
 

@@ -11,7 +11,7 @@ import {
   type SpaceRecord,
   defs,
 } from '../types.js'
-import { parseRecordPath } from '../util.js'
+import { compareBytes, parseRecordPath } from '../util.js'
 
 export type VerifyRepoParams = {
   space: string
@@ -50,7 +50,7 @@ export const verifyRepoStar = async (
   star: AsyncIterable<Uint8Array> | Iterable<Uint8Array>,
   params: VerifyRepoParams,
 ): Promise<VerifiedRepo> => {
-  const starReader = await readStar(star)
+  const starReader = await readStar(star, { maxValueLength: MAX_RECORD_SIZE })
   // Note the try/catch would better be implemented with a DisposableStack, but
   // that isn't (widely) available yet.
   try {
@@ -105,30 +105,18 @@ async function* verifyRecords(
   pairs: AsyncIterable<StarPair>,
   commit: SignedCommit,
 ): AsyncGenerator<VerifiedRecord> {
-  const decoder = new TextDecoder('utf-8', { fatal: true })
+  const decoder = new TextDecoder()
   const repo = new RepoCommit()
-  let prevPath: string | undefined
+  let prevKey: Uint8Array | undefined
 
   for await (const { key, value } of pairs) {
-    let path: string
-    try {
-      path = decoder.decode(key)
-    } catch (cause) {
-      throw new RepoVerificationError('invalid utf-8 in record path', { cause })
-    }
+    const path = decoder.decode(key)
     const { collection, rkey } = parseRecordPath(path)
 
-    // Record paths are ASCII, so string order is the same as byte order.
-    if (prevPath !== undefined && path <= prevPath) {
-      throw new RepoVerificationError(
-        `records out of order: ${path} after ${prevPath}`,
-      )
+    if (prevKey !== undefined && compareBytes(key, prevKey) <= 0) {
+      throw new RepoVerificationError(`records out of order at ${path}`)
     }
-    prevPath = path
-
-    if (value.length > MAX_RECORD_SIZE) {
-      throw new RepoVerificationError(`record too large at ${path}`)
-    }
+    prevKey = key
 
     let record: LexValue
     try {

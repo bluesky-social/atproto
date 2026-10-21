@@ -20,6 +20,9 @@ import { StarParseError } from './error.js'
 export const STAR_MAGIC = new Uint8Array([0x2a, 0x6c, 0x01, 0x00])
 
 const MAX_VARINT_BYTES = 6
+const MAX_META_LENGTH = 64 * 1024 * 1024 // 64 MiB
+const MAX_KEY_LENGTH = 64 * 1024 * 1024 // 64 MiB
+const MAX_VALUE_LENGTH = 64 * 1024 * 1024 * 1024 // 64 GiB
 
 export type StarMeta = LexMap & { $type: string }
 
@@ -59,9 +62,13 @@ export type StarReader = AsyncDisposable & {
 /**
  * Read a STAR archive. The header is read eagerly, the pairs lazily as `pairs` is
  * drained.
+ *
+ * A profile can set a lower `maxValueLength` than STAR's own. Lengths are checked
+ * before a frame is read, so an oversized frame is never buffered.
  */
 export const readStar = async (
   input: AsyncIterable<Uint8Array> | Iterable<Uint8Array>,
+  opts: { maxValueLength?: number } = {},
 ): Promise<StarReader> => {
   const reader = createBytesReader(input)
   try {
@@ -69,13 +76,13 @@ export const readStar = async (
     if (!ui8Equals(magic, STAR_MAGIC)) {
       throw new StarParseError('invalid magic bytes')
     }
-    const metaBytes = await readFrame(reader)
+    const metaBytes = await readFrame(reader, MAX_META_LENGTH)
     if (metaBytes === null) {
       throw new StarParseError('missing metadata')
     }
     return {
       meta: parseMeta(metaBytes),
-      pairs: readPairs(reader),
+      pairs: readPairs(reader, opts.maxValueLength ?? MAX_VALUE_LENGTH),
       [Symbol.asyncDispose]: () => reader.destroy(),
     }
   } catch (err) {
@@ -84,13 +91,16 @@ export const readStar = async (
   }
 }
 
-async function* readPairs(reader: BytesReader): AsyncGenerator<StarPair> {
+async function* readPairs(
+  reader: BytesReader,
+  maxValueLength: number,
+): AsyncGenerator<StarPair> {
   try {
     while (true) {
       // EOF is only allowed at a pair boundary.
-      const key = await readFrame(reader)
+      const key = await readFrame(reader, MAX_KEY_LENGTH)
       if (key === null) return
-      const value = await readFrame(reader)
+      const value = await readFrame(reader, maxValueLength)
       if (value === null) {
         throw new StarParseError('missing value for key')
       }
@@ -120,9 +130,15 @@ function parseMeta(bytes: Uint8Array): StarMeta {
 }
 
 // Null at EOF before a frame starts, which is only allowed at a pair boundary.
-async function readFrame(reader: BytesReader): Promise<Uint8Array | null> {
+async function readFrame(
+  reader: BytesReader,
+  maxLength: number,
+): Promise<Uint8Array | null> {
   const length = await readVarint(reader)
   if (length === null) return null
+  if (length > maxLength) {
+    throw new StarParseError(`length ${length} exceeds limit of ${maxLength}`)
+  }
   const bytes = await reader.read(length)
   if (bytes.length !== length) {
     throw new StarParseError('unexpected end of archive')

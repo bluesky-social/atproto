@@ -1,4 +1,5 @@
 import { beforeAll, describe, expect, it } from 'vitest'
+import { encodeVarInt } from '@atproto/car'
 import { type Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import { encode } from '@atproto/lex-cbor'
 import type { Cid } from '@atproto/lex-data'
@@ -282,15 +283,18 @@ describe('space sync', () => {
       )
     })
 
-    it('rejects a record over the size limit', async () => {
-      const star = await rawStar(await commitFor([]), [
-        {
-          key: utf8('app.bsky.feed.post/3kbcq3p7ad401'),
-          value: encode({ text: 'x'.repeat(MAX_RECORD_SIZE) }),
-        },
+    it('rejects an oversized record before reading it', async () => {
+      // A pair that declares a value one byte over the limit, with none of the
+      // value's bytes following: the length alone must be enough to reject it.
+      const key = utf8('app.bsky.feed.post/3kbcq3p7ad401')
+      const star = Buffer.concat([
+        await rawStar(await commitFor([]), []),
+        encodeVarInt(key.length),
+        key,
+        encodeVarInt(MAX_RECORD_SIZE + 1),
       ])
       await expect(verifyRepoStarFull([star], params())).rejects.toThrow(
-        /record too large/,
+        /exceeds limit of 1048576/,
       )
     })
 
