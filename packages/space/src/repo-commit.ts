@@ -12,7 +12,6 @@ import {
   COMMIT_VERSION,
   type CommitCtx,
   type RecordPathParts,
-  type RepoIndex,
   type RepoOp,
   type SignedCommit,
 } from './types.js'
@@ -32,15 +31,6 @@ export class RepoCommit {
     const commit = new RepoCommit()
     for (const { collection, rkey, cid } of records) {
       commit.add(collection, rkey, cid)
-    }
-    return commit
-  }
-
-  // Fold in every record an index describes, to compare against a commit.
-  static fromIndex(index: RepoIndex): RepoCommit {
-    const commit = new RepoCommit()
-    for (const [path, cid] of Object.entries(index)) {
-      if (cid) commit.setHash.add(`${path}/${cid.toString()}`)
     }
     return commit
   }

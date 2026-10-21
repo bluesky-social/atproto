@@ -1,7 +1,9 @@
 import { TestNetworkNoAppView } from '@atproto/dev-env'
 import { getBlobCidString, parseCid } from '@atproto/lex-data'
+import { MAX_RECORD_SIZE } from '@atproto/space'
 import type { NsidString } from '@atproto/syntax'
 import { com } from '../../src/lexicons/index.js'
+import { prepareCreate } from '../../src/repo/index.js'
 import {
   type Actor,
   SpaceClient,
@@ -442,6 +444,20 @@ describe('space records', () => {
       await expect(
         sc.write(alice, space, { text: 'strict', validate: true }),
       ).rejects.toThrow()
+    })
+
+    it('refuses a record over the size limit', async () => {
+      // Called directly, as the request body limit is lower than the record
+      // limit, so the check isn't reachable over HTTP.
+      const space = await sc.createSpace(alice)
+      await expect(
+        prepareCreate({
+          did: alice.did,
+          space,
+          collection: TEST_COLLECTION,
+          record: record(TEST_COLLECTION, 'x'.repeat(MAX_RECORD_SIZE)),
+        }),
+      ).rejects.toThrow(/Record too large/)
     })
   })
 

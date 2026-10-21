@@ -1,5 +1,4 @@
 import { byteIterableToStream } from '@atproto/common'
-import { parseCid } from '@atproto/lex-data'
 import { type SerializedRecord, serializeRepo } from '@atproto/space'
 import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
 import { SpaceReader } from '../../../../actor-store/space/reader.js'
@@ -16,7 +15,7 @@ export default function (server: Server, ctx: AppContext) {
       },
     }),
     handler: async ({ params, auth }) => {
-      const { space, repo, excludeValues } = params
+      const { space, repo } = params
 
       assertSpaceRead(auth, space, repo)
       await assertRepoAvailability(ctx, repo, isSpaceSelfRead(auth, repo))
@@ -39,18 +38,19 @@ export default function (server: Server, ctx: AppContext) {
           )
         }
 
-        const carStream = byteIterableToStream(
-          serializeRepo(commit, readRecords(reader, space, excludeValues), {
-            excludeValues,
-          }),
+        const starStream = byteIterableToStream(
+          serializeRepo(
+            { space, author: repo, commit },
+            readRecords(reader, space),
+          ),
         )
         const closeDb = () => actorDb.close()
-        carStream.on('error', closeDb)
-        carStream.on('close', closeDb)
+        starStream.on('error', closeDb)
+        starStream.on('close', closeDb)
 
         return {
-          encoding: 'application/vnd.ipld.car' as const,
-          body: carStream,
+          encoding: 'application/octet-stream' as const,
+          body: starStream,
         }
       } catch (err) {
         await actorDb.close()
@@ -63,16 +63,12 @@ export default function (server: Server, ctx: AppContext) {
 async function* readRecords(
   reader: SpaceReader,
   space: string,
-  excludeValues?: boolean,
 ): AsyncGenerator<SerializedRecord> {
-  for await (const record of reader.streamRecords(space, { excludeValues })) {
+  for await (const record of reader.streamRecords(space)) {
     yield {
       collection: record.collection,
       rkey: record.rkey,
-      cid: parseCid(record.cid, { flavor: 'cbor' }),
-      // Absent under excludeValues, where serializeRepo writes the index and no
-      // record blocks, so the bytes are never read.
-      bytes: record.value ?? new Uint8Array(),
+      bytes: record.value,
     }
   }
 }
