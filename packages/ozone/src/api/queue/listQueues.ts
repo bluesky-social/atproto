@@ -2,11 +2,12 @@ import { isNsidString } from '@atproto/lex'
 import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../context.js'
 import { tools } from '../../lexicons/index.js'
+import { QueueAccess } from '../../queue/access.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(tools.ozone.queue.listQueues, {
     auth: ctx.authVerifier.modOrAdminToken,
-    handler: async ({ params }) => {
+    handler: async ({ params, auth }) => {
       const {
         limit = 50,
         cursor,
@@ -28,6 +29,7 @@ export default function (server: Server, ctx: AppContext) {
       const queueService = ctx.queueService(ctx.db)
 
       const result = await queueService.list({
+        access: await QueueAccess.forActor(ctx.db, auth.credentials),
         limit,
         cursor,
         enabled,

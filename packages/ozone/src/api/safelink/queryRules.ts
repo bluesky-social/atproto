@@ -20,6 +20,7 @@ export default function (server: Server, ctx: AppContext) {
         patternType,
         actions,
         reason,
+        source,
         createdBy,
         sortDirection,
       } = input.body
@@ -35,6 +36,7 @@ export default function (server: Server, ctx: AppContext) {
             ? actions.map(getSafelinkAction)
             : undefined,
         reason: reason ? getSafelinkReason(reason) : undefined,
+        source,
         createdBy,
         direction: sortDirection as 'asc' | 'desc' | undefined,
       })

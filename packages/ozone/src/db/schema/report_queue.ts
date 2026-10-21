@@ -24,6 +24,7 @@ export interface ReportQueue {
   createdAt: DatetimeString
   updatedAt: DatetimeString
   enabled: boolean
+  strictAccess: Generated<boolean>
   deletedAt: string | null // NULL = active, timestamp = soft-deleted
 }
 

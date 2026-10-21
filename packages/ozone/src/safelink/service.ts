@@ -405,6 +405,7 @@ export class SafelinkRuleService {
     patternType,
     actions,
     reason,
+    source,
     createdBy,
     direction = 'desc',
   }: {
@@ -414,6 +415,7 @@ export class SafelinkRuleService {
     patternType?: SafelinkPatternType
     actions?: SafelinkActionType[]
     reason?: SafelinkReasonType
+    source?: string
     createdBy?: DidString
     direction?: 'asc' | 'desc'
   } = {}): Promise<{
@@ -436,6 +438,10 @@ export class SafelinkRuleService {
 
     if (reason) {
       query = query.where('reason', '=', reason)
+    }
+
+    if (source !== undefined) {
+      query = query.where('source', '=', source)
     }
 
     if (createdBy) {

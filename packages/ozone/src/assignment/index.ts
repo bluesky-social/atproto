@@ -1,12 +1,13 @@
 import type { Selectable } from 'kysely'
 import { currentDatetimeString, toDatetimeString } from '@atproto/lex'
 import type { DatetimeString, DidString, NsidString } from '@atproto/lex'
-import { InvalidRequestError } from '@atproto/xrpc-server'
+import { ForbiddenError, InvalidRequestError } from '@atproto/xrpc-server'
 import type { Database } from '../db/index.js'
 import { EndAtIdKeyset, paginate } from '../db/pagination.js'
 import type { ModeratorAssignment } from '../db/schema/moderator_assignment.js'
 import type { ReportQueue } from '../db/schema/report_queue.js'
 import type { tools } from '../lexicons/index.js'
+import type { QueueAccessCredentials } from '../queue/access.js'
 import type { QueueService, QueueServiceCreator } from '../queue/service.js'
 import {
   bulkInsertReportActivities,
@@ -71,6 +72,7 @@ type AssignmentRowWithQueue = Selectable<ModeratorAssignment> & {
   queueCreatedBy: DidString | 'admin_token' | null
   queueCreatedAt: DatetimeString | null
   queueUpdatedAt: DatetimeString | null
+  queueStrictAccess: boolean | null
   queueEnabled: boolean | null
   queueDeletedAt: string | null
 }
@@ -134,6 +136,7 @@ export class AssignmentService {
         'report_queue.createdAt as queueCreatedAt',
         'report_queue.updatedAt as queueUpdatedAt',
         'report_queue.enabled as queueEnabled',
+        'report_queue.strictAccess as queueStrictAccess',
         'report_queue.deletedAt as queueDeletedAt',
       ])
       .where('reportId', 'is', null)
@@ -208,6 +211,7 @@ export class AssignmentService {
         'report_queue.createdAt as queueCreatedAt',
         'report_queue.updatedAt as queueUpdatedAt',
         'report_queue.enabled as queueEnabled',
+        'report_queue.strictAccess as queueStrictAccess',
         'report_queue.deletedAt as queueDeletedAt',
       ])
       .where('reportId', 'is not', null)
@@ -257,31 +261,36 @@ export class AssignmentService {
 
   async assignQueue(
     input: AssignQueueInput,
+    credentials?: QueueAccessCredentials,
   ): Promise<tools.ozone.queue.defs.AssignmentView> {
     const { did, queueId } = input
     const now = new Date()
 
-    // Check queue since we aren't using foreign keys
-    const queue = await this.db.db
-      .selectFrom('report_queue')
-      .selectAll()
-      .where('id', '=', queueId)
-      .where('enabled', '=', true)
-      .where('deletedAt', 'is', null)
-      .executeTakeFirst()
-    if (!queue) {
-      throw new InvalidRequestError('Invalid queue', 'InvalidAssignment')
-    }
-
-    // Queue assignments are permanent (endAt = null). Upgrade any existing
-    // active expiry-based row to permanent; otherwise insert a new permanent row.
+    // Start a database transaction to assign the moderator to the queue.
     const result = await this.db.transaction(async (dbTxn) => {
+      // Fetch the queue to ensure it exists and is enabled, and lock it for update.
+      const queue = await dbTxn.db
+        .selectFrom('report_queue')
+        .selectAll()
+        .where('id', '=', queueId)
+        .where('enabled', '=', true)
+        .where('deletedAt', 'is', null)
+        .forUpdate()
+        .executeTakeFirst()
+      if (!queue)
+        throw new InvalidRequestError('Invalid queue', 'InvalidAssignment')
+      // access check
+      if (queue.strictAccess && credentials && !credentials.isAdmin) {
+        throw new ForbiddenError('Only admins can add strict queue members')
+      }
+      // Check if the moderator is already assigned to the queue and if the assignment is still active.
       const existing = await dbTxn.db
         .selectFrom('moderator_assignment')
         .selectAll()
         .where('did', '=', did)
         .where('queueId', '=', queueId)
         .where('reportId', 'is', null)
+        .where('startAt', '<=', toDatetimeString(now))
         .where((eb) =>
           eb.or([
             eb('endAt', 'is', null),
@@ -289,19 +298,20 @@ export class AssignmentService {
           ]),
         )
         .executeTakeFirst()
+      // If an existing assignment is found, either return it if it's still active or reactivate it by setting endAt to null.
       if (existing) {
         if (existing.endAt === null) {
           return existing
         }
-        const updated = await dbTxn.db
+        return dbTxn.db
           .updateTable('moderator_assignment')
           .set({ endAt: null })
           .where('id', '=', existing.id)
           .returningAll()
           .executeTakeFirstOrThrow()
-        return updated
       }
-      const created = await dbTxn.db
+      // If no existing assignment is found, create a new one.
+      return dbTxn.db
         .insertInto('moderator_assignment')
         .values({
           did,
@@ -311,7 +321,6 @@ export class AssignmentService {
         })
         .returningAll()
         .executeTakeFirstOrThrow()
-      return created
     })
 
     if (result.queueId === null || result.reportId !== null) {
@@ -340,6 +349,7 @@ export class AssignmentService {
         'report_queue.createdAt as queueCreatedAt',
         'report_queue.updatedAt as queueUpdatedAt',
         'report_queue.enabled as queueEnabled',
+        'report_queue.strictAccess as queueStrictAccess',
         'report_queue.deletedAt as queueDeletedAt',
       ])
       .where('moderator_assignment.id', '=', result.id)
@@ -693,6 +703,7 @@ export class AssignmentService {
         'report_queue.createdAt as queueCreatedAt',
         'report_queue.updatedAt as queueUpdatedAt',
         'report_queue.enabled as queueEnabled',
+        'report_queue.strictAccess as queueStrictAccess',
         'report_queue.deletedAt as queueDeletedAt',
       ])
       .where('moderator_assignment.id', '=', assignmentId)
@@ -724,6 +735,7 @@ export class AssignmentService {
       createdAt: row.queueCreatedAt!,
       updatedAt: row.queueUpdatedAt!,
       enabled: row.queueEnabled ?? false,
+      strictAccess: row.queueStrictAccess ?? false,
       deletedAt: row.queueDeletedAt,
     }
   }

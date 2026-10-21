@@ -19,6 +19,7 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       const {
+        strictAccess = false,
         name,
         subjectTypes = [],
         collection,
@@ -29,6 +30,9 @@ export default function (server: Server, ctx: AppContext) {
         recommendedPolicies = [],
         recommendedLabels = [],
       } = input.body
+      if (strictAccess && !access.isAdmin) {
+        throw new AuthRequiredError('Only admins can create strict queues')
+      }
       const createdBy =
         access.type === 'admin_token' ? 'admin_token' : access.iss
 
@@ -62,6 +66,7 @@ export default function (server: Server, ctx: AppContext) {
           recommendedLabels,
         })
         return queueService.create({
+          strictAccess,
           name,
           subjectTypes,
           collection,
