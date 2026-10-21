@@ -182,6 +182,22 @@ describe(LabelHydrator, () => {
     expect(fixture.requests).toEqual([])
   })
 
+  test.each([
+    ['impersonation', 'spam'],
+    ['spam', 'impersonation'],
+  ])(
+    'preserves impersonation when merging %s then %s',
+    async (first, second) => {
+      const fixture = createFixture()
+      fixture.labels.push(label(first))
+      const initial = await fixture.hydrate()
+      fixture.labels.splice(0, 1, label(second))
+      const next = await fixture.hydrate()
+      const merged = initial.merge(next)
+      expect(merged.get(subject)?.isImpersonation).toBe(true)
+    },
+  )
+
   it('keeps needs-review when hydration results for the same subject merge', async () => {
     const fixture = createFixture()
     fixture.tags.push(tag())

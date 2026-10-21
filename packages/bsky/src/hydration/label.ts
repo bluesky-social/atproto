@@ -38,6 +38,7 @@ export class Labels
       if (!theirs) continue
       const mine = this.get(key)
       if (mine) {
+        mine.isImpersonation = mine.isImpersonation || theirs.isImpersonation
         mine.isTakendown = mine.isTakendown || theirs.isTakendown
         mine.needsReview = mine.needsReview || theirs.needsReview
         mine.labels = mine.labels.merge(theirs.labels)
