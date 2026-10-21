@@ -87,6 +87,9 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
     plcUrl: env.didPlcUrl,
     cacheMaxTTL: env.didCacheMaxTTL ?? DAY,
     cacheStaleTTL: env.didCacheStaleTTL ?? HOUR,
+    cacheMaxEntries: env.didCacheMaxEntries,
+    cacheMaxBytes: env.didCacheMaxBytes,
+    cacheMaxDocBytes: env.didCacheMaxDocBytes,
   }
 
   const blobDivertServiceCfg =
@@ -242,6 +245,9 @@ export type IdentityConfig = {
   plcUrl: string
   cacheStaleTTL: number
   cacheMaxTTL: number
+  cacheMaxEntries?: number
+  cacheMaxBytes?: number
+  cacheMaxDocBytes?: number
 }
 
 export type AccessConfig = {
