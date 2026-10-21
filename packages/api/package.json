@@ -37,7 +37,7 @@
     "@atproto/xrpc": "workspace:^",
     "await-lock": "^3.0.0",
     "multiformats": "^13.0.0",
-    "tlds": "^1.234.0",
+    "tlds": "^1.261.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {
@@ -46,7 +46,7 @@
     "@jest/globals": "^28.1.3",
     "http-terminator": "^3.2.0",
     "jest": "^30.5.2",
-    "prettier": "^3.9.6"
+    "prettier": "^3.9.10"
   },
   "scripts": {
     "lex:gen": "if [ ! -f ./src/client/index.ts ] || [ -n \"$(find -L ./lexicons -type f -newer ./src/client/index.ts -print -quit)\" ]; then lex gen-api --yes ./src/client ./lexicons/com/atproto/*/* ./lexicons/app/bsky/*/* ./lexicons/chat/bsky/*/* ./lexicons/tools/ozone/*/* ./lexicons/com/germnetwork/*; fi",
