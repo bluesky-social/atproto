@@ -1440,6 +1440,37 @@ message GetLabelsResponse {
 }
 
 //
+// Tags
+//
+
+message Tag {
+  string subject = 1;
+  string issuer = 2; // DID of the moderator or service that created the event.
+  string value = 3;
+  google.protobuf.Timestamp indexed_at = 4; // Time Atlantis stored the tag.
+  TagEvent event = 5; // Ozone event metadata; absent for ordinary tag writes.
+  google.protobuf.Timestamp expires_at = 6; // absent means permanent
+  bool removed = 7; // Removal retained to ignore older events.
+}
+
+message GetTagsForSubjectsRequest {
+  repeated string subjects = 1;
+  repeated string sources = 2; // Ozone service DIDs; empty selects all sources.
+}
+
+message GetTagsForSubjectsResponse {
+  repeated Tag tags = 1;
+}
+
+// Ozone event that added or removed a tag.
+message TagEvent {
+  string source = 1; // Ozone service DID.
+  int64 event_id = 2; // Ozone moderation event ID.
+  google.protobuf.Timestamp created_at = 3; // Time Ozone created the event.
+  string cid = 4; // Subject record CID; empty for account tags.
+}
+
+//
 // Starter packs
 //
 
@@ -1916,6 +1947,9 @@ service Service {
 
   // Starter packs
   rpc GetActorStarterPacks(GetActorStarterPacksRequest) returns (GetActorStarterPacksResponse);
+
+  // Tags
+  rpc GetTagsForSubjects(GetTagsForSubjectsRequest) returns (GetTagsForSubjectsResponse);
 
   // Sync
   rpc GetLatestRev(GetLatestRevRequest) returns (GetLatestRevResponse);

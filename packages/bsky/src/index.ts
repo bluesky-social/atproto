@@ -207,6 +207,7 @@ export class BskyAppView {
     const hydrator = new Hydrator(dataplane, config.labelsFromIssuerDids, {
       debugFieldAllowedDids: config.debugFieldAllowedDids,
       featureGatesClient,
+      needsReviewTagSources: [config.modServiceDid],
     })
     const views = new Views({
       imgUriBuilder: imgUriBuilder,
