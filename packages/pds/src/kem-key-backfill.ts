@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto'
 import fs from 'node:fs/promises'
 import { setTimeout as sleep } from 'node:timers/promises'
 import * as plc from '@did-plc/lib'
-import { MINUTE, SECOND, fileExists } from '@atproto/common'
+import { MINUTE, SECOND, fileExists, rmIfExists } from '@atproto/common'
 import { P256Keypair } from '@atproto/crypto'
 import type { DidString } from '@atproto/lex'
 import type { AppContext } from './context.js'
@@ -38,32 +38,38 @@ export class KemKeyBackfill implements AsyncDisposable {
   start(): void {
     // The entryway owns PLC ops for its accounts
     if (this.ctx.entrywayClient) return
-    this.running ??= this.run().catch((err) =>
-      spaceLogger.error({ err }, 'kem key backfill failed'),
-    )
+    this.running ??= this.run()
   }
 
   /** Resolves once the backfill has completed, here or in another process. */
   async run(): Promise<void> {
     const { signal } = this.abortController
     while (!signal.aborted) {
-      if (await this.isComplete()) return
-      if (await this.renewLease()) {
-        try {
-          const failed = await this.backfill()
-          if (failed === 0 && !signal.aborted) {
-            await this.complete()
-            spaceLogger.info('kem key backfill complete')
-            return
-          }
-          if (failed > 0) {
-            spaceLogger.warn({ failed }, 'kem key backfill will retry')
-          }
-        } finally {
-          await this.releaseLease()
-        }
+      try {
+        if (await this.attempt()) return
+      } catch (err) {
+        spaceLogger.error({ err }, 'kem key backfill failed, will retry')
       }
       await sleep(this.opts.pollMs, undefined, { signal }).catch(() => {})
+    }
+  }
+
+  // True once the backfill has completed.
+  private async attempt(): Promise<boolean> {
+    if (await this.isComplete()) return true
+    if (!(await this.renewLease())) return false
+    try {
+      const failed = await this.backfill()
+      if (failed > 0) {
+        spaceLogger.warn({ failed }, 'kem key backfill will retry')
+        return false
+      }
+      if (this.abortController.signal.aborted) return false
+      await this.complete()
+      spaceLogger.info('kem key backfill complete')
+      return true
+    } finally {
+      await this.releaseLease()
     }
   }
 
@@ -83,12 +89,10 @@ export class KemKeyBackfill implements AsyncDisposable {
       if (rows.length === 0) break
       for (const { did } of rows) {
         if (signal.aborted) break
-        if (!(await this.renewLease())) {
-          throw new Error('lost kem key backfill lease')
-        }
         try {
-          await backfillKemKey(this.ctx, did)
+          await this.backfillAccount(did)
         } catch (err) {
+          if (err instanceof LeaseLostError) throw err
           failed++
           spaceLogger.error({ err, did }, 'failed to backfill kem key')
         }
@@ -96,6 +100,44 @@ export class KemKeyBackfill implements AsyncDisposable {
       cursor = rows[rows.length - 1].did
     }
     return failed
+  }
+
+  /**
+   * Give an account a KEM key if it lacks one. Accounts whose PLC doc this PDS
+   * cannot update still get a key, and their owner must publish it themselves.
+   *
+   * The lease is checked before each step with an effect, so a process that
+   * stalled long enough to lose it cannot publish or write a key over another's.
+   */
+  private async backfillAccount(did: DidString): Promise<void> {
+    const { kemKeyLocation } = await this.ctx.actorStore.getLocation(did)
+    if (await fileExists(kemKeyLocation)) return
+    if (!(await this.ctx.actorStore.exists(did))) return
+
+    const kemKey = await P256Keypair.create({ exportable: true })
+    await this.assertLease()
+    if (await publishKemKey(this.ctx, did, kemKey.did())) {
+      await this.ctx.sequencer.sequenceIdentity(did)
+    } else {
+      spaceLogger.warn(
+        { did },
+        'cannot publish kem key, account must update its did doc',
+      )
+    }
+
+    // The file marks the account done, so it must appear whole or not at all
+    const tmpLocation = `${kemKeyLocation}.${randomUUID()}.tmp`
+    try {
+      await fs.writeFile(tmpLocation, await kemKey.export())
+      await this.assertLease()
+      await fs.rename(tmpLocation, kemKeyLocation)
+    } finally {
+      await rmIfExists(tmpLocation)
+    }
+  }
+
+  private async assertLease(): Promise<void> {
+    if (!(await this.renewLease())) throw new LeaseLostError()
   }
 
   private async isComplete(): Promise<boolean> {
@@ -153,28 +195,10 @@ export class KemKeyBackfill implements AsyncDisposable {
   }
 }
 
-/**
- * Give an account a KEM key if it lacks one. Accounts whose PLC doc this PDS
- * cannot update still get a key, and their owner must publish it themselves.
- */
-export async function backfillKemKey(
-  ctx: AppContext,
-  did: DidString,
-): Promise<void> {
-  const { kemKeyLocation } = await ctx.actorStore.getLocation(did)
-  if (await fileExists(kemKeyLocation)) return
-  if (!(await ctx.actorStore.exists(did))) return
-
-  const kemKey = await P256Keypair.create({ exportable: true })
-  if (await publishKemKey(ctx, did, kemKey.did())) {
-    await ctx.sequencer.sequenceIdentity(did)
-  } else {
-    spaceLogger.warn(
-      { did },
-      'cannot publish kem key, account must update its did doc',
-    )
+class LeaseLostError extends Error {
+  constructor() {
+    super('lost kem key backfill lease')
   }
-  await fs.writeFile(kemKeyLocation, await kemKey.export())
 }
 
 // False when this PDS cannot update the account's PLC doc.

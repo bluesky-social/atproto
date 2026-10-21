@@ -151,6 +151,31 @@ describe('kem key backfill', () => {
     expect(await isComplete()).toBe(true)
   })
 
+  it('does not write a key after losing the lease', async () => {
+    const did = await createAlphaAccount('ivan')
+    const before = await opCount(did)
+    const updateData = ctx.plcClient.updateData.bind(ctx.plcClient)
+    using _ = jest
+      .spyOn(ctx.plcClient, 'updateData')
+      .mockImplementationOnce(async (...args) => {
+        await updateData(...args)
+        // Another process takes over while this one is mid-account
+        await ctx.accountManager.db.db
+          .updateTable('kem_key_backfill_lease')
+          .set({ owner: 'other', expiresAt: Date.now() + 100 })
+          .execute()
+      })
+
+    await using backfill = createBackfill()
+    await backfill.run()
+
+    // The first key was abandoned, and the retry published a second
+    expect(await opCount(did)).toBe(before + 2)
+    const kemKey = await ctx.actorStore.kemKeypair(did)
+    expect(await publishedKemKey(did)).toBe(kemKey.did())
+    expect(await isComplete()).toBe(true)
+  })
+
   it('runs in one process at a time', async () => {
     const did = await createAlphaAccount('gina')
     const before = await opCount(did)
