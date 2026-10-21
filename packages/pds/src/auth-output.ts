@@ -70,15 +70,6 @@ export type SpaceCredentialOutput = {
   }
 }
 
-export type DelegationTokenOutput = {
-  credentials: {
-    type: 'delegation_token'
-    userDid: DidString
-    space: SpaceRefString
-    keyId: DidString
-  }
-}
-
 export function isSpaceCredentialOutput<
   T extends { credentials: { type: string } },
 >(

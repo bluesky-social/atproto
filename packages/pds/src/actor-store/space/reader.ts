@@ -282,10 +282,12 @@ export class SpaceReader {
 
   async getCredentialRecipients(
     space: string,
-  ): Promise<{ serviceDid: string; serviceEndpoint: string }[]> {
+  ): Promise<
+    { serviceDid: string; serviceEndpoint: string; expiresAt: string }[]
+  > {
     return this.db.db
       .selectFrom('space_credential_recipient')
-      .select(['serviceDid', 'serviceEndpoint'])
+      .select(['serviceDid', 'serviceEndpoint', 'expiresAt'])
       .where('space', '=', space)
       .where('expiresAt', '>', new Date().toISOString())
       .execute()

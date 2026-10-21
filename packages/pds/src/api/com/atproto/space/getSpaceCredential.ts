@@ -1,4 +1,5 @@
-import { createSpaceToken, spaceHostAud } from '@atproto/space'
+import { createSpaceToken, isP256DidKey, spaceHostAud } from '@atproto/space'
+import type { DidString } from '@atproto/syntax'
 import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
@@ -6,16 +7,27 @@ import { assertSpaceHost } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.space.getSpaceCredential, {
-    auth: ctx.authVerifier.delegationTokenAuth,
-    handler: async ({ input, auth }) => {
-      const { space, clientAttestation } = input.body
-      const { userDid, space: tokenSpace, keyId } = auth.credentials
+    handler: async ({ input }) => {
+      const { space, credentialKid, delegationToken, clientAttestation } =
+        input.body
 
-      if (tokenSpace !== space) {
-        throw new InvalidRequestError(
-          'Delegation token subject does not match requested space',
-          'InvalidDelegationToken',
-        )
+      if (!isP256DidKey(credentialKid)) {
+        throw new InvalidRequestError('credentialKid must be a P-256 did:key')
+      }
+
+      // Absent when the request carries no delegation token, which only a space
+      // that does not gate on the user accepts.
+      let userDid: DidString | undefined
+      if (delegationToken) {
+        const delegation =
+          await ctx.authVerifier.verifyDelegationToken(delegationToken)
+        if (delegation.space !== space) {
+          throw new InvalidRequestError(
+            'Delegation token subject does not match requested space',
+            'InvalidDelegationToken',
+          )
+        }
+        userDid = delegation.userDid
       }
 
       const spaceDid = await assertSpaceHost(ctx, space)
@@ -29,9 +41,11 @@ export default function (server: Server, ctx: AppContext) {
 
       const config = await ctx.actorStore.read(spaceDid, async (store) => {
         const existing = await store.space.getSpace(space)
-        if (existing?.deletedAt) {
-          // The durable signal that a space is gone: a syncer that missed
-          // notifySpaceDeleted learns it here, on its next renewal.
+        // The durable signal that a space is gone: a syncer that missed
+        // notifySpaceDeleted learns it here, on its next renewal. Without a
+        // delegation token, getActiveSpaceConfig answers SpaceNotFound instead: the
+        // read policy is deleted with the space, so we can't tell it was public.
+        if (existing?.deletedAt && userDid) {
           throw new InvalidRequestError(
             'Space has been deleted',
             'SpaceDeleted',
@@ -49,7 +63,7 @@ export default function (server: Server, ctx: AppContext) {
       const keypair = await ctx.actorStore.keypair(spaceDid)
       const credential = await createSpaceToken(
         'credential',
-        { iss: spaceDid, sub: space, keyId },
+        { iss: spaceDid, sub: space, keyId: credentialKid },
         keypair,
       )
 

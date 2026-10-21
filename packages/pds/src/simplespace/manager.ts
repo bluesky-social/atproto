@@ -9,7 +9,6 @@ import {
   resolveNotifyTarget,
   toSpaceRef,
 } from '../api/com/atproto/space/util.js'
-import type { BackgroundQueue } from '../background.js'
 import { com } from '../lexicons/index.js'
 import { spaceLogger } from '../logger.js'
 import { lexAppAccessToDb, lexPolicyToDb, toLexConfig } from './config.js'
@@ -22,7 +21,6 @@ export class SimpleSpaceManager {
   constructor(
     public actorStore: ActorStore,
     public idResolver: IdResolver,
-    private backgroundQueue: BackgroundQueue,
   ) {}
 
   async createSpace(
@@ -98,13 +96,21 @@ export class SimpleSpaceManager {
    * Both perimeters a credential has to clear. The app goes first because it decides
    * from the config alone, so a refused app is never disclosed to a third-party
    * managing app.
+   *
+   * `userDid` is absent when the request carries no delegation token, which only a
+   * space with a public read policy accepts. Any other space answers as though it
+   * does not exist, so a request without a token can't learn that it does.
    */
   async authorizeCredential(opts: {
     config: SimplespaceConfig
-    userDid: string
+    userDid?: string
     clientId?: string
   }): Promise<void> {
-    const { config, clientId } = opts
+    const { config, userDid, clientId } = opts
+
+    if (!userDid && config.readPolicy !== 'public') {
+      throw new InvalidRequestError('Space not found', 'SpaceNotFound')
+    }
 
     if (config.appAccessType === 'allowList') {
       const allowed: string[] = JSON.parse(config.appAllowed)
@@ -116,9 +122,11 @@ export class SimpleSpaceManager {
       }
     }
 
+    if (!userDid) return
+
     const authorized = await this.authorizeUser({
       config,
-      userDid: opts.userDid,
+      userDid,
       access: 'read',
       clientId,
     })
@@ -177,48 +185,18 @@ export class SimpleSpaceManager {
    *
    * The space row stays as a tombstone so getSpaceCredential keeps answering
    * SpaceDeleted, which is how a syncer that missed the notification finds out.
+   *
+   * Returns the syncers registered at the time of deletion, which are owed a
+   * notifySpaceDeleted.
    */
-  async deleteSpace(space: SpaceRefString): Promise<void> {
+  async deleteSpace(
+    space: SpaceRefString,
+  ): Promise<{ serviceDid: string; expiresAt: string }[]> {
     const { spaceDid } = toSpaceRef(space)
-
-    const services = await this.actorStore.transact(
-      spaceDid,
-      async (actorTxn) => {
-        const services = await actorTxn.space.getCredentialRecipients(space)
-        await actorTxn.space.deleteSpace(space)
-        return services
-      },
-    )
-
-    const lxm = com.atproto.space.notifySpaceDeleted.$lxm
-    this.backgroundQueue.add(async () => {
-      for (const { serviceDid } of services) {
-        // Best effort: a syncer that misses this learns the space is gone from
-        // SpaceDeleted on its next credential renewal.
-        try {
-          const target = await resolveNotifyTarget(this, {
-            iss: spaceDid,
-            service: serviceDid,
-            lxm,
-          })
-          if (!target) {
-            spaceLogger.warn(
-              { space, service: serviceDid, lxm },
-              'could not resolve recipient',
-            )
-            continue
-          }
-          await xrpc(target.endpoint, com.atproto.space.notifySpaceDeleted, {
-            headers: target.headers,
-            body: { space },
-          })
-        } catch (err) {
-          spaceLogger.warn(
-            { err, space, service: serviceDid, lxm },
-            'notify failed',
-          )
-        }
-      }
+    return this.actorStore.transact(spaceDid, async (actorTxn) => {
+      const recipients = await actorTxn.space.getCredentialRecipients(space)
+      await actorTxn.space.deleteSpace(space)
+      return recipients
     })
   }
 

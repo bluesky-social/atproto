@@ -495,6 +495,60 @@ describe('simplespace', () => {
       expect(cred.credential).toBeDefined()
     })
 
+    it('mints without a delegation token when the read policy is public', async () => {
+      const space = await sc.createSpace(alice, {
+        readPolicy: defs.publicPolicy.build({}),
+      })
+      await sc.write(alice, space, { text: 'for anyone' })
+
+      const cred = await sc.publicCredential(space)
+      const res = await cred
+        .clientFor(alice.pds)
+        .call(com.atproto.space.listRecords, { space, repo: alice.did })
+      expect(res.records).toHaveLength(1)
+    })
+
+    it.each(['member-list', 'managing-app'])(
+      'hides a %s space from a request without a delegation token',
+      async (policy) => {
+        const space = await sc.createSpace(alice, {
+          readPolicy:
+            policy === 'managing-app'
+              ? defs.managingAppPolicy.build({
+                  managingApp: 'did:web:unreachable.invalid#forum',
+                })
+              : undefined,
+        })
+        await expect(sc.publicCredential(space)).rejects.toMatchObject({
+          error: 'SpaceNotFound',
+        })
+      },
+    )
+
+    it('hides a space from a request without a delegation token before checking the app', async () => {
+      // An AppNotAuthorized here would disclose that the space exists.
+      const space = await sc.createSpace(alice, {
+        appAccess: defs.allowList.build({
+          allowed: ['https://app.example.com/client-metadata.json'],
+        }),
+      })
+      await expect(sc.publicCredential(space)).rejects.toMatchObject({
+        error: 'SpaceNotFound',
+      })
+    })
+
+    it('refuses a request without a delegation token or attestation under an allowList', async () => {
+      const space = await sc.createSpace(alice, {
+        readPolicy: defs.publicPolicy.build({}),
+        appAccess: defs.allowList.build({
+          allowed: ['https://app.example.com/client-metadata.json'],
+        }),
+      })
+      await expect(sc.publicCredential(space)).rejects.toMatchObject({
+        error: 'AppNotAuthorized',
+      })
+    })
+
     it('refuses a non-member under member-list read policy', async () => {
       const space = await sc.createSpace(alice)
       const token = await sc.delegationTokenFor(carol, space)
@@ -619,6 +673,17 @@ describe('simplespace', () => {
         await expect(
           mint(space, token, await other.attest(spaceHostAud(alice.did))),
         ).rejects.toMatchObject({ error: 'AppNotAuthorized' })
+      })
+
+      it('mints for an allow-listed app without a delegation token', async () => {
+        await using app = await MockClientApp.create()
+        using _installed = app.installOn(network.pds)
+        const space = await spaceFor(app)
+
+        const cred = await sc.publicCredential(space, {
+          clientAttestation: await app.attest(spaceHostAud(alice.did)),
+        })
+        expect(cred.credential).toBeDefined()
       })
 
       it('refuses an expired attestation', async () => {
@@ -907,6 +972,22 @@ describe('simplespace', () => {
 
       await expect(sc.mintCredential(space, token)).rejects.toMatchObject({
         error: 'SpaceDeleted',
+      })
+    })
+
+    it('answers SpaceNotFound for a deleted space to a request without a delegation token', async () => {
+      // The read policy is gone with the space, so there's no telling whether it
+      // was public; SpaceDeleted would disclose that a private space existed.
+      const space = await sc.createSpace(alice, {
+        readPolicy: defs.publicPolicy.build({}),
+      })
+      await alice.client.call(
+        com.atproto.simplespace.deleteSpace,
+        { space },
+        { headers: alice.headers },
+      )
+      await expect(sc.publicCredential(space)).rejects.toMatchObject({
+        error: 'SpaceNotFound',
       })
     })
 

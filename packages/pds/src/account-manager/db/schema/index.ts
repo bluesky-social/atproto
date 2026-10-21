@@ -41,7 +41,10 @@ export type { Token } from './token.js'
 export type { Lexicon } from './lexicon.js'
 export type { UsedRefreshToken } from './used-refresh-token.js'
 export type { RepoRoot } from './repo-root.js'
-export type { SpaceNotificationRetry } from './space-notification.js'
+export type {
+  SpaceDeletedNotificationRetry,
+  SpaceNotificationRetry,
+} from './space-notification.js'
 export type { RefreshToken } from './refresh-token.js'
 export type { RevokedSpaceCredential } from './revoked-space-credential.js'
 export type { AppPassword } from './app-password.js'

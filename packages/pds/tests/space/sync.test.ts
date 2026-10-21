@@ -707,9 +707,9 @@ describe('space sync', () => {
       expect(new Set(listed.repos.map((r) => r.spaceRev)).size).toBe(3)
     })
 
-    it('resolves a dedicated space host and falls back only when it is absent', async () => {
+    it("resolves a space host through the authority's #atproto_pds entry", async () => {
       await using host = await MockService.create(network, {
-        serviceId: 'atproto_space_host',
+        serviceId: 'atproto_space_syncer',
       })
       const resolver = bob.pds.ctx.idResolver
       expect(await resolveServiceEndpoint(resolver, host.serviceRef)).toBe(
@@ -718,21 +718,6 @@ describe('space sync', () => {
       expect(
         await resolveServiceEndpoint(resolver, spaceHostAud(alice.did)),
       ).toBe(alice.pds.url)
-      const doc = await resolver.did.resolve(alice.did)
-      using _resolve = jest.spyOn(resolver.did, 'resolve').mockResolvedValue({
-        ...doc!,
-        service: [
-          ...doc!.service!,
-          {
-            id: '#atproto_space_host',
-            type: 'AtprotoSpaceHost',
-            serviceEndpoint: 'invalid',
-          },
-        ],
-      })
-      expect(
-        await resolveServiceEndpoint(resolver, spaceHostAud(alice.did)),
-      ).toBeUndefined()
     })
 
     it('retries the latest state after delivery failure and worker restart', async () => {
