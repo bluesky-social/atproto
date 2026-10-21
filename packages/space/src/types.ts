@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { type Cid, type LexMap, ifCid } from '@atproto/lex-data'
+import type { Cid, LexMap } from '@atproto/lex-data'
 import {
   type DidString,
   type NsidString,
@@ -24,6 +24,9 @@ export type RepoOp = RecordPathParts & {
 
 export const COMMIT_VERSION = 1
 
+// The maximum size of a record's DRISL encoding.
+export const MAX_RECORD_SIZE = 1024 * 1024 // 1 MiB
+
 // Which repo, in which space, at which revision a commit describes.
 export type CommitCtx = {
   space: SpaceRefString
@@ -36,27 +39,6 @@ export type RecordPath<
   TRkey extends RecordKeyString = RecordKeyString,
 > = `${TCollection}/${TRkey}`
 
-export const isRecordPath = (value: unknown): value is RecordPath => {
-  if (typeof value !== 'string') return false
-  const slash = value.indexOf('/')
-  return (
-    slash > 0 &&
-    slash < value.length - 1 &&
-    value.indexOf('/', slash + 1) === -1
-  )
-}
-
-export const cidSchema = z.unknown().transform((input, ctx): Cid => {
-  const cid = ifCid(input, { flavor: 'cbor' })
-  if (cid) return cid
-
-  ctx.addIssue({
-    code: z.ZodIssueCode.custom,
-    message: 'Not a valid CID',
-  })
-  return z.NEVER
-})
-
 const bytesSchema = z.instanceof(Uint8Array<ArrayBufferLike>)
 
 const commitSchema = z.object({
@@ -68,8 +50,13 @@ const commitSchema = z.object({
 })
 export type Commit = z.infer<typeof commitSchema>
 
-const repoIndex = z.record(z.custom<RecordPath>(isRecordPath), cidSchema)
-export type RepoIndex = z.infer<typeof repoIndex>
+export const REPO_STAR_TYPE = 'atproto-space-repo'
+
+// The metadata of a repo's STAR archive: the repo's commit, typed by its profile.
+const repoStarMetaSchema = commitSchema.extend({
+  $type: z.literal(REPO_STAR_TYPE),
+})
+export type RepoStarMeta = z.infer<typeof repoStarMetaSchema>
 
 export type Def<T> = {
   name: string
@@ -77,12 +64,8 @@ export type Def<T> = {
 }
 
 export const defs = {
-  commit: {
-    name: 'commit',
-    schema: commitSchema,
-  },
-  repoIndex: {
-    name: 'repo index',
-    schema: repoIndex,
+  repoStarMeta: {
+    name: 'repo metadata',
+    schema: repoStarMetaSchema,
   },
 } satisfies Record<string, Def<unknown>>

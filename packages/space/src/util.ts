@@ -72,3 +72,13 @@ export function toPaddedBase64(bytes: Uint8Array): string {
   const base64 = toBase64(bytes)
   return base64.padEnd(Math.ceil(base64.length / 4) * 4, '=')
 }
+
+// Lexicographic byte order: the first differing byte decides, and a prefix sorts
+// before any longer key it starts.
+export function compareBytes(a: Uint8Array, b: Uint8Array): number {
+  const length = Math.min(a.length, b.length)
+  for (let i = 0; i < length; i++) {
+    if (a[i] !== b[i]) return a[i] - b[i]
+  }
+  return a.length - b.length
+}

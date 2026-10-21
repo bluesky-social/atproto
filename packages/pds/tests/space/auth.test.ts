@@ -106,11 +106,11 @@ describe('space auth', () => {
         await expect(read()).rejects.toMatchObject({ error: 'RepoNotFound' })
       }
 
-      const carRes = await fetch(
+      const repoRes = await fetch(
         `${network.pds.url}/xrpc/com.atproto.space.getRepo?space=${encodeURIComponent(space)}&repo=${alice.did}`,
         { headers: dan.headers },
       )
-      expect(carRes.status).toBe(400)
+      expect(repoRes.status).toBe(400)
 
       // Alice reads her own repo in the same space, so the refusal is about the
       // repo boundary rather than the space being unreadable.

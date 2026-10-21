@@ -18,7 +18,7 @@ import {
   spaceHostAud,
   verifyCommit,
   verifyRecordMac,
-  verifyRepoCarFull,
+  verifyRepoStarFull,
 } from '@atproto/space'
 import type { NsidString, SpaceRefString } from '@atproto/syntax'
 import { createServiceAuthHeaders } from '@atproto/xrpc-server'
@@ -40,7 +40,7 @@ import {
  * The oplog is the incremental path: page forward from a cursor, apply each op to
  * a local set hash, and check it against the repo's commit. When the oplog
  * no longer reaches back far enough, `listRecords` + `getLatestCommit` (or a
- * `getRepo` CAR) rebuilds from full state.
+ * `getRepo` STAR archive) rebuilds from full state.
  */
 describe('space sync', () => {
   let network: TestNetworkNoAppView
@@ -379,14 +379,14 @@ describe('space sync', () => {
   })
 
   describe('getRepo', () => {
-    it('serves a verifiable CAR for full-state recovery', async () => {
+    it('serves a verifiable STAR archive for full-state recovery', async () => {
       const space = await sc.createSpace(alice, { members: [bob, carol] })
       for (const collection of [TEST_COLLECTION, TEST_COLLECTION_ALT]) {
         for (const i of [0, 1]) {
           await sc.write(bob, space, {
             collection,
-            rkey: `car-${i}`,
-            text: `car ${i}`,
+            rkey: `star-${i}`,
+            text: `star ${i}`,
           })
         }
       }
@@ -398,22 +398,21 @@ describe('space sync', () => {
       )
       expect(res.status).toBe(200)
       expect(res.headers.get('content-type')).toContain(
-        'application/vnd.ipld.car',
+        'application/octet-stream',
       )
-      const car = new Uint8Array(await res.arrayBuffer())
+      const star = new Uint8Array(await res.arrayBuffer())
 
       const state = await sc.repoState(bob, space)
-      const recovered = await verifyRepoCarFull([car], {
+      const recovered = await verifyRepoStarFull([star], {
         space,
         repo: bob.did,
         ...cred.lastMacParams(),
       })
 
       expect(recovered.records).toHaveLength(4)
-      expect(recovered.repo.matches(recovered.commit)).toBe(true)
       expect(recovered.commit.rev).toBe(state?.rev)
       expect(
-        recovered.repo.setHash.equals(
+        RepoCommit.fromRecords(recovered.records).setHash.equals(
           RepoCommit.fromState(state?.setHash).setHash,
         ),
       ).toBe(true)
@@ -422,43 +421,16 @@ describe('space sync', () => {
         .filter((r) => r.collection === TEST_COLLECTION)
         .map((r) => (r.record as { text: string }).text)
         .sort()
-      expect(texts).toEqual(['car 0', 'car 1'])
+      expect(texts).toEqual(['star 0', 'star 1'])
     })
 
-    it('serves an index-only CAR with excludeValues', async () => {
-      const space = await sc.createSpace(alice, { members: [bob, carol] })
-      for (const i of [0, 1]) {
-        await sc.write(bob, space, { rkey: `idx-${i}`, text: `idx ${i}` })
-      }
-
-      const cred = await sc.credentialFor(carol, space)
-      const res = await cred.fetch(
-        `${bob.pds.url}/xrpc/com.atproto.space.getRepo?space=${encodeURIComponent(space)}&repo=${bob.did}&excludeValues=true`,
-      )
-      expect(res.status).toBe(200)
-      const car = new Uint8Array(await res.arrayBuffer())
-
-      // The set hash folds from the index alone, so it still matches the commit
-      // with no record blocks present — which is what makes an index-only sync
-      // verifiable.
-      const recovered = await verifyRepoCarFull([car], {
-        space,
-        repo: bob.did,
-        ...cred.lastMacParams(),
-        expectValues: false,
-      })
-      expect(recovered.records).toHaveLength(0)
-      expect(Object.keys(recovered.index)).toHaveLength(2)
-      expect(recovered.repo.matches(recovered.commit)).toBe(true)
-    })
-
-    it('refuses a CAR without a credential for that space', async () => {
+    it('refuses a repo without a credential for that space', async () => {
       const space = await sc.createSpace(alice, {
-        skey: 'car-auth',
+        skey: 'star-auth',
         members: [bob],
       })
       const other = await sc.createSpace(alice, {
-        skey: 'car-auth-other',
+        skey: 'star-auth-other',
         members: [carol],
       })
 
