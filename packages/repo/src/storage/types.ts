@@ -29,8 +29,22 @@ export interface RepoStorage {
   readRecord(cid: Cid): Promise<LexMap>
 }
 
+/**
+ * @extends AsyncDisposable Make sure to explicitly dispose of the
+ * {@link BlobStoreCreator}
+ */
+export interface BlobStoreCreator extends AsyncDisposable {
+  // @NOTE For historical reason, the creator is a function. A better
+  // implementation would probably be to use a class interface.
+  (did: string): BlobStore
+}
+
 // @TODO make this less node-js specific by using AsyncIterable<Uint8Array> instead of Readable
-export interface BlobStore {
+/**
+ * @extends AsyncDisposable Make sure to explicitly dispose of the
+ * {@link BlobStore}
+ */
+export interface BlobStore extends AsyncDisposable {
   putTemp(bytes: Uint8Array | Readable): Promise<string>
   makePermanent(key: string, cid: Cid): Promise<void>
   putPermanent(cid: Cid, bytes: Uint8Array | Readable): Promise<void>

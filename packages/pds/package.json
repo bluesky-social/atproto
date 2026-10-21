@@ -1,6 +1,6 @@
 {
   "name": "@atproto/pds",
-  "version": "0.5.35",
+  "version": "0.5.44",
   "license": "MIT",
   "description": "Reference implementation of atproto Personal Data Server (PDS)",
   "keywords": [
@@ -98,12 +98,17 @@
     "@types/nodemailer": "^6.4.6",
     "@types/qs": "^6.15.1",
     "get-port": "^6.1.2",
-    "jest": "^30.5.1",
+    "jest": "^30.5.2",
     "puppeteer": "^23.11.1",
     "ws": "^8.12.0"
   },
   "scripts": {
-    "codegen:lex": "lex build --clear --indexFile --lexicons ../../lexicons",
+    "lex:build": "lex build --clear --indexFile",
+    "lex:install": "lex install",
+    "postlex:install": "pnpm run lex:build",
+    "lex:update": "lex update",
+    "postlex:update": "pnpm run lex:build",
+    "codegen:lex": "pnpm run lex:install --ci",
     "codegen:templates": "node ./scripts/build.templates.js",
     "prebuild": "pnpm run '/^(codegen:.+)$/'",
     "build": "tsc --build tsconfig.build.json",

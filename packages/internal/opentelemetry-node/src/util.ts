@@ -40,20 +40,33 @@ export const statusCodeToString = (code?: number): string => {
   return name.replace(/(?<=.)[A-Z]/g, (c) => `_${c}`).toLowerCase()
 }
 
+const XRPC_PREFIX_LENGTH = 6 // "/xrpc/".length
+const SHORTEST_CONCEIVABLE_NSID_LENGTH = 5 // "a.b.c"
+const SHORTEST_CONCEIVABLE_XRPC_PATH_LENGTH =
+  XRPC_PREFIX_LENGTH + SHORTEST_CONCEIVABLE_NSID_LENGTH
+
 // @NOTE Hand-rolled (rather than using URL/split) because this runs on every
 // instrumented request. Should become obsolete once we have dedicated
 // XrpcClient/XrpcServer instrumentations.
-export function extractNormalizedLxm(url: unknown): string | undefined {
+export function extractUrlXrpcMethodName(url: unknown): string | undefined {
   if (typeof url !== 'string') {
     return undefined
   }
 
-  // 9 = "/xrpc/".length + shortest conceivable NSID ("a.b")
-  if (url.length < 9 || !url.startsWith('/xrpc/')) {
+  if (
+    // Ordered by likelihood of failure
+    url.length < SHORTEST_CONCEIVABLE_XRPC_PATH_LENGTH ||
+    url[5] !== '/' ||
+    url[4] !== 'c' ||
+    url[3] !== 'p' ||
+    url[2] !== 'r' ||
+    url[1] !== 'x' ||
+    url[0] !== '/'
+  ) {
     return undefined
   }
 
-  const firstMethodCharPos = 6 // "/xrpc/".length
+  const firstMethodCharPos = XRPC_PREFIX_LENGTH
 
   // Characters that can never open an NSID (note "_" skips "/xrpc/_health")
   const nextChar = url.charCodeAt(firstMethodCharPos)
@@ -66,7 +79,7 @@ export function extractNormalizedLxm(url: unknown): string | undefined {
     return undefined
   }
 
-  const queryIndex = url.indexOf('?', firstMethodCharPos + 1)
+  const queryIndex = url.indexOf('?', firstMethodCharPos + 1) // nextChar was already searched for a "?" right above, so we can skip that char
 
   let lastMethodCharPos = queryIndex === -1 ? url.length - 1 : queryIndex - 1
 
@@ -75,7 +88,7 @@ export function extractNormalizedLxm(url: unknown): string | undefined {
     lastMethodCharPos--
   }
 
-  if (lastMethodCharPos < 9) {
+  if (lastMethodCharPos + 1 < SHORTEST_CONCEIVABLE_XRPC_PATH_LENGTH) {
     return undefined
   }
 

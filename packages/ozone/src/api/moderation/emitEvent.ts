@@ -269,6 +269,7 @@ const handleModerationEvent = async ({
       const subjectUri = subject.isRecord() ? subject.uri : null
       try {
         await processReportAction({
+          inboxStartAt: ctx.cfg.inbox.startAt,
           db: dbTxn,
           reportAction: input.body.reportAction,
           subjectDid: subject.did,
@@ -293,11 +294,11 @@ const handleModerationEvent = async ({
       moderationTxn,
     )
 
-    const initialTags = tools.ozone.moderation.defs.modEventReport.$isTypeOf(
-      event,
-    )
-      ? [getTagForReport(event.reportType)]
-      : undefined
+    const initialTags =
+      !ctx.cfg.service.reportTagsDisabled &&
+      tools.ozone.moderation.defs.modEventReport.$isTypeOf(event)
+        ? [getTagForReport(event.reportType)]
+        : undefined
     await tagService.evaluateForSubject(initialTags)
 
     if (subject.isRepo()) {

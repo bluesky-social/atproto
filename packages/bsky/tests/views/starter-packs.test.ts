@@ -13,6 +13,8 @@ import {
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
+import { NOTIFICATION_REASON } from '../../src/api/app/bsky/notification/constants.js'
+import { app } from '../../src/lexicons/index.js'
 import { forSnapshot, paginateAll } from '../_util.js'
 
 const isValidProfile = asPredicate(AppBskyActorProfile.validateRecord)
@@ -182,7 +184,7 @@ describe('starter packs', () => {
     )
     expect(notifications).toHaveLength(3)
     notifications.forEach((notif) => {
-      expect(notif.reason).toBe('starterpack-joined')
+      expect(notif.reason).toBe(NOTIFICATION_REASON.STARTERPACK_JOINED)
       expect(notif.reasonSubject).toBe(sp1.uriStr)
       expect(notif.uri).toMatch(/\/app\.bsky\.actor\.profile\/self$/)
       assert(isValidProfile(notif.record), 'record is not profile')
@@ -198,17 +200,23 @@ describe('starter packs', () => {
       { via: sp1.raw },
     )
     const followWithoutVia = await sc.follow(sc.dids.newskie2, sc.dids.bob)
-    const followViaOtherRecord = await sc.follow(
+    const followWithoutAttribution = await sc.follow(
       sc.dids.newskie3,
       sc.dids.bob,
-      { via: feedgen.raw },
+      { via: sp1.raw },
     )
     await network.processAll()
+
+    await network.bsky.db.db
+      .updateTable('notification')
+      .set({ reasonSubject: sp2.uriStr })
+      .where('recordUri', '=', followViaStarterPack.uriStr)
+      .execute()
 
     const {
       data: { notifications },
     } = await agent.api.app.bsky.notification.listNotifications(
-      { reasons: ['follow'] },
+      { reasons: [NOTIFICATION_REASON.FOLLOW] },
       {
         headers: await network.serviceHeaders(
           sc.dids.bob,
@@ -223,22 +231,45 @@ describe('starter packs', () => {
     const withoutViaNotif = notifications.find(
       (notif) => notif.uri === followWithoutVia.uriStr,
     )
-    const viaOtherRecordNotif = notifications.find(
-      (notif) => notif.uri === followViaOtherRecord.uriStr,
+    const withoutAttributionNotif = notifications.find(
+      (notif) => notif.uri === followWithoutAttribution.uriStr,
     )
     assert(viaStarterPackNotif)
     assert(withoutViaNotif)
-    assert(viaOtherRecordNotif)
+    assert(withoutAttributionNotif)
 
     expect(viaStarterPackNotif.record).toMatchObject({ via: sp1.raw })
-    expect(viaStarterPackNotif.starterPack).toMatchObject({
-      uri: sp1.uriStr,
-      cid: sp1.cidStr,
-      record: expect.objectContaining({ name: "alice's starter pack" }),
-      creator: expect.objectContaining({ did: sc.dids.alice }),
-    })
+    expect(viaStarterPackNotif.starterPack).toMatchObject({ uri: sp2.uriStr })
     expect(withoutViaNotif.starterPack).toBeUndefined()
-    expect(viaOtherRecordNotif.starterPack).toBeUndefined()
+    expect(withoutAttributionNotif.starterPack).toBeUndefined()
+
+    const grouped =
+      await agent.api.app.bsky.notification.getGroupedNotifications(
+        {},
+        {
+          headers: await network.serviceHeaders(
+            sc.dids.bob,
+            ids.AppBskyNotificationGetGroupedNotifications,
+          ),
+        },
+      )
+    const followGroup = grouped.data.groups
+      .map(({ kind }) => kind)
+      .find((kind) =>
+        app.bsky.notification.getGroupedNotifications.followGroup.$matches(
+          kind,
+        ),
+      )
+    assert(followGroup)
+    const groupedItems = followGroup.items
+    expect(
+      groupedItems.find(({ actor }) => actor === sc.dids.newskie1)?.starterPack,
+    ).toBe(sp2.uriStr)
+    const withoutAttributionItem = groupedItems.find(
+      ({ actor }) => actor === sc.dids.newskie3,
+    )
+    assert(withoutAttributionItem)
+    expect(withoutAttributionItem.starterPack).toBeUndefined()
   })
 
   it('does not include users with creator block relationship in list sample for non-creator, in-list viewers', async () => {

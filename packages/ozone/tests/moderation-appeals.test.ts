@@ -96,6 +96,7 @@ describe('moderation-appeals', () => {
         ToolsOzoneModerationDefs.REVIEWESCALATED,
         true,
       )
+      expect(status?.tags).toContain('report:appeal')
       // @ts-expect-error unspecced ?
       expect(status?.appealedAt).not.toBeNull()
 
@@ -121,11 +122,12 @@ describe('moderation-appeals', () => {
         subject: getCarolPostSubject(),
       })
       // Verify that the appeal status on carol's post is true
-      await assertSubjectStatus(
+      const carolStatus = await assertSubjectStatus(
         getCarolPostSubject().uri,
         ToolsOzoneModerationDefs.REVIEWESCALATED,
         true,
       )
+      expect(carolStatus?.tags).toContain('report:appeal')
     })
     it('allows multiple appeals and updates last appealed timestamp', async () => {
       // Resolve appeal with acknowledge

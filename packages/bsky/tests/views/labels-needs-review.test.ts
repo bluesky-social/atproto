@@ -2,6 +2,7 @@ import assert from 'node:assert'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { AppBskyFeedDefs, AtpAgent, ids } from '@atproto/api'
 import { type SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import { NOTIFICATION_REASON } from '../../src/api/app/bsky/notification/constants.js'
 
 describe('bsky needs-review labels', () => {
   let network: TestNetwork
@@ -112,18 +113,25 @@ describe('bsky needs-review labels', () => {
       )
       expect(
         notifications.some((notif) => {
-          return notif.reason === 'reply' && notif.author.did === sc.dids.geoff
-        }),
-      ).toBe(false)
-      expect(
-        notifications.some((notif) => {
-          return notif.reason === 'quote' && notif.author.did === sc.dids.geoff
+          return (
+            notif.reason === NOTIFICATION_REASON.REPLY &&
+            notif.author.did === sc.dids.geoff
+          )
         }),
       ).toBe(false)
       expect(
         notifications.some((notif) => {
           return (
-            notif.reason === 'mention' && notif.author.did === sc.dids.geoff
+            notif.reason === NOTIFICATION_REASON.QUOTE &&
+            notif.author.did === sc.dids.geoff
+          )
+        }),
+      ).toBe(false)
+      expect(
+        notifications.some((notif) => {
+          return (
+            notif.reason === NOTIFICATION_REASON.MENTION &&
+            notif.author.did === sc.dids.geoff
           )
         }),
       ).toBe(false)
@@ -246,18 +254,25 @@ describe('bsky needs-review labels', () => {
       )
       expect(
         notifications.some((notif) => {
-          return notif.reason === 'reply' && notif.author.did === sc.dids.geoff
-        }),
-      ).toBe(false)
-      expect(
-        notifications.some((notif) => {
-          return notif.reason === 'quote' && notif.author.did === sc.dids.geoff
+          return (
+            notif.reason === NOTIFICATION_REASON.REPLY &&
+            notif.author.did === sc.dids.geoff
+          )
         }),
       ).toBe(false)
       expect(
         notifications.some((notif) => {
           return (
-            notif.reason === 'mention' && notif.author.did === sc.dids.geoff
+            notif.reason === NOTIFICATION_REASON.QUOTE &&
+            notif.author.did === sc.dids.geoff
+          )
+        }),
+      ).toBe(false)
+      expect(
+        notifications.some((notif) => {
+          return (
+            notif.reason === NOTIFICATION_REASON.MENTION &&
+            notif.author.did === sc.dids.geoff
           )
         }),
       ).toBe(false)

@@ -1,8 +1,6 @@
-import { isEnoentError, readJsonFile } from './fs.js'
+import { buildFilter } from '@atproto/lex-builder'
 import type { LexInstallerOptions } from './lex-installer.js'
 import { LexInstaller } from './lex-installer.js'
-import type { LexiconsManifest } from './lexicons-manifest.js'
-import { lexiconsManifestSchema } from './lexicons-manifest.js'
 
 /**
  * Options for the {@link install} function.
@@ -12,29 +10,37 @@ import { lexiconsManifestSchema } from './lexicons-manifest.js'
  *
  * @example
  * ```typescript
- * const options: LexInstallOptions = {
+ * const options: InstallOptions = {
  *   lexicons: './lexicons',
  *   manifest: './lexicons.manifest.json',
- *   add: ['com.example.myLexicon', 'at://did:plc:xyz/com.example.otherLexicon'],
+ *   additions: ['com.example.myLexicon', 'com.example.otherLexicon'],
  *   save: true,
  *   ci: false,
  * }
  * ```
  */
-export type LexInstallOptions = LexInstallerOptions & {
+export type InstallOptions = LexInstallerOptions & {
   /**
-   * Array of lexicons to add to the installation. Can be NSID strings
-   * (e.g., 'com.example.myLexicon') or AT URIs
-   * (e.g., 'at://did:plc:xyz/com.example.myLexicon').
+   * Array of lexicons NSID strings (e.g., 'com.example.myLexicon') to add to
+   * the installation.
    */
-  add?: string[]
+  additions?: string[]
 
   /**
    * Whether to save the updated manifest after installation.
    * When `true`, the manifest file will be written with any new lexicons.
-   * @default false
+   * @default true
    */
   save?: boolean
+
+  /**
+   * Whether to update existing lexicons during installation.
+   * When `true`, the installer will attempt to fetch and apply updates
+   * for already installed lexicons.
+   * @default false
+   * @deprecated use {@link update} instead
+   */
+  update?: boolean
 
   /**
    * Enable CI mode for strict manifest verification.
@@ -64,7 +70,7 @@ export type LexInstallOptions = LexInstallerOptions & {
  * await install({
  *   lexicons: './lexicons',
  *   manifest: './lexicons.manifest.json',
- *   add: ['app.bsky.feed.post', 'app.bsky.actor.profile'],
+ *   additions: ['app.bsky.feed.post', 'app.bsky.actor.profile'],
  *   save: true,
  * })
  * ```
@@ -81,45 +87,65 @@ export type LexInstallOptions = LexInstallerOptions & {
  *   ci: true,
  * })
  * ```
- *
- * @example
- * Install from specific AT URIs:
- * ```typescript
- * import { install } from '@atproto/lex-installer'
- *
- * await install({
- *   lexicons: './lexicons',
- *   manifest: './lexicons.manifest.json',
- *   add: ['at://did:plc:z72i7hdynmk6r22z27h6tvur/app.bsky.feed.post'],
- *   save: true,
- * })
- * ```
  */
-export async function install(options: LexInstallOptions) {
-  const manifest: LexiconsManifest | undefined = await readJsonFile(
-    options.manifest,
-  ).then(
-    (json) => lexiconsManifestSchema.parse(json),
-    (cause: unknown) => {
-      if (isEnoentError(cause)) return undefined
-      throw new Error('Failed to read lexicons manifest', { cause })
-    },
-  )
-
-  const additions = new Set(options.add)
-
+export async function install({
+  ci = false,
+  save = true,
+  update = false,
+  additions = undefined,
+  ...options
+}: InstallOptions): Promise<void> {
   // Perform the installation using the existing manifest as "hint"
-  await using installer = new LexInstaller(options)
+  await using installer = await LexInstaller.load(options)
 
-  await installer.install({ additions, manifest })
+  await installer.install({
+    additions,
+    update: () => update,
+  })
 
   // Verify lockfile
-  if (options.ci && (!manifest || !installer.equals(manifest))) {
+  if (ci && installer.requiresSave()) {
     throw new Error('Lexicons manifest is out of date')
   }
 
   // Save changes if requested
-  if (options.save) {
+  if (save !== false) {
     await installer.save()
   }
+}
+
+export type UpdateOptions = LexInstallerOptions & {
+  /**
+   * Pattern(s) for lexicon NSIDs to include in the update.
+   *
+   * Supports glob patterns with `*` as a wildcard that matches one or more
+   * characters.
+   */
+  include?: string | string[]
+
+  /**
+   * Pattern(s) for lexicon NSIDs to exclude from the update.
+   *
+   * Supports glob patterns with `*` as a wildcard that matches one or more
+   * characters.
+   */
+  exclude?: string | string[]
+}
+
+export async function update({
+  include,
+  exclude,
+  ...options
+}: UpdateOptions): Promise<void> {
+  // Performs the installation with the update flag enabled
+  await using installer = await LexInstaller.load(options)
+
+  await installer.install({
+    update: buildFilter({
+      include,
+      exclude,
+    }),
+  })
+
+  await installer.save()
 }

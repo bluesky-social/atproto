@@ -1,6 +1,6 @@
 {
   "name": "@atproto/lex-resolver",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "license": "MIT",
   "description": "Lexicon document resolver utility for AT Lexicons",
   "keywords": [
@@ -34,9 +34,9 @@
   "dependencies": {
     "@atproto-labs/did-resolver": "workspace:^",
     "@atproto/crypto": "workspace:^",
-    "@atproto/lex-client": "workspace:^",
     "@atproto/lex-data": "workspace:^",
     "@atproto/lex-document": "workspace:^",
+    "@atproto/lex-rpc": "workspace:^",
     "@atproto/lex-schema": "workspace:^",
     "@atproto/repo": "workspace:^",
     "@atproto/syntax": "workspace:^",
@@ -47,7 +47,7 @@
     "vitest": "^4.1.10"
   },
   "scripts": {
-    "codegen:lex": "node ./scripts/lex-build.js",
+    "codegen:lex": "lex-builder build --lexicons ../../../lexicons --out ./src/lexicons --clear --lib @atproto/lex-schema --include com.atproto.sync.getRecord --include com.atproto.lexicon.schema",
     "prebuild": "pnpm run '/^(codegen:.+)$/'",
     "build": "tsc --build tsconfig.build.json",
     "test": "vitest run"

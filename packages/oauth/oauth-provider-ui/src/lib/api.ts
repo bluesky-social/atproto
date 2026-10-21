@@ -9,6 +9,8 @@ import type {
   ConfirmResetPasswordInput,
   DeactivateAccountInput,
   DidString,
+  DisableEmailAuthFactorInput,
+  EnableEmailAuthFactorInput,
   HandleUnavailableReason,
   InitiateAccountDeletionInput,
   InitiateEmailUpdateInput,
@@ -203,6 +205,32 @@ export class Api extends JsonClient<ApiEndpoints> {
     )
   }
 
+  async enableEmailAuthFactor(
+    {
+      did,
+      locale = this.locale,
+    }: WithOptionalLocale<EnableEmailAuthFactorInput>,
+    options?: Options,
+  ) {
+    return this.fetch('POST', '/enable-email-otp', { did, locale }, options)
+  }
+
+  async disableEmailAuthFactor(
+    {
+      did,
+      token,
+      locale = this.locale,
+    }: WithOptionalLocale<DisableEmailAuthFactorInput>,
+    options?: Options,
+  ) {
+    return this.fetch(
+      'POST',
+      '/disable-email-otp',
+      { did, token, locale },
+      options,
+    )
+  }
+
   async updateHandle({ did, handle }: UpdateHandleInput, options?: Options) {
     return this.fetch('POST', '/update-handle', { did, handle }, options)
   }
@@ -248,6 +276,7 @@ export class Api extends JsonClient<ApiEndpoints> {
       handle,
       email,
       password,
+      remember,
       inviteCode,
       hcaptchaToken,
     }: WithOptionalLocale<SignUpInput>,
@@ -256,7 +285,7 @@ export class Api extends JsonClient<ApiEndpoints> {
     return this.fetch(
       'POST',
       '/sign-up',
-      { locale, handle, email, password, inviteCode, hcaptchaToken },
+      { locale, handle, email, password, remember, inviteCode, hcaptchaToken },
       options,
     )
   }

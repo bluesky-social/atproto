@@ -61,6 +61,7 @@ const skeleton = async (inputs: {
     subject: { uri: params.uri, cid: params.cid },
     cursor: params.cursor,
     limit: params.limit,
+    sort: params.sort,
   })
   return {
     uris: quotesRes.uris as AtUriString[],

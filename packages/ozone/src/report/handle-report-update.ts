@@ -91,6 +91,13 @@ const EVENT_TYPE_MAP = new Map<
     },
   ],
   [
+    tools.ozone.moderation.defs.modEventReverseTakedown.$type,
+    {
+      status: 'closed',
+      activityType: 'closeActivity',
+    },
+  ],
+  [
     tools.ozone.moderation.defs.modEventComment.$type,
     {
       status: 'closed',

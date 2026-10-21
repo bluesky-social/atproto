@@ -33,6 +33,12 @@ export default function (server: Server, ctx: AppContext) {
       const hydrateCtx = await ctx.hydrator.createContext({
         labelers,
         viewer,
+        features: ctx.featureGatesClient.scope(
+          ctx.featureGatesClient.parseUserContextFromHandler({
+            viewer,
+            req,
+          }),
+        ),
       })
       const headers = noUndefinedVals({
         'accept-language': req.headers['accept-language'],
@@ -57,11 +63,16 @@ export default function (server: Server, ctx: AppContext) {
 
 const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
   const { params, ctx } = input
-  if (!ctx.suggestionsClient) {
-    throw new MethodNotImplementedError('Suggestions agent not available')
+  const useIris = params.hydrateCtx.features.checkGate(
+    params.hydrateCtx.features.Gate.SuggestedUsersIrisEnable,
+  )
+  const client = useIris ? ctx.irisClient : ctx.suggestionsClient
+  if (!client) {
+    const agent = useIris ? 'Iris' : 'Suggestions'
+    throw new MethodNotImplementedError(`${agent} agent not available`)
   }
 
-  return ctx.suggestionsClient.call(
+  return client.call(
     app.bsky.unspecced.getOnboardingSuggestedUsersSkeleton,
     {
       limit: params.limit,
@@ -129,6 +140,7 @@ type Context = {
   views: Views
   topicsClient: Client | undefined
   suggestionsClient: Client | undefined
+  irisClient: Client | undefined
 }
 
 type Params = app.bsky.unspecced.getSuggestedOnboardingUsers.$Params & {

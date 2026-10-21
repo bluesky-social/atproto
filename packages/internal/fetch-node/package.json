@@ -1,6 +1,6 @@
 {
   "name": "@atproto-labs/fetch-node",
-  "version": "0.4.0",
+  "version": "0.4.2",
   "license": "MIT",
   "description": "SSRF protection for fetch() in Node.js",
   "keywords": [
@@ -23,6 +23,10 @@
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
+    },
+    "./emudhra-preload": {
+      "types": "./dist/emudhra-preload.d.mts",
+      "default": "./dist/emudhra-preload.mjs"
     }
   },
   "engines": {

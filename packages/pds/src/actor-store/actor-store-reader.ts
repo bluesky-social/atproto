@@ -1,5 +1,6 @@
 import type { Keypair } from '@atproto/crypto'
 import type { DidString } from '@atproto/lex'
+import type { BlobStore } from '@atproto/repo'
 import type { ActorStoreResources } from './actor-store-resources.js'
 import { ActorStoreTransactor } from './actor-store-transactor.js'
 import type { ActorDb } from './db/index.js'
@@ -7,7 +8,8 @@ import { PreferenceReader } from './preference/reader.js'
 import { RecordReader } from './record/reader.js'
 import { RepoReader } from './repo/reader.js'
 
-export class ActorStoreReader {
+export class ActorStoreReader implements AsyncDisposable {
+  private readonly blobstore: BlobStore
   public readonly repo: RepoReader
   public readonly record: RecordReader
   public readonly pref: PreferenceReader
@@ -18,9 +20,8 @@ export class ActorStoreReader {
     protected readonly resources: ActorStoreResources,
     public readonly keypair: () => Promise<Keypair>,
   ) {
-    const blobstore = resources.blobstore(did)
-
-    this.repo = new RepoReader(db, blobstore, did)
+    this.blobstore = resources.blobstore(did)
+    this.repo = new RepoReader(db, this.blobstore, did)
     this.record = new RecordReader(db, did)
     this.pref = new PreferenceReader(db)
 
@@ -29,18 +30,22 @@ export class ActorStoreReader {
     this.keypair = () => (keypairPromise ??= Promise.resolve().then(keypair))
   }
 
+  async [Symbol.asyncDispose]() {
+    await this.blobstore[Symbol.asyncDispose]()
+  }
+
   async transact<T>(
     fn: (fn: ActorStoreTransactor) => T | PromiseLike<T>,
   ): Promise<T> {
     const keypair = await this.keypair()
-    return this.db.transaction((dbTxn) => {
-      const store = new ActorStoreTransactor(
+    return this.db.transaction(async (dbTxn) => {
+      await using store = new ActorStoreTransactor(
         this.did,
         dbTxn,
         keypair,
         this.resources,
       )
-      return fn(store)
+      return await fn(store)
     })
   }
 }

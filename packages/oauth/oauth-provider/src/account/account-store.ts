@@ -6,6 +6,8 @@ import type {
   ConfirmEmailVerificationInput,
   ConfirmResetPasswordInput,
   DeactivateAccountInput,
+  DisableEmailAuthFactorInput,
+  EnableEmailAuthFactorInput,
   InitiateAccountDeletionInput,
   InitiateEmailUpdateInput,
   InitiateEmailUpdateOutput,
@@ -34,6 +36,8 @@ export type {
   DeviceData,
   DeviceId,
   Did,
+  DisableEmailAuthFactorInput,
+  EnableEmailAuthFactorInput,
   HandleString,
   HandleUnavailableReason,
   HcaptchaVerifyResult,
@@ -76,7 +80,12 @@ export type AuthenticateAccountData = {
   locale: string
   password: string
   username: string
-  emailOtp?: string | undefined
+  emailOtp: string | undefined
+  /**
+   * Lists the accounts that were previously remembered on the device, allowing
+   * OTP bypass for these accounts (based on the store's own logic)
+   */
+  deviceAccounts: readonly DeviceAccount[]
 }
 
 export type AuthorizedClientData = { authorizedScopes: readonly string[] }
@@ -131,11 +140,8 @@ export interface AccountStore {
   /**
    * @throws {InvalidCredentialsError} - When the credentials are not valid.
    * Populate {@link InvalidCredentialsError.did} with the subject identifier
-   * when the identifier matched an existing account (e.g. wrong password for
-   * a known user); omit it when the identifier was not found. Throwing the
-   * generic {@link InvalidRequestError} is also accepted for backward
-   * compatibility but prevents the `onSignInFailed` hook from distinguishing
-   * the two cases.
+   * when the identifier matched an existing account (e.g. wrong password for a
+   * known user); omit it when the identifier was not found.
    * @throws {SecondAuthenticationFactorRequiredError} - To indicate that an {@link SecondAuthenticationFactorRequiredError.type} is required in the credentials
    */
   authenticateAccount(data: AuthenticateAccountData): Awaitable<Account>
@@ -220,6 +226,41 @@ export interface AccountStore {
   verifyEmailConfirm(data: VerifyEmailConfirmInput): Awaitable<Account | null>
 
   /**
+   * Enables the email auth factor on the account.
+   *
+   * @returns the updated account, or `null` when the factor was already enabled
+   * (no-op).
+   *
+   * @note when `null` is returned (no-op), the "confirmed" hook is skipped, so
+   *  a repeat request is not counted as a fresh opt-in.
+   *
+   * @throws {InvalidRequestError} - To indicate enabling cannot take place due
+   * to mismatch of email or email not being verified.
+   */
+  enableEmailAuthFactor(data: EnableEmailAuthFactorInput): Awaitable<Account>
+
+  /**
+   * Two-phase disable flow. When `token` is undefined and the factor is still
+   * enabled, an email-based OTP isÒ dispatched and `{ tokenRequired: true }` is
+   * returned (the account is unchanged, nothing has been disabled yet). Calling
+   * again with a valid `token` disables the factor and returns
+   * `{ tokenRequired: false }`. Disabling an already-disabled factor is an
+   * idempotent no-op that returns `{ tokenRequired: false }` without
+   * dispatching an email.
+   *
+   * `updatedAccount` is `null` in both cases where nothing changed — the
+   * OTP-dispatch phase and the already-disabled no-op — and an `Account` only
+   * once the factor has actually been turned off. Callers pair it with
+   * `tokenRequired` to decide whether to fire the "confirmed" hook.
+   *
+   * @throws {InvalidRequestError} - To indicate disabling cannot take place due
+   * to mismatch of email or email not being verified.
+   * @throws {SecondAuthenticationFactorRequiredError} - To indicate that a
+   * second authentication factor is required to complete the action.
+   */
+  disableEmailAuthFactor(data: DisableEmailAuthFactorInput): Awaitable<Account>
+
+  /**
    * @throws {HandleUnavailableError} - To indicate that the handle is already taken
    */
   verifyHandleAvailability(handle: HandleString): Awaitable<void>
@@ -273,6 +314,8 @@ export const isAccountStore = buildInterfaceChecker<AccountStore>([
   'deactivateAccount',
   'deleteAccountConfirm',
   'deleteAccountRequest',
+  'disableEmailAuthFactor',
+  'enableEmailAuthFactor',
   'getAccount',
   'getDeviceAccount',
   'listDeviceAccounts',

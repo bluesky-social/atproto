@@ -18,7 +18,7 @@ import {
   OAuthProvider,
 } from '@atproto/oauth-provider/provider'
 import { OAuthVerifier } from '@atproto/oauth-provider/verifier'
-import type { BlobStore } from '@atproto/repo'
+import type { BlobStoreCreator } from '@atproto/repo'
 import {
   createServiceAuthHeaders,
   createServiceJwt,
@@ -62,7 +62,7 @@ import { Sequencer } from './sequencer/index.js'
 
 export type AppContextOptions = {
   actorStore: ActorStore
-  blobstore: (did: string) => BlobStore
+  blobstore: BlobStoreCreator
   localViewer: LocalViewerCreator
   mailer: ServerMailer
   moderationMailer: ModerationMailer
@@ -89,7 +89,7 @@ export type AppContextOptions = {
 
 export class AppContext implements AsyncDisposable {
   public actorStore: ActorStore
-  public blobstore: (did: string) => BlobStore
+  public blobstore: BlobStoreCreator
   public localViewer: LocalViewerCreator
   public mailer: ServerMailer
   public moderationMailer: ModerationMailer
@@ -142,10 +142,11 @@ export class AppContext implements AsyncDisposable {
 
   static async fromEnv(
     env: ServerEnvironment = readEnv(),
+    overrides?: Partial<AppContextOptions>,
   ): Promise<AppContext> {
     const cfg = envToCfg(env)
     const secrets = envToSecrets(env)
-    return AppContext.fromConfig(cfg, secrets)
+    return AppContext.fromConfig(cfg, secrets, overrides)
   }
 
   static async fromConfig(
@@ -155,8 +156,9 @@ export class AppContext implements AsyncDisposable {
   ): Promise<AppContext> {
     // @TODO Implement using an AsyncDisposableStack
 
-    const blobstore =
-      cfg.blobstore.provider === 's3'
+    const blobstore: BlobStoreCreator =
+      overrides?.blobstore ??
+      (cfg.blobstore.provider === 's3'
         ? S3BlobStore.creator({
             bucket: cfg.blobstore.bucket,
             region: cfg.blobstore.region,
@@ -169,14 +171,19 @@ export class AppContext implements AsyncDisposable {
         : DiskBlobStore.creator(
             cfg.blobstore.location,
             cfg.blobstore.tempLocation,
-          )
+          ))
 
     const mailTransport =
       cfg.email !== null
         ? nodemailer.createTransport(cfg.email.smtpUrl)
         : nodemailer.createTransport({ jsonTransport: true })
 
-    const mailer = new ServerMailer(mailTransport, cfg.email, cfg.branding)
+    const mailer = new ServerMailer(
+      mailTransport,
+      cfg.email,
+      cfg.branding,
+      cfg.oauth.issuer,
+    )
 
     const modMailTransport =
       cfg.moderationEmail !== null
@@ -317,13 +324,20 @@ export class AppContext implements AsyncDisposable {
     })
 
     const plcRotationKey =
-      secrets.plcRotationKey.provider === 'kms'
+      overrides?.plcRotationKey ??
+      (secrets.plcRotationKey?.provider === 'kms'
         ? await KmsKeypair.load({
             keyId: secrets.plcRotationKey.keyId,
           })
-        : await crypto.Secp256k1Keypair.import(
-            secrets.plcRotationKey.privateKeyHex,
-          )
+        : secrets.plcRotationKey?.provider === 'memory'
+          ? await crypto.Secp256k1Keypair.import(
+              secrets.plcRotationKey.privateKeyHex,
+            )
+          : undefined)
+
+    if (!plcRotationKey) {
+      throw new Error('Must configure plc rotation key')
+    }
 
     const accountManager = new AccountManager(
       cfg,
@@ -449,6 +463,14 @@ export class AppContext implements AsyncDisposable {
           availableUserDomains: cfg.identity.serviceHandleDomains,
           hcaptcha: cfg.oauth.provider.hcaptcha,
           branding: cfg.oauth.provider.branding,
+          // @NOTE Not operator-configurable on purpose: changing the email
+          // address unconditionally clears `emailAuthFactorAt` (see
+          // `account-manager/helpers/account.ts`), so the warning describes
+          // what this implementation always does rather than a preference. This
+          // is because updating email writes an unconfirmed email to the email
+          // column, which means leaving email based 2FA enabled can result in
+          // account lock-out.
+          show2FaWarningOnEmailUpdate: true,
           safeFetch,
           lexResolver,
           metadata: {
@@ -641,6 +663,8 @@ export class AppContext implements AsyncDisposable {
   }
 
   async destroy(): Promise<void> {
+    // @TODO Implement this using an AsyncDisposableStack when it becomes
+    // widely available.
     try {
       await this.backgroundQueue.destroy()
     } finally {
@@ -653,7 +677,11 @@ export class AppContext implements AsyncDisposable {
           try {
             await this.redisScratch?.quit()
           } finally {
-            await this.proxyAgent.destroy()
+            try {
+              await this.proxyAgent.destroy()
+            } finally {
+              await this.blobstore[Symbol.asyncDispose]()
+            }
           }
         }
       }

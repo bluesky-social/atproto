@@ -12,6 +12,9 @@ export const readEnv = (): OzoneEnvironment => {
     publicUrl: envStr('OZONE_PUBLIC_URL') as UriString,
     serverDid: envStr('OZONE_SERVER_DID') as DidString,
     serviceRecordCacheTTL: envInt('OZONE_SERVICE_RECORD_CACHE_TTL'),
+    labelStreamBackfillRate: envInt('OZONE_LABEL_STREAM_BACKFILL_RATE'),
+    labelQueryWildcardsEnabled: envBool('OZONE_LABEL_QUERY_WILDCARDS_ENABLED'),
+    reportTagsDisabled: envBool('OZONE_REPORT_TAGS_DISABLED'),
     appviewUrl: envStr('OZONE_APPVIEW_URL') as UriString,
     appviewDid: envStr('OZONE_APPVIEW_DID') as DidString,
     appviewPushEvents: envBool('OZONE_APPVIEW_PUSH_EVENTS'),
@@ -52,14 +55,23 @@ export const readEnv = (): OzoneEnvironment => {
     jetstreamUrl: envStr('OZONE_JETSTREAM_URL'),
     assignmentQueueDurationMs: envInt('OZONE_ASSIGNMENT_QUEUE_DURATION_MS'),
     assignmentReportDurationMs: envInt('OZONE_ASSIGNMENT_REPORT_DURATION_MS'),
+    inboxAppealWindowMonths: envInt('OZONE_INBOX_APPEAL_WINDOW_MONTHS'),
+    inboxStartAt: envStr('OZONE_INBOX_START_AT'),
+    inboxPolicyDefaultUrl: envStr('OZONE_INBOX_POLICY_DEFAULT_URL'),
+    strikeSuspensionConfig: envStr('NEXT_PUBLIC_STRIKE_SUSPENSION_CONFIG'),
     statsComputerIntervalMinutes: envInt(
       'OZONE_STATS_COMPUTER_INTERVAL_MINUTES',
     ),
+    reporterStatsWindowDays: envInt('OZONE_REPORTER_STATS_WINDOW_DAYS'),
   }
 }
 
 export type OzoneEnvironment = {
   nodeEnv?: string
+  strikeSuspensionConfig?: string
+  inboxAppealWindowMonths?: number
+  inboxStartAt?: string
+  inboxPolicyDefaultUrl?: string
   devMode?: boolean
   version?: string
   port?: number
@@ -68,6 +80,9 @@ export type OzoneEnvironment = {
   publicUrl?: string
   serverDid?: DidString
   serviceRecordCacheTTL?: number
+  labelStreamBackfillRate?: number
+  labelQueryWildcardsEnabled?: boolean
+  reportTagsDisabled?: boolean
   appviewUrl?: UriString
   appviewDid?: DidString
   appviewPushEvents?: boolean
@@ -103,4 +118,5 @@ export type OzoneEnvironment = {
   assignmentQueueDurationMs?: number
   assignmentReportDurationMs?: number
   statsComputerIntervalMinutes?: number
+  reporterStatsWindowDays?: number
 }

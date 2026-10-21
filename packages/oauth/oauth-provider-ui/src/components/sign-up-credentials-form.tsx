@@ -10,10 +10,14 @@ import {
 
 type Values = { email: string; password: string; inviteCode: string }
 
+// @NOTE Because values here might be spread ({...val}) when used in calling
+// code, we don't use optional properties and requires explicitly setting
+// undefined values instead.
 export type SignUpCredentialsData = {
   email: string
   password: string
-  inviteCode?: string
+  remember: boolean | undefined
+  inviteCode: string | undefined
 }
 
 export type SignUpCredentialsFormProps = Omit<
@@ -21,6 +25,7 @@ export type SignUpCredentialsFormProps = Omit<
   'onSubmit' | 'onValues'
 > & {
   inviteCodeRequired?: boolean
+  rememberDefault?: boolean
   values?: Partial<SignUpCredentialsData>
   onValues?: (values: Partial<SignUpCredentialsData>) => void
   handler: (
@@ -31,6 +36,7 @@ export type SignUpCredentialsFormProps = Omit<
 
 export function SignUpCredentialsForm({
   inviteCodeRequired = true,
+  rememberDefault = undefined,
   values,
   onValues,
   handler,
@@ -46,13 +52,13 @@ export function SignUpCredentialsForm({
       // values, so stepping Back and Forward again restores un-submitted input.
       onValues={(next) => onValues?.(next as Partial<SignUpCredentialsData>)}
       onSubmit={(next, signal) => {
-        const data: SignUpCredentialsData = inviteCodeRequired
-          ? {
-              email: next.email,
-              password: next.password,
-              inviteCode: next.inviteCode,
-            }
-          : { email: next.email, password: next.password }
+        const data: SignUpCredentialsData = {
+          email: next.email,
+          password: next.password,
+          remember: rememberDefault,
+          inviteCode: inviteCodeRequired ? next.inviteCode : undefined,
+        }
+
         onValues?.(data)
         return handler(data, signal)
       }}

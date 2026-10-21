@@ -1,6 +1,6 @@
 {
   "name": "@atproto/lexicon-resolver",
-  "version": "0.4.22",
+  "version": "0.4.26",
   "license": "MIT",
   "description": "ATProto Lexicon resolution",
   "keywords": [
@@ -44,6 +44,11 @@
     "test": "vitest run",
     "build": "tsc --build tsconfig.build.json",
     "prebuild": "pnpm run '/^(codegen:.+)$/'",
-    "codegen:lex": "lex build --clear --indexFile --lexicons ../../lexicons --include com.atproto.sync.getRecord --include com.atproto.lexicon.schema"
+    "lex:build": "lex build --clear --indexFile",
+    "lex:install": "lex install",
+    "postlex:install": "pnpm run lex:build",
+    "lex:update": "lex update",
+    "postlex:update": "pnpm run lex:build",
+    "codegen:lex": "pnpm run lex:install --ci"
   }
 }

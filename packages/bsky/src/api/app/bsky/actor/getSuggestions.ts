@@ -27,7 +27,13 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ params, auth, req, signal }) => {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
-      const hydrateCtx = await ctx.hydrator.createContext({ viewer, labelers })
+      const hydrateCtx = await ctx.hydrator.createContext({
+        viewer,
+        labelers,
+        features: ctx.featureGatesClient.scope(
+          ctx.featureGatesClient.parseUserContextFromHandler({ viewer, req }),
+        ),
+      })
       const headers = noUndefinedVals({
         'accept-language': req.headers['accept-language'],
         ...getAtprotoPassthroughHeaders(req),
@@ -63,21 +69,22 @@ const skeleton = async (input: {
 }): Promise<Skeleton> => {
   const { ctx, params } = input
   const viewer = params.hydrateCtx.viewer
+  const useIris = params.hydrateCtx.features.checkGate(
+    params.hydrateCtx.features.Gate.SuggestedUsersIrisEnable,
+  )
+  const client = useIris ? ctx.irisClient : ctx.suggestionsClient
 
-  if (viewer && ctx.suggestionsClient) {
-    const res = await ctx.suggestionsClient.xrpc(
-      app.bsky.unspecced.getSuggestionsSkeleton,
-      {
-        headers: params.headers,
-        signal: params.signal,
-        params: {
-          relativeToDid: viewer,
-          viewer: viewer ?? undefined,
-          limit: params.limit,
-          cursor: params.cursor,
-        },
+  if (viewer && client) {
+    const res = await client.xrpc(app.bsky.unspecced.getSuggestionsSkeleton, {
+      headers: params.headers,
+      signal: params.signal,
+      params: {
+        relativeToDid: viewer,
+        viewer: viewer ?? undefined,
+        limit: params.limit,
+        cursor: params.cursor,
       },
-    )
+    })
     return {
       dids: res.body.actors.map((a) => a.did),
       cursor: res.body.cursor,
@@ -111,7 +118,11 @@ const hydration = async (input: {
   skeleton: Skeleton
 }) => {
   const { ctx, params, skeleton } = input
-  return ctx.hydrator.hydrateProfilesDetailed(skeleton.dids, params.hydrateCtx)
+  return ctx.hydrator.hydrateProfilesDetailed(
+    skeleton.dids,
+    params.hydrateCtx,
+    { knownFollowersDids: skeleton.dids, activitySubscriptions: true },
+  )
 }
 
 const noBlocksOrMutes = (input: {
@@ -137,7 +148,7 @@ const presentation = (input: {
 }) => {
   const { ctx, skeleton, hydration } = input
   const actors = mapDefined(skeleton.dids, (did) =>
-    ctx.views.profileKnownFollowers(did, hydration),
+    ctx.views.profile(did, hydration),
   )
   return {
     actors,
@@ -150,6 +161,7 @@ const presentation = (input: {
 
 type Context = {
   suggestionsClient: Client | undefined
+  irisClient: Client | undefined
   dataplane: DataPlaneClient
   hydrator: Hydrator
   views: Views

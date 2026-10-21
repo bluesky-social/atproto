@@ -1,6 +1,7 @@
 import assert from 'node:assert'
 import { type Client, createOp as createPlcOp } from '@did-plc/lib'
 import type { Selectable } from 'kysely'
+import { DAY } from '@atproto/common'
 import { type Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import {
   type DidString,
@@ -11,6 +12,7 @@ import {
   HandleUnavailableError,
   InvalidCredentialsError,
   InvalidRequestError,
+  SecondAuthenticationFactorRequiredError,
 } from '@atproto/oauth-provider/errors'
 import type {
   Account,
@@ -28,6 +30,8 @@ import type {
   DeviceId,
   DeviceStore,
   Did,
+  DisableEmailAuthFactorInput,
+  EnableEmailAuthFactorInput,
   FoundRequestResult,
   HandleUnavailableReason,
   LexiconData,
@@ -64,7 +68,11 @@ import type { ImageUrlBuilder } from '../image/image-url-builder.js'
 import { dbLogger } from '../logger.js'
 import type { ServerMailer } from '../mailer/index.js'
 import type { Sequencer } from '../sequencer/index.js'
-import { type AccountManager, InvalidPasswordError } from './account-manager.js'
+import {
+  type AccountManager,
+  AuthFactorRequiredError,
+  InvalidPasswordError,
+} from './account-manager.js'
 import type * as schemas from './db/schema/index.js'
 import * as accountDeviceHelper from './helpers/account-device.js'
 import { type ActorAccount, UserAlreadyExistsError } from './helpers/account.js'
@@ -243,21 +251,34 @@ export class OAuthStore
   }
 
   async authenticateAccount({
-    locale: _locale,
+    locale,
     username: identifier,
     password,
-    // Not supported by the PDS (yet?)
-    emailOtp = undefined,
+    emailOtp,
+    deviceAccounts,
   }: AuthenticateAccountData): Promise<Account> {
     // @TODO (?) Send an email to the user to notify them of the login attempt
     try {
-      // Should never happen
-      if (emailOtp != null) {
-        throw new Error('Email OTP is not supported')
-      }
-
       const { user, appPassword, isSoftDeleted } =
-        await this.accountManager.login({ identifier, password })
+        await this.accountManager.login({
+          identifier,
+          password,
+          authFactorToken: emailOtp,
+          locale,
+          // Allow users that last signed in on the same device within 30 days
+          // to skip OTP.
+
+          // @NOTE that oauth-provider will require a fresh sign-in (password)
+          // after one week. This allows to improve UX by reducing the frequency
+          // of OTP prompts for trusted devices.
+
+          // @NOTE this is based on Google Workspace approach that requires a
+          // fresh sign-in (password) every week, but does not require OTP when
+          // it does.
+          allowOtpBypassFor: deviceAccounts
+            .filter((da) => Date.now() - da.updatedAt.getTime() < 30 * DAY)
+            .map((da) => da.account.did),
+        })
 
       if (isSoftDeleted) {
         throw new InvalidRequestError('Account was taken down')
@@ -269,15 +290,26 @@ export class OAuthStore
 
       return this.buildAccount(user)
     } catch (err) {
-      // `InvalidPasswordError` is a subclass of `XrpcAuthRequiredError`,
-      // so it must be checked first. Surfacing the matched `did` as the
-      // `sub` lets the oauth-provider's `onSignInFailed` hook distinguish
-      // "identifier known, credentials wrong" from "identifier unknown".
+      // `InvalidPasswordError` and `AuthFactorRequiredError` are both
+      // subclasses of `XrpcAuthRequiredError`, so both must be checked first.
       if (err instanceof InvalidPasswordError) {
-        throw new InvalidCredentialsError(err.message, err.did, err)
+        // Surfacing the matched `did` as the `sub` lets the oauth-provider's
+        // `onSignInFailed` hook distinguish "identifier known, credentials wrong"
+        // from "identifier unknown".
+        throw new InvalidCredentialsError(err.did, err)
+      }
+      // @NOTE The credentials were valid here — the account simply owes a
+      // second factor, and `login()` has already sent the code. This is the
+      // XRPC → OAuth translation that keeps `AccountManager` OAuth-free.
+      if (err instanceof AuthFactorRequiredError) {
+        throw new SecondAuthenticationFactorRequiredError(
+          err.factor,
+          err.hint,
+          err,
+        )
       }
       if (err instanceof XrpcAuthRequiredError) {
-        throw new InvalidCredentialsError(err.message, undefined, err)
+        throw new InvalidCredentialsError(null, err)
       }
       throw err
     }
@@ -688,6 +720,49 @@ export class OAuthStore
     }
   }
 
+  async enableEmailAuthFactor({
+    did,
+  }: EnableEmailAuthFactorInput): Promise<Account> {
+    try {
+      const account = await this.accountManager.enableEmailAuthFactor({ did })
+
+      return this.buildAccount(account)
+    } catch (err) {
+      if (err instanceof XrpcInvalidRequestError) {
+        throw new InvalidRequestError(err.message, err)
+      }
+
+      throw err
+    }
+  }
+
+  async disableEmailAuthFactor({
+    did,
+    token,
+    locale,
+  }: DisableEmailAuthFactorInput): Promise<Account> {
+    const account = await this.accountManager
+      .disableEmailAuthFactor({ did, token, locale })
+      .catch((err) => {
+        if (err instanceof XrpcInvalidRequestError) {
+          if (err.error === 'TokenRequired') {
+            throw new SecondAuthenticationFactorRequiredError(
+              'emailOtp',
+              '***',
+              err.message,
+            )
+          }
+
+          throw new InvalidRequestError(err.message, err)
+        }
+
+        // Unexpected error (should not happen)
+        throw err
+      })
+
+    return this.buildAccount(account)
+  }
+
   async updateHandle({ did, handle }: UpdateHandleData): Promise<Account> {
     try {
       const account = await this.accountManager.updateHandle(did, handle)
@@ -774,7 +849,7 @@ export class OAuthStore
       password,
     )
     if (!validPass) {
-      throw new InvalidCredentialsError('Invalid did or password', did)
+      throw new InvalidCredentialsError(did)
     }
 
     await this.accountManager.assertValidEmailToken(
@@ -811,6 +886,7 @@ export class OAuthStore
       pds: this.serviceDid,
       email: row.email || undefined,
       emailVerified: row.email ? row.emailConfirmedAt != null : undefined,
+      emailAuthFactor: row.email ? row.emailAuthFactorAt != null : undefined,
       handle: row.handle || undefined,
       deactivated: row.deactivatedAt != null,
     }

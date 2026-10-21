@@ -8,6 +8,7 @@ import type {
 } from './lex-builder.js'
 import { LexBuilder } from './lex-builder.js'
 
+export * from './filter.js'
 export * from './lex-builder.js'
 export * from './lex-def-builder.js'
 export * from './lexicon-directory-indexer.js'

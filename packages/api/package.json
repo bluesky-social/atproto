@@ -1,6 +1,6 @@
 {
   "name": "@atproto/api",
-  "version": "0.21.0",
+  "version": "0.29.1",
   "license": "MIT",
   "description": "Client library for atproto and Bluesky",
   "keywords": [
@@ -42,15 +42,21 @@
   },
   "devDependencies": {
     "@atproto/lex-cli": "workspace:^",
+    "@atproto/lex-installer": "workspace:^",
     "@jest/globals": "^28.1.3",
     "http-terminator": "^3.2.0",
-    "jest": "^30.5.1",
+    "jest": "^30.5.2",
     "prettier": "^3.9.6"
   },
   "scripts": {
-    "codegen:lex": "lex gen-api --yes ./src/client ../../lexicons/com/atproto/*/* ../../lexicons/app/bsky/*/* ../../lexicons/chat/bsky/*/* ../../lexicons/tools/ozone/*/* ../../lexicons/com/germnetwork/*",
+    "lex:gen": "if [ ! -f ./src/client/index.ts ] || [ -n \"$(find -L ./lexicons -type f -newer ./src/client/index.ts -print -quit)\" ]; then lex gen-api --yes ./src/client ./lexicons/com/atproto/*/* ./lexicons/app/bsky/*/* ./lexicons/chat/bsky/*/* ./lexicons/tools/ozone/*/* ./lexicons/com/germnetwork/*; fi",
+    "lex:install": "lex-installer install",
+    "postlex:install": "pnpm run lex:gen",
+    "lex:update": "lex-installer update",
+    "postlex:update": "pnpm run lex:gen",
+    "codegen:lex": "pnpm run lex:install --ci",
     "codegen:code": "node ./scripts/generate-code.js",
-    "prebuild": "pnpm run codegen:code && if [ ! -f ./src/client/index.ts ] || [ -n \"$(find ../../lexicons -name '*.json' -newer ./src/client/index.ts -type f -print -quit)\" ]; then pnpm run codegen:lex; fi",
+    "prebuild": "pnpm run '/^(codegen:.+)$/'",
     "build": "tsc --build tsconfig.build.json",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest"
   }

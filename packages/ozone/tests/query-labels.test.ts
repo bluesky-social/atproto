@@ -22,8 +22,10 @@ describe('ozone query labels', () => {
 
   beforeAll(async () => {
     network = await TestNetwork.create({
-      dbPostgresSchema: 'ozone_query_labels',
+      dbPostgresSchema: 'ozone_query_labels_wildcard_switch',
     })
+    expect(network.ozone.ctx.cfg.service.labelQueryWildcardsEnabled).toBe(false)
+    network.ozone.ctx.cfg.service.labelQueryWildcardsEnabled = true
 
     agent = network.ozone.getAgent()
 
@@ -72,6 +74,51 @@ describe('ozone query labels', () => {
 
   afterAll(async () => {
     await network?.close()
+  })
+
+  describe('wildcard queries disabled', () => {
+    beforeEach(() => {
+      network.ozone.ctx.cfg.service.labelQueryWildcardsEnabled = false
+    })
+
+    afterEach(() => {
+      network.ozone.ctx.cfg.service.labelQueryWildcardsEnabled = true
+    })
+
+    it.each([
+      { uriPatterns: ['*'] },
+      { uriPatterns: ['at://did:example:blah*'] },
+      { uriPatterns: ['did:example:blah', 'at://did:example:blah*'] },
+      { uriPatterns: ['did:example:blah', '*'] },
+    ])('rejects wildcard patterns: $uriPatterns', async ({ uriPatterns }) => {
+      await expect(
+        agent.api.com.atproto.label.queryLabels({ uriPatterns }),
+      ).rejects.toMatchObject({
+        status: 400,
+        error: 'InvalidRequest',
+        message: 'Support for wildcard label queries is temporarily disabled',
+      })
+    })
+
+    it('keeps exact matching, source and cursor filters available', async () => {
+      const params = {
+        uriPatterns: ['at://did:example:blah/app.bsky.feed.post/1234abcde'],
+        sources: [EXAMPLE_LABELER],
+        limit: 1,
+      }
+      const first = await agent.api.com.atproto.label.queryLabels(params)
+      const second = await agent.api.com.atproto.label.queryLabels({
+        ...params,
+        cursor: first.data.cursor,
+      })
+      expect(first.data.labels).toEqual([labels[2]])
+      expect(second.data.labels).toEqual([])
+      const otherSource = await agent.api.com.atproto.label.queryLabels({
+        ...params,
+        sources: ['did:example:other-labeler'],
+      })
+      expect(otherSource.data.labels).toEqual([])
+    })
   })
 
   it('returns all labels', async () => {

@@ -100,6 +100,26 @@ export async function generateMockSetup(env: TestNetwork) {
 
   const [alice, bob, carla, triage, mod, adminMod, labeler] = userAgents
 
+  // @NOTE The client uses declared age outside regions requiring age assurance.
+  for (const user of [alice, bob]) {
+    await user.app.bsky.actor.putPreferences({
+      preferences: [
+        {
+          $type: 'app.bsky.actor.defs#personalDetailsPref',
+          birthDate: '1990-01-01T00:00:00.000Z',
+        },
+      ],
+    })
+  }
+
+  // @NOTE Wait for actor rows to exist before seeding age assurance state.
+  await env.processAll()
+  await env.bsky.db.db
+    .updateTable('actor')
+    .set({ ageAssuranceStatus: 'assured', ageAssuranceAccess: 'full' })
+    .where('did', 'in', [alice.did, bob.did])
+    .execute()
+
   // Create chat declarations for all users
   for (const user of userAgents) {
     await user.chat.bsky.actor.declaration.create(

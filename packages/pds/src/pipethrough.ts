@@ -29,10 +29,10 @@ import {
 } from '@atproto/xrpc-server'
 import { isUnicastIp, unicastLookup } from '@atproto-labs/fetch-node'
 import { buildProxiedContentEncoding } from '@atproto-labs/xrpc-utils'
-import { isAccessPrivileged } from './auth-scope.js'
+import { AuthScope, isAccessPrivileged } from './auth-scope.js'
 import type { ProxyConfig } from './config/config.js'
 import type { AppContext } from './context.js'
-import { chat, com, tools } from './lexicons/index.js'
+import { com, tools } from './lexicons/index.js'
 import { httpLogger } from './logger.js'
 
 export function buildProxyAgent(cfg: ProxyConfig): Dispatcher {
@@ -74,6 +74,10 @@ export const proxyHandler = (ctx: AppContext): CatchallHandler => {
   const performAuth = ctx.authVerifier.authorization<RpcPermissionMatch>({
     authorize: (permissions, { params }) => permissions.assertRpc(params),
   })
+  const performInboxAuth = ctx.authVerifier.authorization<RpcPermissionMatch>({
+    additional: [AuthScope.Takendown],
+    authorize: (permissions, { params }) => permissions.assertRpc(params),
+  })
 
   return async (req, res, next) => {
     // /!\ Hot path
@@ -96,7 +100,7 @@ export const proxyHandler = (ctx: AppContext): CatchallHandler => {
       }
 
       const lxm = parseReqNsid(req)
-      if (PROTECTED_METHODS.has(lxm)) {
+      if (isProtectedMethod(lxm)) {
         throw new InvalidRequestError('Bad token method', 'InvalidToken')
       }
 
@@ -112,7 +116,9 @@ export const proxyHandler = (ctx: AppContext): CatchallHandler => {
       const scopeAud = `${did}#${serviceId}`
       const tokenAud = did
 
-      const authResult = await performAuth({
+      const authResult = await (
+        lxm.startsWith('tools.ozone.inbox.') ? performInboxAuth : performAuth
+      )({
         req,
         res,
         params: { lxm, aud: scopeAud },
@@ -123,7 +129,7 @@ export const proxyHandler = (ctx: AppContext): CatchallHandler => {
       if (
         credentials.type === 'access' &&
         !isAccessPrivileged(credentials.scope) &&
-        PRIVILEGED_METHODS.has(lxm)
+        isPrivilegedMethod(lxm)
       ) {
         throw new InvalidRequestError('Bad token method', 'InvalidToken')
       }
@@ -623,16 +629,22 @@ function* responseHeaders(
  */
 export class LxmSet {
   private inner: Set<string>
-  private original: Iterable<string>
   constructor(items: Iterable<string>) {
     this.inner = new Set(Array.from(items, normalizeLxm))
-    this.original = items
   }
   has(lxm: string) {
     return this.inner.has(normalizeLxm(lxm))
   }
-  *[Symbol.iterator](): Iterator<string> {
-    yield* this.original
+}
+
+/** Matches methods within a namespace, case-insensitively. */
+export class LxmPrefix {
+  private readonly prefix: string
+  constructor(namespace: string) {
+    this.prefix = `${normalizeLxm(namespace)}.`
+  }
+  has(lxm: string): boolean {
+    return normalizeLxm(lxm).startsWith(this.prefix)
   }
 }
 
@@ -640,32 +652,25 @@ export function normalizeLxm(lxm: string) {
   return lxm.toLowerCase()
 }
 
-export const CHAT_BSKY_METHODS = new LxmSet([
-  chat.bsky.actor.deleteAccount.$lxm,
-  chat.bsky.actor.exportAccountData.$lxm,
-  chat.bsky.convo.deleteMessageForSelf.$lxm,
-  chat.bsky.convo.getConvo.$lxm,
-  chat.bsky.convo.getConvoForMembers.$lxm,
-  chat.bsky.convo.getLog.$lxm,
-  chat.bsky.convo.getMessages.$lxm,
-  chat.bsky.convo.leaveConvo.$lxm,
-  chat.bsky.convo.listConvos.$lxm,
-  chat.bsky.convo.muteConvo.$lxm,
-  chat.bsky.convo.sendMessage.$lxm,
-  chat.bsky.convo.sendMessageBatch.$lxm,
-  chat.bsky.convo.unmuteConvo.$lxm,
-  chat.bsky.convo.updateRead.$lxm,
-])
+/** Whether a method requires full access or a privileged app password. */
+export function isPrivilegedMethod(lxm: string): boolean {
+  return CHAT_PRIVILEGED_METHODS.has(lxm) || LOCAL_PRIVILEGED_METHODS.has(lxm)
+}
 
-export const PRIVILEGED_METHODS = new LxmSet([
-  ...CHAT_BSKY_METHODS,
+const CHAT_PRIVILEGED_METHODS = new LxmPrefix('chat.bsky')
+const LOCAL_PRIVILEGED_METHODS = new LxmSet([
   com.atproto.server.createAccount.$lxm,
 ])
+
+/** Whether a method is reserved for direct account-management requests. */
+export function isProtectedMethod(lxm: string): boolean {
+  return PROTECTED_METHODS.has(lxm)
+}
 
 // These endpoints are related to account management and must be used directly,
 // not proxied or service-authed. Service auth may be utilized between PDS and
 // entryway for these methods.
-export const PROTECTED_METHODS = new LxmSet([
+const PROTECTED_METHODS = new LxmSet([
   com.atproto.admin.sendEmail.$lxm,
   com.atproto.identity.requestPlcOperationSignature.$lxm,
   com.atproto.identity.signPlcOperation.$lxm,
@@ -692,6 +697,7 @@ const defaultService = (
   serviceInfo: { url: string; did: string } | null
 } => {
   switch (nsid) {
+    case tools.ozone.inbox.appealActionedSubject.$lxm:
     case tools.ozone.communication.createTemplate.$lxm:
     case tools.ozone.communication.deleteTemplate.$lxm:
     case tools.ozone.communication.listTemplates.$lxm:
@@ -711,6 +717,7 @@ const defaultService = (
     case tools.ozone.safelink.queryEvents.$lxm:
     case tools.ozone.safelink.queryRules.$lxm:
     case tools.ozone.safelink.removeRule.$lxm:
+    case tools.ozone.safelink.syncSource.$lxm:
     case tools.ozone.safelink.updateRule.$lxm:
     case tools.ozone.team.addMember.$lxm:
     case tools.ozone.team.deleteMember.$lxm:

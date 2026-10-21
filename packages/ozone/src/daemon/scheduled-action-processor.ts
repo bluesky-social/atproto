@@ -105,6 +105,7 @@ export class ScheduledActionProcessor {
                 policies: eventData.policies,
                 severityLevel: eventData.severityLevel,
                 strikeCount: eventData.strikeCount,
+                strikeExpiresAt: eventData.strikeExpiresAt,
               })
 
               if (eventData.emailSubject && eventData.emailContent) {

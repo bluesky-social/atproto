@@ -43,6 +43,11 @@
               "type": "string",
               "description": "Filter by reason type"
             },
+            "source": {
+              "type": "string",
+              "maxLength": 128,
+              "description": "Filter by exact rule source. Omit to include all sources."
+            },
             "createdBy": {
               "type": "string",
               "format": "did",

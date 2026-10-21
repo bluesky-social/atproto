@@ -1,6 +1,6 @@
 {
   "name": "@atproto/lex-client",
-  "version": "0.3.6",
+  "version": "0.4.0",
   "license": "MIT",
   "description": "HTTP client for interacting with Lexicon based APIs",
   "keywords": [
@@ -33,17 +33,24 @@
   },
   "dependencies": {
     "@atproto/lex-data": "workspace:^",
-    "@atproto/lex-json": "workspace:^",
+    "@atproto/lex-rpc": "workspace:^",
     "@atproto/lex-schema": "workspace:^",
     "tslib": "^2.8.1"
   },
   "devDependencies": {
     "@atproto/lex-cbor": "workspace:^",
+    "@atproto/lex-json": "workspace:^",
     "@atproto/lex-builder": "workspace:^",
+    "@atproto/lex-installer": "workspace:^",
     "vitest": "^4.1.10"
   },
   "scripts": {
-    "codegen:lex": "node ./scripts/lex-build.js",
+    "lex:build": "lex-builder build --out ./src/lexicons --clear --lib @atproto/lex-schema --index-file --default-export",
+    "lex:install": "lex-installer install",
+    "postlex:install": "pnpm run lex:build",
+    "lex:update": "lex-installer update",
+    "postlex:update": "pnpm run lex:build",
+    "codegen:lex": "pnpm run lex:install --ci",
     "prebuild": "pnpm run '/^(codegen:.+)$/'",
     "build": "tsc --build tsconfig.build.json",
     "test": "vitest run"

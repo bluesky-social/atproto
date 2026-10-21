@@ -37,7 +37,8 @@ jobs:
       - run: pnpm install --frozen-lockfile
         env:
           PUPPETEER_SKIP_DOWNLOAD: true
-      - run: pnpm changeset status --since=origin/${{ github.base_ref }}
+      - if: github.head_ref != 'changeset-release/main'
+        run: pnpm changeset status --since=origin/${{ github.base_ref }}
 
   build:
     name: Build
@@ -55,30 +56,21 @@ jobs:
         env:
           PUPPETEER_SKIP_DOWNLOAD: true
 
-      # lex-cli code generation can be a bottleneck. The "prebuild" script in
-      # the "api" and "ozone" packages only re-runs lex-cli when needed: if the
-      # generated output is missing, or if any lexicon JSON has a newer mtime
-      # than the generated files. We cache the generated output keyed on the
-      # content of the lexicon JSONs (plus the package.json files that define
-      # the codegen command), so unchanged lexicons restore from cache.
-      #
-      # However, on a cache hit we have to fix mtimes by hand.
-      # `actions/checkout` writes every checked-out file (including
-      # lexicons/**/*.json) with mtime = checkout time, while `actions/cache`
-      # restores files with their original archived mtime (older). Without
-      # intervention, every lexicon JSON looks "newer" than the restored
-      # generated files and the prebuild script would re-run lex-cli even though
-      # nothing has changed. Touching the restored files brings their mtime to
-      # "now", so the prebuild's `find -newer` check correctly reports no newer
-      # lexicons.
+      # The "api" package generates its client with the legacy, slow `gen-api`.
+      # Its `lex:gen` is mtime-guarded (only re-runs when some lexicon is newer
+      # than ./src/client/index.ts), but on a clean checkout ./src/client is
+      # absent, so it would always run. Cache it keyed on api's lexicon inputs
+      # and, on a hit, bump ./src/client/index.ts past the just-checked-out
+      # lexicon sources so the guard correctly reports nothing newer and skips
+      # `gen-api`. `lex install --ci` does not re-touch the committed/fetched
+      # lexicon files, so the guard stays satisfied through the build.
       - uses: actions/cache@v6
-        id: lex-cli-cache
+        id: gen-api-cache
         with:
-          path: |
-            packages/api/src/client
-          key: lex-cli-${{ hashFiles('lexicons/**/*.json', 'packages/api/package.json', 'packages/ozone/package.json') }}
-      - if: steps.lex-cli-cache.outputs.cache-hit == 'true'
-        run: find packages/api/src/client -exec touch {} +
+          path: packages/api/src/client
+          key: gen-api-${{ hashFiles('packages/api/package.json', 'packages/api/lexicons.json', 'packages/lex-cli/src/**/*.ts') }}
+      - if: steps.gen-api-cache.outputs.cache-hit == 'true'
+        run: touch packages/api/src/client/index.ts
 
       - run: pnpm build
 

@@ -7,6 +7,7 @@ import {
   AppBskyEmbedRecord,
   AppBskyFeedDefs,
   type AtpAgent,
+  ids,
 } from '@atproto/api'
 import { type RecordRef, type SeedClient, TestNetwork } from '@atproto/dev-env'
 import type { DidString } from '@atproto/syntax'
@@ -289,6 +290,91 @@ describe('proxy read after write', () => {
       { headers: { ...sc.getHeaders(alice) } },
     )
     expect(res.data.feed[0].post.uri).toEqual(postRes.uri)
+  })
+
+  it('passes the appview cursors through the timeline munge', async () => {
+    const postRes = await agent.api.app.bsky.feed.post.create(
+      { repo: alice },
+      {
+        text: 'cursor passthrough poast',
+        createdAt: new Date().toISOString(),
+      },
+      sc.getHeaders(alice),
+    )
+    const res = await agent.api.app.bsky.feed.getTimeline(
+      { limit: 2 },
+      { headers: { ...sc.getHeaders(alice) } },
+    )
+    expect(res.data.feed[0].post.uri).toEqual(postRes.uri)
+
+    // The local post is spliced into the feed, but the cursors describe the
+    // appview's page and pass through untouched.
+    const direct = await network.bsky.getAgent().app.bsky.feed.getTimeline(
+      { limit: 2 },
+      {
+        headers: await network.serviceHeaders(
+          alice,
+          ids.AppBskyFeedGetTimeline,
+        ),
+      },
+    )
+    expect(direct.data.startCursor).toBeDefined()
+    expect(res.data.startCursor).toEqual(direct.data.startCursor)
+    expect(res.data.cursor).toEqual(direct.data.cursor)
+  })
+
+  it('forwards since to the appview through the timeline munge', async () => {
+    const postRes = await agent.api.app.bsky.feed.post.create(
+      { repo: alice },
+      {
+        text: 'bounded poast',
+        createdAt: new Date().toISOString(),
+      },
+      sc.getHeaders(alice),
+    )
+    const bskyAgent = network.bsky.getAgent()
+    const headers = await network.serviceHeaders(
+      alice,
+      ids.AppBskyFeedGetTimeline,
+    )
+
+    // A position part-way down the appview's feed, so that a read bounded by
+    // it has something to return without being the whole feed.
+    const firstPage = await bskyAgent.app.bsky.feed.getTimeline(
+      { limit: 2 },
+      { headers },
+    )
+    assert(firstPage.data.cursor, 'expected a cursor')
+    const secondPage = await bskyAgent.app.bsky.feed.getTimeline(
+      { limit: 2, cursor: firstPage.data.cursor },
+      { headers },
+    )
+    assert(secondPage.data.startCursor, 'expected a start cursor')
+    const since = secondPage.data.startCursor
+
+    const direct = await bskyAgent.app.bsky.feed.getTimeline(
+      { since },
+      { headers },
+    )
+    expect(direct.data.feed.map((item) => item.post.uri)).toEqual(
+      firstPage.data.feed.map((item) => item.post.uri),
+    )
+    expect(direct.data.cursor).toEqual(since)
+
+    const proxied = await agent.api.app.bsky.feed.getTimeline(
+      { since },
+      { headers: { ...sc.getHeaders(alice) } },
+    )
+    // The local post is spliced on top of the appview's bounded page; the page
+    // itself, and both cursors, are what the appview returned.
+    const directUris = direct.data.feed.map((item) => item.post.uri)
+    const proxiedUris = proxied.data.feed.map((item) => item.post.uri)
+    expect(proxiedUris).toContain(postRes.uri)
+    expect(proxiedUris.filter((uri) => directUris.includes(uri))).toEqual(
+      directUris,
+    )
+    expect(proxied.data.cursor).toEqual(since)
+    expect(proxied.data.startCursor).toEqual(direct.data.startCursor)
   })
 
   it('returns lag headers', async () => {

@@ -1,5 +1,17 @@
 import { relative } from 'node:path'
 
+type Negate<R extends boolean> = R extends true
+  ? false
+  : R extends false
+    ? true
+    : boolean
+
+export function negate<A extends readonly any[], R extends boolean>(
+  fn: (...args: A) => R,
+): (...args: A) => Negate<R> {
+  return (...args) => !fn(...args) as Negate<R>
+}
+
 export function memoize<T extends (arg: string) => NonNullable<unknown> | null>(
   fn: T,
 ): T {

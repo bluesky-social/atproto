@@ -31,11 +31,59 @@ export default function (server: Server, ctx: AppContext) {
       auth,
       handler: async ({ auth, input: { body } }) => {
         const did = auth.credentials.did
-        const { token, email } = body
+        const account = await ctx.accountManager.getAccount(did, {
+          includeDeactivated: true,
+          includeTakenDown: true,
+        })
+        if (!account) {
+          throw new InvalidRequestError(
+            `Could not find user info for account: ${did}`,
+          )
+        }
 
+        const { token } = body
+        const email = body.email.toLowerCase()
         // @TODO get the locale somehow (either by adding a field in the request
         // body, or by using the `Accept-Language` header).
         const locale = undefined
+
+        // @NOTE Handle explicit toggles even when the factor already matches:
+        // updating the email would clear its confirmation and disable 2FA.
+        if (body.emailAuthFactor != null) {
+          if (body.emailAuthFactor) {
+            // User is trying to enable email OTP
+            if (account.emailConfirmedAt && account.email === email) {
+              // Enabling only adds protection: immediate, no token required.
+              await ctx.accountManager.enableEmailAuthFactor({ did })
+
+              return // no need to continue to email change since email is not being changed
+            } else {
+              // @NOTE updating the user email address has the effect of resetting the
+              // email OTP status, reverting any action we would be performing here.
+              // Instead of silently ignoring a request to enable email OTP while updating
+              // the email, we provide an error message.
+              throw new InvalidRequestError(
+                'Please change and verify your email before enabling OTP',
+              )
+            }
+          } else {
+            // User is trying to disable email OTP
+            if (account.email === email) {
+              // Disabling removes a second factor, so it's gated by an
+              // `update_email` OTP: the first call (no token) emails a code and
+              // makes no change; the second (with token) verifies and disables.
+              await ctx.accountManager.disableEmailAuthFactor({
+                did,
+                token,
+                locale,
+              })
+
+              return // no need to continue to email change since email is not being changed
+            } else {
+              // No-op: changing email address always disables OTP
+            }
+          }
+        }
 
         try {
           await ctx.accountManager.updateEmail(did, email, token, { locale })

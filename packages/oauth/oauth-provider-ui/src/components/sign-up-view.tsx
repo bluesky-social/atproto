@@ -19,6 +19,7 @@ import {
 } from './sign-up-hcaptcha-form.tsx'
 
 export type SignUpViewProps = {
+  rememberDefault?: boolean
   onBack?: () => void
   onValidateNewHandle: (data: SignUpHandleData) => void | PromiseLike<void>
   onDone: (
@@ -30,6 +31,7 @@ export type SignUpViewProps = {
 }
 
 export function SignUpView({
+  rememberDefault,
   onBack,
   onValidateNewHandle,
   onDone,
@@ -109,6 +111,7 @@ export function SignUpView({
                 onValues={(val) => setPending((old) => ({ ...old, ...val }))}
                 handler={next}
                 inviteCodeRequired={inviteCodeRequired}
+                rememberDefault={rememberDefault}
               >
                 {atLast && disclaimer}
               </SignUpCredentialsForm>

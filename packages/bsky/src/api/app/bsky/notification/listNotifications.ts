@@ -18,8 +18,13 @@ import {
 import type { Notification } from '../../../../proto/bsky_pb.js'
 import { uriToDid as didFromUri } from '../../../../util/uris.js'
 import type { Views } from '../../../../views/index.js'
-import { isPostRecordType } from '../../../../views/types.js'
 import { fillPage, resHeaders } from '../../../util.js'
+import {
+  delayCursor,
+  shouldFilterForNeedsReview,
+  shouldFilterHiddenThreadTag,
+  shouldFilterReplyByThreadgate,
+} from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
   const listNotifications = createPipeline(
@@ -84,23 +89,6 @@ const paginateNotifications = async (opts: {
   }
 }
 
-/**
- * Applies a configurable delay to the datetime string of a cursor,
- * effectively allowing for a delay on listing the notifications.
- * This is useful to allow time for services to process notifications
- * before they are listed to the user.
- */
-export const delayCursor = (
-  cursorStr: string | undefined,
-  delayMs: number,
-): string => {
-  const nowMinusDelay = Date.now() - delayMs
-  if (cursorStr === undefined) return new Date(nowMinusDelay).toISOString()
-  const cursor = new Date(cursorStr).getTime()
-  if (isNaN(cursor)) return cursorStr
-  return new Date(Math.min(cursor, nowMinusDelay)).toISOString()
-}
-
 const skeleton = async (
   input: SkeletonFnInput<Context, Params>,
 ): Promise<SkeletonState> => {
@@ -153,56 +141,37 @@ const noBlockOrMutesOrNeedsFiltering = (
     ) {
       return false
     }
-    // Filter out hidden replies only if the viewer owns
-    // the threadgate and they hid the reply.
-    if (item.reason === 'reply') {
-      const post = hydration.posts?.get(uri)
-      if (post) {
-        const rootPostUri = isPostRecordType(post.record)
-          ? post.record.reply?.root.uri
-          : undefined
-        const isRootPostByViewer =
-          rootPostUri && didFromUri(rootPostUri) === params.hydrateCtx?.viewer
-        const isHiddenByThreadgate = isRootPostByViewer
-          ? ctx.views.replyIsHiddenByThreadgate(uri, rootPostUri, hydration)
-          : false
-        if (isHiddenByThreadgate) {
-          return false
-        }
-      }
-    }
-    // Filter out notifications from users that have thread hide tags and are from people they
-    // are not following
+
     if (
-      item.reason === 'reply' ||
-      item.reason === 'quote' ||
-      item.reason === 'mention'
+      shouldFilterReplyByThreadgate(
+        item.reason,
+        uri,
+        params.hydrateCtx.viewer,
+        hydration,
+        ctx.views,
+      )
     ) {
-      const post = hydration.posts?.get(uri)
-      if (post) {
-        for (const [tag] of post.tags.entries()) {
-          if (ctx.cfg.threadTagsHide.has(tag)) {
-            if (!hydration.profileViewers?.get(did)?.following) {
-              return false
-            } else {
-              break
-            }
-          }
-        }
-      }
+      return false
     }
-    // Filter out notifications from users that need review unless moots
+
     if (
-      item.reason === 'reply' ||
-      item.reason === 'quote' ||
-      item.reason === 'mention' ||
-      item.reason === 'like' ||
-      item.reason === 'follow'
+      shouldFilterHiddenThreadTag(
+        item.reason,
+        uri,
+        did,
+        hydration,
+        ctx.cfg.threadTagsHide,
+      )
     ) {
-      if (!ctx.views.viewerSeesNeedsReview({ did, uri }, hydration)) {
-        return false
-      }
+      return false
     }
+
+    if (
+      shouldFilterForNeedsReview(item.reason, did, uri, hydration, ctx.views)
+    ) {
+      return false
+    }
+
     return true
   })
   return skeleton

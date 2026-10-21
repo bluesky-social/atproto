@@ -1,5 +1,18 @@
 # @atproto-labs/fetch-node
 
+## 0.4.2
+
+### Patch Changes
+
+- [#5694](https://github.com/bluesky-social/atproto/pull/5694) [`fc60876`](https://github.com/bluesky-social/atproto/commit/fc60876949cca1ca28e98273ecfc97a151d3ebfc) Thanks [@devinivy](https://github.com/devinivy)! - Add an optional standalone eMudhra intermediate-key mitigation preload for Node.js HTTPS and Undici clients.
+
+## 0.4.1
+
+### Patch Changes
+
+- Updated dependencies [[`f98b78a`](https://github.com/bluesky-social/atproto/commit/f98b78adbc8963e49823117b007422211f6d3ff2), [`f98b78a`](https://github.com/bluesky-social/atproto/commit/f98b78adbc8963e49823117b007422211f6d3ff2)]:
+  - @atproto-labs/fetch@0.4.0
+
 ## 0.4.0
 
 ### Minor Changes
