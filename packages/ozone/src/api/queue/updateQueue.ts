@@ -5,6 +5,7 @@ import {
 } from '@atproto/xrpc-server'
 import type { AppContext } from '../../context.js'
 import { tools } from '../../lexicons/index.js'
+import { QueueAccess } from '../../queue/access.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(tools.ozone.queue.updateQueue, {
@@ -51,6 +52,8 @@ export default function (server: Server, ctx: AppContext) {
             'QueueNotFound',
           )
         }
+        const queueAccess = await QueueAccess.forActor(dbTxn, access)
+        queueAccess.assertQueue(queueId)
 
         const updates: {
           name?: string

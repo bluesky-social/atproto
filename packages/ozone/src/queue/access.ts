@@ -8,7 +8,7 @@ export type QueueAccessCredentials = (
   AdminTokenOutput | ModeratorOutput
 )['credentials']
 
-/** Request-scoped queue visibility. Internal jobs do not use moderator filters. */
+/** Request-scoped queue access. Internal jobs do not use moderator filters. */
 export class QueueAccess {
   private constructor(private readonly hiddenQueueIds: number[]) {}
 

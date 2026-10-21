@@ -294,6 +294,116 @@ describe('strict queue access', () => {
     ).toContain(ordinary)
   })
 
+  it('requires queue access for metadata updates without changing role permissions', async () => {
+    await expect(
+      agent.tools.ozone.queue.updateQueue(
+        { queueId: strict, description: 'Changed', enabled: false },
+        await options(ids.ToolsOzoneQueueUpdateQueue, 'moderator'),
+      ),
+    ).rejects.toMatchObject({ error: 'QueueNotFound' })
+    const unchanged = (await listQueues('admin')).queues.find(
+      (queue) => queue.id === strict,
+    )
+    expect(unchanged).toMatchObject({ enabled: true })
+    expect(unchanged?.description).toBeUndefined()
+
+    await grant()
+    const { data } = await agent.tools.ozone.queue.updateQueue(
+      { queueId: strict, description: 'Changed', enabled: false },
+      await options(ids.ToolsOzoneQueueUpdateQueue, 'moderator'),
+    )
+    expect(data.queue).toMatchObject({
+      description: 'Changed',
+      enabled: false,
+      strictAccess: true,
+    })
+    const unrestricted = await agent.tools.ozone.queue.updateQueue(
+      { queueId: ordinary, description: 'Unrestricted' },
+      await options(ids.ToolsOzoneQueueUpdateQueue, 'moderator'),
+    )
+    expect(unrestricted.data.queue.description).toBe('Unrestricted')
+  })
+
+  it.each([false, true])(
+    'requires source access when deleting a strict queue (migration: %s)',
+    async (migrate) => {
+      const item = await report()
+      const input = {
+        queueId: strict,
+        migrateToQueueId: migrate ? ordinary : undefined,
+      }
+      await expect(
+        agent.tools.ozone.queue.deleteQueue(
+          input,
+          await options(ids.ToolsOzoneQueueDeleteQueue, 'moderator'),
+        ),
+      ).rejects.toMatchObject({ error: 'QueueNotFound' })
+      expect((await getReport(item.id)).queue?.id).toBe(strict)
+      expect(
+        (await listQueues('admin')).queues.map((queue) => queue.id),
+      ).toEqual(expect.arrayContaining([ordinary, strict]))
+
+      await grant()
+      const { data } = await agent.tools.ozone.queue.deleteQueue(
+        input,
+        await options(ids.ToolsOzoneQueueDeleteQueue, 'moderator'),
+      )
+      expect(data).toEqual({ deleted: true, reportsMigrated: 1 })
+      expect((await getReport(item.id)).queue?.id).toBe(
+        migrate ? ordinary : undefined,
+      )
+      expect(
+        (await listQueues('admin')).queues.map((queue) => queue.id),
+      ).not.toContain(strict)
+    },
+  )
+
+  it.each([false, true])(
+    'requires target access when deleting a queue (strict source: %s)',
+    async (strictSource) => {
+      const source = strictSource ? strict : ordinary
+      const target = strictSource ? await createQueue(true) : strict
+      if (strictSource) await grant(source)
+      const item = await report(source)
+      const input = { queueId: source, migrateToQueueId: target }
+      await expect(
+        agent.tools.ozone.queue.deleteQueue(
+          input,
+          await options(ids.ToolsOzoneQueueDeleteQueue, 'moderator'),
+        ),
+      ).rejects.toMatchObject({ error: 'QueueNotFound' })
+      expect((await getReport(item.id)).queue?.id).toBe(source)
+      expect(
+        (await listQueues('admin')).queues.map((queue) => queue.id),
+      ).toEqual(expect.arrayContaining([source, target]))
+
+      await grant(target)
+      const { data } = await agent.tools.ozone.queue.deleteQueue(
+        input,
+        await options(ids.ToolsOzoneQueueDeleteQueue, 'moderator'),
+      )
+      expect(data).toEqual({ deleted: true, reportsMigrated: 1 })
+      expect((await getReport(item.id)).queue?.id).toBe(target)
+      expect(
+        (await listQueues('admin')).queues.map((queue) => queue.id),
+      ).not.toContain(source)
+    },
+  )
+
+  it('allows admins to delete and migrate strict queues without membership', async () => {
+    const target = await createQueue(true)
+    const item = await report()
+    const { data } = await agent.tools.ozone.queue.deleteQueue(
+      { queueId: strict, migrateToQueueId: target },
+      await options(ids.ToolsOzoneQueueDeleteQueue),
+    )
+    expect(data).toEqual({ deleted: true, reportsMigrated: 1 })
+    expect((await getReport(item.id)).queue?.id).toBe(target)
+    expect(
+      (await listQueues('admin')).queues.map((queue) => queue.id),
+    ).not.toContain(strict)
+  })
+
   it('revokes access on the next request when a member leaves', async () => {
     const hidden = await report()
     await grant()
@@ -424,53 +534,83 @@ describe('strict queue access', () => {
     expect(reports.data.reports.map((item) => item.eventId)).toContain(event.id)
   })
 
-  it('serializes self-assignment with a concurrent strict toggle', async () => {
-    const db = network.ozone.ctx.db
-    let unlock!: () => void
-    let locked!: () => void
-    const ready = new Promise<void>((resolve) => {
-      locked = resolve
-    })
-    const release = new Promise<void>((resolve) => {
-      unlock = resolve
-    })
-    const toggle = db.transaction(async (txn) => {
-      // @NOTE Hold the real queue lock to exercise the competing API transaction.
-      await txn.db
-        .updateTable('report_queue')
-        .set({ strictAccess: true })
-        .where('id', '=', ordinary)
-        .execute()
-      locked()
-      await release
-    })
-    await ready
-    const assignment = agent.tools.ozone.queue.assignModerator(
-      { queueId: ordinary, did: network.ozone.moderatorAccnt.did },
-      await options(ids.ToolsOzoneQueueAssignModerator, 'moderator'),
-    )
-    const rejected = expect(assignment).rejects.toThrow('Only admins')
-    try {
-      let waiting = false
-      for (let i = 0; i < 100 && !waiting; i++) {
-        const result = await sql<{
-          waiting: boolean
-        }>`SELECT EXISTS (SELECT 1 FROM pg_stat_activity WHERE datname = current_database() AND wait_event_type = 'Lock' AND query LIKE '%report_queue%') AS waiting`.execute(
-          db.db,
-        )
-        waiting = result.rows[0].waiting
-        if (!waiting) await new Promise((resolve) => setTimeout(resolve, 10))
+  it.each(['self-assignment', 'update', 'delete source', 'delete target'])(
+    'serializes %s with a concurrent strict toggle',
+    async (operation) => {
+      const source = operation === 'delete target' ? strict : ordinary
+      if (operation === 'delete target') await grant(source)
+      const item = await report(source)
+      const db = network.ozone.ctx.db
+      let unlock!: () => void
+      let locked!: () => void
+      const ready = new Promise<void>((resolve) => {
+        locked = resolve
+      })
+      const release = new Promise<void>((resolve) => {
+        unlock = resolve
+      })
+      const toggle = db.transaction(async (txn) => {
+        // @NOTE Hold the real queue lock to exercise the competing API transaction.
+        await txn.db
+          .updateTable('report_queue')
+          .set({ strictAccess: true })
+          .where('id', '=', ordinary)
+          .execute()
+        locked()
+        await release
+      })
+      await ready
+      const mutation =
+        operation === 'self-assignment'
+          ? agent.tools.ozone.queue.assignModerator(
+              { queueId: ordinary, did: network.ozone.moderatorAccnt.did },
+              await options(ids.ToolsOzoneQueueAssignModerator, 'moderator'),
+            )
+          : operation === 'update'
+            ? agent.tools.ozone.queue.updateQueue(
+                { queueId: ordinary, description: 'Changed' },
+                await options(ids.ToolsOzoneQueueUpdateQueue, 'moderator'),
+              )
+            : agent.tools.ozone.queue.deleteQueue(
+                {
+                  queueId: source,
+                  migrateToQueueId:
+                    operation === 'delete target' ? ordinary : undefined,
+                },
+                await options(ids.ToolsOzoneQueueDeleteQueue, 'moderator'),
+              )
+      const rejected =
+        operation === 'self-assignment'
+          ? expect(mutation).rejects.toThrow('Only admins')
+          : expect(mutation).rejects.toMatchObject({ error: 'QueueNotFound' })
+      try {
+        let waiting = false
+        for (let i = 0; i < 100 && !waiting; i++) {
+          const result = await sql<{
+            waiting: boolean
+          }>`SELECT EXISTS (SELECT 1 FROM pg_stat_activity WHERE datname = current_database() AND wait_event_type = 'Lock' AND query LIKE '%report_queue%') AS waiting`.execute(
+            db.db,
+          )
+          waiting = result.rows[0].waiting
+          if (!waiting) await new Promise((resolve) => setTimeout(resolve, 10))
+        }
+        expect(waiting).toBe(true)
+      } finally {
+        unlock()
+        await toggle
+        await rejected
       }
-      expect(waiting).toBe(true)
-    } finally {
-      unlock()
-      await toggle
-      await rejected
-    }
-    expect((await listQueues()).queues.map((queue) => queue.id)).not.toContain(
-      ordinary,
-    )
-  })
+      expect(
+        (await listQueues()).queues.map((queue) => queue.id),
+      ).not.toContain(ordinary)
+      expect((await getReport(item.id)).queue?.id).toBe(source)
+      const unchanged = (await listQueues('admin')).queues.find(
+        (queue) => queue.id === ordinary,
+      )
+      expect(unchanged).toMatchObject({ strictAccess: true })
+      expect(unchanged?.description).toBeUndefined()
+    },
+  )
 
   it('keeps existing statistics available to an unassigned moderator', async () => {
     await report()
