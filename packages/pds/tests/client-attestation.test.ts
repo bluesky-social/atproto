@@ -18,7 +18,7 @@ const memoryReplayManager = () => {
 
 const CLIENT_ID = 'https://app.example.com/client-metadata.json'
 const JWKS_URI = 'https://app.example.com/jwks.json'
-const SPACE_HOST = 'did:plc:authority#atproto_space_host'
+const SPACE_HOST = 'did:plc:authority#atproto_pds'
 
 describe('client attestation verification', () => {
   let clientKey: JoseKey
@@ -156,7 +156,7 @@ describe('client attestation verification', () => {
     await expect(
       verifier.verify(
         await attestation(clientKey, {
-          aud: 'did:plc:elsewhere#atproto_space_host',
+          aud: 'did:plc:elsewhere#atproto_pds',
         }),
         SPACE_HOST,
       ),

@@ -253,23 +253,35 @@ export class SpaceClient {
   ): Promise<SpaceCredential> {
     const key = opts.key ?? (await P256Keypair.create())
     const token = await this.delegationTokenFor(actor, space)
-    const res = await this.authority.getClient().call(
-      com.atproto.space.getSpaceCredential,
-      {
+    const res = await this.authority
+      .getClient()
+      .call(com.atproto.space.getSpaceCredential, {
         space,
+        credentialKid: key.did(),
+        delegationToken: token,
         clientAttestation: opts.clientAttestation,
-      },
-      {
-        headers: await createSpaceSigHeaders(key, {
-          authorization: `Bearer ${token}`,
-        }),
-      },
-    )
+      })
     return new SpaceCredential(res.credential, key, this.idResolver)
   }
 
   get idResolver(): IdResolver {
     return this.authority.ctx.idResolver
+  }
+
+  /** Request a credential without a delegation token, as for a public space. */
+  async publicCredential(
+    space: SpaceRefString,
+    opts: { clientAttestation?: string } = {},
+  ): Promise<SpaceCredential> {
+    const key = await P256Keypair.create()
+    const res = await this.authority
+      .getClient()
+      .call(com.atproto.space.getSpaceCredential, {
+        space,
+        credentialKid: key.did(),
+        clientAttestation: opts.clientAttestation,
+      })
+    return new SpaceCredential(res.credential, key, this.idResolver)
   }
 
   async delegationTokenFor(
@@ -303,18 +315,14 @@ export class SpaceClient {
     opts: { clientAttestation?: string } = {},
   ) {
     const key = await P256Keypair.create()
-    return this.authority.getClient().call(
-      com.atproto.space.getSpaceCredential,
-      {
+    return this.authority
+      .getClient()
+      .call(com.atproto.space.getSpaceCredential, {
         space,
+        credentialKid: key.did(),
+        delegationToken: token,
         clientAttestation: opts.clientAttestation,
-      },
-      {
-        headers: await createSpaceSigHeaders(key, {
-          authorization: `Bearer ${token}`,
-        }),
-      },
-    )
+      })
   }
 
   /** Read a repo's state directly. No endpoint exposes the raw set hash. */
@@ -460,7 +468,7 @@ export class SpaceCredential {
         : await request.clone().json()
     const audience = params.repo ?? SpaceRef.parse(params.space).spaceDid
     const headers = await createSpaceSigHeaders(this.key, {
-      authorization: `Atproto-Space ${this.credential}`,
+      authorization: `Atproto-Space-Credential ${this.credential}`,
       audience,
     })
     for (const [name, value] of Object.entries(headers)) {

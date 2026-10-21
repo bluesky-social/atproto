@@ -12,18 +12,18 @@ import {
 const SPACE = 'at://did:example:space/space/app.bsky.group/test'
 const USER = 'did:example:alice'
 const AUTHORITY = 'did:example:space'
-const SPACE_HOST = `${AUTHORITY}#atproto_space_host`
+const SPACE_HOST = `${AUTHORITY}#atproto_pds`
 const CLIENT_ID = 'https://app.example.com/client-metadata.json'
 const KEY_ID = (await P256Keypair.create()).did() as DidString
 
-/** Swap a token's `typ` header, leaving its payload and signature alone. */
-const retypeToken = (jwt: string, typ: string): string => {
+/** Overwrite fields in a token's header, leaving its payload and signature alone. */
+const withHeader = (jwt: string, fields: Record<string, unknown>): string => {
   const [headerB64, payloadB64, sigB64] = jwt.split('.')
   const header = JSON.parse(Buffer.from(headerB64, 'base64url').toString())
-  const retyped = Buffer.from(JSON.stringify({ ...header, typ })).toString(
-    'base64url',
-  )
-  return `${retyped}.${payloadB64}.${sigB64}`
+  const modified = Buffer.from(
+    JSON.stringify({ ...header, ...fields }),
+  ).toString('base64url')
+  return `${modified}.${payloadB64}.${sigB64}`
 }
 
 async function withClaims(
@@ -91,7 +91,7 @@ describe('space tokens', () => {
       await expect(
         verifySpaceToken('delegation', jwt, {
           getSigningKey: getKey(userKey),
-          aud: 'did:example:other#atproto_space_host',
+          aud: 'did:example:other#atproto_pds',
         }),
       ).rejects.toMatchObject({ code: 'BadJwtAudience' })
     })
@@ -125,10 +125,17 @@ describe('space tokens', () => {
         }),
       ).rejects.toMatchObject({ code: 'BadJwtType' })
     })
+
+    it('is rejected when its kid is not #atproto', async () => {
+      const jwt = withHeader(await create(), { kid: '#other_key' })
+      expect(() => parseSpaceToken('delegation', jwt)).toThrow(
+        /wrong token "kid"/,
+      )
+    })
   })
 
   describe('space credential', () => {
-    const create = (opts?: { expiresInSec?: number; kid?: string }) =>
+    const create = (opts?: { expiresInSec?: number }) =>
       createSpaceToken(
         'credential',
         { iss: AUTHORITY, sub: SPACE, keyId: KEY_ID, ...opts },
@@ -233,27 +240,35 @@ describe('space tokens', () => {
         { iss: AUTHORITY, sub: SPACE, aud: SPACE_HOST },
         authorityKey,
       )
-      const forgedTyp = retypeToken(unbound, SPACE_TOKEN_TYPES.credential.typ)
+      const forgedTyp = withHeader(unbound, {
+        typ: SPACE_TOKEN_TYPES.credential.typ,
+      })
       expect(() => parseSpaceToken('credential', forgedTyp)).toThrow(
         /missing token "cnf.kid"/,
       )
     })
 
-    it('passes iss and kid to the key resolver', async () => {
-      const getSigningKey = vi.fn(() => authorityKey.did())
-      await verifySpaceToken('credential', await create(), { getSigningKey })
-      expect(getSigningKey).toHaveBeenCalledWith(AUTHORITY, '#atproto', false)
+    it('cannot be minted with a kid other than #atproto', async () => {
+      await expect(
+        createSpaceToken(
+          'credential',
+          { iss: AUTHORITY, sub: SPACE, keyId: KEY_ID, kid: '#other_key' },
+          authorityKey,
+        ),
+      ).rejects.toThrow(/"kid" is always "#atproto"/)
     })
 
-    it('honours a kid override for authorities with a dedicated space key', async () => {
-      const getSigningKey = vi.fn(() => authorityKey.did())
-      const jwt = await create({ kid: '#atproto_space' })
-      await verifySpaceToken('credential', jwt, { getSigningKey })
-      expect(getSigningKey).toHaveBeenCalledWith(
-        AUTHORITY,
-        '#atproto_space',
-        false,
+    it('is rejected when its kid is not #atproto', async () => {
+      const jwt = withHeader(await create(), { kid: '#other_key' })
+      expect(() => parseSpaceToken('credential', jwt)).toThrow(
+        /wrong token "kid"/,
       )
+    })
+
+    it('passes iss to the key resolver', async () => {
+      const getSigningKey = vi.fn(() => authorityKey.did())
+      await verifySpaceToken('credential', await create(), { getSigningKey })
+      expect(getSigningKey).toHaveBeenCalledWith(AUTHORITY, false)
     })
 
     it('retries with a freshly resolved key when the signing key has rotated', async () => {
@@ -273,18 +288,8 @@ describe('space tokens', () => {
         getSigningKey,
       })
       expect(payload.iss).toBe(AUTHORITY)
-      expect(getSigningKey).toHaveBeenNthCalledWith(
-        1,
-        AUTHORITY,
-        '#atproto',
-        false,
-      )
-      expect(getSigningKey).toHaveBeenNthCalledWith(
-        2,
-        AUTHORITY,
-        '#atproto',
-        true,
-      )
+      expect(getSigningKey).toHaveBeenNthCalledWith(1, AUTHORITY, false)
+      expect(getSigningKey).toHaveBeenNthCalledWith(2, AUTHORITY, true)
     })
 
     it('does not retry when the resolved key is unchanged', async () => {
@@ -388,6 +393,7 @@ describe('space tokens', () => {
         JSON.stringify({
           alg: 'ES256K',
           typ: SPACE_TOKEN_TYPES.credential.typ,
+          kid: SPACE_TOKEN_TYPES.credential.kid,
         }),
       ).toString('base64url')
       const payload = Buffer.from(JSON.stringify({ iss: AUTHORITY })).toString(
