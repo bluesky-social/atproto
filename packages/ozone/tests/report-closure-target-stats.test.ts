@@ -137,7 +137,11 @@ describe('report closure target statistics', () => {
   async function history(
     startDate: string,
     endDate = startDate,
-    filters: { queueId?: number; reportTypes?: string[] } = {},
+    filters: {
+      queueId?: number
+      reportTypes?: string[]
+      moderatorDid?: DidString
+    } = {},
   ) {
     const { data } = await agent.tools.ozone.report.getHistoricalStats(
       {
@@ -264,7 +268,8 @@ describe('report closure target statistics', () => {
     }
   })
 
-  it('excludes muted backlog while retaining inbound volume and closure results', async () => {
+  it('excludes muted inbound and backlog while retaining closure results', async () => {
+    const moderator = network.ozone.moderatorAccnt.did
     for (const queue of [queueId, null, -1]) {
       for (const status of ['open', 'queued', 'assigned', 'escalated']) {
         await createReport({
@@ -272,21 +277,23 @@ describe('report closure target statistics', () => {
           queue,
           status,
           muted: true,
+          moderator,
         })
       }
-      await createReport({ createdAt: now - 11 * minute, queue })
+      await createReport({ createdAt: now - 11 * minute, queue, moderator })
     }
     for (const duration of [5 * minute, 15 * minute]) {
       await createReport({
         createdAt: now - duration,
         closedAt: now,
         muted: true,
+        moderator,
       })
     }
     await computeLive()
     for (const filters of [{}, { reportTypes: REPORT_TYPE_GROUPS.Legacy }]) {
       expect(await live(filters)).toMatchObject({
-        inboundCount: 17,
+        inboundCount: 3,
         pendingCount: 3,
         closureTargetOverdueCount: 3,
         closedCount: 2,
@@ -299,16 +306,21 @@ describe('report closure target statistics', () => {
       })
     }
     expect(await live({ queueId })).toMatchObject({
-      inboundCount: 7,
+      inboundCount: 1,
       pendingCount: 1,
       closureTargetOverdueCount: 1,
       closedCount: 2,
     })
     expect(await live({ queueId: -1 })).toMatchObject({
-      inboundCount: 10,
+      inboundCount: 2,
       pendingCount: 2,
       closureTargetOverdueCount: 2,
       closedCount: 0,
+    })
+    expect(await live({ moderatorDid: moderator })).toMatchObject({
+      inboundCount: 3,
+      closedCount: 2,
+      acknowledgedCount: 2,
     })
     const { data } = await agent.tools.ozone.queue.listQueues(
       {},
@@ -316,7 +328,46 @@ describe('report closure target statistics', () => {
     )
     expect(
       data.queues.find((queue) => queue.id === queueId)?.stats,
-    ).toMatchObject({ pendingCount: 1, closureTargetOverdueCount: 1 })
+    ).toMatchObject({
+      inboundCount: 1,
+      pendingCount: 1,
+      closureTargetOverdueCount: 1,
+    })
+  })
+
+  it('excludes muted inbound when recomputing historical stats', async () => {
+    const moderator = network.ozone.moderatorAccnt.did
+    const closedAt = Date.parse('2020-01-01T12:00:00.000Z')
+    for (const muted of [false, true]) {
+      await createReport({
+        createdAt: closedAt - 15 * minute,
+        moderator,
+        muted,
+      })
+      await createReport({
+        createdAt: closedAt - 5 * minute,
+        closedAt,
+        moderator,
+        muted,
+      })
+    }
+    await refresh('2020-01-01')
+    for (const filters of [
+      {},
+      { queueId },
+      { reportTypes: REPORT_TYPE_GROUPS.Legacy },
+      { moderatorDid: moderator },
+    ]) {
+      const [stats] = await history('2020-01-01', '2020-01-01', filters)
+      expect(stats).toMatchObject({
+        inboundCount: 2,
+        closedCount: 2,
+        acknowledgedCount: 2,
+        resolutionSampleCount: 2,
+        avgResolutionTimeSec: 300,
+        closureTargetMetCount: 2,
+      })
+    }
   })
 
   it('uses the selected historical boundary rather than the current age', async () => {

@@ -21,7 +21,7 @@ export interface ReportStat {
   moderatorDid: DidString | null // NULL = aggregate, non-null = per-moderator
 
   // inbound
-  inboundCount: number | null // Reports received during this calendar day
+  inboundCount: number | null // Unmuted reports received during this calendar day
 
   // unresolved
   pendingCount: number | null // Unmuted reports not closed at the snapshot time
