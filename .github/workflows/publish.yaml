@@ -24,7 +24,7 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           cache: pnpm
-          node-version-file: '.nvmrc'
+          node-version-file: package.json
           registry-url: 'https://registry.npmjs.org'
       - run: pnpm install --frozen-lockfile
         env:
