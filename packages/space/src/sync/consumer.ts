@@ -3,22 +3,22 @@ import { type LexValue, decode } from '@atproto/lex-cbor'
 import { type Cid, isPlainObject } from '@atproto/lex-data'
 import type { NsidString, RecordKeyString } from '@atproto/syntax'
 import { RepoVerificationError } from '../error.js'
-import { RepoCommit, verifyCommit } from '../repo-commit.js'
 import {
-  type CommitCtx,
+  RepoCommit,
+  type VerifyCommitParams,
+  verifyCommit,
+} from '../repo-commit.js'
+import {
+  type Commit,
   type Def,
   type RecordPath,
   type RepoIndex,
-  type SignedCommit,
   type SpaceRecord,
   defs,
 } from '../types.js'
 import { parseRecordPath } from '../util.js'
 
-export type VerifyRepoParams = {
-  space: string
-  author: string
-  didKey: string
+export type VerifyRepoParams = VerifyCommitParams & {
   // False for an index-only car, which carries no record blocks. Defaults to true.
   expectValues?: boolean
 }
@@ -37,7 +37,7 @@ export type VerifiedRecord = {
  * its `records` (and then `return()`ing the iterator).
  */
 export type VerifiedRepo = AsyncDisposable & {
-  commit: SignedCommit
+  commit: Commit
   index: RepoIndex
   repo: RepoCommit
   records: AsyncGenerator<VerifiedRecord>
@@ -47,10 +47,11 @@ export type VerifiedRepo = AsyncDisposable & {
  * Verify a serialized repo, streaming out its records.
  *
  * The three stages follow the CAR's layout, so nothing needs buffering: the
- * commit, then the index against the commit's hash (which authenticates every
- * path/cid pair without reading a record), then each block against its index
- * entry. That last stage runs as `records` is drained, so it must be consumed to
- * know the repo was complete — {@link verifyRepoCarFull} does that.
+ * commit against the response's MAC, then the index against the commit's data
+ * (which authenticates every path/cid pair without reading a record), then each
+ * block against its index entry. That last stage runs as `records` is drained,
+ * so it must be consumed to know the repo was complete — {@link verifyRepoCarFull}
+ * does that.
  */
 export const verifyRepoCar = async (
   car: AsyncIterable<Uint8Array> | Iterable<Uint8Array>,
@@ -77,10 +78,9 @@ export const verifyRepoCar = async (
         'expected the commit block to lead the car',
       )
     }
-    const commit = parseBlock(commitBlock.value.bytes, defs.signedCommit)
+    const commit = parseBlock(commitBlock.value.bytes, defs.commit)
 
-    const ctx: CommitCtx = { ...params, rev: commit.rev }
-    if (!(await verifyCommit(commit, ctx, params.didKey))) {
+    if (!verifyCommit(commit, params)) {
       throw new RepoVerificationError('commit failed verification')
     }
 
@@ -94,7 +94,7 @@ export const verifyRepoCar = async (
 
     const repo = RepoCommit.fromIndex(index)
     if (!repo.matches(commit)) {
-      throw new RepoVerificationError('index does not match the commit hash')
+      throw new RepoVerificationError('index does not match the commit data')
     }
 
     return {

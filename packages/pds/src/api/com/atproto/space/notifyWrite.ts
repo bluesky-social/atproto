@@ -8,7 +8,7 @@ export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.space.notifyWrite, {
     auth: ctx.authVerifier.serviceAuth,
     handler: async ({ input, auth }) => {
-      const { space, repo, repoRev, hash } = input.body
+      const { space, repo, repoRev, data } = input.body
 
       const { spaceDid: ownerDid } = toSpaceRef(space)
 
@@ -31,7 +31,7 @@ export default function (server: Server, ctx: AppContext) {
         )
       }
 
-      await processNotifyWrite(ctx, { space, repo, repoRev, hash })
+      await processNotifyWrite(ctx, { space, repo, repoRev, data })
     },
   })
 }

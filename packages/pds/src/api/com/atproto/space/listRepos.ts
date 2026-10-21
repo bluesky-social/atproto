@@ -22,7 +22,7 @@ export default function (server: Server, ctx: AppContext) {
           repos: writers.map((writer) => ({
             did: writer.did as l.DidString,
             repoRev: writer.repoRev,
-            hash: writer.hash,
+            data: writer.data,
             spaceRev: writer.spaceRev,
           })),
         },

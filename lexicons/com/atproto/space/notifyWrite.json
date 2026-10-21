@@ -9,7 +9,7 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["space", "repo", "repoRev", "hash"],
+          "required": ["space", "repo", "repoRev", "data"],
           "properties": {
             "space": {
               "type": "string",
@@ -26,9 +26,9 @@
               "description": "The repo revision after the write.",
               "format": "tid"
             },
-            "hash": {
+            "data": {
               "type": "bytes",
-              "description": "The repo's current commit hash (sha256 of the LtHash state) after the write. Lets the space host maintain each repo's hash for listRepos."
+              "description": "The repo's current commit data (sha256 of the LtHash state) after the write. Lets the space host maintain each repo's commit data for listRepos."
             },
             "spaceRev": {
               "type": "string",

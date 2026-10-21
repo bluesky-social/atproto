@@ -5,12 +5,7 @@ import {
   writeCarStream,
 } from '@atproto/car'
 import type { NsidString, RecordKeyString } from '@atproto/syntax'
-import type {
-  RecordPath,
-  RepoIndex,
-  SignedCommit,
-  SpaceRecord,
-} from '../types.js'
+import type { Commit, RecordPath, RepoIndex, SpaceRecord } from '../types.js'
 import { formatRecordPath } from '../util.js'
 
 export type SerializedRecord = CarBlock<CborCid> & {
@@ -19,7 +14,7 @@ export type SerializedRecord = CarBlock<CborCid> & {
 }
 
 /**
- * Serialize a repo as a car: two roots in order — the signed commit, then the
+ * Serialize a repo as a car: two roots in order — the commit, then the
  * index — followed by one block per index entry, in the index's order. Blobs are
  * excluded.
  *
@@ -31,7 +26,7 @@ export type SerializedRecord = CarBlock<CborCid> & {
  * entries rather than from the blocks.
  */
 export async function* serializeRepo(
-  commit: SignedCommit,
+  commit: Commit,
   records: AsyncIterable<SerializedRecord> | Iterable<SerializedRecord>,
   opts: { excludeValues?: boolean } = {},
 ): AsyncIterable<Uint8Array> {

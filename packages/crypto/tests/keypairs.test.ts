@@ -67,5 +67,12 @@ describe('keypairs', () => {
       const validSig = await p256.verifyDidSig(keypair.did(), sliceView, sig)
       expect(validSig).toBeTruthy()
     })
+
+    it('agrees on an ECDH shared secret', async () => {
+      const other = await P256Keypair.create()
+      const secret = keypair.ecdh(other.publicKeyBytes())
+      expect(secret.length).toBe(32)
+      expect(other.ecdh(keypair.publicKeyBytes())).toEqual(secret)
+    })
   })
 })

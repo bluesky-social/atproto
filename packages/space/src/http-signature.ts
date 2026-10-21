@@ -6,9 +6,10 @@ import {
   serializeList,
 } from 'structured-headers'
 import { type Keypair, parseDidKey, verifySignature } from '@atproto/crypto'
-import { fromBase64, toBase64 } from '@atproto/lex-data'
+import { fromBase64 } from '@atproto/lex-data'
 import type { DidString } from '@atproto/syntax'
 import { SpaceSignatureError } from './error.js'
+import { toPaddedBase64 } from './util.js'
 
 type HttpHeaders = Record<string, string | string[] | undefined>
 
@@ -59,7 +60,7 @@ export async function createSpaceSigHeaders(
       ? { 'atproto-space-audience': opts.audience }
       : undefined),
     'signature-input': `${SIGNATURE_LABEL}=${signatureInput}`,
-    signature: `${SIGNATURE_LABEL}=:${toBase64(signature)}:`,
+    signature: `${SIGNATURE_LABEL}=:${toPaddedBase64(signature)}:`,
   }
 }
 

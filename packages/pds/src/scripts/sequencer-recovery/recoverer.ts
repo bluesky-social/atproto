@@ -1,5 +1,5 @@
 import { rmIfExists } from '@atproto/common'
-import { Secp256k1Keypair } from '@atproto/crypto'
+import { P256Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import { type DidString, isNsidString, isRecordKeyString } from '@atproto/lex'
 import {
   BlockMap,
@@ -159,7 +159,8 @@ const processRepoCreation = async (
 ) => {
   const did = evt.repo
   const keypair = await Secp256k1Keypair.create({ exportable: true })
-  await ctx.actorStore.create(did, keypair)
+  const kemKeypair = await P256Keypair.create({ exportable: true })
+  await ctx.actorStore.create(did, keypair, kemKeypair)
   const commit: CommitData = {
     cid: evt.commit,
     rev: evt.rev,

@@ -1,20 +1,14 @@
-import {
-  type Keypair,
-  hkdfSha256,
-  hmacSha256,
-  randomBytes,
-  verifySignature,
-} from '@atproto/crypto'
 import { type Cid, ui8Equals } from '@atproto/lex-data'
 import type { NsidString, RecordKeyString } from '@atproto/syntax'
 import { LtHash } from './lthash.js'
+import { verifyCommitMac } from './mac.js'
 import {
   COMMIT_VERSION,
+  type Commit,
   type CommitCtx,
   type RecordPathParts,
   type RepoIndex,
   type RepoOp,
-  type SignedCommit,
 } from './types.js'
 import { formatSetHashElement } from './util.js'
 
@@ -69,106 +63,48 @@ export class RepoCommit {
   }
 
   /**
-   * Whether this repo's contents match a signed commit. Verify the commit first —
-   * on its own this says nothing about authenticity.
+   * Whether this repo's contents match a commit. Verify the commit first — on its
+   * own this says nothing about authenticity.
    */
-  matches(commit: SignedCommit): boolean {
-    return ui8Equals(this.setHash.digest(), commit.hash)
+  matches(commit: Commit): boolean {
+    return ui8Equals(this.setHash.digest(), commit.data)
   }
 
   /**
-   * Sign a commit over the current contents.
-   *
-   * The signature covers only the ctx, never the digest, so a leaked commit proves
-   * nothing about what the author wrote. The digest is bound to the ctx by a
-   * symmetric MAC instead: readers get integrity, third parties get nothing. A
-   * fresh `ikm` per commit means each reader receives a distinct one.
+   * Build a commit over the current contents. A commit carries no signature: the
+   * repo host authenticates it to each syncer with a MAC (see `mac.ts`).
    */
-  async sign(ctx: CommitCtx, keypair: Keypair): Promise<SignedCommit> {
-    const hash = this.setHash.digest()
-    const ikm = randomBytes(32)
-    const ctxBytes = encodeCommitCtx(ctx, ikm)
+  toCommit(ctx: CommitCtx): Commit {
     return {
       ver: COMMIT_VERSION,
-      hash,
-      ikm,
-      mac: computeMac(ikm, ctxBytes, hash),
-      sig: await keypair.sign(ctxBytes),
+      repo: ctx.repo,
+      space: ctx.space,
       rev: ctx.rev,
+      data: this.setHash.digest(),
     }
   }
 }
 
+export type VerifyCommitParams = {
+  // The space and repo that were requested.
+  space: string
+  repo: string
+  // The shared secret for the request, and the MAC from its response header.
+  sharedSecret: Uint8Array
+  mac: Uint8Array
+}
+
 /**
- * Verify a commit's signature (authenticity) and MAC (integrity). Once this passes,
- * `hash` is trusted as the author's claim about their repo, which is what makes
+ * Verify a commit against the MAC its response carried. Once this passes, `data`
+ * is trusted as the author's claim about their repo, which is what makes
  * {@link RepoCommit#matches} meaningful.
  */
-export const verifyCommit = async (
-  commit: SignedCommit,
-  ctx: CommitCtx,
-  didKey: string,
-): Promise<boolean> => {
+export const verifyCommit = (
+  commit: Commit,
+  params: VerifyCommitParams,
+): boolean => {
   if (commit.ver !== COMMIT_VERSION) return false
-  if (commit.rev !== ctx.rev) return false
-
-  const ctxBytes = encodeCommitCtx(ctx, commit.ikm)
-  const mac = computeMac(commit.ikm, ctxBytes, commit.hash)
-  if (!ui8Equals(mac, commit.mac)) return false
-
-  return verifySignature(didKey, ctxBytes, commit.sig)
-}
-
-const computeMac = (
-  ikm: Uint8Array,
-  ctxBytes: Uint8Array,
-  hash: Uint8Array,
-): Uint8Array => {
-  return hmacSha256(hkdfSha256(ikm, ctxBytes), hash)
-}
-
-const DOMAIN_PREFIX = new TextEncoder().encode('atproto-space-v1')
-
-/**
- * ```
- * ctx = "atproto-space-v1"
- *    || uint16be(len(space))  || space
- *    || uint16be(len(author)) || author
- *    || uint16be(len(rev))    || rev
- *    || uint16be(len(ikm))    || ikm
- * ```
- *
- * Length prefixes are big-endian per the TLS variable-length vector convention —
- * deliberately the opposite byte order from the set hash's lanes.
- */
-export const encodeCommitCtx = (
-  ctx: CommitCtx,
-  ikm: Uint8Array,
-): Uint8Array => {
-  const encoder = new TextEncoder()
-  const fields = [
-    encoder.encode(ctx.space),
-    encoder.encode(ctx.author),
-    encoder.encode(ctx.rev),
-    ikm,
-  ]
-
-  let size = DOMAIN_PREFIX.length
-  for (const field of fields) {
-    if (field.length > 0xffff) {
-      throw new Error('commit ctx field exceeds uint16 length prefix')
-    }
-    size += 2 + field.length
-  }
-
-  const out = new Uint8Array(size)
-  out.set(DOMAIN_PREFIX)
-  let offset = DOMAIN_PREFIX.length
-  for (const field of fields) {
-    out[offset++] = (field.length >>> 8) & 0xff
-    out[offset++] = field.length & 0xff
-    out.set(field, offset)
-    offset += field.length
-  }
-  return out
+  if (commit.repo !== params.repo) return false
+  if (commit.space !== params.space) return false
+  return verifyCommitMac(params.sharedSecret, commit, params.mac)
 }

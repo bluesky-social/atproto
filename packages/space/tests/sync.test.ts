@@ -1,14 +1,15 @@
 import { beforeAll, describe, expect, it } from 'vitest'
 import { encodeCarBlock, encodeCarHeader, readCarStream } from '@atproto/car'
-import { type Keypair, Secp256k1Keypair } from '@atproto/crypto'
+import { randomBytes } from '@atproto/crypto'
 import { encode } from '@atproto/lex-cbor'
 import { type Cid, cidForCbor } from '@atproto/lex-data'
 import {
+  type Commit,
   type CommitCtx,
   RepoCommit,
   RepoVerificationError,
   type SerializedRecord,
-  type SignedCommit,
+  computeCommitMac,
   serializeRecord,
   serializeRepo,
   verifyCommit,
@@ -20,7 +21,7 @@ const SPACE = 'at://did:example:space/space/app.bsky.group/test'
 const AUTHOR = 'did:example:alice'
 const REV = '3kbcq3p7ad400'
 
-const ctx: CommitCtx = { space: SPACE, author: AUTHOR, rev: REV }
+const ctx: CommitCtx = { space: SPACE, repo: AUTHOR, rev: REV }
 
 const collect = async (
   stream: AsyncIterable<Uint8Array>,
@@ -31,11 +32,11 @@ const collect = async (
 }
 
 describe('space sync', () => {
-  let keypair: Keypair
+  // Stands in for the secret a syncer and repo host derive for one request.
+  const sharedSecret = randomBytes(32)
   let records: SerializedRecord[]
 
   beforeAll(async () => {
-    keypair = await Secp256k1Keypair.create()
     records = await Promise.all([
       serializeRecord('app.bsky.feed.post', '3kbcq3p7ad401', {
         text: 'hello',
@@ -49,11 +50,20 @@ describe('space sync', () => {
     ])
   })
 
-  const commitFor = (recs: SerializedRecord[]): Promise<SignedCommit> =>
-    RepoCommit.fromRecords(recs).sign(ctx, keypair)
+  const commitFor = (recs: SerializedRecord[]): Commit =>
+    RepoCommit.fromRecords(recs).toCommit(ctx)
 
-  const carFor = async (recs: SerializedRecord[]): Promise<Uint8Array> =>
-    collect(serializeRepo(await commitFor(recs), recs))
+  const carFor = (recs: SerializedRecord[]): Promise<Uint8Array> =>
+    collect(serializeRepo(commitFor(recs), recs))
+
+  // What a syncer verifies a response with: the repo it asked for, and the MAC
+  // the host sent back for the commit over `recs`.
+  const verifyParams = (recs: SerializedRecord[] = records) => ({
+    space: SPACE,
+    repo: AUTHOR,
+    sharedSecret,
+    mac: computeCommitMac(sharedSecret, commitFor(recs)),
+  })
 
   it('declares the commit and index as roots, in order', async () => {
     const car = await carFor(records)
@@ -70,11 +80,7 @@ describe('space sync', () => {
 
   it('round-trips through verification', async () => {
     const car = await carFor(records)
-    const recovered = await verifyRepoCarFull([car], {
-      space: SPACE,
-      author: AUTHOR,
-      didKey: keypair.did(),
-    })
+    const recovered = await verifyRepoCarFull([car], verifyParams())
 
     expect(recovered.commit.rev).toBe(REV)
     expect(Object.keys(recovered.index)).toHaveLength(records.length)
@@ -92,22 +98,17 @@ describe('space sync', () => {
 
   it('recovers record values intact', async () => {
     const car = await carFor(records)
-    const { records: recovered } = await verifyRepoCarFull([car], {
-      space: SPACE,
-      author: AUTHOR,
-      didKey: keypair.did(),
-    })
+    const { records: recovered } = await verifyRepoCarFull(
+      [car],
+      verifyParams(),
+    )
     const post = recovered.find((r) => r.rkey === '3kbcq3p7ad401')
     expect(post?.record).toEqual({ text: 'hello' })
   })
 
   it('serializes an empty repo', async () => {
     const car = await carFor([])
-    const recovered = await verifyRepoCarFull([car], {
-      space: SPACE,
-      author: AUTHOR,
-      didKey: keypair.did(),
-    })
+    const recovered = await verifyRepoCarFull([car], verifyParams([]))
     expect(Object.keys(recovered.index)).toHaveLength(0)
     expect(recovered.records).toHaveLength(0)
     expect(recovered.repo.setHash.isEmpty()).toBe(true)
@@ -115,11 +116,7 @@ describe('space sync', () => {
 
   it('emits record blocks in the index order', async () => {
     const car = await carFor(records)
-    const { index } = await verifyRepoCarFull([car], {
-      space: SPACE,
-      author: AUTHOR,
-      didKey: keypair.did(),
-    })
+    const { index } = await verifyRepoCarFull([car], verifyParams())
     // Re-read the raw blocks and check they follow the index's declared order.
     const { blocks } = await readCarStream([car])
     const cids: Cid[] = []
@@ -134,24 +131,18 @@ describe('space sync', () => {
   it('authenticates the index without reading records', async () => {
     const car = await carFor(records)
     // verifyRepoCar validates commit + index eagerly; records stay lazy.
-    const { index, repo, commit } = await verifyRepoCar([car], {
-      space: SPACE,
-      author: AUTHOR,
-      didKey: keypair.did(),
-    })
+    const { index, repo, commit } = await verifyRepoCar([car], verifyParams())
     expect(repo.matches(commit)).toBe(true)
     expect(Object.keys(index)).toHaveLength(records.length)
   })
 
   describe('rejects tampering', () => {
-    it('rejects a commit signed by another key', async () => {
-      const other = await Secp256k1Keypair.create()
+    it('rejects a MAC under another shared secret', async () => {
       const car = await carFor(records)
       await expect(
         verifyRepoCarFull([car], {
-          space: SPACE,
-          author: AUTHOR,
-          didKey: other.did(),
+          ...verifyParams(),
+          sharedSecret: randomBytes(32),
         }),
       ).rejects.toThrow(RepoVerificationError)
     })
@@ -160,39 +151,33 @@ describe('space sync', () => {
       const car = await carFor(records)
       await expect(
         verifyRepoCarFull([car], {
+          ...verifyParams(),
           space: 'at://did:example:space/space/app.bsky.group/other',
-          author: AUTHOR,
-          didKey: keypair.did(),
         }),
       ).rejects.toThrow(/commit failed verification/)
     })
 
-    it('rejects a repo verified against the wrong author', async () => {
+    it('rejects a repo verified against the wrong repo', async () => {
       const car = await carFor(records)
       await expect(
         verifyRepoCarFull([car], {
-          space: SPACE,
-          author: 'did:example:bob',
-          didKey: keypair.did(),
+          ...verifyParams(),
+          repo: 'did:example:bob',
         }),
       ).rejects.toThrow(/commit failed verification/)
     })
 
-    it('rejects an index that disagrees with the commit hash', async () => {
+    it('rejects an index that disagrees with the commit data', async () => {
       // A commit over two records, but an index listing all three.
-      const commit = await commitFor(records.slice(0, 2))
+      const commit = commitFor(records.slice(0, 2))
       const car = await collect(serializeRepo(commit, records))
       await expect(
-        verifyRepoCarFull([car], {
-          space: SPACE,
-          author: AUTHOR,
-          didKey: keypair.did(),
-        }),
-      ).rejects.toThrow(/index does not match the commit hash/)
+        verifyRepoCarFull([car], verifyParams(records.slice(0, 2))),
+      ).rejects.toThrow(/index does not match the commit data/)
     })
 
     it('rejects a record block whose bytes do not match its cid', async () => {
-      const commit = await commitFor(records)
+      const commit = commitFor(records)
       const index: Record<string, Cid> = {}
       for (const r of records) {
         index[`${r.collection}/${r.rkey}`] = r.cid
@@ -219,11 +204,7 @@ describe('space sync', () => {
         }),
       ]
 
-      const { records: stream } = await verifyRepoCar(parts, {
-        space: SPACE,
-        author: AUTHOR,
-        didKey: keypair.did(),
-      })
+      const { records: stream } = await verifyRepoCar(parts, verifyParams())
       await expect(async () => {
         for await (const _ of stream) {
           // drain
@@ -232,7 +213,7 @@ describe('space sync', () => {
     })
 
     it('rejects a CAR missing a record named in the index', async () => {
-      const commit = await commitFor(records)
+      const commit = commitFor(records)
       // Serialize the full index but drop the last block.
       const full = await collect(serializeRepo(commit, records))
       const { blocks } = await readCarStream([full])
@@ -245,11 +226,7 @@ describe('space sync', () => {
 
       const parts = [encodeCarHeader(roots), ...kept]
 
-      const { records: stream } = await verifyRepoCar(parts, {
-        space: SPACE,
-        author: AUTHOR,
-        didKey: keypair.did(),
-      })
+      const { records: stream } = await verifyRepoCar(parts, verifyParams())
       await expect(async () => {
         for await (const _ of stream) {
           // drain
@@ -261,11 +238,7 @@ describe('space sync', () => {
   describe('repo index', () => {
     it('folds into the same set hash as the records it describes', async () => {
       const car = await carFor(records)
-      const { index, repo } = await verifyRepoCarFull([car], {
-        space: SPACE,
-        author: AUTHOR,
-        didKey: keypair.did(),
-      })
+      const { index, repo } = await verifyRepoCarFull([car], verifyParams())
       expect(
         RepoCommit.fromIndex(index).setHash.equals(
           RepoCommit.fromRecords(records).setHash,
@@ -277,7 +250,7 @@ describe('space sync', () => {
     })
 
     it('rejects an index whose values are not cids', async () => {
-      const commit = await commitFor(records)
+      const commit = commitFor(records)
       const commitBytes = encode(commit)
       const indexBytes = encode({ 'app.bsky.feed.post/1': 'not-a-cid' })
       const [commitRoot, indexRoot] = await Promise.all([
@@ -290,18 +263,14 @@ describe('space sync', () => {
         encodeCarBlock({ cid: indexRoot, bytes: indexBytes }),
       ])
 
-      await expect(
-        verifyRepoCarFull([car], {
-          space: SPACE,
-          author: AUTHOR,
-          didKey: keypair.did(),
-        }),
-      ).rejects.toThrow(/invalid repo index/)
+      await expect(verifyRepoCarFull([car], verifyParams())).rejects.toThrow(
+        /invalid repo index/,
+      )
     })
   })
 
   // A syncer advances its own copy over the oplog, then checks it against the
-  // repo's signed commit. A mismatch means it must fall back to full recovery.
+  // repo's commit. A mismatch means it must fall back to full recovery.
   describe('incremental sync', () => {
     const createOps = (recs: SerializedRecord[]) =>
       recs.map((r) => ({
@@ -312,15 +281,15 @@ describe('space sync', () => {
       }))
 
     it('catches up to a commit by replaying the oplog', async () => {
-      const commit = await commitFor(records)
+      const commit = commitFor(records)
       const local = new RepoCommit().applyOps(createOps(records))
 
-      expect(await verifyCommit(commit, ctx, keypair.did())).toBe(true)
+      expect(verifyCommit(commit, verifyParams())).toBe(true)
       expect(local.matches(commit)).toBe(true)
     })
 
     it('detects divergence when an op was missed', async () => {
-      const commit = await commitFor(records)
+      const commit = commitFor(records)
       const local = new RepoCommit().applyOps(createOps(records.slice(0, 2)))
       expect(local.matches(commit)).toBe(false)
     })
@@ -341,47 +310,28 @@ describe('space sync', () => {
     it('rejects a truncated CAR', async () => {
       const car = await carFor(records)
       await expect(
-        verifyRepoCar([car.subarray(0, 3)], {
-          space: SPACE,
-          author: AUTHOR,
-          didKey: keypair.did(),
-        }),
+        verifyRepoCar([car.subarray(0, 3)], verifyParams()),
       ).rejects.toThrow(/not enough data/)
     })
 
     it('rejects a CAR with the wrong root count', async () => {
-      const commit = await commitFor(records)
-      const commitBytes = encode({
-        ver: commit.ver,
-        hash: commit.hash,
-        ikm: commit.ikm,
-        sig: commit.sig,
-        mac: commit.mac,
-        rev: commit.rev,
-      })
+      const commit = commitFor(records)
+      const commitBytes = encode(commit)
       const commitCid = await cidForCbor(commitBytes)
       const car = Buffer.concat([
         encodeCarHeader([commitCid]),
         encodeCarBlock({ cid: commitCid, bytes: commitBytes }),
       ])
-      await expect(
-        verifyRepoCar([car], {
-          space: SPACE,
-          author: AUTHOR,
-          didKey: keypair.did(),
-        }),
-      ).rejects.toThrow(/expected 2 car roots/)
+      await expect(verifyRepoCar([car], verifyParams())).rejects.toThrow(
+        /expected 2 car roots/,
+      )
     })
 
     it('reads a CAR delivered in arbitrary chunk boundaries', async () => {
       const car = await carFor(records)
       // One byte at a time — exercises the reader's buffering.
       const chunks = Array.from(car, (byte) => new Uint8Array([byte]))
-      const recovered = await verifyRepoCarFull(chunks, {
-        space: SPACE,
-        author: AUTHOR,
-        didKey: keypair.did(),
-      })
+      const recovered = await verifyRepoCarFull(chunks, verifyParams())
       expect(recovered.records).toHaveLength(records.length)
     })
   })

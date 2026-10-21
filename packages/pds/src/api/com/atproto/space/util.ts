@@ -1,14 +1,29 @@
+import type { IncomingMessage, ServerResponse } from 'node:http'
 import {
   MINUTE,
   TID,
   getPdsEndpoint,
   getServiceEndpoint,
 } from '@atproto/common'
-import type { Keypair } from '@atproto/crypto'
 import type { IdResolver } from '@atproto/identity'
 import { xrpc } from '@atproto/lex'
+import type { Cid } from '@atproto/lex-data'
 import type { SpacePermissionMatchOperation } from '@atproto/oauth-scopes'
-import { type CommitCtx, RepoCommit, type SignedCommit } from '@atproto/space'
+import {
+  COMMIT_MAC_TYPE,
+  type Commit,
+  MAC_HEADER,
+  type MacType,
+  RECORD_MAC_TYPE,
+  RepoCommit,
+  SpaceMacError,
+  WANT_MAC_HEADER,
+  computeCommitMac,
+  computeRecordMac,
+  decapsulate,
+  formatMacHeader,
+  parseWantMacHeader,
+} from '@atproto/space'
 import { type DidString, SpaceRef, type SpaceRefString } from '@atproto/syntax'
 import {
   AuthRequiredError,
@@ -27,6 +42,7 @@ import {
 import type { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
 import { spaceLogger } from '../../../../logger.js'
+import { appendVary } from '../../../../util/http.js'
 
 // Lexicons type a space as a `space-ref`, so schema validation rejects a
 // malformed one before any handler runs. Defensive for other callers.
@@ -135,21 +151,76 @@ export function assertCredentialSpace(
 }
 
 // Undefined when the repo has never been written to.
-export async function buildSignedCommit(opts: {
+export function buildCommit(opts: {
   spaceUri: SpaceRefString
-  author: string
+  repo: DidString
   state: SpaceRepo | null
-  keypair: Keypair
-}): Promise<SignedCommit | undefined> {
-  const { spaceUri, author, state, keypair } = opts
+}): Commit | undefined {
+  const { spaceUri, repo, state } = opts
   if (!state?.setHash || !state.rev) return undefined
 
-  const ctx: CommitCtx = {
-    space: toSpaceRef(spaceUri).toString(),
-    author,
+  return RepoCommit.fromState(state.setHash).toCommit({
+    space: spaceUri,
+    repo,
     rev: state.rev,
+  })
+}
+
+/**
+ * Methods that return a commit or record require a MAC when called with a space
+ * credential, requested via the `Atproto-Space-Want-Mac` header. Returns the
+ * shared secret to compute it with, or undefined when an account reading its own
+ * data did not ask for one.
+ */
+export async function getSpaceMacSecret(
+  ctx: AppContext,
+  opts: {
+    req: IncomingMessage
+    res: ServerResponse
+    auth: AccessOutput | OAuthOutput | SpaceCredentialOutput
+    repo: DidString
+    type: MacType
+  },
+): Promise<Uint8Array | undefined> {
+  const { req, res, auth, repo, type } = opts
+  appendVary(res, WANT_MAC_HEADER)
+
+  const header = req.headers[WANT_MAC_HEADER]
+  if (header === undefined && !isSpaceCredentialOutput(auth)) {
+    return undefined
   }
-  return RepoCommit.fromState(state.setHash).sign(ctx, keypair)
+
+  const kemKeypair = await ctx.actorStore.kemKeypair(repo)
+  try {
+    const keyShare = parseWantMacHeader(header, type)
+    return decapsulate(kemKeypair, keyShare)
+  } catch (err) {
+    if (err instanceof SpaceMacError) {
+      throw new InvalidRequestError(err.message, 'BadSpaceMac')
+    }
+    throw err
+  }
+}
+
+// The `Atproto-Space-Mac` response header for a commit, when a MAC was requested.
+export function commitMacHeaders(
+  sharedSecret: Uint8Array | undefined,
+  commit: Commit,
+): Record<string, string> | undefined {
+  if (!sharedSecret) return undefined
+  const mac = computeCommitMac(sharedSecret, commit)
+  return { [MAC_HEADER]: formatMacHeader(COMMIT_MAC_TYPE, mac) }
+}
+
+// The `Atproto-Space-Mac` response header for a record, when a MAC was requested.
+export function recordMacHeaders(
+  sharedSecret: Uint8Array | undefined,
+  uri: string,
+  cid: Cid,
+): Record<string, string> | undefined {
+  if (!sharedSecret) return undefined
+  const mac = computeRecordMac(sharedSecret, uri, cid)
+  return { [MAC_HEADER]: formatMacHeader(RECORD_MAC_TYPE, mac) }
 }
 
 /**
@@ -207,7 +278,7 @@ export async function processNotifyWrite(
   ctx: AppContext,
   input: com.atproto.space.notifyWrite.$InputBody,
 ): Promise<void> {
-  const { space, repo, repoRev, hash } = input
+  const { space, repo, repoRev, data } = input
   const { spaceDid: ownerDid } = toSpaceRef(space)
 
   await assertSpaceHost(ctx, space)
@@ -239,7 +310,7 @@ export async function processNotifyWrite(
   }
 
   const sequence = await ctx.actorStore.transact(ownerDid, (txn) =>
-    txn.space.recordWriter(space, repo, repoRev, hash),
+    txn.space.recordWriter(space, repo, repoRev, data),
   )
   if (!sequence) return
 
@@ -263,7 +334,7 @@ export async function processNotifyWrite(
         }
         await xrpc(target.endpoint, com.atproto.space.notifyWrite, {
           headers: target.headers,
-          body: { space, repo, repoRev, hash, ...sequence },
+          body: { space, repo, repoRev, data, ...sequence },
           signal: AbortSignal.any([signal, AbortSignal.timeout(10_000)]),
         })
       } catch (err) {

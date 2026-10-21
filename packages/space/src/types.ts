@@ -1,6 +1,13 @@
 import { z } from 'zod'
 import { type Cid, type LexMap, ifCid } from '@atproto/lex-data'
-import type { NsidString, RecordKeyString } from '@atproto/syntax'
+import {
+  type DidString,
+  type NsidString,
+  type RecordKeyString,
+  type SpaceRefString,
+  isSpaceRefString,
+  isValidDid,
+} from '@atproto/syntax'
 
 export type SpaceRecord = LexMap
 
@@ -17,9 +24,10 @@ export type RepoOp = RecordPathParts & {
 
 export const COMMIT_VERSION = 1
 
+// Which repo, in which space, at which revision a commit describes.
 export type CommitCtx = {
-  space: string
-  author: string
+  space: SpaceRefString
+  repo: DidString
   rev: string
 }
 
@@ -51,15 +59,14 @@ export const cidSchema = z.unknown().transform((input, ctx): Cid => {
 
 const bytesSchema = z.instanceof(Uint8Array<ArrayBufferLike>)
 
-const signedCommitSchema = z.object({
-  ver: z.literal(COMMIT_VERSION),
-  hash: bytesSchema,
-  ikm: bytesSchema,
-  sig: bytesSchema,
-  mac: bytesSchema,
+const commitSchema = z.object({
+  ver: z.number(),
+  repo: z.custom<DidString>(isValidDid),
+  space: z.custom<SpaceRefString>(isSpaceRefString),
   rev: z.string(),
+  data: bytesSchema,
 })
-export type SignedCommit = z.infer<typeof signedCommitSchema>
+export type Commit = z.infer<typeof commitSchema>
 
 const repoIndex = z.record(z.custom<RecordPath>(isRecordPath), cidSchema)
 export type RepoIndex = z.infer<typeof repoIndex>
@@ -70,9 +77,9 @@ export type Def<T> = {
 }
 
 export const defs = {
-  signedCommit: {
-    name: 'signed commit',
-    schema: signedCommitSchema,
+  commit: {
+    name: 'commit',
+    schema: commitSchema,
   },
   repoIndex: {
     name: 'repo index',

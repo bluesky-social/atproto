@@ -12,8 +12,10 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ auth }) => {
       const requester = auth.credentials.did
       const signingKey = await ctx.actorStore.keypair(requester)
+      const kemKey = await ctx.actorStore.kemKeypair(requester)
       const verificationMethods = {
         atproto: signingKey.did(),
+        atproto_kem: kemKey.did(),
       }
       const account = await ctx.accountManager.getAccount(requester, {
         includeDeactivated: true,
