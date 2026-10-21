@@ -55,8 +55,13 @@ export class QueueAccess {
     return sql<boolean>`${ref} NOT IN (${sql.join(this.hiddenQueueIds)})`
   }
 
+  /** Whether the caller may access a queue. */
+  canAccessQueue(queueId: number): boolean {
+    return !this.hiddenQueueIds.includes(queueId)
+  }
+
   assertQueue(queueId: number): void {
-    if (this.hiddenQueueIds.includes(queueId)) {
+    if (!this.canAccessQueue(queueId)) {
       throw new InvalidRequestError('Queue not found', 'QueueNotFound')
     }
   }

@@ -232,12 +232,85 @@ describe('strict queue access', () => {
       },
     )
     expect(reportsResponse.status).toBe(200)
+    const item = await report()
+    const reportResponse = await fetch(
+      `${network.ozone.url}/xrpc/${ids.ToolsOzoneReportGetReport}?id=${item.id}`,
+      {
+        headers: {
+          authorization: `Basic ${Buffer.from(`admin:${ADMIN_PASSWORD}`).toString('base64')}`,
+        },
+      },
+    )
+    expect(reportResponse.status).toBe(200)
+    expect((await reportResponse.json()).id).toBe(item.id)
     await expect(
       agent.tools.ozone.queue.updateQueue(
         { queueId: ordinary, strictAccess: null as unknown as boolean },
         await options(ids.ToolsOzoneQueueUpdateQueue),
       ),
     ).rejects.toThrow()
+  })
+
+  it.each<Role>(['admin', 'moderator', 'triage'])(
+    'checks the report queue membership for %s reads',
+    async (role) => {
+      const hidden = await report()
+      const unrestricted = await report(ordinary)
+      const unmatched = await report(-1)
+      expect((await getReport(unrestricted.id, role)).id).toBe(unrestricted.id)
+      expect((await getReport(unmatched.id, role)).id).toBe(unmatched.id)
+      await expect(getReport(999999, role)).rejects.toMatchObject({
+        error: 'NotFound',
+      })
+      if (role === 'admin') {
+        expect((await getReport(hidden.id, role)).id).toBe(hidden.id)
+      } else {
+        await expect(getReport(hidden.id, role)).rejects.toMatchObject({
+          error: 'NotFound',
+        })
+      }
+      await grant(strict, role)
+      expect((await getReport(hidden.id, role)).id).toBe(hidden.id)
+    },
+  )
+
+  it('keeps legacy reports without a queue readable', async () => {
+    const item = await report(-1)
+    // @NOTE Current routing uses -1; legacy reports may have a null queue ID.
+    await network.ozone.ctx.db.db
+      .updateTable('report')
+      .set({ queueId: null })
+      .where('id', '=', item.id)
+      .execute()
+    expect((await getReport(item.id)).id).toBe(item.id)
+  })
+
+  it('checks access to the current queue after report reassignment', async () => {
+    const item = await report(ordinary)
+    expect((await getReport(item.id)).id).toBe(item.id)
+    await agent.tools.ozone.report.reassignQueue(
+      { reportId: item.id, queueId: strict },
+      await options(ids.ToolsOzoneReportReassignQueue),
+    )
+    await expect(getReport(item.id)).rejects.toMatchObject({
+      error: 'NotFound',
+    })
+    await grant()
+    expect((await getReport(item.id)).id).toBe(item.id)
+
+    const other = await createQueue(true)
+    await agent.tools.ozone.report.reassignQueue(
+      { reportId: item.id, queueId: other },
+      await options(ids.ToolsOzoneReportReassignQueue),
+    )
+    await expect(getReport(item.id)).rejects.toMatchObject({
+      error: 'NotFound',
+    })
+    await agent.tools.ozone.report.reassignQueue(
+      { reportId: item.id, queueId: ordinary },
+      await options(ids.ToolsOzoneReportReassignQueue),
+    )
+    expect((await getReport(item.id)).id).toBe(item.id)
   })
 
   it('restricts strict configuration and membership grants to admins', async () => {
@@ -338,7 +411,7 @@ describe('strict queue access', () => {
           await options(ids.ToolsOzoneQueueDeleteQueue, 'moderator'),
         ),
       ).rejects.toMatchObject({ error: 'QueueNotFound' })
-      expect((await getReport(item.id)).queue?.id).toBe(strict)
+      expect((await getReport(item.id, 'admin')).queue?.id).toBe(strict)
       expect(
         (await listQueues('admin')).queues.map((queue) => queue.id),
       ).toEqual(expect.arrayContaining([ordinary, strict]))
@@ -398,7 +471,7 @@ describe('strict queue access', () => {
       await options(ids.ToolsOzoneQueueDeleteQueue),
     )
     expect(data).toEqual({ deleted: true, reportsMigrated: 1 })
-    expect((await getReport(item.id)).queue?.id).toBe(target)
+    expect((await getReport(item.id, 'admin')).queue?.id).toBe(target)
     expect(
       (await listQueues('admin')).queues.map((queue) => queue.id),
     ).not.toContain(strict)
@@ -407,6 +480,7 @@ describe('strict queue access', () => {
   it('revokes access on the next request when a member leaves', async () => {
     const hidden = await report()
     await grant()
+    expect((await getReport(hidden.id)).id).toBe(hidden.id)
     expect(
       (await queryQueue(strict)).data.reports.map((item) => item.id),
     ).toContain(hidden.id)
@@ -417,7 +491,9 @@ describe('strict queue access', () => {
     await expect(queryQueue(strict)).rejects.toMatchObject({
       error: 'QueueNotFound',
     })
-    expect((await getReport(hidden.id)).id).toBe(hidden.id)
+    await expect(getReport(hidden.id)).rejects.toMatchObject({
+      error: 'NotFound',
+    })
     expect((await listQueues()).queues.map((queue) => queue.id)).not.toContain(
       strict,
     )
@@ -426,6 +502,7 @@ describe('strict queue access', () => {
   it.each(['expired', 'future'] as const)(
     'does not grant visibility through %s membership',
     async (state) => {
+      const item = await report()
       const did = network.ozone.moderatorAccnt.did
       // @NOTE The membership APIs do not expose scheduled or expiring grants.
       await network.ozone.ctx.db.db
@@ -447,10 +524,14 @@ describe('strict queue access', () => {
       await expect(queryQueue(strict)).rejects.toMatchObject({
         error: 'QueueNotFound',
       })
+      await expect(getReport(item.id)).rejects.toMatchObject({
+        error: 'NotFound',
+      })
     },
   )
 
   it('accepts active expiring membership and applies admin revocation', async () => {
+    const item = await report()
     // @NOTE The membership API creates permanent assignments only.
     await network.ozone.ctx.db.db
       .insertInto('moderator_assignment')
@@ -465,7 +546,10 @@ describe('strict queue access', () => {
     expect((await listQueues()).queues.map((queue) => queue.id)).toContain(
       strict,
     )
-    expect((await queryQueue(strict)).data.reports).toEqual([])
+    expect(
+      (await queryQueue(strict)).data.reports.map((report) => report.id),
+    ).toContain(item.id)
+    expect((await getReport(item.id)).id).toBe(item.id)
     await agent.tools.ozone.queue.unassignModerator(
       { queueId: strict, did: network.ozone.moderatorAccnt.did },
       await options(ids.ToolsOzoneQueueUnassignModerator),
@@ -475,6 +559,9 @@ describe('strict queue access', () => {
     )
     await expect(queryQueue(strict)).rejects.toMatchObject({
       error: 'QueueNotFound',
+    })
+    await expect(getReport(item.id)).rejects.toMatchObject({
+      error: 'NotFound',
     })
   })
 
@@ -491,7 +578,9 @@ describe('strict queue access', () => {
     await expect(queryQueue(strict)).rejects.toMatchObject({
       error: 'QueueNotFound',
     })
-    expect((await getReport(hidden.id)).id).toBe(hidden.id)
+    await expect(getReport(hidden.id)).rejects.toMatchObject({
+      error: 'NotFound',
+    })
     expect((await listQueues()).queues.map((queue) => queue.id)).not.toContain(
       strict,
     )
@@ -517,7 +606,9 @@ describe('strict queue access', () => {
     expect((await getReport(unassigned.id, 'admin')).queue?.id).toBe(
       data.queue.id,
     )
-    expect((await getReport(unassigned.id)).queue?.id).toBe(data.queue.id)
+    await expect(getReport(unassigned.id)).rejects.toMatchObject({
+      error: 'NotFound',
+    })
     await expect(queryQueue(data.queue.id)).rejects.toMatchObject({
       error: 'QueueNotFound',
     })
@@ -603,7 +694,7 @@ describe('strict queue access', () => {
       expect(
         (await listQueues()).queues.map((queue) => queue.id),
       ).not.toContain(ordinary)
-      expect((await getReport(item.id)).queue?.id).toBe(source)
+      expect((await getReport(item.id, 'admin')).queue?.id).toBe(source)
       const unchanged = (await listQueues('admin')).queues.find(
         (queue) => queue.id === ordinary,
       )
@@ -633,7 +724,7 @@ describe('strict queue access', () => {
     expect(second.queues.map((queue) => queue.id)).toEqual([next])
   })
 
-  it('blocks explicit strict queue queries while preserving other report and event access', async () => {
+  it('blocks strict queue and individual report reads while preserving general queries and events', async () => {
     const item = await report()
     await expect(queryQueue(strict)).rejects.toMatchObject({
       error: 'QueueNotFound',
@@ -647,7 +738,9 @@ describe('strict queue access', () => {
     expect(
       (await queryQueue(-1)).data.reports.map((report) => report.id),
     ).not.toContain(item.id)
-    expect((await getReport(item.id)).id).toBe(item.id)
+    await expect(getReport(item.id)).rejects.toMatchObject({
+      error: 'NotFound',
+    })
     const { data: reports } = await agent.tools.ozone.report.queryReports(
       { status: 'queued', subject: sc.dids.alice },
       await options(ids.ToolsOzoneReportQueryReports, 'moderator'),
@@ -667,6 +760,7 @@ describe('strict queue access', () => {
     )
     expect(events.events.map((event) => event.id)).toContain(item.eventId)
     await grant()
+    expect((await getReport(item.id)).id).toBe(item.id)
     expect(
       (await queryQueue(strict)).data.reports.map((report) => report.id),
     ).toContain(item.id)
