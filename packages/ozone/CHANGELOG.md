@@ -1,5 +1,17 @@
 # @atproto/ozone
 
+## 0.10.3
+
+### Patch Changes
+
+- [#5701](https://github.com/bluesky-social/atproto/pull/5701) [`33a5ccc`](https://github.com/bluesky-social/atproto/commit/33a5ccc99d55e135d4e68ad1928fe75a23091bb2) Thanks [@gcwill70](https://github.com/gcwill70)! - Exclude muted reports from inbound statistics across aggregate, queue, category, and moderator groups. Historical snapshots adopt the new definition when recomputed.
+
+- [#5700](https://github.com/bluesky-social/atproto/pull/5700) [`53d307b`](https://github.com/bluesky-social/atproto/commit/53d307b614120947d7a11687e9bd0868c1c02dd1) Thanks [@gcwill70](https://github.com/gcwill70)! - Add strict access flag to report queues. Non-admin users will only be able to access strict queues and their reports if they are assigned to them.
+  
+  Allow filtering SafeLink rules by exact source in queryRules, combining with existing filters and pagination.
+
+- [#5669](https://github.com/bluesky-social/atproto/pull/5669) [`bb7a1c7`](https://github.com/bluesky-social/atproto/commit/bb7a1c7c1f04c29213f9c0107653748bf05c06aa) Thanks [@foysalit](https://github.com/foysalit)! - Bound historical label replay across subscriptions on each API process to protect request latency. Log subscription cursors and bounded caller metadata at connection start and close for incident attribution.
+
 ## 0.10.2
 
 ### Patch Changes
