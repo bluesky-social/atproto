@@ -5,6 +5,10 @@ Backend service for moderating the Bluesky network.
 [![NPM](https://img.shields.io/npm/v/@atproto/ozone)](https://www.npmjs.com/package/@atproto/ozone)
 [![Github CI Status](https://github.com/bluesky-social/atproto/actions/workflows/repo.yaml/badge.svg)](https://github.com/bluesky-social/atproto/actions/workflows/repo.yaml)
 
+## DID cache
+
+The API uses a bounded in-memory DID document cache. Configure its limits with `OZONE_DID_CACHE_MAX_ENTRIES` (default 10,000), `OZONE_DID_CACHE_MAX_BYTES` (default 33,554,432 bytes for serialized documents and DID keys), and `OZONE_DID_CACHE_MAX_DOC_BYTES` (default 65,536 bytes per serialized document). Set any limit to `0` to disable retention. Documents exceeding a limit can still be resolved but are not cached. Restart the API after changing these settings.
+
 ## Report tags
 
 Reports automatically add a reason tag such as `report:spam` to their subject by default. Set `OZONE_REPORT_TAGS_DISABLED=true` and restart the API to disable these automatic report tags. Unset or `false` keeps them enabled.

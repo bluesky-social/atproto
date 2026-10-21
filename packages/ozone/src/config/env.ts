@@ -39,6 +39,9 @@ export const readEnv = (): OzoneEnvironment => {
     didPlcUrl: envStr('OZONE_DID_PLC_URL'),
     didCacheStaleTTL: envInt('OZONE_DID_CACHE_STALE_TTL'),
     didCacheMaxTTL: envInt('OZONE_DID_CACHE_MAX_TTL'),
+    didCacheMaxEntries: envInt('OZONE_DID_CACHE_MAX_ENTRIES'),
+    didCacheMaxBytes: envInt('OZONE_DID_CACHE_MAX_BYTES'),
+    didCacheMaxDocBytes: envInt('OZONE_DID_CACHE_MAX_DOC_BYTES'),
     cdnPaths: envList('OZONE_CDN_PATHS'),
     adminDids: envList('OZONE_ADMIN_DIDS') as DidString[],
     moderatorDids: envList('OZONE_MODERATOR_DIDS') as DidString[],
@@ -101,6 +104,9 @@ export type OzoneEnvironment = {
   didPlcUrl?: string
   didCacheStaleTTL?: number
   didCacheMaxTTL?: number
+  didCacheMaxEntries?: number
+  didCacheMaxBytes?: number
+  didCacheMaxDocBytes?: number
   cdnPaths?: string[]
   adminDids: DidString[]
   moderatorDids: DidString[]
