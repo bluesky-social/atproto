@@ -443,6 +443,7 @@ export class ReportStatsService {
       select ${statGroups}, count(*) as "inboundCount"
       from report r
       where r."createdAt" >= ${dayStart} and r."createdAt" < ${dayEnd}
+        and r."isMuted" = false
       group by grouping sets ((), (coalesce(r."queueId", -1)), (r."reportType"), (r."assignedTo"))
     `.execute(this.db.db)
 
