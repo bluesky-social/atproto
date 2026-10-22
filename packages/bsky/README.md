@@ -5,6 +5,20 @@ TypeScript implementation of the `app.bsky` Lexicons backing the https://bsky.ap
 [![NPM](https://img.shields.io/npm/v/@atproto/bsky)](https://www.npmjs.com/package/@atproto/bsky)
 [![Github CI Status](https://github.com/bluesky-social/atproto/actions/workflows/repo.yaml/badge.svg)](https://github.com/bluesky-social/atproto/actions/workflows/repo.yaml)
 
+## HTTP access logging
+
+HTTP request completion logs are retained by default. Set
+`BSKY_HTTP_LOG_SUCCESS_SAMPLE_RATE` to a number between `0` and `1` to retain
+that fraction of fast, successful completion logs (for example, `0.1` retains
+approximately 10%). Sampling never suppresses HTTP errors (status 400 or higher),
+response errors, aborted requests, or slow requests. Existing logging enablement
+and log-level settings still apply.
+Slow requests take at least `BSKY_HTTP_LOG_SLOW_REQUEST_MS` milliseconds, which
+defaults to `1000`. Diagnostic logs emitted by request handlers and other
+subsystems are unaffected. Invalid sampling or duration values fail startup.
+Sampled access logs are incomplete and cannot provide full request counts.
+Verify request-metric coverage before relying on metrics as a replacement.
+
 ## License
 
 This project is dual-licensed under MIT and Apache 2.0 terms:
