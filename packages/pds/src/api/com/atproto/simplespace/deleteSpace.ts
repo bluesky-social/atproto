@@ -24,7 +24,10 @@ export default function (server: Server, ctx: AppContext) {
       }
       if (spaceRow.deletedAt) return
 
-      await ctx.simpleSpaceManager.deleteSpace(space)
+      const recipients = await ctx.simpleSpaceManager.deleteSpace(space)
+      ctx.backgroundQueue.add(() =>
+        ctx.spaceNotifications.notifySpaceDeleted(space, recipients),
+      )
     },
   })
 }

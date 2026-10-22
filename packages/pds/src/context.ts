@@ -472,11 +472,7 @@ export class AppContext implements AsyncDisposable {
         })
       : undefined
 
-    const simpleSpaceManager = new SimpleSpaceManager(
-      actorStore,
-      idResolver,
-      backgroundQueue,
-    )
+    const simpleSpaceManager = new SimpleSpaceManager(actorStore, idResolver)
 
     const scopeRefGetter = entrywayClient
       ? new ScopeReferenceGetter(entrywayClient, redisScratch)

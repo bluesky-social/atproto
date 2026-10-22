@@ -3,7 +3,7 @@ export interface SpaceWriter {
   did: string
   spaceRev: string
   repoRev: string
-  hash: Uint8Array
+  data: Uint8Array
 }
 
 const tableName = 'space_writer'

@@ -30,7 +30,8 @@ export class ActorStore {
     const directory = path.join(this.cfg.directory, didHash.slice(0, 2), did)
     const dbLocation = path.join(directory, `store.sqlite`)
     const keyLocation = path.join(directory, `key`)
-    return { directory, dbLocation, keyLocation }
+    const kemKeyLocation = path.join(directory, `kem_key`)
+    return { directory, dbLocation, keyLocation, kemKeyLocation }
   }
 
   async exists(did: string): Promise<boolean> {
@@ -42,6 +43,18 @@ export class ActorStore {
     const { keyLocation } = await this.getLocation(did)
     const privKey = await fs.readFile(keyLocation)
     return crypto.Secp256k1Keypair.import(privKey)
+  }
+
+  /**
+   * The account's `#atproto_kem` key, used to establish shared secrets for space
+   * MACs. Undefined for an account created before KEM keys existed, until it is
+   * backfilled.
+   */
+  async kemKeypair(did: string): Promise<crypto.P256Keypair | undefined> {
+    const { kemKeyLocation } = await this.getLocation(did)
+    const privKey = await readIfExists(kemKeyLocation)
+    if (!privKey) return undefined
+    return crypto.P256Keypair.import(privKey)
   }
 
   async openDb(did: string): Promise<ActorDb> {
@@ -108,16 +121,21 @@ export class ActorStore {
     }
   }
 
-  async create(did: string, keypair: ExportableKeypair) {
-    const { directory, dbLocation, keyLocation } = await this.getLocation(did)
+  async create(
+    did: string,
+    keypair: ExportableKeypair,
+    kemKeypair: ExportableKeypair,
+  ) {
+    const { directory, dbLocation, keyLocation, kemKeyLocation } =
+      await this.getLocation(did)
     // ensure subdir exists
     await mkdir(directory, { recursive: true })
     const exists = await fileExists(dbLocation)
     if (exists) {
       throw new InvalidRequestError('Repo already exists', 'AlreadyExists')
     }
-    const privKey = await keypair.export()
-    await fs.writeFile(keyLocation, privKey)
+    await fs.writeFile(keyLocation, await keypair.export())
+    await fs.writeFile(kemKeyLocation, await kemKeypair.export())
 
     const db: ActorDb = getDb(dbLocation, this.cfg.disableWalAutoCheckpoint)
     try {

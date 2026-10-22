@@ -28,3 +28,15 @@ export class RepoVerificationError extends Error {
     this.name = 'RepoVerificationError'
   }
 }
+
+export class SpaceMacError extends Error {
+  name = 'SpaceMacError'
+  readonly code = 'BadSpaceMac'
+}
+
+export class StarParseError extends Error {
+  constructor(message: string, options?: ErrorOptions) {
+    super(message, options)
+    this.name = 'StarParseError'
+  }
+}

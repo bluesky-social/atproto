@@ -3,6 +3,7 @@ import { type Server, createServer } from 'node:http'
 import type { AddressInfo } from 'node:net'
 import * as plc from '@did-plc/lib'
 import { type HttpTerminator, createHttpTerminator } from 'http-terminator'
+import { getVerificationMaterial } from '@atproto/common'
 import { P256Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import {
   EXAMPLE_LABELER,
@@ -10,11 +11,25 @@ import {
   type TestNetworkNoAppView,
   type TestPds,
 } from '@atproto/dev-env'
+import { type IdResolver, getDidKeyFromMultibase } from '@atproto/identity'
 import { Client, type DidString } from '@atproto/lex'
 import { type LexMap, parseCid } from '@atproto/lex-data'
 import { JoseKey } from '@atproto/oauth-provider/provider'
 import { ReplayManager } from '@atproto/oauth-provider/verifier'
-import { RepoCommit, createSpaceSigHeaders } from '@atproto/space'
+import {
+  COMMIT_MAC_TYPE,
+  type Commit,
+  MAC_HEADER,
+  type MacType,
+  RECORD_MAC_TYPE,
+  RepoCommit,
+  WANT_MAC_HEADER,
+  createSpaceSigHeaders,
+  encapsulate,
+  formatWantMacHeader,
+  parseMacHeader,
+  verifyCommit,
+} from '@atproto/space'
 import {
   type NsidString,
   type RecordKeyString,
@@ -238,19 +253,35 @@ export class SpaceClient {
   ): Promise<SpaceCredential> {
     const key = opts.key ?? (await P256Keypair.create())
     const token = await this.delegationTokenFor(actor, space)
-    const res = await this.authority.getClient().call(
-      com.atproto.space.getSpaceCredential,
-      {
+    const res = await this.authority
+      .getClient()
+      .call(com.atproto.space.getSpaceCredential, {
         space,
+        credentialKid: key.did(),
+        delegationToken: token,
         clientAttestation: opts.clientAttestation,
-      },
-      {
-        headers: await createSpaceSigHeaders(key, {
-          authorization: `Bearer ${token}`,
-        }),
-      },
-    )
-    return new SpaceCredential(res.credential, key)
+      })
+    return new SpaceCredential(res.credential, key, this.idResolver)
+  }
+
+  get idResolver(): IdResolver {
+    return this.authority.ctx.idResolver
+  }
+
+  /** Request a credential without a delegation token, as for a public space. */
+  async publicCredential(
+    space: SpaceRefString,
+    opts: { clientAttestation?: string } = {},
+  ): Promise<SpaceCredential> {
+    const key = await P256Keypair.create()
+    const res = await this.authority
+      .getClient()
+      .call(com.atproto.space.getSpaceCredential, {
+        space,
+        credentialKid: key.did(),
+        clientAttestation: opts.clientAttestation,
+      })
+    return new SpaceCredential(res.credential, key, this.idResolver)
   }
 
   async delegationTokenFor(
@@ -270,7 +301,11 @@ export class SpaceClient {
     sign: (keyId: DidString) => Promise<string>,
   ): Promise<SpaceCredential> {
     const key = await P256Keypair.create()
-    return new SpaceCredential(await sign(key.did() as DidString), key)
+    return new SpaceCredential(
+      await sign(key.did() as DidString),
+      key,
+      this.idResolver,
+    )
   }
 
   /** The exchange on its own, for tests about minting rather than about reading. */
@@ -280,18 +315,14 @@ export class SpaceClient {
     opts: { clientAttestation?: string } = {},
   ) {
     const key = await P256Keypair.create()
-    return this.authority.getClient().call(
-      com.atproto.space.getSpaceCredential,
-      {
+    return this.authority
+      .getClient()
+      .call(com.atproto.space.getSpaceCredential, {
         space,
+        credentialKid: key.did(),
+        delegationToken: token,
         clientAttestation: opts.clientAttestation,
-      },
-      {
-        headers: await createSpaceSigHeaders(key, {
-          authorization: `Bearer ${token}`,
-        }),
-      },
-    )
+      })
   }
 
   /** Read a repo's state directly. No endpoint exposes the raw set hash. */
@@ -396,11 +427,27 @@ export class SpaceClient {
   }
 }
 
-/** A space credential and its signing key, with audience DIDs derived from requests. */
+// The methods that require a MAC when called with a space credential.
+const MAC_TYPES: Record<string, MacType> = {
+  [com.atproto.space.getLatestCommit.$lxm]: COMMIT_MAC_TYPE,
+  [com.atproto.space.getRepo.$lxm]: COMMIT_MAC_TYPE,
+  [com.atproto.space.listRepoOps.$lxm]: COMMIT_MAC_TYPE,
+  [com.atproto.space.getRecord.$lxm]: RECORD_MAC_TYPE,
+}
+
+/**
+ * A space credential and its signing key, with audience DIDs derived from requests.
+ *
+ * Requests a MAC from the methods that require one, as a syncer would, and keeps
+ * the latest request's shared secret and response MAC in `lastMac`.
+ */
 export class SpaceCredential {
+  lastMac?: { type: MacType; sharedSecret: Uint8Array; header: string | null }
+
   constructor(
     public credential: string,
     public key: P256Keypair,
+    public idResolver: IdResolver,
   ) {}
 
   clientFor(pds: TestPds): Client {
@@ -421,13 +468,52 @@ export class SpaceCredential {
         : await request.clone().json()
     const audience = params.repo ?? SpaceRef.parse(params.space).spaceDid
     const headers = await createSpaceSigHeaders(this.key, {
-      authorization: `Atproto-Space ${this.credential}`,
+      authorization: `Atproto-Space-Credential ${this.credential}`,
       audience,
     })
     for (const [name, value] of Object.entries(headers)) {
       request.headers.set(name, value)
     }
-    return globalThis.fetch(request)
+
+    const macType =
+      MAC_TYPES[new URL(request.url).pathname.replace(/^\/xrpc\//, '')]
+    if (!macType || request.headers.has(WANT_MAC_HEADER)) {
+      return globalThis.fetch(request)
+    }
+    const { keyShare, sharedSecret } = await encapsulate(
+      await this.resolveKemKey(params.repo),
+    )
+    request.headers.set(WANT_MAC_HEADER, formatWantMacHeader(macType, keyShare))
+    const response = await globalThis.fetch(request)
+    this.lastMac = {
+      type: macType,
+      sharedSecret,
+      header: response.headers.get(MAC_HEADER),
+    }
+    return response
+  }
+
+  async resolveKemKey(did: string): Promise<string> {
+    const didDoc = await this.idResolver.did.ensureResolve(did)
+    const key = getVerificationMaterial(didDoc, 'atproto_kem')
+    const didKey = key && getDidKeyFromMultibase(key)
+    if (!didKey) throw new Error(`no #atproto_kem key for ${did}`)
+    return didKey
+  }
+
+  /** The shared secret and response MAC of the latest request. */
+  lastMacParams(): { sharedSecret: Uint8Array; mac: Uint8Array } {
+    if (!this.lastMac) throw new Error('no MAC was requested')
+    const { type, sharedSecret, header } = this.lastMac
+    return { sharedSecret, mac: parseMacHeader(header ?? undefined, type) }
+  }
+
+  /** Verify a commit against the MAC from the latest request. */
+  verifyCommit(
+    commit: Commit,
+    requested: { space: string; repo: string },
+  ): boolean {
+    return verifyCommit(commit, { ...requested, ...this.lastMacParams() })
   }
 }
 

@@ -123,19 +123,17 @@ export class SpaceReader {
     }))
   }
 
-  async *streamRecords(
-    space: string,
-    opts: { excludeValues?: boolean } = {},
-  ): AsyncGenerator<Omit<SpaceRecord, 'value'> & { value?: Uint8Array }> {
+  async *streamRecords(space: string): AsyncGenerator<SpaceRecord> {
     let cursor: AtUriString | undefined
     while (true) {
       let builder = this.db.db
         .selectFrom('space_record')
-        .select(RECORD_COLUMNS)
+        .selectAll()
         .where('space', '=', space)
+        // Every uri in a space repo shares a prefix, so this is also record path
+        // order, as a serialized repo requires.
         .orderBy('uri', 'asc')
         .limit(500)
-        .$if(!opts.excludeValues, (qb) => qb.select('value'))
       if (cursor) {
         builder = builder.where('uri', '>', cursor)
       }
@@ -284,10 +282,12 @@ export class SpaceReader {
 
   async getCredentialRecipients(
     space: string,
-  ): Promise<{ serviceDid: string; serviceEndpoint: string }[]> {
+  ): Promise<
+    { serviceDid: string; serviceEndpoint: string; expiresAt: string }[]
+  > {
     return this.db.db
       .selectFrom('space_credential_recipient')
-      .select(['serviceDid', 'serviceEndpoint'])
+      .select(['serviceDid', 'serviceEndpoint', 'expiresAt'])
       .where('space', '=', space)
       .where('expiresAt', '>', new Date().toISOString())
       .execute()
