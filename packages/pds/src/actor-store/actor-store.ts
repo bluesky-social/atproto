@@ -45,10 +45,15 @@ export class ActorStore {
     return crypto.Secp256k1Keypair.import(privKey)
   }
 
-  // The account's `#atproto_kem` key, used to establish shared secrets for space MACs.
-  async kemKeypair(did: string): Promise<crypto.P256Keypair> {
+  /**
+   * The account's `#atproto_kem` key, used to establish shared secrets for space
+   * MACs. Undefined for an account created before KEM keys existed, until it is
+   * backfilled.
+   */
+  async kemKeypair(did: string): Promise<crypto.P256Keypair | undefined> {
     const { kemKeyLocation } = await this.getLocation(did)
-    const privKey = await fs.readFile(kemKeyLocation)
+    const privKey = await readIfExists(kemKeyLocation)
+    if (!privKey) return undefined
     return crypto.P256Keypair.import(privKey)
   }
 

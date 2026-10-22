@@ -3,7 +3,6 @@ import fs from 'node:fs/promises'
 import type * as plc from '@did-plc/lib'
 import PQueue from 'p-queue'
 import type { Keypair } from '@atproto/crypto'
-import type { IdResolver } from '@atproto/identity'
 import { type DidString, isDidString } from '@atproto/lex'
 import type { ActorStore } from '../actor-store/actor-store.js'
 import type { SyncEvtData } from '../repo/index.js'
@@ -14,7 +13,6 @@ import { parseIntArg } from './util.js'
 export type RotateKeysContext = {
   sequencer: Sequencer
   actorStore: ActorStore
-  idResolver: IdResolver
   plcClient: plc.Client
   plcRotationKey: Keypair
 }
@@ -82,7 +80,7 @@ const rotateKeysForRepos = async (
   for (const did of dids) {
     queue.add(async () => {
       try {
-        await updatePlcSigningKey(ctx, did)
+        await updatePlcKeys(ctx, did)
       } catch (err) {
         console.error(`failed to update key for ${did}: ${err}`)
         return
@@ -122,12 +120,22 @@ const rotateKeysForRepos = async (
   console.log('DONE')
 }
 
-const updatePlcSigningKey = async (ctx: RotateKeysContext, did: DidString) => {
-  const updateTo = await ctx.actorStore.keypair(did)
-  const currSigningKey = await ctx.idResolver.did.resolveAtprotoKey(did, true)
-  if (updateTo.did() === currSigningKey) {
-    // already up to date
-    return
+// Publish the signing and KEM keys the PDS holds locally, if the PLC doc differs.
+const updatePlcKeys = async (ctx: RotateKeysContext, did: DidString) => {
+  const keys: Record<string, string> = {
+    atproto: (await ctx.actorStore.keypair(did)).did(),
   }
-  await ctx.plcClient.updateAtprotoKey(did, ctx.plcRotationKey, updateTo.did())
+  const kemKey = await ctx.actorStore.kemKeypair(did)
+  if (kemKey) keys.atproto_kem = kemKey.did()
+
+  const { verificationMethods } = await ctx.plcClient.getDocumentData(did)
+  const upToDate = Object.entries(keys).every(
+    ([id, key]) => verificationMethods[id] === key,
+  )
+  if (upToDate) return
+
+  await ctx.plcClient.updateData(did, ctx.plcRotationKey, (op) => ({
+    ...op,
+    verificationMethods: { ...op.verificationMethods, ...keys },
+  }))
 }

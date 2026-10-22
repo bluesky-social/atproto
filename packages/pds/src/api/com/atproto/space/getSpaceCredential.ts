@@ -42,10 +42,9 @@ export default function (server: Server, ctx: AppContext) {
       const config = await ctx.actorStore.read(spaceDid, async (store) => {
         const existing = await store.space.getSpace(space)
         // The durable signal that a space is gone: a syncer that missed
-        // notifySpaceDeleted learns it here, on its next renewal. Without a
-        // delegation token, getActiveSpaceConfig answers SpaceNotFound instead: the
-        // read policy is deleted with the space, so we can't tell it was public.
-        if (existing?.deletedAt && userDid) {
+        // notifySpaceDeleted learns it here, on its next renewal. Answered with or
+        // without a delegation token, since a public space's syncer may not have one.
+        if (existing?.deletedAt) {
           throw new InvalidRequestError(
             'Space has been deleted',
             'SpaceDeleted',

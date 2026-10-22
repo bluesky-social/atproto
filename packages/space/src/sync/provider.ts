@@ -1,6 +1,7 @@
 import { encode } from '@atproto/lex-cbor'
 import { type Cid, cidForCbor } from '@atproto/lex-data'
 import type { NsidString, RecordKeyString } from '@atproto/syntax'
+import { compareBytes } from '../bytes.js'
 import { type StarPair, writeStar } from '../star.js'
 import {
   type Commit,
@@ -9,7 +10,7 @@ import {
   type RepoStarMeta,
   type SpaceRecord,
 } from '../types.js'
-import { compareBytes, formatRecordPath } from '../util.js'
+import { formatRecordPath } from '../util.js'
 
 export type SerializedRecord = RecordPathParts & {
   bytes: Uint8Array

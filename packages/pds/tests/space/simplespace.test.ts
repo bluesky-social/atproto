@@ -975,9 +975,9 @@ describe('simplespace', () => {
       })
     })
 
-    it('answers SpaceNotFound for a deleted space to a request without a delegation token', async () => {
-      // The read policy is gone with the space, so there's no telling whether it
-      // was public; SpaceDeleted would disclose that a private space existed.
+    it('answers SpaceDeleted to a request without a delegation token', async () => {
+      // A public space's syncer may hold no delegation token, and still needs to
+      // learn that the space is gone.
       const space = await sc.createSpace(alice, {
         readPolicy: defs.publicPolicy.build({}),
       })
@@ -987,7 +987,7 @@ describe('simplespace', () => {
         { headers: alice.headers },
       )
       await expect(sc.publicCredential(space)).rejects.toMatchObject({
-        error: 'SpaceNotFound',
+        error: 'SpaceDeleted',
       })
     })
 

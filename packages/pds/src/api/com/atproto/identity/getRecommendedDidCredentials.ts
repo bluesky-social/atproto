@@ -15,7 +15,7 @@ export default function (server: Server, ctx: AppContext) {
       const kemKey = await ctx.actorStore.kemKeypair(requester)
       const verificationMethods = {
         atproto: signingKey.did(),
-        atproto_kem: kemKey.did(),
+        ...(kemKey ? { atproto_kem: kemKey.did() } : undefined),
       }
       const account = await ctx.accountManager.getAccount(requester, {
         includeDeactivated: true,

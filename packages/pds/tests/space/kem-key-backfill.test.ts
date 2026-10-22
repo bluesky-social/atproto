@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises'
+import * as plc from '@did-plc/lib'
 import { jest } from '@jest/globals'
-import { fileExists } from '@atproto/common'
+import { check, fileExists } from '@atproto/common'
 import { Secp256k1Keypair } from '@atproto/crypto'
 import { type SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
 import type { DidString, HandleString } from '@atproto/lex'
@@ -34,6 +35,12 @@ describe('kem key backfill', () => {
 
   const createBackfill = () =>
     new KemKeyBackfill(ctx, { leaseMs: 10_000, pollMs: 10 })
+
+  const localKemKey = async (did: string) => {
+    const kemKey = await ctx.actorStore.kemKeypair(did)
+    if (!kemKey) throw new Error(`no local kem key for ${did}`)
+    return kemKey.did()
+  }
 
   const publishedKemKey = async (did: string) => {
     const data = await ctx.plcClient.getDocumentData(did)
@@ -76,8 +83,7 @@ describe('kem key backfill', () => {
     await backfill.run()
 
     for (const did of [alice, bob]) {
-      const kemKey = await ctx.actorStore.kemKeypair(did)
-      expect(await publishedKemKey(did)).toBe(kemKey.did())
+      expect(await publishedKemKey(did)).toBe(await localKemKey(did))
       const evts = await ctx.sequencer.db.db
         .selectFrom('repo_seq')
         .select('eventType')
@@ -96,14 +102,14 @@ describe('kem key backfill', () => {
       email: 'carol@test.com',
       password: 'carol-pass',
     })
-    const kemKey = await ctx.actorStore.kemKeypair(did)
+    const kemKey = await localKemKey(did)
     const before = await opCount(did)
 
     await using backfill = createBackfill()
     await backfill.run()
 
     expect(await opCount(did)).toBe(before)
-    expect((await ctx.actorStore.kemKeypair(did)).did()).toBe(kemKey.did())
+    expect(await localKemKey(did)).toBe(kemKey)
   })
 
   it('writes a key without publishing it when the pds cannot', async () => {
@@ -146,8 +152,7 @@ describe('kem key backfill', () => {
     await backfill.run()
 
     expect(updateData).toHaveBeenCalledTimes(2)
-    const kemKey = await ctx.actorStore.kemKeypair(did)
-    expect(await publishedKemKey(did)).toBe(kemKey.did())
+    expect(await publishedKemKey(did)).toBe(await localKemKey(did))
     expect(await isComplete()).toBe(true)
   })
 
@@ -171,8 +176,7 @@ describe('kem key backfill', () => {
 
     // The first key was abandoned, and the retry published a second
     expect(await opCount(did)).toBe(before + 2)
-    const kemKey = await ctx.actorStore.kemKeypair(did)
-    expect(await publishedKemKey(did)).toBe(kemKey.did())
+    expect(await publishedKemKey(did)).toBe(await localKemKey(did))
     expect(await isComplete()).toBe(true)
   })
 
@@ -200,5 +204,30 @@ describe('kem key backfill', () => {
     const { kemKeyLocation } = await ctx.actorStore.getLocation(did)
     expect(await fileExists(kemKeyLocation)).toBe(false)
     expect(await publishedKemKey(did)).toBeUndefined()
+  })
+
+  it('leaves the KEM key out of identity ops for an account without one', async () => {
+    const did = await createAlphaAccount('ivy')
+    const agent = network.pds.getAgent()
+    const headers = sc.getHeaders(did)
+
+    const { data } =
+      await agent.com.atproto.identity.getRecommendedDidCredentials(undefined, {
+        headers,
+      })
+    expect(data.verificationMethods).not.toHaveProperty('atproto_kem')
+
+    // An op without a KEM key is accepted, as there is none it could carry
+    const lastOp = await ctx.plcClient.getLastOp(did)
+    if (check.is(lastOp, plc.def.tombstone)) throw new Error('tombstoned')
+    const operation = await plc.createUpdateOp(
+      lastOp,
+      ctx.plcRotationKey,
+      (op) => op,
+    )
+    await agent.com.atproto.identity.submitPlcOperation(
+      { operation },
+      { encoding: 'application/json', headers },
+    )
   })
 })

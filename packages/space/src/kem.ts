@@ -6,8 +6,8 @@ import {
   parseDidKey,
 } from '@atproto/crypto'
 import { ui8Concat } from '@atproto/lex-data'
+import { uint16be, utf8 } from './bytes.js'
 import { SpaceMacError } from './error.js'
-import { uint16be, utf8 } from './util.js'
 
 /**
  * The key encapsulation mechanism (KEM) that establishes the shared secret a

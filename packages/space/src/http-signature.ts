@@ -7,8 +7,8 @@ import {
 import { type Keypair, parseDidKey, verifySignature } from '@atproto/crypto'
 import { fromBase64 } from '@atproto/lex-data'
 import type { DidString } from '@atproto/syntax'
+import { toPaddedBase64 } from './bytes.js'
 import { SpaceSignatureError } from './error.js'
-import { toPaddedBase64 } from './util.js'
 
 type HttpHeaders = Record<string, string | string[] | undefined>
 

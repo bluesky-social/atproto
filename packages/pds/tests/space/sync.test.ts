@@ -17,7 +17,7 @@ import {
   parseMacHeader,
   spaceHostAud,
   verifyCommit,
-  verifyRecordMac,
+  verifyRecord,
   verifyRepoStarFull,
 } from '@atproto/space'
 import type { NsidString, SpaceRefString } from '@atproto/syntax'
@@ -458,7 +458,8 @@ describe('space sync', () => {
       `${actor.pds.url}/xrpc/${com.atproto.space.getLatestCommit.$lxm}?${new URLSearchParams({ space, repo: actor.did })}`
 
     it('publishes a KEM key for each account', async () => {
-      const kemKey = (await bob.pds.ctx.actorStore.kemKeypair(bob.did)).did()
+      const kemKey = (await bob.pds.ctx.actorStore.kemKeypair(bob.did))?.did()
+      expect(kemKey).toBeDefined()
       const space = await sc.createSpace(alice, { members: [bob] })
       const cred = await sc.credentialFor(bob, space)
       expect(await cred.resolveKemKey(bob.did)).toBe(kemKey)
@@ -485,14 +486,14 @@ describe('space sync', () => {
           rkey: 'maced',
         })
       expect(cred.lastMac?.type).toBe(RECORD_MAC_TYPE)
-      const { sharedSecret, mac } = cred.lastMacParams()
-      expect(
-        verifyRecordMac(sharedSecret, res.uri, parseCid(res.cid), mac),
-      ).toBe(true)
+      const params = {
+        uri: `${space}/${bob.did}/${TEST_COLLECTION}/maced`,
+        ...cred.lastMacParams(),
+      }
+      expect(await verifyRecord(res, params)).toBe(true)
       // The MAC is bound to this one record.
-      expect(
-        verifyRecordMac(sharedSecret, `${res.uri}x`, parseCid(res.cid), mac),
-      ).toBe(false)
+      const other = { ...params, uri: `${params.uri}x` }
+      expect(await verifyRecord(res, other)).toBe(false)
     })
 
     it('omits the MAC from an oplog page without a commit', async () => {
@@ -517,7 +518,7 @@ describe('space sync', () => {
       await sc.write(bob, space)
       const cred = await sc.credentialFor(bob, space)
       const sigHeaders = await createSpaceSigHeaders(cred.key, {
-        authorization: `Atproto-Space ${cred.credential}`,
+        authorization: `Atproto-Space-Credential ${cred.credential}`,
         audience: bob.did,
       })
 
@@ -573,6 +574,9 @@ describe('space sync', () => {
         },
       })
       expect(asked.status).toBe(200)
+      expect(asked.headers.get('access-control-expose-headers')).toMatch(
+        /atproto-space-mac/i,
+      )
       const mac = parseMacHeader(
         asked.headers.get(MAC_HEADER) ?? undefined,
         COMMIT_MAC_TYPE,

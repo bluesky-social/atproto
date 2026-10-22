@@ -9,9 +9,9 @@ import {
 } from 'structured-headers'
 import { hmacSha256 } from '@atproto/crypto'
 import { type Cid, fromBase64, ui8Concat } from '@atproto/lex-data'
+import { timingSafeEqual, toPaddedBase64, uint16be, utf8 } from './bytes.js'
 import { SpaceMacError } from './error.js'
 import { COMMIT_VERSION, type Commit } from './types.js'
-import { timingSafeEqual, toPaddedBase64, uint16be, utf8 } from './util.js'
 
 /**
  * Space repos authenticate commits and records with a MAC rather than a

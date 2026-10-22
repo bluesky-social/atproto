@@ -2,7 +2,7 @@ import { beforeAll, describe, expect, it } from 'vitest'
 import { encodeVarInt } from '@atproto/car'
 import { randomBytes } from '@atproto/crypto'
 import { encode } from '@atproto/lex-cbor'
-import type { Cid } from '@atproto/lex-data'
+import { type Cid, parseCid } from '@atproto/lex-data'
 import {
   type Commit,
   type CommitCtx,
@@ -14,10 +14,12 @@ import {
   type StarPair,
   StarParseError,
   computeCommitMac,
+  computeRecordMac,
   readStar,
   serializeRecord,
   serializeRepo,
   verifyCommit,
+  verifyRecord,
   verifyRepoStar,
   verifyRepoStarFull,
   writeStar,
@@ -351,6 +353,57 @@ describe('space sync', () => {
         { collection: a.collection, rkey: a.rkey, cid: null, prev: b.cid },
       ])
       expect(local.setHash.isEmpty()).toBe(true)
+    })
+  })
+
+  // A syncer that fetches a single record checks it against its record MAC.
+  describe('record verification', () => {
+    const URI = `at://did:example:space/space/app.bsky.group/test/${AUTHOR}/app.bsky.feed.post/3kbcq3p7ad401`
+    const value = { text: 'hello' }
+
+    // The getRecord response and the params a syncer verifies it with.
+    const fetched = async () => {
+      const { cid } = await serializeRecord(
+        'app.bsky.feed.post',
+        '3kbcq3p7ad401',
+        value,
+      )
+      return {
+        record: { uri: URI, cid: cid.toString(), value },
+        params: {
+          uri: URI,
+          sharedSecret,
+          mac: computeRecordMac(sharedSecret, URI, cid),
+        },
+      }
+    }
+
+    it('accepts the requested record under its MAC', async () => {
+      const { record, params } = await fetched()
+      expect(await verifyRecord(record, params)).toBe(true)
+    })
+
+    it('rejects a record other than the one requested', async () => {
+      const { record, params } = await fetched()
+      const other = `${URI}x`
+      expect(await verifyRecord(record, { ...params, uri: other })).toBe(false)
+    })
+
+    it('rejects a MAC under another shared secret', async () => {
+      const { record, params } = await fetched()
+      const mac = computeRecordMac(randomBytes(32), URI, parseCid(record.cid))
+      expect(await verifyRecord(record, { ...params, mac })).toBe(false)
+    })
+
+    it('rejects a value that does not match its cid', async () => {
+      const { record, params } = await fetched()
+      const swapped = { ...record, value: { text: 'world' } }
+      expect(await verifyRecord(swapped, params)).toBe(false)
+    })
+
+    it('rejects a malformed cid', async () => {
+      const { record, params } = await fetched()
+      expect(await verifyRecord({ ...record, cid: 'nope' }, params)).toBe(false)
     })
   })
 })

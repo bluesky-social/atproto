@@ -1,7 +1,14 @@
-import { type LexValue, decode } from '@atproto/lex-cbor'
-import { type Cid, cidForCbor, isPlainObject } from '@atproto/lex-data'
+import { type LexValue, decode, encode } from '@atproto/lex-cbor'
+import {
+  type Cid,
+  cidForCbor,
+  isPlainObject,
+  parseCidSafe,
+} from '@atproto/lex-data'
 import type { NsidString, RecordKeyString } from '@atproto/syntax'
+import { compareBytes } from '../bytes.js'
 import { RepoVerificationError } from '../error.js'
+import { verifyRecordMac } from '../mac.js'
 import {
   RepoCommit,
   type VerifyCommitParams,
@@ -14,7 +21,7 @@ import {
   type SpaceRecord,
   defs,
 } from '../types.js'
-import { compareBytes, parseRecordPath } from '../util.js'
+import { parseRecordPath } from '../util.js'
 
 export type VerifyRepoParams = VerifyCommitParams
 
@@ -42,9 +49,9 @@ export type VerifiedRepo = AsyncDisposable & {
  * The commit in the archive's metadata is verified against the response's MAC
  * up front. Each record is folded into a running set hash as `records` is
  * drained, and the result is compared against the commit's data once the
- * archive ends. Only that match
- * shows the repo was received complete, so `records` must be fully consumed
- * before trusting what it yielded — {@link verifyRepoStarFull} does that.
+ * archive ends. Only that match shows the repo was received complete, so
+ * `records` must be fully consumed before trusting what it yielded —
+ * {@link verifyRepoStarFull} does that.
  */
 export const verifyRepoStar = async (
   star: AsyncIterable<Uint8Array> | Iterable<Uint8Array>,
@@ -61,7 +68,7 @@ export const verifyRepoStar = async (
 
     return {
       commit,
-      records: verifyRecords(starReader.pairs, commit),
+      records: verifyStarRecords(starReader.pairs, commit),
       [Symbol.asyncDispose]: starReader[Symbol.asyncDispose],
     }
   } catch (err) {
@@ -86,7 +93,34 @@ export const verifyRepoStarFull = async (
   return { commit, records: collected }
 }
 
-async function* verifyRecords(
+export type VerifyRecordParams = {
+  // The uri of the record that was requested.
+  uri: string
+  // The shared secret for the request, and the MAC from its response header.
+  sharedSecret: Uint8Array
+  mac: Uint8Array
+}
+
+/**
+ * Verify a `getRecord` response against the MAC it carried: it must be the
+ * record that was requested, the MAC must cover its uri and cid, and its value
+ * must encode to that cid.
+ */
+export const verifyRecord = async (
+  record: { uri: string; cid: string; value: SpaceRecord },
+  params: VerifyRecordParams,
+): Promise<boolean> => {
+  if (record.uri !== params.uri) return false
+  const cid = parseCidSafe(record.cid)
+  if (!cid) return false
+  if (!verifyRecordMac(params.sharedSecret, record.uri, cid, params.mac)) {
+    return false
+  }
+  const valueCid = await cidForCbor(encode(record.value))
+  return valueCid.equals(cid)
+}
+
+async function* verifyStarRecords(
   pairs: AsyncIterable<StarPair>,
   commit: Commit,
 ): AsyncGenerator<VerifiedRecord> {

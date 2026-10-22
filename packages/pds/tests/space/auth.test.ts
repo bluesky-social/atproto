@@ -244,7 +244,7 @@ describe('space auth', () => {
 
         await expect(
           alice.client.call(
-            com.atproto.space.getLatestCommit,
+            com.atproto.space.listRecords,
             { space, repo: alice.did },
             { headers },
           ),

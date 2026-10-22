@@ -189,8 +189,13 @@ export async function getSpaceMacSecret(
   if (header === undefined && !isSpaceCredentialOutput(auth)) {
     return undefined
   }
+  // So that a browser app can read the MAC from a cross-origin response
+  res.appendHeader('Access-Control-Expose-Headers', MAC_HEADER)
 
   const kemKeypair = await ctx.actorStore.kemKeypair(repo)
+  if (!kemKeypair) {
+    throw new Error(`Account has no KEM key: ${repo}`)
+  }
   try {
     const keyShare = parseWantMacHeader(header, type)
     return decapsulate(kemKeypair, keyShare)
