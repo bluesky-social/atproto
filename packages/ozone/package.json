@@ -63,7 +63,7 @@
     "prom-client": "^15.1.3",
     "structured-headers": "^1.0.1",
     "uint8arrays": "^5.0.0",
-    "undici": "^8.5.0",
+    "undici": "^8.12.2",
     "ws": "^8.12.0"
   },
   "devDependencies": {

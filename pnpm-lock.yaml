@@ -530,17 +530,17 @@ importers:
         specifier: ^5.0.0
         version: 5.1.1
       undici:
-        specifier: ^8.5.0
-        version: 8.5.0
+        specifier: ^8.12.2
+        version: 8.12.3
       undici_v6:
-        specifier: npm:undici@^6.x
-        version: undici@6.19.8
+        specifier: npm:undici@^6.29.1
+        version: undici@6.29.1
       undici_v7:
-        specifier: npm:undici@^7.x
-        version: undici@7.28.0
+        specifier: npm:undici@^7.30.1
+        version: undici@7.30.1
       undici_v8:
-        specifier: npm:undici@^8.x
-        version: undici@8.5.0
+        specifier: npm:undici@^8.12.2
+        version: undici@8.12.3
       zod:
         specifier: 3.23.8
         version: 3.23.8
@@ -766,8 +766,8 @@ importers:
         specifier: ^5.0.0
         version: 5.1.1
       undici:
-        specifier: ^8.5.0
-        version: 8.5.0
+        specifier: ^8.12.2
+        version: 8.12.3
     devDependencies:
       '@types/express':
         specifier: ^4.17.13
@@ -869,14 +869,14 @@ importers:
         specifier: ^2.1.0
         version: 2.1.0
       undici_v6:
-        specifier: npm:undici@^6.x
-        version: undici@6.19.8
+        specifier: npm:undici@^6.29.1
+        version: undici@6.29.1
       undici_v7:
-        specifier: npm:undici@^7.x
-        version: undici@7.28.0
+        specifier: npm:undici@^7.30.1
+        version: undici@7.30.1
       undici_v8:
-        specifier: npm:undici@^8.x
-        version: undici@8.5.0
+        specifier: npm:undici@^8.12.2
+        version: undici@8.12.3
     devDependencies:
       vitest:
         specifier: ^4.1.10
@@ -1999,8 +1999,8 @@ importers:
         specifier: ^5.0.0
         version: 5.1.1
       undici:
-        specifier: ^8.5.0
-        version: 8.5.0
+        specifier: ^8.12.2
+        version: 8.12.3
       ws:
         specifier: ^8.12.0
         version: 8.18.0
@@ -2189,8 +2189,8 @@ importers:
         specifier: ^5.0.0
         version: 5.1.1
       undici:
-        specifier: ^8.5.0
-        version: 8.5.0
+        specifier: ^8.12.2
+        version: 8.12.3
       zod:
         specifier: ^3.23.8
         version: 3.24.2
@@ -4609,6 +4609,7 @@ packages:
   '@opentelemetry/propagator-jaeger@2.8.0':
     resolution: {integrity: sha512-Xnz9zZvvQzUw+9DrOn0MomR7BxFCkA2pcfXBQuHC28ndJpSbjLs7knzYb05kw5SyCjSsEWombkZMgGcJSk8JVg==}
     engines: {node: ^18.19.0 || >=20.6.0}
+    deprecated: Package no longer supported. See https://github.com/open-telemetry/opentelemetry-js/pull/7077
     peerDependencies:
       '@opentelemetry/api': '>=1.0.0 <1.10.0'
 
@@ -4679,12 +4680,14 @@ packages:
   '@opentelemetry/sdk-trace-base@2.8.0':
     resolution: {integrity: sha512-mhU4jp+vW0mGbFRd+GeXHvmfA4aDqWjBjLC3pE5XMpLs0IE2ryYb019Ts2AQrOq67gaTF25D91+fgvEHDZEnuQ==}
     engines: {node: ^18.19.0 || >=20.6.0}
+    deprecated: Use @opentelemetry/sdk-trace package
     peerDependencies:
       '@opentelemetry/api': '>=1.3.0 <1.10.0'
 
   '@opentelemetry/sdk-trace-node@2.8.0':
     resolution: {integrity: sha512-nZt9OGufioAc3AfoLTqA9bsAeaMJAictYDdI2VcNQ+PmT+3rfKjAZDZvgPfd8VPX0O5Bw1hdQF6kDK8VSpZiWg==}
     engines: {node: ^18.19.0 || >=20.6.0}
+    deprecated: Use @opentelemetry/sdk-trace package
     peerDependencies:
       '@opentelemetry/api': '>=1.0.0 <1.10.0'
 
@@ -10327,16 +10330,16 @@ packages:
     resolution: {integrity: sha512-72RFADWFqKmUb2hmmvNODKL3p9hcB6Gt2DOQMis1SEBaV6a4MH8soBvzg+95CYhCKPFedut2JY9bMfrDl9D23g==}
     engines: {node: '>=14.0'}
 
-  undici@6.19.8:
-    resolution: {integrity: sha512-U8uCCl2x9TK3WANvmBavymRzxbfFYG+tAu+fgx3zxQy3qdagQqBLwJVrdyO1TBfUXvfKveMKJZhpvUYoOjM+4g==}
+  undici@6.29.1:
+    resolution: {integrity: sha512-EvRlUt/QqAEvXdQeRMYUfwOQsfzpDztykrG2owGEE/rBOBoYv9uF39ZzsNDh4lTFHhTr2XOZjKkYgueD12ZmGA==}
     engines: {node: '>=18.17'}
 
-  undici@7.28.0:
-    resolution: {integrity: sha512-cRZYrTDwWznlnRiPjggAGxZXanty6M8RV1ff8Wm4LWXBp7/IG8v5DnOm74DtUBp9OONpK75YlPnIjQqX0dBDtA==}
+  undici@7.30.1:
+    resolution: {integrity: sha512-03KrMbjIFDWQR5RNPrSw3bd1r12JpyFQl9/yxjUbJtqkjmllqC5lFjZh6ujeuJCKr8EOQvRW872Oy/az+nLYxg==}
     engines: {node: '>=20.18.1'}
 
-  undici@8.5.0:
-    resolution: {integrity: sha512-xamtWoB1EshgjpmlXd7GGm2VfdDtw1+rD8uhry8pSNW3If6S8E0m2T2+orSKeZXEn/aPJMviCpDBA65WJt8zhg==}
+  undici@8.12.3:
+    resolution: {integrity: sha512-+fdndUTwBP86cVjihTp21hZHo7d6oj1c/47XPA3lL8mM0XHs+C4EkcjmgRsFnFk2f/UONGDy9ItBItmXsLOQHw==}
     engines: {node: '>=22.19.0'}
 
   unicode-canonical-property-names-ecmascript@2.0.1:
@@ -20558,11 +20561,11 @@ snapshots:
     dependencies:
       '@fastify/busboy': 2.1.0
 
-  undici@6.19.8: {}
+  undici@6.29.1: {}
 
-  undici@7.28.0: {}
+  undici@7.30.1: {}
 
-  undici@8.5.0: {}
+  undici@8.12.3: {}
 
   unicode-canonical-property-names-ecmascript@2.0.1: {}
 
