@@ -288,7 +288,7 @@ describe('space notification retries', () => {
     expect(retry.retryAt).toBeLessThanOrEqual(Date.now() + MINUTE)
     expect(retry.expiresAt).toBeGreaterThanOrEqual(before + DAY)
     expect(retry.expiresAt).toBeLessThanOrEqual(Date.now() + DAY)
-    expect(new Uint8Array(retry.hash)).toEqual(
+    expect(new Uint8Array(retry.data)).toEqual(
       new LtHash(newer.setHash).digest(),
     )
     await notifications.notify(space, writer.did, older)

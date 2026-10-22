@@ -7,6 +7,7 @@ import type * as authorizedClient from './authorized-client.js'
 import type * as device from './device.js'
 import type * as emailToken from './email-token.js'
 import type * as inviteCode from './invite-code.js'
+import type * as kemKeyBackfill from './kem-key-backfill.js'
 import type * as lexicon from './lexicon.js'
 import type * as refreshToken from './refresh-token.js'
 import type * as repoRoot from './repo-root.js'
@@ -28,6 +29,7 @@ export type DatabaseSchema = actor.PartialDB &
   repoRoot.PartialDB &
   revokedSpaceCredential.PartialDB &
   spaceNotification.PartialDB &
+  kemKeyBackfill.PartialDB &
   inviteCode.PartialDB &
   lexicon.PartialDB &
   emailToken.PartialDB

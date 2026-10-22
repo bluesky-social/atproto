@@ -3,11 +3,21 @@ import { sql } from 'kysely'
 import { MINUTE, TID } from '@atproto/common'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
 import { parseCid } from '@atproto/lex-data'
+import { lexParse } from '@atproto/lex-json'
 import {
+  COMMIT_MAC_TYPE,
   LtHash,
+  MAC_HEADER,
+  RECORD_MAC_TYPE,
   RepoCommit,
-  type SignedCommit,
+  WANT_MAC_HEADER,
+  createSpaceSigHeaders,
+  encapsulate,
+  formatWantMacHeader,
+  parseMacHeader,
   spaceHostAud,
+  verifyCommit,
+  verifyRecord,
   verifyRepoStarFull,
 } from '@atproto/space'
 import type { NsidString, SpaceRefString } from '@atproto/syntax'
@@ -25,28 +35,10 @@ import {
 } from '../_space.js'
 
 /**
- * The wire `signedCommit` types `ver` as a number, while the package's own
- * `SignedCommit` narrows it to the literal 1. They describe the same bytes, so
- * this asserts the version and hands back the narrower type rather than casting
- * blindly at four call sites.
- */
-const asSignedCommit = (commit: {
-  ver: number
-  hash: Uint8Array
-  ikm: Uint8Array
-  sig: Uint8Array
-  mac: Uint8Array
-  rev: string
-}): SignedCommit => {
-  expect(commit.ver).toBe(1)
-  return commit as SignedCommit
-}
-
-/**
  * How a syncing service follows a space.
  *
  * The oplog is the incremental path: page forward from a cursor, apply each op to
- * a local set hash, and check it against the repo's signed commit. When the oplog
+ * a local set hash, and check it against the repo's commit. When the oplog
  * no longer reaches back far enough, `listRecords` + `getLatestCommit` (or a
  * `getRepo` STAR archive) rebuilds from full state.
  */
@@ -240,9 +232,9 @@ describe('space sync', () => {
   })
 
   describe('incremental catch-up', () => {
-    it('replays the oplog to the repo signed commit', async () => {
+    it('replays the oplog to the repo commit', async () => {
       // The whole point of the oplog: a syncer that applies every op ends up with
-      // a set hash matching what the author signed.
+      // a set hash matching the author's commit.
       const space = await sc.createSpace(alice, { members: [dan] })
       await sc.write(dan, space, { rkey: 'one', text: 'one' })
       await sc.put(dan, space, { rkey: 'two', text: 'two' })
@@ -256,6 +248,7 @@ describe('space sync', () => {
         { space, repo: dan.did, limit: 100 },
       )
       expect(commit).toBeDefined()
+      expect(cred.verifyCommit(commit!, { space, repo: dan.did })).toBe(true)
 
       const local = new RepoCommit()
       for (const op of ops) {
@@ -266,7 +259,7 @@ describe('space sync', () => {
           prev: op.prev ? parseCid(op.prev) : null,
         })
       }
-      expect(local.matches(asSignedCommit(commit!))).toBe(true)
+      expect(local.matches(commit!)).toBe(true)
     })
 
     it('detects divergence when an op is missed', async () => {
@@ -291,7 +284,7 @@ describe('space sync', () => {
           prev: op.prev ? parseCid(op.prev) : null,
         })
       }
-      expect(local.matches(asSignedCommit(commit!))).toBe(false)
+      expect(local.matches(commit!)).toBe(false)
     })
 
     // Known gap: the recovery path below is tested by forcing a prune by hand,
@@ -342,7 +335,7 @@ describe('space sync', () => {
           prev: op.prev ? parseCid(op.prev) : null,
         })
       }
-      expect(applied.matches(asSignedCommit(incremental.commit!))).toBe(false)
+      expect(applied.matches(incremental.commit!)).toBe(false)
 
       // Recovery: page listRecords across all collections, recompute, compare.
       const recovered: { collection: NsidString; rkey: string; cid: string }[] =
@@ -378,7 +371,10 @@ describe('space sync', () => {
         space,
         repo: bob.did,
       })
-      expect(rebuilt.matches(asSignedCommit(latest.commit))).toBe(true)
+      expect(cred.verifyCommit(latest.commit, { space, repo: bob.did })).toBe(
+        true,
+      )
+      expect(rebuilt.matches(latest.commit)).toBe(true)
     })
   })
 
@@ -406,12 +402,11 @@ describe('space sync', () => {
       )
       const star = new Uint8Array(await res.arrayBuffer())
 
-      const didKey = (await bob.pds.ctx.actorStore.keypair(bob.did)).did()
       const state = await sc.repoState(bob, space)
       const recovered = await verifyRepoStarFull([star], {
         space,
-        author: bob.did,
-        didKey,
+        repo: bob.did,
+        ...cred.lastMacParams(),
       })
 
       expect(recovered.records).toHaveLength(4)
@@ -458,6 +453,142 @@ describe('space sync', () => {
     })
   })
 
+  describe('MACs', () => {
+    const getLatestCommitUrl = (actor: Actor, space: SpaceRefString) =>
+      `${actor.pds.url}/xrpc/${com.atproto.space.getLatestCommit.$lxm}?${new URLSearchParams({ space, repo: actor.did })}`
+
+    it('publishes a KEM key for each account', async () => {
+      const kemKey = (await bob.pds.ctx.actorStore.kemKeypair(bob.did))?.did()
+      expect(kemKey).toBeDefined()
+      const space = await sc.createSpace(alice, { members: [bob] })
+      const cred = await sc.credentialFor(bob, space)
+      expect(await cred.resolveKemKey(bob.did)).toBe(kemKey)
+
+      const recommended = await bob.client.call(
+        com.atproto.identity.getRecommendedDidCredentials,
+        {},
+        { headers: bob.headers },
+      )
+      expect(recommended.verificationMethods?.['atproto_kem']).toBe(kemKey)
+    })
+
+    it('macs a record served to a syncer', async () => {
+      const space = await sc.createSpace(alice, { members: [bob, carol] })
+      await sc.write(bob, space, { rkey: 'maced' })
+
+      const cred = await sc.credentialFor(carol, space)
+      const res = await cred
+        .clientFor(bob.pds)
+        .call(com.atproto.space.getRecord, {
+          space,
+          repo: bob.did,
+          collection: TEST_COLLECTION,
+          rkey: 'maced',
+        })
+      expect(cred.lastMac?.type).toBe(RECORD_MAC_TYPE)
+      const params = {
+        uri: `${space}/${bob.did}/${TEST_COLLECTION}/maced`,
+        ...cred.lastMacParams(),
+      }
+      expect(await verifyRecord(res, params)).toBe(true)
+      // The MAC is bound to this one record.
+      const other = { ...params, uri: `${params.uri}x` }
+      expect(await verifyRecord(res, other)).toBe(false)
+    })
+
+    it('omits the MAC from an oplog page without a commit', async () => {
+      const space = await sc.createSpace(alice, { members: [bob] })
+      await sc.write(bob, space, { rkey: 'page-0' })
+      await sc.write(bob, space, { rkey: 'page-1' })
+
+      const cred = await sc.credentialFor(bob, space)
+      const page = await cred
+        .clientFor(bob.pds)
+        .call(com.atproto.space.listRepoOps, {
+          space,
+          repo: bob.did,
+          limit: 1,
+        })
+      expect(page.commit).toBeUndefined()
+      expect(cred.lastMac?.header).toBeNull()
+    })
+
+    it('requires a MAC request with a space credential', async () => {
+      const space = await sc.createSpace(alice, { members: [bob] })
+      await sc.write(bob, space)
+      const cred = await sc.credentialFor(bob, space)
+      const sigHeaders = await createSpaceSigHeaders(cred.key, {
+        authorization: `Atproto-Space-Credential ${cred.credential}`,
+        audience: bob.did,
+      })
+
+      const missing = await fetch(getLatestCommitUrl(bob, space), {
+        headers: sigHeaders,
+      })
+      expect(missing.status).toBe(400)
+      expect(await missing.json()).toMatchObject({ error: 'BadSpaceMac' })
+
+      // A record MAC type on a method that returns a commit.
+      const { keyShare } = await encapsulate(await cred.resolveKemKey(bob.did))
+      const wrongType = await fetch(getLatestCommitUrl(bob, space), {
+        headers: {
+          ...sigHeaders,
+          [WANT_MAC_HEADER]: formatWantMacHeader(RECORD_MAC_TYPE, keyShare),
+        },
+      })
+      expect(wrongType.status).toBe(400)
+      expect(await wrongType.json()).toMatchObject({ error: 'BadSpaceMac' })
+
+      const badKey = await fetch(getLatestCommitUrl(bob, space), {
+        headers: {
+          ...sigHeaders,
+          [WANT_MAC_HEADER]: formatWantMacHeader(
+            COMMIT_MAC_TYPE,
+            'did:key:nope',
+          ),
+        },
+      })
+      expect(badKey.status).toBe(400)
+      expect(await badKey.json()).toMatchObject({ error: 'BadSpaceMac' })
+    })
+
+    it('macs an account its own data only when asked', async () => {
+      const space = await sc.createSpace(alice, { members: [bob] })
+      await sc.write(bob, space)
+
+      const unasked = await fetch(getLatestCommitUrl(bob, space), {
+        headers: bob.headers,
+      })
+      expect(unasked.status).toBe(200)
+      expect(unasked.headers.get(MAC_HEADER)).toBeNull()
+      expect(unasked.headers.get('vary')).toMatch(/atproto-space-want-mac/i)
+
+      const cred = await sc.credentialFor(bob, space)
+      const { keyShare, sharedSecret } = await encapsulate(
+        await cred.resolveKemKey(bob.did),
+      )
+      const asked = await fetch(getLatestCommitUrl(bob, space), {
+        headers: {
+          ...bob.headers,
+          [WANT_MAC_HEADER]: formatWantMacHeader(COMMIT_MAC_TYPE, keyShare),
+        },
+      })
+      expect(asked.status).toBe(200)
+      expect(asked.headers.get('access-control-expose-headers')).toMatch(
+        /atproto-space-mac/i,
+      )
+      const mac = parseMacHeader(
+        asked.headers.get(MAC_HEADER) ?? undefined,
+        COMMIT_MAC_TYPE,
+      )
+      const body = lexParse(await asked.text()) as { commit: unknown }
+      const commit = com.atproto.space.defs.commit.$parse(body.commit)
+      expect(
+        verifyCommit(commit, { space, repo: bob.did, sharedSecret, mac }),
+      ).toBe(true)
+    })
+  })
+
   describe('writer set', () => {
     it('records a co-located writer without resolving its public PDS endpoint', async () => {
       const space = await sc.createSpace(alice, {
@@ -496,7 +627,7 @@ describe('space sync', () => {
       const entry = repos.repos.find((r) => r.did === bob.did)!
       const state = await sc.repoState(bob, space)
       expect(entry.repoRev).toBe(state!.rev)
-      expect(entry.hash).toEqual(new LtHash(state!.setHash!).digest())
+      expect(entry.data).toEqual(new LtHash(state!.setHash!).digest())
     })
 
     it('records a writer admitted by public write policy, who was never a member', async () => {
@@ -570,6 +701,10 @@ describe('space sync', () => {
       expect(writers.map((writer) => writer.spaceRev)).toEqual([
         bobState.rev,
         bobState.rev,
+      ])
+      expect(writers.map((writer) => new Uint8Array(writer.data))).toEqual([
+        new LtHash().digest(),
+        new LtHash().digest(),
       ])
       const repo = await db.db
         .selectFrom('space_repo')
@@ -756,7 +891,7 @@ describe('space sync', () => {
         .call(com.atproto.space.listRepos, { space })
       expect(listed.repos).toHaveLength(1)
       expect(listed.repos[0].repoRev).toBe(state.rev)
-      expect(listed.repos[0].hash).toEqual(new LtHash(state.setHash!).digest())
+      expect(listed.repos[0].data).toEqual(new LtHash(state.setHash!).digest())
       await restarted.retryPending()
       expect(
         await cred
@@ -773,7 +908,7 @@ describe('space sync', () => {
         space: SpaceRefString
         repo: string
         repoRev: string
-        hash: Uint8Array
+        data: Uint8Array
       },
       opts: { aud?: string } = {},
     ) => {
@@ -811,7 +946,7 @@ describe('space sync', () => {
           space,
           repo: bob.did,
           repoRev,
-          hash: new Uint8Array(32),
+          data: new Uint8Array(32),
         })
       }
       await alice.pds.ctx.backgroundQueue.processAll()
@@ -827,14 +962,14 @@ describe('space sync', () => {
       const space = await sc.createSpace(alice, { members: [bob] })
       const older = TID.nextStr()
       const newer = TID.nextStr(older)
-      const hash = new LtHash().digest()
+      const data = new LtHash().digest()
       await Promise.all([
-        notify(bob, { space, repo: bob.did, repoRev: newer, hash }),
+        notify(bob, { space, repo: bob.did, repoRev: newer, data }),
         notify(bob, {
           space,
           repo: bob.did,
           repoRev: older,
-          hash: new Uint8Array(32),
+          data: new Uint8Array(32),
         }),
       ])
       const cred = await sc.credentialFor(alice, space)
@@ -842,7 +977,7 @@ describe('space sync', () => {
         .clientFor(alice.pds)
         .call(com.atproto.space.listRepos, { space })
       expect(listed.repos).toHaveLength(1)
-      expect(listed.repos[0]).toMatchObject({ repoRev: newer, hash })
+      expect(listed.repos[0]).toMatchObject({ repoRev: newer, data })
     })
 
     it('rejects future revisions while allowing a small clock skew', async () => {
@@ -855,7 +990,7 @@ describe('space sync', () => {
             (Date.now() + 10 * MINUTE) * 1000,
             0,
           ).toString(),
-          hash: new LtHash().digest(),
+          data: new LtHash().digest(),
         }),
       ).rejects.toMatchObject({ error: 'FutureRev' })
       expect(await sc.writerDids(space)).toEqual([])
@@ -863,7 +998,7 @@ describe('space sync', () => {
         space,
         repo: bob.did,
         repoRev: TID.fromTime((Date.now() + MINUTE) * 1000, 0).toString(),
-        hash: new LtHash().digest(),
+        data: new LtHash().digest(),
       })
       expect(await sc.writerDids(space)).toEqual([bob.did])
     })
@@ -877,7 +1012,7 @@ describe('space sync', () => {
           space,
           repo: carol.did,
           repoRev: TID.nextStr(),
-          hash: new LtHash().digest(),
+          data: new LtHash().digest(),
         }),
       ).rejects.toThrow(/iss does not match claimed writer/)
     })
@@ -897,7 +1032,7 @@ describe('space sync', () => {
             space,
             repo: bob.did,
             repoRev: state!.rev!,
-            hash: new LtHash(state!.setHash!).digest(),
+            data: new LtHash(state!.setHash!).digest(),
           },
           { aud: carol.did },
         ),
@@ -912,7 +1047,7 @@ describe('space sync', () => {
           space,
           repo: carol.did,
           repoRev: TID.nextStr(),
-          hash: new LtHash().digest(),
+          data: new LtHash().digest(),
         }),
       ).rejects.toThrow(/not authorized/)
     })
@@ -926,7 +1061,7 @@ describe('space sync', () => {
           space,
           repo: bob.did,
           repoRev: TID.nextStr(),
-          hash: new LtHash().digest(),
+          data: new LtHash().digest(),
         }),
       ).rejects.toThrow(/not authorized/)
     })
@@ -941,7 +1076,7 @@ describe('space sync', () => {
           space,
           repo: bob.did,
           repoRev: 'not-a-tid',
-          hash: new LtHash().digest(),
+          data: new LtHash().digest(),
         }),
       ).rejects.toThrow(/Invalid TID/)
     })

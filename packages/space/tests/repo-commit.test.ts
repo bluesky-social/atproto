@@ -1,14 +1,14 @@
 import { beforeAll, describe, expect, it } from 'vitest'
-import { type Keypair, Secp256k1Keypair } from '@atproto/crypto'
+import { randomBytes } from '@atproto/crypto'
 import { type Cid, parseCid } from '@atproto/lex-data'
 import {
+  type Commit,
   type CommitCtx,
   LTHASH_STATE_BYTES,
   type RecordPathParts,
   RepoCommit,
   type RepoOp,
-  type SignedCommit,
-  encodeCommitCtx,
+  computeCommitMac,
   formatSetHashElement,
   verifyCommit,
 } from '../src/index.js'
@@ -23,17 +23,11 @@ const CID_B = parseCid(
 
 const ctx: CommitCtx = {
   space: 'at://did:example:space/space/app.bsky.group/test',
-  author: 'did:example:alice',
+  repo: 'did:example:alice',
   rev: '3kbcq3p7ad400',
 }
 
 describe('RepoCommit', () => {
-  let keypair: Keypair
-
-  beforeAll(async () => {
-    keypair = await Secp256k1Keypair.create()
-  })
-
   const sameContents = (a: RepoCommit, b: RepoCommit) =>
     a.setHash.equals(b.setHash)
 
@@ -139,82 +133,81 @@ describe('RepoCommit', () => {
     })
   })
 
-  describe('signing', () => {
+  describe('commits', () => {
     let repo: RepoCommit
+    const sharedSecret = randomBytes(32)
 
     beforeAll(() => {
       repo = new RepoCommit().add('app.bsky.feed.post', '1', CID_A)
     })
 
-    it('produces a well-formed commit', async () => {
-      const commit = await repo.sign(ctx, keypair)
-      expect(commit.ver).toBe(1)
-      expect(commit.rev).toBe(ctx.rev)
-      expect(commit.hash).toEqual(repo.setHash.digest())
-      expect(commit.hash).toHaveLength(32)
-      expect(commit.ikm).toHaveLength(32)
-      expect(commit.mac).toHaveLength(32)
-      expect(commit.sig.length).toBeGreaterThan(0)
+    const verifyParams = (mac: Uint8Array) => ({
+      space: ctx.space,
+      repo: ctx.repo,
+      sharedSecret,
+      mac,
     })
 
-    it('verifies its own commit', async () => {
-      const commit = await repo.sign(ctx, keypair)
-      expect(await verifyCommit(commit, ctx, keypair.did())).toBe(true)
+    it('produces a well-formed commit', () => {
+      const commit = repo.toCommit(ctx)
+      expect(commit.ver).toBe(1)
+      expect(commit.repo).toBe(ctx.repo)
+      expect(commit.space).toBe(ctx.space)
+      expect(commit.rev).toBe(ctx.rev)
+      expect(commit.data).toEqual(repo.setHash.digest())
+      expect(commit.data).toHaveLength(32)
+    })
+
+    it('verifies a commit against its MAC', () => {
+      const commit = repo.toCommit(ctx)
+      const mac = computeCommitMac(sharedSecret, commit)
+      expect(verifyCommit(commit, verifyParams(mac))).toBe(true)
       expect(repo.matches(commit)).toBe(true)
     })
 
-    it('uses a fresh ikm per commit, for deniability', async () => {
-      const a = await repo.sign(ctx, keypair)
-      const b = await repo.sign(ctx, keypair)
-      expect(a.ikm).not.toEqual(b.ikm)
-      expect(a.mac).not.toEqual(b.mac)
-      expect(a.sig).not.toEqual(b.sig)
-      expect(a.hash).toEqual(b.hash)
+    it('rejects a MAC under a different shared secret', () => {
+      const commit = repo.toCommit(ctx)
+      const mac = computeCommitMac(randomBytes(32), commit)
+      expect(verifyCommit(commit, verifyParams(mac))).toBe(false)
     })
 
-    it('rejects a signature from a different key', async () => {
-      const other = await Secp256k1Keypair.create()
-      const commit = await repo.sign(ctx, keypair)
-      expect(await verifyCommit(commit, ctx, other.did())).toBe(false)
-    })
-
-    it.each([
+    it.each<[string, Partial<Commit>]>([
       ['space', { space: 'at://did:example:space/space/app.bsky.group/other' }],
-      ['author', { author: 'did:example:bob' }],
+      ['repo', { repo: 'did:example:bob' }],
+    ])('rejects a commit for a different %s', (_field, override) => {
+      const commit = repo.toCommit(ctx)
+      const mac = computeCommitMac(sharedSecret, commit)
+      expect(verifyCommit(commit, { ...verifyParams(mac), ...override })).toBe(
+        false,
+      )
+    })
+
+    it.each<[string, Partial<Commit>]>([
+      ['space', { space: 'at://did:example:space/space/app.bsky.group/other' }],
+      ['repo', { repo: 'did:example:bob' }],
       ['rev', { rev: '3kbcq3p7ad999' }],
-    ])('does not verify under a different %s', async (_field, override) => {
-      const commit = await repo.sign(ctx, keypair)
-      const otherCtx = { ...ctx, ...override }
-      expect(await verifyCommit(commit, otherCtx, keypair.did())).toBe(false)
+      ['data', { data: new RepoCommit().setHash.digest() }],
+    ])('rejects a tampered %s', (_field, override) => {
+      const commit = repo.toCommit(ctx)
+      const mac = computeCommitMac(sharedSecret, commit)
+      const tampered = { ...commit, ...override }
+      // Point the request at the tampered fields so only the MAC can catch it.
+      const params = {
+        ...verifyParams(mac),
+        space: tampered.space,
+        repo: tampered.repo,
+      }
+      expect(verifyCommit(tampered, params)).toBe(false)
     })
 
-    it('does not verify a tampered hash', async () => {
-      const commit = await repo.sign(ctx, keypair)
-      const tampered = { ...commit, hash: new RepoCommit().setHash.digest() }
-      // The signature over the ctx is still valid — it never covered the hash.
-      // The MAC is what catches this, and what a leaked commit can't prove.
-      expect(await verifyCommit(tampered, ctx, keypair.did())).toBe(false)
+    it('rejects an unknown commit version', () => {
+      const commit = { ...repo.toCommit(ctx), ver: 2 }
+      const mac = computeCommitMac(sharedSecret, commit)
+      expect(verifyCommit(commit, verifyParams(mac))).toBe(false)
     })
 
-    it('rejects a commit whose rev disagrees with the ctx', async () => {
-      const commit = await repo.sign(ctx, keypair)
-      expect(
-        await verifyCommit(
-          { ...commit, rev: '3kbcq3p7ad999' },
-          ctx,
-          keypair.did(),
-        ),
-      ).toBe(false)
-    })
-
-    it('rejects an unknown commit version', async () => {
-      const commit = await repo.sign(ctx, keypair)
-      const future = { ...commit, ver: 2 } as unknown as SignedCommit
-      expect(await verifyCommit(future, ctx, keypair.did())).toBe(false)
-    })
-
-    it('matches() is false once the repo changes', async () => {
-      const commit = await repo.sign(ctx, keypair)
+    it('matches() is false once the repo changes', () => {
+      const commit = repo.toCommit(ctx)
       const advanced = RepoCommit.fromState(repo.setHash.state()).add(
         'app.bsky.feed.post',
         '2',
@@ -229,7 +222,7 @@ describe('RepoCommit', () => {
    * hashing to one element would let one's addition cancel the other's — silently
    * and permanently — so what keeps the encoding injective is worth stating.
    *
-   * It is *not* the length prefixing that {@link encodeCommitCtx} uses. It rests
+   * It is *not* the length prefixing that {@link computeCommitMac} uses. It rests
    * entirely on the outer two fields being slash-free: a collection is an NSID and
    * a cid is base32, so the first slash always ends the collection and the last
    * always begins the cid. That leaves the rkey unambiguous no matter what it
@@ -258,30 +251,6 @@ describe('RepoCommit', () => {
       expect(new RepoCommit().add('n.c.a', 'b/1', CID_A).setHash).not.toEqual(
         new RepoCommit().add('n.c.a', 'b/2', CID_A).setHash,
       )
-    })
-  })
-
-  describe('encodeCommitCtx', () => {
-    const ikm = new Uint8Array(32).fill(7)
-
-    it('is length-prefixed and domain-separated', () => {
-      const encoded = encodeCommitCtx(ctx, ikm)
-      expect(Buffer.from(encoded.subarray(0, 16)).toString()).toBe(
-        'atproto-space-v1',
-      )
-      const spaceLen = (encoded[16] << 8) | encoded[17]
-      expect(spaceLen).toBe(ctx.space.length)
-    })
-
-    it('is unambiguous across field boundaries', () => {
-      // Without length prefixes these two would encode identically.
-      const a = encodeCommitCtx({ space: 'ab', author: 'c', rev: 'd' }, ikm)
-      const b = encodeCommitCtx({ space: 'a', author: 'bc', rev: 'd' }, ikm)
-      expect(a).not.toEqual(b)
-    })
-
-    it('is deterministic', () => {
-      expect(encodeCommitCtx(ctx, ikm)).toEqual(encodeCommitCtx(ctx, ikm))
     })
   })
 })

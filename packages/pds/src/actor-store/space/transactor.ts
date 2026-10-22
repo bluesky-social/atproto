@@ -124,7 +124,7 @@ export class SpaceTransactor extends SpaceReader {
     space: string,
     did: string,
     repoRev: string,
-    hash: Uint8Array,
+    data: Uint8Array,
   ): Promise<{ spaceRev: string; prevSpaceRev?: string } | undefined> {
     this.db.assertTransaction()
     const current = await this.getSpace(space)
@@ -150,9 +150,9 @@ export class SpaceTransactor extends SpaceReader {
     const spaceRev = TID.nextStr(prevSpaceRev)
     await this.db.db
       .insertInto('space_writer')
-      .values({ space, did, repoRev, hash, spaceRev })
+      .values({ space, did, repoRev, data, spaceRev })
       .onConflict((oc) =>
-        oc.columns(['space', 'did']).doUpdateSet({ repoRev, hash, spaceRev }),
+        oc.columns(['space', 'did']).doUpdateSet({ repoRev, data, spaceRev }),
       )
       .execute()
     return { spaceRev, prevSpaceRev }

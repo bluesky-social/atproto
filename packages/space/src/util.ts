@@ -43,13 +43,3 @@ export function formatSetHashElement<
   const path = formatRecordPath(collection, rkey)
   return `${path}/${cid.toString()}`
 }
-
-// Lexicographic byte order: the first differing byte decides, and a prefix sorts
-// before any longer key it starts.
-export function compareBytes(a: Uint8Array, b: Uint8Array): number {
-  const length = Math.min(a.length, b.length)
-  for (let i = 0; i < length; i++) {
-    if (a[i] !== b[i]) return a[i] - b[i]
-  }
-  return a.length - b.length
-}

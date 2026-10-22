@@ -244,7 +244,7 @@ describe('space auth', () => {
 
         await expect(
           alice.client.call(
-            com.atproto.space.getLatestCommit,
+            com.atproto.space.listRecords,
             { space, repo: alice.did },
             { headers },
           ),
@@ -274,7 +274,7 @@ describe('space auth', () => {
             audience: alice.did,
           })
           const url = new URL(
-            `/xrpc/${com.atproto.space.getLatestCommit.$lxm}`,
+            `/xrpc/${com.atproto.space.listRecords.$lxm}`,
             alice.pds.url,
           )
           url.search = new URLSearchParams({
@@ -314,7 +314,11 @@ describe('space auth', () => {
 
         const cred = await sc.credentialFor(carol, space)
         const attacker = await P256Keypair.create()
-        const rebound = new SpaceCredential(cred.credential, attacker)
+        const rebound = new SpaceCredential(
+          cred.credential,
+          attacker,
+          cred.idResolver,
+        )
 
         await expect(
           rebound.clientFor(alice.pds).call(com.atproto.space.getLatestCommit, {
@@ -380,7 +384,7 @@ describe('space auth', () => {
         for (let i = 0; i < 2; i++) {
           await expect(
             alice.client.call(
-              com.atproto.space.getLatestCommit,
+              com.atproto.space.listRecords,
               { space, repo: alice.did },
               { headers },
             ),
@@ -388,7 +392,7 @@ describe('space auth', () => {
         }
         await expect(
           alice.client.call(
-            com.atproto.space.listRecords,
+            com.atproto.space.listBlobs,
             { space, repo: alice.did },
             { headers },
           ),

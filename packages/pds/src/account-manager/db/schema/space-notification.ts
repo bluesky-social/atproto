@@ -4,7 +4,7 @@ export interface SpaceNotificationRetry {
   repo: DidString
   space: SpaceRefString
   repoRev: string
-  hash: Uint8Array
+  data: Uint8Array
   attempts: number
   retryAt: number
   expiresAt: number

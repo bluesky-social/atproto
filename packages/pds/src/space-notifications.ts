@@ -60,7 +60,7 @@ export class SpaceNotifications implements AsyncDisposable {
       space,
       repo,
       repoRev: commit.rev,
-      hash: new LtHash(commit.setHash).digest(),
+      data: new LtHash(commit.setHash).digest(),
     }
     try {
       await this.deliver(body)
@@ -88,7 +88,7 @@ export class SpaceNotifications implements AsyncDisposable {
               .columns(['repo', 'space'])
               .doUpdateSet({
                 repoRev: body.repoRev,
-                hash: body.hash,
+                data: body.data,
                 ...schedule,
               })
               .where('space_notification_retry.repoRev', '<', body.repoRev),
@@ -296,9 +296,9 @@ export class SpaceNotifications implements AsyncDisposable {
   }
 
   private async retryOne(retry: SpaceNotificationRetry): Promise<void> {
-    const { space, repo, repoRev, hash } = retry
+    const { space, repo, repoRev, data } = retry
     try {
-      await this.deliver({ space, repo, repoRev, hash })
+      await this.deliver({ space, repo, repoRev, data })
       await this.clearRetry(retry)
     } catch (err) {
       if (!isRetryableError(err)) {

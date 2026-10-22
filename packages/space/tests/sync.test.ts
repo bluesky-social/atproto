@@ -1,22 +1,25 @@
 import { beforeAll, describe, expect, it } from 'vitest'
 import { encodeVarInt } from '@atproto/car'
-import { type Keypair, Secp256k1Keypair } from '@atproto/crypto'
+import { randomBytes } from '@atproto/crypto'
 import { encode } from '@atproto/lex-cbor'
-import type { Cid } from '@atproto/lex-data'
+import { type Cid, parseCid } from '@atproto/lex-data'
 import {
+  type Commit,
   type CommitCtx,
   MAX_RECORD_SIZE,
   REPO_STAR_TYPE,
   RepoCommit,
   RepoVerificationError,
   type SerializedRecord,
-  type SignedCommit,
   type StarPair,
   StarParseError,
+  computeCommitMac,
+  computeRecordMac,
   readStar,
   serializeRecord,
   serializeRepo,
   verifyCommit,
+  verifyRecord,
   verifyRepoStar,
   verifyRepoStarFull,
   writeStar,
@@ -26,7 +29,7 @@ const SPACE = 'at://did:example:space/space/app.bsky.group/test'
 const AUTHOR = 'did:example:alice'
 const REV = '3kbcq3p7ad400'
 
-const ctx: CommitCtx = { space: SPACE, author: AUTHOR, rev: REV }
+const ctx: CommitCtx = { space: SPACE, repo: AUTHOR, rev: REV }
 
 const collect = async (
   stream: AsyncIterable<Uint8Array>,
@@ -45,12 +48,12 @@ const drain = async (records: AsyncIterable<unknown>): Promise<void> => {
 const utf8 = (str: string) => new TextEncoder().encode(str)
 
 describe('space sync', () => {
-  let keypair: Keypair
+  // Stands in for the secret a syncer and repo host derive for one request.
+  const sharedSecret = randomBytes(32)
   // In path order: likes sort before posts.
   let records: (SerializedRecord & { cid: Cid })[]
 
   beforeAll(async () => {
-    keypair = await Secp256k1Keypair.create()
     records = await Promise.all([
       serializeRecord('app.bsky.feed.like', '3kbcq3p7ad403', {
         subject: 'at://x',
@@ -64,35 +67,25 @@ describe('space sync', () => {
     ])
   })
 
-  const params = () => ({ space: SPACE, author: AUTHOR, didKey: keypair.did() })
+  const commitFor = (recs: (SerializedRecord & { cid: Cid })[]): Commit =>
+    RepoCommit.fromRecords(recs).toCommit(ctx)
 
-  const commitFor = (recs: (SerializedRecord & { cid: Cid })[]) =>
-    RepoCommit.fromRecords(recs).sign(ctx, keypair)
+  // What a syncer verifies a response with: the repo it asked for, and the MAC
+  // the host sent back for the commit over `recs`.
+  const params = (recs: (SerializedRecord & { cid: Cid })[] = records) => ({
+    space: SPACE,
+    repo: AUTHOR,
+    sharedSecret,
+    mac: computeCommitMac(sharedSecret, commitFor(recs)),
+  })
 
-  const starFor = async (
+  const starFor = (
     recs: (SerializedRecord & { cid: Cid })[],
-  ): Promise<Uint8Array> =>
-    collect(
-      serializeRepo(
-        { space: SPACE, author: AUTHOR, commit: await commitFor(recs) },
-        recs,
-      ),
-    )
+  ): Promise<Uint8Array> => collect(serializeRepo(commitFor(recs), recs))
 
   // Hand-builds an archive, for writing what serializeRepo refuses to.
-  const rawStar = (commit: SignedCommit, pairs: StarPair[], meta = {}) =>
-    collect(
-      writeStar(
-        {
-          $type: REPO_STAR_TYPE,
-          did: AUTHOR,
-          space: SPACE,
-          ...commit,
-          ...meta,
-        },
-        pairs,
-      ),
-    )
+  const rawStar = (commit: Commit, pairs: StarPair[], meta = {}) =>
+    collect(writeStar({ $type: REPO_STAR_TYPE, ...commit, ...meta }, pairs))
 
   const pairsFor = (recs: SerializedRecord[]): StarPair[] =>
     recs.map((r) => ({
@@ -100,18 +93,11 @@ describe('space sync', () => {
       value: r.bytes,
     }))
 
-  it('writes the commit and context as metadata, then one pair per record', async () => {
-    const commit = await commitFor(records)
-    const star = await collect(
-      serializeRepo({ space: SPACE, author: AUTHOR, commit }, records),
-    )
+  it('writes the commit as metadata, then one pair per record', async () => {
+    const commit = commitFor(records)
+    const star = await collect(serializeRepo(commit, records))
     await using reader = await readStar([star])
-    expect(reader.meta).toEqual({
-      $type: REPO_STAR_TYPE,
-      did: AUTHOR,
-      space: SPACE,
-      ...commit,
-    })
+    expect(reader.meta).toEqual({ $type: REPO_STAR_TYPE, ...commit })
 
     const keys: string[] = []
     for await (const { key } of reader.pairs) {
@@ -148,27 +134,21 @@ describe('space sync', () => {
 
   it('serializes an empty repo', async () => {
     const star = await starFor([])
-    const recovered = await verifyRepoStarFull([star], params())
+    const recovered = await verifyRepoStarFull([star], params([]))
     expect(recovered.records).toHaveLength(0)
   })
 
   it('refuses to serialize records out of path order', async () => {
-    const commit = await commitFor(records)
+    const commit = commitFor(records)
     await expect(
-      collect(
-        serializeRepo({ space: SPACE, author: AUTHOR, commit }, [
-          records[1],
-          records[0],
-        ]),
-      ),
+      collect(serializeRepo(commit, [records[1], records[0]])),
     ).rejects.toThrow(/records out of order/)
   })
 
   it('verifies the commit before reading any record', async () => {
-    const other = await Secp256k1Keypair.create()
     const star = await starFor(records)
     await expect(
-      verifyRepoStar([star], { ...params(), didKey: other.did() }),
+      verifyRepoStar([star], { ...params(), sharedSecret: randomBytes(32) }),
     ).rejects.toThrow(/commit failed verification/)
   })
 
@@ -176,8 +156,8 @@ describe('space sync', () => {
     it('rejects an archive for another author', async () => {
       const star = await starFor(records)
       await expect(
-        verifyRepoStarFull([star], { ...params(), author: 'did:example:bob' }),
-      ).rejects.toThrow(/expected repo of did:example:bob/)
+        verifyRepoStarFull([star], { ...params(), repo: 'did:example:bob' }),
+      ).rejects.toThrow(/commit failed verification/)
     })
 
     it('rejects an archive for another space', async () => {
@@ -187,21 +167,21 @@ describe('space sync', () => {
           ...params(),
           space: 'at://did:example:space/space/app.bsky.group/other',
         }),
-      ).rejects.toThrow(/expected repo in/)
+      ).rejects.toThrow(/commit failed verification/)
     })
 
     it('rejects metadata relabelled with another author', async () => {
-      // Signed for alice, but claims to be bob's repo.
-      const star = await rawStar(await commitFor(records), pairsFor(records), {
-        did: 'did:example:bob',
+      // MACed for alice, but claims to be bob's repo.
+      const star = await rawStar(commitFor(records), pairsFor(records), {
+        repo: 'did:example:bob',
       })
       await expect(
-        verifyRepoStarFull([star], { ...params(), author: 'did:example:bob' }),
+        verifyRepoStarFull([star], { ...params(), repo: 'did:example:bob' }),
       ).rejects.toThrow(/commit failed verification/)
     })
 
     it('rejects the wrong metadata $type', async () => {
-      const star = await rawStar(await commitFor(records), pairsFor(records), {
+      const star = await rawStar(commitFor(records), pairsFor(records), {
         $type: 'atproto-public-repo',
       })
       await expect(verifyRepoStarFull([star], params())).rejects.toThrow(
@@ -210,48 +190,48 @@ describe('space sync', () => {
     })
 
     it('rejects an unknown commit version', async () => {
-      const star = await rawStar(await commitFor(records), pairsFor(records), {
+      const star = await rawStar(commitFor(records), pairsFor(records), {
         ver: 2,
       })
       await expect(verifyRepoStarFull([star], params())).rejects.toThrow(
-        /invalid repo metadata/,
+        /commit failed verification/,
       )
     })
 
     it('rejects a repo missing a record', async () => {
       const star = await rawStar(
-        await commitFor(records),
+        commitFor(records),
         pairsFor(records.slice(0, -1)),
       )
       // The commit itself is fine, so this only surfaces once records are drained.
       const { records: stream } = await verifyRepoStar([star], params())
       await expect(drain(stream)).rejects.toThrow(
-        /records do not match the commit hash/,
+        /records do not match the commit data/,
       )
     })
 
     it('rejects a repo with an extra record', async () => {
       const star = await rawStar(
-        await commitFor(records.slice(0, -1)),
+        commitFor(records.slice(0, -1)),
         pairsFor(records),
       )
-      await expect(verifyRepoStarFull([star], params())).rejects.toThrow(
-        /records do not match the commit hash/,
-      )
+      await expect(
+        verifyRepoStarFull([star], params(records.slice(0, -1))),
+      ).rejects.toThrow(/records do not match the commit data/)
     })
 
     it('rejects a record whose value was swapped', async () => {
       const pairs = pairsFor(records)
       pairs[0] = { ...pairs[0], value: encode({ text: 'tampered' }) }
-      const star = await rawStar(await commitFor(records), pairs)
+      const star = await rawStar(commitFor(records), pairs)
       await expect(verifyRepoStarFull([star], params())).rejects.toThrow(
-        /records do not match the commit hash/,
+        /records do not match the commit data/,
       )
     })
 
     it('rejects records out of order', async () => {
       const pairs = pairsFor(records)
-      const star = await rawStar(await commitFor(records), [
+      const star = await rawStar(commitFor(records), [
         pairs[1],
         pairs[0],
         pairs[2],
@@ -263,7 +243,7 @@ describe('space sync', () => {
 
     it('rejects a duplicate record', async () => {
       const pairs = pairsFor(records)
-      const star = await rawStar(await commitFor(records), [
+      const star = await rawStar(commitFor(records), [
         pairs[0],
         pairs[0],
         pairs[1],
@@ -275,10 +255,10 @@ describe('space sync', () => {
     })
 
     it('rejects an invalid record path', async () => {
-      const star = await rawStar(await commitFor([]), [
+      const star = await rawStar(commitFor([]), [
         { key: utf8('not-a-path'), value: encode({}) },
       ])
-      await expect(verifyRepoStarFull([star], params())).rejects.toThrow(
+      await expect(verifyRepoStarFull([star], params([]))).rejects.toThrow(
         /invalid record path/,
       )
     })
@@ -288,21 +268,21 @@ describe('space sync', () => {
       // value's bytes following: the length alone must be enough to reject it.
       const key = utf8('app.bsky.feed.post/3kbcq3p7ad401')
       const star = Buffer.concat([
-        await rawStar(await commitFor([]), []),
+        await rawStar(commitFor([]), []),
         encodeVarInt(key.length),
         key,
         encodeVarInt(MAX_RECORD_SIZE + 1),
       ])
-      await expect(verifyRepoStarFull([star], params())).rejects.toThrow(
+      await expect(verifyRepoStarFull([star], params([]))).rejects.toThrow(
         /exceeds limit of 1048576/,
       )
     })
 
     it('rejects a record that is not a map', async () => {
-      const star = await rawStar(await commitFor([]), [
+      const star = await rawStar(commitFor([]), [
         { key: utf8('app.bsky.feed.post/3kbcq3p7ad401'), value: encode('hi') },
       ])
-      await expect(verifyRepoStarFull([star], params())).rejects.toThrow(
+      await expect(verifyRepoStarFull([star], params([]))).rejects.toThrow(
         /invalid record at/,
       )
     })
@@ -337,12 +317,12 @@ describe('space sync', () => {
   it('throws RepoVerificationError for a bad repo', async () => {
     const star = await starFor(records)
     await expect(
-      verifyRepoStarFull([star], { ...params(), author: 'did:example:bob' }),
+      verifyRepoStarFull([star], { ...params(), repo: 'did:example:bob' }),
     ).rejects.toThrow(RepoVerificationError)
   })
 
   // A syncer advances its own copy over the oplog, then checks it against the
-  // repo's signed commit. A mismatch means it must fall back to full recovery.
+  // repo's commit. A mismatch means it must fall back to full recovery.
   describe('incremental sync', () => {
     const createOps = (recs: (SerializedRecord & { cid: Cid })[]) =>
       recs.map((r) => ({
@@ -353,15 +333,15 @@ describe('space sync', () => {
       }))
 
     it('catches up to a commit by replaying the oplog', async () => {
-      const commit = await commitFor(records)
+      const commit = commitFor(records)
       const local = new RepoCommit().applyOps(createOps(records))
 
-      expect(await verifyCommit(commit, ctx, keypair.did())).toBe(true)
+      expect(verifyCommit(commit, params())).toBe(true)
       expect(local.matches(commit)).toBe(true)
     })
 
     it('detects divergence when an op was missed', async () => {
-      const commit = await commitFor(records)
+      const commit = commitFor(records)
       const local = new RepoCommit().applyOps(createOps(records.slice(0, 2)))
       expect(local.matches(commit)).toBe(false)
     })
@@ -373,6 +353,57 @@ describe('space sync', () => {
         { collection: a.collection, rkey: a.rkey, cid: null, prev: b.cid },
       ])
       expect(local.setHash.isEmpty()).toBe(true)
+    })
+  })
+
+  // A syncer that fetches a single record checks it against its record MAC.
+  describe('record verification', () => {
+    const URI = `at://did:example:space/space/app.bsky.group/test/${AUTHOR}/app.bsky.feed.post/3kbcq3p7ad401`
+    const value = { text: 'hello' }
+
+    // The getRecord response and the params a syncer verifies it with.
+    const fetched = async () => {
+      const { cid } = await serializeRecord(
+        'app.bsky.feed.post',
+        '3kbcq3p7ad401',
+        value,
+      )
+      return {
+        record: { uri: URI, cid: cid.toString(), value },
+        params: {
+          uri: URI,
+          sharedSecret,
+          mac: computeRecordMac(sharedSecret, URI, cid),
+        },
+      }
+    }
+
+    it('accepts the requested record under its MAC', async () => {
+      const { record, params } = await fetched()
+      expect(await verifyRecord(record, params)).toBe(true)
+    })
+
+    it('rejects a record other than the one requested', async () => {
+      const { record, params } = await fetched()
+      const other = `${URI}x`
+      expect(await verifyRecord(record, { ...params, uri: other })).toBe(false)
+    })
+
+    it('rejects a MAC under another shared secret', async () => {
+      const { record, params } = await fetched()
+      const mac = computeRecordMac(randomBytes(32), URI, parseCid(record.cid))
+      expect(await verifyRecord(record, { ...params, mac })).toBe(false)
+    })
+
+    it('rejects a value that does not match its cid', async () => {
+      const { record, params } = await fetched()
+      const swapped = { ...record, value: { text: 'world' } }
+      expect(await verifyRecord(swapped, params)).toBe(false)
+    })
+
+    it('rejects a malformed cid', async () => {
+      const { record, params } = await fetched()
+      expect(await verifyRecord({ ...record, cid: 'nope' }, params)).toBe(false)
     })
   })
 })

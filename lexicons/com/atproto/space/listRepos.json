@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "List the known repos that hold data in a space (the writer set), with each repo's current repoRev and commit hash. Served by the space host. This is the sync boundary, not an access-control list: it enumerates only writers, never readers. The set is what the authority claims from write notifications and is not itself authoritative; a repo's host is the source of truth.",
+      "description": "List the known repos that hold data in a space (the writer set), with each repo's current repoRev and commit data. Served by the space host. This is the sync boundary, not an access-control list: it enumerates only writers, never readers. The set is what the authority claims from write notifications and is not itself authoritative; a repo's host is the source of truth.",
       "parameters": {
         "type": "params",
         "required": ["space"],
@@ -56,7 +56,7 @@
     },
     "repo": {
       "type": "object",
-      "required": ["did", "repoRev", "hash", "spaceRev"],
+      "required": ["did", "repoRev", "data", "spaceRev"],
       "properties": {
         "did": {
           "type": "string",
@@ -68,9 +68,9 @@
           "description": "The repo's current revision (TID), as last reported to the authority. May lag the repo host, which is the source of truth.",
           "format": "tid"
         },
-        "hash": {
+        "data": {
           "type": "bytes",
-          "description": "The repo's current commit hash (sha256 of the LtHash state), as last reported to the authority."
+          "description": "The repo's current commit data (sha256 of the LtHash state), as last reported to the authority."
         },
         "spaceRev": {
           "type": "string",

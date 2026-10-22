@@ -1,36 +1,32 @@
 import { encode } from '@atproto/lex-cbor'
 import { type Cid, cidForCbor } from '@atproto/lex-data'
 import type { NsidString, RecordKeyString } from '@atproto/syntax'
+import { compareBytes } from '../bytes.js'
 import { type StarPair, writeStar } from '../star.js'
 import {
+  type Commit,
   REPO_STAR_TYPE,
   type RecordPathParts,
   type RepoStarMeta,
-  type SignedCommit,
   type SpaceRecord,
 } from '../types.js'
-import { compareBytes, formatRecordPath } from '../util.js'
+import { formatRecordPath } from '../util.js'
 
 export type SerializedRecord = RecordPathParts & {
   bytes: Uint8Array
 }
 
 /**
- * Serialize a repo as a STAR archive: the signed commit and its context in the
- * metadata, then one path/record pair per record. Blobs are excluded.
+ * Serialize a repo as a STAR archive: the commit as the metadata, then one
+ * path/record pair per record. Blobs are excluded.
  *
  * Records must be given in strict path order, as the archive requires.
  */
 export async function* serializeRepo(
-  repo: { space: string; author: string; commit: SignedCommit },
+  commit: Commit,
   records: AsyncIterable<SerializedRecord> | Iterable<SerializedRecord>,
 ): AsyncGenerator<Uint8Array> {
-  const meta: RepoStarMeta = {
-    $type: REPO_STAR_TYPE,
-    did: repo.author,
-    space: repo.space,
-    ...repo.commit,
-  }
+  const meta: RepoStarMeta = { $type: REPO_STAR_TYPE, ...commit }
   yield* writeStar(meta, toStarPairs(records))
 }
 
