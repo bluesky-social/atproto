@@ -27,4 +27,10 @@ describe(cn, () => {
       'hover:bg-red-500 bg-blue-500',
     )
   })
+
+  it('treats text-action as a font size, keeping the text colour', () => {
+    expect(cn('text-sm text-primary-foreground', 'text-action')).toBe(
+      'text-primary-foreground text-action',
+    )
+  })
 })
