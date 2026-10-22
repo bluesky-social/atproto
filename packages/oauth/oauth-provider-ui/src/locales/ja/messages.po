@@ -305,15 +305,15 @@ msgstr "受信トレイを確認してください。"
 
 #: src/components/update-handle-dialog.tsx
 msgid "Choose a new default username."
-msgstr "新しいデフォルトのユーザー名を選択してください。"
+msgstr "新しいデフォルトのユーザー名を設定してください。"
 
 #: src/components/update-email-dialog.tsx
 msgid "Choose a new email address to associate with your account."
-msgstr "アカウントに関連付ける新しいメールアドレスを選択してください。"
+msgstr "アカウントに関連付ける新しいメールアドレスを設定してください。"
 
 #: src/components/sign-up-view.tsx
 msgid "Choose a username"
-msgstr "ユーザー名を選んでください"
+msgstr "ユーザー名を設定してください"
 
 #: src/components/redirecting-view.tsx
 msgid "Click here if nothing happens"
@@ -442,20 +442,20 @@ msgstr "コードが届いていませんか？<0>ここをクリックすれば
 
 #: src/components/disable-email-auth-factor-dialog.tsx
 msgid "Disable 2FA"
-msgstr ""
+msgstr "2要素認証を無効にする"
 
 #: src/components/disable-email-auth-factor-dialog.tsx
 msgid "Disable two-factor authentication"
-msgstr ""
+msgstr "2要素認証を無効にする"
 
 #: src/routes/account/u/$accountId/manage.tsx
 msgctxt "2FA"
 msgid "Disabled"
-msgstr ""
+msgstr "無効"
 
 #: src/components/disable-email-auth-factor-dialog.tsx
 msgid "Disabling two-factor authentication makes your account less secure."
-msgstr ""
+msgstr "2要素認証を無効にすると、アカウントのセキュリティが低下します。"
 
 #: src/components/forms/input-handle-custom-instructions.tsx
 msgid "DNS"
@@ -495,11 +495,11 @@ msgstr "メールアドレスの変更に成功しました"
 
 #: src/data/email.ts
 msgid "Email login verification disabled"
-msgstr ""
+msgstr "メールでのログイン認証が無効化されました"
 
 #: src/data/email.ts
 msgid "Email login verification enabled"
-msgstr ""
+msgstr "メールでのログイン認証が有効化されました"
 
 #: src/routes/account/u/$accountId/manage.tsx
 msgid "Email not verified"
@@ -515,16 +515,16 @@ msgstr "メールアドレスが確認されました"
 
 #: src/components/enable-email-auth-factor-dialog.tsx
 msgid "Enable"
-msgstr ""
+msgstr "有効化"
 
 #: src/components/enable-email-auth-factor-dialog.tsx
 msgid "Enable two-factor authentication"
-msgstr ""
+msgstr "2要素認証を有効にする"
 
 #: src/routes/account/u/$accountId/manage.tsx
 msgctxt "2FA"
 msgid "Enabled"
-msgstr ""
+msgstr "有効"
 
 #: src/components/forms/fields/new-password-field.tsx
 msgid "Enter a password"
@@ -532,7 +532,7 @@ msgstr "パスワードを入力"
 
 #: src/components/reset-password-view.tsx
 msgid "Enter the code you received by email to reset your password."
-msgstr "メールで受け取ったコードを入力してパスワードをリセットしてください。"
+msgstr "パスワードをリセットするためにメールで受け取ったコードを入力してください。"
 
 #: src/components/update-handle-custom-form.tsx
 msgid "Enter the domain you want to use"
@@ -540,7 +540,7 @@ msgstr "使用したいドメインを入力してください"
 
 #: src/components/disable-email-auth-factor-dialog.tsx
 msgid "Enter the security code we sent to <0>{email}</0> to disable email two-factor authentication."
-msgstr ""
+msgstr "メールでの2要素認証を無効にするには、<0>{email}</0> に送信したセキュリティコードを入力してください。"
 
 #: src/components/reset-password-view.tsx
 msgid "Enter your account's email and we'll send you a reset code."
@@ -590,11 +590,11 @@ msgstr "アカウントの削除に失敗しました"
 
 #: src/data/email.ts
 msgid "Failed to disable email login verification"
-msgstr ""
+msgstr "メールでのログイン認証の無効化に失敗しました"
 
 #: src/data/email.ts
 msgid "Failed to enable email login verification"
-msgstr ""
+msgstr "メールでのログイン認証の有効化に失敗しました"
 
 #: src/routes/account/u/$accountId/apps.tsx
 msgid "Failed to load connected apps"
@@ -602,7 +602,7 @@ msgstr "接続されたアプリの読み込みに失敗しました"
 
 #: src/routes/account/u/$accountId/devices.tsx
 msgid "Failed to load your devices"
-msgstr ""
+msgstr "デバイスの読み込みに失敗しました"
 
 #: src/data/account.ts
 msgid "Failed to reactivate account"
@@ -634,7 +634,7 @@ msgstr "確認メールの送信に失敗しました"
 
 #: src/data/email.ts
 msgid "Failed to send security code"
-msgstr ""
+msgstr "セキュリティコードの送信に失敗しました"
 
 #: src/data/email.ts
 msgid "Failed to send verification email"
@@ -867,7 +867,7 @@ msgstr "ナビゲーション"
 
 #: src/components/sign-in-picker.tsx
 msgid "Need an account?"
-msgstr "アカウントをお持ちでないですか？"
+msgstr "アカウントを持っていませんか？"
 
 #: src/components/update-email-dialog.tsx
 #: src/components/update-email-form.tsx
@@ -897,7 +897,7 @@ msgstr "信頼できるサイトでのみパスワードを入力してくださ
 
 #: src/routes/__root.tsx
 msgid "Page not found"
-msgstr ""
+msgstr "ページが見つかりません"
 
 #: src/components/delete-account-confirm-form.tsx
 #: src/components/forms/fields/password-field.tsx
@@ -1035,7 +1035,7 @@ msgstr "リポジトリ"
 
 #: src/components/enable-email-auth-factor-dialog.tsx
 msgid "Require an email code to sign in to your account."
-msgstr ""
+msgstr "アカウントにサインインするには、メールのコードが必要です。"
 
 #: src/components/reset-password-confirm-form.tsx
 msgid "Reset code"
@@ -1086,7 +1086,7 @@ msgstr "メールを送信"
 
 #: src/components/disable-email-auth-factor-dialog.tsx
 msgid "Send email to verify"
-msgstr ""
+msgstr "メールを送信して認証"
 
 #: src/components/forms/request-code-button.tsx
 msgid "Send verification code"
@@ -1295,7 +1295,7 @@ msgstr "パスワードを変更するには、メールに送信されたセキ
 
 #: src/components/disable-email-auth-factor-dialog.tsx
 msgid "To disable your email two-factor authentication, please verify your access to <0>{email}</0>"
-msgstr ""
+msgstr "メールでの2要素認証を無効にするには、<0>{email}</0> に送信したセキュリティコードを入力してください。"
 
 #: src/components/verify-email-dialog.tsx
 msgid "To verify your email, you'll need to enter a security code sent to <0>{email}</0>."
@@ -1317,7 +1317,7 @@ msgstr "もう一度試す"
 
 #: src/routes/account/u/$accountId/manage.tsx
 msgid "Two-factor authentication (2FA)"
-msgstr ""
+msgstr "2要素認証 (2FA)"
 
 #: src/components/forms/input-handle-custom-instructions.tsx
 msgid "Type"
@@ -1370,7 +1370,7 @@ msgstr "URL"
 
 #: src/components/forms/fields/handle-field.tsx
 msgid "Use {minLength}–{maxLength, plural, one {# letter, number or hyphen} other {# letters, numbers or hyphens}}"
-msgstr ""
+msgstr "{minLength}～{maxLength, plural, other {#文字、英数字またはハイフン}}を使用"
 
 #: src/components/update-handle-dialog.tsx
 msgid "Use a default username"
@@ -1386,7 +1386,7 @@ msgstr "ユーザー名"
 
 #: src/components/sign-in-form.tsx
 msgid "Username or Email"
-msgstr ""
+msgstr "ユーザー名またはメールアドレス"
 
 #: src/components/sign-in-form.tsx
 msgid "Username or email address"
@@ -1429,7 +1429,7 @@ msgstr "確認して保存"
 
 #: src/routes/account/u/$accountId/manage.tsx
 msgid "Verify email to enable"
-msgstr ""
+msgstr "メールを確認して有効化"
 
 #: src/components/update-email-dialog.tsx
 msgctxt "verify email"
@@ -1528,7 +1528,7 @@ msgstr "新しいパスワードでサインインできるようになりまし
 
 #: src/data/email.ts
 msgid "You will no longer be prompted for a code to sign in."
-msgstr ""
+msgstr "サインインする際にコードの入力が求められなくなります。"
 
 #: src/components/sign-up-view.tsx
 msgid "Your account"
@@ -1540,7 +1540,7 @@ msgstr "あなたのアカウントと関連するすべてのデータが削除
 
 #: src/components/update-email-dialog.tsx
 msgid "Your account currently uses <0>{emailCurrent}</0>. Choose a new email address to associate with it."
-msgstr ""
+msgstr "あなたのアカウントは現在<0>{emailCurrent}</0>を使用しています。関連付ける新しいメールアドレスを入力してください。"
 
 #: src/authorization-page.tsx
 msgid "Your account has been successfully reactivated."
@@ -1548,7 +1548,7 @@ msgstr "あなたのアカウントは再有効化されました。"
 
 #: src/components/reactivate-account-view.tsx
 msgid "Your account is currently deactivated."
-msgstr "アカウントを現在無効化しています。"
+msgstr "アカウントは現在無効化されています。"
 
 #: src/data/account.ts
 msgid "Your account is now deactivated."
@@ -1583,7 +1583,7 @@ msgstr "あなたのフルユーザー名： {0}"
 
 #: src/data/email.ts
 msgid "Your next login will require a code that is sent to your email address."
-msgstr ""
+msgstr "次回のログインでは、メールアドレスに送信されるコードが必要です。"
 
 #: src/components/reactivate-account-dialog.tsx
 msgid "Your profile, posts, feeds, and lists will become visible again across the Atmosphere network — that includes the Bluesky app and any other Atmosphere app you use with this account."
@@ -1604,4 +1604,4 @@ msgstr "ユーザー名が更新されました。"
 #: src/components/forms/fields/handle-field.tsx
 #: src/components/sign-in-form.tsx
 msgid "yourname"
-msgstr ""
+msgstr "あなたの名前"
