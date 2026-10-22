@@ -1,5 +1,13 @@
 # @atproto/ozone
 
+## 0.10.4
+
+### Patch Changes
+
+- [#5707](https://github.com/bluesky-social/atproto/pull/5707) [`8eac4b0`](https://github.com/bluesky-social/atproto/commit/8eac4b0c0e11170171a1978123078f0a0b17ddd3) Thanks [@foysalit](https://github.com/foysalit)! - Use a bounded in-memory DID cache with configurable Ozone cache limits.
+- Updated dependencies [[`8eac4b0`](https://github.com/bluesky-social/atproto/commit/8eac4b0c0e11170171a1978123078f0a0b17ddd3)]:
+  - @atproto/identity@0.5.19
+
 ## 0.10.3
 
 ### Patch Changes

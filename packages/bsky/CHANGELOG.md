@@ -1,5 +1,14 @@
 # @atproto/bsky
 
+## 0.3.6
+
+### Patch Changes
+
+- [#5698](https://github.com/bluesky-social/atproto/pull/5698) [`400777b`](https://github.com/bluesky-social/atproto/commit/400777b959dce1d81dd639392b1f270dca329f37) Thanks [@foysalit](https://github.com/foysalit)! - Support active moderation tags in needs-review visibility checks alongside labels.
+- Updated dependencies [[`8eac4b0`](https://github.com/bluesky-social/atproto/commit/8eac4b0c0e11170171a1978123078f0a0b17ddd3)]:
+  - @atproto/identity@0.5.19
+  - @atproto/sync@0.4.16
+
 ## 0.3.5
 
 ### Patch Changes
