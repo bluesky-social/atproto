@@ -16,7 +16,8 @@ and log-level settings still apply.
 Slow requests take at least `BSKY_HTTP_LOG_SLOW_REQUEST_MS` milliseconds, which
 defaults to `1000`. Diagnostic logs emitted by request handlers and other
 subsystems are unaffected. Invalid sampling or duration values fail startup.
-Use request metrics for request counts; sampled access logs are incomplete.
+Sampled access logs are incomplete and cannot provide full request counts.
+Verify request-metric coverage before relying on metrics as a replacement.
 
 ## License
 
