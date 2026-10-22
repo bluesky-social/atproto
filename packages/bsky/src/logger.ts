@@ -1,7 +1,8 @@
 import type { IncomingMessage } from 'node:http'
 import { stdSerializers } from 'pino'
-import { pinoHttp } from 'pino-http'
+import { type HttpLogger, pinoHttp, startTime } from 'pino-http'
 import { obfuscateHeaders, subsystemLogger } from '@atproto/common'
+import type { ServerConfig } from './config.js'
 
 export const dbLogger: ReturnType<typeof subsystemLogger> =
   subsystemLogger('bsky:db')
@@ -26,17 +27,40 @@ export const httpLogger: ReturnType<typeof subsystemLogger> =
 export const eventsLogger: ReturnType<typeof subsystemLogger> =
   subsystemLogger('bsky:events')
 
-export const loggerMiddleware = pinoHttp({
-  logger: httpLogger,
-  serializers: {
-    err: (err: unknown) => ({
-      code: err?.['code'],
-      message: err?.['message'],
-    }),
-    req: (req: IncomingMessage) => {
-      const serialized = stdSerializers.req(req)
-      const headers = obfuscateHeaders(serialized.headers)
-      return { ...serialized, headers }
+export function createLoggerMiddleware(
+  config: Pick<
+    ServerConfig,
+    'httpLogSuccessSampleRate' | 'httpLogSlowRequestMs'
+  >,
+): HttpLogger {
+  return pinoHttp({
+    logger: httpLogger,
+    customLogLevel: (req, res, err) => {
+      if (
+        config.httpLogSuccessSampleRate === 1 ||
+        err ||
+        res.err ||
+        res.destroyed ||
+        res.statusCode >= 400 ||
+        req.readableAborted ||
+        !res.writableEnded ||
+        Date.now() - res[startTime] >= config.httpLogSlowRequestMs ||
+        Math.random() < config.httpLogSuccessSampleRate
+      ) {
+        return 'info'
+      }
+      return 'silent'
     },
-  },
-})
+    serializers: {
+      err: (err: unknown) => ({
+        code: err?.['code'],
+        message: err?.['message'],
+      }),
+      req: (req: IncomingMessage) => {
+        const serialized = stdSerializers.req(req)
+        const headers = obfuscateHeaders(serialized.headers)
+        return { ...serialized, headers }
+      },
+    },
+  })
+}
