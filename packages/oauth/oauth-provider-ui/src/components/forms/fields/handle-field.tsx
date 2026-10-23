@@ -33,7 +33,7 @@ export function HandleField({
       type="text"
       title={title ?? t`Atmosphere handle`}
       label={label ?? <Trans>Username</Trans>}
-      pattern={`\\s*(?:${HANDLE_PATTERN})\\s*`}
+      pattern={HANDLE_PATTERN}
       placeholder={placeholder ?? t`alice${domains?.[0] ?? '.example.com'}`}
       autoCapitalize={autoCapitalize}
       autoCorrect={autoCorrect}

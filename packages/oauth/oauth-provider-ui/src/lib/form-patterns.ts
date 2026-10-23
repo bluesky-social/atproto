@@ -1,3 +1,4 @@
+import { isAtIdentifierString, isValidHandle } from '@atproto/syntax'
 import { MIN_PASSWORD_LENGTH } from './password.ts'
 
 export { MIN_PASSWORD_LENGTH }
@@ -23,15 +24,11 @@ export const DID_PATTERN = `(?:did:plc:[a-z2-7]{24})|(?:did:web:[a-z0-9._\\-]+)`
 
 export const IDENTIFIER_PATTERN = `(?:${EMAIL_PATTERN})|(?:${HANDLE_PATTERN})|(?:${DID_PATTERN})`
 
-const EMAIL_REGEX = /^[^@]+@[^@]+\.[^@]+$/
-const HANDLE_REGEX =
-  /^([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$/
-const DID_REGEX = /^did:[a-z]+:[a-zA-Z0-9._:%-]*[a-zA-Z0-9._-]$/
+const EMAIL_IDENTIFIER_REGEX = /^[^@\s]+@[^@\s]+\.[^@\s]+$/
 
 export function isIdentifier(value: string): boolean {
-  return (
-    EMAIL_REGEX.test(value) || HANDLE_REGEX.test(value) || DID_REGEX.test(value)
-  )
+  if (value.startsWith('@')) return isValidHandle(value.slice(1))
+  return isAtIdentifierString(value) || EMAIL_IDENTIFIER_REGEX.test(value)
 }
 
 /**
