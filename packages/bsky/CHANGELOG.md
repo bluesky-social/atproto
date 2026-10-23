@@ -1,5 +1,11 @@
 # @atproto/bsky
 
+## 0.3.8
+
+### Patch Changes
+
+- [#5710](https://github.com/bluesky-social/atproto/pull/5710) [`bbd530d`](https://github.com/bluesky-social/atproto/commit/bbd530d4407b95d06862daa04616506568233ae8) Thanks [@vineyardbovines](https://github.com/vineyardbovines)! - Leave links to more URL shorteners out of profile views.
+
 ## 0.3.7
 
 ### Patch Changes
