@@ -57,14 +57,12 @@ export function UpdateHandleCustomForm({
       {...props}
       submittable={handle != null}
       onValues={({ domain }) => {
-        const handle = domain && parseHandle(domain)
-        if (!handle) return
+        const handle = domain ? parseHandle(domain) : undefined
         onValues?.({ handle })
       }}
       handler={(values, signal) => {
         const handle = parseHandle(values.domain)
-        if (!handle) return
-        return handler({ handle }, signal)
+        if (handle) return handler({ handle }, signal)
       }}
     >
       <TextField
