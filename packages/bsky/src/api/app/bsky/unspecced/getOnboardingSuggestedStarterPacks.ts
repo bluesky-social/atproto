@@ -31,13 +31,7 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ auth, params, req, signal }) => {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
-      const hydrateCtx = await ctx.hydrator.createContext({
-        labelers,
-        viewer,
-        features: ctx.featureGatesClient.scope(
-          ctx.featureGatesClient.parseUserContextFromHandler({ viewer, req }),
-        ),
-      })
+      const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
       const headers = noUndefinedVals({
         'accept-language': req.headers['accept-language'],
         ...getAtprotoPassthroughHeaders(req),
@@ -64,18 +58,12 @@ const skeleton: SkeletonFn<Context, Params, SkeletonState> = async (
 ): Promise<SkeletonState> => {
   const { params, ctx } = input
 
-  const useIris = params.hydrateCtx.features.checkGate(
-    params.hydrateCtx.features.Gate.SuggestedStarterPacksOnboardingV2Enable,
-  )
-  const client = useIris ? ctx.irisClient : ctx.topicsClient
-
-  if (!client) {
+  if (!ctx.irisClient) {
     // Use 501 instead of 500 as these are not considered retry-able by clients
-    const agent = useIris ? 'Iris' : 'Topics'
-    throw new MethodNotImplementedError(`${agent} agent not available`)
+    throw new MethodNotImplementedError('Iris agent not available')
   }
 
-  const skeleton = await client.call(
+  const skeleton = await ctx.irisClient.call(
     app.bsky.unspecced.getOnboardingSuggestedStarterPacksSkeleton,
     { limit: params.limit, viewer: params.hydrateCtx.viewer ?? undefined },
     { headers: params.headers, signal: params.signal },
@@ -146,7 +134,6 @@ const presentation: PresentationFn<
 type Context = {
   hydrator: Hydrator
   views: Views
-  topicsClient: Client | undefined
   irisClient: Client | undefined
 }
 
