@@ -325,7 +325,7 @@ export class OAuthStore
     await authorizedClientHelper.upsert(this.db, did, clientId, data)
   }
 
-  async getAccount(handleOrDid: AtIdentifierString): Promise<{
+  async getAccount(handleOrDid: AtIdentifierString): Promise<null | {
     account: Account
     authorizedClients: AuthorizedClients
   }> {
@@ -334,7 +334,7 @@ export class OAuthStore
       includeTakenDown: false,
     })
 
-    assert(accountRow, 'Account not found')
+    if (!accountRow) return null
 
     const account = await this.buildAccount(accountRow)
     const authorizedClients = await authorizedClientHelper.getAuthorizedClients(

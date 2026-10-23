@@ -7,7 +7,7 @@ import {
 } from '#/components/forms/form-shell.tsx'
 import { useCombinedRef } from '#/hooks/use-merged-refs'
 import { UnknownAtprotoAccountError } from '#/lib/api'
-import { IDENTIFIER_REGEX, normalizeIdentifier } from '#/lib/form-patterns'
+import { isIdentifier, normalizeIdentifier } from '#/lib/form-patterns'
 import { ErrorNotice } from './feedback/error-notice'
 
 export type ResetPasswordRequestData = {
@@ -51,9 +51,7 @@ export function ResetPasswordRequestForm({
       }}
       handler={(values, signal) => {
         const identifier = normalizeIdentifier(values.identifier, domains)
-        if (IDENTIFIER_REGEX.test(identifier)) {
-          return handler({ identifier }, signal)
-        }
+        if (isIdentifier(identifier)) return handler({ identifier }, signal)
       }}
       renderError={(error) => (
         <ErrorNotice error={error}>

@@ -342,6 +342,10 @@ export class OAuthProvider extends OAuthVerifier {
       this.hooks,
       createOAuthResolver({
         handleResolver: createHandleResolverNode({ ...rest, safeFetch }),
+        didResolver: rest.didResolver,
+        didCache: rest.didCache,
+        onDidCacheError: rest.onDidCacheError,
+        plcDirectoryUrl: rest.plcDirectoryUrl,
         fetch: safeFetch,
         allowHttp: rest.allowHttp,
       }),
@@ -934,13 +938,17 @@ export class OAuthProvider extends OAuthVerifier {
 
     await this.validateCodeGrant(parameters, input)
 
-    const { account } = await this.accountManager.getAccount(data.did)
+    const accountData = await this.accountManager.getAccount(data.did)
+
+    if (!accountData) {
+      throw new InvalidGrantError('Account no longer exists')
+    }
 
     return this.tokenManager.createToken(
       client,
       clientAuth,
       clientMetadata,
-      account,
+      accountData.account,
       data.deviceId,
       parameters,
       code,

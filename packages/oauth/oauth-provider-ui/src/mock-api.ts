@@ -314,9 +314,9 @@ export function buildMockFetch(origFetch = window.fetch): typeof window.fetch {
         return Response.json({ account })
       }
       case `POST ${API_ENDPOINT_PREFIX}/sign-in`: {
-        const { username, remember, emailOtp } = await request.json()
+        const { identifier, remember, emailOtp } = await request.json()
         for (const [did, account] of accounts) {
-          if (account.email === username || account.handle === username) {
+          if (account.email === identifier || account.handle === identifier) {
             if (
               otpEnabledAccounts.has(account.did) &&
               emailOtp !== 'AAAAA-AAAAA'

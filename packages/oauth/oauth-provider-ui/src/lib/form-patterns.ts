@@ -5,19 +5,34 @@ export { MIN_PASSWORD_LENGTH }
 /** An email address whose domain carries a TLD (a dot with a label after it). */
 export const EMAIL_PATTERN = '[^@]+@[^@]+\\.[^@]+'
 
+// @NOTE Browsers compile `pattern` attributes with the `v` flag, under which a
+// literal `-` inside a character class must be escaped. A pattern that fails to
+// compile is silently ignored, which disables the constraint altogether.
+
 /**
  * A handle's leftmost label: lowercase alphanumerics and hyphens, neither
  * leading nor trailing with a hyphen.
  */
-export const HANDLE_SEGMENT_PATTERN = '[a-z0-9][a-z0-9-]{0,61}[a-z0-9]'
+export const HANDLE_SEGMENT_PATTERN =
+  '[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?'
+const HANDLE_TLD_PATTERN = '[a-zA-Z](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?'
 
-export const HANDLE_PATTERN = `@?${HANDLE_SEGMENT_PATTERN}(?:\\.${HANDLE_SEGMENT_PATTERN})*\\.[a-z](?:[a-z0-9-]{0,61}[a-z0-9])?`
-export const HANDLE_REGEX = new RegExp(`^(?:${HANDLE_PATTERN})$`)
+export const HANDLE_PATTERN = `@?(?:${HANDLE_SEGMENT_PATTERN}\\.)+${HANDLE_TLD_PATTERN}`
 
 export const DID_PATTERN = `(?:did:plc:[a-z2-7]{24})|(?:did:web:[a-z0-9._\\-]+)`
 
 export const IDENTIFIER_PATTERN = `(?:${EMAIL_PATTERN})|(?:${HANDLE_PATTERN})|(?:${DID_PATTERN})`
-export const IDENTIFIER_REGEX = new RegExp(`^(?:${IDENTIFIER_PATTERN})$`)
+
+const EMAIL_REGEX = /^[^@]+@[^@]+\.[^@]+$/
+const HANDLE_REGEX =
+  /^([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$/
+const DID_REGEX = /^did:[a-z]+:[a-zA-Z0-9._:%-]*[a-zA-Z0-9._-]$/
+
+export function isIdentifier(value: string): boolean {
+  return (
+    EMAIL_REGEX.test(value) || HANDLE_REGEX.test(value) || DID_REGEX.test(value)
+  )
+}
 
 /**
  * The OTP shape the provider issues: two groups of five RFC-4648 base32

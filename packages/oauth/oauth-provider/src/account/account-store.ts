@@ -169,7 +169,7 @@ export interface AccountStore {
   /**
    * @throws {InvalidRequestError} - When the credentials are not valid
    */
-  getAccount(handleOrDid: AtIdentifierString): Awaitable<{
+  getAccount(handleOrDid: AtIdentifierString): Awaitable<null | {
     account: Account
     authorizedClients: AuthorizedClients
   }>

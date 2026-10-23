@@ -50,6 +50,7 @@ import { type RouteCtx, createRoute } from '../lib/http/route.js'
 import { localeSchema } from '../lib/util/locale.js'
 import type { Awaitable } from '../lib/util/type.js'
 import type { OAuthProvider } from '../oauth-provider.js'
+import type { Account, AuthorizedClients } from '../oauth-store.js'
 import { type RequestUri, requestUriSchema } from '../request/request-uri.js'
 import type { AuthorizationRedirectParameters } from '../result/authorization-redirect-parameters.js'
 import { tokenIdSchema } from '../token/token-id.js'
@@ -830,7 +831,10 @@ export function createApiMiddleware<
     this: ApiContext<void, { did: Did }>,
     req: Req,
     _res: Res,
-  ) {
+  ): Promise<{
+    account: Account
+    authorizedClients: AuthorizedClients
+  }> {
     if (req.headers.authorization?.startsWith('Bearer ')) {
       try {
         // If there is an authorization header, verify that the ephemeral token it
@@ -845,15 +849,25 @@ export function createApiMiddleware<
           payload.deviceId === this.deviceId &&
           payload.requestUri === this.requestUri
         ) {
-          return await server.accountManager.getAccount(payload.sub)
+          const accountData = await server.accountManager.getAccount(
+            payload.sub,
+          )
+          if (accountData) return accountData
+          throw new WWWAuthenticateError(
+            'unauthorized',
+            `User ${payload.sub} does not exist`,
+            { Bearer: {} },
+          )
         }
       } catch (err) {
-        throw new WWWAuthenticateError(
-          'unauthorized',
-          `Invalid or expired bearer token`,
-          { Bearer: {} },
-          err,
-        )
+        throw err instanceof WWWAuthenticateError
+          ? err
+          : new WWWAuthenticateError(
+              'unauthorized',
+              `Invalid or expired bearer token`,
+              { Bearer: {} },
+              err,
+            )
       }
     }
 

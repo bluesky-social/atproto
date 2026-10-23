@@ -479,7 +479,9 @@ export class AppContext implements AsyncDisposable {
             // Map didCache to SimpleCache<Did, DidDocument>
             get: async (did) => {
               const res = await didCache.checkCache(did)
-              return (res?.doc as any) ?? null
+              // Expired entries are only ever refreshed by a resolution, so
+              // report them as missing rather than serving them indefinitely.
+              return res && !res.expired ? (res.doc as any) : undefined
             },
             set: async (did, doc) => {
               await didCache.cacheDid(did, doc as any)

@@ -121,10 +121,9 @@ every page below it.
 - `components/forms/*` — `FormShell` (the form frame: action row, submit/cancel/
   back, root error), `fields/*` (one wrapper per input type), plus
   `AsyncButton`, `CopyButton`, `RequestCodeButton`, `SignUpWizard`.
-- `components/dialogs/*` — `DialogShell` (frame) and `ConfirmForm` (a form with
-  no fields, just content + action row).
-- `components/feedback/*` — `Notice`, `ErrorNotice`, `ErrorDetails`,
-  `PasswordStrength`.
+- `components/dialogs/*` — `DialogShell` (frame).
+- `components/feedback/*` — `Notice`, `ErrorNotice`, `ErrorCard`,
+  `ErrorDetails`, `PasswordStrength`.
 - `components/identity/*` — account/client avatars, names, identifiers, the
   account menu.
 - `components/layouts/*` — `AuthShell` (the centred auth card) and
@@ -149,7 +148,13 @@ library, no schema layer, and no store: the DOM is the source of truth, and
 ```
 
 Shared regexes for `pattern` attributes live in `src/lib/form-patterns.ts`.
-Note `pattern` sources are implicitly anchored — no `^`/`$`.
+Note `pattern` sources are implicitly anchored — no `^`/`$` — and compiled with
+the `v` flag, under which a literal `-` in a character class must be escaped
+(`[a-z0-9\-]`). A pattern that fails to compile is silently ignored by the
+browser (Chrome logs "Pattern attribute value … is not a valid regular
+expression"), disabling the constraint. The pds `oauth.test.ts` asserts
+`validity.patternMismatch` on the sign-in identifier to catch this in a real
+browser.
 
 Base UI rules this layer depends on — each one was a real, browser-only bug:
 
@@ -160,7 +165,7 @@ Base UI rules this layer depends on — each one was a real, browser-only bug:
 - **`Form` defaults to `noValidate`.** `FormShell` re-enables the browser's
   gate; without it, any control outside a `Field.Root` is validated by no one.
 - **A `Field.Root` binds every descendant control to its own name**, even over
-  an explicit `name` prop. A field composed of two controls (`HandleField`)
+  an explicit `name` prop. A field composed of two controls (`NewHandleField`)
   must opt out of `Field` entirely.
 - **A `disabled` control is omitted from form values.** Use `readOnly` when the
   value must still submit.
@@ -181,11 +186,13 @@ click on a different element and silently swallows it.
 
 The `name` attribute on each control is selected on by the pds e2e suite and by
 password managers. These names are owned by this package and must not be
-renamed: `username`, `password`, `remember`, `code`, `email`, `newEmail`,
+renamed: `identifier`, `password`, `remember`, `token`, `emailOtp`, `email`,
 `handle`, `domain`, `inviteCode`.
 
-Where the API field differs from the input name, map it in `onSubmit` — e.g. the
-form field is `code` but the API takes `token`.
+Controls are named after the API field they feed (`identifier`, `token`,
+`emailOtp`), so values pass through without remapping. Keep it that way when
+adding one. Identifier fields also keep `autoComplete="username"`, which is
+what marks them for password managers.
 
 ## i18n (Lingui)
 

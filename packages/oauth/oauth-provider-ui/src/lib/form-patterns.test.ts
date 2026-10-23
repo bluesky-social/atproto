@@ -1,10 +1,35 @@
 import { describe, expect, it } from 'vitest'
 import {
-  IDENTIFIER_REGEX,
   OTP_CODE_REGEX,
   formatOtpCode,
+  isIdentifier,
   normalizeIdentifier,
 } from './form-patterns.ts'
+
+describe(isIdentifier, () => {
+  it.each([
+    'a.example.com',
+    'x.bsky.social',
+    'a.b.c.test',
+    'Alice.Example.com',
+    'alice@example.com',
+    'did:plc:ewvi7nxzyoun6zhxrhs64oiz',
+    'did:web:example.com',
+  ])('accepts %j', (value) => {
+    expect(isIdentifier(value)).toBe(true)
+  })
+
+  it.each([
+    '-a.example.com',
+    'a-.example.com',
+    'a..example.com',
+    'example.1com',
+    'alice',
+    'a@@b',
+  ])('rejects %j', (value) => {
+    expect(isIdentifier(value)).toBe(false)
+  })
+})
 
 describe(formatOtpCode, () => {
   it('uppercases and inserts the hyphen', () => {
@@ -63,13 +88,13 @@ describe(normalizeIdentifier, () => {
     'alice@example.com',
     'did:plc:ewvi7nxzyoun6zhxrhs64oiz', // did:plc:[a-z2-7]{24}
   ])('pattern accepts what a password manager may fill: %j', (value) => {
-    expect(IDENTIFIER_REGEX.test(value)).toBe(true)
+    expect(isIdentifier(value)).toBe(true)
   })
 
   it.each(['a@@b', 'alice..bsky.social', '.alice', 'alice', '@alice'])(
     'pattern rejects %j',
     (value) => {
-      expect(IDENTIFIER_REGEX.test(value)).toBe(false)
+      expect(isIdentifier(value)).toBe(false)
     },
   )
 })

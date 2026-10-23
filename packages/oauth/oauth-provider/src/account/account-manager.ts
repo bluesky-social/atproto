@@ -21,6 +21,7 @@ import type {
   AccountStore,
   AtIdentifierString,
   AuthorizedClientData,
+  AuthorizedClients,
   DeleteAccountConfirmInput,
   DeleteAccountRequestInput,
   DeviceAccount,
@@ -49,7 +50,7 @@ export class AccountManager {
   protected readonly hcaptchaClient?: HCaptchaClient
 
   constructor(
-    issuer: OAuthIssuerIdentifier,
+    protected readonly issuer: OAuthIssuerIdentifier,
     protected readonly store: AccountStore,
     protected readonly hooks: OAuthHooks,
     protected readonly oauthResolver: OAuthResolver,
@@ -323,7 +324,10 @@ export class AccountManager {
     await this.store.setAuthorizedClient(account.did, client.id, data)
   }
 
-  public async getAccount(did: Did) {
+  public async getAccount(did: Did): Promise<{
+    account: Account
+    authorizedClients: AuthorizedClients
+  } | null> {
     return this.store.getAccount(did)
   }
 
@@ -362,8 +366,8 @@ export class AccountManager {
     if (isAtIdentifierString(input.identifier)) {
       // We *DO* however return a specific error message for users identified by
       // an at-identifier that are not hosted on this service.
-      const account = await this.store.getAccount(input.identifier)
-      if (!account) return this.throwUnknownAtmosphereAccount(input.identifier)
+      const result = await this.store.getAccount(input.identifier)
+      if (!result) return this.throwUnknownAtmosphereAccount(input.identifier)
 
       throw new UnknownAtprotoAccountError(
         input.identifier,
@@ -404,22 +408,27 @@ export class AccountManager {
   private async throwUnknownAtmosphereAccount(
     identifier: AtIdentifierString,
   ): Promise<never> {
-    try {
-      const { metadata, identityInfo } =
-        await this.oauthResolver.resolve(identifier)
+    const { metadata, identityInfo } = await this.oauthResolver
+      .resolve(identifier)
+      .catch((cause: unknown) => {
+        throw new UnknownAtprotoAccountError(
+          identifier,
+          undefined,
+          undefined,
+          cause,
+        )
+      })
 
-      const handle =
-        identityInfo?.handle === 'handle.invalid'
-          ? undefined
-          : identityInfo?.handle
+    const handle =
+      identityInfo?.handle === 'handle.invalid'
+        ? undefined
+        : identityInfo?.handle
 
-      throw new UnknownAtprotoAccountError(
-        handle ?? identifier,
-        metadata.issuer,
-      )
-    } catch (cause) {
-      throw new UnknownAtprotoAccountError(identifier, undefined, cause)
-    }
+    // The identity points back at this service (e.g. a taken-down account):
+    // there is no other service to direct the user to.
+    const issuer = metadata.issuer === this.issuer ? undefined : metadata.issuer
+
+    throw new UnknownAtprotoAccountError(handle ?? identifier, issuer)
   }
 
   public async resetPasswordConfirm(
