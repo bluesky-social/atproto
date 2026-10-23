@@ -1,4 +1,4 @@
-import { type Ref, useMemo, useRef } from 'react'
+import { type Ref, type RefObject, useMemo, useRef } from 'react'
 
 function mergeRefs<T>(...refs: Array<Ref<T> | undefined>): Ref<T> {
   return (value) => {
@@ -24,8 +24,8 @@ export function useMergedRefs<T>(...refs: Array<Ref<T> | undefined>): Ref<T> {
 
 export function useCombinedRef<T>(
   ...refs: Array<Ref<T> | undefined>
-): [current: T | null, mergedRef: Ref<T>] {
+): [current: RefObject<T | null>, mergedRef: Ref<T>] {
   const localRef = useRef<T>(null)
   const mergedRef = useMergedRefs<T>(localRef, ...refs)
-  return [localRef.current, mergedRef]
+  return [localRef, mergedRef]
 }

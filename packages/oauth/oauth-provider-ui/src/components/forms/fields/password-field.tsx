@@ -26,7 +26,7 @@ export function PasswordField({
   const { t } = useLingui()
   const [visible, setVisible] = useState(false)
 
-  const [inputEl, ref] = useCombinedRef<HTMLInputElement>(forwardedRef)
+  const [inputRef, ref] = useCombinedRef<HTMLInputElement>(forwardedRef)
 
   return (
     <TextField
@@ -59,10 +59,10 @@ export function PasswordField({
             onClick={() => {
               setVisible((prev) => !prev)
               setTimeout(() => {
-                inputEl?.focus()
-                inputEl?.setSelectionRange(
-                  inputEl.value.length,
-                  inputEl.value.length,
+                inputRef.current?.focus()
+                inputRef.current?.setSelectionRange(
+                  inputRef.current.value.length,
+                  inputRef.current.value.length,
                 )
               })
             }}

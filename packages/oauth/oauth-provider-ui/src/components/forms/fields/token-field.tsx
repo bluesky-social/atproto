@@ -24,7 +24,7 @@ export function TokenField({
   onChange,
   ...props
 }: TokenFieldProps) {
-  const [inputEl, mergedRef] = useCombinedRef<HTMLInputElement>(ref)
+  const [inputRef, mergedRef] = useCombinedRef<HTMLInputElement>(ref)
 
   return (
     <TextField
@@ -80,7 +80,7 @@ export function TokenField({
                   await onResend()
                   // Next tick, so the button's disabled state has been applied
                   // (after the next render) before focus moves to the input.
-                  if (autoFocus) setTimeout(() => inputEl?.focus())
+                  if (autoFocus) setTimeout(() => inputRef.current?.focus())
                 }}
                 variant="link"
                 size="sm"

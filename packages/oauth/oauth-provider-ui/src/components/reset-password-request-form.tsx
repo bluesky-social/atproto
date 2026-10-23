@@ -32,7 +32,7 @@ export function ResetPasswordRequestForm({
   ...props
 }: ResetPasswordRequestFormProps) {
   const [isSubmittable, setIsSubmittable] = useState(!!hint)
-  const [formEl, ref] = useCombinedRef<HTMLFormElement>(null)
+  const [formRef, ref] = useCombinedRef<HTMLFormElement>(null)
 
   return (
     <FormShell<{
@@ -46,7 +46,7 @@ export function ResetPasswordRequestForm({
           ? normalizeIdentifier(values.identifier, domains)
           : undefined
         setIsSubmittable(!!identifier)
-        formEl?.reset()
+        formRef.current?.reset()
         return onValues?.({ identifier })
       }}
       handler={(values, signal) => {
