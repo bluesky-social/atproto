@@ -4,7 +4,11 @@ import {
   TextField,
   type TextFieldProps,
 } from '#/components/forms/fields/text-field.tsx'
-import { IDENTIFIER_PATTERN, normalizeIdentifier } from '#/lib/form-patterns.ts'
+import {
+  DOMAIN_LESS_IDENTIFIER_PATTERN,
+  IDENTIFIER_PATTERN,
+  normalizeIdentifier,
+} from '#/lib/form-patterns.ts'
 
 export type IdentifierFieldProps = Omit<TextFieldProps, 'type' | 'pattern'> & {
   domains?: readonly string[]
