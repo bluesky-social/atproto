@@ -55,6 +55,7 @@ describe('report-close-reports', () => {
     reportTypes?: string[]
     internalNote?: string
     isAutomated?: boolean
+    meta?: Record<string, unknown>
   }) => {
     return agent.tools.ozone.report.closeReports(input, {
       encoding: 'application/json',
@@ -587,6 +588,11 @@ describe('report-close-reports', () => {
     const f = await fixture()
     const template = await report(f.record)
     const db = network.ozone.ctx.db
+    const meta = {
+      source: 'example-worker',
+      rules: [{ name: 'example/cleanup', version: 1 }],
+      custom: { batch: 'example-batch' },
+    }
     // @NOTE Bulk database fixtures exercise the protocol parameter limit directly.
     await sql`
       with events as (
@@ -615,7 +621,7 @@ describe('report-close-reports', () => {
     )
     try {
       await expect(
-        closeReports({ subject: f.did, includeAllOwned: true }),
+        closeReports({ subject: f.did, includeAllOwned: true, meta }),
       ).rejects.toThrow()
       const closed = await db.db
         .selectFrom('report')
@@ -632,6 +638,7 @@ describe('report-close-reports', () => {
     const { data } = await closeReports({
       subject: f.did,
       includeAllOwned: true,
+      meta,
     })
     expect(data.closedCount).toBe(7001)
     expect(new Set(data.reportIds).size).toBe(7001)
@@ -641,6 +648,10 @@ describe('report-close-reports', () => {
       .where('reportId', 'in', data.reportIds)
       .executeTakeFirstOrThrow()
     expect(counts.count).toBe(7001)
+    expect((await listActivities(template.id))[0].meta).toEqual({
+      ...meta,
+      resolution: 'noAction',
+    })
     expect(
       (await closeReports({ subject: f.did, includeAllOwned: true })).data
         .closedCount,

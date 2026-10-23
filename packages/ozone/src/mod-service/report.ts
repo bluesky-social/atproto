@@ -15,6 +15,7 @@ import {
   InvalidStateTransition,
   handleReportUpdate,
 } from '../report/handle-report-update.js'
+import { getActivityMetadata } from '../report/metadata.js'
 import { notifyReportActivities } from '../report/notifications.js'
 import { CHAT_CONVO_COLLECTION, CHAT_MESSAGE_COLLECTION } from './subject.js'
 
@@ -338,6 +339,7 @@ export type CloseReportsForSubjectParams = {
   reportTypes?: string[]
   internalNote?: string
   isAutomated: boolean
+  meta?: Record<string, unknown>
   createdBy: DidString
 }
 
@@ -364,6 +366,8 @@ export async function closeReportsForSubject(
     isAutomated,
     createdBy,
   } = params
+
+  const metadata = getActivityMetadata(params.meta)
 
   return db.transaction(async (dbTxn) => {
     const matchingReports = await findReportsForSubject(dbTxn, {
@@ -434,8 +438,12 @@ export async function closeReportsForSubject(
             publicNote: null,
             meta:
               u.reportType === tools.ozone.report.defs.ReasonAppeal
-                ? { resolution: 'noAction', appealOutcome: 'denied' }
-                : { resolution: 'noAction' },
+                ? {
+                    ...metadata,
+                    resolution: 'noAction',
+                    appealOutcome: 'denied',
+                  }
+                : { ...metadata, resolution: 'noAction' },
             isAutomated,
             createdBy,
             createdAt: now,
@@ -468,7 +476,9 @@ export type ProcessReportActionParams = {
     types?: string[]
     all?: boolean
     note?: string
+    isAutomated?: boolean
   }
+  metadata?: Record<string, unknown>
   subjectDid: DidString
   subjectUri: string | null
   eventId: number
@@ -666,9 +676,13 @@ export async function processReportAction(
         publicNote: reportAction.note ?? null,
         meta:
           u.activityType === 'closeActivity'
-            ? { actionEventId: eventId }
-            : null,
-        isAutomated: false,
+            ? {
+                ...params.metadata,
+                resolution: 'linked',
+                actionEventId: eventId,
+              }
+            : (params.metadata ?? null),
+        isAutomated: reportAction.isAutomated ?? false,
         createdBy,
         createdAt: now,
       })),

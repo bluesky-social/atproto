@@ -22,6 +22,7 @@ export default function (server: Server, ctx: AppContext) {
         internalNote,
         publicNote,
         isAutomated,
+        meta,
       } = input.body
 
       if ((reportId === undefined) === (eventId === undefined)) {
@@ -50,6 +51,7 @@ export default function (server: Server, ctx: AppContext) {
         internalNote: internalNote ?? undefined,
         publicNote: publicNote ?? undefined,
         isAutomated: isAutomated ?? false,
+        meta,
         createdBy: createdBy ?? ctx.cfg.service.did,
       })
 
