@@ -24,6 +24,8 @@ export const DID_PATTERN = `(?:did:plc:[a-z2-7]{24})|(?:did:web:[a-z0-9._\\-]+)`
 
 export const IDENTIFIER_PATTERN = `(?:${EMAIL_PATTERN})|(?:${HANDLE_PATTERN})|(?:${DID_PATTERN})`
 
+export const DOMAIN_LESS_IDENTIFIER_PATTERN = `(?:@?${HANDLE_SEGMENT_PATTERN})|(?:${IDENTIFIER_PATTERN})`
+
 const EMAIL_IDENTIFIER_REGEX = /^[^@\s]+@[^@\s]+\.[^@\s]+$/
 
 export function isIdentifier(value: string): boolean {

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   DID_PATTERN,
+  DOMAIN_LESS_IDENTIFIER_PATTERN,
   EMAIL_PATTERN,
   HANDLE_PATTERN,
   HANDLE_SEGMENT_PATTERN,
@@ -17,10 +18,11 @@ import {
 describe('pattern attribute sources', () => {
   it.each(
     Object.entries({
-      EMAIL_PATTERN,
-      HANDLE_SEGMENT_PATTERN,
-      HANDLE_PATTERN,
       DID_PATTERN,
+      DOMAIN_LESS_IDENTIFIER_PATTERN,
+      EMAIL_PATTERN,
+      HANDLE_PATTERN,
+      HANDLE_SEGMENT_PATTERN,
       IDENTIFIER_PATTERN,
       OTP_CODE_PATTERN,
     }),

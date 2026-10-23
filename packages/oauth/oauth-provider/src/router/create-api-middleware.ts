@@ -55,7 +55,7 @@ import { type RequestUri, requestUriSchema } from '../request/request-uri.js'
 import type { AuthorizationRedirectParameters } from '../result/authorization-redirect-parameters.js'
 import { tokenIdSchema } from '../token/token-id.js'
 import { emailOtpSchema } from '../types/email-otp.js'
-import { emailSchema } from '../types/email.js'
+import { emailSchema, newEmailSchema } from '../types/email.js'
 import { handleSchema } from '../types/handle.js'
 import { identifierSchema } from '../types/indentifier.js'
 import { newPasswordSchema, oldPasswordSchema } from '../types/password.js'
@@ -258,7 +258,7 @@ export function createApiMiddleware<
       schema: z
         .object({
           did: didSchema,
-          email: emailSchema,
+          email: newEmailSchema,
           token: emailOtpSchema.optional(),
           locale: localeSchema.optional(),
         })
