@@ -27,6 +27,12 @@
             "accept": ["image/png", "image/jpeg", "image/webp"],
             "maxSize": 100000
           },
+          "iconDark": {
+            "type": "blob",
+            "description": "The destination site's icon for a dark color scheme, when the site provides one. Clients use icon when this is missing.",
+            "accept": ["image/png", "image/jpeg", "image/webp"],
+            "maxSize": 100000
+          },
           "createdAt": { "type": "string", "format": "datetime" },
           "labels": {
             "type": "union",
