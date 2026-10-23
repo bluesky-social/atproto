@@ -1,3 +1,4 @@
+import type * as DnsPromises from 'node:dns/promises'
 import { jest } from '@jest/globals'
 import type { AtpAgent } from '@atproto/api'
 import type { SeedClient } from '@atproto/dev-env'
@@ -9,12 +10,11 @@ let alice: DidString
 let bob: DidString
 
 jest.unstable_mockModule('node:dns/promises', () => {
-  // Spread the real module: ESM named imports (e.g. `Resolver`) must exist on
-  // the mock or linking fails.
+  const originalModule =
+    jest.requireActual<typeof DnsPromises>('node:dns/promises')
+
   return {
-    ...jest.requireActual<typeof import('node:dns/promises')>(
-      'node:dns/promises',
-    ),
+    ...originalModule,
     resolveTxt: (domain: string) => {
       if (domain === '_atproto.alice.external') {
         return [[`did=${alice}`]]
