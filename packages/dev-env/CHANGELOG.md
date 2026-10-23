@@ -1,5 +1,16 @@
 # @atproto/dev-env
 
+## 0.6.31
+
+### Patch Changes
+
+- [#5578](https://github.com/bluesky-social/atproto/pull/5578) [`3938b8a`](https://github.com/bluesky-social/atproto/commit/3938b8a5139f11ec1b5671471416e797f087ac3c) Thanks [@ds-boyce](https://github.com/ds-boyce)! - Fix mock replies to store only strong references
+- Updated dependencies [[`9a4011b`](https://github.com/bluesky-social/atproto/commit/9a4011bca5c97baf41228e46d52e633d0a5b69aa), [`f8a8186`](https://github.com/bluesky-social/atproto/commit/f8a8186acf883dc96819d5f698a6241598984c17), [`5c62247`](https://github.com/bluesky-social/atproto/commit/5c622471bb4e330792594d80cb4fd0bc4564a8ff), [`c1aa9ab`](https://github.com/bluesky-social/atproto/commit/c1aa9ab240958b35fbb5367585775cac4cc9e11a)]:
+  - @atproto/ozone@0.10.6
+  - @atproto/api@0.29.2
+  - @atproto/bsky@0.3.9
+  - @atproto/pds@0.5.47
+
 ## 0.6.30
 
 ### Patch Changes
