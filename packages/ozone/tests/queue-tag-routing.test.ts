@@ -255,19 +255,32 @@ describe('tag-based queue routing', () => {
     },
   )
 
-  it.each([false, true])(
-    'uses queue ID for tag and ordinary matches (ordinary first: %s)',
-    async (ordinaryFirst) => {
-      if (ordinaryFirst) await ordinaryQueue()
-      const tagged = await createQueue({ accountTags: [accountTag] })
-      await tagAccount(sc.dids.bob, [accountTag])
-      const event = await report()
-      await network.ozone.daemon.ctx.queueRouter.routeReports()
-      expect((await getReport(event.id)).queue?.id).toBe(
-        ordinaryFirst ? ordinaryQueueId : tagged.id,
-      )
-      expect(await activities((await getReport(event.id)).id)).toHaveLength(
-        ordinaryFirst ? 0 : 1,
+  describe.each(['reporterTags', 'accountTags'] as const)(
+    '%s precedence',
+    (tagField) => {
+      it.each([false, true])(
+        'prioritizes tag matches over ordinary queues (ordinary first: %s)',
+        async (ordinaryFirst) => {
+          if (ordinaryFirst) await ordinaryQueue()
+          const tag = tagField === 'reporterTags' ? reporterTag : accountTag
+          const did = tagField === 'reporterTags' ? sc.dids.alice : sc.dids.bob
+          const tagged = await createQueue({ [tagField]: [tag] })
+          await tagAccount(did, [tag])
+          for (const subjectType of ['account', 'record'] as const) {
+            const event = await report(subjectType)
+            await network.ozone.daemon.ctx.queueRouter.routeReports()
+            const routed = await getReport(event.id)
+            expect(routed.queue?.id).toBe(tagged.id)
+            expect(await activities(routed.id)).toHaveLength(1)
+
+            await unassign(routed.id)
+            expect(await routeExisting(routed.id)).toEqual({
+              assigned: 1,
+              unmatched: 0,
+            })
+            expect((await getReport(event.id)).queue?.id).toBe(tagged.id)
+          }
+        },
       )
     },
   )
@@ -799,15 +812,18 @@ describe('tag-based queue routing', () => {
     expect(await activities(original.id)).toHaveLength(history.length + 1)
   })
 
-  it('uses queue ID across tag roles regardless of input order', async () => {
+  it('uses queue ID across tag roles ahead of an older ordinary queue regardless of input order', async () => {
+    const ordinaryId = await ordinaryQueue()
     const first = await createQueue({ reporterTags: [reporterTag] })
     const second = await createQueue({ accountTags: [accountTag] })
     const service = network.ozone.ctx.queueService(network.ozone.ctx.db)
+    const ordinaryRow = (await service.getById(ordinaryId))!
     const firstRow = (await service.getById(first.id))!
     const secondRow = (await service.getById(second.id))!
     for (const queues of [
-      [secondRow, firstRow],
-      [firstRow, secondRow],
+      [ordinaryRow, secondRow, firstRow],
+      [secondRow, firstRow, ordinaryRow],
+      [firstRow, ordinaryRow, secondRow],
     ]) {
       expect(
         findMatchingQueue(
