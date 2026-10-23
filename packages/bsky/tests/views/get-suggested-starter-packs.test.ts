@@ -31,8 +31,8 @@ describe('getSuggestedStarterPacks', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_tests_get_suggested_starter_packs',
       bsky: {
-        topicsUrl: mockServer.url,
-        topicsApiKey: 'test',
+        irisUrl: mockServer.url,
+        irisApiKey: 'test',
       },
     })
     agent = network.bsky.getAgent()

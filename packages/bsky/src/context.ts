@@ -32,7 +32,6 @@ export class AppContext {
       dataplaneHostList: HostList
       searchClient: Client | undefined
       suggestionsClient: Client | undefined
-      topicsClient: Client | undefined
       irisClient: Client | undefined
       hydrator: Hydrator
       views: Views
@@ -71,10 +70,6 @@ export class AppContext {
 
   get suggestionsClient(): Client | undefined {
     return this.opts.suggestionsClient
-  }
-
-  get topicsClient(): Client | undefined {
-    return this.opts.topicsClient
   }
 
   get irisClient(): Client | undefined {

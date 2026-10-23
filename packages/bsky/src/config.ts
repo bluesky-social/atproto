@@ -71,8 +71,6 @@ export interface ServerConfigValues {
   suggestionsUrl?: string
   suggestionsApiKey?: string
   atmosphereExploreTabService?: string
-  topicsUrl?: string
-  topicsApiKey?: string
   irisUrl?: string
   irisServiceDid?: DidString
   seemoreServiceDid?: DidString
@@ -200,8 +198,6 @@ export class ServerConfig {
     const suggestionsApiKey = process.env.BSKY_SUGGESTIONS_API_KEY || undefined
     const atmosphereExploreTabService =
       process.env.BSKY_ATMOSPHERE_EXPLORE_TAB_SERVICE || undefined
-    const topicsUrl = process.env.BSKY_TOPICS_URL || undefined
-    const topicsApiKey = process.env.BSKY_TOPICS_API_KEY
     const irisUrl = process.env.BSKY_IRIS_URL || undefined
     const irisServiceDid = process.env.BSKY_IRIS_SERVICE_DID || undefined
     assert(irisServiceDid == null || isDidString(irisServiceDid))
@@ -465,8 +461,6 @@ export class ServerConfig {
       suggestionsUrl,
       suggestionsApiKey,
       atmosphereExploreTabService,
-      topicsUrl,
-      topicsApiKey,
       irisUrl,
       irisServiceDid,
       seemoreServiceDid,
@@ -669,14 +663,6 @@ export class ServerConfig {
 
   get atmosphereExploreTabService() {
     return this.cfg.atmosphereExploreTabService
-  }
-
-  get topicsUrl() {
-    return this.cfg.topicsUrl
-  }
-
-  get topicsApiKey() {
-    return this.cfg.topicsApiKey
   }
 
   get irisUrl() {

@@ -138,7 +138,6 @@ const presentation = (
 type Context = {
   hydrator: Hydrator
   views: Views
-  topicsClient: Client | undefined
   suggestionsClient: Client | undefined
   irisClient: Client | undefined
 }
