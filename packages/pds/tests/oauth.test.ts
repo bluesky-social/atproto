@@ -173,7 +173,7 @@ describe('oauth', () => {
 
     await page.assertTitle('Mot de passe oublié')
 
-    await page.typeInInput('email', 'alice@test.com')
+    await page.typeInInput('identifier', 'alice@test.com')
 
     expect(sendTemplateMock).toHaveBeenCalledTimes(0)
 
@@ -190,7 +190,7 @@ describe('oauth', () => {
       token: expect.any(String),
     })
 
-    await page.typeInInput('code', params.token)
+    await page.typeInInput('token', params.token)
 
     await page.typeInInput('password', 'alice-new-pass')
 
@@ -227,7 +227,7 @@ describe('oauth', () => {
 
     await page.assertTitle('Mot de passe oublié')
 
-    await page.typeInInput('email', 'alice@test.com')
+    await page.typeInInput('identifier', 'alice@test.com')
 
     await page.clickOnText('Suivant')
 
@@ -241,7 +241,7 @@ describe('oauth', () => {
 
     const [params] = sendTemplateMock.mock.lastCall!
 
-    await page.typeInInput('code', params.token)
+    await page.typeInInput('token', params.token)
 
     // Keep the same password as the previous test so later tests
     // (which sign in with 'alice-new-pass') are unaffected.
@@ -484,7 +484,7 @@ describe('oauth', () => {
       )
 
       assert(token, "Expected email confirmation token for Jane's login")
-      await page.typeInInput('otp', token)
+      await page.typeInInput('emailOtp', token)
 
       await page.clickOnText('Confirmer')
 
@@ -552,7 +552,7 @@ describe('oauth', () => {
         token !== 'AAAAA-AAAAA',
         "Ensure generated token isn't our test token",
       )
-      await page.typeInInput('otp', 'AAAAA-AAAAA')
+      await page.typeInInput('emailOtp', 'AAAAA-AAAAA')
 
       await page.clickOnText('Confirmer')
 
@@ -561,7 +561,7 @@ describe('oauth', () => {
         'p',
       )
 
-      await page.typeInInput('otp', token)
+      await page.typeInInput('emailOtp', token)
 
       await page.clickOnText('Confirmer')
 

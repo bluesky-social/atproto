@@ -1,22 +1,26 @@
 import { msg } from '@lingui/core/macro'
 import { useLingui } from '@lingui/react'
 import { Trans } from '@lingui/react/macro'
-import { CircleAlertIcon } from 'lucide-react'
-import { type JSX, type ReactNode, useEffect, useMemo, useState } from 'react'
+import { type ReactNode, useEffect, useMemo, useState } from 'react'
+import {
+  ErrorCard,
+  type ErrorCardProps,
+} from '#/components/feedback/error-card.tsx'
 import { Button } from '#/components/ui/button.tsx'
+import { apiErrorParser } from '#/lib/api-error-parser.ts'
+import { composeEventHandlers } from '#/lib/compose-event-handlers.ts'
 import {
   type ErrorParser,
   type ParsedError,
   parseError,
 } from '#/lib/error-parser.ts'
 import type { Override } from '#/lib/util.ts'
-import { cn } from '#/lib/utils.ts'
 import { ErrorDetails } from './error-details.tsx'
 
 export type { ErrorParser, ParsedError }
 
 export type ErrorNoticeProps = Override<
-  JSX.IntrinsicElements['div'],
+  ErrorCardProps,
   {
     error: unknown
     retry?: () => void
@@ -35,7 +39,7 @@ export function ErrorNotice({
   error,
   retry,
   retryLabel,
-  parser,
+  parser = apiErrorParser,
 
   // div
   className,
@@ -63,50 +67,32 @@ export function ErrorNotice({
   }, [parsed])
 
   return (
-    <div
+    <ErrorCard
       {...props}
-      role="alert"
-      className={cn(
-        // Same 16px icon and 12px gap as the checkbox row, so the copy shares
-        // a left edge with the other lines under the fields.
-        'text-destructive flex items-start gap-3 text-sm leading-snug',
-        className,
-      )}
-      onClick={(event) => {
-        onClick?.(event)
-        if (!event.defaultPrevented) setClickCount((c) => c + 1)
-      }}
+      onClick={composeEventHandlers(onClick, () => setClickCount((c) => c + 1))}
     >
-      <CircleAlertIcon aria-hidden className="mt-px size-4 shrink-0" />
+      <p>{_(parsed.description ?? msg`An unknown error occurred`)}</p>
 
-      <div className="flex min-w-0 flex-1 flex-col gap-2">
-        <p>{_(parsed.description ?? msg`An unknown error occurred`)}</p>
+      {children}
 
-        {children}
+      {showDetails && (
+        <ErrorDetails
+          name={parsed.name}
+          code={parsed.code}
+          message={parsed.message}
+          payload={parsed.payload}
+          stack={parsed.stack}
+          className="text-foreground mt-0"
+        />
+      )}
 
-        {showDetails && (
-          <ErrorDetails
-            name={parsed.name}
-            code={parsed.code}
-            message={parsed.message}
-            payload={parsed.payload}
-            stack={parsed.stack}
-            className="text-foreground mt-0"
-          />
-        )}
-
-        {retry != null && (
-          <div>
-            <Button variant="secondary" size="sm" onClick={() => retry()}>
-              {retryLabel || <Trans>Retry</Trans>}
-            </Button>
-          </div>
-        )}
-      </div>
-    </div>
+      {retry != null && (
+        <div>
+          <Button variant="secondary" size="sm" onClick={() => retry()}>
+            {retryLabel || <Trans>Retry</Trans>}
+          </Button>
+        </div>
+      )}
+    </ErrorCard>
   )
 }
-
-export const errorNoticeRender = (props: ErrorNoticeProps) => (
-  <ErrorNotice {...props} />
-)

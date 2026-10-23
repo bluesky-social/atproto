@@ -3,6 +3,7 @@ import type { Redis, RedisOptions } from 'ioredis'
 import type { Jwks } from '@atproto/jwk'
 import { LexResolver } from '@atproto/lex-resolver'
 import type { Account } from '@atproto/oauth-provider-api'
+import { createOAuthResolver } from '@atproto/oauth-resolver'
 import {
   CLIENT_ASSERTION_TYPE_JWT_BEARER,
   type OAuthAccessToken,
@@ -23,7 +24,12 @@ import {
   atprotoLoopbackClientMetadata,
   oauthAuthorizationRequestParametersSchema,
 } from '@atproto/oauth-types'
+import type { CreateDidResolverOptions } from '@atproto-labs/did-resolver'
 import { safeFetchWrap } from '@atproto-labs/fetch-node'
+import {
+  type CreateHandleResolverNodeOptions,
+  createHandleResolverNode,
+} from '@atproto-labs/handle-resolver-node'
 import type { SimpleStore } from '@atproto-labs/simple-store'
 import { SimpleStoreMemory } from '@atproto-labs/simple-store-memory'
 import { AccessTokenMode } from './access-token/access-token-mode.js'
@@ -239,6 +245,8 @@ type OAuthProviderConfig = {
 export type OAuthProviderOptions = OAuthProviderConfig &
   OAuthVerifierOptions &
   OAuthHooks &
+  CreateDidResolverOptions &
+  CreateHandleResolverNodeOptions &
   DeviceManagerOptions &
   CustomizationConfig
 
@@ -268,7 +276,8 @@ export class OAuthProvider extends OAuthVerifier {
     loopbackMetadata = atprotoLoopbackClientMetadata,
 
     // Services
-    safeFetch = safeFetchWrap(),
+    fetch: unsafeFetch = globalThis.fetch, // Inherited from options
+    safeFetch = safeFetchWrap({ fetch: unsafeFetch }),
     lexResolver = new LexResolver({ fetch: safeFetch }),
 
     // compound store implementation
@@ -295,6 +304,8 @@ export class OAuthProvider extends OAuthVerifier {
     }),
 
     // OAuthHooks &
+    // CreateDidResolverOptions &
+    // CreateHandleResolverNodeOptions &
     // OAuthVerifierOptions &
     // DeviceManagerOptions &
     // Customization
@@ -329,6 +340,11 @@ export class OAuthProvider extends OAuthVerifier {
       this.issuer,
       accountStore,
       this.hooks,
+      createOAuthResolver({
+        handleResolver: createHandleResolverNode({ ...rest, safeFetch }),
+        fetch: safeFetch,
+        allowHttp: rest.allowHttp,
+      }),
       this.customization,
     )
     this.clientManager = new ClientManager(

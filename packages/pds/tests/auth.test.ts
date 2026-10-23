@@ -178,7 +178,7 @@ describe('auth', () => {
     const issuer = new URL(network.pds.url)
     const csrfToken = 'a'.repeat(24)
     const probe = async (credentials: {
-      username: string
+      identifier: string
       password: string
     }) => {
       // @NOTE We use undici's low-level `request` rather than fetch(),
@@ -211,11 +211,11 @@ describe('auth', () => {
 
     // bob.test was created above with password 'password'.
     const unknownIdentifier = await probe({
-      username: 'no-such-user.test',
+      identifier: 'no-such-user.test',
       password: 'any-password',
     })
     const knownIdentifierWrongPassword = await probe({
-      username: 'bob.test',
+      identifier: 'bob.test',
       password: 'wrong-password',
     })
 

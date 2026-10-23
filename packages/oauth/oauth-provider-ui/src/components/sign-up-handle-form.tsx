@@ -1,58 +1,52 @@
 import { Trans } from '@lingui/react/macro'
 import type { HandleString } from '@atproto/syntax'
 import {
-  HandleField,
+  NewHandleField,
+  type NewHandleFieldValues,
   composeHandle,
-} from '#/components/forms/fields/handle-field.tsx'
+} from '#/components/forms/fields/new-handle-field.tsx'
 import {
   FormShell,
   type FormShellProps,
 } from '#/components/forms/form-shell.tsx'
+import type { Override } from '#/lib/util'
 
 export type SignUpHandleData = {
   handle: HandleString
 }
 
-type HandleFormValues = { handle: string; domain: string }
-
-export type SignUpHandleFormProps = Omit<
-  FormShellProps<HandleFormValues>,
-  'onSubmit' | 'onValues'
-> & {
-  domains: string[]
-  values?: Partial<SignUpHandleData>
-  onValues?: (values: Partial<SignUpHandleData>) => void
-  handler: (
-    data: SignUpHandleData,
-    signal: AbortSignal,
-  ) => void | PromiseLike<void>
-}
+export type SignUpHandleFormProps = Override<
+  FormShellProps<SignUpHandleData>,
+  {
+    domains: string[]
+    defaultValues?: Partial<SignUpHandleData>
+  }
+>
 
 export function SignUpHandleForm({
   domains,
-  values,
+  defaultValues,
+
+  // FormShellProps
   onValues,
   handler,
   children,
   ...props
 }: SignUpHandleFormProps) {
   return (
-    <FormShell<HandleFormValues>
+    <FormShell<NewHandleFieldValues>
       {...props}
-      // @NOTE The wizard stores the composed handle, so both the report and the
-      // seed below speak whole handles rather than the two parts.
-      onValues={(next) =>
-        onValues?.({ handle: composeHandle(next) as HandleString })
-      }
-      onSubmit={(next, signal) => {
-        const handle = composeHandle(next) as HandleString
-        onValues?.({ handle })
-        return handler({ handle }, signal)
+      onValues={(next) => {
+        onValues?.({ handle: composeHandle(next) })
+      }}
+      handler={(values, signal) => {
+        const handle = composeHandle(values)
+        if (handle) return handler({ handle }, signal)
       }}
     >
-      <HandleField
+      <NewHandleField
         domains={domains}
-        defaultHandle={values?.handle}
+        defaultHandle={defaultValues?.handle}
         required
         autoFocus
       />

@@ -49,12 +49,16 @@ export const updateUserPassword = async (
     passwordScrypt: string
   },
 ) => {
-  await db.executeWithRetry(
+  const [{ numUpdatedRows }] = await db.executeWithRetry(
     db.db
       .updateTable('account')
       .set({ passwordScrypt: opts.passwordScrypt })
       .where('did', '=', opts.did),
   )
+
+  if (numUpdatedRows !== 1n) {
+    throw new InvalidRequestError('No matching account found')
+  }
 }
 
 export const createAppPassword = async (

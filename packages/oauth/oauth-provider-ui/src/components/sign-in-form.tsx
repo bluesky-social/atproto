@@ -1,9 +1,8 @@
 import { Trans, useLingui } from '@lingui/react/macro'
-import { AtSignIcon } from 'lucide-react'
 import { useCallback, useRef, useState } from 'react'
 import { CheckboxField } from '#/components/forms/fields/checkbox-field.tsx'
+import { IdentifierField } from '#/components/forms/fields/identifier-field.tsx'
 import { PasswordField } from '#/components/forms/fields/password-field.tsx'
-import { TextField } from '#/components/forms/fields/text-field.tsx'
 import { TokenField } from '#/components/forms/fields/token-field.tsx'
 import {
   FormShell,
@@ -14,52 +13,44 @@ import {
   InvalidCredentialsError,
   SecondAuthenticationFactorRequiredError,
 } from '#/lib/api.ts'
-import {
-  normalizeSignInIdentifier,
-  signInIdentifierPattern,
-} from '#/lib/form-patterns.ts'
+import { normalizeIdentifier } from '#/lib/form-patterns.ts'
 import { isValidDomain } from '#/lib/handle.ts'
-
-// @NOTE `username`, not `identifier`: the key becomes the rendered `name`,
-// which is a public contract.
-type Values = {
-  username: string
-  password: string
-  remember?: string
-  otp?: string
-}
+import type { Override } from '#/lib/util'
 
 export type SignInData = {
-  username: string
+  identifier: string
   password: string
   remember?: boolean
   emailOtp?: string
 }
 
-export type SignInFormProps = Omit<
-  FormShellProps<Values>,
-  'onSubmit' | 'submitLabel'
-> & {
-  usernameDefault?: string
-  usernameReadonly?: boolean
-  rememberDefault?: boolean
-  disableRemember?: boolean
-  domains?: readonly string[]
+export type SignInFormProps = Override<
+  FormShellProps<SignInData>,
+  {
+    identifierDefault?: string
+    identifierReadonly?: boolean
+    rememberDefault?: boolean
+    disableRemember?: boolean
+    domains?: readonly string[]
 
-  onForgotPassword?: (emailHint?: string) => void
-  onSignIn: (data: SignInData, signal: AbortSignal) => void | PromiseLike<void>
-}
+    onValues?: never
+    onForgotPassword?: (emailHint?: string) => void
+  }
+>
 
 export function SignInForm({
-  usernameDefault = '',
-  usernameReadonly = false,
+  identifierDefault = '',
+  identifierReadonly = false,
   rememberDefault = false,
   disableRemember = false,
   domains: availableDomains = [],
 
   onForgotPassword,
-  onSignIn,
+  handler,
 
+  // FormShellProps
+  submittable = true,
+  submitLabel,
   ...props
 }: SignInFormProps) {
   const { t } = useLingui()
@@ -68,42 +59,49 @@ export function SignInForm({
   const [secondFactorError, setSecondFactorError] =
     useState<null | SecondAuthenticationFactorRequiredError>(null)
 
-  const formRef = useRef<HTMLFormElement>(null)
-  const [otp, setOtp] = useState('')
+  const [emailOtp, setEmailOtp] = useState('')
 
-  const prevValuesRef = useRef<Partial<Values>>({})
+  const prevValuesRef = useRef<{
+    identifier?: string
+    password?: string
+  }>({})
   const clearSecondFactor = useCallback(() => {
-    setOtp('')
+    setEmailOtp('')
     setSecondFactorError(null)
   }, [])
 
   return (
-    <FormShell<Values>
+    <FormShell<{
+      identifier: string
+      password: string
+      remember?: 'on'
+      emailOtp?: string
+    }>
       {...props}
-      ref={formRef}
       submitLabel={
-        secondFactorError ? (
+        submitLabel ??
+        (secondFactorError ? (
           <Trans context="verb">Confirm</Trans>
         ) : (
           <Trans context="verb">Sign in</Trans>
-        )
+        ))
       }
       // The second factor is only required once the server has asked for it,
       // which is component state rather than something the schema can express.
-      submittable={!secondFactorError || Boolean(otp)}
+      submittable={submittable && (!secondFactorError || Boolean(emailOtp))}
       onValues={(next) => {
         const prev = prevValuesRef.current
         prevValuesRef.current = next
         if (
           next.password !== prev.password ||
-          next.username !== prev.username
+          next.identifier !== prev.identifier
         ) {
           clearSecondFactor()
         }
       }}
-      onSubmit={async (values, signal) => {
+      handler={async (values, signal) => {
         const data: SignInData = {
-          username: normalizeSignInIdentifier(values.username, domains),
+          identifier: normalizeIdentifier(values.identifier, domains),
           password: values.password,
         }
 
@@ -114,14 +112,14 @@ export function SignInForm({
           // on the list of accounts signed into the device)
         }
 
-        if (secondFactorError && !!values.otp) {
-          data[secondFactorError.type] = values.otp
+        if (secondFactorError && values.emailOtp) {
+          data[secondFactorError.type] = values.emailOtp
         }
 
         // Wrap the handler to catch 2FA required errors and display the second
         // factor form instead of the error.
         try {
-          await onSignIn(data, signal)
+          return await handler(data, signal)
         } catch (err) {
           if (err instanceof SecondAuthenticationFactorRequiredError) {
             setSecondFactorError(err)
@@ -147,37 +145,16 @@ export function SignInForm({
         }
       }}
     >
-      <TextField
-        name="username"
-        defaultValue={usernameDefault}
-        pattern={signInIdentifierPattern(domains)}
-        label={<Trans>Username or Email</Trans>}
-        placeholder={
-          domains.length > 0
-            ? `${t`yourname`}${domains[0]}`
-            : t`Username or email address`
-        }
-        icon={<AtSignIcon className="size-5" />}
-        type="text"
-        title={t`Username or email address`}
-        autoCapitalize="none"
-        autoCorrect="off"
-        autoComplete="username"
-        spellCheck="false"
-        dir="auto"
+      <IdentifierField
+        name="identifier"
+        domains={domains}
+        defaultValue={identifierDefault}
         enterKeyHint="next"
         required
-        readOnly={usernameReadonly}
         // @NOTE readOnly, not disabled: a disabled control is omitted from the
         // form values entirely, which would submit without a username.
-        autoFocus={!usernameReadonly}
-        onBlur={(event) => {
-          if (usernameReadonly) return
-          event.target.value = normalizeSignInIdentifier(
-            event.target.value,
-            domains,
-          )
-        }}
+        readOnly={identifierReadonly}
+        autoFocus={!identifierReadonly}
       />
 
       <PasswordField
@@ -185,7 +162,7 @@ export function SignInForm({
         label={<Trans>Password</Trans>}
         placeholder={t`Enter your password`}
         enterKeyHint={secondFactorError ? 'next' : 'done'}
-        autoFocus={usernameReadonly}
+        autoFocus={identifierReadonly}
         required
         labelAction={
           onForgotPassword && (
@@ -193,13 +170,15 @@ export function SignInForm({
               type="button"
               variant="link"
               className="text-foreground h-auto p-0 text-sm font-normal"
-              onClick={() => {
-                const input = formRef.current?.querySelector<HTMLInputElement>(
-                  'input[name="username"]',
-                )
-                const value =
-                  input && normalizeSignInIdentifier(input.value, domains)
-                onForgotPassword(value?.includes('@') ? value : undefined)
+              onClick={(event) => {
+                const { form } = event.currentTarget
+                const formData = form ? new FormData(form) : null
+                const identifier = formData?.get('identifier')
+                const hint =
+                  typeof identifier === 'string' // not a File / null / undefined
+                    ? normalizeIdentifier(identifier, domains)
+                    : undefined
+                onForgotPassword(hint)
               }}
               aria-label={t`Reset your password`}
             >
@@ -226,9 +205,9 @@ export function SignInForm({
       {secondFactorError && (
         <div key="2fa">
           <TokenField
-            name="otp"
-            value={otp}
-            onChange={(event) => setOtp(event.currentTarget.value)}
+            name="emailOtp"
+            value={emailOtp}
+            onChange={(event) => setEmailOtp(event.currentTarget.value)}
             label={<Trans>2FA Confirmation</Trans>}
             title={t`Confirmation code`}
             enterKeyHint="done"

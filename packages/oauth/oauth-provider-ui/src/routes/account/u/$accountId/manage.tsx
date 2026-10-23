@@ -192,11 +192,11 @@ function PasswordUpdateRow(props: Omit<RowProps, 'icon' | 'value'>) {
 
   return (
     <UpdatePasswordDialog
-      email={email}
+      currentUsername={email}
       requestPending={resetPasswordRequest.isPending}
       confirmPending={resetPasswordConfirm.isPending}
       onRequest={async () => {
-        await resetPasswordRequest.mutateAsync({ email })
+        await resetPasswordRequest.mutateAsync({ identifier: email })
       }}
       onConfirm={async ({ token, password }) => {
         await resetPasswordConfirm.mutateAsync({ token, password })

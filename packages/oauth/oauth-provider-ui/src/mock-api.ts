@@ -425,10 +425,45 @@ export function buildMockFetch(origFetch = window.fetch): typeof window.fetch {
         return Response.json({
           url: 'https://example.com/callback?error=access_denied&state=mock-state',
         })
-      case `POST ${API_ENDPOINT_PREFIX}/verify-handle-availability`:
+      case `POST ${API_ENDPOINT_PREFIX}/verify-handle-availability`: {
         return Response.json({ available: true })
-      case `POST ${API_ENDPOINT_PREFIX}/reset-password-request`:
-        return Response.json({ success: true })
+      }
+      case `POST ${API_ENDPOINT_PREFIX}/reset-password-request`: {
+        const { identifier } = await request.json()
+        if (identifier.includes('@', 1)) {
+          // Email based reset always succeed
+          return Response.json({ success: true })
+        }
+
+        // Simulate UnknownAtprotoAccountError
+        if (identifier.includes('john') || identifier.includes('jane')) {
+          // Faking identity resolution by backend: jane resolves, john does not
+          const issuer = identifier.includes('jane')
+            ? 'https://example.com'
+            : undefined
+          return Response.json(
+            {
+              error: 'unknown_atproto_account_error',
+              error_description: issuer
+                ? `Atmosphere account ${identifier} is hosted on ${issuer}`
+                : `Unknown Atmosphere identity ${identifier}`,
+              issuer,
+              identifier,
+            },
+            { status: 404 },
+          )
+        }
+
+        return Response.json(
+          {
+            error: 'unknown_atproto_account_error',
+            error_description:
+              'An email address is required for password reset',
+            identifier,
+          },
+          { status: 404 },
+        )
+      }
       case `POST ${API_ENDPOINT_PREFIX}/reset-password-confirm`:
         return Response.json({ success: true })
       case `POST ${API_ENDPOINT_PREFIX}/update-email-request`: {

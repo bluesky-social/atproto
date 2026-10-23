@@ -1,15 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import {
-  OTP_CODE_PATTERN,
+  IDENTIFIER_REGEX,
+  OTP_CODE_REGEX,
   formatOtpCode,
-  normalizeSignInIdentifier,
-  signInIdentifierPattern,
+  normalizeIdentifier,
 } from './form-patterns.ts'
 
 describe(formatOtpCode, () => {
-  const matchesPattern = (value: string) =>
-    new RegExp(`^(?:${OTP_CODE_PATTERN})$`).test(value)
-
   it('uppercases and inserts the hyphen', () => {
     expect(formatOtpCode('abcde23456')).toBe('ABCDE-23456')
   })
@@ -34,16 +31,13 @@ describe(formatOtpCode, () => {
   })
 
   it('produces values accepted by the pattern once complete', () => {
-    expect(matchesPattern(formatOtpCode('abcde23456'))).toBe(true)
-    expect(matchesPattern(formatOtpCode('abcde2345'))).toBe(false)
+    expect(OTP_CODE_REGEX.test(formatOtpCode('abcde23456'))).toBe(true)
+    expect(OTP_CODE_REGEX.test(formatOtpCode('abcde2345'))).toBe(false)
   })
 })
 
-describe(normalizeSignInIdentifier, () => {
+describe(normalizeIdentifier, () => {
   const domains = ['.bsky.social']
-  // Browsers compile `pattern` with the `v` flag and anchor it.
-  const matchesPattern = (value: string, available = domains) =>
-    new RegExp(`^(?:${signInIdentifierPattern(available)})$`, 'v').test(value)
 
   it.each([
     ['alice', 'alice.bsky.social'],
@@ -53,48 +47,29 @@ describe(normalizeSignInIdentifier, () => {
     [' alice ', 'alice.bsky.social'],
     ['alice.example.com', 'alice.example.com'],
     ['Alice@Example.com', 'alice@example.com'],
-    ['did:plc:abc123', 'did:plc:abc123'],
+    ['  did:plc:abc123', 'did:plc:abc123'],
   ])('normalises %j to %j', (input, expected) => {
-    expect(normalizeSignInIdentifier(input, domains)).toBe(expected)
+    expect(normalizeIdentifier(input, domains)).toBe(expected)
   })
 
   it('leaves a bare name alone when no domain is available', () => {
-    expect(normalizeSignInIdentifier('alice', [])).toBe('alice')
+    expect(normalizeIdentifier('alice', [])).toBe('alice')
   })
 
   it.each([
-    'alice',
-    '@alice',
     '@alice.bsky.social',
-    'Alice.Bsky.Social',
-    'alice@example.com',
-    'did:plc:abc123',
-  ])('pattern accepts what a password manager may fill: %j', (value) => {
-    expect(matchesPattern(value)).toBe(true)
-  })
-
-  it.each(['a@@b', 'alice..bsky.social', '.alice'])(
-    'pattern still rejects %j',
-    (value) => {
-      expect(matchesPattern(value)).toBe(false)
-    },
-  )
-
-  // Nothing would complete a bare name, so it must fail in the browser rather
-  // than reach the server as invalid credentials.
-  it.each(['alice', '@alice'])(
-    'pattern rejects %j when no domain is available',
-    (value) => {
-      expect(matchesPattern(value, [])).toBe(false)
-    },
-  )
-
-  it.each([
     '@alice.example.com',
+    'alice.bsky.social',
     'alice@example.com',
-    'did:plc:abc123',
-    ' did:plc:abc123 ',
-  ])('pattern accepts %j when no domain is available', (value) => {
-    expect(matchesPattern(value, [])).toBe(true)
+    'did:plc:ewvi7nxzyoun6zhxrhs64oiz', // did:plc:[a-z2-7]{24}
+  ])('pattern accepts what a password manager may fill: %j', (value) => {
+    expect(IDENTIFIER_REGEX.test(value)).toBe(true)
   })
+
+  it.each(['a@@b', 'alice..bsky.social', '.alice', 'alice', '@alice'])(
+    'pattern rejects %j',
+    (value) => {
+      expect(IDENTIFIER_REGEX.test(value)).toBe(false)
+    },
+  )
 })

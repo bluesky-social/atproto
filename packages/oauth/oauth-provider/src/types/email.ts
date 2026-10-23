@@ -2,6 +2,7 @@ import { isEmailValid } from '@hapi/address'
 import { isDisposableEmail } from 'disposable-email-domains-js'
 import { z } from 'zod'
 
+export type EmailString = `${string}@${string}`
 export const emailSchema = z
   .string()
   .email()
@@ -17,10 +18,11 @@ export const emailSchema = z
   // according to both libraries ensuring that we never encounter a case where
   // an email allowed here is in a format that would be rejected by other parts
   // of our systems.
-  .refine(isEmailValid, {
-    message: 'Invalid email address',
-  })
-  .refine((email) => !isDisposableEmail(email), {
-    message: 'Disposable email addresses are not allowed',
-  })
-  .transform((value) => value.toLowerCase())
+  .refine(
+    (input: string): input is EmailString =>
+      isEmailValid(input) && !isDisposableEmail(input),
+    {
+      message: 'Invalid email address',
+    },
+  )
+  .transform((value) => value.toLowerCase() as EmailString)

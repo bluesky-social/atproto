@@ -471,6 +471,23 @@ export class AppContext implements AsyncDisposable {
           // column, which means leaving email based 2FA enabled can result in
           // account lock-out.
           show2FaWarningOnEmailUpdate: true,
+          allowHttp: cfg.service.devMode,
+          plcDirectoryUrl: cfg.identity.plcUrl,
+          fallbackNameservers: cfg.identity.handleBackupNameservers,
+          handleCache: undefined, // Memory
+          didCache: {
+            // Map didCache to SimpleCache<Did, DidDocument>
+            get: async (did) => {
+              const res = await didCache.checkCache(did)
+              return (res?.doc as any) ?? null
+            },
+            set: async (did, doc) => {
+              await didCache.cacheDid(did, doc as any)
+            },
+            del: async (did) => {
+              await didCache.clearEntry(did)
+            },
+          },
           safeFetch,
           lexResolver,
           metadata: {

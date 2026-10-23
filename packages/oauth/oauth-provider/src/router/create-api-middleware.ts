@@ -56,6 +56,7 @@ import { tokenIdSchema } from '../token/token-id.js'
 import { emailOtpSchema } from '../types/email-otp.js'
 import { emailSchema } from '../types/email.js'
 import { handleSchema } from '../types/handle.js'
+import { identifierSchema } from '../types/indentifier.js'
 import { newPasswordSchema, oldPasswordSchema } from '../types/password.js'
 import { validateCsrfToken } from './assets/csrf.js'
 import {
@@ -187,8 +188,8 @@ export function createApiMiddleware<
       endpoint: '/reset-password-request',
       schema: z
         .object({
+          identifier: identifierSchema,
           locale: localeSchema,
-          email: emailSchema,
         })
         .strict(),
       async handler() {

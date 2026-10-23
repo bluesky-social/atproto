@@ -88,9 +88,10 @@ export function SignUpView({
                 onBack={prev}
                 backLabel={prevLabel}
                 submitLabel={nextLabel}
-                values={pending}
+                defaultValues={pending}
                 onValues={(val) => setPending((old) => ({ ...old, ...val }))}
                 handler={async (data) => {
+                  setPending((old) => ({ ...old, ...data }))
                   await onValidateNewHandle(data)
                   next(data)
                 }}
@@ -107,9 +108,12 @@ export function SignUpView({
                 onBack={prev}
                 backLabel={prevLabel}
                 submitLabel={nextLabel}
-                values={pending}
+                defaultValues={pending}
                 onValues={(val) => setPending((old) => ({ ...old, ...val }))}
-                handler={next}
+                handler={(val) => {
+                  setPending((old) => ({ ...old, ...val }))
+                  return next(val)
+                }}
                 inviteCodeRequired={inviteCodeRequired}
                 rememberDefault={rememberDefault}
               >
@@ -126,9 +130,12 @@ export function SignUpView({
                 onBack={prev}
                 backLabel={prevLabel}
                 submitLabel={nextLabel}
-                values={pending}
+                defaultValues={pending}
                 onValues={(val) => setPending((old) => ({ ...old, ...val }))}
-                handler={next}
+                handler={(val) => {
+                  setPending((old) => ({ ...old, ...val }))
+                  return next(val)
+                }}
               >
                 {atLast && disclaimer}
               </SignUpHcaptchaForm>

@@ -17,6 +17,7 @@ import {
 import type {
   Account,
   AccountStore,
+  AtIdentifierString,
   AuthenticateAccountData,
   AuthorizedClientData,
   AuthorizedClients,
@@ -57,6 +58,7 @@ import type {
   VerifyEmailConfirmInput,
   VerifyEmailRequestInput,
 } from '@atproto/oauth-provider/store'
+import { isAtIdentifierString } from '@atproto/oauth-provider/store'
 import {
   AuthRequiredError as XrpcAuthRequiredError,
   InvalidRequestError as XrpcInvalidRequestError,
@@ -252,7 +254,7 @@ export class OAuthStore
 
   async authenticateAccount({
     locale,
-    username: identifier,
+    identifier,
     password,
     emailOtp,
     deviceAccounts,
@@ -323,11 +325,11 @@ export class OAuthStore
     await authorizedClientHelper.upsert(this.db, did, clientId, data)
   }
 
-  async getAccount(did: Did): Promise<{
+  async getAccount(handleOrDid: AtIdentifierString): Promise<{
     account: Account
     authorizedClients: AuthorizedClients
   }> {
-    const accountRow = await this.accountManager.getAccount(did, {
+    const accountRow = await this.accountManager.getAccount(handleOrDid, {
       includeDeactivated: true,
       includeTakenDown: false,
     })
@@ -337,7 +339,7 @@ export class OAuthStore
     const account = await this.buildAccount(accountRow)
     const authorizedClients = await authorizedClientHelper.getAuthorizedClients(
       this.db,
-      did,
+      account.did,
     )
 
     return { account, authorizedClients }
@@ -412,13 +414,21 @@ export class OAuthStore
   }
 
   async resetPasswordRequest({
-    email,
+    identifier,
     locale,
   }: ResetPasswordRequestInput): Promise<Account | null> {
-    const account = await this.accountManager.getAccountByEmail(email, {
-      includeDeactivated: true,
-      includeTakenDown: false,
-    })
+    const isEmailIdentifier = identifier.includes('@')
+    const account = isEmailIdentifier
+      ? await this.accountManager.getAccountByEmail(identifier, {
+          includeDeactivated: true,
+          includeTakenDown: false,
+        })
+      : isAtIdentifierString(identifier)
+        ? await this.accountManager.getAccount(identifier, {
+            includeDeactivated: true,
+            includeTakenDown: false,
+          })
+        : null
 
     if (!account?.email || !account?.handle) return null
 

@@ -1,5 +1,6 @@
 import type { AtprotoDid } from '@atproto/did'
 import type { Key, Keyset } from '@atproto/jwk'
+import type { OAuthResolver } from '@atproto/oauth-resolver'
 import {
   type AtprotoOAuthScope,
   type AtprotoOAuthTokenResponse,
@@ -26,7 +27,6 @@ import {
   type ClientCredentialsFactory,
   createClientCredentialsFactory,
 } from './oauth-client-auth.js'
-import type { OAuthResolver } from './oauth-resolver.js'
 import { OAuthResponseError } from './oauth-response-error.js'
 import type { Runtime } from './runtime.js'
 import type { ClientMetadata } from './types.js'

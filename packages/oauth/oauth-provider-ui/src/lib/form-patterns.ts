@@ -9,7 +9,15 @@ export const EMAIL_PATTERN = '[^@]+@[^@]+\\.[^@]+'
  * A handle's leftmost label: lowercase alphanumerics and hyphens, neither
  * leading nor trailing with a hyphen.
  */
-export const HANDLE_SEGMENT_PATTERN = '[a-z0-9][a-z0-9\\-]+[a-z0-9]'
+export const HANDLE_SEGMENT_PATTERN = '[a-z0-9][a-z0-9-]{0,61}[a-z0-9]'
+
+export const HANDLE_PATTERN = `@?${HANDLE_SEGMENT_PATTERN}(?:\\.${HANDLE_SEGMENT_PATTERN})*\\.[a-z](?:[a-z0-9-]{0,61}[a-z0-9])?`
+export const HANDLE_REGEX = new RegExp(`^(?:${HANDLE_PATTERN})$`)
+
+export const DID_PATTERN = `(?:did:plc:[a-z2-7]{24})|(?:did:web:[a-z0-9._\\-]+)`
+
+export const IDENTIFIER_PATTERN = `(?:${EMAIL_PATTERN})|(?:${HANDLE_PATTERN})|(?:${DID_PATTERN})`
+export const IDENTIFIER_REGEX = new RegExp(`^(?:${IDENTIFIER_PATTERN})$`)
 
 /**
  * The OTP shape the provider issues: two groups of five RFC-4648 base32
@@ -19,6 +27,7 @@ export const HANDLE_SEGMENT_PATTERN = '[a-z0-9][a-z0-9\\-]+[a-z0-9]'
  * to the whole value, so it carries no `^`/`$`.
  */
 export const OTP_CODE_PATTERN = '[A-Z2-7]{5}-[A-Z2-7]{5}'
+export const OTP_CODE_REGEX = new RegExp(`^(?:${OTP_CODE_PATTERN})$`)
 
 /**
  * Normalises free-typed input into the {@link OTP_CODE_PATTERN} shape:
@@ -33,38 +42,19 @@ export function formatOtpCode(value: string): string {
 }
 
 /**
- * Email, handle, or DID, optionally preceded by `@` and surrounded by
- * whitespace, both of which {@link normalizeSignInIdentifier} strips. A bare
- * name without a dot is allowed only when a domain is available: the
- * normalizer then completes it on submit, because password managers fill
- * saved values without blurring the field. Without a domain nothing would
- * complete it, so the browser rejects it inline instead of the server
- * rejecting it as invalid credentials.
- *
- * @NOTE All three alternatives sit inside one group. The regex this replaced
- * read `^(email|handle)|did:…$`, which by alternation precedence anchored only
- * the first two — so anything merely *containing* `did:x:y` passed. As a
- * `pattern` attribute every branch is anchored, which is what was meant.
- */
-export function signInIdentifierPattern(domains: readonly string[]): string {
-  const labels = domains.length > 0 ? '*' : '+'
-  return `\\s*@?([^@]+@[^@]+|[^.@]+(\\.[^.@]+)${labels}|did:[a-z0-9]+:.+)\\s*`
-}
-
-/**
  * Trims, lowercases, strips a leading `@`, and appends the first available
  * domain to a bare name. Applied on blur (so the field shows the result) and
  * on submit (so a value filled by a password manager is normalised too).
  */
-export function normalizeSignInIdentifier(
+export function normalizeIdentifier(
   value: string,
-  domains: readonly string[],
+  domains?: readonly string[],
 ): string {
   let normalized = value.trim().toLowerCase()
   if (normalized.startsWith('@')) normalized = normalized.slice(1)
   if (
     normalized.length > 0 &&
-    domains.length > 0 &&
+    domains?.length &&
     !normalized.startsWith('did:') &&
     !normalized.includes('@') &&
     !normalized.includes('.')
