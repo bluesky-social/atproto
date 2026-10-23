@@ -1023,6 +1023,7 @@ export function getQueueRoutingNote(
   return `Automatically routed to queue ${JSON.stringify(queue.name)} (ID ${queue.id}). Matched ${criteria.join('; ')}.`
 }
 
+/** Prefer matching queues with tag criteria, then the lowest queue ID. */
 export function findMatchingQueue(
   queues: Selectable<ReportQueue>[],
   subjectType: string,
@@ -1051,6 +1052,8 @@ export function findMatchingQueue(
     const accountTagsMatch =
       queueAccountTags.length === 0 ||
       queueAccountTags.some((tag) => accountTags.includes(tag))
+    const tagged = hasTagCriteria(queue)
+    const matchedTagged = matched !== null && hasTagCriteria(matched)
 
     if (
       subjectTypeMatch &&
@@ -1058,7 +1061,9 @@ export function findMatchingQueue(
       reportTypeMatch &&
       reporterTagsMatch &&
       accountTagsMatch &&
-      (matched === null || queue.id < matched.id)
+      (matched === null ||
+        (tagged && !matchedTagged) ||
+        (tagged === matchedTagged && queue.id < matched.id))
     ) {
       matched = queue
     }
