@@ -2480,9 +2480,6 @@ importers:
       '@atproto/bsync':
         specifier: workspace:^
         version: link:../../packages/bsync
-      dd-trace:
-        specifier: ^5.103.0
-        version: 5.103.0(@openfeature/server-sdk@1.21.0(@openfeature/core@1.10.0))
 
   services/ozone:
     dependencies:
