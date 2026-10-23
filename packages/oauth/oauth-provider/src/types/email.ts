@@ -18,11 +18,14 @@ export const emailSchema = z
   // according to both libraries ensuring that we never encounter a case where
   // an email allowed here is in a format that would be rejected by other parts
   // of our systems.
-  .refine(
-    (input: string): input is EmailString =>
-      isEmailValid(input) && !isDisposableEmail(input),
-    {
-      message: 'Invalid email address',
-    },
-  )
+  .refine((input: string): input is EmailString => isEmailValid(input), {
+    message: 'Invalid email address',
+  })
   .transform((value) => value.toLowerCase() as EmailString)
+
+export const newEmailSchema = emailSchema.refine(
+  (input: string): input is EmailString => !isDisposableEmail(input),
+  {
+    message: 'Disposable email addresses are not allowed',
+  },
+)

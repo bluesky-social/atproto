@@ -167,7 +167,8 @@ export interface AccountStore {
   ): Awaitable<void>
 
   /**
-   * @throws {InvalidRequestError} - When the credentials are not valid
+   * Retrieves the account and its authorized clients for the given handle or
+   * DID. Return `null` if the account is not found.
    */
   getAccount(handleOrDid: AtIdentifierString): Awaitable<null | {
     account: Account

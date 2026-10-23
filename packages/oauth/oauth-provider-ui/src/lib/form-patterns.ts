@@ -4,7 +4,7 @@ import { MIN_PASSWORD_LENGTH } from './password.ts'
 export { MIN_PASSWORD_LENGTH }
 
 /** An email address whose domain carries a TLD (a dot with a label after it). */
-export const EMAIL_PATTERN = '[^@]+@[^@]+\\.[^@]+'
+export const EMAIL_PATTERN = '[^@\\s]+@[^@\\s]+\\.[^@\\s]+'
 
 // @NOTE Browsers compile `pattern` attributes with the `v` flag, under which a
 // literal `-` inside a character class must be escaped. A pattern that fails to

@@ -437,7 +437,7 @@ export function buildMockFetch(origFetch = window.fetch): typeof window.fetch {
 
         // Simulate UnknownAtprotoAccountError
         if (identifier.includes('jane')) {
-          // Faking identity resolution by backend: jane resolves, john does not
+          // Faking identity resolution by backend:
           return Response.json(
             {
               error: 'unknown_atproto_account_error',

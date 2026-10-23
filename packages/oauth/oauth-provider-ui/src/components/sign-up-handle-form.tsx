@@ -41,7 +41,13 @@ export function SignUpHandleForm({
       }}
       handler={(values, signal) => {
         const handle = composeHandle(values)
-        if (handle) return handler({ handle }, signal)
+
+        // Fool-proofing (should be ensured by the form validation)
+        if (!handle) {
+          throw new Error('Invalid handle')
+        }
+
+        return handler({ handle }, signal)
       }}
     >
       <NewHandleField

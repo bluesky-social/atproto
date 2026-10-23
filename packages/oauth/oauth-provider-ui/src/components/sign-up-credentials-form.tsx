@@ -57,7 +57,10 @@ export function SignUpCredentialsForm({
         })
       }
       handler={({ inviteCode, email, password }, signal) => {
-        if (inviteCodeRequired && !inviteCode) return
+        // Fool-proofing (should be ensured by the form validation)
+        if (inviteCodeRequired && !inviteCode) {
+          throw new Error('Invite code is required')
+        }
         return handler({ email, password, remember, inviteCode }, signal)
       }}
     >

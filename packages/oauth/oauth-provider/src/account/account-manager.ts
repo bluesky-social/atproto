@@ -400,6 +400,9 @@ export class AccountManager {
       },
     )
 
+    // @NOTE This is currently a dead branch (because of the "if" above) but
+    // will become live once we support password reset via at-identifiers (by
+    // removing the "if" at the beginning of this function.
     if (!account && isAtIdentifierString(input.identifier)) {
       return this.throwUnknownAtmosphereAccount(input.identifier)
     }

@@ -53,7 +53,9 @@ export function SignUpHcaptchaForm({
       submittable={verify != null}
       onValues={(_values) => onValues?.({ verify })}
       handler={(_values, signal) => {
-        if (verify) return handler({ verify }, signal)
+        // Fool-proofing (should be ensured by "submittable" prop)
+        if (!verify) throw new Error('Verification required')
+        return handler({ verify }, signal)
       }}
     >
       {verifiedOnMount ? (

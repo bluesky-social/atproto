@@ -62,7 +62,11 @@ export function UpdateHandleCustomForm({
       }}
       handler={(values, signal) => {
         const handle = parseHandle(values.domain)
-        if (handle) return handler({ handle }, signal)
+        // Fool-proofing (should be ensured by the "submittable" prop)
+        if (!handle) {
+          throw new Error('Invalid handle')
+        }
+        return handler({ handle }, signal)
       }}
     >
       <TextField

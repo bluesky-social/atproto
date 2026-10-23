@@ -41,7 +41,10 @@ export function UpdateHandleDefaultForm({
         const handle = composeHandle(values)
         // @NOTE The domain check is re-asserted here so submission cannot send a
         // handle outside the available domains.
-        if (!handle || !domains.some((dom) => handle.endsWith(dom))) return
+        if (!handle || !domains.some((dom) => handle.endsWith(dom))) {
+          throw new Error('Invalid handle')
+        }
+
         return handler({ handle }, signal)
       }}
     >

@@ -51,7 +51,12 @@ export function ResetPasswordRequestForm({
       }}
       handler={(values, signal) => {
         const identifier = normalizeIdentifier(values.identifier, domains)
-        if (isIdentifier(identifier)) return handler({ identifier }, signal)
+        if (!isIdentifier(identifier)) {
+          // @TODO use an error that will better render in the UI
+          throw new Error('Invalid identifier')
+        }
+
+        return handler({ identifier }, signal)
       }}
       renderError={(error) => (
         <ErrorNotice error={error}>

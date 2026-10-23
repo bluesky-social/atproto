@@ -4,7 +4,11 @@ import {
   TextField,
   type TextFieldProps,
 } from '#/components/forms/fields/text-field.tsx'
-import { IDENTIFIER_PATTERN, normalizeIdentifier } from '#/lib/form-patterns.ts'
+import {
+  HANDLE_SEGMENT_PATTERN,
+  IDENTIFIER_PATTERN,
+  normalizeIdentifier,
+} from '#/lib/form-patterns.ts'
 
 export type IdentifierFieldProps = Omit<TextFieldProps, 'type' | 'pattern'> & {
   domains?: readonly string[]
@@ -35,7 +39,13 @@ export function IdentifierField({
       type="text"
       title={title ?? t`Username or email address`}
       label={label ?? <Trans>Username or Email</Trans>}
-      pattern={`\\s*(?:${IDENTIFIER_PATTERN})\\s*`}
+      pattern={`\\s*(?:${
+        // @NOTE when domains are provided, we allow both handle segments
+        // as normalizeIdentifier will add the default domain if missing.
+        domains.length > 0
+          ? `${HANDLE_SEGMENT_PATTERN}|${IDENTIFIER_PATTERN}`
+          : IDENTIFIER_PATTERN
+      })\\s*`}
       placeholder={
         placeholder ??
         (domains.length > 0 ? t`you${domains[0]}` : t`alice@example.com`)
