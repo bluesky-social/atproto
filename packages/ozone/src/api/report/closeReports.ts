@@ -17,6 +17,7 @@ export default function (server: Server, ctx: AppContext) {
         reportTypes,
         internalNote,
         isAutomated,
+        meta,
       } = input.body
 
       let subjectDid: DidString
@@ -50,6 +51,7 @@ export default function (server: Server, ctx: AppContext) {
         reportTypes,
         internalNote: internalNote ?? undefined,
         isAutomated: isAutomated ?? false,
+        meta,
         createdBy: createdBy ?? ctx.cfg.service.did,
       })
 
