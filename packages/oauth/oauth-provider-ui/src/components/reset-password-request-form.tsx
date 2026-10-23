@@ -1,11 +1,11 @@
 import { Trans } from '@lingui/react/macro'
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 import { IdentifierField } from '#/components/forms/fields/identifier-field.tsx'
 import {
   FormShell,
   type FormShellProps,
 } from '#/components/forms/form-shell.tsx'
-import { mergeRefs } from '#/hooks/use-merged-refs'
+import { useCombinedRef } from '#/hooks/use-merged-refs'
 import { UnknownAtprotoAccountError } from '#/lib/api'
 import { IDENTIFIER_REGEX, normalizeIdentifier } from '#/lib/form-patterns'
 import { ErrorNotice } from './feedback/error-notice'
@@ -26,27 +26,27 @@ export function ResetPasswordRequestForm({
 
   // FormShellProps
   handler,
-  ref,
+  ref: forwardedRef,
   onValues,
   submittable = true,
   ...props
 }: ResetPasswordRequestFormProps) {
   const [isSubmittable, setIsSubmittable] = useState(!!hint)
-  const formRef = useRef<HTMLFormElement>(null)
+  const [formEl, ref] = useCombinedRef<HTMLFormElement>(null)
 
   return (
     <FormShell<{
       identifier: string
     }>
       {...props}
-      ref={mergeRefs(formRef, ref)}
+      ref={ref}
       submittable={submittable && isSubmittable}
       onValues={(values) => {
         const identifier = values.identifier
           ? normalizeIdentifier(values.identifier, domains)
           : undefined
         setIsSubmittable(!!identifier)
-        formRef.current?.reset()
+        formEl?.reset()
         return onValues?.({ identifier })
       }}
       handler={(values, signal) => {

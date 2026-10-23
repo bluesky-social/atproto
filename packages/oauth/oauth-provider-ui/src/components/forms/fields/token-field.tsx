@@ -1,6 +1,5 @@
 import { Trans } from '@lingui/react/macro'
-import { useRef } from 'react'
-import { useMergedRefs } from '#/hooks/use-merged-refs.ts'
+import { useCombinedRef } from '#/hooks/use-merged-refs.ts'
 import { OTP_CODE_PATTERN, formatOtpCode } from '#/lib/form-patterns.ts'
 import { RequestCodeButton } from '../request-code-button.tsx'
 import { TextField, type TextFieldProps } from './text-field.tsx'
@@ -25,8 +24,7 @@ export function TokenField({
   onChange,
   ...props
 }: TokenFieldProps) {
-  const inputRef = useRef<HTMLInputElement>(null)
-  const mergedRef = useMergedRefs(inputRef, ref)
+  const [inputEl, mergedRef] = useCombinedRef<HTMLInputElement>(ref)
 
   return (
     <TextField
@@ -82,7 +80,7 @@ export function TokenField({
                   await onResend()
                   // Next tick, so the button's disabled state has been applied
                   // (after the next render) before focus moves to the input.
-                  if (autoFocus) setTimeout(() => inputRef.current?.focus())
+                  if (autoFocus) setTimeout(() => inputEl?.focus())
                 }}
                 variant="link"
                 size="sm"

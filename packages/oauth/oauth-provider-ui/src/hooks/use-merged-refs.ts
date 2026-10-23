@@ -1,6 +1,6 @@
 import { type Ref, useMemo, useRef } from 'react'
 
-export function mergeRefs<T>(...refs: Array<Ref<T> | undefined>): Ref<T> {
+function mergeRefs<T>(...refs: Array<Ref<T> | undefined>): Ref<T> {
   return (value) => {
     const cleanups = refs.map((ref) => {
       if (typeof ref === 'function') return ref(value)
@@ -24,7 +24,8 @@ export function useMergedRefs<T>(...refs: Array<Ref<T> | undefined>): Ref<T> {
 
 export function useCombinedRef<T>(
   ...refs: Array<Ref<T> | undefined>
-): [current: T | null, ref: Ref<T>] {
-  const ref = useRef<T>(null)
-  return [ref.current, useMergedRefs(ref, ...refs)]
+): [current: T | null, mergedRef: Ref<T>] {
+  const localRef = useRef<T>(null)
+  const mergedRef = useMergedRefs<T>(localRef, ...refs)
+  return [localRef.current, mergedRef]
 }

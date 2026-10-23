@@ -1,12 +1,11 @@
 import { Form } from '@base-ui/react/form'
 import { Trans } from '@lingui/react/macro'
 import { Loader2Icon } from 'lucide-react'
-import {
-  type ComponentProps,
-  type ComponentPropsWithRef,
-  type MouseEventHandler,
-  type ReactNode,
-  useRef,
+import type {
+  ComponentProps,
+  ComponentPropsWithRef,
+  MouseEventHandler,
+  ReactNode,
 } from 'react'
 import { ErrorNotice } from '#/components/feedback/error-notice.tsx'
 import {
@@ -15,7 +14,6 @@ import {
 } from '#/components/forms/async-button.tsx'
 import { Button } from '#/components/ui/button.tsx'
 import { useAsyncAction } from '#/hooks/use-async-action.ts'
-import { useMergedRefs } from '#/hooks/use-merged-refs'
 import { composeEventHandlers } from '#/lib/compose-event-handlers'
 import { cn } from '#/lib/utils.ts'
 
@@ -130,7 +128,7 @@ export function FormShell<TValues extends FormValues>({
   className,
   onSubmit,
   onReset,
-  ref,
+
   ...props
 }: FormShellProps<TValues>) {
   const action = useAsyncAction<[TValues]>(
@@ -141,13 +139,9 @@ export function FormShell<TValues extends FormValues>({
   const busy = action.loading || loadingProp
   const disabled = Boolean(disabledProp || busy)
 
-  const formRef = useRef<HTMLFormElement>(null)
-  const mergedRef = useMergedRefs(ref, formRef)
-
   return (
     <Form
       {...props}
-      ref={mergedRef}
       // Allows using the ref to call "form.reset()" which will reset the error
       // state of the form (instead of the native behavior that consists of
       // resetting all the default values).

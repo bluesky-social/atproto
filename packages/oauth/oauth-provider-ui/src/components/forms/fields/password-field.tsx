@@ -1,8 +1,8 @@
 import { useLingui } from '@lingui/react/macro'
 import { EyeIcon, EyeOffIcon, KeyIcon } from 'lucide-react'
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 import { Button } from '#/components/ui/button.tsx'
-import { mergeRefs } from '#/hooks/use-merged-refs.ts'
+import { useCombinedRef } from '#/hooks/use-merged-refs.ts'
 import { composeEventHandlers } from '#/lib/compose-event-handlers.ts'
 import { TextField, type TextFieldProps } from './text-field.tsx'
 
@@ -26,12 +26,12 @@ export function PasswordField({
   const { t } = useLingui()
   const [visible, setVisible] = useState(false)
 
-  const ref = useRef<HTMLInputElement | null>(null)
+  const [inputEl, ref] = useCombinedRef<HTMLInputElement>(forwardedRef)
 
   return (
     <TextField
       {...props}
-      ref={mergeRefs(ref, forwardedRef)}
+      ref={ref}
       icon={icon}
       title={props.title ?? t`Password`}
       type={visible ? 'text' : 'password'}
@@ -59,10 +59,10 @@ export function PasswordField({
             onClick={() => {
               setVisible((prev) => !prev)
               setTimeout(() => {
-                ref.current?.focus()
-                ref.current?.setSelectionRange(
-                  ref.current.value.length,
-                  ref.current.value.length,
+                inputEl?.focus()
+                inputEl?.setSelectionRange(
+                  inputEl.value.length,
+                  inputEl.value.length,
                 )
               })
             }}
