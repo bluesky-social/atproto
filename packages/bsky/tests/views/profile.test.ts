@@ -764,6 +764,43 @@ describe('pds profile views', () => {
       })
     })
 
+    it('returns image URLs for the icon and dark icon', async () => {
+      const upload = async (path: string) => {
+        const res = await pdsAgent.api.com.atproto.repo.uploadBlob(
+          await fs.readFile(path),
+          { headers: sc.getHeaders(linky), encoding: 'image/jpeg' },
+        )
+        return res.data.blob
+      }
+      const icon = await upload('../dev-env/assets/key-portrait-small.jpg')
+      const iconDark = await upload('../dev-env/assets/key-landscape-small.jpg')
+      const res = await sc.agent.com.atproto.repo.createRecord(
+        {
+          repo: linky,
+          collection: 'app.bsky.actor.link',
+          record: {
+            url: 'https://icons.example',
+            icon,
+            iconDark,
+            createdAt: new Date().toISOString(),
+          },
+        },
+        { headers: sc.getHeaders(linky), encoding: 'application/json' },
+      )
+      const plain = await createLink(linky, 'https://plain.example')
+      await updateProfile(linky, {
+        displayName: 'links',
+        links: [{ uri: res.data.uri, cid: res.data.cid }, plain],
+      })
+      await network.processAll()
+
+      const [withIcons, withoutIcons] = (await getLinks()) ?? []
+      expect(withIcons.icon).toContain(icon.ref.toString())
+      expect(withIcons.iconDark).toContain(iconDark.ref.toString())
+      expect(withoutIcons.icon).toBeUndefined()
+      expect(withoutIcons.iconDark).toBeUndefined()
+    })
+
     it('leaves out a link that was taken down', async () => {
       const before = await getLinks()
       const takenDown = before?.[0]?.uri

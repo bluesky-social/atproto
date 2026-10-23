@@ -393,6 +393,13 @@ export class Views {
               getBlobCidString(link.record.icon),
             )
           : undefined,
+        iconDark: link.record.iconDark
+          ? this.imgUriBuilder.getPresetUri(
+              'avatar',
+              did,
+              getBlobCidString(link.record.iconDark),
+            )
+          : undefined,
         labels: [
           ...(state.labels?.getBySubject(ref.uri) ?? []),
           ...this.selfLabels({
