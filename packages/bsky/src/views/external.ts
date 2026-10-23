@@ -13,6 +13,7 @@ import { AtUri, normalizeDatetimeAlways } from '@atproto/syntax'
 import type { ExternalRecord } from '../hydration/external.js'
 import type { HydrationState } from '../hydration/hydrator.js'
 import { app, com, place, site, social } from '../lexicons/index.js'
+import { buildExternalRecordUrl } from '../util/external/record-url.js'
 import { estimateReadingTimeMinutes } from '../util/external/standard-site.js'
 import { uriToDid } from '../util/uris.js'
 import type { Views } from './index.js'
@@ -129,7 +130,7 @@ export function externalRecordView(
     }
     return app.bsky.embed.external.viewGallery.$build({
       ...commonFields(views, refs, state),
-      uri,
+      uri: buildExternalRecordUrl(uri) ?? uri,
       title: record.title,
       description: record.description ?? '',
       createdAt: record.createdAt,

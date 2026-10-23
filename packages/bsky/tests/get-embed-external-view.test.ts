@@ -725,7 +725,10 @@ describe('app.bsky.embed.getEmbedExternalView', () => {
       })
       expect(fixture.lookedUp()).toContain(favoriteUri)
       expect(app.bsky.embed.external.viewGallery.$matches(body.data)).toBe(true)
-      expect(body.data).toMatchObject({ items: [{ alt: 'A photo' }] })
+      expect(body.data).toMatchObject({
+        uri: `https://grain.social/profile/${author}/gallery/gallery`,
+        items: [{ alt: 'A photo' }],
+      })
       expect(didsOf((body.data as { likers?: unknown }).likers)).toEqual([
         favoriter,
       ])
