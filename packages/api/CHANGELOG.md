@@ -1,5 +1,13 @@
 # @atproto/api
 
+## 0.29.2
+
+### Patch Changes
+
+- [#5720](https://github.com/bluesky-social/atproto/pull/5720) [`9a4011b`](https://github.com/bluesky-social/atproto/commit/9a4011bca5c97baf41228e46d52e633d0a5b69aa) Thanks [@gcwill70](https://github.com/gcwill70)! - Allow closeReports to close all subjects that an account owns.
+
+- [#5722](https://github.com/bluesky-social/atproto/pull/5722) [`f8a8186`](https://github.com/bluesky-social/atproto/commit/f8a8186acf883dc96819d5f698a6241598984c17) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Resolve Atmosphere Explore and external embed lexicons from the published Bluesky schemas instead of local overrides. Refresh published lexicons, including Atmosphere external views for the PDS and OAuth browser example and profile website deprecation notices.
+
 ## 0.29.1
 
 ### Patch Changes
