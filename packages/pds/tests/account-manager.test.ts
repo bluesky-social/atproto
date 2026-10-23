@@ -81,7 +81,7 @@ describe('account manager', () => {
     await page.clickOnText('Sélectionner un autre compte')
     await page.clickOnText('Un autre compte', '*')
 
-    await page.typeInInput('username', 'alice.test')
+    await page.typeInInput('identifier', 'alice.test')
     const input = await page.typeInInput('password', 'alice-pass')
 
     input.press('Enter')
@@ -353,7 +353,7 @@ describe('account manager', () => {
     await page.clickOnText('Se connecter')
 
     await page.clickOnText('Se souvenir de ce compte sur cet appareil', 'label')
-    await page.typeInInput('username', 'bob-new-email@example.com')
+    await page.typeInInput('identifier', 'bob-new-email@example.com')
     const input = await page.typeInInput('password', 'bob-new-pass')
 
     input.press('Enter')
