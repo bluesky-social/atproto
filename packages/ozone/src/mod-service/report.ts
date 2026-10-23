@@ -249,6 +249,7 @@ export type FindReportsForSubjectParams = {
   reportIds?: number[]
   reportTypes?: string[]
   targetAll?: boolean
+  includeAllOwned?: boolean
   lockForUpdate?: boolean
 }
 
@@ -270,30 +271,34 @@ export async function findReportsForSubject(
   db: Database,
   params: FindReportsForSubjectParams,
 ): Promise<ReportResult[]> {
-  let builder = reportQuery(db).where('r.did', '=', params.subjectDid)
+  let builder = reportQuery(db)
+    .where('r.did', '=', params.subjectDid)
+    .where('me.subjectDid', '=', params.subjectDid)
 
-  // Filter by subject URI (if provided, match exactly; if null/undefined,
-  // match repo-level and exclude chat subjects owned by the same DID).
-  if (params.subjectUri) {
-    const uri = new AtUri(params.subjectUri)
-    if (uri.collection === CHAT_MESSAGE_COLLECTION) {
-      builder = builder.where('r.subjectMessageId', '=', uri.rkey)
-    } else if (uri.collection === CHAT_CONVO_COLLECTION) {
-      builder = builder
-        .where('r.subjectConvoId', '=', uri.rkey)
-        .where('r.subjectMessageId', 'is', null)
+  if (!params.includeAllOwned) {
+    // Filter by subject URI (if provided, match exactly; if null/undefined,
+    // match repo-level and exclude chat subjects owned by the same DID).
+    if (params.subjectUri) {
+      const uri = new AtUri(params.subjectUri)
+      if (uri.collection === CHAT_MESSAGE_COLLECTION) {
+        builder = builder.where('r.subjectMessageId', '=', uri.rkey)
+      } else if (uri.collection === CHAT_CONVO_COLLECTION) {
+        builder = builder
+          .where('r.subjectConvoId', '=', uri.rkey)
+          .where('r.subjectMessageId', 'is', null)
+      } else {
+        builder = builder.where(
+          'r.recordPath',
+          '=',
+          `${uri.collection}/${uri.rkey}`,
+        )
+      }
     } else {
-      builder = builder.where(
-        'r.recordPath',
-        '=',
-        `${uri.collection}/${uri.rkey}`,
-      )
+      builder = builder
+        .where('r.recordPath', '=', '')
+        .where('r.subjectMessageId', 'is', null)
+        .where('r.subjectConvoId', 'is', null)
     }
-  } else {
-    builder = builder
-      .where('r.recordPath', '=', '')
-      .where('r.subjectMessageId', 'is', null)
-      .where('r.subjectConvoId', 'is', null)
   }
 
   if (params.targetAll) {
@@ -316,7 +321,7 @@ export async function findReportsForSubject(
 
   let query = builder.selectAll('r')
   if (params.lockForUpdate) {
-    query = query.forUpdate('r')
+    query = query.orderBy('r.id').forUpdate('r')
   }
 
   const reports = await query.execute()
@@ -329,6 +334,7 @@ export type CloseReportsForSubjectParams = {
   inboxStartAt?: DatetimeString
   subjectDid: DidString
   subjectUri: string | null
+  includeAllOwned?: boolean
   reportTypes?: string[]
   internalNote?: string
   isAutomated: boolean
@@ -363,6 +369,7 @@ export async function closeReportsForSubject(
     const matchingReports = await findReportsForSubject(dbTxn, {
       subjectDid,
       subjectUri: subjectUri as AtUriString,
+      includeAllOwned: params.includeAllOwned,
       reportTypes: reportTypes?.length ? reportTypes : undefined,
       targetAll: !reportTypes?.length,
       lockForUpdate: true,
@@ -404,43 +411,50 @@ export async function closeReportsForSubject(
     const now = currentDatetimeString()
     const updateIds = validUpdates.map((u) => u.id)
 
-    await dbTxn.db
-      .updateTable('report')
-      .set({ status: 'closed', updatedAt: now, closedAt: now })
-      .where('id', 'in', updateIds)
-      .execute()
+    for (let offset = 0; offset < validUpdates.length; offset += 500) {
+      const batch = validUpdates.slice(offset, offset + 500)
+      await dbTxn.db
+        .updateTable('report')
+        .set({ status: 'closed', updatedAt: now, closedAt: now })
+        .where(
+          'id',
+          'in',
+          batch.map((u) => u.id),
+        )
+        .execute()
 
-    const activities = await dbTxn.db
-      .insertInto('report_activity')
-      .values(
-        validUpdates.map((u) => ({
-          reportId: u.id,
-          activityType: 'closeActivity',
-          previousStatus: u.previousStatus,
-          internalNote: internalNote ?? null,
-          publicNote: null,
-          meta:
-            u.reportType === tools.ozone.report.defs.ReasonAppeal
-              ? { appealOutcome: 'denied' }
-              : null,
-          isAutomated,
-          createdBy,
-          createdAt: now,
+      const activities = await dbTxn.db
+        .insertInto('report_activity')
+        .values(
+          batch.map((u) => ({
+            reportId: u.id,
+            activityType: 'closeActivity',
+            previousStatus: u.previousStatus,
+            internalNote: internalNote ?? null,
+            publicNote: null,
+            meta:
+              u.reportType === tools.ozone.report.defs.ReasonAppeal
+                ? { resolution: 'noAction', appealOutcome: 'denied' }
+                : { resolution: 'noAction' },
+            isAutomated,
+            createdBy,
+            createdAt: now,
+          })),
+        )
+        .returning(['id', 'reportId', 'activityType', 'createdAt'])
+        .execute()
+
+      await notifyReportActivities(
+        dbTxn,
+        activities.map((activity) => ({
+          reportId: activity.reportId,
+          activityId: activity.id,
+          activityType: activity.activityType,
+          createdAt: activity.createdAt,
         })),
+        params.inboxStartAt,
       )
-      .returning(['id', 'reportId', 'activityType', 'createdAt'])
-      .execute()
-
-    await notifyReportActivities(
-      dbTxn,
-      activities.map((activity) => ({
-        reportId: activity.reportId,
-        activityId: activity.id,
-        activityType: activity.activityType,
-        createdAt: activity.createdAt,
-      })),
-      params.inboxStartAt,
-    )
+    }
 
     return { closedCount: validUpdates.length, reportIds: updateIds }
   })
@@ -513,6 +527,9 @@ async function processEmailReportAction(
 }
 
 /**
+ * Apply the report action to the matching reports.
+ * Returns the number of reports successfully updated.
+ *
  * Validates and processes a report action by:
  * 1. Finding matching reports based on targeting criteria
  * 2. Validating that specified report IDs exist and belong to the subject

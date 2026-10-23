@@ -16,6 +16,11 @@
               "format": "uri",
               "description": "Subject DID (account-level reports) or AT-URI (record-level reports) whose reports should be closed."
             },
+            "includeAllOwned": {
+              "type": "boolean",
+              "default": false,
+              "description": "If true, also close reports on all subjects owned by the account, including records, messages, and conversations. Only valid when subject is an account DID."
+            },
             "reportTypes": {
               "type": "array",
               "items": { "type": "string" },
