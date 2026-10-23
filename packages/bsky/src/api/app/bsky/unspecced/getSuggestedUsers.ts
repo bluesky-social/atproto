@@ -61,7 +61,6 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-// TODO: rename to `skeleton` once we can fully migrate to Discover
 const skeletonFromDiscover = async (
   input: SkeletonFnInput<Context, Params>,
 ): Promise<SkeletonState> => {
