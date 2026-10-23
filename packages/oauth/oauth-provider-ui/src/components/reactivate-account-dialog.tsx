@@ -1,8 +1,8 @@
 import { Trans } from '@lingui/react/macro'
 import { type ReactElement, useState } from 'react'
-import { ConfirmForm } from '#/components/dialogs/confirm-form.tsx'
 import { DialogShell } from '#/components/dialogs/dialog-shell.tsx'
 import { Notice } from '#/components/feedback/notice.tsx'
+import { FormShell } from './forms/form-shell'
 
 export type ReactivateAccountDialogProps = {
   onConfirm: () => void | PromiseLike<void>
@@ -31,7 +31,7 @@ export function ReactivateAccountDialog({
       onOpenChange={setOpen}
       dismissable={!submitting}
     >
-      <ConfirmForm
+      <FormShell
         submitVariant="default"
         submitLabel={<Trans>Reactivate</Trans>}
         onCancel={() => setOpen(false)}
@@ -46,7 +46,7 @@ export function ReactivateAccountDialog({
             You can deactivate your account again at any time from this page.
           </Trans>
         </Notice>
-      </ConfirmForm>
+      </FormShell>
     </DialogShell>
   )
 }
