@@ -9,7 +9,12 @@ let alice: DidString
 let bob: DidString
 
 jest.unstable_mockModule('node:dns/promises', () => {
+  // Spread the real module: ESM named imports (e.g. `Resolver`) must exist on
+  // the mock or linking fails.
   return {
+    ...jest.requireActual<typeof import('node:dns/promises')>(
+      'node:dns/promises',
+    ),
     resolveTxt: (domain: string) => {
       if (domain === '_atproto.alice.external') {
         return [[`did=${alice}`]]
