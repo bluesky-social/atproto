@@ -81,7 +81,11 @@
           "maxLength": 2560
         },
         "pronouns": { "type": "string" },
-        "website": { "type": "string", "format": "uri" },
+        "website": {
+          "type": "string",
+          "format": "uri",
+          "description": "Deprecated: use links instead."
+        },
         "avatar": { "type": "string", "format": "uri" },
         "banner": { "type": "string", "format": "uri" },
         "followersCount": { "type": "integer" },
