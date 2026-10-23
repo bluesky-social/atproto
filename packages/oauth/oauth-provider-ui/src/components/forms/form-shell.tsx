@@ -1,12 +1,11 @@
 import { Form } from '@base-ui/react/form'
 import { Trans } from '@lingui/react/macro'
 import { Loader2Icon } from 'lucide-react'
-import {
-  type ComponentProps,
-  type MouseEventHandler,
-  type ReactNode,
-  type Ref,
-  useRef,
+import type {
+  ComponentProps,
+  ComponentPropsWithRef,
+  MouseEventHandler,
+  ReactNode,
 } from 'react'
 import { ErrorNotice } from '#/components/feedback/error-notice.tsx'
 import {
@@ -15,7 +14,7 @@ import {
 } from '#/components/forms/async-button.tsx'
 import { Button } from '#/components/ui/button.tsx'
 import { useAsyncAction } from '#/hooks/use-async-action.ts'
-import { apiErrorParser } from '#/lib/api-error-parser.ts'
+import { composeEventHandlers } from '#/lib/compose-event-handlers'
 import { cn } from '#/lib/utils.ts'
 
 /**
@@ -57,15 +56,27 @@ export function ActionButton({
 
 type SubmitVariant = 'default' | 'destructive' | 'secondary'
 
-export type FormShellProps<TValues extends Record<string, unknown>> = {
+export type FormShellValues<TValues extends Record<string, unknown>> = (
+  values: Partial<TValues>,
+) => void
+export type FormShellHandler<TValues extends Record<string, unknown>> = (
+  values: TValues,
+  signal: AbortSignal,
+) => void | PromiseLike<void>
+
+export type FormValues = Record<string, FormDataEntryValue>
+
+export interface FormShellProps<
+  TValues extends Record<string, unknown> = FormValues,
+> extends ComponentPropsWithRef<'form'> {
   /** Receives the form's values, and a signal that aborts on unmount/supersede. */
-  onSubmit: (values: TValues, signal: AbortSignal) => void | PromiseLike<void>
+  handler: FormShellHandler<TValues>
 
   /**
    * Called on every edit with the form's current values, for callers that must
    * survive unmounting — the sign-up wizard restores un-submitted input from it.
    */
-  onValues?: (values: Partial<TValues>) => void
+  onValues?: FormShellValues<TValues>
 
   submitLabel?: ReactNode
   submitVariant?: SubmitVariant
@@ -80,12 +91,8 @@ export type FormShellProps<TValues extends Record<string, unknown>> = {
   actions?: ReactNode
   loading?: boolean
   disabled?: boolean
-  hideError?: boolean
+  renderError?: null | false | ((error: unknown) => ReactNode)
   onLoadingChange?: (loading: boolean) => void
-
-  children?: ReactNode
-  className?: string
-  ref?: Ref<HTMLFormElement>
 }
 
 /**
@@ -96,8 +103,8 @@ export type FormShellProps<TValues extends Record<string, unknown>> = {
  * locale. Submission runs through `useAsyncAction`, which aborts superseded or
  * unmounted requests and retains the last error until a later submit succeeds.
  */
-export function FormShell<TValues extends Record<string, unknown>>({
-  onSubmit,
+export function FormShell<TValues extends FormValues>({
+  handler,
   onValues,
 
   submitLabel = <Trans>Submit</Trans>,
@@ -113,65 +120,70 @@ export function FormShell<TValues extends Record<string, unknown>>({
   actions,
   loading: loadingProp = false,
   disabled: disabledProp = false,
-  hideError = false,
   onLoadingChange,
+  renderError = (error) => <ErrorNotice key="error" error={error} />,
 
+  // Form.Props
   children,
   className,
-  ref,
+  onSubmit,
+  onReset,
+
+  ...props
 }: FormShellProps<TValues>) {
-  const { run, loading, error } = useAsyncAction<[TValues]>(
-    (signal, values) => onSubmit(values, signal),
+  const action = useAsyncAction<[TValues]>(
+    (signal, values) => handler(values, signal),
     { onLoadingChange },
   )
 
-  const busy = loading || loadingProp
+  const busy = action.loading || loadingProp
   const disabled = Boolean(disabledProp || busy)
-
-  const formRef = useRef<HTMLFormElement>(null)
 
   return (
     <Form
-      ref={(element) => {
-        formRef.current = element
-        if (typeof ref === 'function') ref(element)
-        else if (ref) ref.current = element
-      }}
+      {...props}
+      // Allows using the ref to call "form.reset()" which will reset the error
+      // state of the form (instead of the native behavior that consists of
+      // resetting all the default values).
+      onReset={composeEventHandlers(onReset, (event) => {
+        event.preventDefault()
+        action.reset()
+      })}
       inert={disabled}
-      // @NOTE `Form` defaults to noValidate, which leaves any control outside
-      // a `Field.Root` (the handle field, the remember checkbox) with no
+      // @TODO `Form` defaults to noValidate, which leaves any control outside a
+      // `Field.Root` (the handle field, the remember checkbox) with no
       // validation at all. Re-enabling the browser's own gate means every
-      // constraint blocks submission with a native, browser-locale bubble.
+      // constraint blocks submission with a native, browser-locale bubble. We
+      // should consider properly using the validation API provided Base UI
+      // instead.
       noValidate={false}
       className={cn('flex flex-col gap-4', className)}
-      // @NOTE The values Base UI passes here cover only controls registered
-      // through `Field.Root` — a plain named input (the remember checkbox, a
-      // hidden input, a composite field's controls) never appears in them. The
-      // element itself is the complete record, so read it instead.
-      onFormSubmit={() => {
-        const element = formRef.current
-        if (!element) return
-        run(Object.fromEntries(new FormData(element)) as TValues)
-      }}
+      // @TODO Base UI provides a "onFormSubmit" handler that gets values from
+      // all controls registered through `Field.Root`. Some fields (the remember
+      // checkbox, a hidden input, a composite field's controls) never appears
+      // in them as they are not registered through `Field.Root`. We should
+      // refactor all the fields to be registered through `Field.Root` so that
+      // the onFormSubmit handler receives a complete set of values.
+      // onFormSubmit={run}
+      onSubmit={composeEventHandlers(onSubmit, (event) => {
+        event.preventDefault()
+        if (submittable) {
+          void action.run(getFormValues(event.currentTarget) as TValues)
+        }
+      })}
       // @NOTE `onInput`, not `onChange`: the native change event on a text
       // input waits for blur, so a keystroke-by-keystroke mirror has to read
       // the element on input. The values live on the element — there is no
       // store to subscribe to.
-      onInput={
-        onValues &&
-        ((event) => {
-          const data = new FormData(event.currentTarget)
-          onValues(Object.fromEntries(data) as Partial<TValues>)
-        })
-      }
+      onInput={(event) => {
+        onValues?.(getFormValues(event.currentTarget) as Partial<TValues>)
+      }}
     >
       <div key="children" className="space-y-4">
         {children}
       </div>
 
-      {error && !hideError && (
-        <ErrorNotice key="error" error={error} parser={apiErrorParser} />
-      )}
+      {action.error != null && renderError && renderError(action.error)}
 
       <div key="actions" className={actionRow}>
         {submitLabel && (
@@ -198,4 +210,9 @@ export function FormShell<TValues extends Record<string, unknown>>({
       </div>
     </Form>
   )
+}
+
+function getFormValues(form: HTMLFormElement): FormValues {
+  const formData = new FormData(form)
+  return Object.fromEntries(formData)
 }

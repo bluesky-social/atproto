@@ -1,8 +1,8 @@
 import { Trans } from '@lingui/react/macro'
 import { type ReactElement, useState } from 'react'
-import { ConfirmForm } from '#/components/dialogs/confirm-form.tsx'
 import { DialogShell } from '#/components/dialogs/dialog-shell.tsx'
 import { Notice } from '#/components/feedback/notice.tsx'
+import { FormShell } from './forms/form-shell'
 
 export type DeactivateAccountDialogProps = {
   onConfirm: () => void | PromiseLike<void>
@@ -30,7 +30,7 @@ export function DeactivateAccountDialog({
       onOpenChange={setOpen}
       dismissable={!submitting}
     >
-      <ConfirmForm
+      <FormShell
         submitVariant="destructive"
         submitLabel={<Trans>Yes, Deactivate</Trans>}
         onCancel={() => setOpen(false)}
@@ -63,7 +63,7 @@ export function DeactivateAccountDialog({
             </Trans>
           </Notice>
         </>
-      </ConfirmForm>
+      </FormShell>
     </DialogShell>
   )
 }

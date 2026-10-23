@@ -4,36 +4,25 @@ import {
   FormShell,
   type FormShellProps,
 } from '#/components/forms/form-shell.tsx'
+import type { Override } from '#/lib/util'
 
 export type VerifyEmailConfirmData = { token: string }
 
-type Values = { code: string }
-
-export type VerifyEmailConfirmFormProps = Omit<
-  FormShellProps<Values>,
-  'onSubmit'
-> & {
-  onResend?: () => void | PromiseLike<void>
-  handler: (
-    data: VerifyEmailConfirmData,
-    signal: AbortSignal,
-  ) => void | PromiseLike<void>
-}
+export type VerifyEmailConfirmFormProps = Override<
+  FormShellProps<VerifyEmailConfirmData>,
+  {
+    onResend?: () => void | PromiseLike<void>
+  }
+>
 
 export function VerifyEmailConfirmForm({
   onResend,
-  handler,
   ...props
 }: VerifyEmailConfirmFormProps) {
   return (
-    <FormShell<Values>
-      {...props}
-      // The API field is `token`; the form field stays `code` so the rendered
-      // input keeps its contracted name.
-      onSubmit={(values, signal) => handler({ token: values.code }, signal)}
-    >
+    <FormShell<VerifyEmailConfirmData> {...props}>
       <TokenField
-        name="code"
+        name="token"
         label={<Trans>Verification code</Trans>}
         enterKeyHint="done"
         required

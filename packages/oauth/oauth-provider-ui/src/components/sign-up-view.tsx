@@ -46,9 +46,13 @@ export function SignUpView({
   // Keep a copy of all every step's form values in case the user changes a step
   // and goes back to the previous step, allowing to keep the un-submitted
   // values in the form inputs.
-  const [pending, setPending] = useState<
+  const [defaultValues, setDefaultValues] = useState<
     Partial<SignUpCredentialsData & SignUpHandleData & SignUpHcaptchaData>
   >({})
+
+  const updateDefaultValues = (
+    val: Partial<SignUpCredentialsData & SignUpHandleData & SignUpHcaptchaData>,
+  ) => setDefaultValues((old) => ({ ...old, ...val }))
 
   // @NOTE Only the last step creates the account, so only the last step states
   // what creating one agrees to. Which step that is depends on whether hCaptcha
@@ -88,11 +92,12 @@ export function SignUpView({
                 onBack={prev}
                 backLabel={prevLabel}
                 submitLabel={nextLabel}
-                values={pending}
-                onValues={(val) => setPending((old) => ({ ...old, ...val }))}
-                handler={async (data) => {
-                  await onValidateNewHandle(data)
-                  next(data)
+                defaultValues={defaultValues}
+                onValues={updateDefaultValues}
+                handler={async (val) => {
+                  updateDefaultValues(val)
+                  await onValidateNewHandle(val)
+                  return next(val)
                 }}
               >
                 {atLast && disclaimer}
@@ -107,9 +112,12 @@ export function SignUpView({
                 onBack={prev}
                 backLabel={prevLabel}
                 submitLabel={nextLabel}
-                values={pending}
-                onValues={(val) => setPending((old) => ({ ...old, ...val }))}
-                handler={next}
+                defaultValues={defaultValues}
+                onValues={updateDefaultValues}
+                handler={(val) => {
+                  updateDefaultValues(val)
+                  return next(val)
+                }}
                 inviteCodeRequired={inviteCodeRequired}
                 rememberDefault={rememberDefault}
               >
@@ -126,9 +134,12 @@ export function SignUpView({
                 onBack={prev}
                 backLabel={prevLabel}
                 submitLabel={nextLabel}
-                values={pending}
-                onValues={(val) => setPending((old) => ({ ...old, ...val }))}
-                handler={next}
+                defaultValues={defaultValues}
+                onValues={updateDefaultValues}
+                handler={(val) => {
+                  updateDefaultValues(val)
+                  return next(val)
+                }}
               >
                 {atLast && disclaimer}
               </SignUpHcaptchaForm>

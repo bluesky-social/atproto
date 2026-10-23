@@ -1,8 +1,8 @@
 import { Trans } from '@lingui/react/macro'
 import { ShieldCheckIcon } from 'lucide-react'
 import { type ReactElement, useState } from 'react'
-import { ConfirmForm } from '#/components/dialogs/confirm-form.tsx'
 import { DialogShell } from '#/components/dialogs/dialog-shell.tsx'
+import { FormShell } from './forms/form-shell'
 
 export type EnableEmailAuthFactorDialogProps = {
   onConfirm: () => void | PromiseLike<void>
@@ -31,7 +31,7 @@ export function EnableEmailAuthFactorDialog({
         action row, so the submit stays wired to the form's own pending and
         error state. The icon needs no sizing class: `Button` already sets the
         gap and sizes any unsized svg. */}
-      <ConfirmForm
+      <FormShell
         submitLabel={
           <>
             <Trans>Enable</Trans>

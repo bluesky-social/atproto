@@ -237,7 +237,8 @@ export function AuthenticationProvider({
     if (view === View.ResetPassword) {
       return (
         <ResetPasswordView
-          emailDefault={resetPasswordHint}
+          hint={resetPasswordHint}
+          domains={availableUserDomains}
           initialView={resetPasswordConfirm ? 'confirm' : 'request'}
           onViewChange={(v) => setResetPasswordConfirm(v === 'confirm')}
           onResetPasswordRequest={async (data) => {
@@ -265,10 +266,10 @@ export function AuthenticationProvider({
         onSignUp={showSignUpIfAllowed}
         onBack={homeView === View.SignIn ? onCancel : showHome}
         backLabel={homeView === View.SignIn ? <Trans>Cancel</Trans> : undefined}
-        onForgotPassword={(email) => {
+        onForgotPassword={(hint) => {
           setResetPasswordConfirm(false)
           setView(View.ResetPassword)
-          setResetPasswordHint(email)
+          setResetPasswordHint(hint)
         }}
       />
     )

@@ -5,7 +5,9 @@
   "references": [
     { "path": "../../common/tsconfig.build.json" },
     { "path": "../../did/tsconfig.build.json" },
+    { "path": "../../internal/did-resolver/tsconfig.build.json" },
     { "path": "../../internal/fetch-node/tsconfig.build.json" },
+    { "path": "../../internal/handle-resolver-node/tsconfig.build.json" },
     { "path": "../../internal/fetch/tsconfig.build.json" },
     { "path": "../../internal/pipe/tsconfig.build.json" },
     {
@@ -19,6 +21,7 @@
     { "path": "../jwk-jose/tsconfig.build.json" },
     { "path": "../jwk/tsconfig.build.json" },
     { "path": "../oauth-provider-api/tsconfig.build.json" },
+    { "path": "../oauth-resolver/tsconfig.build.json" },
     { "path": "../oauth-scopes/tsconfig.build.json" },
     { "path": "../oauth-types/tsconfig.build.json" },
   ],
