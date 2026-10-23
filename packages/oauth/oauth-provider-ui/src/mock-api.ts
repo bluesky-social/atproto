@@ -436,18 +436,13 @@ export function buildMockFetch(origFetch = window.fetch): typeof window.fetch {
         }
 
         // Simulate UnknownAtprotoAccountError
-        if (identifier.includes('john') || identifier.includes('jane')) {
+        if (identifier.includes('jane')) {
           // Faking identity resolution by backend: jane resolves, john does not
-          const issuer = identifier.includes('jane')
-            ? 'https://example.com'
-            : undefined
           return Response.json(
             {
               error: 'unknown_atproto_account_error',
-              error_description: issuer
-                ? `Atmosphere account ${identifier} is hosted on ${issuer}`
-                : `Unknown Atmosphere identity ${identifier}`,
-              issuer,
+              error_description: `Atmosphere account ${identifier} is hosted elsewhere`,
+              issuer: 'https://example.com',
               identifier,
             },
             { status: 404 },

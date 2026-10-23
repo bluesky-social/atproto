@@ -1,10 +1,33 @@
 import { describe, expect, it } from 'vitest'
 import {
+  DID_PATTERN,
+  EMAIL_PATTERN,
+  HANDLE_PATTERN,
+  HANDLE_SEGMENT_PATTERN,
+  IDENTIFIER_PATTERN,
+  OTP_CODE_PATTERN,
   OTP_CODE_REGEX,
   formatOtpCode,
   isIdentifier,
   normalizeIdentifier,
 } from './form-patterns.ts'
+
+// Browsers compile a `pattern` attribute as `^(?:…)$` with the `v` flag, and
+// silently drop the constraint when that fails to compile.
+describe('pattern attribute sources', () => {
+  it.each(
+    Object.entries({
+      EMAIL_PATTERN,
+      HANDLE_SEGMENT_PATTERN,
+      HANDLE_PATTERN,
+      DID_PATTERN,
+      IDENTIFIER_PATTERN,
+      OTP_CODE_PATTERN,
+    }),
+  )('%s compiles under the "v" flag', (_name, source) => {
+    expect(() => new RegExp(`^(?:${source})$`, 'v')).not.toThrow()
+  })
+})
 
 describe(isIdentifier, () => {
   it.each([

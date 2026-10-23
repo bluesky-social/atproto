@@ -15,8 +15,8 @@ export const EMAIL_PATTERN = '[^@]+@[^@]+\\.[^@]+'
  * leading nor trailing with a hyphen.
  */
 export const HANDLE_SEGMENT_PATTERN =
-  '[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?'
-const HANDLE_TLD_PATTERN = '[a-zA-Z](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?'
+  '[a-zA-Z0-9](?:[a-zA-Z0-9\\-]{0,61}[a-zA-Z0-9])?'
+const HANDLE_TLD_PATTERN = '[a-zA-Z](?:[a-zA-Z0-9\\-]{0,61}[a-zA-Z0-9])?'
 
 export const HANDLE_PATTERN = `@?(?:${HANDLE_SEGMENT_PATTERN}\\.)+${HANDLE_TLD_PATTERN}`
 
