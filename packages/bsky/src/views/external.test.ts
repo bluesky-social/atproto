@@ -347,7 +347,7 @@ describe('record modality views', () => {
     const view = views.externalRecordView(galleryUri, state)
     assert(view && app.bsky.embed.external.viewGallery.$isTypeOf(view))
     assertValid(view)
-    expect(view.uri).toBe(galleryUri)
+    expect(view.uri).toBe(`https://grain.social/profile/${did}/gallery/gallery`)
     expect(view.description).toBe('')
     expect(
       view.items
