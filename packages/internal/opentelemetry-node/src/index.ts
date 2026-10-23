@@ -1,7 +1,13 @@
 import { register } from 'node:module'
-import { type Attributes, diag } from '@opentelemetry/api'
+import {
+  type Attributes,
+  type Context,
+  type TextMapGetter,
+  diag,
+} from '@opentelemetry/api'
 import { getResourceDetectors } from '@opentelemetry/auto-instrumentations-node'
 import {
+  W3CTraceContextPropagator,
   getBooleanFromEnv,
   getStringFromEnv,
   getStringListFromEnv,
@@ -35,6 +41,29 @@ export type SetupOptions = DefaultAtprotoInstrumentationsOptions & {
   instrumentations?: Instrumentation[]
 }
 
+class FilteredW3CTraceContextPropagator extends W3CTraceContextPropagator {
+  extract(context: Context, carrier: unknown, getter: TextMapGetter) {
+    if (this.shouldPropagate(context, carrier, getter)) {
+      return super.extract(context, carrier, getter)
+    }
+    return context
+  }
+
+  shouldPropagate(
+    _context: Context,
+    _carrier: unknown,
+    _getter: TextMapGetter,
+  ) {
+    // Implement your logic to determine if the trace context should
+    // be propagated. For now, we assume the service is public and
+    // do not propagate.
+
+    // @NOTE using IP based logic would require:
+    // https://github.com/open-telemetry/opentelemetry-js/pull/6902
+    return false
+  }
+}
+
 // @NOTE Hand-rolled equivalent of "@opentelemetry/auto-instrumentations-node"'s
 // register script, because that one lacks better-sqlite3 instrumentation and
 // doesn't let us customize the HTTP span naming for XRPC. We use `NodeSDK`
@@ -56,6 +85,7 @@ export async function setup(getOptions: () => SetupOptions): Promise<void> {
   const logsConfigured = isSignalConfigured('LOGS')
   const otelConfigured = tracesConfigured || metricsConfigured || logsConfigured
   const otelEnabled = !otelDisabled && otelConfigured
+  const propagatorsConfigured = process.env.OTEL_PROPAGATORS != null
 
   if (!otelEnabled) return
 
@@ -74,6 +104,9 @@ export async function setup(getOptions: () => SetupOptions): Promise<void> {
     )
 
     const sdk = new NodeSDK({
+      textMapPropagator: propagatorsConfigured
+        ? undefined // Let the SDK handle propagators based on the OTEL_PROPAGATORS env var.
+        : new FilteredW3CTraceContextPropagator(), // default to no propagation
       // @NOTE Passing "resource" replaces (rather than augments) NodeSDK's
       // defaultResource(), so merge our defaults on top of it. Detected
       // resources (including the env detector reading OTEL_RESOURCE_ATTRIBUTES)
