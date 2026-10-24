@@ -24,7 +24,12 @@
             "reportTypes": {
               "type": "array",
               "items": { "type": "string" },
-              "description": "If specified, only reports of the given report types (fully qualified reason NSIDs) are closed. When omitted, all non-closed reports on the subject are targeted."
+              "description": "If nonempty, only reports of the given report types (fully qualified reason NSIDs) are closed. When omitted or empty, all non-closed reports in the requested subject scope are targeted, except excludedReportTypes."
+            },
+            "excludedReportTypes": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Reports of these types (fully qualified reason NSIDs) are excluded from closure and left unchanged. When omitted or empty, no report types are excluded."
             },
             "internalNote": {
               "type": "string",
