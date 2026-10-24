@@ -249,6 +249,7 @@ export type FindReportsForSubjectParams = {
   subjectUri?: AtUriString | null
   reportIds?: number[]
   reportTypes?: string[]
+  excludedReportTypes?: string[]
   targetAll?: boolean
   includeAllOwned?: boolean
   lockForUpdate?: boolean
@@ -320,6 +321,14 @@ export async function findReportsForSubject(
     return []
   }
 
+  if (params.excludedReportTypes?.length) {
+    builder = builder.where(
+      'r.reportType',
+      'not in',
+      params.excludedReportTypes,
+    )
+  }
+
   let query = builder.selectAll('r')
   if (params.lockForUpdate) {
     query = query.orderBy('r.id').forUpdate('r')
@@ -337,6 +346,7 @@ export type CloseReportsForSubjectParams = {
   subjectUri: string | null
   includeAllOwned?: boolean
   reportTypes?: string[]
+  excludedReportTypes?: string[]
   internalNote?: string
   isAutomated: boolean
   meta?: Record<string, unknown>
@@ -349,10 +359,11 @@ export type CloseReportsResult = {
 }
 
 /**
- * Closes all non-closed reports on a subject, optionally filtered by report
- * type. Reports whose current status doesn't permit a transition to closed
- * are skipped silently. Unlike `processReportAction` there is no moderation
- * event involved — reports are closed directly via close activities.
+ * Closes non-closed reports matching the subject and report type filters.
+ * Reports whose current status doesn't permit a transition to closed are
+ * skipped silently. Unlike
+ * `processReportAction` there is no moderation event involved — reports are
+ * closed directly via close activities.
  */
 export async function closeReportsForSubject(
   params: CloseReportsForSubjectParams,
@@ -375,6 +386,7 @@ export async function closeReportsForSubject(
       subjectUri: subjectUri as AtUriString,
       includeAllOwned: params.includeAllOwned,
       reportTypes: reportTypes?.length ? reportTypes : undefined,
+      excludedReportTypes: params.excludedReportTypes,
       targetAll: !reportTypes?.length,
       lockForUpdate: true,
     })
