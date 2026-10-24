@@ -273,13 +273,15 @@ export class BskyAppView {
     // the account being resolved. Same policy as blobDispatcher: https only,
     // unicast addresses only, re-checked per hop by the dispatcher. Redirects
     // stay enabled because xrpcRequestInit sets `redirect: 'follow'`.
-    const federatedFetch = (config.disableSsrfProtection
-      ? globalThis.fetch
-      : safeFetchWrap({
-          allowIpHost: false,
-          allowImplicitRedirect: true,
-          responseMaxSize: 5 * 1024 * 1024,
-        })) as typeof globalThis.fetch
+    const federatedFetch = (
+      config.disableSsrfProtection
+        ? globalThis.fetch
+        : safeFetchWrap({
+            allowIpHost: false,
+            allowImplicitRedirect: true,
+            responseMaxSize: 5 * 1024 * 1024,
+          })
+    ) as typeof globalThis.fetch
 
     const ctx = new AppContext({
       cfg: config,
