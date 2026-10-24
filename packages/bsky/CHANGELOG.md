@@ -1,5 +1,17 @@
 # @atproto/bsky
 
+## 0.3.11
+
+### Patch Changes
+
+- [#5728](https://github.com/bluesky-social/atproto/pull/5728) [`b931b5e`](https://github.com/bluesky-social/atproto/commit/b931b5e1b703e335a434b3b9d51db17c48aa4a57) Thanks [@haileyok](https://github.com/haileyok)! - Feed generator skeleton requests now use the same outbound request policy as blob requests: endpoints resolved from a feed generator's DID document are fetched over HTTPS only, to public addresses only, re-checked on each redirect hop. Endpoints configured directly (iris, iris staging and the trending feed) are unchanged.
+
+- [#5730](https://github.com/bluesky-social/atproto/pull/5730) [`4744b4a`](https://github.com/bluesky-social/atproto/commit/4744b4a2c0d17fed6bf063f2a86bd3b3875ddf1f) Thanks [@haileyok](https://github.com/haileyok)! - Update body-parser to 1.20.9
+- Updated dependencies [[`4744b4a`](https://github.com/bluesky-social/atproto/commit/4744b4a2c0d17fed6bf063f2a86bd3b3875ddf1f)]:
+  - @atproto/xrpc-server@0.13.6
+  - @atproto-labs/xrpc-utils@0.1.27
+  - @atproto/sync@0.4.18
+
 ## 0.3.10
 
 ### Patch Changes
