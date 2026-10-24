@@ -1,5 +1,12 @@
 # @atproto/sync
 
+## 0.4.18
+
+### Patch Changes
+
+- Updated dependencies [[`4744b4a`](https://github.com/bluesky-social/atproto/commit/4744b4a2c0d17fed6bf063f2a86bd3b3875ddf1f)]:
+  - @atproto/xrpc-server@0.13.6
+
 ## 0.4.17
 
 ### Patch Changes
