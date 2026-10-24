@@ -1,11 +1,10 @@
 import assert from 'node:assert'
 import type { IncomingMessage, OutgoingMessage } from 'node:http'
 import { type Duplex, type Readable, pipeline } from 'node:stream'
-import {
-  type Request as ExpressRequest,
-  type Response as ExpressResponse,
-  json,
-  text,
+import { json, text } from 'body-parser'
+import type {
+  Request as ExpressRequest,
+  Response as ExpressResponse,
 } from 'express'
 import { contentType } from 'mime-types'
 import { MaxSizeChecker, createDecoders } from '@atproto/common'

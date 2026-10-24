@@ -2409,6 +2409,9 @@ importers:
       '@atproto/xrpc':
         specifier: workspace:^
         version: link:../xrpc
+      body-parser:
+        specifier: ^1.20.9
+        version: 1.20.9
       express:
         specifier: ^4.17.2
         version: 4.18.2
@@ -2437,6 +2440,9 @@ importers:
       '@noble/curves':
         specifier: ^1.7.0
         version: 1.8.0
+      '@types/body-parser':
+        specifier: ^1.19.6
+        version: 1.19.6
       '@types/express':
         specifier: ^4.17.13
         version: 4.17.13
@@ -5723,6 +5729,9 @@ packages:
 
   '@types/body-parser@1.19.2':
     resolution: {integrity: sha512-ALYone6pm6QmwZoAgeyNksccT9Q4AWZQ6PvfwR37GT6r6FWUPguq6sUmNGSMV2Wr761oQoBxwGGa6DR5o1DC9g==}
+
+  '@types/body-parser@1.19.6':
+    resolution: {integrity: sha512-HLFeCYgz89uk22N5Qg3dvGvsv46B8GLvKKo1zKG4NybA8U2DiEO3w9lqGg29t/tfLRJpJ6iQxnVw4OnB7MoM9g==}
 
   '@types/bunyan@1.8.11':
     resolution: {integrity: sha512-758fRH7umIMk5qt5ELmRMff4mLDlN+xyYzC+dkPTdKwbSkJFvz6xwyScrytPU0QIBbRRwbiE8/BIg8bpajerNQ==}
@@ -13081,7 +13090,7 @@ snapshots:
     dependencies:
       '@jest/types': 28.1.3
       '@sinonjs/fake-timers': 9.1.2
-      '@types/node': 22.20.1
+      '@types/node': 22.20.4
       jest-message-util: 28.1.3
       jest-mock: 28.1.3
       jest-util: 28.1.3
@@ -13090,7 +13099,7 @@ snapshots:
     dependencies:
       '@jest/types': 30.4.1
       '@sinonjs/fake-timers': 15.4.0
-      '@types/node': 22.20.1
+      '@types/node': 22.20.4
       jest-message-util: 30.4.1
       jest-mock: 30.4.1
       jest-util: 30.4.1
@@ -13136,7 +13145,7 @@ snapshots:
 
   '@jest/pattern@30.4.0':
     dependencies:
-      '@types/node': 22.20.1
+      '@types/node': 22.20.4
       jest-regex-util: 30.4.0
 
   '@jest/pattern@30.5.0':
@@ -15260,9 +15269,14 @@ snapshots:
       '@types/connect': 3.4.35
       '@types/node': 22.20.1
 
+  '@types/body-parser@1.19.6':
+    dependencies:
+      '@types/connect': 3.4.38
+      '@types/node': 22.20.4
+
   '@types/bunyan@1.8.11':
     dependencies:
-      '@types/node': 22.20.1
+      '@types/node': 22.20.4
 
   '@types/chai@5.2.3':
     dependencies:
@@ -15276,11 +15290,11 @@ snapshots:
 
   '@types/connect@3.4.35':
     dependencies:
-      '@types/node': 22.20.1
+      '@types/node': 22.20.4
 
   '@types/connect@3.4.38':
     dependencies:
-      '@types/node': 22.20.1
+      '@types/node': 22.20.4
 
   '@types/cookie@0.6.0': {}
 
@@ -15352,7 +15366,7 @@ snapshots:
 
   '@types/memcached@2.2.10':
     dependencies:
-      '@types/node': 22.20.1
+      '@types/node': 22.20.4
 
   '@types/mime-types@3.0.1': {}
 
@@ -15362,7 +15376,7 @@ snapshots:
 
   '@types/mysql@2.15.27':
     dependencies:
-      '@types/node': 22.20.1
+      '@types/node': 22.20.4
 
   '@types/node@22.19.17':
     dependencies:
@@ -15382,7 +15396,7 @@ snapshots:
 
   '@types/oracledb@6.5.2':
     dependencies:
-      '@types/node': 22.20.1
+      '@types/node': 22.20.4
 
   '@types/parse-json@4.0.2':
     optional: true
@@ -15432,7 +15446,7 @@ snapshots:
 
   '@types/tedious@4.0.14':
     dependencies:
-      '@types/node': 22.20.1
+      '@types/node': 22.20.4
 
   '@types/uuid@9.0.8': {}
 
@@ -16750,7 +16764,7 @@ snapshots:
 
   dunder-proto@1.0.0:
     dependencies:
-      call-bind-apply-helpers: 1.0.1
+      call-bind-apply-helpers: 1.0.2
       es-errors: 1.3.0
       gopd: 1.2.0
 
@@ -18234,7 +18248,7 @@ snapshots:
   jest-mock@28.1.3:
     dependencies:
       '@jest/types': 28.1.3
-      '@types/node': 22.20.1
+      '@types/node': 22.20.4
 
   jest-mock@30.4.1:
     dependencies:
@@ -18428,7 +18442,7 @@ snapshots:
   jest-util@30.4.1:
     dependencies:
       '@jest/types': 30.4.1
-      '@types/node': 22.20.1
+      '@types/node': 22.20.4
       chalk: 4.1.2
       ci-info: 4.4.0
       graceful-fs: 4.2.11
@@ -19619,7 +19633,7 @@ snapshots:
       '@protobufjs/path': 1.1.2
       '@protobufjs/pool': 1.1.0
       '@protobufjs/utf8': 1.1.2
-      '@types/node': 22.20.1
+      '@types/node': 22.20.4
       long: 5.3.2
 
   proxy-addr@2.0.7:
@@ -20087,14 +20101,14 @@ snapshots:
       call-bound: 1.0.4
       es-errors: 1.3.0
       get-intrinsic: 1.3.0
-      object-inspect: 1.13.3
+      object-inspect: 1.13.4
 
   side-channel-weakmap@1.0.2:
     dependencies:
       call-bound: 1.0.4
       es-errors: 1.3.0
       get-intrinsic: 1.3.0
-      object-inspect: 1.13.3
+      object-inspect: 1.13.4
       side-channel-map: 1.0.1
 
   side-channel@1.0.4:
