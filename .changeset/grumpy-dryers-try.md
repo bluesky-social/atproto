@@ -1,5 +1,5 @@
 ---
-"@atproto-labs/opentelemetry-node": patch
+"@atproto-labs/opentelemetry-node": minor
 ---
 
 Disable context propagation by default
