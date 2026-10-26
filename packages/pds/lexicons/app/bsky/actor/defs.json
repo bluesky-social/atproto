@@ -575,7 +575,11 @@
         },
         "status": { "ref": "#statusView", "type": "ref" },
         "viewer": { "ref": "#viewerState", "type": "ref" },
-        "website": { "type": "string", "format": "uri" },
+        "website": {
+          "type": "string",
+          "format": "uri",
+          "description": "Deprecated: use links instead."
+        },
         "pronouns": { "type": "string" },
         "createdAt": { "type": "string", "format": "datetime" },
         "indexedAt": { "type": "string", "format": "datetime" },

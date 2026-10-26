@@ -14,6 +14,7 @@ import {
   InvalidStateTransition,
   handleReportUpdate,
 } from './handle-report-update.js'
+import { getActivityMetadata } from './metadata.js'
 import { notifyReportActivities } from './notifications.js'
 
 const VALID_ACTIVITY_TYPES = new Set([
@@ -57,10 +58,11 @@ export async function createReportActivity(
     activityType,
     internalNote,
     publicNote,
-    meta,
     isAutomated = false,
     createdBy,
   } = params
+
+  const metadata = getActivityMetadata(params.meta)
 
   if ((reportId === undefined) === (eventId === undefined)) {
     throw new InvalidRequestError(
@@ -137,10 +139,20 @@ export async function createReportActivity(
         internalNote: internalNote ?? null,
         publicNote: publicNote ?? null,
         meta:
-          activityType === 'closeActivity' &&
-          report.reportType === tools.ozone.report.defs.ReasonAppeal
-            ? { ...meta, appealOutcome: 'denied' }
-            : (meta ?? null),
+          metadata || activityType === 'closeActivity'
+            ? {
+                ...metadata,
+                ...(activityType === 'closeActivity'
+                  ? {
+                      resolution: 'noAction',
+                      ...(report.reportType ===
+                      tools.ozone.report.defs.ReasonAppeal
+                        ? { appealOutcome: 'denied' }
+                        : {}),
+                    }
+                  : {}),
+              }
+            : null,
         isAutomated,
         createdBy,
         createdAt: now,

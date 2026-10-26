@@ -1,5 +1,35 @@
 # @atproto/ozone
 
+## 0.10.9
+
+### Patch Changes
+
+- [#5732](https://github.com/bluesky-social/atproto/pull/5732) [`ef3ad34`](https://github.com/bluesky-social/atproto/commit/ef3ad349e89dd3812f89acd6a41c25f43eb178f0) Thanks [@gcwill70](https://github.com/gcwill70)! - Add `excludedReportTypes` to `tools.ozone.report.closeReports` to leave matching report reasons unchanged during no-action cleanup. Exclusions take precedence over `reportTypes` within the requested subject scope.
+
+## 0.10.8
+
+### Patch Changes
+
+- [#5730](https://github.com/bluesky-social/atproto/pull/5730) [`4744b4a`](https://github.com/bluesky-social/atproto/commit/4744b4a2c0d17fed6bf063f2a86bd3b3875ddf1f) Thanks [@haileyok](https://github.com/haileyok)! - Update body-parser to 1.20.9
+- Updated dependencies [[`4744b4a`](https://github.com/bluesky-social/atproto/commit/4744b4a2c0d17fed6bf063f2a86bd3b3875ddf1f)]:
+  - @atproto/xrpc-server@0.13.6
+
+## 0.10.7
+
+### Patch Changes
+
+- [#5724](https://github.com/bluesky-social/atproto/pull/5724) [`123b4e2`](https://github.com/bluesky-social/atproto/commit/123b4e2c76ba25cbcc4833490fbac12cfa237abf) Thanks [@gcwill70](https://github.com/gcwill70)! - Accept optional metadata on report activity creation and bulk closure requests. Preserve moderation tool metadata on event-generated report activities and allow callers to mark those activities as automated.
+
+## 0.10.6
+
+### Patch Changes
+
+- [#5720](https://github.com/bluesky-social/atproto/pull/5720) [`9a4011b`](https://github.com/bluesky-social/atproto/commit/9a4011bca5c97baf41228e46d52e633d0a5b69aa) Thanks [@gcwill70](https://github.com/gcwill70)! - Allow closeReports to close all subjects that an account owns.
+
+- [#5722](https://github.com/bluesky-social/atproto/pull/5722) [`f8a8186`](https://github.com/bluesky-social/atproto/commit/f8a8186acf883dc96819d5f698a6241598984c17) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Resolve Atmosphere Explore and external embed lexicons from the published Bluesky schemas instead of local overrides. Refresh published lexicons, including Atmosphere external views for the PDS and OAuth browser example and profile website deprecation notices.
+
+- [#5721](https://github.com/bluesky-social/atproto/pull/5721) [`5c62247`](https://github.com/bluesky-social/atproto/commit/5c622471bb4e330792594d80cb4fd0bc4564a8ff) Thanks [@gcwill70](https://github.com/gcwill70)! - Prioritize matching queues with reporter or account tag criteria over untagged queues, using the lowest queue ID to break ties.
+
 ## 0.10.5
 
 ### Patch Changes

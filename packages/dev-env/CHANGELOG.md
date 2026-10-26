@@ -1,5 +1,53 @@
 # @atproto/dev-env
 
+## 0.6.34
+
+### Patch Changes
+
+- Updated dependencies [[`ef3ad34`](https://github.com/bluesky-social/atproto/commit/ef3ad349e89dd3812f89acd6a41c25f43eb178f0)]:
+  - @atproto/api@0.29.4
+  - @atproto/bsky@0.3.12
+  - @atproto/ozone@0.10.9
+
+## 0.6.33
+
+### Patch Changes
+
+- Updated dependencies [[`b931b5e`](https://github.com/bluesky-social/atproto/commit/b931b5e1b703e335a434b3b9d51db17c48aa4a57), [`4744b4a`](https://github.com/bluesky-social/atproto/commit/4744b4a2c0d17fed6bf063f2a86bd3b3875ddf1f)]:
+  - @atproto/bsky@0.3.11
+  - @atproto/ozone@0.10.8
+  - @atproto/pds@0.5.49
+  - @atproto/xrpc-server@0.13.6
+  - @atproto/sync@0.4.18
+
+## 0.6.32
+
+### Patch Changes
+
+- Updated dependencies [[`123b4e2`](https://github.com/bluesky-social/atproto/commit/123b4e2c76ba25cbcc4833490fbac12cfa237abf)]:
+  - @atproto/api@0.29.3
+  - @atproto/bsky@0.3.10
+  - @atproto/ozone@0.10.7
+  - @atproto/pds@0.5.48
+
+## 0.6.31
+
+### Patch Changes
+
+- [#5578](https://github.com/bluesky-social/atproto/pull/5578) [`3938b8a`](https://github.com/bluesky-social/atproto/commit/3938b8a5139f11ec1b5671471416e797f087ac3c) Thanks [@ds-boyce](https://github.com/ds-boyce)! - Fix mock replies to store only strong references
+- Updated dependencies [[`9a4011b`](https://github.com/bluesky-social/atproto/commit/9a4011bca5c97baf41228e46d52e633d0a5b69aa), [`f8a8186`](https://github.com/bluesky-social/atproto/commit/f8a8186acf883dc96819d5f698a6241598984c17), [`5c62247`](https://github.com/bluesky-social/atproto/commit/5c622471bb4e330792594d80cb4fd0bc4564a8ff), [`c1aa9ab`](https://github.com/bluesky-social/atproto/commit/c1aa9ab240958b35fbb5367585775cac4cc9e11a)]:
+  - @atproto/ozone@0.10.6
+  - @atproto/api@0.29.2
+  - @atproto/bsky@0.3.9
+  - @atproto/pds@0.5.47
+
+## 0.6.30
+
+### Patch Changes
+
+- Updated dependencies [[`bbd530d`](https://github.com/bluesky-social/atproto/commit/bbd530d4407b95d06862daa04616506568233ae8)]:
+  - @atproto/bsky@0.3.8
+
 ## 0.6.29
 
 ### Patch Changes

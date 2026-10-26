@@ -15,6 +15,7 @@ import {
   InvalidStateTransition,
   handleReportUpdate,
 } from '../report/handle-report-update.js'
+import { getActivityMetadata } from '../report/metadata.js'
 import { notifyReportActivities } from '../report/notifications.js'
 import { CHAT_CONVO_COLLECTION, CHAT_MESSAGE_COLLECTION } from './subject.js'
 
@@ -248,7 +249,9 @@ export type FindReportsForSubjectParams = {
   subjectUri?: AtUriString | null
   reportIds?: number[]
   reportTypes?: string[]
+  excludedReportTypes?: string[]
   targetAll?: boolean
+  includeAllOwned?: boolean
   lockForUpdate?: boolean
 }
 
@@ -270,30 +273,34 @@ export async function findReportsForSubject(
   db: Database,
   params: FindReportsForSubjectParams,
 ): Promise<ReportResult[]> {
-  let builder = reportQuery(db).where('r.did', '=', params.subjectDid)
+  let builder = reportQuery(db)
+    .where('r.did', '=', params.subjectDid)
+    .where('me.subjectDid', '=', params.subjectDid)
 
-  // Filter by subject URI (if provided, match exactly; if null/undefined,
-  // match repo-level and exclude chat subjects owned by the same DID).
-  if (params.subjectUri) {
-    const uri = new AtUri(params.subjectUri)
-    if (uri.collection === CHAT_MESSAGE_COLLECTION) {
-      builder = builder.where('r.subjectMessageId', '=', uri.rkey)
-    } else if (uri.collection === CHAT_CONVO_COLLECTION) {
-      builder = builder
-        .where('r.subjectConvoId', '=', uri.rkey)
-        .where('r.subjectMessageId', 'is', null)
+  if (!params.includeAllOwned) {
+    // Filter by subject URI (if provided, match exactly; if null/undefined,
+    // match repo-level and exclude chat subjects owned by the same DID).
+    if (params.subjectUri) {
+      const uri = new AtUri(params.subjectUri)
+      if (uri.collection === CHAT_MESSAGE_COLLECTION) {
+        builder = builder.where('r.subjectMessageId', '=', uri.rkey)
+      } else if (uri.collection === CHAT_CONVO_COLLECTION) {
+        builder = builder
+          .where('r.subjectConvoId', '=', uri.rkey)
+          .where('r.subjectMessageId', 'is', null)
+      } else {
+        builder = builder.where(
+          'r.recordPath',
+          '=',
+          `${uri.collection}/${uri.rkey}`,
+        )
+      }
     } else {
-      builder = builder.where(
-        'r.recordPath',
-        '=',
-        `${uri.collection}/${uri.rkey}`,
-      )
+      builder = builder
+        .where('r.recordPath', '=', '')
+        .where('r.subjectMessageId', 'is', null)
+        .where('r.subjectConvoId', 'is', null)
     }
-  } else {
-    builder = builder
-      .where('r.recordPath', '=', '')
-      .where('r.subjectMessageId', 'is', null)
-      .where('r.subjectConvoId', 'is', null)
   }
 
   if (params.targetAll) {
@@ -314,9 +321,17 @@ export async function findReportsForSubject(
     return []
   }
 
+  if (params.excludedReportTypes?.length) {
+    builder = builder.where(
+      'r.reportType',
+      'not in',
+      params.excludedReportTypes,
+    )
+  }
+
   let query = builder.selectAll('r')
   if (params.lockForUpdate) {
-    query = query.forUpdate('r')
+    query = query.orderBy('r.id').forUpdate('r')
   }
 
   const reports = await query.execute()
@@ -329,9 +344,12 @@ export type CloseReportsForSubjectParams = {
   inboxStartAt?: DatetimeString
   subjectDid: DidString
   subjectUri: string | null
+  includeAllOwned?: boolean
   reportTypes?: string[]
+  excludedReportTypes?: string[]
   internalNote?: string
   isAutomated: boolean
+  meta?: Record<string, unknown>
   createdBy: DidString
 }
 
@@ -341,10 +359,11 @@ export type CloseReportsResult = {
 }
 
 /**
- * Closes all non-closed reports on a subject, optionally filtered by report
- * type. Reports whose current status doesn't permit a transition to closed
- * are skipped silently. Unlike `processReportAction` there is no moderation
- * event involved — reports are closed directly via close activities.
+ * Closes non-closed reports matching the subject and report type filters.
+ * Reports whose current status doesn't permit a transition to closed are
+ * skipped silently. Unlike
+ * `processReportAction` there is no moderation event involved — reports are
+ * closed directly via close activities.
  */
 export async function closeReportsForSubject(
   params: CloseReportsForSubjectParams,
@@ -359,11 +378,15 @@ export async function closeReportsForSubject(
     createdBy,
   } = params
 
+  const metadata = getActivityMetadata(params.meta)
+
   return db.transaction(async (dbTxn) => {
     const matchingReports = await findReportsForSubject(dbTxn, {
       subjectDid,
       subjectUri: subjectUri as AtUriString,
+      includeAllOwned: params.includeAllOwned,
       reportTypes: reportTypes?.length ? reportTypes : undefined,
+      excludedReportTypes: params.excludedReportTypes,
       targetAll: !reportTypes?.length,
       lockForUpdate: true,
     })
@@ -404,43 +427,54 @@ export async function closeReportsForSubject(
     const now = currentDatetimeString()
     const updateIds = validUpdates.map((u) => u.id)
 
-    await dbTxn.db
-      .updateTable('report')
-      .set({ status: 'closed', updatedAt: now, closedAt: now })
-      .where('id', 'in', updateIds)
-      .execute()
+    for (let offset = 0; offset < validUpdates.length; offset += 500) {
+      const batch = validUpdates.slice(offset, offset + 500)
+      await dbTxn.db
+        .updateTable('report')
+        .set({ status: 'closed', updatedAt: now, closedAt: now })
+        .where(
+          'id',
+          'in',
+          batch.map((u) => u.id),
+        )
+        .execute()
 
-    const activities = await dbTxn.db
-      .insertInto('report_activity')
-      .values(
-        validUpdates.map((u) => ({
-          reportId: u.id,
-          activityType: 'closeActivity',
-          previousStatus: u.previousStatus,
-          internalNote: internalNote ?? null,
-          publicNote: null,
-          meta:
-            u.reportType === tools.ozone.report.defs.ReasonAppeal
-              ? { appealOutcome: 'denied' }
-              : null,
-          isAutomated,
-          createdBy,
-          createdAt: now,
+      const activities = await dbTxn.db
+        .insertInto('report_activity')
+        .values(
+          batch.map((u) => ({
+            reportId: u.id,
+            activityType: 'closeActivity',
+            previousStatus: u.previousStatus,
+            internalNote: internalNote ?? null,
+            publicNote: null,
+            meta:
+              u.reportType === tools.ozone.report.defs.ReasonAppeal
+                ? {
+                    ...metadata,
+                    resolution: 'noAction',
+                    appealOutcome: 'denied',
+                  }
+                : { ...metadata, resolution: 'noAction' },
+            isAutomated,
+            createdBy,
+            createdAt: now,
+          })),
+        )
+        .returning(['id', 'reportId', 'activityType', 'createdAt'])
+        .execute()
+
+      await notifyReportActivities(
+        dbTxn,
+        activities.map((activity) => ({
+          reportId: activity.reportId,
+          activityId: activity.id,
+          activityType: activity.activityType,
+          createdAt: activity.createdAt,
         })),
+        params.inboxStartAt,
       )
-      .returning(['id', 'reportId', 'activityType', 'createdAt'])
-      .execute()
-
-    await notifyReportActivities(
-      dbTxn,
-      activities.map((activity) => ({
-        reportId: activity.reportId,
-        activityId: activity.id,
-        activityType: activity.activityType,
-        createdAt: activity.createdAt,
-      })),
-      params.inboxStartAt,
-    )
+    }
 
     return { closedCount: validUpdates.length, reportIds: updateIds }
   })
@@ -454,7 +488,9 @@ export type ProcessReportActionParams = {
     types?: string[]
     all?: boolean
     note?: string
+    isAutomated?: boolean
   }
+  metadata?: Record<string, unknown>
   subjectDid: DidString
   subjectUri: string | null
   eventId: number
@@ -513,6 +549,9 @@ async function processEmailReportAction(
 }
 
 /**
+ * Apply the report action to the matching reports.
+ * Returns the number of reports successfully updated.
+ *
  * Validates and processes a report action by:
  * 1. Finding matching reports based on targeting criteria
  * 2. Validating that specified report IDs exist and belong to the subject
@@ -649,9 +688,13 @@ export async function processReportAction(
         publicNote: reportAction.note ?? null,
         meta:
           u.activityType === 'closeActivity'
-            ? { actionEventId: eventId }
-            : null,
-        isAutomated: false,
+            ? {
+                ...params.metadata,
+                resolution: 'linked',
+                actionEventId: eventId,
+              }
+            : (params.metadata ?? null),
+        isAutomated: reportAction.isAutomated ?? false,
         createdBy,
         createdAt: now,
       })),

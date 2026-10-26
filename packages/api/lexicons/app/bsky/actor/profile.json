@@ -26,7 +26,11 @@
             "maxGraphemes": 20,
             "maxLength": 200
           },
-          "website": { "type": "string", "format": "uri" },
+          "website": {
+            "type": "string",
+            "format": "uri",
+            "description": "Deprecated: use links instead."
+          },
           "avatar": {
             "type": "blob",
             "description": "Small image to be displayed next to posts from account. AKA, 'profile picture'",

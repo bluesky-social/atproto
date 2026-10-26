@@ -643,10 +643,10 @@ describe('appealActionedSubject', () => {
       async (affectedTagged) => {
         const { subject, did } = await routingSubject('record')
         const submitterTag = 'appeal-submitter'
+        const ordinary = await createQueue({})
         const reporting = await createQueue({
           reporterTags: [reporterTag, submitterTag],
         })
-        const ordinary = await createQueue({})
         await tagAccount(network.ozone.adminAccnt.did, [submitterTag])
         if (affectedTagged) await tagAccount(did, [reporterTag])
         const action = await takedown(subject)
@@ -702,11 +702,11 @@ describe('appealActionedSubject', () => {
       'requires all automatic appeal criteria to match (reportTypes: %j)',
       async ({ reportTypes }) => {
         const { subject, did } = await routingSubject('record')
+        const ordinary = await createQueue({})
         const tagged = await createQueue({
           accountTags: [accountTag],
           reportTypes,
         })
-        const ordinary = await createQueue({})
         await tagAccount(did, [accountTag])
         await callAppeal({ subject }, did)
         const matches = !!reportTypes?.includes(APPEAL_REASON_TYPE)
