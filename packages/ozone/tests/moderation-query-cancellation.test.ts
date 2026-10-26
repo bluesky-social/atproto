@@ -47,6 +47,7 @@ describe('moderation query cancellation', () => {
 
   it.each([
     [tools.ozone.moderation.queryEvents.$lxm, 'moderation_event', 'limit=1'],
+    [tools.ozone.team.listOnlineMembers.$lxm, 'report_activity', 'limit=1'],
     [
       tools.ozone.moderation.queryStatuses.$lxm,
       'moderation_subject_status',

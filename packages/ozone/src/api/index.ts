@@ -79,6 +79,7 @@ import upsertOption from './setting/upsertOption.js'
 import addMember from './team/addMember.js'
 import deleteMember from './team/deleteMember.js'
 import listMembers from './team/listMembers.js'
+import listOnlineMembers from './team/listOnlineMembers.js'
 import updateMember from './team/updateMember.js'
 import grantVerifications from './verification/grantVerifications.js'
 import listVerifications from './verification/listVerifications.js'
@@ -121,6 +122,7 @@ export default function (server: Server, ctx: AppContext) {
   updateTemplate(server, ctx)
   deleteTemplate(server, ctx)
   listMembers(server, ctx)
+  listOnlineMembers(server, ctx)
   addMember(server, ctx)
   updateMember(server, ctx)
   deleteMember(server, ctx)
