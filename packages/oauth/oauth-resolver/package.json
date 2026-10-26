@@ -1,6 +1,6 @@
 {
   "name": "@atproto/oauth-resolver",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "license": "MIT",
   "description": "OAuth client resolver",
   "keywords": [
