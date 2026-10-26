@@ -1,5 +1,12 @@
 # @atproto/lex-installer
 
+## 0.2.3
+
+### Patch Changes
+
+- Updated dependencies [[`943170b`](https://github.com/bluesky-social/atproto/commit/943170bd390705fbb16920688f8f09ec7078a59b)]:
+  - @atproto-labs/handle-resolver-node@0.2.15
+
 ## 0.2.2
 
 ### Patch Changes

@@ -1,5 +1,12 @@
 # @atproto/bsync
 
+## 0.1.5
+
+### Patch Changes
+
+- Updated dependencies [[`2720f72`](https://github.com/bluesky-social/atproto/commit/2720f72a5c4118c22841861dbc92a20693140093)]:
+  - @atproto-labs/opentelemetry-node@0.4.0
+
 ## 0.1.4
 
 ### Patch Changes
