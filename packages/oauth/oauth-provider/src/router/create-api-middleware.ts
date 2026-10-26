@@ -51,6 +51,7 @@ import { localeSchema } from '../lib/util/locale.js'
 import type { Awaitable } from '../lib/util/type.js'
 import type { OAuthProvider } from '../oauth-provider.js'
 import type { Account, AuthorizedClients } from '../oauth-store.js'
+import { narrowAuthorizedParameters } from '../request/request-manager.js'
 import { type RequestUri, requestUriSchema } from '../request/request-uri.js'
 import type { AuthorizationRedirectParameters } from '../result/authorization-redirect-parameters.js'
 import { tokenIdSchema } from '../token/token-id.js'
@@ -706,11 +707,16 @@ export function createApiMiddleware<
             if (server.checkConsentRequired(parameters, clientData)) {
               const scopes = new Set(clientData?.authorizedScopes)
 
-              // Add the newly accepted scopes to the authorized scopes
+              // `parameters` here is the requested set, not the approved one,
+              // so record the intersection.
 
               // @NOTE `oauthScopeSchema` ensures that `scope` contains no
               // leading/trailing/duplicate spaces.
-              for (const s of parameters.scope?.split(' ') ?? []) scopes.add(s)
+              const approved = narrowAuthorizedParameters(
+                parameters,
+                this.input.scope,
+              )
+              for (const s of approved.scope?.split(' ') ?? []) scopes.add(s)
 
               await server.accountManager.setAuthorizedClient(account, client, {
                 ...clientData,
