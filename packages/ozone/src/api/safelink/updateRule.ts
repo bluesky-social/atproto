@@ -13,8 +13,16 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ input, auth }) => {
       const access = auth.credentials
       const db = ctx.db
-      const { url, pattern, action, reason, source, comment, createdBy } =
-        input.body
+      const {
+        url,
+        pattern,
+        action,
+        reason,
+        source,
+        expiresAt,
+        comment,
+        createdBy,
+      } = input.body
 
       if (!access.isModerator) {
         throw new AuthRequiredError('Must be a moderator to update URL rules')
@@ -34,6 +42,7 @@ export default function (server: Server, ctx: AppContext) {
         action: getSafelinkAction(action),
         reason: getSafelinkReason(reason),
         source,
+        expiresAt,
         createdBy:
           access.type === 'admin_token'
             ? createdBy || ctx.cfg.service.did

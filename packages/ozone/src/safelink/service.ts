@@ -1,6 +1,6 @@
 import { type Selectable, sql } from 'kysely'
 import { currentDatetimeString, toDatetimeString } from '@atproto/lex'
-import type { DidString } from '@atproto/lex'
+import type { DatetimeString, DidString } from '@atproto/lex'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import type {
   SafelinkActionType,
@@ -21,6 +21,13 @@ export type SourceRuleInput = {
   pattern: SafelinkPatternType
   action: SafelinkActionType
   reason: SafelinkReasonType
+  expiresAt?: string
+}
+
+function assertFutureExpiry(expiresAt: string | undefined, now: string) {
+  if (expiresAt && Date.parse(expiresAt) <= Date.parse(now)) {
+    throw new InvalidRequestError('expiresAt must be in the future')
+  }
 }
 
 type SyncResult = {
@@ -66,14 +73,16 @@ export class SafelinkRuleService {
           pattern varchar not null,
           action varchar not null,
           reason varchar not null,
+          "expiresAt" varchar,
           primary key (url, pattern)
         ) on commit drop
       `.execute(txn.db)
       await sql`
-        insert into safelink_sync_input (url, pattern, action, reason)
-        select url, pattern, action, reason
+        insert into safelink_sync_input (url, pattern, action, reason, "expiresAt")
+        select url, pattern, action, reason, "expiresAt"
         from jsonb_to_recordset(${serializedRules}::jsonb)
-          as rule(url varchar, pattern varchar, action varchar, reason varchar)
+          as rule(url varchar, pattern varchar, action varchar, reason varchar,
+                  "expiresAt" varchar)
       `.execute(txn.db)
       await sql`analyze safelink_sync_input`.execute(txn.db)
 
@@ -85,6 +94,7 @@ export class SafelinkRuleService {
           update safelink_rule as current
           set action = incoming.action,
               reason = incoming.reason,
+              "expiresAt" = incoming."expiresAt",
               "createdBy" = ${createdBy},
               "updatedAt" = ${now}
           from safelink_sync_input as incoming
@@ -92,14 +102,15 @@ export class SafelinkRuleService {
             and current.pattern = incoming.pattern
             and current.source = ${source}
             and (current.action is distinct from incoming.action
-              or current.reason is distinct from incoming.reason)
+              or current.reason is distinct from incoming.reason
+              or current."expiresAt" is distinct from incoming."expiresAt")
           returning current.*
         ), emitted as (
           insert into safelink_event
             ("eventType", url, pattern, action, reason, source,
-             "createdBy", "createdAt", comment)
+             "expiresAt", "createdBy", "createdAt", comment)
           select 'updateRule', url, pattern, action, reason, source,
-                 "createdBy", ${now}, comment
+                 "expiresAt", "createdBy", ${now}, comment
           from changed
           returning id
         )
@@ -110,10 +121,10 @@ export class SafelinkRuleService {
       const added = await sql<{ count: number }>`
         with inserted as (
           insert into safelink_rule
-            (url, pattern, action, reason, source, "createdBy",
+            (url, pattern, action, reason, source, "expiresAt", "createdBy",
              "createdAt", "updatedAt", comment)
-          select url, pattern, action, reason, ${source}, ${createdBy},
-                 ${now}, ${now}, null
+          select url, pattern, action, reason, ${source}, "expiresAt",
+                 ${createdBy}, ${now}, ${now}, null
           from safelink_sync_input
           where true
           on conflict (url, pattern) do nothing
@@ -121,9 +132,9 @@ export class SafelinkRuleService {
         ), emitted as (
           insert into safelink_event
             ("eventType", url, pattern, action, reason, source,
-             "createdBy", "createdAt", comment)
+             "expiresAt", "createdBy", "createdAt", comment)
           select 'addRule', url, pattern, action, reason, source,
-                 "createdBy", ${now}, comment
+                 "expiresAt", "createdBy", ${now}, comment
           from inserted
           returning id
         )
@@ -143,9 +154,9 @@ export class SafelinkRuleService {
         ), emitted as (
           insert into safelink_event
             ("eventType", url, pattern, action, reason, source,
-             "createdBy", "createdAt", comment)
+             "expiresAt", "createdBy", "createdAt", comment)
           select 'removeRule', url, pattern, action, reason, source,
-                 ${createdBy}, ${now}, comment
+                 "expiresAt", ${createdBy}, ${now}, comment
           from deleted
           returning id
         )
@@ -174,6 +185,9 @@ export class SafelinkRuleService {
       action: event.action,
       reason: event.reason,
       source: event.source,
+      expiresAt: event.expiresAt
+        ? toDatetimeString(event.expiresAt)
+        : undefined,
       createdBy: event.createdBy,
       createdAt: toDatetimeString(event.createdAt),
       comment: event.comment || undefined,
@@ -186,6 +200,7 @@ export class SafelinkRuleService {
     action,
     reason,
     source = 'ozone/default',
+    expiresAt,
     createdBy,
     comment,
   }: {
@@ -194,16 +209,19 @@ export class SafelinkRuleService {
     action: SafelinkActionType
     reason: SafelinkReasonType
     source?: string
+    expiresAt?: DatetimeString
     createdBy: DidString
     comment?: string
   }): Promise<Selectable<SafelinkEvent>> {
     const now = currentDatetimeString()
+    assertFutureExpiry(expiresAt, now)
     const rule = {
       url,
       pattern,
       action,
       reason,
       source,
+      expiresAt: expiresAt ?? null,
       createdBy,
       comment: comment || null,
       createdAt: now,
@@ -239,6 +257,7 @@ export class SafelinkRuleService {
           .set({
             action,
             reason,
+            expiresAt: rule.expiresAt,
             createdBy,
             comment: rule.comment,
             updatedAt: now,
@@ -262,6 +281,7 @@ export class SafelinkRuleService {
     action,
     reason,
     source = 'ozone/default',
+    expiresAt,
     createdBy,
     comment,
   }: {
@@ -270,13 +290,16 @@ export class SafelinkRuleService {
     action: SafelinkActionType
     reason: SafelinkReasonType
     source?: string
+    expiresAt?: DatetimeString
     createdBy: DidString
     comment?: string
   }): Promise<Selectable<SafelinkEvent>> {
     const now = currentDatetimeString()
+    assertFutureExpiry(expiresAt, now)
     const rule = {
       action,
       reason,
+      expiresAt: expiresAt ?? null,
       createdBy,
       comment: comment || null,
     }
@@ -366,6 +389,7 @@ export class SafelinkRuleService {
           source: existingRule.source,
           action: existingRule.action,
           reason: existingRule.reason,
+          expiresAt: existingRule.expiresAt,
           createdBy,
           comment: comment || null,
           createdAt: currentDatetimeString(),

@@ -33,6 +33,11 @@
               "default": "ozone/default",
               "description": "Source of the rule"
             },
+            "expiresAt": {
+              "type": "string",
+              "format": "datetime",
+              "description": "Optional time for the rule to stop applying. Must be in the future."
+            },
             "comment": {
               "type": "string",
               "description": "Optional comment about the decision"

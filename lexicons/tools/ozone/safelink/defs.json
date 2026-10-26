@@ -45,6 +45,11 @@
           "default": "ozone/default",
           "description": "Source of the decision"
         },
+        "expiresAt": {
+          "type": "string",
+          "format": "datetime",
+          "description": "When the rule stops applying. Rules without one never expire."
+        },
         "createdBy": {
           "type": "string",
           "format": "did",
@@ -109,6 +114,11 @@
           "type": "string",
           "default": "ozone/default",
           "description": "Source of the rule"
+        },
+        "expiresAt": {
+          "type": "string",
+          "format": "datetime",
+          "description": "When the rule stops applying. Rules without one never expire."
         },
         "comment": {
           "type": "string",

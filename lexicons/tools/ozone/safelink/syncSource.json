@@ -56,6 +56,11 @@
         "reason": {
           "type": "ref",
           "ref": "tools.ozone.safelink.defs#reasonType"
+        },
+        "expiresAt": {
+          "type": "string",
+          "format": "datetime",
+          "description": "When the rule stops applying. Rules without one never expire."
         }
       }
     }

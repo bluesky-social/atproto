@@ -57,3 +57,4 @@ export * as _20261012T000000000Z from './20261012T000000000Z-inbox-notification-
 export * as _20261016T000000000Z from './20261016T000000000Z-add-report-queue-tag-criteria.js'
 export * as _20261016T174053481Z from './20261016T174053481Z-add-safelink-rule-source.js'
 export * as _20261020T000000000Z from './20261020T000000000Z-add-queue-strict-access.js'
+export * as _20261026T000000000Z from './20261026T000000000Z-add-safelink-rule-expiry.js'
