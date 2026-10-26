@@ -424,6 +424,7 @@
     "tools.ozone.team.defs",
     "tools.ozone.team.deleteMember",
     "tools.ozone.team.listMembers",
+    "tools.ozone.team.listOnlineMembers",
     "tools.ozone.team.updateMember",
     "tools.ozone.verification.defs",
     "tools.ozone.verification.grantVerifications",
@@ -2070,6 +2071,10 @@
     "tools.ozone.team.listMembers": {
       "uri": "file://../../lexicons/tools/ozone/team/listMembers.json",
       "cid": "bafyreierfif2h572nay4img6uarnmqvqfoy54krlnuqho43w6lmctwu7jy"
+    },
+    "tools.ozone.team.listOnlineMembers": {
+      "uri": "file://../../lexicons/tools/ozone/team/listOnlineMembers.json",
+      "cid": "bafyreide5yr7cvq2rztkkenhwpkfwx75plh4ayq3ybc4fibv3eflbbbkia"
     },
     "tools.ozone.team.updateMember": {
       "uri": "file://../../lexicons/tools/ozone/team/updateMember.json",
