@@ -1332,4 +1332,91 @@ describe('safelink management', () => {
       },
     )
   })
+
+  describe('expiry', () => {
+    const inADay = () =>
+      new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+    const getRule = async (url: string) => {
+      const { data } = await adminAgent.tools.ozone.safelink.queryRules(
+        { urls: [url] },
+        await getAdminHeaders(ids.ToolsOzoneSafelinkQueryRules),
+      )
+      return data.rules[0]
+    }
+
+    it('stores an expiry and returns it on the event, rule and history', async () => {
+      const url = 'https://expiring.example.test'
+      const expiresAt = inADay()
+      const { data: event } = await adminAgent.tools.ozone.safelink.addRule(
+        {
+          url,
+          pattern: 'domain',
+          action: 'block',
+          reason: 'phishing',
+          expiresAt,
+        },
+        await getAdminHeaders(ids.ToolsOzoneSafelinkAddRule),
+      )
+      expect(event.expiresAt).toBe(expiresAt)
+      expect((await getRule(url))?.expiresAt).toBe(expiresAt)
+
+      const { data: history } =
+        await adminAgent.tools.ozone.safelink.queryEvents(
+          { urls: [url] },
+          await getAdminHeaders(ids.ToolsOzoneSafelinkQueryEvents),
+        )
+      expect(history.events[0]?.expiresAt).toBe(expiresAt)
+    })
+
+    it('rejects an expiry that has already passed', async () => {
+      await expect(
+        adminAgent.tools.ozone.safelink.addRule(
+          {
+            url: 'https://already-expired.example.test',
+            pattern: 'domain',
+            action: 'block',
+            reason: 'phishing',
+            expiresAt: new Date(Date.now() - 1000).toISOString(),
+          },
+          await getAdminHeaders(ids.ToolsOzoneSafelinkAddRule),
+        ),
+      ).rejects.toThrow('expiresAt must be in the future')
+    })
+
+    it('clears the expiry when a rule is updated without one', async () => {
+      const url = 'https://expiry-cleared.example.test'
+      const rule = { url, pattern: 'domain', action: 'block', reason: 'spam' }
+      await adminAgent.tools.ozone.safelink.addRule(
+        { ...rule, expiresAt: inADay() },
+        await getAdminHeaders(ids.ToolsOzoneSafelinkAddRule),
+      )
+      const { data: event } = await adminAgent.tools.ozone.safelink.updateRule(
+        { ...rule, action: 'warn' },
+        await getAdminHeaders(ids.ToolsOzoneSafelinkUpdateRule),
+      )
+      expect(event.expiresAt).toBeUndefined()
+      expect((await getRule(url))?.expiresAt).toBeUndefined()
+    })
+
+    it('syncs expiry from a source and treats a new expiry as an update', async () => {
+      const source = 'sourceA/expiry'
+      const url = 'source-expiry.example.test'
+      const rule = { url, pattern: 'domain', action: 'block', reason: 'spam' }
+      const headers = await getAdminHeaders(ids.ToolsOzoneSafelinkSyncSource)
+      const first = inADay()
+      await adminAgent.tools.ozone.safelink.syncSource(
+        { source, rules: [{ ...rule, expiresAt: first }] },
+        headers,
+      )
+      expect((await getRule(url))?.expiresAt).toBe(first)
+
+      const later = new Date(Date.parse(first) + 1000).toISOString()
+      const { data: result } = await adminAgent.tools.ozone.safelink.syncSource(
+        { source, rules: [{ ...rule, expiresAt: later }] },
+        headers,
+      )
+      expect(result).toMatchObject({ added: 0, updated: 1, removed: 0 })
+      expect((await getRule(url))?.expiresAt).toBe(later)
+    })
+  })
 })

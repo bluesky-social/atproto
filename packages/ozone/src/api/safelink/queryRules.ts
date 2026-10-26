@@ -51,6 +51,9 @@ export default function (server: Server, ctx: AppContext) {
             action: rule.action,
             reason: rule.reason,
             source: rule.source,
+            expiresAt: rule.expiresAt
+              ? toDatetimeString(rule.expiresAt)
+              : undefined,
             createdBy: rule.createdBy,
             createdAt: toDatetimeString(rule.createdAt),
             updatedAt: toDatetimeString(rule.updatedAt),

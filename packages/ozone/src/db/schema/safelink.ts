@@ -20,6 +20,7 @@ export interface SafelinkRule {
   createdBy: DidString
   createdAt: DatetimeString
   updatedAt: DatetimeString
+  expiresAt: DatetimeString | null
   comment: string | null
 }
 
@@ -33,6 +34,7 @@ export interface SafelinkEvent {
   reason: SafelinkReasonType
   createdBy: DidString
   createdAt: DatetimeString
+  expiresAt: DatetimeString | null
   comment: string | null
 }
 

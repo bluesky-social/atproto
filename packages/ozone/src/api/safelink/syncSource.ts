@@ -25,6 +25,7 @@ export default function (server: Server, ctx: AppContext) {
           pattern: getSafelinkPattern(rule.pattern),
           action: getSafelinkAction(rule.action),
           reason: getSafelinkReason(rule.reason),
+          expiresAt: rule.expiresAt,
         })),
         access.type === 'admin_token' ? ctx.cfg.service.did : access.iss,
       )
