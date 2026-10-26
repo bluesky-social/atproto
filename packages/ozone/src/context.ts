@@ -132,6 +132,11 @@ export class AppContext {
     const didCache = new MemoryCache(
       cfg.identity.cacheStaleTTL,
       cfg.identity.cacheMaxTTL,
+      {
+        maxEntries: cfg.identity.cacheMaxEntries,
+        maxBytes: cfg.identity.cacheMaxBytes,
+        maxDocBytes: cfg.identity.cacheMaxDocBytes,
+      },
     )
     const idResolver = new IdResolver({
       plcUrl: cfg.identity.plcUrl,
@@ -168,7 +173,7 @@ export class AppContext {
       cfg.appview.did,
       createAuthHeaders,
     )
-    const queueService = QueueService.creator()
+    const queueService = QueueService.creator(cfg.service.did)
     const reportStatsService = ReportStatsService.creator()
     const setService = SetService.creator()
     const settingService = SettingService.creator()

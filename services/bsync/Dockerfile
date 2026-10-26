@@ -1,4 +1,4 @@
-FROM node:24.18-alpine3.23 AS build
+FROM node:24.22-alpine3.23 AS build
 
 RUN npm install -g pnpm@11.11.0
 
@@ -33,7 +33,7 @@ RUN pnpm run --recursive --stream --workspace-concurrency 1 --filter 'bsync-serv
 RUN pnpm install --prod --shamefully-hoist --frozen-lockfile --prefer-offline --config.confirmModulesPurge=false
 
 # Uses assets from build stage to reduce build size
-FROM node:24.18-alpine3.23
+FROM node:24.22-alpine3.23
 
 RUN apk add --update dumb-init
 
@@ -41,11 +41,14 @@ RUN apk add --update dumb-init
 ENTRYPOINT ["dumb-init", "--"]
 
 COPY --from=build /app /app
+COPY ./packages/internal/fetch-node/src/emudhra-preload.mjs /app/emudhra-preload.mjs
 WORKDIR /app/services/bsync
 
 EXPOSE 3000
 ENV BSYNC_PORT=3000
 ENV NODE_ENV=production
+# Load before tracing, including when the default command is overridden.
+ENV NODE_OPTIONS="--import=/app/emudhra-preload.mjs"
 
 # https://github.com/nodejs/docker-node/blob/master/docs/BestPractices.md#non-root-user
 USER node

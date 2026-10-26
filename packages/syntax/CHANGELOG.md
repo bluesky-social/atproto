@@ -1,5 +1,11 @@
 # @atproto/syntax
 
+## 0.7.7
+
+### Patch Changes
+
+- [#5591](https://github.com/bluesky-social/atproto/pull/5591) [`f98b78a`](https://github.com/bluesky-social/atproto/commit/f98b78adbc8963e49823117b007422211f6d3ff2) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Allow `AtUri.make()` arguments to be called with any `Stringifiable` type, better matching the actual implementation
+
 ## 0.7.6
 
 ### Patch Changes

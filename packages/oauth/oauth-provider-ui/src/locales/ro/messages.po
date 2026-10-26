@@ -147,6 +147,16 @@ msgstr "Adăugați următoarea înregistrare la configurația DNS a domeniului d
 msgid "alice.com"
 msgstr "andreea.ro"
 
+#. placeholder {0}: domains?.[0] ?? '.example.com'
+#: src/components/forms/fields/handle-field.tsx
+msgid "alice{0}"
+msgstr ""
+
+#: src/components/forms/fields/email-field.tsx
+#: src/components/forms/fields/identifier-field.tsx
+msgid "alice@example.com"
+msgstr ""
+
 #: src/components/disable-email-auth-factor-dialog.tsx
 #: src/components/reset-password-view.tsx
 #: src/components/update-password-dialog.tsx
@@ -157,6 +167,10 @@ msgstr "Aveți deja un cod?"
 #: src/components/identity/client-name.tsx
 msgid "An application on your device"
 msgstr "O aplicație pe dispozitivul dvs."
+
+#: src/lib/api.ts
+msgid "An email address is required."
+msgstr ""
 
 #: src/lib/notification-message.ts
 msgid "An error occurred"
@@ -171,7 +185,7 @@ msgstr "A apărut o eroare neașteptată."
 msgid "An unknown error occurred"
 msgstr "A apărut o eroare necunoscută"
 
-#: src/components/sign-in-picker.tsx
+#: src/components/utils/account-card.tsx
 msgid "Another account"
 msgstr "Alt cont"
 
@@ -207,6 +221,10 @@ msgstr "Aplicații care pot folosi contul dvs. Revocați-le pe cele pe care nu l
 #: src/components/delete-account-dialog.tsx
 msgid "Are you really, really sure?"
 msgstr "Sunteți foarte, foarte sigur?"
+
+#: src/components/forms/fields/handle-field.tsx
+msgid "Atmosphere handle"
+msgstr ""
 
 #: src/components/authenticate-welcome-view.tsx
 msgctxt "AuthenticationPage"
@@ -482,7 +500,6 @@ msgid "Email"
 msgstr "E-mail"
 
 #: src/components/forms/fields/email-field.tsx
-#: src/components/reset-password-request-form.tsx
 #: src/routes/account/u/$accountId/manage.tsx
 msgid "Email address"
 msgstr "Adresă de e-mail"
@@ -549,12 +566,8 @@ msgid "Enter the security code we sent to <0>{email}</0> to disable email two-fa
 msgstr ""
 
 #: src/components/reset-password-view.tsx
-msgid "Enter your account's email and we'll send you a reset code."
-msgstr "Introduceți e-mailul contului și vă vom trimite un cod de resetare."
-
-#: src/components/reset-password-request-form.tsx
-msgid "Enter your email address"
-msgstr "Introduceți-vă adresa de e-mail"
+msgid "Enter your account's identifier and we'll send you a reset code."
+msgstr ""
 
 #: src/components/forms/fields/new-password-field.tsx
 msgid "Enter your new password"
@@ -1082,7 +1095,7 @@ msgstr "Pas de securitate necesar"
 msgid "Select another account"
 msgstr "Selectare alt cont"
 
-#: src/components/forms/fields/handle-field.tsx
+#: src/components/forms/fields/new-handle-field.tsx
 msgid "Select domain"
 msgstr "Selectare domeniu"
 
@@ -1197,6 +1210,11 @@ msgstr "Termeni"
 #: src/components/utils/link-title.tsx
 msgid "Terms of Service"
 msgstr "Termenii de Serviciu"
+
+#. placeholder {0}: this.payload.identifier
+#: src/lib/api.ts
+msgid "The account \"{0}\" is hosted elsewhere."
+msgstr ""
 
 #: src/components/utils/scope-description.tsx
 msgid "The application is asking for full control over your network identity, meaning that it could <0>permanently break</0>, or even <1>steal</1>, your account. Only grant this permission to applications you really trust."
@@ -1333,7 +1351,7 @@ msgstr "Tip"
 msgid "Type your domain"
 msgstr "Introduceți domeniul"
 
-#: src/components/forms/fields/handle-field.tsx
+#: src/components/forms/fields/new-handle-field.tsx
 msgid "Type your username"
 msgstr "Introduceți numele de utilizator"
 
@@ -1374,7 +1392,7 @@ msgstr "Încărcare fișiere"
 msgid "URL"
 msgstr "URL"
 
-#: src/components/forms/fields/handle-field.tsx
+#: src/components/forms/fields/new-handle-field.tsx
 msgid "Use {minLength}–{maxLength, plural, one {# letter, number or hyphen} other {# letters, numbers or hyphens}}"
 msgstr "Utilizați {minLength}–{maxLength, plural, one {o literă, număr sau cratimă} few {# litere, numere sau cratime} other {# de litere, numere sau cratime}}"
 
@@ -1386,15 +1404,16 @@ msgstr "Utilizați un nume de utilizator implicit"
 msgid "Use a domain name I own"
 msgstr "Utilizați un nume de domeniu propriu"
 
+#: src/components/forms/fields/handle-field.tsx
 #: src/routes/account/u/$accountId/manage.tsx
 msgid "Username"
 msgstr "Nume de utilizator"
 
-#: src/components/sign-in-form.tsx
+#: src/components/forms/fields/identifier-field.tsx
 msgid "Username or Email"
 msgstr ""
 
-#: src/components/sign-in-form.tsx
+#: src/components/forms/fields/identifier-field.tsx
 msgid "Username or email address"
 msgstr "Nume de utilizator sau adresă de e-mail"
 
@@ -1449,6 +1468,11 @@ msgstr "Verificați că sunteți om"
 #: src/components/verify-email-dialog.tsx
 msgid "Verify your email"
 msgstr "Verificați-vă e-mailul"
+
+#. placeholder {0}: error.issuer
+#: src/components/reset-password-request-form.tsx
+msgid "Visit <0>{0}</0> to manage this account."
+msgstr ""
 
 #: src/components/consent-form.tsx
 msgid "wants to access your account"
@@ -1536,6 +1560,11 @@ msgstr "Acum vă puteți conecta cu noua parolă."
 msgid "You will no longer be prompted for a code to sign in."
 msgstr ""
 
+#. placeholder {0}: domains[0]
+#: src/components/forms/fields/identifier-field.tsx
+msgid "you{0}"
+msgstr ""
+
 #: src/components/sign-up-view.tsx
 msgid "Your account"
 msgstr "Contul dvs."
@@ -1583,7 +1612,7 @@ msgid "Your email address has been verified."
 msgstr "Adresa dvs. de e-mail a fost verificată."
 
 #. placeholder {0}: segment ? ( <span className="text-foreground block font-medium break-all"> @{segment} {domain} </span> ) : ( <span className="block break-all"> @{exampleSegment} {domain} </span> )
-#: src/components/forms/fields/handle-field.tsx
+#: src/components/forms/fields/new-handle-field.tsx
 msgid "Your full username will be: {0}"
 msgstr "Numele dvs. de utilizator complet va fi: {0}"
 
@@ -1607,7 +1636,6 @@ msgstr "Sesiunea dvs. a expirat. Vă rugăm să vă conectați din nou."
 msgid "Your username has been updated."
 msgstr "Numele de utilizator a fost actualizat."
 
-#: src/components/forms/fields/handle-field.tsx
-#: src/components/sign-in-form.tsx
+#: src/components/forms/fields/new-handle-field.tsx
 msgid "yourname"
 msgstr "numele dvs."

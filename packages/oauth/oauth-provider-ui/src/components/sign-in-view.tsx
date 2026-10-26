@@ -17,7 +17,7 @@ export type SignInViewProps = {
 
   onSignIn: (credentials: SignInData) => void | PromiseLike<void>
   onSignUp?: () => void
-  onForgotPassword?: (emailHint?: string) => void
+  onForgotPassword?: (hint?: string) => void
   onBack?: () => void
   backLabel?: ReactNode
 }
@@ -71,11 +71,11 @@ export function SignInView({
           // Since this is a re-authentication, we keep the "remember"
           // preference enabled (instead of the prop's value).
           rememberDefault={true}
-          onSignIn={onSignIn}
+          handler={onSignIn}
           onForgotPassword={onForgotPassword}
           onBack={clearSession}
-          usernameDefault={session.account.handle || session.account.did}
-          usernameReadonly={true}
+          identifierDefault={session.account.handle || session.account.did}
+          identifierReadonly={true}
         />
       </AuthShell>
     )
@@ -88,12 +88,12 @@ export function SignInView({
           domains={availableUserDomains}
           disableRemember={disableRemember}
           rememberDefault={rememberDefault}
-          onSignIn={onSignIn}
+          handler={onSignIn}
           onForgotPassword={onForgotPassword}
           onBack={onBack}
           backLabel={backLabel}
-          usernameDefault={forcedIdentifier}
-          usernameReadonly={true}
+          identifierDefault={forcedIdentifier}
+          identifierReadonly={true}
         />
       </AuthShell>
     )
@@ -106,7 +106,7 @@ export function SignInView({
           domains={availableUserDomains}
           disableRemember={disableRemember}
           rememberDefault={rememberDefault}
-          onSignIn={onSignIn}
+          handler={onSignIn}
           onForgotPassword={onForgotPassword}
           onBack={onBack}
           backLabel={backLabel}
@@ -122,7 +122,7 @@ export function SignInView({
           domains={availableUserDomains}
           disableRemember={disableRemember}
           rememberDefault={rememberDefault}
-          onSignIn={onSignIn}
+          handler={onSignIn}
           onForgotPassword={onForgotPassword}
           onBack={() => setShowSignInForm(false)}
         />

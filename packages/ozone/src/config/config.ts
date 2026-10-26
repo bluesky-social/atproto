@@ -33,7 +33,9 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
     version: env.version,
     devMode: env.devMode,
     serviceRecordCacheTTL: env.serviceRecordCacheTTL ?? 5 * MINUTE, // default 5 mins
+    labelStreamBackfillRate: env.labelStreamBackfillRate ?? 2000,
     labelQueryWildcardsEnabled: env.labelQueryWildcardsEnabled ?? false,
+    reportTagsDisabled: env.reportTagsDisabled ?? false,
   }
 
   assert(env.dbPostgresUrl, 'dbPostgresUrl is required')
@@ -85,6 +87,9 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
     plcUrl: env.didPlcUrl,
     cacheMaxTTL: env.didCacheMaxTTL ?? DAY,
     cacheStaleTTL: env.didCacheStaleTTL ?? HOUR,
+    cacheMaxEntries: env.didCacheMaxEntries,
+    cacheMaxBytes: env.didCacheMaxBytes,
+    cacheMaxDocBytes: env.didCacheMaxDocBytes,
   }
 
   const blobDivertServiceCfg =
@@ -192,8 +197,12 @@ export type ServiceConfig = {
   version?: string
   devMode?: boolean
   serviceRecordCacheTTL: number // in ms, default 5 mins
+  /** Historical labels per second across subscriptions on one API process. */
+  labelStreamBackfillRate?: number
   /** Allow wildcard label queries; disabled by default. */
   labelQueryWildcardsEnabled?: boolean
+  /** Disable automatic report-reason tags; false by default. */
+  reportTagsDisabled?: boolean
 }
 
 export type BlobDivertConfig = {
@@ -236,6 +245,9 @@ export type IdentityConfig = {
   plcUrl: string
   cacheStaleTTL: number
   cacheMaxTTL: number
+  cacheMaxEntries?: number
+  cacheMaxBytes?: number
+  cacheMaxDocBytes?: number
 }
 
 export type AccessConfig = {

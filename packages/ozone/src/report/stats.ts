@@ -443,6 +443,7 @@ export class ReportStatsService {
       select ${statGroups}, count(*) as "inboundCount"
       from report r
       where r."createdAt" >= ${dayStart} and r."createdAt" < ${dayEnd}
+        and r."isMuted" = false
       group by grouping sets ((), (coalesce(r."queueId", -1)), (r."reportType"), (r."assignedTo"))
     `.execute(this.db.db)
 
@@ -495,8 +496,17 @@ export class ReportStatsService {
         select
           r."queueId", r."reportType", r."assignedTo",
           r."createdAt", r."assignedAt", r."closedAt", r."priorityTargetMinutes",
-          -- @NOTE The final linked event determines the current closure outcome.
-          (r."actionEventIds" ->> -1)::integer as "actionEventId"
+          -- @NOTE Explicit no-action closures retain earlier action links as history.
+          case when (
+            select activity.meta ->> 'resolution'
+            from report_activity activity
+            where activity."reportId" = r.id
+              and activity."activityType" = 'closeActivity'
+            order by activity."createdAt" desc, activity.id desc
+            limit 1
+          ) = 'noAction' then null
+          else (r."actionEventIds" ->> -1)::integer
+          end as "actionEventId"
         from report r
         where r."closedAt" >= ${dayStart} and r."closedAt" < ${dayEnd}
       ), closure_outcomes as (

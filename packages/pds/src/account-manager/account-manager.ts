@@ -1121,12 +1121,11 @@ export class AccountManager {
   async updateAccountPassword(opts: { did: DidString; password: string }) {
     const { did } = opts
     const passwordScrypt = await scrypt.genSaltAndHash(opts.password)
-    await this.db.transaction(async (dbTxn) =>
-      Promise.all([
-        password.updateUserPassword(dbTxn, { did, passwordScrypt }),
-        emailToken.deleteEmailToken(dbTxn, did, 'reset_password'),
-        auth.revokeRefreshTokensByDid(dbTxn, did),
-      ]),
-    )
+    await this.db.transaction(async (dbTxn) => {
+      await password.updateUserPassword(dbTxn, { did, passwordScrypt })
+      await emailToken.deleteEmailToken(dbTxn, did, 'reset_password')
+      await auth.revokeRefreshTokensByDid(dbTxn, did)
+      // @NOTE Should we also clear oauth sessions here ?
+    })
   }
 }

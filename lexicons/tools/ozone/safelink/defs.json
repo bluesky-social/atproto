@@ -40,6 +40,11 @@
           "type": "ref",
           "ref": "#reasonType"
         },
+        "source": {
+          "type": "string",
+          "default": "ozone/default",
+          "description": "Source of the decision"
+        },
         "createdBy": {
           "type": "string",
           "format": "did",
@@ -73,7 +78,7 @@
     },
     "urlRule": {
       "type": "object",
-      "description": "Input for creating a URL safety rule",
+      "description": "An active URL safety rule",
       "required": [
         "url",
         "pattern",
@@ -99,6 +104,11 @@
         "reason": {
           "type": "ref",
           "ref": "#reasonType"
+        },
+        "source": {
+          "type": "string",
+          "default": "ozone/default",
+          "description": "Source of the rule"
         },
         "comment": {
           "type": "string",

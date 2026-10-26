@@ -2150,9 +2150,19 @@ describe.each(['algoGravity', 'algoLookback'] as const)(
         [recipient],
       )
       await sc.like(sc.dids.bob, generator)
-      await sc.follow(sc.dids.bob, recipient, { via: starterPack.raw })
-      await sc.follow(sc.dids.carol, recipient, { via: starterPack.raw })
+      const bobFollow = await sc.follow(sc.dids.bob, recipient, {
+        via: starterPack.raw,
+      })
+      const carolFollow = await sc.follow(sc.dids.carol, recipient, {
+        via: starterPack.raw,
+      })
       await network.processAll()
+
+      await network.bsky.db.db
+        .updateTable('notification')
+        .set({ reasonSubject: starterPack.uriStr })
+        .where('recordUri', 'in', [bobFollow.uriStr, carolFollow.uriStr])
+        .execute()
 
       const response = await network.bsky
         .getClient()

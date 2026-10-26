@@ -32,13 +32,24 @@ export type RawNotification = {
   indexedAt: DatetimeString
 } & (
   | {
+      // Cases that always have a reason subject.
       reason: DataplaneNotificationReasonWithSubject
       reasonSubject: AtUriString
     }
   | {
+      // Cases that have optional reason subject.
+      reason:
+        | typeof NOTIFICATION_REASON.FOLLOW
+        | typeof NOTIFICATION_REASON.FOLLOW_BACK
+      reasonSubject: AtUriString | undefined
+    }
+  | {
+      // Cases that never have a reason subject.
       reason: Exclude<
         DataplaneNotificationReason,
-        DataplaneNotificationReasonWithSubject
+        | DataplaneNotificationReasonWithSubject
+        | typeof NOTIFICATION_REASON.FOLLOW
+        | typeof NOTIFICATION_REASON.FOLLOW_BACK
       >
       reasonSubject: undefined
     }
@@ -95,9 +106,18 @@ export function parseRawNotification(
         reasonSubject: reasonSubject as AtUriString,
         indexedAt,
       }
-    case NOTIFICATION_REASON.CONTACT_MATCH:
     case NOTIFICATION_REASON.FOLLOW:
     case NOTIFICATION_REASON.FOLLOW_BACK:
+      return {
+        recipientDid: recipientDid as DidString,
+        uri: uri as AtUriString,
+        reason,
+        reasonSubject: reasonSubject
+          ? (reasonSubject as AtUriString)
+          : undefined,
+        indexedAt,
+      }
+    case NOTIFICATION_REASON.CONTACT_MATCH:
     case NOTIFICATION_REASON.MENTION:
     case NOTIFICATION_REASON.SUBSCRIBED_POST:
     case NOTIFICATION_REASON.UNVERIFIED:

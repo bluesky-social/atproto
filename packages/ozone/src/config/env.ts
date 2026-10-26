@@ -12,7 +12,9 @@ export const readEnv = (): OzoneEnvironment => {
     publicUrl: envStr('OZONE_PUBLIC_URL') as UriString,
     serverDid: envStr('OZONE_SERVER_DID') as DidString,
     serviceRecordCacheTTL: envInt('OZONE_SERVICE_RECORD_CACHE_TTL'),
+    labelStreamBackfillRate: envInt('OZONE_LABEL_STREAM_BACKFILL_RATE'),
     labelQueryWildcardsEnabled: envBool('OZONE_LABEL_QUERY_WILDCARDS_ENABLED'),
+    reportTagsDisabled: envBool('OZONE_REPORT_TAGS_DISABLED'),
     appviewUrl: envStr('OZONE_APPVIEW_URL') as UriString,
     appviewDid: envStr('OZONE_APPVIEW_DID') as DidString,
     appviewPushEvents: envBool('OZONE_APPVIEW_PUSH_EVENTS'),
@@ -37,6 +39,9 @@ export const readEnv = (): OzoneEnvironment => {
     didPlcUrl: envStr('OZONE_DID_PLC_URL'),
     didCacheStaleTTL: envInt('OZONE_DID_CACHE_STALE_TTL'),
     didCacheMaxTTL: envInt('OZONE_DID_CACHE_MAX_TTL'),
+    didCacheMaxEntries: envInt('OZONE_DID_CACHE_MAX_ENTRIES'),
+    didCacheMaxBytes: envInt('OZONE_DID_CACHE_MAX_BYTES'),
+    didCacheMaxDocBytes: envInt('OZONE_DID_CACHE_MAX_DOC_BYTES'),
     cdnPaths: envList('OZONE_CDN_PATHS'),
     adminDids: envList('OZONE_ADMIN_DIDS') as DidString[],
     moderatorDids: envList('OZONE_MODERATOR_DIDS') as DidString[],
@@ -78,7 +83,9 @@ export type OzoneEnvironment = {
   publicUrl?: string
   serverDid?: DidString
   serviceRecordCacheTTL?: number
+  labelStreamBackfillRate?: number
   labelQueryWildcardsEnabled?: boolean
+  reportTagsDisabled?: boolean
   appviewUrl?: UriString
   appviewDid?: DidString
   appviewPushEvents?: boolean
@@ -97,6 +104,9 @@ export type OzoneEnvironment = {
   didPlcUrl?: string
   didCacheStaleTTL?: number
   didCacheMaxTTL?: number
+  didCacheMaxEntries?: number
+  didCacheMaxBytes?: number
+  didCacheMaxDocBytes?: number
   cdnPaths?: string[]
   adminDids: DidString[]
   moderatorDids: DidString[]

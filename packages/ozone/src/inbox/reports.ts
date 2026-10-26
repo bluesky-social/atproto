@@ -264,8 +264,9 @@ export function toReportDetail(
     const closingEvent = findClosingEvent(row, actions)
     const outcome = action
       ? 'actionTaken'
-      : closingEvent?.action ===
-          tools.ozone.moderation.defs.modEventAcknowledge.$type
+      : !actions.closingEventIds.has(row.internalReportId) ||
+          closingEvent?.action ===
+            tools.ozone.moderation.defs.modEventAcknowledge.$type
         ? 'noAction'
         : 'other'
     body.resolution = {
@@ -295,7 +296,6 @@ function latestReportAction(row: InboxReportRow, actions: ReportActions) {
 
 function findClosingEvent(row: InboxReportRow, actions: ReportActions) {
   const id = actions.closingEventIds.get(row.internalReportId)
-  // @NOTE A nearby action is not evidence of what closed a report. Legacy
-  // or manual closures without an explicit link have an unknown outcome.
+  // @NOTE Do not attribute nearby subject actions to an unlinked closure.
   return id === undefined ? null : (actions.events.get(id) ?? null)
 }

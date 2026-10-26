@@ -23,6 +23,11 @@ allowBuilds:
   rolldown: true
   '@parcel/watcher': true
 
+minimumReleaseAgeExclude:
+  - '@puppeteer/browsers@3.2.6'
+  - puppeteer-core@25.16.0
+  - puppeteer@25.16.0
+
 overrides:
   cookie: ^0.7.2
   opentelemetry-plugin-better-sqlite3>@opentelemetry/core: ^1.30.0
@@ -36,3 +41,5 @@ overrides:
   # https://github.com/advisories/GHSA-xq3m-2v4x-88gg
   'protobufjs@<7.5.5': '>=7.5.5'
   'protobufjs@>=8.0.0 <8.0.1': '>=8.0.1'
+  'body-parser@<1.20.9': '^1.20.9'
+  'body-parser@>=2.0.0 <2.4.0': '^2.4.0'

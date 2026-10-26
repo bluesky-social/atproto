@@ -38,7 +38,9 @@ export class Labels
       if (!theirs) continue
       const mine = this.get(key)
       if (mine) {
+        mine.isImpersonation = mine.isImpersonation || theirs.isImpersonation
         mine.isTakendown = mine.isTakendown || theirs.isTakendown
+        mine.needsReview = mine.needsReview || theirs.needsReview
         mine.labels = mine.labels.merge(theirs.labels)
       } else {
         this.set(key, theirs)
@@ -73,7 +75,10 @@ export type LabelerViewerState = {
 export type LabelerViewerStates = HydrationMap<DidString, LabelerViewerState>
 
 export class LabelHydrator {
-  constructor(public dataplane: DataPlaneClient) {}
+  constructor(
+    public dataplane: DataPlaneClient,
+    private needsReviewTagSources: readonly DidString[] = [],
+  ) {}
 
   async getLabelsForSubjects(
     subjects: UriString[],
@@ -83,10 +88,15 @@ export class LabelHydrator {
 
     if (!subjects.length || !labelers.dids.length) return map
 
-    const res = await this.dataplane.getLabels({
-      subjects,
-      issuers: labelers.dids,
-    })
+    const sources = this.needsReviewTagSources.filter(
+      (source) => labelers.dids.includes(source) && labelers.redact.has(source),
+    )
+    const [res, tagRes] = await Promise.all([
+      this.dataplane.getLabels({ subjects, issuers: labelers.dids }),
+      sources.length
+        ? this.dataplane.getTagsForSubjects({ subjects, sources })
+        : undefined,
+    ])
 
     for (const cur of res.labels) {
       const parsed = parseJsonBytes(com.atproto.label.defs.label, cur)
@@ -129,6 +139,35 @@ export class LabelHydrator {
         labelers.redact.has(label.src)
       ) {
         entry.isImpersonation = true
+      }
+    }
+
+    if (tagRes) {
+      const requestedSubjects = new Set<string>(subjects)
+      const now = Date.now()
+      for (const tag of tagRes.tags) {
+        if (
+          tag.value !== NEEDS_REVIEW_LABEL ||
+          tag.removed ||
+          !tag.event ||
+          !sources.includes(tag.event.source as DidString) ||
+          !requestedSubjects.has(tag.subject) ||
+          (tag.expiresAt && tag.expiresAt.toDate().getTime() <= now)
+        ) {
+          continue
+        }
+        const subject = tag.subject as UriString
+        const entry = map.get(subject)
+        if (entry) {
+          entry.needsReview = true
+        } else {
+          map.set(subject, {
+            isImpersonation: false,
+            isTakendown: false,
+            needsReview: true,
+            labels: new HydrationMap(),
+          })
+        }
       }
     }
 

@@ -1,6 +1,6 @@
 {
   "name": "@atproto/pds",
-  "version": "0.5.39",
+  "version": "0.5.49",
   "license": "MIT",
   "description": "Reference implementation of atproto Personal Data Server (PDS)",
   "keywords": [
@@ -83,7 +83,7 @@
     "pino-http": "^11.0.0",
     "strtok3": "^10.3.5",
     "uint8arrays": "^5.0.0",
-    "undici": "^8.5.0",
+    "undici": "^8.12.2",
     "zod": "^3.23.8"
   },
   "devDependencies": {
@@ -99,7 +99,7 @@
     "@types/qs": "^6.15.1",
     "get-port": "^6.1.2",
     "jest": "^30.5.2",
-    "puppeteer": "^23.11.1",
+    "puppeteer": "^25.16.0",
     "ws": "^8.12.0"
   },
   "scripts": {

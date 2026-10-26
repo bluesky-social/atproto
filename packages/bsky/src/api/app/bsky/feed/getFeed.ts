@@ -24,6 +24,7 @@ import {
   unpackIdentityServices,
 } from '../../../../data-plane/index.js'
 import { Gate } from '../../../../feature-gates/gates.js'
+import { ANALYTICS_HEADER_DEVICE_ID } from '../../../../feature-gates/index.js'
 import type { FeedItem } from '../../../../hydration/feed.js'
 import type { HydrateCtx } from '../../../../hydration/hydrator.js'
 import { app } from '../../../../lexicons/index.js'
@@ -57,6 +58,7 @@ export default function (server: Server, ctx: AppContext) {
     }),
     handler: async ({ params, auth, req, signal }) => {
       const viewer = auth.credentials.iss
+      const stableDeviceId = req.header(ANALYTICS_HEADER_DEVICE_ID) ?? null
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({
         labelers,
@@ -75,7 +77,14 @@ export default function (server: Server, ctx: AppContext) {
       // Do not refill filtered pages. Overfetching from algorithmic feeds can
       // advance their state and prevent omitted items from appearing later.
       const result = await getFeed(
-        { ...params, hydrateCtx, headers, passthroughHeaders, signal },
+        {
+          ...params,
+          hydrateCtx,
+          stableDeviceId,
+          headers,
+          passthroughHeaders,
+          signal,
+        },
         ctx,
       )
       const {
@@ -186,6 +195,7 @@ type Context = AppContext
 
 type Params = app.bsky.feed.getFeed.$Params & {
   hydrateCtx: HydrateCtx
+  stableDeviceId: string | null
   headers: HeadersMap
   passthroughHeaders: HeadersMap
   signal: AbortSignal
@@ -217,11 +227,20 @@ const IRIS_FEED_RKEY_GATES: Record<string, Gate> = {
 /**
  * Iris' endpoint, when it should serve this request in place of the feed's
  * registered feed generator (seeemore).
+ *
+ * Logged-in viewers are routed by their per-feed gate. Logged-out viewers
+ * have no DID, but the client sends a stable device id (stable_id) that
+ * GrowthBook can bucket on, so they are routed by the dedicated
+ * Gate.IrisFeedLoggedOutEnable gate instead. Requests without a stable
+ * device id are never routed: the feature-gates context falls back to a
+ * random id per request, which would flip backends between pages and send a
+ * cursor to the backend that did not mint it.
  */
 export const irisUrlForFeed = (
   cfg: Pick<ServerConfig, 'irisUrl' | 'irisFeedUris'>,
   params: {
     feed: string
+    stableDeviceId: string | null
     hydrateCtx: {
       viewer: HydrateCtx['viewer']
       features: Pick<HydrateCtx['features'], 'Gate' | 'checkGate'>
@@ -231,7 +250,12 @@ export const irisUrlForFeed = (
   const { irisUrl } = cfg
   if (!irisUrl) return
   if (!cfg.irisFeedUris?.has(params.feed)) return
-  if (!params.hydrateCtx.viewer) return
+  if (!params.hydrateCtx.viewer) {
+    if (!params.stableDeviceId) return
+    return params.hydrateCtx.features.checkGate(Gate.IrisFeedLoggedOutEnable)
+      ? irisUrl
+      : undefined
+  }
   const rkey = params.feed.split('/').at(-1)
   const gate = (rkey && IRIS_FEED_RKEY_GATES[rkey]) || Gate.IrisFeed
   if (!params.hydrateCtx.features.checkGate(gate)) {
@@ -267,11 +291,15 @@ export function irisUrlForTrendingFeed(
 const resolveSkeletonEndpoint = async (
   ctx: Context,
   params: Params,
-): Promise<{ endpoint: string; feedDid?: DidString }> => {
+): Promise<{ endpoint: string; feedDid?: DidString; trusted?: boolean }> => {
   const { feed } = params
   const irisUrl = irisUrlForFeed(ctx.cfg, params)
   if (irisUrl) {
-    return { endpoint: irisUrl, feedDid: await getFeedGenDid(ctx, feed) }
+    return {
+      endpoint: irisUrl,
+      feedDid: await getFeedGenDid(ctx, feed),
+      trusted: true,
+    }
   }
 
   const irisStagingUrl = irisStagingUrlForFeed(ctx.cfg, params)
@@ -279,6 +307,7 @@ const resolveSkeletonEndpoint = async (
     return {
       endpoint: irisStagingUrl,
       feedDid: await getFeedGenDid(ctx, feed),
+      trusted: true,
     }
   }
 
@@ -288,7 +317,9 @@ const resolveSkeletonEndpoint = async (
   }
 
   const trendingIrisUrl = irisUrlForTrendingFeed(ctx.cfg, { feed, feedDid })
-  if (trendingIrisUrl) return { endpoint: trendingIrisUrl, feedDid }
+  if (trendingIrisUrl) {
+    return { endpoint: trendingIrisUrl, feedDid, trusted: true }
+  }
 
   let identity: GetIdentityByDidResponse
   try {
@@ -311,7 +342,7 @@ const resolveSkeletonEndpoint = async (
     )
   }
 
-  return { endpoint: fgEndpoint, feedDid }
+  return { endpoint: fgEndpoint, feedDid, trusted: false }
 }
 
 async function getFeedGenDid(
@@ -327,7 +358,10 @@ const skeletonFromFeedGen = async (
   params: Params,
 ): Promise<AlgoResponse> => {
   const { headers, passthroughHeaders } = params
-  const { endpoint, feedDid } = await resolveSkeletonEndpoint(ctx, params)
+  const { endpoint, feedDid, trusted } = await resolveSkeletonEndpoint(
+    ctx,
+    params,
+  )
   const requestHeaders = noUndefinedVals({
     ...headers,
     ...(feedDid && ctx.cfg.bskyFeedgenDids.has(feedDid)
@@ -336,20 +370,26 @@ const skeletonFromFeedGen = async (
   })
 
   // @TODO currently passthrough auth headers from pds
-  const result = await xrpcSafe(endpoint, app.bsky.feed.getFeedSkeleton, {
-    strictResponseProcessing: false,
-    signal: AbortSignal.any([
-      params.signal,
-      AbortSignal.timeout(ctx.cfg.feedGenSkeletonTimeout),
-    ]),
-    headers: requestHeaders,
-    params: {
-      feed: params.feed,
-      // The feedgen is not guaranteed to honor the limit, but we try it.
-      limit: params.limit,
-      cursor: params.cursor,
+  // Configured endpoints (iris) are ours. The DID-document path is resolved from
+  // another account's record, so only that one goes through the guarded fetch.
+  const result = await xrpcSafe(
+    trusted ? endpoint : { service: endpoint, fetch: ctx.federatedFetch },
+    app.bsky.feed.getFeedSkeleton,
+    {
+      strictResponseProcessing: false,
+      signal: AbortSignal.any([
+        params.signal,
+        AbortSignal.timeout(ctx.cfg.feedGenSkeletonTimeout),
+      ]),
+      headers: requestHeaders,
+      params: {
+        feed: params.feed,
+        // The feedgen is not guaranteed to honor the limit, but we try it.
+        limit: params.limit,
+        cursor: params.cursor,
+      },
     },
-  })
+  )
 
   if (!result.success) {
     const cause = result.reason

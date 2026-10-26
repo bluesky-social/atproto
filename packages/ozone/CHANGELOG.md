@@ -1,5 +1,130 @@
 # @atproto/ozone
 
+## 0.10.9
+
+### Patch Changes
+
+- [#5732](https://github.com/bluesky-social/atproto/pull/5732) [`ef3ad34`](https://github.com/bluesky-social/atproto/commit/ef3ad349e89dd3812f89acd6a41c25f43eb178f0) Thanks [@gcwill70](https://github.com/gcwill70)! - Add `excludedReportTypes` to `tools.ozone.report.closeReports` to leave matching report reasons unchanged during no-action cleanup. Exclusions take precedence over `reportTypes` within the requested subject scope.
+
+## 0.10.8
+
+### Patch Changes
+
+- [#5730](https://github.com/bluesky-social/atproto/pull/5730) [`4744b4a`](https://github.com/bluesky-social/atproto/commit/4744b4a2c0d17fed6bf063f2a86bd3b3875ddf1f) Thanks [@haileyok](https://github.com/haileyok)! - Update body-parser to 1.20.9
+- Updated dependencies [[`4744b4a`](https://github.com/bluesky-social/atproto/commit/4744b4a2c0d17fed6bf063f2a86bd3b3875ddf1f)]:
+  - @atproto/xrpc-server@0.13.6
+
+## 0.10.7
+
+### Patch Changes
+
+- [#5724](https://github.com/bluesky-social/atproto/pull/5724) [`123b4e2`](https://github.com/bluesky-social/atproto/commit/123b4e2c76ba25cbcc4833490fbac12cfa237abf) Thanks [@gcwill70](https://github.com/gcwill70)! - Accept optional metadata on report activity creation and bulk closure requests. Preserve moderation tool metadata on event-generated report activities and allow callers to mark those activities as automated.
+
+## 0.10.6
+
+### Patch Changes
+
+- [#5720](https://github.com/bluesky-social/atproto/pull/5720) [`9a4011b`](https://github.com/bluesky-social/atproto/commit/9a4011bca5c97baf41228e46d52e633d0a5b69aa) Thanks [@gcwill70](https://github.com/gcwill70)! - Allow closeReports to close all subjects that an account owns.
+
+- [#5722](https://github.com/bluesky-social/atproto/pull/5722) [`f8a8186`](https://github.com/bluesky-social/atproto/commit/f8a8186acf883dc96819d5f698a6241598984c17) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Resolve Atmosphere Explore and external embed lexicons from the published Bluesky schemas instead of local overrides. Refresh published lexicons, including Atmosphere external views for the PDS and OAuth browser example and profile website deprecation notices.
+
+- [#5721](https://github.com/bluesky-social/atproto/pull/5721) [`5c62247`](https://github.com/bluesky-social/atproto/commit/5c622471bb4e330792594d80cb4fd0bc4564a8ff) Thanks [@gcwill70](https://github.com/gcwill70)! - Prioritize matching queues with reporter or account tag criteria over untagged queues, using the lowest queue ID to break ties.
+
+## 0.10.5
+
+### Patch Changes
+
+- [#5708](https://github.com/bluesky-social/atproto/pull/5708) [`0e60f3f`](https://github.com/bluesky-social/atproto/commit/0e60f3f007cbd9812975489f0da19bf7613da831) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Require patched Undici versions for direct dependencies and versioned dispatchers.
+- Updated dependencies [[`0e60f3f`](https://github.com/bluesky-social/atproto/commit/0e60f3f007cbd9812975489f0da19bf7613da831)]:
+  - @atproto-labs/fetch-node@0.4.3
+  - @atproto/identity@0.5.20
+  - @atproto/lex@0.4.2
+
+## 0.10.4
+
+### Patch Changes
+
+- [#5707](https://github.com/bluesky-social/atproto/pull/5707) [`8eac4b0`](https://github.com/bluesky-social/atproto/commit/8eac4b0c0e11170171a1978123078f0a0b17ddd3) Thanks [@foysalit](https://github.com/foysalit)! - Use a bounded in-memory DID cache with configurable Ozone cache limits.
+- Updated dependencies [[`8eac4b0`](https://github.com/bluesky-social/atproto/commit/8eac4b0c0e11170171a1978123078f0a0b17ddd3)]:
+  - @atproto/identity@0.5.19
+
+## 0.10.3
+
+### Patch Changes
+
+- [#5701](https://github.com/bluesky-social/atproto/pull/5701) [`33a5ccc`](https://github.com/bluesky-social/atproto/commit/33a5ccc99d55e135d4e68ad1928fe75a23091bb2) Thanks [@gcwill70](https://github.com/gcwill70)! - Exclude muted reports from inbound statistics across aggregate, queue, category, and moderator groups. Historical snapshots adopt the new definition when recomputed.
+
+- [#5700](https://github.com/bluesky-social/atproto/pull/5700) [`53d307b`](https://github.com/bluesky-social/atproto/commit/53d307b614120947d7a11687e9bd0868c1c02dd1) Thanks [@gcwill70](https://github.com/gcwill70)! - Add strict access flag to report queues. Non-admin users will only be able to access strict queues and their reports if they are assigned to them.
+  
+  Allow filtering SafeLink rules by exact source in queryRules, combining with existing filters and pagination.
+
+- [#5669](https://github.com/bluesky-social/atproto/pull/5669) [`bb7a1c7`](https://github.com/bluesky-social/atproto/commit/bb7a1c7c1f04c29213f9c0107653748bf05c06aa) Thanks [@foysalit](https://github.com/foysalit)! - Bound historical label replay across subscriptions on each API process to protect request latency. Log subscription cursors and bounded caller metadata at connection start and close for incident attribution.
+
+## 0.10.2
+
+### Patch Changes
+
+- Updated dependencies [[`fc60876`](https://github.com/bluesky-social/atproto/commit/fc60876949cca1ca28e98273ecfc97a151d3ebfc)]:
+  - @atproto-labs/fetch-node@0.4.2
+  - @atproto/identity@0.5.18
+  - @atproto/lex@0.4.1
+
+## 0.10.1
+
+### Patch Changes
+
+- [#5662](https://github.com/bluesky-social/atproto/pull/5662) [`a2840e2`](https://github.com/bluesky-social/atproto/commit/a2840e277d5ed0d01b97fd4d2427b676e6c90bf2) Thanks [@foysalit](https://github.com/foysalit)! - Expose client-supplied expiry on strike reversals and preserve supplied expiry
+  when executing scheduled takedowns. Strike amounts and expiry policy remain
+  client-controlled.
+
+- [#5693](https://github.com/bluesky-social/atproto/pull/5693) [`1a99766`](https://github.com/bluesky-social/atproto/commit/1a99766791d15cf62e8508cf2b5abc8e9bbb25aa) Thanks [@gcwill70](https://github.com/gcwill70)! - Route reports using reporter and reported-account tags. Record automated notes with the matched tag values.
+
+## 0.10.0
+
+### Minor Changes
+
+- [#5686](https://github.com/bluesky-social/atproto/pull/5686) [`58f14d6`](https://github.com/bluesky-social/atproto/commit/58f14d60273b1ccb7f187b882624c9e2045aed59) Thanks [@gcwill70](https://github.com/gcwill70)! - Add source-aware SafeLink rule synchronization and return rule sources in the API.
+
+### Patch Changes
+
+- [#5680](https://github.com/bluesky-social/atproto/pull/5680) [`9f66a7e`](https://github.com/bluesky-social/atproto/commit/9f66a7e54b030700c03eda0bdbf35ffe756f4cd8) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add a `social.grain.photo` compatibility override that no longer requires `alt`, so the AppView renders Grain gallery photos that omit it. Ozone resolves the override; the PDS keeps validating writes against the published lexicon.
+
+## 0.9.2
+
+### Patch Changes
+
+- [#5667](https://github.com/bluesky-social/atproto/pull/5667) [`68c6502`](https://github.com/bluesky-social/atproto/commit/68c6502d832bffe5c51944477d3fead3e2d5c6d3) Thanks [@foysalit](https://github.com/foysalit)! - Return a noAction inbox report outcome when the latest closure has no linked moderation action.
+
+- [#5659](https://github.com/bluesky-social/atproto/pull/5659) [`0623725`](https://github.com/bluesky-social/atproto/commit/0623725e07aa372d45fb82b9f26b285cef38bd20) Thanks [@foysalit](https://github.com/foysalit)! - Fix temporary tag renewal and record expiry. Reissued tags replace their pending deadline, permanent reissues clear it, and expiry workers ignore stale or already consumed work. Bound each tag-expiry pass to 1,000 due rows, oldest deadline first.
+
+- [#5675](https://github.com/bluesky-social/atproto/pull/5675) [`95a4cd5`](https://github.com/bluesky-social/atproto/commit/95a4cd57f958d981d5648e964e9aa584150c47b5) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Sync the bundled `app.bsky.unspecced` lexicon manifest with the updated Atmosphere Explore lexicons.
+
+- [#5672](https://github.com/bluesky-social/atproto/pull/5672) [`5816c4f`](https://github.com/bluesky-social/atproto/commit/5816c4fefe896422c59f3de9f0602528c64bea82) Thanks [@gcwill70](https://github.com/gcwill70)! - Expose complete lifecycle counts and duration metrics in queue statistics.
+
+- [#5673](https://github.com/bluesky-social/atproto/pull/5673) [`d630dcd`](https://github.com/bluesky-social/atproto/commit/d630dcdf2f4974eea0ec3d9047340a7d53d0016e) Thanks [@foysalit](https://github.com/foysalit)! - Add OZONE_REPORT_TAGS_DISABLED to disable automatic report-reason tags when set to true, while keeping them enabled by default and preserving other subject tags.
+
+- [#5670](https://github.com/bluesky-social/atproto/pull/5670) [`ee471a4`](https://github.com/bluesky-social/atproto/commit/ee471a48599480bba0ee1a1d7d29e7ca0ccf248c) Thanks [@foysalit](https://github.com/foysalit)! - Avoid report/tag deadlocks and remove event-history queries from tag expiry.
+
+## 0.9.1
+
+### Patch Changes
+
+- [#5591](https://github.com/bluesky-social/atproto/pull/5591) [`f98b78a`](https://github.com/bluesky-social/atproto/commit/f98b78adbc8963e49823117b007422211f6d3ff2) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Fix the `chat.bsky.authFullChatClient` permission set: it granted the non-existent `chat.bsky.convo.exportAccountData` RPC method instead of `chat.bsky.actor.exportAccountData`.
+
+- [#5591](https://github.com/bluesky-social/atproto/pull/5591) [`f98b78a`](https://github.com/bluesky-social/atproto/commit/f98b78adbc8963e49823117b007422211f6d3ff2) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Source Lexicons through each package's own `lexicons.json` manifest instead of compiling the repo-root `lexicons` directory directly. Canonical `com.atproto.*` / `tools.ozone.*` schemas are symlinked from the root, `app.bsky.*` / `chat.bsky.*` are fetched from the `bluesky-social/bsky` Github repo, other external namespaces resolve from the network, and locally diverging documents are kept under a tracked `lexicons-overrides` directory. The root `lexicons` directory now only holds the canonical `com.atproto` and `tools.ozone` namespaces. No change to generated output or published API.
+
+- [#5658](https://github.com/bluesky-social/atproto/pull/5658) [`9eeaa86`](https://github.com/bluesky-social/atproto/commit/9eeaa86a279a4dc9d0e80e653a385bd1d62896d1) Thanks [@foysalit](https://github.com/foysalit)! - Validate the canonical severity expiryInDays property and reject the obsolete spelling.
+
+- [#5651](https://github.com/bluesky-social/atproto/pull/5651) [`7c90f02`](https://github.com/bluesky-social/atproto/commit/7c90f0216c9fc2dbe8b3c1b193d34f2138c2a26c) Thanks [@foysalit](https://github.com/foysalit)! - Bound reporter statistics to a configurable history window (180 days by default) and count only explicitly linked actions using primary-key lookups.
+- Updated dependencies [[`f98b78a`](https://github.com/bluesky-social/atproto/commit/f98b78adbc8963e49823117b007422211f6d3ff2), [`f98b78a`](https://github.com/bluesky-social/atproto/commit/f98b78adbc8963e49823117b007422211f6d3ff2), [`f98b78a`](https://github.com/bluesky-social/atproto/commit/f98b78adbc8963e49823117b007422211f6d3ff2), [`f98b78a`](https://github.com/bluesky-social/atproto/commit/f98b78adbc8963e49823117b007422211f6d3ff2), [`f98b78a`](https://github.com/bluesky-social/atproto/commit/f98b78adbc8963e49823117b007422211f6d3ff2), [`f98b78a`](https://github.com/bluesky-social/atproto/commit/f98b78adbc8963e49823117b007422211f6d3ff2), [`f98b78a`](https://github.com/bluesky-social/atproto/commit/f98b78adbc8963e49823117b007422211f6d3ff2)]:
+  - @atproto/lex-password-session@0.3.0
+  - @atproto/lex@0.4.0
+  - @atproto/syntax@0.7.7
+  - @atproto/xrpc-server@0.13.5
+  - @atproto-labs/fetch-node@0.4.1
+  - @atproto/identity@0.5.17
+  - @atproto/common@0.8.6
+
 ## 0.9.0
 
 ### Minor Changes

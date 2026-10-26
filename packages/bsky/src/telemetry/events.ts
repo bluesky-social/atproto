@@ -1,5 +1,6 @@
 import { type Meter, ValueType, diag, metrics } from '@opentelemetry/api'
 import { type Logger, SeverityNumber, logs } from '@opentelemetry/api-logs'
+import type { app } from '../lexicons/index.js'
 import { eventsLogger } from '../logger.js'
 import { isAbortError, isTimeoutError } from './util.js'
 
@@ -9,9 +10,29 @@ const logger: Logger = logs.getLogger('@atproto/bsky')
 export type HydrationSource =
   'known_likers' | 'known_followers' | 'activity_subscriptions'
 
+/** XRPC method that owns a hydration; set on `HydrateCtx` from the method's `$lxm`. */
+export type HydrationXrpcEndpoint =
+  | app.bsky.embed.getEmbedExternalView.$lxm
+  | app.bsky.unspecced.getAtmosphereExploreTab.$lxm
+
+/** Reported XRPC endpoint of an external hydration traversal. */
+export type ExternalHydrationXrpcEndpoint = HydrationXrpcEndpoint | 'unknown'
+
 /** Entry point that owns an external hydration traversal. */
 export type ExternalHydrationRoot = 'uris' | 'refs' | 'dependencies'
-export type ExternalHydrationOutcome = 'completed' | 'capped' | 'failed'
+/**
+ * `partial` is a returned traversal that recovered from a best-effort
+ * dependency failure; `capped` takes precedence over it.
+ */
+export type ExternalHydrationOutcome =
+  'completed' | 'capped' | 'partial' | 'failed'
+
+/** Bounded metric attributes of an external hydration traversal. */
+type ExternalHydrationAttributes = {
+  xrpcEndpoint: ExternalHydrationXrpcEndpoint
+  root: ExternalHydrationRoot
+  outcome: ExternalHydrationOutcome
+}
 
 /**
  * Generic record lookup work of one external hydration traversal, across the
@@ -29,6 +50,21 @@ export type ExternalHydrationWork = {
   batches: number
   /** Deepest fetched batch, where the root batch is pass 1; 0 if none. */
   maxPass: number
+  /**
+   * Refs inspected by the traversal's first dependency discovery. A traversal
+   * whose root batch failed has none.
+   */
+  roots: number
+  /** Roots available after takedown and owner moderation. */
+  rootsResolved: number
+  /**
+   * Refs inspected by later dependency discoveries: records returned by
+   * successful nested batches. Lookups lost to a failed batch or the pass cap
+   * are excluded.
+   */
+  dependencies: number
+  /** Dependencies available after takedown and owner moderation. */
+  dependenciesResolved: number
 }
 
 /**
@@ -61,29 +97,60 @@ class EventReporter {
     valueType: ValueType.INT,
   })
 
-  #externalHydrationLookups = meter.createHistogram<{
-    root: ExternalHydrationRoot
-    outcome: ExternalHydrationOutcome
-  }>('hydration.external.record_lookups', {
-    description:
-      'Generic external record lookups scheduled per hydration traversal, including nested dependency batches',
-    unit: '{lookup}',
-    valueType: ValueType.INT,
-    advice: {
-      explicitBucketBoundaries: [0, 1, 2, 5, 10, 25, 50, 100, 250, 500, 1000],
-    },
-  })
+  #externalHydrationLookups =
+    meter.createHistogram<ExternalHydrationAttributes>(
+      'hydration.external.record_lookups',
+      {
+        description:
+          'Generic external record lookups scheduled per hydration traversal, including nested dependency batches',
+        unit: '{lookup}',
+        valueType: ValueType.INT,
+        advice: {
+          explicitBucketBoundaries: [
+            0, 1, 2, 5, 10, 25, 50, 100, 250, 500, 1000,
+          ],
+        },
+      },
+    )
 
-  #externalHydrationBatches = meter.createHistogram<{
-    root: ExternalHydrationRoot
-    outcome: ExternalHydrationOutcome
-  }>('hydration.external.batches', {
+  #externalHydrationBatches =
+    meter.createHistogram<ExternalHydrationAttributes>(
+      'hydration.external.batches',
+      {
+        description:
+          'Generic external record fetch batches per hydration traversal, one per nested pass',
+        unit: '{batch}',
+        valueType: ValueType.INT,
+        // @NOTE Traversals are capped at `MAX_EXTERNAL_HYDRATION_PASSES` (8).
+        advice: { explicitBucketBoundaries: [0, 1, 2, 3, 4, 5, 6, 7, 8] },
+      },
+    )
+
+  #externalHydrationDuration =
+    meter.createHistogram<ExternalHydrationAttributes>(
+      'hydration.external.duration',
+      {
+        description:
+          'Wall time of an external hydration traversal, including nested dependency batches',
+        unit: 'ms',
+        valueType: ValueType.DOUBLE,
+        advice: {
+          explicitBucketBoundaries: [
+            5, 10, 25, 50, 100, 250, 500, 1000, 2500, 5000, 10000,
+          ],
+        },
+      },
+    )
+
+  #externalHydrationRecords = meter.createCounter<{
+    xrpcEndpoint: ExternalHydrationXrpcEndpoint
+    kind: 'root' | 'dependency'
+    status: 'resolved' | 'unresolved'
+  }>('hydration.external.records', {
     description:
-      'Generic external record fetch batches per hydration traversal, one per nested pass',
-    unit: '{batch}',
+      'Root and dependency records inspected by external hydration traversals, by availability after moderation',
+    unit: '{record}',
     valueType: ValueType.INT,
-    // @NOTE Traversals are capped at `MAX_EXTERNAL_HYDRATION_PASSES` (8).
-    advice: { explicitBucketBoundaries: [0, 1, 2, 3, 4, 5, 6, 7, 8] },
   })
 
   #groupedNotificationsItemsFetched = meter.createHistogram(
@@ -159,25 +226,57 @@ class EventReporter {
    * @note this method should never throw
    */
   externalHydrationTraversal({
+    xrpcEndpoint,
     root,
     outcome,
+    durationMs,
     recordLookups,
     batches,
     maxPass,
-  }: ExternalHydrationWork & {
-    root: ExternalHydrationRoot
-    outcome: ExternalHydrationOutcome
-  }) {
+    roots,
+    rootsResolved,
+    dependencies,
+    dependenciesResolved,
+  }: ExternalHydrationWork &
+    ExternalHydrationAttributes & { durationMs: number }) {
     this.#log('external_hydration_traversal', {
+      xrpcEndpoint,
       root,
       outcome,
+      durationMs,
       recordLookups,
       batches,
       maxPass,
+      roots,
+      rootsResolved,
+      dependencies,
+      dependenciesResolved,
     })
     try {
-      this.#externalHydrationLookups.record(recordLookups, { root, outcome })
-      this.#externalHydrationBatches.record(batches, { root, outcome })
+      const attributes = { xrpcEndpoint, root, outcome }
+      this.#externalHydrationLookups.record(recordLookups, attributes)
+      this.#externalHydrationBatches.record(batches, attributes)
+      this.#externalHydrationDuration.record(durationMs, attributes)
+      this.#externalHydrationRecords.add(rootsResolved, {
+        xrpcEndpoint,
+        kind: 'root',
+        status: 'resolved',
+      })
+      this.#externalHydrationRecords.add(roots - rootsResolved, {
+        xrpcEndpoint,
+        kind: 'root',
+        status: 'unresolved',
+      })
+      this.#externalHydrationRecords.add(dependenciesResolved, {
+        xrpcEndpoint,
+        kind: 'dependency',
+        status: 'resolved',
+      })
+      this.#externalHydrationRecords.add(dependencies - dependenciesResolved, {
+        xrpcEndpoint,
+        kind: 'dependency',
+        status: 'unresolved',
+      })
     } catch (err) {
       diag.error('Failed to record external_hydration_traversal:', err)
     }

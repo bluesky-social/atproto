@@ -1,4 +1,4 @@
-import type { AtpAgent } from '@atproto/api'
+import type { AtpAgent, ToolsOzoneQueueCreateQueue } from '@atproto/api'
 import {
   type ModeratorClient,
   type SeedClient,
@@ -10,7 +10,7 @@ import type { DidString } from '@atproto/syntax'
 import { jsonb } from '../src/db/types.js'
 import { APPEAL_REASON_TYPE, appealWindowEnd } from '../src/inbox/appeal.js'
 import { loadSubject } from '../src/inbox/views.js'
-import { tools } from '../src/lexicons/index.js'
+import { com, tools } from '../src/lexicons/index.js'
 import {
   ConvoSubject,
   MessageSubject,
@@ -263,12 +263,12 @@ describe('appealActionedSubject', () => {
         recommendedPolicies: [],
         createdBy: network.ozone.adminAccnt.did,
       })
-    await network.ozone.ctx
-      .queueService(network.ozone.ctx.db)
-      .insertReportsFromEvents({
+    await network.ozone.ctx.db.transaction((txn) =>
+      network.ozone.ctx.queueService(txn).insertReportsFromEvents({
         cursor: sourceReport.id - 1,
         limit: 1,
-      })
+      }),
+    )
     const source = await reportForEvent(modClient, sourceReport.id)
     const action = await takedown(subject, [source.id])
 
@@ -388,9 +388,11 @@ describe('appealActionedSubject', () => {
       },
       subject,
     })
-    await network.ozone.ctx
-      .queueService(network.ozone.ctx.db)
-      .insertReportsFromEvents({ cursor: sourceReport.id - 1, limit: 1 })
+    await network.ozone.ctx.db.transaction((txn) =>
+      network.ozone.ctx
+        .queueService(txn)
+        .insertReportsFromEvents({ cursor: sourceReport.id - 1, limit: 1 }),
+    )
     await modClient.emitEvent({
       event: {
         $type: 'tools.ozone.moderation.defs#modEventLabel',
@@ -419,9 +421,11 @@ describe('appealActionedSubject', () => {
       },
       subject,
     })
-    await network.ozone.ctx
-      .queueService(network.ozone.ctx.db)
-      .insertReportsFromEvents({ cursor: sourceReport.id - 1, limit: 1 })
+    await network.ozone.ctx.db.transaction((txn) =>
+      network.ozone.ctx
+        .queueService(txn)
+        .insertReportsFromEvents({ cursor: sourceReport.id - 1, limit: 1 }),
+    )
     const source = await reportForEvent(modClient, sourceReport.id)
     const action = await takedown(subject, [source.id])
 
@@ -462,6 +466,361 @@ describe('appealActionedSubject', () => {
     expect(event.event).toMatchObject({
       appealActionType: 'tools.ozone.inbox.appealActionedSubject#labelRef',
       appealLabel: 'label-that-was-never-applied',
+    })
+  })
+
+  describe('tag-based queue routing', () => {
+    let sequence = 0
+    const reporterTag = 'appeal-reporter'
+    const accountTag = 'appeal-account'
+    const createdQueues: number[] = []
+    const taggedSubjects: { subject: EmitSubject; tags: string[] }[] = []
+
+    async function createQueue(
+      input: Partial<ToolsOzoneQueueCreateQueue.InputSchema>,
+    ) {
+      const { data } = await ozoneAgent.tools.ozone.queue.createQueue(
+        {
+          name: `Appeal tag routing ${++sequence}`,
+          subjectTypes: ['account', 'record'],
+          reportTypes: [APPEAL_REASON_TYPE],
+          ...input,
+        },
+        {
+          headers: await network.ozone.modHeaders(
+            tools.ozone.queue.createQueue.$lxm,
+            'admin',
+          ),
+        },
+      )
+      createdQueues.push(data.queue.id)
+      return data.queue
+    }
+
+    async function tagSubject(
+      subject: EmitSubject,
+      add: string[],
+      remove: string[] = [],
+    ) {
+      await modClient.emitEvent({
+        subject,
+        event: tools.ozone.moderation.defs.modEventTag.$build({ add, remove }),
+      })
+      if (add.length) taggedSubjects.push({ subject, tags: add })
+    }
+
+    async function tagAccount(did: DidString, tags: string[]) {
+      await tagSubject(com.atproto.admin.defs.repoRef.$build({ did }), tags)
+    }
+
+    async function routingSubject(subjectType: 'account' | 'record') {
+      const name = `tag-appeal-${++sequence}`
+      if (subjectType === 'record') {
+        return { subject: seededRecordSubject(name), did: sc.dids.alice }
+      }
+      const account = await sc.createAccount(name, {
+        handle: `${name}.test`,
+        email: `${name}@test.com`,
+        password: 'tag-appeal-password',
+      })
+      return {
+        subject: com.atproto.admin.defs.repoRef.$build({ did: account.did }),
+        did: account.did,
+      }
+    }
+
+    async function activities(reportId: number) {
+      return (
+        await ozoneAgent.tools.ozone.report.listActivities(
+          { reportId },
+          {
+            headers: await network.ozone.modHeaders(
+              tools.ozone.report.listActivities.$lxm,
+              'admin',
+            ),
+          },
+        )
+      ).data.activities
+    }
+
+    afterEach(async () => {
+      for (const { subject, tags } of taggedSubjects.splice(0)) {
+        await tagSubject(subject, [], tags)
+      }
+      for (const queueId of createdQueues.splice(0)) {
+        await ozoneAgent.tools.ozone.queue.deleteQueue(
+          { queueId },
+          {
+            headers: await network.ozone.modHeaders(
+              tools.ozone.queue.deleteQueue.$lxm,
+              'admin',
+            ),
+          },
+        )
+      }
+    })
+
+    it.each(['reporterTags', 'accountTags'] as const)(
+      'inherits a %s source queue ahead of current tags and preserves it on replay',
+      async (criterion) => {
+        const { subject, did } = await routingSubject('record')
+        const sourceTag = 'appeal-source'
+        const sourceDid = criterion === 'reporterTags' ? sc.dids.bob : did
+        const sourceQueue = await createQueue({
+          [criterion]: [sourceTag],
+          reportTypes: ['appeal-source-reason'],
+        })
+        const unusedCriterion =
+          criterion === 'reporterTags' ? 'accountTags' : 'reporterTags'
+        await network.ozone.ctx.db.db
+          .updateTable('report_queue')
+          .set({ [unusedCriterion]: null })
+          .where('id', '=', sourceQueue.id)
+          .execute()
+        await tagAccount(sourceDid, [sourceTag])
+        const sourceEvent = await sc.createReport({
+          subject,
+          reasonType: 'appeal-source-reason',
+          reportedBy: sc.dids.bob,
+        })
+        const router = network.ozone.daemon.ctx.queueRouter
+        await router.routeReports()
+        const source = await reportForEvent(modClient, sourceEvent.id)
+        expect(source.queueId).toBe(sourceQueue.id)
+        const action = await takedown(subject, [source.id])
+
+        await tagSubject(
+          com.atproto.admin.defs.repoRef.$build({ did: sourceDid }),
+          [],
+          [sourceTag],
+        )
+        await createQueue({
+          [unusedCriterion]: [reporterTag],
+        })
+        await tagAccount(did, [reporterTag])
+
+        await appeal(action.id, did)
+        expect(await latestAppealReport(did)).toMatchObject({
+          queueId: sourceQueue.id,
+          actionEventIds: [action.id],
+          status: 'queued',
+        })
+        const report = await latestAppealReport(did)
+        expect(await activities(report.id)).toEqual([])
+        await router.routeReports()
+        expect((await latestAppealReport(did)).queueId).toBe(sourceQueue.id)
+        expect(await activities(report.id)).toEqual([])
+      },
+    )
+
+    it.each(['account', 'record'] as const)(
+      'routes a %s appeal to its label mapping ahead of automatic tag matches',
+      async (subjectType) => {
+        const { subject, did } = await routingSubject(subjectType)
+        await createQueue({})
+        const mapped = await createQueue({
+          subjectTypes: [],
+          reportTypes: [],
+          recommendedLabels: ['tag-appeal-label'],
+        })
+        await createQueue({ accountTags: [accountTag] })
+        await createQueue({ reporterTags: [reporterTag] })
+        await tagAccount(did, [reporterTag, accountTag])
+
+        await appealLabel('tag-appeal-label', subject, did)
+
+        expect(await latestAppealReport(did)).toMatchObject({
+          queueId: mapped.id,
+          status: 'queued',
+          actionEventIds: null,
+        })
+        expect(await activities((await latestAppealReport(did)).id)).toEqual([])
+      },
+    )
+
+    it.each([false, true])(
+      'uses the affected account for delegated reporter-tag matching (tagged: %s)',
+      async (affectedTagged) => {
+        const { subject, did } = await routingSubject('record')
+        const submitterTag = 'appeal-submitter'
+        const ordinary = await createQueue({})
+        const reporting = await createQueue({
+          reporterTags: [reporterTag, submitterTag],
+        })
+        await tagAccount(network.ozone.adminAccnt.did, [submitterTag])
+        if (affectedTagged) await tagAccount(did, [reporterTag])
+        const action = await takedown(subject)
+
+        await ozoneAgent.call(
+          tools.ozone.inbox.appealActionedSubject.$lxm,
+          undefined,
+          {
+            subject,
+            action: tools.ozone.inbox.appealActionedSubject.actionRef.$build({
+              id: action.id,
+            }),
+          },
+          {
+            encoding: 'application/json',
+            headers: await network.ozone.modHeaders(
+              tools.ozone.inbox.appealActionedSubject.$lxm,
+              'admin',
+            ),
+          },
+        )
+
+        expect(await latestAppealReport(did)).toMatchObject({
+          queueId: affectedTagged ? reporting.id : ordinary.id,
+          reportedBy: did,
+          actionEventIds: [action.id],
+        })
+        const report = await latestAppealReport(did)
+        const history = await activities(report.id)
+        if (affectedTagged) {
+          expect(history).toHaveLength(1)
+          expect(history[0]).toMatchObject({
+            activity: { $type: tools.ozone.report.defs.noteActivity.$type },
+            internalNote: `Automatically routed to queue "${reporting.name}" (ID ${reporting.id}). Matched reporterTags: ["${reporterTag}"].`,
+            createdBy: network.ozone.ctx.cfg.service.did,
+            isAutomated: true,
+          })
+          expect(history[0].publicNote).toBeUndefined()
+          await network.ozone.daemon.ctx.queueRouter.routeReports()
+          expect(await activities(report.id)).toEqual(history)
+        } else {
+          expect(history).toEqual([])
+        }
+      },
+    )
+
+    it.each([
+      { reportTypes: undefined },
+      { reportTypes: [] },
+      { reportTypes: [com.atproto.moderation.defs.ReasonSpam] },
+      { reportTypes: [APPEAL_REASON_TYPE] },
+    ])(
+      'requires all automatic appeal criteria to match (reportTypes: %j)',
+      async ({ reportTypes }) => {
+        const { subject, did } = await routingSubject('record')
+        const ordinary = await createQueue({})
+        const tagged = await createQueue({
+          accountTags: [accountTag],
+          reportTypes,
+        })
+        await tagAccount(did, [accountTag])
+        await callAppeal({ subject }, did)
+        const matches = !!reportTypes?.includes(APPEAL_REASON_TYPE)
+        const report = await latestAppealReport(did)
+        expect(report.queueId).toBe(matches ? tagged.id : ordinary.id)
+        const history = await activities(report.id)
+        expect(history).toHaveLength(matches ? 1 : 0)
+        if (matches) {
+          expect(history[0].internalNote).toBe(
+            `Automatically routed to queue "${tagged.name}" (ID ${tagged.id}). Matched accountTags: ["${accountTag}"].`,
+          )
+        }
+      },
+    )
+
+    it('routes an appeal through an untagged queue with an explicitly selected appeal reason', async () => {
+      const { subject, did } = await routingSubject('account')
+      const queue = await createQueue({
+        subjectTypes: ['account'],
+        reportTypes: [APPEAL_REASON_TYPE],
+      })
+      await callAppeal({ subject }, did)
+      expect((await latestAppealReport(did)).queueId).toBe(queue.id)
+    })
+
+    it('keeps label mapping ahead of ordinary matching when tags do not match', async () => {
+      const { subject, did } = await routingSubject('record')
+      await createQueue({})
+      await createQueue({ accountTags: [accountTag] })
+      const mapped = await createQueue({
+        subjectTypes: [],
+        reportTypes: [],
+        recommendedLabels: ['tag-appeal-label'],
+      })
+      await tagSubject(subject, [accountTag])
+
+      await appealLabel('tag-appeal-label', subject, did)
+
+      expect((await latestAppealReport(did)).queueId).toBe(mapped.id)
+    })
+
+    it('uses ordinary appeal matching when no tags or label destination match', async () => {
+      const { subject, did } = await routingSubject('record')
+      const ordinary = await createQueue({})
+      await createQueue({ accountTags: [accountTag] })
+
+      await callAppeal({ subject }, did)
+
+      expect((await latestAppealReport(did)).queueId).toBe(ordinary.id)
+    })
+
+    it('skips disabled and deleted tag queues before falling back to a label mapping', async () => {
+      const { subject, did } = await routingSubject('record')
+      const disabled = await createQueue({ accountTags: [accountTag] })
+      const deleted = await createQueue({
+        reporterTags: [reporterTag],
+      })
+      await ozoneAgent.tools.ozone.queue.updateQueue(
+        { queueId: disabled.id, enabled: false },
+        {
+          headers: await network.ozone.modHeaders(
+            tools.ozone.queue.updateQueue.$lxm,
+            'admin',
+          ),
+        },
+      )
+      await ozoneAgent.tools.ozone.queue.deleteQueue(
+        { queueId: deleted.id },
+        {
+          headers: await network.ozone.modHeaders(
+            tools.ozone.queue.deleteQueue.$lxm,
+            'admin',
+          ),
+        },
+      )
+      createdQueues.splice(createdQueues.indexOf(deleted.id), 1)
+      const mapped = await createQueue({
+        subjectTypes: [],
+        reportTypes: [],
+        recommendedLabels: ['tag-appeal-label'],
+      })
+      await tagAccount(did, [accountTag, reporterTag])
+
+      await appealLabel('tag-appeal-label', subject, did)
+
+      expect((await latestAppealReport(did)).queueId).toBe(mapped.id)
+    })
+
+    it('uses tag fallback when linked source reports disagree and retains the action link', async () => {
+      const { subject, did } = await routingSubject('record')
+      const sourceIds: number[] = []
+      for (let count = 0; count < 2; count++) {
+        const queue = await createQueue({ subjectTypes: [], reportTypes: [] })
+        const event = await modClient.emitEvent({
+          subject,
+          event: tools.ozone.moderation.defs.modEventReport.$build({
+            reportType: com.atproto.moderation.defs.ReasonSpam,
+          }),
+          modTool: { name: 'test-tool', meta: { queueId: queue.id } },
+        })
+        await network.ozone.daemon.ctx.queueRouter.routeReports()
+        sourceIds.push((await reportForEvent(modClient, event.id)).id)
+      }
+      const action = await takedown(subject, sourceIds)
+      const tagged = await createQueue({ accountTags: [accountTag] })
+      await tagAccount(did, [accountTag])
+
+      await appeal(action.id, did)
+
+      expect(await latestAppealReport(did)).toMatchObject({
+        queueId: tagged.id,
+        actionEventIds: [action.id],
+        status: 'queued',
+      })
     })
   })
 

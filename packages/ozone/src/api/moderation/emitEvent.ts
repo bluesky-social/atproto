@@ -11,6 +11,7 @@ import { app, com, tools } from '../../lexicons/index.js'
 import { httpLogger } from '../../logger.js'
 import { processReportAction } from '../../mod-service/report.js'
 import { subjectFromInput } from '../../mod-service/subject.js'
+import { getEventActivityMetadata } from '../../report/metadata.js'
 import type { SettingService } from '../../setting/service.js'
 import { TagService } from '../../tag-service/index.js'
 import { getTagForReport } from '../../tag-service/util.js'
@@ -256,6 +257,10 @@ const handleModerationEvent = async ({
       }
     }
 
+    const metadata = input.body.reportAction
+      ? getEventActivityMetadata(input.body.modTool)
+      : undefined
+
     const result = await moderationTxn.logEvent({
       event,
       subject,
@@ -272,6 +277,7 @@ const handleModerationEvent = async ({
           inboxStartAt: ctx.cfg.inbox.startAt,
           db: dbTxn,
           reportAction: input.body.reportAction,
+          metadata,
           subjectDid: subject.did,
           subjectUri,
           eventId: result.event.id,
@@ -294,11 +300,11 @@ const handleModerationEvent = async ({
       moderationTxn,
     )
 
-    const initialTags = tools.ozone.moderation.defs.modEventReport.$isTypeOf(
-      event,
-    )
-      ? [getTagForReport(event.reportType)]
-      : undefined
+    const initialTags =
+      !ctx.cfg.service.reportTagsDisabled &&
+      tools.ozone.moderation.defs.modEventReport.$isTypeOf(event)
+        ? [getTagForReport(event.reportType)]
+        : undefined
     await tagService.evaluateForSubject(initialTags)
 
     if (subject.isRepo()) {

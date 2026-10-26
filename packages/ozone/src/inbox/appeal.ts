@@ -17,7 +17,7 @@ import { tools } from '../lexicons/index.js'
 import type { AppealView } from '../lexicons/tools/ozone/inbox/defs.js'
 import type { ModSubject } from '../mod-service/subject.js'
 import type { ModerationSubjectStatusRow } from '../mod-service/types.js'
-import { findMatchingQueue } from '../queue/service.js'
+import { findMatchingQueue, getQueueRoutingNote } from '../queue/service.js'
 import {
   type AppealOutcome,
   appealActivityOutcome,
@@ -440,16 +440,18 @@ const findSourceQueueIds = async (
  * resolved, but only when every candidate agrees - bulk and collateral actions
  * can link one event to reports sitting in different queues, and guessing
  * between them is worse than using normal appeal routing. An unlinked or
- * ambiguously linked appeal falls back to whatever queue accepts appeals.
+ * ambiguously linked appeal tries label mappings, then the ordinary queue
+ * criteria, including account tags and report types.
  *
  * This is a read of best-effort routing data, so it deliberately runs outside
  * the appeal transaction: holding the subject lock across a queue listing and
  * a report scan would serialize unrelated appeals for no consistency gain, and
- * if the routing data moves underneath us the router reassigns anyway.
+ * tag changes do not need to be synchronized with appeal creation.
  */
 const selectQueue = async (
   ctx: AppContext,
   subject: ModSubject,
+  requester: DidString,
   resolvedActionId: number | undefined,
   action: FileAppealInput['action'],
 ) => {
@@ -467,25 +469,41 @@ const selectQueue = async (
     allSourcesAssigned && sourceQueues.size === 1
       ? (sourceQueueIds[0] as number)
       : null
-  const queueService = ctx.queueService(ctx.db)
+  let routingNote: string | undefined
   if (
     queueId === null &&
     action &&
     tools.ozone.inbox.appealActionedSubject.labelRef.$isTypeOf(action)
   ) {
-    queueId = (await queueService.getByRecommendedLabel(action.val))?.id ?? null
+    queueId =
+      (await ctx.queueService(ctx.db).getByRecommendedLabel(action.val))?.id ??
+      null
   }
   if (queueId === null) {
+    const queueService = ctx.queueService(ctx.db)
     const { queues } = await queueService.list({ limit: 1000, enabled: true })
+    const accountTags = await queueService.loadAccountTags(queues, [
+      requester,
+      subject.did,
+    ])
     const subjectUri = subject.info().subjectUri
     const collection = subjectUri ? new AtUri(subjectUri).collection : null
-    queueId =
-      findMatchingQueue(
-        queues,
-        subject.isRecord() ? 'record' : 'account',
-        collection,
-        APPEAL_REASON_TYPE,
-      )?.id ?? -1
+    const matched = findMatchingQueue(
+      queues,
+      subject.isRecord() ? 'record' : 'account',
+      collection,
+      APPEAL_REASON_TYPE,
+      accountTags.get(requester) ?? [],
+      accountTags.get(subject.did) ?? [],
+    )
+    queueId = matched?.id ?? -1
+    if (matched) {
+      routingNote = getQueueRoutingNote(
+        matched,
+        accountTags.get(requester) ?? [],
+        accountTags.get(subject.did) ?? [],
+      )
+    }
   }
 
   // An unrouted report carries no queue timestamp: `queuedAt` records when a
@@ -494,6 +512,7 @@ const selectQueue = async (
   return {
     queueId,
     queuedAt: queueId > 0 ? currentDatetimeString() : null,
+    routingNote,
   }
 }
 
@@ -521,9 +540,10 @@ export const fileAppeal = async (
     modTool,
   }: FileAppealInput,
 ): Promise<{ reportId: number }> => {
-  const { queueId, queuedAt } = await selectQueue(
+  const { queueId, queuedAt, routingNote } = await selectQueue(
     ctx,
     subject,
+    requester,
     resolvedActionId,
     action,
   )
@@ -549,6 +569,7 @@ export const fileAppeal = async (
       reportType: APPEAL_REASON_TYPE,
       queueId,
       queuedAt,
+      routingNote,
       actionEventIds:
         resolvedActionId === undefined ? null : [resolvedActionId],
     })

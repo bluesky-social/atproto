@@ -7,6 +7,7 @@ import {
   type FormShellProps,
 } from '#/components/forms/form-shell.tsx'
 import { useBrowserColorScheme } from '#/hooks/use-browser-color-scheme.ts'
+import type { Override } from '#/lib/util'
 import { useCurrentLocale } from '#/locales/locale-provider.tsx'
 
 export type VerifyData = {
@@ -18,24 +19,17 @@ export type SignUpHcaptchaData = {
   verify: VerifyData
 }
 
-type HcaptchaValues = Record<string, never>
-
-export type SignUpHcaptchaFormProps = Omit<
-  FormShellProps<HcaptchaValues>,
-  'onSubmit'
-> & {
-  siteKey: string
-  values?: Partial<SignUpHcaptchaData>
-  onValues?: (values: Partial<SignUpHcaptchaData>) => void
-  handler: (
-    data: SignUpHcaptchaData,
-    signal: AbortSignal,
-  ) => void | PromiseLike<void>
-}
+export type SignUpHcaptchaFormProps = Override<
+  FormShellProps<SignUpHcaptchaData>,
+  {
+    siteKey: string
+    defaultValues?: Partial<SignUpHcaptchaData>
+  }
+>
 
 export function SignUpHcaptchaForm({
   siteKey,
-  values,
+  defaultValues,
   onValues,
   handler,
   children,
@@ -45,21 +39,22 @@ export function SignUpHcaptchaForm({
   const theme = useBrowserColorScheme()
   const locale = useCurrentLocale()
 
-  const [verifiedOnMount] = useState(values?.verify != null)
+  const [verifiedOnMount] = useState(defaultValues?.verify != null)
 
   // @NOTE The captcha result is not a form control, so it is held here and
   // mirrored to the wizard as it arrives rather than read off the element.
-  const [verify, setVerify] = useState<VerifyData | null>(
-    values?.verify ?? null,
+  const [verify, setVerify] = useState<VerifyData | undefined>(
+    defaultValues?.verify,
   )
 
   return (
-    <FormShell<HcaptchaValues>
+    <FormShell
       {...props}
       submittable={verify != null}
-      onSubmit={(_next, signal) => {
-        if (!verify) return
-        onValues?.({ verify })
+      onValues={(_values) => onValues?.({ verify })}
+      handler={(_values, signal) => {
+        // Fool-proofing (should be ensured by "submittable" prop)
+        if (!verify) throw new Error('Verification required')
         return handler({ verify }, signal)
       }}
     >
@@ -83,6 +78,7 @@ export function SignUpHcaptchaForm({
           }}
           onVerify={(token: string, ekey: string) => {
             setVerify({ token, ekey })
+            onValues?.({ verify: { token, ekey } })
           }}
         />
       )}

@@ -30,6 +30,13 @@ jobs:
       github.event.pull_request.head.repo.full_name == github.repository &&
       github.event.sender.login != 'github-actions[bot]'
     steps:
+      # Temporary until fixed runner images roll out:
+      # https://github.com/actions/runner-images/issues/15018
+      - name: Update Ubuntu CA certificates
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install --only-upgrade --no-install-recommends -y ca-certificates
+
       - uses: actions/checkout@v7
         with:
           # The event's head commit, not the merge ref (so the push below is a

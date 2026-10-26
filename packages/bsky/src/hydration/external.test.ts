@@ -1,5 +1,10 @@
-import { Timestamp } from '@bufbuild/protobuf'
-import { createPromiseClient, createRouterTransport } from '@connectrpc/connect'
+import { type PartialMessage, Timestamp } from '@bufbuild/protobuf'
+import {
+  Code,
+  ConnectError,
+  createPromiseClient,
+  createRouterTransport,
+} from '@connectrpc/connect'
 import { describe, expect, expectTypeOf, it, test, vi } from 'vitest'
 import { type AtUriString, lexStringify, parseCid } from '@atproto/lex'
 import { site } from '../lexicons/index.js'
@@ -12,11 +17,13 @@ import {
   GetRecordsByRefResponse,
   GetRecordsByURIResponse,
   Record as RecordEntry,
+  type RecordLookupResult,
   RecordLookupStatus,
 } from '../proto/bsky_pb.js'
 import {
   type ExactRecordKey,
   ExternalHydrator,
+  type ExternalRecord,
   type ExternalRecordsByRef,
   type SiteStandardDocument,
   type SiteStandardDocuments,
@@ -664,6 +671,208 @@ describe(ExternalHydrator, () => {
       })
     },
   )
+
+  describe('bounded generic record requests', () => {
+    // The dataplane's request limit, enforced by every stub below.
+    const limit = 100
+    const uriOf = (i: number): AtUriString =>
+      `at://${docDid}/${collection}/r${i}`
+    const cidOf = (uri: string) => `cid-${uri.split('/').pop()}`
+    const uriList = (count: number) =>
+      Array.from({ length: count }, (_, i) => uriOf(i))
+    const refList = (count: number): Required<ItemRef>[] =>
+      uriList(count).map((uri) => ({ uri, cid: cidOf(uri) }))
+    // A record whose body names the requested URI, so mispaired results show.
+    const found = (
+      uri: string,
+      cid: string,
+      takenDown = false,
+    ): PartialMessage<RecordLookupResult> => ({
+      ref: { uri, cid },
+      status: takenDown
+        ? RecordLookupStatus.TAKEN_DOWN
+        : RecordLookupStatus.FOUND,
+      record: {
+        cid,
+        record: Buffer.from(lexStringify({ $type: collection, title: uri })),
+        takenDown,
+        takedownRef: takenDown ? 'moderation-ref' : '',
+      },
+    })
+    const expectFound = (
+      info: ExternalRecord | null | undefined,
+      uri: string,
+      cid = cidOf(uri),
+    ) => expect(info).toMatchObject({ cid, record: { title: uri } })
+
+    type Respond = (
+      uri: string,
+      cid: string,
+      request: number,
+    ) => PartialMessage<RecordLookupResult>
+    const mockByURI = (respond: Respond = (uri, cid) => found(uri, cid)) => {
+      let requests = 0
+      return vi
+        .spyOn(dataplane, 'getRecordsByURI')
+        .mockImplementation(async ({ uris = [] }) => {
+          const request = ++requests
+          if (uris.length > limit) {
+            throw new ConnectError(
+              `at most ${limit} URIs are allowed`,
+              Code.InvalidArgument,
+            )
+          }
+          return new GetRecordsByURIResponse({
+            results: uris.map((uri) => respond(uri, cidOf(uri), request)),
+          })
+        })
+    }
+    const mockByRef = (respond: Respond = (uri, cid) => found(uri, cid)) => {
+      let requests = 0
+      return vi
+        .spyOn(dataplane, 'getRecordsByRef')
+        .mockImplementation(async ({ refs = [] }) => {
+          const request = ++requests
+          if (refs.length > limit) {
+            throw new ConnectError(
+              `at most ${limit} refs are allowed`,
+              Code.InvalidArgument,
+            )
+          }
+          return new GetRecordsByRefResponse({
+            results: refs.map(({ uri = '', cid = '' }) =>
+              respond(uri, cid, request),
+            ),
+          })
+        })
+    }
+
+    const sizes = [
+      { count: 0, requests: [] },
+      { count: 100, requests: [100] },
+      { count: 101, requests: [100, 1] },
+      { count: 127, requests: [100, 27] },
+      { count: 201, requests: [100, 100, 1] },
+    ]
+
+    it('bounds requests at the dataplane limit', () => {
+      expect(ExternalHydrator.MAX_RECORDS_PER_REQUEST).toBe(limit)
+    })
+
+    test.each(sizes)('fetches $count URIs', async ({ count, requests }) => {
+      const input = uriList(count)
+      using lookup = mockByURI()
+      const records = await hydrator.getRecordsByURI(input)
+
+      const calls = lookup.mock.calls.map(([req]) => req.uris ?? [])
+      expect(calls.map((chunk) => chunk.length)).toEqual(requests)
+      expect(calls.flat()).toEqual(input)
+      expect([...records.keys()]).toEqual(input)
+      for (const uri of input) expectFound(records.get(uri), uri)
+    })
+
+    test.each(sizes)(
+      'fetches $count exact refs',
+      async ({ count, requests }) => {
+        const input = refList(count)
+        using lookup = mockByRef()
+        const records = await hydrator.getRecordsByRef(input)
+
+        const calls = lookup.mock.calls.map(([req]) => req.refs ?? [])
+        expect(calls.map((chunk) => chunk.length)).toEqual(requests)
+        expect(calls.flat()).toEqual(input)
+        expect([...records.keys()]).toEqual(
+          input.map((ref) => genericRecordKey(ref)),
+        )
+        for (const ref of input) {
+          expectFound(records.get(genericRecordKey(ref)), ref.uri, ref.cid)
+        }
+      },
+    )
+
+    it('pairs results with their own request when a response is short', async () => {
+      const input = uriList(127)
+      using lookup = mockByURI()
+      const impl = lookup.getMockImplementation()!
+      // The first response omits its last result.
+      lookup.mockImplementationOnce(async (req, options) => {
+        const { results } = await impl(req, options)
+        return new GetRecordsByURIResponse({ results: results.slice(0, -1) })
+      })
+      const records = await hydrator.getRecordsByURI(input)
+
+      expect(lookup).toHaveBeenCalledTimes(2)
+      expect(records.size).toBe(127)
+      for (const uri of input.slice(0, 99)) expectFound(records.get(uri), uri)
+      expect(records.get(input[99])).toBeNull()
+      for (const uri of input.slice(100)) expectFound(records.get(uri), uri)
+    })
+
+    it('keeps unavailable and takedown semantics across request boundaries', async () => {
+      const input = uriList(101)
+      using lookup = mockByURI((uri, cid) =>
+        uri === input[99]
+          ? { ref: { uri }, status: RecordLookupStatus.NOT_FOUND }
+          : found(uri, cid, uri === input[100]),
+      )
+      const hidden = await hydrator.getRecordsByURI(input)
+      expectFound(hidden.get(input[98]), input[98])
+      expect(hidden.get(input[99])).toBeNull()
+      expect(hidden.get(input[100])).toBeNull()
+
+      const included = await hydrator.getRecordsByURI(input, true)
+      expect(included.get(input[99])).toBeNull()
+      expectFound(included.get(input[100]), input[100])
+      expect(included.get(input[100])?.takedownRef).toBe('moderation-ref')
+      expect(lookup).toHaveBeenCalledTimes(4)
+    })
+
+    it('keeps exact versions distinct and forwards duplicates across request boundaries', async () => {
+      const v1: Required<ItemRef> = { uri: docUri, cid: 'v1' }
+      const v2: Required<ItemRef> = { uri: docUri, cid: 'v2' }
+      const input = refList(101)
+      input[0] = v1
+      input[99] = v2
+      input[100] = v1
+      // The duplicate's later request answers differently: as within one
+      // request, the later result wins.
+      using lookup = mockByRef((uri, cid, request) =>
+        uri === docUri && request === 2
+          ? { ref: { uri, cid }, status: RecordLookupStatus.NOT_FOUND }
+          : found(uri, cid),
+      )
+      const records = await hydrator.getRecordsByRef(input)
+
+      expect(lookup.mock.calls.map(([req]) => req.refs)).toEqual([
+        input.slice(0, 100),
+        [v1],
+      ])
+      expect(records.size).toBe(100)
+      expect(records.get(genericRecordKey(v1))).toBeNull()
+      expectFound(records.get(genericRecordKey(v2)), docUri, 'v2')
+    })
+
+    it('rejects the whole call without later requests when a request fails', async () => {
+      const error = new Error('dataplane unavailable')
+      using byURI = mockByURI()
+      byURI
+        .mockImplementationOnce(byURI.getMockImplementation()!)
+        .mockRejectedValueOnce(error)
+      await expect(hydrator.getRecordsByURI(uriList(201))).rejects.toThrow(
+        error,
+      )
+      expect(byURI).toHaveBeenCalledTimes(2)
+
+      using byRef = mockByRef()
+      byRef
+        .mockImplementationOnce(byRef.getMockImplementation()!)
+        .mockRejectedValueOnce(error)
+      await expect(hydrator.getRecordsByRef(refList(201))).rejects.toThrow(
+        error,
+      )
+      expect(byRef).toHaveBeenCalledTimes(2)
+    })
+  })
 })
 
 describe('ExternalHydrator site.standard lookups', () => {

@@ -1,16 +1,10 @@
 import { Trans, useLingui } from '@lingui/react/macro'
-import { AtSignIcon, ChevronRightIcon } from 'lucide-react'
 import type { JSX, ReactNode } from 'react'
 import type { Session } from '@atproto/oauth-provider-api'
 import { ActionButton } from '#/components/forms/form-shell.tsx'
-import { ItemActions, ItemContent, ItemTitle } from '#/components/ui/item.tsx'
 import type { Override } from '#/lib/util.ts'
 import { cn } from '#/lib/utils.ts'
-import {
-  AccountCard,
-  AccountRow,
-  AccountRowMedia,
-} from './utils/account-card.tsx'
+import { AccountCard, OtherAccountCard } from './utils/account-card.tsx'
 import { stringifyHandle } from './utils/handle.tsx'
 
 export type SignInPickerProps = Override<
@@ -50,12 +44,7 @@ export function SignInPicker({
         <AccountCard
           key={session.account.did}
           account={session.account}
-          onClick={(event) => {
-            event.preventDefault()
-            event.stopPropagation()
-
-            onSession(session)
-          }}
+          onClick={() => onSession(session)}
           aria-label={t`Sign in as ${session.account.name ?? stringifyHandle(session.account.handle) ?? session.account.did}`}
         />
       ))}
@@ -65,33 +54,12 @@ export function SignInPicker({
         padding and surface. The icon sits in a disc the size of the avatar so
         the text column lines up with the account rows. */}
       {onOther && (
-        <AccountRow
+        <OtherAccountCard
           key="other"
           variant="outline"
-          render={<button type="button" />}
           onClick={onOther}
           aria-label={t`Sign in to an account that is not listed`}
-        >
-          {/* @NOTE Bordered like `Avatar`, which draws a hairline ring around
-            every account picture, so the disc reads as the same object. */}
-          <AccountRowMedia disc>
-            {/* Same box as the avatar fallback's user glyph. */}
-            <AtSignIcon aria-hidden className="m-[10%] size-[80%]" />
-          </AccountRowMedia>
-          <ItemContent className="min-w-0">
-            <ItemTitle className="w-full text-lg leading-tight">
-              <span className="text-muted-foreground block min-w-0 truncate font-medium">
-                <Trans>Another account</Trans>
-              </span>
-            </ItemTitle>
-          </ItemContent>
-          <ItemActions>
-            <ChevronRightIcon
-              aria-hidden
-              className="text-muted-foreground size-5 shrink-0"
-            />
-          </ItemActions>
-        </AccountRow>
+        />
       )}
 
       {children}

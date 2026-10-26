@@ -26,6 +26,13 @@ jobs:
       github.event.pull_request.draft == false &&
       github.event.sender.login != 'dependabot[bot]'
     steps:
+      # Temporary until fixed runner images roll out:
+      # https://github.com/actions/runner-images/issues/15018
+      - name: Update Ubuntu CA certificates
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install --only-upgrade --no-install-recommends -y ca-certificates
+
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0 # needed for git diff against base branch
@@ -33,11 +40,12 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           cache: pnpm
-          node-version-file: '.nvmrc'
+          node-version-file: package.json
       - run: pnpm install --frozen-lockfile
         env:
           PUPPETEER_SKIP_DOWNLOAD: true
-      - run: pnpm changeset status --since=origin/${{ github.base_ref }}
+      - if: github.head_ref != 'changeset-release/main'
+        run: pnpm changeset status --since=origin/${{ github.base_ref }}
 
   build:
     name: Build
@@ -45,12 +53,19 @@ jobs:
     # Ensure a changeset is present before we spend time building and testing.
     needs: changeset
     steps:
+      # Temporary until fixed runner images roll out:
+      # https://github.com/actions/runner-images/issues/15018
+      - name: Update Ubuntu CA certificates
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install --only-upgrade --no-install-recommends -y ca-certificates
+
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
       - uses: actions/setup-node@v7
         with:
           cache: pnpm
-          node-version-file: '.nvmrc'
+          node-version-file: package.json
       - run: pnpm install --frozen-lockfile
         env:
           PUPPETEER_SKIP_DOWNLOAD: true
@@ -110,12 +125,21 @@ jobs:
       matrix:
         shard: [1/8, 2/8, 3/8, 4/8, 5/8, 6/8, 7/8, 8/8]
     steps:
+      # Temporary until fixed runner images roll out:
+      # https://github.com/actions/runner-images/issues/15018
+      - name: Update Ubuntu CA certificates
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install --only-upgrade --no-install-recommends -y ca-certificates
+
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
       - uses: actions/setup-node@v7
         with:
           cache: pnpm
-          node-version: '22.x'
+          # @NOTE Keep tests on Node 22 for compatibility; 22.23.4 is the minimum
+          # release containing the required security fixes.
+          node-version: '^22.23.4'
       - run: echo "CURRENT_MONTH=$(date +'%Y-%m')" >> $GITHUB_ENV
       - uses: actions/cache@v6
         name: Cache Puppeteer browser binaries
@@ -134,12 +158,19 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
+      # Temporary until fixed runner images roll out:
+      # https://github.com/actions/runner-images/issues/15018
+      - name: Update Ubuntu CA certificates
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install --only-upgrade --no-install-recommends -y ca-certificates
+
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
       - uses: actions/setup-node@v7
         with:
           cache: pnpm
-          node-version-file: '.nvmrc'
+          node-version-file: package.json
       - run: pnpm install --frozen-lockfile
         env:
           PUPPETEER_SKIP_DOWNLOAD: true

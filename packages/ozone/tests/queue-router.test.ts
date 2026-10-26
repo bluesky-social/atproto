@@ -168,9 +168,11 @@ describe('queue-router', () => {
       .set({ reporterDid: null })
       .where('id', '=', storedReport.id)
       .execute()
-    await network.ozone.ctx
-      .queueService(network.ozone.ctx.db)
-      .insertReportsFromEvents({ cursor: event.id - 1, limit: 1 })
+    await network.ozone.ctx.db.transaction((txn) =>
+      network.ozone.ctx
+        .queueService(txn)
+        .insertReportsFromEvents({ cursor: event.id - 1, limit: 1 }),
+    )
     const repaired = await db
       .selectFrom('report')
       .where('id', '=', storedReport.id)
@@ -189,9 +191,11 @@ describe('queue-router', () => {
       .set({ reporterDid: sc.dids.bob })
       .where('id', '=', storedReport.id)
       .execute()
-    await network.ozone.ctx
-      .queueService(network.ozone.ctx.db)
-      .insertReportsFromEvents({ cursor: event.id - 1, limit: 1 })
+    await network.ozone.ctx.db.transaction((txn) =>
+      network.ozone.ctx
+        .queueService(txn)
+        .insertReportsFromEvents({ cursor: event.id - 1, limit: 1 }),
+    )
     const preserved = await db
       .selectFrom('report')
       .where('id', '=', storedReport.id)

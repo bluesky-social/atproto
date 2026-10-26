@@ -33,7 +33,7 @@
         "collection": {
           "type": "string",
           "format": "nsid",
-          "description": "Collection name for record subjects (e.g., 'app.bsky.feed.post')"
+          "description": "Collection name for record subjects. Omit to accept every collection."
         },
         "reportTypes": {
           "type": "array",
@@ -42,18 +42,40 @@
           },
           "description": "Report reason types this queue accepts (fully qualified NSIDs)"
         },
+        "reporterTags": {
+          "type": "array",
+          "maxLength": 25,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": "Match any listed tag on the account submitting the report."
+        },
+        "accountTags": {
+          "type": "array",
+          "maxLength": 25,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": "Match tags on the account that is being reported against. For record subjects, use the author account. Match any listed tag."
+        },
         "description": {
           "type": "string",
           "description": "Optional description of the queue"
         },
         "recommendedPolicies": {
           "type": "array",
-          "items": { "type": "string" },
+          "items": {
+            "type": "string"
+          },
           "description": "Policy keys recommended when actioning reports in this queue"
         },
         "recommendedLabels": {
           "type": "array",
-          "items": { "type": "string" },
+          "items": {
+            "type": "string"
+          },
           "description": "Labels recommended for this queue and used as a fallback when routing label appeals"
         },
         "createdBy": {
@@ -82,6 +104,10 @@
           "type": "ref",
           "ref": "#queueStats",
           "description": "Statistics about this queue"
+        },
+        "strictAccess": {
+          "type": "boolean",
+          "description": "Admins can always list this queue and browse its reports. Other roles require an active queue assignment. Individual report and moderation event access is unchanged."
         }
       }
     },
@@ -114,30 +140,70 @@
           "maximum": 100,
           "description": "Percent of reports meeting their closure target."
         },
+        "closedCount": {
+          "type": "integer",
+          "description": "Number of reports whose current closure falls within this UTC calendar day."
+        },
         "actionedCount": {
           "type": "integer",
-          "description": "Number of reports in 'closed' status"
+          "description": "Number of closures whose last report action is label, tag, or takedown."
+        },
+        "acknowledgedCount": {
+          "type": "integer",
+          "description": "Number of closures whose last report action is not label, tag, or takedown."
         },
         "escalatedCount": {
           "type": "integer",
-          "description": "Number of reports in 'escalated' status"
+          "description": "Number of report escalation events during this UTC calendar day."
         },
         "inboundCount": {
           "type": "integer",
-          "description": "Reports received in this queue in the last 24 hours."
+          "description": "Reports received in this queue during this UTC calendar day."
+        },
+        "labelActionCount": {
+          "type": "integer",
+          "description": "Closures whose last report action is a label event."
+        },
+        "tagActionCount": {
+          "type": "integer",
+          "description": "Closures whose last report action is a tag event."
+        },
+        "takedownActionCount": {
+          "type": "integer",
+          "description": "Closures whose last report action is a takedown event."
+        },
+        "ahtDurationSec": {
+          "type": "integer",
+          "description": "Sum of report assignment-to-close seconds."
+        },
+        "ahtSampleCount": {
+          "type": "integer",
+          "description": "Number of assigned closed-report samples in ahtDurationSec."
+        },
+        "resolutionDurationSec": {
+          "type": "integer",
+          "description": "Sum of report creation-to-close seconds."
+        },
+        "resolutionSampleCount": {
+          "type": "integer",
+          "description": "Number of closed-report samples in resolutionDurationSec."
         },
         "actionRate": {
           "type": "integer",
-          "description": "Percentage of reports actioned (actionedCount / inboundCount * 100), rounded to nearest integer. Absent when inboundCount is 0."
+          "description": "Percentage of closures actioned (actionedCount / closedCount * 100), rounded to nearest integer."
         },
         "avgHandlingTimeSec": {
           "type": "integer",
-          "description": "Average time in seconds from report creation to close, for reports closed in this period."
+          "description": "Average handling time in seconds from report assignment to close."
+        },
+        "avgResolutionTimeSec": {
+          "type": "integer",
+          "description": "Average resolution time in seconds from report creation to close."
         },
         "lastUpdated": {
           "type": "string",
           "format": "datetime",
-          "description": "When these statistics were last computed"
+          "description": "When these statistics were last computed."
         }
       }
     },
