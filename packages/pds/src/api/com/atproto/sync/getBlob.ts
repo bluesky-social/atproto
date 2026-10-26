@@ -22,6 +22,8 @@ export default function (server: Server, ctx: AppContext) {
       const cid = parseCid(params.cid)
       const found = await ctx.actorStore.read(params.did, async (store) => {
         try {
+          const url = await store.repo.blob.getDownloadUrl(cid)
+          if (url) return { url }
           return await store.repo.blob.getBlob(cid)
         } catch (err) {
           if (err instanceof BlobNotFoundError) {
@@ -33,6 +35,13 @@ export default function (server: Server, ctx: AppContext) {
       })
       if (!found) {
         throw new InvalidRequestError('Blob not found')
+      }
+      if ('url' in found) {
+        return {
+          status: 307,
+          location: found.url,
+          headers: { 'cache-control': 'no-store' },
+        }
       }
       res.setHeader('content-length', found.size)
 
