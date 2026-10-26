@@ -47,7 +47,7 @@
     "test:unit": "vitest --run",
     "bench": "vitest bench --run",
     "changeset": "changeset",
-    "publish-script": "pnpm build && changeset git-tag && pnpm publish -r --provenance --no-git-checks --access public",
+    "publish-script": "pnpm build && changeset git-tag && pnpm --filter-prod '!...@atproto/oauth-resolver' publish -r --provenance --no-git-checks --access public",
     "version-script": "changeset version && git add ."
   },
   "devDependencies": {
