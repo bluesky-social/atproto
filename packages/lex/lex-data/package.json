@@ -33,10 +33,10 @@
   "dependencies": {
     "multiformats": "^13.0.0",
     "tslib": "^2.8.1",
-    "unicode-segmenter": "^0.14.0"
+    "unicode-segmenter": "^0.17.3"
   },
   "devDependencies": {
-    "core-js": "^3.50.0",
+    "core-js": "^3.51.0",
     "vitest": "^4.1.10"
   },
   "scripts": {

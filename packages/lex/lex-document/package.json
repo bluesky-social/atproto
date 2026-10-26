@@ -33,7 +33,7 @@
   },
   "dependencies": {
     "@atproto/lex-schema": "workspace:^",
-    "core-js": "^3.50.0",
+    "core-js": "^3.51.0",
     "tslib": "^2.8.1"
   },
   "devDependencies": {
