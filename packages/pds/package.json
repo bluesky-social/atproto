@@ -99,7 +99,7 @@
     "@types/qs": "^6.15.1",
     "get-port": "^6.1.2",
     "jest": "^30.5.2",
-    "puppeteer": "^23.11.1",
+    "puppeteer": "^25.16.0",
     "ws": "^8.12.0"
   },
   "scripts": {

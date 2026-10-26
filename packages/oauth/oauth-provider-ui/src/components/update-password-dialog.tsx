@@ -7,7 +7,6 @@ import { ResetPasswordConfirmForm } from '#/components/reset-password-confirm-fo
 import { Button } from '#/components/ui/button.tsx'
 
 export type UpdatePasswordDialogProps = {
-  email: string
   requestPending?: boolean
   confirmPending?: boolean
   onRequest: () => void | PromiseLike<void>
@@ -16,6 +15,8 @@ export type UpdatePasswordDialogProps = {
     password: string
   }) => void | PromiseLike<void>
   children: ReactElement
+  /** For password managers */
+  currentUsername?: string
 }
 
 enum UpdatePasswordDialogState {
@@ -24,12 +25,12 @@ enum UpdatePasswordDialogState {
 }
 
 export function UpdatePasswordDialog({
-  email,
   requestPending,
   confirmPending,
   onRequest,
   onConfirm,
   children,
+  currentUsername,
 }: UpdatePasswordDialogProps) {
   const { t } = useLingui()
   const [open, setOpen] = useState(false)
@@ -85,7 +86,7 @@ export function UpdatePasswordDialog({
         </div>
       ) : (
         <ResetPasswordConfirmForm
-          email={email}
+          currentUsername={currentUsername}
           disabled={confirmPending}
           onLoadingChange={setConfirmSubmitting}
           onResend={onRequest}

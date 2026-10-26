@@ -142,6 +142,16 @@ msgstr "Ajoutez le champ suivant à la configuration DNS de votre domaine."
 msgid "alice.com"
 msgstr "alice.com"
 
+#. placeholder {0}: domains?.[0] ?? '.example.com'
+#: src/components/forms/fields/handle-field.tsx
+msgid "alice{0}"
+msgstr "alice{0}"
+
+#: src/components/forms/fields/email-field.tsx
+#: src/components/forms/fields/identifier-field.tsx
+msgid "alice@example.com"
+msgstr "alice@exemple.fr"
+
 #: src/components/disable-email-auth-factor-dialog.tsx
 #: src/components/reset-password-view.tsx
 #: src/components/update-password-dialog.tsx
@@ -152,6 +162,10 @@ msgstr "Vous avez déjà un code ?"
 #: src/components/identity/client-name.tsx
 msgid "An application on your device"
 msgstr "Une application sur votre appareil"
+
+#: src/lib/api.ts
+msgid "An email address is required."
+msgstr "Une adresse email est requise."
 
 #: src/lib/notification-message.ts
 msgid "An error occurred"
@@ -166,7 +180,7 @@ msgstr "Une erreur inattendue s'est produite."
 msgid "An unknown error occurred"
 msgstr "Une erreur inconnue s'est produite"
 
-#: src/components/sign-in-picker.tsx
+#: src/components/utils/account-card.tsx
 msgid "Another account"
 msgstr "Un autre compte"
 
@@ -202,6 +216,10 @@ msgstr "Applications pouvant utiliser votre compte. Révoquez celles que vous n'
 #: src/components/delete-account-dialog.tsx
 msgid "Are you really, really sure?"
 msgstr "Êtes-vous vraiment, vraiment sûr ?"
+
+#: src/components/forms/fields/handle-field.tsx
+msgid "Atmosphere handle"
+msgstr "Identifiant Atmosphere"
 
 #: src/components/authenticate-welcome-view.tsx
 msgctxt "AuthenticationPage"
@@ -477,7 +495,6 @@ msgid "Email"
 msgstr "Email"
 
 #: src/components/forms/fields/email-field.tsx
-#: src/components/reset-password-request-form.tsx
 #: src/routes/account/u/$accountId/manage.tsx
 msgid "Email address"
 msgstr "Adresse email"
@@ -544,12 +561,8 @@ msgid "Enter the security code we sent to <0>{email}</0> to disable email two-fa
 msgstr "Saisissez le code de sécurité que nous avons envoyé à <0>{email}</0> pour désactiver l'authentification à deux facteurs par email."
 
 #: src/components/reset-password-view.tsx
-msgid "Enter your account's email and we'll send you a reset code."
-msgstr "Saisissez l'e-mail de votre compte et nous vous enverrons un code de réinitialisation."
-
-#: src/components/reset-password-request-form.tsx
-msgid "Enter your email address"
-msgstr "Saisissez votre adresse email"
+msgid "Enter your account's identifier and we'll send you a reset code."
+msgstr "Saisissez l'identifiant de votre compte et nous vous enverrons un code de réinitialisation."
 
 #: src/components/forms/fields/new-password-field.tsx
 msgid "Enter your new password"
@@ -1077,7 +1090,7 @@ msgstr "Étape de sécurité requise"
 msgid "Select another account"
 msgstr "Sélectionner un autre compte"
 
-#: src/components/forms/fields/handle-field.tsx
+#: src/components/forms/fields/new-handle-field.tsx
 msgid "Select domain"
 msgstr "Sélectionner le domaine"
 
@@ -1192,6 +1205,11 @@ msgstr "Conditions"
 #: src/components/utils/link-title.tsx
 msgid "Terms of Service"
 msgstr "Conditions d'Utilisation"
+
+#. placeholder {0}: this.payload.identifier
+#: src/lib/api.ts
+msgid "The account \"{0}\" is hosted elsewhere."
+msgstr "Le compte \"{0}\" est hébergé ailleurs."
 
 #: src/components/utils/scope-description.tsx
 msgid "The application is asking for full control over your network identity, meaning that it could <0>permanently break</0>, or even <1>steal</1>, your account. Only grant this permission to applications you really trust."
@@ -1328,7 +1346,7 @@ msgstr "Type"
 msgid "Type your domain"
 msgstr "Saisissez votre nom de domaine"
 
-#: src/components/forms/fields/handle-field.tsx
+#: src/components/forms/fields/new-handle-field.tsx
 msgid "Type your username"
 msgstr "Saisissez votre nom d'utilisateur"
 
@@ -1369,7 +1387,7 @@ msgstr "Téléverser des fichiers"
 msgid "URL"
 msgstr "URL"
 
-#: src/components/forms/fields/handle-field.tsx
+#: src/components/forms/fields/new-handle-field.tsx
 msgid "Use {minLength}–{maxLength, plural, one {# letter, number or hyphen} other {# letters, numbers or hyphens}}"
 msgstr "Utilisez {minLength} à {maxLength, plural, one {# lettre, chiffre ou tiret} other {# lettres, chiffres ou tirets}}"
 
@@ -1381,15 +1399,16 @@ msgstr "Utiliser un nom d'utilisateur par défaut"
 msgid "Use a domain name I own"
 msgstr "Utiliser un nom de domaine que je possède"
 
+#: src/components/forms/fields/handle-field.tsx
 #: src/routes/account/u/$accountId/manage.tsx
 msgid "Username"
 msgstr "Nom d'utilisateur"
 
-#: src/components/sign-in-form.tsx
+#: src/components/forms/fields/identifier-field.tsx
 msgid "Username or Email"
 msgstr "Nom d'utilisateur ou email"
 
-#: src/components/sign-in-form.tsx
+#: src/components/forms/fields/identifier-field.tsx
 msgid "Username or email address"
 msgstr "Nom d'utilisateur ou adresse email"
 
@@ -1444,6 +1463,11 @@ msgstr "Vérifiez que vous êtes humain"
 #: src/components/verify-email-dialog.tsx
 msgid "Verify your email"
 msgstr "Vérifier votre adresse email"
+
+#. placeholder {0}: error.issuer
+#: src/components/reset-password-request-form.tsx
+msgid "Visit <0>{0}</0> to manage this account."
+msgstr "Visitez <0>{0}</0> pour gérer ce compte."
 
 #: src/components/consent-form.tsx
 msgid "wants to access your account"
@@ -1531,6 +1555,11 @@ msgstr "Vous pouvez maintenant vous connecter avec votre nouveau mot de passe."
 msgid "You will no longer be prompted for a code to sign in."
 msgstr "Un code ne vous sera plus demandé pour vous connecter."
 
+#. placeholder {0}: domains[0]
+#: src/components/forms/fields/identifier-field.tsx
+msgid "you{0}"
+msgstr "vous{0}"
+
 #: src/components/sign-up-view.tsx
 msgid "Your account"
 msgstr "Votre compte"
@@ -1578,7 +1607,7 @@ msgid "Your email address has been verified."
 msgstr "Votre adresse email a été vérifiée."
 
 #. placeholder {0}: segment ? ( <span className="text-foreground block font-medium break-all"> @{segment} {domain} </span> ) : ( <span className="block break-all"> @{exampleSegment} {domain} </span> )
-#: src/components/forms/fields/handle-field.tsx
+#: src/components/forms/fields/new-handle-field.tsx
 msgid "Your full username will be: {0}"
 msgstr "Votre nom d'utilisateur complet sera : {0}"
 
@@ -1602,7 +1631,6 @@ msgstr "Votre session a expiré. Veuillez vous reconnecter."
 msgid "Your username has been updated."
 msgstr "Votre nom d'utilisateur a été mis à jour."
 
-#: src/components/forms/fields/handle-field.tsx
-#: src/components/sign-in-form.tsx
+#: src/components/forms/fields/new-handle-field.tsx
 msgid "yourname"
 msgstr "votrenom"

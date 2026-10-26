@@ -1,6 +1,7 @@
 import assert from 'node:assert'
 import {
   type Browser,
+  type BrowserContext,
   type Handler,
   type Page,
   type Target,
@@ -105,6 +106,61 @@ export class PageHelper implements AsyncDisposable {
     return this.typeIn(`input[name=${JSON.stringify(name)}]`, text)
   }
 
+  /**
+   * Sets an input's value the way a password manager fills it: without
+   * focusing (or blurring) it, followed by a bubbling `input` event.
+   */
+  async fillInput(name: string, value: string) {
+    const elementHandle = await this.getVisibleElement(
+      `input[name=${JSON.stringify(name)}]`,
+    )
+    await elementHandle.evaluate((input, value) => {
+      ;(input as HTMLInputElement).value = value
+      input.dispatchEvent(new Event('input', { bubbles: true }))
+    }, value)
+    return elementHandle
+  }
+
+  async getInputState(name: string) {
+    const elementHandle = await this.getVisibleElement(
+      `input[name=${JSON.stringify(name)}]`,
+    )
+    return elementHandle.evaluate((input) => {
+      const { value, validity } = input as HTMLInputElement
+      return {
+        value,
+        valid: validity.valid,
+        patternMismatch: validity.patternMismatch,
+      }
+    })
+  }
+
+  /**
+   * Runs `run` and returns the first JSON response whose URL matches `match`.
+   */
+  async captureJsonResponse(
+    match: (url: URL) => boolean,
+    run: () => unknown | Promise<unknown>,
+  ) {
+    const promise = this.page.waitForResponse(
+      (res) => match(new URL(res.url())),
+      {
+        timeout: 10_000,
+      },
+    )
+    try {
+      await run()
+    } catch (err) {
+      promise.catch(() => {}) // Avoid an unhandled rejection on timeout
+      throw err
+    }
+    const response = await promise
+    return {
+      status: response.status(),
+      body: (await response.json()) as unknown,
+    }
+  }
+
   async waitForHidden(selector: string, timeout = 5_000) {
     await this.page.waitForSelector(selector, { hidden: true, timeout })
   }
@@ -139,7 +195,7 @@ export class PageHelper implements AsyncDisposable {
   }
 
   static async from(
-    browser: Browser,
+    browser: Browser | BrowserContext,
     options?: { languages?: readonly string[] },
   ) {
     const page = await browser.newPage()

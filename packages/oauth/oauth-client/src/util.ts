@@ -3,10 +3,6 @@ export type Simplify<T> = { [K in keyof T]: T[K] } & NonNullable<unknown>
 
 export const ifString = <V>(v: V) => (typeof v === 'string' ? v : undefined)
 
-export function contentMime(headers: Headers): string | undefined {
-  return headers.get('content-type')?.split(';')[0]!.trim()
-}
-
 /**
  * Returns an {@link AbortSignal} that aborts after `ms` milliseconds.
  *

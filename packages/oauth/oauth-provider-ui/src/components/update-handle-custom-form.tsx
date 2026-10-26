@@ -12,28 +12,21 @@ import {
   FormShell,
   type FormShellProps,
 } from '#/components/forms/form-shell.tsx'
+import type { Override } from '#/lib/util.ts'
 import { InputHandleCustomInstructions } from './forms/input-handle-custom-instructions.tsx'
-
-// @NOTE The key is `domain` even though the value is a full handle: the
-// rendered `name` is a public contract.
-type Values = { domain: string }
 
 export type UpdateHandleCustomData = {
   handle: HandleString
 }
 
-export type UpdateHandleCustomFormProps = Omit<
-  FormShellProps<Values>,
-  'form' | 'onSubmit'
-> & {
-  did: string
-  /** Seeds the field when re-opening the dialog. */
-  domainDefault?: string
-  handler: (
-    data: UpdateHandleCustomData,
-    signal: AbortSignal,
-  ) => void | PromiseLike<void>
-}
+export type UpdateHandleCustomFormProps = Override<
+  FormShellProps<UpdateHandleCustomData>,
+  {
+    did: string
+    /** Seeds the field when re-opening the dialog. */
+    domainDefault?: string
+  }
+>
 
 /** Normalises typed input into a handle, or undefined when it is not yet one. */
 function parseHandle(value: string): HandleString | undefined {
@@ -48,6 +41,7 @@ export function UpdateHandleCustomForm({
   did,
   domainDefault,
   handler,
+  onValues,
   ...props
 }: UpdateHandleCustomFormProps) {
   const { t } = useLingui()
@@ -57,13 +51,22 @@ export function UpdateHandleCustomForm({
   const handle = parseHandle(domain)
 
   return (
-    <FormShell<Values>
+    <FormShell<{
+      domain: string
+    }>
       {...props}
       submittable={handle != null}
-      onSubmit={(values, signal) => {
-        const parsed = parseHandle(values.domain)
-        if (!parsed) return
-        return handler({ handle: parsed }, signal)
+      onValues={({ domain }) => {
+        const handle = domain ? parseHandle(domain) : undefined
+        onValues?.({ handle })
+      }}
+      handler={(values, signal) => {
+        const handle = parseHandle(values.domain)
+        // Fool-proofing (should be ensured by the "submittable" prop)
+        if (!handle) {
+          throw new Error('Invalid handle')
+        }
+        return handler({ handle }, signal)
       }}
     >
       <TextField

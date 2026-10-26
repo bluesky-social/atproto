@@ -1,0 +1,17 @@
+{
+  "extends": ["../../../tsconfig/isomorphic.tsconfig.json"],
+  "include": ["./src"],
+  "exclude": ["**/*.test.ts"],
+  "references": [
+    { "path": "../../did/tsconfig.build.json" },
+    { "path": "../../internal/fetch/tsconfig.build.json" },
+    { "path": "../../internal/identity-resolver/tsconfig.build.json" },
+    { "path": "../../internal/simple-store/tsconfig.build.json" },
+    { "path": "../../internal/simple-store-memory/tsconfig.build.json" },
+    { "path": "../oauth-types/tsconfig.build.json" },
+  ],
+  "compilerOptions": {
+    "rootDir": "./src",
+    "outDir": "./dist",
+  },
+}

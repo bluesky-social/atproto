@@ -23,6 +23,11 @@ allowBuilds:
   rolldown: true
   '@parcel/watcher': true
 
+minimumReleaseAgeExclude:
+  - '@puppeteer/browsers@3.2.6'
+  - puppeteer-core@25.16.0
+  - puppeteer@25.16.0
+
 overrides:
   cookie: ^0.7.2
   opentelemetry-plugin-better-sqlite3>@opentelemetry/core: ^1.30.0
