@@ -40,7 +40,7 @@
     }
   },
   "engines": {
-    "node": ">=22"
+    "node": ">=22.15.0"
   },
   "dependencies": {
     "@opentelemetry/api": "^1.10.0",
