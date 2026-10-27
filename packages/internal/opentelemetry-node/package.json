@@ -39,8 +39,8 @@
       "default": "./dist/util.js"
     },
     "./better-sqlite3-plugin": {
-      "types": "./dist/better-sqlite3-plugin.d.ts",
-      "default": "./dist/better-sqlite3-plugin.js"
+      "types": "./dist/plugins/better-sqlite3-plugin.d.ts",
+      "default": "./dist/plugins/better-sqlite3-plugin.js"
     }
   },
   "engines": {

@@ -4,7 +4,6 @@ import type { AddressInfo } from 'node:net'
 import { SpanKind, context, trace } from '@opentelemetry/api'
 import { AsyncLocalStorageContextManager } from '@opentelemetry/context-async-hooks'
 import { RPCType, getRPCMetadata } from '@opentelemetry/core'
-import type { Instrumentation } from '@opentelemetry/instrumentation'
 import { MeterProvider, MetricReader } from '@opentelemetry/sdk-metrics'
 import {
   InMemorySpanExporter,
@@ -12,11 +11,67 @@ import {
   TracerProvider,
 } from '@opentelemetry/sdk-trace'
 import { afterAll, beforeAll, describe, expect, test } from 'vitest'
-import { ATTR_HTTP_ROUTE, ATTR_XRPC_METHOD } from '../src/conventions.js'
+import { ATTR_HTTP_ROUTE, ATTR_XRPC_METHOD } from '../conventions.js'
 import {
-  type DefaultAtprotoInstrumentationsOptions,
-  getDefaultAtprotoInstrumentations,
-} from '../src/instrumentation.js'
+  UNKNOWN_XRPC_ROUTE,
+  XrpcHttpInstrumentation,
+  type XrpcHttpInstrumentationConfig,
+  extractUrlXrpcMethodName,
+} from './xrpc-http-instrumentation.js'
+
+describe(extractUrlXrpcMethodName, () => {
+  test.each([
+    {
+      note: 'simple method',
+      url: '/xrpc/com.example.foo',
+      lxm: 'com.example.foo',
+    },
+    {
+      note: 'with query string',
+      url: '/xrpc/com.example.foo?limit=10&cursor=abc',
+      lxm: 'com.example.foo',
+    },
+    {
+      note: 'trailing slash',
+      url: '/xrpc/com.example.foo/',
+      lxm: 'com.example.foo',
+    },
+    {
+      note: 'trailing slash with query',
+      url: '/xrpc/com.example.foo/?a=1',
+      lxm: 'com.example.foo',
+    },
+    {
+      note: 'authority lowercased, name segment preserved',
+      url: '/xrpc/Com.Example.fooBar',
+      lxm: 'com.example.fooBar',
+    },
+    {
+      note: 'shortest valid nsid',
+      url: '/xrpc/a.b.c',
+      lxm: 'a.b.c',
+    },
+  ])('$note', ({ url, lxm }) => {
+    expect(extractUrlXrpcMethodName(url)).toBe(lxm)
+  })
+
+  test.each([
+    { note: 'non-string input', url: undefined },
+    { note: 'null input', url: null },
+    { note: 'number input', url: 42 },
+    { note: 'not an xrpc path', url: '/foo/bar' },
+    { note: 'too short', url: '/xrpc/' },
+    { note: 'health check (underscore)', url: '/xrpc/_health' },
+    { note: 'leading dot', url: '/xrpc/.foo' },
+    { note: 'double slash', url: '/xrpc//foo' },
+    { note: 'immediate query', url: '/xrpc/?foo=bar' },
+    { note: 'extra path segment', url: '/xrpc/com.example.foo/bar' },
+    { note: 'no dot in method', url: '/xrpc/foobar' },
+    { note: 'trailing dot', url: '/xrpc/com.example.' },
+  ])('$note → undefined', ({ url }) => {
+    expect(extractUrlXrpcMethodName(url)).toBeUndefined()
+  })
+})
 
 class TestMetricReader extends MetricReader {
   protected async onForceFlush() {}
@@ -27,12 +82,12 @@ class TestMetricReader extends MetricReader {
  * Runs the http server instrumentation suite against a real http server.
  *
  * @note The instrumentation patches process-wide state ("node:http", OTEL
- * globals), so each call must live in its own test file (vitest isolates
- * files from one another).
+ * globals). Each suite restores it in its afterAll, so suites in the same file
+ * must run sequentially (vitest's default).
  */
-export function describeHttpServerInstrumentation(options: {
+function describeHttpServerInstrumentation(options: {
   name: string
-  xrpcMethods: DefaultAtprotoInstrumentationsOptions['xrpcMethods']
+  xrpcMethods: XrpcHttpInstrumentationConfig['xrpcMethods']
   /** The route the (mimicked) express instrumentation leaves on the request */
   expressRoute: (url: string) => string
   expectedMetricRoutes: string[]
@@ -45,7 +100,7 @@ export function describeHttpServerInstrumentation(options: {
     const tracerProvider = new TracerProvider({
       spanProcessors: [new SimpleSpanProcessor({ exporter: spanExporter })],
     })
-    let instrumentations: Instrumentation[]
+    let unpatchHttp: () => void
     let server: Http.Server
     let origin: string
 
@@ -56,16 +111,17 @@ export function describeHttpServerInstrumentation(options: {
         new AsyncLocalStorageContextManager().enable(),
       )
 
-      instrumentations = getDefaultAtprotoInstrumentations({ xrpcMethods })
-      const meterProvider = new MeterProvider({ readers: [reader] })
-      for (const instrumentation of instrumentations) {
-        instrumentation.setMeterProvider(meterProvider)
-        instrumentation.enable()
-      }
+      const instrumentation = new XrpcHttpInstrumentation({
+        xrpcMethods,
+        enabled: false,
+      })
+      instrumentation.setMeterProvider(new MeterProvider({ readers: [reader] }))
 
-      // The instrumentation patches "node:http" as it gets required, so it must
-      // be loaded after enabling it.
+      // @NOTE Patching "node:http" directly rather than through enable(): the
+      // require hook it registers is shared process-wide and caches "node:http"
+      // once patched, so it wouldn't patch it again for the next suite.
       const http: typeof Http = createRequire(import.meta.url)('node:http')
+      unpatchHttp = patchHttp(instrumentation, http)
       server = http.createServer((req, res) => {
         // Mimic express, which gives requests a "path" getter...
         Object.defineProperty(req, 'path', {
@@ -86,7 +142,7 @@ export function describeHttpServerInstrumentation(options: {
 
     afterAll(async () => {
       await new Promise((resolve) => server.close(resolve))
-      for (const instrumentation of instrumentations) instrumentation.disable()
+      unpatchHttp()
       await tracerProvider.shutdown()
       trace.disable()
       context.disable()
@@ -139,3 +195,47 @@ export function describeHttpServerInstrumentation(options: {
     })
   })
 }
+
+function patchHttp(
+  instrumentation: XrpcHttpInstrumentation,
+  http: typeof Http,
+) {
+  const { patch, unpatch } =
+    instrumentation.getModuleDefinitions().find((m) => m.name === 'http') ?? {}
+  if (!patch || !unpatch) throw new Error('No "http" module definition')
+
+  patch(http)
+  return () => unpatch(http)
+}
+
+describeHttpServerInstrumentation({
+  name: 'with xrpcMethods',
+  xrpcMethods: ['com.example.knownMethod', 'COM.Example.otherMethod'],
+  // Express' catchall middlewares clobber the route with "/"
+  expressRoute: () => '/',
+  expectedMetricRoutes: [
+    // Non-XRPC requests keep whatever route express set
+    '/',
+    '/xrpc/com.example.knownMethod',
+    '/xrpc/com.example.otherMethod',
+    UNKNOWN_XRPC_ROUTE,
+  ],
+})
+
+const ROUTED = new Set(['com.example.knownMethod', 'com.example.otherMethod'])
+
+describeHttpServerInstrumentation({
+  name: 'without xrpcMethods',
+  xrpcMethods: undefined,
+  // Express registers one route per XRPC method; other URLs hit a catchall
+  expressRoute: (url) => {
+    const lxm = extractUrlXrpcMethodName(url)
+    return lxm && ROUTED.has(lxm) ? `/xrpc/${lxm}` : '/'
+  },
+  // The route express recorded is left untouched (never "unknown")
+  expectedMetricRoutes: [
+    '/',
+    '/xrpc/com.example.knownMethod',
+    '/xrpc/com.example.otherMethod',
+  ],
+})

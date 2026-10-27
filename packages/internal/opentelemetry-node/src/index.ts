@@ -1,21 +1,12 @@
 import { register } from 'node:module'
-import {
-  type Attributes,
-  type Context,
-  type TextMapGetter,
-  diag,
-} from '@opentelemetry/api'
+import { type Attributes, diag } from '@opentelemetry/api'
 import { getResourceDetectors } from '@opentelemetry/auto-instrumentations-node'
 import {
-  W3CTraceContextPropagator,
   getBooleanFromEnv,
   getStringFromEnv,
   getStringListFromEnv,
 } from '@opentelemetry/core'
-import {
-  type Instrumentation,
-  InstrumentationBase,
-} from '@opentelemetry/instrumentation'
+import type { Instrumentation } from '@opentelemetry/instrumentation'
 import {
   defaultResource,
   resourceFromAttributes,
@@ -29,13 +20,16 @@ import {
   ATTR_SERVICE_VERSION,
 } from './conventions.js'
 import {
-  type DefaultAtprotoInstrumentationsOptions,
-  getDefaultAtprotoInstrumentations,
+  type BuildInstrumentationsOptions,
+  InstrumentationMismatchError,
+  buildInstrumentations,
 } from './instrumentation.js'
+import { FilteredW3CTraceContextPropagator } from './propagators/filtered-w3c-trace-context-propagator.js'
 
 export type { Attributes, Instrumentation }
+export { InstrumentationMismatchError }
 
-export type SetupOptions = DefaultAtprotoInstrumentationsOptions & {
+export type SetupOptions = BuildInstrumentationsOptions & {
   name: string
   version: string
   /**
@@ -45,30 +39,6 @@ export type SetupOptions = DefaultAtprotoInstrumentationsOptions & {
    * precedence, so these remain defaults.
    */
   defaultResourceAttributes?: Attributes
-  instrumentations?: Instrumentation[]
-}
-
-class FilteredW3CTraceContextPropagator extends W3CTraceContextPropagator {
-  extract(context: Context, carrier: unknown, getter: TextMapGetter) {
-    if (this.shouldPropagate(context, carrier, getter)) {
-      return super.extract(context, carrier, getter)
-    }
-    return context
-  }
-
-  shouldPropagate(
-    _context: Context,
-    _carrier: unknown,
-    _getter: TextMapGetter,
-  ) {
-    // Implement your logic to determine if the trace context should
-    // be propagated. For now, we assume the service is public and
-    // do not propagate.
-
-    // @NOTE using IP based logic would require:
-    // https://github.com/open-telemetry/opentelemetry-js/pull/6902
-    return false
-  }
 }
 
 // @NOTE Hand-rolled equivalent of "@opentelemetry/auto-instrumentations-node"'s
@@ -122,12 +92,6 @@ export async function setup(getOptions: () => SetupOptions): Promise<void> {
     // imports of those modules are not instrumented.
     const options = getOptions()
 
-    const instrumentations = [
-      ...getDefaultAtprotoInstrumentations(options),
-      ...(options.instrumentations ?? []),
-    ]
-    assertSharedInstrumentationBase(instrumentations)
-
     const sdk = new NodeSDK({
       textMapPropagator: propagatorsConfigured
         ? undefined // Let the SDK handle propagators based on the OTEL_PROPAGATORS env var.
@@ -150,7 +114,7 @@ export async function setup(getOptions: () => SetupOptions): Promise<void> {
       // @NOTE Unlike sdk-node's default detectors, these include the
       // "container" detector.
       resourceDetectors: getResourceDetectors(),
-      instrumentations,
+      instrumentations: buildInstrumentations(options),
 
       // @NOTE The gate above enables the SDK as soon as *any* signal is
       // configured, but NodeSDK then defaults every unspecified
@@ -185,28 +149,6 @@ export async function setup(getOptions: () => SetupOptions): Promise<void> {
     if (err instanceof InstrumentationMismatchError) throw err
 
     diag.error('Error initializing OpenTelemetry SDK', err)
-  }
-}
-
-export class InstrumentationMismatchError extends Error {
-  name = 'InstrumentationMismatchError'
-}
-
-/**
- * import-in-the-middle only hooks the ESM imports of modules targeted by
- * instrumentations built on the same `@opentelemetry/instrumentation` copy as
- * this package (see {@link setup}). Instrumentations built on another copy
- * would silently miss them.
- */
-function assertSharedInstrumentationBase(instrumentations: Instrumentation[]) {
-  const foreign = instrumentations.filter(
-    (i) => !(i instanceof InstrumentationBase) && 'getModuleDefinitions' in i,
-  )
-  if (foreign.length) {
-    const names = foreign.map((i) => `"${i.instrumentationName}"`).join(', ')
-    throw new InstrumentationMismatchError(
-      `Instrumentation(s) ${names} use a different copy of @opentelemetry/instrumentation than @atproto-labs/opentelemetry-node, so ESM imports of the modules they target would not be instrumented. Make them resolve the same @opentelemetry/instrumentation (e.g. with a package manager override), or use instrumentations built on it.`,
-    )
   }
 }
 
