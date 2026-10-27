@@ -413,17 +413,26 @@ describe('inbox appeal mapper', () => {
     },
   )
 
-  it('gives an account another appeal after the last one closes', () => {
+  it('gives an account another appeal after a new action', () => {
     expect(
       appeal(ACCOUNT, { appealed: false, report: closedReport })
         .availableActions,
     ).toEqual(['appeal'])
   })
 
-  it('never re-offers an appeal on a record', () => {
+  it('re-offers an appeal on a record after a new action', () => {
     expect(
       appeal(RECORD, { appealed: false, report: closedReport })
         .availableActions,
+    ).toEqual(['appeal'])
+  })
+
+  it('does not re-offer an appeal without an action after closure', () => {
+    expect(
+      appeal(RECORD, {
+        report: closedReport,
+        latestAppealableAt: closedReport.closedAt,
+      }).availableActions,
     ).toEqual([])
   })
 })

@@ -709,7 +709,9 @@ describe('appealActionedSubject', () => {
         })
         await tagAccount(did, [accountTag])
         await callAppeal({ subject }, did)
-        const matches = !!reportTypes?.includes(APPEAL_REASON_TYPE)
+        const matches = !!(
+          reportTypes as readonly string[] | undefined
+        )?.includes(APPEAL_REASON_TYPE)
         const report = await latestAppealReport(did)
         expect(report.queueId).toBe(matches ? tagged.id : ordinary.id)
         const history = await activities(report.id)
@@ -843,7 +845,7 @@ describe('appealActionedSubject', () => {
     })
   })
 
-  it('files through fallback routing when a semantic reference is ambiguous', async () => {
+  it('links a semantic reference to the latest matching action', async () => {
     const subject = seededRecordSubject('ambiguous-ref')
     await takedown(subject)
     await modClient.emitEvent({
@@ -852,14 +854,14 @@ describe('appealActionedSubject', () => {
       },
       subject,
     })
-    await takedown(subject)
+    const action = await takedown(subject)
 
     await appealTakedown(subject, sc.dids.alice)
 
     expect(await latestAppealReport(sc.dids.alice)).toMatchObject({
       queueId: -1,
       status: 'open',
-      actionEventIds: null,
+      actionEventIds: [action.id],
     })
   })
 
@@ -920,7 +922,7 @@ describe('appealActionedSubject', () => {
     })
   })
 
-  it('allows a record only one appeal ever, closed appeals included', async () => {
+  it('allows a new post action to be appealed after a previous appeal closes', async () => {
     const subject = {
       $type: 'com.atproto.repo.strongRef' as const,
       uri: sc.posts[sc.dids.dan][0].ref.uriStr,
@@ -930,11 +932,201 @@ describe('appealActionedSubject', () => {
     await appeal(first.id, sc.dids.dan)
     await closeLatestAppeal(sc.dids.dan)
 
-    // A different action on the same record does not earn a second appeal.
-    const second = await label(subject)
-    await expect(appeal(second.id, sc.dids.dan)).rejects.toMatchObject({
+    await expect(appeal(first.id, sc.dids.dan)).rejects.toMatchObject({
       error: 'AlreadyAppealed',
     })
+    const second = await label(subject)
+    const detail = await sc.agent.call(
+      'tools.ozone.inbox.getActionedSubject',
+      { subject: subject.uri },
+      undefined,
+      {
+        headers: {
+          ...sc.getHeaders(sc.dids.dan),
+          'atproto-proxy': proxyHeader,
+        },
+      },
+    )
+    expect(detail.data.availableActions).toEqual(['appeal'])
+    const result = await appeal(second.id, sc.dids.dan)
+    expect(result.data.availableActions).toEqual([])
+    expect(result.data.appeal.state).toBe('pending')
+  })
+
+  it('offers a takedown appeal after an earlier label appeal is approved', async () => {
+    const account = await sc.createAccount('repeatpost', {
+      handle: 'repeatpost.test',
+      email: 'repeatpost@test.com',
+      password: 'repeatpost-pass',
+    })
+    const post = await sc.post(account.did, 'a post with two actions')
+    const subject = {
+      $type: com.atproto.repo.strongRef.$type,
+      uri: post.ref.uriStr,
+      cid: post.ref.cidStr,
+    }
+    const first = await label(subject)
+    await appeal(first.id, account.did)
+    const previous = await latestAppealReport(account.did)
+    const removal = await modClient.emitEvent({
+      subject,
+      event: {
+        $type: tools.ozone.moderation.defs.modEventLabel.$type,
+        createLabelVals: [],
+        negateLabelVals: ['!warn'],
+      },
+      reportAction: { ids: [previous.id] },
+    })
+    const detail = () =>
+      sc.agent.call(
+        tools.ozone.inbox.getActionedSubject.$lxm,
+        { subject: subject.uri },
+        undefined,
+        {
+          headers: {
+            ...sc.getHeaders(account.did),
+            'atproto-proxy': proxyHeader,
+          },
+        },
+      )
+    expect((await detail()).data.availableActions).toEqual([])
+    await expect(appeal(removal.id, account.did)).rejects.toMatchObject({
+      error: 'NotAppealable',
+    })
+
+    const second = await takedown(subject)
+    expect((await detail()).data.availableActions).toEqual(['appeal'])
+    const list = await sc.agent.call(
+      tools.ozone.inbox.listActionedSubjects.$lxm,
+      {},
+      undefined,
+      {
+        headers: {
+          ...sc.getHeaders(account.did),
+          'atproto-proxy': proxyHeader,
+        },
+      },
+    )
+    const listed = list.data.subjects.find(
+      (view: { subject: { uri?: string } }) => view.subject.uri === subject.uri,
+    )
+    expect(listed?.availableActions).toEqual(['appeal'])
+    await appeal(second.id, account.did)
+    expect(await latestAppealReport(account.did)).toMatchObject({
+      actionEventIds: [second.id],
+    })
+  })
+
+  it('keeps a reopened older appeal pending after a newer one closes', async () => {
+    const account = await sc.createAccount('reopenappeal', {
+      handle: 'reopenappeal.test',
+      email: 'reopenappeal@test.com',
+      password: 'reopenappeal-pass',
+    })
+    const subject = com.atproto.admin.defs.repoRef.$build({ did: account.did })
+    const first = await label(subject)
+    await appeal(first.id, account.did)
+    const oldId = await closeLatestAppeal(account.did)
+    const second = await takedown(subject)
+    await appeal(second.id, account.did)
+    const activity = async (
+      reportId: number,
+      type: 'closeActivity' | 'reopenActivity',
+    ) =>
+      ozoneAgent.tools.ozone.report.createActivity(
+        { reportId, activity: { $type: `tools.ozone.report.defs#${type}` } },
+        {
+          headers: await network.ozone.modHeaders(
+            'tools.ozone.report.createActivity',
+            'admin',
+          ),
+          encoding: 'application/json',
+        },
+      )
+    await activity(oldId, 'reopenActivity')
+    await closeLatestAppeal(account.did)
+    const view = await getAccountView(account.did)
+    expect(view.appeal.state).toBe('pending')
+    expect(view.availableActions).toEqual([])
+    await expect(appeal(second.id, account.did)).rejects.toMatchObject({
+      error: 'AlreadyAppealed',
+    })
+    await activity(oldId, 'closeActivity')
+    await expect(appeal(second.id, account.did)).rejects.toMatchObject({
+      error: 'AlreadyAppealed',
+    })
+  })
+
+  it('finds an appealable action beyond the public event window', async () => {
+    const account = await sc.createAccount('appealhistory', {
+      handle: 'appealhistory.test',
+      email: 'appealhistory@test.com',
+      password: 'appealhistory-pass',
+    })
+    const subject = com.atproto.admin.defs.repoRef.$build({ did: account.did })
+    const first = await label(subject)
+    for (let i = 0; i < 51; i++) {
+      await modClient.emitEvent({
+        subject,
+        event: {
+          $type: tools.ozone.moderation.defs.modEventEmail.$type,
+          subjectLine: 'Update',
+        },
+      })
+    }
+    expect((await getAccountView(account.did)).availableActions).toEqual([
+      'appeal',
+    ])
+    const { data } = await sc.agent.call(
+      tools.ozone.inbox.getActionedSubject.$lxm,
+      { subject: account.did },
+      undefined,
+      {
+        headers: {
+          ...sc.getHeaders(account.did),
+          'atproto-proxy': proxyHeader,
+        },
+      },
+    )
+    expect(data.availableActions).toEqual(['appeal'])
+    await appeal(first.id, account.did)
+  })
+
+  it('requires a new action for a subsequent subject-only appeal', async () => {
+    const account = await sc.createAccount('subjectappeal', {
+      handle: 'subjectappeal.test',
+      email: 'subjectappeal@test.com',
+      password: 'subjectappeal-pass',
+    })
+    const subject = com.atproto.admin.defs.repoRef.$build({ did: account.did })
+    const first = await label(subject)
+    await appeal(first.id, account.did)
+    await closeLatestAppeal(account.did)
+    await expect(legacyAppeal(account.did)).rejects.toMatchObject({
+      error: 'AlreadyAppealed',
+    })
+    await takedown(subject)
+    await legacyAppeal(account.did)
+    expect((await getAccountView(account.did)).appeal.state).toBe('pending')
+  })
+
+  it('serializes concurrent inbox appeals on the same subject', async () => {
+    const account = await sc.createAccount('appealrace', {
+      handle: 'appealrace.test',
+      email: 'appealrace@test.com',
+      password: 'appealrace-pass',
+    })
+    const subject = com.atproto.admin.defs.repoRef.$build({ did: account.did })
+    const action = await takedown(subject)
+    const results = await Promise.allSettled([
+      appeal(action.id, account.did),
+      appeal(action.id, account.did),
+    ])
+    expect(
+      results.filter((result) => result.status === 'fulfilled'),
+    ).toHaveLength(1)
+    const failed = results.find((result) => result.status === 'rejected')
+    expect(failed).toMatchObject({ reason: { error: 'AlreadyAppealed' } })
   })
 
   it('matches an existing appeal by subject rather than by action', async () => {
@@ -966,7 +1158,11 @@ describe('appealActionedSubject', () => {
     })
 
     const firstReportId = await closeLatestAppeal(sc.dids.dan)
-    await appeal(second.id, sc.dids.dan)
+    await expect(appeal(second.id, sc.dids.dan)).rejects.toMatchObject({
+      error: 'AlreadyAppealed',
+    })
+    const third = await label(subject)
+    await appeal(third.id, sc.dids.dan)
     const secondReport = await latestAppealReport(sc.dids.dan)
     expect(secondReport.id).not.toBe(firstReportId)
   })
