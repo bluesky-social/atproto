@@ -24,7 +24,6 @@ import type {
   RecordRef,
 } from '../proto/bsky_pb.js'
 import { type HydrationXrpcEndpoint, events } from '../telemetry/events.js'
-import { SITE_STANDARD_NSID_PREFIX } from '../util/external/standard-site.js'
 import { uriToDid, uriToDid as didFromUri } from '../util/uris.js'
 import type { ParsedLabelers } from '../util.js'
 import { MAX_PROFILE_LINKS } from '../views/profile-link-rules.js'
@@ -46,19 +45,15 @@ import {
   type ProfileViewerStates,
 } from './actor.js'
 import {
-  type ExactRecordKey,
   type ExternalHydrationTracker,
   ExternalHydrator,
   type ExternalRecordBacklinkCounts,
   type ExternalRecordBacklinks,
   type ExternalRecords,
   type ExternalRecordsByRef,
-  type SiteStandardDocuments,
-  type SiteStandardPublications,
   actionExternalRecordTakedowns,
   externalAssociatedRefsFromPosts,
   genericRecordKey,
-  parseGenericRecordKey,
   trackExternalHydration,
 } from './external.js'
 import {
@@ -195,8 +190,6 @@ export type HydrationState = {
   /** Available backlink source URIs per target, potentially from a partial page. */
   externalRecordBacklinks?: ExternalRecordBacklinks
   externalRecordBacklinkCounts?: ExternalRecordBacklinkCounts
-  siteStandardDocuments?: SiteStandardDocuments
-  siteStandardPublications?: SiteStandardPublications
 }
 
 type HydrateKnownLikersOptions = {
@@ -2299,17 +2292,6 @@ const nestedRecordUris = (post: Post['record']): AtUriString[] => {
   return uris
 }
 
-/**
- * Legacy Standard.site filter of the generic associated refs. No runtime caller
- * remains (post hydration uses the all-collection collector directly); it is
- * exported only to satisfy `noUnusedLocals` until the specialized path is
- * deleted.
- */
-export const siteStandardRefsFromPosts = (...postLayers: Posts[]): ItemRef[] =>
-  externalAssociatedRefsFromPosts(...postLayers).filter((ref) =>
-    new AtUri(ref.uri).collection.startsWith(SITE_STANDARD_NSID_PREFIX),
-  )
-
 const getListUrisFromThreadgates = (gates: Threadgates): AtUriString[] => {
   const uris: AtUriString[] = []
   for (const gate of gates.values()) {
@@ -2433,14 +2415,6 @@ export const mergeStates = (
       stateA.externalRecordBacklinkCounts,
       stateB.externalRecordBacklinkCounts,
     ),
-    siteStandardDocuments: mergeMaps(
-      stateA.siteStandardDocuments,
-      stateB.siteStandardDocuments,
-    ),
-    siteStandardPublications: mergeMaps(
-      stateA.siteStandardPublications,
-      stateB.siteStandardPublications,
-    ),
   }
 }
 
@@ -2476,57 +2450,6 @@ const recordUriOf = (
     !parsed.value.hash
     ? (value as AtUriString)
     : undefined
-}
-
-/**
- * Apply takedown labels to the site.standard hydration maps. Per-record
- * takedowns null any entry whose subject URI is taken down; pair takedowns
- * propagate that null across doc/publication pairs so we never render half
- * of a moderated embed. Pairs are discovered via `doc.record.site`; orphan
- * docs and orphan publications are subject only to the per-record sweep.
- */
-export const actionSiteStandardTakedownLabels = (
-  documents: SiteStandardDocuments,
-  publications: SiteStandardPublications,
-  labels: Labels,
-) => {
-  // Pairings have to be captured before nulling — the doc record carries
-  // the publication URI in its `site` field, and we lose it once we null.
-  const pairings: { docKey: ExactRecordKey; pubKey: ExactRecordKey }[] = []
-  if (documents.size > 0 && publications.size > 0) {
-    const pubKeysByUri = new Map<string, ExactRecordKey[]>()
-    for (const key of publications.keys()) {
-      const { uri } = parseGenericRecordKey(key)
-      const list = pubKeysByUri.get(uri)
-      if (list) list.push(key)
-      else pubKeysByUri.set(uri, [key])
-    }
-    for (const [docKey, doc] of documents) {
-      const site = doc?.record.site
-      if (!site || !site.startsWith('at://')) continue
-      for (const pubKey of pubKeysByUri.get(site) ?? []) {
-        pairings.push({ docKey, pubKey })
-      }
-    }
-  }
-
-  // Per-record takedowns: null any entry whose subject URI is taken down.
-  for (const key of documents.keys()) {
-    const { uri } = parseGenericRecordKey(key)
-    if (labels.get(uri)?.isTakendown) documents.set(key, null)
-  }
-  for (const key of publications.keys()) {
-    const { uri } = parseGenericRecordKey(key)
-    if (labels.get(uri)?.isTakendown) publications.set(key, null)
-  }
-
-  // Pair takedowns: if exactly one side of a pair was nulled above, mirror.
-  for (const { docKey, pubKey } of pairings) {
-    const doc = documents.get(docKey)
-    const pub = publications.get(pubKey)
-    if (doc === null && pub !== null) publications.set(pubKey, null)
-    if (pub === null && doc !== null) documents.set(docKey, null)
-  }
 }
 
 const uriToRef = (uri: AtUriString): ItemRef => {

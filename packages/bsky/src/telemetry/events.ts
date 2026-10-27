@@ -43,8 +43,8 @@ type ExternalHydrationAttributes = {
 
 /**
  * Generic record lookup work of one external hydration traversal, across the
- * root and all nested dependency batches. Excludes profile/label hydration,
- * backlink sample/count RPCs, and legacy Standard Site reads.
+ * root and all nested dependency batches. Excludes profile/label hydration
+ * and backlink sample/count RPCs.
  */
 export type ExternalHydrationWork = {
   /**

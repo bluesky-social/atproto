@@ -332,9 +332,6 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
 
     expect(state.externalRecordsByRef?.has(fetchedKey(doc1))).toBe(true)
     expect(state.externalRecordsByRef?.has(fetchedKey(pubUri))).toBe(true)
-    // Generic hydration populates no specialized Standard.site maps.
-    expect(state.siteStandardDocuments).toBeUndefined()
-    expect(state.siteStandardPublications).toBeUndefined()
     expect(state.labels?.has(doc1)).toBe(true)
 
     expect(state.externalRecordBacklinks?.get(doc1)).toEqual(recs.slice(0, 3))
@@ -981,8 +978,6 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
       }
       // The cross-repo publication owner's profile comes from its own batch.
       expect(state.actors?.has('did:plc:pub2' as DidString)).toBe(true)
-      expect(state.siteStandardDocuments).toBeUndefined()
-      expect(state.siteStandardPublications).toBeUndefined()
     })
 
     it('combines directly supplied documents and publications in one lookup', async ({
@@ -2488,10 +2483,6 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
         ])
         fixture.records.set(pub2Uri, { body: makePub() })
         using _refs = mockRefs(fixture, versions)
-        using specialized = vi.spyOn(
-          hydrator.external,
-          'getSiteStandardRecordsByRef',
-        )
         setup(fixture, [
           // Direct embed, with a duplicate and a non-Standard.site root.
           makePost(
@@ -2524,7 +2515,6 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
         )
 
         // One exact-root fetch for every distinct pin, in encounter order.
-        expect(specialized).not.toHaveBeenCalled()
         expect(dataplane.getRecordsByRef).toHaveBeenCalledTimes(1)
         expect(
           vi
@@ -2558,7 +2548,7 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
         expect(state.actors?.has(author)).toBe(true)
         expect(state.actors?.has('did:plc:pub' as DidString)).toBe(true)
 
-        // Exact pins stay distinct, and no specialized maps are emitted.
+        // Exact pins stay distinct.
         expect(
           (
             state.externalRecordsByRef?.get(key(doc1, '2'))
@@ -2567,8 +2557,6 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
             }
           ).site,
         ).toBe(pub2Uri)
-        expect(state.siteStandardDocuments).toBeUndefined()
-        expect(state.siteStandardPublications).toBeUndefined()
 
         // The ordinary post label/profile batches exclude external additions
         // (those are fetched by the generic traversal's own passes).
@@ -2619,7 +2607,6 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
         expect(dataplane.getRecordsByURI).not.toHaveBeenCalled()
         expect(traversalReports()).toEqual([])
         expect(state.externalRecordsByRef).toBeUndefined()
-        expect(state.siteStandardDocuments).toBeUndefined()
         expect(state.posts?.has(feedUri)).toBe(true)
       })
 

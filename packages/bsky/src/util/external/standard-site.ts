@@ -10,8 +10,6 @@ import type {
 import type { RecordInfo } from '../../hydration/util.js'
 import { site } from '../../lexicons/index.js'
 
-export const SITE_STANDARD_NSID_PREFIX = 'site.standard.'
-
 /**
  * Parse `url` as HTTP(S) and reduce it to a canonical
  * `protocol://host/path` string for equality comparison: lowercases host,

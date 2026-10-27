@@ -87,28 +87,6 @@ export type ExactRecordKey = string & { [exactRecordKeySymbol]: true }
 export type SiteStandardDocument = RecordInfo<SiteStandardDocumentRecord>
 export type SiteStandardPublication = RecordInfo<SiteStandardPublicationRecord>
 
-/**
- * Keyed by `${uri}@${cid}` — see `genericRecordKey`. A single hydration
- * batch can pull more than one version of the same URI (different posts
- * pinning different cids), so the composite key is needed for O(1)
- * version-exact lookups.
- */
-export type SiteStandardDocuments = HydrationMap<
-  ExactRecordKey,
-  SiteStandardDocument
->
-/**
- * Keyed by `${uri}@${cid}`. See `SiteStandardDocuments` for the rationale.
- */
-export type SiteStandardPublications = HydrationMap<
-  ExactRecordKey,
-  SiteStandardPublication
->
-export type SiteStandardRecords = {
-  documents: SiteStandardDocuments
-  publications: SiteStandardPublications
-}
-
 export class ExternalHydrator {
   static readonly MAX_BACKLINK_PREVIEWS = 3
   static readonly MAX_BACKLINK_GALLERY_ITEMS = 10
@@ -273,28 +251,6 @@ export class ExternalHydrator {
       )
     }
     return { backlinks, truncated: res.truncated }
-  }
-
-  /**
-   * Fetch exact `site.standard.{document,publication}` versions. Does NOT
-   * resolve a document's publication; callers must pin it explicitly.
-   */
-  async getSiteStandardRecordsByRef(
-    refs: ItemRef[],
-    includeTakedowns = false,
-  ): Promise<SiteStandardRecords> {
-    const ssRefs = refs.filter(
-      (ref): ref is Required<ItemRef> =>
-        !!ref.cid && siteStandardKind(ref.uri) !== undefined,
-    )
-    const out = emptySiteStandardRecords()
-    if (!ssRefs.length) return out
-
-    const records = await this.getRecordsByRef(ssRefs, includeTakedowns)
-    for (const [key, info] of records) {
-      setSiteStandardRecord(out, parseGenericRecordKey(key).uri, key, info)
-    }
-    return out
   }
 }
 
@@ -467,14 +423,9 @@ function parseGenericRecord(
   }
 }
 
-const emptySiteStandardRecords = (): SiteStandardRecords => ({
-  documents: new HydrationMap(),
-  publications: new HydrationMap(),
-})
-
 const siteStandardKind = (
   uri: string,
-): keyof SiteStandardRecords | undefined => {
+): 'documents' | 'publications' | undefined => {
   const parsed = parseAtUriString(uri)
   if (!parsed.success) return undefined
   switch (parsed.value.collection) {
@@ -500,113 +451,9 @@ const matchRecordInfo = <TSchema extends RecordSchema>(
     ? { ...info, record: info.record }
     : null
 
-/**
- * Store a generic record in the map matching its collection. Records failing
- * Lexicon validation are stored as null.
- */
-const setSiteStandardRecord = (
-  out: SiteStandardRecords,
-  uri: string,
-  key: ExactRecordKey,
-  info: ExternalRecord | null | undefined,
-) => {
-  switch (siteStandardKind(uri)) {
-    case 'documents':
-      out.documents.set(key, matchRecordInfo(site.standard.document.main, info))
-      break
-    case 'publications':
-      out.publications.set(
-        key,
-        matchRecordInfo(site.standard.publication.main, info),
-      )
-      break
-  }
-}
-
 export type AssociatedSiteStandardRecord<T> = {
   ref: { uri: AtUriString; cid: string }
   info: T
-}
-
-/**
- * Read-path resolution: caller pinned a set of `(uri, cid)` strongRefs in
- * the post at write time, and we honor those exact versions. Any pair
- * that doesn't structurally agree is rejected, so downstream callers can
- * trust the returned shape.
- *
- * Pairing rules:
- * - Both slots referenced: `doc.site` must equal `publication.ref.uri`,
- *   else both come back `undefined`.
- * - Doc with at-uri `site` referenced but no matching publication ref:
- *   reject the whole pairing (doc claims a publication that should have
- *   been pinned, but wasn't).
- * - Loose doc (web-URL `site`) referenced: publication stays `undefined`.
- * - Only a publication referenced: document stays `undefined`.
- *
- * Each returned slot carries the matching `ref` so callers can recover
- * the owner DID for blob-cdn URL building, etc.
- */
-export const getSiteStandardRecordsFromHydrationMapsByRefs = (
-  associatedRefs: readonly { uri: AtUriString; cid: string }[] | undefined,
-  documents: SiteStandardDocuments | undefined,
-  publications: SiteStandardPublications | undefined,
-): {
-  document: AssociatedSiteStandardRecord<SiteStandardDocument> | undefined
-  publication: AssociatedSiteStandardRecord<SiteStandardPublication> | undefined
-} => {
-  if (!associatedRefs?.length) {
-    return { document: undefined, publication: undefined }
-  }
-
-  // Resolve each ref against the hydration maps, taking the first hit on
-  // each side.
-  let document: AssociatedSiteStandardRecord<SiteStandardDocument> | undefined
-  let publication:
-    AssociatedSiteStandardRecord<SiteStandardPublication> | undefined
-  for (const ref of associatedRefs) {
-    const key = genericRecordKey(ref)
-    if (!document) {
-      const hit = documents?.get(key)
-      if (hit) document = { ref, info: hit }
-    }
-    if (!publication) {
-      const hit = publications?.get(key)
-      if (hit) publication = { ref, info: hit }
-    }
-    if (document && publication) break
-  }
-
-  // Both refs resolved: enforce that the doc's `site` actually points at
-  // the supplied publication. Mismatch means the post was misconstructed
-  // (or tampered with), so reject the whole pairing.
-  if (document && publication) {
-    if (document.info.record.site !== publication.ref.uri) {
-      hydrationLogger.warn(
-        {
-          documentUri: document.ref.uri,
-          documentSite: document.info.record.site,
-          publicationUri: publication.ref.uri,
-        },
-        'site.standard byRefs lookup failed: doc.site does not match hydrated publication.uri',
-      )
-      return { document: undefined, publication: undefined }
-    }
-  }
-
-  // Doc with at-uri `site` but no publication: the post should have
-  // pinned the publication too. Treat as misconstructed.
-  if (document && !publication) {
-    const site = document.info.record.site
-    if (site && site.startsWith('at://')) {
-      hydrationLogger.warn(
-        { documentUri: document.ref.uri, documentSite: site },
-        'site.standard byRefs lookup failed: document.site is AT URI but no matching publication was hydrated',
-      )
-      return { document: undefined, publication: undefined }
-    }
-  }
-
-  return { document, publication }
 }
 
 /**
@@ -616,11 +463,16 @@ export const getSiteStandardRecordsFromHydrationMapsByRefs = (
  * and other collections in `records` can never satisfy a pin. The first valid
  * record per kind wins; a hit must match its URI collection and Lexicon schema.
  *
- * Pairing rules match `getSiteStandardRecordsFromHydrationMapsByRefs`:
+ * Any pair that doesn't structurally agree is rejected, so downstream callers
+ * can trust the returned shape. Pairing rules:
  * - Both slots resolved: `doc.site` must equal the publication ref's URI, else
  *   both come back `undefined`.
- * - Doc with an AT-URI `site` but no pinned publication: rejected.
+ * - Doc with an AT-URI `site` but no pinned publication: rejected (the post
+ *   should have pinned it).
  * - Loose doc (web-URL `site`) alone, or a publication alone: allowed.
+ *
+ * Each returned slot carries its `ref` so callers can recover the owner DID
+ * for blob-cdn URL building, etc.
  */
 export const getSiteStandardRecordsFromRefs = (
   associatedRefs: readonly Required<ItemRef>[] | undefined,
