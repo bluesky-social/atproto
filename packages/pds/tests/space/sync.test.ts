@@ -661,6 +661,39 @@ describe('space sync', () => {
       )
       expect(await sc.writerDids(space)).toContain(bob.did)
     })
+
+    it('drops a writer on removeWriter, and tracks it again once it writes', async () => {
+      const space = await sc.createSpace(alice, {
+        writePolicy: com.atproto.simplespace.defs.publicPolicy.build({}),
+      })
+      await sc.write(bob, space, { text: 'before removal' })
+      await sc.awaitNotify(
+        () => sc.writerDids(space),
+        (dids) => dids.includes(bob.did),
+      )
+
+      await sc.removeWriter(alice, space, bob)
+      await sc.expectWriterSet(space, alice, [])
+
+      // A public write policy still authorizes bob, so his next write puts him
+      // back in the writer set.
+      await sc.write(bob, space, { text: 'after removal' })
+      await sc.awaitNotify(
+        () => sc.writerDids(space),
+        (dids) => dids.includes(bob.did),
+      )
+      await sc.expectWriterSet(space, alice, [bob])
+    })
+
+    it('refuses removeWriter from anyone but the authority', async () => {
+      const space = await sc.createSpace(alice, { members: [dan] })
+      await sc.write(dan, space, { text: 'still tracked' })
+
+      await expect(sc.removeWriter(dan, space, dan)).rejects.toMatchObject({
+        error: 'NotSpaceOwner',
+      })
+      expect(await sc.writerDids(space)).toEqual([dan.did])
+    })
   })
 
   it('migrates existing writer state', async () => {

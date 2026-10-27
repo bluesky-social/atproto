@@ -18,6 +18,7 @@ import notifyCredentialRevoked from './notifyCredentialRevoked.js'
 import notifyWrite from './notifyWrite.js'
 import putRecord from './putRecord.js'
 import registerNotify from './registerNotify.js'
+import removeWriter from './removeWriter.js'
 import unregisterNotify from './unregisterNotify.js'
 
 export default function (server: Server, ctx: AppContext) {
@@ -39,5 +40,6 @@ export default function (server: Server, ctx: AppContext) {
   notifyWrite(server, ctx)
   putRecord(server, ctx)
   registerNotify(server, ctx)
+  removeWriter(server, ctx)
   unregisterNotify(server, ctx)
 }

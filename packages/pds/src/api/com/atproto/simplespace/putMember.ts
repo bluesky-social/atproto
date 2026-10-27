@@ -19,6 +19,9 @@ export default function (server: Server, ctx: AppContext) {
       await ctx.actorStore.transact(ownerDid, async (actorTxn) => {
         await actorTxn.space.getActiveSpaceConfig(space)
         await actorTxn.space.putMember(space, memberDid, { read, write })
+        if (!write) {
+          await actorTxn.space.removeWriter(space, memberDid)
+        }
       })
     },
   })

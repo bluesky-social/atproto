@@ -226,6 +226,26 @@ describe('simplespace', () => {
         write: true,
       })
     })
+
+    it('removeMember drops the member from the writer set', async () => {
+      const space = await sc.createSpace(alice, { members: [dan] })
+      await sc.write(dan, space, { text: 'from a member' })
+      expect(await sc.writerDids(space)).toEqual([dan.did])
+
+      await sc.removeMember(alice, space, dan)
+      expect(await sc.writerDids(space)).toEqual([])
+    })
+
+    it('putMember drops the member from the writer set when it revokes write', async () => {
+      const space = await sc.createSpace(alice, { members: [dan] })
+      await sc.write(dan, space, { text: 'from a member' })
+
+      await sc.putMember(alice, space, dan, { read: true, write: true })
+      expect(await sc.writerDids(space)).toEqual([dan.did])
+
+      await sc.putMember(alice, space, dan, { read: true, write: false })
+      expect(await sc.writerDids(space)).toEqual([])
+    })
   })
 
   describe('config', () => {
