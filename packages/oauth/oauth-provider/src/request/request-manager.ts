@@ -41,6 +41,30 @@ import {
   encodeRequestUri,
 } from './request-uri.js'
 
+/**
+ * Intersects the requested parameters with the scopes approved on the consent
+ * screen, so a client can never end up with more than it asked for.
+ */
+export const narrowAuthorizedParameters = <
+  P extends OAuthAuthorizationRequestParameters,
+>(
+  parameters: P,
+  approvedScope: string | undefined,
+): P => {
+  if (approvedScope == null) return parameters
+
+  const allowedScopes = new Set(approvedScope.split(' '))
+  const requestedScopes = parameters.scope?.split(' ')
+
+  const newScopes = requestedScopes?.filter((s) => allowedScopes.has(s))
+
+  if (!newScopes?.includes('atproto')) {
+    throw new AccessDeniedError(parameters, 'The "atproto" scope is required')
+  }
+
+  return { ...parameters, scope: newScopes.join(' ') }
+}
+
 export class RequestManager {
   constructor(
     protected readonly store: RequestStore,
@@ -435,23 +459,7 @@ export class RequestManager {
       // that every existing scope in the parameters is also present in the
       // override value. This allows the user to remove scopes from the request,
       // but not to add new ones.
-      if (scopeOverride != null) {
-        const allowedScopes = new Set(scopeOverride.split(' '))
-        const existingScopes = parameters.scope?.split(' ')
-
-        // Compute the intersection of the existing scopes and the overrides.
-        const newScopes = existingScopes?.filter((s) => allowedScopes.has(s))
-
-        // Validate: make sure the new scopes are valid
-        if (!newScopes?.includes('atproto')) {
-          throw new AccessDeniedError(
-            parameters,
-            'The "atproto" scope is required',
-          )
-        }
-
-        parameters = { ...parameters, scope: newScopes.join(' ') }
-      }
+      parameters = narrowAuthorizedParameters(parameters, scopeOverride)
 
       // Only response_type=code is supported
       const code = await generateCode()
