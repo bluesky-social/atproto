@@ -16,7 +16,7 @@ The Bluesky Social application encompasses a set of schemas and APIs built in th
 
 ## What is in here?
 
-**Lexicons:** for the `com.atproto.*` and `tools.ozone.*` namespaces are currently maintained in this repo under the `./lexicons/` directory. These are JSON files in the [Lexicon schema definition language](https://atproto.com/specs/lexicon), similar to JSON Schema or OpenAPI. Lexicons for the `app.bsky.*` and `chat.bsky.*` namespaces are now maintained in the [bluesky-social/bsky](https://github.com/bluesky-social/bsky) and [bluesky-social/chat](https://github.com/bluesky-social/chat) Github repositories, and the copies here may be out of date.
+**Lexicons:** for the `com.atproto.*` and `tools.ozone.*` namespaces are currently maintained in this repo under the `./lexicons/` directory. These are JSON files in the [Lexicon schema definition language](https://atproto.com/specs/lexicon), similar to JSON Schema or OpenAPI. Lexicons for the `app.bsky.*` and `chat.bsky.*` namespaces are now maintained in the [bluesky-social/bsky](https://github.com/bluesky-social/bsky) git repository, and the copies here may be out of date.
 
 **TypeScript Packages:** everything under [`./packages/`](./packages/) is published to npm under the `@atproto/*` scope (except for the shared utilities in [`./packages/internal/`](./packages/internal/), which use the `@atproto-labs/*` scope). Each package has its own README; [`packages/README.md`](./packages/README.md) lists them all. The short version, if you're new here:
 
