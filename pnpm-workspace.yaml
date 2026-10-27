@@ -31,6 +31,9 @@ minimumReleaseAgeExclude:
 overrides:
   cookie: ^0.7.2
   opentelemetry-plugin-better-sqlite3>@opentelemetry/core: ^1.30.0
+  # Share the SDK's import-in-the-middle copy, without which ESM imports of
+  # better-sqlite3 are not instrumented
+  opentelemetry-plugin-better-sqlite3>@opentelemetry/instrumentation: ^0.300.0
   # https://github.com/advisories/GHSA-fjxv-7rqg-78g4
   'form-data@<2.5.4': '>=2.5.4'
   'form-data@>=3.0.0 <3.0.4': '>=3.0.4'

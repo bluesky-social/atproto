@@ -94,8 +94,6 @@ export async function setup(getOptions: () => SetupOptions): Promise<void> {
   if (!otelEnabled) return
 
   try {
-    const options = getOptions()
-
     // Restrict import-in-the-middle to modules targeted by the configured
     // instrumentations. Wrapping every ESM module can alter legal `export *`
     // graphs in unrelated packages.
@@ -106,6 +104,12 @@ export async function setup(getOptions: () => SetupOptions): Promise<void> {
       import.meta.url,
       registerOptions,
     )
+
+    // @NOTE Must run after createAddHookMessageChannel(): instrumentations
+    // enable themselves when constructed, and only report the modules they
+    // target to the loader hook if the channel already exists. Otherwise, ESM
+    // imports of those modules are not instrumented.
+    const options = getOptions()
 
     const sdk = new NodeSDK({
       textMapPropagator: propagatorsConfigured

@@ -62,6 +62,9 @@
     "@opentelemetry/context-async-hooks": "^3.0.0",
     "@opentelemetry/sdk-metrics": "^3.0.0",
     "@opentelemetry/sdk-trace": "^3.0.0",
+    "@types/better-sqlite3": "^7.6.13",
+    "better-sqlite3": "^12.9.0",
+    "opentelemetry-plugin-better-sqlite3": "^1.13.0",
     "vitest": "^4.1.10"
   },
   "scripts": {
