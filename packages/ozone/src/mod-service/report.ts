@@ -589,18 +589,12 @@ export async function processReportAction(
     targetAll: reportAction.all,
   })
 
-  // Validate that reports were found for ids and types
   if (matchingReports.length === 0) {
     if (reportAction.ids?.length) {
       throw new Error(
         'No matching reports found for the specified report IDs on this subject',
       )
-    } else if (reportAction.types?.length) {
-      throw new Error(
-        'No matching reports found for the specified report types on this subject',
-      )
     }
-    // For 'all', it's okay if no reports exist
     return 0
   }
 
