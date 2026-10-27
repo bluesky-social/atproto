@@ -1,5 +1,12 @@
-import { type Meter, ValueType, diag, metrics } from '@opentelemetry/api'
-import { type Logger, SeverityNumber, logs } from '@opentelemetry/api-logs'
+import {
+  type Logger,
+  type Meter,
+  SeverityNumber,
+  ValueType,
+  diag,
+  logs,
+  metrics,
+} from '@opentelemetry/api'
 import type { app } from '../lexicons/index.js'
 import { eventsLogger } from '../logger.js'
 import { isAbortError, isTimeoutError } from './util.js'
