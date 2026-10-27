@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { OAuthAuthorizationRequestParameters } from '@atproto/oauth-types'
 import { AccessDeniedError } from '../errors/access-denied-error.js'
-import { narrowAuthorizedParameters } from './request-manager.js'
+import { narrowAuthorizedScope } from './request-manager.js'
 
 const params = (scope?: string): OAuthAuthorizationRequestParameters =>
   ({
@@ -11,10 +11,10 @@ const params = (scope?: string): OAuthAuthorizationRequestParameters =>
     ...(scope == null ? {} : { scope }),
   }) as OAuthAuthorizationRequestParameters
 
-describe('narrowAuthorizedParameters()', () => {
+describe(narrowAuthorizedScope, () => {
   it('keeps only the scopes the user approved', () => {
     expect(
-      narrowAuthorizedParameters(
+      narrowAuthorizedScope(
         params('atproto account:email transition:generic'),
         'atproto transition:generic',
       ),
@@ -26,21 +26,18 @@ describe('narrowAuthorizedParameters()', () => {
 
   it('cannot add scopes that were not requested', () => {
     expect(
-      narrowAuthorizedParameters(params('atproto'), 'atproto account:email'),
+      narrowAuthorizedScope(params('atproto'), 'atproto account:email'),
     ).toEqual({ ...params('atproto'), scope: 'atproto' })
   })
 
   it('leaves the request untouched when nothing was approved', () => {
     const parameters = params('atproto account:email')
-    expect(narrowAuthorizedParameters(parameters, undefined)).toBe(parameters)
+    expect(narrowAuthorizedScope(parameters, undefined)).toBe(parameters)
   })
 
   it('requires the atproto scope', () => {
     expect(() =>
-      narrowAuthorizedParameters(
-        params('atproto account:email'),
-        'account:email',
-      ),
+      narrowAuthorizedScope(params('atproto account:email'), 'account:email'),
     ).toThrow(AccessDeniedError)
   })
 })
