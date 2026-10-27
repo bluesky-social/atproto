@@ -14,7 +14,6 @@ import {
 import { parseAtUriString } from '@atproto/syntax'
 import type { DataPlaneClient } from '../data-plane/client/index.js'
 import { site } from '../lexicons/index.js'
-import { hydrationLogger } from '../logger.js'
 import {
   type RecordLookupResult,
   RecordLookupStatus,
@@ -26,7 +25,7 @@ import {
   type HydrationXrpcEndpoint,
   events,
 } from '../telemetry/events.js'
-import { uriToDid } from '../util/uris.js'
+import { recordUriOf, uriToDid } from '../util/uris.js'
 import {
   type SiteStandardDocumentRecord,
   type SiteStandardPublicationRecord,
@@ -473,88 +472,61 @@ export type AssociatedSiteStandardRecord<T> = {
 }
 
 /**
- * Read-path selection of a post embed's pinned Standard.site document and
- * publication directly from generic exact-ref hydration state. Only the exact
- * `genericRecordKey(ref)` of each pinned ref is read, so latest dependencies
- * and other collections in `records` can never satisfy a pin. The first valid
- * record per kind wins; a hit must match its URI collection and Lexicon schema.
- *
- * Any pair that doesn't structurally agree is rejected, so downstream callers
- * can trust the returned shape. Pairing rules:
- * - Both slots resolved: `doc.site` must equal the publication ref's URI, else
- *   both come back `undefined`.
- * - Doc with an AT-URI `site` but no pinned publication: rejected (the post
- *   should have pinned it).
- * - Loose doc (web-URL `site`) alone, or a publication alone: allowed.
- *
- * Each returned slot carries its `ref` so callers can recover the owner DID
- * for blob-cdn URL building, etc.
+ * Select one pinned embed root. Legacy publication-first pairs may put their
+ * document second; no other authored refs participate in hydration.
  */
-export const getSiteStandardRecordsFromRefs = (
+export function getExternalRootRef(
+  refs: readonly Required<ItemRef>[] | undefined,
+): Required<ItemRef> | undefined {
+  let root = refs?.[0]
+  if (!root) return undefined
+  if (siteStandardKind(root.uri) === 'publications') {
+    const second = refs?.[1]
+    if (second && siteStandardKind(second.uri) === 'documents') root = second
+  }
+  return isHydratableAssociatedRef(root) ? root : undefined
+}
+
+/** Select a pinned Standard.site root and its derived publication, if needed. */
+export function getSiteStandardRecordsFromRefs(
   associatedRefs: readonly Required<ItemRef>[] | undefined,
   records: ExternalRecordsByRef | undefined,
+  dependencies?: ExternalRecords,
 ): {
   document: AssociatedSiteStandardRecord<SiteStandardDocument> | undefined
   publication: AssociatedSiteStandardRecord<SiteStandardPublication> | undefined
-} => {
-  if (!associatedRefs?.length) {
-    return { document: undefined, publication: undefined }
+} {
+  const empty = { document: undefined, publication: undefined }
+  const ref = getExternalRootRef(associatedRefs)
+  if (!ref) return empty
+  const info = records?.get(genericRecordKey(ref))
+  if (siteStandardKind(ref.uri) === 'publications') {
+    const publication = matchRecordInfo(site.standard.publication.main, info)
+    return publication
+      ? { document: undefined, publication: { ref, info: publication } }
+      : empty
   }
-
-  let document: AssociatedSiteStandardRecord<SiteStandardDocument> | undefined
-  let publication:
-    AssociatedSiteStandardRecord<SiteStandardPublication> | undefined
-  for (const ref of associatedRefs) {
-    const kind = siteStandardKind(ref.uri)
-    if (kind === 'documents' && !document) {
-      const info = matchRecordInfo(
-        site.standard.document.main,
-        records?.get(genericRecordKey(ref)),
-      )
-      if (info) document = { ref, info }
-    } else if (kind === 'publications' && !publication) {
-      const info = matchRecordInfo(
-        site.standard.publication.main,
-        records?.get(genericRecordKey(ref)),
-      )
-      if (info) publication = { ref, info }
-    }
-    if (document && publication) break
+  if (siteStandardKind(ref.uri) !== 'documents') return empty
+  const document = matchRecordInfo(site.standard.document.main, info)
+  if (!document) return empty
+  const documentSelection = { ref, info: document }
+  const docSite = document.record.site
+  if (!docSite.startsWith('at://')) {
+    return { document: documentSelection, publication: undefined }
   }
-
-  if (document && publication) {
-    if (document.info.record.site !== publication.ref.uri) {
-      hydrationLogger.warn(
-        {
-          documentUri: document.ref.uri,
-          documentSite: document.info.record.site,
-          publicationUri: publication.ref.uri,
-        },
-        'site.standard byRefs lookup failed: doc.site does not match hydrated publication.uri',
-      )
-      return { document: undefined, publication: undefined }
-    }
+  const uri = recordUriOf(docSite, site.standard.publication.$type)
+  if (!uri) return empty
+  const publication = matchRecordInfo(
+    site.standard.publication.main,
+    dependencies?.get(uri),
+  )
+  if (!publication) return empty
+  return {
+    document: documentSelection,
+    publication: { ref: { uri, cid: publication.cid }, info: publication },
   }
-
-  if (document && !publication) {
-    const docSite = document.info.record.site
-    if (docSite && docSite.startsWith('at://')) {
-      hydrationLogger.warn(
-        { documentUri: document.ref.uri, documentSite: docSite },
-        'site.standard byRefs lookup failed: document.site is AT URI but no matching publication was hydrated',
-      )
-      return { document: undefined, publication: undefined }
-    }
-  }
-
-  return { document, publication }
 }
 
-/**
- * Returns every strongRef the post embedded as `external.associatedRefs`,
- * regardless of collection. Callers are responsible for filtering to NSIDs
- * they care about.
- */
 const externalAssociatedRefs = (
   post: Post['record'],
 ): { uri: AtUriString; cid: string }[] => {
@@ -590,10 +562,7 @@ const isHydratableAssociatedRef = (ref: {
   )
 }
 
-/**
- * Collects every valid exact `external.associatedRefs` ref across all post
- * layers, in first-seen order and deduped by `uri+cid`.
- */
+/** Collect one root per post across all layers, deduped by exact ref. */
 export const externalAssociatedRefsFromPosts = (
   ...postLayers: Posts[]
 ): Required<ItemRef>[] => {
@@ -602,13 +571,12 @@ export const externalAssociatedRefsFromPosts = (
   for (const layer of postLayers) {
     for (const item of layer.values()) {
       if (!item) continue
-      for (const ref of externalAssociatedRefs(item.record)) {
-        if (!isHydratableAssociatedRef(ref)) continue
-        const key = genericRecordKey(ref)
-        if (seen.has(key)) continue
-        seen.add(key)
-        out.push({ uri: ref.uri, cid: ref.cid })
-      }
+      const ref = getExternalRootRef(externalAssociatedRefs(item.record))
+      if (!ref) continue
+      const key = genericRecordKey(ref)
+      if (seen.has(key)) continue
+      seen.add(key)
+      out.push({ uri: ref.uri, cid: ref.cid })
     }
   }
   return out

@@ -228,7 +228,7 @@ describe('Views.profileLinks', () => {
   })
 })
 
-describe('Views.externalEmbed Standard.site pins', () => {
+describe('Views.externalEmbed Standard.site roots', () => {
   const author = 'did:plc:author' as DidString
   const publisher = 'did:plc:publisher' as DidString
   const docUri = atUri(author, site.standard.document.$type, 'doc')
@@ -268,6 +268,9 @@ describe('Views.externalEmbed Standard.site pins', () => {
     ctx: undefined,
     actors: new HydrationMap(),
     labels: new Labels(),
+    externalRecords: new HydrationMap([
+      [pubUri, info(pubRecord('Latest publication'), 'pub-v2')],
+    ]),
     externalRecordsByRef: new HydrationMap([
       [genericRecordKey(docRef), info(docRecord, docRef.cid)],
       [genericRecordKey(pubRef), info(pubRecord(), pubRef.cid)],
@@ -281,7 +284,10 @@ describe('Views.externalEmbed Standard.site pins', () => {
   // Generic hydration nulls the moderated root and keeps only its label.
   const takedown = (state: HydrationState, uri: AtUriString, hide = true) => {
     const ref = uri === docUri ? docRef : pubRef
-    if (hide) state.externalRecordsByRef!.set(genericRecordKey(ref), null)
+    if (hide) {
+      state.externalRecordsByRef!.set(genericRecordKey(ref), null)
+      state.externalRecords?.set(uri, null)
+    }
     state.labels!.set(uri, {
       isImpersonation: false,
       isTakendown: true,
@@ -290,14 +296,40 @@ describe('Views.externalEmbed Standard.site pins', () => {
     })
   }
 
-  it('overlays the pinned versions and keeps the authored refs', () => {
-    const embed = embedOf(docRef, pubRef)
-    const view = views.externalEmbed(author, embed, stateOf())
-    expect(view.external).toMatchObject({
-      title: 'Document',
-      source: { title: 'Publication' },
-      associatedRefs: [docRef, pubRef],
+  it.each([[docRef, pubRef], [pubRef, docRef], [docRef]])(
+    'overlays the pinned root and derived publication, keeping authored refs: %j',
+    (...refs) => {
+      const view = views.externalEmbed(author, embedOf(...refs), stateOf())
+      expect(view.external).toMatchObject({
+        title: 'Document',
+        source: { title: 'Latest publication' },
+        associatedRefs: refs,
+      })
+    },
+  )
+
+  it('ignores moderated authored refs that are not the root or its dependency', () => {
+    const ignored = {
+      uri: atUri(author, site.standard.publication.$type, 'ignored'),
+      cid: 'ignored',
+    }
+    const state = stateOf()
+    state.labels!.set(ignored.uri, {
+      isImpersonation: false,
+      isTakendown: true,
+      needsReview: false,
+      labels: new HydrationMap(),
     })
+    const view = views.externalEmbed(author, embedOf(docRef, ignored), state)
+    expect(view.external.title).toBe('Document')
+  })
+
+  it('never falls back to a legacy publication when the selected document is missing', () => {
+    const state = stateOf()
+    state.externalRecordsByRef!.set(genericRecordKey(docRef), null)
+    const view = views.externalEmbed(author, embedOf(pubRef, docRef), state)
+    expect(view.external.title).toBe('Scraped')
+    expect(view.external.source).toBeUndefined()
   })
 
   it('keeps the bare card when nothing is pinned', () => {

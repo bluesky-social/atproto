@@ -24,8 +24,10 @@ import {
   type ExactRecordKey,
   ExternalHydrator,
   type ExternalRecord,
+  type ExternalRecords,
   type ExternalRecordsByRef,
   genericRecordKey,
+  getExternalRootRef,
   getSiteStandardRecordsFromRefs,
   parseGenericRecordKey,
 } from './external.js'
@@ -95,22 +97,71 @@ describe(parseGenericRecordKey, () => {
   })
 })
 
+describe(getExternalRootRef, () => {
+  const doc = { uri: docUri as AtUriString, cid: docCid }
+  const pub = { uri: pubUri as AtUriString, cid: pubCid }
+  const other = {
+    uri: 'at://did:plc:a/app.example.thing/1' as AtUriString,
+    cid: 'other',
+  }
+
+  test.each([
+    { refs: [doc, pub], expected: doc },
+    { refs: [pub, doc], expected: doc },
+    { refs: [pub], expected: pub },
+    { refs: [other, doc], expected: other },
+    { refs: [pub, other, doc], expected: pub },
+    { refs: [], expected: undefined },
+    { refs: undefined, expected: undefined },
+  ])('selects one root from $refs', ({ refs, expected }) => {
+    expect(getExternalRootRef(refs)).toBe(expected)
+  })
+
+  it('does not inspect the second ref after a document or the tail after a legacy pair', () => {
+    const refs = [doc]
+    Object.defineProperty(refs, 1, {
+      get() {
+        throw new Error('second ref inspected')
+      },
+    })
+    expect(getExternalRootRef(refs)).toBe(doc)
+    const legacy = [pub, doc]
+    Object.defineProperty(legacy, 2, {
+      get() {
+        throw new Error('tail inspected')
+      },
+    })
+    expect(getExternalRootRef(legacy)).toBe(doc)
+  })
+
+  test.each([
+    { uri: doc.uri, cid: '' },
+    { uri: 'at://example.com/site.standard.document/1', cid: doc.cid },
+    { uri: doc.uri + '?query', cid: doc.cid },
+    { uri: doc.uri + '#fragment', cid: doc.cid },
+    { uri: 'at://did:plc:a', cid: doc.cid },
+  ])('does not skip an invalid root to hydrate later refs: $uri', (invalid) => {
+    expect(
+      getExternalRootRef([
+        { ...invalid, uri: invalid.uri as AtUriString },
+        doc,
+      ]),
+    ).toBeUndefined()
+  })
+})
+
 describe(getSiteStandardRecordsFromRefs, () => {
+  const docRef = { uri: docUri as AtUriString, cid: docCid }
+  const pubRef = { uri: pubUri as AtUriString, cid: pubCid }
   const doc = site.standard.document.$build({
-    site: pubUri as AtUriString,
+    site: pubRef.uri,
     path: '/post',
     title: 'Document',
     publishedAt: '2026-10-01T00:00:00.000Z',
   })
-  const looseDoc = site.standard.document.$build({
-    site: 'https://example.com',
-    path: '/post',
-    title: 'Loose',
-    publishedAt: '2026-10-01T00:00:00.000Z',
-  })
   const pub = site.standard.publication.$build({
     url: 'https://example.com',
-    name: 'Publication',
+    name: 'Latest',
   })
   const info = (record: object, cid: string): ExternalRecord => ({
     record: record as ExternalRecord['record'],
@@ -119,132 +170,120 @@ describe(getSiteStandardRecordsFromRefs, () => {
     indexedAt: new Date(0),
     takedownRef: undefined,
   })
-  const ref = (uri: string, cid: string) => ({ uri: uri as AtUriString, cid })
-  const otherUri = 'at://did:plc:a/app.example.thing/1'
-  const records = (
-    ...entries: [uri: string, cid: string, value: ExternalRecord | null][]
-  ): ExternalRecordsByRef => {
-    const out: ExternalRecordsByRef = new HydrationMap()
-    for (const [uri, cid, value] of entries) {
-      out.set(genericRecordKey(ref(uri, cid)), value)
+  const state = () => ({
+    roots: new HydrationMap([
+      [genericRecordKey(docRef), info(doc, docCid)],
+      [genericRecordKey(pubRef), info({ ...pub, name: 'Pinned' }, pubCid)],
+    ]) as ExternalRecordsByRef,
+    dependencies: new HydrationMap([
+      [pubRef.uri, info(pub, 'latest-pub')],
+    ]) as ExternalRecords,
+  })
+  const empty = { document: undefined, publication: undefined }
+
+  it.each([[docRef, pubRef], [pubRef, docRef], [docRef]])(
+    'selects the pinned document and its derived publication for %j',
+    (...refs) => {
+      const { roots, dependencies } = state()
+      const out = getSiteStandardRecordsFromRefs(refs, roots, dependencies)
+      expect(out.document?.ref).toEqual(docRef)
+      expect(out.document?.info.record).toBe(doc)
+      expect(out.publication?.ref).toEqual({
+        uri: pubRef.uri,
+        cid: 'latest-pub',
+      })
+      expect(out.publication?.info.record.name).toBe('Latest')
+    },
+  )
+
+  it('ignores a discarded publication, including its URI and version', () => {
+    const { roots, dependencies } = state()
+    const out = getSiteStandardRecordsFromRefs(
+      [docRef, { uri: otherPubUri as AtUriString, cid: 'wrong' }],
+      roots,
+      dependencies,
+    )
+    expect(out.document?.ref).toEqual(docRef)
+    expect(out.publication?.ref.uri).toBe(pubRef.uri)
+  })
+
+  it('reads a publication root exactly, not from latest dependencies', () => {
+    const { roots, dependencies } = state()
+    expect(
+      getSiteStandardRecordsFromRefs([pubRef], roots, dependencies).publication
+        ?.info.record.name,
+    ).toBe('Pinned')
+    roots.set(genericRecordKey(pubRef), null)
+    expect(
+      getSiteStandardRecordsFromRefs([pubRef], roots, dependencies),
+    ).toEqual(empty)
+  })
+
+  it('never falls back from an unavailable document to another version or authored publication', () => {
+    const { roots, dependencies } = state()
+    roots.set(genericRecordKey(docRef), null)
+    roots.set(genericRecordKey({ ...docRef, cid: 'newer' }), info(doc, 'newer'))
+    for (const refs of [
+      [docRef, pubRef],
+      [pubRef, docRef],
+    ]) {
+      expect(getSiteStandardRecordsFromRefs(refs, roots, dependencies)).toEqual(
+        empty,
+      )
     }
-    return out
-  }
+  })
 
-  it('selects a pinned pair, ignoring other versions and collections', () => {
-    const out = getSiteStandardRecordsFromRefs(
-      [ref(docUri, 'v1'), ref(otherUri, 'v1'), ref(pubUri, 'v1')],
-      records(
-        [docUri, 'v1', info(doc, 'v1')],
-        [docUri, 'v2', info({ ...doc, title: 'Newer' }, 'v2')],
-        [pubUri, 'v1', info(pub, 'v1')],
-        // Latest dependency of another pin: never satisfies a pin.
-        [pubUri, 'v2', info({ ...pub, name: 'Newer' }, 'v2')],
-        [otherUri, 'v1', info({ $type: 'app.example.thing' }, 'v1')],
-      ),
+  it('requires an available, schema-valid publication dependency for an AT-site document', () => {
+    const { roots, dependencies } = state()
+    expect(getSiteStandardRecordsFromRefs([docRef], roots)).toEqual(empty)
+    dependencies.set(pubRef.uri, null)
+    expect(
+      getSiteStandardRecordsFromRefs([docRef], roots, dependencies),
+    ).toEqual(empty)
+    dependencies.set(pubRef.uri, info(doc, 'wrong-type'))
+    expect(
+      getSiteStandardRecordsFromRefs([docRef], roots, dependencies),
+    ).toEqual(empty)
+    roots.set(genericRecordKey(docRef), info(pub, docCid))
+    expect(
+      getSiteStandardRecordsFromRefs([docRef], roots, dependencies),
+    ).toEqual(empty)
+  })
+
+  it('allows a loose URL document without a publication', () => {
+    const { roots } = state()
+    roots.set(
+      genericRecordKey(docRef),
+      info({ ...doc, site: 'https://example.com' }, docCid),
     )
-    expect(out.document?.ref).toEqual(ref(docUri, 'v1'))
-    expect(out.document?.info.record).toMatchObject({ title: 'Document' })
-    expect(out.publication?.ref).toEqual(ref(pubUri, 'v1'))
-    expect(out.publication?.info.record).toMatchObject({ name: 'Publication' })
+    const out = getSiteStandardRecordsFromRefs([docRef], roots)
+    expect(out.document?.ref).toEqual(docRef)
+    expect(out.publication).toBeUndefined()
   })
 
-  it('does not fall back to a different version or the latest dependency', () => {
+  it('does not scan for a Standard.site root behind another collection', () => {
+    const { roots, dependencies } = state()
     expect(
       getSiteStandardRecordsFromRefs(
-        [ref(pubUri, 'v1')],
-        records([pubUri, 'v2', info(pub, 'v2')]),
+        [
+          {
+            uri: 'at://did:plc:a/app.example.thing/1' as AtUriString,
+            cid: 'other',
+          },
+          docRef,
+        ],
+        roots,
+        dependencies,
       ),
-    ).toEqual({ document: undefined, publication: undefined })
-  })
-
-  it('treats missing, nulled and invalid records as misses; first valid wins', () => {
-    expect(
-      getSiteStandardRecordsFromRefs(
-        [ref(docUri, 'v1'), ref(pubUri, 'v1')],
-        records(
-          [docUri, 'v1', null],
-          [pubUri, 'v1', info({ ...pub, name: 42 }, 'v1')],
-        ),
-      ),
-    ).toEqual({ document: undefined, publication: undefined })
-    expect(
-      getSiteStandardRecordsFromRefs([ref(docUri, 'v1')], undefined),
-    ).toEqual({ document: undefined, publication: undefined })
-
-    const out = getSiteStandardRecordsFromRefs(
-      [ref(pubUri, 'bad'), ref(pubUri, 'v1'), ref(pubUri, 'v2')],
-      records(
-        [pubUri, 'bad', info({ nope: true }, 'bad')],
-        [pubUri, 'v1', info(pub, 'v1')],
-        [pubUri, 'v2', info({ ...pub, name: 'Second' }, 'v2')],
-      ),
+    ).toEqual(empty)
+    expect(getSiteStandardRecordsFromRefs([], roots, dependencies)).toEqual(
+      empty,
     )
-    expect(out.publication?.ref).toEqual(ref(pubUri, 'v1'))
-  })
-
-  it('rejects a record whose body is a different collection', () => {
     expect(
-      getSiteStandardRecordsFromRefs(
-        [ref(docUri, 'v1')],
-        records([docUri, 'v1', info(pub, 'v1')]),
-      ),
-    ).toEqual({ document: undefined, publication: undefined })
-  })
-
-  it('rejects the pair when doc.site does not match the pinned publication', () => {
-    expect(
-      getSiteStandardRecordsFromRefs(
-        [ref(docUri, 'v1'), ref(otherPubUri, 'v1')],
-        records(
-          [docUri, 'v1', info(doc, 'v1')],
-          [otherPubUri, 'v1', info(pub, 'v1')],
-        ),
-      ),
-    ).toEqual({ document: undefined, publication: undefined })
-  })
-
-  it('rejects an AT-site document with no pinned publication', () => {
-    expect(
-      getSiteStandardRecordsFromRefs(
-        [ref(docUri, 'v1')],
-        records(
-          [docUri, 'v1', info(doc, 'v1')],
-          [pubUri, 'v1', info(pub, 'v1')],
-        ),
-      ),
-    ).toEqual({ document: undefined, publication: undefined })
-  })
-
-  it('allows a loose URL document or a publication alone', () => {
-    const loose = getSiteStandardRecordsFromRefs(
-      [ref(docUri, 'v1')],
-      records([docUri, 'v1', info(looseDoc, 'v1')]),
-    )
-    expect(loose.document?.ref).toEqual(ref(docUri, 'v1'))
-    expect(loose.publication).toBeUndefined()
-
-    const pubOnly = getSiteStandardRecordsFromRefs(
-      [ref(pubUri, 'v1')],
-      records([pubUri, 'v1', info(pub, 'v1')]),
-    )
-    expect(pubOnly.document).toBeUndefined()
-    expect(pubOnly.publication?.ref).toEqual(ref(pubUri, 'v1'))
-  })
-
-  it('returns nothing for empty or undefined refs', () => {
-    const state = records([pubUri, 'v1', info(pub, 'v1')])
-    expect(getSiteStandardRecordsFromRefs([], state)).toEqual({
-      document: undefined,
-      publication: undefined,
-    })
-    expect(getSiteStandardRecordsFromRefs(undefined, state)).toEqual({
-      document: undefined,
-      publication: undefined,
-    })
+      getSiteStandardRecordsFromRefs(undefined, roots, dependencies),
+    ).toEqual(empty)
   })
 })
-
 describe(ExternalHydrator, () => {
   const dataplane = createPromiseClient(
     Service,

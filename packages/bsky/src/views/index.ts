@@ -14,7 +14,6 @@ import {
   type DidString,
   INVALID_HANDLE,
   normalizeDatetimeAlways,
-  parseAtUriString,
 } from '@atproto/syntax'
 import {
   APPVIEW_NOTIFICATION_REASON,
@@ -2411,8 +2410,8 @@ export class Views {
 
   /**
    * Read-path entry point: caller has the post's `external.associatedRefs[]`
-   * and the global hydration state, and we resolve the matching SS records
-   * by ref. Used by `externalEmbed`.
+   * and the global hydration state. Resolve the selected pinned root and its
+   * publication dependency. Used by `externalEmbed`.
    *
    * Returns a fully-populated `viewExternal['external']` shape (including
    * the required `uri`/`title`/`description`), or `undefined` if the
@@ -2435,30 +2434,21 @@ export class Views {
     state: HydrationState
     assumedUrl: string
   }): ExternalEmbedView['external'] | undefined {
-    // Generic hydration nulls moderated roots without keeping their pairing,
-    // so a moderated pinned document must not fall back to its publication.
-    for (const ref of associatedRefs ?? []) {
-      const parsed = parseAtUriString(ref.uri)
-      if (!parsed.success) continue
-      const { authority, collection } = parsed.value
+    const { document, publication } = getSiteStandardRecordsFromRefs(
+      associatedRefs,
+      state.externalRecordsByRef,
+      state.externalRecords,
+    )
+    for (const selected of [document, publication]) {
       if (
-        collection !== site.standard.document.$type &&
-        collection !== site.standard.publication.$type
-      ) {
-        continue
-      }
-      if (
-        state.actors?.get(authority as DidString) === null ||
-        (!state.ctx?.includeTakedowns &&
-          state.labels?.get(ref.uri)?.isTakendown)
+        selected &&
+        (state.actors?.get(creatorFromUri(selected.ref.uri)) === null ||
+          (!state.ctx?.includeTakedowns &&
+            state.labels?.get(selected.ref.uri)?.isTakendown))
       ) {
         return undefined
       }
     }
-    const { document, publication } = getSiteStandardRecordsFromRefs(
-      associatedRefs,
-      state.externalRecordsByRef,
-    )
     return this.externalEmbedFromStandardSiteRecords({
       document,
       publication,
@@ -2501,12 +2491,10 @@ export class Views {
     // Three layers of validation gate this overlay:
     //
     //  1. Generic hydration nulls taken-down records individually, and
-    //     `externalEmbedFromStandardSite` rejects the whole overlay when either
-    //     pinned side is moderated.
-    //  2. The read-path selection guarantees structural agreement between doc
-    //     and pub — matching `site`/`uri`, no orphan doc claiming a missing
-    //     publication (see `getSiteStandardRecordsFromRefs` in
-    //     `hydration/external.ts`). The compose path validates its own pair.
+    //     `externalEmbedFromStandardSite` rejects a moderated root or dependency.
+    //  2. The read-path selection resolves the pinned root and its named
+    //     publication dependency; an unavailable root never falls back to a
+    //     discarded authored ref. The compose path selects its own pair.
     //  3. `validateStandardSiteRecordsForUrl` below re-checks the doc/pub
     //     relationship and that the records back the URL the embed claims
     //     (see `util/external/standard-site.ts`).

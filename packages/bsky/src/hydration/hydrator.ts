@@ -24,7 +24,7 @@ import type {
   RecordRef,
 } from '../proto/bsky_pb.js'
 import { type HydrationXrpcEndpoint, events } from '../telemetry/events.js'
-import { uriToDid, uriToDid as didFromUri } from '../util/uris.js'
+import { recordUriOf, uriToDid, uriToDid as didFromUri } from '../util/uris.js'
 import type { ParsedLabelers } from '../util.js'
 import { MAX_PROFILE_LINKS } from '../views/profile-link-rules.js'
 import {
@@ -1259,7 +1259,8 @@ export class Hydrator {
         !parsed.success ||
         !isDidString(parsed.value.authority) ||
         !parsed.value.rkey ||
-        parsed.value.hash
+        parsed.value.query !== undefined ||
+        parsed.value.hash !== undefined
       ) {
         continue
       }
@@ -1382,9 +1383,11 @@ export class Hydrator {
                   return
                 }
                 const links = page.backlinks
-                  .filter((b) => parseAtUriString(b.uri).success)
+                  .flatMap(({ uri }) => {
+                    const link = recordUriOf(uri, collection)
+                    return link ? [link] : []
+                  })
                   .slice(0, limit)
-                  .map((b) => b.uri)
                 backlinks.set(
                   uri,
                   dedupeStrs([...(backlinks.get(uri) ?? []), ...links]),
@@ -2473,24 +2476,6 @@ const actionTakedownLabels = (
       hydrationMap.set(key, null)
     }
   }
-}
-
-/**
- * The URI when an externally authored reference is a complete DID-based
- * record URI in `collection`, with a record key and no fragment.
- */
-const recordUriOf = (
-  value: string,
-  collection: NsidString,
-): AtUriString | undefined => {
-  const parsed = parseAtUriString(value)
-  return parsed.success &&
-    isDidString(parsed.value.authority) &&
-    parsed.value.collection === collection &&
-    parsed.value.rkey &&
-    !parsed.value.hash
-    ? (value as AtUriString)
-    : undefined
 }
 
 const uriToRef = (uri: AtUriString): ItemRef => {
