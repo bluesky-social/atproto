@@ -45,6 +45,8 @@ import {
   type ProfileViewerStates,
 } from './actor.js'
 import {
+  type ExternalHydrationLevel,
+  type ExternalHydrationOptions,
   type ExternalHydrationTracker,
   ExternalHydrator,
   type ExternalRecordBacklinkCounts,
@@ -829,7 +831,9 @@ export class Hydrator {
       this.hydrateLabelers(nestedLabelerDids, ctx),
       this.hydrateStarterPacksBasic(nestedStarterPackUris, ctx),
       this.feed.getPostgatesForPosts([...postUrisWithPostgates.values()]),
-      this.hydrateEmbedExternalViewFromRefs(externalRefs, ctx),
+      this.hydrateEmbedExternalViewFromRefs(externalRefs, ctx, {
+        hydration: 'basic',
+      }),
     ])
     if (!ctx.includeTakedowns) {
       actionTakedownLabels(allPostUris, posts, labels)
@@ -1013,15 +1017,20 @@ export class Hydrator {
    * generic batch within the traversal (the root batch is pass 1); nested
    * batches continue the count. Nested passes share the caller's
    * `hydrationMetrics` tracker; without one, this call owns the traversal and
-   * reports its totals.
+   * reports its totals. `options.hydration` (default `'detailed'`) applies to
+   * the whole traversal and is propagated to every nested pass.
    */
   async hydrateEmbedExternalViewFromUris(
     uris: AtUriString[],
     ctx: HydrateCtx,
-    seenRecordKeys: Set<string> = new Set(),
-    hydrationPass = 1,
-    hydrationMetrics?: ExternalHydrationTracker,
+    options: ExternalHydrationOptions = {},
   ): Promise<HydrationState> {
+    const {
+      hydration = 'detailed',
+      seenRecordKeys = new Set<string>(),
+      hydrationPass = 1,
+      hydrationMetrics,
+    } = options
     return trackExternalHydration(
       'uris',
       ctx.xrpcEndpoint,
@@ -1030,6 +1039,7 @@ export class Hydrator {
         this.hydrateEmbedExternalView(
           uris.map(uriToRef),
           ctx,
+          hydration,
           seenRecordKeys,
           hydrationPass,
           hydrationMetrics,
@@ -1045,10 +1055,14 @@ export class Hydrator {
   async hydrateEmbedExternalViewFromRefs(
     refs: Required<ItemRef>[],
     ctx: HydrateCtx,
-    seenRecordKeys: Set<string> = new Set(),
-    hydrationPass = 1,
-    hydrationMetrics?: ExternalHydrationTracker,
+    options: ExternalHydrationOptions = {},
   ): Promise<HydrationState> {
+    const {
+      hydration = 'detailed',
+      seenRecordKeys = new Set<string>(),
+      hydrationPass = 1,
+      hydrationMetrics,
+    } = options
     return trackExternalHydration(
       'refs',
       ctx.xrpcEndpoint,
@@ -1057,6 +1071,7 @@ export class Hydrator {
         this.hydrateEmbedExternalView(
           refs,
           ctx,
+          hydration,
           seenRecordKeys,
           hydrationPass,
           hydrationMetrics,
@@ -1067,6 +1082,7 @@ export class Hydrator {
   private async hydrateEmbedExternalView(
     refs: ItemRef[],
     ctx: HydrateCtx,
+    hydration: ExternalHydrationLevel,
     seenRecordKeys: Set<string>,
     hydrationPass: number,
     hydrationMetrics: ExternalHydrationTracker,
@@ -1137,9 +1153,12 @@ export class Hydrator {
       baseState,
       items,
       ctx,
-      seenRecordKeys,
-      hydrationPass,
-      hydrationMetrics,
+      {
+        hydration,
+        seenRecordKeys,
+        hydrationPass,
+        hydrationMetrics,
+      },
     )
 
     // A supplemental latest lookup returning the same URI and CID is the same
@@ -1161,16 +1180,23 @@ export class Hydrator {
    * `hydrationPass` is the number of the generic batch that produced `state`
    * (1-based, default 1 for prehydrated state, which is treated as the root
    * batch); the next nested batch is `hydrationPass + 1`. `hydrationMetrics`
-   * is shared as in `hydrateEmbedExternalViewFromUris`.
+   * is shared as in `hydrateEmbedExternalViewFromUris`. `options.hydration`
+   * (default `'detailed'`) decides, per collection, whether social-preview
+   * samples are scheduled; backlink counts and content dependencies are
+   * discovered at both levels.
    */
   async hydrateExternalViewDependencies(
     state: HydrationState,
     refs: ItemRef[],
     ctx: HydrateCtx,
-    seenRecordKeys: Set<string> = new Set(),
-    hydrationPass = 1,
-    hydrationMetrics?: ExternalHydrationTracker,
+    options: ExternalHydrationOptions = {},
   ): Promise<HydrationState> {
+    const {
+      hydration = 'detailed',
+      seenRecordKeys = new Set<string>(),
+      hydrationPass = 1,
+      hydrationMetrics,
+    } = options
     return trackExternalHydration(
       'dependencies',
       ctx.xrpcEndpoint,
@@ -1180,6 +1206,7 @@ export class Hydrator {
           state,
           refs,
           ctx,
+          hydration,
           seenRecordKeys,
           hydrationPass,
           hydrationMetrics,
@@ -1191,11 +1218,13 @@ export class Hydrator {
     state: HydrationState,
     refs: ItemRef[],
     ctx: HydrateCtx,
+    hydration: ExternalHydrationLevel,
     seenRecordKeys: Set<string>,
     hydrationPass: number,
     hydrationMetrics: ExternalHydrationTracker,
   ): Promise<HydrationState> {
-    // Backlink sources to sample per target, each with its own bound.
+    // Social-preview backlink sources to sample per target, each with its own
+    // bound. A target with no samples still gets its aggregate count.
     const targets = new Map<
       AtUriString,
       { collection: NsidString; limit: number }[]
@@ -1243,12 +1272,17 @@ export class Hydrator {
         collection === site.standard.document.$type &&
         site.standard.document.$matches(record, { strict: false })
       ) {
-        targets.set(uri, [
-          {
-            collection: site.standard.graph.recommend.$type,
-            limit: ExternalHydrator.MAX_BACKLINK_PREVIEWS,
-          },
-        ])
+        targets.set(
+          uri,
+          hydration === 'detailed'
+            ? [
+                {
+                  collection: site.standard.graph.recommend.$type,
+                  limit: ExternalHydrator.MAX_BACKLINK_PREVIEWS,
+                },
+              ]
+            : [],
+        )
 
         const publicationUri = recordUriOf(
           record.site,
@@ -1259,12 +1293,17 @@ export class Hydrator {
         collection === site.standard.publication.$type &&
         site.standard.publication.$matches(record, { strict: false })
       ) {
-        targets.set(uri, [
-          {
-            collection: site.standard.graph.subscription.$type,
-            limit: ExternalHydrator.MAX_BACKLINK_PREVIEWS,
-          },
-        ])
+        targets.set(
+          uri,
+          hydration === 'detailed'
+            ? [
+                {
+                  collection: site.standard.graph.subscription.$type,
+                  limit: ExternalHydrator.MAX_BACKLINK_PREVIEWS,
+                },
+              ]
+            : [],
+        )
       } else if (
         collection === place.stream.livestream.$type &&
         place.stream.livestream.$matches(record, { strict: false })
@@ -1274,16 +1313,19 @@ export class Hydrator {
         collection === social.grain.gallery.$type &&
         social.grain.gallery.$matches(record, { strict: false })
       ) {
-        targets.set(uri, [
-          {
+        // Membership items are content, sampled at every level.
+        const samples: { collection: NsidString; limit: number }[] = []
+        if (hydration === 'detailed') {
+          samples.push({
             collection: social.grain.favorite.$type,
             limit: ExternalHydrator.MAX_BACKLINK_PREVIEWS,
-          },
-          {
-            collection: social.grain.gallery.item.$type,
-            limit: ExternalHydrator.MAX_BACKLINK_GALLERY_ITEMS,
-          },
-        ])
+          })
+        }
+        samples.push({
+          collection: social.grain.gallery.item.$type,
+          limit: ExternalHydrator.MAX_BACKLINK_GALLERY_ITEMS,
+        })
+        targets.set(uri, samples)
       } else if (
         collection === social.grain.gallery.item.$type &&
         social.grain.gallery.item.$matches(record, { strict: false })
@@ -1378,13 +1420,12 @@ export class Hydrator {
       )
     } else if (newUris.length) {
       try {
-        nested = await this.hydrateEmbedExternalViewFromUris(
-          newUris,
-          ctx,
+        nested = await this.hydrateEmbedExternalViewFromUris(newUris, ctx, {
+          hydration,
           seenRecordKeys,
-          hydrationPass + 1,
+          hydrationPass: hydrationPass + 1,
           hydrationMetrics,
-        )
+        })
       } catch (err) {
         // Skip the whole batch; partial child state could miss moderation.
         hydrationMetrics.partial = true

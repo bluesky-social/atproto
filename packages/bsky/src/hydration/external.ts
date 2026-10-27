@@ -87,6 +87,22 @@ export type ExactRecordKey = string & { [exactRecordKeySymbol]: true }
 export type SiteStandardDocument = RecordInfo<SiteStandardDocumentRecord>
 export type SiteStandardPublication = RecordInfo<SiteStandardPublicationRecord>
 
+export type ExternalHydrationLevel = 'basic' | 'detailed'
+
+/**
+ * Options for external hydration traversals. `hydration` picks one level for
+ * the whole traversal (default `'detailed'`): `'basic'` hydrates renderable
+ * content, moderation and aggregate backlink counts; `'detailed'` also samples
+ * social-preview backlinks and hydrates their records and participants. The
+ * remaining fields are traversal state shared by nested passes.
+ */
+export type ExternalHydrationOptions = {
+  hydration?: ExternalHydrationLevel
+  seenRecordKeys?: Set<string>
+  hydrationPass?: number
+  hydrationMetrics?: ExternalHydrationTracker
+}
+
 export class ExternalHydrator {
   static readonly MAX_BACKLINK_PREVIEWS = 3
   static readonly MAX_BACKLINK_GALLERY_ITEMS = 10
