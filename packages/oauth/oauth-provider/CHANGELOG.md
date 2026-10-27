@@ -1,5 +1,11 @@
 # @atproto/oauth-provider
 
+## 0.25.1
+
+### Patch Changes
+
+- [#5743](https://github.com/bluesky-social/atproto/pull/5743) [`8656303`](https://github.com/bluesky-social/atproto/commit/86563037e8233162165fc455f926569386536dd1) Thanks [@haileyok](https://github.com/haileyok)! - Record the scopes a user approved on the consent screen, not the scopes the client requested.
+
 ## 0.25.0
 
 ### Minor Changes
