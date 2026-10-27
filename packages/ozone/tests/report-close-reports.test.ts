@@ -166,6 +166,209 @@ describe('report-close-reports', () => {
     ).data
   }
 
+  async function setStatus(
+    reportId: number,
+    status: 'queued' | 'assigned' | 'escalated',
+  ) {
+    if (status === 'assigned') {
+      await agent.tools.ozone.report.assignModerator(
+        {
+          reportId,
+          did: network.ozone.moderatorAccnt.did,
+          isPermanent: true,
+        },
+        { headers: await modHeaders(ids.ToolsOzoneReportAssignModerator) },
+      )
+    } else {
+      await agent.tools.ozone.report.createActivity(
+        {
+          reportId,
+          activity:
+            status === 'queued'
+              ? tools.ozone.report.defs.queueActivity.$build({})
+              : tools.ozone.report.defs.escalationActivity.$build({}),
+        },
+        { headers: await modHeaders(ids.ToolsOzoneReportCreateActivity) },
+      )
+    }
+    expect((await detail(reportId)).status).toBe(status)
+  }
+
+  async function snapshotReports(reports: { id: number }[]) {
+    return Promise.all(
+      reports.map(async ({ id }) => ({
+        report: await detail(id),
+        activities: await listActivities(id),
+      })),
+    )
+  }
+
+  async function expectUnchanged(
+    snapshots: Awaited<ReturnType<typeof snapshotReports>>,
+  ) {
+    for (const { report, activities } of snapshots) {
+      const current = await detail(report.id)
+      expect({
+        status: current.status,
+        updatedAt: current.updatedAt,
+        actionEventIds: current.actionEventIds,
+        actionNote: current.actionNote,
+      }).toEqual({
+        status: report.status,
+        updatedAt: report.updatedAt,
+        actionEventIds: report.actionEventIds,
+        actionNote: report.actionNote,
+      })
+      expect(await listActivities(report.id)).toEqual(activities)
+    }
+  }
+
+  describe.each(['account', 'record', 'message', 'conversation'] as const)(
+    '%s active review',
+    (kind) => {
+      it.each([false, true])(
+        'preserves active review during batch closure when isAutomated is %s',
+        async (isAutomated) => {
+          const f = await fixture()
+          const open = await report(f[kind])
+          const queued = await report(f[kind])
+          await setStatus(queued.id, 'queued')
+          const assigned = await report(f[kind])
+          await setStatus(assigned.id, 'assigned')
+          const permanent = await report(f[kind])
+          await setStatus(permanent.id, 'assigned')
+          await setStatus(permanent.id, 'queued')
+          const escalated = await report(f[kind])
+          await setStatus(escalated.id, 'escalated')
+          const temporary = await report(f[kind])
+          await agent.tools.ozone.report.assignModerator(
+            { reportId: temporary.id },
+            { headers: await modHeaders(ids.ToolsOzoneReportAssignModerator) },
+          )
+          const ended = await report(f[kind])
+          await setStatus(ended.id, 'assigned')
+          await agent.tools.ozone.report.unassignModerator(
+            { reportId: ended.id },
+            {
+              headers: await modHeaders(ids.ToolsOzoneReportUnassignModerator),
+            },
+          )
+          const excluded = await report(
+            f[kind],
+            com.atproto.moderation.defs.ReasonRude,
+          )
+          const before = await snapshotReports([
+            assigned,
+            permanent,
+            escalated,
+            excluded,
+          ])
+          const subject =
+            kind === 'account'
+              ? f.did
+              : kind === 'record'
+                ? f.record.uri
+                : `at://${f.did}/${kind === 'message' ? CHAT_MESSAGE_COLLECTION : CHAT_CONVO_COLLECTION}/${kind === 'message' ? f.message.messageId : f.conversation.convoId}`
+          const input = {
+            subject,
+            reportTypes: [
+              com.atproto.moderation.defs.ReasonSpam,
+              com.atproto.moderation.defs.ReasonRude,
+            ],
+            excludedReportTypes: [com.atproto.moderation.defs.ReasonRude],
+            isAutomated,
+          }
+          expect((await closeReports(input)).data).toEqual({
+            closedCount: 4,
+            reportIds: [open.id, queued.id, temporary.id, ended.id],
+          })
+          for (const r of [open, queued, temporary, ended]) {
+            expect((await detail(r.id)).status).toBe('closed')
+            expect(await listActivities(r.id)).toContainEqual(
+              expect.objectContaining({
+                isAutomated,
+                meta: { resolution: 'noAction' },
+              }),
+            )
+          }
+          expect((await closeReports(input)).data).toEqual({
+            closedCount: 0,
+            reportIds: [],
+          })
+          await expectUnchanged(before)
+
+          for (const r of [assigned, permanent, escalated]) {
+            await agent.tools.ozone.report.createActivity(
+              {
+                reportId: r.id,
+                activity: tools.ozone.report.defs.closeActivity.$build({}),
+              },
+              { headers: await modHeaders(ids.ToolsOzoneReportCreateActivity) },
+            )
+            expect((await detail(r.id)).status).toBe('closed')
+          }
+        },
+      )
+    },
+  )
+
+  it.each(['all', 'types', 'exclusions'] as const)(
+    'protects active review across owned subjects with %s targeting',
+    async (selector) => {
+      const f = await fixture()
+      const selected: Awaited<ReturnType<typeof report>>[] = []
+      const protectedReports: Awaited<ReturnType<typeof report>>[] = []
+      for (const subject of [f.account, f.record, f.message, f.conversation]) {
+        selected.push(await report(subject))
+        const queued = await report(subject)
+        await setStatus(queued.id, 'queued')
+        selected.push(queued)
+        for (const status of ['assigned', 'escalated'] as const) {
+          const r = await report(subject)
+          await setStatus(r.id, status)
+          protectedReports.push(r)
+        }
+        const permanent = await report(subject)
+        await setStatus(permanent.id, 'assigned')
+        await setStatus(permanent.id, 'queued')
+        protectedReports.push(permanent)
+        const other = await report(
+          subject,
+          com.atproto.moderation.defs.ReasonRude,
+        )
+        if (selector === 'all') {
+          selected.push(other)
+        } else {
+          protectedReports.push(other)
+        }
+      }
+      const before = await snapshotReports(protectedReports)
+      const input = {
+        subject: f.did,
+        includeAllOwned: true,
+        isAutomated: true,
+        ...(selector === 'types' && {
+          reportTypes: [com.atproto.moderation.defs.ReasonSpam],
+        }),
+        ...(selector === 'exclusions' && {
+          excludedReportTypes: [com.atproto.moderation.defs.ReasonRude],
+        }),
+      }
+      expect((await closeReports(input)).data).toEqual({
+        closedCount: selected.length,
+        reportIds: selected.map(({ id }) => id),
+      })
+      for (const r of selected) {
+        expect((await detail(r.id)).status).toBe('closed')
+      }
+      expect((await closeReports(input)).data).toEqual({
+        closedCount: 0,
+        reportIds: [],
+      })
+      await expectUnchanged(before)
+    },
+  )
+
   it.each([undefined, false])(
     'keeps account closure exact when includeAllOwned is %s',
     async (includeAllOwned) => {

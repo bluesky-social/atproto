@@ -245,14 +245,42 @@ export async function getLatestReport(
 }
 
 export type FindReportsForSubjectParams = {
+  /**
+   * The DID of the subject for which to find reports.
+   */
   subjectDid: DidString
+  /**
+   * The URI of the subject for which to find reports. If not provided, will match repo-level subjects.
+   */
   subjectUri?: AtUriString | null
+  /**
+   * The IDs of the reports to include. If not provided, all reports are considered.
+   */
   reportIds?: number[]
+  /**
+   * The types of reports to include. If not provided, all types are considered.
+   */
   reportTypes?: string[]
+  /**
+   * The types of reports to exclude. If not provided, no types are excluded.
+   */
   excludedReportTypes?: string[]
+  /**
+   * Whether to target all reports for the subject.
+   */
   targetAll?: boolean
+  /**
+   * Whether to target all reports owned by the subject DID.
+   */
   includeAllOwned?: boolean
+  /**
+   * Whether to lock the selected reports for update.
+   */
   lockForUpdate?: boolean
+  /**
+   * Whether to protect active reviews from being included.
+   */
+  protectActiveReview?: boolean
 }
 
 export type ReportResult = {
@@ -303,7 +331,39 @@ export async function findReportsForSubject(
     }
   }
 
-  if (params.targetAll) {
+  if (params.protectActiveReview) {
+    const explicitIds = params.reportIds ?? []
+    const reportTypes = params.reportTypes ?? []
+    if (!explicitIds.length && !params.targetAll && !reportTypes.length) {
+      return []
+    }
+    builder = builder.where('r.status', '!=', 'closed').where((eb) =>
+      eb.or([
+        ...(explicitIds.length ? [eb('r.id', 'in', explicitIds)] : []),
+        ...(params.targetAll || reportTypes.length
+          ? [
+              eb.and([
+                eb('r.status', 'not in', ['assigned', 'escalated']),
+                eb.not(
+                  eb.exists(
+                    eb
+                      .selectFrom('moderator_assignment as ma')
+                      .select('ma.reportId')
+                      .whereRef('ma.reportId', '=', 'r.id')
+                      .where('ma.endAt', 'is', null)
+                      // @NOTE Keep the lookup correlated instead of hashing all assignments.
+                      .offset(0),
+                  ),
+                ),
+                ...(params.targetAll
+                  ? []
+                  : [eb('r.reportType', 'in', reportTypes)]),
+              ]),
+            ]
+          : []),
+      ]),
+    )
+  } else if (params.targetAll) {
     // Target all open/escalated reports on the subject
     builder = builder.where('r.status', 'not in', ['closed'])
   } else if (params.reportIds?.length) {
@@ -359,7 +419,8 @@ export type CloseReportsResult = {
 }
 
 /**
- * Closes non-closed reports matching the subject and report type filters.
+ * Closes eligible reports matching the subject and report type filters.
+ * Assigned and escalated reports are preserved for explicit review actions.
  * Reports whose current status doesn't permit a transition to closed are
  * skipped silently. Unlike
  * `processReportAction` there is no moderation event involved — reports are
@@ -389,6 +450,7 @@ export async function closeReportsForSubject(
       excludedReportTypes: params.excludedReportTypes,
       targetAll: !reportTypes?.length,
       lockForUpdate: true,
+      protectActiveReview: true,
     })
 
     const validUpdates: {
@@ -580,13 +642,19 @@ export async function processReportAction(
     return processEmailReportAction(db, reportAction, subjectDid, eventId)
   }
 
-  // Find reports matching the criteria
+  const closesReports =
+    handleReportUpdate('open', { type: 'event', eventType }).nextStatus ===
+    'closed'
+  // @NOTE Explicit IDs preserve deliberate review actions; broad closure must
+  // not interrupt assigned or escalated reports. Lock targets until commit.
   const matchingReports = await findReportsForSubject(db, {
     subjectDid,
     subjectUri: subjectUri as AtUriString,
     reportIds: reportAction.ids,
     reportTypes: reportAction.types,
     targetAll: reportAction.all,
+    protectActiveReview: closesReports,
+    lockForUpdate: closesReports,
   })
 
   if (matchingReports.length === 0) {
