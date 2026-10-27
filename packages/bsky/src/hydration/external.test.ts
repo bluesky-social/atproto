@@ -672,6 +672,101 @@ describe(ExternalHydrator, () => {
     },
   )
 
+  describe('bounded backlink count requests', () => {
+    const limit = 100
+    const uriOf = (i: number): AtUriString =>
+      `at://${docDid}/${collection}/r${i}`
+    const uriList = (count: number) =>
+      Array.from({ length: count }, (_, i) => uriOf(i))
+    // Every target gets a distinct count, except one zero and one empty entry.
+    const countOf = (uri: string) => Number(uri.split('/r').pop()) + 1
+    const respond = (uris: string[]) =>
+      new GetAtmosphereBacklinkCountsResponse({
+        results: uris.map((targetUri) => {
+          const n = countOf(targetUri)
+          if (n === 2) return { targetUri }
+          return {
+            targetUri,
+            counts: { [collection]: n === 3 ? 0n : BigInt(n) },
+          }
+        }),
+      })
+    // Enforces the dataplane's 1-100 limit and records overlapping requests.
+    const mockCounts = () => {
+      const state = { inFlight: 0, maxInFlight: 0 }
+      const spy = vi
+        .spyOn(dataplane, 'getAtmosphereBacklinkCounts')
+        .mockImplementation(async ({ targetUris = [] }) => {
+          state.maxInFlight = Math.max(state.maxInFlight, ++state.inFlight)
+          try {
+            await new Promise((resolve) => setImmediate(resolve))
+            if (targetUris.length < 1 || targetUris.length > limit) {
+              throw new ConnectError(
+                `between 1 and ${limit} target URIs are required`,
+                Code.InvalidArgument,
+              )
+            }
+            return respond(targetUris)
+          } finally {
+            state.inFlight--
+          }
+        })
+      return { spy, state }
+    }
+
+    test.each([
+      { count: 0, requests: [] },
+      { count: 100, requests: [100] },
+      { count: 101, requests: [100, 1] },
+      { count: 205, requests: [100, 100, 5] },
+    ])('fetches counts for $count targets', async ({ count, requests }) => {
+      const input = uriList(count)
+      const { spy, state } = mockCounts()
+      using _ = spy
+      const result = await hydrator.getAtmosphereBacklinkCounts(
+        input,
+        collection,
+      )
+
+      const calls = spy.mock.calls.map(([req]) => req)
+      expect(calls.map((req) => req.targetUris?.length)).toEqual(requests)
+      expect(calls.flatMap((req) => req.targetUris ?? [])).toEqual(input)
+      for (const req of calls) expect(req.collection).toBe(collection)
+      expect(state.maxInFlight).toBeLessThanOrEqual(1)
+
+      expect([...result.keys()]).toEqual(input)
+      for (const uri of input) {
+        const n = countOf(uri)
+        expect(result.get(uri)).toEqual(
+          n === 2 ? {} : { [collection]: n === 3 ? 0 : n },
+        )
+      }
+    })
+
+    it('forwards an omitted collection on every chunk', async () => {
+      const { spy } = mockCounts()
+      using _ = spy
+      await hydrator.getAtmosphereBacklinkCounts(uriList(101))
+      expect(spy.mock.calls.map(([req]) => req.collection)).toEqual([
+        undefined,
+        undefined,
+      ])
+    })
+
+    it('rejects the whole call without later requests when a chunk fails', async () => {
+      const error = new Error('dataplane unavailable')
+      const { spy } = mockCounts()
+      using _ = spy
+      spy
+        .mockImplementationOnce(spy.getMockImplementation()!)
+        .mockRejectedValueOnce(error)
+      await expect(
+        hydrator.getAtmosphereBacklinkCounts(uriList(205), collection),
+      ).rejects.toThrow(error)
+      expect(spy).toHaveBeenCalledTimes(2)
+    })
+  })
+
   describe('bounded generic record requests', () => {
     // The dataplane's request limit, enforced by every stub below.
     const limit = 100

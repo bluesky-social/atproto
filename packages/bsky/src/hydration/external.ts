@@ -116,6 +116,11 @@ export class ExternalHydrator {
    * exact-ref lookups use the same bound defensively.
    */
   static readonly MAX_RECORDS_PER_REQUEST = 100
+  /**
+   * Target URIs per backlink-count RPC. The dataplane requires between 1 and
+   * 100; this is a separate limit from `MAX_RECORDS_PER_REQUEST`.
+   */
+  static readonly MAX_BACKLINK_COUNT_TARGETS_PER_REQUEST = 100
 
   constructor(public dataplane: DataPlaneClient) {}
 
@@ -189,28 +194,35 @@ export class ExternalHydrator {
     }
   }
 
-  /** Fetch source-record counts, optionally restricted to one collection. */
+  /**
+   * Fetch source-record counts, optionally restricted to one collection. Large
+   * inputs are fetched in sequential bounded requests; any failed request
+   * rejects the whole call.
+   */
   async getAtmosphereBacklinkCounts(
     targetUris: AtUriString[],
     collection?: NsidString,
   ): Promise<ExternalRecordBacklinkCounts> {
     const map: ExternalRecordBacklinkCounts = new HydrationMap()
-    if (!targetUris.length) return map
-
-    const res = await this.dataplane.getAtmosphereBacklinkCounts({
+    for (const chunk of chunkArray(
       targetUris,
-      collection,
-    })
-    for (const result of res.results) {
-      map.set(
-        result.targetUri as AtUriString,
-        Object.fromEntries(
-          Object.entries(result.counts).map(([nsid, count]) => [
-            nsid,
-            Number(count),
-          ]),
-        ),
-      )
+      ExternalHydrator.MAX_BACKLINK_COUNT_TARGETS_PER_REQUEST,
+    )) {
+      const res = await this.dataplane.getAtmosphereBacklinkCounts({
+        targetUris: chunk,
+        collection,
+      })
+      for (const result of res.results) {
+        map.set(
+          result.targetUri as AtUriString,
+          Object.fromEntries(
+            Object.entries(result.counts).map(([nsid, count]) => [
+              nsid,
+              Number(count),
+            ]),
+          ),
+        )
+      }
     }
     return map
   }
