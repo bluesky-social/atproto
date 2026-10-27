@@ -159,7 +159,7 @@ const skeleton = async (
         groupingKey = NOTIFICATION_REASON.FOLLOW
       }
       if (notif.reason === NOTIFICATION_REASON.SUBSCRIBED_POST) {
-        groupingKey = actorDid
+        groupingKey = NOTIFICATION_REASON.SUBSCRIBED_POST
       }
 
       items.push({

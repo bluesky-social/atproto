@@ -80,11 +80,10 @@ const item = (
   )
   if (!raw) throw new Error('Invalid notification fixture')
   const groupingKey =
-    kind === NOTIFICATION_REASON.FOLLOW
+    kind === NOTIFICATION_REASON.FOLLOW ||
+    kind === NOTIFICATION_REASON.SUBSCRIBED_POST
       ? kind
-      : kind === NOTIFICATION_REASON.SUBSCRIBED_POST
-        ? actorDid
-        : (raw.reasonSubject ?? raw.uri)
+      : (raw.reasonSubject ?? raw.uri)
   return {
     raw,
     id,
@@ -400,7 +399,7 @@ describe('notification grouping', () => {
   )
 
   it.each(['algoGravity', 'algoLookback'] as const)(
-    '%s shows subscribed posts separately in activity but groups posts by the same actor in all',
+    '%s shows subscribed posts separately in activity but groups posts across actors in all',
     (algorithm) => {
       const items = [
         item(
@@ -419,23 +418,26 @@ describe('notification grouping', () => {
             actor: 'alice',
           },
         ),
+        item('bob-post', minutesAgo(2), NOTIFICATION_REASON.SUBSCRIBED_POST, {
+          actor: 'bob',
+        }),
       ]
 
       expect(
-        buildGroups(items, 2, now, undefined, algorithm).groups.map(
+        buildGroups(items, 3, now, undefined, algorithm).groups.map(
           ({ items }) => items.map(({ id }) => id),
         ),
-      ).toEqual([['alice-post-1', 'alice-post-2']])
+      ).toEqual([['alice-post-1', 'alice-post-2', 'bob-post']])
       expect(
         buildGroups(
           items,
-          2,
+          3,
           now,
           undefined,
           algorithm,
           NotificationFeed.ACTIVITY,
         ).groups.map(({ items }) => items.map(({ id }) => id)),
-      ).toEqual([['alice-post-1'], ['alice-post-2']])
+      ).toEqual([['alice-post-1'], ['alice-post-2'], ['bob-post']])
     },
   )
 
@@ -1945,6 +1947,69 @@ describe.each(['algoGravity', 'algoLookback'] as const)(
       },
     )
 
+    it.each(['all', 'activity'] as const)(
+      'groups subscribed posts across accounts only in all: %s',
+      async (feed) => {
+        const posts = [
+          await sc.post(sc.dids.bob, 'First subscribed post'),
+          await sc.post(sc.dids.dan, 'Another account’s subscribed post'),
+          await sc.post(sc.dids.bob, 'Second subscribed post'),
+        ]
+        const actors = [sc.dids.bob, sc.dids.dan, sc.dids.bob]
+        await network.processAll()
+        // @NOTE the test dataplane doesn't generate subscribed-post notifications.
+        using notifications = vi
+          .spyOn(network.bsky.ctx.hydrator.dataplane, 'getNotificationsV2')
+          .mockResolvedValue(
+            new GetNotificationsV2Response({
+              notifications: posts.map(
+                ({ ref }, index) =>
+                  new Notification({
+                    recipientDid: sc.dids.carol,
+                    uri: ref.uriStr,
+                    reason: NOTIFICATION_REASON.SUBSCRIBED_POST,
+                    timestamp: Timestamp.fromJson(minutesAgo(index)),
+                  }),
+              ),
+            }),
+          )
+        const headers = await network.serviceHeaders(sc.dids.carol, defs.$lxm)
+
+        const response = await network.bsky
+          .getClient()
+          .call(defs, { feed, limit: 3 }, { headers })
+
+        const items = posts.map(({ ref }, index) => ({
+          actor: actors[index]!,
+          post: ref.uriStr,
+        }))
+        expect(notifications).toHaveBeenCalledTimes(1)
+        expect(response.groups.map(({ count }) => count)).toEqual(
+          feed === 'all' ? [3] : [1, 1, 1],
+        )
+        expect(response.groups.map(({ kind }) => kind)).toEqual(
+          (feed === 'all' ? [items] : items.map((item) => [item])).map(
+            (items) => defs.subscribedPostGroup.$build({ items }),
+          ),
+        )
+        expect(response.relatedViews).toMatchObject([
+          {
+            $type: app.bsky.actor.defs.profileViewBasic.$type,
+            did: sc.dids.bob,
+          },
+          {
+            $type: app.bsky.actor.defs.profileViewBasic.$type,
+            did: sc.dids.dan,
+          },
+          ...posts.map(({ ref }) => ({
+            $type: app.bsky.feed.defs.postView.$type,
+            uri: ref.uriStr,
+          })),
+        ])
+        expect(response.cursor).toBeUndefined()
+      },
+    )
+
     it('returns all subscribed posts with related views for only the first ten of each group', async () => {
       const authors = [sc.dids.bob, sc.dids.dan]
       const postGroups = await Promise.all(
@@ -1982,25 +2047,26 @@ describe.each(['algoGravity', 'algoLookback'] as const)(
         .call(defs, { limit: 2 }, { headers })
 
       expect(notifications).toHaveBeenCalledTimes(1)
-      expect(response.groups.map(({ count }) => count)).toEqual([12, 12])
-      expect(response.groups.map(({ kind }) => kind)).toEqual(
-        postGroups.map(({ actor, posts }) =>
-          defs.subscribedPostGroup.$build({
-            items: posts.map(({ ref }) => ({ actor, post: ref.uriStr })),
-          }),
-        ),
-      )
+      expect(response.groups.map(({ count }) => count)).toEqual([24])
+      expect(response.groups.map(({ kind }) => kind)).toEqual([
+        defs.subscribedPostGroup.$build({
+          items: postGroups.flatMap(({ actor, posts }) =>
+            posts.map(({ ref }) => ({ actor, post: ref.uriStr })),
+          ),
+        }),
+      ])
       expect(response.relatedViews).toMatchObject([
-        ...authors.map((did) => ({
+        {
           $type: app.bsky.actor.defs.profileViewBasic.$type,
-          did,
-        })),
-        ...postGroups.flatMap(({ posts }) =>
-          posts.slice(0, 10).map(({ ref }) => ({
+          did: sc.dids.bob,
+        },
+        ...postGroups
+          .flatMap(({ posts }) => posts)
+          .slice(0, 10)
+          .map(({ ref }) => ({
             $type: app.bsky.feed.defs.postView.$type,
             uri: ref.uriStr,
           })),
-        ),
       ])
       expect(response.cursor).toBeUndefined()
     })
@@ -2045,14 +2111,11 @@ describe.each(['algoGravity', 'algoLookback'] as const)(
               post: reply.ref.uriStr,
               parent: root.ref.uriStr,
             },
+            { actor: sc.dids.dan, post: root.ref.uriStr },
           ],
         }),
-        // Not a reply, so no parent
-        defs.subscribedPostGroup.$build({
-          items: [{ actor: sc.dids.dan, post: root.ref.uriStr }],
-        }),
       ])
-      expect(response.groups[1]!.kind).not.toHaveProperty('items.0.parent')
+      expect(response.groups[0]!.kind).not.toHaveProperty('items.1.parent')
       expect(response.relatedViews).toMatchObject([
         { $type: app.bsky.actor.defs.profileViewBasic.$type, did: sc.dids.bob },
         { $type: app.bsky.actor.defs.profileViewBasic.$type, did: sc.dids.dan },
