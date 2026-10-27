@@ -31,10 +31,10 @@ function fixturePath(name: string) {
   return fileURLToPath(new URL(`./_fixtures/${name}`, import.meta.url))
 }
 
-// opentelemetry-plugin-better-sqlite3 depends on its own (older)
-// @opentelemetry/instrumentation. This fails unless it shares the SDK's
-// import-in-the-middle copy, and setup() opened the loader hook's message
-// channel before constructing it.
+// Guards that our better-sqlite3 instrumentation (./better-sqlite3-plugin)
+// instruments ESM imports, which only works if setup() opened the loader hook's
+// message channel before constructing it. Production queries (run through
+// Kysely) produce the prepared statement spans.
 test('better-sqlite3 queries are traced', async () => {
   await using collector = await startOtlpCollector()
 
@@ -43,11 +43,16 @@ test('better-sqlite3 queries are traced', async () => {
   expect(
     collector.spans('opentelemetry-instrumentation-better-sqlite3'),
   ).toMatchObject([
-    {
-      name: 'SELECT',
-      attributes: expect.arrayContaining([
-        { key: 'db.query.text', value: { stringValue: 'SELECT 1' } },
-      ]),
-    },
+    { name: 'SELECT', attributes: dbAttributes('SELECT 1') },
+    { name: 'prepare: SELECT', attributes: dbAttributes('SELECT 2') },
+    { name: 'all: SELECT', attributes: dbAttributes('SELECT 2') },
   ])
 })
+
+function dbAttributes(query: string) {
+  return expect.arrayContaining([
+    { key: 'db.system.name', value: { stringValue: 'sqlite3' } },
+    { key: 'db.query.text', value: { stringValue: query } },
+    { key: 'db.namespace', value: { stringValue: ':memory:' } },
+  ])
+}

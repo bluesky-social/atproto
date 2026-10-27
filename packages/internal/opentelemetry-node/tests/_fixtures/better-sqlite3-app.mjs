@@ -5,6 +5,8 @@ import SqliteDB from 'better-sqlite3'
 const db = new SqliteDB(':memory:')
 try {
   db.exec('SELECT 1')
+  // As run by Kysely's SqliteDialect
+  db.prepare('SELECT 2').all()
 } finally {
   db.close()
 }

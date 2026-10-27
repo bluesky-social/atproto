@@ -83,6 +83,14 @@ registered alongside the ones you supply. The
 `@atproto-labs/opentelemetry-node/instrumentation` entrypoint exposes
 `getDefaultAtprotoInstrumentations()` if you need that list directly.
 
+Instrumentations you supply must be built on the same
+`@opentelemetry/instrumentation` as this package, or ESM imports of the modules
+they target are not instrumented. For `better-sqlite3`, use the
+`BetterSqlite3Instrumentation` exposed by the
+`@atproto-labs/opentelemetry-node/better-sqlite3-plugin` entrypoint: a port of
+[`opentelemetry-plugin-better-sqlite3`](https://github.com/sjinks/opentelemetry-plugin-better-sqlite3)
+that satisfies this requirement.
+
 The `@atproto-labs/opentelemetry-node/conventions` entrypoint re-exports
 `@opentelemetry/semantic-conventions` plus the atproto-specific constants: the
 XRPC attribute keys (`ATTR_XRPC_METHOD`, `ATTR_XRPC_PROXIED`,

@@ -1,8 +1,8 @@
 // A service telemetry module (see packages/pds/src/telemetry.ts), loaded with
 // `node --import` ahead of the application. Imports this package by name, so
 // from its build output.
-import { BetterSqlite3Instrumentation } from 'opentelemetry-plugin-better-sqlite3'
 import { setup } from '@atproto-labs/opentelemetry-node'
+import { BetterSqlite3Instrumentation } from '@atproto-labs/opentelemetry-node/better-sqlite3-plugin'
 
 await setup(() => ({
   name: 'test-service',

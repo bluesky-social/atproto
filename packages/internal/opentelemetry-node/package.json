@@ -37,6 +37,10 @@
     "./util": {
       "types": "./dist/util.d.ts",
       "default": "./dist/util.js"
+    },
+    "./better-sqlite3-plugin": {
+      "types": "./dist/better-sqlite3-plugin.d.ts",
+      "default": "./dist/better-sqlite3-plugin.js"
     }
   },
   "engines": {
@@ -64,7 +68,6 @@
     "@opentelemetry/sdk-trace": "^3.0.0",
     "@types/better-sqlite3": "^7.6.13",
     "better-sqlite3": "^12.9.0",
-    "opentelemetry-plugin-better-sqlite3": "^1.13.0",
     "vitest": "^4.1.10"
   },
   "scripts": {

@@ -76,7 +76,6 @@
     "kysely": "^0.29.2",
     "nodemailer": "^6.8.0",
     "nodemailer-html-to-text": "^3.2.0",
-    "opentelemetry-plugin-better-sqlite3": "^1.13.0",
     "p-queue": "^8.0.0",
     "pino": "^10.3.1",
     "pino-http": "^11.0.0",
