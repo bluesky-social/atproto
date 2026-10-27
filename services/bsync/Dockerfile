@@ -52,7 +52,7 @@ ENV NODE_OPTIONS="--import=/app/emudhra-preload.mjs"
 
 # https://github.com/nodejs/docker-node/blob/master/docs/BestPractices.md#non-root-user
 USER node
-CMD ["node", "--enable-source-maps", "--import=./tracer.ts", "--import=@atproto/bsync/telemetry", "index.ts"]
+CMD ["node", "--enable-source-maps", "--import=@atproto/bsync/telemetry", "index.ts"]
 
 LABEL org.opencontainers.image.source=https://github.com/bluesky-social/atproto
 LABEL org.opencontainers.image.description="Bsync"
