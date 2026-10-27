@@ -9,7 +9,6 @@ import {
 import type { Request } from 'express'
 import { Agent, type Dispatcher, Pool, interceptors } from 'undici'
 import {
-  MaxSizeChecker,
   createDecoders,
   getServiceEndpoint,
   omit,
@@ -540,17 +539,16 @@ async function bufferUpstreamResponse(
   try {
     // @NOTE maxResponseSize bounds the wire stream that undici reads, and
     // decoding it can yield a much larger buffer, so the decoded stream needs
-    // its own bound. The checker is applied even when there is no
+    // its own bound. `createDecoders` applies it even when there is no
     // content-encoding, so that an identity-encoded body is bounded too.
     return await streamToNodeBuffer(
       pipeline(
         [
           readable,
-          ...createDecoders(contentEncoding),
-          new MaxSizeChecker(
+          ...createDecoders(contentEncoding, {
             maxSize,
-            () => new TypeError('upstream response too large'),
-          ),
+            maxSizeError: () => new TypeError('upstream response too large'),
+          }),
         ],
         () => {},
       ) as Duplex,

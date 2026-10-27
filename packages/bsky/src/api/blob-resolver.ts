@@ -34,6 +34,9 @@ import {
 import { BSKY_USER_AGENT } from './util.js'
 
 export function createMiddleware(ctx: AppContext): Middleware {
+  // @TODO this should be from configuration
+  const maxSize = 100 * 1024 * 1024 // 100 MB
+
   return async (req, res, next) => {
     if (req.method !== 'GET' && req.method !== 'HEAD') return next()
     if (!req.url?.startsWith('/blob/')) return next()
@@ -59,7 +62,7 @@ export function createMiddleware(ctx: AppContext): Middleware {
 
       await streamBlob(ctx, streamOptions, (upstream, { cid, did, url }) => {
         const encoding = upstream.headers['content-encoding']
-        const verifier = createCidVerifier(cid, encoding)
+        const verifier = createCidVerifier(cid, encoding, maxSize)
 
         const logError = (err: unknown) => {
           log.warn(
@@ -324,7 +327,11 @@ function getBlobHeaders(
  * If you need the un-compressed data, you should use a decompress + verify
  * pipeline instead.
  */
-function createCidVerifier(cid: Cid, encoding?: string | string[]): Duplex {
+function createCidVerifier(
+  cid: Cid,
+  encoding?: string | string[],
+  maxSize?: number,
+): Duplex {
   // If the upstream content is compressed, we do not want to return a
   // de-compressed stream here. Indeed, the "compression" middleware will
   // compress the response before it is sent downstream, if it is not already
@@ -339,12 +346,11 @@ function createCidVerifier(cid: Cid, encoding?: string | string[]): Duplex {
   // will be used to decompress & verify the CID (discarding de-compressed
   // data).
 
-  const decoders = createDecoders(encoding)
+  const decoders = createDecoders(encoding, {
+    maxSize,
+    maxSizeError: () => createError(400, 'Blob too large'),
+  })
   const verifier = new VerifyCidTransform(cid)
-
-  // Optimization: If the content is not compressed, we don't need to "tee" the
-  // stream, we can use the verifier as simple passthrough.
-  if (!decoders.length) return verifier
 
   const pipelineController = new AbortController()
   const pipelineStreams: Duplex[] = [...decoders, verifier]
@@ -369,7 +375,7 @@ function createCidVerifier(cid: Cid, encoding?: string | string[]): Duplex {
     },
   )
 
-  // We don't care about the un-compressed data, we only use the verifier to
+  // We don't care about the (un-compressed) data, we only use the verifier to
   // detect any error through the pipelinePromise. We still need to pass the
   // verifier into flowing mode to ensure that the pipelinePromise resolves.
   verifier.resume()

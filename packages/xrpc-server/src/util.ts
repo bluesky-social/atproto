@@ -7,7 +7,7 @@ import type {
   Response as ExpressResponse,
 } from 'express'
 import { contentType } from 'mime-types'
-import { MaxSizeChecker, createDecoders } from '@atproto/common'
+import { createDecoders } from '@atproto/common'
 import { jsonToLex } from '@atproto/lex-json'
 import { l } from '@atproto/lex-schema'
 import {
@@ -603,7 +603,11 @@ function decodeBodyStream(
 
   let transforms: Duplex[]
   try {
-    transforms = createDecoders(contentEncoding)
+    transforms = createDecoders(contentEncoding, {
+      maxSize,
+      maxSizeError: () =>
+        new XRPCError(ResponseType.PayloadTooLarge, 'request entity too large'),
+    })
   } catch (cause) {
     throw new XRPCError(
       ResponseType.UnsupportedMediaType,
@@ -611,15 +615,6 @@ function decodeBodyStream(
       undefined,
       { cause },
     )
-  }
-
-  if (maxSize !== undefined) {
-    const maxSizeChecker = new MaxSizeChecker(
-      maxSize,
-      () =>
-        new XRPCError(ResponseType.PayloadTooLarge, 'request entity too large'),
-    )
-    transforms.push(maxSizeChecker)
   }
 
   return transforms.length > 0
