@@ -52,6 +52,10 @@ import type SqliteDB from 'better-sqlite3'
 // only wraps ESM imports of the modules reported by instrumentations sharing
 // that copy. The instrumentation scope, span names, kinds and attributes are
 // kept identical to upstream, which existing dashboards rely on.
+//
+// @TODO Switch back to the upstream package once it is released on
+// @opentelemetry/instrumentation 0.300:
+// https://github.com/sjinks/opentelemetry-plugin-better-sqlite3/pull/1864
 
 // @NOTE "@types/better-sqlite3" is a dev dependency: keep these types out of
 // the public API, or consumers will need it too.

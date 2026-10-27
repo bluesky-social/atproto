@@ -36,7 +36,7 @@ export class InstrumentationMismatchError extends Error {
 /**
  * import-in-the-middle only hooks the ESM imports of modules targeted by
  * instrumentations built on the same `@opentelemetry/instrumentation` copy as
- * this package (see {@link setup}). Instrumentations built on another copy
+ * this package (see `setup()`). Instrumentations built on another copy
  * would silently miss them.
  */
 function assertSharedInstrumentationBase(instrumentations: Instrumentation[]) {
