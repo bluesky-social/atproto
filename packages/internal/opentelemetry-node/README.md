@@ -77,12 +77,6 @@ This sets the `http.route` attribute of the HTTP server duration metric to
 The list is what keeps the attribute low-cardinality: any client
 can make up an NSID. Span names aren't affected.
 
-The instrumentations common to atproto services (HTTP with XRPC-aware span naming,
-Express, Undici, Pino with log correlation, and Node runtime metrics) are always
-registered alongside the ones you supply. The
-`@atproto-labs/opentelemetry-node/instrumentation` entrypoint exposes
-`getDefaultAtprotoInstrumentations()` if you need that list directly.
-
 Instrumentations you supply must be built on the same
 `@opentelemetry/instrumentation` as this package, or ESM imports of the modules
 they target can't be instrumented: `setup()` then rejects with an
