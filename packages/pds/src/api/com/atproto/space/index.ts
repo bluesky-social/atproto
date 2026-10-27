@@ -1,6 +1,7 @@
 import type { Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../../../context.js'
 import applyWrites from './applyWrites.js'
+import clearRecords from './clearRecords.js'
 import createRecord from './createRecord.js'
 import deleteRecord from './deleteRecord.js'
 import getBlob from './getBlob.js'
@@ -22,6 +23,7 @@ import unregisterNotify from './unregisterNotify.js'
 
 export default function (server: Server, ctx: AppContext) {
   applyWrites(server, ctx)
+  clearRecords(server, ctx)
   createRecord(server, ctx)
   deleteRecord(server, ctx)
   getBlob(server, ctx)

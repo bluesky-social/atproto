@@ -413,6 +413,123 @@ describe('space records', () => {
     })
   })
 
+  describe('clearRecords', () => {
+    const EMPTY_REPO_DATA =
+      'e5a00aa9991ac8a5ee3109844d84a55583bd20572ad3ffcd42792f3c36b183ad'
+
+    it('deletes every record, leaving the repo empty at a new rev', async () => {
+      const space = await sc.createSpace(alice, { members: [dan] })
+      await sc.write(dan, space, { rkey: 'one', text: 'one' })
+      await sc.write(dan, space, {
+        collection: TEST_COLLECTION_ALT,
+        rkey: 'two',
+        text: 'two',
+      })
+      const before = await sc.repoState(dan, space)
+
+      await sc.clear(dan, space)
+
+      const listed = await dan.client.call(
+        com.atproto.space.listRecords,
+        { space, repo: dan.did },
+        { headers: dan.headers },
+      )
+      expect(listed.records).toEqual([])
+
+      const { commit } = await dan.client.call(
+        com.atproto.space.getLatestCommit,
+        { space, repo: dan.did },
+        { headers: dan.headers },
+      )
+      expect(commit.rev > before!.rev!).toBe(true)
+      expect(Buffer.from(commit.data).toString('hex')).toBe(EMPTY_REPO_DATA)
+      await sc.expectSetHashMatchesStore(dan, space)
+    })
+
+    it('clears the oplog rather than logging a delete per record', async () => {
+      const space = await sc.createSpace(alice, { members: [dan] })
+      await sc.write(dan, space, { rkey: 'one', text: 'one' })
+      await sc.write(dan, space, { rkey: 'two', text: 'two' })
+
+      await sc.clear(dan, space)
+
+      const res = await dan.client.call(
+        com.atproto.space.listRepoOps,
+        { space, repo: dan.did },
+        { headers: dan.headers },
+      )
+      expect(res.ops).toEqual([])
+      expect(Buffer.from(res.commit!.data).toString('hex')).toBe(
+        EMPTY_REPO_DATA,
+      )
+    })
+
+    it('is a no-op on an empty or unwritten repo', async () => {
+      const space = await sc.createSpace(alice, { members: [dan] })
+
+      await sc.clear(dan, space)
+      expect(await sc.repoState(dan, space)).toBeNull()
+
+      await sc.write(dan, space, { rkey: 'gone' })
+      await sc.del(dan, space, { rkey: 'gone' })
+      const emptied = await sc.repoState(dan, space)
+      await sc.clear(dan, space)
+      expect(await sc.repoState(dan, space)).toEqual(emptied)
+    })
+
+    it('recreates the repo on a later write', async () => {
+      const space = await sc.createSpace(alice, { members: [dan] })
+      await sc.write(dan, space, { rkey: 'before' })
+      await sc.clear(dan, space)
+      const cleared = await sc.repoState(dan, space)
+
+      const created = await sc.write(dan, space, { rkey: 'after' })
+
+      const after = await sc.repoState(dan, space)
+      expect(after!.rev! > cleared!.rev!).toBe(true)
+      const ops = await dan.client.call(
+        com.atproto.space.listRepoOps,
+        { space, repo: dan.did },
+        { headers: dan.headers },
+      )
+      expect(ops.ops).toMatchObject([
+        { rkey: 'after', cid: created.cid, prev: null },
+      ])
+      await sc.expectSetHashMatchesStore(dan, space)
+    })
+
+    it("leaves the account's repos in other spaces alone", async () => {
+      const space = await sc.createSpace(alice, { members: [dan] })
+      const other = await sc.createSpace(alice, {
+        skey: 'clear-records-other',
+        members: [dan],
+      })
+      await sc.write(dan, space, { rkey: 'cleared' })
+      await sc.write(dan, other, { rkey: 'kept' })
+
+      await sc.clear(dan, space)
+
+      const listed = await dan.client.call(
+        com.atproto.space.listRecords,
+        { space: other, repo: dan.did },
+        { headers: dan.headers },
+      )
+      expect(listed.records.map((r) => r.rkey)).toEqual(['kept'])
+      await sc.expectSetHashMatchesStore(dan, other)
+    })
+
+    it('refuses to clear another account repo', async () => {
+      const space = await sc.createSpace(alice, { members: [dan] })
+      await expect(
+        dan.client.call(
+          com.atproto.space.clearRecords,
+          { space, repo: alice.did },
+          { headers: dan.headers },
+        ),
+      ).rejects.toMatchObject({ error: 'Forbidden' })
+    })
+  })
+
   describe('validation', () => {
     it('rejects a record whose $type disagrees with its collection', async () => {
       const space = await sc.createSpace(alice)
@@ -702,6 +819,21 @@ describe('space records', () => {
 
       // And the reverse: dropping the space record leaves nothing behind.
       await sc.del(alice, space, { rkey: 'shared' })
+      await network.processAll()
+      expect(await sc.blobExists(alice, blobCid)).toBe(false)
+    })
+
+    it('drops the blobs of cleared records', async () => {
+      const space = await sc.createSpace(alice)
+      const blob = await upload(alice, new Uint8Array([3, 1, 3]))
+      const blobCid = getBlobCidString(blob)
+      await sc.write(alice, space, {
+        rkey: 'cleared-blob',
+        record: { $type: TEST_COLLECTION, text: 'cleared', image: blob },
+      })
+      expect(await sc.blobExists(alice, blobCid)).toBe(true)
+
+      await sc.clear(alice, space)
       await network.processAll()
       expect(await sc.blobExists(alice, blobCid)).toBe(false)
     })
