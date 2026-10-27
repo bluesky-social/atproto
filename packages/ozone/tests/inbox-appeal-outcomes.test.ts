@@ -329,12 +329,17 @@ describe('viewer appeal outcomes', () => {
       return [plan, ...(plan.Plans ?? []).flatMap(nodes)]
     }
     const plan = nodes(rows[0]['QUERY PLAN'][0].Plan)
-    const reportScan = plan.find((node) => node['Relation Name'] === 'report')
+    const reportScans = plan.filter(
+      (node) => node['Relation Name'] === 'report',
+    )
     const closureScan = plan.find(
       (node) => node['Relation Name'] === 'report_activity',
     )
-    expect(reportScan?.['Actual Rows']).toBe(1)
-    expect(reportScan?.['Actual Loops']).toBe(subjectCount)
+    expect(reportScans.length).toBeGreaterThanOrEqual(2)
+    expect(reportScans.every((node) => node['Actual Rows'] <= 1)).toBe(true)
+    expect(
+      reportScans.every((node) => node['Actual Loops'] <= subjectCount),
+    ).toBe(true)
     expect(closureScan?.['Actual Loops']).toBe(subjectCount)
   })
 

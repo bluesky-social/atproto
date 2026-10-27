@@ -20,9 +20,11 @@ import {
 } from '../mod-service/subject.js'
 import {
   APPEALABLE_EVENT_ACTIONS,
-  APPEAL_REASON_TYPE,
+  APPEAL_REASON_TYPES,
   PUBLIC_EVENT_ACTIONS,
   REVERSE_TAKEDOWN,
+  appealReportOrder,
+  appealReportTypeFilter,
   reportSubjectFilter,
 } from './appeal.js'
 import { queryActionHistory } from './history.js'
@@ -115,12 +117,14 @@ export async function queryActionedSubjects(
       qb
         .selectFrom('report')
         .where('did', '=', did)
-        .where('reportType', '=', APPEAL_REASON_TYPE)
+        .where(appealReportTypeFilter)
         .where('subjectMessageId', 'is', null)
         .where('subjectConvoId', 'is', null)
         .distinctOn('recordPath')
         .select(['recordPath', 'status', 'createdAt', 'updatedAt', 'closedAt'])
         .orderBy('recordPath')
+        .orderBy(appealReportOrder)
+        .orderBy(sql`"closedAt" DESC NULLS FIRST`)
         .orderBy('id', 'desc'),
     )
     .selectFrom('moderation_subject_status as s')
@@ -246,7 +250,7 @@ export async function getActionedSubjectDetail(
   const reportRows = db.db
     .selectFrom('report')
     .where((eb) => reportSubjectFilter(eb, subject))
-    .where('reportType', '!=', APPEAL_REASON_TYPE)
+    .where('reportType', 'not in', [...APPEAL_REASON_TYPES])
     .$if(cfg.startAt !== undefined, (qb) =>
       qb.where('createdAt', '>=', cfg.startAt!),
     )

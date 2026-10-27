@@ -1,6 +1,7 @@
 import type { DidString } from '@atproto/lex'
 import { ForbiddenError, type Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../context.js'
+import { fileAppeal } from '../../inbox/appeal.js'
 import { com } from '../../lexicons/index.js'
 import type { ModerationService } from '../../mod-service/index.js'
 import { RepoSubject, subjectFromInput } from '../../mod-service/subject.js'
@@ -26,6 +27,20 @@ export default function (server: Server, ctx: AppContext) {
 
       await ctx.moderationServiceProfile().validateReasonType(reasonType)
       await assertValidReporter(ctx.modService(db), reasonType, requester)
+
+      if (isAppealReport(reasonType)) {
+        const { event } = await fileAppeal(ctx, {
+          requester,
+          subject,
+          reason,
+          modTool,
+          legacyReasonType: reasonType,
+        })
+        return {
+          encoding: 'application/json',
+          body: ctx.modService(db).views.formatReport(event),
+        }
+      }
 
       const report = await db.transaction(async (dbTxn) => {
         const moderationTxn = ctx.modService(dbTxn)
@@ -76,14 +91,8 @@ const assertValidReporter = async (
     return
   }
 
-  // For appeals, we just need to make sure that the account does not have pending appeal
+  // Appeals are checked against the subject's report state when they are filed.
   if (isAppealReport(reasonType)) {
-    if (reporterStatus.appealed) {
-      throw new ForbiddenError(
-        'Awaiting decision on previous appeal',
-        'AlreadyAppealed',
-      )
-    }
     return
   }
 

@@ -13,19 +13,26 @@ import type { AppContext } from '../context.js'
 import type { Database } from '../db/index.js'
 import type { DatabaseSchemaType } from '../db/schema/index.js'
 import { jsonb } from '../db/types.js'
-import { tools } from '../lexicons/index.js'
+import { type com, tools } from '../lexicons/index.js'
 import type { AppealView } from '../lexicons/tools/ozone/inbox/defs.js'
 import type { ModSubject } from '../mod-service/subject.js'
-import type { ModerationSubjectStatusRow } from '../mod-service/types.js'
+import type {
+  ModerationEventRow,
+  ModerationSubjectStatusRow,
+} from '../mod-service/types.js'
 import { findMatchingQueue, getQueueRoutingNote } from '../queue/service.js'
+import { TagService } from '../tag-service/index.js'
+import { getTagForReport } from '../tag-service/util.js'
+import { lockAppealSubject, subjectKey } from './appeal-lock.js'
 import {
   type AppealOutcome,
   appealActivityOutcome,
   appealReportSelection,
   appealResolutionFilter,
 } from './appeal-outcome.js'
+import { APPEAL_REASON_TYPE, APPEAL_REASON_TYPES } from './appeal-type.js'
 
-export const APPEAL_REASON_TYPE = 'tools.ozone.report.defs#reasonAppeal'
+export { APPEAL_REASON_TYPE, APPEAL_REASON_TYPES } from './appeal-type.js'
 export const TAKEDOWN = 'tools.ozone.moderation.defs#modEventTakedown'
 export const REVERSE_TAKEDOWN =
   'tools.ozone.moderation.defs#modEventReverseTakedown'
@@ -49,12 +56,19 @@ export type AppealReport = {
   outcome?: AppealOutcome | null
 }
 
+export type AppealEligibility = {
+  hasActiveAppeal: boolean
+  lastClosedAt: DatetimeString | null
+  hasUnknownClosure: boolean
+}
+
 export type AppealInput = {
   subject: ModSubject
   status: Pick<ModerationSubjectStatusRow, 'appealed' | 'lastAppealedAt'> | null
   report: AppealReport | null
   /** Eligibility retains older appeals even when their history is hidden. */
   eligibilityReport?: AppealReport | null
+  eligibility?: AppealEligibility
 
   /** Calendar months an action stays appealable, from `InboxConfig`. */
   windowMonths: number
@@ -77,8 +91,38 @@ export const PUBLIC_EVENT_ACTIONS = [
 
 export const APPEALABLE_EVENT_ACTIONS = [TAKEDOWN, LABEL] as const
 
-export const isAppealableEvent = (action: string): boolean =>
-  (APPEALABLE_EVENT_ACTIONS as readonly string[]).includes(action)
+export const isAppealableEvent = (event: {
+  action: string
+  createLabelVals: string | null
+}): boolean =>
+  event.action === TAKEDOWN ||
+  (event.action === LABEL && !!event.createLabelVals?.trim())
+
+export function hasKnownLatestAppealable(
+  latest: DatetimeString | null,
+  events: readonly {
+    createdAt: DatetimeString
+    action: string
+    createLabelVals: string | null
+  }[],
+): boolean {
+  return (
+    !latest ||
+    events.some(
+      (event) => event.createdAt === latest && isAppealableEvent(event),
+    )
+  )
+}
+
+// @NOTE Use the same predicate for history aggregates and submission checks.
+export const appealableEventFilter = sql<boolean>`(action = ${sql.lit(TAKEDOWN)} OR
+  (action = ${sql.lit(LABEL)} AND nullif(btrim("createLabelVals"), '') IS NOT NULL))`
+
+export const appealReportTypeFilter = sql<boolean>`"reportType" IN (${sql.join(
+  APPEAL_REASON_TYPES.map((value) => sql.lit(value)),
+)})`
+
+export const appealReportOrder = sql<number>`CASE WHEN status <> 'closed' THEN 0 ELSE 1 END`
 
 export const appealWindowEnd = (
   actionCreatedAt: DatetimeString,
@@ -102,10 +146,10 @@ export const isAppealWindowOpen = (
  * Appeal state, derived entirely from data Ozone already records.
  */
 export const toAppealState = ({
-  subject,
   status,
   report,
   eligibilityReport = report,
+  eligibility = eligibilityFromReport(eligibilityReport),
   latestAppealableAt,
   windowMonths,
 }: AppealInput): AppealState => {
@@ -133,7 +177,7 @@ export const toAppealState = ({
   if (appealableUntil) view.appealableUntil = appealableUntil
 
   const availableActions =
-    windowOpen && !appealsExhausted(subject, eligibilityReport)
+    windowOpen && !appealsExhausted(eligibility, latestAppealableAt)
       ? ['appeal']
       : []
 
@@ -145,14 +189,7 @@ export const toAppealState = ({
  * it. Two appeals against the same record - or the same message, or the same
  * conversation - share a key even when they name different action IDs.
  */
-export const subjectKey = (subject: ModSubject): string => {
-  const { subjectDid, subjectMessageId, subjectConvoId } = subject.info()
-  if (subject.isMessage())
-    return `message:${subjectDid}:${subjectConvoId}:${subjectMessageId}`
-  if (subject.isConvo()) return `convo:${subjectDid}:${subjectConvoId}`
-  if (subject.isRecord()) return `record:${subjectDid}:${subject.recordPath}`
-  return `account:${subjectDid}`
-}
+export { subjectKey } from './appeal-lock.js'
 
 /**
  * Match report rows by that identity. Mirrors the subject normalization in
@@ -249,12 +286,13 @@ export const findAppealedEvent = async (
     )
   }
 
-  const matches = await query
+  const match = await query
+    .orderBy('createdAt', 'desc')
     .orderBy('id', 'desc')
-    .limit(2)
+    .limit(1)
     .selectAll()
-    .execute()
-  return matches.length === 1 ? matches[0] : undefined
+    .executeTakeFirst()
+  return match
 }
 
 export const resolveAppealAction = async (
@@ -287,35 +325,85 @@ export const subjectLabelUri = (subject: ModSubject): UriString =>
   (subject.info().subjectUri ?? subject.did) as UriString
 
 /**
- * Whether the subject has used up its appeals.
- *
- * Non-account subjects get one ever, closed or not. An account gets one at a
- * time, based on whether the latest appeal report is closed.
- *
- * The read path calls this to decide whether to offer `appeal`, and the write
- * path calls it to decide whether to accept one. They have to be the same
- * question: anything else advertises an appeal that submission will refuse.
+ * Whether the subject's appeal history blocks this action.
  */
-export const appealsExhausted = (
-  subject: ModSubject,
+export const eligibilityFromReport = (
   report: AppealReport | null,
-): boolean => {
-  if (!report) return false
-  return subject.isRepo() ? report.status !== 'closed' : true
-}
+): AppealEligibility => ({
+  hasActiveAppeal: !!report && report.status !== 'closed',
+  lastClosedAt: report?.status === 'closed' ? report.closedAt : null,
+  hasUnknownClosure: !!report && report.status === 'closed' && !report.closedAt,
+})
 
-export const findLatestAppealReport = async (
+export const appealsExhausted = (
+  eligibility: AppealEligibility,
+  actionAt: DatetimeString | null,
+): boolean =>
+  eligibility.hasActiveAppeal ||
+  eligibility.hasUnknownClosure ||
+  (!!eligibility.lastClosedAt &&
+    (!actionAt || actionAt <= eligibility.lastClosedAt))
+
+export const findAppealCandidates = async (
   db: Database,
   subject: ModSubject,
+): Promise<{
+  activeId: number | null
+  closedId: number | null
+  closedAt: DatetimeString | null
+}> => {
+  const query = db.db
+    .selectFrom('report')
+    .where(appealReportTypeFilter)
+    .where((eb) => reportSubjectFilter(eb, subject))
+  const [active, closed] = await Promise.all([
+    query
+      .where(sql<boolean>`status <> 'closed'`)
+      .select('id')
+      .orderBy('id', 'desc')
+      .limit(1)
+      .executeTakeFirst(),
+    query
+      .where(sql<boolean>`status = 'closed'`)
+      .select(['id', 'closedAt'])
+      .orderBy(sql`"closedAt" DESC NULLS FIRST`)
+      .orderBy('id', 'desc')
+      .limit(1)
+      .executeTakeFirst(),
+  ])
+  return {
+    activeId: active?.id ?? null,
+    closedId: closed?.id ?? null,
+    closedAt: closed?.closedAt ?? null,
+  }
+}
+
+export const eligibilityFromCandidates = (candidates: {
+  activeId: number | null
+  closedId: number | null
+  closedAt: DatetimeString | null
+}): AppealEligibility => ({
+  hasActiveAppeal: candidates.activeId !== null,
+  lastClosedAt: candidates.closedAt,
+  hasUnknownClosure:
+    candidates.closedId !== null && candidates.closedAt === null,
+})
+
+export const findAppealEligibility = async (
+  db: Database,
+  subject: ModSubject,
+): Promise<AppealEligibility> =>
+  eligibilityFromCandidates(await findAppealCandidates(db, subject))
+
+const findAppealReport = async (
+  db: Database,
+  reportId: number,
 ): Promise<AppealReport | null> => {
   const report = await db.db
     .selectFrom(
       db.db
         .selectFrom('report')
-        .where('reportType', '=', APPEAL_REASON_TYPE)
-        .where((eb) => reportSubjectFilter(eb, subject))
-        .orderBy('id', 'desc')
-        .limit(1)
+        .where('id', '=', reportId)
         .select(appealReportSelection)
         .as('report'),
     )
@@ -348,6 +436,15 @@ export const findLatestAppealReport = async (
   return report ?? null
 }
 
+export const findAppealHistory = async (db: Database, subject: ModSubject) => {
+  const candidates = await findAppealCandidates(db, subject)
+  const reportId = candidates.activeId ?? candidates.closedId
+  return {
+    eligibility: eligibilityFromCandidates(candidates),
+    report: reportId === null ? null : await findAppealReport(db, reportId),
+  }
+}
+
 /**
  * Reject an appeal the subject is no longer entitled to.
  *
@@ -357,19 +454,52 @@ export const findLatestAppealReport = async (
 export const assertAppealAllowed = async (
   dbTxn: Database,
   subject: ModSubject,
+  options: {
+    actionAt?: DatetimeString
+    unresolvedAction?: boolean
+    startAt?: DatetimeString
+    windowMonths: number
+  },
 ) => {
   dbTxn.assertTransaction()
-  await sql`select pg_advisory_xact_lock(
-    hashtextextended(${subjectKey(subject)}, 0)
-  )`.execute(dbTxn.db)
+  await lockAppealSubject(dbTxn, subjectKey(subject))
 
-  const existing = await findLatestAppealReport(dbTxn, subject)
+  const eligibility = await findAppealEligibility(dbTxn, subject)
+  if (
+    options.unresolvedAction &&
+    (eligibility.hasActiveAppeal ||
+      eligibility.hasUnknownClosure ||
+      eligibility.lastClosedAt)
+  ) {
+    throw new ForbiddenError('Moderation action not found', 'AlreadyAppealed')
+  }
+  let actionAt = options.actionAt ?? null
+  if (!actionAt && eligibility.lastClosedAt && !eligibility.hasActiveAppeal) {
+    const latest = await dbTxn.db
+      .selectFrom('moderation_event')
+      .where((eb) => eventSubjectFilter(eb, subject))
+      .where('action', 'in', [...PUBLIC_EVENT_ACTIONS])
+      .where(appealableEventFilter)
+      .where('createdAt', '>', eligibility.lastClosedAt)
+      .$if(options.startAt !== undefined, (qb) =>
+        qb.where('createdAt', '>=', options.startAt!),
+      )
+      .orderBy('createdAt', 'desc')
+      .orderBy('id', 'desc')
+      .select('createdAt')
+      .limit(1)
+      .executeTakeFirst()
+    actionAt = latest?.createdAt ?? null
+    if (actionAt && !isAppealWindowOpen(actionAt, options.windowMonths)) {
+      actionAt = null
+    }
+  }
 
-  if (appealsExhausted(subject, existing)) {
+  if (appealsExhausted(eligibility, actionAt)) {
     throw new ForbiddenError(
-      subject.isRepo()
+      eligibility.hasActiveAppeal
         ? 'Awaiting decision on previous appeal'
-        : 'This has already been appealed',
+        : 'No new appealable action since the previous appeal',
       'AlreadyAppealed',
     )
   }
@@ -384,11 +514,13 @@ export type FileAppealInput = {
   subject: ModSubject
   /** Resolved moderation event ID, when one could be found. */
   resolvedActionId?: number
+  resolvedActionAt?: DatetimeString
   /** The action reference supplied by the caller. */
   action?: tools.ozone.inbox.appealActionedSubject.$InputBody['action']
   /** Optional: an appeal is a request for review, not an argued case. */
   reason?: string
   modTool?: { name: string; meta?: { [_ in string]: unknown } }
+  legacyReasonType?: com.atproto.moderation.defs.ReasonType
 }
 
 const buildAppealEventMeta = (
@@ -417,7 +549,7 @@ const findSourceQueueIds = async (
   const query = db.db
     .selectFrom('report')
     .where((eb) => reportSubjectFilter(eb, subject))
-    .where('reportType', '!=', APPEAL_REASON_TYPE)
+    .where('reportType', 'not in', [...APPEAL_REASON_TYPES])
     .where('actionEventIds', '@>', jsonb([actionId]))
 
   const [active, closed] = await Promise.all([
@@ -454,6 +586,8 @@ const selectQueue = async (
   requester: DidString,
   resolvedActionId: number | undefined,
   action: FileAppealInput['action'],
+  reasonType: com.atproto.moderation.defs.ReasonType,
+  modTool: FileAppealInput['modTool'],
 ) => {
   const sourceQueueIds =
     resolvedActionId === undefined
@@ -470,6 +604,14 @@ const selectQueue = async (
       ? (sourceQueueIds[0] as number)
       : null
   let routingNote: string | undefined
+  const explicitQueueId =
+    typeof modTool?.meta?.queueId === 'number'
+      ? modTool.meta.queueId
+      : undefined
+  if (queueId === null && explicitQueueId !== undefined) {
+    const target = await ctx.queueService(ctx.db).getById(explicitQueueId)
+    queueId = target?.enabled ? target.id : -1
+  }
   if (
     queueId === null &&
     action &&
@@ -490,9 +632,15 @@ const selectQueue = async (
     const collection = subjectUri ? new AtUri(subjectUri).collection : null
     const matched = findMatchingQueue(
       queues,
-      subject.isRecord() ? 'record' : 'account',
+      subject.isMessage()
+        ? 'message'
+        : subject.isConvo()
+          ? 'conversation'
+          : subject.isRecord()
+            ? 'record'
+            : 'account',
       collection,
-      APPEAL_REASON_TYPE,
+      reasonType,
       accountTags.get(requester) ?? [],
       accountTags.get(subject.did) ?? [],
     )
@@ -535,28 +683,41 @@ export const fileAppeal = async (
     submittedBy,
     subject,
     resolvedActionId,
+    resolvedActionAt,
     action,
     reason,
     modTool,
+    legacyReasonType,
   }: FileAppealInput,
-): Promise<{ reportId: number }> => {
+): Promise<{
+  reportId: number
+  event: ModerationEventRow
+}> => {
+  const reasonType = legacyReasonType ?? APPEAL_REASON_TYPE
   const { queueId, queuedAt, routingNote } = await selectQueue(
     ctx,
     subject,
     requester,
     resolvedActionId,
     action,
+    reasonType,
+    legacyReasonType ? modTool : undefined,
   )
 
-  const reportId = await ctx.db.transaction(async (dbTxn) => {
-    await assertAppealAllowed(dbTxn, subject)
+  return ctx.db.transaction(async (dbTxn) => {
+    await assertAppealAllowed(dbTxn, subject, {
+      actionAt: resolvedActionAt,
+      unresolvedAction: !!action && !resolvedActionAt,
+      startAt: ctx.cfg.inbox.startAt,
+      windowMonths: ctx.cfg.inbox.appealWindowMonths,
+    })
 
     // create event and report row
     const moderationTxn = ctx.modService(dbTxn)
-    const { event: reportEvent } = await moderationTxn.report({
+    const { event: reportEvent, subjectStatus } = await moderationTxn.report({
       reason,
       subject,
-      reasonType: APPEAL_REASON_TYPE,
+      reasonType,
       reportedBy: requester,
       modTool,
       eventMeta: {
@@ -564,16 +725,26 @@ export const fileAppeal = async (
         ...(submittedBy ? { appealSubmittedBy: submittedBy } : {}),
       },
     })
-    return ctx.queueService(dbTxn).insertReportFromEvent({
+    if (legacyReasonType) {
+      const tagService = new TagService(
+        subject,
+        subjectStatus,
+        ctx.cfg.service.did,
+        moderationTxn,
+      )
+      await tagService.evaluateForSubject(
+        ctx.cfg.service.reportTagsDisabled ? [] : [getTagForReport(reasonType)],
+      )
+    }
+    const reportId = await ctx.queueService(dbTxn).insertReportFromEvent({
       event: reportEvent,
-      reportType: APPEAL_REASON_TYPE,
+      reportType: reasonType,
       queueId,
       queuedAt,
       routingNote,
       actionEventIds:
         resolvedActionId === undefined ? null : [resolvedActionId],
     })
+    return { reportId, event: reportEvent }
   })
-
-  return { reportId }
 }
