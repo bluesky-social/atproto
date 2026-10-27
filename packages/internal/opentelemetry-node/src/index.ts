@@ -97,6 +97,14 @@ export async function setup(getOptions: () => SetupOptions): Promise<void> {
     // Restrict import-in-the-middle to modules targeted by the configured
     // instrumentations. Wrapping every ESM module can alter legal `export *`
     // graphs in unrelated packages.
+    //
+    // @TODO module.register() is deprecated (DEP0205) in favor of the
+    // in-thread module.registerHooks(), which import-in-the-middle supports
+    // through "import-in-the-middle/register-hooks.mjs" (no message channel
+    // needed). Switch to it once the minimum supported Node.js version is >=
+    // 24.11.1 (or >= 22.22.3): registerHooks() exists since 22.15.0, but its
+    // load hook rejects the CommonJS source import-in-the-middle returns before
+    // https://github.com/nodejs/node/pull/59929 (see its supportsSyncHooks()).
     const { registerOptions, waitForAllMessagesAcknowledged } =
       createAddHookMessageChannel()
     register(
