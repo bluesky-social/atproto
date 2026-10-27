@@ -45,6 +45,7 @@ import {
   ATTR_DB_QUERY_TEXT,
   ATTR_DB_SYSTEM_NAME,
 } from '@opentelemetry/semantic-conventions'
+import type SqliteDB from 'better-sqlite3'
 
 // @NOTE Ported rather than depended upon so that it is built on this package's
 // own @opentelemetry/instrumentation (hence import-in-the-middle) copy: setup()
@@ -52,28 +53,15 @@ import {
 // that copy. The instrumentation scope, span names, kinds and attributes are
 // kept identical to upstream, which existing dashboards rely on.
 
-// @NOTE Structural subsets of the "better-sqlite3" types, so that neither this
-// package nor its consumers need "@types/better-sqlite3".
-type Database = {
-  readonly name: string
-  exec(source: string): Database
-  prepare(source: string): Statement
-  pragma(source: string, options?: { simple?: boolean }): unknown
-}
-
+// @NOTE "@types/better-sqlite3" is a dev dependency: keep these types out of
+// the public API, or consumers will need it too.
+type Database = SqliteDB.Database
+type Statement = SqliteDB.Statement
 type StatementMethodName = 'run' | 'get' | 'all'
-type StatementMethod = (...params: unknown[]) => unknown
-
-type Statement = Record<StatementMethodName, StatementMethod> & {
-  readonly source: string
-  readonly database: Database
-}
-
-type DatabaseConstructor = { readonly prototype: Database }
+type StatementMethod = Statement[StatementMethodName]
 
 // @NOTE The CommonJS exports when required, the ESM namespace when imported.
-type BetterSqlite3Exports =
-  DatabaseConstructor | { default: DatabaseConstructor }
+type BetterSqlite3Exports = typeof SqliteDB | { default: typeof SqliteDB }
 
 const SUPPORTED_VERSIONS = [
   '^7.0.0',
@@ -178,7 +166,7 @@ export class BetterSqlite3Instrumentation extends InstrumentationBase {
       const statement = prepare.apply(this, args)
       patchStatement(statement)
       return statement
-    }
+    } as Database['prepare']
   }
 
   private patchStatement(original: StatementMethod): StatementMethod {
