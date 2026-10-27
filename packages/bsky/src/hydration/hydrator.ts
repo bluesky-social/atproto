@@ -30,7 +30,6 @@ import type { ParsedLabelers } from '../util.js'
 import { MAX_PROFILE_LINKS } from '../views/profile-link-rules.js'
 import {
   type ProfileRecord,
-  isExternalEmbedType,
   isListRuleType,
   isRecordEmbedType,
   isRecordWithMediaType,
@@ -57,6 +56,7 @@ import {
   type SiteStandardDocuments,
   type SiteStandardPublications,
   actionExternalRecordTakedowns,
+  externalAssociatedRefsFromPosts,
   genericRecordKey,
   parseGenericRecordKey,
   trackExternalHydration,
@@ -783,19 +783,11 @@ export class Hydrator {
       }
     }
 
-    const siteStandardRefs = siteStandardRefsFromPosts(
+    const externalRefs = externalAssociatedRefsFromPosts(
       postsLayer0,
       postsLayer1,
       postsLayer2,
     )
-    const siteStandardLabelSubjects = dedupeStrs(
-      siteStandardRefs.map((ref) => ref.uri),
-    )
-    // Site-standard record owners need profile basics so we can populate
-    // `associatedProfiles` on the external embed view. Include them in the
-    // post-author profile fetch below; any DIDs surfaced later by the
-    // dataplane are picked up by the top-up after the parallel batch.
-    const ssRefDids = siteStandardRefs.map((ref) => uriToDid(ref.uri))
 
     // Collect known-liker profiles and author-liker block relationships.
     const knownLikers = await knownLikersPromise
@@ -812,7 +804,6 @@ export class Hydrator {
 
     const knownProfileDids = dedupeStrs([
       ...allPostUris.map(didFromUri),
-      ...ssRefDids,
       ...knownLikerDids,
     ])
 
@@ -831,19 +822,13 @@ export class Hydrator {
       labelerState,
       starterPackState,
       postgates,
-      {
-        documents: siteStandardDocuments,
-        publications: siteStandardPublications,
-      },
+      externalState,
     ] = await Promise.all([
       this.feed.getPostAggregates(allRefs, ctx.viewer),
       ctx.viewer
         ? this.feed.getPostViewerStates(threadRefs, ctx.viewer)
         : undefined,
-      this.label.getLabelsForSubjects(
-        [...allPostUris, ...siteStandardLabelSubjects],
-        ctx.labelers,
-      ),
+      this.label.getLabelsForSubjects(allPostUris, ctx.labelers),
       this.hydratePostBlocks(posts, ctx, authorsAndKnownLikersRelationships),
       this.hydrateProfiles(knownProfileDids, ctx),
       this.hydrateLists([...nestedListUris, ...threadgateListUris], ctx),
@@ -851,41 +836,16 @@ export class Hydrator {
       this.hydrateLabelers(nestedLabelerDids, ctx),
       this.hydrateStarterPacksBasic(nestedStarterPackUris, ctx),
       this.feed.getPostgatesForPosts([...postUrisWithPostgates.values()]),
-      this.external.getSiteStandardRecordsByRef(
-        siteStandardRefs,
-        ctx.includeTakedowns,
-      ),
+      this.hydrateEmbedExternalViewFromRefs(externalRefs, ctx),
     ])
     if (!ctx.includeTakedowns) {
       actionTakedownLabels(allPostUris, posts, labels)
-      actionSiteStandardTakedownLabels(
-        siteStandardDocuments,
-        siteStandardPublications,
-        labels,
-      )
     }
 
-    // Defensive top-up: in the unlikely case the dataplane returned a
-    // publication owned by a DID not present in the post-author or
-    // pinned-ref sets, fetch its profile serially and fold it in.
-    const knownProfileDidsSet = new Set(knownProfileDids)
-    const extraSsDids: DidString[] = []
-    for (const key of siteStandardPublications.keys()) {
-      const did = uriToDid(parseGenericRecordKey(key).uri)
-      if (!knownProfileDidsSet.has(did)) {
-        knownProfileDidsSet.add(did)
-        extraSsDids.push(did)
-      }
-    }
-    const mergedProfileState = extraSsDids.length
-      ? mergeStates(
-          profileState,
-          await this.hydrateProfilesBasic(extraSsDids, ctx),
-        )
-      : profileState
     // combine all hydration state
     return mergeManyStates(
-      mergedProfileState,
+      externalState,
+      profileState,
       listState,
       feedGenState,
       labelerState,
@@ -900,8 +860,6 @@ export class Hydrator {
         labels,
         threadgates,
         postgates,
-        siteStandardDocuments,
-        siteStandardPublications,
         ctx,
       },
     )
@@ -2342,53 +2300,15 @@ const nestedRecordUris = (post: Post['record']): AtUriString[] => {
 }
 
 /**
- * Returns every strongRef the post embedded as `external.associatedRefs`,
- * regardless of collection. Callers are responsible for filtering to NSIDs
- * they care about.
+ * Legacy Standard.site filter of the generic associated refs. No runtime caller
+ * remains (post hydration uses the all-collection collector directly); it is
+ * exported only to satisfy `noUnusedLocals` until the specialized path is
+ * deleted.
  */
-const externalAssociatedRefs = (
-  post: Post['record'],
-): { uri: AtUriString; cid: string }[] => {
-  const embed = post?.embed
-  if (!embed) return []
-  if (isExternalEmbedType(embed)) {
-    return embed.external.associatedRefs ?? []
-  }
-  if (isRecordWithMediaType(embed) && isExternalEmbedType(embed.media)) {
-    return embed.media.external.associatedRefs ?? []
-  }
-  return []
-}
-
-/**
- * Collects standard.site refs across all post layers, deduped by `uri+cid` so
- * the dataplane batch is minimal even if multiple posts in the layer reference
- * the same exact version of an SS record. The same `${uri}@${cid}` keys are
- * what `getSiteStandardRecordsByRef` uses on the resulting hydration maps,
- * which lets `lookupAssociatedSiteStandardRecords` do an O(1) version-exact
- * lookup at view time.
- */
-const siteStandardRefsFromPosts = (...postLayers: Posts[]): ItemRef[] => {
-  const seen = new Set<string>()
-  const out: ItemRef[] = []
-  for (const layer of postLayers) {
-    for (const item of layer.values()) {
-      if (!item) continue
-      for (const ref of externalAssociatedRefs(item.record)) {
-        if (
-          !new AtUri(ref.uri).collection.startsWith(SITE_STANDARD_NSID_PREFIX)
-        ) {
-          continue
-        }
-        const key = `${ref.uri}@${ref.cid}`
-        if (seen.has(key)) continue
-        seen.add(key)
-        out.push({ uri: ref.uri, cid: ref.cid })
-      }
-    }
-  }
-  return out
-}
+export const siteStandardRefsFromPosts = (...postLayers: Posts[]): ItemRef[] =>
+  externalAssociatedRefsFromPosts(...postLayers).filter((ref) =>
+    new AtUri(ref.uri).collection.startsWith(SITE_STANDARD_NSID_PREFIX),
+  )
 
 const getListUrisFromThreadgates = (gates: Threadgates): AtUriString[] => {
   const uris: AtUriString[] = []
@@ -2565,7 +2485,7 @@ const recordUriOf = (
  * of a moderated embed. Pairs are discovered via `doc.record.site`; orphan
  * docs and orphan publications are subject only to the per-record sweep.
  */
-const actionSiteStandardTakedownLabels = (
+export const actionSiteStandardTakedownLabels = (
   documents: SiteStandardDocuments,
   publications: SiteStandardPublications,
   labels: Labels,

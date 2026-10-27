@@ -106,7 +106,7 @@ const canonicalUrlMatchesAssumed = (
  *
  * Structural validation of the doc/pub pair (matching `site` ↔ pub URI,
  * no orphan docs that claim a missing publication) happens upstream: in the
- * pinned `getSiteStandardRecordsFromHydrationMapsByRefs`
+ * pinned `getSiteStandardRecordsFromRefs`
  * (`hydration/external.ts`), or by `validateStandardSiteRecordsForUrl` over
  * `getStandardSiteRecordsForUri`'s selection (which alone leaves an orphan
  * document selected with an absent publication). By the time this

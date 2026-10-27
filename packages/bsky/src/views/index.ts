@@ -14,6 +14,7 @@ import {
   type DidString,
   INVALID_HANDLE,
   normalizeDatetimeAlways,
+  parseAtUriString,
 } from '@atproto/syntax'
 import {
   APPVIEW_NOTIFICATION_REASON,
@@ -28,7 +29,7 @@ import {
   type AssociatedSiteStandardRecord,
   type SiteStandardDocument,
   type SiteStandardPublication,
-  getSiteStandardRecordsFromHydrationMapsByRefs,
+  getSiteStandardRecordsFromRefs,
 } from '../hydration/external.js'
 import type { FeedItem, Like, Post, Repost } from '../hydration/feed.js'
 import type { Follow, Verification } from '../hydration/graph.js'
@@ -2434,12 +2435,30 @@ export class Views {
     state: HydrationState
     assumedUrl: string
   }): ExternalEmbedView['external'] | undefined {
-    const { document, publication } =
-      getSiteStandardRecordsFromHydrationMapsByRefs(
-        associatedRefs,
-        state.siteStandardDocuments,
-        state.siteStandardPublications,
-      )
+    // Generic hydration nulls moderated roots without keeping their pairing,
+    // so a moderated pinned document must not fall back to its publication.
+    for (const ref of associatedRefs ?? []) {
+      const parsed = parseAtUriString(ref.uri)
+      if (!parsed.success) continue
+      const { authority, collection } = parsed.value
+      if (
+        collection !== site.standard.document.$type &&
+        collection !== site.standard.publication.$type
+      ) {
+        continue
+      }
+      if (
+        state.actors?.get(authority as DidString) === null ||
+        (!state.ctx?.includeTakedowns &&
+          state.labels?.get(ref.uri)?.isTakendown)
+      ) {
+        return undefined
+      }
+    }
+    const { document, publication } = getSiteStandardRecordsFromRefs(
+      associatedRefs,
+      state.externalRecordsByRef,
+    )
     return this.externalEmbedFromStandardSiteRecords({
       document,
       publication,
@@ -2481,13 +2500,13 @@ export class Views {
   }): ExternalEmbedView['external'] | undefined {
     // Three layers of validation gate this overlay:
     //
-    //  1. Hydrator nulls taken-down records and mirrors the null across
-    //     doc/pub pairs (see `actionSiteStandardTakedownLabels` in
-    //     `hydration/hydrator.ts`).
-    //  2. The lookups guarantee structural agreement between doc and pub
-    //     — matching `site`/`uri`, no orphan doc claiming a missing
-    //     publication (see `getSiteStandardRecordsFromHydrationMapsByRefs`
-    //     in `hydration/external.ts`).
+    //  1. Generic hydration nulls taken-down records individually, and
+    //     `externalEmbedFromStandardSite` rejects the whole overlay when either
+    //     pinned side is moderated.
+    //  2. The read-path selection guarantees structural agreement between doc
+    //     and pub — matching `site`/`uri`, no orphan doc claiming a missing
+    //     publication (see `getSiteStandardRecordsFromRefs` in
+    //     `hydration/external.ts`). The compose path validates its own pair.
     //  3. `validateStandardSiteRecordsForUrl` below re-checks the doc/pub
     //     relationship and that the records back the URL the embed claims
     //     (see `util/external/standard-site.ts`).

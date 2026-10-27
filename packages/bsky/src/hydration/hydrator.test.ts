@@ -24,6 +24,7 @@ import {
 import { events } from '../telemetry/events.js'
 import type { Actors, ProfileLinks } from './actor.js'
 import { ExternalHydrator, genericRecordKey } from './external.js'
+import type { Post } from './feed.js'
 import {
   HydrateCtx,
   Hydrator,
@@ -2396,6 +2397,283 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
       expect(state.externalRecords?.has(chainUri(max - 1))).toBe(true)
       expect(state.externalRecords?.has(chainUri(max))).toBe(false)
       expect(warn).toHaveBeenCalledTimes(1)
+    })
+
+    describe('post associations', () => {
+      const author = 'did:plc:author' as DidString
+      const postUri = (rkey: string) =>
+        atUri(author, app.bsky.feed.post.$type, rkey)
+      const thingUri = atUri(author, 'app.example.thing' as never, '1')
+      const feedUri = postUri('feed')
+      const rootUri = postUri('root')
+      const quotedUri = postUri('quoted')
+      const postCid = (uri: AtUriString) => `post-${uri}`
+      const external = (...refs: { uri: AtUriString; cid: string }[]) =>
+        app.bsky.embed.external.main.$build({
+          external: {
+            uri: 'https://example.com/post' as never,
+            title: 'Card',
+            description: '',
+            associatedRefs: refs,
+          },
+        })
+      const makePost = (
+        uri: AtUriString,
+        embed?: app.bsky.feed.post.Main['embed'],
+        reply?: { root: AtUriString; parent: AtUriString },
+      ): [AtUriString, Post] => [
+        uri,
+        {
+          record: app.bsky.feed.post.$build({
+            text: 'post',
+            createdAt: '2026-10-01T00:00:00.000Z',
+            embed,
+            reply: reply && {
+              root: { uri: reply.root, cid: postCid(reply.root) },
+              parent: { uri: reply.parent, cid: postCid(reply.parent) },
+            },
+          }),
+          cid: postCid(uri),
+          sortedAt: new Date(0),
+          indexedAt: new Date(0),
+          takedownRef: undefined,
+          violatesThreadGate: false,
+          violatesEmbeddingRules: false,
+          hasThreadGate: false,
+          hasPostGate: false,
+          tags: new Set(),
+        },
+      ]
+
+      // Real `hydratePosts` over deterministic posts; only unrelated feed
+      // plumbing is empty.
+      const setup = (fixture: Fixture, posts: [AtUriString, Post][]) => {
+        const { hydrator } = fixture
+        const byUri = new Map(posts)
+        vi.spyOn(hydrator.feed, 'getPosts').mockImplementation(
+          async (uris) =>
+            new HydrationMap(uris.map((uri) => [uri, byUri.get(uri) ?? null])),
+        )
+        vi.spyOn(hydrator.feed, 'getThreadgatesForPosts').mockResolvedValue(
+          new HydrationMap(),
+        )
+        vi.spyOn(hydrator.feed, 'getPostAggregates').mockResolvedValue(
+          new HydrationMap(),
+        )
+        vi.spyOn(hydrator.feed, 'getPostgatesForPosts').mockResolvedValue(
+          new HydrationMap(),
+        )
+        vi.spyOn(hydrator, 'hydrateBidirectionalBlocks').mockResolvedValue(
+          new HydrationMap(),
+        )
+        vi.spyOn(hydrator, 'hydrateProfiles').mockResolvedValue({})
+        vi.spyOn(hydrator, 'hydrateLists').mockResolvedValue({})
+        vi.spyOn(hydrator, 'hydrateFeedGens').mockResolvedValue({})
+        vi.spyOn(hydrator, 'hydrateLabelers').mockResolvedValue({})
+        vi.spyOn(hydrator, 'hydrateStarterPacksBasic').mockResolvedValue({})
+      }
+
+      it('hydrates every post association through one exact-root traversal', async ({
+        fixture,
+      }) => {
+        const { hydrator, ctx, dataplane, seedBasic } = fixture
+        const { recs } = seedBasic()
+        const thing = { $type: 'app.example.thing', n: 1 }
+        const versions = new Map<string, { body: object }>([
+          [key(doc1, '1'), { body: makeDoc(pubUri) }],
+          [key(doc1, '2'), { body: makeDoc(pub2Uri) }],
+          [key(doc2, '1'), { body: makeDoc(pubUri) }],
+          [key(pubUri, '1'), { body: makePub() }],
+          [key(thingUri, '1'), { body: thing }],
+        ])
+        fixture.records.set(pub2Uri, { body: makePub() })
+        using _refs = mockRefs(fixture, versions)
+        using specialized = vi.spyOn(
+          hydrator.external,
+          'getSiteStandardRecordsByRef',
+        )
+        setup(fixture, [
+          // Direct embed, with a duplicate and a non-Standard.site root.
+          makePost(
+            feedUri,
+            external(
+              v(doc1, '1'),
+              v(pubUri, '1'),
+              v(thingUri, '1'),
+              v(doc1, '1'),
+            ),
+            { root: rootUri, parent: rootUri },
+          ),
+          // Reply root: a quote with an external media association.
+          makePost(
+            rootUri,
+            app.bsky.embed.recordWithMedia.main.$build({
+              record: app.bsky.embed.record.main.$build({
+                record: { uri: quotedUri, cid: postCid(quotedUri) },
+              }),
+              media: external(v(doc1, '2')),
+            }),
+          ),
+          // Quoted post, only reachable through the second layer.
+          makePost(quotedUri, external(v(doc2, '1'))),
+        ])
+
+        const state = await hydrator.hydrateFeedItems(
+          [{ post: { uri: feedUri, cid: postCid(feedUri) } }],
+          ctx,
+        )
+
+        // One exact-root fetch for every distinct pin, in encounter order.
+        expect(specialized).not.toHaveBeenCalled()
+        expect(dataplane.getRecordsByRef).toHaveBeenCalledTimes(1)
+        expect(
+          vi
+            .mocked(dataplane.getRecordsByRef)
+            .mock.calls[0][0].refs?.map(({ uri, cid }) => `${uri}@${cid}`),
+        ).toEqual([
+          key(doc1, '1'),
+          key(pubUri, '1'),
+          key(thingUri, '1'),
+          key(doc1, '2'),
+          key(doc2, '1'),
+        ])
+        expect(traversalReports()).toMatchObject([
+          { root: 'refs', outcome: 'completed' },
+        ])
+
+        // Generic state: exact roots, latest dependencies and their extras.
+        expect(
+          state.externalRecordsByRef?.get(key(thingUri, '1'))?.record,
+        ).toMatchObject(thing)
+        expect(state.externalRecords?.has(thingUri)).toBe(false)
+        expect(state.externalRecords?.get(pubUri)).toBeTruthy()
+        expect(state.externalRecords?.get(pub2Uri)).toBeTruthy()
+        expect(state.externalRecordBacklinks?.get(doc1)).toEqual(
+          recs.slice(0, 3),
+        )
+        expect(state.externalRecordBacklinkCounts?.get(doc1)).toEqual({
+          [site.standard.graph.recommend.$type]: 42,
+        })
+        expect(state.labels?.has(doc1)).toBe(true)
+        expect(state.actors?.has(author)).toBe(true)
+        expect(state.actors?.has('did:plc:pub' as DidString)).toBe(true)
+
+        // Exact pins stay distinct, and no specialized maps are emitted.
+        expect(
+          (
+            state.externalRecordsByRef?.get(key(doc1, '2'))
+              ?.record as never as {
+              site: string
+            }
+          ).site,
+        ).toBe(pub2Uri)
+        expect(state.siteStandardDocuments).toBeUndefined()
+        expect(state.siteStandardPublications).toBeUndefined()
+
+        // The ordinary post label/profile batches exclude external additions
+        // (those are fetched by the generic traversal's own passes).
+        const postUris = [feedUri, rootUri, quotedUri].toSorted()
+        const ordinaryLabels = labelSubjects(fixture).filter((subjects) =>
+          subjects.includes(feedUri),
+        )
+        expect(ordinaryLabels).toHaveLength(1)
+        expect([...ordinaryLabels[0]].toSorted()).toEqual(postUris)
+        expect(
+          vi
+            .mocked(hydrator.hydrateProfiles)
+            .mock.calls.flatMap(([dids]) => dids),
+        ).toEqual([author])
+
+        // Post state is preserved.
+        expect([...(state.posts?.keys() ?? [])].toSorted()).toEqual(
+          [feedUri, rootUri, quotedUri].toSorted(),
+        )
+      })
+
+      it('does no external work without valid associations', async ({
+        fixture,
+      }) => {
+        const { hydrator, ctx, dataplane } = fixture
+        const handleDoc = `at://example.com/${site.standard.document.$type}/1`
+        const refs = [
+          { uri: handleDoc as AtUriString, cid: 'v1' },
+          { uri: doc1, cid: '' },
+          { uri: `${doc1}#frag` as AtUriString, cid: 'v1' },
+          {
+            uri: `at://did:plc:author/${site.standard.document.$type}` as never,
+            cid: 'v1',
+          },
+        ]
+        setup(fixture, [
+          makePost(feedUri, external(...refs)),
+          makePost(rootUri),
+        ])
+        using byRef = vi.spyOn(dataplane, 'getRecordsByRef')
+
+        const state = await hydrator.hydratePosts(
+          [{ uri: feedUri }, { uri: rootUri }],
+          ctx,
+        )
+
+        expect(byRef).not.toHaveBeenCalled()
+        expect(dataplane.getRecordsByURI).not.toHaveBeenCalled()
+        expect(traversalReports()).toEqual([])
+        expect(state.externalRecordsByRef).toBeUndefined()
+        expect(state.siteStandardDocuments).toBeUndefined()
+        expect(state.posts?.has(feedUri)).toBe(true)
+      })
+
+      it('nulls moderated roots without touching ordinary post state', async ({
+        fixture,
+      }) => {
+        const { hydrator, ctx, takedownLabeled, seedBasic } = fixture
+        seedBasic()
+        takedownLabeled.add(doc1)
+        using _refs = mockRefs(
+          fixture,
+          new Map([
+            [key(doc1, '1'), { body: makeDoc(pubUri) }],
+            [key(pubUri, '1'), { body: makePub() }],
+          ]),
+        )
+        setup(fixture, [
+          makePost(feedUri, external(v(doc1, '1'), v(pubUri, '1'))),
+        ])
+
+        const state = await hydrator.hydratePosts([{ uri: feedUri }], ctx)
+
+        expect(state.externalRecordsByRef?.get(key(doc1, '1'))).toBeNull()
+        expect(state.externalRecordsByRef?.get(key(pubUri, '1'))).toBeTruthy()
+        expect(state.posts?.get(feedUri)).toBeTruthy()
+      })
+
+      it('fails on root failures but tolerates dependency failures', async ({
+        fixture,
+      }) => {
+        const { hydrator, ctx, dataplane, seedBasic } = fixture
+        seedBasic()
+        using _refs = mockRefs(
+          fixture,
+          new Map([[key(doc1, '1'), { body: makeDoc(pubUri) }]]),
+        )
+        setup(fixture, [makePost(feedUri, external(v(doc1, '1')))])
+        using warn = vi
+          .spyOn(hydrationLogger, 'warn')
+          .mockImplementation(() => {})
+
+        failRecordBatches(fixture, (uri) => uri === pubUri, new Error('deps'))
+        const state = await hydrator.hydratePosts([{ uri: feedUri }], ctx)
+        expect(state.externalRecordsByRef?.get(key(doc1, '1'))).toBeTruthy()
+        expect(state.externalRecords?.has(pubUri)).toBeFalsy()
+        expect(warn).toHaveBeenCalled()
+
+        vi.mocked(dataplane.getRecordsByRef).mockRejectedValue(
+          new Error('root'),
+        )
+        await expect(
+          hydrator.hydratePosts([{ uri: feedUri }], ctx),
+        ).rejects.toThrow('root')
+      })
     })
   })
 

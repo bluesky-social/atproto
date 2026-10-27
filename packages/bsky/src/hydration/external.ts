@@ -7,6 +7,7 @@ import {
   type NsidString,
   type RecordSchema,
   type TypedLexMap,
+  isDidString,
   isTypedLexMap,
   lexParseJsonBytes,
 } from '@atproto/lex'
@@ -26,11 +27,14 @@ import {
   events,
 } from '../telemetry/events.js'
 import { uriToDid } from '../util/uris.js'
-import type {
-  SiteStandardDocumentRecord,
-  SiteStandardPublicationRecord,
+import {
+  type SiteStandardDocumentRecord,
+  type SiteStandardPublicationRecord,
+  isExternalEmbedType,
+  isRecordWithMediaType,
 } from '../views/types.js'
 import type { Actors } from './actor.js'
+import type { Post, Posts } from './feed.js'
 import type { Labels } from './label.js'
 import {
   HydrationMap,
@@ -603,4 +607,141 @@ export const getSiteStandardRecordsFromHydrationMapsByRefs = (
   }
 
   return { document, publication }
+}
+
+/**
+ * Read-path selection of a post embed's pinned Standard.site document and
+ * publication directly from generic exact-ref hydration state. Only the exact
+ * `genericRecordKey(ref)` of each pinned ref is read, so latest dependencies
+ * and other collections in `records` can never satisfy a pin. The first valid
+ * record per kind wins; a hit must match its URI collection and Lexicon schema.
+ *
+ * Pairing rules match `getSiteStandardRecordsFromHydrationMapsByRefs`:
+ * - Both slots resolved: `doc.site` must equal the publication ref's URI, else
+ *   both come back `undefined`.
+ * - Doc with an AT-URI `site` but no pinned publication: rejected.
+ * - Loose doc (web-URL `site`) alone, or a publication alone: allowed.
+ */
+export const getSiteStandardRecordsFromRefs = (
+  associatedRefs: readonly Required<ItemRef>[] | undefined,
+  records: ExternalRecordsByRef | undefined,
+): {
+  document: AssociatedSiteStandardRecord<SiteStandardDocument> | undefined
+  publication: AssociatedSiteStandardRecord<SiteStandardPublication> | undefined
+} => {
+  if (!associatedRefs?.length) {
+    return { document: undefined, publication: undefined }
+  }
+
+  let document: AssociatedSiteStandardRecord<SiteStandardDocument> | undefined
+  let publication:
+    AssociatedSiteStandardRecord<SiteStandardPublication> | undefined
+  for (const ref of associatedRefs) {
+    const kind = siteStandardKind(ref.uri)
+    if (kind === 'documents' && !document) {
+      const info = matchRecordInfo(
+        site.standard.document.main,
+        records?.get(genericRecordKey(ref)),
+      )
+      if (info) document = { ref, info }
+    } else if (kind === 'publications' && !publication) {
+      const info = matchRecordInfo(
+        site.standard.publication.main,
+        records?.get(genericRecordKey(ref)),
+      )
+      if (info) publication = { ref, info }
+    }
+    if (document && publication) break
+  }
+
+  if (document && publication) {
+    if (document.info.record.site !== publication.ref.uri) {
+      hydrationLogger.warn(
+        {
+          documentUri: document.ref.uri,
+          documentSite: document.info.record.site,
+          publicationUri: publication.ref.uri,
+        },
+        'site.standard byRefs lookup failed: doc.site does not match hydrated publication.uri',
+      )
+      return { document: undefined, publication: undefined }
+    }
+  }
+
+  if (document && !publication) {
+    const docSite = document.info.record.site
+    if (docSite && docSite.startsWith('at://')) {
+      hydrationLogger.warn(
+        { documentUri: document.ref.uri, documentSite: docSite },
+        'site.standard byRefs lookup failed: document.site is AT URI but no matching publication was hydrated',
+      )
+      return { document: undefined, publication: undefined }
+    }
+  }
+
+  return { document, publication }
+}
+
+/**
+ * Returns every strongRef the post embedded as `external.associatedRefs`,
+ * regardless of collection. Callers are responsible for filtering to NSIDs
+ * they care about.
+ */
+const externalAssociatedRefs = (
+  post: Post['record'],
+): { uri: AtUriString; cid: string }[] => {
+  const embed = post?.embed
+  if (!embed) return []
+  if (isExternalEmbedType(embed)) {
+    return embed.external.associatedRefs ?? []
+  }
+  if (isRecordWithMediaType(embed) && isExternalEmbedType(embed.media)) {
+    return embed.media.external.associatedRefs ?? []
+  }
+  return []
+}
+
+/**
+ * An exact ref needs a nonempty CID and a complete record URI in a DID repo,
+ * so malformed refs are skipped instead of becoming latest lookups.
+ */
+const isHydratableAssociatedRef = (ref: {
+  uri: string
+  cid: string
+}): boolean => {
+  if (!ref.cid) return false
+  const parsed = parseAtUriString(ref.uri)
+  if (!parsed.success) return false
+  const { authority, collection, rkey, query, hash } = parsed.value
+  return (
+    isDidString(authority) &&
+    !!collection &&
+    !!rkey &&
+    query === undefined &&
+    hash === undefined
+  )
+}
+
+/**
+ * Collects every valid exact `external.associatedRefs` ref across all post
+ * layers, in first-seen order and deduped by `uri+cid`.
+ */
+export const externalAssociatedRefsFromPosts = (
+  ...postLayers: Posts[]
+): Required<ItemRef>[] => {
+  const seen = new Set<string>()
+  const out: Required<ItemRef>[] = []
+  for (const layer of postLayers) {
+    for (const item of layer.values()) {
+      if (!item) continue
+      for (const ref of externalAssociatedRefs(item.record)) {
+        if (!isHydratableAssociatedRef(ref)) continue
+        const key = genericRecordKey(ref)
+        if (seen.has(key)) continue
+        seen.add(key)
+        out.push({ uri: ref.uri, cid: ref.cid })
+      }
+    }
+  }
+  return out
 }
