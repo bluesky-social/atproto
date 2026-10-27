@@ -2,7 +2,7 @@ import { sql } from 'kysely'
 import type { DatetimeString, DidString } from '@atproto/lex'
 import { com, tools } from '../lexicons/index.js'
 import {
-  APPEAL_REASON_TYPES,
+  APPEAL_REASON_TYPE,
   PUBLIC_EVENT_ACTIONS,
   REVERSE_TAKEDOWN,
 } from './appeal.js'
@@ -22,7 +22,7 @@ export function notificationVisibility(
         SELECT 1 FROM report r JOIN moderation_event e ON e.id = r."eventId"
         WHERE r.id = CASE WHEN n.target->>'reportId' ~ '^[1-9][0-9]{0,9}$'
           THEN (n.target->>'reportId')::bigint END
-          AND r."createdAt" >= ${startAt} AND r."reportType" NOT IN (${sql.join(APPEAL_REASON_TYPES)})
+          AND r."createdAt" >= ${startAt} AND r."reportType" <> ${APPEAL_REASON_TYPE}
           AND e."createdBy" = n."recipientDid" AND e.action = ${tools.ozone.moderation.defs.modEventReport.$type}
       )
       WHEN 'tools.ozone.inbox.defs#subjectRef' THEN EXISTS (
@@ -35,7 +35,7 @@ export function notificationVisibility(
         SELECT 1 FROM report_activity a JOIN report r ON r.id = a."reportId"
         WHERE a.id = CASE WHEN n."sourceKey" ~ '^report-activity:[1-9][0-9]{0,9}:appealResolved$'
           THEN split_part(n."sourceKey", ':', 2)::bigint END
-          AND r."reportType" IN (${sql.join(APPEAL_REASON_TYPES)}) AND r."createdAt" >= ${startAt}
+          AND r."reportType" = ${APPEAL_REASON_TYPE} AND r."createdAt" >= ${startAt}
       ))
       WHEN 'tools.ozone.inbox.defs#standingRef' THEN true
       ELSE false

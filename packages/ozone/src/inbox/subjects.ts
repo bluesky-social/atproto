@@ -20,7 +20,7 @@ import {
 } from '../mod-service/subject.js'
 import {
   APPEALABLE_EVENT_ACTIONS,
-  APPEAL_REASON_TYPES,
+  APPEAL_REASON_TYPE,
   PUBLIC_EVENT_ACTIONS,
   REVERSE_TAKEDOWN,
   appealReportOrder,
@@ -250,7 +250,7 @@ export async function getActionedSubjectDetail(
   const reportRows = db.db
     .selectFrom('report')
     .where((eb) => reportSubjectFilter(eb, subject))
-    .where('reportType', 'not in', [...APPEAL_REASON_TYPES])
+    .where('reportType', '!=', APPEAL_REASON_TYPE)
     .$if(cfg.startAt !== undefined, (qb) =>
       qb.where('createdAt', '>=', cfg.startAt!),
     )

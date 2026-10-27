@@ -1,6 +1,5 @@
 import { type RawBuilder, type SqlBool, sql } from 'kysely'
 import { com, tools } from '../lexicons/index.js'
-import { APPEAL_REASON_TYPES } from './appeal-type.js'
 
 export type AppealOutcome = 'approved' | 'denied'
 
@@ -25,7 +24,7 @@ export function appealResolutionFilter(
   const report = (column: string) => sql.ref(`${reportAlias}.${column}`)
   const activity = (column: string) => sql.ref(`${activityAlias}.${column}`)
   return sql<SqlBool>`
-    ${report('reportType')} IN (${sql.join(APPEAL_REASON_TYPES)})
+    ${report('reportType')} = ${tools.ozone.report.defs.ReasonAppeal}
     AND ${activity('activityType')} = 'closeActivity'
     AND ${activity('meta')} ->> 'appealOutcome' IS DISTINCT FROM 'denied'
     AND resolution.id = CASE
@@ -52,7 +51,7 @@ export function appealActivityOutcome(
   const report = (column: string) => sql.ref(`${reportAlias}.${column}`)
   const activity = (column: string) => sql.ref(`${activityAlias}.${column}`)
   return sql<AppealOutcome | null>`CASE
-    WHEN ${report('reportType')} NOT IN (${sql.join(APPEAL_REASON_TYPES)})
+    WHEN ${report('reportType')} <> ${tools.ozone.report.defs.ReasonAppeal}
       OR ${activity('activityType')} <> 'closeActivity'
       OR ${activity('id')} IS NULL THEN NULL
     WHEN ${activity('meta')} ->> 'appealOutcome' = 'denied' THEN 'denied'

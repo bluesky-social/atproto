@@ -13,16 +13,11 @@ import type { AppContext } from '../context.js'
 import type { Database } from '../db/index.js'
 import type { DatabaseSchemaType } from '../db/schema/index.js'
 import { jsonb } from '../db/types.js'
-import { type com, tools } from '../lexicons/index.js'
+import { tools } from '../lexicons/index.js'
 import type { AppealView } from '../lexicons/tools/ozone/inbox/defs.js'
 import type { ModSubject } from '../mod-service/subject.js'
-import type {
-  ModerationEventRow,
-  ModerationSubjectStatusRow,
-} from '../mod-service/types.js'
+import type { ModerationSubjectStatusRow } from '../mod-service/types.js'
 import { findMatchingQueue, getQueueRoutingNote } from '../queue/service.js'
-import { TagService } from '../tag-service/index.js'
-import { getTagForReport } from '../tag-service/util.js'
 import { lockAppealSubject, subjectKey } from './appeal-lock.js'
 import {
   type AppealOutcome,
@@ -30,9 +25,9 @@ import {
   appealReportSelection,
   appealResolutionFilter,
 } from './appeal-outcome.js'
-import { APPEAL_REASON_TYPE, APPEAL_REASON_TYPES } from './appeal-type.js'
+import { APPEAL_REASON_TYPE } from './appeal-type.js'
 
-export { APPEAL_REASON_TYPE, APPEAL_REASON_TYPES } from './appeal-type.js'
+export { APPEAL_REASON_TYPE } from './appeal-type.js'
 export const TAKEDOWN = 'tools.ozone.moderation.defs#modEventTakedown'
 export const REVERSE_TAKEDOWN =
   'tools.ozone.moderation.defs#modEventReverseTakedown'
@@ -118,9 +113,7 @@ export function hasKnownLatestAppealable(
 export const appealableEventFilter = sql<boolean>`(action = ${sql.lit(TAKEDOWN)} OR
   (action = ${sql.lit(LABEL)} AND nullif(btrim("createLabelVals"), '') IS NOT NULL))`
 
-export const appealReportTypeFilter = sql<boolean>`"reportType" IN (${sql.join(
-  APPEAL_REASON_TYPES.map((value) => sql.lit(value)),
-)})`
+export const appealReportTypeFilter = sql<boolean>`"reportType" = ${sql.lit(APPEAL_REASON_TYPE)}`
 
 export const appealReportOrder = sql<number>`CASE WHEN status <> 'closed' THEN 0 ELSE 1 END`
 
@@ -520,7 +513,6 @@ export type FileAppealInput = {
   /** Optional: an appeal is a request for review, not an argued case. */
   reason?: string
   modTool?: { name: string; meta?: { [_ in string]: unknown } }
-  legacyReasonType?: com.atproto.moderation.defs.ReasonType
 }
 
 const buildAppealEventMeta = (
@@ -549,7 +541,7 @@ const findSourceQueueIds = async (
   const query = db.db
     .selectFrom('report')
     .where((eb) => reportSubjectFilter(eb, subject))
-    .where('reportType', 'not in', [...APPEAL_REASON_TYPES])
+    .where('reportType', '!=', APPEAL_REASON_TYPE)
     .where('actionEventIds', '@>', jsonb([actionId]))
 
   const [active, closed] = await Promise.all([
@@ -586,8 +578,6 @@ const selectQueue = async (
   requester: DidString,
   resolvedActionId: number | undefined,
   action: FileAppealInput['action'],
-  reasonType: com.atproto.moderation.defs.ReasonType,
-  modTool: FileAppealInput['modTool'],
 ) => {
   const sourceQueueIds =
     resolvedActionId === undefined
@@ -604,14 +594,6 @@ const selectQueue = async (
       ? (sourceQueueIds[0] as number)
       : null
   let routingNote: string | undefined
-  const explicitQueueId =
-    typeof modTool?.meta?.queueId === 'number'
-      ? modTool.meta.queueId
-      : undefined
-  if (queueId === null && explicitQueueId !== undefined) {
-    const target = await ctx.queueService(ctx.db).getById(explicitQueueId)
-    queueId = target?.enabled ? target.id : -1
-  }
   if (
     queueId === null &&
     action &&
@@ -632,15 +614,9 @@ const selectQueue = async (
     const collection = subjectUri ? new AtUri(subjectUri).collection : null
     const matched = findMatchingQueue(
       queues,
-      subject.isMessage()
-        ? 'message'
-        : subject.isConvo()
-          ? 'conversation'
-          : subject.isRecord()
-            ? 'record'
-            : 'account',
+      subject.isRecord() ? 'record' : 'account',
       collection,
-      reasonType,
+      APPEAL_REASON_TYPE,
       accountTags.get(requester) ?? [],
       accountTags.get(subject.did) ?? [],
     )
@@ -687,24 +663,17 @@ export const fileAppeal = async (
     action,
     reason,
     modTool,
-    legacyReasonType,
   }: FileAppealInput,
-): Promise<{
-  reportId: number
-  event: ModerationEventRow
-}> => {
-  const reasonType = legacyReasonType ?? APPEAL_REASON_TYPE
+): Promise<{ reportId: number }> => {
   const { queueId, queuedAt, routingNote } = await selectQueue(
     ctx,
     subject,
     requester,
     resolvedActionId,
     action,
-    reasonType,
-    legacyReasonType ? modTool : undefined,
   )
 
-  return ctx.db.transaction(async (dbTxn) => {
+  const reportId = await ctx.db.transaction(async (dbTxn) => {
     await assertAppealAllowed(dbTxn, subject, {
       actionAt: resolvedActionAt,
       unresolvedAction: !!action && !resolvedActionAt,
@@ -714,10 +683,10 @@ export const fileAppeal = async (
 
     // create event and report row
     const moderationTxn = ctx.modService(dbTxn)
-    const { event: reportEvent, subjectStatus } = await moderationTxn.report({
+    const { event: reportEvent } = await moderationTxn.report({
       reason,
       subject,
-      reasonType,
+      reasonType: APPEAL_REASON_TYPE,
       reportedBy: requester,
       modTool,
       eventMeta: {
@@ -725,26 +694,16 @@ export const fileAppeal = async (
         ...(submittedBy ? { appealSubmittedBy: submittedBy } : {}),
       },
     })
-    if (legacyReasonType) {
-      const tagService = new TagService(
-        subject,
-        subjectStatus,
-        ctx.cfg.service.did,
-        moderationTxn,
-      )
-      await tagService.evaluateForSubject(
-        ctx.cfg.service.reportTagsDisabled ? [] : [getTagForReport(reasonType)],
-      )
-    }
-    const reportId = await ctx.queueService(dbTxn).insertReportFromEvent({
+    return ctx.queueService(dbTxn).insertReportFromEvent({
       event: reportEvent,
-      reportType: reasonType,
+      reportType: APPEAL_REASON_TYPE,
       queueId,
       queuedAt,
       routingNote,
       actionEventIds:
         resolvedActionId === undefined ? null : [resolvedActionId],
     })
-    return { reportId, event: reportEvent }
   })
+
+  return { reportId }
 }

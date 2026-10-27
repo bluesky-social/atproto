@@ -3,7 +3,7 @@ import type { DatetimeString, DidString } from '@atproto/lex'
 import type { Database } from '../db/index.js'
 import { tools } from '../lexicons/index.js'
 import { subjectFromEventRow } from '../mod-service/subject.js'
-import { APPEAL_REASON_TYPES, REVERSE_TAKEDOWN } from './appeal.js'
+import { APPEAL_REASON_TYPE, REVERSE_TAKEDOWN } from './appeal.js'
 import { isRead } from './seen.js'
 import { inboxHasStarted } from './start.js'
 import { parseSubjectCursor } from './subjects.js'
@@ -44,7 +44,7 @@ function reportQuery(
     .innerJoin('report as r', 'r.eventId', 'me.id')
     .where('me.createdBy', '=', reporter)
     .where('me.action', '=', tools.ozone.moderation.defs.modEventReport.$type)
-    .where('r.reportType', 'not in', [...APPEAL_REASON_TYPES])
+    .where('r.reportType', '!=', APPEAL_REASON_TYPE)
     .$if(startAt !== undefined, (qb) => qb.where('r.createdAt', '>=', startAt!))
     .select(reportSelection)
 }
@@ -95,7 +95,7 @@ export async function queryInboxReports(
       (join) => join.onTrue(),
     )
     .where('r.reporterDid', '=', reporter)
-    .where('r.reportType', 'not in', [...APPEAL_REASON_TYPES])
+    .where('r.reportType', '!=', APPEAL_REASON_TYPE)
     // @NOTE updatedAt never precedes createdAt. The redundant bound lets the
     // updated-time index skip pre-cutoff history instead of filtering it.
     .$if(startAt !== undefined, (qb) =>

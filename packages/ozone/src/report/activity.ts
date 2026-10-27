@@ -10,7 +10,7 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 import type { Database } from '../db/index.js'
 import { TimeIdKeyset, paginate } from '../db/pagination.js'
 import { appealSubjectKey, lockAppealSubject } from '../inbox/appeal-lock.js'
-import { APPEAL_REASON_TYPES, isAppealReason } from '../inbox/appeal-type.js'
+import { APPEAL_REASON_TYPE, isAppealReason } from '../inbox/appeal-type.js'
 import { tools } from '../lexicons/index.js'
 import {
   AlreadyInTargetState,
@@ -115,11 +115,7 @@ export async function createReportActivity(
         .selectFrom('report')
         .where('did', '=', report.did)
         .where('recordPath', '=', report.recordPath)
-        .where(
-          sql<boolean>`"reportType" IN (${sql.join(
-            APPEAL_REASON_TYPES.map((value) => sql.lit(value)),
-          )})`,
-        )
+        .where('reportType', '=', sql.lit(APPEAL_REASON_TYPE))
         .where('id', '!=', report.id)
         .where(sql<boolean>`status <> 'closed'`)
         .where(

@@ -1092,45 +1092,25 @@ describe('appealActionedSubject', () => {
     await appeal(first.id, account.did)
   })
 
-  it('shares the appeal guard with the legacy report endpoint', async () => {
-    const account = await sc.createAccount('legacyappeal', {
-      handle: 'legacyappeal.test',
-      email: 'legacyappeal@test.com',
-      password: 'legacyappeal-pass',
+  it('requires a new action for a subsequent subject-only appeal', async () => {
+    const account = await sc.createAccount('subjectappeal', {
+      handle: 'subjectappeal.test',
+      email: 'subjectappeal@test.com',
+      password: 'subjectappeal-pass',
     })
     const subject = com.atproto.admin.defs.repoRef.$build({ did: account.did })
-    const action = await label(subject)
-    const legacy = () =>
-      sc.createReport({
-        reasonType: com.atproto.moderation.defs.ReasonAppeal,
-        subject,
-        reportedBy: account.did,
-      })
-    const event = await legacy()
-    const report = await reportForEvent(modClient, event.id)
-    await expect(appeal(action.id, account.did)).rejects.toMatchObject({
+    const first = await label(subject)
+    await appeal(first.id, account.did)
+    await closeLatestAppeal(account.did)
+    await expect(legacyAppeal(account.did)).rejects.toMatchObject({
       error: 'AlreadyAppealed',
     })
-    await ozoneAgent.tools.ozone.report.createActivity(
-      {
-        reportId: report.id,
-        activity: { $type: tools.ozone.report.defs.closeActivity.$type },
-      },
-      {
-        headers: await network.ozone.modHeaders(
-          'tools.ozone.report.createActivity',
-          'admin',
-        ),
-        encoding: 'application/json',
-      },
-    )
-    await expect(legacy()).rejects.toMatchObject({ error: 'AlreadyAppealed' })
     await takedown(subject)
-    await legacy()
+    await legacyAppeal(account.did)
     expect((await getAccountView(account.did)).appeal.state).toBe('pending')
   })
 
-  it('serializes concurrent legacy and inbox appeals on the same subject', async () => {
+  it('serializes concurrent inbox appeals on the same subject', async () => {
     const account = await sc.createAccount('appealrace', {
       handle: 'appealrace.test',
       email: 'appealrace@test.com',
@@ -1140,11 +1120,7 @@ describe('appealActionedSubject', () => {
     const action = await takedown(subject)
     const results = await Promise.allSettled([
       appeal(action.id, account.did),
-      sc.createReport({
-        reasonType: com.atproto.moderation.defs.ReasonAppeal,
-        subject,
-        reportedBy: account.did,
-      }),
+      appeal(action.id, account.did),
     ])
     expect(
       results.filter((result) => result.status === 'fulfilled'),

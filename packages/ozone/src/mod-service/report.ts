@@ -9,7 +9,6 @@ import { currentDatetimeString, isDidString } from '@atproto/lex'
 import { AtUri } from '@atproto/syntax'
 import type { Database } from '../db/index.js'
 import type { Report } from '../db/schema/report.js'
-import { isAppealReason } from '../inbox/appeal-type.js'
 import { tools } from '../lexicons/index.js'
 import {
   AlreadyInTargetState,
@@ -511,13 +510,14 @@ export async function closeReportsForSubject(
             previousStatus: u.previousStatus,
             internalNote: internalNote ?? null,
             publicNote: null,
-            meta: isAppealReason(u.reportType)
-              ? {
-                  ...metadata,
-                  resolution: 'noAction',
-                  appealOutcome: 'denied',
-                }
-              : { ...metadata, resolution: 'noAction' },
+            meta:
+              u.reportType === tools.ozone.report.defs.ReasonAppeal
+                ? {
+                    ...metadata,
+                    resolution: 'noAction',
+                    appealOutcome: 'denied',
+                  }
+                : { ...metadata, resolution: 'noAction' },
             isAutomated,
             createdBy,
             createdAt: now,

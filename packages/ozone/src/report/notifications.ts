@@ -4,9 +4,8 @@ import {
   appealActivityOutcome,
   appealResolutionFilter,
 } from '../inbox/appeal-outcome.js'
-import { isAppealReason } from '../inbox/appeal-type.js'
 import {
-  APPEAL_REASON_TYPES,
+  APPEAL_REASON_TYPE,
   PUBLIC_EVENT_ACTIONS,
   REVERSE_TAKEDOWN,
 } from '../inbox/appeal.js'
@@ -58,7 +57,7 @@ export async function notifyReportActivities(
         .$if(startAt !== undefined, (qb) =>
           qb.where('r.createdAt', '>=', startAt!).where((eb) =>
             eb.or([
-              eb('r.reportType', 'not in', [...APPEAL_REASON_TYPES]),
+              eb('r.reportType', '!=', APPEAL_REASON_TYPE),
               eb.exists(
                 eb
                   .selectFrom('moderation_event as action')
@@ -113,7 +112,7 @@ export async function notifyReportActivities(
       for (const activity of batch) {
         const report = byId.get(activity.activityId)
         if (!report) continue
-        const isAppeal = isAppealReason(report.reportType)
+        const isAppeal = report.reportType === APPEAL_REASON_TYPE
         if (isAppeal && activity.activityType !== 'closeActivity') continue
         const subject =
           report.subjectUri && report.subjectCid
