@@ -45,6 +45,7 @@ import {
   type ProfileViewerStates,
 } from './actor.js'
 import {
+  EXTERNAL_HYDRATION_LIMITS,
   type ExternalHydrationLevel,
   type ExternalHydrationOptions,
   type ExternalHydrationTracker,
@@ -53,6 +54,8 @@ import {
   type ExternalRecordBacklinks,
   type ExternalRecords,
   type ExternalRecordsByRef,
+  MAX_CONCURRENT_BACKLINK_REQUESTS,
+  MAX_EXTERNAL_HYDRATION_PASSES,
   actionExternalRecordTakedowns,
   externalAssociatedRefsFromPosts,
   genericRecordKey,
@@ -1273,13 +1276,14 @@ export class Hydrator {
         collection === site.standard.document.$type &&
         site.standard.document.$matches(record, { strict: false })
       ) {
+        const limits = EXTERNAL_HYDRATION_LIMITS[site.standard.document.$type]
         targets.set(
           uri,
           hydration === 'detailed'
             ? [
                 {
                   collection: site.standard.graph.recommend.$type,
-                  limit: ExternalHydrator.MAX_BACKLINK_PREVIEWS,
+                  limit: limits.recommendationPreviews,
                 },
               ]
             : [],
@@ -1294,13 +1298,15 @@ export class Hydrator {
         collection === site.standard.publication.$type &&
         site.standard.publication.$matches(record, { strict: false })
       ) {
+        const limits =
+          EXTERNAL_HYDRATION_LIMITS[site.standard.publication.$type]
         targets.set(
           uri,
           hydration === 'detailed'
             ? [
                 {
                   collection: site.standard.graph.subscription.$type,
-                  limit: ExternalHydrator.MAX_BACKLINK_PREVIEWS,
+                  limit: limits.subscriberPreviews,
                 },
               ]
             : [],
@@ -1314,17 +1320,18 @@ export class Hydrator {
         collection === social.grain.gallery.$type &&
         social.grain.gallery.$matches(record, { strict: false })
       ) {
+        const limits = EXTERNAL_HYDRATION_LIMITS[social.grain.gallery.$type]
         // Membership items are content, sampled at every level.
         const samples: { collection: NsidString; limit: number }[] = []
         if (hydration === 'detailed') {
           samples.push({
             collection: social.grain.favorite.$type,
-            limit: ExternalHydrator.MAX_BACKLINK_PREVIEWS,
+            limit: limits.favoritePreviews,
           })
         }
         samples.push({
           collection: social.grain.gallery.item.$type,
-          limit: ExternalHydrator.MAX_BACKLINK_GALLERY_ITEMS,
+          limit: limits.items,
         })
         targets.set(uri, samples)
       } else if (
@@ -1361,7 +1368,7 @@ export class Hydrator {
           // @NOTE Bound fan-out as well as each sample; counts are independent.
           for (const batch of chunkArray(
             queries,
-            ExternalHydrator.MAX_BACKLINK_FANOUT,
+            MAX_CONCURRENT_BACKLINK_REQUESTS,
           )) {
             await Promise.all(
               batch.map(async ({ uri, collection, limit }) => {
@@ -1406,17 +1413,14 @@ export class Hydrator {
       (uri) => !seenRecordKeys.has(genericRecordKey({ uri })),
     )
     let nested: HydrationState = {}
-    if (
-      newUris.length &&
-      hydrationPass >= ExternalHydrator.MAX_EXTERNAL_HYDRATION_PASSES
-    ) {
+    if (newUris.length && hydrationPass >= MAX_EXTERNAL_HYDRATION_PASSES) {
       // Keep the partial state. Skipped URIs are not marked seen: they were
       // never fetched.
       hydrationMetrics.capped = true
       hydrationLogger.warn(
         {
           hydrationPass,
-          maxPasses: ExternalHydrator.MAX_EXTERNAL_HYDRATION_PASSES,
+          maxPasses: MAX_EXTERNAL_HYDRATION_PASSES,
           skipped: newUris.length,
         },
         'external hydration pass limit reached, skipping dependencies',

@@ -23,7 +23,7 @@ import {
 } from '../proto/bsky_pb.js'
 import { events } from '../telemetry/events.js'
 import type { Actors, ProfileLinks } from './actor.js'
-import { ExternalHydrator, genericRecordKey } from './external.js'
+import { MAX_EXTERNAL_HYDRATION_PASSES, genericRecordKey } from './external.js'
 import type { Post } from './feed.js'
 import {
   HydrateCtx,
@@ -2040,7 +2040,7 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
       fixture,
     }) => {
       const { hydrator, ctx } = fixture
-      const max = ExternalHydrator.MAX_EXTERNAL_HYDRATION_PASSES
+      const max = MAX_EXTERNAL_HYDRATION_PASSES
       seedPath(fixture, 3)
       using warn = vi.spyOn(hydrationLogger, 'warn')
       using embedSpy = vi.spyOn(hydrator, 'hydrateEmbedExternalViewFromUris')
@@ -2072,7 +2072,7 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
       fixture,
     }) => {
       const { hydrator, ctx } = fixture
-      const max = ExternalHydrator.MAX_EXTERNAL_HYDRATION_PASSES
+      const max = MAX_EXTERNAL_HYDRATION_PASSES
       seedPath(fixture, 3)
       using warn = vi.spyOn(hydrationLogger, 'warn')
       using embedSpy = vi.spyOn(hydrator, 'hydrateEmbedExternalViewFromUris')
@@ -2090,7 +2090,7 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
       fixture,
     }) => {
       const { hydrator, ctx } = fixture
-      const max = ExternalHydrator.MAX_EXTERNAL_HYDRATION_PASSES
+      const max = MAX_EXTERNAL_HYDRATION_PASSES
       seedPath(fixture, 3)
       const prehydrated = async () => ({
         ctx,
@@ -2607,7 +2607,7 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
       fixture,
     }) => {
       const { hydrator, ctx } = fixture
-      const max = ExternalHydrator.MAX_EXTERNAL_HYDRATION_PASSES
+      const max = MAX_EXTERNAL_HYDRATION_PASSES
       seedPath(fixture, 3)
       using _refs = mockRefs(
         fixture,
@@ -3046,7 +3046,7 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
       fixture,
     }) => {
       const { hydrator, ctx } = fixture
-      const max = ExternalHydrator.MAX_EXTERNAL_HYDRATION_PASSES
+      const max = MAX_EXTERNAL_HYDRATION_PASSES
       seedPath(fixture, 3)
       using warn = vi.spyOn(hydrationLogger, 'warn')
       const state = await hydrator.hydrateEmbedExternalViewFromUris(
@@ -3210,7 +3210,7 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
       fixture,
     }) => {
       const { hydrator, ctx, dataplane } = fixture
-      const max = ExternalHydrator.MAX_EXTERNAL_HYDRATION_PASSES
+      const max = MAX_EXTERNAL_HYDRATION_PASSES
       seedPath(fixture, 3)
       vi.mocked(dataplane.getAtmosphereBacklinkCounts).mockRejectedValue(
         new Error('counts failure'),

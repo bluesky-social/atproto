@@ -13,7 +13,7 @@ import {
 } from '@atproto/lex'
 import { parseAtUriString } from '@atproto/syntax'
 import type { DataPlaneClient } from '../data-plane/client/index.js'
-import { site } from '../lexicons/index.js'
+import { site, social } from '../lexicons/index.js'
 import {
   type RecordLookupResult,
   RecordLookupStatus,
@@ -102,12 +102,22 @@ export type ExternalHydrationOptions = {
   hydrationMetrics?: ExternalHydrationTracker
 }
 
+/**
+ * Per-collection sample limits. Basic hydration skips social previews,
+ * but keeps gallery items. Direct publication/photo references are singular.
+ */
+export const EXTERNAL_HYDRATION_LIMITS = {
+  [site.standard.document.$type]: { recommendationPreviews: 3 },
+  [site.standard.publication.$type]: { subscriberPreviews: 3 },
+  [social.grain.gallery.$type]: { items: 10, favoritePreviews: 3 },
+} as const
+
+/** Maximum in-flight backlink sample RPCs, not a dependency-count limit. */
+export const MAX_CONCURRENT_BACKLINK_REQUESTS = 8
+/** Maximum logical batches per traversal, counting the root as pass 1. */
+export const MAX_EXTERNAL_HYDRATION_PASSES = 8
+
 export class ExternalHydrator {
-  static readonly MAX_BACKLINK_PREVIEWS = 3
-  static readonly MAX_BACKLINK_GALLERY_ITEMS = 10
-  static readonly MAX_BACKLINK_FANOUT = 8
-  /** Hard cap on generic batches per traversal, counting the root as pass 1. */
-  static readonly MAX_EXTERNAL_HYDRATION_PASSES = 8
   /**
    * Entries per generic record RPC. The dataplane rejects larger URI lookups;
    * exact-ref lookups use the same bound defensively.
