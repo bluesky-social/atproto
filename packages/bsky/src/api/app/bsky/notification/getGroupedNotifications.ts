@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto'
+import { performance } from 'node:perf_hooks'
 import { dedupeStrs, mapDefined } from '@atproto/common'
 import {
   type AtUriString,
@@ -132,15 +133,21 @@ const skeleton = async (
   let groups: NotificationGroup[] = []
   let nextCursor: string | undefined
   let itemsFetched = 0
+  let dataplaneFetches = 0
   let rawLimit = ctx.cfg.notificationsV2MinRawLimit
 
-  for (let read = 0; read < ctx.cfg.notificationsV2MaxReads; read++) {
+  for (
+    let fetches = 0;
+    fetches < ctx.cfg.notificationsV2MaxFetches;
+    fetches++
+  ) {
     const response = await ctx.hydrator.dataplane.getNotificationsV2({
       actorDid: params.hydrateCtx.viewer,
       feed,
       cursor,
       limit: rawLimit,
     })
+    dataplaneFetches++
     itemsFetched += response.notifications.length
 
     for (const notification of response.notifications) {
@@ -159,7 +166,7 @@ const skeleton = async (
         groupingKey = NOTIFICATION_REASON.FOLLOW
       }
       if (notif.reason === NOTIFICATION_REASON.SUBSCRIBED_POST) {
-        groupingKey = actorDid
+        groupingKey = NOTIFICATION_REASON.SUBSCRIBED_POST
       }
 
       items.push({
@@ -170,14 +177,20 @@ const skeleton = async (
       })
     }
 
+    const algorithm = ctx.cfg.notificationsV2Algorithm
+    const groupingStart = performance.now()
     const groupingResult = buildGroups(
       items,
       params.limit,
       now,
       seenAt,
-      ctx.cfg.notificationsV2Algorithm,
+      algorithm,
       feed,
     )
+    events.notificationGrouping({
+      algorithm,
+      durationMs: performance.now() - groupingStart,
+    })
     groups = groupingResult.groups
 
     // After fetching a page from the dataplane and attempting to group, 2 situations can happen:
@@ -208,6 +221,7 @@ const skeleton = async (
   return {
     ...buildSpotlight(items, groups, nextCursor, params.limit, seenAt),
     itemsFetched,
+    dataplaneFetches,
   }
 }
 
@@ -496,6 +510,7 @@ const presentation = (
   events.groupedNotifications({
     itemsFetched: skeleton.itemsFetched,
     itemsReturned: groups.reduce((count, group) => count + group.count, 0),
+    dataplaneFetches: skeleton.dataplaneFetches,
   })
 
   return body
@@ -536,4 +551,5 @@ type SkeletonState = {
   groups: NotificationGroup[]
   cursor?: string
   itemsFetched: number
+  dataplaneFetches: number
 }

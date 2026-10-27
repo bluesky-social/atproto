@@ -116,7 +116,7 @@ export interface ServerConfigValues {
   notificationsV2Algorithm?: NotificationsV2Algorithm
   notificationsV2MinRawLimit: number
   notificationsV2MaxRawItems: number
-  notificationsV2MaxReads: number
+  notificationsV2MaxFetches: number
   notificationsV2MaxGroupItemsWithRelatedViews: number
   // client config
   clientCheckEmailConfirmed?: boolean
@@ -344,12 +344,13 @@ export class ServerConfig {
       notificationsV2MinRawLimit <= notificationsV2MaxRawItems,
       'notificationsV2MinRawLimit must not exceed notificationsV2MaxRawItems',
     )
-    const notificationsV2MaxReads = process.env.BSKY_NOTIFICATIONS_V2_MAX_READS
-      ? parseInt(process.env.BSKY_NOTIFICATIONS_V2_MAX_READS, 10)
+    const notificationsV2MaxFetches = process.env
+      .BSKY_NOTIFICATIONS_V2_MAX_FETCHES
+      ? parseInt(process.env.BSKY_NOTIFICATIONS_V2_MAX_FETCHES, 10)
       : 3
     assert(
-      Number.isInteger(notificationsV2MaxReads),
-      'invalid BSKY_NOTIFICATIONS_V2_MAX_READS',
+      Number.isInteger(notificationsV2MaxFetches),
+      'invalid BSKY_NOTIFICATIONS_V2_MAX_FETCHES',
     )
     const notificationsV2MaxGroupItemsWithRelatedViews = process.env
       .BSKY_NOTIFICATIONS_V2_MAX_GROUP_ITEMS_WITH_RELATED_VIEWS
@@ -520,7 +521,7 @@ export class ServerConfig {
       notificationsV2Algorithm,
       notificationsV2MinRawLimit,
       notificationsV2MaxRawItems,
-      notificationsV2MaxReads,
+      notificationsV2MaxFetches,
       notificationsV2MaxGroupItemsWithRelatedViews,
       disableSsrfProtection,
       proxyAllowHTTP2,
@@ -839,8 +840,8 @@ export class ServerConfig {
     return this.cfg.notificationsV2MaxRawItems
   }
 
-  get notificationsV2MaxReads(): number {
-    return this.cfg.notificationsV2MaxReads
+  get notificationsV2MaxFetches(): number {
+    return this.cfg.notificationsV2MaxFetches
   }
 
   get notificationsV2MaxGroupItemsWithRelatedViews(): number {
