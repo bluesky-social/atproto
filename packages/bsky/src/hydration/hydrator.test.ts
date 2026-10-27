@@ -2836,6 +2836,76 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
         dependenciesResolved: 2,
       })
     })
+
+    it('reports prehydrated roots that schedule no fetch batches', async ({
+      fixture,
+    }) => {
+      const { hydrator, ctx, dataplane, records } = fixture
+      records.set(doc1, { body: makeDoc('https://example.com') })
+      const externalRecords = await hydrator.external.getRecordsByURI([doc1])
+      vi.mocked(dataplane.getRecordsByURI).mockClear()
+      vi.mocked(dataplane.getAtmosphereBacklinks).mockClear()
+      vi.mocked(dataplane.getAtmosphereBacklinkCounts).mockClear()
+
+      await hydrator.hydrateExternalViewDependencies(
+        { ctx, externalRecords },
+        [{ uri: doc1 }],
+        ctx,
+      )
+
+      expect(dataplane.getAtmosphereBacklinks).toHaveBeenCalled()
+      expect(dataplane.getAtmosphereBacklinkCounts).toHaveBeenCalled()
+      expect(dataplane.getRecordsByURI).not.toHaveBeenCalled()
+      const reports = fullTraversalReports()
+      expect(reports).toHaveLength(1)
+      expect(reports[0]).toMatchObject({
+        root: 'dependencies',
+        outcome: 'completed',
+        recordLookups: 0,
+        batches: 0,
+        maxPass: 0,
+      })
+      expect(counts(reports[0])).toEqual({
+        roots: 1,
+        rootsResolved: 1,
+        dependencies: 0,
+        dependenciesResolved: 0,
+      })
+    })
+
+    it('reports an unavailable prehydrated root without gating on resolved roots', async ({
+      fixture,
+    }) => {
+      const { hydrator, ctx, dataplane } = fixture
+      const externalRecords = await hydrator.external.getRecordsByURI([
+        missingDoc,
+      ])
+      expect(externalRecords.get(missingDoc)).toBeNull()
+      vi.mocked(dataplane.getRecordsByURI).mockClear()
+
+      await hydrator.hydrateExternalViewDependencies(
+        { ctx, externalRecords },
+        [{ uri: missingDoc }],
+        ctx,
+      )
+
+      expect(dataplane.getRecordsByURI).not.toHaveBeenCalled()
+      const reports = fullTraversalReports()
+      expect(reports).toHaveLength(1)
+      expect(reports[0]).toMatchObject({
+        root: 'dependencies',
+        outcome: 'completed',
+        recordLookups: 0,
+        batches: 0,
+        maxPass: 0,
+      })
+      expect(counts(reports[0])).toEqual({
+        roots: 1,
+        rootsResolved: 0,
+        dependencies: 0,
+        dependenciesResolved: 0,
+      })
+    })
   })
 })
 

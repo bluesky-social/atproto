@@ -371,9 +371,10 @@ export type ExternalHydrationTracker = ExternalHydrationWork & {
  * there is none. Only the owner reports, once, including on failure, with the
  * context's XRPC endpoint (`'unknown'` if unset) and the traversal's wall time. A
  * returned traversal is `capped` if it hit the pass limit, else `partial` if
- * it recovered from a dependency failure. Owners that completed without
- * scheduling a batch did no work and are not reported; other outcomes always
- * are.
+ * it recovered from a dependency failure. Owners that completed report when
+ * they scheduled a batch or inspected roots (even prehydrated or unavailable
+ * ones); only genuinely empty successful calls are not reported. Other
+ * outcomes always are.
  */
 export async function trackExternalHydration<T>(
   root: ExternalHydrationRoot,
@@ -401,7 +402,7 @@ export async function trackExternalHydration<T>(
     outcome = owned.capped ? 'capped' : owned.partial ? 'partial' : 'completed'
     return state
   } finally {
-    if (owned.batches || outcome !== 'completed') {
+    if (owned.batches > 0 || owned.roots > 0 || outcome !== 'completed') {
       events.externalHydrationTraversal({
         xrpcEndpoint: xrpcEndpoint ?? 'unknown',
         root,
