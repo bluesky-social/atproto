@@ -1,4 +1,3 @@
-import { sql } from 'kysely'
 import type {
   DatetimeString,
   DidString,
@@ -9,8 +8,6 @@ import { currentDatetimeString } from '@atproto/lex'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import type { Database } from '../db/index.js'
 import { TimeIdKeyset, paginate } from '../db/pagination.js'
-import { appealSubjectKey, lockAppealSubject } from '../inbox/appeal-lock.js'
-import { APPEAL_REASON_TYPE, isAppealReason } from '../inbox/appeal-type.js'
 import { tools } from '../lexicons/index.js'
 import {
   AlreadyInTargetState,
@@ -80,15 +77,7 @@ export async function createReportActivity(
     // locks at most one row.
     const report = await dbTxn.db
       .selectFrom('report')
-      .select([
-        'id',
-        'status',
-        'reportType',
-        'did',
-        'recordPath',
-        'subjectMessageId',
-        'subjectConvoId',
-      ])
+      .select(['id', 'status', 'reportType'])
       .where((eb) =>
         reportId !== undefined
           ? eb('id', '=', reportId)
@@ -104,35 +93,6 @@ export async function createReportActivity(
           : `Report for event ${eventId} not found`,
         'ReportNotFound',
       )
-    }
-
-    if (
-      activityType === 'reopenActivity' &&
-      isAppealReason(report.reportType)
-    ) {
-      await lockAppealSubject(dbTxn, appealSubjectKey(report))
-      const active = await dbTxn.db
-        .selectFrom('report')
-        .where('did', '=', report.did)
-        .where('recordPath', '=', report.recordPath)
-        .where('reportType', '=', sql.lit(APPEAL_REASON_TYPE))
-        .where('id', '!=', report.id)
-        .where(sql<boolean>`status <> 'closed'`)
-        .where(
-          sql<boolean>`"subjectMessageId" IS NOT DISTINCT FROM ${report.subjectMessageId}`,
-        )
-        .where(
-          sql<boolean>`"subjectConvoId" IS NOT DISTINCT FROM ${report.subjectConvoId}`,
-        )
-        .select('id')
-        .limit(1)
-        .executeTakeFirst()
-      if (active) {
-        throw new InvalidRequestError(
-          'Another appeal for this subject is already active',
-          'AlreadyAppealed',
-        )
-      }
     }
 
     let result
@@ -185,7 +145,8 @@ export async function createReportActivity(
                 ...(activityType === 'closeActivity'
                   ? {
                       resolution: 'noAction',
-                      ...(isAppealReason(report.reportType)
+                      ...(report.reportType ===
+                      tools.ozone.report.defs.ReasonAppeal
                         ? { appealOutcome: 'denied' }
                         : {}),
                     }

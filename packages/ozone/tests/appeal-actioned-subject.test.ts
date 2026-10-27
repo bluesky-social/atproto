@@ -1017,7 +1017,7 @@ describe('appealActionedSubject', () => {
     })
   })
 
-  it('prevents reopening an older appeal while another is active', async () => {
+  it('keeps a reopened older appeal pending after a newer one closes', async () => {
     const account = await sc.createAccount('reopenappeal', {
       handle: 'reopenappeal.test',
       email: 'reopenappeal@test.com',
@@ -1043,14 +1043,14 @@ describe('appealActionedSubject', () => {
           encoding: 'application/json',
         },
       )
-    await expect(activity(oldId, 'reopenActivity')).rejects.toMatchObject({
-      error: 'AlreadyAppealed',
-    })
-    await closeLatestAppeal(account.did)
     await activity(oldId, 'reopenActivity')
+    await closeLatestAppeal(account.did)
     const view = await getAccountView(account.did)
     expect(view.appeal.state).toBe('pending')
     expect(view.availableActions).toEqual([])
+    await expect(appeal(second.id, account.did)).rejects.toMatchObject({
+      error: 'AlreadyAppealed',
+    })
     await activity(oldId, 'closeActivity')
     await expect(appeal(second.id, account.did)).rejects.toMatchObject({
       error: 'AlreadyAppealed',

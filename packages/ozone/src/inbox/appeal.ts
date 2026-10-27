@@ -18,16 +18,14 @@ import type { AppealView } from '../lexicons/tools/ozone/inbox/defs.js'
 import type { ModSubject } from '../mod-service/subject.js'
 import type { ModerationSubjectStatusRow } from '../mod-service/types.js'
 import { findMatchingQueue, getQueueRoutingNote } from '../queue/service.js'
-import { lockAppealSubject, subjectKey } from './appeal-lock.js'
 import {
   type AppealOutcome,
   appealActivityOutcome,
   appealReportSelection,
   appealResolutionFilter,
 } from './appeal-outcome.js'
-import { APPEAL_REASON_TYPE } from './appeal-type.js'
 
-export { APPEAL_REASON_TYPE } from './appeal-type.js'
+export const APPEAL_REASON_TYPE = tools.ozone.report.defs.ReasonAppeal
 export const TAKEDOWN = 'tools.ozone.moderation.defs#modEventTakedown'
 export const REVERSE_TAKEDOWN =
   'tools.ozone.moderation.defs#modEventReverseTakedown'
@@ -182,7 +180,14 @@ export const toAppealState = ({
  * it. Two appeals against the same record - or the same message, or the same
  * conversation - share a key even when they name different action IDs.
  */
-export { subjectKey } from './appeal-lock.js'
+export const subjectKey = (subject: ModSubject): string => {
+  const { subjectDid, subjectMessageId, subjectConvoId } = subject.info()
+  if (subject.isMessage())
+    return `message:${subjectDid}:${subjectConvoId}:${subjectMessageId}`
+  if (subject.isConvo()) return `convo:${subjectDid}:${subjectConvoId}`
+  if (subject.isRecord()) return `record:${subjectDid}:${subject.recordPath}`
+  return `account:${subjectDid}`
+}
 
 /**
  * Match report rows by that identity. Mirrors the subject normalization in
@@ -455,7 +460,9 @@ export const assertAppealAllowed = async (
   },
 ) => {
   dbTxn.assertTransaction()
-  await lockAppealSubject(dbTxn, subjectKey(subject))
+  await sql`select pg_advisory_xact_lock(
+    hashtextextended(${subjectKey(subject)}, 0)
+  )`.execute(dbTxn.db)
 
   const eligibility = await findAppealEligibility(dbTxn, subject)
   if (
