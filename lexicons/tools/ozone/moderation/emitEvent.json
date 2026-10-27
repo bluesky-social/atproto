@@ -108,11 +108,11 @@
           "items": {
             "type": "string"
           },
-          "description": "Target reports matching these report types on the subject (fully qualified NSIDs)"
+          "description": "Target reports matching these report types on the subject (fully qualified NSIDs). Excludes assigned and escalated reports."
         },
         "all": {
           "type": "boolean",
-          "description": "Target ALL reports on the subject"
+          "description": "Target ALL reports on the subject. Excludes assigned and escalated reports."
         },
         "note": {
           "type": "string",
