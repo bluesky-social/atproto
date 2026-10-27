@@ -1,5 +1,11 @@
 # @atproto-labs/handle-resolver-node
 
+## 0.2.15
+
+### Patch Changes
+
+- [#5687](https://github.com/bluesky-social/atproto/pull/5687) [`943170b`](https://github.com/bluesky-social/atproto/commit/943170bd390705fbb16920688f8f09ec7078a59b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Allow speficying a custom `safeFetch` option. The `fetch` option will only be used if no `safeFetch` is provided.
+
 ## 0.2.14
 
 ### Patch Changes

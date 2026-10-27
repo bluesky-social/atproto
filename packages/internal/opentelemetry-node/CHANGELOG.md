@@ -1,5 +1,11 @@
 # @atproto-labs/opentelemetry-node
 
+## 0.4.0
+
+### Minor Changes
+
+- [#5671](https://github.com/bluesky-social/atproto/pull/5671) [`2720f72`](https://github.com/bluesky-social/atproto/commit/2720f72a5c4118c22841861dbc92a20693140093) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Disable context propagation by default
+
 ## 0.3.1
 
 ### Patch Changes

@@ -63,6 +63,7 @@ COPY ./packages/oauth/oauth-client ./packages/oauth/oauth-client
 COPY ./packages/oauth/oauth-provider-api ./packages/oauth/oauth-provider-api
 COPY ./packages/oauth/oauth-provider-ui ./packages/oauth/oauth-provider-ui
 COPY ./packages/oauth/oauth-provider ./packages/oauth/oauth-provider
+COPY ./packages/oauth/oauth-resolver ./packages/oauth/oauth-resolver
 COPY ./packages/oauth/oauth-scopes ./packages/oauth/oauth-scopes
 COPY ./packages/oauth/oauth-types ./packages/oauth/oauth-types
 COPY ./packages/ozone ./packages/ozone

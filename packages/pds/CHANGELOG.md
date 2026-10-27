@@ -1,5 +1,24 @@
 # @atproto/pds
 
+## 0.5.51
+
+### Patch Changes
+
+- Updated dependencies [[`8656303`](https://github.com/bluesky-social/atproto/commit/86563037e8233162165fc455f926569386536dd1)]:
+  - @atproto/oauth-provider@0.25.1
+
+## 0.5.50
+
+### Patch Changes
+
+- [#5687](https://github.com/bluesky-social/atproto/pull/5687) [`943170b`](https://github.com/bluesky-social/atproto/commit/943170bd390705fbb16920688f8f09ec7078a59b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update puppeteer dev dependency
+
+- [#5687](https://github.com/bluesky-social/atproto/pull/5687) [`943170b`](https://github.com/bluesky-social/atproto/commit/943170bd390705fbb16920688f8f09ec7078a59b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - `/.well-known/change-password` redirects to the entryway
+- Updated dependencies [[`2720f72`](https://github.com/bluesky-social/atproto/commit/2720f72a5c4118c22841861dbc92a20693140093), [`943170b`](https://github.com/bluesky-social/atproto/commit/943170bd390705fbb16920688f8f09ec7078a59b)]:
+  - @atproto-labs/opentelemetry-node@0.4.0
+  - @atproto/oauth-provider@0.25.0
+  - @atproto/lex@0.4.3
+
 ## 0.5.49
 
 ### Patch Changes

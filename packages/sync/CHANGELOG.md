@@ -1,5 +1,12 @@
 # @atproto/sync
 
+## 0.4.19
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/lex@0.4.3
+
 ## 0.4.18
 
 ### Patch Changes

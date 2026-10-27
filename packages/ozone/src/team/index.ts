@@ -1,7 +1,13 @@
-import type { Selectable } from 'kysely'
+import { type Selectable, sql } from 'kysely'
 import { chunkArray } from '@atproto/common'
-import { type Client, type DidString, toDatetimeString } from '@atproto/lex'
+import {
+  type Client,
+  type DatetimeString,
+  type DidString,
+  toDatetimeString,
+} from '@atproto/lex'
 import { InvalidRequestError } from '@atproto/xrpc-server'
+import type { OnlineMembersConfig } from '../config/config.js'
 import type { Database } from '../db/index.js'
 import type { Member } from '../db/schema/member.js'
 import { app, tools } from '../lexicons/index.js'
@@ -80,6 +86,67 @@ export class TeamService {
       .execute()
 
     return { members, cursor: members.at(-1)?.createdAt.toISOString() }
+  }
+
+  /** Lists enabled members with recent moderation or report activity. */
+  async listOnlineMembers({
+    excludedDids,
+    activeWindowMs,
+    limit = 50,
+    serviceDid,
+    signal,
+  }: tools.ozone.team.listOnlineMembers.$Params &
+    OnlineMembersConfig & {
+      serviceDid: DidString
+      signal?: AbortSignal
+    }): Promise<tools.ozone.team.listOnlineMembers.OnlineMember[]> {
+    const now = Date.now()
+    const createdAfter = toDatetimeString(new Date(now - activeWindowMs))
+    const createdBefore = toDatetimeString(new Date(now))
+    const exclusions = [...new Set([serviceDid, ...excludedDids])]
+    const lastActive = sql<DatetimeString | null>`greatest(event."createdAt", activity."createdAt")`
+
+    return this.db.db
+      .selectFrom('member as m')
+      .where('m.disabled', '=', false)
+      .where('m.did', 'not in', exclusions)
+      .leftJoinLateral(
+        (eb) =>
+          eb
+            .selectFrom('moderation_event')
+            .whereRef('createdBy', '=', 'm.did')
+            .where('createdAt', '>=', createdAfter)
+            .where('createdAt', '<=', createdBefore)
+            .orderBy('createdAt', 'desc')
+            .orderBy('id', 'desc')
+            .limit(1)
+            .select('createdAt')
+            .as('event'),
+        (join) => join.onTrue(),
+      )
+      .leftJoinLateral(
+        (eb) =>
+          eb
+            .selectFrom('report_activity')
+            .whereRef('createdBy', '=', 'm.did')
+            // @NOTE a literal predicate allows the partial index on human activity.
+            .where('isAutomated', '=', sql<boolean>`false`)
+            .where('createdAt', '>=', createdAfter)
+            .where('createdAt', '<=', createdBefore)
+            .orderBy('createdAt', 'desc')
+            .orderBy('id', 'desc')
+            .limit(1)
+            .select('createdAt')
+            .as('activity'),
+        (join) => join.onTrue(),
+      )
+      .select(['m.did', lastActive.as('lastActive')])
+      .where(lastActive, 'is not', null)
+      .$narrowType<{ lastActive: DatetimeString }>()
+      .orderBy('lastActive', 'desc')
+      .orderBy('m.did', 'asc')
+      .limit(limit)
+      .execute({ signal, inflightQueryAbortStrategy: 'cancel query' })
   }
 
   async create({

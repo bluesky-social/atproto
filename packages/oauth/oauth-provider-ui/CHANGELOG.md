@@ -1,5 +1,27 @@
 # @atproto/oauth-provider-ui
 
+## 0.11.0
+
+### Minor Changes
+
+- [#5687](https://github.com/bluesky-social/atproto/pull/5687) [`943170b`](https://github.com/bluesky-social/atproto/commit/943170bd390705fbb16920688f8f09ec7078a59b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Support resetting password based on account identifier (in addition to email). When a user attempts to reset password for an Atmosphere account hosted on another service, the user will be notified and show a link to the right service.
+
+### Patch Changes
+
+- [#5735](https://github.com/bluesky-social/atproto/pull/5735) [`b7dcaee`](https://github.com/bluesky-social/atproto/commit/b7dcaeefbb070b8182dc68b4e6b52114d6786d4e) Thanks [@abcbrookie](https://github.com/abcbrookie)! - Fix the text color of action buttons. Their custom font size class was mistaken for a text color when merging class names, which dropped the button's own color: primary buttons showed dark text in light mode, and destructive buttons lost their red text.
+
+- [#5687](https://github.com/bluesky-social/atproto/pull/5687) [`943170b`](https://github.com/bluesky-social/atproto/commit/943170bd390705fbb16920688f8f09ec7078a59b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Fix blur behavior on password field
+
+- [#5663](https://github.com/bluesky-social/atproto/pull/5663) [`dc47f7b`](https://github.com/bluesky-social/atproto/commit/dc47f7b1a2f91e2d8cf2d1dbbdaa6c443fbfdefb) Thanks [@huketo](https://github.com/huketo)! - Complete the Korean translation
+
+- [#5687](https://github.com/bluesky-social/atproto/pull/5687) [`943170b`](https://github.com/bluesky-social/atproto/commit/943170bd390705fbb16920688f8f09ec7078a59b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add a placeholder to the `EmailField` component
+
+- [#5687](https://github.com/bluesky-social/atproto/pull/5687) [`943170b`](https://github.com/bluesky-social/atproto/commit/943170bd390705fbb16920688f8f09ec7078a59b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Accept sign-in identifiers filled by password managers (bare names when a sign-in domain is configured, a leading `@`) and normalise them on submit, not only on blur.
+
+- [#5687](https://github.com/bluesky-social/atproto/pull/5687) [`943170b`](https://github.com/bluesky-social/atproto/commit/943170bd390705fbb16920688f8f09ec7078a59b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Properly type `FormShell` values (in particular, checkboxes are now properly typed as a string rather than a boolean)
+- Updated dependencies [[`943170b`](https://github.com/bluesky-social/atproto/commit/943170bd390705fbb16920688f8f09ec7078a59b)]:
+  - @atproto/oauth-provider-api@0.11.0
+
 ## 0.10.7
 
 ### Patch Changes
