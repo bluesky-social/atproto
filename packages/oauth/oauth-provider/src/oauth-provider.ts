@@ -701,7 +701,7 @@ export class OAuthProvider extends OAuthVerifier {
           throw new ConsentRequiredError(parameters)
         }
 
-        const code = await this.requestManager.setAuthorized(
+        const { code } = await this.requestManager.setAuthorized(
           requestUri,
           client,
           ssoSession.account,
@@ -717,7 +717,7 @@ export class OAuthProvider extends OAuthVerifier {
         if (ssoSessions.length === 1) {
           const ssoSession = ssoSessions[0]!
           if (!ssoSession.loginRequired && !ssoSession.consentRequired) {
-            const code = await this.requestManager.setAuthorized(
+            const { code } = await this.requestManager.setAuthorized(
               requestUri,
               client,
               ssoSession.account,
