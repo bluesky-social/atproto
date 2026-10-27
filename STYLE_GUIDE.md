@@ -103,9 +103,9 @@ Each service's telemetry module supplies only what is specific to it — its nam
 The service itself should:
 
 - Not run its own metrics endpoint (e.g. a hand-rolled Prometheus server); metrics leave the process only through the SDK's env-configured exporters.
-- **Never read the `OTEL_*` environment variables.** Telemetry configuration belongs entirely to the telemetry script; service code interacts with the telemetry stack only through the `@opentelemetry/api*` packages, primarily via its `events.ts` module.
+- **Never read the `OTEL_*` environment variables.** Telemetry configuration belongs entirely to the telemetry script; service code interacts with the telemetry stack only through the `@opentelemetry/api` package, primarily via its `events.ts` module.
 - Not use `process.exit()` to terminate the process. Instead, release all resources so the event loop empties and the process exits naturally (`process.exitCode` can be set to indicate the exit code). Killing the process would drop unflushed telemetry.
-- Define an `events.ts` module as the single place where business events are reported, using Meters (`@opentelemetry/api`) and Logs (`@opentelemetry/api-logs`):
+- Define an `events.ts` module as the single place where business events are reported, using the Metrics and Logs APIs from `@opentelemetry/api`:
   - One helper per event, so each event has exactly one call-site shape and the counter, log record and attribute definitions live together instead of drifting across handlers.
   - The meter and logger are named after the package (`metrics.getMeter('@atproto/pds')`).
   - Counters carry **low-cardinality attributes only**; high-cardinality detail (`did`, `clientId`, …) goes into the log record.
@@ -170,8 +170,14 @@ Here is an example `events.ts` module that exposes utilities to trigger Meters a
 
 ```ts
 // src/events.ts
-import { type Meter, ValueType, metrics } from '@opentelemetry/api'
-import { type Logger, SeverityNumber, logs } from '@opentelemetry/api-logs'
+import {
+  type Logger,
+  type Meter,
+  SeverityNumber,
+  ValueType,
+  logs,
+  metrics,
+} from '@opentelemetry/api'
 import { eventsLogger } from './logger.js'
 
 const meter: Meter = metrics.getMeter('@atproto/my-service')

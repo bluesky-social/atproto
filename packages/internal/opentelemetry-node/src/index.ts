@@ -13,7 +13,11 @@ import {
   getStringListFromEnv,
 } from '@opentelemetry/core'
 import type { Instrumentation } from '@opentelemetry/instrumentation'
-import { NodeSDK, resources } from '@opentelemetry/sdk-node'
+import {
+  defaultResource,
+  resourceFromAttributes,
+} from '@opentelemetry/resources'
+import { NodeSDK } from '@opentelemetry/sdk-node'
 import { createAddHookMessageChannel } from 'import-in-the-middle'
 import {
   ATTR_DEPLOYMENT_ENVIRONMENT_NAME,
@@ -112,8 +116,8 @@ export async function setup(getOptions: () => SetupOptions): Promise<void> {
       // resources (including the env detector reading OTEL_RESOURCE_ATTRIBUTES)
       // are merged in afterwards with higher precedence, so these are defaults
       // only.
-      resource: resources.defaultResource().merge(
-        resources.resourceFromAttributes({
+      resource: defaultResource().merge(
+        resourceFromAttributes({
           [ATTR_SERVICE_NAME]: options.name,
           [ATTR_SERVICE_NAMESPACE]: 'atproto',
           [ATTR_SERVICE_VERSION]: options.version,

@@ -2,9 +2,15 @@ import type * as Http from 'node:http'
 import { createRequire } from 'node:module'
 import type { AddressInfo } from 'node:net'
 import { SpanKind, context, trace } from '@opentelemetry/api'
+import { AsyncLocalStorageContextManager } from '@opentelemetry/context-async-hooks'
 import { RPCType, getRPCMetadata } from '@opentelemetry/core'
 import type { Instrumentation } from '@opentelemetry/instrumentation'
-import { metrics, node, tracing } from '@opentelemetry/sdk-node'
+import { MeterProvider, MetricReader } from '@opentelemetry/sdk-metrics'
+import {
+  InMemorySpanExporter,
+  SimpleSpanProcessor,
+  TracerProvider,
+} from '@opentelemetry/sdk-trace'
 import { afterAll, beforeAll, describe, expect, test } from 'vitest'
 import { ATTR_HTTP_ROUTE, ATTR_XRPC_METHOD } from '../src/conventions.js'
 import {
@@ -12,7 +18,7 @@ import {
   getDefaultAtprotoInstrumentations,
 } from '../src/instrumentation.js'
 
-class TestMetricReader extends metrics.MetricReader {
+class TestMetricReader extends MetricReader {
   protected async onForceFlush() {}
   protected async onShutdown() {}
 }
@@ -35,24 +41,23 @@ export function describeHttpServerInstrumentation(options: {
 
   describe(`http server instrumentation ${name}`, () => {
     const reader = new TestMetricReader()
-    const spanExporter = new tracing.InMemorySpanExporter()
-    const tracerProvider = new node.NodeTracerProvider({
-      spanProcessors: [new tracing.SimpleSpanProcessor(spanExporter)],
+    const spanExporter = new InMemorySpanExporter()
+    const tracerProvider = new TracerProvider({
+      spanProcessors: [new SimpleSpanProcessor({ exporter: spanExporter })],
     })
     let instrumentations: Instrumentation[]
     let server: Http.Server
     let origin: string
 
     beforeAll(async () => {
-      // Records both the old "http.server.duration" and the stable
-      // "http.server.request.duration" metrics
-      process.env.OTEL_SEMCONV_STABILITY_OPT_IN = 'http/dup'
-
-      // Also registers the context manager that carries rpcMetadata
-      tracerProvider.register()
+      trace.setGlobalTracerProvider(tracerProvider)
+      // Carries rpcMetadata across the request lifecycle
+      context.setGlobalContextManager(
+        new AsyncLocalStorageContextManager().enable(),
+      )
 
       instrumentations = getDefaultAtprotoInstrumentations({ xrpcMethods })
-      const meterProvider = new metrics.MeterProvider({ readers: [reader] })
+      const meterProvider = new MeterProvider({ readers: [reader] })
       for (const instrumentation of instrumentations) {
         instrumentation.setMeterProvider(meterProvider)
         instrumentation.enable()
@@ -85,7 +90,6 @@ export function describeHttpServerInstrumentation(options: {
       await tracerProvider.shutdown()
       trace.disable()
       context.disable()
-      delete process.env.OTEL_SEMCONV_STABILITY_OPT_IN
     })
 
     beforeAll(async () => {
@@ -132,7 +136,6 @@ export function describeHttpServerInstrumentation(options: {
       expect(routesOf('http.server.request.duration')).toEqual(
         expectedMetricRoutes,
       )
-      expect(routesOf('http.server.duration')).toEqual(expectedMetricRoutes)
     })
   })
 }

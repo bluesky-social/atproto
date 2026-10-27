@@ -11,8 +11,10 @@ const otel = vi.hoisted(() => ({
 }))
 
 vi.mock('@opentelemetry/api', () => ({
+  SeverityNumber: { INFO: 9 },
   ValueType: { INT: 1, DOUBLE: 2 },
   diag: { error: otel.diagError },
+  logs: { getLogger: () => ({ emit: otel.emit }) },
   metrics: {
     getMeter: () => ({
       createCounter: () => ({ add: otel.add }),
@@ -22,11 +24,6 @@ vi.mock('@opentelemetry/api', () => ({
       }),
     }),
   },
-}))
-
-vi.mock('@opentelemetry/api-logs', () => ({
-  SeverityNumber: { INFO: 9 },
-  logs: { getLogger: () => ({ emit: otel.emit }) },
 }))
 
 const pino = vi.hoisted(() => ({ info: vi.fn() }))
