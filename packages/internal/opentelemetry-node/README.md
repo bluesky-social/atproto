@@ -29,7 +29,7 @@ import { ATTR_DEPLOYMENT_ENVIRONMENT_NAME } from '@atproto-labs/opentelemetry-no
 import { IORedisInstrumentation } from '@opentelemetry/instrumentation-ioredis'
 import pkg from './package.json' with { type: 'json' }
 
-setup(() => ({
+await setup(() => ({
   name: pkg.name,
   version: pkg.version,
   // Optional: override or extend the default resource attributes.
@@ -61,7 +61,7 @@ import { setup } from '@atproto-labs/opentelemetry-node'
 import pkg from './package.json' with { type: 'json' }
 import lex from './lexicons.json' with { type: 'json' }
 
-setup(() => ({
+await setup(() => ({
   name: pkg.name,
   version: pkg.version,
   xrpcMethods: lex.lexicons
