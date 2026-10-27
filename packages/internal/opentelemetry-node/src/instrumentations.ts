@@ -12,7 +12,6 @@ import { UndiciInstrumentation } from '@opentelemetry/instrumentation-undici'
 import { ATTR_XRPC_METHOD } from './conventions.js'
 import {
   XrpcHttpInstrumentation,
-  type XrpcHttpInstrumentationConfig,
   extractUrlXrpcMethodName,
 } from './instrumentations/xrpc-http-instrumentation.js'
 
@@ -52,22 +51,28 @@ function assertSharedInstrumentationBase(instrumentations: Instrumentation[]) {
   }
 }
 
-export type DefaultAtprotoInstrumentationsOptions =
-  XrpcHttpInstrumentationConfig
+type DefaultAtprotoInstrumentationsOptions = {
+  xrpcMethods?: Iterable<string>
+}
 
 /**
  * Default instrumentations for atproto Node.js services. Includes the runtime,
  * HTTP, Express, Undici, and Pino instrumentations, with XRPC-specific span
  * naming and attributes.
+ *
+ * @note Not using getNodeAutoInstrumentations: it pulls in many
+ * instrumentations we don't need, with no easy way to filter them out.
  */
-export function getDefaultAtprotoInstrumentations(
+function getDefaultAtprotoInstrumentations(
   options?: DefaultAtprotoInstrumentationsOptions,
 ): Instrumentation[] {
   return [
-    // @NOTE Not using getNodeAutoInstrumentations: it pulls in many
-    // instrumentations we don't need, with no easy way to filter them out.
-    new RuntimeNodeInstrumentation({ captureUncaughtException: true }),
-    new XrpcHttpInstrumentation(options),
+    new RuntimeNodeInstrumentation({
+      captureUncaughtException: true,
+    }),
+    new XrpcHttpInstrumentation({
+      xrpcMethods: options?.xrpcMethods,
+    }),
     new ExpressInstrumentation({
       ignoreLayersType: [ExpressLayerType.MIDDLEWARE],
     }),
@@ -84,6 +89,8 @@ export function getDefaultAtprotoInstrumentations(
     // and would forward all subsystems indiscriminately. Events we actually want
     // in the OTEL stack go through the Logs API explicitly (see each service's
     // events.ts).
-    new PinoInstrumentation({ disableLogSending: true }),
+    new PinoInstrumentation({
+      disableLogSending: true,
+    }),
   ]
 }

@@ -23,7 +23,7 @@ import {
   type BuildInstrumentationsOptions,
   InstrumentationMismatchError,
   buildInstrumentations,
-} from './instrumentation.js'
+} from './instrumentations.js'
 import { FilteredW3CTraceContextPropagator } from './propagators/filtered-w3c-trace-context-propagator.js'
 
 export type { Attributes, Instrumentation }
