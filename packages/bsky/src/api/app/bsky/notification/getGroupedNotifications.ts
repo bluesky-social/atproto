@@ -133,15 +133,21 @@ const skeleton = async (
   let groups: NotificationGroup[] = []
   let nextCursor: string | undefined
   let itemsFetched = 0
+  let dataplaneFetches = 0
   let rawLimit = ctx.cfg.notificationsV2MinRawLimit
 
-  for (let read = 0; read < ctx.cfg.notificationsV2MaxReads; read++) {
+  for (
+    let fetches = 0;
+    fetches < ctx.cfg.notificationsV2MaxFetches;
+    fetches++
+  ) {
     const response = await ctx.hydrator.dataplane.getNotificationsV2({
       actorDid: params.hydrateCtx.viewer,
       feed,
       cursor,
       limit: rawLimit,
     })
+    dataplaneFetches++
     itemsFetched += response.notifications.length
 
     for (const notification of response.notifications) {
@@ -215,6 +221,7 @@ const skeleton = async (
   return {
     ...buildSpotlight(items, groups, nextCursor, params.limit, seenAt),
     itemsFetched,
+    dataplaneFetches,
   }
 }
 
@@ -503,6 +510,7 @@ const presentation = (
   events.groupedNotifications({
     itemsFetched: skeleton.itemsFetched,
     itemsReturned: groups.reduce((count, group) => count + group.count, 0),
+    dataplaneFetches: skeleton.dataplaneFetches,
   })
 
   return body
@@ -543,4 +551,5 @@ type SkeletonState = {
   groups: NotificationGroup[]
   cursor?: string
   itemsFetched: number
+  dataplaneFetches: number
 }

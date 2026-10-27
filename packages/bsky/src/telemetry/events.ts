@@ -173,6 +173,19 @@ class EventReporter {
     },
   })
 
+  #groupedNotificationsDataplaneFetches = meter.createHistogram(
+    'notifications.grouped.dataplane_fetches',
+    {
+      description:
+        'Dataplane notification fetches per grouped notifications response',
+      unit: '{fetch}',
+      valueType: ValueType.INT,
+      advice: {
+        explicitBucketBoundaries: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+      },
+    },
+  )
+
   #groupedNotificationsItemsFetched = meter.createHistogram(
     'notifications.grouped.items_fetched',
     {
@@ -317,18 +330,20 @@ class EventReporter {
     }
   }
 
-  /** Reports fetched and returned raw-item counts once per completed page. */
+  /** Reports dataplane fetches and raw-item counts once per completed page. */
   groupedNotifications({
     itemsFetched,
     itemsReturned,
+    dataplaneFetches,
   }: {
     itemsFetched: number
     itemsReturned: number
+    dataplaneFetches: number
   }) {
-    this.#log('grouped_notifications', { itemsFetched, itemsReturned })
     try {
       this.#groupedNotificationsItemsFetched.record(itemsFetched)
       this.#groupedNotificationsItemsReturned.record(itemsReturned)
+      this.#groupedNotificationsDataplaneFetches.record(dataplaneFetches)
     } catch (err) {
       diag.error('Failed to record grouped_notifications:', err)
     }
