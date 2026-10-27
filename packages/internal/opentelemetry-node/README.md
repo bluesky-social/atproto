@@ -85,7 +85,8 @@ registered alongside the ones you supply. The
 
 Instrumentations you supply must be built on the same
 `@opentelemetry/instrumentation` as this package, or ESM imports of the modules
-they target are not instrumented. For `better-sqlite3`, use the
+they target can't be instrumented: `setup()` then rejects with an
+`InstrumentationMismatchError`, failing the service start. For `better-sqlite3`, use the
 `BetterSqlite3Instrumentation` exposed by the
 `@atproto-labs/opentelemetry-node/better-sqlite3-plugin` entrypoint: a port of
 [`opentelemetry-plugin-better-sqlite3`](https://github.com/sjinks/opentelemetry-plugin-better-sqlite3)

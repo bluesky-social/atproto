@@ -12,7 +12,10 @@ import {
   getStringFromEnv,
   getStringListFromEnv,
 } from '@opentelemetry/core'
-import type { Instrumentation } from '@opentelemetry/instrumentation'
+import {
+  type Instrumentation,
+  InstrumentationBase,
+} from '@opentelemetry/instrumentation'
 import {
   defaultResource,
   resourceFromAttributes,
@@ -119,6 +122,12 @@ export async function setup(getOptions: () => SetupOptions): Promise<void> {
     // imports of those modules are not instrumented.
     const options = getOptions()
 
+    const instrumentations = [
+      ...getDefaultAtprotoInstrumentations(options),
+      ...(options.instrumentations ?? []),
+    ]
+    assertSharedInstrumentationBase(instrumentations)
+
     const sdk = new NodeSDK({
       textMapPropagator: propagatorsConfigured
         ? undefined // Let the SDK handle propagators based on the OTEL_PROPAGATORS env var.
@@ -141,10 +150,7 @@ export async function setup(getOptions: () => SetupOptions): Promise<void> {
       // @NOTE Unlike sdk-node's default detectors, these include the
       // "container" detector.
       resourceDetectors: getResourceDetectors(),
-      instrumentations: [
-        ...getDefaultAtprotoInstrumentations(options),
-        ...(options.instrumentations ?? []),
-      ],
+      instrumentations,
 
       // @NOTE The gate above enables the SDK as soon as *any* signal is
       // configured, but NodeSDK then defaults every unspecified
@@ -174,7 +180,33 @@ export async function setup(getOptions: () => SetupOptions): Promise<void> {
       })
     })
   } catch (err) {
+    // @NOTE Unlike other setup errors, this one is a packaging bug that would
+    // otherwise go unnoticed, so it is not swallowed: fail the service start.
+    if (err instanceof InstrumentationMismatchError) throw err
+
     diag.error('Error initializing OpenTelemetry SDK', err)
+  }
+}
+
+export class InstrumentationMismatchError extends Error {
+  name = 'InstrumentationMismatchError'
+}
+
+/**
+ * import-in-the-middle only hooks the ESM imports of modules targeted by
+ * instrumentations built on the same `@opentelemetry/instrumentation` copy as
+ * this package (see {@link setup}). Instrumentations built on another copy
+ * would silently miss them.
+ */
+function assertSharedInstrumentationBase(instrumentations: Instrumentation[]) {
+  const foreign = instrumentations.filter(
+    (i) => !(i instanceof InstrumentationBase) && 'getModuleDefinitions' in i,
+  )
+  if (foreign.length) {
+    const names = foreign.map((i) => `"${i.instrumentationName}"`).join(', ')
+    throw new InstrumentationMismatchError(
+      `Instrumentation(s) ${names} use a different copy of @opentelemetry/instrumentation than @atproto-labs/opentelemetry-node, so ESM imports of the modules they target would not be instrumented. Make them resolve the same @opentelemetry/instrumentation (e.g. with a package manager override), or use instrumentations built on it.`,
+    )
   }
 }
 
