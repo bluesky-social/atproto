@@ -7,6 +7,7 @@ import {
   logs,
   metrics,
 } from '@opentelemetry/api'
+import type { NotificationsV2Algorithm } from '../config.js'
 import type { app } from '../lexicons/index.js'
 import { eventsLogger } from '../logger.js'
 import { isAbortError, isTimeoutError } from './util.js'
@@ -160,6 +161,18 @@ class EventReporter {
     valueType: ValueType.INT,
   })
 
+  #notificationGroupingDuration = meter.createHistogram<{
+    algorithm: NotificationsV2Algorithm
+  }>('notifications.grouped.duration', {
+    description:
+      'Compute time of each notification grouping algorithm invocation',
+    unit: 'ms',
+    valueType: ValueType.DOUBLE,
+    advice: {
+      explicitBucketBoundaries: [0.1, 0.25, 0.5, 1, 2.5, 5, 10, 25, 50, 100],
+    },
+  })
+
   #groupedNotificationsItemsFetched = meter.createHistogram(
     'notifications.grouped.items_fetched',
     {
@@ -286,6 +299,21 @@ class EventReporter {
       })
     } catch (err) {
       diag.error('Failed to record external_hydration_traversal:', err)
+    }
+  }
+
+  /** Reports compute time once per grouping invocation, excluding dataplane reads. */
+  notificationGrouping({
+    algorithm,
+    durationMs,
+  }: {
+    algorithm: NotificationsV2Algorithm
+    durationMs: number
+  }) {
+    try {
+      this.#notificationGroupingDuration.record(durationMs, { algorithm })
+    } catch (err) {
+      diag.error('Failed to record notification_grouping:', err)
     }
   }
 

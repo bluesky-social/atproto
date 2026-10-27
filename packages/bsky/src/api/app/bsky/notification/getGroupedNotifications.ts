@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto'
+import { performance } from 'node:perf_hooks'
 import { dedupeStrs, mapDefined } from '@atproto/common'
 import {
   type AtUriString,
@@ -170,14 +171,20 @@ const skeleton = async (
       })
     }
 
+    const algorithm = ctx.cfg.notificationsV2Algorithm
+    const groupingStart = performance.now()
     const groupingResult = buildGroups(
       items,
       params.limit,
       now,
       seenAt,
-      ctx.cfg.notificationsV2Algorithm,
+      algorithm,
       feed,
     )
+    events.notificationGrouping({
+      algorithm,
+      durationMs: performance.now() - groupingStart,
+    })
     groups = groupingResult.groups
 
     // After fetching a page from the dataplane and attempting to group, 2 situations can happen:
