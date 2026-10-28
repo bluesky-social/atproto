@@ -228,6 +228,7 @@ const skeleton = async (
 const hydration = async (
   input: HydrationFnInput<Context, Params, SkeletonState>,
 ) => {
+  const hydrationStart = performance.now()
   const { ctx, params, skeleton } = input
   const notifs = skeleton.groups.flatMap((group) =>
     group.items.map((item) => item.raw),
@@ -247,9 +248,17 @@ const hydration = async (
     ),
   )
 
-  return ctx.hydrator.hydrateGroupedNotifications(notifs, params.hydrateCtx, {
-    knownFollowersDids,
-  })
+  try {
+    return await ctx.hydrator.hydrateGroupedNotifications(
+      notifs,
+      params.hydrateCtx,
+      { knownFollowersDids },
+    )
+  } finally {
+    events.notificationHydration({
+      durationMs: performance.now() - hydrationStart,
+    })
+  }
 }
 
 const rules = (
