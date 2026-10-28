@@ -206,6 +206,7 @@ type HydratePostsOptions = Pick<
   'processDynamicTagsForView'
 > & {
   knownLikers?: HydrateKnownLikersOptions
+  skipReplyBlocks?: boolean
 }
 
 type HydrateFeedItemsOptions = {
@@ -827,7 +828,9 @@ export class Hydrator {
         ? this.feed.getPostViewerStates(threadRefs, ctx.viewer)
         : undefined,
       this.label.getLabelsForSubjects(allPostUris, ctx.labelers),
-      this.hydratePostBlocks(posts, ctx, authorsAndKnownLikersRelationships),
+      this.hydratePostBlocks(posts, ctx, authorsAndKnownLikersRelationships, {
+        skipReplyBlocks: options.skipReplyBlocks,
+      }),
       this.hydrateProfiles(knownProfileDids, ctx),
       this.hydrateLists([...nestedListUris, ...threadgateListUris], ctx),
       this.hydrateFeedGens(nestedFeedGenUris, ctx),
@@ -869,6 +872,7 @@ export class Hydrator {
     posts: Posts,
     ctx: HydrateCtx,
     additionalRelationships: RelationshipPair[] = [],
+    opts?: { skipReplyBlocks?: boolean },
   ): Promise<{
     postBlocks: PostBlocks
     additionalRelationshipsBidirectionalBlocks: BidirectionalBlocks
@@ -882,20 +886,21 @@ export class Hydrator {
       const creator = didFromUri(uri)
       const postBlockPairs: PostBlockPairs = {}
       postBlocksPairs.set(uri, postBlockPairs)
-      // 3p block for replies
-      const parentUri = post.reply?.parent.uri
-      const parentDid = parentUri && didFromUri(parentUri)
-      if (parentDid && parentDid !== creator) {
-        const pair: RelationshipPair = [creator, parentDid]
-        relationships.push(pair)
-        postBlockPairs.parent = pair
-      }
-      const rootUri = post.reply?.root.uri
-      const rootDid = rootUri && didFromUri(rootUri)
-      if (rootDid && rootDid !== creator) {
-        const pair: RelationshipPair = [creator, rootDid]
-        relationships.push(pair)
-        postBlockPairs.root = pair
+      if (!opts?.skipReplyBlocks) {
+        const parentUri = post.reply?.parent.uri
+        const parentDid = parentUri && didFromUri(parentUri)
+        if (parentDid && parentDid !== creator) {
+          const pair: RelationshipPair = [creator, parentDid]
+          relationships.push(pair)
+          postBlockPairs.parent = pair
+        }
+        const rootUri = post.reply?.root.uri
+        const rootDid = rootUri && didFromUri(rootUri)
+        if (rootDid && rootDid !== creator) {
+          const pair: RelationshipPair = [creator, rootDid]
+          relationships.push(pair)
+          postBlockPairs.root = pair
+        }
       }
       // 3p block for record embeds
       for (const embedUri of nestedRecordUris(post)) {
@@ -1899,6 +1904,7 @@ export class Hydrator {
         [...postUris].map((uri) => ({ uri })),
         ctx,
         { posts },
+        { skipReplyBlocks: true },
       ),
       this.hydrateFeedGens([...feedGenUris], ctx),
       this.hydrateStarterPacksBasic([...starterPackUris], ctx),
