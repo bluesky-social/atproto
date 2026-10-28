@@ -32,6 +32,7 @@ export default function (server: Server, ctx: AppContext) {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({
+        xrpcEndpoint: app.bsky.unspecced.getSuggestedStarterPacks.$lxm,
         labelers,
         viewer,
         features: ctx.featureGatesClient.scope(

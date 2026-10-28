@@ -2742,7 +2742,7 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
 
         const state = await hydrator.hydrateFeedItems(
           [{ post: { uri: feedUri, cid: postCid(feedUri) } }],
-          ctx,
+          ctx.copy({ xrpcEndpoint: app.bsky.feed.getFeed.$lxm }),
         )
 
         // One exact-root fetch for every distinct pin, in encounter order.
@@ -2752,8 +2752,13 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
             .mocked(dataplane.getRecordsByRef)
             .mock.calls[0][0].refs?.map(({ uri, cid }) => `${uri}@${cid}`),
         ).toEqual([key(doc1, '1'), key(doc1, '2'), key(doc2, '1')])
-        expect(traversalReports()).toMatchObject([
-          { root: 'refs', outcome: 'completed' },
+        expect(fullTraversalReports()).toHaveLength(1)
+        expect(fullTraversalReports()).toMatchObject([
+          {
+            root: 'refs',
+            outcome: 'completed',
+            xrpcEndpoint: app.bsky.feed.getFeed.$lxm,
+          },
         ])
 
         // Discarded authored refs do not become roots.
