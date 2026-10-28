@@ -7,8 +7,8 @@ import {
   logs,
   metrics,
 } from '@opentelemetry/api'
+import type { NsidString } from '@atproto/lex'
 import type { NotificationsV2Algorithm } from '../config.js'
-import type { app } from '../lexicons/index.js'
 import { eventsLogger } from '../logger.js'
 import { isAbortError, isTimeoutError } from './util.js'
 
@@ -19,9 +19,7 @@ export type HydrationSource =
   'known_likers' | 'known_followers' | 'activity_subscriptions'
 
 /** XRPC method that owns a hydration; set on `HydrateCtx` from the method's `$lxm`. */
-export type HydrationXrpcEndpoint =
-  | app.bsky.embed.getEmbedExternalView.$lxm
-  | app.bsky.unspecced.getAtmosphereExploreTab.$lxm
+export type HydrationXrpcEndpoint = NsidString
 
 /** Reported XRPC endpoint of an external hydration traversal. */
 export type ExternalHydrationXrpcEndpoint = HydrationXrpcEndpoint | 'unknown'

@@ -61,6 +61,7 @@ export default function (server: Server, ctx: AppContext) {
       const stableDeviceId = req.header(ANALYTICS_HEADER_DEVICE_ID) ?? null
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({
+        xrpcEndpoint: app.bsky.feed.getFeed.$lxm,
         labelers,
         viewer,
         features: ctx.featureGatesClient.scope(
