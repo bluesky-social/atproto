@@ -20,6 +20,7 @@ import { getNextRawLimit } from '../src/api/app/bsky/notification/getGroupedNoti
 import {
   type NotificationGroup,
   type NotificationItem,
+  buildNotificationItem,
   getGroupingAlgorithm,
   parseRawNotification,
 } from '../src/api/app/bsky/notification/grouping/grouping.js'
@@ -84,12 +85,7 @@ const item = (
     kind === NOTIFICATION_REASON.SUBSCRIBED_POST
       ? kind
       : (raw.reasonSubject ?? raw.uri)
-  return {
-    raw,
-    id,
-    groupingKey,
-    actorDid,
-  }
+  return buildNotificationItem(raw, id, groupingKey, actorDid)
 }
 
 describe('notification grouping', () => {
@@ -499,12 +495,26 @@ const spotlightTypes = [
 const spotlightItems = (
   type: (typeof spotlightTypes)[number],
   count: number,
-  { actor = 'alice', offset = 0, spacing = 1 / 1000 } = {},
+  {
+    actor = 'alice',
+    offset = 0,
+    spacing = 1 / 1000,
+    olderFrom,
+  }: {
+    actor?: string
+    offset?: number
+    spacing?: number
+    olderFrom?: number
+  } = {},
 ) =>
   Array.from({ length: count }, (_, index) =>
     item(
       `${type.reason}-${actor}-${index}`,
-      minutesAgo(offset + index * spacing),
+      minutesAgo(
+        offset +
+          index * spacing +
+          (olderFrom !== undefined && index >= olderFrom ? DAY / 60_000 : 0),
+      ),
       type.reason,
       {
         actor,
@@ -608,12 +618,7 @@ describe.each(['algoGravity', 'algoLookback'] as const)(
       )
 
       it('does not combine separate bursts to reach the four-item threshold', () => {
-        const items = spotlightItems(type, 4)
-        for (const notification of items.slice(2)) {
-          notification.raw.indexedAt = toDatetimeString(
-            new Date(Date.parse(notification.raw.indexedAt) - DAY),
-          )
-        }
+        const items = spotlightItems(type, 4, { olderFrom: 2 })
         const { ordinary, page } = buildPage(items, items.length)
 
         expect(page.groups).toBe(ordinary.groups)
@@ -625,12 +630,7 @@ describe.each(['algoGravity', 'algoLookback'] as const)(
       })
 
       it('does not combine separate bursts to reach the eight-item threshold', () => {
-        const matching = spotlightItems(type, 8)
-        for (const notification of matching.slice(4)) {
-          notification.raw.indexedAt = toDatetimeString(
-            new Date(Date.parse(notification.raw.indexedAt) - DAY),
-          )
-        }
+        const matching = spotlightItems(type, 8, { olderFrom: 4 })
         const items = [
           ...matching,
           ...Array.from({ length: 201 - matching.length }, (_, index) =>
@@ -648,12 +648,7 @@ describe.each(['algoGravity', 'algoLookback'] as const)(
       })
 
       it('chooses the strongest burst rather than the actor with the most total activity', () => {
-        const alice = spotlightItems(type, 6)
-        for (const notification of alice.slice(3)) {
-          notification.raw.indexedAt = toDatetimeString(
-            new Date(Date.parse(notification.raw.indexedAt) - DAY),
-          )
-        }
+        const alice = spotlightItems(type, 6, { olderFrom: 3 })
         const bob = spotlightItems(type, 4, { actor: 'bob', offset: 1 })
         const items = [...alice.slice(0, 3), ...bob, ...alice.slice(3)]
         const { page } = buildPage(items, items.length)
@@ -667,12 +662,7 @@ describe.each(['algoGravity', 'algoLookback'] as const)(
       })
 
       it('can select an older burst and leaves the actor’s isolated recent activity ordinary', () => {
-        const items = spotlightItems(type, 5)
-        for (const notification of items.slice(1)) {
-          notification.raw.indexedAt = toDatetimeString(
-            new Date(Date.parse(notification.raw.indexedAt) - DAY),
-          )
-        }
+        const items = spotlightItems(type, 5, { olderFrom: 1 })
         const { page } = buildPage(items, items.length)
 
         expectPage(page, items, [
@@ -686,12 +676,7 @@ describe.each(['algoGravity', 'algoLookback'] as const)(
       })
 
       it('breaks equal burst counts by burst recency, not the actor’s latest activity', () => {
-        const alice = spotlightItems(type, 5)
-        for (const notification of alice.slice(1)) {
-          notification.raw.indexedAt = toDatetimeString(
-            new Date(Date.parse(notification.raw.indexedAt) - DAY),
-          )
-        }
+        const alice = spotlightItems(type, 5, { olderFrom: 1 })
         const bob = spotlightItems(type, 4, { actor: 'bob', offset: 1 })
         const items = [alice[0]!, ...bob, ...alice.slice(1)]
         const { page } = buildPage(items, items.length)

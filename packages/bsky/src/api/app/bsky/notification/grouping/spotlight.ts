@@ -218,8 +218,7 @@ const getTopBurst = (
       if (
         burst.length > top.length ||
         (burst.length === top.length &&
-          Date.parse(burst[0]!.raw.indexedAt) >
-            Date.parse(top[0]!.raw.indexedAt))
+          burst[0]!.indexedTime > top[0]!.indexedTime)
       ) {
         top = burst
       }

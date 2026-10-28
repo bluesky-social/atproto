@@ -59,7 +59,22 @@ export type NotificationItem = {
   id: string
   groupingKey: string
   actorDid: DidString
+  indexedTime: number
 }
+
+// Builds a NotificationItem, caching its parsed timestamp so grouping never re-parses it.
+export const buildNotificationItem = (
+  raw: RawNotification,
+  id: string,
+  groupingKey: string,
+  actorDid: DidString,
+): NotificationItem => ({
+  raw,
+  id,
+  groupingKey,
+  actorDid,
+  indexedTime: Date.parse(raw.indexedAt),
+})
 
 // NotificationGroup is the grouping algorithm’s result: the notification items it grouped together,
 // plus their count and timestamps, before Views builds the lexicon response.

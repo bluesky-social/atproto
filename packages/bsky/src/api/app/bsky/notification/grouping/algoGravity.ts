@@ -189,14 +189,14 @@ const createCandidateGroup = (
   attractionCoefficient = PARAMS.attractionCoefficient,
 ): CandidateGroup => {
   const newest = items[0]!
-  const age = Math.max(0, now - Date.parse(newest.raw.indexedAt))
+  const age = Math.max(0, now - newest.indexedTime)
   const zone = zones.find(
     ({ ageMs: maxAgeMs }) => maxAgeMs === null || age <= maxAgeMs,
   )!
   const candidateGroup: CandidateGroup = {
     items,
     occupiedSeconds: new Set(
-      items.map(({ raw }) => Math.floor(Date.parse(raw.indexedAt) / SECOND)),
+      items.map(({ indexedTime }) => Math.floor(indexedTime / SECOND)),
     ).size,
     zone,
     weakestAttraction: Number.POSITIVE_INFINITY,
@@ -205,9 +205,7 @@ const createCandidateGroup = (
   }
 
   for (let index = 0; index < items.length - 1; index++) {
-    const gap =
-      Date.parse(items[index]!.raw.indexedAt) -
-      Date.parse(items[index + 1]!.raw.indexedAt)
+    const gap = items[index]!.indexedTime - items[index + 1]!.indexedTime
     addBindingAttraction(
       candidateGroup,
       index,
@@ -228,8 +226,8 @@ const appendItem = (
   attractionCoefficient: number,
 ): CandidateGroup => {
   const newestBindingIndex = candidateGroup.items.length - 1
-  const previousTime = Date.parse(candidateGroup.items.at(-1)!.raw.indexedAt)
-  const itemTime = Date.parse(item.raw.indexedAt)
+  const previousTime = candidateGroup.items.at(-1)!.indexedTime
+  const itemTime = item.indexedTime
   const gap = previousTime - itemTime
   const extended: CandidateGroup = {
     ...candidateGroup,

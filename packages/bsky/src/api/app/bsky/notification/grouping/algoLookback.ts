@@ -103,12 +103,12 @@ const isWithinLookback = (
   now: number,
   timeSpanMultiplier: number,
 ): boolean => {
-  const newestTime = Date.parse(newest.raw.indexedAt)
+  const newestTime = newest.indexedTime
   const age = Math.max(0, now - newestTime)
   const zone = PARAMS.zones.find(
     ({ ageMs: maxAgeMs }, index) =>
       maxAgeMs === null || (index === 0 ? age < maxAgeMs : age <= maxAgeMs),
   )!
-  const gap = newestTime - Date.parse(item.raw.indexedAt)
+  const gap = newestTime - item.indexedTime
   return gap <= zone.lookbackMs * timeSpanMultiplier
 }

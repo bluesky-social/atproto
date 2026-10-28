@@ -34,6 +34,7 @@ import {
   type NotificationGroup,
   type NotificationItem,
   type RawNotification,
+  buildNotificationItem,
   getGroupingAlgorithm,
   parseRawNotification,
 } from './grouping/grouping.js'
@@ -172,12 +173,7 @@ const skeleton = async (
         groupingKey = NOTIFICATION_REASON.SUBSCRIBED_POST
       }
 
-      items.push({
-        raw: notif,
-        id,
-        groupingKey,
-        actorDid,
-      })
+      items.push(buildNotificationItem(notif, id, groupingKey, actorDid))
     }
 
     const groupingStart = performance.now()
