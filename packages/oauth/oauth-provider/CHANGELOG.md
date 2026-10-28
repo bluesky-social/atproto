@@ -1,5 +1,16 @@
 # @atproto/oauth-provider
 
+## 0.25.2
+
+### Patch Changes
+
+- [#5747](https://github.com/bluesky-social/atproto/pull/5747) [`63bc474`](https://github.com/bluesky-social/atproto/commit/63bc4747175c82497596e9ffaeaaaf83804b0311) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Record the scopes a user approved on the consent screen, not the scopes the client requested.
+
+- [#5753](https://github.com/bluesky-social/atproto/pull/5753) [`3bfd00f`](https://github.com/bluesky-social/atproto/commit/3bfd00f484dc144482c82a4ed248adc49e6be769) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Bound the decoded size of every stage of a multi-coding `content-encoding` chain, and reject bodies listing too many content-codings
+- Updated dependencies [[`3bfd00f`](https://github.com/bluesky-social/atproto/commit/3bfd00f484dc144482c82a4ed248adc49e6be769), [`3bfd00f`](https://github.com/bluesky-social/atproto/commit/3bfd00f484dc144482c82a4ed248adc49e6be769), [`3bfd00f`](https://github.com/bluesky-social/atproto/commit/3bfd00f484dc144482c82a4ed248adc49e6be769), [`3bfd00f`](https://github.com/bluesky-social/atproto/commit/3bfd00f484dc144482c82a4ed248adc49e6be769)]:
+  - @atproto/common@0.8.7
+  - @atproto/lex-resolver@0.4.1
+
 ## 0.25.1
 
 ### Patch Changes
