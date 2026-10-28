@@ -17,7 +17,11 @@ export default function (server: Server, ctx: AppContext) {
       const { feed } = params
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
-      const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
+      const hydrateCtx = await ctx.hydrator.createContext({
+        labelers,
+        viewer,
+        xrpcEndpoint: app.bsky.feed.getFeedGenerator.$lxm,
+      })
       const hydration = await ctx.hydrator.hydrateFeedGens([feed], hydrateCtx)
       const feedInfo = hydration.feedgens?.get(feed)
       if (!feedInfo) {
