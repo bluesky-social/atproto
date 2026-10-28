@@ -66,32 +66,16 @@ export const buildAlgoGravityGroups = (
       canGroup ? undefined : item.id,
     ])
     const candidateGroups = chains.get(key) ?? []
-    const active = candidateGroups.at(-1)
-    let nextCandidateGroups: CandidateGroup[]
-
-    if (!active || active.closed) {
-      nextCandidateGroups = [
-        ...candidateGroups,
-        createCandidateGroup([item], now, zones),
-      ]
-    } else {
-      const extended = appendItem(active, item, PARAMS.attractionCoefficient)
-      const stableCandidateGroups = splitUntilStable(
-        extended,
-        PARAMS.notificationWeight,
-        PARAMS.attractionCoefficient,
-        now,
-        zones,
-      ).map((candidateGroup) =>
-        candidateGroup.items.length === MAX_GROUP_SIZE
-          ? { ...candidateGroup, closed: true }
-          : candidateGroup,
-      )
-      nextCandidateGroups = [
-        ...candidateGroups.slice(0, -1),
-        ...stableCandidateGroups,
-      ]
-    }
+    const nextCandidateGroups = extendCandidateGroups(
+      candidateGroups,
+      item,
+      now,
+      zones,
+    ).map((candidateGroup) =>
+      candidateGroup.items.length === MAX_GROUP_SIZE
+        ? { ...candidateGroup, closed: true }
+        : candidateGroup,
+    )
 
     const nextGroupCount =
       groupCount - candidateGroups.length + nextCandidateGroups.length
@@ -109,6 +93,45 @@ export const buildAlgoGravityGroups = (
   return {
     groups: toGroups(chains, seenAt),
   }
+}
+
+/** Split newest-first notifications into gravity-bound bursts, without a size cap. */
+export const splitGravityBursts = (
+  items: NotificationItem[],
+  now: number,
+  attractionSpanMultiplier: number,
+): NotificationItem[][] => {
+  const zones = PARAMS.zones.map((zone) => ({
+    ...zone,
+    attractionSpanMs: zone.attractionSpanMs * attractionSpanMultiplier,
+  }))
+  let groups: CandidateGroup[] = []
+  for (const item of items) {
+    groups = extendCandidateGroups(groups, item, now, zones)
+  }
+  return groups.map((group) => group.items)
+}
+
+const extendCandidateGroups = (
+  groups: CandidateGroup[],
+  item: NotificationItem,
+  now: number,
+  zones: Zone[],
+): CandidateGroup[] => {
+  const active = groups.at(-1)
+  if (!active || active.closed) {
+    return [...groups, createCandidateGroup([item], now, zones)]
+  }
+  return [
+    ...groups.slice(0, -1),
+    ...splitUntilStable(
+      appendItem(active, item, PARAMS.attractionCoefficient),
+      PARAMS.notificationWeight,
+      PARAMS.attractionCoefficient,
+      now,
+      zones,
+    ),
+  ]
 }
 
 const splitUntilStable = (

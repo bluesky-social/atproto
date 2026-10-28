@@ -34,7 +34,7 @@ import {
   type NotificationGroup,
   type NotificationItem,
   type RawNotification,
-  buildGroups,
+  getGroupingAlgorithm,
   parseRawNotification,
 } from './grouping/grouping.js'
 import {
@@ -136,6 +136,8 @@ const skeleton = async (
   let itemsFetched = 0
   let dataplaneFetches = 0
   let rawLimit = ctx.cfg.notificationsV2MinRawLimit
+  const algorithm = ctx.cfg.notificationsV2Algorithm
+  const { buildGroups, splitBursts } = getGroupingAlgorithm(algorithm)
 
   for (
     let fetches = 0;
@@ -178,16 +180,8 @@ const skeleton = async (
       })
     }
 
-    const algorithm = ctx.cfg.notificationsV2Algorithm
     const groupingStart = performance.now()
-    const groupingResult = buildGroups(
-      items,
-      params.limit,
-      now,
-      seenAt,
-      algorithm,
-      feed,
-    )
+    const groupingResult = buildGroups(items, params.limit, now, seenAt, feed)
     events.notificationGrouping({
       algorithm,
       durationMs: performance.now() - groupingStart,
@@ -220,7 +214,15 @@ const skeleton = async (
   }
 
   return {
-    ...buildSpotlight(items, groups, nextCursor, params.limit, seenAt),
+    ...buildSpotlight(
+      items,
+      groups,
+      nextCursor,
+      params.limit,
+      now,
+      seenAt,
+      splitBursts,
+    ),
     itemsFetched,
     dataplaneFetches,
     hydrationDurationMs: 0,

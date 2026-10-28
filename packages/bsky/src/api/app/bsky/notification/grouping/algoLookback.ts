@@ -48,23 +48,10 @@ export const buildAlgoLookbackGroups = (
       canGroup ? undefined : item.id,
     ])
     const active = activeGroups.get(key)
-    const age = active ? Math.max(0, now - Date.parse(active.indexedAt)) : 0
-    const zone = active
-      ? (PARAMS.zones.find(
-          ({ ageMs: maxAgeMs }, index) =>
-            maxAgeMs === null ||
-            (index === 0 ? age < maxAgeMs : age <= maxAgeMs),
-        ) ?? PARAMS.zones.at(-1)!)
-      : undefined
-    const gap = active
-      ? Date.parse(active.indexedAt) - Date.parse(item.raw.indexedAt)
-      : Number.POSITIVE_INFINITY
-
     if (
       active &&
       active.itemCount < MAX_GROUP_SIZE &&
-      zone &&
-      gap <= zone.lookbackMs
+      isWithinLookback(active.items[0]!, item, now, 1)
     ) {
       active.actorDids.push(item.actorDid)
       active.itemCount++
@@ -93,4 +80,38 @@ export const buildAlgoLookbackGroups = (
   }
 
   return { groups }
+}
+
+/** Split newest-first notifications into lookback windows, without a size cap. */
+export const splitLookbackBursts = (
+  items: NotificationItem[],
+  now: number,
+  timeSpanMultiplier: number,
+): NotificationItem[][] => {
+  const groups: NotificationItem[][] = []
+  for (const item of items) {
+    const active = groups.at(-1)
+    if (active && isWithinLookback(active[0]!, item, now, timeSpanMultiplier)) {
+      active.push(item)
+    } else {
+      groups.push([item])
+    }
+  }
+  return groups
+}
+
+const isWithinLookback = (
+  newest: NotificationItem,
+  item: NotificationItem,
+  now: number,
+  timeSpanMultiplier: number,
+): boolean => {
+  const newestTime = Date.parse(newest.raw.indexedAt)
+  const age = Math.max(0, now - newestTime)
+  const zone = PARAMS.zones.find(
+    ({ ageMs: maxAgeMs }, index) =>
+      maxAgeMs === null || (index === 0 ? age < maxAgeMs : age <= maxAgeMs),
+  )!
+  const gap = newestTime - Date.parse(item.raw.indexedAt)
+  return gap <= zone.lookbackMs * timeSpanMultiplier
 }
