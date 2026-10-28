@@ -1,5 +1,5 @@
 import { mapDefined } from '@atproto/common'
-import type { DidString } from '@atproto/lex'
+import type { AtUriString, DidString } from '@atproto/lex'
 import { AtUri } from '@atproto/syntax'
 import { app } from '../../../../../lexicons/index.js'
 import {
@@ -39,13 +39,10 @@ type SpotlightCandidate = Pick<
   NotificationGroup,
   'kind' | 'groupingKey' | 'items'
 > & {
-  isEligibleAfterTrimming: (
-    spotlightItems: NotificationItem[],
-    retainedItems: NotificationItem[],
-  ) => boolean
+  requiredPosts: number
 }
 
-export function buildSpotlight(
+export const buildSpotlight = (
   items: NotificationItem[],
   groups: NotificationGroup[],
   cursor: string | undefined,
@@ -53,7 +50,7 @@ export function buildSpotlight(
   now: number,
   seenAt: number | undefined,
   splitBursts: BurstSplitter,
-): GroupingResult {
+): GroupingResult => {
   // @NOTE Try one spotlight at a time, keeping the last page where all spotlights pass validation.
   let lastGoodPage: GroupingResult = { groups, cursor }
   const itemCount = groups.reduce(
@@ -65,9 +62,12 @@ export function buildSpotlight(
   // itemCount counts notifications included in the ordinary groups, and pageItems contains the notifications on the page.
   const pageItems = items.slice(0, itemCount)
   const positions = new Map(pageItems.map((item, index) => [item, index]))
-  // @NOTE Rank each reason's strongest burst by full count, then recency, before capping spotlight size.
+  const subjectCollections = new Map<AtUriString, string>()
+
+  // @NOTE `candidates` are at most 1 candidate spotlight (the best one, with most items, then more recent) per reason.
+  // E.g.: Alice's likes, Bob's reposts, Bob's likes via reposts.
   const candidates = mapDefined(SPOTLIGHT_REASONS, (reason) =>
-    selectSpotlight(pageItems, reason, now, splitBursts),
+    selectSpotlight(pageItems, reason, now, splitBursts, subjectCollections),
   )
     .sort(
       (left, right) =>
@@ -126,7 +126,8 @@ export function buildSpotlight(
       const cutoff = positions.get(extraGroup.items[0]!)!
       retainedItems = lastGoodItems.slice(0, cutoff)
       nextCursor = pageItems[cutoff - 1]!.raw.indexedAt
-      // @NOTE Trimming every group at one raw position preserves the page prefix.
+      // @NOTE Every returned page must represent a contiguous prefix of raw notifications,
+      // regardless of how spotlights regroup them.
       for (const group of proposedGroups) {
         group.items = group.items.filter(
           (item) => positions.get(item)! < cutoff,
@@ -139,12 +140,12 @@ export function buildSpotlight(
     }
 
     const retained = new Set(retainedItems)
-    // @NOTE 3. Reject the attempt if any spotlight fails, preserving the previously accepted page and cursor.
-    const allEligible = [...acceptedSpotlights, candidate].every((spotlight) =>
-      spotlight.isEligibleAfterTrimming(
-        spotlight.items.filter((item) => retained.has(item)),
-        retainedItems,
-      ),
+    // @NOTE 3. Reject adding this spotlight if trimming leaves it or an already accepted spotlight
+    // below its minimum size; keep the previous page and cursor.
+    const allEligible = [...acceptedSpotlights, candidate].every(
+      (spotlight) =>
+        spotlight.items.filter((item) => retained.has(item)).length >=
+        spotlight.requiredPosts,
     )
     if (!allEligible) continue
 
@@ -160,12 +161,13 @@ export function buildSpotlight(
   return lastGoodPage
 }
 
-function selectSpotlight(
+const selectSpotlight = (
   items: NotificationItem[],
   reason: SpotlightReason,
   now: number,
   splitBursts: BurstSplitter,
-): SpotlightCandidate | undefined {
+  subjectCollections: Map<AtUriString, string>,
+): SpotlightCandidate | undefined => {
   const range = MULTI_POST_RANGES.find(
     ({ maxItems }) => items.length <= maxItems,
   )
@@ -173,17 +175,20 @@ function selectSpotlight(
 
   // @NOTE Eligibility uses the ordinary page's volume, including after trimming.
   const { requiredPosts } = range
-  const topItems = getTopBurst(items, reason, now, splitBursts)
+  const topItems = getTopBurst(
+    items,
+    reason,
+    now,
+    splitBursts,
+    subjectCollections,
+  )
   if (topItems.length < requiredPosts) return
   const actorDid = topItems[0]!.actorDid
   return {
     kind: SPOTLIGHT_KINDS[reason],
     groupingKey: actorDid,
     items: topItems,
-    isEligibleAfterTrimming: (spotlightItems, retainedItems) =>
-      // @NOTE Check if after trimming it still satisfies the requirements.
-      spotlightItems.length >= requiredPosts &&
-      getTopBurst(retainedItems, reason, now, splitBursts)[0] === topItems[0],
+    requiredPosts,
   }
 }
 
@@ -192,6 +197,7 @@ const getTopBurst = (
   reason: SpotlightReason,
   now: number,
   splitBursts: BurstSplitter,
+  subjectCollections: Map<AtUriString, string>,
 ): NotificationItem[] => {
   const collection =
     reason === NOTIFICATION_REASON.LIKE_VIA_REPOST ||
@@ -200,12 +206,14 @@ const getTopBurst = (
       : app.bsky.feed.post.$type
   const itemsByActor = new Map<DidString, NotificationItem[]>()
   for (const item of items) {
-    if (
-      item.raw.reason !== reason ||
-      new AtUri(item.raw.reasonSubject).collection !== collection
-    ) {
-      continue
+    if (item.raw.reason !== reason) continue
+    const subjectUri = item.raw.reasonSubject
+    let subjectCollection = subjectCollections.get(subjectUri)
+    if (subjectCollection === undefined) {
+      subjectCollection = new AtUri(subjectUri).collection
+      subjectCollections.set(subjectUri, subjectCollection)
     }
+    if (subjectCollection !== collection) continue
     const actorItems = itemsByActor.get(item.actorDid)
     if (actorItems) actorItems.push(item)
     else itemsByActor.set(item.actorDid, [item])
@@ -218,8 +226,7 @@ const getTopBurst = (
       if (
         burst.length > top.length ||
         (burst.length === top.length &&
-          Date.parse(burst[0]!.raw.indexedAt) >
-            Date.parse(top[0]!.raw.indexedAt))
+          burst[0]!.indexedTime > top[0]!.indexedTime)
       ) {
         top = burst
       }

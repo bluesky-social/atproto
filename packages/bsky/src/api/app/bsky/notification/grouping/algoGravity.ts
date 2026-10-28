@@ -1,7 +1,7 @@
 import { HOUR, MINUTE, SECOND } from '@atproto/common'
 import { NotificationFeed } from '../../../../../proto/bsky_pb.js'
 import type {
-  GroupingResult,
+  GroupBuilderFactory,
   NotificationGroup,
   NotificationItem,
 } from './grouping.js'
@@ -47,51 +47,56 @@ type CandidateGroup = {
   closed: boolean
 }
 
-export const buildAlgoGravityGroups = (
-  items: NotificationItem[],
-  limit: number,
-  now: number,
-  seenAt?: number,
+export const createAlgoGravityGroupBuilder: GroupBuilderFactory = (
+  limit,
+  now,
+  seenAt,
   feed = NotificationFeed.ALL,
-): GroupingResult => {
+) => {
   const zones = PARAMS.zones
   const chains = new Map<string, CandidateGroup[]>()
   let groupCount = 0
+  let previousItem: NotificationItem | undefined
 
-  for (const [itemIndex, item] of items.entries()) {
-    const canGroup = canGroupNotification(item.raw.reason, feed)
-    const key = JSON.stringify([
-      item.raw.reason,
-      item.groupingKey,
-      canGroup ? undefined : item.id,
-    ])
-    const candidateGroups = chains.get(key) ?? []
-    const nextCandidateGroups = extendCandidateGroups(
-      candidateGroups,
-      item,
-      now,
-      zones,
-    ).map((candidateGroup) =>
-      candidateGroup.items.length === MAX_GROUP_SIZE
-        ? { ...candidateGroup, closed: true }
-        : candidateGroup,
-    )
+  return (items) => {
+    for (const item of items) {
+      const canGroup = canGroupNotification(item.raw.reason, feed)
+      // @NOTE Null bytes cannot occur in these values, so the key is collision-safe.
+      const key = `${item.raw.reason}\0${item.groupingKey}\0${canGroup ? '' : item.id}`
+      const candidateGroups = chains.get(key) ?? []
+      const nextCandidateGroups = extendCandidateGroups(
+        candidateGroups,
+        item,
+        now,
+        zones,
+      ).map((candidateGroup) =>
+        candidateGroup.items.length === MAX_GROUP_SIZE
+          ? { ...candidateGroup, closed: true }
+          : candidateGroup,
+      )
 
-    const nextGroupCount =
-      groupCount - candidateGroups.length + nextCandidateGroups.length
-    if (nextGroupCount > limit) {
-      return {
-        groups: toGroups(chains, seenAt),
-        cursor: items[itemIndex - 1]?.raw.indexedAt,
+      const nextGroupCount =
+        groupCount - candidateGroups.length + nextCandidateGroups.length
+
+      // If that would produce more groups than we can fit in the limit,
+      // return the groups without having this item.
+      if (nextGroupCount > limit) {
+        return {
+          groups: toGroups(chains, seenAt),
+          cursor: previousItem?.raw.indexedAt,
+        }
       }
+
+      // If adding this item didn't produce a group that makes us overflow the limit,
+      // we can continue appending.
+      chains.set(key, nextCandidateGroups)
+      groupCount = nextGroupCount
+      previousItem = item
     }
 
-    chains.set(key, nextCandidateGroups)
-    groupCount = nextGroupCount
-  }
-
-  return {
-    groups: toGroups(chains, seenAt),
+    return {
+      groups: toGroups(chains, seenAt),
+    }
   }
 }
 
@@ -192,14 +197,14 @@ const createCandidateGroup = (
   attractionCoefficient = PARAMS.attractionCoefficient,
 ): CandidateGroup => {
   const newest = items[0]!
-  const age = Math.max(0, now - Date.parse(newest.raw.indexedAt))
+  const age = Math.max(0, now - newest.indexedTime)
   const zone = zones.find(
     ({ ageMs: maxAgeMs }) => maxAgeMs === null || age <= maxAgeMs,
   )!
   const candidateGroup: CandidateGroup = {
     items,
     occupiedSeconds: new Set(
-      items.map(({ raw }) => Math.floor(Date.parse(raw.indexedAt) / SECOND)),
+      items.map(({ indexedTime }) => Math.floor(indexedTime / SECOND)),
     ).size,
     zone,
     weakestAttraction: Number.POSITIVE_INFINITY,
@@ -208,9 +213,7 @@ const createCandidateGroup = (
   }
 
   for (let index = 0; index < items.length - 1; index++) {
-    const gap =
-      Date.parse(items[index]!.raw.indexedAt) -
-      Date.parse(items[index + 1]!.raw.indexedAt)
+    const gap = items[index]!.indexedTime - items[index + 1]!.indexedTime
     addBindingAttraction(
       candidateGroup,
       index,
@@ -231,8 +234,8 @@ const appendItem = (
   attractionCoefficient: number,
 ): CandidateGroup => {
   const newestBindingIndex = candidateGroup.items.length - 1
-  const previousTime = Date.parse(candidateGroup.items.at(-1)!.raw.indexedAt)
-  const itemTime = Date.parse(item.raw.indexedAt)
+  const previousTime = candidateGroup.items.at(-1)!.indexedTime
+  const itemTime = item.indexedTime
   const gap = previousTime - itemTime
   const extended: CandidateGroup = {
     ...candidateGroup,
