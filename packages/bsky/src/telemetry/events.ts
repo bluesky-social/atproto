@@ -344,29 +344,23 @@ class EventReporter {
     }
   }
 
-  /** Reports hydration wall time, including failed hydration attempts. */
-  notificationHydration({ durationMs }: { durationMs: number }) {
-    try {
-      this.#notificationHydrationDuration.record(durationMs)
-    } catch (err) {
-      diag.error('Failed to record notification_hydration:', err)
-    }
-  }
-
-  /** Reports dataplane fetches and raw-item counts once per completed page. */
+  /** Reports dataplane fetches, raw-item counts, and hydration time once per completed page. */
   groupedNotifications({
     itemsFetched,
     itemsReturned,
     dataplaneFetches,
+    hydrationDurationMs,
   }: {
     itemsFetched: number
     itemsReturned: number
     dataplaneFetches: number
+    hydrationDurationMs: number
   }) {
     try {
       this.#groupedNotificationsItemsFetched.record(itemsFetched)
       this.#groupedNotificationsItemsReturned.record(itemsReturned)
       this.#groupedNotificationsDataplaneFetches.record(dataplaneFetches)
+      this.#notificationHydrationDuration.record(hydrationDurationMs)
     } catch (err) {
       diag.error('Failed to record grouped_notifications:', err)
     }
