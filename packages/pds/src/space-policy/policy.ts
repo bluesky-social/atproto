@@ -1,4 +1,4 @@
-import type { l } from '@atproto/lex'
+import { l } from '@atproto/lex'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { com } from '../lexicons/index.js'
 
@@ -6,6 +6,16 @@ const { personalspace, memberspace, managedspace } = com.atproto
 
 /** A policy as it arrives on the wire: an open union. */
 export type LexPolicy = com.atproto.space.createSpace.$InputBody['policy']
+
+// The same union, for a policy that arrives outside of a method's input.
+const lexPolicySchema = l.typedUnion(
+  [
+    l.typedRef(() => personalspace.policy.main),
+    l.typedRef(() => memberspace.policy.main),
+    l.typedRef(() => managedspace.policy.main),
+  ],
+  false,
+)
 
 /** A policy this host implements. Every PDS must support the baseline policies. */
 export type Policy =
@@ -54,6 +64,18 @@ export function normalizePolicy(policy: LexPolicy): Policy {
     `Unsupported policy: ${policy.$type}`,
     'UnsupportedPolicy',
   )
+}
+
+/**
+ * Validate a policy that no lexicon has checked yet, such as one from a space host
+ * archive, then normalize it as {@link normalizePolicy} does.
+ */
+export function parsePolicy(value: unknown): Policy {
+  const result = lexPolicySchema.safeParse(value)
+  if (!result.success) {
+    throw new InvalidRequestError(`Invalid policy: ${result.reason.message}`)
+  }
+  return normalizePolicy(result.value)
 }
 
 function normalizeAccess(access = 'members'): 'public' | 'members' {

@@ -1,14 +1,20 @@
 import { TID } from '@atproto/common'
 import { encode } from '@atproto/lex-cbor'
-import { type Cid, parseCid } from '@atproto/lex-data'
+import { type Cid, cidForCbor, enumBlobRefs, parseCid } from '@atproto/lex-data'
 import { WriteOpAction } from '@atproto/repo'
-import { RepoCommit } from '@atproto/space'
+import {
+  RepoCommit,
+  type SpaceHostWriter,
+  type VerifiedRecord,
+} from '@atproto/space'
 import {
   type AtUriString,
+  type DidString,
   SpaceRef,
   type SpaceRefString,
 } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
+import { spaceRecordUri } from '../../repo/prepare.js'
 import { BadRecordSwapError, type PreparedWrite } from '../../repo/types.js'
 import type { Policy } from '../../space-policy/policy.js'
 import type { BlobTransactor } from '../blob/transactor.js'
@@ -159,6 +165,23 @@ export class SpaceTransactor extends SpaceReader {
     return { spaceRev, prevSpaceRev }
   }
 
+  /** Replace a space's writer set with the one exported by its previous host. */
+  async importWriters(
+    space: string,
+    writers: SpaceHostWriter[],
+  ): Promise<void> {
+    await this.db.db
+      .deleteFrom('space_writer')
+      .where('space', '=', space)
+      .execute()
+    for (const { did, rev: repoRev, data, spaceRev } of writers) {
+      await this.db.db
+        .insertInto('space_writer')
+        .values({ space, did, repoRev, data, spaceRev })
+        .execute()
+    }
+  }
+
   /**
    * Apply a batch of writes as one commit, all sharing a single `rev`. Must run in a
    * transaction. Returns null if there was nothing to write.
@@ -170,16 +193,7 @@ export class SpaceTransactor extends SpaceReader {
     this.db.assertTransaction()
     if (writes.length === 0) return null
 
-    // A write to another authority's space creates the repo without checking that
-    // the space exists. The authority's own spaces must already exist: a write must
-    // neither conjure an ungoverned space nor revive a deleted one.
-    if (SpaceRef.parse(space).spaceDid === this.did) {
-      const existing = await this.getSpace(space)
-      if (!existing || existing.deletedAt) {
-        throw new InvalidRequestError('Space not found', 'SpaceNotFound')
-      }
-    }
-    await this.ensureSpace(space)
+    await this.ensureRepo(space)
 
     const state = await this.getRepoState(space)
     const repo = RepoCommit.fromState(state?.setHash)
@@ -261,6 +275,89 @@ export class SpaceTransactor extends SpaceReader {
     }
 
     return { rev, setHash }
+  }
+
+  /**
+   * Import the account's repo from its previous host, replacing whatever this host
+   * held for it. Must run in a transaction. Like a migrated public repo, it takes a
+   * new rev here and none of its history. Its records are taken as they are,
+   * including those the PDS publishes from a space's configuration. Its blobs are
+   * uploaded afterwards, so they're associated without being checked.
+   */
+  async importRepo(
+    space: SpaceRefString,
+    records: VerifiedRecord[],
+  ): Promise<void> {
+    this.db.assertTransaction()
+    await this.ensureRepo(space)
+
+    await this.db.db
+      .deleteFrom('space_record_blob')
+      .where('recordUri', 'in', (eb) =>
+        eb.selectFrom('space_record').select('uri').where('space', '=', space),
+      )
+      .execute()
+    await this.db.db
+      .deleteFrom('space_record')
+      .where('space', '=', space)
+      .execute()
+    await this.db.db
+      .deleteFrom('space_record_oplog')
+      .where('space', '=', space)
+      .execute()
+
+    const state = await this.getRepoState(space)
+    const rev = TID.nextStr(state?.rev ?? undefined)
+    const indexedAt = new Date().toISOString()
+    const repo = new RepoCommit()
+
+    for (const { collection, rkey, cid, record } of records) {
+      const uri = spaceRecordUri(space, this.did as DidString, collection, rkey)
+      // Stored re-encoded, as any other write is. A record that wasn't canonical
+      // DRISL in the archive would no longer match its cid, nor the commit data.
+      const value = encode(record)
+      if (!cid.equals(await cidForCbor(value))) {
+        throw new InvalidRequestError(
+          `Invalid STAR: record is not canonical DRISL at ${collection}/${rkey}`,
+        )
+      }
+      await this.db.db
+        .insertInto('space_record')
+        .values({
+          uri: uri.toString(),
+          space,
+          collection,
+          rkey,
+          cid: cid.toString(),
+          value,
+          repoRev: rev,
+          indexedAt,
+        })
+        .execute()
+      for (const blob of enumBlobRefs(record, { strict: false })) {
+        await this.blob.associateSpaceBlob(blob, uri)
+      }
+      repo.add(collection, rkey, cid)
+    }
+
+    await this.db.db
+      .updateTable('space_repo')
+      .set({ setHash: repo.setHash.state(), rev })
+      .where('space', '=', space)
+      .execute()
+  }
+
+  // A write to another authority's space creates the repo without checking that
+  // the space exists. The authority's own spaces must already exist: a write must
+  // neither conjure an ungoverned space nor revive a deleted one.
+  private async ensureRepo(space: SpaceRefString): Promise<void> {
+    if (SpaceRef.parse(space).spaceDid === this.did) {
+      const existing = await this.getSpace(space)
+      if (!existing || existing.deletedAt) {
+        throw new InvalidRequestError('Space not found', 'SpaceNotFound')
+      }
+    }
+    await this.ensureSpace(space)
   }
 
   private async getRecordCid(uri: AtUriString): Promise<Cid | null> {

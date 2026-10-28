@@ -16,6 +16,7 @@ import {
 } from '../repo-commit.js'
 import { type StarPair, readStar } from '../star.js'
 import {
+  COMMIT_VERSION,
   type Commit,
   MAX_RECORD_SIZE,
   type SpaceRecord,
@@ -44,6 +45,37 @@ export type VerifiedRepo = AsyncDisposable & {
 }
 
 /**
+ * Read a serialized repo, streaming out its records, without authenticating its
+ * commit. The records are checked against the commit's data as in
+ * {@link verifyRepoStar}, but nothing vouches for the commit itself. This suits a
+ * repo host importing an account's own repo, which comes with no MAC to check.
+ */
+export const readRepoStar = async (
+  star: AsyncIterable<Uint8Array> | Iterable<Uint8Array>,
+): Promise<VerifiedRepo> => {
+  const starReader = await readStar(star, { maxValueLength: MAX_RECORD_SIZE })
+  // Note the try/catch would better be implemented with a DisposableStack, but
+  // that isn't (widely) available yet.
+  try {
+    const commit = parseMeta(starReader.meta)
+    if (commit.ver !== COMMIT_VERSION) {
+      throw new RepoVerificationError(
+        `unsupported commit version: ${commit.ver}`,
+      )
+    }
+
+    return {
+      commit,
+      records: verifyStarRecords(starReader.pairs, commit),
+      [Symbol.asyncDispose]: starReader[Symbol.asyncDispose],
+    }
+  } catch (err) {
+    await starReader[Symbol.asyncDispose]()
+    throw err
+  }
+}
+
+/**
  * Verify a serialized repo, streaming out its records.
  *
  * The commit in the archive's metadata is verified against the response's MAC
@@ -57,24 +89,12 @@ export const verifyRepoStar = async (
   star: AsyncIterable<Uint8Array> | Iterable<Uint8Array>,
   params: VerifyRepoParams,
 ): Promise<VerifiedRepo> => {
-  const starReader = await readStar(star, { maxValueLength: MAX_RECORD_SIZE })
-  // Note the try/catch would better be implemented with a DisposableStack, but
-  // that isn't (widely) available yet.
-  try {
-    const commit = parseMeta(starReader.meta)
-    if (!verifyCommit(commit, params)) {
-      throw new RepoVerificationError('commit failed verification')
-    }
-
-    return {
-      commit,
-      records: verifyStarRecords(starReader.pairs, commit),
-      [Symbol.asyncDispose]: starReader[Symbol.asyncDispose],
-    }
-  } catch (err) {
-    await starReader[Symbol.asyncDispose]()
-    throw err
+  const repo = await readRepoStar(star)
+  if (!verifyCommit(repo.commit, params)) {
+    await repo[Symbol.asyncDispose]()
+    throw new RepoVerificationError('commit failed verification')
   }
+  return repo
 }
 
 /**

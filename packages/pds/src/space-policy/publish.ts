@@ -16,6 +16,7 @@ import {
   prepareUpdate,
   spaceRecordUri,
 } from '../repo/index.js'
+import { didToRecordKey } from '../util/did-rkey.js'
 import {
   type Policy,
   areMembersPublished,
@@ -66,19 +67,12 @@ export async function prepareMemberRecordWrites(
   did: DidString,
   access?: { read: boolean; write: boolean },
 ): Promise<PreparedWrite[]> {
-  const rkey = memberRecordKey(did)
+  const rkey = didToRecordKey(did)
   if (access && areMembersPublished(policy)) {
     const record = com.atproto.memberspace.member.$build(access)
     return [await preparePut(txn, space, MEMBER_COLLECTION, rkey, record)]
   }
   return prepareDeleteIfExists(txn, space, MEMBER_COLLECTION, rkey)
-}
-
-// A record key can't contain `%`, so the percent-encoded port of a localhost
-// did:web is left unencoded: did:web:localhost%3A2583 -> did:web:localhost:2583
-// @TODO a stopgap until Lexicon has a record key format for DIDs
-function memberRecordKey(did: DidString): RecordKeyString {
-  return did.replace('%3A', ':')
 }
 
 /** Publish or withdraw the whole member list to match the policy. */
