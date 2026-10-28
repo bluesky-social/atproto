@@ -1,5 +1,11 @@
 # @atproto/api
 
+## 0.29.6
+
+### Patch Changes
+
+- [#5756](https://github.com/bluesky-social/atproto/pull/5756) [`54f54ea`](https://github.com/bluesky-social/atproto/commit/54f54ea831f37fe9f722844177f7e1bed8ae8bdc) Thanks [@gcwill70](https://github.com/gcwill70)! - Protect assigned and escalated reports from broad moderation-event and batch report closure, including owned subjects.
+
 ## 0.29.5
 
 ### Patch Changes

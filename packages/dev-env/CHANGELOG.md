@@ -1,5 +1,29 @@
 # @atproto/dev-env
 
+## 0.7.0
+
+### Minor Changes
+
+- [#5748](https://github.com/bluesky-social/atproto/pull/5748) [`87faedd`](https://github.com/bluesky-social/atproto/commit/87faeddd9cc708e520e3c9e1d2c0486e84a1b931) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Group new-post notifications across accounts in All while keeping individual posts separate in Activity.
+  
+  Add a notification grouping compute-time histogram with sub-millisecond buckets and an algorithm label.
+  
+  Track the number of dataplane notification fetches per grouped notifications response.
+  
+  Rename `notificationsV2MaxReads` to `notificationsV2MaxFetches` and `BSKY_NOTIFICATIONS_V2_MAX_READS` to `BSKY_NOTIFICATIONS_V2_MAX_FETCHES`.
+
+### Patch Changes
+
+- Updated dependencies [[`3bfd00f`](https://github.com/bluesky-social/atproto/commit/3bfd00f484dc144482c82a4ed248adc49e6be769), [`87faedd`](https://github.com/bluesky-social/atproto/commit/87faeddd9cc708e520e3c9e1d2c0486e84a1b931), [`54f54ea`](https://github.com/bluesky-social/atproto/commit/54f54ea831f37fe9f722844177f7e1bed8ae8bdc), [`6ed6fe3`](https://github.com/bluesky-social/atproto/commit/6ed6fe39dded20f1e8995042135fba83b31d7b26), [`03a76ee`](https://github.com/bluesky-social/atproto/commit/03a76ee15e4acc123dc45446fc7b6fa46ba0e64e), [`ea28612`](https://github.com/bluesky-social/atproto/commit/ea286121ab421e320bf70f7e5a5dbb82c4c8b15e), [`78b3e20`](https://github.com/bluesky-social/atproto/commit/78b3e206286a3a02ef6693f2a66b4fa234532fbd), [`1c8c3a3`](https://github.com/bluesky-social/atproto/commit/1c8c3a3a8ea27a060f38cda71172339aa1728113), [`3bfd00f`](https://github.com/bluesky-social/atproto/commit/3bfd00f484dc144482c82a4ed248adc49e6be769), [`b33e55b`](https://github.com/bluesky-social/atproto/commit/b33e55b4aa5e4b3b031a2830856300350d9ef798)]:
+  - @atproto/bsky@0.4.0
+  - @atproto/ozone@0.11.0
+  - @atproto/api@0.29.6
+  - @atproto/pds@0.5.52
+  - @atproto/bsync@0.1.6
+  - @atproto/xrpc-server@0.13.7
+  - @atproto/sync@0.4.20
+  - @atproto/lex@0.4.4
+
 ## 0.6.36
 
 ### Patch Changes
