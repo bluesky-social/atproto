@@ -1,7 +1,7 @@
 import { HOUR, MINUTE, SECOND } from '@atproto/common'
 import { NotificationFeed } from '../../../../../proto/bsky_pb.js'
 import type {
-  GroupingResult,
+  GroupBuilderFactory,
   NotificationGroup,
   NotificationItem,
 } from './grouping.js'
@@ -47,48 +47,51 @@ type CandidateGroup = {
   closed: boolean
 }
 
-export const buildAlgoGravityGroups = (
-  items: NotificationItem[],
-  limit: number,
-  now: number,
-  seenAt?: number,
+export const createAlgoGravityGroupBuilder: GroupBuilderFactory = (
+  limit,
+  now,
+  seenAt,
   feed = NotificationFeed.ALL,
-): GroupingResult => {
+) => {
   const zones = PARAMS.zones
   const chains = new Map<string, CandidateGroup[]>()
   let groupCount = 0
+  let previousItem: NotificationItem | undefined
 
-  for (const [itemIndex, item] of items.entries()) {
-    const canGroup = canGroupNotification(item.raw.reason, feed)
-    // @NOTE Null bytes cannot occur in these values, so the key is collision-safe.
-    const key = `${item.raw.reason}\0${item.groupingKey}\0${canGroup ? '' : item.id}`
-    const candidateGroups = chains.get(key) ?? []
-    const nextCandidateGroups = extendCandidateGroups(
-      candidateGroups,
-      item,
-      now,
-      zones,
-    ).map((candidateGroup) =>
-      candidateGroup.items.length === MAX_GROUP_SIZE
-        ? { ...candidateGroup, closed: true }
-        : candidateGroup,
-    )
+  return (items) => {
+    for (const item of items) {
+      const canGroup = canGroupNotification(item.raw.reason, feed)
+      // @NOTE Null bytes cannot occur in these values, so the key is collision-safe.
+      const key = `${item.raw.reason}\0${item.groupingKey}\0${canGroup ? '' : item.id}`
+      const candidateGroups = chains.get(key) ?? []
+      const nextCandidateGroups = extendCandidateGroups(
+        candidateGroups,
+        item,
+        now,
+        zones,
+      ).map((candidateGroup) =>
+        candidateGroup.items.length === MAX_GROUP_SIZE
+          ? { ...candidateGroup, closed: true }
+          : candidateGroup,
+      )
 
-    const nextGroupCount =
-      groupCount - candidateGroups.length + nextCandidateGroups.length
-    if (nextGroupCount > limit) {
-      return {
-        groups: toGroups(chains, seenAt),
-        cursor: items[itemIndex - 1]?.raw.indexedAt,
+      const nextGroupCount =
+        groupCount - candidateGroups.length + nextCandidateGroups.length
+      if (nextGroupCount > limit) {
+        return {
+          groups: toGroups(chains, seenAt),
+          cursor: previousItem?.raw.indexedAt,
+        }
       }
+
+      chains.set(key, nextCandidateGroups)
+      groupCount = nextGroupCount
+      previousItem = item
     }
 
-    chains.set(key, nextCandidateGroups)
-    groupCount = nextGroupCount
-  }
-
-  return {
-    groups: toGroups(chains, seenAt),
+    return {
+      groups: toGroups(chains, seenAt),
+    }
   }
 }
 

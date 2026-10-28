@@ -138,7 +138,8 @@ const skeleton = async (
   let dataplaneFetches = 0
   let rawLimit = ctx.cfg.notificationsV2MinRawLimit
   const algorithm = ctx.cfg.notificationsV2Algorithm
-  const { buildGroups, splitBursts } = getGroupingAlgorithm(algorithm)
+  const { createGroupBuilder, splitBursts } = getGroupingAlgorithm(algorithm)
+  const buildGroups = createGroupBuilder(params.limit, now, seenAt, feed)
 
   for (
     let fetches = 0;
@@ -154,6 +155,7 @@ const skeleton = async (
     dataplaneFetches++
     itemsFetched += response.notifications.length
 
+    const firstNewItem = items.length
     for (const notification of response.notifications) {
       const notif = parseRawNotification(notification)
       if (!notif) continue
@@ -177,7 +179,7 @@ const skeleton = async (
     }
 
     const groupingStart = performance.now()
-    const groupingResult = buildGroups(items, params.limit, now, seenAt, feed)
+    const groupingResult = buildGroups(items.slice(firstNewItem))
     events.notificationGrouping({
       algorithm,
       durationMs: performance.now() - groupingStart,

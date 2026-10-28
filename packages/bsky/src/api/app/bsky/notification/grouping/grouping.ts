@@ -1,13 +1,22 @@
 import type { AtUriString, DatetimeString, DidString } from '@atproto/lex'
 import type { NotificationsV2Algorithm } from '../../../../../config.js'
-import type { Notification } from '../../../../../proto/bsky_pb.js'
+import type {
+  Notification,
+  NotificationFeed,
+} from '../../../../../proto/bsky_pb.js'
 import {
   type AppviewNotificationReason,
   type DataplaneNotificationReason,
   NOTIFICATION_REASON,
 } from '../constants.js'
-import { buildAlgoGravityGroups, splitGravityBursts } from './algoGravity.js'
-import { buildAlgoLookbackGroups, splitLookbackBursts } from './algoLookback.js'
+import {
+  createAlgoGravityGroupBuilder,
+  splitGravityBursts,
+} from './algoGravity.js'
+import {
+  createAlgoLookbackGroupBuilder,
+  splitLookbackBursts,
+} from './algoLookback.js'
 
 // Notification reasons that require reasonSubject to be non-empty.
 // It should be the AT-URI of a record belonging to the notification recipient
@@ -95,6 +104,16 @@ export type GroupingResult = {
   cursor?: string
 }
 
+// @NOTE Feed batches newest-first and stop when a cursor is returned.
+export type GroupBuilder = (items: NotificationItem[]) => GroupingResult
+
+export type GroupBuilderFactory = (
+  limit: number,
+  now: number,
+  seenAt?: number,
+  feed?: NotificationFeed,
+) => GroupBuilder
+
 export type BurstSplitter = (
   items: NotificationItem[],
   now: number,
@@ -102,7 +121,7 @@ export type BurstSplitter = (
 ) => NotificationItem[][]
 
 type GroupingAlgorithm = {
-  buildGroups: typeof buildAlgoGravityGroups
+  createGroupBuilder: GroupBuilderFactory
   splitBursts: BurstSplitter
 }
 
@@ -164,13 +183,13 @@ export const getGroupingAlgorithm = (
   switch (algorithm) {
     case 'algoLookback':
       return {
-        buildGroups: buildAlgoLookbackGroups,
+        createGroupBuilder: createAlgoLookbackGroupBuilder,
         splitBursts: splitLookbackBursts,
       }
     case 'algoGravity':
     default:
       return {
-        buildGroups: buildAlgoGravityGroups,
+        createGroupBuilder: createAlgoGravityGroupBuilder,
         splitBursts: splitGravityBursts,
       }
   }

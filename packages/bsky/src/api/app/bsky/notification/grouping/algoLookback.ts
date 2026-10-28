@@ -1,7 +1,7 @@
 import { HOUR, MINUTE } from '@atproto/common'
 import { NotificationFeed } from '../../../../../proto/bsky_pb.js'
 import type {
-  GroupingResult,
+  GroupBuilderFactory,
   NotificationGroup,
   NotificationItem,
 } from './grouping.js'
@@ -30,53 +30,57 @@ const PARAMS: Params = {
   ],
 }
 
-export const buildAlgoLookbackGroups = (
-  items: NotificationItem[],
-  limit: number,
-  now: number,
-  seenAt?: number,
+export const createAlgoLookbackGroupBuilder: GroupBuilderFactory = (
+  limit,
+  now,
+  seenAt,
   feed = NotificationFeed.ALL,
-): GroupingResult => {
+) => {
   const groups: NotificationGroup[] = []
   const activeGroups = new Map<string, NotificationGroup>()
+  let previousItem: NotificationItem | undefined
 
-  for (const [itemIndex, item] of items.entries()) {
-    const canGroup = canGroupNotification(item.raw.reason, feed)
-    // @NOTE Null bytes cannot occur in these values, so the key is collision-safe.
-    const key = `${item.raw.reason}\0${item.groupingKey}\0${canGroup ? '' : item.id}`
-    const active = activeGroups.get(key)
-    if (
-      active &&
-      active.itemCount < MAX_GROUP_SIZE &&
-      isWithinLookback(active.items[0]!, item, now, 1)
-    ) {
-      active.actorDids.push(item.actorDid)
-      active.itemCount++
-      active.firstIndexedAt = item.raw.indexedAt
-      active.items.push(item)
-      continue
+  return (items) => {
+    for (const item of items) {
+      const canGroup = canGroupNotification(item.raw.reason, feed)
+      // @NOTE Null bytes cannot occur in these values, so the key is collision-safe.
+      const key = `${item.raw.reason}\0${item.groupingKey}\0${canGroup ? '' : item.id}`
+      const active = activeGroups.get(key)
+      if (
+        active &&
+        active.itemCount < MAX_GROUP_SIZE &&
+        isWithinLookback(active.items[0]!, item, now, 1)
+      ) {
+        active.actorDids.push(item.actorDid)
+        active.itemCount++
+        active.firstIndexedAt = item.raw.indexedAt
+        active.items.push(item)
+        previousItem = item
+        continue
+      }
+
+      if (groups.length >= limit) {
+        return { groups, cursor: previousItem?.raw.indexedAt }
+      }
+
+      const group: NotificationGroup = {
+        id: item.id,
+        kind: item.raw.reason,
+        groupingKey: item.groupingKey,
+        actorDids: [item.actorDid],
+        itemCount: 1,
+        indexedAt: item.raw.indexedAt,
+        firstIndexedAt: item.raw.indexedAt,
+        isRead: isNotificationRead(item.raw.indexedAt, seenAt),
+        items: [item],
+      }
+      groups.push(group)
+      activeGroups.set(key, group)
+      previousItem = item
     }
 
-    if (groups.length >= limit) {
-      return { groups, cursor: items[itemIndex - 1]?.raw.indexedAt }
-    }
-
-    const group: NotificationGroup = {
-      id: item.id,
-      kind: item.raw.reason,
-      groupingKey: item.groupingKey,
-      actorDids: [item.actorDid],
-      itemCount: 1,
-      indexedAt: item.raw.indexedAt,
-      firstIndexedAt: item.raw.indexedAt,
-      isRead: isNotificationRead(item.raw.indexedAt, seenAt),
-      items: [item],
-    }
-    groups.push(group)
-    activeGroups.set(key, group)
+    return { groups }
   }
-
-  return { groups }
 }
 
 /** Split newest-first notifications into lookback windows, without a size cap. */
