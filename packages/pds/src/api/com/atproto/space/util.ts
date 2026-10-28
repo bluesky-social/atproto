@@ -78,7 +78,7 @@ export async function assertSpaceHost(
   return spaceDid
 }
 
-// A simplespace space is anchored on its authority's own DID, so ownership is a
+// A space created on a PDS is anchored on its creator's own DID, so ownership is a
 // comparison against the space URI.
 export function assertSpaceOwner(
   auth: AccessOutput | OAuthOutput,
@@ -283,22 +283,19 @@ export async function processNotifyWrite(
     throw new InvalidRequestError('Repo revision is in the future', 'FutureRev')
   }
 
-  const { existing, config, recipients } = await ctx.actorStore.read(
+  const { policy, recipients } = await ctx.actorStore.read(
     ownerDid,
     async (store) => ({
-      existing: await store.space.getSpace(space),
-      config: await store.space.getSpaceConfig(space),
+      policy: await store.space.getActiveSpacePolicy(space),
       recipients: await store.space.getCredentialRecipients(space),
     }),
   )
-  if (!config || !existing || existing.deletedAt) {
-    throw new InvalidRequestError('Space not found', 'SpaceNotFound')
-  }
 
   // Apply the same user perimeter used when minting credentials. notifyWrite
   // comes from a PDS rather than an app, so there is no app attestation to check.
-  const authorized = await ctx.simpleSpaceManager.authorizeUser({
-    config,
+  const authorized = await ctx.spacePolicyManager.authorizeUser({
+    space,
+    policy,
     userDid: repo,
     access: 'write',
   })

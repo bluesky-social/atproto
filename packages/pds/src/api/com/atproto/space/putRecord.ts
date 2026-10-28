@@ -6,6 +6,7 @@ import {
   prepareUpdate,
   spaceRecordUri,
 } from '../../../../repo/index.js'
+import { assertNotPublishedRecord } from '../../../../space-policy/publish.js'
 import { fireNotifyWrite } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
@@ -38,6 +39,7 @@ export default function (server: Server, ctx: AppContext) {
       if (repo !== did) {
         throw new ForbiddenError('repo must match authenticated user')
       }
+      assertNotPublishedRecord(collection)
 
       const { commit, write } = await ctx.actorStore.transact(
         did,

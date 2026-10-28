@@ -1,0 +1,30 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.managedspace.policy",
+  "defs": {
+    "main": {
+      "type": "object",
+      "description": "Space policy that defers each user access decision to an external managing app, which the authority asks via checkUserAccess.",
+      "required": ["managingApp"],
+      "properties": {
+        "managingApp": {
+          "type": "string",
+          "description": "Service identifier of the managing app: a DID with an optional service fragment (e.g. 'did:web:example.com#forum')."
+        },
+        "allowedApps": {
+          "type": "array",
+          "description": "If set, only these apps may access the space, evaluated against the attested client_id. When omitted, any app may access the space and no client attestation is required.",
+          "items": {
+            "type": "string",
+            "description": "An OAuth client ID."
+          }
+        },
+        "publishPolicy": {
+          "type": "boolean",
+          "default": false,
+          "description": "Publish the policy to readers as a com.atproto.space.policy record in the authority's repo in the space."
+        }
+      }
+    }
+  }
+}

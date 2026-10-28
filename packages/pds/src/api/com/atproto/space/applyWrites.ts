@@ -12,6 +12,7 @@ import {
   prepareDelete,
   prepareUpdate,
 } from '../../../../repo/index.js'
+import { assertNotPublishedRecord } from '../../../../space-policy/publish.js'
 import { fireNotifyWrite } from './util.js'
 
 // Matches com.atproto.repo.applyWrites.
@@ -101,6 +102,7 @@ export default function (server: Server, ctx: AppContext) {
       )
 
       for (const write of prepared) {
+        assertNotPublishedRecord(write.uri.collectionSafe)
         auth.credentials.permissions?.assertSpaceRef(space, {
           action: write.action,
           collection: write.uri.collectionSafe,

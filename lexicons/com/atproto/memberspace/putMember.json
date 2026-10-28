@@ -1,10 +1,10 @@
 {
   "lexicon": 1,
-  "id": "com.atproto.simplespace.putMember",
+  "id": "com.atproto.memberspace.putMember",
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Add a member to a space's host-internal member list or replace their read and write access. Requires auth as the space owner.",
+      "description": "Add a member to the member list of a space governed by the memberspace policy, or replace their read and write access. Requires auth as the space owner.",
       "input": {
         "encoding": "application/json",
         "schema": {
@@ -23,11 +23,11 @@
             },
             "read": {
               "type": "boolean",
-              "description": "Whether the member may read under a member-list read policy."
+              "description": "Whether the member may read when the policy's readAccess is 'members'."
             },
             "write": {
               "type": "boolean",
-              "description": "Whether the member's writes are tracked under a member-list write policy."
+              "description": "Whether the member's writes are tracked when the policy's writeAccess is 'members'."
             }
           }
         }
@@ -38,6 +38,10 @@
         },
         {
           "name": "NotSpaceOwner"
+        },
+        {
+          "name": "PolicyMismatch",
+          "description": "The space is not governed by the memberspace policy."
         }
       ]
     }

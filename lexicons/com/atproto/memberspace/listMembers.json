@@ -1,10 +1,10 @@
 {
   "lexicon": 1,
-  "id": "com.atproto.simplespace.listMembers",
+  "id": "com.atproto.memberspace.listMembers",
   "defs": {
     "main": {
       "type": "query",
-      "description": "List the members in a space's host-internal member list and their read and write access. Must be called on the space authority's PDS. Requires OAuth with a covering read grant; a space credential is not sufficient, so members hosted elsewhere cannot enumerate the list.",
+      "description": "List the members of a space governed by the memberspace policy, and their read and write access. Must be called on the space authority's PDS. Requires OAuth with a covering read grant; a space credential is not sufficient, so members hosted elsewhere cannot enumerate the list. To make the list visible to readers, set the policy's publishMembers.",
       "parameters": {
         "type": "params",
         "required": ["space"],
@@ -48,6 +48,10 @@
       "errors": [
         {
           "name": "SpaceNotFound"
+        },
+        {
+          "name": "PolicyMismatch",
+          "description": "The space is not governed by the memberspace policy."
         }
       ]
     },

@@ -10,11 +10,11 @@ import {
 } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { BadRecordSwapError, type PreparedWrite } from '../../repo/types.js'
+import type { Policy } from '../../space-policy/policy.js'
 import type { BlobTransactor } from '../blob/transactor.js'
 import type {
   ActorDb,
-  SimplespaceConfig,
-  SimplespaceMember,
+  MemberspaceMember,
   SpaceRecordOplog,
 } from '../db/index.js'
 import { SpaceReader } from './reader.js'
@@ -48,23 +48,20 @@ export class SpaceTransactor extends SpaceReader {
       .execute()
   }
 
-  async createSpace(uri: string, config: SpaceConfig): Promise<void> {
+  async createSpace(uri: string, policy: Policy): Promise<void> {
     await this.ensureSpace(uri)
+    const policyJson = JSON.stringify(policy)
     await this.db.db
-      .insertInto('simplespace_config')
-      .values({ uri, ...config })
-      .onConflict((oc) => oc.column('uri').doUpdateSet(config))
+      .insertInto('space_policy')
+      .values({ uri, policyJson })
+      .onConflict((oc) => oc.column('uri').doUpdateSet({ policyJson }))
       .execute()
   }
 
-  async updateSpaceConfig(
-    uri: string,
-    config: Partial<SpaceConfig>,
-  ): Promise<void> {
-    if (Object.keys(config).length === 0) return
+  async updateSpacePolicy(uri: string, policy: Policy): Promise<void> {
     await this.db.db
-      .updateTable('simplespace_config')
-      .set(config)
+      .updateTable('space_policy')
+      .set({ policyJson: JSON.stringify(policy) })
       .where('uri', '=', uri)
       .execute()
   }
@@ -79,12 +76,9 @@ export class SpaceTransactor extends SpaceReader {
       .where('uri', '=', uri)
       .execute()
     await this.blob.deleteSpaceBlobs(uri)
-    await this.db.db
-      .deleteFrom('simplespace_config')
-      .where('uri', '=', uri)
-      .execute()
+    await this.db.db.deleteFrom('space_policy').where('uri', '=', uri).execute()
     for (const table of [
-      'simplespace_member',
+      'memberspace_member',
       'space_writer',
       'space_credential_recipient',
       'space_record',
@@ -100,12 +94,12 @@ export class SpaceTransactor extends SpaceReader {
     did: string,
     access: { read: boolean; write: boolean },
   ): Promise<void> {
-    const values: Pick<SimplespaceMember, 'read' | 'write'> = {
+    const values: Pick<MemberspaceMember, 'read' | 'write'> = {
       read: access.read ? 1 : 0,
       write: access.write ? 1 : 0,
     }
     await this.db.db
-      .insertInto('simplespace_member')
+      .insertInto('memberspace_member')
       .values({ space, did, ...values })
       .onConflict((oc) => oc.columns(['space', 'did']).doUpdateSet(values))
       .execute()
@@ -113,9 +107,16 @@ export class SpaceTransactor extends SpaceReader {
 
   async removeMember(space: string, did: string): Promise<void> {
     await this.db.db
-      .deleteFrom('simplespace_member')
+      .deleteFrom('memberspace_member')
       .where('space', '=', space)
       .where('did', '=', did)
+      .execute()
+  }
+
+  async removeAllMembers(space: string): Promise<void> {
+    await this.db.db
+      .deleteFrom('memberspace_member')
+      .where('space', '=', space)
       .execute()
   }
 
@@ -301,8 +302,6 @@ export class SpaceTransactor extends SpaceReader {
       .execute()
   }
 }
-
-export type SpaceConfig = Omit<SimplespaceConfig, 'uri'>
 
 export class SpaceRecordNotFoundError extends InvalidRequestError {
   constructor(collection: string, rkey: string) {

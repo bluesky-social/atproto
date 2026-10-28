@@ -1,10 +1,10 @@
 {
   "lexicon": 1,
-  "id": "com.atproto.simplespace.checkUserAccess",
+  "id": "com.atproto.managedspace.checkUserAccess",
   "defs": {
     "main": {
       "type": "query",
-      "description": "Ask a space's managing app whether to authorize a user to read or write. Served by the managingApp (not the PDS), called by the space authority when the corresponding policy is 'managing-app'. Authenticated with service auth from the authority.",
+      "description": "Ask a space's managing app whether to authorize a user to read or write. Served by the managingApp (not the PDS), called by the authority of a space governed by the managedspace policy. Authenticated with service auth from the authority.",
       "parameters": {
         "type": "params",
         "required": ["space", "user", "access"],

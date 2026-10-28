@@ -533,7 +533,7 @@ describe('space notification retries', () => {
     beforeAll(async () => {
       const sc = new SpaceClient(network)
       deletedSpace = await sc.createSpace(writer, { skey: 'deleted' })
-      await network.pds.ctx.simpleSpaceManager.deleteSpace(deletedSpace)
+      await network.pds.ctx.spacePolicyManager.deleteSpace(deletedSpace)
       syncer = await MockService.create(network, {
         serviceId: 'atproto_space_syncer',
         respond: () => ({ status: syncerStatus, body: {} }),
@@ -674,7 +674,7 @@ describe('space notification retries', () => {
         expect(syncer.calls).toHaveLength(1)
         expect(await pendingDeleted()).toEqual([])
       } finally {
-        await ctx.simpleSpaceManager.deleteSpace(deletedSpace)
+        await ctx.spacePolicyManager.deleteSpace(deletedSpace)
       }
     })
 

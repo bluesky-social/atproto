@@ -58,8 +58,8 @@ import {
 } from './read-after-write/viewer.js'
 import { getRedisClient } from './redis.js'
 import { Sequencer } from './sequencer/index.js'
-import { SimpleSpaceManager } from './simplespace/manager.js'
 import { SpaceNotifications } from './space-notifications.js'
+import { SpacePolicyManager } from './space-policy/manager.js'
 
 export type AppContextOptions = {
   actorStore: ActorStore
@@ -83,7 +83,7 @@ export type AppContextOptions = {
   proxyAgent: undici.Dispatcher
   safeFetch: Fetch
   clientAttestationVerifier: ClientAttestationVerifier
-  simpleSpaceManager: SimpleSpaceManager
+  spacePolicyManager: SpacePolicyManager
   oauthProvider?: OAuthProvider
   authVerifier: AuthVerifier
   plcRotationKey: crypto.Keypair
@@ -113,7 +113,7 @@ export class AppContext implements AsyncDisposable {
   public safeFetch: Fetch
   public clientAttestationVerifier: ClientAttestationVerifier
   public spaceNotifications: SpaceNotifications
-  public simpleSpaceManager: SimpleSpaceManager
+  public spacePolicyManager: SpacePolicyManager
   public authVerifier: AuthVerifier
   public oauthProvider?: OAuthProvider
   public plcRotationKey: crypto.Keypair
@@ -141,7 +141,7 @@ export class AppContext implements AsyncDisposable {
     this.proxyAgent = opts.proxyAgent
     this.safeFetch = opts.safeFetch
     this.clientAttestationVerifier = opts.clientAttestationVerifier
-    this.simpleSpaceManager = opts.simpleSpaceManager
+    this.spacePolicyManager = opts.spacePolicyManager
     this.authVerifier = opts.authVerifier
     this.oauthProvider = opts.oauthProvider
     this.plcRotationKey = opts.plcRotationKey
@@ -472,7 +472,7 @@ export class AppContext implements AsyncDisposable {
         })
       : undefined
 
-    const simpleSpaceManager = new SimpleSpaceManager(actorStore, idResolver)
+    const spacePolicyManager = new SpacePolicyManager(actorStore, idResolver)
 
     const scopeRefGetter = entrywayClient
       ? new ScopeReferenceGetter(entrywayClient, redisScratch)
@@ -547,7 +547,7 @@ export class AppContext implements AsyncDisposable {
       proxyAgent,
       safeFetch,
       clientAttestationVerifier,
-      simpleSpaceManager,
+      spacePolicyManager,
       authVerifier,
       oauthProvider,
       plcRotationKey,
