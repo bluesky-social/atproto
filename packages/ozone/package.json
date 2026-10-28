@@ -1,6 +1,6 @@
 {
   "name": "@atproto/ozone",
-  "version": "0.4.3",
+  "version": "0.10.10",
   "license": "MIT",
   "description": "Backend service for moderating the Bluesky network.",
   "keywords": [
@@ -49,7 +49,7 @@
     "@atproto/ws-client": "workspace:^",
     "@atproto/xrpc-server": "workspace:^",
     "@did-plc/lib": "^0.0.1",
-    "@opentelemetry/instrumentation-pg": "^0.72.0",
+    "@opentelemetry/instrumentation-pg": "^0.77.0",
     "compression": "^1.7.4",
     "cors": "^2.8.5",
     "express": "^4.17.2",
@@ -63,7 +63,7 @@
     "prom-client": "^15.1.3",
     "structured-headers": "^1.0.1",
     "uint8arrays": "^5.0.0",
-    "undici": "^8.5.0",
+    "undici": "^8.12.2",
     "ws": "^8.12.0"
   },
   "devDependencies": {
@@ -81,7 +81,12 @@
     "jest": "^30.5.2"
   },
   "scripts": {
-    "codegen:lex": "lex build --clear --indexFile --lexicons ../../lexicons",
+    "lex:build": "lex build --clear --indexFile",
+    "lex:install": "lex install",
+    "postlex:install": "pnpm run lex:build",
+    "lex:update": "lex update",
+    "postlex:update": "pnpm run lex:build",
+    "codegen:lex": "pnpm run lex:install --ci",
     "prebuild": "pnpm run '/^(codegen:.+)$/'",
     "build": "tsc --build tsconfig.build.json",
     "start": "node --enable-source-maps dist/bin.js",

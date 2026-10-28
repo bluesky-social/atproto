@@ -8,6 +8,7 @@ import {
   type Restricted,
   XrpcError,
   getMain,
+  rkeyFor,
 } from '@atproto/lex'
 
 const QUERY_KEY_PREFIX = 'lex-record'
@@ -16,7 +17,7 @@ type LexRecordKey = readonly [
   string | null,
   string,
   string | null,
-  string | null,
+  string,
 ]
 
 export function getLexRecordKey<S extends RecordSchema>(
@@ -36,17 +37,7 @@ export function getLexRecordKey<S extends RecordSchema>(
   options: GetOptions<S> = {} as GetOptions<S>,
 ): LexRecordKey {
   const schema = getMain(ns)
-
-  const rkey =
-    options.rkey ??
-    (schema.key.startsWith('literal:') ? schema.key.slice(8) : null)
-
-  if (rkey == null) {
-    throw new Error(
-      `The record schema ${schema.$type} requires an "rkey" to be specified in the options.`,
-    )
-  }
-
+  const rkey = rkeyFor(schema, options.rkey)
   return [
     QUERY_KEY_PREFIX,
     client.did ?? null,

@@ -1,6 +1,7 @@
 import assert from 'node:assert'
 import { type Client, createOp as createPlcOp } from '@did-plc/lib'
 import type { Selectable } from 'kysely'
+import { DAY } from '@atproto/common'
 import { type Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import {
   type DidString,
@@ -16,6 +17,7 @@ import {
 import type {
   Account,
   AccountStore,
+  AtIdentifierString,
   AuthenticateAccountData,
   AuthorizedClientData,
   AuthorizedClients,
@@ -56,6 +58,7 @@ import type {
   VerifyEmailConfirmInput,
   VerifyEmailRequestInput,
 } from '@atproto/oauth-provider/store'
+import { isAtIdentifierString } from '@atproto/oauth-provider/store'
 import {
   AuthRequiredError as XrpcAuthRequiredError,
   InvalidRequestError as XrpcInvalidRequestError,
@@ -251,9 +254,10 @@ export class OAuthStore
 
   async authenticateAccount({
     locale,
-    username: identifier,
+    identifier,
     password,
     emailOtp,
+    deviceAccounts,
   }: AuthenticateAccountData): Promise<Account> {
     // @TODO (?) Send an email to the user to notify them of the login attempt
     try {
@@ -263,6 +267,19 @@ export class OAuthStore
           password,
           authFactorToken: emailOtp,
           locale,
+          // Allow users that last signed in on the same device within 30 days
+          // to skip OTP.
+
+          // @NOTE that oauth-provider will require a fresh sign-in (password)
+          // after one week. This allows to improve UX by reducing the frequency
+          // of OTP prompts for trusted devices.
+
+          // @NOTE this is based on Google Workspace approach that requires a
+          // fresh sign-in (password) every week, but does not require OTP when
+          // it does.
+          allowOtpBypassFor: deviceAccounts
+            .filter((da) => Date.now() - da.updatedAt.getTime() < 30 * DAY)
+            .map((da) => da.account.did),
         })
 
       if (isSoftDeleted) {
@@ -281,7 +298,7 @@ export class OAuthStore
         // Surfacing the matched `did` as the `sub` lets the oauth-provider's
         // `onSignInFailed` hook distinguish "identifier known, credentials wrong"
         // from "identifier unknown".
-        throw new InvalidCredentialsError(err.message, err.did, err)
+        throw new InvalidCredentialsError(err.did, err)
       }
       // @NOTE The credentials were valid here — the account simply owes a
       // second factor, and `login()` has already sent the code. This is the
@@ -294,7 +311,7 @@ export class OAuthStore
         )
       }
       if (err instanceof XrpcAuthRequiredError) {
-        throw new InvalidCredentialsError(err.message, undefined, err)
+        throw new InvalidCredentialsError(null, err)
       }
       throw err
     }
@@ -308,21 +325,21 @@ export class OAuthStore
     await authorizedClientHelper.upsert(this.db, did, clientId, data)
   }
 
-  async getAccount(did: Did): Promise<{
+  async getAccount(handleOrDid: AtIdentifierString): Promise<null | {
     account: Account
     authorizedClients: AuthorizedClients
   }> {
-    const accountRow = await this.accountManager.getAccount(did, {
+    const accountRow = await this.accountManager.getAccount(handleOrDid, {
       includeDeactivated: true,
       includeTakenDown: false,
     })
 
-    assert(accountRow, 'Account not found')
+    if (!accountRow) return null
 
     const account = await this.buildAccount(accountRow)
     const authorizedClients = await authorizedClientHelper.getAuthorizedClients(
       this.db,
-      did,
+      account.did,
     )
 
     return { account, authorizedClients }
@@ -397,13 +414,21 @@ export class OAuthStore
   }
 
   async resetPasswordRequest({
-    email,
+    identifier,
     locale,
   }: ResetPasswordRequestInput): Promise<Account | null> {
-    const account = await this.accountManager.getAccountByEmail(email, {
-      includeDeactivated: true,
-      includeTakenDown: false,
-    })
+    const isEmailIdentifier = identifier.includes('@')
+    const account = isEmailIdentifier
+      ? await this.accountManager.getAccountByEmail(identifier, {
+          includeDeactivated: true,
+          includeTakenDown: false,
+        })
+      : isAtIdentifierString(identifier)
+        ? await this.accountManager.getAccount(identifier, {
+            includeDeactivated: true,
+            includeTakenDown: false,
+          })
+        : null
 
     if (!account?.email || !account?.handle) return null
 
@@ -834,7 +859,7 @@ export class OAuthStore
       password,
     )
     if (!validPass) {
-      throw new InvalidCredentialsError('Invalid did or password', did)
+      throw new InvalidCredentialsError(did)
     }
 
     await this.accountManager.assertValidEmailToken(

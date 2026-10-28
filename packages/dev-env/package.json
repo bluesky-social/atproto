@@ -1,6 +1,6 @@
 {
   "name": "@atproto/dev-env",
-  "version": "0.6.8",
+  "version": "0.6.36",
   "license": "MIT",
   "description": "Local development environment helper for atproto development",
   "keywords": [
@@ -52,7 +52,7 @@
     "http-terminator": "^3.2.0",
     "multiformats": "^13.0.0",
     "uint8arrays": "^5.0.0",
-    "undici": "^8.5.0"
+    "undici": "^8.12.2"
   },
   "devDependencies": {
     "@types/express": "^4.17.13"

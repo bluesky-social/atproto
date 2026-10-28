@@ -188,7 +188,7 @@ export type EphemeralToken = SignedJwt
 
 export type SignInInput = {
   locale: string
-  username: string
+  identifier: string
   password: string
   emailOtp?: string
   remember?: boolean
@@ -204,6 +204,7 @@ export type SignUpInput = {
   handle: string
   email: string
   password: string
+  remember?: boolean
   inviteCode?: string
   hcaptchaToken?: string
 }
@@ -214,12 +215,12 @@ export type SignUpOutput = {
 }
 
 export type SignOutInput = {
-  did: DidString | DidString[]
+  did: DidString
 }
 
 export type InitiatePasswordResetInput = {
   locale: string
-  email: string
+  identifier: string
 }
 
 export type ConfirmResetPasswordInput = {

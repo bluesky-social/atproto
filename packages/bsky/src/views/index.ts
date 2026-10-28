@@ -15,6 +15,14 @@ import {
   INVALID_HANDLE,
   normalizeDatetimeAlways,
 } from '@atproto/syntax'
+import {
+  APPVIEW_NOTIFICATION_REASON,
+  NOTIFICATION_REASON,
+} from '../api/app/bsky/notification/constants.js'
+import type {
+  NotificationGroup,
+  NotificationItem,
+} from '../api/app/bsky/notification/grouping/grouping.js'
 import type { Actor, ProfileViewerState } from '../hydration/actor.js'
 import {
   type AssociatedSiteStandardRecord,
@@ -28,7 +36,7 @@ import type { HydrationState } from '../hydration/hydrator.js'
 import type { Label } from '../hydration/label.js'
 import {
   type RecordInfo,
-  getStarterPackUriFromFollow,
+  getStarterPackUriFromNotification,
   parseString,
 } from '../hydration/util.js'
 import type { ImageUriBuilder } from '../image/uri.js'
@@ -37,8 +45,8 @@ import { viewsLogger } from '../logger.js'
 import type { Notification } from '../proto/bsky_pb.js'
 import {
   estimateReadingTimeMinutes,
-  validateStandardSiteForUrl,
-} from '../util/standard-site.js'
+  validateStandardSiteRecordsForUrl,
+} from '../util/external/standard-site.js'
 import {
   postUriToPostgateUri,
   postUriToThreadgateUri,
@@ -46,6 +54,11 @@ import {
   uriToDid,
   uriToDid as creatorFromUri,
 } from '../util/uris.js'
+import { externalRecordView as externalRecordViewBase } from './external.js'
+import {
+  MAX_PROFILE_LINKS,
+  isAllowedProfileLinkUrl,
+} from './profile-link-rules.js'
 import {
   type ThreadItemValueBlocked,
   type ThreadItemValueNoUnauthenticated,
@@ -69,6 +82,7 @@ import {
   type ExternalEmbedSourceThemeView,
   type ExternalEmbedSourceView,
   type ExternalEmbedView,
+  type ExternalRecordView,
   type FeedViewPost,
   type FollowRecord,
   type GalleryEmbed,
@@ -97,6 +111,8 @@ import {
   type PostView,
   type ProfileAssociatedActivitySubscription,
   type ProfileAssociatedChat,
+  type ProfileLinkRecord,
+  type ProfileLinkView,
   type ProfileRecord,
   type ProfileView,
   type ProfileViewBasic,
@@ -151,6 +167,12 @@ const notificationDeletedRecordCid =
 // schema-level cap is 20, but clients are expected to enforce a soft limit
 // of 10 today. The AppView trims defensively at the view boundary.
 const GALLERY_SOFT_LIMIT = 10
+
+type ProfileViewOptions = {
+  // Normally known followers inclusion is decided by its presence on the hydration state.
+  // This is an override.
+  includeKnownFollowers?: boolean
+}
 
 export class Views {
   public imgUriBuilder: ImageUriBuilder = this.opts.imgUriBuilder
@@ -303,23 +325,17 @@ export class Views {
   profileDetailed(
     did: DidString,
     state: HydrationState,
+    opts?: ProfileViewOptions,
   ): Un$Typed<ProfileViewDetailed> | undefined {
     const actor = state.actors?.get(did)
     if (!actor) return
-    const baseView = this.profile(did, state)
+    const baseView = this.profile(did, state, opts)
     if (!baseView) return
-    const knownFollowers = this.knownFollowers(did, state)
     const profileAggs = state.profileAggs?.get(did)
 
     return {
       ...baseView,
       website: this.profileWebsite(did, state),
-      viewer: baseView.viewer
-        ? {
-            ...baseView.viewer,
-            knownFollowers,
-          }
-        : undefined,
       banner: actor.profile?.banner
         ? this.imgUriBuilder.getPresetUri(
             'banner',
@@ -348,15 +364,56 @@ export class Views {
         ? this.starterPackBasic(actor.profile.joinedViaStarterPack.uri, state)
         : undefined,
       pinnedPost: safePinnedPost(actor.profile?.pinnedPost),
+      links: this.profileLinks(did, state),
     }
   }
+
+  profileLinks(
+    did: DidString,
+    state: HydrationState,
+  ): ProfileLinkView[] | undefined {
+    const refs = state.actors?.get(did)?.profile?.links
+    if (!refs?.length) return
+    const links: ProfileLinkView[] = []
+    for (const ref of refs.slice(0, MAX_PROFILE_LINKS)) {
+      // the batch may include other actors' links, so check the repo here too
+      if (uriToDid(ref.uri) !== did) continue
+      // missing when taken down, deleted, or invalid
+      const link = state.profileLinks?.get(ref.uri)
+      if (!link || !isAllowedProfileLinkUrl(link.record.url)) continue
+      links.push({
+        uri: ref.uri,
+        cid: link.cid,
+        url: link.record.url,
+        title: link.record.title,
+        icon: link.record.icon
+          ? this.imgUriBuilder.getPresetUri(
+              'avatar',
+              did,
+              getBlobCidString(link.record.icon),
+            )
+          : undefined,
+        labels: [
+          ...(state.labels?.getBySubject(ref.uri) ?? []),
+          ...this.selfLabels({
+            uri: ref.uri,
+            cid: link.cid,
+            record: link.record,
+          }),
+        ],
+      })
+    }
+    return links.length ? links : undefined
+  }
+
   profile(
     did: DidString,
     state: HydrationState,
+    opts?: ProfileViewOptions,
   ): Un$Typed<ProfileView> | undefined {
     const actor = state.actors?.get(did)
     if (!actor) return
-    const basicView = this.profileBasic(did, state)
+    const basicView = this.profileBasic(did, state, opts)
     if (!basicView) return
     return {
       ...basicView,
@@ -374,6 +431,7 @@ export class Views {
   profileBasic(
     did: DidString,
     state: HydrationState,
+    opts?: ProfileViewOptions,
   ): Un$Typed<ProfileViewBasic> | undefined {
     const actor = state.actors?.get(did)
     if (!actor) return
@@ -387,6 +445,12 @@ export class Views {
         record: actor.profile,
       }),
     ]
+    const viewer = this.profileViewer(did, state)
+    const knownFollowers =
+      viewer && (opts?.includeKnownFollowers ?? true)
+        ? this.knownFollowers(did, state)
+        : undefined
+    if (viewer && knownFollowers) viewer.knownFollowers = knownFollowers
     return {
       did,
       handle: actor.handle ?? INVALID_HANDLE,
@@ -412,7 +476,7 @@ export class Views {
             }
           : undefined,
       },
-      viewer: this.profileViewer(did, state),
+      viewer,
       labels,
       createdAt: actor.createdAt
         ? (actor.createdAt.toISOString() as DatetimeString)
@@ -435,26 +499,6 @@ export class Views {
     actor: Actor,
   ): ProfileAssociatedActivitySubscription {
     return { allowSubscriptions: actor.allowActivitySubscriptionsFrom }
-  }
-
-  profileKnownFollowers(
-    did: DidString,
-    state: HydrationState,
-  ): ProfileView | undefined {
-    const actor = state.actors?.get(did)
-    if (!actor) return
-    const baseView = this.profile(did, state)
-    if (!baseView) return
-    const knownFollowers = this.knownFollowers(did, state)
-    return {
-      ...baseView,
-      viewer: baseView.viewer
-        ? {
-            ...baseView.viewer,
-            knownFollowers,
-          }
-        : undefined,
-    }
   }
 
   profileViewer(
@@ -576,7 +620,10 @@ export class Views {
       if (this.actorIsNoHosted(subjectDid, state)) {
         return undefined
       }
-      return this.profileBasic(subjectDid, state)
+      // @NOTE Nested known-subject views must not recursively expand social proof.
+      return this.profileBasic(subjectDid, state, {
+        includeKnownFollowers: false,
+      })
     })
     return { count, [key]: subjects } as { count: number } & Record<
       Key,
@@ -872,6 +919,7 @@ export class Views {
       | ProfileRecord
       | LabelerRecord
       | VerificationRecord
+      | ProfileLinkRecord
       | NotificationRecordDeleted
   }): Label[] {
     if (!uri || !cid || !record) return []
@@ -880,7 +928,8 @@ export class Views {
     if (
       !isPostRecordType(record) &&
       !isProfileRecordType(record) &&
-      !isLabelerRecordType(record)
+      !isLabelerRecordType(record) &&
+      !app.bsky.actor.link.$isTypeOf(record)
     ) {
       return []
     }
@@ -2310,6 +2359,15 @@ export class Views {
     })
   }
 
+  /** Build a supported record modality from generic record and backlink hydration. */
+  externalRecordView(
+    uri: AtUriString,
+    state: HydrationState,
+    now = Date.now(),
+  ): $Typed<ExternalRecordView> | undefined {
+    return externalRecordViewBase(this, uri, state, now)
+  }
+
   externalEmbed(
     did: DidString,
     embed: ExternalEmbed,
@@ -2393,7 +2451,7 @@ export class Views {
   /**
    * Compose-path entry point: caller already knows which document and
    * publication backed the request and has them in hand (e.g. from
-   * iterating the SS hydration maps directly). Skips the by-ref lookup
+   * `getStandardSiteRecordsForUri`). Skips the by-ref lookup
    * that `externalEmbedFromStandardSite` does. Used by
    * `getEmbedExternalView`.
    *
@@ -2429,14 +2487,15 @@ export class Views {
     //  2. The lookups guarantee structural agreement between doc and pub
     //     — matching `site`/`uri`, no orphan doc claiming a missing
     //     publication (see `getSiteStandardRecordsFromHydrationMapsByRefs`
-    //     and `…ByDocumentUri` in `hydration/external.ts`).
-    //  3. `validateStandardSiteForUrl` below checks that the records back
-    //     the URL the embed claims (see `util/standard-site.ts`).
+    //     in `hydration/external.ts`).
+    //  3. `validateStandardSiteRecordsForUrl` below re-checks the doc/pub
+    //     relationship and that the records back the URL the embed claims
+    //     (see `util/external/standard-site.ts`).
     //
     // If any layer rejected, callers see `undefined` and fall back to the
     // bare embed rather than render partial / disagreeing enrichment.
     if (!document && !publication) return undefined
-    if (!validateStandardSiteForUrl(document, publication, assumedUrl)) {
+    if (!validateStandardSiteRecordsForUrl(document, publication, assumedUrl)) {
       viewsLogger.warn(
         {
           documentUri: document?.ref.uri,
@@ -2594,6 +2653,7 @@ export class Views {
   ): $Typed<PostEmbedView> | undefined {
     const postView = this.post(uri, state, depth)
     if (!postView) return
+    const postInfo = state.posts?.get(uri)
     return app.bsky.embed.record.viewRecord.$build({
       uri: postView.uri,
       cid: postView.cid,
@@ -2604,6 +2664,8 @@ export class Views {
       replyCount: postView.replyCount,
       repostCount: postView.repostCount,
       quoteCount: postView.quoteCount,
+      opThreadPostIndex: postInfo?.opThreadPostIndex,
+      opThreadPostCount: postInfo?.opThreadPostCount,
       indexedAt: postView.indexedAt,
       embeds: depth > 1 ? undefined : postView.embed ? [postView.embed] : [],
     })
@@ -2829,9 +2891,7 @@ export class Views {
       recordInfo = state.reposts?.get(notif.uri as AtUriString)
     } else if (uri.collection === app.bsky.graph.follow.$type) {
       recordInfo = state.follows?.get(notif.uri as AtUriString)
-      if (recordInfo) {
-        starterPackUri = getStarterPackUriFromFollow(recordInfo.record)
-      }
+      starterPackUri = getStarterPackUriFromNotification(notif.reasonSubject)
     } else if (uri.collection === app.bsky.graph.verification.$type) {
       // When a verification record is removed, the record won't be found,
       // both for the `verified` and `unverified` notifications.
@@ -2878,6 +2938,176 @@ export class Views {
       indexedAt: notif.timestamp.toDate().toISOString() as DatetimeString,
       labels: [...labels, ...selfLabels],
     }
+  }
+
+  notificationGroup(
+    group: NotificationGroup,
+    state: HydrationState,
+  ): app.bsky.notification.getGroupedNotifications.Group | undefined {
+    const newestItem = group.items[0]
+    if (!newestItem) return
+    const notif = newestItem.raw
+
+    const defs = app.bsky.notification.getGroupedNotifications
+    const followItem = (item: NotificationItem) => {
+      const notif = item.raw
+      const starterPackUri = getStarterPackUriFromNotification(
+        notif.reasonSubject,
+      )
+      return {
+        actor: item.actorDid,
+        starterPack:
+          starterPackUri &&
+          state.starterPacks?.get(starterPackUri) &&
+          state.actors?.get(creatorFromUri(starterPackUri))
+            ? starterPackUri
+            : undefined,
+      }
+    }
+    const actorItems = group.items.map((item) => ({ actor: item.actorDid }))
+    const uri = notif.uri
+    let kind: app.bsky.notification.getGroupedNotifications.Group['kind']
+
+    switch (notif.reason) {
+      case NOTIFICATION_REASON.LIKE: {
+        const subjectUri = notif.reasonSubject
+        if (
+          group.kind === APPVIEW_NOTIFICATION_REASON.MULTI_POST_LIKE &&
+          group.items.length > 1
+        ) {
+          kind = defs.multiPostLikeGroup.$build({
+            actor: newestItem.actorDid,
+            items: group.items.map((item) => ({
+              post: item.raw.reasonSubject!,
+            })),
+          })
+        } else if (
+          new AtUri(subjectUri).collection === app.bsky.feed.generator.$type
+        ) {
+          kind = defs.generatorLikeGroup.$build({
+            generator: subjectUri,
+            items: actorItems,
+          })
+        } else {
+          kind = defs.likeGroup.$build({ post: subjectUri, items: actorItems })
+        }
+        break
+      }
+      case NOTIFICATION_REASON.REPOST:
+        kind =
+          group.kind === APPVIEW_NOTIFICATION_REASON.MULTI_POST_REPOST &&
+          group.items.length > 1
+            ? defs.multiPostRepostGroup.$build({
+                actor: newestItem.actorDid,
+                items: group.items.map((item) => ({
+                  post: item.raw.reasonSubject!,
+                })),
+              })
+            : defs.repostGroup.$build({
+                post: notif.reasonSubject,
+                items: actorItems,
+              })
+        break
+      case NOTIFICATION_REASON.LIKE_VIA_REPOST:
+      case NOTIFICATION_REASON.REPOST_VIA_REPOST: {
+        if (
+          (group.kind ===
+            APPVIEW_NOTIFICATION_REASON.MULTI_POST_LIKE_VIA_REPOST ||
+            group.kind ===
+              APPVIEW_NOTIFICATION_REASON.MULTI_POST_REPOST_VIA_REPOST) &&
+          group.items.length > 1
+        ) {
+          const items = mapDefined(group.items, (item) => {
+            const viaRepost = item.raw.reasonSubject!
+            const post = state.reposts?.get(viaRepost)?.record.subject.uri
+            if (!post) return
+            return { post, viaRepost }
+          })
+          if (items.length !== group.items.length) return
+          const fields = { actor: newestItem.actorDid, items }
+          kind =
+            notif.reason === NOTIFICATION_REASON.LIKE_VIA_REPOST
+              ? defs.multiPostLikeViaRepostGroup.$build(fields)
+              : defs.multiPostRepostViaRepostGroup.$build(fields)
+          break
+        }
+        const subjectUri = notif.reasonSubject
+        const originalPostUri =
+          state.reposts?.get(subjectUri)?.record.subject.uri
+        if (!originalPostUri) return
+        const fields = {
+          post: originalPostUri,
+          viaRepost: subjectUri,
+          items: actorItems,
+        }
+        kind =
+          notif.reason === NOTIFICATION_REASON.LIKE_VIA_REPOST
+            ? defs.likeViaRepostGroup.$build(fields)
+            : defs.repostViaRepostGroup.$build(fields)
+        break
+      }
+      case NOTIFICATION_REASON.FOLLOW:
+        kind = defs.followGroup.$build({ items: group.items.map(followItem) })
+        break
+      case NOTIFICATION_REASON.FOLLOW_BACK:
+        kind = defs.followBackNotification.$build(followItem(newestItem))
+        break
+      case NOTIFICATION_REASON.SUBSCRIBED_POST:
+        kind = defs.subscribedPostGroup.$build({
+          items: group.items.map((item) => ({
+            actor: item.actorDid,
+            post: item.raw.uri,
+            parent: state.posts?.get(item.raw.uri)?.record.reply?.parent.uri,
+          })),
+        })
+        break
+      case NOTIFICATION_REASON.REPLY:
+      case NOTIFICATION_REASON.QUOTE:
+      case NOTIFICATION_REASON.MENTION: {
+        const parentUri = state.posts?.get(uri)?.record.reply?.parent.uri
+        const fields = { post: uri, parent: parentUri }
+        if (notif.reason === NOTIFICATION_REASON.REPLY) {
+          if (!parentUri) return
+          kind = defs.replyNotification.$build({ ...fields, parent: parentUri })
+        } else {
+          kind =
+            notif.reason === NOTIFICATION_REASON.QUOTE
+              ? defs.quoteNotification.$build(fields)
+              : defs.mentionNotification.$build(fields)
+        }
+        break
+      }
+      case NOTIFICATION_REASON.VERIFIED:
+        kind = defs.verifiedNotification.$build({
+          actor: newestItem.actorDid,
+        })
+        break
+      case NOTIFICATION_REASON.UNVERIFIED:
+        kind = defs.unverifiedNotification.$build({
+          actor: newestItem.actorDid,
+        })
+        break
+      case NOTIFICATION_REASON.STARTERPACK_JOINED:
+        kind = defs.starterPackJoinedNotification.$build({
+          actor: newestItem.actorDid,
+          starterPack: notif.reasonSubject,
+        })
+        break
+      case NOTIFICATION_REASON.CONTACT_MATCH:
+        kind = defs.contactMatchNotification.$build({
+          actor: newestItem.actorDid,
+        })
+        break
+      default:
+        return
+    }
+    return defs.group.$build({
+      id: group.id,
+      isRead: group.isRead,
+      indexedAt: group.indexedAt,
+      count: group.itemCount,
+      kind,
+    })
   }
 
   indexedAt({ sortedAt, indexedAt }: { sortedAt: Date; indexedAt: Date }) {

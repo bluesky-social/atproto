@@ -1,5 +1,50 @@
 # @atproto/identity
 
+## 0.5.20
+
+### Patch Changes
+
+- Updated dependencies [[`0e60f3f`](https://github.com/bluesky-social/atproto/commit/0e60f3f007cbd9812975489f0da19bf7613da831)]:
+  - @atproto-labs/fetch-node@0.4.3
+
+## 0.5.19
+
+### Patch Changes
+
+- [#5707](https://github.com/bluesky-social/atproto/pull/5707) [`8eac4b0`](https://github.com/bluesky-social/atproto/commit/8eac4b0c0e11170171a1978123078f0a0b17ddd3) Thanks [@foysalit](https://github.com/foysalit)! - Use a bounded in-memory DID cache with configurable Ozone cache limits.
+
+## 0.5.18
+
+### Patch Changes
+
+- Updated dependencies [[`fc60876`](https://github.com/bluesky-social/atproto/commit/fc60876949cca1ca28e98273ecfc97a151d3ebfc)]:
+  - @atproto-labs/fetch-node@0.4.2
+
+## 0.5.17
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto-labs/fetch-node@0.4.1
+  - @atproto/common-web@0.5.15
+
+## 0.5.16
+
+### Patch Changes
+
+- Updated dependencies [[`f8ed258`](https://github.com/bluesky-social/atproto/commit/f8ed25853dc91a16639decfaee2e0dcbb60808cd)]:
+  - @atproto/crypto@0.5.7
+  - @atproto/common-web@0.5.14
+
+## 0.5.15
+
+### Patch Changes
+
+- [#5556](https://github.com/bluesky-social/atproto/pull/5556) [`5019f55`](https://github.com/bluesky-social/atproto/commit/5019f5537317ee75ad4527db212bc27c3085fe67) Thanks [@dependabot](https://github.com/apps/dependabot)! - build(deps-dev): bump the dev-dependencies group across 1 directory with 25 updates
+- Updated dependencies [[`5019f55`](https://github.com/bluesky-social/atproto/commit/5019f5537317ee75ad4527db212bc27c3085fe67)]:
+  - @atproto/common-web@0.5.13
+  - @atproto/crypto@0.5.6
+
 ## 0.5.14
 
 ### Patch Changes

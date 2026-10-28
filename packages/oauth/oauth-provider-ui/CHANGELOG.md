@@ -1,5 +1,54 @@
 # @atproto/oauth-provider-ui
 
+## 0.11.0
+
+### Minor Changes
+
+- [#5687](https://github.com/bluesky-social/atproto/pull/5687) [`943170b`](https://github.com/bluesky-social/atproto/commit/943170bd390705fbb16920688f8f09ec7078a59b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Support resetting password based on account identifier (in addition to email). When a user attempts to reset password for an Atmosphere account hosted on another service, the user will be notified and show a link to the right service.
+
+### Patch Changes
+
+- [#5735](https://github.com/bluesky-social/atproto/pull/5735) [`b7dcaee`](https://github.com/bluesky-social/atproto/commit/b7dcaeefbb070b8182dc68b4e6b52114d6786d4e) Thanks [@abcbrookie](https://github.com/abcbrookie)! - Fix the text color of action buttons. Their custom font size class was mistaken for a text color when merging class names, which dropped the button's own color: primary buttons showed dark text in light mode, and destructive buttons lost their red text.
+
+- [#5687](https://github.com/bluesky-social/atproto/pull/5687) [`943170b`](https://github.com/bluesky-social/atproto/commit/943170bd390705fbb16920688f8f09ec7078a59b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Fix blur behavior on password field
+
+- [#5663](https://github.com/bluesky-social/atproto/pull/5663) [`dc47f7b`](https://github.com/bluesky-social/atproto/commit/dc47f7b1a2f91e2d8cf2d1dbbdaa6c443fbfdefb) Thanks [@huketo](https://github.com/huketo)! - Complete the Korean translation
+
+- [#5687](https://github.com/bluesky-social/atproto/pull/5687) [`943170b`](https://github.com/bluesky-social/atproto/commit/943170bd390705fbb16920688f8f09ec7078a59b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add a placeholder to the `EmailField` component
+
+- [#5687](https://github.com/bluesky-social/atproto/pull/5687) [`943170b`](https://github.com/bluesky-social/atproto/commit/943170bd390705fbb16920688f8f09ec7078a59b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Accept sign-in identifiers filled by password managers (bare names when a sign-in domain is configured, a leading `@`) and normalise them on submit, not only on blur.
+
+- [#5687](https://github.com/bluesky-social/atproto/pull/5687) [`943170b`](https://github.com/bluesky-social/atproto/commit/943170bd390705fbb16920688f8f09ec7078a59b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Properly type `FormShell` values (in particular, checkboxes are now properly typed as a string rather than a boolean)
+- Updated dependencies [[`943170b`](https://github.com/bluesky-social/atproto/commit/943170bd390705fbb16920688f8f09ec7078a59b)]:
+  - @atproto/oauth-provider-api@0.11.0
+
+## 0.10.7
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/oauth-provider-api@0.10.1
+
+## 0.10.6
+
+### Patch Changes
+
+- [#5629](https://github.com/bluesky-social/atproto/pull/5629) [`32f8e45`](https://github.com/bluesky-social/atproto/commit/32f8e454f199f4355574e452f660098a55365706) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Improve handling of "remember" setting during sign-in and sign-up. Keeps current "remember me" status when user did not explicitly enable/disable it (avoiding sign users out when they are presented with a UI that does not show the "remember me" option)
+- Updated dependencies [[`32f8e45`](https://github.com/bluesky-social/atproto/commit/32f8e454f199f4355574e452f660098a55365706)]:
+  - @atproto/oauth-provider-api@0.10.0
+
+## 0.10.5
+
+### Patch Changes
+
+- [#5556](https://github.com/bluesky-social/atproto/pull/5556) [`5019f55`](https://github.com/bluesky-social/atproto/commit/5019f5537317ee75ad4527db212bc27c3085fe67) Thanks [@dependabot](https://github.com/apps/dependabot)! - build(deps-dev): bump the dev-dependencies group across 1 directory with 25 updates
+
+- [#5559](https://github.com/bluesky-social/atproto/pull/5559) [`3988a49`](https://github.com/bluesky-social/atproto/commit/3988a49b4b67c35c1f5e4f07f7753244031d78e5) Thanks [@nilaallj](https://github.com/nilaallj)! - Swedish translations for email 2FA + tighter UI
+
+- [#5207](https://github.com/bluesky-social/atproto/pull/5207) [`f5f0aab`](https://github.com/bluesky-social/atproto/commit/f5f0aab4cf3046de3dddd9251a07003d29e3c0be) Thanks [@ThisIsMissEm](https://github.com/ThisIsMissEm)! - Add email-based authentication factor (2FA) for account sign-in
+- Updated dependencies [[`f5f0aab`](https://github.com/bluesky-social/atproto/commit/f5f0aab4cf3046de3dddd9251a07003d29e3c0be)]:
+  - @atproto/oauth-provider-api@0.9.0
+
 ## 0.10.4
 
 ### Patch Changes

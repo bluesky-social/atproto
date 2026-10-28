@@ -142,6 +142,16 @@ msgstr "あなたのドメインのDNS設定に次のレコードを追加して
 msgid "alice.com"
 msgstr "alice.com"
 
+#. placeholder {0}: domains?.[0] ?? '.example.com'
+#: src/components/forms/fields/handle-field.tsx
+msgid "alice{0}"
+msgstr ""
+
+#: src/components/forms/fields/email-field.tsx
+#: src/components/forms/fields/identifier-field.tsx
+msgid "alice@example.com"
+msgstr ""
+
 #: src/components/disable-email-auth-factor-dialog.tsx
 #: src/components/reset-password-view.tsx
 #: src/components/update-password-dialog.tsx
@@ -152,6 +162,10 @@ msgstr "コードをすでに持っていますか？"
 #: src/components/identity/client-name.tsx
 msgid "An application on your device"
 msgstr "デバイス上のアプリ"
+
+#: src/lib/api.ts
+msgid "An email address is required."
+msgstr ""
 
 #: src/lib/notification-message.ts
 msgid "An error occurred"
@@ -166,7 +180,7 @@ msgstr "予期しないエラーが発生しました。"
 msgid "An unknown error occurred"
 msgstr "何らかのエラーが発生しました"
 
-#: src/components/sign-in-picker.tsx
+#: src/components/utils/account-card.tsx
 msgid "Another account"
 msgstr "他のアカウント"
 
@@ -202,6 +216,10 @@ msgstr "アカウントを使用できるアプリです。使わなくなった
 #: src/components/delete-account-dialog.tsx
 msgid "Are you really, really sure?"
 msgstr "本当に、本当によろしいですか？"
+
+#: src/components/forms/fields/handle-field.tsx
+msgid "Atmosphere handle"
+msgstr ""
 
 #: src/components/authenticate-welcome-view.tsx
 msgctxt "AuthenticationPage"
@@ -476,7 +494,6 @@ msgid "Email"
 msgstr "メールアドレス"
 
 #: src/components/forms/fields/email-field.tsx
-#: src/components/reset-password-request-form.tsx
 #: src/routes/account/u/$accountId/manage.tsx
 msgid "Email address"
 msgstr "メールアドレス"
@@ -543,12 +560,8 @@ msgid "Enter the security code we sent to <0>{email}</0> to disable email two-fa
 msgstr "メールでの2要素認証を無効にするには、<0>{email}</0> に送信したセキュリティコードを入力してください。"
 
 #: src/components/reset-password-view.tsx
-msgid "Enter your account's email and we'll send you a reset code."
-msgstr "アカウントのメールアドレスを入力すると、リセットコードをお送りします。"
-
-#: src/components/reset-password-request-form.tsx
-msgid "Enter your email address"
-msgstr "メールアドレスを入力してください"
+msgid "Enter your account's identifier and we'll send you a reset code."
+msgstr ""
 
 #: src/components/forms/fields/new-password-field.tsx
 msgid "Enter your new password"
@@ -1076,7 +1089,7 @@ msgstr "セキュリティステップが必要です"
 msgid "Select another account"
 msgstr "別のアカウントを選択"
 
-#: src/components/forms/fields/handle-field.tsx
+#: src/components/forms/fields/new-handle-field.tsx
 msgid "Select domain"
 msgstr "ドメインを選択"
 
@@ -1191,6 +1204,11 @@ msgstr "利用規約"
 #: src/components/utils/link-title.tsx
 msgid "Terms of Service"
 msgstr "利用規約"
+
+#. placeholder {0}: this.payload.identifier
+#: src/lib/api.ts
+msgid "The account \"{0}\" is hosted elsewhere."
+msgstr ""
 
 #: src/components/utils/scope-description.tsx
 msgid "The application is asking for full control over your network identity, meaning that it could <0>permanently break</0>, or even <1>steal</1>, your account. Only grant this permission to applications you really trust."
@@ -1327,7 +1345,7 @@ msgstr "タイプ"
 msgid "Type your domain"
 msgstr "ドメイン名を入力"
 
-#: src/components/forms/fields/handle-field.tsx
+#: src/components/forms/fields/new-handle-field.tsx
 msgid "Type your username"
 msgstr "ユーザー名を入力"
 
@@ -1368,7 +1386,7 @@ msgstr "ファイルのアップロード"
 msgid "URL"
 msgstr "URL"
 
-#: src/components/forms/fields/handle-field.tsx
+#: src/components/forms/fields/new-handle-field.tsx
 msgid "Use {minLength}–{maxLength, plural, one {# letter, number or hyphen} other {# letters, numbers or hyphens}}"
 msgstr "{minLength}～{maxLength, plural, other {#文字、英数字またはハイフン}}を使用"
 
@@ -1380,15 +1398,16 @@ msgstr "デフォルトのユーザー名を使用"
 msgid "Use a domain name I own"
 msgstr "自分が所有するドメイン名を使用"
 
+#: src/components/forms/fields/handle-field.tsx
 #: src/routes/account/u/$accountId/manage.tsx
 msgid "Username"
 msgstr "ユーザー名"
 
-#: src/components/sign-in-form.tsx
+#: src/components/forms/fields/identifier-field.tsx
 msgid "Username or Email"
 msgstr "ユーザー名またはメールアドレス"
 
-#: src/components/sign-in-form.tsx
+#: src/components/forms/fields/identifier-field.tsx
 msgid "Username or email address"
 msgstr "ユーザー名またはメールアドレス"
 
@@ -1443,6 +1462,11 @@ msgstr "あなたが人間であることを確認"
 #: src/components/verify-email-dialog.tsx
 msgid "Verify your email"
 msgstr "メールアドレスを確認"
+
+#. placeholder {0}: error.issuer
+#: src/components/reset-password-request-form.tsx
+msgid "Visit <0>{0}</0> to manage this account."
+msgstr ""
 
 #: src/components/consent-form.tsx
 msgid "wants to access your account"
@@ -1530,6 +1554,11 @@ msgstr "新しいパスワードでサインインできるようになりまし
 msgid "You will no longer be prompted for a code to sign in."
 msgstr "サインインする際にコードの入力が求められなくなります。"
 
+#. placeholder {0}: domains[0]
+#: src/components/forms/fields/identifier-field.tsx
+msgid "you{0}"
+msgstr ""
+
 #: src/components/sign-up-view.tsx
 msgid "Your account"
 msgstr "あなたのアカウント"
@@ -1577,7 +1606,7 @@ msgid "Your email address has been verified."
 msgstr "メールアドレスが確認されました。"
 
 #. placeholder {0}: segment ? ( <span className="text-foreground block font-medium break-all"> @{segment} {domain} </span> ) : ( <span className="block break-all"> @{exampleSegment} {domain} </span> )
-#: src/components/forms/fields/handle-field.tsx
+#: src/components/forms/fields/new-handle-field.tsx
 msgid "Your full username will be: {0}"
 msgstr "あなたのフルユーザー名： {0}"
 
@@ -1601,7 +1630,6 @@ msgstr "セッションの有効期限が切れました。もう一度サイン
 msgid "Your username has been updated."
 msgstr "ユーザー名が更新されました。"
 
-#: src/components/forms/fields/handle-field.tsx
-#: src/components/sign-in-form.tsx
+#: src/components/forms/fields/new-handle-field.tsx
 msgid "yourname"
 msgstr "あなたの名前"

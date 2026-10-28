@@ -11,11 +11,7 @@ import { com } from '../../../../lexicons/index.js'
 export default function (server: Server, ctx: AppContext) {
   const { entrywayClient } = ctx
 
-  const rateLimit: MethodRateLimit<
-    void,
-    com.atproto.server.resetPassword.$Params,
-    com.atproto.server.resetPassword.$Input
-  > = [
+  const rateLimit: MethodRateLimit = [
     {
       durationMs: 5 * MINUTE,
       points: 50,

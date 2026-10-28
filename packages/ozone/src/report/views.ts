@@ -202,6 +202,14 @@ export function buildReportView(
         }
       : undefined
 
+  const resolutionTimeMs = report.closedAt
+    ? Date.parse(report.closedAt) - Date.parse(report.createdAt)
+    : undefined
+  const hasResolutionTime =
+    resolutionTimeMs !== undefined &&
+    Number.isFinite(resolutionTimeMs) &&
+    resolutionTimeMs >= 0
+
   return {
     id: report.id,
     eventId: report.eventId,
@@ -223,6 +231,16 @@ export function buildReportView(
       status: subjectStatus,
     },
     reportType,
+    priorityLevel: report.priorityLevel ?? undefined,
+    priorityScore: report.priorityScore ?? undefined,
+    priorityTargetMinutes: report.priorityTargetMinutes ?? undefined,
+    resolutionTimeSec: hasResolutionTime
+      ? Math.floor(resolutionTimeMs / 1000)
+      : undefined,
+    priorityTargetMet:
+      hasResolutionTime && report.priorityTargetMinutes !== null
+        ? resolutionTimeMs <= report.priorityTargetMinutes * 60_000
+        : undefined,
     reportedBy: report.reportedBy,
     reporter: {
       type: 'account' as const,
@@ -258,13 +276,38 @@ export function buildReportView(
 export function viewQueueStats(
   row?: Selectable<ReportStat>,
 ): tools.ozone.queue.defs.QueueStats {
+  const closureTargetMetCount = row?.closureTargetMetCount ?? undefined
+  const closureTargetMissedCount = row?.closureTargetMissedCount ?? undefined
+  const sampleCount =
+    closureTargetMetCount !== undefined &&
+    closureTargetMissedCount !== undefined
+      ? closureTargetMetCount + closureTargetMissedCount
+      : 0
+
   return {
+    closureTargetMetCount,
+    closureTargetMissedCount,
+    closureTargetOverdueCount: row?.closureTargetOverdueCount ?? undefined,
+    closureTargetMetRate:
+      sampleCount > 0 && closureTargetMetCount !== undefined
+        ? Math.round((closureTargetMetCount / sampleCount) * 100)
+        : undefined,
     pendingCount: row?.pendingCount ?? undefined,
+    closedCount: row?.closedCount ?? undefined,
     actionedCount: row?.actionedCount ?? undefined,
+    acknowledgedCount: row?.acknowledgedCount ?? undefined,
     escalatedCount: row?.escalatedCount ?? undefined,
     inboundCount: row?.inboundCount ?? undefined,
+    labelActionCount: row?.labelActionCount ?? undefined,
+    tagActionCount: row?.tagActionCount ?? undefined,
+    takedownActionCount: row?.takedownActionCount ?? undefined,
+    ahtDurationSec: row?.ahtDurationSec ?? undefined,
+    ahtSampleCount: row?.ahtSampleCount ?? undefined,
+    resolutionDurationSec: row?.resolutionDurationSec ?? undefined,
+    resolutionSampleCount: row?.resolutionSampleCount ?? undefined,
     actionRate: row?.actionRate ?? undefined,
     avgHandlingTimeSec: row?.avgHandlingTimeSec ?? undefined,
+    avgResolutionTimeSec: row?.avgResolutionTimeSec ?? undefined,
     lastUpdated: row?.computedAt,
   }
 }
@@ -272,7 +315,22 @@ export function viewQueueStats(
 export function viewLiveStats(
   row?: Selectable<ReportStat>,
 ): tools.ozone.report.defs.LiveStats {
+  const closureTargetMetCount = row?.closureTargetMetCount ?? undefined
+  const closureTargetMissedCount = row?.closureTargetMissedCount ?? undefined
+  const sampleCount =
+    closureTargetMetCount !== undefined &&
+    closureTargetMissedCount !== undefined
+      ? closureTargetMetCount + closureTargetMissedCount
+      : 0
+
   return {
+    closureTargetMetCount,
+    closureTargetMissedCount,
+    closureTargetOverdueCount: row?.closureTargetOverdueCount ?? undefined,
+    closureTargetMetRate:
+      sampleCount > 0 && closureTargetMetCount !== undefined
+        ? Math.round((closureTargetMetCount / sampleCount) * 100)
+        : undefined,
     pendingCount: row?.pendingCount ?? undefined,
     closedCount: row?.closedCount ?? undefined,
     actionedCount: row?.actionedCount ?? undefined,
@@ -296,7 +354,22 @@ export function viewLiveStats(
 export function viewHistoricalStats(
   row: Selectable<ReportStat>,
 ): tools.ozone.report.defs.HistoricalStats {
+  const closureTargetMetCount = row.closureTargetMetCount ?? undefined
+  const closureTargetMissedCount = row.closureTargetMissedCount ?? undefined
+  const sampleCount =
+    closureTargetMetCount !== undefined &&
+    closureTargetMissedCount !== undefined
+      ? closureTargetMetCount + closureTargetMissedCount
+      : 0
+
   return {
+    closureTargetMetCount,
+    closureTargetMissedCount,
+    closureTargetOverdueCount: row.closureTargetOverdueCount ?? undefined,
+    closureTargetMetRate:
+      sampleCount > 0 && closureTargetMetCount !== undefined
+        ? Math.round((closureTargetMetCount / sampleCount) * 100)
+        : undefined,
     date: row.date,
     computedAt: row.computedAt,
     pendingCount: row.pendingCount ?? undefined,

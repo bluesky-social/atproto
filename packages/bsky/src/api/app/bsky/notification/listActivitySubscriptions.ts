@@ -80,11 +80,9 @@ const hydration = async (
 ) => {
   const { ctx, params, skeleton } = input
   const { dids } = skeleton
-  const state = await ctx.hydrator.hydrateProfilesDetailed(
-    dids,
-    params.hydrateCtx,
-  )
-  return state
+  return ctx.hydrator.hydrateProfiles(dids, params.hydrateCtx, {
+    activitySubscriptions: true,
+  })
 }
 
 const noBlocks = (input: RulesFnInput<Context, Params, SkeletonState>) => {

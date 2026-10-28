@@ -17,9 +17,15 @@ import { tools } from '../lexicons/index.js'
 import type { AppealView } from '../lexicons/tools/ozone/inbox/defs.js'
 import type { ModSubject } from '../mod-service/subject.js'
 import type { ModerationSubjectStatusRow } from '../mod-service/types.js'
-import { findMatchingQueue } from '../queue/service.js'
+import { findMatchingQueue, getQueueRoutingNote } from '../queue/service.js'
+import {
+  type AppealOutcome,
+  appealActivityOutcome,
+  appealReportSelection,
+  appealResolutionFilter,
+} from './appeal-outcome.js'
 
-export const APPEAL_REASON_TYPE = 'tools.ozone.report.defs#reasonAppeal'
+export const APPEAL_REASON_TYPE = tools.ozone.report.defs.ReasonAppeal
 export const TAKEDOWN = 'tools.ozone.moderation.defs#modEventTakedown'
 export const REVERSE_TAKEDOWN =
   'tools.ozone.moderation.defs#modEventReverseTakedown'
@@ -38,14 +44,24 @@ export type AppealReport = {
   id: number
   status: string
   createdAt: DatetimeString
+  updatedAt: DatetimeString
   closedAt: DatetimeString | null
+  outcome?: AppealOutcome | null
+}
+
+export type AppealEligibility = {
+  hasActiveAppeal: boolean
+  lastClosedAt: DatetimeString | null
+  hasUnknownClosure: boolean
 }
 
 export type AppealInput = {
   subject: ModSubject
-  status: ModerationSubjectStatusRow | null
+  status: Pick<ModerationSubjectStatusRow, 'appealed' | 'lastAppealedAt'> | null
   report: AppealReport | null
-  publicNote: string | null
+  /** Eligibility retains older appeals even when their history is hidden. */
+  eligibilityReport?: AppealReport | null
+  eligibility?: AppealEligibility
 
   /** Calendar months an action stays appealable, from `InboxConfig`. */
   windowMonths: number
@@ -68,8 +84,36 @@ export const PUBLIC_EVENT_ACTIONS = [
 
 export const APPEALABLE_EVENT_ACTIONS = [TAKEDOWN, LABEL] as const
 
-export const isAppealableEvent = (action: string): boolean =>
-  (APPEALABLE_EVENT_ACTIONS as readonly string[]).includes(action)
+export const isAppealableEvent = (event: {
+  action: string
+  createLabelVals: string | null
+}): boolean =>
+  event.action === TAKEDOWN ||
+  (event.action === LABEL && !!event.createLabelVals?.trim())
+
+export function hasKnownLatestAppealable(
+  latest: DatetimeString | null,
+  events: readonly {
+    createdAt: DatetimeString
+    action: string
+    createLabelVals: string | null
+  }[],
+): boolean {
+  return (
+    !latest ||
+    events.some(
+      (event) => event.createdAt === latest && isAppealableEvent(event),
+    )
+  )
+}
+
+// @NOTE Use the same predicate for history aggregates and submission checks.
+export const appealableEventFilter = sql<boolean>`(action = ${sql.lit(TAKEDOWN)} OR
+  (action = ${sql.lit(LABEL)} AND nullif(btrim("createLabelVals"), '') IS NOT NULL))`
+
+export const appealReportTypeFilter = sql<boolean>`"reportType" = ${sql.lit(APPEAL_REASON_TYPE)}`
+
+export const appealReportOrder = sql<number>`CASE WHEN status <> 'closed' THEN 0 ELSE 1 END`
 
 export const appealWindowEnd = (
   actionCreatedAt: DatetimeString,
@@ -93,10 +137,10 @@ export const isAppealWindowOpen = (
  * Appeal state, derived entirely from data Ozone already records.
  */
 export const toAppealState = ({
-  subject,
   status,
   report,
-  publicNote,
+  eligibilityReport = report,
+  eligibility = eligibilityFromReport(eligibilityReport),
   latestAppealableAt,
   windowMonths,
 }: AppealInput): AppealState => {
@@ -106,12 +150,10 @@ export const toAppealState = ({
   const windowOpen = !!appealableUntil && new Date(appealableUntil) > new Date()
 
   let state: AppealView['state']
-  if (status?.appealed) {
-    state = 'pending'
-  } else if (report) {
-    // Cleared without the appeal being worked - a takedown or an automatic
-    // resolution reset the flag - rather than actually reviewed.
-    state = report.closedAt ? 'resolved' : 'superseded'
+  if (report) {
+    // @NOTE Report activities do not maintain the subject's appealed flag.
+    // Use the same source of truth as the appeal submission guard.
+    state = report.status === 'closed' ? 'resolved' : 'pending'
   } else {
     state = appealableUntil && !windowOpen ? 'expired' : 'none'
   }
@@ -119,13 +161,16 @@ export const toAppealState = ({
   const view: AppealView = { state }
   if (report) {
     view.appealedAt = status?.lastAppealedAt ?? report.createdAt
-    if (report.closedAt) view.resolvedAt = report.closedAt
+    if (state === 'resolved' && report.closedAt)
+      view.resolvedAt = report.closedAt
+    if (state === 'resolved' && report.outcome) view.outcome = report.outcome
   }
-  if (state === 'resolved' && publicNote) view.note = publicNote
   if (appealableUntil) view.appealableUntil = appealableUntil
 
   const availableActions =
-    windowOpen && !appealsExhausted(subject, report) ? ['appeal'] : []
+    windowOpen && !appealsExhausted(eligibility, latestAppealableAt)
+      ? ['appeal']
+      : []
 
   return { view, availableActions }
 }
@@ -211,6 +256,7 @@ export const eventSubjectFilter = (
     return eb.and([
       eb('subjectDid', '=', subjectDid),
       eb('subjectUri', '=', subjectUri),
+      eb('subjectType', '=', subjectType),
     ])
   }
   return eb.and([
@@ -228,6 +274,9 @@ export const findAppealedEvent = async (
     .selectFrom('moderation_event')
     .where((eb) => eventSubjectFilter(eb, subject))
     .where('action', '=', action.type === 'label' ? LABEL : TAKEDOWN)
+    .$if(ctx.cfg.inbox.startAt !== undefined, (qb) =>
+      qb.where('createdAt', '>=', ctx.cfg.inbox.startAt!),
+    )
 
   if (action.type === 'label') {
     query = query.where(
@@ -235,12 +284,13 @@ export const findAppealedEvent = async (
     )
   }
 
-  const matches = await query
+  const match = await query
+    .orderBy('createdAt', 'desc')
     .orderBy('id', 'desc')
-    .limit(2)
+    .limit(1)
     .selectAll()
-    .execute()
-  return matches.length === 1 ? matches[0] : undefined
+    .executeTakeFirst()
+  return match
 }
 
 export const resolveAppealAction = async (
@@ -273,37 +323,124 @@ export const subjectLabelUri = (subject: ModSubject): UriString =>
   (subject.info().subjectUri ?? subject.did) as UriString
 
 /**
- * Whether the subject has used up its appeals.
- *
- * Non-account subjects get one ever, closed or not. An account gets one at a
- * time - and an appeal whose report is still open counts even when the
- * `appealed` flag was cleared out from under it, which is what happens when a
- * takedown supersedes an appeal nobody ever worked.
- *
- * The read path calls this to decide whether to offer `appeal`, and the write
- * path calls it to decide whether to accept one. They have to be the same
- * question: anything else advertises an appeal that submission will refuse.
+ * Whether the subject's appeal history blocks this action.
  */
-export const appealsExhausted = (
-  subject: ModSubject,
+export const eligibilityFromReport = (
   report: AppealReport | null,
-): boolean => {
-  if (!report) return false
-  return subject.isRepo() ? report.status !== 'closed' : true
-}
+): AppealEligibility => ({
+  hasActiveAppeal: !!report && report.status !== 'closed',
+  lastClosedAt: report?.status === 'closed' ? report.closedAt : null,
+  hasUnknownClosure: !!report && report.status === 'closed' && !report.closedAt,
+})
 
-export const findLatestAppealReport = async (
+export const appealsExhausted = (
+  eligibility: AppealEligibility,
+  actionAt: DatetimeString | null,
+): boolean =>
+  eligibility.hasActiveAppeal ||
+  eligibility.hasUnknownClosure ||
+  (!!eligibility.lastClosedAt &&
+    (!actionAt || actionAt <= eligibility.lastClosedAt))
+
+export const findAppealCandidates = async (
   db: Database,
   subject: ModSubject,
+): Promise<{
+  activeId: number | null
+  closedId: number | null
+  closedAt: DatetimeString | null
+}> => {
+  const query = db.db
+    .selectFrom('report')
+    .where(appealReportTypeFilter)
+    .where((eb) => reportSubjectFilter(eb, subject))
+  const [active, closed] = await Promise.all([
+    query
+      .where(sql<boolean>`status <> 'closed'`)
+      .select('id')
+      .orderBy('id', 'desc')
+      .limit(1)
+      .executeTakeFirst(),
+    query
+      .where(sql<boolean>`status = 'closed'`)
+      .select(['id', 'closedAt'])
+      .orderBy(sql`"closedAt" DESC NULLS FIRST`)
+      .orderBy('id', 'desc')
+      .limit(1)
+      .executeTakeFirst(),
+  ])
+  return {
+    activeId: active?.id ?? null,
+    closedId: closed?.id ?? null,
+    closedAt: closed?.closedAt ?? null,
+  }
+}
+
+export const eligibilityFromCandidates = (candidates: {
+  activeId: number | null
+  closedId: number | null
+  closedAt: DatetimeString | null
+}): AppealEligibility => ({
+  hasActiveAppeal: candidates.activeId !== null,
+  lastClosedAt: candidates.closedAt,
+  hasUnknownClosure:
+    candidates.closedId !== null && candidates.closedAt === null,
+})
+
+export const findAppealEligibility = async (
+  db: Database,
+  subject: ModSubject,
+): Promise<AppealEligibility> =>
+  eligibilityFromCandidates(await findAppealCandidates(db, subject))
+
+const findAppealReport = async (
+  db: Database,
+  reportId: number,
 ): Promise<AppealReport | null> => {
   const report = await db.db
-    .selectFrom('report')
-    .where('reportType', '=', APPEAL_REASON_TYPE)
-    .where((eb) => reportSubjectFilter(eb, subject))
-    .orderBy('id', 'desc')
-    .select(['id', 'status', 'createdAt', 'closedAt'])
+    .selectFrom(
+      db.db
+        .selectFrom('report')
+        .where('id', '=', reportId)
+        .select(appealReportSelection)
+        .as('report'),
+    )
+    .leftJoinLateral(
+      (eb) =>
+        eb
+          .selectFrom('report_activity')
+          .where('report.status', '=', 'closed')
+          .whereRef('reportId', '=', 'report.id')
+          .where('activityType', '=', 'closeActivity')
+          .whereRef('createdAt', '=', 'report.closedAt')
+          .orderBy('id', 'desc')
+          .limit(1)
+          .select(['id', 'activityType', 'meta'])
+          .as('closure'),
+      (join) => join.onTrue(),
+    )
+    .leftJoin('moderation_event as resolution', (join) =>
+      join.on(appealResolutionFilter('report', 'closure')),
+    )
+    .select([
+      'report.id',
+      'report.status',
+      'report.createdAt',
+      'report.updatedAt',
+      'report.closedAt',
+    ])
+    .select(appealActivityOutcome('report', 'closure').as('outcome'))
     .executeTakeFirst()
   return report ?? null
+}
+
+export const findAppealHistory = async (db: Database, subject: ModSubject) => {
+  const candidates = await findAppealCandidates(db, subject)
+  const reportId = candidates.activeId ?? candidates.closedId
+  return {
+    eligibility: eligibilityFromCandidates(candidates),
+    report: reportId === null ? null : await findAppealReport(db, reportId),
+  }
 }
 
 /**
@@ -315,31 +452,69 @@ export const findLatestAppealReport = async (
 export const assertAppealAllowed = async (
   dbTxn: Database,
   subject: ModSubject,
+  options: {
+    actionAt?: DatetimeString
+    unresolvedAction?: boolean
+    startAt?: DatetimeString
+    windowMonths: number
+  },
 ) => {
   dbTxn.assertTransaction()
   await sql`select pg_advisory_xact_lock(
     hashtextextended(${subjectKey(subject)}, 0)
   )`.execute(dbTxn.db)
 
-  const existing = await findLatestAppealReport(dbTxn, subject)
+  const eligibility = await findAppealEligibility(dbTxn, subject)
+  if (
+    options.unresolvedAction &&
+    (eligibility.hasActiveAppeal ||
+      eligibility.hasUnknownClosure ||
+      eligibility.lastClosedAt)
+  ) {
+    throw new ForbiddenError('Moderation action not found', 'AlreadyAppealed')
+  }
+  let actionAt = options.actionAt ?? null
+  if (!actionAt && eligibility.lastClosedAt && !eligibility.hasActiveAppeal) {
+    const latest = await dbTxn.db
+      .selectFrom('moderation_event')
+      .where((eb) => eventSubjectFilter(eb, subject))
+      .where('action', 'in', [...PUBLIC_EVENT_ACTIONS])
+      .where(appealableEventFilter)
+      .where('createdAt', '>', eligibility.lastClosedAt)
+      .$if(options.startAt !== undefined, (qb) =>
+        qb.where('createdAt', '>=', options.startAt!),
+      )
+      .orderBy('createdAt', 'desc')
+      .orderBy('id', 'desc')
+      .select('createdAt')
+      .limit(1)
+      .executeTakeFirst()
+    actionAt = latest?.createdAt ?? null
+    if (actionAt && !isAppealWindowOpen(actionAt, options.windowMonths)) {
+      actionAt = null
+    }
+  }
 
-  if (appealsExhausted(subject, existing)) {
+  if (appealsExhausted(eligibility, actionAt)) {
     throw new ForbiddenError(
-      subject.isRepo()
+      eligibility.hasActiveAppeal
         ? 'Awaiting decision on previous appeal'
-        : 'This has already been appealed',
+        : 'No new appealable action since the previous appeal',
       'AlreadyAppealed',
     )
   }
 }
 
 export type FileAppealInput = {
-  /** DID of the authenticated account filing the appeal. */
+  /** DID of the affected account, shown as the appeal reporter. */
   requester: DidString
+  /** Moderator filing on the affected account's behalf, when applicable. */
+  submittedBy?: DidString
   /** The subject being appealed, already resolved and authorized. */
   subject: ModSubject
   /** Resolved moderation event ID, when one could be found. */
   resolvedActionId?: number
+  resolvedActionAt?: DatetimeString
   /** The action reference supplied by the caller. */
   action?: tools.ozone.inbox.appealActionedSubject.$InputBody['action']
   /** Optional: an appeal is a request for review, not an argued case. */
@@ -396,16 +571,18 @@ const findSourceQueueIds = async (
  * resolved, but only when every candidate agrees - bulk and collateral actions
  * can link one event to reports sitting in different queues, and guessing
  * between them is worse than using normal appeal routing. An unlinked or
- * ambiguously linked appeal falls back to whatever queue accepts appeals.
+ * ambiguously linked appeal tries label mappings, then the ordinary queue
+ * criteria, including account tags and report types.
  *
  * This is a read of best-effort routing data, so it deliberately runs outside
  * the appeal transaction: holding the subject lock across a queue listing and
  * a report scan would serialize unrelated appeals for no consistency gain, and
- * if the routing data moves underneath us the router reassigns anyway.
+ * tag changes do not need to be synchronized with appeal creation.
  */
 const selectQueue = async (
   ctx: AppContext,
   subject: ModSubject,
+  requester: DidString,
   resolvedActionId: number | undefined,
   action: FileAppealInput['action'],
 ) => {
@@ -423,25 +600,41 @@ const selectQueue = async (
     allSourcesAssigned && sourceQueues.size === 1
       ? (sourceQueueIds[0] as number)
       : null
-  const queueService = ctx.queueService(ctx.db)
+  let routingNote: string | undefined
   if (
     queueId === null &&
     action &&
     tools.ozone.inbox.appealActionedSubject.labelRef.$isTypeOf(action)
   ) {
-    queueId = (await queueService.getByRecommendedLabel(action.val))?.id ?? null
+    queueId =
+      (await ctx.queueService(ctx.db).getByRecommendedLabel(action.val))?.id ??
+      null
   }
   if (queueId === null) {
+    const queueService = ctx.queueService(ctx.db)
     const { queues } = await queueService.list({ limit: 1000, enabled: true })
+    const accountTags = await queueService.loadAccountTags(queues, [
+      requester,
+      subject.did,
+    ])
     const subjectUri = subject.info().subjectUri
     const collection = subjectUri ? new AtUri(subjectUri).collection : null
-    queueId =
-      findMatchingQueue(
-        queues,
-        subject.isRecord() ? 'record' : 'account',
-        collection,
-        APPEAL_REASON_TYPE,
-      )?.id ?? -1
+    const matched = findMatchingQueue(
+      queues,
+      subject.isRecord() ? 'record' : 'account',
+      collection,
+      APPEAL_REASON_TYPE,
+      accountTags.get(requester) ?? [],
+      accountTags.get(subject.did) ?? [],
+    )
+    queueId = matched?.id ?? -1
+    if (matched) {
+      routingNote = getQueueRoutingNote(
+        matched,
+        accountTags.get(requester) ?? [],
+        accountTags.get(subject.did) ?? [],
+      )
+    }
   }
 
   // An unrouted report carries no queue timestamp: `queuedAt` records when a
@@ -450,6 +643,7 @@ const selectQueue = async (
   return {
     queueId,
     queuedAt: queueId > 0 ? currentDatetimeString() : null,
+    routingNote,
   }
 }
 
@@ -469,22 +663,30 @@ export const fileAppeal = async (
   ctx: AppContext,
   {
     requester,
+    submittedBy,
     subject,
     resolvedActionId,
+    resolvedActionAt,
     action,
     reason,
     modTool,
   }: FileAppealInput,
 ): Promise<{ reportId: number }> => {
-  const { queueId, queuedAt } = await selectQueue(
+  const { queueId, queuedAt, routingNote } = await selectQueue(
     ctx,
     subject,
+    requester,
     resolvedActionId,
     action,
   )
 
   const reportId = await ctx.db.transaction(async (dbTxn) => {
-    await assertAppealAllowed(dbTxn, subject)
+    await assertAppealAllowed(dbTxn, subject, {
+      actionAt: resolvedActionAt,
+      unresolvedAction: !!action && !resolvedActionAt,
+      startAt: ctx.cfg.inbox.startAt,
+      windowMonths: ctx.cfg.inbox.appealWindowMonths,
+    })
 
     // create event and report row
     const moderationTxn = ctx.modService(dbTxn)
@@ -494,13 +696,17 @@ export const fileAppeal = async (
       reasonType: APPEAL_REASON_TYPE,
       reportedBy: requester,
       modTool,
-      eventMeta: buildAppealEventMeta(action),
+      eventMeta: {
+        ...buildAppealEventMeta(action),
+        ...(submittedBy ? { appealSubmittedBy: submittedBy } : {}),
+      },
     })
     return ctx.queueService(dbTxn).insertReportFromEvent({
       event: reportEvent,
       reportType: APPEAL_REASON_TYPE,
       queueId,
       queuedAt,
+      routingNote,
       actionEventIds:
         resolvedActionId === undefined ? null : [resolvedActionId],
     })

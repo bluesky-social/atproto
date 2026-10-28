@@ -8,12 +8,14 @@ import { currentDatetimeString } from '@atproto/lex'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import type { Database } from '../db/index.js'
 import { TimeIdKeyset, paginate } from '../db/pagination.js'
-import type { tools } from '../lexicons/index.js'
+import { tools } from '../lexicons/index.js'
 import {
   AlreadyInTargetState,
   InvalidStateTransition,
   handleReportUpdate,
 } from './handle-report-update.js'
+import { getActivityMetadata } from './metadata.js'
+import { notifyReportActivities } from './notifications.js'
 
 const VALID_ACTIVITY_TYPES = new Set([
   'queueActivity',
@@ -43,6 +45,7 @@ export type CreateActivityParams = {
   /** Set true for activities created by automated processes (e.g. queue router). */
   isAutomated?: boolean
   createdBy: DidString
+  inboxStartAt?: DatetimeString
 }
 
 export async function createReportActivity(
@@ -55,10 +58,11 @@ export async function createReportActivity(
     activityType,
     internalNote,
     publicNote,
-    meta,
     isAutomated = false,
     createdBy,
   } = params
+
+  const metadata = getActivityMetadata(params.meta)
 
   if ((reportId === undefined) === (eventId === undefined)) {
     throw new InvalidRequestError(
@@ -73,7 +77,7 @@ export async function createReportActivity(
     // locks at most one row.
     const report = await dbTxn.db
       .selectFrom('report')
-      .select(['id', 'status'])
+      .select(['id', 'status', 'reportType'])
       .where((eb) =>
         reportId !== undefined
           ? eb('id', '=', reportId)
@@ -134,13 +138,40 @@ export async function createReportActivity(
         previousStatus: result.activity?.previousStatus ?? null,
         internalNote: internalNote ?? null,
         publicNote: publicNote ?? null,
-        meta: meta ?? null,
+        meta:
+          metadata || activityType === 'closeActivity'
+            ? {
+                ...metadata,
+                ...(activityType === 'closeActivity'
+                  ? {
+                      resolution: 'noAction',
+                      ...(report.reportType ===
+                      tools.ozone.report.defs.ReasonAppeal
+                        ? { appealOutcome: 'denied' }
+                        : {}),
+                    }
+                  : {}),
+              }
+            : null,
         isAutomated,
         createdBy,
         createdAt: now,
       })
       .returningAll()
       .execute()
+
+    await notifyReportActivities(
+      dbTxn,
+      [
+        {
+          reportId: report.id,
+          activityId: activity.id,
+          activityType,
+          createdAt: now,
+        },
+      ],
+      params.inboxStartAt,
+    )
 
     return activity
   })
@@ -269,8 +300,22 @@ export async function queryReportActivities(
 function buildActivityObject(
   activityType: string,
   previousStatus: string | null,
+  meta: unknown,
 ): tools.ozone.report.defs.ReportActivityView['activity'] {
   const $type = `tools.ozone.report.defs#${activityType}` as Unknown$Type
+  if (activityType === 'unassignmentActivity') {
+    return {
+      $type: tools.ozone.report.defs.unassignmentActivity.$type,
+      previousStatus: previousStatus ?? undefined,
+      nextStatus:
+        meta !== null &&
+        typeof meta === 'object' &&
+        'nextStatus' in meta &&
+        typeof meta.nextStatus === 'string'
+          ? meta.nextStatus
+          : undefined,
+    }
+  }
   return (
     previousStatus !== null ? { $type, previousStatus } : { $type }
   ) as tools.ozone.report.defs.ReportActivityView['activity']
@@ -298,6 +343,7 @@ export function formatActivityView(
     activity: buildActivityObject(
       activity.activityType,
       activity.previousStatus,
+      activity.meta,
     ),
     internalNote: activity.internalNote ?? undefined,
     publicNote: activity.publicNote ?? undefined,

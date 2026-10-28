@@ -11,7 +11,15 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.authVerifier.modOrAdminToken,
     handler: async ({ input, auth }) => {
       const createdBy = getAuthDid(auth, ctx.cfg.service.did)
-      const { subject, reportTypes, internalNote, isAutomated } = input.body
+      const {
+        subject,
+        includeAllOwned,
+        reportTypes,
+        excludedReportTypes,
+        internalNote,
+        isAutomated,
+        meta,
+      } = input.body
 
       let subjectDid: DidString
       let subjectUri: AtUriString | null = null
@@ -29,13 +37,23 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError('Subject must be a DID or an AT-URI')
       }
 
+      if (includeAllOwned && subjectUri) {
+        throw new InvalidRequestError(
+          'includeAllOwned is only valid for account subjects',
+        )
+      }
+
       const result = await closeReportsForSubject({
+        inboxStartAt: ctx.cfg.inbox.startAt,
         db: ctx.db,
         subjectDid,
         subjectUri,
+        includeAllOwned,
         reportTypes,
+        excludedReportTypes,
         internalNote: internalNote ?? undefined,
         isAutomated: isAutomated ?? false,
+        meta,
         createdBy: createdBy ?? ctx.cfg.service.did,
       })
 

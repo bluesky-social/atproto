@@ -1,4 +1,3 @@
-import { CID } from 'multiformats/cid'
 import {
   isAtIdentifierString,
   isAtUriString,
@@ -12,6 +11,7 @@ import {
   isValidUri,
 } from '@atproto/syntax'
 import { ValidationError, type ValidationResult } from '../types.js'
+import { parseCidString } from '../util.js'
 
 export const datetime = createValidator(
   isDatetimeStringLenient,
@@ -64,7 +64,7 @@ function createValidator(
 
 function isCidString(v: string): v is string {
   try {
-    CID.parse(v)
+    parseCidString(v)
     return true
   } catch {
     return false

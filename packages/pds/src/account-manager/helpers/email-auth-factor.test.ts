@@ -50,8 +50,8 @@ describe('email auth factor helpers', () => {
     )
   })
 
-  afterAll(() => {
-    db?.close()
+  afterAll(async () => {
+    await db?.close()
   })
 
   describe('enable', () => {

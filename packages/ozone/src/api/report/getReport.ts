@@ -2,6 +2,7 @@ import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../context.js'
 import { tools } from '../../lexicons/index.js'
 import { getReportById } from '../../mod-service/report.js'
+import { QueueAccess } from '../../queue/access.js'
 import { buildReportView, hydrateReportInfo } from '../../report/views.js'
 import { getPdsAccountInfos } from '../util.js'
 
@@ -13,8 +14,11 @@ export default function (server: Server, ctx: AppContext) {
       const modService = ctx.modService(db)
       const labelers = ctx.reqLabelers(req)
 
-      const report = await getReportById(db, params.id)
-      if (!report) {
+      const [report, access] = await Promise.all([
+        getReportById(db, params.id),
+        QueueAccess.forActor(db, auth.credentials),
+      ])
+      if (!report || !access.canAccessQueue(report.queueId ?? -1)) {
         throw new InvalidRequestError(
           `Report not found: ${params.id}`,
           'NotFound',

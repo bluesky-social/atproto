@@ -5,6 +5,60 @@ Backend service for moderating the Bluesky network.
 [![NPM](https://img.shields.io/npm/v/@atproto/ozone)](https://www.npmjs.com/package/@atproto/ozone)
 [![Github CI Status](https://github.com/bluesky-social/atproto/actions/workflows/repo.yaml/badge.svg)](https://github.com/bluesky-social/atproto/actions/workflows/repo.yaml)
 
+## DID cache
+
+The API uses a bounded in-memory DID document cache. Configure its limits with `OZONE_DID_CACHE_MAX_ENTRIES` (default 10,000), `OZONE_DID_CACHE_MAX_BYTES` (default 33,554,432 bytes for serialized documents and DID keys), and `OZONE_DID_CACHE_MAX_DOC_BYTES` (default 65,536 bytes per serialized document). Set any limit to `0` to disable retention. Documents exceeding a limit can still be resolved but are not cached. Restart the API after changing these settings.
+
+## Report tags
+
+Reports automatically add a reason tag such as `report:spam` to their subject by default. Set `OZONE_REPORT_TAGS_DISABLED=true` and restart the API to disable these automatic report tags. Unset or `false` keeps them enabled.
+
+The setting applies to reports submitted through both `com.atproto.moderation.createReport` and `tools.ozone.moderation.emitEvent`.
+
+Language and embed tags, manually applied tags, and existing report tags are unaffected.
+
+## Wildcard label queries
+
+Wildcard patterns in `com.atproto.label.queryLabels` are disabled by default, including `*` and requests mixing wildcard and exact patterns. They return HTTP 400 (`InvalidRequest`) with the message "Support for wildcard label queries is temporarily disabled" before accessing the database. Exact URI queries remain available.
+
+Set `OZONE_LABEL_QUERY_WILDCARDS_ENABLED=true` and restart the API to restore wildcard support. Unset or `false` disables it.
+
+## Historical label replay
+
+`com.atproto.label.subscribeLabels` connections with a cursor share a historical replay budget on each API process. `OZONE_LABEL_STREAM_BACKFILL_RATE` sets the positive integer number of labels per second; the default is 2000. Pages contain at most 500 labels, so brief page-sized bursts are possible. Restart the API after changing the setting.
+
+This bounds bulk replay work while preserving history and cursor ordering. Large backfills take longer, and multiple replaying clients share the budget. Live subscriptions and sequencer polling do not wait for this budget; cutover queries remain bounded by the existing stream buffer limit.
+
+Subscription start and close logs include a connection ID, cursor, proxy socket address/port, User-Agent and forwarded address chain. Close logs add the last sequence, yielded event count and duration. Forwarded headers and User-Agent are attribution hints, not authenticated caller identities; cookies and authorization headers are excluded.
+
+## Moderation query cancellation
+
+`queryEvents` and `queryStatuses` cancel their listing SQL when the HTTP client disconnects, using Kysely's `cancel query` abort strategy. Kysely uses a separate PostgreSQL connection for cancellation and holds the listing connection until SQL and cancellation finish. This adds no query deadline.
+
+## Moderation inbox standing
+
+Set `NEXT_PUBLIC_STRIKE_SUSPENSION_CONFIG` to the same value used by Ozone UI, for example `4:72,8:168,12:336,16:Infinity`. Each entry maps a strike count to suspension hours; `Infinity` represents a permanent suspension. The backend retains the full map and uses the second and third thresholds, sorted by strike count, for `warning` and `atRisk`. The first tier does not change standing. With no configuration, standing derives from the account's enforcement and restrictions; strike thresholds are disabled. Invalid entries fail configuration at startup.
+
+## Moderation inbox start date
+
+Set `OZONE_INBOX_START_AT` on both the API and daemon to an ISO 8601 timestamp with a timezone, for example `2026-10-15T00:00:00.000Z`. Configuration normalizes it to UTC milliseconds and rejects invalid values at startup. Unset exposes all history. A future date keeps history empty until eligible activity occurs; changing the value requires restarting the services.
+
+Reports are visible only when their `createdAt` is at or after the date, even if an older report is later resolved or reopened. The same bound applies to report detail and resolution actions. Subjects require a public action created at or after the date; action counts, first-action dates, latest actions, detail history and report summaries exclude earlier history. Older appeal history is hidden, while eligibility still respects earlier appeals. Inbox appeals cannot target hidden actions or subjects. Moderator previews use the same cutoff.
+
+Account standing and current enforcement remain live: active restrictions, strikes and labels can predate the inbox start. Preferences and seen watermarks do not expose history; they retain their existing behavior. The cutoff is not a read watermark, so an item created exactly at the start date is initially unread.
+
+Notification producers skip activity before the date and skip transitions on reports or appeal subjects that would be hidden. Lists and unread counts independently enforce the date and target visibility, including existing stored notifications. API and daemon must use the same value. Source reports/actions continue to be recorded normally. Moving the date earlier can reveal more source history, but skipped notifications are not backfilled. Complete the writer rollout before the chosen start date to avoid a notification gap.
+
+Report-first pagination requires the `reporterDid` backfill and the post-retirement catch-up sweep to finish before deploying this reader. Pre-create the reporter/time indexes and `idx_moderation_event_inbox_public_created` concurrently in production before the inbox migration. The latter indexes `(subjectDid, createdAt DESC, id DESC)` so subject history can seek the configured date.
+
+## Strike expiry
+
+Clients supply strike amounts and expiry timestamps from severity settings.
+The backend stores them and excludes expired strikes from active totals.
+
+Legacy events without expiry require a separate repair. Changing expiry does
+not undo takedowns, suspensions, or lifetime strike totals.
+
 ## License
 
 This project is dual-licensed under MIT and Apache 2.0 terms:

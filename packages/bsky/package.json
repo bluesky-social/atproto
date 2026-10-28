@@ -1,6 +1,6 @@
 {
   "name": "@atproto/bsky",
-  "version": "0.0.281",
+  "version": "0.3.13",
   "license": "MIT",
   "description": "Reference implementation of app.bsky App View (Bluesky API)",
   "keywords": [
@@ -55,8 +55,7 @@
     "@noble/curves": "^1.7.0",
     "@growthbook/growthbook": "^1.6.2",
     "@hapi/address": "^5.1.1",
-    "@opentelemetry/api": "^1.9.1",
-    "@opentelemetry/api-logs": "^0.219.0",
+    "@opentelemetry/api": "^1.10.0",
     "@opentelemetry/semantic-conventions": "^1.41.1",
     "@types/http-errors": "^2.0.1",
     "compression": "^1.7.4",
@@ -77,11 +76,12 @@
     "pino-http": "^11.0.0",
     "sharp": "^0.33.5",
     "structured-headers": "^1.0.1",
+    "typescript": "^7.0.2",
     "uint8arrays": "^5.0.0",
-    "undici": "^8.5.0",
-    "undici_v6": "npm:undici@^6.x",
-    "undici_v7": "npm:undici@^7.x",
-    "undici_v8": "npm:undici@^8.x",
+    "undici": "^8.12.2",
+    "undici_v6": "npm:undici@^6.29.1",
+    "undici_v7": "npm:undici@^7.30.1",
+    "undici_v8": "npm:undici@^8.12.2",
     "zod": "3.23.8"
   },
   "devDependencies": {
@@ -100,7 +100,12 @@
   },
   "scripts": {
     "codegen:buf": "buf generate ../bsync/proto && buf generate ./proto",
-    "codegen:lex": "lex build --clear --indexFile --lexicons ../../lexicons",
+    "lex:build": "lex build --clear --indexFile",
+    "lex:install": "lex install",
+    "postlex:install": "pnpm run lex:build",
+    "lex:update": "lex update",
+    "postlex:update": "pnpm run lex:build",
+    "codegen:lex": "pnpm run lex:install --ci",
     "prebuild": "pnpm run '/^(codegen:.+)$/'",
     "build": "tsc --build tsconfig.build.json",
     "verify:import": "node --input-type=module -e \"import '@atproto/bsky'\"",

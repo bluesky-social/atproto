@@ -1,5 +1,199 @@
 # @atproto/pds
 
+## 0.5.51
+
+### Patch Changes
+
+- Updated dependencies [[`8656303`](https://github.com/bluesky-social/atproto/commit/86563037e8233162165fc455f926569386536dd1)]:
+  - @atproto/oauth-provider@0.25.1
+
+## 0.5.50
+
+### Patch Changes
+
+- [#5687](https://github.com/bluesky-social/atproto/pull/5687) [`943170b`](https://github.com/bluesky-social/atproto/commit/943170bd390705fbb16920688f8f09ec7078a59b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update puppeteer dev dependency
+
+- [#5687](https://github.com/bluesky-social/atproto/pull/5687) [`943170b`](https://github.com/bluesky-social/atproto/commit/943170bd390705fbb16920688f8f09ec7078a59b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - `/.well-known/change-password` redirects to the entryway
+- Updated dependencies [[`2720f72`](https://github.com/bluesky-social/atproto/commit/2720f72a5c4118c22841861dbc92a20693140093), [`943170b`](https://github.com/bluesky-social/atproto/commit/943170bd390705fbb16920688f8f09ec7078a59b)]:
+  - @atproto-labs/opentelemetry-node@0.4.0
+  - @atproto/oauth-provider@0.25.0
+  - @atproto/lex@0.4.3
+
+## 0.5.49
+
+### Patch Changes
+
+- [#5730](https://github.com/bluesky-social/atproto/pull/5730) [`4744b4a`](https://github.com/bluesky-social/atproto/commit/4744b4a2c0d17fed6bf063f2a86bd3b3875ddf1f) Thanks [@haileyok](https://github.com/haileyok)! - Update body-parser to 1.20.9
+- Updated dependencies [[`4744b4a`](https://github.com/bluesky-social/atproto/commit/4744b4a2c0d17fed6bf063f2a86bd3b3875ddf1f)]:
+  - @atproto/xrpc-server@0.13.6
+  - @atproto-labs/xrpc-utils@0.1.27
+
+## 0.5.48
+
+### Patch Changes
+
+- [#5724](https://github.com/bluesky-social/atproto/pull/5724) [`123b4e2`](https://github.com/bluesky-social/atproto/commit/123b4e2c76ba25cbcc4833490fbac12cfa237abf) Thanks [@gcwill70](https://github.com/gcwill70)! - Accept optional metadata on report activity creation and bulk closure requests. Preserve moderation tool metadata on event-generated report activities and allow callers to mark those activities as automated.
+
+## 0.5.47
+
+### Patch Changes
+
+- [#5722](https://github.com/bluesky-social/atproto/pull/5722) [`f8a8186`](https://github.com/bluesky-social/atproto/commit/f8a8186acf883dc96819d5f698a6241598984c17) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Resolve Atmosphere Explore and external embed lexicons from the published Bluesky schemas instead of local overrides. Refresh published lexicons, including Atmosphere external views for the PDS and OAuth browser example and profile website deprecation notices.
+
+## 0.5.46
+
+### Patch Changes
+
+- [#5708](https://github.com/bluesky-social/atproto/pull/5708) [`0e60f3f`](https://github.com/bluesky-social/atproto/commit/0e60f3f007cbd9812975489f0da19bf7613da831) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Require patched Undici versions for direct dependencies and versioned dispatchers.
+- Updated dependencies [[`0e60f3f`](https://github.com/bluesky-social/atproto/commit/0e60f3f007cbd9812975489f0da19bf7613da831)]:
+  - @atproto-labs/fetch-node@0.4.3
+  - @atproto/identity@0.5.20
+  - @atproto/oauth-provider@0.24.3
+  - @atproto/lex@0.4.2
+
+## 0.5.45
+
+### Patch Changes
+
+- Updated dependencies [[`8eac4b0`](https://github.com/bluesky-social/atproto/commit/8eac4b0c0e11170171a1978123078f0a0b17ddd3)]:
+  - @atproto/identity@0.5.19
+
+## 0.5.44
+
+### Patch Changes
+
+- [#5700](https://github.com/bluesky-social/atproto/pull/5700) [`53d307b`](https://github.com/bluesky-social/atproto/commit/53d307b614120947d7a11687e9bd0868c1c02dd1) Thanks [@gcwill70](https://github.com/gcwill70)! - Add strict access flag to report queues. Non-admin users will only be able to access strict queues and their reports if they are assigned to them.
+  
+  Allow filtering SafeLink rules by exact source in queryRules, combining with existing filters and pagination.
+
+## 0.5.43
+
+### Patch Changes
+
+- Updated dependencies [[`fc60876`](https://github.com/bluesky-social/atproto/commit/fc60876949cca1ca28e98273ecfc97a151d3ebfc)]:
+  - @atproto-labs/fetch-node@0.4.2
+  - @atproto/identity@0.5.18
+  - @atproto/oauth-provider@0.24.2
+  - @atproto/lex@0.4.1
+
+## 0.5.42
+
+### Patch Changes
+
+- [#5692](https://github.com/bluesky-social/atproto/pull/5692) [`063542d`](https://github.com/bluesky-social/atproto/commit/063542dcb0e9367004dc241bc68d29c7d0ec294c) Thanks [@devinivy](https://github.com/devinivy)! - Require privileged app passwords for all chat.bsky RPC methods.
+
+- [#5662](https://github.com/bluesky-social/atproto/pull/5662) [`a2840e2`](https://github.com/bluesky-social/atproto/commit/a2840e277d5ed0d01b97fd4d2427b676e6c90bf2) Thanks [@foysalit](https://github.com/foysalit)! - Expose client-supplied expiry on strike reversals and preserve supplied expiry
+  when executing scheduled takedowns. Strike amounts and expiry policy remain
+  client-controlled.
+
+## 0.5.41
+
+### Patch Changes
+
+- [#5686](https://github.com/bluesky-social/atproto/pull/5686) [`58f14d6`](https://github.com/bluesky-social/atproto/commit/58f14d60273b1ccb7f187b882624c9e2045aed59) Thanks [@gcwill70](https://github.com/gcwill70)! - Add source-aware SafeLink rule synchronization and return rule sources in the API.
+
+- [#5680](https://github.com/bluesky-social/atproto/pull/5680) [`9f66a7e`](https://github.com/bluesky-social/atproto/commit/9f66a7e54b030700c03eda0bdbf35ffe756f4cd8) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add a `social.grain.photo` compatibility override that no longer requires `alt`, so the AppView renders Grain gallery photos that omit it. Ozone resolves the override; the PDS keeps validating writes against the published lexicon.
+
+## 0.5.40
+
+### Patch Changes
+
+- [#5591](https://github.com/bluesky-social/atproto/pull/5591) [`f98b78a`](https://github.com/bluesky-social/atproto/commit/f98b78adbc8963e49823117b007422211f6d3ff2) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Fix the `chat.bsky.authFullChatClient` permission set: it granted the non-existent `chat.bsky.convo.exportAccountData` RPC method instead of `chat.bsky.actor.exportAccountData`.
+
+- [#5591](https://github.com/bluesky-social/atproto/pull/5591) [`f98b78a`](https://github.com/bluesky-social/atproto/commit/f98b78adbc8963e49823117b007422211f6d3ff2) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Vendor the canonical repo-wide Lexicons through `lex install` + a `directory` resolver (symlinked, CID-locked in a committed `lexicons.json`) instead of building `../../lexicons` directly.
+- Updated dependencies [[`f98b78a`](https://github.com/bluesky-social/atproto/commit/f98b78adbc8963e49823117b007422211f6d3ff2), [`f98b78a`](https://github.com/bluesky-social/atproto/commit/f98b78adbc8963e49823117b007422211f6d3ff2), [`f98b78a`](https://github.com/bluesky-social/atproto/commit/f98b78adbc8963e49823117b007422211f6d3ff2), [`f98b78a`](https://github.com/bluesky-social/atproto/commit/f98b78adbc8963e49823117b007422211f6d3ff2)]:
+  - @atproto/lex@0.4.0
+  - @atproto/syntax@0.7.7
+  - @atproto/oauth-provider@0.24.1
+  - @atproto/xrpc-server@0.13.5
+  - @atproto-labs/fetch-node@0.4.1
+  - @atproto/lex-document@0.1.14
+  - @atproto/oauth-scopes@0.5.14
+  - @atproto/repo@0.11.1
+  - @atproto-labs/xrpc-utils@0.1.26
+  - @atproto/identity@0.5.17
+  - @atproto/aws@0.3.20
+  - @atproto/common@0.8.6
+
+## 0.5.39
+
+### Patch Changes
+
+- [#5629](https://github.com/bluesky-social/atproto/pull/5629) [`32f8e45`](https://github.com/bluesky-social/atproto/commit/32f8e454f199f4355574e452f660098a55365706) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Allow users that last signed in on a device within 30 days to skip OTP.
+- Updated dependencies [[`32f8e45`](https://github.com/bluesky-social/atproto/commit/32f8e454f199f4355574e452f660098a55365706), [`32f8e45`](https://github.com/bluesky-social/atproto/commit/32f8e454f199f4355574e452f660098a55365706), [`32f8e45`](https://github.com/bluesky-social/atproto/commit/32f8e454f199f4355574e452f660098a55365706), [`32f8e45`](https://github.com/bluesky-social/atproto/commit/32f8e454f199f4355574e452f660098a55365706), [`32f8e45`](https://github.com/bluesky-social/atproto/commit/32f8e454f199f4355574e452f660098a55365706)]:
+  - @atproto/oauth-provider@0.24.0
+
+## 0.5.38
+
+### Patch Changes
+
+- [#5550](https://github.com/bluesky-social/atproto/pull/5550) [`3013430`](https://github.com/bluesky-social/atproto/commit/3013430ed7433edd4c70d2970428d0ab803f6e85) Thanks [@foysalit](https://github.com/foysalit)! - Add viewer-facing moderation inbox reads for configurable account standing, report details, and cursor-paginated action history, with PDS proxy access and read-only moderator previews. Include appeal attribution in moderator event views, structured policy details in takedown actions, and pending, resolved, and unread actioned-subject filters based on appeal report state. Keep moderator notes private.
+  
+  Page reports through reporter/time indexes with bounded hydration and source ownership validation. Batch subject hydration, reuse indexes for report summaries, and limit latest appeal lookups to one row in SQL. Add non-appeal reporter/time indexes, with the inbox migration ordered after the reporter DID column migration.
+  
+  Add OZONE_INBOX_START_AT to limit report, action, and appeal history by creation time, with a public subject/action creation-time index. Cover structured policy names, links, and fallback URLs in mapper regression tests.
+- Updated dependencies [[`a044af7`](https://github.com/bluesky-social/atproto/commit/a044af7bd7b522ca51229d7686f5b6413be6eee7)]:
+  - @atproto-labs/opentelemetry-node@0.3.1
+
+## 0.5.37
+
+### Patch Changes
+
+- [#5493](https://github.com/bluesky-social/atproto/pull/5493) [`cd736b3`](https://github.com/bluesky-social/atproto/commit/cd736b3dbbec957cf4eaa7e67fa5b8be8f8ae04e) Thanks [@mozzius](https://github.com/mozzius)! - Add `since` and `startCursor` to `getTimeline` and `getListFeed`, for reading everything strictly newer than a previously returned position.
+
+- [#5576](https://github.com/bluesky-social/atproto/pull/5576) [`13b7cb0`](https://github.com/bluesky-social/atproto/commit/13b7cb000d7358a570be46854a93e441c8fa791e) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Improve resource management of actor store
+
+- [#5584](https://github.com/bluesky-social/atproto/pull/5584) [`a6561d5`](https://github.com/bluesky-social/atproto/commit/a6561d54227756876a0901e4a87675df17972d32) Thanks [@haileyok](https://github.com/haileyok)! - Reject MSTs that reference the same node more than once. Full-tree traversals and diffs now throw `VisitedCidError` instead of re-walking shared subtrees, bounding their cost by the number of unique blocks. `com.atproto.repo.importRepo` returns `InvalidRequest` for such repos.
+- Updated dependencies [[`13b7cb0`](https://github.com/bluesky-social/atproto/commit/13b7cb000d7358a570be46854a93e441c8fa791e), [`f8ed258`](https://github.com/bluesky-social/atproto/commit/f8ed25853dc91a16639decfaee2e0dcbb60808cd), [`cea6f5c`](https://github.com/bluesky-social/atproto/commit/cea6f5c4a034860c35eda03dbde207f5bdb9387f), [`13b7cb0`](https://github.com/bluesky-social/atproto/commit/13b7cb000d7358a570be46854a93e441c8fa791e), [`0593d81`](https://github.com/bluesky-social/atproto/commit/0593d818bc2b7f8a40c9d0fe036bf39c7a4eecda), [`e8b89ff`](https://github.com/bluesky-social/atproto/commit/e8b89ff4c211a10519b54bd83eb64950035942c3), [`a6561d5`](https://github.com/bluesky-social/atproto/commit/a6561d54227756876a0901e4a87675df17972d32), [`52e51de`](https://github.com/bluesky-social/atproto/commit/52e51de0fc7b27173fe7ecc2c7b47ec476a8c1bf)]:
+  - @atproto/repo@0.11.0
+  - @atproto/crypto@0.5.7
+  - @atproto/oauth-provider@0.23.1
+  - @atproto/aws@0.3.19
+  - @atproto-labs/opentelemetry-node@0.3.0
+  - @atproto/lex-data@0.1.8
+  - @atproto/identity@0.5.16
+  - @atproto/xrpc-server@0.13.4
+  - @atproto/common@0.8.5
+  - @atproto/lex@0.3.14
+  - @atproto/lex-cbor@0.1.7
+  - @atproto/lex-document@0.1.13
+  - @atproto/lex-json@0.1.7
+  - @atproto-labs/xrpc-utils@0.1.25
+
+## 0.5.36
+
+### Patch Changes
+
+- [#5562](https://github.com/bluesky-social/atproto/pull/5562) [`f632a35`](https://github.com/bluesky-social/atproto/commit/f632a35e8641644022bf430c6e3b34b1382cab55) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove the need to provide a `plcRotationKey` secret when and override is provided
+
+- [#5563](https://github.com/bluesky-social/atproto/pull/5563) [`af8c350`](https://github.com/bluesky-social/atproto/commit/af8c3501cd32e82cf8128683445656aa6708608d) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Report a handle or email belonging to a deactivated or taken down account as an `InvalidRequest` from `com.atproto.server.createAccount`, instead of failing with an `InternalServerError` once the insert hits the unique index.
+
+- [#5556](https://github.com/bluesky-social/atproto/pull/5556) [`5019f55`](https://github.com/bluesky-social/atproto/commit/5019f5537317ee75ad4527db212bc27c3085fe67) Thanks [@dependabot](https://github.com/apps/dependabot)! - build(deps-dev): bump the dev-dependencies group across 1 directory with 25 updates
+
+- [#5562](https://github.com/bluesky-social/atproto/pull/5562) [`f632a35`](https://github.com/bluesky-social/atproto/commit/f632a35e8641644022bf430c6e3b34b1382cab55) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Honour the `plcRotationKey` override passed to `PDS.create` when updating handles and when creating or tombstoning accounts through OAuth.
+
+- [#5563](https://github.com/bluesky-social/atproto/pull/5563) [`af8c350`](https://github.com/bluesky-social/atproto/commit/af8c3501cd32e82cf8128683445656aa6708608d) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Name the handle, rather than the email, when account creation conflicts on the handle.
+
+- [#5207](https://github.com/bluesky-social/atproto/pull/5207) [`f5f0aab`](https://github.com/bluesky-social/atproto/commit/f5f0aab4cf3046de3dddd9251a07003d29e3c0be) Thanks [@ThisIsMissEm](https://github.com/ThisIsMissEm)! - Fix email authentication factor toggles, including repeated requests, without treating an omitted setting as a request to disable two-factor authentication.
+
+- [#5459](https://github.com/bluesky-social/atproto/pull/5459) [`136e214`](https://github.com/bluesky-social/atproto/commit/136e2145b893773a94e9620df37be5215cdb57a3) Thanks [@gcwill70](https://github.com/gcwill70)! - Allow takendown accounts to file actioned-subject appeals through the PDS.
+
+- [#5207](https://github.com/bluesky-social/atproto/pull/5207) [`f5f0aab`](https://github.com/bluesky-social/atproto/commit/f5f0aab4cf3046de3dddd9251a07003d29e3c0be) Thanks [@ThisIsMissEm](https://github.com/ThisIsMissEm)! - Add email-based authentication factor (2FA) for account sign-in
+
+- [#5562](https://github.com/bluesky-social/atproto/pull/5562) [`f632a35`](https://github.com/bluesky-social/atproto/commit/f632a35e8641644022bf430c6e3b34b1382cab55) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add `overrides?: Partial<AppContextOptions>` argument to `PDS.fromEnv`
+- Updated dependencies [[`5019f55`](https://github.com/bluesky-social/atproto/commit/5019f5537317ee75ad4527db212bc27c3085fe67), [`f5f0aab`](https://github.com/bluesky-social/atproto/commit/f5f0aab4cf3046de3dddd9251a07003d29e3c0be)]:
+  - @atproto/crypto@0.5.6
+  - @atproto/did@0.5.6
+  - @atproto/identity@0.5.15
+  - @atproto/repo@0.10.15
+  - @atproto/xrpc-server@0.13.3
+  - @atproto/oauth-provider@0.23.0
+  - @atproto/aws@0.3.18
+  - @atproto/common@0.8.4
+  - @atproto/oauth-scopes@0.5.13
+  - @atproto-labs/xrpc-utils@0.1.24
+  - @atproto/lex@0.3.13
+
 ## 0.5.35
 
 ### Patch Changes

@@ -139,8 +139,8 @@ export class AccountManager {
     await getMigrator(this.db).migrateToLatestOrThrow()
   }
 
-  close() {
-    this.db.close()
+  async close() {
+    await this.db.close()
   }
 
   // Account
@@ -620,6 +620,7 @@ export class AccountManager {
     password,
     authFactorToken,
     locale,
+    allowOtpBypassFor = [],
   }: {
     identifier: string
     password: string
@@ -628,6 +629,7 @@ export class AccountManager {
     // declares no locale input, so the challenge email falls back to the
     // default template there.
     locale?: string | undefined
+    allowOtpBypassFor?: readonly DidString[]
   }): Promise<{
     // @TODO we should rename this "account" for consistency
     user: ActorAccount
@@ -681,6 +683,7 @@ export class AccountManager {
       } else if (
         user.email !== null &&
         user.emailAuthFactorAt !== null &&
+        !allowOtpBypassFor.includes(user.did) &&
         appPassword === null
       ) {
         const token = await this.createEmailToken(user.did, 'auth_factor')
@@ -1118,12 +1121,11 @@ export class AccountManager {
   async updateAccountPassword(opts: { did: DidString; password: string }) {
     const { did } = opts
     const passwordScrypt = await scrypt.genSaltAndHash(opts.password)
-    await this.db.transaction(async (dbTxn) =>
-      Promise.all([
-        password.updateUserPassword(dbTxn, { did, passwordScrypt }),
-        emailToken.deleteEmailToken(dbTxn, did, 'reset_password'),
-        auth.revokeRefreshTokensByDid(dbTxn, did),
-      ]),
-    )
+    await this.db.transaction(async (dbTxn) => {
+      await password.updateUserPassword(dbTxn, { did, passwordScrypt })
+      await emailToken.deleteEmailToken(dbTxn, did, 'reset_password')
+      await auth.revokeRefreshTokensByDid(dbTxn, did)
+      // @NOTE Should we also clear oauth sessions here ?
+    })
   }
 }

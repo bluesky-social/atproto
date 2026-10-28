@@ -388,9 +388,21 @@ export function decodeCid(
 }
 
 /**
+ * Maximum length of a CID string accepted by {@link parseCid}.
+ *
+ * The longest CID {@link parseCid} can legitimately produce (CIDv1 with a
+ * sha512 digest) is 110 characters in base32, 105 in base36 and 93 in
+ * base58btc. Longer inputs are rejected before decoding because the base36
+ * and base58btc decoders used by `multiformats` run in time quadratic in the
+ * input length, which lets a single large string block the event loop.
+ */
+export const MAX_CID_STRING_LENGTH = 128
+
+/**
  * Parses a CID string into a Cid object.
  *
- * @throws if the input is not a valid CID string.
+ * @throws if the input is not a valid CID string, or is longer than
+ * {@link MAX_CID_STRING_LENGTH}.
  */
 export function parseCid<TOptions extends CheckCidOptions>(
   input: string,
@@ -398,6 +410,11 @@ export function parseCid<TOptions extends CheckCidOptions>(
 ): InferCheckedCid<TOptions>
 export function parseCid(input: string, options?: CheckCidOptions): Cid
 export function parseCid(input: string, options?: CheckCidOptions): Cid {
+  if (input.length > MAX_CID_STRING_LENGTH) {
+    throw new Error(
+      `CID string too long (${input.length} > ${MAX_CID_STRING_LENGTH})`,
+    )
+  }
   const cid = CID.parse(input)
   return asCid(cid, options)
 }

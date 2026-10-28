@@ -12,6 +12,7 @@ export const safelinkEventTableName = 'safelink_event'
 
 export interface SafelinkRule {
   id: GeneratedAlways<number>
+  source: string
   url: string
   pattern: SafelinkPatternType
   action: SafelinkActionType
@@ -24,6 +25,7 @@ export interface SafelinkRule {
 
 export interface SafelinkEvent {
   id: GeneratedAlways<number>
+  source: string
   eventType: SafelinkEventType
   url: string
   pattern: SafelinkPatternType

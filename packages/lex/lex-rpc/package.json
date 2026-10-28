@@ -1,0 +1,48 @@
+{
+  "name": "@atproto/lex-rpc",
+  "version": "0.0.1",
+  "license": "MIT",
+  "description": "Utilities for building and processing AT Protocol XRPC requests (Lexicon RPC)",
+  "keywords": [
+    "atproto",
+    "lexicon",
+    "rpc",
+    "xrpc"
+  ],
+  "homepage": "https://atproto.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bluesky-social/atproto",
+    "directory": "packages/lex/lex-rpc"
+  },
+  "files": [
+    "./dist",
+    "./README.md",
+    "./CHANGELOG.md"
+  ],
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "@atproto/lex-data": "workspace:^",
+    "@atproto/lex-json": "workspace:^",
+    "@atproto/lex-schema": "workspace:^",
+    "tslib": "^2.8.1"
+  },
+  "devDependencies": {
+    "@atproto/lex-cbor": "workspace:^",
+    "vitest": "^4.1.10"
+  },
+  "scripts": {
+    "build": "tsc --build tsconfig.build.json",
+    "test": "vitest run"
+  }
+}

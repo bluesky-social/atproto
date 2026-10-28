@@ -39,8 +39,8 @@ export function isLexiconRecordKey<T>(key: T): key is T & LexiconRecordKey {
     key === 'nsid' ||
     key === 'tid' ||
     (typeof key === 'string' &&
-      key.startsWith('literal:') &&
       key.length > 8 &&
+      key.startsWith('literal:') &&
       isValidRecordKey(key.slice(8)))
   )
 }

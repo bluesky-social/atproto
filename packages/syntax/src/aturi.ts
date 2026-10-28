@@ -19,6 +19,8 @@ export type {
   RecordKeyString,
 }
 
+export type Stringifiable = { toString: () => string }
+
 export const ATP_URI_REGEX =
   // proto-    --did--------------   --name----------------   --path----   --query--   --hash--
   /^(at:\/\/)?((?:did:[a-z0-9:%-]+)|(?:[a-z0-9][a-z0-9.:-]*))(\/[^?#\s]*)?(\?[^#\s]+)?(#[^\s]+)?$/i
@@ -47,10 +49,20 @@ export class AtUri {
     this.searchParams = parsed.searchParams
   }
 
-  static make(handleOrDid: string, collection?: string, rkey?: string) {
-    let str = handleOrDid
-    if (collection) str += '/' + collection
-    if (rkey) str += '/' + rkey
+  static make(handleOrDid: Stringifiable, collection?: Stringifiable): AtUri
+  static make(
+    handleOrDid: Stringifiable,
+    collection: Stringifiable,
+    rkey?: Stringifiable,
+  ): AtUri
+  static make(
+    handleOrDid: Stringifiable,
+    collection?: Stringifiable,
+    rkey?: Stringifiable,
+  ): AtUri {
+    let str = String(handleOrDid)
+    if (collection) str += `/${collection}`
+    if (rkey) str += `/${rkey}`
     return new AtUri(str)
   }
 

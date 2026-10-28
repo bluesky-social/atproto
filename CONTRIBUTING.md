@@ -88,6 +88,47 @@ Beyond style, two things are worth calling out up front: don't change tooling or
 
 - If your change introduces, alters, or removes a documented pattern, update [AGENTS.md](./AGENTS.md) and the skills under `.agents/skills/` in the same PR. Agent files are part of the codebase and must stay in sync with it.
 
+## Working with lexicons
+
+Lexicon NSIDs used in this repository have different sources:
+
+- This repository contains the canonical source for the `com.atproto.*` and `tools.ozone.*` lexicon namespaces.
+- Published on the AT Protocol network:
+  - `app.bsky.*` and `chat.bsky.*` are defined in the [`bsky` repository](https://github.com/bluesky-social/bsky), and automatically published on the AT Protocol network from there.
+  - `site.standard.*`, `social.grain.*`, etc. lexicons are published on the AT Protocol network.
+- Some lexicons are not published on the AT Protocol network
+  - `internal.*`
+  - `app.bsky.unspecced.*` (fetched from the [`bsky` repository](https://github.com/bluesky-social/bsky))
+- Some lexicons are missing on the AT Protocol network (at the time of writing)
+  - `place.stream.badge.defs`
+
+The repository root `lexicons` directory holds **only** the canonical `com.atproto.*` and `tools.ozone.*` namespaces. Every package that works with lexicon documents defines its own lexicon manifest (`lexicons.json`), which acts as a "source of truth" for the lexicons it uses (similar to `package.json` for NPM modules). Packages no longer compile the root `lexicons` directory directly.
+
+> [!NOTE]
+>
+> One package is an exception: [`@atproto/lex-resolver`](./packages/lex/lex-resolver) has no `lexicons.json` and still compiles the canonical schemas straight from the root `lexicons` directory (`lex-builder build --lexicons ../../../lexicons --include …`). It sits inside `@atproto/lex-installer`'s own dependency tree, so it cannot depend on the installer to manage a manifest without creating a dependency cycle. See [its AGENTS.md](./packages/lex/lex-resolver/AGENTS.md).
+
+A package's `lexicons.json` lists its lexicons and an ordered `resolvers` array describing where each one comes from. The typical setup is:
+
+- a `directory` resolver pointing at the root `lexicons` directory, scoped to `com.atproto.*` / `tools.ozone.*` (these are **symlinked** into the package's `./lexicons`, so they can't drift from the canonical source);
+- for `app.bsky.*` / `chat.bsky.*`, an `http` resolver pointing at the [`bsky` repository](https://github.com/bluesky-social/bsky) raw lexicons;
+- the AT Protocol network (the implicit last fallback) for other published namespaces (`site.standard.*`, `social.grain.*`, …);
+- a `directory` resolver pointing at the shared, committed repo-root [`lexicons-overrides`](./lexicons-overrides) directory, listed **after** the canonical resolver but before the network ones, so it overrides the lexicons that would otherwise be resolved from the `bsky` repo or the network (it cannot override the canonical lexicons, which resolve first). This holds any document that must differ locally — unpublished lexicons (e.g. `internal.*`, `place.stream.badge.defs`) and documents whose local version is ahead of what the resolvers would otherwise return.
+
+New lexicon dependencies can be added to a package by running `pnpm lex:install new.nsid.to.install` from the package root; `pnpm lex:update` refreshes them.
+
+When building, each package runs `pnpm run lex:install --ci` as part of its `prebuild`. This resolves every lexicon the manifest lists into the package's `./lexicons` directory and fails if any installed document does not match the CID recorded in `lexicons.json`.
+
+Only the generated TypeScript (`src/lexicons`) and the canonical schemas symlinked from the repo root (`com.atproto.*` / `tools.ozone.*`) are gitignored. Every other document resolved into a package's `./lexicons` directory — the `at://` network copies and the `app.bsky.*` / `chat.bsky.*` documents fetched from the `bsky` repo — is committed to the package for offline builds, since AT Protocol does not allow fetching older versions of records and relying on a live fetch would break CI whenever an external lexicon changes or is temporarily unavailable. The shared repo-root `lexicons-overrides` directory is always committed too.
+
+### Updating Lexicons
+
+Updating a canonical lexicon document (`com.atproto.*` or `tools.ozone.*`) in this repository requires running `pnpm lex:update-local` from the repository root. This re-resolves the canonical lexicons in every package that depends on them, propagating the new CID into each package's `lexicons.json`.
+
+Updating an external lexicon document (not `com.atproto.*` or `tools.ozone.*`) should be done by running `pnpm lex:update` from the package that owns the lexicon. This will fetch the latest version of the lexicon and update the package's `lexicons.json` manifest accordingly.
+
+Updating every lexicon document across the repository can be done by running `pnpm lex:update` from the repository root, which runs each package's own `lex:update` in turn.
+
 ## LLM-assisted contributions
 
 Contributions written with the help of an LLM or coding agent are welcome, under three conditions.

@@ -93,19 +93,19 @@ Each service package (`pds`, `ozone`, `bsky`, etc.) should define its own **opti
 - Uses `@opentelemetry/auto-instrumentations-node`'s `getResourceDetectors` for resource detection (honours `OTEL_NODE_RESOURCE_DETECTORS` and `OTEL_RESOURCE_ATTRIBUTES`, and includes the `container` detector), and sets default resource attributes (service name, version, `atproto` namespace, and deployment environment) that the service may extend or override through the `defaultResourceAttributes` option.
 - Shuts down gracefully: listens for the process `beforeExit` event and calls `sdk.shutdown()` to flush pending telemetry. This works because services exit by emptying the event loop (below).
 
-`setup()` already installs the instrumentations shared by every atproto service (`getDefaultAtprotoInstrumentations()`): the Node runtime, HTTP, Express, Undici and Pino instrumentations. These bring:
+`setup()` already installs the instrumentations shared by every atproto service: the Node runtime, HTTP, Express, Undici and Pino instrumentations. These bring:
 
 - **Low-cardinality span names and `http.route`.** XRPC request spans (incoming and outgoing) are named after the normalized method NSID (`POST /xrpc/com.atproto.server.createSession`), never the raw URL, and carry an `xrpc.method` attribute. This is derived internally from the request path — services get it for free and don't wire it up themselves.
 - **Log correlation without log forwarding.** The Pino instrumentation is registered with `disableLogSending: true`: `trace_id`/`span_id` are injected into every pino record, but records are _not_ shipped to the OTEL stack as log records. Only what a service emits deliberately through the OTEL Logs API — from `events.ts` — reaches the OTEL log stream. (Blanket log forwarding is intentionally not exposed by `setup()` today.)
 
-Each service's telemetry module supplies only what is specific to it — its name and version, and (via the `instrumentations` option) any **extra** instrumentations for packages that service actually uses (e.g. `opentelemetry-plugin-better-sqlite3` for services on `better-sqlite3`) rather than `getNodeAutoInstrumentations()`. Whenever adding a dependency, add the corresponding instrumentation if one exists.
+Each service's telemetry module supplies only what is specific to it — its name and version, and (via the `instrumentations` option) any **extra** instrumentations for packages that service actually uses (e.g. `@atproto-labs/opentelemetry-node/better-sqlite3-plugin` for services on `better-sqlite3`) rather than `getNodeAutoInstrumentations()`. Whenever adding a dependency, add the corresponding instrumentation if one exists. An instrumentation must be built on the same `@opentelemetry/instrumentation` (and so `import-in-the-middle`) copy as `@atproto-labs/opentelemetry-node`, or ESM imports of the module it targets can't be instrumented: `setup()` then throws an `InstrumentationMismatchError`, failing the service start. Workspace overrides don't reach consumers of published packages, so a third-party instrumentation lagging behind must be ported into `@atproto-labs/opentelemetry-node` (as done for `better-sqlite3`) rather than pinned.
 
 The service itself should:
 
 - Not run its own metrics endpoint (e.g. a hand-rolled Prometheus server); metrics leave the process only through the SDK's env-configured exporters.
-- **Never read the `OTEL_*` environment variables.** Telemetry configuration belongs entirely to the telemetry script; service code interacts with the telemetry stack only through the `@opentelemetry/api*` packages, primarily via its `events.ts` module.
+- **Never read the `OTEL_*` environment variables.** Telemetry configuration belongs entirely to the telemetry script; service code interacts with the telemetry stack only through the `@opentelemetry/api` package, primarily via its `events.ts` module.
 - Not use `process.exit()` to terminate the process. Instead, release all resources so the event loop empties and the process exits naturally (`process.exitCode` can be set to indicate the exit code). Killing the process would drop unflushed telemetry.
-- Define an `events.ts` module as the single place where business events are reported, using Meters (`@opentelemetry/api`) and Logs (`@opentelemetry/api-logs`):
+- Define an `events.ts` module as the single place where business events are reported, using the Metrics and Logs APIs from `@opentelemetry/api`:
   - One helper per event, so each event has exactly one call-site shape and the counter, log record and attribute definitions live together instead of drifting across handlers.
   - The meter and logger are named after the package (`metrics.getMeter('@atproto/pds')`).
   - Counters carry **low-cardinality attributes only**; high-cardinality detail (`did`, `clientId`, …) goes into the log record.
@@ -170,8 +170,14 @@ Here is an example `events.ts` module that exposes utilities to trigger Meters a
 
 ```ts
 // src/events.ts
-import { type Meter, ValueType, metrics } from '@opentelemetry/api'
-import { type Logger, SeverityNumber, logs } from '@opentelemetry/api-logs'
+import {
+  type Logger,
+  type Meter,
+  SeverityNumber,
+  ValueType,
+  logs,
+  metrics,
+} from '@opentelemetry/api'
 import { eventsLogger } from './logger.js'
 
 const meter: Meter = metrics.getMeter('@atproto/my-service')

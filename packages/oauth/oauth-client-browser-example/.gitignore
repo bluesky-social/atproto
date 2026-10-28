@@ -1,3 +1,4 @@
-src/lexicons
-dist
-.swc
+/src/lexicons
+/lexicons/com/atproto
+/dist
+/.swc

@@ -5,55 +5,46 @@ import {
   FormShell,
   type FormShellProps,
 } from '#/components/forms/form-shell.tsx'
-
-type Values = { code: string; password: string }
+import type { Override } from '#/lib/util.ts'
 
 export type DeleteAccountConfirmData = {
   token: string
   password: string
 }
 
-export type DeleteAccountConfirmFormProps = Omit<
-  FormShellProps<Values>,
-  'onSubmit'
-> & {
-  email?: string
-  onResend: () => void | PromiseLike<void>
-  handler: (
-    data: DeleteAccountConfirmData,
-    signal: AbortSignal,
-  ) => void | PromiseLike<void>
-}
+export type DeleteAccountConfirmFormProps = Override<
+  FormShellProps<DeleteAccountConfirmData>,
+  {
+    currentUsername?: string
+    onResend: () => void | PromiseLike<void>
+  }
+>
 
 export function DeleteAccountConfirmForm({
-  email,
+  currentUsername,
   onResend,
-  handler,
   ...props
 }: DeleteAccountConfirmFormProps) {
   return (
-    <FormShell<Values>
+    <FormShell<DeleteAccountConfirmData>
       {...props}
       submitVariant="destructive"
       submitLabel={<Trans>Delete my account</Trans>}
-      onSubmit={(values, signal) =>
-        handler({ token: values.code, password: values.password }, signal)
-      }
     >
-      {email && (
+      {currentUsername && (
         // For better password managers integration, we include a hidden
-        // username field with the email pre-filled.
+        // username field with the current username pre-filled.
         <input
           type="text"
           autoComplete="username"
-          defaultValue={email}
+          defaultValue={currentUsername}
           readOnly
           hidden
         />
       )}
 
       <TokenField
-        name="code"
+        name="token"
         label={<Trans>Confirmation code</Trans>}
         enterKeyHint="next"
         required

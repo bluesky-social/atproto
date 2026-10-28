@@ -9,6 +9,7 @@ import { SignInPicker } from './sign-in-picker.tsx'
 
 export type SignInViewProps = {
   disableRemember?: boolean
+  rememberDefault?: boolean
   sessions: readonly Session[]
   session: Session | null
   setSession: (session: Session | null) => void
@@ -16,13 +17,14 @@ export type SignInViewProps = {
 
   onSignIn: (credentials: SignInData) => void | PromiseLike<void>
   onSignUp?: () => void
-  onForgotPassword?: (emailHint?: string) => void
+  onForgotPassword?: (hint?: string) => void
   onBack?: () => void
   backLabel?: ReactNode
 }
 
 export function SignInView({
   disableRemember,
+  rememberDefault,
   forcedIdentifier,
   sessions,
   session,
@@ -56,6 +58,8 @@ export function SignInView({
   }, [session])
 
   if (session) {
+    // A session is selected but "loginRequired" is set, so the user must
+    // re-authenticate.
     return (
       <AuthShell
         title={title}
@@ -64,12 +68,14 @@ export function SignInView({
         <SignInForm
           domains={availableUserDomains}
           disableRemember={disableRemember}
-          onSignIn={onSignIn}
+          // Since this is a re-authentication, we keep the "remember"
+          // preference enabled (instead of the prop's value).
+          rememberDefault={true}
+          handler={onSignIn}
           onForgotPassword={onForgotPassword}
           onBack={clearSession}
-          usernameDefault={session.account.handle || session.account.did}
-          usernameReadonly={true}
-          rememberDefault={true}
+          identifierDefault={session.account.handle || session.account.did}
+          identifierReadonly={true}
         />
       </AuthShell>
     )
@@ -81,12 +87,13 @@ export function SignInView({
         <SignInForm
           domains={availableUserDomains}
           disableRemember={disableRemember}
-          onSignIn={onSignIn}
+          rememberDefault={rememberDefault}
+          handler={onSignIn}
           onForgotPassword={onForgotPassword}
           onBack={onBack}
           backLabel={backLabel}
-          usernameDefault={forcedIdentifier}
-          usernameReadonly={true}
+          identifierDefault={forcedIdentifier}
+          identifierReadonly={true}
         />
       </AuthShell>
     )
@@ -98,7 +105,8 @@ export function SignInView({
         <SignInForm
           domains={availableUserDomains}
           disableRemember={disableRemember}
-          onSignIn={onSignIn}
+          rememberDefault={rememberDefault}
+          handler={onSignIn}
           onForgotPassword={onForgotPassword}
           onBack={onBack}
           backLabel={backLabel}
@@ -113,7 +121,8 @@ export function SignInView({
         <SignInForm
           domains={availableUserDomains}
           disableRemember={disableRemember}
-          onSignIn={onSignIn}
+          rememberDefault={rememberDefault}
+          handler={onSignIn}
           onForgotPassword={onForgotPassword}
           onBack={() => setShowSignInForm(false)}
         />

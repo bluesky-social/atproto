@@ -1,7 +1,18 @@
 import assert from 'node:assert'
 import { DAY, HOUR, MINUTE } from '@atproto/common'
-import type { DidString, UriString } from '@atproto/lex'
+import {
+  type DatetimeString,
+  type DidString,
+  type UriString,
+  isDatetimeString,
+  isDidString,
+  toDatetimeString,
+} from '@atproto/lex'
 import type { OzoneEnvironment } from './env.js'
+import {
+  type StrikeSuspensionConfig,
+  parseStrikeSuspensionConfig,
+} from './strike-suspension.js'
 
 // off-config but still from env:
 // logging: LOG_LEVEL, LOG_SYSTEMS, LOG_ENABLED, LOG_DESTINATION
@@ -23,6 +34,9 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
     version: env.version,
     devMode: env.devMode,
     serviceRecordCacheTTL: env.serviceRecordCacheTTL ?? 5 * MINUTE, // default 5 mins
+    labelStreamBackfillRate: env.labelStreamBackfillRate ?? 2000,
+    labelQueryWildcardsEnabled: env.labelQueryWildcardsEnabled ?? false,
+    reportTagsDisabled: env.reportTagsDisabled ?? false,
   }
 
   assert(env.dbPostgresUrl, 'dbPostgresUrl is required')
@@ -74,6 +88,9 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
     plcUrl: env.didPlcUrl,
     cacheMaxTTL: env.didCacheMaxTTL ?? DAY,
     cacheStaleTTL: env.didCacheStaleTTL ?? HOUR,
+    cacheMaxEntries: env.didCacheMaxEntries,
+    cacheMaxBytes: env.didCacheMaxBytes,
+    cacheMaxDocBytes: env.didCacheMaxDocBytes,
   }
 
   const blobDivertServiceCfg =
@@ -103,13 +120,38 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
     reportDurationMs: env.assignmentReportDurationMs ?? 5 * MINUTE,
   }
 
+  const excludedDids = (env.onlineMembersExcludedDids ?? []).map((did) =>
+    did.trim(),
+  )
+  assert(
+    excludedDids.every(isDidString),
+    'OZONE_ONLINE_MEMBERS_EXCLUDED_DIDS must be a comma-separated list of DIDs',
+  )
+  const onlineMembersCfg: OzoneConfig['onlineMembers'] = {
+    excludedDids: [...new Set(excludedDids)],
+    activeWindowMs: env.onlineMembersActiveWindowMs ?? 5 * MINUTE,
+  }
+  assert(
+    Number.isSafeInteger(onlineMembersCfg.activeWindowMs) &&
+      onlineMembersCfg.activeWindowMs > 0,
+    'OZONE_ONLINE_MEMBERS_ACTIVE_WINDOW_MS must be a positive integer',
+  )
+
   const inboxCfg: OzoneConfig['inbox'] = {
     appealWindowMonths: env.inboxAppealWindowMonths ?? 6,
+    policyDefaultUrl: env.inboxPolicyDefaultUrl ?? DEFAULT_INBOX_POLICY_URL,
+    startAt: parseInboxStartAt(env.inboxStartAt),
   }
 
   const statsCfg: OzoneConfig['stats'] = {
     computerIntervalMinutes: env.statsComputerIntervalMinutes ?? 15,
+    reporterWindowDays: env.reporterStatsWindowDays ?? 180,
   }
+  assert(
+    Number.isSafeInteger(statsCfg.reporterWindowDays) &&
+      statsCfg.reporterWindowDays > 0,
+    'OZONE_REPORTER_STATS_WINDOW_DAYS must be a positive integer',
+  )
 
   return {
     service: serviceCfg,
@@ -123,7 +165,9 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
     access: accessCfg,
     verifier: verifierCfg,
     assignments: assignmentsCfg,
+    onlineMembers: onlineMembersCfg,
     inbox: inboxCfg,
+    strikeSuspension: parseStrikeSuspensionConfig(env.strikeSuspensionConfig),
     stats: statsCfg,
     jetstreamUrl: env.jetstreamUrl,
   }
@@ -140,13 +184,22 @@ export type OzoneConfig = {
   blobDivert: BlobDivertConfig | null
   access: AccessConfig
   assignments: AssignmentsConfig
+  onlineMembers: OnlineMembersConfig
+  strikeSuspension: StrikeSuspensionConfig
   inbox: InboxConfig
   stats: StatsConfig
   jetstreamUrl?: string
   verifier: VerifierConfig | null
 }
 
+export type OnlineMembersConfig = {
+  excludedDids: DidString[]
+  activeWindowMs: number
+}
+
 export type StatsConfig = {
+  /** Reporter statistics history in days; defaults to 180. */
+  reporterWindowDays: number
   /**
    * Minutes between stats computer cycles.
    * Defaults to 15. Minimum is 1.
@@ -169,6 +222,12 @@ export type ServiceConfig = {
   version?: string
   devMode?: boolean
   serviceRecordCacheTTL: number // in ms, default 5 mins
+  /** Historical labels per second across subscriptions on one API process. */
+  labelStreamBackfillRate?: number
+  /** Allow wildcard label queries; disabled by default. */
+  labelQueryWildcardsEnabled?: boolean
+  /** Disable automatic report-reason tags; false by default. */
+  reportTagsDisabled?: boolean
 }
 
 export type BlobDivertConfig = {
@@ -211,6 +270,9 @@ export type IdentityConfig = {
   plcUrl: string
   cacheStaleTTL: number
   cacheMaxTTL: number
+  cacheMaxEntries?: number
+  cacheMaxBytes?: number
+  cacheMaxDocBytes?: number
 }
 
 export type AccessConfig = {
@@ -228,6 +290,8 @@ export type VerifierConfig = {
 }
 
 export type InboxConfig = {
+  /** Inclusive creation-time cutoff for inbox history; unset exposes all history. */
+  startAt?: DatetimeString
   /**
    * Calendar months a moderation action stays appealable, counted from the
    * action. Defaults to 6.
@@ -236,6 +300,27 @@ export type InboxConfig = {
    * deployment owns, and can be changed without shipping code.
    */
   appealWindowMonths: number
+  /** Fallback link for takedown policy keys missing from the policy list. */
+  policyDefaultUrl?: string
+}
+
+export const DEFAULT_INBOX_POLICY_URL =
+  'https://bsky.social/about/support/community-guidelines'
+
+function parseInboxStartAt(
+  value: string | undefined,
+): DatetimeString | undefined {
+  if (value === undefined) return undefined
+  assert(
+    isDatetimeString(value),
+    'OZONE_INBOX_START_AT must be an ISO 8601 timestamp with a timezone',
+  )
+  const normalized = toDatetimeString(new Date(value))
+  assert(
+    /^\d{4}-/.test(normalized),
+    'OZONE_INBOX_START_AT must use a four-digit UTC year',
+  )
+  return normalized
 }
 
 export type AssignmentsConfig = {

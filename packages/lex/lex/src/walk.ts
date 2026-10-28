@@ -2,19 +2,24 @@ import { isObject, isPlainObject, isPlainProto } from '@atproto/lex-data'
 import { Procedure, Query, Schema, Subscription } from '@atproto/lex-schema'
 
 export function* walk(
+  ns: unknown,
+): Generator<Schema | Procedure | Subscription | Query, void, unknown> {
+  if (isPlainObject(ns)) {
+    return yield* walkInternal(ns, new Set<unknown>())
+  }
+}
+
+function* walkInternal(
   ns: Record<string, unknown>,
-): Generator<Schema | Procedure | Subscription | Query> {
-  if (!isPlainObject(ns)) return
-
-  const visited = new Set<unknown>()
-
+  visited: Set<unknown>,
+): Generator<Schema | Procedure | Subscription | Query, void, unknown> {
   for (const [key, value] of Object.entries(ns)) {
     // Ignore helpers
     if (key.startsWith('$')) {
       continue
     }
 
-    // Ignore non-objects (should never happen)
+    // Ignore non-objects
     if (!isObject(value)) {
       continue
     }
@@ -40,7 +45,7 @@ export function* walk(
       yield value
     } else if (isPlainProto(value)) {
       // child namespace
-      yield* walk(value)
+      yield* walkInternal(value, visited)
     }
   }
 }

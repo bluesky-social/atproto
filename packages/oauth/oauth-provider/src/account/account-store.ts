@@ -17,7 +17,13 @@ import type {
   UpdateHandleInput,
 } from '@atproto/oauth-provider-api'
 import type { OAuthScope } from '@atproto/oauth-types'
-import type { DatetimeString, HandleString } from '@atproto/syntax'
+import {
+  type AtIdentifierString,
+  type DatetimeString,
+  type HandleString,
+  isAtIdentifierString,
+  isDidIdentifier,
+} from '@atproto/syntax'
 import type { ClientId } from '../client/client-id.js'
 import type { DeviceData } from '../device/device-data.js'
 import type { DeviceId } from '../device/device-id.js'
@@ -26,12 +32,14 @@ import type { HandleUnavailableReason } from '../errors/handle-unavailable-error
 import type { HcaptchaVerifyResult } from '../lib/hcaptcha.js'
 import type { Awaitable } from '../lib/util/type.js'
 import { buildInterfaceChecker } from '../lib/util/type.js'
+import type { IdentifierString } from '../types/indentifier.js'
 import type { InviteCode } from '../types/invite-code.js'
 import type { SignUpInput } from './sign-up-input.js'
 
 // Export all types needed to implement the AccountStore interface
 export type {
   Account,
+  AtIdentifierString,
   ClientId,
   DeviceData,
   DeviceId,
@@ -41,11 +49,14 @@ export type {
   HandleString,
   HandleUnavailableReason,
   HcaptchaVerifyResult,
+  IdentifierString,
   InviteCode,
   OAuthScope,
   SessionId,
   SignUpInput,
 }
+
+export { isAtIdentifierString, isDidIdentifier }
 
 export type ResetPasswordRequestInput = InitiatePasswordResetInput
 export type ResetPasswordConfirmInput = ConfirmResetPasswordInput
@@ -77,10 +88,15 @@ export type CreateAccountData = {
 }
 
 export type AuthenticateAccountData = {
-  locale: string
+  identifier: IdentifierString
   password: string
-  username: string
-  emailOtp?: string | undefined
+  locale: string
+  emailOtp: string | undefined
+  /**
+   * Lists the accounts that were previously remembered on the device, allowing
+   * OTP bypass for these accounts (based on the store's own logic)
+   */
+  deviceAccounts: readonly DeviceAccount[]
 }
 
 export type AuthorizedClientData = { authorizedScopes: readonly string[] }
@@ -135,11 +151,8 @@ export interface AccountStore {
   /**
    * @throws {InvalidCredentialsError} - When the credentials are not valid.
    * Populate {@link InvalidCredentialsError.did} with the subject identifier
-   * when the identifier matched an existing account (e.g. wrong password for
-   * a known user); omit it when the identifier was not found. Throwing the
-   * generic {@link InvalidRequestError} is also accepted for backward
-   * compatibility but prevents the `onSignInFailed` hook from distinguishing
-   * the two cases.
+   * when the identifier matched an existing account (e.g. wrong password for a
+   * known user); omit it when the identifier was not found.
    * @throws {SecondAuthenticationFactorRequiredError} - To indicate that an {@link SecondAuthenticationFactorRequiredError.type} is required in the credentials
    */
   authenticateAccount(data: AuthenticateAccountData): Awaitable<Account>
@@ -154,9 +167,10 @@ export interface AccountStore {
   ): Awaitable<void>
 
   /**
-   * @throws {InvalidRequestError} - When the credentials are not valid
+   * Retrieves the account and its authorized clients for the given handle or
+   * DID. Return `null` if the account is not found.
    */
-  getAccount(did: Did): Awaitable<{
+  getAccount(handleOrDid: AtIdentifierString): Awaitable<null | {
     account: Account
     authorizedClients: AuthorizedClients
   }>

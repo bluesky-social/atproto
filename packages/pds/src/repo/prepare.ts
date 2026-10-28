@@ -35,6 +35,9 @@ import {
   type ValidationStatus,
 } from './types.js'
 
+// @NOTE Every known lexicon schema is collected here for validation purposes.
+// these are installed through `lex:install` and must be referenced from the
+// lexicons.json manifest.
 const knownSchemas = new Map<string, RecordSchema>(
   walk(lexicons)
     .filter((s) => s instanceof RecordSchema)

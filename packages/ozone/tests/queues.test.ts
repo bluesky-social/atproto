@@ -6,6 +6,8 @@ import {
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
+import { currentDatetimeString } from '@atproto/lex'
+import { jsonb } from '../src/db/types.js'
 
 describe('ozone-queues', () => {
   let network: TestNetwork
@@ -22,8 +24,10 @@ describe('ozone-queues', () => {
   const createQueue = async (
     input: {
       name: string
-      subjectTypes: string[]
-      reportTypes: string[]
+      subjectTypes?: string[]
+      reportTypes?: string[]
+      reporterTags?: string[]
+      accountTags?: string[]
       collection?: string
       description?: string
       recommendedPolicies?: string[]
@@ -103,7 +107,7 @@ describe('ozone-queues', () => {
 
   beforeAll(async () => {
     network = await TestNetwork.create({
-      dbPostgresSchema: 'ozone_queues',
+      dbPostgresSchema: 'ozone_queue_tag_criteria',
     })
     agent = network.ozone.getAgent()
     sc = network.getSeedClient()
@@ -144,6 +148,22 @@ describe('ozone-queues', () => {
       expect(data.queue.stats).toBeDefined()
       expect(data.queue.recommendedPolicies).toEqual([])
       expect(data.queue.recommendedLabels).toEqual([])
+      expect(data.queue.reporterTags).toEqual([])
+      expect(data.queue.accountTags).toEqual([])
+    })
+
+    it('rejects null report types', async () => {
+      await expect(
+        agent.call(
+          ids.ToolsOzoneQueueCreateQueue,
+          undefined,
+          { name: 'CQ: Invalid Null Reasons', reportTypes: null },
+          {
+            encoding: 'application/json',
+            headers: await modHeaders(ids.ToolsOzoneQueueCreateQueue),
+          },
+        ),
+      ).rejects.toMatchObject({ error: 'InvalidRequest' })
     })
 
     it('stores recommended labels and rejects labels mapped to another queue', async () => {
@@ -399,6 +419,375 @@ describe('ozone-queues', () => {
     })
   })
 
+  describe('routing criteria configuration', () => {
+    const createdIds: number[] = []
+    const reason = 'com.atproto.moderation.defs#reasonSpam'
+
+    afterEach(async () => {
+      await cleanupQueues(createdIds.splice(0))
+    })
+
+    const create = async (input: Parameters<typeof createQueue>[0]) => {
+      const { data } = await createQueue(input)
+      createdIds.push(data.queue.id)
+      return data.queue
+    }
+
+    it('stores criteria and preserves them through legacy updates and views', async () => {
+      const criteria = {
+        subjectTypes: ['account', 'record'],
+        reportTypes: [reason],
+        reporterTags: ['priority-reporter', 'trusted-reporter'],
+        accountTags: ['priority-account'],
+      }
+      const queue = await create({ name: 'RC: Tagged', ...criteria })
+      expect(queue).toMatchObject(criteria)
+      expect(queue.collection).toBeUndefined()
+
+      // @NOTE Unknown update fields must not make creation-time criteria mutable.
+      const attemptedCriteria = {
+        reportTypes: [],
+        reporterTags: [],
+        accountTags: [],
+      }
+      const { data } = await updateQueue({
+        queueId: queue.id,
+        name: 'RC: Renamed',
+        enabled: false,
+        description: 'Updated description',
+        recommendedPolicies: ['policy-one'],
+        recommendedLabels: ['routing-label'],
+        ...attemptedCriteria,
+      })
+      expect(data.queue).toMatchObject({ ...criteria, enabled: false })
+      const { queues } = await listQueues()
+      expect(queues.find((q) => q.id === queue.id)).toMatchObject(criteria)
+    })
+
+    it('defaults omitted fields for manual queues', async () => {
+      const queue = await create({ name: 'RC: Manual Defaults' })
+      expect(queue).toMatchObject({
+        subjectTypes: [],
+        reporterTags: [],
+        accountTags: [],
+      })
+      expect(queue.reportTypes).toEqual([])
+    })
+
+    it.each([undefined, []])(
+      'preserves empty report types through updates, listings, and assignments: %j',
+      async (reportTypes) => {
+        const queue = await create({
+          name: 'RC: No Automatic Reasons',
+          subjectTypes: ['account'],
+          reportTypes,
+        })
+        expect(queue.reportTypes).toEqual([])
+        const { data: updated } = await updateQueue({
+          queueId: queue.id,
+          name: 'RC: No Automatic Reasons Renamed',
+        })
+        expect(updated.queue.reportTypes).toEqual([])
+        const { queues } = await listQueues({ reportTypes: [reason] })
+        expect(queues.map((q) => q.id)).not.toContain(queue.id)
+        const { data: assigned } =
+          await agent.tools.ozone.queue.assignModerator(
+            { queueId: queue.id, did: network.ozone.moderatorAccnt.did },
+            { headers: await modHeaders(ids.ToolsOzoneQueueAssignModerator) },
+          )
+        expect(assigned.queue.reportTypes).toEqual([])
+        const { data: listed } = await agent.tools.ozone.queue.getAssignments(
+          { queueIds: [queue.id] },
+          { headers: await modHeaders(ids.ToolsOzoneQueueGetAssignments) },
+        )
+        expect(listed.assignments[0].queue.reportTypes).toEqual([])
+      },
+    )
+
+    it('accepts explicitly selected reasons beyond 25 entries', async () => {
+      const reportTypes = Array.from(
+        { length: 60 },
+        (_, index) => `reason-${index}`,
+      )
+      const queue = await create({
+        name: 'RC: Selected Reasons',
+        subjectTypes: ['account'],
+        reportTypes,
+      })
+      expect(queue.reportTypes).toEqual(reportTypes)
+      const { queues } = await listQueues({ reportTypes: [reportTypes[59]] })
+      expect(queues.map((q) => q.id)).toContain(queue.id)
+    })
+
+    it('retains criteria in moderator assignment views', async () => {
+      const criteria = {
+        reporterTags: ['priority-reporter'],
+        accountTags: ['priority-account'],
+        reportTypes: [reason],
+      }
+      const queue = await create({ name: 'RC: Assigned', ...criteria })
+      const { data: assigned } = await agent.tools.ozone.queue.assignModerator(
+        { queueId: queue.id, did: network.ozone.moderatorAccnt.did },
+        { headers: await modHeaders(ids.ToolsOzoneQueueAssignModerator) },
+      )
+      expect(assigned.queue).toMatchObject(criteria)
+      const { data: listed } = await agent.tools.ozone.queue.getAssignments(
+        { queueIds: [queue.id] },
+        { headers: await modHeaders(ids.ToolsOzoneQueueGetAssignments) },
+      )
+      expect(listed.assignments[0].queue).toMatchObject(criteria)
+    })
+
+    it('normalizes nullable criteria from legacy queue writers in views and updates', async () => {
+      const now = currentDatetimeString()
+      const legacy = await network.ozone.ctx.db.db
+        .insertInto('report_queue')
+        .values({
+          name: 'RC: Legacy Writer',
+          subjectTypes: jsonb([]),
+          collection: null,
+          reportTypes: jsonb([]),
+          description: null,
+          recommendedPolicies: jsonb([]),
+          recommendedLabels: jsonb([]),
+          createdBy: network.ozone.adminAccnt.did,
+          createdAt: now,
+          updatedAt: now,
+          enabled: true,
+          deletedAt: null,
+        })
+        .returning(['id', 'reporterTags', 'accountTags'])
+        .executeTakeFirstOrThrow()
+      createdIds.push(legacy.id)
+      expect(legacy.reporterTags).toBeNull()
+      expect(legacy.accountTags).toBeNull()
+      const { data: updated } = await updateQueue({
+        queueId: legacy.id,
+        name: 'RC: Legacy Writer Renamed',
+      })
+      expect(updated.queue).toMatchObject({ reporterTags: [], accountTags: [] })
+      const { data: assigned } = await agent.tools.ozone.queue.assignModerator(
+        { queueId: legacy.id, did: network.ozone.moderatorAccnt.did },
+        { headers: await modHeaders(ids.ToolsOzoneQueueAssignModerator) },
+      )
+      expect(assigned.queue).toMatchObject({
+        reporterTags: [],
+        accountTags: [],
+      })
+      const { data: assignments } =
+        await agent.tools.ozone.queue.getAssignments(
+          { queueIds: [legacy.id] },
+          { headers: await modHeaders(ids.ToolsOzoneQueueGetAssignments) },
+        )
+      expect(assignments.assignments[0].queue).toMatchObject({
+        reporterTags: [],
+        accountTags: [],
+      })
+      const { queues } = await listQueues()
+      expect(queues.find((q) => q.id === legacy.id)).toMatchObject({
+        reporterTags: [],
+        accountTags: [],
+      })
+    })
+
+    it.each([
+      { reporterTags: [''] },
+      { accountTags: [''] },
+      { reporterTags: Array(26).fill('tag') },
+      { accountTags: Array(26).fill('tag') },
+    ])('rejects invalid criteria %j', async (criteria) => {
+      await expect(
+        createQueue({ name: 'RC: Invalid', ...criteria }),
+      ).rejects.toMatchObject({ error: 'InvalidRequest' })
+    })
+
+    it.each([['*'], ['*', reason]])(
+      'matches report reason filters literally: %j',
+      async (...reportTypes) => {
+        const all = await create({
+          name: 'RC: Literal Reasons',
+          accountTags: ['tagged-account'],
+          subjectTypes: ['account'],
+          reportTypes,
+        })
+        const specific = await create({
+          name: 'RC: Specific Reason',
+          subjectTypes: ['account'],
+          reportTypes: [reason],
+        })
+        const manual = await create({ name: 'RC: No Reasons', reportTypes: [] })
+
+        for (const reportType of [reason, 'custom-report-reason']) {
+          const { queues } = await listQueues({ reportTypes: [reportType] })
+          const ids = queues.map((q) => q.id)
+          expect(ids.includes(all.id)).toBe(reportTypes.includes(reportType))
+          expect(ids).not.toContain(manual.id)
+          expect(ids.includes(specific.id)).toBe(reportType === reason)
+        }
+      },
+    )
+
+    it('allows overlaps across tag roles and preserves criteria during edits', async () => {
+      const ordinary = await create({
+        name: 'RC: Ordinary',
+        subjectTypes: ['account'],
+        reportTypes: [reason],
+      })
+      const reporting = await create({
+        name: 'RC: Reporter',
+        subjectTypes: ['account', 'record'],
+        reporterTags: ['priority-reporter'],
+        reportTypes: [reason],
+      })
+      const reported = await create({
+        name: 'RC: Account',
+        subjectTypes: ['account', 'record'],
+        accountTags: ['priority-account'],
+        reportTypes: [reason],
+      })
+      for (const queue of [ordinary, reporting, reported]) {
+        const { data } = await updateQueue({
+          queueId: queue.id,
+          name: `${queue.name} Renamed`,
+        })
+        expect(data.queue).toMatchObject({
+          reporterTags: queue.reporterTags,
+          accountTags: queue.accountTags,
+          reportTypes: queue.reportTypes,
+        })
+      }
+    })
+
+    it('keeps name and recommended-label uniqueness across tag roles', async () => {
+      await create({
+        name: 'RC: Unique',
+        subjectTypes: ['account'],
+        reportTypes: [reason],
+        recommendedLabels: ['unique-routing-label'],
+      })
+      await expect(createQueue({ name: 'RC: Unique' })).rejects.toMatchObject({
+        error: 'ConflictingQueue',
+      })
+      await expect(
+        createQueue({
+          name: 'RC: Duplicate Label',
+          recommendedLabels: ['unique-routing-label'],
+        }),
+      ).rejects.toMatchObject({ error: 'ConflictingQueue' })
+    })
+
+    it.each([false, true])(
+      'rejects overlapping tag criteria regardless of creation order (unrestricted collection first: %s)',
+      async (unrestrictedFirst) => {
+        const all = {
+          name: 'RC: Unrestricted Collection',
+          subjectTypes: ['record'],
+          accountTags: ['account-tag'],
+          reportTypes: [reason],
+        }
+        const specific = {
+          name: 'RC: Specific With Same Tag Role',
+          subjectTypes: ['record'],
+          collection: 'app.bsky.feed.post',
+          reportTypes: [reason],
+          accountTags: ['different-tag'],
+        }
+        await create(unrestrictedFirst ? all : specific)
+        await expect(
+          createQueue(unrestrictedFirst ? specific : all),
+        ).rejects.toMatchObject({ error: 'ConflictingQueue' })
+      },
+    )
+
+    it.each([false, true])(
+      'allows disjoint reasons with literal wildcard-looking values (literal first: %s)',
+      async (literalFirst) => {
+        const literal = {
+          name: 'RC: Literal Reason',
+          subjectTypes: ['record'],
+          reportTypes: ['*'],
+        }
+        const specific = {
+          name: 'RC: Ordinary Specific',
+          subjectTypes: ['record'],
+          reportTypes: [reason],
+        }
+        await create(literalFirst ? literal : specific)
+        await create(literalFirst ? specific : literal)
+      },
+    )
+
+    it.each(['reporterTags', 'accountTags'] as const)(
+      'allows %s queues with empty or disjoint report reasons',
+      async (field) => {
+        await create({
+          name: 'RC: Tagged Reason',
+          subjectTypes: ['account'],
+          reportTypes: [reason],
+          [field]: ['first-tag'],
+        })
+        for (const reportTypes of [[], ['custom-report-reason']]) {
+          await create({
+            name: `RC: Tagged Disjoint ${reportTypes.length}`,
+            subjectTypes: ['account'],
+            reportTypes,
+            [field]: ['second-tag'],
+          })
+        }
+      },
+    )
+
+    it('allows disjoint collections but detects shared non-record subjects', async () => {
+      const criteria = {
+        subjectTypes: ['record'],
+        reportTypes: [reason],
+        accountTags: ['account-tag'],
+      }
+      await create({
+        name: 'RC: Posts',
+        collection: 'app.bsky.feed.post',
+        ...criteria,
+      })
+      await create({
+        name: 'RC: Profiles',
+        collection: 'app.bsky.actor.profile',
+        ...criteria,
+      })
+      await cleanupQueues(createdIds.splice(0))
+      await create({
+        name: 'RC: Accounts And Posts',
+        collection: 'app.bsky.feed.post',
+        ...criteria,
+        subjectTypes: ['account', 'record'],
+      })
+      await expect(
+        createQueue({
+          name: 'RC: Accounts And Profiles',
+          collection: 'app.bsky.actor.profile',
+          ...criteria,
+          subjectTypes: ['account', 'record'],
+        }),
+      ).rejects.toMatchObject({ error: 'ConflictingQueue' })
+    })
+
+    it('allows manual-only and empty-reason queues alongside automatic queues', async () => {
+      await create({
+        name: 'RC: Automatic',
+        subjectTypes: ['account'],
+        reportTypes: [reason],
+      })
+      await create({
+        name: 'RC: Manual With Reasons',
+        reportTypes: [reason],
+      })
+      await create({
+        name: 'RC: Empty Reasons',
+        subjectTypes: ['account'],
+        reportTypes: [],
+      })
+    })
+  })
+
   describe('listQueues', () => {
     let queueIds: number[] = []
 
@@ -519,7 +908,87 @@ describe('ozone-queues', () => {
         expect(typeof queue.stats.pendingCount).toBe('number')
         expect(typeof queue.stats.actionedCount).toBe('number')
         expect(typeof queue.stats.escalatedCount).toBe('number')
+        expect(queue.stats.closedCount).toBe(0)
+        expect(queue.stats.acknowledgedCount).toBe(0)
+        expect(queue.stats.ahtSampleCount).toBe(0)
+        expect(queue.stats.resolutionSampleCount).toBe(0)
+        expect(queue.stats.avgHandlingTimeSec).toBeUndefined()
+        expect(queue.stats.avgResolutionTimeSec).toBeUndefined()
       }
+    })
+
+    it('returns stored lifecycle counts and durations in queue stats', async () => {
+      await modClient.computeStats()
+      const stored = {
+        inboundCount: 20,
+        pendingCount: 5,
+        closedCount: 10,
+        actionedCount: 6,
+        acknowledgedCount: 4,
+        escalatedCount: 2,
+        labelActionCount: 1,
+        tagActionCount: 2,
+        takedownActionCount: 3,
+        ahtDurationSec: 1200,
+        ahtSampleCount: 4,
+        resolutionDurationSec: 36000,
+        resolutionSampleCount: 10,
+        actionRate: 60,
+        avgHandlingTimeSec: 300,
+        avgResolutionTimeSec: 3600,
+      }
+      await network.ozone.ctx.db.db
+        .updateTable('report_stat')
+        .set(stored)
+        .where('queueId', '=', queueIds[0])
+        .where('moderatorDid', 'is', null)
+        .where('reportTypes', 'is', null)
+        .execute()
+
+      const { queues } = await listQueues()
+      expect(queues.find((q) => q.id === queueIds[0])?.stats).toEqual({
+        ...stored,
+        closureTargetMetCount: 0,
+        closureTargetMissedCount: 0,
+        closureTargetOverdueCount: 0,
+        lastUpdated: expect.any(String),
+      })
+    })
+
+    it('omits unavailable lifecycle fields from legacy queue stats', async () => {
+      await modClient.computeStats()
+      await network.ozone.ctx.db.db
+        .updateTable('report_stat')
+        .set({
+          closedCount: null,
+          acknowledgedCount: null,
+          labelActionCount: null,
+          tagActionCount: null,
+          takedownActionCount: null,
+          ahtDurationSec: null,
+          ahtSampleCount: null,
+          resolutionDurationSec: null,
+          resolutionSampleCount: null,
+          avgResolutionTimeSec: null,
+          avgHandlingTimeSec: 120,
+        })
+        .where('queueId', '=', queueIds[0])
+        .where('moderatorDid', 'is', null)
+        .where('reportTypes', 'is', null)
+        .execute()
+
+      const { queues } = await listQueues()
+      expect(queues.find((q) => q.id === queueIds[0])?.stats).toEqual({
+        inboundCount: 0,
+        pendingCount: 0,
+        actionedCount: 0,
+        escalatedCount: 0,
+        avgHandlingTimeSec: 120,
+        closureTargetMetCount: 0,
+        closureTargetMissedCount: 0,
+        closureTargetOverdueCount: 0,
+        lastUpdated: expect.any(String),
+      })
     })
   })
 

@@ -8,6 +8,8 @@ type LiveNowConfig = {
   domains: string[]
 }[]
 
+export type NotificationsV2Algorithm = 'algoGravity' | 'algoLookback'
+
 export interface KwsConfig {
   apiKey: string
   apiOrigin: string
@@ -42,6 +44,7 @@ export interface ServerConfigValues {
   serverDid: DidString
   alternateAudienceDids: DidString[]
   entrywayJwtPublicKeyHex?: string
+  bffJwtSecret?: string
   liveNowConfig?: LiveNowConfig
   // external services
   etcdHosts: string[]
@@ -61,15 +64,23 @@ export interface ServerConfigValues {
   rolodexApiKey?: string
   rolodexHttpVersion?: '1.1' | '2'
   rolodexIgnoreBadTls?: boolean
+  externalRecordsSafeDomains?: string[]
   searchUrl?: string
   searchTagsHide: Set<string>
   searchTagsHideAll: Set<string>
   suggestionsUrl?: string
   suggestionsApiKey?: string
+  atmosphereExploreTabService?: string
   topicsUrl?: string
   topicsApiKey?: string
   irisUrl?: string
-  irisFeedUris?: Set<string> // `iris:feed:enable` gate to serve via iris instead of seeemore
+  irisServiceDid?: DidString
+  seemoreServiceDid?: DidString
+  irisStagingServiceDid?: DidString
+  trendingFeedDid?: DidString
+  bskyFeedgenDids: Set<string>
+  irisApiKey?: string
+  irisFeedUris?: Set<string> // allowlist iris may serve instead of seeemore; whats-hot is gated by `iris:feed:enable`, other feeds by their per-rkey `iris:feed:<rkey>:enable` gate
   irisStagingUrl?: string
   irisStagingFeedUris?: Set<string> // serve via iris staging instead of the registered feed generator
   feedGenSkeletonTimeout: number
@@ -102,6 +113,11 @@ export interface ServerConfigValues {
   visibilityTagRankPrefix: string
   // notifications
   notificationsDelayMs?: number
+  notificationsV2Algorithm?: NotificationsV2Algorithm
+  notificationsV2MinRawLimit: number
+  notificationsV2MaxRawItems: number
+  notificationsV2MaxFetches: number
+  notificationsV2MaxGroupItemsWithRelatedViews: number
   // client config
   clientCheckEmailConfirmed?: boolean
   topicsEnabled?: boolean
@@ -122,7 +138,13 @@ export interface ServerConfigValues {
 
 export class ServerConfig {
   private assignedPort?: number
-  constructor(private cfg: ServerConfigValues) {}
+  constructor(private cfg: ServerConfigValues) {
+    assert(
+      cfg.bffJwtSecret == null ||
+        Buffer.byteLength(cfg.bffJwtSecret, 'utf8') >= 32,
+      'BSKY_BFF_JWT_SECRET must be generated from at least 32 random bytes (minimum key length: 32 bytes)',
+    )
+  }
 
   static readEnv(overrides?: Partial<ServerConfigValues>) {
     const version = process.env.BSKY_VERSION || undefined
@@ -139,6 +161,7 @@ export class ServerConfig {
     assert(alternateAudienceDids.every(isDidString))
     const entrywayJwtPublicKeyHex =
       process.env.BSKY_ENTRYWAY_JWT_PUBLIC_KEY_HEX || undefined
+    const bffJwtSecret = process.env.BSKY_BFF_JWT_SECRET || undefined
     let liveNowConfig: LiveNowConfig | undefined
     if (process.env.BSKY_LIVE_NOW_CONFIG) {
       try {
@@ -175,9 +198,24 @@ export class ServerConfig {
     )
     const suggestionsUrl = process.env.BSKY_SUGGESTIONS_URL || undefined
     const suggestionsApiKey = process.env.BSKY_SUGGESTIONS_API_KEY || undefined
+    const atmosphereExploreTabService =
+      process.env.BSKY_ATMOSPHERE_EXPLORE_TAB_SERVICE || undefined
     const topicsUrl = process.env.BSKY_TOPICS_URL || undefined
     const topicsApiKey = process.env.BSKY_TOPICS_API_KEY
     const irisUrl = process.env.BSKY_IRIS_URL || undefined
+    const irisServiceDid = process.env.BSKY_IRIS_SERVICE_DID || undefined
+    assert(irisServiceDid == null || isDidString(irisServiceDid))
+    const seemoreServiceDid = process.env.BSKY_SEEMORE_SERVICE_DID || undefined
+    assert(seemoreServiceDid == null || isDidString(seemoreServiceDid))
+    const irisStagingServiceDid =
+      process.env.BSKY_IRIS_STAGING_SERVICE_DID || undefined
+    assert(irisStagingServiceDid == null || isDidString(irisStagingServiceDid))
+    const trendingFeedDid = process.env.BSKY_TRENDING_FEED_DID || undefined
+    assert(trendingFeedDid == null || isDidString(trendingFeedDid))
+    const bskyFeedgenDids = new Set(
+      envList(process.env.BSKY_FEEDGEN_DIDS).filter(isDidString),
+    )
+    const irisApiKey = process.env.BSKY_IRIS_API_KEY || undefined
     const irisFeedUris = new Set(envList(process.env.BSKY_IRIS_FEED_URIS))
     const irisStagingUrl = process.env.BSKY_IRIS_STAGING_URL || undefined
     const irisStagingFeedUris = new Set(
@@ -224,6 +262,11 @@ export class ServerConfig {
     const rolodexIgnoreBadTls =
       process.env.BSKY_ROLODEX_IGNORE_BAD_TLS === 'true'
     assert(rolodexHttpVersion === '1.1' || rolodexHttpVersion === '2')
+    const externalRecordsSafeDomains = envList(
+      process.env.BSKY_EXTERNAL_RECORDS_SAFE_DOMAINS,
+    )
+      .map((value) => value.trim())
+      .filter(Boolean)
     const blobRateLimitBypassKey =
       process.env.BSKY_BLOB_RATE_LIMIT_BYPASS_KEY || undefined
     // single domain would be e.g. "mypds.com", subdomains are supported with a leading dot e.g. ".mypds.com"
@@ -277,6 +320,49 @@ export class ServerConfig {
     const notificationsDelayMs = process.env.BSKY_NOTIFICATIONS_DELAY_MS
       ? parseInt(process.env.BSKY_NOTIFICATIONS_DELAY_MS || '', 10)
       : 0
+    const notificationsV2Algorithm =
+      process.env.BSKY_NOTIFICATIONS_V2_ALGORITHM === 'algoLookback'
+        ? 'algoLookback'
+        : 'algoGravity'
+    const notificationsV2MinRawLimit = process.env
+      .BSKY_NOTIFICATIONS_V2_MIN_RAW_LIMIT
+      ? parseInt(process.env.BSKY_NOTIFICATIONS_V2_MIN_RAW_LIMIT, 10)
+      : 300
+    assert(
+      Number.isInteger(notificationsV2MinRawLimit),
+      'invalid BSKY_NOTIFICATIONS_V2_MIN_RAW_LIMIT',
+    )
+    const notificationsV2MaxRawItems = process.env
+      .BSKY_NOTIFICATIONS_V2_MAX_RAW_ITEMS
+      ? parseInt(process.env.BSKY_NOTIFICATIONS_V2_MAX_RAW_ITEMS, 10)
+      : 3000
+    assert(
+      Number.isInteger(notificationsV2MaxRawItems),
+      'invalid BSKY_NOTIFICATIONS_V2_MAX_RAW_ITEMS',
+    )
+    assert(
+      notificationsV2MinRawLimit <= notificationsV2MaxRawItems,
+      'notificationsV2MinRawLimit must not exceed notificationsV2MaxRawItems',
+    )
+    const notificationsV2MaxFetches = process.env
+      .BSKY_NOTIFICATIONS_V2_MAX_FETCHES
+      ? parseInt(process.env.BSKY_NOTIFICATIONS_V2_MAX_FETCHES, 10)
+      : 3
+    assert(
+      Number.isInteger(notificationsV2MaxFetches),
+      'invalid BSKY_NOTIFICATIONS_V2_MAX_FETCHES',
+    )
+    const notificationsV2MaxGroupItemsWithRelatedViews = process.env
+      .BSKY_NOTIFICATIONS_V2_MAX_GROUP_ITEMS_WITH_RELATED_VIEWS
+      ? parseInt(
+          process.env.BSKY_NOTIFICATIONS_V2_MAX_GROUP_ITEMS_WITH_RELATED_VIEWS,
+          10,
+        )
+      : 10
+    assert(
+      Number.isInteger(notificationsV2MaxGroupItemsWithRelatedViews),
+      'invalid BSKY_NOTIFICATIONS_V2_MAX_GROUP_ITEMS_WITH_RELATED_VIEWS',
+    )
 
     const disableSsrfProtection = process.env.BSKY_DISABLE_SSRF_PROTECTION
       ? process.env.BSKY_DISABLE_SSRF_PROTECTION === 'true'
@@ -367,6 +453,7 @@ export class ServerConfig {
       serverDid,
       alternateAudienceDids,
       entrywayJwtPublicKeyHex,
+      bffJwtSecret,
       liveNowConfig,
       etcdHosts,
       dataplaneUrls,
@@ -378,9 +465,16 @@ export class ServerConfig {
       searchTagsHideAll,
       suggestionsUrl,
       suggestionsApiKey,
+      atmosphereExploreTabService,
       topicsUrl,
       topicsApiKey,
       irisUrl,
+      irisServiceDid,
+      seemoreServiceDid,
+      irisStagingServiceDid,
+      trendingFeedDid,
+      bskyFeedgenDids,
+      irisApiKey,
       irisFeedUris,
       irisStagingUrl,
       irisStagingFeedUris,
@@ -404,6 +498,7 @@ export class ServerConfig {
       rolodexApiKey,
       rolodexHttpVersion,
       rolodexIgnoreBadTls,
+      externalRecordsSafeDomains,
       blobRateLimitBypassKey,
       blobRateLimitBypassHostname,
       adminPasswords,
@@ -423,6 +518,11 @@ export class ServerConfig {
       visibilityTagHide,
       visibilityTagRankPrefix,
       notificationsDelayMs,
+      notificationsV2Algorithm,
+      notificationsV2MinRawLimit,
+      notificationsV2MaxRawItems,
+      notificationsV2MaxFetches,
+      notificationsV2MaxGroupItemsWithRelatedViews,
       disableSsrfProtection,
       proxyAllowHTTP2,
       proxyConnectTimeout,
@@ -473,6 +573,10 @@ export class ServerConfig {
 
   get entrywayJwtPublicKeyHex() {
     return this.cfg.entrywayJwtPublicKeyHex
+  }
+
+  get bffJwtSecret() {
+    return this.cfg.bffJwtSecret
   }
 
   get liveNowConfig() {
@@ -564,6 +668,10 @@ export class ServerConfig {
     return this.cfg.suggestionsApiKey
   }
 
+  get atmosphereExploreTabService() {
+    return this.cfg.atmosphereExploreTabService
+  }
+
   get topicsUrl() {
     return this.cfg.topicsUrl
   }
@@ -574,6 +682,30 @@ export class ServerConfig {
 
   get irisUrl() {
     return this.cfg.irisUrl
+  }
+
+  get irisServiceDid() {
+    return this.cfg.irisServiceDid
+  }
+
+  get seemoreServiceDid() {
+    return this.cfg.seemoreServiceDid
+  }
+
+  get irisStagingServiceDid() {
+    return this.cfg.irisStagingServiceDid
+  }
+
+  get trendingFeedDid() {
+    return this.cfg.trendingFeedDid
+  }
+
+  get bskyFeedgenDids() {
+    return this.cfg.bskyFeedgenDids
+  }
+
+  get irisApiKey() {
+    return this.cfg.irisApiKey
   }
 
   get irisFeedUris() {
@@ -696,6 +828,26 @@ export class ServerConfig {
     return this.cfg.notificationsDelayMs ?? 0
   }
 
+  get notificationsV2Algorithm(): NotificationsV2Algorithm {
+    return this.cfg.notificationsV2Algorithm ?? 'algoGravity'
+  }
+
+  get notificationsV2MinRawLimit(): number {
+    return this.cfg.notificationsV2MinRawLimit
+  }
+
+  get notificationsV2MaxRawItems(): number {
+    return this.cfg.notificationsV2MaxRawItems
+  }
+
+  get notificationsV2MaxFetches(): number {
+    return this.cfg.notificationsV2MaxFetches
+  }
+
+  get notificationsV2MaxGroupItemsWithRelatedViews(): number {
+    return this.cfg.notificationsV2MaxGroupItemsWithRelatedViews
+  }
+
   get disableSsrfProtection(): boolean {
     return this.cfg.disableSsrfProtection ?? false
   }
@@ -742,6 +894,10 @@ export class ServerConfig {
 
   get searchV2OverrideHeader() {
     return this.cfg.searchV2OverrideHeader
+  }
+
+  get externalRecordsSafeDomains() {
+    return this.cfg.externalRecordsSafeDomains ?? []
   }
 }
 

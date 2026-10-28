@@ -46,6 +46,7 @@ Almost every integration test in `pds`, `bsky`, `ozone`, and `lexicon-resolver` 
 
 - `TestNetwork.create({ dbPostgresSchema })` — PDS + AppView + bsync + ozone + PLC. Needs postgres and redis. The schema must be unique per test file: it's the isolation boundary (the AppView and ozone databases are derived from it), so parallel files sharing one corrupt each other's data.
 - `TestNetworkNoAppView.create({ pds, plc })` — PDS + PLC only, on a temp-dir store and a mock PLC database. Lighter; use it when the test doesn't touch the AppView. It forwards only the `pds` and `plc` sub-options, so passing a top-level `dbPostgresSchema` here does nothing.
+- `TestPds.create(config, overrides)` — a lone PDS; pair with `TestPlc.create({})` and set `didPlcUrl: plc.url`. The optional second argument is passed to `PDS.create` as `AppContext` overrides (e.g. `{ plcRotationKey }`); neither network class forwards it.
 - `network.getSeedClient()` plus a seed exported from `@atproto/dev-env` (`basicSeed`, `usersSeed`, `quotesSeed`, …) populates accounts and records.
 - `await network.processAll()` flushes the firehose so the AppView has caught up before you assert.
 

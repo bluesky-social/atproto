@@ -29,7 +29,7 @@ import { ATTR_DEPLOYMENT_ENVIRONMENT_NAME } from '@atproto-labs/opentelemetry-no
 import { IORedisInstrumentation } from '@opentelemetry/instrumentation-ioredis'
 import pkg from './package.json' with { type: 'json' }
 
-setup(() => ({
+await setup(() => ({
   name: pkg.name,
   version: pkg.version,
   // Optional: override or extend the default resource attributes.
@@ -44,11 +44,47 @@ setup(() => ({
 options — and therefore the instrumentations — are only built once an OTLP endpoint
 is configured.
 
-The instrumentations common to atproto services (HTTP with XRPC-aware span naming,
-Express, Undici, Pino with log correlation, and Node runtime metrics) are always
-registered alongside the ones you supply. The
-`@atproto-labs/opentelemetry-node/instrumentation` entrypoint exposes
-`getDefaultAtprotoInstrumentations()` if you need that list directly.
+### XRPC routes on metrics
+
+Pass the known XRPC methods the service may answer (including the ones it
+proxies) as `xrpcMethods`. This allows to set the `http.route` attribute
+correctly for these methods in the metrics. When `xrpcMethods` is omitted, the
+`http.route` of the metrics is left as set by the Express instrumentation.
+
+```ts
+// @NOTE **do not** import runtime code here (like `ids` from
+// `@atproto/lex-cli`'s `./lexicon/lexicons.js`) as telemetry setup must run
+// before any instrumented module. Importing from the `@atproto/lex` manifest
+// (JSON) is fine.
+
+import { setup } from '@atproto-labs/opentelemetry-node'
+import pkg from './package.json' with { type: 'json' }
+import lex from './lexicons.json' with { type: 'json' }
+
+await setup(() => ({
+  name: pkg.name,
+  version: pkg.version,
+  xrpcMethods: lex.lexicons
+    // @NOTE we only care about methods, which, by convention, have a verb
+    // followed by a capitalized noun (e.g., `getFeed`). Reducing the list
+    // helps keep the attribute low-cardinality.
+    .filter((v) => /[A-Z]/.test(v)),
+}))
+```
+
+This sets the `http.route` attribute of the HTTP server duration metric to
+`/xrpc/<nsid>` for these methods, and to `/xrpc/{unknown}` for any other NSID.
+The list is what keeps the attribute low-cardinality: any client
+can make up an NSID. Span names aren't affected.
+
+Instrumentations you supply must be built on the same
+`@opentelemetry/instrumentation` as this package, or ESM imports of the modules
+they target can't be instrumented: `setup()` then rejects with an
+`InstrumentationMismatchError`, failing the service start. For `better-sqlite3`, use the
+`BetterSqlite3Instrumentation` exposed by the
+`@atproto-labs/opentelemetry-node/better-sqlite3-plugin` entrypoint: a port of
+[`opentelemetry-plugin-better-sqlite3`](https://github.com/sjinks/opentelemetry-plugin-better-sqlite3)
+that satisfies this requirement.
 
 The `@atproto-labs/opentelemetry-node/conventions` entrypoint re-exports
 `@opentelemetry/semantic-conventions` plus the atproto-specific constants: the

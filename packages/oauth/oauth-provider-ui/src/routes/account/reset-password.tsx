@@ -1,6 +1,7 @@
 import { createFileRoute, useRouter } from '@tanstack/react-router'
 import { ErrorView } from '#/components/error-view.tsx'
 import { ResetPasswordView } from '#/components/reset-password-view.tsx'
+import { useCustomizationData } from '#/contexts/customization.tsx'
 import { useSessionContext } from '#/contexts/session.tsx'
 
 export const Route = createFileRoute('/account/reset-password')({
@@ -17,6 +18,7 @@ export const Route = createFileRoute('/account/reset-password')({
 })
 
 function ResetPasswordPage() {
+  const { availableUserDomains } = useCustomizationData()
   const { api } = useSessionContext()
   const { email } = Route.useSearch()
 
@@ -24,7 +26,8 @@ function ResetPasswordPage() {
 
   return (
     <ResetPasswordView
-      emailDefault={email}
+      hint={email}
+      domains={availableUserDomains}
       onResetPasswordRequest={async (data) => api.initiatePasswordReset(data)}
       onResetPasswordConfirm={async (data) => api.confirmResetPassword(data)}
       onBack={() => {

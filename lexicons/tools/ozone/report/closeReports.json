@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Close all reports on a subject matching the given criteria. Reports whose current status does not permit a transition to closed are skipped silently. Intended for automated flows that resolve reports without taking action on the subject.",
+      "description": "Close eligible reports on a subject matching the given criteria. Assigned and escalated reports are excluded. Reports whose current status does not permit a transition to closed are skipped silently. Intended for automated flows that resolve reports without taking action on the subject.",
       "input": {
         "encoding": "application/json",
         "schema": {
@@ -16,10 +16,20 @@
               "format": "uri",
               "description": "Subject DID (account-level reports) or AT-URI (record-level reports) whose reports should be closed."
             },
+            "includeAllOwned": {
+              "type": "boolean",
+              "default": false,
+              "description": "If true, also close reports on all subjects owned by the account, including records, messages, and conversations. Only valid when subject is an account DID."
+            },
             "reportTypes": {
               "type": "array",
               "items": { "type": "string" },
-              "description": "If specified, only reports of the given report types (fully qualified reason NSIDs) are closed. When omitted, all non-closed reports on the subject are targeted."
+              "description": "If nonempty, only reports of the given report types (fully qualified reason NSIDs) are closed. When omitted or empty, all eligible reports in the requested subject scope are targeted, except excludedReportTypes. Assigned and escalated reports are always excluded."
+            },
+            "excludedReportTypes": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Reports of these types (fully qualified reason NSIDs) are excluded from closure and left unchanged. When omitted or empty, no report types are excluded."
             },
             "internalNote": {
               "type": "string",
@@ -29,6 +39,10 @@
               "type": "boolean",
               "description": "Set true when this action is triggered by an automated process. Defaults to false.",
               "default": false
+            },
+            "meta": {
+              "type": "unknown",
+              "description": "Optional metadata for the report activities. Lifecycle and resolution fields are controlled by the service."
             }
           }
         }

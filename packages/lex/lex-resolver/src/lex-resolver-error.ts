@@ -1,5 +1,5 @@
 import { LexError } from '@atproto/lex-data'
-import { NSID } from '@atproto/syntax'
+import { type DidString, NSID, type NsidString } from '@atproto/syntax'
 
 /**
  * Error class for lexicon resolution failures.
@@ -41,6 +41,8 @@ import { NSID } from '@atproto/syntax'
 export class LexResolverError extends LexError {
   name = 'LexResolverError'
 
+  public readonly nsid: NSID
+
   /**
    * Creates a new LexResolverError instance.
    *
@@ -66,49 +68,23 @@ export class LexResolverError extends LexError {
     /**
      * The NSID that failed to resolve.
      */
-    public readonly nsid: NSID,
-    /**
-     * Human-readable description of what went wrong during resolution.
-     */
-    public readonly description = `Could not resolve Lexicon for NSID`,
+    nsid: NSID | NsidString,
+    message = `Unable to resolve Lexicon schema ${nsid}`,
     options?: ErrorOptions,
   ) {
-    super('LexiconResolutionFailure', `${description} (${nsid})`, options)
+    super('LexiconResolutionFailure', message, options)
+    this.nsid = typeof nsid === 'string' ? NSID.from(nsid) : nsid
   }
+}
 
-  /**
-   * Factory method to create a LexResolverError from a string or NSID.
-   *
-   * This is a convenience method that handles the conversion of string NSIDs
-   * to NSID objects automatically.
-   *
-   * @param nsid - The NSID as a string or NSID object
-   * @param description - Optional human-readable description of the error
-   * @returns A new LexResolverError instance
-   *
-   * @example
-   * ```typescript
-   * import { LexResolverError } from '@atproto/lex-resolver'
-   *
-   * // Create from string
-   * const error1 = LexResolverError.from('com.example.myLexicon')
-   *
-   * // Create with description
-   * const error2 = LexResolverError.from(
-   *   'com.example.myLexicon',
-   *   'Authority not found in DNS'
-   * )
-   * ```
-   */
-  static from(
-    nsid: NSID | string,
-    description?: string,
+export class LexResolverRecordNotFoundError extends LexResolverError {
+  name = 'LexResolverRecordNotFoundError'
+
+  constructor(
+    readonly did: DidString,
+    nsid: NSID,
     options?: ErrorOptions,
   ) {
-    return new LexResolverError(
-      typeof nsid === 'string' ? NSID.from(nsid) : nsid,
-      description,
-      options,
-    )
+    super(nsid, `Lexicon schema ${nsid} not found in ${did} repo`, options)
   }
 }

@@ -1,5 +1,33 @@
 # @atproto/lex-client
 
+## 0.4.0
+
+### Minor Changes
+
+- [#5591](https://github.com/bluesky-social/atproto/pull/5591) [`f98b78a`](https://github.com/bluesky-social/atproto/commit/f98b78adbc8963e49823117b007422211f6d3ff2) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Refactor around a new, lower-level, `@atproto/lex-rpc` package for making XRPC requests. `@atproto/lex-client` re-exports everything from `@atproto/lex-rpc`, allowing it to stay backwards compatible, and contains logic related to making XRPC requests in the context of manipulating an AT Protocol repository with an authenticated session. This refactor also allows `@atproto/lex-client` to depend on `@atproto/lex-installer`, while also allowing `@atproto/lex-installer` to make XRPC requests (using the lower level `@atproto/lex-rpc`).
+
+### Patch Changes
+
+- [#5591](https://github.com/bluesky-social/atproto/pull/5591) [`f98b78a`](https://github.com/bluesky-social/atproto/commit/f98b78adbc8963e49823117b007422211f6d3ff2) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Build lexicon schemas using the `lex-builder` cli instead of a custom script
+
+- [#5591](https://github.com/bluesky-social/atproto/pull/5591) [`f98b78a`](https://github.com/bluesky-social/atproto/commit/f98b78adbc8963e49823117b007422211f6d3ff2) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Source Lexicons through each package's own `lexicons.json` manifest instead of compiling the repo-root `lexicons` directory directly. Canonical `com.atproto.*` / `tools.ozone.*` schemas are symlinked from the root, `app.bsky.*` / `chat.bsky.*` are fetched from the `bluesky-social/bsky` Github repo, other external namespaces resolve from the network, and locally diverging documents are kept under a tracked `lexicons-overrides` directory. The root `lexicons` directory now only holds the canonical `com.atproto` and `tools.ozone` namespaces. No change to generated output or published API.
+
+- [#5591](https://github.com/bluesky-social/atproto/pull/5591) [`f98b78a`](https://github.com/bluesky-social/atproto/commit/f98b78adbc8963e49823117b007422211f6d3ff2) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Validate `rkey` when calling record operations methods
+
+- [#5591](https://github.com/bluesky-social/atproto/pull/5591) [`f98b78a`](https://github.com/bluesky-social/atproto/commit/f98b78adbc8963e49823117b007422211f6d3ff2) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Expose `rkeyFor` and `rkeyForCreate` utilities
+- Updated dependencies [[`f98b78a`](https://github.com/bluesky-social/atproto/commit/f98b78adbc8963e49823117b007422211f6d3ff2), [`f98b78a`](https://github.com/bluesky-social/atproto/commit/f98b78adbc8963e49823117b007422211f6d3ff2)]:
+  - @atproto/lex-schema@0.2.9
+  - @atproto/lex-rpc@0.0.1
+
+## 0.3.7
+
+### Patch Changes
+
+- Updated dependencies [[`e8b89ff`](https://github.com/bluesky-social/atproto/commit/e8b89ff4c211a10519b54bd83eb64950035942c3)]:
+  - @atproto/lex-data@0.1.8
+  - @atproto/lex-json@0.1.7
+  - @atproto/lex-schema@0.2.8
+
 ## 0.3.6
 
 ### Patch Changes

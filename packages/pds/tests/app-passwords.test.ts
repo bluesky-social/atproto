@@ -1,6 +1,7 @@
 import * as jose from 'jose'
 import type { AtpAgent } from '@atproto/api'
 import { type SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
+import { com } from '../src/lexicons/index.js'
 
 describe('app_passwords', () => {
   let network: TestNetworkNoAppView
@@ -163,37 +164,55 @@ describe('app_passwords', () => {
     await expect(attempt).rejects.toThrow('Bad token method')
   })
 
-  it('restricts privileged app password actions', async () => {
-    const attempt = appAgent.api.chat.bsky.convo.listConvos()
+  it('restricts chat methods outside the installed PDS lexicons', async () => {
+    const attempt = appAgent.api.chat.bsky.convo.acceptConvo({
+      convoId: 'unused',
+    })
     await expect(attempt).rejects.toThrow('Bad token method')
   })
 
-  it('restricts service auth token methods for non-privileged access tokens', async () => {
-    const attemptCaseSensitive = appAgent.api.com.atproto.server.getServiceAuth(
-      {
-        aud: network.pds.ctx.cfg.service.did,
-        lxm: 'com.atproto.server.createAccount',
-      },
-    )
-    await expect(attemptCaseSensitive).rejects.toThrow(
-      /insufficient access to request a service auth token for the following method/,
-    )
-    const attemptCaseInsensitive =
-      appAgent.api.com.atproto.server.getServiceAuth({
-        aud: network.pds.ctx.cfg.service.did,
-        lxm: 'com.atproto.server.createaccount',
-      })
-    await expect(attemptCaseInsensitive).rejects.toThrow(
-      /insufficient access to request a service auth token for the following method/,
-    )
-  })
+  const privilegedMethodCases = [
+    com.atproto.server.createAccount.$lxm,
+    com.atproto.server.createAccount.$lxm.toLowerCase(),
+    'chat.bsky.futureMethod',
+    'CHAT.BSKY.CONVO.FUTUREMETHOD',
+  ]
 
-  it('allows privileged service auth token scopes for privileged access tokens', async () => {
-    await priviAgent.api.com.atproto.server.getServiceAuth({
-      aud: network.pds.ctx.cfg.service.did,
-      lxm: 'com.atproto.server.createAccount',
-    })
-  })
+  it.each(privilegedMethodCases)(
+    'restricts service auth for %s with a non-privileged app password',
+    async (lxm) => {
+      const attempt = appAgent.api.com.atproto.server.getServiceAuth({
+        aud: network.pds.ctx.cfg.service.did,
+        lxm,
+      })
+      await expect(attempt).rejects.toThrow(
+        /insufficient access to request a service auth token for the following method/,
+      )
+    },
+  )
+
+  it.each(privilegedMethodCases)(
+    'allows service auth for %s with a privileged app password',
+    async (lxm) => {
+      await priviAgent.api.com.atproto.server.getServiceAuth({
+        aud: network.pds.ctx.cfg.service.did,
+        lxm,
+      })
+    },
+  )
+
+  it.each([
+    'chat.bskyish.futureMethod',
+    `${com.atproto.server.createAccount.$lxm}Extra`,
+  ])(
+    'allows service auth for %s with a non-privileged app password',
+    async (lxm) => {
+      await appAgent.api.com.atproto.server.getServiceAuth({
+        aud: network.pds.ctx.cfg.service.did,
+        lxm,
+      })
+    },
+  )
 
   it('persists scope across refreshes', async () => {
     const session = await appAgent.api.com.atproto.server.refreshSession(

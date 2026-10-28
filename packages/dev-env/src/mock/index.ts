@@ -100,6 +100,26 @@ export async function generateMockSetup(env: TestNetwork) {
 
   const [alice, bob, carla, triage, mod, adminMod, labeler] = userAgents
 
+  // @NOTE The client uses declared age outside regions requiring age assurance.
+  for (const user of [alice, bob]) {
+    await user.app.bsky.actor.putPreferences({
+      preferences: [
+        {
+          $type: 'app.bsky.actor.defs#personalDetailsPref',
+          birthDate: '1990-01-01T00:00:00.000Z',
+        },
+      ],
+    })
+  }
+
+  // @NOTE Wait for actor rows to exist before seeding age assurance state.
+  await env.processAll()
+  await env.bsky.db.db
+    .updateTable('actor')
+    .set({ ageAssuranceStatus: 'assured', ageAssuranceAccess: 'full' })
+    .where('did', 'in', [alice.did, bob.did])
+    .execute()
+
   // Create chat declarations for all users
   for (const user of userAgents) {
     await user.chat.bsky.actor.declaration.create(
@@ -332,6 +352,7 @@ export async function generateMockSetup(env: TestNetwork) {
       repo: urip.host,
       rkey: urip.rkey,
     })
+    const targetRef = { uri: target.uri, cid: target.cid }
     const author = picka(userAgents)
     try {
       const post = await author.app.bsky.feed.post.create(
@@ -339,8 +360,8 @@ export async function generateMockSetup(env: TestNetwork) {
         {
           text: picka(replyTexts),
           reply: {
-            root: target.value.reply?.root ?? target,
-            parent: target,
+            root: target.value.reply?.root ?? targetRef,
+            parent: targetRef,
           },
           createdAt: date.next().value,
         },
@@ -348,7 +369,6 @@ export async function generateMockSetup(env: TestNetwork) {
 
       posts.push(post)
     } catch (err) {
-      // @TODO Investigate why this sometimes fails.
       console.error('Failed to create reply', err)
     }
   }

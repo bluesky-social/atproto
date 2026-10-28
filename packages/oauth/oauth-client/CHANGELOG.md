@@ -1,5 +1,45 @@
 # @atproto/oauth-client
 
+## 0.9.0
+
+### Minor Changes
+
+- [#5687](https://github.com/bluesky-social/atproto/pull/5687) [`943170b`](https://github.com/bluesky-social/atproto/commit/943170bd390705fbb16920688f8f09ec7078a59b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Factorize `OAuthResolver` logic in separate `@atproto/oauth-resolver` package (out of `@atproto/oauth-client`)
+
+### Patch Changes
+
+- Updated dependencies [[`943170b`](https://github.com/bluesky-social/atproto/commit/943170bd390705fbb16920688f8f09ec7078a59b)]:
+  - @atproto/oauth-resolver@0.0.1
+
+## 0.8.10
+
+### Patch Changes
+
+- Updated dependencies [[`f98b78a`](https://github.com/bluesky-social/atproto/commit/f98b78adbc8963e49823117b007422211f6d3ff2), [`f98b78a`](https://github.com/bluesky-social/atproto/commit/f98b78adbc8963e49823117b007422211f6d3ff2)]:
+  - @atproto-labs/fetch@0.4.0
+  - @atproto-labs/did-resolver@0.3.11
+  - @atproto-labs/identity-resolver@0.4.11
+  - @atproto/xrpc@0.8.16
+
+## 0.8.9
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/xrpc@0.8.15
+
+## 0.8.8
+
+### Patch Changes
+
+- Updated dependencies [[`5019f55`](https://github.com/bluesky-social/atproto/commit/5019f5537317ee75ad4527db212bc27c3085fe67)]:
+  - @atproto/did@0.5.6
+  - @atproto-labs/did-resolver@0.3.10
+  - @atproto-labs/handle-resolver@0.4.10
+  - @atproto/oauth-types@0.7.7
+  - @atproto/xrpc@0.8.14
+  - @atproto-labs/identity-resolver@0.4.10
+
 ## 0.8.7
 
 ### Patch Changes

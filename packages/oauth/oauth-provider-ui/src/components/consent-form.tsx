@@ -69,20 +69,20 @@ export function ConsentForm({
   const [allowEmail, setAllowEmail] = useState(true)
 
   return (
-    <FormShell<{ allowEmail: string }>
+    <FormShell
       onBack={onBack}
       // Clear a previous rejection error as soon as the user changes anything.
       onValues={() => reject.reset()}
       disabled={reject.loading}
       submitLabel={<Trans context="OAuthConsent">Authorize</Trans>}
-      onSubmit={() =>
-        onConsent({
+      handler={() => {
+        return onConsent({
           scope:
             canUnsetEmail && !allowEmail
               ? stripAccountEmailScope(scope)
               : scope,
         })
-      }
+      }}
       actions={
         <ActionButton
           type="button"

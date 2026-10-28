@@ -1,6 +1,8 @@
 import { HOUR } from '@atproto/common'
 import { type DatetimeString, toDatetimeString } from '@atproto/lex'
+import type { StrikeSuspensionConfig } from '../config/strike-suspension.js'
 import type { Database } from '../db/index.js'
+import { InboxNotificationService } from '../inbox/producers.js'
 import { dbLogger } from '../logger.js'
 import type { StrikeServiceCreator } from '../mod-service/strike.js'
 import { getJobCursor, initJobCursor, updateJobCursor } from './job-cursor.js'
@@ -15,6 +17,8 @@ export class StrikeExpiryProcessor {
   constructor(
     private db: Database,
     private strikeServiceCreator: StrikeServiceCreator,
+    private strikeSuspension: StrikeSuspensionConfig = {},
+    private inboxStartAt?: DatetimeString,
   ) {}
 
   start() {
@@ -72,11 +76,25 @@ export class StrikeExpiryProcessor {
       'processing subjects with expired strikes',
     )
 
-    await Promise.all(
-      affectedSubjects.map(({ subjectDid }) => {
-        return strikeService.updateSubjectStrikeCount(subjectDid)
-      }),
-    )
+    for (const { subjectDid } of affectedSubjects) {
+      await this.db.transaction(async (txn) => {
+        const notifications = new InboxNotificationService(
+          txn,
+          this.strikeSuspension,
+          this.inboxStartAt,
+        )
+        const before = await notifications.captureStanding(subjectDid)
+        await this.strikeServiceCreator(txn).updateSubjectStrikeCount(
+          subjectDid,
+        )
+        await notifications.notifyStandingChange(
+          subjectDid,
+          before,
+          `strike-expiry:${subjectDid}:${now.toISOString()}`,
+          toDatetimeString(now),
+        )
+      })
+    }
 
     await this.updateCursor(toDatetimeString(now))
 

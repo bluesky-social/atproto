@@ -1,6 +1,6 @@
 {
   "name": "@atproto/oauth-provider-ui",
-  "version": "0.10.4",
+  "version": "0.11.0",
   "license": "MIT",
   "description": "Sign-in & Sign-up UI for the @atproto/oauth-provider",
   "homepage": "https://atproto.com",
@@ -74,6 +74,7 @@
     "codegen:i18n": "pnpm run i18n",
     "prebuild": "pnpm run '/^(codegen:.+)$/'",
     "build:ui": "vite build --emptyOutDir",
+    "build:ts": "tsc --build tsconfig.json",
     "build": "pnpm run build:ui -- ignore additional npm args",
     "dev:ui": "vite --port 5174",
     "dev:src": "vite build --watch",

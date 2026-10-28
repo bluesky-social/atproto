@@ -1,5 +1,6 @@
 import { TestNetworkNoAppView } from '@atproto/dev-env'
 import type { Client, DidString } from '@atproto/lex'
+import { LexResolverError } from '@atproto/oauth-provider/provider'
 import { com } from '../src/lexicons/index.js'
 
 const NSID = 'com.example.calendar.basePermissions'
@@ -90,6 +91,6 @@ describe('oauth lexicon resolution', () => {
     const nsid = 'com.example.calendar.missingPermissions'
     await expect(
       getLexiconManager().getPermissionSetsFromScope(`include:${nsid}`),
-    ).rejects.toThrow(`Could not resolve Lexicon for NSID (${nsid})`)
+    ).rejects.toThrow(LexResolverError)
   })
 })

@@ -63,12 +63,12 @@ export class LexiconManager {
     const { lexicon } = await this.lexiconGetter.get(nsid)
 
     if (!lexicon) {
-      throw LexResolverError.from(nsid)
+      throw new LexResolverError(nsid)
     }
 
     if (lexicon.defs.main?.type !== 'permission-set') {
       const description = 'Lexicon document is not a permission set'
-      throw LexResolverError.from(nsid, description)
+      throw new LexResolverError(nsid, description)
     }
 
     return lexicon.defs.main

@@ -212,13 +212,7 @@ export class ModerationViews {
 
       event.strikeCount = ifNumber(row.strikeCount)
       event.severityLevel = ifString(row.severityLevel)
-
-      if (
-        tools.ozone.moderation.defs.modEventTakedown.$isTypeOf(event) ||
-        tools.ozone.moderation.defs.modEventEmail.$isTypeOf(event)
-      ) {
-        event.strikeExpiresAt = ifDatetime(row.strikeExpiresAt)
-      }
+      event.strikeExpiresAt = ifDatetime(row.strikeExpiresAt)
     }
 
     if (tools.ozone.moderation.defs.modEventTakedown.$isTypeOf(event)) {
@@ -259,6 +253,12 @@ export class ModerationViews {
     if (tools.ozone.moderation.defs.modEventReport.$isTypeOf(event)) {
       event.isReporterMuted = !!meta.isReporterMuted
       event.reportType = ifString(meta.reportType)!
+      event.appealSubmittedBy = isDidString(meta.appealSubmittedBy)
+        ? meta.appealSubmittedBy
+        : undefined
+      event.appealActionType = ifString(meta.appealActionType)
+      event.appealActionId = ifNumber(meta.appealActionId)
+      event.appealLabel = ifString(meta.appealLabel)
     }
 
     if (tools.ozone.moderation.defs.modEventEmail.$isTypeOf(event)) {

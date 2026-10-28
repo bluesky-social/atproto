@@ -12,10 +12,11 @@ const alice = {
   handle: 'alice.test',
 } as Account
 
-const managerFor = (result: Account | Error) =>
+const managerFor = (result: Account | Error | null) =>
   ({
     getAccount: vi.fn(async () => {
       if (result instanceof Error) throw result
+      if (result === null) return null
       return { account: result, authorizedClients: new Map() }
     }),
   }) satisfies Pick<AccountManager, 'getAccount'>
@@ -37,6 +38,12 @@ describe(resolveLoginHint, () => {
   it('returns the DID unchanged when the account is unknown', async () => {
     const manager = managerFor(new Error('Account not found'))
     await expect(resolveLoginHint(aliceDid, manager)).resolves.toBe(aliceDid)
+  })
+
+  it('returns the DID unchanged when no account matches', async () => {
+    const manager = managerFor(null)
+    await expect(resolveLoginHint(aliceDid, manager)).resolves.toBe(aliceDid)
+    expect(manager.getAccount).toHaveBeenCalledWith(aliceDid)
   })
 
   it('leaves handle hints unchanged without a lookup', async () => {

@@ -32,7 +32,10 @@ export default function (server: Server, ctx: AppContext) {
         throw new ForbiddenError('Unauthorized')
       }
 
-      const result = await ctx.assignmentService.assignQueue({ did, queueId })
+      const result = await ctx.assignmentService.assignQueue(
+        { did, queueId },
+        auth.credentials,
+      )
 
       return {
         encoding: 'application/json',

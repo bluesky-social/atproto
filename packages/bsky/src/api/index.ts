@@ -65,6 +65,7 @@ import unmuteActor from './app/bsky/graph/unmuteActor.js'
 import unmuteActorList from './app/bsky/graph/unmuteActorList.js'
 import unmuteThread from './app/bsky/graph/unmuteThread.js'
 import getLabelerServices from './app/bsky/labeler/getServices.js'
+import getGroupedNotifications from './app/bsky/notification/getGroupedNotifications.js'
 import getPreferences from './app/bsky/notification/getPreferences.js'
 import getUnreadCount from './app/bsky/notification/getUnreadCount.js'
 import listActivitySubscriptions from './app/bsky/notification/listActivitySubscriptions.js'
@@ -76,6 +77,7 @@ import registerPush from './app/bsky/notification/registerPush.js'
 import unregisterPush from './app/bsky/notification/unregisterPush.js'
 import updateSeen from './app/bsky/notification/updateSeen.js'
 import getAgeAssuranceState from './app/bsky/unspecced/getAgeAssuranceState.js'
+import getAtmosphereExploreTab from './app/bsky/unspecced/getAtmosphereExploreTab.js'
 import getConfig from './app/bsky/unspecced/getConfig.js'
 import getOnboardingSuggestedStarterPacks from './app/bsky/unspecced/getOnboardingSuggestedStarterPacks.js'
 import getPopularFeedGenerators from './app/bsky/unspecced/getPopularFeedGenerators.js'
@@ -191,12 +193,14 @@ export default function (server: Server, ctx: AppContext) {
   getUnreadCount(server, ctx)
   listActivitySubscriptions(server, ctx)
   listNotifications(server, ctx)
+  getGroupedNotifications(server, ctx)
   putActivitySubscription(server, ctx)
   updateSeen(server, ctx)
   putPreferences(server, ctx)
   putPreferencesV2(server, ctx)
   registerPush(server, ctx)
   unregisterPush(server, ctx)
+  getAtmosphereExploreTab(server, ctx)
   getConfig(server, ctx)
   getPopularFeedGenerators(server, ctx)
   getTaggedSuggestions(server, ctx)

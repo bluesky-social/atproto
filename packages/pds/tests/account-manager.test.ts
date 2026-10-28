@@ -35,7 +35,7 @@ describe('account manager', () => {
   })
 
   afterEach(async () => {
-    await network.processAll()
+    await network?.processAll()
   })
 
   afterAll(async () => {
@@ -81,7 +81,7 @@ describe('account manager', () => {
     await page.clickOnText('Sélectionner un autre compte')
     await page.clickOnText('Un autre compte', '*')
 
-    await page.typeInInput('username', 'alice.test')
+    await page.typeInInput('identifier', 'alice.test')
     const input = await page.typeInInput('password', 'alice-pass')
 
     input.press('Enter')
@@ -139,7 +139,7 @@ describe('account manager', () => {
       token: expect.any(String),
     })
 
-    await page.typeInInput('code', params.token)
+    await page.typeInInput('token', params.token)
     await page.typeInInput('password', 'bob-new-pass')
 
     await page.clickOnText('Valider')
@@ -196,7 +196,7 @@ describe('account manager', () => {
       token: expect.any(String),
     })
 
-    await page.typeInInput('code', params.token)
+    await page.typeInInput('token', params.token)
     await page.clickOnText('Valider')
 
     await page.ensureNotification('Adresse email vérifiée')
@@ -253,7 +253,7 @@ describe('account manager', () => {
     })
 
     await page.ensureTextVisibility('Code de vérification', 'label')
-    await page.typeInInput('code', params.token)
+    await page.typeInInput('token', params.token)
 
     // We need to explicitly click on the disable button in the dialog,
     // otherwise we end up clicking on the "disable" behind the dialog.
@@ -330,7 +330,7 @@ describe('account manager', () => {
       token: expect.any(String),
     })
 
-    const codeInput = await page.typeInInput('code', updateParams.token)
+    const codeInput = await page.typeInInput('token', updateParams.token)
     codeInput.press('Enter')
 
     await page.ensureNotification("Modification de l'adresse email réussie")
@@ -353,7 +353,7 @@ describe('account manager', () => {
     await page.clickOnText('Se connecter')
 
     await page.clickOnText('Se souvenir de ce compte sur cet appareil', 'label')
-    await page.typeInInput('username', 'bob-new-email@example.com')
+    await page.typeInInput('identifier', 'bob-new-email@example.com')
     const input = await page.typeInInput('password', 'bob-new-pass')
 
     input.press('Enter')
@@ -545,7 +545,7 @@ describe('account manager', () => {
       token: expect.any(String),
     })
 
-    await page.typeInInput('code', params.token)
+    await page.typeInInput('token', params.token)
     await page.typeInInput('password', 'bob-new-pass')
 
     await page.clickOnText('Supprimer mon compte')

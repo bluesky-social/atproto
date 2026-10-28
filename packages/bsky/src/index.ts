@@ -11,6 +11,7 @@ import type { Keypair } from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
 import { Client } from '@atproto/lex'
 import { createServer } from '@atproto/xrpc-server'
+import { safeFetchWrap } from '@atproto-labs/fetch-node'
 import { createBlobDispatcher } from './api/blob-dispatcher.js'
 import API, {
   blobResolver,
@@ -168,6 +169,9 @@ export class BskyAppView {
       ? new Client(
           {
             service: config.irisUrl,
+            headers: config.irisApiKey
+              ? { authorization: `Bearer ${config.irisApiKey}` }
+              : undefined,
             fetch: dispatcherFetch(irisDispatcher),
           },
           {
@@ -204,6 +208,7 @@ export class BskyAppView {
     const hydrator = new Hydrator(dataplane, config.labelsFromIssuerDids, {
       debugFieldAllowedDids: config.debugFieldAllowedDids,
       featureGatesClient,
+      needsReviewTagSources: [config.modServiceDid],
     })
     const views = new Views({
       imgUriBuilder: imgUriBuilder,
@@ -251,15 +256,32 @@ export class BskyAppView {
     const entrywayJwtPublicKey = config.entrywayJwtPublicKeyHex
       ? createPublicKeyObject(config.entrywayJwtPublicKeyHex)
       : undefined
+    const bffJwtSecret = config.bffJwtSecret
+      ? Buffer.from(config.bffJwtSecret, 'utf8')
+      : undefined
     const authVerifier = new AuthVerifier(dataplane, {
       ownDid: config.serverDid,
       alternateAudienceDids: config.alternateAudienceDids,
       modServiceDid: config.modServiceDid,
       adminPasses: config.adminPasswords,
       entrywayJwtPublicKey,
+      bffJwtSecret,
     })
 
     const blobDispatcher = createBlobDispatcher(config)
+    // Egress to hosts named in DID documents, where the destination is chosen by
+    // the account being resolved. Same policy as blobDispatcher: https only,
+    // unicast addresses only, re-checked per hop by the dispatcher. Redirects
+    // stay enabled because xrpcRequestInit sets `redirect: 'follow'`.
+    const federatedFetch = (
+      config.disableSsrfProtection
+        ? globalThis.fetch
+        : safeFetchWrap({
+            allowIpHost: false,
+            allowImplicitRedirect: true,
+            responseMaxSize: 5 * 1024 * 1024,
+          })
+    ) as typeof globalThis.fetch
 
     const ctx = new AppContext({
       cfg: config,
@@ -281,6 +303,7 @@ export class BskyAppView {
       authVerifier,
       featureGatesClient,
       blobDispatcher,
+      federatedFetch,
       kwsClient,
     })
 

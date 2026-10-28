@@ -58,7 +58,7 @@ msgstr "<0>무엇이 특별한가</0><1>가장 큰 차이점은 데이터가 특
 
 #: src/components/forms/input-handle-custom-instructions.tsx
 msgid "<your-domain>"
-msgstr ""
+msgstr "<내-도메인>"
 
 #: src/components/sign-in-form.tsx
 msgid "2FA Confirmation"
@@ -70,7 +70,7 @@ msgstr "로컬 앱"
 
 #: src/lib/api.ts
 msgid "A second authentication factor is required ({hint})"
-msgstr ""
+msgstr "추가 인증 요소가 필요합니다 ({hint})"
 
 #: src/components/utils/scope-description.tsx
 msgid "A service controlled by <0>{domain}</0>"
@@ -82,11 +82,11 @@ msgstr "정보"
 
 #: src/components/utils/scope-description.tsx
 msgid "Access specific parts of your Bluesky account"
-msgstr ""
+msgstr "Bluesky 계정의 특정 부분에 접근"
 
 #: src/components/utils/scope-description.tsx
 msgid "Access specific parts of your Bluesky account and read your private preferences"
-msgstr ""
+msgstr "Bluesky 계정의 특정 부분에 접근 및 비공개 설정 읽기"
 
 #: src/components/utils/scope-description.tsx
 #: src/routes/account/u/$accountId/route.tsx
@@ -99,11 +99,11 @@ msgstr "계정 아바타"
 
 #: src/data/account.ts
 msgid "Account deactivated"
-msgstr ""
+msgstr "계정을 비활성화했습니다"
 
 #: src/data/account.ts
 msgid "Account deleted"
-msgstr ""
+msgstr "계정을 삭제했습니다"
 
 #: src/components/identity/account-identifier.tsx
 msgid "Account identifier"
@@ -120,7 +120,7 @@ msgstr "계정 개요"
 #: src/authorization-page.tsx
 #: src/data/account.ts
 msgid "Account reactivated"
-msgstr ""
+msgstr "계정을 재활성화했습니다"
 
 #: src/components/identity/account-menu.tsx
 msgid "Account selector"
@@ -128,18 +128,28 @@ msgstr "계정 선택기"
 
 #: src/components/utils/handle.tsx
 msgid "Account username"
-msgstr ""
+msgstr "계정 사용자 이름"
 
 #: src/components/session-list.tsx
 msgid "Actions"
-msgstr ""
+msgstr "작업"
 
 #: src/components/forms/input-handle-custom-instructions.tsx
 msgid "Add the following record to your domain's DNS configuration."
-msgstr ""
+msgstr "도메인의 DNS 설정에 다음 레코드를 추가하세요."
 
 #: src/components/update-handle-custom-form.tsx
 msgid "alice.com"
+msgstr "alice.com"
+
+#. placeholder {0}: domains?.[0] ?? '.example.com'
+#: src/components/forms/fields/handle-field.tsx
+msgid "alice{0}"
+msgstr ""
+
+#: src/components/forms/fields/email-field.tsx
+#: src/components/forms/fields/identifier-field.tsx
+msgid "alice@example.com"
 msgstr ""
 
 #: src/components/disable-email-auth-factor-dialog.tsx
@@ -152,6 +162,10 @@ msgstr "이미 코드가 있나요?"
 #: src/components/identity/client-name.tsx
 msgid "An application on your device"
 msgstr "기기에 설치된 애플리케이션"
+
+#: src/lib/api.ts
+msgid "An email address is required."
+msgstr ""
 
 #: src/lib/notification-message.ts
 msgid "An error occurred"
@@ -166,7 +180,7 @@ msgstr "예기치 않은 오류가 발생했습니다."
 msgid "An unknown error occurred"
 msgstr "알 수 없는 오류가 발생했습니다"
 
-#: src/components/sign-in-picker.tsx
+#: src/components/utils/account-card.tsx
 msgid "Another account"
 msgstr "다른 계정"
 
@@ -185,7 +199,7 @@ msgstr "모든 서비스"
 #: src/routes/account/u/$accountId/apps.tsx
 msgctxt "OAuthApp"
 msgid "App"
-msgstr ""
+msgstr "앱"
 
 #: src/routes/account/u/$accountId/route.tsx
 msgid "Apps"
@@ -193,7 +207,7 @@ msgstr "앱"
 
 #: src/routes/account/u/$accountId/apps.tsx
 msgid "Apps may access your account in the background (to check notifications, sync data, etc.) even when you're not actively using them. This is normal behavior and will update the \"last accessed\" time."
-msgstr ""
+msgstr "앱은 사용자가 직접 사용하지 않는 동안에도 백그라운드에서 계정에 접근할 수 있습니다(알림 확인, 데이터 동기화 등). 이는 정상적인 동작이며, 이때 \"마지막 접근\" 시간이 갱신됩니다."
 
 #: src/routes/account/u/$accountId/apps.tsx
 msgid "Apps that can use your account. Revoke any you no longer use."
@@ -201,6 +215,10 @@ msgstr "계정을 사용할 수 있는 앱입니다. 더 이상 사용하지 않
 
 #: src/components/delete-account-dialog.tsx
 msgid "Are you really, really sure?"
+msgstr "정말, 정말로 삭제하시겠어요?"
+
+#: src/components/forms/fields/handle-field.tsx
+msgid "Atmosphere handle"
 msgstr ""
 
 #: src/components/authenticate-welcome-view.tsx
@@ -222,7 +240,7 @@ msgstr "승인"
 #: src/routes/account/u/$accountId/apps.tsx
 msgctxt "OAuthApp"
 msgid "Authorized"
-msgstr ""
+msgstr "승인일"
 
 #: src/components/forms/form-shell.tsx
 #: src/components/forms/sign-up-wizard.tsx
@@ -271,7 +289,7 @@ msgstr "<0>@핸들</0> 변경"
 
 #: src/components/update-password-dialog.tsx
 msgid "Change your password"
-msgstr ""
+msgstr "비밀번호 변경"
 
 #: src/components/utils/scope-description.tsx
 msgid "Chat"
@@ -279,7 +297,7 @@ msgstr "대화"
 
 #: src/components/delete-account-dialog.tsx
 msgid "Check <0>{email}</0> for an email with the confirmation code to enter below:"
-msgstr ""
+msgstr "<0>{email}</0>(으)로 보낸 이메일에서 인증 코드를 확인한 후 아래에 입력하세요:"
 
 #. placeholder {0}: secondFactorError.hint
 #: src/components/sign-in-form.tsx
@@ -288,15 +306,15 @@ msgstr "{0} 이메일에서 로그인 코드를 확인한 후 여기에 입력�
 
 #: src/components/delete-account-dialog.tsx
 msgid "Check your email for the confirmation code to enter below:"
-msgstr ""
+msgstr "이메일에서 인증 코드를 확인한 후 아래에 입력하세요:"
 
 #: src/data/account.ts
 msgid "Check your inbox for the confirmation code."
-msgstr ""
+msgstr "받은 편지함에서 인증 코드를 확인하세요."
 
 #: src/data/email.ts
 msgid "Check your inbox for the verification code."
-msgstr ""
+msgstr "받은 편지함에서 인증 코드를 확인하세요."
 
 #: src/data/email.ts
 #: src/data/password.ts
@@ -305,11 +323,11 @@ msgstr "받은 편지함을 확인하세요."
 
 #: src/components/update-handle-dialog.tsx
 msgid "Choose a new default username."
-msgstr ""
+msgstr "새 기본 사용자 이름을 선택하세요."
 
 #: src/components/update-email-dialog.tsx
 msgid "Choose a new email address to associate with your account."
-msgstr ""
+msgstr "계정에 연결할 새 이메일 주소를 입력하세요."
 
 #: src/components/sign-up-view.tsx
 msgid "Choose a username"
@@ -317,24 +335,24 @@ msgstr "사용자 이름 선택"
 
 #: src/components/redirecting-view.tsx
 msgid "Click here if nothing happens"
-msgstr ""
+msgstr "아무 일도 일어나지 않으면 여기를 누르세요"
 
 #: src/routes/account/u/$accountId/apps.tsx
 msgctxt "OAuthApp"
 msgid "Client"
-msgstr ""
+msgstr "클라이언트"
 
 #: src/components/oauth-session-details-dialog.tsx
 #: src/components/ui/dialog.tsx
 #: src/components/ui/toast.tsx
 msgid "Close"
-msgstr ""
+msgstr "닫기"
 
 #: src/components/error-view.tsx
 #: src/components/feedback/error-details.tsx
 msgctxt "Error"
 msgid "Code"
-msgstr ""
+msgstr "코드"
 
 #: src/components/sign-in-form.tsx
 msgctxt "verb"
@@ -352,7 +370,7 @@ msgstr "인증 코드"
 
 #: src/data/account.ts
 msgid "Confirmation email sent"
-msgstr ""
+msgstr "인증 이메일을 전송했습니다"
 
 #: src/components/sign-in-view.tsx
 msgctxt "AuthenticationPage"
@@ -367,11 +385,11 @@ msgstr "쿠키가 차단되었습니다"
 
 #: src/components/forms/copy-button.tsx
 msgid "Copied"
-msgstr ""
+msgstr "복사됨"
 
 #: src/components/forms/copy-button.tsx
 msgid "Copy to clipboard"
-msgstr ""
+msgstr "클립보드에 복사"
 
 #: src/components/utils/scope-description.tsx
 msgid "Create"
@@ -387,7 +405,7 @@ msgstr "계정에 연결된 공개 데이터를 생성, 갱신, 삭제할 수 �
 
 #: src/lib/api.ts
 msgid "Custom domains are not supported"
-msgstr ""
+msgstr "사용자 지정 도메인은 지원되지 않습니다"
 
 #: src/components/utils/scope-description.tsx
 msgid "Data"
@@ -396,11 +414,11 @@ msgstr "데이터"
 #: src/components/deactivate-account-dialog.tsx
 #: src/routes/account/u/$accountId/manage.tsx
 msgid "Deactivate account"
-msgstr ""
+msgstr "계정 비활성화"
 
 #: src/components/identity/account-avatar.tsx
 msgid "Deactivated account"
-msgstr ""
+msgstr "비활성화된 계정"
 
 #: src/components/utils/scope-description.tsx
 msgid "Delete"
@@ -409,15 +427,15 @@ msgstr "삭제"
 #: src/components/delete-account-dialog.tsx
 #: src/routes/account/u/$accountId/manage.tsx
 msgid "Delete account"
-msgstr ""
+msgstr "계정 삭제"
 
 #: src/components/delete-account-dialog.tsx
 msgid "Delete account <0/>"
-msgstr ""
+msgstr "<0/> 계정 삭제"
 
 #: src/components/delete-account-confirm-form.tsx
 msgid "Delete my account"
-msgstr ""
+msgstr "내 계정 삭제"
 
 #: src/components/consent-form.tsx
 msgctxt "OAuthConsent"
@@ -431,7 +449,7 @@ msgstr "세부 정보"
 #: src/routes/account/u/$accountId/devices.tsx
 msgctxt "device list"
 msgid "Device"
-msgstr ""
+msgstr "기기"
 
 #: src/routes/account/u/$accountId/route.tsx
 msgid "Devices"
@@ -439,37 +457,37 @@ msgstr "기기"
 
 #: src/components/forms/fields/token-field.tsx
 msgid "Didn't receive a code? <0>Click here to resend.</0>"
-msgstr ""
+msgstr "코드를 받지 못하셨나요? <0>여기를 눌러 다시 보내세요.</0>"
 
 #: src/components/disable-email-auth-factor-dialog.tsx
 msgid "Disable 2FA"
-msgstr ""
+msgstr "2단계 인증 끄기"
 
 #: src/components/disable-email-auth-factor-dialog.tsx
 msgid "Disable two-factor authentication"
-msgstr ""
+msgstr "2단계 인증 끄기"
 
 #: src/routes/account/u/$accountId/manage.tsx
 msgctxt "2FA"
 msgid "Disabled"
-msgstr ""
+msgstr "꺼짐"
 
 #: src/components/disable-email-auth-factor-dialog.tsx
 msgid "Disabling two-factor authentication makes your account less secure."
-msgstr ""
+msgstr "2단계 인증을 끄면 계정의 보안 수준이 낮아집니다."
 
 #: src/components/forms/input-handle-custom-instructions.tsx
 msgid "DNS"
-msgstr ""
+msgstr "DNS"
 
 #: src/components/update-handle-dialog.tsx
 msgid "e.g. <0>alice.com</0>"
-msgstr ""
+msgstr "예: <0>alice.com</0>"
 
 #. placeholder {0}: domains[0]
 #: src/components/update-handle-dialog.tsx
 msgid "e.g. <0>alice{0}</0>"
-msgstr ""
+msgstr "예: <0>alice{0}</0>"
 
 #: src/components/sign-up-credentials-form.tsx
 #: src/components/utils/scope-description.tsx
@@ -477,30 +495,29 @@ msgid "Email"
 msgstr "이메일"
 
 #: src/components/forms/fields/email-field.tsx
-#: src/components/reset-password-request-form.tsx
 #: src/routes/account/u/$accountId/manage.tsx
 msgid "Email address"
 msgstr "이메일 주소"
 
 #: src/components/update-email-dialog.tsx
 msgid "Email address successfully updated"
-msgstr ""
+msgstr "이메일 주소를 변경했습니다"
 
 #: src/data/email.ts
 msgid "Email change request sent"
-msgstr ""
+msgstr "이메일 변경 요청을 전송했습니다"
 
 #: src/data/email.ts
 msgid "Email change successful"
-msgstr ""
+msgstr "이메일을 변경했습니다"
 
 #: src/data/email.ts
 msgid "Email login verification disabled"
-msgstr ""
+msgstr "이메일 로그인 인증을 껐습니다"
 
 #: src/data/email.ts
 msgid "Email login verification enabled"
-msgstr ""
+msgstr "이메일 로그인 인증을 켰습니다"
 
 #: src/routes/account/u/$accountId/manage.tsx
 msgid "Email not verified"
@@ -508,24 +525,24 @@ msgstr "이메일 미인증"
 
 #: src/components/forms/input-handle-custom-instructions.tsx
 msgid "Email these instructions"
-msgstr ""
+msgstr "이 안내를 이메일로 보내기"
 
 #: src/data/email.ts
 msgid "Email verified"
-msgstr ""
+msgstr "이메일을 인증했습니다"
 
 #: src/components/enable-email-auth-factor-dialog.tsx
 msgid "Enable"
-msgstr ""
+msgstr "켜기"
 
 #: src/components/enable-email-auth-factor-dialog.tsx
 msgid "Enable two-factor authentication"
-msgstr ""
+msgstr "2단계 인증 켜기"
 
 #: src/routes/account/u/$accountId/manage.tsx
 msgctxt "2FA"
 msgid "Enabled"
-msgstr ""
+msgstr "켜짐"
 
 #: src/components/forms/fields/new-password-field.tsx
 msgid "Enter a password"
@@ -537,19 +554,15 @@ msgstr "이메일로 받은 코드를 입력하여 비밀번호를 재설정하�
 
 #: src/components/update-handle-custom-form.tsx
 msgid "Enter the domain you want to use"
-msgstr ""
+msgstr "사용할 도메인을 입력하세요"
 
 #: src/components/disable-email-auth-factor-dialog.tsx
 msgid "Enter the security code we sent to <0>{email}</0> to disable email two-factor authentication."
-msgstr ""
+msgstr "이메일 2단계 인증을 끄려면 <0>{email}</0>(으)로 보낸 보안 코드를 입력하세요."
 
 #: src/components/reset-password-view.tsx
-msgid "Enter your account's email and we'll send you a reset code."
-msgstr "계정 이메일을 입력하면 재설정 코드를 보내드립니다."
-
-#: src/components/reset-password-request-form.tsx
-msgid "Enter your email address"
-msgstr "이메일 주소 입력"
+msgid "Enter your account's identifier and we'll send you a reset code."
+msgstr ""
 
 #: src/components/forms/fields/new-password-field.tsx
 msgid "Enter your new password"
@@ -562,7 +575,7 @@ msgstr "비밀번호 입력"
 
 #: src/components/deactivate-account-dialog.tsx
 msgid "Every app currently connected to your account, as well as any \"app passwords\" you've created, will be revoked. You'll need to sign back in when you reactivate."
-msgstr ""
+msgstr "현재 계정에 연결된 모든 앱과 직접 만든 \"앱 비밀번호\"의 권한이 취소됩니다. 재활성화할 때 다시 로그인해야 합니다."
 
 #: src/components/sign-up-credentials-form.tsx
 msgid "example-com-xxxxx-xxxxx"
@@ -579,23 +592,23 @@ msgstr "매우 강력"
 
 #: src/data/email.ts
 msgid "Failed to change email"
-msgstr ""
+msgstr "이메일을 변경하지 못했습니다"
 
 #: src/data/account.ts
 msgid "Failed to deactivate account"
-msgstr ""
+msgstr "계정을 비활성화하지 못했습니다"
 
 #: src/data/account.ts
 msgid "Failed to delete account"
-msgstr ""
+msgstr "계정을 삭제하지 못했습니다"
 
 #: src/data/email.ts
 msgid "Failed to disable email login verification"
-msgstr ""
+msgstr "이메일 로그인 인증을 끄지 못했습니다"
 
 #: src/data/email.ts
 msgid "Failed to enable email login verification"
-msgstr ""
+msgstr "이메일 로그인 인증을 켜지 못했습니다"
 
 #: src/routes/account/u/$accountId/apps.tsx
 msgid "Failed to load connected apps"
@@ -603,11 +616,11 @@ msgstr "연결된 앱을 불러오지 못했습니다"
 
 #: src/routes/account/u/$accountId/devices.tsx
 msgid "Failed to load your devices"
-msgstr ""
+msgstr "기기 목록을 불러오지 못했습니다"
 
 #: src/data/account.ts
 msgid "Failed to reactivate account"
-msgstr ""
+msgstr "계정을 재활성화하지 못했습니다"
 
 #: src/data/account-sessions.ts
 msgid "Failed to remove device"
@@ -615,7 +628,7 @@ msgstr "기기를 제거하지 못했습니다"
 
 #: src/data/email.ts
 msgid "Failed to request email change"
-msgstr ""
+msgstr "이메일 변경을 요청하지 못했습니다"
 
 #: src/data/password.ts
 msgid "Failed to request password reset"
@@ -631,43 +644,43 @@ msgstr "접근 권한을 취소하지 못했습니다"
 
 #: src/data/account.ts
 msgid "Failed to send confirmation email"
-msgstr ""
+msgstr "인증 이메일을 보내지 못했습니다"
 
 #: src/data/email.ts
 msgid "Failed to send security code"
-msgstr ""
+msgstr "보안 코드를 보내지 못했습니다"
 
 #: src/data/email.ts
 msgid "Failed to send verification email"
-msgstr ""
+msgstr "인증 이메일을 보내지 못했습니다"
 
 #: src/data/handle.ts
 msgid "Failed to update username"
-msgstr ""
+msgstr "사용자 이름을 변경하지 못했습니다"
 
 #: src/data/email.ts
 msgid "Failed to verify email"
-msgstr ""
+msgstr "이메일을 인증하지 못했습니다"
 
 #: src/components/forms/input-handle-custom-instructions.tsx
 msgid "File contents"
-msgstr ""
+msgstr "파일 내용"
 
 #: src/routes/account/u/$accountId/apps.tsx
 msgid "Filter apps"
-msgstr ""
+msgstr "앱 검색"
 
 #: src/routes/account/u/$accountId/devices.tsx
 msgid "Filter devices"
-msgstr ""
+msgstr "기기 검색"
 
 #: src/components/delete-account-dialog.tsx
 msgid "For security reasons, we'll need to send a confirmation code to your email address <0>{email}</0>."
-msgstr ""
+msgstr "보안을 위해 이메일 주소 <0>{email}</0>(으)로 인증 코드를 보내야 합니다."
 
 #: src/components/delete-account-dialog.tsx
 msgid "For security reasons, we'll need to send a confirmation code to your email address."
-msgstr ""
+msgstr "보안을 위해 이메일 주소로 인증 코드를 보내야 합니다."
 
 #: src/components/reset-password-view.tsx
 msgid "Forgot Password"
@@ -697,11 +710,20 @@ msgid "Hello,\n"
 "A detailed tutorial can be found here: {tutorialHref}\n"
 "\n"
 "Thank you."
-msgstr ""
+msgstr "안녕하세요.\n"
+"\n"
+"도메인 \"{handle}\"을(를) 제 AT 프로토콜 신원({did})에 연결하려면 다음 설정 변경 중 하나가 필요합니다. 두 방법 중 하나만 적용하면 됩니다.\n"
+"\n"
+"{0}\n"
+"\n"
+"변경 사항은 다음 URL에서 확인할 수 있습니다: {troubleshootHref}\n"
+"자세한 안내는 여기에서 볼 수 있습니다: {tutorialHref}\n"
+"\n"
+"감사합니다."
 
 #: src/components/forms/input-handle-custom-instructions.tsx
 msgid "Help"
-msgstr ""
+msgstr "도움말"
 
 #: src/components/forms/fields/password-field.tsx
 msgid "Hide"
@@ -714,11 +736,11 @@ msgstr "홈"
 
 #: src/components/forms/input-handle-custom-instructions.tsx
 msgid "Host"
-msgstr ""
+msgstr "호스트"
 
 #: src/components/forms/input-handle-custom-instructions.tsx
 msgid "HTTP"
-msgstr ""
+msgstr "HTTP"
 
 #: src/components/utils/scope-description.tsx
 msgid "Identity"
@@ -730,27 +752,27 @@ msgstr "문제가 계속되면 브라우저 개인정보 설정에서 {hostname}
 
 #: src/components/forms/input-handle-custom-instructions.tsx
 msgid "If you have access to your domain's DNS configuration panel (e.g. via your domain registrar)"
-msgstr ""
+msgstr "도메인의 DNS 설정 패널에 접근할 수 있는 경우(예: 도메인 등록 업체를 통해)"
 
 #: src/components/forms/input-handle-custom-instructions.tsx
 msgid "If you have access to your domain's web hosting configuration (e.g. via FTP)"
-msgstr ""
+msgstr "도메인의 웹 호스팅 설정에 접근할 수 있는 경우(예: FTP를 통해)"
 
 #: src/components/update-handle-dialog.tsx
 msgid "If you have your own domain, you can use that as your handle. This lets you self-verify your identity. <0>Learn more here</0>."
-msgstr ""
+msgstr "내 도메인이 있다면 핸들로 사용할 수 있습니다. 이렇게 하면 신원을 스스로 인증할 수 있습니다. <0>자세히 알아보기</0>."
 
 #: src/routes/account/u/$accountId/manage.tsx
 msgid "If you update your email address, email 2FA (if enabled) will be disabled."
-msgstr ""
+msgstr "이메일 주소를 변경하면 이메일 2단계 인증(켜져 있는 경우)이 꺼집니다."
 
 #: src/components/deactivate-account-dialog.tsx
 msgid "If you're trying to change your handle or email, do so before you deactivate."
-msgstr ""
+msgstr "핸들이나 이메일을 변경하려면 비활성화하기 전에 변경하세요."
 
 #: src/components/utils/handle.tsx
 msgid "Invalid Handle"
-msgstr ""
+msgstr "잘못된 핸들"
 
 #: src/components/sign-up-credentials-form.tsx
 msgid "Invite code"
@@ -759,7 +781,7 @@ msgstr "초대 코드"
 #: src/routes/account/u/$accountId/devices.tsx
 msgctxt "device list"
 msgid "IP address"
-msgstr ""
+msgstr "IP 주소"
 
 #: src/routes/account/u/$accountId/apps.tsx
 msgid "It appears that you haven’t used this account to sign in to any apps yet."
@@ -772,17 +794,17 @@ msgstr "방금 전"
 #: src/routes/account/u/$accountId/apps.tsx
 msgctxt "OAuthApp"
 msgid "Last accessed"
-msgstr ""
+msgstr "마지막 접근"
 
 #: src/routes/account/u/$accountId/devices.tsx
 msgctxt "device list"
 msgid "Last seen"
-msgstr ""
+msgstr "마지막 접속"
 
 #: src/components/update-email-dialog.tsx
 msgctxt "verify email"
 msgid "Later"
-msgstr ""
+msgstr "나중에"
 
 #: src/components/layouts/account-shell.tsx
 #: src/components/layouts/auth-shell.tsx
@@ -799,7 +821,7 @@ msgstr "루프백"
 
 #: src/components/forms/input-handle-custom-instructions.tsx
 msgid "Make a text file with the contents below available at the following URL."
-msgstr ""
+msgstr "아래 내용을 담은 텍스트 파일을 다음 URL에서 접근할 수 있도록 올리세요."
 
 #: src/components/forms/fields/password-field.tsx
 msgid "Make visible"
@@ -815,7 +837,7 @@ msgstr "<1>@핸들</1>을 포함한 내 <0>전체 신원</0> 관리"
 
 #: src/routes/account/u/$accountId/route.tsx
 msgid "Manage your account"
-msgstr ""
+msgstr "계정 관리"
 
 #: src/routes/account/u/$accountId/route.tsx
 msgid "Manage your active sessions"
@@ -832,7 +854,7 @@ msgstr "프로필, 게시물, 좋아요, 팔로우 관리 및 비공개 설정 �
 #: src/components/feedback/error-details.tsx
 msgctxt "Error"
 msgid "Message"
-msgstr ""
+msgstr "메시지"
 
 #: src/components/feedback/password-strength.tsx
 #: src/components/utils/password-strength-label.tsx
@@ -846,16 +868,16 @@ msgstr "보통"
 
 #: src/routes/account/u/$accountId/route.tsx
 msgid "My Atmosphere Account"
-msgstr ""
+msgstr "내 Atmosphere 계정"
 
 #: src/components/feedback/error-details.tsx
 msgctxt "Error"
 msgid "Name"
-msgstr ""
+msgstr "이름"
 
 #: src/components/layouts/account-shell.tsx
 msgid "Navigation"
-msgstr ""
+msgstr "탐색"
 
 #: src/components/sign-in-picker.tsx
 msgid "Need an account?"
@@ -864,7 +886,7 @@ msgstr "계정이 필요하신가요?"
 #: src/components/update-email-dialog.tsx
 #: src/components/update-email-form.tsx
 msgid "New email address"
-msgstr ""
+msgstr "새 이메일 주소"
 
 #: src/components/reset-password-confirm-form.tsx
 msgid "New password"
@@ -877,7 +899,7 @@ msgstr "다음"
 
 #: src/components/session-list.tsx
 msgid "No matches"
-msgstr ""
+msgstr "일치하는 항목 없음"
 
 #: src/components/reset-password-view.tsx
 msgid "Okay"
@@ -889,7 +911,7 @@ msgstr "신뢰할 수 있는 사이트에서만 비밀번호를 입력하세요.
 
 #: src/routes/__root.tsx
 msgid "Page not found"
-msgstr ""
+msgstr "페이지를 찾을 수 없습니다"
 
 #: src/components/delete-account-confirm-form.tsx
 #: src/components/forms/fields/password-field.tsx
@@ -927,7 +949,7 @@ msgstr "비밀번호는 {MIN_PASSWORD_LENGTH, plural, other {#자}} 이상이어
 #: src/components/feedback/error-details.tsx
 msgctxt "Error"
 msgid "Payload"
-msgstr ""
+msgstr "페이로드"
 
 #: src/components/utils/scope-description.tsx
 msgid "Perform actions on your behalf"
@@ -948,11 +970,11 @@ msgstr "이메일 주소를 확인하고 다시 시도해 주세요."
 
 #: src/data/handle.ts
 msgid "Please check the username and try again."
-msgstr ""
+msgstr "사용자 이름을 확인하고 다시 시도해 주세요."
 
 #: src/data/account.ts
 msgid "Please check your code and password, then try again."
-msgstr ""
+msgstr "코드와 비밀번호를 확인하고 다시 시도해 주세요."
 
 #: src/data/email.ts
 #: src/data/password.ts
@@ -961,16 +983,16 @@ msgstr "재설정 코드를 확인하고 다시 시도해 주세요."
 
 #: src/data/email.ts
 msgid "Please check your verification code and try again."
-msgstr ""
+msgstr "인증 코드를 확인하고 다시 시도해 주세요."
 
 #: src/components/update-email-form.tsx
 msgid "Please enter the security code that was sent to your email address."
-msgstr ""
+msgstr "이메일 주소로 보낸 보안 코드를 입력하세요."
 
 #: src/data/account.ts
 #: src/data/email.ts
 msgid "Please try again in a moment."
-msgstr ""
+msgstr "잠시 후 다시 시도해 주세요."
 
 #: src/components/forms/request-code-button.tsx
 msgid "Please wait {remainingSeconds, plural, one {# second} other {# seconds}} before trying again."
@@ -990,12 +1012,12 @@ msgstr "변경 사항 게시"
 
 #: src/components/reactivate-account-dialog.tsx
 msgid "Reactivate"
-msgstr ""
+msgstr "재활성화"
 
 #: src/components/reactivate-account-dialog.tsx
 #: src/routes/account/u/$accountId/manage.tsx
 msgid "Reactivate account"
-msgstr ""
+msgstr "계정 재활성화"
 
 #: src/components/reactivate-account-view.tsx
 msgid "Reactivating makes your profile and content visible again."
@@ -1015,7 +1037,7 @@ msgstr "내 계정의 이메일 주소 읽기"
 
 #: src/components/utils/scope-description.tsx
 msgid "Read your private preferences"
-msgstr ""
+msgstr "비공개 설정 읽기"
 
 #: src/components/sign-in-form.tsx
 msgid "Remember this account on this device"
@@ -1027,7 +1049,7 @@ msgstr "저장소"
 
 #: src/components/enable-email-auth-factor-dialog.tsx
 msgid "Require an email code to sign in to your account."
-msgstr ""
+msgstr "로그인할 때 이메일로 받은 코드를 요구합니다."
 
 #: src/components/reset-password-confirm-form.tsx
 msgid "Reset code"
@@ -1058,31 +1080,31 @@ msgstr "접근 권한 취소"
 
 #: src/components/update-email-form.tsx
 msgid "Security code"
-msgstr ""
+msgstr "보안 코드"
 
 #: src/components/update-email-form.tsx
 msgid "Security step required"
-msgstr ""
+msgstr "보안 확인 필요"
 
 #: src/components/identity/account-menu.tsx
 msgid "Select another account"
 msgstr "다른 계정 선택"
 
-#: src/components/forms/fields/handle-field.tsx
+#: src/components/forms/fields/new-handle-field.tsx
 msgid "Select domain"
 msgstr "도메인 선택"
 
 #: src/components/delete-account-dialog.tsx
 msgid "Send email"
-msgstr ""
+msgstr "이메일 보내기"
 
 #: src/components/disable-email-auth-factor-dialog.tsx
 msgid "Send email to verify"
-msgstr ""
+msgstr "인증 이메일 보내기"
 
 #: src/components/forms/request-code-button.tsx
 msgid "Send verification code"
-msgstr ""
+msgstr "인증 코드 보내기"
 
 #: src/components/sign-in-view.tsx
 msgctxt "AuthenticationPage"
@@ -1102,7 +1124,7 @@ msgstr "{0}(으)로 로그인"
 
 #: src/components/sign-in-picker.tsx
 msgid "Sign in to an account that is not listed"
-msgstr ""
+msgstr "목록에 없는 계정으로 로그인"
 
 #: src/components/identity/account-menu.tsx
 msgid "Sign out"
@@ -1120,11 +1142,11 @@ msgstr "가입"
 
 #: src/authorization-page.tsx
 msgid "Sign-in canceled"
-msgstr ""
+msgstr "로그인 취소됨"
 
 #: src/authorization-page.tsx
 msgid "Sign-in complete"
-msgstr ""
+msgstr "로그인 완료"
 
 #: src/cookie-error-page.tsx
 msgid "Sign-in needs cookies, and your browser isn't accepting them."
@@ -1137,7 +1159,7 @@ msgstr "문제가 발생했습니다"
 #: src/components/feedback/error-details.tsx
 msgctxt "Error"
 msgid "Stack"
-msgstr ""
+msgstr "스택"
 
 #: src/components/forms/sign-up-wizard.tsx
 msgid "Step {currentPosition} of {count}"
@@ -1184,6 +1206,11 @@ msgstr "약관"
 msgid "Terms of Service"
 msgstr "서비스 이용약관"
 
+#. placeholder {0}: this.payload.identifier
+#: src/lib/api.ts
+msgid "The account \"{0}\" is hosted elsewhere."
+msgstr ""
+
 #: src/components/utils/scope-description.tsx
 msgid "The application is asking for full control over your network identity, meaning that it could <0>permanently break</0>, or even <1>steal</1>, your account. Only grant this permission to applications you really trust."
 msgstr "애플리케이션이 귀하의 네트워크 신원에 대한 전체 제어 권한을 요청하고 있습니다. 이는 계정을 <0>영구적으로 손상</0>시키거나 심지어 <1>탈취</1>할 수도 있음을 의미합니다. 반드시 진심으로 신뢰하는 애플리케이션에만 이 권한을 허용하세요."
@@ -1194,7 +1221,7 @@ msgstr "애플리케이션이 귀하를 대신하여 다음 작업을 수행하�
 
 #: src/components/utils/scope-description.tsx
 msgid "The application requests the permissions necessary to perform the following actions on your Bluesky account:"
-msgstr ""
+msgstr "애플리케이션이 Bluesky 계정에서 다음 작업을 수행하는 데 필요한 권한을 요청합니다:"
 
 #: src/components/utils/scope-description.tsx
 msgid "The AT Protocol network uses an authentication mechanism that allows to uniquely identify users when communicating with external services. This is typically used to retrieve or update data linked to your account, such as chat messages, feeds or moderation content. The application requests the permissions necessary to perform the following authenticated actions on your behalf:"
@@ -1214,35 +1241,35 @@ msgstr "잘못된 초대 코드입니다"
 
 #: src/lib/api.ts
 msgid "The server encountered an unexpected error. Please try again."
-msgstr ""
+msgstr "서버에서 예기치 않은 오류가 발생했습니다. 다시 시도해 주세요."
 
 #: src/lib/api.ts
 msgid "The username contains inappropriate language"
-msgstr ""
+msgstr "사용자 이름에 부적절한 표현이 포함되어 있습니다"
 
 #: src/lib/api.ts
 msgid "The username could not be resolved"
-msgstr ""
+msgstr "사용자 이름을 확인할 수 없습니다"
 
 #: src/lib/api.ts
 msgid "The username is already in use"
-msgstr ""
+msgstr "이미 사용 중인 사용자 이름입니다"
 
 #: src/lib/api.ts
 msgid "The username is invalid"
-msgstr ""
+msgstr "잘못된 사용자 이름입니다"
 
 #: src/components/deactivate-account-dialog.tsx
 msgid "There is no time limit for account deactivation, come back any time."
-msgstr ""
+msgstr "계정 비활성화에는 기한이 없으니 언제든지 돌아오세요."
 
 #: src/components/oauth-session-details-dialog.tsx
 msgid "This app can uniquely identify you through your account."
-msgstr ""
+msgstr "이 앱은 계정을 통해 사용자를 고유하게 식별할 수 있습니다."
 
 #: src/components/oauth-session-details-dialog.tsx
 msgid "This app has access to your account with the following permissions:"
-msgstr ""
+msgstr "이 앱은 다음 권한으로 계정에 접근할 수 있습니다:"
 
 #: src/components/consent-form.tsx
 msgid "This application identifies itself as:"
@@ -1259,7 +1286,7 @@ msgstr "승인 요청이 거부되었습니다. 다시 시도해 주세요."
 #: src/routes/account/u/$accountId/devices.tsx
 msgctxt "device list"
 msgid "This device"
-msgstr ""
+msgstr "이 기기"
 
 #: src/lib/api.ts
 msgid "This email is already used"
@@ -1271,27 +1298,27 @@ msgstr "로그인 세션이 만료되었습니다"
 
 #: src/lib/api.ts
 msgid "This username is reserved"
-msgstr ""
+msgstr "예약된 사용자 이름입니다"
 
 #: src/components/delete-account-dialog.tsx
 msgid "This will irreversibly delete your Bluesky account <0/> and all associated data. Note that this will affect any other Atmosphere services you use with this account."
-msgstr ""
+msgstr "Bluesky 계정 <0/>과(와) 관련된 모든 데이터가 영구적으로 삭제됩니다. 이 계정으로 사용하는 다른 Atmosphere 서비스에도 영향이 있습니다."
 
 #: src/components/delete-account-dialog.tsx
 msgid "This will irreversibly delete your Bluesky account and all associated data. Note that this will affect any other Atmosphere services you use with this account."
-msgstr ""
+msgstr "Bluesky 계정과 관련된 모든 데이터가 영구적으로 삭제됩니다. 이 계정으로 사용하는 다른 Atmosphere 서비스에도 영향이 있습니다."
 
 #: src/components/update-password-dialog.tsx
 msgid "To change your password, you'll need to enter a security code sent to your email."
-msgstr ""
+msgstr "비밀번호를 변경하려면 이메일로 보낸 보안 코드를 입력해야 합니다."
 
 #: src/components/disable-email-auth-factor-dialog.tsx
 msgid "To disable your email two-factor authentication, please verify your access to <0>{email}</0>"
-msgstr ""
+msgstr "이메일 2단계 인증을 끄려면 <0>{email}</0>에 접근할 수 있는지 인증하세요"
 
 #: src/components/verify-email-dialog.tsx
 msgid "To verify your email, you'll need to enter a security code sent to <0>{email}</0>."
-msgstr ""
+msgstr "이메일을 인증하려면 <0>{email}</0>(으)로 보낸 보안 코드를 입력해야 합니다."
 
 #: src/components/utils/scope-description.tsx
 msgctxt "RPC aud"
@@ -1300,7 +1327,7 @@ msgstr "대상"
 
 #: src/components/forms/input-handle-custom-instructions.tsx
 msgid "Troubleshoot"
-msgstr ""
+msgstr "문제 해결"
 
 #: src/components/error-view.tsx
 #: src/cookie-error-page.tsx
@@ -1309,19 +1336,19 @@ msgstr "다시 시도"
 
 #: src/routes/account/u/$accountId/manage.tsx
 msgid "Two-factor authentication (2FA)"
-msgstr ""
+msgstr "2단계 인증(2FA)"
 
 #: src/components/forms/input-handle-custom-instructions.tsx
 msgid "Type"
-msgstr ""
+msgstr "유형"
 
 #: src/components/update-handle-custom-form.tsx
 msgid "Type your domain"
-msgstr ""
+msgstr "도메인 입력"
 
-#: src/components/forms/fields/handle-field.tsx
+#: src/components/forms/fields/new-handle-field.tsx
 msgid "Type your username"
-msgstr ""
+msgstr "사용자 이름 입력"
 
 #: src/contexts/session.tsx
 msgid "Unauthorized"
@@ -1342,15 +1369,15 @@ msgstr "갱신"
 
 #: src/components/update-email-dialog.tsx
 msgid "Update your email"
-msgstr ""
+msgstr "이메일 변경"
 
 #: src/components/update-handle-dialog.tsx
 msgid "Update your username"
-msgstr ""
+msgstr "사용자 이름 변경"
 
 #: src/components/update-handle-dialog.tsx
 msgid "Update your username to a domain name you own to self-verify your identity."
-msgstr ""
+msgstr "사용자 이름을 내가 소유한 도메인 이름으로 변경해 신원을 스스로 인증하세요."
 
 #: src/components/utils/scope-description.tsx
 msgid "Upload files"
@@ -1358,57 +1385,58 @@ msgstr "파일 업로드"
 
 #: src/components/forms/input-handle-custom-instructions.tsx
 msgid "URL"
-msgstr ""
+msgstr "URL"
 
-#: src/components/forms/fields/handle-field.tsx
+#: src/components/forms/fields/new-handle-field.tsx
 msgid "Use {minLength}–{maxLength, plural, one {# letter, number or hyphen} other {# letters, numbers or hyphens}}"
-msgstr ""
+msgstr "영문자, 숫자, 하이픈으로 {minLength}~{maxLength, plural, other {#자}}를 입력하세요"
 
 #: src/components/update-handle-dialog.tsx
 msgid "Use a default username"
-msgstr ""
+msgstr "기본 사용자 이름 사용"
 
 #: src/components/update-handle-dialog.tsx
 msgid "Use a domain name I own"
-msgstr ""
+msgstr "내가 소유한 도메인 이름 사용"
 
+#: src/components/forms/fields/handle-field.tsx
 #: src/routes/account/u/$accountId/manage.tsx
 msgid "Username"
-msgstr ""
+msgstr "사용자 이름"
 
-#: src/components/sign-in-form.tsx
+#: src/components/forms/fields/identifier-field.tsx
 msgid "Username or Email"
-msgstr ""
+msgstr "사용자 이름 또는 이메일"
 
-#: src/components/sign-in-form.tsx
+#: src/components/forms/fields/identifier-field.tsx
 msgid "Username or email address"
 msgstr "사용자 이름 또는 이메일 주소"
 
 #: src/data/handle.ts
 msgid "Username updated"
-msgstr ""
+msgstr "사용자 이름을 변경했습니다"
 
 #: src/components/forms/input-handle-custom-instructions.tsx
 msgid "Value"
-msgstr ""
+msgstr "값"
 
 #: src/components/disable-email-auth-factor-confirm-form.tsx
 #: src/components/update-email-dialog.tsx
 #: src/components/verify-email-confirm-form.tsx
 msgid "Verification code"
-msgstr ""
+msgstr "인증 코드"
 
 #: src/data/email.ts
 msgid "Verification email sent"
-msgstr ""
+msgstr "인증 이메일을 전송했습니다"
 
 #: src/components/forms/input-handle-custom-instructions.tsx
 msgid "Verification method"
-msgstr ""
+msgstr "인증 방법"
 
 #: src/components/sign-up-hcaptcha-form.tsx
 msgid "Verification successful!"
-msgstr ""
+msgstr "인증되었습니다!"
 
 #: src/routes/account/u/$accountId/manage.tsx
 msgctxt "verify email"
@@ -1417,16 +1445,16 @@ msgstr "인증"
 
 #: src/components/update-handle-dialog.tsx
 msgid "Verify and Save"
-msgstr ""
+msgstr "인증 후 저장"
 
 #: src/routes/account/u/$accountId/manage.tsx
 msgid "Verify email to enable"
-msgstr ""
+msgstr "켜려면 이메일을 인증하세요"
 
 #: src/components/update-email-dialog.tsx
 msgctxt "verify email"
 msgid "Verify now"
-msgstr ""
+msgstr "지금 인증"
 
 #: src/components/sign-up-view.tsx
 msgid "Verify you are human"
@@ -1434,6 +1462,11 @@ msgstr "사람이 맞는지 확인"
 
 #: src/components/verify-email-dialog.tsx
 msgid "Verify your email"
+msgstr "이메일 인증"
+
+#. placeholder {0}: error.issuer
+#: src/components/reset-password-request-form.tsx
+msgid "Visit <0>{0}</0> to manage this account."
 msgstr ""
 
 #: src/components/consent-form.tsx
@@ -1459,7 +1492,7 @@ msgstr "환영합니다"
 
 #: src/components/reactivate-account-view.tsx
 msgid "Welcome back!"
-msgstr ""
+msgstr "다시 오신 것을 환영합니다!"
 
 #: src/routes/account/u/$accountId/index.tsx
 msgid "What does this mean?"
@@ -1475,7 +1508,7 @@ msgstr "계정이 로그인된 위치입니다. 알 수 없는 기기는 로그�
 
 #: src/routes/account/u/$accountId/apps.tsx
 msgid "Why is this time so recent?"
-msgstr ""
+msgstr "왜 시간이 이렇게 최근인가요?"
 
 #: src/lib/api.ts
 msgid "Wrong identifier or password"
@@ -1483,15 +1516,15 @@ msgstr "잘못된 아이디 또는 비밀번호입니다"
 
 #: src/components/deactivate-account-dialog.tsx
 msgid "Yes, Deactivate"
-msgstr ""
+msgstr "예, 비활성화합니다"
 
 #: src/components/delete-account-dialog.tsx
 msgid "Yes, delete my account"
-msgstr ""
+msgstr "예, 계정을 삭제합니다"
 
 #: src/components/reactivate-account-view.tsx
 msgid "Yes, reactivate my account"
-msgstr ""
+msgstr "예, 계정을 재활성화합니다"
 
 #: src/components/redirecting-view.tsx
 msgid "You are being redirected..."
@@ -1499,7 +1532,7 @@ msgstr "페이지 이동 중…"
 
 #: src/components/delete-account-dialog.tsx
 msgid "You can also temporarily deactivate your account instead. Your profile, posts, feeds, and lists will no longer be visible to other Bluesky users. You can reactivate your account at any time by logging in."
-msgstr ""
+msgstr "대신 계정을 일시적으로 비활성화할 수도 있습니다. 프로필, 게시물, 피드, 리스트가 다른 Bluesky 사용자에게 더 이상 표시되지 않습니다. 로그인하면 언제든지 계정을 재활성화할 수 있습니다."
 
 #: src/components/sign-up-handle-form.tsx
 msgid "You can change this username to any domain name you control after your account is set up."
@@ -1507,11 +1540,11 @@ msgstr "계정 설정을 완료한 후 이 사용자 이름을 내가 소유한 
 
 #: src/components/reactivate-account-dialog.tsx
 msgid "You can deactivate your account again at any time from this page."
-msgstr ""
+msgstr "이 페이지에서 언제든지 계정을 다시 비활성화할 수 있습니다."
 
 #: src/data/email.ts
 msgid "You can now sign in with your new email."
-msgstr ""
+msgstr "이제 새 이메일로 로그인할 수 있습니다."
 
 #: src/components/reset-password-view.tsx
 #: src/data/password.ts
@@ -1520,6 +1553,11 @@ msgstr "이제 새로운 비밀번호로 로그인할 수 있습니다."
 
 #: src/data/email.ts
 msgid "You will no longer be prompted for a code to sign in."
+msgstr "이제 로그인할 때 코드를 요구하지 않습니다."
+
+#. placeholder {0}: domains[0]
+#: src/components/forms/fields/identifier-field.tsx
+msgid "you{0}"
 msgstr ""
 
 #: src/components/sign-up-view.tsx
@@ -1528,27 +1566,27 @@ msgstr "내 계정"
 
 #: src/data/account.ts
 msgid "Your account and all associated data have been deleted."
-msgstr ""
+msgstr "계정과 관련된 모든 데이터가 삭제되었습니다."
 
 #: src/components/update-email-dialog.tsx
 msgid "Your account currently uses <0>{emailCurrent}</0>. Choose a new email address to associate with it."
-msgstr ""
+msgstr "현재 계정에서 <0>{emailCurrent}</0>을(를) 사용하고 있습니다. 계정에 연결할 새 이메일 주소를 입력하세요."
 
 #: src/authorization-page.tsx
 msgid "Your account has been successfully reactivated."
-msgstr ""
+msgstr "계정을 재활성화했습니다."
 
 #: src/components/reactivate-account-view.tsx
 msgid "Your account is currently deactivated."
-msgstr ""
+msgstr "현재 계정이 비활성화되어 있습니다."
 
 #: src/data/account.ts
 msgid "Your account is now deactivated."
-msgstr ""
+msgstr "계정이 비활성화되었습니다."
 
 #: src/data/account.ts
 msgid "Your account is visible again."
-msgstr ""
+msgstr "계정이 다시 표시됩니다."
 
 #: src/routes/account/u/$accountId/index.tsx
 msgid "Your Atmosphere account\n"
@@ -1558,28 +1596,28 @@ msgstr "내 Atmosphere 계정은\n"
 
 #: src/components/deactivate-account-dialog.tsx
 msgid "Your content (profile, posts, feeds, lists, etc.) will be hidden from the Bluesky app and across the Atmosphere network."
-msgstr ""
+msgstr "콘텐츠(프로필, 게시물, 피드, 리스트 등)가 Bluesky 앱과 Atmosphere 네트워크 전체에서 숨겨집니다."
 
 #: src/components/update-email-dialog.tsx
 msgid "Your email address has been successfully updated and needs to be verified. Please enter the verification code that was sent to <0>{email}</0>."
-msgstr ""
+msgstr "이메일 주소를 변경했으며 인증이 필요합니다. <0>{email}</0>(으)로 보낸 인증 코드를 입력하세요."
 
 #: src/data/email.ts
 msgid "Your email address has been verified."
-msgstr ""
+msgstr "이메일 주소를 인증했습니다."
 
 #. placeholder {0}: segment ? ( <span className="text-foreground block font-medium break-all"> @{segment} {domain} </span> ) : ( <span className="block break-all"> @{exampleSegment} {domain} </span> )
-#: src/components/forms/fields/handle-field.tsx
+#: src/components/forms/fields/new-handle-field.tsx
 msgid "Your full username will be: {0}"
 msgstr "내 전체 사용자 이름: {0}"
 
 #: src/data/email.ts
 msgid "Your next login will require a code that is sent to your email address."
-msgstr ""
+msgstr "다음 로그인부터 이메일 주소로 보낸 코드가 필요합니다."
 
 #: src/components/reactivate-account-dialog.tsx
 msgid "Your profile, posts, feeds, and lists will become visible again across the Atmosphere network — that includes the Bluesky app and any other Atmosphere app you use with this account."
-msgstr ""
+msgstr "프로필, 게시물, 피드, 리스트가 Atmosphere 네트워크 전체에 다시 표시됩니다. 여기에는 Bluesky 앱과 이 계정으로 사용하는 다른 모든 Atmosphere 앱이 포함됩니다."
 
 #: src/components/utils/scope-description.tsx
 msgid "Your repository contains all the data publicly available on the AT Protocol network, such as Bluesky posts, likes, and follows. It also contains data created through other apps you've signed into using this account. The application requests the permissions necessary to publish the following changes to your repository:"
@@ -1591,9 +1629,8 @@ msgstr "세션이 만료되었습니다. 다시 로그인해 주세요."
 
 #: src/data/handle.ts
 msgid "Your username has been updated."
-msgstr ""
+msgstr "사용자 이름을 변경했습니다."
 
-#: src/components/forms/fields/handle-field.tsx
-#: src/components/sign-in-form.tsx
+#: src/components/forms/fields/new-handle-field.tsx
 msgid "yourname"
-msgstr ""
+msgstr "yourname"
