@@ -1,5 +1,5 @@
 import { mapDefined } from '@atproto/common'
-import type { DidString } from '@atproto/lex'
+import type { AtUriString, DidString } from '@atproto/lex'
 import { AtUri } from '@atproto/syntax'
 import { app } from '../../../../../lexicons/index.js'
 import {
@@ -65,9 +65,10 @@ export function buildSpotlight(
   // itemCount counts notifications included in the ordinary groups, and pageItems contains the notifications on the page.
   const pageItems = items.slice(0, itemCount)
   const positions = new Map(pageItems.map((item, index) => [item, index]))
+  const subjectCollections = new Map<AtUriString, string>()
   // @NOTE Rank each reason's strongest burst by full count, then recency, before capping spotlight size.
   const candidates = mapDefined(SPOTLIGHT_REASONS, (reason) =>
-    selectSpotlight(pageItems, reason, now, splitBursts),
+    selectSpotlight(pageItems, reason, now, splitBursts, subjectCollections),
   )
     .sort(
       (left, right) =>
@@ -165,6 +166,7 @@ function selectSpotlight(
   reason: SpotlightReason,
   now: number,
   splitBursts: BurstSplitter,
+  subjectCollections: Map<AtUriString, string>,
 ): SpotlightCandidate | undefined {
   const range = MULTI_POST_RANGES.find(
     ({ maxItems }) => items.length <= maxItems,
@@ -173,7 +175,13 @@ function selectSpotlight(
 
   // @NOTE Eligibility uses the ordinary page's volume, including after trimming.
   const { requiredPosts } = range
-  const topItems = getTopBurst(items, reason, now, splitBursts)
+  const topItems = getTopBurst(
+    items,
+    reason,
+    now,
+    splitBursts,
+    subjectCollections,
+  )
   if (topItems.length < requiredPosts) return
   const actorDid = topItems[0]!.actorDid
   return {
@@ -183,7 +191,13 @@ function selectSpotlight(
     isEligibleAfterTrimming: (spotlightItems, retainedItems) =>
       // @NOTE Check if after trimming it still satisfies the requirements.
       spotlightItems.length >= requiredPosts &&
-      getTopBurst(retainedItems, reason, now, splitBursts)[0] === topItems[0],
+      getTopBurst(
+        retainedItems,
+        reason,
+        now,
+        splitBursts,
+        subjectCollections,
+      )[0] === topItems[0],
   }
 }
 
@@ -192,6 +206,7 @@ const getTopBurst = (
   reason: SpotlightReason,
   now: number,
   splitBursts: BurstSplitter,
+  subjectCollections: Map<AtUriString, string>,
 ): NotificationItem[] => {
   const collection =
     reason === NOTIFICATION_REASON.LIKE_VIA_REPOST ||
@@ -200,12 +215,14 @@ const getTopBurst = (
       : app.bsky.feed.post.$type
   const itemsByActor = new Map<DidString, NotificationItem[]>()
   for (const item of items) {
-    if (
-      item.raw.reason !== reason ||
-      new AtUri(item.raw.reasonSubject).collection !== collection
-    ) {
-      continue
+    if (item.raw.reason !== reason) continue
+    const subjectUri = item.raw.reasonSubject
+    let subjectCollection = subjectCollections.get(subjectUri)
+    if (subjectCollection === undefined) {
+      subjectCollection = new AtUri(subjectUri).collection
+      subjectCollections.set(subjectUri, subjectCollection)
     }
+    if (subjectCollection !== collection) continue
     const actorItems = itemsByActor.get(item.actorDid)
     if (actorItems) actorItems.push(item)
     else itemsByActor.set(item.actorDid, [item])

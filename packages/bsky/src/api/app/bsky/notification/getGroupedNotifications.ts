@@ -33,7 +33,6 @@ import { NOTIFICATION_REASON } from './constants.js'
 import {
   type NotificationGroup,
   type NotificationItem,
-  type RawNotification,
   buildNotificationItem,
   getGroupingAlgorithm,
   parseRawNotification,
@@ -313,7 +312,7 @@ const rules = (
 
         // After hydration, notificationAvailable checks whether each notification’s required records exist.
         // If its actor, post, repost, follow, or starter pack is missing or blocked, rules removes that notification from the returned group.
-        return notificationAvailable(notif, hydration, ctx.views)
+        return notificationAvailable(item, hydration, ctx.views)
       })
 
       const newest = items[0]
@@ -343,18 +342,26 @@ const rules = (
 
 // Checks that the notification’s actor and required records exist and referenced posts aren’t viewer-blocked.
 const notificationAvailable = (
-  notif: RawNotification,
+  item: NotificationItem,
   state: HydrationState,
   views: Views,
 ): boolean => {
+  const { raw: notif, actorDid } = item
   const uri = notif.uri
-  const actor = state.actors?.get(uriToDid(uri))
+  const actor = state.actors?.get(actorDid)
   if (!actor) return false
 
-  const postAvailable = (postUri: AtUriString) =>
-    !!state.posts?.get(postUri) &&
-    !!state.actors?.get(uriToDid(postUri)) &&
-    !views.viewerBlockExists(uriToDid(postUri), state)
+  const postAvailable = (postUri: AtUriString) => {
+    if (!state.posts?.get(postUri)) return false
+    // Notifications can refer to a post itself (mentions) or to a like/repost of that post,
+    // whose author is not necessarily the post author; matching URIs mean actorDid is the post author,
+    // otherwise extract it from postUri.
+    const postAuthorDid = postUri === uri ? actorDid : uriToDid(postUri)
+    return (
+      !!state.actors?.get(postAuthorDid) &&
+      !views.viewerBlockExists(postAuthorDid, state)
+    )
+  }
 
   const starterPackAvailable = (starterPackUri: AtUriString) =>
     !!state.starterPacks?.get(starterPackUri) &&
