@@ -60,11 +60,8 @@ export const buildAlgoGravityGroups = (
 
   for (const [itemIndex, item] of items.entries()) {
     const canGroup = canGroupNotification(item.raw.reason, feed)
-    const key = JSON.stringify([
-      item.raw.reason,
-      item.groupingKey,
-      canGroup ? undefined : item.id,
-    ])
+    // @NOTE Null bytes cannot occur in these values, so the key is collision-safe.
+    const key = `${item.raw.reason}\0${item.groupingKey}\0${canGroup ? '' : item.id}`
     const candidateGroups = chains.get(key) ?? []
     const nextCandidateGroups = extendCandidateGroups(
       candidateGroups,
