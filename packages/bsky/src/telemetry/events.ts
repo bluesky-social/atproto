@@ -173,6 +173,20 @@ class EventReporter {
     },
   })
 
+  #notificationHydrationDuration = meter.createHistogram(
+    'notifications.grouped.hydration.duration',
+    {
+      description: 'Wall time of the grouped notifications hydration phase',
+      unit: 'ms',
+      valueType: ValueType.DOUBLE,
+      advice: {
+        explicitBucketBoundaries: [
+          1, 2.5, 5, 10, 25, 50, 100, 250, 500, 1000, 2500, 5000,
+        ],
+      },
+    },
+  )
+
   #groupedNotificationsDataplaneFetches = meter.createHistogram(
     'notifications.grouped.dataplane_fetches',
     {
@@ -330,20 +344,23 @@ class EventReporter {
     }
   }
 
-  /** Reports dataplane fetches and raw-item counts once per completed page. */
+  /** Reports dataplane fetches, raw-item counts, and hydration time once per completed page. */
   groupedNotifications({
     itemsFetched,
     itemsReturned,
     dataplaneFetches,
+    hydrationDurationMs,
   }: {
     itemsFetched: number
     itemsReturned: number
     dataplaneFetches: number
+    hydrationDurationMs: number
   }) {
     try {
       this.#groupedNotificationsItemsFetched.record(itemsFetched)
       this.#groupedNotificationsItemsReturned.record(itemsReturned)
       this.#groupedNotificationsDataplaneFetches.record(dataplaneFetches)
+      this.#notificationHydrationDuration.record(hydrationDurationMs)
     } catch (err) {
       diag.error('Failed to record grouped_notifications:', err)
     }

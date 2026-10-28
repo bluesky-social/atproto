@@ -222,12 +222,14 @@ const skeleton = async (
     ...buildSpotlight(items, groups, nextCursor, params.limit, seenAt),
     itemsFetched,
     dataplaneFetches,
+    hydrationDurationMs: 0,
   }
 }
 
 const hydration = async (
   input: HydrationFnInput<Context, Params, SkeletonState>,
 ) => {
+  const hydrationStart = performance.now()
   const { ctx, params, skeleton } = input
   const notifs = skeleton.groups.flatMap((group) =>
     group.items.map((item) => item.raw),
@@ -247,9 +249,13 @@ const hydration = async (
     ),
   )
 
-  return ctx.hydrator.hydrateGroupedNotifications(notifs, params.hydrateCtx, {
-    knownFollowersDids,
-  })
+  const hydrated = await ctx.hydrator.hydrateGroupedNotifications(
+    notifs,
+    params.hydrateCtx,
+    { knownFollowersDids },
+  )
+  skeleton.hydrationDurationMs = performance.now() - hydrationStart
+  return hydrated
 }
 
 const rules = (
@@ -511,6 +517,7 @@ const presentation = (
     itemsFetched: skeleton.itemsFetched,
     itemsReturned: groups.reduce((count, group) => count + group.count, 0),
     dataplaneFetches: skeleton.dataplaneFetches,
+    hydrationDurationMs: skeleton.hydrationDurationMs,
   })
 
   return body
@@ -552,4 +559,5 @@ type SkeletonState = {
   cursor?: string
   itemsFetched: number
   dataplaneFetches: number
+  hydrationDurationMs: number
 }
