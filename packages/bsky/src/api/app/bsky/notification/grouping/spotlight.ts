@@ -7,6 +7,7 @@ import {
   NOTIFICATION_REASON,
 } from '../constants.js'
 import type {
+  BurstSplitter,
   GroupingResult,
   NotificationGroup,
   NotificationItem,
@@ -18,6 +19,7 @@ import {
 } from './shared.js'
 
 const MAX_SPOTLIGHTS = 3
+const TIME_SPAN_MULTIPLIER = 2
 const MULTI_POST_RANGES = [
   { maxItems: 200, requiredPosts: 4 },
   { maxItems: 500, requiredPosts: 8 },
@@ -48,7 +50,9 @@ export function buildSpotlight(
   groups: NotificationGroup[],
   cursor: string | undefined,
   limit: number,
+  now: number,
   seenAt: number | undefined,
+  splitBursts: BurstSplitter,
 ): GroupingResult {
   // @NOTE Try one spotlight at a time, keeping the last page where all spotlights pass validation.
   let lastGoodPage: GroupingResult = { groups, cursor }
@@ -61,9 +65,9 @@ export function buildSpotlight(
   // itemCount counts notifications included in the ordinary groups, and pageItems contains the notifications on the page.
   const pageItems = items.slice(0, itemCount)
   const positions = new Map(pageItems.map((item, index) => [item, index]))
-  // @NOTE Rank each reason's top actor by full count, then recency, before capping spotlight size.
+  // @NOTE Rank each reason's strongest burst by full count, then recency, before capping spotlight size.
   const candidates = mapDefined(SPOTLIGHT_REASONS, (reason) =>
-    selectSpotlight(pageItems, reason),
+    selectSpotlight(pageItems, reason, now, splitBursts),
   )
     .sort(
       (left, right) =>
@@ -159,6 +163,8 @@ export function buildSpotlight(
 function selectSpotlight(
   items: NotificationItem[],
   reason: SpotlightReason,
+  now: number,
+  splitBursts: BurstSplitter,
 ): SpotlightCandidate | undefined {
   const range = MULTI_POST_RANGES.find(
     ({ maxItems }) => items.length <= maxItems,
@@ -167,7 +173,7 @@ function selectSpotlight(
 
   // @NOTE Eligibility uses the ordinary page's volume, including after trimming.
   const { requiredPosts } = range
-  const topItems = getNotificationsByTopActor(items, reason)
+  const topItems = getTopBurst(items, reason, now, splitBursts)
   if (topItems.length < requiredPosts) return
   const actorDid = topItems[0]!.actorDid
   return {
@@ -177,15 +183,16 @@ function selectSpotlight(
     isEligibleAfterTrimming: (spotlightItems, retainedItems) =>
       // @NOTE Check if after trimming it still satisfies the requirements.
       spotlightItems.length >= requiredPosts &&
-      getNotificationsByTopActor(retainedItems, reason)[0]?.actorDid ===
-        actorDid,
+      getTopBurst(retainedItems, reason, now, splitBursts)[0] === topItems[0],
   }
 }
 
-function getNotificationsByTopActor(
+const getTopBurst = (
   items: NotificationItem[],
   reason: SpotlightReason,
-): NotificationItem[] {
+  now: number,
+  splitBursts: BurstSplitter,
+): NotificationItem[] => {
   const collection =
     reason === NOTIFICATION_REASON.LIKE_VIA_REPOST ||
     reason === NOTIFICATION_REASON.REPOST_VIA_REPOST
@@ -204,10 +211,19 @@ function getNotificationsByTopActor(
     else itemsByActor.set(item.actorDid, [item])
   }
 
-  // @NOTE Each actor likes or reposts a post once per reason; insertion order breaks ties by newest notification.
+  // @NOTE Each actor likes or reposts a post once per reason.
   let top: NotificationItem[] = []
   for (const actorItems of itemsByActor.values()) {
-    if (actorItems.length > top.length) top = actorItems
+    for (const burst of splitBursts(actorItems, now, TIME_SPAN_MULTIPLIER)) {
+      if (
+        burst.length > top.length ||
+        (burst.length === top.length &&
+          Date.parse(burst[0]!.raw.indexedAt) >
+            Date.parse(top[0]!.raw.indexedAt))
+      ) {
+        top = burst
+      }
+    }
   }
   return top
 }

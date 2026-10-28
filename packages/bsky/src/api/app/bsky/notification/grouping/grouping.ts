@@ -1,16 +1,13 @@
 import type { AtUriString, DatetimeString, DidString } from '@atproto/lex'
 import type { NotificationsV2Algorithm } from '../../../../../config.js'
-import {
-  type Notification,
-  NotificationFeed,
-} from '../../../../../proto/bsky_pb.js'
+import type { Notification } from '../../../../../proto/bsky_pb.js'
 import {
   type AppviewNotificationReason,
   type DataplaneNotificationReason,
   NOTIFICATION_REASON,
 } from '../constants.js'
-import { buildAlgoGravityGroups } from './algoGravity.js'
-import { buildAlgoLookbackGroups } from './algoLookback.js'
+import { buildAlgoGravityGroups, splitGravityBursts } from './algoGravity.js'
+import { buildAlgoLookbackGroups, splitLookbackBursts } from './algoLookback.js'
 
 // Notification reasons that require reasonSubject to be non-empty.
 // It should be the AT-URI of a record belonging to the notification recipient
@@ -83,6 +80,17 @@ export type GroupingResult = {
   cursor?: string
 }
 
+export type BurstSplitter = (
+  items: NotificationItem[],
+  now: number,
+  timeSpanMultiplier: number,
+) => NotificationItem[][]
+
+type GroupingAlgorithm = {
+  buildGroups: typeof buildAlgoGravityGroups
+  splitBursts: BurstSplitter
+}
+
 export function parseRawNotification(
   notification: Notification,
 ): RawNotification | undefined {
@@ -134,19 +142,21 @@ export function parseRawNotification(
   }
 }
 
-export const buildGroups = (
-  items: NotificationItem[],
-  limit: number,
-  now: number,
-  seenAt: number | undefined,
+/** Select matching implementations for ordinary grouping and spotlight bursts. */
+export const getGroupingAlgorithm = (
   algorithm: NotificationsV2Algorithm,
-  feed = NotificationFeed.ALL,
-): GroupingResult => {
+): GroupingAlgorithm => {
   switch (algorithm) {
     case 'algoLookback':
-      return buildAlgoLookbackGroups(items, limit, now, seenAt, feed)
+      return {
+        buildGroups: buildAlgoLookbackGroups,
+        splitBursts: splitLookbackBursts,
+      }
     case 'algoGravity':
     default:
-      return buildAlgoGravityGroups(items, limit, now, seenAt, feed)
+      return {
+        buildGroups: buildAlgoGravityGroups,
+        splitBursts: splitGravityBursts,
+      }
   }
 }
