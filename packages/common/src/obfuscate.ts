@@ -7,18 +7,43 @@ export function obfuscateWord(word: string) {
   return `${word.charAt(0)}***${word.charAt(word.length - 1)}`
 }
 
-export function obfuscateHeaders(headers: Record<string, string>) {
-  const obfuscatedHeaders: Record<string, string> = {}
+type HeaderValue = string | string[] | number | undefined
+
+export function obfuscateHeaders(
+  headers: Record<string, string>,
+): Record<string, string>
+export function obfuscateHeaders(
+  headers: Record<string, HeaderValue>,
+): Record<string, HeaderValue>
+export function obfuscateHeaders(headers: Record<string, HeaderValue>) {
+  const obfuscatedHeaders: Record<string, HeaderValue> = {}
   for (const key in headers) {
-    if (key.toLowerCase() === 'authorization') {
-      obfuscatedHeaders[key] = obfuscateAuthHeader(headers[key])
-    } else if (key.toLowerCase() === 'dpop') {
-      obfuscatedHeaders[key] = obfuscateJwt(headers[key]) || 'Invalid'
+    const name = key.toLowerCase()
+    const value = headers[key]
+    if (name === 'cookie' || name === 'set-cookie') {
+      obfuscatedHeaders[key] = '[Redacted]'
+    } else if (name === 'authorization') {
+      obfuscatedHeaders[key] =
+        typeof value === 'string' ? obfuscateAuthHeader(value) : 'Invalid'
+    } else if (name === 'dpop') {
+      obfuscatedHeaders[key] =
+        typeof value === 'string' ? obfuscateJwt(value) || 'Invalid' : 'Invalid'
     } else {
-      obfuscatedHeaders[key] = headers[key]
+      obfuscatedHeaders[key] = value
     }
   }
   return obfuscatedHeaders
+}
+
+/** Redact headers on the serialized response passed by pino-http. */
+export function obfuscateResSerializer(res: {
+  statusCode?: number | null
+  headers?: Record<string, HeaderValue>
+}) {
+  return {
+    statusCode: res.statusCode ?? null,
+    headers: res.headers ? obfuscateHeaders(res.headers) : res.headers,
+  }
 }
 
 export function obfuscateAuthHeader(authHeader: string): string {

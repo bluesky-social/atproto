@@ -1,7 +1,11 @@
 import type { IncomingMessage } from 'node:http'
 import { stdSerializers } from 'pino'
 import { pinoHttp } from 'pino-http'
-import { obfuscateHeaders, subsystemLogger } from '@atproto/common'
+import {
+  obfuscateHeaders,
+  obfuscateResSerializer,
+  subsystemLogger,
+} from '@atproto/common'
 
 export const dbLogger: ReturnType<typeof subsystemLogger> =
   subsystemLogger('bsky:db')
@@ -29,6 +33,7 @@ export const eventsLogger: ReturnType<typeof subsystemLogger> =
 export const loggerMiddleware = pinoHttp({
   logger: httpLogger,
   serializers: {
+    res: obfuscateResSerializer,
     err: (err: unknown) => ({
       code: err?.['code'],
       message: err?.['message'],
