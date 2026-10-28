@@ -145,12 +145,12 @@ msgstr "alice.com"
 #. placeholder {0}: domains?.[0] ?? '.example.com'
 #: src/components/forms/fields/handle-field.tsx
 msgid "alice{0}"
-msgstr ""
+msgstr "alice{0}"
 
 #: src/components/forms/fields/email-field.tsx
 #: src/components/forms/fields/identifier-field.tsx
 msgid "alice@example.com"
-msgstr ""
+msgstr "alice@example.com"
 
 #: src/components/disable-email-auth-factor-dialog.tsx
 #: src/components/reset-password-view.tsx
@@ -165,7 +165,7 @@ msgstr "デバイス上のアプリ"
 
 #: src/lib/api.ts
 msgid "An email address is required."
-msgstr ""
+msgstr "メールアドレスが必要です。"
 
 #: src/lib/notification-message.ts
 msgid "An error occurred"
@@ -219,7 +219,7 @@ msgstr "本当に、本当によろしいですか？"
 
 #: src/components/forms/fields/handle-field.tsx
 msgid "Atmosphere handle"
-msgstr ""
+msgstr "Atmosphereハンドル"
 
 #: src/components/authenticate-welcome-view.tsx
 msgctxt "AuthenticationPage"
@@ -561,7 +561,7 @@ msgstr "メールでの2要素認証を無効にするには、<0>{email}</0> �
 
 #: src/components/reset-password-view.tsx
 msgid "Enter your account's identifier and we'll send you a reset code."
-msgstr ""
+msgstr "アカウントの識別子を入力すると、リセットコードをお送りします。"
 
 #: src/components/forms/fields/new-password-field.tsx
 msgid "Enter your new password"
@@ -1208,7 +1208,7 @@ msgstr "利用規約"
 #. placeholder {0}: this.payload.identifier
 #: src/lib/api.ts
 msgid "The account \"{0}\" is hosted elsewhere."
-msgstr ""
+msgstr "アカウント「{0}」は他の場所でホストされています。"
 
 #: src/components/utils/scope-description.tsx
 msgid "The application is asking for full control over your network identity, meaning that it could <0>permanently break</0>, or even <1>steal</1>, your account. Only grant this permission to applications you really trust."
@@ -1466,7 +1466,7 @@ msgstr "メールアドレスを確認"
 #. placeholder {0}: error.issuer
 #: src/components/reset-password-request-form.tsx
 msgid "Visit <0>{0}</0> to manage this account."
-msgstr ""
+msgstr "アカウント管理のため <0>{0}</0> にアクセスしてください。"
 
 #: src/components/consent-form.tsx
 msgid "wants to access your account"
@@ -1557,7 +1557,7 @@ msgstr "サインインする際にコードの入力が求められなくなり
 #. placeholder {0}: domains[0]
 #: src/components/forms/fields/identifier-field.tsx
 msgid "you{0}"
-msgstr ""
+msgstr "you{0}"
 
 #: src/components/sign-up-view.tsx
 msgid "Your account"
