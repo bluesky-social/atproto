@@ -39,13 +39,10 @@ type SpotlightCandidate = Pick<
   NotificationGroup,
   'kind' | 'groupingKey' | 'items'
 > & {
-  isEligibleAfterTrimming: (
-    spotlightItems: NotificationItem[],
-    retainedItems: NotificationItem[],
-  ) => boolean
+  requiredPosts: number
 }
 
-export function buildSpotlight(
+export const buildSpotlight = (
   items: NotificationItem[],
   groups: NotificationGroup[],
   cursor: string | undefined,
@@ -53,7 +50,7 @@ export function buildSpotlight(
   now: number,
   seenAt: number | undefined,
   splitBursts: BurstSplitter,
-): GroupingResult {
+): GroupingResult => {
   // @NOTE Try one spotlight at a time, keeping the last page where all spotlights pass validation.
   let lastGoodPage: GroupingResult = { groups, cursor }
   const itemCount = groups.reduce(
@@ -66,7 +63,9 @@ export function buildSpotlight(
   const pageItems = items.slice(0, itemCount)
   const positions = new Map(pageItems.map((item, index) => [item, index]))
   const subjectCollections = new Map<AtUriString, string>()
-  // @NOTE Rank each reason's strongest burst by full count, then recency, before capping spotlight size.
+
+  // @NOTE `candidates` are at most 1 candidate spotlight (the best one, with most items, then more recent) per reason.
+  // E.g.: Alice's likes, Bob's reposts, Bob's likes via reposts.
   const candidates = mapDefined(SPOTLIGHT_REASONS, (reason) =>
     selectSpotlight(pageItems, reason, now, splitBursts, subjectCollections),
   )
@@ -127,7 +126,8 @@ export function buildSpotlight(
       const cutoff = positions.get(extraGroup.items[0]!)!
       retainedItems = lastGoodItems.slice(0, cutoff)
       nextCursor = pageItems[cutoff - 1]!.raw.indexedAt
-      // @NOTE Trimming every group at one raw position preserves the page prefix.
+      // @NOTE Every returned page must represent a contiguous prefix of raw notifications,
+      // regardless of how spotlights regroup them.
       for (const group of proposedGroups) {
         group.items = group.items.filter(
           (item) => positions.get(item)! < cutoff,
@@ -140,12 +140,12 @@ export function buildSpotlight(
     }
 
     const retained = new Set(retainedItems)
-    // @NOTE 3. Reject the attempt if any spotlight fails, preserving the previously accepted page and cursor.
-    const allEligible = [...acceptedSpotlights, candidate].every((spotlight) =>
-      spotlight.isEligibleAfterTrimming(
-        spotlight.items.filter((item) => retained.has(item)),
-        retainedItems,
-      ),
+    // @NOTE 3. Reject adding this spotlight if trimming leaves it or an already accepted spotlight
+    // below its minimum size; keep the previous page and cursor.
+    const allEligible = [...acceptedSpotlights, candidate].every(
+      (spotlight) =>
+        spotlight.items.filter((item) => retained.has(item)).length >=
+        spotlight.requiredPosts,
     )
     if (!allEligible) continue
 
@@ -161,13 +161,13 @@ export function buildSpotlight(
   return lastGoodPage
 }
 
-function selectSpotlight(
+const selectSpotlight = (
   items: NotificationItem[],
   reason: SpotlightReason,
   now: number,
   splitBursts: BurstSplitter,
   subjectCollections: Map<AtUriString, string>,
-): SpotlightCandidate | undefined {
+): SpotlightCandidate | undefined => {
   const range = MULTI_POST_RANGES.find(
     ({ maxItems }) => items.length <= maxItems,
   )
@@ -188,16 +188,7 @@ function selectSpotlight(
     kind: SPOTLIGHT_KINDS[reason],
     groupingKey: actorDid,
     items: topItems,
-    isEligibleAfterTrimming: (spotlightItems, retainedItems) =>
-      // @NOTE Check if after trimming it still satisfies the requirements.
-      spotlightItems.length >= requiredPosts &&
-      getTopBurst(
-        retainedItems,
-        reason,
-        now,
-        splitBursts,
-        subjectCollections,
-      )[0] === topItems[0],
+    requiredPosts,
   }
 }
 

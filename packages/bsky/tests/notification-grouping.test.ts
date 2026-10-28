@@ -1331,7 +1331,7 @@ describe.each(['algoGravity', 'algoLookback'] as const)(
       ])
     })
 
-    it('falls back without trying the new top liker after trimming', () => {
+    it('keeps the selected spotlight when another actor has more likes after trimming', () => {
       const items = postLikes([
         ['alice', 'poem'],
         ['bob', 'poem'],
@@ -1346,22 +1346,20 @@ describe.each(['algoGravity', 'algoLookback'] as const)(
         ['alice', 'drawing'],
         ['alice', 'video'],
       ])
-      const cursor = minutesAgo(1)
-      const { ordinary, page } = buildPage(items, 6, { cursor })
+      const { page } = buildPage(items, 6)
 
-      expect(page.groups).toBe(ordinary.groups)
       expectPage(
         page,
         items,
         [
-          ['alice-poem', 'bob-poem'],
-          ['bob-song', 'alice-song'],
-          ['bob-photo', 'alice-photo'],
-          ['bob-story', 'alice-story'],
-          ['bob-drawing', 'alice-drawing'],
-          ['carol-video', 'alice-video'],
+          ['alice-poem', 'alice-song', 'alice-photo', 'alice-story'],
+          ['bob-poem'],
+          ['bob-song'],
+          ['bob-photo'],
+          ['bob-story'],
+          ['bob-drawing'],
         ],
-        cursor,
+        items[8]!.raw.indexedAt,
       )
     })
 
@@ -1395,7 +1393,7 @@ describe.each(['algoGravity', 'algoLookback'] as const)(
       ).toEqual(['did:plc:bob'])
     })
 
-    it('falls back if trimming creates a tie won by another actor’s newer like', () => {
+    it('keeps the selected spotlight when trimming creates a tie with another actor’s newer like', () => {
       const items = postLikes([
         ['bob', 'poem'],
         ['alice', 'poem'],
@@ -1408,16 +1406,20 @@ describe.each(['algoGravity', 'algoLookback'] as const)(
         ['carol', 'video'],
         ['alice', 'video'],
       ])
-      const { ordinary, page } = buildPage(items, 5)
+      const { page } = buildPage(items, 5)
 
-      expect(page.groups).toBe(ordinary.groups)
-      expectPage(page, items, [
-        ['bob-poem', 'alice-poem'],
-        ['bob-song', 'alice-song'],
-        ['bob-photo', 'alice-photo'],
-        ['bob-story', 'alice-story'],
-        ['carol-video', 'alice-video'],
-      ])
+      expectPage(
+        page,
+        items,
+        [
+          ['bob-poem'],
+          ['alice-poem', 'alice-song', 'alice-photo', 'alice-story'],
+          ['bob-song'],
+          ['bob-photo'],
+          ['bob-story'],
+        ],
+        items[7]!.raw.indexedAt,
+      )
     })
 
     it.each([
