@@ -39,7 +39,7 @@ import { Hydrator } from './hydration/hydrator.js'
 import * as imageServer from './image/server.js'
 import { ImageUriBuilder } from './image/uri.js'
 import { createKwsClient } from './kws.js'
-import { loggerMiddleware } from './logger.js'
+import { createLoggerMiddleware } from './logger.js'
 import {
   authWithApiKey as rolodexAuth,
   createRolodexClient,
@@ -86,7 +86,7 @@ export class BskyAppView {
     const app = express()
     app.set('trust proxy', true)
     app.use(cors({ maxAge: DAY / SECOND }))
-    app.use(loggerMiddleware)
+    app.use(createLoggerMiddleware(config))
     app.use(compression())
 
     // used solely for handle resolution: identity lookups occur on dataplane

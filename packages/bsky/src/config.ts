@@ -39,6 +39,8 @@ export interface ServerConfigValues {
   // service
   version?: string
   debugMode?: boolean
+  httpLogSuccessSampleRate?: number
+  httpLogSlowRequestMs?: number
   port?: number
   publicUrl?: string
   serverDid: DidString
@@ -140,6 +142,17 @@ export class ServerConfig {
   private assignedPort?: number
   constructor(private cfg: ServerConfigValues) {
     assert(
+      Number.isFinite(this.httpLogSuccessSampleRate) &&
+        this.httpLogSuccessSampleRate >= 0 &&
+        this.httpLogSuccessSampleRate <= 1,
+      'BSKY_HTTP_LOG_SUCCESS_SAMPLE_RATE must be a number between 0 and 1',
+    )
+    assert(
+      Number.isFinite(this.httpLogSlowRequestMs) &&
+        this.httpLogSlowRequestMs >= 0,
+      'BSKY_HTTP_LOG_SLOW_REQUEST_MS must be a nonnegative finite number',
+    )
+    assert(
       cfg.bffJwtSecret == null ||
         Buffer.byteLength(cfg.bffJwtSecret, 'utf8') >= 32,
       'BSKY_BFF_JWT_SECRET must be generated from at least 32 random bytes (minimum key length: 32 bytes)',
@@ -151,6 +164,14 @@ export class ServerConfig {
     const debugMode =
       // Because security related features are disabled in development mode, this requires explicit opt-in.
       process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test'
+    const httpLogSuccessSampleRate =
+      process.env.BSKY_HTTP_LOG_SUCCESS_SAMPLE_RATE === undefined
+        ? undefined
+        : Number(process.env.BSKY_HTTP_LOG_SUCCESS_SAMPLE_RATE.trim() || NaN)
+    const httpLogSlowRequestMs =
+      process.env.BSKY_HTTP_LOG_SLOW_REQUEST_MS === undefined
+        ? undefined
+        : Number(process.env.BSKY_HTTP_LOG_SLOW_REQUEST_MS.trim() || NaN)
     const publicUrl = process.env.BSKY_PUBLIC_URL || undefined
     const serverDid = process.env.BSKY_SERVER_DID || 'did:example:test'
     assert(isDidString(serverDid))
@@ -448,6 +469,8 @@ export class ServerConfig {
     return new ServerConfig({
       version,
       debugMode,
+      httpLogSuccessSampleRate,
+      httpLogSlowRequestMs,
       port,
       publicUrl,
       serverDid,
@@ -549,6 +572,14 @@ export class ServerConfig {
 
   get version() {
     return this.cfg.version
+  }
+
+  get httpLogSuccessSampleRate() {
+    return this.cfg.httpLogSuccessSampleRate ?? 1
+  }
+
+  get httpLogSlowRequestMs() {
+    return this.cfg.httpLogSlowRequestMs ?? SECOND
   }
 
   get debugMode() {
