@@ -77,6 +77,9 @@ export const createAlgoGravityGroupBuilder: GroupBuilderFactory = (
 
       const nextGroupCount =
         groupCount - candidateGroups.length + nextCandidateGroups.length
+
+      // If that would produce more groups than we can fit in the limit,
+      // return the groups without having this item.
       if (nextGroupCount > limit) {
         return {
           groups: toGroups(chains, seenAt),
@@ -84,6 +87,8 @@ export const createAlgoGravityGroupBuilder: GroupBuilderFactory = (
         }
       }
 
+      // If adding this item didn't produce a group that makes us overflow the limit,
+      // we can continue appending.
       chains.set(key, nextCandidateGroups)
       groupCount = nextGroupCount
       previousItem = item
