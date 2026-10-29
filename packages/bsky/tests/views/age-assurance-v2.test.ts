@@ -36,6 +36,7 @@ import {
   serializeKWSExternalPayloadV2,
 } from '../../src/api/age-assurance/kws/external-payload.js'
 import type { KwsWebhookBody } from '../../src/api/kws/types.js'
+import { Gate } from '../../src/feature-gates/gates.js'
 
 type Database = TestNetwork['bsky']['db']
 
@@ -222,6 +223,23 @@ describe('age assurance v2 views', () => {
     return data
   }
 
+  function mockAgeVerifiedFlowGate(enabled: boolean) {
+    return vi
+      .spyOn(network.bsky.ctx.featureGatesClient, 'scope')
+      .mockImplementation((userContext) => {
+        const checkGate = (gate: Gate) =>
+          enabled &&
+          userContext.did === actor.did &&
+          gate === Gate.AgeAssuranceAgeVerifiedFlowEnable
+        return {
+          Gate,
+          checkGate,
+          checkGates: (gates) =>
+            new Map(gates.map((gate) => [gate, checkGate(gate)])),
+        }
+      })
+  }
+
   describe('app.bsky.ageassurance.getState', () => {
     it('initially returns defaults', async () => {
       const { state, metadata } = await getState({
@@ -269,7 +287,11 @@ describe('age assurance v2 views', () => {
     ])(
       '$countryCode $regionCode requests age boundary $ageBoundary',
       async ({ countryCode, regionCode, ageBoundary }) => {
+        using scope = mockAgeVerifiedFlowGate(true)
         const res = await beginAgeAssurance({ countryCode, regionCode })
+        expect(scope).toHaveBeenCalledWith(
+          expect.objectContaining({ did: actor.did }),
+        )
         expect(kwsSendAgeVerifiedFlowEmailMock).toHaveBeenCalledTimes(1)
         expect(kwsSendAdultVerifiedFlowEmailMock).not.toHaveBeenCalled()
         const body = kwsSendAgeVerifiedFlowEmailMock.mock.calls[0][0].body
@@ -295,6 +317,68 @@ describe('age assurance v2 views', () => {
         expect(state.lastInitiatedAt).toBeDefined()
         expect(state.status).toEqual('pending')
         expect(state.access).toEqual('unknown')
+      },
+    )
+    test.each([
+      {
+        countryCode: 'AU',
+        regionCode: undefined,
+        flow: 'age',
+        ageBoundaries: [16],
+      },
+      {
+        countryCode: 'GB',
+        regionCode: undefined,
+        flow: 'adult',
+        ageBoundaries: undefined,
+      },
+      {
+        countryCode: 'BR',
+        regionCode: undefined,
+        flow: 'adult',
+        ageBoundaries: undefined,
+      },
+      {
+        countryCode: 'US',
+        regionCode: 'VA',
+        flow: 'adult',
+        ageBoundaries: undefined,
+      },
+    ])(
+      '$countryCode $regionCode uses $flow with the gate disabled',
+      async ({ countryCode, regionCode, flow, ageBoundaries }) => {
+        using _scope = mockAgeVerifiedFlowGate(false)
+        const res = await beginAgeAssurance({ countryCode, regionCode })
+        const selectedMock =
+          flow === 'age'
+            ? kwsSendAgeVerifiedFlowEmailMock
+            : kwsSendAdultVerifiedFlowEmailMock
+        const otherMock =
+          flow === 'age'
+            ? kwsSendAdultVerifiedFlowEmailMock
+            : kwsSendAgeVerifiedFlowEmailMock
+        expect(selectedMock).toHaveBeenCalledTimes(1)
+        expect(otherMock).not.toHaveBeenCalled()
+        const body = selectedMock.mock.calls[0][0].body
+        expect(body).toEqual({
+          email: actor.email,
+          language: 'en',
+          location: regionCode ? `${countryCode}-${regionCode}` : countryCode,
+          externalPayload: expect.any(String),
+          userContext: flow,
+          ...(ageBoundaries ? { ageBoundaries } : {}),
+        })
+        expect(parseKWSExternalPayloadV2(body.externalPayload)).toMatchObject({
+          version: KWSExternalPayloadVersion.V2,
+          actorDid: actor.did,
+          countryCode,
+          regionCode,
+        })
+        await network.processAll()
+        const { state } = await getState({ countryCode, regionCode })
+        expect(state).toEqual(res)
+        expect(state.status).toBe('pending')
+        expect(state.access).toBe('unknown')
       },
     )
   })

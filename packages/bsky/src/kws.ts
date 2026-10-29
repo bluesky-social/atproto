@@ -40,10 +40,8 @@ export type KWSSendEmailRequestCommon = {
   externalPayload: string
 }
 
-export type KWSSendEmailRequest = KWSSendEmailRequestCommon & {
-  userContext: 'age'
-  ageBoundaries: [number]
-}
+export type KWSSendEmailRequest = KWSSendEmailRequestCommon &
+  ({ userContext: 'adult' } | { userContext: 'age'; ageBoundaries: [number] })
 
 export class KwsClient {
   private cachedToken?: CachedToken

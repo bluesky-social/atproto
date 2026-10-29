@@ -90,22 +90,42 @@ export default function (server: Server, ctx: AppContext) {
 
       const location = createLocationString(countryCode, regionCode)
 
-      const kwsConfig =
-        KWS_AGE_VERIFICATION_CONFIG[location] ??
-        KWS_AGE_VERIFICATION_CONFIG[region.countryCode]
-      if (!kwsConfig) {
-        throw new Error(
-          `KWS age verification is not configured for ${location}`,
-        )
-      }
+      const features = ctx.featureGatesClient.scope(
+        ctx.featureGatesClient.parseUserContextFromHandler({
+          viewer: actorDid,
+          req,
+        }),
+      )
+      if (
+        region.countryCode === 'AU' ||
+        features.checkGate(features.Gate.AgeAssuranceAgeVerifiedFlowEnable)
+      ) {
+        const kwsConfig =
+          KWS_AGE_VERIFICATION_CONFIG[location] ??
+          KWS_AGE_VERIFICATION_CONFIG[region.countryCode]
+        if (!kwsConfig) {
+          throw new Error(
+            `KWS age verification is not configured for ${location}`,
+          )
+        }
 
-      await ctx.kwsClient.sendAgeVerifiedFlowEmail({
-        location,
-        email,
-        externalPayload,
-        language,
-        ageBoundary: kwsConfig.ageBoundary,
-      })
+        await ctx.kwsClient.sendAgeVerifiedFlowEmail({
+          location,
+          email,
+          externalPayload,
+          language,
+          ageBoundary: kwsConfig.ageBoundary,
+        })
+      } else {
+        // @TODO remove this adult-flow carve-out after the age-flow rollout.
+        await ctx.kwsClient.email({
+          location,
+          email,
+          externalPayload,
+          language,
+          userContext: 'adult',
+        })
+      }
 
       // If we have existing status/access for this region, retain it.
       const nextStatus =

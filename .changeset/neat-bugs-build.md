@@ -2,6 +2,4 @@
 "@atproto/bsky": patch
 ---
 
-Use the KWS age-verification flow for V2 initiation in all supported regions, with country and region-specific age boundaries.
-
-
+Use regional age boundaries for V2 KWS age verification, with a feature-gated rollout outside Australia that retains adult verification for users without the feature enabled. Add regional and age regression coverage for V2 callbacks.
