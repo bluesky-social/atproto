@@ -249,6 +249,26 @@ describe('space policy', () => {
         error: 'PolicyMismatch',
       })
     })
+
+    it('removeMember drops the member from the writer set', async () => {
+      const space = await sc.createSpace(alice, { members: [dan] })
+      await sc.write(dan, space, { text: 'from a member' })
+      expect(await sc.writerDids(space)).toEqual([dan.did])
+
+      await sc.removeMember(alice, space, dan)
+      expect(await sc.writerDids(space)).toEqual([])
+    })
+
+    it('putMember drops the member from the writer set when it revokes write', async () => {
+      const space = await sc.createSpace(alice, { members: [dan] })
+      await sc.write(dan, space, { text: 'from a member' })
+
+      await sc.putMember(alice, space, dan, { read: true, write: true })
+      expect(await sc.writerDids(space)).toEqual([dan.did])
+
+      await sc.putMember(alice, space, dan, { read: true, write: false })
+      expect(await sc.writerDids(space)).toEqual([])
+    })
   })
 
   describe('policy', () => {
@@ -256,7 +276,6 @@ describe('space policy', () => {
       const space = await sc.createSpace(alice, {
         policy: managedspace.policy.$build({
           managingApp: 'did:web:example.com#forum',
-          allowedApps: ['app:one', 'app:two'],
         }),
       })
 
@@ -265,7 +284,6 @@ describe('space policy', () => {
       expect(got.policy).toEqual({
         $type: 'com.atproto.managedspace.policy',
         managingApp: 'did:web:example.com#forum',
-        allowedApps: ['app:one', 'app:two'],
         publishPolicy: false,
       })
     })
@@ -277,8 +295,8 @@ describe('space policy', () => {
       const got = await getSpace(space)
       expect(got.policy).toEqual({
         $type: 'com.atproto.memberspace.policy',
-        readAccess: 'members',
-        writeAccess: 'members',
+        publicRead: false,
+        publicWrite: false,
         publishPolicy: false,
         publishMembers: false,
       })
@@ -287,23 +305,20 @@ describe('space policy', () => {
     it('replaces the policy wholesale on update', async () => {
       const space = await sc.createSpace(alice, {
         policy: memberspace.policy.$build({
-          readAccess: 'public',
+          publicRead: true,
           allowedApps: ['app:x'],
           publishMembers: true,
         }),
       })
 
-      await updateSpace(
-        space,
-        memberspace.policy.$build({ writeAccess: 'public' }),
-      )
+      await updateSpace(space, memberspace.policy.$build({ publicWrite: true }))
 
       // Nothing from the previous configuration is merged into the new one.
       const got = await getSpace(space)
       expect(got.policy).toEqual({
         $type: 'com.atproto.memberspace.policy',
-        readAccess: 'members',
-        writeAccess: 'public',
+        publicRead: false,
+        publicWrite: true,
         publishPolicy: false,
         publishMembers: false,
       })
@@ -313,10 +328,7 @@ describe('space policy', () => {
       // The member list is not part of the policy object, so a change that keeps
       // the policy's $type leaves it alone.
       const space = await sc.createSpace(alice, { members: [bob] })
-      await updateSpace(
-        space,
-        memberspace.policy.$build({ readAccess: 'public' }),
-      )
+      await updateSpace(space, memberspace.policy.$build({ publicRead: true }))
 
       const members = await listMembers(space)
       expect(members.members.map((m) => m.did)).toEqual([bob.did])
@@ -329,7 +341,7 @@ describe('space policy', () => {
           com.atproto.space.updateSpace,
           {
             space,
-            policy: memberspace.policy.$build({ readAccess: 'public' }),
+            policy: memberspace.policy.$build({ publicRead: true }),
           },
           { headers: bob.headers },
         ),
@@ -340,16 +352,6 @@ describe('space policy', () => {
       const space = await sc.createSpace(alice)
       await expect(
         updateSpace(space, { $type: 'com.example.whatever' } as never),
-      ).rejects.toMatchObject({ error: 'UnsupportedPolicy' })
-    })
-
-    it('refuses an unrecognized access value', async () => {
-      const space = await sc.createSpace(alice)
-      await expect(
-        updateSpace(
-          space,
-          memberspace.policy.$build({ readAccess: 'friends-of-friends' }),
-        ),
       ).rejects.toMatchObject({ error: 'UnsupportedPolicy' })
     })
 
@@ -419,7 +421,7 @@ describe('space policy', () => {
       // Bob's membership went with the list.
       const token = await sc.delegationTokenFor(bob, space)
       await expect(sc.mintCredential(space, token)).rejects.toMatchObject({
-        error: 'UserNotAuthorized',
+        error: 'SpaceNotFound',
       })
     })
   })
@@ -481,7 +483,7 @@ describe('space policy', () => {
       await updateSpace(
         space,
         memberspace.policy.$build({
-          readAccess: 'public',
+          publicRead: true,
           publishPolicy: true,
         }),
       )
@@ -638,7 +640,7 @@ describe('space policy', () => {
 
       const token = await sc.delegationTokenFor(carol, space)
       await expect(sc.mintCredential(space, token)).rejects.toMatchObject({
-        error: 'UserNotAuthorized',
+        error: 'SpaceNotFound',
       })
     })
 
@@ -658,7 +660,7 @@ describe('space policy', () => {
   describe('credential mint gates', () => {
     it('mints for a non-member when read access is public', async () => {
       const space = await sc.createSpace(alice, {
-        policy: memberspace.policy.$build({ readAccess: 'public' }),
+        policy: memberspace.policy.$build({ publicRead: true }),
       })
       const cred = await sc.credentialFor(carol, space)
       expect(cred.credential).toBeDefined()
@@ -666,7 +668,7 @@ describe('space policy', () => {
 
     it('mints without a delegation token when read access is public', async () => {
       const space = await sc.createSpace(alice, {
-        policy: memberspace.policy.$build({ readAccess: 'public' }),
+        policy: memberspace.policy.$build({ publicRead: true }),
       })
       await sc.write(alice, space, { text: 'for anyone' })
 
@@ -711,7 +713,7 @@ describe('space policy', () => {
     it('refuses a request without a delegation token or attestation when apps are restricted', async () => {
       const space = await sc.createSpace(alice, {
         policy: memberspace.policy.$build({
-          readAccess: 'public',
+          publicRead: true,
           allowedApps: ['https://app.example.com/client-metadata.json'],
         }),
       })
@@ -720,21 +722,35 @@ describe('space policy', () => {
       })
     })
 
-    it('refuses a non-member when read access is members', async () => {
+    it('hides the space from a non-member when read access is not public', async () => {
       const space = await sc.createSpace(alice)
       const token = await sc.delegationTokenFor(carol, space)
       await expect(sc.mintCredential(space, token)).rejects.toMatchObject({
-        error: 'UserNotAuthorized',
+        error: 'SpaceNotFound',
       })
     })
 
-    it('refuses a member without read access', async () => {
+    it('hides the space from a non-member before checking the app', async () => {
+      // An AppNotAuthorized here would disclose to a non-member that the space
+      // exists, and that it restricts apps.
+      const space = await sc.createSpace(alice, {
+        policy: memberspace.policy.$build({
+          allowedApps: ['https://app.example.com/client-metadata.json'],
+        }),
+      })
+      const token = await sc.delegationTokenFor(carol, space)
+      await expect(sc.mintCredential(space, token)).rejects.toMatchObject({
+        error: 'SpaceNotFound',
+      })
+    })
+
+    it('hides the space from a member without read access', async () => {
       const space = await sc.createSpace(alice)
       await sc.putMember(alice, space, carol, { read: false, write: true })
 
       const token = await sc.delegationTokenFor(carol, space)
       await expect(sc.mintCredential(space, token)).rejects.toMatchObject({
-        error: 'UserNotAuthorized',
+        error: 'SpaceNotFound',
       })
     })
 
@@ -751,11 +767,11 @@ describe('space policy', () => {
     })
 
     it('refuses when apps are restricted and no attestation is presented', async () => {
-      // readAccess public so the user passes; allowedApps wants an attested
+      // publicRead so the user passes; allowedApps wants an attested
       // client_id, which a plain exchange doesn't supply.
       const space = await sc.createSpace(alice, {
         policy: memberspace.policy.$build({
-          readAccess: 'public',
+          publicRead: true,
           allowedApps: ['https://app.example.com/client-metadata.json'],
         }),
       })
@@ -778,7 +794,7 @@ describe('space policy', () => {
       const spaceFor = (app: MockClientApp) =>
         sc.createSpace(alice, {
           policy: memberspace.policy.$build({
-            readAccess: 'public',
+            publicRead: true,
             allowedApps: [app.clientId],
           }),
         })
@@ -918,7 +934,7 @@ describe('space policy', () => {
 
         const token = await sc.delegationTokenFor(carol, space)
         await expect(sc.mintCredential(space, token)).rejects.toMatchObject({
-          error: 'UserNotAuthorized',
+          error: 'SpaceNotFound',
         })
       })
 
@@ -933,7 +949,7 @@ describe('space policy', () => {
 
         const token = await sc.delegationTokenFor(carol, space)
         await expect(sc.mintCredential(space, token)).rejects.toMatchObject({
-          error: 'UserNotAuthorized',
+          error: 'SpaceNotFound',
         })
       })
 
@@ -942,7 +958,7 @@ describe('space policy', () => {
         const space = await spaceWith('did:web:nonexistent.invalid#forum')
         const token = await sc.delegationTokenFor(carol, space)
         await expect(sc.mintCredential(space, token)).rejects.toMatchObject({
-          error: 'UserNotAuthorized',
+          error: 'SpaceNotFound',
         })
       })
 
@@ -1142,7 +1158,7 @@ describe('space policy', () => {
       // A public space's syncer may hold no delegation token, and still needs to
       // learn that the space is gone.
       const space = await sc.createSpace(alice, {
-        policy: memberspace.policy.$build({ readAccess: 'public' }),
+        policy: memberspace.policy.$build({ publicRead: true }),
       })
       await deleteSpace(space)
       await expect(sc.publicCredential(space)).rejects.toMatchObject({
@@ -1195,8 +1211,8 @@ describe('space policy', () => {
       const space = await sc.createSpace(alice, {
         skey,
         policy: memberspace.policy.$build({
-          readAccess: 'public',
-          writeAccess: 'public',
+          publicRead: true,
+          publicWrite: true,
         }),
       })
       await deleteSpace(space)
@@ -1208,8 +1224,8 @@ describe('space policy', () => {
       // over into the new one.
       const got = await getSpace(space)
       expect(got.policy).toMatchObject({
-        readAccess: 'members',
-        writeAccess: 'members',
+        publicRead: false,
+        publicWrite: false,
       })
 
       await expect(

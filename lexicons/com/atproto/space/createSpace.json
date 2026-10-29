@@ -54,7 +54,7 @@
         },
         {
           "name": "UnsupportedPolicy",
-          "description": "The requested policy, or a value within it, is not one the host implements. A host will not store a policy it cannot enforce."
+          "description": "The requested policy is not one the host implements."
         }
       ]
     }

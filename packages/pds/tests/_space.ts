@@ -182,6 +182,14 @@ export class SpaceClient {
     )
   }
 
+  async removeWriter(owner: Actor, space: SpaceRefString, writer: Actor) {
+    return owner.client.call(
+      com.atproto.space.removeWriter,
+      { space, did: writer.did },
+      { headers: owner.headers },
+    )
+  }
+
   /** Write one record to `actor`'s own repo in the space. */
   async write(actor: Actor, space: SpaceRefString, opts: WriteOptions = {}) {
     const collection = opts.collection ?? TEST_COLLECTION
@@ -232,6 +240,18 @@ export class SpaceClient {
         collection: opts.collection ?? TEST_COLLECTION,
         rkey: opts.rkey as RecordKeyString,
       },
+      { headers: opts.headers ?? actor.headers },
+    )
+  }
+
+  async clear(
+    actor: Actor,
+    space: SpaceRefString,
+    opts: { headers?: { authorization: string } } = {},
+  ) {
+    return actor.client.call(
+      com.atproto.space.clearRecords,
+      { space, repo: actor.did },
       { headers: opts.headers ?? actor.headers },
     )
   }

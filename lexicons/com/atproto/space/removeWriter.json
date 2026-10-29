@@ -1,0 +1,37 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.space.removeWriter",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Remove an account from a space's writer set, so that listRepos no longer lists it. The account is tracked again if it later writes while still authorized. Idempotent: succeeds whether or not the account was in the writer set. Requires auth as an account that may manage the space.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["space", "did"],
+          "properties": {
+            "space": {
+              "type": "string",
+              "format": "space-ref",
+              "description": "Reference to the space."
+            },
+            "did": {
+              "type": "string",
+              "format": "did",
+              "description": "The DID of the writer to remove."
+            }
+          }
+        }
+      },
+      "errors": [
+        {
+          "name": "SpaceNotFound"
+        },
+        {
+          "name": "NotSpaceOwner"
+        }
+      ]
+    }
+  }
+}

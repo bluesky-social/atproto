@@ -1,6 +1,7 @@
 import type { Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../../../context.js'
 import applyWrites from './applyWrites.js'
+import clearRecords from './clearRecords.js'
 import createRecord from './createRecord.js'
 import createSpace from './createSpace.js'
 import deleteRecord from './deleteRecord.js'
@@ -24,11 +25,13 @@ import notifyCredentialRevoked from './notifyCredentialRevoked.js'
 import notifyWrite from './notifyWrite.js'
 import putRecord from './putRecord.js'
 import registerNotify from './registerNotify.js'
+import removeWriter from './removeWriter.js'
 import unregisterNotify from './unregisterNotify.js'
 import updateSpace from './updateSpace.js'
 
 export default function (server: Server, ctx: AppContext) {
   applyWrites(server, ctx)
+  clearRecords(server, ctx)
   createRecord(server, ctx)
   createSpace(server, ctx)
   deleteRecord(server, ctx)
@@ -52,6 +55,7 @@ export default function (server: Server, ctx: AppContext) {
   notifyWrite(server, ctx)
   putRecord(server, ctx)
   registerNotify(server, ctx)
+  removeWriter(server, ctx)
   unregisterNotify(server, ctx)
   updateSpace(server, ctx)
 }

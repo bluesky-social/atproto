@@ -24,23 +24,20 @@ export type Policy =
   | l.$Typed<com.atproto.managedspace.policy.Main>
 
 /**
- * Check that this host implements a requested policy and every value within it, and
- * fill in its defaults, so that what is stored is exactly what is enforced. A host
- * will not store a policy it cannot enforce.
+ * Check that this host implements a requested policy, and fill in its defaults, so
+ * that what is stored is exactly what is enforced.
  *
  * Unknown fields are dropped, as Lexicon evolution allows. A change that can't
  * safely be ignored comes as a new policy rather than a new field.
  */
 export function normalizePolicy(policy: LexPolicy): Policy {
   if (personalspace.policy.$isTypeOf(policy)) {
-    return personalspace.policy.$build({
-      allowedApps: policy.allowedApps,
-    })
+    return personalspace.policy.$build({})
   }
   if (memberspace.policy.$isTypeOf(policy)) {
     return memberspace.policy.$build({
-      readAccess: normalizeAccess(policy.readAccess),
-      writeAccess: normalizeAccess(policy.writeAccess),
+      publicRead: policy.publicRead ?? false,
+      publicWrite: policy.publicWrite ?? false,
       allowedApps: policy.allowedApps,
       publishPolicy: policy.publishPolicy ?? false,
       publishMembers: policy.publishMembers ?? false,
@@ -51,12 +48,10 @@ export function normalizePolicy(policy: LexPolicy): Policy {
     if (!managingApp.startsWith('did:')) {
       throw new InvalidRequestError(
         `managingApp must be a DID with an optional service fragment, got: ${managingApp}`,
-        'UnsupportedPolicy',
       )
     }
     return managedspace.policy.$build({
       managingApp,
-      allowedApps: policy.allowedApps,
       publishPolicy: policy.publishPolicy ?? false,
     })
   }
@@ -78,16 +73,6 @@ export function parsePolicy(value: unknown): Policy {
   return normalizePolicy(result.value)
 }
 
-function normalizeAccess(access = 'members'): 'public' | 'members' {
-  if (access !== 'public' && access !== 'members') {
-    throw new InvalidRequestError(
-      `Unsupported access: ${access}`,
-      'UnsupportedPolicy',
-    )
-  }
-  return access
-}
-
 // The member list and the methods that manage it belong to the memberspace policy.
 export function assertMemberspace(policy: Policy): void {
   if (!memberspace.policy.$isTypeOf(policy)) {
@@ -103,7 +88,7 @@ export function assertMemberspace(policy: Policy): void {
  * minted without a delegation token saying who the user is.
  */
 export function isPublicRead(policy: Policy): boolean {
-  return memberspace.policy.$isTypeOf(policy) && policy.readAccess === 'public'
+  return memberspace.policy.$isTypeOf(policy) && policy.publicRead === true
 }
 
 export function isPolicyPublished(policy: Policy): boolean {
@@ -121,10 +106,11 @@ export function areMembersPublished(policy: Policy): boolean {
 }
 
 /**
- * Evaluated against the attested client_id, so an app that presents no client
- * attestation is never one of the allowed apps.
+ * Only memberspace restricts apps. Evaluated against the attested client_id, so an
+ * app that presents no client attestation is never one of the allowed apps.
  */
 export function isAppAuthorized(policy: Policy, clientId?: string): boolean {
+  if (!memberspace.policy.$isTypeOf(policy)) return true
   if (!policy.allowedApps) return true
   return clientId !== undefined && policy.allowedApps.includes(clientId)
 }

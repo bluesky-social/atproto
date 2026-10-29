@@ -3,6 +3,7 @@ import { encode } from '@atproto/lex-cbor'
 import { type Cid, cidForCbor, enumBlobRefs, parseCid } from '@atproto/lex-data'
 import { WriteOpAction } from '@atproto/repo'
 import {
+  LtHash,
   RepoCommit,
   type SpaceHostWriter,
   type VerifiedRecord,
@@ -182,6 +183,14 @@ export class SpaceTransactor extends SpaceReader {
     }
   }
 
+  async removeWriter(space: string, did: string): Promise<void> {
+    await this.db.db
+      .deleteFrom('space_writer')
+      .where('space', '=', space)
+      .where('did', '=', did)
+      .execute()
+  }
+
   /**
    * Apply a batch of writes as one commit, all sharing a single `rev`. Must run in a
    * transaction. Returns null if there was nothing to write.
@@ -345,6 +354,38 @@ export class SpaceTransactor extends SpaceReader {
       .set({ setHash: repo.setHash.state(), rev })
       .where('space', '=', space)
       .execute()
+  }
+
+  /**
+   * Delete every record and clear the oplog, leaving the repo empty at a new `rev`.
+   * Must run in a transaction. Returns null if the repo was already empty.
+   */
+  async clearRecords(
+    space: SpaceRefString,
+  ): Promise<{ rev: string; setHash: Uint8Array } | null> {
+    this.db.assertTransaction()
+    const state = await this.getRepoState(space)
+    if (!state || new LtHash(state.setHash).isEmpty()) return null
+
+    await this.blob.deleteSpaceBlobs(space)
+    await this.db.db
+      .deleteFrom('space_record')
+      .where('space', '=', space)
+      .execute()
+    await this.db.db
+      .deleteFrom('space_record_oplog')
+      .where('space', '=', space)
+      .execute()
+
+    const rev = TID.nextStr(state.rev ?? undefined)
+    const setHash = new LtHash().state()
+    await this.db.db
+      .updateTable('space_repo')
+      .set({ setHash, rev })
+      .where('space', '=', space)
+      .execute()
+
+    return { rev, setHash }
   }
 
   // A write to another authority's space creates the repo without checking that

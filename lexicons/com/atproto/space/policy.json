@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "record",
-      "description": "The policy governing a space, published to readers when the policy's publishPolicy is set. Written by the space authority's PDS to the authority's own repo in the space, and kept in sync with the policy. Only authoritative in the authority's repo.",
+      "description": "The policy governing a space, optionally published in the space so that syncers can view a description of the space's policy. Written to the space authority's own repo in the space, and kept in sync with the policy. Only authoritative in the authority's repo.",
       "key": "literal:self",
       "record": {
         "type": "object",

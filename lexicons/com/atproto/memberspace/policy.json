@@ -6,21 +6,19 @@
       "type": "object",
       "description": "Space policy that governs access via a member list maintained by the space host, managed with putMember and removeMember.",
       "properties": {
-        "readAccess": {
-          "type": "string",
-          "knownValues": ["public", "members"],
-          "default": "members",
-          "description": "Who the authority authorizes to read: any user, or members whose entry has read set."
+        "publicRead": {
+          "type": "boolean",
+          "default": false,
+          "description": "If true, the authority issues a space credential to anyone, with or without a delegation token. Otherwise, only to members whose entry has read set."
         },
-        "writeAccess": {
-          "type": "string",
-          "knownValues": ["public", "members"],
-          "default": "members",
-          "description": "Whose writes the authority tracks and forwards notifications for: any user, or members whose entry has write set."
+        "publicWrite": {
+          "type": "boolean",
+          "default": false,
+          "description": "If true, the authority tracks and forwards notifications for any user's writes. Otherwise, only for members whose entry has write set."
         },
         "allowedApps": {
           "type": "array",
-          "description": "If set, only these apps may access the space, evaluated against the attested client_id. When omitted, any app may access the space and no client attestation is required.",
+          "description": "If set, the authority mints a credential only for these apps, evaluated against the attested client_id. When omitted, any app may read the space and no client attestation is required. Does not apply to writes.",
           "items": {
             "type": "string",
             "description": "An OAuth client ID."
