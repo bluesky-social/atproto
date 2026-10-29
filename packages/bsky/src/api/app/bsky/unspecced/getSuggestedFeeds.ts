@@ -25,9 +25,6 @@ export default function (server: Server, ctx: AppContext) {
         xrpcEndpoint: app.bsky.unspecced.getSuggestedFeeds.$lxm,
         labelers,
         viewer,
-        features: ctx.featureGatesClient.scope(
-          ctx.featureGatesClient.parseUserContextFromHandler({ viewer, req }),
-        ),
       })
       const headers = noUndefinedVals({
         'accept-language': req.headers['accept-language'],
@@ -55,18 +52,12 @@ const skeleton = async (
 ): Promise<SkeletonState> => {
   const { params, ctx } = input
 
-  const useIris = params.hydrateCtx.features.checkGate(
-    params.hydrateCtx.features.Gate.SuggestedFeedsV2Enable,
-  )
-  const client = useIris ? ctx.irisClient : ctx.topicsClient
-
-  if (!client) {
+  if (!ctx.irisClient) {
     // Use 501 instead of 500 as these are not considered retry-able by clients
-    const agent = useIris ? 'Iris' : 'Topics'
-    throw new MethodNotImplementedError(`${agent} agent not available`)
+    throw new MethodNotImplementedError('Iris agent not available')
   }
 
-  return client.call(
+  return ctx.irisClient.call(
     app.bsky.unspecced.getSuggestedFeedsSkeleton,
     {
       limit: params.limit,
@@ -102,7 +93,6 @@ const presentation = (
 type Context = {
   hydrator: Hydrator
   views: Views
-  topicsClient: Client | undefined
   irisClient: Client | undefined
 }
 
