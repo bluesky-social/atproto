@@ -182,6 +182,7 @@ export class ModerationViews {
       tools.ozone.moderation.defs.modEventMuteReporter.$isTypeOf(event) ||
       tools.ozone.moderation.defs.modEventTakedown.$isTypeOf(event) ||
       tools.ozone.moderation.defs.modEventLabel.$isTypeOf(event) ||
+      tools.ozone.moderation.defs.modEventTag.$isTypeOf(event) ||
       tools.ozone.moderation.defs.modEventMute.$isTypeOf(event)
     ) {
       event.durationInHours = row.durationInHours ?? undefined
