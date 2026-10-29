@@ -9,6 +9,10 @@ Backend service for moderating the Bluesky network.
 
 The API uses a bounded in-memory DID document cache. Configure its limits with `OZONE_DID_CACHE_MAX_ENTRIES` (default 10,000), `OZONE_DID_CACHE_MAX_BYTES` (default 33,554,432 bytes for serialized documents and DID keys), and `OZONE_DID_CACHE_MAX_DOC_BYTES` (default 65,536 bytes per serialized document). Set any limit to `0` to disable retention. Documents exceeding a limit can still be resolved but are not cached. Restart the API after changing these settings.
 
+## Blob diversion
+
+`OZONE_BLOB_DIVERT_MAX_BYTES` sets the maximum size of a blob downloaded for diversion. It must be a positive integer and defaults to 314,572,800 bytes (300 MiB). The receiving service must support the same size. Restart the API after changing this setting.
+
 ## Report tags
 
 Reports automatically add a reason tag such as `report:spam` to their subject by default. Set `OZONE_REPORT_TAGS_DISABLED=true` and restart the API to disable these automatic report tags. Unset or `false` keeps them enabled.

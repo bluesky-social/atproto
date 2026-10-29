@@ -16,10 +16,6 @@ import { UpstreamHttpError, retryHttp } from '../util.js'
 
 const BLOB_HEADERS_TIMEOUT = 30e3
 const BLOB_BODY_TIMEOUT = 120e3
-const BLOB_RESPONSE_MAX_SIZE = 100 * 1024 * 1024
-const safeBlobFetch = createSafeFetch({
-  responseMaxSize: BLOB_RESPONSE_MAX_SIZE,
-})
 
 export class BlobDiverter {
   serviceConfig: BlobDivertConfig
@@ -36,7 +32,9 @@ export class BlobDiverter {
   ) {
     this.serviceConfig = services.serviceConfig
     this.idResolver = services.idResolver
-    this.fetch = services.devMode ? globalThis.fetch : safeBlobFetch
+    this.fetch = services.devMode
+      ? globalThis.fetch
+      : createSafeFetch({ responseMaxSize: services.serviceConfig.maxBytes })
   }
 
   /**
@@ -102,7 +100,7 @@ export class BlobDiverter {
       .request(uploadUrl, {
         method: 'POST',
         body: blob.stream,
-        headersTimeout: 30e3,
+        headersTimeout: 300e3,
         bodyTimeout: 10e3,
         headers: {
           Authorization: basicAuth('admin', this.serviceConfig.adminPassword),

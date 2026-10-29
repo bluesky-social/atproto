@@ -93,11 +93,22 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
     cacheMaxDocBytes: env.didCacheMaxDocBytes,
   }
 
+  const blobDivertMaxBytes = env.blobDivertMaxBytes
+    ? Number(env.blobDivertMaxBytes)
+    : 300 * 1024 * 1024
+  assert(
+    (env.blobDivertMaxBytes === undefined ||
+      /^\d+$/.test(env.blobDivertMaxBytes)) &&
+      Number.isSafeInteger(blobDivertMaxBytes) &&
+      blobDivertMaxBytes > 0,
+    'OZONE_BLOB_DIVERT_MAX_BYTES must be a positive integer',
+  )
   const blobDivertServiceCfg =
     env.blobDivertUrl && env.blobDivertAdminPassword
       ? {
           url: env.blobDivertUrl,
           adminPassword: env.blobDivertAdminPassword,
+          maxBytes: blobDivertMaxBytes,
         }
       : null
   const accessCfg: OzoneConfig['access'] = {
@@ -233,6 +244,7 @@ export type ServiceConfig = {
 export type BlobDivertConfig = {
   url: UriString
   adminPassword: string
+  maxBytes: number
 }
 
 export type DatabaseConfig = {
