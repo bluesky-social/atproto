@@ -77,8 +77,9 @@ COPY ./services/ozone ./services/ozone
 
 # install all deps
 RUN PUPPETEER_SKIP_DOWNLOAD=true pnpm install --frozen-lockfile
-# build all the dependencies of ./package.json
-RUN pnpm run --recursive --stream --workspace-concurrency 1 --filter 'ozone-service...' build -- --force
+# @NOTE Build codegen tools before filtering out development dependencies.
+RUN pnpm run --recursive --stream --workspace-concurrency 1 --filter '@atproto/lex-installer...' build \
+ && pnpm run --recursive --stream --workspace-concurrency 1 --filter-prod 'ozone-service...' build
 # install only prod deps, hoisted to root node_modules dir
 RUN pnpm install --prod --shamefully-hoist --frozen-lockfile --prefer-offline --config.confirmModulesPurge=false
 
