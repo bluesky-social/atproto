@@ -50,12 +50,14 @@ import { type RouteCtx, createRoute } from '../lib/http/route.js'
 import { localeSchema } from '../lib/util/locale.js'
 import type { Awaitable } from '../lib/util/type.js'
 import type { OAuthProvider } from '../oauth-provider.js'
+import type { Account, AuthorizedClients } from '../oauth-store.js'
 import { type RequestUri, requestUriSchema } from '../request/request-uri.js'
 import type { AuthorizationRedirectParameters } from '../result/authorization-redirect-parameters.js'
 import { tokenIdSchema } from '../token/token-id.js'
 import { emailOtpSchema } from '../types/email-otp.js'
-import { emailSchema } from '../types/email.js'
+import { emailSchema, newEmailSchema } from '../types/email.js'
 import { handleSchema } from '../types/handle.js'
+import { identifierSchema } from '../types/indentifier.js'
 import { newPasswordSchema, oldPasswordSchema } from '../types/password.js'
 import { validateCsrfToken } from './assets/csrf.js'
 import {
@@ -187,8 +189,8 @@ export function createApiMiddleware<
       endpoint: '/reset-password-request',
       schema: z
         .object({
+          identifier: identifierSchema,
           locale: localeSchema,
-          email: emailSchema,
         })
         .strict(),
       async handler() {
@@ -256,7 +258,7 @@ export function createApiMiddleware<
       schema: z
         .object({
           did: didSchema,
-          email: emailSchema,
+          email: newEmailSchema,
           token: emailOtpSchema.optional(),
           locale: localeSchema.optional(),
         })
@@ -691,29 +693,36 @@ export function createApiMiddleware<
 
             const client = await server.clientManager.getClient(clientId)
 
-            const code = await server.requestManager.setAuthorized(
-              this.requestUri,
-              client,
-              account,
-              this.deviceId,
-              this.deviceMetadata,
-              this.input.scope,
-            )
+            const { code, parameters } =
+              await server.requestManager.setAuthorized(
+                this.requestUri,
+                client,
+                account,
+                this.deviceId,
+                this.deviceMetadata,
+                this.input.scope,
+              )
 
+            // If the user approved new scopes, update the authorized client
+            // accordingly
             const clientData = authorizedClients.get(clientId)
-            if (server.checkConsentRequired(parameters, clientData)) {
-              const scopes = new Set(clientData?.authorizedScopes)
-
-              // Add the newly accepted scopes to the authorized scopes
-
-              // @NOTE `oauthScopeSchema` ensures that `scope` contains no
-              // leading/trailing/duplicate spaces.
-              for (const s of parameters.scope?.split(' ') ?? []) scopes.add(s)
-
-              await server.accountManager.setAuthorizedClient(account, client, {
-                ...clientData,
-                authorizedScopes: [...scopes],
-              })
+            const oldAuthorizedScopes = new Set(clientData?.authorizedScopes)
+            const newAuthorizedScopes = oldAuthorizedScopes.union(
+              new Set(parameters.scope?.split(' ') ?? []),
+            )
+            if (
+              clientData == null ||
+              newAuthorizedScopes.size !== oldAuthorizedScopes.size
+            ) {
+              await server.accountManager
+                .setAuthorizedClient(account, client, {
+                  ...clientData,
+                  authorizedScopes: [...newAuthorizedScopes],
+                })
+                .catch((err) => {
+                  // Errors are non-critical
+                  onError?.(req, res, err, 'Failed to set authorized client')
+                })
             }
 
             const url = buildRedirectUrl(server.issuer, parameters, { code })
@@ -829,7 +838,10 @@ export function createApiMiddleware<
     this: ApiContext<void, { did: Did }>,
     req: Req,
     _res: Res,
-  ) {
+  ): Promise<{
+    account: Account
+    authorizedClients: AuthorizedClients
+  }> {
     if (req.headers.authorization?.startsWith('Bearer ')) {
       try {
         // If there is an authorization header, verify that the ephemeral token it
@@ -844,15 +856,25 @@ export function createApiMiddleware<
           payload.deviceId === this.deviceId &&
           payload.requestUri === this.requestUri
         ) {
-          return await server.accountManager.getAccount(payload.sub)
+          const accountData = await server.accountManager.getAccount(
+            payload.sub,
+          )
+          if (accountData) return accountData
+          throw new WWWAuthenticateError(
+            'unauthorized',
+            `User ${payload.sub} does not exist`,
+            { Bearer: {} },
+          )
         }
       } catch (err) {
-        throw new WWWAuthenticateError(
-          'unauthorized',
-          `Invalid or expired bearer token`,
-          { Bearer: {} },
-          err,
-        )
+        throw err instanceof WWWAuthenticateError
+          ? err
+          : new WWWAuthenticateError(
+              'unauthorized',
+              `Invalid or expired bearer token`,
+              { Bearer: {} },
+              err,
+            )
       }
     }
 

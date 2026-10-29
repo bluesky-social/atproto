@@ -30,7 +30,11 @@
             "type": "union",
             "description": "Self-label values, specific to the Bluesky application, on the overall account."
           },
-          "website": { "type": "string", "format": "uri" },
+          "website": {
+            "type": "string",
+            "format": "uri",
+            "description": "Deprecated: use links instead."
+          },
           "pronouns": {
             "type": "string",
             "maxLength": 200,

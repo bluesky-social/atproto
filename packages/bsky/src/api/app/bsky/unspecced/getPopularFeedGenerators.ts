@@ -28,6 +28,7 @@ export default function (server: Server, ctx: AppContext) {
         }),
       )
       const hydrateCtx = await ctx.hydrator.createContext({
+        xrpcEndpoint: app.bsky.unspecced.getPopularFeedGenerators.$lxm,
         viewer,
         labelers,
         features,

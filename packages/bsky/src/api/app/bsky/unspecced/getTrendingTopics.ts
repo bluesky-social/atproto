@@ -25,7 +25,11 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ auth, params, req, signal }) => {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
-      const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
+      const hydrateCtx = await ctx.hydrator.createContext({
+        labelers,
+        viewer,
+        xrpcEndpoint: app.bsky.unspecced.getTrendingTopics.$lxm,
+      })
       const headers = noUndefinedVals({
         'accept-language': req.headers['accept-language'],
       })

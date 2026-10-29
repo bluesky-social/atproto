@@ -1,0 +1,49 @@
+{
+  "name": "@atproto/oauth-resolver",
+  "version": "0.0.1",
+  "license": "MIT",
+  "description": "OAuth client resolver",
+  "keywords": [
+    "atproto",
+    "oauth",
+    "client",
+    "isomorphic"
+  ],
+  "homepage": "https://atproto.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bluesky-social/atproto",
+    "directory": "packages/oauth/oauth-resolver"
+  },
+  "files": [
+    "./dist",
+    "./README.md",
+    "./CHANGELOG.md"
+  ],
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "@atproto-labs/fetch": "workspace:^",
+    "@atproto-labs/identity-resolver": "workspace:^",
+    "@atproto-labs/simple-store": "workspace:^",
+    "@atproto-labs/simple-store-memory": "workspace:^",
+    "@atproto/did": "workspace:^",
+    "@atproto/oauth-types": "workspace:^",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "vitest": "^4.1.10"
+  },
+  "scripts": {
+    "build": "tsc --build tsconfig.build.json",
+    "test": "vitest run"
+  }
+}

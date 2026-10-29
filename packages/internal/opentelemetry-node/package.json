@@ -1,6 +1,6 @@
 {
   "name": "@atproto-labs/opentelemetry-node",
-  "version": "0.3.1",
+  "version": "0.5.0",
   "license": "MIT",
   "description": "OpenTelemetry Node.js bootstrap and XRPC-aware helpers for atproto services",
   "keywords": [
@@ -30,34 +30,40 @@
       "types": "./dist/conventions.d.ts",
       "default": "./dist/conventions.js"
     },
-    "./instrumentation": {
-      "types": "./dist/instrumentation.d.ts",
-      "default": "./dist/instrumentation.js"
-    },
     "./util": {
       "types": "./dist/util.d.ts",
       "default": "./dist/util.js"
+    },
+    "./better-sqlite3-plugin": {
+      "types": "./dist/plugins/better-sqlite3-plugin.d.ts",
+      "default": "./dist/plugins/better-sqlite3-plugin.js"
     }
   },
   "engines": {
-    "node": ">=22"
+    "node": ">=22.15.0"
   },
   "dependencies": {
-    "@opentelemetry/api": "^1.9.1",
-    "@opentelemetry/auto-instrumentations-node": "^0.77.0",
-    "@opentelemetry/core": "^2.9.0",
-    "@opentelemetry/instrumentation": "^0.219.0",
-    "@opentelemetry/instrumentation-express": "^0.67.0",
-    "@opentelemetry/instrumentation-http": "^0.219.0",
-    "@opentelemetry/instrumentation-pino": "^0.65.0",
-    "@opentelemetry/instrumentation-runtime-node": "^0.32.0",
-    "@opentelemetry/instrumentation-undici": "^0.29.0",
-    "@opentelemetry/resource-detector-container": "^0.8.10",
-    "@opentelemetry/sdk-node": "^0.219.0",
-    "@opentelemetry/semantic-conventions": "^1.41.1",
-    "import-in-the-middle": "^3.0.1"
+    "@opentelemetry/api": "^1.10.0",
+    "@opentelemetry/auto-instrumentations-node": "^0.82.0",
+    "@opentelemetry/core": "^3.0.0",
+    "@opentelemetry/instrumentation": "^0.300.0",
+    "@opentelemetry/instrumentation-express": "^0.72.0",
+    "@opentelemetry/instrumentation-http": "^0.300.0",
+    "@opentelemetry/instrumentation-pino": "^0.70.0",
+    "@opentelemetry/instrumentation-runtime-node": "^0.37.0",
+    "@opentelemetry/instrumentation-undici": "^0.34.0",
+    "@opentelemetry/resource-detector-container": "^0.9.0",
+    "@opentelemetry/resources": "^3.0.0",
+    "@opentelemetry/sdk-node": "^0.300.0",
+    "@opentelemetry/semantic-conventions": "^1.43.0",
+    "import-in-the-middle": "^3.5.2"
   },
   "devDependencies": {
+    "@opentelemetry/context-async-hooks": "^3.0.0",
+    "@opentelemetry/sdk-metrics": "^3.0.0",
+    "@opentelemetry/sdk-trace": "^3.0.0",
+    "@types/better-sqlite3": "^7.6.13",
+    "better-sqlite3": "^12.9.0",
     "vitest": "^4.1.10"
   },
   "scripts": {

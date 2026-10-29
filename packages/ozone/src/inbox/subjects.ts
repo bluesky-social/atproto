@@ -23,6 +23,8 @@ import {
   APPEAL_REASON_TYPE,
   PUBLIC_EVENT_ACTIONS,
   REVERSE_TAKEDOWN,
+  appealReportOrder,
+  appealReportTypeFilter,
   reportSubjectFilter,
 } from './appeal.js'
 import { queryActionHistory } from './history.js'
@@ -115,12 +117,14 @@ export async function queryActionedSubjects(
       qb
         .selectFrom('report')
         .where('did', '=', did)
-        .where('reportType', '=', APPEAL_REASON_TYPE)
+        .where(appealReportTypeFilter)
         .where('subjectMessageId', 'is', null)
         .where('subjectConvoId', 'is', null)
         .distinctOn('recordPath')
         .select(['recordPath', 'status', 'createdAt', 'updatedAt', 'closedAt'])
         .orderBy('recordPath')
+        .orderBy(appealReportOrder)
+        .orderBy(sql`"closedAt" DESC NULLS FIRST`)
         .orderBy('id', 'desc'),
     )
     .selectFrom('moderation_subject_status as s')

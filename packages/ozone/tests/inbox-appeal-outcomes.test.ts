@@ -318,6 +318,7 @@ describe('viewer appeal outcomes', () => {
     // not multiply report rows or closure lookups for a resolved page.
     type PlanNode = {
       'Relation Name'?: string
+      'Index Name'?: string
       'Actual Rows': number
       'Actual Loops': number
       Plans?: PlanNode[]
@@ -329,12 +330,24 @@ describe('viewer appeal outcomes', () => {
       return [plan, ...(plan.Plans ?? []).flatMap(nodes)]
     }
     const plan = nodes(rows[0]['QUERY PLAN'][0].Plan)
-    const reportScan = plan.find((node) => node['Relation Name'] === 'report')
+    const reportScans = plan.filter(
+      (node) => node['Relation Name'] === 'report',
+    )
+    const appealScans = reportScans.filter(
+      (node) => node['Index Name'] === 'idx_report_appeal_subject',
+    )
+    const reportLookup = reportScans.find(
+      (node) => node['Index Name'] === 'report_pkey',
+    )
     const closureScan = plan.find(
       (node) => node['Relation Name'] === 'report_activity',
     )
-    expect(reportScan?.['Actual Rows']).toBe(1)
-    expect(reportScan?.['Actual Loops']).toBe(subjectCount)
+    expect(appealScans).toHaveLength(2)
+    expect(
+      appealScans.every((node) => node['Actual Loops'] === subjectCount),
+    ).toBe(true)
+    expect(reportLookup?.['Actual Rows']).toBe(1)
+    expect(reportLookup?.['Actual Loops']).toBe(subjectCount)
     expect(closureScan?.['Actual Loops']).toBe(subjectCount)
   })
 

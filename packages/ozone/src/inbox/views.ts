@@ -18,15 +18,18 @@ import type {
   ModerationSubjectStatusRow,
 } from '../mod-service/types.js'
 import { publicActionType } from './action.js'
-import type { AppealReport } from './appeal.js'
 import {
   APPEALABLE_EVENT_ACTIONS,
+  type AppealEligibility,
+  type AppealReport,
   LABEL,
   PUBLIC_EVENT_ACTIONS,
   REVERSE_TAKEDOWN,
   TAKEDOWN,
+  appealableEventFilter,
   eventSubjectFilter,
-  findLatestAppealReport,
+  findAppealHistory,
+  hasKnownLatestAppealable,
   subjectLabelUri,
   toAppealState,
 } from './appeal.js'
@@ -110,6 +113,7 @@ export type SubjectSnapshot = {
   /** Newest action the user is allowed to appeal, if any. */
   latestAppealableAt: DatetimeString | null
   appealReport: AppealReport | null
+  eligibility?: AppealEligibility
 }
 
 type EventTotals = {
@@ -140,11 +144,7 @@ export const loadSubject = async (
       latestAppealableAt: null,
       appealReport: null,
     }
-  const appealable = sql.join(
-    APPEALABLE_EVENT_ACTIONS.map((action) => sql.lit(action)),
-  )
-
-  const [status, labelRows, events, totals, appealReport] = await Promise.all([
+  const [status, labelRows, events, totals, appealHistory] = await Promise.all([
     db.db
       .selectFrom('moderation_subject_status')
       .where('did', '=', subject.did)
@@ -189,14 +189,27 @@ export const loadSubject = async (
         ),
         sql<
           string | null
-        >`max("createdAt") FILTER (WHERE action IN (${appealable}))`.as(
+        >`max("createdAt") FILTER (WHERE action IN (${sql.join(APPEALABLE_EVENT_ACTIONS)}))`.as(
           'latestAppealableAt',
         ),
       ])
       .executeTakeFirstOrThrow() as Promise<EventTotals>,
 
-    findLatestAppealReport(db, subject),
+    findAppealHistory(db, subject),
   ])
+
+  let latestAppealableAt = totals.latestAppealableAt
+  if (!hasKnownLatestAppealable(latestAppealableAt, events)) {
+    const latest = await db.db
+      .selectFrom('moderation_event')
+      .where((eb) => eventSubjectFilter(eb, subject))
+      .where('action', 'in', [...PUBLIC_EVENT_ACTIONS])
+      .where(appealableEventFilter)
+      .$if(startAt !== undefined, (qb) => qb.where('createdAt', '>=', startAt!))
+      .select(sql<DatetimeString | null>`max("createdAt")`.as('createdAt'))
+      .executeTakeFirstOrThrow()
+    latestAppealableAt = latest.createdAt
+  }
 
   return {
     status: status ?? null,
@@ -204,8 +217,9 @@ export const loadSubject = async (
     labels: labelRows.map((row) => row.val),
     actionCount: totals.actionCount,
     firstActionAt: totals.firstActionAt,
-    latestAppealableAt: totals.latestAppealableAt,
-    appealReport: appealReport ?? null,
+    latestAppealableAt,
+    appealReport: appealHistory.report,
+    eligibility: appealHistory.eligibility,
   }
 }
 
@@ -456,6 +470,7 @@ export const toSubjectView = ({
         : snapshot.status,
     report: publicAppeal,
     eligibilityReport: snapshot.appealReport,
+    eligibility: snapshot.eligibility,
     latestAppealableAt: snapshot.latestAppealableAt,
     windowMonths: cfg.appealWindowMonths,
   })

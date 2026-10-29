@@ -1,6 +1,14 @@
-import { type Meter, ValueType, diag, metrics } from '@opentelemetry/api'
-import { type Logger, SeverityNumber, logs } from '@opentelemetry/api-logs'
-import type { app } from '../lexicons/index.js'
+import {
+  type Logger,
+  type Meter,
+  SeverityNumber,
+  ValueType,
+  diag,
+  logs,
+  metrics,
+} from '@opentelemetry/api'
+import type { NsidString } from '@atproto/lex'
+import type { NotificationsV2Algorithm } from '../config.js'
 import { eventsLogger } from '../logger.js'
 import { isAbortError, isTimeoutError } from './util.js'
 
@@ -11,9 +19,7 @@ export type HydrationSource =
   'known_likers' | 'known_followers' | 'activity_subscriptions'
 
 /** XRPC method that owns a hydration; set on `HydrateCtx` from the method's `$lxm`. */
-export type HydrationXrpcEndpoint =
-  | app.bsky.embed.getEmbedExternalView.$lxm
-  | app.bsky.unspecced.getAtmosphereExploreTab.$lxm
+export type HydrationXrpcEndpoint = NsidString
 
 /** Reported XRPC endpoint of an external hydration traversal. */
 export type ExternalHydrationXrpcEndpoint = HydrationXrpcEndpoint | 'unknown'
@@ -36,8 +42,8 @@ type ExternalHydrationAttributes = {
 
 /**
  * Generic record lookup work of one external hydration traversal, across the
- * root and all nested dependency batches. Excludes profile/label hydration,
- * backlink sample/count RPCs, and legacy Standard Site reads.
+ * root and all nested dependency batches. Excludes profile/label hydration
+ * and backlink sample/count RPCs.
  */
 export type ExternalHydrationWork = {
   /**
@@ -152,6 +158,45 @@ class EventReporter {
     unit: '{record}',
     valueType: ValueType.INT,
   })
+
+  #notificationGroupingDuration = meter.createHistogram<{
+    algorithm: NotificationsV2Algorithm
+  }>('notifications.grouped.duration', {
+    description:
+      'Compute time of each notification grouping algorithm invocation',
+    unit: 'ms',
+    valueType: ValueType.DOUBLE,
+    advice: {
+      explicitBucketBoundaries: [0.1, 0.25, 0.5, 1, 2.5, 5, 10, 25, 50, 100],
+    },
+  })
+
+  #notificationHydrationDuration = meter.createHistogram(
+    'notifications.grouped.hydration.duration',
+    {
+      description: 'Wall time of the grouped notifications hydration phase',
+      unit: 'ms',
+      valueType: ValueType.DOUBLE,
+      advice: {
+        explicitBucketBoundaries: [
+          1, 2.5, 5, 10, 25, 50, 100, 250, 500, 1000, 2500, 5000,
+        ],
+      },
+    },
+  )
+
+  #groupedNotificationsDataplaneFetches = meter.createHistogram(
+    'notifications.grouped.dataplane_fetches',
+    {
+      description:
+        'Dataplane notification fetches per grouped notifications response',
+      unit: '{fetch}',
+      valueType: ValueType.INT,
+      advice: {
+        explicitBucketBoundaries: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+      },
+    },
+  )
 
   #groupedNotificationsItemsFetched = meter.createHistogram(
     'notifications.grouped.items_fetched',
@@ -282,18 +327,38 @@ class EventReporter {
     }
   }
 
-  /** Reports fetched and returned raw-item counts once per completed page. */
+  /** Reports compute time once per grouping invocation, excluding dataplane reads. */
+  notificationGrouping({
+    algorithm,
+    durationMs,
+  }: {
+    algorithm: NotificationsV2Algorithm
+    durationMs: number
+  }) {
+    try {
+      this.#notificationGroupingDuration.record(durationMs, { algorithm })
+    } catch (err) {
+      diag.error('Failed to record notification_grouping:', err)
+    }
+  }
+
+  /** Reports dataplane fetches, raw-item counts, and hydration time once per completed page. */
   groupedNotifications({
     itemsFetched,
     itemsReturned,
+    dataplaneFetches,
+    hydrationDurationMs,
   }: {
     itemsFetched: number
     itemsReturned: number
+    dataplaneFetches: number
+    hydrationDurationMs: number
   }) {
-    this.#log('grouped_notifications', { itemsFetched, itemsReturned })
     try {
       this.#groupedNotificationsItemsFetched.record(itemsFetched)
       this.#groupedNotificationsItemsReturned.record(itemsReturned)
+      this.#groupedNotificationsDataplaneFetches.record(dataplaneFetches)
+      this.#notificationHydrationDuration.record(hydrationDurationMs)
     } catch (err) {
       diag.error('Failed to record grouped_notifications:', err)
     }

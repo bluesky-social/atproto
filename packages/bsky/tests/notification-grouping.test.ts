@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto'
 import { Timestamp } from '@bufbuild/protobuf'
 import { afterAll, assert, beforeAll, describe, expect, it, vi } from 'vitest'
-import { DAY } from '@atproto/common'
+import { DAY, MINUTE } from '@atproto/common'
 import { type SeedClient, TestNetwork, usersSeed } from '@atproto/dev-env'
 import {
   type AtUriString,
@@ -20,7 +20,8 @@ import { getNextRawLimit } from '../src/api/app/bsky/notification/getGroupedNoti
 import {
   type NotificationGroup,
   type NotificationItem,
-  buildGroups,
+  buildNotificationItem,
+  getGroupingAlgorithm,
   parseRawNotification,
 } from '../src/api/app/bsky/notification/grouping/grouping.js'
 import { buildSpotlight } from '../src/api/app/bsky/notification/grouping/spotlight.js'
@@ -80,17 +81,11 @@ const item = (
   )
   if (!raw) throw new Error('Invalid notification fixture')
   const groupingKey =
-    kind === NOTIFICATION_REASON.FOLLOW
+    kind === NOTIFICATION_REASON.FOLLOW ||
+    kind === NOTIFICATION_REASON.SUBSCRIBED_POST
       ? kind
-      : kind === NOTIFICATION_REASON.SUBSCRIBED_POST
-        ? actorDid
-        : (raw.reasonSubject ?? raw.uri)
-  return {
-    raw,
-    id,
-    groupingKey,
-    actorDid,
-  }
+      : (raw.reasonSubject ?? raw.uri)
+  return buildNotificationItem(raw, id, groupingKey, actorDid)
 }
 
 describe('notification grouping', () => {
@@ -118,7 +113,10 @@ describe('notification grouping', () => {
         }),
       ]
 
-      const result = buildGroups(items, 2, now, undefined, algorithm)
+      const result = getGroupingAlgorithm(algorithm).createGroupBuilder(
+        2,
+        now,
+      )(items)
 
       expect(
         result.groups.map(({ items }) => items.map(({ id }) => id)),
@@ -161,7 +159,10 @@ describe('notification grouping', () => {
         }),
       ]
 
-      const firstPage = buildGroups(items, 2, now, undefined, algorithm)
+      const firstPage = getGroupingAlgorithm(algorithm).createGroupBuilder(
+        2,
+        now,
+      )(items)
 
       expect(
         firstPage.groups.map(({ items }) => items.map(({ id }) => id)),
@@ -171,13 +172,10 @@ describe('notification grouping', () => {
       ])
       expect(firstPage.cursor).toBe(items[3]!.raw.indexedAt)
 
-      const secondPage = buildGroups(
-        items.slice(4),
+      const secondPage = getGroupingAlgorithm(algorithm).createGroupBuilder(
         2,
         now,
-        undefined,
-        algorithm,
-      )
+      )(items.slice(4))
       expect(
         secondPage.groups.map(({ items }) => items.map(({ id }) => id)),
       ).toEqual([['photo-1'], ['poem-3']])
@@ -193,7 +191,10 @@ describe('notification grouping', () => {
       item('older-2', minutesAgo(61)),
     ]
 
-    const result = buildGroups(items, 2, now, undefined, 'algoGravity')
+    const result = getGroupingAlgorithm('algoGravity').createGroupBuilder(
+      2,
+      now,
+    )(items)
 
     expect(result.groups.map(({ items }) => items.map(({ id }) => id))).toEqual(
       [
@@ -210,7 +211,10 @@ describe('notification grouping', () => {
       item('older-like', minutesAgo(95)),
     ]
 
-    const result = buildGroups(items, 2, now, undefined, 'algoGravity')
+    const result = getGroupingAlgorithm('algoGravity').createGroupBuilder(
+      2,
+      now,
+    )(items)
 
     expect(result.groups.map(({ items }) => items.map(({ id }) => id))).toEqual(
       [['newest'], ['hour-old', 'older-like']],
@@ -224,7 +228,10 @@ describe('notification grouping', () => {
       item('older', minutesAgo(60)),
     ]
 
-    const result = buildGroups(items, 1, now, undefined, 'algoGravity')
+    const result = getGroupingAlgorithm('algoGravity').createGroupBuilder(
+      1,
+      now,
+    )(items)
 
     expect(result.groups[0]?.items.map(({ id }) => id)).toEqual([
       'newer-1',
@@ -239,7 +246,10 @@ describe('notification grouping', () => {
       item(`like-${index}`, new Date(now - index * gapMs).toISOString()),
     )
 
-    const result = buildGroups(items, 2, now, undefined, 'algoGravity')
+    const result = getGroupingAlgorithm('algoGravity').createGroupBuilder(
+      2,
+      now,
+    )(items)
 
     expect(result.groups.map(({ items }) => items.map(({ id }) => id))).toEqual(
       [
@@ -253,14 +263,20 @@ describe('notification grouping', () => {
     const items = [item('newest', minutesAgo(1)), item('older', minutesAgo(31))]
 
     expect(
-      buildGroups(items, 2, now, undefined, 'algoLookback').groups.map(
-        ({ itemCount }) => itemCount,
-      ),
+      getGroupingAlgorithm('algoLookback')
+        .createGroupBuilder(
+          2,
+          now,
+        )(items)
+        .groups.map(({ itemCount }) => itemCount),
     ).toEqual([2])
     expect(
-      buildGroups(items, 2, now, undefined, 'algoGravity').groups.map(
-        ({ itemCount }) => itemCount,
-      ),
+      getGroupingAlgorithm('algoGravity')
+        .createGroupBuilder(
+          2,
+          now,
+        )(items)
+        .groups.map(({ itemCount }) => itemCount),
     ).toEqual([1, 1])
   })
 
@@ -275,18 +291,20 @@ describe('notification grouping', () => {
     ]
 
     expect(
-      buildGroups(
-        justUnderAnHour,
-        2,
-        now,
-        undefined,
-        'algoLookback',
-      ).groups.map(({ items }) => items.map(({ id }) => id)),
+      getGroupingAlgorithm('algoLookback')
+        .createGroupBuilder(
+          2,
+          now,
+        )(justUnderAnHour)
+        .groups.map(({ items }) => items.map(({ id }) => id)),
     ).toEqual([['newer'], ['older']])
     expect(
-      buildGroups(exactlyAnHour, 2, now, undefined, 'algoLookback').groups.map(
-        ({ items }) => items.map(({ id }) => id),
-      ),
+      getGroupingAlgorithm('algoLookback')
+        .createGroupBuilder(
+          2,
+          now,
+        )(exactlyAnHour)
+        .groups.map(({ items }) => items.map(({ id }) => id)),
     ).toEqual([['newer', 'older']])
   })
 
@@ -298,19 +316,19 @@ describe('notification grouping', () => {
         item(`like-${index}`, new Date(start - index).toISOString()),
       )
 
-      const firstPage = buildGroups(items, 1, now, undefined, algorithm)
+      const firstPage = getGroupingAlgorithm(algorithm).createGroupBuilder(
+        1,
+        now,
+      )(items)
       expect(firstPage.groups[0]?.items.map(({ id }) => id)).toEqual(
         items.slice(0, 200).map(({ id }) => id),
       )
       expect(firstPage.cursor).toBe(items[199]!.raw.indexedAt)
 
-      const secondPage = buildGroups(
-        items.slice(200),
+      const secondPage = getGroupingAlgorithm(algorithm).createGroupBuilder(
         1,
         now,
-        undefined,
-        algorithm,
-      )
+      )(items.slice(200))
       expect(secondPage.groups[0]?.items.map(({ id }) => id)).toEqual([
         'like-200',
       ])
@@ -327,9 +345,12 @@ describe('notification grouping', () => {
       ]
 
       expect(
-        buildGroups(items, 2, now, undefined, algorithm).groups.map(
-          ({ items }) => items.map(({ id }) => id),
-        ),
+        getGroupingAlgorithm(algorithm)
+          .createGroupBuilder(
+            2,
+            now,
+          )(items)
+          .groups.map(({ items }) => items.map(({ id }) => id)),
       ).toEqual([['today', 'yesterday']])
     },
   )
@@ -344,9 +365,12 @@ describe('notification grouping', () => {
       ]
 
       expect(
-        buildGroups(items, 3, now, undefined, algorithm).groups.map(
-          ({ items }) => items.map(({ id }) => id),
-        ),
+        getGroupingAlgorithm(algorithm)
+          .createGroupBuilder(
+            3,
+            now,
+          )(items)
+          .groups.map(({ items }) => items.map(({ id }) => id)),
       ).toEqual([['today'], ['yesterday', 'older']])
     },
   )
@@ -361,7 +385,10 @@ describe('notification grouping', () => {
         item('oldest', '2026-09-20T11:59:59.998Z'),
       ]
 
-      const result = buildGroups(items, 1, now, undefined, algorithm)
+      const result = getGroupingAlgorithm(algorithm).createGroupBuilder(
+        1,
+        now,
+      )(items)
       expect(
         result.groups.map(({ items }) => items.map(({ id }) => id)),
       ).toEqual([['recent', 'day-old', 'older', 'oldest']])
@@ -382,25 +409,28 @@ describe('notification grouping', () => {
       ]
 
       expect(
-        buildGroups(items, 2, now, undefined, algorithm).groups.map(
-          ({ items }) => items.map(({ id }) => id),
-        ),
+        getGroupingAlgorithm(algorithm)
+          .createGroupBuilder(
+            2,
+            now,
+          )(items)
+          .groups.map(({ items }) => items.map(({ id }) => id)),
       ).toEqual([['alice-follow', 'bob-follow']])
       expect(
-        buildGroups(
-          items,
-          2,
-          now,
-          undefined,
-          algorithm,
-          NotificationFeed.FOLLOWERS,
-        ).groups.map(({ items }) => items.map(({ id }) => id)),
+        getGroupingAlgorithm(algorithm)
+          .createGroupBuilder(
+            2,
+            now,
+            undefined,
+            NotificationFeed.FOLLOWERS,
+          )(items)
+          .groups.map(({ items }) => items.map(({ id }) => id)),
       ).toEqual([['alice-follow'], ['bob-follow']])
     },
   )
 
   it.each(['algoGravity', 'algoLookback'] as const)(
-    '%s shows subscribed posts separately in activity but groups posts by the same actor in all',
+    '%s shows subscribed posts separately in activity but groups posts across actors in all',
     (algorithm) => {
       const items = [
         item(
@@ -419,23 +449,29 @@ describe('notification grouping', () => {
             actor: 'alice',
           },
         ),
+        item('bob-post', minutesAgo(2), NOTIFICATION_REASON.SUBSCRIBED_POST, {
+          actor: 'bob',
+        }),
       ]
 
       expect(
-        buildGroups(items, 2, now, undefined, algorithm).groups.map(
-          ({ items }) => items.map(({ id }) => id),
-        ),
-      ).toEqual([['alice-post-1', 'alice-post-2']])
+        getGroupingAlgorithm(algorithm)
+          .createGroupBuilder(
+            3,
+            now,
+          )(items)
+          .groups.map(({ items }) => items.map(({ id }) => id)),
+      ).toEqual([['alice-post-1', 'alice-post-2', 'bob-post']])
       expect(
-        buildGroups(
-          items,
-          2,
-          now,
-          undefined,
-          algorithm,
-          NotificationFeed.ACTIVITY,
-        ).groups.map(({ items }) => items.map(({ id }) => id)),
-      ).toEqual([['alice-post-1'], ['alice-post-2']])
+        getGroupingAlgorithm(algorithm)
+          .createGroupBuilder(
+            3,
+            now,
+            undefined,
+            NotificationFeed.ACTIVITY,
+          )(items)
+          .groups.map(({ items }) => items.map(({ id }) => id)),
+      ).toEqual([['alice-post-1'], ['alice-post-2'], ['bob-post']])
     },
   )
 
@@ -444,11 +480,138 @@ describe('notification grouping', () => {
       item('newest', minutesAgo(0), NOTIFICATION_REASON.MENTION),
       item('older', minutesAgo(60), NOTIFICATION_REASON.REPLY),
     ]
-    const result = buildGroups(items, 2, now, now, 'algoGravity')
+    const result = getGroupingAlgorithm('algoGravity').createGroupBuilder(
+      2,
+      now,
+      now,
+    )(items)
 
     expect(result.groups.map(({ isRead }) => isRead)).toEqual([false, true])
   })
 })
+
+describe.each(['algoGravity', 'algoLookback'] as const)(
+  '%s incremental grouping',
+  (algorithm) => {
+    it('extends interleaved groups across batches after reaching the group limit', () => {
+      const items = [
+        item('poem-1', minutesAgo(0), NOTIFICATION_REASON.LIKE, {
+          subject: post('poem'),
+        }),
+        item('song-1', minutesAgo(1), NOTIFICATION_REASON.LIKE, {
+          subject: post('song'),
+        }),
+        item('poem-2', minutesAgo(2), NOTIFICATION_REASON.LIKE, {
+          subject: post('poem'),
+        }),
+        item('song-2', minutesAgo(3), NOTIFICATION_REASON.LIKE, {
+          subject: post('song'),
+        }),
+        item('photo-1', minutesAgo(4), NOTIFICATION_REASON.LIKE, {
+          subject: post('photo'),
+        }),
+      ]
+      const { createGroupBuilder } = getGroupingAlgorithm(algorithm)
+      const expected = createGroupBuilder(2, now, now)(items)
+      expect(
+        expected.groups.map(({ items }) => items.map(({ id }) => id)),
+      ).toEqual([
+        ['poem-1', 'poem-2'],
+        ['song-1', 'song-2'],
+      ])
+      expect(expected.cursor).toBe(items[3]!.raw.indexedAt)
+
+      for (let boundary = 1; boundary < items.length; boundary++) {
+        const buildGroups = createGroupBuilder(2, now, now)
+        expect(buildGroups(items.slice(0, boundary)).cursor).toBeUndefined()
+        expect(buildGroups([]).cursor).toBeUndefined()
+        expect(buildGroups(items.slice(boundary))).toEqual(expected)
+      }
+    })
+
+    it('splits an existing group when an older batch arrives and keeps its older group open', () => {
+      const items = [
+        item('newer-1', minutesAgo(0)),
+        item('newer-2', minutesAgo(1)),
+        item('older-1', minutesAgo(60)),
+        item('older-2', minutesAgo(95)),
+      ]
+      const { createGroupBuilder } = getGroupingAlgorithm(algorithm)
+      const expected = createGroupBuilder(2, now, now)(items)
+      expect(
+        expected.groups.map(({ items }) => items.map(({ id }) => id)),
+      ).toEqual([
+        ['newer-1', 'newer-2'],
+        ['older-1', 'older-2'],
+      ])
+
+      for (let boundary = 1; boundary < items.length; boundary++) {
+        const buildGroups = createGroupBuilder(2, now, now)
+        expect(buildGroups(items.slice(0, boundary)).cursor).toBeUndefined()
+        expect(buildGroups(items.slice(boundary))).toEqual(expected)
+      }
+    })
+
+    it('preserves the existing group and cursor when the next batch would split beyond the limit', () => {
+      const items = [
+        item('newer-1', minutesAgo(0)),
+        item('newer-2', minutesAgo(1)),
+        item('older', minutesAgo(60)),
+      ]
+      const { createGroupBuilder } = getGroupingAlgorithm(algorithm)
+      const buildGroups = createGroupBuilder(1, now)
+      buildGroups(items.slice(0, 2))
+      const result = buildGroups(items.slice(2))
+
+      expect(result).toEqual(createGroupBuilder(1, now)(items))
+      expect(result.groups[0]?.items.map(({ id }) => id)).toEqual([
+        'newer-1',
+        'newer-2',
+      ])
+      expect(result.cursor).toBe(items[1]!.raw.indexedAt)
+    })
+
+    it('retains the 200-item cap and uses the previous batch’s last item as the cursor', () => {
+      const items = Array.from({ length: 201 }, (_, index) =>
+        item(`like-${index}`, new Date(now - index).toISOString()),
+      )
+      const { createGroupBuilder } = getGroupingAlgorithm(algorithm)
+      const buildGroups = createGroupBuilder(1, now)
+      buildGroups(items.slice(0, 199))
+      expect(buildGroups(items.slice(199, 200)).cursor).toBeUndefined()
+      const result = buildGroups(items.slice(200))
+
+      expect(result).toEqual(createGroupBuilder(1, now)(items))
+      expect(result.groups[0]?.itemCount).toBe(200)
+      expect(result.cursor).toBe(items[199]!.raw.indexedAt)
+    })
+
+    it.each([
+      { reason: NOTIFICATION_REASON.FOLLOW, feed: NotificationFeed.FOLLOWERS },
+      {
+        reason: NOTIFICATION_REASON.SUBSCRIBED_POST,
+        feed: NotificationFeed.ACTIVITY,
+      },
+    ])(
+      'preserves individual $reason notifications across batches in feed $feed',
+      ({ reason, feed }) => {
+        const items = [
+          item('first', minutesAgo(0), reason),
+          item('second', minutesAgo(1), reason),
+        ]
+        const { createGroupBuilder } = getGroupingAlgorithm(algorithm)
+        const buildGroups = createGroupBuilder(2, now, undefined, feed)
+        buildGroups(items.slice(0, 1))
+        const result = buildGroups(items.slice(1))
+
+        expect(result).toEqual(
+          createGroupBuilder(2, now, undefined, feed)(items),
+        )
+        expect(result.groups.map(({ itemCount }) => itemCount)).toEqual([1, 1])
+      },
+    )
+  },
+)
 
 const postLikes = (pairs: [actor: string, subject: string][]) =>
   pairs.map(([actor, subject], index) =>
@@ -486,12 +649,26 @@ const spotlightTypes = [
 const spotlightItems = (
   type: (typeof spotlightTypes)[number],
   count: number,
-  { actor = 'alice', offset = 0 } = {},
+  {
+    actor = 'alice',
+    offset = 0,
+    spacing = 1 / 1000,
+    olderFrom,
+  }: {
+    actor?: string
+    offset?: number
+    spacing?: number
+    olderFrom?: number
+  } = {},
 ) =>
   Array.from({ length: count }, (_, index) =>
     item(
       `${type.reason}-${actor}-${index}`,
-      minutesAgo(offset + index / 1000),
+      minutesAgo(
+        offset +
+          index * spacing +
+          (olderFrom !== undefined && index >= olderFrom ? DAY / 60_000 : 0),
+      ),
       type.reason,
       {
         actor,
@@ -528,7 +705,9 @@ describe.each(['algoGravity', 'algoLookback'] as const)(
       limit: number,
       { cursor, seenAt }: { cursor?: string; seenAt?: number } = {},
     ) => {
-      const ordinary = buildGroups(items, limit, now, seenAt, algorithm)
+      const { createGroupBuilder, splitBursts } =
+        getGroupingAlgorithm(algorithm)
+      const ordinary = createGroupBuilder(limit, now, seenAt)(items)
       if (cursor !== undefined) ordinary.cursor = cursor
       const originals = structuredClone({ items, ordinary })
       const page = buildSpotlight(
@@ -536,7 +715,9 @@ describe.each(['algoGravity', 'algoLookback'] as const)(
         ordinary.groups,
         ordinary.cursor,
         limit,
+        now,
         seenAt,
+        splitBursts,
       )
       expect({ items, ordinary }).toEqual(originals)
       expect(page.groups.length).toBeLessThanOrEqual(limit)
@@ -550,6 +731,119 @@ describe.each(['algoGravity', 'algoLookback'] as const)(
     })
 
     describe.each(spotlightTypes)('$reason', (type) => {
+      it.each(
+        algorithm === 'algoGravity'
+          ? [
+              { offset: 0, spacing: 45, eligible: true },
+              { offset: 0, spacing: 57, eligible: false },
+              { offset: 0, spacing: 60, eligible: false },
+              { offset: 45, spacing: 90, eligible: true },
+              { offset: 45, spacing: 120, eligible: false },
+              { offset: 120, spacing: 18 * 60, eligible: true },
+              { offset: 120, spacing: 24 * 60, eligible: false },
+              { offset: 9 * 60, spacing: 36 * 60, eligible: true },
+              { offset: 9 * 60, spacing: 48 * 60, eligible: false },
+            ]
+          : [
+              { offset: 0, spacing: 20, eligible: true },
+              { offset: 0, spacing: 21, eligible: false },
+              { offset: 60, spacing: 40, eligible: true },
+              { offset: 60, spacing: 41, eligible: false },
+              { offset: 12 * 60 + 1, spacing: 160, eligible: true },
+              { offset: 12 * 60 + 1, spacing: 161, eligible: false },
+              { offset: 24 * 60 + 1, spacing: 320, eligible: true },
+              { offset: 24 * 60 + 1, spacing: 321, eligible: false },
+            ],
+      )(
+        'uses doubled time spans: newest $offset minutes ago, gaps $spacing minutes, eligible=$eligible',
+        ({ offset, spacing, eligible }) => {
+          const items = spotlightItems(type, 4, { offset, spacing })
+          const { ordinary, page } = buildPage(items, items.length)
+
+          expectPage(
+            page,
+            items,
+            eligible
+              ? [items.map(({ id }) => id)]
+              : items.map(({ id }) => [id]),
+          )
+          if (eligible) expect(page.groups[0]?.kind).toBe(type.kind)
+          else expect(page.groups).toBe(ordinary.groups)
+        },
+      )
+
+      it('does not combine separate bursts to reach the four-item threshold', () => {
+        const items = spotlightItems(type, 4, { olderFrom: 2 })
+        const { ordinary, page } = buildPage(items, items.length)
+
+        expect(page.groups).toBe(ordinary.groups)
+        expectPage(
+          page,
+          items,
+          items.map(({ id }) => [id]),
+        )
+      })
+
+      it('does not combine separate bursts to reach the eight-item threshold', () => {
+        const matching = spotlightItems(type, 8, { olderFrom: 4 })
+        const items = [
+          ...matching,
+          ...Array.from({ length: 201 - matching.length }, (_, index) =>
+            item(
+              `follow-${index}`,
+              minutesAgo(2 * 24 * 60 + index / 1000),
+              NOTIFICATION_REASON.FOLLOW,
+            ),
+          ),
+        ]
+        const { ordinary, page } = buildPage(items, 30)
+
+        expect(page.groups).toBe(ordinary.groups)
+        expect(page.groups.some(({ kind }) => kind === type.kind)).toBe(false)
+      })
+
+      it('chooses the strongest burst rather than the actor with the most total activity', () => {
+        const alice = spotlightItems(type, 6, { olderFrom: 3 })
+        const bob = spotlightItems(type, 4, { actor: 'bob', offset: 1 })
+        const items = [...alice.slice(0, 3), ...bob, ...alice.slice(3)]
+        const { page } = buildPage(items, items.length)
+
+        expectPage(page, items, [
+          ...alice.slice(0, 3).map(({ id }) => [id]),
+          bob.map(({ id }) => id),
+          ...alice.slice(3).map(({ id }) => [id]),
+        ])
+        expect(page.groups[3]?.kind).toBe(type.kind)
+      })
+
+      it('can select an older burst and leaves the actor’s isolated recent activity ordinary', () => {
+        const items = spotlightItems(type, 5, { olderFrom: 1 })
+        const { page } = buildPage(items, items.length)
+
+        expectPage(page, items, [
+          [items[0]!.id],
+          items.slice(1).map(({ id }) => id),
+        ])
+        expect(page.groups.map(({ kind }) => kind)).toEqual([
+          type.reason,
+          type.kind,
+        ])
+      })
+
+      it('breaks equal burst counts by burst recency, not the actor’s latest activity', () => {
+        const alice = spotlightItems(type, 5, { olderFrom: 1 })
+        const bob = spotlightItems(type, 4, { actor: 'bob', offset: 1 })
+        const items = [alice[0]!, ...bob, ...alice.slice(1)]
+        const { page } = buildPage(items, items.length)
+
+        expectPage(page, items, [
+          [alice[0]!.id],
+          bob.map(({ id }) => id),
+          ...alice.slice(1).map(({ id }) => [id]),
+        ])
+        expect(page.groups[1]?.kind).toBe(type.kind)
+      })
+
       it('spotlights only the top actor and leaves other actors in ordinary groups', () => {
         const alice = spotlightItems(type, 4)
         const bob = spotlightItems(type, 4, { actor: 'bob', offset: 1 })
@@ -862,23 +1156,6 @@ describe.each(['algoGravity', 'algoLookback'] as const)(
       },
     )
 
-    it('combines recent and older likes into one spotlight across days', () => {
-      const items = Array.from({ length: 4 }, (_, index) =>
-        item(
-          `like-${index}`,
-          minutesAgo(index < 2 ? index : 24 * 60 + index),
-          NOTIFICATION_REASON.LIKE,
-          { actor: 'alice', subject: post(`post-${index}`) },
-        ),
-      )
-      const { page } = buildPage(items, items.length)
-
-      expectPage(page, items, [['like-0', 'like-1', 'like-2', 'like-3']])
-      expect(page.groups[0]?.kind).toBe(
-        APPVIEW_NOTIFICATION_REASON.MULTI_POST_LIKE,
-      )
-    })
-
     it('fits without trimming and updates ordinary and spotlight metadata', () => {
       const items = postLikes([
         ['alice', 'poem'],
@@ -1054,7 +1331,7 @@ describe.each(['algoGravity', 'algoLookback'] as const)(
       ])
     })
 
-    it('falls back without trying the new top liker after trimming', () => {
+    it('keeps the selected spotlight when another actor has more likes after trimming', () => {
       const items = postLikes([
         ['alice', 'poem'],
         ['bob', 'poem'],
@@ -1069,22 +1346,20 @@ describe.each(['algoGravity', 'algoLookback'] as const)(
         ['alice', 'drawing'],
         ['alice', 'video'],
       ])
-      const cursor = minutesAgo(1)
-      const { ordinary, page } = buildPage(items, 6, { cursor })
+      const { page } = buildPage(items, 6)
 
-      expect(page.groups).toBe(ordinary.groups)
       expectPage(
         page,
         items,
         [
-          ['alice-poem', 'bob-poem'],
-          ['bob-song', 'alice-song'],
-          ['bob-photo', 'alice-photo'],
-          ['bob-story', 'alice-story'],
-          ['bob-drawing', 'alice-drawing'],
-          ['carol-video', 'alice-video'],
+          ['alice-poem', 'alice-song', 'alice-photo', 'alice-story'],
+          ['bob-poem'],
+          ['bob-song'],
+          ['bob-photo'],
+          ['bob-story'],
+          ['bob-drawing'],
         ],
-        cursor,
+        items[8]!.raw.indexedAt,
       )
     })
 
@@ -1118,7 +1393,7 @@ describe.each(['algoGravity', 'algoLookback'] as const)(
       ).toEqual(['did:plc:bob'])
     })
 
-    it('falls back if trimming creates a tie won by another actor’s newer like', () => {
+    it('keeps the selected spotlight when trimming creates a tie with another actor’s newer like', () => {
       const items = postLikes([
         ['bob', 'poem'],
         ['alice', 'poem'],
@@ -1131,16 +1406,20 @@ describe.each(['algoGravity', 'algoLookback'] as const)(
         ['carol', 'video'],
         ['alice', 'video'],
       ])
-      const { ordinary, page } = buildPage(items, 5)
+      const { page } = buildPage(items, 5)
 
-      expect(page.groups).toBe(ordinary.groups)
-      expectPage(page, items, [
-        ['bob-poem', 'alice-poem'],
-        ['bob-song', 'alice-song'],
-        ['bob-photo', 'alice-photo'],
-        ['bob-story', 'alice-story'],
-        ['carol-video', 'alice-video'],
-      ])
+      expectPage(
+        page,
+        items,
+        [
+          ['bob-poem'],
+          ['alice-poem', 'alice-song', 'alice-photo', 'alice-story'],
+          ['bob-song'],
+          ['bob-photo'],
+          ['bob-story'],
+        ],
+        items[7]!.raw.indexedAt,
+      )
     })
 
     it.each([
@@ -1945,6 +2224,69 @@ describe.each(['algoGravity', 'algoLookback'] as const)(
       },
     )
 
+    it.each(['all', 'activity'] as const)(
+      'groups subscribed posts across accounts only in all: %s',
+      async (feed) => {
+        const posts = [
+          await sc.post(sc.dids.bob, 'First subscribed post'),
+          await sc.post(sc.dids.dan, 'Another account’s subscribed post'),
+          await sc.post(sc.dids.bob, 'Second subscribed post'),
+        ]
+        const actors = [sc.dids.bob, sc.dids.dan, sc.dids.bob]
+        await network.processAll()
+        // @NOTE the test dataplane doesn't generate subscribed-post notifications.
+        using notifications = vi
+          .spyOn(network.bsky.ctx.hydrator.dataplane, 'getNotificationsV2')
+          .mockResolvedValue(
+            new GetNotificationsV2Response({
+              notifications: posts.map(
+                ({ ref }, index) =>
+                  new Notification({
+                    recipientDid: sc.dids.carol,
+                    uri: ref.uriStr,
+                    reason: NOTIFICATION_REASON.SUBSCRIBED_POST,
+                    timestamp: Timestamp.fromJson(minutesAgo(index)),
+                  }),
+              ),
+            }),
+          )
+        const headers = await network.serviceHeaders(sc.dids.carol, defs.$lxm)
+
+        const response = await network.bsky
+          .getClient()
+          .call(defs, { feed, limit: 3 }, { headers })
+
+        const items = posts.map(({ ref }, index) => ({
+          actor: actors[index]!,
+          post: ref.uriStr,
+        }))
+        expect(notifications).toHaveBeenCalledTimes(1)
+        expect(response.groups.map(({ count }) => count)).toEqual(
+          feed === 'all' ? [3] : [1, 1, 1],
+        )
+        expect(response.groups.map(({ kind }) => kind)).toEqual(
+          (feed === 'all' ? [items] : items.map((item) => [item])).map(
+            (items) => defs.subscribedPostGroup.$build({ items }),
+          ),
+        )
+        expect(response.relatedViews).toMatchObject([
+          {
+            $type: app.bsky.actor.defs.profileViewBasic.$type,
+            did: sc.dids.bob,
+          },
+          {
+            $type: app.bsky.actor.defs.profileViewBasic.$type,
+            did: sc.dids.dan,
+          },
+          ...posts.map(({ ref }) => ({
+            $type: app.bsky.feed.defs.postView.$type,
+            uri: ref.uriStr,
+          })),
+        ])
+        expect(response.cursor).toBeUndefined()
+      },
+    )
+
     it('returns all subscribed posts with related views for only the first ten of each group', async () => {
       const authors = [sc.dids.bob, sc.dids.dan]
       const postGroups = await Promise.all(
@@ -1982,25 +2324,26 @@ describe.each(['algoGravity', 'algoLookback'] as const)(
         .call(defs, { limit: 2 }, { headers })
 
       expect(notifications).toHaveBeenCalledTimes(1)
-      expect(response.groups.map(({ count }) => count)).toEqual([12, 12])
-      expect(response.groups.map(({ kind }) => kind)).toEqual(
-        postGroups.map(({ actor, posts }) =>
-          defs.subscribedPostGroup.$build({
-            items: posts.map(({ ref }) => ({ actor, post: ref.uriStr })),
-          }),
-        ),
-      )
+      expect(response.groups.map(({ count }) => count)).toEqual([24])
+      expect(response.groups.map(({ kind }) => kind)).toEqual([
+        defs.subscribedPostGroup.$build({
+          items: postGroups.flatMap(({ actor, posts }) =>
+            posts.map(({ ref }) => ({ actor, post: ref.uriStr })),
+          ),
+        }),
+      ])
       expect(response.relatedViews).toMatchObject([
-        ...authors.map((did) => ({
+        {
           $type: app.bsky.actor.defs.profileViewBasic.$type,
-          did,
-        })),
-        ...postGroups.flatMap(({ posts }) =>
-          posts.slice(0, 10).map(({ ref }) => ({
+          did: sc.dids.bob,
+        },
+        ...postGroups
+          .flatMap(({ posts }) => posts)
+          .slice(0, 10)
+          .map(({ ref }) => ({
             $type: app.bsky.feed.defs.postView.$type,
             uri: ref.uriStr,
           })),
-        ),
       ])
       expect(response.cursor).toBeUndefined()
     })
@@ -2045,14 +2388,11 @@ describe.each(['algoGravity', 'algoLookback'] as const)(
               post: reply.ref.uriStr,
               parent: root.ref.uriStr,
             },
+            { actor: sc.dids.dan, post: root.ref.uriStr },
           ],
         }),
-        // Not a reply, so no parent
-        defs.subscribedPostGroup.$build({
-          items: [{ actor: sc.dids.dan, post: root.ref.uriStr }],
-        }),
       ])
-      expect(response.groups[1]!.kind).not.toHaveProperty('items.0.parent')
+      expect(response.groups[0]!.kind).not.toHaveProperty('items.1.parent')
       expect(response.relatedViews).toMatchObject([
         { $type: app.bsky.actor.defs.profileViewBasic.$type, did: sc.dids.bob },
         { $type: app.bsky.actor.defs.profileViewBasic.$type, did: sc.dids.dan },
@@ -2254,46 +2594,62 @@ describe.each(['algoGravity', 'algoLookback'] as const)(
       },
     )
 
-    it('builds a spotlight across days from multiple raw pages', async () => {
-      const { recipient, records, headers } = await seedSpotlight()
-      const now = Date.now()
-      const notifications = records.map(
-        ({ like, post }, index) =>
-          new Notification({
-            recipientDid: recipient,
-            uri: like,
-            reason: NOTIFICATION_REASON.LIKE,
-            reasonSubject: post.ref.uriStr,
-            timestamp: Timestamp.fromDate(new Date(now - index * DAY)),
-          }),
-      )
-      using reads = vi
-        .spyOn(network.bsky.ctx.hydrator.dataplane, 'getNotificationsV2')
-        .mockResolvedValueOnce(
-          new GetNotificationsV2Response({
-            notifications: notifications.slice(0, 2),
-            cursor: toDatetimeString(new Date(now - DAY)),
-          }),
+    it.each([
+      { spacing: 15 * MINUTE, eligible: true },
+      { spacing: 45 * MINUTE, eligible: algorithm === 'algoGravity' },
+      { spacing: DAY, eligible: false },
+    ])(
+      'uses the configured burst splitter across raw pages: gaps $spacing ms, eligible=$eligible',
+      async ({ spacing, eligible }) => {
+        const { recipient, records, headers } = await seedSpotlight()
+        const now = Date.now()
+        const notifications = records.map(
+          ({ like, post }, index) =>
+            new Notification({
+              recipientDid: recipient,
+              uri: like,
+              reason: NOTIFICATION_REASON.LIKE,
+              reasonSubject: post.ref.uriStr,
+              timestamp: Timestamp.fromDate(new Date(now - index * spacing)),
+            }),
         )
-        .mockResolvedValueOnce(
-          new GetNotificationsV2Response({
-            notifications: notifications.slice(2),
-          }),
+        using reads = vi
+          .spyOn(network.bsky.ctx.hydrator.dataplane, 'getNotificationsV2')
+          .mockResolvedValueOnce(
+            new GetNotificationsV2Response({
+              notifications: notifications.slice(0, 2),
+              cursor: toDatetimeString(new Date(now - spacing)),
+            }),
+          )
+          .mockResolvedValueOnce(
+            new GetNotificationsV2Response({
+              notifications: notifications.slice(2),
+            }),
+          )
+
+        const response = await network.bsky
+          .getClient()
+          .call(defs, { limit: 4 }, { headers })
+
+        expect(reads).toHaveBeenCalledTimes(2)
+        expect(response.groups.map(({ kind }) => kind)).toEqual(
+          eligible
+            ? [
+                defs.multiPostLikeGroup.$build({
+                  actor: sc.dids.bob,
+                  items: records.map(({ post }) => ({ post: post.ref.uriStr })),
+                }),
+              ]
+            : records.map(({ post }) =>
+                defs.likeGroup.$build({
+                  post: post.ref.uriStr,
+                  items: [{ actor: sc.dids.bob }],
+                }),
+              ),
         )
-
-      const response = await network.bsky
-        .getClient()
-        .call(defs, { limit: 4 }, { headers })
-
-      expect(reads).toHaveBeenCalledTimes(2)
-      expect(response.groups.map(({ kind }) => kind)).toEqual([
-        defs.multiPostLikeGroup.$build({
-          actor: sc.dids.bob,
-          items: records.map(({ post }) => ({ post: post.ref.uriStr })),
-        }),
-      ])
-      expect(response.cursor).toBeUndefined()
-    })
+        expect(response.cursor).toBeUndefined()
+      },
+    )
 
     it('builds the spotlight from all fetched pages and hydrates once', async () => {
       const { records, headers } = await seedSpotlight()

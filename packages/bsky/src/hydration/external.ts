@@ -7,13 +7,13 @@ import {
   type NsidString,
   type RecordSchema,
   type TypedLexMap,
+  isDidString,
   isTypedLexMap,
   lexParseJsonBytes,
 } from '@atproto/lex'
 import { parseAtUriString } from '@atproto/syntax'
 import type { DataPlaneClient } from '../data-plane/client/index.js'
-import { site } from '../lexicons/index.js'
-import { hydrationLogger } from '../logger.js'
+import { site, social } from '../lexicons/index.js'
 import {
   type RecordLookupResult,
   RecordLookupStatus,
@@ -25,12 +25,15 @@ import {
   type HydrationXrpcEndpoint,
   events,
 } from '../telemetry/events.js'
-import { uriToDid } from '../util/uris.js'
-import type {
-  SiteStandardDocumentRecord,
-  SiteStandardPublicationRecord,
+import { recordUriOf, uriToDid } from '../util/uris.js'
+import {
+  type SiteStandardDocumentRecord,
+  type SiteStandardPublicationRecord,
+  isExternalEmbedType,
+  isRecordWithMediaType,
 } from '../views/types.js'
 import type { Actors } from './actor.js'
+import type { Post, Posts } from './feed.js'
 import type { Labels } from './label.js'
 import {
   HydrationMap,
@@ -83,39 +86,48 @@ export type ExactRecordKey = string & { [exactRecordKeySymbol]: true }
 export type SiteStandardDocument = RecordInfo<SiteStandardDocumentRecord>
 export type SiteStandardPublication = RecordInfo<SiteStandardPublicationRecord>
 
+export type ExternalHydrationLevel = 'basic' | 'detailed'
+
 /**
- * Keyed by `${uri}@${cid}` — see `genericRecordKey`. A single hydration
- * batch can pull more than one version of the same URI (different posts
- * pinning different cids), so the composite key is needed for O(1)
- * version-exact lookups.
+ * Options for external hydration traversals. `hydration` picks one level for
+ * the whole traversal (default `'detailed'`): `'basic'` hydrates renderable
+ * content, moderation and aggregate backlink counts; `'detailed'` also samples
+ * social-preview backlinks and hydrates their records and participants. The
+ * remaining fields are traversal state shared by nested passes.
  */
-export type SiteStandardDocuments = HydrationMap<
-  ExactRecordKey,
-  SiteStandardDocument
->
-/**
- * Keyed by `${uri}@${cid}`. See `SiteStandardDocuments` for the rationale.
- */
-export type SiteStandardPublications = HydrationMap<
-  ExactRecordKey,
-  SiteStandardPublication
->
-export type SiteStandardRecords = {
-  documents: SiteStandardDocuments
-  publications: SiteStandardPublications
+export type ExternalHydrationOptions = {
+  hydration?: ExternalHydrationLevel
+  seenRecordKeys?: Set<string>
+  hydrationPass?: number
+  hydrationMetrics?: ExternalHydrationTracker
 }
 
+/**
+ * Per-collection sample limits. Basic hydration skips social previews,
+ * but keeps gallery items. Direct publication/photo references are singular.
+ */
+export const EXTERNAL_HYDRATION_LIMITS = {
+  [site.standard.document.$type]: { recommendationPreviews: 3 },
+  [site.standard.publication.$type]: { subscriberPreviews: 3 },
+  [social.grain.gallery.$type]: { items: 10, favoritePreviews: 3 },
+} as const
+
+/** Maximum in-flight backlink sample RPCs, not a dependency-count limit. */
+export const MAX_CONCURRENT_BACKLINK_REQUESTS = 8
+/** Maximum logical batches per traversal, counting the root as pass 1. */
+export const MAX_EXTERNAL_HYDRATION_PASSES = 8
+
 export class ExternalHydrator {
-  static readonly MAX_BACKLINK_PREVIEWS = 3
-  static readonly MAX_BACKLINK_GALLERY_ITEMS = 10
-  static readonly MAX_BACKLINK_FANOUT = 8
-  /** Hard cap on generic batches per traversal, counting the root as pass 1. */
-  static readonly MAX_EXTERNAL_HYDRATION_PASSES = 8
   /**
    * Entries per generic record RPC. The dataplane rejects larger URI lookups;
    * exact-ref lookups use the same bound defensively.
    */
   static readonly MAX_RECORDS_PER_REQUEST = 100
+  /**
+   * Target URIs per backlink-count RPC. The dataplane requires between 1 and
+   * 100; this is a separate limit from `MAX_RECORDS_PER_REQUEST`.
+   */
+  static readonly MAX_BACKLINK_COUNT_TARGETS_PER_REQUEST = 100
 
   constructor(public dataplane: DataPlaneClient) {}
 
@@ -189,28 +201,35 @@ export class ExternalHydrator {
     }
   }
 
-  /** Fetch source-record counts, optionally restricted to one collection. */
+  /**
+   * Fetch source-record counts, optionally restricted to one collection. Large
+   * inputs are fetched in sequential bounded requests; any failed request
+   * rejects the whole call.
+   */
   async getAtmosphereBacklinkCounts(
     targetUris: AtUriString[],
     collection?: NsidString,
   ): Promise<ExternalRecordBacklinkCounts> {
     const map: ExternalRecordBacklinkCounts = new HydrationMap()
-    if (!targetUris.length) return map
-
-    const res = await this.dataplane.getAtmosphereBacklinkCounts({
+    for (const chunk of chunkArray(
       targetUris,
-      collection,
-    })
-    for (const result of res.results) {
-      map.set(
-        result.targetUri as AtUriString,
-        Object.fromEntries(
-          Object.entries(result.counts).map(([nsid, count]) => [
-            nsid,
-            Number(count),
-          ]),
-        ),
-      )
+      ExternalHydrator.MAX_BACKLINK_COUNT_TARGETS_PER_REQUEST,
+    )) {
+      const res = await this.dataplane.getAtmosphereBacklinkCounts({
+        targetUris: chunk,
+        collection,
+      })
+      for (const result of res.results) {
+        map.set(
+          result.targetUri as AtUriString,
+          Object.fromEntries(
+            Object.entries(result.counts).map(([nsid, count]) => [
+              nsid,
+              Number(count),
+            ]),
+          ),
+        )
+      }
     }
     return map
   }
@@ -257,28 +276,6 @@ export class ExternalHydrator {
       )
     }
     return { backlinks, truncated: res.truncated }
-  }
-
-  /**
-   * Fetch exact `site.standard.{document,publication}` versions. Does NOT
-   * resolve a document's publication; callers must pin it explicitly.
-   */
-  async getSiteStandardRecordsByRef(
-    refs: ItemRef[],
-    includeTakedowns = false,
-  ): Promise<SiteStandardRecords> {
-    const ssRefs = refs.filter(
-      (ref): ref is Required<ItemRef> =>
-        !!ref.cid && siteStandardKind(ref.uri) !== undefined,
-    )
-    const out = emptySiteStandardRecords()
-    if (!ssRefs.length) return out
-
-    const records = await this.getRecordsByRef(ssRefs, includeTakedowns)
-    for (const [key, info] of records) {
-      setSiteStandardRecord(out, parseGenericRecordKey(key).uri, key, info)
-    }
-    return out
   }
 }
 
@@ -371,9 +368,10 @@ export type ExternalHydrationTracker = ExternalHydrationWork & {
  * there is none. Only the owner reports, once, including on failure, with the
  * context's XRPC endpoint (`'unknown'` if unset) and the traversal's wall time. A
  * returned traversal is `capped` if it hit the pass limit, else `partial` if
- * it recovered from a dependency failure. Owners that completed without
- * scheduling a batch did no work and are not reported; other outcomes always
- * are.
+ * it recovered from a dependency failure. Owners that completed report when
+ * they scheduled a batch or inspected roots (even prehydrated or unavailable
+ * ones); only genuinely empty successful calls are not reported. Other
+ * outcomes always are.
  */
 export async function trackExternalHydration<T>(
   root: ExternalHydrationRoot,
@@ -401,7 +399,7 @@ export async function trackExternalHydration<T>(
     outcome = owned.capped ? 'capped' : owned.partial ? 'partial' : 'completed'
     return state
   } finally {
-    if (owned.batches || outcome !== 'completed') {
+    if (owned.batches > 0 || owned.roots > 0 || outcome !== 'completed') {
       events.externalHydrationTraversal({
         xrpcEndpoint: xrpcEndpoint ?? 'unknown',
         root,
@@ -450,14 +448,9 @@ function parseGenericRecord(
   }
 }
 
-const emptySiteStandardRecords = (): SiteStandardRecords => ({
-  documents: new HydrationMap(),
-  publications: new HydrationMap(),
-})
-
 const siteStandardKind = (
   uri: string,
-): keyof SiteStandardRecords | undefined => {
+): 'documents' | 'publications' | undefined => {
   const parsed = parseAtUriString(uri)
   if (!parsed.success) return undefined
   switch (parsed.value.collection) {
@@ -483,111 +476,118 @@ const matchRecordInfo = <TSchema extends RecordSchema>(
     ? { ...info, record: info.record }
     : null
 
-/**
- * Store a generic record in the map matching its collection. Records failing
- * Lexicon validation are stored as null.
- */
-const setSiteStandardRecord = (
-  out: SiteStandardRecords,
-  uri: string,
-  key: ExactRecordKey,
-  info: ExternalRecord | null | undefined,
-) => {
-  switch (siteStandardKind(uri)) {
-    case 'documents':
-      out.documents.set(key, matchRecordInfo(site.standard.document.main, info))
-      break
-    case 'publications':
-      out.publications.set(
-        key,
-        matchRecordInfo(site.standard.publication.main, info),
-      )
-      break
-  }
-}
-
 export type AssociatedSiteStandardRecord<T> = {
   ref: { uri: AtUriString; cid: string }
   info: T
 }
 
 /**
- * Read-path resolution: caller pinned a set of `(uri, cid)` strongRefs in
- * the post at write time, and we honor those exact versions. Any pair
- * that doesn't structurally agree is rejected, so downstream callers can
- * trust the returned shape.
- *
- * Pairing rules:
- * - Both slots referenced: `doc.site` must equal `publication.ref.uri`,
- *   else both come back `undefined`.
- * - Doc with at-uri `site` referenced but no matching publication ref:
- *   reject the whole pairing (doc claims a publication that should have
- *   been pinned, but wasn't).
- * - Loose doc (web-URL `site`) referenced: publication stays `undefined`.
- * - Only a publication referenced: document stays `undefined`.
- *
- * Each returned slot carries the matching `ref` so callers can recover
- * the owner DID for blob-cdn URL building, etc.
+ * Select one pinned embed root. Legacy publication-first pairs may put their
+ * document second; no other authored refs participate in hydration.
  */
-export const getSiteStandardRecordsFromHydrationMapsByRefs = (
-  associatedRefs: readonly { uri: AtUriString; cid: string }[] | undefined,
-  documents: SiteStandardDocuments | undefined,
-  publications: SiteStandardPublications | undefined,
+export function getExternalRootRef(
+  refs: readonly Required<ItemRef>[] | undefined,
+): Required<ItemRef> | undefined {
+  let root = refs?.[0]
+  if (!root) return undefined
+  if (siteStandardKind(root.uri) === 'publications') {
+    const second = refs?.[1]
+    if (second && siteStandardKind(second.uri) === 'documents') root = second
+  }
+  return isHydratableAssociatedRef(root) ? root : undefined
+}
+
+/** Select a pinned Standard.site root and its derived publication, if needed. */
+export function getSiteStandardRecordsFromRefs(
+  associatedRefs: readonly Required<ItemRef>[] | undefined,
+  records: ExternalRecordsByRef | undefined,
+  dependencies?: ExternalRecords,
 ): {
   document: AssociatedSiteStandardRecord<SiteStandardDocument> | undefined
   publication: AssociatedSiteStandardRecord<SiteStandardPublication> | undefined
-} => {
-  if (!associatedRefs?.length) {
-    return { document: undefined, publication: undefined }
+} {
+  const empty = { document: undefined, publication: undefined }
+  const ref = getExternalRootRef(associatedRefs)
+  if (!ref) return empty
+  const info = records?.get(genericRecordKey(ref))
+  if (siteStandardKind(ref.uri) === 'publications') {
+    const publication = matchRecordInfo(site.standard.publication.main, info)
+    return publication
+      ? { document: undefined, publication: { ref, info: publication } }
+      : empty
   }
-
-  // Resolve each ref against the hydration maps, taking the first hit on
-  // each side.
-  let document: AssociatedSiteStandardRecord<SiteStandardDocument> | undefined
-  let publication:
-    AssociatedSiteStandardRecord<SiteStandardPublication> | undefined
-  for (const ref of associatedRefs) {
-    const key = genericRecordKey(ref)
-    if (!document) {
-      const hit = documents?.get(key)
-      if (hit) document = { ref, info: hit }
-    }
-    if (!publication) {
-      const hit = publications?.get(key)
-      if (hit) publication = { ref, info: hit }
-    }
-    if (document && publication) break
+  if (siteStandardKind(ref.uri) !== 'documents') return empty
+  const document = matchRecordInfo(site.standard.document.main, info)
+  if (!document) return empty
+  const documentSelection = { ref, info: document }
+  const docSite = document.record.site
+  if (!docSite.startsWith('at://')) {
+    return { document: documentSelection, publication: undefined }
   }
+  const uri = recordUriOf(docSite, site.standard.publication.$type)
+  if (!uri) return empty
+  const publication = matchRecordInfo(
+    site.standard.publication.main,
+    dependencies?.get(uri),
+  )
+  if (!publication) return empty
+  return {
+    document: documentSelection,
+    publication: { ref: { uri, cid: publication.cid }, info: publication },
+  }
+}
 
-  // Both refs resolved: enforce that the doc's `site` actually points at
-  // the supplied publication. Mismatch means the post was misconstructed
-  // (or tampered with), so reject the whole pairing.
-  if (document && publication) {
-    if (document.info.record.site !== publication.ref.uri) {
-      hydrationLogger.warn(
-        {
-          documentUri: document.ref.uri,
-          documentSite: document.info.record.site,
-          publicationUri: publication.ref.uri,
-        },
-        'site.standard byRefs lookup failed: doc.site does not match hydrated publication.uri',
-      )
-      return { document: undefined, publication: undefined }
+const externalAssociatedRefs = (
+  post: Post['record'],
+): { uri: AtUriString; cid: string }[] => {
+  const embed = post?.embed
+  if (!embed) return []
+  if (isExternalEmbedType(embed)) {
+    return embed.external.associatedRefs ?? []
+  }
+  if (isRecordWithMediaType(embed) && isExternalEmbedType(embed.media)) {
+    return embed.media.external.associatedRefs ?? []
+  }
+  return []
+}
+
+/**
+ * An exact ref needs a nonempty CID and a complete record URI in a DID repo,
+ * so malformed refs are skipped instead of becoming latest lookups.
+ */
+const isHydratableAssociatedRef = (ref: {
+  uri: string
+  cid: string
+}): boolean => {
+  if (!ref.cid) return false
+  const parsed = parseAtUriString(ref.uri)
+  if (!parsed.success) return false
+  const { authority, collection, rkey, query, hash } = parsed.value
+  return (
+    isDidString(authority) &&
+    !!collection &&
+    !!rkey &&
+    query === undefined &&
+    hash === undefined
+  )
+}
+
+/** Collect one root per post across all layers, deduped by exact ref. */
+export const externalAssociatedRefsFromPosts = (
+  ...postLayers: Posts[]
+): Required<ItemRef>[] => {
+  const seen = new Set<string>()
+  const out: Required<ItemRef>[] = []
+  for (const layer of postLayers) {
+    for (const item of layer.values()) {
+      if (!item) continue
+      const ref = getExternalRootRef(externalAssociatedRefs(item.record))
+      if (!ref) continue
+      const key = genericRecordKey(ref)
+      if (seen.has(key)) continue
+      seen.add(key)
+      out.push({ uri: ref.uri, cid: ref.cid })
     }
   }
-
-  // Doc with at-uri `site` but no publication: the post should have
-  // pinned the publication too. Treat as misconstructed.
-  if (document && !publication) {
-    const site = document.info.record.site
-    if (site && site.startsWith('at://')) {
-      hydrationLogger.warn(
-        { documentUri: document.ref.uri, documentSite: site },
-        'site.standard byRefs lookup failed: document.site is AT URI but no matching publication was hydrated',
-      )
-      return { document: undefined, publication: undefined }
-    }
-  }
-
-  return { document, publication }
+  return out
 }

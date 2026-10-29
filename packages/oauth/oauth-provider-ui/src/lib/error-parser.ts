@@ -35,14 +35,3 @@ export function parseError(error: unknown): ParsedError {
     payload: toJsonSafe(error),
   }
 }
-
-export function composeErrorParsers(
-  ...parsers: (ErrorParser | undefined)[]
-): ErrorParser {
-  return (error) => {
-    for (const parser of parsers) {
-      const parsed = parser?.(error)
-      if (parsed) return parsed
-    }
-  }
-}

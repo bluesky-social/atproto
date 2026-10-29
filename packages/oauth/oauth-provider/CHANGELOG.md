@@ -1,5 +1,36 @@
 # @atproto/oauth-provider
 
+## 0.25.2
+
+### Patch Changes
+
+- [#5747](https://github.com/bluesky-social/atproto/pull/5747) [`63bc474`](https://github.com/bluesky-social/atproto/commit/63bc4747175c82497596e9ffaeaaaf83804b0311) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Record the scopes a user approved on the consent screen, not the scopes the client requested.
+
+- [#5753](https://github.com/bluesky-social/atproto/pull/5753) [`3bfd00f`](https://github.com/bluesky-social/atproto/commit/3bfd00f484dc144482c82a4ed248adc49e6be769) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Bound the decoded size of every stage of a multi-coding `content-encoding` chain, and reject bodies listing too many content-codings
+- Updated dependencies [[`3bfd00f`](https://github.com/bluesky-social/atproto/commit/3bfd00f484dc144482c82a4ed248adc49e6be769), [`3bfd00f`](https://github.com/bluesky-social/atproto/commit/3bfd00f484dc144482c82a4ed248adc49e6be769), [`3bfd00f`](https://github.com/bluesky-social/atproto/commit/3bfd00f484dc144482c82a4ed248adc49e6be769), [`3bfd00f`](https://github.com/bluesky-social/atproto/commit/3bfd00f484dc144482c82a4ed248adc49e6be769)]:
+  - @atproto/common@0.8.7
+  - @atproto/lex-resolver@0.4.1
+
+## 0.25.1
+
+### Patch Changes
+
+- [#5743](https://github.com/bluesky-social/atproto/pull/5743) [`8656303`](https://github.com/bluesky-social/atproto/commit/86563037e8233162165fc455f926569386536dd1) Thanks [@haileyok](https://github.com/haileyok)! - Record the scopes a user approved on the consent screen, not the scopes the client requested.
+
+## 0.25.0
+
+### Minor Changes
+
+- [#5687](https://github.com/bluesky-social/atproto/pull/5687) [`943170b`](https://github.com/bluesky-social/atproto/commit/943170bd390705fbb16920688f8f09ec7078a59b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Support resetting password based on account identifier (in addition to email). When a user attempts to reset password for an Atmosphere account hosted on another service, the user will be notified and show a link to the right service.
+
+### Patch Changes
+
+- Updated dependencies [[`b7dcaee`](https://github.com/bluesky-social/atproto/commit/b7dcaeefbb070b8182dc68b4e6b52114d6786d4e), [`943170b`](https://github.com/bluesky-social/atproto/commit/943170bd390705fbb16920688f8f09ec7078a59b), [`dc47f7b`](https://github.com/bluesky-social/atproto/commit/dc47f7b1a2f91e2d8cf2d1dbbdaa6c443fbfdefb), [`943170b`](https://github.com/bluesky-social/atproto/commit/943170bd390705fbb16920688f8f09ec7078a59b), [`943170b`](https://github.com/bluesky-social/atproto/commit/943170bd390705fbb16920688f8f09ec7078a59b), [`943170b`](https://github.com/bluesky-social/atproto/commit/943170bd390705fbb16920688f8f09ec7078a59b), [`943170b`](https://github.com/bluesky-social/atproto/commit/943170bd390705fbb16920688f8f09ec7078a59b), [`943170b`](https://github.com/bluesky-social/atproto/commit/943170bd390705fbb16920688f8f09ec7078a59b), [`943170b`](https://github.com/bluesky-social/atproto/commit/943170bd390705fbb16920688f8f09ec7078a59b)]:
+  - @atproto/oauth-provider-ui@0.11.0
+  - @atproto-labs/handle-resolver-node@0.2.15
+  - @atproto/oauth-resolver@0.0.1
+  - @atproto/oauth-provider-api@0.11.0
+
 ## 0.24.3
 
 ### Patch Changes

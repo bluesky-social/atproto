@@ -4,7 +4,11 @@ import { type ReactElement, type ReactNode, useEffect, useState } from 'react'
 import { DialogShell } from '#/components/dialogs/dialog-shell.tsx'
 import { EmailField } from '#/components/forms/fields/email-field.tsx'
 import { TokenField } from '#/components/forms/fields/token-field.tsx'
-import { FormShell } from '#/components/forms/form-shell.tsx'
+import {
+  FormShell,
+  type FormShellProps,
+} from '#/components/forms/form-shell.tsx'
+import type { Override } from '#/lib/util.ts'
 import { UpdateEmailForm } from './update-email-form.tsx'
 
 export type UpdateEmailDialogProps = {
@@ -108,8 +112,7 @@ export function UpdateEmailDialog({
       >
         <UpdateEmailForm
           emailCurrent={emailCurrent}
-          requestPending={requestPending}
-          confirmPending={confirmPending}
+          loading={requestPending || confirmPending}
           newEmailDefault={email}
           onLoadingChange={setSubmitting}
           onCancel={() => setOpen(false)}
@@ -168,21 +171,24 @@ export function UpdateEmailDialog({
   )
 }
 
+type EmailRequestFormProps = Override<
+  FormShellProps<{ email: string }>,
+  {
+    emailDefault?: string
+    introMessage?: ReactNode
+    disabled?: boolean
+    onCancel?: () => void
+    onLoadingChange?: (loading: boolean) => void
+  }
+>
+
 function EmailRequestForm({
   emailDefault,
   introMessage,
-  handler,
   ...props
-}: {
-  emailDefault?: string
-  introMessage?: ReactNode
-  disabled?: boolean
-  onCancel?: () => void
-  onLoadingChange?: (loading: boolean) => void
-  handler: (data: { email: string }, signal: AbortSignal) => Promise<void>
-}) {
+}: EmailRequestFormProps) {
   return (
-    <FormShell<{ email: string }> {...props} onSubmit={handler}>
+    <FormShell<{ email: string }> {...props}>
       {introMessage}
 
       <EmailField
@@ -196,32 +202,35 @@ function EmailRequestForm({
   )
 }
 
+type VerifyStepFormData = { email: string; token: string }
+type VerifyStepFormProps = Override<
+  FormShellProps<VerifyStepFormData>,
+  {
+    children?: never
+    email: string
+    onResend?: () => Promise<void>
+    onCancel?: () => void
+    onLoadingChange?: (loading: boolean) => void
+  }
+>
+
 function VerifyStepForm({
   email,
   onResend,
+  onValues,
   handler,
   ...props
-}: {
-  email: string
-  onResend?: () => Promise<void>
-  onCancel?: () => void
-  onLoadingChange?: (loading: boolean) => void
-  handler: (
-    data: { email: string; token: string },
-    signal: AbortSignal,
-  ) => Promise<void>
-}) {
+}: VerifyStepFormProps) {
   return (
-    <FormShell<{ code: string }>
+    <FormShell<{ token: string }>
       {...props}
       cancelLabel={<Trans context="verify email">Later</Trans>}
       submitLabel={<Trans context="verify email">Verify now</Trans>}
-      onSubmit={(values, signal) =>
-        handler({ email, token: values.code }, signal)
-      }
+      onValues={(values) => onValues?.({ ...values, email })}
+      handler={(values, signal) => handler({ ...values, email }, signal)}
     >
       <TokenField
-        name="code"
+        name="token"
         label={<Trans>Verification code</Trans>}
         required
         autoFocus

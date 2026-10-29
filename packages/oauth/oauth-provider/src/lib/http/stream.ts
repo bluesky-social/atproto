@@ -1,11 +1,7 @@
 import type { IncomingMessage } from 'node:http'
 import { type Duplex, type Readable, pipeline } from 'node:stream'
 import createHttpError from 'http-errors'
-import {
-  MaxSizeChecker,
-  createDecoders,
-  streamToNodeBuffer,
-} from '@atproto/common'
+import { createDecoders, streamToNodeBuffer } from '@atproto/common'
 import {
   type KnownNames,
   type KnownParser,
@@ -27,10 +23,10 @@ export function decodeHttpRequest(
 ): Readable {
   // @NOTE Content-Length counts the octets actually transferred, i.e. the
   // body *after* content-encoding. It therefore bounds the wire size, which
-  // the MaxSizeChecker below does not (that one bounds the decoded size);
-  // these are two distinct bounds that happen to share a constant. It is not
-  // a substitute for the checker: the header is absent under chunked transfer
-  // encoding, and a client may understate it.
+  // the `maxSize` passed to `createDecoders` below does not (that one bounds
+  // the decoded size); these are two distinct bounds that happen to share a
+  // constant. It is not a substitute for the decoded bound: the header is
+  // absent under chunked transfer encoding, and a client may understate it.
   const contentLength = req.headers['content-length']
   if (contentLength != null) {
     const size = Number(contentLength)
@@ -43,15 +39,15 @@ export function decodeHttpRequest(
   }
 
   try {
-    // @NOTE The checker is applied even when the body is not encoded: nothing
-    // else bounds the size of these requests.
+    // @NOTE `createDecoders` applies the decoded-size bound even when the body
+    // is not encoded: nothing else bounds the size of these requests.
     return pipeline(
       [
         req,
-        ...createDecoders(req.headers['content-encoding']),
-        new MaxSizeChecker(maxSize, () =>
-          createHttpError(413, 'Payload too large'),
-        ),
+        ...createDecoders(req.headers['content-encoding'], {
+          maxSize,
+          maxSizeError: () => createHttpError(413, 'Payload too large'),
+        }),
       ],
       () => {},
     ) as Duplex

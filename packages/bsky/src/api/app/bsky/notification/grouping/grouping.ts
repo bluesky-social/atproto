@@ -1,7 +1,7 @@
 import type { AtUriString, DatetimeString, DidString } from '@atproto/lex'
 import type { NotificationsV2Algorithm } from '../../../../../config.js'
-import {
-  type Notification,
+import type {
+  Notification,
   NotificationFeed,
 } from '../../../../../proto/bsky_pb.js'
 import {
@@ -9,8 +9,14 @@ import {
   type DataplaneNotificationReason,
   NOTIFICATION_REASON,
 } from '../constants.js'
-import { buildAlgoGravityGroups } from './algoGravity.js'
-import { buildAlgoLookbackGroups } from './algoLookback.js'
+import {
+  createAlgoGravityGroupBuilder,
+  splitGravityBursts,
+} from './algoGravity.js'
+import {
+  createAlgoLookbackGroupBuilder,
+  splitLookbackBursts,
+} from './algoLookback.js'
 
 // Notification reasons that require reasonSubject to be non-empty.
 // It should be the AT-URI of a record belonging to the notification recipient
@@ -62,7 +68,22 @@ export type NotificationItem = {
   id: string
   groupingKey: string
   actorDid: DidString
+  indexedTime: number
 }
+
+// Builds a NotificationItem, caching its parsed timestamp so grouping never re-parses it.
+export const buildNotificationItem = (
+  raw: RawNotification,
+  id: string,
+  groupingKey: string,
+  actorDid: DidString,
+): NotificationItem => ({
+  raw,
+  id,
+  groupingKey,
+  actorDid,
+  indexedTime: Date.parse(raw.indexedAt),
+})
 
 // NotificationGroup is the grouping algorithm’s result: the notification items it grouped together,
 // plus their count and timestamps, before Views builds the lexicon response.
@@ -81,6 +102,27 @@ export type NotificationGroup = {
 export type GroupingResult = {
   groups: NotificationGroup[]
   cursor?: string
+}
+
+// @NOTE Feed batches newest-first and stop when a cursor is returned.
+export type GroupBuilder = (items: NotificationItem[]) => GroupingResult
+
+export type GroupBuilderFactory = (
+  limit: number,
+  now: number,
+  seenAt?: number,
+  feed?: NotificationFeed,
+) => GroupBuilder
+
+export type BurstSplitter = (
+  items: NotificationItem[],
+  now: number,
+  timeSpanMultiplier: number,
+) => NotificationItem[][]
+
+type GroupingAlgorithm = {
+  createGroupBuilder: GroupBuilderFactory
+  splitBursts: BurstSplitter
 }
 
 export function parseRawNotification(
@@ -134,19 +176,21 @@ export function parseRawNotification(
   }
 }
 
-export const buildGroups = (
-  items: NotificationItem[],
-  limit: number,
-  now: number,
-  seenAt: number | undefined,
+/** Select matching implementations for ordinary grouping and spotlight bursts. */
+export const getGroupingAlgorithm = (
   algorithm: NotificationsV2Algorithm,
-  feed = NotificationFeed.ALL,
-): GroupingResult => {
+): GroupingAlgorithm => {
   switch (algorithm) {
     case 'algoLookback':
-      return buildAlgoLookbackGroups(items, limit, now, seenAt, feed)
+      return {
+        createGroupBuilder: createAlgoLookbackGroupBuilder,
+        splitBursts: splitLookbackBursts,
+      }
     case 'algoGravity':
     default:
-      return buildAlgoGravityGroups(items, limit, now, seenAt, feed)
+      return {
+        createGroupBuilder: createAlgoGravityGroupBuilder,
+        splitBursts: splitGravityBursts,
+      }
   }
 }

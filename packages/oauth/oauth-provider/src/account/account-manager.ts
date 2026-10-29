@@ -1,13 +1,16 @@
 import type { Did } from '@atproto/did'
+import type { OAuthResolver } from '@atproto/oauth-resolver'
 import {
   type OAuthIssuerIdentifier,
   isOAuthClientIdLoopback,
 } from '@atproto/oauth-types'
+import { isAtIdentifierString } from '@atproto/syntax'
 import type { ClientId } from '../client/client-id.js'
 import type { Client } from '../client/client.js'
 import type { DeviceId } from '../device/device-id.js'
 import { InvalidCredentialsError } from '../errors/invalid-credentials-error.js'
 import { InvalidRequestError } from '../errors/invalid-request-error.js'
+import { UnknownAtprotoAccountError } from '../errors/unknown-atproto-account-error.js'
 import { HCaptchaClient, type HcaptchaVerifyResult } from '../lib/hcaptcha.js'
 import { callAsync } from '../lib/util/function.js'
 import { constantTime } from '../lib/util/time.js'
@@ -16,7 +19,9 @@ import type { Customization } from '../oauth-provider.js'
 import type {
   Account,
   AccountStore,
+  AtIdentifierString,
   AuthorizedClientData,
+  AuthorizedClients,
   DeleteAccountConfirmInput,
   DeleteAccountRequestInput,
   DeviceAccount,
@@ -45,9 +50,10 @@ export class AccountManager {
   protected readonly hcaptchaClient?: HCaptchaClient
 
   constructor(
-    issuer: OAuthIssuerIdentifier,
+    protected readonly issuer: OAuthIssuerIdentifier,
     protected readonly store: AccountStore,
     protected readonly hooks: OAuthHooks,
+    protected readonly oauthResolver: OAuthResolver,
     customization: Customization,
   ) {
     this.inviteCodeRequired = customization.inviteCodeRequired !== false
@@ -213,9 +219,9 @@ export class AccountManager {
 
       const account = await callAsync(async () => {
         return this.store.authenticateAccount({
-          locale: data.locale,
+          identifier: data.identifier,
           password: data.password,
-          username: data.username,
+          locale: data.locale,
           emailOtp: data.emailOtp,
           deviceAccounts,
         })
@@ -318,7 +324,10 @@ export class AccountManager {
     await this.store.setAuthorizedClient(account.did, client.id, data)
   }
 
-  public async getAccount(did: Did) {
+  public async getAccount(did: Did): Promise<{
+    account: Account
+    authorizedClients: AuthorizedClients
+  } | null> {
     return this.store.getAccount(did)
   }
 
@@ -346,25 +355,83 @@ export class AccountManager {
     deviceId: DeviceId,
     deviceMetadata: RequestMetadata,
     input: ResetPasswordRequestInput,
-  ) {
-    return constantTime(TIMING_ATTACK_MITIGATION_DELAY, async () => {
-      await this.hooks.onResetPasswordRequest?.call(null, {
-        input,
-        deviceId,
-        deviceMetadata,
+  ): Promise<void> {
+    // @NOTE We won't be sending reset password emails for non-email identifiers
+    // (note that we might want to do that at some point, as other services,
+    // e.g. Instagram, allow password reset via username). Supporting this would
+    // require adding rate limiting + hCaptcha verification to prevent abuse.
+    // Once those defense mechanisms are implemented, the whole "if" here after
+    // can be removed as the "if" at the end of this function will handle
+    // unknown accounts.
+    if (isAtIdentifierString(input.identifier)) {
+      // We *DO* however return a specific error message for users identified by
+      // an at-identifier that are not hosted on this service.
+      const result = await this.store.getAccount(input.identifier)
+      if (!result) return this.throwUnknownAtmosphereAccount(input.identifier)
+
+      throw new UnknownAtprotoAccountError(
+        input.identifier,
+        undefined,
+        'An email address is required for password reset',
+      )
+    }
+
+    const account = await constantTime(
+      TIMING_ATTACK_MITIGATION_DELAY,
+      async () => {
+        await this.hooks.onResetPasswordRequest?.call(null, {
+          input,
+          deviceId,
+          deviceMetadata,
+        })
+
+        const account = await this.store.resetPasswordRequest(input)
+
+        // @NOTE Do not throw here, to prevent user enumeration
+
+        await this.hooks.onResetPasswordRequested?.call(null, {
+          input,
+          deviceId,
+          deviceMetadata,
+          account,
+        })
+
+        return account
+      },
+    )
+
+    // @NOTE This is currently a dead branch (because of the "if" above) but
+    // will become live once we support password reset via at-identifiers (by
+    // removing the "if" at the beginning of this function.
+    if (!account && isAtIdentifierString(input.identifier)) {
+      return this.throwUnknownAtmosphereAccount(input.identifier)
+    }
+  }
+
+  private async throwUnknownAtmosphereAccount(
+    identifier: AtIdentifierString,
+  ): Promise<never> {
+    const { metadata, identityInfo } = await this.oauthResolver
+      .resolve(identifier)
+      .catch((cause: unknown) => {
+        throw new UnknownAtprotoAccountError(
+          identifier,
+          undefined,
+          undefined,
+          cause,
+        )
       })
 
-      const account = await this.store.resetPasswordRequest(input)
+    const handle =
+      identityInfo?.handle === 'handle.invalid'
+        ? undefined
+        : identityInfo?.handle
 
-      // @NOTE Do not throw here, to prevent user enumeration
+    // The identity points back at this service (e.g. a taken-down account):
+    // there is no other service to direct the user to.
+    const issuer = metadata.issuer === this.issuer ? undefined : metadata.issuer
 
-      await this.hooks.onResetPasswordRequested?.call(null, {
-        input,
-        deviceId,
-        deviceMetadata,
-        account,
-      })
-    })
+    throw new UnknownAtprotoAccountError(handle ?? identifier, issuer)
   }
 
   public async resetPasswordConfirm(

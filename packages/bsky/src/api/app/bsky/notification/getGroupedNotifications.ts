@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto'
+import { performance } from 'node:perf_hooks'
 import { dedupeStrs, mapDefined } from '@atproto/common'
 import {
   type AtUriString,
@@ -32,8 +33,8 @@ import { NOTIFICATION_REASON } from './constants.js'
 import {
   type NotificationGroup,
   type NotificationItem,
-  type RawNotification,
-  buildGroups,
+  buildNotificationItem,
+  getGroupingAlgorithm,
   parseRawNotification,
 } from './grouping/grouping.js'
 import {
@@ -92,6 +93,7 @@ export default function (server: Server, ctx: AppContext) {
       )
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({
+        xrpcEndpoint: app.bsky.notification.getGroupedNotifications.$lxm,
         labelers,
         viewer,
         features,
@@ -132,17 +134,27 @@ const skeleton = async (
   let groups: NotificationGroup[] = []
   let nextCursor: string | undefined
   let itemsFetched = 0
+  let dataplaneFetches = 0
   let rawLimit = ctx.cfg.notificationsV2MinRawLimit
+  const algorithm = ctx.cfg.notificationsV2Algorithm
+  const { createGroupBuilder, splitBursts } = getGroupingAlgorithm(algorithm)
+  const buildGroups = createGroupBuilder(params.limit, now, seenAt, feed)
 
-  for (let read = 0; read < ctx.cfg.notificationsV2MaxReads; read++) {
+  for (
+    let fetches = 0;
+    fetches < ctx.cfg.notificationsV2MaxFetches;
+    fetches++
+  ) {
     const response = await ctx.hydrator.dataplane.getNotificationsV2({
       actorDid: params.hydrateCtx.viewer,
       feed,
       cursor,
       limit: rawLimit,
     })
+    dataplaneFetches++
     itemsFetched += response.notifications.length
 
+    const firstNewItem = items.length
     for (const notification of response.notifications) {
       const notif = parseRawNotification(notification)
       if (!notif) continue
@@ -159,25 +171,18 @@ const skeleton = async (
         groupingKey = NOTIFICATION_REASON.FOLLOW
       }
       if (notif.reason === NOTIFICATION_REASON.SUBSCRIBED_POST) {
-        groupingKey = actorDid
+        groupingKey = NOTIFICATION_REASON.SUBSCRIBED_POST
       }
 
-      items.push({
-        raw: notif,
-        id,
-        groupingKey,
-        actorDid,
-      })
+      items.push(buildNotificationItem(notif, id, groupingKey, actorDid))
     }
 
-    const groupingResult = buildGroups(
-      items,
-      params.limit,
-      now,
-      seenAt,
-      ctx.cfg.notificationsV2Algorithm,
-      feed,
-    )
+    const groupingStart = performance.now()
+    const groupingResult = buildGroups(items.slice(firstNewItem))
+    events.notificationGrouping({
+      algorithm,
+      durationMs: performance.now() - groupingStart,
+    })
     groups = groupingResult.groups
 
     // After fetching a page from the dataplane and attempting to group, 2 situations can happen:
@@ -206,14 +211,25 @@ const skeleton = async (
   }
 
   return {
-    ...buildSpotlight(items, groups, nextCursor, params.limit, seenAt),
+    ...buildSpotlight(
+      items,
+      groups,
+      nextCursor,
+      params.limit,
+      now,
+      seenAt,
+      splitBursts,
+    ),
     itemsFetched,
+    dataplaneFetches,
+    hydrationDurationMs: 0,
   }
 }
 
 const hydration = async (
   input: HydrationFnInput<Context, Params, SkeletonState>,
 ) => {
+  const hydrationStart = performance.now()
   const { ctx, params, skeleton } = input
   const notifs = skeleton.groups.flatMap((group) =>
     group.items.map((item) => item.raw),
@@ -233,9 +249,13 @@ const hydration = async (
     ),
   )
 
-  return ctx.hydrator.hydrateGroupedNotifications(notifs, params.hydrateCtx, {
-    knownFollowersDids,
-  })
+  const hydrated = await ctx.hydrator.hydrateGroupedNotifications(
+    notifs,
+    params.hydrateCtx,
+    { knownFollowersDids },
+  )
+  skeleton.hydrationDurationMs = performance.now() - hydrationStart
+  return hydrated
 }
 
 const rules = (
@@ -292,7 +312,7 @@ const rules = (
 
         // After hydration, notificationAvailable checks whether each notification’s required records exist.
         // If its actor, post, repost, follow, or starter pack is missing or blocked, rules removes that notification from the returned group.
-        return notificationAvailable(notif, hydration, ctx.views)
+        return notificationAvailable(item, hydration, ctx.views)
       })
 
       const newest = items[0]
@@ -322,18 +342,26 @@ const rules = (
 
 // Checks that the notification’s actor and required records exist and referenced posts aren’t viewer-blocked.
 const notificationAvailable = (
-  notif: RawNotification,
+  item: NotificationItem,
   state: HydrationState,
   views: Views,
 ): boolean => {
+  const { raw: notif, actorDid } = item
   const uri = notif.uri
-  const actor = state.actors?.get(uriToDid(uri))
+  const actor = state.actors?.get(actorDid)
   if (!actor) return false
 
-  const postAvailable = (postUri: AtUriString) =>
-    !!state.posts?.get(postUri) &&
-    !!state.actors?.get(uriToDid(postUri)) &&
-    !views.viewerBlockExists(uriToDid(postUri), state)
+  const postAvailable = (postUri: AtUriString) => {
+    if (!state.posts?.get(postUri)) return false
+    // Notifications can refer to a post itself (mentions) or to a like/repost of that post,
+    // whose author is not necessarily the post author; matching URIs mean actorDid is the post author,
+    // otherwise extract it from postUri.
+    const postAuthorDid = postUri === uri ? actorDid : uriToDid(postUri)
+    return (
+      !!state.actors?.get(postAuthorDid) &&
+      !views.viewerBlockExists(postAuthorDid, state)
+    )
+  }
 
   const starterPackAvailable = (starterPackUri: AtUriString) =>
     !!state.starterPacks?.get(starterPackUri) &&
@@ -496,6 +524,8 @@ const presentation = (
   events.groupedNotifications({
     itemsFetched: skeleton.itemsFetched,
     itemsReturned: groups.reduce((count, group) => count + group.count, 0),
+    dataplaneFetches: skeleton.dataplaneFetches,
+    hydrationDurationMs: skeleton.hydrationDurationMs,
   })
 
   return body
@@ -536,4 +566,6 @@ type SkeletonState = {
   groups: NotificationGroup[]
   cursor?: string
   itemsFetched: number
+  dataplaneFetches: number
+  hydrationDurationMs: number
 }

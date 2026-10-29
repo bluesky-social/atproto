@@ -29,7 +29,7 @@ import { ATTR_DEPLOYMENT_ENVIRONMENT_NAME } from '@atproto-labs/opentelemetry-no
 import { IORedisInstrumentation } from '@opentelemetry/instrumentation-ioredis'
 import pkg from './package.json' with { type: 'json' }
 
-setup(() => ({
+await setup(() => ({
   name: pkg.name,
   version: pkg.version,
   // Optional: override or extend the default resource attributes.
@@ -61,7 +61,7 @@ import { setup } from '@atproto-labs/opentelemetry-node'
 import pkg from './package.json' with { type: 'json' }
 import lex from './lexicons.json' with { type: 'json' }
 
-setup(() => ({
+await setup(() => ({
   name: pkg.name,
   version: pkg.version,
   xrpcMethods: lex.lexicons
@@ -77,11 +77,14 @@ This sets the `http.route` attribute of the HTTP server duration metric to
 The list is what keeps the attribute low-cardinality: any client
 can make up an NSID. Span names aren't affected.
 
-The instrumentations common to atproto services (HTTP with XRPC-aware span naming,
-Express, Undici, Pino with log correlation, and Node runtime metrics) are always
-registered alongside the ones you supply. The
-`@atproto-labs/opentelemetry-node/instrumentation` entrypoint exposes
-`getDefaultAtprotoInstrumentations()` if you need that list directly.
+Instrumentations you supply must be built on the same
+`@opentelemetry/instrumentation` as this package, or ESM imports of the modules
+they target can't be instrumented: `setup()` then rejects with an
+`InstrumentationMismatchError`, failing the service start. For `better-sqlite3`, use the
+`BetterSqlite3Instrumentation` exposed by the
+`@atproto-labs/opentelemetry-node/better-sqlite3-plugin` entrypoint: a port of
+[`opentelemetry-plugin-better-sqlite3`](https://github.com/sjinks/opentelemetry-plugin-better-sqlite3)
+that satisfies this requirement.
 
 The `@atproto-labs/opentelemetry-node/conventions` entrypoint re-exports
 `@opentelemetry/semantic-conventions` plus the atproto-specific constants: the

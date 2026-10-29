@@ -61,6 +61,7 @@ export default function (server: Server, ctx: AppContext) {
       const stableDeviceId = req.header(ANALYTICS_HEADER_DEVICE_ID) ?? null
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({
+        xrpcEndpoint: app.bsky.feed.getFeed.$lxm,
         labelers,
         viewer,
         features: ctx.featureGatesClient.scope(
@@ -291,11 +292,15 @@ export function irisUrlForTrendingFeed(
 const resolveSkeletonEndpoint = async (
   ctx: Context,
   params: Params,
-): Promise<{ endpoint: string; feedDid?: DidString }> => {
+): Promise<{ endpoint: string; feedDid?: DidString; trusted?: boolean }> => {
   const { feed } = params
   const irisUrl = irisUrlForFeed(ctx.cfg, params)
   if (irisUrl) {
-    return { endpoint: irisUrl, feedDid: await getFeedGenDid(ctx, feed) }
+    return {
+      endpoint: irisUrl,
+      feedDid: await getFeedGenDid(ctx, feed),
+      trusted: true,
+    }
   }
 
   const irisStagingUrl = irisStagingUrlForFeed(ctx.cfg, params)
@@ -303,6 +308,7 @@ const resolveSkeletonEndpoint = async (
     return {
       endpoint: irisStagingUrl,
       feedDid: await getFeedGenDid(ctx, feed),
+      trusted: true,
     }
   }
 
@@ -312,7 +318,9 @@ const resolveSkeletonEndpoint = async (
   }
 
   const trendingIrisUrl = irisUrlForTrendingFeed(ctx.cfg, { feed, feedDid })
-  if (trendingIrisUrl) return { endpoint: trendingIrisUrl, feedDid }
+  if (trendingIrisUrl) {
+    return { endpoint: trendingIrisUrl, feedDid, trusted: true }
+  }
 
   let identity: GetIdentityByDidResponse
   try {
@@ -335,7 +343,7 @@ const resolveSkeletonEndpoint = async (
     )
   }
 
-  return { endpoint: fgEndpoint, feedDid }
+  return { endpoint: fgEndpoint, feedDid, trusted: false }
 }
 
 async function getFeedGenDid(
@@ -351,7 +359,10 @@ const skeletonFromFeedGen = async (
   params: Params,
 ): Promise<AlgoResponse> => {
   const { headers, passthroughHeaders } = params
-  const { endpoint, feedDid } = await resolveSkeletonEndpoint(ctx, params)
+  const { endpoint, feedDid, trusted } = await resolveSkeletonEndpoint(
+    ctx,
+    params,
+  )
   const requestHeaders = noUndefinedVals({
     ...headers,
     ...(feedDid && ctx.cfg.bskyFeedgenDids.has(feedDid)
@@ -360,20 +371,26 @@ const skeletonFromFeedGen = async (
   })
 
   // @TODO currently passthrough auth headers from pds
-  const result = await xrpcSafe(endpoint, app.bsky.feed.getFeedSkeleton, {
-    strictResponseProcessing: false,
-    signal: AbortSignal.any([
-      params.signal,
-      AbortSignal.timeout(ctx.cfg.feedGenSkeletonTimeout),
-    ]),
-    headers: requestHeaders,
-    params: {
-      feed: params.feed,
-      // The feedgen is not guaranteed to honor the limit, but we try it.
-      limit: params.limit,
-      cursor: params.cursor,
+  // Configured endpoints (iris) are ours. The DID-document path is resolved from
+  // another account's record, so only that one goes through the guarded fetch.
+  const result = await xrpcSafe(
+    trusted ? endpoint : { service: endpoint, fetch: ctx.federatedFetch },
+    app.bsky.feed.getFeedSkeleton,
+    {
+      strictResponseProcessing: false,
+      signal: AbortSignal.any([
+        params.signal,
+        AbortSignal.timeout(ctx.cfg.feedGenSkeletonTimeout),
+      ]),
+      headers: requestHeaders,
+      params: {
+        feed: params.feed,
+        // The feedgen is not guaranteed to honor the limit, but we try it.
+        limit: params.limit,
+        cursor: params.cursor,
+      },
     },
-  })
+  )
 
   if (!result.success) {
     const cause = result.reason

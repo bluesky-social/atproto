@@ -31,6 +31,7 @@ export default function (server: Server, ctx: AppContext) {
 
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({
+        xrpcEndpoint: app.bsky.graph.getList.$lxm,
         labelers,
         viewer,
         includeTakedowns,

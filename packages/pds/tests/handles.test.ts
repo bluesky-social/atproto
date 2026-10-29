@@ -1,3 +1,4 @@
+import type * as DnsPromises from 'node:dns/promises'
 import { jest } from '@jest/globals'
 import type { AtpAgent } from '@atproto/api'
 import type { SeedClient } from '@atproto/dev-env'
@@ -9,7 +10,11 @@ let alice: DidString
 let bob: DidString
 
 jest.unstable_mockModule('node:dns/promises', () => {
+  const originalModule =
+    jest.requireActual<typeof DnsPromises>('node:dns/promises')
+
   return {
+    ...originalModule,
     resolveTxt: (domain: string) => {
       if (domain === '_atproto.alice.external') {
         return [[`did=${alice}`]]

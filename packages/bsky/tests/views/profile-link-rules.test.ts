@@ -18,6 +18,7 @@ describe('isAllowedProfileLinkUrl', () => {
   it('rejects general-purpose shorteners and their subdomains', () => {
     expect(isAllowedProfileLinkUrl('https://bit.ly/abc')).toBe(false)
     expect(isAllowedProfileLinkUrl('https://www.tinyurl.com/abc')).toBe(false)
+    expect(isAllowedProfileLinkUrl('https://shorten.world/abc')).toBe(false)
   })
 
   it('allows brand short links and lookalikes', () => {

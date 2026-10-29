@@ -1,4 +1,5 @@
-import { ChevronRightIcon } from 'lucide-react'
+import { Trans } from '@lingui/react/macro'
+import { AtSignIcon, ChevronRightIcon } from 'lucide-react'
 import type { ComponentProps, ReactNode } from 'react'
 import type { Account } from '@atproto/oauth-provider-api'
 import { AccountAvatar } from '#/components/identity/account-avatar.tsx'
@@ -15,13 +16,7 @@ import {
 import type { Override } from '#/lib/util.ts'
 import { cn } from '#/lib/utils.ts'
 
-export type AccountCardProps = Override<
-  Omit<ComponentProps<typeof Item>, 'render' | 'variant'>,
-  {
-    account: Account
-    append?: ReactNode
-  }
->
+export type AccountRowProps = ComponentProps<typeof Item>
 
 /**
  * One row in a list of accounts or account destinations — the same height,
@@ -30,12 +25,13 @@ export type AccountCardProps = Override<
  */
 export function AccountRow({
   className,
+  variant = 'outline',
   ...props
-}: ComponentProps<typeof Item>) {
+}: AccountRowProps) {
   return (
     <Item
-      variant="outline"
       {...props}
+      variant={variant}
       className={cn(
         'bg-muted/30 hover:bg-accent hover:text-accent-foreground w-full gap-4 px-4 py-3 text-left',
         className,
@@ -78,6 +74,14 @@ export function AccountRowMedia({
   )
 }
 
+export type AccountCardProps = Override<
+  AccountRowProps,
+  {
+    account: Account
+    append?: ReactNode
+  }
+>
+
 /**
  * A selectable account row, built on `Item` — the shadcn primitive for a
  * choice list.
@@ -87,21 +91,17 @@ export function AccountRowMedia({
  */
 export function AccountCard({
   account,
+  render = <button type="button" />,
   append = (
     <ChevronRightIcon
       aria-hidden
       className="text-muted-foreground size-5 shrink-0"
     />
   ),
-  className,
   ...props
 }: AccountCardProps) {
   return (
-    <AccountRow
-      {...props}
-      render={<button type="button" />}
-      className={className}
-    >
+    <AccountRow {...props} render={render}>
       <AccountRowMedia>
         <AccountAvatar account={account} size="xl" />
       </AccountRowMedia>
@@ -121,6 +121,34 @@ export function AccountCard({
       </ItemContent>
 
       <ItemActions>{append}</ItemActions>
+    </AccountRow>
+  )
+}
+
+export type OtherAccountCardProps = AccountRowProps
+
+export function OtherAccountCard({
+  render = <button type="button" />,
+  ...props
+}: OtherAccountCardProps) {
+  return (
+    <AccountRow {...props} render={render}>
+      <AccountRowMedia disc>
+        <AtSignIcon aria-hidden className="m-[10%] size-[80%]" />
+      </AccountRowMedia>
+      <ItemContent className="min-w-0">
+        <ItemTitle className="w-full text-lg leading-tight">
+          <span className="text-muted-foreground block min-w-0 truncate font-medium">
+            <Trans>Another account</Trans>
+          </span>
+        </ItemTitle>
+      </ItemContent>
+      <ItemActions>
+        <ChevronRightIcon
+          aria-hidden
+          className="text-muted-foreground size-5 shrink-0"
+        />
+      </ItemActions>
     </AccountRow>
   )
 }

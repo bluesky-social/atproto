@@ -44,6 +44,7 @@ export class AppContext {
       authVerifier: AuthVerifier
       featureGatesClient: FeatureGatesClient
       blobDispatcher: Dispatcher
+      federatedFetch: typeof globalThis.fetch
       kwsClient: KwsClient | undefined
     },
   ) {}
@@ -122,6 +123,10 @@ export class AppContext {
 
   get blobDispatcher(): Dispatcher {
     return this.opts.blobDispatcher
+  }
+
+  get federatedFetch(): typeof globalThis.fetch {
+    return this.opts.federatedFetch
   }
 
   get kwsClient(): KwsClient | undefined {

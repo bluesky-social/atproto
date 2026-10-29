@@ -393,7 +393,10 @@ export class RequestManager {
     deviceId: DeviceId,
     deviceMetadata: RequestMetadata,
     scopeOverride?: string,
-  ): Promise<Code> {
+  ): Promise<{
+    code: Code
+    parameters: Readonly<OAuthAuthorizationRequestParameters>
+  }> {
     const requestId = decodeRequestUri(requestUri)
 
     const data = await this.store.readRequest(requestId)
@@ -435,23 +438,7 @@ export class RequestManager {
       // that every existing scope in the parameters is also present in the
       // override value. This allows the user to remove scopes from the request,
       // but not to add new ones.
-      if (scopeOverride != null) {
-        const allowedScopes = new Set(scopeOverride.split(' '))
-        const existingScopes = parameters.scope?.split(' ')
-
-        // Compute the intersection of the existing scopes and the overrides.
-        const newScopes = existingScopes?.filter((s) => allowedScopes.has(s))
-
-        // Validate: make sure the new scopes are valid
-        if (!newScopes?.includes('atproto')) {
-          throw new AccessDeniedError(
-            parameters,
-            'The "atproto" scope is required',
-          )
-        }
-
-        parameters = { ...parameters, scope: newScopes.join(' ') }
-      }
+      parameters = narrowAuthorizedScope(parameters, scopeOverride)
 
       // Only response_type=code is supported
       const code = await generateCode()
@@ -474,7 +461,7 @@ export class RequestManager {
         requestId,
       })
 
-      return code
+      return { code, parameters }
     } catch (err) {
       await this.store.deleteRequest(requestId)
       throw err
@@ -516,4 +503,24 @@ export class RequestManager {
     const requestId = decodeRequestUri(requestUri)
     await this.store.deleteRequest(requestId)
   }
+}
+
+/**
+ * Intersects the requested parameters with the scopes approved on the consent
+ * screen, so a client can never end up with more than it asked for.
+ */
+export function narrowAuthorizedScope<
+  P extends OAuthAuthorizationRequestParameters,
+>(parameters: P, scopeOverride: string | undefined): P {
+  if (scopeOverride == null || parameters.scope == null) return parameters
+
+  const requestedScopes = new Set(parameters.scope.split(' '))
+  const allowedScopes = new Set(scopeOverride.split(' '))
+
+  const newScopes = requestedScopes.intersection(allowedScopes)
+  if (!newScopes.has('atproto')) {
+    throw new AccessDeniedError(parameters, 'The "atproto" scope is required')
+  }
+
+  return { ...parameters, scope: Array.from(newScopes).join(' ') }
 }

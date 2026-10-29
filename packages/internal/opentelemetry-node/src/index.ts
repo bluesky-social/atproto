@@ -7,7 +7,11 @@ import {
   getStringListFromEnv,
 } from '@opentelemetry/core'
 import type { Instrumentation } from '@opentelemetry/instrumentation'
-import { NodeSDK, resources } from '@opentelemetry/sdk-node'
+import {
+  defaultResource,
+  resourceFromAttributes,
+} from '@opentelemetry/resources'
+import { NodeSDK } from '@opentelemetry/sdk-node'
 import { createAddHookMessageChannel } from 'import-in-the-middle'
 import {
   ATTR_DEPLOYMENT_ENVIRONMENT_NAME,
@@ -16,13 +20,16 @@ import {
   ATTR_SERVICE_VERSION,
 } from './conventions.js'
 import {
-  type DefaultAtprotoInstrumentationsOptions,
-  getDefaultAtprotoInstrumentations,
-} from './instrumentation.js'
+  type BuildInstrumentationsOptions,
+  InstrumentationMismatchError,
+  buildInstrumentations,
+} from './instrumentations.js'
+import { FilteredW3CTraceContextPropagator } from './propagators/filtered-w3c-trace-context-propagator.js'
 
 export type { Attributes, Instrumentation }
+export { InstrumentationMismatchError }
 
-export type SetupOptions = DefaultAtprotoInstrumentationsOptions & {
+export type SetupOptions = BuildInstrumentationsOptions & {
   name: string
   version: string
   /**
@@ -32,7 +39,6 @@ export type SetupOptions = DefaultAtprotoInstrumentationsOptions & {
    * precedence, so these remain defaults.
    */
   defaultResourceAttributes?: Attributes
-  instrumentations?: Instrumentation[]
 }
 
 // @NOTE Hand-rolled equivalent of "@opentelemetry/auto-instrumentations-node"'s
@@ -56,15 +62,22 @@ export async function setup(getOptions: () => SetupOptions): Promise<void> {
   const logsConfigured = isSignalConfigured('LOGS')
   const otelConfigured = tracesConfigured || metricsConfigured || logsConfigured
   const otelEnabled = !otelDisabled && otelConfigured
+  const propagatorsConfigured = process.env.OTEL_PROPAGATORS != null
 
   if (!otelEnabled) return
 
   try {
-    const options = getOptions()
-
     // Restrict import-in-the-middle to modules targeted by the configured
     // instrumentations. Wrapping every ESM module can alter legal `export *`
     // graphs in unrelated packages.
+    //
+    // @TODO module.register() is deprecated (DEP0205) in favor of the
+    // in-thread module.registerHooks(), which import-in-the-middle supports
+    // through "import-in-the-middle/register-hooks.mjs" (no message channel
+    // needed). Switch to it once the minimum supported Node.js version is >=
+    // 24.11.1 (or >= 22.22.3): registerHooks() exists since 22.15.0, but its
+    // load hook rejects the CommonJS source import-in-the-middle returns before
+    // https://github.com/nodejs/node/pull/59929 (see its supportsSyncHooks()).
     const { registerOptions, waitForAllMessagesAcknowledged } =
       createAddHookMessageChannel()
     register(
@@ -73,14 +86,23 @@ export async function setup(getOptions: () => SetupOptions): Promise<void> {
       registerOptions,
     )
 
+    // @NOTE Must run after createAddHookMessageChannel(): instrumentations
+    // enable themselves when constructed, and only report the modules they
+    // target to the loader hook if the channel already exists. Otherwise, ESM
+    // imports of those modules are not instrumented.
+    const options = getOptions()
+
     const sdk = new NodeSDK({
+      textMapPropagator: propagatorsConfigured
+        ? undefined // Let the SDK handle propagators based on the OTEL_PROPAGATORS env var.
+        : new FilteredW3CTraceContextPropagator(), // default to no propagation
       // @NOTE Passing "resource" replaces (rather than augments) NodeSDK's
       // defaultResource(), so merge our defaults on top of it. Detected
       // resources (including the env detector reading OTEL_RESOURCE_ATTRIBUTES)
       // are merged in afterwards with higher precedence, so these are defaults
       // only.
-      resource: resources.defaultResource().merge(
-        resources.resourceFromAttributes({
+      resource: defaultResource().merge(
+        resourceFromAttributes({
           [ATTR_SERVICE_NAME]: options.name,
           [ATTR_SERVICE_NAMESPACE]: 'atproto',
           [ATTR_SERVICE_VERSION]: options.version,
@@ -92,10 +114,7 @@ export async function setup(getOptions: () => SetupOptions): Promise<void> {
       // @NOTE Unlike sdk-node's default detectors, these include the
       // "container" detector.
       resourceDetectors: getResourceDetectors(),
-      instrumentations: [
-        ...getDefaultAtprotoInstrumentations(options),
-        ...(options.instrumentations ?? []),
-      ],
+      instrumentations: buildInstrumentations(options),
 
       // @NOTE The gate above enables the SDK as soon as *any* signal is
       // configured, but NodeSDK then defaults every unspecified
@@ -125,6 +144,10 @@ export async function setup(getOptions: () => SetupOptions): Promise<void> {
       })
     })
   } catch (err) {
+    // @NOTE Unlike other setup errors, this one is a packaging bug that would
+    // otherwise go unnoticed, so it is not swallowed: fail the service start.
+    if (err instanceof InstrumentationMismatchError) throw err
+
     diag.error('Error initializing OpenTelemetry SDK', err)
   }
 }

@@ -97,7 +97,7 @@ export class TestBsky {
       ...cfg,
       notificationsV2MinRawLimit: cfg.notificationsV2MinRawLimit ?? 300,
       notificationsV2MaxRawItems: cfg.notificationsV2MaxRawItems ?? 3000,
-      notificationsV2MaxReads: cfg.notificationsV2MaxReads ?? 3,
+      notificationsV2MaxFetches: cfg.notificationsV2MaxFetches ?? 3,
       notificationsV2MaxGroupItemsWithRelatedViews:
         cfg.notificationsV2MaxGroupItemsWithRelatedViews ?? 10,
       bskyFeedgenDids: cfg.bskyFeedgenDids ?? new Set(),
