@@ -7,7 +7,7 @@ import ddTrace from 'dd-trace'
 ddTrace
   .init()
   .use('http2', {
-    client: true, // calls into dataplane
+    client: true, // calls into dataplane.
     server: false,
   })
   .use('express', {
