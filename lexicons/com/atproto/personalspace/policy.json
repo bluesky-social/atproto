@@ -4,17 +4,8 @@
   "defs": {
     "main": {
       "type": "object",
-      "description": "Space policy for data that only its owner should see, such as bookmarks, mutes, or drafts. Only the space authority's own account is authorized to read, and the authority tracks no other writers.",
-      "properties": {
-        "allowedApps": {
-          "type": "array",
-          "description": "If set, only these apps may access the space, evaluated against the attested client_id. When omitted, any app may access the space and no client attestation is required.",
-          "items": {
-            "type": "string",
-            "description": "An OAuth client ID."
-          }
-        }
-      }
+      "description": "Space policy for data that only its owner should see, such as bookmarks, mutes, or drafts. Only the space authority's own account is authorized to read, and the authority tracks no other writers. Has no configuration fields.",
+      "properties": {}
     }
   }
 }

@@ -276,7 +276,6 @@ describe('space policy', () => {
       const space = await sc.createSpace(alice, {
         policy: managedspace.policy.$build({
           managingApp: 'did:web:example.com#forum',
-          allowedApps: ['app:one', 'app:two'],
         }),
       })
 
@@ -285,7 +284,6 @@ describe('space policy', () => {
       expect(got.policy).toEqual({
         $type: 'com.atproto.managedspace.policy',
         managingApp: 'did:web:example.com#forum',
-        allowedApps: ['app:one', 'app:two'],
         publishPolicy: false,
       })
     })

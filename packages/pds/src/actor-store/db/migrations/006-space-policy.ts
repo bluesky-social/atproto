@@ -83,20 +83,22 @@ export async function down(db: Kysely<unknown>): Promise<void> {
 
 // A managing app on either side becomes a managedspace, which asks the app about
 // both reads and writes. Anything else becomes a memberspace.
+//
+// Only memberspace restricts apps, so a managedspace drops any app allow-list. Its
+// managing app is passed the client_id on reads and can restrict apps itself.
 function configToPolicy(config: SimplespaceConfig): Policy {
-  const allowedApps =
-    config.appAccessType === 'allowList'
-      ? JSON.parse(config.appAllowed)
-      : undefined
   const managingApp = config.readManagingApp ?? config.writeManagingApp
   if (managingApp) {
     return {
       $type: 'com.atproto.managedspace.policy',
       managingApp,
-      allowedApps,
       publishPolicy: false,
     }
   }
+  const allowedApps =
+    config.appAccessType === 'allowList'
+      ? JSON.parse(config.appAllowed)
+      : undefined
   return {
     $type: 'com.atproto.memberspace.policy',
     publicRead: config.readPolicy === 'public',

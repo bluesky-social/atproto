@@ -18,7 +18,7 @@
         },
         "allowedApps": {
           "type": "array",
-          "description": "If set, only these apps may access the space, evaluated against the attested client_id. When omitted, any app may access the space and no client attestation is required.",
+          "description": "If set, the authority mints a credential only for these apps, evaluated against the attested client_id. When omitted, any app may read the space and no client attestation is required. Does not apply to writes.",
           "items": {
             "type": "string",
             "description": "An OAuth client ID."
