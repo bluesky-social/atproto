@@ -40,3 +40,7 @@ export class StarParseError extends Error {
     this.name = 'StarParseError'
   }
 }
+
+export class SpaceMetaArchiveError extends Error {
+  name = 'SpaceMetaArchiveError'
+}

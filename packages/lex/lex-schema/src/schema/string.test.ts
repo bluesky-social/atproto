@@ -420,9 +420,9 @@ describe('StringSchema', () => {
   })
 
   /**
-   * Every `com.atproto.space` and `com.atproto.simplespace` method types its
-   * `space` parameter as `space-ref`, so this is the schema-level gate in front of
-   * every space endpoint — a handler never sees a malformed space.
+   * Every space method types its `space` parameter as `space-ref`, so this is
+   * the schema-level gate in front of every space endpoint — a handler never
+   * sees a malformed space.
    *
    * It is deliberately narrower than `at-uri`: a space ref names a space and
    * nothing else, so the record-tail form that `at-uri` accepts (asserted above)

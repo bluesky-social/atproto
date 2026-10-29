@@ -32,7 +32,7 @@ export default function (server: Server, ctx: AppContext) {
 
       // Registrations are the authority's to hold, so this host must govern the space.
       await ctx.actorStore.read(spaceDid, (store) =>
-        store.space.getActiveSpaceConfig(space),
+        store.space.getActiveSpacePolicy(space),
       )
 
       const expiresAt = toDatetimeString(Date.now() + REGISTRATION_TTL_MS)

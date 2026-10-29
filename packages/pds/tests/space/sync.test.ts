@@ -424,6 +424,52 @@ describe('space sync', () => {
       expect(texts).toEqual(['star 0', 'star 1'])
     })
 
+    it('recovers from a cleared repo', async () => {
+      const space = await sc.createSpace(alice, { members: [bob, carol] })
+      await sc.write(bob, space, { rkey: 'one', text: 'one' })
+      await sc.write(bob, space, { rkey: 'two', text: 'two' })
+
+      const cred = await sc.credentialFor(carol, space)
+      const asSyncer = cred.clientFor(bob.pds)
+      const synced = await asSyncer.call(com.atproto.space.listRepoOps, {
+        space,
+        repo: bob.did,
+      })
+      const local = new RepoCommit()
+      for (const op of synced.ops) {
+        local.applyOp({
+          collection: op.collection,
+          rkey: op.rkey,
+          cid: op.cid ? parseCid(op.cid) : null,
+          prev: op.prev ? parseCid(op.prev) : null,
+        })
+      }
+      expect(local.matches(synced.commit!)).toBe(true)
+
+      await sc.clear(bob, space)
+
+      const incremental = await asSyncer.call(com.atproto.space.listRepoOps, {
+        space,
+        repo: bob.did,
+        since: synced.commit!.rev,
+      })
+      expect(incremental.ops).toEqual([])
+      expect(
+        cred.verifyCommit(incremental.commit!, { space, repo: bob.did }),
+      ).toBe(true)
+      expect(local.matches(incremental.commit!)).toBe(false)
+
+      const res = await cred.fetch(
+        `${bob.pds.url}/xrpc/com.atproto.space.getRepo?space=${encodeURIComponent(space)}&repo=${bob.did}`,
+      )
+      const recovered = await verifyRepoStarFull(
+        [new Uint8Array(await res.arrayBuffer())],
+        { space, repo: bob.did, ...cred.lastMacParams() },
+      )
+      expect(recovered.records).toEqual([])
+      expect(recovered.commit.rev).toBe(incremental.commit!.rev)
+    })
+
     it('refuses a repo without a credential for that space', async () => {
       const space = await sc.createSpace(alice, {
         skey: 'star-auth',
@@ -592,7 +638,9 @@ describe('space sync', () => {
   describe('writer set', () => {
     it('records a co-located writer without resolving its public PDS endpoint', async () => {
       const space = await sc.createSpace(alice, {
-        writePolicy: com.atproto.simplespace.defs.publicPolicy.build({}),
+        policy: com.atproto.memberspace.policy.$build({
+          publicWrite: true,
+        }),
       })
       using resolveDid = jest
         .spyOn(network.pds.ctx.idResolver.did, 'resolve')
@@ -630,9 +678,11 @@ describe('space sync', () => {
       expect(entry.data).toEqual(new LtHash(state!.setHash!).digest())
     })
 
-    it('records a writer admitted by public write policy, who was never a member', async () => {
+    it('records a writer admitted by public write access, who was never a member', async () => {
       const space = await sc.createSpace(alice, {
-        writePolicy: com.atproto.simplespace.defs.publicPolicy.build({}),
+        policy: com.atproto.memberspace.policy.$build({
+          publicWrite: true,
+        }),
       })
       await sc.write(bob, space, { text: 'from a non-member' })
 
@@ -643,14 +693,14 @@ describe('space sync', () => {
       await sc.expectWriterSet(space, alice, [bob])
     })
 
-    it('records a writer into an allowList space, whose PDS presents no attestation', async () => {
+    it('records a writer into an app-gated space, whose PDS presents no attestation', async () => {
       // notifyWrite comes from the writer's PDS, not an app, so there is no
       // client attestation to present. Applying the app perimeter here would
       // reject every write into an app-gated space.
       const space = await sc.createSpace(alice, {
         members: [bob],
-        appAccess: com.atproto.simplespace.defs.allowList.build({
-          allowed: ['https://app.example.com/client-metadata.json'],
+        policy: com.atproto.memberspace.policy.$build({
+          allowedApps: ['https://app.example.com/client-metadata.json'],
         }),
       })
       await sc.write(bob, space, { text: 'app-gated space' })
@@ -660,6 +710,54 @@ describe('space sync', () => {
         (dids) => dids.includes(bob.did),
       )
       expect(await sc.writerDids(space)).toContain(bob.did)
+    })
+
+    it('drops a writer on removeWriter, and tracks it again once it writes', async () => {
+      const space = await sc.createSpace(alice, {
+        policy: com.atproto.memberspace.policy.$build({ publicWrite: true }),
+      })
+      await sc.write(bob, space, { text: 'before removal' })
+      await sc.awaitNotify(
+        () => sc.writerDids(space),
+        (dids) => dids.includes(bob.did),
+      )
+
+      await sc.removeWriter(alice, space, bob)
+      await sc.expectWriterSet(space, alice, [])
+
+      // A public write policy still authorizes bob, so his next write puts him
+      // back in the writer set.
+      await sc.write(bob, space, { text: 'after removal' })
+      await sc.awaitNotify(
+        () => sc.writerDids(space),
+        (dids) => dids.includes(bob.did),
+      )
+      await sc.expectWriterSet(space, alice, [bob])
+    })
+
+    it('refuses removeWriter from anyone but the authority', async () => {
+      const space = await sc.createSpace(alice, { members: [dan] })
+      await sc.write(dan, space, { text: 'still tracked' })
+
+      await expect(sc.removeWriter(dan, space, dan)).rejects.toMatchObject({
+        error: 'NotSpaceOwner',
+      })
+      expect(await sc.writerDids(space)).toEqual([dan.did])
+    })
+
+    it('keeps a cleared repo in the writer set, at the empty digest', async () => {
+      const space = await sc.createSpace(alice, { members: [dan] })
+      await sc.write(dan, space, { text: 'to be cleared' })
+
+      await sc.clear(dan, space)
+
+      const writers = await alice.pds.ctx.actorStore.read(alice.did, (store) =>
+        store.space.listWriters(space),
+      )
+      const state = await sc.repoState(dan, space)
+      expect(writers).toHaveLength(1)
+      expect(writers[0]).toMatchObject({ did: dan.did, repoRev: state!.rev })
+      expect(writers[0].data).toEqual(new LtHash().digest())
     })
   })
 

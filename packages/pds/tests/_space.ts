@@ -70,10 +70,9 @@ export type SpaceOptions = {
   skey?: string
   spaceType?: NsidString
   members?: Actor[]
-  readPolicy?: com.atproto.simplespace.createSpace.$InputBody['readPolicy']
-  writePolicy?: com.atproto.simplespace.createSpace.$InputBody['writePolicy']
-  appAccess?: com.atproto.simplespace.createSpace.$InputBody['appAccess']
-  /** Skip `simplespace.createSpace`, leaving the space ungoverned. */
+  /** Defaults to a memberspace policy with its default configuration. */
+  policy?: com.atproto.space.createSpace.$InputBody['policy']
+  /** Skip `space.createSpace`, leaving the space ungoverned. */
   ungoverned?: boolean
 }
 
@@ -86,8 +85,6 @@ export type WriteOptions = {
   /** Authenticate as something other than the actor's own session. */
   headers?: { authorization: string }
 }
-
-const { defs } = com.atproto.simplespace
 
 /**
  * Test helper for permissioned spaces, in the spirit of `SeedClient`.
@@ -143,13 +140,11 @@ export class SpaceClient {
 
     if (!opts.ungoverned) {
       const res = await owner.client.call(
-        com.atproto.simplespace.createSpace,
+        com.atproto.space.createSpace,
         {
           spaceType,
           skey,
-          readPolicy: opts.readPolicy ?? defs.memberListPolicy.build({}),
-          writePolicy: opts.writePolicy ?? defs.memberListPolicy.build({}),
-          appAccess: opts.appAccess ?? defs.open.build({}),
+          policy: opts.policy ?? com.atproto.memberspace.policy.$build({}),
         },
         { headers: owner.headers },
       )
@@ -173,7 +168,7 @@ export class SpaceClient {
     access: { read: boolean; write: boolean } = { read: true, write: true },
   ) {
     return owner.client.call(
-      com.atproto.simplespace.putMember,
+      com.atproto.memberspace.putMember,
       { space, did: member.did, ...access },
       { headers: owner.headers },
     )
@@ -181,8 +176,16 @@ export class SpaceClient {
 
   async removeMember(owner: Actor, space: SpaceRefString, member: Actor) {
     return owner.client.call(
-      com.atproto.simplespace.removeMember,
+      com.atproto.memberspace.removeMember,
       { space, did: member.did },
+      { headers: owner.headers },
+    )
+  }
+
+  async removeWriter(owner: Actor, space: SpaceRefString, writer: Actor) {
+    return owner.client.call(
+      com.atproto.space.removeWriter,
+      { space, did: writer.did },
       { headers: owner.headers },
     )
   }
@@ -237,6 +240,18 @@ export class SpaceClient {
         collection: opts.collection ?? TEST_COLLECTION,
         rkey: opts.rkey as RecordKeyString,
       },
+      { headers: opts.headers ?? actor.headers },
+    )
+  }
+
+  async clear(
+    actor: Actor,
+    space: SpaceRefString,
+    opts: { headers?: { authorization: string } } = {},
+  ) {
+    return actor.client.call(
+      com.atproto.space.clearRecords,
+      { space, repo: actor.did },
       { headers: opts.headers ?? actor.headers },
     )
   }

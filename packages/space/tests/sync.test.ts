@@ -15,6 +15,7 @@ import {
   StarParseError,
   computeCommitMac,
   computeRecordMac,
+  readRepoStar,
   readStar,
   serializeRecord,
   serializeRepo,
@@ -152,6 +153,39 @@ describe('space sync', () => {
     ).rejects.toThrow(/commit failed verification/)
   })
 
+  // A repo host importing an account's own repo has no MAC to check.
+  describe('reading without a MAC', () => {
+    it('reads the commit and records', async () => {
+      const star = await starFor(records)
+      await using repo = await readRepoStar([star])
+      const recovered = []
+      for await (const record of repo.records) recovered.push(record)
+
+      expect(repo.commit).toMatchObject(commitFor(records))
+      expect(RepoCommit.fromRecords(recovered).matches(repo.commit)).toBe(true)
+    })
+
+    it('still checks the records against the commit data', async () => {
+      const star = await rawStar(
+        commitFor(records),
+        pairsFor(records.slice(0, -1)),
+      )
+      const { records: stream } = await readRepoStar([star])
+      await expect(drain(stream)).rejects.toThrow(
+        /records do not match the commit data/,
+      )
+    })
+
+    it('rejects an unknown commit version', async () => {
+      const star = await rawStar(commitFor(records), pairsFor(records), {
+        ver: 2,
+      })
+      await expect(readRepoStar([star])).rejects.toThrow(
+        /unsupported commit version/,
+      )
+    })
+  })
+
   describe('rejects tampering', () => {
     it('rejects an archive for another author', async () => {
       const star = await starFor(records)
@@ -194,7 +228,7 @@ describe('space sync', () => {
         ver: 2,
       })
       await expect(verifyRepoStarFull([star], params())).rejects.toThrow(
-        /commit failed verification/,
+        /unsupported commit version/,
       )
     })
 

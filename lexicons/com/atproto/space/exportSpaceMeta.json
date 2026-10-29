@@ -1,0 +1,32 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.space.exportSpaceMeta",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "Download a space's host-side state as a space meta archive, for account migration: a STAR file with the atproto-space-meta profile. The archive's metadata is the space. Its body is the space's policy, then any state the policy keeps (such as a memberspace member list), then the writer set. Served by the space host. Requires OAuth as the space owner with a covering read_self grant.",
+      "parameters": {
+        "type": "params",
+        "required": ["space"],
+        "properties": {
+          "space": {
+            "type": "string",
+            "format": "space-ref",
+            "description": "Reference to the space."
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/octet-stream"
+      },
+      "errors": [
+        {
+          "name": "SpaceNotFound"
+        },
+        {
+          "name": "NotSpaceOwner"
+        }
+      ]
+    }
+  }
+}

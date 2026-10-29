@@ -1,20 +1,27 @@
 import { TID } from '@atproto/common'
 import { encode } from '@atproto/lex-cbor'
-import { type Cid, parseCid } from '@atproto/lex-data'
+import { type Cid, cidForCbor, enumBlobRefs, parseCid } from '@atproto/lex-data'
 import { WriteOpAction } from '@atproto/repo'
-import { RepoCommit } from '@atproto/space'
+import {
+  RepoCommit,
+  type SpaceMetaWriter,
+  type VerifiedRecord,
+} from '@atproto/space'
 import {
   type AtUriString,
+  type DidString,
+  type NsidString,
   SpaceRef,
   type SpaceRefString,
 } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
+import { spaceRecordUri } from '../../repo/prepare.js'
 import { BadRecordSwapError, type PreparedWrite } from '../../repo/types.js'
+import type { Policy } from '../../space-policy/policy.js'
 import type { BlobTransactor } from '../blob/transactor.js'
 import type {
   ActorDb,
-  SimplespaceConfig,
-  SimplespaceMember,
+  MemberspaceMember,
   SpaceRecordOplog,
 } from '../db/index.js'
 import { SpaceReader } from './reader.js'
@@ -48,23 +55,20 @@ export class SpaceTransactor extends SpaceReader {
       .execute()
   }
 
-  async createSpace(uri: string, config: SpaceConfig): Promise<void> {
+  async createSpace(uri: string, policy: Policy): Promise<void> {
     await this.ensureSpace(uri)
+    const policyJson = JSON.stringify(policy)
     await this.db.db
-      .insertInto('simplespace_config')
-      .values({ uri, ...config })
-      .onConflict((oc) => oc.column('uri').doUpdateSet(config))
+      .insertInto('space_policy')
+      .values({ uri, policyJson })
+      .onConflict((oc) => oc.column('uri').doUpdateSet({ policyJson }))
       .execute()
   }
 
-  async updateSpaceConfig(
-    uri: string,
-    config: Partial<SpaceConfig>,
-  ): Promise<void> {
-    if (Object.keys(config).length === 0) return
+  async updateSpacePolicy(uri: string, policy: Policy): Promise<void> {
     await this.db.db
-      .updateTable('simplespace_config')
-      .set(config)
+      .updateTable('space_policy')
+      .set({ policyJson: JSON.stringify(policy) })
       .where('uri', '=', uri)
       .execute()
   }
@@ -79,12 +83,9 @@ export class SpaceTransactor extends SpaceReader {
       .where('uri', '=', uri)
       .execute()
     await this.blob.deleteSpaceBlobs(uri)
-    await this.db.db
-      .deleteFrom('simplespace_config')
-      .where('uri', '=', uri)
-      .execute()
+    await this.db.db.deleteFrom('space_policy').where('uri', '=', uri).execute()
     for (const table of [
-      'simplespace_member',
+      'memberspace_member',
       'space_writer',
       'space_credential_recipient',
       'space_record',
@@ -100,12 +101,12 @@ export class SpaceTransactor extends SpaceReader {
     did: string,
     access: { read: boolean; write: boolean },
   ): Promise<void> {
-    const values: Pick<SimplespaceMember, 'read' | 'write'> = {
+    const values: Pick<MemberspaceMember, 'read' | 'write'> = {
       read: access.read ? 1 : 0,
       write: access.write ? 1 : 0,
     }
     await this.db.db
-      .insertInto('simplespace_member')
+      .insertInto('memberspace_member')
       .values({ space, did, ...values })
       .onConflict((oc) => oc.columns(['space', 'did']).doUpdateSet(values))
       .execute()
@@ -113,9 +114,16 @@ export class SpaceTransactor extends SpaceReader {
 
   async removeMember(space: string, did: string): Promise<void> {
     await this.db.db
-      .deleteFrom('simplespace_member')
+      .deleteFrom('memberspace_member')
       .where('space', '=', space)
       .where('did', '=', did)
+      .execute()
+  }
+
+  async removeAllMembers(space: string): Promise<void> {
+    await this.db.db
+      .deleteFrom('memberspace_member')
+      .where('space', '=', space)
       .execute()
   }
 
@@ -158,6 +166,31 @@ export class SpaceTransactor extends SpaceReader {
     return { spaceRev, prevSpaceRev }
   }
 
+  /** Replace a space's writer set with the one exported by its previous host. */
+  async importWriters(
+    space: string,
+    writers: SpaceMetaWriter[],
+  ): Promise<void> {
+    await this.db.db
+      .deleteFrom('space_writer')
+      .where('space', '=', space)
+      .execute()
+    for (const { did, rev: repoRev, data, spaceRev } of writers) {
+      await this.db.db
+        .insertInto('space_writer')
+        .values({ space, did, repoRev, data, spaceRev })
+        .execute()
+    }
+  }
+
+  async removeWriter(space: string, did: string): Promise<void> {
+    await this.db.db
+      .deleteFrom('space_writer')
+      .where('space', '=', space)
+      .where('did', '=', did)
+      .execute()
+  }
+
   /**
    * Apply a batch of writes as one commit, all sharing a single `rev`. Must run in a
    * transaction. Returns null if there was nothing to write.
@@ -169,16 +202,7 @@ export class SpaceTransactor extends SpaceReader {
     this.db.assertTransaction()
     if (writes.length === 0) return null
 
-    // A write to another authority's space creates the repo without checking that
-    // the space exists. The authority's own spaces must already exist: a write must
-    // neither conjure an ungoverned space nor revive a deleted one.
-    if (SpaceRef.parse(space).spaceDid === this.did) {
-      const existing = await this.getSpace(space)
-      if (!existing || existing.deletedAt) {
-        throw new InvalidRequestError('Space not found', 'SpaceNotFound')
-      }
-    }
-    await this.ensureSpace(space)
+    await this.ensureRepo(space)
 
     const state = await this.getRepoState(space)
     const repo = RepoCommit.fromState(state?.setHash)
@@ -262,6 +286,136 @@ export class SpaceTransactor extends SpaceReader {
     return { rev, setHash }
   }
 
+  /**
+   * Import the account's repo from its previous host, replacing whatever this host
+   * held for it. Must run in a transaction. Like a migrated public repo, it takes a
+   * new rev here and none of its history. Its records are taken as they are,
+   * including those the PDS publishes from a space's configuration. Its blobs are
+   * uploaded afterwards, so they're associated without being checked.
+   */
+  async importRepo(
+    space: SpaceRefString,
+    records: VerifiedRecord[],
+  ): Promise<void> {
+    this.db.assertTransaction()
+    await this.ensureRepo(space)
+
+    await this.db.db
+      .deleteFrom('space_record_blob')
+      .where('recordUri', 'in', (eb) =>
+        eb.selectFrom('space_record').select('uri').where('space', '=', space),
+      )
+      .execute()
+    await this.db.db
+      .deleteFrom('space_record')
+      .where('space', '=', space)
+      .execute()
+    await this.db.db
+      .deleteFrom('space_record_oplog')
+      .where('space', '=', space)
+      .execute()
+
+    const state = await this.getRepoState(space)
+    const rev = TID.nextStr(state?.rev ?? undefined)
+    const indexedAt = new Date().toISOString()
+    const repo = new RepoCommit()
+
+    for (const { collection, rkey, cid, record } of records) {
+      const uri = spaceRecordUri(space, this.did as DidString, collection, rkey)
+      // Stored re-encoded, as any other write is. A record that wasn't canonical
+      // DRISL in the archive would no longer match its cid, nor the commit data.
+      const value = encode(record)
+      if (!cid.equals(await cidForCbor(value))) {
+        throw new InvalidRequestError(
+          `Invalid STAR: record is not canonical DRISL at ${collection}/${rkey}`,
+        )
+      }
+      await this.db.db
+        .insertInto('space_record')
+        .values({
+          uri: uri.toString(),
+          space,
+          collection,
+          rkey,
+          cid: cid.toString(),
+          value,
+          repoRev: rev,
+          indexedAt,
+        })
+        .execute()
+      for (const blob of enumBlobRefs(record, { strict: false })) {
+        await this.blob.associateSpaceBlob(blob, uri)
+      }
+      repo.add(collection, rkey, cid)
+    }
+
+    await this.db.db
+      .updateTable('space_repo')
+      .set({ setHash: repo.setHash.state(), rev })
+      .where('space', '=', space)
+      .execute()
+  }
+
+  /**
+   * Delete every record outside of the `keep` collections and clear the oplog,
+   * leaving the repo at a new `rev`. Must run in a transaction. Returns null if
+   * there was nothing to delete.
+   */
+  async clearRecords(
+    space: SpaceRefString,
+    keep: readonly NsidString[] = [],
+  ): Promise<{ rev: string; setHash: Uint8Array } | null> {
+    this.db.assertTransaction()
+    const state = await this.getRepoState(space)
+    if (!state) return null
+
+    await this.blob.deleteSpaceBlobs(space, keep)
+    const deleted = await this.db.db
+      .deleteFrom('space_record')
+      .where('space', '=', space)
+      .$if(keep.length > 0, (qb) => qb.where('collection', 'not in', keep))
+      .executeTakeFirst()
+    if (deleted.numDeletedRows === 0n) return null
+
+    await this.db.db
+      .deleteFrom('space_record_oplog')
+      .where('space', '=', space)
+      .execute()
+
+    const kept = await this.db.db
+      .selectFrom('space_record')
+      .select(['collection', 'rkey', 'cid'])
+      .where('space', '=', space)
+      .execute()
+    const repo = new RepoCommit()
+    for (const { collection, rkey, cid } of kept) {
+      repo.add(collection, rkey, parseCid(cid))
+    }
+
+    const rev = TID.nextStr(state.rev ?? undefined)
+    const setHash = repo.setHash.state()
+    await this.db.db
+      .updateTable('space_repo')
+      .set({ setHash, rev })
+      .where('space', '=', space)
+      .execute()
+
+    return { rev, setHash }
+  }
+
+  // A write to another authority's space creates the repo without checking that
+  // the space exists. The authority's own spaces must already exist: a write must
+  // neither conjure an ungoverned space nor revive a deleted one.
+  private async ensureRepo(space: SpaceRefString): Promise<void> {
+    if (SpaceRef.parse(space).spaceDid === this.did) {
+      const existing = await this.getSpace(space)
+      if (!existing || existing.deletedAt) {
+        throw new InvalidRequestError('Space not found', 'SpaceNotFound')
+      }
+    }
+    await this.ensureSpace(space)
+  }
+
   private async getRecordCid(uri: AtUriString): Promise<Cid | null> {
     const row = await this.db.db
       .selectFrom('space_record')
@@ -301,8 +455,6 @@ export class SpaceTransactor extends SpaceReader {
       .execute()
   }
 }
-
-export type SpaceConfig = Omit<SimplespaceConfig, 'uri'>
 
 export class SpaceRecordNotFoundError extends InvalidRequestError {
   constructor(collection: string, rkey: string) {

@@ -1,0 +1,36 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.space.clearRecords",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Delete every record in the authenticated account's space repo. The repo advances to a new revision with the empty repo's digest, and its oplog is cleared. In the space authority's own repo, the records the host publishes from the space's configuration (com.atproto.space.policy and com.atproto.memberspace.member) are kept, and the digest is that of the records that remain. Succeeds whether or not the repo held any records to delete. Requires auth, implemented by PDS.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["space", "repo"],
+          "properties": {
+            "space": {
+              "type": "string",
+              "format": "space-ref",
+              "description": "Reference to the space."
+            },
+            "repo": {
+              "type": "string",
+              "format": "did",
+              "description": "The DID of the repo to clear (the authenticated member)."
+            }
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "properties": {}
+        }
+      }
+    }
+  }
+}

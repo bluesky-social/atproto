@@ -96,6 +96,16 @@ export class BlobReader {
     return res != null
   }
 
+  async hasSpaceRecordsForBlob(cid: Cid): Promise<boolean> {
+    const res = await this.db.db
+      .selectFrom('space_record_blob')
+      .where('blobCid', '=', cid.toString())
+      .select('blobCid')
+      .limit(1)
+      .executeTakeFirst()
+    return res != null
+  }
+
   async getBlobsForRecord(recordUri: string): Promise<string[]> {
     const res = await this.db.db
       .selectFrom('blob')

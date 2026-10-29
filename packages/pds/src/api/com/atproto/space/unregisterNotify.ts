@@ -14,7 +14,7 @@ export default function (server: Server, ctx: AppContext) {
       const spaceDid = await assertSpaceHost(ctx, space)
 
       await ctx.actorStore.read(spaceDid, (store) =>
-        store.space.getActiveSpaceConfig(space),
+        store.space.getActiveSpacePolicy(space),
       )
 
       // Not resolved here: a subscriber whose DID document has since changed must

@@ -364,13 +364,6 @@ describe('space auth', () => {
             { headers },
           ),
         ).rejects.toMatchObject({ error: 'BadSpaceAudience' })
-        await expect(
-          alice.client.call(
-            com.atproto.simplespace.getSpace,
-            { space },
-            { headers },
-          ),
-        ).rejects.toMatchObject({ error: 'BadSpaceAudience' })
       })
 
       it('reuses a signature for the same audience across requests', async () => {
@@ -495,7 +488,7 @@ describe('space auth', () => {
       await sc.removeMember(alice, space, carol)
 
       await expect(sc.mintCredential(space, token)).rejects.toMatchObject({
-        error: 'UserNotAuthorized',
+        error: 'SpaceNotFound',
       })
     })
   })
@@ -967,6 +960,37 @@ describe('space auth', () => {
           await expect(
             sc.del(alice, space, { collection, rkey: 'seeded', headers }),
           ).rejects.toThrow(/space:/)
+        },
+      )
+    })
+
+    it('requires delete on every collection a clear removes', async () => {
+      const space = await sc.createSpace(alice)
+      const [first, second] = SPACE_TYPE_COLLECTIONS
+      await sc.write(alice, space, { collection: first, rkey: 'first' })
+      await sc.write(alice, space, { collection: second, rkey: 'second' })
+
+      await asOAuth(
+        alice,
+        grant(`collection=${first}&action=delete`),
+        async (headers) => {
+          await expect(sc.clear(alice, space, { headers })).rejects.toThrow(
+            /space:/,
+          )
+        },
+      )
+      const kept = await alice.client.call(
+        com.atproto.space.listRecords,
+        { space, repo: alice.did },
+        { headers: alice.headers },
+      )
+      expect(kept.records).toHaveLength(2)
+
+      await asOAuth(
+        alice,
+        grant(`collection=${first}&collection=${second}&action=delete`),
+        async (headers) => {
+          await expect(sc.clear(alice, space, { headers })).resolves.toEqual({})
         },
       )
     })

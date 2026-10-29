@@ -1,0 +1,45 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.space.getSpace",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "Describe a space, including the policy that governs it. Served by the space host for every space it hosts, regardless of policy. Requires OAuth as the space owner with a covering read_self grant. A policy may optionally be published in the space, as a com.atproto.space.policy record, so that syncers can view it.",
+      "parameters": {
+        "type": "params",
+        "required": ["space"],
+        "properties": {
+          "space": {
+            "type": "string",
+            "format": "space-ref",
+            "description": "Reference to the space."
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["uri", "policy"],
+          "properties": {
+            "uri": {
+              "type": "string",
+              "format": "space-ref",
+              "description": "URI of the space."
+            },
+            "policy": {
+              "type": "union",
+              "description": "The policy governing the space, including its configuration.",
+              "refs": [
+                "com.atproto.personalspace.policy",
+                "com.atproto.memberspace.policy",
+                "com.atproto.managedspace.policy"
+              ]
+            }
+          }
+        }
+      },
+      "errors": [{ "name": "SpaceNotFound" }]
+    }
+  }
+}

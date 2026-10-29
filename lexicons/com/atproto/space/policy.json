@@ -1,0 +1,26 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.space.policy",
+  "defs": {
+    "main": {
+      "type": "record",
+      "description": "The policy governing a space, optionally published in the space so that syncers can view a description of the space's policy. Written to the space authority's own repo in the space, and kept in sync with the policy. Only authoritative in the authority's repo.",
+      "key": "literal:self",
+      "record": {
+        "type": "object",
+        "required": ["policy"],
+        "properties": {
+          "policy": {
+            "type": "union",
+            "description": "The current policy governing the space, including its configuration.",
+            "refs": [
+              "com.atproto.personalspace.policy",
+              "com.atproto.memberspace.policy",
+              "com.atproto.managedspace.policy"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

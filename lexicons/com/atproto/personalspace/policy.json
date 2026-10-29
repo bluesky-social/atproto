@@ -1,0 +1,11 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.personalspace.policy",
+  "defs": {
+    "main": {
+      "type": "object",
+      "description": "Space policy for data that only its owner should see, such as bookmarks, mutes, or drafts. Only the space authority's own account is authorized to read, and the authority tracks no other writers. Has no configuration fields.",
+      "properties": {}
+    }
+  }
+}

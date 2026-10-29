@@ -7,6 +7,7 @@ import {
   type SpaceRefString,
   isSpaceRefString,
   isValidDid,
+  isValidTid,
 } from '@atproto/syntax'
 
 export type SpaceRecord = LexMap
@@ -58,6 +59,26 @@ const repoStarMetaSchema = commitSchema.extend({
 })
 export type RepoStarMeta = z.infer<typeof repoStarMetaSchema>
 
+export const SPACE_META_STAR_TYPE = 'atproto-space-meta'
+export const SPACE_META_VERSION = 1
+
+const tidSchema = z.string().refine(isValidTid, 'must be a TID')
+
+// The metadata of a space meta archive.
+const spaceMetaStarMetaSchema = z.object({
+  $type: z.literal(SPACE_META_STAR_TYPE),
+  ver: z.literal(SPACE_META_VERSION),
+  space: z.custom<SpaceRefString>(isSpaceRefString),
+})
+export type SpaceMetaStarMeta = z.infer<typeof spaceMetaStarMetaSchema>
+
+// A repo in the writer set, as listRepos reports it. Keyed by the repo's DID.
+const spaceMetaWriterSchema = z.object({
+  rev: tidSchema,
+  data: bytesSchema,
+  spaceRev: tidSchema,
+})
+
 export type Def<T> = {
   name: string
   schema: { parse: (data: unknown) => T }
@@ -67,5 +88,13 @@ export const defs = {
   repoStarMeta: {
     name: 'repo metadata',
     schema: repoStarMetaSchema,
+  },
+  spaceMetaStarMeta: {
+    name: 'space meta archive metadata',
+    schema: spaceMetaStarMetaSchema,
+  },
+  spaceMetaWriter: {
+    name: 'writer',
+    schema: spaceMetaWriterSchema,
   },
 } satisfies Record<string, Def<unknown>>

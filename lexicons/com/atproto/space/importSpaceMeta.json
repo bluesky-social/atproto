@@ -1,0 +1,22 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.space.importSpaceMeta",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Import a space from a space meta archive, as served by exportSpaceMeta, during account migration, replacing whatever this host holds for that space. The space must be anchored on the authenticated account's DID. Must come before importing the account's own repo in the space with importRepo. Notification registrations, credential revocations, and deleted space tombstones are not carried over. Requires OAuth with manage=create and manage=update grants for the space, implemented by PDS.",
+      "input": {
+        "encoding": "application/octet-stream"
+      },
+      "errors": [
+        {
+          "name": "NotSpaceOwner"
+        },
+        {
+          "name": "UnsupportedPolicy",
+          "description": "The archive's policy, or a value within it, is not one the host implements. A host will not store a policy it cannot enforce."
+        }
+      ]
+    }
+  }
+}
