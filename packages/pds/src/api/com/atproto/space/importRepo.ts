@@ -13,8 +13,8 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.authVerifier.authorization({
       checkTakedown: true,
       scopes: ACCESS_FULL,
-      authorize: (permissions) => {
-        permissions.assertAccount({ attr: 'repo', action: 'manage' })
+      authorize: () => {
+        // Performed in the handler as it requires the archive's contents
       },
     }),
     handler: async ({ input, auth }) => {
@@ -33,6 +33,14 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError(
           'Repo does not match the authenticated account',
         )
+      }
+
+      const collections = new Set(records.map((record) => record.collection))
+      for (const collection of collections) {
+        auth.credentials.permissions?.assertSpaceRef(commit.space, {
+          action: 'create',
+          collection,
+        })
       }
 
       await ctx.actorStore.transact(did, (actorTxn) =>

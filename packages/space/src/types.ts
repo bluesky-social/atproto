@@ -59,21 +59,21 @@ const repoStarMetaSchema = commitSchema.extend({
 })
 export type RepoStarMeta = z.infer<typeof repoStarMetaSchema>
 
-export const SPACE_HOST_STAR_TYPE = 'atproto-space-host'
-export const SPACE_HOST_VERSION = 1
+export const SPACE_META_STAR_TYPE = 'atproto-space-meta'
+export const SPACE_META_VERSION = 1
 
 const tidSchema = z.string().refine(isValidTid, 'must be a TID')
 
-// The metadata of a space host archive.
-const spaceHostStarMetaSchema = z.object({
-  $type: z.literal(SPACE_HOST_STAR_TYPE),
-  ver: z.literal(SPACE_HOST_VERSION),
+// The metadata of a space meta archive.
+const spaceMetaStarMetaSchema = z.object({
+  $type: z.literal(SPACE_META_STAR_TYPE),
+  ver: z.literal(SPACE_META_VERSION),
   space: z.custom<SpaceRefString>(isSpaceRefString),
 })
-export type SpaceHostStarMeta = z.infer<typeof spaceHostStarMetaSchema>
+export type SpaceMetaStarMeta = z.infer<typeof spaceMetaStarMetaSchema>
 
 // A repo in the writer set, as listRepos reports it. Keyed by the repo's DID.
-const spaceHostWriterSchema = z.object({
+const spaceMetaWriterSchema = z.object({
   rev: tidSchema,
   data: bytesSchema,
   spaceRev: tidSchema,
@@ -89,12 +89,12 @@ export const defs = {
     name: 'repo metadata',
     schema: repoStarMetaSchema,
   },
-  spaceHostStarMeta: {
-    name: 'space host metadata',
-    schema: spaceHostStarMetaSchema,
+  spaceMetaStarMeta: {
+    name: 'space meta archive metadata',
+    schema: spaceMetaStarMetaSchema,
   },
-  spaceHostWriter: {
+  spaceMetaWriter: {
     name: 'writer',
-    schema: spaceHostWriterSchema,
+    schema: spaceMetaWriterSchema,
   },
 } satisfies Record<string, Def<unknown>>

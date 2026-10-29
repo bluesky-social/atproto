@@ -3,14 +3,14 @@ import { encode } from '@atproto/lex-cbor'
 import { type Cid, cidForCbor, enumBlobRefs, parseCid } from '@atproto/lex-data'
 import { WriteOpAction } from '@atproto/repo'
 import {
-  LtHash,
   RepoCommit,
-  type SpaceHostWriter,
+  type SpaceMetaWriter,
   type VerifiedRecord,
 } from '@atproto/space'
 import {
   type AtUriString,
   type DidString,
+  type NsidString,
   SpaceRef,
   type SpaceRefString,
 } from '@atproto/syntax'
@@ -169,7 +169,7 @@ export class SpaceTransactor extends SpaceReader {
   /** Replace a space's writer set with the one exported by its previous host. */
   async importWriters(
     space: string,
-    writers: SpaceHostWriter[],
+    writers: SpaceMetaWriter[],
   ): Promise<void> {
     await this.db.db
       .deleteFrom('space_writer')
@@ -357,28 +357,43 @@ export class SpaceTransactor extends SpaceReader {
   }
 
   /**
-   * Delete every record and clear the oplog, leaving the repo empty at a new `rev`.
-   * Must run in a transaction. Returns null if the repo was already empty.
+   * Delete every record outside of the `keep` collections and clear the oplog,
+   * leaving the repo at a new `rev`. Must run in a transaction. Returns null if
+   * there was nothing to delete.
    */
   async clearRecords(
     space: SpaceRefString,
+    keep: readonly NsidString[] = [],
   ): Promise<{ rev: string; setHash: Uint8Array } | null> {
     this.db.assertTransaction()
     const state = await this.getRepoState(space)
-    if (!state || new LtHash(state.setHash).isEmpty()) return null
+    if (!state) return null
 
-    await this.blob.deleteSpaceBlobs(space)
-    await this.db.db
+    await this.blob.deleteSpaceBlobs(space, keep)
+    const deleted = await this.db.db
       .deleteFrom('space_record')
       .where('space', '=', space)
-      .execute()
+      .$if(keep.length > 0, (qb) => qb.where('collection', 'not in', keep))
+      .executeTakeFirst()
+    if (deleted.numDeletedRows === 0n) return null
+
     await this.db.db
       .deleteFrom('space_record_oplog')
       .where('space', '=', space)
       .execute()
 
+    const kept = await this.db.db
+      .selectFrom('space_record')
+      .select(['collection', 'rkey', 'cid'])
+      .where('space', '=', space)
+      .execute()
+    const repo = new RepoCommit()
+    for (const { collection, rkey, cid } of kept) {
+      repo.add(collection, rkey, parseCid(cid))
+    }
+
     const rev = TID.nextStr(state.rev ?? undefined)
-    const setHash = new LtHash().state()
+    const setHash = repo.setHash.state()
     await this.db.db
       .updateTable('space_repo')
       .set({ setHash, rev })

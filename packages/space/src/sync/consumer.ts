@@ -90,11 +90,15 @@ export const verifyRepoStar = async (
   params: VerifyRepoParams,
 ): Promise<VerifiedRepo> => {
   const repo = await readRepoStar(star)
-  if (!verifyCommit(repo.commit, params)) {
+  try {
+    if (!verifyCommit(repo.commit, params)) {
+      throw new RepoVerificationError('commit failed verification')
+    }
+    return repo
+  } catch (err) {
     await repo[Symbol.asyncDispose]()
-    throw new RepoVerificationError('commit failed verification')
+    throw err
   }
-  return repo
 }
 
 /**

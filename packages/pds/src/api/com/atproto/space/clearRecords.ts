@@ -1,7 +1,8 @@
 import { ForbiddenError, type Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
-import { fireNotifyWrite } from './util.js'
+import { PUBLISHED_COLLECTIONS } from '../../../../space-policy/publish.js'
+import { fireNotifyWrite, toSpaceRef } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.space.clearRecords, {
@@ -31,15 +32,22 @@ export default function (server: Server, ctx: AppContext) {
         throw new ForbiddenError('repo must match authenticated user')
       }
 
+      // In the authority's own repo, the published policy and member records are the
+      // PDS's copy of the space's configuration rather than the account's records,
+      // so they stay, and keeping them takes no grant.
+      const keep =
+        toSpaceRef(space).spaceDid === did ? PUBLISHED_COLLECTIONS : []
+
       const commit = await ctx.actorStore.transact(did, async (actorTxn) => {
         const collections = await actorTxn.space.listCollections(space)
         for (const collection of collections) {
+          if (keep.includes(collection)) continue
           auth.credentials.permissions?.assertSpaceRef(space, {
             action: 'delete',
             collection,
           })
         }
-        return actorTxn.space.clearRecords(space)
+        return actorTxn.space.clearRecords(space, keep)
       })
 
       await fireNotifyWrite(ctx, { space, writerDid: did, commit })

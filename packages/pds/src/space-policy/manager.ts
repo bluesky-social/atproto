@@ -1,6 +1,6 @@
 import type { IdResolver } from '@atproto/identity'
 import { xrpc } from '@atproto/lex'
-import type { SpaceHostArchive } from '@atproto/space'
+import type { SpaceMetaArchive } from '@atproto/space'
 import type { DidString, SpaceRefString } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import type { ActorStore } from '../actor-store/actor-store.js'
@@ -147,7 +147,7 @@ export class SpacePolicyManager {
   }
 
   /** The space's host-side state, for migrating its authority's account. */
-  async exportSpace(space: SpaceRefString): Promise<SpaceHostArchive> {
+  async exportSpaceMeta(space: SpaceRefString): Promise<SpaceMetaArchive> {
     const { spaceDid } = toSpaceRef(space)
     return this.actorStore.read(spaceDid, async (store) => {
       const policy = await store.space.getActiveSpacePolicy(space)
@@ -180,7 +180,7 @@ export class SpacePolicyManager {
    * list are published to readers by records in the authority's repo, which
    * arrives afterwards with importRepo, so nothing is published here.
    */
-  async importSpace(archive: SpaceHostArchive): Promise<void> {
+  async importSpaceMeta(archive: SpaceMetaArchive): Promise<void> {
     const { space } = archive
     const { spaceDid } = toSpaceRef(space)
     const policy = parsePolicy(archive.policy)

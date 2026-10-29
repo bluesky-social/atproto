@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "List the members of a space governed by the memberspace policy, and their read and write access. Must be called on the space authority's PDS. Requires OAuth with a covering read grant; a space credential is not sufficient, so members hosted elsewhere cannot enumerate the list. To make the list visible to readers, set the policy's publishMembers.",
+      "description": "List the members of a space governed by the memberspace policy, and their read and write access. Must be called on the space authority's PDS. Requires OAuth with a covering read_self grant; a space credential is not sufficient, so members hosted elsewhere cannot enumerate the list. To make the list visible to readers, set the policy's publishMembers.",
       "parameters": {
         "type": "params",
         "required": ["space"],

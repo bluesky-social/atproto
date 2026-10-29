@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "Describe a space, including the policy that governs it. Served by the space host for every space it hosts, regardless of policy. Requires OAuth as the space owner with a covering read grant. A policy may optionally be published in the space, as a com.atproto.space.policy record, so that syncers can view it.",
+      "description": "Describe a space, including the policy that governs it. Served by the space host for every space it hosts, regardless of policy. Requires OAuth as the space owner with a covering read_self grant. A policy may optionally be published in the space, as a com.atproto.space.policy record, so that syncers can view it.",
       "parameters": {
         "type": "params",
         "required": ["space"],

@@ -32,6 +32,12 @@ const POLICY_COLLECTION = com.atproto.space.policy.$type
 const POLICY_RKEY = 'self'
 const MEMBER_COLLECTION = com.atproto.memberspace.member.$type
 
+/** The collections the PDS publishes a space's configuration to. */
+export const PUBLISHED_COLLECTIONS: readonly NsidString[] = [
+  POLICY_COLLECTION,
+  MEMBER_COLLECTION,
+]
+
 /** Policy and member records are only written by the PDS, so a direct write is refused in any repo. */
 export function assertNotPolicyRecord(collection: string): void {
   if (collection === POLICY_COLLECTION || collection === MEMBER_COLLECTION) {

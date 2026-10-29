@@ -5,7 +5,7 @@ import { com } from '../lexicons/index.js'
 import { didToRecordKey, recordKeyToDid } from '../util/did-rkey.js'
 import type { Policy } from './policy.js'
 
-// A space host archive carries any state a policy keeps beyond the policy object
+// A space meta archive carries any state a policy keeps beyond the policy object
 // itself. Of the baseline policies, only memberspace keeps any: its member list, one
 // entry per member, keyed as the member's published record would be.
 

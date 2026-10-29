@@ -17,8 +17,8 @@ import {
   RECORD_MAC_TYPE,
   RepoCommit,
   RepoVerificationError,
-  SpaceHostArchiveError,
   SpaceMacError,
+  SpaceMetaArchiveError,
   StarParseError,
   WANT_MAC_HEADER,
   computeCommitMac,
@@ -215,7 +215,7 @@ export function throwInvalidArchive(err: unknown): never {
   if (
     err instanceof StarParseError ||
     err instanceof RepoVerificationError ||
-    err instanceof SpaceHostArchiveError
+    err instanceof SpaceMetaArchiveError
   ) {
     throw new InvalidRequestError(err.message)
   }

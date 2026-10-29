@@ -41,6 +41,6 @@ export class StarParseError extends Error {
   }
 }
 
-export class SpaceHostArchiveError extends Error {
-  name = 'SpaceHostArchiveError'
+export class SpaceMetaArchiveError extends Error {
+  name = 'SpaceMetaArchiveError'
 }

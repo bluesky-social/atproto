@@ -2,14 +2,14 @@ import { describe, expect, it } from 'vitest'
 import { encode } from '@atproto/lex-cbor'
 import { type LexMap, ui8Concat } from '@atproto/lex-data'
 import type { DidString, SpaceRefString } from '@atproto/syntax'
-import { SpaceHostArchiveError } from './error.js'
+import { SpaceMetaArchiveError } from './error.js'
 import {
-  type SpaceHostArchive,
-  readSpaceHostStar,
-  serializeSpaceHost,
-} from './space-host-archive.js'
+  type SpaceMetaArchive,
+  readSpaceMetaStar,
+  serializeSpaceMeta,
+} from './space-meta-archive.js'
 import { type StarPair, readStar, writeStar } from './star.js'
-import { SPACE_HOST_STAR_TYPE } from './types.js'
+import { SPACE_META_STAR_TYPE } from './types.js'
 
 const SPACE =
   'at://did:example:forum/space/com.example.forum/general' as SpaceRefString
@@ -38,11 +38,11 @@ const collect = async (
 
 const utf8 = (str: string) => new TextEncoder().encode(str)
 
-// Hand-builds an archive, for writing what serializeSpaceHost won't.
+// Hand-builds an archive, for writing what serializeSpaceMeta won't.
 const rawArchive = (pairs: [string, LexMap][], meta: LexMap = {}) =>
   collect(
     writeStar(
-      { $type: SPACE_HOST_STAR_TYPE, ver: 1, space: SPACE, ...meta },
+      { $type: SPACE_META_STAR_TYPE, ver: 1, space: SPACE, ...meta },
       pairs.map(([key, value]): StarPair => ({
         key: utf8(key),
         value: encode(value),
@@ -50,8 +50,8 @@ const rawArchive = (pairs: [string, LexMap][], meta: LexMap = {}) =>
     ),
   )
 
-describe('space host archive', () => {
-  const archive: SpaceHostArchive = {
+describe('space meta archive', () => {
+  const archive: SpaceMetaArchive = {
     space: SPACE,
     policy: POLICY,
     policyState: [member('did:example:carol'), member('did:example:alice')],
@@ -59,8 +59,8 @@ describe('space host archive', () => {
   }
 
   it('round-trips, putting each section into key order', async () => {
-    const star = await collect(serializeSpaceHost(archive))
-    expect(await readSpaceHostStar([star])).toEqual({
+    const star = await collect(serializeSpaceMeta(archive))
+    expect(await readSpaceMetaStar([star])).toEqual({
       ...archive,
       policyState: [member('did:example:alice'), member('did:example:carol')],
       writers: [writer('did:example:alice'), writer('did:example:carol')],
@@ -68,10 +68,10 @@ describe('space host archive', () => {
   })
 
   it('writes the space as metadata, then the sections in order', async () => {
-    const star = await collect(serializeSpaceHost(archive))
+    const star = await collect(serializeSpaceMeta(archive))
     await using reader = await readStar([star])
     expect(reader.meta).toEqual({
-      $type: SPACE_HOST_STAR_TYPE,
+      $type: SPACE_META_STAR_TYPE,
       ver: 1,
       space: SPACE,
     })
@@ -90,8 +90,8 @@ describe('space host archive', () => {
 
   it('round-trips a space with no policy state or writers', async () => {
     const empty = { space: SPACE, policy: POLICY, policyState: [], writers: [] }
-    const star = await collect(serializeSpaceHost(empty))
-    expect(await readSpaceHostStar([star])).toEqual(empty)
+    const star = await collect(serializeSpaceMeta(empty))
+    expect(await readSpaceMetaStar([star])).toEqual(empty)
   })
 
   describe('rejects', () => {
@@ -99,7 +99,7 @@ describe('space host archive', () => {
       const star = await rawArchive([
         ['com.example.member/did:example:bob', MEMBER],
       ])
-      await expect(readSpaceHostStar([star])).rejects.toThrow(/missing policy/)
+      await expect(readSpaceMetaStar([star])).rejects.toThrow(/missing policy/)
     })
 
     it('policy state before the policy', async () => {
@@ -107,7 +107,7 @@ describe('space host archive', () => {
         ['com.example.member/did:example:bob', MEMBER],
         ['policy', POLICY],
       ])
-      await expect(readSpaceHostStar([star])).rejects.toThrow(
+      await expect(readSpaceMetaStar([star])).rejects.toThrow(
         /section out of order/,
       )
     })
@@ -118,7 +118,7 @@ describe('space host archive', () => {
         ['writer/did:example:bob', WRITER],
         ['com.example.member/did:example:bob', MEMBER],
       ])
-      await expect(readSpaceHostStar([star])).rejects.toThrow(
+      await expect(readSpaceMetaStar([star])).rejects.toThrow(
         /section out of order/,
       )
     })
@@ -129,7 +129,7 @@ describe('space host archive', () => {
         ['com.example.member/did:example:bob', MEMBER],
         ['com.example.member/did:example:bob', MEMBER],
       ])
-      await expect(readSpaceHostStar([star])).rejects.toThrow(
+      await expect(readSpaceMetaStar([star])).rejects.toThrow(
         /duplicate or out-of-order key/,
       )
     })
@@ -139,7 +139,7 @@ describe('space host archive', () => {
         ['policy', POLICY],
         ['policy', POLICY],
       ])
-      await expect(readSpaceHostStar([star])).rejects.toThrow(
+      await expect(readSpaceMetaStar([star])).rejects.toThrow(
         /duplicate or out-of-order key/,
       )
     })
@@ -150,7 +150,7 @@ describe('space host archive', () => {
         ['writer/did:example:carol', WRITER],
         ['writer/did:example:bob', WRITER],
       ])
-      await expect(readSpaceHostStar([star])).rejects.toThrow(
+      await expect(readSpaceMetaStar([star])).rejects.toThrow(
         /duplicate or out-of-order key/,
       )
     })
@@ -160,7 +160,7 @@ describe('space host archive', () => {
         ['policy', POLICY],
         ['writer/bob', WRITER],
       ])
-      await expect(readSpaceHostStar([star])).rejects.toThrow(
+      await expect(readSpaceMetaStar([star])).rejects.toThrow(
         /invalid DID in writer key/,
       )
     })
@@ -171,33 +171,33 @@ describe('space host archive', () => {
         ['policy', POLICY],
         ['writer/did:example:bob', value],
       ])
-      await expect(readSpaceHostStar([star])).rejects.toThrow(/invalid writer/)
+      await expect(readSpaceMetaStar([star])).rejects.toThrow(/invalid writer/)
     })
 
     it('the wrong metadata $type', async () => {
       const star = await rawArchive([['policy', POLICY]], {
         $type: 'atproto-space-repo',
       })
-      await expect(readSpaceHostStar([star])).rejects.toThrow(
-        /invalid space host metadata/,
+      await expect(readSpaceMetaStar([star])).rejects.toThrow(
+        /invalid space meta archive metadata/,
       )
     })
 
     it('an unknown version', async () => {
       const star = await rawArchive([['policy', POLICY]], { ver: 2 })
-      await expect(readSpaceHostStar([star])).rejects.toThrow(
-        /invalid space host metadata/,
+      await expect(readSpaceMetaStar([star])).rejects.toThrow(
+        /invalid space meta archive metadata/,
       )
     })
 
     it('a value that is not a map', async () => {
       const star = await collect(
-        writeStar({ $type: SPACE_HOST_STAR_TYPE, ver: 1, space: SPACE }, [
+        writeStar({ $type: SPACE_META_STAR_TYPE, ver: 1, space: SPACE }, [
           { key: utf8('policy'), value: encode('memberspace') },
         ]),
       )
-      await expect(readSpaceHostStar([star])).rejects.toThrow(
-        SpaceHostArchiveError,
+      await expect(readSpaceMetaStar([star])).rejects.toThrow(
+        SpaceMetaArchiveError,
       )
     })
   })

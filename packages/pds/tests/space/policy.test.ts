@@ -557,6 +557,34 @@ describe('space policy', () => {
       expect(await publishedMembers(space)).toEqual([])
     })
 
+    it('keeps the published records when the authority clears its repo', async () => {
+      const space = await sc.createSpace(alice, {
+        policy: memberspace.policy.$build({
+          publishPolicy: true,
+          publishMembers: true,
+        }),
+        members: [bob],
+      })
+      await sc.write(alice, space, { rkey: 'own' })
+
+      await sc.clear(alice, space)
+
+      const res = await alice.client.call(
+        com.atproto.space.listRecords,
+        { space, repo: alice.did },
+        { headers: alice.headers },
+      )
+      expect(res.records.map((r) => r.collection).sort()).toEqual(
+        [MEMBER, POLICY].sort(),
+      )
+      await sc.expectSetHashMatchesStore(alice, space)
+
+      // With only the published records left, there is nothing more to clear.
+      const cleared = await sc.repoState(alice, space)
+      await sc.clear(alice, space)
+      expect(await sc.repoState(alice, space)).toEqual(cleared)
+    })
+
     it('notifies the space of what it publishes', async () => {
       // A published record is a write to the authority's repo, so syncers
       // discover it the same way as any other.

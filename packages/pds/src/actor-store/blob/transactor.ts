@@ -23,7 +23,11 @@ import {
   parseCid,
 } from '@atproto/lex-data'
 import { BlobNotFoundError, type BlobStore, WriteOpAction } from '@atproto/repo'
-import { type AtUri, currentDatetimeString } from '@atproto/syntax'
+import {
+  type AtUri,
+  type NsidString,
+  currentDatetimeString,
+} from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import type { BackgroundQueue } from '../../background.js'
 import type { com } from '../../lexicons/index.js'
@@ -406,11 +410,18 @@ export class BlobTransactor extends BlobReader {
   }
 
   // Must run before the space's records are dropped, since it scopes by them.
-  async deleteSpaceBlobs(space: string): Promise<void> {
+  async deleteSpaceBlobs(
+    space: string,
+    keep: readonly NsidString[] = [],
+  ): Promise<void> {
     const dereferenced = await this.db.db
       .deleteFrom('space_record_blob')
       .where('recordUri', 'in', (eb) =>
-        eb.selectFrom('space_record').select('uri').where('space', '=', space),
+        eb
+          .selectFrom('space_record')
+          .select('uri')
+          .where('space', '=', space)
+          .$if(keep.length > 0, (qb) => qb.where('collection', 'not in', keep)),
       )
       .returning('blobCid')
       .execute()

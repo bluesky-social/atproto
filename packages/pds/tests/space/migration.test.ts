@@ -8,10 +8,10 @@ import { encode } from '@atproto/lex-cbor'
 import { cidForCbor, getBlobCidString, ui8Concat } from '@atproto/lex-data'
 import {
   RepoCommit,
-  type SpaceHostArchive,
-  readSpaceHostStar,
+  type SpaceMetaArchive,
+  readSpaceMetaStar,
   serializeRepo,
-  serializeSpaceHost,
+  serializeSpaceMeta,
 } from '@atproto/space'
 import {
   type DidString,
@@ -34,7 +34,7 @@ const { memberspace, personalspace } = com.atproto
 /**
  * Moving an account's space data to a new host, on top of the usual account
  * migration. Each space the account is the authority of moves as a space host
- * archive (exportSpace → importSpace), then each of its space repos moves as a
+ * archive (exportSpaceMeta → importSpaceMeta), then each of its space repos moves as a
  * STAR file (getRepo → importRepo), then the blobs those repos reference.
  */
 describe('space account migration', () => {
@@ -61,16 +61,16 @@ describe('space account migration', () => {
     await network?.close()
   })
 
-  const exportSpace = async (actor: Actor, space: SpaceRefString) => {
-    const res = await actor.client.xrpc(com.atproto.space.exportSpace, {
+  const exportSpaceMeta = async (actor: Actor, space: SpaceRefString) => {
+    const res = await actor.client.xrpc(com.atproto.space.exportSpaceMeta, {
       params: { space },
       headers: actor.headers,
     })
     return res.body
   }
 
-  const importSpace = (actor: Actor, archive: Uint8Array) =>
-    actor.client.xrpc(com.atproto.space.importSpace, {
+  const importSpaceMeta = (actor: Actor, archive: Uint8Array) =>
+    actor.client.xrpc(com.atproto.space.importSpaceMeta, {
       body: archive,
       headers: actor.headers,
     })
@@ -112,7 +112,7 @@ describe('space account migration', () => {
   const migrate = async (spaces: SpaceRefString[]) => {
     for (const space of spaces) {
       if (SpaceRef.parse(space).spaceDid === alice.did) {
-        await importSpace(newAlice, await exportSpace(alice, space))
+        await importSpaceMeta(newAlice, await exportSpaceMeta(alice, space))
       }
     }
     for (const space of spaces) {
@@ -174,7 +174,9 @@ describe('space account migration', () => {
       expect.arrayContaining([space, guestSpace]),
     )
 
-    const original = await readSpaceHostStar([await exportSpace(alice, space)])
+    const original = await readSpaceMetaStar([
+      await exportSpaceMeta(alice, space),
+    ])
     const originalWriters = await writers(alice, space)
     const originalCommit = await latestCommit(alice, space)
 
@@ -207,8 +209,8 @@ describe('space account migration', () => {
     expect(await writers(newAlice, space)).toEqual(originalWriters)
 
     // Re-exported from the new host, the space is unchanged.
-    const reexported = await readSpaceHostStar([
-      await exportSpace(newAlice, space),
+    const reexported = await readSpaceMetaStar([
+      await exportSpaceMeta(newAlice, space),
     ])
     expect(reexported).toEqual(original)
 
@@ -250,7 +252,7 @@ describe('space account migration', () => {
       error: 'SpaceNotFound',
     })
 
-    await importSpace(newAlice, await exportSpace(alice, space))
+    await importSpaceMeta(newAlice, await exportSpaceMeta(alice, space))
     await importRepo(newAlice, star)
     const newCommit = await latestCommit(newAlice, space)
     expect(newCommit.commit.data).toEqual(
@@ -281,9 +283,11 @@ describe('space account migration', () => {
     await sc.removeMember(alice, space, bob)
     await migrate([space])
 
-    const original = await readSpaceHostStar([await exportSpace(alice, space)])
+    const original = await readSpaceMetaStar([
+      await exportSpaceMeta(alice, space),
+    ])
     expect(
-      await readSpaceHostStar([await exportSpace(newAlice, space)]),
+      await readSpaceMetaStar([await exportSpaceMeta(newAlice, space)]),
     ).toEqual(original)
     expect((await latestCommit(newAlice, space)).commit.data).toEqual(
       (await latestCommit(alice, space)).commit.data,
@@ -304,7 +308,7 @@ describe('space account migration', () => {
       { space, did, read: true, write: true },
       { headers: alice.headers },
     )
-    await importSpace(newAlice, await exportSpace(alice, space))
+    await importSpaceMeta(newAlice, await exportSpaceMeta(alice, space))
 
     const { members } = await newAlice.client.call(
       com.atproto.memberspace.listMembers,
@@ -343,7 +347,7 @@ describe('space account migration', () => {
     await sc.write(bob, space)
 
     await expect(
-      importSpace(newAlice, await exportSpace(bob, space)),
+      importSpaceMeta(newAlice, await exportSpaceMeta(bob, space)),
     ).rejects.toMatchObject({ error: 'NotSpaceOwner' })
     await expect(
       importRepo(newAlice, await getRepo(bob, space)),
@@ -353,15 +357,15 @@ describe('space account migration', () => {
   describe('rejects an archive', () => {
     const archiveFor = (
       skey: string,
-      archive: Omit<SpaceHostArchive, 'space'>,
+      archive: Omit<SpaceMetaArchive, 'space'>,
     ): AsyncIterable<Uint8Array> =>
-      serializeSpaceHost({
+      serializeSpaceMeta({
         space: `at://${alice.did}/space/${TEST_SPACE_TYPE}/${skey}`,
         ...archive,
       })
 
     const importArchive = async (archive: AsyncIterable<Uint8Array>) =>
-      importSpace(newAlice, await collect(archive))
+      importSpaceMeta(newAlice, await collect(archive))
 
     it('with a policy the host does not implement', async () => {
       const archive = archiveFor('unsupported', {
@@ -410,7 +414,7 @@ describe('space account migration', () => {
 
     it('that does not parse', async () => {
       await expect(
-        importSpace(newAlice, new Uint8Array([1, 2, 3])),
+        importSpaceMeta(newAlice, new Uint8Array([1, 2, 3])),
       ).rejects.toMatchObject({ error: 'InvalidRequest' })
     })
   })

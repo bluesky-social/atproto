@@ -6,7 +6,7 @@ import createRecord from './createRecord.js'
 import createSpace from './createSpace.js'
 import deleteRecord from './deleteRecord.js'
 import deleteSpace from './deleteSpace.js'
-import exportSpace from './exportSpace.js'
+import exportSpaceMeta from './exportSpaceMeta.js'
 import getBlob from './getBlob.js'
 import getDelegationToken from './getDelegationToken.js'
 import getLatestCommit from './getLatestCommit.js'
@@ -15,7 +15,7 @@ import getRepo from './getRepo.js'
 import getSpace from './getSpace.js'
 import getSpaceCredential from './getSpaceCredential.js'
 import importRepo from './importRepo.js'
-import importSpace from './importSpace.js'
+import importSpaceMeta from './importSpaceMeta.js'
 import listBlobs from './listBlobs.js'
 import listRecords from './listRecords.js'
 import listRepoOps from './listRepoOps.js'
@@ -36,7 +36,7 @@ export default function (server: Server, ctx: AppContext) {
   createSpace(server, ctx)
   deleteRecord(server, ctx)
   deleteSpace(server, ctx)
-  exportSpace(server, ctx)
+  exportSpaceMeta(server, ctx)
   getBlob(server, ctx)
   getDelegationToken(server, ctx)
   getLatestCommit(server, ctx)
@@ -45,7 +45,7 @@ export default function (server: Server, ctx: AppContext) {
   getSpace(server, ctx)
   getSpaceCredential(server, ctx)
   importRepo(server, ctx)
-  importSpace(server, ctx)
+  importSpaceMeta(server, ctx)
   listBlobs(server, ctx)
   listRecords(server, ctx)
   listRepoOps(server, ctx)
