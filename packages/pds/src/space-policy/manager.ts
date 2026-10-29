@@ -1,5 +1,6 @@
 import type { IdResolver } from '@atproto/identity'
 import { xrpc } from '@atproto/lex'
+import type { SpaceHostArchive } from '@atproto/space'
 import type { DidString, SpaceRefString } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import type { ActorStore } from '../actor-store/actor-store.js'
@@ -9,6 +10,7 @@ import {
 } from '../api/com/atproto/space/util.js'
 import { com } from '../lexicons/index.js'
 import { spaceLogger } from '../logger.js'
+import { memberStateEntry, parsePolicyState } from './archive.js'
 import {
   type LexPolicy,
   type Policy,
@@ -17,6 +19,7 @@ import {
   isAppAuthorized,
   isPublicRead,
   normalizePolicy,
+  parsePolicy,
 } from './policy.js'
 import {
   prepareMemberListWrites,
@@ -141,6 +144,55 @@ export class SpacePolicyManager {
       store.space.getActiveSpacePolicy(space),
     )
     return { uri: space, policy }
+  }
+
+  /** The space's host-side state, for migrating its authority's account. */
+  async exportSpace(space: SpaceRefString): Promise<SpaceHostArchive> {
+    const { spaceDid } = toSpaceRef(space)
+    return this.actorStore.read(spaceDid, async (store) => {
+      const policy = await store.space.getActiveSpacePolicy(space)
+      const members = memberspace.policy.$isTypeOf(policy)
+        ? await store.space.listMembers(space)
+        : []
+      const writers = await store.space.listWriters(space)
+      return {
+        space,
+        policy,
+        policyState: members.map((member) =>
+          memberStateEntry({
+            did: member.did as DidString,
+            access: { read: !!member.read, write: !!member.write },
+          }),
+        ),
+        writers: writers.map((writer) => ({
+          did: writer.did as DidString,
+          rev: writer.repoRev,
+          data: writer.data,
+          spaceRev: writer.spaceRev,
+        })),
+      }
+    })
+  }
+
+  /**
+   * Import a space exported by its previous host, as its authority's account
+   * migrates here, replacing whatever this host held for it. The policy and member
+   * list are published to readers by records in the authority's repo, which
+   * arrives afterwards with importRepo, so nothing is published here.
+   */
+  async importSpace(archive: SpaceHostArchive): Promise<void> {
+    const { space } = archive
+    const { spaceDid } = toSpaceRef(space)
+    const policy = parsePolicy(archive.policy)
+    const members = parsePolicyState(policy, archive.policyState)
+    await this.actorStore.transact(spaceDid, async (actorTxn) => {
+      await actorTxn.space.createSpace(space, policy)
+      await actorTxn.space.removeAllMembers(space)
+      for (const { did, access } of members) {
+        await actorTxn.space.putMember(space, did, access)
+      }
+      await actorTxn.space.importWriters(space, archive.writers)
+    })
   }
 
   /**

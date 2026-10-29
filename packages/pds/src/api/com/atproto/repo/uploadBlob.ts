@@ -38,8 +38,12 @@ export default function (server: Server, ctx: AppContext) {
             const blobRef =
               await actorTxn.repo.blob.trackUntetheredBlob(metadata)
 
-            // make the blob permanent if an associated record is already indexed
-            if (await actorTxn.repo.blob.hasRecordsForBlob(blobRef.ref)) {
+            // make the blob permanent if an associated record is already indexed,
+            // as after a repo import, whether a public repo or a space repo
+            if (
+              (await actorTxn.repo.blob.hasRecordsForBlob(blobRef.ref)) ||
+              (await actorTxn.repo.blob.hasSpaceRecordsForBlob(blobRef.ref))
+            ) {
               await actorTxn.repo.blob.verifyBlobAndMakePermanent(blobRef)
             }
 

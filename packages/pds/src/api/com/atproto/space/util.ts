@@ -16,7 +16,10 @@ import {
   type MacType,
   RECORD_MAC_TYPE,
   RepoCommit,
+  RepoVerificationError,
+  SpaceHostArchiveError,
   SpaceMacError,
+  StarParseError,
   WANT_MAC_HEADER,
   computeCommitMac,
   computeRecordMac,
@@ -205,6 +208,18 @@ export async function getSpaceMacSecret(
     }
     throw err
   }
+}
+
+// A malformed STAR archive in a request body is the caller's error.
+export function throwInvalidArchive(err: unknown): never {
+  if (
+    err instanceof StarParseError ||
+    err instanceof RepoVerificationError ||
+    err instanceof SpaceHostArchiveError
+  ) {
+    throw new InvalidRequestError(err.message)
+  }
+  throw err
 }
 
 // The `Atproto-Space-Mac` response header for a commit, when a MAC was requested.
