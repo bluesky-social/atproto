@@ -9,6 +9,7 @@ import type * as expiringTag from './expiring_tag.js'
 import type * as firehoseCursor from './firehose_cursor.js'
 import type * as inboxNotification from './inbox_notification.js'
 import type * as inboxNotificationPreference from './inbox_notification_preference.js'
+import type * as inboxPushOutbox from './inbox_push_outbox.js'
 import type * as inboxSeen from './inbox_seen.js'
 import type * as jobCursor from './job_cursor.js'
 import type * as label from './label.js'
@@ -59,6 +60,7 @@ export type DatabaseSchemaType = modEvent.PartialDB &
   expiringTag.PartialDB &
   inboxSeen.PartialDB &
   inboxNotification.PartialDB &
-  inboxNotificationPreference.PartialDB
+  inboxNotificationPreference.PartialDB &
+  inboxPushOutbox.PartialDB
 
 export type DatabaseSchema = Kysely<DatabaseSchemaType>

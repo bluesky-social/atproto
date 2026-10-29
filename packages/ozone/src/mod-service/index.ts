@@ -704,6 +704,7 @@ export class ModerationService {
       this.db,
       this.cfg.strikeSuspension,
       this.cfg.inbox.startAt,
+      this.cfg.inbox.pushEnabled,
     )
     const previousStanding = await notifications.beforeModerationEvent(
       subject,
