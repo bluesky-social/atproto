@@ -424,6 +424,52 @@ describe('space sync', () => {
       expect(texts).toEqual(['star 0', 'star 1'])
     })
 
+    it('recovers from a cleared repo', async () => {
+      const space = await sc.createSpace(alice, { members: [bob, carol] })
+      await sc.write(bob, space, { rkey: 'one', text: 'one' })
+      await sc.write(bob, space, { rkey: 'two', text: 'two' })
+
+      const cred = await sc.credentialFor(carol, space)
+      const asSyncer = cred.clientFor(bob.pds)
+      const synced = await asSyncer.call(com.atproto.space.listRepoOps, {
+        space,
+        repo: bob.did,
+      })
+      const local = new RepoCommit()
+      for (const op of synced.ops) {
+        local.applyOp({
+          collection: op.collection,
+          rkey: op.rkey,
+          cid: op.cid ? parseCid(op.cid) : null,
+          prev: op.prev ? parseCid(op.prev) : null,
+        })
+      }
+      expect(local.matches(synced.commit!)).toBe(true)
+
+      await sc.clear(bob, space)
+
+      const incremental = await asSyncer.call(com.atproto.space.listRepoOps, {
+        space,
+        repo: bob.did,
+        since: synced.commit!.rev,
+      })
+      expect(incremental.ops).toEqual([])
+      expect(
+        cred.verifyCommit(incremental.commit!, { space, repo: bob.did }),
+      ).toBe(true)
+      expect(local.matches(incremental.commit!)).toBe(false)
+
+      const res = await cred.fetch(
+        `${bob.pds.url}/xrpc/com.atproto.space.getRepo?space=${encodeURIComponent(space)}&repo=${bob.did}`,
+      )
+      const recovered = await verifyRepoStarFull(
+        [new Uint8Array(await res.arrayBuffer())],
+        { space, repo: bob.did, ...cred.lastMacParams() },
+      )
+      expect(recovered.records).toEqual([])
+      expect(recovered.commit.rev).toBe(incremental.commit!.rev)
+    })
+
     it('refuses a repo without a credential for that space', async () => {
       const space = await sc.createSpace(alice, {
         skey: 'star-auth',
@@ -693,6 +739,21 @@ describe('space sync', () => {
         error: 'NotSpaceOwner',
       })
       expect(await sc.writerDids(space)).toEqual([dan.did])
+    })
+
+    it('keeps a cleared repo in the writer set, at the empty digest', async () => {
+      const space = await sc.createSpace(alice, { members: [dan] })
+      await sc.write(dan, space, { text: 'to be cleared' })
+
+      await sc.clear(dan, space)
+
+      const writers = await alice.pds.ctx.actorStore.read(alice.did, (store) =>
+        store.space.listWriters(space),
+      )
+      const state = await sc.repoState(dan, space)
+      expect(writers).toHaveLength(1)
+      expect(writers[0]).toMatchObject({ did: dan.did, repoRev: state!.rev })
+      expect(writers[0].data).toEqual(new LtHash().digest())
     })
   })
 

@@ -249,6 +249,18 @@ export class SpaceClient {
     )
   }
 
+  async clear(
+    actor: Actor,
+    space: SpaceRefString,
+    opts: { headers?: { authorization: string } } = {},
+  ) {
+    return actor.client.call(
+      com.atproto.space.clearRecords,
+      { space, repo: actor.did },
+      { headers: opts.headers ?? actor.headers },
+    )
+  }
+
   /**
    * Issue a fresh space credential for `actor`: mint a delegation token on their
    * own PDS, then exchange it with the authority. Two hops, because a repo host
