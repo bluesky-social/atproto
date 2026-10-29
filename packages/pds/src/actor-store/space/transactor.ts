@@ -158,6 +158,14 @@ export class SpaceTransactor extends SpaceReader {
     return { spaceRev, prevSpaceRev }
   }
 
+  async removeWriter(space: string, did: string): Promise<void> {
+    await this.db.db
+      .deleteFrom('space_writer')
+      .where('space', '=', space)
+      .where('did', '=', did)
+      .execute()
+  }
+
   /**
    * Apply a batch of writes as one commit, all sharing a single `rev`. Must run in a
    * transaction. Returns null if there was nothing to write.
