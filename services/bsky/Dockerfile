@@ -76,8 +76,9 @@ COPY ./services/bsky ./services/bsky
 
 # install all deps
 RUN PUPPETEER_SKIP_DOWNLOAD=true pnpm install --frozen-lockfile
-# build all the dependencies of ./package.json
-RUN pnpm run --recursive --stream --workspace-concurrency 1 --filter 'bsky-app-view-service...' build -- --force
+# @NOTE Build codegen tools before filtering out development dependencies.
+RUN pnpm run --recursive --stream --workspace-concurrency 1 --filter '@atproto/lex-installer...' --filter '@atproto/lex-cli...' build \
+ && pnpm run --recursive --stream --workspace-concurrency 1 --filter-prod 'bsky-app-view-service...' build
 # install only prod deps, hoisted to root node_modules dir
 RUN pnpm install --prod --shamefully-hoist --frozen-lockfile --prefer-offline --config.confirmModulesPurge=false
 
