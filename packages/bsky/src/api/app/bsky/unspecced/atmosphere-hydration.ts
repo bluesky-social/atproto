@@ -20,6 +20,7 @@ import {
 } from '../../../../hydration/hydrator.js'
 import { HydrationMap } from '../../../../hydration/util.js'
 import { app, place, site, social } from '../../../../lexicons/index.js'
+import { hydrationLogger } from '../../../../logger.js'
 import { recordUriOf, uriToDid } from '../../../../util/uris.js'
 import type { Views } from '../../../../views/index.js'
 import type { TimelineActivity } from './atmosphere-grouping.js'
@@ -90,12 +91,25 @@ export class AtmosphereTimelineHydrator {
     this.state.externalRecords?.forEach(discoverPublication)
     this.state.externalRecordsByRef?.forEach(discoverPublication)
     for (const batch of chunkArray([...publications], 100)) {
-      const result =
-        await this.ctx.hydrator.external.getAtmosphereBacklinksByActor(
+      const result = await this.ctx.hydrator.external
+        .getAtmosphereBacklinksByActor(
           batch,
           this.hydrateCtx.viewer as DidString,
           site.standard.graph.subscription.$type,
         )
+        .catch((err) => {
+          hydrationLogger.warn(
+            { err },
+            'failed to hydrate Atmosphere timeline subscriptions',
+          )
+          return undefined
+        })
+      if (!result) {
+        for (const publication of batch) {
+          this.subscriptions.set(publication, undefined)
+        }
+        continue
+      }
       for (const publication of batch) {
         const subscribed = result.backlinks
           .get(publication)

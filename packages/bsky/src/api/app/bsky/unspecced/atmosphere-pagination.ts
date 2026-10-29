@@ -17,6 +17,7 @@ import {
 import { AtmosphereTimelineHydrator } from './atmosphere-hydration.js'
 
 const BATCH_SIZE = 50
+const MAX_BATCHES = 5
 const INITIAL_RETAINED = 100
 const SOFT_RETAINED_LIMIT = 200
 const MAX_CURSOR_LENGTH = 8192
@@ -46,6 +47,7 @@ export async function loadAtmosphereTimeline(
   const viewer = hydrateCtx.viewer as DidString
   let next = cursor === undefined ? undefined : decodeCursor(cursor, viewer)
   let terminal = false
+  let batchesFetched = 0
   let position = 0
   const roots: Root[] = []
   const seenUris = new Set<string>()
@@ -54,6 +56,7 @@ export async function loadAtmosphereTimeline(
   const hydration = new AtmosphereTimelineHydrator(ctx, hydrateCtx, now)
 
   async function fetchBatch() {
+    batchesFetched++
     const requestCursor = next
     if (requestCursor !== undefined) seenCursors.add(requestCursor)
     const page = await ctx.hydrator.external
@@ -105,7 +108,12 @@ export async function loadAtmosphereTimeline(
     }
   }
 
-  while (roots.length < INITIAL_RETAINED && !terminal) await fetchBatch()
+  while (
+    roots.length < INITIAL_RETAINED &&
+    !terminal &&
+    batchesFetched < MAX_BATCHES
+  )
+    await fetchBatch()
   await hydration.hydrate(roots.map(({ uri }) => uri))
   const visible = () =>
     roots.flatMap(({ uri, sortedAt }) => {
@@ -115,6 +123,7 @@ export async function loadAtmosphereTimeline(
   let activities = visible()
   while (
     !terminal &&
+    batchesFetched < MAX_BATCHES &&
     roots.length <= SOFT_RETAINED_LIMIT &&
     !hasGap(activities, now)
   ) {

@@ -1,5 +1,5 @@
 import { createPromiseClient, createRouterTransport } from '@connectrpc/connect'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import {
   type AtUriString,
   type TypedLexMap,
@@ -400,6 +400,29 @@ describe('AtmosphereTimelineHydrator', () => {
       groupable: false,
       item: { viewerState: { subscribed: false } },
     })
+  })
+
+  it('keeps articles visible and ungrouped when subscription lookup fails', async () => {
+    const f = setup()
+    using failure = vi
+      .spyOn(f.hydrator.external, 'getAtmosphereBacklinksByActor')
+      .mockRejectedValueOnce(new Error('subscription lookup unavailable'))
+    await f.timeline.hydrate([documentUri])
+    expect(f.timeline.activity(documentUri, now)).toMatchObject({
+      groupable: false,
+      item: {
+        viewerState: { subscribed: false },
+        view: { title: 'Article' },
+      },
+    })
+
+    await f.timeline.hydrate([recommendUri])
+    expect(f.timeline.activity(recommendUri, now)).toMatchObject({
+      target: documentUri,
+      item: { view: { title: 'Article' } },
+    })
+    expect(f.timeline.activity(documentUri, now)?.groupable).toBe(false)
+    expect(failure).toHaveBeenCalledTimes(1)
   })
 
   it('batches viewer subscription lookups at 100 targets', async () => {

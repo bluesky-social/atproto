@@ -326,6 +326,90 @@ describe('Atmosphere timeline HTTP endpoint', () => {
     expect(fetched).toEqual(items.map(({ uri }) => uri))
   })
 
+  it('bounds overflow-heavy pages and resumes after the last consumed batch', async () => {
+    using _clock = vi.spyOn(Date, 'now').mockReturnValue(now)
+    const items = Array.from({ length: 300 }, (_, i) =>
+      row(i, i * 1000, 'did:plc:alice'),
+    )
+    await using fixture = await setup(batches(items))
+    const first = await fixture.query()
+    expect(first.status).toBe(200)
+    expect(fixture.timelineCalls).toHaveLength(5)
+    expect(activities(first.body).map(({ record }) => record.uri)).toEqual(
+      items.slice(0, 5).map(({ uri }) => uri),
+    )
+    expect(
+      first.body.feed.filter(endpoint.atmosphereItemOverflow.$isTypeOf),
+    ).toMatchObject([{ count: 245 }])
+    expect(
+      JSON.parse(Buffer.from(first.body.cursor!, 'base64url').toString())
+        .cursor,
+    ).toBe(nativeCursor(5))
+
+    const second = await fixture.query(first.body.cursor)
+    expect(second.status).toBe(200)
+    expect(activities(second.body).map(({ record }) => record.uri)).toEqual(
+      items.slice(250, 255).map(({ uri }) => uri),
+    )
+    expect(
+      second.body.feed.filter(endpoint.atmosphereItemOverflow.$isTypeOf),
+    ).toMatchObject([{ count: 45 }])
+    expect(second.body.cursor).toBeUndefined()
+    expect(fixture.timelineCalls.map(({ cursor }) => cursor)).toEqual([
+      '',
+      ...Array.from({ length: 5 }, (_, i) => nativeCursor(i + 1)),
+    ])
+  })
+
+  it.each(['duplicates', 'malformed', 'empty'] as const)(
+    'bounds native fetches when pages contain only %s',
+    async (kind) => {
+      const repeated = row(0)
+      const pages = Array.from({ length: 6 }, () =>
+        kind === 'empty'
+          ? []
+          : Array.from({ length: 50 }, () =>
+              kind === 'duplicates'
+                ? repeated
+                : { uri: 'invalid' as AtUriString, time: now },
+            ),
+      )
+      await using fixture = await setup(pages)
+      const first = await fixture.query()
+      expect(first.status).toBe(200)
+      expect(fixture.timelineCalls).toHaveLength(5)
+      expect(activities(first.body).map(({ record }) => record.uri)).toEqual(
+        kind === 'duplicates' ? [repeated.uri] : [],
+      )
+      expect(
+        JSON.parse(Buffer.from(first.body.cursor!, 'base64url').toString())
+          .cursor,
+      ).toBe(nativeCursor(5))
+
+      const second = await fixture.query(first.body.cursor)
+      expect(second.status).toBe(200)
+      expect(second.body.cursor).toBeUndefined()
+      expect(fixture.timelineCalls).toHaveLength(6)
+      expect(fixture.timelineCalls[5].cursor).toBe(nativeCursor(5))
+    },
+  )
+
+  it('shares the native fetch budget between initial retention and gap search', async () => {
+    using _clock = vi.spyOn(Date, 'now').mockReturnValue(now)
+    const items = rows(100)
+    await using fixture = await setup([...batches(items), [], [], [], []])
+    const response = await fixture.query()
+    expect(response.status).toBe(200)
+    expect(fixture.timelineCalls).toHaveLength(5)
+    expect(activities(response.body).map(({ record }) => record.uri)).toEqual(
+      items.map(({ uri }) => uri),
+    )
+    expect(
+      JSON.parse(Buffer.from(response.body.cursor!, 'base64url').toString())
+        .cursor,
+    ).toBe(nativeCursor(5))
+  })
+
   it('keeps the whole batch on both sides of a qualifying gap and hydrates incrementally', async () => {
     using _clock = vi.spyOn(Date, 'now').mockReturnValue(now)
     const items = rows(200).map((item, i) => ({
