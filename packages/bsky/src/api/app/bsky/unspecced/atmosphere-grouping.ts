@@ -1,6 +1,7 @@
+import { HOUR } from '@atproto/common'
 import type { AtUriString } from '@atproto/lex'
-import { AtUri } from '@atproto/syntax'
 import { app, place, site } from '../../../../lexicons/index.js'
+import { uriToDid } from '../../../../util/uris.js'
 
 type AtmosphereItem = app.bsky.unspecced.getAtmosphereTimeline.AtmosphereItem
 type AtmosphereGroup = app.bsky.unspecced.getAtmosphereTimeline.AtmosphereGroup
@@ -11,8 +12,6 @@ export type TimelineActivity = {
   target?: AtUriString
   groupable: boolean
 }
-
-const HOUR = 60 * 60 * 1000
 
 /** Select the timeline gap and grouping window using the newer activity's age. */
 export function atmosphereWindow(ageMs: number): number {
@@ -67,7 +66,7 @@ export function groupAtmosphereActivities(
         groupBy === 'subject'
           ? activity.target
           : authorGroupable(activity)
-            ? new AtUri(activity.item.record.uri).did
+            ? uriToDid(activity.item.record.uri)
             : undefined
       if (!value) continue
       const key = `${activity.item.collection}:${value}`
@@ -106,7 +105,7 @@ export function groupAtmosphereActivities(
               items,
               ...(groupBy === 'subject'
                 ? { subject: first.target }
-                : { actor: new AtUri(first.item.record.uri).did }),
+                : { actor: uriToDid(first.item.record.uri) }),
             }),
           )
         }

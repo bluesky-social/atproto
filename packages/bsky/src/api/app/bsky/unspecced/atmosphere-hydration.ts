@@ -2,14 +2,14 @@ import { chunkArray } from '@atproto/common'
 import {
   type AtUriString,
   type DidString,
-  isAtUriString,
+  type NsidString,
   toDatetimeString,
 } from '@atproto/lex'
 import { AtUri } from '@atproto/syntax'
 import {
   type ExternalRecord,
   externalAssociatedRefsFromPosts,
-  genericRecordKey,
+  getSiteStandardRecordsFromRefs,
 } from '../../../../hydration/external.js'
 import type { Posts } from '../../../../hydration/feed.js'
 import {
@@ -22,6 +22,7 @@ import { HydrationMap } from '../../../../hydration/util.js'
 import { app, place, site, social } from '../../../../lexicons/index.js'
 import { hydrationLogger } from '../../../../logger.js'
 import { recordUriOf, uriToDid } from '../../../../util/uris.js'
+import { externalRecordViewRefs } from '../../../../views/external.js'
 import type { Views } from '../../../../views/index.js'
 import type { TimelineActivity } from './atmosphere-grouping.js'
 
@@ -133,13 +134,45 @@ export class AtmosphereTimelineHydrator {
     return this.ctx.views.profileBasic(did, this.state)
   }
 
+  /** Recheck current dependencies and moderation without building a view. */
+  isVisible(uri: AtUriString): boolean {
+    return this.selectActivity(uri) !== undefined
+  }
+
   /** Compose a renderable root and the target used by final-page grouping. */
   activity(uri: AtUriString, sortedAt: number): TimelineActivity | undefined {
-    const { views } = this.ctx
+    const selected = this.selectActivity(uri)
+    if (!selected) return
+    const { info, collection, target, groupable, subscribed, viewUri, state } =
+      selected
+    let view: app.bsky.unspecced.getAtmosphereTimeline.AtmosphereItem['view']
+    if (collection === app.bsky.feed.post.$type) {
+      const postView = this.ctx.views.post(uri, this.state)
+      if (!postView) return
+      view = app.bsky.feed.defs.postView.$build(postView)
+    } else {
+      view = this.ctx.views.externalRecordView(viewUri, state, this.now)
+      if (!view) return
+    }
+    return {
+      item: app.bsky.unspecced.getAtmosphereTimeline.atmosphereItem.$build({
+        record: { uri, cid: info.cid, indexedAt: toDatetimeString(sortedAt) },
+        collection,
+        viewerState: { subscribed },
+        view,
+      }),
+      sortedAt,
+      target,
+      groupable,
+    }
+  }
+
+  private selectActivity(uri: AtUriString) {
     if (!this.visibleRecord(uri, this.state)) return
     const collection = new AtUri(uri).collection
     let info = this.state.externalRecords?.get(uri)
-    let view: app.bsky.unspecced.getAtmosphereTimeline.AtmosphereItem['view']
+    let viewUri = uri
+    let state = this.state
     let target: AtUriString | undefined
     let groupable = true
     let subscribed = false
@@ -148,31 +181,27 @@ export class AtmosphereTimelineHydrator {
       const post = this.state.posts?.get(uri)
       if (!post || !app.bsky.feed.post.$matches(post.record)) return
       const layer: Posts = new HydrationMap([[uri, post]])
-      const ref = externalAssociatedRefsFromPosts(layer).find(
-        ({ uri }) => !!recordUriOf(uri, site.standard.document.$type),
-      )
-      if (!ref) return
-      const document = this.state.externalRecordsByRef?.get(
-        genericRecordKey(ref),
+      const { document, publication } = getSiteStandardRecordsFromRefs(
+        externalAssociatedRefsFromPosts(layer),
+        this.state.externalRecordsByRef,
+        this.state.externalRecords,
       )
       if (!document) return
-      // @NOTE A share pins its document; do not substitute the latest version.
-      const state = {
-        ...this.state,
-        externalRecords: new HydrationMap(this.state.externalRecords),
+      // @NOTE Only the pinned document and its publication back this view.
+      const externalRecords = new HydrationMap<AtUriString, ExternalRecord>([
+        [document.ref.uri, document.info],
+      ])
+      if (publication) {
+        externalRecords.set(publication.ref.uri, publication.info)
       }
-      state.externalRecords.set(ref.uri, document)
-      if (!this.renderExternal(ref.uri, state)) return
-      const postView = views.post(uri, this.state)
-      if (!postView) return
-      view = app.bsky.feed.defs.postView.$build(postView)
+      state = { ...this.state, externalRecords }
+      viewUri = document.ref.uri
       info = post
-      target = ref.uri
+      target = document.ref.uri
       groupable = false
     } else {
       if (!info) return
       const { record } = info
-      let viewUri = uri
       if (
         collection === site.standard.graph.recommend.$type &&
         site.standard.graph.recommend.$matches(record)
@@ -207,8 +236,6 @@ export class AtmosphereTimelineHydrator {
         if (!target) return
         viewUri = target
       }
-      view = this.renderExternal(viewUri, this.state)
-      if (!view) return
       if (site.standard.document.$matches(record)) {
         const publication = recordUriOf(
           record.site,
@@ -223,17 +250,15 @@ export class AtmosphereTimelineHydrator {
         groupable = !!record.endedAt
       }
     }
-    if (!info) return
+    if (!info || !this.visibleExternal(viewUri, state)) return
     return {
-      item: app.bsky.unspecced.getAtmosphereTimeline.atmosphereItem.$build({
-        record: { uri, cid: info.cid, indexedAt: toDatetimeString(sortedAt) },
-        collection,
-        viewerState: { subscribed },
-        view,
-      }),
-      sortedAt,
+      info,
+      collection: collection as NsidString,
       target,
       groupable,
+      subscribed,
+      viewUri,
+      state,
     }
   }
 
@@ -260,25 +285,13 @@ export class AtmosphereTimelineHydrator {
     )
   }
 
-  private renderExternal(uri: AtUriString, state: HydrationState) {
-    if (!this.visibleRecord(uri, state)) return
-    const record = state.externalRecords?.get(uri)?.record
-    if (
-      site.standard.document.$matches(record) &&
-      isAtUriString(record.site) &&
-      !this.visibleRecord(record.site, state)
-    ) {
-      return
-    }
-    const view = this.ctx.views.externalRecordView(uri, state, this.now)
-    if (!view) return
-    if (
-      view.associatedRefs?.some(({ uri }) => !this.visibleRecord(uri, state)) ||
-      (app.bsky.embed.external.viewGallery.$isTypeOf(view) &&
-        !view.items.length)
-    ) {
-      return
-    }
-    return view
+  private visibleExternal(uri: AtUriString, state: HydrationState): boolean {
+    const refs = externalRecordViewRefs(this.ctx.views, uri, state)
+    return (
+      !!refs &&
+      refs.every((ref) => this.visibleRecord(ref, state)) &&
+      (new AtUri(uri).collection !== social.grain.gallery.$type ||
+        refs.length > 1)
+    )
   }
 }

@@ -121,6 +121,7 @@ function setup() {
       }),
     ],
   ])
+  const cids = new Map<AtUriString, string>()
   const hidden = new Set<string>()
   const unavailable = new Set<string>()
   const muted = new Set<string>()
@@ -135,15 +136,16 @@ function setup() {
   const postCalls: string[][] = []
   const lookup = (uri: string) => {
     const record = records.get(uri as AtUriString)
+    const recordCid = cids.get(uri as AtUriString) ?? cid
     return {
-      ref: { uri, cid },
+      ref: { uri, cid: recordCid },
       status: hidden.has(uri)
         ? RecordLookupStatus.TAKEN_DOWN
         : record
           ? RecordLookupStatus.FOUND
           : RecordLookupStatus.NOT_FOUND,
       record: record
-        ? { cid, record: Buffer.from(lexStringify(record)) }
+        ? { cid: recordCid, record: Buffer.from(lexStringify(record)) }
         : undefined,
     }
   }
@@ -263,6 +265,7 @@ function setup() {
     timeline,
     hydrator,
     records,
+    cids,
     hidden,
     unavailable,
     muted,
@@ -493,6 +496,96 @@ describe('AtmosphereTimelineHydrator', () => {
     })
     await f.timeline.hydrate([postUri])
     expect(f.postCalls.flat()).toEqual([postUri])
+  })
+
+  it.each([true, false])(
+    'rechecks an unavailable pin when later latest hydration has matching CID: %s',
+    async (sameVersion) => {
+      const f = setup()
+      const document = f.records.get(documentUri)!
+      f.records.delete(documentUri)
+      await f.timeline.hydrate([postUri])
+      expect(f.timeline.isVisible(postUri)).toBe(false)
+
+      f.records.set(documentUri, document)
+      if (!sameVersion) {
+        f.cids.set(
+          documentUri,
+          'bafyreihdwdcefgh4dqkjv67uzcmw7ojee6xedzdetojuzjevtenxquvyku',
+        )
+      }
+      await f.timeline.hydrate([documentUri])
+      expect(f.timeline.isVisible(documentUri)).toBe(true)
+      expect(f.timeline.isVisible(postUri)).toBe(sameVersion)
+      if (sameVersion) {
+        expect(f.timeline.activity(postUri, now)?.item.view).toMatchObject({
+          embed: { external: { title: 'Article' } },
+        })
+      } else {
+        expect(f.timeline.activity(postUri, now)).toBeUndefined()
+      }
+    },
+  )
+
+  it('keeps pinned shares distinct from a later latest document', async () => {
+    const f = setup()
+    await f.timeline.hydrate([postUri])
+    f.records.set(
+      documentUri,
+      site.standard.document.$build({
+        title: 'Updated article',
+        site: publicationUri,
+        path: '/article',
+        publishedAt: createdAt,
+      }),
+    )
+    f.cids.set(
+      documentUri,
+      'bafyreihdwdcefgh4dqkjv67uzcmw7ojee6xedzdetojuzjevtenxquvyku',
+    )
+    await f.timeline.hydrate([documentUri])
+    expect(f.timeline.isVisible(postUri)).toBe(true)
+    expect(f.timeline.activity(postUri, now)?.item.view).toMatchObject({
+      embed: { external: { title: 'Article' } },
+    })
+    expect(f.timeline.activity(documentUri, now)?.item.view).toMatchObject({
+      title: 'Updated article',
+    })
+  })
+
+  it.each(['muted', 'blocked', 'review'] as const)(
+    'rechecks earlier articles and shares after %s moderation refreshes',
+    async (kind) => {
+      const f = setup()
+      await f.timeline.hydrate([documentUri, postUri])
+      expect(f.timeline.isVisible(documentUri)).toBe(true)
+      expect(f.timeline.isVisible(postUri)).toBe(true)
+      if (kind === 'review') f.labels.push({ uri: author, val: 'needs-review' })
+      else f[kind].add(author)
+
+      const later = atUri(author, site.standard.document.$type, 'later')
+      f.records.set(later, f.records.get(documentUri)!)
+      await f.timeline.hydrate([later])
+      expect(f.timeline.isVisible(documentUri)).toBe(false)
+      expect(f.timeline.isVisible(postUri)).toBe(false)
+      expect(f.timeline.activity(documentUri, now)).toBeUndefined()
+      expect(f.timeline.activity(postUri, now)).toBeUndefined()
+    },
+  )
+
+  it('excludes articles whose records cannot produce an HTTP view', async () => {
+    const f = setup()
+    f.records.set(
+      documentUri,
+      site.standard.document.$build({
+        title: 'Non-HTTP article',
+        site: 'ftp://example.com',
+        publishedAt: createdAt,
+      }),
+    )
+    await f.timeline.hydrate([documentUri])
+    expect(f.timeline.isVisible(documentUri)).toBe(false)
+    expect(f.timeline.activity(documentUri, now)).toBeUndefined()
   })
 
   it('does not guess an article association from an external URL', async () => {

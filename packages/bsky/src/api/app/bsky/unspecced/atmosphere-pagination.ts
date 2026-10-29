@@ -1,3 +1,4 @@
+import { mapDefined } from '@atproto/common'
 import {
   type AtUriString,
   type DidString,
@@ -115,23 +116,22 @@ export async function loadAtmosphereTimeline(
   )
     await fetchBatch()
   await hydration.hydrate(roots.map(({ uri }) => uri))
-  const visible = () =>
-    roots.flatMap(({ uri, sortedAt }) => {
-      const activity = hydration.activity(uri, sortedAt)
-      return activity ? [activity] : []
-    })
-  let activities = visible()
+  const visible = () => roots.filter(({ uri }) => hydration.isVisible(uri))
+  let visibleRoots = visible()
   while (
     !terminal &&
     batchesFetched < MAX_BATCHES &&
     roots.length <= SOFT_RETAINED_LIMIT &&
-    !hasGap(activities, now)
+    !hasGap(visibleRoots, now)
   ) {
     const previousCount = roots.length
     await fetchBatch()
     await hydration.hydrate(roots.slice(previousCount).map(({ uri }) => uri))
-    activities = visible()
+    visibleRoots = visible()
   }
+  const activities = mapDefined(visibleRoots, ({ uri, sortedAt }) =>
+    hydration.activity(uri, sortedAt),
+  )
 
   const positions = new Map(roots.map(({ uri, position }) => [uri, position]))
   const output = groupAtmosphereActivities(activities, now).map((item) => ({
