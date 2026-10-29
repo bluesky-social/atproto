@@ -2,7 +2,7 @@ import { TID } from '@atproto/common'
 import { encode } from '@atproto/lex-cbor'
 import { type Cid, parseCid } from '@atproto/lex-data'
 import { WriteOpAction } from '@atproto/repo'
-import { RepoCommit } from '@atproto/space'
+import { LtHash, RepoCommit } from '@atproto/space'
 import {
   type AtUriString,
   SpaceRef,
@@ -258,6 +258,38 @@ export class SpaceTransactor extends SpaceReader {
         await this.blob.verifyBlobAndMakePermanent(blob)
       }
     }
+
+    return { rev, setHash }
+  }
+
+  /**
+   * Delete every record and clear the oplog, leaving the repo empty at a new `rev`.
+   * Must run in a transaction. Returns null if the repo was already empty.
+   */
+  async clearRecords(
+    space: SpaceRefString,
+  ): Promise<{ rev: string; setHash: Uint8Array } | null> {
+    this.db.assertTransaction()
+    const state = await this.getRepoState(space)
+    if (!state || new LtHash(state.setHash).isEmpty()) return null
+
+    await this.blob.deleteSpaceBlobs(space)
+    await this.db.db
+      .deleteFrom('space_record')
+      .where('space', '=', space)
+      .execute()
+    await this.db.db
+      .deleteFrom('space_record_oplog')
+      .where('space', '=', space)
+      .execute()
+
+    const rev = TID.nextStr(state.rev ?? undefined)
+    const setHash = new LtHash().state()
+    await this.db.db
+      .updateTable('space_repo')
+      .set({ setHash, rev })
+      .where('space', '=', space)
+      .execute()
 
     return { rev, setHash }
   }
