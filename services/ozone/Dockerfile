@@ -19,6 +19,7 @@ COPY ./packages/bsync/proto ./packages/bsync/proto
 # pnpm list --filter 'ozone-service...' --depth 0 --json | jq '.[].path' | sort -u | sed "s|\"$PWD/|./|; s|\"\$||"
 COPY ./packages/api ./packages/api
 COPY ./packages/aws ./packages/aws
+COPY ./packages/car ./packages/car
 COPY ./packages/common-web ./packages/common-web
 COPY ./packages/common ./packages/common
 COPY ./packages/crypto ./packages/crypto
@@ -27,6 +28,7 @@ COPY ./packages/identity ./packages/identity
 COPY ./packages/internal/did-resolver ./packages/internal/did-resolver
 COPY ./packages/internal/fetch-node ./packages/internal/fetch-node
 COPY ./packages/internal/fetch ./packages/internal/fetch
+COPY ./packages/internal/handle-resolver-node ./packages/internal/handle-resolver-node
 COPY ./packages/internal/handle-resolver ./packages/internal/handle-resolver
 COPY ./packages/internal/identity-resolver ./packages/internal/identity-resolver
 COPY ./packages/internal/opentelemetry-node ./packages/internal/opentelemetry-node
@@ -47,6 +49,7 @@ COPY ./packages/lex/lex-json ./packages/lex/lex-json
 COPY ./packages/lex/lex-password-session ./packages/lex/lex-password-session
 COPY ./packages/lex/lex-resolver ./packages/lex/lex-resolver
 COPY ./packages/lex/lex-schema ./packages/lex/lex-schema
+COPY ./packages/lex/lex-server ./packages/lex/lex-server
 COPY ./packages/lex/lex ./packages/lex/lex
 COPY ./packages/lexicon ./packages/lexicon
 COPY ./packages/oauth/jwk-jose ./packages/oauth/jwk-jose
@@ -63,6 +66,7 @@ COPY ./packages/oauth/oauth-types ./packages/oauth/oauth-types
 COPY ./packages/ozone ./packages/ozone
 COPY ./packages/pds ./packages/pds
 COPY ./packages/repo ./packages/repo
+COPY ./packages/space ./packages/space
 COPY ./packages/syntax ./packages/syntax
 COPY ./packages/ws-client ./packages/ws-client
 COPY ./packages/xrpc-server ./packages/xrpc-server
