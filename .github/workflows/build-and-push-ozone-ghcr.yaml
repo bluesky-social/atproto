@@ -61,5 +61,5 @@ jobs:
           file: ./services/ozone/Dockerfile
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=ozone
+          cache-to: type=gha,scope=ozone,mode=max

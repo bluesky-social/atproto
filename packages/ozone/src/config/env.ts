@@ -59,6 +59,7 @@ export const readEnv = (): OzoneEnvironment => {
     pdsHeaders: envList('OZONE_PDS_HEADERS'),
     blobDivertUrl: envStr('OZONE_BLOB_DIVERT_URL') as UriString,
     blobDivertAdminPassword: envStr('OZONE_BLOB_DIVERT_ADMIN_PASSWORD'),
+    blobDivertMaxBytes: envStr('OZONE_BLOB_DIVERT_MAX_BYTES'),
     verifierUrl: envStr('OZONE_VERIFIER_URL') as UriString,
     verifierDid: envStr('OZONE_VERIFIER_DID') as DidString,
     verifierPassword: envStr('OZONE_VERIFIER_PASSWORD'),
@@ -126,6 +127,7 @@ export type OzoneEnvironment = {
   pdsHeaders?: string[]
   blobDivertUrl?: UriString
   blobDivertAdminPassword?: string
+  blobDivertMaxBytes?: string
   verifierUrl?: UriString
   verifierDid?: DidString
   verifierPassword?: string
