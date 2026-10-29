@@ -12,6 +12,7 @@ import {
   describe,
   expect,
   it,
+  test,
   vi,
 } from 'vitest'
 import {
@@ -27,8 +28,10 @@ import {
   type KWSWebhookAgeVerified,
   serializeKWSAgeVerifiedStatus,
 } from '../../src/api/age-assurance/kws/age-verified.js'
+import type { KWS_AGE_VERIFICATION_CONFIG } from '../../src/api/age-assurance/kws/const.js'
 import {
   KWSExternalPayloadVersion,
+  parseKWSExternalPayloadV2,
   serializeKWSExternalPayloadV1,
   serializeKWSExternalPayloadV2,
 } from '../../src/api/age-assurance/kws/external-payload.js'
@@ -38,8 +41,12 @@ type Database = TestNetwork['bsky']['db']
 
 const BSKY_REDIRECT_URL = 'http://bsky'
 
-vi.mock('../../dist/api/age-assurance/const.js', () => {
+vi.mock('../../dist/api/age-assurance/const.js', async () => {
+  const actual = await vi.importActual<{
+    AGE_ASSURANCE_CONFIG: AppBskyAgeassuranceDefs.Config
+  }>('../../dist/api/age-assurance/const.js')
   const AGE_ASSURANCE_CONFIG: AppBskyAgeassuranceDefs.Config = {
+    ...actual.AGE_ASSURANCE_CONFIG,
     regions: [
       {
         countryCode: 'AA',
@@ -73,21 +80,26 @@ vi.mock('../../dist/api/age-assurance/const.js', () => {
           },
         ],
       },
+      ...actual.AGE_ASSURANCE_CONFIG.regions,
     ],
   }
   return {
+    ...actual,
     AGE_ASSURANCE_CONFIG,
   }
 })
 
 vi.mock('../../dist/api/age-assurance/kws/const.js', async () => {
-  const actual = await vi.importActual<Record<string, unknown>>(
-    '../../dist/api/age-assurance/kws/const.js',
-  )
-  const KWS_V2_COUNTRIES = new Set(['AA'])
+  const actual = await vi.importActual<{
+    KWS_AGE_VERIFICATION_CONFIG: typeof KWS_AGE_VERIFICATION_CONFIG
+  }>('../../dist/api/age-assurance/kws/const.js')
   return {
     ...actual,
-    KWS_V2_COUNTRIES,
+    KWS_AGE_VERIFICATION_CONFIG: {
+      ...actual.KWS_AGE_VERIFICATION_CONFIG,
+      AA: { ageBoundary: 16 },
+      BB: { ageBoundary: 18 },
+    },
   }
 })
 
@@ -226,11 +238,16 @@ describe('age assurance v2 views', () => {
   })
 
   describe('app.bsky.ageassurance.begin', () => {
-    it('fails if region not supported', async () => {
-      const call = beginAgeAssurance({
-        countryCode: 'XX',
+    test.each([
+      { countryCode: 'XX', regionCode: undefined },
+      { countryCode: 'US', regionCode: 'CA' },
+    ])('rejects unsupported $countryCode $regionCode', async (location) => {
+      await expect(beginAgeAssurance(location)).rejects.toSatisfy((err) => {
+        expect(err).toHaveProperty('error', 'RegionNotSupported')
+        return true
       })
-      await expect(call).rejects.toHaveProperty('error', 'RegionNotSupported')
+      expect(kwsSendAgeVerifiedFlowEmailMock).not.toHaveBeenCalled()
+      expect(kwsSendAdultVerifiedFlowEmailMock).not.toHaveBeenCalled()
     })
 
     it('fails if email is invalid', async () => {
@@ -241,38 +258,101 @@ describe('age assurance v2 views', () => {
       await expect(call).rejects.toHaveProperty('error', 'InvalidEmail')
     })
 
-    it('succeeds for V2 country', async () => {
-      const res = await beginAgeAssurance({
-        countryCode: 'AA',
-      })
-      await network.processAll()
-      const { state } = await getState({
-        countryCode: 'AA',
-      })
-      expect(kwsSendAgeVerifiedFlowEmailMock).toHaveBeenCalledTimes(1)
-      expect(res).toEqual(state)
-      expect(state.lastInitiatedAt).toBeDefined()
-      expect(state.status).toEqual('pending')
-      expect(state.access).toEqual('unknown')
-    })
+    test.each([
+      { countryCode: 'AA', regionCode: undefined, ageBoundary: 16 },
+      { countryCode: 'BB', regionCode: undefined, ageBoundary: 18 },
+      { countryCode: 'AU', regionCode: undefined, ageBoundary: 16 },
+      { countryCode: 'GB', regionCode: undefined, ageBoundary: 18 },
+      { countryCode: 'BR', regionCode: undefined, ageBoundary: 18 },
+      { countryCode: 'US', regionCode: 'VA', ageBoundary: 16 },
+      { countryCode: 'US', regionCode: 'MS', ageBoundary: 18 },
+    ])(
+      '$countryCode $regionCode requests age boundary $ageBoundary',
+      async ({ countryCode, regionCode, ageBoundary }) => {
+        const res = await beginAgeAssurance({ countryCode, regionCode })
+        expect(kwsSendAgeVerifiedFlowEmailMock).toHaveBeenCalledTimes(1)
+        expect(kwsSendAdultVerifiedFlowEmailMock).not.toHaveBeenCalled()
+        const body = kwsSendAgeVerifiedFlowEmailMock.mock.calls[0][0].body
+        expect(body).toEqual({
+          email: actor.email,
+          language: 'en',
+          location: regionCode ? `${countryCode}-${regionCode}` : countryCode,
+          externalPayload: expect.any(String),
+          userContext: 'age',
+          ageBoundaries: [ageBoundary],
+        })
+        expect(parseKWSExternalPayloadV2(body.externalPayload)).toEqual({
+          version: KWSExternalPayloadVersion.V2,
+          actorDid: actor.did,
+          attemptId: expect.any(String),
+          countryCode,
+          regionCode,
+        })
 
-    it('succeeds for V1 country', async () => {
-      const res = await beginAgeAssurance({
-        countryCode: 'BB',
-      })
-      await network.processAll()
-      const { state } = await getState({
-        countryCode: 'BB',
-      })
-      expect(kwsSendAdultVerifiedFlowEmailMock).toHaveBeenCalledTimes(1)
-      expect(res).toEqual(state)
-      expect(state.lastInitiatedAt).toBeDefined()
-      expect(state.status).toEqual('pending')
-      expect(state.access).toEqual('unknown')
-    })
+        await network.processAll()
+        const { state } = await getState({ countryCode, regionCode })
+        expect(res).toEqual(state)
+        expect(state.lastInitiatedAt).toBeDefined()
+        expect(state.status).toEqual('pending')
+        expect(state.access).toEqual('unknown')
+      },
+    )
   })
 
   describe('external handlers', () => {
+    describe.each(['redirect', 'webhook'] as const)(
+      'V2 %s regional access',
+      (callback) => {
+        test.each([
+          { countryCode: 'AU', regionCode: undefined, age: 16, access: 'safe' },
+          { countryCode: 'AU', regionCode: undefined, age: 18, access: 'full' },
+          { countryCode: 'GB', regionCode: undefined, age: 16, access: 'none' },
+          { countryCode: 'GB', regionCode: undefined, age: 18, access: 'full' },
+          { countryCode: 'BR', regionCode: undefined, age: 18, access: 'full' },
+          { countryCode: 'US', regionCode: 'VA', age: 16, access: 'full' },
+          { countryCode: 'US', regionCode: 'MS', age: 16, access: 'none' },
+        ])(
+          '$countryCode $regionCode age $age grants $access',
+          async ({ countryCode, regionCode, age, access }) => {
+            const externalPayload = serializeKWSExternalPayloadV2({
+              version: KWSExternalPayloadVersion.V2,
+              actorDid: actor.did,
+              attemptId: crypto.randomUUID(),
+              countryCode,
+              regionCode,
+            })
+            const status = { verified: true, verifiedMinimumAge: age }
+            const res =
+              callback === 'redirect'
+                ? await kws.redirectV2({
+                    externalPayload,
+                    status: serializeKWSAgeVerifiedStatus(status),
+                  })
+                : await kws.webhookV2({
+                    name: 'age-verified',
+                    time: new Date().toISOString(),
+                    orgId: crypto.randomUUID(),
+                    productId: crypto.randomUUID(),
+                    payload: { email: actor.email, externalPayload, status },
+                  })
+
+            if (callback === 'redirect') {
+              expect(res.status).toBe(302)
+              expect(res.headers.get('Location')).toBe(
+                `${BSKY_REDIRECT_URL}?actorDid=${encodeURIComponent(actor.did)}&result=success`,
+              )
+            } else {
+              expect(res.status).toBe(200)
+            }
+            await network.processAll()
+            const { state } = await getState({ countryCode, regionCode })
+            expect(state.status).toBe('assured')
+            expect(state.access).toBe(access)
+          },
+        )
+      },
+    )
+
     describe('V2 redirects', () => {
       it('redirects with result=unknown if we fail to parse the status object', async () => {
         const res = await kws.redirectV2({
