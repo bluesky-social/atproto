@@ -108,6 +108,10 @@ export class BlobDiverter {
         },
       })
       .catch((err) => {
+        if (err instanceof undici.errors.HeadersTimeoutError) {
+          // @NOTE The upload may have succeeded, so retrying could duplicate it.
+          throw new Error(`Error uploading blob ${report.did}`, { cause: err })
+        }
         throw asXrpcClientError(err, `Error uploading blob ${report.did}`)
       })
 
