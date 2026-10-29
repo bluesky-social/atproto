@@ -1,3 +1,4 @@
+import { createHash, timingSafeEqual } from 'node:crypto'
 import type express from 'express'
 import * as ui8 from 'uint8arrays'
 import type { IdResolver } from '@atproto/identity'
@@ -57,6 +58,7 @@ type NullOutput = {
 export type AuthVerifierOpts = {
   serviceDid: string
   adminPassword: string
+  inboxPushToken?: string
   teamService: TeamService
 }
 
@@ -64,6 +66,7 @@ export class AuthVerifier {
   serviceDid: string
   teamService: TeamService
   private adminPassword: string
+  private inboxPushToken?: string
 
   constructor(
     public idResolver: IdResolver,
@@ -71,7 +74,19 @@ export class AuthVerifier {
   ) {
     this.serviceDid = opts.serviceDid
     this.adminPassword = opts.adminPassword
+    this.inboxPushToken = opts.inboxPushToken
     this.teamService = opts.teamService
+  }
+
+  inboxPush = async (
+    reqCtx: ReqCtx,
+  ): Promise<{ credentials: { type: 'inbox_push' } }> => {
+    const token = getJwtStrFromReq(reqCtx.req)
+    if (!token || !this.inboxPushToken) throw new AuthRequiredError()
+    const expected = createHash('sha256').update(this.inboxPushToken).digest()
+    const actual = createHash('sha256').update(token).digest()
+    if (!timingSafeEqual(actual, expected)) throw new AuthRequiredError()
+    return { credentials: { type: 'inbox_push' } }
   }
 
   modOrAdminToken = async (

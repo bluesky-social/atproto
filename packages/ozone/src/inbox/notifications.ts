@@ -10,6 +10,7 @@ import type { InboxNotification } from '../db/schema/inbox_notification.js'
 import type { InboxSeen } from '../db/schema/inbox_seen.js'
 import type { tools } from '../lexicons/index.js'
 import { notificationVisibility } from './notification-visibility.js'
+import { enqueuePushNotifications } from './push-outbox.js'
 import { getSeenAt } from './seen.js'
 import { inboxHasStarted } from './start.js'
 import { parseSubjectCursor } from './subjects.js'
@@ -42,8 +43,14 @@ export async function createInboxNotifications(
   db: Database,
   notifications: NotificationInput[],
   startAt?: DatetimeString,
+  pushEnabled = false,
 ): Promise<void> {
   if (!inboxHasStarted(startAt)) return
+  if (pushEnabled && !db.isTransaction) {
+    return db.transaction((txn) =>
+      createInboxNotifications(txn, notifications, startAt, true),
+    )
+  }
   const eligible = notifications
     .map((notification) => ({
       ...notification,
@@ -52,11 +59,13 @@ export async function createInboxNotifications(
     }))
     .filter((notification) => !startAt || notification.createdAt >= startAt)
   for (let offset = 0; offset < eligible.length; offset += 500) {
-    await db.db
+    const inserted = await db.db
       .insertInto('inbox_notification')
       .values(eligible.slice(offset, offset + 500))
       .onConflict((oc) => oc.column('sourceKey').doNothing())
+      .returningAll()
       .execute()
+    if (pushEnabled) await enqueuePushNotifications(db, inserted)
   }
 }
 
@@ -65,8 +74,9 @@ export async function createInboxNotification(
   db: Database,
   notification: NotificationInput,
   startAt?: DatetimeString,
+  pushEnabled = false,
 ): Promise<void> {
-  await createInboxNotifications(db, [notification], startAt)
+  await createInboxNotifications(db, [notification], startAt, pushEnabled)
 }
 
 export async function listInboxNotifications(

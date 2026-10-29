@@ -45,6 +45,7 @@ export default function (server: Server, ctx: AppContext) {
 
       const row = await createReportActivity(ctx.db, {
         inboxStartAt: ctx.cfg.inbox.startAt,
+        inboxPushEnabled: ctx.cfg.inbox.pushEnabled,
         reportId,
         eventId,
         activityType,
