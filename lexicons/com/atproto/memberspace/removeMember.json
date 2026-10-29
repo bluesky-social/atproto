@@ -1,10 +1,10 @@
 {
   "lexicon": 1,
-  "id": "com.atproto.simplespace.removeMember",
+  "id": "com.atproto.memberspace.removeMember",
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Remove a member from a space's host-internal member list. Requires auth as the space owner.",
+      "description": "Remove a member from the member list of a space governed by the memberspace policy. Requires auth as the space owner.",
       "input": {
         "encoding": "application/json",
         "schema": {
@@ -30,6 +30,10 @@
         },
         {
           "name": "NotSpaceOwner"
+        },
+        {
+          "name": "PolicyMismatch",
+          "description": "The space is not governed by the memberspace policy."
         }
       ]
     }

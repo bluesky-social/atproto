@@ -2,9 +2,9 @@ import type { LexMap } from '@atproto/lex-data'
 import { cborToLexRecord } from '@atproto/repo'
 import type { AtUriString, NsidString } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
+import type { Policy } from '../../space-policy/policy.js'
 import type {
   ActorDb,
-  SimplespaceConfig,
   Space,
   SpaceRecord,
   SpaceRecordOplog,
@@ -24,22 +24,22 @@ export class SpaceReader {
     return row ?? null
   }
 
-  async getSpaceConfig(uri: string): Promise<SimplespaceConfig | null> {
+  async getSpacePolicy(uri: string): Promise<Policy | null> {
     const row = await this.db.db
-      .selectFrom('simplespace_config')
-      .selectAll()
+      .selectFrom('space_policy')
+      .select('policyJson')
       .where('uri', '=', uri)
       .executeTakeFirst()
-    return row ?? null
+    return row ? (JSON.parse(row.policyJson) as Policy) : null
   }
 
-  async getActiveSpaceConfig(uri: string): Promise<SimplespaceConfig> {
+  async getActiveSpacePolicy(uri: string): Promise<Policy> {
     const space = await this.getSpace(uri)
-    const config = await this.getSpaceConfig(uri)
-    if (!space || space.deletedAt || !config) {
+    const policy = await this.getSpacePolicy(uri)
+    if (!space || space.deletedAt || !policy) {
       throw new InvalidRequestError('Space not found', 'SpaceNotFound')
     }
-    return config
+    return policy
   }
 
   async listSpaces(opts: {
@@ -248,7 +248,7 @@ export class SpaceReader {
 
   async getMember(space: string, did: string) {
     const row = await this.db.db
-      .selectFrom('simplespace_member')
+      .selectFrom('memberspace_member')
       .select(['read', 'write'])
       .where('space', '=', space)
       .where('did', '=', did)
@@ -256,13 +256,18 @@ export class SpaceReader {
     return row
   }
 
-  async listMembers(space: string, opts: { limit: number; cursor?: string }) {
+  async listMembers(
+    space: string,
+    opts: { limit?: number; cursor?: string } = {},
+  ) {
     let builder = this.db.db
-      .selectFrom('simplespace_member')
+      .selectFrom('memberspace_member')
       .select(['did', 'read', 'write'])
       .where('space', '=', space)
       .orderBy('did', 'asc')
-      .limit(opts.limit)
+    if (opts.limit) {
+      builder = builder.limit(opts.limit)
+    }
     if (opts.cursor) {
       builder = builder.where('did', '>', opts.cursor)
     }

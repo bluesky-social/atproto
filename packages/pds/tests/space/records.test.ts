@@ -125,7 +125,7 @@ describe('space records', () => {
     it('refuses an authority write to its own deleted space', async () => {
       const space = await sc.createSpace(alice)
       await alice.client.call(
-        com.atproto.simplespace.deleteSpace,
+        com.atproto.space.deleteSpace,
         { space },
         { headers: alice.headers },
       )

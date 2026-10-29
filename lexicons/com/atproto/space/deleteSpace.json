@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "com.atproto.simplespace.deleteSpace",
+  "id": "com.atproto.space.deleteSpace",
   "defs": {
     "main": {
       "type": "procedure",

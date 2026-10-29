@@ -25,7 +25,7 @@ const CACHE_TTL = 1 * HOUR
  * authentication key, so verifying it means resolving `iss` (the client_id) to
  * its `client-metadata.json`, fetching the JWKS that document publishes, and
  * checking the signature against the key its `kid` names. Skipping any of that
- * would leave `appAccess: #allowList` advisory rather than enforceable, since
+ * would leave a policy's `allowedApps` advisory rather than enforceable, since
  * the client_id is otherwise just a claim.
  */
 export class ClientAttestationVerifier {

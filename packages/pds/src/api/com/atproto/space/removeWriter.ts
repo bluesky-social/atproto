@@ -17,7 +17,7 @@ export default function (server: Server, ctx: AppContext) {
       assertSpaceOwner(auth, space, { manage: 'update' })
 
       await ctx.actorStore.transact(ownerDid, async (actorTxn) => {
-        await actorTxn.space.getActiveSpaceConfig(space)
+        await actorTxn.space.getActiveSpacePolicy(space)
         await actorTxn.space.removeWriter(space, writerDid)
       })
     },

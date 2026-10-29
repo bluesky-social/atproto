@@ -1,26 +1,23 @@
 import type { Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
-import { assertSpaceOwner } from '../space/util.js'
+import { assertSpaceOwner, fireNotifyWrite } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
-  server.add(com.atproto.simplespace.removeMember, {
+  server.add(com.atproto.space.updateSpace, {
     auth: ctx.authVerifier.authorization({
       authorize: () => {
         // Performed in the handler as it requires the request body
       },
     }),
-    handler: async ({ input: { body }, auth }) => {
+    handler: async ({ input, auth }) => {
       const ownerDid = auth.credentials.did
-      const { space, did: memberDid } = body
+      const { space, policy } = input.body
 
       assertSpaceOwner(auth, space, { manage: 'update' })
 
-      await ctx.actorStore.transact(ownerDid, async (actorTxn) => {
-        await actorTxn.space.getActiveSpaceConfig(space)
-        await actorTxn.space.removeMember(space, memberDid)
-        await actorTxn.space.removeWriter(space, memberDid)
-      })
+      const commit = await ctx.spacePolicyManager.updateSpace(space, policy)
+      await fireNotifyWrite(ctx, { space, writerDid: ownerDid, commit })
     },
   })
 }

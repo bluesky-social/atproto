@@ -114,7 +114,7 @@ describe('client attestation verification', () => {
   it('refuses a replayed attestation, but not a second fresh one', async () => {
     // Single-use per the spec. A captured attestation would otherwise let anyone
     // present as an allow-listed client until it expired, which is exactly the
-    // impersonation `appAccess: #allowList` is meant to stop.
+    // impersonation `allowedApps` is meant to stop.
     const verifier = verifierFor({
       [CLIENT_ID]: metadata({ jwks: { keys: [clientKey.publicJwk] } }),
     })

@@ -364,13 +364,6 @@ describe('space auth', () => {
             { headers },
           ),
         ).rejects.toMatchObject({ error: 'BadSpaceAudience' })
-        await expect(
-          alice.client.call(
-            com.atproto.simplespace.getSpace,
-            { space },
-            { headers },
-          ),
-        ).rejects.toMatchObject({ error: 'BadSpaceAudience' })
       })
 
       it('reuses a signature for the same audience across requests', async () => {
@@ -495,7 +488,7 @@ describe('space auth', () => {
       await sc.removeMember(alice, space, carol)
 
       await expect(sc.mintCredential(space, token)).rejects.toMatchObject({
-        error: 'UserNotAuthorized',
+        error: 'SpaceNotFound',
       })
     })
   })

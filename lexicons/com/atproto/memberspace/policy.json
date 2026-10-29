@@ -1,0 +1,40 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.memberspace.policy",
+  "defs": {
+    "main": {
+      "type": "object",
+      "description": "Space policy that governs access via a member list maintained by the space host, managed with putMember and removeMember.",
+      "properties": {
+        "publicRead": {
+          "type": "boolean",
+          "default": false,
+          "description": "If true, the authority issues a space credential to anyone, with or without a delegation token. Otherwise, only to members whose entry has read set."
+        },
+        "publicWrite": {
+          "type": "boolean",
+          "default": false,
+          "description": "If true, the authority tracks and forwards notifications for any user's writes. Otherwise, only for members whose entry has write set."
+        },
+        "allowedApps": {
+          "type": "array",
+          "description": "If set, the authority mints a credential only for these apps, evaluated against the attested client_id. When omitted, any app may read the space and no client attestation is required. Does not apply to writes.",
+          "items": {
+            "type": "string",
+            "description": "An OAuth client ID."
+          }
+        },
+        "publishPolicy": {
+          "type": "boolean",
+          "default": false,
+          "description": "Publish the policy to readers as a com.atproto.space.policy record in the authority's repo in the space."
+        },
+        "publishMembers": {
+          "type": "boolean",
+          "default": false,
+          "description": "Publish the member list to readers as com.atproto.memberspace.member records in the authority's repo in the space."
+        }
+      }
+    }
+  }
+}

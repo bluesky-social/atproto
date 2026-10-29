@@ -1,10 +1,10 @@
 import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
-import { assertSpaceOwner } from '../space/util.js'
+import { assertSpaceOwner } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
-  server.add(com.atproto.simplespace.deleteSpace, {
+  server.add(com.atproto.space.deleteSpace, {
     auth: ctx.authVerifier.authorization({
       authorize: () => {
         // Performed in the handler as it requires the request body
@@ -24,7 +24,7 @@ export default function (server: Server, ctx: AppContext) {
       }
       if (spaceRow.deletedAt) return
 
-      const recipients = await ctx.simpleSpaceManager.deleteSpace(space)
+      const recipients = await ctx.spacePolicyManager.deleteSpace(space)
       ctx.backgroundQueue.add(() =>
         ctx.spaceNotifications.notifySpaceDeleted(space, recipients),
       )

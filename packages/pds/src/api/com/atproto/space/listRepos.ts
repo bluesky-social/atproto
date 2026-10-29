@@ -12,7 +12,7 @@ export default function (server: Server, ctx: AppContext) {
       assertCredentialSpace(auth.credentials, space)
       const spaceDid = await assertSpaceHost(ctx, space)
       const writers = await ctx.actorStore.read(spaceDid, async (store) => {
-        await store.space.getActiveSpaceConfig(space)
+        await store.space.getActiveSpacePolicy(space)
         return store.space.listWriters(space, { limit, cursor })
       })
       return {

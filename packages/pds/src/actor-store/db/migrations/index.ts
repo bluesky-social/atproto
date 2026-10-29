@@ -3,6 +3,7 @@ import * as space from './002-space.js'
 import * as spaceAccess from './003-space-access.js'
 import * as spaceSync from './004-space-sync.js'
 import * as spaceCommitData from './005-space-commit-data.js'
+import * as spacePolicy from './006-space-policy.js'
 
 export default {
   '001': init,
@@ -10,4 +11,5 @@ export default {
   '003': spaceAccess,
   '004': spaceSync,
   '005': spaceCommitData,
+  '006': spacePolicy,
 }

@@ -638,7 +638,9 @@ describe('space sync', () => {
   describe('writer set', () => {
     it('records a co-located writer without resolving its public PDS endpoint', async () => {
       const space = await sc.createSpace(alice, {
-        writePolicy: com.atproto.simplespace.defs.publicPolicy.build({}),
+        policy: com.atproto.memberspace.policy.$build({
+          publicWrite: true,
+        }),
       })
       using resolveDid = jest
         .spyOn(network.pds.ctx.idResolver.did, 'resolve')
@@ -676,9 +678,11 @@ describe('space sync', () => {
       expect(entry.data).toEqual(new LtHash(state!.setHash!).digest())
     })
 
-    it('records a writer admitted by public write policy, who was never a member', async () => {
+    it('records a writer admitted by public write access, who was never a member', async () => {
       const space = await sc.createSpace(alice, {
-        writePolicy: com.atproto.simplespace.defs.publicPolicy.build({}),
+        policy: com.atproto.memberspace.policy.$build({
+          publicWrite: true,
+        }),
       })
       await sc.write(bob, space, { text: 'from a non-member' })
 
@@ -689,14 +693,14 @@ describe('space sync', () => {
       await sc.expectWriterSet(space, alice, [bob])
     })
 
-    it('records a writer into an allowList space, whose PDS presents no attestation', async () => {
+    it('records a writer into an app-gated space, whose PDS presents no attestation', async () => {
       // notifyWrite comes from the writer's PDS, not an app, so there is no
       // client attestation to present. Applying the app perimeter here would
       // reject every write into an app-gated space.
       const space = await sc.createSpace(alice, {
         members: [bob],
-        appAccess: com.atproto.simplespace.defs.allowList.build({
-          allowed: ['https://app.example.com/client-metadata.json'],
+        policy: com.atproto.memberspace.policy.$build({
+          allowedApps: ['https://app.example.com/client-metadata.json'],
         }),
       })
       await sc.write(bob, space, { text: 'app-gated space' })
@@ -710,7 +714,7 @@ describe('space sync', () => {
 
     it('drops a writer on removeWriter, and tracks it again once it writes', async () => {
       const space = await sc.createSpace(alice, {
-        writePolicy: com.atproto.simplespace.defs.publicPolicy.build({}),
+        policy: com.atproto.memberspace.policy.$build({ publicWrite: true }),
       })
       await sc.write(bob, space, { text: 'before removal' })
       await sc.awaitNotify(

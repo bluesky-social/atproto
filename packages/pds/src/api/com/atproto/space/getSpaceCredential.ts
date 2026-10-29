@@ -39,7 +39,7 @@ export default function (server: Server, ctx: AppContext) {
           )
         : undefined
 
-      const config = await ctx.actorStore.read(spaceDid, async (store) => {
+      const policy = await ctx.actorStore.read(spaceDid, async (store) => {
         const existing = await store.space.getSpace(space)
         // The durable signal that a space is gone: a syncer that missed
         // notifySpaceDeleted learns it here, on its next renewal. Answered with or
@@ -50,11 +50,12 @@ export default function (server: Server, ctx: AppContext) {
             'SpaceDeleted',
           )
         }
-        return store.space.getActiveSpaceConfig(space)
+        return store.space.getActiveSpacePolicy(space)
       })
 
-      await ctx.simpleSpaceManager.authorizeCredential({
-        config,
+      await ctx.spacePolicyManager.authorizeCredential({
+        space,
+        policy,
         userDid,
         clientId,
       })

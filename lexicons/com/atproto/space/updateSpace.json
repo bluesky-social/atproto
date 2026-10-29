@@ -1,0 +1,45 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.space.updateSpace",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Replace the policy of a space wholesale. A policy with a different $type migrates the space, discarding state held by the previous policy (such as a member list). The authenticated user must be the space owner. Requires auth, implemented by PDS.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["space", "policy"],
+          "properties": {
+            "space": {
+              "type": "string",
+              "format": "space-ref",
+              "description": "Reference to the space to update."
+            },
+            "policy": {
+              "type": "union",
+              "description": "The policy governing the space, including its configuration. Replaces the current policy.",
+              "refs": [
+                "com.atproto.personalspace.policy",
+                "com.atproto.memberspace.policy",
+                "com.atproto.managedspace.policy"
+              ]
+            }
+          }
+        }
+      },
+      "errors": [
+        {
+          "name": "SpaceNotFound"
+        },
+        {
+          "name": "NotSpaceOwner"
+        },
+        {
+          "name": "UnsupportedPolicy",
+          "description": "The requested policy is not one the host implements."
+        }
+      ]
+    }
+  }
+}

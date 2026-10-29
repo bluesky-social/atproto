@@ -2,10 +2,11 @@ import type { l } from '@atproto/lex'
 import type { Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
+import { assertMemberspace } from '../../../../space-policy/policy.js'
 import { assertSpaceOwner } from '../space/util.js'
 
 export default function (server: Server, ctx: AppContext) {
-  server.add(com.atproto.simplespace.listMembers, {
+  server.add(com.atproto.memberspace.listMembers, {
     // OAuth only: the member list is the authority's own state, so a space
     // credential does not reach it.
     auth: ctx.authVerifier.authorization({
@@ -20,7 +21,8 @@ export default function (server: Server, ctx: AppContext) {
       assertSpaceOwner(auth, space, { action: 'read_self' })
 
       const members = await ctx.actorStore.read(ownerDid, async (store) => {
-        await store.space.getActiveSpaceConfig(space)
+        const policy = await store.space.getActiveSpacePolicy(space)
+        assertMemberspace(policy)
         return store.space.listMembers(space, { limit, cursor })
       })
 
