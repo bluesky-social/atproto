@@ -964,6 +964,37 @@ describe('space auth', () => {
       )
     })
 
+    it('requires delete on every collection a clear removes', async () => {
+      const space = await sc.createSpace(alice)
+      const [first, second] = SPACE_TYPE_COLLECTIONS
+      await sc.write(alice, space, { collection: first, rkey: 'first' })
+      await sc.write(alice, space, { collection: second, rkey: 'second' })
+
+      await asOAuth(
+        alice,
+        grant(`collection=${first}&action=delete`),
+        async (headers) => {
+          await expect(sc.clear(alice, space, { headers })).rejects.toThrow(
+            /space:/,
+          )
+        },
+      )
+      const kept = await alice.client.call(
+        com.atproto.space.listRecords,
+        { space, repo: alice.did },
+        { headers: alice.headers },
+      )
+      expect(kept.records).toHaveLength(2)
+
+      await asOAuth(
+        alice,
+        grant(`collection=${first}&collection=${second}&action=delete`),
+        async (headers) => {
+          await expect(sc.clear(alice, space, { headers })).resolves.toEqual({})
+        },
+      )
+    })
+
     it('resolves putRecord to update rather than demanding create too', async () => {
       // putRecord is create-or-update, so it asks for whichever this write is:
       // an app granted only `update` must be able to overwrite, without also

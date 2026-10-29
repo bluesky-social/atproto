@@ -104,6 +104,9 @@ export class SpacePolicyManager {
       const policy = await actorTxn.space.getActiveSpacePolicy(space)
       assertMemberspace(policy)
       await actorTxn.space.putMember(space, did, access)
+      if (!access.write) {
+        await actorTxn.space.removeWriter(space, did)
+      }
       const writes = await prepareMemberRecordWrites(
         actorTxn.space,
         space,
@@ -121,6 +124,7 @@ export class SpacePolicyManager {
       const policy = await actorTxn.space.getActiveSpacePolicy(space)
       assertMemberspace(policy)
       await actorTxn.space.removeMember(space, did)
+      await actorTxn.space.removeWriter(space, did)
       const writes = await prepareMemberRecordWrites(
         actorTxn.space,
         space,

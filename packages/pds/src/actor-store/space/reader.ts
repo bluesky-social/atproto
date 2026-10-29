@@ -83,6 +83,16 @@ export class SpaceReader {
     return { ...row, value: cborToLexRecord(row.value) }
   }
 
+  async listCollections(space: string): Promise<NsidString[]> {
+    const rows = await this.db.db
+      .selectFrom('space_record')
+      .select('collection')
+      .where('space', '=', space)
+      .groupBy('collection')
+      .execute()
+    return rows.map((row) => row.collection)
+  }
+
   async hasRecord(uri: AtUriString): Promise<boolean> {
     const row = await this.db.db
       .selectFrom('space_record')
