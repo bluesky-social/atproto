@@ -593,7 +593,7 @@ describe('space sync', () => {
     it('records a co-located writer without resolving its public PDS endpoint', async () => {
       const space = await sc.createSpace(alice, {
         policy: com.atproto.memberspace.policy.$build({
-          writeAccess: 'public',
+          publicWrite: true,
         }),
       })
       using resolveDid = jest
@@ -635,7 +635,7 @@ describe('space sync', () => {
     it('records a writer admitted by public write access, who was never a member', async () => {
       const space = await sc.createSpace(alice, {
         policy: com.atproto.memberspace.policy.$build({
-          writeAccess: 'public',
+          publicWrite: true,
         }),
       })
       await sc.write(bob, space, { text: 'from a non-member' })

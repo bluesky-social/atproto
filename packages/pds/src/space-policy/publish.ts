@@ -31,8 +31,8 @@ const POLICY_COLLECTION = com.atproto.space.policy.$type
 const POLICY_RKEY = 'self'
 const MEMBER_COLLECTION = com.atproto.memberspace.member.$type
 
-/** Writing one of these records directly is refused in any repo. */
-export function assertNotPublishedRecord(collection: string): void {
+/** Policy and member records are only written by the PDS, so a direct write is refused in any repo. */
+export function assertNotPolicyRecord(collection: string): void {
   if (collection === POLICY_COLLECTION || collection === MEMBER_COLLECTION) {
     throw new InvalidRequestError(
       `${collection} records are published by the PDS from a space's configuration and cannot be written directly`,

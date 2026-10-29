@@ -29,8 +29,8 @@ export function normalizePolicy(policy: LexPolicy): Policy {
   }
   if (memberspace.policy.$isTypeOf(policy)) {
     return memberspace.policy.$build({
-      readAccess: normalizeAccess(policy.readAccess),
-      writeAccess: normalizeAccess(policy.writeAccess),
+      publicRead: policy.publicRead ?? false,
+      publicWrite: policy.publicWrite ?? false,
       allowedApps: policy.allowedApps,
       publishPolicy: policy.publishPolicy ?? false,
       publishMembers: policy.publishMembers ?? false,
@@ -56,16 +56,6 @@ export function normalizePolicy(policy: LexPolicy): Policy {
   )
 }
 
-function normalizeAccess(access = 'members'): 'public' | 'members' {
-  if (access !== 'public' && access !== 'members') {
-    throw new InvalidRequestError(
-      `Unsupported access: ${access}`,
-      'UnsupportedPolicy',
-    )
-  }
-  return access
-}
-
 // The member list and the methods that manage it belong to the memberspace policy.
 export function assertMemberspace(policy: Policy): void {
   if (!memberspace.policy.$isTypeOf(policy)) {
@@ -81,7 +71,7 @@ export function assertMemberspace(policy: Policy): void {
  * minted without a delegation token saying who the user is.
  */
 export function isPublicRead(policy: Policy): boolean {
-  return memberspace.policy.$isTypeOf(policy) && policy.readAccess === 'public'
+  return memberspace.policy.$isTypeOf(policy) && policy.publicRead === true
 }
 
 export function isPolicyPublished(policy: Policy): boolean {

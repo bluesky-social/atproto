@@ -488,7 +488,7 @@ describe('space auth', () => {
       await sc.removeMember(alice, space, carol)
 
       await expect(sc.mintCredential(space, token)).rejects.toMatchObject({
-        error: 'UserNotAuthorized',
+        error: 'SpaceNotFound',
       })
     })
   })

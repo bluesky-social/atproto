@@ -140,13 +140,12 @@ export class SpacePolicyManager {
   }
 
   /**
-   * Both perimeters a credential has to clear. The app goes first because it decides
-   * from the policy alone, so a refused app is never disclosed to a third-party
-   * managing app.
+   * Both perimeters a credential has to clear. The user goes first, and a user the
+   * policy refuses is answered as though the space does not exist, so that a refusal
+   * discloses nothing about the space to someone without access to it.
    *
    * `userDid` is absent when the request carries no delegation token, which only a
-   * space with public read access accepts. Any other space answers as though it
-   * does not exist, so a request without a token can't learn that it does.
+   * space with public read access accepts.
    */
   async authorizeCredential(opts: {
     space: SpaceRefString
@@ -156,7 +155,16 @@ export class SpacePolicyManager {
   }): Promise<void> {
     const { space, policy, userDid, clientId } = opts
 
-    if (!userDid && !isPublicRead(policy)) {
+    const userAuthorized = userDid
+      ? await this.authorizeUser({
+          space,
+          policy,
+          userDid,
+          access: 'read',
+          clientId,
+        })
+      : isPublicRead(policy)
+    if (!userAuthorized) {
       throw new InvalidRequestError('Space not found', 'SpaceNotFound')
     }
 
@@ -164,22 +172,6 @@ export class SpacePolicyManager {
       throw new InvalidRequestError(
         'Application not authorized for this space',
         'AppNotAuthorized',
-      )
-    }
-
-    if (!userDid) return
-
-    const authorized = await this.authorizeUser({
-      space,
-      policy,
-      userDid,
-      access: 'read',
-      clientId,
-    })
-    if (!authorized) {
-      throw new InvalidRequestError(
-        'User not authorized for this space',
-        'UserNotAuthorized',
       )
     }
   }
@@ -202,8 +194,9 @@ export class SpacePolicyManager {
       return false
     }
     if (memberspace.policy.$isTypeOf(policy)) {
-      const level = access === 'read' ? policy.readAccess : policy.writeAccess
-      if (level === 'public') return true
+      const isPublic =
+        access === 'read' ? policy.publicRead : policy.publicWrite
+      if (isPublic) return true
       const member = await this.actorStore.read(spaceDid, (store) =>
         store.space.getMember(space, userDid),
       )

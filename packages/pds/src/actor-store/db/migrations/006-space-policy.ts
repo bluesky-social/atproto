@@ -99,8 +99,8 @@ function configToPolicy(config: SimplespaceConfig): Policy {
   }
   return {
     $type: 'com.atproto.memberspace.policy',
-    readAccess: config.readPolicy === 'public' ? 'public' : 'members',
-    writeAccess: config.writePolicy === 'public' ? 'public' : 'members',
+    publicRead: config.readPolicy === 'public',
+    publicWrite: config.writePolicy === 'public',
     allowedApps,
     publishPolicy: false,
     publishMembers: false,
@@ -128,9 +128,9 @@ function policyToConfig(uri: string, policy: Policy): SimplespaceConfig {
   // only the authority.
   return {
     uri,
-    readPolicy: policy.readAccess === 'public' ? 'public' : 'member-list',
+    readPolicy: policy.publicRead ? 'public' : 'member-list',
     readManagingApp: null,
-    writePolicy: policy.writeAccess === 'public' ? 'public' : 'member-list',
+    writePolicy: policy.publicWrite ? 'public' : 'member-list',
     writeManagingApp: null,
     ...appAccessConfig,
   }

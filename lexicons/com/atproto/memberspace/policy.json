@@ -6,17 +6,15 @@
       "type": "object",
       "description": "Space policy that governs access via a member list maintained by the space host, managed with putMember and removeMember.",
       "properties": {
-        "readAccess": {
-          "type": "string",
-          "knownValues": ["public", "members"],
-          "default": "members",
-          "description": "Who the authority authorizes to read: any user, or members whose entry has read set."
+        "publicRead": {
+          "type": "boolean",
+          "default": false,
+          "description": "If true, the authority authorizes any user to read. Otherwise, only members whose entry has read set."
         },
-        "writeAccess": {
-          "type": "string",
-          "knownValues": ["public", "members"],
-          "default": "members",
-          "description": "Whose writes the authority tracks and forwards notifications for: any user, or members whose entry has write set."
+        "publicWrite": {
+          "type": "boolean",
+          "default": false,
+          "description": "If true, the authority tracks and forwards notifications for any user's writes. Otherwise, only for members whose entry has write set."
         },
         "allowedApps": {
           "type": "array",
