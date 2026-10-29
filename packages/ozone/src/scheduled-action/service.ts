@@ -1,13 +1,17 @@
-import type { Selectable } from 'kysely'
+import { type Selectable, sql } from 'kysely'
 import { currentDatetimeString, toDatetimeString } from '@atproto/lex'
-import type { DidString, LexMap } from '@atproto/lex'
+import type { DatetimeString, DidString, LexMap } from '@atproto/lex'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import type { ScheduledActionStatus, ScheduledActionType } from '../api/util.js'
 import type { Database } from '../db/index.js'
 import type { ScheduledAction } from '../db/schema/scheduled-action.js'
+import { runNotificationWork } from '../inbox/notification-work.js'
 import type { tools } from '../lexicons/index.js'
 import { dbLogger } from '../logger.js'
-import type { SchedulingParams } from './types.js'
+import { createReportActivity } from '../report/activity.js'
+import { getEventActivityMetadata } from '../report/metadata.js'
+import { notifyReportActivities } from '../report/notifications.js'
+import type { ScheduledTakedownEventData, SchedulingParams } from './types.js'
 
 export type ScheduledActionServiceCreator = (
   db: Database,
@@ -265,6 +269,162 @@ export class ScheduledActionService {
       })
       .where('id', '=', actionId)
       .execute()
+  }
+
+  /**
+   * Returns a query for scheduled reports linked to the given action.
+   */
+  private scheduledReportQuery(action: Selectable<ScheduledAction>) {
+    const eventData = action.eventData as ScheduledTakedownEventData | null
+    const eventId = eventData?.reportEventId
+    if (!Number.isSafeInteger(eventId) || !eventId || eventId < 1) return null
+
+    return this.db.db
+      .selectFrom('report as r')
+      .where('r.did', '=', action.did)
+      .where('r.recordPath', '=', '')
+      .where('r.subjectMessageId', 'is', null)
+      .where('r.subjectConvoId', 'is', null)
+      .where('r.status', '=', 'closed')
+      .where(
+        sql<string>`(
+          select activity.meta ->> 'actionEventId'
+          from report_activity activity
+          where activity."reportId" = r.id
+            and activity."activityType" = 'closeActivity'
+          order by activity."createdAt" desc, activity.id desc
+          limit 1
+        )`,
+        '=',
+        String(eventId),
+      )
+  }
+
+  /**
+   * Links the reports to the given scheduled action.
+   */
+  async linkExecutedReports(
+    action: Selectable<ScheduledAction>,
+    executionEventId: number,
+    executedAt: DatetimeString,
+    inboxStartAt?: DatetimeString,
+  ): Promise<void> {
+    this.db.assertTransaction()
+    const query = this.scheduledReportQuery(action)
+    if (!query) return
+    let cursor = 0
+    let batchSize: number
+    do {
+      const reports = await query
+        .where('r.id', '>', cursor)
+        .select('r.id')
+        .orderBy('r.id')
+        .limit(500)
+        .forUpdate('r')
+        .execute()
+      batchSize = reports.length
+      if (!batchSize) return
+
+      // @NOTE Recheck closure history after acquiring locks with a fresh snapshot.
+      const eligible = query
+        .where(
+          'r.id',
+          'in',
+          reports.map((report) => report.id),
+        )
+        .select('r.id')
+      const updated = await this.db.db
+        .updateTable('report')
+        .set({
+          actionEventIds: sql`coalesce("actionEventIds", '[]'::jsonb) || ${JSON.stringify(executionEventId)}::jsonb`,
+          updatedAt: executedAt,
+        })
+        .where('id', 'in', eligible)
+        .returning('id')
+        .execute()
+      if (updated.length) {
+        await runNotificationWork(this.db, async (txn) => {
+          const closures = await txn.db
+            .selectFrom('report as r')
+            .where(
+              'r.id',
+              'in',
+              updated.map((report) => report.id),
+            )
+            .innerJoinLateral(
+              (eb) =>
+                eb
+                  .selectFrom('report_activity')
+                  .whereRef('reportId', '=', 'r.id')
+                  .where('activityType', '=', 'closeActivity')
+                  .orderBy('createdAt', 'desc')
+                  .orderBy('id', 'desc')
+                  .limit(1)
+                  .select(['id as activityId', 'activityType'])
+                  .as('closure'),
+              (join) => join.onTrue(),
+            )
+            .select([
+              'r.id as reportId',
+              'closure.activityId',
+              'closure.activityType',
+            ])
+            .execute()
+          await notifyReportActivities(
+            txn,
+            closures.map((closure) => ({ ...closure, createdAt: executedAt })),
+            inboxStartAt,
+          )
+        })
+      }
+      cursor = reports[reports.length - 1].id
+    } while (batchSize === 500)
+  }
+
+  /**
+   * Attempt to reopen the oldest report associated with an action.
+   */
+  async reopenOldestScheduledReport(
+    action: Selectable<ScheduledAction>,
+    failureReason: string,
+    inboxStartAt?: DatetimeString,
+  ): Promise<void> {
+    this.db.assertTransaction()
+    const query = this.scheduledReportQuery(action)
+    if (!query) return
+
+    for (;;) {
+      const report = await query
+        .select('r.id')
+        .orderBy('r.createdAt')
+        .orderBy('r.id')
+        .limit(1)
+        .forUpdate('r')
+        .executeTakeFirst()
+      if (!report) return
+      const eligible = await query
+        .where('r.id', '=', report.id)
+        .select('r.id')
+        .executeTakeFirst()
+      if (!eligible) continue
+
+      const eventData = action.eventData as ScheduledTakedownEventData
+      await createReportActivity(this.db, {
+        reportId: report.id,
+        activityType: 'reopenActivity',
+        createdBy: action.createdBy,
+        isAutomated: true,
+        inboxStartAt,
+        internalNote: 'Scheduled takedown failed',
+        meta: {
+          ...getEventActivityMetadata(eventData.modTool),
+          scheduledActionId: action.id,
+          schedulingEventId: eventData.reportEventId,
+          failureReason,
+        },
+      })
+      return
+    }
   }
 
   async markActionAsFailed(

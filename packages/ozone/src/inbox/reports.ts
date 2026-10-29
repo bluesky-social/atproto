@@ -3,6 +3,10 @@ import type { DatetimeString, DidString } from '@atproto/lex'
 import type { Database } from '../db/index.js'
 import { tools } from '../lexicons/index.js'
 import { subjectFromEventRow } from '../mod-service/subject.js'
+import {
+  scheduledClosureFilter,
+  unexecutedScheduledClosure,
+} from '../report/scheduled-closure.js'
 import { APPEAL_REASON_TYPE, REVERSE_TAKEDOWN } from './appeal.js'
 import { isRead } from './seen.js'
 import { inboxHasStarted } from './start.js'
@@ -27,7 +31,8 @@ const reportSelection = [
     PublicEventRow['meta']
   >`jsonb_build_object('convoId', me.meta->'convoId')`.as('meta'),
   'r.id as internalReportId',
-  'r.status as reportStatus',
+  sql<string>`case when r.status = 'closed' and ${unexecutedScheduledClosure()}
+    then 'open' else r.status end`.as('reportStatus'),
   'r.reportType as reportReasonType',
   'r.createdAt as reportCreatedAt',
   'r.updatedAt as reportUpdatedAt',
@@ -104,9 +109,13 @@ export async function queryInboxReports(
         .where('r.updatedAt', '>=', startAt!),
     )
   if (params.filter === 'pending')
-    query = query.where('r.status', '!=', 'closed')
+    query = query.where((eb) =>
+      eb.or([eb('r.status', '!=', 'closed'), unexecutedScheduledClosure()]),
+    )
   if (params.filter === 'resolved')
-    query = query.where('r.status', '=', 'closed')
+    query = query
+      .where('r.status', '=', 'closed')
+      .where((eb) => eb.not(unexecutedScheduledClosure()))
   if (params.filter === 'unread' && seenAt) {
     query = query.where('r.updatedAt', '>', seenAt)
   }
@@ -128,6 +137,7 @@ export async function queryInboxReports(
       'r.createdAt',
       'r.updatedAt',
       'r.closedAt',
+      'r.did',
     ])
     .orderBy(sortColumn, direction)
     .orderBy('r.id', direction)
@@ -164,6 +174,7 @@ export type InboxReportRow = NonNullable<
 export type ReportActions = {
   events: Map<number, PublicEventRow>
   closingEventIds: Map<number, number>
+  scheduledReportIds: Set<number>
 }
 
 export async function loadReportActions(
@@ -191,14 +202,27 @@ export async function loadReportActions(
               .as('closure'),
           (join) => join.onTrue(),
         )
-        .select(['r.id as reportId', 'closure.meta'])
+        .leftJoin('scheduled_action as scheduled', (join) =>
+          join.on(scheduledClosureFilter()),
+        )
+        .select([
+          'r.id as reportId',
+          'closure.meta',
+          'scheduled.status as scheduledStatus',
+          'scheduled.executionEventId',
+        ])
         .execute()
     : []
   const closingEventIds = new Map<number, number>()
+  const scheduledReportIds = new Set<number>()
   for (const activity of activities) {
-    const id = (activity.meta as { actionEventId?: unknown } | null)
-      ?.actionEventId
+    const executed =
+      activity.scheduledStatus === 'executed' && activity.executionEventId
+    const id = executed
+      ? activity.executionEventId
+      : (activity.meta as { actionEventId?: unknown } | null)?.actionEventId
     if (typeof id === 'number') closingEventIds.set(activity.reportId, id)
+    if (executed) scheduledReportIds.add(activity.reportId)
   }
   const ids = [...new Set(closingEventIds.values())]
   const events = ids.length
@@ -214,6 +238,7 @@ export async function loadReportActions(
   return {
     events: new Map(events.map((event) => [event.id, event])),
     closingEventIds,
+    scheduledReportIds,
   }
 }
 
@@ -271,7 +296,10 @@ export function toReportDetail(
         : 'other'
     body.resolution = {
       outcome,
-      resolvedAt: row.reportClosedAt,
+      resolvedAt:
+        actions.scheduledReportIds.has(row.internalReportId) && closingEvent
+          ? closingEvent.createdAt
+          : row.reportClosedAt,
     }
     if (action) {
       body.resolution.actionTaken = action.type
