@@ -12,6 +12,7 @@ import {
   describe,
   expect,
   it,
+  test,
   vi,
 } from 'vitest'
 import {
@@ -38,8 +39,12 @@ type Database = TestNetwork['bsky']['db']
 
 const BSKY_REDIRECT_URL = 'http://bsky'
 
-vi.mock('../../dist/api/age-assurance/const.js', () => {
+vi.mock('../../dist/api/age-assurance/const.js', async () => {
+  const actual = await vi.importActual<{
+    AGE_ASSURANCE_CONFIG: AppBskyAgeassuranceDefs.Config
+  }>('../../dist/api/age-assurance/const.js')
   const AGE_ASSURANCE_CONFIG: AppBskyAgeassuranceDefs.Config = {
+    ...actual.AGE_ASSURANCE_CONFIG,
     regions: [
       {
         countryCode: 'AA',
@@ -73,9 +78,11 @@ vi.mock('../../dist/api/age-assurance/const.js', () => {
           },
         ],
       },
+      ...actual.AGE_ASSURANCE_CONFIG.regions,
     ],
   }
   return {
+    ...actual,
     AGE_ASSURANCE_CONFIG,
   }
 })
@@ -273,6 +280,59 @@ describe('age assurance v2 views', () => {
   })
 
   describe('external handlers', () => {
+    describe.each(['redirect', 'webhook'] as const)(
+      'V2 %s regional access',
+      (callback) => {
+        test.each([
+          { countryCode: 'AU', regionCode: undefined, age: 16, access: 'safe' },
+          { countryCode: 'AU', regionCode: undefined, age: 18, access: 'full' },
+          { countryCode: 'GB', regionCode: undefined, age: 16, access: 'none' },
+          { countryCode: 'GB', regionCode: undefined, age: 18, access: 'full' },
+          { countryCode: 'BR', regionCode: undefined, age: 18, access: 'full' },
+          { countryCode: 'US', regionCode: 'VA', age: 16, access: 'full' },
+          { countryCode: 'US', regionCode: 'MS', age: 16, access: 'none' },
+        ])(
+          '$countryCode $regionCode age $age grants $access',
+          async ({ countryCode, regionCode, age, access }) => {
+            const externalPayload = serializeKWSExternalPayloadV2({
+              version: KWSExternalPayloadVersion.V2,
+              actorDid: actor.did,
+              attemptId: crypto.randomUUID(),
+              countryCode,
+              regionCode,
+            })
+            const status = { verified: true, verifiedMinimumAge: age }
+            const res =
+              callback === 'redirect'
+                ? await kws.redirectV2({
+                    externalPayload,
+                    status: serializeKWSAgeVerifiedStatus(status),
+                  })
+                : await kws.webhookV2({
+                    name: 'age-verified',
+                    time: new Date().toISOString(),
+                    orgId: crypto.randomUUID(),
+                    productId: crypto.randomUUID(),
+                    payload: { email: actor.email, externalPayload, status },
+                  })
+
+            if (callback === 'redirect') {
+              expect(res.status).toBe(302)
+              expect(res.headers.get('Location')).toBe(
+                `${BSKY_REDIRECT_URL}?actorDid=${encodeURIComponent(actor.did)}&result=success`,
+              )
+            } else {
+              expect(res.status).toBe(200)
+            }
+            await network.processAll()
+            const { state } = await getState({ countryCode, regionCode })
+            expect(state.status).toBe('assured')
+            expect(state.access).toBe(access)
+          },
+        )
+      },
+    )
+
     describe('V2 redirects', () => {
       it('redirects with result=unknown if we fail to parse the status object', async () => {
         const res = await kws.redirectV2({
