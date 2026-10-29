@@ -100,7 +100,7 @@ export class BlobDiverter {
       .request(uploadUrl, {
         method: 'POST',
         body: blob.stream,
-        headersTimeout: 300e3,
+        headersTimeout: 420e3,
         bodyTimeout: 10e3,
         headers: {
           Authorization: basicAuth('admin', this.serviceConfig.adminPassword),
