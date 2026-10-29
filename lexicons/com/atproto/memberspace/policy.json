@@ -9,7 +9,7 @@
         "publicRead": {
           "type": "boolean",
           "default": false,
-          "description": "If true, the authority authorizes any user to read. Otherwise, only members whose entry has read set."
+          "description": "If true, the authority issues a space credential to anyone, with or without a delegation token. Otherwise, only to members whose entry has read set."
         },
         "publicWrite": {
           "type": "boolean",
