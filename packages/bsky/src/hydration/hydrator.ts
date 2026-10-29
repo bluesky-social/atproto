@@ -207,6 +207,7 @@ type HydratePostsOptions = Pick<
 > & {
   knownLikers?: HydrateKnownLikersOptions
   skipReplyBlocks?: boolean
+  externalSeenRecordKeys?: Set<string>
 }
 
 type HydrateFeedItemsOptions = {
@@ -839,6 +840,7 @@ export class Hydrator {
       this.feed.getPostgatesForPosts([...postUrisWithPostgates.values()]),
       this.hydrateEmbedExternalViewFromRefs(externalRefs, ctx, {
         hydration: 'basic',
+        seenRecordKeys: options.externalSeenRecordKeys,
       }),
     ])
     if (!ctx.includeTakedowns) {
@@ -1346,6 +1348,37 @@ export class Hydrator {
         // Items have no backlinks; they only point at their photo.
         const photoUri = recordUriOf(record.item, social.grain.photo.$type)
         if (photoUri) discoveredUris.add(photoUri)
+      } else if (
+        // @NOTE Preview actions must not refetch pinned targets as latest.
+        rootBatch &&
+        collection === site.standard.graph.recommend.$type &&
+        site.standard.graph.recommend.$matches(record, { strict: false })
+      ) {
+        const documentUri = recordUriOf(
+          record.document,
+          site.standard.document.$type,
+        )
+        if (documentUri) discoveredUris.add(documentUri)
+      } else if (
+        rootBatch &&
+        collection === site.standard.graph.subscription.$type &&
+        site.standard.graph.subscription.$matches(record, { strict: false })
+      ) {
+        const publicationUri = recordUriOf(
+          record.publication,
+          site.standard.publication.$type,
+        )
+        if (publicationUri) discoveredUris.add(publicationUri)
+      } else if (
+        rootBatch &&
+        collection === social.grain.favorite.$type &&
+        social.grain.favorite.$matches(record, { strict: false })
+      ) {
+        const galleryUri = recordUriOf(
+          record.subject,
+          social.grain.gallery.$type,
+        )
+        if (galleryUri) discoveredUris.add(galleryUri)
       }
     }
 
