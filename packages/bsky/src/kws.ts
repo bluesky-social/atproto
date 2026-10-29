@@ -40,14 +40,10 @@ export type KWSSendEmailRequestCommon = {
   externalPayload: string
 }
 
-export type KWSSendEmailRequest =
-  | (KWSSendEmailRequestCommon & {
-      userContext: 'adult'
-    })
-  | (KWSSendEmailRequestCommon & {
-      userContext: 'age'
-      minimumAge: number
-    })
+export type KWSSendEmailRequest = KWSSendEmailRequestCommon & {
+  userContext: 'age'
+  ageBoundaries: [number]
+}
 
 export class KwsClient {
   private cachedToken?: CachedToken
@@ -151,7 +147,7 @@ export class KwsClient {
   }
 
   /**
-   * @deprecated Use `sendAdultVerifiedFlowEmail` or `sendAgeVerifiedFlowEmail` instead.
+   * @deprecated Use `sendAgeVerifiedFlowEmail` instead.
    */
   async sendEmail({
     countryCode,
@@ -233,25 +229,17 @@ export class KwsClient {
   }
 
   /**
-   * Sends an email to the user initiating an `adult` verification flow, which
-   * results in `adult-verified` events/webhooks.
-   */
-  async sendAdultVerifiedFlowEmail(props: KWSSendEmailRequestCommon) {
-    return this.email({
-      ...props,
-      userContext: 'adult',
-    })
-  }
-
-  /**
    * Sends an email to the user initiating an `age` verification flow, which
    * results in `age-verified` events/webhooks.
    */
-  async sendAgeVerifiedFlowEmail(props: KWSSendEmailRequestCommon) {
+  async sendAgeVerifiedFlowEmail({
+    ageBoundary,
+    ...props
+  }: KWSSendEmailRequestCommon & { ageBoundary: number }) {
     return this.email({
       ...props,
       userContext: 'age',
-      minimumAge: 16, // KWS required value
+      ageBoundaries: [ageBoundary],
     })
   }
 }
