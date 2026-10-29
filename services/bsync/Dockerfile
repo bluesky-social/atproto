@@ -9,12 +9,23 @@ COPY ./.nvmrc ./
 COPY ./package.json ./
 COPY ./pnpm-lock.yaml ./
 COPY ./pnpm-workspace.yaml ./
-COPY ./tsconfig ./tsconfig
-# COPY ./lexicons ./lexicons
-# COPY ./lexicons-overrides ./lexicons-overrides
 
-# NOTE bsync's transitive dependencies go here: if that changes, this needs to be updated.
+# @NOTE Keep manifest and source COPY lists in sync with bsync's transitive dependencies.
 # pnpm list --filter 'bsync-service...' --depth 0 --json | jq '.[].path' | sort -u | sed "s|\"$PWD/|./|; s|\"\$||"
+COPY ./packages/bsync/package.json ./packages/bsync/
+COPY ./packages/common-web/package.json ./packages/common-web/
+COPY ./packages/common/package.json ./packages/common/
+COPY ./packages/internal/opentelemetry-node/package.json ./packages/internal/opentelemetry-node/
+COPY ./packages/lex/lex-cbor/package.json ./packages/lex/lex-cbor/
+COPY ./packages/lex/lex-data/package.json ./packages/lex/lex-data/
+COPY ./packages/lex/lex-json/package.json ./packages/lex/lex-json/
+COPY ./packages/syntax/package.json ./packages/syntax/
+COPY ./services/bsync/package.json ./services/bsync/
+
+# @NOTE Source-only changes must not invalidate dependency installation.
+RUN PUPPETEER_SKIP_DOWNLOAD=true pnpm install --frozen-lockfile
+
+COPY ./tsconfig ./tsconfig
 COPY ./packages/bsync ./packages/bsync
 COPY ./packages/common-web ./packages/common-web
 COPY ./packages/common ./packages/common
@@ -25,8 +36,6 @@ COPY ./packages/lex/lex-json ./packages/lex/lex-json
 COPY ./packages/syntax ./packages/syntax
 COPY ./services/bsync ./services/bsync
 
-# install all deps
-RUN PUPPETEER_SKIP_DOWNLOAD=true pnpm install --frozen-lockfile
 RUN pnpm run --recursive --stream --workspace-concurrency 1 --filter-prod 'bsync-service...' build
 # install only prod deps, hoisted to root node_modules dir
 RUN pnpm install --prod --shamefully-hoist --frozen-lockfile --prefer-offline --config.confirmModulesPurge=false
