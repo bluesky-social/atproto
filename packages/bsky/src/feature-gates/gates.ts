@@ -27,7 +27,6 @@ export enum Gate {
   SuggestedStarterPacksOnboardingV2Enable = 'suggested_starter_packs_onboarding_v2:enable',
   AtmosphereScreenEndpointsEnable = 'atmosphere_screen_endpoints:enable',
   AtmosphereExploreArticlesIrisEnable = 'atmosphere_explore:articles:iris:enable',
-  AgeAssuranceAgeVerifiedFlowEnable = 'age_assurance:age_verified_flow:enable',
 
   // temp
   AATest = 'aa-test-appview',
