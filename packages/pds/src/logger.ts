@@ -1,7 +1,11 @@
 import type { IncomingMessage } from 'node:http'
 import { stdSerializers } from 'pino'
 import { pinoHttp } from 'pino-http'
-import { createLogger, obfuscateHeaders } from '@atproto/common'
+import {
+  createLogger,
+  obfuscateHeaders,
+  obfuscateResSerializer,
+} from '@atproto/common'
 
 export const pdsLogger = createLogger('pds')
 export const blobStoreLogger = createLogger('pds:blob-store')
@@ -40,6 +44,7 @@ export const lexiconResolverLogger = createLogger('pds:lexicon-resolver')
 export const loggerMiddleware = pinoHttp({
   logger: httpLogger,
   serializers: {
+    res: obfuscateResSerializer,
     req: reqSerializer,
     err: (err: unknown) => ({
       code: err?.['code'],
