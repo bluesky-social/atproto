@@ -103,6 +103,8 @@ const lists = [
   },
 ] as const
 type ListKey = (typeof lists)[number]['key']
+// Only livestreams honor schedule fields.
+const unscheduledLists = lists.filter(({ key }) => key !== 'livestreams')
 
 async function setup(config: unknown = {}, exploreEnabled = true) {
   const records = new Map<AtUriString, TypedLexMap>([
@@ -203,6 +205,11 @@ async function setup(config: unknown = {}, exploreEnabled = true) {
   ])
   const takenDown = new Set<string>()
   const takenDownActors = new Set<string>()
+  // Per-DID actor overrides; unlisted DIDs are existing, profile-less actors.
+  const actors = new Map<
+    string,
+    { exists?: boolean; handle?: string; profile?: TypedLexMap }
+  >()
   const blockedActors = new Set<string>()
   const labels: com.atproto.label.defs.Label[] = []
   const lookup = (uri: string) => {
@@ -250,11 +257,25 @@ async function setup(config: unknown = {}, exploreEnabled = true) {
               : [],
         }),
         getActors: ({ dids }) => ({
-          actors: dids.map((did) => ({
-            exists: true,
-            handle: 'author.test',
-            takenDown: takenDownActors.has(did),
-          })),
+          actors: dids.map((did) => {
+            const actor = actors.get(did)
+            return {
+              exists: actor?.exists ?? true,
+              handle: actor?.handle ?? 'author.test',
+              takenDown: takenDownActors.has(did),
+              profile: actor?.profile
+                ? { cid, record: Buffer.from(lexStringify(actor.profile)) }
+                : undefined,
+            }
+          }),
+        }),
+        getCountsForUsers: ({ dids }) => ({
+          followers: dids.map(() => 3),
+          following: dids.map(() => 2),
+          posts: dids.map(() => 1),
+          lists: dids.map(() => 0),
+          feeds: dids.map(() => 0),
+          starterPacks: dids.map(() => 0),
         }),
         getRelationships: ({ targetDids }) => ({
           relationships: targetDids.map((did) => ({
@@ -360,6 +381,7 @@ async function setup(config: unknown = {}, exploreEnabled = true) {
     galleryItems,
     takenDown,
     takenDownActors,
+    actors,
     blockedActors,
     labels,
     dataplane,
@@ -485,10 +507,6 @@ describe('Atmosphere Explore', () => {
     expect(status).toBe(200)
     expect(body.announcementBanner).toEqual(curatedBanner)
     expect(body.apps).toEqual(curated.apps)
-    expect(body.articles.items.map(({ featured }) => featured)).toEqual([
-      false,
-      false,
-    ])
     const article = body.articles.items[0].view
     expect(app.bsky.embed.external.viewArticle.$matches(article)).toBe(true)
     expect(article).toMatchObject({
@@ -568,10 +586,8 @@ describe('Atmosphere Explore', () => {
       missingUri,
     )
     expect(body.articles.items).toHaveLength(1)
-    expect(body.articles.items[0].featured).toBe(false)
     expect(body.publications.items).toHaveLength(1)
     expect(body.photos.items).toHaveLength(1)
-    expect(body.photos.items[0].featured).toBe(false)
     expect(
       body.photos.items[0].view.associatedRefs?.map(({ uri }) => uri),
     ).toEqual([galleryUri, itemUri, photoUri])
@@ -1113,7 +1129,7 @@ describe('Atmosphere Explore', () => {
     )
   })
 
-  it('accepts worker-shaped groups; schedules, not raw featured, decide the flag', async () => {
+  it('accepts worker-shaped groups and ignores retired metadata', async () => {
     const metadata = { startsAt: null, endsAt: null, uris: ['ignored'] }
     await using fixture = await setup({
       ...curated,
@@ -1133,169 +1149,426 @@ describe('Atmosphere Explore', () => {
     })
     const { status, body } = await fixture.query()
     expect(status).toBe(200)
-    // Null schedules are not featured; a worker-supplied `featured` is ignored.
-    expect(body.articles.items.map(({ featured }) => featured)).toEqual([
-      false,
-      false,
-      false,
-    ])
-    expect(body.publications.items.map(({ featured }) => featured)).toEqual([
-      false,
-    ])
-    expect(body.photos.items.map(({ featured }) => featured)).toEqual([false])
-    expect(body.livestreams.items.map(({ featured }) => featured)).toEqual([
-      false,
-    ])
+    expect(body.articles.items).toHaveLength(3)
+    expect(body.publications.items).toHaveLength(1)
+    expect(body.photos.items).toHaveLength(1)
+    expect(body.livestreams.items).toHaveLength(1)
     expect(body.announcementBanner).toEqual(curatedBanner)
     expect(body.apps).toEqual(curated.apps)
     for (const key of lists.map(({ key }) => key))
       for (const item of body[key].items)
-        expect(Object.keys(item).sort()).toEqual(['featured', 'view'])
+        expect(item).toEqual({ featured: false, view: expect.anything() })
   })
 
-  describe('scheduled featured flags', () => {
-    const day = 24 * 60 * 60 * 1000
-    const windows = [
-      {
-        note: 'active',
-        schedule: { startsAt: at(-1), endsAt: at(1) },
-        featured: true,
-      },
-      {
-        note: 'start inclusive',
-        schedule: { startsAt: at(0), endsAt: at(day) },
-        featured: true,
-      },
-      {
-        note: 'end exclusive',
-        schedule: { startsAt: at(-day), endsAt: at(0) },
-        featured: false,
-      },
-      {
-        note: 'future',
-        schedule: { startsAt: at(1), endsAt: at(day) },
-        featured: false,
-      },
-      {
-        note: 'expired',
-        schedule: { startsAt: at(-day), endsAt: at(-1) },
-        featured: false,
-      },
-      { note: 'no dates', schedule: {}, featured: false },
-      {
-        note: 'null dates',
-        schedule: { startsAt: null, endsAt: null },
-        featured: false,
-      },
-      { note: 'missing end', schedule: { startsAt: at(-1) }, featured: false },
-      {
-        note: 'null end',
-        schedule: { startsAt: at(-1), endsAt: null },
-        featured: false,
-      },
-      { note: 'missing start', schedule: { endsAt: at(1) }, featured: false },
-      {
-        note: 'null start',
-        schedule: { startsAt: null, endsAt: at(1) },
-        featured: false,
-      },
-      {
-        note: 'reversed',
-        schedule: { startsAt: at(day), endsAt: at(-day) },
-        featured: false,
-      },
-      {
-        note: 'equal bounds',
-        schedule: { startsAt: at(0), endsAt: at(0) },
-        featured: false,
-      },
-    ]
+  test.each([
+    ['articles', app.bsky.unspecced.getAtmosphereExploreTab.articleItem],
+    [
+      'publications',
+      app.bsky.unspecced.getAtmosphereExploreTab.publicationItem,
+    ],
+    ['photos', app.bsky.unspecced.getAtmosphereExploreTab.galleryItem],
+    ['livestreams', app.bsky.unspecced.getAtmosphereExploreTab.livestreamItem],
+  ] as const)('requires featured on %s items', async (key, schema) => {
+    await using fixture = await setup(curated)
+    const { body } = await fixture.query()
+    const item = body[key].items[0]
+    expect(schema.$matches(item)).toBe(true)
+    const { featured: _featured, ...withoutFeatured } = item
+    expect(schema.$matches(withoutFeatured)).toBe(false)
+  })
 
-    test.each(windows)(
-      'computes featured from the window in every list, ignoring raw featured: $note',
-      async ({ schedule, featured }) => {
+  describe('retired schedules and featured flags', () => {
+    test.each([
+      { note: 'active window', extra: { startsAt: at(-1), endsAt: at(1) } },
+      { note: 'expired window', extra: { startsAt: at(-2), endsAt: at(-1) } },
+      { note: 'future window', extra: { startsAt: at(1), endsAt: at(2) } },
+      { note: 'raw featured flag', extra: { featured: true } },
+      { note: 'malformed startsAt', extra: { startsAt: 'tomorrow' } },
+      { note: 'malformed endsAt', extra: { endsAt: 1 } },
+      { note: 'null dates', extra: { startsAt: null, endsAt: null } },
+    ])(
+      'does not reject, select on, or emit them in any other list: $note',
+      async ({ extra }) => {
         using _now = vi.spyOn(Date, 'now').mockReturnValue(frozenNow)
-        const withRaw = (uri: AtUriString, raw: boolean) => ({
-          canonicalUri: uri,
-          ...schedule,
-          featured: raw,
+        await using fixture = await setup({
+          articles: [{ canonicalUri: docUri, ...extra }],
+          publications: [{ canonicalUri: pubUri, ...extra }],
+          photos: [{ canonicalUri: galleryUri, ...extra }],
         })
-        for (const raw of [true, false]) {
-          await using fixture = await setup({
-            articles: [withRaw(docUri, raw)],
-            publications: [withRaw(pubUri, raw)],
-            photos: [withRaw(galleryUri, raw)],
-            livestreams: [withRaw(liveUri, raw)],
-          })
-          const { status, body } = await fixture.query()
-          expect(status).toBe(200)
-          for (const { key } of lists) {
-            expect(body[key].items.map((item) => item.featured)).toEqual([
-              featured,
-            ])
-            expect(Object.keys(body[key].items[0]).sort()).toEqual([
-              'featured',
-              'view',
-            ])
-          }
+        const { status, body } = await fixture.query()
+        expect(status).toBe(200)
+        for (const { key } of unscheduledLists) {
+          expect(body[key].items).toHaveLength(1)
+          expect(body[key].items[0].featured).toBe(false)
         }
       },
     )
+  })
 
-    it('keeps distinct entries for one root with per-entry flags', async () => {
-      using _now = vi.spyOn(Date, 'now').mockReturnValue(frozenNow)
-      await using fixture = await setup({
-        articles: [
-          { canonicalUri: docUri },
-          { canonicalUri: docUri, startsAt: at(-1), endsAt: at(1) },
-          { canonicalUri: docUri, startsAt: at(1), endsAt: at(2) },
-        ],
+  describe('livestream preview window', () => {
+    const day = 24 * 60 * 60 * 1000
+    const liveName = (name: string) =>
+      atUri(author, streamLivestream.$type, name)
+
+    async function setupStreams(
+      entries: Record<string, unknown>[],
+      lastSeenAt = at(0),
+    ) {
+      const fixture = await setup({
+        livestreams: entries.map(({ name, ...schedule }) => ({
+          canonicalUri: liveName(name as string),
+          ...schedule,
+        })),
       })
+      for (const { name } of entries)
+        fixture.records.set(
+          liveName(name as string),
+          streamLivestream.$build({
+            title: name as string,
+            createdAt: publishedAt,
+            lastSeenAt,
+          }),
+        )
+      return fixture
+    }
+
+    test.each([
+      { note: 'preview start is inclusive', schedule: { previewAt: at(0) } },
+      {
+        note: 'preview takes precedence over an earlier start',
+        schedule: { previewAt: at(1), startsAt: at(-1) },
+        hidden: true,
+      },
+      {
+        note: 'preview takes precedence over a later start',
+        schedule: { previewAt: at(-1), startsAt: at(day) },
+      },
+      { note: 'start is the fallback bound', schedule: { startsAt: at(0) } },
+      {
+        note: 'future start without preview',
+        schedule: { startsAt: at(1) },
+        hidden: true,
+      },
+      {
+        note: 'null preview falls back to a future start',
+        schedule: { previewAt: null, startsAt: at(1) },
+        hidden: true,
+      },
+      {
+        note: 'end is exclusive',
+        schedule: { previewAt: at(-1), endsAt: at(0) },
+        hidden: true,
+      },
+      { note: 'before end', schedule: { endsAt: at(1) } },
+      { note: 'no bounds', schedule: {} },
+      {
+        note: 'null bounds',
+        schedule: { previewAt: null, startsAt: null, endsAt: null },
+      },
+    ])('shows only inside the window: $note', async ({ schedule, hidden }) => {
+      using _now = vi.spyOn(Date, 'now').mockReturnValue(frozenNow)
+      await using fixture = await setupStreams([{ name: 'live', ...schedule }])
+      const { status, body } = await fixture.query()
+      expect(status).toBe(200)
+      expect(body.livestreams.items).toHaveLength(hidden ? 0 : 1)
+    })
+
+    it('filters hidden entries before selection, the cap, and hydration', async () => {
+      using _now = vi.spyOn(Date, 'now').mockReturnValue(frozenNow)
+      const hidden = Array.from({ length: 12 }, (_, i) => ({
+        name: `hidden-${i}`,
+        ...(i % 2 ? { startsAt: at(1) } : { endsAt: at(0) }),
+      }))
+      const shown = [{ name: 'shown-1' }, { name: 'shown-2', startsAt: at(-1) }]
+      await using fixture = await setupStreams([...hidden, ...shown])
       using hydrate = vi.spyOn(
         fixture.hydrator,
         'hydrateEmbedExternalViewFromUris',
       )
       const { body } = await fixture.query()
-      expect(hydrate.mock.calls[0][0]).toEqual([docUri])
-      expect(body.articles.items.map(({ featured }) => featured)).toEqual([
-        true,
-        false,
-        false,
+      expect(hydrate.mock.calls[0][0]).toEqual(
+        shown.map(({ name }) => liveName(name)),
+      )
+      expect(body.livestreams.items.map(({ view }) => view.title)).toEqual([
+        'shown-1',
+        'shown-2',
+      ])
+      for (const item of body.livestreams.items)
+        expect(item.featured).toBe(false)
+    })
+
+    it('skips only entries with malformed dates', async () => {
+      using _now = vi.spyOn(Date, 'now').mockReturnValue(frozenNow)
+      await using fixture = await setupStreams([
+        { name: 'bad-start', startsAt: 'tomorrow' },
+        { name: 'bad-end', endsAt: 1 },
+        { name: 'bad-preview', previewAt: '2026-10-01' },
+        { name: 'ok' },
+      ])
+      const { status, body } = await fixture.query()
+      expect(status).toBe(200)
+      expect(body.livestreams.items.map(({ view }) => view.title)).toEqual([
+        'ok',
       ])
     })
 
+    it('keeps a previewed stream inactive despite a fresh heartbeat', async () => {
+      using _now = vi.spyOn(Date, 'now').mockReturnValue(frozenNow)
+      await using fixture = await setupStreams([
+        { name: 'live', previewAt: at(-day), startsAt: at(1) },
+      ])
+      const { body } = await fixture.query()
+      expect(body.livestreams.items[0].view).toMatchObject({
+        title: 'live',
+        active: false,
+        startedAt: publishedAt,
+      })
+      expect(body.livestreams.items[0].featured).toBe(false)
+    })
+
     test.each([
-      { key: 'articles', bad: { startsAt: 1 } },
-      { key: 'articles', bad: { endsAt: true } },
-      { key: 'publications', bad: { startsAt: 'tomorrow' } },
-      { key: 'photos', bad: { endsAt: '2026-10-01' } },
-      { key: 'livestreams', bad: { startsAt: 'soon' } },
-      // Skipped even when the entry would be excluded by location.
-      { key: 'articles', bad: { locations: ['JP'], endsAt: 'bad' } },
-    ] as const)(
-      'skips a $key entry with a malformed schedule $bad',
-      async ({ key, bad }) => {
-        const { baseUri } = lists.find((list) => list.key === key)!
+      { note: 'fresh heartbeat', lastSeenAt: at(0), active: true },
+      { note: 'stale heartbeat', lastSeenAt: at(-3 * 60_000), active: false },
+    ])(
+      'defers to the shared heartbeat rule after startsAt: $note',
+      async ({ lastSeenAt, active }) => {
         using _now = vi.spyOn(Date, 'now').mockReturnValue(frozenNow)
-        await using fixture = await setup({
-          [key]: [{ canonicalUri: baseUri, ...bad }, { canonicalUri: baseUri }],
-        })
-        const { status, body } = await fixture.query()
-        expect(status).toBe(200)
-        expect(body[key].items.map((item) => item.featured)).toEqual([false])
+        await using fixture = await setupStreams(
+          [{ name: 'live', previewAt: at(-day), startsAt: at(0) }],
+          lastSeenAt,
+        )
+        const { body } = await fixture.query()
+        expect(body.livestreams.items[0].view.active).toBe(active)
       },
     )
 
-    it('skips malformed entries beyond the selection cap', async () => {
+    it('keeps an ended stream inactive after startsAt', async () => {
+      using _now = vi.spyOn(Date, 'now').mockReturnValue(frozenNow)
+      await using fixture = await setupStreams([
+        { name: 'live', startsAt: at(-1) },
+      ])
+      fixture.records.set(
+        liveName('live'),
+        streamLivestream.$build({
+          title: 'live',
+          createdAt: publishedAt,
+          lastSeenAt: at(0),
+          endedAt: at(0),
+        }),
+      )
+      const { body } = await fixture.query()
+      expect(body.livestreams.items[0].view).toMatchObject({
+        active: false,
+        endedAt: at(0),
+      })
+    })
+  })
+
+  describe('app profiles', () => {
+    const images = new ImageUriBuilder('https://images.example.com')
+    const blob = {
+      $type: 'blob',
+      ref: parseCid(photoCid),
+      mimeType: 'image/jpeg',
+      size: 12,
+    } as const
+    const appDid = (name: string) => `did:plc:${name}` as const
+    const appProfile = (displayName: string, withImages = true) =>
+      app.bsky.actor.profile.$build({
+        displayName,
+        ...(withImages ? { avatar: blob, banner: blob } : {}),
+      })
+    const legacy = {
+      logo: 'https://example.com/legacy-logo.png',
+      backgroundImage: 'https://example.com/legacy-bg.png',
+    }
+    const card = (id: string, extra: object = {}) => ({
+      id,
+      title: `App ${id}`,
+      url: 'https://example.com/app',
+      ...extra,
+    })
+
+    it('hydrates a detailed profile backing the card images', async () => {
+      const did = appDid('appone')
+      const editorial = {
+        id: 'one',
+        title: 'Editorial title',
+        description: 'Editorial description',
+        url: 'https://example.com/one',
+        category: 'Social',
+        overlayColor: '#000000',
+        textColor: '#ffffff',
+        ...legacy,
+      }
       await using fixture = await setup({
-        articles: [
-          ...Array.from({ length: 10 }, () => ({ canonicalUri: docUri })),
-          { canonicalUri: docUri, startsAt: 'bad' },
+        apps: [
+          {
+            ...editorial,
+            did,
+            profileUrl: 'https://profile.example/one',
+            profile: { did: 'did:plc:supplied', handle: 'supplied.test' },
+          },
         ],
+      })
+      fixture.actors.set(did, {
+        handle: 'appone.test',
+        profile: appProfile('App One'),
       })
       const { status, body } = await fixture.query()
       expect(status).toBe(200)
-      expect(body.articles.items).toHaveLength(10)
+      const [result] = body.apps
+      const avatar = images.getPresetUri('avatar', did, photoCid)
+      const banner = images.getPresetUri('banner', did, photoCid)
+      expect(result).toEqual({
+        ...editorial,
+        logo: avatar,
+        backgroundImage: banner,
+        profile: expect.objectContaining({
+          did,
+          handle: 'appone.test',
+          displayName: 'App One',
+          avatar,
+          banner,
+          followersCount: 3,
+          followsCount: 2,
+          postsCount: 1,
+        }),
+      })
+      expect(Object.keys(result).sort()).toEqual(
+        [...Object.keys(editorial), 'profile'].sort(),
+      )
+    })
+
+    it('hydrates unique selected DIDs once with the shared context', async () => {
+      const names = ['a', 'b', 'c']
+      await using fixture = await setup({
+        apps: [
+          ...Array.from({ length: 10 }, (_, i) =>
+            card(`${i}`, { did: appDid(names[i % 3]) }),
+          ),
+          // Beyond the cap: never hydrated.
+          card('11', { did: appDid('discarded') }),
+        ],
+        livestreams: [group(liveUri)],
+      })
+      for (const name of names)
+        fixture.actors.set(appDid(name), { profile: appProfile(name) })
+      using profiles = vi.spyOn(fixture.hydrator, 'hydrateProfilesDetailed')
+      using external = vi.spyOn(
+        fixture.hydrator,
+        'hydrateEmbedExternalViewFromUris',
+      )
+      const { status, body } = await fixture.query(true)
+      expect(status).toBe(200)
+      expect(profiles).toHaveBeenCalledTimes(1)
+      expect(profiles.mock.calls[0][0]).toEqual(names.map(appDid))
+      expect(profiles.mock.calls[0][1]).toBe(external.mock.calls[0][1])
+      expect(body.apps).toHaveLength(10)
+      expect(body.apps.map(({ profile }) => profile?.did)).toEqual(
+        Array.from({ length: 10 }, (_, i) => appDid(names[i % 3])),
+      )
+    })
+
+    it('does not hydrate profiles when no app has a DID', async () => {
+      await using fixture = await setup(curated)
+      using profiles = vi.spyOn(fixture.hydrator, 'hydrateProfilesDetailed')
+      const { status, body } = await fixture.query()
+      expect(status).toBe(200)
+      expect(profiles).not.toHaveBeenCalled()
+      expect(body.apps).toEqual(curated.apps)
+    })
+
+    it('keeps apps with a missing or null DID and drops a malformed one', async () => {
+      const did = appDid('valid')
+      await using fixture = await setup({
+        apps: [
+          card('missing', legacy),
+          card('null', { did: null, ...legacy }),
+          card('invalid', { did: 'not-a-did' }),
+          card('number', { did: 5 }),
+          card('valid', { did }),
+        ],
+      })
+      fixture.actors.set(did, { profile: appProfile('Valid') })
+      using profiles = vi.spyOn(fixture.hydrator, 'hydrateProfilesDetailed')
+      const { status, body } = await fixture.query()
+      expect(status).toBe(200)
+      expect(profiles.mock.calls[0][0]).toEqual([did])
+      expect(body.apps.map(({ id }) => id)).toEqual([
+        'missing',
+        'null',
+        'valid',
+      ])
+      expect(body.apps[0]).toEqual(card('missing', legacy))
+      expect(body.apps[1]).toEqual(card('null', legacy))
+      expect(body.apps[2].profile?.did).toBe(did)
+    })
+
+    it('keeps cards when profiles are unavailable or lack images', async () => {
+      const [gone, down, labeled, bare, good] = [
+        'gone',
+        'down',
+        'labeled',
+        'bare',
+        'good',
+      ].map(appDid)
+      await using fixture = await setup({
+        apps: [gone, down, labeled, bare, good].map((did) =>
+          card(did, { did, ...legacy }),
+        ),
+      })
+      fixture.actors.set(gone, { exists: false })
+      fixture.actors.set(down, { profile: appProfile('Down') })
+      fixture.actors.set(labeled, { profile: appProfile('Labeled') })
+      fixture.actors.set(bare, { profile: appProfile('Bare', false) })
+      fixture.actors.set(good, { profile: appProfile('Good') })
+      fixture.takenDownActors.add(down)
+      fixture.labels.push({
+        src: labeler,
+        uri: labeled,
+        val: '!takedown',
+        cts: publishedAt,
+      })
+      const { status, body } = await fixture.query()
+      expect(status).toBe(200)
+      expect(body.apps.map(({ id }) => id)).toEqual([
+        gone,
+        down,
+        labeled,
+        bare,
+        good,
+      ])
+      for (const result of body.apps.slice(0, 3)) {
+        expect(result).toMatchObject(legacy)
+        expect(result).not.toHaveProperty('profile')
+      }
+      // Profile without images: legacy images stay on the card only.
+      expect(body.apps[3]).toMatchObject(legacy)
+      expect(body.apps[3].profile).toMatchObject({ displayName: 'Bare' })
+      expect(body.apps[3].profile).not.toHaveProperty('avatar')
+      expect(body.apps[3].profile).not.toHaveProperty('banner')
+      expect(body.apps[4].logo).toBe(
+        images.getPresetUri('avatar', good, photoCid),
+      )
+    })
+
+    it('applies standard viewer, label, and moderation behavior', async () => {
+      const did = appDid('labeled')
+      await using fixture = await setup({ apps: [card('one', { did })] })
+      fixture.actors.set(did, { profile: appProfile('Labeled') })
+      fixture.labels.push({
+        src: labeler,
+        uri: did,
+        val: 'custom-label',
+        cts: publishedAt,
+      })
+      const anonymous = (await fixture.query()).body.apps[0].profile
+      expect(anonymous?.labels?.map(({ val }) => val)).toEqual(['custom-label'])
+      expect(anonymous?.viewer).toBeUndefined()
+      const authed = (await fixture.query(true)).body.apps[0].profile
+      expect(authed?.labels?.map(({ val }) => val)).toEqual(['custom-label'])
+      expect(authed?.viewer?.following).toBeTruthy()
     })
   })
 
@@ -1466,6 +1739,35 @@ describe('Atmosphere Explore', () => {
         expected: ['news', 'News', 'general', 'untagged'],
       },
       {
+        note: 'single tag with update timestamp',
+        headers: { 'x-atproto-bsky-topics': 'news;2026-09-03T17:00:00.000Z' },
+        expected: ['news', 'general', 'untagged'],
+      },
+      {
+        note: 'last of several tags with update timestamp',
+        headers: {
+          'x-atproto-bsky-topics': 'sports,News;2026-09-03T17:00:00.000Z',
+        },
+        expected: ['News', 'general', 'untagged'],
+      },
+      {
+        note: 'trimmed and repeated tokens with update timestamp',
+        headers: {
+          'x-atproto-bsky-topics': '\tNews ,, news ,news ; 2026-09-03',
+        },
+        expected: ['news', 'News', 'general', 'untagged'],
+      },
+      {
+        note: 'malformed metadata is ignored, not parsed',
+        headers: { 'x-atproto-bsky-topics': 'news;oops,News;extra' },
+        expected: ['news', 'general', 'untagged'],
+      },
+      {
+        note: 'empty tag list before metadata',
+        headers: { 'x-atproto-bsky-topics': ';2026-09-03T17:00:00.000Z' },
+        expected: ['general', 'untagged'],
+      },
+      {
         note: 'general as a requested topic',
         headers: { 'x-atproto-bsky-topics': 'general' },
         expected: ['general', 'untagged'],
@@ -1609,8 +1911,8 @@ describe('Atmosphere Explore', () => {
     const active = { startsAt: at(-1), endsAt: at(1) }
     const expired = { startsAt: at(-2), endsAt: at(-1) }
 
-    test.each(lists)(
-      'places featured $key entries first, then bucket order, before the cap',
+    test.each(unscheduledLists)(
+      'orders $key by bucket and ignores retired schedules before the cap',
       async ({ key, uriFor }) => {
         const u = (name: string) => uriFor(name)
         const entry = (name: string, extra: object) => ({
@@ -1618,63 +1920,58 @@ describe('Atmosphere Explore', () => {
           ...extra,
         })
         const entries = [
-          entry('o-untagged', {}),
-          entry('o-location', { locations: ['US'] }),
-          entry('f-untagged', active),
-          entry('f-general', { tags: ['general'], ...active }),
-          entry('f-location', { locations: ['US-WI'], ...active }),
-          entry('o-topic', { tags: ['news'] }),
-          entry('f-wrong-location', {
+          entry('untagged', {}),
+          entry('location', { locations: ['US'] }),
+          entry('active-untagged', active),
+          entry('active-general', { tags: ['general'], ...active }),
+          entry('active-location', { locations: ['US-WI'], ...active }),
+          entry('topic', { tags: ['news'] }),
+          entry('active-wrong-location', {
             tags: ['news'],
             locations: ['JP'],
             ...active,
           }),
-          entry('f-wrong-location-untagged', { locations: ['JP'], ...active }),
-          entry('f-unrelated', { tags: ['other'], ...active }),
-          entry('o-expired-topic', { tags: ['news'], ...expired }),
-          entry('f-topic', { tags: ['sports'], ...active }),
+          entry('active-unrelated', { tags: ['other'], ...active }),
+          entry('expired-topic', { tags: ['news'], ...expired }),
+          entry('active-topic', { tags: ['sports'], ...active }),
         ]
         expect(await selectedRoots(key, entries, us, topics)).toEqual(
           [
-            'f-location',
-            'f-topic',
-            'f-general',
-            'f-untagged',
-            'o-location',
-            'o-topic',
-            'o-expired-topic',
-            'o-untagged',
+            'location',
+            'active-location',
+            'topic',
+            'expired-topic',
+            'active-topic',
+            'active-general',
+            'untagged',
+            'active-untagged',
           ].map(u),
         )
       },
     )
 
-    test.each(lists)(
-      'lets a later featured $key entry displace an ordinary one before hydration',
+    test.each(unscheduledLists)(
+      'does not let a later scheduled $key entry displace an earlier one',
       async ({ key, uriFor }) => {
         const roots = Array.from({ length: 11 }, (_, i) => uriFor(`root-${i}`))
         const entries = [
           ...roots.slice(0, 10).map((uri) => ({ canonicalUri: uri })),
           { canonicalUri: roots[10], ...active },
         ]
-        expect(await selectedRoots(key, entries)).toEqual([
-          roots[10],
-          ...roots.slice(0, 9),
-        ])
+        expect(await selectedRoots(key, entries)).toEqual(roots.slice(0, 10))
       },
     )
 
     test.each(lists)(
-      'does not backfill when featured $key roots are unavailable',
+      'does not backfill when selected $key roots are unavailable',
       async ({ key, uriFor, baseUri }) => {
-        using _now = vi.spyOn(Date, 'now').mockReturnValue(frozenNow)
         const missing = Array.from({ length: 10 }, (_, i) =>
           uriFor(`missing-${i}`),
         )
         await using fixture = await setup({
           [key]: [
+            ...missing.map((uri) => ({ canonicalUri: uri })),
             { canonicalUri: baseUri },
-            ...missing.map((uri) => ({ canonicalUri: uri, ...active })),
           ],
         })
         using lookup = vi.spyOn(fixture.dataplane, 'getRecordsByURI')
@@ -2063,8 +2360,6 @@ describe('Atmosphere Explore', () => {
       { canonicalUri: 'x', locations: [null] },
       { canonicalUri: 'x', locations: ['U'.repeat(17)] },
       { canonicalUri: 'x', locations: Array.from({ length: 101 }, () => 'US') },
-      { canonicalUri: 'x', startsAt: 'tomorrow' },
-      { canonicalUri: 'x', endsAt: 1 },
     ]
 
     describe.each(lists)('$key', ({ key, baseUri }) => {
@@ -2337,10 +2632,10 @@ describe('Atmosphere Explore list ordering and caps', () => {
   const rootOf = (view: { associatedRefs?: { uri: string }[] }) =>
     view.associatedRefs?.[0]?.uri
 
-  it('shuffles each selected list before hydration, featured items first', async () => {
+  it('shuffles each selected list before hydration', async () => {
     using _now = vi.spyOn(Date, 'now').mockReturnValue(frozenNow)
-    // Index 0 on every swap: [f1, f2, n1, n2] shuffles to [f2, n1, n2, f1],
-    // then featured items are hoisted to give [f2, f1, n1, n2].
+    // Index 0 on every swap: [f1, f2, n1, n2] shuffles to [f2, n1, n2, f1].
+    // Retired schedules on the `f` entries must not change that order.
     using _random = vi.spyOn(Math, 'random').mockReturnValue(0)
     await using fixture = await setup(
       Object.fromEntries(
@@ -2368,7 +2663,7 @@ describe('Atmosphere Explore list ordering and caps', () => {
     const { status, body } = await fixture.query()
     expect(status).toBe(200)
 
-    const expected = ['f2', 'f1', 'n1', 'n2']
+    const expected = ['f2', 'n1', 'n2', 'f1']
     expect(hydrate.mock.calls[0][0]).toEqual(
       lists.flatMap(({ uriFor }) => expected.map((name) => uriFor(name))),
     )
@@ -2378,16 +2673,10 @@ describe('Atmosphere Explore list ordering and caps', () => {
       expect(items.map(({ view }) => rootOf(view))).toEqual(
         expected.map((name) => uriFor(name)),
       )
-      expect(items.map(({ featured }) => featured)).toEqual([
-        true,
-        true,
-        false,
-        false,
-      ])
     }
   })
 
-  it('shuffles Iris articles without marking them featured', async () => {
+  it('shuffles Iris articles', async () => {
     using _random = vi.spyOn(Math, 'random').mockReturnValue(0)
     await using fixture = await setupIris([docUri, doc2Uri, docUri], {}, '9')
     using hydrate = vi.spyOn(
@@ -2402,8 +2691,8 @@ describe('Atmosphere Explore list ordering and caps', () => {
       docUri,
       docUri,
     ])
-    expect(body.articles.items.every(({ featured }) => !featured)).toBe(true)
     expect(body.articles.recIdStr).toBe('9')
+    for (const item of body.articles.items) expect(item.featured).toBe(false)
   })
 
   it('returns at most 10 apps in worker order without hydrating them', async () => {
@@ -2513,7 +2802,7 @@ describe('Atmosphere Explore article source (gate on)', () => {
     expect(client.xrpcDefaults.validateResponse).toBe(false)
   })
 
-  it('uses Iris as the exclusive, non-featured article source', async () => {
+  it('uses Iris as the exclusive article source', async () => {
     await using fixture = await setupIris(
       [doc2Uri, docUri, doc2Uri],
       curated,
@@ -2536,11 +2825,6 @@ describe('Atmosphere Explore article source (gate on)', () => {
       'Article',
       'Second article',
     ])
-    expect(body.articles.items.map(({ featured }) => featured)).toEqual([
-      false,
-      false,
-      false,
-    ])
     expect(hydrate).toHaveBeenCalledWith(
       [doc2Uri, docUri, pubUri, galleryUri, liveUri],
       expect.objectContaining({ viewer: null }),
@@ -2556,10 +2840,8 @@ describe('Atmosphere Explore article source (gate on)', () => {
     expect(body).not.toHaveProperty('recIdStr')
     expect(body.articles.items.some((item) => 'recIdStr' in item)).toBe(false)
     // Other sections are unchanged worker content.
-    expect(body.publications.items.map(({ featured }) => featured)).toEqual([
-      false,
-    ])
-    expect(body.photos.items.map(({ featured }) => featured)).toEqual([false])
+    expect(body.publications.items).toHaveLength(1)
+    expect(body.photos.items).toHaveLength(1)
     expect(body.livestreams.items).toHaveLength(1)
     expect(body.announcementBanner).toEqual(curatedBanner)
     expect(body.apps).toEqual(curated.apps)
@@ -2626,7 +2908,6 @@ describe('Atmosphere Explore article source (gate on)', () => {
     expect(status).toBe(200)
     // Worker location/topic selection never applies to Iris articles.
     expect(body.articles.items).toHaveLength(10)
-    expect(body.articles.items.every(({ featured }) => !featured)).toBe(true)
     expect(hydrate.mock.calls[0][0]).toEqual([docUri, galleryUri])
     expect(body.photos.items).toHaveLength(1)
   })
@@ -2682,7 +2963,10 @@ describe('Atmosphere Explore article source (gate on)', () => {
       name: 'authenticated viewer, request language header',
       authenticated: true,
       params: {},
-      headers: { 'accept-language': 'fr', 'x-atproto-bsky-topics': 'a,b' },
+      headers: {
+        'accept-language': 'fr',
+        'x-atproto-bsky-topics': 'a,b;2026-09-03T17:00:00.000Z',
+      },
       viewer: viewer as string | null,
       language: 'fr',
     },

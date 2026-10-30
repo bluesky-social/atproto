@@ -1,6 +1,6 @@
 import type { IncomingHttpHeaders } from 'node:http'
 import { mapDefined, noUndefinedVals } from '@atproto/common'
-import { type AtUriString, type Client, l } from '@atproto/lex'
+import { type AtUriString, type Client, type DidString, l } from '@atproto/lex'
 import { AtUri } from '@atproto/syntax'
 import {
   ForbiddenError,
@@ -11,7 +11,11 @@ import {
 } from '@atproto/xrpc-server'
 import { safeFetchWrap } from '@atproto-labs/fetch-node'
 import type { AppContext } from '../../../../context.js'
-import type { HydrateCtx, Hydrator } from '../../../../hydration/hydrator.js'
+import {
+  type HydrateCtx,
+  type Hydrator,
+  mergeStates,
+} from '../../../../hydration/hydrator.js'
 import { app, site } from '../../../../lexicons/index.js'
 import { httpLogger } from '../../../../logger.js'
 import {
@@ -27,15 +31,26 @@ import type { Views } from '../../../../views/index.js'
 const MAX_CONFIG_BYTES = 512 * 1024
 const MAX_LIST_ITEMS = 10
 
-const groupSchema = l.object({
+const groupFields = {
   canonicalUri: l.optional(l.unknown()),
-  startsAt: l.optional(l.nullable(l.string({ format: 'datetime' }))),
-  endsAt: l.optional(l.nullable(l.string({ format: 'datetime' }))),
   tags: l.optional(l.array(l.string({ maxLength: 128 }), { maxLength: 100 })),
   locations: l.optional(
     l.array(l.string({ maxLength: 16 }), { maxLength: 100 }),
   ),
+}
+const groupSchema = l.object(groupFields)
+// Only livestreams are scheduled; other groups ignore any schedule fields.
+const optionalDatetime = l.optional(
+  l.nullable(l.string({ format: 'datetime' })),
+)
+const livestreamSchema = l.object({
+  ...groupFields,
+  previewAt: optionalDatetime,
+  startsAt: optionalDatetime,
+  endsAt: optionalDatetime,
 })
+// `did` hydrates the app's profile; `null` and absent both mean no profile.
+const appDidSchema = l.optional(l.nullable(l.string({ format: 'did' })))
 const bannerSchema = l.object({
   status: l.string({ maxLength: 128 }),
   startsAt: l.optional(l.nullable(l.string({ format: 'datetime' }))),
@@ -158,7 +173,7 @@ async function skeleton({
     params,
     now,
   )
-  const select = createSelector(params, params.requestHeaders, now)
+  const select = createSelector(params, params.requestHeaders)
   return {
     now,
     announcementBanner,
@@ -170,7 +185,7 @@ async function skeleton({
               const root = recordUri(uri)
               return root &&
                 new AtUri(root).collection === site.standard.document.$type
-                ? { featured: false, uri: root }
+                ? { uri: root }
                 : undefined
             },
           )
@@ -179,8 +194,18 @@ async function skeleton({
     articleRecIdStr: recommendations?.recIdStr,
     publications: orderGroups(completeGroups(select(config.publications))),
     photos: orderGroups(completeGroups(select(config.photos))),
-    livestreams: orderGroups(completeGroups(select(config.livestreams))),
-    // Apps have no hydration root or featured flag: keep worker order.
+    // Expired and not-yet-previewed livestreams are dropped before selection,
+    // so they never consume the cap.
+    livestreams: orderGroups(
+      mapDefined(
+        select(config.livestreams.filter((entry) => isPreviewable(entry, now))),
+        ({ canonicalUri, startsAt }) => {
+          const uri = recordUri(canonicalUri)
+          return uri ? { uri, startsAt } : undefined
+        },
+      ),
+    ),
+    // Apps are not record-backed: keep worker order.
     apps: config.apps.slice(0, MAX_LIST_ITEMS),
   }
 }
@@ -200,7 +225,15 @@ async function hydration({
       ].map(({ uri }) => uri),
     ),
   ]
-  return ctx.hydrator.hydrateEmbedExternalViewFromUris(uris, params.hydrateCtx)
+  const dids = [...new Set(mapDefined(skeleton.apps, ({ did }) => did))]
+  const [externalState, appProfileState] = await Promise.all([
+    ctx.hydrator.hydrateEmbedExternalViewFromUris(uris, params.hydrateCtx),
+    dids.length
+      ? ctx.hydrator.hydrateProfilesDetailed(dids, params.hydrateCtx)
+      : {},
+  ])
+  // Detailed profile state goes second so it wins any overlapping actor state.
+  return mergeStates(externalState, appProfileState)
 }
 
 function presentation({
@@ -212,46 +245,63 @@ function presentation({
   Params,
   SkeletonState
 >): app.bsky.unspecced.getAtmosphereExploreTab.$OutputBody {
-  const { now, articles, publications, photos, livestreams } = skeleton
+  const { now, articles, publications, photos, livestreams, apps } = skeleton
   return {
     announcementBanner: skeleton.announcementBanner,
     articles: {
-      items: mapDefined(articles, ({ featured, uri }) => {
+      items: mapDefined(articles, ({ uri }) => {
         const view = ctx.views.externalRecordView(uri, state, now)
         return view && app.bsky.embed.external.viewArticle.$isTypeOf(view)
-          ? { featured, view }
+          ? { featured: false, view }
           : undefined
       }),
       recIdStr: skeleton.articleRecIdStr,
     },
     publications: {
-      items: mapDefined(publications, ({ featured, uri }) => {
+      items: mapDefined(publications, ({ uri }) => {
         const view = ctx.views.externalRecordView(uri, state, now)
         return view &&
           app.bsky.embed.external.viewArticlePublication.$isTypeOf(view)
-          ? { featured, view }
+          ? { featured: false, view }
           : undefined
       }),
     },
     photos: {
-      items: mapDefined(photos, ({ featured, uri }) => {
+      items: mapDefined(photos, ({ uri }) => {
         const view = ctx.views.externalRecordView(uri, state, now)
         return view &&
           app.bsky.embed.external.viewGallery.$isTypeOf(view) &&
           view.items.length
-          ? { featured, view }
+          ? { featured: false, view }
           : undefined
       }),
     },
     livestreams: {
-      items: mapDefined(livestreams, ({ featured, uri }) => {
+      items: mapDefined(livestreams, ({ uri, startsAt }) => {
         const view = ctx.views.externalRecordView(uri, state, now)
-        return view && app.bsky.embed.external.viewLivestream.$isTypeOf(view)
-          ? { featured, view }
-          : undefined
+        if (!view || !app.bsky.embed.external.viewLivestream.$isTypeOf(view))
+          return
+        // Previewed streams are never live; copy rather than mutate the view.
+        return startsAt != null && Date.parse(startsAt) > now
+          ? { featured: false, view: { ...view, active: false } }
+          : { featured: false, view }
       }),
     },
-    apps: skeleton.apps,
+    apps: apps.map(({ card, did }) => {
+      const profile = did ? ctx.views.profileDetailed(did, state) : undefined
+      return {
+        id: card.id,
+        title: card.title,
+        description: card.description,
+        logo: profile?.avatar ?? card.logo,
+        backgroundImage: profile?.banner ?? card.backgroundImage,
+        overlayColor: card.overlayColor,
+        textColor: card.textColor,
+        url: card.url,
+        category: card.category,
+        profile,
+      }
+    }),
   }
 }
 
@@ -295,7 +345,10 @@ function createFetchExploreTabSkeleton() {
 }
 
 type Group = l.Infer<typeof groupSchema>
+type LivestreamGroup = l.Infer<typeof livestreamSchema>
 type AppCard = app.bsky.unspecced.getAtmosphereExploreTab.AppCard
+// A validated public card plus the internal DID used to hydrate its profile.
+type AppEntry = { card: AppCard; did?: DidString }
 type ValidBanner = {
   banner: l.Infer<typeof bannerSchema>
   presentation: AnnouncementBanner
@@ -305,8 +358,8 @@ type ExploreConfig = {
   articles: Group[]
   publications: Group[]
   photos: Group[]
-  livestreams: Group[]
-  apps: AppCard[]
+  livestreams: LivestreamGroup[]
+  apps: AppEntry[]
 }
 
 /**
@@ -340,12 +393,44 @@ function normalizeConfig(body: unknown): ExploreConfig {
     articles: valid(groupSchema, config.articles),
     publications: valid(groupSchema, config.publications),
     photos: valid(groupSchema, config.photos),
-    livestreams: valid(groupSchema, config.livestreams),
-    apps: valid(
-      app.bsky.unspecced.getAtmosphereExploreTab.appCard,
-      config.apps,
-    ),
+    livestreams: valid(livestreamSchema, config.livestreams),
+    apps: entries(config.apps).flatMap((entry) => {
+      const parsed = parseApp(entry)
+      return parsed ? [parsed] : []
+    }),
   }
+}
+
+const APP_CARD_FIELDS = [
+  'id',
+  'title',
+  'description',
+  'logo',
+  'backgroundImage',
+  'overlayColor',
+  'textColor',
+  'url',
+  'category',
+] as const
+
+/**
+ * Validates an app entry. Only the public card fields are copied (so a
+ * supplied `profile` or `profileUrl` is never read) and only `did` is kept
+ * beyond them. A present but malformed `did` drops the app.
+ */
+function parseApp(entry: unknown): AppEntry | undefined {
+  if (typeof entry !== 'object' || entry === null || Array.isArray(entry))
+    return
+  const raw = entry as Record<string, unknown>
+  const did = appDidSchema.safeParse(raw.did)
+  if (!did.success) return
+  const card = app.bsky.unspecced.getAtmosphereExploreTab.appCard.safeParse(
+    noUndefinedVals(
+      Object.fromEntries(APP_CARD_FIELDS.map((key) => [key, raw[key]])),
+    ),
+  )
+  if (!card.success) return
+  return { card: card.value, did: did.value ?? undefined }
 }
 
 type Context = {
@@ -364,7 +449,8 @@ type Params = app.bsky.unspecced.getAtmosphereExploreTab.$Params & {
   signal: AbortSignal
 }
 
-type RecordGroup = { featured: boolean; uri: AtUriString }
+type RecordGroup = { uri: AtUriString }
+type LivestreamRecordGroup = RecordGroup & { startsAt?: string | null }
 
 type SkeletonState = {
   now: number
@@ -373,32 +459,42 @@ type SkeletonState = {
   articleRecIdStr?: string
   publications: RecordGroup[]
   photos: RecordGroup[]
-  livestreams: RecordGroup[]
-  apps: app.bsky.unspecced.getAtmosphereExploreTab.AppCard[]
+  livestreams: LivestreamRecordGroup[]
+  apps: AppEntry[]
 }
 
 /**
- * Randomizes a selected list (Fisher-Yates), then places featured items ahead
- * of ordinary ones. Runs before hydration, so presentation keeps this order.
+ * Randomizes a selected list (Fisher-Yates) and caps it. Runs before hydration,
+ * so presentation keeps this order.
  */
-function orderGroups(groups: RecordGroup[]): RecordGroup[] {
+function orderGroups<T extends RecordGroup>(groups: T[]): T[] {
   const shuffled = [...groups]
   for (let i = shuffled.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1))
     ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
   }
-  return [
-    ...shuffled.filter(({ featured }) => featured),
-    ...shuffled.filter(({ featured }) => !featured),
-  ].slice(0, MAX_LIST_ITEMS)
+  return shuffled.slice(0, MAX_LIST_ITEMS)
 }
 
-function completeGroups(groups: SelectedGroup[] = []): RecordGroup[] {
-  return mapDefined(groups, ({ featured, canonicalUri }) => {
+function completeGroups(groups: Group[] = []): RecordGroup[] {
+  return mapDefined(groups, ({ canonicalUri }) => {
     const uri = recordUri(canonicalUri)
-    if (!uri) return
-    return { featured, uri }
+    return uri ? { uri } : undefined
   })
+}
+
+/**
+ * Editorial window for a livestream: shown from `previewAt` (falling back to
+ * `startsAt`) inclusive until `endsAt` exclusive. Absent or null bounds are
+ * open. This is independent of the view's heartbeat-based `active` flag.
+ */
+function isPreviewable(
+  { previewAt, startsAt, endsAt }: LivestreamGroup,
+  now: number,
+): boolean {
+  const start = previewAt ?? startsAt
+  if (start != null && Date.parse(start) > now) return false
+  return endsAt == null || now < Date.parse(endsAt)
 }
 
 type AnnouncementBanner =
@@ -442,48 +538,26 @@ function selectBanner(
 type Selectable = {
   tags?: string[]
   locations?: string[]
-  startsAt?: string | null
-  endsAt?: string | null
 }
-type SelectedGroup = l.Infer<typeof groupSchema> & { featured: boolean }
 
 /**
  * Builds a per-list selector that drops location-ineligible entries, orders
  * the rest by priority bucket (location, requested topic, `general`, untagged;
- * stable within a bucket), moves entries with an active schedule window ahead
- * of the rest (stable, so bucket order holds within each side), and keeps the
- * first `MAX_LIST_ITEMS`. A worker-supplied `featured` flag is ignored.
+ * stable within a bucket), and keeps the first `MAX_LIST_ITEMS`.
  */
 function createSelector(
   params: { countryCode?: string; regionCode?: string },
   headers: IncomingHttpHeaders,
-  now: number,
 ) {
   const topics = parseTopics(headers['x-atproto-bsky-topics'])
-  return (groups: l.Infer<typeof groupSchema>[] = []): SelectedGroup[] => {
-    const buckets: l.Infer<typeof groupSchema>[][] = [[], [], [], []]
+  return <T extends Group>(groups: T[] = []): T[] => {
+    const buckets: T[][] = [[], [], [], []]
     for (const group of groups) {
       const bucket = selectionBucket(group, params, topics)
       if (bucket !== undefined) buckets[bucket].push(group)
     }
-    const featured: SelectedGroup[] = []
-    const ordinary: SelectedGroup[] = []
-    for (const group of buckets.flat()) {
-      const active = isFeatured(group, now)
-      ;(active ? featured : ordinary).push({ ...group, featured: active })
-    }
-    return [...featured, ...ordinary].slice(0, MAX_LIST_ITEMS)
+    return buckets.flat().slice(0, MAX_LIST_ITEMS)
   }
-}
-
-/** Unlike banners, content needs both bounds to define a featured window. */
-function isFeatured({ startsAt, endsAt }: Selectable, now: number): boolean {
-  return (
-    startsAt != null &&
-    endsAt != null &&
-    Date.parse(startsAt) <= now &&
-    now < Date.parse(endsAt)
-  )
 }
 
 function selectionBucket(
@@ -502,10 +576,13 @@ function selectionBucket(
 
 function parseTopics(header: string | string[] | undefined): Set<string> {
   const topics = new Set<string>()
-  const value = Array.isArray(header) ? header.join(',') : header
-  for (const token of value?.split(',') ?? []) {
-    const topic = token.trim()
-    if (topic) topics.add(topic)
+  for (const value of Array.isArray(header) ? header : [header ?? '']) {
+    // @NOTE Clients may append `;<updatedAt>` metadata to the tag list. Ignore it
+    // for matching; the raw header is still forwarded to Iris.
+    for (const token of value.split(';', 1)[0].split(',')) {
+      const topic = token.trim()
+      if (topic) topics.add(topic)
+    }
   }
   return topics
 }
