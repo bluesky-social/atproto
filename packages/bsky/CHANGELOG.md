@@ -1,5 +1,33 @@
 # @atproto/bsky
 
+## 0.5.0
+
+### Minor Changes
+
+- [#5783](https://github.com/bluesky-social/atproto/pull/5783) [`d6e1945`](https://github.com/bluesky-social/atproto/commit/d6e1945e095da70e0b188d5c6684a5797ce9ee8c) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Keep `featured` as a required, deprecated compatibility field on `app.bsky.unspecced.getAtmosphereExploreTab` article, publication, photo, and livestream items; it is always `false`. Retired content scheduling no longer selects or orders articles, publications, and photos. Livestreams are shown from `previewAt` (or `startsAt`) until `endsAt`, and are reported inactive until `startsAt`. App cards now include an optional `profile` (`app.bsky.actor.defs#profileViewDetailed`) hydrated from the app's account, whose avatar and banner back `logo` and `backgroundImage`.
+
+### Patch Changes
+
+- [#5759](https://github.com/bluesky-social/atproto/pull/5759) [`8060c82`](https://github.com/bluesky-social/atproto/commit/8060c82624aae800ce030d2c2096771c77e1fcad) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Split notification spotlights into bursts using the configured grouping algorithm with doubled time spans, requiring each burst to meet the existing page-volume threshold.
+
+- [#5761](https://github.com/bluesky-social/atproto/pull/5761) [`bbfb9ce`](https://github.com/bluesky-social/atproto/commit/bbfb9ce8e9ed56380c766b66249d4c6b20b5f1a5) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Correct endpoint attribution for external embeds hydrated with posts.
+
+- [#5758](https://github.com/bluesky-social/atproto/pull/5758) [`e040958`](https://github.com/bluesky-social/atproto/commit/e0409585e6c5a82fd3fd0197c9d54fca74708bf7) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Add a histogram measuring hydration duration for grouped notifications, reported alongside the existing metrics once per completed response.
+
+- [#5765](https://github.com/bluesky-social/atproto/pull/5765) [`cde5838`](https://github.com/bluesky-social/atproto/commit/cde58383753aaf31f25c088e1219bc3378089a44) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Skip unused parent and thread-root block relationship lookups when hydrating posts for grouped notifications.
+
+- [#5714](https://github.com/bluesky-social/atproto/pull/5714) [`8562b17`](https://github.com/bluesky-social/atproto/commit/8562b172775167593fdf4d82cf4e0242d9d0189b) Thanks [@ocseckin](https://github.com/ocseckin)! - Remove the Topics (hot-topic) client. Suggested feeds and starter packs are always served by Iris, and `getSuggestedUsers` falls back to the suggestions service instead of Topics when its Iris gate is off. `BSKY_TOPICS_URL` and `BSKY_TOPICS_API_KEY` are no longer read.
+
+- [#5763](https://github.com/bluesky-social/atproto/pull/5763) [`861d677`](https://github.com/bluesky-social/atproto/commit/861d677b6e908c7fd3f7f83a6d8dfed9c68896da) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Reduce CPU cost of notification grouping in `getGroupedNotifications`
+
+- [#5761](https://github.com/bluesky-social/atproto/pull/5761) [`bbfb9ce`](https://github.com/bluesky-social/atproto/commit/bbfb9ce8e9ed56380c766b66249d4c6b20b5f1a5) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Attribute AppView hydration contexts consistently to their originating XRPC endpoints.
+
+- [#5783](https://github.com/bluesky-social/atproto/pull/5783) [`d6e1945`](https://github.com/bluesky-social/atproto/commit/d6e1945e095da70e0b188d5c6684a5797ce9ee8c) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Fix curated Atmosphere Explore interest matching for topics headers that carry update-timestamp metadata.
+
+- [#5777](https://github.com/bluesky-social/atproto/pull/5777) [`15aacf4`](https://github.com/bluesky-social/atproto/commit/15aacf4299dc84a650d906e3aa6e82bde1b828d8) Thanks [@blackmichael](https://github.com/blackmichael)! - Add the `app.bsky.unspecced.getAtmosphereTimeline` endpoint.
+- Updated dependencies [[`d6e1945`](https://github.com/bluesky-social/atproto/commit/d6e1945e095da70e0b188d5c6684a5797ce9ee8c)]:
+  - @atproto/api@0.30.0
+
 ## 0.4.0
 
 ### Minor Changes
