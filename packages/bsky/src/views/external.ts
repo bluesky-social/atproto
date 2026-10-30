@@ -28,6 +28,39 @@ export function externalRecordView(
   state: HydrationState,
   now: number,
 ): $Typed<ExternalRecordView> | undefined {
+  return externalRecordViewOrRefs(views, uri, state, now, false)
+}
+
+/** Resolve renderable view dependencies without constructing presentation fields. */
+export function externalRecordViewRefs(
+  views: Views,
+  uri: AtUriString,
+  state: HydrationState,
+): AtUriString[] | undefined {
+  return externalRecordViewOrRefs(views, uri, state, 0, true)
+}
+
+function externalRecordViewOrRefs(
+  views: Views,
+  uri: AtUriString,
+  state: HydrationState,
+  now: number,
+  refsOnly: false,
+): $Typed<ExternalRecordView> | undefined
+function externalRecordViewOrRefs(
+  views: Views,
+  uri: AtUriString,
+  state: HydrationState,
+  now: number,
+  refsOnly: true,
+): AtUriString[] | undefined
+function externalRecordViewOrRefs(
+  views: Views,
+  uri: AtUriString,
+  state: HydrationState,
+  now: number,
+  refsOnly: boolean,
+): $Typed<ExternalRecordView> | AtUriString[] | undefined {
   const info = availableRecord(views, uri, state)
   if (!info) return
   const { record } = info
@@ -38,9 +71,12 @@ export function externalRecordView(
     let base = record.site
     const refs = [uri]
     if (isAtUriString(record.site)) {
-      publisher = publicationView(views, record.site, state)
-      if (!publisher) return
-      base = publisher.uri
+      const publication = publicationRecord(views, record.site, state)
+      if (!publication) return
+      base = publication.url
+      if (!refsOnly) {
+        publisher = publicationView(views, record.site, state, publication)
+      }
       refs.push(record.site)
     }
     const url = httpUri(
@@ -49,6 +85,7 @@ export function externalRecordView(
         : base,
     )
     if (!url || !record.title) return
+    if (refsOnly) return refs
     return app.bsky.embed.external.viewArticle.$build({
       ...commonFields(views, refs, state),
       uri: url,
@@ -73,6 +110,9 @@ export function externalRecordView(
   }
 
   if (site.standard.publication.$matches(record)) {
+    if (refsOnly) {
+      return publicationRecord(views, uri, state) ? [uri] : undefined
+    }
     return publicationView(views, uri, state)
   }
 
@@ -106,6 +146,7 @@ export function externalRecordView(
       if (!social.grain.photo.$matches(photo)) continue
       seenPhotos.add(photoUri)
       refs.push(link.uri, photoUri)
+      if (refsOnly) continue
       items.push(
         app.bsky.embed.external.viewGalleryImage.$build({
           thumbnail: views.imgUriBuilder.getPresetUri(
@@ -128,6 +169,7 @@ export function externalRecordView(
         }),
       )
     }
+    if (refsOnly) return refs
     return app.bsky.embed.external.viewGallery.$build({
       ...commonFields(views, refs, state),
       uri: buildExternalRecordUrl(uri) ?? uri,
@@ -141,6 +183,7 @@ export function externalRecordView(
   }
 
   if (place.stream.livestream.$matches(record)) {
+    if (refsOnly) return [uri]
     const lastSeen = record.lastSeenAt ? Date.parse(record.lastSeenAt) : NaN
     // @NOTE The window applies on both sides of now to tolerate clock skew, so
     // a future heartbeat counts as live for at most twice the window.
@@ -169,11 +212,10 @@ function publicationView(
   views: Views,
   uri: AtUriString,
   state: HydrationState,
+  publication = publicationRecord(views, uri, state),
 ): $Typed<app.bsky.embed.external.ViewArticlePublication> | undefined {
-  const record = availableRecord(views, uri, state)?.record
-  if (!site.standard.publication.$matches(record)) return
-  const url = httpUri(record.url)
-  if (!url || !record.name) return
+  if (!publication) return
+  const { record, url } = publication
   return app.bsky.embed.external.viewArticlePublication.$build({
     ...commonFields(views, [uri], state),
     uri: url,
@@ -203,12 +245,25 @@ function publicationView(
   })
 }
 
-function availableRecord(
+function publicationRecord(
   views: Views,
   uri: AtUriString,
   state: HydrationState,
+) {
+  const record = availableRecord(views, uri, state)?.record
+  if (!site.standard.publication.$matches(record)) return
+  const url = httpUri(record.url)
+  if (!url || !record.name) return
+  return { record, url }
+}
+
+/** Apply shared block, review, and takedown checks to a hydrated record. */
+export function availableRecord(
+  views: Views,
+  uri: AtUriString,
+  state: HydrationState,
+  info: ExternalRecord | null | undefined = state.externalRecords?.get(uri),
 ): ExternalRecord | undefined {
-  const info = state.externalRecords?.get(uri)
   if (!info) return
   const parsed = new AtUri(uri)
   if (!isDidString(parsed.host) || parsed.collection !== info.record.$type)

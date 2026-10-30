@@ -49,6 +49,11 @@ export type ExternalRecords = HydrationMap<AtUriString, ExternalRecord>
 /** Keyed by `genericRecordKey({ uri, cid })` to retain versions of a URI. */
 export type ExternalRecordsByRef = HydrationMap<ExactRecordKey, ExternalRecord>
 export type ExternalRecordBacklinks = HydrationMap<AtUriString, AtUriString[]>
+/** Viewer subscription outcomes per publication; null means unknown. */
+export type ExternalPublicationSubscriptions = HydrationMap<
+  AtUriString,
+  boolean
+>
 
 export type AtmosphereActivityItem = {
   uri: AtUriString
@@ -92,14 +97,16 @@ export type ExternalHydrationLevel = 'basic' | 'detailed'
  * Options for external hydration traversals. `hydration` picks one level for
  * the whole traversal (default `'detailed'`): `'basic'` hydrates renderable
  * content, moderation and aggregate backlink counts; `'detailed'` also samples
- * social-preview backlinks and hydrates their records and participants. The
- * remaining fields are traversal state shared by nested passes.
+ * social-preview backlinks and hydrates their records and participants.
+ * `publicationSubscriptions` opts an authenticated viewer into request-cached
+ * subscription discovery. The remaining fields are shared traversal state.
  */
 export type ExternalHydrationOptions = {
   hydration?: ExternalHydrationLevel
   seenRecordKeys?: Set<string>
   hydrationPass?: number
   hydrationMetrics?: ExternalHydrationTracker
+  publicationSubscriptions?: ExternalPublicationSubscriptions
 }
 
 /**
@@ -128,6 +135,8 @@ export class ExternalHydrator {
    * 100; this is a separate limit from `MAX_RECORDS_PER_REQUEST`.
    */
   static readonly MAX_BACKLINK_COUNT_TARGETS_PER_REQUEST = 100
+  /** Target URIs per actor-backlink RPC, bounded by the dataplane. */
+  static readonly MAX_BACKLINK_ACTOR_TARGETS_PER_REQUEST = 100
 
   constructor(public dataplane: DataPlaneClient) {}
 
