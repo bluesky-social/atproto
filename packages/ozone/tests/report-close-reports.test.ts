@@ -1,12 +1,7 @@
 import { sql } from 'kysely'
 import { ComAtprotoModerationDefs, ids } from '@atproto/api'
 import type AtpAgent from '@atproto/api'
-import {
-  type ModeratorClient,
-  type SeedClient,
-  TestNetwork,
-  basicSeed,
-} from '@atproto/dev-env'
+import { type SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { chat, com, tools } from '../src/lexicons/index.js'
 import {
   CHAT_CONVO_COLLECTION,
@@ -117,8 +112,11 @@ describe('report-close-reports', () => {
     }
   }
 
+  type Subject = Awaited<ReturnType<typeof fixture>>[
+    'account' | 'record' | 'message' | 'conversation']
+
   async function report(
-    subject: Parameters<ModeratorClient['emitEvent']>[0]['subject'],
+    subject: Subject,
     reasonType: string = com.atproto.moderation.defs.ReasonSpam,
   ) {
     const event = await sc.createReport({
@@ -127,12 +125,18 @@ describe('report-close-reports', () => {
       reportedBy: sc.dids.bob,
     })
     await network.processAll()
-    return reportForEvent(network.ozone.getModClient(), event.id)
+    const subjectKey =
+      'uri' in subject
+        ? subject.uri
+        : 'messageId' in subject
+          ? `at://${subject.did}/${CHAT_MESSAGE_COLLECTION}/${subject.messageId}`
+          : 'convoId' in subject
+            ? `at://${subject.did}/${CHAT_CONVO_COLLECTION}/${subject.convoId}`
+            : subject.did
+    return reportForEvent(network.ozone.getModClient(), event.id, subjectKey)
   }
 
-  async function reportsForSubjects(
-    subjects: Parameters<ModeratorClient['emitEvent']>[0]['subject'][],
-  ) {
+  async function reportsForSubjects(subjects: Subject[]) {
     const rows: Awaited<ReturnType<typeof report>>[] = []
     for (const subject of subjects) rows.push(await report(subject))
     return rows
@@ -195,12 +199,18 @@ describe('report-close-reports', () => {
   }
 
   async function snapshotReports(reports: { id: number }[]) {
-    return Promise.all(
-      reports.map(async ({ id }) => ({
+    const snapshots: {
+      report: Awaited<ReturnType<typeof detail>>
+      activities: Awaited<ReturnType<typeof listActivities>>
+    }[] = []
+    // @NOTE Avoid saturating the in-process AppView with concurrent fixture reads.
+    for (const { id } of reports) {
+      snapshots.push({
         report: await detail(id),
         activities: await listActivities(id),
-      })),
-    )
+      })
+    }
+    return snapshots
   }
 
   async function expectUnchanged(
@@ -575,12 +585,7 @@ describe('report-close-reports', () => {
       foreign.message,
       foreign.conversation,
     ])
-    const snapshots = await Promise.all(
-      [...excluded, ...untouched].map(async (r) => ({
-        report: await detail(r.id),
-        activities: await listActivities(r.id),
-      })),
-    )
+    const snapshots = await snapshotReports([...excluded, ...untouched])
     const input = {
       subject: f.did,
       includeAllOwned: true,

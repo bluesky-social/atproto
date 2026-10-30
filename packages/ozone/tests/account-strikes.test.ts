@@ -4,7 +4,7 @@ import {
   type ModeratorClient,
   type SeedClient,
   TestNetwork,
-  basicSeed,
+  usersSeed,
 } from '@atproto/dev-env'
 import { SeverityLevelSettingKey } from '../src/setting/constants.js'
 import { forSnapshot } from './_util.js'
@@ -59,7 +59,18 @@ describe('account-strikes', () => {
     agent = network.ozone.getAgent()
     sc = network.getSeedClient()
     modClient = network.ozone.getModClient()
-    await basicSeed(sc)
+    await usersSeed(sc)
+    // @NOTE Avoid the unrelated background work from the full seed.
+    await sc.post(sc.dids.alice, 'hey there')
+    const root = await sc.post(sc.dids.alice, 'again')
+    await sc.post(sc.dids.alice, 'yoohoo label_me')
+    const bobReply = await sc.reply(
+      sc.dids.bob,
+      root.ref,
+      root.ref,
+      'hear that',
+    )
+    await sc.reply(sc.dids.alice, root.ref, bobReply.ref, 'thanks bob')
     await network.processAll()
     await configureSeverityLevels()
   })
