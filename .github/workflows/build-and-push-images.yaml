@@ -1,0 +1,151 @@
+name: build-and-push-images
+on:
+  push:
+    branches:
+      - main
+      - msi/docker-pnpm-fetch
+
+jobs:
+  # Caches the `deps` stage (pnpm fetch), the only layer that survives source
+  # changes. Image jobs only read it: their later layers change on every commit
+  # and would just churn the cache.
+  deps:
+    if: github.repository == 'bluesky-social/atproto'
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+
+    steps:
+      # Temporary until fixed runner images roll out:
+      # https://github.com/actions/runner-images/issues/15018
+      - name: Update Ubuntu CA certificates
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install --only-upgrade --no-install-recommends -y ca-certificates
+
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Setup Docker buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Fetch dependencies
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          target: deps
+          outputs: type=cacheonly
+          cache-from: type=gha,scope=deps
+          cache-to: type=gha,scope=deps,mode=max
+
+  # Each registry has its own job, so that each only holds its own credentials.
+  image-ghcr:
+    if: github.repository == 'bluesky-social/atproto'
+    needs: deps
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        service: [bsky, bsync, ozone, pds]
+
+    steps:
+      # Temporary until fixed runner images roll out:
+      # https://github.com/actions/runner-images/issues/15018
+      - name: Update Ubuntu CA certificates
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install --only-upgrade --no-install-recommends -y ca-certificates
+
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Setup Docker buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Log into registry ghcr.io
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: |
+            ghcr.io/${{ github.repository }}
+          tags: |
+            type=sha,enable=true,priority=100,prefix=${{ matrix.service }}:,suffix=,format=long
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          target: ${{ matrix.service }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=deps
+
+  image-aws:
+    if: github.repository == 'bluesky-social/atproto'
+    needs: deps
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - service: bsky
+            image: bsky-app-view
+          - service: bsync
+            image: bsync
+          - service: ozone
+            image: ozone
+          - service: pds
+            image: pds
+
+    steps:
+      # Temporary until fixed runner images roll out:
+      # https://github.com/actions/runner-images/issues/15018
+      - name: Update Ubuntu CA certificates
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install --only-upgrade --no-install-recommends -y ca-certificates
+
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Setup Docker buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Log into registry AWS ECR
+        uses: docker/login-action@v4
+        with:
+          registry: ${{ secrets.AWS_ECR_REGISTRY_USEAST2_PACKAGES_REGISTRY }}
+          username: ${{ secrets.AWS_ECR_REGISTRY_USEAST2_PACKAGES_USERNAME }}
+          password: ${{ secrets.AWS_ECR_REGISTRY_USEAST2_PACKAGES_PASSWORD }}
+
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: |
+            ${{ secrets.AWS_ECR_REGISTRY_USEAST2_PACKAGES_REGISTRY }}/${{ matrix.image }}
+          tags: |
+            type=sha,enable=true,priority=100,prefix=,suffix=,format=long
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          target: ${{ matrix.service }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=deps
