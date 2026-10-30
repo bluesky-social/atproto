@@ -576,10 +576,13 @@ function selectionBucket(
 
 function parseTopics(header: string | string[] | undefined): Set<string> {
   const topics = new Set<string>()
-  const value = Array.isArray(header) ? header.join(',') : header
-  for (const token of value?.split(',') ?? []) {
-    const topic = token.trim()
-    if (topic) topics.add(topic)
+  for (const value of Array.isArray(header) ? header : [header ?? '']) {
+    // @NOTE Clients may append `;<updatedAt>` metadata to the tag list. Ignore it
+    // for matching; the raw header is still forwarded to Iris.
+    for (const token of value.split(';', 1)[0].split(',')) {
+      const topic = token.trim()
+      if (topic) topics.add(topic)
+    }
   }
   return topics
 }

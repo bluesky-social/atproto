@@ -1721,6 +1721,35 @@ describe('Atmosphere Explore', () => {
         expected: ['news', 'News', 'general', 'untagged'],
       },
       {
+        note: 'single tag with update timestamp',
+        headers: { 'x-atproto-bsky-topics': 'news;2026-09-03T17:00:00.000Z' },
+        expected: ['news', 'general', 'untagged'],
+      },
+      {
+        note: 'last of several tags with update timestamp',
+        headers: {
+          'x-atproto-bsky-topics': 'sports,News;2026-09-03T17:00:00.000Z',
+        },
+        expected: ['News', 'general', 'untagged'],
+      },
+      {
+        note: 'trimmed and repeated tokens with update timestamp',
+        headers: {
+          'x-atproto-bsky-topics': '\tNews ,, news ,news ; 2026-09-03',
+        },
+        expected: ['news', 'News', 'general', 'untagged'],
+      },
+      {
+        note: 'malformed metadata is ignored, not parsed',
+        headers: { 'x-atproto-bsky-topics': 'news;oops,News;extra' },
+        expected: ['news', 'general', 'untagged'],
+      },
+      {
+        note: 'empty tag list before metadata',
+        headers: { 'x-atproto-bsky-topics': ';2026-09-03T17:00:00.000Z' },
+        expected: ['general', 'untagged'],
+      },
+      {
         note: 'general as a requested topic',
         headers: { 'x-atproto-bsky-topics': 'general' },
         expected: ['general', 'untagged'],
@@ -2915,7 +2944,10 @@ describe('Atmosphere Explore article source (gate on)', () => {
       name: 'authenticated viewer, request language header',
       authenticated: true,
       params: {},
-      headers: { 'accept-language': 'fr', 'x-atproto-bsky-topics': 'a,b' },
+      headers: {
+        'accept-language': 'fr',
+        'x-atproto-bsky-topics': 'a,b;2026-09-03T17:00:00.000Z',
+      },
       viewer: viewer as string | null,
       language: 'fr',
     },
