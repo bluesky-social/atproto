@@ -10,8 +10,24 @@
 
 .git
 
-# services dev
-services/*/tsconfig.json
+# Repository files the service builds do not read. Each service image builds
+# from the repository root, so any of these changing would rebuild all of them.
+.agents
+.changeset
+.claude
+.github
+.vscode
+.zed
+coverage
+docker-bake.hcl
+interop-test-files
+*.md
+eslint.config.js
+jest.config.cjs
+jest.varint-shim.cjs
+Makefile
+prettier.config.js
+vitest.config.ts
 
 # buf
 packages/bsky/src/proto
