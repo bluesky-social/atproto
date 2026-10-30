@@ -3,11 +3,11 @@ import type { AtUriString } from '@atproto/lex'
 import { app, place, site } from '../../../../lexicons/index.js'
 import { uriToDid } from '../../../../util/uris.js'
 
-type AtmosphereItem = app.bsky.unspecced.getAtmosphereTimeline.AtmosphereItem
-type AtmosphereGroup = app.bsky.unspecced.getAtmosphereTimeline.AtmosphereGroup
+type ActivityItem = app.bsky.unspecced.getAtmosphereTimeline.ActivityItem
+type ActivityGroup = app.bsky.unspecced.getAtmosphereTimeline.ActivityGroup
 
 export type TimelineActivity = {
-  item: AtmosphereItem
+  item: ActivityItem
   sortedAt: number
   target?: AtUriString
   groupable: boolean
@@ -25,11 +25,11 @@ export function atmosphereWindow(ageMs: number): number {
 export function groupAtmosphereActivities(
   activities: TimelineActivity[],
   now: number,
-): (AtmosphereItem | AtmosphereGroup)[] {
+): (ActivityItem | ActivityGroup)[] {
   const consumed = new Set<number>()
-  const output = new Map<number, AtmosphereItem | AtmosphereGroup>()
+  const output = new Map<number, ActivityItem | ActivityGroup>()
   const articles = new Map<AtUriString, number>()
-  const related = new Map<number, AtmosphereItem[]>()
+  const related = new Map<number, ActivityItem[]>()
 
   for (const [index, { item }] of activities.entries()) {
     if (item.collection === site.standard.document.$type) {
@@ -52,7 +52,7 @@ export function groupAtmosphereActivities(
     consumed.add(index)
   }
 
-  const itemAt = (index: number): AtmosphereItem => {
+  const itemAt = (index: number): ActivityItem => {
     const item = activities[index].item
     const attachments = related.get(index)
     return attachments ? { ...item, relatedActivity: attachments } : item
@@ -89,7 +89,7 @@ export function groupAtmosphereActivities(
           end++
         }
         if (end - start >= 2) {
-          const items: AtmosphereItem[] = []
+          const items: ActivityItem[] = []
           for (let offset = start; offset < end; offset++) {
             const index = indices[offset]
             items.push(itemAt(index))
@@ -97,7 +97,7 @@ export function groupAtmosphereActivities(
           }
           output.set(
             firstIndex,
-            app.bsky.unspecced.getAtmosphereTimeline.atmosphereGroup.$build({
+            app.bsky.unspecced.getAtmosphereTimeline.activityGroup.$build({
               id: `${groupBy}:${first.item.record.uri}`,
               groupBy,
               collection: first.item.collection,
@@ -117,7 +117,7 @@ export function groupAtmosphereActivities(
   group('subject')
   group('actor')
 
-  const feed: (AtmosphereItem | AtmosphereGroup)[] = []
+  const feed: (ActivityItem | ActivityGroup)[] = []
   for (let index = 0; index < activities.length; index++) {
     const grouped = output.get(index)
     if (grouped) feed.push(grouped)

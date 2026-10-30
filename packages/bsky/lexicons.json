@@ -975,7 +975,7 @@
     },
     "app.bsky.unspecced.getAtmosphereTimeline": {
       "uri": "file://../../lexicons-overrides/app/bsky/unspecced/getAtmosphereTimeline.json",
-      "cid": "bafyreihxxa4i55tosa5wf5r5ylp4njy6nvladjq4zzflw2cm72wxcix63u"
+      "cid": "bafyreibq6g2kinvd4kcvxrqn7xoydqhcca2fajlqxyckaqfkfljivmd6ni"
     },
     "app.bsky.unspecced.getConfig": {
       "uri": "https://raw.githubusercontent.com/bluesky-social/bsky/refs/heads/main/lexicons/app/bsky/unspecced/getConfig.json",

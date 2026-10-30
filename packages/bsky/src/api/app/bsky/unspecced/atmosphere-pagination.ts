@@ -146,7 +146,7 @@ export async function loadAtmosphereTimeline(
     if (!profile) continue
     output.push({
       position: bucket.position,
-      item: app.bsky.unspecced.getAtmosphereTimeline.atmosphereItemOverflow.$build(
+      item: app.bsky.unspecced.getAtmosphereTimeline.activityItemOverflow.$build(
         {
           collection: bucket.collection,
           count: bucket.overflow,

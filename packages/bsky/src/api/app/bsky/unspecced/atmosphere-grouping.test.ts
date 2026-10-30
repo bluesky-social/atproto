@@ -26,8 +26,8 @@ const gallery = social.grain.gallery.$type
 const livestream = place.stream.livestream.$type
 
 type FeedEntry =
-  | app.bsky.unspecced.getAtmosphereTimeline.AtmosphereItem
-  | app.bsky.unspecced.getAtmosphereTimeline.AtmosphereGroup
+  | app.bsky.unspecced.getAtmosphereTimeline.ActivityItem
+  | app.bsky.unspecced.getAtmosphereTimeline.ActivityGroup
 
 function activity(
   id: string,
@@ -50,7 +50,7 @@ function activity(
     sortedAt: now - age,
     target: options.target,
     groupable: options.groupable ?? true,
-    item: timeline.atmosphereItem.$build({
+    item: timeline.activityItem.$build({
       record: {
         uri,
         cid: asStringFormat(

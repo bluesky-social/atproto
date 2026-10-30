@@ -23,9 +23,9 @@
               "items": {
                 "type": "union",
                 "refs": [
-                  "#atmosphereItem",
-                  "#atmosphereItemOverflow",
-                  "#atmosphereGroup"
+                  "#activityItem",
+                  "#activityItemOverflow",
+                  "#activityGroup"
                 ]
               }
             }
@@ -49,7 +49,7 @@
         "subscribed": { "type": "boolean" }
       }
     },
-    "atmosphereItem": {
+    "activityItem": {
       "type": "object",
       "required": ["record", "collection", "viewerState"],
       "properties": {
@@ -69,11 +69,11 @@
         "relatedActivity": {
           "type": "array",
           "description": "Recommendations and shares attached to this article. Attached activities do not themselves contain related activity.",
-          "items": { "type": "ref", "ref": "#atmosphereItem" }
+          "items": { "type": "ref", "ref": "#activityItem" }
         }
       }
     },
-    "atmosphereItemOverflow": {
+    "activityItemOverflow": {
       "type": "object",
       "description": "Distinct additional activities omitted from this page for an author and collection, without hydrating the omitted records.",
       "required": ["count", "collection", "associatedProfiles"],
@@ -89,7 +89,7 @@
         }
       }
     },
-    "atmosphereGroup": {
+    "activityGroup": {
       "type": "object",
       "description": "Two or more activities of the same collection, within a fixed window anchored at the newest member. The group occupies the newest member's position.",
       "required": ["id", "groupBy", "collection", "indexedAt", "items"],
@@ -101,7 +101,7 @@
         "items": {
           "type": "array",
           "minLength": 2,
-          "items": { "type": "ref", "ref": "#atmosphereItem" }
+          "items": { "type": "ref", "ref": "#activityItem" }
         },
         "subject": { "type": "string", "format": "at-uri" },
         "actor": { "type": "string", "format": "did" }

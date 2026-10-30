@@ -257,12 +257,13 @@ function publicationRecord(
   return { record, url }
 }
 
-function availableRecord(
+/** Apply shared block, review, and takedown checks to a hydrated record. */
+export function availableRecord(
   views: Views,
   uri: AtUriString,
   state: HydrationState,
+  info: ExternalRecord | null | undefined = state.externalRecords?.get(uri),
 ): ExternalRecord | undefined {
-  const info = state.externalRecords?.get(uri)
   if (!info) return
   const parsed = new AtUri(uri)
   if (!isDidString(parsed.host) || parsed.collection !== info.record.$type)

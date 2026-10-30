@@ -267,11 +267,11 @@ async function setup(pages: Row[][]) {
 
 function activities(
   body: app.bsky.unspecced.getAtmosphereTimeline.$OutputBody,
-): app.bsky.unspecced.getAtmosphereTimeline.AtmosphereItem[] {
+): app.bsky.unspecced.getAtmosphereTimeline.ActivityItem[] {
   return body.feed.flatMap((entry) =>
-    endpoint.atmosphereGroup.$isTypeOf(entry)
+    endpoint.activityGroup.$isTypeOf(entry)
       ? entry.items
-      : endpoint.atmosphereItem.$isTypeOf(entry)
+      : endpoint.activityItem.$isTypeOf(entry)
         ? [entry]
         : [],
   )
@@ -339,7 +339,7 @@ describe('Atmosphere timeline HTTP endpoint', () => {
       items.slice(0, 5).map(({ uri }) => uri),
     )
     expect(
-      first.body.feed.filter(endpoint.atmosphereItemOverflow.$isTypeOf),
+      first.body.feed.filter(endpoint.activityItemOverflow.$isTypeOf),
     ).toMatchObject([{ count: 245 }])
     expect(
       JSON.parse(Buffer.from(first.body.cursor!, 'base64url').toString())
@@ -352,7 +352,7 @@ describe('Atmosphere timeline HTTP endpoint', () => {
       items.slice(250, 255).map(({ uri }) => uri),
     )
     expect(
-      second.body.feed.filter(endpoint.atmosphereItemOverflow.$isTypeOf),
+      second.body.feed.filter(endpoint.activityItemOverflow.$isTypeOf),
     ).toMatchObject([{ count: 45 }])
     expect(second.body.cursor).toBeUndefined()
     expect(fixture.timelineCalls.map(({ cursor }) => cursor)).toEqual([
@@ -484,7 +484,7 @@ describe('Atmosphere timeline HTTP endpoint', () => {
     const response = await fixture.query()
     expect(response.status).toBe(200)
     const overflow = response.body.feed.filter(
-      endpoint.atmosphereItemOverflow.$isTypeOf,
+      endpoint.activityItemOverflow.$isTypeOf,
     )
     expect(overflow).toEqual([
       expect.objectContaining({

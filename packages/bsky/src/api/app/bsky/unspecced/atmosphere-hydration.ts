@@ -1,4 +1,3 @@
-import { chunkArray } from '@atproto/common'
 import {
   type AtUriString,
   type DidString,
@@ -20,9 +19,11 @@ import {
 } from '../../../../hydration/hydrator.js'
 import { HydrationMap } from '../../../../hydration/util.js'
 import { app, place, site, social } from '../../../../lexicons/index.js'
-import { hydrationLogger } from '../../../../logger.js'
 import { recordUriOf, uriToDid } from '../../../../util/uris.js'
-import { externalRecordViewRefs } from '../../../../views/external.js'
+import {
+  availableRecord,
+  externalRecordViewRefs,
+} from '../../../../views/external.js'
 import type { Views } from '../../../../views/index.js'
 import type { TimelineActivity } from './atmosphere-grouping.js'
 
@@ -31,14 +32,16 @@ export class AtmosphereTimelineHydrator {
   private state: HydrationState
   private readonly seen = new Set<string>()
   private readonly seenPosts = new Set<AtUriString>()
-  private readonly subscriptions = new Map<AtUriString, boolean | undefined>()
 
   constructor(
     private readonly ctx: { hydrator: Hydrator; views: Views },
     private readonly hydrateCtx: HydrateCtxWithViewer,
     private readonly now: number,
   ) {
-    this.state = { ctx: hydrateCtx }
+    this.state = {
+      ctx: hydrateCtx,
+      externalPublicationSubscriptions: new HydrationMap(),
+    }
   }
 
   /** Hydrate new roots and their dependencies without repeating prior lookups. */
@@ -59,7 +62,11 @@ export class AtmosphereTimelineHydrator {
       await this.ctx.hydrator.hydrateEmbedExternalViewFromUris(
         external,
         this.hydrateCtx,
-        { hydration: 'basic', seenRecordKeys: this.seen },
+        {
+          hydration: 'basic',
+          seenRecordKeys: this.seen,
+          publicationSubscriptions: this.state.externalPublicationSubscriptions,
+        },
       ),
     )
     // @NOTE Latest lookups also satisfy exact refs to that same version.
@@ -73,58 +80,13 @@ export class AtmosphereTimelineHydrator {
           posts.map((uri) => ({ uri })),
           this.hydrateCtx,
           this.state,
-          { externalSeenRecordKeys: this.seen },
+          {
+            externalSeenRecordKeys: this.seen,
+            externalPublicationSubscriptions:
+              this.state.externalPublicationSubscriptions,
+          },
         ),
       )
-    }
-
-    const publications = new Set<AtUriString>()
-    const discoverPublication = (info: ExternalRecord | null) => {
-      if (!info || !site.standard.document.$matches(info.record)) return
-      const publication = recordUriOf(
-        info.record.site,
-        site.standard.publication.$type,
-      )
-      if (publication && !this.subscriptions.has(publication)) {
-        publications.add(publication)
-      }
-    }
-    this.state.externalRecords?.forEach(discoverPublication)
-    this.state.externalRecordsByRef?.forEach(discoverPublication)
-    for (const batch of chunkArray([...publications], 100)) {
-      const result = await this.ctx.hydrator.external
-        .getAtmosphereBacklinksByActor(
-          batch,
-          this.hydrateCtx.viewer as DidString,
-          site.standard.graph.subscription.$type,
-        )
-        .catch((err) => {
-          hydrationLogger.warn(
-            { err },
-            'failed to hydrate Atmosphere timeline subscriptions',
-          )
-          return undefined
-        })
-      if (!result) {
-        for (const publication of batch) {
-          this.subscriptions.set(publication, undefined)
-        }
-        continue
-      }
-      for (const publication of batch) {
-        const subscribed = result.backlinks
-          .get(publication)
-          ?.some(
-            (uri) =>
-              recordUriOf(uri, site.standard.graph.subscription.$type) &&
-              uriToDid(uri) === this.hydrateCtx.viewer,
-          )
-        // @NOTE An omitted result in a truncated batch is unknown, not false.
-        this.subscriptions.set(
-          publication,
-          subscribed ? true : result.truncated ? undefined : false,
-        )
-      }
     }
   }
 
@@ -145,7 +107,7 @@ export class AtmosphereTimelineHydrator {
     if (!selected) return
     const { info, collection, target, groupable, subscribed, viewUri, state } =
       selected
-    let view: app.bsky.unspecced.getAtmosphereTimeline.AtmosphereItem['view']
+    let view: app.bsky.unspecced.getAtmosphereTimeline.ActivityItem['view']
     if (collection === app.bsky.feed.post.$type) {
       const postView = this.ctx.views.post(uri, this.state)
       if (!postView) return
@@ -155,7 +117,7 @@ export class AtmosphereTimelineHydrator {
       if (!view) return
     }
     return {
-      item: app.bsky.unspecced.getAtmosphereTimeline.atmosphereItem.$build({
+      item: app.bsky.unspecced.getAtmosphereTimeline.activityItem.$build({
         record: { uri, cid: info.cid, indexedAt: toDatetimeString(sortedAt) },
         collection,
         viewerState: { subscribed },
@@ -242,7 +204,7 @@ export class AtmosphereTimelineHydrator {
           site.standard.publication.$type,
         )
         const subscription = publication
-          ? this.subscriptions.get(publication)
+          ? this.state.externalPublicationSubscriptions?.get(publication)
           : false
         subscribed = subscription === true
         groupable = subscription === false
@@ -265,23 +227,25 @@ export class AtmosphereTimelineHydrator {
   private visibleAuthor(did: DidString, state = this.state): boolean {
     const { views } = this.ctx
     return (
-      !!state.actors?.get(did) &&
+      this.hasUnmutedAuthor(did, state) &&
       !views.actorIsNoHosted(did, state) &&
       !views.viewerBlockExists(did, state) &&
-      !views.viewerMuteExists(did, state) &&
       views.viewerSeesNeedsReview({ did }, state)
+    )
+  }
+
+  private hasUnmutedAuthor(did: DidString, state: HydrationState): boolean {
+    // @NOTE Shared views tolerate absent profiles; timeline activity needs one.
+    return (
+      !!state.actors?.get(did) && !this.ctx.views.viewerMuteExists(did, state)
     )
   }
 
   private visibleRecord(uri: AtUriString, state: HydrationState): boolean {
     const info = state.externalRecords?.get(uri) ?? state.posts?.get(uri)
     return (
-      !!info &&
-      new AtUri(uri).collection === info.record.$type &&
-      !info.takedownRef &&
-      !state.labels?.get(uri)?.isTakendown &&
-      this.visibleAuthor(uriToDid(uri), state) &&
-      this.ctx.views.viewerSeesNeedsReview({ uri }, state)
+      !!availableRecord(this.ctx.views, uri, state, info) &&
+      this.hasUnmutedAuthor(uriToDid(uri), state)
     )
   }
 
@@ -289,7 +253,7 @@ export class AtmosphereTimelineHydrator {
     const refs = externalRecordViewRefs(this.ctx.views, uri, state)
     return (
       !!refs &&
-      refs.every((ref) => this.visibleRecord(ref, state)) &&
+      refs.every((ref) => this.hasUnmutedAuthor(uriToDid(ref), state)) &&
       (new AtUri(uri).collection !== social.grain.gallery.$type ||
         refs.length > 1)
     )

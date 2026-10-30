@@ -319,7 +319,7 @@ describe('AtmosphereTimelineHydrator', () => {
     expect(activities[3]?.groupable).toBe(false)
     for (const activity of activities) {
       expect(
-        app.bsky.unspecced.getAtmosphereTimeline.atmosphereItem.$matches(
+        app.bsky.unspecced.getAtmosphereTimeline.activityItem.$matches(
           activity?.item,
         ),
       ).toBe(true)
@@ -361,6 +361,24 @@ describe('AtmosphereTimelineHydrator', () => {
       expect(f.timeline.activity(recommendUri, now)).toBeUndefined()
     },
   )
+
+  it('hides roots, actions, and overflow when their author profile was not hydrated', async () => {
+    const f = setup()
+    const hydrate = f.hydrator.hydrateEmbedExternalViewFromUris.bind(f.hydrator)
+    using _profiles = vi
+      .spyOn(f.hydrator, 'hydrateEmbedExternalViewFromUris')
+      .mockImplementation(async (...args) => {
+        const state = await hydrate(...args)
+        state.actors?.delete(author)
+        return state
+      })
+    await f.timeline.hydrate([documentUri, recommendUri])
+    expect(f.timeline.isVisible(documentUri)).toBe(false)
+    expect(f.timeline.isVisible(recommendUri)).toBe(false)
+    expect(f.timeline.activity(documentUri, now)).toBeUndefined()
+    expect(f.timeline.activity(recommendUri, now)).toBeUndefined()
+    expect(f.timeline.profile(author)).toBeUndefined()
+  })
 
   it('filters a hidden publisher, without filtering arbitrary positive labels', async () => {
     const hidden = setup()
