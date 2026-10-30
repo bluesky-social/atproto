@@ -1157,7 +1157,24 @@ describe('Atmosphere Explore', () => {
     expect(body.apps).toEqual(curated.apps)
     for (const key of lists.map(({ key }) => key))
       for (const item of body[key].items)
-        expect(Object.keys(item)).toEqual(['view'])
+        expect(item).toEqual({ featured: false, view: expect.anything() })
+  })
+
+  test.each([
+    ['articles', app.bsky.unspecced.getAtmosphereExploreTab.articleItem],
+    [
+      'publications',
+      app.bsky.unspecced.getAtmosphereExploreTab.publicationItem,
+    ],
+    ['photos', app.bsky.unspecced.getAtmosphereExploreTab.galleryItem],
+    ['livestreams', app.bsky.unspecced.getAtmosphereExploreTab.livestreamItem],
+  ] as const)('requires featured on %s items', async (key, schema) => {
+    await using fixture = await setup(curated)
+    const { body } = await fixture.query()
+    const item = body[key].items[0]
+    expect(schema.$matches(item)).toBe(true)
+    const { featured: _featured, ...withoutFeatured } = item
+    expect(schema.$matches(withoutFeatured)).toBe(false)
   })
 
   describe('retired schedules and featured flags', () => {
@@ -1182,7 +1199,7 @@ describe('Atmosphere Explore', () => {
         expect(status).toBe(200)
         for (const { key } of unscheduledLists) {
           expect(body[key].items).toHaveLength(1)
-          expect(Object.keys(body[key].items[0])).toEqual(['view'])
+          expect(body[key].items[0].featured).toBe(false)
         }
       },
     )
@@ -1277,7 +1294,7 @@ describe('Atmosphere Explore', () => {
         'shown-2',
       ])
       for (const item of body.livestreams.items)
-        expect(Object.keys(item)).toEqual(['view'])
+        expect(item.featured).toBe(false)
     })
 
     it('skips only entries with malformed dates', async () => {
@@ -1306,6 +1323,7 @@ describe('Atmosphere Explore', () => {
         active: false,
         startedAt: publishedAt,
       })
+      expect(body.livestreams.items[0].featured).toBe(false)
     })
 
     test.each([
@@ -2674,6 +2692,7 @@ describe('Atmosphere Explore list ordering and caps', () => {
       docUri,
     ])
     expect(body.articles.recIdStr).toBe('9')
+    for (const item of body.articles.items) expect(item.featured).toBe(false)
   })
 
   it('returns at most 10 apps in worker order without hydrating them', async () => {

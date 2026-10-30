@@ -110,15 +110,23 @@
     },
     "articleItem": {
       "type": "object",
-      "required": ["view"],
+      "required": ["featured", "view"],
       "properties": {
+        "featured": {
+          "type": "boolean",
+          "description": "Deprecated. Retained for compatibility; always false."
+        },
         "view": { "type": "ref", "ref": "app.bsky.embed.external#viewArticle" }
       }
     },
     "publicationItem": {
       "type": "object",
-      "required": ["view"],
+      "required": ["featured", "view"],
       "properties": {
+        "featured": {
+          "type": "boolean",
+          "description": "Deprecated. Retained for compatibility; always false."
+        },
         "view": {
           "type": "ref",
           "ref": "app.bsky.embed.external#viewArticlePublication"
@@ -127,15 +135,23 @@
     },
     "galleryItem": {
       "type": "object",
-      "required": ["view"],
+      "required": ["featured", "view"],
       "properties": {
+        "featured": {
+          "type": "boolean",
+          "description": "Deprecated. Retained for compatibility; always false."
+        },
         "view": { "type": "ref", "ref": "app.bsky.embed.external#viewGallery" }
       }
     },
     "livestreamItem": {
       "type": "object",
-      "required": ["view"],
+      "required": ["featured", "view"],
       "properties": {
+        "featured": {
+          "type": "boolean",
+          "description": "Deprecated. Retained for compatibility; always false."
+        },
         "view": {
           "type": "ref",
           "ref": "app.bsky.embed.external#viewLivestream"

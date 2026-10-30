@@ -252,7 +252,7 @@ function presentation({
       items: mapDefined(articles, ({ uri }) => {
         const view = ctx.views.externalRecordView(uri, state, now)
         return view && app.bsky.embed.external.viewArticle.$isTypeOf(view)
-          ? { view }
+          ? { featured: false, view }
           : undefined
       }),
       recIdStr: skeleton.articleRecIdStr,
@@ -262,7 +262,7 @@ function presentation({
         const view = ctx.views.externalRecordView(uri, state, now)
         return view &&
           app.bsky.embed.external.viewArticlePublication.$isTypeOf(view)
-          ? { view }
+          ? { featured: false, view }
           : undefined
       }),
     },
@@ -272,7 +272,7 @@ function presentation({
         return view &&
           app.bsky.embed.external.viewGallery.$isTypeOf(view) &&
           view.items.length
-          ? { view }
+          ? { featured: false, view }
           : undefined
       }),
     },
@@ -283,8 +283,8 @@ function presentation({
           return
         // Previewed streams are never live; copy rather than mutate the view.
         return startsAt != null && Date.parse(startsAt) > now
-          ? { view: { ...view, active: false } }
-          : { view }
+          ? { featured: false, view: { ...view, active: false } }
+          : { featured: false, view }
       }),
     },
     apps: apps.map(({ card, did }) => {
