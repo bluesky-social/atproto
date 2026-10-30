@@ -18,6 +18,10 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/internal/xrpc-utils"
   },
+  "files": [
+    "./dist",
+    "./CHANGELOG.md"
+  ],
   "type": "module",
   "exports": {
     ".": {

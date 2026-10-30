@@ -1,6 +1,9 @@
 {
   "include": [],
   "references": [
+    {
+      "path": "./packages/internal/rolldown-plugin-bundle-manifest/tsconfig.build.json",
+    },
     { "path": "./packages/lex/lex-installer/tsconfig.build.json" },
     { "path": "./packages/lex-cli/tsconfig.build.json" },
   ],
