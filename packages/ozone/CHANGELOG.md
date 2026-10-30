@@ -1,5 +1,17 @@
 # @atproto/ozone
 
+## 0.12.0
+
+### Minor Changes
+
+- [#5783](https://github.com/bluesky-social/atproto/pull/5783) [`d6e1945`](https://github.com/bluesky-social/atproto/commit/d6e1945e095da70e0b188d5c6684a5797ce9ee8c) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Keep `featured` as a required, deprecated compatibility field on `app.bsky.unspecced.getAtmosphereExploreTab` article, publication, photo, and livestream items; it is always `false`. Retired content scheduling no longer selects or orders articles, publications, and photos. Livestreams are shown from `previewAt` (or `startsAt`) until `endsAt`, and are reported inactive until `startsAt`. App cards now include an optional `profile` (`app.bsky.actor.defs#profileViewDetailed`) hydrated from the app's account, whose avatar and banner back `logo` and `backgroundImage`.
+
+### Patch Changes
+
+- [#5770](https://github.com/bluesky-social/atproto/pull/5770) [`c2b5ce3`](https://github.com/bluesky-social/atproto/commit/c2b5ce39ebf1c33857595340a87551800689e8fd) Thanks [@foysalit](https://github.com/foysalit)! - Allow configuring the blob diversion size limit, defaulting to 300 MiB.
+
+- [#5779](https://github.com/bluesky-social/atproto/pull/5779) [`a2dd244`](https://github.com/bluesky-social/atproto/commit/a2dd244d6072216735198db5777909d014b0638e) Thanks [@foysalit](https://github.com/foysalit)! - Include tag event durations in moderation event responses.
+
 ## 0.11.0
 
 ### Minor Changes
