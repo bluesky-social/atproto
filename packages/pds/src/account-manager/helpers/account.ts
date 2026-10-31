@@ -6,7 +6,7 @@ import {
   type HandleString,
   currentDatetimeString,
   isDidIdentifier,
-} from '@atproto/lex'
+} from '@atproto/lex-schema'
 import { isErrUniqueViolation, notSoftDeletedClause } from '../../db/index.js'
 import type { com } from '../../lexicons/index.js'
 import type { AccountDb, ActorEntry } from '../db/index.js'

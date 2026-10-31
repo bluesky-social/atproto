@@ -1,4 +1,4 @@
-import type { Cid } from '@atproto/lex'
+import type { Cid } from '@atproto/lex-data'
 import { AtUri, normalizeDatetimeAlways } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { app } from '../../../../lexicons/index.js'

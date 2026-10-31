@@ -1,4 +1,8 @@
-import { type AtUriString, type NsidString, isDidString } from '@atproto/lex'
+import {
+  type AtUriString,
+  type NsidString,
+  isDidString,
+} from '@atproto/lex-schema'
 import { AtUri, type DidString, parseAtUriString } from '@atproto/syntax'
 import { app } from '../lexicons/index.js'
 import { type StrongRef, validateStrongRef } from '../views/types.js'

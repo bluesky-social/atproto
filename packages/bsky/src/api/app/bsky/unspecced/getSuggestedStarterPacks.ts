@@ -1,5 +1,5 @@
 import { mapDefined, noUndefinedVals } from '@atproto/common'
-import type { Client } from '@atproto/lex'
+import type { Client } from '@atproto/lex-client'
 import { AtUri, type AtUriString, type DidString } from '@atproto/syntax'
 import { MethodNotImplementedError, type Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../../../context.js'

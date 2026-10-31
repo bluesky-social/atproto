@@ -4,7 +4,7 @@ import {
   type DidString,
   type NsidString,
   isDidString,
-} from '@atproto/lex'
+} from '@atproto/lex-schema'
 import { parseAtUriString } from '@atproto/syntax'
 import { InvalidRequestError, UpstreamFailureError } from '@atproto/xrpc-server'
 import type { AppContext } from '../../../../context.js'

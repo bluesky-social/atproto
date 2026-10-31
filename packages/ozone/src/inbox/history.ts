@@ -1,5 +1,5 @@
 import { sql } from 'kysely'
-import type { DatetimeString } from '@atproto/lex'
+import type { DatetimeString } from '@atproto/lex-schema'
 import { DEFAULT_INBOX_POLICY_URL } from '../config/config.js'
 import type { Database } from '../db/index.js'
 import type { ModSubject } from '../mod-service/subject.js'

@@ -1,10 +1,10 @@
 import { mapDefined, noUndefinedVals } from '@atproto/common'
 import {
-  type DidString,
   XrpcInvalidResponseError,
   XrpcResponseError,
   xrpcSafe,
-} from '@atproto/lex'
+} from '@atproto/lex-client'
+import type { DidString } from '@atproto/lex-schema'
 import { AtUri } from '@atproto/syntax'
 import {
   type Headers as HeadersMap,

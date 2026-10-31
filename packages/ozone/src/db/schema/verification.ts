@@ -4,7 +4,7 @@ import type {
   DatetimeString,
   DidString,
   HandleString,
-} from '@atproto/lex'
+} from '@atproto/lex-schema'
 
 export const verificationTableName = 'verification'
 

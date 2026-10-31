@@ -1,9 +1,5 @@
-import {
-  type AtUriString,
-  type LexMap,
-  type TypedLexMap,
-  isDidString,
-} from '@atproto/lex'
+import type { LexMap, TypedLexMap } from '@atproto/lex-data'
+import { type AtUriString, isDidString } from '@atproto/lex-schema'
 import { parseAtUriString } from '@atproto/syntax'
 import type { Server } from '@atproto/xrpc-server'
 import type { ServerConfig } from '../../../../config.js'

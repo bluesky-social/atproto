@@ -1,5 +1,6 @@
 import { isObject, isPlainObject, isPlainProto } from '@atproto/lex-data'
-import { Procedure, Query, Schema, Subscription } from '@atproto/lex-schema'
+import { Schema } from './core.js'
+import { Procedure, Query, Subscription } from './schema.js'
 
 export function* walk(
   ns: unknown,

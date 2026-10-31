@@ -7,7 +7,7 @@ import {
   isDatetimeString,
   isDidString,
   toDatetimeString,
-} from '@atproto/lex'
+} from '@atproto/lex-schema'
 import type { OzoneEnvironment } from './env.js'
 import {
   type StrikeSuspensionConfig,

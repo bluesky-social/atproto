@@ -6,7 +6,7 @@ import {
   isDatetimeString,
   isDidString,
   toDatetimeString,
-} from '@atproto/lex'
+} from '@atproto/lex-schema'
 import { AtUri } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { DEFAULT_INBOX_POLICY_URL } from '../config/config.js'

@@ -3,7 +3,6 @@ on:
   push:
     branches:
       - main
-      - msi/docker-closure-cache
 
 # Each registry has its own job, so that each only holds its own credentials.
 # Both build the same images concurrently: only the image-ghcr jobs write the

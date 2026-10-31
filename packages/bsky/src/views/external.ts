@@ -1,14 +1,14 @@
 import { MINUTE } from '@atproto/common'
+import { getBlobCidString } from '@atproto/lex-data'
 import {
   type $Typed,
   type AtUriString,
   type DidString,
   type NsidString,
   type UriString,
-  getBlobCidString,
   isAtUriString,
   isDidString,
-} from '@atproto/lex'
+} from '@atproto/lex-schema'
 import { AtUri, normalizeDatetimeAlways } from '@atproto/syntax'
 import type { ExternalRecord } from '../hydration/external.js'
 import type { HydrationState } from '../hydration/hydrator.js'

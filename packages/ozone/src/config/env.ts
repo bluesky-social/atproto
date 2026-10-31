@@ -1,5 +1,5 @@
 import { envBool, envInt, envList, envStr } from '@atproto/common'
-import type { DidString, UriString } from '@atproto/lex'
+import type { DidString, UriString } from '@atproto/lex-schema'
 
 export const readEnv = (): OzoneEnvironment => {
   const onlineMembersActiveWindowMs = envStr(

@@ -1,4 +1,4 @@
-import type { DidString } from '@atproto/lex'
+import type { DidString } from '@atproto/lex-schema'
 import { CloseCode, CloseError, websocket } from '@atproto/ws-client'
 
 type JetstreamRecord = Record<string, unknown>

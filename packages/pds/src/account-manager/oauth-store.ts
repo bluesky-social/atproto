@@ -3,11 +3,8 @@ import { type Client, createOp as createPlcOp } from '@did-plc/lib'
 import type { Selectable } from 'kysely'
 import { DAY } from '@atproto/common'
 import { type Keypair, Secp256k1Keypair } from '@atproto/crypto'
-import {
-  type DidString,
-  type HandleString,
-  getBlobCidString,
-} from '@atproto/lex'
+import { getBlobCidString } from '@atproto/lex-data'
+import type { DidString, HandleString } from '@atproto/lex-schema'
 import {
   HandleUnavailableError,
   InvalidCredentialsError,

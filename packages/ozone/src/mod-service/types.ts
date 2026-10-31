@@ -1,5 +1,5 @@
 import type { Selectable } from 'kysely'
-import type { $TypeOf, DatetimeString, DidString } from '@atproto/lex'
+import type { $TypeOf, DatetimeString, DidString } from '@atproto/lex-schema'
 import type { ModerationEvent } from '../db/schema/moderation_event.js'
 import type { ModerationSubjectStatus } from '../db/schema/moderation_subject_status.js'
 import type { tools } from '../lexicons/index.js'
