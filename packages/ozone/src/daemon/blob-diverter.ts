@@ -8,7 +8,7 @@ import {
   getPdsEndpoint,
 } from '@atproto/common'
 import type { IdResolver } from '@atproto/identity'
-import type { AtUriString, DidString } from '@atproto/lex'
+import type { AtUriString, DidString } from '@atproto/lex-schema'
 import type { BlobDivertConfig } from '../config/index.js'
 import type { Database } from '../db/index.js'
 import { BodyTimeoutTransform, createSafeFetch } from '../safe-fetch.js'

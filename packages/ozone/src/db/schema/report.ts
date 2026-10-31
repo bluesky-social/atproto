@@ -1,5 +1,5 @@
 import type { Generated } from 'kysely'
-import type { DatetimeString, DidString } from '@atproto/lex'
+import type { DatetimeString, DidString } from '@atproto/lex-schema'
 
 export const reportTableName = 'report'
 

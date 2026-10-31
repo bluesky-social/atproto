@@ -1,4 +1,4 @@
-import { toDatetimeString } from '@atproto/lex'
+import { toDatetimeString } from '@atproto/lex-schema'
 import type { Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../context.js'
 import { com } from '../../lexicons/index.js'

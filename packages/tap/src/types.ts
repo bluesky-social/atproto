@@ -1,4 +1,5 @@
-import { type LexMap, type LexValue, l } from '@atproto/lex'
+import type { LexMap, LexValue } from '@atproto/lex-data'
+import { l } from '@atproto/lex-schema'
 import type { DidString, HandleString, NsidString } from '@atproto/syntax'
 
 export const recordEventDataSchema = l.object({

@@ -1,4 +1,4 @@
-import { type DidString, isDidString } from '@atproto/lex'
+import { type DidString, isDidString } from '@atproto/lex-schema'
 import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
 import { AuthScope, isAccessFull } from '../../../../auth-scope.js'
 import type { AppContext } from '../../../../context.js'

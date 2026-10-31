@@ -1,7 +1,7 @@
 import assert from 'node:assert'
 import readline from 'node:readline/promises'
 import { TID } from '@atproto/common'
-import { type DidString, isDidString } from '@atproto/lex'
+import { type DidString, isDidString } from '@atproto/lex-schema'
 import {
   BlockMap,
   CidSet,

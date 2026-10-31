@@ -46,11 +46,12 @@
     "@atproto/crypto": "workspace:^",
     "@atproto/did": "workspace:^",
     "@atproto/identity": "workspace:^",
-    "@atproto/lex": "workspace:^",
     "@atproto/lex-cbor": "workspace:^",
+    "@atproto/lex-client": "workspace:^",
     "@atproto/lex-data": "workspace:^",
     "@atproto/lex-document": "workspace:^",
     "@atproto/lex-json": "workspace:^",
+    "@atproto/lex-schema": "workspace:^",
     "@atproto/oauth-provider": "workspace:^",
     "@atproto/oauth-scopes": "workspace:^",
     "@atproto/repo": "workspace:^",
@@ -86,6 +87,7 @@
   },
   "devDependencies": {
     "@atproto/api": "workspace:^",
+    "@atproto/lex": "workspace:^",
     "@atproto/oauth-client-browser-example": "workspace:^",
     "@atproto/oauth-client-node": "workspace:^",
     "@did-plc/server": "^0.0.1",
@@ -101,7 +103,7 @@
     "ws": "^8.12.0"
   },
   "scripts": {
-    "lex:build": "lex build --clear --indexFile",
+    "lex:build": "lex build --clear --indexFile --lib @atproto/lex-schema",
     "lex:install": "lex install",
     "postlex:install": "pnpm run lex:build",
     "lex:update": "lex update",

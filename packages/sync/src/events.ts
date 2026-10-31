@@ -1,5 +1,5 @@
 import type { DidDocument } from '@atproto/identity'
-import type { Cid, LexMap } from '@atproto/lex'
+import type { Cid, LexMap } from '@atproto/lex-data'
 import type { BlockMap } from '@atproto/repo'
 import type { AtUri, DidString } from '@atproto/syntax'
 

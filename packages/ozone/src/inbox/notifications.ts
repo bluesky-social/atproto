@@ -3,7 +3,7 @@ import {
   type DatetimeString,
   type DidString,
   currentDatetimeString,
-} from '@atproto/lex'
+} from '@atproto/lex-schema'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import type { Database } from '../db/index.js'
 import type { InboxNotification } from '../db/schema/inbox_notification.js'

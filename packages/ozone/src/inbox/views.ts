@@ -3,7 +3,7 @@ import {
   type DatetimeString,
   type DidString,
   currentDatetimeString,
-} from '@atproto/lex'
+} from '@atproto/lex-schema'
 import { DEFAULT_INBOX_POLICY_URL, type InboxConfig } from '../config/config.js'
 import type { Database } from '../db/index.js'
 import type {

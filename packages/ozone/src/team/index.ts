@@ -1,11 +1,11 @@
 import { type Selectable, sql } from 'kysely'
 import { chunkArray } from '@atproto/common'
+import type { Client } from '@atproto/lex-client'
 import {
-  type Client,
   type DatetimeString,
   type DidString,
   toDatetimeString,
-} from '@atproto/lex'
+} from '@atproto/lex-schema'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import type { OnlineMembersConfig } from '../config/config.js'
 import type { Database } from '../db/index.js'

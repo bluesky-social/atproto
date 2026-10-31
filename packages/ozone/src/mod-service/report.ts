@@ -4,8 +4,8 @@ import type {
   DatetimeString,
   DidString,
   UriString,
-} from '@atproto/lex'
-import { currentDatetimeString, isDidString } from '@atproto/lex'
+} from '@atproto/lex-schema'
+import { currentDatetimeString, isDidString } from '@atproto/lex-schema'
 import { AtUri } from '@atproto/syntax'
 import type { Database } from '../db/index.js'
 import type { Report } from '../db/schema/report.js'

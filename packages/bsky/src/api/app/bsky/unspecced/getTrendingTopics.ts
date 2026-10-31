@@ -1,5 +1,5 @@
 import { noUndefinedVals } from '@atproto/common'
-import type { Client } from '@atproto/lex'
+import type { Client } from '@atproto/lex-client'
 import { MethodNotImplementedError, type Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../../../context.js'
 import type { HydrateCtx, Hydrator } from '../../../../hydration/hydrator.js'

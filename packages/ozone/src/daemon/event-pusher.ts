@@ -3,11 +3,11 @@ import PQueue from 'p-queue'
 import { SECOND, retry } from '@atproto/common'
 import {
   Client,
-  type DidString,
   XrpcFetchError,
   XrpcInternalError,
   XrpcResponseError,
-} from '@atproto/lex'
+} from '@atproto/lex-client'
+import type { DidString } from '@atproto/lex-schema'
 import type { Database } from '../db/index.js'
 import type { BlobPushEvent } from '../db/schema/blob_push_event.js'
 import type { RepoPushEventType } from '../db/schema/repo_push_event.js'

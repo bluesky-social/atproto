@@ -13,7 +13,7 @@ import {
   Query,
   Subscription,
   walk,
-} from '@atproto/lex'
+} from '@atproto/lex-schema'
 import { createServer, extractUrlNsid } from '@atproto/xrpc-server'
 import API, { health, wellKnown } from './api/index.js'
 import type { OzoneConfig, OzoneSecrets } from './config/index.js'

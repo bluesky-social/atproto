@@ -1,4 +1,4 @@
-import type { DidString } from '@atproto/lex'
+import type { DidString } from '@atproto/lex-schema'
 import { tools } from '../lexicons/index.js'
 import { langLogger as log } from '../logger.js'
 import type { ModerationService } from '../mod-service/index.js'

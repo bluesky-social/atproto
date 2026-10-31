@@ -1,5 +1,5 @@
-import type { DatetimeString, DidString } from '@atproto/lex'
-import { currentDatetimeString } from '@atproto/lex'
+import type { DatetimeString, DidString } from '@atproto/lex-schema'
+import { currentDatetimeString } from '@atproto/lex-schema'
 import type { Database } from '../db/index.js'
 
 export type StrikeServiceCreator = (db: Database) => StrikeService

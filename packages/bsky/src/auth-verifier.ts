@@ -4,7 +4,7 @@ import type express from 'express'
 import * as jose from 'jose'
 import * as ui8 from 'uint8arrays'
 import { SECP256K1_JWT_ALG, parseDidKey } from '@atproto/crypto'
-import { type DidString, isDidString } from '@atproto/lex'
+import { type DidString, isDidString } from '@atproto/lex-schema'
 import {
   AuthRequiredError,
   type VerifySignatureWithKeyFn,

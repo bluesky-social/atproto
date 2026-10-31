@@ -1,5 +1,5 @@
 import { type Deferrable, createDeferrable } from '@atproto/common'
-import { lexParse } from '@atproto/lex'
+import { lexParse } from '@atproto/lex-json'
 import {
   CloseCode,
   CloseError,

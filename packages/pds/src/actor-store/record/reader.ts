@@ -1,5 +1,5 @@
-import type { DidString, NsidString } from '@atproto/lex'
 import { type Cid, type LexMap, parseCid } from '@atproto/lex-data'
+import type { DidString, NsidString } from '@atproto/lex-schema'
 import { CidSet, cborToLexRecord, formatDataKey } from '@atproto/repo'
 import {
   AtUri,

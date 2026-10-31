@@ -4,8 +4,10 @@
   "references": [
     { "path": "../identity/tsconfig.build.json" },
     { "path": "../internal/fetch-node/tsconfig.build.json" },
+    { "path": "../lex/lex-client/tsconfig.build.json" },
+    { "path": "../lex/lex-data/tsconfig.build.json" },
     { "path": "../lex/lex-document/tsconfig.build.json" },
-    { "path": "../lex/lex/tsconfig.build.json" },
+    { "path": "../lex/lex-schema/tsconfig.build.json" },
     { "path": "../repo/tsconfig.build.json" },
     { "path": "../syntax/tsconfig.build.json" },
   ],

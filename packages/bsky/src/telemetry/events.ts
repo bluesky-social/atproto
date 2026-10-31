@@ -7,7 +7,7 @@ import {
   logs,
   metrics,
 } from '@opentelemetry/api'
-import type { NsidString } from '@atproto/lex'
+import type { NsidString } from '@atproto/lex-schema'
 import type { NotificationsV2Algorithm } from '../config.js'
 import { eventsLogger } from '../logger.js'
 import { isAbortError, isTimeoutError } from './util.js'

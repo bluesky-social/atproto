@@ -1,6 +1,6 @@
 import type { Selectable } from 'kysely'
-import { currentDatetimeString, toDatetimeString } from '@atproto/lex'
-import type { DatetimeString, DidString, NsidString } from '@atproto/lex'
+import { currentDatetimeString, toDatetimeString } from '@atproto/lex-schema'
+import type { DatetimeString, DidString, NsidString } from '@atproto/lex-schema'
 import { ForbiddenError, InvalidRequestError } from '@atproto/xrpc-server'
 import type { Database } from '../db/index.js'
 import { EndAtIdKeyset, paginate } from '../db/pagination.js'

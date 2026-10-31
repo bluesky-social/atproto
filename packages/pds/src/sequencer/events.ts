@@ -1,14 +1,14 @@
 import assert from 'node:assert'
 import { z } from 'zod'
 import { schema } from '@atproto/common'
+import { encode as cborEncode } from '@atproto/lex-cbor'
 import {
   type DatetimeString,
   type DidString,
   type HandleString,
   isDidString,
   isHandleString,
-} from '@atproto/lex'
-import { encode as cborEncode } from '@atproto/lex-cbor'
+} from '@atproto/lex-schema'
 import { BlockMap, blocksToCarFile } from '@atproto/repo'
 import { AccountStatus } from '../account-manager/account-manager.js'
 import type { CommitDataWithOps, SyncEvtData } from '../repo/index.js'

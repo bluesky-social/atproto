@@ -1,5 +1,4 @@
 import { TID } from '@atproto/common'
-import { RecordSchema, walk } from '@atproto/lex'
 import { encode } from '@atproto/lex-cbor'
 import {
   type Cid,
@@ -10,6 +9,7 @@ import {
   enumBlobRefs,
   isLegacyBlobRef,
 } from '@atproto/lex-data'
+import { RecordSchema, walk } from '@atproto/lex-schema'
 import {
   type RecordCreateOp,
   type RecordDeleteOp,

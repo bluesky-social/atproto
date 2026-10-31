@@ -1,5 +1,5 @@
 import type { Selectable } from 'kysely'
-import type { DidString } from '@atproto/lex'
+import type { DidString } from '@atproto/lex-schema'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import type { Database } from '../db/index.js'
 import type { InboxNotificationPreference } from '../db/schema/inbox_notification_preference.js'

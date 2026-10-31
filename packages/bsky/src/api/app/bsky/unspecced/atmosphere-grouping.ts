@@ -1,5 +1,5 @@
 import { HOUR } from '@atproto/common'
-import type { AtUriString } from '@atproto/lex'
+import type { AtUriString } from '@atproto/lex-schema'
 import { app, place, site } from '../../../../lexicons/index.js'
 import { uriToDid } from '../../../../util/uris.js'
 

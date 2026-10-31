@@ -6,7 +6,7 @@ import {
   Subscription,
 } from '@atproto/lex-schema'
 import * as lexicons from '../tests/lexicons/index.js'
-import { walk } from './walk.js'
+import { walk } from './index.js'
 
 describe(walk, () => {
   it('walks every definition in a lexicon document once', () => {

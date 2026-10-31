@@ -1,5 +1,5 @@
 import { parseList } from 'structured-headers'
-import type { DidString } from '@atproto/lex'
+import type { DidString } from '@atproto/lex-schema'
 import { isValidDid } from '@atproto/syntax'
 
 export type ParsedLabelers = {

@@ -1,5 +1,5 @@
 import type { Generated, GeneratedAlways } from 'kysely'
-import type { DidString } from '@atproto/lex'
+import type { DidString } from '@atproto/lex-schema'
 import type { Member } from './member.js'
 
 export const settingTableName = 'setting'

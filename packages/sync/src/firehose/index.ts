@@ -4,7 +4,7 @@ import {
   type IdResolver,
   parseToAtprotoDocument,
 } from '@atproto/identity'
-import type { Cid } from '@atproto/lex'
+import type { Cid } from '@atproto/lex-data'
 import {
   RepoVerificationError,
   cborToLexRecord,

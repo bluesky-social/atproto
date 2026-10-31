@@ -43,6 +43,7 @@ const posts = await client.list(app.bsky.feed.post, { limit: 10 })
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
+- [Installation](#installation)
 - [Quick Start](#quick-start)
 - [Lexicon Schemas](#lexicon-schemas)
 - [TypeScript Schemas](#typescript-schemas)
@@ -122,6 +123,28 @@ const posts = await client.list(app.bsky.feed.post, { limit: 10 })
 - [License](#license)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
+## Installation
+
+`@atproto/lex` provides the `lex` CLI, and re-exports the runtime packages listed below. The CLI depends on the Lexicon installation and code generation tooling, which your code does not need at runtime. Install `@atproto/lex` as a dev dependency:
+
+```bash
+npm install --save-dev @atproto/lex
+```
+
+Only `import` from `@atproto/lex` directly when your code is bundled (e.g. with Vite, Rolldown, esbuild or webpack): the bundler only includes the code you use, so the tooling never reaches the output. Otherwise, for example in a Node.js service or a published library, `@atproto/lex` would have to be installed at runtime, along with all of its tooling. Depend on the runtime packages it re-exports instead, import from them, and pass `--lib @atproto/lex-schema` to `lex build` so that the generated schemas import from `@atproto/lex-schema` too:
+
+```bash
+npm install @atproto/lex-client @atproto/lex-schema
+lex build --lib @atproto/lex-schema
+```
+
+| Package               | Provides                                                                    |
+| --------------------- | --------------------------------------------------------------------------- |
+| `@atproto/lex-client` | `Client`, `xrpc()`, `xrpcSafe()` and XRPC errors                            |
+| `@atproto/lex-schema` | The `l` schema utility, identifier and datetime string types and helpers    |
+| `@atproto/lex-data`   | Data model types and helpers: `LexValue`, `Cid`, blob references, …         |
+| `@atproto/lex-json`   | JSON encoding: `lexParse()`, `lexStringify()`, `jsonToLex()`, `lexToJson()` |
 
 ## Quick Start
 
@@ -260,7 +283,7 @@ Options:
 - `--ignore-invalid-lexicons` - Skip lexicon files that fail validation instead of exiting with an error
 - `--exclude <patterns...>` - List of strings or regex patterns to exclude lexicon documents by their IDs
 - `--include <patterns...>` - List of strings or regex patterns to include lexicon documents by their IDs
-- `--lib <package>` - Package name of the library to import the lex schema utility "l" from (default: `@atproto/lex`)
+- `--lib <package>` - Package name of the library to import the lex schema utility "l" from (default: `@atproto/lex`; use `@atproto/lex-schema` when `@atproto/lex` is a dev dependency, see [Installation](#installation))
 - `--import-ext <ext>` - File extension to use for import statements in generated files (default: `.js`). Use `--import-ext ""` to generate extension-less imports
 - `--file-ext <ext>` - File extension to use for generated files (default: `.ts`)
 - `--index-file` - Generate an "index" file that re-exports all root-level namespaces (disabled by default)

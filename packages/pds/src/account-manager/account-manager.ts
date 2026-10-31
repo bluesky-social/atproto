@@ -6,13 +6,13 @@ import { isDisposableEmail } from 'disposable-email-domains-js'
 import { HOUR, obfuscateEmail, wait } from '@atproto/common'
 import type { Keypair } from '@atproto/crypto'
 import type { IdResolver } from '@atproto/identity'
+import type { Cid } from '@atproto/lex-data'
 import {
   type AtIdentifierString,
   type DidString,
   type HandleString,
   isAtIdentifierString,
-} from '@atproto/lex'
-import type { Cid } from '@atproto/lex-data'
+} from '@atproto/lex-schema'
 import {
   INVALID_HANDLE,
   currentDatetimeString,

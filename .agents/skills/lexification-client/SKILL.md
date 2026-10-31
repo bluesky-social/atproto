@@ -30,16 +30,16 @@ the right file.
 
 | Old                                               | New                                                                    |
 | ------------------------------------------------- | ---------------------------------------------------------------------- |
-| `AtpAgent` from `@atproto/api`                    | `Client` from `@atproto/lex`                                           |
+| `AtpAgent` from `@atproto/api`                    | `Client` from `@atproto/lex-client`                                    |
 | `agent.api.<ns>.<method>(params, { headers })`    | `client.call(<schema>, params, opts)` or `client.xrpc(<schema>, opts)` |
 | `result.data`                                     | `result.body`                                                          |
 | `result.headers['content-language']`              | `result.headers.get('content-language')` (standard `Headers`)          |
-| `XRPCError` from `@atproto/xrpc`                  | `XrpcError` from `@atproto/lex`                                        |
+| `XRPCError` from `@atproto/xrpc`                  | `XrpcError` from `@atproto/lex-client`                                 |
 | try/catch + `instanceof XRPCError`                | `xrpcSafe()` / `client.xrpcSafe()` discriminated result                |
 | `HeadersMap` from `@atproto/xrpc`                 | `Headers as HeadersMap` from `@atproto/xrpc-server`                    |
 | `jsonStringToLex` / `stringifyLex`                | `lexParse` / `lexStringify`                                            |
-| `BlobRef` class from `@atproto/lexicon`           | `BlobRef` interface from `@atproto/lex-data` (or `@atproto/lex`)       |
-| `CID` from `multiformats/cid`                     | `Cid` / `parseCid` from `@atproto/lex`                                 |
+| `BlobRef` class from `@atproto/lexicon`           | `BlobRef` interface from `@atproto/lex-data`                           |
+| `CID` from `multiformats/cid`                     | `Cid` / `parseCid` from `@atproto/lex-data`                            |
 | `new Date().toISOString()` for AT Proto datetimes | `currentDatetimeString()` / `toDatetimeString()`                       |
 | `isX(v)` from `src/lexicon/types/…`               | `<ns>.<def>.$matches(v)` / `.$isTypeOf(v)`                             |
 
@@ -109,7 +109,7 @@ import {
   XrpcInvalidResponseError,
   XrpcResponseError,
   xrpcSafe,
-} from '@atproto/lex'
+} from '@atproto/lex-client'
 
 const result = await xrpcSafe(fgEndpoint, app.bsky.feed.getFeedSkeleton, {
   strictResponseProcessing: false,
@@ -175,7 +175,7 @@ for the full error hierarchy and client API.
 
 ```diff
 - import { AtpAgent } from '@atproto/api'
-+ import { Client } from '@atproto/lex'
++ import { Client } from '@atproto/lex-client'
 
 - searchAgent: AtpAgent | undefined
 + searchClient: Client | undefined
@@ -218,7 +218,7 @@ so a migrated call can start failing on data the old code happily accepted.
 
 ```diff
 - import { XRPCError } from '@atproto/xrpc'
-+ import { XrpcError } from '@atproto/lex'
++ import { XrpcError } from '@atproto/lex-client'
 ```
 
 `@atproto/xrpc-server` keeps its own `XRPCError` for **throwing** errors out of
@@ -242,7 +242,7 @@ same file usually also needs.
 
 ```diff
 - import { jsonStringToLex } from '@atproto/lexicon'
-+ import { lexParse } from '@atproto/lex'
++ import { lexParse } from '@atproto/lex-json'
 
 - const parsed = jsonStringToLex(payload.toString('utf8')) as SubjectActivitySubscription
 + const parsed = lexParse<app.bsky.notification.defs.SubjectActivitySubscription>(
@@ -264,7 +264,7 @@ same file usually also needs.
 + indexedAt: toDatetimeString(someDate),
 ```
 
-Both come from `@atproto/lex` and return the branded `DatetimeString`, so a
+Both come from `@atproto/lex-schema` and return the branded `DatetimeString`, so a
 value that reaches a lexicon field is checked at the type level rather than at
 validation time.
 
@@ -272,7 +272,7 @@ validation time.
 
 ```diff
 - import { CID } from 'multiformats/cid'
-+ import { type Cid, parseCid } from '@atproto/lex'
++ import { type Cid, parseCid } from '@atproto/lex-data'
 ```
 
 `Cid` is an interface. Drop `multiformats` from the package's dependencies once
@@ -309,7 +309,7 @@ legacy data. See [lex-data](../lex-data/SKILL.md) for the
 
 Apply `DidString`, `HandleString`, `AtUriString`, `DatetimeString`, `Cid` at
 signatures, interface fields, and DB schema types — that's where they stop bad
-values propagating. Prefer importing them from `@atproto/lex` over
+values propagating. Prefer importing them from `@atproto/lex-schema` (`Cid` from `@atproto/lex-data`) over
 `@atproto/syntax`.
 
 ```diff
@@ -391,15 +391,15 @@ for the same operation is harder to read than either end state.
 
 ## Import source summary
 
-| Before                                            | After                                            |
-| ------------------------------------------------- | ------------------------------------------------ |
-| `@atproto/api` (`AtpAgent`)                       | `@atproto/lex` (`Client`)                        |
-| `@atproto/lexicon` (`jsonStringToLex`, `BlobRef`) | `@atproto/lex` (`lexParse`, `BlobRef`)           |
-| `@atproto/lexicon` (`stringifyLex`)               | `@atproto/lex` (`lexStringify`)                  |
-| `@atproto/xrpc` (`XRPCError`)                     | `@atproto/lex` (`XrpcError`, `xrpcSafe`)         |
-| `@atproto/xrpc` (`HeadersMap`)                    | `@atproto/xrpc-server` (`Headers as HeadersMap`) |
-| `multiformats/cid` (`CID`)                        | `@atproto/lex` (`Cid`, `parseCid`)               |
-| `@atproto/syntax` (`DidString`, etc.)             | `@atproto/lex` (prefer this)                     |
+| Before                                            | After                                                             |
+| ------------------------------------------------- | ----------------------------------------------------------------- |
+| `@atproto/api` (`AtpAgent`)                       | `@atproto/lex-client` (`Client`)                                  |
+| `@atproto/lexicon` (`jsonStringToLex`, `BlobRef`) | `@atproto/lex-json` (`lexParse`), `@atproto/lex-data` (`BlobRef`) |
+| `@atproto/lexicon` (`stringifyLex`)               | `@atproto/lex-json` (`lexStringify`)                              |
+| `@atproto/xrpc` (`XRPCError`)                     | `@atproto/lex-client` (`XrpcError`, `xrpcSafe`)                   |
+| `@atproto/xrpc` (`HeadersMap`)                    | `@atproto/xrpc-server` (`Headers as HeadersMap`)                  |
+| `multiformats/cid` (`CID`)                        | `@atproto/lex-data` (`Cid`, `parseCid`)                           |
+| `@atproto/syntax` (`DidString`, etc.)             | `@atproto/lex-schema` (prefer this)                               |
 
 Dropped imports usually mean dropped `package.json` dependencies
 (`multiformats`, `@atproto/lexicon`, `@atproto/xrpc`), and every package
