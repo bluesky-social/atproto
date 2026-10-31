@@ -1,5 +1,5 @@
 import { sql } from 'kysely'
-import type { DatetimeString, DidString } from '@atproto/lex'
+import type { DatetimeString, DidString } from '@atproto/lex-schema'
 import type { Database } from '../db/index.js'
 import { tools } from '../lexicons/index.js'
 import { subjectFromEventRow } from '../mod-service/subject.js'

@@ -1,6 +1,6 @@
 import { HOUR, MINUTE } from '@atproto/common'
 import { isAtprotoDid, isAtprotoDidRefAbsolute } from '@atproto/did'
-import type { l } from '@atproto/lex'
+import type { l } from '@atproto/lex-schema'
 import {
   InvalidRequestError,
   type Server,

@@ -1,4 +1,4 @@
-import { type Cid, getBlobCidString } from '@atproto/lex'
+import { type Cid, getBlobCidString } from '@atproto/lex-data'
 import { AtUri } from '@atproto/syntax'
 import { NOTIFICATION_REASON } from '../../../../api/app/bsky/notification/constants.js'
 import { app } from '../../../../lexicons/index.js'

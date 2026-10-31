@@ -3,7 +3,7 @@ import {
   type DidString,
   asUnknown$TypedObject,
   isDidString,
-} from '@atproto/lex'
+} from '@atproto/lex-schema'
 import { AtUri } from '@atproto/syntax'
 import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../context.js'

@@ -1,7 +1,10 @@
 {
   "extends": ["../../tsconfig/vitest.tsconfig.json"],
   "include": ["./tests", "./src/**/*.test.ts"],
-  "references": [{ "path": "./tsconfig.build.json" }],
+  "references": [
+    { "path": "../lex/lex/tsconfig.build.json" },
+    { "path": "./tsconfig.build.json" },
+  ],
   "compilerOptions": {
     "rootDir": "./",
   },

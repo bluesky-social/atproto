@@ -1,4 +1,4 @@
-import { atUri } from '@atproto/lex'
+import { atUri } from '@atproto/lex-schema'
 import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'

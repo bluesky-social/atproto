@@ -227,7 +227,7 @@ Lexicon JSON exists — otherwise prefer `./lexicons/`, which stays in sync with
 the contract.
 
 ```ts
-import { l } from '@atproto/lex'
+import { l } from '@atproto/lex-schema'
 
 const thing = l.typedObject(
   'com.example.thing', // NSID

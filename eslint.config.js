@@ -146,6 +146,31 @@ export default [
     },
   },
   {
+    // @atproto/lex depends on the codegen tooling its `lex` CLI needs, which
+    // services must not ship. Packages only depend on it to run `lex` or in
+    // tests, so their production code imports the packages it re-exports.
+    files: ['packages/**/src/**/*.ts'],
+    ignores: [
+      '**/*.test.ts',
+      'packages/lex/lex/**',
+      'packages/oauth/oauth-client-browser-example/**',
+    ],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            {
+              name: '@atproto/lex',
+              message:
+                'Import from the @atproto/lex-* package that re-exports it (lex-client, lex-schema, lex-data, lex-json), and depend on it instead.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
     files: ['**/*.test.ts', '**/tests/**/*.ts'],
     rules: {
       'n/no-extraneous-import': [

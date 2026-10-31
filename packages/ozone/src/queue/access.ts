@@ -1,5 +1,5 @@
 import { type RawBuilder, sql } from 'kysely'
-import { currentDatetimeString } from '@atproto/lex'
+import { currentDatetimeString } from '@atproto/lex-schema'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import type { AdminTokenOutput, ModeratorOutput } from '../auth-verifier.js'
 import type { Database } from '../db/index.js'

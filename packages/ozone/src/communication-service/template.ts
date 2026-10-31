@@ -1,5 +1,5 @@
 import type { Selectable } from 'kysely'
-import { toDatetimeString } from '@atproto/lex'
+import { toDatetimeString } from '@atproto/lex-schema'
 import type { Database } from '../db/index.js'
 import type { CommunicationTemplate } from '../db/schema/communication_template.js'
 import type { tools } from '../lexicons/index.js'

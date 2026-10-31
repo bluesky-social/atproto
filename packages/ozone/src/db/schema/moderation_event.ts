@@ -5,7 +5,7 @@ import type {
   CidString,
   DatetimeString,
   DidString,
-} from '@atproto/lex'
+} from '@atproto/lex-schema'
 import type { chat, com, tools } from '../../lexicons/index.js'
 
 export const eventTableName = 'moderation_event'

@@ -1,5 +1,5 @@
 import type { Generated } from 'kysely'
-import type { DidString } from '@atproto/lex'
+import type { DidString } from '@atproto/lex-schema'
 import type { tools } from '../../lexicons/index.js'
 
 export const memberTableName = 'member'

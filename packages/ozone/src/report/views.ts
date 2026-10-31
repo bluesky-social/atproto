@@ -4,7 +4,7 @@ import {
   type DidString,
   type UriString,
   asUnknown$TypedObject,
-} from '@atproto/lex'
+} from '@atproto/lex-schema'
 import { addAccountInfoToRepoViewDetail } from '../api/util.js'
 import type { ReportStat } from '../db/schema/report_stat.js'
 import { app, type com, type tools } from '../lexicons/index.js'

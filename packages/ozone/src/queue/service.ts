@@ -1,6 +1,6 @@
 import { type Selectable, sql } from 'kysely'
-import type { DatetimeString, DidString, NsidString } from '@atproto/lex'
-import { currentDatetimeString, isDidString } from '@atproto/lex'
+import type { DatetimeString, DidString, NsidString } from '@atproto/lex-schema'
+import { currentDatetimeString, isDidString } from '@atproto/lex-schema'
 import { AtUri } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import type { Database } from '../db/index.js'

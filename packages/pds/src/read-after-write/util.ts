@@ -1,6 +1,7 @@
 import type express from 'express'
-import { type DidString, type LexValue, l } from '@atproto/lex'
+import type { LexValue } from '@atproto/lex-data'
 import { lexParse } from '@atproto/lex-json'
+import { type DidString, l } from '@atproto/lex-schema'
 import type {
   HandlerPipeThrough,
   HandlerPipeThroughBuffer,

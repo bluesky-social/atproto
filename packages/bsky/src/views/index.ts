@@ -1,12 +1,12 @@
 import { HOUR, MINUTE, dedupeStrs, mapDefined } from '@atproto/common'
+import { getBlobCidString } from '@atproto/lex-data'
 import {
   type $Typed,
   type Un$Typed,
   type Unknown$TypedObject,
   type UriString,
   atUri,
-  getBlobCidString,
-} from '@atproto/lex'
+} from '@atproto/lex-schema'
 import {
   AtUri,
   type AtUriString,

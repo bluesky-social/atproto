@@ -1,4 +1,4 @@
-import type { $Typed, DidString } from '@atproto/lex'
+import type { $Typed, DidString } from '@atproto/lex-schema'
 import {
   addAccountInfoToRepoViewDetail,
   getPdsAccountInfos,

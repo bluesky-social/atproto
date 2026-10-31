@@ -1,6 +1,7 @@
 import type { IncomingHttpHeaders } from 'node:http'
 import { mapDefined, noUndefinedVals } from '@atproto/common'
-import { type AtUriString, type Client, type DidString, l } from '@atproto/lex'
+import type { Client } from '@atproto/lex-client'
+import { type AtUriString, type DidString, l } from '@atproto/lex-schema'
 import { AtUri } from '@atproto/syntax'
 import {
   ForbiddenError,

@@ -1,5 +1,5 @@
 import * as util from 'node:util'
-import type { AtUriString, DidString, UriString } from '@atproto/lex'
+import type { AtUriString, DidString, UriString } from '@atproto/lex-schema'
 import {
   type GateRecord,
   type PostRecord,

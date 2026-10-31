@@ -1,5 +1,5 @@
 import type { NotNull, Selectable } from 'kysely'
-import { toDatetimeString } from '@atproto/lex'
+import { toDatetimeString } from '@atproto/lex-schema'
 import type { Database } from '../db/index.js'
 import { TimeIdKeyset, paginate } from '../db/pagination.js'
 import type { SetDetail } from '../db/schema/ozone_set.js'

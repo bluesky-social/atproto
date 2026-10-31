@@ -1,6 +1,6 @@
 import { type Selectable, sql } from 'kysely'
-import { currentDatetimeString, toDatetimeString } from '@atproto/lex'
-import type { DidString } from '@atproto/lex'
+import { currentDatetimeString, toDatetimeString } from '@atproto/lex-schema'
+import type { DidString } from '@atproto/lex-schema'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import type {
   SafelinkActionType,

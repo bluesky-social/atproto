@@ -22,8 +22,10 @@ CBOR.
 ## Which package exports what
 
 `@atproto/lex` re-exports `lex-data`, `lex-json`, `lex-schema` and
-`lex-client`, so a package that already depends on it needs no extra import
-path. `@atproto/lex-cbor` is **not** re-exported — depend on it explicitly.
+`lex-client`, but packages in this repo only list it as a devDependency (see the
+[lex-setup skill](../lex-setup/SKILL.md)): import from the package that defines
+or re-exports each symbol below. `@atproto/lex-cbor` is **not** re-exported —
+depend on it explicitly.
 
 | Symbols                                                       | Defined in                                              | Reachable via `@atproto/lex` |
 | ------------------------------------------------------------- | ------------------------------------------------------- | ---------------------------- |
@@ -37,7 +39,7 @@ directly to avoid pulling in the client and schema layers.
 
 > [!NOTE]
 > This repo sets `verbatimModuleSyntax: true`, so type-only names need the
-> `type` modifier — `import { type DidString, isDidString } from '@atproto/lex'`.
+> `type` modifier — `import { type DidString, isDidString } from '@atproto/lex-schema'`.
 > All examples below follow that form.
 
 ## Lex value types
@@ -48,7 +50,7 @@ import {
   type TypedLexMap,
   isLexValue,
   isTypedLexMap,
-} from '@atproto/lex'
+} from '@atproto/lex-data'
 
 // LexScalar:    number (integers only) | string | boolean | null | Cid | Uint8Array
 // LexValue:     LexScalar | LexValue[] | { [key: string]?: LexValue }
@@ -79,7 +81,7 @@ import {
   isCid,
   parseCid,
   parseCidSafe,
-} from '@atproto/lex'
+} from '@atproto/lex-data'
 
 parseCid(str) // Cid — throws on invalid
 parseCidSafe(str) // Cid | null
@@ -109,7 +111,7 @@ import {
   cidForRawBytes,
   cidForRawHash,
   isCidForBytes,
-} from '@atproto/lex'
+} from '@atproto/lex-data'
 import { cidForLex } from '@atproto/lex-cbor'
 
 await cidForLex(record) // CBOR-encode then hash — the usual entry point
@@ -141,7 +143,7 @@ base64 dependency: `toBase64` / `fromBase64` (both take an optional
 `lexParse<T>()` takes a type parameter, so no `as` cast is needed:
 
 ```ts
-import { lexParse, lexStringify } from '@atproto/lex'
+import { lexParse, lexStringify } from '@atproto/lex-json'
 
 const sub =
   lexParse<app.bsky.notification.defs.SubjectActivitySubscription>(json)
@@ -164,7 +166,7 @@ import {
   encodeLexLink,
   parseLexBytes,
   parseLexLink,
-} from '@atproto/lex'
+} from '@atproto/lex-json'
 
 parseLexLink({ $link: 'bafy...' }) // Cid | undefined
 parseLexBytes({ $bytes: 'SGVsbG8=' }) // Uint8Array | undefined
@@ -180,7 +182,7 @@ required. Add `@atproto/lex-cbor` as a dependency; it is not reachable through
 `@atproto/lex`.
 
 ```ts
-import { type LexValue } from '@atproto/lex'
+import { type LexValue } from '@atproto/lex-data'
 import { cidForLex, decode, decodeAll, encode } from '@atproto/lex-cbor'
 
 const bytes: Uint8Array = encode(someLexValue)
@@ -211,7 +213,7 @@ import {
   ifDatetimeString,
   isDatetimeString,
   toDatetimeString,
-} from '@atproto/lex'
+} from '@atproto/lex-schema'
 
 currentDatetimeString() // now
 toDatetimeString(date) // throws InvalidDatetimeError on an out-of-range date
@@ -230,7 +232,7 @@ Use `DatetimeString` on record and DB row types so a raw `string` can't drift
 in:
 
 ```ts
-import type { DatetimeString, DidString } from '@atproto/lex'
+import type { DatetimeString, DidString } from '@atproto/lex-schema'
 
 interface Row {
   did: DidString
@@ -262,7 +264,11 @@ Only `AtUriString`, `AtIdentifierString` and `DatetimeString` also ship
 cover the same ground:
 
 ```ts
-import { asStringFormat, ifStringFormat, isStringFormat } from '@atproto/lex'
+import {
+  asStringFormat,
+  ifStringFormat,
+  isStringFormat,
+} from '@atproto/lex-schema'
 
 isStringFormat(value, 'did') // narrows to DidString
 asStringFormat(value, 'nsid') // throws TypeError on invalid
@@ -275,9 +281,9 @@ real-world data.
 
 > [!NOTE]
 > These types are defined in `@atproto/syntax` and re-exported through
-> `@atproto/lex`. Import from `@atproto/lex` where the package already depends
-> on it — that keeps identifier types and generated schemas coming from one
-> place and avoids adding a `@atproto/syntax` dependency.
+> `@atproto/lex-schema`. Import from `@atproto/lex-schema` where the package
+> already depends on it — that keeps identifier types and generated schemas
+> coming from one place and avoids adding a `@atproto/syntax` dependency.
 
 ### Boundaries
 
@@ -318,7 +324,7 @@ import {
   getBlobSize,
   isLegacyBlobRef,
   isTypedBlobRef,
-} from '@atproto/lex'
+} from '@atproto/lex-data'
 
 getBlobCid(blob) // Cid — parses the string for legacy refs, so it can throw
 getBlobCidString(blob) // string — skips the parse, prefer it when you only need the string
@@ -360,7 +366,7 @@ Lexicon string constraints are measured in graphemes (user-perceived
 characters) or UTF-8 bytes, never in JS string length:
 
 ```ts
-import { graphemeLen, utf8Len } from '@atproto/lex'
+import { graphemeLen, utf8Len } from '@atproto/lex-data'
 
 graphemeLen('👨‍👩‍👧‍👦') // 1
 utf8Len('👨‍👩‍👧‍👦') // 25

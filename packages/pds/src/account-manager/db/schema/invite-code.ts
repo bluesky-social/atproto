@@ -1,4 +1,4 @@
-import type { DatetimeString, DidString } from '@atproto/lex'
+import type { DatetimeString, DidString } from '@atproto/lex-schema'
 
 export interface InviteCode {
   code: string

@@ -33,7 +33,8 @@
   "dependencies": {
     "@atproto/common": "workspace:^",
     "@atproto/identity": "workspace:^",
-    "@atproto/lex": "workspace:^",
+    "@atproto/lex-data": "workspace:^",
+    "@atproto/lex-schema": "workspace:^",
     "@atproto/repo": "workspace:^",
     "@atproto/syntax": "workspace:^",
     "@atproto/xrpc-server": "workspace:^",
@@ -41,11 +42,12 @@
     "ws": "^8.12.0"
   },
   "devDependencies": {
+    "@atproto/lex": "workspace:^",
     "@types/ws": "^8.5.4",
     "jest": "^30.5.2"
   },
   "scripts": {
-    "lex:build": "lex build --clear --indexFile",
+    "lex:build": "lex build --clear --indexFile --lib @atproto/lex-schema",
     "lex:install": "lex install",
     "postlex:install": "pnpm run lex:build",
     "lex:update": "lex update",

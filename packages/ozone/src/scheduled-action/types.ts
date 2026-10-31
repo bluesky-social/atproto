@@ -1,4 +1,4 @@
-import type { DidString } from '@atproto/lex'
+import type { DidString } from '@atproto/lex-schema'
 import type { ScheduledActionType } from '../api/util.js'
 
 export type ExecutionSchedule =

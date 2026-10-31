@@ -1,6 +1,6 @@
 import { Timestamp } from '@bufbuild/protobuf'
 import { mapDefined } from '@atproto/common'
-import type { AtUriString } from '@atproto/lex'
+import type { AtUriString } from '@atproto/lex-schema'
 import {
   ForbiddenError,
   InvalidRequestError,

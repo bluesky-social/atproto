@@ -1,4 +1,8 @@
-import { type AtUriString, type UriString, isDidString } from '@atproto/lex'
+import {
+  type AtUriString,
+  type UriString,
+  isDidString,
+} from '@atproto/lex-schema'
 import { AtUri } from '@atproto/syntax'
 import { social } from '../../lexicons/index.js'
 

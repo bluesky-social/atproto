@@ -27,10 +27,15 @@ Two commands do everything:
   into `./lexicons/`, recording each one's source + CID, from the manifest's
   `resolvers` and the network.
 
-Both ship in the `lex` bin of `@atproto/lex`. Add `@atproto/lex` as a
-dependency — it re-exports `@atproto/lex-client`, `-schema`, `-data`, and
-`-json`, so one dependency covers the common case. `@atproto/lex-cbor` is
-_not_ re-exported; depend on it directly if the package encodes/decodes CBOR.
+Both ship in the `lex` bin of `@atproto/lex`, which re-exports
+`@atproto/lex-client`, `-schema`, `-data`, and `-json`, but also depends on the
+codegen tooling the bin needs. Services must not ship that tooling, so packages
+in this monorepo list `@atproto/lex` as a devDependency only: production code
+imports each name from the sub-package that re-exports it, and depends on that
+package (eslint rejects `@atproto/lex` imports under `packages/*/src`).
+`lex build` takes `--lib @atproto/lex-schema` for the same reason, as generated
+files import `l` from that package. `@atproto/lex-cbor` is _not_ re-exported;
+depend on it directly if the package encodes/decodes CBOR.
 
 ## Wiring a package in this monorepo
 
@@ -50,7 +55,7 @@ Copy the shape consuming packages use
 {
   "scripts": {
     // Generate TypeScript schema from Lexicon JSON
-    "lex:build": "lex build --clear --indexFile",
+    "lex:build": "lex build --clear --indexFile --lib @atproto/lex-schema",
     // Install Lexicon JSON into ./lexicons/ and update the manifest. Use `pnpm lex:install foo.bar.baz` to install new lexicons
     "lex:install": "lex install",
     // Keep the TypeScript schema up to date after installing new lexicons
@@ -320,7 +325,7 @@ diverge. [packages/pds](../../../packages/pds/package.json) is the reference:
 "codegen:lex": "pnpm run lex:install --ci",
 "lex:install": "lex install",     // regenerate the manifest after adding/removing a lexicon
 "postlex:install": "pnpm run lex:build",
-"lex:build": "lex build --clear --indexFile",
+"lex:build": "lex build --clear --indexFile --lib @atproto/lex-schema",
 ```
 
 Gitignore the symlinked canonical dirs under `/lexicons` (`com/atproto`,

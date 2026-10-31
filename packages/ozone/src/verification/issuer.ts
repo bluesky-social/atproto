@@ -1,12 +1,13 @@
 import type { Selectable } from 'kysely'
+import { Client } from '@atproto/lex-client'
+import { PasswordSession } from '@atproto/lex-password-session'
 import type {
   AtUriString,
   DatetimeString,
   DidString,
   HandleString,
-} from '@atproto/lex'
-import { Client, currentDatetimeString } from '@atproto/lex'
-import { PasswordSession } from '@atproto/lex-password-session'
+} from '@atproto/lex-schema'
+import { currentDatetimeString } from '@atproto/lex-schema'
 import { AtUri } from '@atproto/syntax'
 import type { VerifierConfig } from '../config/index.js'
 import type { Verification } from '../db/schema/verification.js'

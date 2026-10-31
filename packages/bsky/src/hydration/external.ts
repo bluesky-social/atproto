@@ -1,16 +1,15 @@
 import { performance } from 'node:perf_hooks'
 import { chunkArray } from '@atproto/common'
+import { type TypedLexMap, isTypedLexMap } from '@atproto/lex-data'
+import { lexParseJsonBytes } from '@atproto/lex-json'
 import {
   type AtUriString,
   type DidString,
   type InferInput,
   type NsidString,
   type RecordSchema,
-  type TypedLexMap,
   isDidString,
-  isTypedLexMap,
-  lexParseJsonBytes,
-} from '@atproto/lex'
+} from '@atproto/lex-schema'
 import { parseAtUriString } from '@atproto/syntax'
 import type { DataPlaneClient } from '../data-plane/client/index.js'
 import { site, social } from '../lexicons/index.js'

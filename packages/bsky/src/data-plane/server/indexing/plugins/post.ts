@@ -1,5 +1,7 @@
 import { type Insertable, type Selectable, sql } from 'kysely'
-import { type $Typed, type Cid, getBlobCidString, lexParse } from '@atproto/lex'
+import { type Cid, getBlobCidString } from '@atproto/lex-data'
+import { lexParse } from '@atproto/lex-json'
+import type { $Typed } from '@atproto/lex-schema'
 import { AtUri, normalizeDatetimeAlways } from '@atproto/syntax'
 import { NOTIFICATION_REASON } from '../../../../api/app/bsky/notification/constants.js'
 import { app } from '../../../../lexicons/index.js'

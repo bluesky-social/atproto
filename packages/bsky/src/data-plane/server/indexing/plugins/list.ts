@@ -1,5 +1,5 @@
 import type { Selectable } from 'kysely'
-import { type Cid, getBlobCidString } from '@atproto/lex'
+import { type Cid, getBlobCidString } from '@atproto/lex-data'
 import { type AtUri, normalizeDatetimeAlways } from '@atproto/syntax'
 import { app } from '../../../../lexicons/index.js'
 import type { BackgroundQueue } from '../../background.js'

@@ -1,5 +1,5 @@
-import type { DidString } from '@atproto/lex'
-import { currentDatetimeString } from '@atproto/lex'
+import type { DidString } from '@atproto/lex-schema'
+import { currentDatetimeString } from '@atproto/lex-schema'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import type { Database } from '../db/index.js'
 import type { QueueService } from '../queue/service.js'

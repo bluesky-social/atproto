@@ -1,4 +1,4 @@
-import type { Un$Typed } from '@atproto/lex'
+import type { Un$Typed } from '@atproto/lex-schema'
 import type { Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../../../context.js'
 import { app } from '../../../../lexicons/index.js'

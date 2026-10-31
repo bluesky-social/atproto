@@ -1,6 +1,6 @@
 import type { Selectable } from 'kysely'
 import { MINUTE, SECOND } from '@atproto/common'
-import type { DidString } from '@atproto/lex'
+import type { DidString } from '@atproto/lex-schema'
 import {
   assertProtectedTagAction,
   getProtectedTags,

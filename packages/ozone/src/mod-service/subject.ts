@@ -1,4 +1,9 @@
-import type { $TypeOf, $Typed, AtUriString, DidString } from '@atproto/lex'
+import type {
+  $TypeOf,
+  $Typed,
+  AtUriString,
+  DidString,
+} from '@atproto/lex-schema'
 import { AtUri } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { chat, com, type tools } from '../lexicons/index.js'

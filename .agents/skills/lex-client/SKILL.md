@@ -28,7 +28,7 @@ calls. Their first argument is an `Agent | AgentOptions` — a URL string, `URL`
 options, responses, and errors as the client methods.
 
 ```ts
-import { xrpc } from '@atproto/lex'
+import { xrpc } from '@atproto/lex-client'
 
 await xrpc(hostUrl, com.atproto.sync.requestCrawl, { body: { hostname } })
 ```
@@ -39,7 +39,7 @@ The constructor takes an `Agent` (anything with `fetchHandler`, optionally
 `did`) or `AgentOptions` (a URL string/`URL`, or an `AgentConfig`).
 
 ```ts
-import { Client } from '@atproto/lex'
+import { Client } from '@atproto/lex-client'
 
 // Unauthenticated
 const client = new Client('https://public.api.bsky.app')
@@ -275,7 +275,7 @@ retry loop.
 ### `create` / `get` / `put` / `delete`
 
 ```ts
-import { currentDatetimeString } from '@atproto/lex'
+import { currentDatetimeString } from '@atproto/lex-schema'
 
 const { uri, cid } = await client.create(app.bsky.feed.post, {
   text: 'Hello, world!',
@@ -398,7 +398,8 @@ An `Action<Input, Output>` is `(client, input, options) => Output | Promise<Outp
 interchangeable with a lexicon method at the call site.
 
 ```ts
-import { type Action, Client, currentDatetimeString } from '@atproto/lex'
+import { type Action, Client } from '@atproto/lex-client'
+import { currentDatetimeString } from '@atproto/lex-schema'
 import { app } from './lexicons/index.js'
 
 type LikeInput = { uri: AtUriString; cid: CidString }

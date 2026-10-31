@@ -1,5 +1,5 @@
 import { MINUTE, lessThanAgoMs } from '@atproto/common'
-import { type DidString, currentDatetimeString } from '@atproto/lex'
+import { type DidString, currentDatetimeString } from '@atproto/lex-schema'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { getRandomToken } from '../../api/com/atproto/server/util.js'
 import type { AccountDb, EmailTokenPurpose } from '../db/index.js'

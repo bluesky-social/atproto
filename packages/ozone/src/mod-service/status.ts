@@ -1,13 +1,13 @@
 // This may require better organization but for now, just dumping functions here containing DB queries for moderation status
 
 import { HOUR } from '@atproto/common'
-import type { DatetimeString, DidString, UriString } from '@atproto/lex'
+import type { DatetimeString, DidString, UriString } from '@atproto/lex-schema'
 import {
   asDatetimeString,
   currentDatetimeString,
   isDidString,
   toDatetimeString,
-} from '@atproto/lex'
+} from '@atproto/lex-schema'
 import { AtUri } from '@atproto/syntax'
 import { isAppealReport } from '../api/util.js'
 import type { Database } from '../db/index.js'
