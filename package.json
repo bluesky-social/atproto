@@ -31,6 +31,7 @@
     "verify:style": "pnpm run style",
     "verify:lint": "pnpm lint",
     "verify:package-files": "pnpm -r --filter-prod '{./services/*}...' exec node -e \"require('./package.json').files || (console.error(process.cwd() + ': package.json needs a files field'), process.exit(1))\"",
+    "verify:tsconfig-references": "node ./scripts/verify-tsconfig-references.mjs",
     "lex:update": "pnpm run --recursive --parallel lex:update",
     "lex:update-local": "pnpm run --recursive --parallel lex:update com.atproto.* tools.ozone.*",
     "format": "pnpm lint:fix && pnpm style:fix",

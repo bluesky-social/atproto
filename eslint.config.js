@@ -133,6 +133,7 @@ export default [
       'packages/lex-cli/bin.js',
       'packages/lex/*/scripts/*.js',
       'packages/pds/scripts/*.js',
+      'scripts/*.mjs',
     ],
     languageOptions: {
       globals: globals.node,
