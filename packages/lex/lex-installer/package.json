@@ -43,7 +43,6 @@
     "@atproto-labs/fetch-node": "workspace:^",
     "@atproto-labs/handle-resolver": "workspace:^",
     "@atproto-labs/handle-resolver-node": "workspace:^",
-    "@atproto/did": "workspace:^",
     "@atproto/lex-builder": "workspace:^",
     "@atproto/lex-cbor": "workspace:^",
     "@atproto/lex-data": "workspace:^",

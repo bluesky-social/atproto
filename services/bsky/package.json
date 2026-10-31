@@ -2,6 +2,10 @@
   "name": "bsky-app-view-service",
   "private": true,
   "type": "module",
+  "files": [
+    "api.ts",
+    "tracer.ts"
+  ],
   "dependencies": {
     "@atproto/bsky": "workspace:^",
     "@atproto/crypto": "workspace:^",

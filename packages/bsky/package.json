@@ -85,6 +85,7 @@
     "zod": "3.23.8"
   },
   "devDependencies": {
+    "@atproto/bsync": "workspace:^",
     "@atproto/pds": "workspace:^",
     "@bufbuild/buf": "^1.73.0",
     "@bufbuild/protoc-gen-es": "^1.5.0",
@@ -99,7 +100,7 @@
     "vitest": "^4.1.10"
   },
   "scripts": {
-    "codegen:buf": "buf generate ../bsync/proto && buf generate ./proto",
+    "codegen:buf": "buf generate node_modules/@atproto/bsync/proto && buf generate ./proto",
     "lex:build": "lex build --clear --indexFile",
     "lex:install": "lex install",
     "postlex:install": "pnpm run lex:build",
