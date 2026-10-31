@@ -27,6 +27,7 @@ jest.config.cjs
 jest.varint-shim.cjs
 Makefile
 prettier.config.js
+scripts
 vitest.config.ts
 
 # buf

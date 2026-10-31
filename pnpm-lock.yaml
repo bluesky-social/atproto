@@ -1185,9 +1185,6 @@ importers:
       '@atproto-labs/handle-resolver-node':
         specifier: workspace:^
         version: link:../../internal/handle-resolver-node
-      '@atproto/did':
-        specifier: workspace:^
-        version: link:../../did
       '@atproto/lex-builder':
         specifier: workspace:^
         version: link:../lex-builder
