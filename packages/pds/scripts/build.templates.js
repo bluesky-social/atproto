@@ -15,6 +15,9 @@ const OUT_DIR = 'dist/mailer/templates'
  * Precompile a single `.hbs` template into an ES module exporting a runtime
  * template function, alongside its source map.
  *
+ * The map embeds the template as `sourcesContent`, since the `.hbs` sources
+ * are not published alongside `dist`.
+ *
  * @param {string} src - path to the `.hbs` file
  */
 function buildTemplate(src) {
@@ -28,13 +31,15 @@ function buildTemplate(src) {
     destName: `${name}.js`,
   })
 
+  const sourceMap = { ...JSON.parse(map), sourcesContent: [input] }
+
   const module =
     `import Handlebars from 'handlebars'\n` +
     `export default Handlebars.template(${code})\n` +
     `//# sourceMappingURL=${name}.js.map\n`
 
   writeFileSync(jsPath, module)
-  writeFileSync(mapPath, map)
+  writeFileSync(mapPath, JSON.stringify(sourceMap))
 
   console.log(`  ${jsPath}`)
 }
