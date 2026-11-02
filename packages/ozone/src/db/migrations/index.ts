@@ -58,4 +58,4 @@ export * as _20261016T000000000Z from './20261016T000000000Z-add-report-queue-ta
 export * as _20261016T174053481Z from './20261016T174053481Z-add-safelink-rule-source.js'
 export * as _20261020T000000000Z from './20261020T000000000Z-add-queue-strict-access.js'
 export * as _20261026T154047943Z from './20261026T154047943Z-add-report-activity-member-created-index.js'
-export * as _20261101T000000000Z from './20261101T000000000Z-incremental-record-events-stats.js'
+export * as _20261101T000000000Z from './20261101T000000000Z-record-events-stats-incremental-tables.js'

@@ -2,4 +2,4 @@
 '@atproto/ozone': patch
 ---
 
-Maintain `record_events_stats` incrementally with triggers on `moderation_event` instead of refreshing it as a materialized view
+Add `record_events_stats_live`, which a daemon worker keeps current from deltas queued by triggers on `moderation_event` and a batched backfill of earlier events, ahead of serving `record_events_stats` from it instead of a materialized view

@@ -1,7 +1,5 @@
 import type { GeneratedAlways, Selectable } from 'kysely'
 
-// View over record_events_stats_live, which triggers on moderation_event keep
-// current. Read-only: never write to it directly.
 export const tableName = 'record_events_stats'
 
 export type RecordEventsStats = {
