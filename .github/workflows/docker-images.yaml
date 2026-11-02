@@ -1,0 +1,144 @@
+name: Docker
+on:
+  push:
+    branches:
+      - main
+      - msi/docker-closure-cache
+
+# Each registry has its own job, so that each only holds its own credentials.
+# Both build the same images concurrently: only the image-ghcr jobs write the
+# build cache, which the image-aws jobs would only duplicate.
+jobs:
+  image-ghcr:
+    if: github.repository == 'bluesky-social/atproto'
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        service: [bsky, bsync, ozone, pds]
+
+    steps:
+      # Temporary until fixed runner images roll out:
+      # https://github.com/actions/runner-images/issues/15018
+      - name: Update Ubuntu CA certificates
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install --only-upgrade --no-install-recommends -y ca-certificates
+
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Setup Docker buildx
+        uses: docker/setup-buildx-action@v4
+        with:
+          # The runner is discarded at the end of the job anyway
+          cleanup: false
+
+      - name: Log into registry ghcr.io
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: |
+            ghcr.io/${{ github.repository }}
+          tags: |
+            type=sha,enable=true,priority=100,prefix=${{ matrix.service }}:,suffix=,format=long
+          labels: |
+            org.opencontainers.image.licenses=MIT OR Apache-2.0
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          target: ${{ matrix.service }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=${{ matrix.service }}
+          cache-to: type=gha,scope=${{ matrix.service }},mode=max,ignore-error=true,ghtoken=${{ secrets.GITHUB_TOKEN }}
+
+  image-aws:
+    if: github.repository == 'bluesky-social/atproto'
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - service: bsky
+            image: bsky-app-view
+          - service: bsync
+            image: bsync
+          - service: ozone
+            image: ozone
+          - service: pds
+            image: pds
+
+    steps:
+      # Temporary until fixed runner images roll out:
+      # https://github.com/actions/runner-images/issues/15018
+      - name: Update Ubuntu CA certificates
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install --only-upgrade --no-install-recommends -y ca-certificates
+
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Setup Docker buildx
+        uses: docker/setup-buildx-action@v4
+        with:
+          # The runner is discarded at the end of the job anyway
+          cleanup: false
+
+      # TODO: Authenticate with OpenID Connect instead of long-lived credentials,
+      # so that no AWS secret is stored in GitHub:
+      # - In AWS, register GitHub's OIDC provider (token.actions.githubusercontent.com)
+      #   and create an IAM role that only trusts this repository's main branch
+      #   (sub: repo:bluesky-social/atproto:ref:refs/heads/main), allowed to call
+      #   ecr:GetAuthorizationToken and to push to the four ECR repositories
+      #   (ecr:BatchCheckLayerAvailability, ecr:InitiateLayerUpload,
+      #   ecr:UploadLayerPart, ecr:CompleteLayerUpload, ecr:PutImage).
+      # - Grant this job `id-token: write`.
+      # - Replace this step with aws-actions/configure-aws-credentials
+      #   (role-to-assume: <role ARN>, aws-region: us-east-2) followed by
+      #   aws-actions/amazon-ecr-login, take the registry from the latter's
+      #   `registry` output, and delete the AWS_ECR_REGISTRY_USEAST2_PACKAGES_*
+      #   secrets.
+      - name: Log into registry AWS ECR
+        uses: docker/login-action@v4
+        with:
+          registry: ${{ secrets.AWS_ECR_REGISTRY_USEAST2_PACKAGES_REGISTRY }}
+          username: ${{ secrets.AWS_ECR_REGISTRY_USEAST2_PACKAGES_USERNAME }}
+          password: ${{ secrets.AWS_ECR_REGISTRY_USEAST2_PACKAGES_PASSWORD }}
+
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: |
+            ${{ secrets.AWS_ECR_REGISTRY_USEAST2_PACKAGES_REGISTRY }}/${{ matrix.image }}
+          tags: |
+            type=sha,enable=true,priority=100,prefix=,suffix=,format=long
+          labels: |
+            org.opencontainers.image.licenses=MIT OR Apache-2.0
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          target: ${{ matrix.service }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=${{ matrix.service }}

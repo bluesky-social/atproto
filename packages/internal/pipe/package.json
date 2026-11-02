@@ -13,6 +13,10 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/internal/pipe"
   },
+  "files": [
+    "./dist",
+    "./CHANGELOG.md"
+  ],
   "type": "module",
   "exports": {
     ".": {
