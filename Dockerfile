@@ -9,7 +9,7 @@
 # Image labels are set by the docker-images workflow. EXPOSE and VOLUME
 # only matter when running an image locally.
 
-FROM node:24.22.2-alpine3.24 AS base
+FROM node:26.13.0-alpine3.24 AS base
 ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0
 ENV PUPPETEER_SKIP_DOWNLOAD=true
 WORKDIR /app
@@ -100,7 +100,7 @@ RUN pnpm run build:tooling \
  && pnpm --filter pds-service --prod deploy /deploy \
  && rm /deploy/pnpm-lock.yaml /deploy/pnpm-workspace.yaml
 
-FROM node:24.22.2-alpine3.24 AS runtime
+FROM node:26.13.0-alpine3.24 AS runtime
 RUN apk add --no-cache dumb-init
 # Avoid zombie processes, handle signal forwarding
 ENTRYPOINT ["dumb-init", "--"]
