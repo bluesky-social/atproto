@@ -255,6 +255,9 @@ export class DaemonContext {
     // that calls processAll() after creating reports sees the report rows
     // immediately (in production this happens via the 1-min poll).
     await this.queueRouter.routeReports()
+    // Folds the counts record_events_stats reads, which the account stats view
+    // aggregates on refresh.
+    await this.recordEventsStatsWorker.processAll()
     await this.materializedViewRefresher.run()
     await this.teamProfileSynchronizer.run()
   }

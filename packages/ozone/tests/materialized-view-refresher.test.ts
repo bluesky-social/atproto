@@ -74,7 +74,7 @@ describe('materialized view refresher', () => {
       const refreshCalls = infoSpy.mock.calls.filter((call) =>
         call.includes('refreshed materialized view'),
       )
-      expect(refreshCalls).toHaveLength(4)
+      expect(refreshCalls).toHaveLength(3)
     } finally {
       await contender.query(
         `SELECT pg_advisory_unlock(
@@ -94,7 +94,7 @@ describe('materialized view refresher', () => {
     const refreshCalls = infoSpy.mock.calls.filter((call) =>
       call.includes('refreshed materialized view'),
     )
-    expect(refreshCalls).toHaveLength(4)
+    expect(refreshCalls).toHaveLength(3)
     const views = refreshCalls.map((call) => {
       const obj = call[0] as { view: string; durationMs: number }
       expect(typeof obj.durationMs).toBe('number')
@@ -104,7 +104,6 @@ describe('materialized view refresher', () => {
       'account_events_stats',
       'account_record_events_stats',
       'account_record_status_stats',
-      'record_events_stats',
     ])
 
     // The lock was released between cycles: a second run also succeeds.
@@ -113,7 +112,7 @@ describe('materialized view refresher', () => {
     const secondRefreshCalls = infoSpy.mock.calls.filter((call) =>
       call.includes('refreshed materialized view'),
     )
-    expect(secondRefreshCalls).toHaveLength(4)
+    expect(secondRefreshCalls).toHaveLength(3)
   })
 
   it('logs a stable failure message, continues with remaining views, and releases the lock when one refresh fails', async () => {
@@ -124,7 +123,7 @@ describe('materialized view refresher', () => {
     let renamed = false
     try {
       await admin.query(
-        'ALTER MATERIALIZED VIEW "record_events_stats" RENAME TO "record_events_stats_broken"',
+        'ALTER MATERIALIZED VIEW "account_record_events_stats" RENAME TO "account_record_events_stats_broken"',
       )
       renamed = true
 
@@ -144,7 +143,7 @@ describe('materialized view refresher', () => {
         durationMs: number
       }
       expect(failure.err).toBeDefined()
-      expect(failure.view).toBe('record_events_stats')
+      expect(failure.view).toBe('account_record_events_stats')
       expect(typeof failure.durationMs).toBe('number')
 
       // The remaining views still refreshed, including those ordered after
@@ -154,7 +153,6 @@ describe('materialized view refresher', () => {
         .map((call) => (call[0] as { view: string }).view)
       expect(refreshedViews.sort()).toEqual([
         'account_events_stats',
-        'account_record_events_stats',
         'account_record_status_stats',
       ])
 
@@ -175,7 +173,7 @@ describe('materialized view refresher', () => {
     } finally {
       if (renamed) {
         await admin.query(
-          'ALTER MATERIALIZED VIEW "record_events_stats_broken" RENAME TO "record_events_stats"',
+          'ALTER MATERIALIZED VIEW "account_record_events_stats_broken" RENAME TO "account_record_events_stats"',
         )
       }
       admin.release()
