@@ -6,7 +6,7 @@ import {
   type DatetimeString,
   type DidString,
   asDatetimeString,
-} from '@atproto/lex'
+} from '@atproto/lex-schema'
 import { AtUri } from '@atproto/syntax'
 import type { Server } from '@atproto/xrpc-server'
 import type { ServerConfig } from '../../../../config.js'

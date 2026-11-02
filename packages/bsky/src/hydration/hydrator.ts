@@ -1,6 +1,6 @@
 import assert from 'node:assert'
 import { chunkArray, dedupeStrs, mapDefined } from '@atproto/common'
-import { type NsidString, atUri, isDidString } from '@atproto/lex'
+import { type NsidString, atUri, isDidString } from '@atproto/lex-schema'
 import {
   AtUri,
   type AtUriString,

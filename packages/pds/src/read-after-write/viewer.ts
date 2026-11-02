@@ -1,4 +1,5 @@
-import { type LexMap, type UriString, getBlobCidString } from '@atproto/lex'
+import { type LexMap, getBlobCidString } from '@atproto/lex-data'
+import type { UriString } from '@atproto/lex-schema'
 import {
   AtUri,
   type DidString,

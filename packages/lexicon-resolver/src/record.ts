@@ -1,13 +1,11 @@
 import { IdResolver, parseToAtprotoDocument } from '@atproto/identity'
 import {
   type AgentConfig,
-  type Cid,
   Client,
-  type DidString,
   type FetchHandler,
-  type LexMap,
-  l,
-} from '@atproto/lex'
+} from '@atproto/lex-client'
+import type { Cid, LexMap } from '@atproto/lex-data'
+import { type DidString, l } from '@atproto/lex-schema'
 import {
   type Commit,
   MST,

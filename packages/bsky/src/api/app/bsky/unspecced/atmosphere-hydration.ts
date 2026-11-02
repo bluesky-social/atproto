@@ -3,7 +3,7 @@ import {
   type DidString,
   type NsidString,
   toDatetimeString,
-} from '@atproto/lex'
+} from '@atproto/lex-schema'
 import { AtUri } from '@atproto/syntax'
 import {
   type ExternalRecord,

@@ -1,5 +1,5 @@
 import { mapDefined } from '@atproto/common'
-import type { AtUriString, DidString } from '@atproto/lex'
+import type { AtUriString, DidString } from '@atproto/lex-schema'
 import { AtUri } from '@atproto/syntax'
 import { app } from '../../../../../lexicons/index.js'
 import {

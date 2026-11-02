@@ -38,7 +38,7 @@ Repo-specific conventions and setup. Assumes working knowledge of vitest itself 
 
    Adjust the `../../` depth for nested packages (`packages/lex/*` and `packages/oauth/*` need `../../../`). `./tsconfig.build.json` is normally the only reference needed — it already pulls in the package's build-time deps, so a test importing `@atproto/lex-data` from `lex-json` resolves without an extra entry. Add one only for a package the tests import but `src` doesn't; that's `{ "path": "../dev-env/tsconfig.build.json" }` in the integration-test packages, and little else.
 
-   Extend `include` for other test-only sources: benchmarks (`./src/**/*.bench.ts`, as [lex-json](../../../../packages/lex/lex-json/tsconfig.test.json) does) or ambient declarations (`./src/core-js.d.ts`, as [lex-document](../../../../packages/lex/lex-document/tsconfig.test.json) does).
+   Extend `include` for other test-only sources: benchmarks (`./src/**/*.bench.ts`, as [lex-json](../../../../packages/lex/lex-json/tsconfig.test.json) does) or ambient declarations (`./src/core-js.d.ts`, as [oauth-client](../../../../packages/oauth/oauth-client/tsconfig.test.json) does).
 
 5. Make sure the package's `tsconfig.json` references `./tsconfig.build.json`, `./tsconfig.test.json`, and — so the new `vitest.config.ts` gets type-checked — `./tsconfig.config.json`. If the package has no `tsconfig.config.json` yet, create one extending [tsconfig/config.tsconfig.json](../../../../tsconfig/config.tsconfig.json) with `include: ["./*.ts", "./*.js", "./*.cjs", "./*.mjs"]` (adjust the `../../` depth for nested packages). See the SKILL's [TypeScript config](../SKILL.md#typescript-config-for-tests) section.
 

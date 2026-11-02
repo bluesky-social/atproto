@@ -8,7 +8,7 @@ import {
   type AtIdentifierString,
   type DidString,
   isDidString,
-} from '@atproto/lex'
+} from '@atproto/lex-schema'
 import {
   OAuthError,
   WWWAuthenticateError,

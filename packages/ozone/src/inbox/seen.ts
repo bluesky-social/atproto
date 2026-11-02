@@ -4,7 +4,7 @@ import {
   type DidString,
   currentDatetimeString,
   toDatetimeString,
-} from '@atproto/lex'
+} from '@atproto/lex-schema'
 import type { Database } from '../db/index.js'
 import type { InboxSeen } from '../db/schema/inbox_seen.js'
 

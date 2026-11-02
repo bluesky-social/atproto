@@ -1,4 +1,4 @@
-import type { Cid } from '@atproto/lex'
+import type { Cid } from '@atproto/lex-data'
 import type { AtUri } from '@atproto/syntax'
 import { app } from '../../../../lexicons/index.js'
 import type { BackgroundQueue } from '../../background.js'

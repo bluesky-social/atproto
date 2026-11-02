@@ -1,4 +1,4 @@
-import type { Client } from '@atproto/lex'
+import type { Client } from '@atproto/lex-client'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import type { OzoneConfig } from '../config/index.js'
 import { app, com } from '../lexicons/index.js'

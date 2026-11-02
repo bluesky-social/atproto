@@ -27,10 +27,15 @@ Two commands do everything:
   into `./lexicons/`, recording each one's source + CID, from the manifest's
   `resolvers` and the network.
 
-Both ship in the `lex` bin of `@atproto/lex`. Add `@atproto/lex` as a
-dependency — it re-exports `@atproto/lex-client`, `-schema`, `-data`, and
-`-json`, so one dependency covers the common case. `@atproto/lex-cbor` is
-_not_ re-exported; depend on it directly if the package encodes/decodes CBOR.
+Both ship in the `lex` bin of `@atproto/lex`, which re-exports
+`@atproto/lex-client`, `-schema`, `-data`, `-json`, and `-cbor`, but also
+depends on the codegen tooling the bin needs. Services must not ship that
+tooling, so packages in this monorepo list `@atproto/lex` as a devDependency
+only: production code imports each name from the sub-package that re-exports
+it, and depends on that package (eslint rejects `@atproto/lex` imports under
+`packages/*/src`).
+`lex build` takes `--lib @atproto/lex-schema` for the same reason, as generated
+files import `l` from that package.
 
 ## Wiring a package in this monorepo
 
@@ -50,7 +55,7 @@ Copy the shape consuming packages use
 {
   "scripts": {
     // Generate TypeScript schema from Lexicon JSON
-    "lex:build": "lex build --clear --indexFile",
+    "lex:build": "lex build --clear --indexFile --lib @atproto/lex-schema",
     // Install Lexicon JSON into ./lexicons/ and update the manifest. Use `pnpm lex:install foo.bar.baz` to install new lexicons
     "lex:install": "lex install",
     // Keep the TypeScript schema up to date after installing new lexicons
@@ -268,18 +273,20 @@ fetches them from the network into `./lexicons/` and records each resolution
 ```bash
 lex install app.bsky.feed.post   # add NSIDs; dependencies resolve automatically
 lex install                      # install everything the manifest lists
-lex install --update             # re-resolve all to latest
 lex install --ci                 # fail if installed files drift from manifest CIDs
 lex install --no-save <nsid>     # install without touching the manifest
+lex update                       # re-resolve all to latest
+lex update 'chat.bsky.*'         # re-resolve only matching NSIDs
 ```
 
 Flags: `--manifest <path>` (default `./lexicons.json`), `--lexicons <dir>`
-(default `./lexicons`), `--update`, `--ci`, `--no-save`.
+(default `./lexicons`), `--ci`, `--no-save`. `lex install --update` still works
+but is deprecated in favor of `lex update`.
 
 Commit both the manifest and the fetched JSON — they are the input contract,
 and the recorded CIDs are what makes `--ci` meaningful. The upstream-recommended
 wiring adds `"postinstall": "lex install --ci"` to catch drift on every install
-and `"update-lexicons": "lex install --update"` as the deliberate refresh.
+and `"update-lexicons": "lex update"` as the deliberate refresh.
 
 Don't commit a second **copy** of schemas that already live in
 [lexicons/](../../../lexicons/) — it would silently diverge. In-repo, vendor by
@@ -320,7 +327,7 @@ diverge. [packages/pds](../../../packages/pds/package.json) is the reference:
 "codegen:lex": "pnpm run lex:install --ci",
 "lex:install": "lex install",     // regenerate the manifest after adding/removing a lexicon
 "postlex:install": "pnpm run lex:build",
-"lex:build": "lex build --clear --indexFile",
+"lex:build": "lex build --clear --indexFile --lib @atproto/lex-schema",
 ```
 
 Gitignore the symlinked canonical dirs under `/lexicons` (`com/atproto`,

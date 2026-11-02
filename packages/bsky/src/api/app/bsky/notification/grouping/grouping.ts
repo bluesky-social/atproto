@@ -1,4 +1,8 @@
-import type { AtUriString, DatetimeString, DidString } from '@atproto/lex'
+import type {
+  AtUriString,
+  DatetimeString,
+  DidString,
+} from '@atproto/lex-schema'
 import type { NotificationsV2Algorithm } from '../../../../../config.js'
 import type {
   Notification,

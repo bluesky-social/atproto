@@ -1,5 +1,6 @@
 import { mapDefined, noUndefinedVals } from '@atproto/common'
-import type { Client, DidString } from '@atproto/lex'
+import type { Client } from '@atproto/lex-client'
+import type { DidString } from '@atproto/lex-schema'
 import {
   type Headers as HeadersMap,
   InternalServerError,

@@ -1,4 +1,4 @@
-import type { AtUriString, DidString } from '@atproto/lex'
+import type { AtUriString, DidString } from '@atproto/lex-schema'
 import { BackgroundQueue } from '../background.js'
 import type { Database } from '../db/index.js'
 import { type CommitCreateEvent, Jetstream } from '../jetstream/service.js'

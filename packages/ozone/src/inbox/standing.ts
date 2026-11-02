@@ -2,7 +2,7 @@ import {
   type DatetimeString,
   type DidString,
   currentDatetimeString,
-} from '@atproto/lex'
+} from '@atproto/lex-schema'
 import type { StrikeSuspensionConfig } from '../config/strike-suspension.js'
 import type { Database } from '../db/index.js'
 

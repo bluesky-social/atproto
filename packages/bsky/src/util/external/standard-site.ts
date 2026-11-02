@@ -1,4 +1,4 @@
-import type { AtUriString, InferInput, RecordSchema } from '@atproto/lex'
+import type { AtUriString, InferInput, RecordSchema } from '@atproto/lex-schema'
 import { parseAtUriString } from '@atproto/syntax'
 import type {
   AssociatedSiteStandardRecord,
