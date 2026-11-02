@@ -1,10 +1,12 @@
-import { type RawBuilder, sql } from 'kysely'
+import { sql } from 'kysely'
 import { SECOND } from '@atproto/common'
 import type { Database } from '../db/index.js'
 import {
+  type BackfillCursor,
   RECORD_EVENTS_STATS_BACKFILL_JOB,
-  RECORD_STATS_AGGREGATE_SQL,
-  RECORD_STATS_GROUP_BY_SQL,
+  backfillRangeSql,
+  foldDeltasSql,
+  parseCursor,
 } from '../db/migrations/20261101T000000000Z-record-events-stats-incremental-tables.js'
 import { dbLogger } from '../logger.js'
 
@@ -14,12 +16,6 @@ const BATCHES_PER_POLL = 10
 // Counts in record_events_stats_live lag moderation_event by up to this long,
 // plus the time to fold whatever queued up meanwhile.
 const IDLE_INTERVAL = 5 * SECOND
-
-type BackfillCursor = {
-  watermark: number
-  next: number
-  done?: true
-}
 
 export type BackfillBatch = BackfillCursor & {
   scannedIds: number
@@ -112,6 +108,9 @@ export class RecordEventsStatsWorker {
       if (batch.deltaRows === 0) break
       addFold(summary, batch)
     }
+    // The fold batches skip deltas that a concurrent poll() holds; wait for it
+    // too, so everything queued before this call has been folded.
+    await this.processingPromise
     return summary
   }
 
@@ -128,10 +127,7 @@ export class RecordEventsStatsWorker {
       const { watermark, next } = cursor
       const hi = Math.min(next + this.backfillBatchIds, watermark)
       if (hi > next) {
-        await upsertLive(
-          sql`${sql.raw(RECORD_STATS_AGGREGATE_SQL)} AND id > ${next} AND id <= ${hi}
-          ${sql.raw(RECORD_STATS_GROUP_BY_SQL)}`,
-        ).execute(txn.db)
+        await sql.raw(backfillRangeSql(next, hi)).execute(txn.db)
       }
 
       const advanced: BackfillCursor =
@@ -166,31 +162,9 @@ export class RecordEventsStatsWorker {
 
   async processFoldBatch(): Promise<FoldBatch> {
     return this.db.transaction(async (txn) => {
-      // SKIP LOCKED lets concurrent daemons fold disjoint batches.
-      const result = await sql<FoldBatch>`
-        WITH batch AS (
-          DELETE FROM record_events_stats_delta
-          WHERE id IN (
-            SELECT id FROM record_events_stats_delta
-            ORDER BY id
-            LIMIT ${this.foldBatchRows}
-            FOR UPDATE SKIP LOCKED
-          )
-          RETURNING "subjectDid", "subjectKey", "escalateDelta", "reportDelta", "appealDelta"
-        ), folded AS (
-          ${upsertLive(sql`
-            SELECT
-              "subjectDid",
-              "subjectKey",
-              SUM("escalateDelta") AS "escalateCount",
-              SUM("reportDelta") AS "reportCount",
-              SUM("appealDelta") AS "appealCount"
-            FROM batch
-            GROUP BY "subjectDid", "subjectKey"
-          `)}
-        )
-        SELECT count(*)::int AS "deltaRows" FROM batch
-      `.execute(txn.db)
+      const result = await sql
+        .raw<FoldBatch>(foldDeltasSql(this.foldBatchRows))
+        .execute(txn.db)
       return result.rows[0] ?? { deltaRows: 0 }
     })
   }
@@ -209,45 +183,6 @@ export class RecordEventsStatsWorker {
     }
     return summary
   }
-}
-
-// Adds source's per-subject counts to the table, in key order (see above).
-// Rows whose counts are all zero only make sure the subject has a row: on
-// conflict the WHERE skips the update, leaving the existing row as is. Doing
-// this in one statement rather than a separate ON CONFLICT DO NOTHING keeps
-// the whole batch in key order.
-function upsertLive(source: RawBuilder<unknown>): RawBuilder<unknown> {
-  return sql`
-    INSERT INTO record_events_stats_live AS s
-      ("subjectDid", "subjectKey", "escalateCount", "reportCount", "appealCount")
-    SELECT "subjectDid", "subjectKey", "escalateCount", "reportCount", "appealCount"
-    FROM (${source}) AS src
-    ORDER BY "subjectDid", "subjectKey"
-    ON CONFLICT ("subjectDid", "subjectKey") DO UPDATE SET
-      "escalateCount" = s."escalateCount" + excluded."escalateCount",
-      "reportCount" = s."reportCount" + excluded."reportCount",
-      "appealCount" = s."appealCount" + excluded."appealCount"
-    WHERE excluded."escalateCount" <> 0
-      OR excluded."reportCount" <> 0
-      OR excluded."appealCount" <> 0
-  `
-}
-
-// The migration inserts the cursor; without it the backfill can't know where
-// to stop, and restarting it would count events twice.
-function parseCursor(cursor: string | null): BackfillCursor {
-  const parsed: Partial<BackfillCursor> | null = cursor
-    ? JSON.parse(cursor)
-    : null
-  if (
-    typeof parsed?.watermark !== 'number' ||
-    typeof parsed?.next !== 'number'
-  ) {
-    throw new Error(
-      `missing or malformed ${RECORD_EVENTS_STATS_BACKFILL_JOB} job cursor: ${cursor}`,
-    )
-  }
-  return parsed as BackfillCursor
 }
 
 function emptySummary(): WorkSummary {

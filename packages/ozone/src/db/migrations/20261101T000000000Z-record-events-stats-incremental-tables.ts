@@ -160,6 +160,89 @@ WHERE ${inScope}`
 
 export const RECORD_STATS_GROUP_BY_SQL = `GROUP BY "subjectDid", ${subjectKey}`
 
+// The worker's writes to the table, as plain SQL so that later migrations can
+// run the same statements. Every write upserts in subject key order, so
+// concurrent writers lock rows in the same order and can't deadlock.
+
+// Adds source's per-subject counts to the table, in key order. Rows whose
+// counts are all zero only make sure the subject has a row: on conflict the
+// WHERE skips the update, leaving the existing row as is. Doing this in one
+// statement rather than a separate ON CONFLICT DO NOTHING keeps the whole
+// batch in key order.
+const upsertLiveSql = (
+  source: string,
+) => `INSERT INTO record_events_stats_live AS s
+  ("subjectDid", "subjectKey", "escalateCount", "reportCount", "appealCount")
+SELECT "subjectDid", "subjectKey", "escalateCount", "reportCount", "appealCount"
+FROM (${source}) AS src
+ORDER BY "subjectDid", "subjectKey"
+ON CONFLICT ("subjectDid", "subjectKey") DO UPDATE SET
+  "escalateCount" = s."escalateCount" + excluded."escalateCount",
+  "reportCount" = s."reportCount" + excluded."reportCount",
+  "appealCount" = s."appealCount" + excluded."appealCount"
+WHERE excluded."escalateCount" <> 0
+  OR excluded."reportCount" <> 0
+  OR excluded."appealCount" <> 0`
+
+// Adds the events with after < id <= upTo.
+export const backfillRangeSql = (after: number, upTo: number) =>
+  upsertLiveSql(
+    `${RECORD_STATS_AGGREGATE_SQL} AND id > ${int(after)} AND id <= ${int(upTo)}\n${RECORD_STATS_GROUP_BY_SQL}`,
+  )
+
+// Folds up to limit queued deltas, or all of them, and returns how many as
+// "deltaRows". SKIP LOCKED lets concurrent daemons fold disjoint batches.
+export const foldDeltasSql = (limit?: number) => `WITH batch AS (
+  DELETE FROM record_events_stats_delta
+  WHERE id IN (
+    SELECT id FROM record_events_stats_delta
+    ORDER BY id${limit === undefined ? '' : `\n    LIMIT ${int(limit)}`}
+    FOR UPDATE SKIP LOCKED
+  )
+  RETURNING "subjectDid", "subjectKey", "escalateDelta", "reportDelta", "appealDelta"
+), folded AS (
+${upsertLiveSql(`SELECT
+  "subjectDid",
+  "subjectKey",
+  SUM("escalateDelta") AS "escalateCount",
+  SUM("reportDelta") AS "reportCount",
+  SUM("appealDelta") AS "appealCount"
+FROM batch
+GROUP BY "subjectDid", "subjectKey"`)}
+)
+SELECT count(*)::int AS "deltaRows" FROM batch`
+
+// Inlined into SQL, so must be an integer.
+function int(value: number): string {
+  if (!Number.isSafeInteger(value)) {
+    throw new TypeError(`expected an integer, got ${value}`)
+  }
+  return String(value)
+}
+
+export type BackfillCursor = {
+  watermark: number
+  next: number
+  done?: true
+}
+
+// INIT_BACKFILL_CURSOR_SQL inserts the cursor; without it the backfill can't
+// know where to stop, and restarting it would count events twice.
+export function parseCursor(cursor: string | null): BackfillCursor {
+  const parsed: Partial<BackfillCursor> | null = cursor
+    ? JSON.parse(cursor)
+    : null
+  if (
+    typeof parsed?.watermark !== 'number' ||
+    typeof parsed?.next !== 'number'
+  ) {
+    throw new Error(
+      `missing or malformed ${RECORD_EVENTS_STATS_BACKFILL_JOB} job cursor: ${cursor}`,
+    )
+  }
+  return parsed as BackfillCursor
+}
+
 // For the swap migration: account_record_events_stats' query over the table,
 // and record_events_stats as a plain view keeping the columns readers use.
 export const ACCOUNT_STATS_SELECT_SQL = `SELECT
