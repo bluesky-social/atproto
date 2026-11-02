@@ -1,8 +1,9 @@
 import { isEmailValid } from '@hapi/address'
 import { isDisposableEmail } from 'disposable-email-domains-js'
 import { z } from 'zod'
+import type { EmailString } from '@atproto/oauth-provider-api'
 
-export type EmailString = `${string}@${string}`
+export type { EmailString }
 export const emailSchema = z
   .string()
   .email()

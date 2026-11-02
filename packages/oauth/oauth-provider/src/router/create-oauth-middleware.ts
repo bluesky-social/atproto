@@ -10,7 +10,6 @@ import { InvalidClientError } from '../errors/invalid-client-error.js'
 import { InvalidGrantError } from '../errors/invalid-grant-error.js'
 import { InvalidRequestError } from '../errors/invalid-request-error.js'
 import { OAuthError } from '../errors/oauth-error.js'
-import { WWWAuthenticateError } from '../errors/www-authenticate-error.js'
 import {
   type Middleware,
   Router,
@@ -113,10 +112,13 @@ export function createOAuthMiddleware<
         req.headers,
       )
 
+      const deviceMetadata = server.deviceManager.getRequestMetadata(req)
+
       return server.pushedAuthorizationRequest(
         credentials,
         authorizationRequest,
         dpopProof,
+        deviceMetadata,
       )
     }, 201),
   )
@@ -134,8 +136,6 @@ export function createOAuthMiddleware<
     oauthHandler(async function (req) {
       const payload = await parseHttpRequest(req, ['json', 'urlencoded'])
 
-      const clientMetadata = await server.deviceManager.getRequestMetadata(req)
-
       const clientCredentials = await oauthClientCredentialsSchema
         .parseAsync(payload, { path: ['body'] })
         .catch((err) => throwInvalidGrant(err, 'Client credentials missing'))
@@ -150,9 +150,11 @@ export function createOAuthMiddleware<
         req.headers,
       )
 
+      const deviceMetadata = await server.deviceManager.getRequestMetadata(req)
+
       return server.token(
         clientCredentials,
-        clientMetadata,
+        deviceMetadata,
         tokenRequest,
         dpopProof,
       )
@@ -229,10 +231,11 @@ export function createOAuthMiddleware<
             : 'Unexpected error',
         )
 
-        if (!res.headersSent && err instanceof WWWAuthenticateError) {
-          const name = 'WWW-Authenticate'
-          res.setHeader(name, err.wwwAuthenticateHeader)
-          res.appendHeader('Access-Control-Expose-Headers', name)
+        if (!res.headersSent && err instanceof OAuthError) {
+          for (const [name, value] of err.getResponseHeaders()) {
+            res.setHeader(name, value)
+            res.appendHeader('Access-Control-Expose-Headers', name)
+          }
         }
 
         const status = buildErrorStatus(err)

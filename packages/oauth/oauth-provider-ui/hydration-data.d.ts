@@ -49,6 +49,8 @@ export type HydrationData = {
    */
   'error-page': {
     __customizationData: CustomizationData
+    /** The HTTP status code the error page was served with */
+    __errorStatus: number
     __errorData: ErrorData
   }
   /**

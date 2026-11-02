@@ -5,7 +5,13 @@ import type {
   HandleString,
   ISODatetimeString,
 } from '@atproto/syntax'
-import type { Account, DeviceMetadata, Session } from './types.js'
+import type {
+  Account,
+  DeviceMetadata,
+  EmailString,
+  IdentifierString,
+  Session,
+} from './types.js'
 
 export type { DidString }
 
@@ -188,10 +194,11 @@ export type EphemeralToken = SignedJwt
 
 export type SignInInput = {
   locale: string
-  identifier: string
+  identifier: IdentifierString
   password: string
   emailOtp?: string
   remember?: boolean
+  hcaptchaToken?: string
 }
 
 export type SignInOutput = {
@@ -201,8 +208,8 @@ export type SignInOutput = {
 
 export type SignUpInput = {
   locale: string
-  handle: string
-  email: string
+  handle: HandleString
+  email: EmailString
   password: string
   remember?: boolean
   inviteCode?: string
@@ -220,12 +227,14 @@ export type SignOutInput = {
 
 export type InitiatePasswordResetInput = {
   locale: string
-  identifier: string
+  identifier: IdentifierString
+  hcaptchaToken?: string
 }
 
 export type ConfirmResetPasswordInput = {
   token: string
   password: string
+  hcaptchaToken?: string
 }
 
 export type InitiateEmailUpdateInput = {

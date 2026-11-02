@@ -1,14 +1,12 @@
-import HCaptcha from '@hcaptcha/react-hcaptcha'
 import { Trans } from '@lingui/react/macro'
 import { CheckIcon } from 'lucide-react'
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 import {
   FormShell,
   type FormShellProps,
 } from '#/components/forms/form-shell.tsx'
-import { useBrowserColorScheme } from '#/hooks/use-browser-color-scheme.ts'
+import { HcaptchaChallenge } from '#/components/hcaptcha-challenge.tsx'
 import type { Override } from '#/lib/util'
-import { useCurrentLocale } from '#/locales/locale-provider.tsx'
 
 export type VerifyData = {
   token: string
@@ -35,10 +33,6 @@ export function SignUpHcaptchaForm({
   children,
   ...props
 }: SignUpHcaptchaFormProps) {
-  const captchaRef = useRef<HCaptcha>(null)
-  const theme = useBrowserColorScheme()
-  const locale = useCurrentLocale()
-
   const [verifiedOnMount] = useState(defaultValues?.verify != null)
 
   // @NOTE The captcha result is not a form control, so it is held here and
@@ -64,19 +58,9 @@ export function SignUpHcaptchaForm({
           <Trans>Verification successful!</Trans>
         </div>
       ) : (
-        <HCaptcha
-          theme={theme}
-          sitekey={siteKey}
-          ref={captchaRef}
-          languageOverride={locale}
-          onLoad={() => {
-            // this reaches out to the hCaptcha JS API and runs the
-            // execute function on it. you can use other functions as
-            // documented here:
-            // https://docs.hcaptcha.com/configuration#jsapi
-            captchaRef.current?.execute()
-          }}
-          onVerify={(token: string, ekey: string) => {
+        <HcaptchaChallenge
+          siteKey={siteKey}
+          onVerify={(token, ekey) => {
             setVerify({ token, ekey })
             onValues?.({ verify: { token, ekey } })
           }}

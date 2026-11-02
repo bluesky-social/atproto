@@ -19,8 +19,6 @@ import {
   oauthScopeSchema,
 } from '@atproto/oauth-types'
 import type { ISODatetimeString } from '@atproto/syntax'
-import { signInDataSchema } from '../account/sign-in-data.js'
-import { signUpInputSchema } from '../account/sign-up-input.js'
 import { type DeviceId, deviceIdSchema } from '../device/device-id.js'
 import { AuthorizationError } from '../errors/authorization-error.js'
 import {
@@ -30,6 +28,7 @@ import {
 } from '../errors/error-parser.js'
 import { InvalidRequestError } from '../errors/invalid-request-error.js'
 import { WWWAuthenticateError } from '../errors/www-authenticate-error.js'
+import { hcaptchaTokenSchema } from '../lib/hcaptcha.js'
 import {
   type JsonResponse,
   type Middleware,
@@ -49,6 +48,7 @@ import {
 import { type RouteCtx, createRoute } from '../lib/http/route.js'
 import { localeSchema } from '../lib/util/locale.js'
 import type { Awaitable } from '../lib/util/type.js'
+import { OAuthError } from '../oauth-errors.js'
 import type { OAuthProvider } from '../oauth-provider.js'
 import type { Account, AuthorizedClients } from '../oauth-store.js'
 import { type RequestUri, requestUriSchema } from '../request/request-uri.js'
@@ -58,6 +58,7 @@ import { emailOtpSchema } from '../types/email-otp.js'
 import { emailSchema, newEmailSchema } from '../types/email.js'
 import { handleSchema } from '../types/handle.js'
 import { identifierSchema } from '../types/indentifier.js'
+import { inviteCodeSchema } from '../types/invite-code.js'
 import { newPasswordSchema, oldPasswordSchema } from '../types/password.js'
 import { validateCsrfToken } from './assets/csrf.js'
 import {
@@ -70,6 +71,10 @@ import {
   buildRedirectUri,
 } from './assets/send-redirect.js'
 import type { MiddlewareOptions } from './middleware-options.js'
+
+// @TODO Add rate limits to the remaining routes: /oauth/token, /oauth/revoke,
+// and the account API routes not covered by RateLimitManager policies (e.g.
+// verify-handle-availability, authenticated account management).
 
 export function createApiMiddleware<
   Ctx extends object | void = void,
@@ -99,10 +104,27 @@ export function createApiMiddleware<
     apiRoute({
       method: 'POST',
       endpoint: '/sign-up',
-      schema: signUpInputSchema,
+      schema: z
+        .object({
+          locale: localeSchema,
+          handle: handleSchema,
+          email: newEmailSchema,
+          password: newPasswordSchema,
+          remember: z.boolean().optional(),
+          inviteCode: inviteCodeSchema.optional(),
+          hcaptchaToken: hcaptchaTokenSchema.optional(),
+        })
+        .strict(),
       rotateDeviceCookies: true,
       async handler() {
         const { deviceId, deviceMetadata, input, requestUri } = this
+
+        await server.rateLimitManager.consume('sign-up', {
+          kind: 'device',
+          deviceId,
+          deviceMetadata,
+          data: { action: 'sign-up', input },
+        })
 
         const clientId = requestUri
           ? await server.requestManager.peekClientId(requestUri)
@@ -134,10 +156,26 @@ export function createApiMiddleware<
     apiRoute({
       method: 'POST',
       endpoint: '/sign-in',
-      schema: signInDataSchema,
+      schema: z
+        .object({
+          locale: localeSchema,
+          identifier: identifierSchema,
+          password: z.union([oldPasswordSchema, newPasswordSchema]),
+          emailOtp: emailOtpSchema.optional(),
+          remember: z.boolean().optional(),
+          hcaptchaToken: hcaptchaTokenSchema.optional(),
+        })
+        .strict(),
       rotateDeviceCookies: true,
       async handler() {
-        const { deviceId, deviceMetadata, requestUri } = this
+        const { deviceId, deviceMetadata, requestUri, input } = this
+
+        await server.rateLimitManager.consume('sign-in', {
+          kind: 'device',
+          deviceId,
+          deviceMetadata,
+          data: { action: 'sign-in', input },
+        })
 
         // Look up the client identifier associated with the pending OAuth
         // request, if any, so it can be surfaced to the sign-in hooks.
@@ -149,7 +187,7 @@ export function createApiMiddleware<
           await server.accountManager.authenticateAccount(
             deviceId,
             deviceMetadata,
-            this.input,
+            input,
             clientId,
           )
 
@@ -191,13 +229,23 @@ export function createApiMiddleware<
         .object({
           identifier: identifierSchema,
           locale: localeSchema,
+          hcaptchaToken: hcaptchaTokenSchema.optional(),
         })
         .strict(),
       async handler() {
+        const { deviceId, deviceMetadata, input } = this
+
+        await server.rateLimitManager.consume('reset-password-request', {
+          kind: 'device',
+          deviceId,
+          deviceMetadata,
+          data: { action: 'reset-password-request', input },
+        })
+
         await server.accountManager.resetPasswordRequest(
-          this.deviceId,
-          this.deviceMetadata,
-          this.input,
+          deviceId,
+          deviceMetadata,
+          input,
         )
         return { json: { success: true } }
       },
@@ -212,13 +260,23 @@ export function createApiMiddleware<
         .object({
           token: emailOtpSchema,
           password: newPasswordSchema,
+          hcaptchaToken: hcaptchaTokenSchema.optional(),
         })
         .strict(),
       async handler() {
+        const { deviceId, deviceMetadata, input } = this
+
+        await server.rateLimitManager.consume('reset-password-confirm', {
+          kind: 'device',
+          deviceId,
+          deviceMetadata,
+          data: { action: 'reset-password-confirm', input },
+        })
+
         await server.accountManager.resetPasswordConfirm(
-          this.deviceId,
-          this.deviceMetadata,
-          this.input,
+          deviceId,
+          deviceMetadata,
+          input,
         )
         return { json: { success: true } }
       },
@@ -761,7 +819,7 @@ export function createApiMiddleware<
           // @NOTE Not re-throwing the error here, as the error was already
           // handled by the `onError` callback, and apiRoute (`apiMiddleware`)
           // would call `onError` again.
-          return buildErrorJsonResponse(err)
+          return buildErrorJsonResponse(res, err)
         }
       },
     }),
@@ -822,7 +880,7 @@ export function createApiMiddleware<
             }
           }
 
-          return buildErrorJsonResponse(err)
+          return buildErrorJsonResponse(res, err)
         } finally {
           await server.requestManager.delete(requestUri).catch((err) => {
             onError?.(req, res, err, 'Failed to delete request')
@@ -867,14 +925,13 @@ export function createApiMiddleware<
           )
         }
       } catch (err) {
-        throw err instanceof WWWAuthenticateError
-          ? err
-          : new WWWAuthenticateError(
-              'unauthorized',
-              `Invalid or expired bearer token`,
-              { Bearer: {} },
-              err,
-            )
+        if (err instanceof WWWAuthenticateError) throw err
+        throw new WWWAuthenticateError(
+          'unauthorized',
+          `Invalid or expired bearer token`,
+          { Bearer: {} },
+          err,
+        )
       }
     }
 
@@ -1050,13 +1107,20 @@ export function createApiMiddleware<
         onError?.(req, res, err, `Failed to handle API request`)
 
         // Make sore to always return a JSON response
-        return buildErrorJsonResponse(err)
+        return buildErrorJsonResponse(res, err)
       }
     })
   }
 }
 
-function buildErrorJsonResponse(err: unknown) {
+function buildErrorJsonResponse(res: ServerResponse, err: unknown) {
+  if (!res.headersSent && err instanceof OAuthError) {
+    for (const [name, value] of err.getResponseHeaders()) {
+      res.setHeader(name, value)
+      res.appendHeader('Access-Control-Expose-Headers', name)
+    }
+  }
+
   // @TODO Rework the API error responses (relying on codes)
   const json = buildErrorPayload(err)
   const status = buildErrorStatus(err)

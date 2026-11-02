@@ -2,6 +2,8 @@ import assert from 'node:assert'
 import {
   type Browser,
   type BrowserContext,
+  type EvaluateFunc,
+  type HTTPResponse,
   type Handler,
   type Page,
   type Target,
@@ -30,6 +32,13 @@ export class PageHelper implements AsyncDisposable {
 
   async waitForNetworkIdle() {
     await this.page.waitForNetworkIdle()
+  }
+
+  async evaluate<Params extends unknown[], Func extends EvaluateFunc<Params>>(
+    pageFunction: Func,
+    ...args: Params
+  ) {
+    return this.page.evaluate(pageFunction, ...args)
   }
 
   async waitForPopup(run: () => Promise<unknown>): Promise<PageHelper> {
@@ -159,6 +168,58 @@ export class PageHelper implements AsyncDisposable {
       status: response.status(),
       body: (await response.json()) as unknown,
     }
+  }
+
+  /**
+   * Records, in order, the responses to the requests whose URL matches
+   * `match`, along with their JSON body (and the request's), until disposed.
+   */
+  recordJsonResponses(match: (url: URL) => boolean) {
+    const responses: Promise<{
+      status: number
+      body: unknown
+      requestBody: unknown
+    }>[] = []
+
+    const listener: Handler<HTTPResponse> = (response) => {
+      if (!match(new URL(response.url()))) return
+      const status = response.status()
+      const postData = response.request().postData()
+      const requestBody: unknown = postData ? JSON.parse(postData) : undefined
+      responses.push(
+        response.json().then(
+          (body: unknown) => ({ status, body, requestBody }),
+          () => ({ status, body: undefined, requestBody }),
+        ),
+      )
+    }
+
+    this.page.on('response', listener)
+
+    return {
+      [Symbol.dispose]: () => {
+        this.page.off('response', listener)
+      },
+      /**
+       * Waits for at least `count` responses, and returns all of them.
+       */
+      wait: async (count: number, timeout = 5_000) => {
+        const deadline = Date.now() + timeout
+        while (responses.length < count) {
+          if (Date.now() > deadline) {
+            throw new Error(
+              `Timeout waiting for ${count} responses (got ${responses.length})`,
+            )
+          }
+          await new Promise((resolve) => setTimeout(resolve, 50))
+        }
+        return Promise.all(responses)
+      },
+    }
+  }
+
+  async waitForVisible(selector: string, timeout = 5_000) {
+    await this.page.waitForSelector(selector, { visible: true, timeout })
   }
 
   async waitForHidden(selector: string, timeout = 5_000) {

@@ -1,6 +1,10 @@
 import type { Did } from '@atproto/did'
 import type { Jwks } from '@atproto/jwk'
-import type { Account } from '@atproto/oauth-provider-api'
+import type {
+  Account,
+  SignInInput,
+  SignUpInput,
+} from '@atproto/oauth-provider-api'
 import type {
   OAuthAccessToken,
   OAuthAuthorizationDetails,
@@ -16,15 +20,12 @@ import type {
   EnableEmailAuthFactorInput,
   ResetPasswordConfirmInput,
   ResetPasswordRequestInput,
-  SignUpData,
   UpdateEmailConfirmInput,
   UpdateEmailRequestInput,
   UpdateHandleData,
   VerifyEmailConfirmInput,
   VerifyEmailRequestInput,
 } from './account/account-store.js'
-import type { SignInData } from './account/sign-in-data.js'
-import type { SignUpInput } from './account/sign-up-input.js'
 import type { ClientAuth } from './client/client-auth.js'
 import type { ClientId } from './client/client-id.js'
 import type { ClientInfo } from './client/client-info.js'
@@ -32,11 +33,9 @@ import type { Client } from './client/client.js'
 import type { DeviceId } from './device/device-id.js'
 import type { DpopProof } from './dpop/dpop-proof.js'
 import type { InvalidRequestError } from './errors/invalid-request-error.js'
-import type {
-  HcaptchaClientTokens,
-  HcaptchaConfig,
-  HcaptchaVerifyResult,
-} from './lib/hcaptcha.js'
+import type { HcaptchaClientTokens } from './hcaptcha/hcaptcha-client-tokens.js'
+import type { HcaptchaVerifyData } from './hcaptcha/hcaptcha-verify-data.js'
+import type { HcaptchaConfig, HcaptchaVerifyResult } from './lib/hcaptcha.js'
 import type { RequestMetadata } from './lib/http/request.js'
 import type { Awaitable, OmitKey } from './lib/util/type.js'
 import type { RequestId } from './request/request-id.js'
@@ -57,6 +56,7 @@ export type {
   DpopProof,
   HcaptchaClientTokens,
   HcaptchaConfig,
+  HcaptchaVerifyData,
   HcaptchaVerifyResult,
   Jwks,
   OAuthAccessToken,
@@ -68,8 +68,7 @@ export type {
   RequestMetadata,
   ResetPasswordConfirmInput,
   ResetPasswordRequestInput,
-  SignInData,
-  SignUpData,
+  SignInInput,
   SignUpInput,
   TokenClaims,
   UpdateHandleData,
@@ -363,16 +362,20 @@ export type OAuthHooks = {
   }) => Awaitable<void>
 
   /**
-   * This hook is called when a user attempts to sign up, after the hcaptcha
-   * `/siteverify` request has been made (and before the result is validated).
+   * This hook is called whenever an hCaptcha token is verified, after the
+   * hcaptcha `/siteverify` request has been made (and before the result is
+   * validated). By default, this happens on every sign-up, and on sign-in and
+   * password reset requests and confirmations once a captcha tier rate limit
+   * was exceeded.
    */
-  onHcaptchaResult?: (data: {
-    input: SignUpInput
-    deviceId: DeviceId
-    deviceMetadata: RequestMetadata
-    tokens: HcaptchaClientTokens
-    result: HcaptchaVerifyResult
-  }) => Awaitable<void>
+  onHcaptchaResult?: (
+    data: HcaptchaVerifyData & {
+      deviceId: DeviceId
+      deviceMetadata: RequestMetadata
+      tokens: HcaptchaClientTokens
+      result: HcaptchaVerifyResult
+    },
+  ) => Awaitable<void>
 
   /**
    * This hook is called when a user requests a password reset, before the
@@ -424,7 +427,7 @@ export type OAuthHooks = {
    * @throws {AccessDeniedError} to deny the sign-up
    */
   onSignedUp?: (data: {
-    data: SignUpData
+    input: SignUpInput
     account: Account
     deviceId: DeviceId
     deviceMetadata: RequestMetadata
@@ -438,7 +441,7 @@ export type OAuthHooks = {
    * authorization flow.
    */
   onSignInAttempt?: (data: {
-    data: SignInData
+    input: SignInInput
     deviceId: DeviceId
     deviceMetadata: RequestMetadata
     deviceAccounts: readonly DeviceAccount[]
@@ -454,7 +457,7 @@ export type OAuthHooks = {
    * @throws {InvalidRequestError} when the sign-in should be denied
    */
   onSignedIn?: (data: {
-    data: SignInData
+    input: SignInInput
     account: Account
     remembered: boolean
     deviceId: DeviceId
@@ -481,7 +484,7 @@ export type OAuthHooks = {
    * processed further.
    */
   onSignInFailed?: (data: {
-    data: SignInData
+    input: SignInInput
     error: InvalidRequestError
     did: Did | null
     deviceId: DeviceId

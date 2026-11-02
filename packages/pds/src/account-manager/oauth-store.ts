@@ -29,6 +29,7 @@ import type {
   DeviceStore,
   Did,
   DisableEmailAuthFactorInput,
+  EmailString,
   EnableEmailAuthFactorInput,
   FoundRequestResult,
   HandleUnavailableReason,
@@ -42,7 +43,7 @@ import type {
   RequestStore,
   ResetPasswordConfirmInput,
   ResetPasswordRequestInput,
-  SignUpData,
+  SignUpInput,
   TokenData,
   TokenId,
   TokenInfo,
@@ -148,7 +149,7 @@ export class OAuthStore
     handle,
     email,
     password,
-  }: SignUpData): Promise<Account> {
+  }: SignUpInput): Promise<Account> {
     // @TODO Send an account creation confirmation email (+verification link) to the user (in their locale)
     // @NOTE Password strength & length already enforced by the OAuthProvider
 
@@ -891,7 +892,7 @@ export class OAuthStore
     const account: Account = {
       did: row.did,
       pds: this.serviceDid,
-      email: row.email || undefined,
+      email: row.email ? (row.email as EmailString) : undefined,
       emailVerified: row.email ? row.emailConfirmedAt != null : undefined,
       emailAuthFactor: row.email ? row.emailAuthFactorAt != null : undefined,
       handle: row.handle || undefined,

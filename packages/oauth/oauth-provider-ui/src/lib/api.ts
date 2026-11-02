@@ -47,10 +47,9 @@ export type ApiOptions = JsonClientOptions<ApiEndpoints> & {
   locale: string
 }
 
-export type WithOptionalLocale<T extends { locale?: unknown }> = Omit<
-  T,
-  'locale'
-> & { locale?: T['locale'] }
+export type WithOptionalLocale<T> = T extends { locale?: unknown }
+  ? Omit<T, 'locale'> & { locale?: T['locale'] }
+  : T
 
 export class Api extends JsonClient<ApiEndpoints> {
   locale: string
@@ -76,13 +75,14 @@ export class Api extends JsonClient<ApiEndpoints> {
       locale = this.locale,
       emailOtp = undefined,
       remember = undefined, // Default applied by backend based on context
+      hcaptchaToken = undefined,
     }: WithOptionalLocale<SignInInput>,
     options?: Options,
   ) {
     return this.fetch(
       'POST',
       '/sign-in',
-      { identifier, password, locale, emailOtp, remember },
+      { identifier, password, locale, emailOtp, remember, hcaptchaToken },
       options,
     )
   }
@@ -91,13 +91,14 @@ export class Api extends JsonClient<ApiEndpoints> {
     {
       identifier,
       locale = this.locale,
+      hcaptchaToken = undefined,
     }: WithOptionalLocale<InitiatePasswordResetInput>,
     options?: Options,
   ) {
     await this.fetch(
       'POST',
       '/reset-password-request',
-      { identifier, locale },
+      { identifier, locale, hcaptchaToken },
       options,
     )
   }
@@ -141,13 +142,13 @@ export class Api extends JsonClient<ApiEndpoints> {
   //
 
   async confirmResetPassword(
-    { token, password }: ConfirmResetPasswordInput,
+    { token, password, hcaptchaToken = undefined }: ConfirmResetPasswordInput,
     options?: Options,
   ) {
     await this.fetch(
       'POST',
       '/reset-password-confirm',
-      { token, password },
+      { token, password, hcaptchaToken },
       options,
     )
   }
@@ -304,37 +305,42 @@ export class Api extends JsonClient<ApiEndpoints> {
 
   // and transform them into instances of the corresponding error classes.
   protected override parseError(response: Response, payload: Json): Error {
-    return parseApiErrorPayload(payload) ?? super.parseError(response, payload)
+    return (
+      parseApiErrorPayload(response.status, response.headers, payload) ??
+      super.parseError(response, payload)
+    )
   }
 }
 
 export function parseApiErrorPayload(
+  status: number,
+  headers: Headers,
   payload: Json,
 ): OAuthErrorResponse | undefined {
-  if (isOAuthErrorPayload(payload)) {
-    for (const ErrorClass of [
-      // @NOTE Most specific errors must come first!
-      UnknownRequestUriError,
-      UnknownAtprotoAccountError,
-      SecondAuthenticationFactorRequiredError,
-      InvalidCredentialsError,
-      InvalidInviteCodeError,
-      HandleUnavailableError,
-      EmailTakenError,
-      RequestExpiredError,
-      UnauthorizedError,
-      InvalidRequestError,
-      AccessDeniedError,
-    ] as Array<{
-      is(payload: OAuthErrorPayload): boolean
-      new (payload: any): OAuthErrorResponse
-    }>) {
-      if (ErrorClass.is(payload)) {
-        return new ErrorClass(payload)
-      }
+  for (const ErrorClass of [
+    // @NOTE Most specific errors must come first!
+    RateLimitExceededError,
+    UnknownRequestUriError,
+    UnknownAtprotoAccountError,
+    SecondAuthenticationFactorRequiredError,
+    CaptchaRequiredError,
+    CaptchaRejectedError,
+    InvalidCredentialsError,
+    InvalidInviteCodeError,
+    HandleUnavailableError,
+    EmailTakenError,
+    RequestExpiredError,
+    UnauthorizedError,
+    InvalidRequestError,
+    AccessDeniedError,
+    OAuthErrorResponse,
+  ] as Array<{
+    is(status: number, headers: Headers, payload: Json): boolean
+    new (status: number, headers: Headers, payload: any): OAuthErrorResponse
+  }>) {
+    if (ErrorClass.is(status, headers, payload)) {
+      return new ErrorClass(status, headers, payload)
     }
-
-    return new OAuthErrorResponse(payload)
   }
 }
 
@@ -366,12 +372,28 @@ export class OAuthErrorResponse<
   name = 'OAuthErrorResponse'
 
   constructor(
+    status: number,
+    headers: Headers,
     payload: P,
     message = payload.error_description,
     options?: ErrorOptions,
   ) {
-    super(payload, message || `OAuth Error "${payload.error}"`, options)
+    super(
+      status,
+      headers,
+      payload,
+      message || `OAuth Error "${payload.error}"`,
+      options,
+    )
     this.msg = OAuthErrorResponse.getMessageForError(payload.error)
+  }
+
+  static is(
+    _status: number,
+    _headers: Headers,
+    payload: Json,
+  ): payload is OAuthErrorPayload {
+    return isOAuthErrorPayload(payload)
   }
 
   protected static getMessageForError(error: string): MessageDescriptor {
@@ -394,12 +416,18 @@ export class UnauthorizedError<
 > extends OAuthErrorResponse<P> {
   override msg = msg`This sign-in session has expired`
 
-  constructor(payload: P) {
-    super(payload, payload.error_description || 'Unauthorized')
+  constructor(status: number, headers: Headers, payload: P) {
+    super(status, headers, payload, payload.error_description || 'Unauthorized')
   }
 
-  static is(json: OAuthErrorPayload): json is UnauthorizedPayload {
-    return json.error === 'unauthorized'
+  static is(
+    status: number,
+    headers: Headers,
+    payload: Json,
+  ): payload is UnauthorizedPayload {
+    return (
+      super.is(status, headers, payload) && payload.error === 'unauthorized'
+    )
   }
 }
 
@@ -409,12 +437,23 @@ export class AccessDeniedError<
 > extends OAuthErrorResponse<P> {
   override msg = msg`This authorization request has been denied. Please try again.`
 
-  constructor(payload: P, message = payload.error_description) {
-    super(payload, message || 'Access denied')
+  constructor(
+    status: number,
+    headers: Headers,
+    payload: P,
+    message = payload.error_description,
+  ) {
+    super(status, headers, payload, message || 'Access denied')
   }
 
-  static is(json: OAuthErrorPayload): json is AccessDeniedPayload {
-    return json.error === 'access_denied'
+  static is(
+    status: number,
+    headers: Headers,
+    payload: Json,
+  ): payload is AccessDeniedPayload {
+    return (
+      super.is(status, headers, payload) && payload.error === 'access_denied'
+    )
   }
 }
 
@@ -424,12 +463,23 @@ export class InvalidRequestError<
 > extends OAuthErrorResponse<P> {
   override msg = msg`The data you submitted is invalid. Please check the form and try again.`
 
-  constructor(payload: P, message = payload.error_description) {
-    super(payload, message || 'Invalid request')
+  constructor(
+    status: number,
+    headers: Headers,
+    payload: P,
+    message = payload.error_description,
+  ) {
+    super(status, headers, payload, message || 'Invalid request')
   }
 
-  static is(json: OAuthErrorPayload): json is InvalidRequestPayload {
-    return json.error === 'invalid_request'
+  static is(
+    status: number,
+    headers: Headers,
+    payload: Json,
+  ): payload is InvalidRequestPayload {
+    return (
+      super.is(status, headers, payload) && payload.error === 'invalid_request'
+    )
   }
 }
 
@@ -440,8 +490,13 @@ export type HandleUnavailablePayload =
 export class HandleUnavailableError<
   P extends HandleUnavailablePayload = HandleUnavailablePayload,
 > extends OAuthErrorResponse<P> {
-  constructor(payload: P, message = payload.error_description) {
-    super(payload, message || 'Handle unavailable')
+  constructor(
+    status: number,
+    headers: Headers,
+    payload: P,
+    message = payload.error_description,
+  ) {
+    super(status, headers, payload, message || 'Handle unavailable')
     this.msg = HandleUnavailableError.getMessageForReason(payload.reason)
   }
 
@@ -468,10 +523,15 @@ export class HandleUnavailableError<
     }
   }
 
-  static is(json: OAuthErrorPayload): json is HandleUnavailablePayload {
+  static is(
+    status: number,
+    headers: Headers,
+    payload: Json,
+  ): payload is HandleUnavailablePayload {
     return (
-      json.error === 'handle_unavailable' &&
-      isHandleUnavailableReason(json['reason'])
+      super.is(status, headers, payload) &&
+      payload.error === 'handle_unavailable' &&
+      isHandleUnavailableReason(payload['reason'])
     )
   }
 }
@@ -492,9 +552,19 @@ export class SecondAuthenticationFactorRequiredError<
   P extends SecondAuthenticationFactorRequiredPayload =
     SecondAuthenticationFactorRequiredPayload,
 > extends OAuthErrorResponse<P> {
-  constructor(payload: P, message = payload.error_description) {
+  constructor(
+    status: number,
+    headers: Headers,
+    payload: P,
+    message = payload.error_description,
+  ) {
     const { type, hint } = payload
-    super(payload, message || `${type} auth factor required (hint: ${hint})`)
+    super(
+      status,
+      headers,
+      payload,
+      message || `${type} auth factor required (hint: ${hint})`,
+    )
     this.msg = msg`A second authentication factor is required (${hint})`
   }
 
@@ -506,14 +576,121 @@ export class SecondAuthenticationFactorRequiredError<
   }
 
   static is(
-    json: OAuthErrorPayload,
-  ): json is SecondAuthenticationFactorRequiredPayload {
+    status: number,
+    headers: Headers,
+    payload: Json,
+  ): payload is SecondAuthenticationFactorRequiredPayload {
     return (
-      json.error === 'second_authentication_factor_required' &&
-      isSecondAuthFactorType(json['type']) &&
-      typeof json['hint'] === 'string'
+      super.is(status, headers, payload) &&
+      payload.error === 'second_authentication_factor_required' &&
+      isSecondAuthFactorType(payload['type']) &&
+      typeof payload['hint'] === 'string'
     )
   }
+}
+
+export type CaptchaRequiredPayload = OAuthErrorPayload<'captcha_required'>
+export class CaptchaRequiredError<
+  P extends CaptchaRequiredPayload = CaptchaRequiredPayload,
+> extends OAuthErrorResponse<P> {
+  override name = 'CaptchaRequiredError'
+  // @NOTE Only displayed when the UI is unable to show a captcha challenge
+  override msg = msg`Unable to verify that you are human. Please try again later.`
+
+  constructor(
+    status: number,
+    headers: Headers,
+    payload: P,
+    message = payload.error_description || 'Captcha required',
+  ) {
+    super(status, headers, payload, message)
+  }
+
+  static is(
+    status: number,
+    headers: Headers,
+    payload: Json,
+  ): payload is CaptchaRequiredPayload {
+    return (
+      super.is(status, headers, payload) && payload.error === 'captcha_required'
+    )
+  }
+}
+
+export type CaptchaRejectedPayload = OAuthErrorPayload<'captcha_rejected'>
+export class CaptchaRejectedError<
+  P extends CaptchaRejectedPayload = CaptchaRejectedPayload,
+> extends OAuthErrorResponse<P> {
+  override name = 'CaptchaRejectedError'
+  override msg = msg`Unable to verify that you are human. Please try again later.`
+
+  constructor(
+    status: number,
+    headers: Headers,
+    payload: P,
+    message = payload.error_description || 'Captcha rejected',
+  ) {
+    super(status, headers, payload, message)
+  }
+
+  static is(
+    status: number,
+    headers: Headers,
+    payload: Json,
+  ): payload is CaptchaRejectedPayload {
+    return (
+      super.is(status, headers, payload) && payload.error === 'captcha_rejected'
+    )
+  }
+}
+
+/**
+ * Any HTTP 429 response, regardless of its OAuth error code.
+ */
+export class RateLimitExceededError<
+  P extends OAuthErrorPayload = OAuthErrorPayload,
+> extends OAuthErrorResponse<P> {
+  override name = 'RateLimitExceededError'
+  override msg = msg`Too many attempts.`
+
+  /** Number of seconds to wait before retrying, if known. */
+  public readonly retryAfter?: number
+
+  constructor(
+    status: number,
+    headers: Headers,
+    payload: P,
+    message = payload.error_description || 'Rate limit exceeded',
+  ) {
+    super(status, headers, payload, message)
+    this.retryAfter = parseRetryAfter(headers.get('retry-after'))
+  }
+
+  static is(
+    status: number,
+    headers: Headers,
+    payload: Json,
+  ): payload is OAuthErrorPayload {
+    return super.is(status, headers, payload) && status === 429
+  }
+}
+
+/**
+ * @returns the number of seconds to wait, if the `Retry-After` header value
+ * (delay in seconds or HTTP date) is valid
+ */
+function parseRetryAfter(value: string | null): number | undefined {
+  if (!value) return undefined
+
+  const seconds = Number(value)
+  if (Number.isInteger(seconds) && seconds >= 0) return seconds
+
+  const date = Date.parse(value)
+  if (!Number.isNaN(date)) {
+    return Math.max(0, Math.ceil((date - Date.now()) / 1e3))
+  }
+
+  return undefined
 }
 
 export type UnknownAtprotoAccountPayload =
@@ -536,11 +713,16 @@ export class UnknownAtprotoAccountError<
     return this.payload.identifier
   }
 
-  static is(json: OAuthErrorPayload): json is UnknownAtprotoAccountPayload {
+  static is(
+    status: number,
+    headers: Headers,
+    payload: Json,
+  ): payload is UnknownAtprotoAccountPayload {
     return (
-      json.error === 'unknown_atproto_account_error' &&
-      typeof json['identifier'] === 'string' &&
-      (typeof json['issuer'] === 'string' || json['issuer'] === undefined)
+      super.is(status, headers, payload) &&
+      payload.error === 'unknown_atproto_account_error' &&
+      typeof payload['identifier'] === 'string' &&
+      (typeof payload['issuer'] === 'string' || payload['issuer'] === undefined)
     )
   }
 }
@@ -553,15 +735,19 @@ export class InvalidInviteCodeError<
 > extends InvalidRequestError<P> {
   msg = msg`The invite code is not valid`
 
-  constructor(payload: P) {
-    super(payload)
+  constructor(status: number, headers: Headers, payload: P) {
+    super(status, headers, payload)
   }
 
-  static is(json: OAuthErrorPayload): json is InvalidInviteCodePayload {
+  static is(
+    status: number,
+    headers: Headers,
+    payload: Json,
+  ): payload is InvalidInviteCodePayload {
     return (
-      super.is(json) &&
-      json.error_description != null &&
-      json.error_description.startsWith('This invite code is invalid.')
+      super.is(status, headers, payload) &&
+      payload.error_description != null &&
+      payload.error_description.startsWith('This invite code is invalid.')
     )
   }
 }
@@ -574,9 +760,14 @@ export class RequestExpiredError<
 > extends AccessDeniedError<P> {
   override msg = msg`This sign-in session has expired`
 
-  static is(json: OAuthErrorPayload): json is RequestExpiredPayload {
+  static is(
+    status: number,
+    headers: Headers,
+    payload: Json,
+  ): payload is RequestExpiredPayload {
     return (
-      super.is(json) && json.error_description === 'This request has expired'
+      super.is(status, headers, payload) &&
+      payload.error_description === 'This request has expired'
     )
   }
 }
@@ -589,10 +780,14 @@ export class InvalidCredentialsError<
 > extends InvalidRequestError<P> {
   override msg = msg`Wrong identifier or password`
 
-  static is(json: OAuthErrorPayload): json is InvalidCredentialsPayload {
+  static is(
+    status: number,
+    headers: Headers,
+    payload: Json,
+  ): payload is InvalidCredentialsPayload {
     return (
-      super.is(json) &&
-      json.error_description === 'Invalid identifier or password'
+      super.is(status, headers, payload) &&
+      payload.error_description === 'Invalid identifier or password'
     )
   }
 }
@@ -605,8 +800,15 @@ export class UnknownRequestUriError<
 > extends InvalidRequestError<P> {
   override msg = msg`This sign-in session has expired`
 
-  static is(json: OAuthErrorPayload): json is UnknownRequestPayload {
-    return super.is(json) && json.error_description === 'Unknown request_uri'
+  static is(
+    status: number,
+    headers: Headers,
+    payload: Json,
+  ): payload is UnknownRequestPayload {
+    return (
+      super.is(status, headers, payload) &&
+      payload.error_description === 'Unknown request_uri'
+    )
   }
 }
 export type EmailTakenPayload = InvalidRequestPayload & {
@@ -617,7 +819,14 @@ export class EmailTakenError<
 > extends InvalidRequestError<P> {
   override msg = msg`This email is already used`
 
-  static is(json: OAuthErrorPayload): json is EmailTakenPayload {
-    return super.is(json) && json.error_description === 'Email already taken'
+  static is(
+    status: number,
+    headers: Headers,
+    payload: Json,
+  ): payload is EmailTakenPayload {
+    return (
+      super.is(status, headers, payload) &&
+      payload.error_description === 'Email already taken'
+    )
   }
 }

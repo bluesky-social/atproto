@@ -131,7 +131,7 @@ export class JsonClient<Endpoints extends EndpointDefinitions> {
   }
 
   protected parseError(response: Response, payload: Json): Error {
-    return new JsonErrorResponse(payload)
+    return new JsonErrorResponse(response.status, response.headers, payload)
   }
 }
 
@@ -139,6 +139,8 @@ export class JsonErrorResponse<P = unknown> extends Error {
   msg: MessageDescriptor
 
   constructor(
+    public readonly status: number,
+    public readonly headers: Headers,
     public readonly payload: P,
     message: string = 'Unknown JSON error response',
     options?: ErrorOptions,

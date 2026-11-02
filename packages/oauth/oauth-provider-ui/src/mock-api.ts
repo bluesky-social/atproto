@@ -71,6 +71,10 @@ const otpEnabledAccounts = new Set([
   'did:plc:alice',
 ])
 
+// Simulates the sign-in rate limits: a captcha is required after 3 failed
+// attempts, and the client is blocked (once) after 6.
+let failedSignIns = 0
+
 export const customizationData: CustomizationData = {
   availableUserDomains: ['.bsky.social', '.bsky.team'],
   inviteCodeRequired: false,
@@ -314,7 +318,30 @@ export function buildMockFetch(origFetch = window.fetch): typeof window.fetch {
         return Response.json({ account })
       }
       case `POST ${API_ENDPOINT_PREFIX}/sign-in`: {
-        const { identifier, remember, emailOtp } = await request.json()
+        const { identifier, remember, emailOtp, hcaptchaToken } =
+          await request.json()
+
+        if (failedSignIns >= 6) {
+          failedSignIns = 0
+          return Response.json(
+            {
+              error: 'rate_limit_exceeded',
+              error_description: 'Too many requests, please try again later',
+            },
+            { status: 429, headers: { 'Retry-After': '30' } },
+          )
+        }
+
+        if (failedSignIns >= 3 && !hcaptchaToken) {
+          return Response.json(
+            {
+              error: 'captcha_required',
+              error_description: 'Captcha verification required',
+            },
+            { status: 400 },
+          )
+        }
+
         for (const [did, account] of accounts) {
           if (account.email === identifier || account.handle === identifier) {
             if (
@@ -346,6 +373,7 @@ export function buildMockFetch(origFetch = window.fetch): typeof window.fetch {
             return Response.json({ account })
           }
         }
+        failedSignIns++
         return Response.json(
           {
             error: 'invalid_request',

@@ -1,5 +1,6 @@
 import { Trans, useLingui } from '@lingui/react/macro'
 import { HashIcon } from 'lucide-react'
+import type { EmailString } from '@atproto/oauth-provider-api'
 import { EmailField } from '#/components/forms/fields/email-field.tsx'
 import { NewPasswordField } from '#/components/forms/fields/new-password-field.tsx'
 import { TextField } from '#/components/forms/fields/text-field.tsx'
@@ -13,7 +14,7 @@ import type { Override } from '#/lib/util'
 // code, we don't use optional properties and requires explicitly setting
 // undefined values instead.
 export type SignUpCredentialsData = {
-  email: string
+  email: EmailString
   password: string
   remember: boolean | undefined
   inviteCode: string | undefined
@@ -41,7 +42,7 @@ export function SignUpCredentialsForm({
 
   return (
     <FormShell<{
-      email: string
+      email: EmailString
       password: string
       inviteCode: string
     }>

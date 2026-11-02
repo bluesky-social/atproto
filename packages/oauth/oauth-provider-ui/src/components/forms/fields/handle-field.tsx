@@ -66,10 +66,13 @@ export function HandleField({
           ? onInput
           : (event) => {
               const input = event.currentTarget
-              const spacesInFront = input.value.match(/^ */)?.[0].length ?? 0
-              const selectionStart = input.selectionStart! - spacesInFront
-              const selectionEnd = input.selectionEnd! - spacesInFront
-              input.value = input.value.trim().toLowerCase()
+              const charsInFront = input.value.match(/^[\s@]*/)?.[0].length ?? 0
+              const selectionStart = input.selectionStart! - charsInFront
+              const selectionEnd = input.selectionEnd! - charsInFront
+              // @NOTE no domains on purpose: we only want to normalize the
+              // local part of the identifier here (lowercase, trim, remove
+              // leading "@")
+              input.value = normalizeIdentifier(input.value, undefined)
               input.setSelectionRange(selectionStart, selectionEnd)
               return onInput?.(event)
             }
