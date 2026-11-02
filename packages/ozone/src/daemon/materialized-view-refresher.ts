@@ -35,7 +35,7 @@ export class MaterializedViewRefresher extends PeriodicBackgroundTask {
 
         for (const view of [
           'account_events_stats',
-          'record_events_stats',
+          // record_events_stats is a view over the trigger-fed record_events_stats_live
           'account_record_events_stats',
           'account_record_status_stats',
         ]) {
