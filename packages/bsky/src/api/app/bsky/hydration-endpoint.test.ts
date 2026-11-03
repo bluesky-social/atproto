@@ -51,6 +51,7 @@ import getServices from './labeler/getServices.js'
 import getGroupedNotifications from './notification/getGroupedNotifications.js'
 import listActivitySubscriptions from './notification/listActivitySubscriptions.js'
 import listNotifications from './notification/listNotifications.js'
+import getAtmosphereApps from './unspecced/getAtmosphereApps.js'
 import getAtmosphereExploreTab from './unspecced/getAtmosphereExploreTab.js'
 import getOnboardingSuggestedStarterPacks from './unspecced/getOnboardingSuggestedStarterPacks.js'
 import getPopularFeedGenerators from './unspecced/getPopularFeedGenerators.js'
@@ -146,6 +147,11 @@ const routes: {
   {
     schema: app.bsky.notification.listNotifications,
     register: listNotifications,
+  },
+  {
+    schema: app.bsky.unspecced.getAtmosphereApps,
+    register: getAtmosphereApps,
+    atmosphere: true,
   },
   {
     schema: app.bsky.unspecced.getAtmosphereExploreTab,
