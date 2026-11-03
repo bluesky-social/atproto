@@ -210,12 +210,12 @@
           "items": { "type": "string" }
         },
         "accountStats": {
-          "description": "Statistics related to the account subject",
+          "description": "Deprecated. Ozone no longer returns account statistics.",
           "type": "ref",
           "ref": "#accountStats"
         },
         "recordsStats": {
-          "description": "Statistics related to the record subjects authored by the subject's account",
+          "description": "Deprecated. Ozone no longer returns record statistics.",
           "type": "ref",
           "ref": "#recordsStats"
         },

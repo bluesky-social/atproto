@@ -112,6 +112,7 @@
           },
           "sortField": {
             "type": "string",
+            "description": "reportedRecordsCount and takendownRecordsCount are deprecated and no longer supported.",
             "default": "lastReportedAt",
             "enum": [
               "lastReviewedAt",
@@ -173,15 +174,15 @@
           },
           "minAccountSuspendCount": {
             "type": "integer",
-            "description": "If specified, only subjects that belong to an account that has at least this many suspensions will be returned."
+            "description": "Deprecated and no longer supported."
           },
           "minReportedRecordsCount": {
             "type": "integer",
-            "description": "If specified, only subjects that belong to an account that has at least this many reported records will be returned."
+            "description": "Deprecated and no longer supported."
           },
           "minTakendownRecordsCount": {
             "type": "integer",
-            "description": "If specified, only subjects that belong to an account that has at least this many taken down records will be returned."
+            "description": "Deprecated and no longer supported."
           },
           "minPriorityScore": {
             "minimum": 0,

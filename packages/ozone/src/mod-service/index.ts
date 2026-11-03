@@ -1211,6 +1211,18 @@ export class ModerationService {
     statuses: ModerationSubjectStatusRowWithHandle[]
     cursor?: string
   }> {
+    if (
+      (minAccountSuspendCount != null && minAccountSuspendCount > 0) ||
+      (minReportedRecordsCount != null && minReportedRecordsCount > 0) ||
+      (minTakendownRecordsCount != null && minTakendownRecordsCount > 0) ||
+      sortField === 'reportedRecordsCount' ||
+      sortField === 'takendownRecordsCount'
+    ) {
+      throw new InvalidRequestError(
+        'Count-based status filters and sorts are no longer supported',
+      )
+    }
+
     let builder = moderationSubjectStatusQueryBuilder(this.db.db)
 
     const { ref } = this.db.db.dynamic
@@ -1466,30 +1478,6 @@ export class ModerationService {
       )
     }
 
-    if (minAccountSuspendCount != null && minAccountSuspendCount > 0) {
-      builder = builder.where(
-        'account_events_stats.suspendCount',
-        '>=',
-        minAccountSuspendCount,
-      )
-    }
-
-    if (minTakendownRecordsCount != null && minTakendownRecordsCount > 0) {
-      builder = builder.where(
-        'account_record_status_stats.takendownCount',
-        '>=',
-        minTakendownRecordsCount,
-      )
-    }
-
-    if (minReportedRecordsCount != null && minReportedRecordsCount > 0) {
-      builder = builder.where(
-        'account_record_events_stats.reportedCount',
-        '>=',
-        minReportedRecordsCount,
-      )
-    }
-
     if (minPriorityScore != null && minPriorityScore >= 0) {
       builder = builder.where(
         'moderation_subject_status.priorityScore',
@@ -1515,13 +1503,9 @@ export class ModerationService {
     }
 
     const keyset = new StatusKeyset(
-      sortField === 'reportedRecordsCount'
-        ? ref(`account_record_events_stats.reportedCount`)
-        : sortField === 'takendownRecordsCount'
-          ? ref(`account_record_status_stats.takendownCount`)
-          : sortField === 'priorityScore'
-            ? ref(`moderation_subject_status.priorityScore`)
-            : ref(`moderation_subject_status.${sortField}`),
+      sortField === 'priorityScore'
+        ? ref('moderation_subject_status.priorityScore')
+        : ref(`moderation_subject_status.${sortField}`),
       ref('moderation_subject_status.id'),
     )
     const paginatedBuilder = paginate(builder, {

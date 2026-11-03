@@ -80,6 +80,36 @@ describe('moderation-statuses', () => {
   })
 
   describe('query statuses', () => {
+    it('omits retired statistics and rejects count-based filters and sorts', async () => {
+      const response = await modClient.queryStatuses({})
+      expect(response.subjectStatuses.length).toBeGreaterThan(0)
+      for (const status of response.subjectStatuses) {
+        expect(status.accountStats).toBeUndefined()
+        expect(status.recordsStats).toBeUndefined()
+      }
+
+      const noOpFilters = await modClient.queryStatuses({
+        minAccountSuspendCount: 0,
+        minReportedRecordsCount: -1,
+        minTakendownRecordsCount: 0,
+      })
+      expect(noOpFilters.subjectStatuses).toHaveLength(
+        response.subjectStatuses.length,
+      )
+
+      for (const params of [
+        { minAccountSuspendCount: 1 },
+        { minReportedRecordsCount: 1 },
+        { minTakendownRecordsCount: 1 },
+        { sortField: 'reportedRecordsCount' as const },
+        { sortField: 'takendownRecordsCount' as const },
+      ]) {
+        await expect(modClient.queryStatuses(params)).rejects.toThrow(
+          'Count-based status filters and sorts are no longer supported',
+        )
+      }
+    })
+
     it('returns statuses for subjects that received moderation events', async () => {
       const response = await modClient.queryStatuses({})
 
