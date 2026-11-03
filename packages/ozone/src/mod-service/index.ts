@@ -1199,9 +1199,6 @@ export class ModerationService {
     excludeTags,
     collections,
     subjectType,
-    minAccountSuspendCount,
-    minReportedRecordsCount,
-    minTakendownRecordsCount,
     minPriorityScore,
     minStrikeCount,
     ageAssuranceState,
@@ -1211,18 +1208,6 @@ export class ModerationService {
     statuses: ModerationSubjectStatusRowWithHandle[]
     cursor?: string
   }> {
-    if (
-      (minAccountSuspendCount != null && minAccountSuspendCount > 0) ||
-      (minReportedRecordsCount != null && minReportedRecordsCount > 0) ||
-      (minTakendownRecordsCount != null && minTakendownRecordsCount > 0) ||
-      sortField === 'reportedRecordsCount' ||
-      sortField === 'takendownRecordsCount'
-    ) {
-      throw new InvalidRequestError(
-        'Count-based status filters and sorts are no longer supported',
-      )
-    }
-
     let builder = moderationSubjectStatusQueryBuilder(this.db.db)
 
     const { ref } = this.db.db.dynamic
