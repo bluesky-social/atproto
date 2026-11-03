@@ -4,22 +4,28 @@ import { type LexMap, isPlainObject, ui8Equals } from '@atproto/lex-data'
 import { StarParseError } from './error.js'
 
 /**
- * Reading and writing STAR-lite v1 archives: a metadata header followed by
- * key/value pairs until EOF.
+ * Reading and writing STAR archives: a metadata header, then key/value pairs
+ * each preceded by a `0x01` control byte, then a `0x00` control byte to end the
+ * archive.
  *
  * ```
- * [ magic | len | meta ] [ len | key | len | val ] [ len | key | len | val ] ...
+ * [ magic | len | meta ] [ 1 | len | key | len | val ] [ 1 | len | key | len | val ] ... [ 0 ]
  * ```
  *
  * Each `len` is an unsigned varint in its shortest form. Applications define
  * what the keys and values mean in a profile, named by the metadata's `$type`.
  *
- * @see https://tangled.org/microcosm.blue/star/tree/main/v1-star
+ * @see https://dasl.ing/star.html
  */
 
 export const STAR_MAGIC = new Uint8Array([0x2a, 0x6c, 0x01, 0x00])
 
-const MAX_VARINT_BYTES = 6
+const CONTROL_PAIR = 0x01
+const CONTROL_END = 0x00
+
+const MAX_VARINT_BYTES = 9
+
+// STAR sets no size limits of its own, so these are this reader's.
 const MAX_META_LENGTH = 64 * 1024 * 1024 // 64 MiB
 const MAX_KEY_LENGTH = 64 * 1024 * 1024 // 64 MiB
 const MAX_VALUE_LENGTH = 64 * 1024 * 1024 * 1024 // 64 GiB
@@ -38,9 +44,11 @@ export async function* writeStar(
   yield STAR_MAGIC
   yield* frame(encode(meta))
   for await (const { key, value } of pairs) {
+    yield Uint8Array.of(CONTROL_PAIR)
     yield* frame(key)
     yield* frame(value)
   }
+  yield Uint8Array.of(CONTROL_END)
 }
 
 function* frame(bytes: Uint8Array): Generator<Uint8Array> {
@@ -63,7 +71,7 @@ export type StarReader = AsyncDisposable & {
  * Read a STAR archive. The header is read eagerly, the pairs lazily as `pairs` is
  * drained.
  *
- * A profile can set a lower `maxValueLength` than STAR's own. Lengths are checked
+ * A profile can set a lower `maxValueLength` than the default. Lengths are checked
  * before a frame is read, so an oversized frame is never buffered.
  */
 export const readStar = async (
@@ -77,9 +85,6 @@ export const readStar = async (
       throw new StarParseError('invalid magic bytes')
     }
     const metaBytes = await readFrame(reader, MAX_META_LENGTH)
-    if (metaBytes === null) {
-      throw new StarParseError('missing metadata')
-    }
     return {
       meta: parseMeta(metaBytes),
       pairs: readPairs(reader, opts.maxValueLength ?? MAX_VALUE_LENGTH),
@@ -97,14 +102,18 @@ async function* readPairs(
 ): AsyncGenerator<StarPair> {
   try {
     while (true) {
-      // EOF is only allowed at a pair boundary.
-      const key = await readFrame(reader, MAX_KEY_LENGTH)
-      if (key === null) return
-      const value = await readFrame(reader, maxValueLength)
-      if (value === null) {
-        throw new StarParseError('missing value for key')
+      const control = await readByte(reader)
+      if (control === CONTROL_END) break
+      if (control !== CONTROL_PAIR) {
+        throw new StarParseError(`invalid control byte: ${control}`)
       }
+      const key = await readFrame(reader, MAX_KEY_LENGTH)
+      const value = await readFrame(reader, maxValueLength)
       yield { key, value }
+    }
+    const trailing = await reader.read(1)
+    if (trailing.length > 0) {
+      throw new StarParseError('unexpected bytes after end of archive')
     }
   } finally {
     await reader.destroy()
@@ -129,13 +138,11 @@ function parseMeta(bytes: Uint8Array): StarMeta {
   return meta as StarMeta
 }
 
-// Null at EOF before a frame starts, which is only allowed at a pair boundary.
 async function readFrame(
   reader: BytesReader,
   maxLength: number,
-): Promise<Uint8Array | null> {
+): Promise<Uint8Array> {
   const length = await readVarint(reader)
-  if (length === null) return null
   if (length > maxLength) {
     throw new StarParseError(`length ${length} exceeds limit of ${maxLength}`)
   }
@@ -149,14 +156,10 @@ async function readFrame(
 // Unsigned varint: 7 bits per byte, least significant group first, with the
 // high bit set on every byte but the last. Arithmetic rather than bitwise
 // operators, since lengths can exceed 32 bits.
-async function readVarint(reader: BytesReader): Promise<number | null> {
+async function readVarint(reader: BytesReader): Promise<number> {
   let value = 0
   for (let i = 0; i < MAX_VARINT_BYTES; i++) {
-    const [byte] = await reader.read(1)
-    if (byte === undefined) {
-      if (i === 0) return null
-      throw new StarParseError('unexpected end of archive')
-    }
+    const byte = await readByte(reader)
     value += (byte & 0x7f) * 2 ** (7 * i)
     if (byte < 0x80) {
       // A final zero byte only pads the encoding, which STAR forbids.
@@ -167,4 +170,12 @@ async function readVarint(reader: BytesReader): Promise<number | null> {
     }
   }
   throw new StarParseError('varint too long')
+}
+
+async function readByte(reader: BytesReader): Promise<number> {
+  const [byte] = await reader.read(1)
+  if (byte === undefined) {
+    throw new StarParseError('unexpected end of archive')
+  }
+  return byte
 }

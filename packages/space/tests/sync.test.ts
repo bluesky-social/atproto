@@ -301,8 +301,10 @@ describe('space sync', () => {
       // A pair that declares a value one byte over the limit, with none of the
       // value's bytes following: the length alone must be enough to reject it.
       const key = utf8('app.bsky.feed.post/3kbcq3p7ad401')
+      const empty = await rawStar(commitFor([]), [])
       const star = Buffer.concat([
-        await rawStar(commitFor([]), []),
+        empty.subarray(0, -1), // drop the end byte
+        Uint8Array.of(0x01),
         encodeVarInt(key.length),
         key,
         encodeVarInt(MAX_RECORD_SIZE + 1),

@@ -37,6 +37,19 @@ describe('STAR', () => {
     expect(read.pairs).toEqual(pairs)
   })
 
+  it('precedes each pair with a 0x01 byte and ends with a 0x00 byte', async () => {
+    const meta = { $type: 'test' }
+    const pairs = [{ key: Uint8Array.of(7), value: Uint8Array.of(8, 9) }]
+    const bytes = await collect(writeStar(meta, pairs))
+    expect(bytes).toEqual(
+      ui8Concat([
+        header(encode(meta)),
+        Uint8Array.of(0x01, 1, 7, 2, 8, 9),
+        Uint8Array.of(0x00),
+      ]),
+    )
+  })
+
   it('rejects the wrong magic bytes', async () => {
     const bytes = await collect(writeStar({ $type: 'test' }, []))
     bytes[0] = 0x3a
@@ -78,10 +91,32 @@ describe('STAR', () => {
   it('rejects EOF inside a pair', async () => {
     const bytes = Buffer.concat([
       header(encode({ $type: 'test' })),
+      Uint8Array.of(0x01),
       encodeVarInt(1),
       Uint8Array.of(1),
       // missing value
     ])
     await expect(readAll(bytes)).rejects.toThrow(StarParseError)
+  })
+
+  it('rejects an archive without its end byte', async () => {
+    const bytes = header(encode({ $type: 'test' }))
+    await expect(readAll(bytes)).rejects.toThrow(/unexpected end of archive/)
+  })
+
+  it('rejects an unknown control byte', async () => {
+    const bytes = Buffer.concat([
+      header(encode({ $type: 'test' })),
+      Uint8Array.of(0x02),
+    ])
+    await expect(readAll(bytes)).rejects.toThrow(/invalid control byte/)
+  })
+
+  it('rejects bytes after the end byte', async () => {
+    const bytes = Buffer.concat([
+      await collect(writeStar({ $type: 'test' }, [])),
+      Uint8Array.of(0x00),
+    ])
+    await expect(readAll(bytes)).rejects.toThrow(/after end of archive/)
   })
 })
