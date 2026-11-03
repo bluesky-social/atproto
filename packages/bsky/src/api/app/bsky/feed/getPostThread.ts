@@ -39,6 +39,7 @@ export default function (server: Server, ctx: AppContext) {
         ctx.authVerifier.parseCreds(auth)
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({
+        xrpcEndpoint: app.bsky.feed.getPostThread.$lxm,
         labelers,
         viewer,
         includeTakedowns,

@@ -1,5 +1,15 @@
 # @atproto-labs/opentelemetry-node
 
+## 0.5.0
+
+### Minor Changes
+
+- [#5746](https://github.com/bluesky-social/atproto/pull/5746) [`1c8c3a3`](https://github.com/bluesky-social/atproto/commit/1c8c3a3a8ea27a060f38cda71172339aa1728113) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove `extractUrlXrpcMethodName` and `UNKNOWN_XRPC_ROUTE` from public interface
+
+- [#5746](https://github.com/bluesky-social/atproto/pull/5746) [`1c8c3a3`](https://github.com/bluesky-social/atproto/commit/1c8c3a3a8ea27a060f38cda71172339aa1728113) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update to OpenTelemetry JS SDK 3.x (`@opentelemetry/api` 1.10), which requires Node.js `>=22.15.0`. Event log records are now emitted through `@opentelemetry/api` (`@opentelemetry/api-logs` was removed upstream). The HTTP instrumentation only reports the stable `http.server.request.duration` and `http.client.request.duration` metrics: the legacy `http.server.duration` and `http.client.duration` metrics are gone, and `OTEL_SEMCONV_STABILITY_OPT_IN=http` no longer has any effect. Instrumentations passed to `setup()` now also instrument modules loaded through ESM imports, not only `require()`d ones, when built on the same `@opentelemetry/instrumentation` as `@atproto-labs/opentelemetry-node`; otherwise `setup()` now throws an `InstrumentationMismatchError` instead of silently missing them. The new `@atproto-labs/opentelemetry-node/better-sqlite3-plugin` export, a port of `opentelemetry-plugin-better-sqlite3` producing identical spans, replaces that package in the PDS.
+
+- [#5746](https://github.com/bluesky-social/atproto/pull/5746) [`1c8c3a3`](https://github.com/bluesky-social/atproto/commit/1c8c3a3a8ea27a060f38cda71172339aa1728113) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove `./instrumentation` export point
+
 ## 0.4.0
 
 ### Minor Changes

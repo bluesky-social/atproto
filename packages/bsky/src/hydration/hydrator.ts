@@ -1,6 +1,6 @@
 import assert from 'node:assert'
 import { chunkArray, dedupeStrs, mapDefined } from '@atproto/common'
-import { type NsidString, atUri, isDidString } from '@atproto/lex'
+import { type NsidString, atUri, isDidString } from '@atproto/lex-schema'
 import {
   AtUri,
   type AtUriString,
@@ -24,13 +24,11 @@ import type {
   RecordRef,
 } from '../proto/bsky_pb.js'
 import { type HydrationXrpcEndpoint, events } from '../telemetry/events.js'
-import { SITE_STANDARD_NSID_PREFIX } from '../util/external/standard-site.js'
-import { uriToDid, uriToDid as didFromUri } from '../util/uris.js'
+import { recordUriOf, uriToDid, uriToDid as didFromUri } from '../util/uris.js'
 import type { ParsedLabelers } from '../util.js'
 import { MAX_PROFILE_LINKS } from '../views/profile-link-rules.js'
 import {
   type ProfileRecord,
-  isExternalEmbedType,
   isListRuleType,
   isRecordEmbedType,
   isRecordWithMediaType,
@@ -47,18 +45,21 @@ import {
   type ProfileViewerStates,
 } from './actor.js'
 import {
-  type ExactRecordKey,
+  EXTERNAL_HYDRATION_LIMITS,
+  type ExternalHydrationLevel,
+  type ExternalHydrationOptions,
   type ExternalHydrationTracker,
   ExternalHydrator,
+  type ExternalPublicationSubscriptions,
   type ExternalRecordBacklinkCounts,
   type ExternalRecordBacklinks,
   type ExternalRecords,
   type ExternalRecordsByRef,
-  type SiteStandardDocuments,
-  type SiteStandardPublications,
+  MAX_CONCURRENT_BACKLINK_REQUESTS,
+  MAX_EXTERNAL_HYDRATION_PASSES,
   actionExternalRecordTakedowns,
+  externalAssociatedRefsFromPosts,
   genericRecordKey,
-  parseGenericRecordKey,
   trackExternalHydration,
 } from './external.js'
 import {
@@ -195,8 +196,7 @@ export type HydrationState = {
   /** Available backlink source URIs per target, potentially from a partial page. */
   externalRecordBacklinks?: ExternalRecordBacklinks
   externalRecordBacklinkCounts?: ExternalRecordBacklinkCounts
-  siteStandardDocuments?: SiteStandardDocuments
-  siteStandardPublications?: SiteStandardPublications
+  externalPublicationSubscriptions?: ExternalPublicationSubscriptions
 }
 
 type HydrateKnownLikersOptions = {
@@ -208,6 +208,9 @@ type HydratePostsOptions = Pick<
   'processDynamicTagsForView'
 > & {
   knownLikers?: HydrateKnownLikersOptions
+  skipReplyBlocks?: boolean
+  externalSeenRecordKeys?: Set<string>
+  externalPublicationSubscriptions?: ExternalPublicationSubscriptions
 }
 
 type HydrateFeedItemsOptions = {
@@ -783,19 +786,11 @@ export class Hydrator {
       }
     }
 
-    const siteStandardRefs = siteStandardRefsFromPosts(
+    const externalRefs = externalAssociatedRefsFromPosts(
       postsLayer0,
       postsLayer1,
       postsLayer2,
     )
-    const siteStandardLabelSubjects = dedupeStrs(
-      siteStandardRefs.map((ref) => ref.uri),
-    )
-    // Site-standard record owners need profile basics so we can populate
-    // `associatedProfiles` on the external embed view. Include them in the
-    // post-author profile fetch below; any DIDs surfaced later by the
-    // dataplane are picked up by the top-up after the parallel batch.
-    const ssRefDids = siteStandardRefs.map((ref) => uriToDid(ref.uri))
 
     // Collect known-liker profiles and author-liker block relationships.
     const knownLikers = await knownLikersPromise
@@ -812,7 +807,6 @@ export class Hydrator {
 
     const knownProfileDids = dedupeStrs([
       ...allPostUris.map(didFromUri),
-      ...ssRefDids,
       ...knownLikerDids,
     ])
 
@@ -831,61 +825,36 @@ export class Hydrator {
       labelerState,
       starterPackState,
       postgates,
-      {
-        documents: siteStandardDocuments,
-        publications: siteStandardPublications,
-      },
+      externalState,
     ] = await Promise.all([
       this.feed.getPostAggregates(allRefs, ctx.viewer),
       ctx.viewer
         ? this.feed.getPostViewerStates(threadRefs, ctx.viewer)
         : undefined,
-      this.label.getLabelsForSubjects(
-        [...allPostUris, ...siteStandardLabelSubjects],
-        ctx.labelers,
-      ),
-      this.hydratePostBlocks(posts, ctx, authorsAndKnownLikersRelationships),
+      this.label.getLabelsForSubjects(allPostUris, ctx.labelers),
+      this.hydratePostBlocks(posts, ctx, authorsAndKnownLikersRelationships, {
+        skipReplyBlocks: options.skipReplyBlocks,
+      }),
       this.hydrateProfiles(knownProfileDids, ctx),
       this.hydrateLists([...nestedListUris, ...threadgateListUris], ctx),
       this.hydrateFeedGens(nestedFeedGenUris, ctx),
       this.hydrateLabelers(nestedLabelerDids, ctx),
       this.hydrateStarterPacksBasic(nestedStarterPackUris, ctx),
       this.feed.getPostgatesForPosts([...postUrisWithPostgates.values()]),
-      this.external.getSiteStandardRecordsByRef(
-        siteStandardRefs,
-        ctx.includeTakedowns,
-      ),
+      this.hydrateEmbedExternalViewFromRefs(externalRefs, ctx, {
+        hydration: 'basic',
+        seenRecordKeys: options.externalSeenRecordKeys,
+        publicationSubscriptions: options.externalPublicationSubscriptions,
+      }),
     ])
     if (!ctx.includeTakedowns) {
       actionTakedownLabels(allPostUris, posts, labels)
-      actionSiteStandardTakedownLabels(
-        siteStandardDocuments,
-        siteStandardPublications,
-        labels,
-      )
     }
 
-    // Defensive top-up: in the unlikely case the dataplane returned a
-    // publication owned by a DID not present in the post-author or
-    // pinned-ref sets, fetch its profile serially and fold it in.
-    const knownProfileDidsSet = new Set(knownProfileDids)
-    const extraSsDids: DidString[] = []
-    for (const key of siteStandardPublications.keys()) {
-      const did = uriToDid(parseGenericRecordKey(key).uri)
-      if (!knownProfileDidsSet.has(did)) {
-        knownProfileDidsSet.add(did)
-        extraSsDids.push(did)
-      }
-    }
-    const mergedProfileState = extraSsDids.length
-      ? mergeStates(
-          profileState,
-          await this.hydrateProfilesBasic(extraSsDids, ctx),
-        )
-      : profileState
     // combine all hydration state
     return mergeManyStates(
-      mergedProfileState,
+      externalState,
+      profileState,
       listState,
       feedGenState,
       labelerState,
@@ -900,8 +869,6 @@ export class Hydrator {
         labels,
         threadgates,
         postgates,
-        siteStandardDocuments,
-        siteStandardPublications,
         ctx,
       },
     )
@@ -911,6 +878,7 @@ export class Hydrator {
     posts: Posts,
     ctx: HydrateCtx,
     additionalRelationships: RelationshipPair[] = [],
+    opts?: { skipReplyBlocks?: boolean },
   ): Promise<{
     postBlocks: PostBlocks
     additionalRelationshipsBidirectionalBlocks: BidirectionalBlocks
@@ -924,20 +892,21 @@ export class Hydrator {
       const creator = didFromUri(uri)
       const postBlockPairs: PostBlockPairs = {}
       postBlocksPairs.set(uri, postBlockPairs)
-      // 3p block for replies
-      const parentUri = post.reply?.parent.uri
-      const parentDid = parentUri && didFromUri(parentUri)
-      if (parentDid && parentDid !== creator) {
-        const pair: RelationshipPair = [creator, parentDid]
-        relationships.push(pair)
-        postBlockPairs.parent = pair
-      }
-      const rootUri = post.reply?.root.uri
-      const rootDid = rootUri && didFromUri(rootUri)
-      if (rootDid && rootDid !== creator) {
-        const pair: RelationshipPair = [creator, rootDid]
-        relationships.push(pair)
-        postBlockPairs.root = pair
+      if (!opts?.skipReplyBlocks) {
+        const parentUri = post.reply?.parent.uri
+        const parentDid = parentUri && didFromUri(parentUri)
+        if (parentDid && parentDid !== creator) {
+          const pair: RelationshipPair = [creator, parentDid]
+          relationships.push(pair)
+          postBlockPairs.parent = pair
+        }
+        const rootUri = post.reply?.root.uri
+        const rootDid = rootUri && didFromUri(rootUri)
+        if (rootDid && rootDid !== creator) {
+          const pair: RelationshipPair = [creator, rootDid]
+          relationships.push(pair)
+          postBlockPairs.root = pair
+        }
       }
       // 3p block for record embeds
       for (const embedUri of nestedRecordUris(post)) {
@@ -1062,15 +1031,21 @@ export class Hydrator {
    * generic batch within the traversal (the root batch is pass 1); nested
    * batches continue the count. Nested passes share the caller's
    * `hydrationMetrics` tracker; without one, this call owns the traversal and
-   * reports its totals.
+   * reports its totals. `options.hydration` (default `'detailed'`) applies to
+   * the whole traversal and is propagated to every nested pass.
    */
   async hydrateEmbedExternalViewFromUris(
     uris: AtUriString[],
     ctx: HydrateCtx,
-    seenRecordKeys: Set<string> = new Set(),
-    hydrationPass = 1,
-    hydrationMetrics?: ExternalHydrationTracker,
+    options: ExternalHydrationOptions = {},
   ): Promise<HydrationState> {
+    const {
+      hydration = 'detailed',
+      seenRecordKeys = new Set<string>(),
+      hydrationPass = 1,
+      hydrationMetrics,
+      publicationSubscriptions,
+    } = options
     return trackExternalHydration(
       'uris',
       ctx.xrpcEndpoint,
@@ -1079,9 +1054,11 @@ export class Hydrator {
         this.hydrateEmbedExternalView(
           uris.map(uriToRef),
           ctx,
+          hydration,
           seenRecordKeys,
           hydrationPass,
           hydrationMetrics,
+          publicationSubscriptions,
         ),
     )
   }
@@ -1094,10 +1071,15 @@ export class Hydrator {
   async hydrateEmbedExternalViewFromRefs(
     refs: Required<ItemRef>[],
     ctx: HydrateCtx,
-    seenRecordKeys: Set<string> = new Set(),
-    hydrationPass = 1,
-    hydrationMetrics?: ExternalHydrationTracker,
+    options: ExternalHydrationOptions = {},
   ): Promise<HydrationState> {
+    const {
+      hydration = 'detailed',
+      seenRecordKeys = new Set<string>(),
+      hydrationPass = 1,
+      hydrationMetrics,
+      publicationSubscriptions,
+    } = options
     return trackExternalHydration(
       'refs',
       ctx.xrpcEndpoint,
@@ -1106,9 +1088,11 @@ export class Hydrator {
         this.hydrateEmbedExternalView(
           refs,
           ctx,
+          hydration,
           seenRecordKeys,
           hydrationPass,
           hydrationMetrics,
+          publicationSubscriptions,
         ),
     )
   }
@@ -1116,16 +1100,22 @@ export class Hydrator {
   private async hydrateEmbedExternalView(
     refs: ItemRef[],
     ctx: HydrateCtx,
+    hydration: ExternalHydrationLevel,
     seenRecordKeys: Set<string>,
     hydrationPass: number,
     hydrationMetrics: ExternalHydrationTracker,
+    publicationSubscriptions: ExternalPublicationSubscriptions | undefined,
   ): Promise<HydrationState> {
     // Filter at the entry point so each lookup runs at most once per shared
     // traversal, even for callers that did not prefilter their input. Null or
     // unavailable results stay seen as completed lookups. Nothing unseen means
     // no hydration work, and no pass is consumed.
     const items = takeUnseenRefs(refs, seenRecordKeys)
-    if (!items.length) return { ctx }
+    if (!items.length) {
+      return publicationSubscriptions
+        ? { ctx, externalPublicationSubscriptions: publicationSubscriptions }
+        : { ctx }
+    }
     // Get any bare URIs to fetch
     const byUriValues = items
       .filter(({ cid }) => cid === undefined)
@@ -1178,6 +1168,7 @@ export class Hydrator {
       labels,
       externalRecords,
       externalRecordsByRef,
+      externalPublicationSubscriptions: publicationSubscriptions,
     })
     actionExternalRecordTakedowns(baseState, ctx.includeTakedowns)
 
@@ -1186,9 +1177,13 @@ export class Hydrator {
       baseState,
       items,
       ctx,
-      seenRecordKeys,
-      hydrationPass,
-      hydrationMetrics,
+      {
+        hydration,
+        seenRecordKeys,
+        hydrationPass,
+        hydrationMetrics,
+        publicationSubscriptions,
+      },
     )
 
     // A supplemental latest lookup returning the same URI and CID is the same
@@ -1210,16 +1205,24 @@ export class Hydrator {
    * `hydrationPass` is the number of the generic batch that produced `state`
    * (1-based, default 1 for prehydrated state, which is treated as the root
    * batch); the next nested batch is `hydrationPass + 1`. `hydrationMetrics`
-   * is shared as in `hydrateEmbedExternalViewFromUris`.
+   * is shared as in `hydrateEmbedExternalViewFromUris`. `options.hydration`
+   * (default `'detailed'`) decides, per collection, whether social-preview
+   * samples are scheduled; backlink counts and content dependencies are
+   * discovered at both levels.
    */
   async hydrateExternalViewDependencies(
     state: HydrationState,
     refs: ItemRef[],
     ctx: HydrateCtx,
-    seenRecordKeys: Set<string> = new Set(),
-    hydrationPass = 1,
-    hydrationMetrics?: ExternalHydrationTracker,
+    options: ExternalHydrationOptions = {},
   ): Promise<HydrationState> {
+    const {
+      hydration = 'detailed',
+      seenRecordKeys = new Set<string>(),
+      hydrationPass = 1,
+      hydrationMetrics,
+      publicationSubscriptions,
+    } = options
     return trackExternalHydration(
       'dependencies',
       ctx.xrpcEndpoint,
@@ -1229,9 +1232,11 @@ export class Hydrator {
           state,
           refs,
           ctx,
+          hydration,
           seenRecordKeys,
           hydrationPass,
           hydrationMetrics,
+          publicationSubscriptions,
         ),
     )
   }
@@ -1240,16 +1245,20 @@ export class Hydrator {
     state: HydrationState,
     refs: ItemRef[],
     ctx: HydrateCtx,
+    hydration: ExternalHydrationLevel,
     seenRecordKeys: Set<string>,
     hydrationPass: number,
     hydrationMetrics: ExternalHydrationTracker,
+    publicationSubscriptions: ExternalPublicationSubscriptions | undefined,
   ): Promise<HydrationState> {
-    // Backlink sources to sample per target, each with its own bound.
+    // Social-preview backlink sources to sample per target, each with its own
+    // bound. A target with no samples still gets its aggregate count.
     const targets = new Map<
       AtUriString,
       { collection: NsidString; limit: number }[]
     >()
     const discoveredUris = new Set<AtUriString>()
+    const publicationUris = new Set<AtUriString>()
 
     const rootBatch = !hydrationMetrics.rootsCounted
     hydrationMetrics.rootsCounted = true
@@ -1279,7 +1288,8 @@ export class Hydrator {
         !parsed.success ||
         !isDidString(parsed.value.authority) ||
         !parsed.value.rkey ||
-        parsed.value.hash
+        parsed.value.query !== undefined ||
+        parsed.value.hash !== undefined
       ) {
         continue
       }
@@ -1292,28 +1302,45 @@ export class Hydrator {
         collection === site.standard.document.$type &&
         site.standard.document.$matches(record, { strict: false })
       ) {
-        targets.set(uri, [
-          {
-            collection: site.standard.graph.recommend.$type,
-            limit: ExternalHydrator.MAX_BACKLINK_PREVIEWS,
-          },
-        ])
+        const limits = EXTERNAL_HYDRATION_LIMITS[site.standard.document.$type]
+        targets.set(
+          uri,
+          hydration === 'detailed'
+            ? [
+                {
+                  collection: site.standard.graph.recommend.$type,
+                  limit: limits.recommendationPreviews,
+                },
+              ]
+            : [],
+        )
 
         const publicationUri = recordUriOf(
           record.site,
           site.standard.publication.$type,
         )
-        if (publicationUri) discoveredUris.add(publicationUri)
+        if (publicationUri) {
+          discoveredUris.add(publicationUri)
+          publicationUris.add(publicationUri)
+        }
       } else if (
         collection === site.standard.publication.$type &&
         site.standard.publication.$matches(record, { strict: false })
       ) {
-        targets.set(uri, [
-          {
-            collection: site.standard.graph.subscription.$type,
-            limit: ExternalHydrator.MAX_BACKLINK_PREVIEWS,
-          },
-        ])
+        publicationUris.add(uri)
+        const limits =
+          EXTERNAL_HYDRATION_LIMITS[site.standard.publication.$type]
+        targets.set(
+          uri,
+          hydration === 'detailed'
+            ? [
+                {
+                  collection: site.standard.graph.subscription.$type,
+                  limit: limits.subscriberPreviews,
+                },
+              ]
+            : [],
+        )
       } else if (
         collection === place.stream.livestream.$type &&
         place.stream.livestream.$matches(record, { strict: false })
@@ -1323,16 +1350,20 @@ export class Hydrator {
         collection === social.grain.gallery.$type &&
         social.grain.gallery.$matches(record, { strict: false })
       ) {
-        targets.set(uri, [
-          {
+        const limits = EXTERNAL_HYDRATION_LIMITS[social.grain.gallery.$type]
+        // Membership items are content, sampled at every level.
+        const samples: { collection: NsidString; limit: number }[] = []
+        if (hydration === 'detailed') {
+          samples.push({
             collection: social.grain.favorite.$type,
-            limit: ExternalHydrator.MAX_BACKLINK_PREVIEWS,
-          },
-          {
-            collection: social.grain.gallery.item.$type,
-            limit: ExternalHydrator.MAX_BACKLINK_GALLERY_ITEMS,
-          },
-        ])
+            limit: limits.favoritePreviews,
+          })
+        }
+        samples.push({
+          collection: social.grain.gallery.item.$type,
+          limit: limits.items,
+        })
+        targets.set(uri, samples)
       } else if (
         collection === social.grain.gallery.item.$type &&
         social.grain.gallery.item.$matches(record, { strict: false })
@@ -1340,6 +1371,77 @@ export class Hydrator {
         // Items have no backlinks; they only point at their photo.
         const photoUri = recordUriOf(record.item, social.grain.photo.$type)
         if (photoUri) discoveredUris.add(photoUri)
+      } else if (
+        // @NOTE Preview actions must not refetch pinned targets as latest.
+        rootBatch &&
+        collection === site.standard.graph.recommend.$type &&
+        site.standard.graph.recommend.$matches(record, { strict: false })
+      ) {
+        const documentUri = recordUriOf(
+          record.document,
+          site.standard.document.$type,
+        )
+        if (documentUri) discoveredUris.add(documentUri)
+      } else if (
+        rootBatch &&
+        collection === site.standard.graph.subscription.$type &&
+        site.standard.graph.subscription.$matches(record, { strict: false })
+      ) {
+        const publicationUri = recordUriOf(
+          record.publication,
+          site.standard.publication.$type,
+        )
+        if (publicationUri) discoveredUris.add(publicationUri)
+      } else if (
+        rootBatch &&
+        collection === social.grain.favorite.$type &&
+        social.grain.favorite.$matches(record, { strict: false })
+      ) {
+        const galleryUri = recordUriOf(
+          record.subject,
+          social.grain.gallery.$type,
+        )
+        if (galleryUri) discoveredUris.add(galleryUri)
+      }
+    }
+
+    if (publicationSubscriptions && ctx.viewer) {
+      const publications = [...publicationUris].filter(
+        (uri) => !publicationSubscriptions.has(uri),
+      )
+      // @NOTE Reserve even unknown outcomes before awaiting, so concurrent roots
+      // sharing this request's cache never repeat a subscription lookup.
+      for (const uri of publications) publicationSubscriptions.set(uri, null)
+      for (const batch of chunkArray(
+        publications,
+        ExternalHydrator.MAX_BACKLINK_ACTOR_TARGETS_PER_REQUEST,
+      )) {
+        try {
+          const result = await this.external.getAtmosphereBacklinksByActor(
+            batch,
+            ctx.viewer,
+            site.standard.graph.subscription.$type,
+          )
+          for (const publication of batch) {
+            const subscribed = result.backlinks
+              .get(publication)
+              ?.some(
+                (uri) =>
+                  recordUriOf(uri, site.standard.graph.subscription.$type) &&
+                  uriToDid(uri) === ctx.viewer,
+              )
+            publicationSubscriptions.set(
+              publication,
+              subscribed ? true : result.truncated ? null : false,
+            )
+          }
+        } catch (err) {
+          hydrationMetrics.partial = true
+          hydrationLogger.warn(
+            { err },
+            'failed to hydrate external publication subscriptions',
+          )
+        }
       }
     }
 
@@ -1367,7 +1469,7 @@ export class Hydrator {
           // @NOTE Bound fan-out as well as each sample; counts are independent.
           for (const batch of chunkArray(
             queries,
-            ExternalHydrator.MAX_BACKLINK_FANOUT,
+            MAX_CONCURRENT_BACKLINK_REQUESTS,
           )) {
             await Promise.all(
               batch.map(async ({ uri, collection, limit }) => {
@@ -1389,9 +1491,11 @@ export class Hydrator {
                   return
                 }
                 const links = page.backlinks
-                  .filter((b) => parseAtUriString(b.uri).success)
+                  .flatMap(({ uri }) => {
+                    const link = recordUriOf(uri, collection)
+                    return link ? [link] : []
+                  })
                   .slice(0, limit)
-                  .map((b) => b.uri)
                 backlinks.set(
                   uri,
                   dedupeStrs([...(backlinks.get(uri) ?? []), ...links]),
@@ -1410,30 +1514,27 @@ export class Hydrator {
       (uri) => !seenRecordKeys.has(genericRecordKey({ uri })),
     )
     let nested: HydrationState = {}
-    if (
-      newUris.length &&
-      hydrationPass >= ExternalHydrator.MAX_EXTERNAL_HYDRATION_PASSES
-    ) {
+    if (newUris.length && hydrationPass >= MAX_EXTERNAL_HYDRATION_PASSES) {
       // Keep the partial state. Skipped URIs are not marked seen: they were
       // never fetched.
       hydrationMetrics.capped = true
       hydrationLogger.warn(
         {
           hydrationPass,
-          maxPasses: ExternalHydrator.MAX_EXTERNAL_HYDRATION_PASSES,
+          maxPasses: MAX_EXTERNAL_HYDRATION_PASSES,
           skipped: newUris.length,
         },
         'external hydration pass limit reached, skipping dependencies',
       )
     } else if (newUris.length) {
       try {
-        nested = await this.hydrateEmbedExternalViewFromUris(
-          newUris,
-          ctx,
+        nested = await this.hydrateEmbedExternalViewFromUris(newUris, ctx, {
+          hydration,
           seenRecordKeys,
-          hydrationPass + 1,
+          hydrationPass: hydrationPass + 1,
           hydrationMetrics,
-        )
+          publicationSubscriptions,
+        })
       } catch (err) {
         // Skip the whole batch; partial child state could miss moderation.
         hydrationMetrics.partial = true
@@ -1445,7 +1546,12 @@ export class Hydrator {
     }
 
     return mergeStates(
-      { ctx, externalRecordBacklinks, externalRecordBacklinkCounts },
+      {
+        ctx,
+        externalRecordBacklinks,
+        externalRecordBacklinkCounts,
+        externalPublicationSubscriptions: publicationSubscriptions,
+      },
       nested,
     )
   }
@@ -1900,6 +2006,7 @@ export class Hydrator {
         [...postUris].map((uri) => ({ uri })),
         ctx,
         { posts },
+        { skipReplyBlocks: true },
       ),
       this.hydrateFeedGens([...feedGenUris], ctx),
       this.hydrateStarterPacksBasic([...starterPackUris], ctx),
@@ -2341,55 +2448,6 @@ const nestedRecordUris = (post: Post['record']): AtUriString[] => {
   return uris
 }
 
-/**
- * Returns every strongRef the post embedded as `external.associatedRefs`,
- * regardless of collection. Callers are responsible for filtering to NSIDs
- * they care about.
- */
-const externalAssociatedRefs = (
-  post: Post['record'],
-): { uri: AtUriString; cid: string }[] => {
-  const embed = post?.embed
-  if (!embed) return []
-  if (isExternalEmbedType(embed)) {
-    return embed.external.associatedRefs ?? []
-  }
-  if (isRecordWithMediaType(embed) && isExternalEmbedType(embed.media)) {
-    return embed.media.external.associatedRefs ?? []
-  }
-  return []
-}
-
-/**
- * Collects standard.site refs across all post layers, deduped by `uri+cid` so
- * the dataplane batch is minimal even if multiple posts in the layer reference
- * the same exact version of an SS record. The same `${uri}@${cid}` keys are
- * what `getSiteStandardRecordsByRef` uses on the resulting hydration maps,
- * which lets `lookupAssociatedSiteStandardRecords` do an O(1) version-exact
- * lookup at view time.
- */
-const siteStandardRefsFromPosts = (...postLayers: Posts[]): ItemRef[] => {
-  const seen = new Set<string>()
-  const out: ItemRef[] = []
-  for (const layer of postLayers) {
-    for (const item of layer.values()) {
-      if (!item) continue
-      for (const ref of externalAssociatedRefs(item.record)) {
-        if (
-          !new AtUri(ref.uri).collection.startsWith(SITE_STANDARD_NSID_PREFIX)
-        ) {
-          continue
-        }
-        const key = `${ref.uri}@${ref.cid}`
-        if (seen.has(key)) continue
-        seen.add(key)
-        out.push({ uri: ref.uri, cid: ref.cid })
-      }
-    }
-  }
-  return out
-}
-
 const getListUrisFromThreadgates = (gates: Threadgates): AtUriString[] => {
   const uris: AtUriString[] = []
   for (const gate of gates.values()) {
@@ -2513,13 +2571,9 @@ export const mergeStates = (
       stateA.externalRecordBacklinkCounts,
       stateB.externalRecordBacklinkCounts,
     ),
-    siteStandardDocuments: mergeMaps(
-      stateA.siteStandardDocuments,
-      stateB.siteStandardDocuments,
-    ),
-    siteStandardPublications: mergeMaps(
-      stateA.siteStandardPublications,
-      stateB.siteStandardPublications,
+    externalPublicationSubscriptions: mergeMaps(
+      stateA.externalPublicationSubscriptions,
+      stateB.externalPublicationSubscriptions,
     ),
   }
 }
@@ -2537,75 +2591,6 @@ const actionTakedownLabels = (
     if (labels.get(key)?.isTakendown) {
       hydrationMap.set(key, null)
     }
-  }
-}
-
-/**
- * The URI when an externally authored reference is a complete DID-based
- * record URI in `collection`, with a record key and no fragment.
- */
-const recordUriOf = (
-  value: string,
-  collection: NsidString,
-): AtUriString | undefined => {
-  const parsed = parseAtUriString(value)
-  return parsed.success &&
-    isDidString(parsed.value.authority) &&
-    parsed.value.collection === collection &&
-    parsed.value.rkey &&
-    !parsed.value.hash
-    ? (value as AtUriString)
-    : undefined
-}
-
-/**
- * Apply takedown labels to the site.standard hydration maps. Per-record
- * takedowns null any entry whose subject URI is taken down; pair takedowns
- * propagate that null across doc/publication pairs so we never render half
- * of a moderated embed. Pairs are discovered via `doc.record.site`; orphan
- * docs and orphan publications are subject only to the per-record sweep.
- */
-const actionSiteStandardTakedownLabels = (
-  documents: SiteStandardDocuments,
-  publications: SiteStandardPublications,
-  labels: Labels,
-) => {
-  // Pairings have to be captured before nulling — the doc record carries
-  // the publication URI in its `site` field, and we lose it once we null.
-  const pairings: { docKey: ExactRecordKey; pubKey: ExactRecordKey }[] = []
-  if (documents.size > 0 && publications.size > 0) {
-    const pubKeysByUri = new Map<string, ExactRecordKey[]>()
-    for (const key of publications.keys()) {
-      const { uri } = parseGenericRecordKey(key)
-      const list = pubKeysByUri.get(uri)
-      if (list) list.push(key)
-      else pubKeysByUri.set(uri, [key])
-    }
-    for (const [docKey, doc] of documents) {
-      const site = doc?.record.site
-      if (!site || !site.startsWith('at://')) continue
-      for (const pubKey of pubKeysByUri.get(site) ?? []) {
-        pairings.push({ docKey, pubKey })
-      }
-    }
-  }
-
-  // Per-record takedowns: null any entry whose subject URI is taken down.
-  for (const key of documents.keys()) {
-    const { uri } = parseGenericRecordKey(key)
-    if (labels.get(uri)?.isTakendown) documents.set(key, null)
-  }
-  for (const key of publications.keys()) {
-    const { uri } = parseGenericRecordKey(key)
-    if (labels.get(uri)?.isTakendown) publications.set(key, null)
-  }
-
-  // Pair takedowns: if exactly one side of a pair was nulled above, mirror.
-  for (const { docKey, pubKey } of pairings) {
-    const doc = documents.get(docKey)
-    const pub = publications.get(pubKey)
-    if (doc === null && pub !== null) publications.set(pubKey, null)
-    if (pub === null && doc !== null) documents.set(docKey, null)
   }
 }
 

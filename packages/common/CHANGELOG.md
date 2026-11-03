@@ -1,5 +1,26 @@
 # @atproto/common
 
+## 0.8.8
+
+### Patch Changes
+
+- Updated dependencies [[`07c25d4`](https://github.com/bluesky-social/atproto/commit/07c25d410d4f4ad8f6ec80fc14efa0dd8ec55545), [`07c25d4`](https://github.com/bluesky-social/atproto/commit/07c25d410d4f4ad8f6ec80fc14efa0dd8ec55545)]:
+  - @atproto/lex-cbor@0.1.8
+  - @atproto/lex-data@0.1.9
+  - @atproto/common-web@0.5.16
+
+## 0.8.7
+
+### Patch Changes
+
+- [#5753](https://github.com/bluesky-social/atproto/pull/5753) [`3bfd00f`](https://github.com/bluesky-social/atproto/commit/3bfd00f484dc144482c82a4ed248adc49e6be769) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Use dedicated `MaxSizeError` error by default from `MaxSizeChecker`
+
+- [#5753](https://github.com/bluesky-social/atproto/pull/5753) [`3bfd00f`](https://github.com/bluesky-social/atproto/commit/3bfd00f484dc144482c82a4ed248adc49e6be769) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Avoid leaking the `this` context when calling `createError` from `MaxSizeChecker`
+
+- [#5753](https://github.com/bluesky-social/atproto/pull/5753) [`3bfd00f`](https://github.com/bluesky-social/atproto/commit/3bfd00f484dc144482c82a4ed248adc49e6be769) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Mark `MaxSizeChecker` properties as `readonly`
+
+- [#5753](https://github.com/bluesky-social/atproto/pull/5753) [`3bfd00f`](https://github.com/bluesky-social/atproto/commit/3bfd00f484dc144482c82a4ed248adc49e6be769) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add decompression and size limits when decoding streams
+
 ## 0.8.6
 
 ### Patch Changes

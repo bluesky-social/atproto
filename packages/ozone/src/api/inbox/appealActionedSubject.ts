@@ -58,7 +58,7 @@ export default function (server: Server, ctx: AppContext) {
             'NotAppealable',
           )
         }
-        if (!isAppealableEvent(action.action)) {
+        if (!isAppealableEvent(action)) {
           throw new ForbiddenError('Subject is not appealable', 'NotAppealable')
         }
         if (
@@ -102,6 +102,7 @@ export default function (server: Server, ctx: AppContext) {
         subject,
         action: actionInput,
         resolvedActionId: action?.id,
+        resolvedActionAt: action?.createdAt,
         reason: input.body.reason,
         modTool: input.body.modTool,
       })

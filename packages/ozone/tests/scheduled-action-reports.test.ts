@@ -9,7 +9,7 @@ import {
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
-import { asDatetimeString } from '@atproto/lex'
+import { asDatetimeString } from '@atproto/lex-schema'
 import { com, tools } from '../src/lexicons/index.js'
 import { createReportActivity } from '../src/report/activity.js'
 import {

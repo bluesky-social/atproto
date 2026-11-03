@@ -8,7 +8,7 @@ import type * as undici from 'undici'
 import { KmsKeypair, S3BlobStore } from '@atproto/aws'
 import * as crypto from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
-import { Client } from '@atproto/lex'
+import { Client } from '@atproto/lex-client'
 import { parseCid } from '@atproto/lex-data'
 import {
   AccessTokenMode,

@@ -24,13 +24,11 @@ import {
   type ExactRecordKey,
   ExternalHydrator,
   type ExternalRecord,
+  type ExternalRecords,
   type ExternalRecordsByRef,
-  type SiteStandardDocument,
-  type SiteStandardDocuments,
-  type SiteStandardPublication,
-  type SiteStandardPublications,
   genericRecordKey,
-  getSiteStandardRecordsFromHydrationMapsByRefs,
+  getExternalRootRef,
+  getSiteStandardRecordsFromRefs,
   parseGenericRecordKey,
 } from './external.js'
 import { HydrationMap, type ItemRef } from './util.js'
@@ -45,58 +43,6 @@ const otherPubUri = `at://${otherPubDid}/site.standard.publication/self`
 
 const docCid = 'bafydoc'
 const pubCid = 'bafypub'
-
-const makeDocInfo = (
-  record: { site: string; path?: string; title?: string },
-  cid = docCid,
-): SiteStandardDocument =>
-  ({
-    record,
-    cid,
-    sortedAt: new Date(0),
-    indexedAt: new Date(0),
-    takedownRef: undefined,
-  }) as unknown as SiteStandardDocument
-
-const makePubInfo = (
-  record: { url: string; name?: string },
-  cid = pubCid,
-): SiteStandardPublication =>
-  ({
-    record,
-    cid,
-    sortedAt: new Date(0),
-    indexedAt: new Date(0),
-    takedownRef: undefined,
-  }) as unknown as SiteStandardPublication
-
-const makeDocuments = (
-  entries: [
-    uri: AtUriString,
-    cid: string,
-    info: SiteStandardDocument | null,
-  ][] = [],
-): SiteStandardDocuments => {
-  const map: SiteStandardDocuments = new HydrationMap()
-  for (const [uri, cid, info] of entries) {
-    map.set(genericRecordKey({ uri, cid }), info)
-  }
-  return map
-}
-
-const makePublications = (
-  entries: [
-    uri: AtUriString,
-    cid: string,
-    info: SiteStandardPublication | null,
-  ][] = [],
-): SiteStandardPublications => {
-  const map: SiteStandardPublications = new HydrationMap()
-  for (const [uri, cid, info] of entries) {
-    map.set(genericRecordKey({ uri, cid }), info)
-  }
-  return map
-}
 
 describe(genericRecordKey, () => {
   it('keys latest lookups by URI and exact lookups by uri@cid', () => {
@@ -151,129 +97,193 @@ describe(parseGenericRecordKey, () => {
   })
 })
 
-describe(getSiteStandardRecordsFromHydrationMapsByRefs, () => {
-  it('returns both slots when refs resolve and doc.site matches the publication', () => {
-    const docs = makeDocuments([
-      [docUri, docCid, makeDocInfo({ site: pubUri })],
-    ])
-    const pubs = makePublications([
-      [pubUri, pubCid, makePubInfo({ url: 'https://example.com' })],
-    ])
-    const { document, publication } =
-      getSiteStandardRecordsFromHydrationMapsByRefs(
-        [
-          { uri: docUri, cid: docCid },
-          { uri: pubUri, cid: pubCid },
-        ],
-        docs,
-        pubs,
-      )
-    expect(document?.ref).toEqual({ uri: docUri, cid: docCid })
-    expect(publication?.ref).toEqual({ uri: pubUri, cid: pubCid })
+describe(getExternalRootRef, () => {
+  const doc = { uri: docUri as AtUriString, cid: docCid }
+  const pub = { uri: pubUri as AtUriString, cid: pubCid }
+  const other = {
+    uri: 'at://did:plc:a/app.example.thing/1' as AtUriString,
+    cid: 'other',
+  }
+
+  test.each([
+    { refs: [doc, pub], expected: doc },
+    { refs: [pub, doc], expected: doc },
+    { refs: [pub], expected: pub },
+    { refs: [other, doc], expected: other },
+    { refs: [pub, other, doc], expected: pub },
+    { refs: [], expected: undefined },
+    { refs: undefined, expected: undefined },
+  ])('selects one root from $refs', ({ refs, expected }) => {
+    expect(getExternalRootRef(refs)).toBe(expected)
   })
 
-  it('rejects the whole pair when doc.site does not match the resolved publication', () => {
-    const docs = makeDocuments([
-      [docUri, docCid, makeDocInfo({ site: otherPubUri })],
-    ])
-    const pubs = makePublications([
-      [pubUri, pubCid, makePubInfo({ url: 'https://example.com' })],
-    ])
-    const result = getSiteStandardRecordsFromHydrationMapsByRefs(
-      [
-        { uri: docUri, cid: docCid },
-        { uri: pubUri, cid: pubCid },
-      ],
-      docs,
-      pubs,
-    )
-    expect(result).toEqual({ document: undefined, publication: undefined })
+  it('does not inspect the second ref after a document or the tail after a legacy pair', () => {
+    const refs = [doc]
+    Object.defineProperty(refs, 1, {
+      get() {
+        throw new Error('second ref inspected')
+      },
+    })
+    expect(getExternalRootRef(refs)).toBe(doc)
+    const legacy = [pub, doc]
+    Object.defineProperty(legacy, 2, {
+      get() {
+        throw new Error('tail inspected')
+      },
+    })
+    expect(getExternalRootRef(legacy)).toBe(doc)
   })
 
-  it('rejects the whole pair when doc declares an at-uri site but no publication ref was supplied', () => {
-    const docs = makeDocuments([
-      [docUri, docCid, makeDocInfo({ site: pubUri })],
-    ])
-    const pubs = makePublications()
-    const result = getSiteStandardRecordsFromHydrationMapsByRefs(
-      [{ uri: docUri, cid: docCid }],
-      docs,
-      pubs,
-    )
-    expect(result).toEqual({ document: undefined, publication: undefined })
-  })
-
-  it('returns only the doc when site is a web URL (loose doc)', () => {
-    const docs = makeDocuments([
-      [docUri, docCid, makeDocInfo({ site: 'https://example.com' })],
-    ])
-    const pubs = makePublications()
-    const { document, publication } =
-      getSiteStandardRecordsFromHydrationMapsByRefs(
-        [{ uri: docUri, cid: docCid }],
-        docs,
-        pubs,
-      )
-    expect(document?.ref).toEqual({ uri: docUri, cid: docCid })
-    expect(publication).toBeUndefined()
-  })
-
-  it('returns only the publication when no doc ref is supplied', () => {
-    const docs = makeDocuments()
-    const pubs = makePublications([
-      [pubUri, pubCid, makePubInfo({ url: 'https://example.com' })],
-    ])
-    const { document, publication } =
-      getSiteStandardRecordsFromHydrationMapsByRefs(
-        [{ uri: pubUri, cid: pubCid }],
-        docs,
-        pubs,
-      )
-    expect(document).toBeUndefined()
-    expect(publication?.ref).toEqual({ uri: pubUri, cid: pubCid })
-  })
-
-  it('returns nothing when the version-exact lookup misses', () => {
-    // Doc indexed at one cid; ref points at a different cid.
-    const docs = makeDocuments([
-      [docUri, docCid, makeDocInfo({ site: pubUri })],
-    ])
-    const pubs = makePublications()
-    const result = getSiteStandardRecordsFromHydrationMapsByRefs(
-      [{ uri: docUri, cid: 'bafy-different' }],
-      docs,
-      pubs,
-    )
-    expect(result).toEqual({ document: undefined, publication: undefined })
-  })
-
-  it('returns nothing when associatedRefs is empty or undefined', () => {
-    const docs = makeDocuments([
-      [docUri, docCid, makeDocInfo({ site: pubUri })],
-    ])
-    const pubs = makePublications([
-      [pubUri, pubCid, makePubInfo({ url: 'https://example.com' })],
-    ])
+  test.each([
+    { uri: doc.uri, cid: '' },
+    { uri: 'at://example.com/site.standard.document/1', cid: doc.cid },
+    { uri: doc.uri + '?query', cid: doc.cid },
+    { uri: doc.uri + '#fragment', cid: doc.cid },
+    { uri: 'at://did:plc:a', cid: doc.cid },
+  ])('does not skip an invalid root to hydrate later refs: $uri', (invalid) => {
     expect(
-      getSiteStandardRecordsFromHydrationMapsByRefs([], docs, pubs),
-    ).toEqual({ document: undefined, publication: undefined })
-    expect(
-      getSiteStandardRecordsFromHydrationMapsByRefs(undefined, docs, pubs),
-    ).toEqual({ document: undefined, publication: undefined })
-  })
-
-  it('skips null entries (taken-down records) and reports them as misses', () => {
-    const docs = makeDocuments([[docUri, docCid, null]])
-    const pubs = makePublications()
-    const result = getSiteStandardRecordsFromHydrationMapsByRefs(
-      [{ uri: docUri, cid: docCid }],
-      docs,
-      pubs,
-    )
-    expect(result).toEqual({ document: undefined, publication: undefined })
+      getExternalRootRef([
+        { ...invalid, uri: invalid.uri as AtUriString },
+        doc,
+      ]),
+    ).toBeUndefined()
   })
 })
 
+describe(getSiteStandardRecordsFromRefs, () => {
+  const docRef = { uri: docUri as AtUriString, cid: docCid }
+  const pubRef = { uri: pubUri as AtUriString, cid: pubCid }
+  const doc = site.standard.document.$build({
+    site: pubRef.uri,
+    path: '/post',
+    title: 'Document',
+    publishedAt: '2026-10-01T00:00:00.000Z',
+  })
+  const pub = site.standard.publication.$build({
+    url: 'https://example.com',
+    name: 'Latest',
+  })
+  const info = (record: object, cid: string): ExternalRecord => ({
+    record: record as ExternalRecord['record'],
+    cid,
+    sortedAt: new Date(0),
+    indexedAt: new Date(0),
+    takedownRef: undefined,
+  })
+  const state = () => ({
+    roots: new HydrationMap([
+      [genericRecordKey(docRef), info(doc, docCid)],
+      [genericRecordKey(pubRef), info({ ...pub, name: 'Pinned' }, pubCid)],
+    ]) as ExternalRecordsByRef,
+    dependencies: new HydrationMap([
+      [pubRef.uri, info(pub, 'latest-pub')],
+    ]) as ExternalRecords,
+  })
+  const empty = { document: undefined, publication: undefined }
+
+  it.each([[docRef, pubRef], [pubRef, docRef], [docRef]])(
+    'selects the pinned document and its derived publication for %j',
+    (...refs) => {
+      const { roots, dependencies } = state()
+      const out = getSiteStandardRecordsFromRefs(refs, roots, dependencies)
+      expect(out.document?.ref).toEqual(docRef)
+      expect(out.document?.info.record).toBe(doc)
+      expect(out.publication?.ref).toEqual({
+        uri: pubRef.uri,
+        cid: 'latest-pub',
+      })
+      expect(out.publication?.info.record.name).toBe('Latest')
+    },
+  )
+
+  it('ignores a discarded publication, including its URI and version', () => {
+    const { roots, dependencies } = state()
+    const out = getSiteStandardRecordsFromRefs(
+      [docRef, { uri: otherPubUri as AtUriString, cid: 'wrong' }],
+      roots,
+      dependencies,
+    )
+    expect(out.document?.ref).toEqual(docRef)
+    expect(out.publication?.ref.uri).toBe(pubRef.uri)
+  })
+
+  it('reads a publication root exactly, not from latest dependencies', () => {
+    const { roots, dependencies } = state()
+    expect(
+      getSiteStandardRecordsFromRefs([pubRef], roots, dependencies).publication
+        ?.info.record.name,
+    ).toBe('Pinned')
+    roots.set(genericRecordKey(pubRef), null)
+    expect(
+      getSiteStandardRecordsFromRefs([pubRef], roots, dependencies),
+    ).toEqual(empty)
+  })
+
+  it('never falls back from an unavailable document to another version or authored publication', () => {
+    const { roots, dependencies } = state()
+    roots.set(genericRecordKey(docRef), null)
+    roots.set(genericRecordKey({ ...docRef, cid: 'newer' }), info(doc, 'newer'))
+    for (const refs of [
+      [docRef, pubRef],
+      [pubRef, docRef],
+    ]) {
+      expect(getSiteStandardRecordsFromRefs(refs, roots, dependencies)).toEqual(
+        empty,
+      )
+    }
+  })
+
+  it('requires an available, schema-valid publication dependency for an AT-site document', () => {
+    const { roots, dependencies } = state()
+    expect(getSiteStandardRecordsFromRefs([docRef], roots)).toEqual(empty)
+    dependencies.set(pubRef.uri, null)
+    expect(
+      getSiteStandardRecordsFromRefs([docRef], roots, dependencies),
+    ).toEqual(empty)
+    dependencies.set(pubRef.uri, info(doc, 'wrong-type'))
+    expect(
+      getSiteStandardRecordsFromRefs([docRef], roots, dependencies),
+    ).toEqual(empty)
+    roots.set(genericRecordKey(docRef), info(pub, docCid))
+    expect(
+      getSiteStandardRecordsFromRefs([docRef], roots, dependencies),
+    ).toEqual(empty)
+  })
+
+  it('allows a loose URL document without a publication', () => {
+    const { roots } = state()
+    roots.set(
+      genericRecordKey(docRef),
+      info({ ...doc, site: 'https://example.com' }, docCid),
+    )
+    const out = getSiteStandardRecordsFromRefs([docRef], roots)
+    expect(out.document?.ref).toEqual(docRef)
+    expect(out.publication).toBeUndefined()
+  })
+
+  it('does not scan for a Standard.site root behind another collection', () => {
+    const { roots, dependencies } = state()
+    expect(
+      getSiteStandardRecordsFromRefs(
+        [
+          {
+            uri: 'at://did:plc:a/app.example.thing/1' as AtUriString,
+            cid: 'other',
+          },
+          docRef,
+        ],
+        roots,
+        dependencies,
+      ),
+    ).toEqual(empty)
+    expect(getSiteStandardRecordsFromRefs([], roots, dependencies)).toEqual(
+      empty,
+    )
+    expect(
+      getSiteStandardRecordsFromRefs(undefined, roots, dependencies),
+    ).toEqual(empty)
+  })
+})
 describe(ExternalHydrator, () => {
   const dataplane = createPromiseClient(
     Service,
@@ -672,6 +682,101 @@ describe(ExternalHydrator, () => {
     },
   )
 
+  describe('bounded backlink count requests', () => {
+    const limit = 100
+    const uriOf = (i: number): AtUriString =>
+      `at://${docDid}/${collection}/r${i}`
+    const uriList = (count: number) =>
+      Array.from({ length: count }, (_, i) => uriOf(i))
+    // Every target gets a distinct count, except one zero and one empty entry.
+    const countOf = (uri: string) => Number(uri.split('/r').pop()) + 1
+    const respond = (uris: string[]) =>
+      new GetAtmosphereBacklinkCountsResponse({
+        results: uris.map((targetUri) => {
+          const n = countOf(targetUri)
+          if (n === 2) return { targetUri }
+          return {
+            targetUri,
+            counts: { [collection]: n === 3 ? 0n : BigInt(n) },
+          }
+        }),
+      })
+    // Enforces the dataplane's 1-100 limit and records overlapping requests.
+    const mockCounts = () => {
+      const state = { inFlight: 0, maxInFlight: 0 }
+      const spy = vi
+        .spyOn(dataplane, 'getAtmosphereBacklinkCounts')
+        .mockImplementation(async ({ targetUris = [] }) => {
+          state.maxInFlight = Math.max(state.maxInFlight, ++state.inFlight)
+          try {
+            await new Promise((resolve) => setImmediate(resolve))
+            if (targetUris.length < 1 || targetUris.length > limit) {
+              throw new ConnectError(
+                `between 1 and ${limit} target URIs are required`,
+                Code.InvalidArgument,
+              )
+            }
+            return respond(targetUris)
+          } finally {
+            state.inFlight--
+          }
+        })
+      return { spy, state }
+    }
+
+    test.each([
+      { count: 0, requests: [] },
+      { count: 100, requests: [100] },
+      { count: 101, requests: [100, 1] },
+      { count: 205, requests: [100, 100, 5] },
+    ])('fetches counts for $count targets', async ({ count, requests }) => {
+      const input = uriList(count)
+      const { spy, state } = mockCounts()
+      using _ = spy
+      const result = await hydrator.getAtmosphereBacklinkCounts(
+        input,
+        collection,
+      )
+
+      const calls = spy.mock.calls.map(([req]) => req)
+      expect(calls.map((req) => req.targetUris?.length)).toEqual(requests)
+      expect(calls.flatMap((req) => req.targetUris ?? [])).toEqual(input)
+      for (const req of calls) expect(req.collection).toBe(collection)
+      expect(state.maxInFlight).toBeLessThanOrEqual(1)
+
+      expect([...result.keys()]).toEqual(input)
+      for (const uri of input) {
+        const n = countOf(uri)
+        expect(result.get(uri)).toEqual(
+          n === 2 ? {} : { [collection]: n === 3 ? 0 : n },
+        )
+      }
+    })
+
+    it('forwards an omitted collection on every chunk', async () => {
+      const { spy } = mockCounts()
+      using _ = spy
+      await hydrator.getAtmosphereBacklinkCounts(uriList(101))
+      expect(spy.mock.calls.map(([req]) => req.collection)).toEqual([
+        undefined,
+        undefined,
+      ])
+    })
+
+    it('rejects the whole call without later requests when a chunk fails', async () => {
+      const error = new Error('dataplane unavailable')
+      const { spy } = mockCounts()
+      using _ = spy
+      spy
+        .mockImplementationOnce(spy.getMockImplementation()!)
+        .mockRejectedValueOnce(error)
+      await expect(
+        hydrator.getAtmosphereBacklinkCounts(uriList(205), collection),
+      ).rejects.toThrow(error)
+      expect(spy).toHaveBeenCalledTimes(2)
+    })
+  })
+
   describe('bounded generic record requests', () => {
     // The dataplane's request limit, enforced by every stub below.
     const limit = 100
@@ -871,93 +976,6 @@ describe(ExternalHydrator, () => {
         error,
       )
       expect(byRef).toHaveBeenCalledTimes(2)
-    })
-  })
-})
-
-describe('ExternalHydrator site.standard lookups', () => {
-  const dataplane = createPromiseClient(
-    Service,
-    createRouterTransport(() => {}),
-  )
-  const hydrator = new ExternalHydrator(dataplane)
-
-  const doc = site.standard.document.$build({
-    site: pubUri,
-    path: '/post',
-    title: 'Document',
-    publishedAt: '2026-10-01T00:00:00.000Z',
-  })
-  const pub = site.standard.publication.$build({
-    url: 'https://example.com',
-    name: 'Publication',
-  })
-  const found = (uri: AtUriString, cid: string, body: object) => ({
-    ref: { uri, cid },
-    status: RecordLookupStatus.FOUND,
-    record: { cid, record: Buffer.from(lexStringify(body)) },
-  })
-  const notFound = (uri: AtUriString) => ({
-    ref: { uri },
-    status: RecordLookupStatus.NOT_FOUND,
-  })
-  const key = (uri: AtUriString, cid: string) => genericRecordKey({ uri, cid })
-
-  describe('getSiteStandardRecordsByRef', () => {
-    it('short-circuits when no refs are site.standard records with a cid', async () => {
-      using byRef = vi.spyOn(dataplane, 'getRecordsByRef')
-      const res = await hydrator.getSiteStandardRecordsByRef([
-        { uri: 'at://did:plc:a/app.bsky.feed.post/1' as AtUriString, cid: 'x' },
-        { uri: docUri },
-      ])
-      expect(res.documents.size).toBe(0)
-      expect(byRef).not.toHaveBeenCalled()
-    })
-
-    it('hydrates exact versions into the matching maps', async () => {
-      const refs: ItemRef[] = [
-        { uri: docUri, cid: docCid },
-        { uri: pubUri, cid: pubCid },
-      ]
-      using byRef = vi.spyOn(dataplane, 'getRecordsByRef').mockResolvedValue(
-        new GetRecordsByRefResponse({
-          results: [found(docUri, docCid, doc), found(pubUri, pubCid, pub)],
-        }),
-      )
-      const res = await hydrator.getSiteStandardRecordsByRef(refs)
-      expect(byRef).toHaveBeenCalledExactlyOnceWith({ refs })
-      expect(res.documents.get(key(docUri, docCid))?.record).toEqual(doc)
-      expect(res.publications.get(key(pubUri, pubCid))?.record).toEqual(pub)
-    })
-
-    it('does not fetch a document-referenced publication that was not pinned', async () => {
-      using byRef = vi.spyOn(dataplane, 'getRecordsByRef').mockResolvedValue(
-        new GetRecordsByRefResponse({
-          results: [found(docUri, docCid, doc)],
-        }),
-      )
-      const res = await hydrator.getSiteStandardRecordsByRef([
-        { uri: docUri, cid: docCid },
-      ])
-      expect(byRef).toHaveBeenCalledOnce()
-      expect(res.publications.size).toBe(0)
-    })
-
-    it('records missing and invalid versions as null', async () => {
-      using _ = vi.spyOn(dataplane, 'getRecordsByRef').mockResolvedValue(
-        new GetRecordsByRefResponse({
-          results: [
-            notFound(docUri),
-            found(pubUri, pubCid, { ...pub, name: 42 }),
-          ],
-        }),
-      )
-      const res = await hydrator.getSiteStandardRecordsByRef([
-        { uri: docUri, cid: docCid },
-        { uri: pubUri, cid: pubCid },
-      ])
-      expect(res.documents.get(key(docUri, docCid))).toBeNull()
-      expect(res.publications.get(key(pubUri, pubCid))).toBeNull()
     })
   })
 })

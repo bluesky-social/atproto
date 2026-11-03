@@ -1,4 +1,4 @@
-import type { DatetimeString, DidString } from '@atproto/lex'
+import type { DatetimeString, DidString } from '@atproto/lex-schema'
 
 export const inboxSeenTableName = 'inbox_seen'
 

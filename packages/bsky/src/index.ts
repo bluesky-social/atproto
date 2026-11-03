@@ -9,7 +9,7 @@ import { type HttpTerminator, createHttpTerminator } from 'http-terminator'
 import { DAY, SECOND } from '@atproto/common'
 import type { Keypair } from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
-import { Client } from '@atproto/lex'
+import { Client } from '@atproto/lex-client'
 import { createServer } from '@atproto/xrpc-server'
 import { safeFetchWrap } from '@atproto-labs/fetch-node'
 import { createBlobDispatcher } from './api/blob-dispatcher.js'
@@ -141,29 +141,11 @@ export class BskyAppView {
         )
       : undefined
 
-    // @NOTE These bound the connection phase (TCP + TLS) only; once connected,
-    // the request is not bounded here. They are kept for the lifetime of the
+    // @NOTE This bounds the connection phase (TCP + TLS) only; once connected,
+    // the request is not bounded here. It is kept for the lifetime of the
     // service (pooling connections), and closed on `destroy()`.
-    // An unused agent holds no socket, so they can be built unconditionally.
-    const topicsDispatcher = createUndiciAgent({ connectTimeout: SECOND })
+    // An unused agent holds no socket, so it can be built unconditionally.
     const irisDispatcher = createUndiciAgent({ connectTimeout: SECOND })
-
-    const topicsClient = config.topicsUrl
-      ? new Client(
-          {
-            service: config.topicsUrl,
-            headers: config.topicsApiKey
-              ? { authorization: `Bearer ${config.topicsApiKey}` }
-              : undefined,
-            fetch: dispatcherFetch(topicsDispatcher),
-          },
-          {
-            // Trust internal services to send us well-formed responses
-            strictResponseProcessing: false,
-            validateResponse: config.debugMode,
-          },
-        )
-      : undefined
 
     const irisClient = config.irisUrl
       ? new Client(
@@ -256,16 +238,12 @@ export class BskyAppView {
     const entrywayJwtPublicKey = config.entrywayJwtPublicKeyHex
       ? createPublicKeyObject(config.entrywayJwtPublicKeyHex)
       : undefined
-    const bffJwtSecret = config.bffJwtSecret
-      ? Buffer.from(config.bffJwtSecret, 'utf8')
-      : undefined
     const authVerifier = new AuthVerifier(dataplane, {
       ownDid: config.serverDid,
       alternateAudienceDids: config.alternateAudienceDids,
       modServiceDid: config.modServiceDid,
       adminPasses: config.adminPasswords,
       entrywayJwtPublicKey,
-      bffJwtSecret,
     })
 
     const blobDispatcher = createBlobDispatcher(config)
@@ -290,7 +268,6 @@ export class BskyAppView {
       dataplaneHostList,
       searchClient,
       suggestionsClient,
-      topicsClient,
       irisClient,
       hydrator,
       views,
@@ -334,7 +311,7 @@ export class BskyAppView {
     return new BskyAppView({
       ctx,
       app,
-      dispatchers: [topicsDispatcher, irisDispatcher],
+      dispatchers: [irisDispatcher],
     })
   }
 

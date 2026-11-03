@@ -971,8 +971,8 @@
       "cid": "bafyreial4vi2raxz7nfbwovdx6m4pdlb5hnpf37teistounxjxe6svbdsi"
     },
     "app.bsky.unspecced.getAtmosphereExploreTab": {
-      "uri": "https://raw.githubusercontent.com/bluesky-social/bsky/refs/heads/main/lexicons/app/bsky/unspecced/getAtmosphereExploreTab.json",
-      "cid": "bafyreiez66qb7byto44nzivpn27ykzdgilgpuqogeusypl3mln7wicjnry"
+      "uri": "file://../../lexicons-overrides/app/bsky/unspecced/getAtmosphereExploreTab.json",
+      "cid": "bafyreihmakoqnaakyhoyxay2hdlshccakqocrvdpwafuxku52bd6ptvj7q"
     },
     "app.bsky.unspecced.getConfig": {
       "uri": "https://raw.githubusercontent.com/bluesky-social/bsky/refs/heads/main/lexicons/app/bsky/unspecced/getConfig.json",

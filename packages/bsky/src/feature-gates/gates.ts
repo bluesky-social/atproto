@@ -4,7 +4,6 @@
  * defined.
  */
 export enum Gate {
-  SuggestedUsersDiscoverEnable = 'suggested_users:discover_agent:enable',
   SuggestedUsersSocialProofEnable = 'suggested_users:social_proof:enable',
   ThreadsReplyRankingExplorationEnable = 'threads:reply_ranking_exploration:enable',
   SearchFilteringExplorationEnable = 'search:filtering_exploration:enable',
@@ -22,9 +21,6 @@ export enum Gate {
   IrisFeedFollowpicsEnable = 'iris:feed:followpics:enable',
   IrisFeedLoggedOutEnable = 'iris:feed:logged_out:enable',
   KnownLikersFeedEnable = 'known_likers:feed:enable',
-  SuggestedFeedsV2Enable = 'suggested_feeds_v2:enable',
-  SuggestedStarterPacksV2Enable = 'suggested_starter_packs_v2:enable',
-  SuggestedStarterPacksOnboardingV2Enable = 'suggested_starter_packs_onboarding_v2:enable',
   AtmosphereScreenEndpointsEnable = 'atmosphere_screen_endpoints:enable',
   AtmosphereExploreArticlesIrisEnable = 'atmosphere_explore:articles:iris:enable',
 

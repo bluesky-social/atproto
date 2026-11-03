@@ -32,6 +32,7 @@ export default function (server: Server, ctx: AppContext) {
       const { viewer, includeTakedowns, skipViewerBlocks } =
         ctx.authVerifier.parseCreds(auth)
       const hydrateCtx = await ctx.hydrator.createContext({
+        xrpcEndpoint: app.bsky.graph.getLists.$lxm,
         labelers,
         viewer,
         includeTakedowns,

@@ -1,5 +1,6 @@
 import { mapDefined, noUndefinedVals } from '@atproto/common'
-import type { Client, DidString } from '@atproto/lex'
+import type { Client } from '@atproto/lex-client'
+import type { DidString } from '@atproto/lex-schema'
 import {
   type Headers as HeadersMap,
   InternalServerError,
@@ -33,6 +34,7 @@ export default function (server: Server, ctx: AppContext) {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({
+        xrpcEndpoint: app.bsky.graph.getSuggestedFollowsByActor.$lxm,
         labelers,
         viewer,
         features: ctx.featureGatesClient.scope(

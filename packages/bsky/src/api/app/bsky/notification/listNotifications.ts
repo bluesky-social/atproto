@@ -41,7 +41,11 @@ export default function (server: Server, ctx: AppContext) {
       }
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
-      const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
+      const hydrateCtx = await ctx.hydrator.createContext({
+        labelers,
+        viewer,
+        xrpcEndpoint: app.bsky.notification.listNotifications.$lxm,
+      })
 
       const lastSeenRes = await ctx.hydrator.dataplane.getNotificationSeen({
         actorDid: viewer,

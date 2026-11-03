@@ -1,5 +1,28 @@
 # @atproto/sync
 
+## 0.4.21
+
+### Patch Changes
+
+- [#5786](https://github.com/bluesky-social/atproto/pull/5786) [`07c25d4`](https://github.com/bluesky-social/atproto/commit/07c25d410d4f4ad8f6ec80fc14efa0dd8ec55545) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Depend on the `@atproto/lex-*` packages that `@atproto/lex` re-exports instead of `@atproto/lex`, which also installs the lexicon codegen tooling
+- Updated dependencies [[`07c25d4`](https://github.com/bluesky-social/atproto/commit/07c25d410d4f4ad8f6ec80fc14efa0dd8ec55545), [`07c25d4`](https://github.com/bluesky-social/atproto/commit/07c25d410d4f4ad8f6ec80fc14efa0dd8ec55545)]:
+  - @atproto/lex-data@0.1.9
+  - @atproto/lex-schema@0.2.10
+  - @atproto/xrpc-server@0.13.8
+  - @atproto/common@0.8.8
+  - @atproto/repo@0.11.3
+  - @atproto/identity@0.5.21
+
+## 0.4.20
+
+### Patch Changes
+
+- Updated dependencies [[`3bfd00f`](https://github.com/bluesky-social/atproto/commit/3bfd00f484dc144482c82a4ed248adc49e6be769), [`3bfd00f`](https://github.com/bluesky-social/atproto/commit/3bfd00f484dc144482c82a4ed248adc49e6be769), [`3bfd00f`](https://github.com/bluesky-social/atproto/commit/3bfd00f484dc144482c82a4ed248adc49e6be769), [`3bfd00f`](https://github.com/bluesky-social/atproto/commit/3bfd00f484dc144482c82a4ed248adc49e6be769), [`3bfd00f`](https://github.com/bluesky-social/atproto/commit/3bfd00f484dc144482c82a4ed248adc49e6be769)]:
+  - @atproto/common@0.8.7
+  - @atproto/xrpc-server@0.13.7
+  - @atproto/repo@0.11.2
+  - @atproto/lex@0.4.4
+
 ## 0.4.19
 
 ### Patch Changes

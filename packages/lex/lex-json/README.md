@@ -7,7 +7,7 @@ JSON encoding and decoding for the AT Protocol [data model](https://atproto.com/
 
 Provides `lexParse` / `lexStringify` to go between JSON strings and data-model values, and `jsonToLex` / `lexToJson` to convert already-parsed JSON objects. For the CBOR codec used by repository storage, see [`@atproto/lex-cbor`](https://github.com/bluesky-social/atproto/tree/main/packages/lex/lex-cbor).
 
-This is a building block of [`@atproto/lex`](https://github.com/bluesky-social/atproto/tree/main/packages/lex/lex), which re-exports it — prefer depending on that package.
+This is a building block of [`@atproto/lex`](https://github.com/bluesky-social/atproto/tree/main/packages/lex/lex), which re-exports it. Depend on this package directly unless your code is bundled — see the `@atproto/lex` [Installation](https://github.com/bluesky-social/atproto/tree/main/packages/lex/lex#installation) section.
 
 ## License
 

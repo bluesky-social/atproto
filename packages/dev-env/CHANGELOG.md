@@ -1,5 +1,57 @@
 # @atproto/dev-env
 
+## 0.7.2
+
+### Patch Changes
+
+- [#5786](https://github.com/bluesky-social/atproto/pull/5786) [`07c25d4`](https://github.com/bluesky-social/atproto/commit/07c25d410d4f4ad8f6ec80fc14efa0dd8ec55545) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Depend on the `@atproto/lex-*` packages that `@atproto/lex` re-exports instead of `@atproto/lex`, which also installs the lexicon codegen tooling
+- Updated dependencies [[`ee68c93`](https://github.com/bluesky-social/atproto/commit/ee68c9389ebec337d6af37fe373cfb506184040e), [`86c0b36`](https://github.com/bluesky-social/atproto/commit/86c0b362c5a044b8ca3a380438ae09735b3cf16e), [`07c25d4`](https://github.com/bluesky-social/atproto/commit/07c25d410d4f4ad8f6ec80fc14efa0dd8ec55545), [`7aa8e7e`](https://github.com/bluesky-social/atproto/commit/7aa8e7e9e1422f053447879def4d4cf92a05adbb), [`34dbe24`](https://github.com/bluesky-social/atproto/commit/34dbe242ce104b824e195862f97c6a250b444d18), [`7aa8e7e`](https://github.com/bluesky-social/atproto/commit/7aa8e7e9e1422f053447879def4d4cf92a05adbb), [`d38661d`](https://github.com/bluesky-social/atproto/commit/d38661dacd8afb19a2eb87eb8aa7e40656b37c92), [`07c25d4`](https://github.com/bluesky-social/atproto/commit/07c25d410d4f4ad8f6ec80fc14efa0dd8ec55545), [`799d2b9`](https://github.com/bluesky-social/atproto/commit/799d2b9e65845e1ff484717a933d16b069ba267e), [`11f52c5`](https://github.com/bluesky-social/atproto/commit/11f52c5588279d159ab12404a1b323731a467fdd), [`07c25d4`](https://github.com/bluesky-social/atproto/commit/07c25d410d4f4ad8f6ec80fc14efa0dd8ec55545)]:
+  - @atproto/pds@0.5.53
+  - @atproto/bsky@0.5.1
+  - @atproto/lex-client@0.4.1
+  - @atproto/lex-schema@0.2.10
+  - @atproto/ozone@0.12.1
+  - @atproto/sync@0.4.21
+  - @atproto/api@0.30.1
+  - @atproto/xrpc-server@0.13.8
+  - @atproto/common-web@0.5.16
+  - @atproto/identity@0.5.21
+  - @atproto/bsync@0.1.7
+  - @atproto/lexicon@0.7.18
+
+## 0.7.1
+
+### Patch Changes
+
+- Updated dependencies [[`8060c82`](https://github.com/bluesky-social/atproto/commit/8060c82624aae800ce030d2c2096771c77e1fcad), [`bbfb9ce`](https://github.com/bluesky-social/atproto/commit/bbfb9ce8e9ed56380c766b66249d4c6b20b5f1a5), [`c2b5ce3`](https://github.com/bluesky-social/atproto/commit/c2b5ce39ebf1c33857595340a87551800689e8fd), [`e040958`](https://github.com/bluesky-social/atproto/commit/e0409585e6c5a82fd3fd0197c9d54fca74708bf7), [`a2dd244`](https://github.com/bluesky-social/atproto/commit/a2dd244d6072216735198db5777909d014b0638e), [`cde5838`](https://github.com/bluesky-social/atproto/commit/cde58383753aaf31f25c088e1219bc3378089a44), [`d6e1945`](https://github.com/bluesky-social/atproto/commit/d6e1945e095da70e0b188d5c6684a5797ce9ee8c), [`8562b17`](https://github.com/bluesky-social/atproto/commit/8562b172775167593fdf4d82cf4e0242d9d0189b), [`861d677`](https://github.com/bluesky-social/atproto/commit/861d677b6e908c7fd3f7f83a6d8dfed9c68896da), [`bbfb9ce`](https://github.com/bluesky-social/atproto/commit/bbfb9ce8e9ed56380c766b66249d4c6b20b5f1a5), [`d6e1945`](https://github.com/bluesky-social/atproto/commit/d6e1945e095da70e0b188d5c6684a5797ce9ee8c), [`15aacf4`](https://github.com/bluesky-social/atproto/commit/15aacf4299dc84a650d906e3aa6e82bde1b828d8)]:
+  - @atproto/bsky@0.5.0
+  - @atproto/ozone@0.12.0
+  - @atproto/api@0.30.0
+
+## 0.7.0
+
+### Minor Changes
+
+- [#5748](https://github.com/bluesky-social/atproto/pull/5748) [`87faedd`](https://github.com/bluesky-social/atproto/commit/87faeddd9cc708e520e3c9e1d2c0486e84a1b931) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Group new-post notifications across accounts in All while keeping individual posts separate in Activity.
+  
+  Add a notification grouping compute-time histogram with sub-millisecond buckets and an algorithm label.
+  
+  Track the number of dataplane notification fetches per grouped notifications response.
+  
+  Rename `notificationsV2MaxReads` to `notificationsV2MaxFetches` and `BSKY_NOTIFICATIONS_V2_MAX_READS` to `BSKY_NOTIFICATIONS_V2_MAX_FETCHES`.
+
+### Patch Changes
+
+- Updated dependencies [[`3bfd00f`](https://github.com/bluesky-social/atproto/commit/3bfd00f484dc144482c82a4ed248adc49e6be769), [`87faedd`](https://github.com/bluesky-social/atproto/commit/87faeddd9cc708e520e3c9e1d2c0486e84a1b931), [`54f54ea`](https://github.com/bluesky-social/atproto/commit/54f54ea831f37fe9f722844177f7e1bed8ae8bdc), [`6ed6fe3`](https://github.com/bluesky-social/atproto/commit/6ed6fe39dded20f1e8995042135fba83b31d7b26), [`03a76ee`](https://github.com/bluesky-social/atproto/commit/03a76ee15e4acc123dc45446fc7b6fa46ba0e64e), [`ea28612`](https://github.com/bluesky-social/atproto/commit/ea286121ab421e320bf70f7e5a5dbb82c4c8b15e), [`78b3e20`](https://github.com/bluesky-social/atproto/commit/78b3e206286a3a02ef6693f2a66b4fa234532fbd), [`1c8c3a3`](https://github.com/bluesky-social/atproto/commit/1c8c3a3a8ea27a060f38cda71172339aa1728113), [`3bfd00f`](https://github.com/bluesky-social/atproto/commit/3bfd00f484dc144482c82a4ed248adc49e6be769), [`b33e55b`](https://github.com/bluesky-social/atproto/commit/b33e55b4aa5e4b3b031a2830856300350d9ef798)]:
+  - @atproto/bsky@0.4.0
+  - @atproto/ozone@0.11.0
+  - @atproto/api@0.29.6
+  - @atproto/pds@0.5.52
+  - @atproto/bsync@0.1.6
+  - @atproto/xrpc-server@0.13.7
+  - @atproto/sync@0.4.20
+  - @atproto/lex@0.4.4
+
 ## 0.6.36
 
 ### Patch Changes

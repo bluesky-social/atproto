@@ -18,6 +18,7 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ params, req }) => {
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({
+        xrpcEndpoint: internal.bsky.actor.getProfiles.$lxm,
         viewer: params.viewer ?? null,
         labelers,
         includeTakedowns: params.includeTakedowns,

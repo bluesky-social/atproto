@@ -1,5 +1,55 @@
 # @atproto/ozone
 
+## 0.12.1
+
+### Patch Changes
+
+- [#5782](https://github.com/bluesky-social/atproto/pull/5782) [`7aa8e7e`](https://github.com/bluesky-social/atproto/commit/7aa8e7e9e1422f053447879def4d4cf92a05adbb) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Match TypeScript project references to workspace dependencies
+
+- [#5780](https://github.com/bluesky-social/atproto/pull/5780) [`d38661d`](https://github.com/bluesky-social/atproto/commit/d38661dacd8afb19a2eb87eb8aa7e40656b37c92) Thanks [@foysalit](https://github.com/foysalit)! - Reduce unnecessary report hydration in integration tests.
+
+- [#5786](https://github.com/bluesky-social/atproto/pull/5786) [`07c25d4`](https://github.com/bluesky-social/atproto/commit/07c25d410d4f4ad8f6ec80fc14efa0dd8ec55545) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Depend on the `@atproto/lex-*` packages that `@atproto/lex` re-exports instead of `@atproto/lex`, which also installs the lexicon codegen tooling
+- Updated dependencies [[`07c25d4`](https://github.com/bluesky-social/atproto/commit/07c25d410d4f4ad8f6ec80fc14efa0dd8ec55545), [`07c25d4`](https://github.com/bluesky-social/atproto/commit/07c25d410d4f4ad8f6ec80fc14efa0dd8ec55545)]:
+  - @atproto/lex-client@0.4.1
+  - @atproto/lex-data@0.1.9
+  - @atproto/lex-schema@0.2.10
+  - @atproto/xrpc-server@0.13.8
+  - @atproto-labs/fetch-node@0.4.4
+  - @atproto/common@0.8.8
+  - @atproto/lex-password-session@0.3.1
+  - @atproto/identity@0.5.21
+
+## 0.12.0
+
+### Minor Changes
+
+- [#5783](https://github.com/bluesky-social/atproto/pull/5783) [`d6e1945`](https://github.com/bluesky-social/atproto/commit/d6e1945e095da70e0b188d5c6684a5797ce9ee8c) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Keep `featured` as a required, deprecated compatibility field on `app.bsky.unspecced.getAtmosphereExploreTab` article, publication, photo, and livestream items; it is always `false`. Retired content scheduling no longer selects or orders articles, publications, and photos. Livestreams are shown from `previewAt` (or `startsAt`) until `endsAt`, and are reported inactive until `startsAt`. App cards now include an optional `profile` (`app.bsky.actor.defs#profileViewDetailed`) hydrated from the app's account, whose avatar and banner back `logo` and `backgroundImage`.
+
+### Patch Changes
+
+- [#5770](https://github.com/bluesky-social/atproto/pull/5770) [`c2b5ce3`](https://github.com/bluesky-social/atproto/commit/c2b5ce39ebf1c33857595340a87551800689e8fd) Thanks [@foysalit](https://github.com/foysalit)! - Allow configuring the blob diversion size limit, defaulting to 300 MiB.
+
+- [#5779](https://github.com/bluesky-social/atproto/pull/5779) [`a2dd244`](https://github.com/bluesky-social/atproto/commit/a2dd244d6072216735198db5777909d014b0638e) Thanks [@foysalit](https://github.com/foysalit)! - Include tag event durations in moderation event responses.
+
+## 0.11.0
+
+### Minor Changes
+
+- [#5756](https://github.com/bluesky-social/atproto/pull/5756) [`54f54ea`](https://github.com/bluesky-social/atproto/commit/54f54ea831f37fe9f722844177f7e1bed8ae8bdc) Thanks [@gcwill70](https://github.com/gcwill70)! - Protect assigned and escalated reports from broad moderation-event and batch report closure, including owned subjects.
+
+### Patch Changes
+
+- [#5757](https://github.com/bluesky-social/atproto/pull/5757) [`6ed6fe3`](https://github.com/bluesky-social/atproto/commit/6ed6fe39dded20f1e8995042135fba83b31d7b26) Thanks [@foysalit](https://github.com/foysalit)! - Allow new appeals when a moderation action follows a resolved appeal.
+
+- [#5750](https://github.com/bluesky-social/atproto/pull/5750) [`03a76ee`](https://github.com/bluesky-social/atproto/commit/03a76ee15e4acc123dc45446fc7b6fa46ba0e64e) Thanks [@gcwill70](https://github.com/gcwill70)! - Allow moderation events to succeed when reportAction.types matches no reports, while retaining strict validation for explicit report IDs.
+
+- [#5746](https://github.com/bluesky-social/atproto/pull/5746) [`1c8c3a3`](https://github.com/bluesky-social/atproto/commit/1c8c3a3a8ea27a060f38cda71172339aa1728113) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update to OpenTelemetry JS SDK 3.x (`@opentelemetry/api` 1.10), which requires Node.js `>=22.15.0`. Event log records are now emitted through `@opentelemetry/api` (`@opentelemetry/api-logs` was removed upstream). The HTTP instrumentation only reports the stable `http.server.request.duration` and `http.client.request.duration` metrics: the legacy `http.server.duration` and `http.client.duration` metrics are gone, and `OTEL_SEMCONV_STABILITY_OPT_IN=http` no longer has any effect. Instrumentations passed to `setup()` now also instrument modules loaded through ESM imports, not only `require()`d ones, when built on the same `@opentelemetry/instrumentation` as `@atproto-labs/opentelemetry-node`; otherwise `setup()` now throws an `InstrumentationMismatchError` instead of silently missing them. The new `@atproto-labs/opentelemetry-node/better-sqlite3-plugin` export, a port of `opentelemetry-plugin-better-sqlite3` producing identical spans, replaces that package in the PDS.
+- Updated dependencies [[`3bfd00f`](https://github.com/bluesky-social/atproto/commit/3bfd00f484dc144482c82a4ed248adc49e6be769), [`3bfd00f`](https://github.com/bluesky-social/atproto/commit/3bfd00f484dc144482c82a4ed248adc49e6be769), [`1c8c3a3`](https://github.com/bluesky-social/atproto/commit/1c8c3a3a8ea27a060f38cda71172339aa1728113), [`1c8c3a3`](https://github.com/bluesky-social/atproto/commit/1c8c3a3a8ea27a060f38cda71172339aa1728113), [`1c8c3a3`](https://github.com/bluesky-social/atproto/commit/1c8c3a3a8ea27a060f38cda71172339aa1728113), [`3bfd00f`](https://github.com/bluesky-social/atproto/commit/3bfd00f484dc144482c82a4ed248adc49e6be769), [`3bfd00f`](https://github.com/bluesky-social/atproto/commit/3bfd00f484dc144482c82a4ed248adc49e6be769), [`3bfd00f`](https://github.com/bluesky-social/atproto/commit/3bfd00f484dc144482c82a4ed248adc49e6be769)]:
+  - @atproto/common@0.8.7
+  - @atproto-labs/opentelemetry-node@0.5.0
+  - @atproto/xrpc-server@0.13.7
+  - @atproto/lex@0.4.4
+
 ## 0.10.10
 
 ### Patch Changes

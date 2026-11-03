@@ -13,7 +13,7 @@ const value = decode(bytes)
 const cid = await cidForLex(someLexValue)
 ```
 
-Part of the [`@atproto/lex`](https://github.com/bluesky-social/atproto/tree/main/packages/lex/lex) SDK family. Unlike the JSON codec, this package is _not_ re-exported by `@atproto/lex` and must be installed directly.
+This is a building block of [`@atproto/lex`](https://github.com/bluesky-social/atproto/tree/main/packages/lex/lex), which re-exports it. Depend on this package directly unless your code is bundled — see the `@atproto/lex` [Installation](https://github.com/bluesky-social/atproto/tree/main/packages/lex/lex#installation) section.
 
 ## License
 

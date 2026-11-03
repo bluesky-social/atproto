@@ -1,7 +1,7 @@
 import assert from 'node:assert'
 import fs from 'node:fs/promises'
 import { wait } from '@atproto/common'
-import { isDidString } from '@atproto/lex'
+import { isDidString } from '@atproto/lex-schema'
 import type { DidString } from '@atproto/syntax'
 import type { Sequencer } from '../sequencer/index.js'
 import { parseIntArg } from './util.js'

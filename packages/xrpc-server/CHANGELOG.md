@@ -1,5 +1,27 @@
 # @atproto/xrpc-server
 
+## 0.13.8
+
+### Patch Changes
+
+- Updated dependencies [[`07c25d4`](https://github.com/bluesky-social/atproto/commit/07c25d410d4f4ad8f6ec80fc14efa0dd8ec55545), [`07c25d4`](https://github.com/bluesky-social/atproto/commit/07c25d410d4f4ad8f6ec80fc14efa0dd8ec55545), [`07c25d4`](https://github.com/bluesky-social/atproto/commit/07c25d410d4f4ad8f6ec80fc14efa0dd8ec55545)]:
+  - @atproto/lex-cbor@0.1.8
+  - @atproto/lex-client@0.4.1
+  - @atproto/lex-data@0.1.9
+  - @atproto/lex-json@0.1.8
+  - @atproto/lex-schema@0.2.10
+  - @atproto/common@0.8.8
+  - @atproto/lexicon@0.7.18
+  - @atproto/xrpc@0.8.17
+
+## 0.13.7
+
+### Patch Changes
+
+- [#5753](https://github.com/bluesky-social/atproto/pull/5753) [`3bfd00f`](https://github.com/bluesky-social/atproto/commit/3bfd00f484dc144482c82a4ed248adc49e6be769) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Bound the decoded size of every stage of a multi-coding `content-encoding` chain, and reject bodies listing too many content-codings
+- Updated dependencies [[`3bfd00f`](https://github.com/bluesky-social/atproto/commit/3bfd00f484dc144482c82a4ed248adc49e6be769), [`3bfd00f`](https://github.com/bluesky-social/atproto/commit/3bfd00f484dc144482c82a4ed248adc49e6be769), [`3bfd00f`](https://github.com/bluesky-social/atproto/commit/3bfd00f484dc144482c82a4ed248adc49e6be769), [`3bfd00f`](https://github.com/bluesky-social/atproto/commit/3bfd00f484dc144482c82a4ed248adc49e6be769)]:
+  - @atproto/common@0.8.7
+
 ## 0.13.6
 
 ### Patch Changes

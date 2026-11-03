@@ -1,5 +1,27 @@
 # @atproto/api
 
+## 0.30.1
+
+### Patch Changes
+
+- [#5801](https://github.com/bluesky-social/atproto/pull/5801) [`11f52c5`](https://github.com/bluesky-social/atproto/commit/11f52c5588279d159ab12404a1b323731a467fdd) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add getAtmosphereApps with optional category filtering and known followers in app profiles.
+- Updated dependencies []:
+  - @atproto/common-web@0.5.16
+  - @atproto/lexicon@0.7.18
+  - @atproto/xrpc@0.8.17
+
+## 0.30.0
+
+### Minor Changes
+
+- [#5783](https://github.com/bluesky-social/atproto/pull/5783) [`d6e1945`](https://github.com/bluesky-social/atproto/commit/d6e1945e095da70e0b188d5c6684a5797ce9ee8c) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Keep `featured` as a required, deprecated compatibility field on `app.bsky.unspecced.getAtmosphereExploreTab` article, publication, photo, and livestream items; it is always `false`. Retired content scheduling no longer selects or orders articles, publications, and photos. Livestreams are shown from `previewAt` (or `startsAt`) until `endsAt`, and are reported inactive until `startsAt`. App cards now include an optional `profile` (`app.bsky.actor.defs#profileViewDetailed`) hydrated from the app's account, whose avatar and banner back `logo` and `backgroundImage`.
+
+## 0.29.6
+
+### Patch Changes
+
+- [#5756](https://github.com/bluesky-social/atproto/pull/5756) [`54f54ea`](https://github.com/bluesky-social/atproto/commit/54f54ea831f37fe9f722844177f7e1bed8ae8bdc) Thanks [@gcwill70](https://github.com/gcwill70)! - Protect assigned and escalated reports from broad moderation-event and batch report closure, including owned subjects.
+
 ## 0.29.5
 
 ### Patch Changes

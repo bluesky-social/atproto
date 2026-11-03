@@ -1,4 +1,4 @@
-import type { AtUriString, InferInput, RecordSchema } from '@atproto/lex'
+import type { AtUriString, InferInput, RecordSchema } from '@atproto/lex-schema'
 import { parseAtUriString } from '@atproto/syntax'
 import type {
   AssociatedSiteStandardRecord,
@@ -9,8 +9,6 @@ import type {
 } from '../../hydration/external.js'
 import type { RecordInfo } from '../../hydration/util.js'
 import { site } from '../../lexicons/index.js'
-
-export const SITE_STANDARD_NSID_PREFIX = 'site.standard.'
 
 /**
  * Parse `url` as HTTP(S) and reduce it to a canonical
@@ -105,8 +103,8 @@ const canonicalUrlMatchesAssumed = (
  * side carries the slash.
  *
  * Structural validation of the doc/pub pair (matching `site` ↔ pub URI,
- * no orphan docs that claim a missing publication) happens upstream: in the
- * pinned `getSiteStandardRecordsFromHydrationMapsByRefs`
+ * no orphan docs that claim a missing publication) happens upstream: in
+ * `getSiteStandardRecordsFromRefs`'s pinned-root/dependency selection
  * (`hydration/external.ts`), or by `validateStandardSiteRecordsForUrl` over
  * `getStandardSiteRecordsForUri`'s selection (which alone leaves an orphan
  * document selected with an absent publication). By the time this

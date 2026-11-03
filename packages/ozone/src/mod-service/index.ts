@@ -2,15 +2,15 @@ import { type Insertable, sql } from 'kysely'
 import { DAY, addHoursToDate, chunkArray } from '@atproto/common'
 import type { Keypair } from '@atproto/crypto'
 import type { IdResolver } from '@atproto/identity'
+import type { Client } from '@atproto/lex-client'
 import {
-  type Client,
   type DatetimeString,
   type DidString,
   type UriString,
   currentDatetimeString,
   isDidString,
   toDatetimeString,
-} from '@atproto/lex'
+} from '@atproto/lex-schema'
 import { AtUri, INVALID_HANDLE } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { getReviewState } from '../api/util.js'

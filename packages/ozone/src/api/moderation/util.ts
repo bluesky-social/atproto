@@ -1,4 +1,4 @@
-import type { DidString } from '@atproto/lex'
+import type { DidString } from '@atproto/lex-schema'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { tools } from '../../lexicons/index.js'
 import { ProtectedTagSettingKey } from '../../setting/constants.js'

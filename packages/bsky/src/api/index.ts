@@ -77,7 +77,9 @@ import registerPush from './app/bsky/notification/registerPush.js'
 import unregisterPush from './app/bsky/notification/unregisterPush.js'
 import updateSeen from './app/bsky/notification/updateSeen.js'
 import getAgeAssuranceState from './app/bsky/unspecced/getAgeAssuranceState.js'
+import getAtmosphereApps from './app/bsky/unspecced/getAtmosphereApps.js'
 import getAtmosphereExploreTab from './app/bsky/unspecced/getAtmosphereExploreTab.js'
+import getAtmosphereTimeline from './app/bsky/unspecced/getAtmosphereTimeline.js'
 import getConfig from './app/bsky/unspecced/getConfig.js'
 import getOnboardingSuggestedStarterPacks from './app/bsky/unspecced/getOnboardingSuggestedStarterPacks.js'
 import getPopularFeedGenerators from './app/bsky/unspecced/getPopularFeedGenerators.js'
@@ -200,7 +202,9 @@ export default function (server: Server, ctx: AppContext) {
   putPreferencesV2(server, ctx)
   registerPush(server, ctx)
   unregisterPush(server, ctx)
+  getAtmosphereApps(server, ctx)
   getAtmosphereExploreTab(server, ctx)
+  getAtmosphereTimeline(server, ctx)
   getConfig(server, ctx)
   getPopularFeedGenerators(server, ctx)
   getTaggedSuggestions(server, ctx)

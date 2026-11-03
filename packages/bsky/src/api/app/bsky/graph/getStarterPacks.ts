@@ -1,5 +1,5 @@
 import { dedupeStrs, mapDefined } from '@atproto/common'
-import type { AtUriString } from '@atproto/lex'
+import type { AtUriString } from '@atproto/lex-schema'
 import type { Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../../../context.js'
 import type {
@@ -26,6 +26,7 @@ export default function (server: Server, ctx: AppContext) {
         ctx.authVerifier.parseCreds(auth)
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({
+        xrpcEndpoint: app.bsky.graph.getStarterPacks.$lxm,
         viewer,
         labelers,
         includeTakedowns,

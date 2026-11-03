@@ -1,5 +1,27 @@
 # @atproto/lexicon-resolver
 
+## 0.4.31
+
+### Patch Changes
+
+- [#5786](https://github.com/bluesky-social/atproto/pull/5786) [`07c25d4`](https://github.com/bluesky-social/atproto/commit/07c25d410d4f4ad8f6ec80fc14efa0dd8ec55545) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Depend on the `@atproto/lex-*` packages that `@atproto/lex` re-exports instead of `@atproto/lex`, which also installs the lexicon codegen tooling
+- Updated dependencies [[`07c25d4`](https://github.com/bluesky-social/atproto/commit/07c25d410d4f4ad8f6ec80fc14efa0dd8ec55545), [`07c25d4`](https://github.com/bluesky-social/atproto/commit/07c25d410d4f4ad8f6ec80fc14efa0dd8ec55545), [`07c25d4`](https://github.com/bluesky-social/atproto/commit/07c25d410d4f4ad8f6ec80fc14efa0dd8ec55545)]:
+  - @atproto/lex-document@0.1.15
+  - @atproto/lex-client@0.4.1
+  - @atproto/lex-data@0.1.9
+  - @atproto/lex-schema@0.2.10
+  - @atproto-labs/fetch-node@0.4.4
+  - @atproto/repo@0.11.3
+  - @atproto/identity@0.5.21
+
+## 0.4.30
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/repo@0.11.2
+  - @atproto/lex@0.4.4
+
 ## 0.4.29
 
 ### Patch Changes

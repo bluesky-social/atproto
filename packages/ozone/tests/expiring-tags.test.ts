@@ -70,7 +70,29 @@ describe('expiring tags', () => {
       reportedBy: sc.dids.alice,
     })
 
-    await emitTagEvent(sc.dids.bob, ['temp-tag-1', 'temp-tag-2'], [], 1)
+    const emitted = await emitTagEvent(
+      sc.dids.bob,
+      ['temp-tag-1', 'temp-tag-2'],
+      [],
+      1,
+    )
+    const [detail, queried] = await Promise.all([
+      modClient.getEvent(emitted.id),
+      modClient.queryEvents({
+        subject: sc.dids.bob,
+        addedTags: ['temp-tag-1'],
+      }),
+    ])
+    for (const event of [
+      emitted.event,
+      detail.event,
+      queried.events.find((event) => event.id === emitted.id)?.event,
+    ]) {
+      expect(event).toMatchObject({
+        $type: 'tools.ozone.moderation.defs#modEventTag',
+        durationInHours: 1,
+      })
+    }
 
     const tags = await getSubjectTags(sc.dids.bob)
     expect(tags).toContain('temp-tag-1')

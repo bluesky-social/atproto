@@ -1,4 +1,4 @@
-import type { DidString } from '@atproto/lex'
+import type { DidString } from '@atproto/lex-schema'
 import type { BlobStore } from '@atproto/repo'
 import type { SyncEvtData } from '../../repo/index.js'
 import { BlobReader } from '../blob/reader.js'

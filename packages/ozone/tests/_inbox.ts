@@ -12,6 +12,7 @@ type ReportView = Awaited<
 export async function reportForEvent(
   mod: ModeratorClient,
   eventId: number,
+  subject?: string,
 ): Promise<
   Omit<ReportView, 'actionEventIds'> & {
     queueId: number
@@ -23,6 +24,7 @@ export async function reportForEvent(
       const { reports } = await mod.queryReports({
         status,
         isMuted,
+        subject,
         limit: 100,
       })
       const report = reports.find((row) => row.eventId === eventId)

@@ -1,5 +1,5 @@
 import { sql } from 'kysely'
-import type { DatetimeString, DidString } from '@atproto/lex'
+import type { DatetimeString, DidString } from '@atproto/lex-schema'
 import { com, tools } from '../lexicons/index.js'
 import {
   APPEAL_REASON_TYPE,

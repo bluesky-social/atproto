@@ -2,28 +2,30 @@ import { sql } from 'kysely'
 import { chunkArray, dedupeStrs } from '@atproto/common'
 import type { Keypair } from '@atproto/crypto'
 import type { IdResolver } from '@atproto/identity'
+import type { Client } from '@atproto/lex-client'
 import {
-  type AtIdentifierString,
-  type AtUriString,
   type BlobRef,
-  type Client,
-  type DatetimeString,
-  type DidString,
-  type HandleString,
   type LexMap,
-  type NsidString,
-  type Un$Typed,
-  type UriString,
-  currentDatetimeString,
   getBlobCidString,
   getBlobMime,
   getBlobSize,
   isBlobRef,
+} from '@atproto/lex-data'
+import {
+  type AtIdentifierString,
+  type AtUriString,
+  type DatetimeString,
+  type DidString,
+  type HandleString,
+  type NsidString,
+  type Un$Typed,
+  type UriString,
+  currentDatetimeString,
   isDatetimeString,
   isDidString,
   isHandleString,
   toDatetimeString,
-} from '@atproto/lex'
+} from '@atproto/lex-schema'
 import { AtUri, INVALID_HANDLE, normalizeDatetimeAlways } from '@atproto/syntax'
 import type { Database } from '../db/index.js'
 import type { LabelRow } from '../db/schema/label.js'
@@ -182,6 +184,7 @@ export class ModerationViews {
       tools.ozone.moderation.defs.modEventMuteReporter.$isTypeOf(event) ||
       tools.ozone.moderation.defs.modEventTakedown.$isTypeOf(event) ||
       tools.ozone.moderation.defs.modEventLabel.$isTypeOf(event) ||
+      tools.ozone.moderation.defs.modEventTag.$isTypeOf(event) ||
       tools.ozone.moderation.defs.modEventMute.$isTypeOf(event)
     ) {
       event.durationInHours = row.durationInHours ?? undefined

@@ -143,8 +143,10 @@
     "app.bsky.richtext.facet",
     "app.bsky.unspecced.defs",
     "app.bsky.unspecced.getAgeAssuranceState",
+    "app.bsky.unspecced.getAtmosphereApps",
     "app.bsky.unspecced.getAtmosphereExploreArticleRecommendations",
     "app.bsky.unspecced.getAtmosphereExploreTab",
+    "app.bsky.unspecced.getAtmosphereTimeline",
     "app.bsky.unspecced.getConfig",
     "app.bsky.unspecced.getOnboardingSuggestedStarterPacks",
     "app.bsky.unspecced.getOnboardingSuggestedStarterPacksSkeleton",
@@ -964,13 +966,21 @@
       "uri": "https://raw.githubusercontent.com/bluesky-social/bsky/refs/heads/main/lexicons/app/bsky/unspecced/getAgeAssuranceState.json",
       "cid": "bafyreih4xza4elgwnr7oazzbuftplgvnbye2eleiaui7zfkrtlgmhiidfm"
     },
+    "app.bsky.unspecced.getAtmosphereApps": {
+      "uri": "file://../../lexicons-overrides/app/bsky/unspecced/getAtmosphereApps.json",
+      "cid": "bafyreihpi7hxe7j4uh7haawophxtppjwziojd4swq4anpgvnegigqk2234"
+    },
     "app.bsky.unspecced.getAtmosphereExploreArticleRecommendations": {
       "uri": "https://raw.githubusercontent.com/bluesky-social/bsky/refs/heads/main/lexicons/app/bsky/unspecced/getAtmosphereExploreArticleRecommendations.json",
       "cid": "bafyreial4vi2raxz7nfbwovdx6m4pdlb5hnpf37teistounxjxe6svbdsi"
     },
     "app.bsky.unspecced.getAtmosphereExploreTab": {
-      "uri": "https://raw.githubusercontent.com/bluesky-social/bsky/refs/heads/main/lexicons/app/bsky/unspecced/getAtmosphereExploreTab.json",
-      "cid": "bafyreiez66qb7byto44nzivpn27ykzdgilgpuqogeusypl3mln7wicjnry"
+      "uri": "file://../../lexicons-overrides/app/bsky/unspecced/getAtmosphereExploreTab.json",
+      "cid": "bafyreihmakoqnaakyhoyxay2hdlshccakqocrvdpwafuxku52bd6ptvj7q"
+    },
+    "app.bsky.unspecced.getAtmosphereTimeline": {
+      "uri": "file://../../lexicons-overrides/app/bsky/unspecced/getAtmosphereTimeline.json",
+      "cid": "bafyreibq6g2kinvd4kcvxrqn7xoydqhcca2fajlqxyckaqfkfljivmd6ni"
     },
     "app.bsky.unspecced.getConfig": {
       "uri": "https://raw.githubusercontent.com/bluesky-social/bsky/refs/heads/main/lexicons/app/bsky/unspecced/getConfig.json",

@@ -1,5 +1,5 @@
 import { mapDefined } from '@atproto/common'
-import type { AtUriString } from '@atproto/lex'
+import type { AtUriString } from '@atproto/lex-schema'
 import type { Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../../../context.js'
 import type {
@@ -29,7 +29,11 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ params, auth, req }) => {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
-      const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
+      const hydrateCtx = await ctx.hydrator.createContext({
+        labelers,
+        viewer,
+        xrpcEndpoint: app.bsky.graph.getListBlocks.$lxm,
+      })
       const result = await fillPage({
         cursor: params.cursor,
         limit: params.limit,
