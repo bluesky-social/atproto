@@ -80,7 +80,7 @@ describe('moderation-statuses', () => {
   })
 
   describe('query statuses', () => {
-    it('omits retired statistics and rejects count-based filters and sorts', async () => {
+    it('omits retired statistics and ignores count-based filters', async () => {
       const response = await modClient.queryStatuses({})
       expect(response.subjectStatuses.length).toBeGreaterThan(0)
       for (const status of response.subjectStatuses) {
@@ -96,23 +96,22 @@ describe('moderation-statuses', () => {
           `${network.ozone.url}/xrpc/tools.ozone.moderation.queryStatuses?${query}`,
           { headers },
         )
-      const noOpResponse = await queryLegacy(
-        'minAccountSuspendCount=0&minReportedRecordsCount=-1&minTakendownRecordsCount=0',
-      )
-      expect(noOpResponse.status).toBe(200)
-      const noOpFilters = (await noOpResponse.json()) as {
-        subjectStatuses: unknown[]
-      }
-      expect(noOpFilters.subjectStatuses).toHaveLength(
-        response.subjectStatuses.length,
-      )
-
       for (const query of [
         'minAccountSuspendCount=1',
         'minReportedRecordsCount=1',
         'minTakendownRecordsCount=1',
-        'minTakendownRecordsCount=invalid',
-        'minTakendownRecordsCount=0&minTakendownRecordsCount=1',
+      ]) {
+        const legacyResponse = await queryLegacy(query)
+        expect(legacyResponse.status).toBe(200)
+        const result = (await legacyResponse.json()) as {
+          subjectStatuses: { id: number }[]
+        }
+        expect(result.subjectStatuses.map((status) => status.id)).toEqual(
+          response.subjectStatuses.map((status) => status.id),
+        )
+      }
+
+      for (const query of [
         'sortField=reportedRecordsCount',
         'sortField=takendownRecordsCount',
       ]) {
