@@ -653,6 +653,11 @@ export async function processReportAction(
     reportIds: reportAction.ids,
     reportTypes: reportAction.types,
     targetAll: reportAction.all,
+    // @NOTE Scheduling enforcement must not resolve an appeal.
+    excludedReportTypes:
+      eventType === tools.ozone.moderation.defs.scheduleTakedownEvent.$type
+        ? [tools.ozone.report.defs.ReasonAppeal]
+        : undefined,
     protectActiveReview: closesReports,
     lockForUpdate: closesReports,
   })
@@ -674,7 +679,7 @@ export async function processReportAction(
 
     if (missingIds.length > 0) {
       throw new Error(
-        `Report IDs ${missingIds.join(', ')} do not exist, are already closed, or do not belong to this subject`,
+        `Report IDs ${missingIds.join(', ')} do not exist, are already closed, do not belong to this subject, or are excluded from this action`,
       )
     }
   }

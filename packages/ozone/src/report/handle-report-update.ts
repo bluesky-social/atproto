@@ -70,6 +70,13 @@ const EVENT_TYPE_MAP = new Map<
   }
 >([
   [
+    tools.ozone.moderation.defs.scheduleTakedownEvent.$type,
+    {
+      status: 'closed',
+      activityType: 'closeActivity',
+    },
+  ],
+  [
     tools.ozone.moderation.defs.modEventAcknowledge.$type,
     {
       status: 'closed',

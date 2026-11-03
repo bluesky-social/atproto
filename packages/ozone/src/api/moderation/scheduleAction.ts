@@ -6,7 +6,9 @@ import {
 } from '@atproto/xrpc-server'
 import type { AppContext } from '../../context.js'
 import { com, tools } from '../../lexicons/index.js'
+import { processReportAction } from '../../mod-service/report.js'
 import { subjectFromInput } from '../../mod-service/subject.js'
+import { getEventActivityMetadata } from '../../report/metadata.js'
 import type { ExecutionSchedule } from '../../scheduled-action/types.js'
 import { getScheduledActionType } from '../util.js'
 import { ScheduledTakedownTag } from './util.js'
@@ -17,7 +19,8 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ input, auth }) => {
       const access = auth.credentials
       const db = ctx.db
-      const { action, subjects, createdBy, scheduling, modTool } = input.body
+      const { action, subjects, createdBy, scheduling, modTool, reportAction } =
+        input.body
 
       if (!access.isModerator) {
         throw new AuthRequiredError('Must be a moderator to schedule actions')
@@ -41,6 +44,16 @@ export default function (server: Server, ctx: AppContext) {
       if (!scheduling.executeAt && !scheduling.executeAfter) {
         throw new InvalidRequestError('Must specify an execution schedule')
       }
+      if (
+        reportAction &&
+        !reportAction.ids?.length &&
+        !reportAction.types?.length &&
+        !reportAction.all
+      ) {
+        throw new InvalidRequestError(
+          'reportAction must specify ids, types, or all',
+        )
+      }
 
       const executionSchedule: ExecutionSchedule = scheduling.executeAt
         ? { executeAt: new Date(scheduling.executeAt) }
@@ -51,7 +64,8 @@ export default function (server: Server, ctx: AppContext) {
               : undefined,
           }
 
-      const eventData = { ...action, modTool }
+      // @NOTE The report link is server-owned and omitted for legacy schedules.
+      const eventData = { ...action, modTool, reportEventId: undefined }
       const actualCreatedBy =
         access.type === 'admin_token' ? createdBy : access.iss
 
@@ -62,18 +76,20 @@ export default function (server: Server, ctx: AppContext) {
             const modService = ctx.modService(tx)
             const scheduledActionService = ctx.scheduledActionService(tx)
             // register the action in database
-            await scheduledActionService.scheduleAction({
-              action: actionType,
-              eventData,
-              did: subject,
-              createdBy: actualCreatedBy,
-              ...executionSchedule,
-            })
+            const scheduledAction = await scheduledActionService.scheduleAction(
+              {
+                action: actionType,
+                eventData,
+                did: subject,
+                createdBy: actualCreatedBy,
+                ...executionSchedule,
+              },
+            )
             // log an event in the mod event stream
             if (
               tools.ozone.moderation.scheduleAction.takedown.$isTypeOf(action)
             ) {
-              await modService.logEvent({
+              const schedulingEvent = await modService.logEvent({
                 event: tools.ozone.moderation.defs.scheduleTakedownEvent.$build(
                   {
                     executeAfter: scheduling.executeAfter,
@@ -88,7 +104,34 @@ export default function (server: Server, ctx: AppContext) {
                 createdBy: actualCreatedBy,
                 createdAt: now,
                 modTool,
+                eventMeta: { scheduledActionId: scheduledAction.id },
               })
+              if (reportAction) {
+                await tx.db
+                  .updateTable('scheduled_action')
+                  .set({
+                    eventData: {
+                      ...eventData,
+                      reportEventId: schedulingEvent.event.id,
+                    },
+                  })
+                  .where('id', '=', scheduledAction.id)
+                  .execute()
+                await processReportAction({
+                  db: tx,
+                  inboxStartAt: ctx.cfg.inbox.startAt,
+                  reportAction,
+                  metadata: {
+                    ...getEventActivityMetadata(modTool),
+                    scheduledActionId: scheduledAction.id,
+                  },
+                  subjectDid: subject,
+                  subjectUri: null,
+                  eventId: schedulingEvent.event.id,
+                  eventType: schedulingEvent.event.action,
+                  createdBy: actualCreatedBy,
+                })
+              }
               await modService.logEvent({
                 event: tools.ozone.moderation.defs.modEventTag.$build({
                   add: [ScheduledTakedownTag],
@@ -97,12 +140,12 @@ export default function (server: Server, ctx: AppContext) {
                 subject: subjectFromInput(
                   com.atproto.admin.defs.repoRef.$build({ did: subject }),
                 ),
-                createdBy,
+                createdBy: actualCreatedBy,
                 createdAt: now,
               })
             }
-            succeeded.push(subject)
           })
+          succeeded.push(subject)
         } catch (error) {
           let errorMessage = 'Unknown error'
           let errorCode: string | undefined

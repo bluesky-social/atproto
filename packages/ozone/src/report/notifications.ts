@@ -16,6 +16,7 @@ import {
 } from '../inbox/notifications.js'
 import { inboxHasStarted } from '../inbox/start.js'
 import { com, tools } from '../lexicons/index.js'
+import { unexecutedScheduledClosure } from './scheduled-closure.js'
 
 export type NotifiableReportActivity = {
   reportId: number
@@ -91,6 +92,10 @@ export async function notifyReportActivities(
           'activity.id',
           'in',
           batch.map((activity) => activity.activityId),
+        )
+        .where((eb) =>
+          // Exclude reports with unexecuted scheduled closures
+          eb.not(unexecutedScheduledClosure()),
         )
         .where('e.subjectType', 'in', [
           com.atproto.admin.defs.repoRef.$type,

@@ -36,6 +36,11 @@
               "type": "ref",
               "ref": "tools.ozone.moderation.defs#modTool",
               "description": "This will be propagated to the moderation event when it is applied"
+            },
+            "reportAction": {
+              "type": "ref",
+              "ref": "tools.ozone.moderation.emitEvent#reportAction",
+              "description": "Close selected reports on each scheduled account immediately. Reports are linked to the scheduling event. If execution fails, the oldest closed report is reopened."
             }
           }
         }

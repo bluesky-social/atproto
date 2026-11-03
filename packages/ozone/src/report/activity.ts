@@ -70,7 +70,7 @@ export async function createReportActivity(
     )
   }
 
-  return db.transaction(async (dbTxn) => {
+  const createActivity = async (dbTxn: Database) => {
     // Lock the report row for the duration of the transaction to prevent
     // concurrent writes from racing on status validation + update.
     // Report rows have a unique constraint on eventId, so either lookup
@@ -174,7 +174,8 @@ export async function createReportActivity(
     )
 
     return activity
-  })
+  }
+  return db.isTransaction ? createActivity(db) : db.transaction(createActivity)
 }
 
 export type BulkActivityInsert = {

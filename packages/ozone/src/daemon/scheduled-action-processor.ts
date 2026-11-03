@@ -16,6 +16,7 @@ import type {
 import { RepoSubject } from '../mod-service/subject.js'
 import type { ModEventType } from '../mod-service/types.js'
 import type { ScheduledActionServiceCreator } from '../scheduled-action/service.js'
+import type { ScheduledTakedownEventData } from '../scheduled-action/types.js'
 import type {
   SettingService,
   SettingServiceCreator,
@@ -60,18 +61,19 @@ export class ScheduledActionProcessor {
   }
 
   async executeScheduledAction(actionId: number) {
-    await this.db.transaction(async (dbTxn) => {
-      const settingService = this.settingService(dbTxn)
-      const moderationTxn = this.modService(dbTxn)
-      const scheduledActionTxn = this.scheduledActionService(dbTxn)
+    try {
+      await this.db.transaction(async (dbTxn) => {
+        const settingService = this.settingService(dbTxn)
+        const moderationTxn = this.modService(dbTxn)
+        const scheduledActionTxn = this.scheduledActionService(dbTxn)
 
-      try {
-        // maybe overfetching here to get the action again within the transaction to ensure it's still pending
+        // @NOTE Serialize workers and cancellation against the pending action.
         const action = await dbTxn.db
           .selectFrom('scheduled_action')
           .selectAll()
           .where('id', '=', actionId)
           .where('status', '=', 'pending')
+          .forUpdate()
           .executeTakeFirst()
 
         if (!action) {
@@ -90,12 +92,7 @@ export class ScheduledActionProcessor {
         switch (action.action) {
           case 'takedown':
             {
-              const eventData =
-                action.eventData as tools.ozone.moderation.defs.ModEventTakedown & {
-                  modTool?: tools.ozone.moderation.defs.ModTool
-                  emailSubject?: string
-                  emailContent?: string
-                }
+              const eventData = action.eventData as ScheduledTakedownEventData
               modTool = eventData.modTool
               event = tools.ozone.moderation.defs.modEventTakedown.$build({
                 comment: `[SCHEDULED_ACTION] ${eventData.comment || 'Scheduled takedown executed'}`,
@@ -134,6 +131,12 @@ export class ScheduledActionProcessor {
           actionId,
           moderationEvent.event.id,
         )
+        await scheduledActionTxn.linkExecutedReports(
+          action,
+          moderationEvent.event.id,
+          moderationEvent.event.createdAt,
+          moderationTxn.cfg.inbox.startAt,
+        )
 
         dbLogger.info(
           {
@@ -143,12 +146,29 @@ export class ScheduledActionProcessor {
           },
           'executed scheduled action',
         )
-      } catch (error) {
+      })
+    } catch (error) {
+      // Roll back failed enforcement before recording failure and recovery.
+      await this.db.transaction(async (dbTxn) => {
+        const action = await dbTxn.db
+          .selectFrom('scheduled_action')
+          .selectAll()
+          .where('id', '=', actionId)
+          .where('status', '=', 'pending')
+          .forUpdate()
+          .executeTakeFirst()
+        if (!action) return
+        const scheduledActionTxn = this.scheduledActionService(dbTxn)
         const errorMessage =
           error instanceof Error ? error.message : 'Unknown error'
 
         // mark as failed
         await scheduledActionTxn.markActionAsFailed(actionId, errorMessage)
+        await scheduledActionTxn.reopenOldestScheduledReport(
+          action,
+          errorMessage,
+          this.modService(dbTxn).cfg.inbox.startAt,
+        )
 
         dbLogger.error(
           {
@@ -157,8 +177,8 @@ export class ScheduledActionProcessor {
           },
           'failed to execute scheduled action',
         )
-      }
-    })
+      })
+    }
   }
 
   async performTakedown({
