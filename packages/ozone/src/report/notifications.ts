@@ -94,10 +94,8 @@ export async function notifyReportActivities(
           batch.map((activity) => activity.activityId),
         )
         .where((eb) =>
-          eb.or([
-            eb('r.reportType', '=', APPEAL_REASON_TYPE),
-            eb.not(unexecutedScheduledClosure()),
-          ]),
+          // Exclude reports with unexecuted scheduled closures
+          eb.not(unexecutedScheduledClosure()),
         )
         .where('e.subjectType', 'in', [
           com.atproto.admin.defs.repoRef.$type,
