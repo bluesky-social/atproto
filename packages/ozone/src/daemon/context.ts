@@ -19,6 +19,7 @@ import { EventPusher } from './event-pusher.js'
 import { EventReverser } from './event-reverser.js'
 import { MaterializedViewRefresher } from './materialized-view-refresher.js'
 import { QueueRouter } from './queue-router.js'
+import { RecordEventsStatsWorker } from './record-events-stats-worker.js'
 import { ReportReporterDidBackfiller } from './report-reporter-did-backfiller.js'
 import { ScheduledActionProcessor } from './scheduled-action-processor.js'
 import { StatsComputer } from './stats-computer.js'
@@ -39,6 +40,7 @@ export type DaemonContextOptions = {
   strikeExpiryProcessor: StrikeExpiryProcessor
   queueRouter: QueueRouter
   reportReporterDidBackfiller: ReportReporterDidBackfiller
+  recordEventsStatsWorker: RecordEventsStatsWorker
   verificationListener?: VerificationListener
   statsComputer?: StatsComputer
 }
@@ -137,6 +139,7 @@ export class DaemonContext {
     const queueService = QueueService.creator(cfg.service.did)
     const queueRouter = new QueueRouter(db, queueService, register)
     const reportReporterDidBackfiller = new ReportReporterDidBackfiller(db)
+    const recordEventsStatsWorker = new RecordEventsStatsWorker(db)
 
     const reportStatsService = ReportStatsService.creator()
     const statsComputer = new StatsComputer(
@@ -168,6 +171,7 @@ export class DaemonContext {
       strikeExpiryProcessor,
       queueRouter,
       reportReporterDidBackfiller,
+      recordEventsStatsWorker,
       verificationListener,
       statsComputer,
       ...(overrides ?? {}),
@@ -218,6 +222,10 @@ export class DaemonContext {
     return this.opts.reportReporterDidBackfiller
   }
 
+  get recordEventsStatsWorker(): RecordEventsStatsWorker {
+    return this.opts.recordEventsStatsWorker
+  }
+
   get verificationListener(): VerificationListener | undefined {
     return this.opts.verificationListener
   }
@@ -235,6 +243,7 @@ export class DaemonContext {
     this.strikeExpiryProcessor.start()
     this.queueRouter.start()
     this.reportReporterDidBackfiller.start()
+    this.recordEventsStatsWorker.start()
     this.verificationListener?.start()
     this.statsComputer?.start()
   }
@@ -261,6 +270,7 @@ export class DaemonContext {
         this.strikeExpiryProcessor.destroy(),
         this.queueRouter.destroy(),
         this.reportReporterDidBackfiller.destroy(),
+        this.recordEventsStatsWorker.destroy(),
         this.verificationListener?.stop(),
         this.statsComputer?.destroy(),
       ])
