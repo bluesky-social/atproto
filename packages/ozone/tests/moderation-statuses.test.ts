@@ -80,6 +80,45 @@ describe('moderation-statuses', () => {
   })
 
   describe('query statuses', () => {
+    it('omits retired statistics and ignores count-based filters', async () => {
+      const response = await modClient.queryStatuses({})
+      expect(response.subjectStatuses.length).toBeGreaterThan(0)
+      for (const status of response.subjectStatuses) {
+        expect(status).not.toHaveProperty('accountStats')
+        expect(status).not.toHaveProperty('recordsStats')
+      }
+
+      const headers = await network.ozone.modHeaders(
+        'tools.ozone.moderation.queryStatuses',
+      )
+      const queryLegacy = (query: string) =>
+        fetch(
+          `${network.ozone.url}/xrpc/tools.ozone.moderation.queryStatuses?${query}`,
+          { headers },
+        )
+      for (const query of [
+        'minAccountSuspendCount=1',
+        'minReportedRecordsCount=1',
+        'minTakendownRecordsCount=1',
+      ]) {
+        const legacyResponse = await queryLegacy(query)
+        expect(legacyResponse.status).toBe(200)
+        const result = (await legacyResponse.json()) as {
+          subjectStatuses: { id: number }[]
+        }
+        expect(result.subjectStatuses.map((status) => status.id)).toEqual(
+          response.subjectStatuses.map((status) => status.id),
+        )
+      }
+
+      for (const query of [
+        'sortField=reportedRecordsCount',
+        'sortField=takendownRecordsCount',
+      ]) {
+        expect((await queryLegacy(query)).status).toBe(400)
+      }
+    })
+
     it('returns statuses for subjects that received moderation events', async () => {
       const response = await modClient.queryStatuses({})
 
