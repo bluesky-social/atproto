@@ -19,7 +19,7 @@
             "repo": {
               "type": "string",
               "format": "did",
-              "description": "The DID of the repo to write to (the authenticated member)."
+              "description": "The DID of the repo (aka, current account)."
             },
             "collection": {
               "type": "string",

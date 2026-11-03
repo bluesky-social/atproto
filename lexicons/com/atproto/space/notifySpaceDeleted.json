@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Notify a syncing service that a space was deleted and its copy should be dropped. Sent by the space authority to registered services, retried until delivered or the registration expires. Requires service auth.",
+      "description": "Notify a syncing service that a space was deleted and its data should be dropped. Sent by the space host to registered services. Requires service auth.",
       "input": {
         "encoding": "application/json",
         "schema": {

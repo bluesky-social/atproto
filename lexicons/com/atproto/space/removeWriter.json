@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Remove an account from a space's writer set, so that listRepos no longer lists it. The account is tracked again if it later writes while still authorized. Idempotent: succeeds whether or not the account was in the writer set. Requires auth as an account that may manage the space.",
+      "description": "Remove an account from a space's writer set, as returned by listRepos. The account is added back if it writes to the space again. Requires auth as the space owner, implemented by PDS.",
       "input": {
         "encoding": "application/json",
         "schema": {

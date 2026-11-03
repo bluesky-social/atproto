@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Add a member to the member list of a space governed by the memberspace policy, or replace their read and write access. Requires auth as the space owner.",
+      "description": "Add a member to a space, or update an existing member's access. Requires auth as the space owner, implemented by PDS.",
       "input": {
         "encoding": "application/json",
         "schema": {
@@ -23,11 +23,11 @@
             },
             "read": {
               "type": "boolean",
-              "description": "Whether the member may read when the policy's publicRead is not set."
+              "description": "Whether the member has read access."
             },
             "write": {
               "type": "boolean",
-              "description": "Whether the member's writes are tracked when the policy's publicWrite is not set."
+              "description": "Whether the member has write access."
             }
           }
         }
@@ -41,7 +41,7 @@
         },
         {
           "name": "PolicyMismatch",
-          "description": "The space is not governed by the memberspace policy."
+          "description": "The space does not have a memberspace policy."
         }
       ]
     }

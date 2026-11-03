@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "Ask a space's managing app whether to authorize a user to read or write. Served by the managingApp (not the PDS), called by the authority of a space governed by the managedspace policy. Authenticated with service auth from the authority.",
+      "description": "Check whether a user may read or write in a managed space. Called by the space host, implemented by the space's managing app. Requires service auth.",
       "parameters": {
         "type": "params",
         "required": ["space", "user", "access"],
@@ -17,7 +17,7 @@
           "user": {
             "type": "string",
             "format": "did",
-            "description": "The DID of the requesting user."
+            "description": "The DID of the user."
           },
           "access": {
             "type": "string",
@@ -26,7 +26,7 @@
           },
           "clientId": {
             "type": "string",
-            "description": "The attested client_id, if a client attestation was presented. Omitted for write checks."
+            "description": "OAuth client ID of the requesting app, if attested."
           }
         }
       },
@@ -38,7 +38,7 @@
           "properties": {
             "authorized": {
               "type": "boolean",
-              "description": "Whether the managing app authorizes the request."
+              "description": "Whether access is granted."
             }
           }
         }

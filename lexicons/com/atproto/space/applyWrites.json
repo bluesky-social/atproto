@@ -19,7 +19,7 @@
             "repo": {
               "type": "string",
               "format": "did",
-              "description": "The DID of the repo to write to (the authenticated member)."
+              "description": "The DID of the repo (aka, current account)."
             },
             "validate": {
               "type": "boolean",
@@ -62,7 +62,7 @@
         },
         {
           "name": "RecordAlreadyExists",
-          "description": "A create targeted a collection and rkey that already holds a record."
+          "description": "A create targeted a record that already exists."
         }
       ]
     },

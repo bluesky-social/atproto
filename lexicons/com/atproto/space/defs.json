@@ -4,7 +4,7 @@
   "defs": {
     "commit": {
       "type": "object",
-      "description": "A commit over the current state of a permissioned repo. Carries no signature: the repo host authenticates it to a syncer with a MAC in the Atproto-Space-Mac response header.",
+      "description": "Commit to the current state of a repo in a space. Not signed; authenticated by the repo host with a MAC instead.",
       "required": ["ver", "repo", "space", "rev", "data"],
       "properties": {
         "ver": {
@@ -14,7 +14,7 @@
         "repo": {
           "type": "string",
           "format": "did",
-          "description": "The author DID of the repo."
+          "description": "The DID of the repo."
         },
         "space": {
           "type": "string",
@@ -24,11 +24,11 @@
         "rev": {
           "type": "string",
           "format": "tid",
-          "description": "Commit revision (TID)."
+          "description": "Repo revision."
         },
         "data": {
           "type": "bytes",
-          "description": "sha256 digest of the LtHash state (32 bytes)."
+          "description": "SHA-256 digest of the repo's LtHash state."
         }
       }
     }

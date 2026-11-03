@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Register a service to be notified of writes to any repo in a space. Called on the space host. The registering service is named by its service identifier rather than a bare URL, because notifyWrite is delivered with service auth addressed to that identifier; the delivery endpoint is resolved from the service's DID document. Authenticated with a space credential. Re-registering an existing service replaces its registration and extends the expiry.",
+      "description": "Register a service to be notified of writes in a space, via notifyWrite. Re-registering renews an existing registration. Requires a space credential, implemented by the space host.",
       "input": {
         "encoding": "application/json",
         "schema": {
@@ -18,7 +18,7 @@
             },
             "service": {
               "type": "string",
-              "description": "Service identifier of the subscriber: a DID with an optional service fragment naming the entry in its DID document to deliver to (e.g. 'did:web:syncer.example.com#atproto_space_syncer'). notifyWrite calls are addressed to this identifier."
+              "description": "The DID or `did#serviceId` reference of the service to notify."
             }
           }
         }
@@ -32,7 +32,7 @@
             "expiresAt": {
               "type": "string",
               "format": "datetime",
-              "description": "When the registration expires. May be later than the expiry of the space credential the request was authenticated with; renew before this time to stay subscribed."
+              "description": "When the registration expires. Renew before then to keep receiving notifications."
             }
           }
         }
@@ -41,7 +41,7 @@
         { "name": "SpaceNotFound" },
         {
           "name": "ServiceNotResolvable",
-          "description": "The service identifier could not be resolved to a DID document with a matching service endpoint."
+          "description": "The service could not be resolved to an endpoint."
         }
       ]
     }

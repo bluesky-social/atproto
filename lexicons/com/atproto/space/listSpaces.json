@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "List the spaces the authenticated user holds a repo in (i.e. spaces the user has written data to) or is the authority of, optionally filtered by type and/or authority DID. Note this is not 'spaces I'm a member of' — a member's PDS only tracks spaces its user has written to. Requires auth, implemented by PDS.",
+      "description": "List spaces that the authenticated account owns or has written to. Requires auth, implemented by PDS.",
       "parameters": {
         "type": "params",
         "properties": {
@@ -16,7 +16,7 @@
           "did": {
             "type": "string",
             "format": "did",
-            "description": "Filter to spaces under this authority DID."
+            "description": "Filter to spaces owned by this DID."
           },
           "limit": {
             "type": "integer",

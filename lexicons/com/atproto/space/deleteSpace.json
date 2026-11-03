@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Delete a space. Requires auth as the space owner. Deletes the owner's own repo in the space; other members' repos are left in place. Afterwards, reads and writes fail with SpaceNotFound and getSpaceCredential returns SpaceDeleted. Idempotent. Implemented by PDS.",
+      "description": "Delete a space, along with the owner's repo in it. Requires auth as the space owner, implemented by PDS.",
       "input": {
         "encoding": "application/json",
         "schema": {

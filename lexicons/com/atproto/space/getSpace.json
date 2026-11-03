@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "Describe a space, including the policy that governs it. Served by the space host for every space it hosts, regardless of policy. Requires OAuth as the space owner with a covering read_self grant. A policy may optionally be published in the space, as a com.atproto.space.policy record, so that syncers can view it.",
+      "description": "Get a space and its policy. Requires auth as the space owner, implemented by PDS.",
       "parameters": {
         "type": "params",
         "required": ["space"],
@@ -29,7 +29,7 @@
             },
             "policy": {
               "type": "union",
-              "description": "The policy governing the space, including its configuration.",
+              "description": "The policy governing the space.",
               "refs": [
                 "com.atproto.personalspace.policy",
                 "com.atproto.memberspace.policy",

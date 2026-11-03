@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Remove a member from the member list of a space governed by the memberspace policy. Requires auth as the space owner.",
+      "description": "Remove a member from a space. Requires auth as the space owner, implemented by PDS.",
       "input": {
         "encoding": "application/json",
         "schema": {
@@ -33,7 +33,7 @@
         },
         {
           "name": "PolicyMismatch",
-          "description": "The space is not governed by the memberspace policy."
+          "description": "The space does not have a memberspace policy."
         }
       ]
     }

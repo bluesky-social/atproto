@@ -19,7 +19,7 @@
             "repo": {
               "type": "string",
               "format": "did",
-              "description": "The DID of the repo to write to (the authenticated member)."
+              "description": "The DID of the repo (aka, current account)."
             },
             "collection": {
               "type": "string",
@@ -71,7 +71,7 @@
         },
         {
           "name": "RecordAlreadyExists",
-          "description": "A record already exists at this collection and rkey. Retry with a different rkey, or use putRecord."
+          "description": "A record already exists at this collection and rkey."
         }
       ]
     }

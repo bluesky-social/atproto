@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Notify that a repo in a space has advanced. Repo hosts reliably deliver their latest state to the space host, which sequences updates and forwards them to registered syncers with reasonable-effort delivery. Authenticated with service auth.",
+      "description": "Notify that a repo in a space has been updated. Sent by repo hosts to the space host, which forwards it to registered syncing services. Requires service auth.",
       "input": {
         "encoding": "application/json",
         "schema": {
@@ -19,7 +19,7 @@
             "repo": {
               "type": "string",
               "format": "did",
-              "description": "The DID of the account whose repo advanced."
+              "description": "The DID of the repo."
             },
             "repoRev": {
               "type": "string",
@@ -28,17 +28,17 @@
             },
             "data": {
               "type": "bytes",
-              "description": "The repo's current commit data (sha256 of the LtHash state) after the write. Lets the space host maintain each repo's commit data for listRepos."
+              "description": "The repo's commit data after the write."
             },
             "spaceRev": {
               "type": "string",
               "format": "tid",
-              "description": "The space revision assigned by the space host. Present only on notifications forwarded to syncers."
+              "description": "The space revision assigned by the space host. Only set on notifications forwarded to syncing services."
             },
             "prevSpaceRev": {
               "type": "string",
               "format": "tid",
-              "description": "The previous space revision. Omitted on the first update in a space. A gap indicates missed notifications; recover using listRepos with cursor."
+              "description": "The previous space revision. Omitted on the first update in a space. A gap indicates missed notifications, which can be recovered with listRepos."
             }
           }
         }
@@ -49,7 +49,7 @@
         },
         {
           "name": "FutureRev",
-          "description": "The repo revision exceeds the permitted clock skew."
+          "description": "The repo revision is too far in the future."
         }
       ]
     }

@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "List the CIDs of blobs referenced by an account's records within a permissioned space, optionally since some revision of that repo. Lets a syncer discover which blobs to fetch via getBlob, and lets an account enumerate the blobs it must carry when migrating a permissioned repo. Scoped to one space: blobs behind permissioned records are never enumerated by com.atproto.sync.listBlobs, which is unauthenticated. Callable with either OAuth (for the authenticated user's own data) or a space credential (for syncing services).",
+      "description": "List blob CIDs referenced by an account's records in a permissioned space, optionally since some repo revision. Requires auth as the repo's account or with a space credential; implemented by PDS.",
       "parameters": {
         "type": "params",
         "required": ["space", "repo"],
@@ -17,12 +17,12 @@
           "repo": {
             "type": "string",
             "format": "did",
-            "description": "The DID of the account whose blobs to list."
+            "description": "The DID of the account."
           },
           "since": {
             "type": "string",
             "format": "tid",
-            "description": "Optional revision of the permissioned repo to list blobs since."
+            "description": "Optional revision of the repo to list blobs since."
           },
           "limit": {
             "type": "integer",

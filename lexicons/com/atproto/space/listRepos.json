@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "List the known repos that hold data in a space (the writer set), with each repo's current repoRev and commit data. Served by the space host. This is the sync boundary, not an access-control list: it enumerates only writers, never readers. The set is what the authority claims from write notifications and is not itself authoritative; a repo's host is the source of truth.",
+      "description": "List the repos that hold data in a space (the writer set), with the latest known state of each. Requires a space credential, implemented by the space host.",
       "parameters": {
         "type": "params",
         "required": ["space"],
@@ -23,7 +23,7 @@
           },
           "cursor": {
             "type": "string",
-            "description": "Return repos updated after this space revision (exclusive). Use a previous response's cursor or a previously processed spaceRev."
+            "description": "Return repos updated after this space revision."
           }
         }
       },
@@ -39,11 +39,10 @@
                 "type": "ref",
                 "ref": "#repo"
               },
-              "description": "Returned in ascending spaceRev order. A repo may reappear if updated while paginating."
+              "description": "Ordered by spaceRev, ascending."
             },
             "cursor": {
-              "type": "string",
-              "description": "Pass this cursor on the next request. Omitted when no repos are returned."
+              "type": "string"
             }
           }
         }
@@ -60,17 +59,16 @@
       "properties": {
         "did": {
           "type": "string",
-          "format": "did",
-          "description": "The DID of a repo that holds data in the space."
+          "format": "did"
         },
         "repoRev": {
           "type": "string",
-          "description": "The repo's current revision (TID), as last reported to the authority. May lag the repo host, which is the source of truth.",
+          "description": "The repo's revision, as last reported to the space host.",
           "format": "tid"
         },
         "data": {
           "type": "bytes",
-          "description": "The repo's current commit data (sha256 of the LtHash state), as last reported to the authority."
+          "description": "The repo's commit data, as last reported to the space host."
         },
         "spaceRev": {
           "type": "string",

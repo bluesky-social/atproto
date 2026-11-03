@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Replace the policy of a space wholesale. A policy with a different $type migrates the space, discarding state held by the previous policy (such as a member list). The authenticated user must be the space owner. Requires auth, implemented by PDS.",
+      "description": "Replace the policy of a space. Changing to a different policy type discards state held by the previous policy, such as a member list. Requires auth as the space owner, implemented by PDS.",
       "input": {
         "encoding": "application/json",
         "schema": {
@@ -18,7 +18,7 @@
             },
             "policy": {
               "type": "union",
-              "description": "The policy governing the space, including its configuration. Replaces the current policy.",
+              "description": "The new policy for the space.",
               "refs": [
                 "com.atproto.personalspace.policy",
                 "com.atproto.memberspace.policy",
@@ -37,7 +37,7 @@
         },
         {
           "name": "UnsupportedPolicy",
-          "description": "The requested policy is not one the host implements."
+          "description": "The host does not support the requested policy."
         }
       ]
     }

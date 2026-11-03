@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "List the records in an account's repo within a permissioned space, optionally filtered by collection. By default each record's value is inlined; set excludeValues for a metadata-only listing (collection, rkey, cid). Used for full-state recovery. Callable with either OAuth (for the authenticated user's own data) or a space credential (for syncing services). Throws RepoNotFound when the account holds no repo in the space; this does not distinguish a member that has never written from a non-member.",
+      "description": "List records in an account's repo within a permissioned space, optionally filtered by collection. Requires auth as the repo's account or with a space credential; implemented by PDS.",
       "parameters": {
         "type": "params",
         "required": ["space", "repo"],
@@ -17,7 +17,7 @@
           "repo": {
             "type": "string",
             "format": "did",
-            "description": "The DID of the account whose repo to list."
+            "description": "The DID of the repo."
           },
           "collection": {
             "type": "string",
@@ -41,7 +41,7 @@
           "excludeValues": {
             "type": "boolean",
             "default": false,
-            "description": "If true, omit inlined record values and return only metadata (collection, rkey, cid)."
+            "description": "If true, omit record values from the response."
           }
         }
       },
@@ -100,7 +100,7 @@
         },
         "value": {
           "type": "unknown",
-          "description": "The record's value. Inlined by default; omitted when excludeValues is set."
+          "description": "Omitted if excludeValues is set."
         }
       }
     }
