@@ -152,6 +152,7 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
     appealWindowMonths: env.inboxAppealWindowMonths ?? 6,
     policyDefaultUrl: env.inboxPolicyDefaultUrl ?? DEFAULT_INBOX_POLICY_URL,
     startAt: parseInboxStartAt(env.inboxStartAt),
+    pushEnabled: env.inboxPushEnabled ?? false,
   }
 
   const statsCfg: OzoneConfig['stats'] = {
@@ -302,6 +303,7 @@ export type VerifierConfig = {
 }
 
 export type InboxConfig = {
+  pushEnabled?: boolean
   /** Inclusive creation-time cutoff for inbox history; unset exposes all history. */
   startAt?: DatetimeString
   /**

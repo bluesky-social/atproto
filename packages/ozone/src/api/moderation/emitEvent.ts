@@ -275,6 +275,7 @@ const handleModerationEvent = async ({
       try {
         await processReportAction({
           inboxStartAt: ctx.cfg.inbox.startAt,
+          inboxPushEnabled: ctx.cfg.inbox.pushEnabled,
           db: dbTxn,
           reportAction: input.body.reportAction,
           metadata,

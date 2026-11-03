@@ -361,11 +361,14 @@
     "tools.ozone.communication.listTemplates",
     "tools.ozone.communication.updateTemplate",
     "tools.ozone.hosting.getAccountHistory",
+    "tools.ozone.inbox.ackPushNotifications",
     "tools.ozone.inbox.appealActionedSubject",
+    "tools.ozone.inbox.claimPushNotifications",
     "tools.ozone.inbox.defs",
     "tools.ozone.inbox.getAccountStatus",
     "tools.ozone.inbox.getActionedSubject",
     "tools.ozone.inbox.getNotificationPreferences",
+    "tools.ozone.inbox.getPushPreference",
     "tools.ozone.inbox.getReport",
     "tools.ozone.inbox.getUnreadCount",
     "tools.ozone.inbox.listActionedSubjects",
@@ -1838,9 +1841,17 @@
       "uri": "file://../../lexicons/tools/ozone/hosting/getAccountHistory.json",
       "cid": "bafyreicvtqadzirxjjkbugm7j5wu37yi7fv63j2p6v6pgqollzxbw7hx7i"
     },
+    "tools.ozone.inbox.ackPushNotifications": {
+      "uri": "file://../../lexicons/tools/ozone/inbox/ackPushNotifications.json",
+      "cid": "bafyreiano4i2ustp3u7optvdartdv5ziyjh44cwogq7dvbqg22p5ra4jsi"
+    },
     "tools.ozone.inbox.appealActionedSubject": {
       "uri": "file://../../lexicons/tools/ozone/inbox/appealActionedSubject.json",
       "cid": "bafyreiesyoleqourglbxfwh64ffd7hhbpojupbrcd73tiip5pq2qgjhw54"
+    },
+    "tools.ozone.inbox.claimPushNotifications": {
+      "uri": "file://../../lexicons/tools/ozone/inbox/claimPushNotifications.json",
+      "cid": "bafyreifqlkzta64s5mlptqwl6yakmtqqqjkuj3phn2joyq2wupboqsgg7m"
     },
     "tools.ozone.inbox.defs": {
       "uri": "file://../../lexicons/tools/ozone/inbox/defs.json",
@@ -1857,6 +1868,10 @@
     "tools.ozone.inbox.getNotificationPreferences": {
       "uri": "file://../../lexicons/tools/ozone/inbox/getNotificationPreferences.json",
       "cid": "bafyreichkq4r6xbjmuibelyx7ax4mi3zookgootki7re4njzva5osf3iiq"
+    },
+    "tools.ozone.inbox.getPushPreference": {
+      "uri": "file://../../lexicons/tools/ozone/inbox/getPushPreference.json",
+      "cid": "bafyreigvvqe7vghpb3ofd2zgahyb6ygtnchii7pulez2qkbdvp4vnbt7ui"
     },
     "tools.ozone.inbox.getReport": {
       "uri": "file://../../lexicons/tools/ozone/inbox/getReport.json",

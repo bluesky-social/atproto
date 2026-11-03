@@ -132,6 +132,7 @@ export class DaemonContext {
       strikeService,
       cfg.strikeSuspension,
       cfg.inbox.startAt,
+      cfg.inbox.pushEnabled,
     )
 
     const queueService = QueueService.creator(cfg.service.did)

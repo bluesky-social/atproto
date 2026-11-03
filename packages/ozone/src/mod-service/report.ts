@@ -402,6 +402,7 @@ export async function findReportsForSubject(
 export type CloseReportsForSubjectParams = {
   db: Database
   inboxStartAt?: DatetimeString
+  inboxPushEnabled?: boolean
   subjectDid: DidString
   subjectUri: string | null
   includeAllOwned?: boolean
@@ -535,6 +536,7 @@ export async function closeReportsForSubject(
           createdAt: activity.createdAt,
         })),
         params.inboxStartAt,
+        params.inboxPushEnabled,
       )
     }
 
@@ -545,6 +547,7 @@ export async function closeReportsForSubject(
 export type ProcessReportActionParams = {
   db: Database
   inboxStartAt?: DatetimeString
+  inboxPushEnabled?: boolean
   reportAction: {
     ids?: number[]
     types?: string[]
@@ -773,6 +776,7 @@ export async function processReportAction(
       createdAt: activity.createdAt,
     })),
     params.inboxStartAt,
+    params.inboxPushEnabled,
   )
 
   return validUpdates.length

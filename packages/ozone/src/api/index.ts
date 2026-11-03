@@ -5,10 +5,13 @@ import createTemplate from './communication/createTemplate.js'
 import deleteTemplate from './communication/deleteTemplate.js'
 import listTemplates from './communication/listTemplates.js'
 import updateTemplate from './communication/updateTemplate.js'
+import ackPushNotifications from './inbox/ackPushNotifications.js'
 import appealActionedSubject from './inbox/appealActionedSubject.js'
+import claimPushNotifications from './inbox/claimPushNotifications.js'
 import getAccountStatus from './inbox/getAccountStatus.js'
 import getActionedSubject from './inbox/getActionedSubject.js'
 import getNotificationPreferences from './inbox/getNotificationPreferences.js'
+import getPushPreference from './inbox/getPushPreference.js'
 import getInboxReport from './inbox/getReport.js'
 import getUnreadCount from './inbox/getUnreadCount.js'
 import listActionedSubjects from './inbox/listActionedSubjects.js'
@@ -92,8 +95,11 @@ export * as wellKnown from './well-known.js'
 export default function (server: Server, ctx: AppContext) {
   createReport(server, ctx)
   appealActionedSubject(server, ctx)
+  ackPushNotifications(server, ctx)
+  claimPushNotifications(server, ctx)
   getAccountStatus(server, ctx)
   getNotificationPreferences(server, ctx)
+  getPushPreference(server, ctx)
   getUnreadCount(server, ctx)
   getActionedSubject(server, ctx)
   getInboxReport(server, ctx)
