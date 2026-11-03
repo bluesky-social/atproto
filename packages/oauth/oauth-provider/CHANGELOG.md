@@ -1,5 +1,21 @@
 # @atproto/oauth-provider
 
+## 0.25.3
+
+### Patch Changes
+
+- [#5782](https://github.com/bluesky-social/atproto/pull/5782) [`7aa8e7e`](https://github.com/bluesky-social/atproto/commit/7aa8e7e9e1422f053447879def4d4cf92a05adbb) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Match TypeScript project references to workspace dependencies
+- Updated dependencies [[`07c25d4`](https://github.com/bluesky-social/atproto/commit/07c25d410d4f4ad8f6ec80fc14efa0dd8ec55545), [`7aa8e7e`](https://github.com/bluesky-social/atproto/commit/7aa8e7e9e1422f053447879def4d4cf92a05adbb)]:
+  - @atproto/lex-document@0.1.15
+  - @atproto-labs/pipe@0.2.5
+  - @atproto/lex-resolver@0.4.2
+  - @atproto-labs/did-resolver@0.3.12
+  - @atproto-labs/fetch-node@0.4.4
+  - @atproto/common@0.8.8
+  - @atproto/oauth-provider-ui@0.11.0
+  - @atproto/oauth-resolver@0.0.2
+  - @atproto-labs/handle-resolver-node@0.2.16
+
 ## 0.25.2
 
 ### Patch Changes

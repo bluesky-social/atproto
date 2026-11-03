@@ -1,5 +1,13 @@
 # @atproto/oauth-resolver
 
+## 0.0.2
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto-labs/fetch@0.4.1
+  - @atproto-labs/identity-resolver@0.4.12
+
 ## 0.0.1
 
 ### Patch Changes

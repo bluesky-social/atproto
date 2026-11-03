@@ -1,5 +1,15 @@
 # @atproto/api
 
+## 0.30.1
+
+### Patch Changes
+
+- [#5801](https://github.com/bluesky-social/atproto/pull/5801) [`11f52c5`](https://github.com/bluesky-social/atproto/commit/11f52c5588279d159ab12404a1b323731a467fdd) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add getAtmosphereApps with optional category filtering and known followers in app profiles.
+- Updated dependencies []:
+  - @atproto/common-web@0.5.16
+  - @atproto/lexicon@0.7.18
+  - @atproto/xrpc@0.8.17
+
 ## 0.30.0
 
 ### Minor Changes

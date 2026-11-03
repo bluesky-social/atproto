@@ -1,5 +1,13 @@
 # @atproto/identity
 
+## 0.5.21
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto-labs/fetch-node@0.4.4
+  - @atproto/common-web@0.5.16
+
 ## 0.5.20
 
 ### Patch Changes
