@@ -27,6 +27,7 @@ import {
   toDatetimeString,
 } from '@atproto/lex'
 import { AuthRequiredError, createServer } from '@atproto/xrpc-server'
+import registerApps from '../src/api/app/bsky/unspecced/getAtmosphereApps.js'
 import register from '../src/api/app/bsky/unspecced/getAtmosphereExploreTab.js'
 import { ServerConfig } from '../src/config.js'
 import type { AppContext } from '../src/context.js'
@@ -211,6 +212,7 @@ async function setup(config: unknown = {}, exploreEnabled = true) {
     { exists?: boolean; handle?: string; profile?: TypedLexMap }
   >()
   const blockedActors = new Set<string>()
+  const knownFollowers = new Map<string, string[]>()
   const labels: com.atproto.label.defs.Label[] = []
   const lookup = (uri: string) => {
     const record = records.get(uri as AtUriString)
@@ -269,6 +271,13 @@ async function setup(config: unknown = {}, exploreEnabled = true) {
             }
           }),
         }),
+        sampleFollowsFollowing: ({ targetDids }) => ({
+          results: targetDids.map((did) => ({
+            dids: knownFollowers.get(did) ?? [],
+            totalKnown: knownFollowers.get(did)?.length ?? 0,
+          })),
+        }),
+        getBlockExistence: ({ pairs }) => ({ blocks: pairs.map(() => ({})) }),
         getCountsForUsers: ({ dids }) => ({
           followers: dids.map(() => 3),
           following: dids.map(() => 2),
@@ -359,6 +368,7 @@ async function setup(config: unknown = {}, exploreEnabled = true) {
     .spyOn(globalThis, 'fetch')
     .mockImplementation(async () => Response.json(config))
   register(xrpc, ctx)
+  registerApps(xrpc, ctx)
   const enabledGates = new Set(
     exploreEnabled ? [Gate.AtmosphereScreenEndpointsEnable] : [],
   )
@@ -383,6 +393,7 @@ async function setup(config: unknown = {}, exploreEnabled = true) {
     takenDownActors,
     actors,
     blockedActors,
+    knownFollowers,
     labels,
     dataplane,
     hydrator,
@@ -425,6 +436,23 @@ async function setup(config: unknown = {}, exploreEnabled = true) {
       return {
         status: response.status,
         body: body as app.bsky.unspecced.getAtmosphereExploreTab.$OutputBody,
+      }
+    },
+    queryApps: async (
+      authenticated = false,
+      params: app.bsky.unspecced.getAtmosphereApps.$Params = {},
+    ) => {
+      const url = new URL(
+        `http://127.0.0.1:${address.port}/xrpc/${app.bsky.unspecced.getAtmosphereApps.$lxm}`,
+      )
+      if (params.category !== undefined)
+        url.searchParams.set('category', params.category)
+      const response = await nativeFetch(url, {
+        headers: authenticated ? { authorization: 'Bearer valid' } : {},
+      })
+      return {
+        status: response.status,
+        body: (await response.json()) as app.bsky.unspecced.getAtmosphereApps.$OutputBody,
       }
     },
     async [Symbol.asyncDispose]() {
@@ -1362,6 +1390,185 @@ describe('Atmosphere Explore', () => {
         endedAt: at(0),
       })
     })
+  })
+
+  describe('apps endpoint', () => {
+    const apps = Array.from({ length: 12 }, (_, i) => ({
+      id: `${i}`,
+      category: i < 10 ? 'Social' : 'Writing',
+      did: `did:plc:app${i}`,
+    }))
+
+    it('returns all apps in worker order, independently of article recommendations', async () => {
+      await using fixture = await setup({ apps })
+      fixture.setIrisGate()
+      fixture.ctx.irisClient = undefined
+      using external = vi.spyOn(
+        fixture.hydrator,
+        'hydrateEmbedExternalViewFromUris',
+      )
+      const { status, body } = await fixture.queryApps()
+      expect(status).toBe(200)
+      expect(body.apps.map(({ id }) => id)).toEqual(apps.map(({ id }) => id))
+      expect(body.apps.every(({ profile }) => profile)).toBe(true)
+      expect(external).not.toHaveBeenCalled()
+      expect(fixture.iris.fetchMock).not.toHaveBeenCalled()
+      expect(fixture.fetchMock).toHaveBeenCalledOnce()
+      expect(new Request(...fixture.fetchMock.mock.calls[0]).url).toBe(service)
+    })
+
+    test.each([
+      { category: 'Writing', expected: ['10', '11'] },
+      { category: 'writing', expected: [] },
+      { category: 'unknown', expected: [] },
+    ])(
+      'filters category "$category" before hydration',
+      async ({ category, expected }) => {
+        await using fixture = await setup({ apps })
+        using profiles = vi.spyOn(fixture.hydrator, 'hydrateProfilesDetailed')
+        const { status, body } = await fixture.queryApps(true, { category })
+        expect(status).toBe(200)
+        expect(body.apps.map(({ id }) => id)).toEqual(expected)
+        if (expected.length) {
+          expect(profiles).toHaveBeenCalledOnce()
+          expect(profiles.mock.calls[0][0]).toEqual(
+            expected.map((id) => `did:plc:app${id}`),
+          )
+          expect(profiles.mock.calls[0][2]).toEqual({
+            knownFollowersDids: expected.map((id) => `did:plc:app${id}`),
+          })
+        } else {
+          expect(profiles).not.toHaveBeenCalled()
+        }
+      },
+    )
+
+    it('limits category values to 100 characters in params and cards', async () => {
+      const category = 'a'.repeat(100)
+      await using fixture = await setup({
+        apps: [
+          { id: 'valid', category },
+          { id: 'oversized', category: `${category}a` },
+        ],
+      })
+      const all = await fixture.queryApps()
+      expect(all.status).toBe(200)
+      expect(all.body.apps).toEqual([{ id: 'valid', category }])
+      const filtered = await fixture.queryApps(false, { category })
+      expect(filtered.status).toBe(200)
+      expect(filtered.body.apps).toEqual(all.body.apps)
+      expect(fixture.fetchMock).toHaveBeenCalledTimes(2)
+      expect(
+        (await fixture.queryApps(false, { category: `${category}a` })).status,
+      ).toBe(400)
+      expect(fixture.fetchMock).toHaveBeenCalledTimes(2)
+    })
+
+    it('skips invalid cards, strips upstream profile data, and keeps the ingestion bound', async () => {
+      await using fixture = await setup({
+        apps: [
+          { id: 'invalid', did: 'invalid' },
+          ...Array.from({ length: 100 }, (_, i) => ({
+            id: `${i}`,
+            profileUrl: 'https://example.com/profile',
+            profile: { did: author, handle: 'injected.test' },
+          })),
+        ],
+      })
+      const { status, body } = await fixture.queryApps()
+      expect(status).toBe(200)
+      expect(body.apps).toEqual(
+        Array.from({ length: 99 }, (_, i) => ({ id: `${i}` })),
+      )
+    })
+
+    it('honors the Atmosphere feature gate before fetching', async () => {
+      await using fixture = await setup({ apps }, false)
+      expect((await fixture.queryApps()).status).toBe(403)
+      expect(fixture.fetchMock).not.toHaveBeenCalled()
+    })
+
+    it('returns 501 when the worker is not configured', async () => {
+      await using fixture = await setup({ apps })
+      fixture.cfg.atmosphereExploreTabService = undefined
+      expect((await fixture.queryApps()).status).toBe(501)
+      expect(fixture.fetchMock).not.toHaveBeenCalled()
+    })
+
+    it('uses hydrated profile images and keeps editorial fallbacks when a profile is unavailable', async () => {
+      const logo = 'https://example.com/logo.png'
+      const banner = 'https://example.com/banner.png'
+      const appDid = 'did:plc:app'
+      const missingDid = 'did:plc:missing'
+      await using fixture = await setup({
+        apps: [appDid, missingDid].map((did) => ({
+          did,
+          logo,
+          backgroundImage: banner,
+          overlayColor: '#000000',
+          textColor: '#ffffff',
+        })),
+      })
+      const blob = {
+        $type: 'blob',
+        ref: parseCid(photoCid),
+        mimeType: 'image/jpeg',
+        size: 12,
+      } as const
+      fixture.actors.set(appDid, {
+        profile: app.bsky.actor.profile.$build({ avatar: blob, banner: blob }),
+      })
+      fixture.actors.set(missingDid, { exists: false })
+      const { status, body } = await fixture.queryApps()
+      expect(status).toBe(200)
+      const [hydrated, missing] = body.apps
+      const images = new ImageUriBuilder('https://images.example.com')
+      expect(hydrated.profile?.did).toBe(appDid)
+      expect(hydrated.logo).toBe(
+        images.getPresetUri('avatar', appDid, photoCid),
+      )
+      expect(hydrated.banner).toBe(
+        images.getPresetUri('banner', appDid, photoCid),
+      )
+      expect(hydrated).not.toHaveProperty('backgroundImage')
+      expect(missing).toEqual({ logo, banner })
+    })
+  })
+
+  it('app profiles include known followers only for authenticated viewers', async () => {
+    const appDid = 'did:plc:app'
+    const known = 'did:plc:known'
+    const blocked = 'did:plc:blocked'
+    await using fixture = await setup({
+      apps: [
+        { id: 'one', did: appDid },
+        { id: 'two', did: appDid },
+      ],
+    })
+    fixture.knownFollowers.set(appDid, [known, blocked])
+    fixture.blockedActors.add(blocked)
+    const query = fixture.queryApps
+    using sample = vi.spyOn(fixture.dataplane, 'sampleFollowsFollowing')
+    const anonymous = await query()
+    expect(anonymous.status).toBe(200)
+    expect(anonymous.body.apps[0].profile?.viewer).toBeUndefined()
+    expect(sample).not.toHaveBeenCalled()
+
+    const { status, body } = await query(true)
+    expect(status).toBe(200)
+    expect(sample).toHaveBeenCalledOnce()
+    expect(sample.mock.calls[0][0].targetDids).toEqual([appDid])
+    for (const card of body.apps) {
+      expect(card.profile?.viewer?.knownFollowers).toMatchObject({
+        count: 2,
+        followers: [{ did: known }],
+      })
+      expect(card.profile?.viewer?.knownFollowers?.followers).toHaveLength(1)
+      expect(
+        card.profile?.viewer?.knownFollowers?.followers[0].viewer
+          ?.knownFollowers,
+      ).toBeUndefined()
+    }
   })
 
   describe('app profiles', () => {
@@ -2549,6 +2756,7 @@ describe('Atmosphere Explore', () => {
         new Response(JSON.stringify({ padding: 'x'.repeat(512 * 1024) })),
     )
     expect((await fixture.query()).status).toBe(502)
+    expect((await fixture.queryApps()).status).toBe(502)
   })
 
   test.each(['http', 'json', 'network', 'timeout'] as const)(
@@ -2563,6 +2771,9 @@ describe('Atmosphere Explore', () => {
         throw new TypeError('Network failure')
       })
       expect((await fixture.query()).status).toBe(
+        failure === 'timeout' ? 504 : 502,
+      )
+      expect((await fixture.queryApps()).status).toBe(
         failure === 'timeout' ? 504 : 502,
       )
     },
