@@ -1,5 +1,32 @@
 # @atproto/bsky
 
+## 0.5.1
+
+### Patch Changes
+
+- [#5784](https://github.com/bluesky-social/atproto/pull/5784) [`86c0b36`](https://github.com/bluesky-social/atproto/commit/86c0b362c5a044b8ca3a380438ae09735b3cf16e) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Send sitemap responses with a single `res.end()` instead of piping a stream, and forward unexpected sitemap errors to the shared error handler.
+
+- [#5782](https://github.com/bluesky-social/atproto/pull/5782) [`7aa8e7e`](https://github.com/bluesky-social/atproto/commit/7aa8e7e9e1422f053447879def4d4cf92a05adbb) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Declare `@atproto/bsync`, whose protobuf definitions the codegen reads, as a dev dependency
+
+- [#5786](https://github.com/bluesky-social/atproto/pull/5786) [`07c25d4`](https://github.com/bluesky-social/atproto/commit/07c25d410d4f4ad8f6ec80fc14efa0dd8ec55545) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Depend on the `@atproto/lex-*` packages that `@atproto/lex` re-exports instead of `@atproto/lex`, which also installs the lexicon codegen tooling
+
+- [#5797](https://github.com/bluesky-social/atproto/pull/5797) [`799d2b9`](https://github.com/bluesky-social/atproto/commit/799d2b9e65845e1ff484717a933d16b069ba267e) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Remove shared-secret BFF authentication support.
+
+- [#5801](https://github.com/bluesky-social/atproto/pull/5801) [`11f52c5`](https://github.com/bluesky-social/atproto/commit/11f52c5588279d159ab12404a1b323731a467fdd) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add getAtmosphereApps with optional category filtering and known followers in app profiles.
+- Updated dependencies [[`7aa8e7e`](https://github.com/bluesky-social/atproto/commit/7aa8e7e9e1422f053447879def4d4cf92a05adbb), [`07c25d4`](https://github.com/bluesky-social/atproto/commit/07c25d410d4f4ad8f6ec80fc14efa0dd8ec55545), [`07c25d4`](https://github.com/bluesky-social/atproto/commit/07c25d410d4f4ad8f6ec80fc14efa0dd8ec55545), [`11f52c5`](https://github.com/bluesky-social/atproto/commit/11f52c5588279d159ab12404a1b323731a467fdd), [`07c25d4`](https://github.com/bluesky-social/atproto/commit/07c25d410d4f4ad8f6ec80fc14efa0dd8ec55545)]:
+  - @atproto-labs/xrpc-utils@0.1.29
+  - @atproto/lex-client@0.4.1
+  - @atproto/lex-data@0.1.9
+  - @atproto/lex-json@0.1.8
+  - @atproto/lex-schema@0.2.10
+  - @atproto/sync@0.4.21
+  - @atproto/api@0.30.1
+  - @atproto/xrpc-server@0.13.8
+  - @atproto-labs/fetch-node@0.4.4
+  - @atproto/common@0.8.8
+  - @atproto/repo@0.11.3
+  - @atproto/identity@0.5.21
+
 ## 0.5.0
 
 ### Minor Changes

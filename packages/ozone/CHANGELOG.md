@@ -1,5 +1,24 @@
 # @atproto/ozone
 
+## 0.12.1
+
+### Patch Changes
+
+- [#5782](https://github.com/bluesky-social/atproto/pull/5782) [`7aa8e7e`](https://github.com/bluesky-social/atproto/commit/7aa8e7e9e1422f053447879def4d4cf92a05adbb) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Match TypeScript project references to workspace dependencies
+
+- [#5780](https://github.com/bluesky-social/atproto/pull/5780) [`d38661d`](https://github.com/bluesky-social/atproto/commit/d38661dacd8afb19a2eb87eb8aa7e40656b37c92) Thanks [@foysalit](https://github.com/foysalit)! - Reduce unnecessary report hydration in integration tests.
+
+- [#5786](https://github.com/bluesky-social/atproto/pull/5786) [`07c25d4`](https://github.com/bluesky-social/atproto/commit/07c25d410d4f4ad8f6ec80fc14efa0dd8ec55545) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Depend on the `@atproto/lex-*` packages that `@atproto/lex` re-exports instead of `@atproto/lex`, which also installs the lexicon codegen tooling
+- Updated dependencies [[`07c25d4`](https://github.com/bluesky-social/atproto/commit/07c25d410d4f4ad8f6ec80fc14efa0dd8ec55545), [`07c25d4`](https://github.com/bluesky-social/atproto/commit/07c25d410d4f4ad8f6ec80fc14efa0dd8ec55545)]:
+  - @atproto/lex-client@0.4.1
+  - @atproto/lex-data@0.1.9
+  - @atproto/lex-schema@0.2.10
+  - @atproto/xrpc-server@0.13.8
+  - @atproto-labs/fetch-node@0.4.4
+  - @atproto/common@0.8.8
+  - @atproto/lex-password-session@0.3.1
+  - @atproto/identity@0.5.21
+
 ## 0.12.0
 
 ### Minor Changes

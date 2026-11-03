@@ -1,5 +1,24 @@
 # @atproto/dev-env
 
+## 0.7.2
+
+### Patch Changes
+
+- [#5786](https://github.com/bluesky-social/atproto/pull/5786) [`07c25d4`](https://github.com/bluesky-social/atproto/commit/07c25d410d4f4ad8f6ec80fc14efa0dd8ec55545) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Depend on the `@atproto/lex-*` packages that `@atproto/lex` re-exports instead of `@atproto/lex`, which also installs the lexicon codegen tooling
+- Updated dependencies [[`ee68c93`](https://github.com/bluesky-social/atproto/commit/ee68c9389ebec337d6af37fe373cfb506184040e), [`86c0b36`](https://github.com/bluesky-social/atproto/commit/86c0b362c5a044b8ca3a380438ae09735b3cf16e), [`07c25d4`](https://github.com/bluesky-social/atproto/commit/07c25d410d4f4ad8f6ec80fc14efa0dd8ec55545), [`7aa8e7e`](https://github.com/bluesky-social/atproto/commit/7aa8e7e9e1422f053447879def4d4cf92a05adbb), [`34dbe24`](https://github.com/bluesky-social/atproto/commit/34dbe242ce104b824e195862f97c6a250b444d18), [`7aa8e7e`](https://github.com/bluesky-social/atproto/commit/7aa8e7e9e1422f053447879def4d4cf92a05adbb), [`d38661d`](https://github.com/bluesky-social/atproto/commit/d38661dacd8afb19a2eb87eb8aa7e40656b37c92), [`07c25d4`](https://github.com/bluesky-social/atproto/commit/07c25d410d4f4ad8f6ec80fc14efa0dd8ec55545), [`799d2b9`](https://github.com/bluesky-social/atproto/commit/799d2b9e65845e1ff484717a933d16b069ba267e), [`11f52c5`](https://github.com/bluesky-social/atproto/commit/11f52c5588279d159ab12404a1b323731a467fdd), [`07c25d4`](https://github.com/bluesky-social/atproto/commit/07c25d410d4f4ad8f6ec80fc14efa0dd8ec55545)]:
+  - @atproto/pds@0.5.53
+  - @atproto/bsky@0.5.1
+  - @atproto/lex-client@0.4.1
+  - @atproto/lex-schema@0.2.10
+  - @atproto/ozone@0.12.1
+  - @atproto/sync@0.4.21
+  - @atproto/api@0.30.1
+  - @atproto/xrpc-server@0.13.8
+  - @atproto/common-web@0.5.16
+  - @atproto/identity@0.5.21
+  - @atproto/bsync@0.1.7
+  - @atproto/lexicon@0.7.18
+
 ## 0.7.1
 
 ### Patch Changes
