@@ -972,7 +972,7 @@
     },
     "app.bsky.unspecced.getAtmosphereExploreTab": {
       "uri": "file://../../lexicons-overrides/app/bsky/unspecced/getAtmosphereExploreTab.json",
-      "cid": "bafyreihmakoqnaakyhoyxay2hdlshccakqocrvdpwafuxku52bd6ptvj7q"
+      "cid": "bafyreibyqmxg3gvwf6jnguqhqv25rj6oxue5gptgu6crr32efmq57nuxrq"
     },
     "app.bsky.unspecced.getConfig": {
       "uri": "https://raw.githubusercontent.com/bluesky-social/bsky/refs/heads/main/lexicons/app/bsky/unspecced/getConfig.json",
