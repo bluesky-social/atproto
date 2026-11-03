@@ -13,9 +13,7 @@ describe('stats view removal migration', () => {
   const url = process.env.DB_POSTGRES_URL
   assert(url, 'DB_POSTGRES_URL is required')
   const schemas = ['ozone_stats_upgrade_test', 'ozone_stats_fresh_test']
-  const databases = schemas.map(
-    (schema) => new Database({ schema, url }),
-  )
+  const databases = schemas.map((schema) => new Database({ schema, url }))
 
   afterAll(async () => {
     for (const db of databases) {
