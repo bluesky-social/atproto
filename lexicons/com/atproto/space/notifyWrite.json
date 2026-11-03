@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Notify that a repo in a space has been updated. Sent by repo hosts to the space host, which forwards it to registered syncing services. Requires service auth.",
+      "description": "Notify that a space repo has been updated. Sent by repo hosts to the space host, which forwards it to registered syncing services. Requires service auth.",
       "input": {
         "encoding": "application/json",
         "schema": {
@@ -29,12 +29,12 @@
             "spaceRev": {
               "type": "string",
               "format": "tid",
-              "description": "The space revision assigned by the space host. Only set on notifications forwarded to syncing services."
+              "description": "Set by the space host on notifications forwarded to syncing services."
             },
             "prevSpaceRev": {
               "type": "string",
               "format": "tid",
-              "description": "The previous space revision. Omitted on the first update in a space. A gap indicates missed notifications, which can be recovered with listRepos."
+              "description": "Omitted on the first update in a space. A gap indicates missed notifications, which can be recovered with listRepos."
             }
           }
         }

@@ -4,7 +4,7 @@
   "defs": {
     "commit": {
       "type": "object",
-      "description": "Commit to the current state of a repo in a space. Not signed; authenticated by the repo host with a MAC instead.",
+      "description": "Commit to the current state of a space repo. Not signed; authenticated by the repo host with a MAC instead.",
       "required": ["ver", "repo", "space", "rev", "data"],
       "properties": {
         "ver": {

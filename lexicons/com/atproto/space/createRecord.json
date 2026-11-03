@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Create a single new record in a permissioned space. Requires auth, implemented by PDS.",
+      "description": "Create a single new record in a space repo. Requires auth, implemented by PDS.",
       "input": {
         "encoding": "application/json",
         "schema": {

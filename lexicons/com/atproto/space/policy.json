@@ -12,6 +12,7 @@
         "properties": {
           "policy": {
             "type": "union",
+            "description": "Hosts may support policies beyond those listed, and are not required to support all of them.",
             "refs": [
               "com.atproto.personalspace.policy",
               "com.atproto.memberspace.policy",

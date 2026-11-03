@@ -16,8 +16,7 @@
               "format": "space-ref"
             },
             "service": {
-              "type": "string",
-              "description": "The service reference passed to registerNotify."
+              "type": "string"
             }
           }
         }

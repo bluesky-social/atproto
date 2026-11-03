@@ -18,10 +18,9 @@
         },
         "allowedApps": {
           "type": "array",
-          "description": "If set, only these apps may read the space.",
+          "description": "If set, only these apps (by OAuth client ID) may read the space.",
           "items": {
-            "type": "string",
-            "description": "An OAuth client ID."
+            "type": "string"
           }
         },
         "publishPolicy": {

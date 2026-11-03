@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "Get a single record from a permissioned space. Requires auth as the repo's account or with a space credential; implemented by PDS.",
+      "description": "Get a single record from a space repo. Requires auth as the repo's account or with a space credential; implemented by PDS.",
       "parameters": {
         "type": "params",
         "required": ["space", "repo", "collection", "rkey"],

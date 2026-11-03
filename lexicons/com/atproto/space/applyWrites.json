@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Apply a batch transaction of creates, updates, and deletes in a permissioned space. Requires auth, implemented by PDS.",
+      "description": "Apply a batch transaction of creates, updates, and deletes to a space repo. Requires auth, implemented by PDS.",
       "input": {
         "encoding": "application/json",
         "schema": {

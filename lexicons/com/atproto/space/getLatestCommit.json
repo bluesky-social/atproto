@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "Get the current commit of an account's repo within a space. Requires auth as the repo's account or with a space credential; implemented by PDS.",
+      "description": "Get the current commit of a space repo. Requires auth as the repo's account or with a space credential; implemented by PDS.",
       "parameters": {
         "type": "params",
         "required": ["space", "repo"],

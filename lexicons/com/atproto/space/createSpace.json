@@ -13,16 +13,16 @@
           "properties": {
             "spaceType": {
               "type": "string",
-              "format": "nsid",
-              "description": "The NSID of the space type (eg, app.bsky.group)."
+              "format": "nsid"
             },
             "skey": {
               "type": "string",
               "format": "record-key",
-              "description": "The space key, which distinguishes spaces of the same type and owner. Generated as a TID if not provided."
+              "description": "Space key. Generated as a TID if not provided."
             },
             "policy": {
               "type": "union",
+              "description": "Hosts may support policies beyond those listed, and are not required to support all of them.",
               "refs": [
                 "com.atproto.personalspace.policy",
                 "com.atproto.memberspace.policy",
@@ -47,12 +47,10 @@
       },
       "errors": [
         {
-          "name": "SpaceAlreadyExists",
-          "description": "A space with this owner, type, and key already exists."
+          "name": "SpaceAlreadyExists"
         },
         {
-          "name": "UnsupportedPolicy",
-          "description": "The host does not support the requested policy."
+          "name": "UnsupportedPolicy"
         }
       ]
     }

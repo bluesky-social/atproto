@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Import a space's state from an archive produced by exportSpaceMeta, for account migration. Must be called before importing the owner's repo in the space with importRepo. Requires auth as the space owner, implemented by PDS.",
+      "description": "Import a space's state from an archive produced by exportSpaceMeta, for account migration. Must be called before importing the owner's space repo with importRepo. Requires auth as the space owner, implemented by PDS.",
       "input": {
         "encoding": "application/octet-stream"
       },
@@ -13,8 +13,7 @@
           "name": "NotSpaceOwner"
         },
         {
-          "name": "UnsupportedPolicy",
-          "description": "The host does not support the archive's policy."
+          "name": "UnsupportedPolicy"
         }
       ]
     }

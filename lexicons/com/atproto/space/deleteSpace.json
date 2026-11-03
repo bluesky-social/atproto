@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Delete a space, along with the owner's repo in it. Requires auth as the space owner, implemented by PDS.",
+      "description": "Delete a space, along with the owner's space repo. Requires auth as the space owner, implemented by PDS.",
       "input": {
         "encoding": "application/json",
         "schema": {

@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "List operations on an account's repo within a space, after a given revision. Used for incremental sync. Hosts may truncate the log, so use getRepo for a full sync. Requires auth as the repo's account or with a space credential; implemented by PDS.",
+      "description": "List operations on a space repo after a given revision. Used for incremental sync. Hosts may truncate the log, so use getRepo for a full sync. Requires auth as the repo's account or with a space credential; implemented by PDS.",
       "parameters": {
         "type": "params",
         "required": ["space", "repo"],
@@ -74,7 +74,7 @@
     },
     "opEntry": {
       "type": "object",
-      "description": "A single operation on a repo. Operations that share a rev were applied in the same commit.",
+      "description": "Operations that share a rev were applied in the same commit.",
       "required": ["rev", "collection", "rkey", "cid", "prev"],
       "nullable": ["cid", "prev"],
       "properties": {

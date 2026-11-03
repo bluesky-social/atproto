@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "List records in an account's repo within a permissioned space, optionally filtered by collection. Requires auth as the repo's account or with a space credential; implemented by PDS.",
+      "description": "List records in a space repo, optionally filtered by collection. Requires auth as the repo's account or with a space credential; implemented by PDS.",
       "parameters": {
         "type": "params",
         "required": ["space", "repo"],
