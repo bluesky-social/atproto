@@ -84,29 +84,39 @@ describe('moderation-statuses', () => {
       const response = await modClient.queryStatuses({})
       expect(response.subjectStatuses.length).toBeGreaterThan(0)
       for (const status of response.subjectStatuses) {
-        expect(status.accountStats).toBeUndefined()
-        expect(status.recordsStats).toBeUndefined()
+        expect(status).not.toHaveProperty('accountStats')
+        expect(status).not.toHaveProperty('recordsStats')
       }
 
-      const noOpFilters = await modClient.queryStatuses({
-        minAccountSuspendCount: 0,
-        minReportedRecordsCount: -1,
-        minTakendownRecordsCount: 0,
-      })
+      const headers = await network.ozone.modHeaders(
+        'tools.ozone.moderation.queryStatuses',
+      )
+      const queryLegacy = (query: string) =>
+        fetch(
+          `${network.ozone.url}/xrpc/tools.ozone.moderation.queryStatuses?${query}`,
+          { headers },
+        )
+      const noOpResponse = await queryLegacy(
+        'minAccountSuspendCount=0&minReportedRecordsCount=-1&minTakendownRecordsCount=0',
+      )
+      expect(noOpResponse.status).toBe(200)
+      const noOpFilters = (await noOpResponse.json()) as {
+        subjectStatuses: unknown[]
+      }
       expect(noOpFilters.subjectStatuses).toHaveLength(
         response.subjectStatuses.length,
       )
 
-      for (const params of [
-        { minAccountSuspendCount: 1 },
-        { minReportedRecordsCount: 1 },
-        { minTakendownRecordsCount: 1 },
-        { sortField: 'reportedRecordsCount' as const },
-        { sortField: 'takendownRecordsCount' as const },
+      for (const query of [
+        'minAccountSuspendCount=1',
+        'minReportedRecordsCount=1',
+        'minTakendownRecordsCount=1',
+        'minTakendownRecordsCount=invalid',
+        'minTakendownRecordsCount=0&minTakendownRecordsCount=1',
+        'sortField=reportedRecordsCount',
+        'sortField=takendownRecordsCount',
       ]) {
-        await expect(modClient.queryStatuses(params)).rejects.toThrow(
-          'Count-based status filters and sorts are no longer supported',
-        )
+        expect((await queryLegacy(query)).status).toBe(400)
       }
     })
 

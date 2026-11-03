@@ -1,6 +1,6 @@
 ---
 '@atproto/ozone': minor
-'@atproto/api': patch
+'@atproto/api': minor
 '@atproto/bsky': patch
 '@atproto/pds': patch
 '@atproto/dev-env': patch
