@@ -13,8 +13,7 @@
           "properties": {
             "space": {
               "type": "string",
-              "format": "space-ref",
-              "description": "Reference to the space."
+              "format": "space-ref"
             },
             "service": {
               "type": "string",
@@ -32,7 +31,7 @@
             "expiresAt": {
               "type": "string",
               "format": "datetime",
-              "description": "When the registration expires. Renew before then to keep receiving notifications."
+              "description": "Renew before then to keep receiving notifications."
             }
           }
         }
@@ -40,8 +39,7 @@
       "errors": [
         { "name": "SpaceNotFound" },
         {
-          "name": "ServiceNotResolvable",
-          "description": "The service could not be resolved to an endpoint."
+          "name": "ServiceNotResolvable"
         }
       ]
     }

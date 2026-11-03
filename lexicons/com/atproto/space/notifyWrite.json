@@ -13,22 +13,18 @@
           "properties": {
             "space": {
               "type": "string",
-              "format": "space-ref",
-              "description": "Reference to the space."
+              "format": "space-ref"
             },
             "repo": {
               "type": "string",
-              "format": "did",
-              "description": "The DID of the repo."
+              "format": "did"
             },
             "repoRev": {
               "type": "string",
-              "description": "The repo revision after the write.",
               "format": "tid"
             },
             "data": {
-              "type": "bytes",
-              "description": "The repo's commit data after the write."
+              "type": "bytes"
             },
             "spaceRev": {
               "type": "string",

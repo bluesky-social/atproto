@@ -11,15 +11,13 @@
         "properties": {
           "space": {
             "type": "string",
-            "format": "space-ref",
-            "description": "Reference to the space."
+            "format": "space-ref"
           },
           "limit": {
             "type": "integer",
             "minimum": 1,
             "maximum": 1000,
-            "default": 100,
-            "description": "Maximum number of repos to return."
+            "default": 100
           },
           "cursor": {
             "type": "string",
@@ -63,12 +61,12 @@
         },
         "repoRev": {
           "type": "string",
-          "description": "The repo's revision, as last reported to the space host.",
+          "description": "As last reported to the space host.",
           "format": "tid"
         },
         "data": {
           "type": "bytes",
-          "description": "The repo's commit data, as last reported to the space host."
+          "description": "As last reported to the space host."
         },
         "spaceRev": {
           "type": "string",

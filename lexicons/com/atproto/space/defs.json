@@ -13,18 +13,15 @@
         },
         "repo": {
           "type": "string",
-          "format": "did",
-          "description": "The DID of the repo."
+          "format": "did"
         },
         "space": {
           "type": "string",
-          "format": "space-ref",
-          "description": "Reference to the space."
+          "format": "space-ref"
         },
         "rev": {
           "type": "string",
-          "format": "tid",
-          "description": "Repo revision."
+          "format": "tid"
         },
         "data": {
           "type": "bytes",

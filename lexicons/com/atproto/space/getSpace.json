@@ -11,8 +11,7 @@
         "properties": {
           "space": {
             "type": "string",
-            "format": "space-ref",
-            "description": "Reference to the space."
+            "format": "space-ref"
           }
         }
       },
@@ -24,12 +23,10 @@
           "properties": {
             "uri": {
               "type": "string",
-              "format": "space-ref",
-              "description": "URI of the space."
+              "format": "space-ref"
             },
             "policy": {
               "type": "union",
-              "description": "The policy governing the space.",
               "refs": [
                 "com.atproto.personalspace.policy",
                 "com.atproto.memberspace.policy",

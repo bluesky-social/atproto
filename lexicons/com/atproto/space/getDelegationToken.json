@@ -11,8 +11,7 @@
         "properties": {
           "space": {
             "type": "string",
-            "format": "space-ref",
-            "description": "Reference to the space."
+            "format": "space-ref"
           }
         }
       },
@@ -23,8 +22,7 @@
           "required": ["token"],
           "properties": {
             "token": {
-              "type": "string",
-              "description": "A signed JWT delegation token."
+              "type": "string"
             }
           }
         }

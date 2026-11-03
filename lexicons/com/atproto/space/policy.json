@@ -12,7 +12,6 @@
         "properties": {
           "policy": {
             "type": "union",
-            "description": "The policy governing the space.",
             "refs": [
               "com.atproto.personalspace.policy",
               "com.atproto.memberspace.policy",

@@ -11,33 +11,28 @@
         "properties": {
           "space": {
             "type": "string",
-            "format": "space-ref",
-            "description": "Reference to the space."
+            "format": "space-ref"
           },
           "repo": {
             "type": "string",
-            "format": "did",
-            "description": "The DID of the repo."
+            "format": "did"
           },
           "since": {
             "type": "string",
-            "format": "tid",
-            "description": "Return operations after this revision."
+            "format": "tid"
           },
           "limit": {
             "type": "integer",
             "minimum": 1,
             "maximum": 1000,
-            "default": 100,
-            "description": "Maximum number of operations to return."
+            "default": 100
           },
           "cursor": {
             "type": "string"
           },
           "excludeValues": {
             "type": "boolean",
-            "default": false,
-            "description": "If true, omit record values from the response."
+            "default": false
           }
         }
       },
@@ -57,7 +52,7 @@
             "commit": {
               "type": "ref",
               "ref": "com.atproto.space.defs#commit",
-              "description": "The repo's current commit. Only included when the response reaches the latest operation."
+              "description": "Only included when the response reaches the latest operation."
             },
             "cursor": {
               "type": "string"
@@ -107,7 +102,7 @@
         },
         "value": {
           "type": "unknown",
-          "description": "The record's current value. Omitted for deletes, if excludeValues is set, or if the record has since changed."
+          "description": "Omitted for deletes, if excludeValues is set, or if the record has since changed."
         }
       }
     }

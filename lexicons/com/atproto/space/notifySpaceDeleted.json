@@ -13,8 +13,7 @@
           "properties": {
             "space": {
               "type": "string",
-              "format": "space-ref",
-              "description": "Reference to the deleted space."
+              "format": "space-ref"
             }
           }
         }

@@ -9,7 +9,7 @@
       "properties": {
         "managingApp": {
           "type": "string",
-          "description": "The DID or `did#serviceId` reference of the managing app."
+          "description": "The `did#serviceId` reference of the managing app."
         },
         "publishPolicy": {
           "type": "boolean",

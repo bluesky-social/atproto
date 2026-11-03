@@ -11,12 +11,10 @@
         "required": ["read", "write"],
         "properties": {
           "read": {
-            "type": "boolean",
-            "description": "Whether the member has read access."
+            "type": "boolean"
           },
           "write": {
-            "type": "boolean",
-            "description": "Whether the member has write access."
+            "type": "boolean"
           }
         }
       }

@@ -13,13 +13,11 @@
           "properties": {
             "space": {
               "type": "string",
-              "format": "space-ref",
-              "description": "Reference to the space."
+              "format": "space-ref"
             },
             "repo": {
               "type": "string",
-              "format": "did",
-              "description": "The DID of the repo (aka, current account)."
+              "format": "did"
             }
           }
         }

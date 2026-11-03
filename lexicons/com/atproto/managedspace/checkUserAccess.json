@@ -11,18 +11,15 @@
         "properties": {
           "space": {
             "type": "string",
-            "format": "space-ref",
-            "description": "Reference to the space."
+            "format": "space-ref"
           },
           "user": {
             "type": "string",
-            "format": "did",
-            "description": "The DID of the user."
+            "format": "did"
           },
           "access": {
             "type": "string",
-            "knownValues": ["read", "write"],
-            "description": "The kind of access being checked."
+            "knownValues": ["read", "write"]
           },
           "clientId": {
             "type": "string",
@@ -37,8 +34,7 @@
           "required": ["authorized"],
           "properties": {
             "authorized": {
-              "type": "boolean",
-              "description": "Whether access is granted."
+              "type": "boolean"
             }
           }
         }

@@ -10,8 +10,7 @@
         "properties": {
           "spaceType": {
             "type": "string",
-            "format": "nsid",
-            "description": "Filter to spaces of this space type."
+            "format": "nsid"
           },
           "did": {
             "type": "string",
@@ -22,8 +21,7 @@
             "type": "integer",
             "minimum": 1,
             "maximum": 100,
-            "default": 50,
-            "description": "The number of spaces to return."
+            "default": 50
           },
           "cursor": {
             "type": "string"
@@ -56,8 +54,7 @@
       "properties": {
         "uri": {
           "type": "string",
-          "format": "space-ref",
-          "description": "URI of the space."
+          "format": "space-ref"
         }
       }
     }

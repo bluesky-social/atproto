@@ -13,13 +13,11 @@
           "properties": {
             "space": {
               "type": "string",
-              "format": "space-ref",
-              "description": "Reference to the space."
+              "format": "space-ref"
             },
             "did": {
               "type": "string",
-              "format": "did",
-              "description": "The DID of the member to remove."
+              "format": "did"
             }
           }
         }

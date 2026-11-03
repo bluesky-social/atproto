@@ -13,21 +13,17 @@
           "properties": {
             "space": {
               "type": "string",
-              "format": "space-ref",
-              "description": "Reference to the space."
+              "format": "space-ref"
             },
             "did": {
               "type": "string",
-              "format": "did",
-              "description": "The DID of the member."
+              "format": "did"
             },
             "read": {
-              "type": "boolean",
-              "description": "Whether the member has read access."
+              "type": "boolean"
             },
             "write": {
-              "type": "boolean",
-              "description": "Whether the member has write access."
+              "type": "boolean"
             }
           }
         }

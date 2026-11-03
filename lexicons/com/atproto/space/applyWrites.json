@@ -13,13 +13,11 @@
           "properties": {
             "space": {
               "type": "string",
-              "format": "space-ref",
-              "description": "Reference to the space."
+              "format": "space-ref"
             },
             "repo": {
               "type": "string",
-              "format": "did",
-              "description": "The DID of the repo (aka, current account)."
+              "format": "did"
             },
             "validate": {
               "type": "boolean",
@@ -57,12 +55,10 @@
           "name": "SpaceNotFound"
         },
         {
-          "name": "RecordNotFound",
-          "description": "An update or delete targeted a record that does not exist."
+          "name": "RecordNotFound"
         },
         {
-          "name": "RecordAlreadyExists",
-          "description": "A create targeted a record that already exists."
+          "name": "RecordAlreadyExists"
         }
       ]
     },

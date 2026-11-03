@@ -11,23 +11,19 @@
         "properties": {
           "space": {
             "type": "string",
-            "format": "space-ref",
-            "description": "Reference to the space."
+            "format": "space-ref"
           },
           "repo": {
             "type": "string",
-            "format": "did",
-            "description": "The DID of the repo."
+            "format": "did"
           },
           "collection": {
             "type": "string",
-            "format": "nsid",
-            "description": "The NSID of the record collection."
+            "format": "nsid"
           },
           "rkey": {
             "type": "string",
-            "format": "record-key",
-            "description": "The Record Key."
+            "format": "record-key"
           }
         }
       },

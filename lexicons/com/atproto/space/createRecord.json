@@ -13,23 +13,19 @@
           "properties": {
             "space": {
               "type": "string",
-              "format": "space-ref",
-              "description": "Reference to the space."
+              "format": "space-ref"
             },
             "repo": {
               "type": "string",
-              "format": "did",
-              "description": "The DID of the repo (aka, current account)."
+              "format": "did"
             },
             "collection": {
               "type": "string",
-              "format": "nsid",
-              "description": "The NSID of the record collection."
+              "format": "nsid"
             },
             "rkey": {
               "type": "string",
               "format": "record-key",
-              "description": "The Record Key.",
               "maxLength": 512
             },
             "validate": {
@@ -51,8 +47,7 @@
           "properties": {
             "uri": {
               "type": "string",
-              "format": "at-uri",
-              "description": "URI of the created record."
+              "format": "at-uri"
             },
             "cid": {
               "type": "string",
@@ -70,8 +65,7 @@
           "name": "SpaceNotFound"
         },
         {
-          "name": "RecordAlreadyExists",
-          "description": "A record already exists at this collection and rkey."
+          "name": "RecordAlreadyExists"
         }
       ]
     }
