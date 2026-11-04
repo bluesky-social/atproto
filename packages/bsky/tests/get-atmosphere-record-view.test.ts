@@ -419,7 +419,7 @@ describe('app.bsky.unspecced.getAtmosphereRecordView', () => {
 
   it('drops unavailable dependencies from the raw associations', async () => {
     await using fixture = await setup()
-    // Hydrated, but rejected by availableRecord: $type != collection.
+    // Hydrated, but rejected by isRecordAvailable: $type != collection.
     fixture.latest.set(pubUri, {
       cid: cidA,
       record: app.bsky.feed.post.$build({ text: 'x', createdAt: publishedAt }),

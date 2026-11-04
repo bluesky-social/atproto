@@ -1,7 +1,10 @@
 import type { LexMap, TypedLexMap } from '@atproto/lex-data'
 import type { AtUriString } from '@atproto/lex-schema'
 import { parseAtUriString } from '@atproto/syntax'
-import type { ExternalRecords } from '../../hydration/external.js'
+import type {
+  ExternalRecord,
+  ExternalRecords,
+} from '../../hydration/external.js'
 import { com, site, social } from '../../lexicons/index.js'
 
 type StrongRef = com.atproto.repo.strongRef.Main
@@ -33,11 +36,14 @@ const collectionOf = (uri: AtUriString): string | undefined => {
  * The canonical record, then the hydrated dependencies whose URI collection is
  * opted in by `PERSISTED_DEPENDENCY_COLLECTIONS` for the canonical collection.
  * Refs and associatedRecords are index-aligned, with CIDs taken from
- * hydration; unavailable records are excluded.
+ * hydration; unavailable records are excluded. `canonicalInfo`, when given,
+ * is the selected canonical record (e.g. a pinned version) instead of the one
+ * keyed by `canonicalUri` in `records`.
  */
 export const collectAssociations = (
   canonicalUri: AtUriString,
   records: ExternalRecords,
+  canonicalInfo?: ExternalRecord | null,
 ): { associatedRefs: StrongRef[]; associatedRecords: LexMap[] } => {
   const associatedRefs: StrongRef[] = []
   const associatedRecords: LexMap[] = []
@@ -51,7 +57,10 @@ export const collectAssociations = (
     ...[...records.keys()].filter((uri) => uri !== canonicalUri),
   ]
   for (const uri of uris) {
-    const info = records.get(uri)
+    const info =
+      uri === canonicalUri && canonicalInfo !== undefined
+        ? canonicalInfo
+        : records.get(uri)
     if (!info) continue
     if (uri !== canonicalUri) {
       const collection = collectionOf(uri)

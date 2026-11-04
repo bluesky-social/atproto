@@ -2364,8 +2364,9 @@ export class Views {
     uri: AtUriString,
     state: HydrationState,
     now = Date.now(),
+    cid?: string,
   ): $Typed<ExternalRecordView> | undefined {
-    return externalRecordViewBase(this, uri, state, now)
+    return externalRecordViewBase(this, uri, state, now, cid)
   }
 
   externalEmbed(

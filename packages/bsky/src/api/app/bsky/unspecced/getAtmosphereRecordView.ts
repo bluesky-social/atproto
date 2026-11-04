@@ -10,7 +10,7 @@ import {
 import { HydrationMap } from '../../../../hydration/util.js'
 import { app } from '../../../../lexicons/index.js'
 import { collectAssociations } from '../../../../util/external/associations.js'
-import { availableRecord } from '../../../../views/external.js'
+import { isRecordAvailable } from '../../../../views/external.js'
 import { resHeaders } from '../../../util.js'
 
 export default function (server: Server, ctx: AppContext) {
@@ -48,30 +48,25 @@ export default function (server: Server, ctx: AppContext) {
               options,
             )
 
-      // Request-local URI-keyed records: latest dependencies, with the root
-      // replaced by the exact pinned version (or absent) when a CID is given.
-      const candidates = new HydrationMap(state.externalRecords ?? [])
-      if (cid !== undefined) {
-        candidates.set(
-          uri,
-          state.externalRecordsByRef?.get(genericRecordKey({ uri, cid })) ??
-            null,
-        )
-      }
-      const visible: ExternalRecords = new HydrationMap()
-      for (const [recordUri, info] of candidates) {
-        visible.set(
-          recordUri,
-          availableRecord(ctx.views, recordUri, state, info) ?? null,
-        )
-      }
-
+      // Raw associations: the selected root (exact when pinned, never falling
+      // back to latest) plus visibility-filtered latest dependencies.
+      const root =
+        cid === undefined
+          ? state.externalRecords?.get(uri)
+          : state.externalRecordsByRef?.get(genericRecordKey({ uri, cid }))
       let body: app.bsky.unspecced.getAtmosphereRecordView.$OutputBody = {}
-      if (visible.get(uri)) {
-        const viewState = { ...state, externalRecords: visible }
+      if (isRecordAvailable(root, uri, state, ctx.views)) {
+        const dependencies: ExternalRecords = new HydrationMap()
+        for (const [recordUri, info] of state.externalRecords ?? []) {
+          if (recordUri === uri) continue
+          dependencies.set(
+            recordUri,
+            isRecordAvailable(info, recordUri, state, ctx.views) ? info : null,
+          )
+        }
         body = {
-          view: ctx.views.externalRecordView(uri, viewState),
-          ...collectAssociations(uri, visible),
+          view: ctx.views.externalRecordView(uri, state, undefined, cid),
+          ...collectAssociations(uri, dependencies, root),
         }
       }
       return {

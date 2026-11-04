@@ -21,8 +21,8 @@ import { HydrationMap } from '../../../../hydration/util.js'
 import { app, place, site, social } from '../../../../lexicons/index.js'
 import { recordUriOf, uriToDid } from '../../../../util/uris.js'
 import {
-  availableRecord,
   externalRecordViewRefs,
+  isRecordAvailable,
 } from '../../../../views/external.js'
 import type { Views } from '../../../../views/index.js'
 import type { TimelineActivity } from './atmosphere-grouping.js'
@@ -244,7 +244,7 @@ export class AtmosphereTimelineHydrator {
   private visibleRecord(uri: AtUriString, state: HydrationState): boolean {
     const info = state.externalRecords?.get(uri) ?? state.posts?.get(uri)
     return (
-      !!availableRecord(this.ctx.views, uri, state, info) &&
+      isRecordAvailable(info, uri, state, this.ctx.views) &&
       this.hasUnmutedAuthor(uriToDid(uri), state)
     )
   }
