@@ -14,8 +14,8 @@ import { httpLogger as log } from '../../../../logger.js'
 import type { ActorInfo } from '../../../../proto/bsky_pb.js'
 import { AGE_ASSURANCE_CONFIG } from '../../../age-assurance/const.js'
 import {
+  KWS_AGE_VERIFICATION_CONFIG,
   KWS_SUPPORTED_LANGUAGES,
-  KWS_V2_COUNTRIES,
 } from '../../../age-assurance/kws/const.js'
 import {
   KWSExternalPayloadTooLargeError,
@@ -90,23 +90,22 @@ export default function (server: Server, ctx: AppContext) {
 
       const location = createLocationString(countryCode, regionCode)
 
-      if (KWS_V2_COUNTRIES.has(region.countryCode)) {
-        // `age-verified` flow
-        await ctx.kwsClient.sendAgeVerifiedFlowEmail({
-          location,
-          email,
-          externalPayload,
-          language,
-        })
-      } else {
-        // `adult-verified` flow is what we've been using prior to `age-verified`
-        await ctx.kwsClient.sendAdultVerifiedFlowEmail({
-          location,
-          email,
-          externalPayload,
-          language,
-        })
+      const kwsConfig =
+        KWS_AGE_VERIFICATION_CONFIG[location] ??
+        KWS_AGE_VERIFICATION_CONFIG[region.countryCode]
+      if (!kwsConfig) {
+        throw new Error(
+          `KWS age verification is not configured for ${location}`,
+        )
       }
+
+      await ctx.kwsClient.sendAgeVerifiedFlowEmail({
+        location,
+        email,
+        externalPayload,
+        language,
+        ageBoundary: kwsConfig.ageBoundary,
+      })
 
       // If we have existing status/access for this region, retain it.
       const nextStatus =
