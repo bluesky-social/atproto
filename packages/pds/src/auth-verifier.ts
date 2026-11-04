@@ -412,11 +412,11 @@ export class AuthVerifier {
 
   /**
    * Verify a delegation token presented in a `getSpaceCredential` request body,
-   * returning the user it acts for and the space it names.
+   * returning the account it acts for and the space it names.
    */
   public async verifyDelegationToken(
     token: string,
-  ): Promise<{ userDid: DidString; space: SpaceRefString }> {
+  ): Promise<{ repo: DidString; space: SpaceRefString }> {
     try {
       const { payload } = await this.verifySpaceToken(token, 'delegation')
       const space = parseSpaceSub(payload.sub)
@@ -450,7 +450,7 @@ export class AuthVerifier {
         )
       }
 
-      return { userDid: payload.iss, space: space.toString() }
+      return { repo: payload.iss, space: space.toString() }
     } catch (err) {
       // The token arrives in the request body rather than as the request's
       // authorization, so a bad one is an invalid request, not an auth failure.

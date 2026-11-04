@@ -8,6 +8,7 @@ import {
   oauthClientMetadataSchema,
 } from '@atproto/oauth-types'
 import { SPACE_TOKEN_TYPES, parseSpaceToken } from '@atproto/space'
+import { type UriString, isValidUri } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { type Fetch, bindFetch } from '@atproto-labs/fetch'
 import { CachedGetter, type GetterOptions } from '@atproto-labs/simple-store'
@@ -71,9 +72,15 @@ export class ClientAttestationVerifier {
    * attestation must be addressed to, so one minted for another authority
    * cannot be replayed here.
    */
-  async verify(attestation: string, expectedAud: string): Promise<string> {
+  async verify(attestation: string, expectedAud: string): Promise<UriString> {
     const { payload } = parseSpaceToken('clientAttestation', attestation)
     const clientId = payload.iss
+    if (!isValidUri(clientId)) {
+      throw new InvalidRequestError(
+        `Client attestation issuer is not a client_id: ${clientId}`,
+        'InvalidClientAttestation',
+      )
+    }
 
     const metadata = await this.metadata
       .get(clientId)

@@ -31,7 +31,7 @@ export class RepoVerificationError extends Error {
 
 export class SpaceMacError extends Error {
   name = 'SpaceMacError'
-  readonly code = 'BadSpaceMac'
+  readonly code = 'InvalidSpaceMac'
 }
 
 export class StarParseError extends Error {

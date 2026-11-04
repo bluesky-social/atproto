@@ -1,4 +1,5 @@
 import { DAY } from '@atproto/common'
+import { isAtprotoDidRefAbsolute } from '@atproto/did'
 import { toDatetimeString } from '@atproto/syntax'
 import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../../../context.js'
@@ -20,6 +21,12 @@ export default function (server: Server, ctx: AppContext) {
 
       assertCredentialSpace(auth.credentials, space)
 
+      if (!isAtprotoDidRefAbsolute(service)) {
+        throw new InvalidRequestError(
+          `service must be a did#serviceId reference, got: ${service}`,
+        )
+      }
+
       const spaceDid = await assertSpaceHost(ctx, space)
 
       const endpoint = await resolveServiceEndpoint(ctx.idResolver, service)
@@ -40,7 +47,7 @@ export default function (server: Server, ctx: AppContext) {
       await ctx.actorStore.transact(spaceDid, (actorTxn) =>
         actorTxn.space.recordCredentialRecipient({
           space,
-          serviceDid: service,
+          service,
           serviceEndpoint: endpoint,
           expiresAt,
         }),

@@ -13,13 +13,13 @@ export default function (server: Server, ctx: AppContext) {
       },
     }),
     handler: async ({ params, auth }) => {
-      const { space, repo, since, limit, cursor } = params
+      const { space, repo, limit, cursor } = params
 
       assertSpaceRead(auth, space, repo)
       await assertRepoAvailability(ctx, repo, isSpaceSelfRead(auth, repo))
 
       const cids = await ctx.actorStore.read(repo, (store) =>
-        store.space.listBlobs(space, { since, cursor, limit }),
+        store.space.listBlobs(space, { cursor, limit }),
       )
 
       return {
