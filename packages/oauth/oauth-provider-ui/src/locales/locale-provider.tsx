@@ -14,7 +14,7 @@ import { loadMessages } from './load.ts'
 import { type Locale, detectLocale, isLocale, locales } from './locales.ts'
 
 export type LocaleContextValue = {
-  locale: string
+  locale: Locale
   locales: Partial<Record<Locale, { name: string; flag?: string }>>
   setLocale: (locale: Locale) => void
 }
@@ -30,7 +30,7 @@ export function useLocaleContext(): LocaleContextValue {
   return context
 }
 
-export function useCurrentLocale(): string {
+export function useCurrentLocale() {
   return useLocaleContext().locale
 }
 
@@ -44,7 +44,7 @@ export function LocaleProvider({
   // Bundle "en" messages with the app
   const i18n = useMemo(() => new I18n({ locale: 'en', messages: { en } }), [])
 
-  const [currentLocale, setCurrentLocale] = useState<string>(() => i18n.locale)
+  const [currentLocale, setCurrentLocale] = useState<Locale>(() => i18n.locale as Locale)
   const [desiredLocale, setDesiredLocale] = useState<Locale>(() => {
     return detectLocale(userLocales)
   })
@@ -64,7 +64,7 @@ export function LocaleProvider({
 
   // Keep currentLocale in sync with i18n's locale prop
   useEffect(() => {
-    const onChange = () => setCurrentLocale(i18n.locale)
+    const onChange = () => setCurrentLocale(i18n.locale as Locale)
     i18n.on('change', onChange)
     return () => i18n.removeListener('change', onChange)
   }, [i18n])
