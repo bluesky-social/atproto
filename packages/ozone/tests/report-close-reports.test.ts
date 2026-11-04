@@ -49,6 +49,7 @@ describe('report-close-reports', () => {
     includeAllOwned?: boolean
     reportTypes?: string[]
     excludedReportTypes?: string[]
+    actionEventId?: number
     internalNote?: string
     isAutomated?: boolean
     meta?: Record<string, unknown>
@@ -85,6 +86,12 @@ describe('report-close-reports', () => {
   })
 
   let fixtureNumber = 0
+
+  it('advertises account-wide report actions', async () => {
+    const { data } = await agent.tools.ozone.server.getCapabilities({})
+    expect(data.reportActionAllOwned).toBe(true)
+  })
+
   async function fixture() {
     const name = `closereports${++fixtureNumber}`
     const { did } = await sc.createAccount(name, {
@@ -457,6 +464,206 @@ describe('report-close-reports', () => {
       closedCount: 0,
       reportIds: [],
     })
+  })
+
+  it('links an account action to eligible closures across all owned subjects', async () => {
+    const f = await fixture()
+    const foreign = await fixture()
+    const selected = await reportsForSubjects([
+      f.account,
+      f.record,
+      f.message,
+      f.conversation,
+    ])
+    const assigned = await report(f.record)
+    await setStatus(assigned.id, 'assigned')
+    const other = await report(f.record, com.atproto.moderation.defs.ReasonRude)
+    const untouched = await report(foreign.account)
+    const action = await network.ozone.getModClient().emitEvent({
+      subject: f.account,
+      event: tools.ozone.moderation.defs.modEventLabel.$build({
+        createLabelVals: ['spam'],
+        negateLabelVals: [],
+      }),
+    })
+
+    const result = await closeReports({
+      subject: f.did,
+      includeAllOwned: true,
+      reportTypes: [com.atproto.moderation.defs.ReasonSpam],
+      actionEventId: action.id,
+      internalNote: 'Reviewed',
+      meta: { source: 'test', actionEventId: 999, resolution: 'noAction' },
+    })
+    expect(result.data.reportIds.sort()).toEqual(
+      selected.map((r) => r.id).sort(),
+    )
+    for (const r of selected) {
+      expect((await detail(r.id)).actionEventIds).toEqual([action.id])
+      expect(await listActivities(r.id)).toContainEqual(
+        expect.objectContaining({
+          internalNote: 'Reviewed',
+          meta: {
+            source: 'test',
+            resolution: 'linked',
+            actionEventId: action.id,
+          },
+        }),
+      )
+    }
+    expect((await inbox(selected[0].id)).resolution?.outcome).toBe(
+      'actionTaken',
+    )
+    expect((await inbox(selected[1].id)).resolution?.outcome).toBe(
+      'actionTaken',
+    )
+    for (const r of [assigned, other, untouched]) {
+      expect((await detail(r.id)).status).not.toBe('closed')
+    }
+
+    await reopen(selected[1].id)
+    await closeReports({ subject: f.record.uri, actionEventId: action.id })
+    expect((await detail(selected[1].id)).actionEventIds).toEqual([action.id])
+  })
+
+  it('rejects missing, unrelated, and non-closing action events without closing reports', async () => {
+    const f = await fixture()
+    const foreign = await fixture()
+    const selected = await report(f.record)
+    const before = await snapshotReports([selected])
+    const mod = network.ozone.getModClient()
+    const unrelated = await mod.emitEvent({
+      subject: foreign.account,
+      event: tools.ozone.moderation.defs.modEventAcknowledge.$build({}),
+    })
+    const otherPost = await sc.post(f.did, 'Another record')
+    await network.processAll()
+    const wrongRecord = await mod.emitEvent({
+      subject: com.atproto.repo.strongRef.$build({
+        uri: otherPost.ref.uriStr,
+        cid: otherPost.ref.cidStr,
+      }),
+      event: tools.ozone.moderation.defs.modEventAcknowledge.$build({}),
+    })
+    const nonClosing = await mod.emitEvent({
+      subject: f.account,
+      event: tools.ozone.moderation.defs.modEventEscalate.$build({}),
+    })
+    for (const actionEventId of [
+      999999999,
+      unrelated.id,
+      wrongRecord.id,
+      nonClosing.id,
+    ]) {
+      await expect(
+        closeReports({ subject: f.record.uri, actionEventId }),
+      ).rejects.toMatchObject({
+        error: 'InvalidRequest',
+      })
+    }
+    const recordEvent = await mod.emitEvent({
+      subject: f.record,
+      event: tools.ozone.moderation.defs.modEventAcknowledge.$build({}),
+    })
+    await expect(
+      closeReports({
+        subject: f.did,
+        includeAllOwned: true,
+        actionEventId: recordEvent.id,
+      }),
+    ).rejects.toMatchObject({ error: 'InvalidRequest' })
+    await expectUnchanged(before)
+  })
+
+  it('links one emitted account event to all owned reports and preserves active review', async () => {
+    const f = await fixture()
+    const foreign = await fixture()
+    const selected = await reportsForSubjects([
+      f.account,
+      f.record,
+      f.message,
+      f.conversation,
+    ])
+    const explicit = await report(f.record)
+    await setStatus(explicit.id, 'assigned')
+    const assigned = await report(f.record)
+    await setStatus(assigned.id, 'assigned')
+    const escalated = await report(f.account)
+    await setStatus(escalated.id, 'escalated')
+    const untouched = await report(foreign.account)
+    const action = await network.ozone.getModClient().emitEvent({
+      subject: f.account,
+      event: tools.ozone.moderation.defs.modEventLabel.$build({
+        createLabelVals: ['spam'],
+        negateLabelVals: [],
+      }),
+      reportAction: { allOwned: true, ids: [explicit.id] },
+    })
+    for (const r of [...selected, explicit]) {
+      expect((await detail(r.id)).status).toBe('closed')
+      expect((await detail(r.id)).actionEventIds).toEqual([action.id])
+      expect(await listActivities(r.id)).toContainEqual(
+        expect.objectContaining({
+          meta: { resolution: 'linked', actionEventId: action.id },
+        }),
+      )
+    }
+    for (const r of [assigned, escalated, untouched]) {
+      expect((await detail(r.id)).status).not.toBe('closed')
+    }
+  })
+
+  it('rejects allOwned on records and events that do not close reports', async () => {
+    const f = await fixture()
+    const selected = await report(f.record)
+    const before = await snapshotReports([selected])
+    const mod = network.ozone.getModClient()
+    await expect(
+      mod.emitEvent({
+        subject: f.record,
+        event: tools.ozone.moderation.defs.modEventAcknowledge.$build({}),
+        reportAction: { allOwned: true },
+      }),
+    ).rejects.toThrow('allOwned requires an account subject')
+    await expect(
+      mod.emitEvent({
+        subject: f.account,
+        event: tools.ozone.moderation.defs.modEventEscalate.$build({}),
+        reportAction: { allOwned: true },
+      }),
+    ).rejects.toThrow('allOwned requires an event that closes reports')
+    await expectUnchanged(before)
+  })
+
+  it('accepts allOwned as the only target and links record actions on exact subjects', async () => {
+    const f = await fixture()
+    const recordReport = await report(f.record)
+    const recordAction = await network.ozone.getModClient().emitEvent({
+      subject: f.record,
+      event: tools.ozone.moderation.defs.modEventAcknowledge.$build({}),
+    })
+    await closeReports({
+      subject: f.record.uri,
+      actionEventId: recordAction.id,
+    })
+    expect((await detail(recordReport.id)).actionEventIds).toEqual([
+      recordAction.id,
+    ])
+
+    await reopen(recordReport.id)
+    const accountAction = await network.ozone.getModClient().emitEvent({
+      subject: f.account,
+      event: tools.ozone.moderation.defs.modEventLabel.$build({
+        createLabelVals: ['spam'],
+        negateLabelVals: [],
+      }),
+      reportAction: { allOwned: true },
+    })
+    expect((await detail(recordReport.id)).status).toBe('closed')
+    expect((await detail(recordReport.id)).actionEventIds).toEqual([
+      recordAction.id,
+      accountAction.id,
+    ])
   })
 
   it.each(['record', 'message', 'conversation'] as const)(
@@ -1020,6 +1227,46 @@ describe('report-close-reports', () => {
     expect(data.closedCount).toBe(1)
     expect(data.reportIds).toEqual([report.id])
   })
+  it('links account actions across multiple report update batches', async () => {
+    const f = await fixture()
+    const template = await report(f.record)
+    const db = network.ozone.ctx.db
+    // @NOTE Bulk fixtures exercise the event-linked update batches directly.
+    await sql`
+      with events as (
+        insert into moderation_event (action, "subjectType", "subjectDid", "subjectUri", "subjectCid", "createdAt", "createdBy", meta)
+        select action, "subjectType", "subjectDid", "subjectUri", "subjectCid", "createdAt", "createdBy", meta
+        from moderation_event cross join generate_series(1, 505)
+        where id = ${template.eventId}
+        returning id
+      )
+      insert into report ("eventId", did, "reporterDid", "recordPath", "reportType", status, "createdAt", "updatedAt", "queueId", "isMuted", "isAutomated")
+      select events.id, r.did, r."reporterDid", r."recordPath", r."reportType", r.status, r."createdAt", r."updatedAt", -1, false, false
+      from events cross join report r where r.id = ${template.id}
+    `.execute(db.db)
+    // Drain the router's 100-event batches so synthetic events cannot delay
+    // routing reports created by subsequent tests.
+    for (let i = 0; i < 6; i++) {
+      await network.ozone.daemon.ctx.queueRouter.routeReports()
+    }
+    const action = await network.ozone.getModClient().emitEvent({
+      subject: f.account,
+      event: tools.ozone.moderation.defs.modEventLabel.$build({
+        createLabelVals: ['spam'],
+        negateLabelVals: [],
+      }),
+      reportAction: { allOwned: true },
+    })
+    const counts = await sql<{ reports: number; activities: number }>`
+      select count(*)::int as reports,
+        count(*) filter (where a.meta ->> 'actionEventId' = ${String(action.id)})::int as activities
+      from report r join report_activity a on a."reportId" = r.id
+      where r.did = ${f.did} and r.status = 'closed'
+        and r."actionEventIds" @> ${JSON.stringify([action.id])}::jsonb
+    `.execute(db.db)
+    expect(counts.rows[0]).toEqual({ reports: 506, activities: 506 })
+  })
+
   it('closes thousands of reports atomically within SQL parameter limits', async () => {
     const f = await fixture()
     const template = await report(f.record)

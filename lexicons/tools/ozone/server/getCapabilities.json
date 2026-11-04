@@ -12,6 +12,10 @@
             "notifications": {
               "type": "ref",
               "ref": "#notificationConfig"
+            },
+            "reportActionAllOwned": {
+              "type": "boolean",
+              "description": "Whether moderation events support account-wide reportAction targeting."
             }
           }
         }

@@ -5,6 +5,9 @@ import { tools } from '../../lexicons/index.js'
 export default function (server: Server, _ctx: AppContext) {
   server.add(tools.ozone.server.getCapabilities, async () => ({
     encoding: 'application/json' as const,
-    body: { notifications: { channels: ['inApp'] } },
+    body: {
+      notifications: { channels: ['inApp'] },
+      reportActionAllOwned: true,
+    },
   }))
 }

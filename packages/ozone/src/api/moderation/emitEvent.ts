@@ -11,6 +11,7 @@ import { app, com, tools } from '../../lexicons/index.js'
 import { httpLogger } from '../../logger.js'
 import { processReportAction } from '../../mod-service/report.js'
 import { subjectFromInput } from '../../mod-service/subject.js'
+import { handleReportUpdate } from '../../report/handle-report-update.js'
 import { getEventActivityMetadata } from '../../report/metadata.js'
 import type { SettingService } from '../../setting/service.js'
 import { TagService } from '../../tag-service/index.js'
@@ -49,6 +50,20 @@ const handleModerationEvent = async ({
     input.body.subject,
     input.body.subjectBlobCids,
   )
+
+  if (input.body.reportAction?.allOwned) {
+    if (!subject.isRepo()) {
+      throw new InvalidRequestError('allOwned requires an account subject')
+    }
+    if (
+      handleReportUpdate('open', { type: 'event', eventType: event.$type })
+        .nextStatus !== 'closed'
+    ) {
+      throw new InvalidRequestError(
+        'allOwned requires an event that closes reports',
+      )
+    }
+  }
 
   if (
     tools.ozone.moderation.defs.ageAssuranceEvent.$isTypeOf(event) &&
@@ -249,10 +264,11 @@ const handleModerationEvent = async ({
       if (
         !reportAction.ids?.length &&
         !reportAction.types?.length &&
-        !reportAction.all
+        !reportAction.all &&
+        !reportAction.allOwned
       ) {
         throw new InvalidRequestError(
-          'reportAction must specify ids, types, or all',
+          'reportAction must specify ids, types, all, or allOwned',
         )
       }
     }
