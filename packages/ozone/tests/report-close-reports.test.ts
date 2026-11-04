@@ -570,6 +570,126 @@ describe('report-close-reports', () => {
     await expectUnchanged(before)
   })
 
+  it.each(['message', 'conversation'] as const)(
+    'links an event on the exact %s subject',
+    async (kind) => {
+      const f = await fixture()
+      const foreign = await fixture()
+      const selected = await report(f[kind])
+      const untouched = await report(foreign[kind])
+      const subject =
+        kind === 'message'
+          ? `at://${f.did}/${CHAT_MESSAGE_COLLECTION}/${f.message.messageId}`
+          : `at://${f.did}/${CHAT_CONVO_COLLECTION}/${f.conversation.convoId}`
+      const mod = network.ozone.getModClient()
+      const wrongSubject =
+        kind === 'message'
+          ? chat.bsky.convo.defs.messageRef.$build({
+              ...f.message,
+              messageId: 'different-message',
+            })
+          : chat.bsky.convo.defs.convoRef.$build({
+              ...f.conversation,
+              convoId: 'different-conversation',
+            })
+      const wrongEvent = await mod.emitEvent({
+        subject: wrongSubject,
+        event: tools.ozone.moderation.defs.modEventAcknowledge.$build({}),
+      })
+      const foreignEvent = await mod.emitEvent({
+        subject: foreign[kind],
+        event: tools.ozone.moderation.defs.modEventAcknowledge.$build({}),
+      })
+      const action = await mod.emitEvent({
+        subject: f[kind],
+        event: tools.ozone.moderation.defs.modEventAcknowledge.$build({}),
+      })
+      for (const actionEventId of [wrongEvent.id, foreignEvent.id]) {
+        await expect(
+          closeReports({ subject, actionEventId }),
+        ).rejects.toMatchObject({
+          error: 'InvalidRequest',
+        })
+      }
+      await expect(
+        closeReports({
+          subject: f.did,
+          includeAllOwned: true,
+          actionEventId: action.id,
+        }),
+      ).rejects.toMatchObject({ error: 'InvalidRequest' })
+
+      expect(
+        (await closeReports({ subject, actionEventId: action.id })).data,
+      ).toEqual({
+        closedCount: 1,
+        reportIds: [selected.id],
+      })
+      expect((await detail(selected.id)).actionEventIds).toEqual([action.id])
+      expect(await listActivities(selected.id)).toContainEqual(
+        expect.objectContaining({
+          meta: { resolution: 'linked', actionEventId: action.id },
+        }),
+      )
+      expect((await detail(untouched.id)).status).toBe('open')
+    },
+  )
+
+  it('does not link a message event to the same message ID in another conversation', async () => {
+    const f = await fixture()
+    const selected = await report(f.message)
+    const other = await report(
+      chat.bsky.convo.defs.messageRef.$build({
+        ...f.message,
+        convoId: 'other-conversation',
+      }),
+    )
+    const action = await network.ozone.getModClient().emitEvent({
+      subject: f.message,
+      event: tools.ozone.moderation.defs.modEventAcknowledge.$build({}),
+    })
+    expect(
+      (
+        await closeReports({
+          subject: `at://${f.did}/${CHAT_MESSAGE_COLLECTION}/${f.message.messageId}`,
+          actionEventId: action.id,
+        })
+      ).data,
+    ).toEqual({ closedCount: 1, reportIds: [selected.id] })
+    expect((await detail(selected.id)).actionEventIds).toEqual([action.id])
+    expect((await detail(other.id)).status).toBe('open')
+    expect(await listActivities(other.id)).toHaveLength(0)
+  })
+
+  it('links an older action even when it was reversed before the report', async () => {
+    const f = await fixture()
+    const mod = network.ozone.getModClient()
+    const action = await mod.emitEvent({
+      subject: f.account,
+      event: tools.ozone.moderation.defs.modEventLabel.$build({
+        createLabelVals: ['spam'],
+        negateLabelVals: [],
+      }),
+    })
+    await mod.emitEvent({
+      subject: f.account,
+      event: tools.ozone.moderation.defs.modEventLabel.$build({
+        createLabelVals: [],
+        negateLabelVals: ['spam'],
+      }),
+    })
+    const selected = await report(f.account)
+    expect(action.id).toBeLessThan(selected.eventId)
+    expect(
+      (await closeReports({ subject: f.did, actionEventId: action.id })).data,
+    ).toEqual({
+      closedCount: 1,
+      reportIds: [selected.id],
+    })
+    expect((await detail(selected.id)).actionEventIds).toEqual([action.id])
+    expect((await inbox(selected.id)).resolution?.outcome).toBe('actionTaken')
+  })
+
   it('links one emitted account event to all owned reports and preserves active review', async () => {
     const f = await fixture()
     const foreign = await fixture()

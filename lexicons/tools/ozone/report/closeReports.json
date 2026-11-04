@@ -34,7 +34,7 @@
             "actionEventId": {
               "type": "integer",
               "minimum": 1,
-              "description": "Optional existing moderation event that closes reports. It must target the exact subject or its owning account; account-wide closure requires an account event. The event is linked to each closed report."
+              "description": "Optional existing moderation event that closes reports. It must target the exact subject or its owning account; account-wide closure requires an account event. The event is linked to each closed report and may predate the report. The link does not imply the action is still in effect."
             },
             "internalNote": {
               "type": "string",

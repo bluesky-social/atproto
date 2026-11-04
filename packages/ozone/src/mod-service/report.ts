@@ -10,7 +10,7 @@ import { AtUri } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import type { Database } from '../db/index.js'
 import type { Report } from '../db/schema/report.js'
-import { com, tools } from '../lexicons/index.js'
+import { chat, com, tools } from '../lexicons/index.js'
 import {
   AlreadyInTargetState,
   InvalidStateTransition,
@@ -291,6 +291,7 @@ export type ReportResult = {
   queuedAt: DatetimeString | null
   actionEventIds: number[] | null
   actionNote: string | null
+  subjectConvoId: string | null
   isMuted: boolean
   status: string
   reportType: string
@@ -442,29 +443,56 @@ export async function closeReportsForSubject(
   const metadata = getActivityMetadata(params.meta)
 
   return db.transaction(async (dbTxn) => {
+    let messageConvoId: string | undefined
     if (params.actionEventId !== undefined) {
       const event = await dbTxn.db
         .selectFrom('moderation_event')
-        .select(['action', 'subjectDid', 'subjectType', 'subjectUri'])
+        .select([
+          'action',
+          'subjectDid',
+          'subjectType',
+          'subjectUri',
+          'subjectMessageId',
+          'subjectConvoId',
+        ])
         .where('id', '=', params.actionEventId)
         .executeTakeFirst()
       const accountEvent =
         event?.subjectType === com.atproto.admin.defs.repoRef.$type
+      const uri = subjectUri ? new AtUri(subjectUri) : null
       const exactRecordEvent =
         !params.includeAllOwned &&
-        subjectUri &&
+        uri &&
+        uri.collection !== CHAT_MESSAGE_COLLECTION &&
+        uri.collection !== CHAT_CONVO_COLLECTION &&
         event?.subjectType === com.atproto.repo.strongRef.$type &&
         event.subjectUri === subjectUri
+      const exactMessageEvent =
+        !params.includeAllOwned &&
+        uri?.collection === CHAT_MESSAGE_COLLECTION &&
+        event?.subjectType === chat.bsky.convo.defs.messageRef.$type &&
+        event.subjectMessageId === uri.rkey
+      const exactConvoEvent =
+        !params.includeAllOwned &&
+        uri?.collection === CHAT_CONVO_COLLECTION &&
+        event?.subjectType === chat.bsky.convo.defs.convoRef.$type &&
+        event.subjectConvoId === uri.rkey
       if (
         !event ||
         event.subjectDid !== subjectDid ||
-        (!accountEvent && !exactRecordEvent) ||
+        (!accountEvent &&
+          !exactRecordEvent &&
+          !exactMessageEvent &&
+          !exactConvoEvent) ||
         handleReportUpdate('open', { type: 'event', eventType: event.action })
           .nextStatus !== 'closed'
       ) {
         throw new InvalidRequestError(
           'actionEventId must reference a report-closing event on the subject or its owning account',
         )
+      }
+      if (exactMessageEvent) {
+        messageConvoId = event.subjectConvoId ?? ''
       }
     }
     const matchingReports = await findReportsForSubject(dbTxn, {
@@ -484,6 +512,14 @@ export async function closeReportsForSubject(
       reportType: string
     }[] = []
     for (const report of matchingReports) {
+      // Synthetic message URIs omit the conversation ID; keep the link scoped
+      // to the conversation identified by the action event.
+      if (
+        messageConvoId !== undefined &&
+        (report.subjectConvoId ?? '') !== messageConvoId
+      ) {
+        continue
+      }
       try {
         const result = handleReportUpdate(report.status, {
           type: 'activity',

@@ -27,7 +27,9 @@ Language and embed tags, manually applied tags, and existing report tags are una
 
 `tools.ozone.report.closeReports` accepts an existing `actionEventId`. The event must be a report-closing event on the requested subject or its owning account; `includeAllOwned` requires an account event. The selected reports are linked to that event and closed in one transaction. Without an event ID, closures retain their no-action outcome. Both APIs protect assigned, escalated, and actively assigned reports from broad selection. `closeReports` can additionally filter or exclude report types.
 
-An account event linked to an appeal about another subject does not determine that appeal's outcome: appeal outcomes still require a corrective event on the appealed subject.
+For a message event, matching reports must also have the event's conversation ID. This keeps messages with the same ID in different conversations separate.
+
+The linked event may predate a report. The resulting action attribution refers to that event, which may no longer be in effect. An event that predates an appeal, or an account event linked to an appeal about another subject, does not determine the appeal's outcome: appeal outcomes require a later event on the appealed subject.
 
 ## Wildcard label queries
 

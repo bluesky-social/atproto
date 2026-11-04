@@ -226,6 +226,24 @@ describe('viewer appeal outcomes', () => {
     },
   )
 
+  it('does not infer an appeal outcome from the action being appealed', async () => {
+    const appeal = await startAppeal()
+    await network.ozone.getAgent().tools.ozone.report.closeReports(
+      { subject: appeal.subjectId, actionEventId: appeal.action.id },
+      {
+        headers: await network.ozone.modHeaders(
+          tools.ozone.report.closeReports.$lxm,
+        ),
+      },
+    )
+    const view = await detail(appeal.subjectId)
+    expect(view.appeal).toMatchObject({ state: 'resolved' })
+    expect(view.appeal).not.toHaveProperty('outcome')
+    const notifications = await resolutionNotifications(appeal.subjectId)
+    expect(notifications[0]).toBeDefined()
+    expect(notifications[0].target).not.toHaveProperty('appealOutcome')
+  })
+
   it.each(['record', 'account'] as const)(
     'exposes approval for a %s label appeal closed by label removal',
     async (scope) => {
