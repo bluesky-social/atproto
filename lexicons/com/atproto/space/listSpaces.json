@@ -4,14 +4,14 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "List spaces that the authenticated account owns or has written to. Requires auth, implemented by PDS.",
+      "description": "List spaces that the authenticated account has written to or is the authority for. Requires auth, implemented by PDS.",
       "parameters": {
         "type": "params",
         "properties": {
           "spaceDid": {
             "type": "string",
             "format": "did",
-            "description": "Filter to spaces owned by this DID."
+            "description": "Filter to spaces with this DID as their authority."
           },
           "spaceType": {
             "type": "string",
@@ -68,7 +68,7 @@
         "spaceRev": {
           "type": "string",
           "format": "tid",
-          "description": "The current revision of the space. Only included if the account owns the space."
+          "description": "The current revision of the space. Only included if the account is the space's authority."
         }
       }
     }

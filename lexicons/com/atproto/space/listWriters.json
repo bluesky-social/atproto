@@ -53,9 +53,9 @@
     },
     "repo": {
       "type": "object",
-      "required": ["did", "repoRev", "data", "spaceRev"],
+      "required": ["repo", "repoRev", "data", "spaceRev"],
       "properties": {
-        "did": {
+        "repo": {
           "type": "string",
           "format": "did"
         },

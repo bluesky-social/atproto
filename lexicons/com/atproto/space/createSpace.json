@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Create a new space, owned by the authenticated account. Requires auth, implemented by PDS.",
+      "description": "Create a new space, with the authenticated account as its authority. Requires auth, implemented by PDS.",
       "input": {
         "encoding": "application/json",
         "schema": {

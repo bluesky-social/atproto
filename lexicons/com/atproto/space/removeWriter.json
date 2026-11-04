@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Remove an account from a space's writer set, as returned by listWriters. The account is added back if it writes to the space again. Does nothing if the account is not in the writer set. Requires auth as the space owner, implemented by PDS.",
+      "description": "Remove an account from a space's writer set, as returned by listWriters. The account is added back if it writes to the space again. Does nothing if the account is not in the writer set. Requires auth as the space authority, implemented by PDS.",
       "input": {
         "encoding": "application/json",
         "schema": {
@@ -27,7 +27,7 @@
           "name": "SpaceNotFound"
         },
         {
-          "name": "NotSpaceOwner"
+          "name": "NotAuthorized"
         }
       ]
     }

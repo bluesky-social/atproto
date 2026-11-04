@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Replace the policy of a space. Changing to a different policy type discards state held by the previous policy, such as a member list. Requires auth as the space owner, implemented by PDS.",
+      "description": "Replace the policy of a space. Changing to a different policy type discards state held by the previous policy, such as a member list. Requires auth as the space authority, implemented by PDS.",
       "input": {
         "encoding": "application/json",
         "schema": {
@@ -32,7 +32,7 @@
           "name": "SpaceNotFound"
         },
         {
-          "name": "NotSpaceOwner"
+          "name": "NotAuthorized"
         },
         {
           "name": "UnsupportedPolicy"

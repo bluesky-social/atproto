@@ -62,7 +62,7 @@
       },
       "errors": [
         {
-          "name": "BadSpaceMac",
+          "name": "InvalidSpaceMac",
           "description": "The Atproto-Space-Want-Mac header is missing or invalid."
         },
         { "name": "SpaceNotFound" },

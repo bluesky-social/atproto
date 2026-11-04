@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "record",
-      "description": "A published copy of a space's policy. Only authoritative in the space owner's repo.",
+      "description": "A published copy of a space's policy. Only authoritative in the space authority's repo.",
       "key": "literal:self",
       "record": {
         "type": "object",

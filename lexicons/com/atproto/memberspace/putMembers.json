@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Add members to a space, or update existing members' access, in a single commit. Requires auth as the space owner, implemented by PDS.",
+      "description": "Add members to a space, or update existing members' access, in a single commit. Requires auth as the space authority, implemented by PDS.",
       "input": {
         "encoding": "application/json",
         "schema": {
@@ -31,7 +31,7 @@
           "name": "SpaceNotFound"
         },
         {
-          "name": "NotSpaceOwner"
+          "name": "NotAuthorized"
         },
         {
           "name": "PolicyMismatch",

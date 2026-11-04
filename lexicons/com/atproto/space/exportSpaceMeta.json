@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "Export a space's state, such as its policy and member list, as a STAR file for account migration. Requires auth as the space owner, implemented by PDS.",
+      "description": "Export a space's state, such as its policy and member list, as a STAR file for account migration. Requires auth as the space authority, implemented by PDS.",
       "parameters": {
         "type": "params",
         "required": ["space"],
@@ -23,7 +23,7 @@
           "name": "SpaceNotFound"
         },
         {
-          "name": "NotSpaceOwner"
+          "name": "NotAuthorized"
         }
       ]
     }

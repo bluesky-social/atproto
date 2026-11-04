@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "Get a space and its policy. Requires auth as the space owner, implemented by PDS.",
+      "description": "Get a space and its policy. Requires auth as the space authority, implemented by PDS.",
       "parameters": {
         "type": "params",
         "required": ["space"],

@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Remove members from a space in a single commit. DIDs that are not members are ignored. Requires auth as the space owner, implemented by PDS.",
+      "description": "Remove members from a space in a single commit. DIDs that are not members are ignored. Requires auth as the space authority, implemented by PDS.",
       "input": {
         "encoding": "application/json",
         "schema": {
@@ -31,7 +31,7 @@
           "name": "SpaceNotFound"
         },
         {
-          "name": "NotSpaceOwner"
+          "name": "NotAuthorized"
         },
         {
           "name": "PolicyMismatch",
