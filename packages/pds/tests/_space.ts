@@ -36,6 +36,7 @@ import {
   SpaceRef,
   type SpaceRefString,
 } from '@atproto/syntax'
+import { createServiceAuthHeaders } from '@atproto/xrpc-server'
 import { ClientAttestationVerifier } from '../src/client-attestation-verifier.js'
 import { com } from '../src/lexicons/index.js'
 
@@ -548,6 +549,7 @@ export class MockService {
     public url: string,
     public did: DidString,
     public serviceId: string,
+    private keypair: Secp256k1Keypair,
   ) {
     this.terminator = createHttpTerminator({ server })
   }
@@ -555,6 +557,21 @@ export class MockService {
   /** `did#serviceId`, the form a notify target is registered under. */
   get serviceRef(): string {
     return `${this.did}#${this.serviceId}`
+  }
+
+  /** Service auth signed with this service's `#atproto` key, issued as `serviceRef` by default. */
+  async serviceAuthHeaders(opts: {
+    aud: string
+    lxm: string
+    iss?: string
+  }): Promise<Record<string, string>> {
+    const { headers } = await createServiceAuthHeaders({
+      iss: opts.iss ?? this.serviceRef,
+      aud: opts.aud,
+      lxm: opts.lxm,
+      keypair: this.keypair,
+    })
+    return headers
   }
 
   callsTo(lxm: string) {
@@ -602,7 +619,7 @@ export class MockService {
         type: 'plc_operation',
         rotationKeys: [keypair.did()],
         alsoKnownAs: [],
-        verificationMethods: {},
+        verificationMethods: { atproto: keypair.did() },
         services: {
           [opts.serviceId]: { type: 'AtprotoSpaceService', endpoint: url },
         },
@@ -618,6 +635,7 @@ export class MockService {
       url,
       did as DidString,
       opts.serviceId,
+      keypair,
     )
     service.calls = calls
     return service
