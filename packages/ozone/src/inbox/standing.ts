@@ -10,6 +10,7 @@ export type Standing = 'good' | 'warning' | 'atRisk'
 
 export type AccountStanding = {
   standing: Standing
+  hasActiveStrikes: boolean
   updatedAt: DatetimeString
   expiresAt?: DatetimeString
   enforcement: {
@@ -72,6 +73,7 @@ export async function getAccountStanding(
         '1970-01-01T00:00:00.000Z')
   return {
     standing,
+    hasActiveStrikes: count > 0,
     updatedAt,
     // @NOTE A timed takedown remains temporary until its reversal is processed,
     // including when the scheduled expiry has already passed.
