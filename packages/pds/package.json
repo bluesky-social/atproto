@@ -57,6 +57,7 @@
     "@atproto/oauth-types": "workspace:^",
     "@atproto/repo": "workspace:^",
     "@atproto/space": "workspace:^",
+    "@atproto/star": "workspace:^",
     "@atproto/syntax": "workspace:^",
     "@atproto/xrpc-server": "workspace:^",
     "@did-plc/lib": "^0.0.4",

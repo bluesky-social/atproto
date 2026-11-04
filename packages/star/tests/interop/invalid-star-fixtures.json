@@ -1,0 +1,150 @@
+[
+  {
+    "comment": "missing magic (empty)",
+    "star_hex": ""
+  },
+  {
+    "comment": "missing magic",
+    "star_hex": "08A16524747970656000"
+  },
+  {
+    "comment": "magic only (meta with $type is required)",
+    "star_hex": "2A6C0100"
+  },
+  {
+    "comment": "truncated magic",
+    "star_hex": "2A6C01"
+  },
+  {
+    "comment": "wrong magic (0x01 instead of nul fourth byte)",
+    "star_hex": "2A6C010108A16524747970656000"
+  },
+  {
+    "comment": "truncated within meta length prefix",
+    "star_hex": "2A6C010080"
+  },
+  {
+    "comment": "zero-sized meta",
+    "star_hex": "2A6C01000000"
+  },
+  {
+    "comment": "non-map meta (int 1)",
+    "star_hex": "2A6C0100010100"
+  },
+  {
+    "comment": "non-map meta (array)",
+    "star_hex": "2A6C0100018000"
+  },
+  {
+    "comment": "missing meta $type",
+    "star_hex": "2A6C010001A000"
+  },
+  {
+    "comment": "non-string meta $type value",
+    "star_hex": "2A6C010008A16524747970650100"
+  },
+  {
+    "comment": "non-string meta key (invalid drisl)",
+    "star_hex": "2A6C01000AA201606524747970656000"
+  },
+  {
+    "comment": "duplicate meta $type key (invalid drisl)",
+    "star_hex": "2A6C01000FA2652474797065606524747970656000"
+  },
+  {
+    "comment": "non-canonical meta serialization",
+    "star_hex": "2A6C01000BA265247479706560617E6000"
+  },
+  {
+    "comment": "meta with too-short length prefix",
+    "star_hex": "2A6C010007A16524747970656000"
+  },
+  {
+    "comment": "meta with trailing nul padding",
+    "star_hex": "2A6C010009A1652474797065600000"
+  },
+  {
+    "comment": "meta shorter than its length with no padding or data following",
+    "star_hex": "2A6C010009A165247479706560"
+  },
+  {
+    "comment": "non-canonical meta length prefix",
+    "star_hex": "2A6C01008800A16524747970656000"
+  },
+  {
+    "comment": ">9-byte meta length prefix (should reject the varint, not OOM)",
+    "star_hex": "2A6C010080808080808080808001A16524747970656000"
+  },
+  {
+    "comment": "invalid control byte following meta",
+    "star_hex": "2A6C010008A16524747970656002000000"
+  },
+  {
+    "comment": "missing terminating null byte",
+    "star_hex": "2A6C010008A165247479706560"
+  },
+  {
+    "comment": "double terminating null byte",
+    "star_hex": "2A6C010008A1652474797065600000"
+  },
+  {
+    "comment": "non-null byte after terminator",
+    "star_hex": "2A6C010008A1652474797065600001"
+  },
+  {
+    "comment": "empty key no value",
+    "star_hex": "2A6C010008A1652474797065600100"
+  },
+  {
+    "comment": "truncated before key content",
+    "star_hex": "2A6C010008A1652474797065600101"
+  },
+  {
+    "comment": "truncated multi-byte key length prefix",
+    "star_hex": "2A6C010008A1652474797065600180"
+  },
+  {
+    "comment": "truncated mid-key content",
+    "star_hex": "2A6C010008A1652474797065600103AA"
+  },
+  {
+    "comment": "non-canonical varint zero-length key prefix",
+    "star_hex": "2A6C010008A1652474797065600180000000"
+  },
+  {
+    "comment": "non-canonical varint zero as terminator",
+    "star_hex": "2A6C010008A1652474797065608000"
+  },
+  {
+    "comment": "non-canonical non-zero-length key prefix",
+    "star_hex": "2A6C010008A165247479706560018100AA0000"
+  },
+  {
+    "comment": "present key no value",
+    "star_hex": "2A6C010008A1652474797065600101AA"
+  },
+  {
+    "comment": "truncated value after length prefix",
+    "star_hex": "2A6C010008A1652474797065600101AA01"
+  },
+  {
+    "comment": "truncated multi-byte value length prefix",
+    "star_hex": "2A6C010008A165247479706560010080"
+  },
+  {
+    "comment": "truncated mid-value",
+    "star_hex": "2A6C010008A1652474797065600101AA02BB"
+  },
+  {
+    "comment": "non-canonical zero value length prefix",
+    "star_hex": "2A6C010008A1652474797065600100800000"
+  },
+  {
+    "comment": "non-canonical non-zero-length value prefix",
+    "star_hex": "2A6C010008A16524747970656001008100BB00"
+  },
+  {
+    "comment": "invalid control byte after data pair",
+    "star_hex": "2A6C010008A16524747970656001000002000000"
+  }
+]

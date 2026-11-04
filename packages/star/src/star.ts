@@ -1,6 +1,6 @@
-import { type BytesReader, createBytesReader, encodeVarInt } from '@atproto/car'
 import { type LexValue, decode, encode } from '@atproto/lex-cbor'
 import { type LexMap, isPlainObject, ui8Equals } from '@atproto/lex-data'
+import { BytesReader } from './bytes-reader.js'
 import { StarParseError } from './error.js'
 
 /**
@@ -18,17 +18,12 @@ import { StarParseError } from './error.js'
  * @see https://dasl.ing/star.html
  */
 
-export const STAR_MAGIC = new Uint8Array([0x2a, 0x6c, 0x01, 0x00])
+const STAR_MAGIC = new Uint8Array([0x2a, 0x6c, 0x01, 0x00])
 
 const CONTROL_PAIR = 0x01
 const CONTROL_END = 0x00
 
 const MAX_VARINT_BYTES = 9
-
-// STAR sets no size limits of its own, so these are this reader's.
-const MAX_META_LENGTH = 64 * 1024 * 1024 // 64 MiB
-const MAX_KEY_LENGTH = 64 * 1024 * 1024 // 64 MiB
-const MAX_VALUE_LENGTH = 64 * 1024 * 1024 * 1024 // 64 GiB
 
 export type StarMeta = LexMap & { $type: string }
 
@@ -52,7 +47,7 @@ export async function* writeStar(
 }
 
 function* frame(bytes: Uint8Array): Generator<Uint8Array> {
-  yield encodeVarInt(bytes.length)
+  yield encodeVarint(bytes.length)
   yield bytes
 }
 
@@ -68,26 +63,41 @@ export type StarReader = AsyncDisposable & {
 }
 
 /**
+ * STAR sets no size limits of its own, so each length is unlimited unless set
+ * here, as a profile or an application handling untrusted input may want.
+ */
+export type ReadStarOptions = {
+  maxMetaLength?: number
+  maxKeyLength?: number
+  maxValueLength?: number
+}
+
+/**
  * Read a STAR archive. The header is read eagerly, the pairs lazily as `pairs` is
  * drained.
  *
- * A profile can set a lower `maxValueLength` than the default. Lengths are checked
- * before a frame is read, so an oversized frame is never buffered.
+ * Lengths are checked against the limits in `opts` before a frame is read, so an
+ * oversized frame is never buffered.
  */
 export const readStar = async (
   input: AsyncIterable<Uint8Array> | Iterable<Uint8Array>,
-  opts: { maxValueLength?: number } = {},
+  opts: ReadStarOptions = {},
 ): Promise<StarReader> => {
-  const reader = createBytesReader(input)
+  const {
+    maxMetaLength = Infinity,
+    maxKeyLength = Infinity,
+    maxValueLength = Infinity,
+  } = opts
+  const reader = new BytesReader(input)
   try {
     const magic = await reader.read(STAR_MAGIC.length)
     if (!ui8Equals(magic, STAR_MAGIC)) {
       throw new StarParseError('invalid magic bytes')
     }
-    const metaBytes = await readFrame(reader, MAX_META_LENGTH)
+    const metaBytes = await readFrame(reader, maxMetaLength)
     return {
       meta: parseMeta(metaBytes),
-      pairs: readPairs(reader, opts.maxValueLength ?? MAX_VALUE_LENGTH),
+      pairs: readPairs(reader, maxKeyLength, maxValueLength),
       [Symbol.asyncDispose]: () => reader.destroy(),
     }
   } catch (err) {
@@ -98,6 +108,7 @@ export const readStar = async (
 
 async function* readPairs(
   reader: BytesReader,
+  maxKeyLength: number,
   maxValueLength: number,
 ): AsyncGenerator<StarPair> {
   try {
@@ -107,7 +118,7 @@ async function* readPairs(
       if (control !== CONTROL_PAIR) {
         throw new StarParseError(`invalid control byte: ${control}`)
       }
-      const key = await readFrame(reader, MAX_KEY_LENGTH)
+      const key = await readFrame(reader, maxKeyLength)
       const value = await readFrame(reader, maxValueLength)
       yield { key, value }
     }
@@ -156,6 +167,16 @@ async function readFrame(
 // Unsigned varint: 7 bits per byte, least significant group first, with the
 // high bit set on every byte but the last. Arithmetic rather than bitwise
 // operators, since lengths can exceed 32 bits.
+function encodeVarint(value: number): Uint8Array {
+  const bytes: number[] = []
+  while (value >= 0x80) {
+    bytes.push((value % 0x80) | 0x80)
+    value = Math.floor(value / 0x80)
+  }
+  bytes.push(value)
+  return Uint8Array.from(bytes)
+}
+
 async function readVarint(reader: BytesReader): Promise<number> {
   let value = 0
   for (let i = 0; i < MAX_VARINT_BYTES; i++) {

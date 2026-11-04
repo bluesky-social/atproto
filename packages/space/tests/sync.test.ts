@@ -1,8 +1,8 @@
 import { beforeAll, describe, expect, it } from 'vitest'
-import { encodeVarInt } from '@atproto/car'
 import { randomBytes } from '@atproto/crypto'
 import { encode } from '@atproto/lex-cbor'
 import { type Cid, parseCid } from '@atproto/lex-data'
+import { type StarPair, readStar, writeStar } from '@atproto/star'
 import {
   type Commit,
   type CommitCtx,
@@ -11,19 +11,15 @@ import {
   RepoCommit,
   RepoVerificationError,
   type SerializedRecord,
-  type StarPair,
-  StarParseError,
   computeCommitMac,
   computeRecordMac,
   readRepoStar,
-  readStar,
   serializeRecord,
   serializeRepo,
   verifyCommit,
   verifyRecord,
   verifyRepoStar,
   verifyRepoStarFull,
-  writeStar,
 } from '../src/index.js'
 
 const SPACE = 'at://did:example:space/space/app.bsky.group/test'
@@ -297,19 +293,36 @@ describe('space sync', () => {
       )
     })
 
-    it('rejects an oversized record before reading it', async () => {
-      // A pair that declares a value one byte over the limit, with none of the
-      // value's bytes following: the length alone must be enough to reject it.
-      const key = utf8('app.bsky.feed.post/3kbcq3p7ad401')
-      const empty = await rawStar(commitFor([]), [])
-      const star = Buffer.concat([
-        empty.subarray(0, -1), // drop the end byte
-        Uint8Array.of(0x01),
-        encodeVarInt(key.length),
-        key,
-        encodeVarInt(MAX_RECORD_SIZE + 1),
+    it('rejects metadata over 64 KiB', async () => {
+      const star = await rawStar(commitFor([]), [], {
+        filler: 'x'.repeat(64 * 1024),
+      })
+      await expect(verifyRepoStarFull([star], params([]))).rejects.toThrow(
+        /exceeds limit of 65536/,
+      )
+    })
+
+    it('rejects a record path over 4 KiB', async () => {
+      const star = await rawStar(commitFor([]), [
+        {
+          key: utf8(`app.bsky.feed.post/${'x'.repeat(4 * 1024)}`),
+          value: encode({}),
+        },
       ])
       await expect(verifyRepoStarFull([star], params([]))).rejects.toThrow(
+        /exceeds limit of 4096/,
+      )
+    })
+
+    it('rejects an oversized record before reading it', async () => {
+      // Cut the archive off just after the value's length, before the value
+      // itself (and the end byte): the length alone must be enough to reject it.
+      const value = new Uint8Array(MAX_RECORD_SIZE + 1)
+      const star = await rawStar(commitFor([]), [
+        { key: utf8('app.bsky.feed.post/3kbcq3p7ad401'), value },
+      ])
+      const truncated = star.subarray(0, star.length - value.length - 1)
+      await expect(verifyRepoStarFull([truncated], params([]))).rejects.toThrow(
         /exceeds limit of 1048576/,
       )
     })
@@ -321,32 +334,6 @@ describe('space sync', () => {
       await expect(verifyRepoStarFull([star], params([]))).rejects.toThrow(
         /invalid record at/,
       )
-    })
-  })
-
-  describe('STAR framing', () => {
-    it('rejects a truncated archive', async () => {
-      const star = await starFor(records)
-      const { records: stream } = await verifyRepoStar(
-        [star.subarray(0, -1)],
-        params(),
-      )
-      await expect(drain(stream)).rejects.toThrow(StarParseError)
-    })
-
-    it('rejects an archive truncated in its header', async () => {
-      const star = await starFor(records)
-      await expect(
-        verifyRepoStar([star.subarray(0, 3)], params()),
-      ).rejects.toThrow(StarParseError)
-    })
-
-    it('reads an archive delivered in arbitrary chunk boundaries', async () => {
-      const star = await starFor(records)
-      // One byte at a time — exercises the reader's buffering.
-      const chunks = Array.from(star, (byte) => new Uint8Array([byte]))
-      const recovered = await verifyRepoStarFull(chunks, params())
-      expect(recovered.records).toHaveLength(records.length)
     })
   })
 
