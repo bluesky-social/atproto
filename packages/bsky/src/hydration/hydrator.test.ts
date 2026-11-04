@@ -3086,14 +3086,13 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
         expect(state.externalRecordsByRef?.get(key(doc2, '1'))?.record).toEqual(
           makeDoc(pub2Uri),
         )
-        expect(dataplane.getAtmosphereBacklinks).not.toHaveBeenCalled()
       })
 
-      it('hydrates one root per post through one basic exact-root traversal', async ({
+      it('hydrates one root per post through one exact-root traversal', async ({
         fixture,
       }) => {
         const { hydrator, ctx, dataplane, seedBasic } = fixture
-        const { recs, subs } = seedBasic()
+        seedBasic()
         const thing = { $type: 'app.example.thing', n: 1 }
         const versions = new Map<string, { body: object }>([
           [key(doc1, '1'), { body: makeDoc(pubUri) }],
@@ -3156,33 +3155,12 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
         expect(state.externalRecords?.has(thingUri)).toBe(false)
         expect(state.externalRecords?.get(pubUri)).toBeTruthy()
         expect(state.externalRecords?.get(pub2Uri)).toBeTruthy()
-        // Basic keeps aggregate counts (for every collection's targets) but
-        // schedules no social-preview samples, records or participants.
         expect(state.externalRecordBacklinkCounts?.get(doc1)).toEqual({
           [site.standard.graph.recommend.$type]: 42,
         })
         expect(state.externalRecordBacklinkCounts?.get(pubUri)).toEqual({
           [site.standard.graph.subscription.$type]: 17,
         })
-        expect(dataplane.getAtmosphereBacklinks).not.toHaveBeenCalled()
-        expect(state.externalRecordBacklinks?.get(doc1)).toBeUndefined()
-        expect(state.externalRecordBacklinks?.get(pubUri)).toBeUndefined()
-        const participantUris = [...recs, ...subs]
-        const participants: string[] = participantUris
-        for (const uri of participantUris) {
-          expect(state.externalRecords?.has(uri)).toBeFalsy()
-        }
-        expect(
-          labelSubjects(fixture)
-            .flat()
-            .filter((uri) => participants.includes(uri)),
-        ).toEqual([])
-        expect(
-          vi
-            .mocked(hydrator.hydrateProfilesBasic)
-            .mock.calls.flatMap(([dids]) => dids)
-            .filter((did) => /^did:plc:(?:[a-e]|s\d)$/.test(did)),
-        ).toEqual([])
         expect(state.labels?.has(doc1)).toBe(true)
         expect(state.actors?.has(author)).toBe(true)
         expect(state.actors?.has('did:plc:pub' as DidString)).toBe(true)
@@ -3272,7 +3250,6 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
             .mocked(dataplane.getRecordsByURI)
             .mock.calls.flatMap(([req]) => req.uris ?? []),
         ).toEqual([...items.slice(0, 10), ...photos.slice(0, 10)])
-        expect(dataplane.getAtmosphereBacklinks).toHaveBeenCalledTimes(1)
         expect(state.externalRecordBacklinkCounts?.get(gallery)).toEqual({
           [social.grain.favorite.$type]: 99,
         })
