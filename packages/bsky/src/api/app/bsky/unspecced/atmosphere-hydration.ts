@@ -18,7 +18,13 @@ import {
   mergeStates,
 } from '../../../../hydration/hydrator.js'
 import { HydrationMap } from '../../../../hydration/util.js'
-import { app, place, site, social } from '../../../../lexicons/index.js'
+import {
+  app,
+  type com,
+  place,
+  site,
+  social,
+} from '../../../../lexicons/index.js'
 import { recordUriOf, uriToDid } from '../../../../util/uris.js'
 import {
   availableRecord,
@@ -108,6 +114,7 @@ export class AtmosphereTimelineHydrator {
     const { info, collection, target, groupable, subscribed, viewUri, state } =
       selected
     let view: app.bsky.unspecced.getAtmosphereTimeline.ActivityItem['view']
+    let bskyPostRef: app.bsky.unspecced.getAtmosphereTimeline.ActivityItem['bskyPostRef']
     if (collection === app.bsky.feed.post.$type) {
       const postView = this.ctx.views.post(uri, this.state)
       if (!postView) return
@@ -115,6 +122,9 @@ export class AtmosphereTimelineHydrator {
     } else {
       view = this.ctx.views.externalRecordView(viewUri, state, this.now)
       if (!view) return
+      bskyPostRef = getAtmospherePostRef(
+        state.externalRecords?.get(viewUri)?.record,
+      )
     }
     return {
       item: app.bsky.unspecced.getAtmosphereTimeline.activityItem.$build({
@@ -122,6 +132,7 @@ export class AtmosphereTimelineHydrator {
         collection,
         viewerState: { subscribed },
         view,
+        bskyPostRef,
       }),
       sortedAt,
       target,
@@ -258,4 +269,12 @@ export class AtmosphereTimelineHydrator {
         refs.length > 1)
     )
   }
+}
+
+/** Read the author-declared post reference for a renderable Atmosphere record. */
+export function getAtmospherePostRef(
+  record: unknown,
+): com.atproto.repo.strongRef.Main | undefined {
+  if (site.standard.document.$matches(record)) return record.bskyPostRef
+  if (place.stream.livestream.$matches(record)) return record.post
 }

@@ -101,7 +101,6 @@ function externalRecordViewOrRefs(
           )
         : undefined,
       publisher,
-      bskyPostRef: record.bskyPostRef,
       readingTime: record.textContent
         ? estimateReadingTimeMinutes(record.textContent)
         : undefined,
@@ -205,7 +204,6 @@ function externalRecordViewOrRefs(
       active: !record.endedAt && fresh,
       startedAt: record.createdAt,
       endedAt: record.endedAt,
-      bskyPostRef: record.post,
     })
   }
 }

@@ -345,6 +345,24 @@ describe('AtmosphereTimelineHydrator', () => {
     )
   })
 
+  it('uses the rendered article post reference rather than the recommendation source', async () => {
+    const f = setup()
+    const articlePost = { uri: postUri, cid }
+    f.records.get(documentUri)!.bskyPostRef = articlePost
+    f.records.get(recommendUri)!.bskyPostRef = {
+      uri: atUri(reader, app.bsky.feed.post.$type, 'other'),
+      cid,
+    }
+
+    await f.timeline.hydrate([recommendUri])
+
+    expect(f.timeline.activity(recommendUri, now)?.item).toMatchObject({
+      record: { uri: recommendUri },
+      bskyPostRef: articlePost,
+      view: { associatedRefs: [{ uri: documentUri }, { uri: publicationUri }] },
+    })
+  })
+
   it.each(['missing', 'takedown', 'unavailable', 'blocked', 'muted', 'review'])(
     'filters roots and required article targets for %s moderation',
     async (kind) => {
