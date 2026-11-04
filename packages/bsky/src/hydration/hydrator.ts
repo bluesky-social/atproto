@@ -842,7 +842,7 @@ export class Hydrator {
       this.hydrateStarterPacksBasic(nestedStarterPackUris, ctx),
       this.feed.getPostgatesForPosts([...postUrisWithPostgates.values()]),
       this.hydrateEmbedExternalViewFromRefs(externalRefs, ctx, {
-        hydration: 'basic',
+        hydration: 'detailed',
         seenRecordKeys: options.externalSeenRecordKeys,
         publicationSubscriptions: options.externalPublicationSubscriptions,
       }),

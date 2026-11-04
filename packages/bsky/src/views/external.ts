@@ -10,8 +10,9 @@ import {
   isDidString,
 } from '@atproto/lex-schema'
 import { AtUri, normalizeDatetimeAlways } from '@atproto/syntax'
-import type { ExternalRecord } from '../hydration/external.js'
+import { type ExternalRecord, genericRecordKey } from '../hydration/external.js'
 import type { HydrationState } from '../hydration/hydrator.js'
+import type { ItemRef } from '../hydration/util.js'
 import { app, com, place, site, social } from '../lexicons/index.js'
 import { buildExternalRecordUrl } from '../util/external/record-url.js'
 import { estimateReadingTimeMinutes } from '../util/external/standard-site.js'
@@ -24,11 +25,11 @@ export const LIVESTREAM_HEARTBEAT_WINDOW_MS = 2 * MINUTE
 /** Build a modality view from validated, available records in hydration state. */
 export function externalRecordView(
   views: Views,
-  uri: AtUriString,
+  ref: AtUriString | Required<ItemRef>,
   state: HydrationState,
   now: number,
 ): $Typed<ExternalRecordView> | undefined {
-  return externalRecordViewOrRefs(views, uri, state, now, false)
+  return externalRecordViewOrRefs(views, ref, state, now, false)
 }
 
 /** Resolve renderable view dependencies without constructing presentation fields. */
@@ -42,26 +43,32 @@ export function externalRecordViewRefs(
 
 function externalRecordViewOrRefs(
   views: Views,
-  uri: AtUriString,
+  ref: AtUriString | Required<ItemRef>,
   state: HydrationState,
   now: number,
   refsOnly: false,
 ): $Typed<ExternalRecordView> | undefined
 function externalRecordViewOrRefs(
   views: Views,
-  uri: AtUriString,
+  ref: AtUriString | Required<ItemRef>,
   state: HydrationState,
   now: number,
   refsOnly: true,
 ): AtUriString[] | undefined
 function externalRecordViewOrRefs(
   views: Views,
-  uri: AtUriString,
+  ref: AtUriString | Required<ItemRef>,
   state: HydrationState,
   now: number,
   refsOnly: boolean,
 ): $Typed<ExternalRecordView> | AtUriString[] | undefined {
-  const info = availableRecord(views, uri, state)
+  const uri = typeof ref === 'string' ? ref : ref.uri
+  const root =
+    typeof ref === 'string'
+      ? state.externalRecords?.get(uri)
+      : state.externalRecordsByRef?.get(genericRecordKey(ref))
+  if (!root) return
+  const info = availableRecord(views, uri, state, root)
   if (!info) return
   const { record } = info
 
@@ -87,7 +94,7 @@ function externalRecordViewOrRefs(
     if (!url || !record.title) return
     if (refsOnly) return refs
     return app.bsky.embed.external.viewArticle.$build({
-      ...commonFields(views, refs, state),
+      ...commonFields(views, refs, state, info),
       uri: url,
       title: record.title,
       description: record.description ?? '',
@@ -110,10 +117,9 @@ function externalRecordViewOrRefs(
   }
 
   if (site.standard.publication.$matches(record)) {
-    if (refsOnly) {
-      return publicationRecord(views, uri, state) ? [uri] : undefined
-    }
-    return publicationView(views, uri, state)
+    const publication = publicationRecord(views, uri, state, info)
+    if (refsOnly) return publication ? [uri] : undefined
+    return publication && publicationView(views, uri, state, publication)
   }
 
   if (social.grain.gallery.$matches(record)) {
@@ -171,7 +177,7 @@ function externalRecordViewOrRefs(
     }
     if (refsOnly) return refs
     return app.bsky.embed.external.viewGallery.$build({
-      ...commonFields(views, refs, state),
+      ...commonFields(views, refs, state, info),
       uri: buildExternalRecordUrl(uri) ?? uri,
       title: record.title,
       description: record.description ?? '',
@@ -189,7 +195,7 @@ function externalRecordViewOrRefs(
     // a future heartbeat counts as live for at most twice the window.
     const fresh = Math.abs(now - lastSeen) < LIVESTREAM_HEARTBEAT_WINDOW_MS
     return app.bsky.embed.external.viewLivestream.$build({
-      ...commonFields(views, [uri], state),
+      ...commonFields(views, [uri], state, info),
       uri: httpUri(record.canonicalUrl) ?? httpUri(record.url) ?? uri,
       title: record.title,
       description: '',
@@ -217,7 +223,7 @@ function publicationView(
   if (!publication) return
   const { record, url } = publication
   return app.bsky.embed.external.viewArticlePublication.$build({
-    ...commonFields(views, [uri], state),
+    ...commonFields(views, [uri], state, publication.info),
     uri: url,
     title: record.name,
     description: record.description ?? '',
@@ -249,12 +255,14 @@ function publicationRecord(
   views: Views,
   uri: AtUriString,
   state: HydrationState,
+  info?: ExternalRecord,
 ) {
-  const record = availableRecord(views, uri, state)?.record
-  if (!site.standard.publication.$matches(record)) return
+  const available = availableRecord(views, uri, state, info)
+  const record = available?.record
+  if (!available || !site.standard.publication.$matches(record)) return
   const url = httpUri(record.url)
   if (!url || !record.name) return
-  return { record, url }
+  return { record, url, info: available }
 }
 
 /** Apply shared block, review, and takedown checks to a hydrated record. */
@@ -288,22 +296,27 @@ function commonFields(
   views: Views,
   uris: AtUriString[],
   state: HydrationState,
+  root: ExternalRecord,
 ) {
   const refs = [...new Set(uris)]
   const dids = [...new Set(refs.map(uriToDid))]
   return {
-    associatedRefs: refs.map((uri) =>
+    associatedRefs: refs.map((uri, index) =>
       com.atproto.repo.strongRef.$build({
         uri,
-        cid: state.externalRecords!.get(uri)!.cid,
+        cid: index === 0 ? root.cid : state.externalRecords!.get(uri)!.cid,
       }),
     ),
     associatedProfiles: dids.flatMap((did) => {
       const profile = views.profileBasic(did, state)
       return profile ? [profile] : []
     }),
-    labels: refs.flatMap((uri) =>
-      recordLabels(uri, state.externalRecords!.get(uri)!, state),
+    labels: refs.flatMap((uri, index) =>
+      recordLabels(
+        uri,
+        index === 0 ? root : state.externalRecords!.get(uri)!,
+        state,
+      ),
     ),
   }
 }
