@@ -9,7 +9,7 @@ import {
   buildCommit,
   commitMacHeaders,
   getSpaceMacSecret,
-  isSpaceSelfRead,
+  isSpaceUserOrAdmin,
 } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
@@ -23,7 +23,7 @@ export default function (server: Server, ctx: AppContext) {
       const { space, repo, since, limit, excludeValues } = params
 
       assertSpaceRead(auth, space, repo)
-      await assertRepoAvailability(ctx, repo, isSpaceSelfRead(auth, repo))
+      await assertRepoAvailability(ctx, repo, isSpaceUserOrAdmin(auth, repo))
 
       const sharedSecret = await getSpaceMacSecret(ctx, {
         req,

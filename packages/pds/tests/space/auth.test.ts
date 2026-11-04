@@ -4,6 +4,7 @@ import { decodeJwt } from 'jose'
 import { HOUR } from '@atproto/common'
 import { P256Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
+import { getBlobCidString } from '@atproto/lex-data'
 import {
   createSpaceSigHeaders,
   createSpaceToken,
@@ -847,6 +848,301 @@ describe('space auth', () => {
       }
 
       await expect(write()).resolves.toBeDefined()
+    })
+
+    it('stops minting credentials and listing repos for a taken-down authority', async () => {
+      const erin = await sc.createActor('erin', network.pds)
+      const space = await sc.createSpace(erin, { members: [dan] })
+      const cred = await sc.credentialFor(dan, space)
+      const listRepos = () =>
+        cred.clientFor(network.pds).call(com.atproto.space.listRepos, { space })
+      await listRepos()
+
+      await network.pds.ctx.accountManager.takedownAccount(erin.did, {
+        applied: true,
+        ref: 'test-authority-takedown',
+      })
+      try {
+        await expect(sc.credentialFor(dan, space)).rejects.toMatchObject({
+          error: 'RepoTakendown',
+        })
+        await expect(listRepos()).rejects.toMatchObject({
+          error: 'RepoTakendown',
+        })
+      } finally {
+        await network.pds.ctx.accountManager.takedownAccount(erin.did, {
+          applied: false,
+        })
+      }
+
+      await expect(sc.credentialFor(dan, space)).resolves.toBeDefined()
+    })
+
+    it('stops minting public credentials for a taken-down authority', async () => {
+      const frank = await sc.createActor('frank', network.pds)
+      const space = await sc.createSpace(frank, {
+        policy: com.atproto.memberspace.policy.$build({ publicRead: true }),
+      })
+      await sc.publicCredential(space)
+
+      await network.pds.ctx.accountManager.takedownAccount(frank.did, {
+        applied: true,
+        ref: 'test-public-authority-takedown',
+      })
+      try {
+        await expect(sc.publicCredential(space)).rejects.toMatchObject({
+          error: 'RepoTakendown',
+        })
+      } finally {
+        await network.pds.ctx.accountManager.takedownAccount(frank.did, {
+          applied: false,
+        })
+      }
+    })
+
+    it('stops minting credentials for a deactivated authority', async () => {
+      const gina = await sc.createActor('gina', network.pds)
+      const space = await sc.createSpace(gina, { members: [dan] })
+
+      await network.pds.ctx.accountManager.deactivateAccount(gina.did)
+      try {
+        await expect(sc.credentialFor(dan, space)).rejects.toMatchObject({
+          error: 'RepoDeactivated',
+        })
+      } finally {
+        await network.pds.ctx.accountManager.activateAccount(gina.did)
+      }
+    })
+
+    it('refuses space records as takedown subjects', async () => {
+      const space = await sc.createSpace(alice)
+      const { uri, cid } = await sc.write(alice, space)
+      const client = network.pds.getClient()
+      const admin = { headers: network.pds.adminAuthHeaders() }
+
+      for (const applied of [true, false]) {
+        await expect(
+          client.call(
+            com.atproto.admin.updateSubjectStatus,
+            {
+              subject: com.atproto.repo.strongRef.$build({ uri, cid }),
+              takedown: { applied },
+            },
+            admin,
+          ),
+        ).rejects.toThrow('Space records cannot be taken down')
+      }
+    })
+
+    it('reports a space record as not taken down', async () => {
+      // Written by a member, so the record lives outside the authority's repo.
+      const space = await sc.createSpace(alice, { members: [dan] })
+      const { uri, cid } = await sc.write(dan, space)
+
+      const status = await network.pds
+        .getClient()
+        .call(
+          com.atproto.admin.getSubjectStatus,
+          { uri },
+          { headers: network.pds.adminAuthHeaders() },
+        )
+      expect(status).toEqual({
+        subject: com.atproto.repo.strongRef.$build({ uri, cid }),
+        takedown: { applied: false },
+      })
+    })
+
+    it('stops a taken-down authority managing its spaces', async () => {
+      const hank = await sc.createActor('hank', network.pds)
+      const space = await sc.createSpace(hank, { members: [dan] })
+      const policy = com.atproto.memberspace.policy.$build({})
+      const opts = { headers: hank.headers }
+      const calls = [
+        () =>
+          hank.client.call(
+            com.atproto.space.createSpace,
+            { spaceType: TEST_SPACE_TYPE, skey: 'second', policy },
+            opts,
+          ),
+        () =>
+          hank.client.call(
+            com.atproto.space.updateSpace,
+            { space, policy },
+            opts,
+          ),
+        () => hank.client.call(com.atproto.space.deleteSpace, { space }, opts),
+        () =>
+          hank.client.call(
+            com.atproto.space.removeWriter,
+            { space, did: dan.did },
+            opts,
+          ),
+        () =>
+          hank.client.call(
+            com.atproto.memberspace.putMember,
+            { space, did: bob.did, read: true, write: true },
+            opts,
+          ),
+        () =>
+          hank.client.call(
+            com.atproto.memberspace.removeMember,
+            { space, did: dan.did },
+            opts,
+          ),
+      ]
+
+      await network.pds.ctx.accountManager.takedownAccount(hank.did, {
+        applied: true,
+        ref: 'test-authority-manage-takedown',
+      })
+      try {
+        for (const call of calls) {
+          await expect(call()).rejects.toMatchObject({
+            error: 'AccountTakedown',
+          })
+        }
+      } finally {
+        await network.pds.ctx.accountManager.takedownAccount(hank.did, {
+          applied: false,
+        })
+      }
+    })
+
+    it('stops a deactivated authority creating spaces', async () => {
+      const ian = await sc.createActor('ian', network.pds)
+
+      await network.pds.ctx.accountManager.deactivateAccount(ian.did)
+      try {
+        await expect(sc.createSpace(ian)).rejects.toMatchObject({
+          error: 'AccountDeactivated',
+        })
+      } finally {
+        await network.pds.ctx.accountManager.activateAccount(ian.did)
+      }
+    })
+
+    it('lets an admin read any space repo, including a taken-down one', async () => {
+      const space = await sc.createSpace(alice, { members: [dan] })
+      const { body: uploaded } = await dan.client.uploadBlob(
+        new Uint8Array([1, 2, 3]),
+        { headers: dan.headers, encoding: 'image/png' },
+      )
+      await sc.write(dan, space, {
+        rkey: 'admin-read',
+        record: { $type: TEST_COLLECTION, text: 'hi', image: uploaded.blob },
+      })
+
+      const client = network.pds.getClient()
+      const headers = network.pds.adminAuthHeaders()
+      const params = { space, repo: dan.did }
+      const cid = getBlobCidString(uploaded.blob)
+      const reads = [
+        () =>
+          client.call(
+            com.atproto.space.getRecord,
+            { ...params, collection: TEST_COLLECTION, rkey: 'admin-read' },
+            { headers },
+          ),
+        () => client.call(com.atproto.space.listRecords, params, { headers }),
+        () => client.call(com.atproto.space.listBlobs, params, { headers }),
+        () => client.call(com.atproto.space.listRepoOps, params, { headers }),
+        () =>
+          client.call(com.atproto.space.getLatestCommit, params, { headers }),
+        () => client.xrpc(com.atproto.space.getRepo, { params, headers }),
+        () =>
+          client.xrpc(com.atproto.space.getBlob, {
+            params: { ...params, cid },
+            headers,
+          }),
+      ]
+      for (const read of reads) {
+        await expect(read()).resolves.toBeDefined()
+      }
+
+      // As `sync.*` serves a taken-down repo to an admin.
+      await network.pds.ctx.accountManager.takedownAccount(dan.did, {
+        applied: true,
+        ref: 'test-admin-read-takedown',
+      })
+      try {
+        for (const read of reads) {
+          await expect(read()).resolves.toBeDefined()
+        }
+      } finally {
+        await network.pds.ctx.accountManager.takedownAccount(dan.did, {
+          applied: false,
+        })
+      }
+    })
+
+    it('lets a taken-down account export its spaces', async () => {
+      const josie = await sc.createActor('josie', network.pds)
+      const space = await sc.createSpace(josie)
+      const { body: uploaded } = await josie.client.uploadBlob(
+        new Uint8Array([4, 5, 6]),
+        { headers: josie.headers, encoding: 'image/png' },
+      )
+      await sc.write(josie, space, {
+        record: { $type: TEST_COLLECTION, text: 'hi', image: uploaded.blob },
+      })
+
+      await network.pds.ctx.accountManager.takedownAccount(josie.did, {
+        applied: true,
+        ref: 'test-export-takedown',
+      })
+      try {
+        const session = await network.pds
+          .getClient()
+          .call(com.atproto.server.createSession, {
+            identifier: josie.did,
+            password: 'josie-pass',
+            allowTakendown: true,
+          })
+        const headers = SeedClient.getHeaders(session.accessJwt)
+        const params = { space, repo: josie.did }
+        const cid = getBlobCidString(uploaded.blob)
+
+        const { spaces } = await josie.client.call(
+          com.atproto.space.listSpaces,
+          {},
+          { headers },
+        )
+        expect(spaces.map((s) => s.uri)).toContain(space)
+        await expect(
+          josie.client.xrpc(com.atproto.space.exportSpaceMeta, {
+            params: { space },
+            headers,
+          }),
+        ).resolves.toBeDefined()
+        await expect(
+          josie.client.xrpc(com.atproto.space.getRepo, { params, headers }),
+        ).resolves.toBeDefined()
+        const { cids } = await josie.client.call(
+          com.atproto.space.listBlobs,
+          params,
+          { headers },
+        )
+        expect(cids).toContain(cid)
+        await expect(
+          josie.client.xrpc(com.atproto.space.getBlob, {
+            params: { ...params, cid },
+            headers,
+          }),
+        ).resolves.toBeDefined()
+
+        // Export only: everything else stays closed to a takendown session.
+        const listRecords = () =>
+          josie.client.call(com.atproto.space.listRecords, params, { headers })
+        const write = () => sc.write(josie, space, { headers })
+        await expect(listRecords()).rejects.toMatchObject({
+          error: 'InvalidToken',
+        })
+        await expect(write()).rejects.toMatchObject({ error: 'InvalidToken' })
+      } finally {
+        await network.pds.ctx.accountManager.takedownAccount(josie.did, {
+          applied: false,
+        })
+      }
     })
   })
 

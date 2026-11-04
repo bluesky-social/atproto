@@ -38,6 +38,7 @@ import type { ActorStore } from '../../../../actor-store/actor-store.js'
 import type { SpaceRepo } from '../../../../actor-store/db/index.js'
 import {
   type AccessOutput,
+  type AdminTokenOutput,
   type OAuthOutput,
   type SpaceCredentialOutput,
   isSpaceCredentialOutput,
@@ -70,6 +71,36 @@ export async function assertSpaceHost(
   ctx: AppContext,
   spaceUri: SpaceRefString,
 ): Promise<DidString> {
+  const { spaceDid } = await getSpaceHostAccount(ctx, spaceUri)
+  return spaceDid
+}
+
+/**
+ * Like {@link assertSpaceHost}, but also refuses an authority that is taken down
+ * or deactivated, as `sync.*` does for a repo. Notification routes keep using
+ * {@link assertSpaceHost} so the authority's writer state stays current.
+ */
+export async function assertActiveSpaceHost(
+  ctx: AppContext,
+  spaceUri: SpaceRefString,
+): Promise<DidString> {
+  const { spaceDid, account } = await getSpaceHostAccount(ctx, spaceUri)
+  if (account.takedownRef) {
+    throw new InvalidRequestError(
+      `Repo has been takendown: ${spaceDid}`,
+      'RepoTakendown',
+    )
+  }
+  if (account.deactivatedAt) {
+    throw new InvalidRequestError(
+      `Repo has been deactivated: ${spaceDid}`,
+      'RepoDeactivated',
+    )
+  }
+  return spaceDid
+}
+
+async function getSpaceHostAccount(ctx: AppContext, spaceUri: SpaceRefString) {
   const { spaceDid } = toSpaceRef(spaceUri)
   const account = await ctx.accountManager.getAccount(spaceDid, {
     includeDeactivated: true,
@@ -78,7 +109,7 @@ export async function assertSpaceHost(
   if (!account) {
     throw new InvalidRequestError('Space not found', 'SpaceNotFound')
   }
-  return spaceDid
+  return { spaceDid, account }
 }
 
 // A space created on a PDS is anchored on its creator's own DID, so ownership is a
@@ -95,18 +126,23 @@ export function assertSpaceOwner(
   }
 }
 
+export type SpaceReadAuth =
+  AccessOutput | OAuthOutput | SpaceCredentialOutput | AdminTokenOutput
+
 /**
  * An account credential reads only that account's own repo in the space. Reaching
  * another member's repo takes a space credential, which only the authority issues
  * and only after deciding the holder may read the space — a repo host has no member
  * list of its own to consult. A whole-space `read` grant is what an app exchanges
- * for such a credential (see getDelegationToken); it is not itself one.
+ * for such a credential (see getDelegationToken); it is not itself one. The admin
+ * token reads any repo, as it does through `sync.*`.
  */
 export function assertSpaceRead(
-  auth: AccessOutput | OAuthOutput | SpaceCredentialOutput,
+  auth: SpaceReadAuth,
   spaceUri: SpaceRefString,
   repo: string,
 ): void {
+  if (auth.credentials.type === 'admin_token') return
   if (isSpaceCredentialOutput(auth)) {
     assertCredentialSpace(auth.credentials, spaceUri, repo)
     return
@@ -126,10 +162,8 @@ export function assertSpaceRead(
 
 // The space analogue of `isUserOrAdmin`: a space credential names a syncer rather
 // than an account, so it is never the repo's own owner.
-export function isSpaceSelfRead(
-  auth: AccessOutput | OAuthOutput | SpaceCredentialOutput,
-  repo: string,
-): boolean {
+export function isSpaceUserOrAdmin(auth: SpaceReadAuth, repo: string): boolean {
+  if (auth.credentials.type === 'admin_token') return true
   if (auth.credentials.type === 'space_credential') return false
   return auth.credentials.did === repo
 }
@@ -180,7 +214,7 @@ export async function getSpaceMacSecret(
   opts: {
     req: IncomingMessage
     res: ServerResponse
-    auth: AccessOutput | OAuthOutput | SpaceCredentialOutput
+    auth: SpaceReadAuth
     repo: DidString
     type: MacType
   },
