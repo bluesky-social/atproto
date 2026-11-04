@@ -20,6 +20,11 @@
               "type": "string",
               "knownValues": ["good", "warning", "atRisk"]
             },
+            "enforcement": {
+              "type": "ref",
+              "ref": "tools.ozone.inbox.defs#enforcementView",
+              "description": "Current account takedown or suspension, independent of strike standing."
+            },
             "updatedAt": {
               "type": "string",
               "format": "datetime",

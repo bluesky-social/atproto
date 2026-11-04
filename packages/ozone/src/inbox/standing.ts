@@ -12,6 +12,10 @@ export type AccountStanding = {
   standing: Standing
   updatedAt: DatetimeString
   expiresAt?: DatetimeString
+  enforcement: {
+    state: 'none' | 'suspended' | 'takendown'
+    expiresAt?: DatetimeString
+  }
 }
 
 /** Shared derivation for account status and standing notifications. */
@@ -69,7 +73,16 @@ export async function getAccountStanding(
   return {
     standing,
     updatedAt,
-    ...(suspended && status?.suspendUntil
+    // @NOTE A timed takedown remains temporary until its reversal is processed,
+    // including when the scheduled expiry has already passed.
+    enforcement: status?.takendown
+      ? status.suspendUntil
+        ? { state: 'suspended', expiresAt: status.suspendUntil }
+        : { state: 'takendown' }
+      : suspended && status?.suspendUntil
+        ? { state: 'suspended', expiresAt: status.suspendUntil }
+        : { state: 'none' },
+    ...((suspended || status?.takendown) && status?.suspendUntil
       ? { expiresAt: status.suspendUntil }
       : {}),
   }
