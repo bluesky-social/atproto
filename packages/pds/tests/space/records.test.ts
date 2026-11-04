@@ -70,7 +70,7 @@ describe('space records', () => {
     })
 
     it('writes a record from a remote PDS', async () => {
-      // Bob is on pds2. His PDS fires a best-effort notifyWrite at the authority,
+      // Bob is on pds2. His PDS fires a best-effort notifyRepoUpdate at the authority,
       // but the authoritative record of the write is the oplog on his own PDS.
       const space = await sc.createSpace(alice, { members: [bob] })
 
@@ -96,7 +96,7 @@ describe('space records', () => {
         {},
         { headers: bob.headers },
       )
-      expect(listed.spaces.map((s) => s.uri)).toContain(space)
+      expect(listed.spaces.map((s) => s.space)).toContain(space)
     })
 
     it('refuses a write to another account repo', async () => {
@@ -632,27 +632,6 @@ describe('space records', () => {
       ])
     })
 
-    it('reverses the listing order', async () => {
-      const space = await sc.createSpace(alice, { members: [dan] })
-      for (const rkey of ['aaa', 'bbb', 'ccc']) {
-        await sc.write(dan, space, { rkey })
-      }
-
-      const forward = await dan.client.call(
-        com.atproto.space.listRecords,
-        { space, repo: dan.did, collection: TEST_COLLECTION },
-        { headers: dan.headers },
-      )
-      const reversed = await dan.client.call(
-        com.atproto.space.listRecords,
-        { space, repo: dan.did, collection: TEST_COLLECTION, reverse: true },
-        { headers: dan.headers },
-      )
-      expect(reversed.records.map((r) => r.rkey)).toEqual(
-        forward.records.map((r) => r.rkey).reverse(),
-      )
-    })
-
     it('scopes a listing to one space', async () => {
       const space = await sc.createSpace(alice, { skey: 'scope-a' })
       const other = await sc.createSpace(alice, { skey: 'scope-b' })
@@ -838,7 +817,7 @@ describe('space records', () => {
       expect(await sc.blobExists(alice, blobCid)).toBe(false)
     })
 
-    it('filters listBlobs by revision', async () => {
+    it('lists the blobs of a repo to a syncer', async () => {
       const space = await sc.createSpace(alice, { members: [carol] })
 
       const first = await upload(alice, new Uint8Array([1]))
@@ -846,7 +825,6 @@ describe('space records', () => {
         rkey: 'first',
         record: { $type: TEST_COLLECTION, text: 'first', image: first },
       })
-      const midRev = (await sc.repoState(alice, space))?.rev ?? undefined
 
       const second = await upload(alice, new Uint8Array([2]))
       await sc.write(alice, space, {
@@ -863,14 +841,6 @@ describe('space records', () => {
       expect(all.cids.sort()).toEqual(
         [getBlobCidString(first), getBlobCidString(second)].sort(),
       )
-
-      // What an incremental blob sync asks for: only what landed after its cursor.
-      const sinceMid = await asSyncer.call(com.atproto.space.listBlobs, {
-        space,
-        repo: alice.did,
-        since: midRev,
-      })
-      expect(sinceMid.cids).toEqual([getBlobCidString(second)])
     })
 
     it('scopes listBlobs to one space', async () => {

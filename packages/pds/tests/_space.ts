@@ -35,6 +35,7 @@ import {
   type RecordKeyString,
   SpaceRef,
   type SpaceRefString,
+  type UriString,
 } from '@atproto/syntax'
 import { createServiceAuthHeaders } from '@atproto/xrpc-server'
 import { ClientAttestationVerifier } from '../src/client-attestation-verifier.js'
@@ -124,7 +125,7 @@ export class SpaceClient {
   }
 
   /**
-   * Create a space under `authority`, optionally adding members.
+   * Create a space anchored on `authority`'s DID, optionally adding members.
    *
    * The skey defaults to a slug of the running test's name, so tests don't have
    * to invent one and restate their own title. Each test gets a distinct space,
@@ -152,8 +153,8 @@ export class SpaceClient {
       )
       // Belt and braces: if the handler ever stops anchoring on the caller's own
       // DID, every test built on this helper would silently target a stale uri.
-      if (res.uri !== uri) {
-        throw new Error(`expected space ${uri}, got ${res.uri}`)
+      if (res.space !== uri) {
+        throw new Error(`expected space ${uri}, got ${res.space}`)
       }
     }
 
@@ -170,16 +171,16 @@ export class SpaceClient {
     access: { read: boolean; write: boolean } = { read: true, write: true },
   ) {
     return authority.client.call(
-      com.atproto.memberspace.putMember,
-      { space, did: member.did, ...access },
+      com.atproto.memberspace.putMembers,
+      { space, members: [{ did: member.did, ...access }] },
       { headers: authority.headers },
     )
   }
 
   async removeMember(authority: Actor, space: SpaceRefString, member: Actor) {
     return authority.client.call(
-      com.atproto.memberspace.removeMember,
-      { space, did: member.did },
+      com.atproto.memberspace.removeMembers,
+      { space, dids: [member.did] },
       { headers: authority.headers },
     )
   }
@@ -187,7 +188,7 @@ export class SpaceClient {
   async removeWriter(authority: Actor, space: SpaceRefString, writer: Actor) {
     return authority.client.call(
       com.atproto.space.removeWriter,
-      { space, did: writer.did },
+      { space, repo: writer.did },
       { headers: authority.headers },
     )
   }
@@ -274,7 +275,7 @@ export class SpaceClient {
       .getClient()
       .call(com.atproto.space.getSpaceCredential, {
         space,
-        credentialKid: key.did(),
+        credentialKey: key.did(),
         delegationToken: token,
         clientAttestation: opts.clientAttestation,
       })
@@ -295,7 +296,7 @@ export class SpaceClient {
       .getClient()
       .call(com.atproto.space.getSpaceCredential, {
         space,
-        credentialKid: key.did(),
+        credentialKey: key.did(),
         clientAttestation: opts.clientAttestation,
       })
     return new SpaceCredential(res.credential, key, this.idResolver)
@@ -336,7 +337,7 @@ export class SpaceClient {
       .getClient()
       .call(com.atproto.space.getSpaceCredential, {
         space,
-        credentialKid: key.did(),
+        credentialKey: key.did(),
         delegationToken: token,
         clientAttestation: opts.clientAttestation,
       })
@@ -377,8 +378,8 @@ export class SpaceClient {
   /**
    * The writer set as stored by the authority.
    *
-   * Reads through storage rather than `listRepos` because the callers that need it
-   * are polling for a best-effort notification to land, and `listRepos` needs a
+   * Reads through storage rather than `listWriters` because the callers that need it
+   * are polling for a best-effort notification to land, and `listWriters` needs a
    * credential minted per call. Use {@link expectWriterSet} to assert the
    * published view.
    */
@@ -392,7 +393,7 @@ export class SpaceClient {
   }
 
   /**
-   * The writer set, as `listRepos` publishes it. A repo missing from it is a repo
+   * The writer set, as `listWriters` publishes it. A repo missing from it is a repo
    * no syncer can discover.
    */
   async expectWriterSet(
@@ -403,8 +404,8 @@ export class SpaceClient {
     const cred = await this.credentialFor(reader, space)
     const res = await cred
       .clientFor(this.authority)
-      .call(com.atproto.space.listRepos, { space })
-    expect(res.repos.map((r) => r.did).sort()).toEqual(
+      .call(com.atproto.space.listWriters, { space })
+    expect(res.repos.map((r) => r.repo).sort()).toEqual(
       expected.map((a) => a.did).sort(),
     )
   }
@@ -412,10 +413,10 @@ export class SpaceClient {
   /**
    * Wait for a condition that a best-effort notification drives.
    *
-   * `notifyWrite` is fired from the writer's PDS without awaiting, so there is no
+   * `notifyRepoUpdate` is fired from the writer's PDS without awaiting, so there is no
    * queue on the writer side to drain — polling is the only option. Prefer
    * `network.pds.ctx.backgroundQueue.processAll()` where the work *is* queued
-   * (the authority's outbound fan-out, `notifySpaceDeleted`).
+   * (the authority's outbound fan-out, `notifySpaceStatus`).
    */
   async awaitNotify<T>(
     poll: () => Promise<T>,
@@ -672,7 +673,7 @@ export class MockClientApp {
 
   private constructor(
     server: Server,
-    public clientId: string,
+    public clientId: UriString,
     public jwksUri: string,
     public key: JoseKey,
   ) {
@@ -720,7 +721,7 @@ export class MockClientApp {
 
     return new MockClientApp(
       server,
-      `${base}/client-metadata.json`,
+      `${base}/client-metadata.json` as UriString,
       `${base}/jwks.json`,
       key,
     )

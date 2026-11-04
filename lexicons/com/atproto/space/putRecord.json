@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Write a record in a permissioned space, creating or updating it as needed. Requires auth, implemented by PDS.",
+      "description": "Write a record in a space repo, creating or updating it as needed. Requires auth, implemented by PDS.",
       "input": {
         "encoding": "application/json",
         "schema": {
@@ -13,32 +13,26 @@
           "properties": {
             "space": {
               "type": "string",
-              "format": "space-ref",
-              "description": "Reference to the space."
+              "format": "space-ref"
             },
             "repo": {
               "type": "string",
-              "format": "did",
-              "description": "The DID of the repo to write to (the authenticated member)."
+              "format": "did"
             },
             "collection": {
               "type": "string",
-              "format": "nsid",
-              "description": "The NSID of the record collection."
+              "format": "nsid"
             },
             "rkey": {
               "type": "string",
-              "format": "record-key",
-              "description": "The Record Key.",
-              "maxLength": 512
+              "format": "record-key"
             },
             "validate": {
               "type": "boolean",
               "description": "Can be set to 'false' to skip Lexicon schema validation of record data, 'true' to require it, or leave unset to validate only for known Lexicons."
             },
             "record": {
-              "type": "unknown",
-              "description": "The record to write."
+              "type": "unknown"
             }
           }
         }
@@ -51,8 +45,7 @@
           "properties": {
             "uri": {
               "type": "string",
-              "format": "at-uri",
-              "description": "URI of the written record."
+              "format": "at-uri"
             },
             "cid": {
               "type": "string",

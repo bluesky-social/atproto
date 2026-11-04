@@ -333,7 +333,7 @@ describe('space auth', () => {
       })
 
       it.each(['remote', 'co-located'])(
-        'refuses a signature addressed to another writer (%s)',
+        'refuses a signature addressed to another account (%s)',
         async (location) => {
           const other = location === 'remote' ? bob : dan
           const space = await sc.createSpace(alice, { members: [other, carol] })
@@ -365,7 +365,7 @@ describe('space auth', () => {
         })
         await expect(
           alice.client.call(
-            com.atproto.space.listRepos,
+            com.atproto.space.listWriters,
             { space },
             { headers },
           ),
@@ -400,7 +400,7 @@ describe('space auth', () => {
         await expect(
           alice.client.call(
             com.atproto.space.registerNotify,
-            { space, service: alice.did },
+            { space, service: `${alice.did}#atproto_pds` },
             { headers },
           ),
         ).resolves.toBeDefined()
@@ -482,9 +482,9 @@ describe('space auth', () => {
         }),
       ).rejects.toThrow(/issuer is not the space authority/)
 
-      // listRepos authorizes off the credential too, on a separate path.
+      // listWriters authorizes off the credential too, on a separate path.
       await expect(
-        asForged.call(com.atproto.space.listRepos, { space }),
+        asForged.call(com.atproto.space.listWriters, { space }),
       ).rejects.toThrow(/issuer is not the space authority/)
     })
 
@@ -512,11 +512,11 @@ describe('space auth', () => {
       const { headers } = await createServiceAuthHeaders({
         iss: signer.did,
         aud: opts.aud ?? bob.did,
-        lxm: opts.lxm ?? com.atproto.space.notifyCredentialRevoked.$lxm,
+        lxm: opts.lxm ?? com.atproto.space.notifyCredentialsRevoked.$lxm,
         keypair,
       })
       return bob.client.call(
-        com.atproto.space.notifyCredentialRevoked,
+        com.atproto.space.notifyCredentialsRevoked,
         { space, credentials },
         { headers },
       )
@@ -602,12 +602,12 @@ describe('space auth', () => {
       ).rejects.toThrow(/audience does not match/)
       await expect(
         revoke(alice, space, credentials, {
-          lxm: com.atproto.space.notifyWrite.$lxm,
+          lxm: com.atproto.space.notifyRepoUpdate.$lxm,
         }),
       ).rejects.toThrow()
       await expect(
         bob.client.call(
-          com.atproto.space.notifyCredentialRevoked,
+          com.atproto.space.notifyCredentialsRevoked,
           {
             space,
             credentials,
@@ -707,7 +707,7 @@ describe('space auth', () => {
       await expect(
         bob.client.call(com.atproto.space.getSpaceCredential, {
           space,
-          credentialKid: key.did(),
+          credentialKey: key.did(),
           delegationToken: token,
         }),
       ).rejects.toMatchObject({ error: 'SpaceNotFound' })
@@ -722,7 +722,7 @@ describe('space auth', () => {
         com.atproto.space.getSpaceCredential,
         {
           space,
-          credentialKid: key.did(),
+          credentialKey: key.did(),
           delegationToken: token,
         },
       )
@@ -740,7 +740,7 @@ describe('space auth', () => {
       await expect(
         alice.client.call(com.atproto.space.getSpaceCredential, {
           space,
-          credentialKid: key.did(),
+          credentialKey: key.did(),
           delegationToken: token,
         }),
       ).rejects.toThrow(/P-256/)
@@ -854,13 +854,15 @@ describe('space auth', () => {
       await expect(write()).resolves.toBeDefined()
     })
 
-    it('stops minting credentials and listing repos for a taken-down authority', async () => {
+    it('stops minting credentials and listing writers for a taken-down authority', async () => {
       const erin = await sc.createActor('erin', network.pds)
       const space = await sc.createSpace(erin, { members: [dan] })
       const cred = await sc.credentialFor(dan, space)
-      const listRepos = () =>
-        cred.clientFor(network.pds).call(com.atproto.space.listRepos, { space })
-      await listRepos()
+      const listWriters = () =>
+        cred
+          .clientFor(network.pds)
+          .call(com.atproto.space.listWriters, { space })
+      await listWriters()
 
       await network.pds.ctx.accountManager.takedownAccount(erin.did, {
         applied: true,
@@ -870,7 +872,7 @@ describe('space auth', () => {
         await expect(sc.credentialFor(dan, space)).rejects.toMatchObject({
           error: 'RepoTakendown',
         })
-        await expect(listRepos()).rejects.toMatchObject({
+        await expect(listWriters()).rejects.toMatchObject({
           error: 'RepoTakendown',
         })
       } finally {
@@ -978,19 +980,19 @@ describe('space auth', () => {
         () =>
           hank.client.call(
             com.atproto.space.removeWriter,
-            { space, did: dan.did },
+            { space, repo: dan.did },
             opts,
           ),
         () =>
           hank.client.call(
-            com.atproto.memberspace.putMember,
-            { space, did: bob.did, read: true, write: true },
+            com.atproto.memberspace.putMembers,
+            { space, members: [{ did: bob.did, read: true, write: true }] },
             opts,
           ),
         () =>
           hank.client.call(
-            com.atproto.memberspace.removeMember,
-            { space, did: dan.did },
+            com.atproto.memberspace.removeMembers,
+            { space, dids: [dan.did] },
             opts,
           ),
       ]
@@ -1111,7 +1113,7 @@ describe('space auth', () => {
           {},
           { headers },
         )
-        expect(spaces.map((s) => s.uri)).toContain(space)
+        expect(spaces.map((s) => s.space)).toContain(space)
         await expect(
           josie.client.xrpc(com.atproto.space.exportSpaceMeta, {
             params: { space },
@@ -1404,17 +1406,17 @@ describe('space auth', () => {
         // Narrowed to what the grant covers, it is allowed.
         const listed = await alice.client.call(
           com.atproto.space.listSpaces,
-          { spaceType: TEST_SPACE_TYPE, did: alice.did },
+          { spaceType: TEST_SPACE_TYPE, spaceDid: alice.did },
           { headers },
         )
-        expect(listed.spaces.map((s) => s.uri)).toContain(space)
+        expect(listed.spaces.map((s) => s.space)).toContain(space)
 
         await expect(
           alice.client.call(
             com.atproto.space.listSpaces,
             {
               spaceType: 'com.example.otherGroup' as NsidString,
-              did: alice.did,
+              spaceDid: alice.did,
             },
             { headers },
           ),

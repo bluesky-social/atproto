@@ -13,7 +13,7 @@ import {
   prepareUpdate,
 } from '../../../../repo/index.js'
 import { assertNotPolicyRecord } from '../../../../space-policy/publish.js'
-import { fireNotifyWrite } from './util.js'
+import { fireNotifyRepoUpdate } from './util.js'
 
 // Matches com.atproto.repo.applyWrites.
 const MAX_WRITES = 200
@@ -114,7 +114,7 @@ export default function (server: Server, ctx: AppContext) {
         actorTxn.space.applyWrites(space, prepared),
       )
 
-      await fireNotifyWrite(ctx, { space, writerDid: did, commit })
+      await fireNotifyRepoUpdate(ctx, { space, writerDid: did, commit })
 
       return {
         encoding: 'application/json' as const,

@@ -16,7 +16,7 @@ export default function (server: Server, ctx: AppContext) {
       },
     }),
     handler: async ({ params, auth }) => {
-      const userDid = auth.credentials.did
+      const did = auth.credentials.did
       const { space } = params
 
       const ref = toSpaceRef(space)
@@ -25,10 +25,10 @@ export default function (server: Server, ctx: AppContext) {
         action: 'read',
       })
 
-      const keypair = await ctx.actorStore.keypair(userDid)
+      const keypair = await ctx.actorStore.keypair(did)
 
       const token = await createDelegationToken({
-        iss: userDid,
+        iss: did,
         sub: space,
         aud: spaceHostAud(ref.spaceDid),
         keypair,

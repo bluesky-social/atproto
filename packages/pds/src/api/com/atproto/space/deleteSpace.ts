@@ -13,12 +13,12 @@ export default function (server: Server, ctx: AppContext) {
       },
     }),
     handler: async ({ input: { body }, auth }) => {
-      const spaceAuthority = auth.credentials.did
+      const authorityDid = auth.credentials.did
       const { space } = body
 
       assertSpaceAuthority(auth, space, { manage: 'delete' })
 
-      const spaceRow = await ctx.actorStore.read(spaceAuthority, (store) =>
+      const spaceRow = await ctx.actorStore.read(authorityDid, (store) =>
         store.space.getSpace(space),
       )
       if (!spaceRow) {
@@ -28,7 +28,7 @@ export default function (server: Server, ctx: AppContext) {
 
       const recipients = await ctx.spacePolicyManager.deleteSpace(space)
       ctx.backgroundQueue.add(() =>
-        ctx.spaceNotifications.notifySpaceDeleted(space, recipients),
+        ctx.spaceNotifications.notifySpaceStatus(space, recipients),
       )
     },
   })

@@ -4,14 +4,22 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Import the authenticated account's repo in a space from a STAR file, as served by getRepo, during account migration, replacing whatever this host holds for that repo. The archive's commit names the space and must name the account as its repo. If the account is the space's authority, the space must first be imported with importSpaceMeta. Blobs are not included and are uploaded separately. Requires OAuth with a create grant for every collection in the archive, implemented by PDS.",
+      "description": "Import the authenticated account's space repo from a STAR file, for account migration. If the account is the space's authority, the space must first be imported with importSpaceMeta. Requires auth, implemented by PDS.",
       "input": {
-        "encoding": "application/octet-stream"
+        "encoding": "application/vnd.dasl.star"
       },
       "errors": [
         {
           "name": "SpaceNotFound",
-          "description": "The account is the space's authority, and the space has not been imported."
+          "description": "The account is the space's authority, and the space has not been imported yet."
+        },
+        {
+          "name": "InvalidRepoFile",
+          "description": "The STAR file is malformed or fails verification."
+        },
+        {
+          "name": "RepoMismatch",
+          "description": "The repo in the STAR file does not belong to the authenticated account."
         }
       ]
     }

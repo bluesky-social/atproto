@@ -39,7 +39,7 @@ export default function (server: Server, ctx: AppContext) {
       // The endpoint isn't resolved: a subscriber whose service entry has since
       // changed must still be able to withdraw. Succeeds when nothing was registered.
       await ctx.actorStore.transact(spaceDid, (actorTxn) =>
-        actorTxn.space.removeCredentialRecipient(space, service),
+        actorTxn.space.removeCredentialRecipients(space, service),
       )
     },
   })

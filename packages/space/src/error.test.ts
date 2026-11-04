@@ -15,7 +15,7 @@ describe('SpaceError', () => {
   it.each([
     [new SpaceTokenError('x', 'JwtExpired'), 'SpaceTokenError', 'JwtExpired'],
     [new SpaceSignatureError('x'), 'SpaceSignatureError', 'BadSpaceSignature'],
-    [new SpaceMacError('x'), 'SpaceMacError', 'BadSpaceMac'],
+    [new SpaceMacError('x'), 'SpaceMacError', 'InvalidSpaceMac'],
     [new SpaceKemError('x'), 'SpaceKemError', 'InvalidKemKey'],
     [
       new SpaceRepoVerificationError('x'),

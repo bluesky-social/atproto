@@ -13,14 +13,14 @@ export default function (server: Server, ctx: AppContext) {
       },
     }),
     handler: async ({ input: { body }, auth }) => {
-      const spaceAuthority = auth.credentials.did
-      const { space, did: writerDid } = body
+      const authorityDid = auth.credentials.did
+      const { space, repo } = body
 
       assertSpaceAuthority(auth, space, { manage: 'update' })
 
-      await ctx.actorStore.transact(spaceAuthority, async (actorTxn) => {
+      await ctx.actorStore.transact(authorityDid, async (actorTxn) => {
         await actorTxn.space.getActiveSpacePolicy(space)
-        await actorTxn.space.removeWriter(space, writerDid)
+        await actorTxn.space.removeWriter(space, repo)
       })
     },
   })

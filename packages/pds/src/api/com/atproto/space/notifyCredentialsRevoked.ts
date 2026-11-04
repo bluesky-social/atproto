@@ -5,7 +5,7 @@ import { com } from '../../../../lexicons/index.js'
 import { toSpaceRef } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
-  server.add(com.atproto.space.notifyCredentialRevoked, {
+  server.add(com.atproto.space.notifyCredentialsRevoked, {
     auth: ctx.authVerifier.serviceAuth,
     handler: async ({ input, auth }) => {
       const { space, credentials } = input.body

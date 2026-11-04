@@ -15,19 +15,16 @@ export default function (server: Server, ctx: AppContext) {
       },
     }),
     handler: async ({ params, auth }) => {
-      const spaceAuthority = auth.credentials.did
+      const authorityDid = auth.credentials.did
       const { space, limit, cursor } = params
 
       assertSpaceAuthority(auth, space, { action: 'read_self' })
 
-      const members = await ctx.actorStore.read(
-        spaceAuthority,
-        async (store) => {
-          const policy = await store.space.getActiveSpacePolicy(space)
-          assertMemberspace(policy)
-          return store.space.listMembers(space, { limit, cursor })
-        },
-      )
+      const members = await ctx.actorStore.read(authorityDid, async (store) => {
+        const policy = await store.space.getActiveSpacePolicy(space)
+        assertMemberspace(policy)
+        return store.space.listMembers(space, { limit, cursor })
+      })
 
       return {
         encoding: 'application/json',

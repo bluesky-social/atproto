@@ -19,10 +19,10 @@ import importSpaceMeta from './importSpaceMeta.js'
 import listBlobs from './listBlobs.js'
 import listRecords from './listRecords.js'
 import listRepoOps from './listRepoOps.js'
-import listRepos from './listRepos.js'
 import listSpaces from './listSpaces.js'
-import notifyCredentialRevoked from './notifyCredentialRevoked.js'
-import notifyWrite from './notifyWrite.js'
+import listWriters from './listWriters.js'
+import notifyCredentialsRevoked from './notifyCredentialsRevoked.js'
+import notifyRepoUpdate from './notifyRepoUpdate.js'
 import putRecord from './putRecord.js'
 import registerNotify from './registerNotify.js'
 import removeWriter from './removeWriter.js'
@@ -49,10 +49,10 @@ export default function (server: Server, ctx: AppContext) {
   listBlobs(server, ctx)
   listRecords(server, ctx)
   listRepoOps(server, ctx)
-  listRepos(server, ctx)
   listSpaces(server, ctx)
-  notifyCredentialRevoked(server, ctx)
-  notifyWrite(server, ctx)
+  listWriters(server, ctx)
+  notifyCredentialsRevoked(server, ctx)
+  notifyRepoUpdate(server, ctx)
   putRecord(server, ctx)
   registerNotify(server, ctx)
   removeWriter(server, ctx)

@@ -22,7 +22,7 @@ export default function (server: Server, ctx: AppContext) {
 
       const archive = await ctx.spacePolicyManager.exportSpaceMeta(space)
       return {
-        encoding: 'application/octet-stream' as const,
+        encoding: 'application/vnd.dasl.star' as const,
         body: byteIterableToStream(writeSpaceMetaStar(archive)),
       }
     },

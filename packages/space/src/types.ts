@@ -68,7 +68,7 @@ const spaceMetaStarMetaSchema = l.object({
 })
 export type SpaceMetaStarMeta = l.Infer<typeof spaceMetaStarMetaSchema>
 
-// A repo in the writer set, as listRepos reports it. Keyed by the repo's DID.
+// A repo in the writer set, as listWriters reports it. Keyed by the repo's DID.
 const spaceMetaWriterSchema = l.object({
   repoRev: l.string({ format: 'tid' }),
   data: l.bytes(),

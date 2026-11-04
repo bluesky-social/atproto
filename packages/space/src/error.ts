@@ -30,7 +30,7 @@ export class SpaceSignatureError extends SpaceError {
 
 export class SpaceMacError extends SpaceError {
   name = 'SpaceMacError'
-  readonly code = 'BadSpaceMac'
+  readonly code = 'InvalidSpaceMac'
 }
 
 export class SpaceKemError extends SpaceError {

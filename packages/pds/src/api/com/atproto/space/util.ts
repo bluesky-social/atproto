@@ -1,10 +1,5 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
-import {
-  MINUTE,
-  TID,
-  getPdsEndpoint,
-  getServiceEndpoint,
-} from '@atproto/common'
+import { MINUTE, TID, getServiceEndpoint } from '@atproto/common'
 import type { IdResolver } from '@atproto/identity'
 import { xrpc } from '@atproto/lex'
 import type { Cid } from '@atproto/lex-data'
@@ -123,7 +118,7 @@ export function assertSpaceAuthority(
   const ref = typeof space === 'string' ? toSpaceRef(space) : space
   auth.credentials.permissions?.assertSpace(ref, op)
   if (ref.spaceDid !== auth.credentials.did) {
-    throw new InvalidRequestError('Not the space authority', 'NotSpaceOwner')
+    throw new InvalidRequestError('Not the space authority', 'NotAuthorized')
   }
 }
 
@@ -239,20 +234,21 @@ export async function getSpaceMacSecret(
     return decapsulate(kemKeypair, keyShare)
   } catch (err) {
     if (err instanceof SpaceMacError || err instanceof SpaceKemError) {
-      throw new InvalidRequestError(err.message, 'BadSpaceMac')
+      throw new InvalidRequestError(err.message, 'InvalidSpaceMac')
     }
     throw err
   }
 }
 
-// A malformed STAR archive in a request body is the caller's error.
-export function throwInvalidArchive(err: unknown): never {
+// A malformed STAR archive in a request body is the caller's error, reported under
+// the error name the method declares for it.
+export function throwInvalidArchive(err: unknown, errorName: string): never {
   if (
     err instanceof StarParseError ||
     err instanceof SpaceRepoVerificationError ||
     err instanceof SpaceMetaArchiveError
   ) {
-    throw new InvalidRequestError(err.message)
+    throw new InvalidRequestError(err.message, errorName)
   }
   throw err
 }
@@ -279,29 +275,26 @@ export function recordMacHeaders(
 }
 
 /**
- * Resolve a service identifier — a DID with an optional service fragment, e.g.
- * `did:web:syncer.example.com#atproto_space_syncer` — to its endpoint. Without a
- * fragment the DID's own `#atproto_pds` entry is used, since a bare DID names an
- * account and an account is served by its PDS.
+ * Resolve a `did#serviceId` reference, e.g.
+ * `did:web:syncer.example.com#atproto_space_syncer`, to its service endpoint.
  */
 export async function resolveServiceEndpoint(
   idResolver: IdResolver,
   service: string,
 ): Promise<string | undefined> {
-  const [did, fragment] = service.split('#')
+  const [did, serviceId] = service.split('#')
+  if (!serviceId) return undefined
   const didDoc = await idResolver.did.resolve(did).catch((err) => {
     spaceLogger.warn({ err, service }, 'could not resolve service did')
     return null
   })
   if (!didDoc) return undefined
-  return fragment
-    ? getServiceEndpoint(didDoc, { id: `#${fragment}` })
-    : getPdsEndpoint(didDoc)
+  return getServiceEndpoint(didDoc, { id: `#${serviceId}` })
 }
 
 /**
- * Resolve a notification target and mint the service auth to reach it. `aud` is the
- * service identifier itself, so a fragment-bearing target is addressed as published.
+ * Resolve a `did#serviceId` reference and mint the service auth to reach it. `aud`
+ * is the reference itself, so the service is addressed as published.
  */
 export async function resolveNotifyTarget(
   deps: { idResolver: IdResolver; actorStore: ActorStore },
@@ -320,13 +313,13 @@ export async function resolveNotifyTarget(
   return { endpoint, headers }
 }
 
-/** Process a write notification when this PDS hosts the space authority. */
-export async function processNotifyWrite(
+/** Process a repo update notification when this PDS hosts the space authority. */
+export async function processNotifyRepoUpdate(
   ctx: AppContext,
-  input: com.atproto.space.notifyWrite.$InputBody,
+  input: com.atproto.space.notifyRepoUpdate.$InputBody,
 ): Promise<void> {
   const { space, repo, repoRev, data } = input
-  const { spaceDid: spaceAuthority } = toSpaceRef(space)
+  const { spaceDid } = toSpaceRef(space)
 
   await assertSpaceHost(ctx, space)
   if (TID.fromStr(repoRev).timestamp() > (Date.now() + 5 * MINUTE) * 1000) {
@@ -334,56 +327,56 @@ export async function processNotifyWrite(
   }
 
   const { policy, recipients } = await ctx.actorStore.read(
-    spaceAuthority,
+    spaceDid,
     async (store) => ({
       policy: await store.space.getActiveSpacePolicy(space),
       recipients: await store.space.getCredentialRecipients(space),
     }),
   )
 
-  // Apply the same user perimeter used when minting credentials. notifyWrite
+  // Apply the same account perimeter used when minting credentials. The notification
   // comes from a PDS rather than an app, so there is no app attestation to check.
-  const authorized = await ctx.spacePolicyManager.authorizeUser({
+  const authorized = await ctx.spacePolicyManager.authorizeRepo({
     space,
     policy,
-    userDid: repo,
+    repo,
     access: 'write',
   })
   if (!authorized) {
-    throw new ForbiddenError('notifyWrite writer is not authorized')
+    throw new ForbiddenError('Repo is not authorized to write to the space')
   }
 
-  const sequence = await ctx.actorStore.transact(spaceAuthority, (txn) =>
+  const sequence = await ctx.actorStore.transact(spaceDid, (txn) =>
     txn.space.recordWriter(space, repo, repoRev, data),
   )
   if (!sequence) return
 
   // Fan-out stays queued so neither a local write nor a remote PDS waits on
   // downstream syncing services.
-  const lxm = com.atproto.space.notifyWrite.$lxm
+  const lxm = com.atproto.space.notifyRepoUpdate.$lxm
   ctx.backgroundQueue.add(async (_ctx, signal) => {
     for (const recipient of recipients) {
       try {
         const target = await resolveNotifyTarget(ctx, {
-          iss: spaceAuthority,
-          service: recipient.serviceDid,
+          iss: spaceDid,
+          service: recipient.service,
           lxm,
         })
         if (!target) {
           spaceLogger.warn(
-            { space, service: recipient.serviceDid, lxm },
+            { space, service: recipient.service, lxm },
             'could not resolve notify recipient',
           )
           continue
         }
-        await xrpc(target.endpoint, com.atproto.space.notifyWrite, {
+        await xrpc(target.endpoint, com.atproto.space.notifyRepoUpdate, {
           headers: target.headers,
           body: { space, repo, repoRev, data, ...sequence },
           signal: AbortSignal.any([signal, AbortSignal.timeout(10_000)]),
         })
       } catch (err) {
         spaceLogger.warn(
-          { err, space, service: recipient.serviceDid, lxm },
+          { err, space, service: recipient.service, lxm },
           'notify failed',
         )
       }
@@ -392,7 +385,7 @@ export async function processNotifyWrite(
 }
 
 /** Send immediately after the repo commit, persisting failures for retry. */
-export async function fireNotifyWrite(
+export async function fireNotifyRepoUpdate(
   ctx: AppContext,
   opts: {
     space: SpaceRefString

@@ -23,11 +23,11 @@ Make the permissioned spaces SDK consistent with itself and with its sibling pac
   - Errors extend `SpaceError` and carry a `code`. `RepoVerificationError` is renamed `SpaceRepoVerificationError`, and an invalid KEM key throws `SpaceKemError`.
   - `verifyCommit`, `verifyRecord`, `verifyCommitMac` and `verifyRecordMac` throw on failure rather than returning a boolean.
   - Renames: `Commit` to `SpaceCommit`, `VerifiedRepo` to `VerifiedSpaceRepo`, `VerifyRepoParams` to `VerifySpaceRepoParams`, `RecordPath` to `RecordPathString`, `serializeRepo` to `writeRepoStar`, and `serializeSpaceMeta` to `writeSpaceMetaStar`.
-  - A space meta archive's writer entries hold `repoRev` rather than `rev`, as `listRepos` reports it.
+  - A space meta archive's writer entries hold `repoRev` rather than `rev`, as `listWriters` reports it.
   - `createSpaceToken` is split into `createDelegationToken`, `createSpaceCredential` and `createClientAttestation`, each taking one options object. The token types are exported as `DELEGATION_TOKEN_TYP`, `SPACE_CREDENTIAL_TYP` and `CLIENT_ATTESTATION_TYP`. `createSpaceSig` and `createSpaceSigHeaders` take the keypair in their options, and `createSpaceSigHeaders` returns `{ headers }`.
   - `parseMacHeader` accepts `null`, and `parseWantMacHeader` requires the key share to be a DID.
   - A commit's `rev` must be a TID, as in `com.atproto.space.defs#commit`. Schemas are defined with `@atproto/lex-schema` rather than zod.
   - Add `SpaceCredentialAgent`, a lex-client `Agent` that signs each request with a space credential and verifies the MAC on each response that carries one, and `MAC_TYPE_BY_METHOD`. A response to a MAC method that the agent cannot verify is rejected. Its `getRepo()` streams a verified repo, and reports an error response as a `SpaceResponseError` carrying the host's error code.
   - `formatSetHashElement`, `LTHASH_STATE_BYTES`, `REPO_STAR_TYPE`, `SPACE_META_STAR_TYPE` and `SPACE_TOKEN_TYPES` are no longer exported.
-- `@atproto/pds`: a caller acting on a space it is not the authority of is refused with "Not the space authority" (the error code is still `NotSpaceOwner`).
+- `@atproto/pds`: a caller acting on a space it is not the authority of is refused with "Not the space authority".
 - `@atproto/dev-env`: the test PLC serves DID documents with `Multikey` verification methods, as plc.directory does.

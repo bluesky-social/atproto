@@ -358,7 +358,7 @@ describe('SpaceCredentialAgent', () => {
   })
 
   it('addresses a space-level request to the space authority', async () => {
-    const path = xrpcPath('com.atproto.space.listRepos', { space: SPACE })
+    const path = xrpcPath('com.atproto.space.listWriters', { space: SPACE })
     await newAgent().fetchHandler(path, { method: 'GET' })
     expect(seen[0].headers.get('atproto-space-audience')).toBe(SPACE_DID)
   })

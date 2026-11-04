@@ -42,27 +42,40 @@ export class SpaceReader {
     return policy
   }
 
+  /**
+   * List the spaces this account holds a repo in or is the authority for, along with
+   * the state of its repo in each. `spaceRev` is the latest revision in the space's
+   * writer set, which is only kept for the spaces this account is the authority for.
+   */
   async listSpaces(opts: {
     limit: number
     cursor?: string
     type?: string
     authority?: string
-  }): Promise<Space[]> {
+  }) {
     const { limit, cursor, type, authority } = opts
     let builder = this.db.db
       .selectFrom('space')
-      .selectAll()
-      .where('deletedAt', 'is', null)
-      .orderBy('uri', 'asc')
+      .leftJoin('space_repo', 'space_repo.space', 'space.uri')
+      .select(['space.uri', 'space_repo.rev as repoRev', 'space_repo.setHash'])
+      .select((eb) =>
+        eb
+          .selectFrom('space_writer')
+          .whereRef('space_writer.space', '=', 'space.uri')
+          .select(({ fn }) => fn.max('space_writer.spaceRev').as('spaceRev'))
+          .as('spaceRev'),
+      )
+      .where('space.deletedAt', 'is', null)
+      .orderBy('space.uri', 'asc')
       .limit(limit)
     if (authority) {
-      builder = builder.where('authority', '=', authority)
+      builder = builder.where('space.authority', '=', authority)
     }
     if (type) {
-      builder = builder.where('type', '=', type)
+      builder = builder.where('space.type', '=', type)
     }
     if (cursor) {
-      builder = builder.where('uri', '>', cursor)
+      builder = builder.where('space.uri', '>', cursor)
     }
     return builder.execute()
   }
@@ -107,24 +120,23 @@ export class SpaceReader {
     opts: {
       limit: number
       cursor?: string
-      reverse?: boolean
       collection?: NsidString
       excludeValues?: boolean
     },
   ): Promise<(Omit<SpaceRecord, 'value'> & { value?: LexMap })[]> {
-    const { limit, cursor, reverse, collection, excludeValues } = opts
+    const { limit, cursor, collection, excludeValues } = opts
     let builder = this.db.db
       .selectFrom('space_record')
       .select(RECORD_COLUMNS)
       .where('space', '=', space)
-      .orderBy('uri', reverse ? 'asc' : 'desc')
+      .orderBy('uri', 'desc')
       .limit(limit)
       .$if(!excludeValues, (qb) => qb.select('value'))
     if (collection) {
       builder = builder.where('collection', '=', collection)
     }
     if (cursor) {
-      builder = builder.where('uri', reverse ? '>' : '<', cursor as any)
+      builder = builder.where('uri', '<', cursor as any)
     }
     const rows = await builder.execute()
     return rows.map((row) => ({
@@ -214,9 +226,9 @@ export class SpaceReader {
 
   async listBlobs(
     space: string,
-    opts: { limit: number; since?: string; cursor?: string },
+    opts: { limit: number; cursor?: string },
   ): Promise<string[]> {
-    const { limit, since, cursor } = opts
+    const { limit, cursor } = opts
     let builder = this.db.db
       .selectFrom('space_record_blob')
       .innerJoin('space_record', 'space_record.uri', 'recordUri')
@@ -225,9 +237,6 @@ export class SpaceReader {
       .groupBy('blobCid')
       .orderBy('blobCid', 'asc')
       .limit(limit)
-    if (since) {
-      builder = builder.where('space_record.repoRev', '>', since)
-    }
     if (cursor) {
       builder = builder.where('blobCid', '>', cursor)
     }
@@ -298,11 +307,11 @@ export class SpaceReader {
   async getCredentialRecipients(
     space: string,
   ): Promise<
-    { serviceDid: string; serviceEndpoint: string; expiresAt: string }[]
+    { service: string; serviceEndpoint: string; expiresAt: string }[]
   > {
     return this.db.db
       .selectFrom('space_credential_recipient')
-      .select(['serviceDid', 'serviceEndpoint', 'expiresAt'])
+      .select(['service', 'serviceEndpoint', 'expiresAt'])
       .where('space', '=', space)
       .where('expiresAt', '>', new Date().toISOString())
       .execute()

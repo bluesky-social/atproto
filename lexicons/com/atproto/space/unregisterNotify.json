@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Withdraw a write-notification registration made through registerNotify. Called on the space host. Idempotent: succeeds whether or not a matching registration existed. Registrations also lapse on their own at the expiry returned by registerNotify, so this is for explicit withdrawal rather than cleanup. Authenticated with service auth from the subscriber, addressed to the space authority: the issuer must be the service identifier being withdrawn, or its DID.",
+      "description": "Remove a registration made with registerNotify. Requires service auth issued by the service being removed (or its DID), implemented by the space host.",
       "input": {
         "encoding": "application/json",
         "schema": {
@@ -13,12 +13,11 @@
           "properties": {
             "space": {
               "type": "string",
-              "format": "space-ref",
-              "description": "Reference to the space."
+              "format": "space-ref"
             },
             "service": {
               "type": "string",
-              "description": "Service identifier of the subscriber to remove, as passed to registerNotify."
+              "description": "The DID or `did#serviceId` reference of the service to unregister."
             }
           }
         }

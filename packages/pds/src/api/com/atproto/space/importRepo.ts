@@ -26,12 +26,13 @@ export default function (server: Server, ctx: AppContext) {
 
       // @NOTE read the whole archive before the transaction, as
       // com.atproto.repo.importRepo does with its CAR.
-      const { commit, records } = await readRepo(input.body).catch(
-        throwInvalidArchive,
+      const { commit, records } = await readRepo(input.body).catch((err) =>
+        throwInvalidArchive(err, 'InvalidRepoFile'),
       )
       if (commit.repo !== did) {
         throw new InvalidRequestError(
           'Repo does not match the authenticated account',
+          'RepoMismatch',
         )
       }
 
