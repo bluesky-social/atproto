@@ -26,7 +26,19 @@
     "view": {
       "type": "object",
       "required": ["external"],
-      "properties": { "external": { "type": "ref", "ref": "#viewExternal" } }
+      "properties": {
+        "external": { "type": "ref", "ref": "#viewExternal" },
+        "data": {
+          "type": "union",
+          "refs": [
+            "#viewArticle",
+            "#viewArticlePublication",
+            "#viewGallery",
+            "#viewLivestream"
+          ],
+          "description": "Hydrated modality-specific data for the external embed, when available."
+        }
+      }
     },
     "viewExternal": {
       "type": "object",

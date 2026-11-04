@@ -28,6 +28,8 @@ import {
   type AssociatedSiteStandardRecord,
   type SiteStandardDocument,
   type SiteStandardPublication,
+  genericRecordKey,
+  getExternalRootRef,
   getSiteStandardRecordsFromRefs,
 } from '../hydration/external.js'
 import type { FeedItem, Like, Post, Repost } from '../hydration/feed.js'
@@ -2389,6 +2391,18 @@ export class Views {
       state,
       assumedUrl: embed.external.uri,
     })
+    const root = getExternalRootRef(embed.external.associatedRefs)
+    const record = root
+      ? state.externalRecordsByRef?.get(genericRecordKey(root))?.record
+      : undefined
+    const standardSite =
+      record &&
+      (site.standard.document.$isTypeOf(record) ||
+        site.standard.publication.$isTypeOf(record))
+    const data =
+      root && (!standardSite || ssView)
+        ? this.externalRecordView(root.uri, state, undefined, root.cid)
+        : undefined
     // The author-supplied (scraped) thumbnail always wins when present —
     // it's the per-article OG image. Only when the embed has no thumb do
     // we fall back to whatever the SS overlay provides (the document's
@@ -2410,6 +2424,7 @@ export class Views {
         thumb: embeddedThumb ?? ssView?.thumb,
         associatedRefs: embed.external.associatedRefs,
       },
+      data,
     })
   }
 
