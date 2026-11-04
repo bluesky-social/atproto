@@ -6,7 +6,7 @@ import { SpaceMetaArchiveError } from './error.js'
 import {
   type SpaceMetaArchive,
   readSpaceMetaStar,
-  serializeSpaceMeta,
+  writeSpaceMetaStar,
 } from './space-meta-archive.js'
 import { type StarPair, readStar, writeStar } from './star.js'
 import { SPACE_META_STAR_TYPE } from './types.js'
@@ -17,7 +17,7 @@ const SPACE =
 const POLICY = { $type: 'com.example.policy', readAccess: 'members' }
 const MEMBER = { $type: 'com.example.member', read: true, write: true }
 const WRITER = {
-  rev: '3kbcq3p7ad42b',
+  repoRev: '3kbcq3p7ad42b',
   data: new Uint8Array(32).fill(1),
   spaceRev: '3kbcq3p7ad42c',
 }
@@ -38,7 +38,7 @@ const collect = async (
 
 const utf8 = (str: string) => new TextEncoder().encode(str)
 
-// Hand-builds an archive, for writing what serializeSpaceMeta won't.
+// Hand-builds an archive, for writing what writeSpaceMetaStar won't.
 const rawArchive = (pairs: [string, LexMap][], meta: LexMap = {}) =>
   collect(
     writeStar(
@@ -59,7 +59,7 @@ describe('space meta archive', () => {
   }
 
   it('round-trips, putting each section into key order', async () => {
-    const star = await collect(serializeSpaceMeta(archive))
+    const star = await collect(writeSpaceMetaStar(archive))
     expect(await readSpaceMetaStar([star])).toEqual({
       ...archive,
       policyState: [member('did:example:alice'), member('did:example:carol')],
@@ -68,7 +68,7 @@ describe('space meta archive', () => {
   })
 
   it('writes the space as metadata, then the sections in order', async () => {
-    const star = await collect(serializeSpaceMeta(archive))
+    const star = await collect(writeSpaceMetaStar(archive))
     await using reader = await readStar([star])
     expect(reader.meta).toEqual({
       $type: SPACE_META_STAR_TYPE,
@@ -90,8 +90,17 @@ describe('space meta archive', () => {
 
   it('round-trips a space with no policy state or writers', async () => {
     const empty = { space: SPACE, policy: POLICY, policyState: [], writers: [] }
-    const star = await collect(serializeSpaceMeta(empty))
+    const star = await collect(writeSpaceMetaStar(empty))
     expect(await readSpaceMetaStar([star])).toEqual(empty)
+  })
+
+  it('takes a writer DID from its key, ignoring one in its value', async () => {
+    const star = await rawArchive([
+      ['policy', POLICY],
+      ['writer/did:example:bob', { ...WRITER, did: 'not a did' }],
+    ])
+    const { writers } = await readSpaceMetaStar([star])
+    expect(writers).toEqual([writer('did:example:bob')])
   })
 
   describe('rejects', () => {
@@ -163,6 +172,18 @@ describe('space meta archive', () => {
       await expect(readSpaceMetaStar([star])).rejects.toThrow(
         /invalid DID in writer key/,
       )
+    })
+
+    it('a writer keyed by rev rather than repoRev', async () => {
+      const { repoRev, ...rest } = WRITER
+      const star = await rawArchive([
+        ['policy', POLICY],
+        ['writer/did:example:bob', { rev: repoRev, ...rest }],
+      ])
+      await expect(readSpaceMetaStar([star])).rejects.toThrow(
+        SpaceMetaArchiveError,
+      )
+      await expect(readSpaceMetaStar([star])).rejects.toThrow(/repoRev/)
     })
 
     it('a writer missing its space revision', async () => {

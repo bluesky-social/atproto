@@ -82,9 +82,9 @@
         "main": {
           "type": "space",
           "key": "any",
-          "name": "AtmoBoards Forum",
+          "title": "AtmoBoards Forum",
           "description": "A discussion forum",
-          "name:lang": {
+          "title:lang": {
             "es": "Foro AtmoBoards",
             "ja": "AtmoBoards 掲示板"
           },
@@ -102,7 +102,7 @@
         "main": {
           "type": "space",
           "key": "tid",
-          "name": "Empty Space",
+          "title": "Empty Space",
           "collections": []
         }
       }

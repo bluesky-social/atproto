@@ -369,8 +369,8 @@ export class SpaceNotifications implements AsyncDisposable {
     ])
     signal.throwIfAborted()
     const { spaceDid } = SpaceRef.parse(body.space)
-    const owner = await this.ctx.accountManager.getAccount(spaceDid)
-    if (owner) {
+    const authorityAccount = await this.ctx.accountManager.getAccount(spaceDid)
+    if (authorityAccount) {
       await processNotifyWrite(this.ctx, body)
     } else {
       const target = await resolveNotifyTarget(this.ctx, {

@@ -11,14 +11,15 @@ import type { Cid } from '@atproto/lex-data'
 import type { SpacePermissionMatchOperation } from '@atproto/oauth-scopes'
 import {
   COMMIT_MAC_TYPE,
-  type Commit,
   MAC_HEADER,
   type MacType,
   RECORD_MAC_TYPE,
   RepoCommit,
-  RepoVerificationError,
+  type SpaceCommit,
+  SpaceKemError,
   SpaceMacError,
   SpaceMetaArchiveError,
+  SpaceRepoVerificationError,
   StarParseError,
   WANT_MAC_HEADER,
   computeCommitMac,
@@ -112,17 +113,17 @@ async function getSpaceHostAccount(ctx: AppContext, spaceUri: SpaceRefString) {
   return { spaceDid, account }
 }
 
-// A space created on a PDS is anchored on its creator's own DID, so ownership is a
-// comparison against the space URI.
-export function assertSpaceOwner(
+// A space created on a PDS is anchored on its creator's own DID, so being its
+// authority is a comparison against the space URI.
+export function assertSpaceAuthority(
   auth: AccessOutput | OAuthOutput,
   space: SpaceRef | SpaceRefString,
   op: SpacePermissionMatchOperation,
 ): void {
   const ref = typeof space === 'string' ? toSpaceRef(space) : space
-  auth.credentials.permissions?.assertSpaceRef(ref, op)
+  auth.credentials.permissions?.assertSpace(ref, op)
   if (ref.spaceDid !== auth.credentials.did) {
-    throw new InvalidRequestError('Not the space owner', 'NotSpaceOwner')
+    throw new InvalidRequestError('Not the space authority', 'NotSpaceOwner')
   }
 }
 
@@ -155,13 +156,13 @@ export function assertSpaceRead(
       'RepoNotFound',
     )
   }
-  auth.credentials.permissions?.assertSpaceRef(spaceUri, {
+  auth.credentials.permissions?.assertSpace(spaceUri, {
     action: 'read_self',
   })
 }
 
 // The space analogue of `isUserOrAdmin`: a space credential names a syncer rather
-// than an account, so it is never the repo's own owner.
+// than an account, so it is never the repo's own account.
 export function isSpaceUserOrAdmin(auth: SpaceReadAuth, repo: string): boolean {
   if (auth.credentials.type === 'admin_token') return true
   if (auth.credentials.type === 'space_credential') return false
@@ -192,7 +193,7 @@ export function buildCommit(opts: {
   spaceUri: SpaceRefString
   repo: DidString
   state: SpaceRepo | null
-}): Commit | undefined {
+}): SpaceCommit | undefined {
   const { spaceUri, repo, state } = opts
   if (!state?.setHash || !state.rev) return undefined
 
@@ -237,7 +238,7 @@ export async function getSpaceMacSecret(
     const keyShare = parseWantMacHeader(header, type)
     return decapsulate(kemKeypair, keyShare)
   } catch (err) {
-    if (err instanceof SpaceMacError) {
+    if (err instanceof SpaceMacError || err instanceof SpaceKemError) {
       throw new InvalidRequestError(err.message, 'BadSpaceMac')
     }
     throw err
@@ -248,7 +249,7 @@ export async function getSpaceMacSecret(
 export function throwInvalidArchive(err: unknown): never {
   if (
     err instanceof StarParseError ||
-    err instanceof RepoVerificationError ||
+    err instanceof SpaceRepoVerificationError ||
     err instanceof SpaceMetaArchiveError
   ) {
     throw new InvalidRequestError(err.message)
@@ -259,7 +260,7 @@ export function throwInvalidArchive(err: unknown): never {
 // The `Atproto-Space-Mac` response header for a commit, when a MAC was requested.
 export function commitMacHeaders(
   sharedSecret: Uint8Array | undefined,
-  commit: Commit,
+  commit: SpaceCommit,
 ): Record<string, string> | undefined {
   if (!sharedSecret) return undefined
   const mac = computeCommitMac(sharedSecret, commit)
@@ -325,7 +326,7 @@ export async function processNotifyWrite(
   input: com.atproto.space.notifyWrite.$InputBody,
 ): Promise<void> {
   const { space, repo, repoRev, data } = input
-  const { spaceDid: ownerDid } = toSpaceRef(space)
+  const { spaceDid: spaceAuthority } = toSpaceRef(space)
 
   await assertSpaceHost(ctx, space)
   if (TID.fromStr(repoRev).timestamp() > (Date.now() + 5 * MINUTE) * 1000) {
@@ -333,7 +334,7 @@ export async function processNotifyWrite(
   }
 
   const { policy, recipients } = await ctx.actorStore.read(
-    ownerDid,
+    spaceAuthority,
     async (store) => ({
       policy: await store.space.getActiveSpacePolicy(space),
       recipients: await store.space.getCredentialRecipients(space),
@@ -352,7 +353,7 @@ export async function processNotifyWrite(
     throw new ForbiddenError('notifyWrite writer is not authorized')
   }
 
-  const sequence = await ctx.actorStore.transact(ownerDid, (txn) =>
+  const sequence = await ctx.actorStore.transact(spaceAuthority, (txn) =>
     txn.space.recordWriter(space, repo, repoRev, data),
   )
   if (!sequence) return
@@ -364,7 +365,7 @@ export async function processNotifyWrite(
     for (const recipient of recipients) {
       try {
         const target = await resolveNotifyTarget(ctx, {
-          iss: ownerDid,
+          iss: spaceAuthority,
           service: recipient.serviceDid,
           lxm,
         })

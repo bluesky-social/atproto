@@ -241,7 +241,7 @@ export class LexiconSchemaBuilder implements AsyncDisposable {
           def,
         )
       case 'space':
-        return l.space(doc.id, def.key, def.collections, def)
+        return l.space(def.key, doc.id, def.collections, def)
       case 'procedure':
         return l.procedure(
           doc.id,

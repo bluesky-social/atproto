@@ -10,8 +10,8 @@ import {
   RepoCommit,
   type SpaceMetaArchive,
   readSpaceMetaStar,
-  serializeRepo,
-  serializeSpaceMeta,
+  writeRepoStar,
+  writeSpaceMetaStar,
 } from '@atproto/space'
 import {
   type DidString,
@@ -334,7 +334,7 @@ describe('space account migration', () => {
       .toCommit({ space, repo: alice.did, rev: TID.nextStr() })
 
     const star = await collect(
-      serializeRepo(commit, [{ collection: TEST_COLLECTION, rkey, bytes }]),
+      writeRepoStar(commit, [{ collection: TEST_COLLECTION, rkey, bytes }]),
     )
     await expect(importRepo(newAlice, star)).rejects.toMatchObject({
       error: 'InvalidRequest',
@@ -359,7 +359,7 @@ describe('space account migration', () => {
       skey: string,
       archive: Omit<SpaceMetaArchive, 'space'>,
     ): AsyncIterable<Uint8Array> =>
-      serializeSpaceMeta({
+      writeSpaceMetaStar({
         space: `at://${alice.did}/space/${TEST_SPACE_TYPE}/${skey}`,
         ...archive,
       })

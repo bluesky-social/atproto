@@ -42,7 +42,7 @@ export default function (server: Server, ctx: AppContext) {
         const collections = await actorTxn.space.listCollections(space)
         for (const collection of collections) {
           if (keep.includes(collection)) continue
-          auth.credentials.permissions?.assertSpaceRef(space, {
+          auth.credentials.permissions?.assertSpace(space, {
             action: 'delete',
             collection,
           })

@@ -1,4 +1,4 @@
-import { createSpaceToken, spaceHostAud } from '@atproto/space'
+import { createDelegationToken, spaceHostAud } from '@atproto/space'
 import type { Server } from '@atproto/xrpc-server'
 import { ACCESS_FULL } from '../../../../auth-scope.js'
 import type { AppContext } from '../../../../context.js'
@@ -21,21 +21,18 @@ export default function (server: Server, ctx: AppContext) {
 
       const ref = toSpaceRef(space)
 
-      auth.credentials.permissions?.assertSpaceRef(ref, {
+      auth.credentials.permissions?.assertSpace(ref, {
         action: 'read',
       })
 
       const keypair = await ctx.actorStore.keypair(userDid)
 
-      const token = await createSpaceToken(
-        'delegation',
-        {
-          iss: userDid,
-          sub: space,
-          aud: spaceHostAud(ref.spaceDid),
-        },
+      const token = await createDelegationToken({
+        iss: userDid,
+        sub: space,
+        aud: spaceHostAud(ref.spaceDid),
         keypair,
-      )
+      })
 
       return {
         encoding: 'application/json' as const,

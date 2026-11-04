@@ -26,7 +26,7 @@ const { personalspace, memberspace, managedspace } = com.atproto
 describe('space policy', () => {
   let network: TestNetworkNoAppView
   let sc: SpaceClient
-  let alice: Actor // authority / owner
+  let alice: Actor // authority
   let dan: Actor // co-located with the authority
   let bob: Actor // on pds2
   let carol: Actor // on pds3
@@ -136,9 +136,9 @@ describe('space policy', () => {
       expect(otherListed.spaces.map((s) => s.uri)).toEqual([other])
     })
 
-    it('refuses an owner write until createSpace', async () => {
+    it('refuses an authority write until createSpace', async () => {
       // A write to another authority's space creates the repo unchecked, but the
-      // owner's own space must exist first: a write never conjures one.
+      // authority's own space must exist first: a write never conjures one.
       const skey = 'lazy'
       const space =
         `at://${alice.did}/space/${TEST_SPACE_TYPE}/${skey}` as SpaceRefString
@@ -159,7 +159,7 @@ describe('space policy', () => {
   })
 
   describe('memberspace members', () => {
-    it('adds and removes members, and the owner is not one of them', async () => {
+    it('adds and removes members, and the authority is not one of them', async () => {
       const space = await sc.createSpace(alice, { members: [dan] })
       await sc.putMember(alice, space, bob, { read: true, write: false })
 
@@ -180,7 +180,7 @@ describe('space policy', () => {
       expect(after.members.map((m) => m.did)).not.toContain(bob.did)
     })
 
-    it('refuses membership changes from a non-owner member', async () => {
+    it('refuses membership changes from a member who is not the authority', async () => {
       const space = await sc.createSpace(alice, { members: [dan] })
       await expect(
         dan.client.call(
@@ -198,7 +198,7 @@ describe('space policy', () => {
       ).rejects.toMatchObject({ error: 'NotSpaceOwner' })
     })
 
-    it('refuses listMembers to a space credential and to a non-owner member', async () => {
+    it('refuses listMembers to a space credential and to a member who is not the authority', async () => {
       const space = await sc.createSpace(alice, { members: [carol, dan] })
 
       // Carol is a member, hosted elsewhere: a credential reads the space's data,
@@ -334,7 +334,7 @@ describe('space policy', () => {
       expect(members.members.map((m) => m.did)).toEqual([bob.did])
     })
 
-    it('refuses an update from a non-owner', async () => {
+    it('refuses an update from a non-authority', async () => {
       const space = await sc.createSpace(alice, { members: [bob] })
       await expect(
         alice.client.call(
@@ -1137,7 +1137,7 @@ describe('space policy', () => {
         rkey: 'doomed',
         record: {
           $type: TEST_COLLECTION,
-          text: 'owner record',
+          text: 'authority record',
           image: uploaded.blob,
         },
       })

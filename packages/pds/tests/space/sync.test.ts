@@ -2,6 +2,7 @@ import { jest } from '@jest/globals'
 import { sql } from 'kysely'
 import { MINUTE, TID } from '@atproto/common'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
+import { Client } from '@atproto/lex'
 import { parseCid } from '@atproto/lex-data'
 import { lexParse } from '@atproto/lex-json'
 import {
@@ -10,6 +11,9 @@ import {
   MAC_HEADER,
   RECORD_MAC_TYPE,
   RepoCommit,
+  SpaceCredentialAgent,
+  SpaceRepoVerificationError,
+  type VerifiedRecord,
   WANT_MAC_HEADER,
   createSpaceSigHeaders,
   encapsulate,
@@ -20,7 +24,11 @@ import {
   verifyRecord,
   verifyRepoStarFull,
 } from '@atproto/space'
-import type { NsidString, SpaceRefString } from '@atproto/syntax'
+import type {
+  NsidString,
+  SpaceAtUriString,
+  SpaceRefString,
+} from '@atproto/syntax'
 import { createServiceAuthHeaders } from '@atproto/xrpc-server'
 import { getDb, getMigrator } from '../../src/actor-store/db/index.js'
 import { resolveServiceEndpoint } from '../../src/api/com/atproto/space/util.js'
@@ -248,7 +256,9 @@ describe('space sync', () => {
         { space, repo: dan.did, limit: 100 },
       )
       expect(commit).toBeDefined()
-      expect(cred.verifyCommit(commit!, { space, repo: dan.did })).toBe(true)
+      expect(() =>
+        cred.verifyCommit(commit!, { space, repo: dan.did }),
+      ).not.toThrow()
 
       const local = new RepoCommit()
       for (const op of ops) {
@@ -371,9 +381,9 @@ describe('space sync', () => {
         space,
         repo: bob.did,
       })
-      expect(cred.verifyCommit(latest.commit, { space, repo: bob.did })).toBe(
-        true,
-      )
+      expect(() =>
+        cred.verifyCommit(latest.commit, { space, repo: bob.did }),
+      ).not.toThrow()
       expect(rebuilt.matches(latest.commit)).toBe(true)
     })
   })
@@ -454,9 +464,9 @@ describe('space sync', () => {
         since: synced.commit!.rev,
       })
       expect(incremental.ops).toEqual([])
-      expect(
+      expect(() =>
         cred.verifyCommit(incremental.commit!, { space, repo: bob.did }),
-      ).toBe(true)
+      ).not.toThrow()
       expect(local.matches(incremental.commit!)).toBe(false)
 
       const res = await cred.fetch(
@@ -532,14 +542,17 @@ describe('space sync', () => {
           rkey: 'maced',
         })
       expect(cred.lastMac?.type).toBe(RECORD_MAC_TYPE)
+      const uri = `${space}/${bob.did}/${TEST_COLLECTION}/maced`
       const params = {
-        uri: `${space}/${bob.did}/${TEST_COLLECTION}/maced`,
+        uri: uri as SpaceAtUriString,
         ...cred.lastMacParams(),
       }
-      expect(await verifyRecord(res, params)).toBe(true)
+      await expect(verifyRecord(res, params)).resolves.toBeUndefined()
       // The MAC is bound to this one record.
-      const other = { ...params, uri: `${params.uri}x` }
-      expect(await verifyRecord(res, other)).toBe(false)
+      const other = { ...params, uri: `${uri}x` as SpaceAtUriString }
+      await expect(verifyRecord(res, other)).rejects.toThrow(
+        SpaceRepoVerificationError,
+      )
     })
 
     it('omits the MAC from an oplog page without a commit', async () => {
@@ -563,9 +576,10 @@ describe('space sync', () => {
       const space = await sc.createSpace(alice, { members: [bob] })
       await sc.write(bob, space)
       const cred = await sc.credentialFor(bob, space)
-      const sigHeaders = await createSpaceSigHeaders(cred.key, {
+      const { headers: sigHeaders } = await createSpaceSigHeaders({
         authorization: `Atproto-Space-Credential ${cred.credential}`,
         audience: bob.did,
+        keypair: cred.key,
       })
 
       const missing = await fetch(getLatestCommitUrl(bob, space), {
@@ -623,14 +637,47 @@ describe('space sync', () => {
       expect(asked.headers.get('access-control-expose-headers')).toMatch(
         /atproto-space-mac/i,
       )
-      const mac = parseMacHeader(
-        asked.headers.get(MAC_HEADER) ?? undefined,
-        COMMIT_MAC_TYPE,
-      )
+      const mac = parseMacHeader(asked.headers.get(MAC_HEADER), COMMIT_MAC_TYPE)
       const body = lexParse(await asked.text()) as { commit: unknown }
       const commit = com.atproto.space.defs.commit.$parse(body.commit)
-      expect(
+      expect(() =>
         verifyCommit(commit, { space, repo: bob.did, sharedSecret, mac }),
+      ).not.toThrow()
+    })
+  })
+
+  describe('SpaceCredentialAgent', () => {
+    it('reads and syncs a repo through lex-client, verifying each MAC', async () => {
+      const space = await sc.createSpace(alice, { members: [bob, carol] })
+      for (const i of [0, 1]) {
+        await sc.write(bob, space, { rkey: `agent-${i}`, text: `agent ${i}` })
+      }
+
+      // Carol syncs bob's repo, as a syncing service would.
+      const cred = await sc.credentialFor(carol, space)
+      const agent = new SpaceCredentialAgent({
+        credential: cred.credential,
+        keypair: cred.key,
+        resolveDidDoc: (did) => sc.idResolver.did.ensureResolve(did),
+      })
+
+      const record = await new Client(agent).call(com.atproto.space.getRecord, {
+        space,
+        repo: bob.did,
+        collection: TEST_COLLECTION,
+        rkey: 'agent-0',
+      })
+      expect(record.value).toMatchObject({ text: 'agent 0' })
+
+      await using repo = await agent.getRepo({ space, repo: bob.did })
+      const records: VerifiedRecord[] = []
+      for await (const r of repo.records) records.push(r)
+      const state = await sc.repoState(bob, space)
+      expect(repo.commit.rev).toBe(state?.rev)
+      expect(
+        RepoCommit.fromRecords(records).setHash.equals(
+          RepoCommit.fromState(state?.setHash).setHash,
+        ),
       ).toBe(true)
     })
   })

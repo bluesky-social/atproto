@@ -49,7 +49,7 @@ export default function (server: Server, ctx: AppContext) {
           const uri = spaceRecordUri(space, did, collection, rkey)
           const exists = await actorTxn.space.hasRecord(uri.toString())
 
-          auth.credentials.permissions?.assertSpaceRef(space, {
+          auth.credentials.permissions?.assertSpace(space, {
             action: exists ? 'update' : 'create',
             collection,
           })

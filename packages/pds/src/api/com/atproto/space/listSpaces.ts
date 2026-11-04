@@ -19,12 +19,14 @@ export default function (server: Server, ctx: AppContext) {
       // unfiltered listing needs a wildcard grant. Lists only the caller's own
       // spaces, so `read_self` is the grant that fits; `read` satisfies it too.
       if (auth.credentials.type === 'oauth') {
-        auth.credentials.permissions.assertSpace({
-          type: spaceType ?? '*',
-          authority: authority ?? '*',
-          skey: '*',
-          action: 'read_self',
-        })
+        auth.credentials.permissions.assertSpace(
+          {
+            spaceType: spaceType ?? '*',
+            authority: authority ?? '*',
+            skey: '*',
+          },
+          { action: 'read_self' },
+        )
       }
 
       const spaces = await ctx.actorStore.read(auth.credentials.did, (store) =>

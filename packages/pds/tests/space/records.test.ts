@@ -23,7 +23,7 @@ import {
 describe('space records', () => {
   let network: TestNetworkNoAppView
   let sc: SpaceClient
-  let alice: Actor // authority / owner, on pds1
+  let alice: Actor // authority, on pds1
   let dan: Actor // member co-located with the authority on pds1
   let bob: Actor // member on pds2
   let carol: Actor // on pds3; a member only where a test says so
@@ -46,7 +46,7 @@ describe('space records', () => {
 
   describe('writes', () => {
     it('writes a record as a co-located member', async () => {
-      // Dan shares a PDS with the owner — the pure single-PDS write path.
+      // Dan shares a PDS with the authority — the pure single-PDS write path.
       const space = await sc.createSpace(alice, { members: [dan] })
       const before = await sc.repoState(dan, space)
 

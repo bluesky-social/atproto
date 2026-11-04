@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { randomBytes } from '@atproto/crypto'
 import { parseCid } from '@atproto/lex-data'
 import {
-  type Commit,
+  type SpaceCommit,
   SpaceMacError,
   computeCommitMac,
   computeRecordMac,
@@ -25,7 +25,7 @@ const CID_B = parseCid(
 const SPACE = 'at://did:example:space/space/app.bsky.group/test'
 const URI = `at://did:example:alice/space/app.bsky.group/test/app.bsky.feed.post/1`
 
-const commit: Commit = {
+const commit: SpaceCommit = {
   ver: 1,
   space: SPACE,
   repo: 'did:example:alice',
@@ -39,14 +39,16 @@ describe('commit MAC', () => {
   it('verifies under the same shared secret', () => {
     const mac = computeCommitMac(sharedSecret, commit)
     expect(mac).toHaveLength(32)
-    expect(verifyCommitMac(sharedSecret, commit, mac)).toBe(true)
-    expect(verifyCommitMac(randomBytes(32), commit, mac)).toBe(false)
+    expect(() => verifyCommitMac(sharedSecret, commit, mac)).not.toThrow()
+    expect(() => verifyCommitMac(randomBytes(32), commit, mac)).toThrow(
+      SpaceMacError,
+    )
   })
 
   it('is unambiguous across field boundaries', () => {
     // Without length prefixes these two would MAC identically.
-    const a: Commit = { ...commit, repo: 'did:example:alice', rev: '3kbc' }
-    const b: Commit = { ...commit, repo: 'did:example:alice3', rev: 'kbc' }
+    const a: SpaceCommit = { ...commit, repo: 'did:example:alice', rev: '3kbc' }
+    const b: SpaceCommit = { ...commit, repo: 'did:example:alice3', rev: 'kbc' }
     expect(computeCommitMac(sharedSecret, a)).not.toEqual(
       computeCommitMac(sharedSecret, b),
     )
@@ -55,7 +57,9 @@ describe('commit MAC', () => {
   it('covers the data digest', () => {
     const mac = computeCommitMac(sharedSecret, commit)
     const tampered = { ...commit, data: new Uint8Array(32).fill(2) }
-    expect(verifyCommitMac(sharedSecret, tampered, mac)).toBe(false)
+    expect(() => verifyCommitMac(sharedSecret, tampered, mac)).toThrow(
+      SpaceMacError,
+    )
   })
 })
 
@@ -64,14 +68,20 @@ describe('record MAC', () => {
 
   it('verifies under the same shared secret', () => {
     const mac = computeRecordMac(sharedSecret, URI, CID_A)
-    expect(verifyRecordMac(sharedSecret, URI, CID_A, mac)).toBe(true)
-    expect(verifyRecordMac(randomBytes(32), URI, CID_A, mac)).toBe(false)
+    expect(() => verifyRecordMac(sharedSecret, URI, CID_A, mac)).not.toThrow()
+    expect(() => verifyRecordMac(randomBytes(32), URI, CID_A, mac)).toThrow(
+      SpaceMacError,
+    )
   })
 
   it('covers the uri and the cid', () => {
     const mac = computeRecordMac(sharedSecret, URI, CID_A)
-    expect(verifyRecordMac(sharedSecret, `${URI}2`, CID_A, mac)).toBe(false)
-    expect(verifyRecordMac(sharedSecret, URI, CID_B, mac)).toBe(false)
+    expect(() => verifyRecordMac(sharedSecret, `${URI}2`, CID_A, mac)).toThrow(
+      SpaceMacError,
+    )
+    expect(() => verifyRecordMac(sharedSecret, URI, CID_B, mac)).toThrow(
+      SpaceMacError,
+    )
   })
 
   it('is domain-separated from a commit MAC', () => {
@@ -110,6 +120,10 @@ describe('MAC headers', () => {
     expect(() => parseWantMacHeader(undefined, 'atproto-space-repo')).toThrow(
       SpaceMacError,
     )
+    // What fetch's `Headers#get` returns for a missing header.
+    expect(() => parseMacHeader(null, 'atproto-space-repo')).toThrow(
+      SpaceMacError,
+    )
     expect(() => parseWantMacHeader('???', 'atproto-space-repo')).toThrow(
       SpaceMacError,
     )
@@ -125,6 +139,13 @@ describe('MAC headers', () => {
         'atproto-space-repo',
       ),
     ).toThrow(/mac/)
+  })
+
+  it('rejects a key share that is not a DID', () => {
+    const want = formatWantMacHeader('atproto-space-repo', 'not-a-did')
+    expect(() => parseWantMacHeader(want, 'atproto-space-repo')).toThrow(
+      SpaceMacError,
+    )
   })
 
   it('rejects an unexpected type or version', () => {

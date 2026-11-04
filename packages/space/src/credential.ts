@@ -1,6 +1,10 @@
 import { type Keypair, randomStr, verifySignature } from '@atproto/crypto'
 import { fromBase64, toBase64 } from '@atproto/lex-data'
-import { type DidString, isValidDid } from '@atproto/syntax'
+import {
+  type DidString,
+  type SpaceRefString,
+  isValidDid,
+} from '@atproto/syntax'
 import { SpaceTokenError } from './error.js'
 
 /**
@@ -8,13 +12,18 @@ import { SpaceTokenError } from './error.js'
  * entry a delegation token and a client attestation name as their audience. The
  * space host is the authority's PDS, like any other atproto account.
  */
-export const spaceHostAud = (spaceDid: string): string =>
-  `${spaceDid}#atproto_pds`
+export function spaceHostAud(spaceDid: DidString): `${DidString}#atproto_pds` {
+  return `${spaceDid}#atproto_pds`
+}
+
+export const DELEGATION_TOKEN_TYP = 'atproto-space-delegation+jwt'
+export const SPACE_CREDENTIAL_TYP = 'atproto-space-credential+jwt'
+export const CLIENT_ATTESTATION_TYP = 'atproto-client-attestation+jwt'
 
 // @NOTE credentials carry no audience; HTTP message signatures bind each use to an audience DID.
-export const SPACE_TOKEN_TYPES = {
+const SPACE_TOKEN_TYPES = {
   delegation: {
-    typ: 'atproto-space-delegation+jwt',
+    typ: DELEGATION_TOKEN_TYP,
     kid: '#atproto',
     expiresInSec: 60,
     requireAud: true,
@@ -22,7 +31,7 @@ export const SPACE_TOKEN_TYPES = {
     singleUse: true,
   },
   credential: {
-    typ: 'atproto-space-credential+jwt',
+    typ: SPACE_CREDENTIAL_TYP,
     kid: '#atproto',
     expiresInSec: 600,
     requireAud: false,
@@ -30,7 +39,7 @@ export const SPACE_TOKEN_TYPES = {
     singleUse: false,
   },
   clientAttestation: {
-    typ: 'atproto-client-attestation+jwt',
+    typ: CLIENT_ATTESTATION_TYP,
     kid: undefined,
     expiresInSec: 60,
     requireAud: true,
@@ -66,67 +75,94 @@ export type SpaceToken = {
 export const CLOCK_SKEW_SEC = 5
 export const SPACE_CREDENTIAL_MAX_AGE_SEC = 3600
 
-export type CreateSpaceTokenOpts = {
-  iss: string
-  sub: string
-  aud?: string
-  keyId?: DidString
+/** A user's authorization for an app to request a space credential on its behalf. */
+export async function createDelegationToken(opts: {
+  iss: DidString
+  sub: SpaceRefString
+  aud: string
+  keypair: Keypair
   expiresInSec?: number
-  /** Only for a client attestation. Other token types always use `#atproto`. */
-  kid?: string
+}): Promise<string> {
+  const spec = SPACE_TOKEN_TYPES.delegation
+  return signSpaceToken(
+    { typ: spec.typ, kid: spec.kid },
+    { iss: opts.iss, sub: opts.sub, aud: opts.aud },
+    opts.expiresInSec ?? spec.expiresInSec,
+    opts.keypair,
+  )
 }
 
-export const createSpaceToken = async (
-  type: SpaceTokenType,
-  opts: CreateSpaceTokenOpts,
-  keypair: Keypair,
-): Promise<string> => {
-  const spec = SPACE_TOKEN_TYPES[type]
-  if (spec.requireAud && !opts.aud) {
-    throw new SpaceTokenError(`a ${type} token requires an "aud"`)
-  }
-  if (spec.requireCnf && !opts.keyId) {
-    throw new SpaceTokenError(`a ${type} token requires a "keyId"`)
-  }
-  if (spec.kid && opts.kid) {
-    throw new SpaceTokenError(`a ${type} token's "kid" is always "${spec.kid}"`)
-  }
+/** A space authority's grant to read a space, bound to the holder's `keyId`. */
+export async function createSpaceCredential(opts: {
+  iss: DidString
+  sub: SpaceRefString
+  keyId: DidString
+  keypair: Keypair
+  expiresInSec?: number
+}): Promise<string> {
+  const spec = SPACE_TOKEN_TYPES.credential
   const expiresInSec = opts.expiresInSec ?? spec.expiresInSec
   if (
-    type === 'credential' &&
-    (!Number.isFinite(expiresInSec) ||
-      expiresInSec <= 0 ||
-      expiresInSec > SPACE_CREDENTIAL_MAX_AGE_SEC)
+    !Number.isFinite(expiresInSec) ||
+    expiresInSec <= 0 ||
+    expiresInSec > SPACE_CREDENTIAL_MAX_AGE_SEC
   ) {
     throw new SpaceTokenError('invalid space credential lifetime')
   }
+  return signSpaceToken(
+    { typ: spec.typ, kid: spec.kid },
+    { iss: opts.iss, sub: opts.sub, cnf: { kid: opts.keyId } },
+    expiresInSec,
+    opts.keypair,
+  )
+}
 
+/**
+ * An OAuth client's proof of identity to a space host, signed with a key from the
+ * client's JWKS (named by `kid`).
+ */
+export async function createClientAttestation(opts: {
+  clientId: string
+  aud: string
+  kid?: string
+  keypair: Keypair
+  expiresInSec?: number
+}): Promise<string> {
+  const spec = SPACE_TOKEN_TYPES.clientAttestation
+  return signSpaceToken(
+    { typ: spec.typ, kid: opts.kid },
+    { iss: opts.clientId, sub: opts.clientId, aud: opts.aud },
+    opts.expiresInSec ?? spec.expiresInSec,
+    opts.keypair,
+  )
+}
+
+async function signSpaceToken(
+  header: { typ: string; kid?: string },
+  claims: Pick<SpaceTokenPayload, 'iss' | 'sub' | 'aud' | 'cnf'>,
+  expiresInSec: number,
+  keypair: Keypair,
+): Promise<string> {
   const iat = Math.floor(Date.now() / 1000)
-  const header: SpaceTokenHeader = { alg: keypair.jwtAlg, typ: spec.typ }
-  const kid = opts.kid ?? spec.kid
-  if (kid) header.kid = kid
-
+  const fullHeader: SpaceTokenHeader = { alg: keypair.jwtAlg, ...header }
   const payload: SpaceTokenPayload = {
-    iss: opts.iss,
-    sub: opts.sub,
-    ...(opts.aud ? { aud: opts.aud } : undefined),
-    ...(opts.keyId ? { cnf: { kid: opts.keyId } } : undefined),
+    ...claims,
     iat,
     exp: iat + expiresInSec,
     jti: randomStr(16, 'hex'),
   }
 
-  const signingInput = `${jsonToB64Url(header)}.${jsonToB64Url(payload)}`
+  const signingInput = `${jsonToB64Url(fullHeader)}.${jsonToB64Url(payload)}`
   const sig = await keypair.sign(new TextEncoder().encode(signingInput))
   return `${signingInput}.${toBase64(sig, 'base64url')}`
 }
 
 // Structural validation only, no signature check. This is as far as we go for
 // client attestations, whose key comes from the client's JWKS, not a DID doc.
-export const parseSpaceToken = (
+export function parseSpaceToken(
   type: SpaceTokenType,
   jwt: string,
-): SpaceToken & { signingInput: Uint8Array; sig: Uint8Array } => {
+): SpaceToken & { signingInput: Uint8Array; sig: Uint8Array } {
   const spec = SPACE_TOKEN_TYPES[type]
 
   const parts = jwt.split('.')
@@ -203,11 +239,11 @@ export type VerifySpaceTokenOpts = {
   sub?: string
 }
 
-export const verifySpaceToken = async (
+export async function verifySpaceToken(
   type: SpaceTokenType,
   jwt: string,
   opts: VerifySpaceTokenOpts,
-): Promise<SpaceToken> => {
+): Promise<SpaceToken> {
   const { header, payload, signingInput, sig } = parseSpaceToken(type, jwt)
 
   const now = Math.floor(Date.now() / 1000)
@@ -246,12 +282,12 @@ export const verifySpaceToken = async (
   throw new SpaceTokenError('invalid token signature', 'BadJwtSignature')
 }
 
-const matchesSignature = async (
+async function matchesSignature(
   didKey: string,
   header: SpaceTokenHeader,
   signingInput: Uint8Array,
   sig: Uint8Array,
-): Promise<boolean> => {
+): Promise<boolean> {
   try {
     return await verifySignature(didKey, signingInput, sig, {
       jwtAlg: header.alg,
@@ -264,10 +300,11 @@ const matchesSignature = async (
   }
 }
 
-const jsonToB64Url = (json: Record<string, unknown>): string =>
-  toBase64(new TextEncoder().encode(JSON.stringify(json)), 'base64url')
+function jsonToB64Url(json: Record<string, unknown>): string {
+  return toBase64(new TextEncoder().encode(JSON.stringify(json)), 'base64url')
+}
 
-const decodeJsonPart = <T>(b64: string, part: string): T => {
+function decodeJsonPart<T>(b64: string, part: string): T {
   try {
     return JSON.parse(new TextDecoder().decode(fromBase64(b64, 'base64url')))
   } catch (err) {
@@ -278,5 +315,6 @@ const decodeJsonPart = <T>(b64: string, part: string): T => {
   }
 }
 
-const errMsg = (err: unknown): string =>
-  err instanceof Error ? err.message : String(err)
+function errMsg(err: unknown): string {
+  return err instanceof Error ? err.message : String(err)
+}

@@ -166,7 +166,7 @@ export class SpacePolicyManager {
         ),
         writers: writers.map((writer) => ({
           did: writer.did as DidString,
-          rev: writer.repoRev,
+          repoRev: writer.repoRev,
           data: writer.data,
           spaceRev: writer.spaceRev,
         })),

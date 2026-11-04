@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import { SpaceRef } from '@atproto/syntax'
+import {
+  InvalidAtUriError,
+  SpaceRef,
+  type SpaceRefString,
+} from '@atproto/syntax'
 import { ScopeMissingError } from './scope-missing-error.js'
 import { ScopePermissions } from './scope-permissions.js'
 
@@ -311,17 +315,58 @@ describe('ScopePermissions', () => {
     })
   })
 
-  describe('assertSpace', () => {
+  describe('allowsSpace', () => {
+    const set = new ScopePermissions(
+      'space:com.atmoboards.forum?authority=did:plc:owner&action=read',
+    )
+
+    it('accepts a SpaceRef', () => {
+      expect(set.allowsSpace(SPACE_REF, { action: 'read' })).toBe(true)
+    })
+
+    it('accepts a space ref string', () => {
+      expect(set.allowsSpace(SPACE_URI, { action: 'read' })).toBe(true)
+    })
+
+    it('accepts a match reference, which may hold wildcards', () => {
+      expect(
+        set.allowsSpace(
+          {
+            spaceType: 'com.atmoboards.forum',
+            authority: 'did:plc:owner',
+            skey: '*',
+          },
+          { action: 'read' },
+        ),
+      ).toBe(true)
+      expect(
+        set.allowsSpace(
+          { spaceType: '*', authority: '*', skey: '*' },
+          { action: 'read_self' },
+        ),
+      ).toBe(false)
+    })
+
+    it('rejects a record uri in place of a space ref', () => {
+      const recordUri =
+        `${SPACE_URI}/did:plc:alice/com.atmoboards.thread/abc` as SpaceRefString
+      expect(() => set.allowsSpace(recordUri, { action: 'read' })).toThrow(
+        InvalidAtUriError,
+      )
+      expect(() => set.assertSpace(recordUri, { action: 'read' })).toThrow(
+        InvalidAtUriError,
+      )
+    })
+  })
+
+  describe('assertSpace with a SpaceRef', () => {
     describe('read', () => {
       it('passes when the grant covers the (type, authority, skey) tuple', () => {
         const set = new ScopePermissions(
           'space:com.atmoboards.forum?authority=did:plc:owner',
         )
         expect(() =>
-          set.assertSpace({
-            type: SPACE_REF.spaceType,
-            authority: SPACE_REF.spaceDid,
-            skey: SPACE_REF.skey,
+          set.assertSpace(SPACE_REF, {
             action: 'read',
           }),
         ).not.toThrow()
@@ -330,10 +375,7 @@ describe('ScopePermissions', () => {
       it('passes with type wildcard', () => {
         const set = new ScopePermissions('space:*?authority=did:plc:owner')
         expect(() =>
-          set.assertSpace({
-            type: SPACE_REF.spaceType,
-            authority: SPACE_REF.spaceDid,
-            skey: SPACE_REF.skey,
+          set.assertSpace(SPACE_REF, {
             action: 'read',
           }),
         ).not.toThrow()
@@ -344,10 +386,7 @@ describe('ScopePermissions', () => {
           'space:com.atmoboards.forum?authority=*',
         )
         expect(() =>
-          set.assertSpace({
-            type: SPACE_REF.spaceType,
-            authority: SPACE_REF.spaceDid,
-            skey: SPACE_REF.skey,
+          set.assertSpace(SPACE_REF, {
             action: 'read',
           }),
         ).not.toThrow()
@@ -358,10 +397,7 @@ describe('ScopePermissions', () => {
         // not cover a space owned by did:plc:owner.
         const set = new ScopePermissions('space:com.atmoboards.forum')
         expect(() =>
-          set.assertSpace({
-            type: SPACE_REF.spaceType,
-            authority: SPACE_REF.spaceDid,
-            skey: SPACE_REF.skey,
+          set.assertSpace(SPACE_REF, {
             action: 'read',
           }),
         ).toThrow(ScopeMissingError)
@@ -372,10 +408,7 @@ describe('ScopePermissions', () => {
           'space:com.example.different?authority=*',
         )
         expect(() =>
-          set.assertSpace({
-            type: SPACE_REF.spaceType,
-            authority: SPACE_REF.spaceDid,
-            skey: SPACE_REF.skey,
+          set.assertSpace(SPACE_REF, {
             action: 'read',
           }),
         ).toThrow(ScopeMissingError)
@@ -386,10 +419,7 @@ describe('ScopePermissions', () => {
           'space:com.atmoboards.forum?authority=did:plc:somebody-else',
         )
         expect(() =>
-          set.assertSpace({
-            type: SPACE_REF.spaceType,
-            authority: SPACE_REF.spaceDid,
-            skey: SPACE_REF.skey,
+          set.assertSpace(SPACE_REF, {
             action: 'read',
           }),
         ).toThrow(ScopeMissingError)
@@ -398,10 +428,7 @@ describe('ScopePermissions', () => {
       it('rejects when no space scope is present', () => {
         const set = new ScopePermissions('atproto')
         expect(() =>
-          set.assertSpace({
-            type: SPACE_REF.spaceType,
-            authority: SPACE_REF.spaceDid,
-            skey: SPACE_REF.skey,
+          set.assertSpace(SPACE_REF, {
             action: 'read',
           }),
         ).toThrow(ScopeMissingError)
@@ -412,10 +439,7 @@ describe('ScopePermissions', () => {
           'space:com.atmoboards.forum?authority=*&action=read',
         )
         expect(() =>
-          set.assertSpace({
-            type: SPACE_REF.spaceType,
-            authority: SPACE_REF.spaceDid,
-            skey: SPACE_REF.skey,
+          set.assertSpace(SPACE_REF, {
             action: 'read_self',
           }),
         ).not.toThrow()
@@ -428,10 +452,7 @@ describe('ScopePermissions', () => {
           'space:com.atmoboards.forum?authority=*&action=create',
         )
         expect(() =>
-          set.assertSpace({
-            type: SPACE_REF.spaceType,
-            authority: SPACE_REF.spaceDid,
-            skey: SPACE_REF.skey,
+          set.assertSpace(SPACE_REF, {
             action: 'read',
           }),
         ).toThrow(ScopeMissingError)
@@ -444,10 +465,7 @@ describe('ScopePermissions', () => {
           'space:com.atmoboards.forum?authority=*&collection=com.atmoboards.thread&action=create',
         )
         expect(() =>
-          set.assertSpace({
-            type: SPACE_REF.spaceType,
-            authority: SPACE_REF.spaceDid,
-            skey: SPACE_REF.skey,
+          set.assertSpace(SPACE_REF, {
             action: 'create',
             collection: 'com.atmoboards.thread',
           }),
@@ -459,10 +477,7 @@ describe('ScopePermissions', () => {
           'space:com.atmoboards.forum?authority=*&collection=*',
         )
         expect(() =>
-          set.assertSpace({
-            type: SPACE_REF.spaceType,
-            authority: SPACE_REF.spaceDid,
-            skey: SPACE_REF.skey,
+          set.assertSpace(SPACE_REF, {
             action: 'update',
             collection: 'any.valid.collection',
           }),
@@ -474,10 +489,7 @@ describe('ScopePermissions', () => {
           'space:com.atmoboards.forum?authority=*',
         )
         expect(() =>
-          set.assertSpace({
-            type: SPACE_REF.spaceType,
-            authority: SPACE_REF.spaceDid,
-            skey: SPACE_REF.skey,
+          set.assertSpace(SPACE_REF, {
             action: 'create',
             collection: 'com.atmoboards.thread',
           }),
@@ -489,10 +501,7 @@ describe('ScopePermissions', () => {
           'space:com.atmoboards.forum?authority=*&collection=com.atmoboards.thread&action=create',
         )
         expect(() =>
-          set.assertSpace({
-            type: SPACE_REF.spaceType,
-            authority: SPACE_REF.spaceDid,
-            skey: SPACE_REF.skey,
+          set.assertSpace(SPACE_REF, {
             action: 'delete',
             collection: 'com.atmoboards.thread',
           }),
@@ -504,10 +513,7 @@ describe('ScopePermissions', () => {
           'space:com.atmoboards.forum?authority=*&collection=com.atmoboards.thread',
         )
         expect(() =>
-          set.assertSpace({
-            type: SPACE_REF.spaceType,
-            authority: SPACE_REF.spaceDid,
-            skey: SPACE_REF.skey,
+          set.assertSpace(SPACE_REF, {
             action: 'create',
             collection: 'com.atmoboards.reply',
           }),
@@ -519,10 +525,7 @@ describe('ScopePermissions', () => {
           'space:com.atmoboards.forum?authority=*&collection=com.atmoboards.thread&action=read',
         )
         expect(() =>
-          set.assertSpace({
-            type: SPACE_REF.spaceType,
-            authority: SPACE_REF.spaceDid,
-            skey: SPACE_REF.skey,
+          set.assertSpace(SPACE_REF, {
             action: 'create',
             collection: 'com.atmoboards.thread',
           }),
@@ -536,10 +539,7 @@ describe('ScopePermissions', () => {
           'space:com.atmoboards.forum?authority=*&manage=update',
         )
         expect(() =>
-          set.assertSpace({
-            type: SPACE_REF.spaceType,
-            authority: SPACE_REF.spaceDid,
-            skey: SPACE_REF.skey,
+          set.assertSpace(SPACE_REF, {
             manage: 'update',
           }),
         ).not.toThrow()
@@ -550,10 +550,7 @@ describe('ScopePermissions', () => {
           'space:com.atmoboards.forum?authority=*&manage=update',
         )
         expect(() =>
-          set.assertSpace({
-            type: SPACE_REF.spaceType,
-            authority: SPACE_REF.spaceDid,
-            skey: SPACE_REF.skey,
+          set.assertSpace(SPACE_REF, {
             manage: 'delete',
           }),
         ).toThrow(ScopeMissingError)
@@ -564,10 +561,7 @@ describe('ScopePermissions', () => {
           'space:com.atmoboards.forum?authority=*',
         )
         expect(() =>
-          set.assertSpace({
-            type: SPACE_REF.spaceType,
-            authority: SPACE_REF.spaceDid,
-            skey: SPACE_REF.skey,
+          set.assertSpace(SPACE_REF, {
             manage: 'update',
           }),
         ).toThrow(ScopeMissingError)
@@ -578,10 +572,7 @@ describe('ScopePermissions', () => {
           'space:com.atmoboards.forum?authority=*&action=create&action=update',
         )
         expect(() =>
-          set.assertSpace({
-            type: SPACE_REF.spaceType,
-            authority: SPACE_REF.spaceDid,
-            skey: SPACE_REF.skey,
+          set.assertSpace(SPACE_REF, {
             manage: 'update',
           }),
         ).toThrow(ScopeMissingError)
@@ -595,10 +586,7 @@ describe('ScopePermissions', () => {
           'space:com.example.other space:com.atmoboards.forum?authority=*&action=read',
         )
         expect(() =>
-          set.assertSpace({
-            type: SPACE_REF.spaceType,
-            authority: SPACE_REF.spaceDid,
-            skey: SPACE_REF.skey,
+          set.assertSpace(SPACE_REF, {
             action: 'read',
           }),
         ).not.toThrow()
@@ -610,28 +598,19 @@ describe('ScopePermissions', () => {
           'space:com.atmoboards.forum?authority=*&action=read space:com.atmoboards.forum?authority=did:plc:owner&collection=com.atmoboards.thread&action=create',
         )
         expect(() =>
-          set.assertSpace({
-            type: SPACE_REF.spaceType,
-            authority: SPACE_REF.spaceDid,
-            skey: SPACE_REF.skey,
+          set.assertSpace(SPACE_REF, {
             action: 'read',
           }),
         ).not.toThrow()
         expect(() =>
-          set.assertSpace({
-            type: SPACE_REF.spaceType,
-            authority: SPACE_REF.spaceDid,
-            skey: SPACE_REF.skey,
+          set.assertSpace(SPACE_REF, {
             action: 'create',
             collection: 'com.atmoboards.thread',
           }),
         ).not.toThrow()
         // But not delete — neither grant includes it.
         expect(() =>
-          set.assertSpace({
-            type: SPACE_REF.spaceType,
-            authority: SPACE_REF.spaceDid,
-            skey: SPACE_REF.skey,
+          set.assertSpace(SPACE_REF, {
             action: 'delete',
             collection: 'com.atmoboards.thread',
           }),
@@ -640,21 +619,21 @@ describe('ScopePermissions', () => {
     })
   })
 
-  describe('assertSpaceRef', () => {
+  describe('assertSpace with a space ref string', () => {
     describe('read', () => {
       it('passes when the grant covers the (type, authority, skey) tuple', () => {
         const set = new ScopePermissions(
           'space:com.atmoboards.forum?authority=did:plc:owner',
         )
         expect(() =>
-          set.assertSpaceRef(SPACE_URI, { action: 'read' }),
+          set.assertSpace(SPACE_URI, { action: 'read' }),
         ).not.toThrow()
       })
 
       it('passes with type wildcard', () => {
         const set = new ScopePermissions('space:*?authority=did:plc:owner')
         expect(() =>
-          set.assertSpaceRef(SPACE_URI, { action: 'read' }),
+          set.assertSpace(SPACE_URI, { action: 'read' }),
         ).not.toThrow()
       })
 
@@ -663,7 +642,7 @@ describe('ScopePermissions', () => {
           'space:com.atmoboards.forum?authority=*',
         )
         expect(() =>
-          set.assertSpaceRef(SPACE_URI, { action: 'read' }),
+          set.assertSpace(SPACE_URI, { action: 'read' }),
         ).not.toThrow()
       })
 
@@ -671,7 +650,7 @@ describe('ScopePermissions', () => {
         // A bare `space:<type>` defaults authority to the granting user; it does
         // not cover a space owned by did:plc:owner.
         const set = new ScopePermissions('space:com.atmoboards.forum')
-        expect(() => set.assertSpaceRef(SPACE_URI, { action: 'read' })).toThrow(
+        expect(() => set.assertSpace(SPACE_URI, { action: 'read' })).toThrow(
           ScopeMissingError,
         )
       })
@@ -680,7 +659,7 @@ describe('ScopePermissions', () => {
         const set = new ScopePermissions(
           'space:com.example.different?authority=*',
         )
-        expect(() => set.assertSpaceRef(SPACE_URI, { action: 'read' })).toThrow(
+        expect(() => set.assertSpace(SPACE_URI, { action: 'read' })).toThrow(
           ScopeMissingError,
         )
       })
@@ -689,14 +668,14 @@ describe('ScopePermissions', () => {
         const set = new ScopePermissions(
           'space:com.atmoboards.forum?authority=did:plc:somebody-else',
         )
-        expect(() => set.assertSpaceRef(SPACE_URI, { action: 'read' })).toThrow(
+        expect(() => set.assertSpace(SPACE_URI, { action: 'read' })).toThrow(
           ScopeMissingError,
         )
       })
 
       it('rejects when no space scope is present', () => {
         const set = new ScopePermissions('atproto')
-        expect(() => set.assertSpaceRef(SPACE_URI, { action: 'read' })).toThrow(
+        expect(() => set.assertSpace(SPACE_URI, { action: 'read' })).toThrow(
           ScopeMissingError,
         )
       })
@@ -706,7 +685,7 @@ describe('ScopePermissions', () => {
           'space:com.atmoboards.forum?authority=*&action=read',
         )
         expect(() =>
-          set.assertSpaceRef(SPACE_URI, { action: 'read_self' }),
+          set.assertSpace(SPACE_URI, { action: 'read_self' }),
         ).not.toThrow()
       })
 
@@ -716,7 +695,7 @@ describe('ScopePermissions', () => {
         const set = new ScopePermissions(
           'space:com.atmoboards.forum?authority=*&action=create',
         )
-        expect(() => set.assertSpaceRef(SPACE_URI, { action: 'read' })).toThrow(
+        expect(() => set.assertSpace(SPACE_URI, { action: 'read' })).toThrow(
           ScopeMissingError,
         )
       })
@@ -728,7 +707,7 @@ describe('ScopePermissions', () => {
           'space:com.atmoboards.forum?authority=*&collection=com.atmoboards.thread&action=create',
         )
         expect(() =>
-          set.assertSpaceRef(SPACE_URI, {
+          set.assertSpace(SPACE_URI, {
             action: 'create',
             collection: 'com.atmoboards.thread',
           }),
@@ -740,7 +719,7 @@ describe('ScopePermissions', () => {
           'space:com.atmoboards.forum?authority=*&collection=*',
         )
         expect(() =>
-          set.assertSpaceRef(SPACE_URI, {
+          set.assertSpace(SPACE_URI, {
             action: 'update',
             collection: 'any.valid.collection',
           }),
@@ -752,7 +731,7 @@ describe('ScopePermissions', () => {
           'space:com.atmoboards.forum?authority=*',
         )
         expect(() =>
-          set.assertSpaceRef(SPACE_URI, {
+          set.assertSpace(SPACE_URI, {
             action: 'create',
             collection: 'com.atmoboards.thread',
           }),
@@ -764,7 +743,7 @@ describe('ScopePermissions', () => {
           'space:com.atmoboards.forum?authority=*&collection=com.atmoboards.thread&action=create',
         )
         expect(() =>
-          set.assertSpaceRef(SPACE_URI, {
+          set.assertSpace(SPACE_URI, {
             action: 'delete',
             collection: 'com.atmoboards.thread',
           }),
@@ -776,7 +755,7 @@ describe('ScopePermissions', () => {
           'space:com.atmoboards.forum?authority=*&collection=com.atmoboards.thread',
         )
         expect(() =>
-          set.assertSpaceRef(SPACE_URI, {
+          set.assertSpace(SPACE_URI, {
             action: 'create',
             collection: 'com.atmoboards.reply',
           }),
@@ -788,7 +767,7 @@ describe('ScopePermissions', () => {
           'space:com.atmoboards.forum?authority=*&collection=com.atmoboards.thread&action=read',
         )
         expect(() =>
-          set.assertSpaceRef(SPACE_URI, {
+          set.assertSpace(SPACE_URI, {
             action: 'create',
             collection: 'com.atmoboards.thread',
           }),
@@ -802,7 +781,7 @@ describe('ScopePermissions', () => {
           'space:com.atmoboards.forum?authority=*&manage=update',
         )
         expect(() =>
-          set.assertSpaceRef(SPACE_URI, { manage: 'update' }),
+          set.assertSpace(SPACE_URI, { manage: 'update' }),
         ).not.toThrow()
       })
 
@@ -810,27 +789,27 @@ describe('ScopePermissions', () => {
         const set = new ScopePermissions(
           'space:com.atmoboards.forum?authority=*&manage=update',
         )
-        expect(() =>
-          set.assertSpaceRef(SPACE_URI, { manage: 'delete' }),
-        ).toThrow(ScopeMissingError)
+        expect(() => set.assertSpace(SPACE_URI, { manage: 'delete' })).toThrow(
+          ScopeMissingError,
+        )
       })
 
       it('rejects when the default grant has no manage verbs', () => {
         const set = new ScopePermissions(
           'space:com.atmoboards.forum?authority=*',
         )
-        expect(() =>
-          set.assertSpaceRef(SPACE_URI, { manage: 'update' }),
-        ).toThrow(ScopeMissingError)
+        expect(() => set.assertSpace(SPACE_URI, { manage: 'update' })).toThrow(
+          ScopeMissingError,
+        )
       })
 
       it('rejects when the grant lists only record actions', () => {
         const set = new ScopePermissions(
           'space:com.atmoboards.forum?authority=*&action=create&action=update',
         )
-        expect(() =>
-          set.assertSpaceRef(SPACE_URI, { manage: 'update' }),
-        ).toThrow(ScopeMissingError)
+        expect(() => set.assertSpace(SPACE_URI, { manage: 'update' })).toThrow(
+          ScopeMissingError,
+        )
       })
     })
 
@@ -841,7 +820,7 @@ describe('ScopePermissions', () => {
           'space:com.example.other space:com.atmoboards.forum?authority=*&action=read',
         )
         expect(() =>
-          set.assertSpaceRef(SPACE_URI, { action: 'read' }),
+          set.assertSpace(SPACE_URI, { action: 'read' }),
         ).not.toThrow()
       })
 
@@ -851,17 +830,17 @@ describe('ScopePermissions', () => {
           'space:com.atmoboards.forum?authority=*&action=read space:com.atmoboards.forum?authority=did:plc:owner&collection=com.atmoboards.thread&action=create',
         )
         expect(() =>
-          set.assertSpaceRef(SPACE_URI, { action: 'read' }),
+          set.assertSpace(SPACE_URI, { action: 'read' }),
         ).not.toThrow()
         expect(() =>
-          set.assertSpaceRef(SPACE_URI, {
+          set.assertSpace(SPACE_URI, {
             action: 'create',
             collection: 'com.atmoboards.thread',
           }),
         ).not.toThrow()
         // But not delete — neither grant includes it.
         expect(() =>
-          set.assertSpaceRef(SPACE_URI, {
+          set.assertSpace(SPACE_URI, {
             action: 'delete',
             collection: 'com.atmoboards.thread',
           }),

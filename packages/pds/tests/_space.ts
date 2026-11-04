@@ -3,7 +3,7 @@ import { type Server, createServer } from 'node:http'
 import type { AddressInfo } from 'node:net'
 import * as plc from '@did-plc/lib'
 import { type HttpTerminator, createHttpTerminator } from 'http-terminator'
-import { getVerificationMaterial } from '@atproto/common'
+import { getKemDidKey } from '@atproto/common'
 import { P256Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import {
   EXAMPLE_LABELER,
@@ -11,18 +11,18 @@ import {
   type TestNetworkNoAppView,
   type TestPds,
 } from '@atproto/dev-env'
-import { type IdResolver, getDidKeyFromMultibase } from '@atproto/identity'
+import type { IdResolver } from '@atproto/identity'
 import { Client, type DidString } from '@atproto/lex'
 import { type LexMap, parseCid } from '@atproto/lex-data'
 import { JoseKey } from '@atproto/oauth-provider/provider'
 import { ReplayManager } from '@atproto/oauth-provider/verifier'
 import {
-  COMMIT_MAC_TYPE,
-  type Commit,
+  CLIENT_ATTESTATION_TYP,
   MAC_HEADER,
+  MAC_TYPE_BY_METHOD,
   type MacType,
-  RECORD_MAC_TYPE,
   RepoCommit,
+  type SpaceCommit,
   WANT_MAC_HEADER,
   createSpaceSigHeaders,
   encapsulate,
@@ -123,30 +123,31 @@ export class SpaceClient {
   }
 
   /**
-   * Create a space owned by `owner`, optionally adding members.
+   * Create a space under `authority`, optionally adding members.
    *
    * The skey defaults to a slug of the running test's name, so tests don't have
    * to invent one and restate their own title. Each test gets a distinct space,
    * which is what keeps them order-independent.
    */
   async createSpace(
-    owner: Actor,
+    authority: Actor,
     opts: SpaceOptions = {},
   ): Promise<SpaceRefString> {
     const skey = opts.skey ?? currentTestSkey()
     const spaceType = opts.spaceType ?? TEST_SPACE_TYPE
 
-    const uri = `at://${owner.did}/space/${spaceType}/${skey}` as SpaceRefString
+    const uri =
+      `at://${authority.did}/space/${spaceType}/${skey}` as SpaceRefString
 
     if (!opts.ungoverned) {
-      const res = await owner.client.call(
+      const res = await authority.client.call(
         com.atproto.space.createSpace,
         {
           spaceType,
           skey,
           policy: opts.policy ?? com.atproto.memberspace.policy.$build({}),
         },
-        { headers: owner.headers },
+        { headers: authority.headers },
       )
       // Belt and braces: if the handler ever stops anchoring on the caller's own
       // DID, every test built on this helper would silently target a stale uri.
@@ -156,37 +157,37 @@ export class SpaceClient {
     }
 
     for (const member of opts.members ?? []) {
-      await this.putMember(owner, uri, member)
+      await this.putMember(authority, uri, member)
     }
     return uri
   }
 
   async putMember(
-    owner: Actor,
+    authority: Actor,
     space: SpaceRefString,
     member: Actor,
     access: { read: boolean; write: boolean } = { read: true, write: true },
   ) {
-    return owner.client.call(
+    return authority.client.call(
       com.atproto.memberspace.putMember,
       { space, did: member.did, ...access },
-      { headers: owner.headers },
+      { headers: authority.headers },
     )
   }
 
-  async removeMember(owner: Actor, space: SpaceRefString, member: Actor) {
-    return owner.client.call(
+  async removeMember(authority: Actor, space: SpaceRefString, member: Actor) {
+    return authority.client.call(
       com.atproto.memberspace.removeMember,
       { space, did: member.did },
-      { headers: owner.headers },
+      { headers: authority.headers },
     )
   }
 
-  async removeWriter(owner: Actor, space: SpaceRefString, writer: Actor) {
-    return owner.client.call(
+  async removeWriter(authority: Actor, space: SpaceRefString, writer: Actor) {
+    return authority.client.call(
       com.atproto.space.removeWriter,
       { space, did: writer.did },
-      { headers: owner.headers },
+      { headers: authority.headers },
     )
   }
 
@@ -442,14 +443,6 @@ export class SpaceClient {
   }
 }
 
-// The methods that require a MAC when called with a space credential.
-const MAC_TYPES: Record<string, MacType> = {
-  [com.atproto.space.getLatestCommit.$lxm]: COMMIT_MAC_TYPE,
-  [com.atproto.space.getRepo.$lxm]: COMMIT_MAC_TYPE,
-  [com.atproto.space.listRepoOps.$lxm]: COMMIT_MAC_TYPE,
-  [com.atproto.space.getRecord.$lxm]: RECORD_MAC_TYPE,
-}
-
 /**
  * A space credential and its signing key, with audience DIDs derived from requests.
  *
@@ -482,16 +475,17 @@ export class SpaceCredential {
         ? Object.fromEntries(new URL(request.url).searchParams)
         : await request.clone().json()
     const audience = params.repo ?? SpaceRef.parse(params.space).spaceDid
-    const headers = await createSpaceSigHeaders(this.key, {
+    const { headers } = await createSpaceSigHeaders({
       authorization: `Atproto-Space-Credential ${this.credential}`,
       audience,
+      keypair: this.key,
     })
     for (const [name, value] of Object.entries(headers)) {
       request.headers.set(name, value)
     }
 
     const macType =
-      MAC_TYPES[new URL(request.url).pathname.replace(/^\/xrpc\//, '')]
+      MAC_TYPE_BY_METHOD[new URL(request.url).pathname.replace(/^\/xrpc\//, '')]
     if (!macType || request.headers.has(WANT_MAC_HEADER)) {
       return globalThis.fetch(request)
     }
@@ -508,27 +502,26 @@ export class SpaceCredential {
     return response
   }
 
-  async resolveKemKey(did: string): Promise<string> {
+  async resolveKemKey(did: string): Promise<DidString> {
     const didDoc = await this.idResolver.did.ensureResolve(did)
-    const key = getVerificationMaterial(didDoc, 'atproto_kem')
-    const didKey = key && getDidKeyFromMultibase(key)
+    const didKey = getKemDidKey(didDoc)
     if (!didKey) throw new Error(`no #atproto_kem key for ${did}`)
-    return didKey
+    return didKey as DidString
   }
 
   /** The shared secret and response MAC of the latest request. */
   lastMacParams(): { sharedSecret: Uint8Array; mac: Uint8Array } {
     if (!this.lastMac) throw new Error('no MAC was requested')
     const { type, sharedSecret, header } = this.lastMac
-    return { sharedSecret, mac: parseMacHeader(header ?? undefined, type) }
+    return { sharedSecret, mac: parseMacHeader(header, type) }
   }
 
   /** Verify a commit against the MAC from the latest request. */
   verifyCommit(
-    commit: Commit,
-    requested: { space: string; repo: string },
-  ): boolean {
-    return verifyCommit(commit, { ...requested, ...this.lastMacParams() })
+    commit: SpaceCommit,
+    requested: { space: SpaceRefString; repo: DidString },
+  ): void {
+    verifyCommit(commit, { ...requested, ...this.lastMacParams() })
   }
 }
 
@@ -752,7 +745,7 @@ export class MockClientApp {
     const now = Math.floor(Date.now() / 1000)
     const signer = opts.signWith ?? this.key
     return signer.createJwt(
-      { alg: 'ES256', typ: 'atproto-client-attestation+jwt' },
+      { alg: 'ES256', typ: CLIENT_ATTESTATION_TYP },
       {
         iss: opts.iss ?? this.clientId,
         sub: opts.iss ?? this.clientId,

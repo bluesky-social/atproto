@@ -175,7 +175,7 @@ export class SpaceTransactor extends SpaceReader {
       .deleteFrom('space_writer')
       .where('space', '=', space)
       .execute()
-    for (const { did, rev: repoRev, data, spaceRev } of writers) {
+    for (const { did, repoRev, data, spaceRev } of writers) {
       await this.db.db
         .insertInto('space_writer')
         .values({ space, did, repoRev, data, spaceRev })

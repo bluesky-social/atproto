@@ -103,7 +103,7 @@ export default function (server: Server, ctx: AppContext) {
 
       for (const write of prepared) {
         assertNotPolicyRecord(write.uri.collectionSafe)
-        auth.credentials.permissions?.assertSpaceRef(space, {
+        auth.credentials.permissions?.assertSpace(space, {
           action: write.action,
           collection: write.uri.collectionSafe,
         })

@@ -1,7 +1,7 @@
 import type { Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
-import { assertSpaceOwner } from './util.js'
+import { assertSpaceAuthority } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.space.removeWriter, {
@@ -13,12 +13,12 @@ export default function (server: Server, ctx: AppContext) {
       },
     }),
     handler: async ({ input: { body }, auth }) => {
-      const ownerDid = auth.credentials.did
+      const spaceAuthority = auth.credentials.did
       const { space, did: writerDid } = body
 
-      assertSpaceOwner(auth, space, { manage: 'update' })
+      assertSpaceAuthority(auth, space, { manage: 'update' })
 
-      await ctx.actorStore.transact(ownerDid, async (actorTxn) => {
+      await ctx.actorStore.transact(spaceAuthority, async (actorTxn) => {
         await actorTxn.space.getActiveSpacePolicy(space)
         await actorTxn.space.removeWriter(space, writerDid)
       })

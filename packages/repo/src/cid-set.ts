@@ -1,53 +1,54 @@
-import type { Cid } from '@atproto/lex-data'
+import { type Cid, parseCid } from '@atproto/lex-data'
 
-export class CidSet<TCid extends Cid = Cid> implements Iterable<TCid> {
-  private map = new Map<string, TCid>()
+export class CidSet implements Iterable<Cid> {
+  private set: Set<string>
 
-  constructor(arr: Iterable<TCid> = []) {
-    for (const c of arr) {
-      this.map.set(c.toString(), c)
-    }
+  constructor(arr: Cid[] = []) {
+    const strArr = arr.map((c) => c.toString())
+    this.set = new Set(strArr)
   }
 
-  add(cid: TCid): this {
-    this.map.set(cid.toString(), cid)
+  add(cid: Cid): CidSet {
+    this.set.add(cid.toString())
     return this
   }
 
-  addSet(toMerge: CidSet<TCid>): this {
-    for (const c of toMerge) this.map.set(c.toString(), c)
+  addSet(toMerge: CidSet): CidSet {
+    for (const c of toMerge.set) this.set.add(c)
     return this
   }
 
-  subtractSet(toSubtract: CidSet<TCid>): this {
-    for (const c of toSubtract) this.map.delete(c.toString())
+  subtractSet(toSubtract: CidSet): CidSet {
+    for (const c of toSubtract.set) this.set.delete(c)
     return this
   }
 
-  delete(cid: TCid): this {
-    this.map.delete(cid.toString())
+  delete(cid: Cid) {
+    this.set.delete(cid.toString())
     return this
   }
 
-  has(cid: TCid): boolean {
-    return this.map.has(cid.toString())
+  has(cid: Cid): boolean {
+    return this.set.has(cid.toString())
   }
 
   size(): number {
-    return this.map.size
+    return this.set.size
   }
 
-  clear(): this {
-    this.map.clear()
+  clear(): CidSet {
+    this.set.clear()
     return this
   }
 
-  toList(): TCid[] {
+  toList(): Cid[] {
     return Array.from(this)
   }
 
-  [Symbol.iterator](): MapIterator<TCid> {
-    return this.map.values()
+  *[Symbol.iterator](): Generator<Cid, void, unknown> {
+    for (const c of this.set) {
+      yield parseCid(c)
+    }
   }
 }
 

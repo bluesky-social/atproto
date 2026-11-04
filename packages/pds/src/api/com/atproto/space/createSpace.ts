@@ -15,18 +15,22 @@ export default function (server: Server, ctx: AppContext) {
       },
     }),
     handler: async ({ input: { body }, auth }) => {
-      const ownerDid = auth.credentials.did
+      const spaceAuthority = auth.credentials.did
       const { spaceType, policy, skey = TID.nextStr() } = body
 
-      const ref = new SpaceRef(ownerDid, spaceType, skey)
+      const ref = new SpaceRef(spaceAuthority, spaceType, skey)
       const uri = ref.toString()
 
-      auth.credentials.permissions?.assertSpaceRef(ref, {
+      auth.credentials.permissions?.assertSpace(ref, {
         manage: 'create',
       })
 
       const commit = await ctx.spacePolicyManager.createSpace(uri, policy)
-      await fireNotifyWrite(ctx, { space: uri, writerDid: ownerDid, commit })
+      await fireNotifyWrite(ctx, {
+        space: uri,
+        writerDid: spaceAuthority,
+        commit,
+      })
 
       return {
         encoding: 'application/json' as const,

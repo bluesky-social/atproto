@@ -218,10 +218,9 @@ export const spaceRecordUri = (
   space: SpaceRefString,
   author: DidString,
   collection: NsidString,
-  rkey: string,
+  rkey: RecordKeyString,
 ): AtUri => {
-  const { spaceDid, spaceType, skey } = SpaceRef.parse(space)
-  return AtUri.makeSpace(spaceDid, spaceType, skey, author, collection, rkey)
+  return SpaceRef.parse(space).recordUri(author, collection, rkey)
 }
 
 export const prepareDelete = (opts: {

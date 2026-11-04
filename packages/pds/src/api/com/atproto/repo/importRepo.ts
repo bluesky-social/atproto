@@ -34,14 +34,14 @@ export default function (server: Server, ctx: AppContext) {
 
       // @NOTE process as much as we can before the transaction, in particular
       // the reading of the body stream.
-      await using carReader = await readCarStream(input.body)
-
-      if (carReader.roots.length !== 1) {
+      const { roots, blocks } = await readCarStream(input.body)
+      if (roots.length !== 1) {
+        await blocks.dump()
         throw new InvalidRequestError('expected one root')
       }
 
       const blockMap = new BlockMap()
-      for await (const block of carReader.blocks) {
+      for await (const block of blocks) {
         blockMap.set(block.cid, block.bytes)
       }
 
@@ -54,7 +54,7 @@ export default function (server: Server, ctx: AppContext) {
         const diff = await verifyDiff(
           currRepo,
           blockMap,
-          carReader.roots[0],
+          roots[0],
           undefined,
           undefined,
           { ensureLeaves: false },

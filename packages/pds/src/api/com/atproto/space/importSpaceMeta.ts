@@ -3,7 +3,7 @@ import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
 import { ACCESS_FULL } from '../../../../auth-scope.js'
 import type { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
-import { assertSpaceOwner, throwInvalidArchive } from './util.js'
+import { assertSpaceAuthority, throwInvalidArchive } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.space.importSpaceMeta, {
@@ -27,8 +27,8 @@ export default function (server: Server, ctx: AppContext) {
       )
 
       // Importing both creates the space on this host and sets its configuration.
-      assertSpaceOwner(auth, archive.space, { manage: 'create' })
-      assertSpaceOwner(auth, archive.space, { manage: 'update' })
+      assertSpaceAuthority(auth, archive.space, { manage: 'create' })
+      assertSpaceAuthority(auth, archive.space, { manage: 'update' })
 
       await ctx.spacePolicyManager.importSpaceMeta(archive)
     },

@@ -37,7 +37,7 @@ export default function (server: Server, ctx: AppContext) {
 
       const collections = new Set(records.map((record) => record.collection))
       for (const collection of collections) {
-        auth.credentials.permissions?.assertSpaceRef(commit.space, {
+        auth.credentials.permissions?.assertSpace(commit.space, {
           action: 'create',
           collection,
         })

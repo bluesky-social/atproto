@@ -2,7 +2,7 @@ import { byteIterableToStream } from '@atproto/common'
 import {
   COMMIT_MAC_TYPE,
   type SerializedRecord,
-  serializeRepo,
+  writeRepoStar,
 } from '@atproto/space'
 import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
 import { SpaceReader } from '../../../../actor-store/space/reader.js'
@@ -54,7 +54,7 @@ export default function (server: Server, ctx: AppContext) {
         }
 
         const starStream = byteIterableToStream(
-          serializeRepo(commit, readRecords(reader, space)),
+          writeRepoStar(commit, readRecords(reader, space)),
         )
         const closeDb = () => actorDb.close()
         starStream.on('error', closeDb)

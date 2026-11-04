@@ -898,19 +898,19 @@ function SpaceTable({
       const raw = SpacePermission.fromString(s)
       if (!raw) continue
 
-      const space = raw.type !== '*' ? spaces?.[raw.type] : undefined
+      const space = raw.spaceType !== '*' ? spaces?.[raw.spaceType] : undefined
 
       // Apply space declaration defaults before rendering.
       const parsed = space?.collections?.length
         ? raw.withDefaultCollections(space.collections)
         : raw
 
-      const key = `${parsed.type}|${parsed.authority}|${parsed.skey}`
+      const key = `${parsed.spaceType}|${parsed.authority}|${parsed.skey}`
       let row = map.get(key)
       if (!row) {
         row = {
           key,
-          type: parsed.type,
+          type: parsed.spaceType,
           space,
           authority: parsed.authority,
           ownerHandle:
@@ -1070,7 +1070,7 @@ function SpaceTypeLabel({ type, space }: { type: string; space?: Space }) {
   if (space) {
     return (
       <b>
-        <LangProp object={space} property="name" fallback={type} />
+        <LangProp object={space} property="title" fallback={type} />
       </b>
     )
   }
@@ -1096,7 +1096,9 @@ function SpaceUniversalWarning({
   const isUniversal = useMemo(() => {
     return permissions.scopes.some((s) => {
       const parsed = SpacePermission.fromString(s)
-      return parsed != null && parsed.type === '*' && parsed.authority === '*'
+      return (
+        parsed != null && parsed.spaceType === '*' && parsed.authority === '*'
+      )
     })
   }, [permissions])
 

@@ -34,7 +34,7 @@ export default function (server: Server, ctx: AppContext) {
       }
       assertNotPolicyRecord(collection)
 
-      auth.credentials.permissions?.assertSpaceRef(space, {
+      auth.credentials.permissions?.assertSpace(space, {
         action: 'delete',
         collection,
       })

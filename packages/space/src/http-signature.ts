@@ -16,6 +16,7 @@ type HttpHeaders = Record<string, string | string[] | undefined>
 export type SpaceSignatureOptions = {
   authorization: string
   audience: DidString
+  keypair: Keypair
 }
 
 export type SpaceSignature = {
@@ -31,11 +32,12 @@ const SIGNATURE_TAG = 'atproto-space-credential'
 type Component = [name: string, value: string]
 
 /** Sign a request authorized by a space credential, covering the credential and its audience DID. */
-export async function createSpaceSig(
-  key: Keypair,
-  { authorization, audience }: SpaceSignatureOptions,
-): Promise<SpaceSignature> {
-  assertP256DidKey(key.did())
+export async function createSpaceSig({
+  authorization,
+  audience,
+  keypair,
+}: SpaceSignatureOptions): Promise<SpaceSignature> {
+  assertP256DidKey(keypair.did())
 
   const components: Component[] = [
     ['authorization', authorization],
@@ -44,21 +46,22 @@ export async function createSpaceSig(
   const signatureInput = `${formatComponentList(components)};tag="${SIGNATURE_TAG}"`
   return {
     signatureInput,
-    signature: await key.sign(signatureBase(components, signatureInput)),
+    signature: await keypair.sign(signatureBase(components, signatureInput)),
   }
 }
 
 /** Create the authorization, audience, and signature headers for a space request. */
 export async function createSpaceSigHeaders(
-  key: Keypair,
   opts: SpaceSignatureOptions,
-): Promise<Record<string, string>> {
-  const { signatureInput, signature } = await createSpaceSig(key, opts)
+): Promise<{ headers: Record<string, string> }> {
+  const { signatureInput, signature } = await createSpaceSig(opts)
   return {
-    authorization: opts.authorization,
-    'atproto-space-audience': opts.audience,
-    'signature-input': `${SIGNATURE_LABEL}=${signatureInput}`,
-    signature: `${SIGNATURE_LABEL}=:${toPaddedBase64(signature)}:`,
+    headers: {
+      authorization: opts.authorization,
+      'atproto-space-audience': opts.audience,
+      'signature-input': `${SIGNATURE_LABEL}=${signatureInput}`,
+      signature: `${SIGNATURE_LABEL}=:${toPaddedBase64(signature)}:`,
+    },
   }
 }
 

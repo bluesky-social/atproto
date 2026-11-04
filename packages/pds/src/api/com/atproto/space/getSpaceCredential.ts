@@ -1,4 +1,8 @@
-import { createSpaceToken, isP256DidKey, spaceHostAud } from '@atproto/space'
+import {
+  createSpaceCredential,
+  isP256DidKey,
+  spaceHostAud,
+} from '@atproto/space'
 import type { DidString } from '@atproto/syntax'
 import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../../../context.js'
@@ -61,11 +65,12 @@ export default function (server: Server, ctx: AppContext) {
       })
 
       const keypair = await ctx.actorStore.keypair(spaceDid)
-      const credential = await createSpaceToken(
-        'credential',
-        { iss: spaceDid, sub: space, keyId: credentialKid },
+      const credential = await createSpaceCredential({
+        iss: spaceDid,
+        sub: space,
+        keyId: credentialKid,
         keypair,
-      )
+      })
 
       return {
         encoding: 'application/json' as const,

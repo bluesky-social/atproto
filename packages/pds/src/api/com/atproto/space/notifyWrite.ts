@@ -10,7 +10,7 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ input, auth }) => {
       const { space, repo, repoRev, data } = input.body
 
-      const { spaceDid: ownerDid } = toSpaceRef(space)
+      const { spaceDid: spaceAuthority } = toSpaceRef(space)
 
       // iss is the signer, so requiring it to match keeps a PDS from notifying on
       // another account's behalf.
@@ -23,8 +23,8 @@ export default function (server: Server, ctx: AppContext) {
       // Not checked during auth: a PDS answers for many authorities, so the
       // audience is only knowable from the space the body names.
       if (
-        auth.credentials.aud !== ownerDid &&
-        auth.credentials.aud !== spaceHostAud(ownerDid)
+        auth.credentials.aud !== spaceAuthority &&
+        auth.credentials.aud !== spaceHostAud(spaceAuthority)
       ) {
         throw new ForbiddenError(
           'notifyWrite aud does not match the space authority',
