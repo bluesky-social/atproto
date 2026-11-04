@@ -28,6 +28,7 @@ import {
 } from '../../../../pipeline.js'
 import { getAtprotoPassthroughHeaders } from '../../../../util/headers.js'
 import type { Views } from '../../../../views/index.js'
+import { getAtmospherePostRef } from './atmosphere-hydration.js'
 
 const MAX_CONFIG_BYTES = 512 * 1024
 const MAX_LIST_ITEMS = 10
@@ -257,7 +258,13 @@ function presentation({
       items: mapDefined(articles, ({ uri }) => {
         const view = ctx.views.externalRecordView(uri, state, now)
         return view && app.bsky.embed.external.viewArticle.$isTypeOf(view)
-          ? { featured: false, view }
+          ? {
+              featured: false,
+              view,
+              bskyPostRef: getAtmospherePostRef(
+                state.externalRecords?.get(uri)?.record,
+              ),
+            }
           : undefined
       }),
       recIdStr: skeleton.articleRecIdStr,
@@ -287,9 +294,16 @@ function presentation({
         if (!view || !app.bsky.embed.external.viewLivestream.$isTypeOf(view))
           return
         // Previewed streams are never live; copy rather than mutate the view.
-        return startsAt != null && Date.parse(startsAt) > now
-          ? { featured: false, view: { ...view, active: false } }
-          : { featured: false, view }
+        return {
+          featured: false,
+          view:
+            startsAt != null && Date.parse(startsAt) > now
+              ? { ...view, active: false }
+              : view,
+          bskyPostRef: getAtmospherePostRef(
+            state.externalRecords?.get(uri)?.record,
+          ),
+        }
       }),
     },
     apps: apps.map(({ card, did }) => {
