@@ -3,7 +3,7 @@ import type { DidString } from '@atproto/syntax'
 import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
-import { assertSpaceHost } from './util.js'
+import { assertActiveSpaceHost } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.space.getSpaceCredential, {
@@ -30,7 +30,7 @@ export default function (server: Server, ctx: AppContext) {
         userDid = delegation.userDid
       }
 
-      const spaceDid = await assertSpaceHost(ctx, space)
+      const spaceDid = await assertActiveSpaceHost(ctx, space)
 
       const clientId = clientAttestation
         ? await ctx.clientAttestationVerifier.verify(

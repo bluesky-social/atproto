@@ -8,7 +8,7 @@ import { assertRepoAvailability } from '../sync/util.js'
 import {
   assertSpaceRead,
   getSpaceMacSecret,
-  isSpaceSelfRead,
+  isSpaceUserOrAdmin,
   recordMacHeaders,
 } from './util.js'
 
@@ -23,7 +23,7 @@ export default function (server: Server, ctx: AppContext) {
       const { space, repo, collection, rkey } = params
 
       assertSpaceRead(auth, space, repo)
-      await assertRepoAvailability(ctx, repo, isSpaceSelfRead(auth, repo))
+      await assertRepoAvailability(ctx, repo, isSpaceUserOrAdmin(auth, repo))
 
       const sharedSecret = await getSpaceMacSecret(ctx, {
         req,

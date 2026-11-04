@@ -6,6 +6,7 @@ import {
 } from '@atproto/space'
 import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
 import { SpaceReader } from '../../../../actor-store/space/reader.js'
+import { AuthScope } from '../../../../auth-scope.js'
 import type { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
 import { assertRepoAvailability } from '../sync/util.js'
@@ -14,12 +15,13 @@ import {
   buildCommit,
   commitMacHeaders,
   getSpaceMacSecret,
-  isSpaceSelfRead,
+  isSpaceUserOrAdmin,
 } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.space.getRepo, {
     auth: ctx.authVerifier.authorizationOrSpaceCredential({
+      additional: [AuthScope.Takendown],
       authorize: () => {
         // Performed in the handler as it requires the `space` param
       },
@@ -28,7 +30,7 @@ export default function (server: Server, ctx: AppContext) {
       const { space, repo } = params
 
       assertSpaceRead(auth, space, repo)
-      await assertRepoAvailability(ctx, repo, isSpaceSelfRead(auth, repo))
+      await assertRepoAvailability(ctx, repo, isSpaceUserOrAdmin(auth, repo))
 
       const sharedSecret = await getSpaceMacSecret(ctx, {
         req,
