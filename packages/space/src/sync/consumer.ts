@@ -5,9 +5,13 @@ import {
   isPlainObject,
   parseCidSafe,
 } from '@atproto/lex-data'
-import type { NsidString, RecordKeyString } from '@atproto/syntax'
+import type {
+  NsidString,
+  RecordKeyString,
+  SpaceAtUriString,
+} from '@atproto/syntax'
 import { compareBytes } from '../bytes.js'
-import { RepoVerificationError } from '../error.js'
+import { SpaceRepoVerificationError } from '../error.js'
 import { verifyRecordMac } from '../mac.js'
 import {
   RepoCommit,
@@ -17,14 +21,14 @@ import {
 import { type StarPair, readStar } from '../star.js'
 import {
   COMMIT_VERSION,
-  type Commit,
   MAX_RECORD_SIZE,
+  type SpaceCommit,
   type SpaceRecord,
   defs,
 } from '../types.js'
 import { parseRecordPath } from '../util.js'
 
-export type VerifyRepoParams = VerifyCommitParams
+export type VerifySpaceRepoParams = VerifyCommitParams
 
 export type VerifiedRecord = {
   collection: NsidString
@@ -34,13 +38,13 @@ export type VerifiedRecord = {
 }
 
 /**
- * @note **IMPORTANT** to avoid resource leaks, the {@link VerifiedRepo} must be
+ * @note **IMPORTANT** to avoid resource leaks, the {@link VerifiedSpaceRepo} must be
  * disposed of when done, either by calling its `[Symbol.asyncDispose]()`
  * method, by using it in a `using` statement, or by consuming at least one of
  * its `records` (and then `return()`ing the iterator).
  */
-export type VerifiedRepo = AsyncDisposable & {
-  commit: Commit
+export type VerifiedSpaceRepo = AsyncDisposable & {
+  commit: SpaceCommit
   records: AsyncGenerator<VerifiedRecord>
 }
 
@@ -50,16 +54,16 @@ export type VerifiedRepo = AsyncDisposable & {
  * {@link verifyRepoStar}, but nothing vouches for the commit itself. This suits a
  * repo host importing an account's own repo, which comes with no MAC to check.
  */
-export const readRepoStar = async (
+export async function readRepoStar(
   star: AsyncIterable<Uint8Array> | Iterable<Uint8Array>,
-): Promise<VerifiedRepo> => {
+): Promise<VerifiedSpaceRepo> {
   const starReader = await readStar(star, { maxValueLength: MAX_RECORD_SIZE })
   // Note the try/catch would better be implemented with a DisposableStack, but
   // that isn't (widely) available yet.
   try {
     const commit = parseMeta(starReader.meta)
     if (commit.ver !== COMMIT_VERSION) {
-      throw new RepoVerificationError(
+      throw new SpaceRepoVerificationError(
         `unsupported commit version: ${commit.ver}`,
       )
     }
@@ -85,15 +89,13 @@ export const readRepoStar = async (
  * `records` must be fully consumed before trusting what it yielded —
  * {@link verifyRepoStarFull} does that.
  */
-export const verifyRepoStar = async (
+export async function verifyRepoStar(
   star: AsyncIterable<Uint8Array> | Iterable<Uint8Array>,
-  params: VerifyRepoParams,
-): Promise<VerifiedRepo> => {
+  params: VerifySpaceRepoParams,
+): Promise<VerifiedSpaceRepo> {
   const repo = await readRepoStar(star)
   try {
-    if (!verifyCommit(repo.commit, params)) {
-      throw new RepoVerificationError('commit failed verification')
-    }
+    verifyCommit(repo.commit, params)
     return repo
   } catch (err) {
     await repo[Symbol.asyncDispose]()
@@ -105,10 +107,10 @@ export const verifyRepoStar = async (
  * Verify a serialized repo and collect its records. Prefer {@link verifyRepoStar}
  * for large repos, where streaming avoids holding every record at once.
  */
-export const verifyRepoStarFull = async (
+export async function verifyRepoStarFull(
   star: AsyncIterable<Uint8Array> | Iterable<Uint8Array>,
-  params: VerifyRepoParams,
-): Promise<{ commit: Commit; records: VerifiedRecord[] }> => {
+  params: VerifySpaceRepoParams,
+): Promise<{ commit: SpaceCommit; records: VerifiedRecord[] }> {
   const { commit, records } = await verifyRepoStar(star, params)
   const collected: VerifiedRecord[] = []
   for await (const record of records) {
@@ -119,7 +121,7 @@ export const verifyRepoStarFull = async (
 
 export type VerifyRecordParams = {
   // The uri of the record that was requested.
-  uri: string
+  uri: SpaceAtUriString
   // The shared secret for the request, and the MAC from its response header.
   sharedSecret: Uint8Array
   mac: Uint8Array
@@ -129,24 +131,34 @@ export type VerifyRecordParams = {
  * Verify a `getRecord` response against the MAC it carried: it must be the
  * record that was requested, the MAC must cover its uri and cid, and its value
  * must encode to that cid.
+ *
+ * @throws {SpaceRepoVerificationError} if the record is not the one requested,
+ * or its value does not match its cid
+ * @throws {SpaceMacError} if the MAC does not match
  */
-export const verifyRecord = async (
+export async function verifyRecord(
   record: { uri: string; cid: string; value: SpaceRecord },
   params: VerifyRecordParams,
-): Promise<boolean> => {
-  if (record.uri !== params.uri) return false
-  const cid = parseCidSafe(record.cid)
-  if (!cid) return false
-  if (!verifyRecordMac(params.sharedSecret, record.uri, cid, params.mac)) {
-    return false
+): Promise<void> {
+  if (record.uri !== params.uri) {
+    throw new SpaceRepoVerificationError(
+      `record is not the one requested: ${record.uri}`,
+    )
   }
+  const cid = parseCidSafe(record.cid)
+  if (!cid) {
+    throw new SpaceRepoVerificationError(`invalid record cid: ${record.cid}`)
+  }
+  verifyRecordMac(params.sharedSecret, record.uri, cid, params.mac)
   const valueCid = await cidForCbor(encode(record.value))
-  return valueCid.equals(cid)
+  if (!valueCid.equals(cid)) {
+    throw new SpaceRepoVerificationError('record value does not match its cid')
+  }
 }
 
 async function* verifyStarRecords(
   pairs: AsyncIterable<StarPair>,
-  commit: Commit,
+  commit: SpaceCommit,
 ): AsyncGenerator<VerifiedRecord> {
   const decoder = new TextDecoder()
   const repo = new RepoCommit()
@@ -157,7 +169,7 @@ async function* verifyStarRecords(
     const { collection, rkey } = parseRecordPath(path)
 
     if (prevKey !== undefined && compareBytes(key, prevKey) <= 0) {
-      throw new RepoVerificationError(`records out of order at ${path}`)
+      throw new SpaceRepoVerificationError(`records out of order at ${path}`)
     }
     prevKey = key
 
@@ -165,13 +177,13 @@ async function* verifyStarRecords(
     try {
       record = decode(value)
     } catch (cause) {
-      throw new RepoVerificationError(`invalid record cbor at ${path}`, {
+      throw new SpaceRepoVerificationError(`invalid record cbor at ${path}`, {
         cause,
       })
     }
     // Ensure that the encoded record is a plain object (LexMap)
     if (!isPlainObject(record)) {
-      throw new RepoVerificationError(`invalid record at ${path}`)
+      throw new SpaceRepoVerificationError(`invalid record at ${path}`)
     }
 
     const cid = await cidForCbor(value)
@@ -180,7 +192,7 @@ async function* verifyStarRecords(
   }
 
   if (!repo.matches(commit)) {
-    throw new RepoVerificationError('records do not match the commit data')
+    throw new SpaceRepoVerificationError('records do not match the commit data')
   }
 }
 
@@ -189,7 +201,7 @@ function parseMeta(meta: unknown) {
     return defs.repoStarMeta.schema.parse(meta)
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err)
-    throw new RepoVerificationError(
+    throw new SpaceRepoVerificationError(
       `invalid ${defs.repoStarMeta.name}: ${message}`,
     )
   }

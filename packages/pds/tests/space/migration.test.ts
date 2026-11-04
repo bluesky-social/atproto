@@ -10,8 +10,8 @@ import {
   RepoCommit,
   type SpaceMetaArchive,
   readSpaceMetaStar,
-  serializeRepo,
-  serializeSpaceMeta,
+  writeRepoStar,
+  writeSpaceMetaStar,
 } from '@atproto/space'
 import {
   type DidString,
@@ -170,7 +170,7 @@ describe('space account migration', () => {
       {},
       { headers: alice.headers },
     )
-    expect(spaces.map((s) => s.uri)).toEqual(
+    expect(spaces.map((s) => s.space)).toEqual(
       expect.arrayContaining([space, guestSpace]),
     )
 
@@ -304,8 +304,8 @@ describe('space account migration', () => {
     const space = await sc.createSpace(alice)
     const did = 'did:web:localhost%3A2583' as DidString
     await alice.client.call(
-      com.atproto.memberspace.putMember,
-      { space, did, read: true, write: true },
+      com.atproto.memberspace.putMembers,
+      { space, members: [{ did, read: true, write: true }] },
       { headers: alice.headers },
     )
     await importSpaceMeta(newAlice, await exportSpaceMeta(alice, space))
@@ -334,10 +334,10 @@ describe('space account migration', () => {
       .toCommit({ space, repo: alice.did, rev: TID.nextStr() })
 
     const star = await collect(
-      serializeRepo(commit, [{ collection: TEST_COLLECTION, rkey, bytes }]),
+      writeRepoStar(commit, [{ collection: TEST_COLLECTION, rkey, bytes }]),
     )
     await expect(importRepo(newAlice, star)).rejects.toMatchObject({
-      error: 'InvalidRequest',
+      error: 'InvalidRepoFile',
       message: expect.stringContaining('not canonical DRISL'),
     })
   })
@@ -348,10 +348,10 @@ describe('space account migration', () => {
 
     await expect(
       importSpaceMeta(newAlice, await exportSpaceMeta(bob, space)),
-    ).rejects.toMatchObject({ error: 'NotSpaceOwner' })
+    ).rejects.toMatchObject({ error: 'NotAuthorized' })
     await expect(
       importRepo(newAlice, await getRepo(bob, space)),
-    ).rejects.toMatchObject({ error: 'InvalidRequest' })
+    ).rejects.toMatchObject({ error: 'RepoMismatch' })
   })
 
   describe('rejects an archive', () => {
@@ -359,7 +359,7 @@ describe('space account migration', () => {
       skey: string,
       archive: Omit<SpaceMetaArchive, 'space'>,
     ): AsyncIterable<Uint8Array> =>
-      serializeSpaceMeta({
+      writeSpaceMetaStar({
         space: `at://${alice.did}/space/${TEST_SPACE_TYPE}/${skey}`,
         ...archive,
       })
@@ -390,7 +390,7 @@ describe('space account migration', () => {
         writers: [],
       })
       await expect(importArchive(archive)).rejects.toMatchObject({
-        error: 'InvalidRequest',
+        error: 'InvalidSpaceMeta',
         message: expect.stringContaining('Unrecognized policy state'),
       })
     })
@@ -407,7 +407,7 @@ describe('space account migration', () => {
         writers: [],
       })
       await expect(importArchive(archive)).rejects.toMatchObject({
-        error: 'InvalidRequest',
+        error: 'InvalidSpaceMeta',
         message: expect.stringContaining('Unrecognized policy state'),
       })
     })
@@ -415,7 +415,7 @@ describe('space account migration', () => {
     it('that does not parse', async () => {
       await expect(
         importSpaceMeta(newAlice, new Uint8Array([1, 2, 3])),
-      ).rejects.toMatchObject({ error: 'InvalidRequest' })
+      ).rejects.toMatchObject({ error: 'InvalidSpaceMeta' })
     })
   })
 })

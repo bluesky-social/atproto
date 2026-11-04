@@ -84,7 +84,7 @@ const parseCursor = (cursor: string): { rev: string; idx: number } => {
   const [rev, idxStr] = cursor.split('/')
   const idx = parseInt(idxStr, 10)
   if (isNaN(idx)) {
-    throw new InvalidRequestError('Malformed cursor', 'MalformedCursor')
+    throw new InvalidRequestError('Malformed cursor', 'InvalidCursor')
   }
   return { rev, idx }
 }

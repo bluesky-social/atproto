@@ -112,12 +112,14 @@ export class SpaceTransactor extends SpaceReader {
       .execute()
   }
 
-  async removeMember(space: string, did: string): Promise<void> {
-    await this.db.db
+  // Returns whether the DID was a member.
+  async removeMember(space: string, did: string): Promise<boolean> {
+    const result = await this.db.db
       .deleteFrom('memberspace_member')
       .where('space', '=', space)
       .where('did', '=', did)
-      .execute()
+      .executeTakeFirst()
+    return result.numDeletedRows > 0n
   }
 
   async removeAllMembers(space: string): Promise<void> {
@@ -175,7 +177,7 @@ export class SpaceTransactor extends SpaceReader {
       .deleteFrom('space_writer')
       .where('space', '=', space)
       .execute()
-    for (const { did, rev: repoRev, data, spaceRev } of writers) {
+    for (const { did, repoRev, data, spaceRev } of writers) {
       await this.db.db
         .insertInto('space_writer')
         .values({ space, did, repoRev, data, spaceRev })
@@ -328,6 +330,7 @@ export class SpaceTransactor extends SpaceReader {
       if (!cid.equals(await cidForCbor(value))) {
         throw new InvalidRequestError(
           `Invalid STAR: record is not canonical DRISL at ${collection}/${rkey}`,
+          'InvalidRepoFile',
         )
       }
       await this.db.db
@@ -428,30 +431,41 @@ export class SpaceTransactor extends SpaceReader {
   // Re-registering an existing service replaces its endpoint and extends its expiry.
   async recordCredentialRecipient(registration: {
     space: string
-    serviceDid: string
+    service: string
     serviceEndpoint: string
     expiresAt: string
   }): Promise<void> {
-    const { space, serviceDid, serviceEndpoint, expiresAt } = registration
+    const { space, service, serviceEndpoint, expiresAt } = registration
     await this.db.db
       .insertInto('space_credential_recipient')
-      .values({ space, serviceDid, serviceEndpoint, expiresAt })
+      .values({ space, service, serviceEndpoint, expiresAt })
       .onConflict((oc) =>
         oc
-          .columns(['space', 'serviceDid'])
+          .columns(['space', 'service'])
           .doUpdateSet({ serviceEndpoint, expiresAt }),
       )
       .execute()
   }
 
-  async removeCredentialRecipient(
+  // `service` is a `did#serviceId` reference, or a bare DID to remove every service
+  // registered under that DID.
+  async removeCredentialRecipients(
     space: string,
-    serviceDid: string,
+    service: string,
   ): Promise<void> {
+    const registered = await this.db.db
+      .selectFrom('space_credential_recipient')
+      .select('service')
+      .where('space', '=', space)
+      .execute()
+    const removed = registered
+      .map((row) => row.service)
+      .filter((ref) => ref === service || ref.startsWith(`${service}#`))
+    if (removed.length === 0) return
     await this.db.db
       .deleteFrom('space_credential_recipient')
       .where('space', '=', space)
-      .where('serviceDid', '=', serviceDid)
+      .where('service', 'in', removed)
       .execute()
   }
 }

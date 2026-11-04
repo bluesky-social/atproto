@@ -13,7 +13,7 @@ describe('SpacePermission', () => {
       it('parses positional type with all defaults', () => {
         const scope = SpacePermission.fromString('space:com.atmoboards.forum')
         expect(scope).not.toBeNull()
-        expect(scope!.type).toBe('com.atmoboards.forum')
+        expect(scope!.spaceType).toBe('com.atmoboards.forum')
         // authority defaults to `self`, not `*`.
         expect(scope!.authority).toBe('self')
         expect(scope!.skey).toBe('*')
@@ -22,12 +22,30 @@ describe('SpacePermission', () => {
         expect(scope!.manage).toEqual(undefined)
       })
 
+      it('reads the positional space type as spaceType, and prints it positionally', () => {
+        const scope = SpacePermission.fromString(
+          'space:com.atmoboards.forum?action=read',
+        )
+        expect(scope!.spaceType).toBe('com.atmoboards.forum')
+        expect(scope!.toString()).toBe('space:com.atmoboards.forum?action=read')
+      })
+
+      it('accepts spaceType as a named param, but not type', () => {
+        expect(
+          SpacePermission.fromString('space?spaceType=com.atmoboards.forum')
+            ?.spaceType,
+        ).toBe('com.atmoboards.forum')
+        expect(
+          SpacePermission.fromString('space?type=com.atmoboards.forum'),
+        ).toBeNull()
+      })
+
       it('parses wildcard type', () => {
         const scope = SpacePermission.fromString(
           'space:*?authority=did:plc:abc123xyz',
         )
         expect(scope).not.toBeNull()
-        expect(scope!.type).toBe('*')
+        expect(scope!.spaceType).toBe('*')
         expect(scope!.authority).toBe('did:plc:abc123xyz')
       })
 
@@ -43,7 +61,7 @@ describe('SpacePermission', () => {
           'space:com.atmoboards.forum?authority=did:plc:abc123xyz&skey=default&collection=com.atmoboards.thread&action=create&action=update',
         )
         expect(scope).not.toBeNull()
-        expect(scope!.type).toBe('com.atmoboards.forum')
+        expect(scope!.spaceType).toBe('com.atmoboards.forum')
         expect(scope!.authority).toBe('did:plc:abc123xyz')
         expect(scope!.skey).toBe('default')
         expect(scope!.collection).toEqual(['com.atmoboards.thread'])
@@ -154,7 +172,7 @@ describe('SpacePermission', () => {
     describe('scopeNeededFor', () => {
       it('builds a read scope', () => {
         const scope = SpacePermission.scopeNeededFor({
-          type: 'com.atmoboards.forum',
+          spaceType: 'com.atmoboards.forum',
           authority: 'did:plc:abc',
           skey: 'default',
           action: 'read',
@@ -166,7 +184,7 @@ describe('SpacePermission', () => {
 
       it('builds a write scope with collection', () => {
         const scope = SpacePermission.scopeNeededFor({
-          type: 'com.atmoboards.forum',
+          spaceType: 'com.atmoboards.forum',
           authority: 'did:plc:abc',
           skey: 'default',
           collection: 'com.atmoboards.thread',
@@ -179,7 +197,7 @@ describe('SpacePermission', () => {
 
       it('builds a manage scope without asking for record access', () => {
         const scope = SpacePermission.scopeNeededFor({
-          type: 'com.atmoboards.forum',
+          spaceType: 'com.atmoboards.forum',
           authority: 'did:plc:abc',
           skey: 'default',
           manage: 'update',
@@ -201,7 +219,7 @@ describe('SpacePermission', () => {
         [{ manage: 'delete' } as const],
       ])('round-trips %o without widening the grant', (op) => {
         const target: SpacePermissionMatch = {
-          type: 'com.atmoboards.forum',
+          spaceType: 'com.atmoboards.forum',
           authority: 'did:plc:abc',
           skey: 'default',
           ...op,
@@ -214,7 +232,7 @@ describe('SpacePermission', () => {
         if (!('collection' in op)) {
           expect(
             reparsed!.matches({
-              type: 'com.atmoboards.forum',
+              spaceType: 'com.atmoboards.forum',
               authority: 'did:plc:abc',
               skey: 'default',
               action: 'create',
@@ -228,7 +246,7 @@ describe('SpacePermission', () => {
 
   describe('matches', () => {
     const baseTarget = {
-      type: 'com.atmoboards.forum',
+      spaceType: 'com.atmoboards.forum',
       authority: 'did:plc:abc',
       skey: 'default',
     } as const
@@ -355,7 +373,7 @@ describe('SpacePermission', () => {
       expect(
         scope.matches({
           ...baseTarget,
-          type: 'com.example.different',
+          spaceType: 'com.example.different',
           action: 'read',
         }),
       ).toBe(true)
@@ -457,7 +475,7 @@ describe('SpacePermission', () => {
       // Now writes to the declared collections are permitted.
       expect(
         expanded.matches({
-          type: 'com.atmoboards.forum',
+          spaceType: 'com.atmoboards.forum',
           authority: 'did:plc:abc',
           skey: 'default',
           action: 'create',

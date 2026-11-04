@@ -5,22 +5,25 @@ import {
   Secp256k1Keypair,
   formatDidKey,
 } from '@atproto/crypto'
-import { SpaceMacError, decapsulate, encapsulate } from '../src/index.js'
+import type { DidString } from '@atproto/syntax'
+import { SpaceKemError, decapsulate, encapsulate } from '../src/index.js'
 
 const hex = (str: string) => new Uint8Array(Buffer.from(str, 'hex'))
 
 describe('KEM', () => {
   it('derives the same shared secret on both sides', async () => {
     const author = await P256Keypair.create()
-    const { keyShare, sharedSecret } = await encapsulate(author.did())
+    const { keyShare, sharedSecret } = await encapsulate(
+      author.did() as DidString,
+    )
     expect(sharedSecret).toHaveLength(32)
     expect(decapsulate(author, keyShare)).toEqual(sharedSecret)
   })
 
   it('uses a fresh key share per encapsulation', async () => {
     const author = await P256Keypair.create()
-    const a = await encapsulate(author.did())
-    const b = await encapsulate(author.did())
+    const a = await encapsulate(author.did() as DidString)
+    const b = await encapsulate(author.did() as DidString)
     expect(a.keyShare).not.toBe(b.keyShare)
     expect(a.sharedSecret).not.toEqual(b.sharedSecret)
   })
@@ -28,16 +31,22 @@ describe('KEM', () => {
   it('derives a different secret under a different author key', async () => {
     const author = await P256Keypair.create()
     const other = await P256Keypair.create()
-    const { keyShare, sharedSecret } = await encapsulate(author.did())
+    const { keyShare, sharedSecret } = await encapsulate(
+      author.did() as DidString,
+    )
     expect(decapsulate(other, keyShare)).not.toEqual(sharedSecret)
   })
 
   it('rejects a key that is not P-256', async () => {
     const k256 = await Secp256k1Keypair.create()
-    await expect(encapsulate(k256.did())).rejects.toThrow(SpaceMacError)
+    await expect(encapsulate(k256.did() as DidString)).rejects.toThrow(
+      SpaceKemError,
+    )
     const author = await P256Keypair.create()
-    expect(() => decapsulate(author, k256.did())).toThrow(SpaceMacError)
-    expect(() => decapsulate(author, 'did:key:nope')).toThrow(SpaceMacError)
+    expect(() => decapsulate(author, k256.did() as DidString)).toThrow(
+      SpaceKemError,
+    )
+    expect(() => decapsulate(author, 'did:key:nope')).toThrow(SpaceKemError)
   })
 
   // RFC 9180 §A.3.1, DHKEM(P-256, HKDF-SHA256): the syncer's key share is `pkEm`

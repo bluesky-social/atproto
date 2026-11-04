@@ -22,17 +22,25 @@
   },
   "dependencies": {
     "@atproto/car": "workspace:^",
+    "@atproto/common-web": "workspace:^",
     "@atproto/crypto": "workspace:^",
     "@atproto/lex-cbor": "workspace:^",
     "@atproto/lex-data": "workspace:^",
+    "@atproto/lex-json": "workspace:^",
+    "@atproto/lex-schema": "workspace:^",
     "@atproto/syntax": "workspace:^",
     "@noble/hashes": "^1.6.1",
-    "structured-headers": "^1.0.1",
-    "zod": "^3.23.8"
+    "structured-headers": "^1.0.1"
   },
   "devDependencies": {
+    "@atproto/lex-client": "workspace:^",
     "vitest": "^4.1.10"
   },
+  "files": [
+    "./dist",
+    "./README.md",
+    "./CHANGELOG.md"
+  ],
   "type": "module",
   "exports": {
     ".": {

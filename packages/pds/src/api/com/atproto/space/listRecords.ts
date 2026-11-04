@@ -13,8 +13,7 @@ export default function (server: Server, ctx: AppContext) {
       },
     }),
     handler: async ({ params, auth }) => {
-      const { space, repo, collection, limit, cursor, reverse, excludeValues } =
-        params
+      const { space, repo, collection, limit, cursor, excludeValues } = params
 
       assertSpaceRead(auth, space, repo)
       await assertRepoAvailability(ctx, repo, isSpaceUserOrAdmin(auth, repo))
@@ -23,7 +22,6 @@ export default function (server: Server, ctx: AppContext) {
         store.space.listRecords(space, {
           limit,
           cursor,
-          reverse,
           collection,
           excludeValues,
         }),

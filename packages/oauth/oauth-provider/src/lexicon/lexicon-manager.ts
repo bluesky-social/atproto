@@ -82,8 +82,8 @@ export class LexiconManager {
     const nsids = new Set<NsidString>()
     for (const value of scopes) {
       const parsed = SpacePermission.fromString(value)
-      if (parsed && parsed.type !== '*' && !parsed.hasCollections) {
-        nsids.add(parsed.type)
+      if (parsed && parsed.spaceType !== '*' && !parsed.hasCollections) {
+        nsids.add(parsed.spaceType)
       }
     }
     if (nsids.size === 0) return scopes.slice()
@@ -92,8 +92,9 @@ export class LexiconManager {
 
     return scopes.map((value) => {
       const parsed = SpacePermission.fromString(value)
-      if (!parsed || parsed.type === '*' || parsed.hasCollections) return value
-      const space = spaces.get(parsed.type)
+      if (!parsed || parsed.spaceType === '*' || parsed.hasCollections)
+        return value
+      const space = spaces.get(parsed.spaceType)
       if (!isNonEmpty(space?.collections)) return value
       return parsed.withDefaultCollections(space.collections).toString()
     })
@@ -180,8 +181,8 @@ function extractSpaceTypeNsids(scopes: readonly string[]): Set<NsidString> {
   for (const value of scopes) {
     const parsed = SpacePermission.fromString(value)
     if (!parsed) continue
-    if (parsed.type === '*') continue
-    nsids.add(parsed.type)
+    if (parsed.spaceType === '*') continue
+    nsids.add(parsed.spaceType)
   }
   return nsids
 }

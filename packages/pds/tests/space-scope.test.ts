@@ -8,7 +8,7 @@ import type {
 } from '../src/auth-output.js'
 import { AuthScope } from '../src/auth-scope.js'
 
-const SPACE = 'at://did:plc:owner/space/com.atmoboards.forum/default'
+const SPACE = 'at://did:plc:authority/space/com.atmoboards.forum/default'
 const DID = 'did:plc:user' as DidString
 
 const oauthAuth = (scope: string): OAuthOutput => ({
@@ -31,7 +31,7 @@ const credentialAuth = (audience: DidString): SpaceCredentialOutput => ({
   credentials: {
     type: 'space_credential',
     audience,
-    iss: 'did:plc:owner',
+    iss: 'did:plc:authority',
     space: SPACE,
   },
 })
@@ -87,7 +87,7 @@ describe('assertSpaceRead', () => {
     expect(() =>
       assertSpaceRead(
         auth,
-        'at://did:plc:owner/space/com.atmoboards.forum/other',
+        'at://did:plc:authority/space/com.atmoboards.forum/other',
         OTHER_DID,
       ),
     ).toThrow(/not scoped to this space/)

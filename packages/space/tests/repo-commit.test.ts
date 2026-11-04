@@ -2,16 +2,18 @@ import { beforeAll, describe, expect, it } from 'vitest'
 import { randomBytes } from '@atproto/crypto'
 import { type Cid, parseCid } from '@atproto/lex-data'
 import {
-  type Commit,
   type CommitCtx,
-  LTHASH_STATE_BYTES,
   type RecordPathParts,
   RepoCommit,
   type RepoOp,
+  type SpaceCommit,
+  SpaceMacError,
+  SpaceRepoVerificationError,
   computeCommitMac,
-  formatSetHashElement,
   verifyCommit,
 } from '../src/index.js'
+import { LTHASH_STATE_BYTES } from '../src/lthash.js'
+import { formatSetHashElement } from '../src/util.js'
 
 // cids of `{ text: 'hello' }` and `{ text: 'world' }`
 const CID_A = parseCid(
@@ -161,28 +163,32 @@ describe('RepoCommit', () => {
     it('verifies a commit against its MAC', () => {
       const commit = repo.toCommit(ctx)
       const mac = computeCommitMac(sharedSecret, commit)
-      expect(verifyCommit(commit, verifyParams(mac))).toBe(true)
+      expect(() => verifyCommit(commit, verifyParams(mac))).not.toThrow()
       expect(repo.matches(commit)).toBe(true)
     })
 
     it('rejects a MAC under a different shared secret', () => {
       const commit = repo.toCommit(ctx)
       const mac = computeCommitMac(randomBytes(32), commit)
-      expect(verifyCommit(commit, verifyParams(mac))).toBe(false)
-    })
-
-    it.each<[string, Partial<Commit>]>([
-      ['space', { space: 'at://did:example:space/space/app.bsky.group/other' }],
-      ['repo', { repo: 'did:example:bob' }],
-    ])('rejects a commit for a different %s', (_field, override) => {
-      const commit = repo.toCommit(ctx)
-      const mac = computeCommitMac(sharedSecret, commit)
-      expect(verifyCommit(commit, { ...verifyParams(mac), ...override })).toBe(
-        false,
+      expect(() => verifyCommit(commit, verifyParams(mac))).toThrow(
+        SpaceMacError,
       )
     })
 
-    it.each<[string, Partial<Commit>]>([
+    it.each<[string, Partial<SpaceCommit>]>([
+      ['space', { space: 'at://did:example:space/space/app.bsky.group/other' }],
+      ['repo', { repo: 'did:example:bob' }],
+    ])('rejects a commit for a different %s', (field, override) => {
+      const commit = repo.toCommit(ctx)
+      const mac = computeCommitMac(sharedSecret, commit)
+      const params = { ...verifyParams(mac), ...override }
+      expect(() => verifyCommit(commit, params)).toThrow(
+        SpaceRepoVerificationError,
+      )
+      expect(() => verifyCommit(commit, params)).toThrow(field)
+    })
+
+    it.each<[string, Partial<SpaceCommit>]>([
       ['space', { space: 'at://did:example:space/space/app.bsky.group/other' }],
       ['repo', { repo: 'did:example:bob' }],
       ['rev', { rev: '3kbcq3p7ad999' }],
@@ -197,13 +203,15 @@ describe('RepoCommit', () => {
         space: tampered.space,
         repo: tampered.repo,
       }
-      expect(verifyCommit(tampered, params)).toBe(false)
+      expect(() => verifyCommit(tampered, params)).toThrow(SpaceMacError)
     })
 
     it('rejects an unknown commit version', () => {
       const commit = { ...repo.toCommit(ctx), ver: 2 }
       const mac = computeCommitMac(sharedSecret, commit)
-      expect(verifyCommit(commit, verifyParams(mac))).toBe(false)
+      expect(() => verifyCommit(commit, verifyParams(mac))).toThrow(
+        SpaceRepoVerificationError,
+      )
     })
 
     it('matches() is false once the repo changes', () => {

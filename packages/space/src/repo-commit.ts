@@ -1,13 +1,19 @@
 import { type Cid, ui8Equals } from '@atproto/lex-data'
-import type { NsidString, RecordKeyString } from '@atproto/syntax'
+import type {
+  DidString,
+  NsidString,
+  RecordKeyString,
+  SpaceRefString,
+} from '@atproto/syntax'
+import { SpaceRepoVerificationError } from './error.js'
 import { LtHash } from './lthash.js'
 import { verifyCommitMac } from './mac.js'
 import {
   COMMIT_VERSION,
-  type Commit,
   type CommitCtx,
   type RecordPathParts,
   type RepoOp,
+  type SpaceCommit,
 } from './types.js'
 import { formatSetHashElement } from './util.js'
 
@@ -56,7 +62,7 @@ export class RepoCommit {
    * Whether this repo's contents match a commit. Verify the commit first — on its
    * own this says nothing about authenticity.
    */
-  matches(commit: Commit): boolean {
+  matches(commit: SpaceCommit): boolean {
     return ui8Equals(this.setHash.digest(), commit.data)
   }
 
@@ -64,7 +70,7 @@ export class RepoCommit {
    * Build a commit over the current contents. A commit carries no signature: the
    * repo host authenticates it to each syncer with a MAC (see `mac.ts`).
    */
-  toCommit(ctx: CommitCtx): Commit {
+  toCommit(ctx: CommitCtx): SpaceCommit {
     return {
       ver: COMMIT_VERSION,
       repo: ctx.repo,
@@ -77,8 +83,8 @@ export class RepoCommit {
 
 export type VerifyCommitParams = {
   // The space and repo that were requested.
-  space: string
-  repo: string
+  space: SpaceRefString
+  repo: DidString
   // The shared secret for the request, and the MAC from its response header.
   sharedSecret: Uint8Array
   mac: Uint8Array
@@ -88,13 +94,29 @@ export type VerifyCommitParams = {
  * Verify a commit against the MAC its response carried. Once this passes, `data`
  * is trusted as the author's claim about their repo, which is what makes
  * {@link RepoCommit#matches} meaningful.
+ *
+ * @throws {SpaceRepoVerificationError} if the commit is not for the requested
+ * space and repo, or has an unsupported version
+ * @throws {SpaceMacError} if the MAC does not match
  */
-export const verifyCommit = (
-  commit: Commit,
+export function verifyCommit(
+  commit: SpaceCommit,
   params: VerifyCommitParams,
-): boolean => {
-  if (commit.ver !== COMMIT_VERSION) return false
-  if (commit.repo !== params.repo) return false
-  if (commit.space !== params.space) return false
-  return verifyCommitMac(params.sharedSecret, commit, params.mac)
+): void {
+  if (commit.ver !== COMMIT_VERSION) {
+    throw new SpaceRepoVerificationError(
+      `unsupported commit version: ${commit.ver}`,
+    )
+  }
+  if (commit.repo !== params.repo) {
+    throw new SpaceRepoVerificationError(
+      `commit is for another repo: ${commit.repo}`,
+    )
+  }
+  if (commit.space !== params.space) {
+    throw new SpaceRepoVerificationError(
+      `commit is for another space: ${commit.space}`,
+    )
+  }
+  verifyCommitMac(params.sharedSecret, commit, params.mac)
 }

@@ -1,10 +1,7 @@
 import { type NsidString, isValidNsid } from '@atproto/syntax'
 import type { LexiconPermission, LexiconPermissionSet } from '../lib/lexicon.js'
 import { Parser } from '../lib/parser.js'
-import {
-  LexPermissionSyntax,
-  LexSpacePermissionSyntax,
-} from '../lib/syntax-lexicon.js'
+import { LexPermissionSyntax } from '../lib/syntax-lexicon.js'
 import { ScopeStringSyntax } from '../lib/syntax-string.js'
 import {
   type ScopeStringFor,
@@ -85,11 +82,10 @@ export class IncludeScope {
     // their respective ScopeSyntax representations, handling special cases as
     // needed.
 
-    if (isLexPermissionForResource(permission, 'space')) {
-      return new LexSpacePermissionSyntax(permission)
-    }
-
-    if (isLexPermissionForResource(permission, 'repo')) {
+    if (
+      isLexPermissionForResource(permission, 'repo') ||
+      isLexPermissionForResource(permission, 'space')
+    ) {
       return new LexPermissionSyntax(permission)
     }
 
@@ -138,7 +134,7 @@ export class IncludeScope {
     if (permission instanceof SpacePermission) {
       // Only the space type is authority-checked; collections may live under a
       // different authority.
-      return this.isParentAuthorityOf(permission.type)
+      return this.isParentAuthorityOf(permission.spaceType)
     }
 
     throw new TypeError(`Unexpected permission ${permission}`)

@@ -1,10 +1,10 @@
 import type { Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
-import { assertSpaceOwner, fireNotifyWrite } from '../space/util.js'
+import { assertSpaceAuthority, fireNotifyRepoUpdate } from '../space/util.js'
 
 export default function (server: Server, ctx: AppContext) {
-  server.add(com.atproto.memberspace.removeMember, {
+  server.add(com.atproto.memberspace.putMembers, {
     auth: ctx.authVerifier.authorization({
       checkTakedown: true,
       checkDeactivated: true,
@@ -13,13 +13,17 @@ export default function (server: Server, ctx: AppContext) {
       },
     }),
     handler: async ({ input: { body }, auth }) => {
-      const ownerDid = auth.credentials.did
-      const { space, did: memberDid } = body
+      const authorityDid = auth.credentials.did
+      const { space, members } = body
 
-      assertSpaceOwner(auth, space, { manage: 'update' })
+      assertSpaceAuthority(auth, space, { manage: 'update' })
 
-      const commit = await ctx.spacePolicyManager.removeMember(space, memberDid)
-      await fireNotifyWrite(ctx, { space, writerDid: ownerDid, commit })
+      const commit = await ctx.spacePolicyManager.putMembers(space, members)
+      await fireNotifyRepoUpdate(ctx, {
+        space,
+        writerDid: authorityDid,
+        commit,
+      })
     },
   })
 }

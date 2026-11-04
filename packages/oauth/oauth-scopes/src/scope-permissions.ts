@@ -1,10 +1,4 @@
-import {
-  type DidString,
-  type NsidString,
-  type RecordKeyString,
-  SpaceRef,
-  type SpaceRefString,
-} from '@atproto/syntax'
+import { SpaceRef } from '@atproto/syntax'
 import { ScopeMissingError } from './scope-missing-error.js'
 import {
   AccountPermission,
@@ -30,6 +24,8 @@ import {
   SpacePermission,
   type SpacePermissionMatch,
   type SpacePermissionMatchOperation,
+  type SpacePermissionMatchReference,
+  type SpaceTarget,
 } from './scopes/space-permission.js'
 import { ScopesSet } from './scopes-set.js'
 
@@ -105,32 +101,35 @@ export class ScopePermissions {
     }
   }
 
-  public allowsSpace(options: SpacePermissionMatch): boolean {
-    return this.scopes.matches('space', options)
+  public allowsSpace(
+    target: SpaceTarget,
+    operation: SpacePermissionMatchOperation,
+  ): boolean {
+    return this.scopes.matches('space', {
+      ...toMatchReference(target),
+      ...operation,
+    })
   }
-  public assertSpace(options: SpacePermissionMatch): void {
-    if (!this.allowsSpace(options)) {
-      const scope = SpacePermission.scopeNeededFor(options)
+  public assertSpace(
+    target: SpaceTarget,
+    operation: SpacePermissionMatchOperation,
+  ): void {
+    if (!this.allowsSpace(target, operation)) {
+      const scope = SpacePermission.scopeNeededFor({
+        ...toMatchReference(target),
+        ...operation,
+      })
       throw new ScopeMissingError(scope)
     }
   }
-  public assertSpaceRef(
-    space:
-      | {
-          readonly spaceDid: DidString
-          readonly spaceType: NsidString
-          readonly skey: RecordKeyString
-        }
-      | SpaceRefString,
-    operation: SpacePermissionMatchOperation,
-  ): void {
-    const ref = typeof space === 'string' ? SpaceRef.parse(space) : space
+}
 
-    this.assertSpace({
-      ...operation,
-      type: ref.spaceType,
-      authority: ref.spaceDid,
-      skey: ref.skey,
-    })
+function toMatchReference(target: SpaceTarget): SpacePermissionMatchReference {
+  // A string must be a space ref: a record uri within a space is rejected
+  // rather than read as the space it belongs to.
+  const ref = typeof target === 'string' ? SpaceRef.parse(target) : target
+  if ('spaceDid' in ref) {
+    return { spaceType: ref.spaceType, authority: ref.spaceDid, skey: ref.skey }
   }
+  return ref
 }

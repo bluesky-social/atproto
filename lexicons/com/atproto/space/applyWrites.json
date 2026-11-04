@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Apply a batch transaction of creates, updates, and deletes in a permissioned space. Requires auth, implemented by PDS.",
+      "description": "Apply a batch transaction of creates, updates, and deletes to a space repo. Requires auth, implemented by PDS.",
       "input": {
         "encoding": "application/json",
         "schema": {
@@ -13,13 +13,11 @@
           "properties": {
             "space": {
               "type": "string",
-              "format": "space-ref",
-              "description": "Reference to the space."
+              "format": "space-ref"
             },
             "repo": {
               "type": "string",
-              "format": "did",
-              "description": "The DID of the repo to write to (the authenticated member)."
+              "format": "did"
             },
             "validate": {
               "type": "boolean",
@@ -57,12 +55,10 @@
           "name": "SpaceNotFound"
         },
         {
-          "name": "RecordNotFound",
-          "description": "An update or delete targeted a record that does not exist."
+          "name": "RecordNotFound"
         },
         {
-          "name": "RecordAlreadyExists",
-          "description": "A create targeted a collection and rkey that already holds a record."
+          "name": "RecordAlreadyExists"
         }
       ]
     },
@@ -77,8 +73,7 @@
         },
         "rkey": {
           "type": "string",
-          "format": "record-key",
-          "maxLength": 512
+          "format": "record-key"
         },
         "value": {
           "type": "unknown"

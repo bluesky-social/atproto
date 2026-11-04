@@ -4,17 +4,20 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Import a space from a space meta archive, as served by exportSpaceMeta, during account migration, replacing whatever this host holds for that space. The space must be anchored on the authenticated account's DID. Must come before importing the account's own repo in the space with importRepo. Notification registrations, credential revocations, and deleted space tombstones are not carried over. Requires OAuth with manage=create and manage=update grants for the space, implemented by PDS.",
+      "description": "Import a space's state from an archive produced by exportSpaceMeta, for account migration. Must be called before importing the authority's space repo with importRepo. Requires auth as the space authority, implemented by PDS.",
       "input": {
-        "encoding": "application/octet-stream"
+        "encoding": "application/vnd.dasl.star"
       },
       "errors": [
         {
-          "name": "NotSpaceOwner"
+          "name": "NotAuthorized"
         },
         {
-          "name": "UnsupportedPolicy",
-          "description": "The archive's policy, or a value within it, is not one the host implements. A host will not store a policy it cannot enforce."
+          "name": "UnsupportedPolicy"
+        },
+        {
+          "name": "InvalidSpaceMeta",
+          "description": "The STAR file is malformed or fails verification."
         }
       ]
     }

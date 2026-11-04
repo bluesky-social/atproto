@@ -1,0 +1,43 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.memberspace.removeMembers",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Remove members from a space in a single commit. DIDs that are not members are ignored. Requires auth as the space authority, implemented by PDS.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["space", "dids"],
+          "properties": {
+            "space": {
+              "type": "string",
+              "format": "space-ref"
+            },
+            "dids": {
+              "type": "array",
+              "maxLength": 100,
+              "items": {
+                "type": "string",
+                "format": "did"
+              }
+            }
+          }
+        }
+      },
+      "errors": [
+        {
+          "name": "SpaceNotFound"
+        },
+        {
+          "name": "NotAuthorized"
+        },
+        {
+          "name": "PolicyMismatch",
+          "description": "The space does not have a memberspace policy."
+        }
+      ]
+    }
+  }
+}

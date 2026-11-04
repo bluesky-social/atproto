@@ -2,7 +2,7 @@ import { TestNetworkNoAppView } from '@atproto/dev-env'
 import type { NsidString } from '@atproto/lex'
 import { getBlobCidString } from '@atproto/lex-data'
 import { JoseKey } from '@atproto/oauth-provider/provider'
-import { spaceHostAud } from '@atproto/space'
+import { LtHash, spaceHostAud } from '@atproto/space'
 import type { DidString, SpaceRefString } from '@atproto/syntax'
 import { com } from '../../src/lexicons/index.js'
 import {
@@ -26,7 +26,7 @@ const { personalspace, memberspace, managedspace } = com.atproto
 describe('space policy', () => {
   let network: TestNetworkNoAppView
   let sc: SpaceClient
-  let alice: Actor // authority / owner
+  let alice: Actor // authority
   let dan: Actor // co-located with the authority
   let bob: Actor // on pds2
   let carol: Actor // on pds3
@@ -83,7 +83,7 @@ describe('space policy', () => {
         {},
         { headers: alice.headers },
       )
-      expect(listed.spaces.map((s) => s.uri)).toContain(space)
+      expect(listed.spaces.map((s) => s.space)).toContain(space)
     })
 
     it('refuses a duplicate space', async () => {
@@ -125,20 +125,60 @@ describe('space policy', () => {
         { spaceType: TEST_SPACE_TYPE },
         { headers: alice.headers },
       )
-      expect(listed.spaces.map((s) => s.uri)).toContain(space)
-      expect(listed.spaces.map((s) => s.uri)).not.toContain(other)
+      expect(listed.spaces.map((s) => s.space)).toContain(space)
+      expect(listed.spaces.map((s) => s.space)).not.toContain(other)
 
       const otherListed = await alice.client.call(
         com.atproto.space.listSpaces,
         { spaceType: otherType },
         { headers: alice.headers },
       )
-      expect(otherListed.spaces.map((s) => s.uri)).toEqual([other])
+      expect(otherListed.spaces.map((s) => s.space)).toEqual([other])
     })
 
-    it('refuses an owner write until createSpace', async () => {
+    it("lists the state of the caller's repo in each space", async () => {
+      const space = await sc.createSpace(alice, { members: [bob] })
+      const empty = await sc.createSpace(alice, { skey: 'list-state-empty' })
+      await sc.write(alice, space)
+      await sc.write(bob, space)
+      await sc.awaitNotify(
+        () => sc.writerDids(space),
+        (dids) => dids.includes(bob.did),
+      )
+
+      const viewOf = async (actor: Actor, target: SpaceRefString) => {
+        const { spaces } = await actor.client.call(
+          com.atproto.space.listSpaces,
+          { spaceDid: alice.did },
+          { headers: actor.headers },
+        )
+        return spaces.find((s) => s.space === target)
+      }
+
+      for (const actor of [alice, bob]) {
+        const state = await sc.repoState(actor, space)
+        expect(await viewOf(actor, space)).toMatchObject({
+          repoRev: state!.rev,
+          data: new LtHash(state!.setHash!).digest(),
+        })
+      }
+
+      // Only the authority sequences the space, so only it has a space revision.
+      const writers = await alice.pds.ctx.actorStore.read(alice.did, (store) =>
+        store.space.listWriters(space),
+      )
+      expect((await viewOf(alice, space))?.spaceRev).toBe(
+        writers.at(-1)!.spaceRev,
+      )
+      expect((await viewOf(bob, space))?.spaceRev).toBeUndefined()
+
+      // A space nothing has been written to has no repo state to report.
+      expect(await viewOf(alice, empty)).toEqual({ space: empty })
+    })
+
+    it('refuses an authority write until createSpace', async () => {
       // A write to another authority's space creates the repo unchecked, but the
-      // owner's own space must exist first: a write never conjures one.
+      // authority's own space must exist first: a write never conjures one.
       const skey = 'lazy'
       const space =
         `at://${alice.did}/space/${TEST_SPACE_TYPE}/${skey}` as SpaceRefString
@@ -159,7 +199,7 @@ describe('space policy', () => {
   })
 
   describe('memberspace members', () => {
-    it('adds and removes members, and the owner is not one of them', async () => {
+    it('adds and removes members, and the authority is not one of them', async () => {
       const space = await sc.createSpace(alice, { members: [dan] })
       await sc.putMember(alice, space, bob, { read: true, write: false })
 
@@ -180,25 +220,17 @@ describe('space policy', () => {
       expect(after.members.map((m) => m.did)).not.toContain(bob.did)
     })
 
-    it('refuses membership changes from a non-owner member', async () => {
+    it('refuses membership changes from a member other than the authority', async () => {
       const space = await sc.createSpace(alice, { members: [dan] })
-      await expect(
-        dan.client.call(
-          com.atproto.memberspace.putMember,
-          { space, did: carol.did, read: true, write: true },
-          { headers: dan.headers },
-        ),
-      ).rejects.toMatchObject({ error: 'NotSpaceOwner' })
-      await expect(
-        dan.client.call(
-          com.atproto.memberspace.removeMember,
-          { space, did: dan.did },
-          { headers: dan.headers },
-        ),
-      ).rejects.toMatchObject({ error: 'NotSpaceOwner' })
+      await expect(sc.putMember(dan, space, carol)).rejects.toMatchObject({
+        error: 'NotAuthorized',
+      })
+      await expect(sc.removeMember(dan, space, dan)).rejects.toMatchObject({
+        error: 'NotAuthorized',
+      })
     })
 
-    it('refuses listMembers to a space credential and to a non-owner member', async () => {
+    it('refuses listMembers to a space credential and to a member other than the authority', async () => {
       const space = await sc.createSpace(alice, { members: [carol, dan] })
 
       // Carol is a member, hosted elsewhere: a credential reads the space's data,
@@ -217,10 +249,10 @@ describe('space policy', () => {
           { space },
           { headers: dan.headers },
         ),
-      ).rejects.toMatchObject({ error: 'NotSpaceOwner' })
+      ).rejects.toMatchObject({ error: 'NotAuthorized' })
     })
 
-    it('putMember replaces both access values', async () => {
+    it('putMembers replaces both access values', async () => {
       const space = await sc.createSpace(alice)
       await sc.putMember(alice, space, bob, { read: true, write: false })
       await sc.putMember(alice, space, bob, { read: false, write: true })
@@ -250,7 +282,7 @@ describe('space policy', () => {
       })
     })
 
-    it('removeMember drops the member from the writer set', async () => {
+    it('removeMembers drops the member from the writer set', async () => {
       const space = await sc.createSpace(alice, { members: [dan] })
       await sc.write(dan, space, { text: 'from a member' })
       expect(await sc.writerDids(space)).toEqual([dan.did])
@@ -259,7 +291,7 @@ describe('space policy', () => {
       expect(await sc.writerDids(space)).toEqual([])
     })
 
-    it('putMember drops the member from the writer set when it revokes write', async () => {
+    it('putMembers drops the member from the writer set when it revokes write', async () => {
       const space = await sc.createSpace(alice, { members: [dan] })
       await sc.write(dan, space, { text: 'from a member' })
 
@@ -268,6 +300,76 @@ describe('space policy', () => {
 
       await sc.putMember(alice, space, dan, { read: true, write: false })
       expect(await sc.writerDids(space)).toEqual([])
+    })
+
+    it('applies a batch of member changes in a single commit', async () => {
+      const space = await sc.createSpace(alice, {
+        policy: memberspace.policy.$build({ publishMembers: true }),
+      })
+      const memberOps = async () => {
+        const { ops } = await alice.client.call(
+          com.atproto.space.listRepoOps,
+          { space, repo: alice.did },
+          { headers: alice.headers },
+        )
+        return ops.filter((op) => op.collection === memberspace.member.$type)
+      }
+
+      await alice.client.call(
+        com.atproto.memberspace.putMembers,
+        {
+          space,
+          members: [
+            { did: bob.did, read: true, write: true },
+            { did: carol.did, read: true, write: false },
+          ],
+        },
+        { headers: alice.headers },
+      )
+      const added = await memberOps()
+      expect(added).toHaveLength(2)
+      expect(added[0].rev).toBe(added[1].rev)
+
+      await alice.client.call(
+        com.atproto.memberspace.removeMembers,
+        { space, dids: [bob.did, carol.did] },
+        { headers: alice.headers },
+      )
+      const removed = (await memberOps()).filter((op) => op.cid === null)
+      expect(removed).toHaveLength(2)
+      expect(removed[0].rev).toBe(removed[1].rev)
+      expect((await listMembers(space)).members).toEqual([])
+    })
+
+    it('takes the last entry for a member listed twice', async () => {
+      const space = await sc.createSpace(alice, {
+        policy: memberspace.policy.$build({ publishMembers: true }),
+      })
+      await alice.client.call(
+        com.atproto.memberspace.putMembers,
+        {
+          space,
+          members: [
+            { did: bob.did, read: true, write: true },
+            { did: bob.did, read: true, write: false },
+          ],
+        },
+        { headers: alice.headers },
+      )
+      expect((await listMembers(space)).members).toEqual([
+        { did: bob.did, read: true, write: false },
+      ])
+    })
+
+    it('ignores a DID that is not a member, leaving it in the writer set', async () => {
+      const space = await sc.createSpace(alice, {
+        policy: memberspace.policy.$build({ publicWrite: true }),
+      })
+      await sc.write(dan, space, { text: 'from a non-member' })
+      expect(await sc.writerDids(space)).toEqual([dan.did])
+
+      await sc.removeMember(alice, space, dan)
+      expect(await sc.writerDids(space)).toEqual([dan.did])
     })
   })
 
@@ -280,7 +382,7 @@ describe('space policy', () => {
       })
 
       const got = await getSpace(space)
-      expect(got.uri).toBe(space)
+      expect(got.space).toBe(space)
       expect(got.policy).toEqual({
         $type: 'com.atproto.managedspace.policy',
         managingApp: 'did:web:example.com#forum',
@@ -334,7 +436,7 @@ describe('space policy', () => {
       expect(members.members.map((m) => m.did)).toEqual([bob.did])
     })
 
-    it('refuses an update from a non-owner', async () => {
+    it('refuses an update from an account other than the authority', async () => {
       const space = await sc.createSpace(alice, { members: [bob] })
       await expect(
         alice.client.call(
@@ -355,15 +457,15 @@ describe('space policy', () => {
       ).rejects.toMatchObject({ error: 'UnsupportedPolicy' })
     })
 
-    it('refuses a managingApp that does not name a service', async () => {
-      const space = await sc.createSpace(alice)
-      await expect(
-        updateSpace(
-          space,
-          managedspace.policy.$build({ managingApp: 'not-a-did-at-all' }),
-        ),
-      ).rejects.toThrow(/must be a DID/)
-    })
+    it.each(['not-a-did-at-all', 'did:web:example.com'])(
+      'refuses a managingApp that does not name a service (%s)',
+      async (managingApp) => {
+        const space = await sc.createSpace(alice)
+        await expect(
+          updateSpace(space, managedspace.policy.$build({ managingApp })),
+        ).rejects.toThrow(/must be a did#serviceId reference/)
+      },
+    )
 
     it('refuses the policy to a member with a space credential', async () => {
       // The policy is the authority's own state. Readers see it only if the
@@ -387,7 +489,7 @@ describe('space policy', () => {
           { space },
           { headers: dan.headers },
         ),
-      ).rejects.toMatchObject({ error: 'NotSpaceOwner' })
+      ).rejects.toMatchObject({ error: 'NotAuthorized' })
     })
 
     it('refuses to answer for a space this host does not govern', async () => {
@@ -397,7 +499,7 @@ describe('space policy', () => {
 
       // The error names the space rather than leaking it as a missing repo.
       await expect(
-        cred.clientFor(bob.pds).call(com.atproto.space.listRepos, { space }),
+        cred.clientFor(bob.pds).call(com.atproto.space.listWriters, { space }),
       ).rejects.toMatchObject({ error: 'SpaceNotFound' })
       await expect(
         bob.client.call(
@@ -517,17 +619,18 @@ describe('space policy', () => {
         policy: memberspace.policy.$build({ publishMembers: true }),
       })
       const did = 'did:web:localhost%3A2583' as DidString
-      const member = { space, did, read: true, write: true }
-      await alice.client.call(com.atproto.memberspace.putMember, member, {
-        headers: alice.headers,
-      })
+      await alice.client.call(
+        com.atproto.memberspace.putMembers,
+        { space, members: [{ did, read: true, write: true }] },
+        { headers: alice.headers },
+      )
       expect(await publishedMembers(space)).toMatchObject([
         { did: 'did:web:localhost:2583' },
       ])
 
       await alice.client.call(
-        com.atproto.memberspace.removeMember,
-        { space, did },
+        com.atproto.memberspace.removeMembers,
+        { space, dids: [did] },
         { headers: alice.headers },
       )
       expect(await publishedMembers(space)).toEqual([])
@@ -933,7 +1036,7 @@ describe('space policy', () => {
       it('admits a user the managing app authorizes', async () => {
         await using app = await MockService.create(network, {
           serviceId: 'atproto_forum',
-          respond: () => ({ status: 200, body: { authorized: true } }),
+          respond: () => ({ status: 200, body: { read: true, write: true } }),
         })
         const space = await spaceWith(app)
 
@@ -941,22 +1044,33 @@ describe('space policy', () => {
         expect(cred.credential).toBeDefined()
 
         // It was actually consulted, and told who was asking.
-        const asked = app.callsTo('com.atproto.managedspace.checkUserAccess')
+        const asked = app.callsTo('com.atproto.managedspace.checkAccess')
         expect(asked).toHaveLength(1)
-        expect(asked[0].body).toMatchObject({
-          space,
-          user: carol.did,
-          access: 'read',
-        })
+        expect(asked[0].body).toEqual({ space, repo: carol.did })
         // Addressed with service auth from the authority, so the app can tell
         // who is asking it.
         expect(asked[0].auth).toMatch(/^Bearer /)
       })
 
+      it('asks the managing app about a request with no delegation token', async () => {
+        await using app = await MockService.create(network, {
+          serviceId: 'atproto_forum',
+          respond: () => ({ status: 200, body: { read: true, write: false } }),
+        })
+        const space = await spaceWith(app)
+
+        const cred = await sc.publicCredential(space)
+        expect(cred.credential).toBeDefined()
+
+        const asked = app.callsTo('com.atproto.managedspace.checkAccess')
+        expect(asked).toHaveLength(1)
+        expect(asked[0].body).toEqual({ space })
+      })
+
       it('refuses a user the managing app declines', async () => {
         await using app = await MockService.create(network, {
           serviceId: 'atproto_forum',
-          respond: () => ({ status: 200, body: { authorized: false } }),
+          respond: () => ({ status: 200, body: { read: false, write: false } }),
         })
         const space = await spaceWith(app)
 
@@ -990,10 +1104,12 @@ describe('space policy', () => {
         })
       })
 
-      it('records a writer the managing app admits', async () => {
+      it('records a writer the managing app admits, even one it does not let read', async () => {
+        // Read and write are answered together, and each check takes the one it
+        // needs, so an app can admit writers who may not read the space.
         await using app = await MockService.create(network, {
           serviceId: 'atproto_forum',
-          respond: () => ({ status: 200, body: { authorized: true } }),
+          respond: () => ({ status: 200, body: { read: false, write: true } }),
         })
         const space = await spaceWith(app)
 
@@ -1004,8 +1120,13 @@ describe('space policy', () => {
         )
         expect(dids).toContain(bob.did)
         expect(
-          app.callsTo('com.atproto.managedspace.checkUserAccess')[0].body,
-        ).toMatchObject({ space, user: bob.did, access: 'write' })
+          app.callsTo('com.atproto.managedspace.checkAccess')[0].body,
+        ).toEqual({ space, repo: bob.did })
+
+        const token = await sc.delegationTokenFor(bob, space)
+        await expect(sc.mintCredential(space, token)).rejects.toMatchObject({
+          error: 'SpaceNotFound',
+        })
       })
     })
   })
@@ -1016,6 +1137,25 @@ describe('space policy', () => {
    * so tests drain it rather than polling.
    */
   describe('notify registration', () => {
+    // Withdrawal is signed by the service itself, not made with a space credential.
+    const unregister = async (
+      signer: MockService,
+      space: SpaceRefString,
+      service: string,
+      opts: { iss?: string; aud?: string } = {},
+    ) =>
+      alice.client.call(
+        com.atproto.space.unregisterNotify,
+        { space, service },
+        {
+          headers: await signer.serviceAuthHeaders({
+            iss: opts.iss,
+            aud: opts.aud ?? spaceHostAud(alice.did),
+            lxm: com.atproto.space.unregisterNotify.$lxm,
+          }),
+        },
+      )
+
     it('registers, forwards writes, and stops once withdrawn', async () => {
       await using syncer = await MockService.create(network, {
         serviceId: 'atproto_space_syncer',
@@ -1035,32 +1175,76 @@ describe('space policy', () => {
       await sc.write(bob, space, { text: 'forwarded' })
       // The authority's fan-out is queued so the writer's PDS isn't kept waiting.
       await sc.awaitNotify(
-        async () => syncer.callsTo('com.atproto.space.notifyWrite'),
+        async () => syncer.callsTo('com.atproto.space.notifyRepoUpdate'),
         (calls) => calls.length > 0,
       )
       await network.pds.ctx.backgroundQueue.processAll()
 
-      const delivered = syncer.callsTo('com.atproto.space.notifyWrite')
+      const delivered = syncer.callsTo('com.atproto.space.notifyRepoUpdate')
       expect(delivered.length).toBeGreaterThan(0)
       expect(delivered[0].body).toMatchObject({ space, repo: bob.did })
 
       // Withdrawn: no further deliveries.
-      await asSyncer.call(com.atproto.space.unregisterNotify, {
-        space,
-        service: syncer.serviceRef,
-      })
-      const before = syncer.callsTo('com.atproto.space.notifyWrite').length
+      await unregister(syncer, space, syncer.serviceRef)
+      const before = syncer.callsTo('com.atproto.space.notifyRepoUpdate').length
       await sc.write(bob, space, { text: 'not forwarded' })
       await network.pds.ctx.backgroundQueue.processAll()
-      expect(syncer.callsTo('com.atproto.space.notifyWrite')).toHaveLength(
+      expect(syncer.callsTo('com.atproto.space.notifyRepoUpdate')).toHaveLength(
         before,
       )
 
       // Unregistering again is idempotent.
-      await asSyncer.call(com.atproto.space.unregisterNotify, {
+      await unregister(syncer, space, syncer.serviceRef)
+    })
+
+    it('refuses a withdrawal not signed by the registered service', async () => {
+      await using syncer = await MockService.create(network, {
+        serviceId: 'atproto_space_syncer',
+      })
+      await using other = await MockService.create(network, {
+        serviceId: 'atproto_space_syncer',
+      })
+      const space = await sc.createSpace(alice, { members: [bob, carol] })
+      const asSyncer = (await sc.credentialFor(carol, space)).clientFor(
+        alice.pds,
+      )
+      await asSyncer.call(com.atproto.space.registerNotify, {
         space,
         service: syncer.serviceRef,
       })
+
+      // A space credential names no service, so it can't withdraw one.
+      await expect(
+        asSyncer.call(com.atproto.space.unregisterNotify, {
+          space,
+          service: syncer.serviceRef,
+        }),
+      ).rejects.toMatchObject({ error: 'MissingJwt' })
+      // Nor can another service, even one holding the same service id.
+      await expect(
+        unregister(other, space, syncer.serviceRef),
+      ).rejects.toMatchObject({ error: 'Forbidden' })
+      // Nor can the right service, addressed to an authority other than the space's.
+      await expect(
+        unregister(syncer, space, syncer.serviceRef, { aud: bob.did }),
+      ).rejects.toMatchObject({ error: 'Forbidden' })
+
+      await sc.write(bob, space, { text: 'still forwarded' })
+      await sc.awaitNotify(
+        async () => syncer.callsTo('com.atproto.space.notifyRepoUpdate'),
+        (calls) => calls.length > 0,
+      )
+      await network.pds.ctx.backgroundQueue.processAll()
+      const before = syncer.callsTo('com.atproto.space.notifyRepoUpdate').length
+      expect(before).toBeGreaterThan(0)
+
+      // The service's bare DID signs for every service under it.
+      await unregister(syncer, space, syncer.serviceRef, { iss: syncer.did })
+      await sc.write(bob, space, { text: 'not forwarded' })
+      await network.pds.ctx.backgroundQueue.processAll()
+      expect(syncer.callsTo('com.atproto.space.notifyRepoUpdate')).toHaveLength(
+        before,
+      )
     })
 
     it('stops delivering to a registration past its expiry, and resumes on renewal', async () => {
@@ -1088,7 +1272,9 @@ describe('space policy', () => {
 
       await sc.write(bob, space, { text: 'after expiry' })
       await network.pds.ctx.backgroundQueue.processAll()
-      expect(syncer.callsTo('com.atproto.space.notifyWrite')).toHaveLength(0)
+      expect(syncer.callsTo('com.atproto.space.notifyRepoUpdate')).toHaveLength(
+        0,
+      )
 
       // Renewing brings it back — the row was withheld, not dropped.
       await asSyncer.call(com.atproto.space.registerNotify, {
@@ -1097,12 +1283,12 @@ describe('space policy', () => {
       })
       await sc.write(bob, space, { text: 'after renewal' })
       await sc.awaitNotify(
-        async () => syncer.callsTo('com.atproto.space.notifyWrite'),
+        async () => syncer.callsTo('com.atproto.space.notifyRepoUpdate'),
         (calls) => calls.length > 0,
       )
       await network.pds.ctx.backgroundQueue.processAll()
       expect(
-        syncer.callsTo('com.atproto.space.notifyWrite').length,
+        syncer.callsTo('com.atproto.space.notifyRepoUpdate').length,
       ).toBeGreaterThan(0)
     })
 
@@ -1115,6 +1301,50 @@ describe('space policy', () => {
           service: 'did:web:nonexistent.invalid#syncer',
         }),
       ).rejects.toMatchObject({ error: 'ServiceNotResolvable' })
+    })
+
+    it('refuses a service that is not a did#serviceId reference', async () => {
+      await using syncer = await MockService.create(network, {
+        serviceId: 'atproto_space_syncer',
+      })
+      const space = await sc.createSpace(alice, { members: [carol] })
+      const cred = await sc.credentialFor(carol, space)
+      await expect(
+        cred.clientFor(alice.pds).call(com.atproto.space.registerNotify, {
+          space,
+          service: syncer.did,
+        }),
+      ).rejects.toThrow(/did#serviceId/)
+    })
+
+    it('unregisters a service by its bare DID', async () => {
+      await using syncer = await MockService.create(network, {
+        serviceId: 'atproto_space_syncer',
+      })
+      await using other = await MockService.create(network, {
+        serviceId: 'atproto_space_syncer',
+      })
+      const space = await sc.createSpace(alice, { members: [carol] })
+      const cred = await sc.credentialFor(carol, space)
+      const asSyncer = cred.clientFor(alice.pds)
+      for (const service of [syncer, other]) {
+        await asSyncer.call(com.atproto.space.registerNotify, {
+          space,
+          service: service.serviceRef,
+        })
+      }
+
+      // Withdrawing every service under a DID takes the DID itself as issuer.
+      await expect(unregister(syncer, space, syncer.did)).rejects.toMatchObject(
+        { error: 'Forbidden' },
+      )
+      await unregister(syncer, space, syncer.did, { iss: syncer.did })
+
+      const registered = await alice.pds.ctx.actorStore.read(
+        alice.did,
+        (store) => store.space.getCredentialRecipients(space),
+      )
+      expect(registered.map((r) => r.service)).toEqual([other.serviceRef])
     })
   })
 
@@ -1137,7 +1367,7 @@ describe('space policy', () => {
         rkey: 'doomed',
         record: {
           $type: TEST_COLLECTION,
-          text: 'owner record',
+          text: 'authority record',
           image: uploaded.blob,
         },
       })
@@ -1169,7 +1399,7 @@ describe('space policy', () => {
     })
 
     it('answers SpaceDeleted on credential renewal', async () => {
-      // The durable drop signal: a syncer that missed notifySpaceDeleted learns
+      // The durable drop signal: a syncer that missed notifySpaceStatus learns
       // the space is gone here, and can tell it apart from an authority that is
       // merely down.
       const space = await sc.createSpace(alice, { members: [carol] })
@@ -1208,7 +1438,7 @@ describe('space policy', () => {
       await deleteSpace(space)
       await network.pds.ctx.backgroundQueue.processAll()
 
-      const delivered = syncer.callsTo('com.atproto.space.notifySpaceDeleted')
+      const delivered = syncer.callsTo('com.atproto.space.notifySpaceStatus')
       expect(delivered).toHaveLength(1)
       expect(delivered[0].body).toMatchObject({ space })
     })

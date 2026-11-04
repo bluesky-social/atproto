@@ -63,6 +63,19 @@ export const getSigningDidKey = (doc: DidDocument): string | undefined => {
   return `did:key:${parsed.publicKeyMultibase}`
 }
 
+// The key-encapsulation (KEM) key that permissioned spaces derive MAC secrets from.
+export const getKemKey = (
+  doc: DidDocument,
+): { type: string; publicKeyMultibase: string } | undefined => {
+  return getVerificationMaterial(doc, 'atproto_kem')
+}
+
+export const getKemDidKey = (doc: DidDocument): string | undefined => {
+  const parsed = getKemKey(doc)
+  if (!parsed) return
+  return `did:key:${parsed.publicKeyMultibase}`
+}
+
 export const getPdsEndpoint = (doc: DidDocument): string | undefined => {
   return getServiceEndpoint(doc, {
     id: '#atproto_pds',

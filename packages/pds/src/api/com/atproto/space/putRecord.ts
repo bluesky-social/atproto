@@ -7,7 +7,7 @@ import {
   spaceRecordUri,
 } from '../../../../repo/index.js'
 import { assertNotPolicyRecord } from '../../../../space-policy/publish.js'
-import { fireNotifyWrite } from './util.js'
+import { fireNotifyRepoUpdate } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.space.putRecord, {
@@ -49,7 +49,7 @@ export default function (server: Server, ctx: AppContext) {
           const uri = spaceRecordUri(space, did, collection, rkey)
           const exists = await actorTxn.space.hasRecord(uri.toString())
 
-          auth.credentials.permissions?.assertSpaceRef(space, {
+          auth.credentials.permissions?.assertSpace(space, {
             action: exists ? 'update' : 'create',
             collection,
           })
@@ -71,7 +71,7 @@ export default function (server: Server, ctx: AppContext) {
         },
       )
 
-      await fireNotifyWrite(ctx, { space, writerDid: did, commit })
+      await fireNotifyRepoUpdate(ctx, { space, writerDid: did, commit })
 
       return {
         encoding: 'application/json' as const,

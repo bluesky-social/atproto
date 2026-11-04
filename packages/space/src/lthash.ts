@@ -18,7 +18,7 @@ export class LtHash {
 
   constructor(state?: Uint8Array | null) {
     if (state && state.length !== LTHASH_STATE_BYTES) {
-      throw new Error(
+      throw new TypeError(
         `LtHash state must be ${LTHASH_STATE_BYTES} bytes, got ${state.length}`,
       )
     }
@@ -69,7 +69,7 @@ export class LtHash {
 }
 
 // Expand to 1024 u16 lanes with BLAKE3 in XOF mode.
-const expand = (element: string): Uint16Array => {
+function expand(element: string): Uint16Array {
   const expanded = blake3(new TextEncoder().encode(element), {
     dkLen: LTHASH_STATE_BYTES,
   })

@@ -2,7 +2,7 @@ import { ForbiddenError, type Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
 import { PUBLISHED_COLLECTIONS } from '../../../../space-policy/publish.js'
-import { fireNotifyWrite, toSpaceRef } from './util.js'
+import { fireNotifyRepoUpdate, toSpaceRef } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.space.clearRecords, {
@@ -42,7 +42,7 @@ export default function (server: Server, ctx: AppContext) {
         const collections = await actorTxn.space.listCollections(space)
         for (const collection of collections) {
           if (keep.includes(collection)) continue
-          auth.credentials.permissions?.assertSpaceRef(space, {
+          auth.credentials.permissions?.assertSpace(space, {
             action: 'delete',
             collection,
           })
@@ -50,7 +50,7 @@ export default function (server: Server, ctx: AppContext) {
         return actorTxn.space.clearRecords(space, keep)
       })
 
-      await fireNotifyWrite(ctx, { space, writerDid: did, commit })
+      await fireNotifyRepoUpdate(ctx, { space, writerDid: did, commit })
 
       return {
         encoding: 'application/json' as const,

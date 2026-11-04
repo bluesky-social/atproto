@@ -66,10 +66,10 @@ export type StarReader = AsyncDisposable & {
  * A profile can set a lower `maxValueLength` than STAR's own. Lengths are checked
  * before a frame is read, so an oversized frame is never buffered.
  */
-export const readStar = async (
+export async function readStar(
   input: AsyncIterable<Uint8Array> | Iterable<Uint8Array>,
   opts: { maxValueLength?: number } = {},
-): Promise<StarReader> => {
+): Promise<StarReader> {
   const reader = createBytesReader(input)
   try {
     const magic = await reader.read(STAR_MAGIC.length)

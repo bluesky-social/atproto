@@ -9,9 +9,10 @@ import {
 } from 'structured-headers'
 import { hmacSha256 } from '@atproto/crypto'
 import { type Cid, fromBase64, ui8Concat } from '@atproto/lex-data'
+import { type DidString, isValidDid } from '@atproto/syntax'
 import { timingSafeEqual, toPaddedBase64, uint16be, utf8 } from './bytes.js'
 import { SpaceMacError } from './error.js'
-import { COMMIT_VERSION, type Commit } from './types.js'
+import { COMMIT_VERSION, type SpaceCommit } from './types.js'
 
 /**
  * Space repos authenticate commits and records with a MAC rather than a
@@ -29,9 +30,18 @@ export type MacType = typeof COMMIT_MAC_TYPE | typeof RECORD_MAC_TYPE
 export const WANT_MAC_HEADER = 'atproto-space-want-mac'
 export const MAC_HEADER = 'atproto-space-mac'
 
+/** The methods whose responses a repo host authenticates with a MAC, by NSID. */
+export const MAC_TYPE_BY_METHOD: Readonly<Record<string, MacType>> = {
+  'com.atproto.space.getLatestCommit': COMMIT_MAC_TYPE,
+  'com.atproto.space.getRepo': COMMIT_MAC_TYPE,
+  'com.atproto.space.listRepoOps': COMMIT_MAC_TYPE,
+  'com.atproto.space.getRecord': RECORD_MAC_TYPE,
+}
+
 // The version a MAC type is currently on. Commits share theirs with the commit format.
-const macVersion = (type: MacType): number =>
-  type === COMMIT_MAC_TYPE ? COMMIT_VERSION : RECORD_MAC_VERSION
+function macVersion(type: MacType): number {
+  return type === COMMIT_MAC_TYPE ? COMMIT_VERSION : RECORD_MAC_VERSION
+}
 
 // ---- MACs ----
 
@@ -44,10 +54,10 @@ const macVersion = (type: MacType): number =>
  * mac = HMAC-SHA256(shared_secret, context || data)
  * ```
  */
-export const computeCommitMac = (
+export function computeCommitMac(
   sharedSecret: Uint8Array,
-  commit: Commit,
-): Uint8Array => {
+  commit: SpaceCommit,
+): Uint8Array {
   const context = ui8Concat([
     utf8(`${COMMIT_MAC_TYPE}-v${COMMIT_VERSION}`),
     lengthPrefixed(commit.space),
@@ -57,12 +67,14 @@ export const computeCommitMac = (
   return hmacSha256(sharedSecret, ui8Concat([context, commit.data]))
 }
 
-export const verifyCommitMac = (
+export function verifyCommitMac(
   sharedSecret: Uint8Array,
-  commit: Commit,
+  commit: SpaceCommit,
   mac: Uint8Array,
-): boolean => {
-  return timingSafeEqual(computeCommitMac(sharedSecret, commit), mac)
+): void {
+  if (!timingSafeEqual(computeCommitMac(sharedSecret, commit), mac)) {
+    throw new SpaceMacError('commit MAC does not match')
+  }
 }
 
 /**
@@ -72,11 +84,11 @@ export const verifyCommitMac = (
  * mac = HMAC-SHA256(shared_secret, context || record_cid_bytes)
  * ```
  */
-export const computeRecordMac = (
+export function computeRecordMac(
   sharedSecret: Uint8Array,
   uri: string,
   cid: Cid,
-): Uint8Array => {
+): Uint8Array {
   const context = ui8Concat([
     utf8(`${RECORD_MAC_TYPE}-v${RECORD_MAC_VERSION}`),
     lengthPrefixed(uri),
@@ -84,16 +96,18 @@ export const computeRecordMac = (
   return hmacSha256(sharedSecret, ui8Concat([context, cid.bytes]))
 }
 
-export const verifyRecordMac = (
+export function verifyRecordMac(
   sharedSecret: Uint8Array,
   uri: string,
   cid: Cid,
   mac: Uint8Array,
-): boolean => {
-  return timingSafeEqual(computeRecordMac(sharedSecret, uri, cid), mac)
+): void {
+  if (!timingSafeEqual(computeRecordMac(sharedSecret, uri, cid), mac)) {
+    throw new SpaceMacError('record MAC does not match')
+  }
 }
 
-const lengthPrefixed = (str: string): Uint8Array => {
+function lengthPrefixed(str: string): Uint8Array {
   const bytes = utf8(str)
   return ui8Concat([uint16be(bytes.length), bytes])
 }
@@ -104,10 +118,7 @@ const lengthPrefixed = (str: string): Uint8Array => {
  * The `Atproto-Space-Want-Mac` request header, e.g.
  * `type="atproto-space-repo", ver=1, key_share="did:key:zDna..."`
  */
-export const formatWantMacHeader = (
-  type: MacType,
-  keyShare: string,
-): string => {
+export function formatWantMacHeader(type: MacType, keyShare: string): string {
   return serializeDictionary(
     new Map([
       ['type', [type, new Map()]],
@@ -118,13 +129,13 @@ export const formatWantMacHeader = (
 }
 
 /** Parse a request header, returning its `key_share`. */
-export const parseWantMacHeader = (
+export function parseWantMacHeader(
   value: string | string[] | undefined,
   type: MacType,
-): string => {
+): DidString {
   const fields = parseMacDictionary(value, type)
   const keyShare = fields.get('key_share')
-  if (typeof keyShare !== 'string') {
+  if (!isValidDid(keyShare)) {
     throw new SpaceMacError('missing or malformed key_share')
   }
   return keyShare
@@ -134,7 +145,7 @@ export const parseWantMacHeader = (
  * The `Atproto-Space-Mac` response header, e.g.
  * `type="atproto-space-repo", ver=1, mac=:AAECAwQF...:`
  */
-export const formatMacHeader = (type: MacType, mac: Uint8Array): string => {
+export function formatMacHeader(type: MacType, mac: Uint8Array): string {
   return serializeDictionary(
     new Map([
       ['type', [type, new Map()]],
@@ -145,10 +156,10 @@ export const formatMacHeader = (type: MacType, mac: Uint8Array): string => {
 }
 
 /** Parse a response header, returning its MAC. */
-export const parseMacHeader = (
-  value: string | string[] | undefined,
+export function parseMacHeader(
+  value: string | null | undefined,
   type: MacType,
-): Uint8Array => {
+): Uint8Array {
   const fields = parseMacDictionary(value, type)
   const mac = fields.get('mac')
   if (mac === undefined || !isByteSequence(mac)) {
@@ -158,10 +169,10 @@ export const parseMacHeader = (
 }
 
 // Parse either header and check its `type` and `ver`, flattening it to bare values.
-const parseMacDictionary = (
-  value: string | string[] | undefined,
+function parseMacDictionary(
+  value: string | string[] | null | undefined,
   type: MacType,
-): Map<string, BareItem> => {
+): Map<string, BareItem> {
   if (typeof value !== 'string') {
     throw new SpaceMacError('missing or malformed MAC header')
   }

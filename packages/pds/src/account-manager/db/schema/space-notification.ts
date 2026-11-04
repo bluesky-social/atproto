@@ -10,7 +10,7 @@ export interface SpaceNotificationRetry {
   expiresAt: number
 }
 
-export interface SpaceDeletedNotificationRetry {
+export interface SpaceStatusNotificationRetry {
   space: SpaceRefString
   service: string
   attempts: number
@@ -26,6 +26,6 @@ export interface SpaceNotificationLease {
 
 export type PartialDB = {
   space_notification_retry: SpaceNotificationRetry
-  space_deleted_notification_retry: SpaceDeletedNotificationRetry
+  space_status_notification_retry: SpaceStatusNotificationRetry
   space_notification_lease: SpaceNotificationLease
 }

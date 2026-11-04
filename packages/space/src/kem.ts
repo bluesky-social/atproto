@@ -6,8 +6,9 @@ import {
   parseDidKey,
 } from '@atproto/crypto'
 import { ui8Concat } from '@atproto/lex-data'
+import type { DidString } from '@atproto/syntax'
 import { uint16be, utf8 } from './bytes.js'
-import { SpaceMacError } from './error.js'
+import { SpaceKemError } from './error.js'
 
 /**
  * The key encapsulation mechanism (KEM) that establishes the shared secret a
@@ -17,7 +18,7 @@ import { SpaceMacError } from './error.js'
 
 export type Encapsulation = {
   // The syncer's ephemeral public key as a did:key, sent in the request header.
-  keyShare: string
+  keyShare: DidString
   sharedSecret: Uint8Array
 }
 
@@ -25,13 +26,13 @@ export type Encapsulation = {
  * Syncer side: generate a fresh ephemeral keypair and derive a shared secret
  * against the author's `#atproto_kem` key. Use a new one for every request.
  */
-export const encapsulate = async (
-  authorKemKey: string,
-): Promise<Encapsulation> => {
+export async function encapsulate(
+  authorKemKey: DidString,
+): Promise<Encapsulation> {
   const authorKeyBytes = p256KeyBytes(authorKemKey)
   const ephemeral = await P256Keypair.create()
   const dh = ephemeral.ecdh(authorKeyBytes)
-  const keyShare = ephemeral.did()
+  const keyShare = ephemeral.did() as DidString
   const sharedSecret = deriveSharedSecret(
     dh,
     p256KeyBytes(keyShare),
@@ -44,10 +45,10 @@ export const encapsulate = async (
  * Repo host side: derive the same shared secret from the syncer's `keyShare`
  * using the author's KEM keypair.
  */
-export const decapsulate = (
+export function decapsulate(
   authorKemKeypair: P256Keypair,
-  keyShare: string,
-): Uint8Array => {
+  keyShare: DidString,
+): Uint8Array {
   const syncerKeyBytes = p256KeyBytes(keyShare)
   const dh = authorKemKeypair.ecdh(syncerKeyBytes)
   return deriveSharedSecret(
@@ -60,11 +61,11 @@ export const decapsulate = (
 // Fixed labels from RFC 9180. 0x0010 identifies DHKEM(P-256, HKDF-SHA256).
 const KEM_PREFIX = ui8Concat([utf8('HPKE-v1'), utf8('KEM'), uint16be(0x0010)])
 
-const deriveSharedSecret = (
+function deriveSharedSecret(
   dh: Uint8Array,
   syncerKeyBytes: Uint8Array,
   authorKeyBytes: Uint8Array,
-): Uint8Array => {
+): Uint8Array {
   const input = ui8Concat([KEM_PREFIX, utf8('eae_prk'), dh])
   const info = ui8Concat([
     uint16be(32),
@@ -77,15 +78,15 @@ const deriveSharedSecret = (
 }
 
 // The uncompressed public key (0x04 || x || y) for a P-256 did:key.
-const p256KeyBytes = (didKey: string): Uint8Array => {
+function p256KeyBytes(didKey: string): Uint8Array {
   let parsed: ParsedMultikey
   try {
     parsed = parseDidKey(didKey)
   } catch (cause) {
-    throw new SpaceMacError('invalid KEM key', { cause })
+    throw new SpaceKemError('invalid KEM key', { cause })
   }
   if (parsed.jwtAlg !== P256_JWT_ALG) {
-    throw new SpaceMacError('KEM key must be a P-256 did:key')
+    throw new SpaceKemError('KEM key must be a P-256 did:key')
   }
   return parsed.keyBytes
 }

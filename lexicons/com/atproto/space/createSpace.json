@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Create a new space governed by the given policy. The space is anchored on the authenticated user's DID, who becomes the space owner. Requires auth, implemented by PDS.",
+      "description": "Create a new space, with the authenticated account as its authority. Requires auth, implemented by PDS.",
       "input": {
         "encoding": "application/json",
         "schema": {
@@ -13,17 +13,16 @@
           "properties": {
             "spaceType": {
               "type": "string",
-              "format": "nsid",
-              "description": "The NSID of the space type, describing the modality of the space (e.g. app.bsky.group, app.bsky.personal)."
+              "format": "nsid"
             },
             "skey": {
               "type": "string",
               "format": "record-key",
-              "description": "The space key. Used to differentiate multiple spaces of the same type under the same owner. Same syntax requirements as a record key. If not provided, one will be auto-generated (TID)."
+              "description": "Space key. Generated as a TID if not provided."
             },
             "policy": {
               "type": "union",
-              "description": "The policy governing the space, including its configuration.",
+              "description": "PDSes must support all of the listed policies. Other space hosts may support only some of them, and any host may support policies beyond those listed.",
               "refs": [
                 "com.atproto.personalspace.policy",
                 "com.atproto.memberspace.policy",
@@ -37,24 +36,21 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["uri"],
+          "required": ["space"],
           "properties": {
-            "uri": {
+            "space": {
               "type": "string",
-              "format": "space-ref",
-              "description": "URI of the created space."
+              "format": "space-ref"
             }
           }
         }
       },
       "errors": [
         {
-          "name": "SpaceAlreadyExists",
-          "description": "A space with this owner, type, and skey already exists. A space that was previously deleted may be created again."
+          "name": "SpaceAlreadyExists"
         },
         {
-          "name": "UnsupportedPolicy",
-          "description": "The requested policy is not one the host implements."
+          "name": "UnsupportedPolicy"
         }
       ]
     }

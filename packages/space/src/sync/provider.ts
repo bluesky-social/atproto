@@ -2,12 +2,13 @@ import { encode } from '@atproto/lex-cbor'
 import { type Cid, cidForCbor } from '@atproto/lex-data'
 import type { NsidString, RecordKeyString } from '@atproto/syntax'
 import { compareBytes } from '../bytes.js'
+import { SpaceRepoVerificationError } from '../error.js'
 import { type StarPair, writeStar } from '../star.js'
 import {
-  type Commit,
   REPO_STAR_TYPE,
   type RecordPathParts,
   type RepoStarMeta,
+  type SpaceCommit,
   type SpaceRecord,
 } from '../types.js'
 import { formatRecordPath } from '../util.js'
@@ -22,8 +23,8 @@ export type SerializedRecord = RecordPathParts & {
  *
  * Records must be given in strict path order, as the archive requires.
  */
-export async function* serializeRepo(
-  commit: Commit,
+export async function* writeRepoStar(
+  commit: SpaceCommit,
   records: AsyncIterable<SerializedRecord> | Iterable<SerializedRecord>,
 ): AsyncGenerator<Uint8Array> {
   const meta: RepoStarMeta = { $type: REPO_STAR_TYPE, ...commit }
@@ -39,18 +40,18 @@ async function* toStarPairs(
     const path = formatRecordPath(collection, rkey)
     const key = encoder.encode(path)
     if (prevKey !== undefined && compareBytes(key, prevKey) <= 0) {
-      throw new Error(`records out of order at ${path}`)
+      throw new SpaceRepoVerificationError(`records out of order at ${path}`)
     }
     prevKey = key
     yield { key, value: bytes }
   }
 }
 
-export const serializeRecord = async (
+export async function serializeRecord(
   collection: NsidString,
   rkey: RecordKeyString,
   record: SpaceRecord,
-): Promise<SerializedRecord & { cid: Cid }> => {
+): Promise<SerializedRecord & { cid: Cid }> {
   const bytes = encode(record)
   return { collection, rkey, bytes, cid: await cidForCbor(bytes) }
 }
