@@ -3,7 +3,7 @@ import type { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
 import { prepareDelete, spaceRecordUri } from '../../../../repo/index.js'
 import { assertNotPolicyRecord } from '../../../../space-policy/publish.js'
-import { fireNotifyWrite } from './util.js'
+import { fireNotifyRepoUpdate } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.space.deleteRecord, {
@@ -49,7 +49,7 @@ export default function (server: Server, ctx: AppContext) {
         return actorTxn.space.applyWrites(space, [write])
       })
 
-      await fireNotifyWrite(ctx, { space, writerDid: did, commit })
+      await fireNotifyRepoUpdate(ctx, { space, writerDid: did, commit })
 
       return {
         encoding: 'application/json' as const,

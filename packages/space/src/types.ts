@@ -72,7 +72,7 @@ const spaceMetaStarMetaSchema = z.object({
 })
 export type SpaceMetaStarMeta = z.infer<typeof spaceMetaStarMetaSchema>
 
-// A repo in the writer set, as listRepos reports it. Keyed by the repo's DID.
+// A repo in the writer set, as listWriters reports it. Keyed by the repo's DID.
 const spaceMetaWriterSchema = z.object({
   rev: tidSchema,
   data: bytesSchema,

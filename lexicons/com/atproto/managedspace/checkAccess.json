@@ -1,0 +1,44 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.managedspace.checkAccess",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "Check an account's read and write access to a managed space. Called by the space host, implemented by the space's managing app. Requires service auth.",
+      "parameters": {
+        "type": "params",
+        "required": ["space"],
+        "properties": {
+          "space": {
+            "type": "string",
+            "format": "space-ref"
+          },
+          "repo": {
+            "type": "string",
+            "format": "did"
+          },
+          "clientId": {
+            "type": "string",
+            "format": "uri",
+            "description": "OAuth client ID of the requesting app, if attested."
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["read", "write"],
+          "properties": {
+            "read": {
+              "type": "boolean"
+            },
+            "write": {
+              "type": "boolean"
+            }
+          }
+        }
+      }
+    }
+  }
+}

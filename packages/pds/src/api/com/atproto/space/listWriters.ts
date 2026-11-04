@@ -5,7 +5,7 @@ import { com } from '../../../../lexicons/index.js'
 import { assertCredentialSpace, assertSpaceHost } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
-  server.add(com.atproto.space.listRepos, {
+  server.add(com.atproto.space.listWriters, {
     auth: ctx.authVerifier.spaceCredentialAuth,
     handler: async ({ params, auth }) => {
       const { space, limit, cursor } = params
@@ -20,7 +20,7 @@ export default function (server: Server, ctx: AppContext) {
         body: {
           cursor: writers.at(-1)?.spaceRev,
           repos: writers.map((writer) => ({
-            did: writer.did as l.DidString,
+            repo: writer.did as l.DidString,
             repoRev: writer.repoRev,
             data: writer.data,
             spaceRev: writer.spaceRev,

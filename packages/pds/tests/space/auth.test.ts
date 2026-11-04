@@ -329,7 +329,7 @@ describe('space auth', () => {
       })
 
       it.each(['remote', 'co-located'])(
-        'refuses a signature addressed to another repo owner (%s)',
+        'refuses a signature addressed to another account (%s)',
         async (location) => {
           const other = location === 'remote' ? bob : dan
           const space = await sc.createSpace(alice, { members: [other, carol] })
@@ -359,7 +359,7 @@ describe('space auth', () => {
         })
         await expect(
           alice.client.call(
-            com.atproto.space.listRepos,
+            com.atproto.space.listWriters,
             { space },
             { headers },
           ),
@@ -393,7 +393,7 @@ describe('space auth', () => {
         await expect(
           alice.client.call(
             com.atproto.space.registerNotify,
-            { space, service: alice.did },
+            { space, service: `${alice.did}#atproto_pds` },
             { headers },
           ),
         ).resolves.toBeDefined()
@@ -474,9 +474,9 @@ describe('space auth', () => {
         }),
       ).rejects.toThrow(/issuer is not the space authority/)
 
-      // listRepos authorizes off the credential too, on a separate path.
+      // listWriters authorizes off the credential too, on a separate path.
       await expect(
-        asForged.call(com.atproto.space.listRepos, { space }),
+        asForged.call(com.atproto.space.listWriters, { space }),
       ).rejects.toThrow(/issuer is not the space authority/)
     })
 
@@ -504,11 +504,11 @@ describe('space auth', () => {
       const { headers } = await createServiceAuthHeaders({
         iss: signer.did,
         aud: opts.aud ?? bob.did,
-        lxm: opts.lxm ?? com.atproto.space.notifyCredentialRevoked.$lxm,
+        lxm: opts.lxm ?? com.atproto.space.notifyCredentialsRevoked.$lxm,
         keypair,
       })
       return bob.client.call(
-        com.atproto.space.notifyCredentialRevoked,
+        com.atproto.space.notifyCredentialsRevoked,
         { space, credentials },
         { headers },
       )
@@ -594,12 +594,12 @@ describe('space auth', () => {
       ).rejects.toThrow(/audience does not match/)
       await expect(
         revoke(alice, space, credentials, {
-          lxm: com.atproto.space.notifyWrite.$lxm,
+          lxm: com.atproto.space.notifyRepoUpdate.$lxm,
         }),
       ).rejects.toThrow()
       await expect(
         bob.client.call(
-          com.atproto.space.notifyCredentialRevoked,
+          com.atproto.space.notifyCredentialsRevoked,
           {
             space,
             credentials,
@@ -699,7 +699,7 @@ describe('space auth', () => {
       await expect(
         bob.client.call(com.atproto.space.getSpaceCredential, {
           space,
-          credentialKid: key.did(),
+          credentialKey: key.did(),
           delegationToken: token,
         }),
       ).rejects.toMatchObject({ error: 'SpaceNotFound' })
@@ -714,7 +714,7 @@ describe('space auth', () => {
         com.atproto.space.getSpaceCredential,
         {
           space,
-          credentialKid: key.did(),
+          credentialKey: key.did(),
           delegationToken: token,
         },
       )
@@ -732,7 +732,7 @@ describe('space auth', () => {
       await expect(
         alice.client.call(com.atproto.space.getSpaceCredential, {
           space,
-          credentialKid: key.did(),
+          credentialKey: key.did(),
           delegationToken: token,
         }),
       ).rejects.toThrow(/P-256/)
@@ -1104,17 +1104,17 @@ describe('space auth', () => {
         // Narrowed to what the grant covers, it is allowed.
         const listed = await alice.client.call(
           com.atproto.space.listSpaces,
-          { spaceType: TEST_SPACE_TYPE, did: alice.did },
+          { spaceType: TEST_SPACE_TYPE, spaceDid: alice.did },
           { headers },
         )
-        expect(listed.spaces.map((s) => s.uri)).toContain(space)
+        expect(listed.spaces.map((s) => s.space)).toContain(space)
 
         await expect(
           alice.client.call(
             com.atproto.space.listSpaces,
             {
               spaceType: 'com.example.otherGroup' as NsidString,
-              did: alice.did,
+              spaceDid: alice.did,
             },
             { headers },
           ),
