@@ -20,6 +20,10 @@
               "type": "string",
               "knownValues": ["good", "warning", "atRisk"]
             },
+            "hasActiveStrikes": {
+              "type": "boolean",
+              "description": "Whether the account currently has any active strikes."
+            },
             "enforcement": {
               "type": "ref",
               "ref": "tools.ozone.inbox.defs#enforcementView",

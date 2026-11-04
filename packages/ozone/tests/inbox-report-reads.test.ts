@@ -299,6 +299,7 @@ describe('viewer inbox reports', () => {
       (await call(did, 'tools.ozone.inbox.getAccountStatus')).data
     expect(await getStanding()).toMatchObject({
       standing: 'good',
+      hasActiveStrikes: false,
       enforcement: { state: 'none' },
     })
     for (const [index, expected] of ['good', 'warning', 'atRisk'].entries()) {
@@ -314,8 +315,13 @@ describe('viewer inbox reports', () => {
           cid: ref.cidStr,
         },
       })
-      expect((await getStanding()).standing).toBe(expected)
-      expect((await getStanding()).enforcement).toEqual({ state: 'none' })
+      const result = await getStanding()
+      expect(result).toMatchObject({
+        standing: expected,
+        hasActiveStrikes: true,
+        enforcement: { state: 'none' },
+      })
+      expect(result).not.toHaveProperty('activeStrikeCount')
     }
     const { ref } = sc.posts[did][2]
     await modClient.emitEvent({
@@ -329,7 +335,10 @@ describe('viewer inbox reports', () => {
         cid: ref.cidStr,
       },
     })
-    expect((await getStanding()).standing).toBe('good')
+    expect(await getStanding()).toMatchObject({
+      standing: 'good',
+      hasActiveStrikes: false,
+    })
     await modClient.emitEvent({
       event: {
         $type: 'tools.ozone.moderation.defs#modEventTakedown',
@@ -366,6 +375,7 @@ describe('viewer inbox reports', () => {
     })
     expect(await getStanding()).toMatchObject({
       standing: 'atRisk',
+      hasActiveStrikes: false,
       enforcement: { state: 'takendown' },
     })
   })
