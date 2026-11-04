@@ -69,13 +69,7 @@ export function DeleteAccountDialog({
 
   const dismissable = !requestPending && !confirmSubmitting
 
-  const title = handle ? (
-    <Trans>
-      Delete account <Handle handle={handle} />
-    </Trans>
-  ) : (
-    <Trans>Delete account</Trans>
-  )
+  const title = <Trans>Delete account</Trans>
 
   if (step === Step.FinalConfirm) {
     return (

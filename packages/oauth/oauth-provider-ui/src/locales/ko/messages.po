@@ -429,10 +429,6 @@ msgstr "삭제"
 msgid "Delete account"
 msgstr "계정 삭제"
 
-#: src/components/delete-account-dialog.tsx
-msgid "Delete account <0/>"
-msgstr "<0/> 계정 삭제"
-
 #: src/components/delete-account-confirm-form.tsx
 msgid "Delete my account"
 msgstr "내 계정 삭제"
