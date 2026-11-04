@@ -87,11 +87,6 @@ describe('report-close-reports', () => {
 
   let fixtureNumber = 0
 
-  it('advertises account-wide report actions', async () => {
-    const { data } = await agent.tools.ozone.server.getCapabilities({})
-    expect(data.reportActionAllOwned).toBe(true)
-  })
-
   async function fixture() {
     const name = `closereports${++fixtureNumber}`
     const { did } = await sc.createAccount(name, {

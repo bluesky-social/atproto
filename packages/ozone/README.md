@@ -23,7 +23,7 @@ Language and embed tags, manually applied tags, and existing report tags are una
 
 ## Closing reports with moderation actions
 
-`tools.ozone.moderation.emitEvent` accepts `reportAction: { allOwned: true }` on an account event that closes reports. It links the event to eligible reports on the account and its records, messages, and conversations. `allOwned` targets all report types; explicit `ids` also include those reports even when they are assigned or escalated. The event and closures are committed together. `tools.ozone.server.getCapabilities` advertises support as `reportActionAllOwned`.
+`tools.ozone.moderation.emitEvent` accepts `reportAction: { allOwned: true }` on an account event that closes reports. It links the event to eligible reports on the account and its records, messages, and conversations. `allOwned` targets all report types; explicit `ids` also include those reports even when they are assigned or escalated. The event and closures are committed together.
 
 `tools.ozone.report.closeReports` accepts an existing `actionEventId`. The event must be a report-closing event on the requested subject or its owning account; `includeAllOwned` requires an account event. The selected reports are linked to that event and closed in one transaction. Without an event ID, closures retain their no-action outcome. Both APIs protect assigned, escalated, and actively assigned reports from broad selection. `closeReports` can additionally filter or exclude report types.
 
