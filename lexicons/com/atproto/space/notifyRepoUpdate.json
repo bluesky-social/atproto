@@ -34,7 +34,7 @@
             "prevSpaceRev": {
               "type": "string",
               "format": "tid",
-              "description": "Omitted on the first update in a space. A gap indicates missed notifications, which can be recovered with listRepos."
+              "description": "Omitted on the first update in a space. A gap indicates missed notifications, which can be recovered with listWriters."
             }
           }
         }

@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "Check whether an account may read and write in a managed space. Called by the space host, implemented by the space's managing app. Requires service auth.",
+      "description": "Check an account's read and write access to a managed space. Called by the space host, implemented by the space's managing app. Requires service auth.",
       "parameters": {
         "type": "params",
         "required": ["space", "repo"],
@@ -19,6 +19,7 @@
           },
           "clientId": {
             "type": "string",
+            "format": "uri",
             "description": "OAuth client ID of the requesting app, if attested."
           }
         }

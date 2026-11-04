@@ -10,7 +10,8 @@
         "properties": {
           "spaceDid": {
             "type": "string",
-            "format": "did"
+            "format": "did",
+            "description": "Filter to spaces owned by this DID."
           },
           "spaceType": {
             "type": "string",

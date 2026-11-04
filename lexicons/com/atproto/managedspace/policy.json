@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "object",
-      "description": "Space policy that delegates access decisions to an external app through checkUserAccess.",
+      "description": "Space policy that delegates access decisions to an external app through checkAccess.",
       "required": ["managingApp"],
       "properties": {
         "managingApp": {

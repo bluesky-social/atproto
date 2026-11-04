@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Register a service to be notified of writes in a space, via notifyWrite. Re-registering renews an existing registration. Requires a space credential, implemented by the space host.",
+      "description": "Register a service to be notified of updates to a space, via notifyRepoUpdate and notifySpaceStatus. Re-registering renews an existing registration. Requires a space credential, implemented by the space host.",
       "input": {
         "encoding": "application/json",
         "schema": {
