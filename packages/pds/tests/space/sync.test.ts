@@ -235,7 +235,7 @@ describe('space sync', () => {
           repo: dan.did,
           cursor: 'not-a-cursor',
         }),
-      ).rejects.toMatchObject({ error: 'MalformedCursor' })
+      ).rejects.toMatchObject({ error: 'InvalidCursor' })
     })
   })
 

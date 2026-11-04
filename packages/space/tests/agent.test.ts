@@ -144,7 +144,7 @@ describe('SpaceCredentialAgent', () => {
         const chunks = await collect(writeRepoStar(commit, records))
         return new Response(Buffer.concat(chunks), {
           headers: {
-            'content-type': 'application/octet-stream',
+            'content-type': 'application/vnd.dasl.star',
             ...macHeaders(computeCommitMac(sharedSecret!, commit)),
           },
         })

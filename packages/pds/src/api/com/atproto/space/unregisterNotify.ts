@@ -17,16 +17,14 @@ export default function (server: Server, ctx: AppContext) {
       // signed for by the same key, so the bare DID may withdraw any of them.
       const [serviceDid] = service.split('#')
       if (iss !== service && iss !== serviceDid) {
-        throw new ForbiddenError(
-          'unregisterNotify iss does not match the service',
-        )
+        throw new ForbiddenError('Withdrawal iss does not match the service')
       }
 
       // Not checked during auth: a PDS answers for many authorities, so the
       // audience is only knowable from the space the body names.
       if (aud !== spaceDid && aud !== spaceHostAud(spaceDid)) {
         throw new ForbiddenError(
-          'unregisterNotify aud does not match the space authority',
+          'Withdrawal aud does not match the space authority',
         )
       }
 
