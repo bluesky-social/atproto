@@ -1,25 +1,21 @@
 {
   "lexicon": 1,
-  "id": "com.atproto.managedspace.checkUserAccess",
+  "id": "com.atproto.managedspace.checkAccess",
   "defs": {
     "main": {
       "type": "query",
-      "description": "Check whether a user may read or write in a managed space. Called by the space host, implemented by the space's managing app. Requires service auth.",
+      "description": "Check whether an account may read and write in a managed space. Called by the space host, implemented by the space's managing app. Requires service auth.",
       "parameters": {
         "type": "params",
-        "required": ["space", "user", "access"],
+        "required": ["space", "repo"],
         "properties": {
           "space": {
             "type": "string",
             "format": "space-ref"
           },
-          "user": {
+          "repo": {
             "type": "string",
             "format": "did"
-          },
-          "access": {
-            "type": "string",
-            "knownValues": ["read", "write"]
           },
           "clientId": {
             "type": "string",
@@ -31,9 +27,12 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["authorized"],
+          "required": ["read", "write"],
           "properties": {
-            "authorized": {
+            "read": {
+              "type": "boolean"
+            },
+            "write": {
               "type": "boolean"
             }
           }

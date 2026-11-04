@@ -6,7 +6,7 @@
       "type": "procedure",
       "description": "Import a space's state from an archive produced by exportSpaceMeta, for account migration. Must be called before importing the owner's space repo with importRepo. Requires auth as the space owner, implemented by PDS.",
       "input": {
-        "encoding": "application/octet-stream"
+        "encoding": "application/vnd.dasl.star"
       },
       "errors": [
         {
@@ -14,6 +14,10 @@
         },
         {
           "name": "UnsupportedPolicy"
+        },
+        {
+          "name": "InvalidSpaceMeta",
+          "description": "The STAR file is malformed or fails verification."
         }
       ]
     }

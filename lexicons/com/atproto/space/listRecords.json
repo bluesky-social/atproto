@@ -31,9 +31,6 @@
           "cursor": {
             "type": "string"
           },
-          "reverse": {
-            "type": "boolean"
-          },
           "excludeValues": {
             "type": "boolean",
             "default": false

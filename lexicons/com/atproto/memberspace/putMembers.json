@@ -1,29 +1,27 @@
 {
   "lexicon": 1,
-  "id": "com.atproto.memberspace.putMember",
+  "id": "com.atproto.memberspace.putMembers",
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Add a member to a space, or update an existing member's access. Requires auth as the space owner, implemented by PDS.",
+      "description": "Add members to a space, or update existing members' access, in a single commit. Requires auth as the space owner, implemented by PDS.",
       "input": {
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["space", "did", "read", "write"],
+          "required": ["space", "members"],
           "properties": {
             "space": {
               "type": "string",
               "format": "space-ref"
             },
-            "did": {
-              "type": "string",
-              "format": "did"
-            },
-            "read": {
-              "type": "boolean"
-            },
-            "write": {
-              "type": "boolean"
+            "members": {
+              "type": "array",
+              "maxLength": 100,
+              "items": {
+                "type": "ref",
+                "ref": "com.atproto.memberspace.defs#member"
+              }
             }
           }
         }

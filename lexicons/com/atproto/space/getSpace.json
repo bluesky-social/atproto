@@ -19,15 +19,15 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["uri", "policy"],
+          "required": ["space", "policy"],
           "properties": {
-            "uri": {
+            "space": {
               "type": "string",
               "format": "space-ref"
             },
             "policy": {
               "type": "union",
-              "description": "Hosts may support policies beyond those listed, and are not required to support all of them.",
+              "description": "Hosts may support policies beyond those listed. These are the required policies that PDSes support, though they are not required for space hosts generally.",
               "refs": [
                 "com.atproto.personalspace.policy",
                 "com.atproto.memberspace.policy",

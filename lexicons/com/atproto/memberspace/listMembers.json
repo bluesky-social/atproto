@@ -37,7 +37,7 @@
               "type": "array",
               "items": {
                 "type": "ref",
-                "ref": "#member"
+                "ref": "com.atproto.memberspace.defs#member"
               }
             }
           }
@@ -52,22 +52,6 @@
           "description": "The space does not have a memberspace policy."
         }
       ]
-    },
-    "member": {
-      "type": "object",
-      "required": ["did", "read", "write"],
-      "properties": {
-        "did": {
-          "type": "string",
-          "format": "did"
-        },
-        "read": {
-          "type": "boolean"
-        },
-        "write": {
-          "type": "boolean"
-        }
-      }
     }
   }
 }

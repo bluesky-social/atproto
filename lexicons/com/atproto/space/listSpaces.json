@@ -8,14 +8,13 @@
       "parameters": {
         "type": "params",
         "properties": {
+          "spaceDid": {
+            "type": "string",
+            "format": "did"
+          },
           "spaceType": {
             "type": "string",
             "format": "nsid"
-          },
-          "did": {
-            "type": "string",
-            "format": "did",
-            "description": "Filter to spaces owned by this DID."
           },
           "limit": {
             "type": "integer",
@@ -50,11 +49,25 @@
     },
     "spaceView": {
       "type": "object",
-      "required": ["uri"],
+      "required": ["space"],
       "properties": {
-        "uri": {
+        "space": {
           "type": "string",
           "format": "space-ref"
+        },
+        "repoRev": {
+          "type": "string",
+          "format": "tid",
+          "description": "The current revision of the account's repo in the space, if it has one."
+        },
+        "data": {
+          "type": "bytes",
+          "description": "The current commit data of the account's repo in the space, if it has one."
+        },
+        "spaceRev": {
+          "type": "string",
+          "format": "tid",
+          "description": "The current revision of the space. Only included if the account owns the space."
         }
       }
     }

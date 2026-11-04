@@ -17,7 +17,7 @@
             },
             "service": {
               "type": "string",
-              "description": "The DID or `did#serviceId` reference of the service to notify."
+              "description": "The `did#serviceId` reference of the service to notify."
             }
           }
         }

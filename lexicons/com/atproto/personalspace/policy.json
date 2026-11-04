@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "object",
-      "description": "Space policy for personal data that only the space owner can read, such as bookmarks or drafts.",
+      "description": "Space policy for personal data that only the space owner and authorized apps can read, such as bookmarks or drafts.",
       "properties": {}
     }
   }

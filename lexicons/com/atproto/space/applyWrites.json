@@ -73,8 +73,7 @@
         },
         "rkey": {
           "type": "string",
-          "format": "record-key",
-          "maxLength": 512
+          "format": "record-key"
         },
         "value": {
           "type": "unknown"

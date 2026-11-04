@@ -6,12 +6,20 @@
       "type": "procedure",
       "description": "Import the authenticated account's space repo from a STAR file, for account migration. If the account owns the space, the space must first be imported with importSpaceMeta. Requires auth, implemented by PDS.",
       "input": {
-        "encoding": "application/octet-stream"
+        "encoding": "application/vnd.dasl.star"
       },
       "errors": [
         {
           "name": "SpaceNotFound",
           "description": "The account owns the space, and the space has not been imported yet."
+        },
+        {
+          "name": "InvalidRepoFile",
+          "description": "The STAR file is malformed or fails verification."
+        },
+        {
+          "name": "RepoMismatch",
+          "description": "The repo in the STAR file does not belong to the authenticated account."
         }
       ]
     }

@@ -16,7 +16,8 @@
               "format": "space-ref"
             },
             "service": {
-              "type": "string"
+              "type": "string",
+              "description": "The DID or `did#serviceId` reference of the service to notify."
             }
           }
         }

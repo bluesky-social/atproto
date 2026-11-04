@@ -15,7 +15,7 @@
               "type": "string",
               "format": "space-ref"
             },
-            "did": {
+            "repo": {
               "type": "string",
               "format": "did"
             }

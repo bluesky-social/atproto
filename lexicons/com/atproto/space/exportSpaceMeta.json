@@ -16,7 +16,7 @@
         }
       },
       "output": {
-        "encoding": "application/octet-stream"
+        "encoding": "application/vnd.dasl.star"
       },
       "errors": [
         {

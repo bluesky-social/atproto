@@ -20,7 +20,8 @@
           "type": "array",
           "description": "If set, only these apps (by OAuth client ID) may read the space.",
           "items": {
-            "type": "string"
+            "type": "string",
+            "format": "uri"
           }
         },
         "publishPolicy": {
