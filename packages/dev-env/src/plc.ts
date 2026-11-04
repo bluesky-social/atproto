@@ -34,6 +34,8 @@ export class TestPlc {
         const doc = await getDidDoc(server, req.params.did)
         // Leave an unknown or tombstoned DID for the PLC server to answer.
         if (!doc) return next()
+        // Allow any origin, as the PLC server does: browser apps resolve DIDs.
+        res.setHeader('Access-Control-Allow-Origin', '*')
         res.type('application/did+ld+json')
         res.send(JSON.stringify(doc))
       } catch (err) {
