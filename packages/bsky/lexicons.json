@@ -146,6 +146,7 @@
     "app.bsky.unspecced.getAtmosphereApps",
     "app.bsky.unspecced.getAtmosphereExploreArticleRecommendations",
     "app.bsky.unspecced.getAtmosphereExploreTab",
+    "app.bsky.unspecced.getAtmosphereRecordView",
     "app.bsky.unspecced.getAtmosphereTimeline",
     "app.bsky.unspecced.getConfig",
     "app.bsky.unspecced.getOnboardingSuggestedStarterPacks",
@@ -977,6 +978,10 @@
     "app.bsky.unspecced.getAtmosphereExploreTab": {
       "uri": "file://../../lexicons-overrides/app/bsky/unspecced/getAtmosphereExploreTab.json",
       "cid": "bafyreibyqmxg3gvwf6jnguqhqv25rj6oxue5gptgu6crr32efmq57nuxrq"
+    },
+    "app.bsky.unspecced.getAtmosphereRecordView": {
+      "uri": "file://../../lexicons-overrides/app/bsky/unspecced/getAtmosphereRecordView.json",
+      "cid": "bafyreibs7l5lvizh2qra6qqlc2rbaylbxdiaqb2c3ir4qfkzguadex2bau"
     },
     "app.bsky.unspecced.getAtmosphereTimeline": {
       "uri": "file://../../lexicons-overrides/app/bsky/unspecced/getAtmosphereTimeline.json",
