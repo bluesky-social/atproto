@@ -5,7 +5,7 @@ import {
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
-import { type DidString, toDatetimeString } from '@atproto/lex'
+import { type DidString, jsonToLex, toDatetimeString } from '@atproto/lex'
 import { tools } from '../src/lexicons/index.js'
 
 describe('viewer inbox subjects', () => {
@@ -152,7 +152,10 @@ describe('viewer inbox subjects', () => {
       expect(JSON.stringify(detail)).not.toContain(secret)
     }
     expect(detail.reports).not.toHaveProperty('count')
-    expect(tools.ozone.inbox.defs.subjectViewDetail.$matches(detail)).toBe(true)
+    const validation = tools.ozone.inbox.defs.subjectViewDetail.$safeValidate(
+      jsonToLex(JSON.parse(JSON.stringify(detail))),
+    )
+    expect(validation).toEqual(expect.objectContaining({ success: true }))
   })
 
   it('hides other accounts and permits authorized detail previews', async () => {
@@ -182,6 +185,47 @@ describe('viewer inbox subjects', () => {
       `${network.ozone.url}/xrpc/${method}?subject=${encodeURIComponent(sc.dids.alice)}`,
     )
     expect(unauthenticated.status).toBe(401)
+  })
+
+  it('returns best-effort account profile information after an app takedown', async () => {
+    const account = await sc.createAccount('preview', {
+      handle: 'preview.test',
+      email: 'preview@test.com',
+      password: 'preview-pass',
+    })
+    await sc.createProfile(account.did, 'Preview name', 'Preview description')
+    await network.processAll()
+    await mod.emitEvent({
+      subject: { $type: 'com.atproto.admin.defs#repoRef', did: account.did },
+      event: {
+        $type: 'tools.ozone.moderation.defs#modEventTakedown',
+        targetServices: ['appview'],
+      },
+    })
+    await network.processAll()
+    const { data } = await call(
+      account.did,
+      tools.ozone.inbox.getActionedSubject.$lxm,
+      { subject: account.did },
+    )
+    expect(data.subject.did).toBe(account.did)
+    expect(data.account).toMatchObject({
+      handle: 'preview.test',
+      profile: { displayName: 'Preview name' },
+    })
+    expect(data.enforcement).toMatchObject({ state: 'takendown', scope: 'app' })
+    expect(data.availableActions).toContain('appeal')
+
+    using unavailable = jest.spyOn(network.ozone.ctx.appviewClient, 'xrpcSafe')
+    unavailable.mockRejectedValue(new Error('Profile service unavailable'))
+    const { data: fallback } = await call(
+      account.did,
+      tools.ozone.inbox.getActionedSubject.$lxm,
+      { subject: account.did },
+    )
+    expect(fallback.subject.did).toBe(account.did)
+    expect(fallback.availableActions).toContain('appeal')
+    expect(fallback.account?.profile).toBeUndefined()
   })
 
   it('preserves reversal dates across history pages', async () => {
