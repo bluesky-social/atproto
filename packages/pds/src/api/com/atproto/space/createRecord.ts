@@ -3,7 +3,7 @@ import type { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
 import { prepareCreate } from '../../../../repo/index.js'
 import { assertNotPolicyRecord } from '../../../../space-policy/publish.js'
-import { fireNotifyRepoUpdate } from './util.js'
+import { fireNotifyRepoUpdate, toSpaceRef } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.space.createRecord, {
@@ -34,19 +34,20 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ input: { body }, auth }) => {
       const did = auth.credentials.did
       const { space, repo, collection, rkey, record } = body
+      const ref = toSpaceRef(space)
       if (repo !== did) {
         throw new ForbiddenError('repo must match authenticated user')
       }
       assertNotPolicyRecord(collection)
 
-      auth.credentials.permissions?.assertSpace(space, {
+      auth.credentials.permissions?.assertSpace(ref, {
         action: 'create',
         collection,
       })
 
       const write = await prepareCreate({
         did,
-        space,
+        space: ref,
         collection,
         rkey,
         record,
@@ -54,13 +55,13 @@ export default function (server: Server, ctx: AppContext) {
       })
 
       const commit = await ctx.actorStore.transact(did, (actorTxn) =>
-        actorTxn.space.applyWrites(space, [write]),
+        actorTxn.space.applyWrites(ref, [write]),
       )
 
-      await fireNotifyRepoUpdate(ctx, { space, writerDid: did, commit })
+      await fireNotifyRepoUpdate(ctx, { space: ref, writerDid: did, commit })
 
       return {
-        encoding: 'application/json' as const,
+        encoding: 'application/json',
         body: {
           uri: write.uri.toString(),
           cid: write.cid.toString(),

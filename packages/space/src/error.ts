@@ -52,16 +52,3 @@ export class SpaceMetaArchiveError extends SpaceError {
   name = 'SpaceMetaArchiveError'
   readonly code = 'InvalidSpaceMeta'
 }
-
-/** An error response from a repo host, such as `RepoTakendown`. */
-export class SpaceResponseError extends SpaceError {
-  name = 'SpaceResponseError'
-
-  constructor(
-    readonly status: number,
-    readonly code: string,
-    message: string,
-  ) {
-    super(message)
-  }
-}

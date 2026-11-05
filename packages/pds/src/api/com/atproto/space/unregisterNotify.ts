@@ -7,10 +7,11 @@ import { assertSpaceHost, toSpaceRef } from './util.js'
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.space.unregisterNotify, {
     auth: ctx.authVerifier.serviceAuth,
-    handler: async ({ input, auth }) => {
-      const { space, service } = input.body
+    handler: async ({ input: { body }, auth }) => {
+      const { space, service } = body
       const { iss, aud } = auth.credentials
-      const { spaceDid } = toSpaceRef(space)
+      const ref = toSpaceRef(space)
+      const { spaceDid } = ref
 
       // Unlike registerNotify, not a space credential: one names no service, so any
       // holder could withdraw anyone's registration. Every service under a DID is
@@ -28,7 +29,7 @@ export default function (server: Server, ctx: AppContext) {
         )
       }
 
-      await assertSpaceHost(ctx, space)
+      await assertSpaceHost(ctx, ref)
 
       await ctx.actorStore.read(spaceDid, (store) =>
         store.space.getActiveSpacePolicy(space),

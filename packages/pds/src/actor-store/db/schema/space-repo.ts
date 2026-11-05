@@ -1,5 +1,7 @@
+import type { SpaceRefString } from '@atproto/syntax'
+
 export interface SpaceRepo {
-  space: string
+  space: SpaceRefString
   setHash: Uint8Array | null
   rev: string | null
 }

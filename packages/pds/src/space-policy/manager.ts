@@ -1,13 +1,10 @@
 import type { IdResolver } from '@atproto/identity'
 import { xrpc } from '@atproto/lex'
 import type { SpaceMetaArchive } from '@atproto/space'
-import type { DidString, SpaceRefString, UriString } from '@atproto/syntax'
+import type { DidString, SpaceRef, UriString } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import type { ActorStore } from '../actor-store/actor-store.js'
-import {
-  resolveNotifyTarget,
-  toSpaceRef,
-} from '../api/com/atproto/space/util.js'
+import { resolveNotifyTarget } from '../api/com/atproto/space/util.js'
 import { com } from '../lexicons/index.js'
 import { spaceLogger } from '../logger.js'
 import type { PreparedWrite } from '../repo/types.js'
@@ -41,24 +38,23 @@ export class SpacePolicyManager {
   // the policy asks for it. They return the commit to the authority's repo, which is
   // owed a notifyRepoUpdate, or null if nothing was published.
 
-  async createSpace(space: SpaceRefString, policy: LexPolicy) {
-    const { spaceDid } = toSpaceRef(space)
+  async createSpace(ref: SpaceRef, policy: LexPolicy) {
     const normalized = normalizePolicy(policy)
-    return this.actorStore.transact(spaceDid, async (actorTxn) => {
-      const existing = await actorTxn.space.getSpacePolicy(space)
+    return this.actorStore.transact(ref.spaceDid, async (actorTxn) => {
+      const existing = await actorTxn.space.getSpacePolicy(ref.toString())
       if (existing) {
         throw new InvalidRequestError(
           'Space already exists',
           'SpaceAlreadyExists',
         )
       }
-      await actorTxn.space.createSpace(space, normalized)
+      await actorTxn.space.createSpace(ref, normalized)
       const writes = await preparePolicyRecordWrites(
         actorTxn.space,
-        space,
+        ref,
         normalized,
       )
-      return actorTxn.space.applyWrites(space, writes)
+      return actorTxn.space.applyWrites(ref, writes)
     })
   }
 
@@ -67,23 +63,19 @@ export class SpacePolicyManager {
    * change. A different `$type` migrates the space: state held by the previous
    * policy is discarded, so migrating back does not restore it.
    */
-  async updateSpace(space: SpaceRefString, policy: LexPolicy) {
-    const { spaceDid } = toSpaceRef(space)
+  async updateSpace(ref: SpaceRef, policy: LexPolicy) {
+    const space = ref.toString()
     const next = normalizePolicy(policy)
-    return this.actorStore.transact(spaceDid, async (actorTxn) => {
+    return this.actorStore.transact(ref.spaceDid, async (actorTxn) => {
       const current = await actorTxn.space.getActiveSpacePolicy(space)
 
-      const writes = await preparePolicyRecordWrites(
-        actorTxn.space,
-        space,
-        next,
-      )
+      const writes = await preparePolicyRecordWrites(actorTxn.space, ref, next)
       // Only memberspace has a member list, so this also withdraws a published
       // list when a migration discards it.
       if (areMembersPublished(current) !== areMembersPublished(next)) {
         const memberWrites = await prepareMemberListWrites(
           actorTxn.space,
-          space,
+          ref,
           next,
         )
         writes.push(...memberWrites)
@@ -93,21 +85,21 @@ export class SpacePolicyManager {
       if (current.$type !== next.$type) {
         await actorTxn.space.removeAllMembers(space)
       }
-      return actorTxn.space.applyWrites(space, writes)
+      return actorTxn.space.applyWrites(ref, writes)
     })
   }
 
   async putMembers(
-    space: SpaceRefString,
+    ref: SpaceRef,
     members: com.atproto.memberspace.defs.Member[],
   ) {
-    const { spaceDid } = toSpaceRef(space)
+    const space = ref.toString()
     // Keyed by DID, so that a DID listed twice takes its last entry rather than
     // having its record written twice in the same commit.
     const accessByDid = new Map(
       members.map(({ did, read, write }) => [did, { read, write }]),
     )
-    return this.actorStore.transact(spaceDid, async (actorTxn) => {
+    return this.actorStore.transact(ref.spaceDid, async (actorTxn) => {
       const policy = await actorTxn.space.getActiveSpacePolicy(space)
       assertMemberspace(policy)
       const writes: PreparedWrite[] = []
@@ -118,20 +110,20 @@ export class SpacePolicyManager {
         }
         const memberWrites = await prepareMemberRecordWrites(
           actorTxn.space,
-          space,
+          ref,
           policy,
           did,
           access,
         )
         writes.push(...memberWrites)
       }
-      return actorTxn.space.applyWrites(space, writes)
+      return actorTxn.space.applyWrites(ref, writes)
     })
   }
 
-  async removeMembers(space: SpaceRefString, dids: DidString[]) {
-    const { spaceDid } = toSpaceRef(space)
-    return this.actorStore.transact(spaceDid, async (actorTxn) => {
+  async removeMembers(ref: SpaceRef, dids: DidString[]) {
+    const space = ref.toString()
+    return this.actorStore.transact(ref.spaceDid, async (actorTxn) => {
       const policy = await actorTxn.space.getActiveSpacePolicy(space)
       assertMemberspace(policy)
       const writes: PreparedWrite[] = []
@@ -142,28 +134,28 @@ export class SpacePolicyManager {
         await actorTxn.space.removeWriter(space, did)
         const memberWrites = await prepareMemberRecordWrites(
           actorTxn.space,
-          space,
+          ref,
           policy,
           did,
         )
         writes.push(...memberWrites)
       }
-      return actorTxn.space.applyWrites(space, writes)
+      return actorTxn.space.applyWrites(ref, writes)
     })
   }
 
-  async getSpace(space: SpaceRefString) {
-    const { spaceDid } = toSpaceRef(space)
-    const policy = await this.actorStore.read(spaceDid, (store) =>
+  async getSpace(ref: SpaceRef) {
+    const space = ref.toString()
+    const policy = await this.actorStore.read(ref.spaceDid, (store) =>
       store.space.getActiveSpacePolicy(space),
     )
     return { space, policy }
   }
 
   /** The space's host-side state, for migrating its authority's account. */
-  async exportSpaceMeta(space: SpaceRefString): Promise<SpaceMetaArchive> {
-    const { spaceDid } = toSpaceRef(space)
-    return this.actorStore.read(spaceDid, async (store) => {
+  async exportSpaceMeta(ref: SpaceRef): Promise<SpaceMetaArchive> {
+    const space = ref.toString()
+    return this.actorStore.read(ref.spaceDid, async (store) => {
       const policy = await store.space.getActiveSpacePolicy(space)
       const members = memberspace.policy.$isTypeOf(policy)
         ? await store.space.listMembers(space)
@@ -174,12 +166,12 @@ export class SpacePolicyManager {
         policy,
         policyState: members.map((member) =>
           memberStateEntry({
-            did: member.did as DidString,
+            did: member.did,
             access: { read: !!member.read, write: !!member.write },
           }),
         ),
         writers: writers.map((writer) => ({
-          did: writer.did as DidString,
+          did: writer.did,
           repoRev: writer.repoRev,
           data: writer.data,
           spaceRev: writer.spaceRev,
@@ -194,13 +186,15 @@ export class SpacePolicyManager {
    * list are published to readers by records in the authority's repo, which
    * arrives afterwards with importRepo, so nothing is published here.
    */
-  async importSpaceMeta(archive: SpaceMetaArchive): Promise<void> {
-    const { space } = archive
-    const { spaceDid } = toSpaceRef(space)
+  async importSpaceMeta(
+    ref: SpaceRef,
+    archive: SpaceMetaArchive,
+  ): Promise<void> {
+    const space = ref.toString()
     const policy = parseArchivedPolicy(archive.policy)
     const members = parsePolicyState(policy, archive.policyState)
-    await this.actorStore.transact(spaceDid, async (actorTxn) => {
-      await actorTxn.space.createSpace(space, policy)
+    await this.actorStore.transact(ref.spaceDid, async (actorTxn) => {
+      await actorTxn.space.createSpace(ref, policy)
       await actorTxn.space.removeAllMembers(space)
       for (const { did, access } of members) {
         await actorTxn.space.putMember(space, did, access)
@@ -217,7 +211,7 @@ export class SpacePolicyManager {
    * `repo` is absent when the request carries no delegation token.
    */
   async authorizeCredential(opts: {
-    space: SpaceRefString
+    space: SpaceRef
     policy: Policy
     repo?: DidString
     clientId?: UriString
@@ -249,14 +243,14 @@ export class SpacePolicyManager {
    * on the account.
    */
   async authorizeRepo(opts: {
-    space: SpaceRefString
+    space: SpaceRef
     policy: Policy
     repo?: DidString
     access: Access
     clientId?: UriString
   }): Promise<boolean> {
     const { space, policy, repo, access, clientId } = opts
-    const { spaceDid } = toSpaceRef(space)
+    const { spaceDid } = space
 
     // Under every policy the authority is authorized. It is the only party who can
     // reconfigure the space, so it must not be able to lock itself out.
@@ -271,7 +265,7 @@ export class SpacePolicyManager {
       if (isPublic) return true
       if (!repo) return false
       const member = await this.actorStore.read(spaceDid, (store) =>
-        store.space.getMember(space, repo),
+        store.space.getMember(space.toString(), repo),
       )
       if (!member) return false
       if (access === 'read') return !!member.read
@@ -280,7 +274,6 @@ export class SpacePolicyManager {
     if (managedspace.policy.$isTypeOf(policy)) {
       const managedAccess = await this.checkAccess({
         space,
-        spaceDid,
         managingApp: policy.managingApp,
         repo,
         clientId,
@@ -303,10 +296,10 @@ export class SpacePolicyManager {
    * notifySpaceStatus.
    */
   async deleteSpace(
-    space: SpaceRefString,
+    ref: SpaceRef,
   ): Promise<{ service: string; expiresAt: string }[]> {
-    const { spaceDid } = toSpaceRef(space)
-    return this.actorStore.transact(spaceDid, async (actorTxn) => {
+    const space = ref.toString()
+    return this.actorStore.transact(ref.spaceDid, async (actorTxn) => {
       const recipients = await actorTxn.space.getCredentialRecipients(space)
       await actorTxn.space.deleteSpace(space)
       return recipients
@@ -319,18 +312,18 @@ export class SpacePolicyManager {
    * repo update notification does not identify the app that made the write.
    */
   private async checkAccess(opts: {
-    space: SpaceRefString
-    spaceDid: DidString
+    space: SpaceRef
     managingApp: string
     repo?: DidString
     clientId?: UriString
   }): Promise<{ read: boolean; write: boolean }> {
-    const { space, spaceDid, managingApp, repo, clientId } = opts
+    const { managingApp, repo, clientId } = opts
+    const space = opts.space.toString()
 
     const lxm = com.atproto.managedspace.checkAccess.$lxm
     try {
       const target = await resolveNotifyTarget(this, {
-        iss: spaceDid,
+        iss: opts.space.spaceDid,
         service: managingApp,
         lxm,
       })

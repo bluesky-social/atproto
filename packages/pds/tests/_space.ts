@@ -3,7 +3,7 @@ import { type Server, createServer } from 'node:http'
 import type { AddressInfo } from 'node:net'
 import * as plc from '@did-plc/lib'
 import { type HttpTerminator, createHttpTerminator } from 'http-terminator'
-import { getKemDidKey } from '@atproto/common'
+import { getVerificationMaterial } from '@atproto/common'
 import { P256Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import {
   EXAMPLE_LABELER,
@@ -18,9 +18,10 @@ import { JoseKey } from '@atproto/oauth-provider/provider'
 import { ReplayManager } from '@atproto/oauth-provider/verifier'
 import {
   CLIENT_ATTESTATION_TYP,
+  COMMIT_MAC_TYPE,
   MAC_HEADER,
-  MAC_TYPE_BY_METHOD,
   type MacType,
+  RECORD_MAC_TYPE,
   RepoCommit,
   type SpaceCommit,
   WANT_MAC_HEADER,
@@ -40,6 +41,14 @@ import {
 import { createServiceAuthHeaders } from '@atproto/xrpc-server'
 import { ClientAttestationVerifier } from '../src/client-attestation-verifier.js'
 import { com } from '../src/lexicons/index.js'
+
+// The methods whose responses a repo host authenticates with a MAC.
+const MAC_TYPE_BY_METHOD: Record<string, MacType> = {
+  [com.atproto.space.getLatestCommit.$lxm]: COMMIT_MAC_TYPE,
+  [com.atproto.space.getRepo.$lxm]: COMMIT_MAC_TYPE,
+  [com.atproto.space.listRepoOps.$lxm]: COMMIT_MAC_TYPE,
+  [com.atproto.space.getRecord.$lxm]: RECORD_MAC_TYPE,
+}
 
 // Third-party collections, as a space's are in practice. The PDS validates
 // records against a hardcoded schema map (see `repo/prepare.ts`), so anything
@@ -506,9 +515,9 @@ export class SpaceCredential {
 
   async resolveKemKey(did: string): Promise<DidString> {
     const didDoc = await this.idResolver.did.ensureResolve(did)
-    const didKey = getKemDidKey(didDoc)
-    if (!didKey) throw new Error(`no #atproto_kem key for ${did}`)
-    return didKey as DidString
+    const kemKey = getVerificationMaterial(didDoc, 'atproto_kem')
+    if (!kemKey) throw new Error(`no #atproto_kem key for ${did}`)
+    return `did:key:${kemKey.publicKeyMultibase}`
   }
 
   /** The shared secret and response MAC of the latest request. */

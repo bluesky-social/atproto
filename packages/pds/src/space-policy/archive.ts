@@ -49,6 +49,7 @@ export function parsePolicyState(
       throw new InvalidRequestError(
         `Invalid member at ${key}: ${result.reason.message}`,
         'InvalidSpaceMeta',
+        { cause: result.reason },
       )
     }
     const { read, write } = result.value

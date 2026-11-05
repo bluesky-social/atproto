@@ -7,10 +7,11 @@ import { processNotifyRepoUpdate, toSpaceRef } from './util.js'
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.space.notifyRepoUpdate, {
     auth: ctx.authVerifier.serviceAuth,
-    handler: async ({ input, auth }) => {
-      const { space, repo, repoRev, data } = input.body
+    handler: async ({ input: { body }, auth }) => {
+      const { space, repo, repoRev, data } = body
 
-      const { spaceDid } = toSpaceRef(space)
+      const ref = toSpaceRef(space)
+      const { spaceDid } = ref
 
       // iss is the signer, so requiring it to match keeps a PDS from notifying on
       // another account's behalf.
@@ -29,7 +30,7 @@ export default function (server: Server, ctx: AppContext) {
         )
       }
 
-      await processNotifyRepoUpdate(ctx, { space, repo, repoRev, data })
+      await processNotifyRepoUpdate(ctx, ref, { space, repo, repoRev, data })
     },
   })
 }

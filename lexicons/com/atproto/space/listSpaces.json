@@ -46,7 +46,12 @@
             }
           }
         }
-      }
+      },
+      "errors": [
+        {
+          "name": "InvalidCursor"
+        }
+      ]
     },
     "spaceView": {
       "type": "object",

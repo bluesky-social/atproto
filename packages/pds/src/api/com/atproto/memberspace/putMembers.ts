@@ -1,7 +1,11 @@
 import type { Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
-import { assertSpaceAuthority, fireNotifyRepoUpdate } from '../space/util.js'
+import {
+  assertSpaceAuthority,
+  fireNotifyRepoUpdate,
+  toSpaceRef,
+} from '../space/util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.memberspace.putMembers, {
@@ -16,11 +20,12 @@ export default function (server: Server, ctx: AppContext) {
       const authorityDid = auth.credentials.did
       const { space, members } = body
 
-      assertSpaceAuthority(auth, space, { manage: 'update' })
+      const ref = toSpaceRef(space)
+      assertSpaceAuthority(auth, ref, { manage: 'update' })
 
-      const commit = await ctx.spacePolicyManager.putMembers(space, members)
+      const commit = await ctx.spacePolicyManager.putMembers(ref, members)
       await fireNotifyRepoUpdate(ctx, {
-        space,
+        space: ref,
         writerDid: authorityDid,
         commit,
       })

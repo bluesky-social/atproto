@@ -1,7 +1,7 @@
 import type { Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
-import { assertSpaceAuthority } from './util.js'
+import { assertSpaceAuthority, toSpaceRef } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.space.removeWriter, {
@@ -16,7 +16,7 @@ export default function (server: Server, ctx: AppContext) {
       const authorityDid = auth.credentials.did
       const { space, repo } = body
 
-      assertSpaceAuthority(auth, space, { manage: 'update' })
+      assertSpaceAuthority(auth, toSpaceRef(space), { manage: 'update' })
 
       await ctx.actorStore.transact(authorityDid, async (actorTxn) => {
         await actorTxn.space.getActiveSpacePolicy(space)

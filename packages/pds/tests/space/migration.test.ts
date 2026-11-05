@@ -268,14 +268,15 @@ describe('space account migration', () => {
 
     // A record the new host holds that the old host never had, along with its op.
     await newAlice.pds.ctx.actorStore.transact(alice.did, async (txn) => {
+      const ref = SpaceRef.parse(space)
       const write = await prepareCreate({
         did: alice.did,
-        space,
+        space: ref,
         collection: TEST_COLLECTION,
         rkey: 'stale' as RecordKeyString,
         record: record(TEST_COLLECTION),
       })
-      await txn.space.applyWrites(space, [write])
+      await txn.space.applyWrites(ref, [write])
     })
 
     await sc.del(alice, space, { rkey: 'deleted' })

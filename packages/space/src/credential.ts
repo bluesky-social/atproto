@@ -5,6 +5,7 @@ import {
   type SpaceRefString,
   isValidDid,
 } from '@atproto/syntax'
+import { utf8 } from './bytes.js'
 import { SpaceTokenError } from './error.js'
 
 /**
@@ -50,16 +51,18 @@ const SPACE_TOKEN_TYPES = {
 
 export type SpaceTokenType = keyof typeof SPACE_TOKEN_TYPES
 
-// `sub` is the space URI, or the client_id for a client attestation.
-export type SpaceTokenPayload = {
+// `sub` is the space URI, or the client_id for a client attestation. `cnf` is
+// always present on the token types that require it.
+export type SpaceTokenPayload<T extends SpaceTokenType = SpaceTokenType> = {
   iss: string
   sub: string
   aud?: string
   iat: number
   exp: number
   jti: string
-  cnf?: { kid: DidString }
-}
+} & ((typeof SPACE_TOKEN_TYPES)[T]['requireCnf'] extends true
+  ? { cnf: { kid: DidString } }
+  : { cnf?: { kid: DidString } })
 
 export type SpaceTokenHeader = {
   alg: string
@@ -67,9 +70,9 @@ export type SpaceTokenHeader = {
   kid?: string
 }
 
-export type SpaceToken = {
+export type SpaceToken<T extends SpaceTokenType = SpaceTokenType> = {
   header: SpaceTokenHeader
-  payload: SpaceTokenPayload
+  payload: SpaceTokenPayload<T>
 }
 
 export const CLOCK_SKEW_SEC = 5
@@ -153,16 +156,16 @@ async function signSpaceToken(
   }
 
   const signingInput = `${jsonToB64Url(fullHeader)}.${jsonToB64Url(payload)}`
-  const sig = await keypair.sign(new TextEncoder().encode(signingInput))
+  const sig = await keypair.sign(utf8(signingInput))
   return `${signingInput}.${toBase64(sig, 'base64url')}`
 }
 
 // Structural validation only, no signature check. This is as far as we go for
 // client attestations, whose key comes from the client's JWKS, not a DID doc.
-export function parseSpaceToken(
-  type: SpaceTokenType,
+export function parseSpaceToken<T extends SpaceTokenType>(
+  type: T,
   jwt: string,
-): SpaceToken & { signingInput: Uint8Array; sig: Uint8Array } {
+): SpaceToken<T> & { signingInput: Uint8Array; sig: Uint8Array } {
   const spec = SPACE_TOKEN_TYPES[type]
 
   const parts = jwt.split('.')
@@ -172,7 +175,7 @@ export function parseSpaceToken(
   const [headerB64, payloadB64, sigB64] = parts
 
   const header = decodeJsonPart<SpaceTokenHeader>(headerB64, 'header')
-  const payload = decodeJsonPart<SpaceTokenPayload>(payloadB64, 'payload')
+  const payload = decodeJsonPart<SpaceTokenPayload<T>>(payloadB64, 'payload')
 
   if (header.typ !== spec.typ) {
     throw new SpaceTokenError(
@@ -225,7 +228,7 @@ export function parseSpaceToken(
   return {
     header,
     payload,
-    signingInput: new TextEncoder().encode(`${headerB64}.${payloadB64}`),
+    signingInput: utf8(`${headerB64}.${payloadB64}`),
     sig: fromBase64(sigB64, 'base64url'),
   }
 }
@@ -239,11 +242,11 @@ export type VerifySpaceTokenOpts = {
   sub?: string
 }
 
-export async function verifySpaceToken(
-  type: SpaceTokenType,
+export async function verifySpaceToken<T extends SpaceTokenType>(
+  type: T,
   jwt: string,
   opts: VerifySpaceTokenOpts,
-): Promise<SpaceToken> {
+): Promise<SpaceToken<T>> {
   const { header, payload, signingInput, sig } = parseSpaceToken(type, jwt)
 
   const now = Math.floor(Date.now() / 1000)
@@ -301,7 +304,7 @@ async function matchesSignature(
 }
 
 function jsonToB64Url(json: Record<string, unknown>): string {
-  return toBase64(new TextEncoder().encode(JSON.stringify(json)), 'base64url')
+  return toBase64(utf8(JSON.stringify(json)), 'base64url')
 }
 
 function decodeJsonPart<T>(b64: string, part: string): T {

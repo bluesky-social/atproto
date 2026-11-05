@@ -25,9 +25,10 @@ export default function (server: Server, ctx: AppContext) {
         calcPoints: () => 1,
       },
     ],
-    handler: async ({ input, auth }) => {
+    handler: async ({ input: { body }, auth }) => {
       const did = auth.credentials.did
-      const { space, repo } = input.body
+      const { space, repo } = body
+      const ref = toSpaceRef(space)
       if (repo !== did) {
         throw new ForbiddenError('repo must match authenticated user')
       }
@@ -35,14 +36,13 @@ export default function (server: Server, ctx: AppContext) {
       // In the authority's own repo, the published policy and member records are the
       // PDS's copy of the space's configuration rather than the account's records,
       // so they stay, and keeping them takes no grant.
-      const keep =
-        toSpaceRef(space).spaceDid === did ? PUBLISHED_COLLECTIONS : []
+      const keep = ref.spaceDid === did ? PUBLISHED_COLLECTIONS : []
 
       const commit = await ctx.actorStore.transact(did, async (actorTxn) => {
         const collections = await actorTxn.space.listCollections(space)
         for (const collection of collections) {
           if (keep.includes(collection)) continue
-          auth.credentials.permissions?.assertSpace(space, {
+          auth.credentials.permissions?.assertSpace(ref, {
             action: 'delete',
             collection,
           })
@@ -50,10 +50,10 @@ export default function (server: Server, ctx: AppContext) {
         return actorTxn.space.clearRecords(space, keep)
       })
 
-      await fireNotifyRepoUpdate(ctx, { space, writerDid: did, commit })
+      await fireNotifyRepoUpdate(ctx, { space: ref, writerDid: did, commit })
 
       return {
-        encoding: 'application/json' as const,
+        encoding: 'application/json',
         body: {},
       }
     },

@@ -5,7 +5,6 @@ import {
   SpaceMacError,
   SpaceMetaArchiveError,
   SpaceRepoVerificationError,
-  SpaceResponseError,
   SpaceSignatureError,
   SpaceTokenError,
   StarParseError,
@@ -23,11 +22,6 @@ describe('SpaceError', () => {
       'InvalidSpaceRepo',
     ],
     [new StarParseError('x'), 'StarParseError', 'InvalidStar'],
-    [
-      new SpaceResponseError(400, 'RepoTakendown', 'x'),
-      'SpaceResponseError',
-      'RepoTakendown',
-    ],
     [
       new SpaceMetaArchiveError('x'),
       'SpaceMetaArchiveError',

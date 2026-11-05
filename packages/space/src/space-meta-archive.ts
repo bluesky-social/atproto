@@ -162,7 +162,9 @@ function parseDef<T>(def: Def<T>, data: unknown): T {
     return def.schema.parse(data)
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err)
-    throw new SpaceMetaArchiveError(`invalid ${def.name}: ${message}`)
+    throw new SpaceMetaArchiveError(`invalid ${def.name}: ${message}`, {
+      cause: err,
+    })
   }
 }
 

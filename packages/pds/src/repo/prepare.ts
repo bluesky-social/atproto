@@ -23,8 +23,7 @@ import {
   type DidString,
   type NsidString,
   type RecordKeyString,
-  SpaceRef,
-  type SpaceRefString,
+  type SpaceRef,
   isValidRecordKey,
 } from '@atproto/syntax'
 import { hasExplicitSlur } from '../handle/explicit-slurs.js'
@@ -91,7 +90,7 @@ export const validateRecord = (
 
 export const prepareCreate = async (opts: {
   did: DidString
-  space?: SpaceRefString
+  space?: SpaceRef
   collection: NsidString
   rkey?: RecordKeyString
   swapCid?: Cid | null
@@ -114,7 +113,7 @@ export const prepareCreate = async (opts: {
 
 export const prepareUpdate = async (opts: {
   did: DidString
-  space?: SpaceRefString
+  space?: SpaceRef
   collection: NsidString
   rkey: RecordKeyString
   swapCid?: Cid | null
@@ -138,7 +137,7 @@ export const prepareUpdate = async (opts: {
 export async function prepareWrite(opts: {
   did: DidString
   // Set for a permissioned space record, whose uri nests under the space ref.
-  space?: SpaceRefString
+  space?: SpaceRef
   collection: NsidString
   rkey?: RecordKeyString
   record: LexMap
@@ -208,24 +207,15 @@ export async function prepareWrite(opts: {
       },
     ),
     uri: opts.space
-      ? spaceRecordUri(opts.space, opts.did, opts.collection, rkey)
+      ? opts.space.recordUri(opts.did, opts.collection, rkey)
       : AtUri.make(opts.did, opts.collection, rkey),
     cid: await cidForCbor(bytes),
   }
 }
 
-export const spaceRecordUri = (
-  space: SpaceRefString,
-  author: DidString,
-  collection: NsidString,
-  rkey: RecordKeyString,
-): AtUri => {
-  return SpaceRef.parse(space).recordUri(author, collection, rkey)
-}
-
 export const prepareDelete = (opts: {
   did: DidString
-  space?: SpaceRefString
+  space?: SpaceRef
   collection: NsidString
   rkey: RecordKeyString
   swapCid?: Cid | null
@@ -234,7 +224,7 @@ export const prepareDelete = (opts: {
   return {
     action: WriteOpAction.Delete,
     uri: space
-      ? spaceRecordUri(space, did, collection, rkey)
+      ? space.recordUri(did, collection, rkey)
       : AtUri.make(did, collection, rkey),
     swapCid,
   }

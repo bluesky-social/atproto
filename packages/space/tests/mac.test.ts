@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { randomBytes } from '@atproto/crypto'
 import { parseCid } from '@atproto/lex-data'
+import type { DidString } from '@atproto/syntax'
 import {
   type SpaceCommit,
   SpaceMacError,
@@ -142,7 +143,10 @@ describe('MAC headers', () => {
   })
 
   it('rejects a key share that is not a DID', () => {
-    const want = formatWantMacHeader('atproto-space-repo', 'not-a-did')
+    const want = formatWantMacHeader(
+      'atproto-space-repo',
+      'not-a-did' as DidString,
+    )
     expect(() => parseWantMacHeader(want, 'atproto-space-repo')).toThrow(
       SpaceMacError,
     )

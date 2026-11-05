@@ -9,6 +9,7 @@ import {
   commitMacHeaders,
   getSpaceMacSecret,
   isSpaceUserOrAdmin,
+  toSpaceRef,
 } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
@@ -21,7 +22,7 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ params, auth, req, res }) => {
       const { space, repo } = params
 
-      assertSpaceRead(auth, space, repo)
+      assertSpaceRead(auth, toSpaceRef(space), repo)
       await assertRepoAvailability(ctx, repo, isSpaceUserOrAdmin(auth, repo))
 
       const sharedSecret = await getSpaceMacSecret(ctx, {
@@ -48,7 +49,7 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       return {
-        encoding: 'application/json' as const,
+        encoding: 'application/json',
         body: {
           commit,
         },

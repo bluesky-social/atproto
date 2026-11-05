@@ -25,15 +25,15 @@ export default function (server: Server, ctx: AppContext) {
         manage: 'create',
       })
 
-      const commit = await ctx.spacePolicyManager.createSpace(space, policy)
+      const commit = await ctx.spacePolicyManager.createSpace(ref, policy)
       await fireNotifyRepoUpdate(ctx, {
-        space,
+        space: ref,
         writerDid: authorityDid,
         commit,
       })
 
       return {
-        encoding: 'application/json' as const,
+        encoding: 'application/json',
         body: { space },
       }
     },

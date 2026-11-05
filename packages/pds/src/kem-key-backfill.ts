@@ -4,8 +4,9 @@ import { setTimeout as sleep } from 'node:timers/promises'
 import * as plc from '@did-plc/lib'
 import { MINUTE, SECOND, fileExists, rmIfExists } from '@atproto/common'
 import { P256Keypair } from '@atproto/crypto'
-import type { DidString } from '@atproto/lex'
+import type { DidString } from '@atproto/syntax'
 import type { AppContext } from './context.js'
+import { toDateISO } from './db/index.js'
 import { spaceLogger } from './logger.js'
 
 /**
@@ -169,7 +170,7 @@ export class KemKeyBackfill implements AsyncDisposable {
     await this.db.executeWithRetry(
       this.db.db
         .updateTable('kem_key_backfill_lease')
-        .set({ completedAt: new Date().toISOString() })
+        .set({ completedAt: toDateISO(new Date()) })
         .where('id', '=', 1)
         .where('owner', '=', this.owner),
     )

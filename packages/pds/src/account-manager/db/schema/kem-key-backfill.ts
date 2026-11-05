@@ -1,8 +1,10 @@
+import type { DateISO } from '../../../db/index.js'
+
 export interface KemKeyBackfillLease {
   id: number
   owner: string
   expiresAt: number
-  completedAt: string | null
+  completedAt: DateISO | null
 }
 
 export type PartialDB = {

@@ -7,7 +7,7 @@ import {
 import { type Keypair, parseDidKey, verifySignature } from '@atproto/crypto'
 import { fromBase64 } from '@atproto/lex-data'
 import type { DidString } from '@atproto/syntax'
-import { toPaddedBase64 } from './bytes.js'
+import { toPaddedBase64, utf8 } from './bytes.js'
 import { SpaceSignatureError } from './error.js'
 
 type HttpHeaders = Record<string, string | string[] | undefined>
@@ -197,5 +197,5 @@ function signatureBase(
 ): Uint8Array {
   const lines = components.map(([name, value]) => `"${name}": ${value.trim()}`)
   lines.push(`"@signature-params": ${signatureInput}`)
-  return new TextEncoder().encode(lines.join('\n'))
+  return utf8(lines.join('\n'))
 }

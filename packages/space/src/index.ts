@@ -1,8 +1,4 @@
 export {
-  SpaceCredentialAgent,
-  type SpaceCredentialAgentOptions,
-} from './agent.js'
-export {
   CLIENT_ATTESTATION_TYP,
   CLOCK_SKEW_SEC,
   DELEGATION_TOKEN_TYP,
@@ -26,7 +22,6 @@ export {
   SpaceMacError,
   SpaceMetaArchiveError,
   SpaceRepoVerificationError,
-  SpaceResponseError,
   SpaceSignatureError,
   SpaceTokenError,
   StarParseError,
@@ -44,7 +39,6 @@ export { LtHash } from './lthash.js'
 export {
   COMMIT_MAC_TYPE,
   MAC_HEADER,
-  MAC_TYPE_BY_METHOD,
   type MacType,
   RECORD_MAC_TYPE,
   RECORD_MAC_VERSION,

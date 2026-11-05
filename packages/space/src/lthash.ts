@@ -1,5 +1,6 @@
 import { blake3 } from '@noble/hashes/blake3'
 import { sha256 } from '@noble/hashes/sha256'
+import { utf8 } from './bytes.js'
 
 const LANES = 1024
 const LANE_BYTES = 2 // @NOTE cannot change without reworking the Uint16Array impl
@@ -70,7 +71,7 @@ export class LtHash {
 
 // Expand to 1024 u16 lanes with BLAKE3 in XOF mode.
 function expand(element: string): Uint16Array {
-  const expanded = blake3(new TextEncoder().encode(element), {
+  const expanded = blake3(utf8(element), {
     dkLen: LTHASH_STATE_BYTES,
   })
   // Copy: the result may be a view at an offset a Uint16Array can't straddle.

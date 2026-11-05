@@ -1,6 +1,6 @@
 import { type LexValue, decode, encode } from '@atproto/lex-cbor'
 import {
-  type Cid,
+  type CborCid,
   cidForCbor,
   isPlainObject,
   parseCidSafe,
@@ -33,7 +33,7 @@ export type VerifySpaceRepoParams = VerifyCommitParams
 export type VerifiedRecord = {
   collection: NsidString
   rkey: RecordKeyString
-  cid: Cid
+  cid: CborCid
   record: SpaceRecord
 }
 
@@ -145,11 +145,11 @@ export async function verifyRecord(
       `record is not the one requested: ${record.uri}`,
     )
   }
-  const cid = parseCidSafe(record.cid)
+  const cid = parseCidSafe(record.cid, { flavor: 'cbor' })
   if (!cid) {
     throw new SpaceRepoVerificationError(`invalid record cid: ${record.cid}`)
   }
-  verifyRecordMac(params.sharedSecret, record.uri, cid, params.mac)
+  verifyRecordMac(params.sharedSecret, params.uri, cid, params.mac)
   const valueCid = await cidForCbor(encode(record.value))
   if (!valueCid.equals(cid)) {
     throw new SpaceRepoVerificationError('record value does not match its cid')
@@ -203,6 +203,7 @@ function parseMeta(meta: unknown) {
     const message = err instanceof Error ? err.message : String(err)
     throw new SpaceRepoVerificationError(
       `invalid ${defs.repoStarMeta.name}: ${message}`,
+      { cause: err },
     )
   }
 }

@@ -1,5 +1,4 @@
 import { LtHash } from '@atproto/space'
-import type { SpaceRefString } from '@atproto/syntax'
 import type { Server } from '@atproto/xrpc-server'
 import { AuthScope } from '../../../../auth-scope.js'
 import type { AppContext } from '../../../../context.js'
@@ -40,11 +39,11 @@ export default function (server: Server, ctx: AppContext) {
       )
 
       return {
-        encoding: 'application/json' as const,
+        encoding: 'application/json',
         body: {
           cursor: spaces.length < limit ? undefined : spaces.at(-1)?.uri,
           spaces: spaces.map((space) => ({
-            space: space.uri as SpaceRefString,
+            space: space.uri,
             repoRev: space.repoRev ?? undefined,
             data: space.setHash
               ? new LtHash(space.setHash).digest()

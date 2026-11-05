@@ -2242,9 +2242,6 @@ importers:
       '@atproto/car':
         specifier: workspace:^
         version: link:../car
-      '@atproto/common-web':
-        specifier: workspace:^
-        version: link:../common-web
       '@atproto/crypto':
         specifier: workspace:^
         version: link:../crypto
@@ -2254,9 +2251,6 @@ importers:
       '@atproto/lex-data':
         specifier: workspace:^
         version: link:../lex/lex-data
-      '@atproto/lex-json':
-        specifier: workspace:^
-        version: link:../lex/lex-json
       '@atproto/lex-schema':
         specifier: workspace:^
         version: link:../lex/lex-schema
@@ -2270,9 +2264,6 @@ importers:
         specifier: ^1.0.1
         version: 1.0.1
     devDependencies:
-      '@atproto/lex-client':
-        specifier: workspace:^
-        version: link:../lex/lex-client
       vitest:
         specifier: ^4.1.10
         version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@22.20.1)(@vitest/coverage-v8@4.1.10)(vite@8.2.2(@types/node@22.20.1)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.0))

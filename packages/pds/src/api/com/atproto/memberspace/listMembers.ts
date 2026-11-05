@@ -1,9 +1,8 @@
-import type { l } from '@atproto/lex'
 import type { Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
 import { assertMemberspace } from '../../../../space-policy/policy.js'
-import { assertSpaceAuthority } from '../space/util.js'
+import { assertSpaceAuthority, toSpaceRef } from '../space/util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.memberspace.listMembers, {
@@ -18,7 +17,7 @@ export default function (server: Server, ctx: AppContext) {
       const authorityDid = auth.credentials.did
       const { space, limit, cursor } = params
 
-      assertSpaceAuthority(auth, space, { action: 'read_self' })
+      assertSpaceAuthority(auth, toSpaceRef(space), { action: 'read_self' })
 
       const members = await ctx.actorStore.read(authorityDid, async (store) => {
         const policy = await store.space.getActiveSpacePolicy(space)
@@ -31,7 +30,7 @@ export default function (server: Server, ctx: AppContext) {
         body: {
           cursor: members.at(-1)?.did,
           members: members.map((member) => ({
-            did: member.did as l.DidString,
+            did: member.did,
             read: !!member.read,
             write: !!member.write,
           })),

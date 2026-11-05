@@ -3,18 +3,16 @@ import type {
   DidString,
   NsidString,
   RecordKeyString,
-  SpaceRefString,
+  SpaceRef,
 } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import type { SpaceTransactor } from '../actor-store/space/transactor.js'
-import { toSpaceRef } from '../api/com/atproto/space/util.js'
 import { com } from '../lexicons/index.js'
 import {
   type PreparedWrite,
   prepareCreate,
   prepareDelete,
   prepareUpdate,
-  spaceRecordUri,
 } from '../repo/index.js'
 import { didToRecordKey } from '../util/did-rkey.js'
 import {
@@ -50,7 +48,7 @@ export function assertNotPolicyRecord(collection: string): void {
 /** Publish, update, or withdraw the policy record to match the policy. */
 export async function preparePolicyRecordWrites(
   txn: SpaceTransactor,
-  space: SpaceRefString,
+  space: SpaceRef,
   policy: Policy,
 ): Promise<PreparedWrite[]> {
   if (isPolicyPublished(policy)) {
@@ -68,7 +66,7 @@ export async function preparePolicyRecordWrites(
  */
 export async function prepareMemberRecordWrites(
   txn: SpaceTransactor,
-  space: SpaceRefString,
+  space: SpaceRef,
   policy: Policy,
   did: DidString,
   access?: { read: boolean; write: boolean },
@@ -84,17 +82,17 @@ export async function prepareMemberRecordWrites(
 /** Publish or withdraw the whole member list to match the policy. */
 export async function prepareMemberListWrites(
   txn: SpaceTransactor,
-  space: SpaceRefString,
+  space: SpaceRef,
   policy: Policy,
 ): Promise<PreparedWrite[]> {
   const writes: PreparedWrite[] = []
-  for (const member of await txn.listMembers(space)) {
+  for (const member of await txn.listMembers(space.toString())) {
     const access = { read: !!member.read, write: !!member.write }
     const memberWrites = await prepareMemberRecordWrites(
       txn,
       space,
       policy,
-      member.did as DidString,
+      member.did,
       access,
     )
     writes.push(...memberWrites)
@@ -104,13 +102,13 @@ export async function prepareMemberListWrites(
 
 async function preparePut(
   txn: SpaceTransactor,
-  space: SpaceRefString,
+  space: SpaceRef,
   collection: NsidString,
   rkey: RecordKeyString,
   record: LexMap,
 ): Promise<PreparedWrite> {
-  const did = toSpaceRef(space).spaceDid
-  const uri = spaceRecordUri(space, did, collection, rkey)
+  const did = space.spaceDid
+  const uri = space.recordUri(did, collection, rkey)
   const exists = await txn.hasRecord(uri.toString())
   const write = { did, space, collection, rkey, record }
   return exists ? prepareUpdate(write) : prepareCreate(write)
@@ -118,12 +116,12 @@ async function preparePut(
 
 async function prepareDeleteIfExists(
   txn: SpaceTransactor,
-  space: SpaceRefString,
+  space: SpaceRef,
   collection: NsidString,
   rkey: RecordKeyString,
 ): Promise<PreparedWrite[]> {
-  const did = toSpaceRef(space).spaceDid
-  const uri = spaceRecordUri(space, did, collection, rkey)
+  const did = space.spaceDid
+  const uri = space.recordUri(did, collection, rkey)
   const exists = await txn.hasRecord(uri.toString())
   if (!exists) return []
   return [prepareDelete({ did, space, collection, rkey })]

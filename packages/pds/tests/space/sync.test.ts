@@ -2,7 +2,6 @@ import { jest } from '@jest/globals'
 import { sql } from 'kysely'
 import { MINUTE, TID } from '@atproto/common'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
-import { Client } from '@atproto/lex'
 import { parseCid } from '@atproto/lex-data'
 import { lexParse } from '@atproto/lex-json'
 import {
@@ -11,9 +10,7 @@ import {
   MAC_HEADER,
   RECORD_MAC_TYPE,
   RepoCommit,
-  SpaceCredentialAgent,
   SpaceRepoVerificationError,
-  type VerifiedRecord,
   WANT_MAC_HEADER,
   createSpaceSigHeaders,
   encapsulate,
@@ -643,42 +640,6 @@ describe('space sync', () => {
       expect(() =>
         verifyCommit(commit, { space, repo: bob.did, sharedSecret, mac }),
       ).not.toThrow()
-    })
-  })
-
-  describe('SpaceCredentialAgent', () => {
-    it('reads and syncs a repo through lex-client, verifying each MAC', async () => {
-      const space = await sc.createSpace(alice, { members: [bob, carol] })
-      for (const i of [0, 1]) {
-        await sc.write(bob, space, { rkey: `agent-${i}`, text: `agent ${i}` })
-      }
-
-      // Carol syncs bob's repo, as a syncing service would.
-      const cred = await sc.credentialFor(carol, space)
-      const agent = new SpaceCredentialAgent({
-        credential: cred.credential,
-        keypair: cred.key,
-        resolveDidDoc: (did) => sc.idResolver.did.ensureResolve(did),
-      })
-
-      const record = await new Client(agent).call(com.atproto.space.getRecord, {
-        space,
-        repo: bob.did,
-        collection: TEST_COLLECTION,
-        rkey: 'agent-0',
-      })
-      expect(record.value).toMatchObject({ text: 'agent 0' })
-
-      await using repo = await agent.getRepo({ space, repo: bob.did })
-      const records: VerifiedRecord[] = []
-      for await (const r of repo.records) records.push(r)
-      const state = await sc.repoState(bob, space)
-      expect(repo.commit.rev).toBe(state?.rev)
-      expect(
-        RepoCommit.fromRecords(records).setHash.equals(
-          RepoCommit.fromState(state?.setHash).setHash,
-        ),
-      ).toBe(true)
     })
   })
 

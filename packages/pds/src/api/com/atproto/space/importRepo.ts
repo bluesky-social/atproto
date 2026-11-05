@@ -3,7 +3,7 @@ import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
 import { ACCESS_FULL } from '../../../../auth-scope.js'
 import type { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
-import { throwInvalidArchive } from './util.js'
+import { throwInvalidArchive, toSpaceRef } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.space.importRepo, {
@@ -17,7 +17,7 @@ export default function (server: Server, ctx: AppContext) {
         // Performed in the handler as it requires the archive's contents
       },
     }),
-    handler: async ({ input, auth }) => {
+    handler: async ({ input: { body }, auth }) => {
       if (!ctx.cfg.service.acceptingImports) {
         throw new InvalidRequestError('Service is not accepting repo imports')
       }
@@ -26,7 +26,7 @@ export default function (server: Server, ctx: AppContext) {
 
       // @NOTE read the whole archive before the transaction, as
       // com.atproto.repo.importRepo does with its CAR.
-      const { commit, records } = await readRepo(input.body).catch((err) =>
+      const { commit, records } = await readRepo(body).catch((err) =>
         throwInvalidArchive(err, 'InvalidRepoFile'),
       )
       if (commit.repo !== did) {
@@ -36,16 +36,17 @@ export default function (server: Server, ctx: AppContext) {
         )
       }
 
+      const ref = toSpaceRef(commit.space)
       const collections = new Set(records.map((record) => record.collection))
       for (const collection of collections) {
-        auth.credentials.permissions?.assertSpace(commit.space, {
+        auth.credentials.permissions?.assertSpace(ref, {
           action: 'create',
           collection,
         })
       }
 
       await ctx.actorStore.transact(did, (actorTxn) =>
-        actorTxn.space.importRepo(commit.space, records),
+        actorTxn.space.importRepo(ref, records),
       )
     },
   })

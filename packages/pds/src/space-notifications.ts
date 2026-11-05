@@ -1,14 +1,8 @@
 import { randomUUID } from 'node:crypto'
 import { DAY, HOUR, MINUTE, SECOND, allFulfilled } from '@atproto/common'
-import {
-  type DidString,
-  RETRYABLE_HTTP_STATUS_CODES,
-  type SpaceRefString,
-  XrpcError,
-  xrpc,
-} from '@atproto/lex'
+import { RETRYABLE_HTTP_STATUS_CODES, XrpcError, xrpc } from '@atproto/lex'
 import { LtHash, spaceHostAud } from '@atproto/space'
-import { SpaceRef } from '@atproto/syntax'
+import { type DidString, SpaceRef } from '@atproto/syntax'
 import { XRPCError } from '@atproto/xrpc-server'
 import type {
   SpaceNotificationRetry,
@@ -52,10 +46,11 @@ export class SpaceNotifications implements AsyncDisposable {
 
   /** Send immediately, persisting retryable failures for the retry worker. */
   async notify(
-    space: SpaceRefString,
+    ref: SpaceRef,
     repo: DidString,
     commit: { rev: string; setHash: Uint8Array },
   ): Promise<void> {
+    const space = ref.toString()
     const body = {
       space,
       repo,
@@ -63,7 +58,7 @@ export class SpaceNotifications implements AsyncDisposable {
       data: new LtHash(commit.setHash).digest(),
     }
     try {
-      await this.deliver(body)
+      await this.deliver(ref, body)
       await this.clearRetry(body)
     } catch (err) {
       if (!isRetryableError(err)) {
@@ -108,13 +103,14 @@ export class SpaceNotifications implements AsyncDisposable {
    * credential, and is answered SpaceDeleted.
    */
   async notifySpaceStatus(
-    space: SpaceRefString,
+    ref: SpaceRef,
     recipients: { service: string; expiresAt: string }[],
   ): Promise<void> {
+    const space = ref.toString()
     await allFulfilled(
       recipients.map(async ({ service, expiresAt }) => {
         try {
-          await this.deliverSpaceStatus(space, service)
+          await this.deliverSpaceStatus(ref, service)
         } catch (err) {
           if (!isRetryableError(err)) {
             spaceLogger.warn(
@@ -222,7 +218,8 @@ export class SpaceNotifications implements AsyncDisposable {
       return
     }
 
-    const { spaceDid } = SpaceRef.parse(space)
+    const ref = SpaceRef.parse(space)
+    const { spaceDid } = ref
     const authority = await this.ctx.accountManager.getAccount(spaceDid, {
       includeDeactivated: true,
       includeTakenDown: true,
@@ -247,7 +244,7 @@ export class SpaceNotifications implements AsyncDisposable {
     }
 
     try {
-      await this.deliverSpaceStatus(space, service)
+      await this.deliverSpaceStatus(ref, service)
       await this.clearSpaceStatusRetry(retry)
     } catch (err) {
       if (!isRetryableError(err)) {
@@ -299,7 +296,7 @@ export class SpaceNotifications implements AsyncDisposable {
   private async retryOne(retry: SpaceNotificationRetry): Promise<void> {
     const { space, repo, repoRev, data } = retry
     try {
-      await this.deliver({ space, repo, repoRev, data })
+      await this.deliver(SpaceRef.parse(space), { space, repo, repoRev, data })
       await this.clearRetry(retry)
     } catch (err) {
       if (!isRetryableError(err)) {
@@ -362,6 +359,7 @@ export class SpaceNotifications implements AsyncDisposable {
   }
 
   private async deliver(
+    ref: SpaceRef,
     body: com.atproto.space.notifyRepoUpdate.$InputBody,
   ): Promise<void> {
     const signal = AbortSignal.any([
@@ -369,10 +367,10 @@ export class SpaceNotifications implements AsyncDisposable {
       AbortSignal.timeout(10 * SECOND),
     ])
     signal.throwIfAborted()
-    const { spaceDid } = SpaceRef.parse(body.space)
+    const { spaceDid } = ref
     const authority = await this.ctx.accountManager.getAccount(spaceDid)
     if (authority) {
-      await processNotifyRepoUpdate(this.ctx, body)
+      await processNotifyRepoUpdate(this.ctx, ref, body)
     } else {
       const target = await resolveNotifyTarget(this.ctx, {
         iss: body.repo,
@@ -389,7 +387,7 @@ export class SpaceNotifications implements AsyncDisposable {
   }
 
   private async deliverSpaceStatus(
-    space: SpaceRefString,
+    ref: SpaceRef,
     service: string,
   ): Promise<void> {
     const signal = AbortSignal.any([
@@ -397,16 +395,15 @@ export class SpaceNotifications implements AsyncDisposable {
       AbortSignal.timeout(10 * SECOND),
     ])
     signal.throwIfAborted()
-    const { spaceDid } = SpaceRef.parse(space)
     const target = await resolveNotifyTarget(this.ctx, {
-      iss: spaceDid,
+      iss: ref.spaceDid,
       service,
       lxm: com.atproto.space.notifySpaceStatus.$lxm,
     })
     if (!target) throw new Error('Could not resolve syncer')
     await xrpc(target.endpoint, com.atproto.space.notifySpaceStatus, {
       headers: target.headers,
-      body: { space, status: 'deleted' },
+      body: { space: ref.toString(), status: 'deleted' },
       signal,
     })
   }

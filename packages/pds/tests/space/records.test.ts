@@ -1,7 +1,7 @@
 import { TestNetworkNoAppView } from '@atproto/dev-env'
 import { getBlobCidString, parseCid } from '@atproto/lex-data'
 import { MAX_RECORD_SIZE } from '@atproto/space'
-import type { NsidString } from '@atproto/syntax'
+import { type NsidString, SpaceRef } from '@atproto/syntax'
 import { com } from '../../src/lexicons/index.js'
 import { prepareCreate } from '../../src/repo/index.js'
 import {
@@ -570,7 +570,7 @@ describe('space records', () => {
       await expect(
         prepareCreate({
           did: alice.did,
-          space,
+          space: SpaceRef.parse(space),
           collection: TEST_COLLECTION,
           record: record(TEST_COLLECTION, 'x'.repeat(MAX_RECORD_SIZE)),
         }),

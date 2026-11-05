@@ -1,4 +1,3 @@
-import type { l } from '@atproto/lex'
 import { COMMIT_MAC_TYPE } from '@atproto/space'
 import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../../../context.js'
@@ -10,6 +9,7 @@ import {
   commitMacHeaders,
   getSpaceMacSecret,
   isSpaceUserOrAdmin,
+  toSpaceRef,
 } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
@@ -22,7 +22,7 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ params, auth, req, res }) => {
       const { space, repo, since, limit, excludeValues } = params
 
-      assertSpaceRead(auth, space, repo)
+      assertSpaceRead(auth, toSpaceRef(space), repo)
       await assertRepoAvailability(ctx, repo, isSpaceUserOrAdmin(auth, repo))
 
       const sharedSecret = await getSpaceMacSecret(ctx, {
@@ -58,14 +58,14 @@ export default function (server: Server, ctx: AppContext) {
 
       const last = ops.at(-1)
       return {
-        encoding: 'application/json' as const,
+        encoding: 'application/json',
         body: {
           ops: ops.map((op) => ({
             rev: op.rev,
-            collection: op.collection as l.NsidString,
-            rkey: op.rkey as l.RecordKeyString,
-            cid: op.cid as l.CidString | null,
-            prev: op.prev as l.CidString | null,
+            collection: op.collection,
+            rkey: op.rkey,
+            cid: op.cid,
+            prev: op.prev,
             value: op.value,
           })),
           cursor:

@@ -9,7 +9,7 @@ import {
 } from 'structured-headers'
 import { hmacSha256 } from '@atproto/crypto'
 import { type Cid, fromBase64, ui8Concat } from '@atproto/lex-data'
-import { type DidString, isValidDid } from '@atproto/syntax'
+import { type AtUriString, type DidString, isValidDid } from '@atproto/syntax'
 import { timingSafeEqual, toPaddedBase64, uint16be, utf8 } from './bytes.js'
 import { SpaceMacError } from './error.js'
 import { COMMIT_VERSION, type SpaceCommit } from './types.js'
@@ -29,14 +29,6 @@ export type MacType = typeof COMMIT_MAC_TYPE | typeof RECORD_MAC_TYPE
 
 export const WANT_MAC_HEADER = 'atproto-space-want-mac'
 export const MAC_HEADER = 'atproto-space-mac'
-
-/** The methods whose responses a repo host authenticates with a MAC, by NSID. */
-export const MAC_TYPE_BY_METHOD: Readonly<Record<string, MacType>> = {
-  'com.atproto.space.getLatestCommit': COMMIT_MAC_TYPE,
-  'com.atproto.space.getRepo': COMMIT_MAC_TYPE,
-  'com.atproto.space.listRepoOps': COMMIT_MAC_TYPE,
-  'com.atproto.space.getRecord': RECORD_MAC_TYPE,
-}
 
 // The version a MAC type is currently on. Commits share theirs with the commit format.
 function macVersion(type: MacType): number {
@@ -86,7 +78,7 @@ export function verifyCommitMac(
  */
 export function computeRecordMac(
   sharedSecret: Uint8Array,
-  uri: string,
+  uri: AtUriString,
   cid: Cid,
 ): Uint8Array {
   const context = ui8Concat([
@@ -98,7 +90,7 @@ export function computeRecordMac(
 
 export function verifyRecordMac(
   sharedSecret: Uint8Array,
-  uri: string,
+  uri: AtUriString,
   cid: Cid,
   mac: Uint8Array,
 ): void {
@@ -118,7 +110,10 @@ function lengthPrefixed(str: string): Uint8Array {
  * The `Atproto-Space-Want-Mac` request header, e.g.
  * `type="atproto-space-repo", ver=1, key_share="did:key:zDna..."`
  */
-export function formatWantMacHeader(type: MacType, keyShare: string): string {
+export function formatWantMacHeader(
+  type: MacType,
+  keyShare: DidString,
+): string {
   return serializeDictionary(
     new Map([
       ['type', [type, new Map()]],
