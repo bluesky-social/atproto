@@ -146,6 +146,7 @@
     "app.bsky.unspecced.getAtmosphereApps",
     "app.bsky.unspecced.getAtmosphereExploreArticleRecommendations",
     "app.bsky.unspecced.getAtmosphereExploreTab",
+    "app.bsky.unspecced.getAtmosphereRecordView",
     "app.bsky.unspecced.getAtmosphereTimeline",
     "app.bsky.unspecced.getConfig",
     "app.bsky.unspecced.getOnboardingSuggestedStarterPacks",
@@ -976,11 +977,15 @@
     },
     "app.bsky.unspecced.getAtmosphereExploreTab": {
       "uri": "file://../../lexicons-overrides/app/bsky/unspecced/getAtmosphereExploreTab.json",
-      "cid": "bafyreibyqmxg3gvwf6jnguqhqv25rj6oxue5gptgu6crr32efmq57nuxrq"
+      "cid": "bafyreihbh326n4onxitcho3mrbvk5kblz3mexq7i2xjv2g62kvkbye6wzm"
+    },
+    "app.bsky.unspecced.getAtmosphereRecordView": {
+      "uri": "file://../../lexicons-overrides/app/bsky/unspecced/getAtmosphereRecordView.json",
+      "cid": "bafyreigc3pdtr77li2zp32br4pvysah6sd67345xlkjuy4finc35asvmc4"
     },
     "app.bsky.unspecced.getAtmosphereTimeline": {
       "uri": "file://../../lexicons-overrides/app/bsky/unspecced/getAtmosphereTimeline.json",
-      "cid": "bafyreibq6g2kinvd4kcvxrqn7xoydqhcca2fajlqxyckaqfkfljivmd6ni"
+      "cid": "bafyreigbqoyhxvzodgh2kx6lqta67vllstegauolvte6dwbnznxx6oss5m"
     },
     "app.bsky.unspecced.getConfig": {
       "uri": "https://raw.githubusercontent.com/bluesky-social/bsky/refs/heads/main/lexicons/app/bsky/unspecced/getConfig.json",
@@ -1852,11 +1857,11 @@
     },
     "tools.ozone.inbox.defs": {
       "uri": "file://../../lexicons/tools/ozone/inbox/defs.json",
-      "cid": "bafyreieemeqpxmax3rlrtrw554gggpb5q2zkcshexbx2jdat2jxs4km2pq"
+      "cid": "bafyreichr4beggvc355lgnn6xxnl6xt47lsyjbz6eucrfzy7l6xi2u4t74"
     },
     "tools.ozone.inbox.getAccountStatus": {
       "uri": "file://../../lexicons/tools/ozone/inbox/getAccountStatus.json",
-      "cid": "bafyreifh4zdflpggwcasfewmloizyvbzagavqiccagnpngzk6l5j5qxjg4"
+      "cid": "bafyreielxu7srjidj7dnjp25kh5kzzxsmoobe7newl5ika3fd4fdyvf2hq"
     },
     "tools.ozone.inbox.getActionedSubject": {
       "uri": "file://../../lexicons/tools/ozone/inbox/getActionedSubject.json",

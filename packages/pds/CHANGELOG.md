@@ -1,5 +1,17 @@
 # @atproto/pds
 
+## 0.5.54
+
+### Patch Changes
+
+- [#5799](https://github.com/bluesky-social/atproto/pull/5799) [`9537a65`](https://github.com/bluesky-social/atproto/commit/9537a659a9d85bbeef1bb423fcb4be9d2e618ff2) Thanks [@dholms](https://github.com/dholms)! - Add the `com.atproto.label.record` lexicon
+
+- [#5813](https://github.com/bluesky-social/atproto/pull/5813) [`43b0be2`](https://github.com/bluesky-social/atproto/commit/43b0be2fa15e49479c11254101a056e9da137c84) Thanks [@foysalit](https://github.com/foysalit)! - Expose account enforcement and best-effort profile information in the moderation inbox.
+- Updated dependencies []:
+  - @atproto-labs/fetch-node@0.4.5
+  - @atproto/oauth-provider@0.25.4
+  - @atproto/identity@0.5.22
+
 ## 0.5.53
 
 ### Patch Changes

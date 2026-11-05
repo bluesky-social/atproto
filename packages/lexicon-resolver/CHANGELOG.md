@@ -1,5 +1,13 @@
 # @atproto/lexicon-resolver
 
+## 0.4.32
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto-labs/fetch-node@0.4.5
+  - @atproto/identity@0.5.22
+
 ## 0.4.31
 
 ### Patch Changes
