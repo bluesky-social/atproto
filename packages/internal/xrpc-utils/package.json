@@ -41,6 +41,10 @@
     "@atproto/xrpc-server": "workspace:^"
   },
   "scripts": {
-    "build": "tsc --build tsconfig.build.json"
+    "build": "tsc --build tsconfig.build.json",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "vitest": "^4.1.10"
   }
 }
