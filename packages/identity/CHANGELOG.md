@@ -1,5 +1,12 @@
 # @atproto/identity
 
+## 0.5.23
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/common-web@0.5.17
+
 ## 0.5.22
 
 ### Patch Changes

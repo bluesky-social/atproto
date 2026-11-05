@@ -1,5 +1,18 @@
 # @atproto/lex-installer
 
+## 0.2.7
+
+### Patch Changes
+
+- Updated dependencies [[`8c841f6`](https://github.com/bluesky-social/atproto/commit/8c841f6e73c8365c2dfe816c0613aa9c50490361), [`8c841f6`](https://github.com/bluesky-social/atproto/commit/8c841f6e73c8365c2dfe816c0613aa9c50490361), [`8c841f6`](https://github.com/bluesky-social/atproto/commit/8c841f6e73c8365c2dfe816c0613aa9c50490361), [`8c841f6`](https://github.com/bluesky-social/atproto/commit/8c841f6e73c8365c2dfe816c0613aa9c50490361)]:
+  - @atproto/lex-data@0.1.10
+  - @atproto/lex-cbor@0.1.9
+  - @atproto/lex-schema@0.2.11
+  - @atproto/lex-document@0.1.16
+  - @atproto/lex-resolver@0.4.4
+  - @atproto/lex-rpc@0.0.3
+  - @atproto/lex-builder@0.1.20
+
 ## 0.2.6
 
 ### Patch Changes

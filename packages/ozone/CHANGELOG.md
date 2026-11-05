@@ -1,5 +1,21 @@
 # @atproto/ozone
 
+## 0.12.3
+
+### Patch Changes
+
+- [#5827](https://github.com/bluesky-social/atproto/pull/5827) [`bce6f7e`](https://github.com/bluesky-social/atproto/commit/bce6f7e45897fc7c0f8217c412b54adbae36b774) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Proxy authenticated Atmosphere record view requests to AppView with Ozone service credentials and the requested labelers.
+
+- [#5817](https://github.com/bluesky-social/atproto/pull/5817) [`d4f2c91`](https://github.com/bluesky-social/atproto/commit/d4f2c919697d37af8f411f724e12b8ce2b88f922) Thanks [@foysalit](https://github.com/foysalit)! - Support linking report closures to existing moderation events and targeting all subjects owned by an account from a moderation event.
+- Updated dependencies [[`8c841f6`](https://github.com/bluesky-social/atproto/commit/8c841f6e73c8365c2dfe816c0613aa9c50490361), [`8c841f6`](https://github.com/bluesky-social/atproto/commit/8c841f6e73c8365c2dfe816c0613aa9c50490361), [`8c841f6`](https://github.com/bluesky-social/atproto/commit/8c841f6e73c8365c2dfe816c0613aa9c50490361), [`8c841f6`](https://github.com/bluesky-social/atproto/commit/8c841f6e73c8365c2dfe816c0613aa9c50490361)]:
+  - @atproto/lex-data@0.1.10
+  - @atproto/lex-schema@0.2.11
+  - @atproto/common@0.8.9
+  - @atproto/lex-client@0.4.2
+  - @atproto/xrpc-server@0.13.9
+  - @atproto/lex-password-session@0.3.2
+  - @atproto/identity@0.5.23
+
 ## 0.12.2
 
 ### Patch Changes
