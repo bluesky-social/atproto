@@ -74,7 +74,7 @@ export const verifyDiff = async (
   const diff = await DataDiff.of(updated.data, repo?.data ?? null)
   const writes = await util.diffToWriteDescripts(diff)
   const newBlocks = diff.newMstBlocks
-  const leaves = updateBlocks.getMany(diff.newLeafCids.toList())
+  const leaves = updateBlocks.getMany(diff.newLeafCids)
   if (leaves.missing.length > 0 && ensureLeaves) {
     throw new Error(`missing leaf blocks: ${leaves.missing}`)
   }

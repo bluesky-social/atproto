@@ -61,9 +61,9 @@ export class SqlRepoTransactor extends SqlRepoReader implements RepoStorage {
     }
   }
 
-  async deleteMany(cids: Cid[]) {
-    if (cids.length < 1) return
-    const cidStrs = cids.map((c) => c.toString())
+  async deleteMany(cids: Iterable<Cid>) {
+    const cidStrs = Array.from(cids, (c) => c.toString())
+    if (cidStrs.length < 1) return
     await this.db.db
       .deleteFrom('repo_block')
       .where('cid', 'in', cidStrs)
@@ -73,7 +73,7 @@ export class SqlRepoTransactor extends SqlRepoReader implements RepoStorage {
   async applyCommit(commit: CommitData, isCreate?: boolean) {
     await this.updateRoot(commit.cid, commit.rev, isCreate)
     await this.putMany(commit.newBlocks, commit.rev)
-    await this.deleteMany(commit.removedCids.toList())
+    await this.deleteMany(commit.removedCids)
   }
 
   async updateRoot(cid: Cid, rev: string, isCreate = false): Promise<void> {

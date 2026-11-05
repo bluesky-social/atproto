@@ -151,7 +151,7 @@ export class Repo extends ReadableRepo {
     const relevantBlocks = new BlockMap()
     for (const proof of proofs) relevantBlocks.addMap(proof)
 
-    const addedLeaves = leaves.getMany(diff.newLeafCids.toList())
+    const addedLeaves = leaves.getMany(diff.newLeafCids)
     if (addedLeaves.missing.length > 0) {
       throw new Error(`Missing leaf blocks: ${addedLeaves.missing}`)
     }
