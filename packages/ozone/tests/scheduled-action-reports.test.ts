@@ -227,45 +227,201 @@ describe('scheduled action reports', () => {
     expect(data.notifications).toEqual([])
   }
 
-  it('keeps scheduled closures pending in inbox details and filters before pagination', async () => {
-    const reporter = await fixture()
-    const f = await fixture()
-    const first = await report(f.subject, spam, reporter.did)
-    const second = await report(f.subject, other, reporter.did)
-    const resolved = await report(f.subject, spam, reporter.did)
-    await activity(resolved.id, 'closeActivity')
-    await schedule(f.did, { all: true })
-    for (const row of [first, second]) {
-      expect((await reportForEvent(mod, row.eventId)).status).toBe('closed')
-      const detail = await inboxReport(row.id, reporter.did)
-      expect(detail.report.status).toBe('pending')
-      expect(detail.resolution).toBeUndefined()
-      expect(await reportNotifications(row.id, reporter.did)).toEqual([])
-    }
-    for (const sortField of ['createdAt', 'updatedAt'] as const) {
-      for (const sortDirection of ['asc', 'desc'] as const) {
-        const ids: number[] = []
-        let cursor: string | undefined
-        do {
-          const page = await inboxReports(
-            { filter: 'pending', limit: 1, sortField, sortDirection, cursor },
-            reporter.did,
-          )
-          expect(page.reports).toHaveLength(1)
-          expect(page.reports[0].status).toBe('pending')
-          ids.push(page.reports[0].id)
-          cursor = page.cursor
-          expect(ids.length).toBeLessThanOrEqual(2)
-        } while (cursor)
-        expect(ids.sort((a, b) => a - b)).toEqual([first.id, second.id])
+  it.each(['ids', 'types', 'all'] as const)(
+    'hides scheduled %s closures across report reasons in inbox details and paginated lists',
+    async (selector) => {
+      const reporter = await fixture()
+      const f = await fixture()
+      const reasonTypes = [
+        spam,
+        other,
+        tools.ozone.report.defs.ReasonMisleadingBot,
+        tools.ozone.report.defs.ReasonMisleadingImpersonation,
+        tools.ozone.report.defs.ReasonMisleadingSpam,
+        tools.ozone.report.defs.ReasonMisleadingScam,
+        tools.ozone.report.defs.ReasonMisleadingElections,
+        tools.ozone.report.defs.ReasonMisleadingOther,
+        tools.ozone.report.defs.ReasonRuleBanEvasion,
+        tools.ozone.report.defs.ReasonRuleSiteSecurity,
+        tools.ozone.report.defs.ReasonChildSafetyCsam,
+        tools.ozone.report.defs.ReasonSexualNcii,
+        tools.ozone.report.defs.ReasonHarassmentTargeted,
+        tools.ozone.report.defs.ReasonViolenceThreats,
+        tools.ozone.report.defs.ReasonSelfHarmContent,
+      ]
+      const pending: Awaited<ReturnType<typeof report>>[] = []
+      for (const reason of reasonTypes) {
+        pending.push(await report(f.subject, reason, reporter.did))
       }
-    }
-    const page = await inboxReports({ filter: 'resolved' }, reporter.did)
-    expect(page.reports.map((r) => r.id)).toEqual([resolved.id])
-    await expect(inboxReport(first.id, sc.dids.carol)).rejects.toMatchObject({
-      error: 'NotFound',
-    })
-  })
+      const details = await Promise.all(
+        pending.map((row) => inboxReport(row.id, reporter.did)),
+      )
+      const resolved = await report(f.subject, spam, reporter.did)
+      await activity(resolved.id, 'closeActivity')
+      expect(
+        await schedule(f.did, {
+          ...(selector === 'ids'
+            ? { ids: pending.map((row) => row.id) }
+            : selector === 'types'
+              ? { types: reasonTypes }
+              : { all: true }),
+          note: 'PRIVATE scheduled report note',
+          isAutomated: true,
+        }),
+      ).toEqual({ succeeded: [f.did], failed: [] })
+      expect((await actions(f.did))[0].status).toBe('pending')
+      for (const [index, row] of pending.entries()) {
+        expect((await reportForEvent(mod, row.eventId)).status).toBe('closed')
+        const detail = await inboxReport(row.id, reporter.did)
+        expect(detail).toEqual({
+          report: { ...details[index].report, updatedAt: expect.any(String) },
+        })
+        expect(detail.report.status).toBe('pending')
+        expect(await reportNotifications(row.id, reporter.did)).toEqual([])
+      }
+      for (const filter of ['all', 'pending', 'unread'] as const) {
+        for (const sortField of ['createdAt', 'updatedAt'] as const) {
+          for (const sortDirection of ['asc', 'desc'] as const) {
+            const seen: number[] = []
+            let cursor: string | undefined
+            do {
+              const page = await inboxReports(
+                { filter, limit: 5, sortField, sortDirection, cursor },
+                reporter.did,
+              )
+              for (const view of page.reports) {
+                if (view.id === resolved.id) {
+                  expect(filter).not.toBe('pending')
+                  expect(view.status).toBe('resolved')
+                  continue
+                }
+                const original = details.find((d) => d.report.id === view.id)
+                expect(original).toBeDefined()
+                expect(view).toEqual({
+                  ...original!.report,
+                  status: 'pending',
+                  updatedAt: expect.any(String),
+                  isRead: false,
+                })
+                seen.push(view.id)
+              }
+              cursor = page.cursor
+              expect(seen.length).toBeLessThanOrEqual(pending.length)
+            } while (cursor)
+            expect(seen.sort((a, b) => a - b)).toEqual(
+              pending.map((row) => row.id),
+            )
+          }
+        }
+      }
+      const page = await inboxReports({ filter: 'resolved' }, reporter.did)
+      expect(page.reports.map((r) => r.id)).toEqual([resolved.id])
+      await expect(
+        inboxReport(pending[0].id, sc.dids.carol),
+      ).rejects.toMatchObject({
+        error: 'NotFound',
+      })
+      const headers = inboxHeaders(network, sc, f.did)
+      const { data: subjects } =
+        await sc.agent.tools.ozone.inbox.listActionedSubjects({}, { headers })
+      expect(subjects.subjects).toEqual([])
+      await expect(
+        sc.agent.tools.ozone.inbox.getActionedSubject(
+          { subject: f.did },
+          { headers },
+        ),
+      ).rejects.toMatchObject({ error: 'NotFound' })
+      const { data: notifications } =
+        await sc.agent.tools.ozone.inbox.listNotifications({}, { headers })
+      expect(notifications.notifications).toEqual([])
+      const { data: counts } = await sc.agent.tools.ozone.inbox.getUnreadCount(
+        {},
+        { headers },
+      )
+      expect(counts.unreadCounts).toEqual({
+        total: 0,
+        reports: 0,
+        subjects: 0,
+        accountStatus: 0,
+      })
+    },
+  )
+
+  it.each(['all', 'types'] as const)(
+    'hides scheduled %s actions from appeal views and notifications',
+    async (selector) => {
+      const f = await accountAppeal()
+      const selected = await report(f.subject, spam, f.did)
+      const headers = inboxHeaders(network, sc, f.did)
+      const { data: beforeDetail } =
+        await sc.agent.tools.ozone.inbox.getActionedSubject(
+          { subject: f.did },
+          { headers },
+        )
+      const { data: beforeNotifications } =
+        await sc.agent.tools.ozone.inbox.listNotifications({}, { headers })
+      const { data: beforeCounts } =
+        await sc.agent.tools.ozone.inbox.getUnreadCount({}, { headers })
+      expect(
+        await schedule(f.did, {
+          ...(selector === 'all'
+            ? { all: true }
+            : { types: [spam, tools.ozone.report.defs.ReasonAppeal] }),
+          note: 'PRIVATE scheduled appeal note',
+        }),
+      ).toEqual({ succeeded: [f.did], failed: [] })
+      expect((await actions(f.did))[0].status).toBe('pending')
+      expect((await reportForEvent(mod, selected.eventId)).status).toBe(
+        'closed',
+      )
+      await assertPendingAppeal(f)
+      const { data: detail } =
+        await sc.agent.tools.ozone.inbox.getActionedSubject(
+          { subject: f.did },
+          { headers },
+        )
+      expect(detail).toEqual({ ...beforeDetail, updatedAt: expect.any(String) })
+      for (const filter of ['all', 'pending', 'unread'] as const) {
+        const { data } = await sc.agent.tools.ozone.inbox.listActionedSubjects(
+          { filter },
+          { headers },
+        )
+        expect(data.subjects).toHaveLength(1)
+        expect(data.subjects[0].appeal).toEqual(beforeDetail.appeal)
+        expect(data.subjects[0].latestAction).toEqual(beforeDetail.actions[0])
+        expect(data.subjects[0].actionCount).toBe(beforeDetail.actions.length)
+      }
+      const { data: resolved } =
+        await sc.agent.tools.ozone.inbox.listActionedSubjects(
+          { filter: 'resolved' },
+          { headers },
+        )
+      expect(resolved.subjects).toEqual([])
+      await expect(inboxReport(f.appeal.id, f.did)).rejects.toMatchObject({
+        error: 'NotFound',
+      })
+      for (const filter of ['all', 'pending', 'unread', 'resolved'] as const) {
+        const page = await inboxReports({ filter }, f.did)
+        expect(page.reports.map((row) => row.id)).toEqual(
+          filter === 'resolved' ? [] : [selected.id],
+        )
+        expect(page.reports[0]?.lastActionTaken).toBeUndefined()
+      }
+      expect((await inboxReport(selected.id, f.did)).resolution).toBeUndefined()
+      for (const unreadOnly of [false, true]) {
+        const { data } = await sc.agent.tools.ozone.inbox.listNotifications(
+          { unreadOnly },
+          { headers },
+        )
+        expect(data).toEqual(beforeNotifications)
+      }
+      const { data: counts } = await sc.agent.tools.ozone.inbox.getUnreadCount(
+        {},
+        { headers },
+      )
+      expect(counts).toEqual(beforeCounts)
+    },
+  )
 
   it('resolves the inbox and notifies once at the actual execution time', async () => {
     const reporter = await fixture()
