@@ -20,6 +20,7 @@ export default defineConfig({
       'packages/lexicon-resolver',
       'packages/oauth/*',
       'packages/space',
+      'packages/star',
       'packages/syntax',
       'packages/tap',
       'packages/ws-client',

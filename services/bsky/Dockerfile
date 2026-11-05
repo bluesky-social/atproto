@@ -63,6 +63,7 @@ COPY ./packages/oauth/oauth-types ./packages/oauth/oauth-types
 COPY ./packages/pds ./packages/pds
 COPY ./packages/repo ./packages/repo
 COPY ./packages/sync ./packages/sync
+COPY ./packages/star ./packages/star
 COPY ./packages/syntax ./packages/syntax
 COPY ./packages/ws-client ./packages/ws-client
 COPY ./packages/xrpc-server ./packages/xrpc-server

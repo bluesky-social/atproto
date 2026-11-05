@@ -19,7 +19,6 @@ import {
   RepoVerificationError,
   SpaceMacError,
   SpaceMetaArchiveError,
-  StarParseError,
   WANT_MAC_HEADER,
   computeCommitMac,
   computeRecordMac,
@@ -27,6 +26,7 @@ import {
   formatMacHeader,
   parseWantMacHeader,
 } from '@atproto/space'
+import { StarParseError } from '@atproto/star'
 import { type DidString, SpaceRef, type SpaceRefString } from '@atproto/syntax'
 import {
   AuthRequiredError,

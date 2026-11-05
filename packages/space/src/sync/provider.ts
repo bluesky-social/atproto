@@ -1,8 +1,8 @@
 import { encode } from '@atproto/lex-cbor'
 import { type Cid, cidForCbor } from '@atproto/lex-data'
+import { type StarPair, writeStar } from '@atproto/star'
 import type { NsidString, RecordKeyString } from '@atproto/syntax'
 import { compareBytes } from '../bytes.js'
-import { type StarPair, writeStar } from '../star.js'
 import {
   type Commit,
   REPO_STAR_TYPE,
