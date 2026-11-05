@@ -3,6 +3,18 @@ import type { AppContext } from '../context.js'
 import { app, com, tools } from '../lexicons/index.js'
 
 export default function (server: Server, ctx: AppContext) {
+  server.add(app.bsky.unspecced.getAtmosphereRecordView, {
+    auth: ctx.authVerifier.modOrAdminToken,
+    handler: async (request) => {
+      const body = await ctx.appviewClient.call(
+        app.bsky.unspecced.getAtmosphereRecordView,
+        request.params,
+        await ctx.appviewAuth(app.bsky.unspecced.getAtmosphereRecordView.$lxm),
+      )
+      return { encoding: 'application/json', body }
+    },
+  })
+
   server.add(app.bsky.actor.getProfile, {
     auth: ctx.authVerifier.moderator,
     handler: async (request) => {
