@@ -38,6 +38,30 @@ export class BlobReader {
     stream: stream.Readable
   }> {
     const metadata = await this.getBlobMetadata(cid)
+
+    // Blobs are moved to permanent storage before the write that references
+    // them commits. If that write fails, the blob is in permanent storage, but
+    // still has a temp key and no record: don't serve it.
+    const referenced = await this.db.db
+      .selectFrom('blob')
+      .select('cid')
+      .where('cid', '=', cid.toString())
+      .where((eb) =>
+        eb.or([
+          eb('tempKey', 'is', null),
+          eb.exists(
+            eb
+              .selectFrom('record_blob')
+              .select('blobCid')
+              .whereRef('record_blob.blobCid', '=', 'blob.cid'),
+          ),
+        ]),
+      )
+      .executeTakeFirst()
+    if (!referenced) {
+      throw new InvalidRequestError('Blob not found')
+    }
+
     const stream = await this.blobstore.getStream(cid).catch((err) => {
       if (err instanceof BlobNotFoundError) {
         throw new InvalidRequestError('Blob not found')

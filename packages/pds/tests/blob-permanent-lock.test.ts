@@ -134,4 +134,34 @@ describe('making blobs permanent vs the actor db write lock', () => {
     expect(lockHeldDuringMakePermanent).toEqual([false])
     await expectPermanent(img.image.ref.toString())
   })
+
+  it('does not serve a blob whose write failed after it was moved', async () => {
+    const img = await upload('at.png', 'image/png')
+    const cid = img.image.ref.toString()
+    await expect(
+      agent.com.atproto.repo.createRecord(
+        {
+          repo: alice,
+          collection: 'app.bsky.feed.post',
+          record: {
+            $type: 'app.bsky.feed.post',
+            text: 'bad swap',
+            embed: { $type: 'app.bsky.embed.images', images: [img] },
+            createdAt: new Date().toISOString(),
+          },
+          swapCommit: cid,
+        },
+        { headers: sc.getHeaders(alice), encoding: 'application/json' },
+      ),
+    ).rejects.toMatchObject({ error: 'InvalidSwap' })
+
+    // The blob was moved before the write failed...
+    await expect(ctx.blobstore(alice).hasStored(parseCid(cid))).resolves.toBe(
+      true,
+    )
+    // ...but no record references it, so it is not served.
+    await expect(
+      agent.com.atproto.sync.getBlob({ did: alice, cid }),
+    ).rejects.toThrow('Blob not found')
+  })
 })

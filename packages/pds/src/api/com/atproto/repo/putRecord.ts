@@ -6,6 +6,7 @@ import {
   parseCid,
 } from '@atproto/lex-data'
 import { atUri } from '@atproto/lex-schema'
+import { WriteOpAction } from '@atproto/repo'
 import {
   AuthRequiredError,
   InvalidRequestError,
@@ -95,6 +96,41 @@ export default function (server: Server, ctx: AppContext) {
       const swapRecordCid =
         typeof swapRecord === 'string' ? parseCid(swapRecord) : swapRecord
 
+      const writeInfo = {
+        did,
+        collection,
+        rkey,
+        record,
+        swapCid: swapRecordCid,
+        validate,
+      }
+      const prepare = async (
+        isUpdate: boolean,
+      ): Promise<PreparedCreate | PreparedUpdate> => {
+        try {
+          return isUpdate
+            ? await prepareUpdate(writeInfo)
+            : await prepareCreate(writeInfo)
+        } catch (err) {
+          if (err instanceof InvalidRecordError) {
+            throw new InvalidRequestError(err.message)
+          }
+          throw err
+        }
+      }
+
+      // Validate the record and move its blobs to permanent storage before
+      // taking the actor db write lock. Legacy blob refs in a profile are
+      // upgraded in the transaction, so such a record is prepared there.
+      const prepared =
+        collection === app.bsky.actor.profile.$type &&
+        (isLegacyBlobRef(record.avatar) || isLegacyBlobRef(record.banner))
+          ? undefined
+          : await prepare(false)
+      const permanentBlobs = prepared
+        ? await ctx.actorStore.makeBlobsPermanent(did, prepared.blobs)
+        : undefined
+
       const { commit, write } = await ctx.actorStore.transact(
         did,
         async (actorTxn) => {
@@ -106,26 +142,12 @@ export default function (server: Server, ctx: AppContext) {
             await updateProfileLegacyBlobRef(actorTxn, record)
           }
 
-          const writeInfo = {
-            did,
-            collection,
-            rkey,
-            record,
-            swapCid: swapRecordCid,
-            validate,
-          }
-
-          let write: PreparedCreate | PreparedUpdate
-          try {
-            write = isUpdate
-              ? await prepareUpdate(writeInfo)
-              : await prepareCreate(writeInfo)
-          } catch (err) {
-            if (err instanceof InvalidRecordError) {
-              throw new InvalidRequestError(err.message)
-            }
-            throw err
-          }
+          // prepareCreate() and prepareUpdate() only differ in their action.
+          const write: PreparedCreate | PreparedUpdate = !prepared
+            ? await prepare(isUpdate)
+            : isUpdate
+              ? { ...prepared, action: WriteOpAction.Update }
+              : prepared
 
           // no-op
           if (current && current.cid === write.cid.toString()) {
@@ -136,7 +158,7 @@ export default function (server: Server, ctx: AppContext) {
           }
 
           const commit = await actorTxn.repo
-            .processWrites([write], swapCommitCid)
+            .processWrites([write], swapCommitCid, permanentBlobs)
             .catch((err) => {
               if (
                 err instanceof BadCommitSwapError ||
