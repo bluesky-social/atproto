@@ -307,14 +307,19 @@ describe('/consent records the approved scopes', () => {
     )
     assert(status === 200, `consent failed: ${status} ${body}`)
 
+    const client = await provider.clientManager.getClient(CLIENT_ID)
+    const { requestUri: promptNoneRequestUri } =
+      await provider.requestManager.createAuthorizationRequest(
+        client,
+        { method: 'none' },
+        { ...authorizationRequest, prompt: 'none', login_hint: 'user.test' },
+        null,
+      )
+
     const result = await Promise.resolve()
       .then(() =>
         provider.authorize(
-          {
-            ...authorizationRequest,
-            prompt: 'none',
-            login_hint: 'user.test',
-          } as never,
+          { client_id: CLIENT_ID, request_uri: promptNoneRequestUri },
           {
             deviceId: DEVICE_ID as never,
             deviceMetadata: {
@@ -332,7 +337,10 @@ describe('/consent records the approved scopes', () => {
 
     // The dropped permission must still require consent, so this must not be a
     // silent success carrying a code.
-    expect(result).toMatchObject({ ok: false })
+    expect(result).toMatchObject({
+      ok: false,
+      err: expect.objectContaining({ error: 'consent_required' }),
+    })
 
     const authorizedScopes = recorded()
     expect(authorizedScopes).toContain('atproto')

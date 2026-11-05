@@ -9,10 +9,7 @@ import {
   type DidString,
   isDidString,
 } from '@atproto/lex-schema'
-import {
-  OAuthError,
-  WWWAuthenticateError,
-} from '@atproto/oauth-provider/errors'
+import { OAuthError } from '@atproto/oauth-provider/errors'
 import type {
   OAuthVerifier,
   VerifyTokenPayloadOptions,
@@ -390,17 +387,14 @@ export class AuthVerifier {
           verifyTokenOptions,
         )
         .catch((err) => {
-          // Make sure to include any WWW-Authenticate header in the response
-          // (particularly useful for DPoP's "use_dpop_nonce" error)
-          if (err instanceof WWWAuthenticateError) {
-            res.setHeader('WWW-Authenticate', err.wwwAuthenticateHeader)
-            res.appendHeader(
-              'Access-Control-Expose-Headers',
-              'WWW-Authenticate',
-            )
-          }
-
           if (err instanceof OAuthError) {
+            if (!res.headersSent) {
+              for (const [name, value] of err.getResponseHeaders()) {
+                res.setHeader(name, value)
+                res.appendHeader('Access-Control-Expose-Headers', name)
+              }
+            }
+
             throw new XRPCError(err.status, err.error_description, err.error)
           }
 

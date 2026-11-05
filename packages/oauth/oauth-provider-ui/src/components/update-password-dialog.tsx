@@ -1,19 +1,18 @@
 import { Trans, useLingui } from '@lingui/react/macro'
 import { type ReactElement, useEffect, useState } from 'react'
 import { DialogShell } from '#/components/dialogs/dialog-shell.tsx'
-import { actionRow } from '#/components/forms/form-shell.tsx'
-import { RequestCodeButton } from '#/components/forms/request-code-button.tsx'
-import { ResetPasswordConfirmForm } from '#/components/reset-password-confirm-form.tsx'
-import { Button } from '#/components/ui/button.tsx'
+import { ActionButton } from '#/components/forms/form-shell.tsx'
+import { RateLimitedForm } from '#/components/forms/rate-limited-form.tsx'
+import {
+  type ResetPasswordConfirmData,
+  ResetPasswordConfirmForm,
+} from '#/components/reset-password-confirm-form.tsx'
 
 export type UpdatePasswordDialogProps = {
   requestPending?: boolean
   confirmPending?: boolean
-  onRequest: () => void | PromiseLike<void>
-  onConfirm: (data: {
-    token: string
-    password: string
-  }) => void | PromiseLike<void>
+  onRequest: (data: { hcaptchaToken?: string }) => void | PromiseLike<void>
+  onConfirm: (data: ResetPasswordConfirmData) => void | PromiseLike<void>
   children: ReactElement
   /** For password managers */
   currentUsername?: string
@@ -61,35 +60,34 @@ export function UpdatePasswordDialog({
     >
       {/* @NOTE Sending the code is the main path; "Already have a code?" is the
         escape hatch, so it is `ghost` — as `ResetPasswordView` treats the same
-        string. `RequestCodeButton` defaults to `size="sm"` for the inline
-        resend, so the size is restated here to match the button below. */}
+        string. Both requests may require a captcha (see the server's rate
+        limits), so each goes through a `RateLimitedForm`: there is no inline
+        resend, which could not show a challenge, "Back" leads to the request
+        instead. */}
       {state === UpdatePasswordDialogState.Request ? (
-        <div className={actionRow}>
-          <RequestCodeButton
-            action={async () => {
-              await onRequest()
-              setState(UpdatePasswordDialogState.Confirm)
-            }}
-            disabled={confirmPending}
-            variant="default"
-            size="default"
-            className="w-full sm:w-auto"
-          />
-
-          <Button
-            variant="ghost"
-            onClick={() => setState(UpdatePasswordDialogState.Confirm)}
-            className="w-full sm:w-auto"
-          >
-            <Trans>Already have a code?</Trans>
-          </Button>
-        </div>
+        <RateLimitedForm
+          submitLabel={<Trans>Send verification code</Trans>}
+          disabled={confirmPending}
+          handler={async ({ hcaptchaToken }) => {
+            await onRequest({ hcaptchaToken })
+            setState(UpdatePasswordDialogState.Confirm)
+          }}
+          actions={
+            <ActionButton
+              type="button"
+              variant="ghost"
+              onClick={() => setState(UpdatePasswordDialogState.Confirm)}
+            >
+              <Trans>Already have a code?</Trans>
+            </ActionButton>
+          }
+        />
       ) : (
         <ResetPasswordConfirmForm
           currentUsername={currentUsername}
           disabled={confirmPending}
           onLoadingChange={setConfirmSubmitting}
-          onResend={onRequest}
+          onBack={() => setState(UpdatePasswordDialogState.Request)}
           handler={async (data) => {
             await onConfirm(data)
             setOpen(false)

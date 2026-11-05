@@ -7,7 +7,7 @@ import { UnknownAtprotoAccountError } from '../errors/unknown-atproto-account-er
 import type { RequestMetadata } from '../lib/http/request.js'
 import type { OAuthHooks } from '../oauth-hooks.js'
 import { AccountManager } from './account-manager.js'
-import type { AccountStore } from './account-store.js'
+import type { AccountStore, IdentifierString } from './account-store.js'
 
 type ResolveResult = Awaited<ReturnType<OAuthResolver['resolve']>>
 
@@ -92,9 +92,9 @@ async function rejectionOf(promise: Promise<unknown>): Promise<unknown> {
 
 describe('AccountManager.resetPasswordRequest', () => {
   describe('with an at-identifier', () => {
-    it.each([aliceDid, 'alice.test'])(
+    it.each([aliceDid, 'alice.test'] as const)(
       'requires an email address when %j is hosted here',
-      async (identifier) => {
+      async (identifier: IdentifierString) => {
         const { manager, store, resolver } = setup({ account: alice })
 
         const err = await rejectionOf(
@@ -222,7 +222,7 @@ describe('AccountManager.resetPasswordRequest', () => {
       'resolves when %s (no user enumeration)',
       async (_label, account) => {
         const { manager, store, hooks, resolver } = setup({ account })
-        const input = { locale: 'en', identifier: 'alice@example.com' }
+        const input = { locale: 'en', identifier: 'alice@example.com' } as const
 
         await expect(
           manager.resetPasswordRequest(deviceId, deviceMetadata, input),

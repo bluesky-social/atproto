@@ -10,6 +10,7 @@ import { LocaleProvider } from '#/locales/locale-provider.tsx'
 
 const {
   //
+  __errorStatus: errorStatus,
   __errorData: errorData,
   __customizationData: customizationData,
 } = window as typeof window & HydrationData['error-page']
@@ -17,7 +18,7 @@ const {
 // Attempt to turn the error data into an actual error instance if the error
 // data has the shape of an API error response. This will allow the ErrorView to
 // display the right error details and messages for known API errors.
-const error = parseApiErrorPayload(errorData)
+const error = parseApiErrorPayload(errorStatus, new Headers(), errorData)
 
 const container = document.getElementById('root')!
 

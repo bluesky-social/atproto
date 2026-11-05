@@ -1,31 +1,28 @@
 import { Trans, useLingui } from '@lingui/react/macro'
 import { useCallback, useRef, useState } from 'react'
+import type { SignInInput } from '@atproto/oauth-provider-api'
 import { CheckboxField } from '#/components/forms/fields/checkbox-field.tsx'
 import { IdentifierField } from '#/components/forms/fields/identifier-field.tsx'
 import { PasswordField } from '#/components/forms/fields/password-field.tsx'
 import { TokenField } from '#/components/forms/fields/token-field.tsx'
 import {
-  FormShell,
-  type FormShellProps,
-} from '#/components/forms/form-shell.tsx'
+  RateLimitedForm,
+  type RateLimitedFormProps,
+} from '#/components/forms/rate-limited-form.tsx'
 import { Button } from '#/components/ui/button.tsx'
 import {
   InvalidCredentialsError,
   SecondAuthenticationFactorRequiredError,
+  type WithOptionalLocale,
 } from '#/lib/api.ts'
-import { normalizeIdentifier } from '#/lib/form-patterns.ts'
+import { asNormalizedIdentifier } from '#/lib/form-patterns.ts'
 import { isValidDomain } from '#/lib/handle.ts'
 import type { Override } from '#/lib/util'
 
-export type SignInData = {
-  identifier: string
-  password: string
-  remember?: boolean
-  emailOtp?: string
-}
+export type SignInData = WithOptionalLocale<SignInInput>
 
 export type SignInFormProps = Override<
-  FormShellProps<SignInData>,
+  RateLimitedFormProps<SignInData>,
   {
     identifierDefault?: string
     identifierReadonly?: boolean
@@ -71,7 +68,8 @@ export function SignInForm({
   }, [])
 
   return (
-    <FormShell<{
+    <RateLimitedForm<{
+      hcaptchaToken?: string
       identifier: string
       password: string
       remember?: 'on'
@@ -100,10 +98,12 @@ export function SignInForm({
         }
       }}
       handler={async (values, signal) => {
-        const data: SignInData = {
-          identifier: normalizeIdentifier(values.identifier, domains),
-          password: values.password,
-        }
+        const identifier = asNormalizedIdentifier(values.identifier, domains)
+        // @NOTE IdentifierField should ensure prevent submission of the form
+        // if the identifier is invalid. The following should never happen.
+        if (!identifier) throw new Error('Invalid identifier')
+
+        const data: SignInData = { identifier, password: values.password }
 
         if (!disableRemember) {
           data.remember = values.remember != null
@@ -114,6 +114,10 @@ export function SignInForm({
 
         if (secondFactorError && values.emailOtp) {
           data[secondFactorError.type] = values.emailOtp
+        }
+
+        if (values.hcaptchaToken) {
+          data.hcaptchaToken = values.hcaptchaToken
         }
 
         // Wrap the handler to catch 2FA required errors and display the second
@@ -174,10 +178,7 @@ export function SignInForm({
                 const { form } = event.currentTarget
                 const formData = form ? new FormData(form) : null
                 const identifier = formData?.get('identifier')
-                const hint =
-                  typeof identifier === 'string' // not a File / null / undefined
-                    ? normalizeIdentifier(identifier, domains)
-                    : undefined
+                const hint = asNormalizedIdentifier(identifier, domains)
                 onForgotPassword(hint)
               }}
               aria-label={t`Reset your password`}
@@ -225,6 +226,6 @@ export function SignInForm({
           </p>
         </div>
       )}
-    </FormShell>
+    </RateLimitedForm>
   )
 }

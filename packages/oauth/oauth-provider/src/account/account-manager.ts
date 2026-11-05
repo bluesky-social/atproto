@@ -1,4 +1,10 @@
 import type { Did } from '@atproto/did'
+import type {
+  ConfirmResetPasswordInput,
+  InitiatePasswordResetInput,
+  SignInInput,
+  SignUpInput,
+} from '@atproto/oauth-provider-api'
 import type { OAuthResolver } from '@atproto/oauth-resolver'
 import {
   type OAuthIssuerIdentifier,
@@ -11,7 +17,6 @@ import type { DeviceId } from '../device/device-id.js'
 import { InvalidCredentialsError } from '../errors/invalid-credentials-error.js'
 import { InvalidRequestError } from '../errors/invalid-request-error.js'
 import { UnknownAtprotoAccountError } from '../errors/unknown-atproto-account-error.js'
-import { HCaptchaClient, type HcaptchaVerifyResult } from '../lib/hcaptcha.js'
 import { callAsync } from '../lib/util/function.js'
 import { constantTime } from '../lib/util/time.js'
 import type { OAuthHooks, RequestMetadata } from '../oauth-hooks.js'
@@ -28,26 +33,18 @@ import type {
   DisableEmailAuthFactorInput,
   EnableEmailAuthFactorInput,
   HandleString,
-  ResetPasswordConfirmInput,
-  ResetPasswordRequestInput,
-  SignUpData,
   UpdateEmailConfirmInput,
   UpdateEmailRequestInput,
   UpdateHandleData,
   VerifyEmailConfirmInput,
   VerifyEmailRequestInput,
 } from './account-store.js'
-import type { SignInData } from './sign-in-data.js'
-import type { SignUpInput } from './sign-up-input.js'
 
 const TIMING_ATTACK_MITIGATION_DELAY = 400
 const BRUTE_FORCE_MITIGATION_DELAY = 300
 
-// @TODO Add rate limit to all the OAuth routes.
-
 export class AccountManager {
   protected readonly inviteCodeRequired: boolean
-  protected readonly hcaptchaClient?: HCaptchaClient
 
   constructor(
     protected readonly issuer: OAuthIssuerIdentifier,
@@ -57,81 +54,6 @@ export class AccountManager {
     customization: Customization,
   ) {
     this.inviteCodeRequired = customization.inviteCodeRequired !== false
-    this.hcaptchaClient = customization.hcaptcha
-      ? new HCaptchaClient(new URL(issuer).hostname, customization.hcaptcha)
-      : undefined
-  }
-
-  protected async processHcaptchaToken(
-    input: SignUpInput,
-    deviceId: DeviceId,
-    deviceMetadata: RequestMetadata,
-  ): Promise<HcaptchaVerifyResult | undefined> {
-    if (!this.hcaptchaClient) {
-      return undefined
-    }
-
-    if (!input.hcaptchaToken) {
-      throw new InvalidRequestError('hCaptcha token is required')
-    }
-
-    try {
-      const tokens = await this.hcaptchaClient.buildClientTokens(
-        deviceMetadata.ipAddress,
-        input.handle,
-        deviceMetadata.userAgent,
-      )
-
-      const result = await this.hcaptchaClient.verify(
-        'signup',
-        input.hcaptchaToken,
-        deviceMetadata.ipAddress,
-        tokens,
-      )
-
-      await this.hooks.onHcaptchaResult?.call(null, {
-        input,
-        deviceId,
-        deviceMetadata,
-        tokens,
-        result,
-      })
-
-      this.hcaptchaClient.checkVerifyResult(result, tokens)
-
-      return result
-    } catch (err) {
-      throw InvalidRequestError.from(err, 'hCaptcha verification failed')
-    }
-  }
-
-  protected async enforceInviteCode(
-    input: SignUpInput,
-    _deviceId: DeviceId,
-    _deviceMetadata: RequestMetadata,
-  ): Promise<string | undefined> {
-    if (!this.inviteCodeRequired) {
-      return undefined
-    }
-
-    if (!input.inviteCode) {
-      throw new InvalidRequestError('Invite code is required')
-    }
-
-    return input.inviteCode
-  }
-
-  protected async buildSignupData(
-    input: SignUpInput,
-    deviceId: DeviceId,
-    deviceMetadata: RequestMetadata,
-  ): Promise<SignUpData> {
-    const [hcaptchaResult, inviteCode] = await Promise.all([
-      this.processHcaptchaToken(input, deviceId, deviceMetadata),
-      this.enforceInviteCode(input, deviceId, deviceMetadata),
-    ])
-
-    return { ...input, hcaptchaResult, inviteCode }
   }
 
   public async createAccount(
@@ -140,18 +62,21 @@ export class AccountManager {
     input: SignUpInput,
     clientId?: ClientId,
   ): Promise<{ account: Account; remembered: boolean }> {
+    // @NOTE The front-end will not provide an invite code when not required.
+    if (this.inviteCodeRequired && !input.inviteCode) {
+      throw new InvalidRequestError('Invite code is required')
+    }
+
     return constantTime(BRUTE_FORCE_MITIGATION_DELAY, async () => {
-      await callAsync(this.hooks.onSignUpAttempt, {
+      await this.hooks.onSignUpAttempt?.call(null, {
         input,
         deviceId,
         deviceMetadata,
         clientId,
       })
 
-      const data = await this.buildSignupData(input, deviceId, deviceMetadata)
-
       const account = await callAsync(async () => {
-        return this.store.createAccount(data)
+        return this.store.createAccount(input)
       }).catch((err) => {
         throw InvalidRequestError.from(err, 'Account creation failed')
       })
@@ -174,8 +99,8 @@ export class AccountManager {
       }
 
       try {
-        await callAsync(this.hooks.onSignedUp, {
-          data,
+        await this.hooks.onSignedUp?.call(null, {
+          input,
           account,
           deviceId,
           deviceMetadata,
@@ -200,7 +125,7 @@ export class AccountManager {
   public async authenticateAccount(
     deviceId: DeviceId,
     deviceMetadata: RequestMetadata,
-    data: SignInData,
+    input: SignInInput,
     clientId?: ClientId,
   ): Promise<{ account: Account; remembered: boolean }> {
     return constantTime(TIMING_ATTACK_MITIGATION_DELAY, async () => {
@@ -210,7 +135,7 @@ export class AccountManager {
       const deviceAccounts = await this.listDeviceAccounts(deviceId)
 
       await this.hooks.onSignInAttempt?.call(null, {
-        data,
+        input,
         deviceId,
         deviceMetadata,
         deviceAccounts,
@@ -219,10 +144,10 @@ export class AccountManager {
 
       const account = await callAsync(async () => {
         return this.store.authenticateAccount({
-          identifier: data.identifier,
-          password: data.password,
-          locale: data.locale,
-          emailOtp: data.emailOtp,
+          identifier: input.identifier,
+          password: input.password,
+          locale: input.locale,
+          emailOtp: input.emailOtp,
           deviceAccounts,
         })
       }).catch(async (error) => {
@@ -236,7 +161,7 @@ export class AccountManager {
         // "identifier known, password wrong" from "identifier unknown".
         if (error instanceof InvalidRequestError) {
           await this.hooks.onSignInFailed?.call(null, {
-            data,
+            input,
             error,
             did: error instanceof InvalidCredentialsError ? error.did : null,
             deviceId,
@@ -250,7 +175,7 @@ export class AccountManager {
 
       const remembered =
         // If the user has explicitly specified a "remember" preference, use it.
-        data.remember ??
+        input.remember ??
         // Fall back to checking if the account was previously remembered.
         deviceAccounts.some((da) => da.account.did === account.did)
 
@@ -263,8 +188,8 @@ export class AccountManager {
       }
 
       try {
-        await callAsync(this.hooks.onSignedIn, {
-          data,
+        await this.hooks.onSignedIn?.call(null, {
+          input,
           account,
           remembered,
           deviceId,
@@ -354,7 +279,7 @@ export class AccountManager {
   public async resetPasswordRequest(
     deviceId: DeviceId,
     deviceMetadata: RequestMetadata,
-    input: ResetPasswordRequestInput,
+    input: InitiatePasswordResetInput,
   ): Promise<void> {
     // @NOTE We won't be sending reset password emails for non-email identifiers
     // (note that we might want to do that at some point, as other services,
@@ -437,7 +362,7 @@ export class AccountManager {
   public async resetPasswordConfirm(
     deviceId: DeviceId,
     deviceMetadata: RequestMetadata,
-    input: ResetPasswordConfirmInput,
+    input: ConfirmResetPasswordInput,
   ) {
     return constantTime(TIMING_ATTACK_MITIGATION_DELAY, async () => {
       await this.hooks.onResetPasswordConfirm?.call(null, {

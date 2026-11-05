@@ -1,8 +1,14 @@
 import type { Redis } from 'ioredis'
 import { DAY, HOUR, MINUTE } from '@atproto/common'
-import { MemoryRateLimiter, RedisRateLimiter } from '@atproto/xrpc-server'
-import type { Options } from '@atproto/xrpc-server'
+import type { RateLimiterFactory } from '@atproto/oauth-provider/provider'
+import {
+  MemoryRateLimiter,
+  RateLimitExceededError,
+  RedisRateLimiter,
+} from '@atproto/xrpc-server'
+import type { Options, RateLimiterStatus } from '@atproto/xrpc-server'
 import type { RateLimitsConfig } from './config/index.js'
+import { oauthLogger } from './logger.js'
 
 type RateLimitDescriptions = NonNullable<Options['rateLimits']>
 
@@ -55,5 +61,59 @@ export const buildRateLimitsConfig = (
         points: 35000, // creates=3, puts=2, deletes=1
       },
     ],
+  }
+}
+
+/**
+ * Backs the OAuth provider's rate limits with the same storage as the XRPC
+ * rate limits. Backend failures are logged and fail open.
+ */
+export function buildOAuthRateLimiterFactory(
+  redisScratch?: Redis,
+): RateLimiterFactory {
+  return ({ name, points, durationMs }) => {
+    const options = {
+      keyPrefix: `rl-oauth-${name}`,
+      durationMs,
+      points,
+      calcKey: (key: string) => key,
+      calcPoints: () => 1,
+    }
+
+    const limiter = redisScratch
+      ? new RedisRateLimiter<string>(redisScratch, options)
+      : new MemoryRateLimiter<string>(options)
+
+    // @NOTE keys are not logged as they may contain an email address
+    const logFailure = (err: unknown) => {
+      oauthLogger.error(
+        { err, limiter: name },
+        'OAuth rate limiter failure (failing open)',
+      )
+    }
+
+    // @NOTE The limiter's own "remainingPoints" is clamped to 0, which would not
+    // allow distinguishing the last allowed point from an exceeded limit.
+    const toResult = ({ consumedPoints, msBeforeNext }: RateLimiterStatus) => ({
+      remainingPoints: points - consumedPoints,
+      msBeforeNext,
+    })
+
+    return {
+      async consume(key, consumedPoints) {
+        try {
+          const status = await limiter.consume(key, {
+            calcPoints: () => consumedPoints,
+          })
+          // `null` when no point was consumed
+          if (!status) return { remainingPoints: points, msBeforeNext: 0 }
+          return toResult(status)
+        } catch (err) {
+          if (err instanceof RateLimitExceededError) return toResult(err.status)
+          logFailure(err)
+          return { remainingPoints: points, msBeforeNext: 0 }
+        }
+      },
+    }
   }
 }

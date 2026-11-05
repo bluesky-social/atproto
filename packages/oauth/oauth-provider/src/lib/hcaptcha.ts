@@ -115,12 +115,6 @@ export const hcaptchaVerifyResultSchema = z.object({
 
 export type HcaptchaVerifyResult = z.infer<typeof hcaptchaVerifyResultSchema>
 
-export type HcaptchaClientTokens = {
-  hashedIp: string
-  hashedHandle: string
-  hashedUserAgent?: string
-}
-
 const fetchSuccessHandler = pipe(
   fetchOkProcessor(),
   fetchJsonProcessor(),
@@ -138,30 +132,32 @@ export class HCaptchaClient {
   }
 
   public async verify(
-    behaviorType: 'login' | 'signup',
     response: string,
     remoteip: string,
-    clientTokens: HcaptchaClientTokens,
+    behaviorType?: 'login' | 'signup',
+    clientTokens?: Record<string, string>,
   ) {
+    const body = new URLSearchParams({
+      secret: this.config.secretKey,
+      sitekey: this.config.siteKey,
+      response,
+      remoteip,
+    })
+    if (behaviorType) body.set('behavior_type', behaviorType)
+    if (clientTokens) body.set('client_tokens', JSON.stringify(clientTokens))
+
     return this.fetch('https://api.hcaptcha.com/siteverify', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
-      body: new URLSearchParams({
-        secret: this.config.secretKey,
-        sitekey: this.config.siteKey,
-        behavior_type: behaviorType,
-        response,
-        remoteip,
-        client_tokens: JSON.stringify(clientTokens),
-      }).toString(),
+      body: body.toString(),
     }).then(fetchSuccessHandler)
   }
 
   public checkVerifyResult(
     result: HcaptchaVerifyResult,
-    tokens: HcaptchaClientTokens,
+    tokens?: Record<string, string>,
   ): void {
     const { success, score } = result
 
@@ -197,23 +193,7 @@ export class HCaptchaClient {
     }
   }
 
-  public async buildClientTokens(
-    remoteip: string,
-    handle: string,
-    userAgent?: string,
-  ): Promise<HcaptchaClientTokens> {
-    // @NOTE We are **not** using Promise.all here because libuv's thread pool
-    // might get saturated, leading to performance degradation. Instead, we
-    // await each hash sequentially, ensuring that every HTTP request only uses
-    // one thread at a time.
-    return {
-      hashedIp: await this.hashToken(remoteip),
-      hashedHandle: await this.hashToken(handle),
-      hashedUserAgent: userAgent ? await this.hashToken(userAgent) : undefined,
-    }
-  }
-
-  protected async hashToken(value: string): Promise<string> {
+  public async hashToken(value: string): Promise<string> {
     return new Promise<string>((resolve, reject) => {
       // @NOTE This used to be implemented as sha256("<salt><value>"), which
       // resulted in a 32-byte derived key, hence the length parameter 32 in
@@ -239,7 +219,7 @@ export class HCaptchaClient {
 export class HCaptchaVerifyError extends Error {
   constructor(
     readonly result: HcaptchaVerifyResult,
-    readonly tokens: HcaptchaClientTokens,
+    readonly tokens?: Record<string, string>,
     message?: string,
   ) {
     super(message)

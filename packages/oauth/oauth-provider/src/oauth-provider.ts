@@ -12,6 +12,7 @@ import {
   type OAuthAuthorizationRequestPar,
   type OAuthAuthorizationRequestParameters,
   type OAuthAuthorizationRequestQuery,
+  type OAuthAuthorizationRequestUri,
   type OAuthAuthorizationServerMetadata,
   type OAuthClientCredentials,
   type OAuthClientMetadata,
@@ -55,7 +56,6 @@ import {
   type CustomizationConfig,
   customizationSchema,
 } from './customization/customization.js'
-import type { DeviceId } from './device/device-id.js'
 import {
   type DeviceInfo,
   DeviceManager,
@@ -70,6 +70,7 @@ import { InvalidDpopProofError } from './errors/invalid-dpop-proof-error.js'
 import { InvalidGrantError } from './errors/invalid-grant-error.js'
 import { InvalidRequestError } from './errors/invalid-request-error.js'
 import { LoginRequiredError } from './errors/login-required-error.js'
+import { HCaptchaManager } from './hcaptcha/hcaptcha-manager.js'
 import { LexiconManager } from './lexicon/lexicon-manager.js'
 import { type LexiconStore, asLexiconStore } from './lexicon/lexicon-store.js'
 import type { HcaptchaConfig } from './lib/hcaptcha.js'
@@ -90,6 +91,27 @@ import {
   type OAuthVerifierOptions,
   type VerifyTokenPayloadOptions,
 } from './oauth-verifier.js'
+import { RateLimitManager } from './rate-limit/rate-limit-manager.js'
+import {
+  DEFAULT_RATE_LIMIT_POLICIES,
+  type RateLimitKeyGetter,
+  type RateLimitPolicies,
+  type RateLimitPolicy,
+  type RateLimitPolicyContexts,
+  type RateLimitPolicyName,
+  type RateLimitRule,
+  type RateLimitsOptions,
+  authenticatedClientKey,
+  identifierIpKey,
+  identifierKey,
+  ipKey,
+  publicClientIpKey,
+} from './rate-limit/rate-limit-policies.js'
+import type {
+  RateLimiter,
+  RateLimiterFactory,
+  RateLimiterOptions,
+} from './rate-limit/rate-limiter.js'
 import { type ReplayStore, ifReplayStore } from './replay/replay-store.js'
 import { codeSchema } from './request/code.js'
 import { RequestManager } from './request/request-manager.js'
@@ -116,7 +138,15 @@ export { JoseKey } from '@atproto/jwk-jose'
 export type * from '@atproto/lex-resolver'
 export { LexResolver, LexResolverError } from '@atproto/lex-resolver'
 
-export { AccessTokenMode }
+export {
+  AccessTokenMode,
+  DEFAULT_RATE_LIMIT_POLICIES,
+  authenticatedClientKey,
+  identifierIpKey,
+  identifierKey,
+  ipKey,
+  publicClientIpKey,
+}
 export type {
   AccessTokenPayload,
   AuthorizationRedirectParameters,
@@ -132,6 +162,16 @@ export type {
   LoopbackMetadataGetter,
   MultiLangString,
   OAuthAuthorizationServerMetadata,
+  RateLimitKeyGetter,
+  RateLimitPolicies,
+  RateLimitPolicy,
+  RateLimitPolicyContexts,
+  RateLimitPolicyName,
+  RateLimitRule,
+  RateLimiter,
+  RateLimiterFactory,
+  RateLimiterOptions,
+  RateLimitsOptions,
   VerifyTokenPayloadOptions,
 }
 
@@ -240,6 +280,17 @@ type OAuthProviderConfig = {
    * @default is as specified by ATPROTO
    */
   loopbackMetadata?: null | false | LoopbackMetadataGetter
+
+  /**
+   * Enables rate limiting of the OAuth and account routes that create
+   * authorization requests, check credentials, or send emails. The host
+   * provides the storage backend through {@link RateLimitsOptions.factory}.
+   *
+   * When not provided, no rate limiting is performed. The default rules that
+   * have no points, which need no storage, still apply: sign-ups always require
+   * a captcha (when hCaptcha is configured).
+   */
+  rateLimits?: RateLimitsOptions
 }
 
 export type OAuthProviderOptions = OAuthProviderConfig &
@@ -259,6 +310,8 @@ export class OAuthProvider extends OAuthVerifier {
 
   public readonly authenticationMaxAge: number
 
+  public readonly hcaptchaManager: HCaptchaManager
+  public readonly rateLimitManager: RateLimitManager
   public readonly accountManager: AccountManager
   public readonly deviceManager: DeviceManager
   public readonly clientManager: ClientManager
@@ -274,6 +327,7 @@ export class OAuthProvider extends OAuthVerifier {
 
     metadata,
     loopbackMetadata = atprotoLoopbackClientMetadata,
+    rateLimits,
 
     // Services
     fetch: unsafeFetch = globalThis.fetch, // Inherited from options
@@ -336,6 +390,15 @@ export class OAuthProvider extends OAuthVerifier {
         secure: !this.issuer.startsWith('http:'),
       },
     })
+    this.hcaptchaManager = new HCaptchaManager(
+      this.issuer,
+      this.hooks,
+      this.customization.hcaptcha,
+    )
+    this.rateLimitManager = new RateLimitManager(
+      this.hcaptchaManager,
+      rateLimits,
+    )
     this.accountManager = new AccountManager(
       this.issuer,
       accountStore,
@@ -502,6 +565,7 @@ export class OAuthProvider extends OAuthVerifier {
     credentials: OAuthClientCredentials,
     authorizationRequest: OAuthAuthorizationRequestPar,
     dpopProof: null | DpopProof,
+    deviceMetadata: RequestMetadata,
   ): Promise<OAuthParResponse> {
     try {
       const { client, clientAuth } = await this.authenticateClient(
@@ -512,6 +576,13 @@ export class OAuthProvider extends OAuthVerifier {
         // check bellow).
         { allowMissingDpopProof: true },
       )
+
+      await this.rateLimitManager.consume('pushed-authorization-request', {
+        kind: 'client',
+        deviceMetadata,
+        client,
+        clientAuth,
+      })
 
       const parameters =
         'request' in authorizationRequest // Handle JAR
@@ -566,79 +637,32 @@ export class OAuthProvider extends OAuthVerifier {
     }
   }
 
-  private async processAuthorizationRequest(
-    client: Client,
-    deviceId: DeviceId,
-    query: OAuthAuthorizationRequestQuery,
-  ) {
-    // PAR
-    if ('request_uri' in query) {
-      const requestUri = parseRequestUri(query.request_uri, {
-        path: ['query', 'request_uri'],
-      })
-      return this.requestManager.get(requestUri, deviceId, client.id)
-    }
-
-    // JAR
-    if ('request' in query) {
-      // @NOTE Since JAR are signed with the client's private key, a JAR *could*
-      // technically be used to authenticate the client when requests are
-      // created without PAR (i.e. created on the fly by the authorize
-      // endpoint). This implementation actually used to support this
-      // (un-spec'd) behavior. That support was removed:
-      // - Because it was not actually used
-      // - Because it was not part of any standard
-      // - Because it makes extending the client authentication mechanism more
-      //   complex since any extension would not only need to affect the
-      //   "private_key_jwt" auth method but also the JAR "request" object.
-      const parameters = await this.decodeJAR(client, query)
-
-      return this.requestManager.createAuthorizationRequest(
-        client,
-        null,
-        parameters,
-        deviceId,
-      )
-    }
-
-    // "Regular" authorization request (created on the fly by directing the user
-    // to the authorization endpoint with all the parameters in the url).
-    return this.requestManager.createAuthorizationRequest(
-      client,
-      null,
-      query,
-      deviceId,
-    )
-  }
-
   /**
+   * Only requests created through
+   * {@link OAuthProvider.pushedAuthorizationRequest PAR} are accepted.
+   *
    * @see {@link https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-11#section-4.1.1}
+   * @see {@link https://datatracker.ietf.org/doc/html/rfc9126#section-4}
    */
   public async authorize(
-    query: OAuthAuthorizationRequestQuery,
+    query: Extract<
+      OAuthAuthorizationRequestQuery,
+      OAuthAuthorizationRequestUri
+    >,
     { deviceId, deviceMetadata }: DeviceInfo,
   ): Promise<AuthorizationResultRedirect | AuthorizationResultAuthorizePage> {
     const { issuer } = this
 
-    // If there is a chance to redirect the user to the client, let's do
-    // it by wrapping the error in an AuthorizationError.
-    const throwAuthorizationError =
-      'redirect_uri' in query
-        ? (err: unknown): never => {
-            // https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-11#section-4.1.2.1
-            throw AuthorizationError.from(query, err)
-          }
-        : null
+    const client = await this.clientManager.getClient(query.client_id)
 
-    const client = await this.clientManager
-      .getClient(query.client_id)
-      .catch(throwAuthorizationError)
-
-    const { parameters, requestUri } = await this.processAuthorizationRequest(
-      client,
+    const requestUri = parseRequestUri(query.request_uri, {
+      path: ['query', 'request_uri'],
+    })
+    const { parameters } = await this.requestManager.get(
+      requestUri,
       deviceId,
-      query,
-    ).catch(throwAuthorizationError)
+      client.id,
+    )
 
     try {
       const sessions = (
@@ -854,12 +878,11 @@ export class OAuthProvider extends OAuthVerifier {
     }
 
     if (!initial.clientAuth) {
-      // If the client did not use PAR, it was not authenticated when the request
-      // was initially created (see authorize() method in OAuthProvider). Since
-      // PAR is not mandatory, and since the token exchange currently taking place
-      // *is* authenticated (`clientAuth`), we allow "upgrading" the
-      // authentication method (the token created will be bound to the current
-      // clientAuth).
+      // Sessions whose authorization request was not pushed (PAR) were not
+      // authenticated when the request was created. Since the token exchange
+      // currently taking place *is* authenticated (`clientAuth`), we allow
+      // "upgrading" the authentication method (the token created will be bound
+      // to the current clientAuth).
       return
     }
 

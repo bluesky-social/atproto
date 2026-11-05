@@ -1,21 +1,19 @@
 import { Trans } from '@lingui/react/macro'
 import { useState } from 'react'
+import type { InitiatePasswordResetInput } from '@atproto/oauth-provider-api'
 import { IdentifierField } from '#/components/forms/fields/identifier-field.tsx'
-import {
-  FormShell,
-  type FormShellProps,
-} from '#/components/forms/form-shell.tsx'
+import type { RateLimitedFormProps } from '#/components/forms/rate-limited-form.tsx'
+import { RateLimitedForm } from '#/components/forms/rate-limited-form.tsx'
 import { useCombinedRef } from '#/hooks/use-merged-refs'
-import { UnknownAtprotoAccountError } from '#/lib/api'
-import { isIdentifier, normalizeIdentifier } from '#/lib/form-patterns'
+import { UnknownAtprotoAccountError, type WithOptionalLocale } from '#/lib/api'
+import { asNormalizedIdentifier } from '#/lib/form-patterns'
 import { ErrorNotice } from './feedback/error-notice'
 
-export type ResetPasswordRequestData = {
-  identifier: string
-}
+export type ResetPasswordRequestData =
+  WithOptionalLocale<InitiatePasswordResetInput>
 
 export type ResetPasswordRequestFormProps =
-  FormShellProps<ResetPasswordRequestData> & {
+  RateLimitedFormProps<ResetPasswordRequestData> & {
     hint?: string
     domains?: readonly string[]
   }
@@ -35,28 +33,24 @@ export function ResetPasswordRequestForm({
   const [formRef, ref] = useCombinedRef<HTMLFormElement>(null)
 
   return (
-    <FormShell<{
+    <RateLimitedForm<{
       identifier: string
     }>
       {...props}
       ref={ref}
       submittable={submittable && isSubmittable}
       onValues={(values) => {
-        const identifier = values.identifier
-          ? normalizeIdentifier(values.identifier, domains)
-          : undefined
+        const identifier = asNormalizedIdentifier(values.identifier, domains)
         setIsSubmittable(!!identifier)
         formRef.current?.reset()
         return onValues?.({ identifier })
       }}
       handler={(values, signal) => {
-        const identifier = normalizeIdentifier(values.identifier, domains)
-        if (!isIdentifier(identifier)) {
-          // @TODO use an error that will better render in the UI
-          throw new Error('Invalid identifier')
-        }
+        const identifier = asNormalizedIdentifier(values.identifier, domains)
+        // @TODO use an error that will better render in the UI
+        if (!identifier) throw new Error('Invalid identifier')
 
-        return handler({ identifier }, signal)
+        return handler({ ...values, identifier }, signal)
       }}
       renderError={(error) => (
         <ErrorNotice error={error}>
@@ -87,7 +81,7 @@ export function ResetPasswordRequestForm({
         autoFocus
         domains={domains}
       />
-    </FormShell>
+    </RateLimitedForm>
   )
 }
 

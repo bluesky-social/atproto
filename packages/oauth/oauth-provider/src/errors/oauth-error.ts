@@ -25,4 +25,8 @@ export class OAuthError extends Error {
       error_description: this.error_description,
     }
   }
+
+  *getResponseHeaders(): Generator<[name: string, val: string], void, unknown> {
+    //
+  }
 }
