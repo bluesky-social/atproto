@@ -1,5 +1,15 @@
 # @atproto/lex-installer
 
+## 0.2.6
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto-labs/did-resolver@0.3.13
+  - @atproto-labs/fetch-node@0.4.5
+  - @atproto/lex-resolver@0.4.3
+  - @atproto-labs/handle-resolver-node@0.2.17
+
 ## 0.2.5
 
 ### Patch Changes
