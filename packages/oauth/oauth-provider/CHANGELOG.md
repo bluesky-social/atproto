@@ -1,5 +1,17 @@
 # @atproto/oauth-provider
 
+## 0.25.4
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto-labs/did-resolver@0.3.13
+  - @atproto-labs/fetch-node@0.4.5
+  - @atproto/oauth-provider-ui@0.11.0
+  - @atproto/oauth-resolver@0.0.3
+  - @atproto/lex-resolver@0.4.3
+  - @atproto-labs/handle-resolver-node@0.2.17
+
 ## 0.25.3
 
 ### Patch Changes
