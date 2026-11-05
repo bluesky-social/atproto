@@ -60,6 +60,11 @@ describe('BytesSchema', () => {
       expect(result.success).toBe(false)
     })
 
+    it('rejects array-like objects', () => {
+      const result = schema.safeParse({ 0: 1, 1: 2, length: 2 })
+      expect(result.success).toBe(false)
+    })
+
     it('rejects null', () => {
       const result = schema.safeParse(null)
       expect(result.success).toBe(false)
