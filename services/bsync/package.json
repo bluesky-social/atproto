@@ -2,8 +2,10 @@
   "name": "bsync-service",
   "private": true,
   "type": "module",
+  "files": [
+    "index.ts"
+  ],
   "dependencies": {
-    "@atproto/bsync": "workspace:^",
-    "dd-trace": "^5.103.0"
+    "@atproto/bsync": "workspace:^"
   }
 }

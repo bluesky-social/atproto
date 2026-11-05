@@ -9,8 +9,9 @@ import { type HttpTerminator, createHttpTerminator } from 'http-terminator'
 import { DAY, SECOND } from '@atproto/common'
 import type { Keypair } from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
-import { Client } from '@atproto/lex'
+import { Client } from '@atproto/lex-client'
 import { createServer } from '@atproto/xrpc-server'
+import { safeFetchWrap } from '@atproto-labs/fetch-node'
 import { createBlobDispatcher } from './api/blob-dispatcher.js'
 import API, {
   blobResolver,
@@ -92,6 +93,7 @@ export class BskyAppView {
     const idResolver = new IdResolver({
       plcUrl: config.didPlcUrl,
       backupNameservers: config.handleResolveNameservers,
+      fetch: config.disableSsrfProtection ? globalThis.fetch : undefined,
     })
 
     const imgUriBuilderUrl =
@@ -139,34 +141,19 @@ export class BskyAppView {
         )
       : undefined
 
-    // @NOTE These bound the connection phase (TCP + TLS) only; once connected,
-    // the request is not bounded here. They are kept for the lifetime of the
+    // @NOTE This bounds the connection phase (TCP + TLS) only; once connected,
+    // the request is not bounded here. It is kept for the lifetime of the
     // service (pooling connections), and closed on `destroy()`.
-    // An unused agent holds no socket, so they can be built unconditionally.
-    const topicsDispatcher = createUndiciAgent({ connectTimeout: SECOND })
+    // An unused agent holds no socket, so it can be built unconditionally.
     const irisDispatcher = createUndiciAgent({ connectTimeout: SECOND })
-
-    const topicsClient = config.topicsUrl
-      ? new Client(
-          {
-            service: config.topicsUrl,
-            headers: config.topicsApiKey
-              ? { authorization: `Bearer ${config.topicsApiKey}` }
-              : undefined,
-            fetch: dispatcherFetch(topicsDispatcher),
-          },
-          {
-            // Trust internal services to send us well-formed responses
-            strictResponseProcessing: false,
-            validateResponse: config.debugMode,
-          },
-        )
-      : undefined
 
     const irisClient = config.irisUrl
       ? new Client(
           {
             service: config.irisUrl,
+            headers: config.irisApiKey
+              ? { authorization: `Bearer ${config.irisApiKey}` }
+              : undefined,
             fetch: dispatcherFetch(irisDispatcher),
           },
           {
@@ -203,6 +190,7 @@ export class BskyAppView {
     const hydrator = new Hydrator(dataplane, config.labelsFromIssuerDids, {
       debugFieldAllowedDids: config.debugFieldAllowedDids,
       featureGatesClient,
+      needsReviewTagSources: [config.modServiceDid],
     })
     const views = new Views({
       imgUriBuilder: imgUriBuilder,
@@ -259,6 +247,19 @@ export class BskyAppView {
     })
 
     const blobDispatcher = createBlobDispatcher(config)
+    // Egress to hosts named in DID documents, where the destination is chosen by
+    // the account being resolved. Same policy as blobDispatcher: https only,
+    // unicast addresses only, re-checked per hop by the dispatcher. Redirects
+    // stay enabled because xrpcRequestInit sets `redirect: 'follow'`.
+    const federatedFetch = (
+      config.disableSsrfProtection
+        ? globalThis.fetch
+        : safeFetchWrap({
+            allowIpHost: false,
+            allowImplicitRedirect: true,
+            responseMaxSize: 5 * 1024 * 1024,
+          })
+    ) as typeof globalThis.fetch
 
     const ctx = new AppContext({
       cfg: config,
@@ -267,7 +268,6 @@ export class BskyAppView {
       dataplaneHostList,
       searchClient,
       suggestionsClient,
-      topicsClient,
       irisClient,
       hydrator,
       views,
@@ -280,6 +280,7 @@ export class BskyAppView {
       authVerifier,
       featureGatesClient,
       blobDispatcher,
+      federatedFetch,
       kwsClient,
     })
 
@@ -310,7 +311,7 @@ export class BskyAppView {
     return new BskyAppView({
       ctx,
       app,
-      dispatchers: [topicsDispatcher, irisDispatcher],
+      dispatchers: [irisDispatcher],
     })
   }
 

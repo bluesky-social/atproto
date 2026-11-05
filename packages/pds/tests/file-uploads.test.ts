@@ -40,8 +40,13 @@ describe('file uploads', () => {
   })
 
   afterAll(async () => {
-    aliceDb?.close()
-    await network?.close()
+    // @TODO use an async disposable stack to manage the lifecycle of the
+    // disposable resources.
+    try {
+      await aliceDb?.close()
+    } finally {
+      await network?.close()
+    }
   })
 
   let smallBlob: TypedBlobRef

@@ -1,5 +1,13 @@
 import assert from 'node:assert'
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
+import {
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  test,
+} from 'vitest'
 import {
   AppBskyEmbedRecord,
   AppBskyFeedDefs,
@@ -858,7 +866,7 @@ describe('pds views with blocking', () => {
   })
 
   describe('mod service sees through blocks', () => {
-    let modServiceDid: string
+    let modServiceDid: DidString
 
     beforeAll(async () => {
       modServiceDid = network.bsky.ctx.cfg.modServiceDid
@@ -868,8 +876,61 @@ describe('pds views with blocking', () => {
         { createdAt: new Date().toISOString(), subject: modServiceDid },
         sc.getHeaders(alice),
       )
+
+      const modAgent = network.pds.getAgent()
+      await modAgent.login({ identifier: modServiceDid, password: 'hunter2' })
+      await modAgent.app.bsky.graph.block.create(
+        { repo: modServiceDid },
+        { createdAt: new Date().toISOString(), subject: bob },
+      )
+
+      const carolList = await sc.createList(carol, 'Blocked viewers', 'mod')
+      await sc.addToList(carol, modServiceDid, carolList)
+      await pdsAgent.app.bsky.graph.listblock.create(
+        { repo: carol },
+        { createdAt: new Date().toISOString(), subject: carolList.uriStr },
+        sc.getHeaders(carol),
+      )
+
+      const modList = await sc.createList(alice, 'Blocked authors', 'mod')
+      await sc.addToList(alice, dan, modList)
+      await modAgent.app.bsky.graph.listblock.create(
+        { repo: modServiceDid },
+        { createdAt: new Date().toISOString(), subject: modList.uriStr },
+      )
       await network.processAll()
     })
+
+    test.each([
+      { issuer: 'service DID', actor: 'alice', block: 'blocked by actor' },
+      { issuer: 'labeler service', actor: 'alice', block: 'blocked by actor' },
+      { issuer: 'service DID', actor: 'bob', block: 'blocking actor' },
+      { issuer: 'labeler service', actor: 'bob', block: 'blocking actor' },
+      { issuer: 'service DID', actor: 'carol', block: 'blocked by list' },
+      { issuer: 'labeler service', actor: 'carol', block: 'blocked by list' },
+      { issuer: 'service DID', actor: 'dan', block: 'blocking by list' },
+      { issuer: 'labeler service', actor: 'dan', block: 'blocking by list' },
+    ] as const)(
+      '$issuer gets author feed when $block',
+      async ({ issuer, actor }) => {
+        const options =
+          issuer === 'labeler service'
+            ? await network.ozone.ctx.appviewAuth(ids.AppBskyFeedGetAuthorFeed)
+            : {
+                headers: await network.serviceHeaders(
+                  modServiceDid,
+                  ids.AppBskyFeedGetAuthorFeed,
+                ),
+              }
+        const { data } = await agent.app.bsky.feed.getAuthorFeed(
+          { actor: sc.dids[actor], limit: 5, filter: 'posts_no_replies' },
+          options,
+        )
+        expect(data.feed.map(({ post }) => post.uri)).toContain(
+          sc.posts[sc.dids[actor]][0].ref.uriStr,
+        )
+      },
+    )
 
     it('mod service viewer preserves block state on getProfile', async () => {
       // alice blocked the mod service, mod service views alice's profile

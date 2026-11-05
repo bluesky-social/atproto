@@ -1,4 +1,4 @@
-import type { LexMap, LexValue } from '@atproto/lex-client'
+import type { LexMap, LexValue } from '@atproto/lex-rpc'
 import { lexErrorDataSchema } from '@atproto/lex-schema'
 
 export async function extractXrpcErrorCode(

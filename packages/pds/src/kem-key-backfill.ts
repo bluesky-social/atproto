@@ -4,7 +4,7 @@ import { setTimeout as sleep } from 'node:timers/promises'
 import * as plc from '@did-plc/lib'
 import { MINUTE, SECOND, fileExists, rmIfExists } from '@atproto/common'
 import { P256Keypair } from '@atproto/crypto'
-import type { DidString } from '@atproto/lex'
+import type { DidString } from '@atproto/lex-schema'
 import type { AppContext } from './context.js'
 import { spaceLogger } from './logger.js'
 

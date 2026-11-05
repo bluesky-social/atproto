@@ -1,6 +1,6 @@
 {
   "name": "@atproto/ozone",
-  "version": "0.4.0",
+  "version": "0.12.1",
   "license": "MIT",
   "description": "Backend service for moderating the Bluesky network.",
   "keywords": [
@@ -43,16 +43,17 @@
     "@atproto/common": "workspace:^",
     "@atproto/crypto": "workspace:^",
     "@atproto/identity": "workspace:^",
-    "@atproto/lex": "workspace:^",
+    "@atproto/lex-client": "workspace:^",
+    "@atproto/lex-data": "workspace:^",
     "@atproto/lex-password-session": "workspace:^",
+    "@atproto/lex-schema": "workspace:^",
     "@atproto/syntax": "workspace:^",
     "@atproto/ws-client": "workspace:^",
     "@atproto/xrpc-server": "workspace:^",
     "@did-plc/lib": "^0.0.1",
-    "@opentelemetry/instrumentation-pg": "^0.72.0",
+    "@opentelemetry/instrumentation-pg": "^0.77.0",
     "compression": "^1.7.4",
     "cors": "^2.8.5",
-    "dotenv": "^17.4.2",
     "express": "^4.17.2",
     "http-terminator": "^3.2.0",
     "kysely": "^0.29.2",
@@ -64,11 +65,12 @@
     "prom-client": "^15.1.3",
     "structured-headers": "^1.0.1",
     "uint8arrays": "^5.0.0",
-    "undici": "^8.5.0",
+    "undici": "^8.12.2",
     "ws": "^8.12.0"
   },
   "devDependencies": {
     "@atproto/api": "workspace:^",
+    "@atproto/lex": "workspace:^",
     "@atproto/lexicon": "workspace:^",
     "@atproto/pds": "workspace:^",
     "@did-plc/server": "^0.0.1",
@@ -79,15 +81,19 @@
     "@types/pg": "^8.15.5",
     "@types/qs": "^6.15.1",
     "@types/ws": "^8.18.1",
-    "jest": "^30.5.1"
+    "jest": "^30.5.2"
   },
   "scripts": {
-    "codegen:lex": "lex build --clear --indexFile --lexicons ../../lexicons",
+    "lex:build": "lex build --clear --indexFile --lib @atproto/lex-schema",
+    "lex:install": "lex install",
+    "postlex:install": "pnpm run lex:build",
+    "lex:update": "lex update",
+    "postlex:update": "pnpm run lex:build",
+    "codegen:lex": "pnpm run lex:install --ci",
     "prebuild": "pnpm run '/^(codegen:.+)$/'",
     "build": "tsc --build tsconfig.build.json",
     "start": "node --enable-source-maps dist/bin.js",
     "test": "NODE_OPTIONS=--experimental-vm-modules ../dev-infra/with-test-redis-and-db.sh jest",
-    "test:log": "tail -50 test.log | pino-pretty",
     "test:updateSnapshot": "NODE_OPTIONS=--experimental-vm-modules ../dev-infra/with-test-redis-and-db.sh jest --updateSnapshot",
     "migration:create": "node ./bin/migration-create.ts"
   }

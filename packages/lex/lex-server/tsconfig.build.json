@@ -7,9 +7,9 @@
     { "path": "../../did/tsconfig.build.json" },
     { "path": "../../internal/did-resolver/tsconfig.build.json" },
     { "path": "../lex-cbor/tsconfig.build.json" },
-    { "path": "../lex-client/tsconfig.build.json" },
     { "path": "../lex-data/tsconfig.build.json" },
     { "path": "../lex-json/tsconfig.build.json" },
+    { "path": "../lex-rpc/tsconfig.build.json" },
     { "path": "../lex-schema/tsconfig.build.json" },
   ],
   "compilerOptions": {

@@ -2,7 +2,7 @@ import type * as prometheus from 'prom-client'
 import { allFulfilled } from '@atproto/common'
 import { type Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
-import { Client } from '@atproto/lex'
+import { Client } from '@atproto/lex-client'
 import { createServiceAuthHeaders } from '@atproto/xrpc-server'
 import { BackgroundQueue } from '../background.js'
 import type { OzoneConfig, OzoneSecrets } from '../config/index.js'
@@ -11,7 +11,6 @@ import { ModerationService } from '../mod-service/index.js'
 import { StrikeService } from '../mod-service/strike.js'
 import { QueueService } from '../queue/service.js'
 import { ReportStatsService } from '../report/stats.js'
-import { SafeDidResolver } from '../safe-fetch.js'
 import { ScheduledActionService } from '../scheduled-action/service.js'
 import { SettingService } from '../setting/service.js'
 import { TeamService } from '../team/index.js'
@@ -20,6 +19,7 @@ import { EventPusher } from './event-pusher.js'
 import { EventReverser } from './event-reverser.js'
 import { MaterializedViewRefresher } from './materialized-view-refresher.js'
 import { QueueRouter } from './queue-router.js'
+import { ReportReporterDidBackfiller } from './report-reporter-did-backfiller.js'
 import { ScheduledActionProcessor } from './scheduled-action-processor.js'
 import { StatsComputer } from './stats-computer.js'
 import { StrikeExpiryProcessor } from './strike-expiry-processor.js'
@@ -38,6 +38,7 @@ export type DaemonContextOptions = {
   scheduledActionProcessor: ScheduledActionProcessor
   strikeExpiryProcessor: StrikeExpiryProcessor
   queueRouter: QueueRouter
+  reportReporterDidBackfiller: ReportReporterDidBackfiller
   verificationListener?: VerificationListener
   statsComputer?: StatsComputer
 }
@@ -62,12 +63,8 @@ export class DaemonContext {
 
     const idResolver = new IdResolver({
       plcUrl: cfg.identity.plcUrl,
+      fetch: cfg.service.devMode ? globalThis.fetch : undefined,
     })
-    if (!cfg.service.devMode) {
-      idResolver.did = new SafeDidResolver({
-        plcUrl: cfg.identity.plcUrl,
-      })
-    }
 
     // Trust internal services to send us well-formed responses
     const appviewClient = new Client(
@@ -130,10 +127,16 @@ export class DaemonContext {
       scheduledActionService,
     )
 
-    const strikeExpiryProcessor = new StrikeExpiryProcessor(db, strikeService)
+    const strikeExpiryProcessor = new StrikeExpiryProcessor(
+      db,
+      strikeService,
+      cfg.strikeSuspension,
+      cfg.inbox.startAt,
+    )
 
-    const queueService = QueueService.creator()
+    const queueService = QueueService.creator(cfg.service.did)
     const queueRouter = new QueueRouter(db, queueService, register)
+    const reportReporterDidBackfiller = new ReportReporterDidBackfiller(db)
 
     const reportStatsService = ReportStatsService.creator()
     const statsComputer = new StatsComputer(
@@ -164,6 +167,7 @@ export class DaemonContext {
       scheduledActionProcessor,
       strikeExpiryProcessor,
       queueRouter,
+      reportReporterDidBackfiller,
       verificationListener,
       statsComputer,
       ...(overrides ?? {}),
@@ -210,6 +214,10 @@ export class DaemonContext {
     return this.opts.queueRouter
   }
 
+  get reportReporterDidBackfiller(): ReportReporterDidBackfiller {
+    return this.opts.reportReporterDidBackfiller
+  }
+
   get verificationListener(): VerificationListener | undefined {
     return this.opts.verificationListener
   }
@@ -226,6 +234,7 @@ export class DaemonContext {
     this.scheduledActionProcessor.start()
     this.strikeExpiryProcessor.start()
     this.queueRouter.start()
+    this.reportReporterDidBackfiller.start()
     this.verificationListener?.start()
     this.statsComputer?.start()
   }
@@ -251,6 +260,7 @@ export class DaemonContext {
         this.scheduledActionProcessor.destroy(),
         this.strikeExpiryProcessor.destroy(),
         this.queueRouter.destroy(),
+        this.reportReporterDidBackfiller.destroy(),
         this.verificationListener?.stop(),
         this.statsComputer?.destroy(),
       ])

@@ -1,6 +1,7 @@
 {
   "extends": ["../../../tsconfig/isomorphic.tsconfig.json"],
   "include": ["./src"],
+  "exclude": ["**/*.test.ts"],
   "references": [{ "path": "../pipe/tsconfig.build.json" }],
   "compilerOptions": {
     "outDir": "./dist",

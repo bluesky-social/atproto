@@ -1,4 +1,4 @@
-import { l } from '@atproto/lex'
+import { l } from '@atproto/lex-schema'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { com } from '../lexicons/index.js'
 

@@ -16,6 +16,9 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/space"
   },
+  "files": [
+    "./dist"
+  ],
   "scripts": {
     "test": "vitest run",
     "build": "tsc --build tsconfig.build.json"

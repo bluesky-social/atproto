@@ -11,7 +11,7 @@ export function apiErrorParser(error: unknown): ParsedError | void {
       code: error.payload.error,
       message: error.payload.error_description,
       payload: toJsonSafe(error.payload),
-      description: apiErrorMessage(error),
+      description: error.msg,
     }
   }
 }

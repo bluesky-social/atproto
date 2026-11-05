@@ -15,14 +15,17 @@ packages/bsync/src/proto
 # codegen
 packages/api/src/client
 
-# @atproto/lex
-packages/lexicon-resolver/src/lexicons
-packages/lex/*/src/lexicons
-packages/lex/*/tests/lexicons
-packages/oauth/oauth-client-browser-example/src/lexicons
-packages/pds/src/lexicons
-packages/bsky/src/lexicons
-packages/sync/src/lexicons
+# @atproto/lex install
+packages/*/*/lexicons.json
+packages/*/lexicons.json
+packages/api/lexicons
+packages/pds/lexicons
+packages/oauth/oauth-client-browser-example/lexicons
+
+# @atproto/lex build
+packages/*/src/lexicons
+packages/*/*/src/lexicons
+packages/*/*/tests/lexicons
 
 # others
 packages/api/src/moderation/const/labels.ts

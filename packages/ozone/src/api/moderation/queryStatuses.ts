@@ -5,10 +5,10 @@ import { tools } from '../../lexicons/index.js'
 export default function (server: Server, ctx: AppContext) {
   server.add(tools.ozone.moderation.queryStatuses, {
     auth: ctx.authVerifier.modOrAdminToken,
-    handler: async ({ params }) => {
+    handler: async ({ params, signal }) => {
       const db = ctx.db
       const modService = ctx.modService(db)
-      const results = await modService.getSubjectStatuses(params)
+      const results = await modService.getSubjectStatuses({ ...params, signal })
       const subjectStatuses = results.statuses.map((status) =>
         modService.views.formatSubjectStatus(status),
       )

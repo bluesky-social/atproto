@@ -7,31 +7,31 @@ import {
   FormShell,
   type FormShellProps,
 } from '#/components/forms/form-shell.tsx'
+import type { Override } from '#/lib/util'
 
-type Values = { email: string; password: string; inviteCode: string }
-
+// @NOTE Because values here might be spread ({...val}) when used in calling
+// code, we don't use optional properties and requires explicitly setting
+// undefined values instead.
 export type SignUpCredentialsData = {
   email: string
   password: string
-  inviteCode?: string
+  remember: boolean | undefined
+  inviteCode: string | undefined
 }
 
-export type SignUpCredentialsFormProps = Omit<
-  FormShellProps<Values>,
-  'onSubmit' | 'onValues'
-> & {
-  inviteCodeRequired?: boolean
-  values?: Partial<SignUpCredentialsData>
-  onValues?: (values: Partial<SignUpCredentialsData>) => void
-  handler: (
-    data: SignUpCredentialsData,
-    signal: AbortSignal,
-  ) => void | PromiseLike<void>
-}
+export type SignUpCredentialsFormProps = Override<
+  FormShellProps<SignUpCredentialsData>,
+  {
+    inviteCodeRequired?: boolean
+    rememberDefault?: boolean
+    defaultValues?: Partial<SignUpCredentialsData>
+  }
+>
 
 export function SignUpCredentialsForm({
   inviteCodeRequired = true,
-  values,
+  rememberDefault: remember = undefined,
+  defaultValues,
   onValues,
   handler,
   children,
@@ -40,27 +40,34 @@ export function SignUpCredentialsForm({
   const { t } = useLingui()
 
   return (
-    <FormShell<Values>
+    <FormShell<{
+      email: string
+      password: string
+      inviteCode: string
+    }>
       {...props}
       // @NOTE Mirror every edit back to the wizard, not just the submitted
       // values, so stepping Back and Forward again restores un-submitted input.
-      onValues={(next) => onValues?.(next as Partial<SignUpCredentialsData>)}
-      onSubmit={(next, signal) => {
-        const data: SignUpCredentialsData = inviteCodeRequired
-          ? {
-              email: next.email,
-              password: next.password,
-              inviteCode: next.inviteCode,
-            }
-          : { email: next.email, password: next.password }
-        onValues?.(data)
-        return handler(data, signal)
+      onValues={(values) =>
+        onValues?.({
+          email: values.email,
+          password: values.password,
+          inviteCode: values.inviteCode,
+          remember,
+        })
+      }
+      handler={({ inviteCode, email, password }, signal) => {
+        // Fool-proofing (should be ensured by the form validation)
+        if (inviteCodeRequired && !inviteCode) {
+          throw new Error('Invite code is required')
+        }
+        return handler({ email, password, remember, inviteCode }, signal)
       }}
     >
       {inviteCodeRequired && (
         <TextField
           name="inviteCode"
-          defaultValue={values?.inviteCode ?? ''}
+          defaultValue={defaultValues?.inviteCode ?? ''}
           label={<Trans>Invite code</Trans>}
           icon={<HashIcon className="size-5" />}
           autoFocus
@@ -73,7 +80,7 @@ export function SignUpCredentialsForm({
 
       <EmailField
         name="email"
-        defaultValue={values?.email ?? ''}
+        defaultValue={defaultValues?.email ?? ''}
         label={<Trans>Email</Trans>}
         autoFocus={!inviteCodeRequired}
         autoComplete="username email"
@@ -83,7 +90,7 @@ export function SignUpCredentialsForm({
 
       <NewPasswordField
         name="password"
-        defaultValue={values?.password ?? ''}
+        defaultValue={defaultValues?.password ?? ''}
         label={<Trans>Password</Trans>}
         enterKeyHint="next"
         required

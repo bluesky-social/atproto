@@ -1,5 +1,6 @@
 import { mapDefined, noUndefinedVals } from '@atproto/common'
-import type { AtUriString, Client } from '@atproto/lex'
+import type { Client } from '@atproto/lex-client'
+import type { AtUriString } from '@atproto/lex-schema'
 import { MethodNotImplementedError, type Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../../../context.js'
 import type { HydrateCtx, Hydrator } from '../../../../hydration/hydrator.js'
@@ -21,7 +22,11 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ auth, params, req, signal }) => {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
-      const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
+      const hydrateCtx = await ctx.hydrator.createContext({
+        xrpcEndpoint: app.bsky.unspecced.getSuggestedFeeds.$lxm,
+        labelers,
+        viewer,
+      })
       const headers = noUndefinedVals({
         'accept-language': req.headers['accept-language'],
         ...getAtprotoPassthroughHeaders(req),
@@ -48,12 +53,12 @@ const skeleton = async (
 ): Promise<SkeletonState> => {
   const { params, ctx } = input
 
-  if (!ctx.topicsClient) {
+  if (!ctx.irisClient) {
     // Use 501 instead of 500 as these are not considered retry-able by clients
-    throw new MethodNotImplementedError('Topics agent not available')
+    throw new MethodNotImplementedError('Iris agent not available')
   }
 
-  return ctx.topicsClient.call(
+  return ctx.irisClient.call(
     app.bsky.unspecced.getSuggestedFeedsSkeleton,
     {
       limit: params.limit,
@@ -82,13 +87,14 @@ const presentation = (
     feeds: mapDefined(skeleton.feeds, (uri) =>
       ctx.views.feedGenerator(uri, hydration),
     ),
+    recIdStr: skeleton.recIdStr,
   }
 }
 
 type Context = {
   hydrator: Hydrator
   views: Views
-  topicsClient: Client | undefined
+  irisClient: Client | undefined
 }
 
 type Params = app.bsky.unspecced.getSuggestedFeeds.$Params & {
@@ -99,4 +105,5 @@ type Params = app.bsky.unspecced.getSuggestedFeeds.$Params & {
 
 type SkeletonState = {
   feeds: AtUriString[]
+  recIdStr?: string
 }

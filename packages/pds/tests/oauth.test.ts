@@ -1,10 +1,12 @@
+import assert from 'node:assert'
 import { once } from 'node:events'
 import { type Server, createServer } from 'node:http'
 import type { AddressInfo } from 'node:net'
 import { jest } from '@jest/globals'
-import { type Browser, launch } from 'puppeteer'
-import { TestNetwork } from '@atproto/dev-env'
+import { type Browser, type BrowserContext, launch } from 'puppeteer'
+import { TestNetwork, TestPds } from '@atproto/dev-env'
 import { middleware as oauthClientAssetsMiddleware } from '@atproto/oauth-client-browser-example/server'
+import type { AppContext } from '../src/index.js'
 import { PageHelper } from './_puppeteer.js'
 
 describe('oauth', () => {
@@ -13,6 +15,10 @@ describe('oauth', () => {
   let server: Server
 
   let appUrl: string
+
+  let sendMailMock: jest.SpiedFunction<
+    AppContext['mailer']['transporter']['sendMail']
+  >
 
   // @NOTE We are using another language than "en" as default language to
   // test the language negotiation.
@@ -31,6 +37,13 @@ describe('oauth', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'oauth',
     })
+
+    // Catch-all: never actually deliver, but keep recording calls. Per-test
+    // spies on the individual mailer methods stay un-stubbed, so the real
+    // template still renders into the call this records.
+    sendMailMock = jest
+      .spyOn(network.pds.ctx.mailer.transporter, 'sendMail')
+      .mockImplementation(async () => {})
 
     const sc = network.getSeedClient()
 
@@ -60,6 +73,10 @@ describe('oauth', () => {
         (e): e is [string, string] => e[1] != null,
       ),
     )}`
+  })
+
+  beforeEach(() => {
+    sendMailMock.mockClear()
   })
 
   afterAll(async () => {
@@ -156,7 +173,7 @@ describe('oauth', () => {
 
     await page.assertTitle('Mot de passe oublié')
 
-    await page.typeInInput('email', 'alice@test.com')
+    await page.typeInInput('identifier', 'alice@test.com')
 
     expect(sendTemplateMock).toHaveBeenCalledTimes(0)
 
@@ -173,7 +190,7 @@ describe('oauth', () => {
       token: expect.any(String),
     })
 
-    await page.typeInInput('code', params.token)
+    await page.typeInInput('token', params.token)
 
     await page.typeInInput('password', 'alice-new-pass')
 
@@ -210,7 +227,7 @@ describe('oauth', () => {
 
     await page.assertTitle('Mot de passe oublié')
 
-    await page.typeInInput('email', 'alice@test.com')
+    await page.typeInInput('identifier', 'alice@test.com')
 
     await page.clickOnText('Suivant')
 
@@ -224,7 +241,7 @@ describe('oauth', () => {
 
     const [params] = sendTemplateMock.mock.lastCall!
 
-    await page.typeInInput('code', params.token)
+    await page.typeInInput('token', params.token)
 
     // Keep the same password as the previous test so later tests
     // (which sign in with 'alice-new-pass') are unaffected.
@@ -250,8 +267,10 @@ describe('oauth', () => {
 
     await page.typeInInput('password', 'alice-new-pass')
 
-    // Make sure the warning is visible
-    await page.ensureTextVisibility('Avertissement', 'h3')
+    // Make sure the phishing reminder is visible
+    await page.ensureTextVisibility(
+      'Ne saisissez votre mot de passe que sur des sites de confiance.',
+    )
 
     await page.clickOn(
       'label::-p-text(Se souvenir de ce compte sur cet appareil)',
@@ -363,13 +382,14 @@ describe('oauth', () => {
 
     await page.navigationClick(`Login with ${new URL(network.pds.url).host}`)
 
-    await page.ensureTextVisibility('Se connecter en tant que...')
+    // The picker heading carries a line break; match its first line
+    await page.ensureTextVisibility('Continuer avec', 'div')
 
     await page.clickOnText('alice.test', 'span')
 
     await page.assertTitle('Heureux de vous revoir!')
 
-    await page.ensureTextVisibility('Vous avez précédemment désactivé')
+    await page.ensureTextVisibility('Votre compte est actuellement désactivé.')
 
     await page.clickOnText('Oui, réactiver mon compte')
 
@@ -388,5 +408,356 @@ describe('oauth', () => {
     await page.clickOnText('Sign out')
 
     await page.waitForNetworkIdle()
+  })
+
+  describe('with 2FA', () => {
+    let jane
+
+    beforeAll(async () => {
+      const sc = network.getSeedClient()
+
+      jane = await sc.createAccount('jane', {
+        email: 'jane@test.com',
+        handle: 'jane.test',
+        password: 'jane-pass',
+      })
+
+      const confirmationToken =
+        await network.pds.ctx.accountManager.createEmailToken(
+          jane.did,
+          'confirm_email',
+        )
+
+      await network.pds.ctx.accountManager.confirmEmail(
+        jane.did,
+        jane.email,
+        confirmationToken,
+      )
+
+      await network.pds.ctx.accountManager.enableEmailAuthFactor({
+        did: jane.did,
+      })
+    })
+
+    it('Allows to sign-in through OAuth', async () => {
+      await using page = await PageHelper.from(browser, { languages })
+
+      await page.goto(appUrl)
+
+      await page.assertTitle('OAuth Client Example')
+
+      const input = await page.typeInInput('identifier', 'jane.test')
+
+      await page.navigationAction(async () => input.press('Enter'))
+
+      await page.assertTitle('Connexion')
+
+      await page.typeInInput('password', 'jane-pass')
+
+      // @NOTE Left un-stubbed on purpose: the real method runs, so the
+      // template renders into the (mocked) transport, and the token is read
+      // off the call rather than parsed back out of the email body.
+      using sendSignInAuthFactorMock = jest.spyOn(
+        network.pds.ctx.mailer,
+        'sendSignInAuthFactor',
+      )
+
+      await page.clickOnText('Se connecter')
+      await page.waitForNetworkIdle()
+
+      const [params] = sendSignInAuthFactorMock.mock.lastCall!
+      // `locale` proves the negotiated language reached the mailer: only the
+      // OAuth sign-in path carries one (createSession declares no locale
+      // input), so this is the sole coverage for that wiring.
+      expect(params).toEqual({
+        handle: 'jane.test',
+        locale: 'fr',
+        token: expect.any(String),
+      })
+      const token = params.token
+
+      // Make sure the 2FA field appears:
+      await page.ensureTextVisibility('Confirmation 2FA', 'label')
+      await page.ensureTextVisibility(
+        'Consultez la boîte de réception de j***e@t***m pour y trouver un code de connexion, et saisissez-le ici.',
+        'p',
+      )
+
+      assert(token, "Expected email confirmation token for Jane's login")
+      await page.typeInInput('emailOtp', token)
+
+      await page.clickOnText('Confirmer')
+
+      await page.assertTitle('Autoriser')
+
+      await page.navigationClick('Autoriser')
+
+      await page.assertTitle('OAuth Client Example')
+
+      await page.ensureTextVisibility('Token info', 'h2')
+
+      await page.clickOnAriaLabel('User menu')
+
+      await page.clickOnText('Sign out')
+
+      await page.waitForNetworkIdle()
+    })
+
+    it('Prevents to sign-in through OAuth with invalid OTP', async () => {
+      await using page = await PageHelper.from(browser, { languages })
+
+      await page.goto(appUrl)
+
+      await page.assertTitle('OAuth Client Example')
+
+      const input = await page.typeInInput('identifier', 'jane.test')
+
+      await page.navigationAction(async () => input.press('Enter'))
+
+      await page.assertTitle('Connexion')
+
+      await page.typeInInput('password', 'jane-pass')
+
+      // @NOTE Left un-stubbed on purpose: the real method runs, so the
+      // template renders into the (mocked) transport, and the token is read
+      // off the call rather than parsed back out of the email body.
+      using sendSignInAuthFactorMock = jest.spyOn(
+        network.pds.ctx.mailer,
+        'sendSignInAuthFactor',
+      )
+
+      await page.clickOnText('Se connecter')
+      await page.waitForNetworkIdle()
+
+      const [params] = sendSignInAuthFactorMock.mock.lastCall!
+      // `locale` proves the negotiated language reached the mailer: only the
+      // OAuth sign-in path carries one (createSession declares no locale
+      // input), so this is the sole coverage for that wiring.
+      expect(params).toEqual({
+        handle: 'jane.test',
+        locale: 'fr',
+        token: expect.any(String),
+      })
+      const token = params.token
+
+      // Make sure the 2FA field appears:
+      await page.ensureTextVisibility('Confirmation 2FA', 'label')
+      await page.ensureTextVisibility(
+        'Consultez la boîte de réception de j***e@t***m pour y trouver un code de connexion, et saisissez-le ici.',
+        'p',
+      )
+
+      assert(token, 'Ensure we generated a token')
+      assert(
+        token !== 'AAAAA-AAAAA',
+        "Ensure generated token isn't our test token",
+      )
+      await page.typeInInput('emailOtp', 'AAAAA-AAAAA')
+
+      await page.clickOnText('Confirmer')
+
+      await page.ensureTextVisibility(
+        'Les données que vous avez soumises sont invalides. Veuillez vérifier le formulaire et réessayer.',
+        'p',
+      )
+
+      await page.typeInInput('emailOtp', token)
+
+      await page.clickOnText('Confirmer')
+
+      await page.assertTitle('Autoriser')
+    })
+  })
+
+  describe('identifier input', () => {
+    // Accounts on a second PDS, sharing the PLC directory with the first one.
+    let otherPds: TestPds
+    let remoteDid: string
+
+    // @NOTE Each test runs in a fresh browser context, so that nothing the
+    // tests above remembered on the device (alice's session) changes which
+    // screens show up here, and nothing done here leaks into later tests.
+    let context: BrowserContext
+
+    const isResetPasswordRequest = (url: URL) =>
+      url.pathname.endsWith('/~api/reset-password-request')
+
+    beforeAll(async () => {
+      otherPds = await TestPds.create({ didPlcUrl: network.plc.url })
+
+      const { data } = await otherPds.getAgent().createAccount({
+        email: 'remote@test.com',
+        handle: 'remote.test',
+        password: 'remote-pass',
+      })
+      remoteDid = data.did
+    })
+
+    beforeEach(async () => {
+      context = await browser.createBrowserContext()
+    })
+
+    afterEach(async () => {
+      await context?.close()
+    })
+
+    afterAll(async () => {
+      await otherPds?.close()
+    })
+
+    it('requires an email to reset the password of a local account', async () => {
+      using sendResetPasswordMock = jest
+        .spyOn(network.pds.ctx.mailer, 'sendResetPassword')
+        .mockImplementation(async () => {
+          // noop
+        })
+
+      await using page = await PageHelper.from(context, { languages })
+
+      await page.goto(appUrl)
+
+      await page.assertTitle('OAuth Client Example')
+
+      const input = await page.typeInInput('identifier', 'alice.test')
+
+      await page.navigationAction(async () => input.press('Enter'))
+
+      await page.assertTitle('Connexion')
+
+      await page.clickOnText('Oublié ?')
+
+      await page.assertTitle('Mot de passe oublié')
+
+      await page.typeInInput('identifier', 'alice.test')
+
+      const { status, body } = await page.captureJsonResponse(
+        isResetPasswordRequest,
+        () => page.clickOnText('Suivant'),
+      )
+
+      expect(status).toBe(404)
+      expect(body).toEqual({
+        error: 'unknown_atproto_account_error',
+        error_description: expect.any(String),
+        identifier: 'alice.test',
+      })
+
+      await page.ensureTextVisibility('Une adresse email est requise.')
+
+      await expect(
+        page.ensureTextVisibility('Visitez', 'p', 500),
+      ).rejects.toThrow('Waiting for selector')
+
+      await page.assertTitle('Mot de passe oublié')
+
+      expect(sendResetPasswordMock).toHaveBeenCalledTimes(0)
+    })
+
+    it('directs accounts hosted on another PDS to their service', async () => {
+      // @NOTE Identified by DID: handles under ".test" are not resolvable
+      // (neither through DNS nor through HTTPS well-known) from the provider's
+      // handle resolver.
+
+      using sendResetPasswordMock = jest
+        .spyOn(network.pds.ctx.mailer, 'sendResetPassword')
+        .mockImplementation(async () => {
+          // noop
+        })
+
+      const otherIssuer = otherPds.ctx.cfg.oauth.issuer
+
+      await using page = await PageHelper.from(context, { languages })
+
+      await page.goto(new URL('/account/reset-password', network.pds.url))
+
+      await page.assertTitle('Mot de passe oublié')
+
+      await page.typeInInput('identifier', remoteDid)
+
+      const { status, body } = await page.captureJsonResponse(
+        isResetPasswordRequest,
+        () => page.clickOnText('Suivant'),
+      )
+
+      expect(status).toBe(404)
+      expect(body).toEqual({
+        error: 'unknown_atproto_account_error',
+        error_description: expect.any(String),
+        identifier: remoteDid,
+        issuer: otherIssuer,
+      })
+
+      await page.ensureTextVisibility(
+        `Le compte "${remoteDid}" est hébergé ailleurs.`,
+      )
+
+      await page.ensureTextVisibility(
+        `Visitez ${otherIssuer} pour gérer ce compte.`,
+      )
+
+      await page.ensureTextVisibility(
+        otherIssuer,
+        `p a[href=${JSON.stringify(otherIssuer)}]`,
+      )
+
+      expect(sendResetPasswordMock).toHaveBeenCalledTimes(0)
+    })
+
+    it('requires an email to reset the password of an unknown handle', async () => {
+      using sendResetPasswordMock = jest
+        .spyOn(network.pds.ctx.mailer, 'sendResetPassword')
+        .mockImplementation(async () => {
+          // noop
+        })
+
+      await using page = await PageHelper.from(context, { languages })
+
+      await page.goto(new URL('/account/reset-password', network.pds.url))
+
+      await page.assertTitle('Mot de passe oublié')
+
+      await page.typeInInput('identifier', 'nobody.test')
+
+      const { status, body } = await page.captureJsonResponse(
+        isResetPasswordRequest,
+        () => page.clickOnText('Suivant'),
+      )
+
+      // Not a server_error: an identity that does not resolve is reported as
+      // an unknown account, with no service to direct the user to.
+      expect(status).toBe(404)
+      expect(body).toEqual({
+        error: 'unknown_atproto_account_error',
+        error_description: expect.any(String),
+        identifier: 'nobody.test',
+      })
+
+      await page.ensureTextVisibility('Une adresse email est requise.')
+
+      await expect(
+        page.ensureTextVisibility('Visitez', 'p', 500),
+      ).rejects.toThrow('Waiting for selector')
+
+      expect(sendResetPasswordMock).toHaveBeenCalledTimes(0)
+    })
+
+    it('rejects malformed identifiers through the browser', async () => {
+      await using page = await PageHelper.from(context, { languages })
+
+      await page.goto(new URL('/account/sign-in', network.pds.url))
+
+      await page.assertTitle('Connexion')
+
+      await page.fillInput('identifier', 'a@@b')
+
+      // @NOTE A `pattern` the browser fails to compile (e.g. an unescaped "-"
+      // in a character class, under the "v" flag) is silently ignored, which
+      // would make this false.
+      await expect(page.getInputState('identifier')).resolves.toEqual({
+        value: 'a@@b',
+        valid: false,
+        patternMismatch: true,
+      })
+    })
   })
 })

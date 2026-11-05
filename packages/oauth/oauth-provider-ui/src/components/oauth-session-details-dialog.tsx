@@ -1,9 +1,9 @@
 import { Trans } from '@lingui/react/macro'
 import { type ReactElement, useState } from 'react'
-import { ConfirmForm } from '#/components/dialogs/confirm-form.tsx'
 import { DialogShell } from '#/components/dialogs/dialog-shell.tsx'
 import { Button } from '#/components/ui/button.tsx'
 import { ScopeDescription } from '#/components/utils/scope-description.tsx'
+import { FormShell } from './forms/form-shell'
 
 export type OAuthSessionDetailsDialogProps = {
   clientName: string
@@ -33,7 +33,7 @@ export function OAuthSessionDetailsDialog({
       onOpenChange={setOpen}
       dismissable={!submitting}
     >
-      <ConfirmForm
+      <FormShell
         submitVariant="destructive"
         submitLabel={<Trans context="OAuthApp">Revoke access</Trans>}
         actions={
@@ -69,7 +69,7 @@ export function OAuthSessionDetailsDialog({
             <ScopeDescription scope={scope} />
           </>
         )}
-      </ConfirmForm>
+      </FormShell>
     </DialogShell>
   )
 }

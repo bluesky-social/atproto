@@ -1,12 +1,11 @@
 import { randomUUID } from 'node:crypto'
 import { DAY, HOUR, MINUTE, SECOND, allFulfilled } from '@atproto/common'
 import {
-  type DidString,
   RETRYABLE_HTTP_STATUS_CODES,
-  type SpaceRefString,
   XrpcError,
   xrpc,
-} from '@atproto/lex'
+} from '@atproto/lex-client'
+import type { DidString, SpaceRefString } from '@atproto/lex-schema'
 import { LtHash, spaceHostAud } from '@atproto/space'
 import { SpaceRef } from '@atproto/syntax'
 import { XRPCError } from '@atproto/xrpc-server'

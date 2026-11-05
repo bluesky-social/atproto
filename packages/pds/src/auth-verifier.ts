@@ -8,7 +8,7 @@ import {
   type AtIdentifierString,
   type DidString,
   isDidString,
-} from '@atproto/lex'
+} from '@atproto/lex-schema'
 import {
   OAuthError,
   WWWAuthenticateError,
@@ -889,6 +889,8 @@ const parseBasicAuth = (
     return null
   }
 }
+
+export { type KeyObject }
 
 export const createSecretKeyObject = (secret: string): KeyObject => {
   return createSecretKey(Buffer.from(secret))

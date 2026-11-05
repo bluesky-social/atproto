@@ -1,7 +1,10 @@
 import { envBool, envInt, envList, envStr } from '@atproto/common'
-import type { DidString, UriString } from '@atproto/lex'
+import type { DidString, UriString } from '@atproto/lex-schema'
 
 export const readEnv = (): OzoneEnvironment => {
+  const onlineMembersActiveWindowMs = envStr(
+    'OZONE_ONLINE_MEMBERS_ACTIVE_WINDOW_MS',
+  )
   return {
     nodeEnv: envStr('NODE_ENV'),
     devMode: envBool('OZONE_DEV_MODE'),
@@ -12,6 +15,9 @@ export const readEnv = (): OzoneEnvironment => {
     publicUrl: envStr('OZONE_PUBLIC_URL') as UriString,
     serverDid: envStr('OZONE_SERVER_DID') as DidString,
     serviceRecordCacheTTL: envInt('OZONE_SERVICE_RECORD_CACHE_TTL'),
+    labelStreamBackfillRate: envInt('OZONE_LABEL_STREAM_BACKFILL_RATE'),
+    labelQueryWildcardsEnabled: envBool('OZONE_LABEL_QUERY_WILDCARDS_ENABLED'),
+    reportTagsDisabled: envBool('OZONE_REPORT_TAGS_DISABLED'),
     appviewUrl: envStr('OZONE_APPVIEW_URL') as UriString,
     appviewDid: envStr('OZONE_APPVIEW_DID') as DidString,
     appviewPushEvents: envBool('OZONE_APPVIEW_PUSH_EVENTS'),
@@ -36,15 +42,24 @@ export const readEnv = (): OzoneEnvironment => {
     didPlcUrl: envStr('OZONE_DID_PLC_URL'),
     didCacheStaleTTL: envInt('OZONE_DID_CACHE_STALE_TTL'),
     didCacheMaxTTL: envInt('OZONE_DID_CACHE_MAX_TTL'),
+    didCacheMaxEntries: envInt('OZONE_DID_CACHE_MAX_ENTRIES'),
+    didCacheMaxBytes: envInt('OZONE_DID_CACHE_MAX_BYTES'),
+    didCacheMaxDocBytes: envInt('OZONE_DID_CACHE_MAX_DOC_BYTES'),
     cdnPaths: envList('OZONE_CDN_PATHS'),
     adminDids: envList('OZONE_ADMIN_DIDS') as DidString[],
     moderatorDids: envList('OZONE_MODERATOR_DIDS') as DidString[],
     triageDids: envList('OZONE_TRIAGE_DIDS') as DidString[],
+    onlineMembersExcludedDids: envList('OZONE_ONLINE_MEMBERS_EXCLUDED_DIDS'),
+    onlineMembersActiveWindowMs:
+      onlineMembersActiveWindowMs === undefined
+        ? undefined
+        : Number(onlineMembersActiveWindowMs),
     adminPassword: envStr('OZONE_ADMIN_PASSWORD'),
     signingKeyHex: envStr('OZONE_SIGNING_KEY_HEX'),
     pdsHeaders: envList('OZONE_PDS_HEADERS'),
     blobDivertUrl: envStr('OZONE_BLOB_DIVERT_URL') as UriString,
     blobDivertAdminPassword: envStr('OZONE_BLOB_DIVERT_ADMIN_PASSWORD'),
+    blobDivertMaxBytes: envStr('OZONE_BLOB_DIVERT_MAX_BYTES'),
     verifierUrl: envStr('OZONE_VERIFIER_URL') as UriString,
     verifierDid: envStr('OZONE_VERIFIER_DID') as DidString,
     verifierPassword: envStr('OZONE_VERIFIER_PASSWORD'),
@@ -52,14 +67,23 @@ export const readEnv = (): OzoneEnvironment => {
     jetstreamUrl: envStr('OZONE_JETSTREAM_URL'),
     assignmentQueueDurationMs: envInt('OZONE_ASSIGNMENT_QUEUE_DURATION_MS'),
     assignmentReportDurationMs: envInt('OZONE_ASSIGNMENT_REPORT_DURATION_MS'),
+    inboxAppealWindowMonths: envInt('OZONE_INBOX_APPEAL_WINDOW_MONTHS'),
+    inboxStartAt: envStr('OZONE_INBOX_START_AT'),
+    inboxPolicyDefaultUrl: envStr('OZONE_INBOX_POLICY_DEFAULT_URL'),
+    strikeSuspensionConfig: envStr('NEXT_PUBLIC_STRIKE_SUSPENSION_CONFIG'),
     statsComputerIntervalMinutes: envInt(
       'OZONE_STATS_COMPUTER_INTERVAL_MINUTES',
     ),
+    reporterStatsWindowDays: envInt('OZONE_REPORTER_STATS_WINDOW_DAYS'),
   }
 }
 
 export type OzoneEnvironment = {
   nodeEnv?: string
+  strikeSuspensionConfig?: string
+  inboxAppealWindowMonths?: number
+  inboxStartAt?: string
+  inboxPolicyDefaultUrl?: string
   devMode?: boolean
   version?: string
   port?: number
@@ -68,6 +92,9 @@ export type OzoneEnvironment = {
   publicUrl?: string
   serverDid?: DidString
   serviceRecordCacheTTL?: number
+  labelStreamBackfillRate?: number
+  labelQueryWildcardsEnabled?: boolean
+  reportTagsDisabled?: boolean
   appviewUrl?: UriString
   appviewDid?: DidString
   appviewPushEvents?: boolean
@@ -86,15 +113,21 @@ export type OzoneEnvironment = {
   didPlcUrl?: string
   didCacheStaleTTL?: number
   didCacheMaxTTL?: number
+  didCacheMaxEntries?: number
+  didCacheMaxBytes?: number
+  didCacheMaxDocBytes?: number
   cdnPaths?: string[]
   adminDids: DidString[]
   moderatorDids: DidString[]
   triageDids: DidString[]
+  onlineMembersExcludedDids?: string[]
+  onlineMembersActiveWindowMs?: number
   adminPassword?: string
   signingKeyHex?: string
   pdsHeaders?: string[]
   blobDivertUrl?: UriString
   blobDivertAdminPassword?: string
+  blobDivertMaxBytes?: string
   verifierUrl?: UriString
   verifierDid?: DidString
   verifierPassword?: string
@@ -103,4 +136,5 @@ export type OzoneEnvironment = {
   assignmentQueueDurationMs?: number
   assignmentReportDurationMs?: number
   statsComputerIntervalMinutes?: number
+  reporterStatsWindowDays?: number
 }

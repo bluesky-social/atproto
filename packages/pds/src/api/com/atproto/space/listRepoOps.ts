@@ -1,4 +1,4 @@
-import type { l } from '@atproto/lex'
+import type { l } from '@atproto/lex-schema'
 import { COMMIT_MAC_TYPE } from '@atproto/space'
 import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../../../context.js'

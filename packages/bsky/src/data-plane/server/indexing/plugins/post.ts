@@ -1,6 +1,9 @@
 import { type Insertable, type Selectable, sql } from 'kysely'
-import { type $Typed, type Cid, getBlobCidString, lexParse } from '@atproto/lex'
+import { type Cid, getBlobCidString } from '@atproto/lex-data'
+import { lexParse } from '@atproto/lex-json'
+import type { $Typed } from '@atproto/lex-schema'
 import { AtUri, normalizeDatetimeAlways } from '@atproto/syntax'
+import { NOTIFICATION_REASON } from '../../../../api/app/bsky/notification/constants.js'
 import { app } from '../../../../lexicons/index.js'
 import {
   postUriToPostgateUri,
@@ -326,7 +329,7 @@ const notifsForInsert = (obj: IndexedPost) => {
     if (facet.type === 'mention') {
       maybeNotify({
         did: facet.value,
-        reason: 'mention',
+        reason: NOTIFICATION_REASON.MENTION,
         author: obj.post.creator,
         recordUri: obj.post.uri,
         recordCid: obj.post.cid,
@@ -342,7 +345,7 @@ const notifsForInsert = (obj: IndexedPost) => {
         if (embedUri.collection === app.bsky.feed.post.$type) {
           maybeNotify({
             did: embedUri.host,
-            reason: 'quote',
+            reason: NOTIFICATION_REASON.QUOTE,
             reasonSubject: embedUri.toString(),
             author: obj.post.creator,
             recordUri: obj.post.uri,
@@ -369,7 +372,7 @@ const notifsForInsert = (obj: IndexedPost) => {
       const ancestorUri = new AtUri(ancestor.uri)
       maybeNotify({
         did: ancestorUri.host,
-        reason: 'reply',
+        reason: NOTIFICATION_REASON.REPLY,
         reasonSubject: ancestorUri.toString(),
         author: obj.post.creator,
         recordUri: obj.post.uri,
@@ -390,7 +393,7 @@ const notifsForInsert = (obj: IndexedPost) => {
         const ancestorUri = new AtUri(ancestor.uri)
         maybeNotify({
           did: ancestorUri.host,
-          reason: 'reply',
+          reason: NOTIFICATION_REASON.REPLY,
           reasonSubject: ancestorUri.toString(),
           author: descendent.creator,
           recordUri: descendent.uri,

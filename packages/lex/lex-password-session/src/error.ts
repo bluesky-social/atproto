@@ -1,5 +1,5 @@
-import type { XrpcFailure } from '@atproto/lex-client'
-import { LexError } from '@atproto/lex-client'
+import type { XrpcFailure } from '@atproto/lex-rpc'
+import { LexError } from '@atproto/lex-rpc'
 
 /**
  * Error thrown when two-factor authentication (2FA) is required.

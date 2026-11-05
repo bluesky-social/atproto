@@ -37,6 +37,9 @@ export function createMiddleware(
 
   const cache = new BlobDiskCache(ctx.cfg.blobCacheLocation)
 
+  // @TODO this should be from configuration
+  const imageMaxSize = 100 * 1024 * 1024 // 100 MB
+
   return async (req, res, next) => {
     if (res.destroyed) return
     if (req.method !== 'GET' && req.method !== 'HEAD') return next()
@@ -91,9 +94,19 @@ export function createMiddleware(
           throw createError(400, 'Not an image')
         }
 
+        const contentLength = upstream.headers['content-length']
+          ? Number(upstream.headers['content-length'])
+          : undefined
+        if (contentLength && contentLength > imageMaxSize) {
+          throw createError(400, 'Image too large')
+        }
+
         const streams = [
           // decompress
-          ...createDecoders(upstream.headers['content-encoding']),
+          ...createDecoders(upstream.headers['content-encoding'], {
+            maxSize: imageMaxSize,
+            maxSizeError: () => createError(400, 'Image too large'),
+          }),
           // verify
           new VerifyCidTransform(cid),
           // upscale

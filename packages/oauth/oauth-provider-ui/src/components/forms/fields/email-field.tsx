@@ -13,6 +13,7 @@ export function EmailField({
   // @NOTE `type="email"` alone accepts `user@host` without a dot; the pattern
   // additionally requires a domain with a TLD.
   pattern = EMAIL_PATTERN,
+  placeholder,
   ...props
 }: EmailFieldProps) {
   const { t } = useLingui()
@@ -28,6 +29,7 @@ export function EmailField({
       autoCorrect="off"
       spellCheck="false"
       dir="auto"
+      placeholder={placeholder ?? t`alice@example.com`}
       pattern={pattern}
     />
   )

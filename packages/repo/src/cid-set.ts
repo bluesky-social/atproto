@@ -1,4 +1,5 @@
 import type { Cid } from '@atproto/lex-data'
+import { VisitedCidError } from './error.js'
 
 export class CidSet<TCid extends Cid = Cid> implements Iterable<TCid> {
   private map = new Map<string, TCid>()
@@ -12,6 +13,14 @@ export class CidSet<TCid extends Cid = Cid> implements Iterable<TCid> {
   add(cid: TCid): this {
     this.map.set(cid.toString(), cid)
     return this
+  }
+
+  // Adds `cid` to the set, throwing `VisitedCidError` if it is already present.
+  // Prefer this over `has` + `add` so the CID is only stringified once.
+  markVisited(cid: TCid): void {
+    const str = cid.toString()
+    if (this.map.has(str)) throw new VisitedCidError(cid)
+    this.map.set(str, cid)
   }
 
   addSet(toMerge: CidSet<TCid>): this {

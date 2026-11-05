@@ -346,19 +346,29 @@ export const bytesToStream = (bytes: Uint8Array): Readable => {
 export class MaxSizeChecker extends Transform {
   totalSize = 0
   constructor(
-    public maxSize: number,
-    public createError: () => Error = () =>
-      new Error(`Max size of ${maxSize} bytes exceeded`),
+    public readonly maxSize: number,
+    public readonly createError: () => Error = () => new MaxSizeError(maxSize),
   ) {
     super()
   }
+
   _transform(chunk: Uint8Array, _enc: BufferEncoding, cb: TransformCallback) {
     this.totalSize += chunk.length
     if (this.totalSize > this.maxSize) {
-      cb(this.createError())
+      cb(this.createError.call(null))
     } else {
       cb(null, chunk)
     }
+  }
+}
+
+export class MaxSizeError extends TypeError {
+  name = 'MaxSizeError'
+  constructor(
+    readonly maxSize: number,
+    options?: ErrorOptions,
+  ) {
+    super(`Max size of ${maxSize} bytes exceeded`, options)
   }
 }
 
@@ -407,32 +417,102 @@ export function decodeStream(
 }
 
 /**
+ * Maximum number of content-codings accepted by {@link createDecoders} unless a
+ * caller passes its own. Generous on purpose: a header may legally list several
+ * codings (RFC 9110 §8.4.1).
+ */
+export const DEFAULT_MAX_CODINGS = 8
+
+export type CreateDecodersOptions = {
+  maxCodings?: number
+  maxSize?: number
+  maxSizeError?: () => Error
+}
+
+/**
  * Create a series of decoding streams based on the content-encoding header. The
  * resulting streams should be piped together to decode the content.
  *
  * @see {@link https://datatracker.ietf.org/doc/html/rfc9110#section-8.4.1}
  */
-export function createDecoders(contentEncoding?: string | string[]): Duplex[] {
-  const decoders: Duplex[] = []
-
-  if (contentEncoding?.length) {
-    const encodings: string[] = Array.isArray(contentEncoding)
+export function createDecoders(
+  contentEncoding?: string | string[],
+  {
+    maxCodings = DEFAULT_MAX_CODINGS,
+    maxSize = undefined,
+    maxSizeError = undefined,
+  }: CreateDecodersOptions = {},
+): Duplex[] {
+  const codings = (
+    Array.isArray(contentEncoding)
       ? contentEncoding.flatMap(commaSplit)
-      : contentEncoding.split(',')
-    for (const encoding of encodings) {
-      const normalizedEncoding = normalizeEncoding(encoding)
+      : contentEncoding?.length
+        ? contentEncoding.split(',')
+        : []
+  )
+    .map(normalizeEncoding)
+    // @NOTE
+    // > The default (identity) encoding [...] is used only in the
+    // > Accept-Encoding header, and SHOULD NOT be used in the
+    // > Content-Encoding header.
+    .filter(isNotIdentity)
 
-      // @NOTE
-      // > The default (identity) encoding [...] is used only in the
-      // > Accept-Encoding header, and SHOULD NOT be used in the
-      // > Content-Encoding header.
-      if (normalizedEncoding === 'identity') continue
-
-      decoders.push(createDecoder(normalizedEncoding))
-    }
+  // Checked before any decoder is constructed.
+  if (codings.length > maxCodings) {
+    const seen =
+      codings.slice(0, 4).join(', ') + (codings.length > 4 ? ', …' : '')
+    throw new TypeError(
+      `Unsupported content-encoding: ${codings.length} codings (${seen}) exceed the maximum of ${maxCodings}`,
+    )
   }
 
-  return decoders.reverse()
+  const decoders: Duplex[] = codings.map(createDecoder).reverse()
+
+  // Size limits are applied only if maxSize is specified.
+  if (maxSize == null) return decoders
+
+  return [
+    // @NOTE if there is only one decoder, no need to apply the decoding budget
+    // limiter (MaxSizeChecker will be enough).
+    ...(decoders.length <= 1
+      ? decoders
+      : decodingBudgetLimiter(
+          decoders,
+          // Using `maxSize * decoders.length` here would be equivalent to
+          // adding a simple MaxSizeChecker for each decoder in the chain. The
+          // threshold provides a guarantee that each re-encoding in the chain
+          // was worth its size contribution (averaging 95% per decoder):
+          //
+          // <=> maxSize + maxSize * 0.95 + maxSize * 0.95^2 + …
+          // <=> maxSize * (0.95^0 + 0.95^1 + 0.95^2 + …)
+          //
+          // @NOTE that we are not enforcing the compression ratio on every
+          // decoder in the chain. Instead, we are applying a cumulative size
+          // limit that accounts for the expected compression ratio of each
+          // decoder.
+          maxSize * decoders.reduce((acc, _, i) => acc + Math.pow(0.95, i), 0),
+          maxSizeError,
+        )),
+    new MaxSizeChecker(maxSize, maxSizeError),
+  ]
+}
+
+function decodingBudgetLimiter(
+  decoders: Duplex[],
+  totalSizeLimit: number,
+  maxSizeError: () => Error = () => new MaxSizeError(totalSizeLimit),
+): Duplex[] {
+  let totalSize = 0
+  return decoders.flatMap((decoder) => [
+    decoder,
+    new Transform({
+      transform(chunk, _encoding, callback) {
+        totalSize += chunk.length
+        if (totalSize > totalSizeLimit) callback(maxSizeError())
+        else callback(null, chunk)
+      },
+    }),
+  ])
 }
 
 function commaSplit(header: string): string[] {
@@ -443,6 +523,12 @@ function normalizeEncoding(encoding: string) {
   // https://www.rfc-editor.org/rfc/rfc7231#section-3.1.2.1
   // > All content-coding values are case-insensitive...
   return encoding.trim().toLowerCase()
+}
+
+function isNotIdentity<T extends string>(
+  encoding: T,
+): encoding is Exclude<T, 'identity'> {
+  return encoding !== 'identity'
 }
 
 function createDecoder(normalizedEncoding: string): Duplex {

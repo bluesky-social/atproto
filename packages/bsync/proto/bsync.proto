@@ -58,15 +58,6 @@ message NotifOperation {
   optional bool priority = 3;
 }
 
-message AddNotifOperationRequest {
-  string actor_did = 1;
-  optional bool priority = 2;
-}
-
-message AddNotifOperationResponse {
-  NotifOperation operation = 1;
-}
-
 message ScanNotifOperationsRequest {
   string cursor = 1;
   int32 limit = 2;
@@ -142,7 +133,6 @@ service Service {
   // Sync
   rpc AddMuteOperation(AddMuteOperationRequest) returns (AddMuteOperationResponse);
   rpc ScanMuteOperations(ScanMuteOperationsRequest) returns (ScanMuteOperationsResponse);
-  rpc AddNotifOperation(AddNotifOperationRequest) returns (AddNotifOperationResponse);
   rpc ScanNotifOperations(ScanNotifOperationsRequest) returns (ScanNotifOperationsResponse);
   rpc PutOperation(PutOperationRequest) returns (PutOperationResponse);
   rpc ScanOperations(ScanOperationsRequest) returns (ScanOperationsResponse);

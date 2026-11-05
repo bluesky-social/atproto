@@ -106,22 +106,23 @@ In route files, `Server` comes from the same package:
 | `../lexicon/types/…` (record & def types)              | `../lexicons/index.js` → `.Main`, `.ViewRecord`, …                   |
 | `../lexicon/types/…` (`QueryParams`, `OutputSchema`)   | `../lexicons/index.js` → `.$Params`, `.$OutputBody`                  |
 | `../lexicon/types/…` (`isX`, `validateX`)              | `../lexicons/index.js` → `.$isTypeOf`, `.$matches`, `.$safeValidate` |
-| `../lexicon/util` (`$Typed`, `Un$Typed`)               | `@atproto/lex`                                                       |
-| `@atproto/api` (`AtpAgent`)                            | `@atproto/lex` (`Client`)                                            |
-| `@atproto/lexicon` (`jsonStringToLex`, `stringifyLex`) | `@atproto/lex` (`lexParse`, `lexStringify`)                          |
-| `@atproto/lexicon` (`BlobRef`)                         | `@atproto/lex` (`BlobRef`)                                           |
+| `../lexicon/util` (`$Typed`, `Un$Typed`)               | `@atproto/lex-schema`                                                |
+| `@atproto/api` (`AtpAgent`)                            | `@atproto/lex-client` (`Client`)                                     |
+| `@atproto/lexicon` (`jsonStringToLex`, `stringifyLex`) | `@atproto/lex-json` (`lexParse`, `lexStringify`)                     |
+| `@atproto/lexicon` (`BlobRef`)                         | `@atproto/lex-data` (`BlobRef`)                                      |
 | `@atproto/xrpc` (`HeadersMap`)                         | `@atproto/xrpc-server` (`Headers`, usually aliased)                  |
-| `@atproto/xrpc` (`XRPCError`, thrown by a _caller_)    | `@atproto/lex` (`XrpcError`)                                         |
-| `multiformats/cid` (`CID`)                             | `@atproto/lex` (`Cid`, `parseCid`)                                   |
+| `@atproto/xrpc` (`XRPCError`, thrown by a _caller_)    | `@atproto/lex-client` (`XrpcError`)                                  |
+| `multiformats/cid` (`CID`)                             | `@atproto/lex-data` (`Cid`, `parseCid`)                              |
 
 `@atproto/xrpc-server` keeps its own `XRPCError` for errors handlers **throw**.
 The casing distinguishes them: `XRPCError` server-side (concrete, thrown),
 `XrpcError` client-side (abstract, caught). Both can appear in one file.
 
-`@atproto/lex` re-exports `lex-client`, `lex-schema`, `lex-data`, and
-`lex-json`, so `Cid`, `BlobRef`, `lexParse`, and `$Typed` all resolve from it.
-`@atproto/lex-cbor` is **not** re-exported. Importing from either the umbrella
-or the sub-package is fine; match whatever the file already does.
+`@atproto/lex` re-exports `lex-client`, `lex-schema`, `lex-data`, `lex-json`,
+and `lex-cbor`, but service code must not import it: it also depends on the
+codegen tooling of its `lex` bin, so packages only list it as a devDependency
+(see the [lex-setup skill](../lex-setup/SKILL.md)). Import from the
+sub-package, and depend on it.
 
 ## Pitfalls
 
@@ -135,9 +136,11 @@ or the sub-package is fine; match whatever the file already does.
   `$matches` validates the whole value. Substituting `$isTypeOf` where the
   data is unvalidated silently accepts malformed records. See
   [references/types-and-guards.md](references/types-and-guards.md).
-- **`encoding` widening** affects only the bare-handler form of `server.add`,
-  not the object form. Don't sprinkle `as const` everywhere — see
-  [references/routes.md](references/routes.md).
+- **`encoding` widening** happens in either form of `server.add`, when the
+  returned literal is not contextually typed: built in an intermediate
+  variable, or returned by a handler that declares no parameters. Don't
+  sprinkle `as const` everywhere — see
+  [references/routes.md](references/routes.md#encoding-and-literal-widening).
 - **Branded strings arriving from outside TypeScript's view** — protobuf,
   Kysely rows, `JSON.parse` — are plain `string`. Cast once at the boundary
   (`as DidString`), never deep in the call graph.

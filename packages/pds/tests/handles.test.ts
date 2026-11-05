@@ -10,9 +10,11 @@ let alice: DidString
 let bob: DidString
 
 jest.unstable_mockModule('node:dns/promises', () => {
-  const dns = jest.requireActual<typeof DnsPromises>('node:dns/promises')
+  const originalModule =
+    jest.requireActual<typeof DnsPromises>('node:dns/promises')
+
   return {
-    ...dns,
+    ...originalModule,
     resolveTxt: (domain: string) => {
       if (domain === '_atproto.alice.external') {
         return [[`did=${alice}`]]
@@ -53,7 +55,10 @@ describe('handles', () => {
       dbPostgresSchema: 'handles',
     })
     ctx = network.pds.ctx
-    idResolver = new IdResolver({ plcUrl: ctx.cfg.identity.plcUrl })
+    idResolver = new IdResolver({
+      plcUrl: ctx.cfg.identity.plcUrl,
+      fetch: globalThis.fetch,
+    })
     agent = network.pds.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc)

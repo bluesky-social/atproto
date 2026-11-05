@@ -23,16 +23,15 @@ export type AtprotoHandleResolverNodeOptions = {
    * it is not provided.
    *
    * @default `globalThis.fetch`
+   * @note Ignored if {@link AtprotoHandleResolverNodeOptions.safeFetch safeFetch} is provided.
    */
   fetch?: Fetch
 
   /**
-   * Custom fetch function that will be used for HTTP requests. This function,
-   * if provided, *must* be safe to use with user-provided input (URL). If not
-   * provided, a safe fetch function will be created by wrapping the provided {@link fetch}
-   * function (or the default `globalThis.fetch`) with {@link safeFetchWrap}.
+   * Allows to provide a custom safe fetch function, which will be used for HTTP
+   * requests with SSRF protection and other safety measures applied.
    *
-   * @see {@link safeFetchWrap}
+   * @default `safeFetchWrap({ fetch, timeout: 3000, ssrfProtection: true, responseMaxSize: 10 * 1024 })`
    */
   safeFetch?: Fetch
 

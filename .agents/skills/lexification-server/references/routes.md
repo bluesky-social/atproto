@@ -36,9 +36,9 @@ import type { Server } from '@atproto/xrpc-server'
 import { com } from '../../../../lexicons/index.js'
 ```
 
-Migrated code overwhelmingly uses the object form (~187 registrations in
-`pds` + `bsky`, versus ~8 bare-handler). Preserve whichever form the file
-already had; there is no reason to convert between them during a migration.
+Migrated code overwhelmingly uses the object form. Preserve whichever form the
+file already had; there is no reason to convert between them during a
+migration.
 
 ## `encoding` and literal widening
 
@@ -90,15 +90,16 @@ the body. Mixing them up produces a confusing excess-property error.)
 + type Params = app.bsky.feed.getAuthorFeed.$Params
 ```
 
-| Legacy generated type                | Accessor                                    |
-| ------------------------------------ | ------------------------------------------- |
-| `QueryParams` / `InputSchema` params | `$Params`                                   |
-| `OutputSchema`                       | `$OutputBody`                               |
-| whole handler output                 | `$Output`                                   |
-| `InputSchema` (procedures)           | `$Input`                                    |
-| subscription message union           | `$Message`                                  |
-| record / main object                 | `.Main`                                     |
-| sub-definitions                      | their own name (`.ReplyRef`, `.ViewRecord`) |
+| Legacy generated type      | Accessor                                    |
+| -------------------------- | ------------------------------------------- |
+| `QueryParams`              | `$Params`                                   |
+| `InputSchema`              | `$InputBody`                                |
+| `HandlerInput`             | `$Input`                                    |
+| `OutputSchema`             | `$OutputBody`                               |
+| `HandlerSuccess`           | `$Output`                                   |
+| subscription message union | `$Message`                                  |
+| record / main object       | `.Main`                                     |
+| sub-definitions            | their own name (`.ReplyRef`, `.ViewRecord`) |
 
 Because the namespace object carries both values and types, one
 `import { app } from '../lexicons/index.js'` replaces every per-method type
@@ -148,7 +149,7 @@ re-exported them. Leave those imports alone.
 
 What does change is errors the service _catches_ from its own outbound calls —
 those move from `@atproto/xrpc`'s `XRPCError` to `XrpcError` from
-`@atproto/lex`. `XrpcError` is abstract: catch and narrow it, never construct
+`@atproto/lex-client`. `XrpcError` is abstract: catch and narrow it, never construct
 it. That half belongs to
 [lexification-client](../../lexification-client/SKILL.md).
 
@@ -156,10 +157,11 @@ it. That half belongs to
 
 ```diff
 - import { HeadersMap } from '@atproto/xrpc'
-+ import { Headers as HeadersMap } from '@atproto/xrpc-server'
++ import type { Headers as HeadersMap } from '@atproto/xrpc-server'
 ```
 
-Aliased because `Headers` collides with the DOM global. The types are not
+Aliased because `Headers` collides with the DOM global, and type-only because
+`Headers` is a type. The types are not
 identical: legacy `HeadersMap` was `Record<string, string | undefined>`, the
 new `Headers` is `Record<string, string>`. Code that relied on assigning
 `undefined` to clear a header needs the key omitted instead.

@@ -3,7 +3,7 @@ import * as plc from '@did-plc/lib'
 import type express from 'express'
 import { type Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import { type DidCache, IdResolver, MemoryCache } from '@atproto/identity'
-import { Client } from '@atproto/lex'
+import { Client } from '@atproto/lex-client'
 import { createServiceAuthHeaders } from '@atproto/xrpc-server'
 import { AssignmentService } from './assignment/index.js'
 import { AuthVerifier } from './auth-verifier.js'
@@ -34,7 +34,6 @@ import {
   ReportStatsService,
   type ReportStatsServiceCreator,
 } from './report/stats.js'
-import { SafeDidResolver } from './safe-fetch.js'
 import {
   SafelinkRuleService,
   type SafelinkRuleServiceCreator,
@@ -65,6 +64,7 @@ import {
   VerificationService,
   type VerificationServiceCreator,
 } from './verification/service.js'
+import type { VideoInvalidator } from './video-invalidator.js'
 
 export type AppContextOptions = {
   db: Database
@@ -89,6 +89,7 @@ export type AppContextOptions = {
   didCache: DidCache
   idResolver: IdResolver
   imgInvalidator?: ImageInvalidator
+  videoInvalidator?: VideoInvalidator
   backgroundQueue: BackgroundQueue
   sequencer: Sequencer
   assignmentService: AssignmentService
@@ -131,17 +132,17 @@ export class AppContext {
     const didCache = new MemoryCache(
       cfg.identity.cacheStaleTTL,
       cfg.identity.cacheMaxTTL,
+      {
+        maxEntries: cfg.identity.cacheMaxEntries,
+        maxBytes: cfg.identity.cacheMaxBytes,
+        maxDocBytes: cfg.identity.cacheMaxDocBytes,
+      },
     )
     const idResolver = new IdResolver({
       plcUrl: cfg.identity.plcUrl,
       didCache,
+      fetch: cfg.service.devMode ? globalThis.fetch : undefined,
     })
-    if (!cfg.service.devMode) {
-      idResolver.did = new SafeDidResolver({
-        plcUrl: cfg.identity.plcUrl,
-        didCache,
-      })
-    }
 
     const createAuthHeaders = (aud: string, lxm: string) =>
       createServiceAuthHeaders({
@@ -172,7 +173,7 @@ export class AppContext {
       cfg.appview.did,
       createAuthHeaders,
     )
-    const queueService = QueueService.creator()
+    const queueService = QueueService.creator(cfg.service.did)
     const reportStatsService = ReportStatsService.creator()
     const setService = SetService.creator()
     const settingService = SettingService.creator()
@@ -194,6 +195,7 @@ export class AppContext {
       createAuthHeaders,
       strikeService,
       overrides?.imgInvalidator,
+      overrides?.videoInvalidator,
     )
     const assignmentService = AssignmentService.creator(
       {

@@ -15,7 +15,7 @@ describe('account-status', () => {
   })
 
   afterEach(async () => {
-    await network.processAll()
+    await network?.processAll()
   })
 
   afterAll(async () => {

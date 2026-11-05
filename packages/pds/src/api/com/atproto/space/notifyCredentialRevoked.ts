@@ -1,4 +1,4 @@
-import { isDidString } from '@atproto/lex'
+import { isDidString } from '@atproto/lex-schema'
 import { ForbiddenError, type Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'

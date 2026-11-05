@@ -1,6 +1,6 @@
 {
   "name": "@atproto/oauth-provider",
-  "version": "0.22.6",
+  "version": "0.25.3",
   "license": "MIT",
   "description": "Generic OAuth2 and OpenID Connect provider for Node.js. Currently only supports features needed for Atproto.",
   "keywords": [
@@ -76,6 +76,7 @@
     "@atproto/oauth-types": "workspace:^",
     "@atproto/oauth-provider-api": "workspace:*",
     "@atproto/oauth-provider-ui": "workspace:*",
+    "@atproto/oauth-resolver": "workspace:^",
     "@atproto/oauth-scopes": "workspace:^",
     "@atproto/syntax": "workspace:^",
     "@hapi/accept": "^6.0.3",
@@ -95,7 +96,6 @@
     "@types/cookie": "^0.6.0",
     "@types/forwarded": "0.1.4",
     "@types/http-errors": "^2.0.4",
-    "@types/send": "^0.17.4",
     "vitest": "^4.1.10"
   },
   "scripts": {

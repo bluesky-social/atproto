@@ -32,7 +32,7 @@ export default function (server: Server, ctx: AppContext) {
       } else if (uri) {
         const parsedUri = new AtUri(uri)
         const [takedown, cid] = await ctx.actorStore.read(
-          parsedUri.hostname,
+          parsedUri.did,
           (store) =>
             Promise.all([
               store.record.getRecordTakedownStatus(parsedUri),

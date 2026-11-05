@@ -4,17 +4,25 @@
  * defined.
  */
 export enum Gate {
-  SuggestedUsersDiscoverEnable = 'suggested_users:discover_agent:enable',
   SuggestedUsersSocialProofEnable = 'suggested_users:social_proof:enable',
   ThreadsReplyRankingExplorationEnable = 'threads:reply_ranking_exploration:enable',
   SearchFilteringExplorationEnable = 'search:filtering_exploration:enable',
   SuggestedUsersForExploreEnable = 'suggested_users:for_explore:enable',
   SuggestedUsersForDiscoverEnable = 'suggested_users:for_discover:enable',
   SuggestedUsersForSeeMoreEnable = 'suggested_users:for_see_more:enable',
+  SuggestedUsersIrisEnable = 'suggested_users:iris:enable',
   SearchV2Enable = 'search:v2:enable',
   IrisFeed = 'iris:feed:enable',
-  OpThreadMetadataEnable = 'op_thread_metadata:enable',
+  IrisFeedWithFriendsEnable = 'iris:feed:with-friends:enable',
+  IrisFeedThevidsEnable = 'iris:feed:thevids:enable',
+  IrisFeedMutualsEnable = 'iris:feed:mutuals:enable',
+  IrisFeedBskyTeamEnable = 'iris:feed:bsky-team:enable',
+  IrisFeedBestOfFollowsEnable = 'iris:feed:best-of-follows:enable',
+  IrisFeedFollowpicsEnable = 'iris:feed:followpics:enable',
+  IrisFeedLoggedOutEnable = 'iris:feed:logged_out:enable',
   KnownLikersFeedEnable = 'known_likers:feed:enable',
+  AtmosphereScreenEndpointsEnable = 'atmosphere_screen_endpoints:enable',
+  AtmosphereExploreArticlesIrisEnable = 'atmosphere_explore:articles:iris:enable',
 
   // temp
   AATest = 'aa-test-appview',

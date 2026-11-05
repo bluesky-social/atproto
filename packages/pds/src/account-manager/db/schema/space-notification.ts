@@ -1,4 +1,4 @@
-import type { DidString, SpaceRefString } from '@atproto/lex'
+import type { DidString, SpaceRefString } from '@atproto/lex-schema'
 
 export interface SpaceNotificationRetry {
   repo: DidString

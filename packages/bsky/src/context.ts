@@ -4,7 +4,7 @@ import type express from 'express'
 import type { Dispatcher } from 'undici'
 import type { Keypair } from '@atproto/crypto'
 import type { IdResolver } from '@atproto/identity'
-import type { Client } from '@atproto/lex'
+import type { Client } from '@atproto/lex-client'
 import type { AuthVerifier } from './auth-verifier.js'
 import type { BsyncClient } from './bsync.js'
 import type { ServerConfig } from './config.js'
@@ -32,7 +32,6 @@ export class AppContext {
       dataplaneHostList: HostList
       searchClient: Client | undefined
       suggestionsClient: Client | undefined
-      topicsClient: Client | undefined
       irisClient: Client | undefined
       hydrator: Hydrator
       views: Views
@@ -45,6 +44,7 @@ export class AppContext {
       authVerifier: AuthVerifier
       featureGatesClient: FeatureGatesClient
       blobDispatcher: Dispatcher
+      federatedFetch: typeof globalThis.fetch
       kwsClient: KwsClient | undefined
     },
   ) {}
@@ -71,10 +71,6 @@ export class AppContext {
 
   get suggestionsClient(): Client | undefined {
     return this.opts.suggestionsClient
-  }
-
-  get topicsClient(): Client | undefined {
-    return this.opts.topicsClient
   }
 
   get irisClient(): Client | undefined {
@@ -127,6 +123,10 @@ export class AppContext {
 
   get blobDispatcher(): Dispatcher {
     return this.opts.blobDispatcher
+  }
+
+  get federatedFetch(): typeof globalThis.fetch {
+    return this.opts.federatedFetch
   }
 
   get kwsClient(): KwsClient | undefined {

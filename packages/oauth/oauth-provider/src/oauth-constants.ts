@@ -74,8 +74,8 @@ export const CLIENT_ASSERTION_MAX_AGE = 1 * MINUTE
 /** 3 minutes */
 export const DPOP_NONCE_MAX_AGE = 3 * MINUTE
 
-/** 5 seconds */
-export const SESSION_FIXATION_MAX_AGE = 5 * SECOND
+/** 30 seconds. We use a value long enough to account for network latency */
+export const SESSION_FIXATION_MAX_AGE = 30 * SECOND
 
 /** 1 day */
 export const CODE_CHALLENGE_REPLAY_TIMEFRAME = 1 * DAY

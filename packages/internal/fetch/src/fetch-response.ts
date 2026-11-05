@@ -99,21 +99,60 @@ export async function peekJson(
   if (type !== 'application/json') return undefined
   checkLength(response, maxSize)
 
-  // 1) Clone the request so we can consume the body
+  // 1) Clone the response so we can consume the body
   const clonedResponse = response.clone()
 
-  // 2) Make sure the request's body is not too large
-  const limitedResponse =
-    response.body && maxSize < Infinity
-      ? new TransformedResponse(
-          clonedResponse,
-          new MaxBytesTransformStream(maxSize),
-        )
-      : // Note: some runtimes (e.g. react-native) don't expose a body property
-        clonedResponse
+  // Note: some runtimes (e.g. react-native) don't expose a body property. In
+  // that case, we only rely on the Content-Length check above.
+  if (!clonedResponse.body || maxSize === Infinity) {
+    return clonedResponse.json()
+  }
+
+  // 2) Read the body, making sure it is not too large. This reads the stream
+  // directly rather than wrapping it in a TransformedResponse, because the
+  // global Response is not always able to wrap a ReadableStream (e.g.
+  // react-native's whatwg-fetch polyfill, used alongside Expo's fetch).
+  const bytes = await readStreamBytes(clonedResponse.body, maxSize)
+  if (!bytes) {
+    throw new FetchResponseError(response, 502, 'Response too large')
+  }
 
   // 3) Parse the JSON
-  return limitedResponse.json()
+  return JSON.parse(new TextDecoder().decode(bytes))
+}
+
+/**
+ * @returns the stream's bytes, or `null` (after cancelling the stream) if it
+ * holds more than `maxBytes`.
+ */
+async function readStreamBytes(
+  stream: ReadableStream<Uint8Array>,
+  maxBytes: number,
+): Promise<Uint8Array | null> {
+  const reader = stream.getReader()
+  const chunks: Uint8Array[] = []
+  let length = 0
+
+  for (let r = await reader.read(); !r.done; r = await reader.read()) {
+    length += r.value.byteLength
+    if (length > maxBytes) {
+      // Don't await: when the stream is a branch of a clone()'s tee, the
+      // promise only settles once the other branch is consumed or cancelled.
+      reader.cancel().catch(logCancellationError)
+      return null
+    }
+    chunks.push(r.value)
+  }
+
+  if (chunks.length === 1) return chunks[0]!
+
+  const bytes = new Uint8Array(length)
+  let offset = 0
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset)
+    offset += chunk.byteLength
+  }
+  return bytes
 }
 
 export function checkLength(response: Response, maxBytes: number) {

@@ -1,4 +1,3 @@
-import './env.js'
 import getPort from 'get-port'
 import { IntrospectServer } from './introspect.js'
 import { TestPds } from './pds.js'

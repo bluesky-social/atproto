@@ -1,4 +1,3 @@
-import { atUri } from '@atproto/lex'
 import {
   type LegacyBlobRef,
   type LexMap,
@@ -6,6 +5,7 @@ import {
   isLegacyBlobRef,
   parseCid,
 } from '@atproto/lex-data'
+import { atUri } from '@atproto/lex-schema'
 import {
   AuthRequiredError,
   InvalidRequestError,

@@ -1,7 +1,9 @@
 import { type Selectable, sql } from 'kysely'
 import { DAY, HOUR } from '@atproto/common'
 import { type IdResolver, getPds } from '@atproto/identity'
-import { type Cid, l, parseCid, xrpc, xrpcSafe } from '@atproto/lex'
+import { xrpc, xrpcSafe } from '@atproto/lex-client'
+import { type Cid, parseCid } from '@atproto/lex-data'
+import { l } from '@atproto/lex-schema'
 import {
   type VerifiedRepo,
   WriteOpAction,
@@ -29,6 +31,7 @@ import * as List from './plugins/list.js'
 import * as NotifDeclaration from './plugins/notif-declaration.js'
 import * as Postgate from './plugins/post-gate.js'
 import * as Post from './plugins/post.js'
+import * as ProfileLink from './plugins/profile-link.js'
 import * as Profile from './plugins/profile.js'
 import * as ReferenceListOptOut from './plugins/reference-list-opt-out.js'
 import * as Repost from './plugins/repost.js'
@@ -57,6 +60,7 @@ export class IndexingService {
     notifDeclaration: NotifDeclaration.PluginType
     chatDeclaration: ChatDeclaration.PluginType
     germDeclaration: GermDeclaration.PluginType
+    profileLink: ProfileLink.PluginType
     verification: Verification.PluginType
     status: Status.PluginType
   }
@@ -88,6 +92,7 @@ export class IndexingService {
       notifDeclaration: NotifDeclaration.makePlugin(this.db, this.background),
       chatDeclaration: ChatDeclaration.makePlugin(this.db, this.background),
       germDeclaration: GermDeclaration.makePlugin(this.db, this.background),
+      profileLink: ProfileLink.makePlugin(this.db, this.background),
       verification: Verification.makePlugin(this.db, this.background),
       status: Status.makePlugin(this.db, this.background),
     }

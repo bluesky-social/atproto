@@ -1,4 +1,4 @@
-import type { l } from '@atproto/lex'
+import type { l } from '@atproto/lex-schema'
 import type { Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'

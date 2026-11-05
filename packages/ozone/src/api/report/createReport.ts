@@ -1,4 +1,4 @@
-import type { DidString } from '@atproto/lex'
+import type { DidString } from '@atproto/lex-schema'
 import { ForbiddenError, type Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../context.js'
 import { com } from '../../lexicons/index.js'
@@ -44,7 +44,11 @@ export default function (server: Server, ctx: AppContext) {
           ctx.cfg.service.did,
           moderationTxn,
         )
-        await tagService.evaluateForSubject([getTagForReport(reasonType)])
+        await tagService.evaluateForSubject(
+          ctx.cfg.service.reportTagsDisabled
+            ? []
+            : [getTagForReport(reasonType)],
+        )
 
         return reportEvent
       })
