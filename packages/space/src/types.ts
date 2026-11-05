@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import type { Cid, LexMap } from '@atproto/lex-data'
+import type { ReadStarOptions } from '@atproto/star'
 import {
   type DidString,
   type NsidString,
@@ -53,6 +54,12 @@ export type Commit = z.infer<typeof commitSchema>
 
 export const REPO_STAR_TYPE = 'atproto-space-repo'
 
+export const REPO_STAR_LIMITS: ReadStarOptions = {
+  maxMetaLength: 64 * 1024, // 64 KiB
+  maxKeyLength: 4 * 1024, // 4 KiB
+  maxValueLength: MAX_RECORD_SIZE,
+}
+
 // The metadata of a repo's STAR archive: the repo's commit, typed by its profile.
 const repoStarMetaSchema = commitSchema.extend({
   $type: z.literal(REPO_STAR_TYPE),
@@ -61,6 +68,12 @@ export type RepoStarMeta = z.infer<typeof repoStarMetaSchema>
 
 export const SPACE_META_STAR_TYPE = 'atproto-space-meta'
 export const SPACE_META_VERSION = 1
+
+export const SPACE_META_STAR_LIMITS: ReadStarOptions = {
+  maxMetaLength: 64 * 1024, // 64 KiB
+  maxKeyLength: 4 * 1024, // 4 KiB
+  maxValueLength: 1024 * 1024, // 1 MiB
+}
 
 const tidSchema = z.string().refine(isValidTid, 'must be a TID')
 

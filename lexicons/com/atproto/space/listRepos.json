@@ -51,6 +51,14 @@
       "errors": [
         {
           "name": "SpaceNotFound"
+        },
+        {
+          "name": "RepoTakendown",
+          "description": "The space authority has been taken down."
+        },
+        {
+          "name": "RepoDeactivated",
+          "description": "The space authority has been deactivated."
         }
       ]
     },

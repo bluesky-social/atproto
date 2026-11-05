@@ -21,6 +21,9 @@ export default function (server: Server, ctx: AppContext) {
           await ctx.accountManager.takedownAccount(subject.did, takedown)
         } else if (com.atproto.repo.strongRef.$isTypeOf(subject)) {
           const uri = new AtUri(subject.uri)
+          if (uri.isSpace) {
+            throw new InvalidRequestError('Space records cannot be taken down')
+          }
           await ctx.actorStore.transact(uri.hostname, async (store) => {
             await store.record.updateRecordTakedownStatus(uri, takedown)
           })

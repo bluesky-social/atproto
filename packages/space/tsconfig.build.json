@@ -3,11 +3,11 @@
   "include": ["./src"],
   "exclude": ["**/*.test.ts"],
   "references": [
-    { "path": "../car/tsconfig.build.json" },
     { "path": "../common/tsconfig.build.json" },
     { "path": "../crypto/tsconfig.build.json" },
     { "path": "../lex/lex-cbor/tsconfig.build.json" },
     { "path": "../lex/lex-data/tsconfig.build.json" },
+    { "path": "../star/tsconfig.build.json" },
   ],
   "compilerOptions": {
     "rootDir": "./src",

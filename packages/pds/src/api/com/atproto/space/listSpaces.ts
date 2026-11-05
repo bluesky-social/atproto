@@ -1,11 +1,13 @@
 import type { SpaceRefString } from '@atproto/syntax'
 import type { Server } from '@atproto/xrpc-server'
+import { AuthScope } from '../../../../auth-scope.js'
 import type { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.space.listSpaces, {
     auth: ctx.authVerifier.authorization({
+      additional: [AuthScope.Takendown],
       authorize: () => {
         // Performed in the handler as it requires the query params
       },

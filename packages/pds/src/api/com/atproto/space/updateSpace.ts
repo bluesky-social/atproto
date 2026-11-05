@@ -6,6 +6,8 @@ import { assertSpaceOwner, fireNotifyWrite } from './util.js'
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.space.updateSpace, {
     auth: ctx.authVerifier.authorization({
+      checkTakedown: true,
+      checkDeactivated: true,
       authorize: () => {
         // Performed in the handler as it requires the request body
       },

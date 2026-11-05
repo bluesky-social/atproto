@@ -67,6 +67,7 @@ COPY ./packages/ozone ./packages/ozone
 COPY ./packages/pds ./packages/pds
 COPY ./packages/repo ./packages/repo
 COPY ./packages/space ./packages/space
+COPY ./packages/star ./packages/star
 COPY ./packages/syntax ./packages/syntax
 COPY ./packages/ws-client ./packages/ws-client
 COPY ./packages/xrpc-server ./packages/xrpc-server
