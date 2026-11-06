@@ -275,6 +275,11 @@ export type FindReportsForSubjectParams = {
    */
   includeAllOwned?: boolean
   /**
+   * Allow explicit IDs to select records owned by an account subject.
+   * Broad selectors remain scoped to the account unless includeAllOwned is set.
+   */
+  includeOwnedRecordIds?: boolean
+  /**
    * Whether to lock the selected reports for update.
    */
   lockForUpdate?: boolean
@@ -308,8 +313,8 @@ export async function findReportsForSubject(
     .where('me.subjectDid', '=', params.subjectDid)
 
   if (!params.includeAllOwned) {
-    // Filter by subject URI (if provided, match exactly; if null/undefined,
-    // match repo-level and exclude chat subjects owned by the same DID).
+    // Match the exact subject, optionally including explicitly selected record
+    // reports for account actions. Broad selectors retain their subject scope.
     if (params.subjectUri) {
       const uri = new AtUri(params.subjectUri)
       if (uri.collection === CHAT_MESSAGE_COLLECTION) {
@@ -326,10 +331,24 @@ export async function findReportsForSubject(
         )
       }
     } else {
-      builder = builder
-        .where('r.recordPath', '=', '')
-        .where('r.subjectMessageId', 'is', null)
-        .where('r.subjectConvoId', 'is', null)
+      builder = builder.where((eb) =>
+        eb.or([
+          eb.and([
+            eb('r.recordPath', '=', ''),
+            eb('r.subjectMessageId', 'is', null),
+            eb('r.subjectConvoId', 'is', null),
+          ]),
+          ...(params.includeOwnedRecordIds && params.reportIds?.length
+            ? [
+                eb.and([
+                  eb('r.id', 'in', params.reportIds),
+                  eb('me.subjectType', '=', com.atproto.repo.strongRef.$type),
+                  eb('r.recordPath', '!=', ''),
+                ]),
+              ]
+            : []),
+        ]),
+      )
     }
   }
 
@@ -630,6 +649,7 @@ export type ProcessReportActionParams = {
   metadata?: Record<string, unknown>
   subjectDid: DidString
   subjectUri: string | null
+  subjectType: string
   eventId: number
   eventType: string
   createdBy: DidString
@@ -729,6 +749,9 @@ export async function processReportAction(
     reportTypes: reportAction.types,
     targetAll: reportAction.all || reportAction.allOwned,
     includeAllOwned: reportAction.allOwned,
+    includeOwnedRecordIds:
+      closesReports &&
+      params.subjectType === com.atproto.admin.defs.repoRef.$type,
     protectActiveReview: closesReports,
     lockForUpdate: closesReports,
   })
