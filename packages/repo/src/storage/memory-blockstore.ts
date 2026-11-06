@@ -50,8 +50,7 @@ export class MemoryBlockstore
 
   async applyCommit(commit: CommitData): Promise<void> {
     this.root = commit.cid
-    const rmCids = commit.removedCids.toList()
-    for (const cid of rmCids) {
+    for (const cid of commit.removedCids) {
       this.blocks.delete(cid)
     }
     commit.newBlocks.forEach((bytes, cid) => {

@@ -728,13 +728,13 @@ export class MST {
     const leaves = new CidSet()
     let toFetch = new CidSet()
     toFetch.add(await this.getPointer())
-    while (toFetch.size() > 0) {
+    while (toFetch.size > 0) {
       const nextLayer = new CidSet()
-      const fetched = await this.storage.getBlocks(toFetch.toList())
+      const fetched = await this.storage.getBlocks([...toFetch])
       if (fetched.missing.length > 0) {
         throw new MissingBlocksError('mst node', fetched.missing)
       }
-      for (const cid of toFetch.toList()) {
+      for (const cid of toFetch) {
         const found = await parse.getAndParseByDef(
           fetched.blocks,
           cid,
@@ -753,7 +753,7 @@ export class MST {
       }
       toFetch = nextLayer
     }
-    const leafData = await this.storage.getBlocks(leaves.toList())
+    const leafData = await this.storage.getBlocks([...leaves])
     if (leafData.missing.length > 0) {
       throw new MissingBlocksError('mst leaf', leafData.missing)
     }

@@ -57,7 +57,7 @@ export class SqlRepoReader extends ReadableBlockstore {
     const cached = this.cache.getMany(cids)
     if (cached.missing.length < 1) return cached
     const missing = new CidSet(cached.missing)
-    const missingStr = cached.missing.map((c) => c.toString())
+    const missingStr = Array.from(missing, (c) => c.toString())
     const blocks = new BlockMap()
     for (const batch of chunkArray(missingStr, 500)) {
       const res = await this.db.db
@@ -73,7 +73,7 @@ export class SqlRepoReader extends ReadableBlockstore {
     }
     this.cache.addMap(blocks)
     blocks.addMap(cached.blocks)
-    return { blocks, missing: missing.toList() }
+    return { blocks, missing: [...missing] }
   }
 
   async getCarStream(since?: string) {
