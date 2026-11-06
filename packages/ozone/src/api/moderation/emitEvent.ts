@@ -236,7 +236,12 @@ const handleModerationEvent = async ({
   }
 
   if (tools.ozone.moderation.defs.modEventReport.$isTypeOf(event)) {
-    await ctx.moderationServiceProfile().validateReasonType(event.reportType)
+    await ctx
+      .moderationServiceProfile()
+      .validateReasonType(
+        event.reportType,
+        tools.ozone.moderation.emitEvent.$lxm,
+      )
   }
 
   const moderationEvent = await db.transaction(async (dbTxn) => {

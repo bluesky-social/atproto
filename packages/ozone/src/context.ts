@@ -1,6 +1,7 @@
 import assert from 'node:assert'
 import * as plc from '@did-plc/lib'
 import type express from 'express'
+import type { Registry } from 'prom-client'
 import { type Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import { type DidCache, IdResolver, MemoryCache } from '@atproto/identity'
 import { Client } from '@atproto/lex-client'
@@ -105,6 +106,7 @@ export class AppContext {
     cfg: OzoneConfig,
     secrets: OzoneSecrets,
     overrides?: Partial<AppContextOptions>,
+    register?: Registry,
   ): Promise<AppContext> {
     const db = new Database({
       url: cfg.db.postgresUrl,
@@ -183,6 +185,7 @@ export class AppContext {
     const moderationServiceProfile = ModerationServiceProfile.creator(
       cfg,
       appviewClient,
+      register,
     )
     const modService = ModerationService.creator(
       signingKey,
