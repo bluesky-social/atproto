@@ -2,6 +2,7 @@ import { Counter, type Registry } from 'prom-client'
 import type { Client } from '@atproto/lex-client'
 import { TokenSchema } from '@atproto/lex-schema'
 import { InvalidRequestError } from '@atproto/xrpc-server'
+import { isAppealReport } from '../api/util.js'
 import type { OzoneConfig } from '../config/index.js'
 import { app, com, tools } from '../lexicons/index.js'
 import { httpLogger } from '../logger.js'
@@ -103,6 +104,11 @@ export class ModerationServiceProfile {
     reasonType: string,
     nsid: ReportMethod,
   ): Promise<string> {
+    // @NOTE appeals remain available regardless of the report-type allowlist.
+    if (isAppealReport(reasonType)) {
+      return reasonType
+    }
+
     const profile = await this.getProfile()
 
     if (

@@ -162,6 +162,9 @@ describe('report reason', () => {
           tools.ozone.report.defs.ReasonMisleadingSpam,
           'example.report.defs#reasonCustom',
           'spam',
+          'appeal',
+          'example.report.defs#reasonAppeal',
+          `${tools.ozone.report.defs.ReasonAppeal}-unknown`,
         ],
       },
       {
@@ -234,6 +237,66 @@ describe('report reason', () => {
         expect(await readReportState()).toEqual(before)
       },
     )
+  })
+
+  describe.each([
+    com.atproto.moderation.createReport.$lxm,
+    tools.ozone.moderation.emitEvent.$lxm,
+  ])('appeals through %s', (nsid) => {
+    it.each([
+      { name: 'omitted list', reasonTypes: undefined },
+      { name: 'empty list', reasonTypes: [] },
+      {
+        name: 'unrelated list',
+        reasonTypes: [com.atproto.moderation.defs.ReasonSpam],
+      },
+      {
+        name: 'legacy appeal only',
+        reasonTypes: [com.atproto.moderation.defs.ReasonAppeal],
+      },
+      {
+        name: 'modern appeal only',
+        reasonTypes: [tools.ozone.report.defs.ReasonAppeal],
+      },
+    ])('accepts both appeal types with $name', async ({ reasonTypes }) => {
+      await updateReasonTypes(reasonTypes)
+      const before = await readRejections()
+      const post = sc.posts[sc.dids.bob][0].ref
+      const subject = {
+        $type: com.atproto.repo.strongRef.$type,
+        uri: post.uriStr,
+        cid: post.cidStr,
+      }
+
+      for (const reasonType of [
+        com.atproto.moderation.defs.ReasonAppeal,
+        tools.ozone.report.defs.ReasonAppeal,
+      ]) {
+        if (nsid === com.atproto.moderation.createReport.$lxm) {
+          await expect(
+            sc.createReport({
+              reasonType,
+              subject,
+              reportedBy: sc.dids.bob,
+            }),
+          ).resolves.toMatchObject({ reasonType, subject })
+        } else {
+          await expect(
+            network.ozone.getModClient().emitEvent({
+              subject,
+              event: {
+                $type: tools.ozone.moderation.defs.modEventReport.$type,
+                reportType: reasonType,
+              },
+            }),
+          ).resolves.toMatchObject({
+            subject,
+            event: { reportType: reasonType },
+          })
+        }
+      }
+      expect(await readRejections()).toEqual(before)
+    })
   })
 
   describe('rejection metrics', () => {
@@ -332,15 +395,22 @@ describe('report reason', () => {
       })
     })
 
-    it('does not count other request errors', async () => {
+    it.each([
+      com.atproto.moderation.defs.ReasonAppeal,
+      tools.ozone.report.defs.ReasonAppeal,
+    ])('still rejects unauthorized appeals using %s', async (reasonType) => {
+      await updateReasonTypes([])
       const before = await readRejections()
       await expect(
         sc.createReport({
-          reasonType: tools.ozone.report.defs.ReasonAppeal,
+          reasonType,
           subject: repoSubject(sc.dids.bob),
           reportedBy: sc.dids.alice,
         }),
-      ).rejects.toMatchObject({ status: 403 })
+      ).rejects.toMatchObject({
+        status: 403,
+        message: 'You cannot appeal this report',
+      })
       expect(await readRejections()).toEqual(before)
     })
 
