@@ -1,5 +1,13 @@
 # @atproto/bsky
 
+## 0.5.4
+
+### Patch Changes
+
+- [#5815](https://github.com/bluesky-social/atproto/pull/5815) [`0f77a7d`](https://github.com/bluesky-social/atproto/commit/0f77a7d61ef22f47e7c14138aa2e040346ac6316) Thanks [@ds-boyce](https://github.com/ds-boyce)! - Add the internal GetPostViewCounts RPC contract for batched author-facing view-count reads from Atlantis.
+
+- [#5837](https://github.com/bluesky-social/atproto/pull/5837) [`896c727`](https://github.com/bluesky-social/atproto/commit/896c727632798ca14a68009c8d052321cd8b3c44) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Hydrate known followers for `getAtmosphereExploreTab` apps, and only return apps the worker marks `featured: true`.
+
 ## 0.5.3
 
 ### Patch Changes
