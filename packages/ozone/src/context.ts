@@ -16,7 +16,10 @@ import type { OzoneConfig, OzoneSecrets } from './config/index.js'
 import { BlobDiverter } from './daemon/blob-diverter.js'
 import { EventPusher } from './daemon/index.js'
 import { Database } from './db/index.js'
-import type { ImageInvalidator } from './image-invalidator.js'
+import type {
+  ImageInvalidator,
+  RenditionCacheController,
+} from './image-invalidator.js'
 import {
   ModerationService,
   type ModerationServiceCreator,
@@ -90,6 +93,7 @@ export type AppContextOptions = {
   idResolver: IdResolver
   imgInvalidator?: ImageInvalidator
   videoInvalidator?: VideoInvalidator
+  renditionCacheController?: RenditionCacheController
   backgroundQueue: BackgroundQueue
   sequencer: Sequencer
   assignmentService: AssignmentService
@@ -196,6 +200,7 @@ export class AppContext {
       strikeService,
       overrides?.imgInvalidator,
       overrides?.videoInvalidator,
+      overrides?.renditionCacheController,
     )
     const assignmentService = AssignmentService.creator(
       {
