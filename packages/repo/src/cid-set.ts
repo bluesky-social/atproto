@@ -18,13 +18,21 @@ export class CidSet<TCid extends Cid = Cid> implements Iterable<TCid> {
     return this
   }
 
-  addSet(toMerge: CidSet<TCid>): this {
-    for (const [k, v] of toMerge.#map) this.#map.set(k, v)
+  addSet(toMerge: Iterable<TCid>): this {
+    if (toMerge instanceof CidSet) {
+      for (const [k, v] of toMerge.#map) this.#map.set(k, v)
+    } else {
+      for (const cid of toMerge) this.add(cid)
+    }
     return this
   }
 
-  subtractSet(toSubtract: CidSet<TCid>): this {
-    for (const c of toSubtract.#map.keys()) this.#map.delete(c)
+  subtractSet(toSubtract: Iterable<TCid>): this {
+    if (toSubtract instanceof CidSet) {
+      for (const k of toSubtract.#map.keys()) this.#map.delete(k)
+    } else {
+      for (const cid of toSubtract) this.delete(cid)
+    }
     return this
   }
 

@@ -181,7 +181,7 @@ export class RepoTransactor extends RepoReader {
       const missingBlocks = await this.storage.getBlocks(
         newRecordBlocks.missing,
       )
-      commit.relevantBlocks.addMap(missingBlocks.blocks)
+      commit.relevantBlocks.addBlocks(missingBlocks.blocks)
     }
     return {
       ...commit,

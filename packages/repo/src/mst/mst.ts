@@ -217,7 +217,7 @@ export class MST {
     for (const entry of entries) {
       if (entry.isTree()) {
         const subtree = await entry.getUnstoredBlocks()
-        blocks.addMap(subtree.blocks)
+        blocks.addBlocks(subtree.blocks)
       }
     }
     return { root: pointer, blocks: blocks }
@@ -730,7 +730,7 @@ export class MST {
     toFetch.add(await this.getPointer())
     while (toFetch.size > 0) {
       const nextLayer = new CidSet()
-      const fetched = await this.storage.getBlocks([...toFetch])
+      const fetched = await this.storage.getBlocks(toFetch)
       if (fetched.missing.length > 0) {
         throw new MissingBlocksError('mst node', fetched.missing)
       }
@@ -753,7 +753,7 @@ export class MST {
       }
       toFetch = nextLayer
     }
-    const leafData = await this.storage.getBlocks([...leaves])
+    const leafData = await this.storage.getBlocks(leaves)
     if (leafData.missing.length > 0) {
       throw new MissingBlocksError('mst leaf', leafData.missing)
     }
@@ -785,7 +785,7 @@ export class MST {
       this.proofForLeftSib(key),
       this.proofForRightSib(key),
     ])
-    return self.addMap(left).addMap(right)
+    return self.addBlocks(left).addBlocks(right)
   }
 
   async proofForKey(key: string): Promise<BlockMap> {

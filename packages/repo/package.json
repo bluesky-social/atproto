@@ -7,6 +7,7 @@
   "license": "MIT",
   "description": "atproto repo and MST implementation",
   "keywords": [
+    "isomorphic",
     "atproto",
     "mst"
   ],
@@ -30,7 +31,6 @@
   },
   "dependencies": {
     "@atproto/car": "workspace:^",
-    "@atproto/common": "workspace:^",
     "@atproto/common-web": "workspace:^",
     "@atproto/crypto": "workspace:^",
     "@atproto/lex-cbor": "workspace:^",

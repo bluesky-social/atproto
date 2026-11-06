@@ -185,7 +185,7 @@ describe('repo subscribe repos', () => {
     const allBlocks = new repo.BlockMap()
     for (const evt of evts) {
       const car = await readCar(evt.blocks)
-      allBlocks.addMap(car.blocks)
+      allBlocks.addBlocks(car.blocks)
       for (const op of evt.ops) {
         const { collection, rkey } = repo.parseDataKey(op.path)
         if (op.action === 'delete') {

@@ -49,11 +49,11 @@ export class BlockMap<TCid extends Cid = Cid> implements Iterable<
   // @NOTE Read paths below don't require a strong type for the cid, allowing
   // for easier interop with older code that uses Cid instead of CborCid.
 
-  get(cid: Cid): Uint8Array | undefined {
+  get(cid: TCid): Uint8Array | undefined {
     return this.#map.get(cid.toString())?.bytes
   }
 
-  delete(cid: Cid): this {
+  delete(cid: TCid): this {
     this.#map.delete(cid.toString())
     return this
   }
@@ -74,7 +74,7 @@ export class BlockMap<TCid extends Cid = Cid> implements Iterable<
     return { blocks, missing }
   }
 
-  has(cid: Cid): boolean {
+  has(cid: TCid): boolean {
     return this.#map.has(cid.toString())
   }
 
@@ -121,7 +121,7 @@ export class BlockMap<TCid extends Cid = Cid> implements Iterable<
     return size
   }
 
-  equals(other: BlockMap): boolean {
+  equals(other: BlockMap<TCid>): boolean {
     if (this.size !== other.size) {
       return false
     }
@@ -151,13 +151,16 @@ export class BlockMap<TCid extends Cid = Cid> implements Iterable<
     return this.#map.values()
   }
 
-  static async from<TCid extends Cid = Cid>(
+  static async from<TCid extends Cid>(
     input:
       | Iterable<Readonly<CarBlock<TCid>>>
       | AsyncIterable<Readonly<CarBlock<TCid>>>,
   ): Promise<BlockMap<TCid>> {
     const blockMap = new BlockMap<TCid>()
     for await (const { cid, bytes } of input) {
+      // @TODO Will silently overwrite existing blocks with the same CID we
+      // might want to handle duplicates differently? (typically throwing an
+      // error)
       blockMap.set(cid, bytes)
     }
     return blockMap

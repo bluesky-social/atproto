@@ -5,16 +5,16 @@ import type { ActorDb, RepoBlock } from '../db/index.js'
 import { SqlRepoReader } from './sql-repo-reader.js'
 
 export class SqlRepoTransactor extends SqlRepoReader implements RepoStorage {
-  cache = new BlockMap()
+  cache = new BlockMap<Cid>()
   now: string
 
   constructor(
     public db: ActorDb,
     public did: string,
-    now?: string,
+    now: string = new Date().toISOString(),
   ) {
     super(db)
-    this.now = now ?? new Date().toISOString()
+    this.now = now
   }
 
   // proactively cache all blocks from a particular commit (to prevent multiple roundtrips)
@@ -44,7 +44,10 @@ export class SqlRepoTransactor extends SqlRepoReader implements RepoStorage {
     this.cache.set(cid, block)
   }
 
-  async putMany(toPut: BlockMap, rev: string): Promise<void> {
+  async putMany(
+    toPut: Iterable<{ cid: Cid; bytes: Uint8Array }>,
+    rev: string,
+  ): Promise<void> {
     const blocks: RepoBlock[] = Array.from(toPut, ({ cid, bytes }) => ({
       cid: cid.toString(),
       repoRev: rev,

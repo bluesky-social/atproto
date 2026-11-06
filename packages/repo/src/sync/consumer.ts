@@ -78,7 +78,7 @@ export const verifyDiff = async (
   if (leaves.missing.length > 0 && ensureLeaves) {
     throw new Error(`missing leaf blocks: ${leaves.missing}`)
   }
-  newBlocks.addMap(leaves.blocks)
+  newBlocks.addBlocks(leaves.blocks)
   const removedCids = diff.removedCids
   const commitCid = await newBlocks.add(updated.commit)
   // ensure the commit cid actually changed

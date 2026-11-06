@@ -50,7 +50,7 @@ export async function readCar(
 }
 
 export async function readCarWithRoot(
-  bytes: Uint8Array,
+  bytes: Uint8Array | Iterable<Uint8Array> | AsyncIterable<Uint8Array>,
   opts?: ReadCarOptions,
 ): Promise<{ root: CborCid; blocks: BlockMap }> {
   const { roots, blocks } = await readCar(bytes, opts)

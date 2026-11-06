@@ -1,5 +1,4 @@
-import type { CarBlock } from '@atproto/car'
-import { BlockMap } from '@atproto/car'
+import { BlockMap, type CarBlock } from '@atproto/car'
 import type { Cid } from '@atproto/lex-data'
 import type { CommitData } from '../types.js'
 import { ReadableBlockstore } from './readable-blockstore.js'
@@ -9,13 +8,12 @@ export class MemoryBlockstore
   extends ReadableBlockstore
   implements RepoStorage
 {
-  blocks: BlockMap
+  blocks = new BlockMap<Cid>()
   root: Cid | null = null
   rev: string | null = null
 
   constructor(blocks?: Iterable<Readonly<CarBlock>>) {
     super()
-    this.blocks = new BlockMap()
     if (blocks) this.blocks.addBlocks(blocks)
   }
 
@@ -31,7 +29,10 @@ export class MemoryBlockstore
     return this.blocks.has(cid)
   }
 
-  async getBlocks(cids: Cid[]): Promise<{ blocks: BlockMap; missing: Cid[] }> {
+  async getBlocks(cids: Iterable<Cid>): Promise<{
+    blocks: BlockMap<Cid>
+    missing: Cid[]
+  }> {
     return this.blocks.getMany(cids)
   }
 
@@ -53,16 +54,16 @@ export class MemoryBlockstore
     for (const cid of commit.removedCids) {
       this.blocks.delete(cid)
     }
-    commit.newBlocks.forEach((bytes, cid) => {
+    for (const { cid, bytes } of commit.newBlocks) {
       this.blocks.set(cid, bytes)
-    })
+    }
   }
 
   async sizeInBytes(): Promise<number> {
     let total = 0
-    this.blocks.forEach((bytes) => {
+    for (const bytes of this.blocks.values()) {
       total += bytes.byteLength
-    })
+    }
     return total
   }
 

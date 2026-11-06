@@ -54,11 +54,11 @@ async function* iterateRecordBlocks(
   const cidsForPaths = await Promise.all(
     paths.map((p) => mst.cidsForPath(util.formatDataKey(p.collection, p.rkey))),
   )
-  const allCids = new CidSet()
-  for (const cids of cidsForPaths) {
-    for (const cid of cids) allCids.add(cid)
-  }
-  const { missing, blocks } = await storage.getBlocks([...allCids])
+  const allCids = cidsForPaths.reduce(
+    (acc, cids) => acc.addSet(cids),
+    new CidSet(),
+  )
+  const { missing, blocks } = await storage.getBlocks(allCids)
   if (missing.length > 0) {
     throw new MissingBlocksError('writeRecordsToCarStream', missing)
   }
