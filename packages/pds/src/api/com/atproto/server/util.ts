@@ -1,5 +1,5 @@
-import type * as plc from '@did-plc/lib'
-import { getPdsEndpoint, getSigningDidKey } from '@atproto/common'
+import * as plc from '@did-plc/lib'
+import { check, getPdsEndpoint, getSigningDidKey } from '@atproto/common'
 import * as crypto from '@atproto/crypto'
 import type { DidDocument, IdResolver } from '@atproto/identity'
 import { InvalidRequestError } from '@atproto/xrpc-server'
@@ -56,7 +56,6 @@ export const isValidDidDocForService = async (
     plcClient: plc.Client
     idResolver: IdResolver
     cfg: ServerConfig
-    plcRotationKey: crypto.Keypair
     actorStore: ActorStore
   },
   did: string,
@@ -69,22 +68,49 @@ export const isValidDidDocForService = async (
   }
 }
 
+export const serverRotationKeyDid = (ctx: {
+  cfg: ServerConfig
+  plcRotationKey: crypto.Keypair
+}): string => ctx.cfg.entryway?.plcRotationKey ?? ctx.plcRotationKey.did()
+
+export function assertNotTombstoned(
+  op: plc.CompatibleOpOrTombstone,
+): asserts op is plc.CompatibleOp {
+  if (check.is(op, plc.def.tombstone)) {
+    throw new InvalidRequestError('Did is tombstoned')
+  }
+}
+
+// @NOTE op may be current (eg. from getLastOp) or proposed (eg.
+// client-submitted)
+export function assertCanSignUpdatesForDid(
+  op: plc.CompatibleOpOrTombstone,
+  rotationKeyDid: string,
+): asserts op is plc.CompatibleOp {
+  assertNotTombstoned(op)
+  if (!plc.normalizeOp(op).rotationKeys.includes(rotationKeyDid)) {
+    throw new InvalidRequestError(
+      "Rotation keys do not include server's rotation key",
+    )
+  }
+}
+
 export const assertValidDidDocumentForService = async (
   ctx: {
     plcClient: plc.Client
     idResolver: IdResolver
     cfg: ServerConfig
-    plcRotationKey: crypto.Keypair
     actorStore: ActorStore
   },
   did: string,
 ) => {
   if (did.startsWith('did:plc')) {
-    const resolved = await ctx.plcClient.getDocumentData(did)
+    const lastOp = await ctx.plcClient.getLastOp(did)
+    assertNotTombstoned(lastOp)
+    const resolved = plc.normalizeOp(lastOp)
     await assertValidDocContents(ctx, did, {
       pdsEndpoint: resolved.services['atproto_pds']?.endpoint,
       signingKey: resolved.verificationMethods['atproto'],
-      rotationKeys: resolved.rotationKeys,
     })
   } else {
     const resolved = await ctx.idResolver.did.resolve(did, true)
@@ -101,25 +127,15 @@ export const assertValidDidDocumentForService = async (
 const assertValidDocContents = async (
   ctx: {
     cfg: ServerConfig
-    plcRotationKey: crypto.Keypair
     actorStore: ActorStore
   },
   did: string,
   contents: {
     signingKey?: string
     pdsEndpoint?: string
-    rotationKeys?: string[]
   },
 ) => {
-  const { signingKey, pdsEndpoint, rotationKeys } = contents
-
-  const plcRotationKey =
-    ctx.cfg.entryway?.plcRotationKey ?? ctx.plcRotationKey.did()
-  if (rotationKeys !== undefined && !rotationKeys.includes(plcRotationKey)) {
-    throw new InvalidRequestError(
-      'Server rotation key not included in PLC DID data',
-    )
-  }
+  const { signingKey, pdsEndpoint } = contents
 
   if (!pdsEndpoint || pdsEndpoint !== ctx.cfg.service.publicUrl) {
     throw new InvalidRequestError(
