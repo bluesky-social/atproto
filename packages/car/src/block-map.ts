@@ -16,27 +16,33 @@ export type BlockMapEntry<TCid extends Cid = Cid> = [
   bytes: Uint8Array,
 ]
 
+/**
+ * In memory map for storing data (CBOR or raw bytes) indexed by their CIDs
+ * (Content Identifiers).
+ */
 export class BlockMap<TCid extends Cid = Cid> implements Iterable<
   CarBlock<TCid>
 > {
-  readonly #map = new Map<string, CarBlock<TCid>>()
+  readonly #map: Map<string, Readonly<CarBlock<TCid>>>
 
-  constructor(entries?: Iterable<Readonly<BlockMapEntry<TCid>>>) {
-    if (entries) {
-      for (const [cid, bytes] of entries) {
-        this.set(cid, bytes)
-      }
+  constructor(blocks?: Iterable<Readonly<CarBlock<TCid>>>) {
+    if (blocks instanceof BlockMap) {
+      this.#map = new Map(blocks.#map)
+    } else {
+      this.#map = new Map()
+      if (blocks) for (const { cid, bytes } of blocks) this.set(cid, bytes)
     }
   }
 
   async add(
-    // @NOTE Only allow use of add() when CborCid is assignable to TCid
-    value: CborCid extends TCid ? LexValue : never,
+    // @NOTE Only allow use of add() when CborCid is assignable to TCid. This is
+    // expressed through a function-typed property (checked contravariantly)
+    // rather than a conditional on TCid, which would make BlockMap invariant.
+    this: { set: (cid: CborCid, bytes: Uint8Array) => unknown },
+    value: LexValue,
   ): Promise<CborCid> {
     const bytes = encode(value)
     const cid = await cidForCbor(bytes)
-    // @ts-expect-error see @TODO above. This is made "safe" by the conditional
-    // type on the input value.
     this.set(cid, bytes)
     return cid
   }
@@ -49,24 +55,25 @@ export class BlockMap<TCid extends Cid = Cid> implements Iterable<
   // @NOTE Read paths below don't require a strong type for the cid, allowing
   // for easier interop with older code that uses Cid instead of CborCid.
 
-  get(cid: TCid): Uint8Array | undefined {
+  get(cid: Cid): Uint8Array | undefined {
     return this.#map.get(cid.toString())?.bytes
   }
 
-  delete(cid: TCid): this {
+  delete(cid: Cid): this {
     this.#map.delete(cid.toString())
     return this
   }
 
-  getMany<TInputCid extends Cid>(
+  getMany<const TInputCid extends Cid>(
     cids: Iterable<TInputCid>,
   ): { blocks: BlockMap<TCid>; missing: TInputCid[] } {
     const missing: TInputCid[] = []
     const blocks = new BlockMap<TCid>()
     for (const cid of cids) {
-      const entry = this.#map.get(cid.toString())
+      const cidStr = cid.toString()
+      const entry = this.#map.get(cidStr)
       if (entry) {
-        blocks.set(entry.cid, entry.bytes)
+        blocks.#map.set(cidStr, entry)
       } else {
         missing.push(cid)
       }
@@ -74,17 +81,12 @@ export class BlockMap<TCid extends Cid = Cid> implements Iterable<
     return { blocks, missing }
   }
 
-  has(cid: TCid): boolean {
+  has(cid: Cid): boolean {
     return this.#map.has(cid.toString())
   }
 
   clear(): void {
     this.#map.clear()
-  }
-
-  /** @deprecated Prefer iterating */
-  forEach(cb: (bytes: Uint8Array, cid: TCid) => void): void {
-    for (const { cid, bytes } of this) cb(bytes, cid)
   }
 
   cids(): TCid[] {
@@ -97,18 +99,16 @@ export class BlockMap<TCid extends Cid = Cid> implements Iterable<
   }
 
   addBlocks(blocks: Iterable<Readonly<CarBlock<TCid>>>): this {
-    for (const { cid, bytes } of blocks) this.set(cid, bytes)
+    if (blocks instanceof BlockMap) {
+      // Optimization: because BlockMap values are readonly, we can directly
+      // copy them into the internal map without creating new objects.
+      for (const [cidStr, entry] of blocks.#map.entries()) {
+        this.#map.set(cidStr, entry)
+      }
+    } else {
+      for (const { cid, bytes } of blocks) this.set(cid, bytes)
+    }
     return this
-  }
-
-  /** @deprecated use {@link addEntries} instead */
-  addMany(entries: Iterable<Readonly<BlockMapEntry<TCid>>>): this {
-    return this.addEntries(entries)
-  }
-
-  /** @deprecated use {@link addBlocks} instead */
-  addMap(other: Iterable<Readonly<CarBlock<TCid>>>): this {
-    return this.addBlocks(other)
   }
 
   get size(): number {
@@ -117,15 +117,15 @@ export class BlockMap<TCid extends Cid = Cid> implements Iterable<
 
   get byteSize(): number {
     let size = 0
-    for (const bytes of this.values()) size += bytes.length
+    for (const { bytes } of this.#map.values()) size += bytes.length
     return size
   }
 
-  equals(other: BlockMap<TCid>): boolean {
+  equals(other: BlockMap): boolean {
     if (this.size !== other.size) {
       return false
     }
-    for (const { cid, bytes } of this) {
+    for (const { cid, bytes } of this.#map.values()) {
       const otherBytes = other.get(cid)
       if (!otherBytes) return false
       if (!ui8Equals(bytes, otherBytes)) {
@@ -136,19 +136,22 @@ export class BlockMap<TCid extends Cid = Cid> implements Iterable<
   }
 
   *keys(): Generator<TCid, void, unknown> {
-    for (const { cid } of this) yield cid
+    for (const { cid } of this.#map.values()) yield cid
   }
 
   *values(): Generator<Uint8Array, void, unknown> {
-    for (const { bytes } of this) yield bytes
+    for (const { bytes } of this.#map.values()) yield bytes
   }
 
   *entries(): Generator<BlockMapEntry<TCid>, void, unknown> {
-    for (const { cid, bytes } of this) yield [cid, bytes]
+    for (const { cid, bytes } of this.#map.values()) yield [cid, bytes]
   }
 
-  [Symbol.iterator](): MapIterator<CarBlock<TCid>> {
-    return this.#map.values()
+  *[Symbol.iterator](): Generator<CarBlock<TCid>, void, unknown> {
+    // @NOTE we don't expose the internal Map's values directly, we yield new
+    // objects instead. This prevents external code from mutating the internal
+    // state of the BlockMap.
+    for (const { cid, bytes } of this.#map.values()) yield { cid, bytes }
   }
 
   static async from<TCid extends Cid>(
@@ -156,6 +159,10 @@ export class BlockMap<TCid extends Cid = Cid> implements Iterable<
       | Iterable<Readonly<CarBlock<TCid>>>
       | AsyncIterable<Readonly<CarBlock<TCid>>>,
   ): Promise<BlockMap<TCid>> {
+    // Optimization: if the input is already a BlockMap, create a new BlockMap
+    // from it directly.
+    if (input instanceof BlockMap) return new BlockMap(input)
+
     const blockMap = new BlockMap<TCid>()
     for await (const { cid, bytes } of input) {
       // @TODO Will silently overwrite existing blocks with the same CID we
