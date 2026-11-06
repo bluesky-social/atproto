@@ -8,13 +8,19 @@ import {
   Secp256k1Keypair,
 } from '@atproto/crypto'
 import { type AtprotoData, ensureAtpDocument } from '@atproto/identity'
-import type { DidString } from '@atproto/syntax'
+import type { DidString, HandleString } from '@atproto/syntax'
 import {
   AuthRequiredError,
   InvalidRequestError,
+  type MethodAuthVerifier,
   type Server,
 } from '@atproto/xrpc-server'
 import { NEW_PASSWORD_MAX_LENGTH } from '../../../../account-manager/helpers/scrypt.js'
+import type {
+  AdminTokenOutput,
+  UnauthenticatedOutput,
+  UserServiceAuthOutput,
+} from '../../../../auth-output.js'
 import type { AppContext } from '../../../../context.js'
 import { events } from '../../../../events.js'
 import { baseNormalizeAndValidate } from '../../../../handle/index.js'
@@ -22,12 +28,20 @@ import { com } from '../../../../lexicons/index.js'
 import { safeResolveDidDoc } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
+  // Behind an entryway, the entryway calls this route with its admin
+  // credentials when migrating an existing account in.
+  const auth: MethodAuthVerifier<
+    UserServiceAuthOutput | AdminTokenOutput | UnauthenticatedOutput
+  > = ctx.entrywayClient
+    ? ctx.authVerifier.userServiceAuthOrAdminTokenOptional
+    : ctx.authVerifier.userServiceAuthOptional
+
   server.add(com.atproto.server.createAccount, {
     rateLimit: {
       durationMs: 5 * MINUTE,
       points: 100,
     },
-    auth: ctx.authVerifier.userServiceAuthOptional,
+    auth,
     handler: async ({
       input,
       auth,
@@ -36,7 +50,10 @@ export default function (server: Server, ctx: AppContext) {
       // @NOTE Until this code and the OAuthStore's `createAccount` are
       // refactored together, any change made here must be reflected over there.
 
-      const requester = auth.credentials?.did ?? null
+      const requester =
+        auth.credentials?.type === 'user_service_auth'
+          ? auth.credentials.did
+          : null
       const {
         did,
         handle,
@@ -47,7 +64,7 @@ export default function (server: Server, ctx: AppContext) {
         plcOp,
         deactivated,
       } = ctx.entrywayClient
-        ? await validateInputsForEntrywayPds(ctx, input.body)
+        ? await validateInputsForEntrywayPds(ctx, input.body, auth)
         : await validateInputsForLocalPds(ctx, input.body, requester)
 
       await ctx.actorStore.create(did, signingKey)
@@ -147,14 +164,16 @@ export default function (server: Server, ctx: AppContext) {
 const validateInputsForEntrywayPds = async (
   ctx: AppContext,
   input: com.atproto.server.createAccount.$InputBody,
+  auth: UserServiceAuthOutput | AdminTokenOutput | UnauthenticatedOutput,
 ) => {
   const handle = baseNormalizeAndValidate(input.handle)
 
   const { did, plcOp } = input
-  if (!did || !plcOp) {
-    throw new InvalidRequestError(
-      'non-entryway pds requires bringing a DID and plcOp',
-    )
+  if (!did) {
+    throw new InvalidRequestError('entryway pds requires bringing a DID')
+  }
+  if (!plcOp) {
+    return validateInputsForEntrywayMigration(ctx, did, handle, auth)
   }
   if (!check.is(plcOp, plc.def.operation)) {
     throw new InvalidRequestError('invalid plc operation', 'IncompatibleDidDoc')
@@ -201,6 +220,54 @@ const validateInputsForEntrywayPds = async (
     signingKey,
     plcOp,
     deactivated: false,
+  }
+}
+
+/**
+ * Migrating an existing account (did:plc or did:web) into a PDS that sits
+ * behind an entryway. The entryway owns the user's credentials and is
+ * responsible for verifying that the user controls the DID (e.g. via a service
+ * auth token minted by their current PDS) before calling this route with its
+ * admin credentials.
+ */
+const validateInputsForEntrywayMigration = async (
+  ctx: AppContext,
+  did: DidString,
+  handle: HandleString,
+  auth: UserServiceAuthOutput | AdminTokenOutput | UnauthenticatedOutput,
+) => {
+  if (auth.credentials?.type !== 'admin_token') {
+    throw new AuthRequiredError(
+      'entryway pds requires a plcOp, or entryway admin auth to migrate an existing DID',
+    )
+  }
+
+  // the entryway is authoritative for handles, but the handle must still be
+  // available on this pds.
+  const existing = await ctx.accountManager.getAccount(handle, {
+    includeTakenDown: true,
+    includeDeactivated: true,
+  })
+  if (existing) {
+    throw new InvalidRequestError(
+      `Handle already taken: ${handle}`,
+      'HandleNotAvailable',
+    )
+  }
+
+  const signingKey =
+    (await ctx.actorStore.getReservedKeypair(did)) ??
+    (await Secp256k1Keypair.create({ exportable: true }))
+
+  return {
+    did,
+    handle,
+    email: undefined,
+    password: undefined,
+    inviteCode: undefined,
+    signingKey,
+    plcOp: null,
+    deactivated: true,
   }
 }
 

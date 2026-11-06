@@ -339,6 +339,19 @@ export class AuthVerifier {
     }
   }
 
+  public userServiceAuthOrAdminTokenOptional: MethodAuthVerifier<
+    UserServiceAuthOutput | AdminTokenOutput | UnauthenticatedOutput
+  > = async (ctx) => {
+    const type = extractAuthType(ctx.req)
+    if (type === AuthType.BEARER) {
+      return await this.userServiceAuth(ctx)
+    } else if (type === AuthType.BASIC) {
+      return await this.adminToken(ctx)
+    } else {
+      return this.unauthenticated(ctx)
+    }
+  }
+
   public authorizationOrUserServiceAuth<P extends Params>(
     options: VerifiedOptions &
       ScopedOptions &
