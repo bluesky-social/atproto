@@ -89,6 +89,12 @@ export default function (server: Server, ctx: AppContext) {
         throw err
       }
 
+      // Move blobs to permanent storage before taking the actor db write lock.
+      const permanentBlobs = await ctx.actorStore.makeBlobsPermanent(
+        did,
+        write.blobs,
+      )
+
       const commit = await ctx.actorStore.transact(did, async (actorTxn) => {
         const backlinkConflicts =
           validate !== false
@@ -106,7 +112,7 @@ export default function (server: Server, ctx: AppContext) {
         )
         const writes = [...backlinkDeletions, write]
         const commit = await actorTxn.repo
-          .processWrites(writes, swapCommitCid)
+          .processWrites(writes, swapCommitCid, permanentBlobs)
           .catch((err) => {
             if (err instanceof BadCommitSwapError) {
               throw new InvalidRequestError(err.message, 'InvalidSwap')

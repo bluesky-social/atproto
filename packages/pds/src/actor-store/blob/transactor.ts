@@ -32,6 +32,9 @@ import type { PreparedWrite } from '../../repo/types.js'
 import type { ActorDb, Blob as BlobTable } from '../db/index.js'
 import { BlobReader } from './reader.js'
 
+/** Temp keys moved to permanent storage before a transaction, by CID. */
+export type PermanentBlobs = ReadonlyMap<string, string>
+
 export type BlobMetadata = {
   tempKey: string
   size: number
@@ -143,7 +146,61 @@ export class BlobTransactor extends BlobReader {
     }
   }
 
-  async processWriteBlobs(rev: string, writes: PreparedWrite[]) {
+  /**
+   * Moves the temp files of `blobs` to permanent storage. Must be called
+   * **outside** of a transaction, before the transaction that references the
+   * blobs, so that the actor db write lock is not held while waiting on the
+   * blobstore (with S3-compatible storage, a copy and a delete per blob).
+   *
+   * Returns the temp key that was moved for each CID. Pass the result to
+   * `processWrites()` so that the transaction only updates the database.
+   *
+   * Best effort: a blob that could not be moved is left out of the result, and
+   * the transaction moves it instead, as it did before. Moving is safe to
+   * repeat: blobstores tolerate `makePermanent()` for a temp key that was
+   * already moved (S3BlobStore falls back to `hasStored()`, DiskBlobStore
+   * skips the copy).
+   */
+  async makeBlobsPermanent(blobs: TypedBlobRef[]): Promise<PermanentBlobs> {
+    this.db.assertNotTransaction()
+    const moved = new Map<string, string>()
+    const byCid = new Map(blobs.map((b) => [b.ref.toString(), b]))
+    if (byCid.size === 0) return moved
+
+    // Plain read, outside of any transaction: takes no write lock.
+    const rows = await this.db.db
+      .selectFrom('blob')
+      .select(['cid', 'tempKey', 'size', 'mimeType'])
+      .where('cid', 'in', [...byCid.keys()])
+      .where('takedownRef', 'is', null)
+      .execute()
+
+    const queue = new PQueue({ concurrency: 20, timeout: 60 * SECOND })
+    await queue.addAll(
+      rows.map((row) => async () => {
+        const blob = byCid.get(row.cid)
+        // Missing rows are reported (BlobNotFound) inside the transaction.
+        if (!blob || !row.tempKey) return
+        verifyBlob(blob, row)
+        try {
+          await this.blobstore.makePermanent(row.tempKey, blob.ref)
+          moved.set(row.cid, row.tempKey)
+        } catch (err) {
+          log.warn(
+            { err, cid: row.cid },
+            'could not make blob permanent before transaction',
+          )
+        }
+      }),
+    )
+    return moved
+  }
+
+  async processWriteBlobs(
+    rev: string,
+    writes: PreparedWrite[],
+    permanentBlobs?: PermanentBlobs,
+  ) {
     await this.deleteDereferencedBlobs(writes)
 
     const ac = new AbortController()
@@ -159,7 +216,11 @@ export class BlobTransactor extends BlobReader {
           tasks.push(async () => {
             if (ac.signal.aborted) return
             await this.associateBlob(blob, write.uri)
-            await this.verifyBlobAndMakePermanent(blob, ac.signal)
+            await this.verifyBlobAndMakePermanent(
+              blob,
+              ac.signal,
+              permanentBlobs,
+            )
           })
         }
       }
@@ -278,6 +339,7 @@ export class BlobTransactor extends BlobReader {
   async verifyBlobAndMakePermanent(
     blob: TypedBlobRef,
     signal?: AbortSignal,
+    permanentBlobs?: PermanentBlobs,
   ): Promise<void> {
     const found = await this.db.db
       .selectFrom('blob')
@@ -298,26 +360,25 @@ export class BlobTransactor extends BlobReader {
     if (found.tempKey) {
       verifyBlob(blob, found)
 
-      // @NOTE it is less than ideal to perform async (i/o) operations during a
-      // transaction. Especially since there have been instances of the actor-db
-      // being locked, requiring to kick the processes.
+      // If makeBlobsPermanent() already moved this temp key before the
+      // transaction, only the database needs updating.
+      if (permanentBlobs?.get(blob.ref.toString()) !== found.tempKey) {
+        // @NOTE Fallback for callers that did not call makeBlobsPermanent()
+        // first. This holds the actor-db write lock across blobstore i/o,
+        // which has caused locked actor dbs; prefer moving blobs beforehand.
+        await this.blobstore
+          .makePermanent(found.tempKey, blob.ref)
+          .catch((err) => {
+            log.error(
+              { err, cid: blob.ref.toString() },
+              'could not make blob permanent',
+            )
 
-      // The better solution would be to update the blob state in the database
-      // (e.g. "makeItPermanent") and to process those updates outside of the
-      // transaction.
+            throw err
+          })
 
-      await this.blobstore
-        .makePermanent(found.tempKey, blob.ref)
-        .catch((err) => {
-          log.error(
-            { err, cid: blob.ref.toString() },
-            'could not make blob permanent',
-          )
-
-          throw err
-        })
-
-      signal?.throwIfAborted()
+        signal?.throwIfAborted()
+      }
 
       await this.db.db
         .updateTable('blob')

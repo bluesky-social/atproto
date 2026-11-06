@@ -4,6 +4,7 @@ import path from 'node:path'
 import { fileExists, readIfExists, rmIfExists } from '@atproto/common'
 import * as crypto from '@atproto/crypto'
 import type { ExportableKeypair, Keypair } from '@atproto/crypto'
+import type { TypedBlobRef } from '@atproto/lex-data'
 import type { DidString } from '@atproto/lex-schema'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import type { ActorStoreConfig } from '../config/index.js'
@@ -14,6 +15,7 @@ import { ActorStoreReader } from './actor-store-reader.js'
 import type { ActorStoreResources } from './actor-store-resources.js'
 import { ActorStoreTransactor } from './actor-store-transactor.js'
 import { ActorStoreWriter } from './actor-store-writer.js'
+import type { PermanentBlobs } from './blob/transactor.js'
 import { type ActorDb, getDb, getMigrator } from './db/index.js'
 
 export class ActorStore {
@@ -107,6 +109,21 @@ export class ActorStore {
     await using db = await this.openDb(did)
     await using writer = new ActorStoreWriter(did, db, keypair, this.resources)
     return await fn(writer)
+  }
+
+  /**
+   * Moves `blobs` to permanent storage, outside of any transaction. Call it
+   * before `transact()` and pass the result to `processWrites()`. See
+   * `BlobTransactor.makeBlobsPermanent()`.
+   */
+  async makeBlobsPermanent(
+    did: DidString,
+    blobs: TypedBlobRef[],
+  ): Promise<PermanentBlobs> {
+    if (blobs.length === 0) return new Map()
+    return this.writeNoTransaction(did, (store) =>
+      store.repo.blob.makeBlobsPermanent(blobs),
+    )
   }
 
   async create(did: string, keypair: ExportableKeypair) {

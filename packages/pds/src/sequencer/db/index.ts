@@ -13,7 +13,7 @@ export const getDb = (
   const pragmas: Record<string, string> = disableWalAutoCheckpoint
     ? { wal_autocheckpoint: '0' }
     : {}
-  return Database.sqlite(location, pragmas)
+  return Database.sqlite(location, { pragmas })
 }
 
 export const getMigrator = (db: Database<SequencerDbSchema>) => {

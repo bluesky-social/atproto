@@ -96,7 +96,17 @@ export class DiskBlobStore implements BlobStore {
     const alreadyHas = await this.hasStored(cid)
     if (!alreadyHas) {
       const data = await fs.readFile(tmpPath)
-      await fs.writeFile(storedPath, data)
+      // Write to a staging file and rename it into place, so that the stored
+      // path never holds a partial blob: a concurrent makePermanent() for the
+      // same blob skips the copy as soon as the stored path exists. Staged
+      // next to the stored path, as rename() can't cross filesystems.
+      const stagingPath = `${storedPath}.${this.genKey()}.tmp`
+      try {
+        await fs.writeFile(stagingPath, data)
+        await fs.rename(stagingPath, storedPath)
+      } finally {
+        await rmIfExists(stagingPath)
+      }
     }
     try {
       await fs.rm(tmpPath)
