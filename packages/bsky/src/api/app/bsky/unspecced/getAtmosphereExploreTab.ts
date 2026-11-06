@@ -235,7 +235,9 @@ async function hydration({
   const [externalState, appProfileState] = await Promise.all([
     ctx.hydrator.hydrateEmbedExternalViewFromUris(uris, params.hydrateCtx),
     dids.length
-      ? ctx.hydrator.hydrateProfilesDetailed(dids, params.hydrateCtx)
+      ? ctx.hydrator.hydrateProfilesDetailed(dids, params.hydrateCtx, {
+          knownFollowersDids: dids,
+        })
       : {},
   ])
   // Detailed profile state goes second so it wins any overlapping actor state.
@@ -435,12 +437,14 @@ const APP_CARD_FIELDS = [
 /**
  * Validates an app entry. Only the public card fields are copied (so a
  * supplied `profile` or `profileUrl` is never read) and only `did` is kept
- * beyond them. A present but malformed `did` drops the app.
+ * beyond them. A present but malformed `did` drops the app, as does anything
+ * not explicitly `featured: true`.
  */
 function parseApp(entry: unknown): AppEntry | undefined {
   if (typeof entry !== 'object' || entry === null || Array.isArray(entry))
     return
   const raw = entry as Record<string, unknown>
+  if (raw.featured !== true) return
   const did = appDidSchema.safeParse(raw.did)
   if (!did.success) return
   const card = app.bsky.unspecced.getAtmosphereExploreTab.appCard.safeParse(
