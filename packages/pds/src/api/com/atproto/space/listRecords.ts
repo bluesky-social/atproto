@@ -3,7 +3,7 @@ import type { Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
 import { assertRepoAvailability } from '../sync/util.js'
-import { assertSpaceRead, isSpaceSelfRead } from './util.js'
+import { assertSpaceRead, isSpaceUserOrAdmin } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.space.listRecords, {
@@ -16,7 +16,7 @@ export default function (server: Server, ctx: AppContext) {
       const { space, repo, collection, limit, cursor, excludeValues } = params
 
       assertSpaceRead(auth, space, repo)
-      await assertRepoAvailability(ctx, repo, isSpaceSelfRead(auth, repo))
+      await assertRepoAvailability(ctx, repo, isSpaceUserOrAdmin(auth, repo))
 
       const records = await ctx.actorStore.read(repo, (store) =>
         store.space.listRecords(space, {

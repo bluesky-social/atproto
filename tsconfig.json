@@ -55,6 +55,7 @@
     { "path": "./packages/repo" },
     { "path": "./packages/sync" },
     { "path": "./packages/space" },
+    { "path": "./packages/star" },
     { "path": "./packages/syntax" },
     { "path": "./packages/tap" },
     { "path": "./packages/ws-client" },

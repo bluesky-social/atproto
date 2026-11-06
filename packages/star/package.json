@@ -1,0 +1,44 @@
+{
+  "name": "@atproto/star",
+  "version": "0.0.1",
+  "license": "MIT",
+  "description": "Reading and writing STAR archives",
+  "keywords": [
+    "atproto",
+    "dasl",
+    "star"
+  ],
+  "homepage": "https://atproto.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bluesky-social/atproto",
+    "directory": "packages/star"
+  },
+  "files": [
+    "./dist",
+    "./README.md",
+    "./CHANGELOG.md"
+  ],
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "@atproto/lex-cbor": "workspace:^",
+    "@atproto/lex-data": "workspace:^"
+  },
+  "devDependencies": {
+    "vitest": "^4.1.10"
+  },
+  "scripts": {
+    "build": "tsc --build tsconfig.build.json",
+    "test": "vitest run"
+  }
+}

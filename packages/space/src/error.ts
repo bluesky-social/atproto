@@ -34,13 +34,6 @@ export class SpaceMacError extends Error {
   readonly code = 'InvalidSpaceMac'
 }
 
-export class StarParseError extends Error {
-  constructor(message: string, options?: ErrorOptions) {
-    super(message, options)
-    this.name = 'StarParseError'
-  }
-}
-
 export class SpaceMetaArchiveError extends Error {
   name = 'SpaceMetaArchiveError'
 }

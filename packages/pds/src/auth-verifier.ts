@@ -530,11 +530,17 @@ export class AuthVerifier {
       ScopedOptions &
       ExtraScopedOptions &
       AuthorizedOptions<P>,
-  ): MethodAuthVerifier<SpaceCredentialOutput | OAuthOutput | AccessOutput, P> {
+  ): MethodAuthVerifier<
+    SpaceCredentialOutput | OAuthOutput | AccessOutput | AdminTokenOutput,
+    P
+  > {
     const authorizationVerifier = this.authorization(options)
     return async (ctx) => {
       if (isSpaceCredentialAuth(ctx.req)) {
         return this.spaceCredentialAuth(ctx)
+      } else if (extractAuthType(ctx.req) === AuthType.BASIC) {
+        // Read routes accept the admin token, as `sync.*` does.
+        return this.adminToken(ctx)
       } else {
         return authorizationVerifier(ctx)
       }
