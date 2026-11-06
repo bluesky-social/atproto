@@ -301,6 +301,7 @@ const handleModerationEvent = async ({
           metadata,
           subjectDid: subject.did,
           subjectUri,
+          subjectType: subject.info().subjectType,
           eventId: result.event.id,
           eventType: event.$type,
           createdBy,
