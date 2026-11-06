@@ -1,3 +1,6 @@
+// @NOTE Do **not** re-export the zod schemas directly from this package. Do not
+// export anything from "./schemas.js" either.
+
 export * from '@atproto/car'
 
 export * from './cid-set.js'
