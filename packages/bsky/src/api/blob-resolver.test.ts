@@ -68,12 +68,20 @@ function context(
   } as unknown as AppContext
 }
 
-async function proxyRequest(ctx: AppContext, signal?: AbortSignal) {
+async function proxyRequest(
+  ctx: AppContext,
+  signal?: AbortSignal,
+  middlewareErrors?: unknown[],
+) {
   const middleware = createMiddleware(ctx)
   const appview = createServer(async (req, res) => {
     await middleware(req, res, (error) => {
+      middlewareErrors?.push(error)
       res.statusCode = isHttpError(error) ? error.statusCode : 500
-      res.end(error instanceof Error ? error.message : 'fixture error')
+      // Never reflect upstream exception text into an HTML-like response.
+      res.setHeader('content-type', 'application/json')
+      res.setHeader('x-content-type-options', 'nosniff')
+      res.end()
     })
   })
   const origin = await listen(appview)
@@ -81,7 +89,7 @@ async function proxyRequest(ctx: AppContext, signal?: AbortSignal) {
     const response = await fetch(`${origin}/blob/${DID}/${cid}`, { signal })
     const body = Buffer.from(await response.arrayBuffer())
     if (response.status >= 400) {
-      throw new Error(`Proxy ${response.status}: ${body.toString('utf8')}`)
+      throw new Error(`Proxy status ${response.status}`)
     }
     expect(response.headers.get('content-security-policy')).toBe(
       "default-src 'none'; sandbox",
@@ -219,8 +227,15 @@ describe('internal PDS blob redirects', () => {
       res.writeHead(307, { location: storageOrigin }).end()
     })
     const ctx = context(await listen(pds), true)
+    const middlewareErrors: unknown[] = []
     try {
-      await expect(proxyRequest(ctx)).rejects.toThrow('404: Bad cid check')
+      await expect(
+        proxyRequest(ctx, undefined, middlewareErrors),
+      ).rejects.toThrow('Proxy status 404')
+      expect(middlewareErrors).toHaveLength(1)
+      const failure = middlewareErrors[0]
+      expect(failure).toBeInstanceOf(Error)
+      expect((failure as Error).message).toBe('Bad cid check')
     } finally {
       await ctx.blobDispatcher.close()
       await Promise.all([close(pds), close(storage)])
@@ -270,8 +285,13 @@ describe('internal PDS blob redirects', () => {
       res.end(payload)
     })
     const ctx = context(await listen(pds), true, true)
+    const middlewareErrors: unknown[] = []
     try {
-      await expect(proxyRequest(ctx)).rejects.toThrow('404: Blob not found')
+      await expect(
+        proxyRequest(ctx, undefined, middlewareErrors),
+      ).rejects.toThrow('Proxy status 404')
+      expect(middlewareErrors).toHaveLength(1)
+      expect(middlewareErrors[0]).toMatchObject({ message: 'Blob not found' })
       expect(requests).toBe(0)
     } finally {
       await ctx.blobDispatcher.close()
