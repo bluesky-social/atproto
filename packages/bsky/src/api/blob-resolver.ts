@@ -1,4 +1,5 @@
-import { type Duplex, Transform, type Writable } from 'node:stream'
+import { createHash, timingSafeEqual } from 'node:crypto'
+import { type Duplex, Transform, Writable } from 'node:stream'
 import { pipeline } from 'node:stream/promises'
 import createError, { isHttpError } from 'http-errors'
 import type { Dispatcher } from 'undici'
@@ -36,6 +37,18 @@ import { BSKY_USER_AGENT } from './util.js'
 export function createMiddleware(ctx: AppContext): Middleware {
   // @TODO this should be from configuration
   const maxSize = 100 * 1024 * 1024 // 100 MB
+  const sourceToken = ctx.cfg.blobSourceHandoffToken
+  const expectedToken =
+    sourceToken && createHash('sha256').update(sourceToken).digest()
+
+  const allowSourceHandoff = (value: string | string[] | undefined) =>
+    !!expectedToken &&
+    typeof value === 'string' &&
+    value.startsWith('Bearer ') &&
+    timingSafeEqual(
+      expectedToken,
+      createHash('sha256').update(value.slice('Bearer '.length)).digest(),
+    )
 
   return async (req, res, next) => {
     if (req.method !== 'GET' && req.method !== 'HEAD') return next()
@@ -47,10 +60,12 @@ export function createMiddleware(ctx: AppContext): Middleware {
     // displayed as a web page) ?
 
     try {
+      const handoff = allowSourceHandoff(req.headers.authorization)
       const streamOptions: StreamBlobOptions = {
         did: didParam,
         cid: cidParam,
         signal: responseSignal(res),
+        allowSourceHandoff: handoff,
         // Because we will be verifying the CID, we need to ensure that the
         // upstream response can be de-compressed. We do this by negotiating the
         // "accept-encoding" header based on the downstream client's capabilities.
@@ -61,6 +76,26 @@ export function createMiddleware(ctx: AppContext): Middleware {
       }
 
       await streamBlob(ctx, streamOptions, (upstream, { cid, did, url }) => {
+        if (handoff && upstream.statusCode === 307) {
+          const target = sourceHandoffTarget(upstream.headers.location, ctx.cfg)
+          res.statusCode = 307
+          res.setHeader('Location', target.toString())
+          res.setHeader('Cache-Control', 'no-store')
+          res.setHeader(
+            'Content-Security-Policy',
+            "default-src 'none'; sandbox",
+          )
+          res.setHeader('X-Content-Type-Options', 'nosniff')
+          res.setHeader('X-Frame-Options', 'DENY')
+          res.setHeader('X-XSS-Protection', '0')
+          res.setHeader('Content-Disposition', `attachment; filename="${cid}"`)
+          res.end()
+          return new Writable({
+            write(_chunk, _encoding, callback) {
+              callback()
+            },
+          })
+        }
         const encoding = upstream.headers['content-encoding']
         const verifier = createCidVerifier(cid, encoding, maxSize)
 
@@ -159,6 +194,11 @@ export type StreamBlobOptions = {
   did: string
   acceptEncoding?: string
   signal?: AbortSignal
+  allowSourceHandoff?: boolean
+}
+
+type BlobRequestOptions = Dispatcher.RequestOptions & {
+  maxRedirections?: number
 }
 
 export type StreamBlobFactory = (
@@ -178,6 +218,12 @@ export async function streamBlob(
   const { did, cid } = parseBlobParams(options)
   const url = await getBlobUrl(ctx.dataplane, did, cid)
 
+  options = {
+    ...options,
+    allowSourceHandoff:
+      options.allowSourceHandoff === true &&
+      ctx.cfg.blobRedirectAdminOrigin === url.origin,
+  }
   const headers = getBlobHeaders(ctx.cfg, url)
 
   headers.set(
@@ -192,37 +238,42 @@ export async function streamBlob(
 
   let headersReceived = false
 
+  const request: BlobRequestOptions = {
+    method: 'GET',
+    origin: url.origin,
+    path: url.pathname + url.search,
+    headers,
+    signal: options.signal,
+    // The interceptor accepts this dispatch field even though the base
+    // Dispatcher type does not include interceptor-specific options.
+    maxRedirections: options.allowSourceHandoff ? 0 : undefined,
+  }
+
   return ctx.blobDispatcher
-    .stream(
-      {
-        method: 'GET',
-        origin: url.origin,
-        path: url.pathname + url.search,
-        headers,
-        signal: options.signal,
-      },
-      (upstream) => {
-        headersReceived = true
+    .stream(request, (upstream) => {
+      headersReceived = true
 
-        if (upstream.statusCode !== 200) {
-          log.warn(
-            {
-              did,
-              cid: cid.toString(),
-              pds: url.origin,
-              status: upstream.statusCode,
-            },
-            `blob resolution failed upstream`,
-          )
+      if (
+        upstream.statusCode !== 200 &&
+        !(options.allowSourceHandoff && upstream.statusCode === 307)
+      ) {
+        log.warn(
+          {
+            did,
+            cid: cid.toString(),
+            pds: url.origin,
+            status: upstream.statusCode,
+          },
+          `blob resolution failed upstream`,
+        )
 
-          throw upstream.statusCode >= 400 && upstream.statusCode < 500
-            ? createError(404, 'Blob not found', { cause: upstream }) // 4xx => 404
-            : createError(502, 'Upstream Error', { cause: upstream }) // !200 && !4xx => 502
-        }
+        throw upstream.statusCode >= 400 && upstream.statusCode < 500
+          ? createError(404, 'Blob not found', { cause: upstream }) // 4xx => 404
+          : createError(502, 'Upstream Error', { cause: upstream }) // !200 && !4xx => 502
+      }
 
-        return factory(upstream, { url, did, cid })
-      },
-    )
+      return factory(upstream, { url, did, cid })
+    })
     .catch((err) => {
       // Is this a connection error, or a stream error ?
       if (!headersReceived) {
@@ -342,6 +393,26 @@ function matchesHostname(url: URL, hostname: string): boolean {
  * If you need the un-compressed data, you should use a decompress + verify
  * pipeline instead.
  */
+function sourceHandoffTarget(location: unknown, cfg: ServerConfig): URL {
+  if (typeof location !== 'string') {
+    throw createError(502, 'Missing internal source redirect location')
+  }
+  let url: URL
+  try {
+    url = new URL(location)
+  } catch {
+    throw createError(502, 'Invalid internal source redirect location')
+  }
+  const loopbackFixture =
+    cfg.disableSsrfProtection === true &&
+    url.protocol === 'http:' &&
+    ['localhost', '127.0.0.1', '[::1]'].includes(url.hostname)
+  if (url.protocol !== 'https:' && !loopbackFixture) {
+    throw createError(502, 'Unsafe internal source redirect location')
+  }
+  return url
+}
+
 function createCidVerifier(
   cid: Cid,
   encoding?: string | string[],

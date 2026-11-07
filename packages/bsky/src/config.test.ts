@@ -15,6 +15,7 @@ const CAP_ENV = [
 const REDIRECT_ENV = [
   'BSKY_BLOB_REDIRECT_ADMIN_PASSWORD',
   'BSKY_BLOB_REDIRECT_ADMIN_ORIGIN',
+  'BSKY_BLOB_SOURCE_HANDOFF_TOKEN',
 ] as const
 
 const saved = new Map<string, string | undefined>()
@@ -47,6 +48,7 @@ describe('internal PDS blob redirect credentials', () => {
     const cfg = ServerConfig.readEnv()
     expect(cfg.blobRedirectAdminPassword).toBeUndefined()
     expect(cfg.blobRedirectAdminOrigin).toBeUndefined()
+    expect(cfg.blobSourceHandoffToken).toBeUndefined()
   })
 
   it('requires the password and scoped origin together', () => {
@@ -60,6 +62,18 @@ describe('internal PDS blob redirect credentials', () => {
     expect(() => ServerConfig.readEnv()).toThrow(
       'BSKY_BLOB_REDIRECT_ADMIN_PASSWORD',
     )
+  })
+
+  it('requires scoped PDS credentials before enabling source handoff', () => {
+    expect(() =>
+      ServerConfig.readEnv({ blobSourceHandoffToken: 'synthetic-only' }),
+    ).toThrow('BSKY_BLOB_SOURCE_HANDOFF_TOKEN')
+    const cfg = ServerConfig.readEnv({
+      blobSourceHandoffToken: 'synthetic-only',
+      blobRedirectAdminPassword: 'synthetic-only',
+      blobRedirectAdminOrigin: 'https://pds.test',
+    })
+    expect(cfg.blobSourceHandoffToken).toBe('synthetic-only')
   })
 
   it('applies the pair requirement to programmatic overrides too', () => {

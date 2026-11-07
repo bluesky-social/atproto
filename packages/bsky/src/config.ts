@@ -88,6 +88,7 @@ export interface ServerConfigValues {
   blobRateLimitBypassHostname?: string
   blobRedirectAdminPassword?: string
   blobRedirectAdminOrigin?: string
+  blobSourceHandoffToken?: string
   // identity
   didPlcUrl: string
   handleResolveNameservers?: string[]
@@ -278,6 +279,14 @@ export class ServerConfig {
     assert(
       !!blobRedirectAdminPassword === !!blobRedirectAdminOrigin,
       'must specify both BSKY_BLOB_REDIRECT_ADMIN_PASSWORD and BSKY_BLOB_REDIRECT_ADMIN_ORIGIN to enable internal blob redirects',
+    )
+    const blobSourceHandoffToken =
+      overrides?.blobSourceHandoffToken ??
+      (process.env.BSKY_BLOB_SOURCE_HANDOFF_TOKEN || undefined)
+    assert(
+      !blobSourceHandoffToken ||
+        (!!blobRedirectAdminPassword && !!blobRedirectAdminOrigin),
+      'BSKY_BLOB_SOURCE_HANDOFF_TOKEN requires the internal blob redirect credentials',
     )
     const adminPasswords = envList(
       process.env.BSKY_ADMIN_PASSWORDS || process.env.BSKY_ADMIN_PASSWORD,
@@ -548,6 +557,7 @@ export class ServerConfig {
       ...noUndefinedVals(overrides ?? {}),
       blobRedirectAdminPassword,
       blobRedirectAdminOrigin,
+      blobSourceHandoffToken,
     })
   }
 
@@ -750,6 +760,10 @@ export class ServerConfig {
 
   get blobRedirectAdminOrigin() {
     return this.cfg.blobRedirectAdminOrigin
+  }
+
+  get blobSourceHandoffToken() {
+    return this.cfg.blobSourceHandoffToken
   }
 
   get didPlcUrl() {

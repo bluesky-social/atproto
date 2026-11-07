@@ -13,6 +13,7 @@ const DID = 'did:plc:abcdefghijklmnopqrstuvwx'
 const payload = Buffer.from('synthetic verified blob, not a production image')
 const cid = cidForRawHash(createHash('sha256').update(payload).digest())
 const adminAuthorization = `Basic ${Buffer.from('admin:synthetic-only').toString('base64')}`
+const handoffAuthorization = 'Bearer synthetic-handoff-name'
 
 async function listen(server: Server) {
   server.listen(0, '127.0.0.1')
@@ -41,6 +42,7 @@ function context(
       : undefined,
     blobRateLimitBypassKey: redirectAdmin ? 'synthetic-bypass' : undefined,
     blobRateLimitBypassHostname: redirectAdmin ? origin.hostname : undefined,
+    blobSourceHandoffToken: 'synthetic-handoff-name',
     proxyPreferCompressed: false,
     disableSsrfProtection: true,
     proxyAllowHTTP2: false,
@@ -72,6 +74,8 @@ async function proxyRequest(
   ctx: AppContext,
   signal?: AbortSignal,
   middlewareErrors?: unknown[],
+  sourceAuthorization?: string,
+  inspect?: (response: Response) => void,
 ) {
   const middleware = createMiddleware(ctx)
   const appview = createServer(async (req, res) => {
@@ -86,7 +90,14 @@ async function proxyRequest(
   })
   const origin = await listen(appview)
   try {
-    const response = await fetch(`${origin}/blob/${DID}/${cid}`, { signal })
+    const response = await fetch(`${origin}/blob/${DID}/${cid}`, {
+      signal,
+      redirect: 'manual',
+      headers: sourceAuthorization
+        ? { authorization: sourceAuthorization }
+        : undefined,
+    })
+    inspect?.(response)
     const body = Buffer.from(await response.arrayBuffer())
     if (response.status >= 400) {
       throw new Error(`Proxy status ${response.status}`)
@@ -96,7 +107,9 @@ async function proxyRequest(
     )
     expect(response.headers.get('x-content-type-options')).toBe('nosniff')
     expect(response.headers.get('x-frame-options')).toBe('DENY')
-    expect(response.headers.get('content-length')).toBeNull()
+    expect(response.headers.get('content-length')).toBe(
+      response.status === 307 ? '0' : null,
+    )
     return body
   } finally {
     await close(appview)
@@ -275,6 +288,110 @@ describe('internal PDS blob redirects', () => {
     } finally {
       await ctx.blobDispatcher.close()
       await Promise.all([close(pds), close(storage)])
+    }
+  })
+
+  it('hands a signed target only to the credited internal source', async () => {
+    const pdsAuthorizations: Array<string | undefined> = []
+    let objectRequests = 0
+    const storage = createServer((req, res) => {
+      objectRequests++
+      res.end('must not be requested')
+    })
+    const storageOrigin = new URL(await listen(storage))
+    storageOrigin.protocol = 'https:'
+    const target = `${storageOrigin.origin}/synthetic?signature=fixture`
+    const pds = createServer((req, res) => {
+      pdsAuthorizations.push(req.headers.authorization)
+      res.writeHead(307, { location: target }).end()
+    })
+    const ctx = context(await listen(pds), true)
+    try {
+      await proxyRequest(
+        ctx,
+        undefined,
+        undefined,
+        handoffAuthorization,
+        (response) => {
+          expect(response.status).toBe(307)
+          expect(response.headers.get('location')).toBe(target)
+          expect(response.headers.get('cache-control')).toBe('no-store')
+          expect(response.headers.get('content-disposition')).toBe(
+            `attachment; filename="${cid}"`,
+          )
+        },
+      )
+      expect(objectRequests).toBe(0)
+      expect(pdsAuthorizations).toEqual([adminAuthorization])
+    } finally {
+      await ctx.blobDispatcher.close()
+      await Promise.all([close(pds), close(storage)])
+    }
+  })
+
+  it('does not hand off through another PDS origin', async () => {
+    let pdsAuthorization: string | undefined
+    let objectAuthorization: string | undefined
+    const storage = createServer((_req, res) => {
+      objectAuthorization = _req.headers.authorization
+      res.end(payload)
+    })
+    const objectOrigin = await listen(storage)
+    const pds = createServer((req, res) => {
+      pdsAuthorization = req.headers.authorization
+      res.writeHead(307, { location: objectOrigin }).end()
+    })
+    const ctx = context(await listen(pds), true, false, 'https://other.test')
+    try {
+      expect(
+        await proxyRequest(ctx, undefined, undefined, handoffAuthorization),
+      ).toEqual(payload)
+      expect(pdsAuthorization).toBeUndefined()
+      expect(objectAuthorization).toBeUndefined()
+    } finally {
+      await ctx.blobDispatcher.close()
+      await Promise.all([close(pds), close(storage)])
+    }
+  })
+
+  it('retains normal verified streaming for other clients', async () => {
+    const pds = createServer((req, res) => {
+      if (!req.url?.startsWith('/xrpc/')) {
+        res.end(payload)
+      } else if (req.headers.authorization !== adminAuthorization) {
+        res.writeHead(401).end()
+      } else if (req.url?.startsWith('/xrpc/')) {
+        res.writeHead(307, { location: '/synthetic-object' }).end()
+      } else {
+        res.end(payload)
+      }
+    })
+    const ctx = context(await listen(pds), true)
+    try {
+      expect(await proxyRequest(ctx)).toEqual(payload)
+      expect(
+        await proxyRequest(ctx, undefined, undefined, 'Bearer invalid-fixture'),
+      ).toEqual(payload)
+    } finally {
+      await ctx.blobDispatcher.close()
+      await close(pds)
+    }
+  })
+
+  it('rejects an insecure source handoff target', async () => {
+    const pds = createServer((_req, res) => {
+      res.writeHead(307, { location: 'http://storage.invalid/synthetic' }).end()
+    })
+    const ctx = context(await listen(pds), true)
+    const middlewareErrors: unknown[] = []
+    try {
+      await expect(
+        proxyRequest(ctx, undefined, middlewareErrors, handoffAuthorization),
+      ).rejects.toThrow('Proxy status 502')
+      expect(middlewareErrors).toHaveLength(1)
+    } finally {
+      await ctx.blobDispatcher.close()
+      await close(pds)
     }
   })
 
