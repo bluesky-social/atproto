@@ -348,6 +348,19 @@ export const acceptableVectors: Array<{
     },
   },
   {
+    note: 'link with CIDv0',
+    json: {
+      $link: 'QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojWnPbdG',
+    },
+  },
+  {
+    note: 'link with sha-512 CID',
+    json: {
+      $link:
+        'bafyrgqe3ohjcjplc6n4f3fwunlj6upltggn7xqujbsvnvyw764srszz4u4rshq6ztos4chl4plgg4ffyyxnayrtdi5oc4xb2332g645433aeg',
+    },
+  },
+  {
     note: 'object with empty $type',
     json: {
       $type: '',
