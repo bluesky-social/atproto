@@ -299,6 +299,8 @@ function getBlobHeaders(
   {
     blobRateLimitBypassKey: bypassKey,
     blobRateLimitBypassHostname: bypassHostname,
+    blobRedirectAdminPassword: redirectPassword,
+    blobRedirectAdminOrigin: redirectOrigin,
   }: ServerConfig,
   url: URL,
 ): Map<string, string> {
@@ -306,17 +308,30 @@ function getBlobHeaders(
 
   headers.set('user-agent', BSKY_USER_AGENT)
 
-  if (bypassKey && bypassHostname) {
-    const matchesUrl = bypassHostname.startsWith('.')
-      ? url.hostname.endsWith(bypassHostname)
-      : url.hostname === bypassHostname
+  if (bypassKey && bypassHostname && matchesHostname(url, bypassHostname)) {
+    headers.set('x-ratelimit-bypass', bypassKey)
+  }
 
-    if (matchesUrl) {
-      headers.set('x-ratelimit-bypass', bypassKey)
+  // The validated origin pins scheme, hostname and port. In particular, a
+  // hostname match must never forward this credential to another local port.
+  if (redirectPassword && redirectOrigin === url.origin) {
+    const loopbackFixture =
+      url.protocol === 'http:' &&
+      ['localhost', '127.0.0.1', '[::1]'].includes(url.hostname)
+    if (url.protocol !== 'https:' && !loopbackFixture) {
+      throw createError(502, 'Insecure internal blob redirect origin')
     }
+    const basic = Buffer.from(`admin:${redirectPassword}`).toString('base64')
+    headers.set('authorization', `Basic ${basic}`)
   }
 
   return headers
+}
+
+function matchesHostname(url: URL, hostname: string): boolean {
+  return hostname.startsWith('.')
+    ? url.hostname.endsWith(hostname)
+    : url.hostname === hostname
 }
 
 /**

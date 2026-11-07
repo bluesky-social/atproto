@@ -86,6 +86,8 @@ export interface ServerConfigValues {
   videoThumbnailUrlPattern?: string
   blobRateLimitBypassKey?: string
   blobRateLimitBypassHostname?: string
+  blobRedirectAdminPassword?: string
+  blobRedirectAdminOrigin?: string
   // identity
   didPlcUrl: string
   handleResolveNameservers?: string[]
@@ -122,6 +124,8 @@ export interface ServerConfigValues {
   disableSsrfProtection?: boolean
   proxyAllowHTTP2?: boolean
   proxyConnectTimeout?: number
+  proxyPoolConnections?: number
+  proxyMaxOrigins?: number
   proxyHeadersTimeout?: number
   proxyBodyTimeout?: number
   proxyMaxResponseSize?: number
@@ -264,6 +268,17 @@ export class ServerConfig {
       !blobRateLimitBypassKey || blobRateLimitBypassHostname,
       'must specify a hostname when using a blob rate limit bypass key',
     )
+    const blobRedirectAdminPassword =
+      overrides?.blobRedirectAdminPassword ??
+      (process.env.BSKY_BLOB_REDIRECT_ADMIN_PASSWORD || undefined)
+    const blobRedirectAdminOrigin = parseBlobRedirectAdminOrigin(
+      overrides?.blobRedirectAdminOrigin ??
+        process.env.BSKY_BLOB_REDIRECT_ADMIN_ORIGIN,
+    )
+    assert(
+      !!blobRedirectAdminPassword === !!blobRedirectAdminOrigin,
+      'must specify both BSKY_BLOB_REDIRECT_ADMIN_PASSWORD and BSKY_BLOB_REDIRECT_ADMIN_ORIGIN to enable internal blob redirects',
+    )
     const adminPasswords = envList(
       process.env.BSKY_ADMIN_PASSWORDS || process.env.BSKY_ADMIN_PASSWORD,
     )
@@ -359,6 +374,14 @@ export class ServerConfig {
     const proxyAllowHTTP2 = process.env.BSKY_PROXY_ALLOW_HTTP2 === 'true'
     const proxyConnectTimeout =
       parseInt(process.env.BSKY_PROXY_CONNECT_TIMEOUT || '', 10) || undefined
+    const proxyPoolConnections = readBoundedPositiveInteger(
+      process.env.BSKY_PROXY_POOL_CONNECTIONS,
+      'BSKY_PROXY_POOL_CONNECTIONS',
+    )
+    const proxyMaxOrigins = readBoundedPositiveInteger(
+      process.env.BSKY_PROXY_MAX_ORIGINS,
+      'BSKY_PROXY_MAX_ORIGINS',
+    )
     const proxyHeadersTimeout =
       parseInt(process.env.BSKY_PROXY_HEADERS_TIMEOUT || '', 10) || undefined
     const proxyBodyTimeout =
@@ -511,6 +534,8 @@ export class ServerConfig {
       disableSsrfProtection,
       proxyAllowHTTP2,
       proxyConnectTimeout,
+      proxyPoolConnections,
+      proxyMaxOrigins,
       proxyHeadersTimeout,
       proxyBodyTimeout,
       proxyMaxResponseSize,
@@ -521,6 +546,8 @@ export class ServerConfig {
       draftsLimit,
       searchV2OverrideHeader,
       ...noUndefinedVals(overrides ?? {}),
+      blobRedirectAdminPassword,
+      blobRedirectAdminOrigin,
     })
   }
 
@@ -717,6 +744,14 @@ export class ServerConfig {
     return this.cfg.blobRateLimitBypassHostname
   }
 
+  get blobRedirectAdminPassword() {
+    return this.cfg.blobRedirectAdminPassword
+  }
+
+  get blobRedirectAdminOrigin() {
+    return this.cfg.blobRedirectAdminOrigin
+  }
+
   get didPlcUrl() {
     return this.cfg.didPlcUrl
   }
@@ -833,6 +868,14 @@ export class ServerConfig {
     return this.cfg.proxyConnectTimeout
   }
 
+  get proxyPoolConnections(): number | undefined {
+    return this.cfg.proxyPoolConnections
+  }
+
+  get proxyMaxOrigins(): number | undefined {
+    return this.cfg.proxyMaxOrigins
+  }
+
   get proxyHeadersTimeout(): number {
     return this.cfg.proxyHeadersTimeout ?? 30e3
   }
@@ -872,6 +915,71 @@ export class ServerConfig {
   get externalRecordsSafeDomains() {
     return this.cfg.externalRecordsSafeDomains ?? []
   }
+}
+
+function parseBlobRedirectAdminOrigin(value: string | undefined) {
+  if (value === undefined) return undefined
+  const fail = () =>
+    new Error(
+      'BSKY_BLOB_REDIRECT_ADMIN_ORIGIN must be an HTTPS origin, or an explicit loopback HTTP fixture origin, with no credentials, path, query, or fragment',
+    )
+  const input = value.trim()
+  if (
+    input.includes('\\') ||
+    !/^https?:\/\/(?:\[[0-9a-f:.]+\]|[^/?#@:\s]+)(?::[0-9]+)?\/?$/i.test(input)
+  ) {
+    throw fail()
+  }
+  let url: URL
+  try {
+    url = new URL(input)
+  } catch {
+    throw fail()
+  }
+  if (
+    !url.hostname.startsWith('[') &&
+    (url.hostname.length > 253 ||
+      !url.hostname
+        .split('.')
+        .every(
+          (label) =>
+            label.length <= 63 &&
+            /^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/i.test(label),
+        ))
+  ) {
+    throw fail()
+  }
+  const fixtureOrigin =
+    url.protocol === 'http:' &&
+    ['localhost', '127.0.0.1', '[::1]'].includes(url.hostname)
+  if (
+    url.port === '0' ||
+    url.hostname.startsWith('.') ||
+    (url.protocol !== 'https:' && !fixtureOrigin) ||
+    url.username ||
+    url.password ||
+    url.pathname !== '/' ||
+    url.search ||
+    url.hash
+  ) {
+    throw fail()
+  }
+  return url.origin
+}
+
+function readBoundedPositiveInteger(
+  value: string | undefined,
+  name: string,
+): number | undefined {
+  if (value === undefined || value === '') return undefined
+  if (!/^[1-9][0-9]*$/.test(value)) {
+    throw new Error(`${name} must be a positive decimal integer`)
+  }
+  const parsed = Number(value)
+  if (!Number.isSafeInteger(parsed)) {
+    throw new Error(`${name} exceeds the supported integer range`)
+  }
+  return parsed
 }
 
 function envList(str: string | undefined): string[] {
