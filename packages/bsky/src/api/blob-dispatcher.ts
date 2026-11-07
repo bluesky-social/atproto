@@ -43,6 +43,9 @@ export function createBlobDispatcher(cfg: ServerConfig): Dispatcher {
     interceptors.redirect({
       maxRedirections: 10,
       throwOnMaxRedirect: true,
+      // Credentials are intended only for the initial PDS request, including
+      // when object storage is mounted under the same origin.
+      stripHeadersOnRedirect: ['authorization', 'x-ratelimit-bypass'],
     }),
     interceptors.retry({
       statusCodes: [...RETRYABLE_HTTP_STATUS_CODES].filter(
