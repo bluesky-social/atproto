@@ -10,6 +10,11 @@ export function createBlobDispatcher(cfg: ServerConfig): Dispatcher {
     headersTimeout: cfg.proxyHeadersTimeout,
     maxResponseSize: cfg.proxyMaxResponseSize,
     bodyTimeout: cfg.proxyBodyTimeout,
+    // These optional values preserve the library's unbounded defaults unless an
+    // operator explicitly configures a cap. `connections` is an Agent option that
+    // is forwarded to the per-origin Pool, `maxOrigins` is enforced by the Agent.
+    connections: cfg.proxyPoolConnections,
+    maxOrigins: cfg.proxyMaxOrigins,
     factory: cfg.disableSsrfProtection
       ? undefined
       : (origin, opts) => {
@@ -21,7 +26,13 @@ export function createBlobDispatcher(cfg: ServerConfig): Dispatcher {
           if (isUnicastIp(hostname) === false) {
             throw new Error('Hostname resolved to non-unicast address')
           }
-          return new Pool(origin, opts)
+          // `opts` already carries `connections` and `maxOrigins` from the Agent.
+          // Pool has no `maxOrigins` option (it is Agent-level only), so pass it
+          // through untouched rather than declaring it on Pool explicitly.
+          return new Pool(origin, {
+            ...opts,
+            connections: cfg.proxyPoolConnections,
+          })
         },
     connect: {
       lookup: cfg.disableSsrfProtection ? undefined : unicastLookup,
