@@ -4,9 +4,14 @@ import { byteIterableToStream } from '@atproto/common'
 import type { LexiconDoc } from '@atproto/lexicon'
 import { XrpcClient } from '@atproto/xrpc'
 import * as xrpcServer from '../src/index.js'
-import { closeServer, createServer } from './_util.js'
+import {
+  buildAddLexicons,
+  buildMethodLexicons,
+  closeServer,
+  createServer,
+} from './_util.js'
 
-const LEXICONS: LexiconDoc[] = [
+const LEXICONS = [
   {
     lexicon: 1,
     id: 'io.example.readableStream',
@@ -25,7 +30,7 @@ const LEXICONS: LexiconDoc[] = [
       },
     },
   },
-]
+] as const satisfies LexiconDoc[]
 
 describe('Responses', () => {
   let s: http.Server
@@ -70,3 +75,37 @@ describe('Responses', () => {
     await expect(attempt).rejects.toThrow()
   })
 })
+
+describe.each([buildMethodLexicons, buildAddLexicons])(
+  '%p redirects',
+  (buildServer) => {
+    it.each([301, 302, 303, 307, 308] as const)(
+      'returns a %i redirect without validating a response body',
+      async (status) => {
+        const location =
+          'https://objects.example.com/blob?signature=abc&expires=60'
+        const server = await buildServer(
+          LEXICONS,
+          {
+            'io.example.readableStream': () => ({
+              status,
+              location,
+              headers: { 'cache-control': 'no-store' },
+            }),
+          },
+          { validateResponse: true },
+        )
+        await using s = await createServer(server)
+        const { port } = s.address() as AddressInfo
+        const res = await fetch(
+          `http://localhost:${port}/xrpc/io.example.readableStream`,
+          { redirect: 'manual' },
+        )
+        expect(res.status).toBe(status)
+        expect(res.headers.get('location')).toBe(location)
+        expect(res.headers.get('cache-control')).toBe('no-store')
+        expect(await res.text()).toBe('')
+      },
+    )
+  },
+)

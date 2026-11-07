@@ -3,6 +3,7 @@ import { BlobNotFoundError } from '@atproto/repo'
 import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
 import { AuthScope } from '../../../../auth-scope.js'
 import { isUserOrAdmin } from '../../../../auth-verifier.js'
+import { isInternalBlobRedirectUrl } from '../../../../config/config.js'
 import type { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
 import { assertRepoAvailability } from './util.js'
@@ -20,8 +21,21 @@ export default function (server: Server, ctx: AppContext) {
       await assertRepoAvailability(ctx, did, isUserOrAdmin(auth, did))
 
       const cid = parseCid(params.cid)
+      const redirectAllowed =
+        ctx.cfg.blobstore.provider === 's3' &&
+        ctx.cfg.blobstore.internalRedirects &&
+        auth.credentials?.type === 'admin_token'
       const found = await ctx.actorStore.read(params.did, async (store) => {
         try {
+          const url = redirectAllowed
+            ? await store.repo.blob.getDownloadUrl(cid)
+            : undefined
+          if (url) {
+            if (!isInternalBlobRedirectUrl(new URL(url))) {
+              throw new Error('Insecure internal blob redirect URL')
+            }
+            return { url }
+          }
           return await store.repo.blob.getBlob(cid)
         } catch (err) {
           if (err instanceof BlobNotFoundError) {
@@ -33,6 +47,13 @@ export default function (server: Server, ctx: AppContext) {
       })
       if (!found) {
         throw new InvalidRequestError('Blob not found')
+      }
+      if ('url' in found) {
+        return {
+          status: 307,
+          location: found.url,
+          headers: { 'cache-control': 'no-store' },
+        }
       }
       res.setHeader('content-length', found.size)
 

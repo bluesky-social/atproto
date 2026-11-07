@@ -14,6 +14,15 @@ export type { BrandingConfig }
 // off-config but still from env:
 // logging: LOG_LEVEL, LOG_SYSTEMS, LOG_ENABLED, LOG_DESTINATION
 
+/** Allows HTTPS, with a narrow HTTP exception for local test object stores. */
+export function isInternalBlobRedirectUrl(url: URL): boolean {
+  return (
+    url.protocol === 'https:' ||
+    (url.protocol === 'http:' &&
+      ['localhost', '127.0.0.1', '[::1]'].includes(url.hostname))
+  )
+}
+
 export const envToCfg = (env: ServerEnvironment): ServerConfig => {
   const port = env.port ?? 2583
   const hostname = env.hostname ?? 'localhost'
@@ -74,6 +83,17 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
       region: env.blobstoreS3Region,
       endpoint: env.blobstoreS3Endpoint,
       forcePathStyle: env.blobstoreS3ForcePathStyle,
+      internalRedirects: env.blobstoreS3InternalRedirects ?? false,
+    }
+    if (blobstoreCfg.internalRedirects) {
+      const endpoint =
+        blobstoreCfg.endpoint ?? 'https://s3.us-east-1.amazonaws.com'
+      const parsed = new URL(endpoint)
+      if (!isInternalBlobRedirectUrl(parsed)) {
+        throw new Error(
+          'PDS_BLOBSTORE_S3_INTERNAL_REDIRECTS requires HTTPS except on explicit loopback fixtures',
+        )
+      }
     }
     if (env.blobstoreS3AccessKeyId || env.blobstoreS3SecretAccessKey) {
       if (!env.blobstoreS3AccessKeyId || !env.blobstoreS3SecretAccessKey) {
@@ -424,6 +444,7 @@ export type S3BlobstoreConfig = {
   region?: string
   endpoint?: string
   forcePathStyle?: boolean
+  internalRedirects: boolean
   uploadTimeoutMs?: number
   requestTimeoutMs?: number
   credentials?: {

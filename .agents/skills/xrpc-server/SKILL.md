@@ -146,14 +146,19 @@ return {
 
 Other shapes the server understands:
 
-| Return                           | Effect                                                                   |
-| -------------------------------- | ------------------------------------------------------------------------ |
-| nothing (`undefined`)            | 200 with an empty body — correct for lexicons with no `output`           |
-| `{ encoding, body: Readable }`   | streamed binary response                                                 |
-| `{ encoding, buffer, headers? }` | `HandlerPipeThroughBuffer`                                               |
-| `{ encoding, stream, headers? }` | `HandlerPipeThroughStream` — what the PDS `pipethrough()` helper returns |
+| Return                           | Effect                                                                       |
+| -------------------------------- | ---------------------------------------------------------------------------- |
+| nothing (`undefined`)            | 200 with an empty body — correct for lexicons with no `output`               |
+| `{ encoding, body: Readable }`   | streamed binary response                                                     |
+| `{ encoding, buffer, headers? }` | `HandlerPipeThroughBuffer`                                                   |
+| `{ encoding, stream, headers? }` | `HandlerPipeThroughStream` — what the PDS `pipethrough()` helper returns     |
+| `{ status, location, headers? }` | `HandlerRedirect` — HTTP 301/302/303/307/308, skips response body validation |
 
-Binary example, from `packages/pds/src/api/com/atproto/sync/getBlob.ts`:
+For expiring download URLs, return a 307 with `cache-control: no-store`.
+Set attachment disposition on the destination response; redirect headers do
+not carry over to it.
+
+Binary response example:
 
 ```ts
 res.setHeader('content-security-policy', `default-src 'none'; sandbox`)
