@@ -9,17 +9,22 @@ If you are interested in self-hosting a PDS, you probably want this repository i
 
 ## Blob downloads
 
-With S3 blob storage, `com.atproto.sync.getBlob` responds with a non-cacheable
-307 redirect to a presigned download URL valid for one minute. Disk blob
-storage streams the response directly. Downloads retain their MIME type and
-use `Content-Disposition: attachment`.
+`com.atproto.sync.getBlob` streams blobs directly by default. For clients
+using the existing admin-token authentication, S3 storage can instead be
+configured with `PDS_BLOBSTORE_S3_INTERNAL_REDIRECTS=true` to return a
+non-cacheable 307 to a presigned download URL valid for one minute. This is
+intended for trusted internal source clients, not anonymous or ordinary-user
+requests; those requests retain the streamed response's CSP, `nosniff`, and
+attachment headers. Disk storage always streams the response.
 
-Presigned URLs use the configured S3 region, endpoint, and path style. For
-Cloudflare R2, set `PDS_BLOBSTORE_S3_REGION=auto` and
+Presigned URLs use the configured S3 region, endpoint, and path style and
+carry the mime type and `Content-Disposition: attachment`. Configuration
+requires HTTPS, with an HTTP exception only for loopback test fixtures. The
+issued URL receives the same scheme check. For Cloudflare R2, set
+`PDS_BLOBSTORE_S3_REGION=auto` and
 `PDS_BLOBSTORE_S3_ENDPOINT=https://<account-id>.r2.cloudflarestorage.com`,
 along with the bucket and access credentials. The endpoint must be reachable
-by clients. Browser applications fetching redirected blobs also need the
-bucket's CORS rules to allow their origins and GET requests.
+by the internal source client.
 
 Account and blob availability are checked before issuing each redirect.
 Already-issued URLs may remain usable until they expire, unless the object

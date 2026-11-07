@@ -138,7 +138,22 @@ describe('file uploads', () => {
   })
 
   describe('S3 downloads', () => {
-    it('redirects to a presigned URL and clients can follow it', async () => {
+    let originalBlobstoreConfig: AppContext['cfg']['blobstore']
+    beforeEach(() => {
+      originalBlobstoreConfig = ctx.cfg.blobstore
+      // These context fields select a mocked local S3 fixture; no real
+      // bucket, credentials, endpoint or production setting is used.
+      ctx.cfg.blobstore = {
+        provider: 's3',
+        bucket: 'blobs',
+        internalRedirects: true,
+      }
+    })
+    afterEach(() => {
+      ctx.cfg.blobstore = originalBlobstoreConfig
+    })
+
+    it('redirects authorized admin source clients to a presigned URL', async () => {
       const requests: string[] = []
       await using s3 = createServer((req, res) => {
         requests.push(req.method as string)
@@ -181,7 +196,10 @@ describe('file uploads', () => {
       )
       url.searchParams.set('did', alice)
       url.searchParams.set('cid', smallBlob.ref.toString())
-      const redirect = await fetch(url, { redirect: 'manual' })
+      const redirect = await fetch(url, {
+        redirect: 'manual',
+        headers: network.pds.adminAuthHeaders(),
+      })
       expect(redirect.status).toBe(307)
       expect(redirect.headers.get('cache-control')).toBe('no-store')
       expect(redirect.headers.get('content-length')).not.toBe(
@@ -196,6 +214,7 @@ describe('file uploads', () => {
       const { body, headers } = await client.getBlob(
         alice,
         smallBlob.ref.toString(),
+        { headers: network.pds.adminAuthHeaders() },
       )
       expect(uint8arrays.equals(smallFile, body)).toBeTruthy()
       expect(headers.get('content-type')).toBe('image/jpeg')
@@ -203,6 +222,91 @@ describe('file uploads', () => {
         `attachment; filename="${smallBlob.ref}"`,
       )
       expect(requests).toEqual(['HEAD', 'HEAD', 'GET'])
+    })
+
+    it('keeps anonymous blob downloads streamed with the existing security headers', async () => {
+      const getDownloadUrl = jest.fn<S3BlobStore['getDownloadUrl']>()
+      using _blobstore = jest
+        .spyOn(ctx.actorStore.resources, 'blobstore')
+        .mockImplementation((did) =>
+          Object.assign(ctx.blobstore(did), { getDownloadUrl }),
+        )
+      const url = new URL(
+        `/xrpc/${com.atproto.sync.getBlob.$lxm}`,
+        network.pds.url,
+      )
+      url.searchParams.set('did', alice)
+      url.searchParams.set('cid', smallBlob.ref.toString())
+      const response = await fetch(url, { redirect: 'manual' })
+      expect(response.status).toBe(200)
+      expect(response.headers.get('location')).toBeNull()
+      expect(response.headers.get('x-content-type-options')).toBe('nosniff')
+      expect(response.headers.get('content-security-policy')).toBe(
+        "default-src 'none'; sandbox",
+      )
+      expect(response.headers.get('content-disposition')).toBe(
+        `attachment; filename="${smallBlob.ref}"`,
+      )
+      expect(new Uint8Array(await response.arrayBuffer())).toEqual(smallFile)
+      expect(getDownloadUrl).not.toHaveBeenCalled()
+    })
+
+    it('keeps the streaming fallback when the internal redirect flag is disabled', async () => {
+      if (ctx.cfg.blobstore.provider !== 's3') {
+        throw new Error('fixture should configure S3')
+      }
+      ctx.cfg.blobstore.internalRedirects = false
+      const getDownloadUrl = jest.fn<S3BlobStore['getDownloadUrl']>()
+      using _blobstore = jest
+        .spyOn(ctx.actorStore.resources, 'blobstore')
+        .mockImplementation((did) =>
+          Object.assign(ctx.blobstore(did), { getDownloadUrl }),
+        )
+      const { body, headers } = await client.getBlob(
+        alice,
+        smallBlob.ref.toString(),
+        { headers: network.pds.adminAuthHeaders() },
+      )
+      expect(new Uint8Array(body)).toEqual(smallFile)
+      expect(headers.get('x-content-type-options')).toBe('nosniff')
+      expect(getDownloadUrl).not.toHaveBeenCalled()
+    })
+
+    it('keeps ordinary user downloads streamed', async () => {
+      const getDownloadUrl = jest.fn<S3BlobStore['getDownloadUrl']>()
+      using _blobstore = jest
+        .spyOn(ctx.actorStore.resources, 'blobstore')
+        .mockImplementation((did) =>
+          Object.assign(ctx.blobstore(did), { getDownloadUrl }),
+        )
+      const { body, headers } = await client.getBlob(
+        alice,
+        smallBlob.ref.toString(),
+        { headers: sc.getHeaders(alice) },
+      )
+      expect(new Uint8Array(body)).toEqual(smallFile)
+      expect(headers.get('x-content-type-options')).toBe('nosniff')
+      expect(headers.get('content-disposition')).toBe(
+        `attachment; filename="${smallBlob.ref}"`,
+      )
+      expect(getDownloadUrl).not.toHaveBeenCalled()
+    })
+
+    it('rejects an insecure URL returned by the blobstore', async () => {
+      const getDownloadUrl = jest
+        .fn<S3BlobStore['getDownloadUrl']>()
+        .mockResolvedValue('http://storage.invalid/synthetic?signature=fixture')
+      using _blobstore = jest
+        .spyOn(ctx.actorStore.resources, 'blobstore')
+        .mockImplementation((did) =>
+          Object.assign(ctx.blobstore(did), { getDownloadUrl }),
+        )
+      await expect(
+        client.getBlob(alice, smallBlob.ref.toString(), {
+          headers: network.pds.adminAuthHeaders(),
+        }),
+      ).rejects.toThrow('Internal Server Error')
+      expect(getDownloadUrl).toHaveBeenCalled()
     })
 
     it('checks blob metadata before asking S3 for a URL', async () => {
@@ -213,7 +317,9 @@ describe('file uploads', () => {
           Object.assign(ctx.blobstore(did), { getDownloadUrl }),
         )
       await expect(
-        client.getBlob(bob, smallBlob.ref.toString()),
+        client.getBlob(bob, smallBlob.ref.toString(), {
+          headers: network.pds.adminAuthHeaders(),
+        }),
       ).rejects.toThrow('Blob not found')
       expect(getDownloadUrl).not.toHaveBeenCalled()
     })
@@ -232,7 +338,9 @@ describe('file uploads', () => {
         .execute()
       try {
         await expect(
-          client.getBlob(alice, smallBlob.ref.toString()),
+          client.getBlob(alice, smallBlob.ref.toString(), {
+            headers: network.pds.adminAuthHeaders(),
+          }),
         ).rejects.toThrow('Blob not found')
         expect(getDownloadUrl).not.toHaveBeenCalled()
       } finally {
