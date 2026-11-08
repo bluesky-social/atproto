@@ -1,3 +1,4 @@
+import * as plcLib from '@did-plc/lib'
 import { type Keypair, Secp256k1Keypair, randomStr } from '@atproto/crypto'
 import { TestPds, TestPlc } from '@atproto/dev-env'
 import { com } from '../src/lexicons/index.js'
@@ -21,6 +22,7 @@ describe('entryway relay attribution', () => {
   let plainPds: TestPds
   let jwtSigningKey: Secp256k1Keypair
   let otherKey: Secp256k1Keypair
+  let plcRotationKey: Secp256k1Keypair
 
   const signJwt = async (
     header: Record<string, unknown>,
@@ -113,10 +115,29 @@ describe('entryway relay attribution', () => {
       { method: 'POST', body: '{}' },
     )
 
+  // Reports RateLimit-Limit rather than -Remaining: createAccount has a limit
+  // of its own, which the header shows when it is the tighter one.
+  const createAccount = async (
+    target: TestPds,
+    headers: Headers,
+    body: Record<string, unknown>,
+  ) => {
+    const url = new URL(
+      `/xrpc/${com.atproto.server.createAccount.$lxm}`,
+      `http://127.0.0.1:${target.port}`,
+    )
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { ...headers, 'content-type': 'application/json' },
+      body: JSON.stringify(body),
+    })
+    return { status: res.status, limit: res.headers.get('ratelimit-limit') }
+  }
+
   beforeAll(async () => {
     jwtSigningKey = await Secp256k1Keypair.create({ exportable: true })
     otherKey = await Secp256k1Keypair.create()
-    const plcRotationKey = await Secp256k1Keypair.create()
+    plcRotationKey = await Secp256k1Keypair.create()
 
     plc = await TestPlc.create({})
 
@@ -419,6 +440,47 @@ describe('entryway relay attribution', () => {
         status: 200,
         remaining: null,
       })
+    })
+
+    it('bypass the rate limit of createAccount.', async () => {
+      const {
+        data: { signingKey },
+      } = await pds.getAgent().com.atproto.server.reserveSigningKey(
+        {},
+        {
+          headers: await serviceHeaders(
+            pds,
+            com.atproto.server.reserveSigningKey.$lxm,
+          ),
+          encoding: 'application/json',
+        },
+      )
+      const handle = 'rate-limited.test'
+      const plcCreate = await plcLib.createOp({
+        signingKey,
+        rotationKeys: [plcRotationKey.did()],
+        handle,
+        pds: pds.ctx.cfg.service.publicUrl,
+        signer: plcRotationKey,
+      })
+      const headers = await serviceHeaders(
+        pds,
+        com.atproto.server.createAccount.$lxm,
+      )
+      await expect(
+        createAccount(pds, headers, {
+          did: plcCreate.did,
+          handle,
+          plcOp: plcCreate.op,
+        }),
+      ).resolves.toEqual({ status: 200, limit: null })
+    })
+
+    it('leave unauthenticated createAccount to its own rate limit.', async () => {
+      // fails validation, after the rate limits apply
+      await expect(
+        createAccount(pds, {}, { handle: 'nobody.test' }),
+      ).resolves.toEqual({ status: 400, limit: '100' })
     })
 
     it('bypass rate limits on routes that do not authenticate.', async () => {

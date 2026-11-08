@@ -1,7 +1,7 @@
 import * as plcLib from '@did-plc/lib'
 import { type Keypair, Secp256k1Keypair, randomStr } from '@atproto/crypto'
 import { TestPds, TestPlc } from '@atproto/dev-env'
-import type { DidString } from '@atproto/syntax'
+import type { DidString, HandleString } from '@atproto/syntax'
 import { createServiceAuthHeaders } from '@atproto/xrpc-server'
 import { com } from '../src/lexicons/index.js'
 
@@ -114,9 +114,11 @@ describe('entryway service auth', () => {
     return headers
   }
 
+  // Authenticates as the entryway unless given other headers.
   const createAccount = async (
     target: TestPds,
     handle: string,
+    headers?: Headers,
   ): Promise<DidString> => {
     const agent = target.getAgent()
     const {
@@ -138,11 +140,18 @@ describe('entryway service auth', () => {
       pds: target.ctx.cfg.service.publicUrl,
       signer: plcRotationKey,
     })
-    await agent.com.atproto.server.createAccount({
-      did: plcCreate.did,
-      handle,
-      plcOp: plcCreate.op,
-    })
+    await agent.com.atproto.server.createAccount(
+      { did: plcCreate.did, handle, plcOp: plcCreate.op },
+      {
+        headers:
+          headers ??
+          (await entrywayHeaders(
+            target,
+            com.atproto.server.createAccount.$lxm,
+          )),
+        encoding: 'application/json',
+      },
+    )
     return plcCreate.did as DidString
   }
 
@@ -232,6 +241,17 @@ describe('entryway service auth', () => {
       lxm: com.atproto.server.reserveSigningKey.$lxm,
       call: (target, headers) => reserveSigningKey(target, headers),
     },
+    {
+      lxm: com.atproto.server.createAccount.$lxm,
+      // without a did and plcOp, fails validation once authenticated
+      call: (target, headers) =>
+        target
+          .getAgent()
+          .com.atproto.server.createAccount(
+            { handle: 'nobody.test' },
+            { headers, encoding: 'application/json' },
+          ),
+    },
   ]
 
   beforeAll(async () => {
@@ -319,6 +339,18 @@ describe('entryway service auth', () => {
         }),
       )
       expect(res.data.signingKey).toMatch(/^did:key:/)
+    })
+
+    it('accepts an entryway service JWT on createAccount.', async () => {
+      const did = await createAccount(pds, 'create-jwt.test')
+      const account = await pds.ctx.accountManager.getAccount(did)
+      expect(account?.handle).toBe('create-jwt.test')
+    })
+
+    it('accepts an unauthenticated createAccount.', async () => {
+      const did = await createAccount(pds, 'create-unauthed.test', {})
+      const account = await pds.ctx.accountManager.getAccount(did)
+      expect(account?.handle).toBe('create-unauthed.test')
     })
 
     it('accepts an entryway service JWT on deleteAccount.', async () => {
@@ -502,6 +534,36 @@ describe('entryway service auth', () => {
         )
       })
     })
+
+    it.each([
+      {
+        name: 'a wrong aud',
+        handle: 'create-wrong-aud.test' as HandleString,
+        payload: { aud: 'did:example:another-pds' },
+      },
+      {
+        name: "another method's lxm",
+        handle: 'create-wrong-lxm.test' as HandleString,
+        payload: { lxm: com.atproto.server.reserveSigningKey.$lxm },
+      },
+    ])(
+      'refuses an otherwise valid createAccount with $name.',
+      async ({ handle, payload }) => {
+        for (const target of [pds, strictPds]) {
+          const headers = await entrywayHeaders(
+            target,
+            com.atproto.server.createAccount.$lxm,
+            { payload },
+          )
+          await expect(
+            createAccount(target, handle, headers),
+          ).rejects.toMatchObject({ status: 401 })
+          await expect(
+            target.ctx.accountManager.getAccount(handle),
+          ).resolves.toBeNull()
+        }
+      },
+    )
   })
 
   describe('access tokens', () => {
@@ -539,6 +601,35 @@ describe('entryway service auth', () => {
       await expect(reserveSigningKey(strictPds, {})).rejects.toThrow(
         'Entryway service auth required',
       )
+    })
+
+    // until the entryway signs createAccount
+    it('still accepts an unauthenticated createAccount.', async () => {
+      const did = await createAccount(strictPds, 'strict-unauthed.test', {})
+      const account = await strictPds.ctx.accountManager.getAccount(did)
+      expect(account?.handle).toBe('strict-unauthed.test')
+    })
+
+    it('refuses the admin password on createAccount.', async () => {
+      await expect(
+        createAccount(
+          strictPds,
+          'strict-basic.test',
+          strictPds.adminAuthHeaders(),
+        ),
+      ).rejects.toMatchObject({
+        status: 401,
+        message: 'Invalid authorization header',
+      })
+      await expect(
+        strictPds.ctx.accountManager.getAccount('strict-basic.test'),
+      ).resolves.toBeNull()
+    })
+
+    it('accepts an entryway service JWT on createAccount.', async () => {
+      const did = await createAccount(strictPds, 'strict-create.test')
+      const account = await strictPds.ctx.accountManager.getAccount(did)
+      expect(account?.handle).toBe('strict-create.test')
     })
 
     it('accepts an entryway service JWT on reserveSigningKey.', async () => {
@@ -666,6 +757,48 @@ describe('entryway service auth', () => {
         ),
       )
       expect(res.data.signingKey).toMatch(/^did:key:/)
+    })
+
+    it('creates an account without authentication.', async () => {
+      const res = await plainPds.getAgent().com.atproto.server.createAccount({
+        handle: 'plain.test',
+        email: 'plain@test.com',
+        password: 'hunter22',
+      })
+      expect(res.data.handle).toBe('plain.test')
+    })
+
+    it('creates an account for the DID of user service auth.', async () => {
+      const key = await Secp256k1Keypair.create()
+      const op = await plcLib.signOperation(
+        {
+          type: 'plc_operation',
+          alsoKnownAs: [],
+          verificationMethods: { atproto: key.did() },
+          rotationKeys: [key.did()],
+          services: {},
+          prev: null,
+        },
+        key,
+      )
+      const did = await plcLib.didForCreateOp(op)
+      await plc.getClient().sendOperation(did, op)
+      const { headers } = await createServiceAuthHeaders({
+        iss: did,
+        aud: plainPds.ctx.cfg.service.did,
+        lxm: com.atproto.server.createAccount.$lxm,
+        keypair: key,
+      })
+      const res = await plainPds.getAgent().com.atproto.server.createAccount(
+        {
+          did: did as DidString,
+          handle: 'plain-migrated.test',
+          email: 'plain-migrated@test.com',
+          password: 'hunter22',
+        },
+        { headers, encoding: 'application/json' },
+      )
+      expect(res.data.did).toBe(did)
     })
 
     it('does not accept entryway service JWTs.', async () => {
