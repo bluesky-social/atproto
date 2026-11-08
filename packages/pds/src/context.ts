@@ -590,6 +590,15 @@ export class AppContext implements AsyncDisposable {
           entryway: cfg.entryway?.did,
           modService: cfg.modService?.did,
         },
+        entrywayServiceAuth: cfg.entryway
+          ? {
+              didKey: crypto.formatDidKey(
+                crypto.SECP256K1_JWT_ALG,
+                ui8.fromString(cfg.entryway.jwtPublicKeyHex, 'hex'),
+              ),
+              required: cfg.entryway.requireServiceAuth,
+            }
+          : undefined,
       },
     )
 

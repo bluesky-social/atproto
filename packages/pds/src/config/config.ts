@@ -138,6 +138,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
       did: env.entrywayDid,
       jwtPublicKeyHex: env.entrywayJwtVerifyKeyK256PublicKeyHex,
       plcRotationKey: env.entrywayPlcRotationKey,
+      requireServiceAuth: env.entrywayRequireServiceAuth ?? false,
     }
   }
 
@@ -459,6 +460,7 @@ export type EntrywayConfig = {
   did: string
   jwtPublicKeyHex: string
   plcRotationKey: string
+  requireServiceAuth: boolean
 }
 
 export type FetchConfig = {
