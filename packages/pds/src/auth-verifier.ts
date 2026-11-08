@@ -1,6 +1,5 @@
 import { type KeyObject, createPublicKey, createSecretKey } from 'node:crypto'
 import type { IncomingMessage, ServerResponse } from 'node:http'
-import { isIP } from 'node:net'
 import { secp256k1 } from '@noble/curves/secp256k1'
 import * as jose from 'jose'
 import { getVerificationMaterial } from '@atproto/common'
@@ -49,6 +48,7 @@ import type {
 import { ACCESS_STANDARD, AuthScope, isAuthScope } from './auth-scope.js'
 import { softDeleted } from './db/index.js'
 import { appendVary } from './util/http.js'
+import { canonicalIp } from './util/ip.js'
 import type { WithRequired } from './util/types.js'
 
 export type VerifiedOptions = {
@@ -92,6 +92,30 @@ export type AuthVerifierOpts = {
 const ENTRYWAY_SERVICE_JWT_MAX_LIFETIME_SEC = 5 * 60
 const ENTRYWAY_RELAY_TOKEN_MAX_LIFETIME_SEC = 2 * 60
 const ENTRYWAY_JWT_CLOCK_TOLERANCE_SEC = 30
+
+/**
+ * Why a relay token was refused. Kept to a short code so that logging it
+ * reveals nothing of the token or of the client.
+ */
+export type EntrywayRelayTokenRejection =
+  | 'not_configured'
+  | 'malformed'
+  | 'bad_alg'
+  | 'bad_sig'
+  | 'expired'
+  | 'bad_typ'
+  | 'wrong_iss'
+  | 'wrong_aud'
+  | 'has_lxm'
+  | 'bad_iat'
+  | 'bad_lifetime'
+  | 'bad_client_ip'
+
+export class EntrywayRelayTokenError extends Error {
+  constructor(public readonly reason: EntrywayRelayTokenRejection) {
+    super(`Invalid entryway relay token: ${reason}`)
+  }
+}
 
 export type VerifyBearerJwtOptions<S extends AuthScope = AuthScope> =
   WithRequired<
@@ -729,70 +753,69 @@ export class AuthVerifier {
 
   /**
    * Verifies the relay token that the entryway attaches to the user requests
-   * it proxies, and returns the client IP address it attests to.
+   * it proxies, and returns the client IP address it attests to, in canonical
+   * form.
+   *
+   * @throws {EntrywayRelayTokenError} if the token is not valid
    */
   public async verifyEntrywayRelayToken(token: string): Promise<string> {
     const entrywayDid = this.dids.entryway
     const key = this._entrywayServiceAuth?.keyObject
     if (!entrywayDid || !key) {
-      throw new AuthRequiredError('Untrusted issuer', 'UntrustedIss')
+      throw new EntrywayRelayTokenError('not_configured')
     }
 
     // @NOTE Verified with node:crypto rather than xrpc-server's verifyJwt (as
     // service JWTs are): the entryway sends one of these with every request it
     // proxies.
-    const { payload, protectedHeader } = await jose.jwtVerify(token, key, {
-      algorithms: ['ES256K'],
-    })
+    const { payload, protectedHeader } = await jose
+      .jwtVerify(token, key, { algorithms: ['ES256K'] })
+      .catch((err) => {
+        throw new EntrywayRelayTokenError(
+          err instanceof jose.errors.JWTExpired
+            ? 'expired'
+            : err instanceof jose.errors.JWSSignatureVerificationFailed
+              ? 'bad_sig'
+              : err instanceof jose.errors.JOSEAlgNotAllowed
+                ? 'bad_alg'
+                : 'malformed',
+        )
+      })
 
     // "typ" is pinned so that access tokens ("at+jwt") are refused, and "lxm"
     // is refused so that a relay token and a service JWT can never stand in
     // for each other.
     if (protectedHeader.typ !== 'JWT') {
-      throw new AuthRequiredError(
-        `Invalid jwt type "${protectedHeader.typ}"`,
-        'BadJwtType',
-      )
+      throw new EntrywayRelayTokenError('bad_typ')
     }
     const { iss, aud, iat, exp, lxm, client_ip: clientIp } = payload
     if (iss !== entrywayDid) {
-      throw new AuthRequiredError('Untrusted issuer', 'UntrustedIss')
+      throw new EntrywayRelayTokenError('wrong_iss')
     }
     if (aud !== this.dids.pds) {
-      throw new AuthRequiredError(
-        'jwt audience does not match service did',
-        'BadJwtAudience',
-      )
+      throw new EntrywayRelayTokenError('wrong_aud')
     }
     if (lxm !== undefined) {
-      throw new AuthRequiredError(
-        'relay token must not have a lexicon method ("lxm")',
-        'BadJwtLexiconMethod',
-      )
+      throw new EntrywayRelayTokenError('has_lxm')
     }
     if (
       typeof iat !== 'number' ||
       iat > Date.now() / 1000 + ENTRYWAY_JWT_CLOCK_TOLERANCE_SEC
     ) {
-      throw new AuthRequiredError('jwt iat is missing or invalid', 'BadJwtIat')
+      throw new EntrywayRelayTokenError('bad_iat')
     }
     if (
       typeof exp !== 'number' ||
       exp - iat > ENTRYWAY_RELAY_TOKEN_MAX_LIFETIME_SEC
     ) {
-      throw new AuthRequiredError(
-        'jwt exp is missing or lifetime is too long',
-        'BadJwtLifetime',
-      )
+      throw new EntrywayRelayTokenError('bad_lifetime')
     }
-    if (typeof clientIp !== 'string' || isIP(clientIp) === 0) {
-      throw new AuthRequiredError(
-        'relay token client_ip is not an IP address',
-        'BadJwtClientIp',
-      )
+    const ip = typeof clientIp === 'string' ? canonicalIp(clientIp) : null
+    if (!ip) {
+      throw new EntrywayRelayTokenError('bad_client_ip')
     }
 
-    return clientIp
+    return ip
   }
 
   protected assertEntrywayServiceAuthNotRequired(res: ServerResponse): void {

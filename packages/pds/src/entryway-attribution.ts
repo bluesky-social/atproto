@@ -1,6 +1,6 @@
 import type { IncomingMessage } from 'node:http'
 import type express from 'express'
-import type { AuthVerifier } from './auth-verifier.js'
+import { type AuthVerifier, EntrywayRelayTokenError } from './auth-verifier.js'
 import { httpLogger } from './logger.js'
 
 const ENTRYWAY_RELAY_HEADER = 'x-entryway-relay'
@@ -36,8 +36,11 @@ export const entrywayAttribution =
           enumerable: true,
         })
       } catch (err) {
-        // Never fatal: the request stays attributed to its actual source.
-        httpLogger.warn({ err }, 'ignoring invalid entryway relay token')
+        // Never fatal: the request stays attributed to its actual source. Only
+        // the reason is logged, as the token itself carries the client's IP.
+        const reason =
+          err instanceof EntrywayRelayTokenError ? err.reason : 'error'
+        httpLogger.debug({ reason }, 'ignoring invalid entryway relay token')
       }
     }
 

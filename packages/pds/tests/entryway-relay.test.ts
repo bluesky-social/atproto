@@ -1,6 +1,7 @@
 import { type Keypair, Secp256k1Keypair, randomStr } from '@atproto/crypto'
 import { TestPds, TestPlc } from '@atproto/dev-env'
 import { com } from '../src/lexicons/index.js'
+import { canonicalIp } from '../src/util/ip.js'
 
 const ENTRYWAY_DID = 'did:example:entryway'
 const GLOBAL_LIMIT = 3000
@@ -194,6 +195,21 @@ describe('entryway relay attribution', () => {
       })
     })
 
+    it('share one bucket across spellings of an address.', async () => {
+      const spellings = [
+        ['2001:db8::a:1', '2001:DB8::A:1', '2001:db8:0:0:0:0:a:1'],
+        ['fe80::b:1', 'fe80::b:1%eth0', 'FE80:0::B:1%1'],
+        ['198.51.100.80', '::ffff:198.51.100.80', '::FFFF:c633:6450'],
+      ]
+      for (const group of spellings) {
+        for (const [i, clientIp] of group.entries()) {
+          await expect(
+            describeServer(pds, await relayHeaders(pds, clientIp)),
+          ).resolves.toEqual({ status: 200, remaining: GLOBAL_LIMIT - 1 - i })
+        }
+      }
+    })
+
     it('accept a token at the maximum lifetime.', async () => {
       const iat = Math.floor(Date.now() / 1000)
       const headers = await relayHeaders(pds, '198.51.100.3', {
@@ -214,9 +230,14 @@ describe('entryway relay attribution', () => {
       expect(second.remaining).toBe(GLOBAL_LIMIT - 2)
     })
 
-    const invalid: { name: string; token: () => Promise<string> }[] = [
+    const invalid: {
+      name: string
+      reason: string
+      token: () => Promise<string>
+    }[] = [
       {
         name: 'a wrong iss',
+        reason: 'wrong_iss',
         token: () =>
           relayToken(pds, '198.51.100.10', {
             payload: { iss: 'did:example:not-entryway' },
@@ -224,6 +245,7 @@ describe('entryway relay attribution', () => {
       },
       {
         name: 'a wrong aud',
+        reason: 'wrong_aud',
         token: () =>
           relayToken(pds, '198.51.100.11', {
             payload: { aud: bypassIpPds.ctx.cfg.service.did },
@@ -231,6 +253,7 @@ describe('entryway relay attribution', () => {
       },
       {
         name: 'an array aud',
+        reason: 'wrong_aud',
         token: () =>
           relayToken(pds, '198.51.100.12', {
             payload: { aud: [pds.ctx.cfg.service.did] },
@@ -238,6 +261,7 @@ describe('entryway relay attribution', () => {
       },
       {
         name: 'an expired token',
+        reason: 'expired',
         token: () => {
           const now = Math.floor(Date.now() / 1000)
           return relayToken(pds, '198.51.100.13', {
@@ -247,6 +271,7 @@ describe('entryway relay attribution', () => {
       },
       {
         name: 'a token living longer than 120 seconds',
+        reason: 'bad_lifetime',
         token: () => {
           const now = Math.floor(Date.now() / 1000)
           return relayToken(pds, '198.51.100.14', {
@@ -256,16 +281,19 @@ describe('entryway relay attribution', () => {
       },
       {
         name: 'a missing exp',
+        reason: 'bad_lifetime',
         token: () =>
           relayToken(pds, '198.51.100.15', { payload: { exp: undefined } }),
       },
       {
         name: 'a missing iat',
+        reason: 'bad_iat',
         token: () =>
           relayToken(pds, '198.51.100.16', { payload: { iat: undefined } }),
       },
       {
         name: 'a token issued in the future',
+        reason: 'bad_iat',
         token: () => {
           const now = Math.floor(Date.now() / 1000)
           return relayToken(pds, '198.51.100.17', {
@@ -275,6 +303,7 @@ describe('entryway relay attribution', () => {
       },
       {
         name: 'an lxm',
+        reason: 'has_lxm',
         token: () =>
           relayToken(pds, '198.51.100.18', {
             payload: { lxm: com.atproto.server.describeServer.$lxm },
@@ -282,33 +311,55 @@ describe('entryway relay attribution', () => {
       },
       {
         name: 'typ at+jwt',
+        reason: 'bad_typ',
         token: () =>
           relayToken(pds, '198.51.100.19', { header: { typ: 'at+jwt' } }),
       },
       {
         name: 'a missing typ',
+        reason: 'bad_typ',
         token: () =>
           relayToken(pds, '198.51.100.20', { header: { typ: undefined } }),
       },
       {
         name: 'alg ES256',
+        reason: 'bad_alg',
         token: () =>
           relayToken(pds, '198.51.100.21', { header: { alg: 'ES256' } }),
       },
       {
         name: 'a bad signature',
+        reason: 'bad_sig',
         token: () => relayToken(pds, '198.51.100.22', { keypair: otherKey }),
       },
       {
         name: 'a client_ip that is not an IP address',
+        reason: 'bad_client_ip',
         token: () => relayToken(pds, 'not-an-ip'),
       },
       {
         name: 'a malformed IPv4 client_ip',
+        reason: 'bad_client_ip',
         token: () => relayToken(pds, '198.51.100.256'),
       },
       {
+        name: 'an IPv4 client_ip with a zone ID',
+        reason: 'bad_client_ip',
+        token: () => relayToken(pds, '198.51.100.24%eth0'),
+      },
+      {
+        name: 'a client_ip with a port',
+        reason: 'bad_client_ip',
+        token: () => relayToken(pds, '[2001:db8::24]:443'),
+      },
+      {
+        name: 'a client_ip with surrounding space',
+        reason: 'bad_client_ip',
+        token: () => relayToken(pds, ' 198.51.100.25'),
+      },
+      {
         name: 'a missing client_ip',
+        reason: 'bad_client_ip',
         token: () =>
           relayToken(pds, '198.51.100.23', {
             payload: { client_ip: undefined },
@@ -316,6 +367,7 @@ describe('entryway relay attribution', () => {
       },
       {
         name: 'a service JWT',
+        reason: 'has_lxm',
         token: async () =>
           (
             await serviceHeaders(pds, com.atproto.server.describeServer.$lxm)
@@ -323,6 +375,7 @@ describe('entryway relay attribution', () => {
       },
       {
         name: 'a malformed token',
+        reason: 'malformed',
         token: async () => 'not.a.jwt',
       },
     ]
@@ -333,6 +386,12 @@ describe('entryway relay attribution', () => {
         'x-entryway-relay': await token(),
       })
       expect(res).toEqual({ status: 200, remaining: before.remaining! - 1 })
+    })
+
+    it.each(invalid)('refuse $name as $reason.', async ({ token, reason }) => {
+      await expect(
+        pds.ctx.authVerifier.verifyEntrywayRelayToken(await token()),
+      ).rejects.toMatchObject({ reason })
     })
 
     it('leave authorization to the route.', async () => {
@@ -460,5 +519,40 @@ describe('entryway relay attribution', () => {
       expect(res.status).toBe(200)
       expect(res.remaining).toEqual(expect.any(Number))
     })
+  })
+})
+
+describe('canonicalIp', () => {
+  it.each([
+    ['198.51.100.1', '198.51.100.1'],
+    ['2001:db8::1', '2001:db8::1'],
+    ['2001:DB8::1', '2001:db8::1'],
+    ['2001:0db8:0000:0000:0000:0000:0000:0001', '2001:db8::1'],
+    ['2001:db8:0:0:1:0:0:1', '2001:db8::1:0:0:1'],
+    ['2001:db8:0:1:1:1:1:1', '2001:db8:0:1:1:1:1:1'],
+    ['fe80::1%eth0', 'fe80::1'],
+    ['::ffff:198.51.100.1', '198.51.100.1'],
+    ['::ffff:c633:6401', '198.51.100.1'],
+    ['0:0:0:0:0:ffff:0:0', '0.0.0.0'],
+    ['::ffff:0:c633:6401', '::ffff:0:c633:6401'],
+    ['::198.51.100.1', '::c633:6401'],
+    ['::1', '::1'],
+    ['::', '::'],
+  ])('canonicalizes %s as %s.', (ip, expected) => {
+    expect(canonicalIp(ip)).toBe(expected)
+  })
+
+  it.each([
+    '',
+    'not-an-ip',
+    '198.51.100.256',
+    '198.051.100.1',
+    '198.51.100.1%eth0',
+    'fe80::1%',
+    '[2001:db8::1]',
+    '2001:db8::1/64',
+    ' 198.51.100.1',
+  ])('refuses %j.', (ip) => {
+    expect(canonicalIp(ip)).toBeNull()
   })
 })
