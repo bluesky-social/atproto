@@ -55,5 +55,11 @@ function accountSerializer(account: { did: string }) {
 function reqSerializer(req: IncomingMessage) {
   const serialized = stdSerializers.req(req)
   const headers = obfuscateHeaders(serialized.headers)
+  // Unlike obfuscateJwt(), which keeps a JWT's payload, hide the entryway's
+  // relay token entirely: its payload is the end user's IP address, and the
+  // token can be replayed until it expires.
+  if (headers['x-entryway-relay'] !== undefined) {
+    headers['x-entryway-relay'] = '***'
+  }
   return { ...serialized, headers }
 }

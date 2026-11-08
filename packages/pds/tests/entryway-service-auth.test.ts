@@ -101,11 +101,14 @@ describe('entryway service auth', () => {
     return { authorization: `Bearer ${token}` }
   }
 
-  const modServiceHeaders = async (target: TestPds): Promise<Headers> => {
+  const modServiceHeaders = async (
+    target: TestPds,
+    lxm: string = com.atproto.admin.updateSubjectStatus.$lxm,
+  ): Promise<Headers> => {
     const { headers } = await createServiceAuthHeaders({
       iss: modServiceDid,
       aud: target.ctx.cfg.service.did,
-      lxm: com.atproto.admin.updateSubjectStatus.$lxm,
+      lxm,
       keypair: modServiceKey,
     })
     return headers
@@ -181,6 +184,9 @@ describe('entryway service auth', () => {
       { headers, encoding: 'application/json' },
     )
 
+  const getSubjectStatus = (target: TestPds, did: string, headers: Headers) =>
+    target.getAgent().com.atproto.admin.getSubjectStatus({ did }, { headers })
+
   const reserveSigningKey = (target: TestPds, headers: Headers) =>
     target
       .getAgent()
@@ -217,6 +223,10 @@ describe('entryway service auth', () => {
     {
       lxm: com.atproto.admin.updateSubjectStatus.$lxm,
       call: (target, headers) => updateTakedown(target, carol, false, headers),
+    },
+    {
+      lxm: com.atproto.admin.getSubjectStatus.$lxm,
+      call: (target, headers) => getSubjectStatus(target, carol, headers),
     },
     {
       lxm: com.atproto.server.reserveSigningKey.$lxm,
@@ -372,6 +382,29 @@ describe('entryway service auth', () => {
       const did = await createAccount(pds, 'status-mod.test')
       await updateTakedown(pds, did, true, await modServiceHeaders(pds))
       await expect(takedownRef(pds, did)).resolves.toBe('test-takedown')
+    })
+
+    it('accepts an entryway service JWT on getSubjectStatus.', async () => {
+      const res = await getSubjectStatus(
+        pds,
+        carol,
+        await entrywayHeaders(pds, com.atproto.admin.getSubjectStatus.$lxm),
+      )
+      expect(res.data.subject).toMatchObject({ did: carol })
+    })
+
+    it('accepts the admin password on getSubjectStatus.', async () => {
+      const res = await getSubjectStatus(pds, carol, pds.adminAuthHeaders())
+      expect(res.data.subject).toMatchObject({ did: carol })
+    })
+
+    it('accepts the mod service on getSubjectStatus.', async () => {
+      const res = await getSubjectStatus(
+        pds,
+        carol,
+        await modServiceHeaders(pds, com.atproto.admin.getSubjectStatus.$lxm),
+      )
+      expect(res.data.subject).toMatchObject({ did: carol })
     })
   })
 
@@ -601,6 +634,24 @@ describe('entryway service auth', () => {
         ),
       )
       await expect(takedownRef(strictPds, dave)).resolves.toBeNull()
+    })
+
+    it('refuses the admin password on getSubjectStatus.', async () => {
+      await expect(
+        getSubjectStatus(strictPds, dave, strictPds.adminAuthHeaders()),
+      ).rejects.toThrow('Entryway service auth required')
+    })
+
+    it('accepts an entryway service JWT on getSubjectStatus.', async () => {
+      const res = await getSubjectStatus(
+        strictPds,
+        dave,
+        await entrywayHeaders(
+          strictPds,
+          com.atproto.admin.getSubjectStatus.$lxm,
+        ),
+      )
+      expect(res.data.subject).toMatchObject({ did: dave })
     })
   })
 

@@ -29,6 +29,7 @@ import {
   readEnv,
 } from './config/index.js'
 import { AppContext, type AppContextOptions } from './context.js'
+import { entrywayAttribution } from './entryway-attribution.js'
 import * as error from './error.js'
 import type { app } from './lexicons.js'
 import { loggerMiddleware, pdsLogger } from './logger.js'
@@ -203,6 +204,9 @@ export class PDS implements AsyncDisposable {
       ...getTrustedIps(cfg),
     ])
     app.use(loggerMiddleware)
+    if (cfg.entryway) {
+      app.use(entrywayAttribution(ctx.authVerifier))
+    }
     app.use(compression())
     app.use(authRoutes.createRouter(ctx)) // Before CORS
     app.use(cors({ maxAge: DAY / SECOND }))
