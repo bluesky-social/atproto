@@ -596,6 +596,7 @@ export class AppContext implements AsyncDisposable {
                 crypto.SECP256K1_JWT_ALG,
                 ui8.fromString(cfg.entryway.jwtPublicKeyHex, 'hex'),
               ),
+              keyObject: createPublicKeyObject(cfg.entryway.jwtPublicKeyHex),
               required: cfg.entryway.requireServiceAuth,
             }
           : undefined,

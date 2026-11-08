@@ -3,6 +3,7 @@ import { DAY, HOUR, MINUTE } from '@atproto/common'
 import { MemoryRateLimiter, RedisRateLimiter } from '@atproto/xrpc-server'
 import type { Options } from '@atproto/xrpc-server'
 import type { RateLimitsConfig } from './config/index.js'
+import { isEntrywayServiceRequest } from './entryway-attribution.js'
 
 type RateLimitDescriptions = NonNullable<Options['rateLimits']>
 
@@ -24,6 +25,9 @@ export const buildRateLimitsConfig = (
         return true
       }
       if (bypassIps && bypassIps.includes(req.ip)) {
+        return true
+      }
+      if (isEntrywayServiceRequest(req)) {
         return true
       }
       return false
