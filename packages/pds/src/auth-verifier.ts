@@ -765,10 +765,30 @@ export class AuthVerifier {
       throw new EntrywayRelayTokenError('not_configured')
     }
 
+    // Every claim is checked on the decoded token before the signature, so a
+    // stranger's junk header costs a parse, not a signature verification: the
+    // middleware runs before the rate limiter, and anyone can send this header.
+    let unverifiedHeader: jose.ProtectedHeaderParameters
+    let unverifiedPayload: jose.JWTPayload
+    try {
+      unverifiedHeader = jose.decodeProtectedHeader(token)
+      unverifiedPayload = jose.decodeJwt(token)
+    } catch {
+      throw new EntrywayRelayTokenError('malformed')
+    }
+    if (unverifiedHeader.alg !== 'ES256K') {
+      throw new EntrywayRelayTokenError('bad_alg')
+    }
+    const ip = this.checkEntrywayRelayClaims(
+      entrywayDid,
+      unverifiedHeader,
+      unverifiedPayload,
+    )
+
     // @NOTE Verified with node:crypto rather than xrpc-server's verifyJwt (as
     // service JWTs are): the entryway sends one of these with every request it
     // proxies.
-    const { payload, protectedHeader } = await jose
+    await jose
       .jwtVerify(token, key, { algorithms: ['ES256K'] })
       .catch((err) => {
         throw new EntrywayRelayTokenError(
@@ -782,9 +802,17 @@ export class AuthVerifier {
         )
       })
 
-    // "typ" is pinned so that access tokens ("at+jwt") are refused, and "lxm"
-    // is refused so that a relay token and a service JWT can never stand in
-    // for each other.
+    return ip
+  }
+
+  // "typ" is pinned so that access tokens ("at+jwt") are refused, and "lxm" is
+  // refused so that a relay token and a service JWT can never stand in for each
+  // other. Returns the attested client IP in canonical form.
+  private checkEntrywayRelayClaims(
+    entrywayDid: string,
+    protectedHeader: jose.ProtectedHeaderParameters,
+    payload: jose.JWTPayload,
+  ): string {
     if (protectedHeader.typ !== 'JWT') {
       throw new EntrywayRelayTokenError('bad_typ')
     }
@@ -814,7 +842,6 @@ export class AuthVerifier {
     if (!ip) {
       throw new EntrywayRelayTokenError('bad_client_ip')
     }
-
     return ip
   }
 
