@@ -1,5 +1,25 @@
 # @atproto/pds
 
+## 0.5.55
+
+### Patch Changes
+
+- [#5817](https://github.com/bluesky-social/atproto/pull/5817) [`d4f2c91`](https://github.com/bluesky-social/atproto/commit/d4f2c919697d37af8f411f724e12b8ce2b88f922) Thanks [@foysalit](https://github.com/foysalit)! - Support linking report closures to existing moderation events and targeting all subjects owned by an account from a moderation event.
+- Updated dependencies [[`32c4f74`](https://github.com/bluesky-social/atproto/commit/32c4f7401b5ffd402790ccdbea60f0f12f06adfd), [`8c841f6`](https://github.com/bluesky-social/atproto/commit/8c841f6e73c8365c2dfe816c0613aa9c50490361), [`8c841f6`](https://github.com/bluesky-social/atproto/commit/8c841f6e73c8365c2dfe816c0613aa9c50490361), [`8c841f6`](https://github.com/bluesky-social/atproto/commit/8c841f6e73c8365c2dfe816c0613aa9c50490361), [`8c841f6`](https://github.com/bluesky-social/atproto/commit/8c841f6e73c8365c2dfe816c0613aa9c50490361)]:
+  - @atproto-labs/xrpc-utils@0.1.30
+  - @atproto/lex-data@0.1.10
+  - @atproto/lex-cbor@0.1.9
+  - @atproto/lex-schema@0.2.11
+  - @atproto/common@0.8.9
+  - @atproto/lex-client@0.4.2
+  - @atproto/lex-document@0.1.16
+  - @atproto/lex-json@0.1.9
+  - @atproto/repo@0.11.4
+  - @atproto/xrpc-server@0.13.9
+  - @atproto/aws@0.3.23
+  - @atproto/oauth-provider@0.25.5
+  - @atproto/identity@0.5.23
+
 ## 0.5.54
 
 ### Patch Changes

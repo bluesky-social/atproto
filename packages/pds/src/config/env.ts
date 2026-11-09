@@ -74,11 +74,13 @@ export function readEnv() {
 
     // entryway
     entrywayUrl: envStr('PDS_ENTRYWAY_URL'),
+    entrywayApiUrl: envStr('PDS_ENTRYWAY_API_URL'),
     entrywayDid: envStr('PDS_ENTRYWAY_DID'),
     entrywayJwtVerifyKeyK256PublicKeyHex: envStr(
       'PDS_ENTRYWAY_JWT_VERIFY_KEY_K256_PUBLIC_KEY_HEX',
     ),
     entrywayPlcRotationKey: envStr('PDS_ENTRYWAY_PLC_ROTATION_KEY'),
+    entrywayRequireServiceAuth: envBool('PDS_ENTRYWAY_REQUIRE_SERVICE_AUTH'),
 
     // invites
     inviteRequired: envBool('PDS_INVITE_REQUIRED'),

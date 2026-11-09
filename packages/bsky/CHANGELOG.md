@@ -1,5 +1,31 @@
 # @atproto/bsky
 
+## 0.5.4
+
+### Patch Changes
+
+- [#5815](https://github.com/bluesky-social/atproto/pull/5815) [`0f77a7d`](https://github.com/bluesky-social/atproto/commit/0f77a7d61ef22f47e7c14138aa2e040346ac6316) Thanks [@ds-boyce](https://github.com/ds-boyce)! - Add the internal GetPostViewCounts RPC contract for batched author-facing view-count reads from Atlantis.
+
+- [#5837](https://github.com/bluesky-social/atproto/pull/5837) [`896c727`](https://github.com/bluesky-social/atproto/commit/896c727632798ca14a68009c8d052321cd8b3c44) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Hydrate known followers for `getAtmosphereExploreTab` apps, and only return apps the worker marks `featured: true`.
+
+## 0.5.3
+
+### Patch Changes
+
+- [#5817](https://github.com/bluesky-social/atproto/pull/5817) [`d4f2c91`](https://github.com/bluesky-social/atproto/commit/d4f2c919697d37af8f411f724e12b8ce2b88f922) Thanks [@foysalit](https://github.com/foysalit)! - Support linking report closures to existing moderation events and targeting all subjects owned by an account from a moderation event.
+- Updated dependencies [[`32c4f74`](https://github.com/bluesky-social/atproto/commit/32c4f7401b5ffd402790ccdbea60f0f12f06adfd), [`8c841f6`](https://github.com/bluesky-social/atproto/commit/8c841f6e73c8365c2dfe816c0613aa9c50490361), [`8c841f6`](https://github.com/bluesky-social/atproto/commit/8c841f6e73c8365c2dfe816c0613aa9c50490361), [`d4f2c91`](https://github.com/bluesky-social/atproto/commit/d4f2c919697d37af8f411f724e12b8ce2b88f922), [`8c841f6`](https://github.com/bluesky-social/atproto/commit/8c841f6e73c8365c2dfe816c0613aa9c50490361), [`8c841f6`](https://github.com/bluesky-social/atproto/commit/8c841f6e73c8365c2dfe816c0613aa9c50490361)]:
+  - @atproto-labs/xrpc-utils@0.1.30
+  - @atproto/lex-data@0.1.10
+  - @atproto/api@0.30.3
+  - @atproto/lex-schema@0.2.11
+  - @atproto/common@0.8.9
+  - @atproto/lex-client@0.4.2
+  - @atproto/lex-json@0.1.9
+  - @atproto/repo@0.11.4
+  - @atproto/sync@0.4.23
+  - @atproto/xrpc-server@0.13.9
+  - @atproto/identity@0.5.23
+
 ## 0.5.2
 
 ### Patch Changes

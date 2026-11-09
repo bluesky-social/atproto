@@ -107,6 +107,19 @@ type ListKey = (typeof lists)[number]['key']
 // Only livestreams honor schedule fields.
 const unscheduledLists = lists.filter(({ key }) => key !== 'livestreams')
 
+// The explore tab only shows `featured: true` apps, so fixture apps default to
+// featured. Override with `featured: false`/`undefined` to exercise the filter.
+function workerBody(config: unknown) {
+  const { apps, ...rest } = (config ?? {}) as { apps?: unknown }
+  if (!Array.isArray(apps)) return config
+  const isObject = (a: unknown): a is object =>
+    typeof a === 'object' && a !== null && !Array.isArray(a)
+  return {
+    ...rest,
+    apps: apps.map((a) => (isObject(a) ? { featured: true, ...a } : a)),
+  }
+}
+
 async function setup(config: unknown = {}, exploreEnabled = true) {
   const records = new Map<AtUriString, TypedLexMap>([
     [
@@ -366,7 +379,7 @@ async function setup(config: unknown = {}, exploreEnabled = true) {
   const xrpc = createServer([], { validateResponse: true })
   const fetchMock = vi
     .spyOn(globalThis, 'fetch')
-    .mockImplementation(async () => Response.json(config))
+    .mockImplementation(async () => Response.json(workerBody(config)))
   register(xrpc, ctx)
   registerApps(xrpc, ctx)
   const enabledGates = new Set(
@@ -1750,6 +1763,9 @@ describe('Atmosphere Explore', () => {
       expect(profiles).toHaveBeenCalledTimes(1)
       expect(profiles.mock.calls[0][0]).toEqual(names.map(appDid))
       expect(profiles.mock.calls[0][1]).toBe(external.mock.calls[0][1])
+      expect(profiles.mock.calls[0][2]).toEqual({
+        knownFollowersDids: names.map(appDid),
+      })
       expect(body.apps).toHaveLength(10)
       expect(body.apps.map(({ profile }) => profile?.did)).toEqual(
         Array.from({ length: 10 }, (_, i) => appDid(names[i % 3])),
@@ -1763,6 +1779,36 @@ describe('Atmosphere Explore', () => {
       expect(status).toBe(200)
       expect(profiles).not.toHaveBeenCalled()
       expect(body.apps).toEqual(curated.apps)
+    })
+
+    it('only returns featured apps, but still lists them all in the apps endpoint', async () => {
+      await using fixture = await setup({
+        apps: [
+          card('yes'),
+          card('no', { featured: false }),
+          card('missing', { featured: undefined }),
+          card('string', { featured: 'true' }),
+        ],
+      })
+      const { status, body } = await fixture.query()
+      expect(status).toBe(200)
+      expect(body.apps.map(({ id }) => id)).toEqual(['yes'])
+      const all = await fixture.queryApps()
+      expect(all.body.apps.map(({ id }) => id)).toEqual([
+        'yes',
+        'no',
+        'missing',
+        'string',
+      ])
+    })
+
+    it('returns no apps when none are featured', async () => {
+      await using fixture = await setup({
+        apps: [card('no', { featured: false })],
+      })
+      const { status, body } = await fixture.query()
+      expect(status).toBe(200)
+      expect(body.apps).toEqual([])
     })
 
     it('keeps apps with a missing or null DID and drops a malformed one', async () => {

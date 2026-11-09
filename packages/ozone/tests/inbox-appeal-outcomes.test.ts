@@ -191,6 +191,59 @@ describe('viewer appeal outcomes', () => {
     await assertOutcome(appeal.subjectId, 'denied')
   })
 
+  it.each(['emitEvent', 'closeReports'] as const)(
+    'does not infer a record appeal outcome from an account event via %s',
+    async (method) => {
+      const appeal = await startAppeal()
+      const accountEvent = await mod.emitEvent({
+        subject: com.atproto.admin.defs.repoRef.$build({ did: sc.dids.alice }),
+        event: tools.ozone.moderation.defs.modEventAcknowledge.$build({}),
+        ...(method === 'emitEvent' && {
+          reportAction: { allOwned: true, ids: [appeal.reportId] },
+        }),
+      })
+      if (method === 'closeReports') {
+        await network.ozone.getAgent().tools.ozone.report.closeReports(
+          {
+            subject: sc.dids.alice,
+            includeAllOwned: true,
+            reportTypes: [tools.ozone.report.defs.ReasonAppeal],
+            actionEventId: accountEvent.id,
+          },
+          {
+            headers: await network.ozone.modHeaders(
+              tools.ozone.report.closeReports.$lxm,
+            ),
+          },
+        )
+      }
+      const view = await detail(appeal.subjectId)
+      expect(view.appeal).toMatchObject({ state: 'resolved' })
+      expect(view.appeal).not.toHaveProperty('outcome')
+      const notifications = await resolutionNotifications(appeal.subjectId)
+      expect(notifications[0]).toBeDefined()
+      expect(notifications[0].target).not.toHaveProperty('appealOutcome')
+    },
+  )
+
+  it('does not infer an appeal outcome from the action being appealed', async () => {
+    const appeal = await startAppeal()
+    await network.ozone.getAgent().tools.ozone.report.closeReports(
+      { subject: appeal.subjectId, actionEventId: appeal.action.id },
+      {
+        headers: await network.ozone.modHeaders(
+          tools.ozone.report.closeReports.$lxm,
+        ),
+      },
+    )
+    const view = await detail(appeal.subjectId)
+    expect(view.appeal).toMatchObject({ state: 'resolved' })
+    expect(view.appeal).not.toHaveProperty('outcome')
+    const notifications = await resolutionNotifications(appeal.subjectId)
+    expect(notifications[0]).toBeDefined()
+    expect(notifications[0].target).not.toHaveProperty('appealOutcome')
+  })
+
   it.each(['record', 'account'] as const)(
     'exposes approval for a %s label appeal closed by label removal',
     async (scope) => {

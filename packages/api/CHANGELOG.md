@@ -1,5 +1,15 @@
 # @atproto/api
 
+## 0.30.3
+
+### Patch Changes
+
+- [#5817](https://github.com/bluesky-social/atproto/pull/5817) [`d4f2c91`](https://github.com/bluesky-social/atproto/commit/d4f2c919697d37af8f411f724e12b8ce2b88f922) Thanks [@foysalit](https://github.com/foysalit)! - Support linking report closures to existing moderation events and targeting all subjects owned by an account from a moderation event.
+- Updated dependencies []:
+  - @atproto/common-web@0.5.17
+  - @atproto/lexicon@0.7.19
+  - @atproto/xrpc@0.8.18
+
 ## 0.30.2
 
 ### Patch Changes

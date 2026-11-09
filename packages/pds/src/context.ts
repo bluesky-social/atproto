@@ -280,7 +280,7 @@ export class AppContext implements AsyncDisposable {
       : undefined
     const entrywayClient = cfg.entryway
       ? new Client(
-          { service: cfg.entryway.url },
+          { service: cfg.entryway.apiUrl },
           {
             // Trust internal services to send us well-formed responses
             strictResponseProcessing: false,
@@ -292,7 +292,7 @@ export class AppContext implements AsyncDisposable {
       cfg.entryway && secrets.entrywayAdminToken
         ? new Client(
             {
-              service: cfg.entryway.url,
+              service: cfg.entryway.apiUrl,
               headers: {
                 authorization: basicAuthHeader(
                   'admin',
@@ -590,6 +590,16 @@ export class AppContext implements AsyncDisposable {
           entryway: cfg.entryway?.did,
           modService: cfg.modService?.did,
         },
+        entrywayServiceAuth: cfg.entryway
+          ? {
+              didKey: crypto.formatDidKey(
+                crypto.SECP256K1_JWT_ALG,
+                ui8.fromString(cfg.entryway.jwtPublicKeyHex, 'hex'),
+              ),
+              keyObject: createPublicKeyObject(cfg.entryway.jwtPublicKeyHex),
+              required: cfg.entryway.requireServiceAuth,
+            }
+          : undefined,
       },
     )
 
