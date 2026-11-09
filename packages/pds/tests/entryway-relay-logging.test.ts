@@ -104,7 +104,7 @@ describe('entryway relay logging', () => {
     )
 
     expect(logs.split('"x-entryway-relay":"***"')).toHaveLength(3)
-    expect(logs).toContain('"reason":"bad_sig"')
+    expect(logs).toContain('"reason":"ERR_JWS_SIGNATURE_VERIFICATION_FAILED"')
     for (const token of [valid, invalid]) {
       const [, payload, signature] = token.split('.')
       expect(logs).not.toContain(payload)
