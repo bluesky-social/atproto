@@ -59,9 +59,9 @@
     "import-in-the-middle": "^3.5.2"
   },
   "devDependencies": {
-    "@opentelemetry/context-async-hooks": "^3.0.0",
-    "@opentelemetry/sdk-metrics": "^3.0.0",
-    "@opentelemetry/sdk-trace": "^3.0.0",
+    "@opentelemetry/context-async-hooks": "^3.1.0",
+    "@opentelemetry/sdk-metrics": "^3.1.0",
+    "@opentelemetry/sdk-trace": "^3.1.0",
     "@types/better-sqlite3": "^7.6.13",
     "better-sqlite3": "^12.9.0",
     "vitest": "^4.1.10"
