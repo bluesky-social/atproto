@@ -185,6 +185,8 @@ the record body:
 const result = app.bsky.feed.post.keySchema.safeValidate(rkey)
 ```
 
+A space type exposes the same for its space key — `space.keySchema`,
+`space.isKey(skey)`, and `space.matchesRef(ref)` (type and key) for a `SpaceRef`.
 For a bare `LexiconRecordKey`, build one with `l.recordKey('tid')`.
 
 ## Strict mode
