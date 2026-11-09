@@ -135,6 +135,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     )
     entrywayCfg = {
       url: env.entrywayUrl,
+      apiUrl: env.entrywayApiUrl ?? env.entrywayUrl,
       did: env.entrywayDid,
       jwtPublicKeyHex: env.entrywayJwtVerifyKeyK256PublicKeyHex,
       plcRotationKey: env.entrywayPlcRotationKey,
@@ -456,7 +457,17 @@ export type IdentityConfig = {
 }
 
 export type EntrywayConfig = {
+  /**
+   * The entryway's public URL, which is also the OAuth issuer and the
+   * authorization server this PDS advertises.
+   */
   url: string
+  /**
+   * Where this PDS sends its own requests to the entryway. Defaults to
+   * {@link url}; differs when those requests go through a local proxy, e.g.
+   * one that adds mTLS.
+   */
+  apiUrl: string
   did: string
   jwtPublicKeyHex: string
   plcRotationKey: string
