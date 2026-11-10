@@ -1487,10 +1487,15 @@ export class ModerationService {
       )
     }
 
+    const effectiveSortField =
+      sortField === 'reportedRecordsCount' ||
+      sortField === 'takendownRecordsCount'
+        ? 'lastReportedAt'
+        : sortField
     const keyset = new StatusKeyset(
-      sortField === 'priorityScore'
+      effectiveSortField === 'priorityScore'
         ? ref('moderation_subject_status.priorityScore')
-        : ref(`moderation_subject_status.${sortField}`),
+        : ref(`moderation_subject_status.${effectiveSortField}`),
       ref('moderation_subject_status.id'),
     )
     const paginatedBuilder = paginate(builder, {

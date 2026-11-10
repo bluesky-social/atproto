@@ -111,12 +111,31 @@ describe('moderation-statuses', () => {
         )
       }
 
-      for (const query of [
-        'sortField=reportedRecordsCount',
-        'sortField=takendownRecordsCount',
-      ]) {
-        expect((await queryLegacy(query)).status).toBe(400)
+      for (const direction of ['asc', 'desc']) {
+        const query = `sortDirection=${direction}&limit=1`
+        const firstPage = (await (await queryLegacy(query)).json()) as {
+          cursor?: string
+          subjectStatuses: { id: number }[]
+        }
+        expect(firstPage.cursor).toBeDefined()
+        for (const sortField of [
+          'reportedRecordsCount',
+          'takendownRecordsCount',
+        ]) {
+          for (const cursor of [
+            '',
+            `&cursor=${encodeURIComponent(firstPage.cursor!)}`,
+          ]) {
+            const expected = await (await queryLegacy(query + cursor)).json()
+            const legacyResponse = await queryLegacy(
+              `${query}&sortField=${sortField}${cursor}`,
+            )
+            expect(legacyResponse.status).toBe(200)
+            expect(await legacyResponse.json()).toEqual(expected)
+          }
+        }
       }
+      expect((await queryLegacy('sortField=unknown')).status).toBe(400)
     })
 
     it('returns statuses for subjects that received moderation events', async () => {
