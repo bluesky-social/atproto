@@ -7,6 +7,11 @@ import type { NotificationGroup } from './grouping.js'
 
 export const MAX_GROUP_SIZE = 200
 
+/** Return the item cap for an ordinary notification group. */
+export function getMaxGroupSize(kind: DataplaneNotificationReason): number {
+  return kind === NOTIFICATION_REASON.SUBSCRIBED_POST ? 25 : MAX_GROUP_SIZE
+}
+
 // Notification timestamps never collide; no tie-breaker is needed.
 export const compareNotificationGroupsNewestFirst = (
   left: NotificationGroup,

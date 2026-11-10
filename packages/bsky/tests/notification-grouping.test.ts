@@ -336,6 +336,27 @@ describe('notification grouping', () => {
   )
 
   it.each(['algoGravity', 'algoLookback'] as const)(
+    '%s splits subscribed posts into groups of at most 25 without losing posts',
+    (algorithm) => {
+      const items = Array.from({ length: 60 }, (_, index) =>
+        item(
+          `post-${index}`,
+          toDatetimeString(new Date(now - index)),
+          NOTIFICATION_REASON.SUBSCRIBED_POST,
+        ),
+      )
+      const { createGroupBuilder } = getGroupingAlgorithm(algorithm)
+      const result = createGroupBuilder(3, now)(items)
+
+      expect(result.groups.map(({ itemCount }) => itemCount)).toEqual([
+        25, 25, 10,
+      ])
+      expect(result.groups.flatMap(({ items }) => items)).toEqual(items)
+      expect(result.cursor).toBeUndefined()
+    },
+  )
+
+  it.each(['algoGravity', 'algoLookback'] as const)(
     '%s groups recent likes across midnight',
     (algorithm) => {
       const now = Date.parse('2026-09-21T00:05:00.000Z')
@@ -571,20 +592,39 @@ describe.each(['algoGravity', 'algoLookback'] as const)(
       expect(result.cursor).toBe(items[1]!.raw.indexedAt)
     })
 
-    it('retains the 200-item cap and uses the previous batch’s last item as the cursor', () => {
-      const items = Array.from({ length: 201 }, (_, index) =>
-        item(`like-${index}`, new Date(now - index).toISOString()),
-      )
-      const { createGroupBuilder } = getGroupingAlgorithm(algorithm)
-      const buildGroups = createGroupBuilder(1, now)
-      buildGroups(items.slice(0, 199))
-      expect(buildGroups(items.slice(199, 200)).cursor).toBeUndefined()
-      const result = buildGroups(items.slice(200))
+    it.each([
+      { reason: NOTIFICATION_REASON.LIKE, cap: 200 },
+      { reason: NOTIFICATION_REASON.SUBSCRIBED_POST, cap: 25 },
+    ])(
+      'retains the $cap-item cap for $reason and uses the previous batch’s last item as the cursor',
+      ({ reason, cap }) => {
+        const items = Array.from({ length: cap + 1 }, (_, index) =>
+          item(
+            `${reason}-${index}`,
+            toDatetimeString(new Date(now - index)),
+            reason,
+          ),
+        )
+        const { createGroupBuilder } = getGroupingAlgorithm(algorithm)
+        const buildGroups = createGroupBuilder(1, now)
+        buildGroups(items.slice(0, cap - 1))
+        expect(buildGroups(items.slice(cap - 1, cap)).cursor).toBeUndefined()
+        const firstPage = buildGroups(items.slice(cap))
 
-      expect(result).toEqual(createGroupBuilder(1, now)(items))
-      expect(result.groups[0]?.itemCount).toBe(200)
-      expect(result.cursor).toBe(items[199]!.raw.indexedAt)
-    })
+        expect(firstPage).toEqual(createGroupBuilder(1, now)(items))
+        expect(firstPage.groups[0]?.itemCount).toBe(cap)
+        expect(firstPage.cursor).toBe(items[cap - 1]!.raw.indexedAt)
+
+        const secondPage = createGroupBuilder(1, now)(items.slice(cap))
+        expect(secondPage.groups.map(({ itemCount }) => itemCount)).toEqual([1])
+        expect(secondPage.cursor).toBeUndefined()
+        expect(
+          [...firstPage.groups, ...secondPage.groups].flatMap(
+            ({ items }) => items,
+          ),
+        ).toEqual(items)
+      },
+    )
 
     it.each([
       { reason: NOTIFICATION_REASON.FOLLOW, feed: NotificationFeed.FOLLOWERS },
