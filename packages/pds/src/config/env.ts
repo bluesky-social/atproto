@@ -117,6 +117,7 @@ export function readEnv() {
     rateLimitsEnabled: envBool('PDS_RATE_LIMITS_ENABLED'),
     rateLimitBypassKey: envStr('PDS_RATE_LIMIT_BYPASS_KEY'),
     rateLimitBypassIps: envList('PDS_RATE_LIMIT_BYPASS_IPS'),
+    disableIpRateLimits: envBool('PDS_DISABLE_IP_RATE_LIMITS'),
 
     // redis
     redisScratchAddress: envStr('PDS_REDIS_SCRATCH_ADDRESS'),

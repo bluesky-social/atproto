@@ -29,21 +29,25 @@ export const buildRateLimitsConfig = (
       }
       return bypass ? bypass(ctx) : false
     },
-    global: [
-      {
-        name: 'global-ip',
-        durationMs: 5 * MINUTE,
-        points: 3000,
-        // getRepo can be a high-volume sync path, so it has its own endpoint
-        // limit and should not consume the shared global read bucket.
-        calcKey: ({ req }) => {
-          if (req.path === SYNC_GET_REPO_PATH) {
-            return null
-          }
-          return req.ip
-        },
-      },
-    ],
+    global: rateLimits.disableIpLimits
+      ? undefined
+      : [
+          {
+            name: 'global-ip',
+            durationMs: 5 * MINUTE,
+            points: 3000,
+            // getRepo can be a high-volume sync path, so it has its own
+            // endpoint limit and should not consume the shared global read
+            // bucket.
+            calcKey: ({ req }) => {
+              if (req.path === SYNC_GET_REPO_PATH) {
+                return null
+              }
+              return req.ip
+            },
+          },
+        ],
+    skipDefaultKeyedRouteLimits: rateLimits.disableIpLimits,
     shared: [
       {
         name: 'repo-write-hour',
