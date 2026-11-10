@@ -13,8 +13,8 @@ import type {
   NotificationItem,
 } from './grouping.js'
 import {
-  MAX_GROUP_SIZE,
   compareNotificationGroupsNewestFirst,
+  getMaxGroupSize,
   isNotificationRead,
 } from './shared.js'
 
@@ -76,7 +76,7 @@ export const buildSpotlight = (
     )
     .map((candidate) => ({
       ...candidate,
-      items: candidate.items.slice(0, MAX_GROUP_SIZE),
+      items: candidate.items.slice(0, getMaxGroupSize(candidate.kind)),
     }))
 
   let lastGoodItems = pageItems
