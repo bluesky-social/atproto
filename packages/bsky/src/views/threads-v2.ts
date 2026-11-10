@@ -1,4 +1,4 @@
-import type { $Typed } from '@atproto/lex'
+import type { $Typed } from '@atproto/lex-schema'
 import type { HydrateCtx } from '../hydration/hydrator.js'
 import type {
   GetPostThreadV2QueryParams,

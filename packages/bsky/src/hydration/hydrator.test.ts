@@ -1,3 +1,4 @@
+import { EventEmitter, once } from 'node:events'
 import {
   Code,
   ConnectError,
@@ -16,6 +17,7 @@ import { hydrationLogger } from '../logger.js'
 import { Service } from '../proto/bsky_connect.js'
 import {
   GetAtmosphereBacklinkCountsResponse,
+  GetAtmosphereBacklinksByActorResponse,
   GetAtmosphereBacklinksResponse,
   GetRecordsByRefResponse,
   GetRecordsByURIResponse,
@@ -23,7 +25,11 @@ import {
 } from '../proto/bsky_pb.js'
 import { events } from '../telemetry/events.js'
 import type { Actors, ProfileLinks } from './actor.js'
-import { MAX_EXTERNAL_HYDRATION_PASSES, genericRecordKey } from './external.js'
+import {
+  type ExternalPublicationSubscriptions,
+  MAX_EXTERNAL_HYDRATION_PASSES,
+  genericRecordKey,
+} from './external.js'
 import type { Post } from './feed.js'
 import {
   HydrateCtx,
@@ -2121,6 +2127,249 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
       expect(warn).toHaveBeenCalledTimes(1)
     })
   })
+  describe('publication subscriptions', () => {
+    const viewer: DidString = 'did:plc:viewer'
+
+    it.for([false, true])(
+      'validates viewer-owned subscription backlinks (truncated: %s)',
+      async (truncated, { fixture }) => {
+        const { hydrator, ctx, records, dataplane, seedBasic } = fixture
+        seedBasic()
+        records.set(pub2Uri, { body: makePub() })
+        records.set(missingPub, { body: makePub() })
+        using byActor = vi
+          .spyOn(dataplane, 'getAtmosphereBacklinksByActor')
+          .mockResolvedValue(
+            new GetAtmosphereBacklinksByActorResponse({
+              results: [
+                {
+                  targetUri: pubUri,
+                  uris: [subscriptionUri(viewer, 'valid')],
+                },
+                {
+                  targetUri: pub2Uri,
+                  uris: [
+                    subscriptionUri('did:plc:other', 'wrong-owner'),
+                    recommendUri(viewer, 'wrong-collection'),
+                    subscriptionUri(viewer, 'query') + '?query',
+                    subscriptionUri(viewer, 'fragment') + '#fragment',
+                    'at://viewer.test/' +
+                      site.standard.graph.subscription.$type +
+                      '/1',
+                    `at://${viewer}/${site.standard.graph.subscription.$type}`,
+                  ],
+                },
+              ],
+              truncated,
+            }),
+          )
+        const subscriptions: ExternalPublicationSubscriptions =
+          new HydrationMap()
+        const state = await hydrator.hydrateEmbedExternalViewFromUris(
+          [doc1, doc2, pub2Uri, missingPub],
+          ctx.copy({ viewer }),
+          { hydration: 'basic', publicationSubscriptions: subscriptions },
+        )
+
+        expect(state.externalPublicationSubscriptions).toBe(subscriptions)
+        expect([...subscriptions]).toEqual([
+          [pubUri, true],
+          [pub2Uri, truncated ? null : false],
+          [missingPub, truncated ? null : false],
+        ])
+        expect(byActor).toHaveBeenCalledExactlyOnceWith({
+          targetUris: [pubUri, pub2Uri, missingPub],
+          actorDid: viewer,
+          collection: site.standard.graph.subscription.$type,
+        })
+        expect(dataplane.getAtmosphereBacklinks).not.toHaveBeenCalled()
+      },
+    )
+
+    it('bounds requests and caches complete, truncated, and failed outcomes across roots', async ({
+      fixture,
+    }) => {
+      const { hydrator, ctx, records, dataplane } = fixture
+      const publications = Array.from({ length: 205 }, (_, i) =>
+        atUri('did:plc:publisher', site.standard.publication.$type, `p${i}`),
+      )
+      const documents = publications.map((publication, i) => {
+        records.set(publication, { body: makePub() })
+        const uri = atUri(
+          'did:plc:author',
+          site.standard.document.$type,
+          `s${i}`,
+        )
+        records.set(uri, { body: makeDoc(publication) })
+        return uri
+      })
+      const err = new Error('subscription lookup failed')
+      using warn = vi
+        .spyOn(hydrationLogger, 'warn')
+        .mockImplementation(() => {})
+      using byActor = vi
+        .spyOn(dataplane, 'getAtmosphereBacklinksByActor')
+        .mockImplementation(async ({ targetUris = [] }) => {
+          assertRecordLimit(targetUris.length)
+          if (targetUris[0] === publications[100]) throw err
+          return new GetAtmosphereBacklinksByActorResponse({
+            results:
+              targetUris[0] === publications[0]
+                ? [
+                    {
+                      targetUri: publications[0],
+                      uris: [subscriptionUri(viewer, '1')],
+                    },
+                  ]
+                : [],
+            truncated: targetUris[0] === publications[0],
+          })
+        })
+      const subscriptions: ExternalPublicationSubscriptions = new HydrationMap()
+      const options = {
+        hydration: 'basic' as const,
+        seenRecordKeys: new Set<string>(),
+        publicationSubscriptions: subscriptions,
+      }
+      const scopedCtx = ctx.copy({ viewer })
+      const first = await hydrator.hydrateEmbedExternalViewFromUris(
+        publications,
+        scopedCtx,
+        options,
+      )
+      const next = await hydrator.hydrateEmbedExternalViewFromUris(
+        documents,
+        scopedCtx,
+        options,
+      )
+      const state = mergeStates(first, next)
+
+      expect(state.externalPublicationSubscriptions).toBe(subscriptions)
+      expect([...subscriptions]).toEqual(
+        publications.map((uri, i) => [
+          uri,
+          i === 0 ? true : i < 200 ? null : false,
+        ]),
+      )
+      const batches = byActor.mock.calls.map(([req]) => req.targetUris ?? [])
+      expect(batches.map((batch) => batch.length)).toEqual([100, 100, 5])
+      expect(batches.flat()).toEqual(publications)
+      expect(warn).toHaveBeenCalledExactlyOnceWith(
+        { err },
+        'failed to hydrate external publication subscriptions',
+      )
+      expect(fullTraversalReports().map(({ outcome }) => outcome)).toEqual([
+        'partial',
+        'completed',
+      ])
+    })
+
+    it('reserves shared targets before concurrent root lookups can repeat them', async ({
+      fixture,
+    }) => {
+      const { hydrator, ctx, dataplane, seedBasic } = fixture
+      seedBasic()
+      const gate = new EventEmitter()
+      const started = once(gate, 'started')
+      const response = once(gate, 'response')
+      using byActor = vi
+        .spyOn(dataplane, 'getAtmosphereBacklinksByActor')
+        .mockImplementation(async () => {
+          gate.emit('started')
+          const [result] = await response
+          return result
+        })
+      const subscriptions: ExternalPublicationSubscriptions = new HydrationMap()
+      const options = {
+        hydration: 'basic' as const,
+        publicationSubscriptions: subscriptions,
+      }
+      const scopedCtx = ctx.copy({ viewer })
+      const first = hydrator.hydrateEmbedExternalViewFromUris(
+        [doc1],
+        scopedCtx,
+        options,
+      )
+      await started
+      const next = await hydrator.hydrateEmbedExternalViewFromUris(
+        [doc2],
+        scopedCtx,
+        options,
+      )
+      expect(subscriptions.get(pubUri)).toBeNull()
+      gate.emit(
+        'response',
+        new GetAtmosphereBacklinksByActorResponse({
+          results: [
+            { targetUri: pubUri, uris: [subscriptionUri(viewer, '1')] },
+          ],
+        }),
+      )
+      const state = mergeStates(await first, next)
+
+      expect(byActor).toHaveBeenCalledTimes(1)
+      expect(state.externalPublicationSubscriptions?.get(pubUri)).toBe(true)
+    })
+
+    it('ignores unvalidated and moderated publication sources', async ({
+      fixture,
+    }) => {
+      const {
+        hydrator,
+        ctx,
+        records,
+        dataplane,
+        takedownLabeled,
+        unavailableOwners,
+      } = fixture
+      const hidden = atUri('did:plc:hidden', site.standard.document.$type, '1')
+      records.set(doc1, { body: makeDoc(pubUri) })
+      records.set(doc2, { body: { ...makeDoc(pub2Uri), title: 123 } })
+      records.set(hidden, { body: makeDoc(missingPub) })
+      records.set(pubUri, { body: makePub() })
+      records.set(pub2Uri, { body: { ...makePub(), name: 123 } })
+      takedownLabeled.add(doc1)
+      takedownLabeled.add(pubUri)
+      unavailableOwners.add('did:plc:hidden')
+      using byActor = vi.spyOn(dataplane, 'getAtmosphereBacklinksByActor')
+      const subscriptions: ExternalPublicationSubscriptions = new HydrationMap()
+      const state = await hydrator.hydrateEmbedExternalViewFromUris(
+        [doc1, doc2, hidden, pubUri, pub2Uri],
+        ctx.copy({ viewer }),
+        { hydration: 'basic', publicationSubscriptions: subscriptions },
+      )
+
+      expect(state.externalPublicationSubscriptions).toBe(subscriptions)
+      expect(subscriptions.size).toBe(0)
+      expect(byActor).not.toHaveBeenCalled()
+    })
+
+    it.for([
+      { viewer, optIn: false },
+      { viewer: null, optIn: true },
+      { viewer: null, optIn: false },
+    ])(
+      'makes no subscription calls for $viewer with opt-in $optIn',
+      async ({ viewer, optIn }, { fixture }) => {
+        const { hydrator, ctx, dataplane, seedBasic } = fixture
+        seedBasic()
+        using byActor = vi.spyOn(dataplane, 'getAtmosphereBacklinksByActor')
+        const subscriptions: ExternalPublicationSubscriptions | undefined =
+          optIn ? new HydrationMap() : undefined
+        const state = await hydrator.hydrateEmbedExternalViewFromUris(
+          [doc1],
+          ctx.copy({ viewer }),
+          { hydration: 'basic', publicationSubscriptions: subscriptions },
+        )
+
+        expect(state.externalRecords?.get(pubUri)?.record).toEqual(makePub())
+        expect(state.externalPublicationSubscriptions).toBe(subscriptions)
+        expect(subscriptions?.size ?? 0).toBe(0)
+        expect(byActor).not.toHaveBeenCalled()
+      },
+    )
+  })
+
   describe('exact refs', () => {
     const v = (uri: AtUriString, version: string) => ({
       uri,
@@ -2158,6 +2407,72 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
         })
     const key = (uri: AtUriString, version: string) =>
       genericRecordKey(v(uri, version))
+
+    it('shares subscription discovery across URI roots, exact versions, and recursive dependencies', async ({
+      fixture,
+    }) => {
+      const { hydrator, ctx, records, dataplane, seedBasic } = fixture
+      seedBasic()
+      records.set(pub2Uri, { body: makePub() })
+      const root = recommendUri('did:plc:root', '1')
+      records.set(root, { body: makeRecommend(doc1) })
+      using _refs = mockRefs(
+        fixture,
+        new Map([
+          [key(doc1, '1'), { body: makeDoc(pubUri) }],
+          [key(doc1, '2'), { body: makeDoc(pub2Uri) }],
+          [key(pubUri, '1'), { body: makePub() }],
+        ]),
+      )
+      const viewer: DidString = 'did:plc:viewer'
+      using byActor = vi
+        .spyOn(dataplane, 'getAtmosphereBacklinksByActor')
+        .mockImplementation(
+          async ({ targetUris = [] }) =>
+            new GetAtmosphereBacklinksByActorResponse({
+              results: targetUris.map((targetUri) => ({
+                targetUri,
+                uris:
+                  targetUri === pub2Uri ? [subscriptionUri(viewer, '1')] : [],
+              })),
+            }),
+        )
+      const subscriptions: ExternalPublicationSubscriptions = new HydrationMap()
+      const options = {
+        hydration: 'basic' as const,
+        seenRecordKeys: new Set<string>(),
+        publicationSubscriptions: subscriptions,
+      }
+      const scopedCtx = ctx.copy({ viewer })
+      const uriState = await hydrator.hydrateEmbedExternalViewFromUris(
+        [root],
+        scopedCtx,
+        options,
+      )
+      const refState = await hydrator.hydrateEmbedExternalViewFromRefs(
+        [v(doc1, '1'), v(doc1, '2'), v(pubUri, '1')],
+        scopedCtx,
+        options,
+      )
+      const state = mergeStates(uriState, refState)
+
+      expect(state.externalPublicationSubscriptions).toBe(subscriptions)
+      expect([...subscriptions]).toEqual([
+        [pubUri, false],
+        [pub2Uri, true],
+      ])
+      expect(byActor.mock.calls.map(([req]) => req.targetUris)).toEqual([
+        [pubUri],
+        [pub2Uri],
+      ])
+      expect(state.externalRecordsByRef?.get(key(doc1, '1'))?.record).toEqual(
+        makeDoc(pubUri),
+      )
+      expect(state.externalRecordsByRef?.get(key(doc1, '2'))?.record).toEqual(
+        makeDoc(pub2Uri),
+      )
+      expect(state.externalRecords?.get(pub2Uri)?.record).toEqual(makePub())
+    })
 
     it('keeps every requested version and inspects each for dependencies', async ({
       fixture,
@@ -2698,6 +3013,81 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
         vi.spyOn(hydrator, 'hydrateLabelers').mockResolvedValue({})
         vi.spyOn(hydrator, 'hydrateStarterPacksBasic').mockResolvedValue({})
       }
+
+      it('shares URI subscription outcomes with pinned post roots without treating discarded refs as targets', async ({
+        fixture,
+      }) => {
+        const { hydrator, ctx, records, dataplane, seedBasic } = fixture
+        seedBasic()
+        records.set(pub2Uri, { body: makePub() })
+        using _refs = mockRefs(
+          fixture,
+          new Map([
+            [key(doc1, '1'), { body: makeDoc(pubUri) }],
+            [key(doc2, '1'), { body: makeDoc(pub2Uri) }],
+            [key(missingPubDoc, '1'), { body: makeDoc(missingPub) }],
+          ]),
+        )
+        setup(fixture, [
+          makePost(feedUri, external(v(doc1, '1'), v(missingPubDoc, '1'))),
+          makePost(rootUri, external(v(doc2, '1'))),
+        ])
+        using _viewers = vi
+          .spyOn(hydrator.feed, 'getPostViewerStates')
+          .mockResolvedValue(new HydrationMap())
+        const viewer: DidString = 'did:plc:viewer'
+        using byActor = vi
+          .spyOn(dataplane, 'getAtmosphereBacklinksByActor')
+          .mockImplementation(
+            async ({ targetUris = [] }) =>
+              new GetAtmosphereBacklinksByActorResponse({
+                results: targetUris.map((targetUri) => ({
+                  targetUri,
+                  uris: [subscriptionUri(viewer, '1')],
+                })),
+              }),
+          )
+        const subscriptions: ExternalPublicationSubscriptions =
+          new HydrationMap()
+        const seenRecordKeys = new Set<string>()
+        const scopedCtx = ctx.copy({ viewer })
+        const uriState = await hydrator.hydrateEmbedExternalViewFromUris(
+          [doc1],
+          scopedCtx,
+          {
+            hydration: 'basic',
+            seenRecordKeys,
+            publicationSubscriptions: subscriptions,
+          },
+        )
+        const postState = await hydrator.hydratePosts(
+          [{ uri: feedUri }, { uri: rootUri }],
+          scopedCtx,
+          uriState,
+          {
+            externalSeenRecordKeys: seenRecordKeys,
+            externalPublicationSubscriptions: subscriptions,
+          },
+        )
+        const state = mergeStates(uriState, postState)
+
+        expect(state.externalPublicationSubscriptions).toBe(subscriptions)
+        expect([...subscriptions]).toEqual([
+          [pubUri, true],
+          [pub2Uri, true],
+        ])
+        expect(byActor.mock.calls.map(([req]) => req.targetUris)).toEqual([
+          [pubUri],
+          [pub2Uri],
+        ])
+        expect(state.externalRecordsByRef?.get(key(doc1, '1'))?.record).toEqual(
+          makeDoc(pubUri),
+        )
+        expect(state.externalRecordsByRef?.get(key(doc2, '1'))?.record).toEqual(
+          makeDoc(pub2Uri),
+        )
+        expect(dataplane.getAtmosphereBacklinks).not.toHaveBeenCalled()
+      })
 
       it('hydrates one root per post through one basic exact-root traversal', async ({
         fixture,

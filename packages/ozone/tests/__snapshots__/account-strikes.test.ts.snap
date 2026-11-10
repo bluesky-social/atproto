@@ -2,9 +2,6 @@
 
 exports[`account-strikes tracks strikes and exposes them through queryStatuses and queryEvents 1`] = `
 {
-  "accountStats": {
-    "$type": "tools.ozone.moderation.defs#accountStats",
-  },
   "accountStrike": {
     "$type": "tools.ozone.moderation.defs#accountStrike",
     "activeStrikeCount": 5,
@@ -22,9 +19,6 @@ exports[`account-strikes tracks strikes and exposes them through queryStatuses a
   "lastReviewedAt": "1970-01-01T00:00:00.000Z",
   "lastReviewedBy": "user(0)",
   "priorityScore": 0,
-  "recordsStats": {
-    "$type": "tools.ozone.moderation.defs#recordsStats",
-  },
   "reviewState": "tools.ozone.moderation.defs#reviewClosed",
   "subject": {
     "$type": "com.atproto.admin.defs#repoRef",

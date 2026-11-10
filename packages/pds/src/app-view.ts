@@ -1,5 +1,5 @@
 import { format } from 'node:util'
-import { Client } from '@atproto/lex'
+import { Client } from '@atproto/lex-client'
 
 export type AppViewOptions = {
   url: string

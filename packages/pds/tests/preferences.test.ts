@@ -1,6 +1,7 @@
 import type { AtpAgent } from '@atproto/api'
 import { type SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
 import type { Unknown$Type } from '@atproto/lex'
+import { app } from '../src/lexicons/index.js'
 import usersSeed from './seeds/users.js'
 
 describe('user preferences', () => {
@@ -260,6 +261,74 @@ describe('user preferences', () => {
       (pref) => pref.$type === 'app.bsky.actor.defs#personalDetailsPref',
     )
     expect(scopedPref).toBeDefined()
+  })
+
+  it('saves and retrieves preferences with a 300 KiB request body', async () => {
+    const preferences = [
+      app.bsky.actor.defs.mutedWordsPref.$build({
+        items: Array.from({ length: 2000 }, (_, i) => ({
+          value: `muted-word-${i}`.repeat(3),
+          targets: ['content', 'tag'],
+          actorTarget: 'all',
+        })),
+      }),
+    ]
+    const body = JSON.stringify({ preferences })
+    expect(Buffer.byteLength(body)).toBeGreaterThan(150 * 1024)
+    expect(Buffer.byteLength(body)).toBeLessThan(300 * 1024)
+
+    const res = await fetch(
+      `${network.pds.url}/xrpc/${app.bsky.actor.putPreferences.$lxm}`,
+      {
+        method: 'POST',
+        headers: {
+          ...sc.getHeaders(sc.dids.alice),
+          'Content-Type': 'application/json',
+        },
+        // @NOTE Trailing JSON whitespace makes the request exactly 300 KiB.
+        body: body.padEnd(300 * 1024),
+      },
+    )
+    expect(res.status).toEqual(200)
+
+    const { data } = await agent.api.app.bsky.actor.getPreferences(
+      {},
+      { headers: sc.getHeaders(sc.dids.alice) },
+    )
+    expect(data.preferences).toEqual(preferences)
+  })
+
+  it('rejects preferences over 300 KiB without changing stored preferences', async () => {
+    const preferences = [
+      app.bsky.actor.defs.adultContentPref.$build({ enabled: false }),
+    ]
+    await agent.api.app.bsky.actor.putPreferences(
+      { preferences },
+      { headers: sc.getHeaders(sc.dids.alice), encoding: 'application/json' },
+    )
+
+    const res = await fetch(
+      `${network.pds.url}/xrpc/${app.bsky.actor.putPreferences.$lxm}`,
+      {
+        method: 'POST',
+        headers: {
+          ...sc.getHeaders(sc.dids.alice),
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ preferences: [] }).padEnd(300 * 1024 + 1),
+      },
+    )
+    expect(res.status).toEqual(413)
+    await expect(res.json()).resolves.toEqual({
+      error: 'PayloadTooLargeError',
+      message: 'request entity too large',
+    })
+
+    const { data } = await agent.api.app.bsky.actor.getPreferences(
+      {},
+      { headers: sc.getHeaders(sc.dids.alice) },
+    )
+    expect(data.preferences).toEqual(preferences)
   })
 
   describe('personalDetailsPref and declaredAgePref', () => {

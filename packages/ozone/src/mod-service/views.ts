@@ -2,28 +2,30 @@ import { sql } from 'kysely'
 import { chunkArray, dedupeStrs } from '@atproto/common'
 import type { Keypair } from '@atproto/crypto'
 import type { IdResolver } from '@atproto/identity'
+import type { Client } from '@atproto/lex-client'
 import {
-  type AtIdentifierString,
-  type AtUriString,
   type BlobRef,
-  type Client,
-  type DatetimeString,
-  type DidString,
-  type HandleString,
   type LexMap,
-  type NsidString,
-  type Un$Typed,
-  type UriString,
-  currentDatetimeString,
   getBlobCidString,
   getBlobMime,
   getBlobSize,
   isBlobRef,
+} from '@atproto/lex-data'
+import {
+  type AtIdentifierString,
+  type AtUriString,
+  type DatetimeString,
+  type DidString,
+  type HandleString,
+  type NsidString,
+  type Un$Typed,
+  type UriString,
+  currentDatetimeString,
   isDatetimeString,
   isDidString,
   isHandleString,
   toDatetimeString,
-} from '@atproto/lex'
+} from '@atproto/lex-schema'
 import { AtUri, INVALID_HANDLE, normalizeDatetimeAlways } from '@atproto/syntax'
 import type { Database } from '../db/index.js'
 import type { LabelRow } from '../db/schema/label.js'
@@ -182,6 +184,7 @@ export class ModerationViews {
       tools.ozone.moderation.defs.modEventMuteReporter.$isTypeOf(event) ||
       tools.ozone.moderation.defs.modEventTakedown.$isTypeOf(event) ||
       tools.ozone.moderation.defs.modEventLabel.$isTypeOf(event) ||
+      tools.ozone.moderation.defs.modEventTag.$isTypeOf(event) ||
       tools.ozone.moderation.defs.modEventMute.$isTypeOf(event)
     ) {
       event.durationInHours = row.durationInHours ?? undefined
@@ -806,31 +809,6 @@ export class ModerationViews {
       subject: subjectFromStatusRow(
         status,
       ).lex() as tools.ozone.moderation.defs.SubjectStatusView['subject'],
-
-      // Explicitly typing to allow for easy manipulation (e.g. to strip from tests snapshots)
-      accountStats: tools.ozone.moderation.defs.accountStats.$build({
-        // account_events_stats
-        reportCount: status.reportCount ?? undefined,
-        appealCount: status.appealCount ?? undefined,
-        suspendCount: status.suspendCount ?? undefined,
-        takedownCount: status.takedownCount ?? undefined,
-        escalateCount: status.escalateCount ?? undefined,
-      }),
-
-      // Explicitly typing to allow for easy manipulation (e.g. to strip from tests snapshots)
-      recordsStats: tools.ozone.moderation.defs.recordsStats.$build({
-        // account_record_events_stats
-        totalReports: status.totalReports ?? undefined,
-        reportedCount: status.reportedCount ?? undefined,
-        escalatedCount: status.escalatedCount ?? undefined,
-        appealedCount: status.appealedCount ?? undefined,
-
-        // account_record_status_stats
-        subjectCount: status.subjectCount ?? undefined,
-        pendingCount: status.pendingCount ?? undefined,
-        processedCount: status.processedCount ?? undefined,
-        takendownCount: status.takendownCount ?? undefined,
-      }),
 
       accountStrike:
         status.strikeCount !== null || status.totalStrikeCount !== null

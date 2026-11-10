@@ -4,12 +4,13 @@ import type {
   DatetimeString,
   DidString,
   UriString,
-} from '@atproto/lex'
-import { currentDatetimeString, isDidString } from '@atproto/lex'
+} from '@atproto/lex-schema'
+import { currentDatetimeString, isDidString } from '@atproto/lex-schema'
 import { AtUri } from '@atproto/syntax'
+import { InvalidRequestError } from '@atproto/xrpc-server'
 import type { Database } from '../db/index.js'
 import type { Report } from '../db/schema/report.js'
-import { tools } from '../lexicons/index.js'
+import { chat, com, tools } from '../lexicons/index.js'
 import {
   AlreadyInTargetState,
   InvalidStateTransition,
@@ -274,6 +275,11 @@ export type FindReportsForSubjectParams = {
    */
   includeAllOwned?: boolean
   /**
+   * Allow explicit IDs to select records owned by an account subject.
+   * Broad selectors remain scoped to the account unless includeAllOwned is set.
+   */
+  includeOwnedRecordIds?: boolean
+  /**
    * Whether to lock the selected reports for update.
    */
   lockForUpdate?: boolean
@@ -290,6 +296,7 @@ export type ReportResult = {
   queuedAt: DatetimeString | null
   actionEventIds: number[] | null
   actionNote: string | null
+  subjectConvoId: string | null
   isMuted: boolean
   status: string
   reportType: string
@@ -306,8 +313,8 @@ export async function findReportsForSubject(
     .where('me.subjectDid', '=', params.subjectDid)
 
   if (!params.includeAllOwned) {
-    // Filter by subject URI (if provided, match exactly; if null/undefined,
-    // match repo-level and exclude chat subjects owned by the same DID).
+    // Match the exact subject, optionally including explicitly selected record
+    // reports for account actions. Broad selectors retain their subject scope.
     if (params.subjectUri) {
       const uri = new AtUri(params.subjectUri)
       if (uri.collection === CHAT_MESSAGE_COLLECTION) {
@@ -324,10 +331,24 @@ export async function findReportsForSubject(
         )
       }
     } else {
-      builder = builder
-        .where('r.recordPath', '=', '')
-        .where('r.subjectMessageId', 'is', null)
-        .where('r.subjectConvoId', 'is', null)
+      builder = builder.where((eb) =>
+        eb.or([
+          eb.and([
+            eb('r.recordPath', '=', ''),
+            eb('r.subjectMessageId', 'is', null),
+            eb('r.subjectConvoId', 'is', null),
+          ]),
+          ...(params.includeOwnedRecordIds && params.reportIds?.length
+            ? [
+                eb.and([
+                  eb('r.id', 'in', params.reportIds),
+                  eb('me.subjectType', '=', com.atproto.repo.strongRef.$type),
+                  eb('r.recordPath', '!=', ''),
+                ]),
+              ]
+            : []),
+        ]),
+      )
     }
   }
 
@@ -408,6 +429,7 @@ export type CloseReportsForSubjectParams = {
   includeAllOwned?: boolean
   reportTypes?: string[]
   excludedReportTypes?: string[]
+  actionEventId?: number
   internalNote?: string
   isAutomated: boolean
   meta?: Record<string, unknown>
@@ -423,9 +445,7 @@ export type CloseReportsResult = {
  * Closes eligible reports matching the subject and report type filters.
  * Assigned and escalated reports are preserved for explicit review actions.
  * Reports whose current status doesn't permit a transition to closed are
- * skipped silently. Unlike
- * `processReportAction` there is no moderation event involved — reports are
- * closed directly via close activities.
+ * skipped silently. An existing moderation event can be linked to each closure.
  */
 export async function closeReportsForSubject(
   params: CloseReportsForSubjectParams,
@@ -443,6 +463,58 @@ export async function closeReportsForSubject(
   const metadata = getActivityMetadata(params.meta)
 
   return db.transaction(async (dbTxn) => {
+    let messageConvoId: string | undefined
+    if (params.actionEventId !== undefined) {
+      const event = await dbTxn.db
+        .selectFrom('moderation_event')
+        .select([
+          'action',
+          'subjectDid',
+          'subjectType',
+          'subjectUri',
+          'subjectMessageId',
+          'subjectConvoId',
+        ])
+        .where('id', '=', params.actionEventId)
+        .executeTakeFirst()
+      const accountEvent =
+        event?.subjectType === com.atproto.admin.defs.repoRef.$type
+      const uri = subjectUri ? new AtUri(subjectUri) : null
+      const exactRecordEvent =
+        !params.includeAllOwned &&
+        uri &&
+        uri.collection !== CHAT_MESSAGE_COLLECTION &&
+        uri.collection !== CHAT_CONVO_COLLECTION &&
+        event?.subjectType === com.atproto.repo.strongRef.$type &&
+        event.subjectUri === subjectUri
+      const exactMessageEvent =
+        !params.includeAllOwned &&
+        uri?.collection === CHAT_MESSAGE_COLLECTION &&
+        event?.subjectType === chat.bsky.convo.defs.messageRef.$type &&
+        event.subjectMessageId === uri.rkey
+      const exactConvoEvent =
+        !params.includeAllOwned &&
+        uri?.collection === CHAT_CONVO_COLLECTION &&
+        event?.subjectType === chat.bsky.convo.defs.convoRef.$type &&
+        event.subjectConvoId === uri.rkey
+      if (
+        !event ||
+        event.subjectDid !== subjectDid ||
+        (!accountEvent &&
+          !exactRecordEvent &&
+          !exactMessageEvent &&
+          !exactConvoEvent) ||
+        handleReportUpdate('open', { type: 'event', eventType: event.action })
+          .nextStatus !== 'closed'
+      ) {
+        throw new InvalidRequestError(
+          'actionEventId must reference a report-closing event on the subject or its owning account',
+        )
+      }
+      if (exactMessageEvent) {
+        messageConvoId = event.subjectConvoId ?? ''
+      }
+    }
     const matchingReports = await findReportsForSubject(dbTxn, {
       subjectDid,
       subjectUri: subjectUri as AtUriString,
@@ -460,6 +532,14 @@ export async function closeReportsForSubject(
       reportType: string
     }[] = []
     for (const report of matchingReports) {
+      // Synthetic message URIs omit the conversation ID; keep the link scoped
+      // to the conversation identified by the action event.
+      if (
+        messageConvoId !== undefined &&
+        (report.subjectConvoId ?? '') !== messageConvoId
+      ) {
+        continue
+      }
       try {
         const result = handleReportUpdate(report.status, {
           type: 'activity',
@@ -494,7 +574,14 @@ export async function closeReportsForSubject(
       const batch = validUpdates.slice(offset, offset + 500)
       await dbTxn.db
         .updateTable('report')
-        .set({ status: 'closed', updatedAt: now, closedAt: now })
+        .set({
+          status: 'closed',
+          updatedAt: now,
+          closedAt: now,
+          ...(params.actionEventId !== undefined && {
+            actionEventIds: sql`CASE WHEN "actionEventIds" ->> -1 = ${String(params.actionEventId)} THEN "actionEventIds" ELSE COALESCE("actionEventIds", '[]'::jsonb) || ${JSON.stringify(params.actionEventId)}::jsonb END`,
+          }),
+        })
         .where(
           'id',
           'in',
@@ -512,13 +599,19 @@ export async function closeReportsForSubject(
             internalNote: internalNote ?? null,
             publicNote: null,
             meta:
-              u.reportType === tools.ozone.report.defs.ReasonAppeal
+              params.actionEventId !== undefined
                 ? {
                     ...metadata,
-                    resolution: 'noAction',
-                    appealOutcome: 'denied',
+                    resolution: 'linked',
+                    actionEventId: params.actionEventId,
                   }
-                : { ...metadata, resolution: 'noAction' },
+                : u.reportType === tools.ozone.report.defs.ReasonAppeal
+                  ? {
+                      ...metadata,
+                      resolution: 'noAction',
+                      appealOutcome: 'denied',
+                    }
+                  : { ...metadata, resolution: 'noAction' },
             isAutomated,
             createdBy,
             createdAt: now,
@@ -552,12 +645,14 @@ export type ProcessReportActionParams = {
     ids?: number[]
     types?: string[]
     all?: boolean
+    allOwned?: boolean
     note?: string
     isAutomated?: boolean
   }
   metadata?: Record<string, unknown>
   subjectDid: DidString
   subjectUri: string | null
+  subjectType: string
   eventId: number
   eventType: string
   createdBy: DidString
@@ -655,7 +750,11 @@ export async function processReportAction(
     subjectUri: subjectUri as AtUriString,
     reportIds: reportAction.ids,
     reportTypes: reportAction.types,
-    targetAll: reportAction.all,
+    targetAll: reportAction.all || reportAction.allOwned,
+    includeAllOwned: reportAction.allOwned,
+    includeOwnedRecordIds:
+      closesReports &&
+      params.subjectType === com.atproto.admin.defs.repoRef.$type,
     protectActiveReview: closesReports,
     lockForUpdate: closesReports,
   })
@@ -722,62 +821,63 @@ export async function processReportAction(
   }
 
   const now = currentDatetimeString()
-  const updateIds = validUpdates.map((u) => u.id)
+  for (let offset = 0; offset < validUpdates.length; offset += 500) {
+    const batch = validUpdates.slice(offset, offset + 500)
+    // All transitions from this event share a target status.
+    const status = batch[0].nextStatus
+    await db.db
+      .updateTable('report')
+      .set({
+        actionEventIds: sql`COALESCE("actionEventIds", '[]'::jsonb) || ${JSON.stringify(eventId)}::jsonb`,
+        actionNote: reportAction.note ?? null,
+        status,
+        updatedAt: now,
+        closedAt: status === 'closed' ? now : null,
+      })
+      .where(
+        'id',
+        'in',
+        batch.map((u) => u.id),
+      )
+      .execute()
 
-  // Bulk UPDATE reports that passed validation
-  // All valid reports share the same target status since they come from the
-  // same event type, so a single UPDATE is sufficient.
-  const status = validUpdates[0].nextStatus
-  const closedAt = status === 'closed' ? now : null
-  await db.db
-    .updateTable('report')
-    .set({
-      actionEventIds: sql`COALESCE("actionEventIds", '[]'::jsonb) || ${JSON.stringify(eventId)}::jsonb`,
-      actionNote: reportAction.note ?? null,
-      status,
-      updatedAt: now,
-      closedAt,
-    })
-    .where('id', 'in', updateIds)
-    .execute()
+    const activities = await db.db
+      .insertInto('report_activity')
+      .values(
+        batch.map((u) => ({
+          reportId: u.id,
+          activityType: u.activityType,
+          previousStatus: u.previousStatus,
+          internalNote: null,
+          publicNote: reportAction.note ?? null,
+          meta:
+            u.activityType === 'closeActivity'
+              ? {
+                  ...params.metadata,
+                  resolution: 'linked',
+                  actionEventId: eventId,
+                }
+              : (params.metadata ?? null),
+          isAutomated: reportAction.isAutomated ?? false,
+          createdBy,
+          createdAt: now,
+        })),
+      )
+      .returning(['id', 'reportId', 'activityType', 'createdAt'])
+      .execute()
 
-  // Bulk INSERT one activity per updated report
-  const activities = await db.db
-    .insertInto('report_activity')
-    .values(
-      validUpdates.map((u) => ({
-        reportId: u.id,
-        activityType: u.activityType,
-        previousStatus: u.previousStatus,
-        internalNote: null,
-        publicNote: reportAction.note ?? null,
-        meta:
-          u.activityType === 'closeActivity'
-            ? {
-                ...params.metadata,
-                resolution: 'linked',
-                actionEventId: eventId,
-              }
-            : (params.metadata ?? null),
-        isAutomated: reportAction.isAutomated ?? false,
-        createdBy,
-        createdAt: now,
+    await notifyReportActivities(
+      db,
+      activities.map((activity) => ({
+        reportId: activity.reportId,
+        activityId: activity.id,
+        activityType: activity.activityType,
+        createdAt: activity.createdAt,
       })),
+      params.inboxStartAt,
+      params.inboxPushEnabled,
     )
-    .returning(['id', 'reportId', 'activityType', 'createdAt'])
-    .execute()
-
-  await notifyReportActivities(
-    db,
-    activities.map((activity) => ({
-      reportId: activity.reportId,
-      activityId: activity.id,
-      activityType: activity.activityType,
-      createdAt: activity.createdAt,
-    })),
-    params.inboxStartAt,
-    params.inboxPushEnabled,
-  )
+  }
 
   return validUpdates.length
 }

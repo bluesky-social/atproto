@@ -133,6 +133,7 @@ export default [
       'packages/lex-cli/bin.js',
       'packages/lex/*/scripts/*.js',
       'packages/pds/scripts/*.js',
+      'scripts/*.mjs',
     ],
     languageOptions: {
       globals: globals.node,
@@ -142,6 +143,31 @@ export default [
     files: ['**/*.js', '**/*.cjs', '**/*.cts'],
     rules: {
       '@typescript-eslint/no-require-imports': 'off',
+    },
+  },
+  {
+    // @atproto/lex depends on the codegen tooling its `lex` CLI needs, which
+    // services must not ship. Packages only depend on it to run `lex` or in
+    // tests, so their production code imports the packages it re-exports.
+    files: ['packages/**/src/**/*.ts'],
+    ignores: [
+      '**/*.test.ts',
+      'packages/lex/lex/**',
+      'packages/oauth/oauth-client-browser-example/**',
+    ],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            {
+              name: '@atproto/lex',
+              message:
+                'Import from the @atproto/lex-* package that re-exports it (lex-client, lex-schema, lex-data, lex-json, lex-cbor), and depend on it instead.',
+            },
+          ],
+        },
+      ],
     },
   },
   {

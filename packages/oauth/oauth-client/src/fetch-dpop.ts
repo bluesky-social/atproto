@@ -3,6 +3,7 @@ import type { Key } from '@atproto/jwk'
 import {
   type Fetch,
   type FetchContext,
+  FetchResponseError,
   cancelBody,
   peekJson,
 } from '@atproto-labs/fetch'
@@ -94,7 +95,14 @@ export function dpopFetchWrapper<C = FetchContext>({
       // Ignore set errors
     }
 
-    const shouldRetry = await isUseDpopNonceError(initResponse, isAuthServer)
+    let shouldRetry: boolean
+    try {
+      shouldRetry = await isUseDpopNonceError(initResponse, isAuthServer)
+    } catch (err) {
+      await cancelBody(initResponse, 'log')
+      throw err
+    }
+
     if (!shouldRetry) {
       // Not a "use_dpop_nonce" error, so there is no need to retry
       return initResponse
@@ -217,9 +225,15 @@ async function isUseDpopNonceError(
       try {
         const json = await peekJson(response, 10 * 1024)
         return (json as any)?.['error'] === 'use_dpop_nonce'
-      } catch {
+      } catch (err) {
         // Response too big (to be "use_dpop_nonce" error) or invalid JSON
-        return false
+        if (err instanceof FetchResponseError) return false
+        if (err instanceof SyntaxError) return false
+
+        // Anything else (e.g. a broken fetch implementation) must not be
+        // mistaken for "not a use_dpop_nonce error", which would silently
+        // prevent the retry.
+        throw err
       }
     }
   }

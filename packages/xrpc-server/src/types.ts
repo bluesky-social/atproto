@@ -22,6 +22,13 @@ export type Options = {
     global?: ServerRateLimitDescription<HandlerContext>[]
     shared?: ServerRateLimitDescription<HandlerContext>[]
     bypass?: (ctx: HandlerContext) => boolean
+    /**
+     * Skip route-specific rate limits that don't define their own `calcKey`,
+     * and so would otherwise be keyed on the client IP. Useful when an
+     * upstream proxy already enforces per-IP limits. Shared and global rate
+     * limits are not affected.
+     */
+    skipDefaultKeyedRouteLimits?: boolean
   }
   /**
    * By default, errors are converted to {@link XRPCError} using

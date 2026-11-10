@@ -7,7 +7,7 @@ import {
   isDatetimeString,
   isDidString,
   toDatetimeString,
-} from '@atproto/lex'
+} from '@atproto/lex-schema'
 import type { OzoneEnvironment } from './env.js'
 import {
   type StrikeSuspensionConfig,
@@ -46,8 +46,6 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
     poolSize: env.dbPoolSize,
     poolMaxUses: env.dbPoolMaxUses,
     poolIdleTimeoutMs: env.dbPoolIdleTimeoutMs,
-    materializedViewRefreshIntervalMs: env.dbMaterializedViewRefreshIntervalMs,
-    materializedViewRefreshTimeoutMs: env.dbMaterializedViewRefreshTimeoutMs,
     teamProfileRefreshIntervalMs: env.dbTeamProfileRefreshIntervalMs,
   }
 
@@ -254,8 +252,6 @@ export type DatabaseConfig = {
   poolSize?: number
   poolMaxUses?: number
   poolIdleTimeoutMs?: number
-  materializedViewRefreshIntervalMs?: number
-  materializedViewRefreshTimeoutMs?: number
   teamProfileRefreshIntervalMs?: number
 }
 

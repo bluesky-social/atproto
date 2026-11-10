@@ -1,5 +1,23 @@
 # @atproto/lex-schema
 
+## 0.2.11
+
+### Patch Changes
+
+- [#5825](https://github.com/bluesky-social/atproto/pull/5825) [`8c841f6`](https://github.com/bluesky-social/atproto/commit/8c841f6e73c8365c2dfe816c0613aa9c50490361) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add `ui8ConcatAsync()` to `@atproto/lex-data`, type `encode()`'s result in `@atproto/lex-cbor` as `Uint8Array<ArrayBuffer>`, and keep `bytes` schemas from coercing arrays and array-like objects now that `asUint8Array` accepts them.
+- Updated dependencies [[`8c841f6`](https://github.com/bluesky-social/atproto/commit/8c841f6e73c8365c2dfe816c0613aa9c50490361), [`8c841f6`](https://github.com/bluesky-social/atproto/commit/8c841f6e73c8365c2dfe816c0613aa9c50490361), [`8c841f6`](https://github.com/bluesky-social/atproto/commit/8c841f6e73c8365c2dfe816c0613aa9c50490361), [`8c841f6`](https://github.com/bluesky-social/atproto/commit/8c841f6e73c8365c2dfe816c0613aa9c50490361)]:
+  - @atproto/lex-data@0.1.10
+
+## 0.2.10
+
+### Patch Changes
+
+- [#5786](https://github.com/bluesky-social/atproto/pull/5786) [`07c25d4`](https://github.com/bluesky-social/atproto/commit/07c25d410d4f4ad8f6ec80fc14efa0dd8ec55545) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Recommend depending on this package directly, rather than on `@atproto/lex`, unless the code is bundled
+
+- [#5786](https://github.com/bluesky-social/atproto/pull/5786) [`07c25d4`](https://github.com/bluesky-social/atproto/commit/07c25d410d4f4ad8f6ec80fc14efa0dd8ec55545) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Move `walk` to `@atproto/lex-schema`, which `@atproto/lex` still re-exports it from
+- Updated dependencies [[`07c25d4`](https://github.com/bluesky-social/atproto/commit/07c25d410d4f4ad8f6ec80fc14efa0dd8ec55545)]:
+  - @atproto/lex-data@0.1.9
+
 ## 0.2.9
 
 ### Patch Changes

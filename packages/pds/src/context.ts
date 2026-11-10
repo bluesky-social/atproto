@@ -8,7 +8,7 @@ import type * as undici from 'undici'
 import { KmsKeypair, S3BlobStore } from '@atproto/aws'
 import * as crypto from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
-import { Client } from '@atproto/lex'
+import { Client } from '@atproto/lex-client'
 import { parseCid } from '@atproto/lex-data'
 import {
   AccessTokenMode,
@@ -280,7 +280,7 @@ export class AppContext implements AsyncDisposable {
       : undefined
     const entrywayClient = cfg.entryway
       ? new Client(
-          { service: cfg.entryway.url },
+          { service: cfg.entryway.apiUrl },
           {
             // Trust internal services to send us well-formed responses
             strictResponseProcessing: false,
@@ -292,7 +292,7 @@ export class AppContext implements AsyncDisposable {
       cfg.entryway && secrets.entrywayAdminToken
         ? new Client(
             {
-              service: cfg.entryway.url,
+              service: cfg.entryway.apiUrl,
               headers: {
                 authorization: basicAuthHeader(
                   'admin',
@@ -590,6 +590,15 @@ export class AppContext implements AsyncDisposable {
           entryway: cfg.entryway?.did,
           modService: cfg.modService?.did,
         },
+        entrywayServiceAuth: cfg.entryway
+          ? {
+              didKey: crypto.formatDidKey(
+                crypto.SECP256K1_JWT_ALG,
+                ui8.fromString(cfg.entryway.jwtPublicKeyHex, 'hex'),
+              ),
+              required: cfg.entryway.requireServiceAuth,
+            }
+          : undefined,
       },
     )
 

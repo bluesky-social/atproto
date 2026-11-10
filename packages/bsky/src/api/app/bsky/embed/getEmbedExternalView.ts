@@ -1,20 +1,14 @@
-import {
-  type AtUriString,
-  type LexMap,
-  type TypedLexMap,
-  isDidString,
-} from '@atproto/lex'
+import { type AtUriString, isDidString } from '@atproto/lex-schema'
 import { parseAtUriString } from '@atproto/syntax'
 import type { Server } from '@atproto/xrpc-server'
 import type { ServerConfig } from '../../../../config.js'
 import type { AppContext } from '../../../../context.js'
-import type { ExternalRecords } from '../../../../hydration/external.js'
 import type {
   HydrateCtx,
   HydrationState,
   Hydrator,
 } from '../../../../hydration/hydrator.js'
-import { app, com, site, social } from '../../../../lexicons/index.js'
+import { app, site } from '../../../../lexicons/index.js'
 import {
   type HydrationFnInput,
   type PresentationFnInput,
@@ -22,6 +16,7 @@ import {
   createPipeline,
   noRules,
 } from '../../../../pipeline.js'
+import { collectAssociations } from '../../../../util/external/associations.js'
 import { isExternalRecordUrlSafe } from '../../../../util/external/index.js'
 import {
   getStandardSiteRecordsForUri,
@@ -182,62 +177,6 @@ const normalizeCanonicalUri = (params: Params): AtUriString | undefined => {
     candidates.find((c) => c.collection === site.standard.publication.$type)
   return preferred?.uri
 }
-
-/**
- * Persistence policy, not render-time hydration: the canonical record (when
- * available, whatever its collection) plus only the additional collections
- * opted in here, so records baked into a post stay slim. Hydration still holds
- * the full state (e.g. recommendation, subscription and favorite records that
- * back the rendered `likers`/`subscribers` previews); those are deliberately
- * not persisted. An absent entry means no additional collections. Add a
- * collection here only when a post must carry it.
- */
-const PERSISTED_DEPENDENCY_COLLECTIONS: ReadonlyMap<string, readonly string[]> =
-  new Map<string, readonly string[]>([
-    [site.standard.document.$type, [site.standard.publication.$type]],
-    [
-      social.grain.gallery.$type,
-      [social.grain.gallery.item.$type, social.grain.photo.$type],
-    ],
-  ])
-
-/**
- * The canonical record, then the hydrated dependencies whose URI collection is
- * opted in by `PERSISTED_DEPENDENCY_COLLECTIONS` for the canonical collection.
- * Refs and associatedRecords are index-aligned, with CIDs taken from
- * hydration; unavailable records are excluded.
- */
-const collectAssociations = (
-  canonicalUri: AtUriString,
-  records: ExternalRecords,
-): { associatedRefs: StrongRef[]; associatedRecords: LexMap[] } => {
-  const associatedRefs: StrongRef[] = []
-  const associatedRecords: LexMap[] = []
-  const canonicalCollection = parseRecordUri(canonicalUri)?.collection
-  const persisted =
-    (canonicalCollection &&
-      PERSISTED_DEPENDENCY_COLLECTIONS.get(canonicalCollection)) ||
-    []
-  const uris = [
-    canonicalUri,
-    ...[...records.keys()].filter((uri) => uri !== canonicalUri),
-  ]
-  for (const uri of uris) {
-    const info = records.get(uri)
-    if (!info) continue
-    if (uri !== canonicalUri) {
-      const collection = parseRecordUri(uri)?.collection
-      if (!collection || !persisted.includes(collection)) continue
-    }
-    associatedRefs.push(
-      com.atproto.repo.strongRef.$build({ uri, cid: info.cid }),
-    )
-    associatedRecords.push(info.record as TypedLexMap)
-  }
-  return { associatedRefs, associatedRecords }
-}
-
-type StrongRef = com.atproto.repo.strongRef.Main
 
 type Context = {
   hydrator: Hydrator

@@ -2,15 +2,15 @@ import { type Insertable, sql } from 'kysely'
 import { DAY, addHoursToDate, chunkArray } from '@atproto/common'
 import type { Keypair } from '@atproto/crypto'
 import type { IdResolver } from '@atproto/identity'
+import type { Client } from '@atproto/lex-client'
 import {
-  type Client,
   type DatetimeString,
   type DidString,
   type UriString,
   currentDatetimeString,
   isDidString,
   toDatetimeString,
-} from '@atproto/lex'
+} from '@atproto/lex-schema'
 import { AtUri, INVALID_HANDLE } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { getReviewState } from '../api/util.js'
@@ -1200,9 +1200,6 @@ export class ModerationService {
     excludeTags,
     collections,
     subjectType,
-    minAccountSuspendCount,
-    minReportedRecordsCount,
-    minTakendownRecordsCount,
     minPriorityScore,
     minStrikeCount,
     ageAssuranceState,
@@ -1467,30 +1464,6 @@ export class ModerationService {
       )
     }
 
-    if (minAccountSuspendCount != null && minAccountSuspendCount > 0) {
-      builder = builder.where(
-        'account_events_stats.suspendCount',
-        '>=',
-        minAccountSuspendCount,
-      )
-    }
-
-    if (minTakendownRecordsCount != null && minTakendownRecordsCount > 0) {
-      builder = builder.where(
-        'account_record_status_stats.takendownCount',
-        '>=',
-        minTakendownRecordsCount,
-      )
-    }
-
-    if (minReportedRecordsCount != null && minReportedRecordsCount > 0) {
-      builder = builder.where(
-        'account_record_events_stats.reportedCount',
-        '>=',
-        minReportedRecordsCount,
-      )
-    }
-
     if (minPriorityScore != null && minPriorityScore >= 0) {
       builder = builder.where(
         'moderation_subject_status.priorityScore',
@@ -1515,14 +1488,15 @@ export class ModerationService {
       )
     }
 
+    const effectiveSortField =
+      sortField === 'reportedRecordsCount' ||
+      sortField === 'takendownRecordsCount'
+        ? 'lastReportedAt'
+        : sortField
     const keyset = new StatusKeyset(
-      sortField === 'reportedRecordsCount'
-        ? ref(`account_record_events_stats.reportedCount`)
-        : sortField === 'takendownRecordsCount'
-          ? ref(`account_record_status_stats.takendownCount`)
-          : sortField === 'priorityScore'
-            ? ref(`moderation_subject_status.priorityScore`)
-            : ref(`moderation_subject_status.${sortField}`),
+      effectiveSortField === 'priorityScore'
+        ? ref('moderation_subject_status.priorityScore')
+        : ref(`moderation_subject_status.${effectiveSortField}`),
       ref('moderation_subject_status.id'),
     )
     const paginatedBuilder = paginate(builder, {

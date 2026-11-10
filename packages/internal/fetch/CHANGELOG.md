@@ -1,5 +1,18 @@
 # @atproto-labs/fetch
 
+## 0.4.2
+
+### Patch Changes
+
+- [#5805](https://github.com/bluesky-social/atproto/pull/5805) [`a93db66`](https://github.com/bluesky-social/atproto/commit/a93db663f51405031b9fc12b6f57968a435fddec) Thanks [@mozzius](https://github.com/mozzius)! - `peekJson` no longer constructs a `Response` to enforce its size limit, so it works when the global `Response` can't wrap a stream (e.g. React Native's whatwg-fetch polyfill alongside Expo's `fetch`). A body over the limit now rejects with a `FetchResponseError`.
+
+## 0.4.1
+
+### Patch Changes
+
+- Updated dependencies [[`7aa8e7e`](https://github.com/bluesky-social/atproto/commit/7aa8e7e9e1422f053447879def4d4cf92a05adbb)]:
+  - @atproto-labs/pipe@0.2.5
+
 ## 0.4.0
 
 ### Minor Changes

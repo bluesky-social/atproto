@@ -1,5 +1,5 @@
 import type { Generated, Selectable } from 'kysely'
-import type { DatetimeString } from '@atproto/lex'
+import type { DatetimeString } from '@atproto/lex-schema'
 
 export interface Account {
   did: string

@@ -2,8 +2,8 @@
 name: xrpc-server
 description: >
   Build or edit routes on an AT Protocol service that uses
-  `@atproto/xrpc-server` — `packages/pds`, `packages/bsky`, or any package whose
-  handlers call `server.add()`. Use when adding or changing an endpoint, wiring
+  `@atproto/xrpc-server` — `packages/pds`, `packages/bsky`, `packages/ozone`, or
+  any package whose handlers call `server.add()`. Use when adding or changing an endpoint, wiring
   `createServer` into Express, reading params/input/auth in a handler, returning
   JSON, binary, streamed, or empty responses, setting response headers, throwing
   XRPC protocol errors, applying per-route rate limits or body limits, or
@@ -231,12 +231,12 @@ const aud = computeProxyTo(ctx, req, lxm)
 permissions.assertRpc({ aud, lxm })
 ```
 
-| Accessor        | Use                                                                  |
-| --------------- | -------------------------------------------------------------------- |
-| `$lxm`          | lexicon method id, for auth scopes and proxy targets                 |
-| `$type`         | record type, e.g. `uri.collection === app.bsky.feed.post.$type`      |
-| `$token`        | a token def's string value (`app.bsky.graph.defs.curatelist.$token`) |
-| `$build({...})` | construct a value with its `$type` set                               |
+| Accessor        | Use                                                                                         |
+| --------------- | ------------------------------------------------------------------------------------------- |
+| `$lxm`          | lexicon method id, for auth scopes and proxy targets                                        |
+| `$type`         | record type, e.g. `uri.collection === app.bsky.feed.post.$type`                             |
+| `$token`        | a token def's string value; prefer the PascalCase export (`app.bsky.graph.defs.Curatelist`) |
+| `$build({...})` | construct a value with its `$type` set                                                      |
 
 `$build` is how union members are constructed:
 
@@ -297,8 +297,9 @@ rejects the connection with that error. The subscription context is
 `{ params, auth, req, signal }` — and `req` here is a raw Node
 `IncomingMessage`, not an Express `Request`.
 
-`packages/pds/src/api/com/atproto/sync/subscribeRepos.ts` is the only
-subscription in the repo and the reference implementation.
+`packages/pds/src/api/com/atproto/sync/subscribeRepos.ts` is the reference
+implementation; `packages/ozone/src/api/label/subscribeLabels.ts` follows the
+same shape.
 
 ## File layout
 

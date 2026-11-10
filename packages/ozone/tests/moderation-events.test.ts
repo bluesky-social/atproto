@@ -723,6 +723,61 @@ describe('moderation-events', () => {
         subjectBlobCids: [post.images[0].image.ref.toString()],
       })
     })
+
+    it('returns account and record takedowns and reversals across pages', async () => {
+      const subject = {
+        $type: 'com.atproto.admin.defs#repoRef',
+        did: sc.dids.carol,
+      }
+      await modClient.emitEvent({
+        event: {
+          $type: 'tools.ozone.moderation.defs#modEventTakedown',
+          durationInHours: 24,
+        },
+        subject,
+      })
+      await modClient.emitEvent({
+        event: { $type: 'tools.ozone.moderation.defs#modEventReverseTakedown' },
+        subject,
+      })
+
+      const types = [
+        'tools.ozone.moderation.defs#modEventTakedown',
+        'tools.ozone.moderation.defs#modEventReverseTakedown',
+      ]
+      const account = await modClient.queryEvents({
+        subject: sc.dids.carol,
+        types,
+      })
+      expect(account.events).toHaveLength(2)
+      expect(
+        account.events.every((event) =>
+          ComAtprotoAdminDefs.isRepoRef(event.subject),
+        ),
+      ).toBe(true)
+      expect(account.events.map((event) => event.event.$type)).toEqual(
+        expect.arrayContaining(types),
+      )
+
+      const events: typeof account.events = []
+      let cursor: string | undefined
+      do {
+        const page = await modClient.queryEvents({
+          subject: sc.dids.carol,
+          includeAllUserRecords: true,
+          types,
+          limit: 1,
+          cursor,
+        })
+        events.push(...page.events)
+        cursor = page.cursor
+      } while (cursor)
+      expect(events).toHaveLength(4)
+      expect(new Set(events.map((event) => event.id)).size).toBe(4)
+      expect(
+        events.filter((event) => ComAtprotoRepoStrongRef.isMain(event.subject)),
+      ).toHaveLength(2)
+    })
   })
 
   describe('email event', () => {

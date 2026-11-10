@@ -1,5 +1,5 @@
 import { envBool, envInt, envList, envStr } from '@atproto/common'
-import type { DidString, UriString } from '@atproto/lex'
+import type { DidString, UriString } from '@atproto/lex-schema'
 
 export const readEnv = (): OzoneEnvironment => {
   const onlineMembersActiveWindowMs = envStr(
@@ -30,12 +30,6 @@ export const readEnv = (): OzoneEnvironment => {
     dbPoolSize: envInt('OZONE_DB_POOL_SIZE'),
     dbPoolMaxUses: envInt('OZONE_DB_POOL_MAX_USES'),
     dbPoolIdleTimeoutMs: envInt('OZONE_DB_POOL_IDLE_TIMEOUT_MS'),
-    dbMaterializedViewRefreshIntervalMs: envInt(
-      'OZONE_DB_MATERIALIZED_VIEW_REFRESH_INTERVAL_MS',
-    ),
-    dbMaterializedViewRefreshTimeoutMs: envInt(
-      'OZONE_DB_MATERIALIZED_VIEW_REFRESH_TIMEOUT_MS',
-    ),
     dbTeamProfileRefreshIntervalMs: envInt(
       'OZONE_DB_TEAM_PROFILE_REFRESH_INTERVAL_MS',
     ),
@@ -111,8 +105,6 @@ export type OzoneEnvironment = {
   dbPoolSize?: number
   dbPoolMaxUses?: number
   dbPoolIdleTimeoutMs?: number
-  dbMaterializedViewRefreshIntervalMs?: number
-  dbMaterializedViewRefreshTimeoutMs?: number
   dbTeamProfileRefreshIntervalMs?: number
   didPlcUrl?: string
   didCacheStaleTTL?: number

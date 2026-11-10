@@ -2,7 +2,7 @@ import {
   type DatetimeString,
   type DidString,
   currentDatetimeString,
-} from '@atproto/lex'
+} from '@atproto/lex-schema'
 import type { StrikeSuspensionConfig } from '../config/strike-suspension.js'
 import type { Database } from '../db/index.js'
 
@@ -10,8 +10,13 @@ export type Standing = 'good' | 'warning' | 'atRisk'
 
 export type AccountStanding = {
   standing: Standing
+  hasActiveStrikes: boolean
   updatedAt: DatetimeString
   expiresAt?: DatetimeString
+  enforcement: {
+    state: 'none' | 'suspended' | 'takendown'
+    expiresAt?: DatetimeString
+  }
 }
 
 /** Shared derivation for account status and standing notifications. */
@@ -68,8 +73,18 @@ export async function getAccountStanding(
         '1970-01-01T00:00:00.000Z')
   return {
     standing,
+    hasActiveStrikes: count > 0,
     updatedAt,
-    ...(suspended && status?.suspendUntil
+    // @NOTE A timed takedown remains temporary until its reversal is processed,
+    // including when the scheduled expiry has already passed.
+    enforcement: status?.takendown
+      ? status.suspendUntil
+        ? { state: 'suspended', expiresAt: status.suspendUntil }
+        : { state: 'takendown' }
+      : suspended && status?.suspendUntil
+        ? { state: 'suspended', expiresAt: status.suspendUntil }
+        : { state: 'none' },
+    ...((suspended || status?.takendown) && status?.suspendUntil
       ? { expiresAt: status.suspendUntil }
       : {}),
   }

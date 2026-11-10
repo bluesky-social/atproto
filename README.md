@@ -25,7 +25,7 @@ The Bluesky Social application encompasses a set of schemas and APIs built in th
 - **Implementing atproto itself?** The protocol primitives are split into focused packages: identifier parsing ([`syntax`](./packages/syntax/README.md)), DID/handle resolution ([`identity`](./packages/identity/README.md), [`did`](./packages/did/)), signing ([`crypto`](./packages/crypto/README.md)), repository & Merkle Search Tree ([`repo`](./packages/repo/README.md)), and firehose consumption ([`sync`](./packages/sync/)).
 - **Everything else** is either a service implementation (see below), shared internal glue ([`common`](./packages/common/README.md), [`common-web`](./packages/common-web/README.md), [`./packages/internal/`](./packages/internal/)), or dev tooling ([`dev-env`](./packages/dev-env/), [`dev-infra`](./packages/dev-infra/)).
 
-**TypeScript Services:** each has its implementation in `packages/<name>` and a thin runtime wrapper in `services/<name>`.
+**TypeScript Services:** each has its implementation in `packages/<name>` and a thin runtime wrapper in `services/<name>`. [`services/README.md`](./services/README.md) explains how to build and run their Docker images.
 
 - `pds`: "Personal Data Server", hosting repo content for atproto accounts. See [bluesky-social/pds](https://github.com/bluesky-social/pds) for directions on self-hosting.
 - `bsky`: AppView implementation of the `app.bsky.*` API endpoints, including a PostgreSQL dataplane implementation for testing. Note that the production `https://api.bsky.app` service uses a different dataplane which is not open source.

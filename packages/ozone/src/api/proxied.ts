@@ -1,6 +1,7 @@
 import type { Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../context.js'
 import { app, com, tools } from '../lexicons/index.js'
+import { LABELER_HEADER_NAME } from '../util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(app.bsky.actor.getProfile, {
@@ -145,6 +146,29 @@ export default function (server: Server, ctx: AppContext) {
         app.bsky.graph.getLists,
         request.params,
         await ctx.appviewAuth(app.bsky.graph.getLists.$lxm),
+      )
+      return {
+        encoding: 'application/json',
+        body,
+      }
+    },
+  })
+
+  server.add(app.bsky.unspecced.getAtmosphereRecordView, {
+    auth: ctx.authVerifier.modOrAdminToken,
+    handler: async ({ params, req }) => {
+      const auth = await ctx.appviewAuth(
+        app.bsky.unspecced.getAtmosphereRecordView.$lxm,
+      )
+      const headers = new Headers(auth.headers)
+      const labelers = req.header(LABELER_HEADER_NAME)
+      if (labelers !== undefined) {
+        headers.set(LABELER_HEADER_NAME, labelers)
+      }
+      const body = await ctx.appviewClient.call(
+        app.bsky.unspecced.getAtmosphereRecordView,
+        params,
+        { headers },
       )
       return {
         encoding: 'application/json',

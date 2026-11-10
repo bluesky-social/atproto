@@ -1,4 +1,4 @@
-import { type DatetimeString, currentDatetimeString } from '@atproto/lex'
+import { type DatetimeString, currentDatetimeString } from '@atproto/lex-schema'
 import type { AccountDb } from '../db/index.js'
 
 /**

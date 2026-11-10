@@ -6,7 +6,7 @@ import {
   type UriString,
   currentDatetimeString,
   toDatetimeString,
-} from '@atproto/lex'
+} from '@atproto/lex-schema'
 import { AtUri } from '@atproto/syntax'
 import { ForbiddenError, InvalidRequestError } from '@atproto/xrpc-server'
 import type { AppContext } from '../context.js'

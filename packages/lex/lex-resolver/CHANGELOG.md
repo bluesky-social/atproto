@@ -1,5 +1,42 @@
 # @atproto/lex-resolver
 
+## 0.4.5
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/repo@0.11.5
+
+## 0.4.4
+
+### Patch Changes
+
+- Updated dependencies [[`8c841f6`](https://github.com/bluesky-social/atproto/commit/8c841f6e73c8365c2dfe816c0613aa9c50490361), [`8c841f6`](https://github.com/bluesky-social/atproto/commit/8c841f6e73c8365c2dfe816c0613aa9c50490361), [`8c841f6`](https://github.com/bluesky-social/atproto/commit/8c841f6e73c8365c2dfe816c0613aa9c50490361), [`8c841f6`](https://github.com/bluesky-social/atproto/commit/8c841f6e73c8365c2dfe816c0613aa9c50490361)]:
+  - @atproto/lex-data@0.1.10
+  - @atproto/lex-schema@0.2.11
+  - @atproto/lex-document@0.1.16
+  - @atproto/lex-rpc@0.0.3
+  - @atproto/repo@0.11.4
+
+## 0.4.3
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto-labs/did-resolver@0.3.13
+
+## 0.4.2
+
+### Patch Changes
+
+- Updated dependencies [[`07c25d4`](https://github.com/bluesky-social/atproto/commit/07c25d410d4f4ad8f6ec80fc14efa0dd8ec55545), [`07c25d4`](https://github.com/bluesky-social/atproto/commit/07c25d410d4f4ad8f6ec80fc14efa0dd8ec55545), [`07c25d4`](https://github.com/bluesky-social/atproto/commit/07c25d410d4f4ad8f6ec80fc14efa0dd8ec55545)]:
+  - @atproto/lex-document@0.1.15
+  - @atproto/lex-data@0.1.9
+  - @atproto/lex-schema@0.2.10
+  - @atproto-labs/did-resolver@0.3.12
+  - @atproto/lex-rpc@0.0.2
+  - @atproto/repo@0.11.3
+
 ## 0.4.1
 
 ### Patch Changes

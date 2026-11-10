@@ -1,10 +1,10 @@
+import type { LexMap } from '@atproto/lex-data'
 import type {
   DatetimeString,
   DidString,
-  LexMap,
   Unknown$Type,
-} from '@atproto/lex'
-import { currentDatetimeString } from '@atproto/lex'
+} from '@atproto/lex-schema'
+import { currentDatetimeString } from '@atproto/lex-schema'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import type { Database } from '../db/index.js'
 import { TimeIdKeyset, paginate } from '../db/pagination.js'

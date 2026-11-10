@@ -336,6 +336,36 @@ describe('notification grouping', () => {
   )
 
   it.each(['algoGravity', 'algoLookback'] as const)(
+    '%s caps subscribed-post groups at 150 across batches without losing the next post',
+    (algorithm) => {
+      const items = Array.from({ length: 151 }, (_, index) =>
+        item(
+          `post-${index}`,
+          minutesAgo(index / 1000),
+          NOTIFICATION_REASON.SUBSCRIBED_POST,
+        ),
+      )
+      const buildGroups = getGroupingAlgorithm(algorithm).createGroupBuilder(
+        1,
+        now,
+      )
+
+      expect(buildGroups(items.slice(0, 149)).cursor).toBeUndefined()
+      expect(buildGroups(items.slice(149, 150)).cursor).toBeUndefined()
+      const firstPage = buildGroups(items.slice(150))
+      expect(firstPage.groups[0]?.items).toEqual(items.slice(0, 150))
+      expect(firstPage.cursor).toBe(items[149]!.raw.indexedAt)
+
+      const secondPage = getGroupingAlgorithm(algorithm).createGroupBuilder(
+        1,
+        now,
+      )(items.slice(150))
+      expect(secondPage.groups[0]?.items).toEqual([items[150]])
+      expect(secondPage.cursor).toBeUndefined()
+    },
+  )
+
+  it.each(['algoGravity', 'algoLookback'] as const)(
     '%s groups recent likes across midnight',
     (algorithm) => {
       const now = Date.parse('2026-09-21T00:05:00.000Z')
@@ -910,16 +940,16 @@ describe.each(['algoGravity', 'algoLookback'] as const)(
       })
 
       it('leaves items beyond the spotlight size cap in ordinary groups', () => {
-        const items = spotlightItems(type, 201)
-        const { page } = buildPage(items, 201)
+        const items = spotlightItems(type, 151)
+        const { page } = buildPage(items, 151)
         expectPage(page, items, [
-          items.slice(0, 200).map(({ id }) => id),
-          [items[200]!.id],
+          items.slice(0, 150).map(({ id }) => id),
+          [items[150]!.id],
         ])
         expect(
           page.groups.map(({ kind, itemCount }) => [kind, itemCount]),
         ).toEqual([
-          [type.kind, 200],
+          [type.kind, 150],
           [type.reason, 1],
         ])
       })
@@ -1607,20 +1637,20 @@ describe.each(['algoGravity', 'algoLookback'] as const)(
       },
     )
 
-    it('keeps likes beyond the 200-item spotlight cap in ordinary groups', () => {
+    it('keeps likes beyond the 150-item spotlight cap in ordinary groups', () => {
       const items = postLikes(
-        Array.from({ length: 201 }, (_, index) => ['alice', `post-${index}`]),
+        Array.from({ length: 151 }, (_, index) => ['alice', `post-${index}`]),
       )
-      const { page } = buildPage(items, 201)
+      const { page } = buildPage(items, 151)
 
       expectPage(page, items, [
-        Array.from({ length: 200 }, (_, index) => `alice-post-${index}`),
-        ['alice-post-200'],
+        Array.from({ length: 150 }, (_, index) => `alice-post-${index}`),
+        ['alice-post-150'],
       ])
       expect(
         page.groups.map(({ kind, itemCount }) => [kind, itemCount]),
       ).toEqual([
-        [APPVIEW_NOTIFICATION_REASON.MULTI_POST_LIKE, 200],
+        [APPVIEW_NOTIFICATION_REASON.MULTI_POST_LIKE, 150],
         ['like', 1],
       ])
     })

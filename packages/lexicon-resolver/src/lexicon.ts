@@ -1,9 +1,10 @@
 import * as dns from 'node:dns/promises'
-import { type Cid, l } from '@atproto/lex'
+import type { Cid } from '@atproto/lex-data'
 import {
   type LexiconDocument,
   lexiconDocumentSchema,
 } from '@atproto/lex-document'
+import { l } from '@atproto/lex-schema'
 import type { Commit } from '@atproto/repo'
 import { AtUri, type DidString, NSID, type NsidString } from '@atproto/syntax'
 import * as lexiconsSchema from './lexicons/com/atproto/lexicon/schema.js'

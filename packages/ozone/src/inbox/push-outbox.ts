@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto'
 import { type Selectable, sql } from 'kysely'
-import type { DatetimeString } from '@atproto/lex'
+import type { DatetimeString } from '@atproto/lex-schema'
 import type { Database } from '../db/index.js'
 import type { InboxNotification } from '../db/schema/inbox_notification.js'
 import { dbLogger } from '../logger.js'

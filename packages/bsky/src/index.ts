@@ -9,7 +9,7 @@ import { type HttpTerminator, createHttpTerminator } from 'http-terminator'
 import { DAY, SECOND } from '@atproto/common'
 import type { Keypair } from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
-import { Client } from '@atproto/lex'
+import { Client } from '@atproto/lex-client'
 import { createServer } from '@atproto/xrpc-server'
 import { safeFetchWrap } from '@atproto-labs/fetch-node'
 import { createBlobDispatcher } from './api/blob-dispatcher.js'
@@ -238,16 +238,12 @@ export class BskyAppView {
     const entrywayJwtPublicKey = config.entrywayJwtPublicKeyHex
       ? createPublicKeyObject(config.entrywayJwtPublicKeyHex)
       : undefined
-    const bffJwtSecret = config.bffJwtSecret
-      ? Buffer.from(config.bffJwtSecret, 'utf8')
-      : undefined
     const authVerifier = new AuthVerifier(dataplane, {
       ownDid: config.serverDid,
       alternateAudienceDids: config.alternateAudienceDids,
       modServiceDid: config.modServiceDid,
       adminPasses: config.adminPasswords,
       entrywayJwtPublicKey,
-      bffJwtSecret,
     })
 
     const blobDispatcher = createBlobDispatcher(config)

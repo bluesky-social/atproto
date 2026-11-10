@@ -95,6 +95,50 @@ describe('inbox push outbox', () => {
     )
   })
 
+  it('enqueues report pushes when a moderation event actions multiple reports', async () => {
+    const subject = com.atproto.admin.defs.repoRef.$build({
+      did: sc.dids.alice,
+    })
+    const events = await Promise.all(
+      ['one', 'two'].map((reason) =>
+        sc.createReport({
+          reasonType: ComAtprotoModerationDefs.REASONSPAM,
+          reason,
+          subject,
+          reportedBy: sc.dids.bob,
+        }),
+      ),
+    )
+    await network.processAll()
+    const mod = network.ozone.getModClient()
+    const reports = await Promise.all(
+      events.map((event) => reportForEvent(mod, event.id)),
+    )
+    await mod.emitEvent({
+      event: tools.ozone.moderation.defs.modEventAcknowledge.$build({}),
+      subject,
+      reportAction: { ids: reports.map((report) => report.id) },
+    })
+
+    const { notifications } = await claimPushNotifications(
+      network.ozone.ctx.db,
+      10,
+    )
+    expect(notifications).toHaveLength(2)
+    expect(notifications).toEqual(
+      expect.arrayContaining(
+        reports.map((report) =>
+          expect.objectContaining({
+            recipientDid: sc.dids.bob,
+            reason: 'reportResolved',
+            category: 'reports',
+            target: expect.objectContaining({ reportId: report.id }),
+          }),
+        ),
+      ),
+    )
+  })
+
   it('enqueues once for newly inserted notifications and respects preferences', async () => {
     const db = network.ozone.ctx.db
     const input = notification('test:one')

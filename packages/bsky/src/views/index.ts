@@ -1,12 +1,12 @@
 import { HOUR, MINUTE, dedupeStrs, mapDefined } from '@atproto/common'
+import { getBlobCidString } from '@atproto/lex-data'
 import {
   type $Typed,
   type Un$Typed,
   type Unknown$TypedObject,
   type UriString,
   atUri,
-  getBlobCidString,
-} from '@atproto/lex'
+} from '@atproto/lex-schema'
 import {
   AtUri,
   type AtUriString,
@@ -2364,8 +2364,9 @@ export class Views {
     uri: AtUriString,
     state: HydrationState,
     now = Date.now(),
+    cid?: string,
   ): $Typed<ExternalRecordView> | undefined {
-    return externalRecordViewBase(this, uri, state, now)
+    return externalRecordViewBase(this, uri, state, now, cid)
   }
 
   externalEmbed(

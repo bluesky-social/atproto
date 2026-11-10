@@ -1,6 +1,6 @@
 {
   "name": "@atproto/lex",
-  "version": "0.4.4",
+  "version": "0.4.8",
   "license": "MIT",
   "description": "Lexicon tooling for AT",
   "keywords": [
@@ -37,6 +37,7 @@
   },
   "dependencies": {
     "@atproto/lex-builder": "workspace:^",
+    "@atproto/lex-cbor": "workspace:^",
     "@atproto/lex-client": "workspace:^",
     "@atproto/lex-data": "workspace:^",
     "@atproto/lex-json": "workspace:^",
@@ -53,6 +54,7 @@
     "codegen:lex": "./bin/lex build --override --indexFile --lexicons ./lexicons --out ./tests/lexicons --lib @atproto/lex-schema",
     "prebuild": "pnpm run '/^(codegen:.+)$/'",
     "build": "tsc --build tsconfig.build.json",
-    "test": "vitest run"
+    "test": "vitest run",
+    "verify:declarations": "node ./verify-declarations.mjs"
   }
 }

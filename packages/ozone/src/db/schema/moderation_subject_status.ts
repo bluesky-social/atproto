@@ -1,5 +1,5 @@
 import type { Generated } from 'kysely'
-import type { DatetimeString, DidString } from '@atproto/lex'
+import type { DatetimeString, DidString } from '@atproto/lex-schema'
 import type { tools } from '../../lexicons/index.js'
 
 export const subjectStatusTableName = 'moderation_subject_status'

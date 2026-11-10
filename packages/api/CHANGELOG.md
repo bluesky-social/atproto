@@ -1,5 +1,45 @@
 # @atproto/api
 
+## 0.30.3
+
+### Patch Changes
+
+- [#5817](https://github.com/bluesky-social/atproto/pull/5817) [`d4f2c91`](https://github.com/bluesky-social/atproto/commit/d4f2c919697d37af8f411f724e12b8ce2b88f922) Thanks [@foysalit](https://github.com/foysalit)! - Support linking report closures to existing moderation events and targeting all subjects owned by an account from a moderation event.
+- Updated dependencies []:
+  - @atproto/common-web@0.5.17
+  - @atproto/lexicon@0.7.19
+  - @atproto/xrpc@0.8.18
+
+## 0.30.2
+
+### Patch Changes
+
+- [#5809](https://github.com/bluesky-social/atproto/pull/5809) [`7b640e8`](https://github.com/bluesky-social/atproto/commit/7b640e8fee709d22a0d62262068db0ddb3106741) Thanks [@blackmichael](https://github.com/blackmichael)! - Expose optional author-declared bskyPostRef strong references beside view on unspecced Atmosphere timeline activities and Explore article and livestream items, without changing external embed schemas or fetching the referenced post.
+
+- [#5799](https://github.com/bluesky-social/atproto/pull/5799) [`9537a65`](https://github.com/bluesky-social/atproto/commit/9537a659a9d85bbeef1bb423fcb4be9d2e618ff2) Thanks [@dholms](https://github.com/dholms)! - Add the `com.atproto.label.record` lexicon
+
+- [#5813](https://github.com/bluesky-social/atproto/pull/5813) [`43b0be2`](https://github.com/bluesky-social/atproto/commit/43b0be2fa15e49479c11254101a056e9da137c84) Thanks [@foysalit](https://github.com/foysalit)! - Expose account enforcement and best-effort profile information in the moderation inbox.
+
+- [#5818](https://github.com/bluesky-social/atproto/pull/5818) [`ba75afa`](https://github.com/bluesky-social/atproto/commit/ba75afad9fab6d1f5c207b1b5d12a7ecfc5b379d) Thanks [@foysalit](https://github.com/foysalit)! - Expose whether an account has active strikes in its moderation inbox status.
+
+- [#5806](https://github.com/bluesky-social/atproto/pull/5806) [`b794e18`](https://github.com/bluesky-social/atproto/commit/b794e186bc81ce979d29de18f3ca9ab03b7e3d29) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Use geo headers instead of countryCode and regionCode query parameters when selecting curated Atmosphere Explore content.
+
+## 0.30.1
+
+### Patch Changes
+
+- [#5801](https://github.com/bluesky-social/atproto/pull/5801) [`11f52c5`](https://github.com/bluesky-social/atproto/commit/11f52c5588279d159ab12404a1b323731a467fdd) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add getAtmosphereApps with optional category filtering and known followers in app profiles.
+- Updated dependencies []:
+  - @atproto/common-web@0.5.16
+  - @atproto/lexicon@0.7.18
+  - @atproto/xrpc@0.8.17
+
+## 0.30.0
+
+### Minor Changes
+
+- [#5783](https://github.com/bluesky-social/atproto/pull/5783) [`d6e1945`](https://github.com/bluesky-social/atproto/commit/d6e1945e095da70e0b188d5c6684a5797ce9ee8c) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Keep `featured` as a required, deprecated compatibility field on `app.bsky.unspecced.getAtmosphereExploreTab` article, publication, photo, and livestream items; it is always `false`. Retired content scheduling no longer selects or orders articles, publications, and photos. Livestreams are shown from `previewAt` (or `startsAt`) until `endsAt`, and are reported inactive until `startsAt`. App cards now include an optional `profile` (`app.bsky.actor.defs#profileViewDetailed`) hydrated from the app's account, whose avatar and banner back `logo` and `backgroundImage`.
+
 ## 0.29.6
 
 ### Patch Changes

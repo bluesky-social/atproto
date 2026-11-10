@@ -1,5 +1,20 @@
 # @atproto-labs/fetch-node
 
+## 0.4.5
+
+### Patch Changes
+
+- Updated dependencies [[`a93db66`](https://github.com/bluesky-social/atproto/commit/a93db663f51405031b9fc12b6f57968a435fddec)]:
+  - @atproto-labs/fetch@0.4.2
+
+## 0.4.4
+
+### Patch Changes
+
+- Updated dependencies [[`7aa8e7e`](https://github.com/bluesky-social/atproto/commit/7aa8e7e9e1422f053447879def4d4cf92a05adbb)]:
+  - @atproto-labs/pipe@0.2.5
+  - @atproto-labs/fetch@0.4.1
+
 ## 0.4.3
 
 ### Patch Changes

@@ -1,5 +1,5 @@
 import { HOUR } from '@atproto/common'
-import { type DatetimeString, toDatetimeString } from '@atproto/lex'
+import { type DatetimeString, toDatetimeString } from '@atproto/lex-schema'
 import type { StrikeSuspensionConfig } from '../config/strike-suspension.js'
 import type { Database } from '../db/index.js'
 import { InboxNotificationService } from '../inbox/producers.js'

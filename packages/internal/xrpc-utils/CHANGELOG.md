@@ -1,5 +1,30 @@
 # @atproto-labs/xrpc-utils
 
+## 0.1.31
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/xrpc-server@0.13.10
+
+## 0.1.30
+
+### Patch Changes
+
+- [#5821](https://github.com/bluesky-social/atproto/pull/5821) [`32c4f74`](https://github.com/bluesky-social/atproto/commit/32c4f7401b5ffd402790ccdbea60f0f12f06adfd) Thanks [@devinivy](https://github.com/devinivy)! - Ignore empty Accept-Encoding list entries as required by RFC 9110, avoiding errors when clients send extra commas.
+- Updated dependencies []:
+  - @atproto/xrpc-server@0.13.9
+  - @atproto/xrpc@0.8.18
+
+## 0.1.29
+
+### Patch Changes
+
+- [#5782](https://github.com/bluesky-social/atproto/pull/5782) [`7aa8e7e`](https://github.com/bluesky-social/atproto/commit/7aa8e7e9e1422f053447879def4d4cf92a05adbb) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Only publish `dist` and `CHANGELOG.md`
+- Updated dependencies []:
+  - @atproto/xrpc-server@0.13.8
+  - @atproto/xrpc@0.8.17
+
 ## 0.1.28
 
 ### Patch Changes

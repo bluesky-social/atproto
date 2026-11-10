@@ -1,4 +1,4 @@
-import { isDidString } from '@atproto/lex'
+import { isDidString } from '@atproto/lex-schema'
 import {
   ForbiddenError,
   InvalidRequestError,
