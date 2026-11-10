@@ -1,3 +1,6 @@
+// @NOTE Do **not** re-export the zod schemas directly from this package. Do not
+// export anything from "./schemas.js" either.
+
 export * from './credential.js'
 export * from './http-signature.js'
 export * from './error.js'

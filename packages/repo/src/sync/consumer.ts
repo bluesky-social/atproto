@@ -1,4 +1,4 @@
-import { type BlockMap, readCarWithRoot } from '@atproto/car'
+import { type BlockMap, type CborCid, readCarWithRoot } from '@atproto/car'
 import type { Cid } from '@atproto/lex-data'
 import { DataDiff } from '../data-diff.js'
 import { MST } from '../mst/index.js'
@@ -27,8 +27,8 @@ export const verifyRepoCar = async (
 }
 
 export const verifyRepo = async (
-  blocks: BlockMap,
-  head: Cid,
+  blocks: BlockMap<CborCid>,
+  head: CborCid,
   did?: string,
   signingKey?: string,
   opts?: { ensureLeaves?: boolean },
@@ -74,11 +74,11 @@ export const verifyDiff = async (
   const diff = await DataDiff.of(updated.data, repo?.data ?? null)
   const writes = await util.diffToWriteDescripts(diff)
   const newBlocks = diff.newMstBlocks
-  const leaves = updateBlocks.getMany(diff.newLeafCids.toList())
+  const leaves = updateBlocks.getMany(diff.newLeafCids)
   if (leaves.missing.length > 0 && ensureLeaves) {
     throw new Error(`missing leaf blocks: ${leaves.missing}`)
   }
-  newBlocks.addMap(leaves.blocks)
+  newBlocks.addBlocks(leaves.blocks)
   const removedCids = diff.removedCids
   const commitCid = await newBlocks.add(updated.commit)
   // ensure the commit cid actually changed

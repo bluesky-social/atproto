@@ -1,15 +1,33 @@
-import { z } from 'zod'
 import type { Cid, LexMap } from '@atproto/lex-data'
 import type { ReadStarOptions } from '@atproto/star'
-import {
-  type DidString,
-  type NsidString,
-  type RecordKeyString,
-  type SpaceRefString,
-  isSpaceRefString,
-  isValidDid,
-  isValidTid,
+import type {
+  DidString,
+  NsidString,
+  RecordKeyString,
+  SpaceRefString,
 } from '@atproto/syntax'
+import {
+  repoStarMetaSchema,
+  spaceMetaStarMetaSchema,
+  spaceMetaWriterSchema,
+} from './schemas.js'
+
+export {
+  REPO_STAR_TYPE,
+  SPACE_META_STAR_TYPE,
+  SPACE_META_VERSION,
+} from './constants.js'
+
+export type Def<T> = {
+  name: string
+  schema: { parse: (data: unknown) => T }
+}
+
+export type InferDef<D> = D extends Def<infer T> ? T : never
+
+function buildDef<T>(name: string, schema: Def<T>['schema']): Def<T> {
+  return { name, schema }
+}
 
 export type SpaceRecord = LexMap
 
@@ -41,18 +59,15 @@ export type RecordPath<
   TRkey extends RecordKeyString = RecordKeyString,
 > = `${TCollection}/${TRkey}`
 
-const bytesSchema = z.instanceof(Uint8Array<ArrayBufferLike>)
-
-const commitSchema = z.object({
-  ver: z.number(),
-  repo: z.custom<DidString>(isValidDid),
-  space: z.custom<SpaceRefString>(isSpaceRefString),
-  rev: z.string(),
-  data: bytesSchema,
-})
-export type Commit = z.infer<typeof commitSchema>
-
-export const REPO_STAR_TYPE = 'atproto-space-repo'
+// @NOTE A commit is only ever parsed as part of a repo's STAR archive metadata
+// (see `defs.repoStarMeta`), so there is no need for a commitSchema.
+export type Commit = {
+  ver: number
+  repo: DidString
+  space: SpaceRefString
+  rev: string
+  data: Uint8Array
+}
 
 export const REPO_STAR_LIMITS: ReadStarOptions = {
   maxMetaLength: 64 * 1024, // 64 KiB
@@ -61,13 +76,8 @@ export const REPO_STAR_LIMITS: ReadStarOptions = {
 }
 
 // The metadata of a repo's STAR archive: the repo's commit, typed by its profile.
-const repoStarMetaSchema = commitSchema.extend({
-  $type: z.literal(REPO_STAR_TYPE),
-})
-export type RepoStarMeta = z.infer<typeof repoStarMetaSchema>
-
-export const SPACE_META_STAR_TYPE = 'atproto-space-meta'
-export const SPACE_META_VERSION = 1
+const repoStarMeta = buildDef('repo metadata', repoStarMetaSchema)
+export type RepoStarMeta = InferDef<typeof repoStarMeta>
 
 export const SPACE_META_STAR_LIMITS: ReadStarOptions = {
   maxMetaLength: 64 * 1024, // 64 KiB
@@ -75,39 +85,18 @@ export const SPACE_META_STAR_LIMITS: ReadStarOptions = {
   maxValueLength: 1024 * 1024, // 1 MiB
 }
 
-const tidSchema = z.string().refine(isValidTid, 'must be a TID')
-
 // The metadata of a space meta archive.
-const spaceMetaStarMetaSchema = z.object({
-  $type: z.literal(SPACE_META_STAR_TYPE),
-  ver: z.literal(SPACE_META_VERSION),
-  space: z.custom<SpaceRefString>(isSpaceRefString),
-})
-export type SpaceMetaStarMeta = z.infer<typeof spaceMetaStarMetaSchema>
+const spaceMetaStarMeta = buildDef(
+  'space meta archive metadata',
+  spaceMetaStarMetaSchema,
+)
+export type SpaceMetaStarMeta = InferDef<typeof spaceMetaStarMeta>
 
 // A repo in the writer set, as listWriters reports it. Keyed by the repo's DID.
-const spaceMetaWriterSchema = z.object({
-  rev: tidSchema,
-  data: bytesSchema,
-  spaceRev: tidSchema,
-})
-
-export type Def<T> = {
-  name: string
-  schema: { parse: (data: unknown) => T }
-}
+const spaceMetaWriter = buildDef('writer', spaceMetaWriterSchema)
 
 export const defs = {
-  repoStarMeta: {
-    name: 'repo metadata',
-    schema: repoStarMetaSchema,
-  },
-  spaceMetaStarMeta: {
-    name: 'space meta archive metadata',
-    schema: spaceMetaStarMetaSchema,
-  },
-  spaceMetaWriter: {
-    name: 'writer',
-    schema: spaceMetaWriterSchema,
-  },
-} satisfies Record<string, Def<unknown>>
+  repoStarMeta,
+  spaceMetaStarMeta,
+  spaceMetaWriter,
+}

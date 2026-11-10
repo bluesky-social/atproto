@@ -1,53 +1,66 @@
 import type { Cid } from '@atproto/lex-data'
 
 export class CidSet<TCid extends Cid = Cid> implements Iterable<TCid> {
-  private map = new Map<string, TCid>()
+  #map: Map<string, TCid>
 
-  constructor(arr: Iterable<TCid> = []) {
-    for (const c of arr) {
-      this.map.set(c.toString(), c)
+  constructor(arr?: Iterable<TCid>) {
+    if (arr instanceof CidSet) {
+      // Optimized special case for when the input is another CidSet
+      this.#map = new Map(arr.#map)
+    } else {
+      this.#map = new Map()
+      if (arr) for (const c of arr) this.#map.set(c.toString(), c)
     }
   }
 
   add(cid: TCid): this {
-    this.map.set(cid.toString(), cid)
+    this.#map.set(cid.toString(), cid)
     return this
   }
 
-  addSet(toMerge: CidSet<TCid>): this {
-    for (const c of toMerge) this.map.set(c.toString(), c)
+  addSet(toMerge: Iterable<TCid>): this {
+    if (toMerge instanceof CidSet) {
+      for (const [k, v] of toMerge.#map) this.#map.set(k, v)
+    } else {
+      for (const cid of toMerge) this.add(cid)
+    }
     return this
   }
 
-  subtractSet(toSubtract: CidSet<TCid>): this {
-    for (const c of toSubtract) this.map.delete(c.toString())
+  subtractSet(toSubtract: Iterable<TCid>): this {
+    if (toSubtract instanceof CidSet) {
+      for (const k of toSubtract.#map.keys()) this.#map.delete(k)
+    } else {
+      for (const cid of toSubtract) this.delete(cid)
+    }
     return this
   }
 
   delete(cid: TCid): this {
-    this.map.delete(cid.toString())
+    this.#map.delete(cid.toString())
     return this
   }
 
   has(cid: TCid): boolean {
-    return this.map.has(cid.toString())
+    return this.#map.has(cid.toString())
   }
 
-  size(): number {
-    return this.map.size
+  get size(): number {
+    return this.#map.size
   }
 
   clear(): this {
-    this.map.clear()
+    this.#map.clear()
     return this
   }
 
+  /** @deprecated Use the iterable interface instead */
   toList(): TCid[] {
     return Array.from(this)
   }
 
   [Symbol.iterator](): MapIterator<TCid> {
-    return this.map.values()
+    return this.#map.values()
   }
 }
 

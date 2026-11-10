@@ -161,7 +161,10 @@ describe('covering proofs', () => {
       mst.getCoveringProof(k.D2),
       mst.getCoveringProof(k.C2),
     ])
-    const proof = proofs.reduce((acc, cur) => acc.addMap(cur), new BlockMap())
+    const proof = proofs.reduce(
+      (acc, cur) => acc.addBlocks(cur),
+      new BlockMap(),
+    )
     const proofStorage = new MemoryBlockstore(proof)
 
     const addB = async (mst: MST) => mst.add(k.B2, cid)
@@ -229,7 +232,10 @@ describe('covering proofs', () => {
       mst.getCoveringProof(k.G2),
       mst.getCoveringProof(k.C2),
     ])
-    const proof = proofs.reduce((acc, cur) => acc.addMap(cur), new BlockMap())
+    const proof = proofs.reduce(
+      (acc, cur) => acc.addBlocks(cur),
+      new BlockMap(),
+    )
     const proofStorage = new MemoryBlockstore(proof)
 
     const delA = async (mst: MST) => mst.delete(k.A2)

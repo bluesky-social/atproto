@@ -167,7 +167,7 @@ export class RepoTransactor extends RepoReader {
 
     // find blocks that would be deleted but are referenced by another record
     const dupeRecordCids = await this.getDuplicateRecordCids(
-      commit.removedCids.toList(),
+      commit.removedCids,
       delAndUpdateUris,
     )
     for (const cid of dupeRecordCids) {
@@ -181,7 +181,7 @@ export class RepoTransactor extends RepoReader {
       const missingBlocks = await this.storage.getBlocks(
         newRecordBlocks.missing,
       )
-      commit.relevantBlocks.addMap(missingBlocks.blocks)
+      commit.relevantBlocks.addBlocks(missingBlocks.blocks)
     }
     return {
       ...commit,
@@ -213,14 +213,15 @@ export class RepoTransactor extends RepoReader {
   }
 
   async getDuplicateRecordCids(
-    cids: Cid[],
-    touchedUris: AtUri[],
+    cids: Iterable<Cid>,
+    touchedUris: Iterable<AtUri>,
   ): Promise<Cid[]> {
-    if (touchedUris.length === 0 || cids.length === 0) {
-      return []
-    }
-    const cidStrs = cids.map((c) => c.toString())
-    const uriStrs = touchedUris.map((u) => u.toString())
+    const cidStrs = Array.from(cids, (c) => c.toString())
+    if (cidStrs.length === 0) return []
+
+    const uriStrs = Array.from(touchedUris, (u) => u.toString())
+    if (uriStrs.length === 0) return []
+
     const res = await this.db.db
       .selectFrom('record')
       .where('cid', 'in', cidStrs)

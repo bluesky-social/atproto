@@ -5,7 +5,6 @@ import { encode } from '@atproto/lex-cbor'
 import { type Cid, cidForCbor } from '@atproto/lex-data'
 import { CidSet } from './cid-set.js'
 import { DataDiff } from './data-diff.js'
-import log from './logger.js'
 import { MST } from './mst/index.js'
 import { ReadableRepo } from './readable-repo.js'
 import type { RepoStorage } from './storage/index.js'
@@ -51,7 +50,7 @@ export class Repo extends ReadableRepo {
     }
     const dataCid = await data.getPointer()
     const diff = await DataDiff.of(data, null)
-    newBlocks.addMap(diff.newMstBlocks)
+    newBlocks.addBlocks(diff.newMstBlocks)
 
     const rev = revOverride ?? TID.nextStr()
     const commit = await util.signCommit(
@@ -106,7 +105,6 @@ export class Repo extends ReadableRepo {
     }
     const commit = await storage.readObj(commitCid, def.versionedCommit)
     const data = await MST.load(storage, commit.data)
-    log.info({ did: commit.did }, 'loaded repo for')
     return new Repo({
       storage,
       data,
@@ -149,14 +147,14 @@ export class Repo extends ReadableRepo {
       ),
     )
     const relevantBlocks = new BlockMap()
-    for (const proof of proofs) relevantBlocks.addMap(proof)
+    for (const proof of proofs) relevantBlocks.addBlocks(proof)
 
-    const addedLeaves = leaves.getMany(diff.newLeafCids.toList())
+    const addedLeaves = leaves.getMany(diff.newLeafCids)
     if (addedLeaves.missing.length > 0) {
       throw new Error(`Missing leaf blocks: ${addedLeaves.missing}`)
     }
-    newBlocks.addMap(addedLeaves.blocks)
-    relevantBlocks.addMap(addedLeaves.blocks)
+    newBlocks.addBlocks(addedLeaves.blocks)
+    relevantBlocks.addBlocks(addedLeaves.blocks)
 
     const rev = TID.nextStr(this.commit.rev)
     const commit = await util.signCommit(

@@ -1,13 +1,12 @@
 import { TID } from '@atproto/common-web'
 import * as crypto from '@atproto/crypto'
 import type { Keypair } from '@atproto/crypto'
-import * as cbor from '@atproto/lex-cbor'
 import {
-  type Cid,
-  type LexMap,
-  type LexValue,
-  isPlainObject,
-} from '@atproto/lex-data'
+  cidForLex,
+  decode as cborDecode,
+  encode as cborEncode,
+} from '@atproto/lex-cbor'
+import { type LexMap, isPlainObject } from '@atproto/lex-data'
 import type { DataDiff } from './data-diff.js'
 import {
   type Commit,
@@ -88,7 +87,7 @@ export const signCommit = async (
   unsigned: UnsignedCommit,
   keypair: Keypair,
 ): Promise<Commit> => {
-  const encoded = cbor.encode(unsigned)
+  const encoded = cborEncode(unsigned)
   const sig = await keypair.sign(encoded)
   return {
     ...unsigned,
@@ -101,21 +100,19 @@ export const verifyCommitSig = async (
   didKey: string,
 ): Promise<boolean> => {
   const { sig, ...rest } = commit
-  const encoded = cbor.encode(rest)
+  const encoded = cborEncode(rest)
   return crypto.verifySignature(didKey, encoded, sig)
 }
 
-export const cborToLex: (val: Uint8Array) => LexValue = cbor.decode
-
 export const cborToLexRecord = (val: Uint8Array): LexMap => {
-  const parsed = cborToLex(val)
+  const parsed = cborDecode(val)
   if (!isPlainObject(parsed)) {
     throw new Error('lexicon records be a json object')
   }
   return parsed
 }
 
-export const cidForRecord: (val: LexValue) => Promise<Cid> = cbor.cidForLex
+export { cborDecode as cborToLex, cidForLex as cidForRecord }
 
 export const ensureV3Commit = (commit: LegacyV2Commit | Commit): Commit => {
   if (commit.version === 3) {

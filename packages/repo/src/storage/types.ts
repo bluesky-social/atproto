@@ -1,21 +1,20 @@
-import type { Readable } from 'node:stream'
 import type { BlockMap } from '@atproto/car'
 import type { check } from '@atproto/common-web'
 import type { Cid, LexMap } from '@atproto/lex-data'
 import type { CommitData } from '../types.js'
 
-export interface RepoStorage {
-  // Writable
+export interface WritableRepoStorage {
   getRoot(): Promise<Cid | null>
   putBlock(cid: Cid, block: Uint8Array, rev: string): Promise<void>
   putMany(blocks: BlockMap, rev: string): Promise<void>
   updateRoot(cid: Cid, rev: string): Promise<void>
-  applyCommit(commit: CommitData)
+  applyCommit(commit: CommitData): Promise<void>
+}
 
-  // Readable
+export interface ReadableRepoStorage {
   getBytes(cid: Cid): Promise<Uint8Array | null>
   has(cid: Cid): Promise<boolean>
-  getBlocks(cids: Cid[]): Promise<{ blocks: BlockMap; missing: Cid[] }>
+  getBlocks(cids: Iterable<Cid>): Promise<{ blocks: BlockMap; missing: Cid[] }>
   attemptRead<T>(
     cid: Cid,
     def: check.Def<T>,
@@ -29,15 +28,21 @@ export interface RepoStorage {
   readRecord(cid: Cid): Promise<LexMap>
 }
 
-// @TODO make this less node-js specific by using AsyncIterable<Uint8Array> instead of Readable
+export interface RepoStorage extends ReadableRepoStorage, WritableRepoStorage {}
+
 export interface BlobStore {
-  putTemp(bytes: Uint8Array | Readable): Promise<string>
+  putTemp(
+    bytes: Uint8Array | Iterable<Uint8Array> | AsyncIterable<Uint8Array>,
+  ): Promise<string>
   makePermanent(key: string, cid: Cid): Promise<void>
-  putPermanent(cid: Cid, bytes: Uint8Array | Readable): Promise<void>
+  putPermanent(
+    cid: Cid,
+    bytes: Uint8Array | Iterable<Uint8Array> | AsyncIterable<Uint8Array>,
+  ): Promise<void>
   quarantine(cid: Cid): Promise<void>
   unquarantine(cid: Cid): Promise<void>
   getBytes(cid: Cid): Promise<Uint8Array>
-  getStream(cid: Cid): Promise<Readable>
+  getStream(cid: Cid): Promise<AsyncIterable<Uint8Array>>
   hasTemp(key: string): Promise<boolean>
   hasStored(cid: Cid): Promise<boolean>
   delete(cid: Cid): Promise<void>

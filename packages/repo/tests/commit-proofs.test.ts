@@ -30,7 +30,10 @@ describe('commit proofs', () => {
       const proofs = await Promise.all(
         [...adds, ...dels].map((key) => mst.getCoveringProof(key)),
       )
-      const proof = proofs.reduce((acc, cur) => acc.addMap(cur), new BlockMap())
+      const proof = proofs.reduce(
+        (acc, cur) => acc.addBlocks(cur),
+        new BlockMap(),
+      )
       const blocksInProof = fixture.blocksInProof.map(parseCid)
       for (const cid of blocksInProof) {
         expect(proof.has(cid)).toBe(true)
