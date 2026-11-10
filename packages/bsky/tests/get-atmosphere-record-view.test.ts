@@ -11,6 +11,7 @@ import {
 } from '@atproto/lex'
 import { AuthRequiredError, createServer } from '@atproto/xrpc-server'
 import register from '../src/api/app/bsky/unspecced/getAtmosphereRecordView.js'
+import registerBatch from '../src/api/app/bsky/unspecced/getAtmosphereRecordViews.js'
 import { AuthVerifier } from '../src/auth-verifier.js'
 import type { AppContext } from '../src/context.js'
 import { FeatureGatesClient } from '../src/feature-gates/index.js'
@@ -59,6 +60,7 @@ const document = (title: string) =>
   })
 
 type Body = app.bsky.unspecced.getAtmosphereRecordView.$OutputBody
+type BatchBody = app.bsky.unspecced.getAtmosphereRecordViews.$OutputBody
 
 async function setup() {
   const latest = new Map<AtUriString, { cid: string; record: TypedLexMap }>([
@@ -235,6 +237,7 @@ async function setup() {
   } as unknown as AppContext
   const xrpc = createServer([], { validateResponse: true })
   register(xrpc, ctx)
+  registerBatch(xrpc, ctx)
   const server = createHttpServer(xrpc.router)
   server.listen(0, '127.0.0.1')
   await once(server, 'listening')
@@ -244,6 +247,8 @@ async function setup() {
   const spies = {
     uris: vi.spyOn(hydrator, 'hydrateEmbedExternalViewFromUris'),
     refs: vi.spyOn(hydrator, 'hydrateEmbedExternalViewFromRefs'),
+    lookupUris: vi.spyOn(dataplane, 'getRecordsByURI'),
+    lookupRefs: vi.spyOn(dataplane, 'getRecordsByRef'),
   }
   return {
     latest,
@@ -264,6 +269,23 @@ async function setup() {
         headers: iss ? { 'x-test-iss': iss } : {},
       })
       return { status: response.status, body: (await response.json()) as Body }
+    },
+    queryBatch: async (
+      params: { uris: string[]; cids?: string[] },
+      iss: string | null = viewer,
+    ) => {
+      const url = new URL(
+        `http://127.0.0.1:${address.port}/xrpc/${app.bsky.unspecced.getAtmosphereRecordViews.$lxm}`,
+      )
+      for (const uri of params.uris) url.searchParams.append('uris', uri)
+      for (const cid of params.cids ?? []) url.searchParams.append('cids', cid)
+      const response = await nativeFetch(url, {
+        headers: iss ? { 'x-test-iss': iss } : {},
+      })
+      return {
+        status: response.status,
+        body: (await response.json()) as BatchBody,
+      }
     },
     async [Symbol.asyncDispose]() {
       for (const spy of Object.values(spies)) spy.mockRestore()
@@ -427,5 +449,184 @@ describe('app.bsky.unspecced.getAtmosphereRecordView', () => {
     const { body } = await fixture.query({ uri: docUri })
     expect(uris(body.associatedRefs)).toEqual([docUri])
     expect(body.associatedRecords).toHaveLength(1)
+  })
+})
+
+describe('app.bsky.unspecced.getAtmosphereRecordViews', () => {
+  it('requires authentication', async () => {
+    await using fixture = await setup()
+    expect((await fixture.queryBatch({ uris: [docUri] }, null)).status).toBe(
+      401,
+    )
+    expect(fixture.spies.lookupUris).not.toHaveBeenCalled()
+    expect(fixture.spies.lookupRefs).not.toHaveBeenCalled()
+  })
+
+  it('batches mixed latest and exact versions in request order without mixing dependencies', async () => {
+    await using fixture = await setup()
+    const otherPub = atUri(author, site.standard.publication.$type, 'other')
+    fixture.latest.set(otherPub, {
+      cid: cidA,
+      record: site.standard.publication.$build({
+        name: 'Other publication',
+        url: 'https://other.example.com',
+      }),
+    })
+    fixture.versions.set(`${docUri}@${cidB}`, {
+      ...document('Pinned'),
+      site: otherPub,
+    })
+    fixture.versions.set(
+      `${pubUri}@${cidB}`,
+      site.standard.publication.$build({
+        name: 'Old publication',
+        url: 'https://old.example.com',
+      }),
+    )
+    const { status, body } = await fixture.queryBatch({
+      uris: [docUri, docUri, docUri, missingUri, postUri, docUri, pubUri],
+      cids: ['latest', cidB, cidC, 'latest', 'latest', cidB, cidB],
+    })
+    expect(status).toBe(200)
+    expect(body.views.map((result) => result.view)).toMatchObject([
+      { title: 'Latest', publisher: { title: 'Publication' } },
+      { title: 'Pinned', publisher: { title: 'Other publication' } },
+      undefined,
+      undefined,
+      undefined,
+      { title: 'Pinned' },
+      { title: 'Old publication' },
+    ])
+    expect(body.views[0].associatedRefs).toMatchObject([
+      { uri: docUri, cid: cidA },
+      { uri: pubUri, cid: cidA },
+    ])
+    expect(body.views[1].associatedRefs).toMatchObject([
+      { uri: docUri, cid: cidB },
+      { uri: otherPub, cid: cidA },
+    ])
+    expect(body.views[1].associatedRecords).toMatchObject([
+      { title: 'Pinned' },
+      { name: 'Other publication' },
+    ])
+    expect(body.views[2]).toEqual({})
+    expect(body.views[3]).toEqual({})
+    expect(body.views[4].associatedRefs).toMatchObject([
+      { uri: postUri, cid: cidA },
+    ])
+    expect(body.views[5]).toEqual(body.views[1])
+    expect(body.views[6].associatedRefs).toMatchObject([
+      { uri: pubUri, cid: cidB },
+    ])
+    expect(
+      fixture.spies.lookupRefs.mock.calls.map(([req]) => req.refs),
+    ).toEqual([
+      [
+        { uri: docUri, cid: cidB },
+        { uri: docUri, cid: cidC },
+        { uri: pubUri, cid: cidB },
+      ],
+    ])
+    expect(
+      fixture.spies.lookupUris.mock.calls.map(([req]) => req.uris),
+    ).toEqual([
+      [docUri, missingUri, postUri],
+      [pubUri, otherPub],
+    ])
+  })
+
+  it('keeps gallery associations separate from unrelated batch roots', async () => {
+    await using fixture = await setup()
+    const otherPhoto = atUri(author, social.grain.photo.$type, 'other')
+    fixture.latest.set(otherPhoto, {
+      cid: cidA,
+      record: social.grain.photo.$build({ photo: blob, alt: 'Other photo' }),
+    })
+    const { status, body } = await fixture.queryBatch({
+      uris: [galleryUri, otherPhoto, docUri],
+    })
+    expect(status).toBe(200)
+    expect(uris(body.views[0].associatedRefs)).toEqual([
+      galleryUri,
+      itemUri,
+      photoUri,
+    ])
+    expect(body.views[0].associatedRecords).toMatchObject([
+      { title: 'Gallery' },
+      { gallery: galleryUri, item: photoUri },
+      { alt: 'A photo' },
+    ])
+    expect(body.views[0].view).toMatchObject({
+      items: [{ alt: 'A photo' }],
+    })
+    expect(uris(body.views[1].associatedRefs)).toEqual([otherPhoto])
+    expect(uris(body.views[2].associatedRefs)).toEqual([docUri, pubUri])
+  })
+
+  it.each([
+    { uris: [docUri], cids: [cidA, cidB] },
+    { uris: [docUri, pubUri], cids: [cidA] },
+    { uris: [docUri], cids: ['invalid'] },
+    { uris: [docUri, 'at://author.test/site.standard.document/story'] },
+    { uris: [docUri, `at://${author}/site.standard.document`] },
+    { uris: [docUri, `${docUri}?query`] },
+    { uris: Array.from({ length: 26 }, () => docUri) },
+    { uris: [] },
+  ])('rejects invalid batch $uris / $cids before hydration', async (params) => {
+    await using fixture = await setup()
+    expect((await fixture.queryBatch(params)).status).toBe(400)
+    expect(fixture.spies.lookupUris).not.toHaveBeenCalled()
+    expect(fixture.spies.lookupRefs).not.toHaveBeenCalled()
+  })
+
+  it('accepts the maximum batch size and preserves duplicate results', async () => {
+    await using fixture = await setup()
+    const { status, body } = await fixture.queryBatch({
+      uris: Array.from({ length: 25 }, () => docUri),
+    })
+    expect(status).toBe(200)
+    expect(body.views).toEqual(Array.from({ length: 25 }, () => body.views[0]))
+    expect(body.views[0].view).toMatchObject({ title: 'Latest' })
+    expect(
+      fixture.spies.lookupUris.mock.calls.map(([req]) => req.uris),
+    ).toEqual([[docUri], [pubUri]])
+  })
+
+  it.each(['takedown', 'block'] as const)(
+    'applies %s visibility to both latest and pinned batch roots',
+    async (moderation) => {
+      await using fixture = await setup()
+      if (moderation === 'takedown') fixture.takenDown.add(docUri)
+      else fixture.blocked.add(author)
+      const params = { uris: [docUri, docUri], cids: ['latest', cidB] }
+      expect((await fixture.queryBatch(params)).body).toEqual({
+        views: [{}, {}],
+      })
+      const { body } = await fixture.queryBatch(params, modService)
+      expect(
+        body.views.map((result) => result.associatedRefs?.[0]),
+      ).toMatchObject([
+        { uri: docUri, cid: cidA },
+        { uri: docUri, cid: cidB },
+      ])
+      expect(body.views.map((result) => result.view)).toMatchObject([
+        { title: 'Latest' },
+        { title: 'Pinned' },
+      ])
+    },
+  )
+
+  it('omits unavailable dependencies without omitting visible roots', async () => {
+    await using fixture = await setup()
+    fixture.takenDown.add(pubUri)
+    fixture.takenDown.add(photoUri)
+    const { status, body } = await fixture.queryBatch({
+      uris: [docUri, galleryUri],
+    })
+    expect(status).toBe(200)
+    expect(body.views[0].view).toBeUndefined()
+    expect(uris(body.views[0].associatedRefs)).toEqual([docUri])
+    expect(uris(body.views[1].associatedRefs)).toEqual([galleryUri, itemUri])
+    expect(body.views[1].view).toMatchObject({ items: [] })
   })
 })

@@ -7,6 +7,19 @@ import { AtUri, type DidString, parseAtUriString } from '@atproto/syntax'
 import { app } from '../lexicons/index.js'
 import { type StrongRef, validateStrongRef } from '../views/types.js'
 
+/** A complete DID-based record URI, with no query or fragment. */
+export function isCompleteRecordUri(value: string): value is AtUriString {
+  const parsed = parseAtUriString(value)
+  return (
+    parsed.success &&
+    isDidString(parsed.value.authority) &&
+    !!parsed.value.collection &&
+    !!parsed.value.rkey &&
+    parsed.value.query === undefined &&
+    parsed.value.hash === undefined
+  )
+}
+
 /** A complete DID-based record URI in the expected collection, with no query or fragment. */
 export function recordUriOf(
   value: string,
