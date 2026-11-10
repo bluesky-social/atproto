@@ -43,11 +43,6 @@ export class SpaceRepoVerificationError extends SpaceError {
   readonly code = 'InvalidSpaceRepo'
 }
 
-export class StarParseError extends SpaceError {
-  name = 'StarParseError'
-  readonly code = 'InvalidStar'
-}
-
 export class SpaceMetaArchiveError extends SpaceError {
   name = 'SpaceMetaArchiveError'
   readonly code = 'InvalidSpaceMeta'

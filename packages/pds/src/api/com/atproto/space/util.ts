@@ -15,7 +15,6 @@ import {
   SpaceMacError,
   SpaceMetaArchiveError,
   SpaceRepoVerificationError,
-  StarParseError,
   WANT_MAC_HEADER,
   computeCommitMac,
   computeRecordMac,
@@ -23,6 +22,7 @@ import {
   formatMacHeader,
   parseWantMacHeader,
 } from '@atproto/space'
+import { StarParseError } from '@atproto/star'
 import {
   type AtUriString,
   type DidString,

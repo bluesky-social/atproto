@@ -7,7 +7,6 @@ import {
   SpaceRepoVerificationError,
   SpaceSignatureError,
   SpaceTokenError,
-  StarParseError,
 } from './error.js'
 
 describe('SpaceError', () => {
@@ -21,7 +20,6 @@ describe('SpaceError', () => {
       'SpaceRepoVerificationError',
       'InvalidSpaceRepo',
     ],
-    [new StarParseError('x'), 'StarParseError', 'InvalidStar'],
     [
       new SpaceMetaArchiveError('x'),
       'SpaceMetaArchiveError',

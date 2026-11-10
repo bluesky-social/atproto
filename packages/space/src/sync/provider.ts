@@ -1,9 +1,9 @@
 import { encode } from '@atproto/lex-cbor'
 import { type CborCid, cidForCbor } from '@atproto/lex-data'
+import { type StarPair, writeStar } from '@atproto/star'
 import type { NsidString, RecordKeyString } from '@atproto/syntax'
 import { compareBytes, utf8 } from '../bytes.js'
 import { SpaceRepoVerificationError } from '../error.js'
-import { type StarPair, writeStar } from '../star.js'
 import {
   REPO_STAR_TYPE,
   type RecordPathParts,

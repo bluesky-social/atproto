@@ -2066,6 +2066,9 @@ importers:
       '@atproto/space':
         specifier: workspace:^
         version: link:../space
+      '@atproto/star':
+        specifier: workspace:^
+        version: link:../star
       '@atproto/syntax':
         specifier: workspace:^
         version: link:../syntax
@@ -2239,9 +2242,6 @@ importers:
 
   packages/space:
     dependencies:
-      '@atproto/car':
-        specifier: workspace:^
-        version: link:../car
       '@atproto/crypto':
         specifier: workspace:^
         version: link:../crypto
@@ -2254,6 +2254,9 @@ importers:
       '@atproto/lex-schema':
         specifier: workspace:^
         version: link:../lex/lex-schema
+      '@atproto/star':
+        specifier: workspace:^
+        version: link:../star
       '@atproto/syntax':
         specifier: workspace:^
         version: link:../syntax
@@ -2263,6 +2266,19 @@ importers:
       structured-headers:
         specifier: ^1.0.1
         version: 1.0.1
+    devDependencies:
+      vitest:
+        specifier: ^4.1.10
+        version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@22.20.1)(@vitest/coverage-v8@4.1.10)(vite@8.2.2(@types/node@22.20.1)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.0))
+
+  packages/star:
+    dependencies:
+      '@atproto/lex-cbor':
+        specifier: workspace:^
+        version: link:../lex/lex-cbor
+      '@atproto/lex-data':
+        specifier: workspace:^
+        version: link:../lex/lex-data
     devDependencies:
       vitest:
         specifier: ^4.1.10

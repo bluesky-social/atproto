@@ -1,5 +1,6 @@
 import { type LexValue, decode, encode } from '@atproto/lex-cbor'
 import { type LexMap, isPlainObject } from '@atproto/lex-data'
+import { type StarPair, readStar, writeStar } from '@atproto/star'
 import {
   type DidString,
   type SpaceRefString,
@@ -7,9 +8,9 @@ import {
 } from '@atproto/syntax'
 import { compareBytes, utf8 } from './bytes.js'
 import { SpaceMetaArchiveError } from './error.js'
-import { type StarPair, readStar, writeStar } from './star.js'
 import {
   type Def,
+  SPACE_META_STAR_LIMITS,
   SPACE_META_STAR_TYPE,
   SPACE_META_VERSION,
   type SpaceMetaStarMeta,
@@ -76,14 +77,15 @@ export async function* writeSpaceMetaStar(
 }
 
 /**
- * Read a space meta archive, rejecting it if a section is missing or out of
- * place, or a key is duplicated or out of order. Read whole, since it holds a
- * space's configuration and writer set rather than its records.
+ * Read a space meta archive, rejecting it if a length limit is exceeded, a
+ * section is missing or out of place, or a key is duplicated or out of order.
+ * Read whole, since it holds a space's configuration and writer set rather than
+ * its records.
  */
 export async function readSpaceMetaStar(
   star: AsyncIterable<Uint8Array> | Iterable<Uint8Array>,
 ): Promise<SpaceMetaArchive> {
-  await using reader = await readStar(star)
+  await using reader = await readStar(star, SPACE_META_STAR_LIMITS)
   const meta = parseDef(defs.spaceMetaStarMeta, reader.meta)
 
   let policy: LexMap | undefined

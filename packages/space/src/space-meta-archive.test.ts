@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { encode } from '@atproto/lex-cbor'
 import { type LexMap, ui8Concat } from '@atproto/lex-data'
+import { type StarPair, readStar, writeStar } from '@atproto/star'
 import type { DidString, SpaceRefString } from '@atproto/syntax'
 import { SpaceMetaArchiveError } from './error.js'
 import {
@@ -8,7 +9,6 @@ import {
   readSpaceMetaStar,
   writeSpaceMetaStar,
 } from './space-meta-archive.js'
-import { type StarPair, readStar, writeStar } from './star.js'
 import { SPACE_META_STAR_TYPE } from './types.js'
 
 const SPACE =
@@ -208,6 +208,34 @@ describe('space meta archive', () => {
       const star = await rawArchive([['policy', POLICY]], { ver: 2 })
       await expect(readSpaceMetaStar([star])).rejects.toThrow(
         /invalid space meta archive metadata/,
+      )
+    })
+
+    it('metadata over 64 KiB', async () => {
+      const star = await rawArchive([['policy', POLICY]], {
+        filler: 'x'.repeat(64 * 1024),
+      })
+      await expect(readSpaceMetaStar([star])).rejects.toThrow(
+        /exceeds limit of 65536/,
+      )
+    })
+
+    it('a key over 4 KiB', async () => {
+      const star = await rawArchive([
+        ['policy', POLICY],
+        [`com.example.member/${'x'.repeat(4 * 1024)}`, MEMBER],
+      ])
+      await expect(readSpaceMetaStar([star])).rejects.toThrow(
+        /exceeds limit of 4096/,
+      )
+    })
+
+    it('a value over 1 MiB', async () => {
+      const star = await rawArchive([
+        ['policy', { ...POLICY, filler: 'x'.repeat(1024 * 1024) }],
+      ])
+      await expect(readSpaceMetaStar([star])).rejects.toThrow(
+        /exceeds limit of 1048576/,
       )
     })
 

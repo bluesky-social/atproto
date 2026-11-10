@@ -24,6 +24,7 @@
     { "path": "../oauth/oauth-types/tsconfig.build.json" },
     { "path": "../repo/tsconfig.build.json" },
     { "path": "../space/tsconfig.build.json" },
+    { "path": "../star/tsconfig.build.json" },
     { "path": "../syntax/tsconfig.build.json" },
     { "path": "../xrpc-server/tsconfig.build.json" },
     { "path": "../xrpc/tsconfig.build.json" },

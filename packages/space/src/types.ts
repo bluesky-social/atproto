@@ -1,5 +1,6 @@
 import type { Cid, LexMap } from '@atproto/lex-data'
 import { l } from '@atproto/lex-schema'
+import type { ReadStarOptions } from '@atproto/star'
 import type {
   DidString,
   NsidString,
@@ -50,6 +51,12 @@ export type SpaceCommit = l.Infer<typeof commitSchema>
 
 export const REPO_STAR_TYPE = 'atproto-space-repo'
 
+export const REPO_STAR_LIMITS: ReadStarOptions = {
+  maxMetaLength: 64 * 1024, // 64 KiB
+  maxKeyLength: 4 * 1024, // 4 KiB
+  maxValueLength: MAX_RECORD_SIZE,
+}
+
 // The metadata of a repo's STAR archive: the repo's commit, typed by its profile.
 const repoStarMetaSchema = l.object({
   $type: l.literal(REPO_STAR_TYPE),
@@ -59,6 +66,12 @@ export type RepoStarMeta = l.Infer<typeof repoStarMetaSchema>
 
 export const SPACE_META_STAR_TYPE = 'atproto-space-meta'
 export const SPACE_META_VERSION = 1
+
+export const SPACE_META_STAR_LIMITS: ReadStarOptions = {
+  maxMetaLength: 64 * 1024, // 64 KiB
+  maxKeyLength: 4 * 1024, // 4 KiB
+  maxValueLength: 1024 * 1024, // 1 MiB
+}
 
 // The metadata of a space meta archive.
 const spaceMetaStarMetaSchema = l.object({

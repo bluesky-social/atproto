@@ -5,6 +5,7 @@ import {
   isPlainObject,
   parseCidSafe,
 } from '@atproto/lex-data'
+import { type StarPair, readStar } from '@atproto/star'
 import type {
   NsidString,
   RecordKeyString,
@@ -18,10 +19,9 @@ import {
   type VerifyCommitParams,
   verifyCommit,
 } from '../repo-commit.js'
-import { type StarPair, readStar } from '../star.js'
 import {
   COMMIT_VERSION,
-  MAX_RECORD_SIZE,
+  REPO_STAR_LIMITS,
   type SpaceCommit,
   type SpaceRecord,
   defs,
@@ -57,7 +57,7 @@ export type VerifiedSpaceRepo = AsyncDisposable & {
 export async function readRepoStar(
   star: AsyncIterable<Uint8Array> | Iterable<Uint8Array>,
 ): Promise<VerifiedSpaceRepo> {
-  const starReader = await readStar(star, { maxValueLength: MAX_RECORD_SIZE })
+  const starReader = await readStar(star, REPO_STAR_LIMITS)
   // Note the try/catch would better be implemented with a DisposableStack, but
   // that isn't (widely) available yet.
   try {

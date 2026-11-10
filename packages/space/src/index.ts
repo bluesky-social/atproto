@@ -24,7 +24,6 @@ export {
   SpaceRepoVerificationError,
   SpaceSignatureError,
   SpaceTokenError,
-  StarParseError,
 } from './error.js'
 export {
   type SpaceSignature,
@@ -64,14 +63,6 @@ export {
   readSpaceMetaStar,
   writeSpaceMetaStar,
 } from './space-meta-archive.js'
-export {
-  STAR_MAGIC,
-  type StarMeta,
-  type StarPair,
-  type StarReader,
-  readStar,
-  writeStar,
-} from './star.js'
 export {
   type SerializedRecord,
   type VerifiedRecord,

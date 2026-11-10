@@ -21,11 +21,11 @@
     "build": "tsc --build tsconfig.build.json"
   },
   "dependencies": {
-    "@atproto/car": "workspace:^",
     "@atproto/crypto": "workspace:^",
     "@atproto/lex-cbor": "workspace:^",
     "@atproto/lex-data": "workspace:^",
     "@atproto/lex-schema": "workspace:^",
+    "@atproto/star": "workspace:^",
     "@atproto/syntax": "workspace:^",
     "@noble/hashes": "^1.6.1",
     "structured-headers": "^1.0.1"
