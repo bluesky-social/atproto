@@ -810,31 +810,6 @@ export class ModerationViews {
         status,
       ).lex() as tools.ozone.moderation.defs.SubjectStatusView['subject'],
 
-      // Explicitly typing to allow for easy manipulation (e.g. to strip from tests snapshots)
-      accountStats: tools.ozone.moderation.defs.accountStats.$build({
-        // account_events_stats
-        reportCount: status.reportCount ?? undefined,
-        appealCount: status.appealCount ?? undefined,
-        suspendCount: status.suspendCount ?? undefined,
-        takedownCount: status.takedownCount ?? undefined,
-        escalateCount: status.escalateCount ?? undefined,
-      }),
-
-      // Explicitly typing to allow for easy manipulation (e.g. to strip from tests snapshots)
-      recordsStats: tools.ozone.moderation.defs.recordsStats.$build({
-        // account_record_events_stats
-        totalReports: status.totalReports ?? undefined,
-        reportedCount: status.reportedCount ?? undefined,
-        escalatedCount: status.escalatedCount ?? undefined,
-        appealedCount: status.appealedCount ?? undefined,
-
-        // account_record_status_stats
-        subjectCount: status.subjectCount ?? undefined,
-        pendingCount: status.pendingCount ?? undefined,
-        processedCount: status.processedCount ?? undefined,
-        takendownCount: status.takendownCount ?? undefined,
-      }),
-
       accountStrike:
         status.strikeCount !== null || status.totalStrikeCount !== null
           ? tools.ozone.moderation.defs.accountStrike.$build({
