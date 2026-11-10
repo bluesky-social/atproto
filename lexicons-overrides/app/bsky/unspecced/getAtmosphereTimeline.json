@@ -56,10 +56,10 @@
         "record": { "type": "ref", "ref": "#activityRecord" },
         "collection": { "type": "string", "format": "nsid" },
         "viewerState": { "type": "ref", "ref": "#viewerState" },
-        "bskyPostRef": {
+        "viewBskyPost": {
           "type": "ref",
-          "ref": "com.atproto.repo.strongRef",
-          "description": "The Bluesky post associated with the rendered article or livestream, as declared by its author. The referenced post may not be available."
+          "ref": "app.bsky.feed.defs#postView",
+          "description": "The hydrated Bluesky post associated with the rendered article or livestream, as declared by its author. Omitted when the post is unavailable to the viewer."
         },
         "view": {
           "type": "union",

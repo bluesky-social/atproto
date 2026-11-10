@@ -28,7 +28,10 @@ import {
 } from '../../../../pipeline.js'
 import { getAtprotoPassthroughHeaders } from '../../../../util/headers.js'
 import type { Views } from '../../../../views/index.js'
-import { getAtmospherePostRef } from './atmosphere-hydration.js'
+import {
+  getAtmospherePostUris,
+  getAtmospherePostView,
+} from './atmosphere-hydration.js'
 
 const MAX_CONFIG_BYTES = 512 * 1024
 const MAX_LIST_ITEMS = 10
@@ -240,8 +243,24 @@ async function hydration({
         })
       : {},
   ])
-  // Detailed profile state goes second so it wins any overlapping actor state.
-  return mergeStates(externalState, appProfileState)
+  const postUris = getAtmospherePostUris(externalState)
+  const postState = postUris.length
+    ? await ctx.hydrator.hydratePosts(
+        postUris.map((uri) => ({ uri })),
+        params.hydrateCtx,
+        externalState,
+        {
+          externalSeenRecordKeys: new Set([
+            ...(externalState.externalRecords?.keys() ?? []),
+            ...(externalState.externalRecordsByRef?.keys() ?? []),
+          ]),
+          externalPublicationSubscriptions:
+            externalState.externalPublicationSubscriptions,
+        },
+      )
+    : {}
+  // Detailed profile state goes last so it wins any overlapping actor state.
+  return mergeStates(mergeStates(externalState, postState), appProfileState)
 }
 
 function presentation({
@@ -263,8 +282,10 @@ function presentation({
           ? {
               featured: false,
               view,
-              bskyPostRef: getAtmospherePostRef(
+              viewBskyPost: getAtmospherePostView(
+                ctx.views,
                 state.externalRecords?.get(uri)?.record,
+                state,
               ),
             }
           : undefined
@@ -302,8 +323,10 @@ function presentation({
             startsAt != null && Date.parse(startsAt) > now
               ? { ...view, active: false }
               : view,
-          bskyPostRef: getAtmospherePostRef(
+          viewBskyPost: getAtmospherePostView(
+            ctx.views,
             state.externalRecords?.get(uri)?.record,
+            state,
           ),
         }
       }),

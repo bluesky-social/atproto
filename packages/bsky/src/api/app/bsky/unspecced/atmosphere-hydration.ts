@@ -18,13 +18,7 @@ import {
   mergeStates,
 } from '../../../../hydration/hydrator.js'
 import { HydrationMap } from '../../../../hydration/util.js'
-import {
-  app,
-  type com,
-  place,
-  site,
-  social,
-} from '../../../../lexicons/index.js'
+import { app, place, site, social } from '../../../../lexicons/index.js'
 import { recordUriOf, uriToDid } from '../../../../util/uris.js'
 import {
   externalRecordViewRefs,
@@ -79,6 +73,11 @@ export class AtmosphereTimelineHydrator {
     for (const key of this.state.externalRecordsByRef?.keys() ?? []) {
       this.seen.add(key)
     }
+    for (const uri of getAtmospherePostUris(this.state)) {
+      if (this.seenPosts.has(uri)) continue
+      this.seenPosts.add(uri)
+      posts.push(uri)
+    }
     if (posts.length) {
       this.state = mergeStates(
         this.state,
@@ -114,7 +113,7 @@ export class AtmosphereTimelineHydrator {
     const { info, collection, target, groupable, subscribed, viewUri, state } =
       selected
     let view: app.bsky.unspecced.getAtmosphereTimeline.ActivityItem['view']
-    let bskyPostRef: app.bsky.unspecced.getAtmosphereTimeline.ActivityItem['bskyPostRef']
+    let viewBskyPost: app.bsky.feed.defs.PostView | undefined
     if (collection === app.bsky.feed.post.$type) {
       const postView = this.ctx.views.post(uri, this.state)
       if (!postView) return
@@ -122,8 +121,10 @@ export class AtmosphereTimelineHydrator {
     } else {
       view = this.ctx.views.externalRecordView(viewUri, state, this.now)
       if (!view) return
-      bskyPostRef = getAtmospherePostRef(
+      viewBskyPost = getAtmospherePostView(
+        this.ctx.views,
         state.externalRecords?.get(viewUri)?.record,
+        state,
       )
     }
     return {
@@ -132,7 +133,7 @@ export class AtmosphereTimelineHydrator {
         collection,
         viewerState: { subscribed },
         view,
-        bskyPostRef,
+        viewBskyPost,
       }),
       sortedAt,
       target,
@@ -271,10 +272,34 @@ export class AtmosphereTimelineHydrator {
   }
 }
 
-/** Read the author-declared post reference for a renderable Atmosphere record. */
-export function getAtmospherePostRef(
+/** Collect associated posts after external records and action targets load. */
+export function getAtmospherePostUris(state: HydrationState): AtUriString[] {
+  const uris = new Set<AtUriString>()
+  for (const info of state.externalRecords?.values() ?? []) {
+    const uri = getAtmospherePostUri(info?.record)
+    if (uri) uris.add(uri)
+  }
+  return [...uris]
+}
+
+/** Compose an associated post without making it a required content dependency. */
+export function getAtmospherePostView(
+  views: Views,
   record: unknown,
-): com.atproto.repo.strongRef.Main | undefined {
-  if (site.standard.document.$matches(record)) return record.bskyPostRef
-  if (place.stream.livestream.$matches(record)) return record.post
+  state: HydrationState,
+): app.bsky.feed.defs.PostView | undefined {
+  const uri = getAtmospherePostUri(record)
+  if (!uri || !availableRecord(views, uri, state, state.posts?.get(uri))) return
+  const post = views.post(uri, state)
+  if (!post || views.noUnauthenticatedPost(state, post)) return
+  return app.bsky.feed.defs.postView.$build(post)
+}
+
+function getAtmospherePostUri(record: unknown): AtUriString | undefined {
+  const ref = site.standard.document.$matches(record)
+    ? record.bskyPostRef
+    : place.stream.livestream.$matches(record)
+      ? record.post
+      : undefined
+  return ref && recordUriOf(ref.uri, app.bsky.feed.post.$type)
 }
