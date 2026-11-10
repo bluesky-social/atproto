@@ -1,5 +1,26 @@
 # @atproto/ozone
 
+## 0.13.0
+
+### Minor Changes
+
+- [#5828](https://github.com/bluesky-social/atproto/pull/5828) [`c03fb8d`](https://github.com/bluesky-social/atproto/commit/c03fb8dde754508529f82b80d626332198f33f44) Thanks [@gcwill70](https://github.com/gcwill70)! - **Breaking:** Treat the labeler service record's `reasonTypes` as an exact allowlist for non-appeal reports through `com.atproto.moderation.createReport` and report events through `tools.ozone.moderation.emitEvent`. A modern non-appeal reason is no longer implicitly accepted when only its mapped legacy reason is listed. Unlisted non-appeal reasons return `InvalidRequest` before creating a report or associated moderation writes.
+  
+  An omitted `reasonTypes` list continues to accept all reason types. An empty list rejects all non-appeal reasons. Modern (`tools.ozone.report.defs#reasonAppeal`) and legacy (`com.atproto.moderation.defs#reasonAppeal`) appeals bypass the allowlist, including when the list is empty. Appeal ownership and eligibility checks still apply. Explicitly listed modern, legacy, and custom reasons remain valid; existing reports retain their original reasons.
+  
+  Before upgrading, use the updated Ozone labeler configuration editor to explicitly list every reason the labeler should accept. The editor offers current and legacy reasons and preserves existing configured lists and custom values. Verify each labeler's published list and allow for profile propagation and service-record cache refresh before enabling strict validation.
+  
+  When metrics are enabled with `OZONE_METRICS_PORT`, `ozone_report_reason_rejections_total` counts allowlist rejections from `createReport` and report events through `emitEvent`. Labels identify the endpoint and recognized modern or legacy reason type; other strings share the `unknown` reason bucket. The counter records attempts, including retries, without storing rejected reports. Operators can configure alert thresholds in their monitoring system.
+
+### Patch Changes
+
+- [#5762](https://github.com/bluesky-social/atproto/pull/5762) [`7a46712`](https://github.com/bluesky-social/atproto/commit/7a467120982d9ff1559afeb3a26989dad5877d17) Thanks [@haileyok](https://github.com/haileyok)! - Redact cookie and set-cookie headers in HTTP request and response logs.
+
+- [#5839](https://github.com/bluesky-social/atproto/pull/5839) [`fe343a1`](https://github.com/bluesky-social/atproto/commit/fe343a1b90c1de470a45b0469628a9e75e7d883f) Thanks [@gcwill70](https://github.com/gcwill70)! - Allow account moderation events to close explicitly selected reports on records owned by the account, linking the event to each report.
+- Updated dependencies [[`7a46712`](https://github.com/bluesky-social/atproto/commit/7a467120982d9ff1559afeb3a26989dad5877d17)]:
+  - @atproto/common@0.8.10
+  - @atproto/xrpc-server@0.13.10
+
 ## 0.12.3
 
 ### Patch Changes

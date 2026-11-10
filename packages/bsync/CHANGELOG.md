@@ -1,5 +1,13 @@
 # @atproto/bsync
 
+## 0.1.9
+
+### Patch Changes
+
+- [#5762](https://github.com/bluesky-social/atproto/pull/5762) [`7a46712`](https://github.com/bluesky-social/atproto/commit/7a467120982d9ff1559afeb3a26989dad5877d17) Thanks [@haileyok](https://github.com/haileyok)! - Redact cookie and set-cookie headers in HTTP request and response logs.
+- Updated dependencies [[`7a46712`](https://github.com/bluesky-social/atproto/commit/7a467120982d9ff1559afeb3a26989dad5877d17)]:
+  - @atproto/common@0.8.10
+
 ## 0.1.8
 
 ### Patch Changes
