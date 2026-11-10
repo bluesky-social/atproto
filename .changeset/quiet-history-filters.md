@@ -6,5 +6,5 @@
 '@atproto/dev-env': patch
 ---
 
-Retire moderation subject statistics and their count-based filters. Deploy the
-updated moderation UI first; retired count-based sort values are rejected.
+Retire moderation subject statistics and count-based filters. Legacy count-based
+sorts fall back to last reported time.

@@ -112,8 +112,15 @@
           },
           "sortField": {
             "type": "string",
+            "description": "The reportedRecordsCount and takendownRecordsCount values are deprecated and use lastReportedAt instead.",
             "default": "lastReportedAt",
-            "enum": ["lastReviewedAt", "lastReportedAt", "priorityScore"]
+            "enum": [
+              "lastReviewedAt",
+              "lastReportedAt",
+              "priorityScore",
+              "reportedRecordsCount",
+              "takendownRecordsCount"
+            ]
           },
           "sortDirection": {
             "type": "string",

@@ -18,7 +18,9 @@ import type {
   ExternalRecordBacklinkCounts,
   ExternalRecordBacklinks,
   ExternalRecords,
+  ExternalRecordsByRef,
 } from '../hydration/external.js'
+import { genericRecordKey } from '../hydration/external.js'
 import {
   HydrateCtx,
   type HydrationState,
@@ -30,7 +32,10 @@ import { ImageUriBuilder } from '../image/uri.js'
 import { app, com, place, site, social } from '../lexicons/index.js'
 import { Service } from '../proto/bsky_connect.js'
 import { ActorInfo, GetActorsResponse } from '../proto/bsky_pb.js'
-import { LIVESTREAM_HEARTBEAT_WINDOW_MS } from './external.js'
+import {
+  LIVESTREAM_HEARTBEAT_WINDOW_MS,
+  isRecordAvailable,
+} from './external.js'
 import { Views } from './index.js'
 import type { Label } from './types.js'
 import { VideoUriBuilder } from './util.js'
@@ -70,6 +75,7 @@ const views = new Views({
 function createState() {
   return {
     externalRecords: new HydrationMap() as ExternalRecords,
+    externalRecordsByRef: new HydrationMap() as ExternalRecordsByRef,
     externalRecordBacklinks: new HydrationMap() as ExternalRecordBacklinks,
     externalRecordBacklinkCounts:
       new HydrationMap() as ExternalRecordBacklinkCounts,
@@ -277,6 +283,19 @@ describe('record modality views', () => {
       cts: createdAt,
     })
     expect(view.likers).toBeUndefined()
+  })
+
+  it('checks only the supplied record, never the latest map entry', () => {
+    const state = createState()
+    addGallery(state)
+    const latest = state.externalRecords!.get(galleryUri)!
+    expect(isRecordAvailable(latest, galleryUri, state, views)).toBe(true)
+    expect(isRecordAvailable(undefined, galleryUri, state, views)).toBe(false)
+    expect(isRecordAvailable(null, galleryUri, state, views)).toBe(false)
+    // $type must match the URI collection
+    expect(isRecordAvailable(latest, docUri, state, views)).toBe(false)
+    addLabel(state, galleryUri, '!takedown', true)
+    expect(isRecordAvailable(latest, galleryUri, state, views)).toBe(false)
   })
 
   it('builds a standalone publication without inventing timestamps or engagement', () => {
@@ -1222,6 +1241,187 @@ describe('legacy Standard.site overlay validation', () => {
         undefined,
         'https://evil.example/blog/article',
       ),
+    ).toBeUndefined()
+  })
+})
+
+describe('pinned root selection by CID', () => {
+  const pinCid = 'bafkreigh2akiscaildc5tww2o3w4g5ucuzji75ltsiqg2wfswnns66cinu'
+  const stateRoot = (state: HydrationState, uri: AtUriString) =>
+    state.externalRecords!.get(uri)!
+
+  /** Add a pinned copy of the root to externalRecordsByRef under pinCid. */
+  function pin(
+    state: HydrationState,
+    uri: AtUriString,
+    record: TypedLexMap,
+    pinned = pinCid,
+  ) {
+    state.externalRecordsByRef!.set(genericRecordKey({ uri, cid: pinned }), {
+      ...stateRoot(state, uri),
+      record,
+      cid: pinned,
+    })
+  }
+
+  const cases: {
+    name: string
+    uri: AtUriString
+    setup: (state: HydrationState) => void
+    pinned: TypedLexMap
+    title: string | undefined
+  }[] = [
+    {
+      name: 'standalone publication',
+      uri: pubUri,
+      setup: addPublication,
+      pinned: site.standard.publication.$build({
+        name: 'Pinned publication',
+        url: 'https://pinned.example.com',
+      }),
+      title: 'Pinned publication',
+    },
+    {
+      name: 'article',
+      uri: docUri,
+      setup: (state) => {
+        addPublication(state)
+        addArticle(state)
+      },
+      pinned: site.standard.document.$build({
+        site: pubUri,
+        path: '/pinned',
+        title: 'Pinned article',
+        publishedAt: createdAt,
+      }),
+      title: 'Pinned article',
+    },
+    {
+      name: 'gallery',
+      uri: galleryUri,
+      setup: (state) => {
+        addGallery(state)
+        addPhoto(state, 'one')
+      },
+      pinned: social.grain.gallery.$build({
+        title: 'Pinned gallery',
+        createdAt,
+      }),
+      title: 'Pinned gallery',
+    },
+    {
+      name: 'livestream',
+      uri: streamUri,
+      setup: (state) =>
+        addRecord(
+          state,
+          streamUri,
+          place.stream.livestream.$build({ title: 'Latest stream', createdAt }),
+        ),
+      pinned: place.stream.livestream.$build({
+        title: 'Pinned stream',
+        createdAt,
+      }),
+      title: 'Pinned stream',
+    },
+  ]
+
+  test.each(cases)(
+    '$name: selects the pinned version over latest, with its CID',
+    ({ uri, setup, pinned, title }) => {
+      const state = createState()
+      setup(state)
+      addActor(state, did)
+      addActor(state, publisherDid)
+      const latest = views.externalRecordView(uri, state)
+      assert(latest)
+      pin(state, uri, pinned)
+      const snapshot = JSON.stringify([...state.externalRecords!])
+
+      const view = views.externalRecordView(uri, state, undefined, pinCid)
+      assert(view)
+      expect(view.title).toBe(title)
+      expect(view.title).not.toBe(latest.title)
+      expect(view.associatedRefs?.[0]).toMatchObject({ uri, cid: pinCid })
+      // Dependencies stay on latest.
+      for (const ref of (view.associatedRefs ?? []).slice(1)) {
+        expect(ref.cid).toBe(cid)
+      }
+      expect(JSON.stringify([...state.externalRecords!])).toBe(snapshot)
+    },
+  )
+
+  test('works with no latest root at all', () => {
+    const state = createState()
+    addActor(state, publisherDid)
+    pin(
+      state,
+      pubUri,
+      site.standard.publication.$build({
+        name: 'Only pinned',
+        url: 'https://pinned.example.com',
+      }),
+    )
+    expect(views.externalRecordView(pubUri, state)).toBeUndefined()
+    const view = views.externalRecordView(pubUri, state, undefined, pinCid)
+    expect(view?.title).toBe('Only pinned')
+    expect(view?.associatedRefs).toEqual([
+      expect.objectContaining({ uri: pubUri, cid: pinCid }),
+    ])
+  })
+
+  test('missing or null pin never falls back to latest', () => {
+    const state = createState()
+    addGallery(state)
+    expect(views.externalRecordView(galleryUri, state)).toBeDefined()
+    expect(
+      views.externalRecordView(galleryUri, state, undefined, pinCid),
+    ).toBeUndefined()
+    state.externalRecordsByRef!.set(
+      genericRecordKey({ uri: galleryUri, cid: pinCid }),
+      null,
+    )
+    expect(
+      views.externalRecordView(galleryUri, state, undefined, pinCid),
+    ).toBeUndefined()
+  })
+
+  test('unrenderable pinned publication never falls back to latest', () => {
+    const state = createState()
+    addPublication(state)
+    pin(
+      state,
+      pubUri,
+      site.standard.publication.$build({
+        name: 'Bad pin',
+        url: 'ftp://pinned.example.com',
+      }),
+    )
+    expect(
+      views.externalRecordView(pubUri, state, undefined, pinCid),
+    ).toBeUndefined()
+    expect(views.externalRecordView(pubUri, state)).toBeDefined()
+    // no dependence on latest being renderable
+    state.externalRecords!.delete(pubUri)
+    expect(
+      views.externalRecordView(pubUri, state, undefined, pinCid),
+    ).toBeUndefined()
+  })
+
+  test('URI-based labels and takedown visibility still apply to the pin', () => {
+    const state = createState()
+    addGallery(state)
+    pin(
+      state,
+      galleryUri,
+      social.grain.gallery.$build({ title: 'Pinned gallery', createdAt }),
+    )
+    addLabel(state, galleryUri, 'warn')
+    const view = views.externalRecordView(galleryUri, state, undefined, pinCid)
+    expect(view?.labels?.map((l) => l.val)).toEqual(['warn'])
+    addLabel(state, galleryUri, '!takedown', true)
+    expect(
+      views.externalRecordView(galleryUri, state, undefined, pinCid),
     ).toBeUndefined()
   })
 })

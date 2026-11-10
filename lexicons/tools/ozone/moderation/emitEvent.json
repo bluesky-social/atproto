@@ -114,6 +114,10 @@
           "type": "boolean",
           "description": "Target ALL reports on the subject. Excludes assigned and escalated reports."
         },
+        "allOwned": {
+          "type": "boolean",
+          "description": "Target all eligible reports on the account and its owned subjects, including records, messages, and conversations. Only valid for account subjects and events that close reports. Excludes assigned, escalated, and actively assigned reports unless explicitly targeted by ID."
+        },
         "note": {
           "type": "string",
           "description": "Note to send to reporter(s) when actioning their report"

@@ -20,6 +20,15 @@
               "type": "string",
               "knownValues": ["good", "warning", "atRisk"]
             },
+            "hasActiveStrikes": {
+              "type": "boolean",
+              "description": "Whether the account currently has any active strikes."
+            },
+            "enforcement": {
+              "type": "ref",
+              "ref": "tools.ozone.inbox.defs#enforcementView",
+              "description": "Current account takedown or suspension, independent of strike standing."
+            },
             "updatedAt": {
               "type": "string",
               "format": "datetime",

@@ -51,7 +51,9 @@ import getServices from './labeler/getServices.js'
 import getGroupedNotifications from './notification/getGroupedNotifications.js'
 import listActivitySubscriptions from './notification/listActivitySubscriptions.js'
 import listNotifications from './notification/listNotifications.js'
+import getAtmosphereApps from './unspecced/getAtmosphereApps.js'
 import getAtmosphereExploreTab from './unspecced/getAtmosphereExploreTab.js'
+import getAtmosphereRecordView from './unspecced/getAtmosphereRecordView.js'
 import getOnboardingSuggestedStarterPacks from './unspecced/getOnboardingSuggestedStarterPacks.js'
 import getPopularFeedGenerators from './unspecced/getPopularFeedGenerators.js'
 import getPostThreadOtherV2 from './unspecced/getPostThreadOtherV2.js'
@@ -70,6 +72,7 @@ const routes: {
   schema: { $lxm: string }
   register: (server: Server, ctx: AppContext) => void
   atmosphere?: boolean
+  params?: object
 }[] = [
   { schema: app.bsky.actor.getProfile, register: getProfile },
   { schema: app.bsky.actor.getProfiles, register: getProfiles },
@@ -148,9 +151,19 @@ const routes: {
     register: listNotifications,
   },
   {
+    schema: app.bsky.unspecced.getAtmosphereApps,
+    register: getAtmosphereApps,
+    atmosphere: true,
+  },
+  {
     schema: app.bsky.unspecced.getAtmosphereExploreTab,
     register: getAtmosphereExploreTab,
     atmosphere: true,
+  },
+  {
+    schema: app.bsky.unspecced.getAtmosphereRecordView,
+    register: getAtmosphereRecordView,
+    params: { uri: 'at://did:plc:abc/site.standard.document/1' },
   },
   {
     schema: app.bsky.unspecced.getOnboardingSuggestedStarterPacks,
@@ -204,7 +217,7 @@ type HandlerInput = {
 describe('hydration endpoint attribution', () => {
   it.each(routes)(
     'passes $schema.$lxm to hydration',
-    async ({ schema, register, atmosphere }) => {
+    async ({ schema, register, atmosphere, params }) => {
       const sentinel = new Error('stop at createContext')
       const createContext = vi
         .fn<Hydrator['createContext']>()
@@ -251,7 +264,7 @@ describe('hydration endpoint attribution', () => {
       expect(registeredSchema).toBe(schema)
       await expect(
         handler({
-          params: {},
+          params: params ?? {},
           auth: { credentials: { iss: 'did:plc:viewer' } },
           req: { header: () => undefined },
         }),

@@ -733,9 +733,11 @@ export class Server {
     // `rateLimits` options was not provided to the constructor.
     if (!rateLimits) return globalRateLimiter
 
-    const { creator, bypass } = rateLimits
+    const { creator, bypass, skipDefaultKeyedRouteLimits } = rateLimits
 
-    const rateLimiters = asArray(config.rateLimit).map((options, i) => {
+    // @NOTE `i` indexes the unfiltered list so that key prefixes don't shift
+    // when `skipDefaultKeyedRouteLimits` drops some of the route's limits.
+    const rateLimiters = asArray(config.rateLimit).flatMap((options, i) => {
       if (isSharedRateLimitOpts(options)) {
         const rateLimiter = this.sharedRateLimiters?.get(options.name) as
           RateLimiterI<HandlerContext<A, P, I>> | undefined
@@ -744,21 +746,28 @@ export class Server {
         // exist. This is a configuration error.
         assert(rateLimiter, `Shared rate limiter "${options.name}" not defined`)
 
-        return WrappedRateLimiter.from<HandlerContext<A, P, I>>(
-          rateLimiter,
-          options,
-        )
+        return [
+          WrappedRateLimiter.from<HandlerContext<A, P, I>>(
+            rateLimiter,
+            options,
+          ),
+        ]
+      } else if (!options.calcKey && skipDefaultKeyedRouteLimits) {
+        return []
       } else {
-        return creator({
-          ...options,
-          calcKey: options.calcKey ?? defaultKey,
-          calcPoints: options.calcPoints ?? defaultPoints,
-          keyPrefix: `${nsid}-${i}`,
-        })
+        return [
+          creator({
+            ...options,
+            calcKey: options.calcKey ?? defaultKey,
+            calcPoints: options.calcPoints ?? defaultPoints,
+            keyPrefix: `${nsid}-${i}`,
+          }),
+        ]
       }
     })
 
-    // If the route config contains an empty array, use global rate limiter.
+    // If the route config contains an empty array, or all of its limits were
+    // skipped, use global rate limiter.
     if (!rateLimiters.length) return globalRateLimiter
 
     // The global rate limiter (if present) should be applied in addition to

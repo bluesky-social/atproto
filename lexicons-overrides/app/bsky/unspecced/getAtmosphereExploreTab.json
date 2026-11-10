@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "Get Atmosphere Explore content. Articles are recommended when algorithmic recommendations are enabled for the request, and curated otherwise; other sections are curated. Authentication is optional; authenticated requests include viewer-specific profile state.",
+      "description": "Get Atmosphere Explore content. Articles are recommended when algorithmic recommendations are enabled for the request, and curated otherwise; other sections are curated. Curated content is selected using the x-atproto-bsky-geo-country, x-atproto-bsky-geo-region, and x-atproto-bsky-topics request headers. Authentication is optional; authenticated requests include viewer-specific profile state.",
       "parameters": {
         "type": "params",
         "properties": {
@@ -12,14 +12,6 @@
             "type": "array",
             "description": "Preferred languages for article recommendations when algorithmic recommendations are enabled. Ignored otherwise.",
             "items": { "type": "string", "format": "language" }
-          },
-          "countryCode": {
-            "type": "string",
-            "description": "The ISO 3166-1 alpha-2 country code used to select curated content."
-          },
-          "regionCode": {
-            "type": "string",
-            "description": "The ISO 3166-2 region code used to select curated content."
           }
         }
       },
@@ -116,6 +108,11 @@
           "type": "boolean",
           "description": "Deprecated. Retained for compatibility; always false."
         },
+        "bskyPostRef": {
+          "type": "ref",
+          "ref": "com.atproto.repo.strongRef",
+          "description": "The Bluesky post associated with the article, as declared by its author. The referenced post may not be available."
+        },
         "view": { "type": "ref", "ref": "app.bsky.embed.external#viewArticle" }
       }
     },
@@ -151,6 +148,11 @@
         "featured": {
           "type": "boolean",
           "description": "Deprecated. Retained for compatibility; always false."
+        },
+        "bskyPostRef": {
+          "type": "ref",
+          "ref": "com.atproto.repo.strongRef",
+          "description": "The Bluesky post that announced the livestream, as declared by its author. The referenced post may not be available."
         },
         "view": {
           "type": "ref",

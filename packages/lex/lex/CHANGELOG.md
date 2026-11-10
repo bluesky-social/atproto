@@ -1,5 +1,52 @@
 # @atproto/lex
 
+## 0.4.8
+
+### Patch Changes
+
+- [#5855](https://github.com/bluesky-social/atproto/pull/5855) [`ac78dcf`](https://github.com/bluesky-social/atproto/commit/ac78dcf2cba6505f822b6db093a14d489eee1c49) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Fix CBOR option declarations so strict NodeNext consumers can import Lex without checking cborg's incompatible declarations. Add a packed-consumer regression check for both entrypoints.
+- Updated dependencies [[`ac78dcf`](https://github.com/bluesky-social/atproto/commit/ac78dcf2cba6505f822b6db093a14d489eee1c49)]:
+  - @atproto/lex-cbor@0.1.10
+  - @atproto/lex-installer@0.2.8
+
+## 0.4.7
+
+### Patch Changes
+
+- Updated dependencies [[`8c841f6`](https://github.com/bluesky-social/atproto/commit/8c841f6e73c8365c2dfe816c0613aa9c50490361), [`8c841f6`](https://github.com/bluesky-social/atproto/commit/8c841f6e73c8365c2dfe816c0613aa9c50490361), [`8c841f6`](https://github.com/bluesky-social/atproto/commit/8c841f6e73c8365c2dfe816c0613aa9c50490361), [`8c841f6`](https://github.com/bluesky-social/atproto/commit/8c841f6e73c8365c2dfe816c0613aa9c50490361)]:
+  - @atproto/lex-data@0.1.10
+  - @atproto/lex-cbor@0.1.9
+  - @atproto/lex-schema@0.2.11
+  - @atproto/lex-client@0.4.2
+  - @atproto/lex-installer@0.2.7
+  - @atproto/lex-json@0.1.9
+  - @atproto/lex-builder@0.1.20
+
+## 0.4.6
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/lex-installer@0.2.6
+
+## 0.4.5
+
+### Patch Changes
+
+- [#5786](https://github.com/bluesky-social/atproto/pull/5786) [`07c25d4`](https://github.com/bluesky-social/atproto/commit/07c25d410d4f4ad8f6ec80fc14efa0dd8ec55545) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Document installing `@atproto/lex` as a dev dependency, and importing from the packages it re-exports when the code is not bundled
+
+- [#5786](https://github.com/bluesky-social/atproto/pull/5786) [`07c25d4`](https://github.com/bluesky-social/atproto/commit/07c25d410d4f4ad8f6ec80fc14efa0dd8ec55545) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Re-export `@atproto/lex-cbor` from `@atproto/lex`
+
+- [#5786](https://github.com/bluesky-social/atproto/pull/5786) [`07c25d4`](https://github.com/bluesky-social/atproto/commit/07c25d410d4f4ad8f6ec80fc14efa0dd8ec55545) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Move `walk` to `@atproto/lex-schema`, which `@atproto/lex` still re-exports it from
+- Updated dependencies [[`07c25d4`](https://github.com/bluesky-social/atproto/commit/07c25d410d4f4ad8f6ec80fc14efa0dd8ec55545), [`07c25d4`](https://github.com/bluesky-social/atproto/commit/07c25d410d4f4ad8f6ec80fc14efa0dd8ec55545), [`7aa8e7e`](https://github.com/bluesky-social/atproto/commit/7aa8e7e9e1422f053447879def4d4cf92a05adbb), [`7aa8e7e`](https://github.com/bluesky-social/atproto/commit/7aa8e7e9e1422f053447879def4d4cf92a05adbb), [`07c25d4`](https://github.com/bluesky-social/atproto/commit/07c25d410d4f4ad8f6ec80fc14efa0dd8ec55545)]:
+  - @atproto/lex-cbor@0.1.8
+  - @atproto/lex-client@0.4.1
+  - @atproto/lex-data@0.1.9
+  - @atproto/lex-json@0.1.8
+  - @atproto/lex-schema@0.2.10
+  - @atproto/lex-installer@0.2.5
+  - @atproto/lex-builder@0.1.19
+
 ## 0.4.4
 
 ### Patch Changes
