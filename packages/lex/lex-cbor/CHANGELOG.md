@@ -1,5 +1,11 @@
 # @atproto/lex-cbor
 
+## 0.1.10
+
+### Patch Changes
+
+- [#5855](https://github.com/bluesky-social/atproto/pull/5855) [`ac78dcf`](https://github.com/bluesky-social/atproto/commit/ac78dcf2cba6505f822b6db093a14d489eee1c49) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Fix CBOR option declarations so strict NodeNext consumers can import Lex without checking cborg's incompatible declarations. Add a packed-consumer regression check for both entrypoints.
+
 ## 0.1.9
 
 ### Patch Changes

@@ -1,5 +1,13 @@
 # @atproto/common
 
+## 0.8.10
+
+### Patch Changes
+
+- [#5762](https://github.com/bluesky-social/atproto/pull/5762) [`7a46712`](https://github.com/bluesky-social/atproto/commit/7a467120982d9ff1559afeb3a26989dad5877d17) Thanks [@haileyok](https://github.com/haileyok)! - Redact cookie and set-cookie headers in HTTP request and response logs.
+- Updated dependencies [[`ac78dcf`](https://github.com/bluesky-social/atproto/commit/ac78dcf2cba6505f822b6db093a14d489eee1c49)]:
+  - @atproto/lex-cbor@0.1.10
+
 ## 0.8.9
 
 ### Patch Changes
