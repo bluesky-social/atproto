@@ -415,6 +415,23 @@ message GetInteractionCountsResponse {
   repeated int32 bookmarks = 5;
 }
 
+// GetPostViewCounts is an internal read; callers enforce author-only access.
+message GetPostViewCountsRequest {
+  // At most 1000 DID-form app.bsky.feed.post URIs, including duplicates.
+  repeated string uris = 1;
+}
+
+message PostViewCount {
+  string uri = 1;
+  uint64 count = 2;
+}
+
+message GetPostViewCountsResponse {
+  // One entry per distinct requested URI, in no specified order. A missing
+  // counter is zero; a failed read fails the RPC rather than returning zero.
+  repeated PostViewCount counts = 1;
+}
+
 message GetCountsForUsersRequest {
   repeated string dids = 1;
 }
@@ -1860,6 +1877,7 @@ service Service {
 
   // Interaction Counts
   rpc GetInteractionCounts(GetInteractionCountsRequest) returns (GetInteractionCountsResponse);
+  rpc GetPostViewCounts(GetPostViewCountsRequest) returns (GetPostViewCountsResponse);
   rpc GetCountsForUsers(GetCountsForUsersRequest) returns (GetCountsForUsersResponse);
   rpc GetStarterPackCounts(GetStarterPackCountsRequest) returns (GetStarterPackCountsResponse);
   rpc GetListCounts(GetListCountsRequest) returns (GetListCountsResponse);

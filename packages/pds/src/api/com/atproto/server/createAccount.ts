@@ -12,9 +12,16 @@ import type { DidString } from '@atproto/syntax'
 import {
   AuthRequiredError,
   InvalidRequestError,
+  type MethodAuthVerifier,
   type Server,
 } from '@atproto/xrpc-server'
 import { NEW_PASSWORD_MAX_LENGTH } from '../../../../account-manager/helpers/scrypt.js'
+import type {
+  EntrywayServiceOutput,
+  UnauthenticatedOutput,
+  UserServiceAuthOutput,
+} from '../../../../auth-output.js'
+import { bearerTokenFromReq } from '../../../../auth-verifier.js'
 import type { AppContext } from '../../../../context.js'
 import { events } from '../../../../events.js'
 import { baseNormalizeAndValidate } from '../../../../handle/index.js'
@@ -22,12 +29,24 @@ import { com } from '../../../../lexicons/index.js'
 import { safeResolveDidDoc } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
+  // Like entrywayServiceOptional, but PDS_ENTRYWAY_REQUIRE_SERVICE_AUTH does
+  // not apply yet: the entryway can only start signing createAccount once
+  // PDSes accept a signed call. Enforcement follows once it does.
+  const auth: MethodAuthVerifier<
+    EntrywayServiceOutput | UserServiceAuthOutput | UnauthenticatedOutput
+  > = ctx.cfg.entryway
+    ? (authCtx) =>
+        bearerTokenFromReq(authCtx.req) !== null
+          ? ctx.authVerifier.entrywayService(authCtx)
+          : ctx.authVerifier.unauthenticated(authCtx)
+    : ctx.authVerifier.userServiceAuthOptional
+
   server.add(com.atproto.server.createAccount, {
     rateLimit: {
       durationMs: 5 * MINUTE,
       points: 100,
     },
-    auth: ctx.authVerifier.userServiceAuthOptional,
+    auth,
     handler: async ({
       input,
       auth,
@@ -36,7 +55,10 @@ export default function (server: Server, ctx: AppContext) {
       // @NOTE Until this code and the OAuthStore's `createAccount` are
       // refactored together, any change made here must be reflected over there.
 
-      const requester = auth.credentials?.did ?? null
+      const requester =
+        auth.credentials?.type === 'user_service_auth'
+          ? auth.credentials.did
+          : null
       const {
         did,
         handle,

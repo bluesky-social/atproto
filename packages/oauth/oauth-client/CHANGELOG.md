@@ -1,5 +1,34 @@
 # @atproto/oauth-client
 
+## 0.9.3
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/xrpc@0.8.18
+
+## 0.9.2
+
+### Patch Changes
+
+- [#5805](https://github.com/bluesky-social/atproto/pull/5805) [`a93db66`](https://github.com/bluesky-social/atproto/commit/a93db663f51405031b9fc12b6f57968a435fddec) Thanks [@mozzius](https://github.com/mozzius)! - Fix the DPoP nonce retry for authorization server requests on React Native, where the first sign-in (or a token refresh with no cached nonce) failed with `use_dpop_nonce`. Unexpected errors while checking for a `use_dpop_nonce` response are no longer treated as "not a nonce error".
+- Updated dependencies [[`a93db66`](https://github.com/bluesky-social/atproto/commit/a93db663f51405031b9fc12b6f57968a435fddec)]:
+  - @atproto-labs/fetch@0.4.2
+  - @atproto-labs/did-resolver@0.3.13
+  - @atproto/oauth-resolver@0.0.3
+  - @atproto-labs/identity-resolver@0.4.13
+
+## 0.9.1
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto-labs/did-resolver@0.3.12
+  - @atproto-labs/fetch@0.4.1
+  - @atproto-labs/identity-resolver@0.4.12
+  - @atproto/oauth-resolver@0.0.2
+  - @atproto/xrpc@0.8.17
+
 ## 0.9.0
 
 ### Minor Changes

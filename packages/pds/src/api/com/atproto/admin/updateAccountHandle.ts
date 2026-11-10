@@ -7,7 +7,7 @@ export default function (server: Server, ctx: AppContext) {
 
   if (entrywayClient) {
     server.add(com.atproto.admin.updateAccountHandle, {
-      auth: ctx.authVerifier.adminToken,
+      auth: ctx.authVerifier.adminTokenOrEntrywayService,
       handler: async ({ input: { body } }) => {
         const { did, handle } = await ctx.accountManager.validateHandleUpdate(
           body.did,

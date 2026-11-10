@@ -10,7 +10,7 @@ import {
   isDidString,
 } from '@atproto/lex-schema'
 import { AtUri, normalizeDatetimeAlways } from '@atproto/syntax'
-import type { ExternalRecord } from '../hydration/external.js'
+import { type ExternalRecord, genericRecordKey } from '../hydration/external.js'
 import type { HydrationState } from '../hydration/hydrator.js'
 import { app, com, place, site, social } from '../lexicons/index.js'
 import { buildExternalRecordUrl } from '../util/external/record-url.js'
@@ -21,14 +21,19 @@ import type { ExternalRecordView, Label, ProfileViewBasic } from './types.js'
 
 export const LIVESTREAM_HEARTBEAT_WINDOW_MS = 2 * MINUTE
 
-/** Build a modality view from validated, available records in hydration state. */
+/**
+ * Build a modality view from validated, available records in hydration state.
+ * With `cid`, the root comes from the exact version in `externalRecordsByRef`
+ * (never falling back to latest); everything else stays URI-based.
+ */
 export function externalRecordView(
   views: Views,
   uri: AtUriString,
   state: HydrationState,
   now: number,
+  cid?: string,
 ): $Typed<ExternalRecordView> | undefined {
-  return externalRecordViewOrRefs(views, uri, state, now, false)
+  return externalRecordViewOrRefs(views, uri, state, now, false, cid)
 }
 
 /** Resolve renderable view dependencies without constructing presentation fields. */
@@ -46,6 +51,7 @@ function externalRecordViewOrRefs(
   state: HydrationState,
   now: number,
   refsOnly: false,
+  cid?: string,
 ): $Typed<ExternalRecordView> | undefined
 function externalRecordViewOrRefs(
   views: Views,
@@ -60,9 +66,13 @@ function externalRecordViewOrRefs(
   state: HydrationState,
   now: number,
   refsOnly: boolean,
+  cid?: string,
 ): $Typed<ExternalRecordView> | AtUriString[] | undefined {
-  const info = availableRecord(views, uri, state)
-  if (!info) return
+  const info =
+    cid === undefined
+      ? state.externalRecords?.get(uri)
+      : state.externalRecordsByRef?.get(genericRecordKey({ uri, cid }))
+  if (!isRecordAvailable(info, uri, state, views)) return
   const { record } = info
 
   if (site.standard.document.$matches(record)) {
@@ -71,7 +81,9 @@ function externalRecordViewOrRefs(
     let base = record.site
     const refs = [uri]
     if (isAtUriString(record.site)) {
-      const publication = publicationRecord(views, record.site, state)
+      const siteInfo = state.externalRecords?.get(record.site)
+      if (!isRecordAvailable(siteInfo, record.site, state, views)) return
+      const publication = publicationRecord(siteInfo)
       if (!publication) return
       base = publication.url
       if (!refsOnly) {
@@ -87,7 +99,7 @@ function externalRecordViewOrRefs(
     if (!url || !record.title) return
     if (refsOnly) return refs
     return app.bsky.embed.external.viewArticle.$build({
-      ...commonFields(views, refs, state),
+      ...commonFields(views, refs, state, info),
       uri: url,
       title: record.title,
       description: record.description ?? '',
@@ -110,16 +122,19 @@ function externalRecordViewOrRefs(
   }
 
   if (site.standard.publication.$matches(record)) {
-    if (refsOnly) {
-      return publicationRecord(views, uri, state) ? [uri] : undefined
-    }
-    return publicationView(views, uri, state)
+    const publication = publicationRecord(info)
+    if (!publication) return
+    if (refsOnly) return [uri]
+    return publicationView(views, uri, state, publication)
   }
 
   if (social.grain.gallery.$matches(record)) {
     const links = (state.externalRecordBacklinks?.get(uri) ?? []).flatMap(
       (linkUri) => {
-        const link = availableRecord(views, linkUri, state)?.record
+        const linkInfo = state.externalRecords?.get(linkUri)
+        const link = isRecordAvailable(linkInfo, linkUri, state, views)
+          ? linkInfo.record
+          : undefined
         if (
           !social.grain.gallery.item.$matches(link) ||
           link.gallery !== uri ||
@@ -142,7 +157,10 @@ function externalRecordViewOrRefs(
     for (const link of links) {
       const photoUri = link.record.item
       if (seenPhotos.has(photoUri)) continue
-      const photo = availableRecord(views, photoUri, state)?.record
+      const photoInfo = state.externalRecords?.get(photoUri)
+      const photo = isRecordAvailable(photoInfo, photoUri, state, views)
+        ? photoInfo.record
+        : undefined
       if (!social.grain.photo.$matches(photo)) continue
       seenPhotos.add(photoUri)
       refs.push(link.uri, photoUri)
@@ -171,7 +189,7 @@ function externalRecordViewOrRefs(
     }
     if (refsOnly) return refs
     return app.bsky.embed.external.viewGallery.$build({
-      ...commonFields(views, refs, state),
+      ...commonFields(views, refs, state, info),
       uri: buildExternalRecordUrl(uri) ?? uri,
       title: record.title,
       description: record.description ?? '',
@@ -189,7 +207,7 @@ function externalRecordViewOrRefs(
     // a future heartbeat counts as live for at most twice the window.
     const fresh = Math.abs(now - lastSeen) < LIVESTREAM_HEARTBEAT_WINDOW_MS
     return app.bsky.embed.external.viewLivestream.$build({
-      ...commonFields(views, [uri], state),
+      ...commonFields(views, [uri], state, info),
       uri: httpUri(record.canonicalUrl) ?? httpUri(record.url) ?? uri,
       title: record.title,
       description: '',
@@ -212,12 +230,11 @@ function publicationView(
   views: Views,
   uri: AtUriString,
   state: HydrationState,
-  publication = publicationRecord(views, uri, state),
-): $Typed<app.bsky.embed.external.ViewArticlePublication> | undefined {
-  if (!publication) return
-  const { record, url } = publication
+  publication: NonNullable<ReturnType<typeof publicationRecord>>,
+): $Typed<app.bsky.embed.external.ViewArticlePublication> {
+  const { record, url, info } = publication
   return app.bsky.embed.external.viewArticlePublication.$build({
-    ...commonFields(views, [uri], state),
+    ...commonFields(views, [uri], state, info),
     uri: url,
     title: record.name,
     description: record.description ?? '',
@@ -245,66 +262,64 @@ function publicationView(
   })
 }
 
-function publicationRecord(
-  views: Views,
-  uri: AtUriString,
-  state: HydrationState,
-) {
-  const record = availableRecord(views, uri, state)?.record
+function publicationRecord(info: ExternalRecord) {
+  const { record } = info
   if (!site.standard.publication.$matches(record)) return
   const url = httpUri(record.url)
   if (!url || !record.name) return
-  return { record, url }
+  return { record, url, info }
 }
 
-/** Apply shared block, review, and takedown checks to a hydrated record. */
-export function availableRecord(
-  views: Views,
+/** Whether a selected record passes shared block, review, and takedown checks. */
+export function isRecordAvailable(
+  info: ExternalRecord | null | undefined,
   uri: AtUriString,
   state: HydrationState,
-  info: ExternalRecord | null | undefined = state.externalRecords?.get(uri),
-): ExternalRecord | undefined {
-  if (!info) return
+  views: Views,
+): info is ExternalRecord {
+  if (!info) return false
   const parsed = new AtUri(uri)
   if (!isDidString(parsed.host) || parsed.collection !== info.record.$type)
-    return
+    return false
   // @NOTE Actor hydration nulls unavailable accounts (missing and tombstoned
   // ones even with includeTakedowns). Absent entries just weren't hydrated.
-  if (state.actors?.get(parsed.host) === null) return
-  if (views.viewerBlockExists(parsed.host, state)) return
-  if (!views.viewerSeesNeedsReview({ uri }, state)) return
+  if (state.actors?.get(parsed.host) === null) return false
+  if (views.viewerBlockExists(parsed.host, state)) return false
+  if (!views.viewerSeesNeedsReview({ uri }, state)) return false
   if (
     !state.ctx?.includeTakedowns &&
     (info.takedownRef ||
       state.labels?.get(uri)?.isTakendown ||
       views.actorIsNoHosted(parsed.host, state))
   ) {
-    return
+    return false
   }
-  return info
+  return true
 }
 
+/** `root` is the selected record for `uris[0]`; the rest come from latest. */
 function commonFields(
   views: Views,
   uris: AtUriString[],
   state: HydrationState,
+  root: ExternalRecord,
 ) {
+  const infoOf = (uri: AtUriString) =>
+    uri === uris[0] ? root : state.externalRecords!.get(uri)!
   const refs = [...new Set(uris)]
   const dids = [...new Set(refs.map(uriToDid))]
   return {
     associatedRefs: refs.map((uri) =>
       com.atproto.repo.strongRef.$build({
         uri,
-        cid: state.externalRecords!.get(uri)!.cid,
+        cid: infoOf(uri).cid,
       }),
     ),
     associatedProfiles: dids.flatMap((did) => {
       const profile = views.profileBasic(did, state)
       return profile ? [profile] : []
     }),
-    labels: refs.flatMap((uri) =>
-      recordLabels(uri, state.externalRecords!.get(uri)!, state),
-    ),
+    labels: refs.flatMap((uri) => recordLabels(uri, infoOf(uri), state)),
   }
 }
 
@@ -354,7 +369,10 @@ function backlinkProfiles(
   if (!backlinks) return
   const dids = new Set<DidString>()
   for (const backlink of backlinks) {
-    const record = availableRecord(views, backlink, state)?.record
+    const info = state.externalRecords?.get(backlink)
+    const record = isRecordAvailable(info, backlink, state, views)
+      ? info.record
+      : undefined
     const matches =
       kind === 'recommend'
         ? site.standard.graph.recommend.$matches(record) &&

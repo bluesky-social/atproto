@@ -1,5 +1,76 @@
 # @atproto/ozone
 
+## 0.13.0
+
+### Minor Changes
+
+- [#5828](https://github.com/bluesky-social/atproto/pull/5828) [`c03fb8d`](https://github.com/bluesky-social/atproto/commit/c03fb8dde754508529f82b80d626332198f33f44) Thanks [@gcwill70](https://github.com/gcwill70)! - **Breaking:** Treat the labeler service record's `reasonTypes` as an exact allowlist for non-appeal reports through `com.atproto.moderation.createReport` and report events through `tools.ozone.moderation.emitEvent`. A modern non-appeal reason is no longer implicitly accepted when only its mapped legacy reason is listed. Unlisted non-appeal reasons return `InvalidRequest` before creating a report or associated moderation writes.
+  
+  An omitted `reasonTypes` list continues to accept all reason types. An empty list rejects all non-appeal reasons. Modern (`tools.ozone.report.defs#reasonAppeal`) and legacy (`com.atproto.moderation.defs#reasonAppeal`) appeals bypass the allowlist, including when the list is empty. Appeal ownership and eligibility checks still apply. Explicitly listed modern, legacy, and custom reasons remain valid; existing reports retain their original reasons.
+  
+  Before upgrading, use the updated Ozone labeler configuration editor to explicitly list every reason the labeler should accept. The editor offers current and legacy reasons and preserves existing configured lists and custom values. Verify each labeler's published list and allow for profile propagation and service-record cache refresh before enabling strict validation.
+  
+  When metrics are enabled with `OZONE_METRICS_PORT`, `ozone_report_reason_rejections_total` counts allowlist rejections from `createReport` and report events through `emitEvent`. Labels identify the endpoint and recognized modern or legacy reason type; other strings share the `unknown` reason bucket. The counter records attempts, including retries, without storing rejected reports. Operators can configure alert thresholds in their monitoring system.
+
+### Patch Changes
+
+- [#5762](https://github.com/bluesky-social/atproto/pull/5762) [`7a46712`](https://github.com/bluesky-social/atproto/commit/7a467120982d9ff1559afeb3a26989dad5877d17) Thanks [@haileyok](https://github.com/haileyok)! - Redact cookie and set-cookie headers in HTTP request and response logs.
+
+- [#5839](https://github.com/bluesky-social/atproto/pull/5839) [`fe343a1`](https://github.com/bluesky-social/atproto/commit/fe343a1b90c1de470a45b0469628a9e75e7d883f) Thanks [@gcwill70](https://github.com/gcwill70)! - Allow account moderation events to close explicitly selected reports on records owned by the account, linking the event to each report.
+- Updated dependencies [[`7a46712`](https://github.com/bluesky-social/atproto/commit/7a467120982d9ff1559afeb3a26989dad5877d17)]:
+  - @atproto/common@0.8.10
+  - @atproto/xrpc-server@0.13.10
+
+## 0.12.3
+
+### Patch Changes
+
+- [#5827](https://github.com/bluesky-social/atproto/pull/5827) [`bce6f7e`](https://github.com/bluesky-social/atproto/commit/bce6f7e45897fc7c0f8217c412b54adbae36b774) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Proxy authenticated Atmosphere record view requests to AppView with Ozone service credentials and the requested labelers.
+
+- [#5817](https://github.com/bluesky-social/atproto/pull/5817) [`d4f2c91`](https://github.com/bluesky-social/atproto/commit/d4f2c919697d37af8f411f724e12b8ce2b88f922) Thanks [@foysalit](https://github.com/foysalit)! - Support linking report closures to existing moderation events and targeting all subjects owned by an account from a moderation event.
+- Updated dependencies [[`8c841f6`](https://github.com/bluesky-social/atproto/commit/8c841f6e73c8365c2dfe816c0613aa9c50490361), [`8c841f6`](https://github.com/bluesky-social/atproto/commit/8c841f6e73c8365c2dfe816c0613aa9c50490361), [`8c841f6`](https://github.com/bluesky-social/atproto/commit/8c841f6e73c8365c2dfe816c0613aa9c50490361), [`8c841f6`](https://github.com/bluesky-social/atproto/commit/8c841f6e73c8365c2dfe816c0613aa9c50490361)]:
+  - @atproto/lex-data@0.1.10
+  - @atproto/lex-schema@0.2.11
+  - @atproto/common@0.8.9
+  - @atproto/lex-client@0.4.2
+  - @atproto/xrpc-server@0.13.9
+  - @atproto/lex-password-session@0.3.2
+  - @atproto/identity@0.5.23
+
+## 0.12.2
+
+### Patch Changes
+
+- [#5809](https://github.com/bluesky-social/atproto/pull/5809) [`7b640e8`](https://github.com/bluesky-social/atproto/commit/7b640e8fee709d22a0d62262068db0ddb3106741) Thanks [@blackmichael](https://github.com/blackmichael)! - Expose optional author-declared bskyPostRef strong references beside view on unspecced Atmosphere timeline activities and Explore article and livestream items, without changing external embed schemas or fetching the referenced post.
+
+- [#5813](https://github.com/bluesky-social/atproto/pull/5813) [`43b0be2`](https://github.com/bluesky-social/atproto/commit/43b0be2fa15e49479c11254101a056e9da137c84) Thanks [@foysalit](https://github.com/foysalit)! - Expose account enforcement and best-effort profile information in the moderation inbox.
+
+- [#5818](https://github.com/bluesky-social/atproto/pull/5818) [`ba75afa`](https://github.com/bluesky-social/atproto/commit/ba75afad9fab6d1f5c207b1b5d12a7ecfc5b379d) Thanks [@foysalit](https://github.com/foysalit)! - Expose whether an account has active strikes in its moderation inbox status.
+
+- [#5806](https://github.com/bluesky-social/atproto/pull/5806) [`b794e18`](https://github.com/bluesky-social/atproto/commit/b794e186bc81ce979d29de18f3ca9ab03b7e3d29) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Use geo headers instead of countryCode and regionCode query parameters when selecting curated Atmosphere Explore content.
+- Updated dependencies []:
+  - @atproto-labs/fetch-node@0.4.5
+  - @atproto/identity@0.5.22
+
+## 0.12.1
+
+### Patch Changes
+
+- [#5782](https://github.com/bluesky-social/atproto/pull/5782) [`7aa8e7e`](https://github.com/bluesky-social/atproto/commit/7aa8e7e9e1422f053447879def4d4cf92a05adbb) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Match TypeScript project references to workspace dependencies
+
+- [#5780](https://github.com/bluesky-social/atproto/pull/5780) [`d38661d`](https://github.com/bluesky-social/atproto/commit/d38661dacd8afb19a2eb87eb8aa7e40656b37c92) Thanks [@foysalit](https://github.com/foysalit)! - Reduce unnecessary report hydration in integration tests.
+
+- [#5786](https://github.com/bluesky-social/atproto/pull/5786) [`07c25d4`](https://github.com/bluesky-social/atproto/commit/07c25d410d4f4ad8f6ec80fc14efa0dd8ec55545) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Depend on the `@atproto/lex-*` packages that `@atproto/lex` re-exports instead of `@atproto/lex`, which also installs the lexicon codegen tooling
+- Updated dependencies [[`07c25d4`](https://github.com/bluesky-social/atproto/commit/07c25d410d4f4ad8f6ec80fc14efa0dd8ec55545), [`07c25d4`](https://github.com/bluesky-social/atproto/commit/07c25d410d4f4ad8f6ec80fc14efa0dd8ec55545)]:
+  - @atproto/lex-client@0.4.1
+  - @atproto/lex-data@0.1.9
+  - @atproto/lex-schema@0.2.10
+  - @atproto/xrpc-server@0.13.8
+  - @atproto-labs/fetch-node@0.4.4
+  - @atproto/common@0.8.8
+  - @atproto/lex-password-session@0.3.1
+  - @atproto/identity@0.5.21
+
 ## 0.12.0
 
 ### Minor Changes

@@ -70,7 +70,7 @@ export class OzoneService {
     app.use(loggerMiddleware)
     app.use(compression())
 
-    const ctx = await AppContext.fromConfig(cfg, secrets, overrides)
+    const ctx = await AppContext.fromConfig(cfg, secrets, overrides, register)
 
     let server = createServer([], {
       validateResponse: false,

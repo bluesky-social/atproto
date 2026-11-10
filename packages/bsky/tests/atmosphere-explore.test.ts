@@ -27,6 +27,7 @@ import {
   toDatetimeString,
 } from '@atproto/lex'
 import { AuthRequiredError, createServer } from '@atproto/xrpc-server'
+import registerApps from '../src/api/app/bsky/unspecced/getAtmosphereApps.js'
 import register from '../src/api/app/bsky/unspecced/getAtmosphereExploreTab.js'
 import { ServerConfig } from '../src/config.js'
 import type { AppContext } from '../src/context.js'
@@ -105,6 +106,19 @@ const lists = [
 type ListKey = (typeof lists)[number]['key']
 // Only livestreams honor schedule fields.
 const unscheduledLists = lists.filter(({ key }) => key !== 'livestreams')
+
+// The explore tab only shows `featured: true` apps, so fixture apps default to
+// featured. Override with `featured: false`/`undefined` to exercise the filter.
+function workerBody(config: unknown) {
+  const { apps, ...rest } = (config ?? {}) as { apps?: unknown }
+  if (!Array.isArray(apps)) return config
+  const isObject = (a: unknown): a is object =>
+    typeof a === 'object' && a !== null && !Array.isArray(a)
+  return {
+    ...rest,
+    apps: apps.map((a) => (isObject(a) ? { featured: true, ...a } : a)),
+  }
+}
 
 async function setup(config: unknown = {}, exploreEnabled = true) {
   const records = new Map<AtUriString, TypedLexMap>([
@@ -211,6 +225,7 @@ async function setup(config: unknown = {}, exploreEnabled = true) {
     { exists?: boolean; handle?: string; profile?: TypedLexMap }
   >()
   const blockedActors = new Set<string>()
+  const knownFollowers = new Map<string, string[]>()
   const labels: com.atproto.label.defs.Label[] = []
   const lookup = (uri: string) => {
     const record = records.get(uri as AtUriString)
@@ -269,6 +284,13 @@ async function setup(config: unknown = {}, exploreEnabled = true) {
             }
           }),
         }),
+        sampleFollowsFollowing: ({ targetDids }) => ({
+          results: targetDids.map((did) => ({
+            dids: knownFollowers.get(did) ?? [],
+            totalKnown: knownFollowers.get(did)?.length ?? 0,
+          })),
+        }),
+        getBlockExistence: ({ pairs }) => ({ blocks: pairs.map(() => ({})) }),
         getCountsForUsers: ({ dids }) => ({
           followers: dids.map(() => 3),
           following: dids.map(() => 2),
@@ -357,8 +379,9 @@ async function setup(config: unknown = {}, exploreEnabled = true) {
   const xrpc = createServer([], { validateResponse: true })
   const fetchMock = vi
     .spyOn(globalThis, 'fetch')
-    .mockImplementation(async () => Response.json(config))
+    .mockImplementation(async () => Response.json(workerBody(config)))
   register(xrpc, ctx)
+  registerApps(xrpc, ctx)
   const enabledGates = new Set(
     exploreEnabled ? [Gate.AtmosphereScreenEndpointsEnable] : [],
   )
@@ -383,6 +406,7 @@ async function setup(config: unknown = {}, exploreEnabled = true) {
     takenDownActors,
     actors,
     blockedActors,
+    knownFollowers,
     labels,
     dataplane,
     hydrator,
@@ -425,6 +449,23 @@ async function setup(config: unknown = {}, exploreEnabled = true) {
       return {
         status: response.status,
         body: body as app.bsky.unspecced.getAtmosphereExploreTab.$OutputBody,
+      }
+    },
+    queryApps: async (
+      authenticated = false,
+      params: app.bsky.unspecced.getAtmosphereApps.$Params = {},
+    ) => {
+      const url = new URL(
+        `http://127.0.0.1:${address.port}/xrpc/${app.bsky.unspecced.getAtmosphereApps.$lxm}`,
+      )
+      if (params.category !== undefined)
+        url.searchParams.set('category', params.category)
+      const response = await nativeFetch(url, {
+        headers: authenticated ? { authorization: 'Bearer valid' } : {},
+      })
+      return {
+        status: response.status,
+        body: (await response.json()) as app.bsky.unspecced.getAtmosphereApps.$OutputBody,
       }
     },
     async [Symbol.asyncDispose]() {
@@ -882,23 +923,30 @@ describe('Atmosphere Explore', () => {
     })
   })
 
-  test.each<app.bsky.unspecced.getAtmosphereExploreTab.$Params>([
+  test.each([
     {},
-    { langs: ['en', 'es'] },
-    { countryCode: 'US' },
-    { regionCode: 'WI' },
-    { langs: ['en', 'es'], countryCode: 'US', regionCode: 'WI' },
-    { countryCode: 'US&extra=value', regionCode: 'WI +/?#' },
+    { 'x-atproto-bsky-geo-country': 'US' },
+    { 'x-atproto-bsky-geo-region': 'WI' },
+    { 'x-atproto-bsky-geo-country': 'US', 'x-atproto-bsky-geo-region': 'WI' },
+    {
+      'x-atproto-bsky-geo-country': 'US&extra=value',
+      'x-atproto-bsky-geo-region': 'WI +/?#',
+    },
   ])(
-    'always fetches the full config regardless of request params: %j',
-    async (params) => {
+    'always fetches the full config regardless of request headers: %j',
+    async (headers) => {
       await using fixture = await setup()
       expect(
         (
-          await fixture.query(true, params, {
-            'x-atproto-bsky-topics': 'news',
-            'x-bsky-topics': 'news',
-          })
+          await fixture.query(
+            true,
+            { langs: ['en', 'es'] },
+            {
+              ...headers,
+              'x-atproto-bsky-topics': 'news',
+              'x-bsky-topics': 'news',
+            },
+          )
         ).status,
       ).toBe(200)
       const request = fixture.fetchMock.mock.calls[0][0] as Request
@@ -906,19 +954,65 @@ describe('Atmosphere Explore', () => {
       expect(request.headers.get('authorization')).toBeNull()
       expect(request.headers.get('x-atproto-bsky-topics')).toBeNull()
       expect(request.headers.get('x-bsky-topics')).toBeNull()
+      expect(request.headers.get('x-atproto-bsky-geo-country')).toBeNull()
+      expect(request.headers.get('x-atproto-bsky-geo-region')).toBeNull()
     },
   )
 
   it('fetches the configured service URL as-is', async () => {
     await using fixture = await setup()
-    fixture.cfg.atmosphereExploreTabService = `${service}?config=curated&countryCode=CA`
+    fixture.cfg.atmosphereExploreTabService = `${service}?config=curated`
     expect(
-      (await fixture.query(false, { countryCode: 'US', regionCode: 'WI' }))
-        .status,
+      (
+        await fixture.query(
+          false,
+          {},
+          {
+            'x-atproto-bsky-geo-country': 'US',
+            'x-atproto-bsky-geo-region': 'WI',
+          },
+        )
+      ).status,
     ).toBe(200)
     const request = fixture.fetchMock.mock.calls[0][0] as Request
-    expect(request.url).toBe(`${service}?config=curated&countryCode=CA`)
+    expect(request.url).toBe(`${service}?config=curated`)
   })
+
+  test.each([
+    { headers: {}, expectedBanner: 'global', expectedRoots: [] },
+    {
+      headers: {
+        'x-atproto-bsky-geo-country': 'US',
+        'x-atproto-bsky-geo-region': 'WI',
+      },
+      expectedBanner: 'us',
+      expectedRoots: [doc2Uri],
+    },
+  ])(
+    'ignores geo query params with headers $headers',
+    async ({ headers, expectedBanner, expectedRoots }) => {
+      await using fixture = await setup({
+        announcementBanners: [
+          { id: 'jp', status: 'enabled', locations: ['JP-13'] },
+          { id: 'us', status: 'enabled', locations: ['US-WI'] },
+          { id: 'global', status: 'enabled' },
+        ],
+        articles: [
+          { canonicalUri: docUri, locations: ['JP-13'] },
+          { canonicalUri: doc2Uri, locations: ['US-WI'] },
+        ],
+      })
+      using hydrate = vi.spyOn(
+        fixture.hydrator,
+        'hydrateEmbedExternalViewFromUris',
+      )
+      const params = { langs: ['en'], countryCode: 'JP', regionCode: '13' }
+      const { status, body } = await fixture.query(false, params, headers)
+      expect(status).toBe(200)
+      expect(body.announcementBanner?.id).toBe(expectedBanner)
+      expect(hydrate.mock.calls[0][0]).toEqual(expectedRoots)
+    },
+  )
 
   describe('announcement banner', () => {
     const now = Date.parse(publishedAt)
@@ -929,15 +1023,18 @@ describe('Atmosphere Explore', () => {
       status: 'enabled',
       ...extra,
     })
-    const us = { countryCode: 'US', regionCode: 'WI' }
+    const us = {
+      'x-atproto-bsky-geo-country': 'US',
+      'x-atproto-bsky-geo-region': 'WI',
+    }
 
     async function pickBanner(
       banners: unknown,
-      params: app.bsky.unspecced.getAtmosphereExploreTab.$Params = {},
+      headers: Partial<Record<string, string>> = {},
     ) {
       using _now = vi.spyOn(Date, 'now').mockReturnValue(now)
       await using fixture = await setup({ announcementBanners: banners })
-      const { status, body } = await fixture.query(false, params)
+      const { status, body } = await fixture.query(false, {}, headers)
       expect(status).toBe(200)
       return body.announcementBanner?.id
     }
@@ -997,7 +1094,9 @@ describe('Atmosphere Explore', () => {
         banner('second-match', { locations: ['US-WI'] }),
       ]
       expect(await pickBanner(banners, us)).toBe('first-match')
-      expect(await pickBanner(banners, { countryCode: 'JP' })).toBe('none')
+      expect(
+        await pickBanner(banners, { 'x-atproto-bsky-geo-country': 'JP' }),
+      ).toBe('none')
     })
 
     it('does not let ineligible targeted banners override an eligible unrestricted one', async () => {
@@ -1088,33 +1187,54 @@ describe('Atmosphere Explore', () => {
     })
 
     test.each([
-      { locations: ['US'], params: { countryCode: 'US' }, match: true },
-      { locations: ['US'], params: us, match: true },
-      { locations: ['US-WI'], params: us, match: true },
       {
-        locations: ['US-WI'],
-        params: { countryCode: 'US', regionCode: 'US-WI' },
+        locations: ['US'],
+        headers: { 'x-atproto-bsky-geo-country': 'US' },
         match: true,
       },
-      { locations: ['US-WI'], params: { countryCode: 'US' }, match: false },
+      { locations: ['US'], headers: us, match: true },
+      { locations: ['US-WI'], headers: us, match: true },
       {
         locations: ['US-WI'],
-        params: { countryCode: 'US', regionCode: 'CA' },
+        headers: {
+          'x-atproto-bsky-geo-country': 'US',
+          'x-atproto-bsky-geo-region': 'US-WI',
+        },
+        match: true,
+      },
+      {
+        locations: ['US-WI'],
+        headers: { 'x-atproto-bsky-geo-country': 'US' },
         match: false,
       },
       {
         locations: ['US-WI'],
-        params: { countryCode: 'CA', regionCode: 'WI' },
+        headers: {
+          'x-atproto-bsky-geo-country': 'US',
+          'x-atproto-bsky-geo-region': 'CA',
+        },
         match: false,
       },
-      { locations: ['US'], params: { regionCode: 'WI' }, match: false },
-      { locations: ['JP'], params: {}, match: false },
-      { locations: ['JP'], params: us, match: false },
+      {
+        locations: ['US-WI'],
+        headers: {
+          'x-atproto-bsky-geo-country': 'CA',
+          'x-atproto-bsky-geo-region': 'WI',
+        },
+        match: false,
+      },
+      {
+        locations: ['US'],
+        headers: { 'x-atproto-bsky-geo-region': 'WI' },
+        match: false,
+      },
+      { locations: ['JP'], headers: {}, match: false },
+      { locations: ['JP'], headers: us, match: false },
     ])(
-      'location $locations with $params matches: $match',
-      async ({ locations, params, match }) => {
+      'location $locations with $headers matches: $match',
+      async ({ locations, headers, match }) => {
         // A wrong-location banner never leaks through, even as the only banner.
-        expect(await pickBanner([banner('t', { locations })], params)).toBe(
+        expect(await pickBanner([banner('t', { locations })], headers)).toBe(
           match ? 't' : undefined,
         )
       },
@@ -1364,6 +1484,185 @@ describe('Atmosphere Explore', () => {
     })
   })
 
+  describe('apps endpoint', () => {
+    const apps = Array.from({ length: 12 }, (_, i) => ({
+      id: `${i}`,
+      category: i < 10 ? 'Social' : 'Writing',
+      did: `did:plc:app${i}`,
+    }))
+
+    it('returns all apps in worker order, independently of article recommendations', async () => {
+      await using fixture = await setup({ apps })
+      fixture.setIrisGate()
+      fixture.ctx.irisClient = undefined
+      using external = vi.spyOn(
+        fixture.hydrator,
+        'hydrateEmbedExternalViewFromUris',
+      )
+      const { status, body } = await fixture.queryApps()
+      expect(status).toBe(200)
+      expect(body.apps.map(({ id }) => id)).toEqual(apps.map(({ id }) => id))
+      expect(body.apps.every(({ profile }) => profile)).toBe(true)
+      expect(external).not.toHaveBeenCalled()
+      expect(fixture.iris.fetchMock).not.toHaveBeenCalled()
+      expect(fixture.fetchMock).toHaveBeenCalledOnce()
+      expect(new Request(...fixture.fetchMock.mock.calls[0]).url).toBe(service)
+    })
+
+    test.each([
+      { category: 'Writing', expected: ['10', '11'] },
+      { category: 'writing', expected: [] },
+      { category: 'unknown', expected: [] },
+    ])(
+      'filters category "$category" before hydration',
+      async ({ category, expected }) => {
+        await using fixture = await setup({ apps })
+        using profiles = vi.spyOn(fixture.hydrator, 'hydrateProfilesDetailed')
+        const { status, body } = await fixture.queryApps(true, { category })
+        expect(status).toBe(200)
+        expect(body.apps.map(({ id }) => id)).toEqual(expected)
+        if (expected.length) {
+          expect(profiles).toHaveBeenCalledOnce()
+          expect(profiles.mock.calls[0][0]).toEqual(
+            expected.map((id) => `did:plc:app${id}`),
+          )
+          expect(profiles.mock.calls[0][2]).toEqual({
+            knownFollowersDids: expected.map((id) => `did:plc:app${id}`),
+          })
+        } else {
+          expect(profiles).not.toHaveBeenCalled()
+        }
+      },
+    )
+
+    it('limits category values to 100 characters in params and cards', async () => {
+      const category = 'a'.repeat(100)
+      await using fixture = await setup({
+        apps: [
+          { id: 'valid', category },
+          { id: 'oversized', category: `${category}a` },
+        ],
+      })
+      const all = await fixture.queryApps()
+      expect(all.status).toBe(200)
+      expect(all.body.apps).toEqual([{ id: 'valid', category }])
+      const filtered = await fixture.queryApps(false, { category })
+      expect(filtered.status).toBe(200)
+      expect(filtered.body.apps).toEqual(all.body.apps)
+      expect(fixture.fetchMock).toHaveBeenCalledTimes(2)
+      expect(
+        (await fixture.queryApps(false, { category: `${category}a` })).status,
+      ).toBe(400)
+      expect(fixture.fetchMock).toHaveBeenCalledTimes(2)
+    })
+
+    it('skips invalid cards, strips upstream profile data, and keeps the ingestion bound', async () => {
+      await using fixture = await setup({
+        apps: [
+          { id: 'invalid', did: 'invalid' },
+          ...Array.from({ length: 100 }, (_, i) => ({
+            id: `${i}`,
+            profileUrl: 'https://example.com/profile',
+            profile: { did: author, handle: 'injected.test' },
+          })),
+        ],
+      })
+      const { status, body } = await fixture.queryApps()
+      expect(status).toBe(200)
+      expect(body.apps).toEqual(
+        Array.from({ length: 99 }, (_, i) => ({ id: `${i}` })),
+      )
+    })
+
+    it('honors the Atmosphere feature gate before fetching', async () => {
+      await using fixture = await setup({ apps }, false)
+      expect((await fixture.queryApps()).status).toBe(403)
+      expect(fixture.fetchMock).not.toHaveBeenCalled()
+    })
+
+    it('returns 501 when the worker is not configured', async () => {
+      await using fixture = await setup({ apps })
+      fixture.cfg.atmosphereExploreTabService = undefined
+      expect((await fixture.queryApps()).status).toBe(501)
+      expect(fixture.fetchMock).not.toHaveBeenCalled()
+    })
+
+    it('uses hydrated profile images and keeps editorial fallbacks when a profile is unavailable', async () => {
+      const logo = 'https://example.com/logo.png'
+      const banner = 'https://example.com/banner.png'
+      const appDid = 'did:plc:app'
+      const missingDid = 'did:plc:missing'
+      await using fixture = await setup({
+        apps: [appDid, missingDid].map((did) => ({
+          did,
+          logo,
+          backgroundImage: banner,
+          overlayColor: '#000000',
+          textColor: '#ffffff',
+        })),
+      })
+      const blob = {
+        $type: 'blob',
+        ref: parseCid(photoCid),
+        mimeType: 'image/jpeg',
+        size: 12,
+      } as const
+      fixture.actors.set(appDid, {
+        profile: app.bsky.actor.profile.$build({ avatar: blob, banner: blob }),
+      })
+      fixture.actors.set(missingDid, { exists: false })
+      const { status, body } = await fixture.queryApps()
+      expect(status).toBe(200)
+      const [hydrated, missing] = body.apps
+      const images = new ImageUriBuilder('https://images.example.com')
+      expect(hydrated.profile?.did).toBe(appDid)
+      expect(hydrated.logo).toBe(
+        images.getPresetUri('avatar', appDid, photoCid),
+      )
+      expect(hydrated.banner).toBe(
+        images.getPresetUri('banner', appDid, photoCid),
+      )
+      expect(hydrated).not.toHaveProperty('backgroundImage')
+      expect(missing).toEqual({ logo, banner })
+    })
+  })
+
+  it('app profiles include known followers only for authenticated viewers', async () => {
+    const appDid = 'did:plc:app'
+    const known = 'did:plc:known'
+    const blocked = 'did:plc:blocked'
+    await using fixture = await setup({
+      apps: [
+        { id: 'one', did: appDid },
+        { id: 'two', did: appDid },
+      ],
+    })
+    fixture.knownFollowers.set(appDid, [known, blocked])
+    fixture.blockedActors.add(blocked)
+    const query = fixture.queryApps
+    using sample = vi.spyOn(fixture.dataplane, 'sampleFollowsFollowing')
+    const anonymous = await query()
+    expect(anonymous.status).toBe(200)
+    expect(anonymous.body.apps[0].profile?.viewer).toBeUndefined()
+    expect(sample).not.toHaveBeenCalled()
+
+    const { status, body } = await query(true)
+    expect(status).toBe(200)
+    expect(sample).toHaveBeenCalledOnce()
+    expect(sample.mock.calls[0][0].targetDids).toEqual([appDid])
+    for (const card of body.apps) {
+      expect(card.profile?.viewer?.knownFollowers).toMatchObject({
+        count: 2,
+        followers: [{ did: known }],
+      })
+      expect(card.profile?.viewer?.knownFollowers?.followers).toHaveLength(1)
+      expect(
+        card.profile?.viewer?.knownFollowers?.followers[0].viewer
+          ?.knownFollowers,
+      ).toBeUndefined()
+    }
+  })
+
   describe('app profiles', () => {
     const images = new ImageUriBuilder('https://images.example.com')
     const blob = {
@@ -1464,6 +1763,9 @@ describe('Atmosphere Explore', () => {
       expect(profiles).toHaveBeenCalledTimes(1)
       expect(profiles.mock.calls[0][0]).toEqual(names.map(appDid))
       expect(profiles.mock.calls[0][1]).toBe(external.mock.calls[0][1])
+      expect(profiles.mock.calls[0][2]).toEqual({
+        knownFollowersDids: names.map(appDid),
+      })
       expect(body.apps).toHaveLength(10)
       expect(body.apps.map(({ profile }) => profile?.did)).toEqual(
         Array.from({ length: 10 }, (_, i) => appDid(names[i % 3])),
@@ -1477,6 +1779,36 @@ describe('Atmosphere Explore', () => {
       expect(status).toBe(200)
       expect(profiles).not.toHaveBeenCalled()
       expect(body.apps).toEqual(curated.apps)
+    })
+
+    it('only returns featured apps, but still lists them all in the apps endpoint', async () => {
+      await using fixture = await setup({
+        apps: [
+          card('yes'),
+          card('no', { featured: false }),
+          card('missing', { featured: undefined }),
+          card('string', { featured: 'true' }),
+        ],
+      })
+      const { status, body } = await fixture.query()
+      expect(status).toBe(200)
+      expect(body.apps.map(({ id }) => id)).toEqual(['yes'])
+      const all = await fixture.queryApps()
+      expect(all.body.apps.map(({ id }) => id)).toEqual([
+        'yes',
+        'no',
+        'missing',
+        'string',
+      ])
+    })
+
+    it('returns no apps when none are featured', async () => {
+      await using fixture = await setup({
+        apps: [card('no', { featured: false })],
+      })
+      const { status, body } = await fixture.query()
+      expect(status).toBe(200)
+      expect(body.apps).toEqual([])
     })
 
     it('keeps apps with a missing or null DID and drops a malformed one', async () => {
@@ -1574,13 +1906,16 @@ describe('Atmosphere Explore', () => {
 
   describe('selection before hydration', () => {
     const topics = { 'x-atproto-bsky-topics': ' news , ,news,sports' }
-    const us = { countryCode: 'US', regionCode: 'WI' }
+    const us = {
+      'x-atproto-bsky-geo-country': 'US',
+      'x-atproto-bsky-geo-region': 'WI',
+    }
 
     async function selectedRoots(
       key: ListKey,
       entries: unknown[],
-      params: app.bsky.unspecced.getAtmosphereExploreTab.$Params = {},
-      headers: Record<string, string> = {},
+      locationHeaders: Partial<Record<string, string>> = {},
+      headers: Partial<Record<string, string>> = {},
     ) {
       using _now = vi.spyOn(Date, 'now').mockReturnValue(frozenNow)
       await using fixture = await setup({ [key]: entries })
@@ -1588,7 +1923,10 @@ describe('Atmosphere Explore', () => {
         fixture.hydrator,
         'hydrateEmbedExternalViewFromUris',
       )
-      expect((await fixture.query(false, params, headers)).status).toBe(200)
+      expect(
+        (await fixture.query(false, {}, { ...locationHeaders, ...headers }))
+          .status,
+      ).toBe(200)
       return (
         hydrate.mock.calls.find(([, , seen]) => !seen)?.[0] ??
         ([] as AtUriString[])
@@ -1653,7 +1991,7 @@ describe('Atmosphere Explore', () => {
           'hydrateEmbedExternalViewFromUris',
         )
         using lookup = vi.spyOn(fixture.dataplane, 'getRecordsByURI')
-        expect((await fixture.query(false, us)).status).toBe(200)
+        expect((await fixture.query(false, {}, us)).status).toBe(200)
         const selected = [roots[11], ...roots.slice(0, 9)]
         expect(hydrate.mock.calls.filter(([, , seen]) => !seen)).toHaveLength(1)
         expect(hydrate.mock.calls[0][0]).toEqual(selected)
@@ -1793,60 +2131,104 @@ describe('Atmosphere Explore', () => {
     })
 
     test.each([
-      { locations: ['US'], params: { countryCode: 'US' }, match: true },
-      {
-        locations: ['us'],
-        params: { countryCode: 'us', regionCode: 'wi' },
-        match: true,
-      },
-      { locations: ['US'], params: us, match: true },
-      { locations: ['US-WI'], params: us, match: true },
-      {
-        locations: ['US-WI'],
-        params: { countryCode: 'US', regionCode: 'US-WI' },
-        match: true,
-      },
-      { locations: ['JP', 'US-WI'], params: us, match: true },
       {
         locations: ['US'],
-        params: { countryCode: 'US', regionCode: 'CA-ON' },
+        headers: { 'x-atproto-bsky-geo-country': 'US' },
+        match: true,
+      },
+      {
+        locations: ['us'],
+        headers: {
+          'x-atproto-bsky-geo-country': 'us',
+          'x-atproto-bsky-geo-region': 'wi',
+        },
+        match: true,
+      },
+      { locations: ['US'], headers: us, match: true },
+      { locations: ['US-WI'], headers: us, match: true },
+      {
+        locations: ['US-WI'],
+        headers: {
+          'x-atproto-bsky-geo-country': 'US',
+          'x-atproto-bsky-geo-region': 'US-WI',
+        },
+        match: true,
+      },
+      { locations: ['JP', 'US-WI'], headers: us, match: true },
+      {
+        locations: ['US'],
+        headers: {
+          'x-atproto-bsky-geo-country': 'US',
+          'x-atproto-bsky-geo-region': 'CA-ON',
+        },
         match: true,
       },
       {
         locations: ['US-WI'],
-        params: { countryCode: 'US', regionCode: 'CA-WI' },
+        headers: {
+          'x-atproto-bsky-geo-country': 'US',
+          'x-atproto-bsky-geo-region': 'CA-WI',
+        },
         match: false,
       },
       {
         locations: ['US-WI'],
-        params: { countryCode: 'US', regionCode: 'US-CA' },
+        headers: {
+          'x-atproto-bsky-geo-country': 'US',
+          'x-atproto-bsky-geo-region': 'US-CA',
+        },
         match: false,
       },
-      { locations: ['US-WI'], params: { countryCode: 'US' }, match: false },
       {
         locations: ['US-WI'],
-        params: { countryCode: 'CA', regionCode: 'WI' },
+        headers: { 'x-atproto-bsky-geo-country': 'US' },
         match: false,
       },
-      { locations: ['US-WI'], params: { regionCode: 'WI' }, match: false },
-      { locations: ['US-WI'], params: { regionCode: 'US-WI' }, match: false },
-      { locations: ['US'], params: { regionCode: 'WI' }, match: false },
+      {
+        locations: ['US-WI'],
+        headers: {
+          'x-atproto-bsky-geo-country': 'CA',
+          'x-atproto-bsky-geo-region': 'WI',
+        },
+        match: false,
+      },
+      {
+        locations: ['US-WI'],
+        headers: { 'x-atproto-bsky-geo-region': 'WI' },
+        match: false,
+      },
+      {
+        locations: ['US-WI'],
+        headers: { 'x-atproto-bsky-geo-region': 'US-WI' },
+        match: false,
+      },
+      {
+        locations: ['US'],
+        headers: { 'x-atproto-bsky-geo-region': 'WI' },
+        match: false,
+      },
       {
         locations: ['US-'],
-        params: { countryCode: 'US', regionCode: '' },
+        headers: {
+          'x-atproto-bsky-geo-country': 'US',
+          'x-atproto-bsky-geo-region': '',
+        },
         match: false,
       },
-      { locations: ['WI'], params: us, match: false },
-      { locations: ['JP'], params: us, match: false },
-      { locations: ['JP'], params: {}, match: false },
+      { locations: ['WI'], headers: us, match: false },
+      { locations: ['JP'], headers: us, match: false },
+      { locations: ['JP'], headers: {}, match: false },
       {
         locations: ['JP-13'],
-        params: { countryCode: 'US', regionCode: '13' },
+        headers: {
+          'x-atproto-bsky-geo-country': 'US',
+          'x-atproto-bsky-geo-region': '13',
+        },
         match: false,
       },
     ])(
-      'location $locations with $params matches: $match',
-      async ({ locations, params, match }) => {
+      'location $locations with $headers matches: $match',
+      async ({ locations, headers, match }) => {
         for (const key of lists.map((list) => list.key)) {
           const uri = lists.find((list) => list.key === key)!.uriFor('x')
           // Tags that would otherwise qualify never override a location miss.
@@ -1856,7 +2238,7 @@ describe('Atmosphere Explore', () => {
             { canonicalUri: uri, locations },
             { canonicalUri: uri, locations, tags: [] },
           ]
-          expect(await selectedRoots(key, entries, params, topics)).toEqual(
+          expect(await selectedRoots(key, entries, headers, topics)).toEqual(
             match ? [uri] : [],
           )
         }
@@ -1896,7 +2278,7 @@ describe('Atmosphere Explore', () => {
         fixture.hydrator,
         'hydrateEmbedExternalViewFromUris',
       )
-      const { body } = await fixture.query(false, us)
+      const { body } = await fixture.query(false, {}, us)
       expect(hydrate.mock.calls[0][0]).toEqual([
         ...Array.from({ length: 10 }, (_, i) =>
           atUri(author, site.standard.document.$type, `a${i}`),
@@ -2482,7 +2864,10 @@ describe('Atmosphere Explore', () => {
         status: 'enabled',
         ...extra,
       })
-      const us = { countryCode: 'US', regionCode: 'WI' }
+      const us = {
+        'x-atproto-bsky-geo-country': 'US',
+        'x-atproto-bsky-geo-region': 'WI',
+      }
       const malformed = [
         { status: 'enabled', title: 123 },
         { id: 'x', status: 'enabled', title: 123 },
@@ -2499,12 +2884,12 @@ describe('Atmosphere Explore', () => {
         'banner',
       ]
 
-      async function pick(banners: unknown, params = {}) {
+      async function pick(banners: unknown, headers = {}) {
         await using fixture = await setup({
           announcementBanners: banners,
           articles: [group(docUri)],
         })
-        const { status, body } = await fixture.query(false, params)
+        const { status, body } = await fixture.query(false, {}, headers)
         expect(status).toBe(200)
         // Nonbanner content always survives bad banners.
         expect(body.articles.items).toHaveLength(1)
@@ -2549,6 +2934,7 @@ describe('Atmosphere Explore', () => {
         new Response(JSON.stringify({ padding: 'x'.repeat(512 * 1024) })),
     )
     expect((await fixture.query()).status).toBe(502)
+    expect((await fixture.queryApps()).status).toBe(502)
   })
 
   test.each(['http', 'json', 'network', 'timeout'] as const)(
@@ -2563,6 +2949,9 @@ describe('Atmosphere Explore', () => {
         throw new TypeError('Network failure')
       })
       expect((await fixture.query()).status).toBe(
+        failure === 'timeout' ? 504 : 502,
+      )
+      expect((await fixture.queryApps()).status).toBe(
         failure === 'timeout' ? 504 : 502,
       )
     },
@@ -2901,10 +3290,14 @@ describe('Atmosphere Explore article source (gate on)', () => {
       fixture.hydrator,
       'hydrateEmbedExternalViewFromUris',
     )
-    const { status, body } = await fixture.query(false, {
-      countryCode: 'US',
-      regionCode: 'US-WI',
-    })
+    const { status, body } = await fixture.query(
+      false,
+      {},
+      {
+        'x-atproto-bsky-geo-country': 'US',
+        'x-atproto-bsky-geo-region': 'US-WI',
+      },
+    )
     expect(status).toBe(200)
     // Worker location/topic selection never applies to Iris articles.
     expect(body.articles.items).toHaveLength(10)
@@ -2973,8 +3366,13 @@ describe('Atmosphere Explore article source (gate on)', () => {
     {
       name: 'anonymous viewer, params.langs overrides the header',
       authenticated: false,
-      params: { langs: ['en', 'es'], countryCode: 'US', regionCode: 'WI' },
-      headers: { 'accept-language': 'fr', 'x-bsky-topics': 'legacy' },
+      params: { langs: ['en', 'es'] },
+      headers: {
+        'accept-language': 'fr',
+        'x-bsky-topics': 'legacy',
+        'x-atproto-bsky-geo-country': 'US',
+        'x-atproto-bsky-geo-region': 'WI',
+      },
       viewer: null,
       language: 'en,es',
     },
@@ -3016,8 +3414,7 @@ describe('Atmosphere Explore article source (gate on)', () => {
       expect(forwarded).toBe(value)
     }
 
-    // Location is applied locally: it reaches neither upstream. Recommendation
-    // headers go only to Iris.
+    // Geo and recommendation headers go only to Iris, never to the worker.
     const worker = fixture.fetchMock.mock.calls[0][0] as Request
     expect([...new URL(worker.url).searchParams]).toEqual([])
     expect(worker.headers.get('authorization')).toBeNull()

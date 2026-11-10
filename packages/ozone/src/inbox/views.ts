@@ -383,7 +383,10 @@ export const toEnforcementView = ({
     (val) => val !== TAKEDOWN_LABEL && val !== SUSPEND_LABEL,
   )
   const suspendUntil = status?.suspendUntil
-  const temporary = !!suspendUntil && new Date(suspendUntil) > new Date()
+  // @NOTE A timed takedown stays temporary until the reversal is processed.
+  const temporary =
+    !!suspendUntil &&
+    (!!status?.takendown || new Date(suspendUntil) > new Date())
   const enforced = !!status?.takendown || temporary
 
   let state: EnforcementView['state'] = 'none'

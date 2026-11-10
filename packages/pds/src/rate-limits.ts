@@ -1,7 +1,7 @@
 import type { Redis } from 'ioredis'
 import { DAY, HOUR, MINUTE } from '@atproto/common'
 import { MemoryRateLimiter, RedisRateLimiter } from '@atproto/xrpc-server'
-import type { Options } from '@atproto/xrpc-server'
+import type { HandlerContext, Options } from '@atproto/xrpc-server'
 import type { RateLimitsConfig } from './config/index.js'
 
 type RateLimitDescriptions = NonNullable<Options['rateLimits']>
@@ -11,22 +11,23 @@ const SYNC_GET_REPO_PATH = '/xrpc/com.atproto.sync.getRepo'
 export const buildRateLimitsConfig = (
   rateLimits: RateLimitsConfig,
   redisScratch?: Redis,
+  bypass?: (ctx: HandlerContext) => boolean,
 ): RateLimitDescriptions | undefined => {
   if (!rateLimits.enabled) return undefined
+  const { bypassKey, bypassIps } = rateLimits
 
   return {
     creator: redisScratch
       ? (opts) => new RedisRateLimiter(redisScratch, opts)
       : (opts) => new MemoryRateLimiter(opts),
-    bypass: ({ req }) => {
-      const { bypassKey, bypassIps } = rateLimits
-      if (bypassKey && bypassKey === req.headers['x-ratelimit-bypass']) {
+    bypass: (ctx) => {
+      if (bypassKey && bypassKey === ctx.req.headers['x-ratelimit-bypass']) {
         return true
       }
-      if (bypassIps && bypassIps.includes(req.ip)) {
+      if (bypassIps && bypassIps.includes(ctx.req.ip)) {
         return true
       }
-      return false
+      return bypass ? bypass(ctx) : false
     },
     global: [
       {

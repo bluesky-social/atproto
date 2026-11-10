@@ -10,6 +10,18 @@ import { closeServer, createServer } from './_util.js'
 const LEXICONS: LexiconDoc[] = [
   {
     lexicon: 1,
+    id: 'io.example.authLimit',
+    defs: {
+      main: {
+        type: 'query',
+        output: {
+          encoding: 'application/json',
+        },
+      },
+    },
+  },
+  {
+    lexicon: 1,
     id: 'io.example.routeLimit',
     defs: {
       main: {
@@ -133,7 +145,9 @@ describe('Parameters', () => {
   const server = xrpcServer.createServer(LEXICONS, {
     rateLimits: {
       creator: (opts) => new MemoryRateLimiter(opts),
-      bypass: ({ req }) => req.headers['x-ratelimit-bypass'] === 'bypass',
+      bypass: ({ req, auth }) =>
+        req.headers['x-ratelimit-bypass'] === 'bypass' ||
+        (auth ? auth.credentials === 'trusted' : false),
       shared: [
         {
           name: 'shared-limit',
@@ -149,6 +163,19 @@ describe('Parameters', () => {
         },
       ],
     },
+  })
+  server.method('io.example.authLimit', {
+    auth: ({ req }) => ({
+      credentials: req.headers['x-trusted'] === 'yes' ? 'trusted' : null,
+    }),
+    rateLimit: {
+      durationMs: 5 * MINUTE,
+      points: 1,
+    },
+    handler: () => ({
+      encoding: 'json',
+      body: {},
+    }),
   })
   server.method('io.example.routeLimit', {
     rateLimit: {
@@ -337,5 +364,16 @@ describe('Parameters', () => {
       calls.push(makeCall())
     }
     await Promise.all(calls)
+  })
+
+  it('can bypass rate limits based on the auth result', async () => {
+    const makeCall = (headers: Record<string, string>) =>
+      client.call('io.example.authLimit', {}, {}, { headers })
+    for (let i = 0; i < 3; i++) {
+      await makeCall({ 'x-trusted': 'yes' })
+    }
+    await expect(Promise.all([makeCall({}), makeCall({})])).rejects.toThrow(
+      'Rate Limit Exceeded',
+    )
   })
 })

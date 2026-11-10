@@ -28,6 +28,7 @@ import {
 } from '../../../../pipeline.js'
 import { getAtprotoPassthroughHeaders } from '../../../../util/headers.js'
 import type { Views } from '../../../../views/index.js'
+import { getAtmospherePostRef } from './atmosphere-hydration.js'
 
 const MAX_CONFIG_BYTES = 512 * 1024
 const MAX_LIST_ITEMS = 10
@@ -117,6 +118,10 @@ export default function (server: Server, ctx: AppContext) {
           hydrateCtx,
           workerUrl,
           requestHeaders: req.headers,
+          location: {
+            countryCode: req.get('x-atproto-bsky-geo-country')?.trim(),
+            regionCode: req.get('x-atproto-bsky-geo-region')?.trim(),
+          },
           headers: noUndefinedVals({
             'accept-language': params.langs?.length
               ? params.langs.join(',')
@@ -171,10 +176,10 @@ async function skeleton({
   const now = Date.now()
   const announcementBanner = selectBanner(
     config.announcementBanners,
-    params,
+    params.location,
     now,
   )
-  const select = createSelector(params, params.requestHeaders)
+  const select = createSelector(params.location, params.requestHeaders)
   return {
     now,
     announcementBanner,
@@ -230,7 +235,9 @@ async function hydration({
   const [externalState, appProfileState] = await Promise.all([
     ctx.hydrator.hydrateEmbedExternalViewFromUris(uris, params.hydrateCtx),
     dids.length
-      ? ctx.hydrator.hydrateProfilesDetailed(dids, params.hydrateCtx)
+      ? ctx.hydrator.hydrateProfilesDetailed(dids, params.hydrateCtx, {
+          knownFollowersDids: dids,
+        })
       : {},
   ])
   // Detailed profile state goes second so it wins any overlapping actor state.
@@ -253,7 +260,13 @@ function presentation({
       items: mapDefined(articles, ({ uri }) => {
         const view = ctx.views.externalRecordView(uri, state, now)
         return view && app.bsky.embed.external.viewArticle.$isTypeOf(view)
-          ? { featured: false, view }
+          ? {
+              featured: false,
+              view,
+              bskyPostRef: getAtmospherePostRef(
+                state.externalRecords?.get(uri)?.record,
+              ),
+            }
           : undefined
       }),
       recIdStr: skeleton.articleRecIdStr,
@@ -283,9 +296,16 @@ function presentation({
         if (!view || !app.bsky.embed.external.viewLivestream.$isTypeOf(view))
           return
         // Previewed streams are never live; copy rather than mutate the view.
-        return startsAt != null && Date.parse(startsAt) > now
-          ? { featured: false, view: { ...view, active: false } }
-          : { featured: false, view }
+        return {
+          featured: false,
+          view:
+            startsAt != null && Date.parse(startsAt) > now
+              ? { ...view, active: false }
+              : view,
+          bskyPostRef: getAtmospherePostRef(
+            state.externalRecords?.get(uri)?.record,
+          ),
+        }
       }),
     },
     apps: apps.map(({ card, did }) => {
@@ -417,12 +437,14 @@ const APP_CARD_FIELDS = [
 /**
  * Validates an app entry. Only the public card fields are copied (so a
  * supplied `profile` or `profileUrl` is never read) and only `did` is kept
- * beyond them. A present but malformed `did` drops the app.
+ * beyond them. A present but malformed `did` drops the app, as does anything
+ * not explicitly `featured: true`.
  */
 function parseApp(entry: unknown): AppEntry | undefined {
   if (typeof entry !== 'object' || entry === null || Array.isArray(entry))
     return
   const raw = entry as Record<string, unknown>
+  if (raw.featured !== true) return
   const did = appDidSchema.safeParse(raw.did)
   if (!did.success) return
   const card = app.bsky.unspecced.getAtmosphereExploreTab.appCard.safeParse(
@@ -447,6 +469,7 @@ type Params = app.bsky.unspecced.getAtmosphereExploreTab.$Params & {
   /** Recommendation headers for Iris only. */
   headers: Record<string, string>
   requestHeaders: IncomingHttpHeaders
+  location: { countryCode?: string; regionCode?: string }
   signal: AbortSignal
 }
 
@@ -508,7 +531,7 @@ type AnnouncementBanner =
  */
 function selectBanner(
   banners: ValidBanner[],
-  params: { countryCode?: string; regionCode?: string },
+  location: Params['location'],
   now: number,
 ): AnnouncementBanner | undefined {
   let matched: AnnouncementBanner | undefined
@@ -521,7 +544,7 @@ function selectBanner(
     const end = endsAt == null ? Infinity : Date.parse(endsAt)
     if (end <= now) continue
     if (locations?.length) {
-      if (!matched && matchesLocation(locations, params)) {
+      if (!matched && matchesLocation(locations, location)) {
         matched = presentation
       }
     } else if (end > fallbackEnd) {
@@ -547,14 +570,14 @@ type Selectable = {
  * stable within a bucket), and keeps the first `MAX_LIST_ITEMS`.
  */
 function createSelector(
-  params: { countryCode?: string; regionCode?: string },
+  location: Params['location'],
   headers: IncomingHttpHeaders,
 ) {
   const topics = parseTopics(headers['x-atproto-bsky-topics'])
   return <T extends Group>(groups: T[] = []): T[] => {
     const buckets: T[][] = [[], [], [], []]
     for (const group of groups) {
-      const bucket = selectionBucket(group, params, topics)
+      const bucket = selectionBucket(group, location, topics)
       if (bucket !== undefined) buckets[bucket].push(group)
     }
     return buckets.flat().slice(0, MAX_LIST_ITEMS)
@@ -563,11 +586,11 @@ function createSelector(
 
 function selectionBucket(
   { tags, locations }: Selectable,
-  params: { countryCode?: string; regionCode?: string },
+  location: Params['location'],
   topics: Set<string>,
 ): 0 | 1 | 2 | 3 | undefined {
   if (locations?.length) {
-    if (!matchesLocation(locations, params)) return
+    if (!matchesLocation(locations, location)) return
     return 0
   }
   if (tags?.some((tag) => topics.has(tag))) return 1
@@ -596,7 +619,7 @@ function parseTopics(header: string | string[] | undefined): Set<string> {
  */
 function matchesLocation(
   locations: string[] | undefined,
-  { countryCode, regionCode }: { countryCode?: string; regionCode?: string },
+  { countryCode, regionCode }: Params['location'],
 ): boolean {
   const country = countryCode?.toUpperCase()
   if (!locations?.length || !country) return false

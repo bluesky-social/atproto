@@ -15,6 +15,9 @@ const cid = await cidForLex(someLexValue)
 
 This is a building block of [`@atproto/lex`](https://github.com/bluesky-social/atproto/tree/main/packages/lex/lex), which re-exports it. Depend on this package directly unless your code is bundled — see the `@atproto/lex` [Installation](https://github.com/bluesky-social/atproto/tree/main/packages/lex/lex#installation) section.
 
+> [!NOTE]
+> We temporarily shadow cborg's option types locally because its extensionless declaration imports break strict NodeNext consumers. Encoding and decoding still use cborg at runtime.
+
 ## License
 
 This project is dual-licensed under MIT and Apache 2.0 terms:

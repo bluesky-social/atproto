@@ -92,6 +92,7 @@
     "com.atproto.identity.updateHandle",
     "com.atproto.label.defs",
     "com.atproto.label.queryLabels",
+    "com.atproto.label.record",
     "com.atproto.label.subscribeLabels",
     "com.atproto.lexicon.resolveLexicon",
     "com.atproto.lexicon.schema",
@@ -591,6 +592,10 @@
       "uri": "file://../../lexicons/com/atproto/label/queryLabels.json",
       "cid": "bafyreiefwfo6dn5tsp5mstgvhcmdwweroa3bfhavr4ekbwm6rikcglsqve"
     },
+    "com.atproto.label.record": {
+      "uri": "file://../../lexicons/com/atproto/label/record.json",
+      "cid": "bafyreiekntlzu6pbxk72zsflqrnwu65cjxpwaddvunfcq2w5uhkqjazak4"
+    },
     "com.atproto.label.subscribeLabels": {
       "uri": "file://../../lexicons/com/atproto/label/subscribeLabels.json",
       "cid": "bafyreie6hmxroxlelbrzpji7sajpsq3adtbd4m6ipeieghavuyjlbrt5oa"
@@ -957,7 +962,7 @@
     },
     "tools.ozone.inbox.defs": {
       "uri": "file://../../lexicons/tools/ozone/inbox/defs.json",
-      "cid": "bafyreieemeqpxmax3rlrtrw554gggpb5q2zkcshexbx2jdat2jxs4km2pq"
+      "cid": "bafyreichr4beggvc355lgnn6xxnl6xt47lsyjbz6eucrfzy7l6xi2u4t74"
     },
     "tools.ozone.moderation.cancelScheduledActions": {
       "uri": "file://../../lexicons/tools/ozone/moderation/cancelScheduledActions.json",
@@ -969,7 +974,7 @@
     },
     "tools.ozone.moderation.emitEvent": {
       "uri": "file://../../lexicons/tools/ozone/moderation/emitEvent.json",
-      "cid": "bafyreibegtfjuzyyiz4h7p2cectekkemhrmg6sx5t6mg5ywshu5gmajkpi"
+      "cid": "bafyreib7hk5p57u6tonqgrrpxfnzhr6awk3qacwtvqtu4y72bjnz3mdwwy"
     },
     "tools.ozone.moderation.getAccountTimeline": {
       "uri": "file://../../lexicons/tools/ozone/moderation/getAccountTimeline.json",

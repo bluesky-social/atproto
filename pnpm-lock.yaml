@@ -1005,6 +1005,10 @@ importers:
       '@atproto/xrpc-server':
         specifier: workspace:^
         version: link:../../xrpc-server
+    devDependencies:
+      vitest:
+        specifier: ^4.1.10
+        version: 4.1.10(@opentelemetry/api@1.10.0)(@types/node@22.20.4)(@vitest/coverage-v8@4.1.10)(vite@8.3.1(@types/node@22.20.4)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.1))
 
   packages/lex-cli:
     dependencies:

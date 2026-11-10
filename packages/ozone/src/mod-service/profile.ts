@@ -1,99 +1,23 @@
+import { Counter, type Registry } from 'prom-client'
 import type { Client } from '@atproto/lex-client'
+import { TokenSchema } from '@atproto/lex-schema'
 import { InvalidRequestError } from '@atproto/xrpc-server'
+import { isAppealReport } from '../api/util.js'
 import type { OzoneConfig } from '../config/index.js'
-import { app, com } from '../lexicons/index.js'
+import { app, com, tools } from '../lexicons/index.js'
 import { httpLogger } from '../logger.js'
 
-// Reverse mapping from new ozone namespaced reason types to old com.atproto namespaced reason types
-export const NEW_TO_OLD_REASON_MAPPING: Record<string, string> = {
-  'tools.ozone.report.defs#reasonAppeal':
-    com.atproto.moderation.defs.ReasonAppeal,
-  'tools.ozone.report.defs#reasonOther':
-    com.atproto.moderation.defs.ReasonOther,
+type ReportMethod =
+  | typeof com.atproto.moderation.createReport.$lxm
+  | typeof tools.ozone.moderation.emitEvent.$lxm
 
-  'tools.ozone.report.defs#reasonViolenceAnimal':
-    com.atproto.moderation.defs.ReasonViolation,
-  'tools.ozone.report.defs#reasonViolenceThreats':
-    com.atproto.moderation.defs.ReasonViolation,
-  'tools.ozone.report.defs#reasonViolenceGraphicContent':
-    com.atproto.moderation.defs.ReasonViolation,
-  'tools.ozone.report.defs#reasonViolenceGlorification':
-    com.atproto.moderation.defs.ReasonViolation,
-  'tools.ozone.report.defs#reasonViolenceExtremistContent':
-    com.atproto.moderation.defs.ReasonViolation,
-  'tools.ozone.report.defs#reasonViolenceTrafficking':
-    com.atproto.moderation.defs.ReasonViolation,
-  'tools.ozone.report.defs#reasonViolenceOther':
-    com.atproto.moderation.defs.ReasonViolation,
-
-  'tools.ozone.report.defs#reasonSexualAbuseContent':
-    com.atproto.moderation.defs.ReasonSexual,
-  'tools.ozone.report.defs#reasonSexualNCII':
-    com.atproto.moderation.defs.ReasonSexual,
-  'tools.ozone.report.defs#reasonSexualDeepfake':
-    com.atproto.moderation.defs.ReasonSexual,
-  'tools.ozone.report.defs#reasonSexualAnimal':
-    com.atproto.moderation.defs.ReasonSexual,
-  'tools.ozone.report.defs#reasonSexualUnlabeled':
-    com.atproto.moderation.defs.ReasonSexual,
-  'tools.ozone.report.defs#reasonSexualOther':
-    com.atproto.moderation.defs.ReasonSexual,
-
-  'tools.ozone.report.defs#reasonChildSafetyCSAM':
-    com.atproto.moderation.defs.ReasonViolation,
-  'tools.ozone.report.defs#reasonChildSafetyGroom':
-    com.atproto.moderation.defs.ReasonViolation,
-  'tools.ozone.report.defs#reasonChildSafetyPrivacy':
-    com.atproto.moderation.defs.ReasonViolation,
-  'tools.ozone.report.defs#reasonChildSafetyHarassment':
-    com.atproto.moderation.defs.ReasonViolation,
-  'tools.ozone.report.defs#reasonChildSafetyOther':
-    com.atproto.moderation.defs.ReasonViolation,
-
-  'tools.ozone.report.defs#reasonHarassmentTroll':
-    com.atproto.moderation.defs.ReasonRude,
-  'tools.ozone.report.defs#reasonHarassmentTargeted':
-    com.atproto.moderation.defs.ReasonRude,
-  'tools.ozone.report.defs#reasonHarassmentHateSpeech':
-    com.atproto.moderation.defs.ReasonRude,
-  'tools.ozone.report.defs#reasonHarassmentDoxxing':
-    com.atproto.moderation.defs.ReasonRude,
-  'tools.ozone.report.defs#reasonHarassmentOther':
-    com.atproto.moderation.defs.ReasonRude,
-
-  'tools.ozone.report.defs#reasonMisleadingBot':
-    com.atproto.moderation.defs.ReasonMisleading,
-  'tools.ozone.report.defs#reasonMisleadingImpersonation':
-    com.atproto.moderation.defs.ReasonMisleading,
-  'tools.ozone.report.defs#reasonMisleadingSpam':
-    com.atproto.moderation.defs.ReasonSpam,
-  'tools.ozone.report.defs#reasonMisleadingScam':
-    com.atproto.moderation.defs.ReasonMisleading,
-  'tools.ozone.report.defs#reasonMisleadingElections':
-    com.atproto.moderation.defs.ReasonMisleading,
-  'tools.ozone.report.defs#reasonMisleadingOther':
-    com.atproto.moderation.defs.ReasonMisleading,
-
-  'tools.ozone.report.defs#reasonRuleSiteSecurity':
-    com.atproto.moderation.defs.ReasonViolation,
-  'tools.ozone.report.defs#reasonRuleProhibitedSales':
-    com.atproto.moderation.defs.ReasonViolation,
-  'tools.ozone.report.defs#reasonRuleBanEvasion':
-    com.atproto.moderation.defs.ReasonViolation,
-  'tools.ozone.report.defs#reasonRuleOther':
-    com.atproto.moderation.defs.ReasonViolation,
-
-  'tools.ozone.report.defs#reasonSelfHarmContent':
-    com.atproto.moderation.defs.ReasonViolation,
-  'tools.ozone.report.defs#reasonSelfHarmED':
-    com.atproto.moderation.defs.ReasonViolation,
-  'tools.ozone.report.defs#reasonSelfHarmStunts':
-    com.atproto.moderation.defs.ReasonViolation,
-  'tools.ozone.report.defs#reasonSelfHarmSubstances':
-    com.atproto.moderation.defs.ReasonViolation,
-  'tools.ozone.report.defs#reasonSelfHarmOther':
-    com.atproto.moderation.defs.ReasonViolation,
-}
+const KNOWN_REASON_TYPES = new Set<string>(
+  [com.atproto.moderation.defs, tools.ozone.report.defs].flatMap((defs) =>
+    Object.values(defs)
+      .filter((value) => value instanceof TokenSchema)
+      .map((token) => token.value),
+  ),
+)
 
 interface CacheEntry {
   profile: app.bsky.labeler.defs.LabelerViewDetailed | null
@@ -110,6 +34,7 @@ export class ModerationServiceProfile {
     private cfg: OzoneConfig,
     private appviewClient: Client,
     cacheTTL?: number,
+    private reasonRejections?: Counter<'nsid' | 'reason_type'>,
   ) {
     this.CACHE_TTL = cacheTTL || cfg.service.serviceRecordCacheTTL
   }
@@ -117,8 +42,35 @@ export class ModerationServiceProfile {
   static creator(
     cfg: OzoneConfig,
     appviewClient: Client,
+    register?: Registry,
   ): ModerationServiceProfileCreator {
-    return () => new ModerationServiceProfile(cfg, appviewClient)
+    const reasonRejections = register
+      ? new Counter({
+          name: 'ozone_report_reason_rejections_total',
+          help: 'Report attempts rejected because the reason type is not in the labeler allowlist',
+          labelNames: ['nsid', 'reason_type'] as const,
+          registers: [register],
+        })
+      : undefined
+
+    if (reasonRejections) {
+      for (const nsid of [
+        com.atproto.moderation.createReport.$lxm,
+        tools.ozone.moderation.emitEvent.$lxm,
+      ]) {
+        for (const reason_type of [...KNOWN_REASON_TYPES, 'unknown']) {
+          reasonRejections.inc({ nsid, reason_type }, 0)
+        }
+      }
+    }
+
+    return () =>
+      new ModerationServiceProfile(
+        cfg,
+        appviewClient,
+        undefined,
+        reasonRejections,
+      )
   }
 
   async getProfile() {
@@ -148,26 +100,31 @@ export class ModerationServiceProfile {
     return this.cache?.profile || null
   }
 
-  async validateReasonType(reasonType: string): Promise<string> {
+  async validateReasonType(
+    reasonType: string,
+    nsid: ReportMethod,
+  ): Promise<string> {
+    // @NOTE appeals remain available regardless of the report-type allowlist.
+    if (isAppealReport(reasonType)) {
+      return reasonType
+    }
+
     const profile = await this.getProfile()
 
-    if (!Array.isArray(profile?.reasonTypes)) {
-      return reasonType
+    if (
+      Array.isArray(profile?.reasonTypes) &&
+      !profile.reasonTypes.includes(reasonType)
+    ) {
+      // @NOTE caller-supplied custom values must not create unbounded series.
+      this.reasonRejections?.inc({
+        nsid,
+        reason_type: KNOWN_REASON_TYPES.has(reasonType)
+          ? reasonType
+          : 'unknown',
+      })
+      throw new InvalidRequestError(`Invalid reason type: ${reasonType}`)
     }
 
-    const supportedReasonTypes = profile.reasonTypes
-
-    // Check if the reason type is directly supported
-    if (supportedReasonTypes.includes(reasonType)) {
-      return reasonType
-    }
-
-    // Allow new reason types only if they map to a supported old reason type
-    const mappedOldReason = NEW_TO_OLD_REASON_MAPPING[reasonType]
-    if (mappedOldReason && supportedReasonTypes.includes(mappedOldReason)) {
-      return reasonType
-    }
-
-    throw new InvalidRequestError(`Invalid reason type: ${reasonType}`)
+    return reasonType
   }
 }
