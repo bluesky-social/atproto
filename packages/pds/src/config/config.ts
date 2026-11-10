@@ -248,6 +248,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
         bypassIps: env.rateLimitBypassIps?.map((ipOrCidr) =>
           ipOrCidr.split('/')[0]?.trim(),
         ),
+        disableIpLimits: env.disableIpRateLimits,
       }
     : { enabled: false }
 
@@ -541,6 +542,11 @@ export type RateLimitsConfig =
       enabled: true
       bypassKey?: string
       bypassIps?: string[]
+      /**
+       * Drop the PDS's own per-IP rate limits, for when an upstream proxy
+       * enforces them. Per-account rate limits still apply.
+       */
+      disableIpLimits?: boolean
     }
   | { enabled: false }
 
