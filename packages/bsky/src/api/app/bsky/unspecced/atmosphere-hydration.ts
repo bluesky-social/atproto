@@ -289,7 +289,8 @@ export function getAtmospherePostView(
   state: HydrationState,
 ): app.bsky.feed.defs.PostView | undefined {
   const uri = getAtmospherePostUri(record)
-  if (!uri || !availableRecord(views, uri, state, state.posts?.get(uri))) return
+  if (!uri || !isRecordAvailable(state.posts?.get(uri), uri, state, views))
+    return
   const post = views.post(uri, state)
   if (!post || views.noUnauthenticatedPost(state, post)) return
   return app.bsky.feed.defs.postView.$build(post)

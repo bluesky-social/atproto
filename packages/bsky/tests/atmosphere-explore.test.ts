@@ -596,10 +596,6 @@ describe('Atmosphere Explore', () => {
           replyCount: 3,
           embed: {
             external: { title: 'Article' },
-            data: {
-              $type: app.bsky.embed.external.viewArticle.$type,
-              title: 'Article',
-            },
           },
         })
         expect(item.viewBskyPost?.viewer?.like).toBe(
