@@ -25,7 +25,9 @@ export class Database<Schema> implements AsyncDisposable {
 
   static sqlite<T>(
     location: string,
-    opts?: { pragmas?: Record<string, string> },
+    // `pragmas` is required so that a bare record of pragmas can't be passed
+    // as `opts`, where it would be silently ignored.
+    opts?: { pragmas: Record<string, string> },
   ): Database<T> {
     const sqliteDb = new SqliteDB(location, {
       timeout: 0, // handled by application

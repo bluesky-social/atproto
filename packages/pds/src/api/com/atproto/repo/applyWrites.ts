@@ -166,9 +166,17 @@ export default function (server: Server, ctx: AppContext) {
 
       const swapCommitCid = swapCommit ? parseCid(swapCommit) : undefined
 
+      // Move blobs to permanent storage before taking the actor db write lock.
+      const permanentBlobs = await ctx.actorStore.makeBlobsPermanent(
+        did,
+        preparedWrites.flatMap((write) =>
+          write.action === WriteOpAction.Delete ? [] : write.blobs,
+        ),
+      )
+
       const commit = await ctx.actorStore.transact(did, async (actorTxn) => {
         const commit = await actorTxn.repo
-          .processWrites(preparedWrites, swapCommitCid)
+          .processWrites(preparedWrites, swapCommitCid, permanentBlobs)
           .catch((err) => {
             if (err instanceof BadCommitSwapError) {
               throw new InvalidRequestError(err.message, 'InvalidSwap')

@@ -19,6 +19,7 @@ import {
   type PreparedCreate,
   type PreparedWrite,
 } from '../../repo/types.js'
+import type { PermanentBlobs } from '../blob/transactor.js'
 import { BlobTransactor } from '../blob/transactor.js'
 import type { ActorDb } from '../db/index.js'
 import { RecordTransactor } from '../record/transactor.js'
@@ -77,9 +78,15 @@ export class RepoTransactor extends RepoReader {
     }
   }
 
+  /**
+   * @param permanentBlobs the result of `ActorStore.makeBlobsPermanent()`,
+   * called before this transaction so that blobstore i/o does not happen while
+   * the actor db write lock is held.
+   */
   async processWrites(
     writes: PreparedWrite[],
     swapCommitCid?: Cid,
+    permanentBlobs?: PermanentBlobs,
   ): Promise<CommitDataWithOps> {
     this.db.assertTransaction()
     if (writes.length > 200) {
@@ -97,7 +104,7 @@ export class RepoTransactor extends RepoReader {
     // & send to indexing
     await this.indexWrites(writes, commit.rev)
     // process blobs
-    await this.blob.processWriteBlobs(commit.rev, writes)
+    await this.blob.processWriteBlobs(commit.rev, writes, permanentBlobs)
 
     return commit
   }

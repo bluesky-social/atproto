@@ -82,7 +82,13 @@ export const getAccount = async (
       if (isDidIdentifier(handleOrDid)) {
         return eb('actor.did', '=', handleOrDid)
       } else {
-        return eb('actor.handle', '=', handleOrDid)
+        // Compare lower(handle) so that sqlite can use `actor_handle_lower_idx`
+        // instead of scanning every actor.
+        return eb(
+          eb.fn<string>('lower', ['actor.handle']),
+          '=',
+          handleOrDid.toLowerCase(),
+        )
       }
     })
     .executeTakeFirst()
@@ -117,7 +123,21 @@ export const getAccountByEmail = async (
   flags?: AvailabilityFlags,
 ): Promise<ActorAccount | null> => {
   const found = await selectAccountQB(db, flags)
-    .where('email', '=', email.toLowerCase())
+    // Look up the did in a subquery so that sqlite can use
+    // `account_email_lower_idx`. A lower(email) comparison in this WHERE would
+    // keep the LEFT JOIN on account, and sqlite would scan every actor.
+    .where('account.did', '=', (qb) =>
+      qb
+        .selectFrom('account as by_email')
+        .select('by_email.did')
+        .where((eb) =>
+          eb(
+            eb.fn<string>('lower', ['by_email.email']),
+            '=',
+            email.toLowerCase(),
+          ),
+        ),
+    )
     .executeTakeFirst()
   return found || null
 }
@@ -219,10 +239,19 @@ export const updateHandle = async (
       .where(({ not, exists }) =>
         not(
           exists(
+            // Compare lower(handle) so that sqlite can use
+            // `actor_handle_lower_idx`: this runs while holding the account
+            // db write lock.
             db.db
-              .selectFrom('actor')
-              .where('handle', '=', handle)
-              .where('did', '!=', did)
+              .selectFrom('actor as other')
+              .where((eb) =>
+                eb(
+                  eb.fn<string>('lower', ['other.handle']),
+                  '=',
+                  handle.toLowerCase(),
+                ),
+              )
+              .where('other.did', '!=', did)
               .selectAll(),
           ),
         ),
