@@ -44,3 +44,8 @@ export type DeviceMetadata = {
   ipAddress: string
   lastSeenAt: ISODatetimeString
 }
+
+export type FedcmRegistrationData = {
+  configUrl: string
+  accountsExpiration: number
+}

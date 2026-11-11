@@ -1,6 +1,7 @@
 import type {
   Account,
   CustomizationData,
+  FedcmRegistrationData,
   Session,
 } from '@atproto/oauth-provider-api'
 import type { LexiconPermissionSet } from '@atproto/oauth-scopes'
@@ -34,6 +35,7 @@ export type HydrationData = {
   'account-page': {
     __customizationData: CustomizationData
     __deviceSessions: readonly Session[]
+    __fedcmRegistrationData?: FedcmRegistrationData
   }
 
   /**
@@ -43,6 +45,7 @@ export type HydrationData = {
     __customizationData: CustomizationData
     __authorizeData: AuthorizeData
     __sessions: readonly Session[]
+    __fedcmRegistrationData?: FedcmRegistrationData
   }
   /**
    * Matches the variables needed by `error-page.tsx`
