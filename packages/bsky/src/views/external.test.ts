@@ -395,6 +395,26 @@ describe('record modality views', () => {
     expect(state.externalRecordBacklinks.get(galleryUri)).toEqual(before)
   })
 
+  test.each([
+    { counts: undefined, expected: undefined },
+    { counts: {}, expected: 0 },
+    { counts: { [social.grain.gallery.item.$type]: 27 }, expected: 27 },
+  ])(
+    'uses the gallery item backlink total for photoCount: $expected',
+    ({ counts, expected }) => {
+      const state = createState()
+      addGallery(state)
+      addPhoto(state, 'preview')
+      if (counts) state.externalRecordBacklinkCounts.set(galleryUri, counts)
+
+      const view = views.externalRecordView(galleryUri, state)
+      assert(view && app.bsky.embed.external.viewGallery.$isTypeOf(view))
+      assertValid(view)
+      expect(view.photoCount).toBe(expected)
+      expect(view.items).toMatchObject([{ alt: 'preview' }])
+    },
+  )
+
   it('drops unrelated, foreign-authored, duplicate, missing, invalid, and taken-down gallery items', () => {
     const state = createState()
     addGallery(state)
