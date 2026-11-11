@@ -7,7 +7,10 @@ import {
 } from '../constants.js'
 import type { NotificationGroup } from './grouping.js'
 
-const DEFAULT_MAX_GROUP_SIZE = 200
+const DEFAULT_MAX_GROUP_SIZE = 100
+
+// @NOTE These kinds must not exceed a certain number of items: the frontend puts all item URIs
+// in a URL query string, and larger groups make the URL too long and break navigation.
 const MAX_GROUP_SIZE_OVERRIDES: Partial<
   Record<AppviewNotificationReason, number>
 > = {
@@ -19,7 +22,10 @@ const MAX_GROUP_SIZE_OVERRIDES: Partial<
 }
 
 export function getMaxGroupSize(kind: AppviewNotificationReason): number {
-  return MAX_GROUP_SIZE_OVERRIDES[kind] ?? DEFAULT_MAX_GROUP_SIZE
+  return Math.min(
+    DEFAULT_MAX_GROUP_SIZE,
+    MAX_GROUP_SIZE_OVERRIDES[kind] ?? DEFAULT_MAX_GROUP_SIZE,
+  )
 }
 
 // Notification timestamps never collide; no tie-breaker is needed.
