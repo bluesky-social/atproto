@@ -2,4 +2,4 @@
 '@atproto/ozone': patch
 ---
 
-Remove the reporterDid migration test, which raced with other packages' tests on the shared test database.
+Stop the reporterDid backfill test from dropping and re-adding the column, which raced with other packages' tests on the shared test database.
