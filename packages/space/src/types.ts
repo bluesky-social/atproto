@@ -92,7 +92,7 @@ const spaceMetaStarMeta = buildDef(
 )
 export type SpaceMetaStarMeta = InferDef<typeof spaceMetaStarMeta>
 
-// A repo in the writer set, as listRepos reports it. Keyed by the repo's DID.
+// A repo in the writer set, as listWriters reports it. Keyed by the repo's DID.
 const spaceMetaWriter = buildDef('writer', spaceMetaWriterSchema)
 
 export const defs = {

@@ -61,7 +61,7 @@ export default function (server: Server, ctx: AppContext) {
         starStream.on('close', closeDb)
 
         return {
-          encoding: 'application/octet-stream' as const,
+          encoding: 'application/vnd.dasl.star' as const,
           body: starStream,
           headers: commitMacHeaders(sharedSecret, commit),
         }

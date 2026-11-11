@@ -1,6 +1,6 @@
 export interface SpaceCredentialRecipient {
   space: string
-  serviceDid: string
+  service: string
   serviceEndpoint: string
   // Stored rather than derived, so reads are a plain comparison against now.
   expiresAt: string

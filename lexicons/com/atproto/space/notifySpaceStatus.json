@@ -1,0 +1,27 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.space.notifySpaceStatus",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Notify a syncing service of a change in a space's status. A deleted space's data should be dropped. Sent by the space host to registered services. Requires service auth.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["space", "status"],
+          "properties": {
+            "space": {
+              "type": "string",
+              "format": "space-ref"
+            },
+            "status": {
+              "type": "string",
+              "knownValues": ["deleted"]
+            }
+          }
+        }
+      }
+    }
+  }
+}

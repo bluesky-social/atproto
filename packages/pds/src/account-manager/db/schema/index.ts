@@ -44,8 +44,8 @@ export type { Lexicon } from './lexicon.js'
 export type { UsedRefreshToken } from './used-refresh-token.js'
 export type { RepoRoot } from './repo-root.js'
 export type {
-  SpaceDeletedNotificationRetry,
   SpaceNotificationRetry,
+  SpaceStatusNotificationRetry,
 } from './space-notification.js'
 export type { RefreshToken } from './refresh-token.js'
 export type { RevokedSpaceCredential } from './revoked-space-credential.js'

@@ -8,16 +8,16 @@ import { assertActiveSpaceHost } from './util.js'
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.space.getSpaceCredential, {
     handler: async ({ input }) => {
-      const { space, credentialKid, delegationToken, clientAttestation } =
+      const { space, credentialKey, delegationToken, clientAttestation } =
         input.body
 
-      if (!isP256DidKey(credentialKid)) {
-        throw new InvalidRequestError('credentialKid must be a P-256 did:key')
+      if (!isP256DidKey(credentialKey)) {
+        throw new InvalidRequestError('credentialKey must be a P-256 did:key')
       }
 
       // Absent when the request carries no delegation token, which only a space
-      // that does not gate on the user accepts.
-      let userDid: DidString | undefined
+      // that does not gate on the account accepts.
+      let repo: DidString | undefined
       if (delegationToken) {
         const delegation =
           await ctx.authVerifier.verifyDelegationToken(delegationToken)
@@ -27,7 +27,7 @@ export default function (server: Server, ctx: AppContext) {
             'InvalidDelegationToken',
           )
         }
-        userDid = delegation.userDid
+        repo = delegation.repo
       }
 
       const spaceDid = await assertActiveSpaceHost(ctx, space)
@@ -41,8 +41,8 @@ export default function (server: Server, ctx: AppContext) {
 
       const policy = await ctx.actorStore.read(spaceDid, async (store) => {
         const existing = await store.space.getSpace(space)
-        // The durable signal that a space is gone: a syncer that missed
-        // notifySpaceDeleted learns it here, on its next renewal. Answered with or
+        // The durable signal that a space is gone: a syncer that missed its
+        // notifySpaceStatus learns it here, on its next renewal. Answered with or
         // without a delegation token, since a public space's syncer may not have one.
         if (existing?.deletedAt) {
           throw new InvalidRequestError(
@@ -56,14 +56,14 @@ export default function (server: Server, ctx: AppContext) {
       await ctx.spacePolicyManager.authorizeCredential({
         space,
         policy,
-        userDid,
+        repo,
         clientId,
       })
 
       const keypair = await ctx.actorStore.keypair(spaceDid)
       const credential = await createSpaceToken(
         'credential',
-        { iss: spaceDid, sub: space, keyId: credentialKid },
+        { iss: spaceDid, sub: space, keyId: credentialKey },
         keypair,
       )
 

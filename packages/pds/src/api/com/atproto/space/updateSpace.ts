@@ -1,7 +1,7 @@
 import type { Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
-import { assertSpaceOwner, fireNotifyWrite } from './util.js'
+import { assertSpaceAuthority, fireNotifyRepoUpdate } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.space.updateSpace, {
@@ -13,13 +13,17 @@ export default function (server: Server, ctx: AppContext) {
       },
     }),
     handler: async ({ input, auth }) => {
-      const ownerDid = auth.credentials.did
+      const authorityDid = auth.credentials.did
       const { space, policy } = input.body
 
-      assertSpaceOwner(auth, space, { manage: 'update' })
+      assertSpaceAuthority(auth, space, { manage: 'update' })
 
       const commit = await ctx.spacePolicyManager.updateSpace(space, policy)
-      await fireNotifyWrite(ctx, { space, writerDid: ownerDid, commit })
+      await fireNotifyRepoUpdate(ctx, {
+        space,
+        writerDid: authorityDid,
+        commit,
+      })
     },
   })
 }

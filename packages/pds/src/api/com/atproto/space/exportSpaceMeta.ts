@@ -4,7 +4,7 @@ import type { Server } from '@atproto/xrpc-server'
 import { AuthScope } from '../../../../auth-scope.js'
 import type { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
-import { assertSpaceOwner } from './util.js'
+import { assertSpaceAuthority } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.space.exportSpaceMeta, {
@@ -18,11 +18,11 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ params, auth }) => {
       const { space } = params
 
-      assertSpaceOwner(auth, space, { action: 'read_self' })
+      assertSpaceAuthority(auth, space, { action: 'read_self' })
 
       const archive = await ctx.spacePolicyManager.exportSpaceMeta(space)
       return {
-        encoding: 'application/octet-stream' as const,
+        encoding: 'application/vnd.dasl.star' as const,
         body: byteIterableToStream(serializeSpaceMeta(archive)),
       }
     },

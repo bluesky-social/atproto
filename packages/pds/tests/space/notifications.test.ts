@@ -46,7 +46,7 @@ describe('space notification retries', () => {
     error = undefined
     host.calls.length = 0
     await db.db.deleteFrom('space_notification_retry').execute()
-    await db.db.deleteFrom('space_deleted_notification_retry').execute()
+    await db.db.deleteFrom('space_status_notification_retry').execute()
     await db.db
       .updateTable('space_notification_lease')
       .set({ owner: '', expiresAt: 0 })
@@ -70,7 +70,9 @@ describe('space notification retries', () => {
   it('sends immediately without queueing a successful notification', async () => {
     const commit = makeCommit()
     await notifications.notify(space, writer.did, commit)
-    expect(host.callsTo(com.atproto.space.notifyWrite.$lxm)).toHaveLength(1)
+    expect(host.callsTo(com.atproto.space.notifyRepoUpdate.$lxm)).toHaveLength(
+      1,
+    )
     expect(host.calls[0].body).toMatchObject({ repoRev: commit.rev })
     expect(
       await db.db.selectFrom('space_notification_retry').selectAll().execute(),
@@ -525,7 +527,7 @@ describe('space notification retries', () => {
     expect(host.calls).toHaveLength(2)
   })
 
-  describe('space deleted', () => {
+  describe('space status', () => {
     let syncer: MockService
     let syncerStatus = 200
     let deletedSpace: SpaceRefString
@@ -550,34 +552,35 @@ describe('space notification retries', () => {
     })
 
     const registration = () => ({
-      serviceDid: syncer.serviceRef,
+      service: syncer.serviceRef,
       expiresAt: new Date(Date.now() + DAY).toISOString(),
     })
 
-    const pendingDeleted = () =>
-      db.db.selectFrom('space_deleted_notification_retry').selectAll().execute()
+    const pendingStatus = () =>
+      db.db.selectFrom('space_status_notification_retry').selectAll().execute()
 
-    const makeDeletedDue = () =>
+    const makeStatusDue = () =>
       db.db
-        .updateTable('space_deleted_notification_retry')
+        .updateTable('space_status_notification_retry')
         .set({ retryAt: 0 })
         .execute()
 
     it('sends immediately without queueing a successful notification', async () => {
-      await notifications.notifySpaceDeleted(deletedSpace, [registration()])
-      const delivered = syncer.callsTo(
-        com.atproto.space.notifySpaceDeleted.$lxm,
-      )
+      await notifications.notifySpaceStatus(deletedSpace, [registration()])
+      const delivered = syncer.callsTo(com.atproto.space.notifySpaceStatus.$lxm)
       expect(delivered).toHaveLength(1)
-      expect(delivered[0].body).toEqual({ space: deletedSpace })
-      expect(await pendingDeleted()).toEqual([])
+      expect(delivered[0].body).toEqual({
+        space: deletedSpace,
+        status: 'deleted',
+      })
+      expect(await pendingStatus()).toEqual([])
     })
 
     it('retries a transient failure until delivered', async () => {
       syncerStatus = 503
       const recipient = registration()
-      await notifications.notifySpaceDeleted(deletedSpace, [recipient])
-      expect(await pendingDeleted()).toMatchObject([
+      await notifications.notifySpaceStatus(deletedSpace, [recipient])
+      expect(await pendingStatus()).toMatchObject([
         {
           space: deletedSpace,
           service: syncer.serviceRef,
@@ -586,39 +589,39 @@ describe('space notification retries', () => {
         },
       ])
 
-      await makeDeletedDue()
+      await makeStatusDue()
       await notifications.retryPending()
-      expect(await pendingDeleted()).toMatchObject([{ attempts: 2 }])
+      expect(await pendingStatus()).toMatchObject([{ attempts: 2 }])
 
       syncerStatus = 200
-      await makeDeletedDue()
+      await makeStatusDue()
       await notifications.retryPending()
-      expect(await pendingDeleted()).toEqual([])
+      expect(await pendingStatus()).toEqual([])
       expect(syncer.calls).toHaveLength(3)
     })
 
     it('does not retry a permanent failure', async () => {
       syncerStatus = 400
-      await notifications.notifySpaceDeleted(deletedSpace, [registration()])
-      expect(await pendingDeleted()).toEqual([])
+      await notifications.notifySpaceStatus(deletedSpace, [registration()])
+      expect(await pendingStatus()).toEqual([])
       expect(syncer.calls).toHaveLength(1)
     })
 
     it('stops retrying once the registration expires', async () => {
       syncerStatus = 503
-      await notifications.notifySpaceDeleted(deletedSpace, [registration()])
+      await notifications.notifySpaceStatus(deletedSpace, [registration()])
       await db.db
-        .updateTable('space_deleted_notification_retry')
+        .updateTable('space_status_notification_retry')
         .set({ retryAt: 0, expiresAt: Date.now() })
         .execute()
       await notifications.retryPending()
-      expect(await pendingDeleted()).toEqual([])
+      expect(await pendingStatus()).toEqual([])
       expect(syncer.calls).toHaveLength(1)
     })
 
     it('drops retries once the authority account is gone', async () => {
       await db.db
-        .insertInto('space_deleted_notification_retry')
+        .insertInto('space_status_notification_retry')
         .values({
           space:
             'at://did:plc:aaaaaaaaaaaaaaaaaaaaaaaa/space/com.example.group/gone' as SpaceRefString,
@@ -629,14 +632,14 @@ describe('space notification retries', () => {
         })
         .execute()
       await notifications.retryPending()
-      expect(await pendingDeleted()).toEqual([])
+      expect(await pendingStatus()).toEqual([])
       expect(syncer.calls).toHaveLength(0)
     })
 
     it('defers retries while the authority is inactive', async () => {
       syncerStatus = 503
-      await notifications.notifySpaceDeleted(deletedSpace, [registration()])
-      await makeDeletedDue()
+      await notifications.notifySpaceStatus(deletedSpace, [registration()])
+      await makeStatusDue()
       await db.db
         .updateTable('actor')
         .set({ deactivatedAt: currentDatetimeString() })
@@ -646,7 +649,7 @@ describe('space notification retries', () => {
         syncerStatus = 200
         await notifications.retryPending()
         expect(syncer.calls).toHaveLength(1)
-        expect(await pendingDeleted()).toMatchObject([{ attempts: 2 }])
+        expect(await pendingStatus()).toMatchObject([{ attempts: 2 }])
       } finally {
         await db.db
           .updateTable('actor')
@@ -654,16 +657,16 @@ describe('space notification retries', () => {
           .where('did', '=', writer.did)
           .execute()
       }
-      await makeDeletedDue()
+      await makeStatusDue()
       await notifications.retryPending()
       expect(syncer.calls).toHaveLength(2)
-      expect(await pendingDeleted()).toEqual([])
+      expect(await pendingStatus()).toEqual([])
     })
 
     it('drops retries once the space is recreated', async () => {
       syncerStatus = 503
-      await notifications.notifySpaceDeleted(deletedSpace, [registration()])
-      await makeDeletedDue()
+      await notifications.notifySpaceStatus(deletedSpace, [registration()])
+      await makeStatusDue()
       const ctx = network.pds.ctx
       await ctx.actorStore.transact(writer.did, (txn) =>
         txn.space.ensureSpace(deletedSpace),
@@ -672,22 +675,22 @@ describe('space notification retries', () => {
         syncerStatus = 200
         await notifications.retryPending()
         expect(syncer.calls).toHaveLength(1)
-        expect(await pendingDeleted()).toEqual([])
+        expect(await pendingStatus()).toEqual([])
       } finally {
         await ctx.spacePolicyManager.deleteSpace(deletedSpace)
       }
     })
 
-    it('keeps a newer deletion retry when an older delivery finishes', async () => {
+    it('keeps a newer status retry when an older delivery finishes', async () => {
       syncerStatus = 503
-      await notifications.notifySpaceDeleted(deletedSpace, [registration()])
-      await makeDeletedDue()
+      await notifications.notifySpaceStatus(deletedSpace, [registration()])
+      await makeStatusDue()
 
       const delivered = createDeferrable()
       const resume = createDeferrable()
-      const deliver = notifications['deliverSpaceDeleted'].bind(notifications)
+      const deliver = notifications['deliverSpaceStatus'].bind(notifications)
       const spy = jest
-        .spyOn(notifications as any, 'deliverSpaceDeleted')
+        .spyOn(notifications as any, 'deliverSpaceStatus')
         .mockImplementationOnce(async (...args: any[]) => {
           await deliver(args[0], args[1])
           delivered.resolve()
@@ -698,12 +701,12 @@ describe('space notification retries', () => {
       try {
         await delivered.complete
         syncerStatus = 503
-        await notifications.notifySpaceDeleted(deletedSpace, [registration()])
-        const requeued = await pendingDeleted()
+        await notifications.notifySpaceStatus(deletedSpace, [registration()])
+        const requeued = await pendingStatus()
         expect(requeued).toHaveLength(1)
         resume.resolve()
         await inFlight
-        expect(await pendingDeleted()).toEqual(requeued)
+        expect(await pendingStatus()).toEqual(requeued)
       } finally {
         resume.resolve()
         await inFlight

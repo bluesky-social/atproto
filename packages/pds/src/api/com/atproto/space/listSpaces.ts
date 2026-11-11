@@ -1,3 +1,4 @@
+import { LtHash } from '@atproto/space'
 import type { SpaceRefString } from '@atproto/syntax'
 import type { Server } from '@atproto/xrpc-server'
 import { AuthScope } from '../../../../auth-scope.js'
@@ -13,7 +14,7 @@ export default function (server: Server, ctx: AppContext) {
       },
     }),
     handler: async ({ params, auth }) => {
-      const { spaceType, did: authority, limit, cursor } = params
+      const { spaceDid, spaceType, limit, cursor } = params
 
       // No one space to check against, so the filters are the target: an
       // unfiltered listing needs a wildcard grant. Lists only the caller's own
@@ -21,14 +22,19 @@ export default function (server: Server, ctx: AppContext) {
       if (auth.credentials.type === 'oauth') {
         auth.credentials.permissions.assertSpace({
           type: spaceType ?? '*',
-          authority: authority ?? '*',
+          authority: spaceDid ?? '*',
           skey: '*',
           action: 'read_self',
         })
       }
 
       const spaces = await ctx.actorStore.read(auth.credentials.did, (store) =>
-        store.space.listSpaces({ limit, cursor, type: spaceType, authority }),
+        store.space.listSpaces({
+          limit,
+          cursor,
+          type: spaceType,
+          authority: spaceDid,
+        }),
       )
 
       return {
@@ -36,7 +42,12 @@ export default function (server: Server, ctx: AppContext) {
         body: {
           cursor: spaces.length < limit ? undefined : spaces.at(-1)?.uri,
           spaces: spaces.map((space) => ({
-            uri: space.uri as SpaceRefString,
+            space: space.uri as SpaceRefString,
+            repoRev: space.repoRev ?? undefined,
+            data: space.setHash
+              ? new LtHash(space.setHash).digest()
+              : undefined,
+            spaceRev: space.spaceRev ?? undefined,
           })),
         },
       }
