@@ -94,6 +94,15 @@ export type ExternalHydrationWork = {
  * essentially free when telemetry is disabled.
  */
 class EventReporter {
+  #authVerifierRequests = meter.createCounter<{
+    verifier:
+      'standard' | 'entrywaySession' | 'role' | 'modService' | 'anonymous'
+  }>('auth.verifier.requests', {
+    description:
+      'Requests by selected authentication verifier, including failed attempts; wrapper verifiers are not counted separately',
+    valueType: ValueType.INT,
+  })
+
   #hydrationFailedCounter = meter.createCounter<{
     source: HydrationSource
     reason: 'abort' | 'timeout' | 'error'
@@ -251,6 +260,17 @@ class EventReporter {
       eventsLogger.info({ eventName, ...attributes })
     } catch (err) {
       diag.error(`Failed to log event ${eventName}:`, err)
+    }
+  }
+
+  authVerifierRequest(
+    verifier:
+      'standard' | 'entrywaySession' | 'role' | 'modService' | 'anonymous',
+  ) {
+    try {
+      this.#authVerifierRequests.add(1, { verifier })
+    } catch (err) {
+      diag.error('Failed to record auth_verifier_request:', err)
     }
   }
 
