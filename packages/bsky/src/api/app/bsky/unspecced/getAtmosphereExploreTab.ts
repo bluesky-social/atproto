@@ -17,7 +17,7 @@ import {
   type Hydrator,
   mergeStates,
 } from '../../../../hydration/hydrator.js'
-import { app, site } from '../../../../lexicons/index.js'
+import { app, site, social } from '../../../../lexicons/index.js'
 import { httpLogger } from '../../../../logger.js'
 import {
   type HydrationFnInput,
@@ -106,11 +106,14 @@ export default function (server: Server, ctx: AppContext) {
         features,
         xrpcEndpoint: app.bsky.unspecced.getAtmosphereExploreTab.$lxm,
       })
-      const useIris = hydrateCtx.features.checkGate(
+      const useIrisArticles = hydrateCtx.features.checkGate(
         hydrateCtx.features.Gate.AtmosphereExploreArticlesIrisEnable,
       )
+      const useIrisGalleries = hydrateCtx.features.checkGate(
+        hydrateCtx.features.Gate.AtmosphereExploreGalleriesIrisEnable,
+      )
       // Use 501 instead of 500 as these are not considered retry-able by clients
-      if (useIris && !ctx.irisClient)
+      if ((useIrisArticles || useIrisGalleries) && !ctx.irisClient)
         throw new MethodNotImplementedError('Iris agent not available')
       const result = await getExplore(
         {
@@ -133,7 +136,9 @@ export default function (server: Server, ctx: AppContext) {
         {
           hydrator: ctx.hydrator,
           views: ctx.views,
-          irisClient: useIris ? ctx.irisClient : undefined,
+          irisClient: ctx.irisClient,
+          useIrisArticles,
+          useIrisGalleries,
           fetchExploreTabSkeleton,
         },
       )
@@ -146,9 +151,9 @@ async function skeleton({
   ctx,
   params,
 }: SkeletonFnInput<Context, Params>): Promise<SkeletonState> {
-  const [config, recommendations] = await Promise.all([
+  const [config, recommendations, galleryRecommendations] = await Promise.all([
     ctx.fetchExploreTabSkeleton(params.workerUrl, params.signal),
-    ctx.irisClient
+    ctx.useIrisArticles && ctx.irisClient
       ? ctx.irisClient
           .call(
             app.bsky.unspecced.getAtmosphereExploreArticleRecommendations,
@@ -168,6 +173,29 @@ async function skeleton({
             httpLogger.warn(
               { err },
               'Unable to fetch Atmosphere Explore article recommendations',
+            )
+            return undefined
+          })
+      : undefined,
+    ctx.useIrisGalleries && ctx.irisClient
+      ? ctx.irisClient
+          .call(
+            app.bsky.unspecced.getAtmosphereExploreGalleryRecommendations,
+            {
+              limit: MAX_LIST_ITEMS,
+              viewer: params.hydrateCtx.viewer ?? undefined,
+            },
+            {
+              headers: params.headers,
+              signal: params.signal,
+              validateResponse: true,
+            },
+          )
+          .catch((err) => {
+            if (params.signal.aborted) throw err
+            httpLogger.warn(
+              { err },
+              'Unable to fetch Atmosphere Explore gallery recommendations',
             )
             return undefined
           })
@@ -199,7 +227,21 @@ async function skeleton({
     ),
     articleRecIdStr: recommendations?.recIdStr,
     publications: orderGroups(completeGroups(select(config.publications))),
-    photos: orderGroups(completeGroups(select(config.photos))),
+    photos: orderGroups(
+      galleryRecommendations && galleryRecommendations.galleries.length > 0
+        ? mapDefined(
+            galleryRecommendations.galleries.slice(0, MAX_LIST_ITEMS),
+            ({ uri }) => {
+              const root = recordUri(uri)
+              return root &&
+                new AtUri(root).collection === social.grain.gallery.$type
+                ? { uri: root }
+                : undefined
+            },
+          )
+        : completeGroups(select(config.photos)),
+    ),
+    galleryRecIdStr: galleryRecommendations?.recIdStr,
     // Expired and not-yet-previewed livestreams are dropped before selection,
     // so they never consume the cap.
     livestreams: orderGroups(
@@ -289,6 +331,7 @@ function presentation({
           ? { featured: false, view }
           : undefined
       }),
+      recIdStr: skeleton.galleryRecIdStr,
     },
     livestreams: {
       items: mapDefined(livestreams, ({ uri, startsAt }) => {
@@ -460,6 +503,8 @@ type Context = {
   hydrator: Hydrator
   views: Views
   irisClient: Client | undefined
+  useIrisArticles: boolean
+  useIrisGalleries: boolean
   fetchExploreTabSkeleton: ReturnType<typeof createFetchExploreTabSkeleton>
 }
 
@@ -483,6 +528,7 @@ type SkeletonState = {
   articleRecIdStr?: string
   publications: RecordGroup[]
   photos: RecordGroup[]
+  galleryRecIdStr?: string
   livestreams: LivestreamRecordGroup[]
   apps: AppEntry[]
 }

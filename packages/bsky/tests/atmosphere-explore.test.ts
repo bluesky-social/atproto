@@ -335,13 +335,21 @@ async function setup(config: unknown = {}, exploreEnabled = true) {
   // worker content.
   const iris = {
     response: { articles: [], recIdStr: '123' } as unknown,
+    galleryResponse: { galleries: [], recIdStr: 'gallery-123' } as unknown,
     respond: undefined as
       undefined | ((request: Request) => Response | Promise<Response>),
     fetchMock: vi.fn<typeof globalThis.fetch>(),
   }
   iris.fetchMock.mockImplementation(async (input, init) => {
     const request = new Request(input, init)
-    return iris.respond ? iris.respond(request) : Response.json(iris.response)
+    return iris.respond
+      ? iris.respond(request)
+      : Response.json(
+          new URL(request.url).pathname ===
+            `/xrpc/${app.bsky.unspecced.getAtmosphereExploreGalleryRecommendations.$lxm}`
+            ? iris.galleryResponse
+            : iris.response,
+        )
   })
   const ctx = {
     cfg,
@@ -421,6 +429,10 @@ async function setup(config: unknown = {}, exploreEnabled = true) {
       if (enabled) enabledGates.add(Gate.AtmosphereExploreArticlesIrisEnable)
       else enabledGates.delete(Gate.AtmosphereExploreArticlesIrisEnable)
       return gateScope
+    },
+    setGalleryIrisGate(enabled = true) {
+      if (enabled) enabledGates.add(Gate.AtmosphereExploreGalleriesIrisEnable)
+      else enabledGates.delete(Gate.AtmosphereExploreGalleriesIrisEnable)
     },
     query: async (
       authenticated = false,
@@ -3780,5 +3792,233 @@ describe('Atmosphere Explore Iris requirements and failures', () => {
     expect(status).toBe(200)
     // @NOTE The first 10 contain 3 wrong-collection roots and 7 valid articles.
     expect(body.articles.items).toHaveLength(7)
+  })
+})
+
+function seedGallery(fixture: Fixture, rkey: string) {
+  const uri = atUri(author, grainGallery.$type, rkey)
+  const item = atUri(author, grainGalleryItem.$type, rkey)
+  fixture.records.set(
+    uri,
+    grainGallery.$build({ title: rkey, createdAt: publishedAt }),
+  )
+  fixture.records.set(
+    item,
+    grainGalleryItem.$build({
+      gallery: uri,
+      item: photoUri,
+      createdAt: publishedAt,
+    }),
+  )
+  fixture.galleryItems.set(uri, [item])
+  return uri
+}
+
+describe('Atmosphere Explore Iris galleries', () => {
+  test.each([
+    { articles: false, galleries: false },
+    { articles: true, galleries: false },
+    { articles: false, galleries: true },
+    { articles: true, galleries: true },
+  ])('selects independent sources: %j', async ({ articles, galleries }) => {
+    await using fixture = await setup(curated)
+    const uri = seedGallery(fixture, 'recommended')
+    fixture.setIrisGate(articles)
+    fixture.setGalleryIrisGate(galleries)
+    fixture.iris.response = {
+      articles: [{ uri: doc2Uri }],
+      recIdStr: 'article-rec',
+    }
+    fixture.iris.galleryResponse = {
+      galleries: [{ uri }],
+      recIdStr: 'gallery-rec',
+    }
+    const { status, body } = await fixture.query(true)
+
+    expect(status).toBe(200)
+    expect(body.articles.items.map(({ view }) => view.title)).toEqual(
+      articles ? ['Second article'] : ['Article', 'Article'],
+    )
+    expect(body.articles.recIdStr).toBe(articles ? 'article-rec' : undefined)
+    expect(body.photos.items.map(({ view }) => view.title)).toEqual(
+      galleries ? ['recommended'] : ['Gallery'],
+    )
+    expect(body.photos.recIdStr).toBe(galleries ? 'gallery-rec' : undefined)
+    const gallery = body.photos.items[0].view
+    expect(gallery.items[0]).toMatchObject({ alt: 'A photo' })
+    expect(gallery.associatedRefs?.map(({ uri }) => uri)).toEqual([
+      galleries ? uri : galleryUri,
+      galleries
+        ? atUri(author, grainGalleryItem.$type, 'recommended')
+        : itemUri,
+      photoUri,
+    ])
+  })
+
+  it('ignores worker selection and hydrates only the Iris gallery roots', async () => {
+    await using fixture = await setup({
+      photos: [{ canonicalUri: galleryUri, locations: ['JP'] }],
+    })
+    fixture.setGalleryIrisGate()
+    const uri = seedGallery(fixture, 'recommended')
+    fixture.iris.galleryResponse = {
+      galleries: [{ uri }],
+      recIdStr: 'gallery-rec',
+    }
+    using lookup = vi.spyOn(fixture.dataplane, 'getRecordsByURI')
+    const { status, body } = await fixture.query(
+      false,
+      {},
+      {
+        'x-atproto-bsky-geo-country': 'US',
+        'x-atproto-bsky-topics': 'unrelated',
+      },
+    )
+
+    expect(status).toBe(200)
+    expect(body.photos.items.map(({ view }) => view.title)).toEqual([
+      'recommended',
+    ])
+    expect(lookup.mock.calls.flatMap(([params]) => params.uris)).not.toContain(
+      galleryUri,
+    )
+  })
+
+  test.each([
+    {
+      name: 'empty list',
+      response: { galleries: [], recIdStr: 'empty-rec' },
+      recIdStr: 'empty-rec',
+    },
+    {
+      name: 'missing list',
+      response: { recIdStr: 'invalid' },
+      recIdStr: undefined,
+    },
+    {
+      name: 'missing rec ID',
+      response: { galleries: [] },
+      recIdStr: undefined,
+    },
+    {
+      name: 'invalid gallery',
+      response: { galleries: [{ uri: 7 }], recIdStr: 'invalid' },
+      recIdStr: undefined,
+    },
+  ])(
+    'falls back to curated photos on $name',
+    async ({ response, recIdStr }) => {
+      await using fixture = await setup(curated)
+      fixture.setGalleryIrisGate()
+      fixture.iris.galleryResponse = response
+      const { status, body } = await fixture.query()
+      expect(status).toBe(200)
+      expect(body.photos.items.map(({ view }) => view.title)).toEqual([
+        'Gallery',
+      ])
+      expect(body.photos.recIdStr).toBe(recIdStr)
+    },
+  )
+
+  test.each(['articles', 'galleries'] as const)(
+    'keeps the other Iris source when %s fails',
+    async (failed) => {
+      await using fixture = await setup(curated)
+      fixture.setIrisGate()
+      fixture.setGalleryIrisGate()
+      const uri = seedGallery(fixture, 'recommended')
+      fixture.iris.respond = async (request) => {
+        const isArticle = new URL(request.url).pathname.endsWith(
+          'ArticleRecommendations',
+        )
+        if (isArticle === (failed === 'articles'))
+          return new Response('', { status: 503 })
+        return Response.json(
+          isArticle
+            ? { articles: [{ uri: doc2Uri }], recIdStr: 'article-rec' }
+            : { galleries: [{ uri }], recIdStr: 'gallery-rec' },
+        )
+      }
+      const { status, body } = await fixture.query()
+      expect(status).toBe(200)
+      expect(body.articles.items.map(({ view }) => view.title)).toEqual(
+        failed === 'articles' ? ['Article', 'Article'] : ['Second article'],
+      )
+      expect(body.articles.recIdStr).toBe(
+        failed === 'articles' ? undefined : 'article-rec',
+      )
+      expect(body.photos.items.map(({ view }) => view.title)).toEqual(
+        failed === 'galleries' ? ['Gallery'] : ['recommended'],
+      )
+      expect(body.photos.recIdStr).toBe(
+        failed === 'galleries' ? undefined : 'gallery-rec',
+      )
+    },
+  )
+
+  it('caps and filters Iris roots before shuffling without backfill', async () => {
+    await using fixture = await setup(curated)
+    fixture.setGalleryIrisGate()
+    const uris = Array.from({ length: 10 }, (_, i) =>
+      seedGallery(fixture, `iris-${i}`),
+    )
+    fixture.iris.galleryResponse = {
+      galleries: [docUri, ...uris].map((uri) => ({ uri })),
+      recIdStr: 'capped',
+    }
+    vi.mocked(Math.random).mockReturnValue(0)
+    const { status, body } = await fixture.query()
+    expect(status).toBe(200)
+    expect(body.photos.items.map(({ view }) => view.title)).toEqual([
+      ...Array.from({ length: 8 }, (_, i) => `iris-${i + 1}`),
+      'iris-0',
+    ])
+    expect(body.photos.recIdStr).toBe('capped')
+  })
+
+  test.each([
+    'roots',
+    'missing',
+    'empty',
+    'record',
+    'photo',
+    'actor',
+    'block',
+  ] as const)(
+    'does not fall back after filtering a nonempty Iris list: %s',
+    async (kind) => {
+      await using fixture = await setup(curated)
+      fixture.setGalleryIrisGate()
+      const uri = seedGallery(fixture, 'recommended')
+      fixture.iris.galleryResponse = {
+        galleries: (kind === 'roots'
+          ? [
+              docUri,
+              `at://${author}`,
+              `at://${author}/${grainGallery.$type}`,
+              `at://author.test/${grainGallery.$type}/gallery`,
+            ]
+          : [uri]
+        ).map((uri) => ({ uri })),
+        recIdStr: 'filtered',
+      }
+      if (kind === 'missing') fixture.records.delete(uri)
+      if (kind === 'empty') fixture.galleryItems.set(uri, [])
+      if (kind === 'record') fixture.takenDown.add(uri)
+      if (kind === 'photo') fixture.takenDown.add(photoUri)
+      if (kind === 'actor') fixture.takenDownActors.add(author)
+      if (kind === 'block') fixture.blockedActors.add(author)
+      const { status, body } = await fixture.query(true)
+      expect(status).toBe(200)
+      expect(body.photos).toEqual({ items: [], recIdStr: 'filtered' })
+    },
+  )
+
+  it('requires an Iris client when only the gallery gate is enabled', async () => {
+    await using fixture = await setup(curated)
+    fixture.setGalleryIrisGate()
+    fixture.ctx.irisClient = undefined
+    expect((await fixture.query()).status).toBe(501)
+    expect(fixture.fetchMock).not.toHaveBeenCalled()
   })
 })
