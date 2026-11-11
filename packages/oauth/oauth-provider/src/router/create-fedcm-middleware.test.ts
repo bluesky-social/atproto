@@ -57,7 +57,16 @@ describe('createFedcmMiddleware', () => {
       accounts_endpoint: `${issuer}/oauth/fedcm/accounts`,
       id_assertion_endpoint: `${issuer}/oauth/fedcm/assertion`,
       login_url: `${issuer}/account/sign-in?fedcm=true`,
+      types: ['https://atproto.com'],
     })
+  })
+
+  it('advertises the atproto federation type in the config', async () => {
+    const origin = await listen(provider())
+    const config = await fetch(`${origin}/oauth/fedcm/config.json`)
+    expect(((await config.json()) as { types: string[] }).types).toEqual([
+      'https://atproto.com',
+    ])
   })
 
   it('returns eligible account display data from the read-only shadow session', async () => {
@@ -129,7 +138,6 @@ describe('createFedcmMiddleware', () => {
     )
     expect(await response.json()).toEqual({ token: account.did })
     expect(fake.clientManager.getClient).toHaveBeenCalledWith(clientId)
-    expect(fake.deviceManager.readFedcmDevice).toHaveBeenCalledOnce()
     expect(fake.pushedAuthorizationRequest).not.toHaveBeenCalled()
     expect(fake.token).not.toHaveBeenCalled()
   })
@@ -158,45 +166,55 @@ describe('createFedcmMiddleware', () => {
     expect(await accepted.json()).toEqual({ token: account.did })
   })
 
-  it('does not assert accounts that are absent from the current session', async () => {
-    const fake = provider({ accounts: [] })
+  it('asserts an active local account without a device session', async () => {
+    const fake = provider({ device: null, accounts: [] })
     const origin = await listen(fake)
     const response = await assertion(origin, { origin: 'https://rp.example' })
 
-    expect(response.status).toBe(401)
-    expect(await response.json()).toEqual({
-      error: { code: 'login_required' },
-    })
+    expect(response.status).toBe(200)
+    expect(await response.json()).toEqual({ token: account.did })
+    expect(fake.deviceManager.readFedcmDevice).not.toHaveBeenCalled()
   })
 
-  it('rejects a selected DID that is absent while another account is eligible', async () => {
-    const fake = provider()
+  it('rejects DIDs that are not active local accounts', async () => {
+    const unknownDid = 'did:plc:ewvi7nxzyoun6zhxrhs64oiz'
+    const deactivatedDid = didSchema.parse('did:plc:z72i7hdynmk6r22z27h6tvur')
+    const takenDownDid = 'did:plc:5zspv27pk4iqtrl2ql2nykjh'
+    const fake = provider({
+      accountsByDid: {
+        [account.did]: { account, authorizedClients: new Map() },
+        [deactivatedDid]: {
+          account: { ...account, did: deactivatedDid, deactivated: true },
+          authorizedClients: new Map(),
+        },
+        // Taken-down accounts are excluded by getAccount (includeTakenDown: false)
+        [takenDownDid]: null,
+      },
+    })
     const origin = await listen(fake)
-    const response = await assertion(origin, {
-      accountId: 'did:plc:ewvi7nxzyoun6zhxrhs64oiz',
-      origin: 'https://rp.example',
-    })
 
-    expect(response.status).toBe(401)
-    expect(await response.json()).toEqual({
-      error: { code: 'login_required' },
-    })
-    expect(fake.listFedcmAccounts).toHaveBeenCalledOnce()
+    for (const accountId of [unknownDid, deactivatedDid, takenDownDid]) {
+      const response = await assertion(origin, {
+        accountId,
+        origin: 'https://rp.example',
+      })
+      expect(response.status).toBe(401)
+      expect(await response.json()).toEqual({
+        error: { code: 'login_required' },
+      })
+    }
+    expect(fake.accountManager.getAccount).toHaveBeenCalledTimes(3)
   })
 
-  it('requires an existing shadow session for both FedCM endpoints', async () => {
+  it('requires an existing shadow session for the accounts endpoint', async () => {
     const fake = provider({ device: null })
     const origin = await listen(fake)
     const accounts = await fetch(`${origin}/oauth/fedcm/accounts`, {
       headers: { 'sec-fetch-dest': 'webidentity' },
     })
-    const assertionResponse = await assertion(origin, {
-      origin: 'https://rp.example',
-    })
 
     expect(accounts.status).toBe(401)
-    expect(assertionResponse.status).toBe(401)
-    expect(fake.deviceManager.readFedcmDevice).toHaveBeenCalledTimes(2)
+    expect(fake.deviceManager.readFedcmDevice).toHaveBeenCalledOnce()
     expect(fake.listFedcmAccounts).not.toHaveBeenCalled()
   })
 
@@ -254,11 +272,18 @@ function provider({
   accounts = [deviceAccount],
   redirectUris = ['https://rp.example/callback'],
   device = deviceInfo,
+  accountsByDid = {
+    [account.did]: { account, authorizedClients: new Map() },
+  },
 }: {
   fedcm?: false | { allowLoopbackClients?: boolean }
   accounts?: DeviceAccount[]
   redirectUris?: string[]
   device?: DeviceInfo | null
+  accountsByDid?: Record<
+    string,
+    { account: Account; authorizedClients: Map<string, unknown> } | null
+  >
 } = {}) {
   return {
     issuer,
@@ -266,6 +291,9 @@ function provider({
     deviceManager: {
       readFedcmDevice: vi.fn(async () => device),
       load: vi.fn(),
+    },
+    accountManager: {
+      getAccount: vi.fn(async (did: string) => accountsByDid[did] ?? null),
     },
     listFedcmAccounts: vi.fn(async () => accounts),
     clientManager: {

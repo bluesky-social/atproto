@@ -20,6 +20,12 @@ import {
 import type { OAuthProvider } from '../oauth-provider.js'
 import type { MiddlewareOptions } from './middleware-options.js'
 
+export const FEDCM_IDP_REGISTRATION_TYPE = 'https://atproto.com'
+
+export function buildFedcmConfigUrl(issuer: string): string {
+  return new URL('/oauth/fedcm/config.json', issuer).href
+}
+
 const assertionInputSchema = z.object({
   account_id: didSchema,
   client_id: oauthClientIdSchema,
@@ -54,9 +60,10 @@ export function createFedcmMiddleware<
   if (!fedcm) return (_req, _res, next) => void next()
 
   const issuerUrl = new URL(server.issuer)
-  const configUrl = new URL('/oauth/fedcm/config.json', issuerUrl).href
+  const configUrl = buildFedcmConfigUrl(server.issuer)
   const router = new Router<Ctx, Req, Res>(issuerUrl)
 
+  // @NOTE IdP registration: Chrome skips this check for registered IdPs.
   router.get(
     '/.well-known/web-identity',
     cacheControlMiddleware(300),
@@ -70,9 +77,12 @@ export function createFedcmMiddleware<
       accounts_endpoint: new URL('/oauth/fedcm/accounts', issuerUrl).href,
       id_assertion_endpoint: new URL('/oauth/fedcm/assertion', issuerUrl).href,
       login_url: new URL('/account/sign-in?fedcm=true', issuerUrl).href,
+      types: [FEDCM_IDP_REGISTRATION_TYPE],
     }),
   )
 
+  // @NOTE IdP registration: Chrome never fetches this for registered IdPs,
+  // which use pushed accounts.
   router.get(
     '/oauth/fedcm/accounts',
     fedcmJsonHandler(async (req) => {
@@ -80,6 +90,7 @@ export function createFedcmMiddleware<
 
       // @NOTE This must stay read-only and must not reflect Origin, which would
       // expose account data to arbitrary credentialed RP origins.
+      // @NOTE IdP registration: this device read is unused for registered IdPs.
       const device = await server.deviceManager.readFedcmDevice(req)
       if (!device) throw new FedcmEndpointError(401, 'login_required')
 
@@ -155,15 +166,12 @@ export function createFedcmMiddleware<
 
       setCorsOrigin(res, origin)
 
-      // account_id is only a selection hint: authorize against the active
-      // browser session, and return the DID without issuing OAuth credentials.
-      const device = await server.deviceManager.readFedcmDevice(req)
-      if (!device) throw new FedcmEndpointError(401, 'login_required')
-
-      const account = (await server.listFedcmAccounts(device.deviceId)).find(
-        ({ account }) => account.did === account_id,
-      )?.account
-      if (!account) throw new FedcmEndpointError(401, 'login_required')
+      // TODO(fedcm): final call needed — should the assertion endpoint only speak for accounts signed in on this device? Prototype answers for any active local account so Chrome's pushed (possibly stale) accounts still complete; the DID is only a hint and OAuth re-authenticates. See decisions log #1.
+      const result = await server.accountManager.getAccount(account_id)
+      const account = result?.account
+      if (!account || account.deactivated) {
+        throw new FedcmEndpointError(401, 'login_required')
+      }
 
       return { token: account.did }
     }),
