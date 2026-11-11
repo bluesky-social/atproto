@@ -1,4 +1,4 @@
-import { COMMIT_MAC_TYPE } from '@atproto/space'
+import { COMMIT_MAC_PROFILE } from '@atproto/space'
 import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
@@ -7,7 +7,7 @@ import {
   assertSpaceRead,
   buildCommit,
   commitMacHeaders,
-  getSpaceMacSecret,
+  getSpaceMacRequest,
   isSpaceUserOrAdmin,
   toSpaceRef,
 } from './util.js'
@@ -25,12 +25,12 @@ export default function (server: Server, ctx: AppContext) {
       assertSpaceRead(auth, toSpaceRef(space), repo)
       await assertRepoAvailability(ctx, repo, isSpaceUserOrAdmin(auth, repo))
 
-      const sharedSecret = await getSpaceMacSecret(ctx, {
+      const macRequest = await getSpaceMacRequest(ctx, {
         req,
         res,
         auth,
         repo,
-        type: COMMIT_MAC_TYPE,
+        profile: COMMIT_MAC_PROFILE,
       })
 
       const commit = await ctx.actorStore.read(repo, async (store) =>
@@ -53,7 +53,7 @@ export default function (server: Server, ctx: AppContext) {
         body: {
           commit,
         },
-        headers: commitMacHeaders(sharedSecret, commit),
+        headers: commitMacHeaders(macRequest, commit),
       }
     },
   })

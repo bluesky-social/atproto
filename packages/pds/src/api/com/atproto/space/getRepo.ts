@@ -1,6 +1,6 @@
 import { byteIterableToStream } from '@atproto/common'
 import {
-  COMMIT_MAC_TYPE,
+  COMMIT_MAC_PROFILE,
   type SerializedRecord,
   writeRepoStar,
 } from '@atproto/space'
@@ -15,7 +15,7 @@ import {
   assertSpaceRead,
   buildCommit,
   commitMacHeaders,
-  getSpaceMacSecret,
+  getSpaceMacRequest,
   isSpaceUserOrAdmin,
   toSpaceRef,
 } from './util.js'
@@ -34,12 +34,12 @@ export default function (server: Server, ctx: AppContext) {
       assertSpaceRead(auth, toSpaceRef(space), repo)
       await assertRepoAvailability(ctx, repo, isSpaceUserOrAdmin(auth, repo))
 
-      const sharedSecret = await getSpaceMacSecret(ctx, {
+      const macRequest = await getSpaceMacRequest(ctx, {
         req,
         res,
         auth,
         repo,
-        type: COMMIT_MAC_TYPE,
+        profile: COMMIT_MAC_PROFILE,
       })
 
       // Held open for the life of the stream so records page out lazily.
@@ -65,7 +65,7 @@ export default function (server: Server, ctx: AppContext) {
         return {
           encoding: 'application/vnd.dasl.star',
           body: starStream,
-          headers: commitMacHeaders(sharedSecret, commit),
+          headers: commitMacHeaders(macRequest, commit),
         }
       } catch (err) {
         await actorDb.close()

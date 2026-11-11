@@ -7,7 +7,7 @@ import type {
 } from '@atproto/syntax'
 import { SpaceRepoVerificationError } from './error.js'
 import { LtHash } from './lthash.js'
-import { verifyCommitMac } from './mac.js'
+import { type MacParams, verifyCommitMac } from './mac.js'
 import {
   COMMIT_VERSION,
   type CommitCtx,
@@ -81,13 +81,10 @@ export class RepoCommit {
   }
 }
 
-export type VerifyCommitParams = {
+export type VerifyCommitParams = MacParams & {
   // The space and repo that were requested.
   space: SpaceRefString
   repo: DidString
-  // The shared secret for the request, and the MAC from its response header.
-  sharedSecret: Uint8Array
-  mac: Uint8Array
 }
 
 /**
@@ -118,5 +115,5 @@ export function verifyCommit(
       `commit is for another space: ${commit.space}`,
     )
   }
-  verifyCommitMac(params.sharedSecret, commit, params.mac)
+  verifyCommitMac(commit, params)
 }

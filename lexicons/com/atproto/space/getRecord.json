@@ -50,7 +50,7 @@
       "errors": [
         {
           "name": "InvalidSpaceMac",
-          "description": "The Atproto-Space-Want-Mac header is missing or invalid."
+          "description": "The MAC requested in the Accept-Signature header is missing or invalid."
         },
         {
           "name": "RecordNotFound"

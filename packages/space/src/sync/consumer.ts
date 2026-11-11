@@ -13,7 +13,7 @@ import type {
 } from '@atproto/syntax'
 import { compareBytes } from '../bytes.js'
 import { SpaceRepoVerificationError } from '../error.js'
-import { verifyRecordMac } from '../mac.js'
+import { type MacParams, verifyRecordMac } from '../mac.js'
 import {
   RepoCommit,
   type VerifyCommitParams,
@@ -119,12 +119,9 @@ export async function verifyRepoStarFull(
   return { commit, records: collected }
 }
 
-export type VerifyRecordParams = {
+export type VerifyRecordParams = MacParams & {
   // The uri of the record that was requested.
   uri: SpaceAtUriString
-  // The shared secret for the request, and the MAC from its response header.
-  sharedSecret: Uint8Array
-  mac: Uint8Array
 }
 
 /**
@@ -149,7 +146,7 @@ export async function verifyRecord(
   if (!cid) {
     throw new SpaceRepoVerificationError(`invalid record cid: ${record.cid}`)
   }
-  verifyRecordMac(params.sharedSecret, params.uri, cid, params.mac)
+  verifyRecordMac(params.uri, cid, params)
   const valueCid = await cidForCbor(encode(record.value))
   if (!valueCid.equals(cid)) {
     throw new SpaceRepoVerificationError('record value does not match its cid')

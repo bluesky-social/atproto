@@ -36,18 +36,16 @@ export {
 export { type Encapsulation, decapsulate, encapsulate } from './kem.js'
 export { LtHash } from './lthash.js'
 export {
-  COMMIT_MAC_TYPE,
-  MAC_HEADER,
-  type MacType,
-  RECORD_MAC_TYPE,
-  RECORD_MAC_VERSION,
-  WANT_MAC_HEADER,
-  computeCommitMac,
-  computeRecordMac,
-  formatMacHeader,
-  formatWantMacHeader,
-  parseMacHeader,
-  parseWantMacHeader,
+  COMMIT_MAC_PROFILE,
+  MAC_COVERED_HEADER,
+  type MacParams,
+  type MacProfile,
+  type MacRequest,
+  RECORD_MAC_PROFILE,
+  createCommitMacHeaders,
+  createRecordMacHeaders,
+  formatMacRequest,
+  parseMacRequest,
   verifyCommitMac,
   verifyRecordMac,
 } from './mac.js'
