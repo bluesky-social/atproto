@@ -17,6 +17,8 @@ type StrongRef = com.atproto.repo.strongRef.Main
  * back the rendered `likers`/`subscribers` previews); those are deliberately
  * not persisted. An absent entry means no additional collections. Add a
  * collection here only when a post must carry it.
+ * @NOTE New dependencies must also be selected by the per-root walk in
+ * `api/app/bsky/unspecced/getAtmosphereRecordViews.ts`.
  */
 const PERSISTED_DEPENDENCY_COLLECTIONS: ReadonlyMap<string, readonly string[]> =
   new Map<string, readonly string[]>([
