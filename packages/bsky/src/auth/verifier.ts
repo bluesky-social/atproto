@@ -28,6 +28,7 @@ import {
   unpackIdentityKeys,
 } from '../data-plane/index.js'
 import type { GetIdentityByDidResponse } from '../proto/bsky_pb.js'
+import { events } from '../telemetry/events.js'
 
 type ReqCtx = {
   req: express.Request
@@ -115,41 +116,48 @@ export class AuthVerifier {
   standardOptionalParameterized =
     (opts: StandardAuthOpts) =>
     async (ctx: ReqCtx): Promise<StandardOutput | NullOutput> => {
-      if (isBearerToken(ctx.req)) {
-        // @NOTE temporarily accept entryway session tokens to shed load from PDS instances
-        const token = bearerTokenFromReq(ctx.req)
-        const header = token ? jose.decodeProtectedHeader(token) : undefined
-        if (header?.typ === 'at+jwt') {
-          // we should never use entryway session tokens in the case of flexible auth audiences (namely in the case of getFeed)
-          if (opts.skipAudCheck) {
-            throw new AuthRequiredError('Malformed token', 'InvalidToken')
+      let verifier: 'standard' | 'entrywaySession' | 'anonymous' = 'standard'
+      try {
+        if (isBearerToken(ctx.req)) {
+          // @NOTE temporarily accept entryway session tokens to shed load from PDS instances
+          const token = bearerTokenFromReq(ctx.req)
+          const header = token ? jose.decodeProtectedHeader(token) : undefined
+          if (header?.typ === 'at+jwt') {
+            verifier = 'entrywaySession'
+            // we should never use entryway session tokens in the case of flexible auth audiences (namely in the case of getFeed)
+            if (opts.skipAudCheck) {
+              throw new AuthRequiredError('Malformed token', 'InvalidToken')
+            }
+            return this.entrywaySession(token)
           }
-          return this.entrywaySession(token)
-        }
 
-        const { iss, aud } = await this.verifyServiceJwt(ctx, token, {
-          lxmCheck: opts.lxmCheck,
-          iss: null,
-          aud: null,
-        })
-        if (
-          !opts.skipAudCheck &&
-          !(this.standardAudienceDids as Set<string>).has(aud)
-        ) {
-          throw new AuthRequiredError(
-            'jwt audience does not match service did',
-            'BadJwtAudience',
-          )
+          const { iss, aud } = await this.verifyServiceJwt(ctx, token, {
+            lxmCheck: opts.lxmCheck,
+            iss: null,
+            aud: null,
+          })
+          if (
+            !opts.skipAudCheck &&
+            !(this.standardAudienceDids as Set<string>).has(aud)
+          ) {
+            throw new AuthRequiredError(
+              'jwt audience does not match service did',
+              'BadJwtAudience',
+            )
+          }
+          return {
+            credentials: {
+              type: 'standard',
+              iss,
+              aud,
+            },
+          }
+        } else {
+          verifier = 'anonymous'
+          return this.nullCreds()
         }
-        return {
-          credentials: {
-            type: 'standard',
-            iss,
-            aud,
-          },
-        }
-      } else {
-        return this.nullCreds()
+      } finally {
+        events.authVerifierRequest(verifier)
       }
     }
 
@@ -165,6 +173,7 @@ export class AuthVerifier {
   }
 
   role = (ctx: ReqCtx): RoleOutput => {
+    events.authVerifierRequest('role')
     const creds = this.parseRoleCreds(ctx.req)
     if (creds.status !== RoleStatus.Valid) {
       throw new AuthRequiredError()
@@ -194,6 +203,9 @@ export class AuthVerifier {
       return await this.standard(ctx)
     } else {
       const creds = this.parseRoleCreds(ctx.req)
+      events.authVerifierRequest(
+        creds.status === RoleStatus.Missing ? 'anonymous' : 'role',
+      )
       if (creds.status === RoleStatus.Valid) {
         return {
           credentials: {
@@ -210,6 +222,7 @@ export class AuthVerifier {
   }
 
   modService = async (reqCtx: ReqCtx): Promise<ModServiceOutput> => {
+    events.authVerifierRequest('modService')
     const token = bearerTokenFromReq(reqCtx.req)
     const { iss, aud } = await this.verifyServiceJwt(reqCtx, token, {
       aud: this.ownDid,
