@@ -24,7 +24,7 @@ import type {
   MemberspaceMember,
   SpaceRecordOplog,
 } from '../db/index.js'
-import { SpaceReader } from './reader.js'
+import { NOTIFY_GRACE_PERIOD_MS, SpaceReader } from './reader.js'
 
 export class SpaceTransactor extends SpaceReader {
   constructor(
@@ -442,6 +442,15 @@ export class SpaceTransactor extends SpaceReader {
         oc.columns(['space', 'endpoint', 'token']).doUpdateSet({ expiresAt }),
       )
       .execute()
+
+    // Registrations past their grace period are never read again, so prune them
+    // here to keep the table from growing indefinitely.
+    const lapsedBefore = new Date(Date.now() - NOTIFY_GRACE_PERIOD_MS)
+    await this.db.db
+      .deleteFrom('space_notify_registration')
+      .where('space', '=', space)
+      .where('expiresAt', '<=', lapsedBefore.toISOString())
+      .execute()
   }
 
   async removeNotifyRegistration(
@@ -457,13 +466,16 @@ export class SpaceTransactor extends SpaceReader {
   }
 
   // Leaves alone a registration renewed since `lapsedBy`.
-  async removeLapsedNotifyRegistrations(
+  async removeLapsedNotifyRegistration(
     space: SpaceRefString,
+    registration: { endpoint: string; token: string },
     lapsedBy: string,
   ): Promise<void> {
     await this.db.db
       .deleteFrom('space_notify_registration')
       .where('space', '=', space)
+      .where('endpoint', '=', registration.endpoint)
+      .where('token', '=', registration.token)
       .where('expiresAt', '<=', lapsedBy)
       .execute()
   }

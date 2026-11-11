@@ -6,7 +6,8 @@ export interface SpaceNotifyRegistration {
   endpoint: string
   token: string
   // When the credential that last renewed the registration expires. A lapsed
-  // registration is kept until it has been sent one more notification.
+  // registration is kept until one more notification is delivered, for up to a
+  // day.
   expiresAt: string
 }
 

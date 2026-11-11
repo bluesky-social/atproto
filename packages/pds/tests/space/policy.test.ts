@@ -1,3 +1,4 @@
+import { DAY, MINUTE, SECOND } from '@atproto/common'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
 import type { NsidString } from '@atproto/lex'
 import { getBlobCidString } from '@atproto/lex-data'
@@ -1136,11 +1137,15 @@ describe('space policy', () => {
     network.pds.ctx.actorStore.read(alice.did, (store) =>
       store.space.getNotifyRegistrations(space),
     )
-  const lapseRegistration = (space: SpaceRefString, syncer: MockService) =>
+  const lapseRegistration = (
+    space: SpaceRefString,
+    syncer: MockService,
+    ago = SECOND,
+  ) =>
     network.pds.ctx.actorStore.transact(alice.did, (actorTxn) =>
       actorTxn.space.db.db
         .updateTable('space_notify_registration')
-        .set({ expiresAt: new Date(Date.now() - 1000).toISOString() })
+        .set({ expiresAt: new Date(Date.now() - ago).toISOString() })
         .where('space', '=', space)
         .where('endpoint', '=', syncer.url)
         .execute(),
@@ -1258,21 +1263,57 @@ describe('space policy', () => {
       )
     })
 
-    it('keeps a registration through a transient failure', async () => {
+    it('keeps a lapsed registration through a transient failure', async () => {
+      let status = 503
       await using syncer = await MockService.create(network, {
         serviceId: 'atproto_space_syncer',
-        respond: () => ({ status: 503, body: {} }),
+        respond: () => ({ status, body: {} }),
       })
       const space = await sc.createSpace(alice, { members: [bob, carol] })
       await sc.credentialFor(carol, space, {
         notify: syncer.notifyRegistration(),
       })
+      await lapseRegistration(space, syncer)
+
+      // A syncer that misses its last notification during a blip still gets the next.
+      await writeAndForward(space)
+      expect(await getRegistrations(space)).toHaveLength(1)
+
+      status = 200
+      await writeAndForward(space)
+      expect(syncer.callsTo('com.atproto.space.notifyRepoUpdate')).toHaveLength(
+        2,
+      )
+      expect(await getRegistrations(space)).toEqual([])
+    })
+
+    it('stops notifying a lapsed registration after its grace period', async () => {
+      await using syncer = await MockService.create(network, {
+        serviceId: 'atproto_space_syncer',
+      })
+      const space = await sc.createSpace(alice, { members: [bob, carol] })
+      await sc.credentialFor(carol, space, {
+        notify: syncer.notifyRegistration(),
+      })
+      await lapseRegistration(space, syncer, DAY + MINUTE)
 
       await writeAndForward(space)
       expect(syncer.callsTo('com.atproto.space.notifyRepoUpdate')).toHaveLength(
-        1,
+        0,
       )
-      expect(await getRegistrations(space)).toHaveLength(1)
+
+      // The next registration prunes it from storage, which no read shows.
+      await sc.credentialFor(carol, space, {
+        notify: syncer.notifyRegistration('next-token'),
+      })
+      const stored = await network.pds.ctx.actorStore.read(alice.did, (store) =>
+        store.space.db.db
+          .selectFrom('space_notify_registration')
+          .select('token')
+          .where('space', '=', space)
+          .execute(),
+      )
+      expect(stored).toEqual([{ token: 'next-token' }])
     })
 
     it('withdraws the registration carried by a refused credential request', async () => {

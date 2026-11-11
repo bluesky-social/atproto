@@ -1,3 +1,4 @@
+import { DAY } from '@atproto/common'
 import type { LexMap } from '@atproto/lex-data'
 import { cborToLexRecord } from '@atproto/repo'
 import {
@@ -20,6 +21,10 @@ import type {
   SpaceRepo,
   SpaceWriter,
 } from '../db/index.js'
+
+// How long a lapsed notify registration waits for its last notification to be
+// delivered, so a syncer that misses one during a blip still gets the next.
+export const NOTIFY_GRACE_PERIOD_MS = DAY
 
 export class SpaceReader {
   constructor(public db: ActorDb) {}
@@ -325,14 +330,17 @@ export class SpaceReader {
     return builder.execute()
   }
 
-  // Includes lapsed registrations, which are still owed one more notification.
+  // Includes lapsed registrations still owed one more notification, until their
+  // grace period runs out.
   async getNotifyRegistrations(
     space: SpaceRefString,
   ): Promise<{ endpoint: string; token: string; expiresAt: string }[]> {
+    const lapsedBefore = new Date(Date.now() - NOTIFY_GRACE_PERIOD_MS)
     return this.db.db
       .selectFrom('space_notify_registration')
       .select(['endpoint', 'token', 'expiresAt'])
       .where('space', '=', space)
+      .where('expiresAt', '>', lapsedBefore.toISOString())
       .execute()
   }
 }

@@ -369,7 +369,7 @@ export async function processNotifyRepoUpdate(
 
 /**
  * Forward a repo update to each registered syncer. A registration whose credential
- * has expired is sent this one last notification and then dropped, so a syncer
+ * has expired is dropped once this last notification is delivered, so a syncer
  * that let its credential lapse is woken to renew it.
  */
 async function forwardNotifyRepoUpdate(
@@ -381,8 +381,9 @@ async function forwardNotifyRepoUpdate(
 ): Promise<void> {
   const space = ref.toString()
   const now = new Date().toISOString()
+  const deliveredLapsed: { endpoint: string; token: string }[] = []
 
-  for (const { endpoint, token } of registrations) {
+  for (const { endpoint, token, expiresAt } of registrations) {
     try {
       // The endpoint is chosen by the syncer, so it's fetched as untrusted.
       await xrpc(
@@ -394,6 +395,7 @@ async function forwardNotifyRepoUpdate(
           signal: AbortSignal.any([signal, AbortSignal.timeout(10_000)]),
         },
       )
+      if (expiresAt <= now) deliveredLapsed.push({ endpoint, token })
     } catch (err) {
       spaceLogger.warn({ err, space, endpoint }, 'notify failed')
       // A syncer unregisters by answering with a permanent HTTP error.
@@ -405,10 +407,16 @@ async function forwardNotifyRepoUpdate(
     }
   }
 
-  if (registrations.some((registration) => registration.expiresAt <= now)) {
-    await ctx.actorStore.transact(ref.spaceDid, (actorTxn) =>
-      actorTxn.space.removeLapsedNotifyRegistrations(space, now),
-    )
+  if (deliveredLapsed.length > 0) {
+    await ctx.actorStore.transact(ref.spaceDid, async (actorTxn) => {
+      for (const registration of deliveredLapsed) {
+        await actorTxn.space.removeLapsedNotifyRegistration(
+          space,
+          registration,
+          now,
+        )
+      }
+    })
   }
 }
 
