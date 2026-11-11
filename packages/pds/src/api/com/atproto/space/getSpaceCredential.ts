@@ -1,9 +1,11 @@
+import { SECOND } from '@atproto/common'
 import {
   createSpaceCredential,
   isP256DidKey,
+  parseSpaceToken,
   spaceHostAud,
 } from '@atproto/space'
-import type { DidString } from '@atproto/syntax'
+import { type DidString, toDatetimeString } from '@atproto/syntax'
 import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
@@ -12,7 +14,13 @@ import { assertActiveSpaceHost, toSpaceRef } from './util.js'
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.space.getSpaceCredential, {
     handler: async ({ input: { body } }) => {
-      const { space, credentialKey, delegationToken, clientAttestation } = body
+      const {
+        space,
+        credentialKey,
+        delegationToken,
+        clientAttestation,
+        notify,
+      } = body
       const ref = toSpaceRef(space)
 
       if (!isP256DidKey(credentialKey)) {
@@ -58,12 +66,23 @@ export default function (server: Server, ctx: AppContext) {
         return store.space.getActiveSpacePolicy(space)
       })
 
-      await ctx.spacePolicyManager.authorizeCredential({
-        space: ref,
-        policy,
-        repo,
-        clientId,
-      })
+      try {
+        await ctx.spacePolicyManager.authorizeCredential({
+          space: ref,
+          policy,
+          repo,
+          clientId,
+        })
+      } catch (err) {
+        // A refused request withdraws the registration it carries, so a syncer
+        // that has lost access to the space stops being notified.
+        if (notify) {
+          await ctx.actorStore.transact(spaceDid, (actorTxn) =>
+            actorTxn.space.removeNotifyRegistration(space, notify),
+          )
+        }
+        throw err
+      }
 
       const keypair = await ctx.actorStore.keypair(spaceDid)
       const credential = await createSpaceCredential({
@@ -72,6 +91,20 @@ export default function (server: Server, ctx: AppContext) {
         keyId: credentialKey,
         keypair,
       })
+
+      if (notify) {
+        // Renewed by each credential request, so a syncer that keeps its
+        // credential fresh stays registered.
+        const { exp } = parseSpaceToken('credential', credential).payload
+        await ctx.actorStore.transact(spaceDid, (actorTxn) =>
+          actorTxn.space.putNotifyRegistration({
+            space,
+            endpoint: notify.endpoint,
+            token: notify.token,
+            expiresAt: toDatetimeString(exp * SECOND),
+          }),
+        )
+      }
 
       return {
         encoding: 'application/json',

@@ -87,7 +87,7 @@ export class SpaceTransactor extends SpaceReader {
     for (const table of [
       'memberspace_member',
       'space_writer',
-      'space_credential_recipient',
+      'space_notify_registration',
       'space_record',
       'space_record_oplog',
       'space_repo',
@@ -427,44 +427,44 @@ export class SpaceTransactor extends SpaceReader {
     return row ? parseCid(row.cid, { flavor: 'cbor' }) : null
   }
 
-  // Re-registering an existing service replaces its endpoint and extends its expiry.
-  async recordCredentialRecipient(registration: {
+  // Re-registering the same endpoint and token extends the registration's expiry.
+  async putNotifyRegistration(registration: {
     space: SpaceRefString
-    service: string
-    serviceEndpoint: string
+    endpoint: string
+    token: string
     expiresAt: string
   }): Promise<void> {
-    const { space, service, serviceEndpoint, expiresAt } = registration
+    const { space, endpoint, token, expiresAt } = registration
     await this.db.db
-      .insertInto('space_credential_recipient')
-      .values({ space, service, serviceEndpoint, expiresAt })
+      .insertInto('space_notify_registration')
+      .values({ space, endpoint, token, expiresAt })
       .onConflict((oc) =>
-        oc
-          .columns(['space', 'service'])
-          .doUpdateSet({ serviceEndpoint, expiresAt }),
+        oc.columns(['space', 'endpoint', 'token']).doUpdateSet({ expiresAt }),
       )
       .execute()
   }
 
-  // `service` is a `did#serviceId` reference, or a bare DID to remove every service
-  // registered under that DID.
-  async removeCredentialRecipients(
+  async removeNotifyRegistration(
     space: SpaceRefString,
-    service: string,
+    registration: { endpoint: string; token: string },
   ): Promise<void> {
-    const registered = await this.db.db
-      .selectFrom('space_credential_recipient')
-      .select('service')
-      .where('space', '=', space)
-      .execute()
-    const removed = registered
-      .map((row) => row.service)
-      .filter((ref) => ref === service || ref.startsWith(`${service}#`))
-    if (removed.length === 0) return
     await this.db.db
-      .deleteFrom('space_credential_recipient')
+      .deleteFrom('space_notify_registration')
       .where('space', '=', space)
-      .where('service', 'in', removed)
+      .where('endpoint', '=', registration.endpoint)
+      .where('token', '=', registration.token)
+      .execute()
+  }
+
+  // Leaves alone a registration renewed since `lapsedBy`.
+  async removeLapsedNotifyRegistrations(
+    space: SpaceRefString,
+    lapsedBy: string,
+  ): Promise<void> {
+    await this.db.db
+      .deleteFrom('space_notify_registration')
+      .where('space', '=', space)
+      .where('expiresAt', '<=', lapsedBy)
       .execute()
   }
 }

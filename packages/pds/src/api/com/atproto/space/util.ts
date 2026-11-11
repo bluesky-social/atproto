@@ -1,7 +1,7 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { MINUTE, TID, getServiceEndpoint } from '@atproto/common'
 import type { IdResolver } from '@atproto/identity'
-import { xrpc } from '@atproto/lex'
+import { XrpcError, xrpc } from '@atproto/lex'
 import type { Cid } from '@atproto/lex-data'
 import type { SpacePermissionMatchOperation } from '@atproto/oauth-scopes'
 import {
@@ -282,7 +282,7 @@ export function recordMacHeaders(
 
 /**
  * Resolve a `did#serviceId` reference, e.g.
- * `did:web:syncer.example.com#atproto_space_syncer`, to its service endpoint.
+ * `did:web:forum.example.com#atproto_forum`, to its service endpoint.
  */
 export async function resolveServiceEndpoint(
   idResolver: IdResolver,
@@ -300,7 +300,8 @@ export async function resolveServiceEndpoint(
 
 /**
  * Resolve a `did#serviceId` reference and mint the service auth to reach it. `aud`
- * is the reference itself, so the service is addressed as published.
+ * is the reference itself, so the service is addressed as published. The endpoint
+ * is whatever the DID's controller published, so callers reach it with `safeFetch`.
  */
 export async function resolveNotifyTarget(
   deps: { idResolver: IdResolver; actorStore: ActorStore },
@@ -333,11 +334,11 @@ export async function processNotifyRepoUpdate(
     throw new InvalidRequestError('Repo revision is in the future', 'FutureRev')
   }
 
-  const { policy, recipients } = await ctx.actorStore.read(
+  const { policy, registrations } = await ctx.actorStore.read(
     spaceDid,
     async (store) => ({
       policy: await store.space.getActiveSpacePolicy(space),
-      recipients: await store.space.getCredentialRecipients(space),
+      registrations: await store.space.getNotifyRegistrations(space),
     }),
   )
 
@@ -360,35 +361,55 @@ export async function processNotifyRepoUpdate(
 
   // Fan-out stays queued so neither a local write nor a remote PDS waits on
   // downstream syncing services.
-  const lxm = com.atproto.space.notifyRepoUpdate.$lxm
-  ctx.backgroundQueue.add(async (_ctx, signal) => {
-    for (const recipient of recipients) {
-      try {
-        const target = await resolveNotifyTarget(ctx, {
-          iss: spaceDid,
-          service: recipient.service,
-          lxm,
-        })
-        if (!target) {
-          spaceLogger.warn(
-            { space, service: recipient.service, lxm },
-            'could not resolve notify recipient',
-          )
-          continue
-        }
-        await xrpc(target.endpoint, com.atproto.space.notifyRepoUpdate, {
-          headers: target.headers,
-          body: { space, repo, repoRev, data, ...sequence },
+  const body = { space, repo, repoRev, data, ...sequence }
+  ctx.backgroundQueue.add((_ctx, signal) =>
+    forwardNotifyRepoUpdate(ctx, ref, registrations, body, signal),
+  )
+}
+
+/**
+ * Forward a repo update to each registered syncer. A registration whose credential
+ * has expired is sent this one last notification and then dropped, so a syncer
+ * that let its credential lapse is woken to renew it.
+ */
+async function forwardNotifyRepoUpdate(
+  ctx: AppContext,
+  ref: SpaceRef,
+  registrations: { endpoint: string; token: string; expiresAt: string }[],
+  body: com.atproto.space.notifyRepoUpdate.$InputBody,
+  signal: AbortSignal,
+): Promise<void> {
+  const space = ref.toString()
+  const now = new Date().toISOString()
+
+  for (const { endpoint, token } of registrations) {
+    try {
+      // The endpoint is chosen by the syncer, so it's fetched as untrusted.
+      await xrpc(
+        { service: endpoint, fetch: ctx.safeFetch },
+        com.atproto.space.notifyRepoUpdate,
+        {
+          headers: { authorization: `Bearer ${token}` },
+          body,
           signal: AbortSignal.any([signal, AbortSignal.timeout(10_000)]),
-        })
-      } catch (err) {
-        spaceLogger.warn(
-          { err, space, service: recipient.service, lxm },
-          'notify failed',
+        },
+      )
+    } catch (err) {
+      spaceLogger.warn({ err, space, endpoint }, 'notify failed')
+      // A syncer unregisters by answering with a permanent HTTP error.
+      if (err instanceof XrpcError && !err.shouldRetry()) {
+        await ctx.actorStore.transact(ref.spaceDid, (actorTxn) =>
+          actorTxn.space.removeNotifyRegistration(space, { endpoint, token }),
         )
       }
     }
-  })
+  }
+
+  if (registrations.some((registration) => registration.expiresAt <= now)) {
+    await ctx.actorStore.transact(ref.spaceDid, (actorTxn) =>
+      actorTxn.space.removeLapsedNotifyRegistrations(space, now),
+    )
+  }
 }
 
 /** Send immediately after the repo commit, persisting failures for retry. */

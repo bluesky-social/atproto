@@ -399,8 +399,8 @@ describe('space auth', () => {
         ).resolves.toBeDefined()
         await expect(
           alice.client.call(
-            com.atproto.space.registerNotify,
-            { space, service: `${alice.did}#atproto_pds` },
+            com.atproto.space.listWriters,
+            { space },
             { headers },
           ),
         ).resolves.toBeDefined()

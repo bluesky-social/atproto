@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Notify that a space repo has been updated. Sent by repo hosts to the space host, which forwards it to registered syncing services. Requires service auth.",
+      "description": "Notify that a space repo has been updated. Sent by repo hosts to the space host, with service auth. The space host forwards it to the syncing services registered through getSpaceCredential, presenting each one's registered token as a bearer token.",
       "input": {
         "encoding": "application/json",
         "schema": {

@@ -24,9 +24,7 @@ import listWriters from './listWriters.js'
 import notifyCredentialsRevoked from './notifyCredentialsRevoked.js'
 import notifyRepoUpdate from './notifyRepoUpdate.js'
 import putRecord from './putRecord.js'
-import registerNotify from './registerNotify.js'
 import removeWriter from './removeWriter.js'
-import unregisterNotify from './unregisterNotify.js'
 import updateSpace from './updateSpace.js'
 
 export default function (server: Server, ctx: AppContext) {
@@ -54,8 +52,6 @@ export default function (server: Server, ctx: AppContext) {
   notifyCredentialsRevoked(server, ctx)
   notifyRepoUpdate(server, ctx)
   putRecord(server, ctx)
-  registerNotify(server, ctx)
   removeWriter(server, ctx)
-  unregisterNotify(server, ctx)
   updateSpace(server, ctx)
 }

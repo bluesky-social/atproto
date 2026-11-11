@@ -831,12 +831,10 @@ describe('space sync', () => {
         respond: () => ({ status: 503, body: {} }),
       })
       const space = await sc.createSpace(alice, { members: [bob, dan, carol] })
-      const cred = await sc.credentialFor(carol, space)
-      const client = cred.clientFor(alice.pds)
-      await client.call(com.atproto.space.registerNotify, {
-        space,
-        service: syncer.serviceRef,
+      const cred = await sc.credentialFor(carol, space, {
+        notify: syncer.notifyRegistration(),
       })
+      const client = cred.clientFor(alice.pds)
       const empty = await client.call(com.atproto.space.listWriters, { space })
       expect(empty.repos).toEqual([])
 
@@ -930,12 +928,10 @@ describe('space sync', () => {
         serviceId: 'atproto_space_syncer',
       })
       const space = await sc.createSpace(alice, { members: [bob, dan, carol] })
-      const cred = await sc.credentialFor(carol, space)
-      const client = cred.clientFor(alice.pds)
-      await client.call(com.atproto.space.registerNotify, {
-        space,
-        service: syncer.serviceRef,
+      const cred = await sc.credentialFor(carol, space, {
+        notify: syncer.notifyRegistration(),
       })
+      const client = cred.clientFor(alice.pds)
       await sc.write(alice, space)
       await Promise.all([sc.write(bob, space), sc.write(dan, space)])
       await alice.pds.ctx.backgroundQueue.processAll()
@@ -1045,12 +1041,10 @@ describe('space sync', () => {
         serviceId: 'atproto_space_syncer',
       })
       const space = await sc.createSpace(alice, { members: [bob] })
-      const cred = await sc.credentialFor(alice, space)
-      const client = cred.clientFor(alice.pds)
-      await client.call(com.atproto.space.registerNotify, {
-        space,
-        service: syncer.serviceRef,
+      const cred = await sc.credentialFor(alice, space, {
+        notify: syncer.notifyRegistration(),
       })
+      const client = cred.clientFor(alice.pds)
       await sc.write(bob, space)
       const older = (await sc.repoState(bob, space))!.rev!
       await sc.write(bob, space)

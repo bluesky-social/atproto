@@ -1131,220 +1131,180 @@ describe('space policy', () => {
     })
   })
 
+  // No endpoint does this, so these reach into storage deliberately.
+  const getRegistrations = (space: SpaceRefString) =>
+    network.pds.ctx.actorStore.read(alice.did, (store) =>
+      store.space.getNotifyRegistrations(space),
+    )
+  const lapseRegistration = (space: SpaceRefString, syncer: MockService) =>
+    network.pds.ctx.actorStore.transact(alice.did, (actorTxn) =>
+      actorTxn.space.db.db
+        .updateTable('space_notify_registration')
+        .set({ expiresAt: new Date(Date.now() - 1000).toISOString() })
+        .where('space', '=', space)
+        .where('endpoint', '=', syncer.url)
+        .execute(),
+    )
+
   /**
-   * Notification fan-out. A syncing service registers with the authority and is
-   * told about writes; deliveries are best-effort and run on a background queue,
-   * so tests drain it rather than polling.
+   * Notification fan-out. A syncing service registers an endpoint when it requests
+   * a space credential, and is told about writes; deliveries are best-effort and
+   * run on a background queue, so tests drain it rather than polling.
    */
   describe('notify registration', () => {
-    // Withdrawal is signed by the service itself, not made with a space credential.
-    const unregister = async (
-      signer: MockService,
-      space: SpaceRefString,
-      service: string,
-      opts: { iss?: string; aud?: string } = {},
-    ) =>
-      alice.client.call(
-        com.atproto.space.unregisterNotify,
-        { space, service },
-        {
-          headers: await signer.serviceAuthHeaders({
-            iss: opts.iss,
-            aud: opts.aud ?? spaceHostAud(alice.did),
-            lxm: com.atproto.space.unregisterNotify.$lxm,
-          }),
-        },
-      )
+    // A member's write reaches the authority before `write` resolves, which queues
+    // the fan-out.
+    const writeAndForward = async (space: SpaceRefString) => {
+      await sc.write(bob, space)
+      await network.pds.ctx.backgroundQueue.processAll()
+    }
 
-    it('registers, forwards writes, and stops once withdrawn', async () => {
+    it('registers with a credential request, and forwards writes with its token', async () => {
       await using syncer = await MockService.create(network, {
         serviceId: 'atproto_space_syncer',
       })
       const space = await sc.createSpace(alice, { members: [bob, carol] })
-      const cred = await sc.credentialFor(carol, space)
-      const asSyncer = cred.clientFor(alice.pds)
-
-      const reg = await asSyncer.call(com.atproto.space.registerNotify, {
-        space,
-        service: syncer.serviceRef,
+      await sc.credentialFor(carol, space, {
+        notify: syncer.notifyRegistration('first-token'),
       })
-      // The registration expires, and the caller is told when: a syncer has to
-      // renew rather than assume it stays registered forever.
-      expect(reg.expiresAt).toBeDefined()
 
-      await sc.write(bob, space, { text: 'forwarded' })
-      // The authority's fan-out is queued so the writer's PDS isn't kept waiting.
-      await sc.awaitNotify(
-        async () => syncer.callsTo('com.atproto.space.notifyRepoUpdate'),
-        (calls) => calls.length > 0,
-      )
-      await network.pds.ctx.backgroundQueue.processAll()
-
+      await writeAndForward(space)
       const delivered = syncer.callsTo('com.atproto.space.notifyRepoUpdate')
-      expect(delivered.length).toBeGreaterThan(0)
+      expect(delivered).toHaveLength(1)
       expect(delivered[0].body).toMatchObject({ space, repo: bob.did })
+      expect(delivered[0].auth).toBe('Bearer first-token')
 
-      // Withdrawn: no further deliveries.
-      await unregister(syncer, space, syncer.serviceRef)
-      const before = syncer.callsTo('com.atproto.space.notifyRepoUpdate').length
-      await sc.write(bob, space, { text: 'not forwarded' })
-      await network.pds.ctx.backgroundQueue.processAll()
-      expect(syncer.callsTo('com.atproto.space.notifyRepoUpdate')).toHaveLength(
-        before,
-      )
-
-      // Unregistering again is idempotent.
-      await unregister(syncer, space, syncer.serviceRef)
+      // Renewing with the same token keeps a single registration.
+      await sc.credentialFor(carol, space, {
+        notify: syncer.notifyRegistration('first-token'),
+      })
+      expect(await getRegistrations(space)).toHaveLength(1)
     })
 
-    it('refuses a withdrawal not signed by the registered service', async () => {
-      await using syncer = await MockService.create(network, {
-        serviceId: 'atproto_space_syncer',
-      })
-      await using other = await MockService.create(network, {
-        serviceId: 'atproto_space_syncer',
-      })
-      const space = await sc.createSpace(alice, { members: [bob, carol] })
-      const asSyncer = (await sc.credentialFor(carol, space)).clientFor(
-        alice.pds,
-      )
-      await asSyncer.call(com.atproto.space.registerNotify, {
-        space,
-        service: syncer.serviceRef,
-      })
-
-      // A space credential names no service, so it can't withdraw one.
-      await expect(
-        asSyncer.call(com.atproto.space.unregisterNotify, {
-          space,
-          service: syncer.serviceRef,
-        }),
-      ).rejects.toMatchObject({ error: 'MissingJwt' })
-      // Nor can another service, even one holding the same service id.
-      await expect(
-        unregister(other, space, syncer.serviceRef),
-      ).rejects.toMatchObject({ error: 'Forbidden' })
-      // Nor can the right service, addressed to an authority other than the space's.
-      await expect(
-        unregister(syncer, space, syncer.serviceRef, { aud: bob.did }),
-      ).rejects.toMatchObject({ error: 'Forbidden' })
-
-      await sc.write(bob, space, { text: 'still forwarded' })
-      await sc.awaitNotify(
-        async () => syncer.callsTo('com.atproto.space.notifyRepoUpdate'),
-        (calls) => calls.length > 0,
-      )
-      await network.pds.ctx.backgroundQueue.processAll()
-      const before = syncer.callsTo('com.atproto.space.notifyRepoUpdate').length
-      expect(before).toBeGreaterThan(0)
-
-      // The service's bare DID signs for every service under it.
-      await unregister(syncer, space, syncer.serviceRef, { iss: syncer.did })
-      await sc.write(bob, space, { text: 'not forwarded' })
-      await network.pds.ctx.backgroundQueue.processAll()
-      expect(syncer.callsTo('com.atproto.space.notifyRepoUpdate')).toHaveLength(
-        before,
-      )
-    })
-
-    it('stops delivering to a registration past its expiry, and resumes on renewal', async () => {
+    it('treats a different token as a separate registration', async () => {
       await using syncer = await MockService.create(network, {
         serviceId: 'atproto_space_syncer',
       })
       const space = await sc.createSpace(alice, { members: [bob, carol] })
-      const cred = await sc.credentialFor(carol, space)
-      const asSyncer = cred.clientFor(alice.pds)
-
-      await asSyncer.call(com.atproto.space.registerNotify, {
-        space,
-        service: syncer.serviceRef,
-      })
-
-      // Expire it rather than waiting out the TTL. No endpoint does this, so it
-      // reaches into storage deliberately.
-      await network.pds.ctx.actorStore.transact(alice.did, (actorTxn) =>
-        actorTxn.space.db.db
-          .updateTable('space_credential_recipient')
-          .set({ expiresAt: new Date(Date.now() - 1000).toISOString() })
-          .where('space', '=', space)
-          .execute(),
-      )
-
-      await sc.write(bob, space, { text: 'after expiry' })
-      await network.pds.ctx.backgroundQueue.processAll()
-      expect(syncer.callsTo('com.atproto.space.notifyRepoUpdate')).toHaveLength(
-        0,
-      )
-
-      // Renewing brings it back — the row was withheld, not dropped.
-      await asSyncer.call(com.atproto.space.registerNotify, {
-        space,
-        service: syncer.serviceRef,
-      })
-      await sc.write(bob, space, { text: 'after renewal' })
-      await sc.awaitNotify(
-        async () => syncer.callsTo('com.atproto.space.notifyRepoUpdate'),
-        (calls) => calls.length > 0,
-      )
-      await network.pds.ctx.backgroundQueue.processAll()
-      expect(
-        syncer.callsTo('com.atproto.space.notifyRepoUpdate').length,
-      ).toBeGreaterThan(0)
-    })
-
-    it('refuses a service that cannot be resolved', async () => {
-      const space = await sc.createSpace(alice, { members: [carol] })
-      const cred = await sc.credentialFor(carol, space)
-      await expect(
-        cred.clientFor(alice.pds).call(com.atproto.space.registerNotify, {
-          space,
-          service: 'did:web:nonexistent.invalid#syncer',
-        }),
-      ).rejects.toMatchObject({ error: 'ServiceNotResolvable' })
-    })
-
-    it('refuses a service that is not a did#serviceId reference', async () => {
-      await using syncer = await MockService.create(network, {
-        serviceId: 'atproto_space_syncer',
-      })
-      const space = await sc.createSpace(alice, { members: [carol] })
-      const cred = await sc.credentialFor(carol, space)
-      await expect(
-        cred.clientFor(alice.pds).call(com.atproto.space.registerNotify, {
-          space,
-          service: syncer.did,
-        }),
-      ).rejects.toThrow(/did#serviceId/)
-    })
-
-    it('unregisters a service by its bare DID', async () => {
-      await using syncer = await MockService.create(network, {
-        serviceId: 'atproto_space_syncer',
-      })
-      await using other = await MockService.create(network, {
-        serviceId: 'atproto_space_syncer',
-      })
-      const space = await sc.createSpace(alice, { members: [carol] })
-      const cred = await sc.credentialFor(carol, space)
-      const asSyncer = cred.clientFor(alice.pds)
-      for (const service of [syncer, other]) {
-        await asSyncer.call(com.atproto.space.registerNotify, {
-          space,
-          service: service.serviceRef,
+      for (const token of ['first-token', 'second-token']) {
+        await sc.credentialFor(carol, space, {
+          notify: syncer.notifyRegistration(token),
         })
       }
 
-      // Withdrawing every service under a DID takes the DID itself as issuer.
-      await expect(unregister(syncer, space, syncer.did)).rejects.toMatchObject(
-        { error: 'Forbidden' },
-      )
-      await unregister(syncer, space, syncer.did, { iss: syncer.did })
+      await writeAndForward(space)
+      const auths = syncer
+        .callsTo('com.atproto.space.notifyRepoUpdate')
+        .map((call) => call.auth)
+      expect(auths.sort()).toEqual([
+        'Bearer first-token',
+        'Bearer second-token',
+      ])
+    })
 
-      const registered = await alice.pds.ctx.actorStore.read(
-        alice.did,
-        (store) => store.space.getCredentialRecipients(space),
+    it('sends a lapsed registration one more notification, then drops it', async () => {
+      await using syncer = await MockService.create(network, {
+        serviceId: 'atproto_space_syncer',
+      })
+      const space = await sc.createSpace(alice, { members: [bob, carol] })
+      await sc.credentialFor(carol, space, {
+        notify: syncer.notifyRegistration(),
+      })
+      await lapseRegistration(space, syncer)
+
+      // The last notification wakes a syncer that let its credential lapse.
+      await writeAndForward(space)
+      expect(syncer.callsTo('com.atproto.space.notifyRepoUpdate')).toHaveLength(
+        1,
       )
-      expect(registered.map((r) => r.service)).toEqual([other.serviceRef])
+      expect(await getRegistrations(space)).toEqual([])
+
+      await writeAndForward(space)
+      expect(syncer.callsTo('com.atproto.space.notifyRepoUpdate')).toHaveLength(
+        1,
+      )
+
+      // Fetching a new credential to sync that write registers it again.
+      await sc.credentialFor(carol, space, {
+        notify: syncer.notifyRegistration(),
+      })
+      await writeAndForward(space)
+      expect(syncer.callsTo('com.atproto.space.notifyRepoUpdate')).toHaveLength(
+        2,
+      )
+    })
+
+    it('unregisters a syncer that answers with a permanent HTTP error', async () => {
+      let status = 401
+      await using syncer = await MockService.create(network, {
+        serviceId: 'atproto_space_syncer',
+        respond: () => ({ status, body: { error: 'InvalidToken' } }),
+      })
+      const space = await sc.createSpace(alice, { members: [bob, carol] })
+      await sc.credentialFor(carol, space, {
+        notify: syncer.notifyRegistration(),
+      })
+
+      await writeAndForward(space)
+      expect(syncer.callsTo('com.atproto.space.notifyRepoUpdate')).toHaveLength(
+        1,
+      )
+      expect(await getRegistrations(space)).toEqual([])
+
+      status = 200
+      await writeAndForward(space)
+      expect(syncer.callsTo('com.atproto.space.notifyRepoUpdate')).toHaveLength(
+        1,
+      )
+    })
+
+    it('keeps a registration through a transient failure', async () => {
+      await using syncer = await MockService.create(network, {
+        serviceId: 'atproto_space_syncer',
+        respond: () => ({ status: 503, body: {} }),
+      })
+      const space = await sc.createSpace(alice, { members: [bob, carol] })
+      await sc.credentialFor(carol, space, {
+        notify: syncer.notifyRegistration(),
+      })
+
+      await writeAndForward(space)
+      expect(syncer.callsTo('com.atproto.space.notifyRepoUpdate')).toHaveLength(
+        1,
+      )
+      expect(await getRegistrations(space)).toHaveLength(1)
+    })
+
+    it('withdraws the registration carried by a refused credential request', async () => {
+      await using syncer = await MockService.create(network, {
+        serviceId: 'atproto_space_syncer',
+      })
+      const space = await sc.createSpace(alice, { members: [bob, carol] })
+      await sc.credentialFor(carol, space, {
+        notify: syncer.notifyRegistration('syncer-token'),
+      })
+      await sc.removeMember(alice, space, carol)
+
+      // A different token names a different registration, so naming the
+      // endpoint alone withdraws nothing.
+      await expect(
+        sc.mintCredential(space, await sc.delegationTokenFor(carol, space), {
+          notify: syncer.notifyRegistration('guessed-token'),
+        }),
+      ).rejects.toMatchObject({ error: 'SpaceNotFound' })
+      expect(await getRegistrations(space)).toHaveLength(1)
+
+      await expect(
+        sc.mintCredential(space, await sc.delegationTokenFor(carol, space), {
+          notify: syncer.notifyRegistration('syncer-token'),
+        }),
+      ).rejects.toMatchObject({ error: 'SpaceNotFound' })
+      expect(await getRegistrations(space)).toEqual([])
+
+      await writeAndForward(space)
+      expect(syncer.callsTo('com.atproto.space.notifyRepoUpdate')).toHaveLength(
+        0,
+      )
     })
   })
 
@@ -1424,23 +1384,30 @@ describe('space policy', () => {
       })
     })
 
-    it('notifies registered syncers', async () => {
+    it('notifies registered syncers, including lapsed registrations', async () => {
       await using syncer = await MockService.create(network, {
         serviceId: 'atproto_space_syncer',
       })
-      const space = await sc.createSpace(alice, { members: [carol] })
-      const cred = await sc.credentialFor(carol, space)
-      await cred.clientFor(alice.pds).call(com.atproto.space.registerNotify, {
-        space,
-        service: syncer.serviceRef,
+      await using lapsed = await MockService.create(network, {
+        serviceId: 'atproto_space_syncer',
       })
+      const space = await sc.createSpace(alice, { members: [carol] })
+      for (const service of [syncer, lapsed]) {
+        await sc.credentialFor(carol, space, {
+          notify: service.notifyRegistration(),
+        })
+      }
+      await lapseRegistration(space, lapsed)
 
       await deleteSpace(space)
       await network.pds.ctx.backgroundQueue.processAll()
 
-      const delivered = syncer.callsTo('com.atproto.space.notifySpaceStatus')
-      expect(delivered).toHaveLength(1)
-      expect(delivered[0].body).toMatchObject({ space })
+      for (const service of [syncer, lapsed]) {
+        const delivered = service.callsTo('com.atproto.space.notifySpaceStatus')
+        expect(delivered).toHaveLength(1)
+        expect(delivered[0].body).toMatchObject({ space })
+        expect(delivered[0].auth).toBe('Bearer notify-token')
+      }
     })
 
     it('leaves a member repo untouched', async () => {

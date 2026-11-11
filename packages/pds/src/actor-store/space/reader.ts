@@ -325,16 +325,14 @@ export class SpaceReader {
     return builder.execute()
   }
 
-  async getCredentialRecipients(
+  // Includes lapsed registrations, which are still owed one more notification.
+  async getNotifyRegistrations(
     space: SpaceRefString,
-  ): Promise<
-    { service: string; serviceEndpoint: string; expiresAt: string }[]
-  > {
+  ): Promise<{ endpoint: string; token: string; expiresAt: string }[]> {
     return this.db.db
-      .selectFrom('space_credential_recipient')
-      .select(['service', 'serviceEndpoint', 'expiresAt'])
+      .selectFrom('space_notify_registration')
+      .select(['endpoint', 'token', 'expiresAt'])
       .where('space', '=', space)
-      .where('expiresAt', '>', new Date().toISOString())
       .execute()
   }
 }

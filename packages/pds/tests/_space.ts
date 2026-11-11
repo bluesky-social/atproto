@@ -38,7 +38,6 @@ import {
   type SpaceRefString,
   type UriString,
 } from '@atproto/syntax'
-import { createServiceAuthHeaders } from '@atproto/xrpc-server'
 import { ClientAttestationVerifier } from '../src/client-attestation-verifier.js'
 import { com } from '../src/lexicons/index.js'
 
@@ -276,7 +275,11 @@ export class SpaceClient {
   async credentialFor(
     actor: Actor,
     space: SpaceRefString,
-    opts: { clientAttestation?: string; key?: P256Keypair } = {},
+    opts: {
+      clientAttestation?: string
+      key?: P256Keypair
+      notify?: com.atproto.space.getSpaceCredential.Notify
+    } = {},
   ): Promise<SpaceCredential> {
     const key = opts.key ?? (await P256Keypair.create())
     const token = await this.delegationTokenFor(actor, space)
@@ -287,6 +290,7 @@ export class SpaceClient {
         credentialKey: key.did(),
         delegationToken: token,
         clientAttestation: opts.clientAttestation,
+        notify: opts.notify,
       })
     return new SpaceCredential(res.credential, key, this.idResolver)
   }
@@ -339,7 +343,10 @@ export class SpaceClient {
   async mintCredential(
     space: SpaceRefString,
     token: string,
-    opts: { clientAttestation?: string } = {},
+    opts: {
+      clientAttestation?: string
+      notify?: com.atproto.space.getSpaceCredential.Notify
+    } = {},
   ) {
     const key = await P256Keypair.create()
     return this.authority
@@ -349,6 +356,7 @@ export class SpaceClient {
         credentialKey: key.did(),
         delegationToken: token,
         clientAttestation: opts.clientAttestation,
+        notify: opts.notify,
       })
   }
 
@@ -545,7 +553,8 @@ export const record = (collection: NsidString, text = 'hello') => ({
 
 /**
  * A local HTTP service with a real PLC-registered DID, so the PDS resolves and
- * reaches it the way it would a managing app or a syncing service.
+ * reaches it the way it would a managing app or a space host. Also stands in for
+ * a syncing service, which registers its URL directly.
  *
  * Records every request it receives, which is how a test observes a fan-out that
  * is otherwise fire-and-forget.
@@ -559,29 +568,20 @@ export class MockService {
     public url: string,
     public did: DidString,
     public serviceId: string,
-    private keypair: Secp256k1Keypair,
   ) {
     this.terminator = createHttpTerminator({ server })
   }
 
-  /** `did#serviceId`, the form a notify target is registered under. */
+  /** `did#serviceId`, the form a managing app is named by. */
   get serviceRef(): string {
     return `${this.did}#${this.serviceId}`
   }
 
-  /** Service auth signed with this service's `#atproto` key, issued as `serviceRef` by default. */
-  async serviceAuthHeaders(opts: {
-    aud: string
-    lxm: string
-    iss?: string
-  }): Promise<Record<string, string>> {
-    const { headers } = await createServiceAuthHeaders({
-      iss: opts.iss ?? this.serviceRef,
-      aud: opts.aud,
-      lxm: opts.lxm,
-      keypair: this.keypair,
-    })
-    return headers
+  /** A getSpaceCredential `notify` registration for this service. */
+  notifyRegistration(
+    token = 'notify-token',
+  ): com.atproto.space.getSpaceCredential.Notify {
+    return { endpoint: this.url as UriString, token }
   }
 
   callsTo(lxm: string) {
@@ -645,7 +645,6 @@ export class MockService {
       url,
       did as DidString,
       opts.serviceId,
-      keypair,
     )
     service.calls = calls
     return service

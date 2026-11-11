@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Notify a syncing service of a change in a space's status. A deleted space's data should be dropped. Sent by the space host to registered services. Requires service auth.",
+      "description": "Notify a syncing service of a change in a space's status. A deleted space's data should be dropped. Sent by the space host to the syncing services registered through getSpaceCredential, presenting each one's registered token as a bearer token.",
       "input": {
         "encoding": "application/json",
         "schema": {

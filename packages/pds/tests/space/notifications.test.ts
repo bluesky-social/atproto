@@ -594,10 +594,7 @@ describe('space notification retries', () => {
       await syncer?.close()
     })
 
-    const registration = () => ({
-      service: syncer.serviceRef,
-      expiresAt: new Date(Date.now() + DAY).toISOString(),
-    })
+    const registration = () => ({ endpoint: syncer.url, token: 'syncer-token' })
 
     const pendingStatus = () =>
       db.db.selectFrom('space_status_notification_retry').selectAll().execute()
@@ -618,23 +615,25 @@ describe('space notification retries', () => {
         space: deletedSpace,
         status: 'deleted',
       })
+      expect(delivered[0].auth).toBe('Bearer syncer-token')
       expect(await pendingStatus()).toEqual([])
     })
 
     it('retries a transient failure until delivered', async () => {
       syncerStatus = 503
-      const recipient = registration()
+      const before = Date.now()
       await notifications.notifySpaceStatus(SpaceRef.parse(deletedSpace), [
-        recipient,
+        registration(),
       ])
-      expect(await pendingStatus()).toMatchObject([
-        {
-          space: deletedSpace,
-          service: syncer.serviceRef,
-          attempts: 1,
-          expiresAt: Date.parse(recipient.expiresAt),
-        },
-      ])
+      const [retry] = await pendingStatus()
+      expect(retry).toMatchObject({
+        space: deletedSpace,
+        endpoint: syncer.url,
+        token: 'syncer-token',
+        attempts: 1,
+      })
+      expect(retry.expiresAt).toBeGreaterThanOrEqual(before + DAY)
+      expect(retry.expiresAt).toBeLessThanOrEqual(Date.now() + DAY)
 
       await makeStatusDue()
       await notifications.retryPending()
@@ -645,6 +644,7 @@ describe('space notification retries', () => {
       await notifications.retryPending()
       expect(await pendingStatus()).toEqual([])
       expect(syncer.calls).toHaveLength(3)
+      expect(syncer.calls.at(-1)?.auth).toBe('Bearer syncer-token')
     })
 
     it('does not retry a permanent failure', async () => {
@@ -656,7 +656,7 @@ describe('space notification retries', () => {
       expect(syncer.calls).toHaveLength(1)
     })
 
-    it('stops retrying once the registration expires', async () => {
+    it('stops retrying after 24 hours', async () => {
       syncerStatus = 503
       await notifications.notifySpaceStatus(SpaceRef.parse(deletedSpace), [
         registration(),
@@ -676,7 +676,8 @@ describe('space notification retries', () => {
         .values({
           space:
             'at://did:plc:aaaaaaaaaaaaaaaaaaaaaaaa/space/com.example.group/gone' as SpaceRefString,
-          service: syncer.serviceRef,
+          endpoint: syncer.url,
+          token: 'syncer-token',
           attempts: 1,
           retryAt: 0,
           expiresAt: Date.now() + DAY,

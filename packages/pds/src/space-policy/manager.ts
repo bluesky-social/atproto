@@ -3,6 +3,7 @@ import { xrpc } from '@atproto/lex'
 import type { SpaceMetaArchive } from '@atproto/space'
 import type { DidString, SpaceRef, UriString } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
+import type { Fetch } from '@atproto-labs/fetch-node'
 import type { ActorStore } from '../actor-store/actor-store.js'
 import { resolveNotifyTarget } from '../api/com/atproto/space/util.js'
 import { com } from '../lexicons/index.js'
@@ -32,6 +33,7 @@ export class SpacePolicyManager {
   constructor(
     public actorStore: ActorStore,
     public idResolver: IdResolver,
+    public safeFetch: Fetch,
   ) {}
 
   // The methods that change a space's configuration also publish it to readers when
@@ -293,16 +295,17 @@ export class SpacePolicyManager {
    * SpaceDeleted, which is how a syncer that missed the notification finds out.
    *
    * Returns the syncers registered at the time of deletion, which are owed a
-   * notifySpaceStatus.
+   * notifySpaceStatus. That includes lapsed registrations still awaiting their
+   * last notification.
    */
   async deleteSpace(
     ref: SpaceRef,
-  ): Promise<{ service: string; expiresAt: string }[]> {
+  ): Promise<{ endpoint: string; token: string }[]> {
     const space = ref.toString()
     return this.actorStore.transact(ref.spaceDid, async (actorTxn) => {
-      const recipients = await actorTxn.space.getCredentialRecipients(space)
+      const registrations = await actorTxn.space.getNotifyRegistrations(space)
       await actorTxn.space.deleteSpace(space)
-      return recipients
+      return registrations
     })
   }
 
@@ -335,7 +338,7 @@ export class SpacePolicyManager {
         return { read: false, write: false }
       }
       const res = await xrpc(
-        target.endpoint,
+        { service: target.endpoint, fetch: this.safeFetch },
         com.atproto.managedspace.checkAccess,
         {
           headers: target.headers,

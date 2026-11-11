@@ -12,7 +12,8 @@ export interface SpaceNotificationRetry {
 
 export interface SpaceStatusNotificationRetry {
   space: SpaceRefString
-  service: string
+  endpoint: string
+  token: string
   attempts: number
   retryAt: number
   expiresAt: number
