@@ -49,21 +49,24 @@ describe('KEM', () => {
     expect(() => decapsulate(author, 'did:key:nope')).toThrow(SpaceKemError)
   })
 
-  // RFC 9180 §A.3.1, DHKEM(P-256, HKDF-SHA256): the syncer's key share is `pkEm`
-  // and the author's KEM keypair is `skRm`.
-  it('matches the RFC 9180 test vector', async () => {
-    const pkEm = hex(
-      '04a92719c6195d5085104f469a8b9814d5838ff72b60501e2c4466e5e67b325ac98536d7b61a1af4b78e5b7f951c0900be863c403ce65c9bfcb9382657222d18c4',
+  // The keys are from the export-only DHKEM(P-256, HKDF-SHA256) entry of the
+  // HPKE test vectors (github.com/cfrg/draft-irtf-cfrg-hpke), where the syncer's
+  // key share is `enc` and the author's KEM keypair is `skRm`. Those vectors use
+  // a different `info`, so the expected secret was computed with Go's
+  // crypto/hpke, using `info` "atproto-space-mac" and an empty exporter context.
+  it('matches HPKE secret export', async () => {
+    const enc = hex(
+      '04d804370b7e24b94749eb1dc8df6d4d4a5d75f9effad01739ebcad5c54a40d57aaa8b4190fc124dbde2e4f1e1d1b012a3bc4038157dc29b55533a932306d8d38d',
     )
     const skRm = hex(
-      'f3ce7fdae57e1a310d87f1ebbde6f328be0a99cdbcadf4d6589cf29de4b8ffd2',
+      '62c3868357a464f8461d03aa0182c7cebcde841036aea7230ddc7339f1088346',
     )
     const sharedSecret = hex(
-      'c0d26aeab536609a572b07695d933b589dcf363ff9d93c93adea537aeabb8cb8',
+      'f896b227296a19f87eeac264c7539506729fc78f07cdeee98434e8f89e869057',
     )
 
     const author = await P256Keypair.import(skRm)
-    const keyShare = formatDidKey(P256_JWT_ALG, pkEm)
+    const keyShare = formatDidKey(P256_JWT_ALG, enc)
     expect(decapsulate(author, keyShare)).toEqual(sharedSecret)
   })
 })
