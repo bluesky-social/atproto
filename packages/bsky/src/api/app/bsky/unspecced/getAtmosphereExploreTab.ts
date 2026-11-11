@@ -29,6 +29,7 @@ import {
 import { getAtprotoPassthroughHeaders } from '../../../../util/headers.js'
 import type { Views } from '../../../../views/index.js'
 import {
+  getAtmospherePostRef,
   getAtmospherePostUris,
   getAtmospherePostView,
 } from './atmosphere-hydration.js'
@@ -278,17 +279,17 @@ function presentation({
     articles: {
       items: mapDefined(articles, ({ uri }) => {
         const view = ctx.views.externalRecordView(uri, state, now)
-        return view && app.bsky.embed.external.viewArticle.$isTypeOf(view)
-          ? {
-              featured: false,
-              view,
-              viewBskyPost: getAtmospherePostView(
-                ctx.views,
-                state.externalRecords?.get(uri)?.record,
-                state,
-              ),
-            }
-          : undefined
+        if (!view || !app.bsky.embed.external.viewArticle.$isTypeOf(view))
+          return
+        const bskyPostRef = getAtmospherePostRef(
+          state.externalRecords?.get(uri)?.record,
+        )
+        return {
+          featured: false,
+          view,
+          bskyPostRef,
+          viewBskyPost: getAtmospherePostView(ctx.views, bskyPostRef, state),
+        }
       }),
       recIdStr: skeleton.articleRecIdStr,
     },
@@ -316,6 +317,9 @@ function presentation({
         const view = ctx.views.externalRecordView(uri, state, now)
         if (!view || !app.bsky.embed.external.viewLivestream.$isTypeOf(view))
           return
+        const bskyPostRef = getAtmospherePostRef(
+          state.externalRecords?.get(uri)?.record,
+        )
         // Previewed streams are never live; copy rather than mutate the view.
         return {
           featured: false,
@@ -323,11 +327,8 @@ function presentation({
             startsAt != null && Date.parse(startsAt) > now
               ? { ...view, active: false }
               : view,
-          viewBskyPost: getAtmospherePostView(
-            ctx.views,
-            state.externalRecords?.get(uri)?.record,
-            state,
-          ),
+          bskyPostRef,
+          viewBskyPost: getAtmospherePostView(ctx.views, bskyPostRef, state),
         }
       }),
     },

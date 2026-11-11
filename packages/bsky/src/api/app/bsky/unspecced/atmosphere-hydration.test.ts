@@ -360,6 +360,7 @@ describe('AtmosphereTimelineHydrator', () => {
     const item = f.timeline.activity(recommendUri, now)?.item
     expect(item).toMatchObject({
       record: { uri: recommendUri },
+      bskyPostRef: { uri: postUri, cid },
       viewBskyPost: {
         uri: postUri,
         cid,
@@ -369,7 +370,6 @@ describe('AtmosphereTimelineHydrator', () => {
       },
       view: { associatedRefs: [{ uri: documentUri }, { uri: publicationUri }] },
     })
-    expect(item).not.toHaveProperty('bskyPostRef')
     expect(
       app.bsky.unspecced.getAtmosphereTimeline.activityItem.$matches(item),
     ).toBe(true)
@@ -387,6 +387,7 @@ describe('AtmosphereTimelineHydrator', () => {
     await f.timeline.hydrate([streamUri])
     expect(f.timeline.activity(streamUri, now)?.item).toMatchObject({
       view: { $type: app.bsky.embed.external.viewLivestream.$type },
+      bskyPostRef: { uri: postUri, cid },
       viewBskyPost: { uri: postUri, record: { text: 'Read this' } },
     })
   })
@@ -407,11 +408,12 @@ describe('AtmosphereTimelineHydrator', () => {
       await f.timeline.hydrate([documentUri])
       const item = f.timeline.activity(documentUri, now)?.item
       expect(item?.view).toMatchObject({ title: 'Article' })
+      expect(item?.bskyPostRef).toEqual({ uri: associatedPostUri, cid })
       expect(item?.viewBskyPost).toBeUndefined()
     },
   )
 
-  it('ignores references outside the DID-based post collection', async () => {
+  it('preserves references outside the DID-based post collection without hydration', async () => {
     const f = setup()
     f.records.get(documentUri)!.bskyPostRef = { uri: publicationUri, cid }
     f.records.get(streamUri)!.post = {
@@ -419,11 +421,13 @@ describe('AtmosphereTimelineHydrator', () => {
       cid,
     }
     await f.timeline.hydrate([documentUri, streamUri])
-    expect(f.timeline.activity(documentUri, now)?.item.view).toMatchObject({
-      title: 'Article',
+    expect(f.timeline.activity(documentUri, now)?.item).toMatchObject({
+      bskyPostRef: { uri: publicationUri, cid },
+      view: { title: 'Article' },
     })
-    expect(f.timeline.activity(streamUri, now)?.item.view).toMatchObject({
-      title: 'Stream',
+    expect(f.timeline.activity(streamUri, now)?.item).toMatchObject({
+      bskyPostRef: { uri: 'at://author.test/app.bsky.feed.post/post', cid },
+      view: { title: 'Stream' },
     })
     expect(
       f.timeline.activity(documentUri, now)?.item.viewBskyPost,

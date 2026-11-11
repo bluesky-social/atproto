@@ -108,6 +108,11 @@
           "type": "boolean",
           "description": "Deprecated. Retained for compatibility; always false."
         },
+        "bskyPostRef": {
+          "type": "ref",
+          "ref": "com.atproto.repo.strongRef",
+          "description": "The Bluesky post associated with the article, as declared by its author. The referenced post may not be available."
+        },
         "viewBskyPost": {
           "type": "ref",
           "ref": "app.bsky.feed.defs#postView",
@@ -148,6 +153,11 @@
         "featured": {
           "type": "boolean",
           "description": "Deprecated. Retained for compatibility; always false."
+        },
+        "bskyPostRef": {
+          "type": "ref",
+          "ref": "com.atproto.repo.strongRef",
+          "description": "The Bluesky post that announced the livestream, as declared by its author. The referenced post may not be available."
         },
         "viewBskyPost": {
           "type": "ref",

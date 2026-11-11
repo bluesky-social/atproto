@@ -580,8 +580,13 @@ describe('Atmosphere Explore', () => {
           }),
         }),
       )
-      fixture.records.get(docUri)!.bskyPostRef = { uri: postUri, cid }
-      fixture.records.get(liveUri)!.post = { uri: postUri, cid }
+      // @NOTE The declared reference can pin an older version of the post.
+      const postRef = {
+        uri: postUri,
+        cid: 'bafyreidp33zeeo7kwlj6qw5wyvbkdcs4fl4uj4dhgifpzgno3nfbl4amoq',
+      }
+      fixture.records.get(docUri)!.bskyPostRef = postRef
+      fixture.records.get(liveUri)!.post = postRef
 
       const { status, body } = await fixture.query(authenticated)
       expect(status).toBe(200)
@@ -603,7 +608,7 @@ describe('Atmosphere Explore', () => {
             ? atUri(viewer, app.bsky.feed.like.$type, 'like')
             : undefined,
         )
-        expect(item).not.toHaveProperty('bskyPostRef')
+        expect(item.bskyPostRef).toEqual(postRef)
       }
     },
   )
@@ -645,6 +650,8 @@ describe('Atmosphere Explore', () => {
     expect(status).toBe(200)
     expect(body.articles.items[0].view.title).toBe('Article')
     expect(body.livestreams.items[0].view.title).toBe('Live')
+    expect(body.articles.items[0].bskyPostRef).toEqual({ uri: postUri, cid })
+    expect(body.livestreams.items[0].bskyPostRef).toEqual({ uri: postUri, cid })
     expect(body.articles.items[0]).not.toHaveProperty('viewBskyPost')
     expect(body.livestreams.items[0]).not.toHaveProperty('viewBskyPost')
   })
