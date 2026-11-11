@@ -1,3 +1,11 @@
+/*
+  How AppView verifies auth:
+  1. `standard`: called by app clients. Service JWT signed with the user's account key, or an entryway session token. Used across `app.bsky.*`.
+  2. `role`: called by internal services such as Chat and Rolodex, and administrators. Basic auth with username `admin` and a configured admin password. Used for internal profile lookup, contact notifications, and admin-capable routes.
+  3. `modService`: called by Ozone. Service JWT signed with its labeler key, or its account key for legacy issuers without a fragment. Accepted on `com.atproto.admin.getSubjectStatus` and `com.atproto.admin.updateSubjectStatus` through `roleOrModService`.
+
+  Optional variants allow anonymous requests. `standardOrRole`, `optionalStandardOrRole`, and `roleOrModService` combine the corresponding verifiers.
+*/
 import crypto, { type KeyObject } from 'node:crypto'
 import { secp256k1 } from '@noble/curves/secp256k1'
 import type express from 'express'
@@ -116,10 +124,10 @@ export class AuthVerifier {
           if (opts.skipAudCheck) {
             throw new AuthRequiredError('Malformed token', 'InvalidToken')
           }
-          return this.entrywaySession(ctx)
+          return this.entrywaySession(token)
         }
 
-        const { iss, aud } = await this.verifyServiceJwt(ctx, {
+        const { iss, aud } = await this.verifyServiceJwt(ctx, token, {
           lxmCheck: opts.lxmCheck,
           iss: null,
           aud: null,
@@ -202,7 +210,8 @@ export class AuthVerifier {
   }
 
   modService = async (reqCtx: ReqCtx): Promise<ModServiceOutput> => {
-    const { iss, aud } = await this.verifyServiceJwt(reqCtx, {
+    const token = bearerTokenFromReq(reqCtx.req)
+    const { iss, aud } = await this.verifyServiceJwt(reqCtx, token, {
       aud: this.ownDid,
       iss: [this.modServiceDid, `${this.modServiceDid}#atproto_labeler`],
     })
@@ -261,8 +270,9 @@ export class AuthVerifier {
   // @NOTE this auth verifier method is not recommended to be implemented by most appviews
   // this is a short term fix to remove proxy load from Bluesky's PDS and in line with possible
   // future plans to have the client talk directly with the appview
-  private entrywaySession = async (reqCtx: ReqCtx): Promise<StandardOutput> => {
-    const token = bearerTokenFromReq(reqCtx.req)
+  private entrywaySession = async (
+    token: string | null,
+  ): Promise<StandardOutput> => {
     if (!token) {
       throw new AuthRequiredError(undefined, 'AuthMissing')
     }
@@ -333,7 +343,7 @@ export class AuthVerifier {
       aud: string | null
       lxmCheck?: (method?: string) => boolean
     },
-  >(reqCtx: ReqCtx, opts: TOptions) {
+  >(reqCtx: ReqCtx, jwtStr: string | null, opts: TOptions) {
     const getSigningKey = async (
       iss: string,
       _forceRefresh: boolean, // @TODO consider propagating to dataplane
@@ -379,7 +389,6 @@ export class AuthVerifier {
       }
     }
 
-    const jwtStr = bearerTokenFromReq(reqCtx.req)
     if (!jwtStr) {
       throw new AuthRequiredError('missing jwt', 'MissingJwt')
     }
