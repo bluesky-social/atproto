@@ -1,5 +1,23 @@
 # @atproto/bsky
 
+## 0.5.6
+
+### Patch Changes
+
+- [#5858](https://github.com/bluesky-social/atproto/pull/5858) [`dd74699`](https://github.com/bluesky-social/atproto/commit/dd74699050a2ef0049736466e45c13842b71e0b9) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Limit subscribed-post and all spotlight notification groups to 150 items.
+
+- [#5802](https://github.com/bluesky-social/atproto/pull/5802) [`d930c3b`](https://github.com/bluesky-social/atproto/commit/d930c3b6b401df7085b8e85f3fc83dbbc3e28605) Thanks [@foysalit](https://github.com/foysalit)! - Retire moderation subject statistics and count-based filters. Legacy count-based
+  sorts fall back to last reported time.
+
+- [#5861](https://github.com/bluesky-social/atproto/pull/5861) [`211c9e8`](https://github.com/bluesky-social/atproto/commit/211c9e8acceccca2e983b7bc8ebfc0756664c956) Thanks [@blackmichael](https://github.com/blackmichael)! - Use Iris Grain gallery recommendations in Atmosphere Explore behind `atmosphere_explore:galleries:iris:enable`, independently of article recommendations. Return the gallery recommendation ID in `photos.recIdStr`. Retain curated photos when Iris returns an empty list or fails.
+  
+  Update the shared Explore contract description for recommended photo galleries.
+- Updated dependencies [[`b30ea73`](https://github.com/bluesky-social/atproto/commit/b30ea7305be8df27524ed70d4af7f246014194c2), [`d930c3b`](https://github.com/bluesky-social/atproto/commit/d930c3b6b401df7085b8e85f3fc83dbbc3e28605), [`211c9e8`](https://github.com/bluesky-social/atproto/commit/211c9e8acceccca2e983b7bc8ebfc0756664c956)]:
+  - @atproto/xrpc-server@0.13.11
+  - @atproto/api@0.31.0
+  - @atproto-labs/xrpc-utils@0.1.32
+  - @atproto/sync@0.4.25
+
 ## 0.5.5
 
 ### Patch Changes

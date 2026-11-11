@@ -1,5 +1,19 @@
 # @atproto/dev-env
 
+## 0.7.7
+
+### Patch Changes
+
+- [#5802](https://github.com/bluesky-social/atproto/pull/5802) [`d930c3b`](https://github.com/bluesky-social/atproto/commit/d930c3b6b401df7085b8e85f3fc83dbbc3e28605) Thanks [@foysalit](https://github.com/foysalit)! - Retire moderation subject statistics and count-based filters. Legacy count-based
+  sorts fall back to last reported time.
+- Updated dependencies [[`dd74699`](https://github.com/bluesky-social/atproto/commit/dd74699050a2ef0049736466e45c13842b71e0b9), [`b30ea73`](https://github.com/bluesky-social/atproto/commit/b30ea7305be8df27524ed70d4af7f246014194c2), [`d930c3b`](https://github.com/bluesky-social/atproto/commit/d930c3b6b401df7085b8e85f3fc83dbbc3e28605), [`211c9e8`](https://github.com/bluesky-social/atproto/commit/211c9e8acceccca2e983b7bc8ebfc0756664c956), [`bae981e`](https://github.com/bluesky-social/atproto/commit/bae981e238a7bc192b52a53c14f051a76a9f5507)]:
+  - @atproto/bsky@0.5.6
+  - @atproto/xrpc-server@0.13.11
+  - @atproto/pds@0.5.57
+  - @atproto/ozone@0.14.0
+  - @atproto/api@0.31.0
+  - @atproto/sync@0.4.25
+
 ## 0.7.6
 
 ### Patch Changes

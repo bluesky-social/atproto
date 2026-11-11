@@ -1,5 +1,19 @@
 # @atproto/pds
 
+## 0.5.57
+
+### Patch Changes
+
+- [#5857](https://github.com/bluesky-social/atproto/pull/5857) [`b30ea73`](https://github.com/bluesky-social/atproto/commit/b30ea7305be8df27524ed70d4af7f246014194c2) Thanks [@amckinley](https://github.com/amckinley)! - Add `PDS_DISABLE_IP_RATE_LIMITS`, for a PDS behind a proxy that enforces per-IP rate limits. When set with `PDS_RATE_LIMITS_ENABLED`, the PDS drops its global per-IP limit and the route limits keyed only on the client IP, and keeps its per-account limits. The xrpc-server `rateLimits` option gains `skipDefaultKeyedRouteLimits`, which skips route-specific limits that don't define their own `calcKey`.
+
+- [#5802](https://github.com/bluesky-social/atproto/pull/5802) [`d930c3b`](https://github.com/bluesky-social/atproto/commit/d930c3b6b401df7085b8e85f3fc83dbbc3e28605) Thanks [@foysalit](https://github.com/foysalit)! - Retire moderation subject statistics and count-based filters. Legacy count-based
+  sorts fall back to last reported time.
+
+- [#5863](https://github.com/bluesky-social/atproto/pull/5863) [`bae981e`](https://github.com/bluesky-social/atproto/commit/bae981e238a7bc192b52a53c14f051a76a9f5507) Thanks [@amckinley](https://github.com/amckinley)! - Look up accounts by handle and by email through the existing `lower(handle)` and `lower(email)` indexes. `getAccount` by handle (behind `createSession` and `resolveHandle`), `getAccountByEmail` and `updateHandle`'s check that a handle is free compared the bare column, which those indexes can't serve, so each scanned the whole `actor` or `account` table.
+- Updated dependencies [[`b30ea73`](https://github.com/bluesky-social/atproto/commit/b30ea7305be8df27524ed70d4af7f246014194c2)]:
+  - @atproto/xrpc-server@0.13.11
+  - @atproto-labs/xrpc-utils@0.1.32
+
 ## 0.5.56
 
 ### Patch Changes
