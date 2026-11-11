@@ -467,13 +467,6 @@ const parseBasicAuth = (
   return { username, password }
 }
 
-export const buildBasicAuth = (username: string, password: string): string => {
-  return (
-    BASIC +
-    ui8.toString(ui8.fromString(`${username}:${password}`, 'utf8'), 'base64pad')
-  )
-}
-
 const createSecp256k1KeyObject = (
   publicKey: Uint8Array | string,
 ): KeyObject => {
