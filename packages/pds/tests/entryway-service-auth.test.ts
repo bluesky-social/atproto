@@ -353,6 +353,18 @@ describe('entryway service auth', () => {
       expect(account?.handle).toBe('create-unauthed.test')
     })
 
+    it('refuses the admin password on createAccount.', async () => {
+      await expect(
+        createAccount(pds, 'create-basic.test', pds.adminAuthHeaders()),
+      ).rejects.toMatchObject({
+        status: 401,
+        message: 'Invalid authorization header',
+      })
+      await expect(
+        pds.ctx.accountManager.getAccount('create-basic.test'),
+      ).resolves.toBeNull()
+    })
+
     it('accepts an entryway service JWT on deleteAccount.', async () => {
       const did = await createAccount(pds, 'delete-jwt.test')
       await deleteAccount(
@@ -603,11 +615,17 @@ describe('entryway service auth', () => {
       )
     })
 
-    // until the entryway signs createAccount
-    it('still accepts an unauthenticated createAccount.', async () => {
-      const did = await createAccount(strictPds, 'strict-unauthed.test', {})
-      const account = await strictPds.ctx.accountManager.getAccount(did)
-      expect(account?.handle).toBe('strict-unauthed.test')
+    it('refuses an unauthenticated createAccount.', async () => {
+      await expect(
+        createAccount(strictPds, 'strict-unauthed.test', {}),
+      ).rejects.toMatchObject({
+        status: 401,
+        error: 'AuthenticationRequired',
+        message: 'Entryway service auth required',
+      })
+      await expect(
+        strictPds.ctx.accountManager.getAccount('strict-unauthed.test'),
+      ).resolves.toBeNull()
     })
 
     it('refuses the admin password on createAccount.', async () => {
@@ -619,7 +637,8 @@ describe('entryway service auth', () => {
         ),
       ).rejects.toMatchObject({
         status: 401,
-        message: 'Invalid authorization header',
+        error: 'AuthenticationRequired',
+        message: 'Entryway service auth required',
       })
       await expect(
         strictPds.ctx.accountManager.getAccount('strict-basic.test'),
