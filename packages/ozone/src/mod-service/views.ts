@@ -38,6 +38,7 @@ import {
 } from './status.js'
 import {
   CHAT_CONVO_COLLECTION,
+  CHAT_MESSAGE_COLLECTION,
   type ModSubject,
   subjectFromEventRow,
   subjectFromStatusRow,
@@ -762,7 +763,9 @@ export class ModerationViews {
                 '=',
                 sub.recordPath ?? '',
               ),
-              eb('moderation_subject_status.convoId', '=', sub.convoId),
+              ...(sub.recordPath.startsWith(`${CHAT_MESSAGE_COLLECTION}/`)
+                ? []
+                : [eb('moderation_subject_status.convoId', '=', sub.convoId)]),
             ]),
           ),
         ),
@@ -773,13 +776,19 @@ export class ModerationViews {
       this.getAccoutInfosByDid(parsedSubjects.map((s) => s.did)),
     ])
 
-    return new Map(
-      statusRes.map((row): [string, ModerationSubjectStatusRowWithHandle] => {
-        const subjectId = formatSubjectId(row.did, row.recordPath, row.convoId)
-        const handle = accountsByDid.get(row.did)?.handle ?? INVALID_HANDLE
-        return [subjectId, { ...row, handle }]
-      }),
-    )
+    const statusMap = new Map<string, ModerationSubjectStatusRowWithHandle>()
+    const ambiguous = new Set<string>()
+    for (const row of statusRes) {
+      const subjectId = formatSubjectId(row.did, row.recordPath, row.convoId)
+      const handle = accountsByDid.get(row.did)?.handle ?? INVALID_HANDLE
+      if (statusMap.has(subjectId)) {
+        statusMap.delete(subjectId)
+        ambiguous.add(subjectId)
+      } else if (!ambiguous.has(subjectId)) {
+        statusMap.set(subjectId, { ...row, handle })
+      }
+    }
+    return statusMap
   }
 
   formatSubjectStatus(
