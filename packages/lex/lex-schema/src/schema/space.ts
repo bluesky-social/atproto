@@ -57,8 +57,7 @@ export class Space<
     collections: readonly NsidString[],
     options: SpaceOptions,
   ) {
-    asLexiconRecordKey(key)
-    this.key = key
+    this.key = asLexiconRecordKey(key)
     this.nsid = nsid
     this.collections = collections
     this.options = options
