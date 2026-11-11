@@ -143,7 +143,7 @@ export class AtmosphereTimelineHydrator implements TimelineHydration {
     }
   }
 
-  /** Compose each visible actor profile once for subject groups. */
+  /** Compose each visible actor profile once for subject and related groups. */
   profile(did: DidString): app.bsky.actor.defs.ProfileViewBasic | undefined {
     if (!this.visibleAuthor(did)) return
     let profile = this.profiles.get(did)
@@ -176,7 +176,7 @@ export class AtmosphereTimelineHydrator implements TimelineHydration {
     }
   }
 
-  /** Render a standalone item or the newest group item of an author group. */
+  /** Render a standalone item or the newest item of an actor group. */
   item(
     activity: TimelineActivity,
   ): $Typed<app.bsky.unspecced.getAtmosphereTimeline.ActivityItem> | undefined {

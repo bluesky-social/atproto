@@ -336,7 +336,7 @@ describe('AtmosphereTimelineHydrator', () => {
     }
   })
 
-  it('combines article creation, recommendations and shares with one subject and visible actors', async () => {
+  it('attaches collection-specific related activity to a standalone article with visible actors', async () => {
     const f = setup()
     const secondRecommendation = atUri(
       viewer,
@@ -354,22 +354,30 @@ describe('AtmosphereTimelineHydrator', () => {
     const feed = groupAtmosphereActivities(activities, now, f.timeline)
     expect(feed).toMatchObject([
       {
-        $type:
-          app.bsky.unspecced.getAtmosphereTimeline.activitySubjectGroup.$type,
-        subject: {
-          uri: documentUri,
-          view: { title: 'Article' },
-          viewerState: { subscribed: true },
-          viewBskyPost: { uri: postUri, record: { text: 'Read this' } },
-        },
-        activities: roots.map((uri) => ({ record: { uri } })),
-        actors: [{ did: reader }, { did: viewer }, { did: author }],
+        $type: app.bsky.unspecced.getAtmosphereTimeline.activityItem.$type,
+        record: { uri: documentUri },
+        collection: site.standard.document.$type,
+        view: { title: 'Article' },
+        viewerState: { subscribed: true },
+        viewBskyPost: { uri: postUri, record: { text: 'Read this' } },
+        relatedActivity: [
+          {
+            collection: site.standard.graph.recommend.$type,
+            activities: [recommendUri, secondRecommendation].map((uri) => ({
+              record: { uri },
+            })),
+            actors: [{ did: reader }, { did: viewer }],
+          },
+          {
+            collection: app.bsky.feed.post.$type,
+            activities: [{ record: { uri: postUri } }],
+            actors: [{ did: viewer }],
+          },
+        ],
       },
     ])
     expect(
-      app.bsky.unspecced.getAtmosphereTimeline.activitySubjectGroup.$matches(
-        feed[0],
-      ),
+      app.bsky.unspecced.getAtmosphereTimeline.activityItem.$matches(feed[0]),
     ).toBe(true)
 
     f.muted.add(reader)
@@ -386,8 +394,19 @@ describe('AtmosphereTimelineHydrator', () => {
     })
     expect(groupAtmosphereActivities(visible, now, f.timeline)).toMatchObject([
       {
-        activities: roots.slice(1).map((uri) => ({ record: { uri } })),
-        actors: [{ did: viewer }, { did: author }],
+        record: { uri: documentUri },
+        relatedActivity: [
+          {
+            collection: app.bsky.feed.post.$type,
+            activities: [{ record: { uri: postUri } }],
+            actors: [{ did: viewer }],
+          },
+          {
+            collection: site.standard.graph.recommend.$type,
+            activities: [{ record: { uri: secondRecommendation } }],
+            actors: [{ did: viewer }],
+          },
+        ],
       },
     ])
   })

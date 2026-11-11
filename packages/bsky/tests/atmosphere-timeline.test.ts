@@ -58,7 +58,10 @@ function nativeCursor(index: number): string {
 }
 
 async function setup(pages: Row[][]) {
-  const records = new Map<AtUriString, site.standard.document.Main>()
+  const records = new Map<
+    AtUriString,
+    site.standard.document.Main | site.standard.graph.recommend.Main
+  >()
   for (const item of pages.flat()) {
     records.set(
       item.uri,
@@ -269,12 +272,17 @@ function activityUris(
   body: app.bsky.unspecced.getAtmosphereTimeline.$OutputBody,
 ): AtUriString[] {
   return body.feed.flatMap((entry) =>
-    endpoint.activityAuthorGroup.$isTypeOf(entry)
+    endpoint.activityActorGroup.$isTypeOf(entry)
       ? entry.uris
       : endpoint.activitySubjectGroup.$isTypeOf(entry)
         ? entry.activities.map(({ record }) => record.uri)
         : endpoint.activityItem.$isTypeOf(entry)
-          ? [entry.record.uri]
+          ? [
+              entry.record.uri,
+              ...(entry.relatedActivity?.flatMap(({ activities }) =>
+                activities.map(({ record }) => record.uri),
+              ) ?? []),
+            ]
           : [],
   )
 }
@@ -326,7 +334,7 @@ describe('Atmosphere timeline HTTP endpoint', () => {
     expect(fetched).toEqual(items.map(({ uri }) => uri))
   })
 
-  it('retains all author-group URIs and resumes after the last consumed batch', async () => {
+  it('retains all actor-group URIs and resumes after the last consumed batch', async () => {
     using _clock = vi.spyOn(Date, 'now').mockReturnValue(now)
     const items = Array.from({ length: 300 }, (_, i) =>
       row(i, i * 1000, 'did:plc:alice'),
@@ -340,7 +348,7 @@ describe('Atmosphere timeline HTTP endpoint', () => {
     )
     expect(first.body.feed).toMatchObject([
       {
-        $type: endpoint.activityAuthorGroup.$type,
+        $type: endpoint.activityActorGroup.$type,
         item: { record: { uri: items[0].uri } },
         uris: items.slice(0, 250).map(({ uri }) => uri),
       },
@@ -361,6 +369,78 @@ describe('Atmosphere timeline HTTP endpoint', () => {
       ...Array.from({ length: 5 }, (_, i) => nativeCursor(i + 1)),
     ])
   })
+
+  it.each([true, false])(
+    'returns recommendations as related activity only when their document is on the page (%s)',
+    async (includeDocument) => {
+      using _clock = vi.spyOn(Date, 'now').mockReturnValue(now)
+      const newer = row(0, 0, 'did:plc:alice')
+      const article = row(1, 3 * minute, 'did:plc:alice')
+      const recommendations = ['did:plc:reader', viewer].map(
+        (actor, index) => ({
+          uri: atUri(
+            actor as DidString,
+            site.standard.graph.recommend.$type,
+            'recommend',
+          ),
+          time: now - (index + 1) * minute,
+        }),
+      )
+      const items = [
+        newer,
+        ...recommendations,
+        ...(includeDocument ? [article] : []),
+      ]
+      await using fixture = await setup([items])
+      fixture.records.set(
+        article.uri,
+        site.standard.document.$build({
+          title: 'Recommended article',
+          site: 'https://articles.example.com',
+          path: '/recommended',
+          publishedAt: toDatetimeString(article.time),
+        }),
+      )
+      for (const recommendation of recommendations) {
+        fixture.records.set(
+          recommendation.uri,
+          site.standard.graph.recommend.$build({
+            document: article.uri,
+            createdAt: toDatetimeString(recommendation.time),
+          }),
+        )
+      }
+
+      const response = await fixture.query()
+      expect(response.status).toBe(200)
+      const actions = {
+        collection: site.standard.graph.recommend.$type,
+        activities: recommendations.map(({ uri }) => ({ record: { uri } })),
+        actors: [{ did: 'did:plc:reader' }, { did: viewer }],
+      }
+      expect(response.body.feed).toMatchObject([
+        { $type: endpoint.activityItem.$type, record: { uri: newer.uri } },
+        includeDocument
+          ? {
+              $type: endpoint.activityItem.$type,
+              record: { uri: article.uri },
+              view: { title: 'Recommended article' },
+              relatedActivity: [actions],
+            }
+          : {
+              $type: endpoint.activitySubjectGroup.$type,
+              ...actions,
+              subject: {
+                uri: article.uri,
+                view: { title: 'Recommended article' },
+              },
+            },
+      ])
+      expect(activityUris(response.body).sort()).toEqual(
+        items.map(({ uri }) => uri).sort(),
+      )
+    },
+  )
 
   it.each(['duplicates', 'malformed', 'empty'] as const)(
     'bounds native fetches when pages contain only %s',
