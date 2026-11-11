@@ -66,7 +66,13 @@ export const OAUTH_SCOPE_DEFAULT: string =
         ].join(' ')
 export const OAUTH_SCOPE: string =
   searchParams.get('scope') ?? OAUTH_SCOPE_DEFAULT
+// @NOTE IdP registration: once browsers ship FedCM IdP registration, explicit
+// provider config URLs are unnecessary and `fedcm_provider` can be removed.
 export const FEDCM_PROVIDER_URLS = searchParams.getAll('fedcm_provider')
+// @NOTE IdP registration: requests registered IdPs (Chrome's experimental
+// API) instead of, or alongside, explicit `fedcm_provider` URLs.
+export const FEDCM_IDP_REGISTRATION =
+  searchParams.get('fedcm_idp_registration') === 'true'
 export const FEDCM_MODE =
   searchParams.get('fedcm_mode') === 'active' ? 'active' : 'passive'
 
@@ -89,6 +95,7 @@ const canonicalSearchParams = new URLSearchParams({
   }),
   ...(OAUTH_SCOPE !== OAUTH_SCOPE_DEFAULT && { scope: OAUTH_SCOPE }),
   ...(FEDCM_MODE !== 'passive' && { fedcm_mode: FEDCM_MODE }),
+  ...(FEDCM_IDP_REGISTRATION && { fedcm_idp_registration: 'true' }),
 })
 for (const providerUrl of FEDCM_PROVIDER_URLS) {
   canonicalSearchParams.append('fedcm_provider', providerUrl)
