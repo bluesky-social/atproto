@@ -309,10 +309,10 @@ describe('notification grouping', () => {
   })
 
   it.each(['algoGravity', 'algoLookback'] as const)(
-    '%s starts a new group at the 200-like cap without losing the next like',
+    '%s starts a new group at the 100-like cap without losing the next like',
     (algorithm) => {
       const start = Date.parse(minutesAgo(1))
-      const items = Array.from({ length: 201 }, (_, index) =>
+      const items = Array.from({ length: 101 }, (_, index) =>
         item(`like-${index}`, new Date(start - index).toISOString()),
       )
 
@@ -321,24 +321,24 @@ describe('notification grouping', () => {
         now,
       )(items)
       expect(firstPage.groups[0]?.items.map(({ id }) => id)).toEqual(
-        items.slice(0, 200).map(({ id }) => id),
+        items.slice(0, 100).map(({ id }) => id),
       )
-      expect(firstPage.cursor).toBe(items[199]!.raw.indexedAt)
+      expect(firstPage.cursor).toBe(items[99]!.raw.indexedAt)
 
       const secondPage = getGroupingAlgorithm(algorithm).createGroupBuilder(
         1,
         now,
-      )(items.slice(200))
+      )(items.slice(100))
       expect(secondPage.groups[0]?.items.map(({ id }) => id)).toEqual([
-        'like-200',
+        'like-100',
       ])
     },
   )
 
   it.each(['algoGravity', 'algoLookback'] as const)(
-    '%s caps subscribed-post groups at 150 across batches without losing the next post',
+    '%s caps subscribed-post groups at 100 across batches without losing the next post',
     (algorithm) => {
-      const items = Array.from({ length: 151 }, (_, index) =>
+      const items = Array.from({ length: 101 }, (_, index) =>
         item(
           `post-${index}`,
           minutesAgo(index / 1000),
@@ -350,17 +350,17 @@ describe('notification grouping', () => {
         now,
       )
 
-      expect(buildGroups(items.slice(0, 149)).cursor).toBeUndefined()
-      expect(buildGroups(items.slice(149, 150)).cursor).toBeUndefined()
-      const firstPage = buildGroups(items.slice(150))
-      expect(firstPage.groups[0]?.items).toEqual(items.slice(0, 150))
-      expect(firstPage.cursor).toBe(items[149]!.raw.indexedAt)
+      expect(buildGroups(items.slice(0, 99)).cursor).toBeUndefined()
+      expect(buildGroups(items.slice(99, 100)).cursor).toBeUndefined()
+      const firstPage = buildGroups(items.slice(100))
+      expect(firstPage.groups[0]?.items).toEqual(items.slice(0, 100))
+      expect(firstPage.cursor).toBe(items[99]!.raw.indexedAt)
 
       const secondPage = getGroupingAlgorithm(algorithm).createGroupBuilder(
         1,
         now,
-      )(items.slice(150))
-      expect(secondPage.groups[0]?.items).toEqual([items[150]])
+      )(items.slice(100))
+      expect(secondPage.groups[0]?.items).toEqual([items[100]])
       expect(secondPage.cursor).toBeUndefined()
     },
   )
@@ -601,19 +601,19 @@ describe.each(['algoGravity', 'algoLookback'] as const)(
       expect(result.cursor).toBe(items[1]!.raw.indexedAt)
     })
 
-    it('retains the 200-item cap and uses the previous batch’s last item as the cursor', () => {
-      const items = Array.from({ length: 201 }, (_, index) =>
+    it('retains the 100-item cap and uses the previous batch’s last item as the cursor', () => {
+      const items = Array.from({ length: 101 }, (_, index) =>
         item(`like-${index}`, new Date(now - index).toISOString()),
       )
       const { createGroupBuilder } = getGroupingAlgorithm(algorithm)
       const buildGroups = createGroupBuilder(1, now)
-      buildGroups(items.slice(0, 199))
-      expect(buildGroups(items.slice(199, 200)).cursor).toBeUndefined()
-      const result = buildGroups(items.slice(200))
+      buildGroups(items.slice(0, 99))
+      expect(buildGroups(items.slice(99, 100)).cursor).toBeUndefined()
+      const result = buildGroups(items.slice(100))
 
       expect(result).toEqual(createGroupBuilder(1, now)(items))
-      expect(result.groups[0]?.itemCount).toBe(200)
-      expect(result.cursor).toBe(items[199]!.raw.indexedAt)
+      expect(result.groups[0]?.itemCount).toBe(100)
+      expect(result.cursor).toBe(items[99]!.raw.indexedAt)
     })
 
     it.each([
@@ -940,16 +940,16 @@ describe.each(['algoGravity', 'algoLookback'] as const)(
       })
 
       it('leaves items beyond the spotlight size cap in ordinary groups', () => {
-        const items = spotlightItems(type, 151)
-        const { page } = buildPage(items, 151)
+        const items = spotlightItems(type, 101)
+        const { page } = buildPage(items, 101)
         expectPage(page, items, [
-          items.slice(0, 150).map(({ id }) => id),
-          [items[150]!.id],
+          items.slice(0, 100).map(({ id }) => id),
+          [items[100]!.id],
         ])
         expect(
           page.groups.map(({ kind, itemCount }) => [kind, itemCount]),
         ).toEqual([
-          [type.kind, 150],
+          [type.kind, 100],
           [type.reason, 1],
         ])
       })
@@ -1595,7 +1595,7 @@ describe.each(['algoGravity', 'algoLookback'] as const)(
           ),
         ),
       ]
-      const { ordinary, page } = buildPage(items, 5)
+      const { ordinary, page } = buildPage(items, 6)
 
       expect(page.groups).toBe(ordinary.groups)
       expectPage(page, items, [
@@ -1603,7 +1603,8 @@ describe.each(['algoGravity', 'algoLookback'] as const)(
         ['alice-song'],
         ['alice-photo'],
         ['alice-story'],
-        Array.from({ length: 197 }, (_, index) => `follow-${index}`),
+        Array.from({ length: 100 }, (_, index) => `follow-${index}`),
+        Array.from({ length: 97 }, (_, index) => `follow-${100 + index}`),
       ])
     })
 
@@ -1637,20 +1638,20 @@ describe.each(['algoGravity', 'algoLookback'] as const)(
       },
     )
 
-    it('keeps likes beyond the 150-item spotlight cap in ordinary groups', () => {
+    it('keeps likes beyond the 100-item spotlight cap in ordinary groups', () => {
       const items = postLikes(
-        Array.from({ length: 151 }, (_, index) => ['alice', `post-${index}`]),
+        Array.from({ length: 101 }, (_, index) => ['alice', `post-${index}`]),
       )
-      const { page } = buildPage(items, 151)
+      const { page } = buildPage(items, 101)
 
       expectPage(page, items, [
-        Array.from({ length: 150 }, (_, index) => `alice-post-${index}`),
-        ['alice-post-150'],
+        Array.from({ length: 100 }, (_, index) => `alice-post-${index}`),
+        ['alice-post-100'],
       ])
       expect(
         page.groups.map(({ kind, itemCount }) => [kind, itemCount]),
       ).toEqual([
-        [APPVIEW_NOTIFICATION_REASON.MULTI_POST_LIKE, 150],
+        [APPVIEW_NOTIFICATION_REASON.MULTI_POST_LIKE, 100],
         ['like', 1],
       ])
     })
