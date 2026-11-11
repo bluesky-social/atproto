@@ -96,20 +96,7 @@ export class AuthVerifier {
   standardOptionalParameterized =
     (opts: StandardAuthOpts) =>
     async (ctx: ReqCtx): Promise<StandardOutput | NullOutput> => {
-      // @TODO remove! basic auth + did supported just for testing.
-      if (isBasicToken(ctx.req)) {
-        const aud = this.ownDid
-        const iss = ctx.req.headers['appview-as-did']
-        if (typeof iss !== 'string' || !isDidString(iss)) {
-          throw new AuthRequiredError('bad issuer')
-        }
-        if (!this.parseRoleCreds(ctx.req).admin) {
-          throw new AuthRequiredError('bad credentials')
-        }
-        return {
-          credentials: { type: 'standard', iss, aud },
-        }
-      } else if (isBearerToken(ctx.req)) {
+      if (isBearerToken(ctx.req)) {
         const { iss, aud } = await this.verifyServiceJwt(ctx, {
           lxmCheck: opts.lxmCheck,
           iss: null,
@@ -357,10 +344,6 @@ const BASIC = 'Basic '
 
 const isBearerToken = (req: express.Request): boolean => {
   return req.headers.authorization?.startsWith(BEARER) ?? false
-}
-
-const isBasicToken = (req: express.Request): boolean => {
-  return req.headers.authorization?.startsWith(BASIC) ?? false
 }
 
 const bearerTokenFromReq = (req: express.Request) => {
