@@ -139,7 +139,20 @@ const tidSchema = string({ format: 'tid' })
 const nsidSchema = string({ format: 'nsid' })
 const selfLiteralSchema = withDefault(literal('self'), 'self')
 
-function recordKey<Key extends LexiconRecordKey>(
+/**
+ * Creates the schema of a key matching a {@link LexiconRecordKey}, as used by
+ * records and spaces.
+ *
+ * @throws {Error} If `key` is not a supported record key type
+ *
+ * @example
+ * ```ts
+ * l.recordKey('tid').matches('3jzfcijpj2z2a') // true
+ * l.recordKey('literal:self').matches('other') // false
+ * ```
+ */
+/*@__NO_SIDE_EFFECTS__*/
+export function recordKey<Key extends LexiconRecordKey>(
   key: Key,
 ): RecordKeySchema<Key> {
   // @NOTE Use cached instances for common schemas

@@ -27,6 +27,7 @@ export * from './session-getter.js'
 export * from './state-store.js'
 export * from './types.js'
 
+export * from './errors/auth-method-unsatisfiable-error.js'
 export * from './errors/token-invalid-error.js'
 export * from './errors/token-refresh-error.js'
 export * from './errors/token-revoked-error.js'

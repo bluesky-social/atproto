@@ -225,7 +225,8 @@ export async function xrpcSafe<const M extends Query | Procedure>(
     try {
       const agent = buildAgent(agentOpts)
       const url = xrpcRequestUrl(method, options)
-      const request = xrpcRequestInit(method, options)
+      const request = await xrpcRequestInit(method, options)
+      throwIfAborted(options.signal)
       const response = await agent.fetchHandler(url, request).catch((err) => {
         const cause = extractFetchErrorCause(err)
         throw new XrpcFetchError(method, cause)
@@ -268,15 +269,15 @@ function xrpcRequestUrl<M extends Procedure | Query | Subscription>(
   return queryString ? (`${path}?${queryString}` as const) : path
 }
 
-function xrpcRequestInit<T extends Procedure | Query>(
+async function xrpcRequestInit<T extends Procedure | Query>(
   schema: T,
   options: XrpcRequestProcessingOptions &
     XrpcRequestHeadersOptions &
     XrpcProcedureInputOptions & {
       encoding?: string
     },
-): RequestInit & { duplex?: 'half' } {
-  const headers = buildXrpcRequestHeaders(options)
+): Promise<RequestInit & { duplex?: 'half' }> {
+  const headers = await buildXrpcRequestHeaders(options)
 
   // Tell the server what type of response we're expecting
   if (schema.output.encoding) {

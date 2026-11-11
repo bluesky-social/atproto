@@ -1,15 +1,22 @@
-import { assert, describe, expect, it, vi } from 'vitest'
+import { type LookupOptions, lookup } from 'node:dns'
+import { once } from 'node:events'
+import { type AddressInfo, type Socket, createServer } from 'node:net'
+import { assert, describe, expect, expectTypeOf, it, vi } from 'vitest'
 import type { WebSocket as WsSocket } from 'ws'
 import { CloseCode, isReconnectableClose } from '../src/lib/close-codes.js'
 import {
   CloseError,
+  HandshakeRejectedError,
+  HandshakeTimeoutError,
   HeartbeatTimeoutError,
+  MessageTooBigError,
   WebSocketClientError,
 } from '../src/lib/errors.js'
 import type { CloseEventDetail, MessageOf } from '../src/message-channel.js'
 import { createTransport } from '../src/transport/node-transport.js'
 import {
   DEFAULT_HEARTBEAT_INTERVAL_MS,
+  type LookupFunction,
   type Sender,
   type Transport,
 } from '../src/transport/transport.js'
@@ -668,5 +675,261 @@ describe(createTransport, () => {
     await new Promise((resolve) => setTimeout(resolve, 120))
     controller.abort(new Error('test cleanup'))
     expect(pings).toBe(0)
+  })
+
+  it('fails with MessageTooBigError, closing with 1009, past maxPayload', async () => {
+    let serverSaw: number | undefined
+    await using server = await startServer((ws) => {
+      ws.on('close', (code) => {
+        serverSaw = code
+      })
+      ws.send('x'.repeat(2048))
+    })
+    const transport = createTransport({
+      ...transportOptionDefaults,
+      url: server.url,
+      dataMode: 'text',
+      signal: new AbortController().signal,
+      maxPayload: 1024,
+    })
+    const { messages, error } = await drain(transport)
+    expect(messages).toEqual([])
+    assert(error instanceof MessageTooBigError)
+    expect(error.maxPayload).toBe(1024)
+    expect(error.shouldRetry()).toBe(false)
+    await vi.waitFor(() => expect(serverSaw).toBe(CloseCode.MessageTooBig))
+  })
+
+  it('carries the status and headers of a refused upgrade', async () => {
+    await using server = await startServer(() => {}, {
+      verifyClient: (_info, cb) =>
+        cb(false, 401, 'Unauthorized', { 'WWW-Authenticate': 'Bearer' }),
+    })
+    const onClose = vi.fn()
+    const transport = createTransport({
+      ...transportOptionDefaults,
+      url: server.url,
+      dataMode: 'text',
+      signal: new AbortController().signal,
+      onClose,
+    })
+    const { error } = await drain(transport)
+    assert(error instanceof HandshakeRejectedError)
+    expect(error.status).toBe(401)
+    expect(error.headers.get('www-authenticate')).toBe('Bearer')
+    expect(error.shouldRetry()).toBe(true)
+    expect(onClose).toHaveBeenCalledTimes(1)
+  })
+
+  it('fails with HandshakeTimeoutError when the upgrade never completes', async () => {
+    // Accepts the TCP connection, then never answers the upgrade request.
+    const sockets = new Set<Socket>()
+    const tcp = createServer((socket) => sockets.add(socket))
+    await once(tcp.listen(0), 'listening')
+    try {
+      const { port } = tcp.address() as AddressInfo
+      const onClose = vi.fn()
+      const transport = createTransport({
+        ...transportOptionDefaults,
+        url: `ws://localhost:${port}`,
+        dataMode: 'text',
+        signal: new AbortController().signal,
+        handshakeTimeoutMs: 50,
+        onClose,
+      })
+      const { error } = await drain(transport)
+      assert(error instanceof HandshakeTimeoutError)
+      expect(error.shouldRetry()).toBe(true)
+      expect(onClose).toHaveBeenCalledTimes(1)
+    } finally {
+      for (const socket of sockets) socket.destroy()
+      tcp.close()
+    }
+  })
+
+  it('times a heartbeat out after timeoutMs rather than a full round', async () => {
+    await using server = await startServer((ws) => {
+      // @ts-expect-error reaching into ws internals to disable autoPong
+      ws._autoPong = false
+    })
+    let openedAt = 0
+    const transport = createTransport({
+      ...transportOptionDefaults,
+      url: server.url,
+      dataMode: 'text',
+      signal: new AbortController().signal,
+      heartbeat: { intervalMs: 300, timeoutMs: 20 },
+      onOpen: () => {
+        openedAt = Date.now()
+      },
+    })
+    const { error } = await drain(transport)
+    assert(error instanceof HeartbeatTimeoutError)
+    // ~320ms (ping, then the deadline), where a missed round takes ~600ms.
+    expect(Date.now() - openedAt).toBeLessThan(500)
+  })
+
+  describe('sender.close()', () => {
+    async function closeWith(code: number, reason?: string) {
+      let serverSaw: { code: number; reason: string } | undefined
+      await using server = await startServer((ws) => {
+        ws.on('close', (code, buf) => {
+          serverSaw = { code, reason: buf.toString() }
+        })
+      })
+      let sender!: Sender<'text'>
+      const transport = createTransport({
+        ...transportOptionDefaults,
+        url: server.url,
+        dataMode: 'text',
+        signal: new AbortController().signal,
+        onOpen: (s) => {
+          sender = s
+        },
+      })
+      const drained = drain(transport)
+      await vi.waitFor(() => assert(sender))
+      sender.close(code, reason)
+      const { error } = await drained
+      await vi.waitFor(() => assert(serverSaw))
+      return { error, serverSaw }
+    }
+
+    it('ends the connection with a CloseError of that code', async () => {
+      const { error, serverSaw } = await closeWith(
+        CloseCode.TryAgainLater,
+        'busy',
+      )
+      assert(error instanceof CloseError)
+      expect([error.code, error.reason]).toEqual([
+        CloseCode.TryAgainLater,
+        'busy',
+      ])
+      expect(serverSaw).toEqual({
+        code: CloseCode.TryAgainLater,
+        reason: 'busy',
+      })
+    })
+
+    it('drops the socket without a closing handshake for 1006', async () => {
+      const { error, serverSaw } = await closeWith(CloseCode.Abnormal)
+      assert(error instanceof CloseError)
+      expect(error.code).toBe(CloseCode.Abnormal)
+      expect(serverSaw?.code).toBe(CloseCode.Abnormal)
+    })
+
+    it('sends 1000 for a code ws cannot send', async () => {
+      const { error, serverSaw } = await closeWith(CloseCode.NoStatus)
+      assert(error instanceof CloseError)
+      expect(error.code).toBe(CloseCode.NoStatus)
+      expect(serverSaw?.code).toBe(CloseCode.Normal)
+    })
+
+    it('throws on an oversized reason, leaving the connection open', async () => {
+      await using server = await startServer(() => {})
+      const controller = new AbortController()
+      let sender!: Sender<'text'>
+      createTransport({
+        ...transportOptionDefaults,
+        url: server.url,
+        dataMode: 'text',
+        signal: controller.signal,
+        onOpen: (s) => {
+          sender = s
+        },
+      })
+      await vi.waitFor(() => assert(sender))
+      expect(() => sender.close(CloseCode.Normal, 'x'.repeat(124))).toThrow(
+        RangeError,
+      )
+      await expect(sender.send('still open')).resolves.toBeUndefined()
+      controller.abort(new Error('test cleanup'))
+    })
+  })
+
+  it('settles a transport created with an aborted signal', async () => {
+    await using server = await startServer(() => {})
+    const reason = new Error('stop')
+    const onClose = vi.fn()
+    const transport = createTransport({
+      ...transportOptionDefaults,
+      url: server.url,
+      dataMode: 'text',
+      signal: AbortSignal.abort(reason),
+      onClose,
+    })
+    const { error } = await drain(transport)
+    expect(error).toBe(reason)
+    expect(onClose).toHaveBeenCalledTimes(1)
+  })
+
+  it('drops the socket on an abort with a 1006 CloseError', async () => {
+    let serverSaw: number | undefined
+    await using server = await startServer((ws) => {
+      ws.on('close', (code) => {
+        serverSaw = code
+      })
+    })
+    const controller = new AbortController()
+    let opened = false
+    const transport = createTransport({
+      ...transportOptionDefaults,
+      url: server.url,
+      dataMode: 'text',
+      signal: controller.signal,
+      onOpen: () => {
+        opened = true
+      },
+    })
+    const drained = drain(transport)
+    await vi.waitFor(() => assert(opened))
+    controller.abort(new CloseError(CloseCode.Abnormal, '', false))
+    await drained
+    await vi.waitFor(() => expect(serverSaw).toBe(CloseCode.Abnormal))
+  })
+
+  it('exposes the negotiated subprotocol on the sender', async () => {
+    await using server = await startServer(() => {}, {
+      handleProtocols: () => 'v2',
+    })
+    const controller = new AbortController()
+    let sender!: Sender<'text'>
+    createTransport({
+      ...transportOptionDefaults,
+      url: server.url,
+      dataMode: 'text',
+      signal: controller.signal,
+      protocols: ['v1', 'v2'],
+      onOpen: (s) => {
+        sender = s
+      },
+    })
+    await vi.waitFor(() => assert(sender))
+    expect(sender.protocol).toBe('v2')
+    controller.abort(new Error('test cleanup'))
+  })
+
+  it('resolves the host with the given lookup', async () => {
+    expectTypeOf(lookup).toExtend<LookupFunction>()
+    const hostnames: string[] = []
+    await using server = await startServer(() => {})
+    const controller = new AbortController()
+    let opened = false
+    createTransport({
+      ...transportOptionDefaults,
+      url: server.url,
+      dataMode: 'text',
+      signal: controller.signal,
+      lookup: (hostname, options, callback) => {
+        hostnames.push(hostname)
+        lookup(hostname, options as LookupOptions, callback)
+      },
+      onOpen: () => {
+        opened = true
+      },
+    })
+    await vi.waitFor(() => assert(opened))
+    expect(hostnames).toEqual(['localhost'])
+    controller.abort(new Error('test cleanup'))
   })
 })

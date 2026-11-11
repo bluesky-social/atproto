@@ -185,6 +185,8 @@ the record body:
 const result = app.bsky.feed.post.keySchema.safeValidate(rkey)
 ```
 
+For a bare `LexiconRecordKey`, build one with `l.recordKey('tid')`.
+
 ## Strict mode
 
 Every validating method takes `{ strict?: boolean, path?: PropertyKey[] }`,

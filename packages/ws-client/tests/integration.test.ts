@@ -279,6 +279,28 @@ describe('websocket() end-to-end over real sockets', () => {
 })
 
 describe('sending over real sockets', () => {
+  it('reconnects after sender.close() as the reconnect policy decides', async () => {
+    let connections = 0
+    await using server = await startServer((ws) => {
+      ws.send(`hello ${++connections}`)
+    })
+    const senders: Sender<'text'>[] = []
+    const gen = websocket(server.url, {
+      ...noBackoff,
+      dataMode: 'text',
+      onConnect: (sender) => {
+        senders.push(sender)
+      },
+    })
+    expect(await gen.next()).toEqual({ value: 'hello 1', done: false })
+    // 1013 is retryable under the default policy: the stream redials.
+    senders[0].close(CloseCode.TryAgainLater)
+    expect(await gen.next()).toEqual({ value: 'hello 2', done: false })
+    // 1000 is not: the stream ends, as normally as a server's 1000 would end it.
+    senders[1].close(CloseCode.Normal)
+    expect(await gen.next()).toEqual({ value: undefined, done: true })
+  })
+
   it('sends through the sender handed to onConnect, and a fresh one per reconnect', async () => {
     // Sending goes through the per-connection sender the hooks hand out, not a
     // client object with a queue. A queued send could only settle on the next

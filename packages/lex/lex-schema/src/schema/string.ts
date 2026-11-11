@@ -1,6 +1,12 @@
-import { graphemeLen, ifCid, utf8Len } from '@atproto/lex-data'
+import {
+  graphemeLen,
+  ifCid,
+  isWellFormedString,
+  utf8Len,
+} from '@atproto/lex-data'
 import {
   type InferStringFormat,
+  IssueCustom,
   type Restricted,
   Schema,
   type StringFormat,
@@ -80,6 +86,14 @@ export class StringSchema<
     const str = coerceToString(input)
     if (str == null) {
       return ctx.issueUnexpectedType(input, 'string')
+    }
+
+    // A lone surrogate has no UTF-8 encoding (it would be replaced by U+FFFD
+    // when serialized).
+    if (!isWellFormedString(str)) {
+      return ctx.issue(
+        new IssueCustom(ctx.path, str, 'String contains a lone surrogate'),
+      )
     }
 
     let lazyUtf8Len: number

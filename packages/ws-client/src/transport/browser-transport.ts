@@ -1,5 +1,10 @@
 import { CloseCode } from '../lib/close-codes.js'
-import { SocketError, WebSocketClientError } from '../lib/errors.js'
+import {
+  CloseError,
+  HandshakeTimeoutError,
+  SocketError,
+  WebSocketClientError,
+} from '../lib/errors.js'
 import {
   ABNORMAL_CLOSE_DETAIL,
   type CloseEventDetail,
@@ -46,6 +51,7 @@ interface WHATWGErrorEvent {
 
 interface WHATWGWebSocket {
   binaryType: 'blob' | 'arraybuffer'
+  readonly protocol: string
   send(data: string | BufferSource): void
   close(code?: number, reason?: string): void
   addEventListener(type: 'open', listener: () => void): void
@@ -80,13 +86,20 @@ export type WebSocketCtor = new (
 // an abort listener, where nothing can catch it. Substituting 1000 loses the
 // specific code but still closes the connection cleanly, which is the part that
 // matters; the specific reason still reaches the consumer as the iterator's
-// rejection. Node's `ws` has no such restriction, hence no equivalent there.
-function closeSocket(ws: WHATWGWebSocket, code: number | undefined): void {
+// rejection. Node's `ws` accepts every RFC 6455 code it may send.
+//
+// That includes 1006: with no `terminate()` in the WHATWG API, a request to drop
+// the socket closes it politely instead.
+function closeSocket(
+  ws: WHATWGWebSocket,
+  code: number | undefined,
+  reason?: string,
+): void {
   const permitted =
     code === undefined ||
     code === CloseCode.Normal ||
     (code >= 3000 && code <= 4999)
-  ws.close(permitted ? code : CloseCode.Normal)
+  ws.close(permitted ? code : CloseCode.Normal, reason)
 }
 
 /**
@@ -99,12 +112,14 @@ function closeSocket(ws: WHATWGWebSocket, code: number | undefined): void {
  * `WebSocket` but no `#transport` override of their own (Bun, Deno, workers,
  * Expo) — hence the loud failures below rather than assuming a browser.
  *
- * Two things Node's transport has that this one lacks:
+ * What Node's transport has that this one lacks:
  * - No read-side backpressure. The WHATWG API has no `ws.pause()`/`resume()`, so
  *   `createMessageChannel` gets no `backpressure` hooks and `maxBufferedBytes` is
  *   the only backstop against an unbounded read buffer.
  * - No heartbeat. The WHATWG API has no ping/pong, so `options.heartbeat` is
  *   ignored and `idleTimeoutMs` is this platform's only dead-connection detector.
+ * - No payload cap. The WHATWG API only hands over a message once received in
+ *   full, so `options.maxPayload` is ignored.
  */
 function createTransportImpl<M extends DataMode>(
   options: TransportOptions<M>,
@@ -121,6 +136,10 @@ function createTransportImpl<M extends DataMode>(
     throw new TypeError(
       'WebSocket headers are not supported in the browser; use the URL or a subprotocol instead',
     )
+  }
+  // Likewise for a DNS lookup, which usually enforces where the socket may go.
+  if (options.lookup) {
+    throw new TypeError('A DNS lookup is not supported in the browser')
   }
   // Fail loudly where a global WebSocket is genuinely absent, rather than
   // surfacing a confusing "undefined is not a constructor" a few lines down.
@@ -179,6 +198,24 @@ function createTransportImpl<M extends DataMode>(
     channel.fail(error)
   }
 
+  // Bounds the dial, whether or not an idle timeout is set. Closing a CONNECTING
+  // socket fails it, which fires 'close' (or 'error', see below).
+  let handshakeTimer: ReturnType<typeof setTimeout> | undefined =
+    options.handshakeTimeoutMs === undefined
+      ? undefined
+      : setTimeout(() => {
+          handshakeTimer = undefined
+          endWith(new HandshakeTimeoutError())
+          ws.close()
+        }, options.handshakeTimeoutMs)
+
+  function clearHandshakeTimer(): void {
+    if (handshakeTimer !== undefined) {
+      clearTimeout(handshakeTimer)
+      handshakeTimer = undefined
+    }
+  }
+
   // Handed to `onOpen`, which the reconnect loop forwards straight to the caller's
   // `onConnect` — so this object, not just its `send`, is public API. Keep it to
   // exactly the `Sender` surface: anything else added here becomes reachable from
@@ -191,10 +228,21 @@ function createTransportImpl<M extends DataMode>(
       // The WHATWG API gives no flush notification, only indicates that the browser accepted the write
       ws.send(data)
     },
+    close(code, reason) {
+      if (!open) return
+      // First, as it throws (before closing anything) on an oversized reason.
+      closeSocket(ws, code, reason)
+      open = false
+      endWith(new CloseError(code, reason ?? '', false))
+    },
+    get protocol() {
+      return ws.protocol
+    },
   }
 
   ws.addEventListener('open', () => {
     open = true
+    clearHandshakeTimer()
     options.onOpen(sender)
   })
 
@@ -225,6 +273,7 @@ function createTransportImpl<M extends DataMode>(
   // alone isn't enough.
   ws.addEventListener('close', (ev) => {
     open = false
+    clearHandshakeTimer()
     if (pendingError) {
       // Teardown began with a failure (a socket error, a bad frame, an idle
       // timeout, an aborted signal). The channel was already failed then; report
@@ -247,6 +296,7 @@ function createTransportImpl<M extends DataMode>(
 
   ws.addEventListener('error', (ev) => {
     open = false
+    clearHandshakeTimer()
     endWith(new SocketError(ev.error))
     // Settled here as well as from 'close', which is defensive against Node 22:
     // its WebSocket strands two pre-open failures, firing `error` with no `close`
@@ -272,6 +322,7 @@ function createTransportImpl<M extends DataMode>(
     'abort',
     () => {
       open = false
+      clearHandshakeTimer()
       endWith(options.signal.reason)
       // An abort always closes politely — it is a request to stop, not a failure —
       // and the reason only picks the code: a `CloseError` names one, anything
@@ -287,6 +338,10 @@ function createTransportImpl<M extends DataMode>(
 
   return {
     send: sender.send,
+    close: sender.close,
+    get protocol() {
+      return sender.protocol
+    },
     [Symbol.asyncIterator]: () => iterator,
   }
 }
