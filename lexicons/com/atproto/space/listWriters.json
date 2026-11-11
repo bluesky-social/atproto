@@ -61,20 +61,18 @@
     },
     "repo": {
       "type": "object",
-      "required": ["repo", "repoRev", "data", "spaceRev"],
+      "required": ["repo", "latest", "spaceRev"],
       "properties": {
         "repo": {
           "type": "string",
           "format": "did"
         },
-        "repoRev": {
-          "type": "string",
-          "description": "As last reported to the space host.",
-          "format": "tid"
-        },
-        "data": {
-          "type": "bytes",
-          "description": "As last reported to the space host."
+        "latest": {
+          "type": "union",
+          "refs": [
+            "com.atproto.space.defs#repoWrite",
+            "com.atproto.space.defs#repoRemoved"
+          ]
         },
         "spaceRev": {
           "type": "string",

@@ -9,7 +9,7 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["space", "repo", "repoRev", "data"],
+          "required": ["space", "repo", "latest"],
           "properties": {
             "space": {
               "type": "string",
@@ -19,12 +19,12 @@
               "type": "string",
               "format": "did"
             },
-            "repoRev": {
-              "type": "string",
-              "format": "tid"
-            },
-            "data": {
-              "type": "bytes"
+            "latest": {
+              "type": "union",
+              "refs": [
+                "com.atproto.space.defs#repoWrite",
+                "com.atproto.space.defs#repoRemoved"
+              ]
             },
             "spaceRev": {
               "type": "string",
