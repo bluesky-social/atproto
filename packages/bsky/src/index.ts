@@ -20,7 +20,7 @@ import API, {
   sitemap,
   wellKnown,
 } from './api/index.js'
-import { AuthVerifier } from './auth/verifier.js'
+import { AuthVerifier, createPublicKeyObject } from './auth/verifier.js'
 import { authWithApiKey as bsyncAuth, createBsyncClient } from './bsync.js'
 import type { ServerConfig } from './config.js'
 import { AppContext } from './context.js'
@@ -235,11 +235,15 @@ export class BskyAppView {
 
     const kwsClient = config.kws ? createKwsClient(config.kws) : undefined
 
+    const entrywayJwtPublicKey = config.entrywayJwtPublicKeyHex
+      ? createPublicKeyObject(config.entrywayJwtPublicKeyHex)
+      : undefined
     const authVerifier = new AuthVerifier(dataplane, {
       ownDid: config.serverDid,
       alternateAudienceDids: config.alternateAudienceDids,
       modServiceDid: config.modServiceDid,
       adminPasses: config.adminPasswords,
+      entrywayJwtPublicKey,
     })
 
     const blobDispatcher = createBlobDispatcher(config)
