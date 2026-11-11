@@ -1,4 +1,4 @@
-import type { DidString, UriString } from '@atproto/lex-schema'
+import type { DidString } from '@atproto/lex-schema'
 import {
   AuthRequiredError,
   ForbiddenError,
@@ -59,6 +59,11 @@ const handleModerationEvent = async ({
   if (subject.isMessage() && (isTakedownEvent || isReverseTakedownEvent)) {
     throw new InvalidRequestError(
       'Message takedowns are not supported; apply the action to the account instead',
+    )
+  }
+  if (subject.isMessage() && isLabelEvent) {
+    throw new InvalidRequestError(
+      'Message labels are not supported; apply labels to the account instead',
     )
   }
 
@@ -393,11 +398,8 @@ const handleModerationEvent = async ({
     }
 
     if (isLabelEvent) {
-      const labelUri: UriString = subject.isMessage()
-        ? `at://${subject.did}/${CHAT_MESSAGE_COLLECTION}/${subject.messageId}`
-        : (result.event.subjectUri ?? result.event.subjectDid)
       await moderationTxn.formatAndCreateLabels(
-        labelUri,
+        result.event.subjectUri ?? result.event.subjectDid,
         result.event.subjectCid,
         {
           create: result.event.createLabelVals?.length

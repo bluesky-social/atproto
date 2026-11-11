@@ -62,6 +62,7 @@ describe('report-action', () => {
         subject: uri,
       })
       expect(target.reports).toHaveLength(1)
+      expect(target.reports[0].subject.status?.subject).toMatchObject(message)
       await expect(
         modClient.emitEvent({
           subject: message,
@@ -92,6 +93,17 @@ describe('report-action', () => {
           await modClient.queryReports({ status: 'closed', subject: uri })
         ).reports.map((report) => report.id),
       ).toContain(target.reports[0].id)
+      const closed = await modClient.queryReports({
+        status: 'closed',
+        subject: uri,
+      })
+      const closedReport = closed.reports.find(
+        (report) => report.id === target.reports[0].id,
+      )
+      expect(closedReport?.subject.status?.reviewState).toBe(
+        'tools.ozone.moderation.defs#reviewClosed',
+      )
+      expect(closedReport?.subject.status?.subject).toMatchObject(message)
       for (const subject of [otherUri, convoUri, did]) {
         expect(
           (await modClient.queryReports({ status: 'open', subject })).reports
@@ -145,6 +157,14 @@ describe('report-action', () => {
       const foreignId = both.reports.find(
         (report) => report.id !== sameConvo.reports[0].id,
       )!.id
+      expect(
+        both.reports.find((report) => report.id === sameConvo.reports[0].id)
+          ?.subject.status?.subject,
+      ).toMatchObject(message)
+      expect(
+        both.reports.find((report) => report.id === foreignId)?.subject.status
+          ?.subject,
+      ).toMatchObject(sameIdOtherConvo)
       await modClient.emitEvent({
         subject: message,
         event: { $type: 'tools.ozone.moderation.defs#modEventAcknowledge' },
@@ -156,28 +176,31 @@ describe('report-action', () => {
         ).reports.map((report) => report.id),
       ).toEqual([foreignId])
 
-      await modClient.emitEvent({
-        subject: message,
-        event: {
-          $type: 'tools.ozone.moderation.defs#modEventLabel',
-          createLabelVals: ['message-test-label'],
-          negateLabelVals: [],
-        },
-      })
+      await expect(
+        modClient.emitEvent({
+          subject: message,
+          event: {
+            $type: 'tools.ozone.moderation.defs#modEventLabel',
+            createLabelVals: ['message-test-label'],
+            negateLabelVals: [],
+          },
+        }),
+      ).rejects.toThrow('Message labels are not supported')
+      await expect(
+        modClient.emitEvent({
+          subject: message,
+          event: {
+            $type: 'tools.ozone.moderation.defs#modEventLabel',
+            createLabelVals: [],
+            negateLabelVals: ['message-test-label'],
+          },
+        }),
+      ).rejects.toThrow('Message labels are not supported')
       const agent = network.ozone.getAgent()
       const messageLabels = await agent.api.com.atproto.label.queryLabels({
         uriPatterns: [uri],
       })
-      expect(messageLabels.data.labels).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({ uri, val: 'message-test-label' }),
-        ]),
-      )
-      expect(
-        messageLabels.data.labels.find(
-          (label) => label.val === 'message-test-label',
-        )?.cid,
-      ).toBeUndefined()
+      expect(messageLabels.data.labels).toEqual([])
       const accountLabels = await agent.api.com.atproto.label.queryLabels({
         uriPatterns: [did],
       })
@@ -186,6 +209,23 @@ describe('report-action', () => {
           (label) => label.val === 'message-test-label',
         ),
       ).toBe(false)
+      await modClient.emitEvent({
+        subject: account,
+        event: {
+          $type: 'tools.ozone.moderation.defs#modEventLabel',
+          createLabelVals: ['message-test-label'],
+          negateLabelVals: [],
+        },
+      })
+      const updatedAccountLabels =
+        await agent.api.com.atproto.label.queryLabels({
+          uriPatterns: [did],
+        })
+      expect(updatedAccountLabels.data.labels).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ val: 'message-test-label' }),
+        ]),
+      )
     })
 
     it('actions specific report IDs and updates status to closed', async () => {

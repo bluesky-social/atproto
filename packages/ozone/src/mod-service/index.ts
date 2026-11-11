@@ -1263,9 +1263,19 @@ export class ModerationService {
           `${CHAT_MESSAGE_COLLECTION}/%`,
         )
     } else if (subjectType === 'conversation') {
-      builder = builder
-        .where('moderation_subject_status.convoId', '!=', '')
-        .where('moderation_subject_status.recordPath', '=', '')
+      builder = builder.where((eb) =>
+        eb.or([
+          eb.and([
+            eb('moderation_subject_status.convoId', '!=', ''),
+            eb('moderation_subject_status.recordPath', '=', ''),
+          ]),
+          eb(
+            'moderation_subject_status.recordPath',
+            'like',
+            `${CHAT_MESSAGE_COLLECTION}/%`,
+          ),
+        ]),
+      )
     }
 
     // Only fetch items that belongs to the specified queue when specified

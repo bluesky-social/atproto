@@ -40,6 +40,7 @@ import {
   CHAT_CONVO_COLLECTION,
   CHAT_MESSAGE_COLLECTION,
   type ModSubject,
+  messageStatusKey,
   subjectFromEventRow,
   subjectFromStatusRow,
 } from './subject.js'
@@ -742,6 +743,50 @@ export class ModerationViews {
     const request = this.fetchSubjectStatus(subjects)
     this.subjectStatusesBySubjects.set(cacheKey, request)
     return request
+  }
+
+  async getMessageSubjectStatuses(
+    messages: { did: DidString; messageId: string; convoId: string }[],
+  ): Promise<Map<string, ModerationSubjectStatusRowWithHandle>> {
+    if (!messages.length) return new Map()
+    const unique = Array.from(
+      new Map(
+        messages.map((message) => [
+          messageStatusKey(message.did, message.messageId, message.convoId),
+          message,
+        ]),
+      ).values(),
+    )
+    const [rows, accounts] = await Promise.all([
+      moderationSubjectStatusQueryBuilder(this.db.db)
+        .where((eb) =>
+          eb.or(
+            unique.map((message) =>
+              eb.and([
+                eb('moderation_subject_status.did', '=', message.did),
+                eb(
+                  'moderation_subject_status.recordPath',
+                  '=',
+                  `${CHAT_MESSAGE_COLLECTION}/${message.messageId}`,
+                ),
+                eb('moderation_subject_status.convoId', '=', message.convoId),
+              ]),
+            ),
+          ),
+        )
+        .execute(),
+      this.getAccoutInfosByDid(unique.map((message) => message.did)),
+    ])
+    return new Map(
+      rows.map((row) => [
+        messageStatusKey(
+          row.did,
+          row.recordPath.slice(CHAT_MESSAGE_COLLECTION.length + 1),
+          row.convoId,
+        ),
+        { ...row, handle: accounts.get(row.did)?.handle ?? INVALID_HANDLE },
+      ]),
+    )
   }
 
   private async fetchSubjectStatus(

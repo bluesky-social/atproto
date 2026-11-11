@@ -19,6 +19,12 @@ type SubjectInput =
 export const CHAT_CONVO_COLLECTION = 'chat.bsky.convo'
 export const CHAT_MESSAGE_COLLECTION = 'chat.bsky.convo.message'
 
+export const messageStatusKey = (
+  did: string,
+  messageId: string,
+  convoId: string,
+) => JSON.stringify([did, messageId, convoId])
+
 type StrongRef = com.atproto.repo.strongRef.Main
 const isStrongRef = com.atproto.repo.strongRef.main.$matches
 
