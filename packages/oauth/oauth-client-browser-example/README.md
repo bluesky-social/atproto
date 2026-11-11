@@ -17,7 +17,7 @@ Enter a handle to sign in, or configure FedCM to choose a remembered account fir
 | `bsky_api_url`           | Bluesky API endpoint used by the example.                                                                                                                            | Development: `http://localhost:2584`; otherwise `https://api.bsky.app`.   |
 | `bsky_api_did`           | Audience DID for Bluesky API OAuth permissions.                                                                                                                      | Development: `did:example:invalid`; otherwise `did:web:api.bsky.app`.     |
 | `scope`                  | Replaces environment-specific scopes; the app also requests `atproto` and the profile and preferences permissions it needs.                                          | Environment-specific scopes.                                              |
-| `fedcm_provider`         | FedCM configuration URL; repeat to configure multiple identity providers. FedCM is off when omitted.                                                                 | None.                                                                     |
+| `fedcm_provider`         | FedCM configuration URL; repeat to configure multiple identity providers. FedCM is off when omitted, unless `fedcm_idp_registration=true`.                           | None.                                                                     |
 | `fedcm_idp_registration` | `true` also requests IdPs the browser registered via Chrome's experimental FedCM IdP Registration (type `https://atproto.com`); counts as one provider for `active`. | Off.                                                                      |
 | `fedcm_mode`             | `passive` opens FedCM automatically; `active` adds a “Choose an account” button and requires exactly one provider.                                                   | `passive`.                                                                |
 
@@ -83,5 +83,7 @@ To clear registrations, clear site data for the tunnel origin.
 Build `oauth-provider-ui`, `oauth-provider`, `oauth-client-browser-example`, and `pds` from their package directories, then run from `packages/pds`:
 
 ```sh
-PUPPETEER_EXECUTABLE_PATH='/path/to/chrome' pnpm test:sqlite tests/fedcm.test.ts --runInBand
+PUPPETEER_EXECUTABLE_PATH='/path/to/chrome' pnpm test:sqlite tests/fedcm.test.ts tests/fedcm-idp-registration.test.ts --runInBand
 ```
+
+`tests/fedcm-idp-registration.test.ts` covers the registered-IdP flow; it enables Chrome's `FedCmIdPRegistration` and `FedCmLightweightMode` features through launch args, so no `chrome://flags` setup is needed.

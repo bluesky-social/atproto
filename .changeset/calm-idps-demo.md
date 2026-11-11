@@ -4,4 +4,4 @@
 "@atproto/pds": patch
 ---
 
-Add a registered-IdP FedCM demo (`fedcm_idp_registration=true`), launcher URL, README guidance, and browser tests.
+Add a registered-IdP FedCM demo (`fedcm_idp_registration=true`) to the browser example, with a dev-env launcher URL. `@atproto/pds` only updates its README.

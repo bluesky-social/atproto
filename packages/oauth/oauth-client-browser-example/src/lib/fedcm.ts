@@ -90,7 +90,10 @@ export function requestFedcmSelection(
       if (idpRegistration) {
         // @NOTE IdP registration: the picked IdP is any registered one, so its
         // config URL cannot be known up front. The OAuth `sub` check in
-        // OAuthProvider.tsx is the real guard.
+        // OAuthProvider.tsx is the real guard, but it does not stop a
+        // malicious registered IdP from asserting its own DID: registration
+        // is silent, so any site can register as `https://atproto.com` and
+        // sign the user into an attacker's account. Accepted for the prototype.
         if (new URL(configURL).protocol !== 'https:') {
           throw new Error('FedCM returned a non-https provider configURL')
         }
