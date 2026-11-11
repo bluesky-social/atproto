@@ -1,5 +1,6 @@
 import type {
   Account,
+  DidString,
   FedcmRegistrationData,
 } from '@atproto/oauth-provider-api'
 
@@ -34,19 +35,29 @@ type FedcmWindow = Window & {
   }
 }
 
-/** Remembered, active, non-ephemeral sessions, as FedCM accounts. */
+/**
+ * Remembered, active, non-ephemeral sessions, as FedCM accounts.
+ *
+ * @param eligibleDids - accounts the server's `Set-Login` was derived from.
+ * They are kept even when `loginRequired`, which `prompt=login` sets on every
+ * session of an authorization page.
+ */
 export function toFedcmPushedAccounts(
   sessions: readonly FedcmSyncSession[],
+  eligibleDids: readonly DidString[],
 ): FedcmPushedAccount[] {
   return sessions
     .filter(
-      (s) => !s.ephemeralToken && !s.account.deactivated && !s.loginRequired,
+      (s) =>
+        !s.ephemeralToken &&
+        !s.account.deactivated &&
+        (!s.loginRequired || eligibleDids.includes(s.account.did)),
     )
     .map(({ account }) => {
       const handle = account.handle ? `@${account.handle}` : undefined
       return {
         id: account.did,
-        name: account.name ?? handle ?? account.did,
+        name: account.name || handle || account.did,
         email: handle ?? account.did,
         ...(account.picture ? { picture: account.picture } : undefined),
       }
@@ -61,7 +72,7 @@ export async function syncFedcmRegistration(
   data: FedcmRegistrationData,
   sessions: readonly FedcmSyncSession[],
 ): Promise<void> {
-  const accounts = toFedcmPushedAccounts(sessions)
+  const accounts = toFedcmPushedAccounts(sessions, data.eligibleDids)
 
   try {
     const login =

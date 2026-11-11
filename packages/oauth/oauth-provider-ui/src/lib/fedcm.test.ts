@@ -1,5 +1,9 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import type { Account } from '@atproto/oauth-provider-api'
+import type {
+  Account,
+  DidString,
+  FedcmRegistrationData,
+} from '@atproto/oauth-provider-api'
 import {
   type FedcmSyncSession,
   completeFedcmLogin,
@@ -50,7 +54,7 @@ describe(completeFedcmLogin, () => {
 })
 
 const mkSession = (
-  account: Partial<Account> & { did: string },
+  account: Partial<Account> & { did: DidString },
   extra: Partial<Omit<FedcmSyncSession, 'account'>> = {},
 ): FedcmSyncSession => ({
   account: { deactivated: false, ...account } as Account,
@@ -61,14 +65,17 @@ const mkSession = (
 describe(toFedcmPushedAccounts, () => {
   it('maps remembered active sessions to pushed accounts', () => {
     expect(
-      toFedcmPushedAccounts([
-        mkSession({
-          did: 'did:plc:alice',
-          name: 'Alice',
-          handle: 'alice.test',
-          picture: 'https://cdn/a.jpg',
-        }),
-      ]),
+      toFedcmPushedAccounts(
+        [
+          mkSession({
+            did: 'did:plc:alice',
+            name: 'Alice',
+            handle: 'alice.test',
+            picture: 'https://cdn/a.jpg',
+          }),
+        ],
+        [],
+      ),
     ).toEqual([
       {
         id: 'did:plc:alice',
@@ -80,10 +87,13 @@ describe(toFedcmPushedAccounts, () => {
   })
 
   it('falls back to the handle, then the DID', () => {
-    const [bob, carol] = toFedcmPushedAccounts([
-      mkSession({ did: 'did:plc:bob', handle: 'bob.test' }),
-      mkSession({ did: 'did:plc:carol' }),
-    ])
+    const [bob, carol] = toFedcmPushedAccounts(
+      [
+        mkSession({ did: 'did:plc:bob', handle: 'bob.test' }),
+        mkSession({ did: 'did:plc:carol' }),
+      ],
+      [],
+    )
     expect(bob).toEqual({
       id: 'did:plc:bob',
       name: '@bob.test',
@@ -97,22 +107,59 @@ describe(toFedcmPushedAccounts, () => {
     expect(JSON.stringify([bob, carol])).not.toContain('undefined')
   })
 
+  it('treats an empty display name as missing', () => {
+    const [dave] = toFedcmPushedAccounts(
+      [mkSession({ did: 'did:plc:dave', name: '', handle: 'dave.test' })],
+      [],
+    )
+    expect(dave.name).toBe('@dave.test')
+  })
+
   it('excludes ephemeral, deactivated and login-required sessions', () => {
     expect(
-      toFedcmPushedAccounts([
-        mkSession({ did: 'did:plc:e' }, { ephemeralToken: 'tok' }),
-        mkSession({ did: 'did:plc:d', deactivated: true }),
-        mkSession({ did: 'did:plc:l' }, { loginRequired: true }),
-        mkSession({ did: 'did:plc:ok' }),
-      ]).map((a) => a.id),
+      toFedcmPushedAccounts(
+        [
+          mkSession({ did: 'did:plc:e' }, { ephemeralToken: 'tok' }),
+          mkSession({ did: 'did:plc:d', deactivated: true }),
+          mkSession({ did: 'did:plc:l' }, { loginRequired: true }),
+          mkSession({ did: 'did:plc:ok' }),
+        ],
+        [],
+      ).map((a) => a.id),
     ).toEqual(['did:plc:ok'])
+  })
+
+  it('keeps login-required sessions the server reports as eligible', () => {
+    // e.g. every session on a `prompt=login` authorization page
+    expect(
+      toFedcmPushedAccounts(
+        [
+          mkSession({ did: 'did:plc:in' }, { loginRequired: true }),
+          mkSession({ did: 'did:plc:out' }, { loginRequired: true }),
+        ],
+        ['did:plc:in'],
+      ).map((a) => a.id),
+    ).toEqual(['did:plc:in'])
+  })
+
+  it('never keeps ephemeral or deactivated sessions, even if eligible', () => {
+    expect(
+      toFedcmPushedAccounts(
+        [
+          mkSession({ did: 'did:plc:e' }, { ephemeralToken: 'tok' }),
+          mkSession({ did: 'did:plc:d', deactivated: true }),
+        ],
+        ['did:plc:e', 'did:plc:d'],
+      ),
+    ).toEqual([])
   })
 })
 
 describe(syncFedcmRegistration, () => {
-  const data = {
+  const data: FedcmRegistrationData = {
     configUrl: 'https://pds.test/fedcm/config',
     accountsExpiration: 30_000,
+    eligibleDids: [],
   }
   const sessions = [mkSession({ did: 'did:plc:alice', handle: 'alice.test' })]
 
@@ -129,7 +176,7 @@ describe(syncFedcmRegistration, () => {
     await syncFedcmRegistration(data, sessions)
 
     expect(setStatus).toHaveBeenCalledWith('logged-in', {
-      accounts: toFedcmPushedAccounts(sessions),
+      accounts: toFedcmPushedAccounts(sessions, []),
       expiration: 30_000,
     })
     expect(register).toHaveBeenCalledWith(data.configUrl)
@@ -149,6 +196,25 @@ describe(syncFedcmRegistration, () => {
     expect(setStatus).toHaveBeenCalledOnce()
     expect(setStatus.mock.calls[0]).toEqual(['logged-out'])
     expect(register).not.toHaveBeenCalled()
+  })
+
+  it('pushes eligible accounts when every session is prompt-flagged', async () => {
+    const setStatus = vi.fn()
+    const register = vi.fn(() => Promise.resolve(true))
+    vi.stubGlobal('navigator', { login: { setStatus } })
+    vi.stubGlobal('window', { IdentityProvider: { register } })
+
+    await syncFedcmRegistration({ ...data, eligibleDids: ['did:plc:alice'] }, [
+      mkSession({ did: 'did:plc:alice' }, { loginRequired: true }),
+    ])
+
+    expect(setStatus).toHaveBeenCalledOnce()
+    expect(setStatus).toHaveBeenCalledWith('logged-in', {
+      accounts: [expect.objectContaining({ id: 'did:plc:alice' })],
+      expiration: 30_000,
+    })
+    expect(setStatus).not.toHaveBeenCalledWith('logged-out')
+    expect(register).toHaveBeenCalledWith(data.configUrl)
   })
 
   it('skips registration when the browser lacks IdentityProvider.register', async () => {
