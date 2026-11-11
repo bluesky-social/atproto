@@ -2245,6 +2245,9 @@ importers:
       '@atproto/lex-data':
         specifier: workspace:^
         version: link:../lex/lex-data
+      '@atproto/lex-schema':
+        specifier: workspace:^
+        version: link:../lex/lex-schema
       '@atproto/star':
         specifier: workspace:^
         version: link:../star
@@ -2257,9 +2260,6 @@ importers:
       structured-headers:
         specifier: ^1.0.1
         version: 1.0.1
-      zod:
-        specifier: ^3.23.8
-        version: 3.23.8
     devDependencies:
       vitest:
         specifier: ^4.1.10
@@ -5351,7 +5351,9 @@ packages:
   '@smithy/smithy-client@4.5.1':
     resolution: {integrity: sha512-PuvtnQgwpy3bb56YvHAP7eRwp862yJxtQno40UX9kTjjkgTlo//ov+e1IVCFTiELcAOiqF2++Y0e7eH/Zgv5Vw==}
     engines: {node: '>=18.0.0'}
-    deprecated: Deprecated due to a bug in custom logger data redaction. See https://github.com/aws/aws-sdk-js-v3/issues/8393.
+    deprecated: |-
+      Deprecated due to a bug in custom logger data redaction. Upgrade to the latest version. If you used a custom logger with
+        this version, review your logs and rotate any credentials or other secrets. See https://github.com/aws/aws-sdk-js-v3/issues/8393.
 
   '@smithy/types@4.3.2':
     resolution: {integrity: sha512-QO4zghLxiQ5W9UZmX2Lo0nta2PuE1sSrXUYDoaB6HMR762C0P7v/HEPHf6ZdglTVssJG1bsrSBxdc3quvDSihw==}

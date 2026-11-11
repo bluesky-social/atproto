@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Remove a registration made with registerNotify. Requires a space credential, implemented by the space host.",
+      "description": "Remove a registration made with registerNotify. Requires service auth issued by the service being removed (or its DID), implemented by the space host.",
       "input": {
         "encoding": "application/json",
         "schema": {

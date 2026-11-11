@@ -8,7 +8,7 @@ const OWNER_DID = 'did:plc:owner456'
 type SpaceDef = {
   type: 'space'
   key: string
-  name: string
+  title: string
   collections: string[]
 }
 
@@ -45,7 +45,7 @@ class TestLexiconManager extends LexiconManager {
 const space = (collections: string[]): SpaceDef => ({
   type: 'space',
   key: 'any',
-  name: 'Test Space',
+  title: 'Test Space',
   collections,
 })
 
@@ -262,7 +262,7 @@ describe('LexiconManager', () => {
 
   describe('getSpacesFromScope', () => {
     it('returns the declaration for each space type named', async () => {
-      // What the consent screen renders from: the human-readable name and the
+      // What the consent screen renders from: the human-readable title and the
       // collections an app is asking to write.
       const manager = new TestLexiconManager({
         [FORUM]: space([THREAD, REPLY]),
@@ -272,7 +272,7 @@ describe('LexiconManager', () => {
       )
       expect(spaces.get(FORUM)).toMatchObject({
         type: 'space',
-        name: 'Test Space',
+        title: 'Test Space',
         collections: [THREAD, REPLY],
       })
     })

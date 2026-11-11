@@ -6,14 +6,15 @@ import type { Cid } from '@atproto/lex-data'
 import type { SpacePermissionMatchOperation } from '@atproto/oauth-scopes'
 import {
   COMMIT_MAC_TYPE,
-  type Commit,
   MAC_HEADER,
   type MacType,
   RECORD_MAC_TYPE,
   RepoCommit,
-  RepoVerificationError,
+  type SpaceCommit,
+  SpaceKemError,
   SpaceMacError,
   SpaceMetaArchiveError,
+  SpaceRepoVerificationError,
   WANT_MAC_HEADER,
   computeCommitMac,
   computeRecordMac,
@@ -22,7 +23,12 @@ import {
   parseWantMacHeader,
 } from '@atproto/space'
 import { StarParseError } from '@atproto/star'
-import { type DidString, SpaceRef, type SpaceRefString } from '@atproto/syntax'
+import {
+  type AtUriString,
+  type DidString,
+  SpaceRef,
+  type SpaceRefString,
+} from '@atproto/syntax'
 import {
   AuthRequiredError,
   ForbiddenError,
@@ -58,16 +64,15 @@ export function toSpaceRef(spaceUri: SpaceRefString): SpaceRef {
 }
 
 /**
- * Assert that this host is the space's authority, returning its DID. Space-host
- * methods reach straight into the authority's actor store, which would otherwise
- * fail as `Repo not found` — an error none of their lexicons declare.
+ * Assert that this host is the space's authority. Space-host methods reach
+ * straight into the authority's actor store, which would otherwise fail as
+ * `Repo not found` — an error none of their lexicons declare.
  */
 export async function assertSpaceHost(
   ctx: AppContext,
-  spaceUri: SpaceRefString,
-): Promise<DidString> {
-  const { spaceDid } = await getSpaceHostAccount(ctx, spaceUri)
-  return spaceDid
+  ref: SpaceRef,
+): Promise<void> {
+  await getSpaceHostAccount(ctx, ref)
 }
 
 /**
@@ -77,45 +82,42 @@ export async function assertSpaceHost(
  */
 export async function assertActiveSpaceHost(
   ctx: AppContext,
-  spaceUri: SpaceRefString,
-): Promise<DidString> {
-  const { spaceDid, account } = await getSpaceHostAccount(ctx, spaceUri)
+  ref: SpaceRef,
+): Promise<void> {
+  const account = await getSpaceHostAccount(ctx, ref)
   if (account.takedownRef) {
     throw new InvalidRequestError(
-      `Repo has been takendown: ${spaceDid}`,
+      `Repo has been takendown: ${ref.spaceDid}`,
       'RepoTakendown',
     )
   }
   if (account.deactivatedAt) {
     throw new InvalidRequestError(
-      `Repo has been deactivated: ${spaceDid}`,
+      `Repo has been deactivated: ${ref.spaceDid}`,
       'RepoDeactivated',
     )
   }
-  return spaceDid
 }
 
-async function getSpaceHostAccount(ctx: AppContext, spaceUri: SpaceRefString) {
-  const { spaceDid } = toSpaceRef(spaceUri)
-  const account = await ctx.accountManager.getAccount(spaceDid, {
+async function getSpaceHostAccount(ctx: AppContext, ref: SpaceRef) {
+  const account = await ctx.accountManager.getAccount(ref.spaceDid, {
     includeDeactivated: true,
     includeTakenDown: true,
   })
   if (!account) {
     throw new InvalidRequestError('Space not found', 'SpaceNotFound')
   }
-  return { spaceDid, account }
+  return account
 }
 
-// A space created on a PDS is anchored on its creator's own DID, so whether the caller
-// is the space authority is a comparison against the space URI.
+// A space created on a PDS is anchored on its creator's own DID, so being its
+// authority is a comparison against the space URI.
 export function assertSpaceAuthority(
   auth: AccessOutput | OAuthOutput,
-  space: SpaceRef | SpaceRefString,
+  ref: SpaceRef,
   op: SpacePermissionMatchOperation,
 ): void {
-  const ref = typeof space === 'string' ? toSpaceRef(space) : space
-  auth.credentials.permissions?.assertSpaceRef(ref, op)
+  auth.credentials.permissions?.assertSpace(ref, op)
   if (ref.spaceDid !== auth.credentials.did) {
     throw new InvalidRequestError('Not the space authority', 'NotAuthorized')
   }
@@ -134,12 +136,12 @@ export type SpaceReadAuth =
  */
 export function assertSpaceRead(
   auth: SpaceReadAuth,
-  spaceUri: SpaceRefString,
-  repo: string,
+  ref: SpaceRef,
+  repo: DidString,
 ): void {
   if (auth.credentials.type === 'admin_token') return
   if (isSpaceCredentialOutput(auth)) {
-    assertCredentialSpace(auth.credentials, spaceUri, repo)
+    assertCredentialSpace(auth.credentials, ref, repo)
     return
   }
   if (auth.credentials.did !== repo) {
@@ -150,23 +152,26 @@ export function assertSpaceRead(
       'RepoNotFound',
     )
   }
-  auth.credentials.permissions?.assertSpaceRef(spaceUri, {
+  auth.credentials.permissions?.assertSpace(ref, {
     action: 'read_self',
   })
 }
 
 // The space analogue of `isUserOrAdmin`: a space credential names a syncer rather
 // than an account, so it is never the repo's own account.
-export function isSpaceUserOrAdmin(auth: SpaceReadAuth, repo: string): boolean {
+export function isSpaceUserOrAdmin(
+  auth: SpaceReadAuth,
+  repo: DidString,
+): boolean {
   if (auth.credentials.type === 'admin_token') return true
-  if (auth.credentials.type === 'space_credential') return false
+  if (isSpaceCredentialOutput(auth)) return false
   return auth.credentials.did === repo
 }
 
 export function assertCredentialSpace(
   credentials: SpaceCredentialOutput['credentials'],
-  spaceUri: SpaceRefString,
-  audience: string = toSpaceRef(spaceUri).spaceDid,
+  ref: SpaceRef,
+  audience: DidString = ref.spaceDid,
 ): void {
   if (credentials.audience !== audience) {
     throw new AuthRequiredError(
@@ -174,7 +179,7 @@ export function assertCredentialSpace(
       'BadSpaceAudience',
     )
   }
-  if (credentials.space !== spaceUri) {
+  if (credentials.space !== ref.toString()) {
     throw new InvalidRequestError(
       'Credential is not scoped to this space',
       'InvalidCredential',
@@ -187,7 +192,7 @@ export function buildCommit(opts: {
   spaceUri: SpaceRefString
   repo: DidString
   state: SpaceRepo | null
-}): Commit | undefined {
+}): SpaceCommit | undefined {
   const { spaceUri, repo, state } = opts
   if (!state?.setHash || !state.rev) return undefined
 
@@ -232,8 +237,10 @@ export async function getSpaceMacSecret(
     const keyShare = parseWantMacHeader(header, type)
     return decapsulate(kemKeypair, keyShare)
   } catch (err) {
-    if (err instanceof SpaceMacError) {
-      throw new InvalidRequestError(err.message, err.code)
+    if (err instanceof SpaceMacError || err instanceof SpaceKemError) {
+      throw new InvalidRequestError(err.message, 'InvalidSpaceMac', {
+        cause: err,
+      })
     }
     throw err
   }
@@ -244,10 +251,10 @@ export async function getSpaceMacSecret(
 export function throwInvalidArchive(err: unknown, errorName: string): never {
   if (
     err instanceof StarParseError ||
-    err instanceof RepoVerificationError ||
+    err instanceof SpaceRepoVerificationError ||
     err instanceof SpaceMetaArchiveError
   ) {
-    throw new InvalidRequestError(err.message, errorName)
+    throw new InvalidRequestError(err.message, errorName, { cause: err })
   }
   throw err
 }
@@ -255,7 +262,7 @@ export function throwInvalidArchive(err: unknown, errorName: string): never {
 // The `Atproto-Space-Mac` response header for a commit, when a MAC was requested.
 export function commitMacHeaders(
   sharedSecret: Uint8Array | undefined,
-  commit: Commit,
+  commit: SpaceCommit,
 ): Record<string, string> | undefined {
   if (!sharedSecret) return undefined
   const mac = computeCommitMac(sharedSecret, commit)
@@ -265,7 +272,7 @@ export function commitMacHeaders(
 // The `Atproto-Space-Mac` response header for a record, when a MAC was requested.
 export function recordMacHeaders(
   sharedSecret: Uint8Array | undefined,
-  uri: string,
+  uri: AtUriString,
   cid: Cid,
 ): Record<string, string> | undefined {
   if (!sharedSecret) return undefined
@@ -315,12 +322,13 @@ export async function resolveNotifyTarget(
 /** Process a repo update notification when this PDS hosts the space authority. */
 export async function processNotifyRepoUpdate(
   ctx: AppContext,
+  ref: SpaceRef,
   input: com.atproto.space.notifyRepoUpdate.$InputBody,
 ): Promise<void> {
   const { space, repo, repoRev, data } = input
-  const { spaceDid } = toSpaceRef(space)
+  const { spaceDid } = ref
 
-  await assertSpaceHost(ctx, space)
+  await assertSpaceHost(ctx, ref)
   if (TID.fromStr(repoRev).timestamp() > (Date.now() + 5 * MINUTE) * 1000) {
     throw new InvalidRequestError('Repo revision is in the future', 'FutureRev')
   }
@@ -336,7 +344,7 @@ export async function processNotifyRepoUpdate(
   // Apply the same account perimeter used when minting credentials. The notification
   // comes from a PDS rather than an app, so there is no app attestation to check.
   const authorized = await ctx.spacePolicyManager.authorizeRepo({
-    space,
+    space: ref,
     policy,
     repo,
     access: 'write',
@@ -387,12 +395,12 @@ export async function processNotifyRepoUpdate(
 export async function fireNotifyRepoUpdate(
   ctx: AppContext,
   opts: {
-    space: SpaceRefString
-    writerDid: string
+    space: SpaceRef
+    writerDid: DidString
     commit: { rev: string; setHash: Uint8Array } | null
   },
 ): Promise<void> {
   const { space, writerDid, commit } = opts
   if (!commit) return
-  await ctx.spaceNotifications.notify(space, writerDid as DidString, commit)
+  await ctx.spaceNotifications.notify(space, writerDid, commit)
 }

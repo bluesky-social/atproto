@@ -71,6 +71,9 @@
         },
         {
           "name": "RepoDeactivated"
+        },
+        {
+          "name": "InvalidCursor"
         }
       ]
     },

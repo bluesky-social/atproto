@@ -13,7 +13,7 @@ import {
   prepareUpdate,
 } from '../../../../repo/index.js'
 import { assertNotPolicyRecord } from '../../../../space-policy/publish.js'
-import { fireNotifyRepoUpdate } from './util.js'
+import { fireNotifyRepoUpdate, toSpaceRef } from './util.js'
 
 // Matches com.atproto.repo.applyWrites.
 const MAX_WRITES = 200
@@ -60,9 +60,10 @@ export default function (server: Server, ctx: AppContext) {
     opts: {
       jsonLimit: 1_000_000,
     },
-    handler: async ({ input, auth }) => {
+    handler: async ({ input: { body }, auth }) => {
       const did = auth.credentials.did
-      const { space, repo, writes, validate } = input.body
+      const { space, repo, writes, validate } = body
+      const ref = toSpaceRef(space)
       if (repo !== did) {
         throw new ForbiddenError('repo must match authenticated user')
       }
@@ -75,7 +76,7 @@ export default function (server: Server, ctx: AppContext) {
         writes.map((write, i) => {
           const writeInfo = {
             did,
-            space,
+            space: ref,
             collection: write.collection,
             validate,
             validationPath: ['writes', i, 'value'] as (string | number)[],
@@ -103,7 +104,7 @@ export default function (server: Server, ctx: AppContext) {
 
       for (const write of prepared) {
         assertNotPolicyRecord(write.uri.collectionSafe)
-        auth.credentials.permissions?.assertSpaceRef(space, {
+        auth.credentials.permissions?.assertSpace(ref, {
           action: write.action,
           collection: write.uri.collectionSafe,
         })
@@ -111,13 +112,13 @@ export default function (server: Server, ctx: AppContext) {
 
       // Null for an empty batch: nothing was written, so there is nothing to notify.
       const commit = await ctx.actorStore.transact(did, (actorTxn) =>
-        actorTxn.space.applyWrites(space, prepared),
+        actorTxn.space.applyWrites(ref, prepared),
       )
 
-      await fireNotifyRepoUpdate(ctx, { space, writerDid: did, commit })
+      await fireNotifyRepoUpdate(ctx, { space: ref, writerDid: did, commit })
 
       return {
-        encoding: 'application/json' as const,
+        encoding: 'application/json',
         body: { results: prepared.map(writeToResult) },
       }
     },

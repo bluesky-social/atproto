@@ -3,7 +3,11 @@ import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
 import { ACCESS_FULL } from '../../../../auth-scope.js'
 import type { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
-import { assertSpaceAuthority, throwInvalidArchive } from './util.js'
+import {
+  assertSpaceAuthority,
+  throwInvalidArchive,
+  toSpaceRef,
+} from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.space.importSpaceMeta, {
@@ -17,20 +21,22 @@ export default function (server: Server, ctx: AppContext) {
         // Performed in the handler as it requires the archive's space
       },
     }),
-    handler: async ({ input, auth }) => {
+    handler: async ({ input: { body }, auth }) => {
       if (!ctx.cfg.service.acceptingImports) {
         throw new InvalidRequestError('Service is not accepting repo imports')
       }
 
-      const archive = await readSpaceMetaStar(input.body).catch((err) =>
+      const archive = await readSpaceMetaStar(body).catch((err) =>
         throwInvalidArchive(err, 'InvalidSpaceMeta'),
       )
 
-      // Importing both creates the space on this host and sets its configuration.
-      assertSpaceAuthority(auth, archive.space, { manage: 'create' })
-      assertSpaceAuthority(auth, archive.space, { manage: 'update' })
+      const ref = toSpaceRef(archive.space)
 
-      await ctx.spacePolicyManager.importSpaceMeta(archive)
+      // Importing both creates the space on this host and sets its configuration.
+      assertSpaceAuthority(auth, ref, { manage: 'create' })
+      assertSpaceAuthority(auth, ref, { manage: 'update' })
+
+      await ctx.spacePolicyManager.importSpaceMeta(ref, archive)
     },
   })
 }

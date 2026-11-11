@@ -1,15 +1,19 @@
-import { createSpaceToken, isP256DidKey, spaceHostAud } from '@atproto/space'
+import {
+  createSpaceCredential,
+  isP256DidKey,
+  spaceHostAud,
+} from '@atproto/space'
 import type { DidString } from '@atproto/syntax'
 import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
-import { assertActiveSpaceHost } from './util.js'
+import { assertActiveSpaceHost, toSpaceRef } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.space.getSpaceCredential, {
-    handler: async ({ input }) => {
-      const { space, credentialKey, delegationToken, clientAttestation } =
-        input.body
+    handler: async ({ input: { body } }) => {
+      const { space, credentialKey, delegationToken, clientAttestation } = body
+      const ref = toSpaceRef(space)
 
       if (!isP256DidKey(credentialKey)) {
         throw new InvalidRequestError('credentialKey must be a P-256 did:key')
@@ -30,7 +34,8 @@ export default function (server: Server, ctx: AppContext) {
         repo = delegation.repo
       }
 
-      const spaceDid = await assertActiveSpaceHost(ctx, space)
+      await assertActiveSpaceHost(ctx, ref)
+      const { spaceDid } = ref
 
       const clientId = clientAttestation
         ? await ctx.clientAttestationVerifier.verify(
@@ -54,21 +59,22 @@ export default function (server: Server, ctx: AppContext) {
       })
 
       await ctx.spacePolicyManager.authorizeCredential({
-        space,
+        space: ref,
         policy,
         repo,
         clientId,
       })
 
       const keypair = await ctx.actorStore.keypair(spaceDid)
-      const credential = await createSpaceToken(
-        'credential',
-        { iss: spaceDid, sub: space, keyId: credentialKey },
+      const credential = await createSpaceCredential({
+        iss: spaceDid,
+        sub: space,
+        keyId: credentialKey,
         keypair,
-      )
+      })
 
       return {
-        encoding: 'application/json' as const,
+        encoding: 'application/json',
         body: { credential },
       }
     },

@@ -4,8 +4,11 @@ import {
   type RepoPermissionMatch,
   type RpcPermissionMatch,
   ScopePermissions,
-  type SpacePermissionMatch,
 } from './scope-permissions.js'
+import type {
+  SpacePermissionMatchOperation,
+  SpaceTarget,
+} from './scopes/space-permission.js'
 
 /**
  * Overrides the default permission set to allow transitional scopes to be used
@@ -57,8 +60,11 @@ export class ScopePermissionsTransition extends ScopePermissions {
    * legacy token must never reach a space. Overridden rather than omitted to
    * keep that a decision rather than an oversight.
    */
-  override allowsSpace(options: SpacePermissionMatch): boolean {
-    return super.allowsSpace(options)
+  override allowsSpace(
+    target: SpaceTarget,
+    operation: SpacePermissionMatchOperation,
+  ): boolean {
+    return super.allowsSpace(target, operation)
   }
 
   override allowsRpc(options: RpcPermissionMatch) {

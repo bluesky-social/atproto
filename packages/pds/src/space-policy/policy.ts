@@ -73,6 +73,7 @@ export function parseArchivedPolicy(value: unknown): Policy {
     throw new InvalidRequestError(
       `Invalid policy: ${result.reason.message}`,
       'InvalidSpaceMeta',
+      { cause: result.reason },
     )
   }
   return normalizePolicy(result.value)

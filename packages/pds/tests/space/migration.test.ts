@@ -10,8 +10,8 @@ import {
   RepoCommit,
   type SpaceMetaArchive,
   readSpaceMetaStar,
-  serializeRepo,
-  serializeSpaceMeta,
+  writeRepoStar,
+  writeSpaceMetaStar,
 } from '@atproto/space'
 import {
   type DidString,
@@ -268,14 +268,15 @@ describe('space account migration', () => {
 
     // A record the new host holds that the old host never had, along with its op.
     await newAlice.pds.ctx.actorStore.transact(alice.did, async (txn) => {
+      const ref = SpaceRef.parse(space)
       const write = await prepareCreate({
         did: alice.did,
-        space,
+        space: ref,
         collection: TEST_COLLECTION,
         rkey: 'stale' as RecordKeyString,
         record: record(TEST_COLLECTION),
       })
-      await txn.space.applyWrites(space, [write])
+      await txn.space.applyWrites(ref, [write])
     })
 
     await sc.del(alice, space, { rkey: 'deleted' })
@@ -334,7 +335,7 @@ describe('space account migration', () => {
       .toCommit({ space, repo: alice.did, rev: TID.nextStr() })
 
     const star = await collect(
-      serializeRepo(commit, [{ collection: TEST_COLLECTION, rkey, bytes }]),
+      writeRepoStar(commit, [{ collection: TEST_COLLECTION, rkey, bytes }]),
     )
     await expect(importRepo(newAlice, star)).rejects.toMatchObject({
       error: 'InvalidRepoFile',
@@ -359,7 +360,7 @@ describe('space account migration', () => {
       skey: string,
       archive: Omit<SpaceMetaArchive, 'space'>,
     ): AsyncIterable<Uint8Array> =>
-      serializeSpaceMeta({
+      writeSpaceMetaStar({
         space: `at://${alice.did}/space/${TEST_SPACE_TYPE}/${skey}`,
         ...archive,
       })

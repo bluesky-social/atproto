@@ -3,6 +3,7 @@ import { CID } from 'multiformats/cid'
 import {
   type LexiconDoc,
   Lexicons,
+  lexSpace,
   lexiconDoc,
   parseLexiconDoc,
 } from '../src/index.js'
@@ -1312,5 +1313,23 @@ describe('XRPC output validation', () => {
     expect(() =>
       lex.assertValidXrpcOutput('com.example.procedure', {}),
     ).toThrow('Output must have the property "object"')
+  })
+})
+
+describe('Space definitions', () => {
+  it('accepts an optional title', () => {
+    expect(
+      lexSpace.safeParse({ type: 'space', title: 'Example', collections: [] })
+        .success,
+    ).toBe(true)
+    expect(lexSpace.safeParse({ type: 'space', collections: [] }).success).toBe(
+      true,
+    )
+  })
+
+  it('rejects an empty title', () => {
+    expect(
+      lexSpace.safeParse({ type: 'space', title: '', collections: [] }).success,
+    ).toBe(false)
   })
 })

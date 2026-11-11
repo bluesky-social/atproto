@@ -8,6 +8,7 @@ import {
   assertCredentialSpace,
   assertSpaceHost,
   resolveServiceEndpoint,
+  toSpaceRef,
 } from './util.js'
 
 // How long a registration lasts before the service has to renew it.
@@ -16,10 +17,11 @@ const REGISTRATION_TTL_MS = DAY
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.space.registerNotify, {
     auth: ctx.authVerifier.spaceCredentialAuth,
-    handler: async ({ input, auth }) => {
-      const { space, service } = input.body
+    handler: async ({ input: { body }, auth }) => {
+      const { space, service } = body
+      const ref = toSpaceRef(space)
 
-      assertCredentialSpace(auth.credentials, space)
+      assertCredentialSpace(auth.credentials, ref)
 
       if (!isAtprotoDidRefAbsolute(service)) {
         throw new InvalidRequestError(
@@ -27,7 +29,7 @@ export default function (server: Server, ctx: AppContext) {
         )
       }
 
-      const spaceDid = await assertSpaceHost(ctx, space)
+      await assertSpaceHost(ctx, ref)
 
       const endpoint = await resolveServiceEndpoint(ctx.idResolver, service)
       if (!endpoint) {
@@ -38,13 +40,13 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       // Registrations are the authority's to hold, so this host must govern the space.
-      await ctx.actorStore.read(spaceDid, (store) =>
+      await ctx.actorStore.read(ref.spaceDid, (store) =>
         store.space.getActiveSpacePolicy(space),
       )
 
       const expiresAt = toDatetimeString(Date.now() + REGISTRATION_TTL_MS)
 
-      await ctx.actorStore.transact(spaceDid, (actorTxn) =>
+      await ctx.actorStore.transact(ref.spaceDid, (actorTxn) =>
         actorTxn.space.recordCredentialRecipient({
           space,
           service,
@@ -54,7 +56,7 @@ export default function (server: Server, ctx: AppContext) {
       )
 
       return {
-        encoding: 'application/json' as const,
+        encoding: 'application/json',
         body: { expiresAt },
       }
     },

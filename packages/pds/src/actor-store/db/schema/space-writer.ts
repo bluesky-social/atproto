@@ -1,6 +1,8 @@
+import type { DidString, SpaceRefString } from '@atproto/syntax'
+
 export interface SpaceWriter {
-  space: string
-  did: string
+  space: SpaceRefString
+  did: DidString
   spaceRev: string
   repoRev: string
   data: Uint8Array

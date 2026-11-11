@@ -1,5 +1,5 @@
-import type { SpaceRefString } from '@atproto/lex'
 import { CLOCK_SKEW_SEC, SPACE_CREDENTIAL_MAX_AGE_SEC } from '@atproto/space'
+import type { SpaceRefString } from '@atproto/syntax'
 import { toDateISO } from '../../db/index.js'
 import type { AccountDb } from '../db/index.js'
 

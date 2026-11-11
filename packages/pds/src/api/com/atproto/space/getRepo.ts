@@ -2,8 +2,9 @@ import { byteIterableToStream } from '@atproto/common'
 import {
   COMMIT_MAC_TYPE,
   type SerializedRecord,
-  serializeRepo,
+  writeRepoStar,
 } from '@atproto/space'
+import type { SpaceRefString } from '@atproto/syntax'
 import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
 import { SpaceReader } from '../../../../actor-store/space/reader.js'
 import { AuthScope } from '../../../../auth-scope.js'
@@ -16,6 +17,7 @@ import {
   commitMacHeaders,
   getSpaceMacSecret,
   isSpaceUserOrAdmin,
+  toSpaceRef,
 } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
@@ -29,7 +31,7 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ params, auth, req, res }) => {
       const { space, repo } = params
 
-      assertSpaceRead(auth, space, repo)
+      assertSpaceRead(auth, toSpaceRef(space), repo)
       await assertRepoAvailability(ctx, repo, isSpaceUserOrAdmin(auth, repo))
 
       const sharedSecret = await getSpaceMacSecret(ctx, {
@@ -54,14 +56,14 @@ export default function (server: Server, ctx: AppContext) {
         }
 
         const starStream = byteIterableToStream(
-          serializeRepo(commit, readRecords(reader, space)),
+          writeRepoStar(commit, readRecords(reader, space)),
         )
         const closeDb = () => actorDb.close()
         starStream.on('error', closeDb)
         starStream.on('close', closeDb)
 
         return {
-          encoding: 'application/vnd.dasl.star' as const,
+          encoding: 'application/vnd.dasl.star',
           body: starStream,
           headers: commitMacHeaders(sharedSecret, commit),
         }
@@ -75,7 +77,7 @@ export default function (server: Server, ctx: AppContext) {
 
 async function* readRecords(
   reader: SpaceReader,
-  space: string,
+  space: SpaceRefString,
 ): AsyncGenerator<SerializedRecord> {
   for await (const record of reader.streamRecords(space)) {
     yield {

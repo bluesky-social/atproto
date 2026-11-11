@@ -1137,6 +1137,25 @@ describe('space policy', () => {
    * so tests drain it rather than polling.
    */
   describe('notify registration', () => {
+    // Withdrawal is signed by the service itself, not made with a space credential.
+    const unregister = async (
+      signer: MockService,
+      space: SpaceRefString,
+      service: string,
+      opts: { iss?: string; aud?: string } = {},
+    ) =>
+      alice.client.call(
+        com.atproto.space.unregisterNotify,
+        { space, service },
+        {
+          headers: await signer.serviceAuthHeaders({
+            iss: opts.iss,
+            aud: opts.aud ?? spaceHostAud(alice.did),
+            lxm: com.atproto.space.unregisterNotify.$lxm,
+          }),
+        },
+      )
+
     it('registers, forwards writes, and stops once withdrawn', async () => {
       await using syncer = await MockService.create(network, {
         serviceId: 'atproto_space_syncer',
@@ -1166,10 +1185,7 @@ describe('space policy', () => {
       expect(delivered[0].body).toMatchObject({ space, repo: bob.did })
 
       // Withdrawn: no further deliveries.
-      await asSyncer.call(com.atproto.space.unregisterNotify, {
-        space,
-        service: syncer.serviceRef,
-      })
+      await unregister(syncer, space, syncer.serviceRef)
       const before = syncer.callsTo('com.atproto.space.notifyRepoUpdate').length
       await sc.write(bob, space, { text: 'not forwarded' })
       await network.pds.ctx.backgroundQueue.processAll()
@@ -1178,10 +1194,57 @@ describe('space policy', () => {
       )
 
       // Unregistering again is idempotent.
-      await asSyncer.call(com.atproto.space.unregisterNotify, {
+      await unregister(syncer, space, syncer.serviceRef)
+    })
+
+    it('refuses a withdrawal not signed by the registered service', async () => {
+      await using syncer = await MockService.create(network, {
+        serviceId: 'atproto_space_syncer',
+      })
+      await using other = await MockService.create(network, {
+        serviceId: 'atproto_space_syncer',
+      })
+      const space = await sc.createSpace(alice, { members: [bob, carol] })
+      const asSyncer = (await sc.credentialFor(carol, space)).clientFor(
+        alice.pds,
+      )
+      await asSyncer.call(com.atproto.space.registerNotify, {
         space,
         service: syncer.serviceRef,
       })
+
+      // A space credential names no service, so it can't withdraw one.
+      await expect(
+        asSyncer.call(com.atproto.space.unregisterNotify, {
+          space,
+          service: syncer.serviceRef,
+        }),
+      ).rejects.toMatchObject({ error: 'MissingJwt' })
+      // Nor can another service, even one holding the same service id.
+      await expect(
+        unregister(other, space, syncer.serviceRef),
+      ).rejects.toMatchObject({ error: 'Forbidden' })
+      // Nor can the right service, addressed to an authority other than the space's.
+      await expect(
+        unregister(syncer, space, syncer.serviceRef, { aud: bob.did }),
+      ).rejects.toMatchObject({ error: 'Forbidden' })
+
+      await sc.write(bob, space, { text: 'still forwarded' })
+      await sc.awaitNotify(
+        async () => syncer.callsTo('com.atproto.space.notifyRepoUpdate'),
+        (calls) => calls.length > 0,
+      )
+      await network.pds.ctx.backgroundQueue.processAll()
+      const before = syncer.callsTo('com.atproto.space.notifyRepoUpdate').length
+      expect(before).toBeGreaterThan(0)
+
+      // The service's bare DID signs for every service under it.
+      await unregister(syncer, space, syncer.serviceRef, { iss: syncer.did })
+      await sc.write(bob, space, { text: 'not forwarded' })
+      await network.pds.ctx.backgroundQueue.processAll()
+      expect(syncer.callsTo('com.atproto.space.notifyRepoUpdate')).toHaveLength(
+        before,
+      )
     })
 
     it('stops delivering to a registration past its expiry, and resumes on renewal', async () => {
@@ -1271,10 +1334,11 @@ describe('space policy', () => {
         })
       }
 
-      await asSyncer.call(com.atproto.space.unregisterNotify, {
-        space,
-        service: syncer.did,
-      })
+      // Withdrawing every service under a DID takes the DID itself as issuer.
+      await expect(unregister(syncer, space, syncer.did)).rejects.toMatchObject(
+        { error: 'Forbidden' },
+      )
+      await unregister(syncer, space, syncer.did, { iss: syncer.did })
 
       const registered = await alice.pds.ctx.actorStore.read(
         alice.did,

@@ -6,8 +6,9 @@ import { P256Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
 import { getBlobCidString } from '@atproto/lex-data'
 import {
+  createDelegationToken,
+  createSpaceCredential,
   createSpaceSigHeaders,
-  createSpaceToken,
   spaceHostAud,
 } from '@atproto/space'
 import type { NsidString, SpaceRefString } from '@atproto/syntax'
@@ -238,9 +239,10 @@ describe('space auth', () => {
         const space = await sc.createSpace(alice, { members: [carol] })
         await sc.write(alice, space)
         const cred = await sc.credentialFor(carol, space)
-        const headers = await createSpaceSigHeaders(cred.key, {
+        const { headers } = await createSpaceSigHeaders({
           authorization: `atproto-space-credential ${cred.credential}`,
           audience: alice.did,
+          keypair: cred.key,
         })
 
         await expect(
@@ -270,9 +272,10 @@ describe('space auth', () => {
           const space = await sc.createSpace(alice)
           await sc.write(alice, space)
           const cred = await sc.credentialFor(alice, space)
-          const headers = await createSpaceSigHeaders(cred.key, {
+          const { headers } = await createSpaceSigHeaders({
             authorization: `Atproto-Space-Credential ${cred.credential}`,
             audience: alice.did,
+            keypair: cred.key,
           })
           const url = new URL(
             `/xrpc/${com.atproto.space.listRecords.$lxm}`,
@@ -336,9 +339,10 @@ describe('space auth', () => {
           const space = await sc.createSpace(alice, { members: [other, carol] })
           await sc.write(alice, space)
           const cred = await sc.credentialFor(carol, space)
-          const headers = await createSpaceSigHeaders(cred.key, {
+          const { headers } = await createSpaceSigHeaders({
             authorization: `Atproto-Space-Credential ${cred.credential}`,
             audience: other.did,
+            keypair: cred.key,
           })
 
           await expect(
@@ -354,9 +358,10 @@ describe('space auth', () => {
       it('requires the space authority as audience for space-host requests', async () => {
         const space = await sc.createSpace(alice, { members: [bob] })
         const cred = await sc.credentialFor(bob, space)
-        const headers = await createSpaceSigHeaders(cred.key, {
+        const { headers } = await createSpaceSigHeaders({
           authorization: `Atproto-Space-Credential ${cred.credential}`,
           audience: bob.did,
+          keypair: cred.key,
         })
         await expect(
           alice.client.call(
@@ -371,9 +376,10 @@ describe('space auth', () => {
         const space = await sc.createSpace(alice, { members: [carol] })
         await sc.write(alice, space)
         const cred = await sc.credentialFor(carol, space)
-        const headers = await createSpaceSigHeaders(cred.key, {
+        const { headers } = await createSpaceSigHeaders({
           authorization: `Atproto-Space-Credential ${cred.credential}`,
           audience: alice.did,
+          keypair: cred.key,
         })
         for (let i = 0; i < 2; i++) {
           await expect(
@@ -460,11 +466,12 @@ describe('space auth', () => {
 
       const carolKeypair = await carol.pds.ctx.actorStore.keypair(carol.did)
       const forged = await sc.forgedCredential((keyId) =>
-        createSpaceToken(
-          'credential',
-          { iss: carol.did, sub: space, keyId },
-          carolKeypair,
-        ),
+        createSpaceCredential({
+          iss: carol.did,
+          sub: space,
+          keyId,
+          keypair: carolKeypair,
+        }),
       )
       const asForged = forged.clientFor(alice.pds)
 
@@ -744,15 +751,12 @@ describe('space auth', () => {
       // own authority. Only the aud differs from a token that would be honoured.
       const space = await sc.createSpace(alice, { members: [carol] })
       const carolKeypair = await carol.pds.ctx.actorStore.keypair(carol.did)
-      const misaddressed = await createSpaceToken(
-        'delegation',
-        {
-          iss: carol.did,
-          sub: space,
-          aud: spaceHostAud(bob.did),
-        },
-        carolKeypair,
-      )
+      const misaddressed = await createDelegationToken({
+        iss: carol.did,
+        sub: space,
+        aud: spaceHostAud(bob.did),
+        keypair: carolKeypair,
+      })
 
       await expect(
         sc.mintCredential(space, misaddressed),

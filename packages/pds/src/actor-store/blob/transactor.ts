@@ -26,6 +26,7 @@ import { BlobNotFoundError, type BlobStore, WriteOpAction } from '@atproto/repo'
 import {
   type AtUri,
   type NsidString,
+  type SpaceRefString,
   currentDatetimeString,
 } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
@@ -411,7 +412,7 @@ export class BlobTransactor extends BlobReader {
 
   // Must run before the space's records are dropped, since it scopes by them.
   async deleteSpaceBlobs(
-    space: string,
+    space: SpaceRefString,
     keep: readonly NsidString[] = [],
   ): Promise<void> {
     const dereferenced = await this.db.db

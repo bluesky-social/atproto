@@ -82,9 +82,9 @@ const LEXICONS: readonly LexiconDoc[] = [
       main: {
         type: 'space',
         key: 'any',
-        name: 'Example Group',
+        title: 'Example Group',
         description: 'A permissioned group space, for dev and tests',
-        'name:lang': { fr: 'Groupe Exemple' },
+        'title:lang': { fr: 'Groupe Exemple' },
         collections: ['com.example.groupPost', 'com.example.groupNote'],
       },
     },

@@ -85,13 +85,15 @@
     }
   },
   {
-    "name": "space missing name",
+    "name": "space with empty title",
     "lexicon": {
       "lexicon": 1,
       "id": "com.example.space",
       "defs": {
         "main": {
           "type": "space",
+          "key": "any",
+          "title": "",
           "collections": []
         }
       }
@@ -105,7 +107,7 @@
       "defs": {
         "main": {
           "type": "space",
-          "name": "Example Space"
+          "title": "Example Space"
         }
       }
     }
@@ -118,7 +120,7 @@
       "defs": {
         "main": {
           "type": "space",
-          "name": "Example Space",
+          "title": "Example Space",
           "collections": ["not-a-valid-nsid"]
         }
       }
@@ -133,7 +135,7 @@
         "demo": {
           "type": "space",
           "key": "any",
-          "name": "Example Space",
+          "title": "Example Space",
           "collections": []
         }
       }
@@ -147,7 +149,7 @@
       "defs": {
         "main": {
           "type": "space",
-          "name": "Example Space",
+          "title": "Example Space",
           "collections": []
         }
       }
@@ -162,7 +164,7 @@
         "main": {
           "type": "space",
           "key": "bogus",
-          "name": "Example Space",
+          "title": "Example Space",
           "collections": []
         }
       }

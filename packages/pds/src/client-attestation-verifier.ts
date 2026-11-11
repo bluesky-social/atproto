@@ -7,7 +7,7 @@ import {
   type OAuthClientMetadata,
   oauthClientMetadataSchema,
 } from '@atproto/oauth-types'
-import { SPACE_TOKEN_TYPES, parseSpaceToken } from '@atproto/space'
+import { CLIENT_ATTESTATION_TYP, parseSpaceToken } from '@atproto/space'
 import { type UriString, isValidUri } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { type Fetch, bindFetch } from '@atproto-labs/fetch'
@@ -92,7 +92,7 @@ export class ClientAttestationVerifier {
       issuer: clientId,
       subject: clientId,
       audience: expectedAud,
-      typ: SPACE_TOKEN_TYPES.clientAttestation.typ,
+      typ: CLIENT_ATTESTATION_TYP,
       requiredClaims: ['jti', 'exp'],
     }).catch(invalid(`Invalid client attestation for "${clientId}"`))
 

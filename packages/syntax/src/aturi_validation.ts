@@ -198,7 +198,7 @@ export type SpaceAtUriParts = AtUriPartsBase & {
   authority: DidString
   spaceType: NsidString
   skey: string
-  author?: DidString
+  authorDid?: DidString
 }
 
 export type AtUriParts = PublicAtUriParts | SpaceAtUriParts
@@ -209,7 +209,7 @@ const AT_URI_REGEXP =
 
 export const SPACE_MARKER = 'space'
 const SPACE_AT_URI_REGEXP =
-  /^at:\/\/(?<authority>[^/?#\s]+)\/space\/(?<spaceType>[^/?#\s]+)\/(?<skey>[^/?#\s]+)(?:\/(?<author>[^/?#\s]+)\/(?<collection>[^/?#\s]+)\/(?<rkey>[^/?#\s]+))?(?<trailingSlash>\/)?(?:\?(?<query>[^#\s]*))?(?:#(?<hash>[^\s]*))?$/
+  /^at:\/\/(?<authority>[^/?#\s]+)\/space\/(?<spaceType>[^/?#\s]+)\/(?<skey>[^/?#\s]+)(?:\/(?<authorDid>[^/?#\s]+)\/(?<collection>[^/?#\s]+)\/(?<rkey>[^/?#\s]+))?(?<trailingSlash>\/)?(?:\?(?<query>[^#\s]*))?(?:#(?<hash>[^\s]*))?$/
 
 /**
  * Parses a valid {@link AtUriString} into a {@link AtUriParts} object, or
@@ -317,7 +317,7 @@ export function parseAtUriString(
  * Whether a string addresses permissioned space data. Checks only for the `space`
  * marker — use {@link isAtUriString} to validate the URI itself.
  */
-export function isSpaceUri(input: unknown): boolean {
+function isSpaceUri(input: unknown): boolean {
   if (typeof input !== 'string') return false
   if (!input.startsWith('at://')) return false
   const pathStart = input.indexOf('/', 5) // after "at://"
@@ -334,11 +334,20 @@ export function isPublicAtUriString<I>(
   return !isSpaceUri(input) && isAtUriString(input, options)
 }
 
+/**
+ * An ATURI addressing permissioned space data: either a space ref or a record
+ * within a space.
+ *
+ * @example "at://did:plc:ewvi7nxzyoun6zhxrhs64oiz/space/app.bsky.group/default/did:plc:44ybard66vv44zksje25o7dz/app.bsky.feed.post/3jui7kd54zh2y"
+ */
+export type SpaceAtUriString = AtUriString &
+  `at://${DidString}/${typeof SPACE_MARKER}/${string}`
+
 /** Whether a string is a valid ATURI addressing permissioned space data. */
 export function isSpaceAtUriString<I>(
   input: I,
   options?: Omit<ParseAtUriStringOptions, 'detailed'>,
-): input is I & AtUriString {
+): input is I & SpaceAtUriString {
   return isSpaceUri(input) && isAtUriString(input, options)
 }
 
@@ -357,7 +366,9 @@ export type SpaceRefString =
 export function isSpaceRefString<I>(input: I): input is I & SpaceRefString {
   if (!isSpaceAtUriString(input)) return false
   const result = parseAtUriString(input)
-  return result.success && result.value.isSpace && result.value.author == null
+  return (
+    result.success && result.value.isSpace && result.value.authorDid == null
+  )
 }
 
 /**
@@ -381,8 +392,8 @@ function parseSpaceAtUriString(
     return failure('Space ATURI has invalid space type')
   }
 
-  if (groups.author != null) {
-    if (!isValidDid(groups.author)) {
+  if (groups.authorDid != null) {
+    if (!isValidDid(groups.authorDid)) {
       return failure('Space ATURI author must be a DID')
     }
     if (!isValidNsid(groups.collection)) {

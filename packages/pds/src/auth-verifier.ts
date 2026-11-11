@@ -381,10 +381,10 @@ export class AuthVerifier {
         )
       }
       try {
-        await verifyCredentialSig(ctx.req.headers, payload.cnf!.kid)
+        await verifyCredentialSig(ctx.req.headers, payload.cnf.kid)
       } catch (err) {
         if (err instanceof SpaceSignatureError) {
-          throw new AuthRequiredError(err.message, err.code)
+          throw new AuthRequiredError(err.message, err.code, { cause: err })
         }
         throw err
       }
@@ -455,13 +455,18 @@ export class AuthVerifier {
       // The token arrives in the request body rather than as the request's
       // authorization, so a bad one is an invalid request, not an auth failure.
       if (err instanceof AuthRequiredError) {
-        throw new InvalidRequestError(err.message, 'InvalidDelegationToken')
+        throw new InvalidRequestError(err.message, 'InvalidDelegationToken', {
+          cause: err,
+        })
       }
       throw err
     }
   }
 
-  private async verifySpaceToken(jwtStr: string, type: SpaceTokenType) {
+  private async verifySpaceToken<T extends SpaceTokenType>(
+    jwtStr: string,
+    type: T,
+  ) {
     try {
       return await verifySpaceToken(type, jwtStr, {
         getSigningKey: (iss, forceRefresh) =>
@@ -470,11 +475,12 @@ export class AuthVerifier {
     } catch (err) {
       if (err instanceof AuthRequiredError) throw err
       if (err instanceof SpaceTokenError) {
-        throw new AuthRequiredError(err.message, err.code)
+        throw new AuthRequiredError(err.message, err.code, { cause: err })
       }
       throw new AuthRequiredError(
         `Invalid ${type} token: ${err instanceof Error ? err.message : String(err)}`,
         'BadJwt',
+        { cause: err },
       )
     }
   }

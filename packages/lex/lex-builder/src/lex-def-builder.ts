@@ -206,13 +206,13 @@ export class LexDefBuilder {
 
   private async addSpace(hash: string, def: LexiconSpace) {
     const options = stringifyOptions(def, [
-      'name',
-      'name:lang',
+      'title',
+      'title:lang',
     ] satisfies (keyof l.SpaceOptions)[])
 
     await this.addSchema(hash, def, {
       schema: markPure(
-        `l.space($nsid, ${JSON.stringify(def.key)}, ${JSON.stringify(def.collections)}, ${options})`,
+        `l.space(${JSON.stringify(def.key)}, $nsid, ${JSON.stringify(def.collections)}, ${options})`,
       ),
     })
   }

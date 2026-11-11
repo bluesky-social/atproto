@@ -1,14 +1,19 @@
-import { describe, expect, test } from 'vitest'
+import { describe, expect, expectTypeOf, test } from 'vitest'
 import {
   AtUri,
+  type DidString,
   InvalidAtUriError,
+  InvalidDidError,
+  InvalidNsidError,
+  InvalidRecordKeyError,
+  type NsidString,
+  type SpaceAtUriString,
   SpaceRef,
   assertAtUriString,
   isAtUriString,
   isPublicAtUriString,
   isSpaceAtUriString,
   isSpaceRefString,
-  isSpaceUri,
   parseAtUriString,
 } from '../src/index.js'
 import { readInteropFile } from './_utils.js'
@@ -255,13 +260,8 @@ describe('custom cases', () => {
     const SPACE = 'at://did:plc:asdf123/space/com.example.group/default'
     const PUBLIC = 'at://did:plc:asdf123/com.atproto.feed.post/abc'
 
-    test('isSpaceUri checks only for the marker', () => {
-      expect(isSpaceUri(SPACE)).toBe(true)
-      expect(isSpaceUri(PUBLIC)).toBe(false)
-      expect(isSpaceUri('at://did:plc:asdf123')).toBe(false)
-      expect(isSpaceUri('at://did:plc:asdf123/spacey/x/y')).toBe(false)
-      expect(isSpaceUri(null)).toBe(false)
-      expect(isSpaceUri(42)).toBe(false)
+    test('isSpaceUri is internal', async () => {
+      expect('isSpaceUri' in (await import('../src/index.js'))).toBe(false)
     })
 
     test('isSpaceAtUriString / isPublicAtUriString also validate', () => {
@@ -271,9 +271,14 @@ describe('custom cases', () => {
       expect(isPublicAtUriString(PUBLIC)).toBe(true)
       expect(isSpaceAtUriString(PUBLIC)).toBe(false)
 
-      // unlike isSpaceUri, these reject anything that isn't a valid aturi
       expect(isPublicAtUriString('hello')).toBe(false)
       expect(isSpaceAtUriString('at://did:plc:asdf123/space')).toBe(false)
+    })
+
+    test('isSpaceAtUriString narrows to SpaceAtUriString', () => {
+      const input: unknown = SPACE
+      if (!isSpaceAtUriString(input)) throw new Error('expected a space uri')
+      expectTypeOf(input).toExtend<SpaceAtUriString>()
     })
 
     test('parseAtUriString discriminates on isSpace', () => {
@@ -289,7 +294,7 @@ describe('custom cases', () => {
       expect(space.value.authority).toBe('did:plc:asdf123')
       expect(space.value.spaceType).toBe('com.example.group')
       expect(space.value.skey).toBe('default')
-      expect(space.value.author).toBe('did:plc:user1')
+      expect(space.value.authorDid).toBe('did:plc:user1')
       expect(space.value.collection).toBe('com.atproto.feed.post')
       expect(space.value.rkey).toBe('abc123')
     })
@@ -434,24 +439,11 @@ describe('custom cases', () => {
     })
   })
 
-  describe('AtUri.makeSpace', () => {
-    test('builds a space uri', () => {
-      const uri = AtUri.makeSpace(
-        'did:plc:asdf123',
-        'com.example.group',
-        'default',
-      )
-      expect(uri.toString()).toBe(
-        'at://did:plc:asdf123/space/com.example.group/default',
-      )
-      expect(uri.skey).toBe('default')
-    })
+  describe('SpaceRef#recordUri', () => {
+    const ref = new SpaceRef('did:plc:asdf123', 'com.example.group', 'default')
 
-    test('builds a record uri', () => {
-      const uri = AtUri.makeSpace(
-        'did:plc:asdf123',
-        'com.example.group',
-        'default',
+    test('builds a record uri inside the space', () => {
+      const uri = ref.recordUri(
         'did:plc:user1',
         'com.atproto.feed.post',
         'abc123',
@@ -461,6 +453,22 @@ describe('custom cases', () => {
       )
       expect(uri.authorDid).toBe('did:plc:user1')
       expect(uri.rkey).toBe('abc123')
+    })
+
+    test('validates its parts', () => {
+      expect(() =>
+        ref.recordUri(
+          'user.bsky.social' as DidString,
+          'com.atproto.feed.post',
+          'abc123',
+        ),
+      ).toThrow(InvalidDidError)
+      expect(() =>
+        ref.recordUri('did:plc:user1', 'short' as NsidString, 'abc123'),
+      ).toThrow(InvalidNsidError)
+      expect(() =>
+        ref.recordUri('did:plc:user1', 'com.atproto.feed.post', '..'),
+      ).toThrow(InvalidRecordKeyError)
     })
   })
 })

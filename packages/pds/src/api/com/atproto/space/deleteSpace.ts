@@ -1,7 +1,7 @@
 import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
-import { assertSpaceAuthority } from './util.js'
+import { assertSpaceAuthority, toSpaceRef } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.space.deleteSpace, {
@@ -15,8 +15,9 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ input: { body }, auth }) => {
       const authorityDid = auth.credentials.did
       const { space } = body
+      const ref = toSpaceRef(space)
 
-      assertSpaceAuthority(auth, space, { manage: 'delete' })
+      assertSpaceAuthority(auth, ref, { manage: 'delete' })
 
       const spaceRow = await ctx.actorStore.read(authorityDid, (store) =>
         store.space.getSpace(space),
@@ -26,9 +27,9 @@ export default function (server: Server, ctx: AppContext) {
       }
       if (spaceRow.deletedAt) return
 
-      const recipients = await ctx.spacePolicyManager.deleteSpace(space)
+      const recipients = await ctx.spacePolicyManager.deleteSpace(ref)
       ctx.backgroundQueue.add(() =>
-        ctx.spaceNotifications.notifySpaceStatus(space, recipients),
+        ctx.spaceNotifications.notifySpaceStatus(ref, recipients),
       )
     },
   })

@@ -21,19 +21,19 @@ export default function (server: Server, ctx: AppContext) {
       const ref = new SpaceRef(authorityDid, spaceType, skey)
       const space = ref.toString()
 
-      auth.credentials.permissions?.assertSpaceRef(ref, {
+      auth.credentials.permissions?.assertSpace(ref, {
         manage: 'create',
       })
 
-      const commit = await ctx.spacePolicyManager.createSpace(space, policy)
+      const commit = await ctx.spacePolicyManager.createSpace(ref, policy)
       await fireNotifyRepoUpdate(ctx, {
-        space,
+        space: ref,
         writerDid: authorityDid,
         commit,
       })
 
       return {
-        encoding: 'application/json' as const,
+        encoding: 'application/json',
         body: { space },
       }
     },

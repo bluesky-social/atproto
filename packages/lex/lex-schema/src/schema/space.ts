@@ -1,26 +1,33 @@
-import type { LexiconRecordKey, NsidString } from '../core.js'
+import {
+  type LexiconRecordKey,
+  type NsidString,
+  asLexiconRecordKey,
+} from '../core.js'
 
 /**
  * Configuration options for a space declaration.
  *
- * @property description - Optional developer-facing description of the space type
- * @property name:lang - Localized names by language code
+ * @property title - Human-readable title shown on OAuth consent screens, which
+ *   show the NSID when it is absent
+ * @property title:lang - Localized titles by language code
+ * @property description - Developer-facing description of the space type
  */
 export type SpaceOptions = {
-  name: string
-  'name:lang'?: Record<string, undefined | string>
+  title?: string
+  'title:lang'?: Record<string, undefined | string>
+  description?: string
 }
 
 /**
  * Declares a space type in AT Protocol.
  *
  * A space declaration establishes an NSID for a kind of permissioned space
- * and supplies the human-readable name shown on OAuth consent screens when
+ * and may supply the human-readable title shown on OAuth consent screens when
  * an application requests access to a space of this type. It also lists the
  * recommended record collections for clients of this space type.
  *
  * The `collections` list does not constrain what may actually be written
- * into the space — it's a recommendation for clients and (along with `name`)
+ * into the space — it's a recommendation for clients and (along with `title`)
  * informs how OAuth consent screens describe the access being requested.
  *
  * @template TNsid - The NSID identifying this space type
@@ -29,11 +36,10 @@ export type SpaceOptions = {
  * @example
  * ```ts
  * const forum = new Space(
- *   'com.atmoboards.forum',
  *   'any',
- *   'AtmoBoards Forum',
+ *   'com.atmoboards.forum',
  *   ['com.atmoboards.thread', 'com.atmoboards.reply'],
- *   { 'name:lang': { es: 'Foro AtmoBoards' } },
+ *   { title: 'AtmoBoards Forum', 'title:lang': { es: 'Foro AtmoBoards' } },
  * )
  * ```
  */
@@ -41,51 +47,50 @@ export class Space<
   const TNsid extends NsidString = any,
   const TKey extends LexiconRecordKey = LexiconRecordKey,
 > {
-  readonly nsid: TNsid
   readonly key: TKey
+  readonly nsid: TNsid
   readonly collections: readonly NsidString[]
   readonly options: SpaceOptions
 
   constructor(
-    nsid: TNsid,
     key: TKey,
+    nsid: TNsid,
     collections: readonly NsidString[],
-    options: SpaceOptions,
+    options: SpaceOptions = {},
   ) {
+    this.key = asLexiconRecordKey(key)
     this.nsid = nsid
-    this.key = key
     this.collections = collections
     this.options = options
   }
 
-  get name(): string {
-    return this.options.name
+  get title(): string | undefined {
+    return this.options.title
   }
 }
 
 /**
  * Creates a space declaration.
  *
- * @param nsid - The NSID identifying this space type
  * @param key - Recommended space key type
- * @param name - Human-readable name shown on OAuth consent screens (e.g. "AtmoBoards Forum")
+ * @param nsid - The NSID identifying this space type
  * @param collections - Recommended record collections for clients of this space type
- * @param options - Optional metadata (description, localized names)
+ * @param options - Optional metadata (title, localized titles, description)
  * @returns A new {@link Space} instance
  *
  * @example
  * ```ts
  * const forum = l.space(
- *   'com.atmoboards.forum',
  *   'any',
- *   'AtmoBoards Forum',
+ *   'com.atmoboards.forum',
  *   ['com.atmoboards.thread', 'com.atmoboards.reply'],
  *   {
- *     description: 'A discussion forum',
- *     'name:lang': {
+ *     title: 'AtmoBoards Forum',
+ *     'title:lang': {
  *       es: 'Foro AtmoBoards',
  *       ja: 'AtmoBoards 掲示板',
  *     },
+ *     description: 'A discussion forum',
  *   },
  * )
  * ```
@@ -95,10 +100,10 @@ export function space<
   const N extends NsidString,
   const K extends LexiconRecordKey,
 >(
-  nsid: N,
   key: K,
+  nsid: N,
   collections: readonly NsidString[],
-  options: SpaceOptions,
+  options?: SpaceOptions,
 ): Space<N, K> {
-  return new Space<N, K>(nsid, key, collections, options)
+  return new Space<N, K>(key, nsid, collections, options)
 }

@@ -23,15 +23,17 @@ describe('space HTTP message signatures', () => {
   })
 
   const signedHeaders = () =>
-    createSpaceSigHeaders(key, {
+    createSpaceSigHeaders({
       authorization: AUTHORIZATION,
       audience: AUDIENCE,
-    })
+      keypair: key,
+    }).then(({ headers }) => headers)
 
   it('signs the RFC 9421 signature base with a compact P-256 signature', async () => {
-    const { signatureInput, signature } = await createSpaceSig(key, {
+    const { signatureInput, signature } = await createSpaceSig({
       authorization: AUTHORIZATION,
       audience: AUDIENCE,
+      keypair: key,
     })
     const input =
       '("authorization" "atproto-space-audience");tag="atproto-space-credential"'
@@ -173,9 +175,10 @@ describe('space HTTP message signatures', () => {
 
   it('rejects another signing key', async () => {
     const other = await P256Keypair.create()
-    const headers = await createSpaceSigHeaders(other, {
+    const { headers } = await createSpaceSigHeaders({
       authorization: AUTHORIZATION,
       audience: AUDIENCE,
+      keypair: other,
     })
     await expect(verifyCredentialSig(headers, keyId)).rejects.toThrow(
       /invalid HTTP message signature/,
@@ -234,9 +237,10 @@ describe('space HTTP message signatures', () => {
   it('rejects other key types', async () => {
     const other = await Secp256k1Keypair.create()
     await expect(
-      createSpaceSigHeaders(other, {
+      createSpaceSigHeaders({
         authorization: AUTHORIZATION,
         audience: AUDIENCE,
+        keypair: other,
       }),
     ).rejects.toThrow(/P-256/)
     const headers = await signedHeaders()

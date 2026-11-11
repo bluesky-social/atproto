@@ -69,7 +69,8 @@
         { "name": "RepoNotFound" },
         { "name": "RepoTakendown" },
         { "name": "RepoSuspended" },
-        { "name": "RepoDeactivated" }
+        { "name": "RepoDeactivated" },
+        { "name": "InvalidCursor" }
       ]
     },
     "opEntry": {

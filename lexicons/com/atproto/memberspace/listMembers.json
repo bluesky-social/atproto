@@ -48,8 +48,14 @@
           "name": "SpaceNotFound"
         },
         {
+          "name": "NotAuthorized"
+        },
+        {
           "name": "PolicyMismatch",
           "description": "The space does not have a memberspace policy."
+        },
+        {
+          "name": "InvalidCursor"
         }
       ]
     }

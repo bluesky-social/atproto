@@ -11,18 +11,19 @@ import {
   type TestNetworkNoAppView,
   type TestPds,
 } from '@atproto/dev-env'
-import { type IdResolver, getDidKeyFromMultibase } from '@atproto/identity'
+import type { IdResolver } from '@atproto/identity'
 import { Client, type DidString } from '@atproto/lex'
 import { type LexMap, parseCid } from '@atproto/lex-data'
 import { JoseKey } from '@atproto/oauth-provider/provider'
 import { ReplayManager } from '@atproto/oauth-provider/verifier'
 import {
+  CLIENT_ATTESTATION_TYP,
   COMMIT_MAC_TYPE,
-  type Commit,
   MAC_HEADER,
   type MacType,
   RECORD_MAC_TYPE,
   RepoCommit,
+  type SpaceCommit,
   WANT_MAC_HEADER,
   createSpaceSigHeaders,
   encapsulate,
@@ -37,8 +38,17 @@ import {
   type SpaceRefString,
   type UriString,
 } from '@atproto/syntax'
+import { createServiceAuthHeaders } from '@atproto/xrpc-server'
 import { ClientAttestationVerifier } from '../src/client-attestation-verifier.js'
 import { com } from '../src/lexicons/index.js'
+
+// The methods whose responses a repo host authenticates with a MAC.
+const MAC_TYPE_BY_METHOD: Record<string, MacType> = {
+  [com.atproto.space.getLatestCommit.$lxm]: COMMIT_MAC_TYPE,
+  [com.atproto.space.getRepo.$lxm]: COMMIT_MAC_TYPE,
+  [com.atproto.space.listRepoOps.$lxm]: COMMIT_MAC_TYPE,
+  [com.atproto.space.getRecord.$lxm]: RECORD_MAC_TYPE,
+}
 
 // Third-party collections, as a space's are in practice. The PDS validates
 // records against a hardcoded schema map (see `repo/prepare.ts`), so anything
@@ -444,14 +454,6 @@ export class SpaceClient {
   }
 }
 
-// The methods that require a MAC when called with a space credential.
-const MAC_TYPES: Record<string, MacType> = {
-  [com.atproto.space.getLatestCommit.$lxm]: COMMIT_MAC_TYPE,
-  [com.atproto.space.getRepo.$lxm]: COMMIT_MAC_TYPE,
-  [com.atproto.space.listRepoOps.$lxm]: COMMIT_MAC_TYPE,
-  [com.atproto.space.getRecord.$lxm]: RECORD_MAC_TYPE,
-}
-
 /**
  * A space credential and its signing key, with audience DIDs derived from requests.
  *
@@ -484,16 +486,17 @@ export class SpaceCredential {
         ? Object.fromEntries(new URL(request.url).searchParams)
         : await request.clone().json()
     const audience = params.repo ?? SpaceRef.parse(params.space).spaceDid
-    const headers = await createSpaceSigHeaders(this.key, {
+    const { headers } = await createSpaceSigHeaders({
       authorization: `Atproto-Space-Credential ${this.credential}`,
       audience,
+      keypair: this.key,
     })
     for (const [name, value] of Object.entries(headers)) {
       request.headers.set(name, value)
     }
 
     const macType =
-      MAC_TYPES[new URL(request.url).pathname.replace(/^\/xrpc\//, '')]
+      MAC_TYPE_BY_METHOD[new URL(request.url).pathname.replace(/^\/xrpc\//, '')]
     if (!macType || request.headers.has(WANT_MAC_HEADER)) {
       return globalThis.fetch(request)
     }
@@ -510,27 +513,26 @@ export class SpaceCredential {
     return response
   }
 
-  async resolveKemKey(did: string): Promise<string> {
+  async resolveKemKey(did: string): Promise<DidString> {
     const didDoc = await this.idResolver.did.ensureResolve(did)
-    const key = getVerificationMaterial(didDoc, 'atproto_kem')
-    const didKey = key && getDidKeyFromMultibase(key)
-    if (!didKey) throw new Error(`no #atproto_kem key for ${did}`)
-    return didKey
+    const kemKey = getVerificationMaterial(didDoc, 'atproto_kem')
+    if (!kemKey) throw new Error(`no #atproto_kem key for ${did}`)
+    return `did:key:${kemKey.publicKeyMultibase}`
   }
 
   /** The shared secret and response MAC of the latest request. */
   lastMacParams(): { sharedSecret: Uint8Array; mac: Uint8Array } {
     if (!this.lastMac) throw new Error('no MAC was requested')
     const { type, sharedSecret, header } = this.lastMac
-    return { sharedSecret, mac: parseMacHeader(header ?? undefined, type) }
+    return { sharedSecret, mac: parseMacHeader(header, type) }
   }
 
   /** Verify a commit against the MAC from the latest request. */
   verifyCommit(
-    commit: Commit,
-    requested: { space: string; repo: string },
-  ): boolean {
-    return verifyCommit(commit, { ...requested, ...this.lastMacParams() })
+    commit: SpaceCommit,
+    requested: { space: SpaceRefString; repo: DidString },
+  ): void {
+    verifyCommit(commit, { ...requested, ...this.lastMacParams() })
   }
 }
 
@@ -557,6 +559,7 @@ export class MockService {
     public url: string,
     public did: DidString,
     public serviceId: string,
+    private keypair: Secp256k1Keypair,
   ) {
     this.terminator = createHttpTerminator({ server })
   }
@@ -564,6 +567,21 @@ export class MockService {
   /** `did#serviceId`, the form a notify target is registered under. */
   get serviceRef(): string {
     return `${this.did}#${this.serviceId}`
+  }
+
+  /** Service auth signed with this service's `#atproto` key, issued as `serviceRef` by default. */
+  async serviceAuthHeaders(opts: {
+    aud: string
+    lxm: string
+    iss?: string
+  }): Promise<Record<string, string>> {
+    const { headers } = await createServiceAuthHeaders({
+      iss: opts.iss ?? this.serviceRef,
+      aud: opts.aud,
+      lxm: opts.lxm,
+      keypair: this.keypair,
+    })
+    return headers
   }
 
   callsTo(lxm: string) {
@@ -611,7 +629,7 @@ export class MockService {
         type: 'plc_operation',
         rotationKeys: [keypair.did()],
         alsoKnownAs: [],
-        verificationMethods: {},
+        verificationMethods: { atproto: keypair.did() },
         services: {
           [opts.serviceId]: { type: 'AtprotoSpaceService', endpoint: url },
         },
@@ -627,6 +645,7 @@ export class MockService {
       url,
       did as DidString,
       opts.serviceId,
+      keypair,
     )
     service.calls = calls
     return service
@@ -754,7 +773,7 @@ export class MockClientApp {
     const now = Math.floor(Date.now() / 1000)
     const signer = opts.signWith ?? this.key
     return signer.createJwt(
-      { alg: 'ES256', typ: 'atproto-client-attestation+jwt' },
+      { alg: 'ES256', typ: CLIENT_ATTESTATION_TYP },
       {
         iss: opts.iss ?? this.clientId,
         sub: opts.iss ?? this.clientId,

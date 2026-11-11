@@ -37,7 +37,7 @@
           }
         }
       },
-      "errors": [{ "name": "SpaceNotFound" }]
+      "errors": [{ "name": "SpaceNotFound" }, { "name": "NotAuthorized" }]
     }
   }
 }

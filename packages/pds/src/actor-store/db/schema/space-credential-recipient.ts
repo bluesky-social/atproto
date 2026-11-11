@@ -1,5 +1,7 @@
+import type { SpaceRefString } from '@atproto/syntax'
+
 export interface SpaceCredentialRecipient {
-  space: string
+  space: SpaceRefString
   service: string
   serviceEndpoint: string
   // Stored rather than derived, so reads are a plain comparison against now.
