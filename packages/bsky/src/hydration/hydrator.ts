@@ -1064,12 +1064,12 @@ export class Hydrator {
   }
 
   /**
-   * Like `hydrateEmbedExternalViewFromUris`, but for exact record versions
-   * pinned by strong refs. Roots land only in `externalRecordsByRef`; their
+   * Like `hydrateEmbedExternalViewFromUris`, but accepts optional CID pins per
+   * root. Pinned roots land only in `externalRecordsByRef`; unpinned roots and
    * URI dependencies are hydrated as latest versions by the URI path.
    */
   async hydrateEmbedExternalViewFromRefs(
-    refs: Required<ItemRef>[],
+    refs: ItemRef[],
     ctx: HydrateCtx,
     options: ExternalHydrationOptions = {},
   ): Promise<HydrationState> {

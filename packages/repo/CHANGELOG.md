@@ -1,5 +1,13 @@
 # @atproto/repo
 
+## 0.11.5
+
+### Patch Changes
+
+- Updated dependencies [[`ac78dcf`](https://github.com/bluesky-social/atproto/commit/ac78dcf2cba6505f822b6db093a14d489eee1c49), [`7a46712`](https://github.com/bluesky-social/atproto/commit/7a467120982d9ff1559afeb3a26989dad5877d17)]:
+  - @atproto/lex-cbor@0.1.10
+  - @atproto/common@0.8.10
+
 ## 0.11.4
 
 ### Patch Changes

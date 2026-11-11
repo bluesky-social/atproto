@@ -1,5 +1,32 @@
 # @atproto/dev-env
 
+## 0.7.7
+
+### Patch Changes
+
+- [#5802](https://github.com/bluesky-social/atproto/pull/5802) [`d930c3b`](https://github.com/bluesky-social/atproto/commit/d930c3b6b401df7085b8e85f3fc83dbbc3e28605) Thanks [@foysalit](https://github.com/foysalit)! - Retire moderation subject statistics and count-based filters. Legacy count-based
+  sorts fall back to last reported time.
+- Updated dependencies [[`dd74699`](https://github.com/bluesky-social/atproto/commit/dd74699050a2ef0049736466e45c13842b71e0b9), [`b30ea73`](https://github.com/bluesky-social/atproto/commit/b30ea7305be8df27524ed70d4af7f246014194c2), [`d930c3b`](https://github.com/bluesky-social/atproto/commit/d930c3b6b401df7085b8e85f3fc83dbbc3e28605), [`211c9e8`](https://github.com/bluesky-social/atproto/commit/211c9e8acceccca2e983b7bc8ebfc0756664c956), [`bae981e`](https://github.com/bluesky-social/atproto/commit/bae981e238a7bc192b52a53c14f051a76a9f5507)]:
+  - @atproto/bsky@0.5.6
+  - @atproto/xrpc-server@0.13.11
+  - @atproto/pds@0.5.57
+  - @atproto/ozone@0.14.0
+  - @atproto/api@0.31.0
+  - @atproto/sync@0.4.25
+
+## 0.7.6
+
+### Patch Changes
+
+- [#5835](https://github.com/bluesky-social/atproto/pull/5835) [`1ec24ff`](https://github.com/bluesky-social/atproto/commit/1ec24ff2a123e3ea9d125d0dea950a8ee3adfca4) Thanks [@gcwill70](https://github.com/gcwill70)! - Support local Atmosphere record hydration and backlinks, and seed reusable moderation fixtures.
+- Updated dependencies [[`39d702c`](https://github.com/bluesky-social/atproto/commit/39d702c851d469d7340fc0c5946959063769f849), [`0849c24`](https://github.com/bluesky-social/atproto/commit/0849c24d492a9286e90c1734f2483d6ed7423d73), [`7f619af`](https://github.com/bluesky-social/atproto/commit/7f619aff86f452f1ac2320b6926d88a8968b319d), [`1033419`](https://github.com/bluesky-social/atproto/commit/103341946f8bdb2abb5409866b234ad17812f7b8), [`1ec24ff`](https://github.com/bluesky-social/atproto/commit/1ec24ff2a123e3ea9d125d0dea950a8ee3adfca4), [`870a534`](https://github.com/bluesky-social/atproto/commit/870a5346d0e9374cb99e60bf88a98c27d3d34cfe), [`c03fb8d`](https://github.com/bluesky-social/atproto/commit/c03fb8dde754508529f82b80d626332198f33f44), [`7a46712`](https://github.com/bluesky-social/atproto/commit/7a467120982d9ff1559afeb3a26989dad5877d17), [`fe343a1`](https://github.com/bluesky-social/atproto/commit/fe343a1b90c1de470a45b0469628a9e75e7d883f)]:
+  - @atproto/pds@0.5.56
+  - @atproto/bsky@0.5.5
+  - @atproto/ozone@0.13.0
+  - @atproto/bsync@0.1.9
+  - @atproto/xrpc-server@0.13.10
+  - @atproto/sync@0.4.24
+
 ## 0.7.5
 
 ### Patch Changes

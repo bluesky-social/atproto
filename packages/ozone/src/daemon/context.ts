@@ -17,7 +17,6 @@ import { TeamService } from '../team/index.js'
 import { getSigningKeyId } from '../util.js'
 import { EventPusher } from './event-pusher.js'
 import { EventReverser } from './event-reverser.js'
-import { MaterializedViewRefresher } from './materialized-view-refresher.js'
 import { QueueRouter } from './queue-router.js'
 import { ReportReporterDidBackfiller } from './report-reporter-did-backfiller.js'
 import { ScheduledActionProcessor } from './scheduled-action-processor.js'
@@ -33,7 +32,6 @@ export type DaemonContextOptions = {
   signingKey: Keypair
   eventPusher: EventPusher
   eventReverser: EventReverser
-  materializedViewRefresher: MaterializedViewRefresher
   teamProfileSynchronizer: TeamProfileSynchronizer
   scheduledActionProcessor: ScheduledActionProcessor
   strikeExpiryProcessor: StrikeExpiryProcessor
@@ -113,12 +111,6 @@ export class DaemonContext {
 
     const eventReverser = new EventReverser(db, modService)
 
-    const materializedViewRefresher = new MaterializedViewRefresher(
-      backgroundQueue,
-      cfg.db.materializedViewRefreshIntervalMs,
-      cfg.db.materializedViewRefreshTimeoutMs,
-    )
-
     const scheduledActionProcessor = new ScheduledActionProcessor(
       db,
       cfg.service.did,
@@ -162,7 +154,6 @@ export class DaemonContext {
       signingKey,
       eventPusher,
       eventReverser,
-      materializedViewRefresher,
       teamProfileSynchronizer,
       scheduledActionProcessor,
       strikeExpiryProcessor,
@@ -192,10 +183,6 @@ export class DaemonContext {
 
   get eventReverser(): EventReverser {
     return this.opts.eventReverser
-  }
-
-  get materializedViewRefresher(): MaterializedViewRefresher {
-    return this.opts.materializedViewRefresher
   }
 
   get teamProfileSynchronizer(): TeamProfileSynchronizer {
@@ -229,7 +216,6 @@ export class DaemonContext {
   async start() {
     this.eventPusher.start()
     this.eventReverser.start()
-    this.materializedViewRefresher.start()
     this.teamProfileSynchronizer.start()
     this.scheduledActionProcessor.start()
     this.strikeExpiryProcessor.start()
@@ -240,13 +226,11 @@ export class DaemonContext {
   }
 
   async processAll() {
-    // Sequential because the materialized view values depend on the events.
     await this.eventPusher.processAll()
     // Drain pending modEventReport rows into the report table so test code
     // that calls processAll() after creating reports sees the report rows
     // immediately (in production this happens via the 1-min poll).
     await this.queueRouter.routeReports()
-    await this.materializedViewRefresher.run()
     await this.teamProfileSynchronizer.run()
   }
 
@@ -255,7 +239,6 @@ export class DaemonContext {
       await allFulfilled([
         this.eventReverser.destroy(),
         this.eventPusher.destroy(),
-        this.materializedViewRefresher.destroy(),
         this.teamProfileSynchronizer.destroy(),
         this.scheduledActionProcessor.destroy(),
         this.strikeExpiryProcessor.destroy(),

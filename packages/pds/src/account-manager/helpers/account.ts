@@ -82,7 +82,13 @@ export const getAccount = async (
       if (isDidIdentifier(handleOrDid)) {
         return eb('actor.did', '=', handleOrDid)
       } else {
-        return eb('actor.handle', '=', handleOrDid)
+        // Handles are indexed only as lower("handle"): comparing the bare
+        // column scans every actor.
+        return eb(
+          eb.fn('lower', ['actor.handle']),
+          '=',
+          handleOrDid.toLowerCase(),
+        )
       }
     })
     .executeTakeFirst()
@@ -116,8 +122,23 @@ export const getAccountByEmail = async (
   email: string,
   flags?: AvailabilityFlags,
 ): Promise<ActorAccount | null> => {
+  // Emails are indexed only as lower("email"), like handles. Filtering the
+  // left join on that expression still walks every actor, so find the DID
+  // through the index first.
   const found = await selectAccountQB(db, flags)
-    .where('email', '=', email.toLowerCase())
+    .where((eb) =>
+      eb(
+        'actor.did',
+        'in',
+        db.db
+          .selectFrom('account')
+          .select('account.did')
+          .where((eb2) =>
+            eb2(eb2.fn('lower', ['account.email']), '=', email.toLowerCase()),
+          )
+          .$narrowType<{ did: DidString }>(),
+      ),
+    )
     .executeTakeFirst()
   return found || null
 }
@@ -221,7 +242,9 @@ export const updateHandle = async (
           exists(
             db.db
               .selectFrom('actor')
-              .where('handle', '=', handle)
+              .where((eb) =>
+                eb(eb.fn('lower', ['handle']), '=', handle.toLowerCase()),
+              )
               .where('did', '!=', did)
               .selectAll(),
           ),

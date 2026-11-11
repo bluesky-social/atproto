@@ -1,6 +1,3 @@
-import type { AtUriString } from '@atproto/lex-schema'
-import { isDidString } from '@atproto/lex-schema'
-import { parseAtUriString } from '@atproto/syntax'
 import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../../../context.js'
 import {
@@ -10,6 +7,7 @@ import {
 import { HydrationMap } from '../../../../hydration/util.js'
 import { app } from '../../../../lexicons/index.js'
 import { collectAssociations } from '../../../../util/external/associations.js'
+import { isCompleteRecordUri } from '../../../../util/uris.js'
 import { isRecordAvailable } from '../../../../views/external.js'
 import { resHeaders } from '../../../util.js'
 
@@ -76,17 +74,4 @@ export default function (server: Server, ctx: AppContext) {
       }
     },
   })
-}
-
-/** A complete DID-based record URI: collection and rkey, no query/fragment. */
-const isCompleteRecordUri = (value: string): value is AtUriString => {
-  const parsed = parseAtUriString(value)
-  return (
-    parsed.success &&
-    isDidString(parsed.value.authority) &&
-    !!parsed.value.collection &&
-    !!parsed.value.rkey &&
-    parsed.value.query === undefined &&
-    parsed.value.hash === undefined
-  )
 }

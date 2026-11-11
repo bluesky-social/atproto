@@ -145,8 +145,10 @@
     "app.bsky.unspecced.getAgeAssuranceState",
     "app.bsky.unspecced.getAtmosphereApps",
     "app.bsky.unspecced.getAtmosphereExploreArticleRecommendations",
+    "app.bsky.unspecced.getAtmosphereExploreGalleryRecommendations",
     "app.bsky.unspecced.getAtmosphereExploreTab",
     "app.bsky.unspecced.getAtmosphereRecordView",
+    "app.bsky.unspecced.getAtmosphereRecordViews",
     "app.bsky.unspecced.getAtmosphereTimeline",
     "app.bsky.unspecced.getConfig",
     "app.bsky.unspecced.getOnboardingSuggestedStarterPacks",
@@ -975,13 +977,21 @@
       "uri": "https://raw.githubusercontent.com/bluesky-social/bsky/refs/heads/main/lexicons/app/bsky/unspecced/getAtmosphereExploreArticleRecommendations.json",
       "cid": "bafyreial4vi2raxz7nfbwovdx6m4pdlb5hnpf37teistounxjxe6svbdsi"
     },
+    "app.bsky.unspecced.getAtmosphereExploreGalleryRecommendations": {
+      "uri": "file://../../lexicons-overrides/app/bsky/unspecced/getAtmosphereExploreGalleryRecommendations.json",
+      "cid": "bafyreibsqntzzfnxal4g4riz7tqb7cmfsigff27vt7o7vtljdl5mumpshi"
+    },
     "app.bsky.unspecced.getAtmosphereExploreTab": {
       "uri": "file://../../lexicons-overrides/app/bsky/unspecced/getAtmosphereExploreTab.json",
-      "cid": "bafyreicy4ac4dwr5akoaqlcg7whhsqf4iupa54bebxi7lvomv3zkf6chhy"
+      "cid": "bafyreihghydcuj6a6eadoniihcr3fsftq24a7qjw2cuxk73yqgoriwshnq"
     },
     "app.bsky.unspecced.getAtmosphereRecordView": {
       "uri": "file://../../lexicons-overrides/app/bsky/unspecced/getAtmosphereRecordView.json",
       "cid": "bafyreigc3pdtr77li2zp32br4pvysah6sd67345xlkjuy4finc35asvmc4"
+    },
+    "app.bsky.unspecced.getAtmosphereRecordViews": {
+      "uri": "file://../../lexicons-overrides/app/bsky/unspecced/getAtmosphereRecordViews.json",
+      "cid": "bafyreiezb7d6z2x7ay6tlcltibinxtwvbrka2btokd5g3xl5hirtaw3rb4"
     },
     "app.bsky.unspecced.getAtmosphereTimeline": {
       "uri": "file://../../lexicons-overrides/app/bsky/unspecced/getAtmosphereTimeline.json",
@@ -1905,7 +1915,7 @@
     },
     "tools.ozone.moderation.defs": {
       "uri": "file://../../lexicons/tools/ozone/moderation/defs.json",
-      "cid": "bafyreiaxhnfxwxaf4q6lpgmgv5pijoqo7szmgyzxm35k7pynq6d2amjcq4"
+      "cid": "bafyreibcg3sbvmdyegzpglbukhxmmqalwuplg37btnhsgkox337n3zjvbm"
     },
     "tools.ozone.moderation.emitEvent": {
       "uri": "file://../../lexicons/tools/ozone/moderation/emitEvent.json",
@@ -1957,7 +1967,7 @@
     },
     "tools.ozone.moderation.queryStatuses": {
       "uri": "file://../../lexicons/tools/ozone/moderation/queryStatuses.json",
-      "cid": "bafyreicnr6vxwjlsr7524mg4fhd6ts6parx7rdwqwefvwql6uz7jxp3dfu"
+      "cid": "bafyreidemz3yw3yiw3pnixwmlkp7dbapfoaohg3i7lih2eqyavyjovmuny"
     },
     "tools.ozone.moderation.scheduleAction": {
       "uri": "file://../../lexicons/tools/ozone/moderation/scheduleAction.json",

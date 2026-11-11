@@ -1,5 +1,43 @@
 # @atproto/pds
 
+## 0.5.57
+
+### Patch Changes
+
+- [#5857](https://github.com/bluesky-social/atproto/pull/5857) [`b30ea73`](https://github.com/bluesky-social/atproto/commit/b30ea7305be8df27524ed70d4af7f246014194c2) Thanks [@amckinley](https://github.com/amckinley)! - Add `PDS_DISABLE_IP_RATE_LIMITS`, for a PDS behind a proxy that enforces per-IP rate limits. When set with `PDS_RATE_LIMITS_ENABLED`, the PDS drops its global per-IP limit and the route limits keyed only on the client IP, and keeps its per-account limits. The xrpc-server `rateLimits` option gains `skipDefaultKeyedRouteLimits`, which skips route-specific limits that don't define their own `calcKey`.
+
+- [#5802](https://github.com/bluesky-social/atproto/pull/5802) [`d930c3b`](https://github.com/bluesky-social/atproto/commit/d930c3b6b401df7085b8e85f3fc83dbbc3e28605) Thanks [@foysalit](https://github.com/foysalit)! - Retire moderation subject statistics and count-based filters. Legacy count-based
+  sorts fall back to last reported time.
+
+- [#5863](https://github.com/bluesky-social/atproto/pull/5863) [`bae981e`](https://github.com/bluesky-social/atproto/commit/bae981e238a7bc192b52a53c14f051a76a9f5507) Thanks [@amckinley](https://github.com/amckinley)! - Look up accounts by handle and by email through the existing `lower(handle)` and `lower(email)` indexes. `getAccount` by handle (behind `createSession` and `resolveHandle`), `getAccountByEmail` and `updateHandle`'s check that a handle is free compared the bare column, which those indexes can't serve, so each scanned the whole `actor` or `account` table.
+- Updated dependencies [[`b30ea73`](https://github.com/bluesky-social/atproto/commit/b30ea7305be8df27524ed70d4af7f246014194c2)]:
+  - @atproto/xrpc-server@0.13.11
+  - @atproto-labs/xrpc-utils@0.1.32
+
+## 0.5.56
+
+### Patch Changes
+
+- [#5846](https://github.com/bluesky-social/atproto/pull/5846) [`39d702c`](https://github.com/bluesky-social/atproto/commit/39d702c851d469d7340fc0c5946959063769f849) Thanks [@amckinley](https://github.com/amckinley)! - Add `PDS_ENTRYWAY_API_URL`, the URL this PDS uses for its own requests to the entryway, e.g. a local proxy that adds mTLS. It defaults to `PDS_ENTRYWAY_URL`, which remains the entryway's public URL: the OAuth issuer and the authorization server the PDS advertises.
+
+- [#5847](https://github.com/bluesky-social/atproto/pull/5847) [`0849c24`](https://github.com/bluesky-social/atproto/commit/0849c24d492a9286e90c1734f2483d6ed7423d73) Thanks [@amckinley](https://github.com/amckinley)! - Accept the entryway's service JWT on `com.atproto.server.createAccount` when the PDS runs behind an entryway, on the same terms as the other entryway-called routes (`lxm` `com.atproto.server.createAccount`, `aud` this PDS's service DID); a valid one bypasses rate limits. Behind an entryway, a bearer token on this route must be such a JWT: other bearer tokens are no longer verified as user service auth. Unauthenticated calls are still accepted, even with `PDS_ENTRYWAY_REQUIRE_SERVICE_AUTH=true`, so that the entryway can start signing this call; enforcement under that setting follows in a later release, once it does. PDSes without entryway configuration are unaffected.
+
+- [#5845](https://github.com/bluesky-social/atproto/pull/5845) [`7f619af`](https://github.com/bluesky-social/atproto/commit/7f619aff86f452f1ac2320b6926d88a8968b319d) Thanks [@amckinley](https://github.com/amckinley)! - Attribute entryway traffic for rate limiting by signed tokens instead of by IP address. A request that a route authenticates with the entryway service JWT bypasses rate limits; routes that do not authenticate apply them as usual. A user request the entryway proxies may carry an `x-entryway-relay` token (ES256K, `typ: "JWT"`, issued by `PDS_ENTRYWAY_DID` for this PDS's service DID, no `lxm`, at most 120 seconds long, signed with the `PDS_ENTRYWAY_JWT_VERIFY_KEY_K256_PUBLIC_KEY_HEX` key); when it verifies, the request's IP address (`req.ip`) becomes the token's `client_ip`, in canonical form, so rate limits key on the end user. Invalid relay tokens are ignored and logged at debug level with a short reason code, and request logs redact the `x-entryway-relay` header. `com.atproto.admin.getSubjectStatus` now also accepts the entryway service JWT. `PDS_RATE_LIMIT_BYPASS_IPS` keeps working as before, and PDSes without entryway configuration are unaffected.
+
+- [#5844](https://github.com/bluesky-social/atproto/pull/5844) [`1033419`](https://github.com/bluesky-social/atproto/commit/103341946f8bdb2abb5409866b234ad17812f7b8) Thanks [@amckinley](https://github.com/amckinley)! - Accept short-lived service JWTs from the entryway on `com.atproto.admin.deleteAccount`, `com.atproto.admin.updateAccountHandle`, `com.atproto.admin.updateSubjectStatus` and `com.atproto.server.reserveSigningKey`. Tokens must be ES256K with `typ: "JWT"`, issued by `PDS_ENTRYWAY_DID` for this PDS's service DID, bound to the called method through `lxm`, live at most 5 minutes, and be signed with the `PDS_ENTRYWAY_JWT_VERIFY_KEY_K256_PUBLIC_KEY_HEX` key. Setting `PDS_ENTRYWAY_REQUIRE_SERVICE_AUTH=true` makes these routes refuse the admin password and unauthenticated callers; `updateSubjectStatus` still accepts the moderation service. PDSes without entryway configuration are unaffected.
+
+- [#5852](https://github.com/bluesky-social/atproto/pull/5852) [`870a534`](https://github.com/bluesky-social/atproto/commit/870a5346d0e9374cb99e60bf88a98c27d3d34cfe) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Increase the app.bsky.actor.putPreferences JSON request-body limit from 150 KiB to 300 KiB without changing the global PDS limit.
+
+- [#5762](https://github.com/bluesky-social/atproto/pull/5762) [`7a46712`](https://github.com/bluesky-social/atproto/commit/7a467120982d9ff1559afeb3a26989dad5877d17) Thanks [@haileyok](https://github.com/haileyok)! - Redact cookie and set-cookie headers in HTTP request and response logs.
+- Updated dependencies [[`ac78dcf`](https://github.com/bluesky-social/atproto/commit/ac78dcf2cba6505f822b6db093a14d489eee1c49), [`7a46712`](https://github.com/bluesky-social/atproto/commit/7a467120982d9ff1559afeb3a26989dad5877d17)]:
+  - @atproto/lex-cbor@0.1.10
+  - @atproto/common@0.8.10
+  - @atproto/repo@0.11.5
+  - @atproto/xrpc-server@0.13.10
+  - @atproto/aws@0.3.24
+  - @atproto/oauth-provider@0.25.6
+  - @atproto-labs/xrpc-utils@0.1.31
+
 ## 0.5.55
 
 ### Patch Changes

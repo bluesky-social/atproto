@@ -1,7 +1,4 @@
 import type { Kysely } from 'kysely'
-import type * as accountEventsStats from './account_events_stats.js'
-import type * as accountRecordEventsStats from './account_record_events_stats.js'
-import type * as accountRecordStatusStats from './account_record_status_stats.js'
 import type * as accountStrike from './account_strike.js'
 import type * as blobPushEvent from './blob_push_event.js'
 import type * as communicationTemplate from './communication_template.js'
@@ -17,7 +14,6 @@ import type * as modEvent from './moderation_event.js'
 import type * as modSubjectStatus from './moderation_subject_status.js'
 import type * as moderatorAssignment from './moderator_assignment.js'
 import type * as set from './ozone_set.js'
-import type * as recordEventsStats from './record_events_stats.js'
 import type * as recordPushEvent from './record_push_event.js'
 import type * as repoPushEvent from './repo_push_event.js'
 import type * as report from './report.js'
@@ -44,10 +40,6 @@ export type DatabaseSchemaType = modEvent.PartialDB &
   set.PartialDB &
   member.PartialDB &
   setting.PartialDB &
-  accountEventsStats.PartialDB &
-  recordEventsStats.PartialDB &
-  accountRecordEventsStats.PartialDB &
-  accountRecordStatusStats.PartialDB &
   accountStrike.PartialDB &
   verification.PartialDB &
   firehoseCursor.PartialDB &
