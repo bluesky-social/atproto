@@ -1,4 +1,3 @@
-import { isCidString } from '@atproto/lex-schema'
 import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../../../context.js'
 import {
@@ -20,26 +19,15 @@ import { resHeaders } from '../../../util.js'
 export default function (server: Server, ctx: AppContext) {
   server.add(app.bsky.unspecced.getAtmosphereRecordViews, {
     auth: ctx.authVerifier.standard,
-    handler: async ({ params, auth, req }) => {
-      const { uris, cids } = params
-      if (cids !== undefined && cids.length !== uris.length) {
-        throw new InvalidRequestError('cids must be index-aligned with uris')
-      }
-      const refs = uris.map((uri, index): ItemRef => {
+    handler: async ({ input, auth, req }) => {
+      const refs = input.body.records
+      for (const { uri } of refs) {
         if (!isCompleteRecordUri(uri)) {
           throw new InvalidRequestError(
-            'uris must contain complete DID-based record URIs',
+            'records must contain complete DID-based record URIs',
           )
         }
-        const value = cids?.[index]
-        const cid = value === 'latest' ? undefined : value
-        if (cid !== undefined && !isCidString(cid)) {
-          throw new InvalidRequestError(
-            'cids must contain valid CIDs or latest',
-          )
-        }
-        return { uri, cid }
-      })
+      }
       const { viewer, includeTakedowns, include3pBlocks, skipViewerBlocks } =
         ctx.authVerifier.parseCreds(auth)
       const hydrateCtx = await ctx.hydrator.createContext({

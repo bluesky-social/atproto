@@ -270,17 +270,17 @@ async function setup() {
       })
       return { status: response.status, body: (await response.json()) as Body }
     },
-    queryBatch: async (
-      params: { uris: string[]; cids?: string[] },
-      iss: string | null = viewer,
-    ) => {
+    fetchBatch: async (body: unknown, iss: string | null = viewer) => {
       const url = new URL(
         `http://127.0.0.1:${address.port}/xrpc/${app.bsky.unspecced.getAtmosphereRecordViews.$lxm}`,
       )
-      for (const uri of params.uris) url.searchParams.append('uris', uri)
-      for (const cid of params.cids ?? []) url.searchParams.append('cids', cid)
       const response = await nativeFetch(url, {
-        headers: iss ? { 'x-test-iss': iss } : {},
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          ...(iss ? { 'x-test-iss': iss } : {}),
+        },
+        body: JSON.stringify(body),
       })
       return {
         status: response.status,
@@ -455,9 +455,9 @@ describe('app.bsky.unspecced.getAtmosphereRecordView', () => {
 describe('app.bsky.unspecced.getAtmosphereRecordViews', () => {
   it('requires authentication', async () => {
     await using fixture = await setup()
-    expect((await fixture.queryBatch({ uris: [docUri] }, null)).status).toBe(
-      401,
-    )
+    expect(
+      (await fixture.fetchBatch({ records: [{ uri: docUri }] }, null)).status,
+    ).toBe(401)
     expect(fixture.spies.lookupUris).not.toHaveBeenCalled()
     expect(fixture.spies.lookupRefs).not.toHaveBeenCalled()
   })
@@ -483,9 +483,16 @@ describe('app.bsky.unspecced.getAtmosphereRecordViews', () => {
         url: 'https://old.example.com',
       }),
     )
-    const { status, body } = await fixture.queryBatch({
-      uris: [docUri, docUri, docUri, missingUri, postUri, docUri, pubUri],
-      cids: ['latest', cidB, cidC, 'latest', 'latest', cidB, cidB],
+    const { status, body } = await fixture.fetchBatch({
+      records: [
+        { uri: docUri },
+        { uri: docUri, cid: cidB },
+        { uri: docUri, cid: cidC },
+        { uri: missingUri },
+        { uri: postUri },
+        { uri: docUri, cid: cidB },
+        { uri: pubUri, cid: cidB },
+      ],
     })
     expect(status).toBe(200)
     expect(body.views.map((result) => result.view)).toMatchObject([
@@ -542,8 +549,8 @@ describe('app.bsky.unspecced.getAtmosphereRecordViews', () => {
       cid: cidA,
       record: social.grain.photo.$build({ photo: blob, alt: 'Other photo' }),
     })
-    const { status, body } = await fixture.queryBatch({
-      uris: [galleryUri, otherPhoto, docUri],
+    const { status, body } = await fixture.fetchBatch({
+      records: [{ uri: galleryUri }, { uri: otherPhoto }, { uri: docUri }],
     })
     expect(status).toBe(200)
     expect(uris(body.views[0].associatedRefs)).toEqual([
@@ -564,25 +571,39 @@ describe('app.bsky.unspecced.getAtmosphereRecordViews', () => {
   })
 
   it.each([
-    { uris: [docUri], cids: [cidA, cidB] },
-    { uris: [docUri, pubUri], cids: [cidA] },
-    { uris: [docUri], cids: ['invalid'] },
-    { uris: [docUri, 'at://author.test/site.standard.document/story'] },
-    { uris: [docUri, `at://${author}/site.standard.document`] },
-    { uris: [docUri, `${docUri}?query`] },
-    { uris: Array.from({ length: 26 }, () => docUri) },
-    { uris: [] },
-  ])('rejects invalid batch $uris / $cids before hydration', async (params) => {
+    { records: [{ uri: docUri, cid: 'invalid' }] },
+    { records: [{ uri: docUri, cid: '' }] },
+    { records: [{ uri: docUri, cid: null }] },
+    { records: [{}] },
+    { records: [null] },
+    {
+      records: [
+        { uri: docUri },
+        { uri: 'at://author.test/site.standard.document/story' },
+      ],
+    },
+    {
+      records: [
+        { uri: docUri },
+        { uri: `at://${author}/site.standard.document` },
+      ],
+    },
+    { records: [{ uri: docUri }, { uri: `${docUri}?query` }] },
+    { records: Array.from({ length: 26 }, () => ({ uri: docUri })) },
+    { records: [] },
+    { records: { uri: docUri } },
+    {},
+  ])('rejects invalid batch %# before hydration', async (body) => {
     await using fixture = await setup()
-    expect((await fixture.queryBatch(params)).status).toBe(400)
+    expect((await fixture.fetchBatch(body)).status).toBe(400)
     expect(fixture.spies.lookupUris).not.toHaveBeenCalled()
     expect(fixture.spies.lookupRefs).not.toHaveBeenCalled()
   })
 
   it('accepts the maximum batch size and preserves duplicate results', async () => {
     await using fixture = await setup()
-    const { status, body } = await fixture.queryBatch({
-      uris: Array.from({ length: 25 }, () => docUri),
+    const { status, body } = await fixture.fetchBatch({
+      records: Array.from({ length: 25 }, () => ({ uri: docUri })),
     })
     expect(status).toBe(200)
     expect(body.views).toEqual(Array.from({ length: 25 }, () => body.views[0]))
@@ -598,11 +619,11 @@ describe('app.bsky.unspecced.getAtmosphereRecordViews', () => {
       await using fixture = await setup()
       if (moderation === 'takedown') fixture.takenDown.add(docUri)
       else fixture.blocked.add(author)
-      const params = { uris: [docUri, docUri], cids: ['latest', cidB] }
-      expect((await fixture.queryBatch(params)).body).toEqual({
+      const input = { records: [{ uri: docUri }, { uri: docUri, cid: cidB }] }
+      expect((await fixture.fetchBatch(input)).body).toEqual({
         views: [{}, {}],
       })
-      const { body } = await fixture.queryBatch(params, modService)
+      const { body } = await fixture.fetchBatch(input, modService)
       expect(
         body.views.map((result) => result.associatedRefs?.[0]),
       ).toMatchObject([
@@ -620,8 +641,8 @@ describe('app.bsky.unspecced.getAtmosphereRecordViews', () => {
     await using fixture = await setup()
     fixture.takenDown.add(pubUri)
     fixture.takenDown.add(photoUri)
-    const { status, body } = await fixture.queryBatch({
-      uris: [docUri, galleryUri],
+    const { status, body } = await fixture.fetchBatch({
+      records: [{ uri: docUri }, { uri: galleryUri }],
     })
     expect(status).toBe(200)
     expect(body.views[0].view).toBeUndefined()

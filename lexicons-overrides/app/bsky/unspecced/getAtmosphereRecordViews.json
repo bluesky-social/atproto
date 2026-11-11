@@ -3,24 +3,21 @@
   "id": "app.bsky.unspecced.getAtmosphereRecordViews",
   "defs": {
     "main": {
-      "type": "query",
+      "type": "procedure",
       "description": "Get hydrated views and raw associations for multiple Atmosphere records. Requires authentication. Roots may be latest or pinned to exact CIDs; dependencies are always latest.",
-      "parameters": {
-        "type": "params",
-        "required": ["uris"],
-        "properties": {
-          "uris": {
-            "type": "array",
-            "minLength": 1,
-            "maxLength": 25,
-            "items": { "type": "string", "format": "at-uri" },
-            "description": "Complete DID-based AT-URIs, including collection and record key. Results preserve this order, including duplicates."
-          },
-          "cids": {
-            "type": "array",
-            "maxLength": 25,
-            "items": { "type": "string", "knownValues": ["latest"] },
-            "description": "Optional CIDs index-aligned with uris. When supplied, must have the same length as uris. Each entry must be a valid CID or the string 'latest' to select the latest version. Without cids, all roots are latest. Unavailable pins never fall back to latest."
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["records"],
+          "properties": {
+            "records": {
+              "type": "array",
+              "minLength": 1,
+              "maxLength": 25,
+              "items": { "type": "ref", "ref": "#recordRef" },
+              "description": "Records to fetch. Results preserve this order, including duplicates."
+            }
           }
         }
       },
@@ -34,9 +31,25 @@
               "type": "array",
               "maxLength": 25,
               "items": { "type": "ref", "ref": "#recordView" },
-              "description": "Index-aligned with uris. Missing or invisible roots produce empty objects. Visible roots without a supported view still return raw associations. Each result includes only its own dependencies."
+              "description": "Index-aligned with the input records. Missing or invisible roots produce empty objects. Visible roots without a supported view still return raw associations. Each result includes only its own dependencies."
             }
           }
+        }
+      }
+    },
+    "recordRef": {
+      "type": "object",
+      "required": ["uri"],
+      "properties": {
+        "uri": {
+          "type": "string",
+          "format": "at-uri",
+          "description": "Complete DID-based AT-URI of the record, including collection and record key."
+        },
+        "cid": {
+          "type": "string",
+          "format": "cid",
+          "description": "Optional CID pinning the exact record version. Omit to fetch the latest version. Unavailable pins never fall back to latest."
         }
       }
     },
