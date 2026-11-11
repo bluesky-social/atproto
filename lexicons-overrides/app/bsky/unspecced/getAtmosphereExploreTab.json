@@ -4,13 +4,13 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "Get Atmosphere Explore content. Articles are recommended when algorithmic recommendations are enabled for the request, and curated otherwise; other sections are curated. Curated content is selected using the x-atproto-bsky-geo-country, x-atproto-bsky-geo-region, and x-atproto-bsky-topics request headers. Authentication is optional; authenticated requests include viewer-specific profile state.",
+      "description": "Get Atmosphere Explore content. Articles and photo galleries are recommended when their algorithmic recommendations are enabled for the request, and curated otherwise; other sections are curated. Curated content is selected using the x-atproto-bsky-geo-country, x-atproto-bsky-geo-region, and x-atproto-bsky-topics request headers. Authentication is optional; authenticated requests include viewer-specific profile state.",
       "parameters": {
         "type": "params",
         "properties": {
           "langs": {
             "type": "array",
-            "description": "Preferred languages for article recommendations when algorithmic recommendations are enabled. Ignored otherwise.",
+            "description": "Preferred languages for article and photo gallery recommendations when their algorithmic recommendations are enabled. Ignored otherwise.",
             "items": { "type": "string", "format": "language" }
           }
         }

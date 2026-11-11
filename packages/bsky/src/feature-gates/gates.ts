@@ -23,6 +23,7 @@ export enum Gate {
   KnownLikersFeedEnable = 'known_likers:feed:enable',
   AtmosphereScreenEndpointsEnable = 'atmosphere_screen_endpoints:enable',
   AtmosphereExploreArticlesIrisEnable = 'atmosphere_explore:articles:iris:enable',
+  AtmosphereExploreGalleriesIrisEnable = 'atmosphere_explore:galleries:iris:enable',
 
   // temp
   AATest = 'aa-test-appview',
