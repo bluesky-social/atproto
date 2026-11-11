@@ -166,7 +166,10 @@ export function createFedcmMiddleware<
 
       setCorsOrigin(res, origin)
 
-      // TODO(fedcm): final call needed — should the assertion endpoint only speak for accounts signed in on this device? Prototype answers for any active local account so Chrome's pushed (possibly stale) accounts still complete; the DID is only a hint and OAuth re-authenticates. See decisions log #1.
+      // TODO(fedcm): final call needed — should the assertion endpoint only
+      // speak for accounts signed in on this device? Prototype answers for any
+      // active local account so Chrome's pushed (possibly stale) accounts still
+      // complete; the DID is only a hint and OAuth re-authenticates.
       const result = await server.accountManager.getAccount(account_id)
       const account = result?.account
       if (!account || account.deactivated) {
