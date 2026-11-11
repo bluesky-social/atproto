@@ -1,7 +1,6 @@
 import crypto, { type KeyObject } from 'node:crypto'
 import { secp256k1 } from '@noble/curves/secp256k1'
 import type express from 'express'
-import * as jose from 'jose'
 import * as ui8 from 'uint8arrays'
 import { SECP256K1_JWT_ALG, parseDidKey } from '@atproto/crypto'
 import { type DidString, isDidString } from '@atproto/lex-schema'
@@ -67,18 +66,11 @@ type ModServiceOutput = {
   }
 }
 
-const ALLOWED_AUTH_SCOPES = new Set([
-  'com.atproto.access',
-  'com.atproto.appPass',
-  'com.atproto.appPassPrivileged',
-])
-
 export type AuthVerifierOpts = {
   ownDid: DidString
   alternateAudienceDids: DidString[]
   modServiceDid: DidString
   adminPasses: string[]
-  entrywayJwtPublicKey?: KeyObject
 }
 
 export class AuthVerifier {
@@ -86,7 +78,6 @@ export class AuthVerifier {
   public standardAudienceDids: Set<DidString>
   public modServiceDid: DidString
   private adminPasses: Set<string>
-  private entrywayJwtPublicKey?: KeyObject
 
   constructor(
     public dataplane: DataPlaneClient,
@@ -99,7 +90,6 @@ export class AuthVerifier {
     ])
     this.modServiceDid = opts.modServiceDid
     this.adminPasses = new Set(opts.adminPasses)
-    this.entrywayJwtPublicKey = opts.entrywayJwtPublicKey
   }
 
   // verifiers (arrow fns to preserve scope)
@@ -120,17 +110,6 @@ export class AuthVerifier {
           credentials: { type: 'standard', iss, aud },
         }
       } else if (isBearerToken(ctx.req)) {
-        // @NOTE temporarily accept entryway session tokens to shed load from PDS instances
-        const token = bearerTokenFromReq(ctx.req)
-        const header = token ? jose.decodeProtectedHeader(token) : undefined
-        if (header?.typ === 'at+jwt') {
-          // we should never use entryway session tokens in the case of flexible auth audiences (namely in the case of getFeed)
-          if (opts.skipAudCheck) {
-            throw new AuthRequiredError('Malformed token', 'InvalidToken')
-          }
-          return this.entrywaySession(ctx)
-        }
-
         const { iss, aud } = await this.verifyServiceJwt(ctx, {
           lxmCheck: opts.lxmCheck,
           iss: null,
@@ -210,62 +189,6 @@ export class AuthVerifier {
       } else {
         throw new AuthRequiredError()
       }
-    }
-  }
-
-  // @NOTE this auth verifier method is not recommended to be implemented by most appviews
-  // this is a short term fix to remove proxy load from Bluesky's PDS and in line with possible
-  // future plans to have the client talk directly with the appview
-  entrywaySession = async (reqCtx: ReqCtx): Promise<StandardOutput> => {
-    const token = bearerTokenFromReq(reqCtx.req)
-    if (!token) {
-      throw new AuthRequiredError(undefined, 'AuthMissing')
-    }
-
-    // if entryway jwt key not configured then do not parsed these tokens
-    if (!this.entrywayJwtPublicKey) {
-      throw new AuthRequiredError('Malformed token', 'InvalidToken')
-    }
-
-    const res = await jose
-      .jwtVerify(token, this.entrywayJwtPublicKey)
-      .catch((err) => {
-        if (err?.['code'] === 'ERR_JWT_EXPIRED') {
-          throw new AuthRequiredError('Token has expired', 'ExpiredToken')
-        }
-        throw new AuthRequiredError(
-          'Token could not be verified',
-          'InvalidToken',
-        )
-      })
-
-    const { sub, aud, scope, cnf } = res.payload
-    if (typeof cnf !== 'undefined') {
-      // Proof-of-Possession (PoP) tokens are not allowed here
-      // https://www.rfc-editor.org/rfc/rfc7800.html
-      throw new AuthRequiredError(
-        'Malformed token: DPoP not supported',
-        'InvalidToken',
-      )
-    }
-    if (typeof sub !== 'string' || !sub.startsWith('did:')) {
-      throw new AuthRequiredError('Malformed token', 'InvalidToken')
-    } else if (
-      typeof aud !== 'string' ||
-      !aud.startsWith('did:web:') ||
-      !aud.endsWith('.bsky.network')
-    ) {
-      throw new AuthRequiredError('Bad token aud', 'InvalidToken')
-    } else if (typeof scope !== 'string' || !ALLOWED_AUTH_SCOPES.has(scope)) {
-      throw new AuthRequiredError('Bad token scope', 'InvalidToken')
-    }
-
-    return {
-      credentials: {
-        type: 'standard',
-        aud: this.ownDid,
-        iss: sub as DidString | `${DidString}#${string}`,
-      },
     }
   }
 
@@ -483,10 +406,6 @@ const createSecp256k1KeyObject = (
       y: ui8.toString(point.subarray(33, 65), 'base64url'),
     },
   })
-}
-
-export const createPublicKeyObject = (publicKeyHex: string): KeyObject => {
-  return createSecp256k1KeyObject(publicKeyHex)
 }
 
 const verifySig = (
