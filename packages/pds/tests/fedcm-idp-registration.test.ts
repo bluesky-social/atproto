@@ -24,6 +24,14 @@ type RegistrationWindow = Window & {
   __fedcmRegistered?: Promise<boolean>
 }
 
+type SetStatusNavigator = {
+  login?: { setStatus?: (...args: unknown[]) => unknown }
+}
+type SetStatusWindow = Window & {
+  __fedcmSetStatusCalls?: unknown[][]
+  __sessions?: { loginRequired: boolean }[]
+}
+
 browserDescribe('FedCM IdP registration in Chrome', () => {
   let browser: Browser
   let network: TestNetworkNoAppView
@@ -129,6 +137,12 @@ browserDescribe('FedCM IdP registration in Chrome', () => {
     requests.length = 0
   })
 
+  let cleanup: (() => void) | undefined
+  afterEach(() => {
+    cleanup?.()
+    cleanup = undefined
+  })
+
   afterAll(async () => {
     await browser?.close()
     await closeServers([tlsServer, rpServer])
@@ -164,6 +178,102 @@ browserDescribe('FedCM IdP registration in Chrome', () => {
     )
   })
 
+  it('keeps the account pushed from a prompt=login authorization page', async () => {
+    requests.length = 0
+    await using page = new FedcmPage(await browser.newPage())
+    const cdp = await page.cdp()
+    await page.page.evaluateOnNewDocument((idpOrigin) => {
+      if (location.origin !== idpOrigin) return
+      const login = (navigator as unknown as SetStatusNavigator).login
+      const setStatus = login?.setStatus
+      if (!login || !setStatus) return
+      const calls: unknown[][] = []
+      ;(window as SetStatusWindow).__fedcmSetStatusCalls = calls
+      login.setStatus = (...args) => {
+        calls.push(args)
+        return setStatus.apply(login, args)
+      }
+    }, idpOrigin)
+    // The example app never sends `prompt`; add `prompt=login` to its PAR
+    // body. A public client's prompt is forced to `consent` unless trusted,
+    // so trust its client_id for this test.
+    const provider = network.pds.ctx.cfg.oauth.provider
+    assert(provider)
+    const { trustedClients } = provider
+    cleanup = () => {
+      provider.trustedClients = trustedClients
+    }
+    await cdp.send('Fetch.enable', {
+      patterns: [{ urlPattern: '*/oauth/par', requestStage: 'Request' }],
+    })
+    cdp.on('Fetch.requestPaused', ({ requestId, request }) => {
+      const body =
+        request.method === 'POST' && request.postData != null
+          ? new URLSearchParams(request.postData)
+          : undefined
+      const clientId = body?.get('client_id')
+      if (body && clientId) {
+        provider.trustedClients = [...(trustedClients ?? []), clientId]
+        body.set('prompt', 'login')
+      }
+      void cdp
+        .send('Fetch.continueRequest', {
+          requestId,
+          ...(body && {
+            postData: Buffer.from(body.toString()).toString('base64'),
+          }),
+        })
+        .catch(() => {})
+    })
+
+    const shown = nextDialog(cdp)
+    await page.goto(appUrl)
+    const dialog = await shown
+    await cdp.send('FedCm.selectAccount', {
+      dialogId: dialog.dialogId,
+      accountIndex: 0,
+    })
+    await page.page.waitForSelector('input[name="password"]', {
+      visible: true,
+    })
+    expect(parRequests().filter((r) => r.status === 201)).toHaveLength(1)
+    // Precondition: the server flagged every session as login-required.
+    await expect(
+      page.page.evaluate(() =>
+        (window as SetStatusWindow).__sessions?.map((s) => s.loginRequired),
+      ),
+    ).resolves.toEqual([true])
+    await page.page.waitForFunction(
+      () => Boolean((window as SetStatusWindow).__fedcmSetStatusCalls?.length),
+      { timeout: 10_000 },
+    )
+    const calls = await page.page.evaluate(
+      () => (window as SetStatusWindow).__fedcmSetStatusCalls,
+    )
+    expect(calls).not.toContainEqual(['logged-out'])
+    expect(calls?.[0]).toEqual([
+      'logged-in',
+      {
+        accounts: [expect.objectContaining({ id: alice })],
+        expiration: expect.any(Number),
+      },
+    ])
+
+    await using next = new FedcmPage(await browser.newPage())
+    const nextCdp = await next.cdp()
+    const nextShown = nextDialog(nextCdp)
+    await next.goto(appUrl)
+    const nextDialogShown = await nextShown
+    expect(nextDialogShown.accounts).toEqual([
+      expect.objectContaining({ accountId: alice, idpConfigUrl: configUrl }),
+    ])
+    await nextCdp.send('FedCm.dismissDialog', {
+      dialogId: nextDialogShown.dialogId,
+    })
+  })
+
+  // @NOTE Runs last among the dialog tests: it deletes the IdP cookies, so
+  // later page loads see no device session.
   it('completes for a pushed account whose device session is gone', async () => {
     requests.length = 0
     await using page = new FedcmPage(await browser.newPage())
