@@ -265,15 +265,17 @@ async function setup(pages: Row[][]) {
   }
 }
 
-function activities(
+function activityUris(
   body: app.bsky.unspecced.getAtmosphereTimeline.$OutputBody,
-): app.bsky.unspecced.getAtmosphereTimeline.ActivityItem[] {
+): AtUriString[] {
   return body.feed.flatMap((entry) =>
-    endpoint.activityGroup.$isTypeOf(entry)
-      ? entry.items
-      : endpoint.activityItem.$isTypeOf(entry)
-        ? [entry]
-        : [],
+    endpoint.activityAuthorGroup.$isTypeOf(entry)
+      ? entry.uris
+      : endpoint.activitySubjectGroup.$isTypeOf(entry)
+        ? entry.activities.map(({ record }) => record.uri)
+        : endpoint.activityItem.$isTypeOf(entry)
+          ? [entry.record.uri]
+          : [],
   )
 }
 
@@ -298,12 +300,10 @@ describe('Atmosphere timeline HTTP endpoint', () => {
       const response = await fixture.query(cursor)
       expect(response.status).toBe(200)
       expect(response.headers.has('atproto-content-labelers')).toBe(true)
-      expect(activities(response.body).map(({ record }) => record.uri)).toEqual(
+      expect(activityUris(response.body)).toEqual(
         items.slice(page * 250, (page + 1) * 250).map(({ uri }) => uri),
       )
-      received.push(
-        ...activities(response.body).map(({ record }) => record.uri),
-      )
+      received.push(...activityUris(response.body))
       cursor = response.body.cursor
       if (page < 4) {
         expect(cursor).toBeDefined()
@@ -326,7 +326,7 @@ describe('Atmosphere timeline HTTP endpoint', () => {
     expect(fetched).toEqual(items.map(({ uri }) => uri))
   })
 
-  it('bounds overflow-heavy pages and resumes after the last consumed batch', async () => {
+  it('retains all author-group URIs and resumes after the last consumed batch', async () => {
     using _clock = vi.spyOn(Date, 'now').mockReturnValue(now)
     const items = Array.from({ length: 300 }, (_, i) =>
       row(i, i * 1000, 'did:plc:alice'),
@@ -335,12 +335,16 @@ describe('Atmosphere timeline HTTP endpoint', () => {
     const first = await fixture.query()
     expect(first.status).toBe(200)
     expect(fixture.timelineCalls).toHaveLength(5)
-    expect(activities(first.body).map(({ record }) => record.uri)).toEqual(
-      items.slice(0, 5).map(({ uri }) => uri),
+    expect(activityUris(first.body)).toEqual(
+      items.slice(0, 250).map(({ uri }) => uri),
     )
-    expect(
-      first.body.feed.filter(endpoint.activityItemOverflow.$isTypeOf),
-    ).toMatchObject([{ count: 245 }])
+    expect(first.body.feed).toMatchObject([
+      {
+        $type: endpoint.activityAuthorGroup.$type,
+        item: { record: { uri: items[0].uri } },
+        uris: items.slice(0, 250).map(({ uri }) => uri),
+      },
+    ])
     expect(
       JSON.parse(Buffer.from(first.body.cursor!, 'base64url').toString())
         .cursor,
@@ -348,12 +352,9 @@ describe('Atmosphere timeline HTTP endpoint', () => {
 
     const second = await fixture.query(first.body.cursor)
     expect(second.status).toBe(200)
-    expect(activities(second.body).map(({ record }) => record.uri)).toEqual(
-      items.slice(250, 255).map(({ uri }) => uri),
+    expect(activityUris(second.body)).toEqual(
+      items.slice(250).map(({ uri }) => uri),
     )
-    expect(
-      second.body.feed.filter(endpoint.activityItemOverflow.$isTypeOf),
-    ).toMatchObject([{ count: 45 }])
     expect(second.body.cursor).toBeUndefined()
     expect(fixture.timelineCalls.map(({ cursor }) => cursor)).toEqual([
       '',
@@ -378,7 +379,7 @@ describe('Atmosphere timeline HTTP endpoint', () => {
       const first = await fixture.query()
       expect(first.status).toBe(200)
       expect(fixture.timelineCalls).toHaveLength(5)
-      expect(activities(first.body).map(({ record }) => record.uri)).toEqual(
+      expect(activityUris(first.body)).toEqual(
         kind === 'duplicates' ? [repeated.uri] : [],
       )
       expect(
@@ -401,9 +402,7 @@ describe('Atmosphere timeline HTTP endpoint', () => {
     const response = await fixture.query()
     expect(response.status).toBe(200)
     expect(fixture.timelineCalls).toHaveLength(5)
-    expect(activities(response.body).map(({ record }) => record.uri)).toEqual(
-      items.map(({ uri }) => uri),
-    )
+    expect(activityUris(response.body)).toEqual(items.map(({ uri }) => uri))
     expect(
       JSON.parse(Buffer.from(response.body.cursor!, 'base64url').toString())
         .cursor,
@@ -419,7 +418,7 @@ describe('Atmosphere timeline HTTP endpoint', () => {
     await using fixture = await setup(batches(items))
     const response = await fixture.query()
     expect(response.status).toBe(200)
-    expect(activities(response.body).map(({ record }) => record.uri)).toEqual(
+    expect(activityUris(response.body)).toEqual(
       items.slice(0, 150).map(({ uri }) => uri),
     )
     expect(
@@ -441,9 +440,7 @@ describe('Atmosphere timeline HTTP endpoint', () => {
     await using fixture = await setup(batches(items))
     const response = await fixture.query()
     expect(response.status).toBe(200)
-    expect(activities(response.body).map(({ record }) => record.uri)).toEqual(
-      items.map(({ uri }) => uri),
-    )
+    expect(activityUris(response.body)).toEqual(items.map(({ uri }) => uri))
     expect(fixture.timelineCalls).toHaveLength(3)
   })
 
@@ -454,7 +451,7 @@ describe('Atmosphere timeline HTTP endpoint', () => {
     for (const item of items.slice(0, 245)) fixture.records.delete(item.uri)
     const response = await fixture.query()
     expect(response.status).toBe(200)
-    expect(activities(response.body).map(({ record }) => record.uri)).toEqual(
+    expect(activityUris(response.body)).toEqual(
       items.slice(245, 250).map(({ uri }) => uri),
     )
     expect(fixture.timelineCalls).toHaveLength(5)
@@ -463,7 +460,7 @@ describe('Atmosphere timeline HTTP endpoint', () => {
     )
   })
 
-  it('deduplicates before capping each author/collection and positions overflow at the sixth record', async () => {
+  it('deduplicates records without omitting later activities by the same author', async () => {
     using _clock = vi.spyOn(Date, 'now').mockReturnValue(now)
     const alice = 'did:plc:alice'
     const aliceRows = Array.from({ length: 17 }, (_, i) =>
@@ -483,26 +480,16 @@ describe('Atmosphere timeline HTTP endpoint', () => {
     await using fixture = await setup([items.slice(0, 12), items.slice(12)])
     const response = await fixture.query()
     expect(response.status).toBe(200)
-    const overflow = response.body.feed.filter(
-      endpoint.activityItemOverflow.$isTypeOf,
-    )
-    expect(overflow).toEqual([
-      expect.objectContaining({
-        count: 12,
-        collection: site.standard.document.$type,
-        associatedProfiles: [expect.objectContaining({ did: alice })],
-      }),
-    ])
-    expect(response.body.feed.indexOf(overflow[0])).toBe(6)
-    expect(fixture.lookups.flat()).toEqual([
+    expect(activityUris(response.body)).toEqual([
       ...aliceRows.slice(0, 5).map(({ uri }) => uri),
       bob.uri,
+      ...aliceRows.slice(5).map(({ uri }) => uri),
     ])
-    expect(activities(response.body)).toHaveLength(6)
+    expect(fixture.lookups.flat()).toEqual(activityUris(response.body))
   })
 
   it.each(['blocked', 'muted', 'missingActors'] as const)(
-    'hides %s authors and their overflow without fetching omitted records',
+    'hides all %s authors, including later group items',
     async (kind) => {
       using _clock = vi.spyOn(Date, 'now').mockReturnValue(now)
       const alice = 'did:plc:alice'
@@ -512,9 +499,7 @@ describe('Atmosphere timeline HTTP endpoint', () => {
       await using fixture = await setup([items])
       fixture[kind].add(alice)
       expect((await fixture.query()).body.feed).toEqual([])
-      expect(fixture.lookups.flat()).toEqual(
-        items.slice(0, 5).map(({ uri }) => uri),
-      )
+      expect(fixture.lookups.flat()).toEqual(items.map(({ uri }) => uri))
     },
   )
 
@@ -537,9 +522,9 @@ describe('Atmosphere timeline HTTP endpoint', () => {
         await using fixture = await setup(batches(items))
         const response = await fixture.query()
         expect(response.status).toBe(200)
-        expect(
-          activities(response.body).map(({ record }) => record.uri),
-        ).toEqual(items.slice(0, extra ? 100 : 150).map(({ uri }) => uri))
+        expect(activityUris(response.body)).toEqual(
+          items.slice(0, extra ? 100 : 150).map(({ uri }) => uri),
+        )
         expect(fixture.timelineCalls).toHaveLength(extra ? 2 : 3)
       }
     },

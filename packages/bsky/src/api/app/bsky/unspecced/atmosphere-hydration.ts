@@ -1,4 +1,5 @@
 import {
+  type $Typed,
   type AtUriString,
   type DidString,
   type NsidString,
@@ -32,14 +33,23 @@ import {
   isRecordAvailable,
 } from '../../../../views/external.js'
 import type { Views } from '../../../../views/index.js'
-import type { TimelineActivity } from './atmosphere-grouping.js'
+import type { ExternalRecordView } from '../../../../views/types.js'
+import type {
+  TimelineActivity,
+  TimelineHydration,
+} from './atmosphere-grouping.js'
 
 /** Request-scoped hydration and visibility for incrementally fetched roots. */
-export class AtmosphereTimelineHydrator {
+export class AtmosphereTimelineHydrator implements TimelineHydration {
   private state: HydrationState
   private seen = new Set<string>()
   private readonly seenPosts = new Set<AtUriString>()
   private readonly seenAssociatedPosts = new Set<AtUriString>()
+  private readonly externalViews = new Map<string, $Typed<ExternalRecordView>>()
+  private readonly profiles = new Map<
+    DidString,
+    app.bsky.actor.defs.ProfileViewBasic
+  >()
 
   constructor(
     private readonly ctx: { hydrator: Hydrator; views: Views },
@@ -55,6 +65,8 @@ export class AtmosphereTimelineHydrator {
 
   /** Hydrate new roots and their dependencies without repeating prior lookups. */
   async hydrate(uris: AtUriString[]): Promise<void> {
+    this.externalViews.clear()
+    this.profiles.clear()
     const posts: AtUriString[] = []
     const external: AtUriString[] = []
     for (const uri of uris) {
@@ -131,10 +143,15 @@ export class AtmosphereTimelineHydrator {
     }
   }
 
-  /** Return only an already-loaded, visible author profile for overflow. */
+  /** Compose each visible actor profile once for subject groups. */
   profile(did: DidString): app.bsky.actor.defs.ProfileViewBasic | undefined {
     if (!this.visibleAuthor(did)) return
-    return this.ctx.views.profileBasic(did, this.state)
+    let profile = this.profiles.get(did)
+    if (!profile) {
+      profile = this.ctx.views.profileBasic(did, this.state)
+      if (profile) this.profiles.set(did, profile)
+    }
+    return profile
   }
 
   /** Recheck current dependencies and moderation without building a view. */
@@ -142,40 +159,92 @@ export class AtmosphereTimelineHydrator {
     return this.selectActivity(uri) !== undefined
   }
 
-  /** Compose a renderable root and the target used by final-page grouping. */
+  /** Select visible metadata before deciding which presentation views are needed. */
   activity(uri: AtUriString, sortedAt: number): TimelineActivity | undefined {
     const selected = this.selectActivity(uri)
     if (!selected) return
-    const { info, collection, target, groupable, subscribed, viewUri, state } =
-      selected
-    let view: app.bsky.unspecced.getAtmosphereTimeline.ActivityItem['view']
-    let bskyPostRef: com.atproto.repo.strongRef.Main | undefined
-    let viewBskyPost: app.bsky.feed.defs.PostView | undefined
-    if (collection === app.bsky.feed.post.$type) {
-      const postView = this.ctx.views.post(uri, this.state)
-      if (!postView) return
-      view = app.bsky.feed.defs.postView.$build(postView)
-    } else {
-      view = this.ctx.views.externalRecordView(viewUri, state, this.now)
-      if (!view) return
-      bskyPostRef = getAtmospherePostRef(
-        state.externalRecords?.get(viewUri)?.record,
-      )
-      viewBskyPost = getAtmospherePostView(this.ctx.views, bskyPostRef, state)
-    }
+    const { info, collection, target, groupable, subscribed } = selected
     return {
       item: app.bsky.unspecced.getAtmosphereTimeline.activityItem.$build({
         record: { uri, cid: info.cid, indexedAt: toDatetimeString(sortedAt) },
         collection,
         viewerState: { subscribed },
-        view,
-        bskyPostRef,
-        viewBskyPost,
       }),
       sortedAt,
       target,
       groupable,
     }
+  }
+
+  /** Render a standalone item or the newest group item of an author group. */
+  item(
+    activity: TimelineActivity,
+  ): $Typed<app.bsky.unspecced.getAtmosphereTimeline.ActivityItem> | undefined {
+    const { uri } = activity.item.record
+    const selected = this.selectActivity(uri)
+    if (!selected) return
+    const { collection, viewUri, state } = selected
+    if (collection === app.bsky.feed.post.$type) {
+      const view = this.ctx.views.post(uri, this.state)
+      return view
+        ? app.bsky.unspecced.getAtmosphereTimeline.activityItem.$build({
+            ...activity.item,
+            view: app.bsky.feed.defs.postView.$build(view),
+          })
+        : undefined
+    }
+    const view = this.externalView(viewUri, state)
+    if (!view) return
+    const bskyPostRef = getAtmospherePostRef(
+      state.externalRecords?.get(viewUri)?.record,
+    )
+    return app.bsky.unspecced.getAtmosphereTimeline.activityItem.$build({
+      ...activity.item,
+      view,
+      bskyPostRef,
+      viewBskyPost: getAtmospherePostView(this.ctx.views, bskyPostRef, state),
+    })
+  }
+
+  /** Render the shared target, using pinned state when selected through a share. */
+  subject(
+    activity: TimelineActivity,
+  ): app.bsky.unspecced.getAtmosphereTimeline.ActivitySubject | undefined {
+    const selected = this.selectActivity(activity.item.record.uri)
+    if (!selected) return
+    const { viewUri, state } = selected
+    const view = this.externalView(viewUri, state)
+    if (!view || app.bsky.embed.external.viewLivestream.$isTypeOf(view)) return
+    const record = state.externalRecords?.get(viewUri)?.record
+    const publication = site.standard.document.$matches(record)
+      ? recordUriOf(record.site, site.standard.publication.$type)
+      : undefined
+    const bskyPostRef = getAtmospherePostRef(record)
+    return app.bsky.unspecced.getAtmosphereTimeline.activitySubject.$build({
+      uri: viewUri,
+      view,
+      viewerState: {
+        subscribed: publication
+          ? this.state.externalPublicationSubscriptions?.get(publication) ===
+            true
+          : false,
+      },
+      bskyPostRef,
+      viewBskyPost: getAtmospherePostView(this.ctx.views, bskyPostRef, state),
+    })
+  }
+
+  private externalView(uri: AtUriString, state: HydrationState) {
+    // @NOTE Pinned shares have restricted records, even for the same root CID.
+    if (state !== this.state) {
+      return this.ctx.views.externalRecordView(uri, state, this.now)
+    }
+    let view = this.externalViews.get(uri)
+    if (!view) {
+      view = this.ctx.views.externalRecordView(uri, state, this.now)
+      if (view) this.externalViews.set(uri, view)
+    }
+    return view
   }
 
   private selectActivity(uri: AtUriString) {
