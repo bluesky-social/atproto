@@ -514,6 +514,55 @@ describe(groupAtmosphereActivities, () => {
     expectConserved(result, input)
   })
 
+  it.each(['subject', 'related'] as const)(
+    'preserves record and actor completeness when a %s bucket has an unavailable profile',
+    (kind) => {
+      const article = activity('article', 4 * MINUTE)
+      const target = article.item.record.uri
+      const recommendations = ['alice', 'bob', 'carol'].map((author, index) =>
+        activity(`rec${index}`, index * MINUTE, recommend, { target, author }),
+      )
+      const shared = activity('share', 3 * MINUTE, share, {
+        target,
+        author: 'dave',
+      })
+      const input =
+        kind === 'related'
+          ? [...recommendations, shared, article]
+          : recommendations
+      const views = hydration()
+      views.profile.mockImplementation((did) =>
+        did === 'did:plc:carol'
+          ? undefined
+          : app.bsky.actor.defs.profileViewBasic.$build({
+              did,
+              handle: asStringFormat('actor.test', 'handle'),
+            }),
+      )
+
+      const result = groupAtmosphereActivities(input, now, views)
+      const standalone =
+        kind === 'related' ? [...recommendations, article] : recommendations
+      expect(rootUris(result)).toEqual(
+        standalone.map(({ item }) => [item.record.uri]),
+      )
+      expect(result.every(timeline.activityItem.$isTypeOf)).toBe(true)
+      if (kind === 'related') {
+        expect(result.at(-1)).toMatchObject({
+          record: { uri: target },
+          relatedActivity: [
+            {
+              collection: share,
+              activities: [{ record: { uri: shared.item.record.uri } }],
+              actors: [{ did: 'did:plc:dave' }],
+            },
+          ],
+        })
+      }
+      expectConserved(result, input)
+    },
+  )
+
   it('selects the newest share when only shares can supply the pinned target', () => {
     const target = activity('missing', HOUR).item.record.uri
     const input = [

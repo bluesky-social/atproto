@@ -57,7 +57,8 @@ export function groupAtmosphereActivities(
       if (seenActors.has(did)) continue
       seenActors.add(did)
       const profile = hydration.profile(did)
-      if (profile) actors.push(profile)
+      if (!profile) return
+      actors.push(profile)
     }
     return actors
   }
@@ -109,7 +110,7 @@ export function groupAtmosphereActivities(
       []
     for (const [collection, indices] of buckets) {
       const actors = profiles(indices)
-      if (actors.length === 0) continue
+      if (!actors) continue
       relatedActivity.push(
         timeline.activityRelatedGroup.$build({
           collection,
@@ -184,17 +185,18 @@ export function groupAtmosphereActivities(
             }
             if (multipleActors) {
               const actors = profiles(indices, start, end)
-              const subject =
-                actors.length >= 2 ? hydration.subject(first) : undefined
-              if (subject) {
-                entry = timeline.activitySubjectGroup.$build({
-                  id: `subject:${first.item.record.uri}`,
-                  collection: first.item.collection,
-                  indexedAt: first.item.record.indexedAt,
-                  subject,
-                  activities: groupItems(indices, start, end),
-                  actors,
-                })
+              if (actors) {
+                const subject = hydration.subject(first)
+                if (subject) {
+                  entry = timeline.activitySubjectGroup.$build({
+                    id: `subject:${first.item.record.uri}`,
+                    collection: first.item.collection,
+                    indexedAt: first.item.record.indexedAt,
+                    subject,
+                    activities: groupItems(indices, start, end),
+                    actors,
+                  })
+                }
               }
             }
           } else {
