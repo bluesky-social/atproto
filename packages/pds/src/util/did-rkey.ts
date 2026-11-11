@@ -8,7 +8,7 @@ import type { DidString, RecordKeyString } from '@atproto/syntax'
 // This only ever affects localhost DIDs (ie for local testing)
 
 export function didToRecordKey(did: DidString): RecordKeyString {
-    return did.replace(/%3A/g, ':')
+  return did.replace(/%3A/g, ':')
 }
 
 export function recordKeyToDid(rkey: string): string {
