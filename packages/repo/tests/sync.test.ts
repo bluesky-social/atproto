@@ -5,7 +5,7 @@ import {
   type RepoContents,
   RepoVerificationError,
   getAndParseRecord,
-  readCar,
+  readCarStream,
   readCarWithRoot,
 } from '../src/index.js'
 import { MemoryBlockstore } from '../src/storage/index.js'
@@ -30,8 +30,8 @@ describe('Repo Sync', () => {
   })
 
   it('sync a full repo', async () => {
-    const carBytes = await util.toBuffer(sync.getFullRepo(storage, repo.cid))
-    const car = await readCarWithRoot(carBytes)
+    const carStream = sync.getFullRepo(storage, repo.cid)
+    const car = await readCarWithRoot(carStream)
     const verified = await sync.verifyRepo(
       car.blocks,
       car.root,
@@ -53,15 +53,15 @@ describe('Repo Sync', () => {
   })
 
   it('does not sync duplicate blocks', async () => {
-    const carBytes = await util.toBuffer(sync.getFullRepo(storage, repo.cid))
-    const car = await readCar(carBytes)
+    const carStream = sync.getFullRepo(storage, repo.cid)
+    await using reader = await readCarStream(carStream)
     const cids = new CidSet()
-    car.blocks.forEach((_, cid) => {
+    for await (const { cid } of reader) {
       if (cids.has(cid)) {
         throw new Error(`duplicate block: :${cid.toString()}`)
       }
       cids.add(cid)
-    })
+    }
   })
 
   it('syncs a repo that is behind', async () => {
@@ -86,8 +86,8 @@ describe('Repo Sync', () => {
 
   it('throws on a bad signature', async () => {
     const badRepo = await util.addBadCommit(repo, keypair)
-    const carBytes = await util.toBuffer(sync.getFullRepo(storage, badRepo.cid))
-    const car = await readCarWithRoot(carBytes)
+    const carStream = sync.getFullRepo(storage, badRepo.cid)
+    const car = await readCarWithRoot(carStream)
     await expect(
       sync.verifyRepo(car.blocks, car.root, repoDid, keypair.did()),
     ).rejects.toThrow(RepoVerificationError)

@@ -1,5 +1,5 @@
+import { BlockMap, type CarBlock } from '@atproto/car'
 import type { Cid } from '@atproto/lex-data'
-import { BlockMap } from '../block-map.js'
 import type { CommitData } from '../types.js'
 import { ReadableBlockstore } from './readable-blockstore.js'
 import type { RepoStorage } from './types.js'
@@ -8,16 +8,13 @@ export class MemoryBlockstore
   extends ReadableBlockstore
   implements RepoStorage
 {
-  blocks: BlockMap
+  blocks = new BlockMap<Cid>()
   root: Cid | null = null
   rev: string | null = null
 
-  constructor(blocks?: BlockMap) {
+  constructor(blocks?: Iterable<Readonly<CarBlock>>) {
     super()
-    this.blocks = new BlockMap()
-    if (blocks) {
-      this.blocks.addMap(blocks)
-    }
+    if (blocks) this.blocks.addBlocks(blocks)
   }
 
   async getRoot(): Promise<Cid | null> {
@@ -32,7 +29,10 @@ export class MemoryBlockstore
     return this.blocks.has(cid)
   }
 
-  async getBlocks(cids: Cid[]): Promise<{ blocks: BlockMap; missing: Cid[] }> {
+  async getBlocks(cids: Iterable<Cid>): Promise<{
+    blocks: BlockMap<Cid>
+    missing: Cid[]
+  }> {
     return this.blocks.getMany(cids)
   }
 
@@ -40,8 +40,8 @@ export class MemoryBlockstore
     this.blocks.set(cid, block)
   }
 
-  async putMany(blocks: BlockMap): Promise<void> {
-    this.blocks.addMap(blocks)
+  async putMany(blocks: Iterable<Readonly<CarBlock>>): Promise<void> {
+    this.blocks.addBlocks(blocks)
   }
 
   async updateRoot(cid: Cid, rev: string): Promise<void> {
@@ -51,20 +51,19 @@ export class MemoryBlockstore
 
   async applyCommit(commit: CommitData): Promise<void> {
     this.root = commit.cid
-    const rmCids = commit.removedCids.toList()
-    for (const cid of rmCids) {
+    for (const cid of commit.removedCids) {
       this.blocks.delete(cid)
     }
-    commit.newBlocks.forEach((bytes, cid) => {
+    for (const { cid, bytes } of commit.newBlocks) {
       this.blocks.set(cid, bytes)
-    })
+    }
   }
 
   async sizeInBytes(): Promise<number> {
     let total = 0
-    this.blocks.forEach((bytes) => {
+    for (const bytes of this.blocks.values()) {
       total += bytes.byteLength
-    })
+    }
     return total
   }
 

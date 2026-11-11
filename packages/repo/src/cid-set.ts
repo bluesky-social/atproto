@@ -1,54 +1,66 @@
-import { type Cid, parseCid } from '@atproto/lex-data'
+import type { Cid } from '@atproto/lex-data'
 
-export class CidSet implements Iterable<Cid> {
-  private set: Set<string>
+export class CidSet<TCid extends Cid = Cid> implements Iterable<TCid> {
+  #map: Map<string, TCid>
 
-  constructor(arr: Cid[] = []) {
-    const strArr = arr.map((c) => c.toString())
-    this.set = new Set(strArr)
+  constructor(arr?: Iterable<TCid>) {
+    if (arr instanceof CidSet) {
+      // Optimized special case for when the input is another CidSet
+      this.#map = new Map(arr.#map)
+    } else {
+      this.#map = new Map()
+      if (arr) for (const c of arr) this.#map.set(c.toString(), c)
+    }
   }
 
-  add(cid: Cid): CidSet {
-    this.set.add(cid.toString())
+  add(cid: TCid): this {
+    this.#map.set(cid.toString(), cid)
     return this
   }
 
-  addSet(toMerge: CidSet): CidSet {
-    for (const c of toMerge.set) this.set.add(c)
+  addSet(toMerge: Iterable<TCid>): this {
+    if (toMerge instanceof CidSet) {
+      for (const [k, v] of toMerge.#map) this.#map.set(k, v)
+    } else {
+      for (const cid of toMerge) this.add(cid)
+    }
     return this
   }
 
-  subtractSet(toSubtract: CidSet): CidSet {
-    for (const c of toSubtract.set) this.set.delete(c)
+  subtractSet(toSubtract: Iterable<TCid>): this {
+    if (toSubtract instanceof CidSet) {
+      for (const k of toSubtract.#map.keys()) this.#map.delete(k)
+    } else {
+      for (const cid of toSubtract) this.delete(cid)
+    }
     return this
   }
 
-  delete(cid: Cid) {
-    this.set.delete(cid.toString())
+  delete(cid: TCid): this {
+    this.#map.delete(cid.toString())
     return this
   }
 
-  has(cid: Cid): boolean {
-    return this.set.has(cid.toString())
+  has(cid: TCid): boolean {
+    return this.#map.has(cid.toString())
   }
 
-  size(): number {
-    return this.set.size
+  get size(): number {
+    return this.#map.size
   }
 
-  clear(): CidSet {
-    this.set.clear()
+  clear(): this {
+    this.#map.clear()
     return this
   }
 
-  toList(): Cid[] {
+  /** @deprecated Use the iterable interface instead */
+  toList(): TCid[] {
     return Array.from(this)
   }
 
-  *[Symbol.iterator](): Generator<Cid, void, unknown> {
-    for (const c of this.set) {
-      yield parseCid(c)
-    }
+  [Symbol.iterator](): MapIterator<TCid> {
+    return this.#map.values()
   }
 }
 

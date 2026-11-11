@@ -1,6 +1,6 @@
-import { byteIterableToStream } from '@atproto/common'
+import { Readable } from 'node:stream'
 import { parseCid } from '@atproto/lex-data'
-import { blocksToCarStream } from '@atproto/repo'
+import { writeCarStream } from '@atproto/repo'
 import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
 import { isUserOrAdmin } from '../../../../auth-verifier.js'
 import type { AppContext } from '../../../../context.js'
@@ -26,11 +26,11 @@ export default function (server: Server, ctx: AppContext) {
         const missingStr = got.missing.map((c) => c.toString())
         throw new InvalidRequestError(`Could not find cids: ${missingStr}`)
       }
-      const car = blocksToCarStream(null, got.blocks)
+      const car = writeCarStream(null, got.blocks)
 
       return {
         encoding: 'application/vnd.ipld.car' as const,
-        body: byteIterableToStream(car),
+        body: Readable.from(car, { objectMode: false }),
       }
     },
   })

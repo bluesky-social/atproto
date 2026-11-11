@@ -1,6 +1,5 @@
 import type { Cid, LexMap } from '@atproto/lex-data'
 import { MissingBlocksError } from './error.js'
-import log from './logger.js'
 import { MST } from './mst/index.js'
 import * as parse from './parse.js'
 import type { ReadableBlockstore } from './storage/index.js'
@@ -30,7 +29,6 @@ export class ReadableRepo {
   static async load(storage: ReadableBlockstore, commitCid: Cid) {
     const commit = await storage.readObj(commitCid, def.versionedCommit)
     const data = await MST.load(storage, commit.data)
-    log.info({ did: commit.did }, 'loaded repo for')
     return new ReadableRepo({
       storage,
       data,

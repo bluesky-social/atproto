@@ -1,4 +1,8 @@
-export * from './block-map.js'
+// @NOTE Do **not** re-export the zod schemas directly from this package. Do not
+// export anything from "./schemas.js" either.
+
+export * from '@atproto/car'
+
 export * from './cid-set.js'
 export * from './repo.js'
 export * from './mst/index.js'
@@ -7,5 +11,4 @@ export * from './storage/index.js'
 export * from './sync/index.js'
 export * from './types.js'
 export * from './data-diff.js'
-export * from './car.js'
 export * from './util.js'
