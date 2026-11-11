@@ -28,7 +28,11 @@ import {
 } from '../../../../pipeline.js'
 import { getAtprotoPassthroughHeaders } from '../../../../util/headers.js'
 import type { Views } from '../../../../views/index.js'
-import { getAtmospherePostRef } from './atmosphere-hydration.js'
+import {
+  getAtmospherePostRef,
+  getAtmospherePostUris,
+  getAtmospherePostView,
+} from './atmosphere-hydration.js'
 
 const MAX_CONFIG_BYTES = 512 * 1024
 const MAX_LIST_ITEMS = 10
@@ -282,8 +286,34 @@ async function hydration({
         })
       : {},
   ])
-  // Detailed profile state goes second so it wins any overlapping actor state.
-  return mergeStates(externalState, appProfileState)
+  const postUris = getAtmospherePostUris(externalState)
+  const postState = postUris.length
+    ? await ctx.hydrator
+        .hydratePosts(
+          postUris.map((uri) => ({ uri })),
+          params.hydrateCtx,
+          // @NOTE Failed hydration must not leak partially loaded posts.
+          { ...externalState },
+          {
+            externalSeenRecordKeys: new Set([
+              ...(externalState.externalRecords?.keys() ?? []),
+              ...(externalState.externalRecordsByRef?.keys() ?? []),
+            ]),
+            externalPublicationSubscriptions:
+              externalState.externalPublicationSubscriptions,
+          },
+        )
+        .catch((err) => {
+          if (params.signal.aborted) throw err
+          httpLogger.warn(
+            { err },
+            'Unable to hydrate Atmosphere Explore associated posts',
+          )
+          return {}
+        })
+    : {}
+  // Detailed profile state goes last so it wins any overlapping actor state.
+  return mergeStates(mergeStates(externalState, postState), appProfileState)
 }
 
 function presentation({
@@ -301,15 +331,17 @@ function presentation({
     articles: {
       items: mapDefined(articles, ({ uri }) => {
         const view = ctx.views.externalRecordView(uri, state, now)
-        return view && app.bsky.embed.external.viewArticle.$isTypeOf(view)
-          ? {
-              featured: false,
-              view,
-              bskyPostRef: getAtmospherePostRef(
-                state.externalRecords?.get(uri)?.record,
-              ),
-            }
-          : undefined
+        if (!view || !app.bsky.embed.external.viewArticle.$isTypeOf(view))
+          return
+        const bskyPostRef = getAtmospherePostRef(
+          state.externalRecords?.get(uri)?.record,
+        )
+        return {
+          featured: false,
+          view,
+          bskyPostRef,
+          viewBskyPost: getAtmospherePostView(ctx.views, bskyPostRef, state),
+        }
       }),
       recIdStr: skeleton.articleRecIdStr,
     },
@@ -338,6 +370,9 @@ function presentation({
         const view = ctx.views.externalRecordView(uri, state, now)
         if (!view || !app.bsky.embed.external.viewLivestream.$isTypeOf(view))
           return
+        const bskyPostRef = getAtmospherePostRef(
+          state.externalRecords?.get(uri)?.record,
+        )
         // Previewed streams are never live; copy rather than mutate the view.
         return {
           featured: false,
@@ -345,9 +380,8 @@ function presentation({
             startsAt != null && Date.parse(startsAt) > now
               ? { ...view, active: false }
               : view,
-          bskyPostRef: getAtmospherePostRef(
-            state.externalRecords?.get(uri)?.record,
-          ),
+          bskyPostRef,
+          viewBskyPost: getAtmospherePostView(ctx.views, bskyPostRef, state),
         }
       }),
     },

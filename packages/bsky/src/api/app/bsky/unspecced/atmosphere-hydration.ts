@@ -25,6 +25,7 @@ import {
   site,
   social,
 } from '../../../../lexicons/index.js'
+import { httpLogger } from '../../../../logger.js'
 import { recordUriOf, uriToDid } from '../../../../util/uris.js'
 import {
   externalRecordViewRefs,
@@ -36,13 +37,15 @@ import type { TimelineActivity } from './atmosphere-grouping.js'
 /** Request-scoped hydration and visibility for incrementally fetched roots. */
 export class AtmosphereTimelineHydrator {
   private state: HydrationState
-  private readonly seen = new Set<string>()
+  private seen = new Set<string>()
   private readonly seenPosts = new Set<AtUriString>()
+  private readonly seenAssociatedPosts = new Set<AtUriString>()
 
   constructor(
     private readonly ctx: { hydrator: Hydrator; views: Views },
     private readonly hydrateCtx: HydrateCtxWithViewer,
     private readonly now: number,
+    private readonly signal: AbortSignal,
   ) {
     this.state = {
       ctx: hydrateCtx,
@@ -94,6 +97,38 @@ export class AtmosphereTimelineHydrator {
         ),
       )
     }
+    const associated = getAtmospherePostUris(this.state).filter(
+      (uri) => !this.seenPosts.has(uri) && !this.seenAssociatedPosts.has(uri),
+    )
+    if (associated.length) {
+      for (const uri of associated) this.seenAssociatedPosts.add(uri)
+      const seen = new Set(this.seen)
+      const postState = await this.ctx.hydrator
+        .hydratePosts(
+          associated.map((uri) => ({ uri })),
+          this.hydrateCtx,
+          // @NOTE Isolate post mutations and lookup markers until success.
+          { ...this.state, posts: new HydrationMap(this.state.posts) },
+          {
+            externalSeenRecordKeys: seen,
+            externalPublicationSubscriptions:
+              this.state.externalPublicationSubscriptions,
+          },
+        )
+        .catch((err) => {
+          if (this.signal.aborted) throw err
+          httpLogger.warn(
+            { err },
+            'Unable to hydrate Atmosphere timeline associated posts',
+          )
+          return undefined
+        })
+      if (postState) {
+        this.state = mergeStates(this.state, postState)
+        this.seen = seen
+        for (const uri of associated) this.seenPosts.add(uri)
+      }
+    }
   }
 
   /** Return only an already-loaded, visible author profile for overflow. */
@@ -114,7 +149,8 @@ export class AtmosphereTimelineHydrator {
     const { info, collection, target, groupable, subscribed, viewUri, state } =
       selected
     let view: app.bsky.unspecced.getAtmosphereTimeline.ActivityItem['view']
-    let bskyPostRef: app.bsky.unspecced.getAtmosphereTimeline.ActivityItem['bskyPostRef']
+    let bskyPostRef: com.atproto.repo.strongRef.Main | undefined
+    let viewBskyPost: app.bsky.feed.defs.PostView | undefined
     if (collection === app.bsky.feed.post.$type) {
       const postView = this.ctx.views.post(uri, this.state)
       if (!postView) return
@@ -125,6 +161,7 @@ export class AtmosphereTimelineHydrator {
       bskyPostRef = getAtmospherePostRef(
         state.externalRecords?.get(viewUri)?.record,
       )
+      viewBskyPost = getAtmospherePostView(this.ctx.views, bskyPostRef, state)
     }
     return {
       item: app.bsky.unspecced.getAtmosphereTimeline.activityItem.$build({
@@ -133,6 +170,7 @@ export class AtmosphereTimelineHydrator {
         viewerState: { subscribed },
         view,
         bskyPostRef,
+        viewBskyPost,
       }),
       sortedAt,
       target,
@@ -271,7 +309,32 @@ export class AtmosphereTimelineHydrator {
   }
 }
 
-/** Read the author-declared post reference for a renderable Atmosphere record. */
+/** Collect associated posts after external records and action targets load. */
+export function getAtmospherePostUris(state: HydrationState): AtUriString[] {
+  const uris = new Set<AtUriString>()
+  for (const info of state.externalRecords?.values() ?? []) {
+    const ref = getAtmospherePostRef(info?.record)
+    const uri = ref && recordUriOf(ref.uri, app.bsky.feed.post.$type)
+    if (uri) uris.add(uri)
+  }
+  return [...uris]
+}
+
+/** Compose an associated post without making it a required content dependency. */
+export function getAtmospherePostView(
+  views: Views,
+  ref: com.atproto.repo.strongRef.Main | undefined,
+  state: HydrationState,
+): app.bsky.feed.defs.PostView | undefined {
+  const uri = ref && recordUriOf(ref.uri, app.bsky.feed.post.$type)
+  if (!uri || !isRecordAvailable(state.posts?.get(uri), uri, state, views))
+    return
+  const post = views.post(uri, state)
+  if (!post || views.noUnauthenticatedPost(state, post)) return
+  return app.bsky.feed.defs.postView.$build(post)
+}
+
+/** Read the author-declared reference independently of post availability. */
 export function getAtmospherePostRef(
   record: unknown,
 ): com.atproto.repo.strongRef.Main | undefined {

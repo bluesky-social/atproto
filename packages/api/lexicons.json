@@ -961,11 +961,11 @@
     },
     "app.bsky.unspecced.getAtmosphereExploreTab": {
       "uri": "file://../../lexicons-overrides/app/bsky/unspecced/getAtmosphereExploreTab.json",
-      "cid": "bafyreidkx2npil4kwtujbcr2bs74yzhaa2yto6zbklsebgmz7d6byw7sx4"
+      "cid": "bafyreihghydcuj6a6eadoniihcr3fsftq24a7qjw2cuxk73yqgoriwshnq"
     },
     "app.bsky.unspecced.getAtmosphereTimeline": {
       "uri": "file://../../lexicons-overrides/app/bsky/unspecced/getAtmosphereTimeline.json",
-      "cid": "bafyreigbqoyhxvzodgh2kx6lqta67vllstegauolvte6dwbnznxx6oss5m"
+      "cid": "bafyreifas5ue4dkf3xxlsihrzlarina6mrmpb2b2haxgg5fuosw3jufaci"
     },
     "app.bsky.unspecced.getConfig": {
       "uri": "https://raw.githubusercontent.com/bluesky-social/bsky/refs/heads/main/lexicons/app/bsky/unspecced/getConfig.json",

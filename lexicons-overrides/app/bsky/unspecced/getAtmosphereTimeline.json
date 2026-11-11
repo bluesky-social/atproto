@@ -61,6 +61,11 @@
           "ref": "com.atproto.repo.strongRef",
           "description": "The Bluesky post associated with the rendered article or livestream, as declared by its author. The referenced post may not be available."
         },
+        "viewBskyPost": {
+          "type": "ref",
+          "ref": "app.bsky.feed.defs#postView",
+          "description": "The hydrated Bluesky post associated with the rendered article or livestream, as declared by its author. Omitted when the post is unavailable to the viewer."
+        },
         "view": {
           "type": "union",
           "refs": [

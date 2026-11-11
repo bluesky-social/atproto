@@ -310,6 +310,30 @@ async function setup(config: unknown = {}, exploreEnabled = true) {
         getLabels: () => ({
           labels: labels.map((label) => Buffer.from(lexStringify(label))),
         }),
+        getPostRecords: ({ uris }) => ({
+          records: uris.map((uri) => {
+            const record = records.get(uri as AtUriString)
+            return {
+              cid,
+              takedownRef: takenDown.has(uri) ? 'takedown' : undefined,
+              record: record ? Buffer.from(lexStringify(record)) : undefined,
+            }
+          }),
+          meta: uris.map(() => ({})),
+        }),
+        getRecordsByRef: ({ refs }) => ({
+          results: refs.map(({ uri }) => lookup(uri)),
+        }),
+        getInteractionCounts: ({ refs }) => ({
+          likes: refs.map(() => 12),
+          replies: refs.map(() => 3),
+        }),
+        getLikesByActorAndSubjects: ({ refs }) => ({
+          uris: refs.map(() => atUri(viewer, app.bsky.feed.like.$type, 'like')),
+        }),
+        getRepostsByActorAndSubjects: () => ({}),
+        getBookmarksByActorAndSubjects: () => ({}),
+        getThreadMutesOnSubjects: () => ({}),
       })
     }),
   )
@@ -542,21 +566,162 @@ describe('Atmosphere Explore access gate', () => {
 })
 
 describe('Atmosphere Explore', () => {
-  it('hydrates canonical views, associations, and ordering', async () => {
+  test.each([false, true])(
+    'hydrates article and livestream posts over HTTP (authenticated: %s)',
+    async (authenticated) => {
+      await using fixture = await setup(curated)
+      using exactRecords = vi.spyOn(fixture.dataplane, 'getRecordsByRef')
+      const postAuthor = 'did:plc:announcer'
+      const postUri = atUri(
+        postAuthor,
+        app.bsky.feed.post.$type,
+        'announcement',
+      )
+      fixture.records.set(
+        postUri,
+        app.bsky.feed.post.$build({
+          text: 'Read and watch',
+          createdAt: publishedAt,
+          embed: app.bsky.embed.external.$build({
+            external: {
+              uri: 'https://example.com/blog/story',
+              title: 'Author-supplied title',
+              description: '',
+              associatedRefs: [{ uri: docUri, cid }],
+            },
+          }),
+        }),
+      )
+      // @NOTE The declared reference can pin an older version of the post.
+      const postRef = {
+        uri: postUri,
+        cid: 'bafyreidp33zeeo7kwlj6qw5wyvbkdcs4fl4uj4dhgifpzgno3nfbl4amoq',
+      }
+      fixture.records.get(docUri)!.bskyPostRef = postRef
+      fixture.records.get(liveUri)!.post = postRef
+
+      const { status, body } = await fixture.query(authenticated)
+      expect(status).toBe(200)
+      expect(exactRecords).not.toHaveBeenCalled()
+      for (const item of [body.articles.items[0], body.livestreams.items[0]]) {
+        expect(item.viewBskyPost).toMatchObject({
+          uri: postUri,
+          cid,
+          author: { did: postAuthor },
+          record: { text: 'Read and watch' },
+          likeCount: 12,
+          replyCount: 3,
+          embed: {
+            external: { title: 'Article' },
+          },
+        })
+        expect(item.viewBskyPost?.viewer?.like).toBe(
+          authenticated
+            ? atUri(viewer, app.bsky.feed.like.$type, 'like')
+            : undefined,
+        )
+        expect(item.bskyPostRef).toEqual(postRef)
+      }
+    },
+  )
+
+  test.each([
+    'missing',
+    'takedown',
+    'unavailable',
+    'blocked',
+    'no-unauthenticated',
+  ])('keeps external views when their associated post is %s', async (kind) => {
     await using fixture = await setup(curated)
-    using hydrate = vi.spyOn(
-      fixture.hydrator,
-      'hydrateEmbedExternalViewFromUris',
-    )
-    const { status, body } = await fixture.query()
-    expect(hydrate).toHaveBeenCalledWith(
-      [missingUri, docUri, pubUri, galleryUri, liveUri],
-      expect.objectContaining({
-        viewer: null,
-        xrpcEndpoint: app.bsky.unspecced.getAtmosphereExploreTab.$lxm,
+    const postAuthor = 'did:plc:announcer'
+    const postUri = atUri(postAuthor, app.bsky.feed.post.$type, 'announcement')
+    fixture.records.set(
+      postUri,
+      app.bsky.feed.post.$build({
+        text: 'Read and watch',
+        createdAt: publishedAt,
       }),
     )
-    expect(hydrate.mock.calls.filter(([, , seen]) => !seen)).toHaveLength(1)
+    fixture.records.get(docUri)!.bskyPostRef = { uri: postUri, cid }
+    fixture.records.get(liveUri)!.post = { uri: postUri, cid }
+    if (kind === 'missing') fixture.records.delete(postUri)
+    if (kind === 'takedown') fixture.takenDown.add(postUri)
+    if (kind === 'unavailable')
+      fixture.actors.set(postAuthor, { exists: false })
+    if (kind === 'blocked') fixture.blockedActors.add(postAuthor)
+    if (kind === 'no-unauthenticated') {
+      fixture.labels.push({
+        src: labeler,
+        uri: postAuthor,
+        val: '!no-unauthenticated',
+        cts: publishedAt,
+      })
+    }
+
+    const { status, body } = await fixture.query(kind === 'blocked')
+    expect(status).toBe(200)
+    expect(body.articles.items[0].view.title).toBe('Article')
+    expect(body.livestreams.items[0].view.title).toBe('Live')
+    expect(body.articles.items[0].bskyPostRef).toEqual({ uri: postUri, cid })
+    expect(body.livestreams.items[0].bskyPostRef).toEqual({ uri: postUri, cid })
+    expect(body.articles.items[0]).not.toHaveProperty('viewBskyPost')
+    expect(body.livestreams.items[0]).not.toHaveProperty('viewBskyPost')
+  })
+
+  test.each(['getPostRecords', 'getInteractionCounts'] as const)(
+    'preserves Explore content and references when %s fails',
+    async (method) => {
+      await using fixture = await setup(curated)
+      const postUri = atUri(author, app.bsky.feed.post.$type, 'announcement')
+      const postRef = { uri: postUri, cid }
+      fixture.records.set(
+        postUri,
+        app.bsky.feed.post.$build({
+          text: 'Read and watch',
+          createdAt: publishedAt,
+        }),
+      )
+      fixture.records.get(docUri)!.bskyPostRef = postRef
+      fixture.records.get(liveUri)!.post = postRef
+      using _failure = vi
+        .spyOn(fixture.dataplane, method)
+        .mockRejectedValue(
+          new ConnectError('post lookup failed', Code.Unavailable),
+        )
+
+      const { status, body } = await fixture.query(true)
+
+      expect(status).toBe(200)
+      expect(body).toMatchObject({
+        publications: {
+          items: [
+            {
+              view: {
+                $type: app.bsky.embed.external.viewArticlePublication.$type,
+              },
+            },
+          ],
+        },
+        photos: {
+          items: [
+            { view: { $type: app.bsky.embed.external.viewGallery.$type } },
+          ],
+        },
+        apps: curated.apps,
+        announcementBanner: curatedBanner,
+      })
+      expect(body.articles.items[0].view.title).toBe('Article')
+      expect(body.livestreams.items[0].view.title).toBe('Live')
+      for (const item of [...body.articles.items, ...body.livestreams.items]) {
+        expect(item.bskyPostRef).toEqual(postRef)
+        expect(item).not.toHaveProperty('viewBskyPost')
+      }
+    },
+  )
+
+  it('hydrates canonical views, associations, and ordering', async () => {
+    await using fixture = await setup(curated)
+    const { status, body } = await fixture.query()
     expect(status).toBe(200)
     expect(body.announcementBanner).toEqual(curatedBanner)
     expect(body.apps).toEqual(curated.apps)
