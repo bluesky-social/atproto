@@ -26,6 +26,7 @@ const {
   __authorizeData: authorizeData,
   __customizationData: customizationData,
   __sessions: initialSessions,
+  __fedcmRegistrationData: fedcmRegistration,
 } = window as typeof window & HydrationData['authorization-page']
 
 // When the user is logging in, make sure the page URL contains the
@@ -63,6 +64,7 @@ createRoot(container).render(
               initialSelected={authorizeData.selectedDid}
               disableRemember={false}
               rememberDefault={false}
+              fedcmRegistration={fedcmRegistration}
             >
               <App />
             </SessionProvider>

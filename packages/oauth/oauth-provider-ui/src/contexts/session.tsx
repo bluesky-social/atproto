@@ -4,14 +4,20 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useRef,
   useState,
 } from 'react'
 import { useErrorBoundary } from 'react-error-boundary'
-import type { Account, DidString, Session } from '@atproto/oauth-provider-api'
+import type {
+  Account,
+  DidString,
+  FedcmRegistrationData,
+  Session,
+} from '@atproto/oauth-provider-api'
 import { Api, UnauthorizedError, UnknownRequestUriError } from '#/lib/api.ts'
-import { completeFedcmLogin } from '#/lib/fedcm.ts'
+import { completeFedcmLogin, syncFedcmRegistration } from '#/lib/fedcm.ts'
 import { upsert } from '#/lib/util.ts'
 import { useCurrentLocale } from '#/locales/locale-provider.jsx'
 import { useCustomizationData } from './customization.js'
@@ -84,6 +90,7 @@ export type SessionProviderProps = {
   disableRemember: boolean
   rememberDefault: boolean
   fedcm?: boolean
+  fedcmRegistration?: FedcmRegistrationData
   forcedIdentifier?: string
   leave?: () => void | Promise<void>
 }
@@ -95,6 +102,7 @@ export function SessionProvider({
   disableRemember,
   rememberDefault,
   fedcm = false,
+  fedcmRegistration = undefined,
   forcedIdentifier = undefined,
   leave = undefined,
 }: SessionProviderProps) {
@@ -205,6 +213,12 @@ export function SessionProvider({
     },
     [update],
   )
+
+  // Covers page load, sign-in, sign-up and sign-out alike.
+  useEffect(() => {
+    if (fedcmRegistration)
+      void syncFedcmRegistration(fedcmRegistration, sessions)
+  }, [sessions, fedcmRegistration])
 
   const completeFedcmLoginIfEnabled = useCallback(async () => {
     if (fedcm) await completeFedcmLogin()

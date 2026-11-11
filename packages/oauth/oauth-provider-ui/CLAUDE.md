@@ -58,6 +58,15 @@ it in session context across SPA navigation. Close only after an explicit
 eligible remembered-account choice or persisted active sign-in/sign-up; never
 close for ephemeral sessions or because an account existed at initial load.
 
+FedCM IdP registration is separate: when hydration carries
+`__fedcmRegistrationData`, `SessionProvider` runs `syncFedcmRegistration` on
+every `sessions` change (page load, sign-in/up/out). It pushes
+`navigator.login.setStatus('logged-in', { accounts, expiration })` then calls
+`IdentityProvider.register(configUrl)`; with no eligible account it pushes
+`'logged-out'` only. Eligible = not ephemeral, not deactivated, not
+`loginRequired`. Every call is feature-detected and best-effort (`console.warn`
+on failure, silent when the API is absent).
+
 **File-based.** `src/routes/` is the route tree, and `src/routeTree.gen.ts` is
 generated from it by `@tanstack/router-plugin` on every dev run and build. The
 generated file is committed; don't edit it, and don't add it to a lint or format
