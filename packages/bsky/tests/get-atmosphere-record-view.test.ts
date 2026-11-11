@@ -12,7 +12,7 @@ import {
 import { AuthRequiredError, createServer } from '@atproto/xrpc-server'
 import register from '../src/api/app/bsky/unspecced/getAtmosphereRecordView.js'
 import registerBatch from '../src/api/app/bsky/unspecced/getAtmosphereRecordViews.js'
-import { AuthVerifier } from '../src/auth-verifier.js'
+import { AuthVerifier } from '../src/auth/verifier.js'
 import type { AppContext } from '../src/context.js'
 import { FeatureGatesClient } from '../src/feature-gates/index.js'
 import { Hydrator } from '../src/hydration/hydrator.js'

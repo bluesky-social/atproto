@@ -17,8 +17,8 @@ import {
   getKeyAsDidKey,
   isDataplaneError,
   unpackIdentityKeys,
-} from './data-plane/index.js'
-import type { GetIdentityByDidResponse } from './proto/bsky_pb.js'
+} from '../data-plane/index.js'
+import type { GetIdentityByDidResponse } from '../proto/bsky_pb.js'
 
 type ReqCtx = {
   req: express.Request
@@ -29,7 +29,7 @@ type StandardAuthOpts = {
   lxmCheck?: (method?: string) => boolean
 }
 
-export enum RoleStatus {
+enum RoleStatus {
   Valid,
   Invalid,
   Missing,
@@ -66,7 +66,7 @@ type ModServiceOutput = {
   }
 }
 
-export type AuthVerifierOpts = {
+type AuthVerifierOpts = {
   ownDid: DidString
   alternateAudienceDids: DidString[]
   modServiceDid: DidString
@@ -92,7 +92,8 @@ export class AuthVerifier {
     this.adminPasses = new Set(opts.adminPasses)
   }
 
-  // verifiers (arrow fns to preserve scope)
+  // #region Auth-verification methods.
+
   standardOptionalParameterized =
     (opts: StandardAuthOpts) =>
     async (ctx: ReqCtx): Promise<StandardOutput | NullOutput> => {
@@ -197,7 +198,46 @@ export class AuthVerifier {
     }
   }
 
-  parseRoleCreds(req: express.Request) {
+  // #endregion
+
+  // #region Credential parsing.
+
+  parseCreds(
+    creds: StandardOutput | RoleOutput | ModServiceOutput | NullOutput,
+  ) {
+    const viewer =
+      creds.credentials.type === 'standard' ? creds.credentials.iss : null
+
+    const includeTakedownsAnd3pBlocks =
+      (creds.credentials.type === 'role' && creds.credentials.admin) ||
+      creds.credentials.type === 'mod_service' ||
+      (creds.credentials.type === 'standard' &&
+        this.isModService(creds.credentials.iss))
+
+    const canPerformTakedown =
+      (creds.credentials.type === 'role' && creds.credentials.admin) ||
+      creds.credentials.type === 'mod_service'
+
+    const isModService =
+      creds.credentials.type === 'mod_service' ||
+      (creds.credentials.type === 'standard' &&
+        this.isModService(creds.credentials.iss))
+
+    return {
+      viewer,
+      includeTakedowns: includeTakedownsAnd3pBlocks,
+      include3pBlocks: includeTakedownsAnd3pBlocks,
+      canPerformTakedown,
+      isModService,
+      skipViewerBlocks: isModService && viewer !== null,
+    }
+  }
+
+  // #endregion
+
+  // #region Helpers.
+
+  private parseRoleCreds(req: express.Request) {
     const parsed = parseBasicAuth(req.headers.authorization || '')
     const { Missing, Valid, Invalid } = RoleStatus
     if (!parsed) {
@@ -210,7 +250,7 @@ export class AuthVerifier {
     return { status: Invalid, admin: false }
   }
 
-  async verifyServiceJwt<
+  private async verifyServiceJwt<
     TOptions extends {
       iss: string[] | null
       aud: string | null
@@ -291,14 +331,16 @@ export class AuthVerifier {
     }
   }
 
-  isModService(iss: string): iss is DidString | `${DidString}#atproto_labeler` {
+  private isModService(
+    iss: string,
+  ): iss is DidString | `${DidString}#atproto_labeler` {
     return [
       this.modServiceDid,
       `${this.modServiceDid}#atproto_labeler`,
     ].includes(iss)
   }
 
-  nullCreds(): NullOutput {
+  private nullCreds(): NullOutput {
     return {
       credentials: {
         type: 'none',
@@ -307,37 +349,8 @@ export class AuthVerifier {
     }
   }
 
-  parseCreds(
-    creds: StandardOutput | RoleOutput | ModServiceOutput | NullOutput,
-  ) {
-    const viewer =
-      creds.credentials.type === 'standard' ? creds.credentials.iss : null
-    const includeTakedownsAnd3pBlocks =
-      (creds.credentials.type === 'role' && creds.credentials.admin) ||
-      creds.credentials.type === 'mod_service' ||
-      (creds.credentials.type === 'standard' &&
-        this.isModService(creds.credentials.iss))
-    const canPerformTakedown =
-      (creds.credentials.type === 'role' && creds.credentials.admin) ||
-      creds.credentials.type === 'mod_service'
-    const isModService =
-      creds.credentials.type === 'mod_service' ||
-      (creds.credentials.type === 'standard' &&
-        this.isModService(creds.credentials.iss))
-
-    return {
-      viewer,
-      includeTakedowns: includeTakedownsAnd3pBlocks,
-      include3pBlocks: includeTakedownsAnd3pBlocks,
-      canPerformTakedown,
-      isModService,
-      skipViewerBlocks: isModService && viewer !== null,
-    }
-  }
+  // #endregion
 }
-
-// HELPERS
-// ---------
 
 const BEARER = 'Bearer '
 const BASIC = 'Basic '
@@ -352,7 +365,7 @@ const bearerTokenFromReq = (req: express.Request) => {
   return header.slice(BEARER.length).trim()
 }
 
-export const parseBasicAuth = (
+const parseBasicAuth = (
   token: string,
 ): { username: string; password: string } | null => {
   if (!token.startsWith(BASIC)) return null
@@ -409,7 +422,7 @@ const verifySig = (
   )
 }
 
-export const verifySignatureWithKey: VerifySignatureWithKeyFn = async (
+const verifySignatureWithKey: VerifySignatureWithKeyFn = async (
   didKey: string,
   msgBytes: Uint8Array,
   sigBytes: Uint8Array,
