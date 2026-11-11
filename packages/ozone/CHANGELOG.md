@@ -1,5 +1,13 @@
 # @atproto/ozone
 
+## 0.14.1
+
+### Patch Changes
+
+- [#5853](https://github.com/bluesky-social/atproto/pull/5853) [`57b7a37`](https://github.com/bluesky-social/atproto/commit/57b7a375f571bf7f42709f93f98d3f9bd000fb6d) Thanks [@blackmichael](https://github.com/blackmichael)! - Add optional hydrated viewBskyPost values alongside existing bskyPostRef fields on Atmosphere timeline activities and Explore articles and livestreams. Reuse post hydration and viewer visibility checks, preserving references and external content when posts are unavailable. Refresh consuming contract inputs.
+  
+  Keep Explore and the Atmosphere timeline available when optional post hydration fails, omitting incomplete post views while retaining external content and references. Preserve request cancellation and failures for required timeline root posts.
+
 ## 0.14.0
 
 ### Minor Changes

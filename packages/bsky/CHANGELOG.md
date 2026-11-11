@@ -1,5 +1,25 @@
 # @atproto/bsky
 
+## 0.5.7
+
+### Patch Changes
+
+- [#5872](https://github.com/bluesky-social/atproto/pull/5872) [`b43dd14`](https://github.com/bluesky-social/atproto/commit/b43dd14e0b1ca2aff9d6470d9a5d726c9be301fb) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Remove admin impersonation through Basic authentication and the `appview-as-did` header.
+
+- [#5873](https://github.com/bluesky-social/atproto/pull/5873) [`3b93b6f`](https://github.com/bluesky-social/atproto/commit/3b93b6f2bcfde14c0e69a45a80d0967aa3032f93) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Reduce notification group sizes to 100 while preserving per-kind URL length limits.
+
+- [#5853](https://github.com/bluesky-social/atproto/pull/5853) [`57b7a37`](https://github.com/bluesky-social/atproto/commit/57b7a375f571bf7f42709f93f98d3f9bd000fb6d) Thanks [@blackmichael](https://github.com/blackmichael)! - Add optional hydrated viewBskyPost values alongside existing bskyPostRef fields on Atmosphere timeline activities and Explore articles and livestreams. Reuse post hydration and viewer visibility checks, preserving references and external content when posts are unavailable. Refresh consuming contract inputs.
+  
+  Keep Explore and the Atmosphere timeline available when optional post hydration fails, omitting incomplete post views while retaining external content and references. Preserve request cancellation and failures for required timeline root posts.
+
+- [#5860](https://github.com/bluesky-social/atproto/pull/5860) [`3fb2578`](https://github.com/bluesky-social/atproto/commit/3fb2578a59813b3183fb1e443120e25a43ab4aba) Thanks [@blackmichael](https://github.com/blackmichael)! - Add the authenticated app.bsky.unspecced.getAtmosphereRecordViews batch procedure accepting record objects with a URI and optional CID, shared hydration, and visibility-filtered raw associations.
+
+- [#5871](https://github.com/bluesky-social/atproto/pull/5871) [`4ca55db`](https://github.com/bluesky-social/atproto/commit/4ca55dbc6d9e04d721fc14abffb73ce33158e002) Thanks [@blackmichael](https://github.com/blackmichael)! - Rework Atmosphere timeline groups: replace overflow with complete group item URIs and hydrate only the newest actor-group item. Keep subject groups to one collection and multiple actors, and return article creations as standalone items with collection-specific related activity references and actor profiles.
+  
+  Require complete actor lists for subject groups and related-activity buckets, preserving the existing record fallbacks when profiles are unavailable.
+- Updated dependencies [[`57b7a37`](https://github.com/bluesky-social/atproto/commit/57b7a375f571bf7f42709f93f98d3f9bd000fb6d), [`4ca55db`](https://github.com/bluesky-social/atproto/commit/4ca55dbc6d9e04d721fc14abffb73ce33158e002)]:
+  - @atproto/api@0.31.1
+
 ## 0.5.6
 
 ### Patch Changes
