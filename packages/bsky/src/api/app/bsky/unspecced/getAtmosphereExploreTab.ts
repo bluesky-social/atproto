@@ -288,19 +288,29 @@ async function hydration({
   ])
   const postUris = getAtmospherePostUris(externalState)
   const postState = postUris.length
-    ? await ctx.hydrator.hydratePosts(
-        postUris.map((uri) => ({ uri })),
-        params.hydrateCtx,
-        externalState,
-        {
-          externalSeenRecordKeys: new Set([
-            ...(externalState.externalRecords?.keys() ?? []),
-            ...(externalState.externalRecordsByRef?.keys() ?? []),
-          ]),
-          externalPublicationSubscriptions:
-            externalState.externalPublicationSubscriptions,
-        },
-      )
+    ? await ctx.hydrator
+        .hydratePosts(
+          postUris.map((uri) => ({ uri })),
+          params.hydrateCtx,
+          // @NOTE Failed hydration must not leak partially loaded posts.
+          { ...externalState },
+          {
+            externalSeenRecordKeys: new Set([
+              ...(externalState.externalRecords?.keys() ?? []),
+              ...(externalState.externalRecordsByRef?.keys() ?? []),
+            ]),
+            externalPublicationSubscriptions:
+              externalState.externalPublicationSubscriptions,
+          },
+        )
+        .catch((err) => {
+          if (params.signal.aborted) throw err
+          httpLogger.warn(
+            { err },
+            'Unable to hydrate Atmosphere Explore associated posts',
+          )
+          return {}
+        })
     : {}
   // Detailed profile state goes last so it wins any overlapping actor state.
   return mergeStates(mergeStates(externalState, postState), appProfileState)

@@ -668,6 +668,57 @@ describe('Atmosphere Explore', () => {
     expect(body.livestreams.items[0]).not.toHaveProperty('viewBskyPost')
   })
 
+  test.each(['getPostRecords', 'getInteractionCounts'] as const)(
+    'preserves Explore content and references when %s fails',
+    async (method) => {
+      await using fixture = await setup(curated)
+      const postUri = atUri(author, app.bsky.feed.post.$type, 'announcement')
+      const postRef = { uri: postUri, cid }
+      fixture.records.set(
+        postUri,
+        app.bsky.feed.post.$build({
+          text: 'Read and watch',
+          createdAt: publishedAt,
+        }),
+      )
+      fixture.records.get(docUri)!.bskyPostRef = postRef
+      fixture.records.get(liveUri)!.post = postRef
+      using _failure = vi
+        .spyOn(fixture.dataplane, method)
+        .mockRejectedValue(
+          new ConnectError('post lookup failed', Code.Unavailable),
+        )
+
+      const { status, body } = await fixture.query(true)
+
+      expect(status).toBe(200)
+      expect(body).toMatchObject({
+        publications: {
+          items: [
+            {
+              view: {
+                $type: app.bsky.embed.external.viewArticlePublication.$type,
+              },
+            },
+          ],
+        },
+        photos: {
+          items: [
+            { view: { $type: app.bsky.embed.external.viewGallery.$type } },
+          ],
+        },
+        apps: curated.apps,
+        announcementBanner: curatedBanner,
+      })
+      expect(body.articles.items[0].view.title).toBe('Article')
+      expect(body.livestreams.items[0].view.title).toBe('Live')
+      for (const item of [...body.articles.items, ...body.livestreams.items]) {
+        expect(item.bskyPostRef).toEqual(postRef)
+        expect(item).not.toHaveProperty('viewBskyPost')
+      }
+    },
+  )
+
   it('hydrates canonical views, associations, and ordering', async () => {
     await using fixture = await setup(curated)
     const { status, body } = await fixture.query()

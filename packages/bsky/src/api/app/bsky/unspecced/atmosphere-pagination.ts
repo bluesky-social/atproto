@@ -44,6 +44,7 @@ export async function loadAtmosphereTimeline(
   hydrateCtx: HydrateCtxWithViewer,
   cursor: string | undefined,
   now: number,
+  signal: AbortSignal,
 ): Promise<app.bsky.unspecced.getAtmosphereTimeline.$OutputBody> {
   const viewer = hydrateCtx.viewer as DidString
   let next = cursor === undefined ? undefined : decodeCursor(cursor, viewer)
@@ -54,7 +55,7 @@ export async function loadAtmosphereTimeline(
   const seenUris = new Set<string>()
   const seenCursors = new Set<string>()
   const buckets = new Map<string, Bucket>()
-  const hydration = new AtmosphereTimelineHydrator(ctx, hydrateCtx, now)
+  const hydration = new AtmosphereTimelineHydrator(ctx, hydrateCtx, now, signal)
 
   async function fetchBatch() {
     batchesFetched++

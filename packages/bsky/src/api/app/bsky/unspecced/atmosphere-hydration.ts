@@ -25,6 +25,7 @@ import {
   site,
   social,
 } from '../../../../lexicons/index.js'
+import { httpLogger } from '../../../../logger.js'
 import { recordUriOf, uriToDid } from '../../../../util/uris.js'
 import {
   externalRecordViewRefs,
@@ -36,13 +37,15 @@ import type { TimelineActivity } from './atmosphere-grouping.js'
 /** Request-scoped hydration and visibility for incrementally fetched roots. */
 export class AtmosphereTimelineHydrator {
   private state: HydrationState
-  private readonly seen = new Set<string>()
+  private seen = new Set<string>()
   private readonly seenPosts = new Set<AtUriString>()
+  private readonly seenAssociatedPosts = new Set<AtUriString>()
 
   constructor(
     private readonly ctx: { hydrator: Hydrator; views: Views },
     private readonly hydrateCtx: HydrateCtxWithViewer,
     private readonly now: number,
+    private readonly signal: AbortSignal,
   ) {
     this.state = {
       ctx: hydrateCtx,
@@ -79,11 +82,6 @@ export class AtmosphereTimelineHydrator {
     for (const key of this.state.externalRecordsByRef?.keys() ?? []) {
       this.seen.add(key)
     }
-    for (const uri of getAtmospherePostUris(this.state)) {
-      if (this.seenPosts.has(uri)) continue
-      this.seenPosts.add(uri)
-      posts.push(uri)
-    }
     if (posts.length) {
       this.state = mergeStates(
         this.state,
@@ -98,6 +96,38 @@ export class AtmosphereTimelineHydrator {
           },
         ),
       )
+    }
+    const associated = getAtmospherePostUris(this.state).filter(
+      (uri) => !this.seenPosts.has(uri) && !this.seenAssociatedPosts.has(uri),
+    )
+    if (associated.length) {
+      for (const uri of associated) this.seenAssociatedPosts.add(uri)
+      const seen = new Set(this.seen)
+      const postState = await this.ctx.hydrator
+        .hydratePosts(
+          associated.map((uri) => ({ uri })),
+          this.hydrateCtx,
+          // @NOTE Isolate post mutations and lookup markers until success.
+          { ...this.state, posts: new HydrationMap(this.state.posts) },
+          {
+            externalSeenRecordKeys: seen,
+            externalPublicationSubscriptions:
+              this.state.externalPublicationSubscriptions,
+          },
+        )
+        .catch((err) => {
+          if (this.signal.aborted) throw err
+          httpLogger.warn(
+            { err },
+            'Unable to hydrate Atmosphere timeline associated posts',
+          )
+          return undefined
+        })
+      if (postState) {
+        this.state = mergeStates(this.state, postState)
+        this.seen = seen
+        for (const uri of associated) this.seenPosts.add(uri)
+      }
     }
   }
 
