@@ -114,7 +114,6 @@ async function run() {
       port: 2587,
       chatUrl: 'http://localhost:2590',
       chatDid: 'did:example:chat',
-      dbMaterializedViewRefreshIntervalMs: 30_000,
     },
     introspect: { port: 2581 },
   })
