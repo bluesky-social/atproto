@@ -1,40 +1,31 @@
 import assert from 'node:assert'
-import { execFileSync } from 'node:child_process'
 import { once } from 'node:events'
-import { mkdtemp, readFile, rm } from 'node:fs/promises'
 import { type Server, createServer } from 'node:http'
 import { createServer as createHttpsServer } from 'node:https'
 import type { AddressInfo } from 'node:net'
-import { tmpdir } from 'node:os'
-import { join } from 'node:path'
-import { type Browser, type CDPSession, type Page, launch } from 'puppeteer'
+import { type Browser, type CDPSession, launch } from 'puppeteer'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
 import { type DidString, asStringFormat } from '@atproto/lex'
 import { middleware as oauthClientAssetsMiddleware } from '@atproto/oauth-client-browser-example/server'
-import { PageHelper } from './_puppeteer.js'
+import {
+  FedcmPage,
+  browserDescribe,
+  closeServers,
+  createTlsCredentials,
+  fedcmBrowserArgs,
+  nextDialog,
+} from './_fedcm.js'
 
 const idpOrigin = 'https://idp-one.test'
 const otherOrigin = 'https://idp-two.test'
 const configUrl = `${idpOrigin}/oauth/fedcm/config.json`
 const otherConfigUrl = `${otherOrigin}/config.json`
 
-type Dialog = {
-  dialogId: string
-  dialogType: string
-  accounts: { accountId: string; idpConfigUrl: string }[]
-}
-
-// @NOTE Puppeteer's pinned Chrome predates username-only and multi-IdP support.
-const browserDescribe = process.env.PUPPETEER_EXECUTABLE_PATH
-  ? describe
-  : describe.skip
-
 browserDescribe('account-first FedCM in Chrome 141+', () => {
   let browser: Browser
   let network: TestNetworkNoAppView
   let tlsServer: Server
   let rpServer: Server
-  let certDirectory: string
   let appUrl: string
   let dids: DidString[]
   const requests: {
@@ -46,28 +37,7 @@ browserDescribe('account-first FedCM in Chrome 141+', () => {
   }[] = []
 
   beforeAll(async () => {
-    certDirectory = await mkdtemp(join(tmpdir(), 'atproto-fedcm-tls-'))
-    const keyPath = join(certDirectory, 'key.pem')
-    const certPath = join(certDirectory, 'cert.pem')
-    execFileSync(
-      'openssl',
-      [
-        'req',
-        '-x509',
-        '-newkey',
-        'rsa:2048',
-        '-nodes',
-        '-days',
-        '1',
-        '-subj',
-        '/CN=idp-one.test',
-        '-keyout',
-        keyPath,
-        '-out',
-        certPath,
-      ],
-      { stdio: 'ignore' },
-    )
+    const tls = await createTlsCredentials('idp-one.test')
 
     network = await TestNetworkNoAppView.create({
       pds: {
@@ -88,94 +58,80 @@ browserDescribe('account-first FedCM in Chrome 141+', () => {
     }
     await network.processAll()
 
-    tlsServer = createHttpsServer(
-      {
-        key: await readFile(keyPath),
-        cert: await readFile(certPath),
-      },
-      (req, res) => {
-        const host = req.headers.host ?? ''
-        const path = new URL(req.url ?? '/', `https://${host}`).pathname
-        const request = {
-          host,
-          path,
-          method: req.method,
-          status: 0,
-          cookie: req.headers.cookie,
-        }
-        requests.push(request)
-        res.on('finish', () => {
-          request.status = res.statusCode
-        })
-        if (path === '/oauth/fedcm/cookie-probe') {
-          res.setHeader('Content-Type', 'text/html')
-          res.end('<!doctype html><title>Cookie probe</title>')
-        } else if (host === 'idp-one.test') {
-          network.pds.server.app(req, res)
+    tlsServer = createHttpsServer(tls, (req, res) => {
+      const host = req.headers.host ?? ''
+      const path = new URL(req.url ?? '/', `https://${host}`).pathname
+      const request = {
+        host,
+        path,
+        method: req.method,
+        status: 0,
+        cookie: req.headers.cookie,
+      }
+      requests.push(request)
+      res.on('finish', () => {
+        request.status = res.statusCode
+      })
+      if (path === '/oauth/fedcm/cookie-probe') {
+        res.setHeader('Content-Type', 'text/html')
+        res.end('<!doctype html><title>Cookie probe</title>')
+      } else if (host === 'idp-one.test') {
+        network.pds.server.app(req, res)
+      } else {
+        res.setHeader('Content-Type', 'application/json')
+        res.setHeader('Cache-Control', 'no-store')
+        if (path === '/.well-known/web-identity') {
+          res.end(JSON.stringify({ provider_urls: [otherConfigUrl] }))
+        } else if (path === '/config.json') {
+          res.end(
+            JSON.stringify({
+              accounts_endpoint: `${otherOrigin}/accounts`,
+              id_assertion_endpoint: `${otherOrigin}/assertion`,
+              login_url: `${otherOrigin}/account`,
+            }),
+          )
+        } else if (path === '/account') {
+          res.setHeader('Set-Login', 'logged-in')
+          res.setHeader(
+            'Set-Cookie',
+            'other-session=active; Secure; SameSite=None; HttpOnly',
+          )
+          res.end('{}')
+        } else if (path === '/accounts') {
+          res.end(
+            JSON.stringify({
+              accounts: [
+                {
+                  id: 'external-1',
+                  username: 'external-one',
+                  name: 'External One',
+                },
+                {
+                  id: 'external-2',
+                  username: 'external-two',
+                  name: 'External Two',
+                },
+              ],
+            }),
+          )
+        } else if (path === '/assertion') {
+          res.setHeader('Access-Control-Allow-Origin', req.headers.origin ?? '')
+          res.setHeader('Access-Control-Allow-Credentials', 'true')
+          req.resume()
+          req.on('end', () =>
+            res.end(JSON.stringify({ token: 'external-user' })),
+          )
         } else {
-          res.setHeader('Content-Type', 'application/json')
-          res.setHeader('Cache-Control', 'no-store')
-          if (path === '/.well-known/web-identity') {
-            res.end(JSON.stringify({ provider_urls: [otherConfigUrl] }))
-          } else if (path === '/config.json') {
-            res.end(
-              JSON.stringify({
-                accounts_endpoint: `${otherOrigin}/accounts`,
-                id_assertion_endpoint: `${otherOrigin}/assertion`,
-                login_url: `${otherOrigin}/account`,
-              }),
-            )
-          } else if (path === '/account') {
-            res.setHeader('Set-Login', 'logged-in')
-            res.setHeader(
-              'Set-Cookie',
-              'other-session=active; Secure; SameSite=None; HttpOnly',
-            )
-            res.end('{}')
-          } else if (path === '/accounts') {
-            res.end(
-              JSON.stringify({
-                accounts: [
-                  {
-                    id: 'external-1',
-                    username: 'external-one',
-                    name: 'External One',
-                  },
-                  {
-                    id: 'external-2',
-                    username: 'external-two',
-                    name: 'External Two',
-                  },
-                ],
-              }),
-            )
-          } else if (path === '/assertion') {
-            res.setHeader(
-              'Access-Control-Allow-Origin',
-              req.headers.origin ?? '',
-            )
-            res.setHeader('Access-Control-Allow-Credentials', 'true')
-            req.resume()
-            req.on('end', () =>
-              res.end(JSON.stringify({ token: 'external-user' })),
-            )
-          } else {
-            res.writeHead(404).end('{}')
-          }
+          res.writeHead(404).end('{}')
         }
-      },
-    )
+      }
+    })
     tlsServer.listen(0, '127.0.0.1')
     await once(tlsServer, 'listening')
     const tlsPort = (tlsServer.address() as AddressInfo).port
 
     browser = await launch({
-      args: [
-        '--ignore-certificate-errors',
-        '--no-proxy-server',
-        `--host-resolver-rules=MAP idp-one.test 127.0.0.1:${tlsPort}, MAP idp-two.test 127.0.0.1:${tlsPort}`,
-        '--test-third-party-cookie-phaseout',
-      ],
+      args: fedcmBrowserArgs(tlsPort, ['idp-one.test', 'idp-two.test']),
     })
     const version = await browser.version()
     assert(Number(version.match(/\/(\d+)/)?.[1]) >= 141, version)
@@ -223,18 +179,8 @@ browserDescribe('account-first FedCM in Chrome 141+', () => {
 
   afterAll(async () => {
     await browser?.close()
-    await Promise.all(
-      [tlsServer, rpServer]
-        .filter(Boolean)
-        .map(
-          (server) =>
-            new Promise<void>((resolve, reject) =>
-              server.close((err) => (err ? reject(err) : resolve())),
-            ),
-        ),
-    )
+    await closeServers([tlsServer, rpServer])
     await network?.close()
-    if (certDirectory) await rm(certDirectory, { recursive: true, force: true })
   })
 
   it('combines five accounts from two IdPs and dismisses without PAR', async () => {
@@ -613,59 +559,6 @@ browserDescribe('account-first FedCM in Chrome 141+', () => {
     )
   }
 })
-
-class FedcmPage extends PageHelper {
-  constructor(public override readonly page: Page) {
-    super(page)
-  }
-
-  async cdp(): Promise<CDPSession> {
-    const cdp = await this.page.createCDPSession()
-    await cdp.send('FedCm.enable', { disableRejectionDelay: true })
-    return cdp
-  }
-
-  async api(path: string, input: object) {
-    return this.page.evaluate(
-      async (path, input) => {
-        const csrf = document.cookie
-          .split('; ')
-          .find((c) => c.startsWith('csrf-token='))
-          ?.slice(11)
-        const response = await fetch(`/@atproto/oauth-provider/~api${path}`, {
-          method: 'POST',
-          mode: 'same-origin',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-csrf-token': csrf ?? '',
-          },
-          body: JSON.stringify(input),
-        })
-        return {
-          status: response.status,
-          loginStatus: response.headers.get('Set-Login'),
-          body: await response.json(),
-        }
-      },
-      path,
-      input,
-    )
-  }
-}
-
-function nextDialog(cdp: CDPSession): Promise<Dialog> {
-  return new Promise((resolve, reject) => {
-    const timeout = setTimeout(() => {
-      cdp.off('FedCm.dialogShown', onDialog)
-      reject(new Error('Timed out waiting for FedCM dialog'))
-    }, 10_000)
-    function onDialog(dialog: Dialog) {
-      clearTimeout(timeout)
-      resolve(dialog)
-    }
-    cdp.once('FedCm.dialogShown', onDialog)
-  })
-}
 
 function nextParResponse(
   cdp: CDPSession,
