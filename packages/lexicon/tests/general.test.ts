@@ -1317,14 +1317,19 @@ describe('XRPC output validation', () => {
 })
 
 describe('Space definitions', () => {
-  it('requires a title', () => {
+  it('accepts an optional title', () => {
     expect(
       lexSpace.safeParse({ type: 'space', title: 'Example', collections: [] })
         .success,
     ).toBe(true)
+    expect(lexSpace.safeParse({ type: 'space', collections: [] }).success).toBe(
+      true,
+    )
+  })
+
+  it('rejects an empty title', () => {
     expect(
-      lexSpace.safeParse({ type: 'space', name: 'Example', collections: [] })
-        .success,
+      lexSpace.safeParse({ type: 'space', title: '', collections: [] }).success,
     ).toBe(false)
   })
 })

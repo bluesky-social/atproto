@@ -26,6 +26,12 @@ describe('Space', () => {
       expect(sp.options).toBe(options)
     })
 
+    it('accepts a space without options', () => {
+      const sp = space('any', 'com.example.group', ['com.example.post'])
+      expect(sp.title).toBeUndefined()
+      expect(sp.options).toEqual({})
+    })
+
     it('accepts an empty collections array', () => {
       const sp = space('any', 'com.example.group', [], {
         title: 'Example Group',

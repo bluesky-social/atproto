@@ -7,12 +7,13 @@ import {
 /**
  * Configuration options for a space declaration.
  *
- * @property title - Human-readable title shown on OAuth consent screens
+ * @property title - Human-readable title shown on OAuth consent screens, which
+ *   show the NSID when it is absent
  * @property title:lang - Localized titles by language code
  * @property description - Developer-facing description of the space type
  */
 export type SpaceOptions = {
-  title: string
+  title?: string
   'title:lang'?: Record<string, undefined | string>
   description?: string
 }
@@ -21,7 +22,7 @@ export type SpaceOptions = {
  * Declares a space type in AT Protocol.
  *
  * A space declaration establishes an NSID for a kind of permissioned space
- * and supplies the human-readable title shown on OAuth consent screens when
+ * and may supply the human-readable title shown on OAuth consent screens when
  * an application requests access to a space of this type. It also lists the
  * recommended record collections for clients of this space type.
  *
@@ -55,7 +56,7 @@ export class Space<
     key: TKey,
     nsid: TNsid,
     collections: readonly NsidString[],
-    options: SpaceOptions,
+    options: SpaceOptions = {},
   ) {
     this.key = asLexiconRecordKey(key)
     this.nsid = nsid
@@ -63,7 +64,7 @@ export class Space<
     this.options = options
   }
 
-  get title(): string {
+  get title(): string | undefined {
     return this.options.title
   }
 }
@@ -74,7 +75,7 @@ export class Space<
  * @param key - Recommended space key type
  * @param nsid - The NSID identifying this space type
  * @param collections - Recommended record collections for clients of this space type
- * @param options - Display metadata (title, localized titles, description)
+ * @param options - Optional metadata (title, localized titles, description)
  * @returns A new {@link Space} instance
  *
  * @example
@@ -102,7 +103,7 @@ export function space<
   key: K,
   nsid: N,
   collections: readonly NsidString[],
-  options: SpaceOptions,
+  options?: SpaceOptions,
 ): Space<N, K> {
   return new Space<N, K>(key, nsid, collections, options)
 }

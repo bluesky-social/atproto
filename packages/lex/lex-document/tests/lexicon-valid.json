@@ -107,5 +107,19 @@
         }
       }
     }
+  },
+  {
+    "name": "space without title",
+    "lexicon": {
+      "lexicon": 1,
+      "id": "com.example.untitled",
+      "defs": {
+        "main": {
+          "type": "space",
+          "key": "any",
+          "collections": ["com.example.post"]
+        }
+      }
+    }
   }
 ]

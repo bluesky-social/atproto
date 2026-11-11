@@ -22,7 +22,7 @@ export type LexiconPermissionSet = {
 
 export type LexiconSpace = {
   readonly type: 'space'
-  readonly title: string
+  readonly title?: string
   readonly 'title:lang'?: LangMap
   readonly collections: readonly string[]
 }

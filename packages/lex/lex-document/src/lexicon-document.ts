@@ -667,7 +667,7 @@ export type LexiconSpaceKey = l.LexiconRecordKey
 export const lexiconSpaceSchema = l.object({
   type: l.literal('space'),
   key: lexiconSpaceKeySchema,
-  title: l.string({ minLength: 1, maxLength: 64 }),
+  title: l.optional(l.string({ minLength: 1, maxLength: 64 })),
   'title:lang': l.optional(lexiconLanguageDict),
   collections: l.array(l.string({ format: 'nsid' })),
   description: l.optional(l.string()),
@@ -676,9 +676,10 @@ export const lexiconSpaceSchema = l.object({
 /**
  * TypeScript type for a Lexicon space definition.
  *
- * Declares a permissioned space type. The `title` is shown on OAuth consent
- * screens when an application requests access to a space of this type;
- * `collections` lists the recommended record collections for clients.
+ * Declares a permissioned space type. The optional `title` is shown on OAuth
+ * consent screens when an application requests access to a space of this type,
+ * which show the NSID without one; `collections` lists the recommended record
+ * collections for clients.
  *
  * @see {@link lexiconSpaceSchema} for the schema definition
  */

@@ -85,13 +85,15 @@
     }
   },
   {
-    "name": "space missing title",
+    "name": "space with empty title",
     "lexicon": {
       "lexicon": 1,
       "id": "com.example.space",
       "defs": {
         "main": {
           "type": "space",
+          "key": "any",
+          "title": "",
           "collections": []
         }
       }
@@ -163,21 +165,6 @@
           "type": "space",
           "key": "bogus",
           "title": "Example Space",
-          "collections": []
-        }
-      }
-    }
-  },
-  {
-    "name": "space with name instead of title",
-    "lexicon": {
-      "lexicon": 1,
-      "id": "com.example.space",
-      "defs": {
-        "main": {
-          "type": "space",
-          "key": "any",
-          "name": "Example Space",
           "collections": []
         }
       }
