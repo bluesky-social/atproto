@@ -184,7 +184,7 @@ browserDescribe('account-first FedCM in Chrome 141+', () => {
     await idpPage.goto(`${idpOrigin}/account/sign-in`)
     for (const name of ['alice', 'bob', 'carla']) {
       const response = await idpPage.api('/sign-in', {
-        username: `${name}.test`,
+        identifier: `${name}.test`,
         password: `${name}-pass`,
         remember: true,
         locale: 'en',
@@ -533,10 +533,12 @@ browserDescribe('account-first FedCM in Chrome 141+', () => {
   it('keeps browser status logged in until the last remembered account signs out', async () => {
     await using page = new FedcmPage(await browser.newPage())
     await page.goto(`${idpOrigin}/account`)
-    const first = await page.api('/sign-out', { did: dids[0] })
-    expect(first.status).toBe(200)
-    expect(first.loginStatus).toBe('logged-in')
-    const last = await page.api('/sign-out', { did: dids.slice(1) })
+    for (const did of dids.slice(0, -1)) {
+      const response = await page.api('/sign-out', { did })
+      expect(response.status).toBe(200)
+      expect(response.loginStatus).toBe('logged-in')
+    }
+    const last = await page.api('/sign-out', { did: dids.at(-1) })
     expect(last.status).toBe(200)
     expect(last.loginStatus).toBe('logged-out')
   })
@@ -580,7 +582,7 @@ browserDescribe('account-first FedCM in Chrome 141+', () => {
     )
     const popupPage = await popupTarget.page()
     assert(popupPage)
-    await popup.typeInInput('username', 'alice.test')
+    await popup.typeInInput('identifier', 'alice.test')
     await popup.typeInInput('password', 'alice-pass')
     const closed = new Promise<void>((resolve, reject) => {
       const timeout = setTimeout(
