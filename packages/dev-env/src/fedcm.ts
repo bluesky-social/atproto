@@ -67,7 +67,12 @@ function createBrowserExampleUrls(idpOrigin: URL, network: TestNetwork) {
   const activeUrl = new URL(url)
   activeUrl.searchParams.set('fedcm_mode', 'active')
 
-  return { passiveUrl: url, activeUrl }
+  // Registered IdP mode: no configured provider, the browser supplies it.
+  const registrationUrl = new URL(url)
+  registrationUrl.searchParams.delete('fedcm_provider')
+  registrationUrl.searchParams.set('fedcm_idp_registration', 'true')
+
+  return { passiveUrl: url, activeUrl, registrationUrl }
 }
 
 const abortController = new AbortController()
@@ -126,11 +131,17 @@ async function run() {
   await network.processAll()
   console.timeEnd('FedCM dev environment is ready')
 
-  const { passiveUrl, activeUrl } = createBrowserExampleUrls(idpOrigin, network)
+  const { passiveUrl, activeUrl, registrationUrl } = createBrowserExampleUrls(
+    idpOrigin,
+    network,
+  )
 
   console.log(`PDS account manager: ${new URL('/account', idpOrigin)}`)
   console.log(`OAuth browser example (passive FedCM): ${passiveUrl}`)
   console.log(`OAuth browser example (active FedCM): ${activeUrl}`)
+  console.log(
+    `OAuth browser example (registered IdP, needs chrome://flags/#fedcm-idp-registration and #fedcm-lightweight-mode): ${registrationUrl}`,
+  )
   console.log(`AppView DID: ${network.bsky.serverDid}`)
   console.log(
     'Test accounts: alice.test, bob.test, carla.test (password: hunter2)',

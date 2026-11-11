@@ -66,6 +66,18 @@ If passive mode stays hidden after a dismissal, try the active URL and check Chr
 
 Stop the services with Ctrl+C, then stop the browser app and tunnel. The service wrapper removes PostgreSQL and Redis containers it started. If both were already running, it leaves them and the demo's PostgreSQL schemas in place. Each service run creates fresh accounts, so sign in again after restarting. A new tunnel also needs a new `FEDCM_IDP_ORIGIN` and the newly printed example URLs.
 
+### Registered IdP mode (experimental Chrome flags)
+
+Chrome's experimental FedCM IdP Registration lets the PDS register itself as an identity provider, so the app needs no `fedcm_provider`. Try it with the launcher's printed registered IdP URL:
+
+1. Enable `chrome://flags/#fedcm-idp-registration` and `chrome://flags/#fedcm-lightweight-mode`, then restart Chrome.
+2. Sign in as `alice.test` at `<tunnel>/account` with **Remember this account on this device** on. Ephemeral sessions are not pushed to the browser.
+3. Open the registered IdP URL. Registration takes effect on the first PDS page load after sign-in, with no prompt or reload.
+4. Choose alice in the picker; OAuth follows.
+5. Optionally delete the PDS cookies and retry. The accounts the PDS pushed to Chrome survive, which shows the stale-account path.
+
+To clear registrations, clear site data for the tunnel origin.
+
 ## Browser test
 
 Build `oauth-provider-ui`, `oauth-provider`, `oauth-client-browser-example`, and `pds` from their package directories, then run from `packages/pds`:
