@@ -26,7 +26,7 @@ const derivePrivKey = async (
   })
 }
 
-// @NOTE temporary measure, see note on entrywaySession in bsky/src/auth-verifier.ts
+// @NOTE temporary measure, see note on entrywaySession in bsky/src/auth/verifier.ts
 describe('entryway auth', () => {
   let network: TestNetwork
   let agent: AtpAgent

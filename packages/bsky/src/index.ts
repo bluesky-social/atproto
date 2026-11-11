@@ -20,7 +20,7 @@ import API, {
   sitemap,
   wellKnown,
 } from './api/index.js'
-import { AuthVerifier, createPublicKeyObject } from './auth-verifier.js'
+import { AuthVerifier, createPublicKeyObject } from './auth/verifier.js'
 import { authWithApiKey as bsyncAuth, createBsyncClient } from './bsync.js'
 import type { ServerConfig } from './config.js'
 import { AppContext } from './context.js'
