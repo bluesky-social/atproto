@@ -8,6 +8,7 @@
   The assertion endpoint deliberately does not require a device session: it
   answers for any active local account (see the `TODO(fedcm)` in
   `create-fedcm-middleware.ts`).
-- Keep the accounts list and first-party `Set-Login` status aligned through
+- Keep the accounts list, first-party `Set-Login` status, and the UI's pushed
+  accounts (`FedcmRegistrationData.eligibleDids`) aligned through
   `listFedcmAccounts`. Reflect assertion CORS only after client/origin
   validation; account enumeration does not expose credentialed CORS.

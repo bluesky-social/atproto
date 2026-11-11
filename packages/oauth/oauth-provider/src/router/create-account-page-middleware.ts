@@ -64,14 +64,14 @@ export function createAccountPageMiddleware<
       const deviceAccounts =
         await server.accountManager.listDeviceAccounts(deviceId)
 
-      await setFedcmLoginStatus(server, deviceId, res)
+      const fedcmAccounts = await setFedcmLoginStatus(server, deviceId, res)
 
       sendAccountPage(req, res, {
         deviceSessions: deviceAccounts.map((deviceAccount): Session => ({
           account: deviceAccount.account,
           loginRequired: server.checkLoginRequired(deviceAccount),
         })),
-        fedcmRegistration: getFedcmRegistrationData(server),
+        fedcmRegistration: getFedcmRegistrationData(server, fedcmAccounts),
       })
     } catch (err) {
       onError?.(

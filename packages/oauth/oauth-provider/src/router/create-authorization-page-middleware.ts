@@ -196,7 +196,11 @@ export function createAuthorizationPageMiddleware<
 
       // Normal authorization flow
       const device = await server.deviceManager.load(req, res)
-      await setFedcmLoginStatus(server, device.deviceId, res)
+      const fedcmAccounts = await setFedcmLoginStatus(
+        server,
+        device.deviceId,
+        res,
+      )
 
       const result = await server.authorize(query, device)
 
@@ -205,7 +209,7 @@ export function createAuthorizationPageMiddleware<
       } else {
         return sendAuthorizePage(req, res, {
           ...result,
-          fedcmRegistration: getFedcmRegistrationData(server),
+          fedcmRegistration: getFedcmRegistrationData(server, fedcmAccounts),
         })
       }
     }),
