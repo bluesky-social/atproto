@@ -98,12 +98,19 @@ export function createFedcmMiddleware<
       if (!accounts.length) throw new FedcmEndpointError(401, 'login_required')
 
       return {
-        accounts: accounts.map(({ account }) => ({
-          id: account.did,
-          username: account.handle ? `@${account.handle}` : account.did,
-          ...(account.name ? { name: account.name } : {}),
-          ...(account.picture ? { picture: account.picture } : {}),
-        })),
+        // listFedcmAccounts only returns accounts with a handle.
+        accounts: accounts.flatMap(({ account }) =>
+          account.handle
+            ? [
+                {
+                  id: account.did,
+                  username: `@${account.handle}`,
+                  ...(account.name ? { name: account.name } : {}),
+                  ...(account.picture ? { picture: account.picture } : {}),
+                },
+              ]
+            : [],
+        ),
       }
     }),
   )

@@ -20,7 +20,7 @@ export type FedcmSyncSession = {
 type FedcmNavigator = Navigator & {
   login?: {
     // @NOTE The two-argument form requires `#fedcm-lightweight-mode`; without
-    // it the browser ignores the extra argument.
+    // it Chrome throws ("Overload resolution failed") and nothing is pushed.
     setStatus?: (
       status: 'logged-in' | 'logged-out',
       options?: { accounts: FedcmPushedAccount[]; expiration?: number },
@@ -36,7 +36,9 @@ type FedcmWindow = Window & {
 }
 
 /**
- * Remembered, active, non-ephemeral sessions, as FedCM accounts.
+ * Remembered, active, non-ephemeral sessions with a handle, as FedCM accounts.
+ * Accounts without a handle are left out: the browser would have to show the
+ * DID, which is not user readable.
  *
  * @param eligibleDids - accounts the server's `Set-Login` was derived from.
  * They are kept even when `loginRequired`, which `prompt=login` sets on every
@@ -46,22 +48,25 @@ export function toFedcmPushedAccounts(
   sessions: readonly FedcmSyncSession[],
   eligibleDids: readonly DidString[],
 ): FedcmPushedAccount[] {
-  return sessions
-    .filter(
-      (s) =>
-        !s.ephemeralToken &&
-        !s.account.deactivated &&
-        (!s.loginRequired || eligibleDids.includes(s.account.did)),
-    )
-    .map(({ account }) => {
-      const handle = account.handle ? `@${account.handle}` : undefined
-      return {
+  return sessions.flatMap(({ account, ephemeralToken, loginRequired }) => {
+    if (
+      !account.handle ||
+      ephemeralToken ||
+      account.deactivated ||
+      (loginRequired && !eligibleDids.includes(account.did))
+    ) {
+      return []
+    }
+    const handle = `@${account.handle}`
+    return [
+      {
         id: account.did,
-        name: account.name || handle || account.did,
-        email: handle ?? account.did,
+        name: account.name || handle,
+        email: handle,
         ...(account.picture ? { picture: account.picture } : undefined),
-      }
-    })
+      },
+    ]
+  })
 }
 
 /**

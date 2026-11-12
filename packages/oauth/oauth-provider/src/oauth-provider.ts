@@ -444,12 +444,15 @@ export class OAuthProvider extends OAuthVerifier {
 
   /**
    * Lists accounts available to FedCM on an existing browser session.
+   * Accounts without a handle are left out: the browser would have to show the
+   * DID, which is not user readable.
    */
   public async listFedcmAccounts(deviceId: DeviceId): Promise<DeviceAccount[]> {
     const deviceAccounts =
       await this.accountManager.listDeviceAccounts(deviceId)
     return deviceAccounts.filter(
       (deviceAccount) =>
+        deviceAccount.account.handle &&
         !deviceAccount.account.deactivated &&
         !this.checkLoginRequired(deviceAccount),
     )

@@ -218,7 +218,7 @@ describe('createFedcmMiddleware', () => {
     expect(fake.listFedcmAccounts).not.toHaveBeenCalled()
   })
 
-  it('filters deactivated and stale accounts from the FedCM account list', async () => {
+  it('filters deactivated, stale and handle-less accounts from the FedCM account list', async () => {
     const now = new Date()
     const staleAccount = {
       ...account,
@@ -229,10 +229,17 @@ describe('createFedcmMiddleware', () => {
       did: didSchema.parse('did:plc:z72i7hdynmk6r22z27h6tvur'),
       deactivated: true,
     }
+    // A DID is not user readable, so an account with no handle can't be shown.
+    const handlelessAccount = {
+      ...account,
+      did: didSchema.parse('did:plc:44ybard66vv44zksje25o7dz'),
+      handle: undefined,
+    }
     const deviceAccounts = [
       { account, updatedAt: now },
       { account: staleAccount, updatedAt: new Date(now.getTime() - 60_000) },
       { account: deactivatedAccount, updatedAt: now },
+      { account: handlelessAccount, updatedAt: now },
     ] as DeviceAccount[]
     const fake = {
       accountManager: {
