@@ -118,6 +118,7 @@ export class AuthVerifier {
     async (ctx: ReqCtx): Promise<StandardOutput | NullOutput> => {
       let verifier: 'standard' | 'entrywaySession' | 'anonymous' = 'standard'
       let did: string | undefined
+      let appPassword: boolean | undefined
       let err: unknown
       try {
         if (isBearerToken(ctx.req)) {
@@ -126,8 +127,8 @@ export class AuthVerifier {
           const header = token ? jose.decodeProtectedHeader(token) : undefined
           if (header?.typ === 'at+jwt') {
             verifier = 'entrywaySession'
-            // Claimed DID, for logging. Only trusted once entrywaySession() succeeds.
-            did = claimedSub(token)
+            // Claimed session, for logging. Only trusted once entrywaySession() succeeds.
+            ;({ did, appPassword } = claimedSession(token))
             // we should never use entryway session tokens in the case of flexible auth audiences (namely in the case of getFeed)
             if (opts.skipAudCheck) {
               throw new AuthRequiredError('Malformed token', 'InvalidToken')
@@ -165,7 +166,7 @@ export class AuthVerifier {
         err = e
         throw e
       } finally {
-        events.authVerifierRequest(verifier, { did, err })
+        events.authVerifierRequest(verifier, { did, appPassword, err })
       }
     }
 
@@ -472,13 +473,20 @@ const bearerTokenFromReq = (req: express.Request) => {
   return header.slice(BEARER.length).trim()
 }
 
-const claimedSub = (token: string | null): string | undefined => {
-  if (!token) return undefined
+const claimedSession = (
+  token: string | null,
+): { did?: string; appPassword?: boolean } => {
+  if (!token) return {}
   try {
-    const { sub } = jose.decodeJwt(token)
-    return typeof sub === 'string' ? sub : undefined
+    const { sub, scope } = jose.decodeJwt(token)
+    return {
+      did: typeof sub === 'string' ? sub : undefined,
+      appPassword:
+        scope === 'com.atproto.appPass' ||
+        scope === 'com.atproto.appPassPrivileged',
+    }
   } catch {
-    return undefined
+    return {}
   }
 }
 
