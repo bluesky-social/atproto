@@ -325,20 +325,22 @@ export async function processNotifyRepoUpdate(
   ref: SpaceRef,
   input: com.atproto.space.notifyRepoUpdate.$InputBody,
 ): Promise<void> {
-  const { space, repo, repoRev, data } = input
+  const { space, repo, latest } = input
   const { spaceDid } = ref
 
   await assertSpaceHost(ctx, ref)
-  if (TID.fromStr(repoRev).timestamp() > (Date.now() + 5 * MINUTE) * 1000) {
+  // Only the space host removes a repo from the writer set, so a repo host can
+  // only report a write.
+  if (!com.atproto.space.defs.repoWrite.$isTypeOf(latest)) {
+    throw new InvalidRequestError('Repo hosts may only notify of a repo write')
+  }
+  const { rev, data } = latest
+  if (TID.fromStr(rev).timestamp() > (Date.now() + 5 * MINUTE) * 1000) {
     throw new InvalidRequestError('Repo revision is in the future', 'FutureRev')
   }
 
-  const { policy, recipients } = await ctx.actorStore.read(
-    spaceDid,
-    async (store) => ({
-      policy: await store.space.getActiveSpacePolicy(space),
-      recipients: await store.space.getCredentialRecipients(space),
-    }),
+  const policy = await ctx.actorStore.read(spaceDid, (store) =>
+    store.space.getActiveSpacePolicy(space),
   )
 
   // Apply the same account perimeter used when minting credentials. The notification
@@ -354,14 +356,57 @@ export async function processNotifyRepoUpdate(
   }
 
   const sequence = await ctx.actorStore.transact(spaceDid, (txn) =>
-    txn.space.recordWriter(space, repo, repoRev, data),
+    txn.space.recordWriter(space, repo, rev, data),
   )
   if (!sequence) return
 
-  // Fan-out stays queued so neither a local write nor a remote PDS waits on
-  // downstream syncing services.
+  forwardRepoUpdate(ctx, ref, {
+    space,
+    repo,
+    latest: com.atproto.space.defs.repoWrite.$build({ rev, data }),
+    ...sequence,
+  })
+}
+
+/** A repo removed from a space's writer set, at its place in the space sequence. */
+export type RemovedWriter = {
+  repo: DidString
+  spaceRev: string
+  prevSpaceRev?: string
+}
+
+/** Tell the syncers registered for a space that a repo left its writer set. */
+export function forwardWriterRemoved(
+  ctx: AppContext,
+  ref: SpaceRef,
+  removed: RemovedWriter,
+): void {
+  forwardRepoUpdate(ctx, ref, {
+    space: ref.toString(),
+    repo: removed.repo,
+    latest: com.atproto.space.defs.repoRemoved.$build({}),
+    spaceRev: removed.spaceRev,
+    prevSpaceRev: removed.prevSpaceRev,
+  })
+}
+
+/**
+ * Forward a sequenced change to the writer set to the syncers registered for the
+ * space. Fan-out stays queued so neither a local write nor a remote PDS waits on
+ * downstream syncing services.
+ */
+function forwardRepoUpdate(
+  ctx: AppContext,
+  ref: SpaceRef,
+  update: com.atproto.space.notifyRepoUpdate.$InputBody,
+): void {
+  const { space } = update
+  const { spaceDid } = ref
   const lxm = com.atproto.space.notifyRepoUpdate.$lxm
   ctx.backgroundQueue.add(async (_ctx, signal) => {
+    const recipients = await ctx.actorStore.read(spaceDid, (store) =>
+      store.space.getCredentialRecipients(space),
+    )
     for (const recipient of recipients) {
       try {
         const target = await resolveNotifyTarget(ctx, {
@@ -378,7 +423,7 @@ export async function processNotifyRepoUpdate(
         }
         await xrpc(target.endpoint, com.atproto.space.notifyRepoUpdate, {
           headers: target.headers,
-          body: { space, repo, repoRev, data, ...sequence },
+          body: update,
           signal: AbortSignal.any([signal, AbortSignal.timeout(10_000)]),
         })
       } catch (err) {

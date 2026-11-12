@@ -302,6 +302,36 @@ describe('space policy', () => {
       expect(await sc.writerDids(space)).toEqual([])
     })
 
+    it('tells registered syncers of the writers a member change removes', async () => {
+      await using syncer = await MockService.create(network, {
+        serviceId: 'atproto_space_syncer',
+      })
+      const space = await sc.createSpace(alice, { members: [dan, bob, carol] })
+      const cred = await sc.credentialFor(carol, space)
+      await cred.clientFor(alice.pds).call(com.atproto.space.registerNotify, {
+        space,
+        service: syncer.serviceRef,
+      })
+      await sc.write(dan, space, { text: 'from a member' })
+      await sc.write(bob, space, { text: 'from a member' })
+
+      await sc.putMember(alice, space, dan, { read: true, write: false })
+      await sc.removeMember(alice, space, bob)
+      await network.pds.ctx.backgroundQueue.processAll()
+
+      const removed = syncer
+        .callsTo(com.atproto.space.notifyRepoUpdate.$lxm)
+        .map(
+          (call) => call.body as com.atproto.space.notifyRepoUpdate.$InputBody,
+        )
+        .filter((body) =>
+          com.atproto.space.defs.repoRemoved.$isTypeOf(body.latest),
+        )
+      expect(removed.map((body) => body.repo).sort()).toEqual(
+        [dan.did, bob.did].sort(),
+      )
+    })
+
     it('applies a batch of member changes in a single commit', async () => {
       const space = await sc.createSpace(alice, {
         policy: memberspace.policy.$build({ publishMembers: true }),

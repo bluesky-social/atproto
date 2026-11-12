@@ -4,7 +4,10 @@ import type { SpaceMetaArchive } from '@atproto/space'
 import type { DidString, SpaceRef, UriString } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import type { ActorStore } from '../actor-store/actor-store.js'
-import { resolveNotifyTarget } from '../api/com/atproto/space/util.js'
+import {
+  type RemovedWriter,
+  resolveNotifyTarget,
+} from '../api/com/atproto/space/util.js'
 import { com } from '../lexicons/index.js'
 import { spaceLogger } from '../logger.js'
 import type { PreparedWrite } from '../repo/types.js'
@@ -36,7 +39,9 @@ export class SpacePolicyManager {
 
   // The methods that change a space's configuration also publish it to readers when
   // the policy asks for it. They return the commit to the authority's repo, which is
-  // owed a notifyRepoUpdate, or null if nothing was published.
+  // owed a notifyRepoUpdate, or null if nothing was published. The methods that
+  // manage members also return the writers they removed, whose removal is owed to
+  // registered syncers.
 
   async createSpace(ref: SpaceRef, policy: LexPolicy) {
     const normalized = normalizePolicy(policy)
@@ -103,10 +108,12 @@ export class SpacePolicyManager {
       const policy = await actorTxn.space.getActiveSpacePolicy(space)
       assertMemberspace(policy)
       const writes: PreparedWrite[] = []
+      const removedWriters: RemovedWriter[] = []
       for (const [did, access] of accessByDid) {
         await actorTxn.space.putMember(space, did, access)
         if (!access.write) {
-          await actorTxn.space.removeWriter(space, did)
+          const removed = await actorTxn.space.removeWriter(space, did)
+          if (removed) removedWriters.push({ repo: did, ...removed })
         }
         const memberWrites = await prepareMemberRecordWrites(
           actorTxn.space,
@@ -117,7 +124,8 @@ export class SpacePolicyManager {
         )
         writes.push(...memberWrites)
       }
-      return actorTxn.space.applyWrites(ref, writes)
+      const commit = await actorTxn.space.applyWrites(ref, writes)
+      return { commit, removedWriters }
     })
   }
 
@@ -127,11 +135,13 @@ export class SpacePolicyManager {
       const policy = await actorTxn.space.getActiveSpacePolicy(space)
       assertMemberspace(policy)
       const writes: PreparedWrite[] = []
+      const removedWriters: RemovedWriter[] = []
       for (const did of dids) {
         // A DID that is not a member is ignored, leaving any writer set entry alone.
-        const removed = await actorTxn.space.removeMember(space, did)
-        if (!removed) continue
-        await actorTxn.space.removeWriter(space, did)
+        const wasMember = await actorTxn.space.removeMember(space, did)
+        if (!wasMember) continue
+        const removed = await actorTxn.space.removeWriter(space, did)
+        if (removed) removedWriters.push({ repo: did, ...removed })
         const memberWrites = await prepareMemberRecordWrites(
           actorTxn.space,
           ref,
@@ -140,7 +150,8 @@ export class SpacePolicyManager {
         )
         writes.push(...memberWrites)
       }
-      return actorTxn.space.applyWrites(ref, writes)
+      const commit = await actorTxn.space.applyWrites(ref, writes)
+      return { commit, removedWriters }
     })
   }
 
@@ -160,7 +171,11 @@ export class SpacePolicyManager {
       const members = memberspace.policy.$isTypeOf(policy)
         ? await store.space.listMembers(space)
         : []
-      const writers = await store.space.listWriters(space)
+      // Removed writers are left behind, as the archive carries only the writer set
+      // itself. Like garbage collection, this drops removals not yet seen by syncers.
+      const writers = (await store.space.listWriters(space)).filter(
+        (writer) => !writer.removedAt,
+      )
       return {
         space,
         policy,
@@ -260,16 +275,15 @@ export class SpacePolicyManager {
       return false
     }
     if (memberspace.policy.$isTypeOf(policy)) {
-      const isPublic =
-        access === 'read' ? policy.publicRead : policy.publicWrite
-      if (isPublic) return true
+      if (access === 'read' && policy.publicRead) return true
       if (!repo) return false
       const member = await this.actorStore.read(spaceDid, (store) =>
         store.space.getMember(space.toString(), repo),
       )
-      if (!member) return false
-      if (access === 'read') return !!member.read
-      return !!member.write
+      if (access === 'read') return !!member?.read
+      // A member without write access stays excluded even under publicWrite.
+      if (member) return !!member.write
+      return policy.publicWrite === true
     }
     if (managedspace.policy.$isTypeOf(policy)) {
       const managedAccess = await this.checkAccess({
