@@ -174,10 +174,13 @@ async function setup() {
           }),
         }),
         getAtmosphereBacklinkCounts: ({ targetUris }) => ({
-          results: targetUris.map((targetUri) => ({
-            targetUri,
-            counts: { [site.standard.graph.recommend.$type]: 7n },
-          })),
+          results: targetUris.map((targetUri) => {
+            const counts: Record<string, bigint> =
+              targetUri === galleryUri
+                ? { [social.grain.gallery.item.$type]: 27n }
+                : { [site.standard.graph.recommend.$type]: 7n }
+            return { targetUri, counts }
+          }),
         }),
         getAtmosphereBacklinks: ({ collection, targetUri }) => ({
           backlinks: (backlinks.get(`${targetUri}|${collection}`) ?? []).map(
@@ -370,6 +373,10 @@ describe('app.bsky.unspecced.getAtmosphereRecordView', () => {
     await using fixture = await setup()
     const { body } = await fixture.query({ uri: galleryUri })
     expect(body.view?.$type).toBe(app.bsky.embed.external.viewGallery.$type)
+    expect(body.view).toMatchObject({
+      photoCount: 27,
+      items: [{ alt: 'A photo' }],
+    })
     expect(uris(body.associatedRefs)).toEqual([galleryUri, itemUri, photoUri])
     expect(body.associatedRecords).toHaveLength(3)
     expect(body.associatedRecords?.[2]).toMatchObject({ alt: 'A photo' })

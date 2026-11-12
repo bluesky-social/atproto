@@ -195,6 +195,7 @@ function externalRecordViewOrRefs(
       description: record.description ?? '',
       createdAt: record.createdAt,
       items,
+      photoCount: backlinkCount(uri, social.grain.gallery.item.$type, state),
       likeCount: backlinkCount(uri, social.grain.favorite.$type, state),
       likers: backlinkProfiles(views, uri, state, 'favorite'),
     })
