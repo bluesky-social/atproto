@@ -68,8 +68,6 @@ import listRepoOps from './lexicons/com/atproto/space/listRepoOps.js'
 import listWriters, {
   type Repo as ListWritersRepo,
 } from './lexicons/com/atproto/space/listWriters.js'
-import registerNotify from './lexicons/com/atproto/space/registerNotify.js'
-import unregisterNotify from './lexicons/com/atproto/space/unregisterNotify.js'
 import type {
   SpaceCollection,
   SpaceCollectionSchema,
@@ -172,8 +170,6 @@ export declare namespace SpaceReader {
       cursor?: string
       limit?: number
     }
-
-  export type NotifyOptions = ReaderXrpcOptions<typeof registerNotify, 'body'>
 
   /** A record of a repo in the space, verified against the repo's commit. */
   export type RepoRecord = {
@@ -897,30 +893,6 @@ export class SpaceReader<S extends Space = Space> {
     return this.repoXrpc(repo, listBlobs, {
       ...options,
       params: { space: this.uri, repo, cursor, limit },
-    })
-  }
-
-  /**
-   * Registers a service (`did#fragment`) to be notified of the writes to the
-   * space, until the returned `expiresAt`.
-   */
-  async registerNotify(
-    service: string,
-    options: SpaceReader.NotifyOptions = {},
-  ): Promise<XrpcResponse<typeof registerNotify>> {
-    return this.authorityXrpc(registerNotify, {
-      ...options,
-      body: { space: this.uri, service },
-    })
-  }
-
-  async unregisterNotify(
-    service: string,
-    options: SpaceReader.NotifyOptions = {},
-  ): Promise<XrpcResponse<typeof unregisterNotify>> {
-    return this.authorityXrpc(unregisterNotify, {
-      ...options,
-      body: { space: this.uri, service },
     })
   }
 

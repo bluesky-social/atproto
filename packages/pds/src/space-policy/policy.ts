@@ -1,5 +1,5 @@
 import { isAtprotoDidRefAbsolute } from '@atproto/did'
-import { l } from '@atproto/lex'
+import { l } from '@atproto/lex-schema'
 import type { UriString } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { com } from '../lexicons/index.js'

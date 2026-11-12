@@ -559,7 +559,11 @@ export class AppContext implements AsyncDisposable {
         })
       : undefined
 
-    const spacePolicyManager = new SpacePolicyManager(actorStore, idResolver)
+    const spacePolicyManager = new SpacePolicyManager(
+      actorStore,
+      idResolver,
+      safeFetch,
+    )
 
     const scopeRefGetter = entrywayClient
       ? new ScopeReferenceGetter(entrywayClient, redisScratch)

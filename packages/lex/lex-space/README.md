@@ -368,7 +368,7 @@ To discover the repos to sync, list the writer set with `reader.writers()`. The 
 
 ### Notifications
 
-`reader.registerNotify(service)` registers a service (`did#fragment`) to be notified of the writes to the space, until the returned `expiresAt`, and `reader.unregisterNotify(service)` withdraws it. Receiving and verifying notifications is not covered by this package yet.
+A syncing service registers an endpoint to be notified of updates to the space through the `notify` field of `com.atproto.space.authorizeSpaceSync`. Registering for, receiving and verifying notifications are not covered by this package yet.
 
 ## Configuration
 
@@ -406,7 +406,7 @@ const space = SpaceClient.openSpace(com.example.forum, spaceUri, {
 | ---------------------------------------------------------- | ------------------------------------ | --------------------------------------- |
 | The user's own repo (all writes, and reads without `repo`) | The user's PDS                       | The user's session (their agent)        |
 | Another account's repo (reads with `repo`)                 | That account's PDS                   | The space credential, for that account  |
-| The space as a whole (`writers()`, `registerNotify()`, …)  | The space host (the authority's PDS) | The space credential, for the authority |
+| The space as a whole (`writers()`, `listWriters()`, …)     | The space host (the authority's PDS) | The space credential, for the authority |
 
 ### Methods
 
@@ -420,7 +420,6 @@ const space = SpaceClient.openSpace(com.example.forum, spaceUri, {
 | `getLatestCommit()`, `getRepo()`, `listRepoOps()`                                    | A repo's commit, full content and operation log, verified        | `SpaceReader` / `SpaceClient` |
 | `getRepoSnapshot()`, `syncRepo()`, `pullRepo()`                                      | Full and incremental repo sync                                   | `SpaceReader` / `SpaceClient` |
 | `getBlob()`, `listBlobs()`                                                           | Blobs referenced by a repo's records                             | `SpaceReader` / `SpaceClient` |
-| `registerNotify()`, `unregisterNotify()`                                             | Write notifications                                              | `SpaceReader` / `SpaceClient` |
 | `list()`, `listAll()`, `get()`                                                       | Typed reads, of the space type's collections                     | `SpaceClient`                 |
 | `create()`, `put()`, `delete()`                                                      | Typed writes to the user's repo, of the space type's collections | `SpaceClient`                 |
 | `createRecord()`, `putRecord()`, `deleteRecord()`, `applyWrites()`, `clearRecords()` | Lower level writes to the user's repo, of any collection         | `SpaceClient`                 |

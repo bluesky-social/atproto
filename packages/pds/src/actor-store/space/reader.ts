@@ -326,17 +326,44 @@ export class SpaceReader {
     return builder.execute()
   }
 
-  async getCredentialRecipients(
-    space: SpaceRefString,
-  ): Promise<
-    { service: string; serviceEndpoint: string; expiresAt: string }[]
-  > {
-    return this.db.db
-      .selectFrom('space_credential_recipient')
-      .select(['service', 'serviceEndpoint', 'expiresAt'])
+  /**
+   * The space's current revision: the latest in its writer set, removals
+   * included. Only kept for the spaces this account is the authority for.
+   */
+  async getSpaceRev(space: SpaceRefString): Promise<string | undefined> {
+    const latest = await this.db.db
+      .selectFrom('space_writer')
+      .select('spaceRev')
       .where('space', '=', space)
-      .where('expiresAt', '>', new Date().toISOString())
+      .orderBy('spaceRev', 'desc')
+      .limit(1)
+      .executeTakeFirst()
+    return latest?.spaceRev
+  }
+
+  // Includes lapsed registrations.
+  async getNotifyRegistrations(
+    space: SpaceRefString,
+  ): Promise<{ endpoint: string; token: string; expiresAt: string }[]> {
+    return this.db.db
+      .selectFrom('space_notify_registration')
+      .select(['endpoint', 'token', 'expiresAt'])
+      .where('space', '=', space)
       .execute()
+  }
+
+  async getNotifyRegistration(
+    space: SpaceRefString,
+    registration: { endpoint: string; token: string },
+  ): Promise<{ expiresAt: string } | null> {
+    const row = await this.db.db
+      .selectFrom('space_notify_registration')
+      .select('expiresAt')
+      .where('space', '=', space)
+      .where('endpoint', '=', registration.endpoint)
+      .where('token', '=', registration.token)
+      .executeTakeFirst()
+    return row ?? null
   }
 }
 

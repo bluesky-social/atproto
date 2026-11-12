@@ -146,7 +146,9 @@
     "com.atproto.server.revokeAppPassword",
     "com.atproto.server.updateEmail",
     "com.atproto.space.applyWrites",
+    "com.atproto.space.authorizeSpaceSync",
     "com.atproto.space.clearRecords",
+    "com.atproto.space.confirmRegistration",
     "com.atproto.space.createRecord",
     "com.atproto.space.createSpace",
     "com.atproto.space.defs",
@@ -159,7 +161,6 @@
     "com.atproto.space.getRecord",
     "com.atproto.space.getRepo",
     "com.atproto.space.getSpace",
-    "com.atproto.space.getSpaceCredential",
     "com.atproto.space.importRepo",
     "com.atproto.space.importSpaceMeta",
     "com.atproto.space.listBlobs",
@@ -169,12 +170,10 @@
     "com.atproto.space.listWriters",
     "com.atproto.space.notifyCredentialsRevoked",
     "com.atproto.space.notifyRepoUpdate",
-    "com.atproto.space.notifySpaceStatus",
+    "com.atproto.space.notifySpaceUpdate",
     "com.atproto.space.policy",
     "com.atproto.space.putRecord",
-    "com.atproto.space.registerNotify",
     "com.atproto.space.removeWriter",
-    "com.atproto.space.unregisterNotify",
     "com.atproto.space.updateSpace",
     "com.atproto.sync.defs",
     "com.atproto.sync.getBlob",
@@ -848,9 +847,17 @@
       "uri": "file://../../lexicons/com/atproto/space/applyWrites.json",
       "cid": "bafyreigeyanka5svdubo5qpkmdr7j5jm6y3mmzzhmwyuhrkg36y7oj6sem"
     },
+    "com.atproto.space.authorizeSpaceSync": {
+      "uri": "file://../../lexicons/com/atproto/space/authorizeSpaceSync.json",
+      "cid": "bafyreibz53zqvmx7vn4chl5cogi6r7x2lf2iwdtbtnubmz3sksbytcyshe"
+    },
     "com.atproto.space.clearRecords": {
       "uri": "file://../../lexicons/com/atproto/space/clearRecords.json",
       "cid": "bafyreiewazkjbblcolxrbbx4nlo275ai3j5xvijicvbirxp6hxmzz67adu"
+    },
+    "com.atproto.space.confirmRegistration": {
+      "uri": "file://../../lexicons/com/atproto/space/confirmRegistration.json",
+      "cid": "bafyreibxgh3udfj3zcnzofk3ntvrlw3zen3ftdn4zmmi27775zoifznbzu"
     },
     "com.atproto.space.createRecord": {
       "uri": "file://../../lexicons/com/atproto/space/createRecord.json",
@@ -900,10 +907,6 @@
       "uri": "file://../../lexicons/com/atproto/space/getSpace.json",
       "cid": "bafyreibt5jonspofubfedslmgendjlqx752r7zczgrvpligqle4hdxyt44"
     },
-    "com.atproto.space.getSpaceCredential": {
-      "uri": "file://../../lexicons/com/atproto/space/getSpaceCredential.json",
-      "cid": "bafyreido3upxn6y2ddilmxvdzgmfcsxi6aevwagcig67ke6odpgd6ee44u"
-    },
     "com.atproto.space.importRepo": {
       "uri": "file://../../lexicons/com/atproto/space/importRepo.json",
       "cid": "bafyreia6wmqrtwd3k5gvff23bggzq47z3nuq2c4i2k5h2hpxp4lqh67654"
@@ -938,11 +941,11 @@
     },
     "com.atproto.space.notifyRepoUpdate": {
       "uri": "file://../../lexicons/com/atproto/space/notifyRepoUpdate.json",
-      "cid": "bafyreihmlxqq25pyhecqkrn6m7ffq4zornl2xrnibtyckclnu5bxjwffgm"
+      "cid": "bafyreiecsnmu3g54pjkjciwnijtsyrtma22xbbm6tlulanm6otuso3sbum"
     },
-    "com.atproto.space.notifySpaceStatus": {
-      "uri": "file://../../lexicons/com/atproto/space/notifySpaceStatus.json",
-      "cid": "bafyreih3nnklfku7lgbyi3z5cbsp2ly253hs75ehhxphsw64k4vmysyycq"
+    "com.atproto.space.notifySpaceUpdate": {
+      "uri": "file://../../lexicons/com/atproto/space/notifySpaceUpdate.json",
+      "cid": "bafyreif757ctnmzjrs5iqwg7cg6feauinwbrs553cb5gd7xomyb75r7uhe"
     },
     "com.atproto.space.policy": {
       "uri": "file://../../lexicons/com/atproto/space/policy.json",
@@ -952,17 +955,9 @@
       "uri": "file://../../lexicons/com/atproto/space/putRecord.json",
       "cid": "bafyreidhqc7nmlxowakahezkzjwt7xkovmph62mnr7g7d7z226qjswhxoe"
     },
-    "com.atproto.space.registerNotify": {
-      "uri": "file://../../lexicons/com/atproto/space/registerNotify.json",
-      "cid": "bafyreiemlldqpwrqwvew3wxlywas5ch2hr4lbbdg7ae2ozzhteltflkkx4"
-    },
     "com.atproto.space.removeWriter": {
       "uri": "file://../../lexicons/com/atproto/space/removeWriter.json",
       "cid": "bafyreid2fmugpd7mnxhrx37w5ssaebpok4gue7hlvnyunkposzypkcu5wq"
-    },
-    "com.atproto.space.unregisterNotify": {
-      "uri": "file://../../lexicons/com/atproto/space/unregisterNotify.json",
-      "cid": "bafyreibhpf7lcsdgyixdpsgkgrgitf4kauip2eeib7dhwsb7lm76sdvwsm"
     },
     "com.atproto.space.updateSpace": {
       "uri": "file://../../lexicons/com/atproto/space/updateSpace.json",

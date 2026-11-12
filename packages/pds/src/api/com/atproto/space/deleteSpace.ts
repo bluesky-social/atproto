@@ -27,9 +27,13 @@ export default function (server: Server, ctx: AppContext) {
       }
       if (spaceRow.deletedAt) return
 
-      const recipients = await ctx.spacePolicyManager.deleteSpace(ref)
+      const registrations = await ctx.spacePolicyManager.deleteSpace(ref)
       ctx.backgroundQueue.add(() =>
-        ctx.spaceNotifications.notifySpaceStatus(ref, recipients),
+        ctx.spaceNotifications.notifySyncers(
+          ref,
+          registrations,
+          com.atproto.space.notifySpaceUpdate.spaceDeleted.$build({}),
+        ),
       )
     },
   })

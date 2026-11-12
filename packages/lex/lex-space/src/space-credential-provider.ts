@@ -9,7 +9,7 @@ import { SimpleStoreMemory } from '@atproto-labs/simple-store-memory'
 import type { AtprotoDidResolver } from './atproto-did-resolver.js'
 import type { ClientAttestationProvider } from './client-attestation-provider.js'
 import type { DelegationTokenProvider } from './delegation-token-provider.js'
-import { main as getSpaceCredential } from './lexicons/com/atproto/space/getSpaceCredential.js'
+import { main as authorizeSpaceSync } from './lexicons/com/atproto/space/authorizeSpaceSync.js'
 import { SpaceCredential } from './space-credential.js'
 
 export type SpaceCredentialProviderOptions = {
@@ -70,7 +70,7 @@ export function buildSpaceCredentialProvider({
     signal?.throwIfAborted?.()
 
     const agent = buildAgent({ fetch, service })
-    const res = await xrpc(agent, getSpaceCredential, {
+    const res = await xrpc(agent, authorizeSpaceSync, {
       signal,
       body: {
         space: space.toString(),

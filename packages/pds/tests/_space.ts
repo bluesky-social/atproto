@@ -36,7 +36,6 @@ import {
   type SpaceRefString,
   type UriString,
 } from '@atproto/syntax'
-import { createServiceAuthHeaders } from '@atproto/xrpc-server'
 import { ClientAttestationVerifier } from '../src/client-attestation-verifier.js'
 import { com } from '../src/lexicons/index.js'
 
@@ -274,17 +273,22 @@ export class SpaceClient {
   async credentialFor(
     actor: Actor,
     space: SpaceRefString,
-    opts: { clientAttestation?: string; key?: P256Keypair } = {},
+    opts: {
+      clientAttestation?: string
+      key?: P256Keypair
+      notify?: com.atproto.space.authorizeSpaceSync.Notify
+    } = {},
   ): Promise<SpaceCredential> {
     const key = opts.key ?? (await P256Keypair.create())
     const token = await this.delegationTokenFor(actor, space)
     const res = await this.authority
       .getClient()
-      .call(com.atproto.space.getSpaceCredential, {
+      .call(com.atproto.space.authorizeSpaceSync, {
         space,
         credentialKey: key.did(),
         delegationToken: token,
         clientAttestation: opts.clientAttestation,
+        notify: opts.notify,
       })
     return new SpaceCredential(res.credential, key, this.idResolver)
   }
@@ -301,7 +305,7 @@ export class SpaceClient {
     const key = await P256Keypair.create()
     const res = await this.authority
       .getClient()
-      .call(com.atproto.space.getSpaceCredential, {
+      .call(com.atproto.space.authorizeSpaceSync, {
         space,
         credentialKey: key.did(),
         clientAttestation: opts.clientAttestation,
@@ -337,16 +341,20 @@ export class SpaceClient {
   async mintCredential(
     space: SpaceRefString,
     token: string,
-    opts: { clientAttestation?: string } = {},
+    opts: {
+      clientAttestation?: string
+      notify?: com.atproto.space.authorizeSpaceSync.Notify
+    } = {},
   ) {
     const key = await P256Keypair.create()
     return this.authority
       .getClient()
-      .call(com.atproto.space.getSpaceCredential, {
+      .call(com.atproto.space.authorizeSpaceSync, {
         space,
         credentialKey: key.did(),
         delegationToken: token,
         clientAttestation: opts.clientAttestation,
+        notify: opts.notify,
       })
   }
 
@@ -426,7 +434,7 @@ export class SpaceClient {
    * `notifyRepoUpdate` is fired from the writer's PDS without awaiting, so there is no
    * queue on the writer side to drain — polling is the only option. Prefer
    * `network.pds.ctx.backgroundQueue.processAll()` where the work *is* queued
-   * (the authority's outbound fan-out, `notifySpaceStatus`).
+   * (the authority's outbound fan-out, `notifySpaceUpdate`).
    */
   async awaitNotify<T>(
     poll: () => Promise<T>,
@@ -546,7 +554,8 @@ export const record = (collection: NsidString, text = 'hello') => ({
 
 /**
  * A local HTTP service with a real PLC-registered DID, so the PDS resolves and
- * reaches it the way it would a managing app or a syncing service.
+ * reaches it the way it would a managing app or a space host. Also stands in for
+ * a syncing service, which registers its URL directly.
  *
  * Records every request it receives, which is how a test observes a fan-out that
  * is otherwise fire-and-forget.
@@ -560,33 +569,32 @@ export class MockService {
     public url: string,
     public did: DidString,
     public serviceId: string,
-    private keypair: Secp256k1Keypair,
   ) {
     this.terminator = createHttpTerminator({ server })
   }
 
-  /** `did#serviceId`, the form a notify target is registered under. */
+  /** `did#serviceId`, the form a managing app is named by. */
   get serviceRef(): string {
     return `${this.did}#${this.serviceId}`
   }
 
-  /** Service auth signed with this service's `#atproto` key, issued as `serviceRef` by default. */
-  async serviceAuthHeaders(opts: {
-    aud: string
-    lxm: string
-    iss?: string
-  }): Promise<Record<string, string>> {
-    const { headers } = await createServiceAuthHeaders({
-      iss: opts.iss ?? this.serviceRef,
-      aud: opts.aud,
-      lxm: opts.lxm,
-      keypair: this.keypair,
-    })
-    return headers
+  /** An authorizeSpaceSync `notify` registration for this service. */
+  notifyRegistration(
+    token = 'notify-token',
+  ): com.atproto.space.authorizeSpaceSync.Notify {
+    return { endpoint: this.url as UriString, token }
   }
 
   callsTo(lxm: string) {
     return this.calls.filter((c) => c.lxm === lxm)
+  }
+
+  /** The `update` of each notifySpaceUpdate call, in the order received. */
+  spaceUpdates() {
+    return this.callsTo(com.atproto.space.notifySpaceUpdate.$lxm).map(
+      (call) =>
+        (call.body as com.atproto.space.notifySpaceUpdate.$InputBody).update,
+    )
   }
 
   static async create(
@@ -594,27 +602,42 @@ export class MockService {
     opts: {
       serviceId: string
       /** Defaults to 200 with an empty object. */
-      respond?: () => { status: number; body: unknown }
+      respond?: (
+        call: MockService['calls'][number],
+      ) =>
+        | { status: number; body: unknown }
+        | Promise<{ status: number; body: unknown }>
+      /**
+       * Whether to confirm notify registrations by echoing the challenge, in
+       * place of `respond`. Defaults to true.
+       */
+      confirmRegistrations?: boolean
     },
   ): Promise<MockService> {
     const respond = opts.respond ?? (() => ({ status: 200, body: {} }))
+    const confirmRegistrations = opts.confirmRegistrations ?? true
     const calls: MockService['calls'] = []
 
     const server = createServer((req, res) => {
       const chunks: Buffer[] = []
       req.on('data', (chunk) => chunks.push(chunk))
-      req.on('end', () => {
+      req.on('end', async () => {
         const raw = Buffer.concat(chunks).toString('utf8')
         const url = new URL(req.url ?? '/', 'http://localhost')
-        calls.push({
+        const call = {
           // `/xrpc/<lxm>`
           lxm: url.pathname.replace(/^\/xrpc\//, ''),
           body: raw
             ? safeJson(raw)
             : Object.fromEntries(url.searchParams.entries()),
           auth: req.headers['authorization'] as string | undefined,
-        })
-        const { status, body } = respond()
+        }
+        calls.push(call)
+        const { status, body } =
+          confirmRegistrations &&
+          call.lxm === com.atproto.space.confirmRegistration.$lxm
+            ? { status: 200, body: { challenge: (call.body as any).challenge } }
+            : await respond(call)
         res.writeHead(status, { 'content-type': 'application/json' })
         res.end(JSON.stringify(body))
       })
@@ -646,7 +669,6 @@ export class MockService {
       url,
       did as DidString,
       opts.serviceId,
-      keypair,
     )
     service.calls = calls
     return service

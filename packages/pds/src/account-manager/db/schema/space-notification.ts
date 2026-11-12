@@ -1,4 +1,6 @@
 import type { DidString, SpaceRefString } from '@atproto/syntax'
+import type { JsonEncoded } from '../../../db/index.js'
+import type { SyncerNotice } from '../../../space-notifications.js'
 
 export interface SpaceNotificationRetry {
   repo: DidString
@@ -10,9 +12,12 @@ export interface SpaceNotificationRetry {
   expiresAt: number
 }
 
-export interface SpaceStatusNotificationRetry {
+// At most one pending notice per registration.
+export interface SpaceSyncerNotificationRetry {
   space: SpaceRefString
-  service: string
+  endpoint: string
+  token: string
+  noticeJson: JsonEncoded<SyncerNotice>
   attempts: number
   retryAt: number
   expiresAt: number
@@ -26,6 +31,6 @@ export interface SpaceNotificationLease {
 
 export type PartialDB = {
   space_notification_retry: SpaceNotificationRetry
-  space_status_notification_retry: SpaceStatusNotificationRetry
+  space_syncer_notification_retry: SpaceSyncerNotificationRetry
   space_notification_lease: SpaceNotificationLease
 }
