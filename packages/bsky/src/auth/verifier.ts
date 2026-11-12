@@ -17,6 +17,7 @@ import {
   AuthRequiredError,
   type VerifySignatureWithKeyFn,
   cryptoVerifySignatureWithKey,
+  extractUrlNsid,
   parseReqNsid,
   verifyJwt as verifyServiceJwt,
 } from '@atproto/xrpc-server'
@@ -119,6 +120,7 @@ export class AuthVerifier {
       let verifier: 'standard' | 'entrywaySession' | 'anonymous' = 'standard'
       let did: string | undefined
       let appPassword: boolean | undefined
+      let iat: number | undefined
       let err: unknown
       try {
         if (isBearerToken(ctx.req)) {
@@ -128,7 +130,7 @@ export class AuthVerifier {
           if (header?.typ === 'at+jwt') {
             verifier = 'entrywaySession'
             // Claimed session, for logging. Only trusted once entrywaySession() succeeds.
-            ;({ did, appPassword } = claimedSession(token))
+            ;({ did, appPassword, iat } = claimedSession(token))
             // we should never use entryway session tokens in the case of flexible auth audiences (namely in the case of getFeed)
             if (opts.skipAudCheck) {
               throw new AuthRequiredError('Malformed token', 'InvalidToken')
@@ -166,7 +168,15 @@ export class AuthVerifier {
         err = e
         throw e
       } finally {
-        events.authVerifierRequest(verifier, { did, appPassword, err })
+        events.authVerifierRequest(verifier, {
+          did,
+          appPassword,
+          iat,
+          method: extractUrlNsid(ctx.req.originalUrl),
+          userAgent: ctx.req.headers['user-agent'],
+          origin: ctx.req.headers.origin,
+          err,
+        })
       }
     }
 
@@ -475,15 +485,16 @@ const bearerTokenFromReq = (req: express.Request) => {
 
 const claimedSession = (
   token: string | null,
-): { did?: string; appPassword?: boolean } => {
+): { did?: string; appPassword?: boolean; iat?: number } => {
   if (!token) return {}
   try {
-    const { sub, scope } = jose.decodeJwt(token)
+    const { sub, scope, iat } = jose.decodeJwt(token)
     return {
       did: typeof sub === 'string' ? sub : undefined,
       appPassword:
         scope === 'com.atproto.appPass' ||
         scope === 'com.atproto.appPassPrivileged',
+      iat: typeof iat === 'number' ? iat : undefined,
     }
   } catch {
     return {}
