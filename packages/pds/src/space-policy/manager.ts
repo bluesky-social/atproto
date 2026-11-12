@@ -1,5 +1,5 @@
 import type { IdResolver } from '@atproto/identity'
-import { xrpc } from '@atproto/lex'
+import { xrpc } from '@atproto/lex-client'
 import type { SpaceMetaArchive } from '@atproto/space'
 import type { DidString, SpaceRef, UriString } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'

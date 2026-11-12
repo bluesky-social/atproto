@@ -3,9 +3,9 @@ import { DAY, HOUR, MINUTE, SECOND, allFulfilled } from '@atproto/common'
 import {
   RETRYABLE_HTTP_STATUS_CODES,
   XrpcError,
-  type l,
   xrpc,
-} from '@atproto/lex'
+} from '@atproto/lex-client'
+import type { l } from '@atproto/lex-schema'
 import { LtHash, spaceHostAud } from '@atproto/space'
 import { type DidString, SpaceRef, type SpaceRefString } from '@atproto/syntax'
 import { XRPCError } from '@atproto/xrpc-server'

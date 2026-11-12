@@ -1,8 +1,9 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { MINUTE, TID, getServiceEndpoint } from '@atproto/common'
 import type { IdResolver } from '@atproto/identity'
-import { type l, xrpc } from '@atproto/lex'
+import { xrpc } from '@atproto/lex-client'
 import type { Cid } from '@atproto/lex-data'
+import type { l } from '@atproto/lex-schema'
 import type { SpacePermissionMatchOperation } from '@atproto/oauth-scopes'
 import {
   type CreateMacParams,

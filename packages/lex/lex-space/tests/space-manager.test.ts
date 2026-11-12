@@ -20,6 +20,10 @@ import {
   memberspace,
   personalspace,
 } from '../src/index.js'
+import {
+  repoRemoved,
+  repoWrite,
+} from '../src/lexicons/com/atproto/space/defs.js'
 import { agentOf, collect, createUser, processNotifications } from './_util.js'
 
 const note = l.record(
@@ -188,12 +192,15 @@ describe('SpaceManager', () => {
         agent: alice.agent,
         didResolver,
       })
-      const writers = async () =>
-        (await aliceSpace.listWriters()).body.repos.map((r) => r.repo)
-      expect(await writers()).toContain(bob.assertDid)
+      const bobWriter = async () =>
+        (await aliceSpace.listWriters()).body.repos.find(
+          (r) => r.repo === bob.assertDid,
+        )
+      expect((await bobWriter())?.latest.$type).toBe(repoWrite.$type)
 
+      // Still listed after removal, so that syncers learn of it.
       await new SpaceManager(agentOf(alice), uri).removeWriter(bob.assertDid)
-      expect(await writers()).not.toContain(bob.assertDid)
+      expect((await bobWriter())?.latest.$type).toBe(repoRemoved.$type)
     })
 
     it('deletes a space', async () => {
