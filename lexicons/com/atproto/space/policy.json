@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "record",
-      "description": "The policy governing a space, optionally published in the space so that syncers can view a description of the space's policy. Written to the space authority's own repo in the space, and kept in sync with the policy. Only authoritative in the authority's repo.",
+      "description": "A published copy of a space's policy. Only authoritative in the space authority's repo.",
       "key": "literal:self",
       "record": {
         "type": "object",
@@ -12,7 +12,7 @@
         "properties": {
           "policy": {
             "type": "union",
-            "description": "The current policy governing the space, including its configuration.",
+            "description": "PDSes must support all of the listed policies. Other space hosts may support only some of them, and any host may support policies beyond those listed.",
             "refs": [
               "com.atproto.personalspace.policy",
               "com.atproto.memberspace.policy",

@@ -6,46 +6,31 @@ import {
   type FormShellProps,
 } from '#/components/forms/form-shell.tsx'
 import { Separator } from '#/components/ui/separator.tsx'
-
-// @NOTE `newEmail`, not `email` — the dialog's request step owns
-// `input[name="email"]`, and this confirm step must not collide with it.
-type Values = { newEmail: string; code: string }
+import type { Override } from '#/lib/util.ts'
 
 export type UpdateEmailFormData = {
   email: string
   token: string
 }
 
-export type UpdateEmailFormProps = Omit<FormShellProps<Values>, 'onSubmit'> & {
-  emailCurrent?: string
-  /** Seeds the new-email field when re-opening the dialog. */
-  newEmailDefault?: string
-  requestPending?: boolean
-  confirmPending?: boolean
-  onResend: () => void | PromiseLike<void>
-  handler: (
-    data: UpdateEmailFormData,
-    signal: AbortSignal,
-  ) => void | PromiseLike<void>
-}
+export type UpdateEmailFormProps = Override<
+  FormShellProps<UpdateEmailFormData>,
+  {
+    emailCurrent?: string
+    /** Seeds the new-email field when re-opening the dialog. */
+    newEmailDefault?: string
+    onResend: () => void | PromiseLike<void>
+  }
+>
 
 export function UpdateEmailForm({
   emailCurrent,
   newEmailDefault,
-  requestPending,
-  confirmPending: _confirmPending,
   onResend,
-  handler,
   ...props
 }: UpdateEmailFormProps) {
   return (
-    <FormShell<Values>
-      {...props}
-      loading={props.loading || requestPending}
-      onSubmit={(values, signal) =>
-        handler({ email: values.newEmail, token: values.code }, signal)
-      }
-    >
+    <FormShell<{ email: string; token: string }> {...props}>
       {emailCurrent && (
         // @NOTE For better password managers integration, we include a
         // hidden username field with the current email pre-filled.
@@ -62,7 +47,7 @@ export function UpdateEmailForm({
       )}
 
       <EmailField
-        name="newEmail"
+        name="email"
         defaultValue={newEmailDefault ?? ''}
         label={<Trans>New email address</Trans>}
         required
@@ -83,7 +68,7 @@ export function UpdateEmailForm({
       </div>
 
       <TokenField
-        name="code"
+        name="token"
         label={<Trans>Security code</Trans>}
         required
         onResend={onResend}

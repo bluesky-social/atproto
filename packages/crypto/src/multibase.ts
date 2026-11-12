@@ -1,5 +1,6 @@
 import * as uint8arrays from 'uint8arrays'
 import type { SupportedEncodings } from 'uint8arrays/to-string'
+import { base58ToKeyBytes } from './utils.js'
 
 export const multibaseToBytes = (mb: string): Uint8Array => {
   const base = mb[0]
@@ -14,7 +15,7 @@ export const multibaseToBytes = (mb: string): Uint8Array => {
     case 'B':
       return uint8arrays.fromString(key, 'base32upper')
     case 'z':
-      return uint8arrays.fromString(key, 'base58btc')
+      return base58ToKeyBytes(key)
     case 'm':
       return uint8arrays.fromString(key, 'base64')
     case 'u':

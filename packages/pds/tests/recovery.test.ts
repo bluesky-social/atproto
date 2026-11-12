@@ -38,7 +38,7 @@ describe('recovery', () => {
     await network?.close()
   })
 
-  const getStats = (did: string) => {
+  const getStats = (did: DidString) => {
     return ctx.actorStore.read(did, async (store) => {
       const recordCount = await store.record.recordCount()
       const root = await store.repo.storage.getRootDetailed()
@@ -50,7 +50,7 @@ describe('recovery', () => {
     })
   }
 
-  const getRev = (did: string) => {
+  const getRev = (did: DidString) => {
     return ctx.actorStore.read(did, async (store) => {
       const root = await store.repo.storage.getRootDetailed()
       return root.rev

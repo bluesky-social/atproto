@@ -5,6 +5,7 @@ import {
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
+import { com, tools } from '../src/lexicons/index.js'
 
 describe('moderation subject content tagging', () => {
   let network: TestNetwork
@@ -140,7 +141,7 @@ describe('moderation subject content tagging', () => {
   })
 
   describe('report tagger', () => {
-    it('Adds report reason tag', async () => {
+    it('Adds report reason tag by default', async () => {
       await Promise.all([
         sc.createReport({
           reasonType: ComAtprotoModerationDefs.REASONSPAM,
@@ -165,5 +166,92 @@ describe('moderation subject content tagging', () => {
       expect(accountStatus.tags).toContain('report:spam')
       expect(accountStatus.tags).toContain('report:misleading')
     })
+
+    it('Adds report reason tags for moderator reports by default', async () => {
+      await modClient.emitEvent({
+        subject: com.atproto.admin.defs.repoRef.$build({
+          did: sc.dids.alice,
+        }),
+        event: tools.ozone.moderation.defs.modEventReport.$build({
+          reportType: com.atproto.moderation.defs.ReasonSpam,
+        }),
+      })
+
+      const accountStatus = await getStatus(sc.dids.alice)
+      expect(accountStatus.tags).toContain('report:spam')
+    })
+
+    it.each(['createReport', 'emitEvent'])(
+      'Disables report tags through %s while preserving content and existing tags',
+      async (endpoint) => {
+        const service = network.ozone.ctx.cfg.service
+        const original = service.reportTagsDisabled
+        service.reportTagsDisabled = true
+
+        try {
+          const subject = com.atproto.admin.defs.repoRef.$build({
+            did: sc.dids.bob,
+          })
+          await modClient.emitEvent({
+            subject,
+            event: tools.ozone.moderation.defs.modEventTag.$build({
+              add: ['manual-tag', 'report:other'],
+              remove: [],
+            }),
+          })
+          const post = await sc.post(
+            sc.dids.carol,
+            'Xで有名な人達＋反AIや絵描きによくない',
+            undefined,
+            sc.posts[sc.dids.carol][0].images,
+          )
+          await network.processAll()
+
+          const postSubject = com.atproto.repo.strongRef.$build({
+            uri: post.ref.uriStr,
+            cid: post.ref.cidStr,
+          })
+          if (endpoint === 'createReport') {
+            await sc.createReport({
+              reasonType: ComAtprotoModerationDefs.REASONSPAM,
+              subject,
+              reportedBy: sc.dids.alice,
+            })
+            await sc.createReport({
+              reasonType: ComAtprotoModerationDefs.REASONMISLEADING,
+              subject: postSubject,
+              reportedBy: sc.dids.alice,
+            })
+          } else {
+            await modClient.emitEvent({
+              subject,
+              event: tools.ozone.moderation.defs.modEventReport.$build({
+                reportType: com.atproto.moderation.defs.ReasonSpam,
+              }),
+            })
+            await modClient.emitEvent({
+              subject: postSubject,
+              event: tools.ozone.moderation.defs.modEventReport.$build({
+                reportType: com.atproto.moderation.defs.ReasonMisleading,
+              }),
+            })
+          }
+
+          const accountStatus = await getStatus(sc.dids.bob)
+          expect(accountStatus.tags).toEqual(
+            expect.arrayContaining(['manual-tag', 'report:other']),
+          )
+          expect(accountStatus.tags).not.toContain('report:spam')
+
+          const postStatus = await getStatus(post.ref.uriStr)
+          expect(postStatus.tags).toEqual(
+            expect.arrayContaining(['lang:ja', 'embed:image']),
+          )
+          expect(postStatus.tags).not.toContain('report:misleading')
+        } finally {
+          service.reportTagsDisabled = original
+        }
+      },
+    )
   })
 })

@@ -79,10 +79,10 @@ export type ReadStarOptions = {
  * Lengths are checked against the limits in `opts` before a frame is read, so an
  * oversized frame is never buffered.
  */
-export const readStar = async (
+export async function readStar(
   input: AsyncIterable<Uint8Array> | Iterable<Uint8Array>,
   opts: ReadStarOptions = {},
-): Promise<StarReader> => {
+): Promise<StarReader> {
   const {
     maxMetaLength = Infinity,
     maxKeyLength = Infinity,

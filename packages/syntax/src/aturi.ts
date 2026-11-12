@@ -20,6 +20,8 @@ export type {
   RecordKeyString,
 }
 
+export type Stringifiable = { toString: () => string }
+
 export const ATP_URI_REGEX =
   // proto-    --did--------------   --name----------------   --path----   --query--   --hash--
   /^(at:\/\/)?((?:did:[a-z0-9:%-]+)|(?:[a-z0-9][a-z0-9.:-]*))(\/[^?#\s]*)?(\?[^#\s]+)?(#[^\s]+)?$/i
@@ -58,32 +60,20 @@ export class AtUri {
     return parsePath(this.host, this.pathname)
   }
 
-  static make(handleOrDid: string, collection?: string, rkey?: string) {
-    let str = handleOrDid
-    if (collection) str += '/' + collection
-    if (rkey) str += '/' + rkey
-    return new AtUri(str)
-  }
-
-  static makeSpace(
-    spaceDid: DidString,
-    spaceType: NsidString,
-    skey: RecordKeyString,
-    authorDid?: DidString,
-    collection?: NsidString,
-    rkey?: RecordKeyString,
-  ) {
-    ensureValidDid(spaceDid)
-    ensureValidNsid(spaceType)
-    ensureValidRecordKey(skey)
-    if (authorDid) ensureValidDid(authorDid)
-    if (collection) ensureValidNsid(collection)
-    if (rkey) ensureValidRecordKey(rkey)
-
-    let str = `at://${spaceDid}/${SPACE_MARKER}/${spaceType}/${skey}`
-    if (authorDid) str += '/' + authorDid
-    if (collection) str += '/' + collection
-    if (rkey) str += '/' + rkey
+  static make(handleOrDid: Stringifiable, collection?: Stringifiable): AtUri
+  static make(
+    handleOrDid: Stringifiable,
+    collection: Stringifiable,
+    rkey?: Stringifiable,
+  ): AtUri
+  static make(
+    handleOrDid: Stringifiable,
+    collection?: Stringifiable,
+    rkey?: Stringifiable,
+  ): AtUri {
+    let str = String(handleOrDid)
+    if (collection) str += `/${collection}`
+    if (rkey) str += `/${rkey}`
     return new AtUri(str)
   }
 
@@ -244,6 +234,18 @@ export class SpaceRef {
       throw new InvalidAtUriError(`Invalid space ref: ${uri} ${ref.toString()}`)
     }
     return ref
+  }
+
+  /** The URI of a record within this space. */
+  recordUri(
+    authorDid: DidString,
+    collection: NsidString,
+    rkey: RecordKeyString,
+  ): AtUri {
+    ensureValidDid(authorDid)
+    ensureValidNsid(collection)
+    ensureValidRecordKey(rkey)
+    return new AtUri(`${this}/${authorDid}/${collection}/${rkey}`)
   }
 
   toString(): SpaceRefString {

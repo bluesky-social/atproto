@@ -1,4 +1,6 @@
-import { l } from '@atproto/lex'
+import { isAtprotoDidRefAbsolute } from '@atproto/did'
+import { l } from '@atproto/lex-schema'
+import type { UriString } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { com } from '../lexicons/index.js'
 
@@ -45,9 +47,9 @@ export function normalizePolicy(policy: LexPolicy): Policy {
   }
   if (managedspace.policy.$isTypeOf(policy)) {
     const { managingApp } = policy
-    if (!managingApp.startsWith('did:')) {
+    if (!isAtprotoDidRefAbsolute(managingApp)) {
       throw new InvalidRequestError(
-        `managingApp must be a DID with an optional service fragment, got: ${managingApp}`,
+        `managingApp must be a did#serviceId reference, got: ${managingApp}`,
       )
     }
     return managedspace.policy.$build({
@@ -62,13 +64,17 @@ export function normalizePolicy(policy: LexPolicy): Policy {
 }
 
 /**
- * Validate a policy that no lexicon has checked yet, such as one from a space host
- * archive, then normalize it as {@link normalizePolicy} does.
+ * Validate a policy from a space meta archive, which no lexicon has checked yet,
+ * then normalize it as {@link normalizePolicy} does.
  */
-export function parsePolicy(value: unknown): Policy {
+export function parseArchivedPolicy(value: unknown): Policy {
   const result = lexPolicySchema.safeParse(value)
   if (!result.success) {
-    throw new InvalidRequestError(`Invalid policy: ${result.reason.message}`)
+    throw new InvalidRequestError(
+      `Invalid policy: ${result.reason.message}`,
+      'InvalidSpaceMeta',
+      { cause: result.reason },
+    )
   }
   return normalizePolicy(result.value)
 }
@@ -81,14 +87,6 @@ export function assertMemberspace(policy: Policy): void {
       'PolicyMismatch',
     )
   }
-}
-
-/**
- * Whether the policy authorizes any user to read. Only then can a credential be
- * minted without a delegation token saying who the user is.
- */
-export function isPublicRead(policy: Policy): boolean {
-  return memberspace.policy.$isTypeOf(policy) && policy.publicRead === true
 }
 
 export function isPolicyPublished(policy: Policy): boolean {
@@ -109,7 +107,7 @@ export function areMembersPublished(policy: Policy): boolean {
  * Only memberspace restricts apps. Evaluated against the attested client_id, so an
  * app that presents no client attestation is never one of the allowed apps.
  */
-export function isAppAuthorized(policy: Policy, clientId?: string): boolean {
+export function isAppAuthorized(policy: Policy, clientId?: UriString): boolean {
   if (!memberspace.policy.$isTypeOf(policy)) return true
   if (!policy.allowedApps) return true
   return clientId !== undefined && policy.allowedApps.includes(clientId)

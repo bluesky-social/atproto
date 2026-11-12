@@ -1,0 +1,43 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.space.notifyRepoUpdate",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Notify the space host that a space repo has been updated. Sent by repo hosts, with service auth.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["space", "repo", "repoRev", "data"],
+          "properties": {
+            "space": {
+              "type": "string",
+              "format": "space-ref"
+            },
+            "repo": {
+              "type": "string",
+              "format": "did"
+            },
+            "repoRev": {
+              "type": "string",
+              "format": "tid"
+            },
+            "data": {
+              "type": "bytes"
+            }
+          }
+        }
+      },
+      "errors": [
+        {
+          "name": "SpaceNotFound"
+        },
+        {
+          "name": "FutureRev",
+          "description": "The repo revision is too far in the future."
+        }
+      ]
+    }
+  }
+}

@@ -33,6 +33,15 @@ export class MissingCommitBlocksError extends Error {
   }
 }
 
+// Thrown by `CidSet.markVisited` when a CID is recorded a second time. For MST
+// traversals this means the tree references the same node more than once,
+// which a valid tree never does.
+export class VisitedCidError extends Error {
+  constructor(public cid: Cid) {
+    super(`cid visited more than once: ${cid.toString()}`)
+  }
+}
+
 export class UnexpectedObjectError extends Error {
   constructor(
     public cid: Cid,

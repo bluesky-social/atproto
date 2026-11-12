@@ -1,5 +1,69 @@
 # @atproto-labs/handle-resolver-node
 
+## 0.2.17
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto-labs/fetch-node@0.4.5
+
+## 0.2.16
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto-labs/fetch-node@0.4.4
+
+## 0.2.15
+
+### Patch Changes
+
+- [#5687](https://github.com/bluesky-social/atproto/pull/5687) [`943170b`](https://github.com/bluesky-social/atproto/commit/943170bd390705fbb16920688f8f09ec7078a59b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Allow speficying a custom `safeFetch` option. The `fetch` option will only be used if no `safeFetch` is provided.
+
+## 0.2.14
+
+### Patch Changes
+
+- Updated dependencies [[`0e60f3f`](https://github.com/bluesky-social/atproto/commit/0e60f3f007cbd9812975489f0da19bf7613da831)]:
+  - @atproto-labs/fetch-node@0.4.3
+
+## 0.2.13
+
+### Patch Changes
+
+- Updated dependencies [[`fc60876`](https://github.com/bluesky-social/atproto/commit/fc60876949cca1ca28e98273ecfc97a151d3ebfc)]:
+  - @atproto-labs/fetch-node@0.4.2
+
+## 0.2.12
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto-labs/fetch-node@0.4.1
+
+## 0.2.11
+
+### Patch Changes
+
+- Updated dependencies [[`5019f55`](https://github.com/bluesky-social/atproto/commit/5019f5537317ee75ad4527db212bc27c3085fe67)]:
+  - @atproto/did@0.5.6
+  - @atproto-labs/handle-resolver@0.4.10
+
+## 0.2.10
+
+### Patch Changes
+
+- Updated dependencies [[`f88aa58`](https://github.com/bluesky-social/atproto/commit/f88aa5842df9aba9f208a6073272b43ef9bd089d)]:
+  - @atproto-labs/fetch-node@0.4.0
+
+## 0.2.9
+
+### Patch Changes
+
+- Updated dependencies [[`fe4087e`](https://github.com/bluesky-social/atproto/commit/fe4087ecb7a7cc53c7081c9f97d49121e5251c36)]:
+  - @atproto/did@0.5.5
+  - @atproto-labs/handle-resolver@0.4.9
+
 ## 0.2.8
 
 ### Patch Changes

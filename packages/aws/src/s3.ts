@@ -1,10 +1,14 @@
-import type stream from 'node:stream'
+import { Readable } from 'node:stream'
 import { NoSuchKey, S3, type S3ClientConfig } from '@aws-sdk/client-s3'
 import { Upload } from '@aws-sdk/lib-storage'
 import type { CID } from 'multiformats/cid'
-import { SECOND, aggregateErrors, chunkArray } from '@atproto/common-web'
+import { SECOND, aggregateErrors, chunkArray } from '@atproto/common'
 import { randomStr } from '@atproto/crypto'
-import { BlobNotFoundError, type BlobStore } from '@atproto/repo'
+import {
+  BlobNotFoundError,
+  type BlobStore,
+  type BlobStoreCreator,
+} from '@atproto/repo'
 
 export type S3Config = {
   bucket: string
@@ -51,54 +55,92 @@ export type S3Config = {
    * enough to accommodate slow clients uploading large blobs.
    */
   uploadTimeoutMs?: number
+  /**
+   * The maximum number of concurrent connections to S3 per client. Blob
+   * downloads are streamed at the pace of the downstream consumer, so a finite
+   * cap lets slow consumers hold every connection and queue all other blob
+   * reads and writes behind them.
+   *
+   * Defaults to `Infinity`.
+   */
+  maxSockets?: number
 } & Omit<S3ClientConfig, 'apiVersion' | 'requestHandler'>
 
-export class S3BlobStore implements BlobStore {
-  private client: S3
-  private bucket: string
-  private uploadTimeoutMs: number
+const DEFAULT_UPLOAD_TIMEOUT_MS = 10 * SECOND
 
+function createS3Client(cfg: S3Config): S3 {
+  const {
+    bucket,
+    uploadTimeoutMs = DEFAULT_UPLOAD_TIMEOUT_MS,
+    // @NOTE The request timeout acts as a stall detector (socket idle
+    // timeout) and should stay short even when uploadTimeoutMs is large,
+    // so that stalled S3 connections are reaped and retried quickly. The 6s
+    // floor keeps the idle timeout from applying to streamed (client-paced)
+    // blob downloads (see S3Config.requestTimeoutMs).
+    requestTimeoutMs = Math.max(
+      Math.min(uploadTimeoutMs, 15 * SECOND),
+      6 * SECOND,
+    ),
+    connectionTimeoutMs = 5 * SECOND,
+    maxSockets = Infinity,
+    ...rest
+  } = cfg
+  return new S3({
+    ...rest,
+    apiVersion: '2006-03-01',
+    // Ensures that all requests timeout under "requestTimeoutMs".
+    //
+    // @NOTE This will also apply to the upload of each individual blob
+    // chunk when using Upload from @aws-sdk/lib-storage. This is fine
+    // because chunks are buffered in memory before being sent, meaning that
+    // requests to S3 are not client-paced.
+    requestHandler: {
+      requestTimeout: requestTimeoutMs,
+      connectionTimeout: connectionTimeoutMs,
+      httpAgent: { maxSockets },
+      httpsAgent: { maxSockets },
+    },
+  })
+}
+
+export class S3BlobStore implements BlobStore {
+  private readonly clientOwned: boolean
+  private readonly client: S3
+  private readonly bucket: string
+  private readonly uploadTimeoutMs: number
+
+  /**
+   * @param client Shared by every store returned from
+   * {@link S3BlobStore.creator}, so that they reuse one connection pool.
+   * Defaults to a new client built from `cfg`.
+   */
   constructor(
     public did: string,
     cfg: S3Config,
+    client?: S3,
   ) {
-    const {
-      bucket,
-      uploadTimeoutMs = 10 * SECOND,
-      // @NOTE The request timeout acts as a stall detector (socket idle
-      // timeout) and should stay short even when uploadTimeoutMs is large,
-      // so that stalled S3 connections are reaped and retried quickly. The 6s
-      // floor keeps the idle timeout from applying to streamed (client-paced)
-      // blob downloads (see S3Config.requestTimeoutMs).
-      requestTimeoutMs = Math.max(
-        Math.min(uploadTimeoutMs, 15 * SECOND),
-        6 * SECOND,
-      ),
-      connectionTimeoutMs = 5 * SECOND,
-      ...rest
-    } = cfg
-    this.bucket = bucket
-    this.uploadTimeoutMs = uploadTimeoutMs
-    this.client = new S3({
-      ...rest,
-      apiVersion: '2006-03-01',
-      // Ensures that all requests timeout under "requestTimeoutMs".
-      //
-      // @NOTE This will also apply to the upload of each individual blob
-      // chunk when using Upload from @aws-sdk/lib-storage. This is fine
-      // because chunks are buffered in memory before being sent, meaning that
-      // requests to S3 are not client-paced.
-      requestHandler: {
-        requestTimeout: requestTimeoutMs,
-        connectionTimeout: connectionTimeoutMs,
-      },
-    })
+    this.bucket = cfg.bucket
+    this.uploadTimeoutMs = cfg.uploadTimeoutMs ?? DEFAULT_UPLOAD_TIMEOUT_MS
+    this.client = client ?? createS3Client(cfg)
+    this.clientOwned = client === undefined
   }
 
-  static creator(cfg: S3Config) {
-    return (did: string) => {
-      return new S3BlobStore(did, cfg)
+  static creator(cfg: S3Config): BlobStoreCreator {
+    // @NOTE A store is created for every actor store access. A client per
+    // store would open a fresh TLS connection to S3 for every blob request and
+    // leave it idle in an unreachable pool, exhausting ephemeral ports under
+    // load.
+    const client = createS3Client(cfg)
+    const creator = (did: string): BlobStore => {
+      return new S3BlobStore(did, cfg, client)
     }
+    // The S3BlobStore instances won't own the client, the BlobStoreCreator
+    // does. In order to properly clean up the client, we attach an async
+    // dispose method to the creator itself.
+    Object.defineProperty(creator, Symbol.asyncDispose, {
+      value: async () => client.destroy(),
+    })
+    return creator as BlobStoreCreator
   }
 
   private genKey() {
@@ -117,7 +159,10 @@ export class S3BlobStore implements BlobStore {
     return `quarantine/${this.did}/${cid.toString()}`
   }
 
-  private async uploadBytes(path: string, bytes: Uint8Array | stream.Readable) {
+  private async uploadBytes(
+    path: string,
+    bytes: Uint8Array | Iterable<Uint8Array> | AsyncIterable<Uint8Array>,
+  ) {
     // @NOTE we use Upload rather than client.putObject because stream length is
     // not known in advance. See also aws/aws-sdk-js-v3#2348.
     //
@@ -134,7 +179,10 @@ export class S3BlobStore implements BlobStore {
       client: this.client,
       params: {
         Bucket: this.bucket,
-        Body: bytes,
+        Body:
+          ArrayBuffer.isView(bytes) || bytes instanceof Readable
+            ? bytes
+            : Readable.from(bytes),
         Key: path,
       },
       abortController,
@@ -157,7 +205,9 @@ export class S3BlobStore implements BlobStore {
     }
   }
 
-  async putTemp(bytes: Uint8Array | stream.Readable): Promise<string> {
+  async putTemp(
+    bytes: Uint8Array | Iterable<Uint8Array> | AsyncIterable<Uint8Array>,
+  ): Promise<string> {
     const key = this.genKey()
     await this.uploadBytes(this.getTmpPath(key), bytes)
     return key
@@ -190,7 +240,7 @@ export class S3BlobStore implements BlobStore {
 
   async putPermanent(
     cid: CID,
-    bytes: Uint8Array | stream.Readable,
+    bytes: Uint8Array | AsyncIterable<Uint8Array>,
   ): Promise<void> {
     await this.uploadBytes(this.getStoredPath(cid), bytes)
   }
@@ -215,7 +265,9 @@ export class S3BlobStore implements BlobStore {
       Key: this.getStoredPath(cid),
     })
     if (res.Body) {
-      return res.Body
+      // @NOTE On Node.js, the Body returned by getObject is a Readable stream
+      // (or an IncomingMessage, which extends Readable).
+      return res.Body as typeof res.Body & Readable
     } else {
       throw new BlobNotFoundError()
     }
@@ -226,9 +278,8 @@ export class S3BlobStore implements BlobStore {
     return res.transformToByteArray()
   }
 
-  async getStream(cid: CID): Promise<stream.Readable> {
-    const res = await this.getObject(cid)
-    return res as stream.Readable
+  async getStream(cid: CID): Promise<AsyncIterable<Uint8Array>> {
+    return this.getObject(cid)
   }
 
   async delete(cid: CID): Promise<void> {
@@ -313,6 +364,16 @@ export class S3BlobStore implements BlobStore {
 
       throw err
     }
+  }
+
+  /**
+   * Destroy underlying resources, like sockets. It's usually not necessary to
+   * do this. However in Node.js, it's best to explicitly shut down the client's
+   * agent when it is no longer needed. Otherwise, sockets might stay open for
+   * quite a long time before the server terminates them.
+   */
+  async [Symbol.asyncDispose]() {
+    if (this.clientOwned) this.client.destroy()
   }
 }
 

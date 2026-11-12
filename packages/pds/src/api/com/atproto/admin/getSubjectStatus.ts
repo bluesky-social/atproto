@@ -6,7 +6,7 @@ import { com } from '../../../../lexicons/index.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.admin.getSubjectStatus, {
-    auth: ctx.authVerifier.moderator,
+    auth: ctx.authVerifier.moderatorOrEntrywayService,
     handler: async ({ params }) => {
       const { did, uri, blob } = params
       let body: com.atproto.admin.getSubjectStatus.$OutputBody | null = null
@@ -50,7 +50,7 @@ export default function (server: Server, ctx: AppContext) {
           }
         } else {
           const [takedown, cid] = await ctx.actorStore.read(
-            parsedUri.hostname,
+            parsedUri.did,
             (store) =>
               Promise.all([
                 store.record.getRecordTakedownStatus(parsedUri),

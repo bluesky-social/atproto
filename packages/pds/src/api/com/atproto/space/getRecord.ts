@@ -1,15 +1,15 @@
 import { parseCid } from '@atproto/lex-data'
-import { RECORD_MAC_TYPE } from '@atproto/space'
+import { RECORD_MAC_PROFILE } from '@atproto/space'
 import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
-import { spaceRecordUri } from '../../../../repo/index.js'
 import { assertRepoAvailability } from '../sync/util.js'
 import {
   assertSpaceRead,
-  getSpaceMacSecret,
+  getSpaceMacRequest,
   isSpaceUserOrAdmin,
   recordMacHeaders,
+  toSpaceRef,
 } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
@@ -21,19 +21,20 @@ export default function (server: Server, ctx: AppContext) {
     }),
     handler: async ({ params, auth, req, res }) => {
       const { space, repo, collection, rkey } = params
+      const ref = toSpaceRef(space)
 
-      assertSpaceRead(auth, space, repo)
+      assertSpaceRead(auth, ref, repo)
       await assertRepoAvailability(ctx, repo, isSpaceUserOrAdmin(auth, repo))
 
-      const sharedSecret = await getSpaceMacSecret(ctx, {
+      const mac = await getSpaceMacRequest(ctx, {
         req,
         res,
         auth,
         repo,
-        type: RECORD_MAC_TYPE,
+        profile: RECORD_MAC_PROFILE,
       })
 
-      const uri = spaceRecordUri(space, repo, collection, rkey)
+      const uri = ref.recordUri(repo, collection, rkey)
       const record = await ctx.actorStore.read(repo, (store) =>
         store.space.getRecord(uri.toString()),
       )
@@ -45,16 +46,16 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       return {
-        encoding: 'application/json' as const,
+        encoding: 'application/json',
         body: {
           uri: uri.toString(),
           cid: record.cid,
           value: record.value,
         },
         headers: recordMacHeaders(
-          sharedSecret,
           uri.toString(),
-          parseCid(record.cid),
+          parseCid(record.cid, { flavor: 'cbor' }),
+          mac,
         ),
       }
     },

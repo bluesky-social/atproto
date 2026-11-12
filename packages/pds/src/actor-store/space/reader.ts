@@ -1,7 +1,16 @@
 import type { LexMap } from '@atproto/lex-data'
 import { cborToLexRecord } from '@atproto/repo'
-import type { AtUriString, NsidString } from '@atproto/syntax'
+import {
+  type AtUriString,
+  type DidString,
+  type NsidString,
+  type SpaceRefString,
+  isAtUriString,
+  isSpaceRefString,
+  isValidDid,
+} from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
+import { fromJson } from '../../db/index.js'
 import type { Policy } from '../../space-policy/policy.js'
 import type {
   ActorDb,
@@ -15,7 +24,7 @@ import type {
 export class SpaceReader {
   constructor(public db: ActorDb) {}
 
-  async getSpace(uri: string): Promise<Space | null> {
+  async getSpace(uri: SpaceRefString): Promise<Space | null> {
     const row = await this.db.db
       .selectFrom('space')
       .selectAll()
@@ -24,16 +33,16 @@ export class SpaceReader {
     return row ?? null
   }
 
-  async getSpacePolicy(uri: string): Promise<Policy | null> {
+  async getSpacePolicy(uri: SpaceRefString): Promise<Policy | null> {
     const row = await this.db.db
       .selectFrom('space_policy')
       .select('policyJson')
       .where('uri', '=', uri)
       .executeTakeFirst()
-    return row ? (JSON.parse(row.policyJson) as Policy) : null
+    return row ? fromJson(row.policyJson) : null
   }
 
-  async getActiveSpacePolicy(uri: string): Promise<Policy> {
+  async getActiveSpacePolicy(uri: SpaceRefString): Promise<Policy> {
     const space = await this.getSpace(uri)
     const policy = await this.getSpacePolicy(uri)
     if (!space || space.deletedAt || !policy) {
@@ -42,27 +51,43 @@ export class SpaceReader {
     return policy
   }
 
+  /**
+   * List the spaces this account holds a repo in or is the authority for, along with
+   * the state of its repo in each. `spaceRev` is the latest revision in the space's
+   * writer set, which is only kept for the spaces this account is the authority for.
+   */
   async listSpaces(opts: {
     limit: number
     cursor?: string
-    type?: string
-    authority?: string
-  }): Promise<Space[]> {
+    type?: NsidString
+    authority?: DidString
+  }) {
     const { limit, cursor, type, authority } = opts
     let builder = this.db.db
       .selectFrom('space')
-      .selectAll()
-      .where('deletedAt', 'is', null)
-      .orderBy('uri', 'asc')
+      .leftJoin('space_repo', 'space_repo.space', 'space.uri')
+      .select(['space.uri', 'space_repo.rev as repoRev', 'space_repo.setHash'])
+      .select((eb) =>
+        eb
+          .selectFrom('space_writer')
+          .whereRef('space_writer.space', '=', 'space.uri')
+          .select(({ fn }) => fn.max('space_writer.spaceRev').as('spaceRev'))
+          .as('spaceRev'),
+      )
+      .where('space.deletedAt', 'is', null)
+      .orderBy('space.uri', 'asc')
       .limit(limit)
     if (authority) {
-      builder = builder.where('authority', '=', authority)
+      builder = builder.where('space.authority', '=', authority)
     }
     if (type) {
-      builder = builder.where('type', '=', type)
+      builder = builder.where('space.type', '=', type)
     }
     if (cursor) {
-      builder = builder.where('uri', '>', cursor)
+      if (!isSpaceRefString(cursor)) {
+        throw new InvalidRequestError('Malformed cursor', 'InvalidCursor')
+      }
+      builder = builder.where('space.uri', '>', cursor)
     }
     return builder.execute()
   }
@@ -83,7 +108,7 @@ export class SpaceReader {
     return { ...row, value: cborToLexRecord(row.value) }
   }
 
-  async listCollections(space: string): Promise<NsidString[]> {
+  async listCollections(space: SpaceRefString): Promise<NsidString[]> {
     const rows = await this.db.db
       .selectFrom('space_record')
       .select('collection')
@@ -103,28 +128,30 @@ export class SpaceReader {
   }
 
   async listRecords(
-    space: string,
+    space: SpaceRefString,
     opts: {
       limit: number
       cursor?: string
-      reverse?: boolean
       collection?: NsidString
       excludeValues?: boolean
     },
   ): Promise<(Omit<SpaceRecord, 'value'> & { value?: LexMap })[]> {
-    const { limit, cursor, reverse, collection, excludeValues } = opts
+    const { limit, cursor, collection, excludeValues } = opts
     let builder = this.db.db
       .selectFrom('space_record')
       .select(RECORD_COLUMNS)
       .where('space', '=', space)
-      .orderBy('uri', reverse ? 'asc' : 'desc')
+      .orderBy('uri', 'desc')
       .limit(limit)
       .$if(!excludeValues, (qb) => qb.select('value'))
     if (collection) {
       builder = builder.where('collection', '=', collection)
     }
     if (cursor) {
-      builder = builder.where('uri', reverse ? '>' : '<', cursor as any)
+      if (!isAtUriString(cursor)) {
+        throw new InvalidRequestError('Malformed cursor', 'InvalidCursor')
+      }
+      builder = builder.where('uri', '<', cursor)
     }
     const rows = await builder.execute()
     return rows.map((row) => ({
@@ -133,7 +160,7 @@ export class SpaceReader {
     }))
   }
 
-  async *streamRecords(space: string): AsyncGenerator<SpaceRecord> {
+  async *streamRecords(space: SpaceRefString): AsyncGenerator<SpaceRecord> {
     let cursor: AtUriString | undefined
     while (true) {
       let builder = this.db.db
@@ -157,7 +184,7 @@ export class SpaceReader {
   }
 
   async listRepoOps(
-    space: string,
+    space: SpaceRefString,
     opts: {
       limit: number
       since?: string
@@ -203,7 +230,7 @@ export class SpaceReader {
     }))
   }
 
-  async getRepoState(space: string): Promise<SpaceRepo | null> {
+  async getRepoState(space: SpaceRefString): Promise<SpaceRepo | null> {
     const row = await this.db.db
       .selectFrom('space_repo')
       .selectAll()
@@ -213,10 +240,10 @@ export class SpaceReader {
   }
 
   async listBlobs(
-    space: string,
-    opts: { limit: number; since?: string; cursor?: string },
+    space: SpaceRefString,
+    opts: { limit: number; cursor?: string },
   ): Promise<string[]> {
-    const { limit, since, cursor } = opts
+    const { limit, cursor } = opts
     let builder = this.db.db
       .selectFrom('space_record_blob')
       .innerJoin('space_record', 'space_record.uri', 'recordUri')
@@ -225,9 +252,6 @@ export class SpaceReader {
       .groupBy('blobCid')
       .orderBy('blobCid', 'asc')
       .limit(limit)
-    if (since) {
-      builder = builder.where('space_record.repoRev', '>', since)
-    }
     if (cursor) {
       builder = builder.where('blobCid', '>', cursor)
     }
@@ -235,7 +259,10 @@ export class SpaceReader {
     return rows.map((row) => row.blobCid)
   }
 
-  async isBlobInSpace(space: string, blobCid: string): Promise<boolean> {
+  async isBlobInSpace(
+    space: SpaceRefString,
+    blobCid: string,
+  ): Promise<boolean> {
     const row = await this.db.db
       .selectFrom('space_record_blob')
       .innerJoin('space_record', 'space_record.uri', 'recordUri')
@@ -246,7 +273,7 @@ export class SpaceReader {
     return !!row
   }
 
-  async getMember(space: string, did: string) {
+  async getMember(space: SpaceRefString, did: DidString) {
     const row = await this.db.db
       .selectFrom('memberspace_member')
       .select(['read', 'write'])
@@ -257,7 +284,7 @@ export class SpaceReader {
   }
 
   async listMembers(
-    space: string,
+    space: SpaceRefString,
     opts: { limit?: number; cursor?: string } = {},
   ) {
     let builder = this.db.db
@@ -269,13 +296,17 @@ export class SpaceReader {
       builder = builder.limit(opts.limit)
     }
     if (opts.cursor) {
+      if (!isValidDid(opts.cursor)) {
+        throw new InvalidRequestError('Malformed cursor', 'InvalidCursor')
+      }
       builder = builder.where('did', '>', opts.cursor)
     }
     return builder.execute()
   }
 
+  /** Includes writers that have been removed, so that removals reach syncers. */
   async listWriters(
-    space: string,
+    space: SpaceRefString,
     opts: {
       limit?: number
       cursor?: string
@@ -295,17 +326,44 @@ export class SpaceReader {
     return builder.execute()
   }
 
-  async getCredentialRecipients(
-    space: string,
-  ): Promise<
-    { serviceDid: string; serviceEndpoint: string; expiresAt: string }[]
-  > {
-    return this.db.db
-      .selectFrom('space_credential_recipient')
-      .select(['serviceDid', 'serviceEndpoint', 'expiresAt'])
+  /**
+   * The space's current revision: the latest in its writer set, removals
+   * included. Only kept for the spaces this account is the authority for.
+   */
+  async getSpaceRev(space: SpaceRefString): Promise<string | undefined> {
+    const latest = await this.db.db
+      .selectFrom('space_writer')
+      .select('spaceRev')
       .where('space', '=', space)
-      .where('expiresAt', '>', new Date().toISOString())
+      .orderBy('spaceRev', 'desc')
+      .limit(1)
+      .executeTakeFirst()
+    return latest?.spaceRev
+  }
+
+  // Includes lapsed registrations.
+  async getNotifyRegistrations(
+    space: SpaceRefString,
+  ): Promise<{ endpoint: string; token: string; expiresAt: string }[]> {
+    return this.db.db
+      .selectFrom('space_notify_registration')
+      .select(['endpoint', 'token', 'expiresAt'])
+      .where('space', '=', space)
       .execute()
+  }
+
+  async getNotifyRegistration(
+    space: SpaceRefString,
+    registration: { endpoint: string; token: string },
+  ): Promise<{ expiresAt: string } | null> {
+    const row = await this.db.db
+      .selectFrom('space_notify_registration')
+      .select('expiresAt')
+      .where('space', '=', space)
+      .where('endpoint', '=', registration.endpoint)
+      .where('token', '=', registration.token)
+      .executeTakeFirst()
+    return row ?? null
   }
 }
 

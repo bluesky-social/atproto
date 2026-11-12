@@ -1,4 +1,4 @@
-import type { SpaceRefString } from '@atproto/lex'
+import type { SpaceRefString } from '@atproto/syntax'
 import type { DateISO } from '../../../db/index.js'
 
 export interface RevokedSpaceCredential {

@@ -1,5 +1,5 @@
 import { base64url } from 'multiformats/bases/base64'
-import type { Jwk, Key } from '@atproto/jwk'
+import { type Jwk, type Key, extractJktComponents } from '@atproto/jwk'
 import { requestLocalLock } from './lock.js'
 import type {
   RuntimeImplementation,
@@ -64,29 +64,6 @@ export class Runtime {
     }
     const bytes = await this.implementation.getRandomValues(byteLength)
     return base64url.baseEncode(bytes)
-  }
-}
-
-function extractJktComponents(jwk: Record<string, unknown>) {
-  const get = (field: string) => {
-    const value = jwk[field]
-    if (typeof value !== 'string' || !value) {
-      throw new TypeError(`"${field}" Parameter missing or invalid`)
-    }
-    return value
-  }
-
-  switch (jwk.kty) {
-    case 'EC':
-      return { crv: get('crv'), kty: get('kty'), x: get('x'), y: get('y') }
-    case 'OKP':
-      return { crv: get('crv'), kty: get('kty'), x: get('x') }
-    case 'RSA':
-      return { e: get('e'), kty: get('kty'), n: get('n') }
-    case 'oct':
-      return { k: get('k'), kty: get('kty') }
-    default:
-      throw new TypeError('"kty" (Key Type) Parameter missing or unsupported')
   }
 }
 

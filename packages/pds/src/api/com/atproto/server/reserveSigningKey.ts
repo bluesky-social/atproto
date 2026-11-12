@@ -4,6 +4,9 @@ import { com } from '../../../../lexicons/index.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.server.reserveSigningKey, {
+    auth: ctx.cfg.entryway
+      ? ctx.authVerifier.entrywayServiceOptional
+      : undefined,
     handler: async ({ input }) => {
       const signingKey = await ctx.actorStore.reserveKeypair(input.body.did)
       return {

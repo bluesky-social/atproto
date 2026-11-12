@@ -1,12 +1,12 @@
-import { z } from 'zod'
 import { BlockMap, type CarBlock } from '@atproto/car'
+import { check } from '@atproto/common-web'
 import { cidForLex, encode } from '@atproto/lex-cbor'
 import { type Cid, cidForCbor } from '@atproto/lex-data'
 import { CidSet } from '../cid-set.js'
 import { MissingBlockError, MissingBlocksError } from '../error.js'
 import * as parse from '../parse.js'
+import { nodeDataSchema } from '../schemas.js'
 import type { ReadableBlockstore } from '../storage/index.js'
-import { schema } from '../types.js'
 import * as util from './util.js'
 
 /**
@@ -42,23 +42,9 @@ import * as util from './util.js'
  * Then the first will be described as `prefix: 0, key: 'bsky/posts/abcdefg'`,
  * and the second will be described as `prefix: 16, key: 'hi'.`
  */
-const subTreePointer = z.nullable(schema.cid)
-const treeEntry = z.object({
-  p: z.number(), // prefix count of ascii chars that this key shares with the prev key
-  k: schema.bytes, // the rest of the key outside the shared prefix
-  v: schema.cid, // value
-  t: subTreePointer, // next subtree (to the right of leaf)
-})
-const nodeData = z.object({
-  l: subTreePointer, // left-most subtree
-  e: z.array(treeEntry), //entries
-})
-export type NodeData = z.infer<typeof nodeData>
 
-export const nodeDataDef = {
-  name: 'mst node',
-  schema: nodeData,
-}
+export const nodeDataDef = check.buildDef('mst node', nodeDataSchema)
+export type NodeData = check.InferDef<typeof nodeDataDef>
 
 export type NodeEntry = MST | Leaf
 
@@ -207,8 +193,15 @@ export class MST {
 
   // Return the necessary blocks to persist the MST to repo storage
   async getUnstoredBlocks(): Promise<{ root: Cid; blocks: BlockMap }> {
+    return this.getUnstoredBlocksInner(new CidSet())
+  }
+
+  private async getUnstoredBlocksInner(
+    seen: CidSet,
+  ): Promise<{ root: Cid; blocks: BlockMap }> {
     const blocks = new BlockMap()
     const pointer = await this.getPointer()
+    this.markVisited(seen)
     const alreadyHas = await this.storage.has(pointer)
     if (alreadyHas) return { root: pointer, blocks }
     const entries = await this.getEntries()
@@ -216,8 +209,8 @@ export class MST {
     await blocks.add(data)
     for (const entry of entries) {
       if (entry.isTree()) {
-        const subtree = await entry.getUnstoredBlocks()
-        blocks.addMap(subtree.blocks)
+        const subtree = await entry.getUnstoredBlocksInner(seen)
+        blocks.addBlocks(subtree.blocks)
       }
     }
     return { root: pointer, blocks: blocks }
@@ -545,6 +538,31 @@ export class MST {
     return maybeIndex >= 0 ? maybeIndex : entries.length
   }
 
+  // Traversal safety
+  // -------------------
+
+  // Records this node in `seen`, throwing `VisitedCidError` if it was already
+  // recorded.
+  //
+  // !! REQUIRED for every traversal !!
+  // Any method (in this class or elsewhere) that can visit more than one child
+  // of a node (full-tree walks, diffs, block collection, ...) MUST create a
+  // fresh `CidSet` per traversal and call this on every MST node it enters,
+  // before reading that node's entries. Without it, a node referenced by more
+  // than one parent is walked once per reference. Never add such a walk that
+  // bypasses this.
+  //
+  // Lookups that follow a single path (one recursive call per level, e.g.
+  // `cidsForPath`, `proofForKey`) are bounded by tree depth and do not need it.
+  // Neither do walks over nodes built in memory by local mutations (outdated
+  // pointers, e.g. `serialize`): nodes loaded from storage never have one.
+  //
+  // Nodes with an outdated pointer have not yet been serialized and are skipped.
+  markVisited(seen: CidSet): void {
+    if (this.outdatedPointer) return
+    seen.markVisited(this.pointer)
+  }
+
   // List operations (partial tree traversal)
   // -------------------
 
@@ -552,6 +570,14 @@ export class MST {
 
   // Walk tree starting at key
   async *walkFrom(key: string): AsyncIterable<NodeEntry> {
+    yield* this.walkFromInner(key, new CidSet())
+  }
+
+  private async *walkFromInner(
+    key: string,
+    seen: CidSet,
+  ): AsyncIterable<NodeEntry> {
+    this.markVisited(seen)
     yield this
     const index = await this.findGtOrEqualLeafIndex(key)
     const entries = await this.getEntries()
@@ -564,7 +590,7 @@ export class MST {
         if (prev.isLeaf() && prev.key === key) {
           yield prev
         } else if (prev.isTree()) {
-          yield* prev.walkFrom(key)
+          yield* prev.walkFromInner(key, seen)
         }
       }
     }
@@ -574,7 +600,7 @@ export class MST {
       if (entry.isLeaf()) {
         yield entry
       } else {
-        yield* entry.walkFrom(key)
+        yield* entry.walkFromInner(key, seen)
       }
     }
   }
@@ -619,13 +645,16 @@ export class MST {
 
   // Walk full tree & emit nodes, consumer can bail at any point by returning false
   async *walk(): AsyncIterable<NodeEntry> {
+    yield* this.walkInner(new CidSet())
+  }
+
+  private async *walkInner(seen: CidSet): AsyncIterable<NodeEntry> {
+    this.markVisited(seen)
     yield this
     const entries = await this.getEntries()
     for (const entry of entries) {
       if (entry.isTree()) {
-        for await (const e of entry.walk()) {
-          yield e
-        }
+        yield* entry.walkInner(seen)
       } else {
         yield entry
       }
@@ -634,6 +663,11 @@ export class MST {
 
   // Walk full tree & emit nodes, consumer can bail at any point by returning false
   async paths(): Promise<NodeEntry[][]> {
+    return this.pathsInner(new CidSet())
+  }
+
+  private async pathsInner(seen: CidSet): Promise<NodeEntry[][]> {
+    this.markVisited(seen)
     const entries = await this.getEntries()
     let paths: NodeEntry[][] = []
     for (const entry of entries) {
@@ -641,7 +675,7 @@ export class MST {
         paths.push([entry])
       }
       if (entry.isTree()) {
-        const subPaths = await entry.paths()
+        const subPaths = await entry.pathsInner(seen)
         paths = [...paths, ...subPaths.map((p) => [entry, ...p])]
       }
     }
@@ -660,17 +694,21 @@ export class MST {
   // Walks tree & returns all cids
   async allCids(): Promise<CidSet> {
     const cids = new CidSet()
+    await this.allCidsInner(cids)
+    return cids
+  }
+
+  private async allCidsInner(cids: CidSet, seen = new CidSet()): Promise<void> {
+    this.markVisited(seen)
     const entries = await this.getEntries()
     for (const entry of entries) {
       if (entry.isLeaf()) {
         cids.add(entry.value)
       } else {
-        const subtreeCids = await entry.allCids()
-        cids.addSet(subtreeCids)
+        await entry.allCidsInner(cids, seen)
       }
     }
     cids.add(await this.getPointer())
-    return cids
   }
 
   // Walks tree & returns all leaves
@@ -693,12 +731,17 @@ export class MST {
 
   // Walk reachable branches of tree & emit nodes, consumer can bail at any point by returning false
   async *walkReachable(): AsyncIterable<NodeEntry> {
+    yield* this.walkReachableInner(new CidSet())
+  }
+
+  private async *walkReachableInner(seen: CidSet): AsyncIterable<NodeEntry> {
+    this.markVisited(seen)
     yield this
     const entries = await this.getEntries()
     for (const entry of entries) {
       if (entry.isTree()) {
         try {
-          for await (const e of entry.walkReachable()) {
+          for await (const e of entry.walkReachableInner(seen)) {
             yield e
           }
         } catch (err) {
@@ -726,15 +769,17 @@ export class MST {
 
   async *carBlockStream(): AsyncIterable<CarBlock> {
     const leaves = new CidSet()
+    const seen = new CidSet()
     let toFetch = new CidSet()
     toFetch.add(await this.getPointer())
-    while (toFetch.size() > 0) {
+    this.markVisited(seen)
+    while (toFetch.size > 0) {
       const nextLayer = new CidSet()
-      const fetched = await this.storage.getBlocks(toFetch.toList())
+      const fetched = await this.storage.getBlocks(toFetch)
       if (fetched.missing.length > 0) {
         throw new MissingBlocksError('mst node', fetched.missing)
       }
-      for (const cid of toFetch.toList()) {
+      for (const cid of toFetch) {
         const found = await parse.getAndParseByDef(
           fetched.blocks,
           cid,
@@ -747,13 +792,16 @@ export class MST {
           if (entry.isLeaf()) {
             leaves.add(entry.value)
           } else {
+            // Mark at discovery: `nextLayer` would otherwise silently merge
+            // repeated references to the same node.
+            entry.markVisited(seen)
             nextLayer.add(await entry.getPointer())
           }
         }
       }
       toFetch = nextLayer
     }
-    const leafData = await this.storage.getBlocks(leaves.toList())
+    const leafData = await this.storage.getBlocks(leaves)
     if (leafData.missing.length > 0) {
       throw new MissingBlocksError('mst leaf', leafData.missing)
     }
@@ -785,7 +833,7 @@ export class MST {
       this.proofForLeftSib(key),
       this.proofForRightSib(key),
     ])
-    return self.addMap(left).addMap(right)
+    return self.addBlocks(left).addBlocks(right)
   }
 
   async proofForKey(key: string): Promise<BlockMap> {

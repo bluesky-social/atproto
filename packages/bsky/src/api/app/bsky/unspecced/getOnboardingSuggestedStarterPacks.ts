@@ -1,5 +1,5 @@
 import { mapDefined, noUndefinedVals } from '@atproto/common'
-import type { Client } from '@atproto/lex'
+import type { Client } from '@atproto/lex-client'
 import { AtUri, type AtUriString, type DidString } from '@atproto/syntax'
 import { MethodNotImplementedError, type Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../../../context.js'
@@ -31,7 +31,12 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ auth, params, req, signal }) => {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
-      const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
+      const hydrateCtx = await ctx.hydrator.createContext({
+        xrpcEndpoint:
+          app.bsky.unspecced.getOnboardingSuggestedStarterPacks.$lxm,
+        labelers,
+        viewer,
+      })
       const headers = noUndefinedVals({
         'accept-language': req.headers['accept-language'],
         ...getAtprotoPassthroughHeaders(req),
@@ -58,12 +63,12 @@ const skeleton: SkeletonFn<Context, Params, SkeletonState> = async (
 ): Promise<SkeletonState> => {
   const { params, ctx } = input
 
-  if (!ctx.topicsClient) {
+  if (!ctx.irisClient) {
     // Use 501 instead of 500 as these are not considered retry-able by clients
-    throw new MethodNotImplementedError('Topics agent not available')
+    throw new MethodNotImplementedError('Iris agent not available')
   }
 
-  const skeleton = await ctx.topicsClient.call(
+  const skeleton = await ctx.irisClient.call(
     app.bsky.unspecced.getOnboardingSuggestedStarterPacksSkeleton,
     { limit: params.limit, viewer: params.hydrateCtx.viewer ?? undefined },
     { headers: params.headers, signal: params.signal },
@@ -102,6 +107,7 @@ const noBlocks: RulesFn<Context, Params, SkeletonState> = (input) => {
 
   const blocks = hydration.bidirectionalBlocks?.get(viewer)
   const filteredSkeleton: SkeletonState = {
+    ...skeleton,
     starterPacks: skeleton.starterPacks.filter((uri) => {
       try {
         return !blocks?.get(new AtUri(uri).did)
@@ -126,13 +132,14 @@ const presentation: PresentationFn<
     starterPacks: mapDefined(skeleton.starterPacks, (uri) =>
       ctx.views.starterPack(uri, hydration),
     ),
+    recIdStr: skeleton.recIdStr,
   }
 }
 
 type Context = {
   hydrator: Hydrator
   views: Views
-  topicsClient: Client | undefined
+  irisClient: Client | undefined
 }
 
 type Params = app.bsky.unspecced.getOnboardingSuggestedStarterPacks.$Params & {

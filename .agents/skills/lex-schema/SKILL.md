@@ -185,6 +185,10 @@ the record body:
 const result = app.bsky.feed.post.keySchema.safeValidate(rkey)
 ```
 
+A space type exposes the same for its space key — `space.keySchema`,
+`space.isKey(skey)`, and `space.matchesRef(ref)` (type and key) for a `SpaceRef`.
+For a bare `LexiconRecordKey`, build one with `l.recordKey('tid')`.
+
 ## Strict mode
 
 Every validating method takes `{ strict?: boolean, path?: PropertyKey[] }`,
@@ -227,7 +231,7 @@ Lexicon JSON exists — otherwise prefer `./lexicons/`, which stays in sync with
 the contract.
 
 ```ts
-import { l } from '@atproto/lex'
+import { l } from '@atproto/lex-schema'
 
 const thing = l.typedObject(
   'com.example.thing', // NSID
@@ -261,8 +265,9 @@ string types and format guards, and the datetime helpers
 (`l.currentDatetimeString`, `l.toDatetimeString`, `l.asDatetimeString`,
 `l.isDatetimeString`, `l.ifDatetimeString`).
 
-`@atproto/lex` re-exports all of it flat as well, but importing `l` avoids
-colliding with globals and generic names (`string`, `object`, `record`).
+`@atproto/lex-schema` (and `@atproto/lex`) also export all of it flat, but
+importing `l` avoids colliding with globals and generic names (`string`,
+`object`, `record`).
 
 `ParamsSchema` additionally exposes `fromURLSearchParams()` (coercing each
 string to the declared scalar type) and `toURLSearchParams()` — use these

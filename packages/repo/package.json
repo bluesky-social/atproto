@@ -1,12 +1,13 @@
 {
   "name": "@atproto/repo",
-  "version": "0.10.13",
+  "version": "0.11.5",
   "engines": {
     "node": ">=22"
   },
   "license": "MIT",
   "description": "atproto repo and MST implementation",
   "keywords": [
+    "isomorphic",
     "atproto",
     "mst"
   ],
@@ -30,7 +31,6 @@
   },
   "dependencies": {
     "@atproto/car": "workspace:^",
-    "@atproto/common": "workspace:^",
     "@atproto/common-web": "workspace:^",
     "@atproto/crypto": "workspace:^",
     "@atproto/lex-cbor": "workspace:^",
@@ -39,7 +39,7 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
-    "jest": "^30.5.1"
+    "jest": "^30.5.2"
   },
   "scripts": {
     "test": "NODE_OPTIONS=--experimental-vm-modules jest",

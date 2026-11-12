@@ -1,7 +1,7 @@
-import fsSync from 'node:fs'
+import { createReadStream } from 'node:fs'
 import fs from 'node:fs/promises'
 import path from 'node:path'
-import type stream from 'node:stream'
+import type { Readable } from 'node:stream'
 import {
   aggregateErrors,
   chunkArray,
@@ -11,7 +11,11 @@ import {
 } from '@atproto/common'
 import { randomStr } from '@atproto/crypto'
 import type { Cid } from '@atproto/lex-data'
-import { BlobNotFoundError, type BlobStore } from '@atproto/repo'
+import {
+  BlobNotFoundError,
+  type BlobStore,
+  type BlobStoreCreator,
+} from '@atproto/repo'
 import { blobStoreLogger as log } from './logger.js'
 
 export class DiskBlobStore implements BlobStore {
@@ -26,12 +30,18 @@ export class DiskBlobStore implements BlobStore {
     location: string,
     tmpLocation?: string,
     quarantineLocation?: string,
-  ) {
-    return (did: string) => {
-      const tmp = tmpLocation || path.join(location, 'tempt')
-      const quarantine = quarantineLocation || path.join(location, 'quarantine')
+  ): BlobStoreCreator {
+    const tmp = tmpLocation || path.join(location, 'tempt')
+    const quarantine = quarantineLocation || path.join(location, 'quarantine')
+    const creator = (did: string): BlobStore => {
       return new DiskBlobStore(did, location, tmp, quarantine)
     }
+    Object.defineProperty(creator, Symbol.asyncDispose, {
+      value: async () => {
+        // no-op
+      },
+    })
+    return creator as BlobStoreCreator
   }
 
   private async ensureDir() {
@@ -72,7 +82,9 @@ export class DiskBlobStore implements BlobStore {
     return fileExists(this.getStoredPath(cid))
   }
 
-  async putTemp(bytes: Uint8Array | stream.Readable): Promise<string> {
+  async putTemp(
+    bytes: Uint8Array | Iterable<Uint8Array> | AsyncIterable<Uint8Array>,
+  ): Promise<string> {
     await this.ensureTemp()
     const key = this.genKey()
     await fs.writeFile(this.getTmpPath(key), bytes)
@@ -97,7 +109,7 @@ export class DiskBlobStore implements BlobStore {
 
   async putPermanent(
     cid: Cid,
-    bytes: Uint8Array | stream.Readable,
+    bytes: Uint8Array | Iterable<Uint8Array> | AsyncIterable<Uint8Array>,
   ): Promise<void> {
     await this.ensureDir()
     await fs.writeFile(this.getStoredPath(cid), bytes)
@@ -129,13 +141,13 @@ export class DiskBlobStore implements BlobStore {
     }
   }
 
-  async getStream(cid: Cid): Promise<stream.Readable> {
+  async getStream(cid: Cid): Promise<Readable> {
     const path = this.getStoredPath(cid)
     const exists = await fileExists(path)
     if (!exists) {
       throw new BlobNotFoundError()
     }
-    return fsSync.createReadStream(path)
+    return createReadStream(path)
   }
 
   async delete(cid: Cid): Promise<void> {
@@ -161,6 +173,10 @@ export class DiskBlobStore implements BlobStore {
     await rmIfExists(path.join(this.location, this.did), true)
     await rmIfExists(path.join(this.tmpLocation, this.did), true)
     await rmIfExists(path.join(this.quarantineLocation, this.did), true)
+  }
+
+  async [Symbol.asyncDispose]() {
+    // No resources to clean up for the disk blob store.
   }
 }
 

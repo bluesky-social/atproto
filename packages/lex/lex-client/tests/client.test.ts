@@ -2,11 +2,7 @@ import { assert, describe, expect, expectTypeOf, it, vi } from 'vitest'
 import { type LexValue, cidForLex } from '@atproto/lex-cbor'
 import { cidForRawBytes, isTypedBlobRef, parseCid } from '@atproto/lex-data'
 import { lexParse, lexToJson } from '@atproto/lex-json'
-import {
-  type $Typed,
-  LexValidationError,
-  currentDatetimeString,
-} from '@atproto/lex-schema'
+import { LexValidationError, currentDatetimeString } from '@atproto/lex-schema'
 import {
   type Action,
   Client,
@@ -16,50 +12,21 @@ import {
   XrpcResponseError,
   buildAgent,
 } from '../src/index.js'
-import { app, com } from './lexicons/index.js'
+import {
+  type ApplyWritesOutputBody,
+  type CreateRecordOutputBody,
+  type GetRecordOutputBody,
+  type Preference,
+  type UploadBlobOutputBody,
+  com,
+} from './lexicons.js'
 
 const cborCid = parseCid(
   'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
   { flavor: 'cbor' },
 )
 
-type Preference = app.bsky.actor.defs.Preferences[number]
-
-describe('utils', () => {
-  describe('TypedObjectSchema', () => {
-    describe('build()', () => {
-      it('overrides $type when building an object', () => {
-        function expectAdultContentPref(
-          _: app.bsky.actor.defs.AdultContentPref,
-        ) {}
-        function expectTypedAdultContentPref(
-          _: $Typed<app.bsky.actor.defs.AdultContentPref>,
-        ) {}
-
-        const pref = app.bsky.actor.defs.adultContentPref.build({
-          // @ts-expect-error
-          $type: 'foo',
-          enabled: true,
-        })
-
-        expectAdultContentPref(pref)
-        expectTypedAdultContentPref(pref)
-
-        expect(pref).toStrictEqual({
-          $type: 'app.bsky.actor.defs#adultContentPref',
-          enabled: true,
-        })
-
-        expectTypeOf(pref).toEqualTypeOf<{
-          $type: 'app.bsky.actor.defs#adultContentPref'
-          enabled: boolean
-        }>()
-      })
-    })
-  })
-})
-
-describe('Client', () => {
+describe(Client, () => {
   describe('atproto-* headers', () => {
     it('defaults "service" to atproto-proxy headers set through the per-request headers option', async () => {
       const fetchHandler = vi.fn<FetchHandler>(async (_url, _init) => {
@@ -68,7 +35,7 @@ describe('Client', () => {
 
       const client = new Client(fetchHandler)
 
-      await client.xrpc(app.bsky.actor.getPreferences, {
+      await client.xrpc(com.example.actor.getPreferences, {
         headers: {
           'atproto-proxy': 'did:plc:existing#service',
         },
@@ -93,15 +60,15 @@ describe('Client', () => {
 
       expect(client.service).toBe('did:plc:existing#service')
 
-      await client.xrpc(app.bsky.actor.getPreferences)
+      await client.xrpc(com.example.actor.getPreferences)
 
       // A per-request "service" still overrides the header-provided default
-      await client.xrpc(app.bsky.actor.getPreferences, {
+      await client.xrpc(com.example.actor.getPreferences, {
         service: 'did:plc:new#service',
       })
 
       // And "service: null" disables it
-      await client.xrpc(app.bsky.actor.getPreferences, {
+      await client.xrpc(com.example.actor.getPreferences, {
         service: null,
       })
 
@@ -127,7 +94,7 @@ describe('Client', () => {
 
       const client = new Client(fetchHandler, { service, labelers: [labeler] })
 
-      await client.xrpc(app.bsky.actor.getPreferences)
+      await client.xrpc(com.example.actor.getPreferences)
 
       expect(fetchHandler).toHaveBeenCalledOnce()
 
@@ -147,7 +114,7 @@ describe('Client', () => {
 
       const client = new Client(fetchHandler, { service, labelers: [labeler] })
 
-      await client.xrpc(app.bsky.actor.getPreferences, {
+      await client.xrpc(com.example.actor.getPreferences, {
         service: 'did:plc:new#service',
         labelers: ['did:plc:new'],
       })
@@ -160,6 +127,35 @@ describe('Client', () => {
       expect(headers.get('atproto-accept-labelers')).toBe('did:plc:new')
     })
 
+    it('merges per-request headers provided as a function with the instance headers', async () => {
+      const service = 'did:plc:ewvi7nxzyoun6zhxrhs64oiz#bsky_appview'
+
+      const fetchHandler = vi.fn<FetchHandler>(async (_url, _init) => {
+        return Response.json({ preferences: [] })
+      })
+
+      const client = new Client(fetchHandler, {
+        service,
+        headers: { 'x-instance': 'instance', 'x-shared': 'instance' },
+      })
+
+      await client.xrpc(com.example.actor.getPreferences, {
+        headers: async () => ({
+          'x-shared': 'request',
+          'atproto-proxy': 'did:plc:ignored#service',
+        }),
+      })
+
+      expect(fetchHandler).toHaveBeenCalledOnce()
+
+      const [_url, init] = fetchHandler.mock.calls[0]
+      const headers = new Headers(init?.headers)
+      expect(headers.get('x-instance')).toBe('instance')
+      expect(headers.get('x-shared')).toBe('request')
+      // Not used as fallback: the client's default "service" applies
+      expect(headers.get('atproto-proxy')).toBe(service)
+    })
+
     it('allows default proxy and labeler headers to be disabled per request', async () => {
       const service = 'did:plc:ewvi7nxzyoun6zhxrhs64oiz#bsky_appview'
       const labeler = 'did:plc:ewvi7nxzyoun6zhxrhs64oiz'
@@ -170,7 +166,7 @@ describe('Client', () => {
 
       const client = new Client(fetchHandler, { service, labelers: [labeler] })
 
-      await client.xrpc(app.bsky.actor.getPreferences, {
+      await client.xrpc(com.example.actor.getPreferences, {
         service: null,
         labelers: null,
       })
@@ -193,7 +189,7 @@ describe('Client', () => {
 
       const client = new Client(fetchHandler, { service, labelers: [labeler] })
 
-      await client.xrpc(app.bsky.actor.getPreferences, {
+      await client.xrpc(com.example.actor.getPreferences, {
         service: undefined,
         labelers: undefined,
       })
@@ -216,7 +212,7 @@ describe('Client', () => {
           return Response.json({ records: [] })
         }
         return Response.json({
-          uri: `at://${did}/app.bsky.feed.post/2222222222222`,
+          uri: `at://${did}/com.example.feed.post/2222222222222`,
           cid: 'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
         })
       })
@@ -227,12 +223,12 @@ describe('Client', () => {
       )
 
       await client.createRecord(
-        app.bsky.feed.post.$build({
+        com.example.feed.post.$build({
           text: 'Hello!',
           createdAt: currentDatetimeString(),
         }),
       )
-      await client.listRecords(app.bsky.feed.post.$type)
+      await client.listRecords(com.example.feed.post.$type)
 
       expect(fetchHandler).toHaveBeenCalledTimes(2)
       for (const [, init] of fetchHandler.mock.calls) {
@@ -242,7 +238,7 @@ describe('Client', () => {
       }
 
       // Explicit per-call options still apply
-      await client.listRecords(app.bsky.feed.post.$type, {
+      await client.listRecords(com.example.feed.post.$type, {
         service,
         labelers: [labeler],
       })
@@ -266,7 +262,7 @@ describe('Client', () => {
 
       const client = new Client(agent)
 
-      await client.xrpc(app.bsky.actor.getPreferences, {
+      await client.xrpc(com.example.actor.getPreferences, {
         headers: { 'x-child': 'child', 'x-shared': 'child' },
       })
 
@@ -293,7 +289,7 @@ describe('Client', () => {
 
       const client = new Client(fetchHandler)
 
-      await client.xrpc(app.bsky.actor.getPreferences, {
+      await client.xrpc(com.example.actor.getPreferences, {
         labelers: ['did:plc:dynamiclabeler'],
       })
 
@@ -311,16 +307,17 @@ describe('Client', () => {
   describe('actions', () => {
     it('updatePreferences', async () => {
       const fetchHandler = vi.fn<FetchHandler>(async (url, init) => {
-        if (url === '/xrpc/app.bsky.actor.getPreferences') {
+        if (url === '/xrpc/com.example.actor.getPreferences') {
           expect(init?.method).toBe('GET')
           expect(init?.body).toBeUndefined()
           return Response.json({ preferences: storedPreferences })
-        } else if (url === '/xrpc/app.bsky.actor.putPreferences') {
+        } else if (url === '/xrpc/com.example.actor.putPreferences') {
           expect(init?.method).toBe('POST')
           expect(typeof init?.body).toBe('string')
-          const result = app.bsky.actor.putPreferences.$input.schema.safeParse(
-            lexParse(init?.body as string),
-          )
+          const result =
+            com.example.actor.putPreferences.$input.schema.safeParse(
+              lexParse(init?.body as string),
+            )
           if (result.success) {
             storedPreferences = result.value.preferences
             return new Response(null, { status: 204 })
@@ -342,7 +339,7 @@ describe('Client', () => {
         Preference[]
       > = async function (client, updatePreferences, options) {
         const data = await client.call(
-          app.bsky.actor.getPreferences,
+          com.example.actor.getPreferences,
           {},
           options,
         )
@@ -353,7 +350,7 @@ describe('Client', () => {
         options?.signal?.throwIfAborted()
 
         await client.call(
-          app.bsky.actor.putPreferences,
+          com.example.actor.putPreferences,
           { preferences },
           options,
         )
@@ -371,10 +368,10 @@ describe('Client', () => {
         }
 
       let storedPreferences: Preference[] = [
-        app.bsky.actor.defs.adultContentPref.build({
+        com.example.actor.defs.adultContentPref.build({
           enabled: false,
         }),
-        app.bsky.actor.defs.contentLabelPref.build({
+        com.example.actor.defs.contentLabelPref.build({
           label: 'my-label',
           visibility: 'warn',
         }),
@@ -383,11 +380,11 @@ describe('Client', () => {
       expect(fetchHandler).toHaveBeenCalledTimes(0)
       expect(storedPreferences).toEqual([
         {
-          $type: 'app.bsky.actor.defs#adultContentPref',
+          $type: 'com.example.actor.defs#adultContentPref',
           enabled: false,
         },
         {
-          $type: 'app.bsky.actor.defs#contentLabelPref',
+          $type: 'com.example.actor.defs#contentLabelPref',
           label: 'my-label',
           visibility: 'warn',
         },
@@ -396,7 +393,7 @@ describe('Client', () => {
       // Upsert adult content preference
       await client.call(
         upsertPreference,
-        app.bsky.actor.defs.adultContentPref.build({
+        com.example.actor.defs.adultContentPref.build({
           enabled: true,
         }),
       )
@@ -404,60 +401,164 @@ describe('Client', () => {
       expect(fetchHandler).toHaveBeenCalledTimes(2)
       expect(storedPreferences).toEqual([
         {
-          $type: 'app.bsky.actor.defs#contentLabelPref',
+          $type: 'com.example.actor.defs#contentLabelPref',
           label: 'my-label',
           visibility: 'warn',
         },
         {
-          $type: 'app.bsky.actor.defs#adultContentPref',
+          $type: 'com.example.actor.defs#adultContentPref',
           enabled: true,
         },
       ])
 
       // @ts-expect-error invalid preference value
       await client.call(upsertPreference, {
-        $type: 'app.bsky.actor.defs#adultContentPref',
+        $type: 'com.example.actor.defs#adultContentPref',
         // enabled: true,
       })
 
       expect(fetchHandler).toHaveBeenCalledTimes(4)
       expect(storedPreferences).toEqual([
         {
-          $type: 'app.bsky.actor.defs#contentLabelPref',
+          $type: 'com.example.actor.defs#contentLabelPref',
           label: 'my-label',
           visibility: 'warn',
         },
         {
-          $type: 'app.bsky.actor.defs#adultContentPref',
+          $type: 'com.example.actor.defs#adultContentPref',
           enabled: false, // "false" default will be enforced when parsing the body
         },
       ])
 
       await expect(async () => {
         await client.call(upsertPreference, {
-          $type: 'app.bsky.actor.defs#adultContentPref',
+          $type: 'com.example.actor.defs#adultContentPref',
           // @ts-expect-error invalid preference value
           enabled: 'not-a-boolean',
         })
       }).rejects.toThrow('Expected boolean value')
+    })
+
+    it('calls actions without input when their input is optional', async () => {
+      const client = new Client(vi.fn<FetchHandler>())
+
+      async function optionalInput(
+        _client: Client,
+        input?: { value: string },
+      ): Promise<string> {
+        return input?.value ?? 'default'
+      }
+      const voidInput: Action<void, string> = async () => 'void'
+      const requiredInput: Action<{ value: string }, string> = async (
+        _client,
+        input,
+      ) => input.value
+
+      await expect(client.call(optionalInput)).resolves.toBe('default')
+      await expect(client.call(optionalInput, { value: 'set' })).resolves.toBe(
+        'set',
+      )
+      await expect(client.call(voidInput)).resolves.toBe('void')
+
+      // @ts-expect-error required input
+      await expect(client.call(requiredInput)).rejects.toThrow()
+    })
+
+    it('infers the type parameters of generic actions', async () => {
+      const client = new Client(vi.fn<FetchHandler>())
+
+      type Shape = { kind: string }
+      type Square = { kind: 'square' }
+      type Circle = { kind: 'circle' }
+
+      // An omitted `shapes` falls back to the constraint of S (not to its
+      // default), hence `undefined` in the constraint.
+      async function pick<
+        const S extends readonly Shape[] | undefined = undefined,
+      >(
+        _client: Client,
+        input: { shapes?: S },
+      ): Promise<undefined extends S ? Square : NonNullable<S>[number]> {
+        return (input.shapes?.[0] ?? { kind: 'square' }) as any
+      }
+
+      const circle: Circle = { kind: 'circle' }
+      const square: Square = { kind: 'square' }
+      const shapes: readonly Shape[] = [circle]
+
+      expectTypeOf(
+        await client.call(pick, { shapes: [circle] }),
+      ).toEqualTypeOf<Circle>()
+      expectTypeOf(
+        await client.call(pick, { shapes: [circle, square] }),
+      ).toEqualTypeOf<Circle | Square>()
+      expectTypeOf(await client.call(pick, {})).toEqualTypeOf<Square>()
+      expectTypeOf(await client.call(pick, { shapes })).toEqualTypeOf<Shape>()
+
+      await expect(client.call(pick, { shapes: [circle] })).resolves.toEqual(
+        circle,
+      )
+
+      // With optional input properties left out
+      async function pickWith<
+        const S extends readonly Shape[] | undefined = undefined,
+      >(
+        _client: Client,
+        input: { shapes?: S; filter?: (shape: Shape) => boolean },
+      ): Promise<undefined extends S ? Square : NonNullable<S>[number]> {
+        return (input.shapes?.find(input.filter ?? Boolean) ?? square) as any
+      }
+
+      expectTypeOf(
+        await client.call(pickWith, { shapes: [circle] }),
+      ).toEqualTypeOf<Circle>()
+    })
+
+    it('infers the input and output of non-generic actions', async () => {
+      const client = new Client(vi.fn<FetchHandler>())
+
+      const plain: Action<{ value: string }, number> = async (_c, input) =>
+        input.value.length
+      async function binary(_client: Client, input: Uint8Array) {
+        return input.length
+      }
+      function sync(_client: Client, input: 'a' | 'b'): 'sync' {
+        return input && 'sync'
+      }
+
+      expectTypeOf(
+        await client.call(plain, { value: 'abc' }),
+      ).toEqualTypeOf<number>()
+      expectTypeOf(
+        await client.call(binary, new Uint8Array(3)),
+      ).toEqualTypeOf<number>()
+      expectTypeOf(await client.call(sync, 'a')).toEqualTypeOf<'sync'>()
+      expectTypeOf(
+        await client.call({ main: plain }, { value: 'abc' }),
+      ).toEqualTypeOf<number>()
+
+      // @ts-expect-error excess property
+      await client.call(plain, { value: 'abc', extra: true })
+      // @ts-expect-error invalid input
+      await client.call(sync, 'c')
     })
   })
 
   describe('query', () => {
     it('allows perfoming a GET request and parsing the response', async () => {
       const fetchHandler = vi.fn<FetchHandler>(async (url, init) => {
-        expect(url).toBe('/xrpc/app.bsky.actor.getPreferences')
+        expect(url).toBe('/xrpc/com.example.actor.getPreferences')
         expect(init?.method).toBe('GET')
         expect(init?.body).toBeUndefined()
 
         return Response.json({
           preferences: [
             {
-              $type: 'app.bsky.actor.defs#adultContentPref',
+              $type: 'com.example.actor.defs#adultContentPref',
               enabled: false,
             },
             {
-              $type: 'app.bsky.actor.defs#someOtherPref',
+              $type: 'com.example.actor.defs#someOtherPref',
               otherField: 'some value',
             },
           ],
@@ -466,15 +567,17 @@ describe('Client', () => {
 
       const client = new Client(fetchHandler)
 
-      const { preferences } = await client.call(app.bsky.actor.getPreferences)
+      const { preferences } = await client.call(
+        com.example.actor.getPreferences,
+      )
 
       expect(preferences).toEqual([
         {
-          $type: 'app.bsky.actor.defs#adultContentPref',
+          $type: 'com.example.actor.defs#adultContentPref',
           enabled: false,
         },
         {
-          $type: 'app.bsky.actor.defs#someOtherPref',
+          $type: 'com.example.actor.defs#someOtherPref',
           otherField: 'some value',
         },
       ])
@@ -482,11 +585,11 @@ describe('Client', () => {
       expect(fetchHandler).toHaveBeenCalledTimes(1)
 
       const adultContentPref = preferences.find((p) =>
-        app.bsky.actor.defs.adultContentPref.isTypeOf(p),
+        com.example.actor.defs.adultContentPref.isTypeOf(p),
       )
 
       expect(adultContentPref).toEqual({
-        $type: 'app.bsky.actor.defs#adultContentPref',
+        $type: 'com.example.actor.defs#adultContentPref',
         enabled: false,
       })
     })
@@ -504,7 +607,7 @@ describe('Client', () => {
       const client = new Client(fetchHandler)
 
       await expect(
-        client.call(app.bsky.actor.getPreferences),
+        client.call(com.example.actor.getPreferences),
       ).rejects.toSatisfy((err) => {
         assert(err instanceof XrpcResponseError)
         expect(err.message).toMatch(
@@ -522,7 +625,7 @@ describe('Client', () => {
       const client = new Client(fetchHandler)
 
       await expect(
-        client.call(app.bsky.actor.getPreferences),
+        client.call(com.example.actor.getPreferences),
       ).rejects.toSatisfy((err) => {
         assert(err instanceof XrpcResponseError)
         expect(err.error).toBe('RateLimitExceeded')
@@ -539,7 +642,7 @@ describe('Client', () => {
       const client = new Client(fetchHandler)
 
       await expect(
-        client.call(app.bsky.actor.getPreferences),
+        client.call(com.example.actor.getPreferences),
       ).rejects.toSatisfy((err) => {
         assert(err instanceof XrpcInvalidResponseError)
         expect(err.message).toMatch('Unexpected status code 302')
@@ -558,7 +661,7 @@ describe('Client', () => {
       const client = new Client(fetchHandler)
 
       await expect(
-        client.call(app.bsky.actor.getPreferences),
+        client.call(com.example.actor.getPreferences),
       ).rejects.toSatisfy((err) => {
         assert(err instanceof XrpcResponseError)
         expect(err.error).toBe('InternalServerError')
@@ -587,7 +690,7 @@ describe('Client', () => {
       const client = new Client(fetchHandler)
 
       await expect(
-        client.call(app.bsky.actor.getPreferences),
+        client.call(com.example.actor.getPreferences),
       ).rejects.toMatchObject({
         name: 'XrpcResponseError',
         message: 'This is a custom error message from the server',
@@ -620,7 +723,7 @@ describe('Client', () => {
 
       const client = new Client(fetchHandler)
 
-      const response = await client.xrpcSafe(app.bsky.actor.getPreferences)
+      const response = await client.xrpcSafe(com.example.actor.getPreferences)
 
       assert(response instanceof XrpcAuthenticationError)
       expect(response.error).toBe('Unauthorized')
@@ -664,7 +767,7 @@ describe('Client', () => {
         const rkey = payload.rkey || nextTid()
         const cid = await cidForLex(payload.record as LexValue)
 
-        const responseBody: com.atproto.repo.createRecord.$OutputBody = {
+        const responseBody: CreateRecordOutputBody = {
           cid: cid.toString(),
           uri: `at://${payload.repo}/${payload.collection}/${rkey}`,
         }
@@ -676,7 +779,7 @@ describe('Client', () => {
 
       await expect(async () => {
         return client.create(
-          app.bsky.feed.generator,
+          com.example.feed.generator,
           {
             // @ts-expect-error invalid DID
             did: 'not-a-did',
@@ -694,7 +797,7 @@ describe('Client', () => {
       expect(fetchHandler).toHaveBeenCalledTimes(0)
 
       const newGenerator = await client.create(
-        app.bsky.feed.generator,
+        com.example.feed.generator,
         {
           did,
           displayName: 'Alice Generator',
@@ -708,10 +811,10 @@ describe('Client', () => {
 
       expect(fetchHandler).toHaveBeenCalledTimes(1)
       expect(newGenerator.cid).toBe(
-        'bafyreihx5eurnmsnj6ulfby3icl4ebh6pliwuqaze25z4ejitnt23b4vw4',
+        'bafyreiad2d6jkx3mrr4pbhdcik46t4r4zjnnlvsvz7ssmz7lr765gdpngu',
       )
 
-      const aliceGenerator = await client.create(app.bsky.feed.generator, {
+      const aliceGenerator = await client.create(com.example.feed.generator, {
         did,
         displayName: 'Alice Generator',
         createdAt: currentDatetimeString(),
@@ -719,27 +822,29 @@ describe('Client', () => {
 
       expect(nextTid).toHaveBeenCalledTimes(1)
       expect(aliceGenerator.uri).toBe(
-        `at://${did}/app.bsky.feed.generator/${'2'.repeat(13)}`,
+        `at://${did}/com.example.feed.generator/${'2'.repeat(13)}`,
       )
 
-      const newProfile = await client.create(app.bsky.actor.profile, {
+      const newProfile = await client.create(com.example.actor.profile, {
         displayName: 'Alice',
       })
 
       expect(nextTid).toHaveBeenCalledTimes(1)
       expect(fetchHandler).toHaveBeenCalledTimes(3)
       expect(newProfile.uri).toBe(
-        'at://did:plc:alice/app.bsky.actor.profile/self',
+        'at://did:plc:alice/com.example.actor.profile/self',
       )
 
-      const newPost = await client.create(app.bsky.feed.post, {
+      const newPost = await client.create(com.example.feed.post, {
         text: 'Hello, world!',
         createdAt: currentDatetimeString(),
       })
 
       expect(nextTid).toHaveBeenCalledTimes(2)
       expect(fetchHandler).toHaveBeenCalledTimes(4)
-      expect(newPost.uri).toBe(`at://${did}/app.bsky.feed.post/2222222222322`)
+      expect(newPost.uri).toBe(
+        `at://${did}/com.example.feed.post/2222222222322`,
+      )
     })
 
     it('allows fetching records', async () => {
@@ -754,17 +859,17 @@ describe('Client', () => {
         const rkey = urlObj.searchParams.get('rkey')
 
         expect(repo).toBe(did)
-        expect(collection).toBe(app.bsky.feed.post.$type)
+        expect(collection).toBe(com.example.feed.post.$type)
         expect(rkey).toBe('2222222222222')
 
-        const record = app.bsky.feed.post.$build({
+        const record = com.example.feed.post.$build({
           text: 'This is an old post',
           createdAt: '2024-01-01T00:00:00Z',
         })
 
         const cid = await cidForLex(record)
 
-        const responseBody: com.atproto.repo.getRecord.$OutputBody = {
+        const responseBody: GetRecordOutputBody = {
           cid: cid.toString(),
           uri: `at://${repo!}/${collection!}/${rkey!}` as any,
           value: record,
@@ -775,13 +880,13 @@ describe('Client', () => {
 
       const client = new Client({ fetchHandler, did })
 
-      const { value: post } = await client.get(app.bsky.feed.post, {
+      const { value: post } = await client.get(com.example.feed.post, {
         rkey: '2222222222222',
       })
 
       expect(fetchHandler).toHaveBeenCalledTimes(1)
       expect(post).toMatchObject({
-        $type: 'app.bsky.feed.post',
+        $type: 'com.example.feed.post',
         text: 'This is an old post',
         createdAt: '2024-01-01T00:00:00Z',
       })
@@ -810,7 +915,7 @@ describe('Client', () => {
 
         const bytes = new Uint8Array(await blob.arrayBuffer())
 
-        const responseBody: com.atproto.repo.uploadBlob.$OutputBody = {
+        const responseBody: UploadBlobOutputBody = {
           blob: {
             $type: 'blob',
             ref: await cidForRawBytes(bytes),
@@ -882,7 +987,7 @@ describe('Client', () => {
 
         await expect(
           client.create(
-            app.bsky.feed.generator,
+            com.example.feed.generator,
             {
               // @ts-expect-error invalid DID
               did: 'not-a-did',
@@ -903,14 +1008,14 @@ describe('Client', () => {
       it('skips local validation when validateRequest: false', async () => {
         const fetchHandler = vi.fn<FetchHandler>(async () => {
           return Response.json({
-            uri: `at://${did}/app.bsky.feed.generator/test`,
+            uri: `at://${did}/com.example.feed.generator/test`,
             cid: cborCid.toString(),
           })
         })
         const client = new Client({ fetchHandler, did })
 
         await client.create(
-          app.bsky.feed.generator,
+          com.example.feed.generator,
           {
             // @ts-expect-error invalid DID
             did: 'not-a-did',
@@ -926,14 +1031,14 @@ describe('Client', () => {
       it('defaults to not validating', async () => {
         const fetchHandler = vi.fn<FetchHandler>(async () => {
           return Response.json({
-            uri: `at://${did}/app.bsky.feed.generator/test`,
+            uri: `at://${did}/com.example.feed.generator/test`,
             cid: cborCid.toString(),
           })
         })
         const client = new Client({ fetchHandler, did })
 
         await client.create(
-          app.bsky.feed.generator,
+          com.example.feed.generator,
           {
             // @ts-expect-error invalid DID
             did: 'not-a-did',
@@ -952,7 +1057,7 @@ describe('Client', () => {
 
         await expect(
           client.create(
-            app.bsky.feed.generator,
+            com.example.feed.generator,
             // @ts-expect-error
             {
               displayName: 'Test',
@@ -974,7 +1079,7 @@ describe('Client', () => {
 
         await expect(
           client.create(
-            app.bsky.feed.generator,
+            com.example.feed.generator,
             {
               did,
               // @ts-expect-error wrong type
@@ -1000,7 +1105,7 @@ describe('Client', () => {
 
         await expect(
           client.put(
-            app.bsky.actor.profile,
+            com.example.actor.profile,
             {
               // @ts-expect-error invalid data
               displayName: 123,
@@ -1019,14 +1124,14 @@ describe('Client', () => {
       it('skips local validation when validateRequest: false', async () => {
         const fetchHandler = vi.fn<FetchHandler>(async () => {
           return Response.json({
-            uri: `at://${did}/app.bsky.actor.profile/self`,
+            uri: `at://${did}/com.example.actor.profile/self`,
             cid: cborCid.toString(),
           })
         })
         const client = new Client({ fetchHandler, did })
 
         await client.put(
-          app.bsky.actor.profile,
+          com.example.actor.profile,
           {
             // @ts-expect-error invalid data
             displayName: 123,
@@ -1040,13 +1145,13 @@ describe('Client', () => {
       it('defaults to not validating', async () => {
         const fetchHandler = vi.fn<FetchHandler>(async () => {
           return Response.json({
-            uri: `at://${did}/app.bsky.actor.profile/self`,
+            uri: `at://${did}/com.example.actor.profile/self`,
             cid: cborCid.toString(),
           })
         })
         const client = new Client({ fetchHandler, did })
 
-        await client.put(app.bsky.actor.profile, {
+        await client.put(com.example.actor.profile, {
           // @ts-expect-error invalid data
           displayName: 123,
         })
@@ -1066,7 +1171,7 @@ describe('Client', () => {
           )
 
           let cid = 0
-          const body: com.atproto.repo.applyWrites.$OutputBody = {
+          const body: ApplyWritesOutputBody = {
             results: payload.writes.map((write) => {
               if (com.atproto.repo.applyWrites.create.$isTypeOf(write)) {
                 return com.atproto.repo.applyWrites.createResult.$build({
@@ -1098,41 +1203,41 @@ describe('Client', () => {
         )
 
         const { body } = await client.applyWrites((op) => [
-          op.create(app.bsky.feed.post, {
+          op.create(com.example.feed.post, {
             text: 'Hello, world!',
             createdAt: currentDatetimeString(),
           }),
 
-          op.update(app.bsky.actor.profile, {
+          op.update(com.example.actor.profile, {
             displayName: 'Alice',
           }),
 
-          op.delete(app.bsky.feed.post, {
-            rkey: 'old-post',
+          op.delete(com.example.feed.post, {
+            rkey: '2222222222224',
           }),
 
-          op.delete(app.bsky.actor.profile),
+          op.delete(com.example.actor.profile),
         ])
 
         expect(fetchHandler).toHaveBeenCalledTimes(1)
         expect(body.results).toEqual([
           {
             $type: 'com.atproto.repo.applyWrites#createResult',
-            uri: `at://${did}/app.bsky.feed.post/2222222222222`,
+            uri: `at://${did}/com.example.feed.post/2222222222222`,
             cid: '1',
           },
           {
             $type: 'com.atproto.repo.applyWrites#updateResult',
-            uri: `at://${did}/app.bsky.actor.profile/self`,
+            uri: `at://${did}/com.example.actor.profile/self`,
             cid: '2',
           },
           {
             $type: 'com.atproto.repo.applyWrites#deleteResult',
-            uri: `at://${did}/app.bsky.feed.post/old-post`,
+            uri: `at://${did}/com.example.feed.post/2222222222224`,
           },
           {
             $type: 'com.atproto.repo.applyWrites#deleteResult',
-            uri: `at://${did}/app.bsky.actor.profile/self`,
+            uri: `at://${did}/com.example.actor.profile/self`,
           },
         ])
       })
@@ -1155,12 +1260,12 @@ describe('Client', () => {
         )
 
         await client.applyWrites(function* (op) {
-          yield op.delete(app.bsky.actor.profile)
-          yield op.update(app.bsky.actor.profile, { displayName: 'Alice' })
+          yield op.delete(com.example.actor.profile)
+          yield op.update(com.example.actor.profile, { displayName: 'Alice' })
 
           expect(() => {
             // @ts-expect-error
-            op.update(app.bsky.feed.post, {
+            op.update(com.example.feed.post, {
               text: 'Alice',
               createdAt: currentDatetimeString(),
             })
@@ -1168,7 +1273,7 @@ describe('Client', () => {
 
           expect(() => {
             // @ts-expect-error
-            op.delete(app.bsky.feed.post)
+            op.delete(com.example.feed.post)
           }).toThrow()
         })
 

@@ -9,6 +9,9 @@
     { "path": "./tsconfig.build.json" },
   ],
   "compilerOptions": {
+    // @NOTE Resolve cborg's extensionless declarations instead of silently checking any.
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
     "rootDir": "./",
   },
 }

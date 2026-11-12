@@ -1,13 +1,9 @@
 import { ForbiddenError, type Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
-import {
-  prepareCreate,
-  prepareUpdate,
-  spaceRecordUri,
-} from '../../../../repo/index.js'
+import { prepareCreate, prepareUpdate } from '../../../../repo/index.js'
 import { assertNotPolicyRecord } from '../../../../space-policy/publish.js'
-import { fireNotifyWrite } from './util.js'
+import { fireNotifyRepoUpdate, toSpaceRef } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.space.putRecord, {
@@ -33,9 +29,10 @@ export default function (server: Server, ctx: AppContext) {
     opts: {
       jsonLimit: 1_000_000,
     },
-    handler: async ({ input, auth }) => {
+    handler: async ({ input: { body }, auth }) => {
       const did = auth.credentials.did
-      const { space, repo, collection, rkey, record } = input.body
+      const { space, repo, collection, rkey, record } = body
+      const ref = toSpaceRef(space)
       if (repo !== did) {
         throw new ForbiddenError('repo must match authenticated user')
       }
@@ -46,35 +43,35 @@ export default function (server: Server, ctx: AppContext) {
         async (actorTxn) => {
           // Resolve to what this write actually is, so an app granted only `update`
           // isn't asked for `create` too.
-          const uri = spaceRecordUri(space, did, collection, rkey)
+          const uri = ref.recordUri(did, collection, rkey)
           const exists = await actorTxn.space.hasRecord(uri.toString())
 
-          auth.credentials.permissions?.assertSpaceRef(space, {
+          auth.credentials.permissions?.assertSpace(ref, {
             action: exists ? 'update' : 'create',
             collection,
           })
 
           const writeInfo = {
             did,
-            space,
+            space: ref,
             collection,
             rkey,
             record,
-            validate: input.body.validate,
+            validate: body.validate,
           }
           const write = exists
             ? await prepareUpdate(writeInfo)
             : await prepareCreate(writeInfo)
 
-          const commit = await actorTxn.space.applyWrites(space, [write])
+          const commit = await actorTxn.space.applyWrites(ref, [write])
           return { commit, write }
         },
       )
 
-      await fireNotifyWrite(ctx, { space, writerDid: did, commit })
+      await fireNotifyRepoUpdate(ctx, { space: ref, writerDid: did, commit })
 
       return {
-        encoding: 'application/json' as const,
+        encoding: 'application/json',
         body: {
           uri: write.uri.toString(),
           cid: write.cid.toString(),

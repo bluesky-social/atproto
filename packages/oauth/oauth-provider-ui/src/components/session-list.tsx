@@ -1,13 +1,13 @@
 import { Trans, useLingui } from '@lingui/react/macro'
 import { type LucideIcon, SearchIcon } from 'lucide-react'
 import { Fragment, type ReactNode, useMemo, useState } from 'react'
+import { FieldInput } from '#/components/forms/fields/text-field.tsx'
 import {
   Empty,
   EmptyDescription,
   EmptyHeader,
   EmptyMedia,
 } from '#/components/ui/empty.tsx'
-import { Input } from '#/components/ui/input.tsx'
 import { Separator } from '#/components/ui/separator.tsx'
 import { Skeleton } from '#/components/ui/skeleton.tsx'
 import {
@@ -112,15 +112,15 @@ export function SessionList<T>({
       <div className="relative">
         <SearchIcon
           aria-hidden
-          className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2"
+          className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-5 -translate-y-1/2"
         />
-        <Input
+        <FieldInput
           type="search"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           placeholder={filterLabel}
           aria-label={filterLabel}
-          className="pl-9"
+          className="pl-10"
         />
       </div>
 
@@ -179,12 +179,13 @@ export function SessionList<T>({
           Array.from({ length: SKELETON_ROWS }, (_, row) => (
             <Fragment key={`skeleton-${row}`}>
               {row > 0 && <Separator />}
-              <div className="flex items-start justify-between gap-3 py-3">
-                <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-                  <Skeleton className="h-4 w-40" />
-                  <Skeleton className="h-3 w-full max-w-[12rem]" />
+              <div className="flex flex-col gap-2 py-4">
+                <div className="flex items-center justify-between gap-3">
+                  <Skeleton className="h-5 w-40" />
+                  <Skeleton className="h-8 w-20 shrink-0" />
                 </div>
-                <Skeleton className="h-8 w-20 shrink-0" />
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-full" />
               </div>
             </Fragment>
           ))}
@@ -192,25 +193,27 @@ export function SessionList<T>({
           filtered.map((item, index) => (
             <Fragment key={rowKey(item)}>
               {index > 0 && <Separator />}
-              <div className="flex items-start justify-between gap-3 py-3">
-                <div className="flex min-w-0 flex-1 flex-col gap-1">
-                  <div className="truncate text-sm font-medium">
+              {/* Title and action share the first line; the labelled pairs
+                run the full width underneath. */}
+              <div className="flex flex-col gap-2 py-4">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0 flex-1 truncate text-base font-semibold">
                     {mobileTitle(item)}
                   </div>
-                  <dl className="text-muted-foreground flex flex-col gap-0.5 text-xs">
-                    {columns
-                      .filter((column) => !column.hideOnMobile)
-                      .map((column, index) => (
-                        <div key={index} className="flex justify-between gap-4">
-                          <dt className="shrink-0">{column.header}</dt>
-                          <dd className="min-w-0 truncate text-right">
-                            {column.cell(item)}
-                          </dd>
-                        </div>
-                      ))}
-                  </dl>
+                  <div className="shrink-0">{action(item)}</div>
                 </div>
-                <div className="shrink-0">{action(item)}</div>
+                <dl className="text-muted-foreground flex flex-col gap-1 text-sm">
+                  {columns
+                    .filter((column) => !column.hideOnMobile)
+                    .map((column, index) => (
+                      <div key={index} className="flex justify-between gap-4">
+                        <dt className="shrink-0">{column.header}</dt>
+                        <dd className="min-w-0 truncate text-right">
+                          {column.cell(item)}
+                        </dd>
+                      </div>
+                    ))}
+                </dl>
               </div>
             </Fragment>
           ))}

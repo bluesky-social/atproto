@@ -13,7 +13,7 @@ import {
   Query,
   Subscription,
   walk,
-} from '@atproto/lex'
+} from '@atproto/lex-schema'
 import { createServer, extractUrlNsid } from '@atproto/xrpc-server'
 import API, { health, wellKnown } from './api/index.js'
 import type { OzoneConfig, OzoneSecrets } from './config/index.js'
@@ -29,6 +29,7 @@ export { AppContext } from './context.js'
 export { EventPusher, EventReverser, OzoneDaemon } from './daemon/index.js'
 export { Database } from './db/index.js'
 export { type ImageInvalidator } from './image-invalidator.js'
+export { VideoInvalidator } from './video-invalidator.js'
 export { httpLogger } from './logger.js'
 
 const KNOWN_METHODS = new Set<string>(
@@ -69,7 +70,7 @@ export class OzoneService {
     app.use(loggerMiddleware)
     app.use(compression())
 
-    const ctx = await AppContext.fromConfig(cfg, secrets, overrides)
+    const ctx = await AppContext.fromConfig(cfg, secrets, overrides, register)
 
     let server = createServer([], {
       validateResponse: false,

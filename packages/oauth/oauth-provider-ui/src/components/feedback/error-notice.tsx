@@ -3,18 +3,24 @@ import { useLingui } from '@lingui/react'
 import { Trans } from '@lingui/react/macro'
 import { type ReactNode, useEffect, useMemo, useState } from 'react'
 import {
+  ErrorCard,
+  type ErrorCardProps,
+} from '#/components/feedback/error-card.tsx'
+import { Button } from '#/components/ui/button.tsx'
+import { apiErrorParser } from '#/lib/api-error-parser.ts'
+import { composeEventHandlers } from '#/lib/compose-event-handlers.ts'
+import {
   type ErrorParser,
   type ParsedError,
   parseError,
 } from '#/lib/error-parser.ts'
 import type { Override } from '#/lib/util.ts'
 import { ErrorDetails } from './error-details.tsx'
-import { Notice, NoticeAction, type NoticeProps } from './notice.tsx'
 
 export type { ErrorParser, ParsedError }
 
 export type ErrorNoticeProps = Override<
-  Omit<NoticeProps, 'role' | 'append' | 'action'>,
+  ErrorCardProps,
   {
     error: unknown
     retry?: () => void
@@ -23,13 +29,20 @@ export type ErrorNoticeProps = Override<
   }
 >
 
+/**
+ * An inline error under a form: one line in the error colour with a small
+ * icon, the same shape as the quiet helper lines around it, rather than a
+ * filled and bordered box. Clicking it five times toggles the technical
+ * details.
+ */
 export function ErrorNotice({
   error,
   retry,
   retryLabel,
-  parser,
+  parser = apiErrorParser,
 
-  // Notice
+  // div
+  className,
   children,
   onClick,
   ...props
@@ -54,40 +67,32 @@ export function ErrorNotice({
   }, [parsed])
 
   return (
-    <Notice
+    <ErrorCard
       {...props}
-      role="alert"
-      onClick={(event) => {
-        onClick?.(event)
-        if (!event.defaultPrevented) setClickCount((c) => c + 1)
-      }}
-      append={
-        <>
-          {children}
-          {showDetails && (
-            <ErrorDetails
-              name={parsed.name}
-              code={parsed.code}
-              message={parsed.message}
-              payload={parsed.payload}
-              stack={parsed.stack}
-            />
-          )}
-        </>
-      }
-      action={
-        retry != null && (
-          <NoticeAction onClick={() => retry()}>
-            {retryLabel || <Trans>Retry</Trans>}
-          </NoticeAction>
-        )
-      }
+      onClick={composeEventHandlers(onClick, () => setClickCount((c) => c + 1))}
     >
-      {_(parsed.description ?? msg`An unknown error occurred`)}
-    </Notice>
+      <p>{_(parsed.description ?? msg`An unknown error occurred`)}</p>
+
+      {children}
+
+      {showDetails && (
+        <ErrorDetails
+          name={parsed.name}
+          code={parsed.code}
+          message={parsed.message}
+          payload={parsed.payload}
+          stack={parsed.stack}
+          className="text-foreground mt-0"
+        />
+      )}
+
+      {retry != null && (
+        <div>
+          <Button variant="secondary" size="sm" onClick={() => retry()}>
+            {retryLabel || <Trans>Retry</Trans>}
+          </Button>
+        </div>
+      )}
+    </ErrorCard>
   )
 }
-
-export const errorNoticeRender = (props: ErrorNoticeProps) => (
-  <ErrorNotice {...props} />
-)

@@ -147,7 +147,7 @@ export function DeleteAccountDialog({
         }
       >
         <DeleteAccountConfirmForm
-          email={email}
+          currentUsername={email}
           // Disables the form while a code is being requested
           onResend={onRequest}
           onCancel={() => setOpen(false)}

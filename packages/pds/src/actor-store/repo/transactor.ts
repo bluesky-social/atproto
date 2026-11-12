@@ -1,5 +1,6 @@
 import type * as crypto from '@atproto/crypto'
 import { type Cid, parseCid } from '@atproto/lex-data'
+import type { DidString } from '@atproto/lex-schema'
 import {
   type BlobStore,
   Repo,
@@ -32,14 +33,14 @@ export class RepoTransactor extends RepoReader {
   constructor(
     public db: ActorDb,
     public blobstore: BlobStore,
-    public did: string,
+    public did: DidString,
     public signingKey: crypto.Keypair,
     public backgroundQueue: BackgroundQueue,
     public now: string = new Date().toISOString(),
   ) {
-    super(db, blobstore)
+    super(db, blobstore, did)
     this.blob = new BlobTransactor(db, blobstore, backgroundQueue)
-    this.record = new RecordTransactor(db, blobstore)
+    this.record = new RecordTransactor(db, did, blobstore)
     this.storage = new SqlRepoTransactor(db, did, now)
   }
 
@@ -167,7 +168,7 @@ export class RepoTransactor extends RepoReader {
 
     // find blocks that would be deleted but are referenced by another record
     const dupeRecordCids = await this.getDuplicateRecordCids(
-      commit.removedCids.toList(),
+      commit.removedCids,
       delAndUpdateUris,
     )
     for (const cid of dupeRecordCids) {
@@ -181,7 +182,7 @@ export class RepoTransactor extends RepoReader {
       const missingBlocks = await this.storage.getBlocks(
         newRecordBlocks.missing,
       )
-      commit.relevantBlocks.addMap(missingBlocks.blocks)
+      commit.relevantBlocks.addBlocks(missingBlocks.blocks)
     }
     return {
       ...commit,
@@ -213,14 +214,15 @@ export class RepoTransactor extends RepoReader {
   }
 
   async getDuplicateRecordCids(
-    cids: Cid[],
-    touchedUris: AtUri[],
+    cids: Iterable<Cid>,
+    touchedUris: Iterable<AtUri>,
   ): Promise<Cid[]> {
-    if (touchedUris.length === 0 || cids.length === 0) {
-      return []
-    }
-    const cidStrs = cids.map((c) => c.toString())
-    const uriStrs = touchedUris.map((u) => u.toString())
+    const cidStrs = Array.from(cids, (c) => c.toString())
+    if (cidStrs.length === 0) return []
+
+    const uriStrs = Array.from(touchedUris, (u) => u.toString())
+    if (uriStrs.length === 0) return []
+
     const res = await this.db.db
       .selectFrom('record')
       .where('cid', 'in', cidStrs)

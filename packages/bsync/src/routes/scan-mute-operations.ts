@@ -5,7 +5,7 @@ import { createMuteOpChannel } from '../db/schema/mute_op.js'
 import type { Service } from '../proto/bsync_connect.js'
 import { ScanMuteOperationsResponse } from '../proto/bsync_pb.js'
 import { authWithApiKey } from './auth.js'
-import { combineSignals, validCursor } from './util.js'
+import { combinedSignals, validCursor } from './util.js'
 
 export default (ctx: AppContext): Partial<ServiceImpl<typeof Service>> => ({
   async scanMuteOperations(req, handlerCtx) {
@@ -13,13 +13,16 @@ export default (ctx: AppContext): Partial<ServiceImpl<typeof Service>> => ({
     const { db, events } = ctx
     const limit = req.limit || 1000
     const cursor = validCursor(req.cursor)
-    const nextMuteOpPromise = once(events, createMuteOpChannel, {
-      signal: combineSignals(
-        ctx.shutdown,
-        AbortSignal.timeout(ctx.cfg.service.longPollTimeoutMs),
-      ),
-    })
-    nextMuteOpPromise.catch(() => null) // ensure timeout is always handled
+
+    using signal = combinedSignals(
+      ctx.shutdown,
+      AbortSignal.timeout(ctx.cfg.service.longPollTimeoutMs),
+    )
+
+    const nextMuteOpPromise = once(events, createMuteOpChannel, { signal })
+
+    // awaited later
+    void nextMuteOpPromise.catch(() => null)
 
     const nextMuteOpPageQb = db.db
       .selectFrom('mute_op')
@@ -35,7 +38,8 @@ export default (ctx: AppContext): Partial<ServiceImpl<typeof Service>> => ({
       try {
         await nextMuteOpPromise
       } catch (err) {
-        ctx.shutdown.throwIfAborted()
+        if (ctx.shutdown.aborted) throw err
+
         return new ScanMuteOperationsResponse({
           operations: [],
           cursor: req.cursor,

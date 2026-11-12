@@ -1,10 +1,19 @@
 import { jest } from '@jest/globals'
-import { DAY, HOUR, MINUTE, TID, createDeferrable } from '@atproto/common'
+import {
+  DAY,
+  HOUR,
+  MINUTE,
+  SECOND,
+  TID,
+  createDeferrable,
+} from '@atproto/common'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
 import { type SpaceRefString, currentDatetimeString } from '@atproto/lex'
 import { LtHash } from '@atproto/space'
+import { SpaceRef } from '@atproto/syntax'
 import { XRPCError } from '@atproto/xrpc-server'
 import type { AccountDb } from '../../src/account-manager/db/index.js'
+import { fromJson, toJson } from '../../src/db/index.js'
 import { com } from '../../src/lexicons/index.js'
 import { SpaceNotifications } from '../../src/space-notifications.js'
 import { type Actor, MockService, SpaceClient } from '../_space.js'
@@ -46,7 +55,7 @@ describe('space notification retries', () => {
     error = undefined
     host.calls.length = 0
     await db.db.deleteFrom('space_notification_retry').execute()
-    await db.db.deleteFrom('space_deleted_notification_retry').execute()
+    await db.db.deleteFrom('space_syncer_notification_retry').execute()
     await db.db
       .updateTable('space_notification_lease')
       .set({ owner: '', expiresAt: 0 })
@@ -69,9 +78,15 @@ describe('space notification retries', () => {
 
   it('sends immediately without queueing a successful notification', async () => {
     const commit = makeCommit()
-    await notifications.notify(space, writer.did, commit)
-    expect(host.callsTo(com.atproto.space.notifyWrite.$lxm)).toHaveLength(1)
-    expect(host.calls[0].body).toMatchObject({ repoRev: commit.rev })
+    await notifications.notify(SpaceRef.parse(space), writer.did, commit)
+    expect(host.callsTo(com.atproto.space.notifyRepoUpdate.$lxm)).toHaveLength(
+      1,
+    )
+    expect(host.calls[0].body).toMatchObject({
+      space,
+      repo: writer.did,
+      repoRev: commit.rev,
+    })
     expect(
       await db.db.selectFrom('space_notification_retry').selectAll().execute(),
     ).toEqual([])
@@ -80,11 +95,11 @@ describe('space notification retries', () => {
   it('clears an older queued notification when a new write succeeds immediately', async () => {
     status = 503
     const older = makeCommit()
-    await notifications.notify(space, writer.did, older)
+    await notifications.notify(SpaceRef.parse(space), writer.did, older)
     expect((await pending()).repoRev).toBe(older.rev)
 
     status = 200
-    await notifications.notify(space, writer.did, makeCommit())
+    await notifications.notify(SpaceRef.parse(space), writer.did, makeCommit())
     expect(host.calls).toHaveLength(2)
     expect(
       await db.db.selectFrom('space_notification_retry').selectAll().execute(),
@@ -97,7 +112,7 @@ describe('space notification retries', () => {
       status = code
       const commit = makeCommit()
       const before = Date.now()
-      await notifications.notify(space, writer.did, commit)
+      await notifications.notify(SpaceRef.parse(space), writer.did, commit)
       const retry = await pending()
       expect(retry).toMatchObject({
         space,
@@ -117,7 +132,7 @@ describe('space notification retries', () => {
   it('uses the HTTP status even when the XRPC error name suggests a rejection', async () => {
     status = 503
     error = 'Forbidden'
-    await notifications.notify(space, writer.did, makeCommit())
+    await notifications.notify(SpaceRef.parse(space), writer.did, makeCommit())
     expect((await pending()).attempts).toBe(1)
     await makeDue()
     await notifications.retryPending()
@@ -129,7 +144,11 @@ describe('space notification retries', () => {
     async (code) => {
       status = code
       error = 'CustomRejection'
-      await notifications.notify(space, writer.did, makeCommit())
+      await notifications.notify(
+        SpaceRef.parse(space),
+        writer.did,
+        makeCommit(),
+      )
       expect(
         await db.db
           .selectFrom('space_notification_retry')
@@ -138,7 +157,11 @@ describe('space notification retries', () => {
       ).toEqual([])
 
       status = 503
-      await notifications.notify(space, writer.did, makeCommit())
+      await notifications.notify(
+        SpaceRef.parse(space),
+        writer.did,
+        makeCommit(),
+      )
       expect((await pending()).attempts).toBe(1)
       await makeDue()
       status = code
@@ -157,7 +180,11 @@ describe('space notification retries', () => {
     using _read = jest
       .spyOn(network.pds.ctx.actorStore, 'read')
       .mockRejectedValue(new XRPCError(code, 'temporary failure', 'Forbidden'))
-    await notifications.notify(localSpace, writer.did, makeCommit())
+    await notifications.notify(
+      SpaceRef.parse(localSpace),
+      writer.did,
+      makeCommit(),
+    )
     expect((await pending()).attempts).toBe(1)
     await makeDue()
     await notifications.retryPending()
@@ -172,7 +199,11 @@ describe('space notification retries', () => {
     it('does not queue a rejected notification', async () => {
       status = code
       error = reason
-      await notifications.notify(space, writer.did, makeCommit())
+      await notifications.notify(
+        SpaceRef.parse(space),
+        writer.did,
+        makeCommit(),
+      )
       expect(host.calls).toHaveLength(1)
       expect(
         await db.db
@@ -186,12 +217,20 @@ describe('space notification retries', () => {
       'clears queued work when %s is rejected',
       async (attempt) => {
         status = 503
-        await notifications.notify(space, writer.did, makeCommit())
+        await notifications.notify(
+          SpaceRef.parse(space),
+          writer.did,
+          makeCommit(),
+        )
         await makeDue()
         status = code
         error = reason
         if (attempt === 'notify') {
-          await notifications.notify(space, writer.did, makeCommit())
+          await notifications.notify(
+            SpaceRef.parse(space),
+            writer.did,
+            makeCommit(),
+          )
         } else {
           await notifications.retryPending()
         }
@@ -212,7 +251,11 @@ describe('space notification retries', () => {
         reason === 'Forbidden'
           ? localSpace
           : (`${localSpace}-missing` as SpaceRefString)
-      await notifications.notify(target, outsider.did, makeCommit())
+      await notifications.notify(
+        SpaceRef.parse(target),
+        outsider.did,
+        makeCommit(),
+      )
       expect(
         await db.db
           .selectFrom('space_notification_retry')
@@ -224,7 +267,11 @@ describe('space notification retries', () => {
         using _read = jest
           .spyOn(network.pds.ctx.actorStore, 'read')
           .mockRejectedValueOnce(new Error('database unavailable'))
-        await notifications.notify(target, outsider.did, makeCommit())
+        await notifications.notify(
+          SpaceRef.parse(target),
+          outsider.did,
+          makeCommit(),
+        )
       }
       expect(await pending()).toMatchObject({
         space: target,
@@ -248,7 +295,7 @@ describe('space notification retries', () => {
       .spyOn(network.pds.ctx.idResolver.did, 'resolve')
       .mockRejectedValue(new Error('resolver unavailable'))
     const commit = makeCommit()
-    await notifications.notify(space, writer.did, commit)
+    await notifications.notify(SpaceRef.parse(space), writer.did, commit)
     expect(resolve).toHaveBeenCalled()
     expect(host.calls).toHaveLength(0)
     expect((await pending()).repoRev).toBe(commit.rev)
@@ -260,7 +307,7 @@ describe('space notification retries', () => {
       .spyOn(db, 'executeWithRetry')
       .mockRejectedValueOnce(new Error('database unavailable'))
     await expect(
-      notifications.notify(space, writer.did, makeCommit()),
+      notifications.notify(SpaceRef.parse(space), writer.did, makeCommit()),
     ).rejects.toThrow('database unavailable')
     expect(host.calls).toHaveLength(1)
   })
@@ -270,7 +317,7 @@ describe('space notification retries', () => {
     const older = makeCommit()
     const newer = makeCommit()
     newer.setHash[0] = 1
-    await notifications.notify(space, writer.did, older)
+    await notifications.notify(SpaceRef.parse(space), writer.did, older)
     const retryAt = Date.now() + HOUR
     const expiresAt = Date.now() + DAY / 2
     await db.db
@@ -278,7 +325,7 @@ describe('space notification retries', () => {
       .set({ attempts: 5, retryAt, expiresAt })
       .execute()
     const before = Date.now()
-    await notifications.notify(space, writer.did, newer)
+    await notifications.notify(SpaceRef.parse(space), writer.did, newer)
     const retry = await pending()
     expect(retry).toMatchObject({
       repoRev: newer.rev,
@@ -291,8 +338,8 @@ describe('space notification retries', () => {
     expect(new Uint8Array(retry.data)).toEqual(
       new LtHash(newer.setHash).digest(),
     )
-    await notifications.notify(space, writer.did, older)
-    await notifications.notify(space, writer.did, newer)
+    await notifications.notify(SpaceRef.parse(space), writer.did, older)
+    await notifications.notify(SpaceRef.parse(space), writer.did, newer)
     expect(await pending()).toEqual(retry)
   })
 
@@ -316,17 +363,21 @@ describe('space notification retries', () => {
         })
       const older = makeCommit()
       const newer = makeCommit()
-      const inFlight = notifications.notify(space, writer.did, older)
+      const inFlight = notifications.notify(
+        SpaceRef.parse(space),
+        writer.did,
+        older,
+      )
       try {
         await started.complete
         status = 503
-        await notifications.notify(space, writer.did, newer)
+        await notifications.notify(SpaceRef.parse(space), writer.did, newer)
         status = code
         error = reason
         resume.resolve()
         await inFlight
         expect((await pending()).repoRev).toBe(newer.rev)
-        await notifications.notify(space, writer.did, newer)
+        await notifications.notify(SpaceRef.parse(space), writer.did, newer)
         expect(
           await db.db
             .selectFrom('space_notification_retry')
@@ -342,7 +393,7 @@ describe('space notification retries', () => {
 
   it('backs off failed retries, caps the delay, and only reads due work', async () => {
     status = 503
-    await notifications.notify(space, writer.did, makeCommit())
+    await notifications.notify(SpaceRef.parse(space), writer.did, makeCommit())
     await notifications.retryPending()
     expect(host.calls).toHaveLength(1)
 
@@ -386,7 +437,11 @@ describe('space notification retries', () => {
     async ({ code, reason }) => {
       using _now = jest.spyOn(Date, 'now').mockReturnValue(Date.now())
       status = 503
-      await notifications.notify(space, writer.did, makeCommit())
+      await notifications.notify(
+        SpaceRef.parse(space),
+        writer.did,
+        makeCommit(),
+      )
       await makeDue()
       const resolver = network.pds.ctx.idResolver.did
       const resolve = resolver.resolve.bind(resolver)
@@ -403,7 +458,7 @@ describe('space notification retries', () => {
       try {
         await started.complete
         const newer = makeCommit()
-        await notifications.notify(space, writer.did, newer)
+        await notifications.notify(SpaceRef.parse(space), writer.did, newer)
         const freshRetry = await pending()
         expect(freshRetry).toMatchObject({ repoRev: newer.rev, attempts: 1 })
         status = code
@@ -421,7 +476,7 @@ describe('space notification retries', () => {
 
   it('stops at the deadline and allows a later write to start a new retry window', async () => {
     status = 503
-    await notifications.notify(space, writer.did, makeCommit())
+    await notifications.notify(SpaceRef.parse(space), writer.did, makeCommit())
     const expiresAt = Date.now() + MINUTE / 2
     await db.db
       .updateTable('space_notification_retry')
@@ -445,7 +500,7 @@ describe('space notification retries', () => {
 
     const newer = makeCommit()
     const before = Date.now()
-    await notifications.notify(space, writer.did, newer)
+    await notifications.notify(SpaceRef.parse(space), writer.did, newer)
     const retry = await pending()
     expect(retry).toMatchObject({ repoRev: newer.rev, attempts: 1 })
     expect(retry.expiresAt).toBeGreaterThanOrEqual(before + DAY)
@@ -462,7 +517,7 @@ describe('space notification retries', () => {
       .executeTakeFirstOrThrow()
 
     status = 503
-    await notifications.notify(space, writer.did, makeCommit())
+    await notifications.notify(SpaceRef.parse(space), writer.did, makeCommit())
     await makeDue()
     status = 200
     await second.retryPending()
@@ -501,7 +556,7 @@ describe('space notification retries', () => {
 
   it('defers retries for inactive accounts and resumes after activation', async () => {
     status = 503
-    await notifications.notify(space, writer.did, makeCommit())
+    await notifications.notify(SpaceRef.parse(space), writer.did, makeCommit())
     await makeDue()
     await db.db
       .updateTable('actor')
@@ -525,7 +580,9 @@ describe('space notification retries', () => {
     expect(host.calls).toHaveLength(2)
   })
 
-  describe('space deleted', () => {
+  describe('syncer notices', () => {
+    const { spaceDeleted, registrationExpired } =
+      com.atproto.space.notifySpaceUpdate
     let syncer: MockService
     let syncerStatus = 200
     let deletedSpace: SpaceRefString
@@ -533,110 +590,167 @@ describe('space notification retries', () => {
     beforeAll(async () => {
       const sc = new SpaceClient(network)
       deletedSpace = await sc.createSpace(writer, { skey: 'deleted' })
-      await network.pds.ctx.spacePolicyManager.deleteSpace(deletedSpace)
+      await network.pds.ctx.spacePolicyManager.deleteSpace(
+        SpaceRef.parse(deletedSpace),
+      )
       syncer = await MockService.create(network, {
         serviceId: 'atproto_space_syncer',
         respond: () => ({ status: syncerStatus, body: {} }),
       })
     })
 
-    beforeEach(() => {
+    beforeEach(async () => {
       syncerStatus = 200
       syncer.calls.length = 0
+      await network.pds.ctx.actorStore.transact(writer.did, (txn) =>
+        txn.space.removeNotifyRegistration(localSpace, registration()),
+      )
     })
 
     afterAll(async () => {
       await syncer?.close()
     })
 
-    const registration = () => ({
-      serviceDid: syncer.serviceRef,
-      expiresAt: new Date(Date.now() + DAY).toISOString(),
-    })
+    const registration = () => ({ endpoint: syncer.url, token: 'syncer-token' })
 
-    const pendingDeleted = () =>
-      db.db.selectFrom('space_deleted_notification_retry').selectAll().execute()
+    const pendingNotices = () =>
+      db.db.selectFrom('space_syncer_notification_retry').selectAll().execute()
 
-    const makeDeletedDue = () =>
+    const makeNoticesDue = () =>
       db.db
-        .updateTable('space_deleted_notification_retry')
+        .updateTable('space_syncer_notification_retry')
         .set({ retryAt: 0 })
         .execute()
 
-    it('sends immediately without queueing a successful notification', async () => {
-      await notifications.notifySpaceDeleted(deletedSpace, [registration()])
-      const delivered = syncer.callsTo(
-        com.atproto.space.notifySpaceDeleted.$lxm,
+    const notifyDeleted = () =>
+      notifications.notifySyncers(
+        SpaceRef.parse(deletedSpace),
+        [registration()],
+        spaceDeleted.$build({}),
       )
+
+    // Expiry notices go to a lapsed registration in a space that still exists.
+    const lapseRegistration = (expiresAt = Date.now() - MINUTE) =>
+      network.pds.ctx.actorStore.transact(writer.did, (txn) =>
+        txn.space.putNotifyRegistration({
+          space: localSpace,
+          ...registration(),
+          expiresAt: new Date(expiresAt).toISOString(),
+        }),
+      )
+
+    const notifyExpired = () =>
+      notifications.notifySyncers(
+        SpaceRef.parse(localSpace),
+        [registration()],
+        registrationExpired.$build({ spaceRev: TID.nextStr() }),
+      )
+
+    const getRegistration = () =>
+      network.pds.ctx.actorStore.read(writer.did, (store) =>
+        store.space.getNotifyRegistration(localSpace, registration()),
+      )
+
+    it('sends immediately without queueing a successful notification', async () => {
+      await notifyDeleted()
+      const delivered = syncer.callsTo(com.atproto.space.notifySpaceUpdate.$lxm)
       expect(delivered).toHaveLength(1)
-      expect(delivered[0].body).toEqual({ space: deletedSpace })
-      expect(await pendingDeleted()).toEqual([])
+      expect(delivered[0].body).toEqual({
+        space: deletedSpace,
+        token: 'syncer-token',
+        update: spaceDeleted.$build({}),
+      })
+      expect(await pendingNotices()).toEqual([])
     })
 
     it('retries a transient failure until delivered', async () => {
       syncerStatus = 503
-      const recipient = registration()
-      await notifications.notifySpaceDeleted(deletedSpace, [recipient])
-      expect(await pendingDeleted()).toMatchObject([
-        {
-          space: deletedSpace,
-          service: syncer.serviceRef,
-          attempts: 1,
-          expiresAt: Date.parse(recipient.expiresAt),
-        },
-      ])
+      const before = Date.now()
+      await notifyDeleted()
+      const [retry] = await pendingNotices()
+      expect(retry).toMatchObject({
+        space: deletedSpace,
+        endpoint: syncer.url,
+        token: 'syncer-token',
+        attempts: 1,
+      })
+      expect(retry.expiresAt).toBeGreaterThanOrEqual(before + 72 * HOUR)
+      expect(retry.expiresAt).toBeLessThanOrEqual(Date.now() + 72 * HOUR)
 
-      await makeDeletedDue()
+      await makeNoticesDue()
       await notifications.retryPending()
-      expect(await pendingDeleted()).toMatchObject([{ attempts: 2 }])
+      expect(await pendingNotices()).toMatchObject([{ attempts: 2 }])
 
       syncerStatus = 200
-      await makeDeletedDue()
+      await makeNoticesDue()
       await notifications.retryPending()
-      expect(await pendingDeleted()).toEqual([])
+      expect(await pendingNotices()).toEqual([])
       expect(syncer.calls).toHaveLength(3)
+      expect(syncer.calls.at(-1)?.body).toMatchObject({ token: 'syncer-token' })
     })
 
     it('does not retry a permanent failure', async () => {
       syncerStatus = 400
-      await notifications.notifySpaceDeleted(deletedSpace, [registration()])
-      expect(await pendingDeleted()).toEqual([])
+      await notifyDeleted()
+      expect(await pendingNotices()).toEqual([])
       expect(syncer.calls).toHaveLength(1)
     })
 
-    it('stops retrying once the registration expires', async () => {
+    it('backs off from a minute to twelve hours', async () => {
       syncerStatus = 503
-      await notifications.notifySpaceDeleted(deletedSpace, [registration()])
+      await notifyDeleted()
+      for (const delay of [
+        MINUTE,
+        10 * MINUTE,
+        HOUR,
+        6 * HOUR,
+        12 * HOUR,
+        12 * HOUR,
+      ]) {
+        const [retry] = await pendingNotices()
+        const wait = retry.retryAt - Date.now()
+        expect(wait).toBeGreaterThan(delay / 2 - SECOND)
+        expect(wait).toBeLessThanOrEqual(delay)
+        await makeNoticesDue()
+        await notifications.retryPending()
+      }
+    })
+
+    it('stops retrying after a final retry past 72 hours', async () => {
+      syncerStatus = 503
+      await notifyDeleted()
       await db.db
-        .updateTable('space_deleted_notification_retry')
+        .updateTable('space_syncer_notification_retry')
         .set({ retryAt: 0, expiresAt: Date.now() })
         .execute()
       await notifications.retryPending()
-      expect(await pendingDeleted()).toEqual([])
-      expect(syncer.calls).toHaveLength(1)
+      expect(await pendingNotices()).toEqual([])
+      expect(syncer.calls).toHaveLength(2)
     })
 
     it('drops retries once the authority account is gone', async () => {
       await db.db
-        .insertInto('space_deleted_notification_retry')
+        .insertInto('space_syncer_notification_retry')
         .values({
           space:
             'at://did:plc:aaaaaaaaaaaaaaaaaaaaaaaa/space/com.example.group/gone' as SpaceRefString,
-          service: syncer.serviceRef,
+          endpoint: syncer.url,
+          token: 'syncer-token',
+          noticeJson: toJson(spaceDeleted.$build({})),
           attempts: 1,
           retryAt: 0,
           expiresAt: Date.now() + DAY,
         })
         .execute()
       await notifications.retryPending()
-      expect(await pendingDeleted()).toEqual([])
+      expect(await pendingNotices()).toEqual([])
       expect(syncer.calls).toHaveLength(0)
     })
 
     it('defers retries while the authority is inactive', async () => {
       syncerStatus = 503
-      await notifications.notifySpaceDeleted(deletedSpace, [registration()])
-      await makeDeletedDue()
+      await notifyDeleted()
+      await makeNoticesDue()
       await db.db
         .updateTable('actor')
         .set({ deactivatedAt: currentDatetimeString() })
@@ -646,7 +760,7 @@ describe('space notification retries', () => {
         syncerStatus = 200
         await notifications.retryPending()
         expect(syncer.calls).toHaveLength(1)
-        expect(await pendingDeleted()).toMatchObject([{ attempts: 2 }])
+        expect(await pendingNotices()).toMatchObject([{ attempts: 2 }])
       } finally {
         await db.db
           .updateTable('actor')
@@ -654,40 +768,40 @@ describe('space notification retries', () => {
           .where('did', '=', writer.did)
           .execute()
       }
-      await makeDeletedDue()
+      await makeNoticesDue()
       await notifications.retryPending()
       expect(syncer.calls).toHaveLength(2)
-      expect(await pendingDeleted()).toEqual([])
+      expect(await pendingNotices()).toEqual([])
     })
 
-    it('drops retries once the space is recreated', async () => {
+    it('drops a deletion notice once the space is recreated', async () => {
       syncerStatus = 503
-      await notifications.notifySpaceDeleted(deletedSpace, [registration()])
-      await makeDeletedDue()
+      await notifyDeleted()
+      await makeNoticesDue()
       const ctx = network.pds.ctx
       await ctx.actorStore.transact(writer.did, (txn) =>
-        txn.space.ensureSpace(deletedSpace),
+        txn.space.ensureSpace(SpaceRef.parse(deletedSpace)),
       )
       try {
         syncerStatus = 200
         await notifications.retryPending()
         expect(syncer.calls).toHaveLength(1)
-        expect(await pendingDeleted()).toEqual([])
+        expect(await pendingNotices()).toEqual([])
       } finally {
-        await ctx.spacePolicyManager.deleteSpace(deletedSpace)
+        await ctx.spacePolicyManager.deleteSpace(SpaceRef.parse(deletedSpace))
       }
     })
 
-    it('keeps a newer deletion retry when an older delivery finishes', async () => {
+    it('keeps a newer retry when an older delivery finishes', async () => {
       syncerStatus = 503
-      await notifications.notifySpaceDeleted(deletedSpace, [registration()])
-      await makeDeletedDue()
+      await notifyDeleted()
+      await makeNoticesDue()
 
       const delivered = createDeferrable()
       const resume = createDeferrable()
-      const deliver = notifications['deliverSpaceDeleted'].bind(notifications)
+      const deliver = notifications['deliverSyncerNotice'].bind(notifications)
       const spy = jest
-        .spyOn(notifications as any, 'deliverSpaceDeleted')
+        .spyOn(notifications as any, 'deliverSyncerNotice')
         .mockImplementationOnce(async (...args: any[]) => {
           await deliver(args[0], args[1])
           delivered.resolve()
@@ -698,17 +812,68 @@ describe('space notification retries', () => {
       try {
         await delivered.complete
         syncerStatus = 503
-        await notifications.notifySpaceDeleted(deletedSpace, [registration()])
-        const requeued = await pendingDeleted()
+        await notifyDeleted()
+        const requeued = await pendingNotices()
         expect(requeued).toHaveLength(1)
         resume.resolve()
         await inFlight
-        expect(await pendingDeleted()).toEqual(requeued)
+        expect(await pendingNotices()).toEqual(requeued)
       } finally {
         resume.resolve()
         await inFlight
         spy.mockRestore()
       }
+    })
+
+    it('drops a lapsed registration that rejects its expiry notice', async () => {
+      await lapseRegistration()
+      syncerStatus = 400
+      await notifyExpired()
+      expect(await pendingNotices()).toEqual([])
+      expect(await getRegistration()).toBeNull()
+    })
+
+    it('drops a lapsed registration once its expiry notice stops being retried', async () => {
+      await lapseRegistration()
+      syncerStatus = 503
+      await notifyExpired()
+      expect(await getRegistration()).not.toBeNull()
+      await db.db
+        .updateTable('space_syncer_notification_retry')
+        .set({ retryAt: 0, expiresAt: Date.now() })
+        .execute()
+      await notifications.retryPending()
+      expect(await pendingNotices()).toEqual([])
+      expect(await getRegistration()).toBeNull()
+    })
+
+    it('drops an expiry notice once the registration is renewed', async () => {
+      await lapseRegistration()
+      syncerStatus = 503
+      await notifyExpired()
+      await lapseRegistration(Date.now() + HOUR)
+      await makeNoticesDue()
+
+      syncerStatus = 200
+      await notifications.retryPending()
+      expect(syncer.calls).toHaveLength(1)
+      expect(await pendingNotices()).toEqual([])
+      expect(await getRegistration()).not.toBeNull()
+    })
+
+    it('lets a deletion notice supersede a pending expiry notice, but not the reverse', async () => {
+      await lapseRegistration()
+      syncerStatus = 503
+      const ref = SpaceRef.parse(localSpace)
+      await notifyExpired()
+      await notifications.notifySyncers(
+        ref,
+        [registration()],
+        spaceDeleted.$build({}),
+      )
+      await notifyExpired()
+      const [retry] = await pendingNotices()
+      expect(fromJson(retry.noticeJson)).toEqual(spaceDeleted.$build({}))
     })
   })
 })

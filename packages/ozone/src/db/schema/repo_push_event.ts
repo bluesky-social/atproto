@@ -1,5 +1,5 @@
 import type { Generated } from 'kysely'
-import type { DidString } from '@atproto/lex'
+import type { DidString } from '@atproto/lex-schema'
 
 export const eventTableName = 'repo_push_event'
 

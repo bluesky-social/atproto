@@ -1,5 +1,125 @@
 # @atproto/lex-resolver
 
+## 0.4.5
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/repo@0.11.5
+
+## 0.4.4
+
+### Patch Changes
+
+- Updated dependencies [[`8c841f6`](https://github.com/bluesky-social/atproto/commit/8c841f6e73c8365c2dfe816c0613aa9c50490361), [`8c841f6`](https://github.com/bluesky-social/atproto/commit/8c841f6e73c8365c2dfe816c0613aa9c50490361), [`8c841f6`](https://github.com/bluesky-social/atproto/commit/8c841f6e73c8365c2dfe816c0613aa9c50490361), [`8c841f6`](https://github.com/bluesky-social/atproto/commit/8c841f6e73c8365c2dfe816c0613aa9c50490361)]:
+  - @atproto/lex-data@0.1.10
+  - @atproto/lex-schema@0.2.11
+  - @atproto/lex-document@0.1.16
+  - @atproto/lex-rpc@0.0.3
+  - @atproto/repo@0.11.4
+
+## 0.4.3
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto-labs/did-resolver@0.3.13
+
+## 0.4.2
+
+### Patch Changes
+
+- Updated dependencies [[`07c25d4`](https://github.com/bluesky-social/atproto/commit/07c25d410d4f4ad8f6ec80fc14efa0dd8ec55545), [`07c25d4`](https://github.com/bluesky-social/atproto/commit/07c25d410d4f4ad8f6ec80fc14efa0dd8ec55545), [`07c25d4`](https://github.com/bluesky-social/atproto/commit/07c25d410d4f4ad8f6ec80fc14efa0dd8ec55545)]:
+  - @atproto/lex-document@0.1.15
+  - @atproto/lex-data@0.1.9
+  - @atproto/lex-schema@0.2.10
+  - @atproto-labs/did-resolver@0.3.12
+  - @atproto/lex-rpc@0.0.2
+  - @atproto/repo@0.11.3
+
+## 0.4.1
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/repo@0.11.2
+
+## 0.4.0
+
+### Minor Changes
+
+- [#5591](https://github.com/bluesky-social/atproto/pull/5591) [`f98b78a`](https://github.com/bluesky-social/atproto/commit/f98b78adbc8963e49823117b007422211f6d3ff2) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove static `from` method from the `LexResolverError` class.
+
+- [#5591](https://github.com/bluesky-social/atproto/pull/5591) [`f98b78a`](https://github.com/bluesky-social/atproto/commit/f98b78adbc8963e49823117b007422211f6d3ff2) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Refactor around a new, lower-level, `@atproto/lex-rpc` package for making XRPC requests. `@atproto/lex-client` re-exports everything from `@atproto/lex-rpc`, allowing it to stay backwards compatible, and contains logic related to making XRPC requests in the context of manipulating an AT Protocol repository with an authenticated session. This refactor also allows `@atproto/lex-client` to depend on `@atproto/lex-installer`, while also allowing `@atproto/lex-installer` to make XRPC requests (using the lower level `@atproto/lex-rpc`).
+
+### Patch Changes
+
+- [#5591](https://github.com/bluesky-social/atproto/pull/5591) [`f98b78a`](https://github.com/bluesky-social/atproto/commit/f98b78adbc8963e49823117b007422211f6d3ff2) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Build lexicon schemas using the `lex-builder` cli instead of a custom script
+
+- [#5591](https://github.com/bluesky-social/atproto/pull/5591) [`f98b78a`](https://github.com/bluesky-social/atproto/commit/f98b78adbc8963e49823117b007422211f6d3ff2) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Use `com.atproto.lexicon.schema` generated schema to build and validate lexicon schema records
+- Updated dependencies [[`f98b78a`](https://github.com/bluesky-social/atproto/commit/f98b78adbc8963e49823117b007422211f6d3ff2), [`f98b78a`](https://github.com/bluesky-social/atproto/commit/f98b78adbc8963e49823117b007422211f6d3ff2), [`f98b78a`](https://github.com/bluesky-social/atproto/commit/f98b78adbc8963e49823117b007422211f6d3ff2)]:
+  - @atproto/lex-schema@0.2.9
+  - @atproto/lex-rpc@0.0.1
+  - @atproto/syntax@0.7.7
+  - @atproto-labs/did-resolver@0.3.11
+  - @atproto/lex-document@0.1.14
+  - @atproto/repo@0.11.1
+
+## 0.3.2
+
+### Patch Changes
+
+- Updated dependencies [[`13b7cb0`](https://github.com/bluesky-social/atproto/commit/13b7cb000d7358a570be46854a93e441c8fa791e), [`f8ed258`](https://github.com/bluesky-social/atproto/commit/f8ed25853dc91a16639decfaee2e0dcbb60808cd), [`e8b89ff`](https://github.com/bluesky-social/atproto/commit/e8b89ff4c211a10519b54bd83eb64950035942c3), [`a6561d5`](https://github.com/bluesky-social/atproto/commit/a6561d54227756876a0901e4a87675df17972d32)]:
+  - @atproto/repo@0.11.0
+  - @atproto/crypto@0.5.7
+  - @atproto/lex-data@0.1.8
+  - @atproto/lex-client@0.3.7
+  - @atproto/lex-document@0.1.13
+  - @atproto/lex-schema@0.2.8
+
+## 0.3.1
+
+### Patch Changes
+
+- Updated dependencies [[`5019f55`](https://github.com/bluesky-social/atproto/commit/5019f5537317ee75ad4527db212bc27c3085fe67)]:
+  - @atproto/crypto@0.5.6
+  - @atproto/repo@0.10.15
+  - @atproto-labs/did-resolver@0.3.10
+
+## 0.3.0
+
+### Minor Changes
+
+- [#5499](https://github.com/bluesky-social/atproto/pull/5499) [`210907c`](https://github.com/bluesky-social/atproto/commit/210907c801d281c6b83c92bf94c888b2dc3d531f) Thanks [@fatfingers23](https://github.com/fatfingers23)! - Always trigger the on<Name>Result and on<Name>Error hooks, even when values are resolved from hooks.
+
+- [#5499](https://github.com/bluesky-social/atproto/pull/5499) [`210907c`](https://github.com/bluesky-social/atproto/commit/210907c801d281c6b83c92bf94c888b2dc3d531f) Thanks [@fatfingers23](https://github.com/fatfingers23)! - Perform lexicon document validation after `onFetch`, allowing it not to perform any validation
+
+- [#5499](https://github.com/bluesky-social/atproto/pull/5499) [`210907c`](https://github.com/bluesky-social/atproto/commit/210907c801d281c6b83c92bf94c888b2dc3d531f) Thanks [@fatfingers23](https://github.com/fatfingers23)! - Avoid encoding/decoding of lexicon URIs
+
+### Patch Changes
+
+- [#5499](https://github.com/bluesky-social/atproto/pull/5499) [`210907c`](https://github.com/bluesky-social/atproto/commit/210907c801d281c6b83c92bf94c888b2dc3d531f) Thanks [@fatfingers23](https://github.com/fatfingers23)! - Propagate abort `signal` to `onFetch` hook
+- Updated dependencies [[`210907c`](https://github.com/bluesky-social/atproto/commit/210907c801d281c6b83c92bf94c888b2dc3d531f)]:
+  - @atproto/lex-document@0.1.12
+
+## 0.2.13
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto-labs/did-resolver@0.3.9
+
+## 0.2.12
+
+### Patch Changes
+
+- [#5447](https://github.com/bluesky-social/atproto/pull/5447) [`7a23156`](https://github.com/bluesky-social/atproto/commit/7a23156efa16433b83f90fd35e155c68b3a0253a) Thanks [@mozzius](https://github.com/mozzius)! - Support runtimes without `URL.canParse` when validating PDS service endpoints.
+
+- Updated dependencies [[`fe4087e`](https://github.com/bluesky-social/atproto/commit/fe4087ecb7a7cc53c7081c9f97d49121e5251c36)]:
+  - @atproto/crypto@0.5.5
+  - @atproto/repo@0.10.14
+  - @atproto-labs/did-resolver@0.3.8
+
 ## 0.2.11
 
 ### Patch Changes

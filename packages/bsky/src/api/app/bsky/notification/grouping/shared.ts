@@ -1,0 +1,61 @@
+import { NotificationFeed } from '../../../../../proto/bsky_pb.js'
+import {
+  APPVIEW_NOTIFICATION_REASON,
+  type AppviewNotificationReason,
+  type DataplaneNotificationReason,
+  NOTIFICATION_REASON,
+} from '../constants.js'
+import type { NotificationGroup } from './grouping.js'
+
+const DEFAULT_MAX_GROUP_SIZE = 100
+
+// @NOTE These kinds must not exceed a certain number of items: the frontend puts all item URIs
+// in a URL query string, and larger groups make the URL too long and break navigation.
+const MAX_GROUP_SIZE_OVERRIDES: Partial<
+  Record<AppviewNotificationReason, number>
+> = {
+  [NOTIFICATION_REASON.SUBSCRIBED_POST]: 150,
+  [APPVIEW_NOTIFICATION_REASON.MULTI_POST_LIKE]: 150,
+  [APPVIEW_NOTIFICATION_REASON.MULTI_POST_REPOST]: 150,
+  [APPVIEW_NOTIFICATION_REASON.MULTI_POST_LIKE_VIA_REPOST]: 150,
+  [APPVIEW_NOTIFICATION_REASON.MULTI_POST_REPOST_VIA_REPOST]: 150,
+}
+
+export function getMaxGroupSize(kind: AppviewNotificationReason): number {
+  return Math.min(
+    DEFAULT_MAX_GROUP_SIZE,
+    MAX_GROUP_SIZE_OVERRIDES[kind] ?? DEFAULT_MAX_GROUP_SIZE,
+  )
+}
+
+// Notification timestamps never collide; no tie-breaker is needed.
+export const compareNotificationGroupsNewestFirst = (
+  left: NotificationGroup,
+  right: NotificationGroup,
+): number => Date.parse(right.indexedAt) - Date.parse(left.indexedAt)
+
+const GROUPABLE_KINDS = new Set<DataplaneNotificationReason>([
+  NOTIFICATION_REASON.FOLLOW,
+  NOTIFICATION_REASON.LIKE,
+  NOTIFICATION_REASON.LIKE_VIA_REPOST,
+  NOTIFICATION_REASON.REPOST,
+  NOTIFICATION_REASON.REPOST_VIA_REPOST,
+  NOTIFICATION_REASON.SUBSCRIBED_POST,
+])
+
+export const canGroupNotification = (
+  kind: DataplaneNotificationReason,
+  feed: NotificationFeed,
+): boolean =>
+  GROUPABLE_KINDS.has(kind) &&
+  !(
+    (kind === NOTIFICATION_REASON.FOLLOW &&
+      feed === NotificationFeed.FOLLOWERS) ||
+    (kind === NOTIFICATION_REASON.SUBSCRIBED_POST &&
+      feed === NotificationFeed.ACTIVITY)
+  )
+
+export const isNotificationRead = (
+  indexedAt: string,
+  seenAt: number | undefined,
+) => seenAt !== undefined && Date.parse(indexedAt) < seenAt

@@ -34,6 +34,7 @@ export default function (server: Server, ctx: AppContext) {
         ctx.authVerifier.parseCreds(auth)
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({
+        xrpcEndpoint: app.bsky.actor.getProfiles.$lxm,
         viewer,
         labelers,
         includeTakedowns,
@@ -71,7 +72,11 @@ const hydration = async (input: {
   skeleton: SkeletonState
 }) => {
   const { ctx, params, skeleton } = input
-  return ctx.hydrator.hydrateProfilesDetailed(skeleton.dids, params.hydrateCtx)
+  return ctx.hydrator.hydrateProfilesDetailed(
+    skeleton.dids,
+    params.hydrateCtx,
+    { knownFollowersDids: skeleton.dids, activitySubscriptions: true },
+  )
 }
 
 const presentation = (input: {

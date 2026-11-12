@@ -6,7 +6,7 @@ import type * as recordBlob from './record-blob.js'
 import type * as record from './record.js'
 import type * as repoBlock from './repo-block.js'
 import type * as repoRoot from './repo-root.js'
-import type * as spaceCredentialRecipient from './space-credential-recipient.js'
+import type * as spaceNotifyRegistration from './space-notify-registration.js'
 import type * as spacePolicy from './space-policy.js'
 import type * as spaceRecordBlob from './space-record-blob.js'
 import type * as spaceRecordOplog from './space-record-oplog.js'
@@ -30,7 +30,7 @@ export type DatabaseSchema = accountPref.PartialDB &
   spaceRepo.PartialDB &
   spaceRecordOplog.PartialDB &
   spaceWriter.PartialDB &
-  spaceCredentialRecipient.PartialDB
+  spaceNotifyRegistration.PartialDB
 
 export type { AccountPref } from './account-pref.js'
 export type { RepoRoot } from './repo-root.js'
@@ -47,4 +47,4 @@ export type { SpaceRecordBlob } from './space-record-blob.js'
 export type { SpaceRepo } from './space-repo.js'
 export type { SpaceRecordOplog } from './space-record-oplog.js'
 export type { SpaceWriter } from './space-writer.js'
-export type { SpaceCredentialRecipient } from './space-credential-recipient.js'
+export type { SpaceNotifyRegistration } from './space-notify-registration.js'

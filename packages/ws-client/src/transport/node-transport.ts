@@ -1,6 +1,11 @@
 import { WebSocket } from 'ws'
+import { CloseCode } from '../lib/close-codes.js'
 import {
+  CloseError,
+  HandshakeRejectedError,
+  HandshakeTimeoutError,
   HeartbeatTimeoutError,
+  MessageTooBigError,
   SocketError,
   WebSocketClientError,
 } from '../lib/errors.js'
@@ -26,6 +31,34 @@ export const HEADERS_SUPPORTED = true
 // the socket is destroyed and 'close' fires anyway. Enforced by `ws` itself via
 // its `closeTimeout` option.
 const CLOSE_TIMEOUT_MS = 1_000
+
+// `ws`'s default `maxPayload`, which a `MessageTooBigError` reports when the
+// caller set none.
+const DEFAULT_MAX_PAYLOAD = 100 * 1024 * 1024
+
+// The close codes `ws` sends (RFC 6455 §7.4.1, and the private-use range). It
+// throws on any other, but only after moving the socket to CLOSING, which would
+// leave it wedged.
+function isSendableCloseCode(code: number): boolean {
+  return (
+    (code >= 1000 &&
+      code <= 1014 &&
+      code !== 1004 && // Reserved by RFC 6455
+      code !== CloseCode.NoStatus &&
+      code !== CloseCode.Abnormal) ||
+    (code >= 3000 && code <= 4999)
+  )
+}
+
+// 1006 is never sent on the wire, so it asks for the socket to be dropped
+// without a closing handshake. Any other code `ws` can't send closes with 1000.
+function closeSocket(ws: WebSocket, code: number, reason?: string): void {
+  if (code === CloseCode.Abnormal) {
+    ws.terminate()
+  } else {
+    ws.close(isSendableCloseCode(code) ? code : CloseCode.Normal, reason)
+  }
+}
 
 /**
  * Node transport, built on `ws`. Created already connecting; torn down by
@@ -84,11 +117,16 @@ function createTransportImpl<M extends DataMode>(
   // (its default is 30s — far too long for a shutdown path to wait). The option
   // is typed via the intersection because @types/ws lags ws 8.19, which
   // introduced it.
+  //
+  // `maxPayload` is only set when given: `ws` reads an explicit `undefined` as
+  // 0, which means unlimited. `lookup` reaches `net.connect()` through `ws`.
   const wsopts = {
     headers: options.headers
       ? Object.fromEntries(new Headers(options.headers))
       : undefined,
     closeTimeout: CLOSE_TIMEOUT_MS, // supported by our version of ws, but not in @types/ws yet
+    ...(options.maxPayload !== undefined && { maxPayload: options.maxPayload }),
+    ...(options.lookup && { lookup: options.lookup }),
   }
   const ws = new WebSocket(options.url, options.protocols, wsopts)
 
@@ -135,8 +173,19 @@ function createTransportImpl<M extends DataMode>(
   // an uncaught exception rather than a rejection — so a connect slower than the
   // interval would take the whole process down. That means a hung *connect* is
   // not covered by the heartbeat, only a hung established connection.
+  //
+  // A `timeoutMs` shorter than the interval adds a deadline per ping, so a dead
+  // connection is detected `timeoutMs` after a ping rather than at the next tick.
   let heartbeatAlive = true
   let heartbeatTimer: ReturnType<typeof setInterval> | undefined
+  let pongTimer: ReturnType<typeof setTimeout> | undefined
+
+  function heartbeatTimeout(): void {
+    // Recorded and applied from 'close', like every other failure; terminate
+    // fires that event promptly since it skips the close handshake.
+    endWith(new HeartbeatTimeoutError())
+    ws.terminate()
+  }
 
   function startHeartbeat(): void {
     const { heartbeat } = options
@@ -145,6 +194,7 @@ function createTransportImpl<M extends DataMode>(
     // WebSocketKeepAlive had, and which its consumers relied on.
     if (heartbeat === false) return
     const intervalMs = heartbeat?.intervalMs ?? DEFAULT_HEARTBEAT_INTERVAL_MS
+    const timeoutMs = heartbeat?.timeoutMs ?? intervalMs
     heartbeatAlive = true
     heartbeatTimer = setInterval(() => {
       if (paused) {
@@ -152,14 +202,17 @@ function createTransportImpl<M extends DataMode>(
         return
       }
       if (!heartbeatAlive) {
-        // Recorded and applied from 'close', like every other failure; terminate
-        // fires that event promptly since it skips the close handshake.
-        endWith(new HeartbeatTimeoutError())
-        ws.terminate()
+        heartbeatTimeout()
         return
       }
       heartbeatAlive = false
       ws.ping()
+      if (timeoutMs < intervalMs) {
+        pongTimer = setTimeout(() => {
+          pongTimer = undefined
+          if (!heartbeatAlive && !paused) heartbeatTimeout()
+        }, timeoutMs)
+      }
     }, intervalMs)
   }
 
@@ -167,6 +220,27 @@ function createTransportImpl<M extends DataMode>(
     if (heartbeatTimer !== undefined) {
       clearInterval(heartbeatTimer)
       heartbeatTimer = undefined
+    }
+    if (pongTimer !== undefined) {
+      clearTimeout(pongTimer)
+      pongTimer = undefined
+    }
+  }
+
+  // Bounds the dial, which the heartbeat (armed on open) does not cover.
+  let handshakeTimer: ReturnType<typeof setTimeout> | undefined =
+    options.handshakeTimeoutMs === undefined
+      ? undefined
+      : setTimeout(() => {
+          handshakeTimer = undefined
+          endWith(new HandshakeTimeoutError())
+          ws.terminate()
+        }, options.handshakeTimeoutMs)
+
+  function clearHandshakeTimer(): void {
+    if (handshakeTimer !== undefined) {
+      clearTimeout(handshakeTimer)
+      handshakeTimer = undefined
     }
   }
 
@@ -183,12 +257,40 @@ function createTransportImpl<M extends DataMode>(
         ws.send(data, (err) => (err ? reject(new SocketError(err)) : resolve()))
       })
     },
+    close(code, reason) {
+      if (!open) return
+      // Checked up front, since `ws` only throws once the socket is CLOSING.
+      if (reason && Buffer.byteLength(reason) > 123) {
+        throw new RangeError('The close reason must not exceed 123 bytes')
+      }
+      open = false
+      clearHeartbeat()
+      endWith(new CloseError(code, reason ?? '', false))
+      closeSocket(ws, code, reason)
+    },
+    get protocol() {
+      return ws.protocol
+    },
   }
 
   ws.on('open', () => {
     open = true
+    clearHandshakeTimer()
     startHeartbeat()
     options.onOpen(sender)
+  })
+
+  // A refused upgrade. With a listener, `ws` leaves the dial for us to end
+  // instead of failing it with an `Unexpected server response: <status>` error
+  // that carries the status only in its message.
+  ws.on('unexpected-response', (_req, res) => {
+    const headers = new Headers()
+    for (let i = 0; i + 1 < res.rawHeaders.length; i += 2) {
+      headers.append(res.rawHeaders[i], res.rawHeaders[i + 1])
+    }
+    endWith(new HandshakeRejectedError(res.statusCode ?? 0, headers))
+    // Aborts the request, then fires 'error' (already superseded) and 'close'.
+    ws.terminate()
   })
 
   // `ws` delivers control frames through their own events rather than 'message',
@@ -226,6 +328,7 @@ function createTransportImpl<M extends DataMode>(
   ws.addEventListener('close', (ev) => {
     open = false
     clearHeartbeat()
+    clearHandshakeTimer()
     if (pendingError) {
       // Teardown began with a failure (a socket error, a liveness timeout, an
       // aborted signal). The channel was already failed at that point; report the
@@ -253,25 +356,35 @@ function createTransportImpl<M extends DataMode>(
   ws.on('error', (err: Error) => {
     open = false
     clearHeartbeat()
-    endWith(new SocketError(err))
+    clearHandshakeTimer()
+    // `ws` closes with 1009 on its own when a message exceeds `maxPayload`.
+    endWith(
+      (err as { code?: unknown }).code === 'WS_ERR_UNSUPPORTED_MESSAGE_LENGTH'
+        ? new MessageTooBigError(options.maxPayload ?? DEFAULT_MAX_PAYLOAD)
+        : new SocketError(err),
+    )
   })
 
-  options.signal.addEventListener(
-    'abort',
-    () => {
-      open = false
-      clearHeartbeat()
-      endWith(options.signal.reason)
-      // An abort always closes politely — it is a request to stop, not a failure —
-      // and the reason only picks the code: a `CloseError` names one, anything
-      // else means 1000. Bounded by `closeTimeout`, so a peer that never answers
-      // delays this by at most CLOSE_TIMEOUT_MS before `ws` forces the close
-      // event. The 'close' handler above is what settles the channel, so a
-      // consumer awaiting the end of iteration is awaiting the socket.
-      ws.close(closeCodeForStop(options.signal.reason))
-    },
-    { once: true },
-  )
+  function onAbort(): void {
+    open = false
+    clearHeartbeat()
+    clearHandshakeTimer()
+    endWith(options.signal.reason)
+    // An abort closes politely — it is a request to stop, not a failure — and
+    // the reason only picks the code: a `CloseError` names one, anything else
+    // means 1000. Bounded by `closeTimeout`, so a peer that never answers
+    // delays this by at most CLOSE_TIMEOUT_MS before `ws` forces the close
+    // event. The 'close' handler above is what settles the channel, so a
+    // consumer awaiting the end of iteration is awaiting the socket.
+    //
+    // The exception is a `CloseError` of 1006, which drops the socket at once.
+    closeSocket(ws, closeCodeForStop(options.signal.reason))
+  }
+
+  // The signal may have aborted while the socket was being created, e.g. from
+  // a caller's `lookup`, and the event won't fire again.
+  if (options.signal.aborted) onAbort()
+  else options.signal.addEventListener('abort', onAbort, { once: true })
 
   // This lets consumers treat the end of iteration as "teardown is done"
   // (resources have been released).
@@ -279,6 +392,10 @@ function createTransportImpl<M extends DataMode>(
 
   return {
     send: sender.send,
+    close: sender.close,
+    get protocol() {
+      return sender.protocol
+    },
     [Symbol.asyncIterator]: () => iterator,
   }
 }

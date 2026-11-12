@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Delete a record from a permissioned space, or ensure it doesn't exist. Succeeds whether or not the record was present. Requires auth, implemented by PDS.",
+      "description": "Delete a record from a space repo, or ensure it doesn't exist. Requires auth, implemented by PDS.",
       "input": {
         "encoding": "application/json",
         "schema": {
@@ -13,23 +13,19 @@
           "properties": {
             "space": {
               "type": "string",
-              "format": "space-ref",
-              "description": "Reference to the space."
+              "format": "space-ref"
             },
             "repo": {
               "type": "string",
-              "format": "did",
-              "description": "The DID of the repo to delete from (the authenticated member)."
+              "format": "did"
             },
             "collection": {
               "type": "string",
-              "format": "nsid",
-              "description": "The NSID of the record collection."
+              "format": "nsid"
             },
             "rkey": {
               "type": "string",
-              "format": "record-key",
-              "description": "The Record Key."
+              "format": "record-key"
             }
           }
         }

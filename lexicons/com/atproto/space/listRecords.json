@@ -4,44 +4,36 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "List the records in an account's repo within a permissioned space, optionally filtered by collection. By default each record's value is inlined; set excludeValues for a metadata-only listing (collection, rkey, cid). Used for full-state recovery. Callable with either OAuth (for the authenticated user's own data) or a space credential (for syncing services). Throws RepoNotFound when the account holds no repo in the space; this does not distinguish a member that has never written from a non-member.",
+      "description": "List records in a space repo, optionally filtered by collection. Requires auth as the repo's account or with a space credential; implemented by PDS.",
       "parameters": {
         "type": "params",
         "required": ["space", "repo"],
         "properties": {
           "space": {
             "type": "string",
-            "format": "space-ref",
-            "description": "Reference to the space."
+            "format": "space-ref"
           },
           "repo": {
             "type": "string",
-            "format": "did",
-            "description": "The DID of the account whose repo to list."
+            "format": "did"
           },
           "collection": {
             "type": "string",
             "format": "nsid",
-            "description": "The NSID of the record collection. If omitted, lists records across all collections."
+            "description": "If omitted, lists records across all collections."
           },
           "limit": {
             "type": "integer",
             "minimum": 1,
             "maximum": 1000,
-            "default": 50,
-            "description": "The number of records to return."
+            "default": 50
           },
           "cursor": {
             "type": "string"
           },
-          "reverse": {
-            "type": "boolean",
-            "description": "Flag to reverse the order of the returned records."
-          },
           "excludeValues": {
             "type": "boolean",
-            "default": false,
-            "description": "If true, omit inlined record values and return only metadata (collection, rkey, cid)."
+            "default": false
           }
         }
       },
@@ -79,6 +71,9 @@
         },
         {
           "name": "RepoDeactivated"
+        },
+        {
+          "name": "InvalidCursor"
         }
       ]
     },
@@ -99,8 +94,7 @@
           "format": "cid"
         },
         "value": {
-          "type": "unknown",
-          "description": "The record's value. Inlined by default; omitted when excludeValues is set."
+          "type": "unknown"
         }
       }
     }

@@ -4,6 +4,7 @@ import path from 'node:path'
 import { fileExists, readIfExists, rmIfExists } from '@atproto/common'
 import * as crypto from '@atproto/crypto'
 import type { ExportableKeypair, Keypair } from '@atproto/crypto'
+import type { DidString } from '@atproto/lex-schema'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import type { ActorStoreConfig } from '../config/index.js'
 import { retrySqlite } from '../db/index.js'
@@ -76,49 +77,53 @@ export class ActorStore {
         db.db.selectFrom('repo_root').selectAll().execute(),
       )
     } catch (err) {
-      db.close()
+      await db.close()
       throw err
     }
 
     return db
   }
 
-  async read<T>(did: string, fn: (fn: ActorStoreReader) => T | PromiseLike<T>) {
-    const db = await this.openDb(did)
-    try {
-      const getKeypair = () => this.keypair(did)
-      return await fn(new ActorStoreReader(did, db, this.resources, getKeypair))
-    } finally {
-      db.close()
-    }
+  async read<T>(
+    did: DidString,
+    fn: (fn: ActorStoreReader) => T | PromiseLike<T>,
+  ) {
+    await using db = await this.openDb(did)
+    const getKeypair = () => this.keypair(did)
+    await using reader = new ActorStoreReader(
+      did,
+      db,
+      this.resources,
+      getKeypair,
+    )
+    return await fn(reader)
   }
 
   async transact<T>(
-    did: string,
-    fn: (fn: ActorStoreTransactor) => T | PromiseLike<T>,
+    did: DidString,
+    fn: (transactor: ActorStoreTransactor) => T | PromiseLike<T>,
   ) {
     const keypair = await this.keypair(did)
-    const db = await this.openDb(did)
-    try {
-      return await db.transaction((dbTxn) => {
-        return fn(new ActorStoreTransactor(did, dbTxn, keypair, this.resources))
-      })
-    } finally {
-      db.close()
-    }
+    await using db = await this.openDb(did)
+    return await db.transaction(async (dbTxn) => {
+      await using transactor = new ActorStoreTransactor(
+        did,
+        dbTxn,
+        keypair,
+        this.resources,
+      )
+      return await fn(transactor)
+    })
   }
 
   async writeNoTransaction<T>(
-    did: string,
-    fn: (fn: ActorStoreWriter) => T | PromiseLike<T>,
+    did: DidString,
+    fn: (writer: ActorStoreWriter) => T | PromiseLike<T>,
   ) {
     const keypair = await this.keypair(did)
-    const db = await this.openDb(did)
-    try {
-      return await fn(new ActorStoreWriter(did, db, keypair, this.resources))
-    } finally {
-      db.close()
-    }
+    await using db = await this.openDb(did)
+    await using writer = new ActorStoreWriter(did, db, keypair, this.resources)
+    return await fn(writer)
   }
 
   async create(
@@ -143,12 +148,12 @@ export class ActorStore {
       const migrator = getMigrator(db)
       await migrator.migrateToLatestOrThrow()
     } finally {
-      db.close()
+      await db.close()
     }
   }
 
-  async destroy(did: string) {
-    const blobstore = this.resources.blobstore(did)
+  async destroy(did: DidString) {
+    await using blobstore = this.resources.blobstore(did)
     if (blobstore instanceof DiskBlobStore) {
       await blobstore.deleteAll()
     } else {

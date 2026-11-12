@@ -1,5 +1,116 @@
 # @atproto/xrpc-server
 
+## 0.13.11
+
+### Patch Changes
+
+- [#5857](https://github.com/bluesky-social/atproto/pull/5857) [`b30ea73`](https://github.com/bluesky-social/atproto/commit/b30ea7305be8df27524ed70d4af7f246014194c2) Thanks [@amckinley](https://github.com/amckinley)! - Add `PDS_DISABLE_IP_RATE_LIMITS`, for a PDS behind a proxy that enforces per-IP rate limits. When set with `PDS_RATE_LIMITS_ENABLED`, the PDS drops its global per-IP limit and the route limits keyed only on the client IP, and keeps its per-account limits. The xrpc-server `rateLimits` option gains `skipDefaultKeyedRouteLimits`, which skips route-specific limits that don't define their own `calcKey`.
+
+## 0.13.10
+
+### Patch Changes
+
+- Updated dependencies [[`ac78dcf`](https://github.com/bluesky-social/atproto/commit/ac78dcf2cba6505f822b6db093a14d489eee1c49), [`7a46712`](https://github.com/bluesky-social/atproto/commit/7a467120982d9ff1559afeb3a26989dad5877d17)]:
+  - @atproto/lex-cbor@0.1.10
+  - @atproto/common@0.8.10
+
+## 0.13.9
+
+### Patch Changes
+
+- Updated dependencies [[`8c841f6`](https://github.com/bluesky-social/atproto/commit/8c841f6e73c8365c2dfe816c0613aa9c50490361), [`8c841f6`](https://github.com/bluesky-social/atproto/commit/8c841f6e73c8365c2dfe816c0613aa9c50490361), [`8c841f6`](https://github.com/bluesky-social/atproto/commit/8c841f6e73c8365c2dfe816c0613aa9c50490361), [`8c841f6`](https://github.com/bluesky-social/atproto/commit/8c841f6e73c8365c2dfe816c0613aa9c50490361)]:
+  - @atproto/lex-data@0.1.10
+  - @atproto/lex-cbor@0.1.9
+  - @atproto/lex-schema@0.2.11
+  - @atproto/common@0.8.9
+  - @atproto/lex-client@0.4.2
+  - @atproto/lex-json@0.1.9
+  - @atproto/lexicon@0.7.19
+  - @atproto/xrpc@0.8.18
+
+## 0.13.8
+
+### Patch Changes
+
+- Updated dependencies [[`07c25d4`](https://github.com/bluesky-social/atproto/commit/07c25d410d4f4ad8f6ec80fc14efa0dd8ec55545), [`07c25d4`](https://github.com/bluesky-social/atproto/commit/07c25d410d4f4ad8f6ec80fc14efa0dd8ec55545), [`07c25d4`](https://github.com/bluesky-social/atproto/commit/07c25d410d4f4ad8f6ec80fc14efa0dd8ec55545)]:
+  - @atproto/lex-cbor@0.1.8
+  - @atproto/lex-client@0.4.1
+  - @atproto/lex-data@0.1.9
+  - @atproto/lex-json@0.1.8
+  - @atproto/lex-schema@0.2.10
+  - @atproto/common@0.8.8
+  - @atproto/lexicon@0.7.18
+  - @atproto/xrpc@0.8.17
+
+## 0.13.7
+
+### Patch Changes
+
+- [#5753](https://github.com/bluesky-social/atproto/pull/5753) [`3bfd00f`](https://github.com/bluesky-social/atproto/commit/3bfd00f484dc144482c82a4ed248adc49e6be769) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Bound the decoded size of every stage of a multi-coding `content-encoding` chain, and reject bodies listing too many content-codings
+- Updated dependencies [[`3bfd00f`](https://github.com/bluesky-social/atproto/commit/3bfd00f484dc144482c82a4ed248adc49e6be769), [`3bfd00f`](https://github.com/bluesky-social/atproto/commit/3bfd00f484dc144482c82a4ed248adc49e6be769), [`3bfd00f`](https://github.com/bluesky-social/atproto/commit/3bfd00f484dc144482c82a4ed248adc49e6be769), [`3bfd00f`](https://github.com/bluesky-social/atproto/commit/3bfd00f484dc144482c82a4ed248adc49e6be769)]:
+  - @atproto/common@0.8.7
+
+## 0.13.6
+
+### Patch Changes
+
+- [#5730](https://github.com/bluesky-social/atproto/pull/5730) [`4744b4a`](https://github.com/bluesky-social/atproto/commit/4744b4a2c0d17fed6bf063f2a86bd3b3875ddf1f) Thanks [@haileyok](https://github.com/haileyok)! - Update body-parser to 1.20.9
+
+## 0.13.5
+
+### Patch Changes
+
+- Updated dependencies [[`f98b78a`](https://github.com/bluesky-social/atproto/commit/f98b78adbc8963e49823117b007422211f6d3ff2), [`f98b78a`](https://github.com/bluesky-social/atproto/commit/f98b78adbc8963e49823117b007422211f6d3ff2), [`f98b78a`](https://github.com/bluesky-social/atproto/commit/f98b78adbc8963e49823117b007422211f6d3ff2), [`f98b78a`](https://github.com/bluesky-social/atproto/commit/f98b78adbc8963e49823117b007422211f6d3ff2), [`f98b78a`](https://github.com/bluesky-social/atproto/commit/f98b78adbc8963e49823117b007422211f6d3ff2), [`f98b78a`](https://github.com/bluesky-social/atproto/commit/f98b78adbc8963e49823117b007422211f6d3ff2)]:
+  - @atproto/lex-client@0.4.0
+  - @atproto/lex-schema@0.2.9
+  - @atproto/lexicon@0.7.17
+  - @atproto/common@0.8.6
+  - @atproto/xrpc@0.8.16
+
+## 0.13.4
+
+### Patch Changes
+
+- Updated dependencies [[`f8ed258`](https://github.com/bluesky-social/atproto/commit/f8ed25853dc91a16639decfaee2e0dcbb60808cd), [`e8b89ff`](https://github.com/bluesky-social/atproto/commit/e8b89ff4c211a10519b54bd83eb64950035942c3)]:
+  - @atproto/crypto@0.5.7
+  - @atproto/lex-data@0.1.8
+  - @atproto/lexicon@0.7.16
+  - @atproto/common@0.8.5
+  - @atproto/lex-cbor@0.1.7
+  - @atproto/lex-client@0.3.7
+  - @atproto/lex-json@0.1.7
+  - @atproto/lex-schema@0.2.8
+  - @atproto/xrpc@0.8.15
+
+## 0.13.3
+
+### Patch Changes
+
+- [#5556](https://github.com/bluesky-social/atproto/pull/5556) [`5019f55`](https://github.com/bluesky-social/atproto/commit/5019f5537317ee75ad4527db212bc27c3085fe67) Thanks [@dependabot](https://github.com/apps/dependabot)! - build(deps-dev): bump the dev-dependencies group across 1 directory with 25 updates
+- Updated dependencies [[`5019f55`](https://github.com/bluesky-social/atproto/commit/5019f5537317ee75ad4527db212bc27c3085fe67)]:
+  - @atproto/crypto@0.5.6
+  - @atproto/lexicon@0.7.15
+  - @atproto/common@0.8.4
+  - @atproto/xrpc@0.8.14
+
+## 0.13.2
+
+### Patch Changes
+
+- [#5553](https://github.com/bluesky-social/atproto/pull/5553) [`2480187`](https://github.com/bluesky-social/atproto/commit/2480187c9554ff161227480dd6c0bcaf5e7e3921) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove `console.error` debug statement
+
+## 0.13.1
+
+### Patch Changes
+
+- [#5488](https://github.com/bluesky-social/atproto/pull/5488) [`fe4087e`](https://github.com/bluesky-social/atproto/commit/fe4087ecb7a7cc53c7081c9f97d49121e5251c36) Thanks [@dependabot](https://github.com/apps/dependabot)! - Bump the dev-dependencies group across 1 directory with 30 updates
+
+- Updated dependencies [[`fe4087e`](https://github.com/bluesky-social/atproto/commit/fe4087ecb7a7cc53c7081c9f97d49121e5251c36)]:
+  - @atproto/crypto@0.5.5
+  - @atproto/lexicon@0.7.14
+  - @atproto/common@0.8.3
+  - @atproto/xrpc@0.8.13
+
 ## 0.13.0
 
 ### Minor Changes

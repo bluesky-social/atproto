@@ -1,4 +1,6 @@
 import * as dns from 'node:dns/promises'
+import type { Fetch } from '@atproto-labs/fetch-node'
+import { createDefaultFetch } from '../fetch.js'
 import type { HandleResolverOpts } from '../types.js'
 
 const SUBDOMAIN = '_atproto'
@@ -6,12 +8,17 @@ const PREFIX = 'did='
 
 export class HandleResolver {
   public timeout: number
+  private fetch: Fetch
   private backupNameservers: string[] | undefined
   private backupNameserverIps: string[] | undefined
 
   constructor(opts: HandleResolverOpts = {}) {
     this.timeout = opts.timeout ?? 3000
     this.backupNameservers = opts.backupNameservers
+    // @NOTE Not wrapped with bindFetch: that would normalize (url, init) into a
+    // Request, and safeFetchWrap's explicit-redirect check rejects a Request
+    // carrying redirect: 'follow' with no init.
+    this.fetch = opts.fetch ?? createDefaultFetch()
   }
 
   async resolve(handle: string): Promise<string | undefined> {
@@ -49,7 +56,13 @@ export class HandleResolver {
   ): Promise<string | undefined> {
     const url = new URL('/.well-known/atproto-did', `https://${handle}`)
     try {
-      const res = await fetch(url, { signal })
+      const timeoutSignal = AbortSignal.timeout(this.timeout)
+      const res = await this.fetch.call(null, url, {
+        redirect: 'follow',
+        signal: signal
+          ? AbortSignal.any([signal, timeoutSignal])
+          : timeoutSignal,
+      })
       const did = (await res.text()).split('\n')[0].trim()
       if (typeof did === 'string' && did.startsWith('did:')) {
         return did

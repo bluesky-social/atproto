@@ -57,6 +57,7 @@ export const accounts = new Map<DidString, Account>(
         deactivated: true,
         email: 'alice@test.com',
         emailVerified: true,
+        emailAuthFactor: true,
         name: 'Alice',
         handle: 'alice.test',
         picture: /** @type {sting|undefined} */ undefined,
@@ -177,6 +178,11 @@ export const accountDeviceSessions = new Map<
       },
       {
         did: 'did:plc:dpajgwmnecpdyjyqzjzm6bnb',
+        remember: false,
+        loginRequired: false,
+      },
+      {
+        did: 'did:plc:alice',
         remember: false,
         loginRequired: false,
       },
@@ -308,9 +314,9 @@ export function buildMockFetch(origFetch = window.fetch): typeof window.fetch {
         return Response.json({ account })
       }
       case `POST ${API_ENDPOINT_PREFIX}/sign-in`: {
-        const { username, remember, emailOtp } = await request.json()
+        const { identifier, remember, emailOtp } = await request.json()
         for (const [did, account] of accounts) {
-          if (account.email === username || account.handle === username) {
+          if (account.email === identifier || account.handle === identifier) {
             if (
               otpEnabledAccounts.has(account.did) &&
               emailOtp !== 'AAAAA-AAAAA'
@@ -408,10 +414,51 @@ export function buildMockFetch(origFetch = window.fetch): typeof window.fetch {
         )
         return Response.json({ success: true })
       }
-      case `POST ${API_ENDPOINT_PREFIX}/verify-handle-availability`:
+      // Consent and rejection both answer with the client's redirect URL. The
+      // mock points at a placeholder so the "redirecting" state can be seen;
+      // the page will then try to navigate there.
+      case `POST ${API_ENDPOINT_PREFIX}/consent`:
+        return Response.json({
+          url: 'https://example.com/callback?code=mock-code&state=mock-state',
+        })
+      case `POST ${API_ENDPOINT_PREFIX}/reject`:
+        return Response.json({
+          url: 'https://example.com/callback?error=access_denied&state=mock-state',
+        })
+      case `POST ${API_ENDPOINT_PREFIX}/verify-handle-availability`: {
         return Response.json({ available: true })
-      case `POST ${API_ENDPOINT_PREFIX}/reset-password-request`:
-        return Response.json({ success: true })
+      }
+      case `POST ${API_ENDPOINT_PREFIX}/reset-password-request`: {
+        const { identifier } = await request.json()
+        if (identifier.includes('@', 1)) {
+          // Email based reset always succeed
+          return Response.json({ success: true })
+        }
+
+        // Simulate UnknownAtprotoAccountError
+        if (identifier.includes('jane')) {
+          // Faking identity resolution by backend:
+          return Response.json(
+            {
+              error: 'unknown_atproto_account_error',
+              error_description: `Atmosphere account ${identifier} is hosted elsewhere`,
+              issuer: 'https://example.com',
+              identifier,
+            },
+            { status: 404 },
+          )
+        }
+
+        return Response.json(
+          {
+            error: 'unknown_atproto_account_error',
+            error_description:
+              'An email address is required for password reset',
+            identifier,
+          },
+          { status: 404 },
+        )
+      }
       case `POST ${API_ENDPOINT_PREFIX}/reset-password-confirm`:
         return Response.json({ success: true })
       case `POST ${API_ENDPOINT_PREFIX}/update-email-request`: {
@@ -472,6 +519,58 @@ export function buildMockFetch(origFetch = window.fetch): typeof window.fetch {
           )
         }
         return Response.json({ success: true })
+      }
+      case `POST ${API_ENDPOINT_PREFIX}/enable-email-otp`: {
+        const { did } = await request.json()
+        const account = accounts.get(did)
+        if (!account) {
+          return Response.json(
+            {
+              error: 'invalid_request',
+              error_description: 'Unknown account',
+            },
+            { status: 400 },
+          )
+        }
+
+        account.emailAuthFactor = true
+        return Response.json({ account, tokenRequired: false })
+      }
+      case `POST ${API_ENDPOINT_PREFIX}/disable-email-otp`: {
+        const { did, token } = await request.json()
+        const account = accounts.get(did)
+        if (!account) {
+          return Response.json(
+            {
+              error: 'invalid_request',
+              error_description: 'Unknown account',
+            },
+            { status: 400 },
+          )
+        }
+
+        // Already disabled → idempotent no-op, no OTP dispatched.
+        if (!account.emailAuthFactor) {
+          return Response.json({ account, tokenRequired: false })
+        }
+
+        // Phase one: no token yet → an OTP would be dispatched.
+        if (!token) {
+          return Response.json({ account, tokenRequired: true })
+        }
+
+        if (token !== 'AAAAA-AAAAA') {
+          return Response.json(
+            {
+              error: 'invalid_request',
+              error_description: 'Invalid token',
+            },
+            { status: 400 },
+          )
+        }
+
+        account.emailAuthFactor = false
+        return Response.json({ account, tokenRequired: false })
       }
       case `POST ${API_ENDPOINT_PREFIX}/update-handle`: {
         const { did, handle } = await request.json()

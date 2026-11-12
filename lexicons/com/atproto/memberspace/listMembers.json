@@ -4,22 +4,20 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "List the members of a space governed by the memberspace policy, and their read and write access. Must be called on the space authority's PDS. Requires OAuth with a covering read_self grant; a space credential is not sufficient, so members hosted elsewhere cannot enumerate the list. To make the list visible to readers, set the policy's publishMembers.",
+      "description": "List the members of a space with a memberspace policy. Requires auth as the space authority, implemented by PDS.",
       "parameters": {
         "type": "params",
         "required": ["space"],
         "properties": {
           "space": {
             "type": "string",
-            "format": "space-ref",
-            "description": "Reference to the space."
+            "format": "space-ref"
           },
           "limit": {
             "type": "integer",
             "minimum": 1,
             "maximum": 1000,
-            "default": 100,
-            "description": "Maximum number of members to return."
+            "default": 100
           },
           "cursor": {
             "type": "string"
@@ -39,7 +37,7 @@
               "type": "array",
               "items": {
                 "type": "ref",
-                "ref": "#member"
+                "ref": "com.atproto.memberspace.defs#member"
               }
             }
           }
@@ -50,26 +48,16 @@
           "name": "SpaceNotFound"
         },
         {
+          "name": "NotAuthorized"
+        },
+        {
           "name": "PolicyMismatch",
-          "description": "The space is not governed by the memberspace policy."
+          "description": "The space does not have a memberspace policy."
+        },
+        {
+          "name": "InvalidCursor"
         }
       ]
-    },
-    "member": {
-      "type": "object",
-      "required": ["did", "read", "write"],
-      "properties": {
-        "did": {
-          "type": "string",
-          "format": "did"
-        },
-        "read": {
-          "type": "boolean"
-        },
-        "write": {
-          "type": "boolean"
-        }
-      }
     }
   }
 }

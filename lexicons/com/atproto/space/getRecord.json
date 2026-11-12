@@ -4,30 +4,26 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "Get a single record from a permissioned space. Callable with either OAuth (for the authenticated user's own data) or a space credential (for syncing services). When called with a space credential, the caller must send an Atproto-Space-Want-Mac header, and the record's MAC is returned in the Atproto-Space-Mac response header. Throws RepoNotFound when the account holds no repo in the space; this does not distinguish a member that has never written from a non-member.",
+      "description": "Get a single record from a space repo. Responses are authenticated with a MAC. Requires auth as the repo's account or with a space credential; implemented by PDS.",
       "parameters": {
         "type": "params",
         "required": ["space", "repo", "collection", "rkey"],
         "properties": {
           "space": {
             "type": "string",
-            "format": "space-ref",
-            "description": "Reference to the space."
+            "format": "space-ref"
           },
           "repo": {
             "type": "string",
-            "format": "did",
-            "description": "The DID of the account whose repo to read from."
+            "format": "did"
           },
           "collection": {
             "type": "string",
-            "format": "nsid",
-            "description": "The NSID of the record collection."
+            "format": "nsid"
           },
           "rkey": {
             "type": "string",
-            "format": "record-key",
-            "description": "The Record Key."
+            "format": "record-key"
           }
         }
       },
@@ -53,8 +49,8 @@
       },
       "errors": [
         {
-          "name": "BadSpaceMac",
-          "description": "The Atproto-Space-Want-Mac header is missing or malformed, names an unsupported type or version, or carries an invalid key share."
+          "name": "InvalidSpaceMac",
+          "description": "The MAC requested in the Accept-Signature header is missing or invalid."
         },
         {
           "name": "RecordNotFound"

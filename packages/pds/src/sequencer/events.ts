@@ -1,14 +1,14 @@
 import assert from 'node:assert'
 import { z } from 'zod'
 import { schema } from '@atproto/common'
+import { encode as cborEncode } from '@atproto/lex-cbor'
 import {
   type DatetimeString,
   type DidString,
   type HandleString,
   isDidString,
   isHandleString,
-} from '@atproto/lex'
-import { encode as cborEncode } from '@atproto/lex-cbor'
+} from '@atproto/lex-schema'
 import { BlockMap, blocksToCarFile } from '@atproto/repo'
 import { AccountStatus } from '../account-manager/account-manager.js'
 import type { CommitDataWithOps, SyncEvtData } from '../repo/index.js'
@@ -19,8 +19,8 @@ export const formatSeqCommit = async (
   commitData: CommitDataWithOps,
 ): Promise<RepoSeqInsert> => {
   const blocksToSend = new BlockMap()
-  blocksToSend.addMap(commitData.newBlocks)
-  blocksToSend.addMap(commitData.relevantBlocks)
+  blocksToSend.addBlocks(commitData.newBlocks)
+  blocksToSend.addBlocks(commitData.relevantBlocks)
 
   const evt = {
     repo: did,

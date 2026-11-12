@@ -3,6 +3,7 @@ import type { Redis, RedisOptions } from 'ioredis'
 import type { Jwks } from '@atproto/jwk'
 import { LexResolver } from '@atproto/lex-resolver'
 import type { Account } from '@atproto/oauth-provider-api'
+import { createOAuthResolver } from '@atproto/oauth-resolver'
 import {
   CLIENT_ASSERTION_TYPE_JWT_BEARER,
   type OAuthAccessToken,
@@ -23,11 +24,15 @@ import {
   atprotoLoopbackClientMetadata,
   oauthAuthorizationRequestParametersSchema,
 } from '@atproto/oauth-types'
-import { type DidResolver, createDidResolver } from '@atproto-labs/did-resolver'
+import {
+  type CreateDidResolverOptions,
+  createDidResolver,
+} from '@atproto-labs/did-resolver'
 import { safeFetchWrap } from '@atproto-labs/fetch-node'
 import {
-  AtprotoHandleResolverNode,
+  type CreateHandleResolverNodeOptions,
   type HandleResolver,
+  createHandleResolverNode,
 } from '@atproto-labs/handle-resolver-node'
 import type { SimpleStore } from '@atproto-labs/simple-store'
 import { SimpleStoreMemory } from '@atproto-labs/simple-store-memory'
@@ -77,6 +82,7 @@ import type { RequestMetadata } from './lib/http/request.js'
 import { dateToRelativeSeconds } from './lib/util/date.js'
 import { formatError } from './lib/util/error.js'
 import type { MultiLangString } from './lib/util/locale.js'
+import { isOlderThan } from './lib/util/time.js'
 import {
   type CustomMetadata,
   buildMetadata,
@@ -113,7 +119,7 @@ export { Keyset } from '@atproto/jwk'
 export type * from '@atproto/jwk-jose'
 export { JoseKey } from '@atproto/jwk-jose'
 export type * from '@atproto/lex-resolver'
-export { LexResolver } from '@atproto/lex-resolver'
+export { LexResolver, LexResolverError } from '@atproto/lex-resolver'
 
 export { AccessTokenMode }
 export type {
@@ -135,7 +141,6 @@ export type {
   VerifyTokenPayloadOptions,
 }
 
-export type AtprotoDidResolver = DidResolver<'plc' | 'web'>
 export type ClientJwksCache = SimpleStore<string, Jwks>
 export type ClientMetadataCache = SimpleStore<string, OAuthClientMetadata>
 export type OAuthStore = AccountStore &
@@ -147,13 +152,6 @@ export type OAuthStore = AccountStore &
   TokenStore
 
 type OAuthProviderConfig = {
-  /**
-   * The URL of the PLC directory to use for resolving DIDs. This is used to
-   * resolve did:plc DIDs to their corresponding handles and is only used when
-   * `didResolver` is not provided.
-   */
-  plcDirectoryUrl?: string
-
   /**
    * Maximum age a device/account session can be before requiring
    * re-authentication.
@@ -190,16 +188,6 @@ type OAuthProviderConfig = {
    * A Lexicon resolver instance to use for fetching lexicon schemas.
    */
   lexResolver?: LexResolver
-
-  /**
-   * Resolves space-authority DIDs to handles for the consent screen.
-   */
-  didResolver?: AtprotoDidResolver
-
-  /**
-   * Allows verifying the ownership of handles by resolving them to DIDs.
-   */
-  handleResolver?: HandleResolver
 
   /**
    * A custom fetch function that can be used to fetch the client metadata from
@@ -263,6 +251,8 @@ type OAuthProviderConfig = {
 export type OAuthProviderOptions = OAuthProviderConfig &
   OAuthVerifierOptions &
   OAuthHooks &
+  CreateDidResolverOptions &
+  CreateHandleResolverNodeOptions &
   DeviceManagerOptions &
   CustomizationConfig
 
@@ -294,22 +284,17 @@ export class OAuthProvider extends OAuthVerifier {
     loopbackMetadata = atprotoLoopbackClientMetadata,
 
     // Services
-    safeFetch = safeFetchWrap(),
+    fetch: unsafeFetch = globalThis.fetch, // Inherited from options
+    safeFetch = safeFetchWrap({ fetch: unsafeFetch }),
     lexResolver = new LexResolver({
       fetch: safeFetch,
       plcDirectoryUrl,
       // We let LexResolver create it's own DidResolver instance, so that it can
-      // have a separate cache. This prevents space authority DIDs from causing
-      // lex resolver caches to expire, and vice-versa.
+      // have a separate cache. This prevents identity DIDs (accounts, space
+      // authorities) from causing lex resolver caches to expire, and vice-versa.
       didResolver: undefined,
       didCache: undefined, // Memory cache
     }),
-    didResolver = createDidResolver({
-      fetch: safeFetch,
-      plcDirectoryUrl,
-      didCache: undefined, // Memory cache
-    }),
-    handleResolver = new AtprotoHandleResolverNode({ safeFetch }),
 
     // compound store implementation
     store,
@@ -335,6 +320,8 @@ export class OAuthProvider extends OAuthVerifier {
     }),
 
     // OAuthHooks &
+    // CreateDidResolverOptions &
+    // CreateHandleResolverNodeOptions &
     // OAuthVerifierOptions &
     // DeviceManagerOptions &
     // Customization
@@ -365,10 +352,30 @@ export class OAuthProvider extends OAuthVerifier {
         secure: !this.issuer.startsWith('http:'),
       },
     })
+
+    // Shared by the OAuth resolver (account identities) and the identity
+    // manager (space authorities), so that both use the same caches.
+    const allowHttp = rest.allowHttp ?? false
+    const didResolver = createDidResolver({
+      didResolver: rest.didResolver,
+      didCache: rest.didCache,
+      onDidCacheError: rest.onDidCacheError,
+      plcDirectoryUrl,
+      fetch: safeFetch,
+      allowHttp,
+    })
+    const handleResolver = createHandleResolverNode({ ...rest, safeFetch })
+
     this.accountManager = new AccountManager(
       this.issuer,
       accountStore,
       this.hooks,
+      createOAuthResolver({
+        handleResolver,
+        didResolver,
+        fetch: safeFetch,
+        allowHttp,
+      }),
       this.customization,
     )
     this.clientManager = new ClientManager(
@@ -427,8 +434,7 @@ export class OAuthProvider extends OAuthVerifier {
   }
 
   public checkLoginRequired(deviceAccount: DeviceAccount) {
-    const authAge = Date.now() - deviceAccount.updatedAt.getTime()
-    return authAge > this.authenticationMaxAge
+    return isOlderThan(deviceAccount.updatedAt, this.authenticationMaxAge)
   }
 
   protected async authenticateClient(
@@ -723,7 +729,7 @@ export class OAuthProvider extends OAuthVerifier {
           throw new ConsentRequiredError(parameters)
         }
 
-        const code = await this.requestManager.setAuthorized(
+        const { code } = await this.requestManager.setAuthorized(
           requestUri,
           client,
           ssoSession.account,
@@ -739,7 +745,7 @@ export class OAuthProvider extends OAuthVerifier {
         if (ssoSessions.length === 1) {
           const ssoSession = ssoSessions[0]!
           if (!ssoSession.loginRequired && !ssoSession.consentRequired) {
-            const code = await this.requestManager.setAuthorized(
+            const { code } = await this.requestManager.setAuthorized(
               requestUri,
               client,
               ssoSession.account,
@@ -951,22 +957,11 @@ export class OAuthProvider extends OAuthVerifier {
     const data = await this.requestManager
       .consumeCode(code)
       .catch(async (err) => {
-        // Code not found in request manager: check for replays
+        // Code not found in request manager: delete the existing OAuth session
+        // if the code was replayed (already converted into a token)
         const tokenInfo = await this.tokenManager.findByCode(code)
         if (tokenInfo) {
-          // try/finally to ensure that both code path get executed (sequentially)
-          try {
-            // "code" was replayed, delete existing session
-            await this.tokenManager.deleteToken(tokenInfo.id)
-          } finally {
-            // As an additional security measure, we also sign the device out,
-            // so that the device cannot be used to access the account anymore
-            // without a new authentication.
-            const { deviceId, did } = tokenInfo.data
-            if (deviceId) {
-              await this.accountManager.removeDeviceAccount(deviceId, did)
-            }
-          }
+          await this.tokenManager.deleteToken(tokenInfo.id)
         }
 
         throw InvalidGrantError.from(err, `Invalid code`)
@@ -990,13 +985,17 @@ export class OAuthProvider extends OAuthVerifier {
 
     await this.validateCodeGrant(parameters, input)
 
-    const { account } = await this.accountManager.getAccount(data.did)
+    const accountData = await this.accountManager.getAccount(data.did)
+
+    if (!accountData) {
+      throw new InvalidGrantError('Account no longer exists')
+    }
 
     return this.tokenManager.createToken(
       client,
       clientAuth,
       clientMetadata,
-      account,
+      accountData.account,
       data.deviceId,
       parameters,
       code,

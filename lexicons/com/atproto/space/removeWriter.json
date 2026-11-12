@@ -4,22 +4,20 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Remove an account from a space's writer set, so that listRepos no longer lists it. The account is tracked again if it later writes while still authorized. Idempotent: succeeds whether or not the account was in the writer set. Requires auth as an account that may manage the space.",
+      "description": "Remove an account from a space's writer set, as returned by listWriters. The removal is sent to registered syncers. The account is added back if it makes another authorized write to the space. Does nothing if the account is not in the writer set. Requires auth as the space authority, implemented by PDS.",
       "input": {
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["space", "did"],
+          "required": ["space", "repo"],
           "properties": {
             "space": {
               "type": "string",
-              "format": "space-ref",
-              "description": "Reference to the space."
+              "format": "space-ref"
             },
-            "did": {
+            "repo": {
               "type": "string",
-              "format": "did",
-              "description": "The DID of the writer to remove."
+              "format": "did"
             }
           }
         }
@@ -29,7 +27,7 @@
           "name": "SpaceNotFound"
         },
         {
-          "name": "NotSpaceOwner"
+          "name": "NotAuthorized"
         }
       ]
     }

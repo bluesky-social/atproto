@@ -39,12 +39,17 @@ export function parsePolicyState(
       ? recordKeyToDid(key.slice(MEMBER_KEY_PREFIX.length))
       : undefined
     if (!memberspace.policy.$isTypeOf(policy) || !isValidDid(did)) {
-      throw new InvalidRequestError(`Unrecognized policy state: ${key}`)
+      throw new InvalidRequestError(
+        `Unrecognized policy state: ${key}`,
+        'InvalidSpaceMeta',
+      )
     }
     const result = memberspace.member.$safeParse(value)
     if (!result.success) {
       throw new InvalidRequestError(
         `Invalid member at ${key}: ${result.reason.message}`,
+        'InvalidSpaceMeta',
+        { cause: result.reason },
       )
     }
     const { read, write } = result.value

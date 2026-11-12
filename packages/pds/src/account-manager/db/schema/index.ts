@@ -1,4 +1,5 @@
 import type * as accountDevice from './account-device.js'
+import type * as accountEmailAuthFactor from './account-email-auth-factor.js'
 import type * as account from './account.js'
 import type * as actor from './actor.js'
 import type * as appPassword from './app-password.js'
@@ -19,6 +20,7 @@ import type * as usedRefreshToken from './used-refresh-token.js'
 export type DatabaseSchema = actor.PartialDB &
   account.PartialDB &
   accountDevice.PartialDB &
+  accountEmailAuthFactor.PartialDB &
   authorizedClient.PartialDB &
   device.PartialDB &
   oauthRequest.PartialDB &
@@ -44,8 +46,8 @@ export type { Lexicon } from './lexicon.js'
 export type { UsedRefreshToken } from './used-refresh-token.js'
 export type { RepoRoot } from './repo-root.js'
 export type {
-  SpaceDeletedNotificationRetry,
   SpaceNotificationRetry,
+  SpaceSyncerNotificationRetry,
 } from './space-notification.js'
 export type { RefreshToken } from './refresh-token.js'
 export type { RevokedSpaceCredential } from './revoked-space-credential.js'

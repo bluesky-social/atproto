@@ -1,6 +1,8 @@
+import type { AtUriString } from '@atproto/syntax'
+
 export interface SpaceRecordBlob {
   blobCid: string
-  recordUri: string
+  recordUri: AtUriString
 }
 
 const tableName = 'space_record_blob'

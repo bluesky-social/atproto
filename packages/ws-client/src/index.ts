@@ -18,7 +18,11 @@ export type {
 // `#transport` imports condition, so a third-party transport has no supported
 // way in anyway, and exporting the interface would commit us to its shape for no
 // consumer that exists. Widening a public API later is easy; narrowing it isn't.
-export type { HeadersInit, Sender } from './transport/transport.js'
+export type {
+  HeadersInit,
+  LookupFunction,
+  Sender,
+} from './transport/transport.js'
 export type {
   Awaitable,
   WebSocketIterable,
@@ -30,13 +34,17 @@ export {
   BufferOverflowError,
   CloseError,
   DataModeError,
+  HandshakeRejectedError,
+  HandshakeTimeoutError,
   HeartbeatTimeoutError,
   IdleTimeoutError,
+  MessageTooBigError,
   SocketError,
   WebSocketClientError,
 } from './lib/errors.js'
 export {
   FATAL_CLOSE_CODES,
+  backoffMs,
   defaultShouldReconnect,
   isReconnectableClose,
 } from './lib/reconnect-policy.js'
@@ -54,7 +62,7 @@ export type NodeWebSocketOptions<M extends DataMode = 'auto'> =
   WebSocketOptions<M>
 export type BrowserWebSocketOptions<M extends DataMode = 'auto'> = Omit<
   WebSocketOptions<M>,
-  'headers'
+  'headers' | 'lookup'
 >
 
 /**

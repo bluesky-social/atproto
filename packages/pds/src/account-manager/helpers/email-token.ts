@@ -1,5 +1,5 @@
 import { MINUTE, lessThanAgoMs } from '@atproto/common'
-import { type DidString, currentDatetimeString } from '@atproto/lex'
+import { type DidString, currentDatetimeString } from '@atproto/lex-schema'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { getRandomToken } from '../../api/com/atproto/server/util.js'
 import type { AccountDb, EmailTokenPurpose } from '../db/index.js'
@@ -46,7 +46,6 @@ export const assertValidToken = async (
   did: DidString,
   purpose: EmailTokenPurpose,
   token: string,
-  expirationLen = 15 * MINUTE,
 ) => {
   const res = await db.db
     .selectFrom('email_token')
@@ -58,7 +57,7 @@ export const assertValidToken = async (
   if (!res) {
     throw new InvalidRequestError('Token is invalid', 'InvalidToken')
   }
-  const expired = !lessThanAgoMs(new Date(res.requestedAt), expirationLen)
+  const expired = !lessThanAgoMs(new Date(res.requestedAt), 15 * MINUTE)
   if (expired) {
     throw new InvalidRequestError('Token is expired', 'ExpiredToken')
   }
@@ -68,7 +67,6 @@ export const assertValidTokenAndFindDid = async (
   db: AccountDb,
   purpose: EmailTokenPurpose,
   token: string,
-  expirationLen = 15 * MINUTE,
 ): Promise<DidString> => {
   const res = await db.db
     .selectFrom('email_token')
@@ -79,7 +77,7 @@ export const assertValidTokenAndFindDid = async (
   if (!res) {
     throw new InvalidRequestError('Token is invalid', 'InvalidToken')
   }
-  const expired = !lessThanAgoMs(new Date(res.requestedAt), expirationLen)
+  const expired = !lessThanAgoMs(new Date(res.requestedAt), 15 * MINUTE)
   if (expired) {
     throw new InvalidRequestError('Token is expired', 'ExpiredToken')
   }

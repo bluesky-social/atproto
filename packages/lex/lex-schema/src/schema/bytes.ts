@@ -1,4 +1,4 @@
-import { asUint8Array } from '@atproto/lex-data'
+import { asUint8Array, ifUint8Array } from '@atproto/lex-data'
 import { Schema, type ValidationContext } from '../core.js'
 import type { ValidationResult } from '../index.js'
 import { memoizedOptions } from '../util/memoize.js'
@@ -40,14 +40,12 @@ export class BytesSchema extends Schema<Uint8Array> {
     input: unknown,
     ctx: ValidationContext,
   ): ValidationResult<Uint8Array> {
+    // In "parse" mode, coerce different binary formats into Uint8Array. Plain
+    // arrays and array-like objects are not binary data and are rejected.
     const bytes =
-      input instanceof Uint8Array
-        ? // Already an Uint8Array, use it directly
-          input
-        : ctx.options.mode === 'parse' && !Array.isArray(input)
-          ? // In "parse" mode, coerce different binary formats into Uint8Array
-            asUint8ArraySafe(input)
-          : undefined
+      ctx.options.mode === 'parse' && isBinary(input)
+        ? asUint8Array(input)
+        : ifUint8Array(input)
     if (!bytes) {
       return ctx.issueUnexpectedType(input, 'bytes')
     }
@@ -66,12 +64,8 @@ export class BytesSchema extends Schema<Uint8Array> {
   }
 }
 
-function asUint8ArraySafe(input: unknown): Uint8Array | undefined {
-  try {
-    return asUint8Array(input)
-  } catch {
-    return undefined
-  }
+function isBinary(input: unknown): input is ArrayBuffer | ArrayBufferView {
+  return input instanceof ArrayBuffer || ArrayBuffer.isView(input)
 }
 
 /**

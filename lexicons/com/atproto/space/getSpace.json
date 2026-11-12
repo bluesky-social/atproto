@@ -4,15 +4,14 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "Describe a space, including the policy that governs it. Served by the space host for every space it hosts, regardless of policy. Requires OAuth as the space owner with a covering read_self grant. A policy may optionally be published in the space, as a com.atproto.space.policy record, so that syncers can view it.",
+      "description": "Get a space and its policy. Requires auth as the space authority, implemented by PDS.",
       "parameters": {
         "type": "params",
         "required": ["space"],
         "properties": {
           "space": {
             "type": "string",
-            "format": "space-ref",
-            "description": "Reference to the space."
+            "format": "space-ref"
           }
         }
       },
@@ -20,16 +19,15 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["uri", "policy"],
+          "required": ["space", "policy"],
           "properties": {
-            "uri": {
+            "space": {
               "type": "string",
-              "format": "space-ref",
-              "description": "URI of the space."
+              "format": "space-ref"
             },
             "policy": {
               "type": "union",
-              "description": "The policy governing the space, including its configuration.",
+              "description": "PDSes must support all of the listed policies. Other space hosts may support only some of them, and any host may support policies beyond those listed.",
               "refs": [
                 "com.atproto.personalspace.policy",
                 "com.atproto.memberspace.policy",
@@ -39,7 +37,7 @@
           }
         }
       },
-      "errors": [{ "name": "SpaceNotFound" }]
+      "errors": [{ "name": "SpaceNotFound" }, { "name": "NotAuthorized" }]
     }
   }
 }

@@ -1,5 +1,5 @@
 import { mapDefined } from '@atproto/common'
-import type { DidString } from '@atproto/lex'
+import type { DidString } from '@atproto/lex-schema'
 import type { Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../../../context.js'
 import type {
@@ -29,6 +29,7 @@ export default function (server: Server, ctx: AppContext) {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({
+        xrpcEndpoint: app.bsky.contact.getMatches.$lxm,
         labelers,
         viewer,
       })
@@ -64,7 +65,7 @@ const skeleton = async (
   return {
     actor,
     subjects: subjects as DidString[],
-    cursor: cursor || undefined,
+    cursor,
   }
 }
 

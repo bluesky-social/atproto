@@ -1,4 +1,5 @@
 import type { Cid, LexMap } from '@atproto/lex-data'
+import type { DidString } from '@atproto/lex-schema'
 import { type BlobStore, WriteOpAction } from '@atproto/repo'
 import type { AtUri } from '@atproto/syntax'
 import type { com } from '../../lexicons/index.js'
@@ -9,9 +10,10 @@ import { RecordReader, getBacklinks } from './reader.js'
 export class RecordTransactor extends RecordReader {
   constructor(
     public db: ActorDb,
+    public did: DidString,
     public blobstore: BlobStore,
   ) {
-    super(db)
+    super(db, did)
   }
 
   async indexRecord(

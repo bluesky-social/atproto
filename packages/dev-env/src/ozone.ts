@@ -2,7 +2,8 @@ import * as plc from '@did-plc/lib'
 import * as ui8 from 'uint8arrays'
 import { AtpAgent } from '@atproto/api'
 import { type Keypair, Secp256k1Keypair } from '@atproto/crypto'
-import { Client, type DidString } from '@atproto/lex'
+import { Client } from '@atproto/lex-client'
+import type { DidString } from '@atproto/lex-schema'
 import * as ozone from '@atproto/ozone'
 import { createServiceJwt } from '@atproto/xrpc-server'
 import { ADMIN_PASSWORD, EXAMPLE_LABELER } from './const.js'
@@ -89,6 +90,7 @@ export class TestOzone {
     // api server
     const server = await ozone.OzoneService.create(cfg, secrets, {
       imgInvalidator: config.imgInvalidator,
+      videoInvalidator: config.videoInvalidator,
     })
     await server.start()
 

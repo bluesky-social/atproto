@@ -1,5 +1,95 @@
 # @atproto/oauth-client
 
+## 0.9.3
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/xrpc@0.8.18
+
+## 0.9.2
+
+### Patch Changes
+
+- [#5805](https://github.com/bluesky-social/atproto/pull/5805) [`a93db66`](https://github.com/bluesky-social/atproto/commit/a93db663f51405031b9fc12b6f57968a435fddec) Thanks [@mozzius](https://github.com/mozzius)! - Fix the DPoP nonce retry for authorization server requests on React Native, where the first sign-in (or a token refresh with no cached nonce) failed with `use_dpop_nonce`. Unexpected errors while checking for a `use_dpop_nonce` response are no longer treated as "not a nonce error".
+- Updated dependencies [[`a93db66`](https://github.com/bluesky-social/atproto/commit/a93db663f51405031b9fc12b6f57968a435fddec)]:
+  - @atproto-labs/fetch@0.4.2
+  - @atproto-labs/did-resolver@0.3.13
+  - @atproto/oauth-resolver@0.0.3
+  - @atproto-labs/identity-resolver@0.4.13
+
+## 0.9.1
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto-labs/did-resolver@0.3.12
+  - @atproto-labs/fetch@0.4.1
+  - @atproto-labs/identity-resolver@0.4.12
+  - @atproto/oauth-resolver@0.0.2
+  - @atproto/xrpc@0.8.17
+
+## 0.9.0
+
+### Minor Changes
+
+- [#5687](https://github.com/bluesky-social/atproto/pull/5687) [`943170b`](https://github.com/bluesky-social/atproto/commit/943170bd390705fbb16920688f8f09ec7078a59b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Factorize `OAuthResolver` logic in separate `@atproto/oauth-resolver` package (out of `@atproto/oauth-client`)
+
+### Patch Changes
+
+- Updated dependencies [[`943170b`](https://github.com/bluesky-social/atproto/commit/943170bd390705fbb16920688f8f09ec7078a59b)]:
+  - @atproto/oauth-resolver@0.0.1
+
+## 0.8.10
+
+### Patch Changes
+
+- Updated dependencies [[`f98b78a`](https://github.com/bluesky-social/atproto/commit/f98b78adbc8963e49823117b007422211f6d3ff2), [`f98b78a`](https://github.com/bluesky-social/atproto/commit/f98b78adbc8963e49823117b007422211f6d3ff2)]:
+  - @atproto-labs/fetch@0.4.0
+  - @atproto-labs/did-resolver@0.3.11
+  - @atproto-labs/identity-resolver@0.4.11
+  - @atproto/xrpc@0.8.16
+
+## 0.8.9
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/xrpc@0.8.15
+
+## 0.8.8
+
+### Patch Changes
+
+- Updated dependencies [[`5019f55`](https://github.com/bluesky-social/atproto/commit/5019f5537317ee75ad4527db212bc27c3085fe67)]:
+  - @atproto/did@0.5.6
+  - @atproto-labs/did-resolver@0.3.10
+  - @atproto-labs/handle-resolver@0.4.10
+  - @atproto/oauth-types@0.7.7
+  - @atproto/xrpc@0.8.14
+  - @atproto-labs/identity-resolver@0.4.10
+
+## 0.8.7
+
+### Patch Changes
+
+- Updated dependencies [[`f88aa58`](https://github.com/bluesky-social/atproto/commit/f88aa5842df9aba9f208a6073272b43ef9bd089d)]:
+  - @atproto-labs/fetch@0.3.6
+  - @atproto-labs/did-resolver@0.3.9
+  - @atproto-labs/identity-resolver@0.4.9
+
+## 0.8.6
+
+### Patch Changes
+
+- Updated dependencies [[`fe4087e`](https://github.com/bluesky-social/atproto/commit/fe4087ecb7a7cc53c7081c9f97d49121e5251c36)]:
+  - @atproto/did@0.5.5
+  - @atproto-labs/did-resolver@0.3.8
+  - @atproto-labs/handle-resolver@0.4.9
+  - @atproto/oauth-types@0.7.6
+  - @atproto/xrpc@0.8.13
+  - @atproto-labs/identity-resolver@0.4.8
+
 ## 0.8.5
 
 ### Patch Changes

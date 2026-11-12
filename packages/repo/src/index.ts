@@ -1,3 +1,6 @@
+// @NOTE Do **not** re-export the zod schemas directly from this package. Do not
+// export anything from "./schemas.js" either.
+
 export * from '@atproto/car'
 
 export * from './cid-set.js'
@@ -9,3 +12,4 @@ export * from './sync/index.js'
 export * from './types.js'
 export * from './data-diff.js'
 export * from './util.js'
+export { VisitedCidError } from './error.js'

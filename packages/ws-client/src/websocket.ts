@@ -39,6 +39,12 @@ export interface WebSocketOptions<
 > extends ConnectionOptions<M> {
   /** Exponential-backoff ceiling in seconds. Default 64. */
   maxReconnectSeconds?: number
+  /**
+   * How long a connection must have stayed open for the backoff to start over
+   * once it ends. Default 0: any connection that opened. Otherwise a peer that
+   * accepts and then drops every connection is redialed about every second.
+   */
+  stableConnectionMs?: number
   /** Abort to end the stream permanently; the iterator rejects with the reason. */
   signal?: AbortSignal
   /**
@@ -85,14 +91,28 @@ export interface WebSocketOptions<
   onError?: (error: unknown) => void
   /**
    * A connection ended with an error and a retry is coming, `attempt` counting
-   * consecutive failures since the last successful open (so `0` is the first
-   * retry of a cycle).
+   * consecutive failures since the last stable connection (see
+   * `stableConnectionMs`), so `0` is the first retry of a cycle.
    *
    * Unlike `onError` this is the *only* place such a failure surfaces: the stream
    * swallows it and keeps going, so a caller that wants to see transient trouble
    * has to observe it here.
    */
   onReconnect?: (error: unknown, reconnect: { attempt: number }) => void
+  /**
+   * Awaited before each redial, alongside the backoff, so that a new connection
+   * waits for whatever the previous one left running (e.g. handlers it
+   * cancelled). Called right after `onReconnect`, with the same `attempt`.
+   *
+   * `signal` aborts when the stream does (it may already be aborted), and the
+   * redial waits for the returned promise regardless: settle it promptly then.
+   * A rejection ends the stream with that error, or with the abort reason once
+   * aborted.
+   */
+  beforeReconnect?: (reconnect: {
+    attempt: number
+    signal: AbortSignal
+  }) => Awaitable<void>
   /**
    * The stream ended. Fires exactly once per started stream, however it ended,
    * and only once the local socket is closed — so a caller can treat it as
@@ -136,11 +156,12 @@ export async function* websocketFactory<M extends DataMode = 'auto'>(
 ): WebSocketIterable<M> {
   const { signal } = options
   const maxMs = 1000 * (options.maxReconnectSeconds ?? 64)
+  const stableMs = options.stableConnectionMs ?? 0
   const shouldReconnect = normalizeShouldReconnect(options.shouldReconnect)
 
-  // Consecutive failed connections since the last successful open, so the
-  // backoff restarts at ~1s after any stable open and only escalates across
-  // repeated failures with nothing working in between.
+  // Consecutive failed connections since the last stable one, so the backoff
+  // restarts at ~1s after a stable connection and only escalates across repeated
+  // failures with nothing working in between.
   let retries = 0
   let firstOpen = true
   // How the last connection ended, recorded by the transport's `onClose` below.
@@ -170,6 +191,7 @@ export async function* websocketFactory<M extends DataMode = 'auto'>(
       const teardown = new AbortController()
       forwardAbort(signal, teardown)
       let opened = false
+      let openedAt = 0
       // Per-attempt, and cleared here rather than only written on success: a
       // detail left over from an earlier connection would otherwise be reported
       // as this stream's ending.
@@ -182,8 +204,11 @@ export async function* websocketFactory<M extends DataMode = 'auto'>(
           headers: options.headers,
           heartbeat: options.heartbeat,
           idleTimeoutMs: options.idleTimeoutMs,
+          handshakeTimeoutMs: options.handshakeTimeoutMs,
           highWaterMark: options.highWaterMark,
           maxBufferedBytes: options.maxBufferedBytes,
+          maxPayload: options.maxPayload,
+          lookup: options.lookup,
           // Transport options wired by this websocket implementation and not directly by the caller
           url: resolved,
           signal: teardown.signal,
@@ -191,8 +216,8 @@ export async function* websocketFactory<M extends DataMode = 'auto'>(
           // rejects once this connection is no longer open, which the
           // transport knows the moment its socket closes, errors, or aborts.
           onOpen: (sender) => {
-            retries = 0 // a stable open: the backoff starts over
             opened = true
+            openedAt = Date.now()
             // onOpen bookends the stream and fires once, before the first
             // onConnect; onConnect fires for every connection including this
             // one.
@@ -208,6 +233,9 @@ export async function* websocketFactory<M extends DataMode = 'auto'>(
             // this is what makes onConnect/onDisconnect pair exactly.
             if (opened) {
               opened = false
+              // Measured here rather than when the loop resumes, which waits for
+              // the consumer to pull.
+              if (Date.now() - openedAt >= stableMs) retries = 0
               invokeHook(options.onDisconnect)
             }
           },
@@ -259,8 +287,28 @@ export async function* websocketFactory<M extends DataMode = 'auto'>(
         // rethrowing, a non-reconnectable clean close returning, a consumer
         // `break` resuming at the `yield*`) must not be delayed by it.
         // Post-increment so the first reconnect waits ~1s (2^0) and each
-        // consecutive failure escalates; a successful open resets to 0.
-        await sleep(backoffMs(retries++, maxMs), signal)
+        // consecutive failure escalates; a stable connection resets to 0.
+        //
+        // The redial waits for both the backoff and `beforeReconnect`. Its own
+        // controller cuts the backoff short if `beforeReconnect` rejects.
+        const backoff = new AbortController()
+        forwardAbort(signal, backoff)
+        try {
+          await Promise.all([
+            options.beforeReconnect?.call(null, {
+              attempt: retries,
+              signal: backoff.signal,
+            }),
+            sleep(backoffMs(retries++, maxMs), backoff.signal),
+          ])
+        } catch (error) {
+          // An abort is the caller's decision: surface its reason rather than
+          // however `beforeReconnect` reacted to it.
+          signal?.throwIfAborted()
+          throw error
+        } finally {
+          backoff.abort()
+        }
         // Loop: the check at the top catches an abort that landed during the
         // backoff, then the url is re-resolved and redialed.
       } finally {
@@ -306,11 +354,20 @@ function normalizeShouldReconnect(
 // Bound with `{ signal: target.signal }`, so aborting the target detaches the
 // listener. There's no separate cleanup to remember, and a per-attempt
 // controller that's always aborted in a `finally` can never leak one.
+//
+// An abort that already happened is forwarded at once, since the event won't
+// fire again: user code (`shouldReconnect`, the hooks) runs between the loop's
+// abort checks and some of these calls.
 function forwardAbort(
   source: AbortSignal | undefined,
   target: AbortController,
 ): void {
-  source?.addEventListener('abort', () => target.abort(source.reason), {
+  if (!source) return
+  if (source.aborted) {
+    target.abort(source.reason)
+    return
+  }
+  source.addEventListener('abort', () => target.abort(source.reason), {
     once: true,
     signal: target.signal,
   })
@@ -324,14 +381,14 @@ function forwardAbort(
 function sleep(ms: number, signal: AbortSignal | undefined): Promise<void> {
   if (signal?.aborted) return Promise.resolve()
   return new Promise((resolve) => {
-    const timer = setTimeout(() => {
-      signal?.removeEventListener('abort', onStop)
-      resolve()
-    }, ms)
     const onStop = () => {
       clearTimeout(timer)
       resolve()
     }
+    const timer = setTimeout(() => {
+      signal?.removeEventListener('abort', onStop)
+      resolve()
+    }, ms)
     signal?.addEventListener('abort', onStop, { once: true })
   })
 }

@@ -1,14 +1,12 @@
-import { z } from 'zod'
 import type { Cid, LexMap } from '@atproto/lex-data'
+import { l } from '@atproto/lex-schema'
 import type { ReadStarOptions } from '@atproto/star'
-import {
-  type DidString,
-  type NsidString,
-  type RecordKeyString,
-  type SpaceRefString,
-  isSpaceRefString,
-  isValidDid,
-  isValidTid,
+import type {
+  DidString,
+  NsidString,
+  RecordKeyString,
+  SpaceRefString,
+  TidString,
 } from '@atproto/syntax'
 
 export type SpaceRecord = LexMap
@@ -33,24 +31,23 @@ export const MAX_RECORD_SIZE = 1024 * 1024 // 1 MiB
 export type CommitCtx = {
   space: SpaceRefString
   repo: DidString
-  rev: string
+  rev: TidString
 }
 
-export type RecordPath<
+export type RecordPathString<
   TCollection extends NsidString = NsidString,
   TRkey extends RecordKeyString = RecordKeyString,
 > = `${TCollection}/${TRkey}`
 
-const bytesSchema = z.instanceof(Uint8Array<ArrayBufferLike>)
-
-const commitSchema = z.object({
-  ver: z.number(),
-  repo: z.custom<DidString>(isValidDid),
-  space: z.custom<SpaceRefString>(isSpaceRefString),
-  rev: z.string(),
-  data: bytesSchema,
+// Matches `com.atproto.space.defs#commit`.
+const commitSchema = l.object({
+  ver: l.integer(),
+  repo: l.string({ format: 'did' }),
+  space: l.string({ format: 'space-ref' }),
+  rev: l.string({ format: 'tid' }),
+  data: l.bytes(),
 })
-export type Commit = z.infer<typeof commitSchema>
+export type SpaceCommit = l.Infer<typeof commitSchema>
 
 export const REPO_STAR_TYPE = 'atproto-space-repo'
 
@@ -61,10 +58,11 @@ export const REPO_STAR_LIMITS: ReadStarOptions = {
 }
 
 // The metadata of a repo's STAR archive: the repo's commit, typed by its profile.
-const repoStarMetaSchema = commitSchema.extend({
-  $type: z.literal(REPO_STAR_TYPE),
+const repoStarMetaSchema = l.object({
+  $type: l.literal(REPO_STAR_TYPE),
+  ...commitSchema.shape,
 })
-export type RepoStarMeta = z.infer<typeof repoStarMetaSchema>
+export type RepoStarMeta = l.Infer<typeof repoStarMetaSchema>
 
 export const SPACE_META_STAR_TYPE = 'atproto-space-meta'
 export const SPACE_META_VERSION = 1
@@ -75,21 +73,19 @@ export const SPACE_META_STAR_LIMITS: ReadStarOptions = {
   maxValueLength: 1024 * 1024, // 1 MiB
 }
 
-const tidSchema = z.string().refine(isValidTid, 'must be a TID')
-
 // The metadata of a space meta archive.
-const spaceMetaStarMetaSchema = z.object({
-  $type: z.literal(SPACE_META_STAR_TYPE),
-  ver: z.literal(SPACE_META_VERSION),
-  space: z.custom<SpaceRefString>(isSpaceRefString),
+const spaceMetaStarMetaSchema = l.object({
+  $type: l.literal(SPACE_META_STAR_TYPE),
+  ver: l.literal(SPACE_META_VERSION),
+  space: l.string({ format: 'space-ref' }),
 })
-export type SpaceMetaStarMeta = z.infer<typeof spaceMetaStarMetaSchema>
+export type SpaceMetaStarMeta = l.Infer<typeof spaceMetaStarMetaSchema>
 
-// A repo in the writer set, as listRepos reports it. Keyed by the repo's DID.
-const spaceMetaWriterSchema = z.object({
-  rev: tidSchema,
-  data: bytesSchema,
-  spaceRev: tidSchema,
+// A repo in the writer set, as listWriters reports it. Keyed by the repo's DID.
+const spaceMetaWriterSchema = l.object({
+  repoRev: l.string({ format: 'tid' }),
+  data: l.bytes(),
+  spaceRev: l.string({ format: 'tid' }),
 })
 
 export type Def<T> = {

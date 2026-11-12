@@ -20,6 +20,7 @@ import type {
   ChatDeclarationRecord,
   GermDeclarationRecord,
   NotificationDeclarationRecord,
+  ProfileLinkRecord,
   ProfileRecord,
   StatusRecord,
 } from '../views/types.js'
@@ -52,7 +53,6 @@ export type Actor = {
   allowGroupChatInvitesFrom?: string
   upstreamStatus?: string
   createdAt?: Date
-  priorityNotifications: boolean
   trustedVerifier?: boolean
   verifications: VerificationHydrationState[]
   status?: RecordInfo<StatusRecord>
@@ -87,6 +87,9 @@ export type ChatDeclarations = HydrationMap<AtUriString, ChatDeclaration>
 
 export type GermDeclaration = RecordInfo<GermDeclarationRecord>
 export type GermDeclarations = HydrationMap<AtUriString, GermDeclaration>
+
+export type ProfileLink = RecordInfo<ProfileLinkRecord>
+export type ProfileLinks = HydrationMap<AtUriString, ProfileLink>
 
 export type NotificationDeclaration = RecordInfo<NotificationDeclarationRecord>
 export type NotificationDeclarations = HydrationMap<
@@ -319,7 +322,6 @@ export class ActorHydrator {
         allowGroupChatInvitesFrom: actor.allowGroupChatInvitesFrom || undefined,
         upstreamStatus: actor.upstreamStatus || undefined,
         createdAt: parseDate(actor.createdAt),
-        priorityNotifications: actor.priorityNotifications,
         trustedVerifier: actor.trustedVerifier,
         verifications,
         status: status,
@@ -368,6 +370,26 @@ export class ActorHydrator {
     for (let i = 0; i < uris.length; i++) {
       const record = parseRecord(
         com.germnetwork.declaration.main,
+        res.records[i],
+        includeTakedowns,
+      )
+      map.set(uris[i], record ?? null)
+    }
+
+    return map
+  }
+
+  async getProfileLinks(
+    uris: AtUriString[],
+    includeTakedowns = false,
+  ): Promise<ProfileLinks> {
+    const map: ProfileLinks = new HydrationMap()
+    if (!uris.length) return map
+
+    const res = await this.dataplane.getProfileLinkRecords({ uris })
+    for (let i = 0; i < uris.length; i++) {
+      const record = parseRecord(
+        app.bsky.actor.link.main,
         res.records[i],
         includeTakedowns,
       )
@@ -502,28 +524,23 @@ export class ActorHydrator {
     if (!dids.length) return map
 
     try {
-      const { results: knownFollowersResults } =
-        await this.dataplane.getFollowsFollowing(
-          {
-            actorDid: viewer,
-            targetDids: dids,
-          },
-          {
-            signal: AbortSignal.timeout(100),
-          },
-        )
-
+      const { results } = await this.dataplane.sampleFollowsFollowing(
+        {
+          actorDid: viewer,
+          targetDids: dids,
+          limit: 5,
+        },
+        { signal: AbortSignal.timeout(100) },
+      )
       for (let i = 0; i < dids.length; i++) {
-        const did = dids[i]
-
-        const result = knownFollowersResults[i]?.dids
-
+        const result = results[i]
+        const followerDids = result?.dids
         map.set(
-          did,
-          result && result.length > 0
+          dids[i],
+          followerDids && followerDids.length > 0
             ? {
-                count: result.length,
-                followers: result.slice(0, 5) as DidString[],
+                count: result.totalKnown || followerDids.length,
+                followers: followerDids as DidString[],
               }
             : undefined,
         )

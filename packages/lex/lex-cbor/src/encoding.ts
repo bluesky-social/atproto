@@ -1,4 +1,4 @@
-import type { DecodeOptions, EncodeOptions, TagDecoder } from 'cborg'
+import type { TagDecoder } from 'cborg'
 import {
   Token,
   Type,
@@ -9,11 +9,7 @@ import {
 import type { OptionalTypeEncoder } from 'cborg/interface'
 import type { Cid, LexValue } from '@atproto/lex-data'
 import { decodeCid, ifCid } from '@atproto/lex-data'
-
-// @NOTE "cborg" version 4 is required to support multi-decoding via the
-// "decodeFirst" function. However, that version only exposes ES modules.
-// Because this package is using "commonjs", "cborg" will be bundled instead of
-// depending on it directly.
+import type { CborDecodeOptions, CborEncodeOptions } from './cbor-options.js'
 
 const CID_CBOR_TAG = 42
 
@@ -27,7 +23,7 @@ const CID_CBOR_TAG = 42
  * - `undefined` values are not permitted (undefined object properties will be stripped)
  * - Only safe integer numbers are allowed (no floats or non-integer values)
  */
-export const encodeOptions: Readonly<EncodeOptions> =
+export const encodeOptions: Readonly<CborEncodeOptions> =
   /*#__PURE__*/ Object.freeze({
     float64: true,
     ignoreUndefinedProperties: true,
@@ -77,7 +73,7 @@ export const encodeOptions: Readonly<EncodeOptions> =
  * Configuration options for CBOR decoding that enforces AT Protocol data model
  * constraints.
  */
-export const decodeOptions: Readonly<DecodeOptions> =
+export const decodeOptions: Readonly<CborDecodeOptions> =
   /*#__PURE__*/ Object.freeze({
     allowIndefinite: false,
     coerceUndefinedToNull: true,

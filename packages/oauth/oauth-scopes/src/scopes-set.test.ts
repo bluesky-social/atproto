@@ -52,7 +52,7 @@ describe('ScopesSet', () => {
     ])
     expect(
       set.matches('space', {
-        type: 'com.example.group',
+        spaceType: 'com.example.group',
         authority: 'did:plc:abc',
         skey: 'default',
         action: 'read',
@@ -60,7 +60,7 @@ describe('ScopesSet', () => {
     ).toBe(true)
     expect(
       set.matches('space', {
-        type: 'com.example.group',
+        spaceType: 'com.example.group',
         authority: 'did:plc:other',
         skey: 'default',
         action: 'read',

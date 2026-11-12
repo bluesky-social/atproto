@@ -1,5 +1,74 @@
 # @atproto-labs/fetch-node
 
+## 0.4.5
+
+### Patch Changes
+
+- Updated dependencies [[`a93db66`](https://github.com/bluesky-social/atproto/commit/a93db663f51405031b9fc12b6f57968a435fddec)]:
+  - @atproto-labs/fetch@0.4.2
+
+## 0.4.4
+
+### Patch Changes
+
+- Updated dependencies [[`7aa8e7e`](https://github.com/bluesky-social/atproto/commit/7aa8e7e9e1422f053447879def4d4cf92a05adbb)]:
+  - @atproto-labs/pipe@0.2.5
+  - @atproto-labs/fetch@0.4.1
+
+## 0.4.3
+
+### Patch Changes
+
+- [#5708](https://github.com/bluesky-social/atproto/pull/5708) [`0e60f3f`](https://github.com/bluesky-social/atproto/commit/0e60f3f007cbd9812975489f0da19bf7613da831) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Require patched Undici versions for direct dependencies and versioned dispatchers.
+
+## 0.4.2
+
+### Patch Changes
+
+- [#5694](https://github.com/bluesky-social/atproto/pull/5694) [`fc60876`](https://github.com/bluesky-social/atproto/commit/fc60876949cca1ca28e98273ecfc97a151d3ebfc) Thanks [@devinivy](https://github.com/devinivy)! - Add an optional standalone eMudhra intermediate-key mitigation preload for Node.js HTTPS and Undici clients.
+
+## 0.4.1
+
+### Patch Changes
+
+- Updated dependencies [[`f98b78a`](https://github.com/bluesky-social/atproto/commit/f98b78adbc8963e49823117b007422211f6d3ff2), [`f98b78a`](https://github.com/bluesky-social/atproto/commit/f98b78adbc8963e49823117b007422211f6d3ff2)]:
+  - @atproto-labs/fetch@0.4.0
+
+## 0.4.0
+
+### Minor Changes
+
+- [#5503](https://github.com/bluesky-social/atproto/pull/5503) [`f88aa58`](https://github.com/bluesky-social/atproto/commit/f88aa5842df9aba9f208a6073272b43ef9bd089d) Thanks [@devinivy](https://github.com/devinivy)! - `safeFetchWrap()` now applies its url policy — the protocol, custom port,
+  hostname, forbidden-domain-name and literal-IP checks — to every request it
+  issues, rather than only to the one it was handed. The policy runs again at
+  dispatch time, which is the layer that observes each redirect hop, and a hop is
+  refused before its connection is made.
+
+  The dispatcher is installed even when `ssrfProtection` (or `allowPrivateIps`)
+  relaxes the unicast requirement, so relaxing that no longer relaxes the
+  remaining checks along with it. As a consequence, a custom `dispatcher` can no
+  longer be supplied through the request init in that configuration.
+
+  This requires undici's `Dispatcher.compose()`, which is feature-detected rather
+  than inferred from a version number: on a NodeJS whose bundled undici predates
+  it, constructing a safe fetch now throws instead of issuing requests without the
+  per-hop checks.
+
+  Redirect handling itself is unchanged: bodies are still replayed across 307/308,
+  methods still downgrade on 301/302/303, and the existing timeout still covers
+  the whole chain rather than a single hop.
+
+  `@atproto-labs/fetch` exposes the policy as three url-level predicates —
+  `checkProtocolPolicy()`, `checkHostHeaderPolicy()` and
+  `checkForbiddenDomainNamePolicy()` — which return the reason a url is
+  unacceptable instead of throwing. The request transforms built on them are
+  unchanged, status codes included.
+
+### Patch Changes
+
+- Updated dependencies [[`f88aa58`](https://github.com/bluesky-social/atproto/commit/f88aa5842df9aba9f208a6073272b43ef9bd089d)]:
+  - @atproto-labs/fetch@0.3.6
+
 ## 0.3.7
 
 ### Patch Changes

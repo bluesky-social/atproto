@@ -39,8 +39,8 @@ export function isLexiconRecordKey<T>(key: T): key is T & LexiconRecordKey {
     key === 'nsid' ||
     key === 'tid' ||
     (typeof key === 'string' &&
-      key.startsWith('literal:') &&
       key.length > 8 &&
+      key.startsWith('literal:') &&
       isValidRecordKey(key.slice(8)))
   )
 }
@@ -48,20 +48,21 @@ export function isLexiconRecordKey<T>(key: T): key is T & LexiconRecordKey {
 /**
  * Validates and returns a value as a lexicon record key constraint, throwing if invalid.
  *
+ * @typeParam T - The input type
  * @param key - The value to validate
- * @returns The value typed as {@link LexiconRecordKey}
+ * @returns The value typed as `T & LexiconRecordKey`
  * @throws {Error} If the value is not a valid record key constraint
  *
  * @example
  * ```typescript
  * const constraint = asLexiconRecordKey('tid')
- * // constraint is typed as LexiconRecordKey
+ * // constraint is typed as 'tid'
  *
  * asLexiconRecordKey('invalid') // throws Error
  * ```
  */
 /*@__NO_SIDE_EFFECTS__*/
-export function asLexiconRecordKey(key: unknown): LexiconRecordKey {
+export function asLexiconRecordKey<T>(key: T): T & LexiconRecordKey {
   if (isLexiconRecordKey(key)) return key
   throw new Error(`Invalid record key: ${String(key)}`)
 }

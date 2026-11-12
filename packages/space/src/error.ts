@@ -1,7 +1,14 @@
-export class SpaceTokenError extends Error {
+/** Every error this package throws on a protocol failure carries a stable `code`. */
+export abstract class SpaceError extends Error {
+  abstract readonly code: string
+}
+
+export class SpaceTokenError extends SpaceError {
+  name = 'SpaceTokenError'
+
   constructor(
     message: string,
-    public readonly code:
+    readonly code:
       | 'BadJwt'
       | 'BadJwtType'
       | 'BadJwtIss'
@@ -13,27 +20,30 @@ export class SpaceTokenError extends Error {
     options?: ErrorOptions,
   ) {
     super(message, options)
-    this.name = 'SpaceTokenError'
   }
 }
 
-export class SpaceSignatureError extends Error {
+export class SpaceSignatureError extends SpaceError {
   name = 'SpaceSignatureError'
   readonly code = 'BadSpaceSignature'
 }
 
-export class RepoVerificationError extends Error {
-  constructor(message: string, options?: ErrorOptions) {
-    super(message, options)
-    this.name = 'RepoVerificationError'
-  }
-}
-
-export class SpaceMacError extends Error {
+export class SpaceMacError extends SpaceError {
   name = 'SpaceMacError'
-  readonly code = 'BadSpaceMac'
+  readonly code = 'InvalidSpaceMac'
 }
 
-export class SpaceMetaArchiveError extends Error {
+export class SpaceKemError extends SpaceError {
+  name = 'SpaceKemError'
+  readonly code = 'InvalidKemKey'
+}
+
+export class SpaceRepoVerificationError extends SpaceError {
+  name = 'SpaceRepoVerificationError'
+  readonly code = 'InvalidSpaceRepo'
+}
+
+export class SpaceMetaArchiveError extends SpaceError {
   name = 'SpaceMetaArchiveError'
+  readonly code = 'InvalidSpaceMeta'
 }

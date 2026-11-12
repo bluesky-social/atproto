@@ -1,5 +1,36 @@
 # @atproto/lex-cbor
 
+## 0.1.10
+
+### Patch Changes
+
+- [#5855](https://github.com/bluesky-social/atproto/pull/5855) [`ac78dcf`](https://github.com/bluesky-social/atproto/commit/ac78dcf2cba6505f822b6db093a14d489eee1c49) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Fix CBOR option declarations so strict NodeNext consumers can import Lex without checking cborg's incompatible declarations. Add a packed-consumer regression check for both entrypoints.
+
+## 0.1.9
+
+### Patch Changes
+
+- [#5825](https://github.com/bluesky-social/atproto/pull/5825) [`8c841f6`](https://github.com/bluesky-social/atproto/commit/8c841f6e73c8365c2dfe816c0613aa9c50490361) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add `ui8ConcatAsync()` to `@atproto/lex-data`, type `encode()`'s result in `@atproto/lex-cbor` as `Uint8Array<ArrayBuffer>`, and keep `bytes` schemas from coercing arrays and array-like objects now that `asUint8Array` accepts them.
+- Updated dependencies [[`8c841f6`](https://github.com/bluesky-social/atproto/commit/8c841f6e73c8365c2dfe816c0613aa9c50490361), [`8c841f6`](https://github.com/bluesky-social/atproto/commit/8c841f6e73c8365c2dfe816c0613aa9c50490361), [`8c841f6`](https://github.com/bluesky-social/atproto/commit/8c841f6e73c8365c2dfe816c0613aa9c50490361), [`8c841f6`](https://github.com/bluesky-social/atproto/commit/8c841f6e73c8365c2dfe816c0613aa9c50490361)]:
+  - @atproto/lex-data@0.1.10
+
+## 0.1.8
+
+### Patch Changes
+
+- [#5786](https://github.com/bluesky-social/atproto/pull/5786) [`07c25d4`](https://github.com/bluesky-social/atproto/commit/07c25d410d4f4ad8f6ec80fc14efa0dd8ec55545) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Re-export `@atproto/lex-cbor` from `@atproto/lex`
+
+- [#5786](https://github.com/bluesky-social/atproto/pull/5786) [`07c25d4`](https://github.com/bluesky-social/atproto/commit/07c25d410d4f4ad8f6ec80fc14efa0dd8ec55545) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Recommend depending on this package directly, rather than on `@atproto/lex`, unless the code is bundled
+- Updated dependencies [[`07c25d4`](https://github.com/bluesky-social/atproto/commit/07c25d410d4f4ad8f6ec80fc14efa0dd8ec55545)]:
+  - @atproto/lex-data@0.1.9
+
+## 0.1.7
+
+### Patch Changes
+
+- Updated dependencies [[`e8b89ff`](https://github.com/bluesky-social/atproto/commit/e8b89ff4c211a10519b54bd83eb64950035942c3)]:
+  - @atproto/lex-data@0.1.8
+
 ## 0.1.6
 
 ### Patch Changes

@@ -5,22 +5,24 @@ import { TestNetworkNoAppView } from '@atproto/dev-env'
 import { parseCid } from '@atproto/lex-data'
 import { lexParse } from '@atproto/lex-json'
 import {
-  COMMIT_MAC_TYPE,
+  COMMIT_MAC_PROFILE,
   LtHash,
-  MAC_HEADER,
-  RECORD_MAC_TYPE,
+  RECORD_MAC_PROFILE,
   RepoCommit,
-  WANT_MAC_HEADER,
+  SpaceRepoVerificationError,
   createSpaceSigHeaders,
   encapsulate,
-  formatWantMacHeader,
-  parseMacHeader,
+  formatMacRequest,
   spaceHostAud,
   verifyCommit,
   verifyRecord,
   verifyRepoStarFull,
 } from '@atproto/space'
-import type { NsidString, SpaceRefString } from '@atproto/syntax'
+import type {
+  NsidString,
+  SpaceAtUriString,
+  SpaceRefString,
+} from '@atproto/syntax'
 import { createServiceAuthHeaders } from '@atproto/xrpc-server'
 import { getDb, getMigrator } from '../../src/actor-store/db/index.js'
 import { resolveServiceEndpoint } from '../../src/api/com/atproto/space/util.js'
@@ -32,6 +34,7 @@ import {
   SpaceClient,
   TEST_COLLECTION,
   TEST_COLLECTION_ALT,
+  listedWriters,
 } from '../_space.js'
 
 /**
@@ -105,41 +108,49 @@ describe('space sync', () => {
       expect(rkeys).toEqual([0, 1, 2, 3, 4].map((i) => `atomic-${i}`))
     })
 
-    it('withholds the commit until the oplog is drained to head', async () => {
-      // The commit is the syncer's checkpoint, so handing it out mid-backfill
-      // would let it believe it had caught up.
+    it('carries the current commit on every page', async () => {
+      // Every page carries the repo's current commit, so a syncer compares its
+      // copy against it once it has applied the last page, which has no cursor.
       const space = await sc.createSpace(alice, { members: [dan] })
       for (const i of [0, 1, 2]) {
         await sc.write(dan, space, { rkey: `paged-${i}` })
       }
+      const state = await sc.repoState(dan, space)
 
       const cred = await sc.credentialFor(dan, space)
       const asSyncer = cred.clientFor(dan.pds)
-      const first = await asSyncer.call(com.atproto.space.listRepoOps, {
-        space,
-        repo: dan.did,
-        limit: 1,
-      })
-      expect(first.commit).toBeUndefined()
-      expect(first.cursor).toBeDefined()
-
-      let cursor = first.cursor
-      let commit: unknown
-      const seen = [first.ops[0].rev]
-      for (let i = 0; i < 5 && cursor; i++) {
-        const next = await asSyncer.call(com.atproto.space.listRepoOps, {
+      const local = new RepoCommit()
+      const seen: string[] = []
+      let cursor: string | undefined
+      for (let i = 0; i < 5; i++) {
+        const page = await asSyncer.call(com.atproto.space.listRepoOps, {
           space,
           repo: dan.did,
           cursor,
           limit: 1,
         })
-        if (next.ops[0]) seen.push(next.ops[0].rev)
-        cursor = next.cursor
-        commit = next.commit
+        expect(page.commit.rev).toBe(state?.rev)
+        for (const op of page.ops) {
+          seen.push(op.rev)
+          local.applyOp({
+            collection: op.collection,
+            rkey: op.rkey,
+            cid: op.cid ? parseCid(op.cid) : null,
+            prev: op.prev ? parseCid(op.prev) : null,
+          })
+        }
+        // The first page leaves the syncer's copy behind the commit.
+        if (i === 0) expect(local.matches(page.commit)).toBe(false)
+        cursor = page.cursor
+        if (!cursor) {
+          expect(local.matches(page.commit)).toBe(true)
+          break
+        }
       }
       // Each page advances: paging on a cursor that was ignored would repeat a rev.
+      expect(seen).toHaveLength(3)
       expect(new Set(seen).size).toBe(seen.length)
-      expect(commit).toBeDefined()
+      expect(cursor).toBeUndefined()
     })
 
     it('pages with since and cursor together', async () => {
@@ -227,7 +238,7 @@ describe('space sync', () => {
           repo: dan.did,
           cursor: 'not-a-cursor',
         }),
-      ).rejects.toMatchObject({ error: 'MalformedCursor' })
+      ).rejects.toMatchObject({ error: 'InvalidCursor' })
     })
   })
 
@@ -248,7 +259,9 @@ describe('space sync', () => {
         { space, repo: dan.did, limit: 100 },
       )
       expect(commit).toBeDefined()
-      expect(cred.verifyCommit(commit!, { space, repo: dan.did })).toBe(true)
+      expect(() =>
+        cred.verifyCommit(commit!, { space, repo: dan.did }),
+      ).not.toThrow()
 
       const local = new RepoCommit()
       for (const op of ops) {
@@ -371,9 +384,9 @@ describe('space sync', () => {
         space,
         repo: bob.did,
       })
-      expect(cred.verifyCommit(latest.commit, { space, repo: bob.did })).toBe(
-        true,
-      )
+      expect(() =>
+        cred.verifyCommit(latest.commit, { space, repo: bob.did }),
+      ).not.toThrow()
       expect(rebuilt.matches(latest.commit)).toBe(true)
     })
   })
@@ -398,7 +411,7 @@ describe('space sync', () => {
       )
       expect(res.status).toBe(200)
       expect(res.headers.get('content-type')).toContain(
-        'application/octet-stream',
+        'application/vnd.dasl.star',
       )
       const star = new Uint8Array(await res.arrayBuffer())
 
@@ -454,9 +467,9 @@ describe('space sync', () => {
         since: synced.commit!.rev,
       })
       expect(incremental.ops).toEqual([])
-      expect(
+      expect(() =>
         cred.verifyCommit(incremental.commit!, { space, repo: bob.did }),
-      ).toBe(true)
+      ).not.toThrow()
       expect(local.matches(incremental.commit!)).toBe(false)
 
       const res = await cred.fetch(
@@ -490,11 +503,13 @@ describe('space sync', () => {
     it('reports RepoNotFound for an unwritten repo', async () => {
       const space = await sc.createSpace(alice, { members: [carol] })
       const cred = await sc.credentialFor(carol, space)
+      const asSyncer = cred.clientFor(alice.pds)
+      const params = { space, repo: alice.did }
       await expect(
-        cred.clientFor(alice.pds).call(com.atproto.space.getLatestCommit, {
-          space,
-          repo: alice.did,
-        }),
+        asSyncer.call(com.atproto.space.getLatestCommit, params),
+      ).rejects.toMatchObject({ error: 'RepoNotFound' })
+      await expect(
+        asSyncer.call(com.atproto.space.listRepoOps, params),
       ).rejects.toMatchObject({ error: 'RepoNotFound' })
     })
   })
@@ -531,18 +546,21 @@ describe('space sync', () => {
           collection: TEST_COLLECTION,
           rkey: 'maced',
         })
-      expect(cred.lastMac?.type).toBe(RECORD_MAC_TYPE)
+      expect(cred.lastMac?.profile).toBe(RECORD_MAC_PROFILE)
+      const uri = `${space}/${bob.did}/${TEST_COLLECTION}/maced`
       const params = {
-        uri: `${space}/${bob.did}/${TEST_COLLECTION}/maced`,
+        uri: uri as SpaceAtUriString,
         ...cred.lastMacParams(),
       }
-      expect(await verifyRecord(res, params)).toBe(true)
+      await expect(verifyRecord(res, params)).resolves.toBeUndefined()
       // The MAC is bound to this one record.
-      const other = { ...params, uri: `${params.uri}x` }
-      expect(await verifyRecord(res, other)).toBe(false)
+      const other = { ...params, uri: `${uri}x` as SpaceAtUriString }
+      await expect(verifyRecord(res, other)).rejects.toThrow(
+        SpaceRepoVerificationError,
+      )
     })
 
-    it('omits the MAC from an oplog page without a commit', async () => {
+    it('macs every oplog page', async () => {
       const space = await sc.createSpace(alice, { members: [bob] })
       await sc.write(bob, space, { rkey: 'page-0' })
       await sc.write(bob, space, { rkey: 'page-1' })
@@ -555,47 +573,52 @@ describe('space sync', () => {
           repo: bob.did,
           limit: 1,
         })
-      expect(page.commit).toBeUndefined()
-      expect(cred.lastMac?.header).toBeNull()
+      expect(page.cursor).toBeDefined()
+      expect(() =>
+        cred.verifyCommit(page.commit, { space, repo: bob.did }),
+      ).not.toThrow()
     })
 
     it('requires a MAC request with a space credential', async () => {
       const space = await sc.createSpace(alice, { members: [bob] })
       await sc.write(bob, space)
       const cred = await sc.credentialFor(bob, space)
-      const sigHeaders = await createSpaceSigHeaders(cred.key, {
+      const { headers: sigHeaders } = await createSpaceSigHeaders({
         authorization: `Atproto-Space-Credential ${cred.credential}`,
         audience: bob.did,
+        keypair: cred.key,
       })
 
       const missing = await fetch(getLatestCommitUrl(bob, space), {
         headers: sigHeaders,
       })
       expect(missing.status).toBe(400)
-      expect(await missing.json()).toMatchObject({ error: 'BadSpaceMac' })
+      expect(await missing.json()).toMatchObject({ error: 'InvalidSpaceMac' })
 
-      // A record MAC type on a method that returns a commit.
+      // A record MAC profile on a method that returns a commit.
       const { keyShare } = await encapsulate(await cred.resolveKemKey(bob.did))
-      const wrongType = await fetch(getLatestCommitUrl(bob, space), {
+      const wrongProfile = await fetch(getLatestCommitUrl(bob, space), {
         headers: {
           ...sigHeaders,
-          [WANT_MAC_HEADER]: formatWantMacHeader(RECORD_MAC_TYPE, keyShare),
+          'accept-signature': formatMacRequest(RECORD_MAC_PROFILE, keyShare),
         },
       })
-      expect(wrongType.status).toBe(400)
-      expect(await wrongType.json()).toMatchObject({ error: 'BadSpaceMac' })
+      expect(wrongProfile.status).toBe(400)
+      expect(await wrongProfile.json()).toMatchObject({
+        error: 'InvalidSpaceMac',
+      })
 
       const badKey = await fetch(getLatestCommitUrl(bob, space), {
         headers: {
           ...sigHeaders,
-          [WANT_MAC_HEADER]: formatWantMacHeader(
-            COMMIT_MAC_TYPE,
+          'accept-signature': formatMacRequest(
+            COMMIT_MAC_PROFILE,
             'did:key:nope',
           ),
         },
       })
       expect(badKey.status).toBe(400)
-      expect(await badKey.json()).toMatchObject({ error: 'BadSpaceMac' })
+      expect(await badKey.json()).toMatchObject({ error: 'InvalidSpaceMac' })
     })
 
     it('macs an account its own data only when asked', async () => {
@@ -606,32 +629,44 @@ describe('space sync', () => {
         headers: bob.headers,
       })
       expect(unasked.status).toBe(200)
-      expect(unasked.headers.get(MAC_HEADER)).toBeNull()
-      expect(unasked.headers.get('vary')).toMatch(/atproto-space-want-mac/i)
+      expect(unasked.headers.get('signature')).toBeNull()
+      expect(unasked.headers.get('vary')).toMatch(/accept-signature/i)
+
+      // A request for some other kind of signature is ignored, not refused.
+      const otherTag = await fetch(getLatestCommitUrl(bob, space), {
+        headers: {
+          ...bob.headers,
+          'accept-signature': 'other=("@status");tag="other"',
+        },
+      })
+      expect(otherTag.status).toBe(200)
+      expect(otherTag.headers.get('signature')).toBeNull()
 
       const cred = await sc.credentialFor(bob, space)
-      const { keyShare, sharedSecret } = await encapsulate(
-        await cred.resolveKemKey(bob.did),
-      )
+      const encapsulation = await encapsulate(await cred.resolveKemKey(bob.did))
       const asked = await fetch(getLatestCommitUrl(bob, space), {
         headers: {
           ...bob.headers,
-          [WANT_MAC_HEADER]: formatWantMacHeader(COMMIT_MAC_TYPE, keyShare),
+          'accept-signature': formatMacRequest(
+            COMMIT_MAC_PROFILE,
+            encapsulation.keyShare,
+          ),
         },
       })
       expect(asked.status).toBe(200)
-      expect(asked.headers.get('access-control-expose-headers')).toMatch(
-        /atproto-space-mac/i,
-      )
-      const mac = parseMacHeader(
-        asked.headers.get(MAC_HEADER) ?? undefined,
-        COMMIT_MAC_TYPE,
-      )
+      const exposed = asked.headers.get('access-control-expose-headers')
+      expect(exposed).toMatch(/atproto-space-commit/i)
+      expect(exposed).toMatch(/signature-input/i)
       const body = lexParse(await asked.text()) as { commit: unknown }
       const commit = com.atproto.space.defs.commit.$parse(body.commit)
-      expect(
-        verifyCommit(commit, { space, repo: bob.did, sharedSecret, mac }),
-      ).toBe(true)
+      expect(() =>
+        verifyCommit(commit, {
+          space,
+          repo: bob.did,
+          ...encapsulation,
+          headers: asked.headers,
+        }),
+      ).not.toThrow()
     })
   })
 
@@ -652,30 +687,36 @@ describe('space sync', () => {
       expect(await sc.writerDids(space)).toEqual([dan.did])
     })
 
-    it('records a writer from notifyWrite, and it is not the member list', async () => {
+    it('records a writer from notifyRepoUpdate, and it is not the member list', async () => {
       const space = await sc.createSpace(alice, { members: [bob] })
 
-      // Bob writes on pds2; his PDS delivers notifyWrite at the
+      // Bob writes on pds2; his PDS delivers notifyRepoUpdate at the
       // authority, which records him in the writer set.
       await sc.write(bob, space, { text: 'writer set entry' })
 
       const cred = await sc.credentialFor(bob, space)
       const asSyncer = cred.clientFor(alice.pds)
       const repos = await sc.awaitNotify(
-        () => asSyncer.call(com.atproto.space.listRepos, { space }),
-        (res) => res.repos.some((r) => r.did === bob.did),
+        () => asSyncer.call(com.atproto.space.listWriters, { space }),
+        (res) => listedWriters(res).some((r) => r.repo === bob.did),
       )
-      const dids = repos.repos.map((r) => r.did)
+      const dids = listedWriters(repos).map((r) => r.repo)
       expect(dids).toContain(bob.did)
       // Alice is a member who hasn't written, so she is absent: the writer set is
       // the sync boundary, not the membership list.
       expect(dids).not.toContain(alice.did)
 
       // And it carries where each writer is up to, so a syncer knows what to pull.
-      const entry = repos.repos.find((r) => r.did === bob.did)!
+      const entry = listedWriters(repos).find((r) => r.repo === bob.did)!
       const state = await sc.repoState(bob, space)
-      expect(entry.repoRev).toBe(state!.rev)
-      expect(entry.data).toEqual(new LtHash(state!.setHash!).digest())
+      expect(entry).toEqual(
+        com.atproto.space.defs.repoWrite.$build({
+          repo: bob.did,
+          repoRev: state!.rev!,
+          data: new LtHash(state!.setHash!).digest(),
+          spaceRev: entry.spaceRev,
+        }),
+      )
     })
 
     it('records a writer admitted by public write access, who was never a member', async () => {
@@ -694,7 +735,7 @@ describe('space sync', () => {
     })
 
     it('records a writer into an app-gated space, whose PDS presents no attestation', async () => {
-      // notifyWrite comes from the writer's PDS, not an app, so there is no
+      // notifyRepoUpdate comes from the writer's PDS, not an app, so there is no
       // client attestation to present. Applying the app perimeter here would
       // reject every write into an app-gated space.
       const space = await sc.createSpace(alice, {
@@ -721,9 +762,25 @@ describe('space sync', () => {
         () => sc.writerDids(space),
         (dids) => dids.includes(bob.did),
       )
+      const cred = await sc.credentialFor(alice, space)
+      const client = cred.clientFor(alice.pds)
+      const before = await client.call(com.atproto.space.listWriters, { space })
 
       await sc.removeWriter(alice, space, bob)
       await sc.expectWriterSet(space, alice, [])
+
+      // The removal is listed at a new space revision, so a syncer catching up
+      // from its cursor learns of it.
+      const caughtUp = await client.call(com.atproto.space.listWriters, {
+        space,
+        cursor: before.cursor,
+      })
+      expect(caughtUp.repos).toEqual([
+        com.atproto.space.defs.repoRemoved.$build({
+          repo: bob.did,
+          spaceRev: caughtUp.cursor!,
+        }),
+      ])
 
       // A public write policy still authorizes bob, so his next write puts him
       // back in the writer set.
@@ -735,12 +792,30 @@ describe('space sync', () => {
       await sc.expectWriterSet(space, alice, [bob])
     })
 
+    it('ignores removeWriter for a repo outside the writer set', async () => {
+      const space = await sc.createSpace(alice, { members: [bob, dan] })
+      await sc.write(dan, space)
+      await sc.removeWriter(alice, space, dan)
+      const cred = await sc.credentialFor(alice, space)
+      const client = cred.clientFor(alice.pds)
+      const before = await client.call(com.atproto.space.listWriters, { space })
+
+      // Neither a repo that never wrote nor one already removed is a change to
+      // the writer set, so neither advances the space sequence.
+      await sc.removeWriter(alice, space, bob)
+      await sc.removeWriter(alice, space, dan)
+
+      expect(
+        await client.call(com.atproto.space.listWriters, { space }),
+      ).toEqual(before)
+    })
+
     it('refuses removeWriter from anyone but the authority', async () => {
       const space = await sc.createSpace(alice, { members: [dan] })
       await sc.write(dan, space, { text: 'still tracked' })
 
       await expect(sc.removeWriter(dan, space, dan)).rejects.toMatchObject({
-        error: 'NotSpaceOwner',
+        error: 'NotAuthorized',
       })
       expect(await sc.writerDids(space)).toEqual([dan.did])
     })
@@ -823,47 +898,47 @@ describe('space sync', () => {
         respond: () => ({ status: 503, body: {} }),
       })
       const space = await sc.createSpace(alice, { members: [bob, dan, carol] })
-      const cred = await sc.credentialFor(carol, space)
-      const client = cred.clientFor(alice.pds)
-      await client.call(com.atproto.space.registerNotify, {
-        space,
-        service: syncer.serviceRef,
+      const cred = await sc.credentialFor(carol, space, {
+        notify: syncer.notifyRegistration(),
       })
-      const empty = await client.call(com.atproto.space.listRepos, { space })
+      const client = cred.clientFor(alice.pds)
+      const empty = await client.call(com.atproto.space.listWriters, { space })
       expect(empty.repos).toEqual([])
 
       await sc.write(bob, space)
-      const initial = await client.call(com.atproto.space.listRepos, { space })
+      const initial = await client.call(com.atproto.space.listWriters, {
+        space,
+      })
       const cursor = initial.cursor
-      expect(cursor).toBe(initial.repos.at(-1)!.spaceRev)
+      expect(cursor).toBe(listedWriters(initial).at(-1)!.spaceRev)
       await sc.write(dan, space)
       await sc.write(bob, space)
       await alice.pds.ctx.backgroundQueue.processAll()
 
-      const first = await client.call(com.atproto.space.listRepos, {
+      const first = await client.call(com.atproto.space.listWriters, {
         space,
         cursor,
         limit: 1,
       })
-      expect(first.repos.map((r) => r.did)).toEqual([dan.did])
+      expect(listedWriters(first).map((r) => r.repo)).toEqual([dan.did])
 
       // @NOTE A repo already returned can move forward while the caller paginates.
       await sc.write(dan, space)
-      const second = await client.call(com.atproto.space.listRepos, {
+      const second = await client.call(com.atproto.space.listWriters, {
         space,
         cursor: first.cursor,
         limit: 1,
       })
-      expect(second.repos.map((r) => r.did)).toEqual([bob.did])
-      const last = await client.call(com.atproto.space.listRepos, {
+      expect(listedWriters(second).map((r) => r.repo)).toEqual([bob.did])
+      const last = await client.call(com.atproto.space.listWriters, {
         space,
         cursor: second.cursor,
         limit: 1,
       })
-      expect(last.repos.map((r) => r.did)).toEqual([dan.did])
+      expect(listedWriters(last).map((r) => r.repo)).toEqual([dan.did])
       const nextCursor = last.cursor
-      expect(nextCursor).toBe(last.repos.at(-1)!.spaceRev)
-      const caughtUp = await client.call(com.atproto.space.listRepos, {
+      expect(nextCursor).toBe(listedWriters(last).at(-1)!.spaceRev)
+      const caughtUp = await client.call(com.atproto.space.listWriters, {
         space,
         cursor: nextCursor,
       })
@@ -871,14 +946,38 @@ describe('space sync', () => {
       expect(caughtUp.cursor).toBeUndefined()
     })
 
+    it("returns the space's current revision on each authorization", async () => {
+      const space = await sc.createSpace(alice, { members: [dan, carol] })
+      const authorize = async () =>
+        sc.mintCredential(space, await sc.delegationTokenFor(carol, space))
+      expect((await authorize()).spaceRev).toBeUndefined()
+
+      await sc.write(dan, space)
+      const cred = await sc.credentialFor(carol, space)
+      const client = cred.clientFor(alice.pds)
+      const written = await client.call(com.atproto.space.listWriters, {
+        space,
+      })
+      expect((await authorize()).spaceRev).toBe(written.cursor)
+
+      await sc.removeWriter(alice, space, dan)
+      const removed = await client.call(com.atproto.space.listWriters, {
+        space,
+      })
+      expect(removed.cursor! > written.cursor!).toBe(true)
+      expect((await authorize()).spaceRev).toBe(removed.cursor)
+    })
+
     it('resumes after an empty page using the last processed repo revision', async () => {
       const space = await sc.createSpace(alice, { members: [bob] })
       await sc.write(bob, space)
       const cred = await sc.credentialFor(alice, space)
       const client = cred.clientFor(alice.pds)
-      const initial = await client.call(com.atproto.space.listRepos, { space })
+      const initial = await client.call(com.atproto.space.listWriters, {
+        space,
+      })
       let cursor = initial.cursor!
-      const empty = await client.call(com.atproto.space.listRepos, {
+      const empty = await client.call(com.atproto.space.listWriters, {
         space,
         cursor,
       })
@@ -887,25 +986,25 @@ describe('space sync', () => {
       cursor = empty.cursor ?? cursor
 
       await sc.write(bob, space)
-      const catchUp = await client.call(com.atproto.space.listRepos, {
+      const catchUp = await client.call(com.atproto.space.listWriters, {
         space,
         cursor,
       })
-      expect(catchUp.repos.map((r) => r.did)).toEqual([bob.did])
-      expect(catchUp.repos[0].spaceRev > cursor).toBe(true)
+      expect(listedWriters(catchUp).map((r) => r.repo)).toEqual([bob.did])
+      expect(listedWriters(catchUp)[0].spaceRev > cursor).toBe(true)
     })
 
-    it('accepts arbitrary string listRepos cursors', async () => {
+    it('accepts arbitrary string listWriters cursors', async () => {
       const space = await sc.createSpace(alice)
       await sc.write(alice, space)
       const cred = await sc.credentialFor(alice, space)
       const client = cred.clientFor(alice.pds)
-      const before = await client.call(com.atproto.space.listRepos, {
+      const before = await client.call(com.atproto.space.listWriters, {
         space,
         cursor: '0',
       })
-      expect(before.repos.map((repo) => repo.did)).toEqual([alice.did])
-      const after = await client.call(com.atproto.space.listRepos, {
+      expect(listedWriters(before).map((r) => r.repo)).toEqual([alice.did])
+      const after = await client.call(com.atproto.space.listWriters, {
         space,
         cursor: 'not-a-tid',
       })
@@ -918,26 +1017,53 @@ describe('space sync', () => {
         serviceId: 'atproto_space_syncer',
       })
       const space = await sc.createSpace(alice, { members: [bob, dan, carol] })
-      const cred = await sc.credentialFor(carol, space)
-      const client = cred.clientFor(alice.pds)
-      await client.call(com.atproto.space.registerNotify, {
-        space,
-        service: syncer.serviceRef,
+      const cred = await sc.credentialFor(carol, space, {
+        notify: syncer.notifyRegistration(),
       })
+      const client = cred.clientFor(alice.pds)
       await sc.write(alice, space)
       await Promise.all([sc.write(bob, space), sc.write(dan, space)])
       await alice.pds.ctx.backgroundQueue.processAll()
       const notifications = syncer
-        .callsTo(com.atproto.space.notifyWrite.$lxm)
-        .map((call) => call.body as com.atproto.space.notifyWrite.$InputBody)
-        .sort((a, b) => a.spaceRev!.localeCompare(b.spaceRev!))
+        .spaceUpdates()
+        .filter((update) => com.atproto.space.defs.repoWrite.$isTypeOf(update))
+        .sort((a, b) => a.spaceRev.localeCompare(b.spaceRev))
       expect(notifications).toHaveLength(3)
       expect(notifications[0].prevSpaceRev).toBeUndefined()
       expect(notifications[1].prevSpaceRev).toBe(notifications[0].spaceRev)
       expect(notifications[2].prevSpaceRev).toBe(notifications[1].spaceRev)
-      const listed = await client.call(com.atproto.space.listRepos, { space })
-      expect(listed.repos.at(-1)?.spaceRev).toBe(notifications[2].spaceRev)
-      expect(new Set(listed.repos.map((r) => r.spaceRev)).size).toBe(3)
+      const listed = await client.call(com.atproto.space.listWriters, { space })
+      expect(listedWriters(listed).at(-1)?.spaceRev).toBe(
+        notifications[2].spaceRev,
+      )
+      expect(new Set(listedWriters(listed).map((r) => r.spaceRev)).size).toBe(3)
+    })
+
+    it('forwards a removal from the writer set, in the space sequence', async () => {
+      await using syncer = await MockService.create(network, {
+        serviceId: 'atproto_space_syncer',
+      })
+      const space = await sc.createSpace(alice, { members: [dan, carol] })
+      const cred = await sc.credentialFor(carol, space, {
+        notify: syncer.notifyRegistration(),
+      })
+      const client = cred.clientFor(alice.pds)
+      await sc.write(dan, space)
+      await sc.removeWriter(alice, space, dan)
+      await alice.pds.ctx.backgroundQueue.processAll()
+
+      const { repoWrite, repoRemoved } = com.atproto.space.defs
+      const updates = syncer.spaceUpdates()
+      const write = updates.find((update) => repoWrite.$isTypeOf(update))
+      const removal = updates.find((update) => repoRemoved.$isTypeOf(update))
+      const listed = await client.call(com.atproto.space.listWriters, { space })
+      expect(removal).toEqual(
+        repoRemoved.$build({
+          repo: dan.did,
+          spaceRev: listed.cursor!,
+          prevSpaceRev: write?.spaceRev,
+        }),
+      )
     })
 
     it("resolves a space host through the authority's #atproto_pds entry", async () => {
@@ -986,38 +1112,39 @@ describe('space sync', () => {
       const cred = await sc.credentialFor(bob, space)
       const listed = await cred
         .clientFor(alice.pds)
-        .call(com.atproto.space.listRepos, { space })
+        .call(com.atproto.space.listWriters, { space })
       expect(listed.repos).toHaveLength(1)
-      expect(listed.repos[0].repoRev).toBe(state.rev)
-      expect(listed.repos[0].data).toEqual(new LtHash(state.setHash!).digest())
+      expect(listed.repos[0]).toEqual(
+        com.atproto.space.defs.repoWrite.$build({
+          repo: bob.did,
+          repoRev: state.rev!,
+          data: new LtHash(state.setHash!).digest(),
+          spaceRev: listedWriters(listed)[0].spaceRev,
+        }),
+      )
       await restarted.retryPending()
       expect(
         await cred
           .clientFor(alice.pds)
-          .call(com.atproto.space.listRepos, { space }),
+          .call(com.atproto.space.listWriters, { space }),
       ).toEqual(listed)
     })
   })
 
-  describe('notifyWrite', () => {
+  describe('notifyRepoUpdate', () => {
     const notify = async (
       signer: Actor,
-      body: {
-        space: SpaceRefString
-        repo: string
-        repoRev: string
-        data: Uint8Array
-      },
+      body: com.atproto.space.notifyRepoUpdate.$InputBody,
       opts: { aud?: string } = {},
     ) => {
       const keypair = await signer.pds.ctx.actorStore.keypair(signer.did)
       const { headers } = await createServiceAuthHeaders({
         iss: signer.did,
         aud: opts.aud ?? spaceHostAud(alice.did),
-        lxm: com.atproto.space.notifyWrite.$lxm,
+        lxm: com.atproto.space.notifyRepoUpdate.$lxm,
         keypair,
       })
-      return alice.client.call(com.atproto.space.notifyWrite, body as never, {
+      return alice.client.call(com.atproto.space.notifyRepoUpdate, body, {
         headers,
       })
     }
@@ -1027,19 +1154,18 @@ describe('space sync', () => {
         serviceId: 'atproto_space_syncer',
       })
       const space = await sc.createSpace(alice, { members: [bob] })
-      const cred = await sc.credentialFor(alice, space)
-      const client = cred.clientFor(alice.pds)
-      await client.call(com.atproto.space.registerNotify, {
-        space,
-        service: syncer.serviceRef,
+      const cred = await sc.credentialFor(alice, space, {
+        notify: syncer.notifyRegistration(),
       })
+      const client = cred.clientFor(alice.pds)
       await sc.write(bob, space)
       const older = (await sc.repoState(bob, space))!.rev!
       await sc.write(bob, space)
+      const current = (await sc.repoState(bob, space))!.rev!
       await alice.pds.ctx.backgroundQueue.processAll()
-      const before = await client.call(com.atproto.space.listRepos, { space })
-      const calls = syncer.callsTo(com.atproto.space.notifyWrite.$lxm).length
-      for (const repoRev of [older, before.repos[0].repoRev]) {
+      const before = await client.call(com.atproto.space.listWriters, { space })
+      const calls = syncer.spaceUpdates().length
+      for (const repoRev of [older, current]) {
         await notify(bob, {
           space,
           repo: bob.did,
@@ -1048,12 +1174,10 @@ describe('space sync', () => {
         })
       }
       await alice.pds.ctx.backgroundQueue.processAll()
-      expect(await client.call(com.atproto.space.listRepos, { space })).toEqual(
-        before,
-      )
-      expect(syncer.callsTo(com.atproto.space.notifyWrite.$lxm)).toHaveLength(
-        calls,
-      )
+      expect(
+        await client.call(com.atproto.space.listWriters, { space }),
+      ).toEqual(before)
+      expect(syncer.spaceUpdates()).toHaveLength(calls)
     })
 
     it('keeps the newest repo revision when notifications race', async () => {
@@ -1073,9 +1197,16 @@ describe('space sync', () => {
       const cred = await sc.credentialFor(alice, space)
       const listed = await cred
         .clientFor(alice.pds)
-        .call(com.atproto.space.listRepos, { space })
+        .call(com.atproto.space.listWriters, { space })
       expect(listed.repos).toHaveLength(1)
-      expect(listed.repos[0]).toMatchObject({ repoRev: newer, data })
+      expect(listed.repos[0]).toEqual(
+        com.atproto.space.defs.repoWrite.$build({
+          repo: bob.did,
+          repoRev: newer,
+          data,
+          spaceRev: listedWriters(listed)[0].spaceRev,
+        }),
+      )
     })
 
     it('rejects future revisions while allowing a small clock skew', async () => {
@@ -1112,13 +1243,13 @@ describe('space sync', () => {
           repoRev: TID.nextStr(),
           data: new LtHash().digest(),
         }),
-      ).rejects.toThrow(/iss does not match claimed writer/)
+      ).rejects.toThrow(/iss does not match the repo/)
     })
 
     it('rejects one addressed to another authority', async () => {
       // Everything but the audience checks out: bob is a member signing for
       // himself, off a real write. Only the aud stands between him and moving
-      // the writer set that listRepos publishes.
+      // the writer set that listWriters publishes.
       const space = await sc.createSpace(alice, { members: [bob] })
       await sc.write(bob, space, { text: 'misaddressed' })
       const state = await sc.repoState(bob, space)
@@ -1164,8 +1295,33 @@ describe('space sync', () => {
       ).rejects.toThrow(/not authorized/)
     })
 
-    it('rejects a repoRev that is not a TID before any auth check', async () => {
-      // `repoRev` is typed as a tid, so a malformed one never reaches the handler.
+    it('rejects a member without write access even when writes are public', async () => {
+      // publicWrite admits accounts that aren't on the member list. A member whose
+      // write access is set to false is still excluded.
+      const space = await sc.createSpace(alice, {
+        policy: com.atproto.memberspace.policy.$build({ publicWrite: true }),
+      })
+      await sc.putMember(alice, space, bob, { read: true, write: false })
+
+      await expect(
+        notify(bob, {
+          space,
+          repo: bob.did,
+          repoRev: TID.nextStr(),
+          data: new LtHash().digest(),
+        }),
+      ).rejects.toThrow(/not authorized/)
+      await notify(carol, {
+        space,
+        repo: carol.did,
+        repoRev: TID.nextStr(),
+        data: new LtHash().digest(),
+      })
+      expect(await sc.writerDids(space)).toEqual([carol.did])
+    })
+
+    it('rejects a rev that is not a TID before any auth check', async () => {
+      // `rev` is typed as a tid, so a malformed one never reaches the handler.
       // Worth pinning: an adversarial test that passes a junk rev would be
       // rejected here and never exercise the check it means to.
       const space = await sc.createSpace(alice, { members: [bob] })

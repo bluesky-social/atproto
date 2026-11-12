@@ -4,6 +4,9 @@ import * as spaceAccess from './003-space-access.js'
 import * as spaceSync from './004-space-sync.js'
 import * as spaceCommitData from './005-space-commit-data.js'
 import * as spacePolicy from './006-space-policy.js'
+import * as spaceNotifyService from './007-space-notify-service.js'
+import * as spaceWriterRemoved from './008-space-writer-removed.js'
+import * as spaceNotifyRegistration from './009-space-notify-registration.js'
 
 export default {
   '001': init,
@@ -12,4 +15,7 @@ export default {
   '004': spaceSync,
   '005': spaceCommitData,
   '006': spacePolicy,
+  '007': spaceNotifyService,
+  '008': spaceWriterRemoved,
+  '009': spaceNotifyRegistration,
 }

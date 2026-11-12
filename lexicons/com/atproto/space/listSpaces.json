@@ -4,26 +4,24 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "List the spaces the authenticated user holds a repo in (i.e. spaces the user has written data to) or is the authority of, optionally filtered by type and/or authority DID. Note this is not 'spaces I'm a member of' — a member's PDS only tracks spaces its user has written to. Requires auth, implemented by PDS.",
+      "description": "List spaces that the authenticated account has written to or is the authority for. Requires auth, implemented by PDS.",
       "parameters": {
         "type": "params",
         "properties": {
-          "spaceType": {
-            "type": "string",
-            "format": "nsid",
-            "description": "Filter to spaces of this space type."
-          },
-          "did": {
+          "spaceDid": {
             "type": "string",
             "format": "did",
-            "description": "Filter to spaces under this authority DID."
+            "description": "Filter to spaces with this DID as their authority."
+          },
+          "spaceType": {
+            "type": "string",
+            "format": "nsid"
           },
           "limit": {
             "type": "integer",
             "minimum": 1,
             "maximum": 100,
-            "default": 50,
-            "description": "The number of spaces to return."
+            "default": 50
           },
           "cursor": {
             "type": "string"
@@ -48,16 +46,34 @@
             }
           }
         }
-      }
+      },
+      "errors": [
+        {
+          "name": "InvalidCursor"
+        }
+      ]
     },
     "spaceView": {
       "type": "object",
-      "required": ["uri"],
+      "required": ["space"],
       "properties": {
-        "uri": {
+        "space": {
           "type": "string",
-          "format": "space-ref",
-          "description": "URI of the space."
+          "format": "space-ref"
+        },
+        "repoRev": {
+          "type": "string",
+          "format": "tid",
+          "description": "The current revision of the account's repo in the space, if it has one."
+        },
+        "data": {
+          "type": "bytes",
+          "description": "The current commit data of the account's repo in the space, if it has one."
+        },
+        "spaceRev": {
+          "type": "string",
+          "format": "tid",
+          "description": "The current revision of the space. Only included if the account is the space's authority."
         }
       }
     }

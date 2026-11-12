@@ -1,8 +1,10 @@
 import assert from 'node:assert'
 import { CID } from 'multiformats/cid'
 import {
+  BlobRef,
   type LexiconDoc,
   Lexicons,
+  lexSpace,
   lexiconDoc,
   parseLexiconDoc,
 } from '../src/index.js'
@@ -1139,6 +1141,25 @@ describe('Record validation', () => {
     ).toThrow('Record/cid must be a cid string')
   })
 
+  it('Rejects oversized cid strings without decoding them', () => {
+    // base58btc decoding is quadratic in the input length, so this would take
+    // seconds to decode if the length were not checked first.
+    const start = performance.now()
+    expect(() =>
+      lex.assertValidRecord('com.example.cid', {
+        $type: 'com.example.cid',
+        cid: 'Qm' + 'a'.repeat(200_000),
+      }),
+    ).toThrow('Record/cid must be a cid string')
+    expect(() =>
+      BlobRef.fromJsonRef({
+        cid: 'Qm' + 'a'.repeat(200_000),
+        mimeType: 'image/jpeg',
+      }),
+    ).toThrow('CID string too long')
+    expect(performance.now() - start).toBeLessThan(100)
+  })
+
   it('Applies language formatting constraint', () => {
     lex.assertValidRecord('com.example.language', {
       $type: 'com.example.language',
@@ -1312,5 +1333,23 @@ describe('XRPC output validation', () => {
     expect(() =>
       lex.assertValidXrpcOutput('com.example.procedure', {}),
     ).toThrow('Output must have the property "object"')
+  })
+})
+
+describe('Space definitions', () => {
+  it('accepts an optional title', () => {
+    expect(
+      lexSpace.safeParse({ type: 'space', title: 'Example', collections: [] })
+        .success,
+    ).toBe(true)
+    expect(lexSpace.safeParse({ type: 'space', collections: [] }).success).toBe(
+      true,
+    )
+  })
+
+  it('rejects an empty title', () => {
+    expect(
+      lexSpace.safeParse({ type: 'space', title: '', collections: [] }).success,
+    ).toBe(false)
   })
 })

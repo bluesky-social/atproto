@@ -1,5 +1,42 @@
 # @atproto/lex-document
 
+## 0.1.16
+
+### Patch Changes
+
+- Updated dependencies [[`8c841f6`](https://github.com/bluesky-social/atproto/commit/8c841f6e73c8365c2dfe816c0613aa9c50490361), [`8c841f6`](https://github.com/bluesky-social/atproto/commit/8c841f6e73c8365c2dfe816c0613aa9c50490361), [`8c841f6`](https://github.com/bluesky-social/atproto/commit/8c841f6e73c8365c2dfe816c0613aa9c50490361), [`8c841f6`](https://github.com/bluesky-social/atproto/commit/8c841f6e73c8365c2dfe816c0613aa9c50490361)]:
+  - @atproto/lex-data@0.1.10
+  - @atproto/lex-schema@0.2.11
+
+## 0.1.15
+
+### Patch Changes
+
+- [#5786](https://github.com/bluesky-social/atproto/pull/5786) [`07c25d4`](https://github.com/bluesky-social/atproto/commit/07c25d410d4f4ad8f6ec80fc14efa0dd8ec55545) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Replace the `core-js` dependency with a built-in `Symbol.dispose` and `Symbol.asyncDispose` polyfill, and declare `@atproto/lex-data`, whose types it exports, as a dependency
+- Updated dependencies [[`07c25d4`](https://github.com/bluesky-social/atproto/commit/07c25d410d4f4ad8f6ec80fc14efa0dd8ec55545), [`07c25d4`](https://github.com/bluesky-social/atproto/commit/07c25d410d4f4ad8f6ec80fc14efa0dd8ec55545)]:
+  - @atproto/lex-data@0.1.9
+  - @atproto/lex-schema@0.2.10
+
+## 0.1.14
+
+### Patch Changes
+
+- Updated dependencies [[`f98b78a`](https://github.com/bluesky-social/atproto/commit/f98b78adbc8963e49823117b007422211f6d3ff2)]:
+  - @atproto/lex-schema@0.2.9
+
+## 0.1.13
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/lex-schema@0.2.8
+
+## 0.1.12
+
+### Patch Changes
+
+- [#5499](https://github.com/bluesky-social/atproto/pull/5499) [`210907c`](https://github.com/bluesky-social/atproto/commit/210907c801d281c6b83c92bf94c888b2dc3d531f) Thanks [@fatfingers23](https://github.com/fatfingers23)! - Allow `get()` to be called with strinfiable value
+
 ## 0.1.11
 
 ### Patch Changes

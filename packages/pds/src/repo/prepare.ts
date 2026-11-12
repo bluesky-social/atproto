@@ -1,5 +1,4 @@
 import { TID } from '@atproto/common'
-import { RecordSchema, walk } from '@atproto/lex'
 import { encode } from '@atproto/lex-cbor'
 import {
   type Cid,
@@ -10,6 +9,7 @@ import {
   enumBlobRefs,
   isLegacyBlobRef,
 } from '@atproto/lex-data'
+import { RecordSchema, walk } from '@atproto/lex-schema'
 import {
   type RecordCreateOp,
   type RecordDeleteOp,
@@ -23,8 +23,7 @@ import {
   type DidString,
   type NsidString,
   type RecordKeyString,
-  SpaceRef,
-  type SpaceRefString,
+  type SpaceRef,
   isValidRecordKey,
 } from '@atproto/syntax'
 import { hasExplicitSlur } from '../handle/explicit-slurs.js'
@@ -38,6 +37,9 @@ import {
   type ValidationStatus,
 } from './types.js'
 
+// @NOTE Every known lexicon schema is collected here for validation purposes.
+// these are installed through `lex:install` and must be referenced from the
+// lexicons.json manifest.
 const knownSchemas = new Map<string, RecordSchema>(
   walk(lexicons)
     .filter((s) => s instanceof RecordSchema)
@@ -91,7 +93,7 @@ export const validateRecord = (
 
 export const prepareCreate = async (opts: {
   did: DidString
-  space?: SpaceRefString
+  space?: SpaceRef
   collection: NsidString
   rkey?: RecordKeyString
   swapCid?: Cid | null
@@ -114,7 +116,7 @@ export const prepareCreate = async (opts: {
 
 export const prepareUpdate = async (opts: {
   did: DidString
-  space?: SpaceRefString
+  space?: SpaceRef
   collection: NsidString
   rkey: RecordKeyString
   swapCid?: Cid | null
@@ -138,7 +140,7 @@ export const prepareUpdate = async (opts: {
 export async function prepareWrite(opts: {
   did: DidString
   // Set for a permissioned space record, whose uri nests under the space ref.
-  space?: SpaceRefString
+  space?: SpaceRef
   collection: NsidString
   rkey?: RecordKeyString
   record: LexMap
@@ -208,25 +210,15 @@ export async function prepareWrite(opts: {
       },
     ),
     uri: opts.space
-      ? spaceRecordUri(opts.space, opts.did, opts.collection, rkey)
+      ? opts.space.recordUri(opts.did, opts.collection, rkey)
       : AtUri.make(opts.did, opts.collection, rkey),
     cid: await cidForCbor(bytes),
   }
 }
 
-export const spaceRecordUri = (
-  space: SpaceRefString,
-  author: DidString,
-  collection: NsidString,
-  rkey: string,
-): AtUri => {
-  const { spaceDid, spaceType, skey } = SpaceRef.parse(space)
-  return AtUri.makeSpace(spaceDid, spaceType, skey, author, collection, rkey)
-}
-
 export const prepareDelete = (opts: {
   did: DidString
-  space?: SpaceRefString
+  space?: SpaceRef
   collection: NsidString
   rkey: RecordKeyString
   swapCid?: Cid | null
@@ -235,7 +227,7 @@ export const prepareDelete = (opts: {
   return {
     action: WriteOpAction.Delete,
     uri: space
-      ? spaceRecordUri(space, did, collection, rkey)
+      ? space.recordUri(did, collection, rkey)
       : AtUri.make(did, collection, rkey),
     swapCid,
   }

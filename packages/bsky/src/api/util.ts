@@ -43,6 +43,11 @@ export const fillPage = async <
   cursor?: string
   limit: number
   maxRequests?: number
+  /**
+   * Cursor marking the end of a bounded range. Reaching it stops the refill,
+   * and it is returned untouched rather than read as an exhausted page.
+   */
+  terminalCursor?: string
   fetch: F
   items: (result: Awaited<ReturnType<F>>) => T[]
 }): Promise<Awaited<ReturnType<F>>> => {
@@ -55,10 +60,13 @@ export const fillPage = async <
     limit: opts.limit,
   })) as Awaited<ReturnType<F>>
   const items = opts.items(result)
-  let cursor = result.cursor
+  let cursor = result.cursor || undefined
   for (
     let requests = 1;
-    requests < maxRequests && cursor && items.length < enoughItems;
+    requests < maxRequests &&
+    cursor &&
+    cursor !== opts.terminalCursor &&
+    items.length < enoughItems;
     requests++
   ) {
     const previousCursor = cursor
@@ -67,7 +75,7 @@ export const fillPage = async <
       limit: opts.limit - items.length,
     })) as Awaited<ReturnType<F>>
     items.push(...opts.items(page))
-    cursor = page.cursor
+    cursor = page.cursor || undefined
     if (cursor === previousCursor) {
       cursor = undefined
       break

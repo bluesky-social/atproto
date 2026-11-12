@@ -1,33 +1,33 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
-import {
-  MINUTE,
-  TID,
-  getPdsEndpoint,
-  getServiceEndpoint,
-} from '@atproto/common'
+import PQueue from 'p-queue'
+import { MINUTE, TID, getServiceEndpoint } from '@atproto/common'
 import type { IdResolver } from '@atproto/identity'
-import { xrpc } from '@atproto/lex'
+import { xrpc } from '@atproto/lex-client'
 import type { Cid } from '@atproto/lex-data'
+import type { l } from '@atproto/lex-schema'
 import type { SpacePermissionMatchOperation } from '@atproto/oauth-scopes'
 import {
-  COMMIT_MAC_TYPE,
-  type Commit,
-  MAC_HEADER,
-  type MacType,
-  RECORD_MAC_TYPE,
+  type CreateMacParams,
+  MAC_COVERED_HEADER,
+  type MacProfile,
   RepoCommit,
-  RepoVerificationError,
+  type SpaceCommit,
+  SpaceKemError,
   SpaceMacError,
   SpaceMetaArchiveError,
-  WANT_MAC_HEADER,
-  computeCommitMac,
-  computeRecordMac,
+  SpaceRepoVerificationError,
+  createCommitMacHeaders,
+  createRecordMacHeaders,
   decapsulate,
-  formatMacHeader,
-  parseWantMacHeader,
+  parseMacRequest,
 } from '@atproto/space'
 import { StarParseError } from '@atproto/star'
-import { type DidString, SpaceRef, type SpaceRefString } from '@atproto/syntax'
+import {
+  type AtUriString,
+  type DidString,
+  SpaceRef,
+  type SpaceRefString,
+} from '@atproto/syntax'
 import {
   AuthRequiredError,
   ForbiddenError,
@@ -63,16 +63,15 @@ export function toSpaceRef(spaceUri: SpaceRefString): SpaceRef {
 }
 
 /**
- * Assert that this host is the space's authority, returning its DID. Space-host
- * methods reach straight into the authority's actor store, which would otherwise
- * fail as `Repo not found` — an error none of their lexicons declare.
+ * Assert that this host is the space's authority. Space-host methods reach
+ * straight into the authority's actor store, which would otherwise fail as
+ * `Repo not found` — an error none of their lexicons declare.
  */
 export async function assertSpaceHost(
   ctx: AppContext,
-  spaceUri: SpaceRefString,
-): Promise<DidString> {
-  const { spaceDid } = await getSpaceHostAccount(ctx, spaceUri)
-  return spaceDid
+  ref: SpaceRef,
+): Promise<void> {
+  await getSpaceHostAccount(ctx, ref)
 }
 
 /**
@@ -82,47 +81,44 @@ export async function assertSpaceHost(
  */
 export async function assertActiveSpaceHost(
   ctx: AppContext,
-  spaceUri: SpaceRefString,
-): Promise<DidString> {
-  const { spaceDid, account } = await getSpaceHostAccount(ctx, spaceUri)
+  ref: SpaceRef,
+): Promise<void> {
+  const account = await getSpaceHostAccount(ctx, ref)
   if (account.takedownRef) {
     throw new InvalidRequestError(
-      `Repo has been takendown: ${spaceDid}`,
+      `Repo has been takendown: ${ref.spaceDid}`,
       'RepoTakendown',
     )
   }
   if (account.deactivatedAt) {
     throw new InvalidRequestError(
-      `Repo has been deactivated: ${spaceDid}`,
+      `Repo has been deactivated: ${ref.spaceDid}`,
       'RepoDeactivated',
     )
   }
-  return spaceDid
 }
 
-async function getSpaceHostAccount(ctx: AppContext, spaceUri: SpaceRefString) {
-  const { spaceDid } = toSpaceRef(spaceUri)
-  const account = await ctx.accountManager.getAccount(spaceDid, {
+async function getSpaceHostAccount(ctx: AppContext, ref: SpaceRef) {
+  const account = await ctx.accountManager.getAccount(ref.spaceDid, {
     includeDeactivated: true,
     includeTakenDown: true,
   })
   if (!account) {
     throw new InvalidRequestError('Space not found', 'SpaceNotFound')
   }
-  return { spaceDid, account }
+  return account
 }
 
-// A space created on a PDS is anchored on its creator's own DID, so ownership is a
-// comparison against the space URI.
-export function assertSpaceOwner(
+// A space created on a PDS is anchored on its creator's own DID, so being its
+// authority is a comparison against the space URI.
+export function assertSpaceAuthority(
   auth: AccessOutput | OAuthOutput,
-  space: SpaceRef | SpaceRefString,
+  ref: SpaceRef,
   op: SpacePermissionMatchOperation,
 ): void {
-  const ref = typeof space === 'string' ? toSpaceRef(space) : space
-  auth.credentials.permissions?.assertSpaceRef(ref, op)
+  auth.credentials.permissions?.assertSpace(ref, op)
   if (ref.spaceDid !== auth.credentials.did) {
-    throw new InvalidRequestError('Not the space owner', 'NotSpaceOwner')
+    throw new InvalidRequestError('Not the space authority', 'NotAuthorized')
   }
 }
 
@@ -139,12 +135,12 @@ export type SpaceReadAuth =
  */
 export function assertSpaceRead(
   auth: SpaceReadAuth,
-  spaceUri: SpaceRefString,
-  repo: string,
+  ref: SpaceRef,
+  repo: DidString,
 ): void {
   if (auth.credentials.type === 'admin_token') return
   if (isSpaceCredentialOutput(auth)) {
-    assertCredentialSpace(auth.credentials, spaceUri, repo)
+    assertCredentialSpace(auth.credentials, ref, repo)
     return
   }
   if (auth.credentials.did !== repo) {
@@ -155,23 +151,26 @@ export function assertSpaceRead(
       'RepoNotFound',
     )
   }
-  auth.credentials.permissions?.assertSpaceRef(spaceUri, {
+  auth.credentials.permissions?.assertSpace(ref, {
     action: 'read_self',
   })
 }
 
 // The space analogue of `isUserOrAdmin`: a space credential names a syncer rather
-// than an account, so it is never the repo's own owner.
-export function isSpaceUserOrAdmin(auth: SpaceReadAuth, repo: string): boolean {
+// than an account, so it is never the repo's own account.
+export function isSpaceUserOrAdmin(
+  auth: SpaceReadAuth,
+  repo: DidString,
+): boolean {
   if (auth.credentials.type === 'admin_token') return true
-  if (auth.credentials.type === 'space_credential') return false
+  if (isSpaceCredentialOutput(auth)) return false
   return auth.credentials.did === repo
 }
 
 export function assertCredentialSpace(
   credentials: SpaceCredentialOutput['credentials'],
-  spaceUri: SpaceRefString,
-  audience: string = toSpaceRef(spaceUri).spaceDid,
+  ref: SpaceRef,
+  audience: DidString = ref.spaceDid,
 ): void {
   if (credentials.audience !== audience) {
     throw new AuthRequiredError(
@@ -179,7 +178,7 @@ export function assertCredentialSpace(
       'BadSpaceAudience',
     )
   }
-  if (credentials.space !== spaceUri) {
+  if (credentials.space !== ref.toString()) {
     throw new InvalidRequestError(
       'Credential is not scoped to this space',
       'InvalidCredential',
@@ -192,7 +191,7 @@ export function buildCommit(opts: {
   spaceUri: SpaceRefString
   repo: DidString
   state: SpaceRepo | null
-}): Commit | undefined {
+}): SpaceCommit | undefined {
   const { spaceUri, repo, state } = opts
   if (!state?.setHash || !state.rev) return undefined
 
@@ -205,102 +204,113 @@ export function buildCommit(opts: {
 
 /**
  * Methods that return a commit or record require a MAC when called with a space
- * credential, requested via the `Atproto-Space-Want-Mac` header. Returns the
- * shared secret to compute it with, or undefined when an account reading its own
- * data did not ask for one.
+ * credential, requested via the `Accept-Signature` header. Returns the request
+ * and the shared secret to answer it with, or undefined when an account reading
+ * its own data did not ask for one.
  */
-export async function getSpaceMacSecret(
+export async function getSpaceMacRequest(
   ctx: AppContext,
   opts: {
     req: IncomingMessage
     res: ServerResponse
     auth: SpaceReadAuth
     repo: DidString
-    type: MacType
+    profile: MacProfile
   },
-): Promise<Uint8Array | undefined> {
-  const { req, res, auth, repo, type } = opts
-  appendVary(res, WANT_MAC_HEADER)
+): Promise<CreateMacParams | undefined> {
+  const { req, res, auth, repo, profile } = opts
+  appendVary(res, 'Accept-Signature')
 
-  const header = req.headers[WANT_MAC_HEADER]
-  if (header === undefined && !isSpaceCredentialOutput(auth)) {
-    return undefined
-  }
-  // So that a browser app can read the MAC from a cross-origin response
-  res.appendHeader('Access-Control-Expose-Headers', MAC_HEADER)
-
-  const kemKeypair = await ctx.actorStore.kemKeypair(repo)
-  if (!kemKeypair) {
-    throw new Error(`Account has no KEM key: ${repo}`)
-  }
   try {
-    const keyShare = parseWantMacHeader(header, type)
-    return decapsulate(kemKeypair, keyShare)
+    const request = parseMacRequest(req.headers['accept-signature'], profile)
+    if (!request) {
+      if (isSpaceCredentialOutput(auth)) {
+        throw new InvalidRequestError(
+          `A MAC must be requested with tag "${profile}"`,
+          'InvalidSpaceMac',
+        )
+      }
+      return undefined
+    }
+    // So that a browser app can read the MAC from a cross-origin response
+    res.appendHeader('Access-Control-Expose-Headers', [
+      MAC_COVERED_HEADER[profile],
+      'signature-input',
+      'signature',
+    ])
+
+    const kemKeypair = await ctx.actorStore.kemKeypair(repo)
+    if (!kemKeypair) {
+      throw new Error(`Account has no KEM key: ${repo}`)
+    }
+    return {
+      ...request,
+      sharedSecret: decapsulate(kemKeypair, request.keyShare),
+    }
   } catch (err) {
-    if (err instanceof SpaceMacError) {
-      throw new InvalidRequestError(err.message, 'BadSpaceMac')
+    if (err instanceof SpaceMacError || err instanceof SpaceKemError) {
+      throw new InvalidRequestError(err.message, 'InvalidSpaceMac', {
+        cause: err,
+      })
     }
     throw err
   }
 }
 
-// A malformed STAR archive in a request body is the caller's error.
-export function throwInvalidArchive(err: unknown): never {
+// A malformed STAR archive in a request body is the caller's error, reported under
+// the error name the method declares for it.
+export function throwInvalidArchive(err: unknown, errorName: string): never {
   if (
     err instanceof StarParseError ||
-    err instanceof RepoVerificationError ||
+    err instanceof SpaceRepoVerificationError ||
     err instanceof SpaceMetaArchiveError
   ) {
-    throw new InvalidRequestError(err.message)
+    throw new InvalidRequestError(err.message, errorName, { cause: err })
   }
   throw err
 }
 
-// The `Atproto-Space-Mac` response header for a commit, when a MAC was requested.
+// The MAC response headers for a commit, when a MAC was requested.
 export function commitMacHeaders(
-  sharedSecret: Uint8Array | undefined,
-  commit: Commit,
+  commit: SpaceCommit,
+  mac: CreateMacParams | undefined,
 ): Record<string, string> | undefined {
-  if (!sharedSecret) return undefined
-  const mac = computeCommitMac(sharedSecret, commit)
-  return { [MAC_HEADER]: formatMacHeader(COMMIT_MAC_TYPE, mac) }
+  if (!mac) return undefined
+  return createCommitMacHeaders(commit, mac).headers
 }
 
-// The `Atproto-Space-Mac` response header for a record, when a MAC was requested.
+// The MAC response headers for a record, when a MAC was requested.
 export function recordMacHeaders(
-  sharedSecret: Uint8Array | undefined,
-  uri: string,
+  uri: AtUriString,
   cid: Cid,
+  mac: CreateMacParams | undefined,
 ): Record<string, string> | undefined {
-  if (!sharedSecret) return undefined
-  const mac = computeRecordMac(sharedSecret, uri, cid)
-  return { [MAC_HEADER]: formatMacHeader(RECORD_MAC_TYPE, mac) }
+  if (!mac) return undefined
+  return createRecordMacHeaders(uri, cid, mac).headers
 }
 
 /**
- * Resolve a service identifier — a DID with an optional service fragment, e.g.
- * `did:web:syncer.example.com#atproto_space_syncer` — to its endpoint. Without a
- * fragment the DID's own `#atproto_pds` entry is used, since a bare DID names an
- * account and an account is served by its PDS.
+ * Resolve a `did#serviceId` reference, e.g.
+ * `did:web:forum.example.com#atproto_forum`, to its service endpoint.
  */
 export async function resolveServiceEndpoint(
   idResolver: IdResolver,
   service: string,
 ): Promise<string | undefined> {
-  const [did, fragment] = service.split('#')
+  const [did, serviceId] = service.split('#')
+  if (!serviceId) return undefined
   const didDoc = await idResolver.did.resolve(did).catch((err) => {
     spaceLogger.warn({ err, service }, 'could not resolve service did')
     return null
   })
   if (!didDoc) return undefined
-  return fragment
-    ? getServiceEndpoint(didDoc, { id: `#${fragment}` })
-    : getPdsEndpoint(didDoc)
+  return getServiceEndpoint(didDoc, { id: `#${serviceId}` })
 }
 
 /**
- * Resolve a notification target and mint the service auth to reach it. `aud` is the
- * service identifier itself, so a fragment-bearing target is addressed as published.
+ * Resolve a `did#serviceId` reference and mint the service auth to reach it. `aud`
+ * is the reference itself, so the service is addressed as published. The endpoint
+ * is whatever the DID's controller published, so callers reach it with `safeFetch`.
  */
 export async function resolveNotifyTarget(
   deps: { idResolver: IdResolver; actorStore: ActorStore },
@@ -319,87 +329,159 @@ export async function resolveNotifyTarget(
   return { endpoint, headers }
 }
 
-/** Process a write notification when this PDS hosts the space authority. */
-export async function processNotifyWrite(
+/** Process a repo update notification when this PDS hosts the space authority. */
+export async function processNotifyRepoUpdate(
   ctx: AppContext,
-  input: com.atproto.space.notifyWrite.$InputBody,
+  ref: SpaceRef,
+  input: com.atproto.space.notifyRepoUpdate.$InputBody,
 ): Promise<void> {
   const { space, repo, repoRev, data } = input
-  const { spaceDid: ownerDid } = toSpaceRef(space)
+  const { spaceDid } = ref
 
-  await assertSpaceHost(ctx, space)
+  await assertSpaceHost(ctx, ref)
   if (TID.fromStr(repoRev).timestamp() > (Date.now() + 5 * MINUTE) * 1000) {
     throw new InvalidRequestError('Repo revision is in the future', 'FutureRev')
   }
 
-  const { policy, recipients } = await ctx.actorStore.read(
-    ownerDid,
-    async (store) => ({
-      policy: await store.space.getActiveSpacePolicy(space),
-      recipients: await store.space.getCredentialRecipients(space),
-    }),
+  const policy = await ctx.actorStore.read(spaceDid, (store) =>
+    store.space.getActiveSpacePolicy(space),
   )
 
-  // Apply the same user perimeter used when minting credentials. notifyWrite
+  // Apply the same account perimeter used when minting credentials. The notification
   // comes from a PDS rather than an app, so there is no app attestation to check.
-  const authorized = await ctx.spacePolicyManager.authorizeUser({
-    space,
+  const authorized = await ctx.spacePolicyManager.authorizeRepo({
+    space: ref,
     policy,
-    userDid: repo,
+    repo,
     access: 'write',
   })
   if (!authorized) {
-    throw new ForbiddenError('notifyWrite writer is not authorized')
+    throw new ForbiddenError('Repo is not authorized to write to the space')
   }
 
-  const sequence = await ctx.actorStore.transact(ownerDid, (txn) =>
+  const sequence = await ctx.actorStore.transact(spaceDid, (txn) =>
     txn.space.recordWriter(space, repo, repoRev, data),
   )
   if (!sequence) return
 
-  // Fan-out stays queued so neither a local write nor a remote PDS waits on
-  // downstream syncing services.
-  const lxm = com.atproto.space.notifyWrite.$lxm
-  ctx.backgroundQueue.add(async (_ctx, signal) => {
-    for (const recipient of recipients) {
+  forwardSpaceUpdate(
+    ctx,
+    ref,
+    com.atproto.space.defs.repoWrite.$build({
+      repo,
+      repoRev,
+      data,
+      ...sequence,
+    }),
+  )
+}
+
+/** A repo removed from a space's writer set, at its place in the space sequence. */
+export type RemovedWriter = {
+  repo: DidString
+  spaceRev: string
+  prevSpaceRev?: string
+}
+
+/** Tell the syncers registered for a space that a repo left its writer set. */
+export function forwardWriterRemoved(
+  ctx: AppContext,
+  ref: SpaceRef,
+  removed: RemovedWriter,
+): void {
+  forwardSpaceUpdate(
+    ctx,
+    ref,
+    com.atproto.space.defs.repoRemoved.$build(removed),
+  )
+}
+
+/** How many syncer endpoints a fan-out notifies at once. */
+export const SYNCER_NOTIFY_CONCURRENCY = 50
+
+/** A sequenced change to a space's writer set. */
+type WriterSetUpdate =
+  | l.$Typed<com.atproto.space.defs.RepoWrite>
+  | l.$Typed<com.atproto.space.defs.RepoRemoved>
+
+/**
+ * Forward a sequenced change to the writer set to the syncers registered for the
+ * space. Fan-out stays queued so neither a local write nor a remote PDS waits on
+ * downstream syncing services.
+ */
+function forwardSpaceUpdate(
+  ctx: AppContext,
+  ref: SpaceRef,
+  update: WriterSetUpdate,
+): void {
+  ctx.backgroundQueue.add((_ctx, signal) =>
+    deliverSpaceUpdate(ctx, ref, update, signal),
+  )
+}
+
+/**
+ * Deliver an update to each active registration, on a best-effort basis. A
+ * registration that has lapsed since the last update is sent an expiry notice in
+ * place of the update, which is delivered reliably.
+ */
+async function deliverSpaceUpdate(
+  ctx: AppContext,
+  ref: SpaceRef,
+  update: WriterSetUpdate,
+  signal: AbortSignal,
+): Promise<void> {
+  const space = ref.toString()
+  const registrations = await ctx.actorStore.read(ref.spaceDid, (store) =>
+    store.space.getNotifyRegistrations(space),
+  )
+  const now = new Date().toISOString()
+  // Lapsed registrations are handled below.
+  const active = registrations.filter(({ expiresAt }) => expiresAt > now)
+
+  // In parallel, so a slow endpoint doesn't hold up delivery to the others.
+  const queue = new PQueue({ concurrency: SYNCER_NOTIFY_CONCURRENCY })
+  await queue.addAll(
+    active.map(({ endpoint, token }) => async () => {
       try {
-        const target = await resolveNotifyTarget(ctx, {
-          iss: ownerDid,
-          service: recipient.serviceDid,
-          lxm,
-        })
-        if (!target) {
-          spaceLogger.warn(
-            { space, service: recipient.serviceDid, lxm },
-            'could not resolve notify recipient',
-          )
-          continue
-        }
-        await xrpc(target.endpoint, com.atproto.space.notifyWrite, {
-          headers: target.headers,
-          body: { space, repo, repoRev, data, ...sequence },
-          signal: AbortSignal.any([signal, AbortSignal.timeout(10_000)]),
-        })
-      } catch (err) {
-        spaceLogger.warn(
-          { err, space, service: recipient.serviceDid, lxm },
-          'notify failed',
+        // The endpoint is chosen by the syncer, so it's fetched as untrusted.
+        await xrpc(
+          { service: endpoint, fetch: ctx.safeFetch },
+          com.atproto.space.notifySpaceUpdate,
+          {
+            body: { space, token, update },
+            signal: AbortSignal.any([signal, AbortSignal.timeout(10_000)]),
+          },
         )
+      } catch (err) {
+        spaceLogger.warn({ err, space, endpoint }, 'notify failed')
       }
-    }
-  })
+    }),
+  )
+
+  const lapsed = await ctx.actorStore.transact(ref.spaceDid, (actorTxn) =>
+    actorTxn.space.claimLapsedNotifyRegistrations(space, now),
+  )
+  if (lapsed.length > 0) {
+    await ctx.spaceNotifications.notifySyncers(
+      ref,
+      lapsed,
+      com.atproto.space.notifySpaceUpdate.registrationExpired.$build({
+        spaceRev: update.spaceRev,
+      }),
+    )
+  }
 }
 
 /** Send immediately after the repo commit, persisting failures for retry. */
-export async function fireNotifyWrite(
+export async function fireNotifyRepoUpdate(
   ctx: AppContext,
   opts: {
-    space: SpaceRefString
-    writerDid: string
+    space: SpaceRef
+    writerDid: DidString
     commit: { rev: string; setHash: Uint8Array } | null
   },
 ): Promise<void> {
   const { space, writerDid, commit } = opts
   if (!commit) return
-  await ctx.spaceNotifications.notify(space, writerDid as DidString, commit)
+  await ctx.spaceNotifications.notify(space, writerDid, commit)
 }

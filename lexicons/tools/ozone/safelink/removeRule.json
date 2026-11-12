@@ -19,6 +19,12 @@
               "type": "ref",
               "ref": "tools.ozone.safelink.defs#patternType"
             },
+            "source": {
+              "type": "string",
+              "maxLength": 128,
+              "default": "ozone/default",
+              "description": "Source of the rule to remove"
+            },
             "comment": {
               "type": "string",
               "description": "Optional comment about why the rule is being removed"

@@ -5,7 +5,7 @@ import { AuthScope } from '../../../../auth-scope.js'
 import type { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
 import { assertRepoAvailability } from '../sync/util.js'
-import { assertSpaceRead, isSpaceUserOrAdmin } from './util.js'
+import { assertSpaceRead, isSpaceUserOrAdmin, toSpaceRef } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.space.getBlob, {
@@ -18,7 +18,7 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ params, auth, res }) => {
       const { space, repo } = params
 
-      assertSpaceRead(auth, space, repo)
+      assertSpaceRead(auth, toSpaceRef(space), repo)
       await assertRepoAvailability(ctx, repo, isSpaceUserOrAdmin(auth, repo))
 
       const cid = parseCid(params.cid)
@@ -46,7 +46,7 @@ export default function (server: Server, ctx: AppContext) {
       res.setHeader('content-security-policy', `default-src 'none'; sandbox`)
 
       return {
-        encoding: found.mimeType || ('application/octet-stream' as const),
+        encoding: found.mimeType || 'application/octet-stream',
         body: found.stream,
       }
     },

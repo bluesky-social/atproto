@@ -239,8 +239,8 @@ export const lexSpace = z.object({
   type: z.literal('space'),
   description: z.string().optional(),
   key: z.string().optional(),
-  name: z.string().min(1).max(64),
-  'name:lang': lexLang.optional(),
+  title: z.string().min(1).max(64).optional(),
+  'title:lang': lexLang.optional(),
   collections: z.array(z.string()),
 })
 

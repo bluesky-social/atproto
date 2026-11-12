@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { LTHASH_STATE_BYTES, LtHash } from '../src/index.js'
+import { LtHash } from '../src/index.js'
+import { LTHASH_STATE_BYTES } from '../src/lthash.js'
 
 const ZEROS = new Uint8Array(LTHASH_STATE_BYTES)
 
@@ -47,6 +48,7 @@ describe('LtHash', () => {
     })
 
     it('rejects wrong-length state', () => {
+      expect(() => new LtHash(new Uint8Array(32))).toThrow(TypeError)
       expect(() => new LtHash(new Uint8Array(32))).toThrow(/must be 2048 bytes/)
     })
 

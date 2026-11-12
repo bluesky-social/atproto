@@ -43,7 +43,7 @@ export type PolicyStateEntry = {
 
 export type SpaceMetaWriter = {
   did: DidString
-  rev: string
+  repoRev: string
   data: Uint8Array
   spaceRev: string
 }
@@ -55,7 +55,7 @@ const SECTIONS = ['policy', 'policyState', 'writers'] as const
 type Section = (typeof SECTIONS)[number]
 
 /** Serialize a space meta archive, putting each section into key order. */
-export async function* serializeSpaceMeta(
+export async function* writeSpaceMetaStar(
   archive: SpaceMetaArchive,
 ): AsyncGenerator<Uint8Array> {
   const meta: SpaceMetaStarMeta = {
@@ -142,7 +142,8 @@ function parseWriter(key: string, value: LexMap): SpaceMetaWriter {
   if (!isValidDid(did)) {
     throw new SpaceMetaArchiveError(`invalid DID in writer key: ${key}`)
   }
-  return { did, ...parseDef(defs.spaceMetaWriter, value) }
+  const { repoRev, data, spaceRev } = parseDef(defs.spaceMetaWriter, value)
+  return { did, repoRev, data, spaceRev }
 }
 
 function decodeMap(key: string, bytes: Uint8Array): LexMap {
@@ -163,7 +164,9 @@ function parseDef<T>(def: Def<T>, data: unknown): T {
     return def.schema.parse(data)
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err)
-    throw new SpaceMetaArchiveError(`invalid ${def.name}: ${message}`)
+    throw new SpaceMetaArchiveError(`invalid ${def.name}: ${message}`, {
+      cause: err,
+    })
   }
 }
 

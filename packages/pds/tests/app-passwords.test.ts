@@ -1,9 +1,13 @@
 import * as jose from 'jose'
 import type { AtpAgent } from '@atproto/api'
-import { TestNetworkNoAppView } from '@atproto/dev-env'
+import { type SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
+import { com } from '../src/lexicons/index.js'
 
 describe('app_passwords', () => {
   let network: TestNetworkNoAppView
+  let sc: SeedClient
+  let jane
+  let janeAgent: AtpAgent
   let accntAgent: AtpAgent
   let appAgent: AtpAgent
   let priviAgent: AtpAgent
@@ -15,11 +19,36 @@ describe('app_passwords', () => {
     accntAgent = network.pds.getAgent()
     appAgent = network.pds.getAgent()
     priviAgent = network.pds.getAgent()
+    janeAgent = network.pds.getAgent()
 
     await accntAgent.createAccount({
       handle: 'alice.test',
       email: 'alice@test.com',
       password: 'alice-pass',
+    })
+
+    // Create a Jane account with 2FA enabled:
+    sc = network.getSeedClient()
+    jane = await sc.createAccount('jane', {
+      email: 'jane@test.com',
+      handle: 'jane.test',
+      password: 'jane-pass',
+    })
+
+    const confirmationToken =
+      await network.pds.ctx.accountManager.createEmailToken(
+        jane.did,
+        'confirm_email',
+      )
+
+    await network.pds.ctx.accountManager.confirmEmail(
+      jane.did,
+      jane.email,
+      confirmationToken,
+    )
+
+    await network.pds.ctx.accountManager.enableEmailAuthFactor({
+      did: jane.did,
     })
   })
 
@@ -60,6 +89,34 @@ describe('app_passwords', () => {
       password: privilegedAppPass,
     })
     expect(res2.data.did).toEqual(accntAgent.session?.did)
+  })
+
+  it('creates a session with an app-specific password when the account has 2FA enabled', async () => {
+    // account-password login IS challenged, confirm 2FA is genuinely on:
+    await expect(
+      janeAgent.api.com.atproto.server.createSession({
+        identifier: 'jane.test',
+        password: 'jane-pass',
+      }),
+    ).rejects.toMatchObject({ error: 'AuthFactorTokenRequired' })
+
+    // Attempt a login with an app password instead, no challenge:
+    const res = await janeAgent.api.com.atproto.server.createAppPassword(
+      {
+        name: 'test-pass',
+      },
+      {
+        headers: sc.getHeaders(jane.did),
+      },
+    )
+    expect(res.data.name).toBe('test-pass')
+    expect(res.data.privileged).toBe(false)
+    const janeAppPass = res.data.password
+    const res1 = await janeAgent.login({
+      identifier: 'jane.test',
+      password: janeAppPass,
+    })
+    expect(res1.data.did).toEqual(jane.did)
   })
 
   it('creates an access token for an app with a restricted scope', () => {
@@ -107,37 +164,55 @@ describe('app_passwords', () => {
     await expect(attempt).rejects.toThrow('Bad token method')
   })
 
-  it('restricts privileged app password actions', async () => {
-    const attempt = appAgent.api.chat.bsky.convo.listConvos()
+  it('restricts chat methods outside the installed PDS lexicons', async () => {
+    const attempt = appAgent.api.chat.bsky.convo.acceptConvo({
+      convoId: 'unused',
+    })
     await expect(attempt).rejects.toThrow('Bad token method')
   })
 
-  it('restricts service auth token methods for non-privileged access tokens', async () => {
-    const attemptCaseSensitive = appAgent.api.com.atproto.server.getServiceAuth(
-      {
-        aud: network.pds.ctx.cfg.service.did,
-        lxm: 'com.atproto.server.createAccount',
-      },
-    )
-    await expect(attemptCaseSensitive).rejects.toThrow(
-      /insufficient access to request a service auth token for the following method/,
-    )
-    const attemptCaseInsensitive =
-      appAgent.api.com.atproto.server.getServiceAuth({
-        aud: network.pds.ctx.cfg.service.did,
-        lxm: 'com.atproto.server.createaccount',
-      })
-    await expect(attemptCaseInsensitive).rejects.toThrow(
-      /insufficient access to request a service auth token for the following method/,
-    )
-  })
+  const privilegedMethodCases = [
+    com.atproto.server.createAccount.$lxm,
+    com.atproto.server.createAccount.$lxm.toLowerCase(),
+    'chat.bsky.futureMethod',
+    'CHAT.BSKY.CONVO.FUTUREMETHOD',
+  ]
 
-  it('allows privileged service auth token scopes for privileged access tokens', async () => {
-    await priviAgent.api.com.atproto.server.getServiceAuth({
-      aud: network.pds.ctx.cfg.service.did,
-      lxm: 'com.atproto.server.createAccount',
-    })
-  })
+  it.each(privilegedMethodCases)(
+    'restricts service auth for %s with a non-privileged app password',
+    async (lxm) => {
+      const attempt = appAgent.api.com.atproto.server.getServiceAuth({
+        aud: network.pds.ctx.cfg.service.did,
+        lxm,
+      })
+      await expect(attempt).rejects.toThrow(
+        /insufficient access to request a service auth token for the following method/,
+      )
+    },
+  )
+
+  it.each(privilegedMethodCases)(
+    'allows service auth for %s with a privileged app password',
+    async (lxm) => {
+      await priviAgent.api.com.atproto.server.getServiceAuth({
+        aud: network.pds.ctx.cfg.service.did,
+        lxm,
+      })
+    },
+  )
+
+  it.each([
+    'chat.bskyish.futureMethod',
+    `${com.atproto.server.createAccount.$lxm}Extra`,
+  ])(
+    'allows service auth for %s with a non-privileged app password',
+    async (lxm) => {
+      await appAgent.api.com.atproto.server.getServiceAuth({
+        aud: network.pds.ctx.cfg.service.did,
+        lxm,
+      })
+    },
+  )
 
   it('persists scope across refreshes', async () => {
     const session = await appAgent.api.com.atproto.server.refreshSession(

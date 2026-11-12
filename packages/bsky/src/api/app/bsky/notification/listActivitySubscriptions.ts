@@ -30,6 +30,7 @@ export default function (server: Server, ctx: AppContext) {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({
+        xrpcEndpoint: app.bsky.notification.listActivitySubscriptions.$lxm,
         labelers,
         viewer,
       })
@@ -71,7 +72,7 @@ const skeleton = async (
   return {
     actorDid,
     dids: dids as DidString[],
-    cursor: cursor || undefined,
+    cursor,
   }
 }
 
@@ -80,11 +81,9 @@ const hydration = async (
 ) => {
   const { ctx, params, skeleton } = input
   const { dids } = skeleton
-  const state = await ctx.hydrator.hydrateProfilesDetailed(
-    dids,
-    params.hydrateCtx,
-  )
-  return state
+  return ctx.hydrator.hydrateProfiles(dids, params.hydrateCtx, {
+    activitySubscriptions: true,
+  })
 }
 
 const noBlocks = (input: RulesFnInput<Context, Params, SkeletonState>) => {

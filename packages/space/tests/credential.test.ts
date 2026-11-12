@@ -2,9 +2,14 @@ import { beforeAll, describe, expect, it, vi } from 'vitest'
 import { type Keypair, P256Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import type { DidString } from '@atproto/syntax'
 import {
-  SPACE_TOKEN_TYPES,
+  CLIENT_ATTESTATION_TYP,
+  DELEGATION_TOKEN_TYP,
+  SPACE_CREDENTIAL_TYP,
   SpaceTokenError,
-  createSpaceToken,
+  buildClientAttestation,
+  createClientAttestation,
+  createDelegationToken,
+  createSpaceCredential,
   parseSpaceToken,
   verifySpaceToken,
 } from '../src/index.js'
@@ -58,11 +63,12 @@ describe('space tokens', () => {
 
   describe('delegation token', () => {
     const create = () =>
-      createSpaceToken(
-        'delegation',
-        { iss: USER, sub: SPACE, aud: SPACE_HOST },
-        userKey,
-      )
+      createDelegationToken({
+        iss: USER,
+        sub: SPACE,
+        aud: SPACE_HOST,
+        keypair: userKey,
+      })
 
     it('round-trips', async () => {
       const { header, payload } = await verifySpaceToken(
@@ -70,7 +76,7 @@ describe('space tokens', () => {
         await create(),
         { getSigningKey: getKey(userKey), aud: SPACE_HOST, sub: SPACE },
       )
-      expect(header.typ).toBe('atproto-space-delegation+jwt')
+      expect(header.typ).toBe(DELEGATION_TOKEN_TYP)
       expect(header.kid).toBe('#atproto')
       expect(header.alg).toBe(userKey.jwtAlg)
       expect(payload.iss).toBe(USER)
@@ -78,12 +84,6 @@ describe('space tokens', () => {
       expect(payload.aud).toBe(SPACE_HOST)
       expect(payload.exp - payload.iat).toBe(60)
       expect(payload.jti).toMatch(/^[0-9a-f]{32}$/)
-    })
-
-    it('requires an aud at mint time', async () => {
-      await expect(
-        createSpaceToken('delegation', { iss: USER, sub: SPACE }, userKey),
-      ).rejects.toThrow(/requires an "aud"/)
     })
 
     it('is rejected by an authority it was not addressed to', async () => {
@@ -136,11 +136,13 @@ describe('space tokens', () => {
 
   describe('space credential', () => {
     const create = (opts?: { expiresInSec?: number }) =>
-      createSpaceToken(
-        'credential',
-        { iss: AUTHORITY, sub: SPACE, keyId: KEY_ID, ...opts },
-        authorityKey,
-      )
+      createSpaceCredential({
+        iss: AUTHORITY,
+        sub: SPACE,
+        keyId: KEY_ID,
+        keypair: authorityKey,
+        ...opts,
+      })
 
     it('round-trips, defaults to 10 minutes, and carries no aud', async () => {
       const { header, payload } = await verifySpaceToken(
@@ -148,7 +150,7 @@ describe('space tokens', () => {
         await create(),
         { getSigningKey: getKey(authorityKey), sub: SPACE },
       )
-      expect(header.typ).toBe('atproto-space-credential+jwt')
+      expect(header.typ).toBe(SPACE_CREDENTIAL_TYP)
       expect(header.kid).toBe('#atproto')
       expect(payload.iss).toBe(AUTHORITY)
       expect(payload.aud).toBeUndefined()
@@ -224,38 +226,17 @@ describe('space tokens', () => {
       expect(payload.cnf?.kid).toBe(KEY_ID)
     })
 
-    it('requires a keyId at mint time', async () => {
-      await expect(
-        createSpaceToken(
-          'credential',
-          { iss: AUTHORITY, sub: SPACE },
-          authorityKey,
-        ),
-      ).rejects.toThrow(/requires a "keyId"/)
-    })
-
     it('is rejected when it carries no binding', async () => {
-      const unbound = await createSpaceToken(
-        'delegation',
-        { iss: AUTHORITY, sub: SPACE, aud: SPACE_HOST },
-        authorityKey,
-      )
-      const forgedTyp = withHeader(unbound, {
-        typ: SPACE_TOKEN_TYPES.credential.typ,
+      const unbound = await createDelegationToken({
+        iss: AUTHORITY,
+        sub: SPACE,
+        aud: SPACE_HOST,
+        keypair: authorityKey,
       })
+      const forgedTyp = withHeader(unbound, { typ: SPACE_CREDENTIAL_TYP })
       expect(() => parseSpaceToken('credential', forgedTyp)).toThrow(
         /missing token "cnf.kid"/,
       )
-    })
-
-    it('cannot be minted with a kid other than #atproto', async () => {
-      await expect(
-        createSpaceToken(
-          'credential',
-          { iss: AUTHORITY, sub: SPACE, keyId: KEY_ID, kid: '#other_key' },
-          authorityKey,
-        ),
-      ).rejects.toThrow(/"kid" is always "#atproto"/)
     })
 
     it('is rejected when its kid is not #atproto', async () => {
@@ -273,11 +254,12 @@ describe('space tokens', () => {
 
     it('retries with a freshly resolved key when the signing key has rotated', async () => {
       const rotatedKey = await Secp256k1Keypair.create()
-      const jwt = await createSpaceToken(
-        'credential',
-        { iss: AUTHORITY, sub: SPACE, keyId: KEY_ID },
-        rotatedKey,
-      )
+      const jwt = await createSpaceCredential({
+        iss: AUTHORITY,
+        sub: SPACE,
+        keyId: KEY_ID,
+        keypair: rotatedKey,
+      })
       // First resolution returns the stale key, the retry the rotated one.
       const getSigningKey = vi
         .fn()
@@ -294,11 +276,12 @@ describe('space tokens', () => {
 
     it('does not retry when the resolved key is unchanged', async () => {
       const otherKey = await Secp256k1Keypair.create()
-      const jwt = await createSpaceToken(
-        'credential',
-        { iss: AUTHORITY, sub: SPACE, keyId: KEY_ID },
-        otherKey,
-      )
+      const jwt = await createSpaceCredential({
+        iss: AUTHORITY,
+        sub: SPACE,
+        keyId: KEY_ID,
+        keypair: otherKey,
+      })
       const getSigningKey = vi.fn(() => authorityKey.did())
       await expect(
         verifySpaceToken('credential', jwt, { getSigningKey }),
@@ -340,18 +323,19 @@ describe('space tokens', () => {
 
   describe('client attestation', () => {
     const create = () =>
-      createSpaceToken(
-        'clientAttestation',
-        { iss: CLIENT_ID, sub: CLIENT_ID, aud: SPACE_HOST, kid: 'key-1' },
-        clientKey,
-      )
+      createClientAttestation({
+        clientId: CLIENT_ID,
+        aud: SPACE_HOST,
+        kid: 'key-1',
+        keypair: clientKey,
+      })
 
     it('parses without needing a key', async () => {
       const { header, payload } = parseSpaceToken(
         'clientAttestation',
         await create(),
       )
-      expect(header.typ).toBe('atproto-client-attestation+jwt')
+      expect(header.typ).toBe(CLIENT_ATTESTATION_TYP)
       expect(header.kid).toBe('key-1')
       expect(payload.iss).toBe(CLIENT_ID)
       expect(payload.sub).toBe(CLIENT_ID)
@@ -359,9 +343,9 @@ describe('space tokens', () => {
     })
 
     it('requires iss and sub to both be the client_id', async () => {
-      const jwt = await createSpaceToken(
-        'clientAttestation',
-        { iss: CLIENT_ID, sub: 'https://other.example/x', aud: SPACE_HOST },
+      const jwt = await withClaims(
+        await create(),
+        { sub: 'https://other.example/x' },
         clientKey,
       )
       expect(() => parseSpaceToken('clientAttestation', jwt)).toThrow(
@@ -376,6 +360,27 @@ describe('space tokens', () => {
         { getSigningKey: getKey(clientKey), aud: SPACE_HOST },
       )
       expect(payload.iss).toBe(CLIENT_ID)
+    })
+
+    it('builds a token for a signer that sets "alg" itself', async () => {
+      const token = buildClientAttestation({
+        clientId: CLIENT_ID,
+        aud: SPACE_HOST,
+      })
+      expect(token.header).toEqual({ typ: CLIENT_ATTESTATION_TYP })
+
+      const header = { alg: clientKey.jwtAlg, ...token.header }
+      const input = [header, token.payload]
+        .map((part) => Buffer.from(JSON.stringify(part)).toString('base64url'))
+        .join('.')
+      const sig = await clientKey.sign(Buffer.from(input))
+      const jwt = `${input}.${Buffer.from(sig).toString('base64url')}`
+
+      const { payload } = await verifySpaceToken('clientAttestation', jwt, {
+        getSigningKey: getKey(clientKey),
+        aud: SPACE_HOST,
+      })
+      expect(payload).toEqual(token.payload)
     })
   })
 
@@ -392,8 +397,8 @@ describe('space tokens', () => {
       const header = Buffer.from(
         JSON.stringify({
           alg: 'ES256K',
-          typ: SPACE_TOKEN_TYPES.credential.typ,
-          kid: SPACE_TOKEN_TYPES.credential.kid,
+          typ: SPACE_CREDENTIAL_TYP,
+          kid: '#atproto',
         }),
       ).toString('base64url')
       const payload = Buffer.from(JSON.stringify({ iss: AUTHORITY })).toString(

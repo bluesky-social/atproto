@@ -22,14 +22,6 @@ exports[`admin get repo view gets a repo by did, even when taken down. 1`] = `
   ],
   "moderation": {
     "subjectStatus": {
-      "accountStats": {
-        "$type": "tools.ozone.moderation.defs#accountStats",
-        "appealCount": 0,
-        "escalateCount": 0,
-        "reportCount": 2,
-        "suspendCount": 0,
-        "takedownCount": 1,
-      },
       "ageAssuranceState": "unknown",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "hosting": {
@@ -41,9 +33,6 @@ exports[`admin get repo view gets a repo by did, even when taken down. 1`] = `
       "lastReviewedAt": "1970-01-01T00:00:00.000Z",
       "lastReviewedBy": "user(1)",
       "priorityScore": 0,
-      "recordsStats": {
-        "$type": "tools.ozone.moderation.defs#recordsStats",
-      },
       "reviewState": "tools.ozone.moderation.defs#reviewClosed",
       "subject": {
         "$type": "com.atproto.admin.defs#repoRef",

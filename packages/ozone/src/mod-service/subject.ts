@@ -1,4 +1,9 @@
-import type { $TypeOf, $Typed, AtUriString, DidString } from '@atproto/lex'
+import type {
+  $TypeOf,
+  $Typed,
+  AtUriString,
+  DidString,
+} from '@atproto/lex-schema'
 import { AtUri } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { chat, com, type tools } from '../lexicons/index.js'
@@ -72,7 +77,19 @@ export const subjectFromInput = (
   throw new InvalidRequestError('Invalid subject')
 }
 
-export const subjectFromEventRow = (row: ModerationEventRow): ModSubject => {
+export const subjectFromEventRow = (
+  row: Pick<
+    ModerationEventRow,
+    | 'subjectType'
+    | 'subjectUri'
+    | 'subjectCid'
+    | 'subjectBlobCids'
+    | 'subjectMessageId'
+    | 'subjectConvoId'
+    | 'subjectDid'
+    | 'meta'
+  >,
+): ModSubject => {
   if (
     row.subjectType === com.atproto.repo.strongRef.$type &&
     row.subjectUri &&
@@ -101,7 +118,10 @@ export const subjectFromEventRow = (row: ModerationEventRow): ModSubject => {
 }
 
 export const subjectFromStatusRow = (
-  row: ModerationSubjectStatusRow,
+  row: Pick<
+    ModerationSubjectStatusRow,
+    'did' | 'recordPath' | 'recordCid' | 'blobCids' | 'convoId'
+  >,
 ): ModSubject => {
   if (row.recordPath && row.recordCid) {
     // Not too intuitive but the recordpath is basically <collection>/<rkey>

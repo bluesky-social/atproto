@@ -1,4 +1,4 @@
-import { xrpc } from '@atproto/lex'
+import { xrpc } from '@atproto/lex-client'
 import type { BackgroundQueue } from './background.js'
 import { com } from './lexicons/index.js'
 import { crawlerLogger as log } from './logger.js'

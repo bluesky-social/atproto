@@ -43,6 +43,7 @@ const posts = await client.list(app.bsky.feed.post, { limit: 10 })
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
+- [Installation](#installation)
 - [Quick Start](#quick-start)
 - [Lexicon Schemas](#lexicon-schemas)
 - [TypeScript Schemas](#typescript-schemas)
@@ -123,6 +124,29 @@ const posts = await client.list(app.bsky.feed.post, { limit: 10 })
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
+## Installation
+
+`@atproto/lex` provides the `lex` CLI, and re-exports the runtime packages listed below. The CLI depends on the Lexicon installation and code generation tooling, which your code does not need at runtime. Install `@atproto/lex` as a dev dependency:
+
+```bash
+npm install --save-dev @atproto/lex
+```
+
+Only `import` from `@atproto/lex` directly when your code is bundled (e.g. with Vite, Rolldown, esbuild or webpack): the bundler only includes the code you use, so the tooling never reaches the output. Otherwise, for example in a Node.js service or a published library, `@atproto/lex` would have to be installed at runtime, along with all of its tooling. Depend on the runtime packages it re-exports instead, import from them, and pass `--lib @atproto/lex-schema` to `lex build` so that the generated schemas import from `@atproto/lex-schema` too:
+
+```bash
+npm install @atproto/lex-client @atproto/lex-schema
+lex build --lib @atproto/lex-schema
+```
+
+| Package               | Provides                                                                    |
+| --------------------- | --------------------------------------------------------------------------- |
+| `@atproto/lex-client` | `Client`, `xrpc()`, `xrpcSafe()` and XRPC errors                            |
+| `@atproto/lex-schema` | The `l` schema utility, identifier and datetime string types and helpers    |
+| `@atproto/lex-data`   | Data model types and helpers: `LexValue`, `Cid`, blob references, …         |
+| `@atproto/lex-json`   | JSON encoding: `lexParse()`, `lexStringify()`, `jsonToLex()`, `lexToJson()` |
+| `@atproto/lex-cbor`   | CBOR encoding: `encode()`, `decode()`, `cidForLex()`                        |
+
 ## Quick Start
 
 **1. Install Lexicons**
@@ -190,7 +214,7 @@ const profile = await xrpc('https://api.bsky.app', app.bsky.actor.getProfile, {
 
 ## Lexicon Schemas
 
-The `lex install` command fetches Lexicon schemas from the Atmosphere network and manages them locally (in the `lexicons/` directory by default). It also updates the `lexicons.json` manifest file to track installed Lexicons and their versions.
+The `lex install` command resolves Lexicon schemas and manages them locally (in the `lexicons/` directory by default). It also updates the `lexicons.json` manifest file to track installed Lexicons and their versions.
 
 ```bash
 # Install Lexicons and update lexicons.json (default behavior)
@@ -217,6 +241,30 @@ Options:
 - `--ci` - Error if the installed lexicons do not match the CIDs in the lexicons.json manifest
 - `--lexicons <dir>` - Directory containing lexicon JSON files (default: `./lexicons`)
 
+### Local resolution (`resolvers`)
+
+Beyond the network, `lexicons.json` can declare an ordered `resolvers` array of
+local override strategies, consulted (in order, first match wins) for every
+dependency before the network fallback. This lets a package vendor Lexicons from
+a local directory. Local-file resolutions are **symlinked** into the `lexicons/`
+directory (not copied) and locked with a `file://` URI relative to the manifest.
+
+```jsonc
+{
+  "version": 1,
+  "lexicons": ["com.example.foo"],
+  "resolvers": [
+    // path relative to lexicons.json; optional include/exclude NSID globs
+    { "type": "directory", "path": "../../lexicons" },
+    // use a specific repo for resolving certain NSIDs (instead of performing the _lexicon network resolution of the authority)
+    { "type": "repo", "repo": "bsky.app", "include": ["app.bsky.*"] },
+  ],
+  "resolutions": {/* ...file:// or at:// locks... */},
+}
+```
+
+See the [`@atproto/lex-installer` README](https://github.com/bluesky-social/atproto/blob/main/packages/lex/lex-installer/README.md) for the full resolution order and the planned `repo` resolver.
+
 ## TypeScript Schemas
 
 After installing Lexicon JSON files, use the `lex build` command to generate TypeScript schemas. These generated schemas provide type-safe validation, type guards, and builder utilities for working with AT Protocol data structures.
@@ -236,7 +284,7 @@ Options:
 - `--ignore-invalid-lexicons` - Skip lexicon files that fail validation instead of exiting with an error
 - `--exclude <patterns...>` - List of strings or regex patterns to exclude lexicon documents by their IDs
 - `--include <patterns...>` - List of strings or regex patterns to include lexicon documents by their IDs
-- `--lib <package>` - Package name of the library to import the lex schema utility "l" from (default: `@atproto/lex`)
+- `--lib <package>` - Package name of the library to import the lex schema utility "l" from (default: `@atproto/lex`; use `@atproto/lex-schema` when `@atproto/lex` is a dev dependency, see [Installation](#installation))
 - `--import-ext <ext>` - File extension to use for import statements in generated files (default: `.js`). Use `--import-ext ""` to generate extension-less imports
 - `--file-ext <ext>` - File extension to use for generated files (default: `.ts`)
 - `--index-file` - Generate an "index" file that re-exports all root-level namespaces (disabled by default)
@@ -566,11 +614,10 @@ const obj = lexToJson({
 
 ### CBOR Encoding
 
-Use `@atproto/lex-cbor` to encode/decode the data model to/from CBOR ([DRISL](https://dasl.ing/drisl.html)) format for storage and authentication:
+The package re-exports `@atproto/lex-cbor` to encode/decode the data model to/from CBOR ([DRISL](https://dasl.ing/drisl.html)) format for storage and authentication:
 
 ```typescript
-import { encode, decode } from '@atproto/lex-cbor'
-import type { LexValue } from '@atproto/lex'
+import { encode, decode, type LexValue } from '@atproto/lex'
 
 // Encode data model to CBOR bytes
 const cborBytes = encode(someLexValue)
@@ -1074,6 +1121,16 @@ console.log(response.headers)
 console.log(response.body)
 ```
 
+Per-request `headers` can also be a (sync or async) function, called for every attempt (retries included), for headers that must differ between attempts:
+
+```typescript
+const response = await client.xrpc(app.bsky.feed.getTimeline, {
+  params: { limit: 50 },
+  maxRetries: 3,
+  headers: async () => ({ 'x-request-nonce': await createNonce() }),
+})
+```
+
 Validation and strictness options (`validateRequest`, `validateResponse`, `strictResponseProcessing`) can also be passed per-call to override the client defaults:
 
 ```typescript
@@ -1537,6 +1594,8 @@ const enableAdultContent: Action<void, Preference[]> = async (
 // Use the high-level action
 await client.call(enableAdultContent)
 ```
+
+Actions whose input is `void`, or optional (e.g. `params?: ListParams`), can be called without input.
 
 ### Using a Single Client for Multiple Services
 

@@ -1,7 +1,7 @@
 import type express from 'express'
 import * as ui8 from 'uint8arrays'
 import type { IdResolver } from '@atproto/identity'
-import { type DidString, isDidString } from '@atproto/lex'
+import { type DidString, isDidString } from '@atproto/lex-schema'
 import {
   AuthRequiredError,
   parseReqNsid,

@@ -7,15 +7,15 @@ import {
   type SpaceMetaWriter,
   type VerifiedRecord,
 } from '@atproto/space'
-import {
-  type AtUriString,
-  type DidString,
-  type NsidString,
+import type {
+  AtUriString,
+  DidString,
+  NsidString,
   SpaceRef,
-  type SpaceRefString,
+  SpaceRefString,
 } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { spaceRecordUri } from '../../repo/prepare.js'
+import { toJson } from '../../db/index.js'
 import { BadRecordSwapError, type PreparedWrite } from '../../repo/types.js'
 import type { Policy } from '../../space-policy/policy.js'
 import type { BlobTransactor } from '../blob/transactor.js'
@@ -35,11 +35,11 @@ export class SpaceTransactor extends SpaceReader {
     super(db)
   }
 
-  async ensureSpace(uri: string): Promise<void> {
-    const { spaceDid, spaceType } = SpaceRef.parse(uri)
+  async ensureSpace(ref: SpaceRef): Promise<void> {
+    const uri = ref.toString()
     const space = {
-      authority: spaceDid,
-      type: spaceType,
+      authority: ref.spaceDid,
+      type: ref.spaceType,
       createdAt: new Date().toISOString(),
       deletedAt: null,
     }
@@ -55,28 +55,28 @@ export class SpaceTransactor extends SpaceReader {
       .execute()
   }
 
-  async createSpace(uri: string, policy: Policy): Promise<void> {
-    await this.ensureSpace(uri)
-    const policyJson = JSON.stringify(policy)
+  async createSpace(ref: SpaceRef, policy: Policy): Promise<void> {
+    await this.ensureSpace(ref)
+    const policyJson = toJson(policy)
     await this.db.db
       .insertInto('space_policy')
-      .values({ uri, policyJson })
+      .values({ uri: ref.toString(), policyJson })
       .onConflict((oc) => oc.column('uri').doUpdateSet({ policyJson }))
       .execute()
   }
 
-  async updateSpacePolicy(uri: string, policy: Policy): Promise<void> {
+  async updateSpacePolicy(uri: SpaceRefString, policy: Policy): Promise<void> {
     await this.db.db
       .updateTable('space_policy')
-      .set({ policyJson: JSON.stringify(policy) })
+      .set({ policyJson: toJson(policy) })
       .where('uri', '=', uri)
       .execute()
   }
 
   // Delete a space this account is the authority for, including its own repo in the
-  // space. The `space` row survives as a tombstone, so getSpaceCredential can
+  // space. The `space` row survives as a tombstone, so authorizeSpaceSync can
   // keep reporting the space as deleted.
-  async deleteSpace(uri: string): Promise<void> {
+  async deleteSpace(uri: SpaceRefString): Promise<void> {
     await this.db.db
       .updateTable('space')
       .set({ deletedAt: new Date().toISOString() })
@@ -87,7 +87,7 @@ export class SpaceTransactor extends SpaceReader {
     for (const table of [
       'memberspace_member',
       'space_writer',
-      'space_credential_recipient',
+      'space_notify_registration',
       'space_record',
       'space_record_oplog',
       'space_repo',
@@ -97,8 +97,8 @@ export class SpaceTransactor extends SpaceReader {
   }
 
   async putMember(
-    space: string,
-    did: string,
+    space: SpaceRefString,
+    did: DidString,
     access: { read: boolean; write: boolean },
   ): Promise<void> {
     const values: Pick<MemberspaceMember, 'read' | 'write'> = {
@@ -112,15 +112,17 @@ export class SpaceTransactor extends SpaceReader {
       .execute()
   }
 
-  async removeMember(space: string, did: string): Promise<void> {
-    await this.db.db
+  // Returns whether the DID was a member.
+  async removeMember(space: SpaceRefString, did: DidString): Promise<boolean> {
+    const result = await this.db.db
       .deleteFrom('memberspace_member')
       .where('space', '=', space)
       .where('did', '=', did)
-      .execute()
+      .executeTakeFirst()
+    return result.numDeletedRows > 0n
   }
 
-  async removeAllMembers(space: string): Promise<void> {
+  async removeAllMembers(space: SpaceRefString): Promise<void> {
     await this.db.db
       .deleteFrom('memberspace_member')
       .where('space', '=', space)
@@ -129,8 +131,8 @@ export class SpaceTransactor extends SpaceReader {
 
   /** Record a newer repo state and advance the space sequence atomically. */
   async recordWriter(
-    space: string,
-    did: string,
+    space: SpaceRefString,
+    did: DidString,
     repoRev: string,
     data: Uint8Array,
   ): Promise<{ spaceRev: string; prevSpaceRev?: string } | undefined> {
@@ -147,48 +149,70 @@ export class SpaceTransactor extends SpaceReader {
       .executeTakeFirst()
     if (writer && writer.repoRev >= repoRev) return
 
-    const latest = await this.db.db
-      .selectFrom('space_writer')
-      .select('spaceRev')
-      .where('space', '=', space)
-      .orderBy('spaceRev', 'desc')
-      .limit(1)
-      .executeTakeFirst()
-    const prevSpaceRev = latest?.spaceRev
-    const spaceRev = TID.nextStr(prevSpaceRev)
+    const { spaceRev, prevSpaceRev } = await this.nextSpaceRev(space)
+    // A newer write from a removed writer adds it back to the writer set.
     await this.db.db
       .insertInto('space_writer')
-      .values({ space, did, repoRev, data, spaceRev })
+      .values({ space, did, repoRev, data, spaceRev, removedAt: null })
       .onConflict((oc) =>
-        oc.columns(['space', 'did']).doUpdateSet({ repoRev, data, spaceRev }),
+        oc
+          .columns(['space', 'did'])
+          .doUpdateSet({ repoRev, data, spaceRev, removedAt: null }),
       )
       .execute()
     return { spaceRev, prevSpaceRev }
   }
 
+  /**
+   * Remove a repo from the writer set and advance the space sequence atomically.
+   * The row stays behind, marked removed, so that listWriters can report the
+   * removal. Returns undefined if the repo is not in the writer set.
+   */
+  async removeWriter(
+    space: SpaceRefString,
+    did: DidString,
+  ): Promise<{ spaceRev: string; prevSpaceRev?: string } | undefined> {
+    this.db.assertTransaction()
+    const writer = await this.db.db
+      .selectFrom('space_writer')
+      .select('removedAt')
+      .where('space', '=', space)
+      .where('did', '=', did)
+      .executeTakeFirst()
+    if (!writer || writer.removedAt) return
+
+    const { spaceRev, prevSpaceRev } = await this.nextSpaceRev(space)
+    await this.db.db
+      .updateTable('space_writer')
+      .set({ spaceRev, removedAt: new Date().toISOString() })
+      .where('space', '=', space)
+      .where('did', '=', did)
+      .execute()
+    return { spaceRev, prevSpaceRev }
+  }
+
+  private async nextSpaceRev(
+    space: SpaceRefString,
+  ): Promise<{ spaceRev: string; prevSpaceRev?: string }> {
+    const prevSpaceRev = await this.getSpaceRev(space)
+    return { spaceRev: TID.nextStr(prevSpaceRev), prevSpaceRev }
+  }
+
   /** Replace a space's writer set with the one exported by its previous host. */
   async importWriters(
-    space: string,
+    space: SpaceRefString,
     writers: SpaceMetaWriter[],
   ): Promise<void> {
     await this.db.db
       .deleteFrom('space_writer')
       .where('space', '=', space)
       .execute()
-    for (const { did, rev: repoRev, data, spaceRev } of writers) {
+    for (const { did, repoRev, data, spaceRev } of writers) {
       await this.db.db
         .insertInto('space_writer')
-        .values({ space, did, repoRev, data, spaceRev })
+        .values({ space, did, repoRev, data, spaceRev, removedAt: null })
         .execute()
     }
-  }
-
-  async removeWriter(space: string, did: string): Promise<void> {
-    await this.db.db
-      .deleteFrom('space_writer')
-      .where('space', '=', space)
-      .where('did', '=', did)
-      .execute()
   }
 
   /**
@@ -196,13 +220,14 @@ export class SpaceTransactor extends SpaceReader {
    * transaction. Returns null if there was nothing to write.
    */
   async applyWrites(
-    space: SpaceRefString,
+    ref: SpaceRef,
     writes: PreparedWrite[],
   ): Promise<{ rev: string; setHash: Uint8Array } | null> {
     this.db.assertTransaction()
     if (writes.length === 0) return null
 
-    await this.ensureRepo(space)
+    await this.ensureRepo(ref)
+    const space = ref.toString()
 
     const state = await this.getRepoState(space)
     const repo = RepoCommit.fromState(state?.setHash)
@@ -293,12 +318,10 @@ export class SpaceTransactor extends SpaceReader {
    * including those the PDS publishes from a space's configuration. Its blobs are
    * uploaded afterwards, so they're associated without being checked.
    */
-  async importRepo(
-    space: SpaceRefString,
-    records: VerifiedRecord[],
-  ): Promise<void> {
+  async importRepo(ref: SpaceRef, records: VerifiedRecord[]): Promise<void> {
     this.db.assertTransaction()
-    await this.ensureRepo(space)
+    await this.ensureRepo(ref)
+    const space = ref.toString()
 
     await this.db.db
       .deleteFrom('space_record_blob')
@@ -321,13 +344,14 @@ export class SpaceTransactor extends SpaceReader {
     const repo = new RepoCommit()
 
     for (const { collection, rkey, cid, record } of records) {
-      const uri = spaceRecordUri(space, this.did as DidString, collection, rkey)
+      const uri = ref.recordUri(this.did as DidString, collection, rkey)
       // Stored re-encoded, as any other write is. A record that wasn't canonical
       // DRISL in the archive would no longer match its cid, nor the commit data.
       const value = encode(record)
       if (!cid.equals(await cidForCbor(value))) {
         throw new InvalidRequestError(
           `Invalid STAR: record is not canonical DRISL at ${collection}/${rkey}`,
+          'InvalidRepoFile',
         )
       }
       await this.db.db
@@ -389,7 +413,7 @@ export class SpaceTransactor extends SpaceReader {
       .execute()
     const repo = new RepoCommit()
     for (const { collection, rkey, cid } of kept) {
-      repo.add(collection, rkey, parseCid(cid))
+      repo.add(collection, rkey, parseCid(cid, { flavor: 'cbor' }))
     }
 
     const rev = TID.nextStr(state.rev ?? undefined)
@@ -406,14 +430,14 @@ export class SpaceTransactor extends SpaceReader {
   // A write to another authority's space creates the repo without checking that
   // the space exists. The authority's own spaces must already exist: a write must
   // neither conjure an ungoverned space nor revive a deleted one.
-  private async ensureRepo(space: SpaceRefString): Promise<void> {
-    if (SpaceRef.parse(space).spaceDid === this.did) {
-      const existing = await this.getSpace(space)
+  private async ensureRepo(ref: SpaceRef): Promise<void> {
+    if (ref.spaceDid === this.did) {
+      const existing = await this.getSpace(ref.toString())
       if (!existing || existing.deletedAt) {
         throw new InvalidRequestError('Space not found', 'SpaceNotFound')
       }
     }
-    await this.ensureSpace(space)
+    await this.ensureSpace(ref)
   }
 
   private async getRecordCid(uri: AtUriString): Promise<Cid | null> {
@@ -422,36 +446,79 @@ export class SpaceTransactor extends SpaceReader {
       .select('cid')
       .where('uri', '=', uri)
       .executeTakeFirst()
-    return row ? parseCid(row.cid) : null
+    return row ? parseCid(row.cid, { flavor: 'cbor' }) : null
   }
 
-  // Re-registering an existing service replaces its endpoint and extends its expiry.
-  async recordCredentialRecipient(registration: {
-    space: string
-    serviceDid: string
-    serviceEndpoint: string
+  // Re-registering the same endpoint and token renews the registration. The
+  // space is checked in the same transaction, so a registration can't survive a
+  // concurrent deletion of the space.
+  async putNotifyRegistration(registration: {
+    space: SpaceRefString
+    endpoint: string
+    token: string
     expiresAt: string
   }): Promise<void> {
-    const { space, serviceDid, serviceEndpoint, expiresAt } = registration
+    this.db.assertTransaction()
+    const { space, endpoint, token, expiresAt } = registration
+    const current = await this.getSpace(space)
+    if (!current) {
+      throw new InvalidRequestError('Space not found', 'SpaceNotFound')
+    }
+    if (current.deletedAt) {
+      throw new InvalidRequestError('Space has been deleted', 'SpaceDeleted')
+    }
     await this.db.db
-      .insertInto('space_credential_recipient')
-      .values({ space, serviceDid, serviceEndpoint, expiresAt })
+      .insertInto('space_notify_registration')
+      .values({ space, endpoint, token, expiresAt, expiryNotified: 0 })
       .onConflict((oc) =>
         oc
-          .columns(['space', 'serviceDid'])
-          .doUpdateSet({ serviceEndpoint, expiresAt }),
+          .columns(['space', 'endpoint', 'token'])
+          .doUpdateSet({ expiresAt, expiryNotified: 0 }),
       )
       .execute()
   }
 
-  async removeCredentialRecipient(
-    space: string,
-    serviceDid: string,
+  // Marks the lapsed registrations that have yet to be sent an expiry notice,
+  // and returns them. Each lapse is claimed once, so a syncer is sent a single
+  // expiry notice however many updates follow.
+  async claimLapsedNotifyRegistrations(
+    space: SpaceRefString,
+    now: string,
+  ): Promise<{ endpoint: string; token: string }[]> {
+    return this.db.db
+      .updateTable('space_notify_registration')
+      .set({ expiryNotified: 1 })
+      .where('space', '=', space)
+      .where('expiresAt', '<=', now)
+      .where('expiryNotified', '=', 0)
+      .returning(['endpoint', 'token'])
+      .execute()
+  }
+
+  async removeNotifyRegistration(
+    space: SpaceRefString,
+    registration: { endpoint: string; token: string },
   ): Promise<void> {
     await this.db.db
-      .deleteFrom('space_credential_recipient')
+      .deleteFrom('space_notify_registration')
       .where('space', '=', space)
-      .where('serviceDid', '=', serviceDid)
+      .where('endpoint', '=', registration.endpoint)
+      .where('token', '=', registration.token)
+      .execute()
+  }
+
+  // Leaves alone a registration renewed since `lapsedBy`.
+  async removeLapsedNotifyRegistration(
+    space: SpaceRefString,
+    registration: { endpoint: string; token: string },
+    lapsedBy: string,
+  ): Promise<void> {
+    await this.db.db
+      .deleteFrom('space_notify_registration')
+      .where('space', '=', space)
+      .where('endpoint', '=', registration.endpoint)
+      .where('token', '=', registration.token)
+      .where('expiresAt', '<=', lapsedBy)
       .execute()
   }
 }
