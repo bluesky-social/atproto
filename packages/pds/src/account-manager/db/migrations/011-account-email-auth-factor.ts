@@ -1,5 +1,8 @@
 import type { Kysely } from 'kysely'
 
+// @TODO fix before merging to main: this is '008' on main. It was moved to
+// '011' to keep spaces alpha DBs migrating. See the note in ./index.ts.
+
 /**
  * A dedicated table rather than a column on `account`: further authentication
  * factors can then be added without altering `account` again, which sqlite
