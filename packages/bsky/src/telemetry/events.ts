@@ -266,12 +266,17 @@ class EventReporter {
   authVerifierRequest(
     verifier:
       'standard' | 'entrywaySession' | 'role' | 'modService' | 'anonymous',
-    { did, err }: { did?: string; err?: unknown } = {},
+    {
+      did,
+      appPassword,
+      err,
+    }: { did?: string; appPassword?: boolean; err?: unknown } = {},
   ) {
     if (verifier === 'entrywaySession') {
       this.#log('auth_verifier_request', {
         verifier,
         did,
+        appPassword,
         success: err === undefined,
         error:
           err === undefined
