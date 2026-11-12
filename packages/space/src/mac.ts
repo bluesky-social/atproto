@@ -53,7 +53,7 @@ const MAC_ALG = 'hmac-sha256'
 const MAC_LABEL = 'mac'
 
 // The parameters a host fulfills: the key share to use, the profile's tag, and
-// optionally the algorithm. Each MAC is keyed by a single-use key share, so
+// optionally the algorithm. A syncer uses a new key share for each request, so
 // `created`, `expires`, and `nonce` would add nothing.
 const MAC_REQUEST_PARAMS = ['keyid', 'tag', 'alg']
 

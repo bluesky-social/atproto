@@ -61,7 +61,7 @@ export function decapsulate(
 }
 
 // A fixed label tying the secret to this protocol.
-const HPKE_INFO = utf8('atproto-space-mac')
+const HPKE_INFO = utf8('atproto-mac')
 
 // HPKE labels every HKDF input with a version and the IDs of the algorithms in
 // use: 0x0010 is DHKEM(P-256, HKDF-SHA256), 0x0001 is HKDF-SHA256, and 0xffff
