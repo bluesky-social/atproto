@@ -94,6 +94,7 @@ export interface ServerConfigValues {
   adminPasswords: string[]
   labelsFromIssuerDids?: DidString[]
   indexedAtEpoch?: Date
+  postViewCountsStartAt?: Date
   // misc/dev
   blobCacheLocation?: string
   eventProxyTrackingEndpoint?: string
@@ -283,6 +284,13 @@ export class ServerConfig {
     const indexedAtEpoch = process.env.BSKY_INDEXED_AT_EPOCH
       ? new Date(process.env.BSKY_INDEXED_AT_EPOCH)
       : undefined
+    const postViewCountsStartAt = process.env.BSKY_POST_VIEW_COUNTS_START_AT
+      ? new Date(process.env.BSKY_POST_VIEW_COUNTS_START_AT)
+      : undefined
+    assert(
+      !postViewCountsStartAt || !isNaN(postViewCountsStartAt.getTime()),
+      'invalid BSKY_POST_VIEW_COUNTS_START_AT',
+    )
     assert(
       !indexedAtEpoch || !isNaN(indexedAtEpoch.getTime()),
       'invalid BSKY_INDEXED_AT_EPOCH',
@@ -494,6 +502,7 @@ export class ServerConfig {
       clientCheckEmailConfirmed,
       topicsEnabled,
       indexedAtEpoch,
+      postViewCountsStartAt,
       bigThreadUris,
       bigThreadDepth,
       maxThreadDepth,
@@ -763,6 +772,10 @@ export class ServerConfig {
 
   get indexedAtEpoch() {
     return this.cfg.indexedAtEpoch
+  }
+
+  get postViewCountsStartAt() {
+    return this.cfg.postViewCountsStartAt
   }
 
   get bigThreadUris() {

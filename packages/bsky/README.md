@@ -5,6 +5,19 @@ TypeScript implementation of the `app.bsky` Lexicons backing the https://bsky.ap
 [![NPM](https://img.shields.io/npm/v/@atproto/bsky)](https://www.npmjs.com/package/@atproto/bsky)
 [![Github CI Status](https://github.com/bluesky-social/atproto/actions/workflows/repo.yaml/badge.svg)](https://github.com/bluesky-social/atproto/actions/workflows/repo.yaml)
 
+## Post view counts
+
+Set `BSKY_POST_VIEW_COUNTS_START_AT` to the UTC launch timestamp (for example,
+`2026-12-01T00:00:00Z`) to enable author-only view counts after that time. Leave it
+unset to disable serving counts. Only posts with both indexing and sort dates at
+or after the cutoff qualify, so importing an older post does not make it eligible.
+
+AppView reads `unique_views` through Atlantis's `GetFeatures` RPC and includes
+`viewCount` only at 100 views or more. The optional lookup has a 100ms total budget;
+failures omit the count without failing the post response. Deploy compatible
+Atlantis instances before enabling serving. The app handles under-18 age hiding;
+AppView enforces author-only access.
+
 ## License
 
 This project is dual-licensed under MIT and Apache 2.0 terms:

@@ -188,6 +188,7 @@ export class BskyAppView {
       rejectUnauthorized: !config.dataplaneIgnoreBadTls,
     })
     const hydrator = new Hydrator(dataplane, config.labelsFromIssuerDids, {
+      postViewCountsStartAt: config.postViewCountsStartAt,
       debugFieldAllowedDids: config.debugFieldAllowedDids,
       featureGatesClient,
       needsReviewTagSources: [config.modServiceDid],
