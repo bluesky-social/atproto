@@ -15,7 +15,7 @@ Enter a handle to sign in, or configure FedCM to choose a remembered account fir
 | `plc_directory_url`      | PLC directory used to resolve DIDs.                                                                                                                                  | Development: `http://localhost:2582`; otherwise the OAuth client default. |
 | `handle_resolver`        | Service used to resolve account handles.                                                                                                                             | Development: `http://localhost:2584`; otherwise `https://bsky.social`.    |
 | `bsky_api_url`           | Bluesky API endpoint used by the example.                                                                                                                            | Development: `http://localhost:2584`; otherwise `https://api.bsky.app`.   |
-| `bsky_api_did`           | Audience DID for Bluesky API OAuth permissions.                                                                                                                      | Development: `did:example:invalid`; otherwise `did:web:api.bsky.app`.     |
+| `bsky_api_did`           | Audience DID for Bluesky API OAuth permissions; `none` runs without an AppView (no profile card or Bluesky API permissions).                                         | Development: `did:example:invalid`; otherwise `did:web:api.bsky.app`.     |
 | `scope`                  | Replaces environment-specific scopes; the app also requests `atproto` and the profile and preferences permissions it needs.                                          | Environment-specific scopes.                                              |
 | `fedcm_provider`         | FedCM configuration URL; repeat to configure multiple identity providers. FedCM is off when omitted, unless `fedcm_idp_registration=true`.                           | None.                                                                     |
 | `fedcm_idp_registration` | `true` also requests IdPs the browser registered via Chrome's experimental FedCM IdP Registration (type `https://atproto.com`); counts as one provider for `active`. | Off.                                                                      |
@@ -25,58 +25,56 @@ For a local AppView, set `bsky_api_did` to its actual DID. FedCM needs Chrome 14
 
 ## Run the full FedCM example
 
-This setup runs a local PDS, PLC directory, AppView, and seeded accounts. A Cloudflare tunnel gives the PDS the HTTPS address Chrome needs. The browser app stays on loopback.
+This runs a local PDS and PLC directory with three test accounts. No Docker is needed. A Cloudflare tunnel gives the PDS the HTTPS address that FedCM requires, while the app stays on loopback.
 
-The tunnel exposes a development PDS with known test passwords, including its admin password. Use throwaway data, keep the tunnel URL private, and stop it when finished.
+The tunnel exposes a development PDS with known passwords. Keep its URL private and stop it when you're done.
 
-You need Node 24, pnpm, running Docker, `jq`, [cloudflared](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/), and Chrome 141+. Build once from the repository root:
+**You need** Node 24, pnpm, [cloudflared](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/) (`brew install cloudflared`), and Chrome 141+.
+
+**1. Build once** from the repository root:
 
 ```sh
-pnpm install
-pnpm build
+pnpm install && pnpm build
 ```
 
-In one terminal, start the tunnel and keep it running:
+**2. Start three processes** in separate terminals:
 
 ```sh
+# Tunnel. Copy the https://….trycloudflare.com address it prints.
 cloudflared tunnel --url http://localhost:2583
-```
 
-Copy the `https://….trycloudflare.com` address it prints. In a second terminal, start the services with that address:
-
-```sh
+# PDS and PLC, using that address
 cd packages/dev-env
-FEDCM_IDP_ORIGIN=https://your-tunnel.trycloudflare.com pnpm start:fedcm
-```
+FEDCM_IDP_ORIGIN=https://<your-tunnel>.trycloudflare.com pnpm start:fedcm
 
-The launcher enables the PDS prototype settings, seeds accounts, and prints the account manager and configured passive and active example URLs. It uses ports 2581, 2582, 2583, 2584, and 2587, plus PostgreSQL on 5433 and Redis on 6380.
-
-In a third terminal, start the browser app:
-
-```sh
+# Browser app
 cd packages/oauth/oauth-client-browser-example
 pnpm dev
 ```
 
-In Chrome, open the printed account manager URL through the tunnel and click **Sign in**. Use `alice.test`, `bob.test`, or `carla.test` with password `hunter2` and enable **Remember this account on this device**. Sign in to more accounts there to populate the picker.
+The launcher prints the account manager URL and three app URLs: passive, active, and registered IdP. Test accounts are `alice.test`, `bob.test`, and `carla.test`, all with password `hunter2`.
 
-Open the printed passive URL to show the picker automatically, or the active URL and click **Choose an account**. Select an account and approve the OAuth permissions. The app then displays its profile and session.
+**3. Try FedCM with a configured provider.** This mode needs no Chrome flags.
 
-If passive mode stays hidden after a dismissal, try the active URL and check Chrome's “Third-party sign-in” site permission. Firefox does not support this prototype's FedCM flow.
+1. Open the account manager URL (`<tunnel>/account`) and sign in. Check **Remember this account on this device**.
+2. Open the passive URL, where the account picker appears on its own. Or open the active URL and click **Choose an account**.
+3. Pick the account and approve. The app shows the session.
 
-Stop the services with Ctrl+C, then stop the browser app and tunnel. The service wrapper removes PostgreSQL and Redis containers it started. If both were already running, it leaves them and the demo's PostgreSQL schemas in place. Each service run creates fresh accounts, so sign in again after restarting. A new tunnel also needs a new `FEDCM_IDP_ORIGIN` and the newly printed example URLs.
+**4. Try registered IdP mode** (Chrome's experimental FedCM IdP Registration). In this mode the app doesn't name any PDS.
 
-### Registered IdP mode (experimental Chrome flags)
+1. Enable both `chrome://flags/#fedcm-idp-registration` and `chrome://flags/#fedcm-lightweight-mode`, then relaunch Chrome. Without lightweight mode, the PDS registers but can't hand Chrome any accounts. You'll see `setStatus ... Overload resolution failed` in the PDS page's console.
+2. Sign in on the PDS with **Remember this account on this device** checked. Either sign in at `<tunnel>/account`, or open the registered IdP URL and type the handle. Any PDS sign-in page registers the PDS with Chrome.
+3. Open the registered IdP URL. Chrome offers the account. Pick it and OAuth follows.
+4. Optional: delete all cookies for the tunnel origin and retry. Chrome still offers the account, and the PDS asks for the password.
 
-Chrome's experimental FedCM IdP Registration lets the PDS register itself as an identity provider, so the app needs no `fedcm_provider`. Try it with the launcher's printed registered IdP URL:
+To remove the registration, clear site data for the tunnel origin.
 
-1. Enable `chrome://flags/#fedcm-idp-registration` and `chrome://flags/#fedcm-lightweight-mode`, then restart Chrome.
-2. Sign in as `alice.test` at `<tunnel>/account` with **Remember this account on this device** on. Ephemeral sessions are not pushed to the browser.
-3. Open the registered IdP URL. Registration takes effect on the first PDS page load after sign-in, with no prompt or reload.
-4. Choose alice in the picker; OAuth follows.
-5. Optionally delete the PDS cookies and retry. The accounts the PDS pushed to Chrome survive, which shows the stale-account path.
+**Notes**
 
-To clear registrations, clear site data for the tunnel origin.
+- Each launcher run creates fresh accounts, so sign in again after a restart. A new tunnel needs a new `FEDCM_IDP_ORIGIN`.
+- The demo has no AppView, so its URLs set `bsky_api_did=none` and the app skips the Bluesky profile card.
+- If passive mode stays hidden after you dismiss it, use the active URL, and check Chrome's "Third-party sign-in" site setting.
+- Firefox doesn't support this FedCM flow.
 
 ## Browser test
 

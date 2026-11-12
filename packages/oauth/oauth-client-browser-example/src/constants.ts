@@ -23,6 +23,13 @@ const BSKY_API_DID_DEFAULT =
 
 export const BSKY_API_URL = getParam('bsky_api_url', BSKY_API_URL_DEFAULT)
 export const BSKY_API_DID = getParam('bsky_api_did', BSKY_API_DID_DEFAULT)
+// `bsky_api_did=none` runs without an AppView: no Bluesky API permissions,
+// preferences, profile card, or calendar permissions (e.g. the FedCM demo,
+// which runs only a PDS).
+export const BSKY_API_ENABLED = BSKY_API_DID !== 'none'
+const BSKY_API_SCOPES = BSKY_API_ENABLED
+  ? [`rpc:*?aud=${BSKY_API_DID}#bsky_appview`]
+  : []
 
 export const PLC_DIRECTORY_URL = getParam(
   'plc_directory_url',
@@ -45,8 +52,12 @@ export const OAUTH_SCOPE_DEFAULT: string =
         'identity:*',
         'blob:*/*',
         'repo:*',
-        `rpc:*?aud=${BSKY_API_DID}#bsky_appview`,
-        `include:com.example.calendar.basePermissions?aud=${BSKY_API_DID}#calendar_service`,
+        ...BSKY_API_SCOPES,
+        ...(BSKY_API_ENABLED
+          ? [
+              `include:com.example.calendar.basePermissions?aud=${BSKY_API_DID}#calendar_service`,
+            ]
+          : []),
       ].join(' ')
     : ENV === 'production'
       ? [
@@ -54,15 +65,19 @@ export const OAUTH_SCOPE_DEFAULT: string =
           'account:status',
           'blob:*/*',
           'repo:*',
-          `rpc:*?aud=${BSKY_API_DID}#bsky_appview`,
-          `include:directory.lexicon.calendar.basePermissions?aud=${BSKY_API_DID}#calendar_service`,
+          ...BSKY_API_SCOPES,
+          ...(BSKY_API_ENABLED
+            ? [
+                `include:directory.lexicon.calendar.basePermissions?aud=${BSKY_API_DID}#calendar_service`,
+              ]
+            : []),
         ].join(' ')
       : [
           'account:email',
           'account:status',
           'blob:*/*',
           'repo:*',
-          `rpc:*?aud=${BSKY_API_DID}#bsky_appview`,
+          ...BSKY_API_SCOPES,
         ].join(' ')
 export const OAUTH_SCOPE: string =
   searchParams.get('scope') ?? OAUTH_SCOPE_DEFAULT
