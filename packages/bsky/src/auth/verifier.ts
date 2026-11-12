@@ -117,6 +117,8 @@ export class AuthVerifier {
     (opts: StandardAuthOpts) =>
     async (ctx: ReqCtx): Promise<StandardOutput | NullOutput> => {
       let verifier: 'standard' | 'entrywaySession' | 'anonymous' = 'standard'
+      let did: string | undefined
+      let err: unknown
       try {
         if (isBearerToken(ctx.req)) {
           // @NOTE temporarily accept entryway session tokens to shed load from PDS instances
@@ -124,11 +126,14 @@ export class AuthVerifier {
           const header = token ? jose.decodeProtectedHeader(token) : undefined
           if (header?.typ === 'at+jwt') {
             verifier = 'entrywaySession'
+            // Claimed DID, for logging. Only trusted once entrywaySession() succeeds.
+            did = claimedSub(token)
             // we should never use entryway session tokens in the case of flexible auth audiences (namely in the case of getFeed)
             if (opts.skipAudCheck) {
               throw new AuthRequiredError('Malformed token', 'InvalidToken')
             }
-            return this.entrywaySession(token)
+            // await so a rejection is caught below and logged as a failure
+            return await this.entrywaySession(token)
           }
 
           const { iss, aud } = await this.verifyServiceJwt(ctx, token, {
@@ -156,8 +161,11 @@ export class AuthVerifier {
           verifier = 'anonymous'
           return this.nullCreds()
         }
+      } catch (e) {
+        err = e
+        throw e
       } finally {
-        events.authVerifierRequest(verifier)
+        events.authVerifierRequest(verifier, { did, err })
       }
     }
 
@@ -462,6 +470,16 @@ const bearerTokenFromReq = (req: express.Request) => {
   const header = req.headers.authorization || ''
   if (!header.startsWith(BEARER)) return null
   return header.slice(BEARER.length).trim()
+}
+
+const claimedSub = (token: string | null): string | undefined => {
+  if (!token) return undefined
+  try {
+    const { sub } = jose.decodeJwt(token)
+    return typeof sub === 'string' ? sub : undefined
+  } catch {
+    return undefined
+  }
 }
 
 const parseBasicAuth = (
