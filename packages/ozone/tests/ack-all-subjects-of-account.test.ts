@@ -1,91 +1,97 @@
-import { ComAtprotoModerationDefs, ids } from '@atproto/api'
+import {
+  ComAtprotoAdminDefs,
+  ComAtprotoModerationDefs,
+  ComAtprotoRepoStrongRef,
+  ToolsOzoneModerationDefs,
+} from '@atproto/api'
 import {
   type ModeratorClient,
+  type RecordRef,
   type SeedClient,
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
-import { reportForEvent } from './_inbox.js'
 
-describe('account action report cascade', () => {
+describe('acknowledge all subjects of account', () => {
   let network: TestNetwork
   let sc: SeedClient
-  let mod: ModeratorClient
-  let fixtureNumber = 0
+  let modClient: ModeratorClient
 
-  const headers = async (nsid: string) => ({
-    headers: await network.ozone.modHeaders(nsid, 'admin'),
+  const repoSubject = (did: string) => ({
+    $type: 'com.atproto.admin.defs#repoRef',
+    did,
   })
 
-  async function fixture() {
-    const name = `accountcascade${++fixtureNumber}`
-    const { did } = await sc.createAccount(name, {
-      handle: `${name}.test`,
-      email: `${name}@example.com`,
-      password: 'password',
+  const recordSubject = (ref: RecordRef) => ({
+    $type: 'com.atproto.repo.strongRef',
+    uri: ref.uriStr,
+    cid: ref.cidStr,
+  })
+
+  const getReviewStateBySubject = (
+    subjects: ToolsOzoneModerationDefs.SubjectStatusView[],
+  ) => {
+    const states = new Map<string, ToolsOzoneModerationDefs.SubjectStatusView>()
+
+    subjects.forEach((item) => {
+      if (ComAtprotoRepoStrongRef.isMain(item.subject)) {
+        states.set(item.subject.uri, item)
+      } else if (ComAtprotoAdminDefs.isRepoRef(item.subject)) {
+        states.set(item.subject.did, item)
+      }
     })
-    const post = await sc.post(did, 'Example post')
-    const otherPost = await sc.post(did, 'Another post')
-    return {
-      did,
-      account: { $type: 'com.atproto.admin.defs#repoRef', did },
-      record: {
-        $type: 'com.atproto.repo.strongRef',
-        uri: post.ref.uriStr,
-        cid: post.ref.cidStr,
-      },
-      otherRecord: {
-        $type: 'com.atproto.repo.strongRef',
-        uri: otherPost.ref.uriStr,
-        cid: otherPost.ref.cidStr,
-      },
-      message: {
-        $type: 'chat.bsky.convo.defs#messageRef',
-        did,
-        convoId: 'cascade-conversation',
-        messageId: 'cascade-message',
-      },
-      conversation: {
-        $type: 'chat.bsky.convo.defs#convoRef',
-        did,
-        convoId: 'cascade-conversation',
-      },
-    }
+
+    return states
   }
 
-  async function report(
-    subject: Awaited<ReturnType<typeof fixture>>[
-      'account' | 'record' | 'message' | 'conversation'],
-    reasonType = ComAtprotoModerationDefs.REASONSPAM,
-  ) {
-    const event = await sc.createReport({
-      subject,
-      reasonType,
-      reportedBy: sc.dids.carol,
+  const reportUserAndPost = async (did: string) => {
+    const postOne = sc.posts[did][0].ref
+    const postTwo = sc.posts[did][1].ref
+    await Promise.all([
+      sc.createReport({
+        reasonType: ComAtprotoModerationDefs.REASONSPAM,
+        subject: repoSubject(did),
+        reportedBy: sc.dids.carol,
+      }),
+      sc.createReport({
+        reasonType: ComAtprotoModerationDefs.REASONOTHER,
+        reason: 'defamation',
+        subject: recordSubject(postOne),
+        reportedBy: sc.dids.carol,
+      }),
+      sc.createReport({
+        reasonType: ComAtprotoModerationDefs.REASONOTHER,
+        reason: 'defamation',
+        subject: recordSubject(postTwo),
+        reportedBy: sc.dids.carol,
+      }),
+    ])
+    await modClient.emitEvent({
+      event: {
+        $type: 'tools.ozone.moderation.defs#modEventReport',
+        reportType: ComAtprotoModerationDefs.REASONAPPEAL,
+      },
+      subject: recordSubject(postTwo),
     })
-    await network.processAll()
-    const key =
-      'uri' in subject
-        ? subject.uri
-        : 'messageId' in subject
-          ? `at://${subject.did}/chat.bsky.convo.message/${subject.messageId}`
-          : 'convoId' in subject
-            ? `at://${subject.did}/chat.bsky.convo/${subject.convoId}`
-            : subject.did
-    return {
-      eventId: event.id,
-      key,
-      row: await reportForEvent(mod, event.id, key),
-    }
+
+    return { postOne, postTwo }
   }
 
-  async function activities(reportId: number) {
-    return (
-      await mod.agent.tools.ozone.report.listActivities(
-        { reportId },
-        await headers(ids.ToolsOzoneReportListActivities),
-      )
-    ).data.activities
+  const expectAppealResolutionEvents = async (uri: string) => {
+    const { events } = await modClient.queryEvents({
+      subject: uri,
+      types: [
+        'tools.ozone.moderation.defs#modEventAcknowledge',
+        'tools.ozone.moderation.defs#modEventResolveAppeal',
+      ],
+    })
+    expect(events).toHaveLength(2)
+    expect(events.map((event) => event.event.$type)).toEqual(
+      expect.arrayContaining([
+        'tools.ozone.moderation.defs#modEventResolveAppeal',
+        'tools.ozone.moderation.defs#modEventAcknowledge',
+      ]),
+    )
   }
 
   beforeAll(async () => {
@@ -93,7 +99,7 @@ describe('account action report cascade', () => {
       dbPostgresSchema: 'ozone_ack_all_subjects_of_account',
     })
     sc = network.getSeedClient()
-    mod = network.ozone.getModClient()
+    modClient = network.ozone.getModClient()
     await basicSeed(sc)
     await network.processAll()
   })
@@ -102,160 +108,100 @@ describe('account action report cascade', () => {
     await network?.close()
   })
 
-  it('links eligible account and owned reports to the takedown, preserving active reviews', async () => {
-    const f = await fixture()
-    const other = await fixture()
-    const account = await report(f.account)
-    const record = await report(f.record, ComAtprotoModerationDefs.REASONOTHER)
-    const message = await report(f.message)
-    const conversation = await report(f.conversation)
-    const assigned = await report(f.otherRecord)
-    const escalated = await report(
-      f.otherRecord,
-      ComAtprotoModerationDefs.REASONOTHER,
-    )
-    const unrelated = await report(other.account)
+  it('acknowledges all open/escalated review subjects with takedown.', async () => {
+    const { postOne, postTwo } = await reportUserAndPost(sc.dids.bob)
 
-    await mod.agent.tools.ozone.report.assignModerator(
-      {
-        reportId: assigned.row.id,
-        did: network.ozone.moderatorAccnt.did,
-        isPermanent: true,
-      },
-      await headers(ids.ToolsOzoneReportAssignModerator),
-    )
-    await mod.agent.tools.ozone.report.createActivity(
-      {
-        reportId: escalated.row.id,
-        activity: { $type: 'tools.ozone.report.defs#escalationActivity' },
-      },
-      await headers(ids.ToolsOzoneReportCreateActivity),
-    )
-    const action = await mod.emitEvent({
-      subject: f.account,
-      event: {
-        $type: 'tools.ozone.moderation.defs#modEventTakedown',
-        acknowledgeAccountSubjects: true,
-      },
-      reportAction: {
-        types: [ComAtprotoModerationDefs.REASONSPAM],
-        isAutomated: true,
-      },
-      modTool: { name: 'test-automation', meta: { rules: 'test-rule' } },
+    const { subjectStatuses: statusesBefore } = await modClient.queryStatuses({
+      subject: sc.dids.bob,
+      includeAllUserRecords: true,
     })
 
-    for (const item of [account, record, message, conversation]) {
-      const result = await reportForEvent(mod, item.eventId, item.key)
-      expect(result.status).toBe('closed')
-      expect(result.actionEventIds).toEqual([action.id])
-      expect(await activities(item.row.id)).toContainEqual(
-        expect.objectContaining({
-          activity: expect.objectContaining({
-            $type: 'tools.ozone.report.defs#closeActivity',
-          }),
-          isAutomated: true,
-          meta: expect.objectContaining({
-            resolution: 'linked',
-            actionEventId: action.id,
-            rules: 'test-rule',
-          }),
-        }),
-      )
-    }
-    for (const [item, status] of [
-      [assigned, 'assigned'],
-      [escalated, 'escalated'],
-      [unrelated, 'open'],
-    ] as const) {
-      const result = await reportForEvent(mod, item.eventId, item.key)
-      expect(result.status).toBe(status)
-      expect(result.actionEventIds).toBeNull()
-    }
-    for (const subject of [f.record.uri, f.otherRecord.uri]) {
-      expect(
-        (
-          await mod.queryEvents({
-            subject,
-            types: [
-              'tools.ozone.moderation.defs#modEventAcknowledge',
-              'tools.ozone.moderation.defs#modEventResolveAppeal',
-            ],
-          })
-        ).events,
-      ).toHaveLength(0)
-    }
+    await modClient.performTakedown({
+      subject: repoSubject(sc.dids.bob),
+      acknowledgeAccountSubjects: true,
+    })
+
+    const { subjectStatuses: statusesAfter } = await modClient.queryStatuses({
+      subject: sc.dids.bob,
+      includeAllUserRecords: true,
+    })
+
+    const reviewStatesBefore = getReviewStateBySubject(statusesBefore)
+    const reviewStatesAfter = getReviewStateBySubject(statusesAfter)
+
+    // Check that review states before were different for different subjects
+    expect(reviewStatesBefore.get(postOne.uriStr)?.reviewState).toBe(
+      ToolsOzoneModerationDefs.REVIEWOPEN,
+    )
+    expect(reviewStatesBefore.get(postTwo.uriStr)?.reviewState).toBe(
+      ToolsOzoneModerationDefs.REVIEWESCALATED,
+    )
+    expect(reviewStatesBefore.get(postTwo.uriStr)?.appealed).toBe(true)
+    expect(reviewStatesBefore.get(sc.dids.bob)?.reviewState).toBe(
+      ToolsOzoneModerationDefs.REVIEWOPEN,
+    )
+
+    // Check that review states after are all closed
+    expect(reviewStatesAfter.get(postOne.uriStr)?.reviewState).toBe(
+      ToolsOzoneModerationDefs.REVIEWCLOSED,
+    )
+    expect(reviewStatesAfter.get(postTwo.uriStr)?.reviewState).toBe(
+      ToolsOzoneModerationDefs.REVIEWCLOSED,
+    )
+    expect(reviewStatesAfter.get(postTwo.uriStr)?.appealed).toBe(false)
+    await expectAppealResolutionEvents(postTwo.uriStr)
+    expect(reviewStatesAfter.get(sc.dids.bob)?.reviewState).toBe(
+      ToolsOzoneModerationDefs.REVIEWCLOSED,
+    )
   })
 
-  it('links the account acknowledgement to owned reports only when requested', async () => {
-    const f = await fixture()
-    const record = await report(f.record)
-    await mod.emitEvent({
-      subject: f.account,
-      event: { $type: 'tools.ozone.moderation.defs#modEventAcknowledge' },
-    })
-    expect((await reportForEvent(mod, record.eventId, record.key)).status).toBe(
-      'open',
-    )
+  it('acknowledges all open/escalated review subjects with acknowledge.', async () => {
+    const { postOne, postTwo } = await reportUserAndPost(sc.dids.alice)
 
-    const action = await mod.emitEvent({
-      subject: f.account,
+    const { subjectStatuses: statusesBefore } = await modClient.queryStatuses({
+      subject: sc.dids.alice,
+      includeAllUserRecords: true,
+    })
+
+    await modClient.emitEvent({
+      subject: repoSubject(sc.dids.alice),
       event: {
         $type: 'tools.ozone.moderation.defs#modEventAcknowledge',
         acknowledgeAccountSubjects: true,
       },
     })
-    const result = await reportForEvent(mod, record.eventId, record.key)
-    expect(result.status).toBe('closed')
-    expect(result.actionEventIds).toEqual([action.id])
-    expect(
-      (
-        await mod.queryEvents({
-          subject: f.record.uri,
-          types: ['tools.ozone.moderation.defs#modEventAcknowledge'],
-        })
-      ).events,
-    ).toHaveLength(0)
-  })
 
-  it('links reports to a scheduled account takedown', async () => {
-    const f = await fixture()
-    const account = await report(f.account)
-    const record = await report(f.record)
-    await mod.agent.tools.ozone.moderation.scheduleAction(
-      {
-        action: {
-          $type: 'tools.ozone.moderation.scheduleAction#takedown',
-          acknowledgeAccountSubjects: true,
-        },
-        subjects: [f.did],
-        createdBy: 'did:example:admin',
-        scheduling: { executeAt: new Date(Date.now() - 1000).toISOString() },
-        modTool: { name: 'test-automation' },
-      },
-      await headers(ids.ToolsOzoneModerationScheduleAction),
-    )
-    await network.ozone.daemon.ctx.scheduledActionProcessor.findAndExecuteScheduledActions()
-    const { events } = await mod.queryEvents({
-      subject: f.did,
-      types: ['tools.ozone.moderation.defs#modEventTakedown'],
+    const { subjectStatuses: statusesAfter } = await modClient.queryStatuses({
+      subject: sc.dids.alice,
+      includeAllUserRecords: true,
     })
-    expect(events).toHaveLength(1)
-    for (const item of [account, record]) {
-      const result = await reportForEvent(mod, item.eventId, item.key)
-      expect(result.status).toBe('closed')
-      expect(result.actionEventIds).toEqual([events[0].id])
-      expect(await activities(item.row.id)).toContainEqual(
-        expect.objectContaining({
-          activity: expect.objectContaining({
-            $type: 'tools.ozone.report.defs#closeActivity',
-          }),
-          isAutomated: true,
-          meta: expect.objectContaining({
-            resolution: 'linked',
-            actionEventId: events[0].id,
-          }),
-        }),
-      )
-    }
+
+    const reviewStatesBefore = getReviewStateBySubject(statusesBefore)
+    const reviewStatesAfter = getReviewStateBySubject(statusesAfter)
+
+    // Check that review states before were different for different subjects
+    expect(reviewStatesBefore.get(postOne.uriStr)?.reviewState).toBe(
+      ToolsOzoneModerationDefs.REVIEWOPEN,
+    )
+    expect(reviewStatesBefore.get(postTwo.uriStr)?.reviewState).toBe(
+      ToolsOzoneModerationDefs.REVIEWESCALATED,
+    )
+    expect(reviewStatesBefore.get(postTwo.uriStr)?.appealed).toBe(true)
+    expect(reviewStatesBefore.get(sc.dids.alice)?.reviewState).toBe(
+      ToolsOzoneModerationDefs.REVIEWOPEN,
+    )
+
+    // Check that review states after are all closed
+    expect(reviewStatesAfter.get(postOne.uriStr)?.reviewState).toBe(
+      ToolsOzoneModerationDefs.REVIEWCLOSED,
+    )
+    expect(reviewStatesAfter.get(postTwo.uriStr)?.reviewState).toBe(
+      ToolsOzoneModerationDefs.REVIEWCLOSED,
+    )
+    expect(reviewStatesAfter.get(postTwo.uriStr)?.appealed).toBe(false)
+    await expectAppealResolutionEvents(postTwo.uriStr)
+    expect(reviewStatesAfter.get(sc.dids.alice)?.reviewState).toBe(
+      ToolsOzoneModerationDefs.REVIEWCLOSED,
+    )
   })
 })

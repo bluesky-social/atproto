@@ -406,13 +406,12 @@ const handleModerationEvent = async ({
           },
           metadata: getEventActivityMetadata(input.body.modTool),
         })
-      } else {
-        await moderationTxn.resolveSubjectsForAccount(
-          subject.did,
-          createdBy,
-          result.event,
-        )
       }
+      await moderationTxn.resolveSubjectsForAccount(
+        subject.did,
+        createdBy,
+        result.event,
+      )
     }
 
     if (isLabelEvent) {
