@@ -17,7 +17,6 @@ import { type LexMap, parseCid } from '@atproto/lex-data'
 import { JoseKey } from '@atproto/oauth-provider/provider'
 import { ReplayManager } from '@atproto/oauth-provider/verifier'
 import {
-  CLIENT_ATTESTATION_TYP,
   COMMIT_MAC_TYPE,
   MAC_HEADER,
   type MacType,
@@ -25,6 +24,7 @@ import {
   RepoCommit,
   type SpaceCommit,
   WANT_MAC_HEADER,
+  buildClientAttestation,
   createSpaceSigHeaders,
   encapsulate,
   formatWantMacHeader,
@@ -393,7 +393,7 @@ export class SpaceClient {
   }
 
   /**
-   * The writer set as stored by the authority.
+   * The writer set as stored by the authority, leaving out removed writers.
    *
    * Reads through storage rather than `listWriters` because the callers that need it
    * are polling for a best-effort notification to land, and `listWriters` needs a
@@ -406,12 +406,12 @@ export class SpaceClient {
       spaceDid,
       (store) => store.space.listWriters(space, { limit: 100 }),
     )
-    return writers.map((w) => w.did)
+    return writers.filter((w) => !w.removedAt).map((w) => w.did)
   }
 
   /**
-   * The writer set, as `listWriters` publishes it. A repo missing from it is a repo
-   * no syncer can discover.
+   * The writer set, as `listWriters` publishes it. A repo missing from it, or
+   * reported as removed, is a repo no syncer treats as part of the space.
    */
   async expectWriterSet(
     space: SpaceRefString,
@@ -422,7 +422,10 @@ export class SpaceClient {
     const res = await cred
       .clientFor(this.authority)
       .call(com.atproto.space.listWriters, { space })
-    expect(res.repos.map((r) => r.repo).sort()).toEqual(
+    const writers = res.repos.filter((r) =>
+      com.atproto.space.defs.repoWrite.$isTypeOf(r.latest),
+    )
+    expect(writers.map((r) => r.repo).sort()).toEqual(
       expected.map((a) => a.did).sort(),
     )
   }
@@ -769,19 +772,13 @@ export class MockClientApp {
     spaceHost: string,
     opts: { signWith?: JoseKey; iss?: string; expiresInSec?: number } = {},
   ): Promise<string> {
-    const now = Math.floor(Date.now() / 1000)
     const signer = opts.signWith ?? this.key
-    return signer.createJwt(
-      { alg: 'ES256', typ: CLIENT_ATTESTATION_TYP },
-      {
-        iss: opts.iss ?? this.clientId,
-        sub: opts.iss ?? this.clientId,
-        aud: spaceHost,
-        iat: now,
-        exp: now + (opts.expiresInSec ?? 60),
-        jti: `nonce-${now}`,
-      },
-    )
+    const { header, payload } = buildClientAttestation({
+      clientId: opts.iss ?? this.clientId,
+      aud: spaceHost,
+      expiresInSec: opts.expiresInSec,
+    })
+    return signer.createJwt({ alg: 'ES256', ...header }, payload)
   }
 
   close(): Promise<void> {

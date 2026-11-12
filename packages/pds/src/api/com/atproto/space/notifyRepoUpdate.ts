@@ -8,7 +8,7 @@ export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.space.notifyRepoUpdate, {
     auth: ctx.authVerifier.serviceAuth,
     handler: async ({ input: { body }, auth }) => {
-      const { space, repo, repoRev, data } = body
+      const { space, repo, latest } = body
 
       const ref = toSpaceRef(space)
       const { spaceDid } = ref
@@ -30,7 +30,7 @@ export default function (server: Server, ctx: AppContext) {
         )
       }
 
-      await processNotifyRepoUpdate(ctx, ref, { space, repo, repoRev, data })
+      await processNotifyRepoUpdate(ctx, ref, { space, repo, latest })
     },
   })
 }

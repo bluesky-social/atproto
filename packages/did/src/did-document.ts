@@ -46,6 +46,8 @@ const didVerificationMethodSchema = z.object({
   publicKeyMultibase: z.string().optional(),
 })
 
+export type DidVerificationMethod = z.infer<typeof didVerificationMethodSchema>
+
 /**
  * The value of the id property MUST be a URI conforming to [RFC3986]. A
  * conforming producer MUST NOT produce multiple service entries with the same

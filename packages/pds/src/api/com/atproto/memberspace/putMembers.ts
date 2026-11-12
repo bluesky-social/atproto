@@ -4,6 +4,7 @@ import { com } from '../../../../lexicons/index.js'
 import {
   assertSpaceAuthority,
   fireNotifyRepoUpdate,
+  forwardWriterRemoved,
   toSpaceRef,
 } from '../space/util.js'
 
@@ -23,7 +24,11 @@ export default function (server: Server, ctx: AppContext) {
       const ref = toSpaceRef(space)
       assertSpaceAuthority(auth, ref, { manage: 'update' })
 
-      const commit = await ctx.spacePolicyManager.putMembers(ref, members)
+      const { commit, removedWriters } =
+        await ctx.spacePolicyManager.putMembers(ref, members)
+      for (const removed of removedWriters) {
+        forwardWriterRemoved(ctx, ref, removed)
+      }
       await fireNotifyRepoUpdate(ctx, {
         space: ref,
         writerDid: authorityDid,

@@ -1,0 +1,64 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.space.notifySpaceUpdate",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Notify a syncing service of an update to a space. Sent by the space host to the notification endpoint registered through getSpaceCredential.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["space", "token", "update"],
+          "properties": {
+            "space": {
+              "type": "string",
+              "format": "space-ref"
+            },
+            "token": {
+              "type": "string",
+              "maxLength": 512,
+              "description": "The token the endpoint was registered with."
+            },
+            "update": {
+              "type": "union",
+              "refs": ["#repoUpdate", "#spaceDeleted"]
+            }
+          }
+        }
+      }
+    },
+    "repoUpdate": {
+      "type": "object",
+      "description": "A repo in the space has been updated.",
+      "required": ["repo", "repoRev", "data", "spaceRev"],
+      "properties": {
+        "repo": {
+          "type": "string",
+          "format": "did"
+        },
+        "repoRev": {
+          "type": "string",
+          "format": "tid"
+        },
+        "data": {
+          "type": "bytes"
+        },
+        "spaceRev": {
+          "type": "string",
+          "format": "tid"
+        },
+        "prevSpaceRev": {
+          "type": "string",
+          "format": "tid",
+          "description": "Omitted on the first update in a space. A gap indicates missed notifications, which can be recovered with listWriters."
+        }
+      }
+    },
+    "spaceDeleted": {
+      "type": "object",
+      "description": "The space has been deleted. Confirm with getSpaceCredential before dropping its data.",
+      "properties": {}
+    }
+  }
+}

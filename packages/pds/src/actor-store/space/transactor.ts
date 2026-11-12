@@ -149,6 +149,51 @@ export class SpaceTransactor extends SpaceReader {
       .executeTakeFirst()
     if (writer && writer.repoRev >= repoRev) return
 
+    const { spaceRev, prevSpaceRev } = await this.nextSpaceRev(space)
+    // A newer write from a removed writer adds it back to the writer set.
+    await this.db.db
+      .insertInto('space_writer')
+      .values({ space, did, repoRev, data, spaceRev, removedAt: null })
+      .onConflict((oc) =>
+        oc
+          .columns(['space', 'did'])
+          .doUpdateSet({ repoRev, data, spaceRev, removedAt: null }),
+      )
+      .execute()
+    return { spaceRev, prevSpaceRev }
+  }
+
+  /**
+   * Remove a repo from the writer set and advance the space sequence atomically.
+   * The row stays behind, marked removed, so that listWriters can report the
+   * removal. Returns undefined if the repo is not in the writer set.
+   */
+  async removeWriter(
+    space: SpaceRefString,
+    did: DidString,
+  ): Promise<{ spaceRev: string; prevSpaceRev?: string } | undefined> {
+    this.db.assertTransaction()
+    const writer = await this.db.db
+      .selectFrom('space_writer')
+      .select('removedAt')
+      .where('space', '=', space)
+      .where('did', '=', did)
+      .executeTakeFirst()
+    if (!writer || writer.removedAt) return
+
+    const { spaceRev, prevSpaceRev } = await this.nextSpaceRev(space)
+    await this.db.db
+      .updateTable('space_writer')
+      .set({ spaceRev, removedAt: new Date().toISOString() })
+      .where('space', '=', space)
+      .where('did', '=', did)
+      .execute()
+    return { spaceRev, prevSpaceRev }
+  }
+
+  private async nextSpaceRev(
+    space: SpaceRefString,
+  ): Promise<{ spaceRev: string; prevSpaceRev?: string }> {
     const latest = await this.db.db
       .selectFrom('space_writer')
       .select('spaceRev')
@@ -157,15 +202,7 @@ export class SpaceTransactor extends SpaceReader {
       .limit(1)
       .executeTakeFirst()
     const prevSpaceRev = latest?.spaceRev
-    const spaceRev = TID.nextStr(prevSpaceRev)
-    await this.db.db
-      .insertInto('space_writer')
-      .values({ space, did, repoRev, data, spaceRev })
-      .onConflict((oc) =>
-        oc.columns(['space', 'did']).doUpdateSet({ repoRev, data, spaceRev }),
-      )
-      .execute()
-    return { spaceRev, prevSpaceRev }
+    return { spaceRev: TID.nextStr(prevSpaceRev), prevSpaceRev }
   }
 
   /** Replace a space's writer set with the one exported by its previous host. */
@@ -180,17 +217,9 @@ export class SpaceTransactor extends SpaceReader {
     for (const { did, repoRev, data, spaceRev } of writers) {
       await this.db.db
         .insertInto('space_writer')
-        .values({ space, did, repoRev, data, spaceRev })
+        .values({ space, did, repoRev, data, spaceRev, removedAt: null })
         .execute()
     }
-  }
-
-  async removeWriter(space: SpaceRefString, did: DidString): Promise<void> {
-    await this.db.db
-      .deleteFrom('space_writer')
-      .where('space', '=', space)
-      .where('did', '=', did)
-      .execute()
   }
 
   /**

@@ -69,6 +69,17 @@ export function isAgent(value: unknown): value is Agent {
   )
 }
 
+/** An {@link Agent} acting for a user. */
+export interface AuthenticatedAgent extends Agent {
+  readonly did: DidString
+}
+
+export function isAuthenticatedAgent(
+  agent: Agent,
+): agent is AuthenticatedAgent {
+  return agent.did != null
+}
+
 export type AgentConfig = {
   /**
    * The identifier (DID) of the user represented by this agent.

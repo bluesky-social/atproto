@@ -360,10 +360,11 @@ Lexicon string constraints are measured in graphemes (user-perceived
 characters) or UTF-8 bytes, never in JS string length:
 
 ```ts
-import { graphemeLen, utf8Len } from '@atproto/lex'
+import { graphemeLen, utf8Len, isWellFormedString } from '@atproto/lex'
 
 graphemeLen('👨‍👩‍👧‍👦') // 1
 utf8Len('👨‍👩‍👧‍👦') // 25
+isWellFormedString('\uD83D') // false — lone surrogate
 ```
 
 ## Comparison

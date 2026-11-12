@@ -25,8 +25,12 @@ export default function (server: Server, ctx: AppContext) {
           cursor: writers.at(-1)?.spaceRev,
           repos: writers.map((writer) => ({
             repo: writer.did,
-            repoRev: writer.repoRev,
-            data: writer.data,
+            latest: writer.removedAt
+              ? com.atproto.space.defs.repoRemoved.$build({})
+              : com.atproto.space.defs.repoWrite.$build({
+                  rev: writer.repoRev,
+                  data: writer.data,
+                }),
             spaceRev: writer.spaceRev,
           })),
         },

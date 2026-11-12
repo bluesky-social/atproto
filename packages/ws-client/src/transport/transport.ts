@@ -9,12 +9,42 @@ import type {
 // the latter has the Headers global but not the HeadersInit type name.
 export type HeadersInit = NonNullable<ConstructorParameters<typeof Headers>[0]>
 
+/**
+ * A DNS lookup function, with the signature of Node's `dns.lookup()` (see the
+ * `lookup` option of `net.connect()`). Declared here rather than imported from
+ * `node:net` so the browser typings don't depend on `@types/node`.
+ */
+export type LookupFunction = (
+  hostname: string,
+  options: object,
+  callback: (
+    error: Error | null,
+    address: string | { address: string; family: number }[],
+    family?: number,
+  ) => void,
+) => void
+
 export interface Sender<M extends DataMode = 'auto'> {
   /**
    * Resolves on flush (Node) or hand-off (browser), not delivery: at-most-once,
    * like a bare WebSocket. Rejects once this connection is no longer open.
    */
   send(data: MessageOf<M>): Promise<void>
+  /**
+   * Ends this connection, not the stream: the connection ends with a
+   * `CloseError` of `code`, which the reconnect policy classifies like any other
+   * (so a `1000` ends the stream under the default policy). Delivery stops at
+   * once. A no-op once this connection is no longer open.
+   *
+   * `CloseCode.Abnormal` (1006), which is never sent on the wire, drops the
+   * socket without a closing handshake (Node; the browser closes politely). A
+   * code the platform cannot send is replaced by `1000` on the wire.
+   *
+   * @throws {RangeError|DOMException} if `reason` exceeds 123 UTF-8 bytes
+   */
+  close(code: number, reason?: string): void
+  /** The subprotocol the server selected, or `''`. */
+  readonly protocol: string
 }
 
 export interface Transport<M extends DataMode = 'auto'>
@@ -50,10 +80,29 @@ export interface TransportOptions<M extends DataMode = 'auto'> {
    *
    * Node only. The WHATWG API has no ping/pong, so the browser transport ignores
    * this and relies on `idleTimeoutMs` instead.
+   *
+   * `timeoutMs` bounds the wait for a sign of life after each ping. It defaults
+   * to (and is capped at) `intervalMs`, so a missed round times out.
    */
-  heartbeat: undefined | false | { intervalMs?: number }
+  heartbeat: undefined | false | { intervalMs?: number; timeoutMs?: number }
   /** End the connection if no message arrives within this window. */
   idleTimeoutMs: undefined | number
+  /**
+   * End a dial whose opening handshake has not completed within this window,
+   * with a `HandshakeTimeoutError`. Unlimited by default.
+   */
+  handshakeTimeoutMs: undefined | number
+  /**
+   * Largest message accepted, in bytes. A larger one fails the connection with
+   * a `MessageTooBigError` and a 1009 close. Node only: `ws` rejects it before
+   * buffering it. Default 100 MiB (`ws`'s default).
+   */
+  maxPayload: undefined | number
+  /**
+   * Resolves the host to connect to, in place of `dns.lookup()` (Node only; the
+   * browser transport throws, as for `headers`).
+   */
+  lookup: undefined | LookupFunction
   /**
    * Read-side backpressure threshold, in bytes of received-but-unread messages.
    * Past it the socket is paused until the consumer drains below half the mark;
