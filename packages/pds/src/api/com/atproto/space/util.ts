@@ -1,4 +1,5 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
+import PQueue from 'p-queue'
 import { MINUTE, TID, getServiceEndpoint } from '@atproto/common'
 import type { IdResolver } from '@atproto/identity'
 import { xrpc } from '@atproto/lex-client'
@@ -395,6 +396,9 @@ export function forwardWriterRemoved(
   )
 }
 
+/** How many syncer endpoints a fan-out notifies at once. */
+export const SYNCER_NOTIFY_CONCURRENCY = 50
+
 /** A sequenced change to a space's writer set. */
 type WriterSetUpdate =
   | l.$Typed<com.atproto.space.notifySpaceUpdate.RepoWrite>
@@ -431,24 +435,28 @@ async function deliverSpaceUpdate(
     store.space.getNotifyRegistrations(space),
   )
   const now = new Date().toISOString()
+  // Lapsed registrations are handled below.
+  const active = registrations.filter(({ expiresAt }) => expiresAt > now)
 
-  for (const { endpoint, token, expiresAt } of registrations) {
-    // Lapsed, so handled below.
-    if (expiresAt <= now) continue
-    try {
-      // The endpoint is chosen by the syncer, so it's fetched as untrusted.
-      await xrpc(
-        { service: endpoint, fetch: ctx.safeFetch },
-        com.atproto.space.notifySpaceUpdate,
-        {
-          body: { space, token, update },
-          signal: AbortSignal.any([signal, AbortSignal.timeout(10_000)]),
-        },
-      )
-    } catch (err) {
-      spaceLogger.warn({ err, space, endpoint }, 'notify failed')
-    }
-  }
+  // In parallel, so a slow endpoint doesn't hold up delivery to the others.
+  const queue = new PQueue({ concurrency: SYNCER_NOTIFY_CONCURRENCY })
+  await queue.addAll(
+    active.map(({ endpoint, token }) => async () => {
+      try {
+        // The endpoint is chosen by the syncer, so it's fetched as untrusted.
+        await xrpc(
+          { service: endpoint, fetch: ctx.safeFetch },
+          com.atproto.space.notifySpaceUpdate,
+          {
+            body: { space, token, update },
+            signal: AbortSignal.any([signal, AbortSignal.timeout(10_000)]),
+          },
+        )
+      } catch (err) {
+        spaceLogger.warn({ err, space, endpoint }, 'notify failed')
+      }
+    }),
+  )
 
   const lapsed = await ctx.actorStore.transact(ref.spaceDid, (actorTxn) =>
     actorTxn.space.claimLapsedNotifyRegistrations(space, now),

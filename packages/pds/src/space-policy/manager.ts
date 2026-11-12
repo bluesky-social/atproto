@@ -1,8 +1,9 @@
+import { SECOND } from '@atproto/common'
 import type { IdResolver } from '@atproto/identity'
 import { xrpc } from '@atproto/lex-client'
 import type { SpaceMetaArchive } from '@atproto/space'
 import type { DidString, SpaceRef, UriString } from '@atproto/syntax'
-import { InvalidRequestError } from '@atproto/xrpc-server'
+import { InvalidRequestError, UpstreamFailureError } from '@atproto/xrpc-server'
 import type { Fetch } from '@atproto-labs/fetch-node'
 import type { ActorStore } from '../actor-store/actor-store.js'
 import {
@@ -326,6 +327,11 @@ export class SpacePolicyManager {
    * Ask a managed space's managing app for an account's access. `repo` is absent for
    * a read with no delegation token, and `clientId` is absent for writes, since a
    * repo update notification does not identify the app that made the write.
+   *
+   * Without an answer from the app, throws an UpstreamFailureError. Failing open
+   * would hand out credentials for the spaces that asked for the strictest gate, but
+   * denying would be taken as a loss of access: a syncer's registration would be
+   * withdrawn, and a repo host would drop its write notification rather than retry.
    */
   private async checkAccess(opts: {
     space: SpaceRef
@@ -343,30 +349,23 @@ export class SpacePolicyManager {
         service: managingApp,
         lxm,
       })
-      if (!target) {
-        spaceLogger.warn(
-          { space, managingApp },
-          'could not resolve managing app',
-        )
-        return { read: false, write: false }
-      }
+      if (!target) throw new Error('Could not resolve managing app')
       const res = await xrpc(
         { service: target.endpoint, fetch: this.safeFetch },
         com.atproto.managedspace.checkAccess,
         {
           headers: target.headers,
           params: { space, repo, clientId },
+          signal: AbortSignal.timeout(10 * SECOND),
         },
       )
       return { read: res.body.read, write: res.body.write }
     } catch (err) {
-      // An unreachable managing app denies: failing open would hand out credentials
-      // for the spaces that asked for the strictest gate.
       spaceLogger.warn(
         { err, space, managingApp, repo },
         'managing app check failed',
       )
-      return { read: false, write: false }
+      throw new UpstreamFailureError('Managing app did not answer')
     }
   }
 }

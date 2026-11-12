@@ -1,4 +1,5 @@
-import { DAY, MINUTE, SECOND } from '@atproto/common'
+import { jest } from '@jest/globals'
+import { DAY, MINUTE, SECOND, createDeferrable } from '@atproto/common'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
 import type { NsidString } from '@atproto/lex'
 import { getBlobCidString } from '@atproto/lex-data'
@@ -839,12 +840,6 @@ describe('space policy', () => {
     it.each([
       { name: 'memberspace', policy: memberspace.policy.$build({}) },
       { name: 'personalspace', policy: personalspace.policy.$build({}) },
-      {
-        name: 'managedspace',
-        policy: managedspace.policy.$build({
-          managingApp: 'did:web:unreachable.invalid#forum',
-        }),
-      },
     ])(
       'hides a $name space from a request without a delegation token',
       async ({ policy }) => {
@@ -1104,11 +1099,16 @@ describe('space policy', () => {
         await expect(sc.mintCredential(space, token)).rejects.toMatchObject({
           error: 'SpaceNotFound',
         })
+        // Nor does a request without a delegation token learn the space exists.
+        await expect(sc.publicCredential(space)).rejects.toMatchObject({
+          error: 'SpaceNotFound',
+        })
       })
 
-      it('denies when the managing app errors', async () => {
+      it('fails without a credential when the managing app errors', async () => {
         // Failing open would hand out credentials for exactly the spaces that
-        // asked for the strictest gate.
+        // asked for the strictest gate. But no answer is not a refusal, so it
+        // is reported as a failure to retry rather than as a loss of access.
         await using app = await MockService.create(network, {
           serviceId: 'atproto_forum',
           respond: () => ({ status: 500, body: { error: 'InternalError' } }),
@@ -1117,17 +1117,84 @@ describe('space policy', () => {
 
         const token = await sc.delegationTokenFor(carol, space)
         await expect(sc.mintCredential(space, token)).rejects.toMatchObject({
-          error: 'SpaceNotFound',
+          error: 'UpstreamFailure',
         })
       })
 
-      it('denies when the managing app cannot be resolved', async () => {
-        // Same reasoning as an error response: an unreachable gate is a closed one.
+      it('fails without a credential when the managing app cannot be resolved', async () => {
         const space = await spaceWith('did:web:nonexistent.invalid#forum')
         const token = await sc.delegationTokenFor(carol, space)
         await expect(sc.mintCredential(space, token)).rejects.toMatchObject({
+          error: 'UpstreamFailure',
+        })
+      })
+
+      it('keeps a registration through a managing app outage, and withdraws it on refusal', async () => {
+        let answer: { status: number; body: unknown } = {
+          status: 200,
+          body: { read: true, write: true },
+        }
+        await using app = await MockService.create(network, {
+          serviceId: 'atproto_forum',
+          respond: () => answer,
+        })
+        await using syncer = await MockService.create(network, {
+          serviceId: 'atproto_space_syncer',
+        })
+        const space = await spaceWith(app)
+        const reauthorize = () =>
+          sc.credentialFor(carol, space, {
+            notify: syncer.notifyRegistration(),
+          })
+        await reauthorize()
+        expect(await getRegistrations(space)).toHaveLength(1)
+
+        answer = { status: 500, body: { error: 'InternalError' } }
+        await expect(reauthorize()).rejects.toMatchObject({
+          error: 'UpstreamFailure',
+        })
+        expect(await getRegistrations(space)).toHaveLength(1)
+
+        answer = { status: 200, body: { read: false, write: false } }
+        await expect(reauthorize()).rejects.toMatchObject({
           error: 'SpaceNotFound',
         })
+        expect(await getRegistrations(space)).toEqual([])
+      })
+
+      it('retries a write notification through a managing app outage', async () => {
+        // A repo host drops a notification the space host refuses, but retries
+        // one the space host can't decide on.
+        let answer: { status: number; body: unknown } = {
+          status: 500,
+          body: { error: 'InternalError' },
+        }
+        await using app = await MockService.create(network, {
+          serviceId: 'atproto_forum',
+          respond: () => answer,
+        })
+        const space = await spaceWith(app)
+
+        await sc.write(bob, space)
+        const db = bob.pds.ctx.accountManager.db.db
+        const pending = () =>
+          db
+            .selectFrom('space_notification_retry')
+            .selectAll()
+            .where('space', '=', space)
+            .execute()
+        expect(await pending()).toHaveLength(1)
+        expect(await sc.writerDids(space)).not.toContain(bob.did)
+
+        answer = { status: 200, body: { read: false, write: true } }
+        await db
+          .updateTable('space_notification_retry')
+          .set({ retryAt: 0 })
+          .where('space', '=', space)
+          .execute()
+        await bob.pds.ctx.spaceNotifications.retryPending()
+        expect(await pending()).toEqual([])
+        expect(await sc.writerDids(space)).toContain(bob.did)
       })
 
       it('records a writer the managing app admits, even one it does not let read', async () => {
@@ -1411,6 +1478,44 @@ describe('space policy', () => {
       await writeAndForward(space)
       expect(syncer.spaceUpdates()).toHaveLength(0)
     })
+
+    it('delivers to each registration without waiting on a slow one', async () => {
+      const slowReleased = createDeferrable()
+      const fastDelivered = createDeferrable()
+      await using syncer = await MockService.create(network, {
+        serviceId: 'atproto_space_syncer',
+        respond: async (call) => {
+          const { token } = call.body as { token?: string }
+          if (token === 'a-slow-token') await slowReleased.complete
+          if (token === 'b-fast-token') fastDelivered.resolve()
+          return { status: 200, body: {} }
+        },
+      })
+      const space = await sc.createSpace(alice, { members: [bob, carol] })
+      // Listed first, by token, so a serial delivery would wait on it first.
+      for (const token of ['a-slow-token', 'b-fast-token']) {
+        await sc.credentialFor(carol, space, {
+          notify: syncer.notifyRegistration(token),
+        })
+      }
+
+      await sc.write(bob, space)
+      let timer: NodeJS.Timeout | undefined
+      try {
+        // Well short of the timeout that would end a serial wait on the slow one.
+        const first = await Promise.race([
+          fastDelivered.complete.then(() => 'fast'),
+          new Promise((resolve) => {
+            timer = setTimeout(() => resolve('timeout'), 2 * SECOND)
+          }),
+        ])
+        expect(first).toBe('fast')
+      } finally {
+        clearTimeout(timer)
+        slowReleased.resolve()
+      }
+      await network.pds.ctx.backgroundQueue.processAll()
+    })
   })
 
   describe('deletion', () => {
@@ -1495,6 +1600,38 @@ describe('space policy', () => {
       await expect(
         sc.mintCredential(space, 'not-a-delegation-token'),
       ).rejects.toMatchObject({ error: 'SpaceDeleted' })
+    })
+
+    it('refuses a registration made as the space is deleted', async () => {
+      await using syncer = await MockService.create(network, {
+        serviceId: 'atproto_space_syncer',
+      })
+      const space = await sc.createSpace(alice, { members: [carol] })
+      const token = await sc.delegationTokenFor(carol, space)
+
+      // Delete the space once the authorization has checked it, before the
+      // registration is written: the authority's key is fetched in between, to
+      // sign the credential.
+      const { actorStore } = network.pds.ctx
+      const keypair = actorStore.keypair.bind(actorStore)
+      let deleted = false
+      using _keypairSpy = jest
+        .spyOn(actorStore, 'keypair')
+        .mockImplementation(async (did) => {
+          if (did === alice.did && !deleted) {
+            deleted = true
+            await deleteSpace(space)
+          }
+          return keypair(did)
+        })
+
+      await expect(
+        sc.mintCredential(space, token, {
+          notify: syncer.notifyRegistration(),
+        }),
+      ).rejects.toMatchObject({ error: 'SpaceDeleted' })
+      expect(deleted).toBe(true)
+      expect(await getRegistrations(space)).toEqual([])
     })
 
     it('notifies registered syncers, including lapsed registrations', async () => {

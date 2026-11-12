@@ -83,8 +83,10 @@ export default function (server: Server, ctx: AppContext) {
         })
       } catch (err) {
         // A refused request withdraws the registration it carries, so a syncer
-        // that has lost access to the space stops being notified.
-        if (notify) {
+        // that has lost access to the space stops being notified. A failure to
+        // decide, such as an unreachable managing app, is not a refusal, so it
+        // leaves the registration in place.
+        if (notify && err instanceof InvalidRequestError) {
           await ctx.actorStore.transact(spaceDid, (actorTxn) =>
             actorTxn.space.removeNotifyRegistration(space, notify),
           )

@@ -602,7 +602,11 @@ export class MockService {
     opts: {
       serviceId: string
       /** Defaults to 200 with an empty object. */
-      respond?: () => { status: number; body: unknown }
+      respond?: (
+        call: MockService['calls'][number],
+      ) =>
+        | { status: number; body: unknown }
+        | Promise<{ status: number; body: unknown }>
       /**
        * Whether to confirm notify registrations by echoing the challenge, in
        * place of `respond`. Defaults to true.
@@ -617,7 +621,7 @@ export class MockService {
     const server = createServer((req, res) => {
       const chunks: Buffer[] = []
       req.on('data', (chunk) => chunks.push(chunk))
-      req.on('end', () => {
+      req.on('end', async () => {
         const raw = Buffer.concat(chunks).toString('utf8')
         const url = new URL(req.url ?? '/', 'http://localhost')
         const call = {
@@ -633,7 +637,7 @@ export class MockService {
           confirmRegistrations &&
           call.lxm === com.atproto.space.confirmRegistration.$lxm
             ? { status: 200, body: { challenge: (call.body as any).challenge } }
-            : respond()
+            : await respond(call)
         res.writeHead(status, { 'content-type': 'application/json' })
         res.end(JSON.stringify(body))
       })

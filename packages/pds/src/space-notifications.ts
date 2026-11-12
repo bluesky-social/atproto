@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto'
+import PQueue from 'p-queue'
 import { DAY, HOUR, MINUTE, SECOND, allFulfilled } from '@atproto/common'
 import {
   RETRYABLE_HTTP_STATUS_CODES,
@@ -14,6 +15,7 @@ import type {
   SpaceSyncerNotificationRetry,
 } from './account-manager/db/index.js'
 import {
+  SYNCER_NOTIFY_CONCURRENCY,
   processNotifyRepoUpdate,
   resolveNotifyTarget,
 } from './api/com/atproto/space/util.js'
@@ -138,27 +140,30 @@ export class SpaceNotifications implements AsyncDisposable {
     notice: SyncerNotice,
   ): Promise<void> {
     const space = ref.toString()
+    const queue = new PQueue({ concurrency: SYNCER_NOTIFY_CONCURRENCY })
     await allFulfilled(
-      registrations.map(async ({ endpoint, token }) => {
-        const recipient = { space, endpoint, token }
-        try {
-          await this.deliverSyncerNotice(recipient, notice)
-        } catch (err) {
-          if (!isRetryableError(err)) {
-            await this.abandonSyncerNotice(recipient, notice)
+      registrations.map(({ endpoint, token }) =>
+        queue.add(async () => {
+          const recipient = { space, endpoint, token }
+          try {
+            await this.deliverSyncerNotice(recipient, notice)
+          } catch (err) {
+            if (!isRetryableError(err)) {
+              await this.abandonSyncerNotice(recipient, notice)
+              spaceLogger.warn(
+                { err, space, endpoint },
+                'syncer notification will not be retried',
+              )
+              return
+            }
+            await this.queueSyncerNotice(recipient, notice)
             spaceLogger.warn(
               { err, space, endpoint },
-              'syncer notification will not be retried',
+              'syncer notification queued for retry',
             )
-            return
           }
-          await this.queueSyncerNotice(recipient, notice)
-          spaceLogger.warn(
-            { err, space, endpoint },
-            'syncer notification queued for retry',
-          )
-        }
-      }),
+        }),
+      ),
     )
   }
 

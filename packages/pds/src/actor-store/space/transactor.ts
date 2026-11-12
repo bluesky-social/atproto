@@ -449,14 +449,24 @@ export class SpaceTransactor extends SpaceReader {
     return row ? parseCid(row.cid, { flavor: 'cbor' }) : null
   }
 
-  // Re-registering the same endpoint and token renews the registration.
+  // Re-registering the same endpoint and token renews the registration. The
+  // space is checked in the same transaction, so a registration can't survive a
+  // concurrent deletion of the space.
   async putNotifyRegistration(registration: {
     space: SpaceRefString
     endpoint: string
     token: string
     expiresAt: string
   }): Promise<void> {
+    this.db.assertTransaction()
     const { space, endpoint, token, expiresAt } = registration
+    const current = await this.getSpace(space)
+    if (!current) {
+      throw new InvalidRequestError('Space not found', 'SpaceNotFound')
+    }
+    if (current.deletedAt) {
+      throw new InvalidRequestError('Space has been deleted', 'SpaceDeleted')
+    }
     await this.db.db
       .insertInto('space_notify_registration')
       .values({ space, endpoint, token, expiresAt, expiryNotified: 0 })
