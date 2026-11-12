@@ -9,7 +9,7 @@ If you are interested in self-hosting a PDS, you probably want this repository i
 
 ## FedCM prototype
 
-Set `PDS_OAUTH_FEDCM_ENABLED=1` on an HTTPS PDS to offer a browser account picker. It shows remembered accounts with active sessions and returns the selected DID. Apps must still complete AT Protocol OAuth to sign in.
+Set `PDS_OAUTH_FEDCM_ENABLED=1` on an HTTPS PDS to offer a browser account picker. The draft interoperability profile is in [FEDCM.md](../oauth/oauth-provider/FEDCM.md). It shows remembered accounts with active sessions and returns the selected DID. Apps must still complete AT Protocol OAuth to sign in.
 
 The configuration URL is `/oauth/fedcm/config.json`. For `pds.example.com`, also publish the `/.well-known/web-identity` document at `https://example.com`. (With Chrome's experimental FedCM IdP Registration, Chrome skips this eTLD+1 check for registered IdPs, so the document becomes unnecessary for that mode.) PDS hosts behind an entryway must enable FedCM at the entryway's authorization server instead.
 

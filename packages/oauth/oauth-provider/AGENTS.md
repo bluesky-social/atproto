@@ -1,5 +1,8 @@
 # OAuth provider
 
+- [FEDCM.md](FEDCM.md) is the draft interoperability profile for FedCM
+  (`https://atproto.com`). Update it in the same change as any FedCM behavior
+  an app or another IdP could observe.
 - FedCM is opt-in and returns a selected DID as a routing hint. It must not create
   OAuth grants, credentials, or pushed authorization requests.
 - The FedCM accounts endpoint reads only the dedicated `/oauth/fedcm` shadow
