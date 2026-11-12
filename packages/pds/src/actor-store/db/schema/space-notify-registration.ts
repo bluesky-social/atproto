@@ -5,7 +5,7 @@ export interface SpaceNotifyRegistration {
   space: SpaceRefString
   endpoint: string
   token: string
-  // When the credential that last renewed the registration expires.
+  // When the credential from the registration's latest authorization expires.
   expiresAt: string
   // Whether the lapsed registration has been sent its expiry notice. After that,
   // it is sent nothing but a deletion notice until it's renewed.

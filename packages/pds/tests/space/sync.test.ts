@@ -944,6 +944,28 @@ describe('space sync', () => {
       expect(caughtUp.cursor).toBeUndefined()
     })
 
+    it("returns the space's current revision on each authorization", async () => {
+      const space = await sc.createSpace(alice, { members: [dan, carol] })
+      const authorize = async () =>
+        sc.mintCredential(space, await sc.delegationTokenFor(carol, space))
+      expect((await authorize()).spaceRev).toBeUndefined()
+
+      await sc.write(dan, space)
+      const cred = await sc.credentialFor(carol, space)
+      const client = cred.clientFor(alice.pds)
+      const written = await client.call(com.atproto.space.listWriters, {
+        space,
+      })
+      expect((await authorize()).spaceRev).toBe(written.cursor)
+
+      await sc.removeWriter(alice, space, dan)
+      const removed = await client.call(com.atproto.space.listWriters, {
+        space,
+      })
+      expect(removed.cursor! > written.cursor!).toBe(true)
+      expect((await authorize()).spaceRev).toBe(removed.cursor)
+    })
+
     it('resumes after an empty page using the last processed repo revision', async () => {
       const space = await sc.createSpace(alice, { members: [bob] })
       await sc.write(bob, space)

@@ -470,7 +470,7 @@ export class AuthVerifier {
     }
 
   /**
-   * Verify a delegation token presented in a `getSpaceCredential` request body,
+   * Verify a delegation token presented in an `authorizeSpaceSync` request body,
    * returning the account it acts for and the space it names.
    */
   public async verifyDelegationToken(

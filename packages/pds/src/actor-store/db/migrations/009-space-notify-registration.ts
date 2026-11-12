@@ -2,11 +2,11 @@ import type { Kysely } from 'kysely'
 
 export async function up(db: Kysely<unknown>): Promise<void> {
   // A registerNotify registration names a service rather than an endpoint, and
-  // has no token, so it can't be carried over. Syncers re-register on their next
-  // credential request.
+  // has no token, so it can't be carried over. Syncers re-register the next time
+  // they authorize.
   await db.schema.dropTable('space_credential_recipient').execute()
 
-  // Endpoints registered (via getSpaceCredential) to receive notifications. A
+  // Endpoints registered (via authorizeSpaceSync) to receive notifications. A
   // registration is identified by its endpoint and token together.
   await db.schema
     .createTable('space_notify_registration')

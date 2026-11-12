@@ -16,6 +16,7 @@
     "com.atproto.memberspace.removeMembers",
     "com.atproto.personalspace.policy",
     "com.atproto.space.applyWrites",
+    "com.atproto.space.authorizeSpaceSync",
     "com.atproto.space.clearRecords",
     "com.atproto.space.createRecord",
     "com.atproto.space.createSpace",
@@ -28,7 +29,6 @@
     "com.atproto.space.getRecord",
     "com.atproto.space.getRepo",
     "com.atproto.space.getSpace",
-    "com.atproto.space.getSpaceCredential",
     "com.atproto.space.listBlobs",
     "com.atproto.space.listRecords",
     "com.atproto.space.listRepoOps",
@@ -70,6 +70,10 @@
     "com.atproto.space.applyWrites": {
       "uri": "file://../../../lexicons/com/atproto/space/applyWrites.json",
       "cid": "bafyreigeyanka5svdubo5qpkmdr7j5jm6y3mmzzhmwyuhrkg36y7oj6sem"
+    },
+    "com.atproto.space.authorizeSpaceSync": {
+      "uri": "file://../../../lexicons/com/atproto/space/authorizeSpaceSync.json",
+      "cid": "bafyreibz53zqvmx7vn4chl5cogi6r7x2lf2iwdtbtnubmz3sksbytcyshe"
     },
     "com.atproto.space.clearRecords": {
       "uri": "file://../../../lexicons/com/atproto/space/clearRecords.json",
@@ -118,10 +122,6 @@
     "com.atproto.space.getSpace": {
       "uri": "file://../../../lexicons/com/atproto/space/getSpace.json",
       "cid": "bafyreibt5jonspofubfedslmgendjlqx752r7zczgrvpligqle4hdxyt44"
-    },
-    "com.atproto.space.getSpaceCredential": {
-      "uri": "file://../../../lexicons/com/atproto/space/getSpaceCredential.json",
-      "cid": "bafyreickxiuillnv2w4byd2nhg3sjuwpkf2itfn4rmmniqffdbw3kjct3m"
     },
     "com.atproto.space.listBlobs": {
       "uri": "file://../../../lexicons/com/atproto/space/listBlobs.json",

@@ -368,7 +368,7 @@ To discover the repos to sync, list the writer set with `reader.writers()`. The 
 
 ### Notifications
 
-A syncing service registers an endpoint to be notified of updates to the space through the `notify` field of `com.atproto.space.getSpaceCredential`. Registering for, receiving and verifying notifications are not covered by this package yet.
+A syncing service registers an endpoint to be notified of updates to the space through the `notify` field of `com.atproto.space.authorizeSpaceSync`. Registering for, receiving and verifying notifications are not covered by this package yet.
 
 ## Configuration
 

@@ -1,6 +1,7 @@
 import type { Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../../../context.js'
 import applyWrites from './applyWrites.js'
+import authorizeSpaceSync from './authorizeSpaceSync.js'
 import clearRecords from './clearRecords.js'
 import createRecord from './createRecord.js'
 import createSpace from './createSpace.js'
@@ -13,7 +14,6 @@ import getLatestCommit from './getLatestCommit.js'
 import getRecord from './getRecord.js'
 import getRepo from './getRepo.js'
 import getSpace from './getSpace.js'
-import getSpaceCredential from './getSpaceCredential.js'
 import importRepo from './importRepo.js'
 import importSpaceMeta from './importSpaceMeta.js'
 import listBlobs from './listBlobs.js'
@@ -29,6 +29,7 @@ import updateSpace from './updateSpace.js'
 
 export default function (server: Server, ctx: AppContext) {
   applyWrites(server, ctx)
+  authorizeSpaceSync(server, ctx)
   clearRecords(server, ctx)
   createRecord(server, ctx)
   createSpace(server, ctx)
@@ -41,7 +42,6 @@ export default function (server: Server, ctx: AppContext) {
   getRecord(server, ctx)
   getRepo(server, ctx)
   getSpace(server, ctx)
-  getSpaceCredential(server, ctx)
   importRepo(server, ctx)
   importSpaceMeta(server, ctx)
   listBlobs(server, ctx)

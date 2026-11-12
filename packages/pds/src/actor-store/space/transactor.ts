@@ -74,7 +74,7 @@ export class SpaceTransactor extends SpaceReader {
   }
 
   // Delete a space this account is the authority for, including its own repo in the
-  // space. The `space` row survives as a tombstone, so getSpaceCredential can
+  // space. The `space` row survives as a tombstone, so authorizeSpaceSync can
   // keep reporting the space as deleted.
   async deleteSpace(uri: SpaceRefString): Promise<void> {
     await this.db.db
@@ -194,14 +194,7 @@ export class SpaceTransactor extends SpaceReader {
   private async nextSpaceRev(
     space: SpaceRefString,
   ): Promise<{ spaceRev: string; prevSpaceRev?: string }> {
-    const latest = await this.db.db
-      .selectFrom('space_writer')
-      .select('spaceRev')
-      .where('space', '=', space)
-      .orderBy('spaceRev', 'desc')
-      .limit(1)
-      .executeTakeFirst()
-    const prevSpaceRev = latest?.spaceRev
+    const prevSpaceRev = await this.getSpaceRev(space)
     return { spaceRev: TID.nextStr(prevSpaceRev), prevSpaceRev }
   }
 

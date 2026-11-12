@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Notify a syncing service of an update to a space. Sent by the space host to the notification endpoint registered through getSpaceCredential.",
+      "description": "Notify a syncing service of an update to a space. Sent by the space host to the notification endpoint registered through authorizeSpaceSync.",
       "input": {
         "encoding": "application/json",
         "schema": {
@@ -82,12 +82,12 @@
     },
     "spaceDeleted": {
       "type": "object",
-      "description": "The space has been deleted. Confirm with getSpaceCredential before dropping its data.",
+      "description": "The space has been deleted. Confirm with authorizeSpaceSync before dropping its data.",
       "properties": {}
     },
     "registrationExpired": {
       "type": "object",
-      "description": "The endpoint's registration has expired. Sent in place of the first update after expiry. Renew through getSpaceCredential to keep receiving notifications.",
+      "description": "The endpoint's registration has expired. Sent in place of the first update after expiry. Call authorizeSpaceSync to keep receiving notifications.",
       "required": ["spaceRev"],
       "properties": {
         "spaceRev": {

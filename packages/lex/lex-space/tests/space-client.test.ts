@@ -39,7 +39,7 @@ const group = l.space('any', 'com.example.group', [note.$type], {
   title: 'Example group',
 })
 
-const GET_SPACE_CREDENTIAL = `/xrpc/${com.atproto.space.getSpaceCredential.$lxm}`
+const AUTHORIZE_SPACE_SYNC = `/xrpc/${com.atproto.space.authorizeSpaceSync.$lxm}`
 
 describe('SpaceClient', () => {
   let network: TestNetworkNoAppView
@@ -239,8 +239,8 @@ describe('SpaceClient', () => {
       await bobSpace.list(note, { repo: alice.assertDid })
 
       expect(calls.paths).toHaveLength(4)
-      expect(calls.paths.filter((p) => p === GET_SPACE_CREDENTIAL)).toEqual([
-        GET_SPACE_CREDENTIAL,
+      expect(calls.paths.filter((p) => p === AUTHORIZE_SPACE_SYNC)).toEqual([
+        AUTHORIZE_SPACE_SYNC,
       ])
     })
 
@@ -258,7 +258,7 @@ describe('SpaceClient', () => {
         await expect(result).rejects.toMatchObject({ error: 'SpaceNotFound' })
       }
       // A failed mint is retried rather than cached
-      expect(calls.paths).toEqual([GET_SPACE_CREDENTIAL, GET_SPACE_CREDENTIAL])
+      expect(calls.paths).toEqual([AUTHORIZE_SPACE_SYNC, AUTHORIZE_SPACE_SYNC])
     })
 
     it('sends the caller headers along with the MAC request', async () => {
@@ -706,7 +706,7 @@ describe('SpaceClient', () => {
 
       const renewed = await bobSpace.authorize({ renew: true })
       expect(renewed.token).not.toBe(credential.token)
-      expect(calls.paths).toEqual([GET_SPACE_CREDENTIAL, GET_SPACE_CREDENTIAL])
+      expect(calls.paths).toEqual([AUTHORIZE_SPACE_SYNC, AUTHORIZE_SPACE_SYNC])
     })
 
     it('fails early when the space does not grant access', async () => {
@@ -742,9 +742,9 @@ describe('SpaceClient', () => {
       })
 
       await bobSpace.listWriters()
-      expect(calls.paths.filter((p) => p === GET_SPACE_CREDENTIAL)).toEqual([
-        GET_SPACE_CREDENTIAL,
-        GET_SPACE_CREDENTIAL,
+      expect(calls.paths.filter((p) => p === AUTHORIZE_SPACE_SYNC)).toEqual([
+        AUTHORIZE_SPACE_SYNC,
+        AUTHORIZE_SPACE_SYNC,
       ])
     })
   })

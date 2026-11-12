@@ -305,7 +305,7 @@ export class SpacePolicyManager {
    * a credential to read — their PDS is not notified, and the application is what
    * tells the user their space is gone.
    *
-   * The space row stays as a tombstone so getSpaceCredential keeps answering
+   * The space row stays as a tombstone so authorizeSpaceSync keeps answering
    * SpaceDeleted, which is how a syncer that missed the notification finds out.
    *
    * Returns the syncers registered at the time of deletion, including lapsed

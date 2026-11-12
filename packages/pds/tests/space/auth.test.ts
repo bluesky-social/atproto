@@ -65,7 +65,7 @@ describe('space auth', () => {
   describe('the repo boundary', () => {
     it('refuses a co-located non-member reading a member repo', async () => {
       // Alice and dan share pds1. Dan is not a member; the membership gate lives
-      // in getSpaceCredential, so the read methods have to refuse him on their
+      // in authorizeSpaceSync, so the read methods have to refuse him on their
       // own rather than assuming an unauthorized caller never got this far.
       const space = await sc.createSpace(alice)
       await sc.write(alice, space, { rkey: 'private', text: 'members only' })
@@ -705,7 +705,7 @@ describe('space auth', () => {
       // mint against. The error names the space rather than leaking that as a
       // missing repo.
       await expect(
-        bob.client.call(com.atproto.space.getSpaceCredential, {
+        bob.client.call(com.atproto.space.authorizeSpaceSync, {
           space,
           credentialKey: key.did(),
           delegationToken: token,
@@ -719,7 +719,7 @@ describe('space auth', () => {
       const key = await P256Keypair.create()
 
       const { credential } = await alice.client.call(
-        com.atproto.space.getSpaceCredential,
+        com.atproto.space.authorizeSpaceSync,
         {
           space,
           credentialKey: key.did(),
@@ -738,7 +738,7 @@ describe('space auth', () => {
       const key = await Secp256k1Keypair.create()
 
       await expect(
-        alice.client.call(com.atproto.space.getSpaceCredential, {
+        alice.client.call(com.atproto.space.authorizeSpaceSync, {
           space,
           credentialKey: key.did(),
           delegationToken: token,

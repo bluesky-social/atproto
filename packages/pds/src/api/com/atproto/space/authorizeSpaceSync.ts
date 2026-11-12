@@ -1,6 +1,6 @@
 import { SECOND } from '@atproto/common'
 import { randomStr } from '@atproto/crypto'
-import { xrpc } from '@atproto/lex'
+import { xrpc } from '@atproto/lex-client'
 import {
   createSpaceCredential,
   isP256DidKey,
@@ -19,7 +19,7 @@ import { spaceLogger } from '../../../../logger.js'
 import { assertActiveSpaceHost, toSpaceRef } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
-  server.add(com.atproto.space.getSpaceCredential, {
+  server.add(com.atproto.space.authorizeSpaceSync, {
     handler: async ({ input: { body } }) => {
       const {
         space,
@@ -38,9 +38,9 @@ export default function (server: Server, ctx: AppContext) {
       const { spaceDid } = ref
 
       // The durable signal that a space is gone: a syncer that missed its
-      // deletion notice learns it here, on its next renewal. Answered regardless
-      // of the request's authorization, since a public space's syncer may not
-      // have a delegation token.
+      // deletion notice learns it here, the next time it reauthorizes. Answered
+      // regardless of the request's authorization, since a public space's syncer
+      // may not have a delegation token.
       const existing = await ctx.actorStore.read(spaceDid, (store) =>
         store.space.getSpace(space),
       )
@@ -110,8 +110,8 @@ export default function (server: Server, ctx: AppContext) {
       })
 
       if (notify) {
-        // Renewed by each credential request, so a syncer that keeps its
-        // credential fresh stays registered.
+        // Renewed by each authorization, so a syncer that keeps reauthorizing
+        // stays registered.
         const { exp } = parseSpaceToken('credential', credential).payload
         await ctx.actorStore.transact(spaceDid, (actorTxn) =>
           actorTxn.space.putNotifyRegistration({
@@ -123,9 +123,14 @@ export default function (server: Server, ctx: AppContext) {
         )
       }
 
+      // Read after registering, so any update past this revision is notified.
+      const spaceRev = await ctx.actorStore.read(spaceDid, (store) =>
+        store.space.getSpaceRev(space),
+      )
+
       return {
         encoding: 'application/json',
-        body: { credential },
+        body: { credential, spaceRev },
       }
     },
   })
@@ -139,7 +144,7 @@ export default function (server: Server, ctx: AppContext) {
 async function confirmRegistration(
   ctx: AppContext,
   space: SpaceRefString,
-  notify: com.atproto.space.getSpaceCredential.Notify,
+  notify: com.atproto.space.authorizeSpaceSync.Notify,
 ): Promise<void> {
   const { endpoint, token } = notify
   const challenge = randomStr(16, 'base32')

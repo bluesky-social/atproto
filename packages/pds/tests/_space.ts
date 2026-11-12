@@ -276,14 +276,14 @@ export class SpaceClient {
     opts: {
       clientAttestation?: string
       key?: P256Keypair
-      notify?: com.atproto.space.getSpaceCredential.Notify
+      notify?: com.atproto.space.authorizeSpaceSync.Notify
     } = {},
   ): Promise<SpaceCredential> {
     const key = opts.key ?? (await P256Keypair.create())
     const token = await this.delegationTokenFor(actor, space)
     const res = await this.authority
       .getClient()
-      .call(com.atproto.space.getSpaceCredential, {
+      .call(com.atproto.space.authorizeSpaceSync, {
         space,
         credentialKey: key.did(),
         delegationToken: token,
@@ -305,7 +305,7 @@ export class SpaceClient {
     const key = await P256Keypair.create()
     const res = await this.authority
       .getClient()
-      .call(com.atproto.space.getSpaceCredential, {
+      .call(com.atproto.space.authorizeSpaceSync, {
         space,
         credentialKey: key.did(),
         clientAttestation: opts.clientAttestation,
@@ -343,13 +343,13 @@ export class SpaceClient {
     token: string,
     opts: {
       clientAttestation?: string
-      notify?: com.atproto.space.getSpaceCredential.Notify
+      notify?: com.atproto.space.authorizeSpaceSync.Notify
     } = {},
   ) {
     const key = await P256Keypair.create()
     return this.authority
       .getClient()
-      .call(com.atproto.space.getSpaceCredential, {
+      .call(com.atproto.space.authorizeSpaceSync, {
         space,
         credentialKey: key.did(),
         delegationToken: token,
@@ -578,10 +578,10 @@ export class MockService {
     return `${this.did}#${this.serviceId}`
   }
 
-  /** A getSpaceCredential `notify` registration for this service. */
+  /** An authorizeSpaceSync `notify` registration for this service. */
   notifyRegistration(
     token = 'notify-token',
-  ): com.atproto.space.getSpaceCredential.Notify {
+  ): com.atproto.space.authorizeSpaceSync.Notify {
     return { endpoint: this.url as UriString, token }
   }
 

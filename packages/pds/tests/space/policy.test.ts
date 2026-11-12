@@ -1250,7 +1250,7 @@ describe('space policy', () => {
       expect(tokens.sort()).toEqual(['first-token', 'second-token'])
     })
 
-    it('refuses a credential request whose registration is not confirmed', async () => {
+    it('refuses an authorization whose registration is not confirmed', async () => {
       await using syncer = await MockService.create(network, {
         serviceId: 'atproto_space_syncer',
         confirmRegistrations: false,
@@ -1291,7 +1291,7 @@ describe('space policy', () => {
       expect(syncer.spaceUpdates()).toHaveLength(1)
       expect(await getRegistrations(space)).toHaveLength(1)
 
-      // Fetching a new credential renews it.
+      // Reauthorizing renews it.
       await sc.credentialFor(carol, space, {
         notify: syncer.notifyRegistration(),
       })
@@ -1382,7 +1382,7 @@ describe('space policy', () => {
       expect(syncer.spaceUpdates()).toHaveLength(2)
     })
 
-    it('withdraws the registration carried by a refused credential request', async () => {
+    it('withdraws the registration carried by a refused authorization', async () => {
       await using syncer = await MockService.create(network, {
         serviceId: 'atproto_space_syncer',
       })
@@ -1447,7 +1447,7 @@ describe('space policy', () => {
           await store.space.listRecords(space, { limit: 10 }),
           await store.space.listMembers(space, { limit: 10 }),
         ])
-      // The row survives as a tombstone, so getSpaceCredential can keep
+      // The row survives as a tombstone, so authorizeSpaceSync can keep
       // answering SpaceDeleted; everything it held is gone.
       expect(spaceRow?.deletedAt).toBeDefined()
       expect(policy).toBeNull()
@@ -1463,7 +1463,7 @@ describe('space policy', () => {
       await deleteSpace(space)
     })
 
-    it('answers SpaceDeleted on credential renewal', async () => {
+    it('answers SpaceDeleted on reauthorization', async () => {
       // The durable drop signal: a syncer that missed its deletion notice learns
       // the space is gone here, and can tell it apart from an authority that is
       // merely down.

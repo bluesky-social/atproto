@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Confirm a new notification registration. Called by the space host on an endpoint passed to getSpaceCredential, before registering it. The syncing service checks that it issued the token for the space, and echoes back the challenge.",
+      "description": "Confirm a new notification registration. Called by the space host on an endpoint passed to authorizeSpaceSync, before registering it. The syncing service checks that it issued the token for the space, and echoes back the challenge.",
       "input": {
         "encoding": "application/json",
         "schema": {

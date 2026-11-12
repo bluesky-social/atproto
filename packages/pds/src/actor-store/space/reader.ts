@@ -326,6 +326,21 @@ export class SpaceReader {
     return builder.execute()
   }
 
+  /**
+   * The space's current revision: the latest in its writer set, removals
+   * included. Only kept for the spaces this account is the authority for.
+   */
+  async getSpaceRev(space: SpaceRefString): Promise<string | undefined> {
+    const latest = await this.db.db
+      .selectFrom('space_writer')
+      .select('spaceRev')
+      .where('space', '=', space)
+      .orderBy('spaceRev', 'desc')
+      .limit(1)
+      .executeTakeFirst()
+    return latest?.spaceRev
+  }
+
   // Includes lapsed registrations.
   async getNotifyRegistrations(
     space: SpaceRefString,
