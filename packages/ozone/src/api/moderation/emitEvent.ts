@@ -390,6 +390,23 @@ const handleModerationEvent = async ({
       (isTakedownEvent || isAcknowledgeEvent) &&
       result.event.meta?.acknowledgeAccountSubjects
     ) {
+      if (subject.isRepo()) {
+        await processReportAction({
+          db: dbTxn,
+          inboxStartAt: ctx.cfg.inbox.startAt,
+          subjectDid: subject.did,
+          subjectUri: null,
+          subjectType: com.atproto.admin.defs.repoRef.$type,
+          eventId: result.event.id,
+          eventType: event.$type,
+          createdBy,
+          reportAction: {
+            allOwned: true,
+            isAutomated: input.body.reportAction?.isAutomated,
+          },
+          metadata: getEventActivityMetadata(input.body.modTool),
+        })
+      }
       await moderationTxn.resolveSubjectsForAccount(
         subject.did,
         createdBy,
