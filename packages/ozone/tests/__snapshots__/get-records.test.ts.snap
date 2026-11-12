@@ -31,9 +31,6 @@ exports[`admin get records view get multiple records by uris 1`] = `
       ],
       "moderation": {
         "subjectStatus": {
-          "accountStats": {
-            "$type": "tools.ozone.moderation.defs#accountStats",
-          },
           "ageAssuranceState": "unknown",
           "createdAt": "1970-01-01T00:00:00.000Z",
           "hosting": {
@@ -45,17 +42,6 @@ exports[`admin get records view get multiple records by uris 1`] = `
           "lastReviewedAt": "1970-01-01T00:00:00.000Z",
           "lastReviewedBy": "user(1)",
           "priorityScore": 0,
-          "recordsStats": {
-            "$type": "tools.ozone.moderation.defs#recordsStats",
-            "appealedCount": 0,
-            "escalatedCount": 0,
-            "pendingCount": 0,
-            "processedCount": 1,
-            "reportedCount": 1,
-            "subjectCount": 1,
-            "takendownCount": 1,
-            "totalReports": 2,
-          },
           "reviewState": "tools.ozone.moderation.defs#reviewClosed",
           "subject": {
             "$type": "com.atproto.repo.strongRef",

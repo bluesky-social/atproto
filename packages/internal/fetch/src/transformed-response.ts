@@ -1,3 +1,9 @@
+/**
+ * @note Requires a global `Response` that accepts a `ReadableStream` body,
+ * which react-native's whatwg-fetch polyfill does not. Code that may run there
+ * (even if `fetch()` itself returns responses with a body stream, as Expo's
+ * does) must not construct one.
+ */
 export class TransformedResponse extends Response {
   #response: Response
 

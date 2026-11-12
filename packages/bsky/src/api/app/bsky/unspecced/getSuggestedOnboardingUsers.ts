@@ -1,5 +1,6 @@
 import { dedupeStrs, mapDefined, noUndefinedVals } from '@atproto/common'
-import type { Client, DidString } from '@atproto/lex'
+import type { Client } from '@atproto/lex-client'
+import type { DidString } from '@atproto/lex-schema'
 import { MethodNotImplementedError, type Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../../../context.js'
 import {
@@ -31,8 +32,15 @@ export default function (server: Server, ctx: AppContext) {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({
+        xrpcEndpoint: app.bsky.unspecced.getSuggestedOnboardingUsers.$lxm,
         labelers,
         viewer,
+        features: ctx.featureGatesClient.scope(
+          ctx.featureGatesClient.parseUserContextFromHandler({
+            viewer,
+            req,
+          }),
+        ),
       })
       const headers = noUndefinedVals({
         'accept-language': req.headers['accept-language'],
@@ -57,11 +65,16 @@ export default function (server: Server, ctx: AppContext) {
 
 const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
   const { params, ctx } = input
-  if (!ctx.suggestionsClient) {
-    throw new MethodNotImplementedError('Suggestions agent not available')
+  const useIris = params.hydrateCtx.features.checkGate(
+    params.hydrateCtx.features.Gate.SuggestedUsersIrisEnable,
+  )
+  const client = useIris ? ctx.irisClient : ctx.suggestionsClient
+  if (!client) {
+    const agent = useIris ? 'Iris' : 'Suggestions'
+    throw new MethodNotImplementedError(`${agent} agent not available`)
   }
 
-  return ctx.suggestionsClient.call(
+  return client.call(
     app.bsky.unspecced.getOnboardingSuggestedUsersSkeleton,
     {
       limit: params.limit,
@@ -127,8 +140,8 @@ const presentation = (
 type Context = {
   hydrator: Hydrator
   views: Views
-  topicsClient: Client | undefined
   suggestionsClient: Client | undefined
+  irisClient: Client | undefined
 }
 
 type Params = app.bsky.unspecced.getSuggestedOnboardingUsers.$Params & {

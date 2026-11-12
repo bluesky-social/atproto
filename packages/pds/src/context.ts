@@ -8,15 +8,17 @@ import type * as undici from 'undici'
 import { KmsKeypair, S3BlobStore } from '@atproto/aws'
 import * as crypto from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
-import { Client } from '@atproto/lex'
+import { Client } from '@atproto/lex-client'
+import { parseCid } from '@atproto/lex-data'
 import {
   AccessTokenMode,
   JoseKey,
   LexResolver,
+  LexResolverError,
   OAuthProvider,
 } from '@atproto/oauth-provider/provider'
 import { OAuthVerifier } from '@atproto/oauth-provider/verifier'
-import type { BlobStore } from '@atproto/repo'
+import type { BlobStoreCreator } from '@atproto/repo'
 import {
   createServiceAuthHeaders,
   createServiceJwt,
@@ -63,7 +65,7 @@ import { SpacePolicyManager } from './space-policy/manager.js'
 
 export type AppContextOptions = {
   actorStore: ActorStore
-  blobstore: (did: string) => BlobStore
+  blobstore: BlobStoreCreator
   localViewer: LocalViewerCreator
   mailer: ServerMailer
   moderationMailer: ModerationMailer
@@ -92,7 +94,7 @@ export type AppContextOptions = {
 
 export class AppContext implements AsyncDisposable {
   public actorStore: ActorStore
-  public blobstore: (did: string) => BlobStore
+  public blobstore: BlobStoreCreator
   public localViewer: LocalViewerCreator
   public mailer: ServerMailer
   public moderationMailer: ModerationMailer
@@ -151,10 +153,11 @@ export class AppContext implements AsyncDisposable {
 
   static async fromEnv(
     env: ServerEnvironment = readEnv(),
+    overrides?: Partial<AppContextOptions>,
   ): Promise<AppContext> {
     const cfg = envToCfg(env)
     const secrets = envToSecrets(env)
-    return AppContext.fromConfig(cfg, secrets)
+    return AppContext.fromConfig(cfg, secrets, overrides)
   }
 
   static async fromConfig(
@@ -164,8 +167,9 @@ export class AppContext implements AsyncDisposable {
   ): Promise<AppContext> {
     // @TODO Implement using an AsyncDisposableStack
 
-    const blobstore =
-      cfg.blobstore.provider === 's3'
+    const blobstore: BlobStoreCreator =
+      overrides?.blobstore ??
+      (cfg.blobstore.provider === 's3'
         ? S3BlobStore.creator({
             bucket: cfg.blobstore.bucket,
             region: cfg.blobstore.region,
@@ -178,14 +182,19 @@ export class AppContext implements AsyncDisposable {
         : DiskBlobStore.creator(
             cfg.blobstore.location,
             cfg.blobstore.tempLocation,
-          )
+          ))
 
     const mailTransport =
       cfg.email !== null
         ? nodemailer.createTransport(cfg.email.smtpUrl)
         : nodemailer.createTransport({ jsonTransport: true })
 
-    const mailer = new ServerMailer(mailTransport, cfg.email, cfg.branding)
+    const mailer = new ServerMailer(
+      mailTransport,
+      cfg.email,
+      cfg.branding,
+      cfg.oauth.issuer,
+    )
 
     const modMailTransport =
       cfg.moderationEmail !== null
@@ -193,6 +202,32 @@ export class AppContext implements AsyncDisposable {
         : nodemailer.createTransport({ jsonTransport: true })
 
     const moderationMailer = new ModerationMailer(modMailTransport, cfg)
+
+    /**
+     * A fetch() function that protects against SSRF attacks, large responses &
+     * known bad domains. This function can safely be used to fetch user
+     * provided URLs (unless "disableSsrfProtection" is true, of course).
+     *
+     * @note **DO NOT** wrap `safeFetch` with any logging or other transforms as
+     * this might prevent the use of explicit `redirect: "follow"` init from
+     * working. See {@link safeFetchWrap}.
+     */
+    const safeFetch = safeFetchWrap({
+      allowIpHost: false,
+      allowImplicitRedirect: false,
+      responseMaxSize: cfg.fetch.maxResponseSize,
+      ssrfProtection: !cfg.fetch.disableSsrfProtection,
+
+      fetch: function (input, init) {
+        const method =
+          init?.method ?? (input instanceof Request ? input.method : 'GET')
+        const uri = input instanceof Request ? input.url : String(input)
+
+        fetchLogger.info({ method, uri }, 'fetch')
+
+        return globalThis.fetch.call(this, input, init)
+      },
+    })
 
     const didCache = new DidSqliteCache(
       cfg.db.didCacheDbLoc,
@@ -207,6 +242,7 @@ export class AppContext implements AsyncDisposable {
       didCache,
       timeout: cfg.identity.resolverTimeout,
       backupNameservers: cfg.identity.handleBackupNameservers,
+      fetch: safeFetch,
     })
     const plcClient = new plc.Client(cfg.identity.plcUrl)
 
@@ -255,7 +291,7 @@ export class AppContext implements AsyncDisposable {
       : undefined
     const entrywayClient = cfg.entryway
       ? new Client(
-          { service: cfg.entryway.url },
+          { service: cfg.entryway.apiUrl },
           {
             // Trust internal services to send us well-formed responses
             strictResponseProcessing: false,
@@ -267,7 +303,7 @@ export class AppContext implements AsyncDisposable {
       cfg.entryway && secrets.entrywayAdminToken
         ? new Client(
             {
-              service: cfg.entryway.url,
+              service: cfg.entryway.apiUrl,
               headers: {
                 authorization: basicAuthHeader(
                   'admin',
@@ -299,13 +335,20 @@ export class AppContext implements AsyncDisposable {
     })
 
     const plcRotationKey =
-      secrets.plcRotationKey.provider === 'kms'
+      overrides?.plcRotationKey ??
+      (secrets.plcRotationKey?.provider === 'kms'
         ? await KmsKeypair.load({
             keyId: secrets.plcRotationKey.keyId,
           })
-        : await crypto.Secp256k1Keypair.import(
-            secrets.plcRotationKey.privateKeyHex,
-          )
+        : secrets.plcRotationKey?.provider === 'memory'
+          ? await crypto.Secp256k1Keypair.import(
+              secrets.plcRotationKey.privateKeyHex,
+            )
+          : undefined)
+
+    if (!plcRotationKey) {
+      throw new Error('Must configure plc rotation key')
+    }
 
     const accountManager = new AccountManager(
       cfg,
@@ -319,6 +362,87 @@ export class AppContext implements AsyncDisposable {
     )
     await accountManager.migrateOrThrow()
 
+    // @TODO Use this lexResolver instance to implement validation of records
+    // created with the "validate" option. Before doing so, ensure that 1) a
+    // didCache is provided, and 2) that nsid->lexicon are cached.
+    const lexResolver = new LexResolver({
+      fetch: safeFetch,
+      didCache: undefined, // @TODO provide a dedicated cache
+      plcDirectoryUrl: cfg.identity.plcUrl,
+      hooks: {
+        // @NOTE Lexicons hosted by this PDS are read straight from the
+        // actor store. Fetching them over the network would require this
+        // server to reach its own public endpoint, which is not
+        // guaranteed to work (SSRF protection, missing NAT hairpin,
+        // internal reverse proxies, ...).
+        onFetch: async ({ uri, did, nsid, signal }) => {
+          const account = await accountManager.getAccount(did, {
+            includeDeactivated: true,
+            includeTakenDown: true,
+          })
+
+          signal?.throwIfAborted()
+
+          // Mirror what com.atproto.sync.getRecord would answer to an
+          // unauthenticated requester
+          if (account?.takedownRef) {
+            throw new LexResolverError(nsid, `Repo is not available: ${did}`)
+          }
+
+          // Not hosted here: fall back to the network resolution
+          if (!account || account.deactivatedAt) return undefined
+
+          const record = await actorStore.read(account.did, (store) => {
+            return store.record.getRecord(uri, null)
+          })
+
+          if (!record || record.takedownRef != null) {
+            throw new LexResolverError(
+              nsid,
+              `Lexicon record not found at ${uri}`,
+            )
+          }
+
+          return {
+            cid: parseCid(record.cid),
+            record: record.value,
+          }
+        },
+        onFetchResult({ uri, cid, source }) {
+          lexiconResolverLogger.info(
+            { uri: uri.toString(), cid: cid.toString(), source },
+            'Fetched lexicon',
+          )
+        },
+        onFetchError({ err, uri }) {
+          lexiconResolverLogger.error(
+            { uri: uri.toString(), err },
+            'Lexicon fetch error',
+          )
+        },
+        onResolveAuthority: ({ nsid }) => {
+          lexiconResolverLogger.debug(
+            { nsid: nsid.toString() },
+            'Resolving lexicon DID authority',
+          )
+          // Override the lexicon did resolution to point to a custom PDS
+          return cfg.lexicon.didAuthority
+        },
+        onResolveAuthorityResult({ nsid, did, source }) {
+          lexiconResolverLogger.info(
+            { nsid: nsid.toString(), did, source },
+            'Resolved lexicon DID',
+          )
+        },
+        onResolveAuthorityError({ nsid, err }) {
+          lexiconResolverLogger.error(
+            { nsid: nsid.toString(), err },
+            'Lexicon DID resolution error',
+          )
+        },
+      },
+    })
+
     const localViewer = LocalViewer.creator(
       accountManager,
       imageUrlBuilder,
@@ -327,32 +451,6 @@ export class AppContext implements AsyncDisposable {
 
     // An agent for performing HTTP requests based on user provided URLs.
     const proxyAgent = buildProxyAgent(cfg.proxy)
-
-    /**
-     * A fetch() function that protects against SSRF attacks, large responses &
-     * known bad domains. This function can safely be used to fetch user
-     * provided URLs (unless "disableSsrfProtection" is true, of course).
-     *
-     * @note **DO NOT** wrap `safeFetch` with any logging or other transforms as
-     * this might prevent the use of explicit `redirect: "follow"` init from
-     * working. See {@link safeFetchWrap}.
-     */
-    const safeFetch = safeFetchWrap({
-      allowIpHost: false,
-      allowImplicitRedirect: false,
-      responseMaxSize: cfg.fetch.maxResponseSize,
-      ssrfProtection: !cfg.fetch.disableSsrfProtection,
-
-      fetch: function (input, init) {
-        const method =
-          init?.method ?? (input instanceof Request ? input.method : 'GET')
-        const uri = input instanceof Request ? input.url : String(input)
-
-        fetchLogger.info({ method, uri }, 'fetch')
-
-        return globalThis.fetch.call(this, input, init)
-      },
-    })
 
     const oauthProvider = cfg.oauth.provider
       ? new OAuthProvider({
@@ -370,52 +468,41 @@ export class AppContext implements AsyncDisposable {
             cfg.service.publicUrl,
             cfg.identity.recoveryDidKey,
           ),
-          plcDirectoryUrl: cfg.identity.plcUrl,
           redis: redisScratch,
           dpopSecret: secrets.dpopSecret,
           inviteCodeRequired: cfg.invites.required,
           availableUserDomains: cfg.identity.serviceHandleDomains,
           hcaptcha: cfg.oauth.provider.hcaptcha,
           branding: cfg.oauth.provider.branding,
-          safeFetch,
-          lexResolver: new LexResolver({
-            fetch: safeFetch,
-            plcDirectoryUrl: cfg.identity.plcUrl,
-            hooks: {
-              onResolveAuthority: ({ nsid }) => {
-                lexiconResolverLogger.debug(
-                  { nsid: nsid.toString() },
-                  'Resolving lexicon DID authority',
-                )
-                // Override the lexicon did resolution to point to a custom PDS
-                return cfg.lexicon.didAuthority
-              },
-              onResolveAuthorityResult({ nsid, did }) {
-                lexiconResolverLogger.info(
-                  { nsid: nsid.toString(), did },
-                  'Resolved lexicon DID',
-                )
-              },
-              onResolveAuthorityError({ nsid, err }) {
-                lexiconResolverLogger.error(
-                  { nsid: nsid.toString(), err },
-                  'Lexicon DID resolution error',
-                )
-              },
-              onFetchResult({ uri, cid }) {
-                lexiconResolverLogger.info(
-                  { uri: uri.toString(), cid: cid.toString() },
-                  'Fetched lexicon',
-                )
-              },
-              onFetchError({ err, uri }) {
-                lexiconResolverLogger.error(
-                  { uri: uri.toString(), err },
-                  'Lexicon fetch error',
-                )
-              },
+          // @NOTE Not operator-configurable on purpose: changing the email
+          // address unconditionally clears `emailAuthFactorAt` (see
+          // `account-manager/helpers/account.ts`), so the warning describes
+          // what this implementation always does rather than a preference. This
+          // is because updating email writes an unconfirmed email to the email
+          // column, which means leaving email based 2FA enabled can result in
+          // account lock-out.
+          show2FaWarningOnEmailUpdate: true,
+          allowHttp: cfg.service.devMode,
+          plcDirectoryUrl: cfg.identity.plcUrl,
+          fallbackNameservers: cfg.identity.handleBackupNameservers,
+          handleCache: undefined, // Memory
+          didCache: {
+            // Map didCache to SimpleCache<Did, DidDocument>
+            get: async (did) => {
+              const res = await didCache.checkCache(did)
+              // Expired entries are only ever refreshed by a resolution, so
+              // report them as missing rather than serving them indefinitely.
+              return res && !res.expired ? (res.doc as any) : undefined
             },
-          }),
+            set: async (did, doc) => {
+              await didCache.cacheDid(did, doc as any)
+            },
+            del: async (did) => {
+              await didCache.clearEntry(did)
+            },
+          },
+          safeFetch,
+          lexResolver,
           metadata: {
             protected_resources: [new URL(cfg.oauth.issuer).origin],
           },
@@ -526,6 +613,15 @@ export class AppContext implements AsyncDisposable {
           entryway: cfg.entryway?.did,
           modService: cfg.modService?.did,
         },
+        entrywayServiceAuth: cfg.entryway
+          ? {
+              didKey: crypto.formatDidKey(
+                crypto.SECP256K1_JWT_ALG,
+                ui8.fromString(cfg.entryway.jwtPublicKeyHex, 'hex'),
+              ),
+              required: cfg.entryway.requireServiceAuth,
+            }
+          : undefined,
       },
     )
 
@@ -579,6 +675,26 @@ export class AppContext implements AsyncDisposable {
     return forwardedFor(req, authPassthru(req))
   }
 
+  /**
+   * A {@link Client} for a service URL that was resolved from a DID document,
+   * i.e. a URL the PDS does not control. Routes the request through
+   * {@link safeFetch}, which restricts it to https origins that resolve to
+   * unicast addresses, and caps the response size. Lexicon validation follows
+   * the service's dev mode, as it does for the AppView client.
+   *
+   * Any call built from a DID document's service endpoint must use this.
+   */
+  safeClient(service: string | URL): Client {
+    return new Client(
+      { service, fetch: this.safeFetch },
+      {
+        validateRequest: this.cfg.service.devMode,
+        validateResponse: this.cfg.service.devMode,
+        strictResponseProcessing: this.cfg.service.devMode,
+      },
+    )
+  }
+
   async serviceAuthHeaders(did: string, aud: string, lxm: string) {
     const keypair = await this.actorStore.keypair(did)
     return createServiceAuthHeaders({
@@ -600,6 +716,8 @@ export class AppContext implements AsyncDisposable {
   }
 
   async destroy(): Promise<void> {
+    // @TODO Implement this using an AsyncDisposableStack when it becomes
+    // widely available.
     await this.spaceNotifications.destroy()
     try {
       await this.backgroundQueue.destroy()
@@ -613,7 +731,11 @@ export class AppContext implements AsyncDisposable {
           try {
             await this.redisScratch?.quit()
           } finally {
-            await this.proxyAgent.destroy()
+            try {
+              await this.proxyAgent.destroy()
+            } finally {
+              await this.blobstore[Symbol.asyncDispose]()
+            }
           }
         }
       }

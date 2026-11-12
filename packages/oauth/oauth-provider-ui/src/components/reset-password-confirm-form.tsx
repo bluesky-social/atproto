@@ -5,44 +5,37 @@ import {
   FormShell,
   type FormShellProps,
 } from '#/components/forms/form-shell.tsx'
-
-// @NOTE `code`, not `token`: the key becomes the rendered `name`, which is a
-// public contract. The view maps it to the API's `token` field.
-type Values = { code: string; password: string }
+import type { Override } from '#/lib/util'
 
 export type ResetPasswordConfirmData = {
   token: string
   password: string
 }
 
-export type ResetPasswordConfirmFormProps = Omit<
-  FormShellProps<Values>,
-  'onSubmit'
-> & {
-  email?: string
-  onResend?: () => void | PromiseLike<void>
-  handler: (
-    data: ResetPasswordConfirmData,
-    signal: AbortSignal,
-  ) => void | PromiseLike<void>
-}
+export type ResetPasswordConfirmFormProps = Override<
+  FormShellProps<ResetPasswordConfirmData>,
+  {
+    onResend?: () => void | PromiseLike<void>
+    /** For password managers */
+    currentUsername?: string
+  }
+>
 
 export function ResetPasswordConfirmForm({
-  email,
+  currentUsername,
   onResend,
-  handler,
+
+  // FormShellProps
   ...props
 }: ResetPasswordConfirmFormProps) {
   return (
-    <FormShell<Values>
+    <FormShell<{
+      token: string
+      password: string
+    }>
       {...props}
-      onSubmit={(values, signal) =>
-        // @NOTE The API field is `token`; the form field stays `code` so the
-        // rendered input keeps its contracted name.
-        handler({ token: values.code, password: values.password }, signal)
-      }
     >
-      {email && (
+      {currentUsername && (
         // For better password managers integration, we include a hidden
         // username field with the email pre-filled. This allows password
         // managers to associate the reset token and new password with the
@@ -50,14 +43,14 @@ export function ResetPasswordConfirmForm({
         <input
           type="text"
           autoComplete="username"
-          defaultValue={email}
+          defaultValue={currentUsername}
           readOnly
           hidden
         />
       )}
 
       <TokenField
-        name="code"
+        name="token"
         label={<Trans>Reset code</Trans>}
         enterKeyHint="next"
         required

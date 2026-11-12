@@ -1,5 +1,6 @@
 import { mapDefined, noUndefinedVals } from '@atproto/common'
-import type { Client, DidString } from '@atproto/lex'
+import type { Client } from '@atproto/lex-client'
+import type { DidString } from '@atproto/lex-schema'
 import {
   type Headers as HeadersMap,
   InternalServerError,
@@ -33,6 +34,7 @@ export default function (server: Server, ctx: AppContext) {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({
+        xrpcEndpoint: app.bsky.graph.getSuggestedFollowsByActor.$lxm,
         labelers,
         viewer,
         features: ctx.featureGatesClient.scope(
@@ -43,7 +45,12 @@ export default function (server: Server, ctx: AppContext) {
         ),
       })
 
-      if (!ctx.suggestionsClient) {
+      const useIris = hydrateCtx.features.checkGate(
+        hydrateCtx.features.Gate.SuggestedUsersIrisEnable,
+      )
+      const client = useIris ? ctx.irisClient : ctx.suggestionsClient
+
+      if (!client) {
         return {
           encoding: 'application/json',
           body: { suggestions: [] },
@@ -78,8 +85,13 @@ const skeleton = async (
 ): Promise<SkeletonState> => {
   const { params, ctx } = input
 
+  const useIris = params.hydrateCtx.features.checkGate(
+    params.hydrateCtx.features.Gate.SuggestedUsersIrisEnable,
+  )
+  const client = useIris ? ctx.irisClient : ctx.suggestionsClient
+
   // handled above already, this branch should not be reached
-  if (!ctx.suggestionsClient) {
+  if (!client) {
     throw new InternalServerError('Suggestions service not configured')
   }
 
@@ -88,17 +100,14 @@ const skeleton = async (
     throw new InvalidRequestError('Actor not found')
   }
 
-  const res = await ctx.suggestionsClient.xrpc(
-    app.bsky.unspecced.getSuggestionsSkeleton,
-    {
-      params: {
-        viewer: params.hydrateCtx.viewer ?? undefined,
-        relativeToDid,
-      },
-      headers: params.headers,
-      signal: params.signal,
+  const res = await client.xrpc(app.bsky.unspecced.getSuggestionsSkeleton, {
+    params: {
+      viewer: params.hydrateCtx.viewer ?? undefined,
+      relativeToDid,
     },
-  )
+    headers: params.headers,
+    signal: params.signal,
+  })
 
   return {
     recIdStr: res.body.recIdStr,
@@ -120,6 +129,7 @@ const hydration = async (
     return ctx.hydrator.hydrateProfilesDetailed(
       suggestedDids,
       params.hydrateCtx,
+      { knownFollowersDids: suggestedDids, activitySubscriptions: true },
     )
   } else {
     return ctx.hydrator.hydrateProfiles(suggestedDids, params.hydrateCtx)
@@ -144,7 +154,7 @@ const presentation = (
   const { ctx, hydration, skeleton } = input
   const { suggestedDids, contentLanguage } = skeleton
   const suggestions = mapDefined(suggestedDids, (did) =>
-    ctx.views.profileKnownFollowers(did, hydration),
+    ctx.views.profile(did, hydration),
   )
   return {
     recIdStr: skeleton.recIdStr,
@@ -157,6 +167,7 @@ type Context = {
   hydrator: Hydrator
   views: Views
   suggestionsClient: Client | undefined
+  irisClient: Client | undefined
 }
 
 type Params = app.bsky.graph.getSuggestedFollowsByActor.$Params & {

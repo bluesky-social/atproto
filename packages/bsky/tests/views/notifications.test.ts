@@ -24,7 +24,9 @@ import {
   seedThreadV2,
 } from '@atproto/dev-env'
 import type { DidString } from '@atproto/syntax'
-import { delayCursor } from '../../src/api/app/bsky/notification/listNotifications.js'
+import { NOTIFICATION_REASON } from '../../src/api/app/bsky/notification/constants.js'
+import { delayCursor } from '../../src/api/app/bsky/notification/util.js'
+import { NotificationFeed } from '../../src/proto/bsky_pb.js'
 import { Namespaces } from '../../src/stash.js'
 import { forSnapshot, paginateAll } from '../_util.js'
 
@@ -226,6 +228,46 @@ describe('notification views', () => {
     await network.processAll()
   })
 
+  it('preserves follow-back reasons only in V2 notifications', async () => {
+    const followbackActor = await sc.createAccount('followback-actor', {
+      handle: 'fback1.test',
+      email: 'followback-actor@test.com',
+      password: 'hunter2hunter2',
+    })
+    const followbackRecipient = await sc.createAccount('followback-recipient', {
+      handle: 'fback2.test',
+      email: 'followback-recipient@test.com',
+      password: 'hunter2hunter2',
+    })
+
+    await sc.follow(followbackActor.did, followbackRecipient.did)
+    await network.processAll()
+    const followBackRef = await sc.follow(
+      followbackRecipient.did,
+      followbackActor.did,
+    )
+    await network.processAll()
+
+    const legacy = await network.bsky.ctx.dataplane.getNotifications({
+      actorDid: followbackActor.did,
+      limit: 10,
+    })
+    expect(
+      legacy.notifications.find((notif) => notif.uri === followBackRef.uriStr)
+        ?.reason,
+    ).toBe(NOTIFICATION_REASON.FOLLOW)
+
+    const v2 = await network.bsky.ctx.dataplane.getNotificationsV2({
+      actorDid: followbackActor.did,
+      feed: NotificationFeed.FOLLOWERS,
+      limit: 10,
+    })
+    expect(
+      v2.notifications.find((notif) => notif.uri === followBackRef.uriStr)
+        ?.reason,
+    ).toBe(NOTIFICATION_REASON.FOLLOW_BACK)
+  })
+
   it('generates notifications for quotes', async () => {
     // Dan was quoted by alice
     const notifsDan = await agent.api.app.bsky.notification.listNotifications(
@@ -254,7 +296,9 @@ describe('notification views', () => {
     )
 
     const na = sortNotifs(
-      notifsAlice.data.notifications.filter((n) => n.reason === 'like'),
+      notifsAlice.data.notifications.filter(
+        (n) => n.reason === NOTIFICATION_REASON.LIKE,
+      ),
     )
     expect(na).toHaveLength(5)
     expect(forSnapshot(na)).toMatchSnapshot()
@@ -272,7 +316,9 @@ describe('notification views', () => {
     )
 
     const na = sortNotifs(
-      notifsAlice.data.notifications.filter((n) => n.reason === 'repost'),
+      notifsAlice.data.notifications.filter(
+        (n) => n.reason === NOTIFICATION_REASON.REPOST,
+      ),
     )
     expect(na).toHaveLength(2)
     expect(forSnapshot(na)).toMatchSnapshot()
@@ -298,7 +344,9 @@ describe('notification views', () => {
     )
 
     const no = sortNotifs(
-      notifsOp.data.notifications.filter((n) => n.reason === 'like'),
+      notifsOp.data.notifications.filter(
+        (n) => n.reason === NOTIFICATION_REASON.LIKE,
+      ),
     )
     // Like from `alice` in this test.
     expect(no).toHaveLength(1)
@@ -316,7 +364,7 @@ describe('notification views', () => {
 
     const nr = sortNotifs(
       notifsReposter.data.notifications.filter(
-        (n) => n.reason === 'like-via-repost',
+        (n) => n.reason === NOTIFICATION_REASON.LIKE_VIA_REPOST,
       ),
     )
     // Like from `alice` in this test.
@@ -343,7 +391,9 @@ describe('notification views', () => {
     )
 
     const no = sortNotifs(
-      notifsOp.data.notifications.filter((n) => n.reason === 'like'),
+      notifsOp.data.notifications.filter(
+        (n) => n.reason === NOTIFICATION_REASON.LIKE,
+      ),
     )
     // Like from `alice` in previous test + `carol` on this test.
     expect(no).toHaveLength(2)
@@ -361,7 +411,7 @@ describe('notification views', () => {
 
     const nr = sortNotifs(
       notifsReposter.data.notifications.filter(
-        (n) => n.reason === 'like-via-repost',
+        (n) => n.reason === NOTIFICATION_REASON.LIKE_VIA_REPOST,
       ),
     )
     // Like from `alice` in previous test.
@@ -389,7 +439,9 @@ describe('notification views', () => {
     )
 
     const no = sortNotifs(
-      notifsOp.data.notifications.filter((n) => n.reason === 'repost'),
+      notifsOp.data.notifications.filter(
+        (n) => n.reason === NOTIFICATION_REASON.REPOST,
+      ),
     )
     // Repost from `carol` in seeds + `alice` on this test.
     expect(no).toHaveLength(2)
@@ -407,7 +459,7 @@ describe('notification views', () => {
 
     const nr = sortNotifs(
       notifsReposter.data.notifications.filter(
-        (n) => n.reason === 'repost-via-repost',
+        (n) => n.reason === NOTIFICATION_REASON.REPOST_VIA_REPOST,
       ),
     )
     // Repost from `alice` in this test.
@@ -424,7 +476,9 @@ describe('notification views', () => {
     )
     await network.processAll()
     const notifsBob1 = await agent.app.bsky.notification.listNotifications(
-      { reasons: ['verified', 'unverified'] },
+      {
+        reasons: [NOTIFICATION_REASON.VERIFIED, NOTIFICATION_REASON.UNVERIFIED],
+      },
       {
         headers: await network.serviceHeaders(
           sc.dids.bob,
@@ -439,7 +493,9 @@ describe('notification views', () => {
     await sc.unverify(sc.dids.alice, sc.dids.bob)
     await network.processAll()
     const notifsBob2 = await agent.app.bsky.notification.listNotifications(
-      { reasons: ['verified', 'unverified'] },
+      {
+        reasons: [NOTIFICATION_REASON.VERIFIED, NOTIFICATION_REASON.UNVERIFIED],
+      },
       {
         headers: await network.serviceHeaders(
           sc.dids.bob,
@@ -511,7 +567,6 @@ describe('notification views', () => {
   it('returns a cursor only when more notifications are available', async () => {
     const exact = await network.bsky.ctx.dataplane.getNotifications({
       actorDid: alice,
-      priority: false,
       limit: 13,
     })
     expect(exact.notifications).toHaveLength(13)
@@ -519,7 +574,6 @@ describe('notification views', () => {
 
     const over = await network.bsky.ctx.dataplane.getNotifications({
       actorDid: alice,
-      priority: false,
       limit: 12,
     })
     expect(over.notifications).toHaveLength(12)
@@ -530,14 +584,14 @@ describe('notification views', () => {
       ids.AppBskyNotificationListNotifications,
     )
     const terminal = await agent.app.bsky.notification.listNotifications(
-      { priority: false, limit: 13 },
+      { limit: 13 },
       { headers },
     )
     expect(terminal.data.notifications).toHaveLength(13)
     expect(terminal.data.cursor).toBeUndefined()
 
     const trimmed = await agent.app.bsky.notification.listNotifications(
-      { priority: false, limit: 12 },
+      { limit: 12 },
       { headers },
     )
     expect(trimmed.data.notifications).toHaveLength(12)
@@ -701,85 +755,10 @@ describe('notification views', () => {
     )
   })
 
-  it('fetches notifications with explicit priority', async () => {
-    const priority = await agent.api.app.bsky.notification.listNotifications(
-      { priority: true },
-      {
-        headers: await network.serviceHeaders(
-          sc.dids.carol,
-          ids.AppBskyNotificationListNotifications,
-        ),
-      },
-    )
-    // only notifs from follow (alice)
-    expect(
-      priority.data.notifications.every(
-        (notif) =>
-          !([sc.dids.bob, sc.dids.dan] as string[]).includes(notif.author.did),
-      ),
-    ).toBe(true)
-    expect(forSnapshot(priority.data)).toMatchSnapshot()
-    const noPriority = await agent.api.app.bsky.notification.listNotifications(
-      { priority: false },
-      {
-        headers: await network.serviceHeaders(
-          sc.dids.carol,
-          ids.AppBskyNotificationListNotifications,
-        ),
-      },
-    )
-    expect(forSnapshot(noPriority.data)).toMatchSnapshot()
-  })
-
-  it('fetches notifications with default priority', async () => {
-    await agent.api.app.bsky.notification.putPreferences(
-      { priority: true },
-      {
-        encoding: 'application/json',
-        headers: await network.serviceHeaders(
-          sc.dids.carol,
-          ids.AppBskyNotificationPutPreferences,
-        ),
-      },
-    )
-    await network.processAll()
-    const notifs = await agent.api.app.bsky.notification.listNotifications(
-      {},
-      {
-        headers: await network.serviceHeaders(
-          sc.dids.carol,
-          ids.AppBskyNotificationListNotifications,
-        ),
-      },
-    )
-    // only notifs from follow (alice)
-    expect(
-      notifs.data.notifications.every(
-        (notif) =>
-          !([sc.dids.bob, sc.dids.dan] as string[]).includes(notif.author.did),
-      ),
-    ).toBe(true)
-    expect(forSnapshot(notifs.data)).toMatchSnapshot()
-    await agent.api.app.bsky.notification.putPreferences(
-      { priority: false },
-      {
-        encoding: 'application/json',
-        headers: await network.serviceHeaders(
-          sc.dids.carol,
-          ids.AppBskyNotificationPutPreferences,
-        ),
-      },
-    )
-    await network.processAll()
-  })
-
   it('filters notifications by reason', async () => {
     const res = await agent.app.bsky.notification.listNotifications(
       {
-        // Pin priority so the snapshot doesn't race with the viewer's stored
-        // priority preference, which neighbouring tests mutate.
-        priority: false,
-        reasons: ['mention'],
+        reasons: [NOTIFICATION_REASON.MENTION],
       },
       {
         headers: await network.serviceHeaders(
@@ -795,10 +774,7 @@ describe('notification views', () => {
   it('filters notifications by multiple reasons', async () => {
     const res = await agent.app.bsky.notification.listNotifications(
       {
-        // Pin priority so the snapshot doesn't race with the viewer's stored
-        // priority preference, which neighbouring tests mutate.
-        priority: false,
-        reasons: ['mention', 'reply'],
+        reasons: [NOTIFICATION_REASON.MENTION, NOTIFICATION_REASON.REPLY],
       },
       {
         headers: await network.serviceHeaders(
@@ -817,7 +793,11 @@ describe('notification views', () => {
     ) => sortNotifs(results.flatMap((res) => res.notifications))
     const paginator = async (cursor?: string) => {
       const res = await agent.app.bsky.notification.listNotifications(
-        { reasons: ['mention', 'reply'], cursor, limit: 2 },
+        {
+          reasons: [NOTIFICATION_REASON.MENTION, NOTIFICATION_REASON.REPLY],
+          cursor,
+          limit: 2,
+        },
         {
           headers: await network.serviceHeaders(
             alice,
@@ -835,7 +815,7 @@ describe('notification views', () => {
     )
 
     const full = await agent.app.bsky.notification.listNotifications(
-      { reasons: ['mention', 'reply'] },
+      { reasons: [NOTIFICATION_REASON.MENTION, NOTIFICATION_REASON.REPLY] },
       {
         headers: await network.serviceHeaders(
           alice,
@@ -867,7 +847,7 @@ describe('notification views', () => {
 
     it('filters posts with hide tag', async () => {
       const results = await agent.app.bsky.notification.listNotifications(
-        { reasons: ['reply'] },
+        { reasons: [NOTIFICATION_REASON.REPLY] },
         {
           headers: await network.serviceHeaders(
             dan,
@@ -883,7 +863,7 @@ describe('notification views', () => {
       await sc.follow(dan, eve)
       await network.processAll()
       const results = await agent.app.bsky.notification.listNotifications(
-        { reasons: ['reply'] },
+        { reasons: [NOTIFICATION_REASON.REPLY] },
         {
           headers: await network.serviceHeaders(
             dan,
@@ -1203,6 +1183,52 @@ describe('notification views', () => {
       await getAndAssert(expectedApi1, expectedDb1)
     })
 
+    it('maps legacy priority onto granular preferences', async () => {
+      const actorDid = sc.dids.carol
+      const headers = await network.serviceHeaders(
+        actorDid,
+        ids.AppBskyNotificationPutPreferencesV2,
+      )
+      await agent.app.bsky.notification.putPreferencesV2(
+        {
+          reply: { include: 'all', list: false, push: false },
+          mention: { include: 'all', list: false, push: true },
+          quote: { include: 'all', list: true, push: false },
+          verified: { list: false, push: false },
+        },
+        { encoding: 'application/json', headers },
+      )
+      await network.processAll()
+
+      await agent.app.bsky.notification.putPreferences(
+        { priority: true },
+        {
+          encoding: 'application/json',
+          headers: await network.serviceHeaders(
+            actorDid,
+            ids.AppBskyNotificationPutPreferences,
+          ),
+        },
+      )
+      await network.processAll()
+
+      const preferences = await agent.app.bsky.notification.getPreferences(
+        {},
+        {
+          headers: await network.serviceHeaders(
+            actorDid,
+            ids.AppBskyNotificationGetPreferences,
+          ),
+        },
+      )
+      expect(preferences.data.preferences).toMatchObject({
+        reply: { include: 'follows', list: false, push: false },
+        mention: { include: 'follows', list: false, push: true },
+        quote: { include: 'follows', list: true, push: false },
+        verified: { list: false, push: false },
+      })
+    })
+
     it('stores the preferences setting the defaults', async () => {
       const actorDid = sc.dids.carol
 
@@ -1253,6 +1279,7 @@ describe('notification views', () => {
           push: false,
           include: 'accepted',
         },
+        injected: true,
       }
       const expected0: AppBskyNotificationDefs.Preferences = {
         // chat is deprecated: input is ignored and the default is always returned.

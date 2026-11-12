@@ -27,4 +27,14 @@ describe(cn, () => {
       'hover:bg-red-500 bg-blue-500',
     )
   })
+
+  it('treats the theme font sizes as sizes, not as text colors', () => {
+    expect(cn('text-primary-foreground text-sm', 'text-action')).toBe(
+      'text-primary-foreground text-action',
+    )
+  })
+
+  it('treats the theme container widths as widths', () => {
+    expect(cn('max-w-auth-card w-full', 'max-w-md')).toBe('w-full max-w-md')
+  })
 })

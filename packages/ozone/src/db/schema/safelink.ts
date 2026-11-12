@@ -1,5 +1,5 @@
 import type { GeneratedAlways } from 'kysely'
-import type { DatetimeString, DidString } from '@atproto/lex'
+import type { DatetimeString, DidString } from '@atproto/lex-schema'
 import type {
   SafelinkActionType,
   SafelinkEventType,
@@ -12,6 +12,7 @@ export const safelinkEventTableName = 'safelink_event'
 
 export interface SafelinkRule {
   id: GeneratedAlways<number>
+  source: string
   url: string
   pattern: SafelinkPatternType
   action: SafelinkActionType
@@ -24,6 +25,7 @@ export interface SafelinkRule {
 
 export interface SafelinkEvent {
   id: GeneratedAlways<number>
+  source: string
   eventType: SafelinkEventType
   url: string
   pattern: SafelinkPatternType

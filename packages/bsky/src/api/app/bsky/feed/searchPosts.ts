@@ -1,6 +1,7 @@
 import { Timestamp } from '@bufbuild/protobuf'
 import { mapDefined } from '@atproto/common'
-import type { AtUriString, Client } from '@atproto/lex'
+import type { Client } from '@atproto/lex-client'
+import type { AtUriString } from '@atproto/lex-schema'
 import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
 import type { ServerConfig } from '../../../../config.js'
 import type { AppContext } from '../../../../context.js'
@@ -42,6 +43,7 @@ export default function (server: Server, ctx: AppContext) {
 
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({
+        xrpcEndpoint: app.bsky.feed.searchPosts.$lxm,
         labelers,
         viewer,
         skipViewerBlocks,

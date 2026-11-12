@@ -50,10 +50,8 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
     ] = await Promise.all([
       db.db
         .selectFrom('actor')
-        .leftJoin('actor_state', 'actor_state.did', 'actor.did')
         .where('actor.did', 'in', dids)
         .selectAll('actor')
-        .select('actor_state.priorityNotifs')
         .select([
           db.db
             .selectFrom('labeler')
@@ -179,7 +177,6 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
             : undefined,
         upstreamStatus: row?.upstreamStatus ?? '',
         createdAt: profiles.records[i].createdAt, // @NOTE profile creation date not trusted in production
-        priorityNotifications: row?.priorityNotifs ?? false,
         trustedVerifier: row?.trustedVerifier ?? false,
         verifiedBy,
         statusRecord: status,

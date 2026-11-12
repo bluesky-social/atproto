@@ -1,5 +1,52 @@
 # @atproto/lexicon
 
+## 0.7.19
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/common-web@0.5.17
+
+## 0.7.18
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/common-web@0.5.16
+
+## 0.7.17
+
+### Patch Changes
+
+- Updated dependencies [[`f98b78a`](https://github.com/bluesky-social/atproto/commit/f98b78adbc8963e49823117b007422211f6d3ff2)]:
+  - @atproto/syntax@0.7.7
+  - @atproto/common-web@0.5.15
+
+## 0.7.16
+
+### Patch Changes
+
+- [#5582](https://github.com/bluesky-social/atproto/pull/5582) [`e8b89ff`](https://github.com/bluesky-social/atproto/commit/e8b89ff4c211a10519b54bd83eb64950035942c3) Thanks [@haileyok](https://github.com/haileyok)! - Reject CID strings longer than 128 characters before decoding them.
+- Updated dependencies []:
+  - @atproto/common-web@0.5.14
+
+## 0.7.15
+
+### Patch Changes
+
+- [#5556](https://github.com/bluesky-social/atproto/pull/5556) [`5019f55`](https://github.com/bluesky-social/atproto/commit/5019f5537317ee75ad4527db212bc27c3085fe67) Thanks [@dependabot](https://github.com/apps/dependabot)! - build(deps-dev): bump the dev-dependencies group across 1 directory with 25 updates
+- Updated dependencies [[`5019f55`](https://github.com/bluesky-social/atproto/commit/5019f5537317ee75ad4527db212bc27c3085fe67)]:
+  - @atproto/common-web@0.5.13
+
+## 0.7.14
+
+### Patch Changes
+
+- [#5488](https://github.com/bluesky-social/atproto/pull/5488) [`fe4087e`](https://github.com/bluesky-social/atproto/commit/fe4087ecb7a7cc53c7081c9f97d49121e5251c36) Thanks [@dependabot](https://github.com/apps/dependabot)! - Bump the dev-dependencies group across 1 directory with 30 updates
+
+- Updated dependencies [[`fe4087e`](https://github.com/bluesky-social/atproto/commit/fe4087ecb7a7cc53c7081c9f97d49121e5251c36)]:
+  - @atproto/common-web@0.5.12
+
 ## 0.7.13
 
 ### Patch Changes

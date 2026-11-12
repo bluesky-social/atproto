@@ -1,6 +1,6 @@
 import type { Selectable } from 'kysely'
 import { MINUTE, SECOND } from '@atproto/common'
-import type { DidString } from '@atproto/lex'
+import type { DidString } from '@atproto/lex-schema'
 import {
   assertProtectedTagAction,
   getProtectedTags,
@@ -105,6 +105,7 @@ export class ScheduledActionProcessor {
                 policies: eventData.policies,
                 severityLevel: eventData.severityLevel,
                 strikeCount: eventData.strikeCount,
+                strikeExpiresAt: eventData.strikeExpiresAt,
               })
 
               if (eventData.emailSubject && eventData.emailContent) {

@@ -23,6 +23,7 @@ export type AtprotoHandleResolverNodeOptions = {
    * it is not provided.
    *
    * @default `globalThis.fetch`
+   * @note Ignored if {@link AtprotoHandleResolverNodeOptions.safeFetch safeFetch} is provided.
    */
   fetch?: Fetch
 
@@ -32,6 +33,7 @@ export type AtprotoHandleResolverNodeOptions = {
    * provided, a safe fetch function will be created by wrapping the provided {@link fetch}
    * function (or the default `globalThis.fetch`) with {@link safeFetchWrap}.
    *
+   * @default `safeFetchWrap({ fetch, timeout: 3000, ssrfProtection: true, responseMaxSize: 10 * 1024 })`
    * @see {@link safeFetchWrap}
    */
   safeFetch?: Fetch

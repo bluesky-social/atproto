@@ -1,6 +1,6 @@
 import {
+  type AccountAgent,
   type Agent,
-  type AuthenticatedAgent,
   type DidString,
   type Infer,
   type InferMethodInputBody,
@@ -11,17 +11,21 @@ import {
   type Procedure,
   type Query,
   type RecordKeyOptions,
-  type RecordSchema,
   type Restricted,
-  type TypedLexMap,
   type XrpcOptions,
   type XrpcResponse,
-  getDefaultRecordKey,
-  getLiteralRecordKey,
-  isAuthenticatedAgent,
+  isAccountAgent,
+  rkeyFor,
+  rkeyForCreate,
   xrpc,
 } from '@atproto/lex-client'
-import { type RecordKeyValue, type Space, getMain } from '@atproto/lex-schema'
+import type { TypedLexMap } from '@atproto/lex-data'
+import {
+  type RecordKeyValue,
+  type RecordSchema,
+  type Space,
+  getMain,
+} from '@atproto/lex-schema'
 import { SpaceRef, type SpaceRefString } from '@atproto/syntax'
 import { delegationTokenProviderFor } from './delegation-token-provider.js'
 import { main as applyWrites } from './lexicons/com/atproto/space/applyWrites.js'
@@ -40,8 +44,8 @@ import { SpaceWriteOperationHelper } from './write-operation-builder.js'
 
 export * from './space-reader.js'
 export type {
+  AccountAgent,
   Agent,
-  AuthenticatedAgent,
   Space,
   SpaceRefString,
   SpaceWriteOperationHelper,
@@ -224,7 +228,7 @@ export class SpaceClient<S extends Space = Space> extends SpaceReader<S> {
     space: SpaceRefString | SpaceRef | SpaceReader.AuthorityRef<S>,
     { agent, ...options }: SpaceClient.OpenSpaceOptions,
   ): SpaceClient<S> {
-    if (!isAuthenticatedAgent(agent)) {
+    if (!isAccountAgent(agent)) {
       throw new TypeError('Agent must be authenticated')
     }
     const ref =
@@ -261,7 +265,7 @@ export class SpaceClient<S extends Space = Space> extends SpaceReader<S> {
     { policy, skey }: SpaceClient.CreateSpaceInput<S>,
     { signal, ...options }: SpaceClient.CreateSpaceOptions = {},
   ): Promise<SpaceClient<S>> {
-    if (!isAuthenticatedAgent(agent)) {
+    if (!isAccountAgent(agent)) {
       throw new TypeError('Agent must be authenticated')
     }
     // Validates the key, and defaults it for literal keys
@@ -281,7 +285,7 @@ export class SpaceClient<S extends Space = Space> extends SpaceReader<S> {
    */
   constructor(
     /** The user's agent (e.g. their OAuth session). */
-    readonly agent: AuthenticatedAgent,
+    readonly agent: AccountAgent,
     schema: S,
     ref: SpaceRef,
     options: SpaceClient.Options = {},
@@ -495,7 +499,7 @@ export class SpaceClient<S extends Space = Space> extends SpaceReader<S> {
     if (options.validateRequest !== false) this.assertCollection(schema.$type)
     const record = schema.build(input) as TypedLexMap<NsidString>
     if (options.validateRequest) schema.validate(record)
-    const rkey = options.rkey ?? getDefaultRecordKey(schema)
+    const rkey = rkeyForCreate(schema, options.rkey)
     if (rkey !== undefined) schema.keySchema.assert(rkey)
     const response = await this.createRecord(record, rkey, options)
     return response.body
@@ -530,9 +534,7 @@ export class SpaceClient<S extends Space = Space> extends SpaceReader<S> {
     if (options.validateRequest !== false) this.assertCollection(schema.$type)
     const record = schema.build(input) as TypedLexMap<NsidString>
     if (options.validateRequest) schema.validate(record)
-    const rkey = schema.keySchema.parse(
-      options.rkey ?? getLiteralRecordKey(schema),
-    )
+    const rkey = schema.keySchema.parse(rkeyFor(schema, options.rkey))
     const response = await this.putRecord(record, rkey, options)
     return response.body
   }
@@ -557,9 +559,7 @@ export class SpaceClient<S extends Space = Space> extends SpaceReader<S> {
   ): Promise<void> {
     const schema = getMain(ns)
     if (options.validateRequest !== false) this.assertCollection(schema.$type)
-    const rkey = schema.keySchema.parse(
-      options.rkey ?? getLiteralRecordKey(schema),
-    )
+    const rkey = schema.keySchema.parse(rkeyFor(schema, options.rkey))
     await this.deleteRecord(schema.$type, rkey, options)
   }
 
@@ -586,9 +586,7 @@ export class SpaceClient<S extends Space = Space> extends SpaceReader<S> {
   ): Promise<SpaceClient.GetOutput<T>> {
     const schema = getMain(ns)
     if (options.validateRequest !== false) this.assertCollection(schema.$type)
-    const rkey = schema.keySchema.parse(
-      options.rkey ?? getLiteralRecordKey(schema),
-    )
+    const rkey = schema.keySchema.parse(rkeyFor(schema, options.rkey))
     const response = await this.getRecord(schema.$type, rkey, options)
     const value = schema.validate(response.body.value)
     return { ...response.body, value }

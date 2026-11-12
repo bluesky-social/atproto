@@ -1,6 +1,6 @@
-import { XrpcError } from '@atproto/lex-client'
 import type { LexErrorCode, LexErrorData } from '@atproto/lex-data'
 import { LexError } from '@atproto/lex-data'
+import { XrpcError } from '@atproto/lex-rpc'
 import { LexValidationError } from '@atproto/lex-schema'
 import type { WWWAuthenticate } from './lib/www-authenticate.js'
 import { formatWWWAuthenticateHeader } from './lib/www-authenticate.js'

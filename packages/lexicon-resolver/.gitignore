@@ -1,2 +1,9 @@
-# @atproto/lex-cli
-src/lexicons
+# @atproto/lex
+/src/lexicons
+
+# @NOTE lexicons are installed from the network, and kept as copy here to avoid
+# network dependency during ci build. com.atproto.* and tools.ozone.* lexicons
+# are symlinked from the repo-wide canonical lexicons (see "resolvers" in
+# lexicons.json) and can be ignored from Git.
+/lexicons/com/atproto
+/lexicons/tools/ozone

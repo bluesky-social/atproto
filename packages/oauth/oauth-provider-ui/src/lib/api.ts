@@ -9,6 +9,8 @@ import type {
   ConfirmResetPasswordInput,
   DeactivateAccountInput,
   DidString,
+  DisableEmailAuthFactorInput,
+  EnableEmailAuthFactorInput,
   HandleUnavailableReason,
   InitiateAccountDeletionInput,
   InitiateEmailUpdateInput,
@@ -69,25 +71,25 @@ export class Api extends JsonClient<ApiEndpoints> {
 
   async signIn(
     {
-      username,
+      identifier,
       password,
-      emailOtp,
-      remember,
       locale = this.locale,
+      emailOtp = undefined,
+      remember = undefined, // Default applied by backend based on context
     }: WithOptionalLocale<SignInInput>,
     options?: Options,
   ) {
     return this.fetch(
       'POST',
       '/sign-in',
-      { username, password, emailOtp, remember, locale },
+      { identifier, password, locale, emailOtp, remember },
       options,
     )
   }
 
   async initiatePasswordReset(
     {
-      email,
+      identifier,
       locale = this.locale,
     }: WithOptionalLocale<InitiatePasswordResetInput>,
     options?: Options,
@@ -95,7 +97,7 @@ export class Api extends JsonClient<ApiEndpoints> {
     await this.fetch(
       'POST',
       '/reset-password-request',
-      { email, locale },
+      { identifier, locale },
       options,
     )
   }
@@ -203,6 +205,32 @@ export class Api extends JsonClient<ApiEndpoints> {
     )
   }
 
+  async enableEmailAuthFactor(
+    {
+      did,
+      locale = this.locale,
+    }: WithOptionalLocale<EnableEmailAuthFactorInput>,
+    options?: Options,
+  ) {
+    return this.fetch('POST', '/enable-email-otp', { did, locale }, options)
+  }
+
+  async disableEmailAuthFactor(
+    {
+      did,
+      token,
+      locale = this.locale,
+    }: WithOptionalLocale<DisableEmailAuthFactorInput>,
+    options?: Options,
+  ) {
+    return this.fetch(
+      'POST',
+      '/disable-email-otp',
+      { did, token, locale },
+      options,
+    )
+  }
+
   async updateHandle({ did, handle }: UpdateHandleInput, options?: Options) {
     return this.fetch('POST', '/update-handle', { did, handle }, options)
   }
@@ -248,6 +276,7 @@ export class Api extends JsonClient<ApiEndpoints> {
       handle,
       email,
       password,
+      remember,
       inviteCode,
       hcaptchaToken,
     }: WithOptionalLocale<SignUpInput>,
@@ -256,7 +285,7 @@ export class Api extends JsonClient<ApiEndpoints> {
     return this.fetch(
       'POST',
       '/sign-up',
-      { locale, handle, email, password, inviteCode, hcaptchaToken },
+      { locale, handle, email, password, remember, inviteCode, hcaptchaToken },
       options,
     )
   }
@@ -286,6 +315,7 @@ export function parseApiErrorPayload(
     for (const ErrorClass of [
       // @NOTE Most specific errors must come first!
       UnknownRequestUriError,
+      UnknownAtprotoAccountError,
       SecondAuthenticationFactorRequiredError,
       InvalidCredentialsError,
       InvalidInviteCodeError,
@@ -353,7 +383,7 @@ export class OAuthErrorResponse<
       case 'server_error':
         return msg`The server encountered an unexpected error. Please try again.`
       default:
-        return msg`An unexpected error occurred. Please try again.`
+        return msg`An unexpected error occurred.`
     }
   }
 }
@@ -482,6 +512,35 @@ export class SecondAuthenticationFactorRequiredError<
       json.error === 'second_authentication_factor_required' &&
       isSecondAuthFactorType(json['type']) &&
       typeof json['hint'] === 'string'
+    )
+  }
+}
+
+export type UnknownAtprotoAccountPayload =
+  OAuthErrorPayload<'unknown_atproto_account_error'> & {
+    identifier: string
+    issuer: string | undefined
+  }
+export class UnknownAtprotoAccountError<
+  P extends UnknownAtprotoAccountPayload = UnknownAtprotoAccountPayload,
+> extends OAuthErrorResponse<P> {
+  override msg = this.issuer
+    ? msg`The account "${this.payload.identifier}" is hosted elsewhere.`
+    : msg`An email address is required.`
+
+  get issuer() {
+    return this.payload.issuer
+  }
+
+  get identifier() {
+    return this.payload.identifier
+  }
+
+  static is(json: OAuthErrorPayload): json is UnknownAtprotoAccountPayload {
+    return (
+      json.error === 'unknown_atproto_account_error' &&
+      typeof json['identifier'] === 'string' &&
+      (typeof json['issuer'] === 'string' || json['issuer'] === undefined)
     )
   }
 }

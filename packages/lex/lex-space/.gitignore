@@ -1,2 +1,8 @@
-src/lexicons
-tests/lexicons
+# @atproto/lex
+/src/lexicons
+# Every lexicon is symlinked from the repo-wide canonical source (see
+# "resolvers" in lexicons.json).
+/lexicons
+
+# legacy (old compiled lexicons schemas location)
+/tests/lexicons

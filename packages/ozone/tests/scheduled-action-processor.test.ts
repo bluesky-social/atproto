@@ -22,7 +22,11 @@ describe('scheduled action processor', () => {
   const scheduleTestAction = async (
     subject: string,
     scheduling: any,
-    emailData?: { emailSubject?: string; emailContent?: string },
+    emailData?: {
+      emailSubject?: string
+      emailContent?: string
+      strikeExpiresAt?: string
+    },
   ) => {
     return await adminAgent.tools.ozone.moderation.scheduleAction(
       {
@@ -81,12 +85,16 @@ describe('scheduled action processor', () => {
       const testSubject = sc.dids.alice
 
       const pastTime = new Date(Date.now() - 1000).toISOString()
+      const strikeExpiresAt = new Date(
+        Date.now() + 365 * 24 * HOUR,
+      ).toISOString()
       await scheduleTestAction(
         testSubject,
         { executeAt: pastTime },
         {
           emailSubject: 'Test Email Subject',
           emailContent: 'Test Email Content',
+          strikeExpiresAt,
         },
       )
 
@@ -119,6 +127,7 @@ describe('scheduled action processor', () => {
       )
 
       expect(takedownEvent?.event['comment']).toBeDefined()
+      expect(takedownEvent?.event['strikeExpiresAt']).toBe(strikeExpiresAt)
 
       expect(emailEvent?.event['subjectLine']).toBe('Test Email Subject')
       expect(emailEvent?.event['content']).toBe('Test Email Content')

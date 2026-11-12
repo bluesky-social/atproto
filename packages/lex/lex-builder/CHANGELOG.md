@@ -1,5 +1,53 @@
 # @atproto/lex-builder
 
+## 0.1.20
+
+### Patch Changes
+
+- Updated dependencies [[`8c841f6`](https://github.com/bluesky-social/atproto/commit/8c841f6e73c8365c2dfe816c0613aa9c50490361)]:
+  - @atproto/lex-schema@0.2.11
+  - @atproto/lex-document@0.1.16
+
+## 0.1.19
+
+### Patch Changes
+
+- Updated dependencies [[`07c25d4`](https://github.com/bluesky-social/atproto/commit/07c25d410d4f4ad8f6ec80fc14efa0dd8ec55545), [`07c25d4`](https://github.com/bluesky-social/atproto/commit/07c25d410d4f4ad8f6ec80fc14efa0dd8ec55545), [`07c25d4`](https://github.com/bluesky-social/atproto/commit/07c25d410d4f4ad8f6ec80fc14efa0dd8ec55545)]:
+  - @atproto/lex-document@0.1.15
+  - @atproto/lex-schema@0.2.10
+
+## 0.1.18
+
+### Patch Changes
+
+- [#5591](https://github.com/bluesky-social/atproto/pull/5591) [`f98b78a`](https://github.com/bluesky-social/atproto/commit/f98b78adbc8963e49823117b007422211f6d3ff2) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add `lex-builder` bin and expose the `yargs` command module from the `./cli` entrypoint
+
+- [#5591](https://github.com/bluesky-social/atproto/pull/5591) [`f98b78a`](https://github.com/bluesky-social/atproto/commit/f98b78adbc8963e49823117b007422211f6d3ff2) Thanks [@matthieusieben](https://github.com/matthieusieben)! - `@atproto/lex-builder` now exports `buildFilter`
+- Updated dependencies [[`f98b78a`](https://github.com/bluesky-social/atproto/commit/f98b78adbc8963e49823117b007422211f6d3ff2)]:
+  - @atproto/lex-schema@0.2.9
+  - @atproto/lex-document@0.1.14
+
+## 0.1.17
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/lex-document@0.1.13
+  - @atproto/lex-schema@0.2.8
+
+## 0.1.16
+
+### Patch Changes
+
+- Updated dependencies [[`210907c`](https://github.com/bluesky-social/atproto/commit/210907c801d281c6b83c92bf94c888b2dc3d531f)]:
+  - @atproto/lex-document@0.1.12
+
+## 0.1.15
+
+### Patch Changes
+
+- [#5488](https://github.com/bluesky-social/atproto/pull/5488) [`fe4087e`](https://github.com/bluesky-social/atproto/commit/fe4087ecb7a7cc53c7081c9f97d49121e5251c36) Thanks [@dependabot](https://github.com/apps/dependabot)! - Bump the dev-dependencies group across 1 directory with 30 updates
+
 ## 0.1.14
 
 ### Patch Changes

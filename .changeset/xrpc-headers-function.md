@@ -1,4 +1,5 @@
 ---
+'@atproto/lex-rpc': patch
 '@atproto/lex-client': patch
 ---
 

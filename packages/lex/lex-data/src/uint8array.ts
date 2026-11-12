@@ -117,8 +117,7 @@ export function ifUint8Array(input: unknown): Uint8Array | undefined {
  * - `ArrayLike` objects (e.g., `number[]`, etc.) - Converted to Uint8Array
  *
  * @param input - The value to convert
- * @returns A Uint8Array
- * @throws If the input cannot be converted to a Uint8Array
+ * @returns A Uint8Array, or `undefined` if the input could not be converted
  *
  * @example
  * ```typescript
@@ -128,11 +127,10 @@ export function ifUint8Array(input: unknown): Uint8Array | undefined {
  * asUint8Array(new ArrayBuffer(4))         // Uint8Array of length 4
  * asUint8Array(new Int16Array([1, 2]))     // Uint8Array view of the buffer
  * asUint8Array([1, 2, 3])                  // Uint8Array([1, 2, 3])
- *
- * asUint8Array('string')                   // throws TypeError
+ * asUint8Array('string')                   // undefined
  * ```
  */
-export function asUint8Array(input: unknown): Uint8Array {
+export function asUint8Array(input: unknown): Uint8Array | undefined {
   // In Node.js, if the input is a NodeJSBuffer, we turn it into an actual
   // Uint8Array to avoid discrepancies between NodeJSBuffer and Uint8Array
   // regarding some operations (e.g., `slice`, `subarray`, etc.).
@@ -157,20 +155,31 @@ export function asUint8Array(input: unknown): Uint8Array {
   }
 
   if (isArrayLike(input)) {
-    const { length } = input as any
+    const { length } = input
     const uint8Array = new Uint8Array(length)
     for (let i = 0; i < length; i++) {
-      const value = input[i] as any
-      if (!(value >= 0 && value <= 255 && Number.isInteger(value))) {
-        throw new TypeError(
-          `Cannot convert array-like value to Uint8Array: element at index ${i} is not a number`,
-        )
-      }
+      const value = input[i]
+      if (!isUint8(value)) return undefined
       uint8Array[i] = value
     }
     return uint8Array
   }
 
+  return undefined
+}
+
+function isUint8(value: unknown): value is number {
+  return (
+    typeof value === 'number' &&
+    value >= 0 &&
+    value <= 255 &&
+    Number.isInteger(value)
+  )
+}
+
+export function toUint8Array(input: unknown): Uint8Array {
+  const bytes = asUint8Array(input)
+  if (bytes) return bytes
   throw new TypeError(`Cannot convert value to Uint8Array: ${String(input)}`)
 }
 
@@ -180,8 +189,18 @@ function isArrayLike(input: unknown): input is ArrayLike<unknown> {
   }
 
   const { length } = input
-  if (!Number.isInteger(length) || (length as number) < 0) {
+  if (
+    typeof length !== 'number' ||
+    length < 0 ||
+    !Number.isSafeInteger(length)
+  ) {
     return false
+  }
+
+  for (let i = 0; i < length; i++) {
+    // Array-like objects must have all indices from 0 to length - 1 defined (no
+    // holes)
+    if (!(i in input)) return false
   }
 
   return true

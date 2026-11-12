@@ -1,0 +1,73 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.video.finishUpload",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Finish an upload. This call is idempotent and safe to retry. On deduplication completedJobId may differ from the input jobId; poll getJobStatus with completedJobId. Probe-based validation failures surface later as JOB_STATE_FAILED from getJobStatus, not as errors from this call.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["jobId"],
+          "properties": {
+            "jobId": { "type": "string", "minLength": 1, "maxLength": 256 }
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["completedJobId", "jobStatus"],
+          "properties": {
+            "completedJobId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256,
+              "description": "The processing job to poll with getJobStatus; on deduplication this may differ from the input jobId."
+            },
+            "jobStatus": {
+              "type": "ref",
+              "ref": "app.bsky.video.defs#jobStatus"
+            }
+          }
+        }
+      },
+      "errors": [
+        {
+          "name": "UploadNotFound",
+          "description": "The job ID is unknown or aged out of retention; known terminal sessions are never reported as not found."
+        },
+        {
+          "name": "UploadExpired",
+          "description": "The upload session expired before finalization began."
+        },
+        {
+          "name": "MissingParts",
+          "description": "Not all parts are recorded; the error message lists the missing part numbers."
+        },
+        {
+          "name": "UploadNotReady",
+          "description": "A finish is in progress; check getUploadStatus and retry."
+        },
+        {
+          "name": "UnsupportedContentType",
+          "description": "The assembled object's detected content type is not supported."
+        },
+        {
+          "name": "UploadFailed",
+          "description": "The session is known to have failed; the error carries its failure reason."
+        },
+        {
+          "name": "UploadAborted",
+          "description": "The session is known to have been aborted."
+        },
+        {
+          "name": "ServiceOverloaded",
+          "description": "The service is draining or temporarily at capacity; retry later."
+        }
+      ]
+    }
+  }
+}

@@ -23,10 +23,7 @@ export default function (server: Server, ctx: AppContext) {
         return
       }
 
-      await ctx.accountManager.updateAccountEmail({
-        did: account.did,
-        email: body.email,
-      })
+      await ctx.accountManager.updateAccountEmail(account.did, body.email)
     },
   })
 }

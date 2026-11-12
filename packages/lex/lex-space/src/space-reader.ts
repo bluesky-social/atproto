@@ -11,8 +11,6 @@ import {
   type NsidString,
   type Procedure,
   type Query,
-  type RecordSchema,
-  type TypedLexMap,
   XrpcAuthenticationError,
   type XrpcOptions,
   type XrpcResponse,
@@ -20,8 +18,19 @@ import {
   buildAgent,
   xrpc,
 } from '@atproto/lex-client'
-import { type Cid, checkCid, isCidForBytes, parseCid } from '@atproto/lex-data'
-import { type RecordKeyValue, type Space, getMain } from '@atproto/lex-schema'
+import {
+  type Cid,
+  type TypedLexMap,
+  checkCid,
+  isCidForBytes,
+  parseCid,
+} from '@atproto/lex-data'
+import {
+  type RecordKeyValue,
+  type RecordSchema,
+  type Space,
+  getMain,
+} from '@atproto/lex-schema'
 import {
   COMMIT_MAC_PROFILE,
   type Encapsulation,

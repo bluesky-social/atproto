@@ -1,0 +1,13 @@
+#!/usr/bin/env node
+
+import yargs from 'yargs'
+import { hideBin } from 'yargs/helpers'
+import { installCommand, updateCommand } from '@atproto/lex-installer/cli'
+
+void yargs(hideBin(process.argv))
+  .command(installCommand)
+  .command(updateCommand)
+  .strict()
+  .strictCommands()
+  .demandCommand(1)
+  .parseAsync()

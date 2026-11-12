@@ -30,7 +30,21 @@ export interface ReadableRepoStorage {
 
 export interface RepoStorage extends ReadableRepoStorage, WritableRepoStorage {}
 
-export interface BlobStore {
+/**
+ * @extends AsyncDisposable Make sure to explicitly dispose of the
+ * {@link BlobStoreCreator}
+ */
+export interface BlobStoreCreator extends AsyncDisposable {
+  // @NOTE For historical reason, the creator is a function. A better
+  // implementation would probably be to use a class interface.
+  (did: string): BlobStore
+}
+
+/**
+ * @extends AsyncDisposable Make sure to explicitly dispose of the
+ * {@link BlobStore}
+ */
+export interface BlobStore extends AsyncDisposable {
   putTemp(
     bytes: Uint8Array | Iterable<Uint8Array> | AsyncIterable<Uint8Array>,
   ): Promise<string>

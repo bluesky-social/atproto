@@ -1,19 +1,35 @@
 import type { TestNetworkNoAppView, TestPds } from '@atproto/dev-env'
-import { type AuthenticatedAgent, Client } from '@atproto/lex-client'
-import { com } from './lexicons/index.js'
+import { type AccountAgent, Client } from '@atproto/lex-client'
+import { l } from '@atproto/lex-schema'
+
+// @NOTE The package only vendors the space lexicons. This is a trimmed mirror
+// of com.atproto.server.createAccount, enough to create the test accounts.
+const createAccount = l.procedure(
+  'com.atproto.server.createAccount',
+  l.params(),
+  l.jsonPayload({
+    handle: l.string({ format: 'handle' }),
+    email: l.optional(l.string()),
+    password: l.optional(l.string()),
+  }),
+  l.jsonPayload({
+    did: l.string({ format: 'did' }),
+    handle: l.string({ format: 'handle' }),
+    accessJwt: l.string(),
+    refreshJwt: l.string(),
+  }),
+)
 
 export async function createUser(
   pds: TestPds,
   handle: `${string}.${string}`,
 ): Promise<Client> {
   const name = handle.split('.')[0]
-  const { did, accessJwt } = await pds
-    .getClient()
-    .call(com.atproto.server.createAccount, {
-      handle,
-      email: `${name}@test.com`,
-      password: `${name}-pass`,
-    })
+  const { did, accessJwt } = await pds.getClient().call(createAccount, {
+    handle,
+    email: `${name}@test.com`,
+    password: `${name}-pass`,
+  })
   return new Client({
     did,
     service: pds.url,
@@ -27,7 +43,7 @@ export async function processNotifications(network: TestNetworkNoAppView) {
   }
 }
 
-export function agentOf(client: Client): AuthenticatedAgent {
+export function agentOf(client: Client): AccountAgent {
   client.assertAuthenticated()
   return client.agent
 }

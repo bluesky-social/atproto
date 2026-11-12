@@ -21,7 +21,7 @@ export function LinkAnchor({
 }: LinkAnchorProps) {
   return (
     <LinkExternal {...props} href={href} rel={rel}>
-      {children}
+      {children ?? <LinkTitle link={link} />}
     </LinkExternal>
   )
 }

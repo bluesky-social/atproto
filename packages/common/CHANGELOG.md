@@ -1,5 +1,73 @@
 # @atproto/common
 
+## 0.8.10
+
+### Patch Changes
+
+- [#5762](https://github.com/bluesky-social/atproto/pull/5762) [`7a46712`](https://github.com/bluesky-social/atproto/commit/7a467120982d9ff1559afeb3a26989dad5877d17) Thanks [@haileyok](https://github.com/haileyok)! - Redact cookie and set-cookie headers in HTTP request and response logs.
+- Updated dependencies [[`ac78dcf`](https://github.com/bluesky-social/atproto/commit/ac78dcf2cba6505f822b6db093a14d489eee1c49)]:
+  - @atproto/lex-cbor@0.1.10
+
+## 0.8.9
+
+### Patch Changes
+
+- Updated dependencies [[`8c841f6`](https://github.com/bluesky-social/atproto/commit/8c841f6e73c8365c2dfe816c0613aa9c50490361), [`8c841f6`](https://github.com/bluesky-social/atproto/commit/8c841f6e73c8365c2dfe816c0613aa9c50490361), [`8c841f6`](https://github.com/bluesky-social/atproto/commit/8c841f6e73c8365c2dfe816c0613aa9c50490361), [`8c841f6`](https://github.com/bluesky-social/atproto/commit/8c841f6e73c8365c2dfe816c0613aa9c50490361)]:
+  - @atproto/lex-data@0.1.10
+  - @atproto/lex-cbor@0.1.9
+  - @atproto/common-web@0.5.17
+
+## 0.8.8
+
+### Patch Changes
+
+- Updated dependencies [[`07c25d4`](https://github.com/bluesky-social/atproto/commit/07c25d410d4f4ad8f6ec80fc14efa0dd8ec55545), [`07c25d4`](https://github.com/bluesky-social/atproto/commit/07c25d410d4f4ad8f6ec80fc14efa0dd8ec55545)]:
+  - @atproto/lex-cbor@0.1.8
+  - @atproto/lex-data@0.1.9
+  - @atproto/common-web@0.5.16
+
+## 0.8.7
+
+### Patch Changes
+
+- [#5753](https://github.com/bluesky-social/atproto/pull/5753) [`3bfd00f`](https://github.com/bluesky-social/atproto/commit/3bfd00f484dc144482c82a4ed248adc49e6be769) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Use dedicated `MaxSizeError` error by default from `MaxSizeChecker`
+
+- [#5753](https://github.com/bluesky-social/atproto/pull/5753) [`3bfd00f`](https://github.com/bluesky-social/atproto/commit/3bfd00f484dc144482c82a4ed248adc49e6be769) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Avoid leaking the `this` context when calling `createError` from `MaxSizeChecker`
+
+- [#5753](https://github.com/bluesky-social/atproto/pull/5753) [`3bfd00f`](https://github.com/bluesky-social/atproto/commit/3bfd00f484dc144482c82a4ed248adc49e6be769) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Mark `MaxSizeChecker` properties as `readonly`
+
+- [#5753](https://github.com/bluesky-social/atproto/pull/5753) [`3bfd00f`](https://github.com/bluesky-social/atproto/commit/3bfd00f484dc144482c82a4ed248adc49e6be769) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add decompression and size limits when decoding streams
+
+## 0.8.6
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/common-web@0.5.15
+
+## 0.8.5
+
+### Patch Changes
+
+- Updated dependencies [[`e8b89ff`](https://github.com/bluesky-social/atproto/commit/e8b89ff4c211a10519b54bd83eb64950035942c3)]:
+  - @atproto/lex-data@0.1.8
+  - @atproto/common-web@0.5.14
+  - @atproto/lex-cbor@0.1.7
+
+## 0.8.4
+
+### Patch Changes
+
+- Updated dependencies [[`5019f55`](https://github.com/bluesky-social/atproto/commit/5019f5537317ee75ad4527db212bc27c3085fe67)]:
+  - @atproto/common-web@0.5.13
+
+## 0.8.3
+
+### Patch Changes
+
+- Updated dependencies [[`fe4087e`](https://github.com/bluesky-social/atproto/commit/fe4087ecb7a7cc53c7081c9f97d49121e5251c36)]:
+  - @atproto/common-web@0.5.12
+
 ## 0.8.2
 
 ### Patch Changes

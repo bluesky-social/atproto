@@ -2,7 +2,7 @@ import { Timestamp } from '@bufbuild/protobuf'
 import type { ServiceImpl } from '@connectrpc/connect'
 import * as ui8 from 'uint8arrays'
 import { keyBy } from '@atproto/common'
-import { l } from '@atproto/lex'
+import { l } from '@atproto/lex-schema'
 import { AtUri } from '@atproto/syntax'
 import { app, chat, com } from '../../../lexicons/index.js'
 import { dataplaneLogger } from '../../../logger.js'
@@ -31,6 +31,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
     app.bsky.notification.declaration,
   ),
   getGermDeclarationRecords: getRecords(db, com.germnetwork.declaration),
+  getProfileLinkRecords: getRecords(db, app.bsky.actor.link),
   getStarterPackRecords: getRecords(db, app.bsky.graph.starterpack),
   getVerificationRecords: getRecords(db, app.bsky.graph.verification),
   getStatusRecords: getRecords(db, app.bsky.actor.status),

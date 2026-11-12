@@ -1,7 +1,7 @@
 #! /usr/bin/env node
 
 import { scheduler } from 'node:timers/promises'
-import { l } from '@atproto/lex'
+import { l } from '@atproto/lex-schema'
 import { LexError, LexRouter } from '@atproto/lex-server'
 import { serve, upgradeWebSocket } from '@atproto/lex-server/nodejs'
 

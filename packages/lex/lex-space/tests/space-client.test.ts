@@ -26,8 +26,8 @@ import {
   delegationTokenProviderFor,
   listSpaces,
 } from '../src/index.js'
+import { com } from '../src/lexicons/index.js'
 import { createUser, processNotifications } from './_util.js'
-import { com } from './lexicons/index.js'
 
 const note = l.record(
   'tid',

@@ -6,7 +6,6 @@ import { Service } from '../proto/bsync_connect.js'
 import { operationAttributes } from '../telemetry/attributes.js'
 import { withRpcServerTelemetry } from '../telemetry/rpc.js'
 import addMuteOperation from './add-mute-operation.js'
-import addNotifOperation from './add-notif-operation.js'
 import deleteOperations from './delete-operations.js'
 import fanoutNotificationSeen from './fanout-notification-seen.js'
 import putOperation from './put-operation.js'
@@ -21,7 +20,6 @@ export default (ctx: AppContext) => (router: ConnectRouter) => {
       {
         ...addMuteOperation(ctx),
         ...scanMuteOperations(ctx),
-        ...addNotifOperation(ctx),
         ...scanNotifOperations(ctx),
         ...putOperation(ctx),
         ...scanOperations(ctx),

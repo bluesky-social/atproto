@@ -19,6 +19,7 @@ import {
 } from '@atproto/xrpc-server'
 import apiRoutes from './api/index.js'
 import * as authRoutes from './auth-routes.js'
+import { createPublicKeyObject } from './auth-verifier.js'
 import * as basicRoutes from './basic-routes.js'
 import {
   type ServerConfig,
@@ -29,6 +30,10 @@ import {
   readEnv,
 } from './config/index.js'
 import { AppContext, type AppContextOptions } from './context.js'
+import {
+  entrywayAttribution,
+  entrywayRateLimitBypass,
+} from './entryway-attribution.js'
 import * as error from './error.js'
 import { KemKeyBackfill } from './kem-key-backfill.js'
 import type { app } from './lexicons.js'
@@ -39,12 +44,13 @@ import compression from './util/compression.js'
 import * as wellKnown from './well-known.js'
 
 export {
+  type KeyObject,
   bearerTokenFromReq,
   createPublicKeyObject,
   createSecretKeyObject,
 } from './auth-verifier.js'
 export * from './config/index.js'
-export { AppContext } from './context.js'
+export { AppContext, type AppContextOptions } from './context.js'
 export { Database } from './db/index.js'
 export { DiskBlobStore } from './disk-blobstore.js'
 export * from './lexicons.js'
@@ -76,10 +82,13 @@ export class PDS implements AsyncDisposable {
     this.app = opts.app
   }
 
-  static async fromEnv(env: ServerEnvironment = readEnv()): Promise<PDS> {
+  static async fromEnv(
+    env: ServerEnvironment = readEnv(),
+    overrides?: Partial<AppContextOptions>,
+  ): Promise<PDS> {
     const cfg = envToCfg(env)
     const secrets = envToSecrets(env)
-    return PDS.create(cfg, secrets)
+    return PDS.create(cfg, secrets, overrides)
   }
 
   /**
@@ -186,7 +195,11 @@ export class PDS implements AsyncDisposable {
 
         return XRPCError.fromError(err)
       },
-      rateLimits: buildRateLimitsConfig(rateLimits, ctx.redisScratch),
+      rateLimits: buildRateLimitsConfig(
+        rateLimits,
+        ctx.redisScratch,
+        cfg.entryway ? entrywayRateLimitBypass : undefined,
+      ),
     })
 
     apiRoutes(server, ctx)
@@ -201,6 +214,15 @@ export class PDS implements AsyncDisposable {
       ...getTrustedIps(cfg),
     ])
     app.use(loggerMiddleware)
+    if (cfg.entryway) {
+      app.use(
+        entrywayAttribution({
+          entrywayDid: cfg.entryway.did,
+          pdsDid: cfg.service.did,
+          key: createPublicKeyObject(cfg.entryway.jwtPublicKeyHex),
+        }),
+      )
+    }
     app.use(compression())
     app.use(authRoutes.createRouter(ctx)) // Before CORS
     app.use(cors({ maxAge: DAY / SECOND }))

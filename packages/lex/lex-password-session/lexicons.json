@@ -1,0 +1,39 @@
+{
+  "version": 2,
+  "resolvers": [
+    {
+      "type": "directory",
+      "path": "../../../lexicons",
+      "include": ["com.atproto.*", "tools.ozone.*"]
+    }
+  ],
+  "lexicons": [
+    "com.atproto.server.createAccount",
+    "com.atproto.server.createSession",
+    "com.atproto.server.deleteSession",
+    "com.atproto.server.getSession",
+    "com.atproto.server.refreshSession"
+  ],
+  "resolutions": {
+    "com.atproto.server.createAccount": {
+      "uri": "file://../../../lexicons/com/atproto/server/createAccount.json",
+      "cid": "bafyreidvhpgnjvbrqu4caqlgzfkieo4ksn4kjksxxvlz4iv3wprlkdaw4e"
+    },
+    "com.atproto.server.createSession": {
+      "uri": "file://../../../lexicons/com/atproto/server/createSession.json",
+      "cid": "bafyreig3p3umilvktnf5cdlzcfcs46pj5qcqb5tg5vqftlskxmqszhop2i"
+    },
+    "com.atproto.server.deleteSession": {
+      "uri": "file://../../../lexicons/com/atproto/server/deleteSession.json",
+      "cid": "bafyreihf7louq2vhkmswy6qeyrixk2fr52olshivc4mtjkm7v447oljfue"
+    },
+    "com.atproto.server.getSession": {
+      "uri": "file://../../../lexicons/com/atproto/server/getSession.json",
+      "cid": "bafyreiemqus6i7fomp2pkzqm5772hr52x354ni6sqrumigqga57kgicy2y"
+    },
+    "com.atproto.server.refreshSession": {
+      "uri": "file://../../../lexicons/com/atproto/server/refreshSession.json",
+      "cid": "bafyreidba6hc2j7iqdon24oq7xjfdko6qru3yxdgtkhrul5a5ntf5cg2fy"
+    }
+  }
+}

@@ -1,5 +1,5 @@
-import type { Main, RecordSchema, Restricted } from '@atproto/lex-client'
-import type { Space } from '@atproto/lex-schema'
+import type { Main, Restricted } from '@atproto/lex-client'
+import type { RecordSchema, Space } from '@atproto/lex-schema'
 
 /** The collections declared by a space type. */
 export type SpaceCollection<S extends Space> = S['collections'][number]

@@ -14,7 +14,7 @@ export async function resolveLoginHint(
 ): Promise<string | undefined> {
   if (hint && isAtprotoDid(hint)) {
     const account = await accountManager.getAccount(hint).then(
-      (result) => result.account,
+      (result) => (result ? result.account : null),
       // Unknown account: fall back to displaying the hint as-is
       () => null,
     )

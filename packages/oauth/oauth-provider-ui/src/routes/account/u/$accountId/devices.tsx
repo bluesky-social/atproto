@@ -1,5 +1,5 @@
 import { Trans, useLingui } from '@lingui/react/macro'
-import { Link, createFileRoute } from '@tanstack/react-router'
+import { createFileRoute } from '@tanstack/react-router'
 import { MonitorSmartphoneIcon } from 'lucide-react'
 import { useMemo } from 'react'
 import type {
@@ -56,19 +56,10 @@ function DevicesPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <p className="text-sm">
+      <p className="text-muted-foreground text-base leading-snug">
         <Trans>
-          Your account is signed in on the devices listed below. If your account
-          was compromised, sign out all devices, change your password, and check
-          your connected{' '}
-          <Link
-            to="/account/u/$accountId/apps"
-            params={{ accountId: account.handle ?? account.did }}
-            className="text-foreground hover:underline"
-          >
-            apps
-          </Link>
-          .
+          Where your account is signed in. Sign out of anything you don't
+          recognize.
         </Trans>
       </p>
 

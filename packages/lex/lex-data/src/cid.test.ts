@@ -1,3 +1,6 @@
+import { base32 } from 'multiformats/bases/base32'
+import { base36 } from 'multiformats/bases/base36'
+import { base58btc } from 'multiformats/bases/base58'
 import { CID } from 'multiformats/cid'
 import { sha256, sha512 } from 'multiformats/hashes/sha2'
 import { describe, expect, it } from 'vitest'
@@ -5,6 +8,7 @@ import { BytesCid, createCustomCid } from './cid-implementation.test.js'
 import {
   CBOR_DATA_CODEC,
   type Cid,
+  MAX_CID_STRING_LENGTH,
   RAW_DATA_CODEC,
   SHA256_HASH_CODE,
   asMultiformatsCID,
@@ -257,6 +261,34 @@ describe(parseCid, () => {
 
   it('throws for invalid CIDs', () => {
     expect(() => parseCid(invalidCidStr)).toThrow()
+  })
+
+  it('parses the longest legitimate CIDs in every supported base', async () => {
+    const digest = await sha512.digest(new TextEncoder().encode('hello world'))
+    const cid = CID.createV1(CBOR_DATA_CODEC, digest)
+    for (const str of [
+      cid.toString(base32),
+      cid.toString(base36),
+      cid.toString(base58btc),
+    ]) {
+      expect(str.length).toBeLessThanOrEqual(MAX_CID_STRING_LENGTH)
+      expect(parseCid(str).equals(cid)).toBe(true)
+    }
+  })
+
+  it('rejects oversized CID strings without decoding them', () => {
+    // base58btc and base36 decoding is quadratic in the input length, so these
+    // would take seconds to decode if the length were not checked first.
+    for (const prefix of ['Qm', 'z', 'k', 'b']) {
+      const str = prefix + 'a'.repeat(200_000)
+      const start = performance.now()
+      expect(() => parseCid(str)).toThrow('CID string too long')
+      expect(parseCidSafe(str)).toBeNull()
+      expect(performance.now() - start).toBeLessThan(100)
+    }
+    expect(() =>
+      parseCid('Qm' + 'a'.repeat(MAX_CID_STRING_LENGTH - 1)),
+    ).toThrow('CID string too long')
   })
 })
 

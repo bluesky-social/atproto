@@ -8,9 +8,11 @@ export default function (server: Server, ctx: AppContext) {
 
   const auth = ctx.authVerifier.authorization({
     scopes: ACCESS_FULL,
+    // OAuth authorization flows are refused for deactivated accounts, so a
+    // client cannot obtain fresh credentials to reactivate an account with.
     authorize: () => {
       throw new ForbiddenError(
-        'OAuth credentials are not supported for this endpoint',
+        'Account reactivation is not available with OAuth credentials. Sign in to your account management page to reactivate.',
       )
     },
   })
