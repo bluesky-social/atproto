@@ -174,13 +174,13 @@ async function setup() {
           }),
         }),
         getAtmosphereBacklinkCounts: ({ targetUris }) => ({
-          results: targetUris.map((targetUri) => ({
-            targetUri,
-            counts:
+          results: targetUris.map((targetUri) => {
+            const counts: Record<string, bigint> =
               targetUri === galleryUri
                 ? { [social.grain.gallery.item.$type]: 27n }
-                : { [site.standard.graph.recommend.$type]: 7n },
-          })),
+                : { [site.standard.graph.recommend.$type]: 7n }
+            return { targetUri, counts }
+          }),
         }),
         getAtmosphereBacklinks: ({ collection, targetUri }) => ({
           backlinks: (backlinks.get(`${targetUri}|${collection}`) ?? []).map(
