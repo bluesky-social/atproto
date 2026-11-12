@@ -51,6 +51,18 @@ type DefRefsOptions = {
 
   includePermissionRpc?: boolean
   includePermissionRepo?: boolean
+
+  /**
+   * Determines whether to include the space type and collections of `space`
+   * permissions when listing lexicon dependencies.
+   */
+  includePermissionSpace?: boolean
+
+  /**
+   * Determines whether to include the collections declared by `space`
+   * definitions when listing lexicon dependencies.
+   */
+  includeScopeCollections?: boolean
 }
 
 function* defRefs(
@@ -82,11 +94,11 @@ function* defRefs(
       }
       return
     case 'array':
-      return yield* defRefs(def.items)
+      return yield* defRefs(def.items, options)
     case 'params':
     case 'object':
       for (const prop of Object.values(def.properties)) {
-        yield* defRefs(prop)
+        yield* defRefs(prop, options)
       }
       return
     case 'union':
@@ -97,29 +109,34 @@ function* defRefs(
       return
     }
     case 'record':
-      yield* defRefs(def.record)
+      yield* defRefs(def.record, options)
       return
     case 'procedure':
       if (def.input?.schema) {
-        yield* defRefs(def.input.schema)
+        yield* defRefs(def.input.schema, options)
       }
     // fallthrough
     case 'query':
       if (def.output?.schema) {
-        yield* defRefs(def.output.schema)
+        yield* defRefs(def.output.schema, options)
       }
     // fallthrough
     case 'subscription':
       if (def.parameters) {
-        yield* defRefs(def.parameters)
+        yield* defRefs(def.parameters, options)
       }
       if ('message' in def && def.message?.schema) {
-        yield* defRefs(def.message.schema)
+        yield* defRefs(def.message.schema, options)
       }
       return
     case 'permission-set':
       for (const permission of def.permissions) {
-        yield* defRefs(permission)
+        yield* defRefs(permission, options)
+      }
+      return
+    case 'space':
+      if (options?.includeScopeCollections) {
+        yield* def.collections
       }
       return
     case 'permission':
@@ -139,9 +156,21 @@ function* defRefs(
             }
           }
         }
+      } else if (def.resource === 'space') {
+        if (options?.includePermissionSpace) {
+          if (typeof def.spaceType === 'string') {
+            yield def.spaceType
+          }
+          if (Array.isArray(def.collection)) {
+            for (const collection of def.collection) {
+              if (typeof collection === 'string') {
+                yield collection
+              }
+            }
+          }
+        }
       }
       return
-    case 'space':
     case 'boolean':
     case 'cid-link':
     case 'token':

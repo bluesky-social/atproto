@@ -1477,6 +1477,9 @@ importers:
       '@atproto/lex-builder':
         specifier: workspace:^
         version: link:../lex-builder
+      '@atproto/lex-installer':
+        specifier: workspace:^
+        version: link:../lex-installer
       '@atproto/oauth-client':
         specifier: workspace:^
         version: link:../../oauth/oauth-client
