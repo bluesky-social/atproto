@@ -13,7 +13,7 @@ import type {
 } from '@atproto/syntax'
 import { compareBytes } from '../bytes.js'
 import { SpaceRepoVerificationError } from '../error.js'
-import { type MacParams, verifyRecordMac } from '../mac.js'
+import { type VerifyMacParams, verifyRecordMac } from '../mac.js'
 import {
   RepoCommit,
   type VerifyCommitParams,
@@ -119,7 +119,7 @@ export async function verifyRepoStarFull(
   return { commit, records: collected }
 }
 
-export type VerifyRecordParams = MacParams & {
+export type VerifyRecordParams = VerifyMacParams & {
   // The uri of the record that was requested.
   uri: SpaceAtUriString
 }

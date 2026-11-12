@@ -5,9 +5,9 @@ import { xrpc } from '@atproto/lex'
 import type { Cid } from '@atproto/lex-data'
 import type { SpacePermissionMatchOperation } from '@atproto/oauth-scopes'
 import {
+  type CreateMacParams,
   MAC_COVERED_HEADER,
   type MacProfile,
-  type MacRequest,
   RepoCommit,
   type SpaceCommit,
   SpaceKemError,
@@ -200,12 +200,6 @@ export function buildCommit(opts: {
   })
 }
 
-// A MAC request, with the shared secret to answer it with.
-export type SpaceMacRequest = {
-  request: MacRequest
-  sharedSecret: Uint8Array
-}
-
 /**
  * Methods that return a commit or record require a MAC when called with a space
  * credential, requested via the `Accept-Signature` header. Returns the request
@@ -221,7 +215,7 @@ export async function getSpaceMacRequest(
     repo: DidString
     profile: MacProfile
   },
-): Promise<SpaceMacRequest | undefined> {
+): Promise<CreateMacParams | undefined> {
   const { req, res, auth, repo, profile } = opts
   appendVary(res, 'Accept-Signature')
 
@@ -239,8 +233,8 @@ export async function getSpaceMacRequest(
     // So that a browser app can read the MAC from a cross-origin response
     res.appendHeader('Access-Control-Expose-Headers', [
       MAC_COVERED_HEADER[profile],
-      'Signature-Input',
-      'Signature',
+      'signature-input',
+      'signature',
     ])
 
     const kemKeypair = await ctx.actorStore.kemKeypair(repo)
@@ -248,7 +242,7 @@ export async function getSpaceMacRequest(
       throw new Error(`Account has no KEM key: ${repo}`)
     }
     return {
-      request,
+      ...request,
       sharedSecret: decapsulate(kemKeypair, request.keyShare),
     }
   } catch (err) {
@@ -276,21 +270,21 @@ export function throwInvalidArchive(err: unknown, errorName: string): never {
 
 // The MAC response headers for a commit, when a MAC was requested.
 export function commitMacHeaders(
-  mac: SpaceMacRequest | undefined,
   commit: SpaceCommit,
+  mac: CreateMacParams | undefined,
 ): Record<string, string> | undefined {
   if (!mac) return undefined
-  return createCommitMacHeaders(mac.request, mac.sharedSecret, commit)
+  return createCommitMacHeaders(commit, mac).headers
 }
 
 // The MAC response headers for a record, when a MAC was requested.
 export function recordMacHeaders(
-  mac: SpaceMacRequest | undefined,
   uri: AtUriString,
   cid: Cid,
+  mac: CreateMacParams | undefined,
 ): Record<string, string> | undefined {
   if (!mac) return undefined
-  return createRecordMacHeaders(mac.request, mac.sharedSecret, uri, cid)
+  return createRecordMacHeaders(uri, cid, mac).headers
 }
 
 /**

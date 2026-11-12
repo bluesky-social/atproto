@@ -25,13 +25,13 @@ import { type RecordKeyValue, type Space, getMain } from '@atproto/lex-schema'
 import {
   COMMIT_MAC_PROFILE,
   type Encapsulation,
-  type MacParams,
   type MacProfile,
   RECORD_MAC_PROFILE,
   RepoCommit,
   type SpaceCommit,
   SpaceMacError,
   SpaceRepoVerificationError,
+  type VerifyMacParams,
   encapsulate,
   formatMacRequest,
   formatRecordPath,
@@ -1015,7 +1015,7 @@ export class SpaceReader<S extends Space = Space> {
     profile: MacProfile,
     options: XrpcOptions<M>,
     refreshKemKey: boolean,
-  ): Promise<{ response: XrpcResponse<M>; mac: MacParams }> {
+  ): Promise<{ response: XrpcResponse<M>; mac: VerifyMacParams }> {
     const didDocument = await this.#resolver.resolve(repo, {
       signal: options.signal,
       noCache: refreshKemKey,

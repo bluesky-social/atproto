@@ -41,11 +41,12 @@ export { type Encapsulation, decapsulate, encapsulate } from './kem.js'
 export { LtHash } from './lthash.js'
 export {
   COMMIT_MAC_PROFILE,
+  type CreateMacParams,
   MAC_COVERED_HEADER,
-  type MacParams,
   type MacProfile,
   type MacRequest,
   RECORD_MAC_PROFILE,
+  type VerifyMacParams,
   createCommitMacHeaders,
   createRecordMacHeaders,
   formatMacRequest,

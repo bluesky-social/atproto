@@ -46,15 +46,16 @@ export async function createSpaceSig({
 }: SpaceSignatureOptions): Promise<SpaceSignature> {
   assertP256DidKey(keypair.did())
 
-  const params: InnerList = [
+  const signatureInput = serializeInnerList([
     CREDENTIAL_COMPONENTS,
     new Map([['tag', SIGNATURE_TAG]]),
-  ]
-  const base = signatureBase(params, [authorization, audience])
-  return {
-    signatureInput: serializeInnerList(params),
-    signature: await keypair.sign(base),
-  }
+  ])
+  const base = signatureBase(
+    CREDENTIAL_COMPONENTS,
+    [authorization, audience],
+    signatureInput,
+  )
+  return { signatureInput, signature: await keypair.sign(base) }
 }
 
 /** Create the authorization, audience, and signature headers for a space request. */
@@ -81,7 +82,7 @@ export async function verifyCredentialSig(
   keyId: DidString,
 ): Promise<void> {
   const values = credentialValues(headers)
-  const { params, signature } = findSignature(
+  const { signatureParams, signature } = findSignature(
     headers['signature-input'],
     headers['signature'],
     {
@@ -94,7 +95,7 @@ export async function verifyCredentialSig(
   )
   assertP256DidKey(keyId)
 
-  const base = signatureBase(params, values)
+  const base = signatureBase(CREDENTIAL_COMPONENTS, values, signatureParams)
   const valid =
     signature.length === 64 &&
     (await verifySignature(keyId, base, signature, {
@@ -154,13 +155,14 @@ export type SignatureRequirements = {
  * `Signature` fields, and check it meets the application's requirements. Labels
  * carry no meaning (RFC 9421 §7.2.5), so the tag is what identifies it. Other
  * parameters, like `created`, are covered by the signature but not interpreted.
+ * Returns the signature with its serialized parameters.
  */
 export function findSignature(
   inputField: string | string[] | null | undefined,
   signatureField: string | string[] | null | undefined,
   required: SignatureRequirements,
   SignatureError: new (message: string, options?: ErrorOptions) => Error,
-): { params: InnerList; signature: Uint8Array } {
+): { signatureParams: string; signature: Uint8Array } {
   if (typeof inputField !== 'string' || typeof signatureField !== 'string') {
     throw new SignatureError('missing or malformed signature headers')
   }
@@ -198,7 +200,7 @@ export function findSignature(
   if (parameters.has('keyid') && parameters.get('keyid') !== required.keyId) {
     throw new SignatureError('signature keyid does not match the expected key')
   }
-  return { params, signature }
+  return { signatureParams: serializeInnerList(params), signature }
 }
 
 /** The members of a `Signature-Input` or `Accept-Signature` field tagged `tag`. */
@@ -238,13 +240,17 @@ export function formatComponents(components: Item[]): string {
 }
 
 /**
- * The signature base (RFC 9421 §2.5) for a signature with parameters `params`.
- * `values` holds the value of each covered component, in order.
+ * The signature base (RFC 9421 §2.5) for a signature covering `components`,
+ * whose values are given in order, under the serialized `signatureParams`.
  */
-export function signatureBase(params: InnerList, values: string[]): Uint8Array {
-  const lines = params[0].map(
+export function signatureBase(
+  components: Item[],
+  values: string[],
+  signatureParams: string,
+): Uint8Array {
+  const lines = components.map(
     (component, i) => `${serializeItem(component)}: ${values[i].trim()}`,
   )
-  lines.push(`"@signature-params": ${serializeInnerList(params)}`)
+  lines.push(`"@signature-params": ${signatureParams}`)
   return utf8(lines.join('\n'))
 }

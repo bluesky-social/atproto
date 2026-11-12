@@ -2,9 +2,9 @@ import type { Cid } from '@atproto/lex-data'
 import type { AtUriString, DidString } from '@atproto/syntax'
 import {
   COMMIT_MAC_PROFILE,
-  type MacParams,
   RECORD_MAC_PROFILE,
   type SpaceCommit,
+  type VerifyMacParams,
   createCommitMacHeaders,
   createRecordMacHeaders,
   formatMacRequest,
@@ -23,12 +23,15 @@ export function commitMacParams(
   commit: SpaceCommit,
   sharedSecret: Uint8Array,
   hostSecret = sharedSecret,
-): MacParams {
+): VerifyMacParams {
   const request = parseMacRequest(
     formatMacRequest(COMMIT_MAC_PROFILE, KEY_SHARE),
     COMMIT_MAC_PROFILE,
   )!
-  const headers = createCommitMacHeaders(request, hostSecret, commit)
+  const { headers } = createCommitMacHeaders(commit, {
+    ...request,
+    sharedSecret: hostSecret,
+  })
   return { keyShare: KEY_SHARE, sharedSecret, headers: new Headers(headers) }
 }
 
@@ -38,11 +41,14 @@ export function recordMacParams(
   cid: Cid,
   sharedSecret: Uint8Array,
   hostSecret = sharedSecret,
-): MacParams {
+): VerifyMacParams {
   const request = parseMacRequest(
     formatMacRequest(RECORD_MAC_PROFILE, KEY_SHARE),
     RECORD_MAC_PROFILE,
   )!
-  const headers = createRecordMacHeaders(request, hostSecret, uri, cid)
+  const { headers } = createRecordMacHeaders(uri, cid, {
+    ...request,
+    sharedSecret: hostSecret,
+  })
   return { keyShare: KEY_SHARE, sharedSecret, headers: new Headers(headers) }
 }

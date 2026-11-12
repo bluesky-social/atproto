@@ -2,7 +2,6 @@ import {
   type BareItem,
   ByteSequence,
   type Dictionary,
-  type InnerList,
   type Item,
   isByteSequence,
   isInnerList,
@@ -62,17 +61,6 @@ function macComponents(profile: MacProfile): Item[] {
   return [[MAC_COVERED_HEADER[profile], new Map([['sf', true]])]]
 }
 
-// The parameters a syncer requests a MAC with.
-function macParams(profile: MacProfile, keyShare: DidString): InnerList {
-  return [
-    macComponents(profile),
-    new Map([
-      ['keyid', keyShare],
-      ['tag', profile],
-    ]),
-  ]
-}
-
 // ---- Requests ----
 
 /**
@@ -84,15 +72,23 @@ export function formatMacRequest(
   profile: MacProfile,
   keyShare: DidString,
 ): string {
-  return `${MAC_LABEL}=${serializeInnerList(macParams(profile, keyShare))}`
+  const signatureParams = serializeInnerList([
+    macComponents(profile),
+    new Map([
+      ['keyid', keyShare],
+      ['tag', profile],
+    ]),
+  ])
+  return `${MAC_LABEL}=${signatureParams}`
 }
 
 /** A MAC request, as the host reads it from `Accept-Signature`. */
 export type MacRequest = {
   label: string
-  // The requested signature parameters, which the host's MAC uses as given.
-  params: InnerList
   keyShare: DidString
+  // The requested signature parameters, serialized. The host's MAC uses them as
+  // given.
+  signatureParams: string
 }
 
 /**
@@ -130,10 +126,18 @@ export function parseMacRequest(
   if (!isValidDid(keyShare)) {
     throw new SpaceMacError('missing or malformed keyid')
   }
-  return { label, params, keyShare }
+  return { label, keyShare, signatureParams: serializeInnerList(params) }
 }
 
 // ---- Responses ----
+
+/**
+ * What a host answers a MAC request with: the request, and the shared secret
+ * decapsulated from its key share.
+ */
+export type CreateMacParams = MacRequest & {
+  sharedSecret: Uint8Array
+}
 
 /**
  * The response headers for a commit: an `Atproto-Space-Commit` header describing
@@ -141,10 +145,9 @@ export function parseMacRequest(
  * `ver=1, repo="did:example:alice", space="at://...", rev="3mwcj3b6uak2f", data=:q3J0...=:`
  */
 export function createCommitMacHeaders(
-  request: MacRequest,
-  sharedSecret: Uint8Array,
   commit: SpaceCommit,
-): Record<string, string> {
+  params: CreateMacParams,
+): { headers: Record<string, string> } {
   const header = serializeDictionary(
     new Map([
       ['ver', [commit.ver, new Map()]],
@@ -154,10 +157,7 @@ export function createCommitMacHeaders(
       ['data', [new ByteSequence(toPaddedBase64(commit.data)), new Map()]],
     ]),
   )
-  return {
-    [MAC_COVERED_HEADER[COMMIT_MAC_PROFILE]]: header,
-    ...createMacSigHeaders(request, sharedSecret, header),
-  }
+  return createMacHeaders(COMMIT_MAC_PROFILE, header, params)
 }
 
 /**
@@ -166,33 +166,38 @@ export function createCommitMacHeaders(
  * `uri="at://...", cid="bafyrei..."`
  */
 export function createRecordMacHeaders(
-  request: MacRequest,
-  sharedSecret: Uint8Array,
   uri: AtUriString,
   cid: Cid,
-): Record<string, string> {
+  params: CreateMacParams,
+): { headers: Record<string, string> } {
   const header = serializeDictionary(
     new Map([
       ['uri', [uri, new Map()]],
       ['cid', [cid.toString(), new Map()]],
     ]),
   )
-  return {
-    [MAC_COVERED_HEADER[RECORD_MAC_PROFILE]]: header,
-    ...createMacSigHeaders(request, sharedSecret, header),
-  }
+  return createMacHeaders(RECORD_MAC_PROFILE, header, params)
 }
 
-// The `Signature-Input` and `Signature` headers for a MAC over the covered header.
-function createMacSigHeaders(
-  { label, params }: MacRequest,
-  sharedSecret: Uint8Array,
+// The covered header, with the `Signature-Input` and `Signature` headers of a MAC
+// over it.
+function createMacHeaders(
+  profile: MacProfile,
   coveredHeader: string,
-): Record<string, string> {
-  const mac = hmacSha256(sharedSecret, signatureBase(params, [coveredHeader]))
+  { label, signatureParams, sharedSecret }: CreateMacParams,
+): { headers: Record<string, string> } {
+  const base = signatureBase(
+    macComponents(profile),
+    [coveredHeader],
+    signatureParams,
+  )
+  const mac = hmacSha256(sharedSecret, base)
   return {
-    'signature-input': `${label}=${serializeInnerList(params)}`,
-    signature: `${label}=:${toPaddedBase64(mac)}:`,
+    headers: {
+      [MAC_COVERED_HEADER[profile]]: coveredHeader,
+      'signature-input': `${label}=${signatureParams}`,
+      signature: `${label}=:${toPaddedBase64(mac)}:`,
+    },
   }
 }
 
@@ -202,7 +207,7 @@ function createMacSigHeaders(
  * What a syncer checks a response's MAC with: the encapsulation the MAC was
  * requested with, and the response's headers.
  */
-export type MacParams = Encapsulation & {
+export type VerifyMacParams = Encapsulation & {
   headers: Headers
 }
 
@@ -210,8 +215,11 @@ export type MacParams = Encapsulation & {
  * Verify a response's MAC, and that the `Atproto-Space-Commit` header it covers
  * describes `commit`.
  */
-export function verifyCommitMac(commit: SpaceCommit, mac: MacParams): void {
-  const fields = verifyMac(COMMIT_MAC_PROFILE, mac)
+export function verifyCommitMac(
+  commit: SpaceCommit,
+  params: VerifyMacParams,
+): void {
+  const fields = verifyMac(COMMIT_MAC_PROFILE, params)
   const data = bareItem(fields, 'data')
   const matches =
     bareItem(fields, 'ver') === commit.ver &&
@@ -233,9 +241,9 @@ export function verifyCommitMac(commit: SpaceCommit, mac: MacParams): void {
 export function verifyRecordMac(
   uri: AtUriString,
   cid: Cid,
-  mac: MacParams,
+  params: VerifyMacParams,
 ): void {
-  const fields = verifyMac(RECORD_MAC_PROFILE, mac)
+  const fields = verifyMac(RECORD_MAC_PROFILE, params)
   if (
     bareItem(fields, 'uri') !== uri ||
     bareItem(fields, 'cid') !== cid.toString()
@@ -247,24 +255,24 @@ export function verifyRecordMac(
 // Check the MAC requested for `profile`, returning the fields of the header it covers.
 function verifyMac(
   profile: MacProfile,
-  { keyShare, sharedSecret, headers }: MacParams,
+  { keyShare, sharedSecret, headers }: VerifyMacParams,
 ): Dictionary {
-  const { params, signature } = findSignature(
+  const components = macComponents(profile)
+  const { signatureParams, signature } = findSignature(
     headers.get('signature-input'),
     headers.get('signature'),
-    {
-      tag: profile,
-      components: macComponents(profile),
-      alg: MAC_ALG,
-      keyId: keyShare,
-    },
+    { tag: profile, components, alg: MAC_ALG, keyId: keyShare },
     SpaceMacError,
   )
 
   const header = MAC_COVERED_HEADER[profile]
   const fields = parseMacField(headers.get(header), header)
   // The `sf` flag covers the header as re-serialized from its parsed form.
-  const base = signatureBase(params, [serializeDictionary(fields)])
+  const base = signatureBase(
+    components,
+    [serializeDictionary(fields)],
+    signatureParams,
+  )
   if (!timingSafeEqual(hmacSha256(sharedSecret, base), signature)) {
     throw new SpaceMacError('MAC does not match')
   }

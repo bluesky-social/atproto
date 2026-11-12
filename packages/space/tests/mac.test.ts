@@ -47,9 +47,10 @@ describe('MAC requests', () => {
 
   it('round-trips a request', () => {
     const header = formatMacRequest(COMMIT_MAC_PROFILE, KEY_SHARE)
-    expect(parseMacRequest(header, COMMIT_MAC_PROFILE)).toMatchObject({
+    expect(parseMacRequest(header, COMMIT_MAC_PROFILE)).toEqual({
       label: 'mac',
       keyShare: KEY_SHARE,
+      signatureParams: header.slice('mac='.length),
     })
   })
 
@@ -129,7 +130,10 @@ describe('commit MAC', () => {
       `sig1=("atproto-space-commit";sf);keyid="${KEY_SHARE}";tag="atproto-space-repo"`,
       COMMIT_MAC_PROFILE,
     )!
-    const headers = createCommitMacHeaders(request, sharedSecret, commit)
+    const { headers } = createCommitMacHeaders(commit, {
+      ...request,
+      sharedSecret,
+    })
 
     const covered = `ver=1, repo="did:example:alice", space="${SPACE}", rev="3kbcq3p7ad400", data=:AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE=:`
     const params = `("atproto-space-commit";sf);keyid="${KEY_SHARE}";tag="atproto-space-repo"`

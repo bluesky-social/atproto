@@ -25,7 +25,7 @@ export default function (server: Server, ctx: AppContext) {
       assertSpaceRead(auth, toSpaceRef(space), repo)
       await assertRepoAvailability(ctx, repo, isSpaceUserOrAdmin(auth, repo))
 
-      const macRequest = await getSpaceMacRequest(ctx, {
+      const mac = await getSpaceMacRequest(ctx, {
         req,
         res,
         auth,
@@ -53,7 +53,7 @@ export default function (server: Server, ctx: AppContext) {
         body: {
           commit,
         },
-        headers: commitMacHeaders(macRequest, commit),
+        headers: commitMacHeaders(commit, mac),
       }
     },
   })

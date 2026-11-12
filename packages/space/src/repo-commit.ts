@@ -7,7 +7,7 @@ import type {
 } from '@atproto/syntax'
 import { SpaceRepoVerificationError } from './error.js'
 import { LtHash } from './lthash.js'
-import { type MacParams, verifyCommitMac } from './mac.js'
+import { type VerifyMacParams, verifyCommitMac } from './mac.js'
 import {
   COMMIT_VERSION,
   type CommitCtx,
@@ -81,7 +81,7 @@ export class RepoCommit {
   }
 }
 
-export type VerifyCommitParams = MacParams & {
+export type VerifyCommitParams = VerifyMacParams & {
   // The space and repo that were requested.
   space: SpaceRefString
   repo: DidString

@@ -18,11 +18,11 @@ import { JoseKey } from '@atproto/oauth-provider/provider'
 import { ReplayManager } from '@atproto/oauth-provider/verifier'
 import {
   COMMIT_MAC_PROFILE,
-  type MacParams,
   type MacProfile,
   RECORD_MAC_PROFILE,
   RepoCommit,
   type SpaceCommit,
+  type VerifyMacParams,
   buildClientAttestation,
   createSpaceSigHeaders,
   encapsulate,
@@ -459,7 +459,7 @@ export class SpaceClient {
  * the latest request's encapsulation and response headers in `lastMac`.
  */
 export class SpaceCredential {
-  lastMac?: MacParams & { profile: MacProfile }
+  lastMac?: VerifyMacParams & { profile: MacProfile }
 
   constructor(
     public credential: string,
@@ -520,7 +520,7 @@ export class SpaceCredential {
   }
 
   /** The encapsulation and response headers of the latest request. */
-  lastMacParams(): MacParams {
+  lastMacParams(): VerifyMacParams {
     if (!this.lastMac) throw new Error('no MAC was requested')
     return this.lastMac
   }

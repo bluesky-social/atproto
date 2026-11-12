@@ -26,7 +26,7 @@ export default function (server: Server, ctx: AppContext) {
       assertSpaceRead(auth, ref, repo)
       await assertRepoAvailability(ctx, repo, isSpaceUserOrAdmin(auth, repo))
 
-      const macRequest = await getSpaceMacRequest(ctx, {
+      const mac = await getSpaceMacRequest(ctx, {
         req,
         res,
         auth,
@@ -53,9 +53,9 @@ export default function (server: Server, ctx: AppContext) {
           value: record.value,
         },
         headers: recordMacHeaders(
-          macRequest,
           uri.toString(),
           parseCid(record.cid, { flavor: 'cbor' }),
+          mac,
         ),
       }
     },
