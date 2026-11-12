@@ -21,7 +21,6 @@ import type {
   UnauthenticatedOutput,
   UserServiceAuthOutput,
 } from '../../../../auth-output.js'
-import { bearerTokenFromReq } from '../../../../auth-verifier.js'
 import type { AppContext } from '../../../../context.js'
 import { events } from '../../../../events.js'
 import { baseNormalizeAndValidate } from '../../../../handle/index.js'
@@ -29,16 +28,13 @@ import { com } from '../../../../lexicons/index.js'
 import { safeResolveDidDoc } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
-  // Like entrywayServiceOptional, but PDS_ENTRYWAY_REQUIRE_SERVICE_AUTH does
-  // not apply yet: the entryway can only start signing createAccount once
-  // PDSes accept a signed call. Enforcement follows once it does.
+  // Behind an entryway, only the entryway calls createAccount, and user service
+  // auth cannot verify its token: that reads the issuer's key from its DID
+  // document, and the entryway's did:web does not resolve.
   const auth: MethodAuthVerifier<
     EntrywayServiceOutput | UserServiceAuthOutput | UnauthenticatedOutput
   > = ctx.cfg.entryway
-    ? (authCtx) =>
-        bearerTokenFromReq(authCtx.req) !== null
-          ? ctx.authVerifier.entrywayService(authCtx)
-          : ctx.authVerifier.unauthenticated(authCtx)
+    ? ctx.authVerifier.entrywayServiceOptional
     : ctx.authVerifier.userServiceAuthOptional
 
   server.add(com.atproto.server.createAccount, {
