@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "Get the authenticated viewer's Atmosphere activity timeline. Groups contain visible activities from the returned page.",
+      "description": "Get the requesting account's Atmosphere activity timeline, pre-grouped for rendering. Requires auth.",
       "parameters": {
         "type": "params",
         "properties": {
@@ -15,11 +15,12 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["feed"],
+          "required": ["feed", "relatedViews"],
           "properties": {
             "cursor": { "type": "string" },
             "feed": {
               "type": "array",
+              "description": "Activities and activity groups, newest first. Groups only contain activities from the same page of results. Clients should ignore entry types they do not recognize.",
               "items": {
                 "type": "union",
                 "refs": [
@@ -28,6 +29,14 @@
                   "#activitySubjectGroup"
                 ]
               }
+            },
+            "relatedViews": {
+              "type": "array",
+              "description": "Reusable views referenced by feed entries. Views shared across entries appear once to avoid duplication. Includes the profile of the actor of every activityItem and activityActorGroup, plus the profiles of at most the newest 3 distinct actors in each activitySubjectGroup and each activityItem's relatedActivity. Ex: for a subject group of 12 recommendations, only the profiles of the 3 newest recommenders are included; clients can fetch the rest with app.bsky.actor.getProfiles. Profiles unavailable to the viewer are omitted.",
+              "items": {
+                "type": "union",
+                "refs": ["app.bsky.actor.defs#profileViewBasic"]
+              }
             }
           }
         }
@@ -35,46 +44,38 @@
     },
     "activityItem": {
       "type": "object",
+      "description": "A single activity with its hydrated subject. Activities whose subject is unavailable to the viewer are omitted from the timeline.",
       "required": ["ref", "collection", "indexedAt", "actor", "subject"],
       "properties": {
         "ref": { "type": "ref", "ref": "com.atproto.repo.strongRef" },
-        "collection": { "type": "string", "format": "nsid" },
-        "indexedAt": { "type": "string", "format": "datetime" },
-        "actor": {
-          "type": "ref",
-          "ref": "app.bsky.actor.defs#profileViewBasic"
+        "collection": {
+          "type": "string",
+          "format": "nsid",
+          "description": "The collection of the activity record. Ex: site.standard.graph.recommend."
         },
+        "indexedAt": { "type": "string", "format": "datetime" },
+        "actor": { "type": "string", "format": "did" },
         "subject": { "type": "ref", "ref": "#activitySubject" },
         "relatedActivity": {
           "type": "array",
-          "description": "All visible activities targeting this item's subject, such as recommendations of a newly published article.",
-          "items": { "type": "ref", "ref": "#activityRef" }
+          "description": "All visible activities targeting this activity's subject, newest first. Ex: recommendations of a newly published article.",
+          "items": { "type": "ref", "ref": "#activityItemRelatedActivity" }
         }
       }
     },
-    "activityRef": {
+    "activityItemRelatedActivity": {
       "type": "object",
-      "description": "An activity attributed to its actor, without a hydrated subject.",
       "required": ["ref", "collection", "indexedAt", "actor"],
       "properties": {
         "ref": { "type": "ref", "ref": "com.atproto.repo.strongRef" },
         "collection": { "type": "string", "format": "nsid" },
         "indexedAt": { "type": "string", "format": "datetime" },
-        "actor": {
-          "type": "ref",
-          "ref": "app.bsky.actor.defs#profileViewBasic"
-        }
+        "actor": { "type": "string", "format": "did" }
       }
-    },
-    "activityRecord": {
-      "ref": { "type": "ref", "ref": "com.atproto.repo.strongRef" },
-      "collection": { "type": "string", "format": "nsid" },
-      "indexedAt": { "type": "string", "format": "datetime" },
-      "record": { "type": "unknown" }
     },
     "activitySubject": {
       "type": "object",
-      "description": "The subject of any activity, grouped or not.",
+      "description": "The hydrated content an activity targets. For activities that create content, such as publishing an article, the subject is the created record itself.",
       "required": ["view"],
       "properties": {
         "view": {
@@ -88,17 +89,20 @@
         },
         "bskyPostRef": {
           "type": "ref",
-          "ref": "com.atproto.repo.strongRef"
+          "ref": "com.atproto.repo.strongRef",
+          "description": "The Bluesky post associated with the subject, as declared by its author. The referenced post may not be available."
         },
         "bskyPostView": {
           "type": "ref",
-          "ref": "app.bsky.feed.defs#postView"
+          "ref": "app.bsky.feed.defs#postView",
+          "description": "The hydrated Bluesky post associated with the subject. Omitted when the post is unavailable to the viewer. May reflect a newer version of the post than the CID in bskyPostRef."
         }
       }
     },
     "activityActorGroup": {
       "type": "object",
-      "required": ["collection", "indexedAt", "actor", "items", "itemRefs"],
+      "description": "Activities by one actor in one collection, such as several articles published by the same author.",
+      "required": ["collection", "indexedAt", "actor", "subjects", "items"],
       "properties": {
         "collection": { "type": "string", "format": "nsid" },
         "indexedAt": {
@@ -106,27 +110,38 @@
           "format": "datetime",
           "description": "When the group's newest activity was indexed."
         },
-        "actor": {
-          "type": "ref",
-          "ref": "app.bsky.actor.defs#profileViewBasic"
-        },
-        "items": {
+        "actor": { "type": "string", "format": "did" },
+        "subjects": {
           "type": "array",
-          "description": "Unique hydrated subjects of the group's activities, newest first. Currently only the newest subject is returned; activities without a hydrated subject are available through itemRefs (e.g. for a 'View all' list).",
+          "description": "Hydrated subjects of the group's activities, newest first. Currently only the newest subject is included; clients can hydrate the rest from the subject URIs in items.",
           "minLength": 1,
           "items": { "type": "ref", "ref": "#activitySubject" }
         },
-        "itemRefs": {
+        "items": {
           "type": "array",
-          "description": "Refs of all available group items, including the hydrated item, in newest-first timeline order.",
+          "description": "All activities in the group, newest first.",
           "minLength": 2,
-          "items": { "type": "ref", "ref": "com.atproto.repo.strongRef" }
+          "items": { "type": "ref", "ref": "#activityActorGroupItem" }
+        }
+      }
+    },
+    "activityActorGroupItem": {
+      "type": "object",
+      "required": ["ref", "indexedAt", "subject"],
+      "properties": {
+        "ref": { "type": "ref", "ref": "com.atproto.repo.strongRef" },
+        "indexedAt": { "type": "string", "format": "datetime" },
+        "subject": {
+          "type": "string",
+          "format": "at-uri",
+          "description": "The content the activity targets. Matches ref.uri for activities that create content."
         }
       }
     },
     "activitySubjectGroup": {
       "type": "object",
-      "required": ["collection", "indexedAt", "subject", "items", "itemRefs"],
+      "description": "Activities by several actors in one collection targeting the same subject, such as several recommendations of one article.",
+      "required": ["collection", "indexedAt", "subject", "items"],
       "properties": {
         "collection": { "type": "string", "format": "nsid" },
         "indexedAt": {
@@ -137,16 +152,19 @@
         "subject": { "type": "ref", "ref": "#activitySubject" },
         "items": {
           "type": "array",
-          "description": "Activities targeting the subject, attributed to their actors, newest first. May be a subset of the group's activities; itemRefs lists all of them.",
-          "minLength": 1,
-          "items": { "type": "ref", "ref": "#activityRef" }
-        },
-        "itemRefs": {
-          "type": "array",
-          "description": "Refs of all available activities in the group, including those in items, in newest-first timeline order.",
+          "description": "All activities in the group, newest first.",
           "minLength": 2,
-          "items": { "type": "ref", "ref": "com.atproto.repo.strongRef" }
+          "items": { "type": "ref", "ref": "#activitySubjectGroupItem" }
         }
+      }
+    },
+    "activitySubjectGroupItem": {
+      "type": "object",
+      "required": ["ref", "indexedAt", "actor"],
+      "properties": {
+        "ref": { "type": "ref", "ref": "com.atproto.repo.strongRef" },
+        "indexedAt": { "type": "string", "format": "datetime" },
+        "actor": { "type": "string", "format": "did" }
       }
     }
   }

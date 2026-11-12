@@ -194,12 +194,12 @@
     },
     "viewArticlePublicationViewerState": {
       "type": "object",
-      "description": "Metadata about the requesting account's relationship with the publication.",
+      "description": "Metadata about the requesting account's relationship with the subject publication. Only has meaningful content for authed requests.",
       "properties": {
         "subscription": {
           "type": "string",
           "format": "at-uri",
-          "description": "The viewer's site.standard.graph.subscription record for this publication, if subscribed."
+          "description": "The requesting account's site.standard.graph.subscription record for this publication, if subscribed."
         }
       }
     },
@@ -328,7 +328,7 @@
         "lastSeenAt": {
           "type": "string",
           "format": "datetime",
-          "description": "The livestream's most recent heartbeat. Clients can compare it with the current time to tell whether a cached view is still live."
+          "description": "When the livestream last reported that it was live. A livestream without endedAt is considered active until two minutes after its last heartbeat; clients can apply the same window to tell whether a cached view is still live."
         }
       }
     }
