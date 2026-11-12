@@ -254,6 +254,8 @@ export type FindReportsForSubjectParams = {
    * The URI of the subject for which to find reports. If not provided, will match repo-level subjects.
    */
   subjectUri?: AtUriString | null
+  /** Conversation containing a message subject, when known. */
+  messageConvoId?: string
   /**
    * The IDs of the reports to include. If not provided, all reports are considered.
    */
@@ -319,6 +321,17 @@ export async function findReportsForSubject(
       const uri = new AtUri(params.subjectUri)
       if (uri.collection === CHAT_MESSAGE_COLLECTION) {
         builder = builder.where('r.subjectMessageId', '=', uri.rkey)
+        if (params.messageConvoId !== undefined) {
+          const convoId = params.messageConvoId
+          builder = convoId
+            ? builder.where('r.subjectConvoId', '=', convoId)
+            : builder.where((eb) =>
+                eb.or([
+                  eb('r.subjectConvoId', 'is', null),
+                  eb('r.subjectConvoId', '=', ''),
+                ]),
+              )
+        }
       } else if (uri.collection === CHAT_CONVO_COLLECTION) {
         builder = builder
           .where('r.subjectConvoId', '=', uri.rkey)
@@ -650,6 +663,7 @@ export type ProcessReportActionParams = {
   subjectDid: DidString
   subjectUri: string | null
   subjectType: string
+  messageConvoId?: string
   eventId: number
   eventType: string
   createdBy: DidString
@@ -745,6 +759,7 @@ export async function processReportAction(
   const matchingReports = await findReportsForSubject(db, {
     subjectDid,
     subjectUri: subjectUri as AtUriString,
+    messageConvoId: params.messageConvoId,
     reportIds: reportAction.ids,
     reportTypes: reportAction.types,
     targetAll: reportAction.all || reportAction.allOwned,

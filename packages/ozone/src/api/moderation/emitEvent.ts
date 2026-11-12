@@ -10,7 +10,11 @@ import type { AppContext } from '../../context.js'
 import { app, com, tools } from '../../lexicons/index.js'
 import { httpLogger } from '../../logger.js'
 import { processReportAction } from '../../mod-service/report.js'
-import { subjectFromInput } from '../../mod-service/subject.js'
+import {
+  CHAT_CONVO_COLLECTION,
+  CHAT_MESSAGE_COLLECTION,
+  subjectFromInput,
+} from '../../mod-service/subject.js'
 import { handleReportUpdate } from '../../report/handle-report-update.js'
 import { getEventActivityMetadata } from '../../report/metadata.js'
 import type { SettingService } from '../../setting/service.js'
@@ -50,6 +54,18 @@ const handleModerationEvent = async ({
     input.body.subject,
     input.body.subjectBlobCids,
   )
+
+  // Ozone dispatches takedown enforcement only for repositories and records.
+  if (subject.isMessage() && (isTakedownEvent || isReverseTakedownEvent)) {
+    throw new InvalidRequestError(
+      'Message takedowns are not supported; apply the action to the account instead',
+    )
+  }
+  if (subject.isMessage() && isLabelEvent) {
+    throw new InvalidRequestError(
+      'Message labels are not supported; apply labels to the account instead',
+    )
+  }
 
   if (input.body.reportAction?.allOwned) {
     if (!subject.isRepo()) {
@@ -292,7 +308,13 @@ const handleModerationEvent = async ({
 
     // Update reports if reportAction was provided
     if (input.body.reportAction) {
-      const subjectUri = subject.isRecord() ? subject.uri : null
+      const subjectUri = subject.isRecord()
+        ? subject.uri
+        : subject.isMessage()
+          ? `at://${subject.did}/${CHAT_MESSAGE_COLLECTION}/${subject.messageId}`
+          : subject.isConvo()
+            ? `at://${subject.did}/${CHAT_CONVO_COLLECTION}/${subject.convoId}`
+            : null
       try {
         await processReportAction({
           inboxStartAt: ctx.cfg.inbox.startAt,
@@ -301,6 +323,7 @@ const handleModerationEvent = async ({
           metadata,
           subjectDid: subject.did,
           subjectUri,
+          messageConvoId: subject.isMessage() ? subject.convoId : undefined,
           subjectType: subject.info().subjectType,
           eventId: result.event.id,
           eventType: event.$type,

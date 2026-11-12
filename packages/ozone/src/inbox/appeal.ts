@@ -15,7 +15,10 @@ import type { DatabaseSchemaType } from '../db/schema/index.js'
 import { jsonb } from '../db/types.js'
 import { tools } from '../lexicons/index.js'
 import type { AppealView } from '../lexicons/tools/ozone/inbox/defs.js'
-import type { ModSubject } from '../mod-service/subject.js'
+import {
+  CHAT_MESSAGE_COLLECTION,
+  type ModSubject,
+} from '../mod-service/subject.js'
 import type { ModerationSubjectStatusRow } from '../mod-service/types.js'
 import { findMatchingQueue, getQueueRoutingNote } from '../queue/service.js'
 import {
@@ -320,7 +323,9 @@ export const resolveAppealAction = async (
  * account.
  */
 export const subjectLabelUri = (subject: ModSubject): UriString =>
-  (subject.info().subjectUri ?? subject.did) as UriString
+  subject.isMessage()
+    ? `at://${subject.did}/${CHAT_MESSAGE_COLLECTION}/${subject.messageId}`
+    : ((subject.info().subjectUri ?? subject.did) as UriString)
 
 /**
  * Whether the subject's appeal history blocks this action.

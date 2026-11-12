@@ -36,12 +36,14 @@ import {
 } from './expiring-tags.js'
 import {
   adjustModerationSubjectStatus,
+  getStatusIdentifierFromEvent,
   getStatusIdentifierFromSubject,
   moderationSubjectStatusQueryBuilder,
 } from './status.js'
 import type { StrikeService, StrikeServiceCreator } from './strike.js'
 import {
   CHAT_CONVO_COLLECTION,
+  CHAT_MESSAGE_COLLECTION,
   type ModSubject,
   type RecordSubject,
   type RepoSubject,
@@ -238,10 +240,14 @@ export class ModerationService {
       // regardless of subjectUri check, we always want to query against subjectDid column since that's indexed
       builder = builder.where('subjectDid', '=', subjectDid)
 
-      // subjectUri or subjectConvoId
+      // Chat subjects use synthetic URIs; their IDs are stored separately.
       if (!includeAllUserRecords) {
-        if (subjectAtUri?.collection === CHAT_CONVO_COLLECTION) {
-          builder = builder.where('subjectConvoId', '=', subjectAtUri.rkey)
+        if (subjectAtUri?.collection === CHAT_MESSAGE_COLLECTION) {
+          builder = builder.where('subjectMessageId', '=', subjectAtUri.rkey)
+        } else if (subjectAtUri?.collection === CHAT_CONVO_COLLECTION) {
+          builder = builder
+            .where('subjectConvoId', '=', subjectAtUri.rkey)
+            .where('subjectMessageId', 'is', null)
         } else if (subjectUri) {
           builder = builder.where('subjectUri', '=', subjectUri)
         } else {
@@ -250,6 +256,7 @@ export class ModerationService {
           builder = builder
             .where('subjectUri', 'is', null)
             .where('subjectConvoId', 'is', null)
+            .where('subjectMessageId', 'is', null)
         }
       }
     } else if (subject) {
@@ -261,10 +268,13 @@ export class ModerationService {
       builder = builder
         .where('subjectUri', 'is', null)
         .where('subjectConvoId', 'is', null)
+        .where('subjectMessageId', 'is', null)
     } else if (subjectType === 'record') {
       builder = builder.where('subjectUri', 'is not', null)
     } else if (subjectType === 'conversation') {
-      builder = builder.where('subjectConvoId', 'is not', null)
+      builder = builder
+        .where('subjectConvoId', 'is not', null)
+        .where('subjectMessageId', 'is', null)
     }
 
     // If subjectType is set to 'account' let that take priority and ignore collections filter
@@ -666,10 +676,7 @@ export class ModerationService {
     let initialStatusId: number | undefined
     if (tools.ozone.moderation.defs.modEventTag.$isTypeOf(event)) {
       initialStatusId = await lockTagSubject(this.db, {
-        ...getStatusIdentifierFromSubject(
-          subjectInfo.subjectUri ?? subjectInfo.subjectDid,
-          subjectInfo.subjectConvoId,
-        ),
+        ...getStatusIdentifierFromEvent(subjectInfo),
         recordCid: subjectInfo.subjectCid,
       })
     }
@@ -1222,11 +1229,13 @@ export class ModerationService {
 
       if (!includeAllUserRecords) {
         if (subjectInfo.convoId) {
-          builder = builder.where(
-            'moderation_subject_status.convoId',
-            '=',
-            subjectInfo.convoId,
-          )
+          builder = builder
+            .where(
+              'moderation_subject_status.convoId',
+              '=',
+              subjectInfo.convoId,
+            )
+            .where('moderation_subject_status.recordPath', '=', '')
         } else if (subjectInfo.recordPath) {
           builder = builder.where(
             'moderation_subject_status.recordPath',
@@ -1246,9 +1255,27 @@ export class ModerationService {
         .where('moderation_subject_status.recordPath', '=', '')
         .where('moderation_subject_status.convoId', '=', '')
     } else if (subjectType === 'record') {
-      builder = builder.where('moderation_subject_status.recordPath', '!=', '')
+      builder = builder
+        .where('moderation_subject_status.recordPath', '!=', '')
+        .where(
+          'moderation_subject_status.recordPath',
+          'not like',
+          `${CHAT_MESSAGE_COLLECTION}/%`,
+        )
     } else if (subjectType === 'conversation') {
-      builder = builder.where('moderation_subject_status.convoId', '!=', '')
+      builder = builder.where((eb) =>
+        eb.or([
+          eb.and([
+            eb('moderation_subject_status.convoId', '!=', ''),
+            eb('moderation_subject_status.recordPath', '=', ''),
+          ]),
+          eb(
+            'moderation_subject_status.recordPath',
+            'like',
+            `${CHAT_MESSAGE_COLLECTION}/%`,
+          ),
+        ]),
+      )
     }
 
     // Only fetch items that belongs to the specified queue when specified
@@ -1527,11 +1554,12 @@ export class ModerationService {
   async getStatus(
     subject: ModSubject,
   ): Promise<ModerationSubjectStatusRow | null> {
+    const identifier = getStatusIdentifierFromEvent(subject.info())
     const result = await this.db.db
       .selectFrom('moderation_subject_status')
-      .where('did', '=', subject.did)
-      .where('recordPath', '=', subject.recordPath ?? '')
-      .where('convoId', '=', subject.convoId ?? '')
+      .where('did', '=', identifier.did)
+      .where('recordPath', '=', identifier.recordPath)
+      .where('convoId', '=', identifier.convoId)
       .selectAll()
       .executeTakeFirst()
     return result ?? null
