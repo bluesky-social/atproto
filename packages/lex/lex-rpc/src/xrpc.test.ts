@@ -334,6 +334,86 @@ describe(xrpc, () => {
     })
   })
 
+  describe('params initializer', () => {
+    const requiredParamsQuery = l.query(
+      'io.example.requiredParams',
+      l.params({ actor: l.string() }),
+      l.jsonPayload({ value: l.string() }),
+    )
+
+    it.each([
+      ['a function', () => ({ limit: 25 })],
+      ['an async function', async () => ({ limit: 25 })],
+    ])('accepts %s returning the params', async (_, params) => {
+      const fetchHandler = vi.fn<FetchHandler>(async () => {
+        return Response.json({ value: 'ok' })
+      })
+
+      await xrpc(fetchHandler, testQuery, { params })
+
+      expect(fetchHandler).toHaveBeenCalledOnce()
+      const [path] = fetchHandler.mock.calls[0]
+      expect(path).toBe('/xrpc/io.example.testQuery?limit=25')
+    })
+
+    it('invokes the function again for every retry', async () => {
+      let attempt = 0
+      const fetchHandler = vi.fn<FetchHandler>(async () => {
+        return attempt < 2
+          ? new Response(null, { status: 503 })
+          : Response.json({ value: 'ok' })
+      })
+
+      await xrpc(fetchHandler, testQuery, {
+        params: async () => ({ limit: ++attempt }),
+        maxRetries: 2,
+        minRetryTimeout: 0,
+        retryHeaders: false,
+      })
+
+      expect(fetchHandler.mock.calls.map(([path]) => path)).toEqual([
+        '/xrpc/io.example.testQuery?limit=1',
+        '/xrpc/io.example.testQuery?limit=2',
+      ])
+    })
+
+    it('fails without a request when the function rejects', async () => {
+      const fetchHandler = vi.fn<FetchHandler>(async () => {
+        return Response.json({ value: 'ok' })
+      })
+      const cause = new Error('no params')
+
+      const result = await xrpcSafe(fetchHandler, testQuery, {
+        params: async () => {
+          throw cause
+        },
+      })
+
+      assert(!result.success)
+      expect(result).toBeInstanceOf(XrpcInternalError)
+      expect(result.cause).toBe(cause)
+      expect(fetchHandler).not.toHaveBeenCalled()
+    })
+
+    it('requires a function to return the required params', async () => {
+      const fetchHandler = vi.fn<FetchHandler>(async () => {
+        return Response.json({ value: 'ok' })
+      })
+
+      await xrpc(fetchHandler, requiredParamsQuery, {
+        params: async () => ({ actor: 'alice' }),
+      })
+      expect(fetchHandler.mock.calls[0][0]).toBe(
+        '/xrpc/io.example.requiredParams?actor=alice',
+      )
+
+      // @ts-expect-error missing required "actor" param
+      xrpc(fetchHandler, requiredParamsQuery, { params: () => ({}) }).catch(
+        () => {},
+      )
+    })
+  })
+
   describe('error handling', () => {
     describe('fetch errors', () => {
       it('throws XrpcFetchError when fetchHandler throws', async () => {
