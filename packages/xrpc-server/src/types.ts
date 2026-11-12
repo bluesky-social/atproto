@@ -3,7 +3,12 @@ import { Readable } from 'node:stream'
 import type { NextFunction, Request, Response } from 'express'
 import { l } from '@atproto/lex-schema'
 import type { ErrorResult, XRPCError } from './errors.js'
-import type { CalcKeyFn, CalcPointsFn, RateLimiterI } from './rate-limiter.js'
+import type {
+  CalcKeyFn,
+  CalcPointsFn,
+  RateLimiterErrorHandler,
+  RateLimiterI,
+} from './rate-limiter.js'
 
 export type Awaitable<T> = T | Promise<T>
 
@@ -144,6 +149,7 @@ export type RateLimiterCreator<T extends HandlerContext = HandlerContext> = <
   calcKey: CalcKeyFn<C>
   calcPoints: CalcPointsFn<C>
   failClosed?: boolean
+  onError?: RateLimiterErrorHandler<C>
 }) => RateLimiterI<C>
 
 export type ServerRateLimitDescription<
@@ -168,6 +174,7 @@ export type RouteRateLimitOpts<C extends HandlerContext = HandlerContext> = {
   points: number
   calcKey?: CalcKeyFn<C>
   calcPoints?: CalcPointsFn<C>
+  failClosed?: boolean
 }
 
 export type RateLimitOpts<C extends HandlerContext = HandlerContext> =

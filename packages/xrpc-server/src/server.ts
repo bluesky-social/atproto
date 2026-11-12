@@ -761,6 +761,12 @@ export class Server {
             calcKey: options.calcKey ?? defaultKey,
             calcPoints: options.calcPoints ?? defaultPoints,
             keyPrefix: `${nsid}-${i}`,
+            // As for global and shared limits: when the store fails (Redis
+            // down, say), log and let the request through unless the route
+            // asks to fail closed.
+            onError: options.failClosed
+              ? undefined
+              : rateLimiterLoggerErrorHandler,
           }),
         ]
       }
