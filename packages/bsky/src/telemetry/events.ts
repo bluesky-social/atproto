@@ -269,14 +269,30 @@ class EventReporter {
     {
       did,
       appPassword,
+      iat,
+      method,
+      userAgent,
+      origin,
       err,
-    }: { did?: string; appPassword?: boolean; err?: unknown } = {},
+    }: {
+      did?: string
+      appPassword?: boolean
+      iat?: number
+      method?: string
+      userAgent?: string
+      origin?: string
+      err?: unknown
+    } = {},
   ) {
     if (verifier === 'entrywaySession') {
       this.#log('auth_verifier_request', {
         verifier,
         did,
         appPassword,
+        iat,
+        method,
+        userAgent,
+        origin,
         success: err === undefined,
         error:
           err === undefined
