@@ -812,6 +812,26 @@ describe('StringSchema', () => {
       const result = schema.safeParse('👨‍👩‍👧‍👦')
       expect(result.success).toBe(true)
     })
+
+    it('accepts surrogate pairs', () => {
+      expect(string().matches('\ud83d\ude00')).toBe(true)
+    })
+
+    it.each([
+      ['a lone high surrogate', 'a\ud83d'],
+      ['a lone low surrogate', '\ude00a'],
+      ['reversed surrogates', '\ude00\ud83d'],
+      ['two high surrogates', '\ud83d\ud83d'],
+    ])('rejects %s', (_, value) => {
+      expect(string().safeParse(value)).toMatchObject({
+        success: false,
+        reason: {
+          issues: [
+            { code: 'custom', message: 'String contains a lone surrogate' },
+          ],
+        },
+      })
+    })
   })
 
   describe('knownValues option', () => {

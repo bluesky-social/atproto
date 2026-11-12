@@ -6,6 +6,7 @@ import {
   DELEGATION_TOKEN_TYP,
   SPACE_CREDENTIAL_TYP,
   SpaceTokenError,
+  buildClientAttestation,
   createClientAttestation,
   createDelegationToken,
   createSpaceCredential,
@@ -359,6 +360,27 @@ describe('space tokens', () => {
         { getSigningKey: getKey(clientKey), aud: SPACE_HOST },
       )
       expect(payload.iss).toBe(CLIENT_ID)
+    })
+
+    it('builds a token for a signer that sets "alg" itself', async () => {
+      const token = buildClientAttestation({
+        clientId: CLIENT_ID,
+        aud: SPACE_HOST,
+      })
+      expect(token.header).toEqual({ typ: CLIENT_ATTESTATION_TYP })
+
+      const header = { alg: clientKey.jwtAlg, ...token.header }
+      const input = [header, token.payload]
+        .map((part) => Buffer.from(JSON.stringify(part)).toString('base64url'))
+        .join('.')
+      const sig = await clientKey.sign(Buffer.from(input))
+      const jwt = `${input}.${Buffer.from(sig).toString('base64url')}`
+
+      const { payload } = await verifySpaceToken('clientAttestation', jwt, {
+        getSigningKey: getKey(clientKey),
+        aud: SPACE_HOST,
+      })
+      expect(payload).toEqual(token.payload)
     })
   })
 

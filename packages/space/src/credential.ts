@@ -1,4 +1,4 @@
-import { type Keypair, randomStr, verifySignature } from '@atproto/crypto'
+import { type Signer, randomStr, verifySignature } from '@atproto/crypto'
 import { fromBase64, toBase64 } from '@atproto/lex-data'
 import {
   type DidString,
@@ -50,6 +50,8 @@ const SPACE_TOKEN_TYPES = {
 } as const
 
 export type SpaceTokenType = keyof typeof SPACE_TOKEN_TYPES
+export type SpaceTokenHeaderTyp =
+  (typeof SPACE_TOKEN_TYPES)[keyof typeof SPACE_TOKEN_TYPES]['typ']
 
 // `sub` is the space URI, or the client_id for a client attestation. `cnf` is
 // always present on the token types that require it.
@@ -66,7 +68,7 @@ export type SpaceTokenPayload<T extends SpaceTokenType = SpaceTokenType> = {
 
 export type SpaceTokenHeader = {
   alg: string
-  typ: string
+  typ: SpaceTokenHeaderTyp
   kid?: string
 }
 
@@ -83,16 +85,16 @@ export async function createDelegationToken(opts: {
   iss: DidString
   sub: SpaceRefString
   aud: string
-  keypair: Keypair
+  keypair: Signer
   expiresInSec?: number
 }): Promise<string> {
   const spec = SPACE_TOKEN_TYPES.delegation
-  return signSpaceToken(
+  const token = buildSpaceToken(
     { typ: spec.typ, kid: spec.kid },
     { iss: opts.iss, sub: opts.sub, aud: opts.aud },
     opts.expiresInSec ?? spec.expiresInSec,
-    opts.keypair,
   )
+  return signSpaceToken(token, opts.keypair)
 }
 
 /** A space authority's grant to read a space, bound to the holder's `keyId`. */
@@ -100,7 +102,7 @@ export async function createSpaceCredential(opts: {
   iss: DidString
   sub: SpaceRefString
   keyId: DidString
-  keypair: Keypair
+  keypair: Signer
   expiresInSec?: number
 }): Promise<string> {
   const spec = SPACE_TOKEN_TYPES.credential
@@ -112,51 +114,89 @@ export async function createSpaceCredential(opts: {
   ) {
     throw new SpaceTokenError('invalid space credential lifetime')
   }
-  return signSpaceToken(
+  const token = buildSpaceToken(
     { typ: spec.typ, kid: spec.kid },
     { iss: opts.iss, sub: opts.sub, cnf: { kid: opts.keyId } },
     expiresInSec,
-    opts.keypair,
   )
+  return signSpaceToken(token, opts.keypair)
+}
+
+export type ClientAttestationOpts = {
+  clientId: string
+  aud: string
+  kid?: string
+  expiresInSec?: number
 }
 
 /**
  * An OAuth client's proof of identity to a space host, signed with a key from the
  * client's JWKS (named by `kid`).
  */
-export async function createClientAttestation(opts: {
-  clientId: string
-  aud: string
-  kid?: string
-  keypair: Keypair
-  expiresInSec?: number
-}): Promise<string> {
+export async function createClientAttestation(
+  opts: ClientAttestationOpts & { keypair: Signer },
+): Promise<string> {
+  return signSpaceToken(buildClientAttestation(opts), opts.keypair)
+}
+
+/** A space token's header (without `alg`) and claims, ready to sign. */
+export type UnsignedSpaceToken = {
+  header: Omit<SpaceTokenHeader, 'alg'>
+  payload: SpaceTokenPayload
+}
+
+/**
+ * Builds a client attestation for any JWT signer, e.g. an `@atproto/jwk`
+ * `Keyset`, which picks the key and sets `alg` itself.
+ * {@link createClientAttestation} signs with a `Signer`.
+ *
+ * @example
+ * ```ts
+ * const { header, payload } = buildClientAttestation({
+ *   clientId,
+ *   aud: spaceHostAud(spaceDid),
+ * })
+ * const jwt = await keyset.createJwt(header, payload)
+ * ```
+ */
+export function buildClientAttestation(
+  opts: ClientAttestationOpts,
+): UnsignedSpaceToken {
   const spec = SPACE_TOKEN_TYPES.clientAttestation
-  return signSpaceToken(
+  return buildSpaceToken(
     { typ: spec.typ, kid: opts.kid },
     { iss: opts.clientId, sub: opts.clientId, aud: opts.aud },
     opts.expiresInSec ?? spec.expiresInSec,
-    opts.keypair,
   )
 }
 
-async function signSpaceToken(
-  header: { typ: string; kid?: string },
+function buildSpaceToken(
+  header: Omit<SpaceTokenHeader, 'alg'>,
   claims: Pick<SpaceTokenPayload, 'iss' | 'sub' | 'aud' | 'cnf'>,
   expiresInSec: number,
-  keypair: Keypair,
-): Promise<string> {
+): UnsignedSpaceToken {
   const iat = Math.floor(Date.now() / 1000)
-  const fullHeader: SpaceTokenHeader = { alg: keypair.jwtAlg, ...header }
-  const payload: SpaceTokenPayload = {
-    ...claims,
-    iat,
-    exp: iat + expiresInSec,
-    jti: randomStr(16, 'hex'),
+  return {
+    header: {
+      typ: header.typ,
+      ...(header.kid ? { kid: header.kid } : undefined),
+    },
+    payload: {
+      ...claims,
+      iat,
+      exp: iat + expiresInSec,
+      jti: randomStr(16, 'hex'),
+    },
   }
+}
 
-  const signingInput = `${jsonToB64Url(fullHeader)}.${jsonToB64Url(payload)}`
-  const sig = await keypair.sign(utf8(signingInput))
+async function signSpaceToken(
+  token: UnsignedSpaceToken,
+  signer: Signer,
+): Promise<string> {
+  const header: SpaceTokenHeader = { alg: signer.jwtAlg, ...token.header }
+  const signingInput = `${jsonToB64Url(header)}.${jsonToB64Url(token.payload)}`
+  const sig = await signer.sign(utf8(signingInput))
   return `${signingInput}.${toBase64(sig, 'base64url')}`
 }
 

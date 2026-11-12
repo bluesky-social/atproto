@@ -1,5 +1,9 @@
 import { z } from 'zod'
-import type { DidDocument, DidService } from './did-document.js'
+import type {
+  DidDocument,
+  DidService,
+  DidVerificationMethod,
+} from './did-document.js'
 import { DidError, InvalidDidError } from './did-error.js'
 import { type DidRefAbsolute, isDidRefAbsolute } from './did-ref.js'
 import type { Did } from './did.js'
@@ -159,6 +163,30 @@ export function extractPdsUrl(document: AtprotoDidDocument): URL {
   return new URL(service.serviceEndpoint)
 }
 
+/**
+ * Extracts the `#atproto_kem` key, used to establish shared secrets with the
+ * account's space repo host.
+ */
+export function extractKemKey<
+  M extends AtprotoIdentityDidMethods = AtprotoIdentityDidMethods,
+>(document: DidDocument<M>): AtprotoKemVerificationMethod<M> {
+  // Ids are unique, so the method with the matching id is the only candidate.
+  const method = document.verificationMethod?.find(
+    isAtprotoKemVerificationMethod<M>,
+    document,
+  )
+
+  if (!method) {
+    throw new DidError(
+      document.id,
+      `Document ${document.id} does not contain a (valid) #atproto_kem key`,
+      'did-verification-method-not-found',
+    )
+  }
+
+  return method
+}
+
 export type AtprotoAka = `at://${string}`
 export function isAtprotoAka(value: string): value is AtprotoAka {
   return value.startsWith('at://')
@@ -193,11 +221,17 @@ export const ATPROTO_VERIFICATION_METHOD_TYPES = Object.freeze([
 ] as const)
 export type SupportedAtprotoVerificationMethodType =
   (typeof ATPROTO_VERIFICATION_METHOD_TYPES)[number]
+export function isAtprotoVerificationMethodType<T>(
+  type: T,
+): type is T & SupportedAtprotoVerificationMethodType {
+  return (ATPROTO_VERIFICATION_METHOD_TYPES as readonly unknown[]).includes(
+    type,
+  )
+}
 
-type VerificationMethod = NonNullable<DidDocument['verificationMethod']>[number]
 export type AtprotoVerificationMethod<
   M extends AtprotoIdentityDidMethods = AtprotoIdentityDidMethods,
-> = Extract<VerificationMethod, object> & {
+> = DidVerificationMethod & {
   id: Identifier<Did<M>, 'atproto'>
   type: SupportedAtprotoVerificationMethodType
   publicKeyMultibase: string
@@ -213,12 +247,49 @@ export function isAtprotoVerificationMethod<
     | NonNullable<DidDocument<M>['verificationMethod']>[number],
 ): method is AtprotoVerificationMethod<M> {
   return (
-    typeof method === 'object' &&
     typeof method?.publicKeyMultibase === 'string' &&
-    (ATPROTO_VERIFICATION_METHOD_TYPES as readonly unknown[]).includes(
-      method.type,
-    ) &&
+    isAtprotoVerificationMethodType(method.type) &&
     matchesIdentifier(this.id, 'atproto', method.id)
+  )
+}
+
+// KEM keys are P-256. Some PLC directory versions render them with the legacy
+// type, whose publicKeyMultibase holds the bare key bytes.
+export const ATPROTO_KEM_VERIFICATION_METHOD_TYPES = Object.freeze([
+  'EcdsaSecp256r1VerificationKey2019',
+  'Multikey',
+] as const)
+export type SupportedAtprotoKemVerificationMethodType =
+  (typeof ATPROTO_KEM_VERIFICATION_METHOD_TYPES)[number]
+export function isAtprotoKemVerificationMethodType<T>(
+  type: T,
+): type is T & SupportedAtprotoKemVerificationMethodType {
+  return (ATPROTO_KEM_VERIFICATION_METHOD_TYPES as readonly unknown[]).includes(
+    type,
+  )
+}
+
+export type AtprotoKemVerificationMethod<
+  M extends AtprotoIdentityDidMethods = AtprotoIdentityDidMethods,
+> = DidVerificationMethod & {
+  id: Identifier<Did<M>, 'atproto_kem'>
+  type: SupportedAtprotoKemVerificationMethodType
+  publicKeyMultibase: string
+}
+
+export function isAtprotoKemVerificationMethod<
+  M extends AtprotoIdentityDidMethods = AtprotoIdentityDidMethods,
+>(
+  this: DidDocument<M>,
+  method:
+    | null
+    | undefined
+    | NonNullable<DidDocument<M>['verificationMethod']>[number],
+): method is AtprotoKemVerificationMethod<M> {
+  return (
+    typeof method?.publicKeyMultibase === 'string' &&
+    isAtprotoKemVerificationMethodType(method.type) &&
+    matchesIdentifier(this.id, 'atproto_kem', method.id)
   )
 }
 

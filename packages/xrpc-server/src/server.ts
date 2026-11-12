@@ -775,7 +775,6 @@ function createErrorMiddleware({
   errorParser = (err) => XRPCError.fromError(err),
 }: Options): ErrorRequestHandler {
   return (err, req, res, next) => {
-    console.error('err', err)
     const nsid = extractUrlNsid(req.originalUrl)
     const xrpcError = errorParser(err)
 

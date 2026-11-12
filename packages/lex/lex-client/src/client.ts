@@ -15,7 +15,7 @@ import type {
   Restricted,
 } from '@atproto/lex-schema'
 import { Procedure, Query, RecordSchema, getMain } from '@atproto/lex-schema'
-import type { Agent, AgentOptions } from './agent.js'
+import type { Agent, AgentOptions, AuthenticatedAgent } from './agent.js'
 import { buildAgent } from './agent.js'
 import type { XrpcFailure } from './errors.js'
 // @NOTE We could use import { com } from "./lexicons/index.js" here, but some
@@ -31,15 +31,10 @@ import listRecords, {
 import putRecord from './lexicons/com/atproto/repo/putRecord.js'
 import uploadBlob from './lexicons/com/atproto/repo/uploadBlob.js'
 import getBlob from './lexicons/com/atproto/sync/getBlob.js'
-import type {
-  XrpcResponse,
-  XrpcResponseBody,
-  XrpcResponseOptions,
-} from './response.js'
+import type { XrpcResponse, XrpcResponseBody } from './response.js'
 import { type BinaryBodyInit, type Service, isService } from './types.js'
 import {
   type RecordKeyOptions,
-  type XrpcRequestHeadersOptions,
   applyDefaults,
   getDefaultRecordKey,
   getLiteralRecordKey,
@@ -57,7 +52,6 @@ import {
 import {
   type XrpcOptions,
   type XrpcRequestParams,
-  type XrpcRequestProcessingOptions,
   xrpc,
   xrpcSafe,
 } from './xrpc.js'
@@ -115,9 +109,35 @@ export {
  * }
  * ```
  */
-export type ClientOptions = XrpcRequestHeadersOptions &
-  Pick<XrpcRequestProcessingOptions, 'validateRequest'> &
-  XrpcResponseOptions
+export type ClientOptions = {
+  /** @see {@link XrpcRequestHeadersOptions.headers} */
+  headers?: HeadersInit
+
+  /** @see {@link XrpcRequestProcessingOptions.validateRequest} */
+  validateRequest?: boolean
+
+  /** @see {@link XrpcResponseOptions.validateResponse} */
+  validateResponse?: boolean
+
+  /** @see {@link XrpcResponseOptions.strictResponseProcessing} */
+  strictResponseProcessing?: boolean
+
+  /** @see {@link XrpcRequestHeadersOptions.labelers} */
+  labelers?: null | Iterable<DidString>
+
+  /** @see {@link XrpcRequestHeadersOptions.appLabelers} */
+  appLabelers?: null | Iterable<DidString>
+
+  /** @see {@link XrpcRequestHeadersOptions.service} */
+  service?: null | Service
+}
+
+// @NOTE When several overloads apply, TypeScript first selects them with the
+// (stricter) subtype relation, which a value only passes against this type if
+// it has the (never present) property. Overloads accepting it are thus only
+// selected with the assignability relation, i.e. after every other overload.
+declare const subtypePassGuard: unique symbol
+type SubtypePassGuard = { readonly [subtypePassGuard]?: never }
 
 export type ActionOptions = {
   /** AbortSignal to cancel the request. */
@@ -475,7 +495,10 @@ export class Client {
    * console.log(client.did)
    * ```
    */
-  public assertAuthenticated(): asserts this is { did: DidString } {
+  public assertAuthenticated(): asserts this is {
+    did: DidString
+    agent: AuthenticatedAgent
+  } {
     if (!this.did) throw new Error('Client is not authenticated')
   }
 
@@ -600,24 +623,33 @@ export class Client {
       combined.appLabelers = (this.constructor as typeof Client).appLabelers
     }
 
-    const optionsHeaders =
-      options.headers != null ? new Headers(options.headers) : null
+    const { headers } = options
+    if (typeof headers === 'function') {
+      // Called for every attempt, so merged lazily. Not knowing its headers
+      // beforehand, it cannot provide a fallback for the "service" option.
+      combined.headers = async () => mergeHeaders(this.headers, await headers())
+    } else {
+      const optionsHeaders = headers != null ? new Headers(headers) : null
 
-    // @NOTE we allow the "service" options to fallback to the "atproto-proxy"
-    // header if it is present in the request-specific headers.
-    if (options.service === undefined && optionsHeaders?.has('atproto-proxy')) {
-      const serviceHeader = optionsHeaders.get('atproto-proxy')?.trim()
-      if (serviceHeader != null && isService(serviceHeader)) {
-        combined.service = serviceHeader
+      // @NOTE we allow the "service" options to fallback to the "atproto-proxy"
+      // header if it is present in the request-specific headers.
+      if (
+        options.service === undefined &&
+        optionsHeaders?.has('atproto-proxy')
+      ) {
+        const serviceHeader = optionsHeaders.get('atproto-proxy')?.trim()
+        if (serviceHeader != null && isService(serviceHeader)) {
+          combined.service = serviceHeader
+        }
       }
-    }
 
-    // Merge the instance-wide headers with the request-specific headers.
-    // Request-specific headers take precedence. This cannot be done in the
-    // applyDefaults step above because headers require special merging logic.
-    combined.headers = optionsHeaders
-      ? mergeHeaders(this.headers, optionsHeaders)
-      : new Headers(this.headers)
+      // Merge the instance-wide headers with the request-specific headers.
+      // Request-specific headers take precedence. This cannot be done in the
+      // applyDefaults step above because headers require special merging logic.
+      combined.headers = optionsHeaders
+        ? mergeHeaders(this.headers, optionsHeaders)
+        : new Headers(this.headers)
+    }
 
     // @NOTE Since the combined options here always contain a defined
     // "service" (even if null), any "atproto-proxy" header in either the
@@ -938,12 +970,25 @@ export class Client {
       : Restricted<'This procedure type requires an "input" argument'>,
   ): Promise<XrpcResponseBody<T>>
   public async call<const T extends Action>(
-    ns: void extends InferActionInput<T>
+    ns: undefined extends InferActionInput<T>
       ? Main<T>
       : Restricted<'This action type requires an "input" argument'>,
   ): Promise<InferActionOutput<T>>
+  // @NOTE Inferring the input and output from the action's own signature, rather
+  // than through InferActionInput / InferActionOutput, lets generic actions
+  // infer their type parameters from the input. Intersecting the input with its
+  // mapped type lowers the priority of the inference from the input, so that
+  // excess properties are still reported (for non-generic actions). A generic
+  // action fails the subtype relation when its input has optional properties
+  // left out, hence the guard on the next overload, which would otherwise be
+  // selected (with the type parameters of the action erased).
+  public async call<I, O>(
+    ns: (client: Client, input: I, options: ActionOptions) => O | Promise<O>,
+    arg: I & { [K in keyof I]: I[K] },
+    options?: ActionOptions,
+  ): Promise<O>
   public async call<const T extends Action | Procedure | Query>(
-    ns: Main<T>,
+    ns: Main<T> & SubtypePassGuard,
     arg: T extends Action
       ? InferActionInput<T>
       : T extends Procedure

@@ -5,17 +5,22 @@ import type {
   NodeWebSocketOptions,
   WebSocketIterable,
 } from '../src/index.ts'
-import { websocket } from '../src/index.ts'
+import { backoffMs, websocket } from '../src/index.ts'
 
 describe('public entrypoint', () => {
   it('exports websocket() as the one way to consume a socket', () => {
     expect(typeof websocket).toBe('function')
   })
 
-  it('offers no close()/terminate() anywhere in the public surface', () => {
+  it('exports the backoff schedule for redials of its own', () => {
+    expect(typeof backoffMs).toBe('function')
+  })
+
+  it('offers no close()/terminate() on the stream', () => {
     // Stopping is one idiom: break/throw on the iteration, or an aborted signal.
-    // Guards against a close-shaped method creeping back onto the generator or
-    // the sender it hands out, giving callers a second, unspecified way to stop.
+    // Guards against a close-shaped method creeping back onto the generator,
+    // giving callers a second, unspecified way to stop. A sender's close() ends
+    // only its connection, leaving what follows to the reconnect policy.
     const gen = websocket('ws://example.invalid', { shouldReconnect: false })
     const names = new Set<string>()
     for (
@@ -31,9 +36,11 @@ describe('public entrypoint', () => {
 
   it('types browser options as a subset of node options', () => {
     expectTypeOf<BrowserWebSocketOptions>().toExtend<NodeWebSocketOptions>()
-    // headers is the one node-only option.
+    // headers and lookup are the node-only options the browser throws on.
     expectTypeOf<NodeWebSocketOptions>().toHaveProperty('headers')
+    expectTypeOf<NodeWebSocketOptions>().toHaveProperty('lookup')
     expectTypeOf<keyof BrowserWebSocketOptions>().not.toExtend<'headers'>()
+    expectTypeOf<keyof BrowserWebSocketOptions>().not.toExtend<'lookup'>()
   })
 
   it('binds dataMode to the yielded type, with all generator type args', () => {

@@ -535,7 +535,7 @@ async function verifyRecordProof(
     throw new Error(`Invalid repo did: ${commit.did}`)
   }
 
-  const signingKey = getDidKeyFromMultibase(key)
+  const signingKey = crypto.formatDidVerificationMethod(key)
   const validSig = await verifyCommitSig(commit, signingKey)
   if (!validSig) {
     throw new Error(`Invalid signature on commit: ${root.toString()}`)
@@ -554,25 +554,4 @@ async function verifyRecordProof(
   }
 
   return { cid, record }
-}
-
-function getDidKeyFromMultibase(key: AtprotoVerificationMethod) {
-  switch (key.type) {
-    case 'EcdsaSecp256r1VerificationKey2019': {
-      const keyBytes = crypto.multibaseToBytes(key.publicKeyMultibase)
-      return crypto.formatDidKey(crypto.P256_JWT_ALG, keyBytes)
-    }
-    case 'EcdsaSecp256k1VerificationKey2019': {
-      const keyBytes = crypto.multibaseToBytes(key.publicKeyMultibase)
-      return crypto.formatDidKey(crypto.SECP256K1_JWT_ALG, keyBytes)
-    }
-    case 'Multikey': {
-      const { jwtAlg, keyBytes } = crypto.parseMultikey(key.publicKeyMultibase)
-      return crypto.formatDidKey(jwtAlg, keyBytes)
-    }
-    default: {
-      // Should never happen
-      throw new Error(`Unsupported verification method type: ${key.type}`)
-    }
-  }
 }
