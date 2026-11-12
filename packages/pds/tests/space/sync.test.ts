@@ -5,17 +5,14 @@ import { TestNetworkNoAppView } from '@atproto/dev-env'
 import { parseCid } from '@atproto/lex-data'
 import { lexParse } from '@atproto/lex-json'
 import {
-  COMMIT_MAC_TYPE,
+  COMMIT_MAC_PROFILE,
   LtHash,
-  MAC_HEADER,
-  RECORD_MAC_TYPE,
+  RECORD_MAC_PROFILE,
   RepoCommit,
   SpaceRepoVerificationError,
-  WANT_MAC_HEADER,
   createSpaceSigHeaders,
   encapsulate,
-  formatWantMacHeader,
-  parseMacHeader,
+  formatMacRequest,
   spaceHostAud,
   verifyCommit,
   verifyRecord,
@@ -110,41 +107,49 @@ describe('space sync', () => {
       expect(rkeys).toEqual([0, 1, 2, 3, 4].map((i) => `atomic-${i}`))
     })
 
-    it('withholds the commit until the oplog is drained to head', async () => {
-      // The commit is the syncer's checkpoint, so handing it out mid-backfill
-      // would let it believe it had caught up.
+    it('carries the current commit on every page', async () => {
+      // Every page carries the repo's current commit, so a syncer compares its
+      // copy against it once it has applied the last page, which has no cursor.
       const space = await sc.createSpace(alice, { members: [dan] })
       for (const i of [0, 1, 2]) {
         await sc.write(dan, space, { rkey: `paged-${i}` })
       }
+      const state = await sc.repoState(dan, space)
 
       const cred = await sc.credentialFor(dan, space)
       const asSyncer = cred.clientFor(dan.pds)
-      const first = await asSyncer.call(com.atproto.space.listRepoOps, {
-        space,
-        repo: dan.did,
-        limit: 1,
-      })
-      expect(first.commit).toBeUndefined()
-      expect(first.cursor).toBeDefined()
-
-      let cursor = first.cursor
-      let commit: unknown
-      const seen = [first.ops[0].rev]
-      for (let i = 0; i < 5 && cursor; i++) {
-        const next = await asSyncer.call(com.atproto.space.listRepoOps, {
+      const local = new RepoCommit()
+      const seen: string[] = []
+      let cursor: string | undefined
+      for (let i = 0; i < 5; i++) {
+        const page = await asSyncer.call(com.atproto.space.listRepoOps, {
           space,
           repo: dan.did,
           cursor,
           limit: 1,
         })
-        if (next.ops[0]) seen.push(next.ops[0].rev)
-        cursor = next.cursor
-        commit = next.commit
+        expect(page.commit.rev).toBe(state?.rev)
+        for (const op of page.ops) {
+          seen.push(op.rev)
+          local.applyOp({
+            collection: op.collection,
+            rkey: op.rkey,
+            cid: op.cid ? parseCid(op.cid) : null,
+            prev: op.prev ? parseCid(op.prev) : null,
+          })
+        }
+        // The first page leaves the syncer's copy behind the commit.
+        if (i === 0) expect(local.matches(page.commit)).toBe(false)
+        cursor = page.cursor
+        if (!cursor) {
+          expect(local.matches(page.commit)).toBe(true)
+          break
+        }
       }
       // Each page advances: paging on a cursor that was ignored would repeat a rev.
+      expect(seen).toHaveLength(3)
       expect(new Set(seen).size).toBe(seen.length)
-      expect(commit).toBeDefined()
+      expect(cursor).toBeUndefined()
     })
 
     it('pages with since and cursor together', async () => {
@@ -497,11 +502,13 @@ describe('space sync', () => {
     it('reports RepoNotFound for an unwritten repo', async () => {
       const space = await sc.createSpace(alice, { members: [carol] })
       const cred = await sc.credentialFor(carol, space)
+      const asSyncer = cred.clientFor(alice.pds)
+      const params = { space, repo: alice.did }
       await expect(
-        cred.clientFor(alice.pds).call(com.atproto.space.getLatestCommit, {
-          space,
-          repo: alice.did,
-        }),
+        asSyncer.call(com.atproto.space.getLatestCommit, params),
+      ).rejects.toMatchObject({ error: 'RepoNotFound' })
+      await expect(
+        asSyncer.call(com.atproto.space.listRepoOps, params),
       ).rejects.toMatchObject({ error: 'RepoNotFound' })
     })
   })
@@ -538,7 +545,7 @@ describe('space sync', () => {
           collection: TEST_COLLECTION,
           rkey: 'maced',
         })
-      expect(cred.lastMac?.type).toBe(RECORD_MAC_TYPE)
+      expect(cred.lastMac?.profile).toBe(RECORD_MAC_PROFILE)
       const uri = `${space}/${bob.did}/${TEST_COLLECTION}/maced`
       const params = {
         uri: uri as SpaceAtUriString,
@@ -552,7 +559,7 @@ describe('space sync', () => {
       )
     })
 
-    it('omits the MAC from an oplog page without a commit', async () => {
+    it('macs every oplog page', async () => {
       const space = await sc.createSpace(alice, { members: [bob] })
       await sc.write(bob, space, { rkey: 'page-0' })
       await sc.write(bob, space, { rkey: 'page-1' })
@@ -565,8 +572,10 @@ describe('space sync', () => {
           repo: bob.did,
           limit: 1,
         })
-      expect(page.commit).toBeUndefined()
-      expect(cred.lastMac?.header).toBeNull()
+      expect(page.cursor).toBeDefined()
+      expect(() =>
+        cred.verifyCommit(page.commit, { space, repo: bob.did }),
+      ).not.toThrow()
     })
 
     it('requires a MAC request with a space credential', async () => {
@@ -585,22 +594,24 @@ describe('space sync', () => {
       expect(missing.status).toBe(400)
       expect(await missing.json()).toMatchObject({ error: 'InvalidSpaceMac' })
 
-      // A record MAC type on a method that returns a commit.
+      // A record MAC profile on a method that returns a commit.
       const { keyShare } = await encapsulate(await cred.resolveKemKey(bob.did))
-      const wrongType = await fetch(getLatestCommitUrl(bob, space), {
+      const wrongProfile = await fetch(getLatestCommitUrl(bob, space), {
         headers: {
           ...sigHeaders,
-          [WANT_MAC_HEADER]: formatWantMacHeader(RECORD_MAC_TYPE, keyShare),
+          'accept-signature': formatMacRequest(RECORD_MAC_PROFILE, keyShare),
         },
       })
-      expect(wrongType.status).toBe(400)
-      expect(await wrongType.json()).toMatchObject({ error: 'InvalidSpaceMac' })
+      expect(wrongProfile.status).toBe(400)
+      expect(await wrongProfile.json()).toMatchObject({
+        error: 'InvalidSpaceMac',
+      })
 
       const badKey = await fetch(getLatestCommitUrl(bob, space), {
         headers: {
           ...sigHeaders,
-          [WANT_MAC_HEADER]: formatWantMacHeader(
-            COMMIT_MAC_TYPE,
+          'accept-signature': formatMacRequest(
+            COMMIT_MAC_PROFILE,
             'did:key:nope',
           ),
         },
@@ -617,28 +628,43 @@ describe('space sync', () => {
         headers: bob.headers,
       })
       expect(unasked.status).toBe(200)
-      expect(unasked.headers.get(MAC_HEADER)).toBeNull()
-      expect(unasked.headers.get('vary')).toMatch(/atproto-space-want-mac/i)
+      expect(unasked.headers.get('signature')).toBeNull()
+      expect(unasked.headers.get('vary')).toMatch(/accept-signature/i)
+
+      // A request for some other kind of signature is ignored, not refused.
+      const otherTag = await fetch(getLatestCommitUrl(bob, space), {
+        headers: {
+          ...bob.headers,
+          'accept-signature': 'other=("@status");tag="other"',
+        },
+      })
+      expect(otherTag.status).toBe(200)
+      expect(otherTag.headers.get('signature')).toBeNull()
 
       const cred = await sc.credentialFor(bob, space)
-      const { keyShare, sharedSecret } = await encapsulate(
-        await cred.resolveKemKey(bob.did),
-      )
+      const encapsulation = await encapsulate(await cred.resolveKemKey(bob.did))
       const asked = await fetch(getLatestCommitUrl(bob, space), {
         headers: {
           ...bob.headers,
-          [WANT_MAC_HEADER]: formatWantMacHeader(COMMIT_MAC_TYPE, keyShare),
+          'accept-signature': formatMacRequest(
+            COMMIT_MAC_PROFILE,
+            encapsulation.keyShare,
+          ),
         },
       })
       expect(asked.status).toBe(200)
-      expect(asked.headers.get('access-control-expose-headers')).toMatch(
-        /atproto-space-mac/i,
-      )
-      const mac = parseMacHeader(asked.headers.get(MAC_HEADER), COMMIT_MAC_TYPE)
+      const exposed = asked.headers.get('access-control-expose-headers')
+      expect(exposed).toMatch(/atproto-space-commit/i)
+      expect(exposed).toMatch(/signature-input/i)
       const body = lexParse(await asked.text()) as { commit: unknown }
       const commit = com.atproto.space.defs.commit.$parse(body.commit)
       expect(() =>
-        verifyCommit(commit, { space, repo: bob.did, sharedSecret, mac }),
+        verifyCommit(commit, {
+          space,
+          repo: bob.did,
+          ...encapsulation,
+          headers: asked.headers,
+        }),
       ).not.toThrow()
     })
   })

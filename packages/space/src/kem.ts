@@ -17,7 +17,8 @@ import { SpaceKemError } from './error.js'
  */
 
 export type Encapsulation = {
-  // The syncer's ephemeral public key as a did:key, sent in the request header.
+  // The syncer's ephemeral public key as a did:key, sent as the `keyid` of its
+  // MAC request.
   keyShare: DidString
   sharedSecret: Uint8Array
 }

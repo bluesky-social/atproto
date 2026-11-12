@@ -23,19 +23,18 @@ import {
 import { type Cid, checkCid, isCidForBytes, parseCid } from '@atproto/lex-data'
 import { type RecordKeyValue, type Space, getMain } from '@atproto/lex-schema'
 import {
-  COMMIT_MAC_TYPE,
-  MAC_HEADER,
-  type MacType,
-  RECORD_MAC_TYPE,
+  COMMIT_MAC_PROFILE,
+  type Encapsulation,
+  type MacProfile,
+  RECORD_MAC_PROFILE,
   RepoCommit,
   type SpaceCommit,
   SpaceMacError,
   SpaceRepoVerificationError,
-  WANT_MAC_HEADER,
+  type VerifyMacParams,
   encapsulate,
+  formatMacRequest,
   formatRecordPath,
-  formatWantMacHeader,
-  parseMacHeader,
   verifyCommit,
   verifyRecord,
   verifyRepoStar,
@@ -476,11 +475,11 @@ export class SpaceReader<S extends Space = Space> {
       const { response, mac } = await this.#withMac(
         repo,
         getRecord,
-        RECORD_MAC_TYPE,
+        RECORD_MAC_PROFILE,
         { ...options, params },
         kem,
       )
-      await verifyRecord(response.body, { ...requireMac(mac), uri })
+      await verifyRecord(response.body, { ...mac, uri })
       return response
     })
   }
@@ -504,11 +503,11 @@ export class SpaceReader<S extends Space = Space> {
         const { response, mac } = await this.#withMac(
           repo,
           getLatestCommit,
-          COMMIT_MAC_TYPE,
+          COMMIT_MAC_PROFILE,
           { ...options, params },
           kem,
         )
-        verifyCommit(response.body.commit, { ...params, ...requireMac(mac) })
+        verifyCommit(response.body.commit, { ...params, ...mac })
         return response
       },
     )
@@ -531,18 +530,19 @@ export class SpaceReader<S extends Space = Space> {
       const { response, mac } = await this.#withMac(
         repo,
         getRepo,
-        COMMIT_MAC_TYPE,
+        COMMIT_MAC_PROFILE,
         { ...options, params },
         kem,
       )
       // @TODO Stream the archive, once lex-client can stream response bodies
-      return verifyRepoStar([response.body], { ...params, ...requireMac(mac) })
+      return verifyRepoStar([response.body], { ...params, ...mac })
     })
   }
 
   /**
-   * Lists a page of a repo's operation log. The commit of the final page is
-   * verified against the MAC its host computed for the request.
+   * Lists a page of a repo's operation log. The repo's current commit, included
+   * with every page, is verified against the MAC its host computed for the
+   * request.
    *
    * @see {@link syncRepo} to apply the operations to a known state.
    * @throws {SpaceRepoVerificationError} if the commit fails verification
@@ -571,15 +571,11 @@ export class SpaceReader<S extends Space = Space> {
         const { response, mac } = await this.#withMac(
           repo,
           listRepoOps,
-          COMMIT_MAC_TYPE,
+          COMMIT_MAC_PROFILE,
           { ...options, params },
           kem,
         )
-        // Only the final page carries a commit, and thus a MAC.
-        const { commit } = response.body
-        if (commit) {
-          verifyCommit(commit, { space: this.uri, repo, ...requireMac(mac) })
-        }
+        verifyCommit(response.body.commit, { space: this.uri, repo, ...mac })
         return response
       },
     )
@@ -602,7 +598,7 @@ export class SpaceReader<S extends Space = Space> {
     const repoCommit = RepoCommit.fromState(head.state)
     const changes = new Map<string, SpaceReader.RecordChange>()
 
-    let commit: SpaceCommit | undefined
+    let commit: SpaceCommit
     let cursor: string | undefined
     let rev = head.rev
     do {
@@ -652,13 +648,12 @@ export class SpaceReader<S extends Space = Space> {
         })
       }
 
+      // Every page carries the repo's current commit. The last page's is checked
+      // against the state once all the operations are applied.
       commit = body.commit
       cursor = body.cursor
     } while (cursor)
 
-    if (!commit) {
-      throw new RepoGapError(`Repo ${repo} operation log ended without commit`)
-    }
     if (!repoCommit.matches(commit)) {
       throw new RepoGapError(`Repo ${repo} diverged from its commit`)
     }
@@ -1009,20 +1004,18 @@ export class SpaceReader<S extends Space = Space> {
   }
 
   /**
-   * Makes a request to a member's PDS asking for a MAC, using a new key share
-   * (derived from the member's `#atproto_kem` key) for every attempt, retries
-   * included.
+   * Makes a request to a member's PDS asking for a MAC (with `Accept-Signature`),
+   * using a new key share (derived from the member's `#atproto_kem` key) for
+   * every attempt, retries included. Returns what the response's MAC is
+   * verified with.
    */
   async #withMac<const M extends Query>(
     repo: DidString,
     ns: Main<M>,
-    type: MacType,
+    profile: MacProfile,
     options: XrpcOptions<M>,
     refreshKemKey: boolean,
-  ): Promise<{
-    response: XrpcResponse<M>
-    mac?: { sharedSecret: Uint8Array; mac: Uint8Array }
-  }> {
+  ): Promise<{ response: XrpcResponse<M>; mac: VerifyMacParams }> {
     const didDocument = await this.#resolver.resolve(repo, {
       signal: options.signal,
       noCache: refreshKemKey,
@@ -1030,7 +1023,7 @@ export class SpaceReader<S extends Space = Space> {
     const kemKey = formatDidVerificationMethod(extractKemKey(didDocument))
 
     const { headers: headersInit } = options
-    let sharedSecret!: Uint8Array
+    let encapsulation!: Encapsulation
     const response = await this.repoXrpc(repo, ns, {
       ...options,
       // The encapsulated key can only be used once, even on retries, so we
@@ -1041,23 +1034,18 @@ export class SpaceReader<S extends Space = Space> {
           typeof headersInit === 'function' ? await headersInit() : headersInit,
         )
         options.signal?.throwIfAborted?.()
-        const encapsulation = await encapsulate(kemKey)
+        encapsulation = await encapsulate(kemKey)
         options.signal?.throwIfAborted?.()
-        sharedSecret = encapsulation.sharedSecret
         headers.set(
-          WANT_MAC_HEADER,
-          formatWantMacHeader(type, encapsulation.keyShare),
+          'accept-signature',
+          formatMacRequest(profile, encapsulation.keyShare),
         )
         return headers
       },
     } as XrpcOptions<M>)
 
-    const header = response.headers.get(MAC_HEADER)
-    if (header == null) return { response }
-    return {
-      response,
-      mac: { sharedSecret, mac: parseMacHeader(header, type) },
-    }
+    // A missing MAC fails verification, like an invalid one.
+    return { response, mac: { ...encapsulation, headers: response.headers } }
   }
 
   /**
@@ -1082,11 +1070,6 @@ export class SpaceReader<S extends Space = Space> {
       throw new SpaceRepoVerificationError(message, { cause: err })
     }
   }
-}
-
-function requireMac<T>(mac: T | undefined): T {
-  if (!mac) throw new SpaceMacError('missing MAC')
-  return mac
 }
 
 function isVerificationError(err: unknown): boolean {

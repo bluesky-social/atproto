@@ -17,18 +17,16 @@ import { type LexMap, parseCid } from '@atproto/lex-data'
 import { JoseKey } from '@atproto/oauth-provider/provider'
 import { ReplayManager } from '@atproto/oauth-provider/verifier'
 import {
-  COMMIT_MAC_TYPE,
-  MAC_HEADER,
-  type MacType,
-  RECORD_MAC_TYPE,
+  COMMIT_MAC_PROFILE,
+  type MacProfile,
+  RECORD_MAC_PROFILE,
   RepoCommit,
   type SpaceCommit,
-  WANT_MAC_HEADER,
+  type VerifyMacParams,
   buildClientAttestation,
   createSpaceSigHeaders,
   encapsulate,
-  formatWantMacHeader,
-  parseMacHeader,
+  formatMacRequest,
   verifyCommit,
 } from '@atproto/space'
 import {
@@ -43,11 +41,11 @@ import { ClientAttestationVerifier } from '../src/client-attestation-verifier.js
 import { com } from '../src/lexicons/index.js'
 
 // The methods whose responses a repo host authenticates with a MAC.
-const MAC_TYPE_BY_METHOD: Record<string, MacType> = {
-  [com.atproto.space.getLatestCommit.$lxm]: COMMIT_MAC_TYPE,
-  [com.atproto.space.getRepo.$lxm]: COMMIT_MAC_TYPE,
-  [com.atproto.space.listRepoOps.$lxm]: COMMIT_MAC_TYPE,
-  [com.atproto.space.getRecord.$lxm]: RECORD_MAC_TYPE,
+const MAC_PROFILE_BY_METHOD: Record<string, MacProfile> = {
+  [com.atproto.space.getLatestCommit.$lxm]: COMMIT_MAC_PROFILE,
+  [com.atproto.space.getRepo.$lxm]: COMMIT_MAC_PROFILE,
+  [com.atproto.space.listRepoOps.$lxm]: COMMIT_MAC_PROFILE,
+  [com.atproto.space.getRecord.$lxm]: RECORD_MAC_PROFILE,
 }
 
 // Third-party collections, as a space's are in practice. The PDS validates
@@ -461,10 +459,10 @@ export class SpaceClient {
  * A space credential and its signing key, with audience DIDs derived from requests.
  *
  * Requests a MAC from the methods that require one, as a syncer would, and keeps
- * the latest request's shared secret and response MAC in `lastMac`.
+ * the latest request's encapsulation and response headers in `lastMac`.
  */
 export class SpaceCredential {
-  lastMac?: { type: MacType; sharedSecret: Uint8Array; header: string | null }
+  lastMac?: VerifyMacParams & { profile: MacProfile }
 
   constructor(
     public credential: string,
@@ -498,21 +496,22 @@ export class SpaceCredential {
       request.headers.set(name, value)
     }
 
-    const macType =
-      MAC_TYPE_BY_METHOD[new URL(request.url).pathname.replace(/^\/xrpc\//, '')]
-    if (!macType || request.headers.has(WANT_MAC_HEADER)) {
+    const profile =
+      MAC_PROFILE_BY_METHOD[
+        new URL(request.url).pathname.replace(/^\/xrpc\//, '')
+      ]
+    if (!profile || request.headers.has('accept-signature')) {
       return globalThis.fetch(request)
     }
-    const { keyShare, sharedSecret } = await encapsulate(
+    const encapsulation = await encapsulate(
       await this.resolveKemKey(params.repo),
     )
-    request.headers.set(WANT_MAC_HEADER, formatWantMacHeader(macType, keyShare))
+    request.headers.set(
+      'accept-signature',
+      formatMacRequest(profile, encapsulation.keyShare),
+    )
     const response = await globalThis.fetch(request)
-    this.lastMac = {
-      type: macType,
-      sharedSecret,
-      header: response.headers.get(MAC_HEADER),
-    }
+    this.lastMac = { ...encapsulation, headers: response.headers, profile }
     return response
   }
 
@@ -523,11 +522,10 @@ export class SpaceCredential {
     return `did:key:${kemKey.publicKeyMultibase}`
   }
 
-  /** The shared secret and response MAC of the latest request. */
-  lastMacParams(): { sharedSecret: Uint8Array; mac: Uint8Array } {
+  /** The encapsulation and response headers of the latest request. */
+  lastMacParams(): VerifyMacParams {
     if (!this.lastMac) throw new Error('no MAC was requested')
-    const { type, sharedSecret, header } = this.lastMac
-    return { sharedSecret, mac: parseMacHeader(header, type) }
+    return this.lastMac
   }
 
   /** Verify a commit against the MAC from the latest request. */
