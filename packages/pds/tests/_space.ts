@@ -14,6 +14,7 @@ import {
 import type { IdResolver } from '@atproto/identity'
 import { Client, type DidString } from '@atproto/lex'
 import { type LexMap, parseCid } from '@atproto/lex-data'
+import type { l } from '@atproto/lex-schema'
 import { JoseKey } from '@atproto/oauth-provider/provider'
 import { ReplayManager } from '@atproto/oauth-provider/verifier'
 import {
@@ -92,6 +93,27 @@ export type WriteOptions = {
   validate?: boolean
   /** Authenticate as something other than the actor's own session. */
   headers?: { authorization: string }
+}
+
+/** A writer set entry: a repo's latest write, or its removal. */
+export type ListedWriter =
+  | l.$Typed<com.atproto.space.defs.RepoWrite>
+  | l.$Typed<com.atproto.space.defs.RepoRemoved>
+
+/**
+ * The entries of a `listWriters` page. Their union is open, so this checks that
+ * each is of a known kind.
+ */
+export function listedWriters(page: {
+  repos: readonly { $type: string }[]
+}): ListedWriter[] {
+  const { repoWrite, repoRemoved } = com.atproto.space.defs
+  return page.repos.map((entry) => {
+    if (repoWrite.$isTypeOf(entry) || repoRemoved.$isTypeOf(entry)) {
+      return entry as ListedWriter
+    }
+    throw new Error(`Unexpected writer set entry: ${entry.$type}`)
+  })
 }
 
 /**
@@ -421,7 +443,7 @@ export class SpaceClient {
       .clientFor(this.authority)
       .call(com.atproto.space.listWriters, { space })
     const writers = res.repos.filter((r) =>
-      com.atproto.space.defs.repoWrite.$isTypeOf(r.latest),
+      com.atproto.space.defs.repoWrite.$isTypeOf(r),
     )
     expect(writers.map((r) => r.repo).sort()).toEqual(
       expected.map((a) => a.did).sort(),

@@ -23,16 +23,19 @@ export default function (server: Server, ctx: AppContext) {
         encoding: 'application/json',
         body: {
           cursor: writers.at(-1)?.spaceRev,
-          repos: writers.map((writer) => ({
-            repo: writer.did,
-            latest: writer.removedAt
-              ? com.atproto.space.defs.repoRemoved.$build({})
+          repos: writers.map((writer) =>
+            writer.removedAt
+              ? com.atproto.space.defs.repoRemoved.$build({
+                  repo: writer.did,
+                  spaceRev: writer.spaceRev,
+                })
               : com.atproto.space.defs.repoWrite.$build({
-                  rev: writer.repoRev,
+                  repo: writer.did,
+                  repoRev: writer.repoRev,
                   data: writer.data,
+                  spaceRev: writer.spaceRev,
                 }),
-            spaceRev: writer.spaceRev,
-          })),
+          ),
         },
       }
     },

@@ -26,6 +26,7 @@ import {
   parseCid,
 } from '@atproto/lex-data'
 import {
+  type $Typed,
   type RecordKeyValue,
   type RecordSchema,
   type Space,
@@ -56,6 +57,12 @@ import {
 import { createDidResolver } from '@atproto-labs/did-resolver'
 import type { AtprotoDidResolver } from './atproto-did-resolver.js'
 import { RepoGapError } from './errors.js'
+import {
+  type RepoRemoved,
+  type RepoWrite,
+  repoRemoved,
+  repoWrite,
+} from './lexicons/com/atproto/space/defs.js'
 import getBlob from './lexicons/com/atproto/space/getBlob.js'
 import getLatestCommit from './lexicons/com/atproto/space/getLatestCommit.js'
 import getRecord from './lexicons/com/atproto/space/getRecord.js'
@@ -65,9 +72,7 @@ import listRecords, {
   type Record as ListRecordsRecord,
 } from './lexicons/com/atproto/space/listRecords.js'
 import listRepoOps from './lexicons/com/atproto/space/listRepoOps.js'
-import listWriters, {
-  type Repo as ListWritersRepo,
-} from './lexicons/com/atproto/space/listWriters.js'
+import listWriters from './lexicons/com/atproto/space/listWriters.js'
 import type {
   SpaceCollection,
   SpaceCollectionSchema,
@@ -101,7 +106,12 @@ export declare namespace SpaceReader {
   > = Omit<XrpcOptions<M>, K | 'service' | 'labelers'>
 
   export type ListedRecord = ListRecordsRecord
-  export type ListedWriter = ListWritersRepo
+
+  /**
+   * A repo of the writer set, at the latest update to it: its latest write
+   * (`repoWrite`), or its removal from the writer set (`repoRemoved`).
+   */
+  export type ListedWriter = $Typed<RepoWrite> | $Typed<RepoRemoved>
 
   export type Options = BuildSpaceCredentialProviderOptions & {
     /**
@@ -248,8 +258,16 @@ export declare namespace SpaceReader {
       }
   )
 
+  /**
+   * How a repo was brought up to date: with the changes since the known state,
+   * with a snapshot of the repo in full, or as an empty repo, when its host
+   * does not have it (e.g. never written to, or cleared and garbage collected).
+   * An empty repo has no state to sync from: any copy of it is to be dropped.
+   */
   export type RepoPull =
-    ({ type: 'changes' } & RepoChanges) | ({ type: 'snapshot' } & RepoSnapshot)
+    | ({ type: 'changes' } & RepoChanges)
+    | ({ type: 'snapshot' } & RepoSnapshot)
+    | { type: 'empty' }
 
   /**
    * A space of type `S`, by its authority and key. The key can be left out for
@@ -368,11 +386,13 @@ export class SpaceReader<S extends Space = Space> {
       didResolver = createDidResolver({ fetch }),
       clientAttestationProvider = undefined,
       delegationTokenProvider = undefined,
+      notifyRegistrationProvider = undefined,
       credentialProvider = buildSpaceCredentialProvider({
         didResolver,
         fetch,
         clientAttestationProvider,
         delegationTokenProvider,
+        notifyRegistrationProvider,
       }),
     }: SpaceReader.Options = {},
   ) {
@@ -405,17 +425,28 @@ export class SpaceReader<S extends Space = Space> {
   }
 
   /**
-   * Iterates over the writer set of the space, in ascending `spaceRev` order.
-   * A repo updated while iterating may be yielded again. The highest `spaceRev`
-   * yielded can be used as `cursor` to only list the repos updated since.
+   * Iterates over the writer set of the space, at the latest update to each
+   * repo, in ascending `spaceRev` order. A repo removed from the writer set is
+   * listed as `repoRemoved`, and is not part of the space. A repo updated while
+   * iterating may be yielded again, in which case its last entry is current.
+   *
+   * The highest `spaceRev` yielded can be used as `cursor` to only list the
+   * repos updated since. Removals may be forgotten by the space host after 72
+   * hours, so with an older cursor, list the whole writer set instead, and drop
+   * the repos missing from it.
    */
   async *writers(
     options: SpaceReader.ListWritersOptions = {},
-  ): AsyncGenerator<ListWritersRepo, void, undefined> {
+  ): AsyncGenerator<SpaceReader.ListedWriter, void, undefined> {
     let { cursor } = options
     do {
       const { body } = await this.listWriters({ ...options, cursor })
-      yield* body.repos
+      for (const entry of body.repos) {
+        // Entries of a kind unknown to this version are skipped.
+        if (repoWrite.$isTypeOf(entry) || repoRemoved.$isTypeOf(entry)) {
+          yield entry as SpaceReader.ListedWriter
+        }
+      }
       // Guard against a server returning the same cursor
       if (body.cursor === cursor) return
       cursor = body.cursor
@@ -708,7 +739,8 @@ export class SpaceReader<S extends Space = Space> {
   /**
    * Brings a repo up to date: incrementally from its known state (`head` and
    * `lookup`), and in full when there is none (e.g. on the first pull), or
-   * when the incremental sync fails.
+   * when the incremental sync fails. A repo its host does not have is pulled
+   * as an empty repo.
    */
   async pullRepo({
     repo,
@@ -721,6 +753,7 @@ export class SpaceReader<S extends Space = Space> {
         const changes = await this.syncRepo({ repo, head, lookup, signal })
         return { type: 'changes', ...changes }
       } catch (err) {
+        if (isRepoNotFound(err)) return { type: 'empty' }
         if (
           !(err instanceof RepoGapError) &&
           !(err instanceof SpaceRepoVerificationError)
@@ -730,7 +763,13 @@ export class SpaceReader<S extends Space = Space> {
       }
     }
 
-    const snapshot = await this.getRepoSnapshot({ repo, signal })
+    let snapshot: SpaceReader.RepoSnapshot
+    try {
+      snapshot = await this.getRepoSnapshot({ repo, signal })
+    } catch (err) {
+      if (isRepoNotFound(err)) return { type: 'empty' }
+      throw err
+    }
     if (head && snapshot.commit.rev < head.rev) {
       throw new RepoGapError(`Repo ${repo} is older than its known state`)
     }
@@ -740,8 +779,8 @@ export class SpaceReader<S extends Space = Space> {
   /**
    * Iterates over the records of every repo in the writer set of the space.
    * Each repo is fetched in full, and verified, before its records are
-   * yielded. Repos that are unavailable (not found, taken down, suspended or
-   * deactivated) are skipped.
+   * yielded. Repos removed from the writer set, and repos that are unavailable
+   * (not found, taken down, suspended or deactivated), are skipped.
    *
    * Every record is yielded, flagged with whether its collection is declared
    * by the space type. With `collections`, only the records of these
@@ -796,10 +835,15 @@ export class SpaceReader<S extends Space = Space> {
       for (const { $type } of schemas) this.assertCollection($type)
     }
 
-    const dids = new Set<DidString>()
-    for await (const { repo } of this.writers({ signal })) dids.add(repo)
+    // A repo listed again was updated while listing: its last entry is current.
+    const writers = new Map<DidString, SpaceReader.ListedWriter>()
+    for await (const entry of this.writers({ signal })) {
+      writers.set(entry.repo, entry)
+    }
 
-    const queue = [...dids]
+    const queue = [...writers.values()]
+      .filter((entry) => repoWrite.$isTypeOf(entry))
+      .map((entry) => entry.repo)
     while (queue.length) {
       const batch = queue.splice(0, concurrency)
       const snapshots = await Promise.all(
@@ -997,11 +1041,11 @@ export class SpaceReader<S extends Space = Space> {
     options: XrpcOptions<M>,
     refreshKemKey: boolean,
   ): Promise<{ response: XrpcResponse<M>; mac: VerifyMacParams }> {
-    const didDocument = await this.#resolver.resolve(repo, {
-      signal: options.signal,
-      noCache: refreshKemKey,
-    })
-    const kemKey = formatDidVerificationMethod(extractKemKey(didDocument))
+    const kemKey = await this.#resolveKemKey(
+      repo,
+      options.signal,
+      refreshKemKey,
+    )
 
     const { headers: headersInit } = options
     let encapsulation!: Encapsulation
@@ -1030,6 +1074,24 @@ export class SpaceReader<S extends Space = Space> {
   }
 
   /**
+   * Resolves the `#atproto_kem` key of a repo's account. A DID document without
+   * one is resolved again, as the key may have been added since it was cached.
+   */
+  async #resolveKemKey(
+    repo: DidString,
+    signal: AbortSignal | undefined,
+    noCache: boolean,
+  ): Promise<DidString> {
+    const didDocument = await this.#resolver.resolve(repo, { signal, noCache })
+    try {
+      return formatDidVerificationMethod(extractKemKey(didDocument))
+    } catch (err) {
+      if (noCache) throw err
+      return this.#resolveKemKey(repo, signal, true)
+    }
+  }
+
+  /**
    * Retries a verification once, with the author's KEM key re-resolved, as it
    * may have been rotated since it was cached.
    *
@@ -1051,6 +1113,10 @@ export class SpaceReader<S extends Space = Space> {
       throw new SpaceRepoVerificationError(message, { cause: err })
     }
   }
+}
+
+function isRepoNotFound(err: unknown): boolean {
+  return err instanceof XrpcResponseError && err.error === 'RepoNotFound'
 }
 
 function isVerificationError(err: unknown): boolean {

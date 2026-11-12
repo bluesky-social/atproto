@@ -38,7 +38,7 @@ const commit: SpaceCommit = {
 describe('MAC requests', () => {
   it('formats the Accept-Signature header', () => {
     expect(formatMacRequest(COMMIT_MAC_PROFILE, KEY_SHARE)).toBe(
-      'mac=("atproto-space-commit";sf);keyid="did:key:zDnaExample";tag="atproto-space-repo"',
+      'mac=("atproto-space-commit";sf);keyid="did:key:zDnaExample";tag="atproto-space-commit"',
     )
     expect(formatMacRequest(RECORD_MAC_PROFILE, KEY_SHARE)).toBe(
       'mac=("atproto-space-record";sf);keyid="did:key:zDnaExample";tag="atproto-space-record"',
@@ -55,7 +55,7 @@ describe('MAC requests', () => {
   })
 
   it('finds the request by its tag, under any label', () => {
-    const header = `other=("content-digest");tag="other", m=("atproto-space-commit";sf);keyid="${KEY_SHARE}";tag="atproto-space-repo"`
+    const header = `other=("content-digest");tag="other", m=("atproto-space-commit";sf);keyid="${KEY_SHARE}";tag="atproto-space-commit"`
     expect(parseMacRequest(header, COMMIT_MAC_PROFILE)).toMatchObject({
       label: 'm',
       keyShare: KEY_SHARE,
@@ -86,7 +86,7 @@ describe('MAC requests', () => {
   })
 
   it('rejects more than one request with the profile tag', () => {
-    const request = `("atproto-space-commit";sf);keyid="${KEY_SHARE}";tag="atproto-space-repo"`
+    const request = `("atproto-space-commit";sf);keyid="${KEY_SHARE}";tag="atproto-space-commit"`
     expect(() =>
       parseMacRequest(`a=${request}, b=${request}`, COMMIT_MAC_PROFILE),
     ).toThrow(/more than one MAC requested/)
@@ -107,7 +107,7 @@ describe('MAC requests', () => {
     ['the header without sf', '("atproto-space-commit")'],
     ['an additional header', '("atproto-space-commit";sf "authorization")'],
   ])('rejects a request covering %s', (_name, components) => {
-    const header = `mac=${components};keyid="${KEY_SHARE}";tag="atproto-space-repo"`
+    const header = `mac=${components};keyid="${KEY_SHARE}";tag="atproto-space-commit"`
     expect(() => parseMacRequest(header, COMMIT_MAC_PROFILE)).toThrow(
       /must cover exactly/,
     )
@@ -117,7 +117,7 @@ describe('MAC requests', () => {
     ['missing', ''],
     ['not a DID', ';keyid="not-a-did"'],
   ])('rejects a keyid that is %s', (_name, keyid) => {
-    const header = `mac=("atproto-space-commit";sf)${keyid};tag="atproto-space-repo"`
+    const header = `mac=("atproto-space-commit";sf)${keyid};tag="atproto-space-commit"`
     expect(() => parseMacRequest(header, COMMIT_MAC_PROFILE)).toThrow(/keyid/)
   })
 })
@@ -127,7 +127,7 @@ describe('commit MAC', () => {
 
   it('covers an Atproto-Space-Commit header under the requested parameters', () => {
     const request = parseMacRequest(
-      `sig1=("atproto-space-commit";sf);keyid="${KEY_SHARE}";tag="atproto-space-repo"`,
+      `sig1=("atproto-space-commit";sf);keyid="${KEY_SHARE}";tag="atproto-space-commit"`,
       COMMIT_MAC_PROFILE,
     )!
     const { headers } = createCommitMacHeaders(commit, {
@@ -136,7 +136,7 @@ describe('commit MAC', () => {
     })
 
     const covered = `ver=1, repo="did:example:alice", space="${SPACE}", rev="3kbcq3p7ad400", data=:AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE=:`
-    const params = `("atproto-space-commit";sf);keyid="${KEY_SHARE}";tag="atproto-space-repo"`
+    const params = `("atproto-space-commit";sf);keyid="${KEY_SHARE}";tag="atproto-space-commit"`
     expect(headers['atproto-space-commit']).toBe(covered)
     expect(headers['signature-input']).toBe(`sig1=${params}`)
 
@@ -219,12 +219,12 @@ describe('commit MAC', () => {
   test.each([
     [
       'parameters added and reordered',
-      `("atproto-space-commit";sf);tag="atproto-space-repo";created=1700000000;keyid="${KEY_SHARE}"`,
+      `("atproto-space-commit";sf);tag="atproto-space-commit";created=1700000000;keyid="${KEY_SHARE}"`,
     ],
-    ['no keyid', '("atproto-space-commit";sf);tag="atproto-space-repo"'],
+    ['no keyid', '("atproto-space-commit";sf);tag="atproto-space-commit"'],
     [
       'an hmac-sha256 alg',
-      `("atproto-space-commit";sf);keyid="${KEY_SHARE}";tag="atproto-space-repo";alg="hmac-sha256"`,
+      `("atproto-space-commit";sf);keyid="${KEY_SHARE}";tag="atproto-space-commit";alg="hmac-sha256"`,
     ],
   ])('accepts a MAC with %s', (_name, params) => {
     expect(() => verifyCommitMac(commit, macWithParams(params))).not.toThrow()
@@ -233,12 +233,12 @@ describe('commit MAC', () => {
   test.each([
     [
       'another keyid',
-      '("atproto-space-commit";sf);keyid="did:key:zDnaOther";tag="atproto-space-repo"',
+      '("atproto-space-commit";sf);keyid="did:key:zDnaOther";tag="atproto-space-commit"',
       /keyid does not match/,
     ],
     [
       'another alg',
-      `("atproto-space-commit";sf);keyid="${KEY_SHARE}";tag="atproto-space-repo";alg="hmac-sha512"`,
+      `("atproto-space-commit";sf);keyid="${KEY_SHARE}";tag="atproto-space-commit";alg="hmac-sha512"`,
       /algorithm/,
     ],
     [
@@ -248,7 +248,7 @@ describe('commit MAC', () => {
     ],
     [
       'the header not flagged sf',
-      `("atproto-space-commit");keyid="${KEY_SHARE}";tag="atproto-space-repo"`,
+      `("atproto-space-commit");keyid="${KEY_SHARE}";tag="atproto-space-commit"`,
       /must cover exactly/,
     ],
   ])('rejects a MAC with %s', (_name, params, error) => {
@@ -294,7 +294,7 @@ describe('record MAC', () => {
     // The same shared secret never MACs two kinds of message interchangeably.
     const mac = recordMacParams(URI, CID_A, sharedSecret)
     expect(() => verifyCommitMac(commit, mac)).toThrow(
-      /missing or malformed signature with tag "atproto-space-repo"/,
+      /missing or malformed signature with tag "atproto-space-commit"/,
     )
   })
 })

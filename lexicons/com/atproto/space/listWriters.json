@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "List the repos that hold data in a space (the writer set), with the latest known state of each. Requires a space credential, implemented by the space host.",
+      "description": "List the repos in a space's writer set, with the latest known state of each: its current revision, or its removal from the writer set. Requires a space credential, implemented by the space host.",
       "parameters": {
         "type": "params",
         "required": ["space"],
@@ -21,7 +21,7 @@
           },
           "cursor": {
             "type": "string",
-            "description": "Return repos updated after this space revision."
+            "description": "Return repos updated after this space revision. Removed repos may be garbage collected after 72 hrs, so a syncer whose last seen space revision is older should list the whole writer set instead."
           }
         }
       },
@@ -34,10 +34,13 @@
             "repos": {
               "type": "array",
               "items": {
-                "type": "ref",
-                "ref": "#repo"
+                "type": "union",
+                "refs": [
+                  "com.atproto.space.defs#repoWrite",
+                  "com.atproto.space.defs#repoRemoved"
+                ]
               },
-              "description": "Ordered by spaceRev, ascending."
+              "description": "The latest update to each repo, ordered by spaceRev, ascending. prevSpaceRev is not set."
             },
             "cursor": {
               "type": "string"
@@ -58,28 +61,6 @@
           "description": "The space authority has been deactivated."
         }
       ]
-    },
-    "repo": {
-      "type": "object",
-      "required": ["repo", "latest", "spaceRev"],
-      "properties": {
-        "repo": {
-          "type": "string",
-          "format": "did"
-        },
-        "latest": {
-          "type": "union",
-          "refs": [
-            "com.atproto.space.defs#repoWrite",
-            "com.atproto.space.defs#repoRemoved"
-          ]
-        },
-        "spaceRev": {
-          "type": "string",
-          "format": "tid",
-          "description": "The space revision at which this repo was last updated."
-        }
-      }
     }
   }
 }

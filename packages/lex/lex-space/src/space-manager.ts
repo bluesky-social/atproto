@@ -69,7 +69,7 @@ export declare namespace SpaceManager {
  * }
  *
  * const space = new SpaceManager(client.agent, spaceUri)
- * await space.updateSpace(managedspacePolicy.$build({ managingApp }))
+ * await space.updateSpace(managedspace.policy.$build({ managingApp }))
  * await space.deleteSpace()
  * ```
  */

@@ -9,8 +9,30 @@ import { SimpleStoreMemory } from '@atproto-labs/simple-store-memory'
 import type { AtprotoDidResolver } from './atproto-did-resolver.js'
 import type { ClientAttestationProvider } from './client-attestation-provider.js'
 import type { DelegationTokenProvider } from './delegation-token-provider.js'
-import { main as authorizeSpaceSync } from './lexicons/com/atproto/space/authorizeSpaceSync.js'
+import {
+  type Notify,
+  main as authorizeSpaceSync,
+} from './lexicons/com/atproto/space/authorizeSpaceSync.js'
 import { SpaceCredential } from './space-credential.js'
+
+/**
+ * Where, and with what token, the space host notifies a syncer of updates to a
+ * space (with `com.atproto.space.notifySpaceUpdate`).
+ */
+export type NotifyRegistration = Omit<Notify, '$type'>
+
+/**
+ * Provides the registration for notifications of updates to a space, renewed
+ * with every credential obtained. The `endpoint` must implement
+ * `com.atproto.space.confirmRegistration`, which the space host calls before
+ * registering it, and `com.atproto.space.notifySpaceUpdate`. The `token`
+ * should be unique to the space, and stay the same across credentials.
+ * Resolves `undefined` not to register.
+ */
+export type NotifyRegistrationProvider = (
+  space: SpaceRef,
+  options: { signal?: AbortSignal },
+) => Promise<NotifyRegistration | undefined>
 
 export type SpaceCredentialProviderOptions = {
   signal?: AbortSignal
@@ -39,6 +61,14 @@ export type BuildSpaceCredentialProviderOptions = {
   clientAttestationProvider?: ClientAttestationProvider
 
   /**
+   * Registers for notifications of updates to the space, with each credential
+   * obtained. The registration stays active while the latest credential is
+   * valid. Obtaining a credential fails with `RegistrationNotConfirmed` if the
+   * endpoint does not confirm the registration.
+   */
+  notifyRegistrationProvider?: NotifyRegistrationProvider
+
+  /**
    * Resolves the space authority and the space's members to their PDS and
    * `#atproto_kem` key.
    */
@@ -53,15 +83,18 @@ export function buildSpaceCredentialProvider({
   didResolver = createDidResolver({ fetch }),
   clientAttestationProvider,
   delegationTokenProvider,
+  notifyRegistrationProvider,
 }: BuildSpaceCredentialProviderOptions): SpaceCredentialProvider {
   return async (space, { signal, renew } = {}) => {
-    const [service, delegationToken, clientAttestation] = await Promise.all([
-      didResolver
-        .resolve(space.spaceDid, { signal, noCache: renew })
-        .then(extractPdsUrl),
-      delegationTokenProvider?.(space, { signal }),
-      clientAttestationProvider?.(spaceHostAud(space.spaceDid)),
-    ])
+    const [service, delegationToken, clientAttestation, notify] =
+      await Promise.all([
+        didResolver
+          .resolve(space.spaceDid, { signal, noCache: renew })
+          .then(extractPdsUrl),
+        delegationTokenProvider?.(space, { signal }),
+        clientAttestationProvider?.(spaceHostAud(space.spaceDid)),
+        notifyRegistrationProvider?.(space, { signal }),
+      ])
 
     signal?.throwIfAborted?.()
 
@@ -77,10 +110,13 @@ export function buildSpaceCredentialProvider({
         credentialKey: key.did(),
         delegationToken,
         clientAttestation,
+        notify,
       },
     })
 
-    return SpaceCredential.parse(res.body.credential, key)
+    return SpaceCredential.parse(res.body.credential, key, {
+      spaceRev: res.body.spaceRev,
+    })
   }
 }
 
@@ -94,9 +130,12 @@ export class SpaceCredentialProviderCache extends CachedGetter<
   SpaceCredential
 > {
   static for(provider: SpaceCredentialProvider): SpaceCredentialProviderCache {
-    return new SpaceCredentialProviderCache(async (space, { signal }) => {
-      return provider(SpaceRef.parse(space), { signal })
-    })
+    return new SpaceCredentialProviderCache(
+      async (space, { signal, noCache }) => {
+        // A renewal re-resolves the authority, e.g. in case it moved to another PDS.
+        return provider(SpaceRef.parse(space), { signal, renew: noCache })
+      },
+    )
   }
 
   protected constructor(getter: Getter<SpaceRefString, SpaceCredential>) {

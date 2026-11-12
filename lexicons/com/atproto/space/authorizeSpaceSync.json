@@ -29,7 +29,7 @@
             "notify": {
               "type": "ref",
               "ref": "#notify",
-              "description": "Register an endpoint to be notified of updates to the space via notifySpaceUpdate. The registration stays active while this credential is valid. After it expires, the endpoint receives only a prompt to reauthorize."
+              "description": "Register an endpoint to be notified of updates to the space via notifySpaceUpdate. The registration stays active while this credential is valid. After it expires, the endpoint receives only a prompt to reauthorize, or notice of the space's deletion."
             }
           }
         }

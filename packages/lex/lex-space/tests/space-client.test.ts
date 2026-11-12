@@ -1,3 +1,6 @@
+import { once } from 'node:events'
+import { createServer } from 'node:http'
+import type { AddressInfo } from 'node:net'
 import {
   afterAll,
   assert,
@@ -27,7 +30,7 @@ import {
   listSpaces,
 } from '../src/index.js'
 import { com } from '../src/lexicons/index.js'
-import { createUser, processNotifications } from './_util.js'
+import { collect, createUser, processNotifications } from './_util.js'
 
 const note = l.record(
   'tid',
@@ -221,7 +224,12 @@ describe('SpaceClient', () => {
       await processNotifications(network)
 
       const { body } = await bobSpace.listWriters()
-      expect(body.repos.map((r) => r.repo)).toContain(bob.assertDid)
+      expect(body.repos).toContainEqual(
+        expect.objectContaining({
+          $type: com.atproto.space.defs.repoWrite.$type,
+          repo: bob.assertDid,
+        }),
+      )
     })
 
     it('mints a single space credential on first use, and reuses it', async () => {
@@ -605,6 +613,27 @@ describe('SpaceClient', () => {
       expect(pulled.head).toEqual(full.head)
     })
 
+    it('pulls a repo its host does not have as an empty repo', async () => {
+      const aliceSpace = SpaceClient.openSpace(group, space, {
+        agent: alice.agent,
+        didResolver,
+      })
+      // Carol never wrote to the space
+      expect(await aliceSpace.pullRepo({ repo: carol.assertDid })).toEqual({
+        type: 'empty',
+      })
+
+      // Nor with a known state, e.g. of a repo since garbage collected
+      const { head } = await aliceSpace.getRepoSnapshot({ repo: bob.assertDid })
+      expect(
+        await aliceSpace.pullRepo({
+          repo: carol.assertDid,
+          head,
+          lookup: () => undefined,
+        }),
+      ).toEqual({ type: 'empty' })
+    })
+
     it('falls back to a full sync when the known state diverged', async () => {
       const syncSpace = await setupSpace(alice, 'sync-gap', [bob])
       const bobSpace = SpaceClient.openSpace(group, syncSpace, {
@@ -707,6 +736,109 @@ describe('SpaceClient', () => {
       const renewed = await bobSpace.authorize({ renew: true })
       expect(renewed.token).not.toBe(credential.token)
       expect(calls.paths).toEqual([AUTHORIZE_SPACE_SYNC, AUTHORIZE_SPACE_SYNC])
+    })
+
+    it('re-resolves the space authority when renewing', async () => {
+      const resolved: { did: string; noCache?: boolean }[] = []
+      const recordingResolver: AtprotoDidResolver = {
+        resolve: (did, options) => {
+          resolved.push({ did, noCache: options?.noCache })
+          return didResolver.resolve(did, options)
+        },
+      }
+      const bobSpace = SpaceClient.openSpace(group, space, {
+        agent: bob.agent,
+        didResolver: recordingResolver,
+      })
+
+      await bobSpace.authorize()
+      await bobSpace.authorize({ renew: true })
+      expect(resolved.filter((r) => r.did === alice.assertDid)).toEqual([
+        { did: alice.assertDid, noCache: false },
+        { did: alice.assertDid, noCache: true },
+      ])
+    })
+
+    it("reports the space's revision", async () => {
+      const bobSpace = SpaceClient.openSpace(group, space, {
+        agent: bob.agent,
+        didResolver,
+      })
+      await processNotifications(network)
+
+      const writers = await collect(bobSpace.writers())
+      const { spaceRev } = await bobSpace.authorize()
+      expect(spaceRev).toBeDefined()
+      expect(spaceRev).toBe(writers.at(-1)?.spaceRev)
+    })
+
+    it('registers for notifications with each credential', async () => {
+      const notifySpace = await setupSpace(alice, 'notify', [bob])
+      const calls: { lxm: string; body: { challenge?: string } }[] = []
+      const server = createServer(async (req, res) => {
+        let body = ''
+        for await (const chunk of req) body += chunk
+        const call = {
+          lxm: new URL(req.url ?? '/', 'http://localhost').pathname.slice(6),
+          body: JSON.parse(body),
+        }
+        calls.push(call)
+        res.setHeader('content-type', 'application/json')
+        res.end(JSON.stringify({ challenge: call.body.challenge }))
+      })
+      server.listen(0)
+      await once(server, 'listening')
+      try {
+        const endpoint = `http://localhost:${(server.address() as AddressInfo).port}`
+        const bobSpace = SpaceClient.openSpace(group, notifySpace, {
+          agent: bob.agent,
+          didResolver,
+          notifyRegistrationProvider: async (ref) => ({
+            endpoint: endpoint as `${string}:${string}`,
+            token: `token-for:${ref}`,
+          }),
+        })
+
+        // A new registration is confirmed by the endpoint
+        await bobSpace.authorize()
+        expect(calls).toEqual([
+          {
+            lxm: 'com.atproto.space.confirmRegistration',
+            body: {
+              space: notifySpace,
+              token: `token-for:${notifySpace}`,
+              challenge: expect.any(String),
+            },
+          },
+        ])
+
+        // And renewed, without confirming it again
+        await bobSpace.authorize({ renew: true })
+        expect(calls).toHaveLength(1)
+
+        // Updates to the space are then notified
+        const aliceSpace = SpaceClient.openSpace(group, notifySpace, {
+          agent: alice.agent,
+          didResolver,
+        })
+        await aliceSpace.create(note, { text: 'notified' })
+        await processNotifications(network)
+        expect(calls.slice(1)).toEqual([
+          {
+            lxm: 'com.atproto.space.notifySpaceUpdate',
+            body: {
+              space: notifySpace,
+              token: `token-for:${notifySpace}`,
+              update: expect.objectContaining({
+                $type: com.atproto.space.defs.repoWrite.$type,
+                repo: alice.assertDid,
+              }),
+            },
+          },
+        ])
+      } finally {
+        server.close()
+      }
     })
 
     it('fails early when the space does not grant access', async () => {

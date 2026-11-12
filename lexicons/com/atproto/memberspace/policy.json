@@ -14,7 +14,7 @@
         "publicWrite": {
           "type": "boolean",
           "default": false,
-          "description": "If true, anyone may write to the space. Otherwise, only members with write access."
+          "description": "If true, any account's writes are tracked in the writer set, except members without write access. Otherwise, only members with write access."
         },
         "allowedApps": {
           "type": "array",

@@ -367,7 +367,7 @@ export async function processNotifyRepoUpdate(
   forwardSpaceUpdate(
     ctx,
     ref,
-    com.atproto.space.notifySpaceUpdate.repoWrite.$build({
+    com.atproto.space.defs.repoWrite.$build({
       repo,
       repoRev,
       data,
@@ -392,7 +392,7 @@ export function forwardWriterRemoved(
   forwardSpaceUpdate(
     ctx,
     ref,
-    com.atproto.space.notifySpaceUpdate.repoRemoved.$build(removed),
+    com.atproto.space.defs.repoRemoved.$build(removed),
   )
 }
 
@@ -401,8 +401,8 @@ export const SYNCER_NOTIFY_CONCURRENCY = 50
 
 /** A sequenced change to a space's writer set. */
 type WriterSetUpdate =
-  | l.$Typed<com.atproto.space.notifySpaceUpdate.RepoWrite>
-  | l.$Typed<com.atproto.space.notifySpaceUpdate.RepoRemoved>
+  | l.$Typed<com.atproto.space.defs.RepoWrite>
+  | l.$Typed<com.atproto.space.defs.RepoRemoved>
 
 /**
  * Forward a sequenced change to the writer set to the syncers registered for the

@@ -34,7 +34,7 @@ import type { SpaceCommit } from './types.js'
  * returned, and a MAC covering that header.
  */
 
-export const COMMIT_MAC_PROFILE = 'atproto-space-repo'
+export const COMMIT_MAC_PROFILE = 'atproto-space-commit'
 export const RECORD_MAC_PROFILE = 'atproto-space-record'
 
 export type MacProfile = typeof COMMIT_MAC_PROFILE | typeof RECORD_MAC_PROFILE
@@ -66,7 +66,7 @@ function macComponents(profile: MacProfile): Item[] {
 /**
  * The syncer's `Accept-Signature` request header, asking for a MAC keyed by the
  * shared secret for `keyShare` (see `encapsulate`), e.g.
- * `mac=("atproto-space-commit";sf);keyid="did:key:zDna...";tag="atproto-space-repo"`
+ * `mac=("atproto-space-commit";sf);keyid="did:key:zDna...";tag="atproto-space-commit"`
  */
 export function formatMacRequest(
   profile: MacProfile,

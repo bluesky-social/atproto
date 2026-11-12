@@ -322,7 +322,7 @@ describe('space policy', () => {
       const removed = syncer
         .spaceUpdates()
         .filter((update) =>
-          com.atproto.space.notifySpaceUpdate.repoRemoved.$isTypeOf(update),
+          com.atproto.space.defs.repoRemoved.$isTypeOf(update),
         )
       expect(removed.map((update) => update.repo).sort()).toEqual(
         [dan.did, bob.did].sort(),
@@ -1249,8 +1249,8 @@ describe('space policy', () => {
    * queue, so tests drain it rather than polling.
    */
   describe('notify registration', () => {
-    const { repoWrite, registrationExpired } =
-      com.atproto.space.notifySpaceUpdate
+    const { repoWrite } = com.atproto.space.defs
+    const { registrationExpired } = com.atproto.space.notifySpaceUpdate
 
     // A member's write reaches the authority before `write` resolves, which queues
     // the fan-out.

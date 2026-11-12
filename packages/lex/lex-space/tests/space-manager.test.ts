@@ -193,14 +193,18 @@ describe('SpaceManager', () => {
         didResolver,
       })
       const bobWriter = async () =>
-        (await aliceSpace.listWriters()).body.repos.find(
+        (await collect(aliceSpace.writers())).findLast(
           (r) => r.repo === bob.assertDid,
         )
-      expect((await bobWriter())?.latest.$type).toBe(repoWrite.$type)
+      expect((await bobWriter())?.$type).toBe(repoWrite.$type)
 
       // Still listed after removal, so that syncers learn of it.
       await new SpaceManager(agentOf(alice), uri).removeWriter(bob.assertDid)
-      expect((await bobWriter())?.latest.$type).toBe(repoRemoved.$type)
+      expect((await bobWriter())?.$type).toBe(repoRemoved.$type)
+
+      // But no longer part of the space.
+      const records = await collect(aliceSpace.allRecords())
+      expect(records.map((r) => r.repo)).not.toContain(bob.assertDid)
     })
 
     it('deletes a space', async () => {

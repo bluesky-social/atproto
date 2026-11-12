@@ -53,7 +53,7 @@
     },
     "com.atproto.memberspace.policy": {
       "uri": "file://../../../lexicons/com/atproto/memberspace/policy.json",
-      "cid": "bafyreigl6b27w4plqubrr2cmxhf7hzoshhyr4gfr4scc3mx56y22mu524y"
+      "cid": "bafyreicee27qdtvxxegh45qg4jxb4dampdiej3h3ojpbxc2dojuwltmw3e"
     },
     "com.atproto.memberspace.putMembers": {
       "uri": "file://../../../lexicons/com/atproto/memberspace/putMembers.json",
@@ -73,7 +73,7 @@
     },
     "com.atproto.space.authorizeSpaceSync": {
       "uri": "file://../../../lexicons/com/atproto/space/authorizeSpaceSync.json",
-      "cid": "bafyreibz53zqvmx7vn4chl5cogi6r7x2lf2iwdtbtnubmz3sksbytcyshe"
+      "cid": "bafyreie4v3dgbpfnxp2wzvrjdxmi2ebcewfpyuaz5ies6rvgi75jhxm5qy"
     },
     "com.atproto.space.clearRecords": {
       "uri": "file://../../../lexicons/com/atproto/space/clearRecords.json",
@@ -89,7 +89,7 @@
     },
     "com.atproto.space.defs": {
       "uri": "file://../../../lexicons/com/atproto/space/defs.json",
-      "cid": "bafyreihf4qwnzrhyzk7xrl4zhlgaf25u72nqroc6icbpyumfrk6dgrcmkq"
+      "cid": "bafyreibduv77izg73loxbywck5vubymk4pvel5pynsskckjybr3qi6votq"
     },
     "com.atproto.space.deleteRecord": {
       "uri": "file://../../../lexicons/com/atproto/space/deleteRecord.json",
@@ -141,7 +141,7 @@
     },
     "com.atproto.space.listWriters": {
       "uri": "file://../../../lexicons/com/atproto/space/listWriters.json",
-      "cid": "bafyreiejm2bbq4sxi27tmqhdvjpxtfsfefdx7tnukdwo77zm2dxlkle3fy"
+      "cid": "bafyreif2r43lwwiobe6asnr66lxh7rc25monaf6srn6jvshjz73c7ysmwu"
     },
     "com.atproto.space.putRecord": {
       "uri": "file://../../../lexicons/com/atproto/space/putRecord.json",
@@ -149,7 +149,7 @@
     },
     "com.atproto.space.removeWriter": {
       "uri": "file://../../../lexicons/com/atproto/space/removeWriter.json",
-      "cid": "bafyreid2fmugpd7mnxhrx37w5ssaebpok4gue7hlvnyunkposzypkcu5wq"
+      "cid": "bafyreibzc26n6psgxe4nlxfafco4n2ibu5yp5iijplviqvlqgwv7nasgom"
     },
     "com.atproto.space.updateSpace": {
       "uri": "file://../../../lexicons/com/atproto/space/updateSpace.json",

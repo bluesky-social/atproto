@@ -5,7 +5,7 @@
 "@atproto/api": patch
 ---
 
-Carry space repo MACs as HTTP message signatures (RFC 9421, `hmac-sha256`). A syncer requests a MAC with `Accept-Signature`, giving its ephemeral KEM key as the `keyid` and the MAC profile (`atproto-space-repo` or `atproto-space-record`) as the `tag`. The repo host responds with an `Atproto-Space-Commit` or `Atproto-Space-Record` header describing the commit or record it returned, and a `Signature-Input` and `Signature` covering that header under the requested label. This replaces the `Atproto-Space-Want-Mac` and `Atproto-Space-Mac` headers. The PDS lists `Accept-Signature` in `Vary`, and exposes the new headers to browsers through `Access-Control-Expose-Headers`.
+Carry space repo MACs as HTTP message signatures (RFC 9421, `hmac-sha256`). A syncer requests a MAC with `Accept-Signature`, giving its ephemeral KEM key as the `keyid` and the MAC profile (`atproto-space-commit` or `atproto-space-record`) as the `tag`. The repo host responds with an `Atproto-Space-Commit` or `Atproto-Space-Record` header describing the commit or record it returned, and a `Signature-Input` and `Signature` covering that header under the requested label. This replaces the `Atproto-Space-Want-Mac` and `Atproto-Space-Mac` headers. The PDS lists `Accept-Signature` in `Vary`, and exposes the new headers to browsers through `Access-Control-Expose-Headers`.
 
 A host ignores requested signatures with other tags, and refuses more than one request with the profile's tag, or a request for parameters other than `keyid`, `tag` and `alg`.
 

@@ -111,11 +111,11 @@ Each `SpaceClient` obtains its own credential: keep one instance per space, rath
 To create a space instead, with the user as its authority, use `SpaceClient.createSpace()`. It returns the new space, opened:
 
 ```typescript
-import { SpaceClient, memberspacePolicy } from '@atproto/lex-space'
+import { SpaceClient, memberspace } from '@atproto/lex-space'
 
 const space = await SpaceClient.createSpace(client.agent, com.example.forum, {
   skey: 'general', // Defaults to the literal key of the space type, or to a TID
-  policy: memberspacePolicy.$build({}),
+  policy: memberspace.policy.$build({}),
 })
 ```
 
@@ -157,7 +157,8 @@ Set `repo` to read another account's repo. This requires a `read` grant:
 
 ```typescript
 // The accounts holding a repo in the space
-for await (const { repo } of space.writers()) {
+for await (const { $type, repo } of space.writers()) {
+  if ($type !== 'com.atproto.space.defs#repoWrite') continue // removed
   // Every post of each of them, across pages
   for await (const post of space.listAll(com.example.post, { repo })) {
     if (post.valid) console.log(repo, post.value.text)
@@ -238,11 +239,11 @@ import {
   MemberspacePolicyManager,
   SpaceClient,
   SpaceManager,
-  memberspacePolicy,
+  memberspace,
 } from '@atproto/lex-space'
 
 const space = await SpaceClient.createSpace(client.agent, com.example.forum, {
-  policy: memberspacePolicy.$build({}),
+  policy: memberspace.policy.$build({}),
 })
 
 const manager = await SpaceManager.open(client.agent, space.uri)
@@ -259,7 +260,7 @@ if (manager instanceof MemberspacePolicyManager) {
 | `com.atproto.memberspace.policy`   | `MemberspacePolicyManager`   | `putMembers()`, `removeMembers()`, `listMembers()`, `members()`, `updatePolicy()` |
 | `com.atproto.managedspace.policy`  | `ManagedspacePolicyManager`  | `updatePolicy()` (e.g. the `managingApp`)                                         |
 
-The schemas of these policies are exported as `personalspacePolicy`, `memberspacePolicy` and `managedspacePolicy`, and their managers as `baselineSpacePolicies`.
+The schemas of these policies are exported under `personalspace`, `memberspace` and `managedspace` (e.g. `memberspace.policy`), and their managers as `baselineSpacePolicies`.
 
 To only accept some policies, list their managers: the result is typed accordingly, and `UnsupportedSpacePolicyError` is thrown for any other policy.
 
@@ -298,13 +299,13 @@ The first manager whose schema matches the policy manages the space.
 `SpaceManager` handles what every policy shares, including policies no manager supports:
 
 ```typescript
-import { SpaceManager, managedspacePolicy } from '@atproto/lex-space'
+import { SpaceManager, managedspace } from '@atproto/lex-space'
 
 const space = new SpaceManager(client.agent, spaceUri)
 
 const { policy } = await space.getSpace()
 await space.removeWriter(did) // from the writer set
-await space.updateSpace(managedspacePolicy.$build({ managingApp }))
+await space.updateSpace(managedspace.policy.$build({ managingApp }))
 await space.deleteSpace()
 ```
 
@@ -357,18 +358,42 @@ for await (const _ of notified) {
       if (cid) store.put(repo, collection, rkey, cid, record)
       else store.delete(repo, collection, rkey)
     }
-  } else {
+    head = pulled.head
+  } else if (pulled.type === 'snapshot') {
     store.replace(repo, pulled.records)
+    head = pulled.head
+  } else {
+    // Its host does not have the repo (e.g. cleared and garbage collected)
+    store.replace(repo, [])
+    head = undefined
   }
-  head = pulled.head
 }
 ```
 
-To discover the repos to sync, list the writer set with `reader.writers()`. The highest `spaceRev` it yields can be passed as `cursor` later, to only list the repos updated since.
+To discover the repos to sync, list the writer set with `reader.writers()`. It yields the latest update to each repo: a `repoWrite`, with the repo's current `repoRev` and `data`, or a `repoRemoved`, for a repo removed from the writer set, which is no longer part of the space. The highest `spaceRev` it yields can be passed as `cursor` later, to only list the repos updated since. Removals may be forgotten after 72 hours, so a service that hasn't caught up in that time lists the whole writer set instead, and drops the repos missing from it.
 
 ### Notifications
 
-A syncing service registers an endpoint to be notified of updates to the space through the `notify` field of `com.atproto.space.authorizeSpaceSync`. Registering for, receiving and verifying notifications are not covered by this package yet.
+A sync service can register an endpoint to be notified of updates to the space, rather than polling it. The registration is made, and renewed, with each space credential obtained:
+
+```typescript
+const reader = SpaceReader.openSpace(com.example.forum, spaceUri, {
+  delegationTokenProvider,
+  // A token unique to the space, that stays the same across credentials
+  notifyRegistrationProvider: async (space) => ({
+    endpoint: 'https://sync.example.com',
+    token: await store.notifyTokenFor(space.toString()),
+  }),
+})
+
+// Registers, if not already done. The space's revision at the time can be
+// compared with the last one seen, to catch up on missed updates.
+const { spaceRev } = await reader.authorize()
+```
+
+The registration stays active while the latest credential is valid. The endpoint must implement `com.atproto.space.confirmRegistration`, which the space host calls before registering it, and `com.atproto.space.notifySpaceUpdate`: serving these is up to the service.
+
+A notification of a repo's update (`repoWrite` or `repoRemoved`) carries its `spaceRev`, and the `prevSpaceRev` before it: a gap means missed notifications, which `writers({ cursor })` recovers. When notified that its registration expired, the service renews it with `reader.authorize({ renew: true })`. When notified that the space was deleted, it confirms with `reader.authorize({ renew: true })`, which fails with `SpaceDeleted` if so, before dropping its copy of the space.
 
 ## Configuration
 
@@ -391,6 +416,9 @@ const space = SpaceClient.openSpace(com.example.forum, spaceUri, {
   // signer)` takes a `Keyset` or an `@atproto/crypto` keypair instead.
   clientAttestationProvider:
     clientAttestationProviderForOAuthClient(oauthClient),
+
+  // Registers for notifications of updates to the space (see Notifications)
+  notifyRegistrationProvider,
 
   // Used for every request to hosts other than the user's PDS (e.g. to
   // enforce your own network policy)
@@ -424,7 +452,7 @@ const space = SpaceClient.openSpace(com.example.forum, spaceUri, {
 | `create()`, `put()`, `delete()`                                                      | Typed writes to the user's repo, of the space type's collections | `SpaceClient`                 |
 | `createRecord()`, `putRecord()`, `deleteRecord()`, `applyWrites()`, `clearRecords()` | Lower level writes to the user's repo, of any collection         | `SpaceClient`                 |
 
-Other calls to the user's PDS can be made with the user's agent: `xrpc(space.agent, method, options)`. The package exports the space schemas it uses, under `com` (e.g. `com.atproto.space.getDelegationToken`). To manage a space, see [Managing a space](#managing-a-space).
+Other calls to the user's PDS can be made with the user's agent: `xrpc(space.agent, method, options)`. The package exports the space schemas it uses, under `lexicons` (e.g. `lexicons.com.atproto.space.getDelegationToken`). To manage a space, see [Managing a space](#managing-a-space).
 
 ### Current limitations
 

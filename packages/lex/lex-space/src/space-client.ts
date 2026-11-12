@@ -210,7 +210,8 @@ export declare namespace SpaceClient {
  *   agent: client.agent,
  * })
  *
- * for await (const { repo } of space.writers()) {
+ * for await (const { $type, repo } of space.writers()) {
+ *   if ($type !== 'com.atproto.space.defs#repoWrite') continue // removed
  *   const { records } = await space.list(com.example.post, { repo })
  * }
  * ```
@@ -255,7 +256,7 @@ export class SpaceClient<S extends Space = Space> extends SpaceReader<S> {
    * ```typescript
    * const space = await SpaceClient.createSpace(client.agent, com.example.forum, {
    *   skey: 'general',
-   *   policy: memberspacePolicy.$build({}),
+   *   policy: memberspace.policy.$build({}),
    * })
    * ```
    */

@@ -34,6 +34,7 @@ import {
   SpaceClient,
   TEST_COLLECTION,
   TEST_COLLECTION_ALT,
+  listedWriters,
 } from '../_space.js'
 
 /**
@@ -697,21 +698,23 @@ describe('space sync', () => {
       const asSyncer = cred.clientFor(alice.pds)
       const repos = await sc.awaitNotify(
         () => asSyncer.call(com.atproto.space.listWriters, { space }),
-        (res) => res.repos.some((r) => r.repo === bob.did),
+        (res) => listedWriters(res).some((r) => r.repo === bob.did),
       )
-      const dids = repos.repos.map((r) => r.repo)
+      const dids = listedWriters(repos).map((r) => r.repo)
       expect(dids).toContain(bob.did)
       // Alice is a member who hasn't written, so she is absent: the writer set is
       // the sync boundary, not the membership list.
       expect(dids).not.toContain(alice.did)
 
       // And it carries where each writer is up to, so a syncer knows what to pull.
-      const entry = repos.repos.find((r) => r.repo === bob.did)!
+      const entry = listedWriters(repos).find((r) => r.repo === bob.did)!
       const state = await sc.repoState(bob, space)
-      expect(entry.latest).toEqual(
+      expect(entry).toEqual(
         com.atproto.space.defs.repoWrite.$build({
-          rev: state!.rev!,
+          repo: bob.did,
+          repoRev: state!.rev!,
           data: new LtHash(state!.setHash!).digest(),
+          spaceRev: entry.spaceRev,
         }),
       )
     })
@@ -773,11 +776,10 @@ describe('space sync', () => {
         cursor: before.cursor,
       })
       expect(caughtUp.repos).toEqual([
-        {
+        com.atproto.space.defs.repoRemoved.$build({
           repo: bob.did,
-          latest: com.atproto.space.defs.repoRemoved.$build({}),
-          spaceRev: caughtUp.cursor,
-        },
+          spaceRev: caughtUp.cursor!,
+        }),
       ])
 
       // A public write policy still authorizes bob, so his next write puts him
@@ -908,7 +910,7 @@ describe('space sync', () => {
         space,
       })
       const cursor = initial.cursor
-      expect(cursor).toBe(initial.repos.at(-1)!.spaceRev)
+      expect(cursor).toBe(listedWriters(initial).at(-1)!.spaceRev)
       await sc.write(dan, space)
       await sc.write(bob, space)
       await alice.pds.ctx.backgroundQueue.processAll()
@@ -918,7 +920,7 @@ describe('space sync', () => {
         cursor,
         limit: 1,
       })
-      expect(first.repos.map((r) => r.repo)).toEqual([dan.did])
+      expect(listedWriters(first).map((r) => r.repo)).toEqual([dan.did])
 
       // @NOTE A repo already returned can move forward while the caller paginates.
       await sc.write(dan, space)
@@ -927,15 +929,15 @@ describe('space sync', () => {
         cursor: first.cursor,
         limit: 1,
       })
-      expect(second.repos.map((r) => r.repo)).toEqual([bob.did])
+      expect(listedWriters(second).map((r) => r.repo)).toEqual([bob.did])
       const last = await client.call(com.atproto.space.listWriters, {
         space,
         cursor: second.cursor,
         limit: 1,
       })
-      expect(last.repos.map((r) => r.repo)).toEqual([dan.did])
+      expect(listedWriters(last).map((r) => r.repo)).toEqual([dan.did])
       const nextCursor = last.cursor
-      expect(nextCursor).toBe(last.repos.at(-1)!.spaceRev)
+      expect(nextCursor).toBe(listedWriters(last).at(-1)!.spaceRev)
       const caughtUp = await client.call(com.atproto.space.listWriters, {
         space,
         cursor: nextCursor,
@@ -988,8 +990,8 @@ describe('space sync', () => {
         space,
         cursor,
       })
-      expect(catchUp.repos.map((r) => r.repo)).toEqual([bob.did])
-      expect(catchUp.repos[0].spaceRev > cursor).toBe(true)
+      expect(listedWriters(catchUp).map((r) => r.repo)).toEqual([bob.did])
+      expect(listedWriters(catchUp)[0].spaceRev > cursor).toBe(true)
     })
 
     it('accepts arbitrary string listWriters cursors', async () => {
@@ -1001,7 +1003,7 @@ describe('space sync', () => {
         space,
         cursor: '0',
       })
-      expect(before.repos.map((r) => r.repo)).toEqual([alice.did])
+      expect(listedWriters(before).map((r) => r.repo)).toEqual([alice.did])
       const after = await client.call(com.atproto.space.listWriters, {
         space,
         cursor: 'not-a-tid',
@@ -1024,17 +1026,17 @@ describe('space sync', () => {
       await alice.pds.ctx.backgroundQueue.processAll()
       const notifications = syncer
         .spaceUpdates()
-        .filter((update) =>
-          com.atproto.space.notifySpaceUpdate.repoWrite.$isTypeOf(update),
-        )
+        .filter((update) => com.atproto.space.defs.repoWrite.$isTypeOf(update))
         .sort((a, b) => a.spaceRev.localeCompare(b.spaceRev))
       expect(notifications).toHaveLength(3)
       expect(notifications[0].prevSpaceRev).toBeUndefined()
       expect(notifications[1].prevSpaceRev).toBe(notifications[0].spaceRev)
       expect(notifications[2].prevSpaceRev).toBe(notifications[1].spaceRev)
       const listed = await client.call(com.atproto.space.listWriters, { space })
-      expect(listed.repos.at(-1)?.spaceRev).toBe(notifications[2].spaceRev)
-      expect(new Set(listed.repos.map((r) => r.spaceRev)).size).toBe(3)
+      expect(listedWriters(listed).at(-1)?.spaceRev).toBe(
+        notifications[2].spaceRev,
+      )
+      expect(new Set(listedWriters(listed).map((r) => r.spaceRev)).size).toBe(3)
     })
 
     it('forwards a removal from the writer set, in the space sequence', async () => {
@@ -1050,7 +1052,7 @@ describe('space sync', () => {
       await sc.removeWriter(alice, space, dan)
       await alice.pds.ctx.backgroundQueue.processAll()
 
-      const { repoWrite, repoRemoved } = com.atproto.space.notifySpaceUpdate
+      const { repoWrite, repoRemoved } = com.atproto.space.defs
       const updates = syncer.spaceUpdates()
       const write = updates.find((update) => repoWrite.$isTypeOf(update))
       const removal = updates.find((update) => repoRemoved.$isTypeOf(update))
@@ -1112,10 +1114,12 @@ describe('space sync', () => {
         .clientFor(alice.pds)
         .call(com.atproto.space.listWriters, { space })
       expect(listed.repos).toHaveLength(1)
-      expect(listed.repos[0].latest).toEqual(
+      expect(listed.repos[0]).toEqual(
         com.atproto.space.defs.repoWrite.$build({
-          rev: state.rev!,
+          repo: bob.did,
+          repoRev: state.rev!,
           data: new LtHash(state.setHash!).digest(),
+          spaceRev: listedWriters(listed)[0].spaceRev,
         }),
       )
       await restarted.retryPending()
@@ -1195,8 +1199,13 @@ describe('space sync', () => {
         .clientFor(alice.pds)
         .call(com.atproto.space.listWriters, { space })
       expect(listed.repos).toHaveLength(1)
-      expect(listed.repos[0].latest).toEqual(
-        com.atproto.space.defs.repoWrite.$build({ rev: newer, data }),
+      expect(listed.repos[0]).toEqual(
+        com.atproto.space.defs.repoWrite.$build({
+          repo: bob.did,
+          repoRev: newer,
+          data,
+          spaceRev: listedWriters(listed)[0].spaceRev,
+        }),
       )
     })
 
