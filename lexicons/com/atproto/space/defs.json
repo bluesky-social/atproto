@@ -28,6 +28,25 @@
           "description": "SHA-256 digest of the repo's LtHash state."
         }
       }
+    },
+    "repoWrite": {
+      "type": "object",
+      "description": "The repo advanced to a new revision.",
+      "required": ["rev", "data"],
+      "properties": {
+        "rev": {
+          "type": "string",
+          "format": "tid"
+        },
+        "data": {
+          "type": "bytes"
+        }
+      }
+    },
+    "repoRemoved": {
+      "type": "object",
+      "description": "The repo was removed from the writer set.",
+      "properties": {}
     }
   }
 }

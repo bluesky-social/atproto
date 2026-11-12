@@ -385,7 +385,7 @@ export class SpaceClient {
   }
 
   /**
-   * The writer set as stored by the authority.
+   * The writer set as stored by the authority, leaving out removed writers.
    *
    * Reads through storage rather than `listWriters` because the callers that need it
    * are polling for a best-effort notification to land, and `listWriters` needs a
@@ -398,12 +398,12 @@ export class SpaceClient {
       spaceDid,
       (store) => store.space.listWriters(space, { limit: 100 }),
     )
-    return writers.map((w) => w.did)
+    return writers.filter((w) => !w.removedAt).map((w) => w.did)
   }
 
   /**
-   * The writer set, as `listWriters` publishes it. A repo missing from it is a repo
-   * no syncer can discover.
+   * The writer set, as `listWriters` publishes it. A repo missing from it, or
+   * reported as removed, is a repo no syncer treats as part of the space.
    */
   async expectWriterSet(
     space: SpaceRefString,
@@ -414,7 +414,10 @@ export class SpaceClient {
     const res = await cred
       .clientFor(this.authority)
       .call(com.atproto.space.listWriters, { space })
-    expect(res.repos.map((r) => r.repo).sort()).toEqual(
+    const writers = res.repos.filter((r) =>
+      com.atproto.space.defs.repoWrite.$isTypeOf(r.latest),
+    )
+    expect(writers.map((r) => r.repo).sort()).toEqual(
       expected.map((a) => a.did).sort(),
     )
   }

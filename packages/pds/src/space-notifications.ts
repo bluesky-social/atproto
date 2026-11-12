@@ -51,18 +51,18 @@ export class SpaceNotifications implements AsyncDisposable {
     commit: { rev: string; setHash: Uint8Array },
   ): Promise<void> {
     const space = ref.toString()
-    const body = {
+    const update = {
       space,
       repo,
       repoRev: commit.rev,
       data: new LtHash(commit.setHash).digest(),
     }
     try {
-      await this.deliver(ref, body)
-      await this.clearRetry(body)
+      await this.deliver(ref, update)
+      await this.clearRetry(update)
     } catch (err) {
       if (!isRetryableError(err)) {
-        await this.clearRetry(body)
+        await this.clearRetry(update)
         spaceLogger.warn(
           { err, space, repo },
           'space notification will not be retried',
@@ -77,16 +77,16 @@ export class SpaceNotifications implements AsyncDisposable {
       await this.db.executeWithRetry(
         this.db.db
           .insertInto('space_notification_retry')
-          .values({ ...body, ...schedule })
+          .values({ ...update, ...schedule })
           .onConflict((oc) =>
             oc
               .columns(['repo', 'space'])
               .doUpdateSet({
-                repoRev: body.repoRev,
-                data: body.data,
+                repoRev: update.repoRev,
+                data: update.data,
                 ...schedule,
               })
-              .where('space_notification_retry.repoRev', '<', body.repoRev),
+              .where('space_notification_retry.repoRev', '<', update.repoRev),
           ),
       )
       spaceLogger.warn(
@@ -294,9 +294,9 @@ export class SpaceNotifications implements AsyncDisposable {
   }
 
   private async retryOne(retry: SpaceNotificationRetry): Promise<void> {
-    const { space, repo, repoRev, data } = retry
+    const { space, repo } = retry
     try {
-      await this.deliver(SpaceRef.parse(space), { space, repo, repoRev, data })
+      await this.deliver(SpaceRef.parse(space), retry)
       await this.clearRetry(retry)
     } catch (err) {
       if (!isRetryableError(err)) {
@@ -360,13 +360,21 @@ export class SpaceNotifications implements AsyncDisposable {
 
   private async deliver(
     ref: SpaceRef,
-    body: com.atproto.space.notifyRepoUpdate.$InputBody,
+    update: Pick<SpaceNotificationRetry, 'space' | 'repo' | 'repoRev' | 'data'>,
   ): Promise<void> {
     const signal = AbortSignal.any([
       this.abortController.signal,
       AbortSignal.timeout(10 * SECOND),
     ])
     signal.throwIfAborted()
+    const body = {
+      space: update.space,
+      repo: update.repo,
+      latest: com.atproto.space.defs.repoWrite.$build({
+        rev: update.repoRev,
+        data: update.data,
+      }),
+    }
     const { spaceDid } = ref
     const authority = await this.ctx.accountManager.getAccount(spaceDid)
     if (authority) {

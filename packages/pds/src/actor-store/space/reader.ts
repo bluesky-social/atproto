@@ -304,6 +304,7 @@ export class SpaceReader {
     return builder.execute()
   }
 
+  /** Includes writers that have been removed, so that removals reach syncers. */
   async listWriters(
     space: SpaceRefString,
     opts: {

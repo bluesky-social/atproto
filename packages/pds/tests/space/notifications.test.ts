@@ -74,7 +74,12 @@ describe('space notification retries', () => {
     expect(host.callsTo(com.atproto.space.notifyRepoUpdate.$lxm)).toHaveLength(
       1,
     )
-    expect(host.calls[0].body).toMatchObject({ repoRev: commit.rev })
+    expect(host.calls[0].body).toMatchObject({
+      latest: {
+        $type: com.atproto.space.defs.repoWrite.$type,
+        rev: commit.rev,
+      },
+    })
     expect(
       await db.db.selectFrom('space_notification_retry').selectAll().execute(),
     ).toEqual([])

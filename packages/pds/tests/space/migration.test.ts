@@ -241,6 +241,17 @@ describe('space account migration', () => {
     )
   })
 
+  it('leaves a removed writer out of the archive', async () => {
+    const space = await sc.createSpace(alice, { members: [bob] })
+    await sc.write(bob, space)
+    await sc.removeWriter(alice, space, bob)
+
+    const archive = await readSpaceMetaStar([
+      await exportSpaceMeta(alice, space),
+    ])
+    expect(archive.writers).toEqual([])
+  })
+
   it("requires the space before the authority's own repo in it", async () => {
     const space = await sc.createSpace(alice, {
       policy: personalspace.policy.$build({}),
