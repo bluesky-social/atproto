@@ -9,11 +9,11 @@ import {
   type SpaceCommit,
   SpaceMacError,
   SpaceRepoVerificationError,
-  computeCommitMac,
   verifyCommit,
 } from '../src/index.js'
 import { LTHASH_STATE_BYTES } from '../src/lthash.js'
 import { formatSetHashElement } from '../src/util.js'
+import { commitMacParams } from './_util.js'
 
 // cids of `{ text: 'hello' }` and `{ text: 'world' }`
 const CID_A = parseCid(
@@ -143,11 +143,11 @@ describe('RepoCommit', () => {
       repo = new RepoCommit().add('app.bsky.feed.post', '1', CID_A)
     })
 
-    const verifyParams = (mac: Uint8Array) => ({
+    // The requested space and repo, and the MAC the host sent for `commit`.
+    const verifyParams = (commit: SpaceCommit, hostSecret = sharedSecret) => ({
       space: ctx.space,
       repo: ctx.repo,
-      sharedSecret,
-      mac,
+      ...commitMacParams(commit, sharedSecret, hostSecret),
     })
 
     it('produces a well-formed commit', () => {
@@ -162,17 +162,14 @@ describe('RepoCommit', () => {
 
     it('verifies a commit against its MAC', () => {
       const commit = repo.toCommit(ctx)
-      const mac = computeCommitMac(sharedSecret, commit)
-      expect(() => verifyCommit(commit, verifyParams(mac))).not.toThrow()
+      expect(() => verifyCommit(commit, verifyParams(commit))).not.toThrow()
       expect(repo.matches(commit)).toBe(true)
     })
 
     it('rejects a MAC under a different shared secret', () => {
       const commit = repo.toCommit(ctx)
-      const mac = computeCommitMac(randomBytes(32), commit)
-      expect(() => verifyCommit(commit, verifyParams(mac))).toThrow(
-        SpaceMacError,
-      )
+      const params = verifyParams(commit, randomBytes(32))
+      expect(() => verifyCommit(commit, params)).toThrow(SpaceMacError)
     })
 
     it.each<[string, Partial<SpaceCommit>]>([
@@ -180,8 +177,7 @@ describe('RepoCommit', () => {
       ['repo', { repo: 'did:example:bob' }],
     ])('rejects a commit for a different %s', (field, override) => {
       const commit = repo.toCommit(ctx)
-      const mac = computeCommitMac(sharedSecret, commit)
-      const params = { ...verifyParams(mac), ...override }
+      const params = { ...verifyParams(commit), ...override }
       expect(() => verifyCommit(commit, params)).toThrow(
         SpaceRepoVerificationError,
       )
@@ -195,11 +191,10 @@ describe('RepoCommit', () => {
       ['data', { data: new RepoCommit().setHash.digest() }],
     ])('rejects a tampered %s', (_field, override) => {
       const commit = repo.toCommit(ctx)
-      const mac = computeCommitMac(sharedSecret, commit)
       const tampered = { ...commit, ...override }
       // Point the request at the tampered fields so only the MAC can catch it.
       const params = {
-        ...verifyParams(mac),
+        ...verifyParams(commit),
         space: tampered.space,
         repo: tampered.repo,
       }
@@ -208,8 +203,7 @@ describe('RepoCommit', () => {
 
     it('rejects an unknown commit version', () => {
       const commit = { ...repo.toCommit(ctx), ver: 2 }
-      const mac = computeCommitMac(sharedSecret, commit)
-      expect(() => verifyCommit(commit, verifyParams(mac))).toThrow(
+      expect(() => verifyCommit(commit, verifyParams(commit))).toThrow(
         SpaceRepoVerificationError,
       )
     })
@@ -230,7 +224,7 @@ describe('RepoCommit', () => {
    * hashing to one element would let one's addition cancel the other's — silently
    * and permanently — so what keeps the encoding injective is worth stating.
    *
-   * It is *not* the length prefixing that {@link computeCommitMac} uses. It rests
+   * It is *not* any length prefixing or other framing. It rests
    * entirely on the outer two fields being slash-free: a collection is an NSID and
    * a cid is base32, so the first slash always ends the collection and the last
    * always begins the cid. That leaves the rkey unambiguous no matter what it

@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "List operations on a space repo after a given revision. Used for incremental sync. Hosts may truncate the log, so use getRepo for a full sync. Responses that include the latest commit are authenticated with a MAC. Requires auth as the repo's account or with a space credential; implemented by PDS.",
+      "description": "List operations on a space repo after a given revision. Used for incremental sync. Hosts may truncate the log, so use getRepo for a full sync. Responses are authenticated with a MAC. Requires auth as the repo's account or with a space credential; implemented by PDS.",
       "parameters": {
         "type": "params",
         "required": ["space", "repo"],
@@ -40,7 +40,7 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["ops"],
+          "required": ["ops", "commit"],
           "properties": {
             "ops": {
               "type": "array",
@@ -52,7 +52,7 @@
             "commit": {
               "type": "ref",
               "ref": "com.atproto.space.defs#commit",
-              "description": "Only included when the response reaches the latest operation."
+              "description": "The repo's current commit. A syncer compares it against its own set hash once it has applied the last page, which has no cursor."
             },
             "cursor": {
               "type": "string"
@@ -63,7 +63,7 @@
       "errors": [
         {
           "name": "InvalidSpaceMac",
-          "description": "The Atproto-Space-Want-Mac header is missing or invalid."
+          "description": "The MAC requested in the Accept-Signature header is missing or invalid."
         },
         { "name": "SpaceNotFound" },
         { "name": "RepoNotFound" },

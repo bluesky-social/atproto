@@ -15,12 +15,6 @@ import {
 } from '@atproto/lex-client'
 import { type Cid, getBlobCidString } from '@atproto/lex-data'
 import { l } from '@atproto/lex-schema'
-import {
-  MAC_HEADER,
-  RECORD_MAC_TYPE,
-  WANT_MAC_HEADER,
-  formatMacHeader,
-} from '@atproto/space'
 import type { SpaceRefString } from '@atproto/syntax'
 import { createDidResolver } from '@atproto-labs/did-resolver'
 import {
@@ -290,7 +284,9 @@ describe('SpaceClient', () => {
 
       expect(received).toHaveLength(1)
       expect(received[0].get('x-caller')).toBe('yes')
-      expect(received[0].has(WANT_MAC_HEADER)).toBe(true)
+      expect(received[0].get('accept-signature')).toMatch(
+        /;tag="atproto-space-record"/,
+      )
     })
 
     it('rejects records that fail MAC verification', async () => {
@@ -305,10 +301,12 @@ describe('SpaceClient', () => {
             return response
           }
           getRecordCalls++
+          // Keep the label, but replace the MAC
           const headers = new Headers(response.headers)
+          const zeros = Buffer.alloc(32).toString('base64')
           headers.set(
-            MAC_HEADER,
-            formatMacHeader(RECORD_MAC_TYPE, new Uint8Array(32)),
+            'signature',
+            headers.get('signature')!.replace(/:[^:]*:/, `:${zeros}:`),
           )
           return new Response(response.body, {
             status: response.status,
@@ -518,6 +516,22 @@ describe('SpaceClient', () => {
         repo: bob.assertDid,
       })
       expect(body.commit).toMatchObject({ repo: bob.assertDid, space })
+    })
+
+    it('verifies the commit on every page of the operation log', async () => {
+      const aliceSpace = SpaceClient.openSpace(group, space, {
+        agent: alice.agent,
+        didResolver,
+      })
+      const latest = await aliceSpace.getLatestCommit({ repo: bob.assertDid })
+      const { body } = await aliceSpace.listRepoOps({
+        repo: bob.assertDid,
+        limit: 1,
+      })
+      // A full page, so not necessarily the last
+      expect(body.ops).toHaveLength(1)
+      expect(body.cursor).toBeDefined()
+      expect(body.commit).toEqual(latest.body.commit)
     })
 
     it('pulls a repo in full, then incrementally', async () => {

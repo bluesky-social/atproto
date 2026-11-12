@@ -18,8 +18,6 @@ import {
   SpaceRepoVerificationError,
   type VerifyRecordParams,
   type VerifySpaceRepoParams,
-  computeCommitMac,
-  computeRecordMac,
   readRepoStar,
   serializeRecord,
   verifyCommit,
@@ -29,6 +27,7 @@ import {
   writeRepoStar,
 } from '../src/index.js'
 import { REPO_STAR_TYPE } from '../src/types.js'
+import { commitMacParams, recordMacParams } from './_util.js'
 
 const SPACE: SpaceRefString = 'at://did:example:space/space/app.bsky.group/test'
 const AUTHOR: DidString = 'did:example:alice'
@@ -82,8 +81,7 @@ describe('space sync', () => {
   ): VerifySpaceRepoParams => ({
     space: SPACE,
     repo: AUTHOR,
-    sharedSecret,
-    mac: computeCommitMac(sharedSecret, commitFor(recs)),
+    ...commitMacParams(commitFor(recs), sharedSecret),
   })
 
   const starFor = (
@@ -415,8 +413,7 @@ describe('space sync', () => {
         record: { uri: URI, cid: cid.toString(), value },
         params: {
           uri: URI,
-          sharedSecret,
-          mac: computeRecordMac(sharedSecret, URI, cid),
+          ...recordMacParams(URI, cid, sharedSecret),
         } satisfies VerifyRecordParams,
       }
     }
@@ -437,8 +434,13 @@ describe('space sync', () => {
 
     it('rejects a MAC under another shared secret', async () => {
       const { record, params } = await fetched()
-      const mac = computeRecordMac(randomBytes(32), URI, parseCid(record.cid))
-      await expect(verifyRecord(record, { ...params, mac })).rejects.toThrow(
+      const mac = recordMacParams(
+        URI,
+        parseCid(record.cid),
+        sharedSecret,
+        randomBytes(32),
+      )
+      await expect(verifyRecord(record, { ...params, ...mac })).rejects.toThrow(
         SpaceMacError,
       )
     })

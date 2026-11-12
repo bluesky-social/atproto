@@ -1,12 +1,12 @@
 import { parseCid } from '@atproto/lex-data'
-import { RECORD_MAC_TYPE } from '@atproto/space'
+import { RECORD_MAC_PROFILE } from '@atproto/space'
 import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
 import { assertRepoAvailability } from '../sync/util.js'
 import {
   assertSpaceRead,
-  getSpaceMacSecret,
+  getSpaceMacRequest,
   isSpaceUserOrAdmin,
   recordMacHeaders,
   toSpaceRef,
@@ -26,12 +26,12 @@ export default function (server: Server, ctx: AppContext) {
       assertSpaceRead(auth, ref, repo)
       await assertRepoAvailability(ctx, repo, isSpaceUserOrAdmin(auth, repo))
 
-      const sharedSecret = await getSpaceMacSecret(ctx, {
+      const mac = await getSpaceMacRequest(ctx, {
         req,
         res,
         auth,
         repo,
-        type: RECORD_MAC_TYPE,
+        profile: RECORD_MAC_PROFILE,
       })
 
       const uri = ref.recordUri(repo, collection, rkey)
@@ -53,9 +53,9 @@ export default function (server: Server, ctx: AppContext) {
           value: record.value,
         },
         headers: recordMacHeaders(
-          sharedSecret,
           uri.toString(),
           parseCid(record.cid, { flavor: 'cbor' }),
+          mac,
         ),
       }
     },
