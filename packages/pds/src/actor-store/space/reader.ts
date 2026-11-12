@@ -1,4 +1,3 @@
-import { DAY } from '@atproto/common'
 import type { LexMap } from '@atproto/lex-data'
 import { cborToLexRecord } from '@atproto/repo'
 import {
@@ -21,10 +20,6 @@ import type {
   SpaceRepo,
   SpaceWriter,
 } from '../db/index.js'
-
-// How long a lapsed notify registration waits for its last notification to be
-// delivered, so a syncer that misses one during a blip still gets the next.
-export const NOTIFY_GRACE_PERIOD_MS = DAY
 
 export class SpaceReader {
   constructor(public db: ActorDb) {}
@@ -331,18 +326,29 @@ export class SpaceReader {
     return builder.execute()
   }
 
-  // Includes lapsed registrations still owed one more notification, until their
-  // grace period runs out.
+  // Includes lapsed registrations.
   async getNotifyRegistrations(
     space: SpaceRefString,
   ): Promise<{ endpoint: string; token: string; expiresAt: string }[]> {
-    const lapsedBefore = new Date(Date.now() - NOTIFY_GRACE_PERIOD_MS)
     return this.db.db
       .selectFrom('space_notify_registration')
       .select(['endpoint', 'token', 'expiresAt'])
       .where('space', '=', space)
-      .where('expiresAt', '>', lapsedBefore.toISOString())
       .execute()
+  }
+
+  async getNotifyRegistration(
+    space: SpaceRefString,
+    registration: { endpoint: string; token: string },
+  ): Promise<{ expiresAt: string } | null> {
+    const row = await this.db.db
+      .selectFrom('space_notify_registration')
+      .select('expiresAt')
+      .where('space', '=', space)
+      .where('endpoint', '=', registration.endpoint)
+      .where('token', '=', registration.token)
+      .executeTakeFirst()
+    return row ?? null
   }
 }
 

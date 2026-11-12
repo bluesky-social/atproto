@@ -14,6 +14,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('endpoint', 'varchar', (col) => col.notNull())
     .addColumn('token', 'varchar', (col) => col.notNull())
     .addColumn('expiresAt', 'varchar', (col) => col.notNull())
+    .addColumn('expiryNotified', 'integer', (col) => col.notNull().defaultTo(0))
     .addPrimaryKeyConstraint('space_notify_registration_pkey', [
       'space',
       'endpoint',

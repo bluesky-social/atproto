@@ -1,7 +1,7 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { MINUTE, TID, getServiceEndpoint } from '@atproto/common'
 import type { IdResolver } from '@atproto/identity'
-import { XrpcError, xrpc } from '@atproto/lex'
+import { type l, xrpc } from '@atproto/lex'
 import type { Cid } from '@atproto/lex-data'
 import type { SpacePermissionMatchOperation } from '@atproto/oauth-scopes'
 import {
@@ -333,17 +333,11 @@ export async function processNotifyRepoUpdate(
   ref: SpaceRef,
   input: com.atproto.space.notifyRepoUpdate.$InputBody,
 ): Promise<void> {
-  const { space, repo, latest } = input
+  const { space, repo, repoRev, data } = input
   const { spaceDid } = ref
 
   await assertSpaceHost(ctx, ref)
-  // Only the space host removes a repo from the writer set, so a repo host can
-  // only report a write.
-  if (!com.atproto.space.defs.repoWrite.$isTypeOf(latest)) {
-    throw new InvalidRequestError('Repo hosts may only notify of a repo write')
-  }
-  const { rev, data } = latest
-  if (TID.fromStr(rev).timestamp() > (Date.now() + 5 * MINUTE) * 1000) {
+  if (TID.fromStr(repoRev).timestamp() > (Date.now() + 5 * MINUTE) * 1000) {
     throw new InvalidRequestError('Repo revision is in the future', 'FutureRev')
   }
 
@@ -364,16 +358,20 @@ export async function processNotifyRepoUpdate(
   }
 
   const sequence = await ctx.actorStore.transact(spaceDid, (txn) =>
-    txn.space.recordWriter(space, repo, rev, data),
+    txn.space.recordWriter(space, repo, repoRev, data),
   )
   if (!sequence) return
 
-  forwardRepoUpdate(ctx, ref, {
-    space,
-    repo,
-    latest: com.atproto.space.defs.repoWrite.$build({ rev, data }),
-    ...sequence,
-  })
+  forwardSpaceUpdate(
+    ctx,
+    ref,
+    com.atproto.space.notifySpaceUpdate.repoWrite.$build({
+      repo,
+      repoRev,
+      data,
+      ...sequence,
+    }),
+  )
 }
 
 /** A repo removed from a space's writer set, at its place in the space sequence. */
@@ -389,39 +387,42 @@ export function forwardWriterRemoved(
   ref: SpaceRef,
   removed: RemovedWriter,
 ): void {
-  forwardRepoUpdate(ctx, ref, {
-    space: ref.toString(),
-    repo: removed.repo,
-    latest: com.atproto.space.defs.repoRemoved.$build({}),
-    spaceRev: removed.spaceRev,
-    prevSpaceRev: removed.prevSpaceRev,
-  })
+  forwardSpaceUpdate(
+    ctx,
+    ref,
+    com.atproto.space.notifySpaceUpdate.repoRemoved.$build(removed),
+  )
 }
+
+/** A sequenced change to a space's writer set. */
+type WriterSetUpdate =
+  | l.$Typed<com.atproto.space.notifySpaceUpdate.RepoWrite>
+  | l.$Typed<com.atproto.space.notifySpaceUpdate.RepoRemoved>
 
 /**
  * Forward a sequenced change to the writer set to the syncers registered for the
  * space. Fan-out stays queued so neither a local write nor a remote PDS waits on
  * downstream syncing services.
  */
-function forwardRepoUpdate(
+function forwardSpaceUpdate(
   ctx: AppContext,
   ref: SpaceRef,
-  update: com.atproto.space.notifyRepoUpdate.$InputBody,
+  update: WriterSetUpdate,
 ): void {
   ctx.backgroundQueue.add((_ctx, signal) =>
-    deliverRepoUpdate(ctx, ref, update, signal),
+    deliverSpaceUpdate(ctx, ref, update, signal),
   )
 }
 
 /**
- * Deliver a repo update to each registered syncer. A registration whose credential
- * has expired is dropped once this last notification is delivered, so a syncer
- * that let its credential lapse is woken to renew it.
+ * Deliver an update to each active registration, on a best-effort basis. A
+ * registration that has lapsed since the last update is sent an expiry notice in
+ * place of the update, which is delivered reliably.
  */
-async function deliverRepoUpdate(
+async function deliverSpaceUpdate(
   ctx: AppContext,
   ref: SpaceRef,
-  body: com.atproto.space.notifyRepoUpdate.$InputBody,
+  update: WriterSetUpdate,
   signal: AbortSignal,
 ): Promise<void> {
   const space = ref.toString()
@@ -429,42 +430,36 @@ async function deliverRepoUpdate(
     store.space.getNotifyRegistrations(space),
   )
   const now = new Date().toISOString()
-  const deliveredLapsed: { endpoint: string; token: string }[] = []
 
   for (const { endpoint, token, expiresAt } of registrations) {
+    // Lapsed, so handled below.
+    if (expiresAt <= now) continue
     try {
       // The endpoint is chosen by the syncer, so it's fetched as untrusted.
       await xrpc(
         { service: endpoint, fetch: ctx.safeFetch },
-        com.atproto.space.notifyRepoUpdate,
+        com.atproto.space.notifySpaceUpdate,
         {
-          headers: { authorization: `Bearer ${token}` },
-          body,
+          body: { space, token, update },
           signal: AbortSignal.any([signal, AbortSignal.timeout(10_000)]),
         },
       )
-      if (expiresAt <= now) deliveredLapsed.push({ endpoint, token })
     } catch (err) {
       spaceLogger.warn({ err, space, endpoint }, 'notify failed')
-      // A syncer unregisters by answering with a permanent HTTP error.
-      if (err instanceof XrpcError && !err.shouldRetry()) {
-        await ctx.actorStore.transact(ref.spaceDid, (actorTxn) =>
-          actorTxn.space.removeNotifyRegistration(space, { endpoint, token }),
-        )
-      }
     }
   }
 
-  if (deliveredLapsed.length > 0) {
-    await ctx.actorStore.transact(ref.spaceDid, async (actorTxn) => {
-      for (const registration of deliveredLapsed) {
-        await actorTxn.space.removeLapsedNotifyRegistration(
-          space,
-          registration,
-          now,
-        )
-      }
-    })
+  const lapsed = await ctx.actorStore.transact(ref.spaceDid, (actorTxn) =>
+    actorTxn.space.claimLapsedNotifyRegistrations(space, now),
+  )
+  if (lapsed.length > 0) {
+    await ctx.spaceNotifications.notifySyncers(
+      ref,
+      lapsed,
+      com.atproto.space.notifySpaceUpdate.registrationExpired.$build({
+        spaceRev: update.spaceRev,
+      }),
+    )
   }
 }
 

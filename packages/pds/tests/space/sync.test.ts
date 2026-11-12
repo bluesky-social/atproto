@@ -1001,11 +1001,11 @@ describe('space sync', () => {
       await Promise.all([sc.write(bob, space), sc.write(dan, space)])
       await alice.pds.ctx.backgroundQueue.processAll()
       const notifications = syncer
-        .callsTo(com.atproto.space.notifyRepoUpdate.$lxm)
-        .map(
-          (call) => call.body as com.atproto.space.notifyRepoUpdate.$InputBody,
+        .spaceUpdates()
+        .filter((update) =>
+          com.atproto.space.notifySpaceUpdate.repoWrite.$isTypeOf(update),
         )
-        .sort((a, b) => a.spaceRev!.localeCompare(b.spaceRev!))
+        .sort((a, b) => a.spaceRev.localeCompare(b.spaceRev))
       expect(notifications).toHaveLength(3)
       expect(notifications[0].prevSpaceRev).toBeUndefined()
       expect(notifications[1].prevSpaceRev).toBe(notifications[0].spaceRev)
@@ -1028,20 +1028,18 @@ describe('space sync', () => {
       await sc.removeWriter(alice, space, dan)
       await alice.pds.ctx.backgroundQueue.processAll()
 
-      const [write, removal] = syncer
-        .callsTo(com.atproto.space.notifyRepoUpdate.$lxm)
-        .map(
-          (call) => call.body as com.atproto.space.notifyRepoUpdate.$InputBody,
-        )
-        .sort((a, b) => a.spaceRev!.localeCompare(b.spaceRev!))
+      const { repoWrite, repoRemoved } = com.atproto.space.notifySpaceUpdate
+      const updates = syncer.spaceUpdates()
+      const write = updates.find((update) => repoWrite.$isTypeOf(update))
+      const removal = updates.find((update) => repoRemoved.$isTypeOf(update))
       const listed = await client.call(com.atproto.space.listWriters, { space })
-      expect(removal).toEqual({
-        space,
-        repo: dan.did,
-        latest: com.atproto.space.defs.repoRemoved.$build({}),
-        spaceRev: listed.cursor,
-        prevSpaceRev: write.spaceRev,
-      })
+      expect(removal).toEqual(
+        repoRemoved.$build({
+          repo: dan.did,
+          spaceRev: listed.cursor!,
+          prevSpaceRev: write?.spaceRev,
+        }),
+      )
     })
 
     it("resolves a space host through the authority's #atproto_pds entry", async () => {
@@ -1125,9 +1123,6 @@ describe('space sync', () => {
       })
     }
 
-    const repoWrite = (rev: string, data = new LtHash().digest()) =>
-      com.atproto.space.defs.repoWrite.$build({ rev, data })
-
     it('ignores duplicate and older revisions without forwarding them', async () => {
       await using syncer = await MockService.create(network, {
         serviceId: 'atproto_space_syncer',
@@ -1143,23 +1138,20 @@ describe('space sync', () => {
       const current = (await sc.repoState(bob, space))!.rev!
       await alice.pds.ctx.backgroundQueue.processAll()
       const before = await client.call(com.atproto.space.listWriters, { space })
-      const calls = syncer.callsTo(
-        com.atproto.space.notifyRepoUpdate.$lxm,
-      ).length
-      for (const rev of [older, current]) {
+      const calls = syncer.spaceUpdates().length
+      for (const repoRev of [older, current]) {
         await notify(bob, {
           space,
           repo: bob.did,
-          latest: repoWrite(rev, new Uint8Array(32)),
+          repoRev,
+          data: new Uint8Array(32),
         })
       }
       await alice.pds.ctx.backgroundQueue.processAll()
       expect(
         await client.call(com.atproto.space.listWriters, { space }),
       ).toEqual(before)
-      expect(
-        syncer.callsTo(com.atproto.space.notifyRepoUpdate.$lxm),
-      ).toHaveLength(calls)
+      expect(syncer.spaceUpdates()).toHaveLength(calls)
     })
 
     it('keeps the newest repo revision when notifications race', async () => {
@@ -1168,11 +1160,12 @@ describe('space sync', () => {
       const newer = TID.nextStr(older)
       const data = new LtHash().digest()
       await Promise.all([
-        notify(bob, { space, repo: bob.did, latest: repoWrite(newer, data) }),
+        notify(bob, { space, repo: bob.did, repoRev: newer, data }),
         notify(bob, {
           space,
           repo: bob.did,
-          latest: repoWrite(older, new Uint8Array(32)),
+          repoRev: older,
+          data: new Uint8Array(32),
         }),
       ])
       const cred = await sc.credentialFor(alice, space)
@@ -1180,7 +1173,9 @@ describe('space sync', () => {
         .clientFor(alice.pds)
         .call(com.atproto.space.listWriters, { space })
       expect(listed.repos).toHaveLength(1)
-      expect(listed.repos[0].latest).toEqual(repoWrite(newer, data))
+      expect(listed.repos[0].latest).toEqual(
+        com.atproto.space.defs.repoWrite.$build({ rev: newer, data }),
+      )
     })
 
     it('rejects future revisions while allowing a small clock skew', async () => {
@@ -1189,18 +1184,19 @@ describe('space sync', () => {
         notify(bob, {
           space,
           repo: bob.did,
-          latest: repoWrite(
-            TID.fromTime((Date.now() + 10 * MINUTE) * 1000, 0).toString(),
-          ),
+          repoRev: TID.fromTime(
+            (Date.now() + 10 * MINUTE) * 1000,
+            0,
+          ).toString(),
+          data: new LtHash().digest(),
         }),
       ).rejects.toMatchObject({ error: 'FutureRev' })
       expect(await sc.writerDids(space)).toEqual([])
       await notify(bob, {
         space,
         repo: bob.did,
-        latest: repoWrite(
-          TID.fromTime((Date.now() + MINUTE) * 1000, 0).toString(),
-        ),
+        repoRev: TID.fromTime((Date.now() + MINUTE) * 1000, 0).toString(),
+        data: new LtHash().digest(),
       })
       expect(await sc.writerDids(space)).toEqual([bob.did])
     })
@@ -1213,7 +1209,8 @@ describe('space sync', () => {
         notify(bob, {
           space,
           repo: carol.did,
-          latest: repoWrite(TID.nextStr()),
+          repoRev: TID.nextStr(),
+          data: new LtHash().digest(),
         }),
       ).rejects.toThrow(/iss does not match the repo/)
     })
@@ -1232,10 +1229,8 @@ describe('space sync', () => {
           {
             space,
             repo: bob.did,
-            latest: repoWrite(
-              state!.rev!,
-              new LtHash(state!.setHash!).digest(),
-            ),
+            repoRev: state!.rev!,
+            data: new LtHash(state!.setHash!).digest(),
           },
           { aud: carol.did },
         ),
@@ -1249,7 +1244,8 @@ describe('space sync', () => {
         notify(carol, {
           space,
           repo: carol.did,
-          latest: repoWrite(TID.nextStr()),
+          repoRev: TID.nextStr(),
+          data: new LtHash().digest(),
         }),
       ).rejects.toThrow(/not authorized/)
     })
@@ -1262,7 +1258,8 @@ describe('space sync', () => {
         notify(bob, {
           space,
           repo: bob.did,
-          latest: repoWrite(TID.nextStr()),
+          repoRev: TID.nextStr(),
+          data: new LtHash().digest(),
         }),
       ).rejects.toThrow(/not authorized/)
     })
@@ -1279,33 +1276,17 @@ describe('space sync', () => {
         notify(bob, {
           space,
           repo: bob.did,
-          latest: repoWrite(TID.nextStr()),
+          repoRev: TID.nextStr(),
+          data: new LtHash().digest(),
         }),
       ).rejects.toThrow(/not authorized/)
       await notify(carol, {
         space,
         repo: carol.did,
-        latest: repoWrite(TID.nextStr()),
+        repoRev: TID.nextStr(),
+        data: new LtHash().digest(),
       })
       expect(await sc.writerDids(space)).toEqual([carol.did])
-    })
-
-    it('rejects a removal, which only the space host can make', async () => {
-      const space = await sc.createSpace(alice, { members: [bob] })
-      await sc.write(bob, space, { text: 'still a writer' })
-      await sc.awaitNotify(
-        () => sc.writerDids(space),
-        (dids) => dids.includes(bob.did),
-      )
-
-      await expect(
-        notify(bob, {
-          space,
-          repo: bob.did,
-          latest: com.atproto.space.defs.repoRemoved.$build({}),
-        }),
-      ).rejects.toThrow(/may only notify of a repo write/)
-      expect(await sc.writerDids(space)).toEqual([bob.did])
     })
 
     it('rejects a rev that is not a TID before any auth check', async () => {
@@ -1317,7 +1298,8 @@ describe('space sync', () => {
         notify(bob, {
           space,
           repo: bob.did,
-          latest: repoWrite('not-a-tid'),
+          repoRev: 'not-a-tid',
+          data: new LtHash().digest(),
         }),
       ).rejects.toThrow(/Invalid TID/)
     })

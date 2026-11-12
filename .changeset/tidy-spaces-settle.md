@@ -6,7 +6,7 @@
 
 Settle the names and shapes of the space lexicons.
 
-Methods are renamed: `com.atproto.space.listRepos` to `listWriters` (each entry's `did` is now `repo`), `notifyWrite` to `notifyRepoUpdate`, and `notifyCredentialRevoked` to `notifyCredentialsRevoked`. `com.atproto.space.notifySpaceDeleted` is replaced by `notifySpaceStatus`, which carries a `status` of `deleted`.
+Methods are renamed: `com.atproto.space.listRepos` to `listWriters` (each entry's `did` is now `repo`), `notifyWrite` to `notifyRepoUpdate`, and `notifyCredentialRevoked` to `notifyCredentialsRevoked`.
 
 `com.atproto.memberspace.putMember` and `removeMember` are replaced by `putMembers` and `removeMembers`, which take up to 100 members (or DIDs) and apply them in a single commit. A DID listed twice in `putMembers` takes its last entry, and `removeMembers` ignores DIDs that are not members, leaving them in the writer set. The member object moves to `com.atproto.memberspace.defs#member`.
 

@@ -434,7 +434,7 @@ export class SpaceClient {
    * `notifyRepoUpdate` is fired from the writer's PDS without awaiting, so there is no
    * queue on the writer side to drain — polling is the only option. Prefer
    * `network.pds.ctx.backgroundQueue.processAll()` where the work *is* queued
-   * (the authority's outbound fan-out, `notifySpaceStatus`).
+   * (the authority's outbound fan-out, `notifySpaceUpdate`).
    */
   async awaitNotify<T>(
     poll: () => Promise<T>,
@@ -589,15 +589,29 @@ export class MockService {
     return this.calls.filter((c) => c.lxm === lxm)
   }
 
+  /** The `update` of each notifySpaceUpdate call, in the order received. */
+  spaceUpdates() {
+    return this.callsTo(com.atproto.space.notifySpaceUpdate.$lxm).map(
+      (call) =>
+        (call.body as com.atproto.space.notifySpaceUpdate.$InputBody).update,
+    )
+  }
+
   static async create(
     network: TestNetworkNoAppView,
     opts: {
       serviceId: string
       /** Defaults to 200 with an empty object. */
       respond?: () => { status: number; body: unknown }
+      /**
+       * Whether to confirm notify registrations by echoing the challenge, in
+       * place of `respond`. Defaults to true.
+       */
+      confirmRegistrations?: boolean
     },
   ): Promise<MockService> {
     const respond = opts.respond ?? (() => ({ status: 200, body: {} }))
+    const confirmRegistrations = opts.confirmRegistrations ?? true
     const calls: MockService['calls'] = []
 
     const server = createServer((req, res) => {
@@ -606,15 +620,20 @@ export class MockService {
       req.on('end', () => {
         const raw = Buffer.concat(chunks).toString('utf8')
         const url = new URL(req.url ?? '/', 'http://localhost')
-        calls.push({
+        const call = {
           // `/xrpc/<lxm>`
           lxm: url.pathname.replace(/^\/xrpc\//, ''),
           body: raw
             ? safeJson(raw)
             : Object.fromEntries(url.searchParams.entries()),
           auth: req.headers['authorization'] as string | undefined,
-        })
-        const { status, body } = respond()
+        }
+        calls.push(call)
+        const { status, body } =
+          confirmRegistrations &&
+          call.lxm === com.atproto.space.confirmRegistration.$lxm
+            ? { status: 200, body: { challenge: (call.body as any).challenge } }
+            : respond()
         res.writeHead(status, { 'content-type': 'application/json' })
         res.end(JSON.stringify(body))
       })

@@ -45,7 +45,7 @@ export type { UsedRefreshToken } from './used-refresh-token.js'
 export type { RepoRoot } from './repo-root.js'
 export type {
   SpaceNotificationRetry,
-  SpaceStatusNotificationRetry,
+  SpaceSyncerNotificationRetry,
 } from './space-notification.js'
 export type { RefreshToken } from './refresh-token.js'
 export type { RevokedSpaceCredential } from './revoked-space-credential.js'

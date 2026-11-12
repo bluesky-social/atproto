@@ -1,20 +1,51 @@
 import { randomUUID } from 'node:crypto'
 import { DAY, HOUR, MINUTE, SECOND, allFulfilled } from '@atproto/common'
-import { RETRYABLE_HTTP_STATUS_CODES, XrpcError, xrpc } from '@atproto/lex'
+import {
+  RETRYABLE_HTTP_STATUS_CODES,
+  XrpcError,
+  type l,
+  xrpc,
+} from '@atproto/lex'
 import { LtHash, spaceHostAud } from '@atproto/space'
-import { type DidString, SpaceRef } from '@atproto/syntax'
+import { type DidString, SpaceRef, type SpaceRefString } from '@atproto/syntax'
 import { XRPCError } from '@atproto/xrpc-server'
 import type {
   SpaceNotificationRetry,
-  SpaceStatusNotificationRetry,
+  SpaceSyncerNotificationRetry,
 } from './account-manager/db/index.js'
 import {
   processNotifyRepoUpdate,
   resolveNotifyTarget,
 } from './api/com/atproto/space/util.js'
 import type { AppContext } from './context.js'
+import { fromJson, toJson } from './db/index.js'
 import { com } from './lexicons/index.js'
 import { spaceLogger } from './logger.js'
+
+const { spaceDeleted, registrationExpired } =
+  com.atproto.space.notifySpaceUpdate
+
+/** An update that the space host must reliably deliver to a registered syncer. */
+export type SyncerNotice =
+  | l.$Typed<com.atproto.space.notifySpaceUpdate.SpaceDeleted>
+  | l.$Typed<com.atproto.space.notifySpaceUpdate.RegistrationExpired>
+
+type SyncerRecipient = {
+  space: SpaceRefString
+  endpoint: string
+  token: string
+}
+
+// A syncer notice is retried after each of these delays in turn, repeating the
+// last, until a retry fails after the retry window has closed.
+const SYNCER_NOTICE_RETRY_DELAYS = [
+  MINUTE,
+  10 * MINUTE,
+  HOUR,
+  6 * HOUR,
+  12 * HOUR,
+]
+const SYNCER_NOTICE_RETRY_WINDOW = 72 * HOUR
 
 /**
  * Sends notifications immediately; retryable failures are coalesced in the
@@ -22,8 +53,8 @@ import { spaceLogger } from './logger.js'
  * An expiring lease selects one retry worker across processes, allowing takeover
  * if that worker stops.
  *
- * Space status notifications to syncers are retried the same way, within a
- * 24-hour window.
+ * Notices to syncers, of a space's deletion or a registration's expiry, are
+ * retried the same way, but on a slower schedule and for at least 72 hours.
  */
 export class SpaceNotifications implements AsyncDisposable {
   private readonly owner = randomUUID()
@@ -97,49 +128,62 @@ export class SpaceNotifications implements AsyncDisposable {
   }
 
   /**
-   * Tell each syncer registered for a space of its status, persisting retryable
-   * failures. Deletion is the only status sent. Retries stop after 24 hours, as
-   * for a repo update: a syncer that still holds a copy learns of the deletion
-   * when it renews its credential, and is answered SpaceDeleted.
+   * Send a notice to each of the given syncers, persisting retryable failures.
+   * If a syncer rejects its expiry notice, or can't be reached within the retry
+   * window, its registration is dropped.
    */
-  async notifySpaceStatus(
+  async notifySyncers(
     ref: SpaceRef,
     registrations: { endpoint: string; token: string }[],
+    notice: SyncerNotice,
   ): Promise<void> {
     const space = ref.toString()
     await allFulfilled(
       registrations.map(async ({ endpoint, token }) => {
+        const recipient = { space, endpoint, token }
         try {
-          await this.deliverSpaceStatus(ref, { endpoint, token })
+          await this.deliverSyncerNotice(recipient, notice)
         } catch (err) {
           if (!isRetryableError(err)) {
+            await this.abandonSyncerNotice(recipient, notice)
             spaceLogger.warn(
               { err, space, endpoint },
-              'space status notification will not be retried',
+              'syncer notification will not be retried',
             )
             return
           }
-          const schedule = {
-            attempts: 1,
-            retryAt: nextRetryAt(1),
-            expiresAt: Date.now() + DAY,
-          }
-          await this.db.executeWithRetry(
-            this.db.db
-              .insertInto('space_status_notification_retry')
-              .values({ space, endpoint, token, ...schedule })
-              .onConflict((oc) =>
-                oc
-                  .columns(['space', 'endpoint', 'token'])
-                  .doUpdateSet(schedule),
-              ),
-          )
+          await this.queueSyncerNotice(recipient, notice)
           spaceLogger.warn(
             { err, space, endpoint },
-            'space status notification queued for retry',
+            'syncer notification queued for retry',
           )
         }
       }),
+    )
+  }
+
+  private async queueSyncerNotice(
+    recipient: SyncerRecipient,
+    notice: SyncerNotice,
+  ): Promise<void> {
+    const noticeJson = toJson(notice)
+    const schedule = {
+      attempts: 1,
+      retryAt: nextSyncerRetryAt(1),
+      expiresAt: Date.now() + SYNCER_NOTICE_RETRY_WINDOW,
+    }
+    await this.db.executeWithRetry(
+      this.db.db
+        .insertInto('space_syncer_notification_retry')
+        .values({ ...recipient, noticeJson, ...schedule })
+        .onConflict((oc) => {
+          // A deletion notice replaces whatever is pending. An expiry notice
+          // never replaces a pending notice, so a deletion notice is never lost.
+          const pending = oc.columns(['space', 'endpoint', 'token'])
+          return spaceDeleted.$isTypeOf(notice)
+            ? pending.doUpdateSet({ noticeJson, ...schedule })
+            : pending.doNothing()
+        }),
     )
   }
 
@@ -179,14 +223,14 @@ export class SpaceNotifications implements AsyncDisposable {
         .orderBy('retryAt')
         .limit(5)
         .execute()
-      const statusRetries = await this.db.db
-        .selectFrom('space_status_notification_retry')
+      const syncerRetries = await this.db.db
+        .selectFrom('space_syncer_notification_retry')
         .selectAll()
         .where('retryAt', '<=', now)
         .orderBy('retryAt')
         .limit(5)
         .execute()
-      if (!retries.length && !statusRetries.length) return
+      if (!retries.length && !syncerRetries.length) return
       if (this.abortController.signal.aborted || Date.now() >= expiresAt) return
 
       // @NOTE Renew between batches; lease expiry can cause duplicate delivery.
@@ -202,26 +246,18 @@ export class SpaceNotifications implements AsyncDisposable {
             await this.retryOne(retry)
           }
         }),
-        ...statusRetries.map((retry) => this.retrySpaceStatus(retry)),
+        ...syncerRetries.map((retry) => this.retrySyncerNotice(retry)),
       ])
     }
   }
 
-  private async retrySpaceStatus(
-    retry: SpaceStatusNotificationRetry,
+  private async retrySyncerNotice(
+    retry: SpaceSyncerNotificationRetry,
   ): Promise<void> {
-    const { space, endpoint, token } = retry
-    if (retry.expiresAt <= Date.now()) {
-      await this.clearSpaceStatusRetry(retry)
-      spaceLogger.warn(
-        { space, endpoint },
-        'space status notification expired after 24 hours',
-      )
-      return
-    }
+    const { space, endpoint } = retry
+    const notice = fromJson(retry.noticeJson)
 
-    const ref = SpaceRef.parse(space)
-    const { spaceDid } = ref
+    const { spaceDid } = SpaceRef.parse(space)
     const authority = await this.ctx.accountManager.getAccount(spaceDid, {
       includeDeactivated: true,
       includeTakenDown: true,
@@ -229,53 +265,105 @@ export class SpaceNotifications implements AsyncDisposable {
     if (!authority) {
       // Deleting the authority's account deleted its spaces with it, which
       // syncers learn from the account event.
-      await this.clearSpaceStatusRetry(retry)
+      await this.clearSyncerRetry(retry)
       return
     }
     if (authority.deactivatedAt || authority.takedownRef) {
-      await this.rescheduleSpaceStatus(retry)
+      await this.rescheduleSyncerRetry(retry, notice)
       return
     }
-    const current = await this.ctx.actorStore.read(spaceDid, (store) =>
-      store.space.getSpace(space),
-    )
-    if (!current?.deletedAt) {
-      // Recreated since: telling the syncer now would purge its new copy.
-      await this.clearSpaceStatusRetry(retry)
+    if (!(await this.isSyncerNoticeOwed(retry, notice))) {
+      await this.clearSyncerRetry(retry)
       return
     }
 
     try {
-      await this.deliverSpaceStatus(ref, { endpoint, token })
-      await this.clearSpaceStatusRetry(retry)
+      await this.deliverSyncerNotice(retry, notice)
+      await this.clearSyncerRetry(retry)
     } catch (err) {
       if (!isRetryableError(err)) {
-        await this.clearSpaceStatusRetry(retry)
+        await this.clearSyncerRetry(retry)
+        await this.abandonSyncerNotice(retry, notice)
         spaceLogger.warn(
           { err, space, endpoint },
-          'space status notification will not be retried',
+          'syncer notification will not be retried',
         )
         return
       }
-      await this.rescheduleSpaceStatus(retry)
+      await this.rescheduleSyncerRetry(retry, notice)
       spaceLogger.warn(
         { err, space, endpoint },
-        'space status notification retry failed',
+        'syncer notification retry failed',
       )
     }
   }
 
-  private async rescheduleSpaceStatus(
-    retry: SpaceStatusNotificationRetry,
+  // A notice that no longer applies is dropped rather than sent.
+  private async isSyncerNoticeOwed(
+    recipient: SyncerRecipient,
+    notice: SyncerNotice,
+  ): Promise<boolean> {
+    const { space } = recipient
+    const { spaceDid } = SpaceRef.parse(space)
+    return this.ctx.actorStore.read(spaceDid, async (store) => {
+      if (registrationExpired.$isTypeOf(notice)) {
+        // Not owed if the syncer has renewed since.
+        const registration = await store.space.getNotifyRegistration(
+          space,
+          recipient,
+        )
+        return (
+          registration !== null &&
+          registration.expiresAt <= new Date().toISOString()
+        )
+      }
+      // Not owed if the space has been recreated since.
+      const current = await store.space.getSpace(space)
+      return !!current?.deletedAt
+    })
+  }
+
+  /**
+   * Give up on delivering a notice. A syncer that rejects its expiry notice, or
+   * can't be reached, is unregistered, unless it has renewed since. A deleted
+   * space's registrations were already dropped with it.
+   */
+  private async abandonSyncerNotice(
+    recipient: SyncerRecipient,
+    notice: SyncerNotice,
   ): Promise<void> {
+    if (!registrationExpired.$isTypeOf(notice)) return
+    const { space } = recipient
+    const { spaceDid } = SpaceRef.parse(space)
+    await this.ctx.actorStore.transact(spaceDid, (actorTxn) =>
+      actorTxn.space.removeLapsedNotifyRegistration(
+        space,
+        recipient,
+        new Date().toISOString(),
+      ),
+    )
+  }
+
+  // Retries aren't scheduled to stop at the end of the window, so the last one
+  // lands after it. Once that one has failed too, the notice is abandoned.
+  private async rescheduleSyncerRetry(
+    retry: SpaceSyncerNotificationRetry,
+    notice: SyncerNotice,
+  ): Promise<void> {
+    if (retry.expiresAt <= Date.now()) {
+      await this.clearSyncerRetry(retry)
+      await this.abandonSyncerNotice(retry, notice)
+      spaceLogger.warn(
+        { space: retry.space, endpoint: retry.endpoint },
+        'syncer notification expired after 72 hours',
+      )
+      return
+    }
     const attempts = retry.attempts + 1
     await this.db.executeWithRetry(
       this.db.db
-        .updateTable('space_status_notification_retry')
-        .set({
-          attempts,
-          retryAt: Math.min(nextRetryAt(attempts), retry.expiresAt),
-        })
+        .updateTable('space_syncer_notification_retry')
+        .set({ attempts, retryAt: nextSyncerRetryAt(attempts) })
         .where('space', '=', retry.space)
         .where('endpoint', '=', retry.endpoint)
         .where('token', '=', retry.token)
@@ -283,16 +371,16 @@ export class SpaceNotifications implements AsyncDisposable {
     )
   }
 
-  // @NOTE Matching retryAt leaves alone a row a later deletion re-queued.
-  private async clearSpaceStatusRetry(
+  // @NOTE Matching retryAt leaves alone a row re-queued since.
+  private async clearSyncerRetry(
     retry: Pick<
-      SpaceStatusNotificationRetry,
+      SpaceSyncerNotificationRetry,
       'space' | 'endpoint' | 'token' | 'retryAt'
     >,
   ): Promise<void> {
     await this.db.executeWithRetry(
       this.db.db
-        .deleteFrom('space_status_notification_retry')
+        .deleteFrom('space_syncer_notification_retry')
         .where('space', '=', retry.space)
         .where('endpoint', '=', retry.endpoint)
         .where('token', '=', retry.token)
@@ -377,10 +465,8 @@ export class SpaceNotifications implements AsyncDisposable {
     const body = {
       space: update.space,
       repo: update.repo,
-      latest: com.atproto.space.defs.repoWrite.$build({
-        rev: update.repoRev,
-        data: update.data,
-      }),
+      repoRev: update.repoRev,
+      data: update.data,
     }
     const { spaceDid } = ref
     const authority = await this.ctx.accountManager.getAccount(spaceDid)
@@ -405,9 +491,9 @@ export class SpaceNotifications implements AsyncDisposable {
     }
   }
 
-  private async deliverSpaceStatus(
-    ref: SpaceRef,
-    registration: { endpoint: string; token: string },
+  private async deliverSyncerNotice(
+    recipient: SyncerRecipient,
+    notice: SyncerNotice,
   ): Promise<void> {
     const signal = AbortSignal.any([
       this.abortController.signal,
@@ -416,11 +502,14 @@ export class SpaceNotifications implements AsyncDisposable {
     signal.throwIfAborted()
     // The endpoint is chosen by the syncer, so it's fetched as untrusted.
     await xrpc(
-      { service: registration.endpoint, fetch: this.ctx.safeFetch },
-      com.atproto.space.notifySpaceStatus,
+      { service: recipient.endpoint, fetch: this.ctx.safeFetch },
+      com.atproto.space.notifySpaceUpdate,
       {
-        headers: { authorization: `Bearer ${registration.token}` },
-        body: { space: ref.toString(), status: 'deleted' },
+        body: {
+          space: recipient.space,
+          token: recipient.token,
+          update: notice,
+        },
         signal,
       },
     )
@@ -459,7 +548,17 @@ function isRetryableError(err: unknown): boolean {
 }
 
 function nextRetryAt(attempts: number): number {
-  // @NOTE Double the base delay from one minute up to one hour. Jitter of 50-100%
+  // @NOTE Double the base delay from one minute up to one hour.
   const delay = Math.min(MINUTE * 2 ** Math.min(attempts - 1, 6), HOUR)
+  return retryAfter(delay)
+}
+
+function nextSyncerRetryAt(attempts: number): number {
+  const delays = SYNCER_NOTICE_RETRY_DELAYS
+  return retryAfter(delays[Math.min(attempts, delays.length) - 1])
+}
+
+function retryAfter(delay: number): number {
+  // @NOTE Jitter of 50-100%
   return Date.now() + Math.floor(delay * (0.5 + Math.random() / 2))
 }

@@ -319,14 +319,11 @@ describe('space policy', () => {
       await network.pds.ctx.backgroundQueue.processAll()
 
       const removed = syncer
-        .callsTo(com.atproto.space.notifyRepoUpdate.$lxm)
-        .map(
-          (call) => call.body as com.atproto.space.notifyRepoUpdate.$InputBody,
+        .spaceUpdates()
+        .filter((update) =>
+          com.atproto.space.notifySpaceUpdate.repoRemoved.$isTypeOf(update),
         )
-        .filter((body) =>
-          com.atproto.space.defs.repoRemoved.$isTypeOf(body.latest),
-        )
-      expect(removed.map((body) => body.repo).sort()).toEqual(
+      expect(removed.map((update) => update.repo).sort()).toEqual(
         [dan.did, bob.did].sort(),
       )
     })
@@ -1181,10 +1178,13 @@ describe('space policy', () => {
 
   /**
    * Notification fan-out. A syncing service registers an endpoint when it requests
-   * a space credential, and is told about writes; deliveries are best-effort and
-   * run on a background queue, so tests drain it rather than polling.
+   * a space credential, and is told about writes; deliveries run on a background
+   * queue, so tests drain it rather than polling.
    */
   describe('notify registration', () => {
+    const { repoWrite, registrationExpired } =
+      com.atproto.space.notifySpaceUpdate
+
     // A member's write reaches the authority before `write` resolves, which queues
     // the fan-out.
     const writeAndForward = async (space: SpaceRefString) => {
@@ -1192,7 +1192,7 @@ describe('space policy', () => {
       await network.pds.ctx.backgroundQueue.processAll()
     }
 
-    it('registers with a credential request, and forwards writes with its token', async () => {
+    it('confirms a new registration, and forwards writes with its token', async () => {
       await using syncer = await MockService.create(network, {
         serviceId: 'atproto_space_syncer',
       })
@@ -1200,18 +1200,33 @@ describe('space policy', () => {
       await sc.credentialFor(carol, space, {
         notify: syncer.notifyRegistration('first-token'),
       })
+      const confirmations = syncer.callsTo(
+        com.atproto.space.confirmRegistration.$lxm,
+      )
+      expect(confirmations).toHaveLength(1)
+      expect(confirmations[0].body).toMatchObject({
+        space,
+        token: 'first-token',
+      })
 
       await writeAndForward(space)
-      const delivered = syncer.callsTo('com.atproto.space.notifyRepoUpdate')
+      const delivered = syncer.callsTo(com.atproto.space.notifySpaceUpdate.$lxm)
       expect(delivered).toHaveLength(1)
-      expect(delivered[0].body).toMatchObject({ space, repo: bob.did })
-      expect(delivered[0].auth).toBe('Bearer first-token')
+      expect(delivered[0].body).toMatchObject({
+        space,
+        token: 'first-token',
+        update: { $type: repoWrite.$type, repo: bob.did },
+      })
 
-      // Renewing with the same token keeps a single registration.
+      // Renewing with the same token keeps a single registration, and needs no
+      // confirmation.
       await sc.credentialFor(carol, space, {
         notify: syncer.notifyRegistration('first-token'),
       })
       expect(await getRegistrations(space)).toHaveLength(1)
+      expect(
+        syncer.callsTo(com.atproto.space.confirmRegistration.$lxm),
+      ).toHaveLength(1)
     })
 
     it('treats a different token as a separate registration', async () => {
@@ -1226,18 +1241,69 @@ describe('space policy', () => {
       }
 
       await writeAndForward(space)
-      const auths = syncer
-        .callsTo('com.atproto.space.notifyRepoUpdate')
-        .map((call) => call.auth)
-      expect(auths.sort()).toEqual([
-        'Bearer first-token',
-        'Bearer second-token',
-      ])
+      const tokens = syncer
+        .callsTo(com.atproto.space.notifySpaceUpdate.$lxm)
+        .map(
+          (call) =>
+            (call.body as com.atproto.space.notifySpaceUpdate.$InputBody).token,
+        )
+      expect(tokens.sort()).toEqual(['first-token', 'second-token'])
     })
 
-    it('sends a lapsed registration one more notification, then drops it', async () => {
+    it('refuses a credential request whose registration is not confirmed', async () => {
       await using syncer = await MockService.create(network, {
         serviceId: 'atproto_space_syncer',
+        confirmRegistrations: false,
+        respond: () => ({ status: 200, body: { challenge: 'not-the-one' } }),
+      })
+      const space = await sc.createSpace(alice, { members: [bob, carol] })
+
+      await expect(
+        sc.mintCredential(space, await sc.delegationTokenFor(carol, space), {
+          notify: syncer.notifyRegistration(),
+        }),
+      ).rejects.toMatchObject({ error: 'RegistrationNotConfirmed' })
+      expect(await getRegistrations(space)).toEqual([])
+    })
+
+    it('sends a lapsed registration an expiry notice in place of the next update, then nothing more', async () => {
+      await using syncer = await MockService.create(network, {
+        serviceId: 'atproto_space_syncer',
+      })
+      const space = await sc.createSpace(alice, { members: [bob, carol] })
+      await sc.credentialFor(carol, space, {
+        notify: syncer.notifyRegistration(),
+      })
+      // However long ago it lapsed.
+      await lapseRegistration(space, syncer, DAY + MINUTE)
+
+      await writeAndForward(space)
+      const cred = await sc.credentialFor(alice, space)
+      const listed = await cred
+        .clientFor(alice.pds)
+        .call(com.atproto.space.listWriters, { space })
+      expect(syncer.spaceUpdates()).toEqual([
+        registrationExpired.$build({ spaceRev: listed.cursor! }),
+      ])
+
+      // The registration is kept, for a deletion notice, but sent no updates.
+      await writeAndForward(space)
+      expect(syncer.spaceUpdates()).toHaveLength(1)
+      expect(await getRegistrations(space)).toHaveLength(1)
+
+      // Fetching a new credential renews it.
+      await sc.credentialFor(carol, space, {
+        notify: syncer.notifyRegistration(),
+      })
+      await writeAndForward(space)
+      expect(syncer.spaceUpdates()).toHaveLength(2)
+      expect(syncer.spaceUpdates()[1]).toMatchObject({ $type: repoWrite.$type })
+    })
+
+    it('unregisters a syncer that rejects its expiry notice', async () => {
+      await using syncer = await MockService.create(network, {
+        serviceId: 'atproto_space_syncer',
+        respond: () => ({ status: 400, body: { error: 'InvalidToken' } }),
       })
       const space = await sc.createSpace(alice, { members: [bob, carol] })
       await sc.credentialFor(carol, space, {
@@ -1245,53 +1311,20 @@ describe('space policy', () => {
       })
       await lapseRegistration(space, syncer)
 
-      // The last notification wakes a syncer that let its credential lapse.
       await writeAndForward(space)
-      expect(syncer.callsTo('com.atproto.space.notifyRepoUpdate')).toHaveLength(
-        1,
-      )
+      expect(syncer.spaceUpdates()).toHaveLength(1)
       expect(await getRegistrations(space)).toEqual([])
 
-      await writeAndForward(space)
-      expect(syncer.callsTo('com.atproto.space.notifyRepoUpdate')).toHaveLength(
-        1,
-      )
-
-      // Fetching a new credential to sync that write registers it again.
+      // Registering again is a new registration, so it is confirmed again.
       await sc.credentialFor(carol, space, {
         notify: syncer.notifyRegistration(),
       })
-      await writeAndForward(space)
-      expect(syncer.callsTo('com.atproto.space.notifyRepoUpdate')).toHaveLength(
-        2,
-      )
+      expect(
+        syncer.callsTo(com.atproto.space.confirmRegistration.$lxm),
+      ).toHaveLength(2)
     })
 
-    it('unregisters a syncer that answers with a permanent HTTP error', async () => {
-      let status = 401
-      await using syncer = await MockService.create(network, {
-        serviceId: 'atproto_space_syncer',
-        respond: () => ({ status, body: { error: 'InvalidToken' } }),
-      })
-      const space = await sc.createSpace(alice, { members: [bob, carol] })
-      await sc.credentialFor(carol, space, {
-        notify: syncer.notifyRegistration(),
-      })
-
-      await writeAndForward(space)
-      expect(syncer.callsTo('com.atproto.space.notifyRepoUpdate')).toHaveLength(
-        1,
-      )
-      expect(await getRegistrations(space)).toEqual([])
-
-      status = 200
-      await writeAndForward(space)
-      expect(syncer.callsTo('com.atproto.space.notifyRepoUpdate')).toHaveLength(
-        1,
-      )
-    })
-
-    it('keeps a lapsed registration through a transient failure', async () => {
+    it('retries an expiry notice through a transient failure', async () => {
       let status = 503
       await using syncer = await MockService.create(network, {
         serviceId: 'atproto_space_syncer',
@@ -1303,45 +1336,50 @@ describe('space policy', () => {
       })
       await lapseRegistration(space, syncer)
 
-      // A syncer that misses its last notification during a blip still gets the next.
       await writeAndForward(space)
-      expect(await getRegistrations(space)).toHaveLength(1)
+      const db = network.pds.ctx.accountManager.db.db
+      const pending = () =>
+        db
+          .selectFrom('space_syncer_notification_retry')
+          .selectAll()
+          .where('space', '=', space)
+          .execute()
+      expect(await pending()).toHaveLength(1)
 
       status = 200
-      await writeAndForward(space)
-      expect(syncer.callsTo('com.atproto.space.notifyRepoUpdate')).toHaveLength(
-        2,
-      )
-      expect(await getRegistrations(space)).toEqual([])
+      await db
+        .updateTable('space_syncer_notification_retry')
+        .set({ retryAt: 0 })
+        .where('space', '=', space)
+        .execute()
+      await network.pds.ctx.spaceNotifications.retryPending()
+      expect(await pending()).toEqual([])
+      expect(syncer.spaceUpdates()).toEqual([
+        expect.objectContaining({ $type: registrationExpired.$type }),
+        expect.objectContaining({ $type: registrationExpired.$type }),
+      ])
+      expect(await getRegistrations(space)).toHaveLength(1)
     })
 
-    it('stops notifying a lapsed registration after its grace period', async () => {
+    it('keeps an active registration through a rejected update', async () => {
+      // Updates are best-effort. A syncer unregisters only by rejecting its
+      // expiry notice.
+      let status = 401
       await using syncer = await MockService.create(network, {
         serviceId: 'atproto_space_syncer',
+        respond: () => ({ status, body: { error: 'InvalidToken' } }),
       })
       const space = await sc.createSpace(alice, { members: [bob, carol] })
       await sc.credentialFor(carol, space, {
         notify: syncer.notifyRegistration(),
       })
-      await lapseRegistration(space, syncer, DAY + MINUTE)
 
       await writeAndForward(space)
-      expect(syncer.callsTo('com.atproto.space.notifyRepoUpdate')).toHaveLength(
-        0,
-      )
+      expect(await getRegistrations(space)).toHaveLength(1)
 
-      // The next registration prunes it from storage, which no read shows.
-      await sc.credentialFor(carol, space, {
-        notify: syncer.notifyRegistration('next-token'),
-      })
-      const stored = await network.pds.ctx.actorStore.read(alice.did, (store) =>
-        store.space.db.db
-          .selectFrom('space_notify_registration')
-          .select('token')
-          .where('space', '=', space)
-          .execute(),
-      )
-      expect(stored).toEqual([{ token: 'next-token' }])
+      status = 200
+      await writeAndForward(space)
+      expect(syncer.spaceUpdates()).toHaveLength(2)
     })
 
     it('withdraws the registration carried by a refused credential request', async () => {
@@ -1371,9 +1409,7 @@ describe('space policy', () => {
       expect(await getRegistrations(space)).toEqual([])
 
       await writeAndForward(space)
-      expect(syncer.callsTo('com.atproto.space.notifyRepoUpdate')).toHaveLength(
-        0,
-      )
+      expect(syncer.spaceUpdates()).toHaveLength(0)
     })
   })
 
@@ -1428,7 +1464,7 @@ describe('space policy', () => {
     })
 
     it('answers SpaceDeleted on credential renewal', async () => {
-      // The durable drop signal: a syncer that missed notifySpaceStatus learns
+      // The durable drop signal: a syncer that missed its deletion notice learns
       // the space is gone here, and can tell it apart from an authority that is
       // merely down.
       const space = await sc.createSpace(alice, { members: [carol] })
@@ -1453,6 +1489,14 @@ describe('space policy', () => {
       })
     })
 
+    it('answers SpaceDeleted regardless of the request authorization', async () => {
+      const space = await sc.createSpace(alice, { members: [carol] })
+      await deleteSpace(space)
+      await expect(
+        sc.mintCredential(space, 'not-a-delegation-token'),
+      ).rejects.toMatchObject({ error: 'SpaceDeleted' })
+    })
+
     it('notifies registered syncers, including lapsed registrations', async () => {
       await using syncer = await MockService.create(network, {
         serviceId: 'atproto_space_syncer',
@@ -1467,16 +1511,30 @@ describe('space policy', () => {
         })
       }
       await lapseRegistration(space, lapsed)
+      // A lapsed registration that has had its expiry notice is still sent a
+      // deletion notice.
+      await sc.write(alice, space)
+      await network.pds.ctx.backgroundQueue.processAll()
 
       await deleteSpace(space)
       await network.pds.ctx.backgroundQueue.processAll()
 
       for (const service of [syncer, lapsed]) {
-        const delivered = service.callsTo('com.atproto.space.notifySpaceStatus')
-        expect(delivered).toHaveLength(1)
-        expect(delivered[0].body).toMatchObject({ space })
-        expect(delivered[0].auth).toBe('Bearer notify-token')
+        const delivered = service.callsTo(
+          com.atproto.space.notifySpaceUpdate.$lxm,
+        )
+        expect(delivered.at(-1)?.body).toEqual({
+          space,
+          token: 'notify-token',
+          update: com.atproto.space.notifySpaceUpdate.spaceDeleted.$build({}),
+        })
       }
+      expect(lapsed.spaceUpdates()).toEqual([
+        expect.objectContaining({
+          $type: com.atproto.space.notifySpaceUpdate.registrationExpired.$type,
+        }),
+        com.atproto.space.notifySpaceUpdate.spaceDeleted.$build({}),
+      ])
     })
 
     it('leaves a member repo untouched', async () => {

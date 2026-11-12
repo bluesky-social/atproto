@@ -308,9 +308,8 @@ export class SpacePolicyManager {
    * The space row stays as a tombstone so getSpaceCredential keeps answering
    * SpaceDeleted, which is how a syncer that missed the notification finds out.
    *
-   * Returns the syncers registered at the time of deletion, which are owed a
-   * notifySpaceStatus. That includes lapsed registrations still awaiting their
-   * last notification.
+   * Returns the syncers registered at the time of deletion, including lapsed
+   * registrations, which are owed a deletion notice.
    */
   async deleteSpace(
     ref: SpaceRef,

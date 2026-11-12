@@ -24,7 +24,7 @@ import type {
   MemberspaceMember,
   SpaceRecordOplog,
 } from '../db/index.js'
-import { NOTIFY_GRACE_PERIOD_MS, SpaceReader } from './reader.js'
+import { SpaceReader } from './reader.js'
 
 export class SpaceTransactor extends SpaceReader {
   constructor(
@@ -456,7 +456,7 @@ export class SpaceTransactor extends SpaceReader {
     return row ? parseCid(row.cid, { flavor: 'cbor' }) : null
   }
 
-  // Re-registering the same endpoint and token extends the registration's expiry.
+  // Re-registering the same endpoint and token renews the registration.
   async putNotifyRegistration(registration: {
     space: SpaceRefString
     endpoint: string
@@ -466,19 +466,29 @@ export class SpaceTransactor extends SpaceReader {
     const { space, endpoint, token, expiresAt } = registration
     await this.db.db
       .insertInto('space_notify_registration')
-      .values({ space, endpoint, token, expiresAt })
+      .values({ space, endpoint, token, expiresAt, expiryNotified: 0 })
       .onConflict((oc) =>
-        oc.columns(['space', 'endpoint', 'token']).doUpdateSet({ expiresAt }),
+        oc
+          .columns(['space', 'endpoint', 'token'])
+          .doUpdateSet({ expiresAt, expiryNotified: 0 }),
       )
       .execute()
+  }
 
-    // Registrations past their grace period are never read again, so prune them
-    // here to keep the table from growing indefinitely.
-    const lapsedBefore = new Date(Date.now() - NOTIFY_GRACE_PERIOD_MS)
-    await this.db.db
-      .deleteFrom('space_notify_registration')
+  // Marks the lapsed registrations that have yet to be sent an expiry notice,
+  // and returns them. Each lapse is claimed once, so a syncer is sent a single
+  // expiry notice however many updates follow.
+  async claimLapsedNotifyRegistrations(
+    space: SpaceRefString,
+    now: string,
+  ): Promise<{ endpoint: string; token: string }[]> {
+    return this.db.db
+      .updateTable('space_notify_registration')
+      .set({ expiryNotified: 1 })
       .where('space', '=', space)
-      .where('expiresAt', '<=', lapsedBefore.toISOString())
+      .where('expiresAt', '<=', now)
+      .where('expiryNotified', '=', 0)
+      .returning(['endpoint', 'token'])
       .execute()
   }
 
