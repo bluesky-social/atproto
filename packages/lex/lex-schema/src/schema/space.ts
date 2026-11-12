@@ -1,8 +1,13 @@
+import { SpaceRef } from '@atproto/syntax'
 import {
+  type DidString,
   type LexiconRecordKey,
   type NsidString,
+  type RecordKeyValue,
   asLexiconRecordKey,
 } from '../core.js'
+import { lazyProperty } from '../util/lazy-property.js'
+import { type RecordKeySchema, recordKey } from './record.js'
 
 /**
  * Configuration options for a space declaration.
@@ -32,6 +37,7 @@ export type SpaceOptions = {
  *
  * @template TNsid - The NSID identifying this space type
  * @template TKey - The recommended space key type
+ * @template TCollections - The recommended record collections
  *
  * @example
  * ```ts
@@ -44,18 +50,19 @@ export type SpaceOptions = {
  * ```
  */
 export class Space<
-  const TNsid extends NsidString = any,
+  const TNsid extends NsidString = NsidString,
   const TKey extends LexiconRecordKey = LexiconRecordKey,
+  const TCollections extends readonly NsidString[] = readonly NsidString[],
 > {
   readonly key: TKey
   readonly nsid: TNsid
-  readonly collections: readonly NsidString[]
+  readonly collections: TCollections
   readonly options: SpaceOptions
 
   constructor(
     key: TKey,
     nsid: TNsid,
-    collections: readonly NsidString[],
+    collections: TCollections,
     options: SpaceOptions = {},
   ) {
     this.key = asLexiconRecordKey(key)
@@ -66,6 +73,72 @@ export class Space<
 
   get title(): string | undefined {
     return this.options.title
+  }
+
+  get spaceType(): TNsid {
+    return this.nsid
+  }
+
+  /**
+   * Schema validating a space key against this space type's {@link key}.
+   */
+  get keySchema(): RecordKeySchema<TKey> {
+    return lazyProperty(this, 'keySchema', recordKey(this.key))
+  }
+
+  /**
+   * Whether `skey` is a valid key for a space of this type.
+   */
+  isKey(skey: unknown): skey is RecordKeyValue<TKey> {
+    return this.keySchema.matches(skey)
+  }
+
+  /**
+   * Whether `ref` designates a space of this type, with a valid key.
+   *
+   * @example
+   * ```ts
+   * if (forum.matchesRef(SpaceRef.parse(uri))) {
+   *   // uri references a "com.atmoboards.forum" space
+   * }
+   * ```
+   */
+  matchesRef<R extends { spaceType: string; skey: string }>(
+    ref: R,
+  ): ref is R & { spaceType: TNsid; skey: RecordKeyValue<TKey> } {
+    return ref.spaceType === this.nsid && this.isKey(ref.skey)
+  }
+
+  spaceRefFor(
+    spaceDid: TKey extends `literal:${string}` ? DidString : never,
+    skey?: RecordKeyValue<TKey>,
+  ): SpaceRef
+  spaceRefFor(spaceDid: DidString, skey: RecordKeyValue<TKey>): SpaceRef
+  spaceRefFor(spaceDid: DidString, skey?: RecordKeyValue<TKey>): SpaceRef {
+    // @NOTE Default can only be computed for literal keys. We *could*
+    // technically also default for "tid"/"any" values, but we don't know
+    // whether this will be used to reference an existing space, or a new one
+    // being created.
+    if (this.key.startsWith('literal:')) {
+      if (skey == null) {
+        skey = this.key.slice(8) as RecordKeyValue<TKey>
+      } else if (
+        // @NOTE let's check the value (it's cheap since we don't create a new
+        // string)
+        skey.length !== this.key.length - 8 ||
+        !this.key.endsWith(skey)
+      ) {
+        throw new TypeError(
+          'Cannot build SpaceRef: skey does not match literal key',
+        )
+      }
+    } else if (!skey) {
+      throw new TypeError(
+        'Cannot build SpaceRef: skey is not provided and key is not a literal',
+      )
+    }
+
+    return new SpaceRef(spaceDid, this.nsid, skey)
   }
 }
 
@@ -99,11 +172,7 @@ export class Space<
 export function space<
   const N extends NsidString,
   const K extends LexiconRecordKey,
->(
-  key: K,
-  nsid: N,
-  collections: readonly NsidString[],
-  options?: SpaceOptions,
-): Space<N, K> {
-  return new Space<N, K>(key, nsid, collections, options)
+  const C extends readonly NsidString[],
+>(key: K, nsid: N, collections: C, options?: SpaceOptions): Space<N, K, C> {
+  return new Space<N, K, C>(key, nsid, collections, options)
 }

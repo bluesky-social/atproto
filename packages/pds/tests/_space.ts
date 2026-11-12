@@ -17,13 +17,13 @@ import { type LexMap, parseCid } from '@atproto/lex-data'
 import { JoseKey } from '@atproto/oauth-provider/provider'
 import { ReplayManager } from '@atproto/oauth-provider/verifier'
 import {
-  CLIENT_ATTESTATION_TYP,
   COMMIT_MAC_PROFILE,
   type MacParams,
   type MacProfile,
   RECORD_MAC_PROFILE,
   RepoCommit,
   type SpaceCommit,
+  buildClientAttestation,
   createSpaceSigHeaders,
   encapsulate,
   formatMacRequest,
@@ -768,19 +768,13 @@ export class MockClientApp {
     spaceHost: string,
     opts: { signWith?: JoseKey; iss?: string; expiresInSec?: number } = {},
   ): Promise<string> {
-    const now = Math.floor(Date.now() / 1000)
     const signer = opts.signWith ?? this.key
-    return signer.createJwt(
-      { alg: 'ES256', typ: CLIENT_ATTESTATION_TYP },
-      {
-        iss: opts.iss ?? this.clientId,
-        sub: opts.iss ?? this.clientId,
-        aud: spaceHost,
-        iat: now,
-        exp: now + (opts.expiresInSec ?? 60),
-        jti: `nonce-${now}`,
-      },
-    )
+    const { header, payload } = buildClientAttestation({
+      clientId: opts.iss ?? this.clientId,
+      aud: spaceHost,
+      expiresInSec: opts.expiresInSec,
+    })
+    return signer.createJwt({ alg: 'ES256', ...header }, payload)
   }
 
   close(): Promise<void> {

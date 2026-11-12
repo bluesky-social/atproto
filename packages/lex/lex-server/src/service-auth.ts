@@ -1,11 +1,11 @@
-import * as crypto from '@atproto/crypto'
+import { formatDidVerificationMethod, verifySignature } from '@atproto/crypto'
 import type { AtprotoDid, AtprotoDidDocument, Did } from '@atproto/did'
-import { matchesIdentifier } from '@atproto/did'
+import { isAtprotoVerificationMethod } from '@atproto/did'
 import { fromBase64, isPlainObject, utf8FromBase64 } from '@atproto/lex-data'
 import type { DidString } from '@atproto/lex-schema'
 import { isDidString } from '@atproto/lex-schema'
-import type { CreateDidResolverOptions } from '@atproto-labs/did-resolver'
 import { createDidResolver } from '@atproto-labs/did-resolver'
+import type { CreateDidResolverOptions } from '@atproto-labs/did-resolver'
 import { LexServerAuthError } from './errors.js'
 import type { LexRouterAuth } from './lex-router.js'
 
@@ -223,7 +223,7 @@ export function serviceAuth({
 
 async function verifyJwt(jwt: ParsedJwt, key: Did<'key'>) {
   try {
-    return await crypto.verifySignature(key, jwt.message, jwt.signature, {
+    return await verifySignature(key, jwt.message, jwt.signature, {
       jwtAlg: jwt.header.alg,
       allowMalleableSig: true,
     })
@@ -240,40 +240,19 @@ async function verifyJwt(jwt: ParsedJwt, key: Did<'key'>) {
 function getAtprotoSigningKey(
   didDocument: AtprotoDidDocument,
 ): null | Did<'key'> {
-  try {
-    const key = didDocument.verificationMethod?.find(
-      isAtprotoVerificationMethod,
-      didDocument,
-    )
+  const key = didDocument.verificationMethod?.find(
+    isAtprotoVerificationMethod,
+    didDocument,
+  )
 
-    if (key?.publicKeyMultibase) {
-      if (key.type === 'EcdsaSecp256r1VerificationKey2019') {
-        const keyBytes = crypto.multibaseToBytes(key.publicKeyMultibase)
-        return crypto.formatDidKey(crypto.P256_JWT_ALG, keyBytes)
-      } else if (key.type === 'EcdsaSecp256k1VerificationKey2019') {
-        const keyBytes = crypto.multibaseToBytes(key.publicKeyMultibase)
-        return crypto.formatDidKey(crypto.SECP256K1_JWT_ALG, keyBytes)
-      } else if (key.type === 'Multikey') {
-        const parsed = crypto.parseMultikey(key.publicKeyMultibase)
-        return crypto.formatDidKey(parsed.jwtAlg, parsed.keyBytes)
-      }
-    }
+  if (!key) return null
+
+  try {
+    return formatDidVerificationMethod(key)
   } catch {
     // Invalid key, ignore
+    return null
   }
-
-  return null
-}
-
-function isAtprotoVerificationMethod<
-  V extends string | { id: string; type: string; publicKeyMultibase?: string },
->(
-  this: AtprotoDidDocument,
-  vm: V,
-): vm is Exclude<V, string> & {
-  id: `${string}#atproto`
-} {
-  return typeof vm === 'object' && matchesIdentifier(this.id, 'atproto', vm.id)
 }
 
 async function parseJwtBearer(

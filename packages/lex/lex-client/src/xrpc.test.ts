@@ -210,6 +210,28 @@ describe(xrpc, () => {
       )
     })
 
+    it('computes headers provided as a function for every attempt', async () => {
+      let calls = 0
+      const fetchHandler = vi.fn<FetchHandler>(async () => {
+        return ++calls === 1
+          ? Response.json({ error: 'Unavailable' }, { status: 503 })
+          : Response.json({ value: 'ok' })
+      })
+
+      let attempt = 0
+      await xrpc(fetchHandler, testQuery, {
+        headers: async () => ({ 'x-attempt': String(++attempt) }),
+        maxRetries: 1,
+        minRetryTimeout: 0,
+      })
+
+      expect(fetchHandler).toHaveBeenCalledTimes(2)
+      const attempts = fetchHandler.mock.calls.map(([, init]) =>
+        new Headers(init.headers).get('x-attempt'),
+      )
+      expect(attempts).toEqual(['1', '2'])
+    })
+
     it('accepts optional params as omitted', async () => {
       const fetchHandler = vi.fn<FetchHandler>(async () => {
         return Response.json({ value: 'ok' })

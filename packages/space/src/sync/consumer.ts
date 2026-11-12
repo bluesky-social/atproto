@@ -71,7 +71,7 @@ export async function readRepoStar(
     return {
       commit,
       records: verifyStarRecords(starReader.pairs, commit),
-      [Symbol.asyncDispose]: starReader[Symbol.asyncDispose],
+      [Symbol.asyncDispose]: starReader[Symbol.asyncDispose].bind(starReader),
     }
   } catch (err) {
     await starReader[Symbol.asyncDispose]()
