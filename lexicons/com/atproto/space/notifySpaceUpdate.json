@@ -22,15 +22,20 @@
             },
             "update": {
               "type": "union",
-              "refs": ["#repoUpdate", "#spaceDeleted"]
+              "refs": [
+                "#repoWrite",
+                "#repoRemoved",
+                "#spaceDeleted",
+                "#registrationExpired"
+              ]
             }
           }
         }
       }
     },
-    "repoUpdate": {
+    "repoWrite": {
       "type": "object",
-      "description": "A repo in the space has been updated.",
+      "description": "A repo in the space advanced to a new revision.",
       "required": ["repo", "repoRev", "data", "spaceRev"],
       "properties": {
         "repo": {
@@ -55,10 +60,41 @@
         }
       }
     },
+    "repoRemoved": {
+      "type": "object",
+      "description": "A repo was removed from the writer set.",
+      "required": ["repo", "spaceRev"],
+      "properties": {
+        "repo": {
+          "type": "string",
+          "format": "did"
+        },
+        "spaceRev": {
+          "type": "string",
+          "format": "tid"
+        },
+        "prevSpaceRev": {
+          "type": "string",
+          "format": "tid",
+          "description": "Omitted on the first update in a space. A gap indicates missed notifications, which can be recovered with listWriters."
+        }
+      }
+    },
     "spaceDeleted": {
       "type": "object",
       "description": "The space has been deleted. Confirm with getSpaceCredential before dropping its data.",
       "properties": {}
+    },
+    "registrationExpired": {
+      "type": "object",
+      "description": "The endpoint's registration has expired. Sent in place of the first update after expiry. Renew through getSpaceCredential to keep receiving notifications.",
+      "required": ["spaceRev"],
+      "properties": {
+        "spaceRev": {
+          "type": "string",
+          "format": "tid"
+        }
+      }
     }
   }
 }

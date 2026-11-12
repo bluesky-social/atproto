@@ -4,12 +4,12 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Notify that a space repo has been updated. Sent by repo hosts to the space host, with service auth. The space host forwards it to the syncing services registered through getSpaceCredential, presenting each one's registered token as a bearer token.",
+      "description": "Notify the space host that a space repo has been updated. Sent by repo hosts, with service auth.",
       "input": {
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["space", "repo", "latest"],
+          "required": ["space", "repo", "repoRev", "data"],
           "properties": {
             "space": {
               "type": "string",
@@ -19,22 +19,12 @@
               "type": "string",
               "format": "did"
             },
-            "latest": {
-              "type": "union",
-              "refs": [
-                "com.atproto.space.defs#repoWrite",
-                "com.atproto.space.defs#repoRemoved"
-              ]
-            },
-            "spaceRev": {
+            "repoRev": {
               "type": "string",
-              "format": "tid",
-              "description": "Set by the space host on notifications forwarded to syncing services."
+              "format": "tid"
             },
-            "prevSpaceRev": {
-              "type": "string",
-              "format": "tid",
-              "description": "Omitted on the first update in a space. A gap indicates missed notifications, which can be recovered with listWriters."
+            "data": {
+              "type": "bytes"
             }
           }
         }
