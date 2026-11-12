@@ -177,6 +177,10 @@ export abstract class Key<J extends Jwk = Jwk> {
     return true
   }
 
+  abstract deriveJwkThumbprint(
+    digestAlgorithm?: 'sha256' | 'sha384' | 'sha512',
+  ): Promise<string>
+
   /**
    * Create a signed JWT
    */
