@@ -28,6 +28,7 @@ export default function (server: Server, ctx: AppContext) {
         ctx.authVerifier.parseCreds(auth)
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({
+        xrpcEndpoint: app.bsky.feed.getQuotes.$lxm,
         labelers,
         viewer,
         includeTakedowns,
@@ -61,6 +62,7 @@ const skeleton = async (inputs: {
     subject: { uri: params.uri, cid: params.cid },
     cursor: params.cursor,
     limit: params.limit,
+    sort: params.sort,
   })
   return {
     uris: quotesRes.uris as AtUriString[],

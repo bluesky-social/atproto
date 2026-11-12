@@ -41,13 +41,24 @@ Where this repo differs from a typical TypeScript service:
 - Repo/MST code (packages/repo) underpins content addressing and
   signatures; silent data corruption there is the worst failure mode in
   the codebase. Be suspicious of changes to hashing, CBOR encoding, or
-  block storage ordering.
+  block storage ordering. Any new or changed MST traversal that can visit more
+  than one child of a node (full-tree walk, diff, block collection) without
+  calling `MST.markVisited` on each node it enters (with a fresh `CidSet` per
+  traversal) is a blocking finding; single-path lookups are exempt. See
+  packages/repo/AGENTS.md.
 - XRPC endpoints in pds/bsky/ozone are internet-facing. New endpoints or
   loosened input validation deserve a look at rate limits, payload size
   bounds, and unbounded-fan-out queries (hydration joins, cursors).
 - Agent files are part of the codebase. If the PR introduces, changes, or
-  removes a documented pattern, CLAUDE.md / STYLE_GUIDE.md / the skills
-  under `.agents/skills/` should be updated in the same PR.
+  removes a durable pattern, convention, or layout rule, the agent file that
+  owns it — AGENTS.md / STYLE_GUIDE.md / a nested package AGENTS.md / a skill
+  under `.agents/skills/` — should be updated in the same PR. Flag it as a
+  non-blocking finding when a pattern changed but its agent file didn't. Don't
+  flag routine additions (a new route, metric, or test) that re-apply an
+  existing pattern without establishing a new one.
+- Flag committed working plans, session handoffs, review reports, and other
+  scratch documents. These belong outside the repository and do not need
+  repository ignore rules; tracked docs should contain durable guidance.
 - Documentation and comments must describe the current state of the code.
   A doc or comment the PR leaves behind describing the old behavior — a
   stale JSDoc, a comment referring to a deleted symbol, a "previously…" /

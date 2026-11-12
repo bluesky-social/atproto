@@ -4,7 +4,8 @@ import { AtpAgent } from '@atproto/api'
 import * as bsky from '@atproto/bsky'
 import { SECOND } from '@atproto/common-web'
 import { Secp256k1Keypair } from '@atproto/crypto'
-import { Client, type UriString } from '@atproto/lex'
+import { Client } from '@atproto/lex-client'
+import type { UriString } from '@atproto/lex-schema'
 import type { DidString } from '@atproto/syntax'
 import { ADMIN_PASSWORD, EXAMPLE_LABELER } from './const.js'
 import getPort from './get-port.js'
@@ -65,6 +66,8 @@ export class TestBsky {
       db,
       dataplanePort,
       cfg.plcUrl,
+      // Resolves against an in-process PLC on localhost.
+      globalThis.fetch,
     )
 
     const config = new bsky.ServerConfig({
@@ -93,6 +96,12 @@ export class TestBsky {
       draftsLimit: 500,
       feedGenSkeletonTimeout: 5 * SECOND,
       ...cfg,
+      notificationsV2MinRawLimit: cfg.notificationsV2MinRawLimit ?? 300,
+      notificationsV2MaxRawItems: cfg.notificationsV2MaxRawItems ?? 3000,
+      notificationsV2MaxFetches: cfg.notificationsV2MaxFetches ?? 3,
+      notificationsV2MaxGroupItemsWithRelatedViews:
+        cfg.notificationsV2MaxGroupItemsWithRelatedViews ?? 10,
+      bskyFeedgenDids: cfg.bskyFeedgenDids ?? new Set(),
       adminPasswords: [ADMIN_PASSWORD],
       etcdHosts: [],
     })

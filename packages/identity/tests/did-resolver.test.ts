@@ -26,7 +26,7 @@ describe('did resolver', () => {
     await plcServer.start()
 
     plcUrl = 'http://localhost:' + plcPort
-    resolver = new DidResolver({ plcUrl })
+    resolver = new DidResolver({ plcUrl, fetch: globalThis.fetch })
 
     close = async () => {
       await webServer.close()

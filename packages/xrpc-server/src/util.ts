@@ -1,14 +1,13 @@
 import assert from 'node:assert'
 import type { IncomingMessage, OutgoingMessage } from 'node:http'
 import { type Duplex, type Readable, pipeline } from 'node:stream'
-import {
-  type Request as ExpressRequest,
-  type Response as ExpressResponse,
-  json,
-  text,
+import bodyParser from 'body-parser'
+import type {
+  Request as ExpressRequest,
+  Response as ExpressResponse,
 } from 'express'
 import { contentType } from 'mime-types'
-import { MaxSizeChecker, createDecoders } from '@atproto/common'
+import { createDecoders } from '@atproto/common'
 import { jsonToLex } from '@atproto/lex-json'
 import { l } from '@atproto/lex-schema'
 import {
@@ -560,8 +559,8 @@ function createBodyParser(inputEncoding: string, options: RouteOptions) {
     return
   }
   const { jsonLimit, textLimit } = options
-  const jsonParser = json({ limit: jsonLimit })
-  const textParser = text({ limit: textLimit })
+  const jsonParser = bodyParser.json({ limit: jsonLimit })
+  const textParser = bodyParser.text({ limit: textLimit })
   // Transform json and text parser middlewares into a single function
   return (req: ExpressRequest, res: ExpressResponse) => {
     return new Promise<void>((resolve, reject) => {
@@ -604,7 +603,11 @@ function decodeBodyStream(
 
   let transforms: Duplex[]
   try {
-    transforms = createDecoders(contentEncoding)
+    transforms = createDecoders(contentEncoding, {
+      maxSize,
+      maxSizeError: () =>
+        new XRPCError(ResponseType.PayloadTooLarge, 'request entity too large'),
+    })
   } catch (cause) {
     throw new XRPCError(
       ResponseType.UnsupportedMediaType,
@@ -612,15 +615,6 @@ function decodeBodyStream(
       undefined,
       { cause },
     )
-  }
-
-  if (maxSize !== undefined) {
-    const maxSizeChecker = new MaxSizeChecker(
-      maxSize,
-      () =>
-        new XRPCError(ResponseType.PayloadTooLarge, 'request entity too large'),
-    )
-    transforms.push(maxSizeChecker)
   }
 
   return transforms.length > 0

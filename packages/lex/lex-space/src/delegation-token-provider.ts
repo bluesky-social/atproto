@@ -1,4 +1,4 @@
-import { type Agent, isAuthenticatedAgent, xrpc } from '@atproto/lex-client'
+import { type Agent, isAccountAgent, xrpc } from '@atproto/lex-client'
 import type { SpaceRef } from '@atproto/syntax'
 import getDelegationToken from './lexicons/com/atproto/space/getDelegationToken.js'
 
@@ -28,7 +28,7 @@ export type DelegationTokenProvider = (
 export function delegationTokenProviderFor(
   agent: Agent,
 ): DelegationTokenProvider {
-  if (!isAuthenticatedAgent(agent)) {
+  if (!isAccountAgent(agent)) {
     throw new TypeError('Agent must be authenticated')
   }
   return async (space, { signal }) => {

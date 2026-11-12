@@ -135,9 +135,11 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     )
     entrywayCfg = {
       url: env.entrywayUrl,
+      apiUrl: env.entrywayApiUrl ?? env.entrywayUrl,
       did: env.entrywayDid,
       jwtPublicKeyHex: env.entrywayJwtVerifyKeyK256PublicKeyHex,
       plcRotationKey: env.entrywayPlcRotationKey,
+      requireServiceAuth: env.entrywayRequireServiceAuth ?? false,
     }
   }
 
@@ -246,6 +248,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
         bypassIps: env.rateLimitBypassIps?.map((ipOrCidr) =>
           ipOrCidr.split('/')[0]?.trim(),
         ),
+        disableIpLimits: env.disableIpRateLimits,
       }
     : { enabled: false }
 
@@ -440,6 +443,11 @@ export type DiskBlobstoreConfig = {
 
 export type IdentityConfig = {
   plcUrl: string
+  /**
+   * Bounds each individual identity resolution attempt. Note that
+   * `safeFetch`'s own 10s timeout acts as an upper backstop, so values above
+   * 10s are effectively capped.
+   */
   resolverTimeout: number
   cacheStaleTTL: number
   cacheMaxTTL: number
@@ -450,10 +458,21 @@ export type IdentityConfig = {
 }
 
 export type EntrywayConfig = {
+  /**
+   * The entryway's public URL, which is also the OAuth issuer and the
+   * authorization server this PDS advertises.
+   */
   url: string
+  /**
+   * Where this PDS sends its own requests to the entryway. Defaults to
+   * {@link url}; differs when those requests go through a local proxy, e.g.
+   * one that adds mTLS.
+   */
+  apiUrl: string
   did: string
   jwtPublicKeyHex: string
   plcRotationKey: string
+  requireServiceAuth: boolean
 }
 
 export type FetchConfig = {
@@ -523,6 +542,11 @@ export type RateLimitsConfig =
       enabled: true
       bypassKey?: string
       bypassIps?: string[]
+      /**
+       * Drop the PDS's own per-IP rate limits, for when an upstream proxy
+       * enforces them. Per-account rate limits still apply.
+       */
+      disableIpLimits?: boolean
     }
   | { enabled: false }
 

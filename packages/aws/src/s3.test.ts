@@ -1,6 +1,7 @@
 import http from 'node:http'
 import type { AddressInfo, Socket } from 'node:net'
 import { setTimeout as sleep } from 'node:timers/promises'
+import { S3 } from '@aws-sdk/client-s3'
 import { CID } from 'multiformats/cid'
 import { afterEach, assert, beforeEach, describe, expect, it, vi } from 'vitest'
 import { S3BlobStore } from './s3.js'
@@ -21,6 +22,7 @@ type RequestHandler = (
  */
 class FakeS3Server {
   server: http.Server
+  connectionCount = 0
   private sockets = new Set<Socket>()
 
   constructor() {
@@ -28,6 +30,7 @@ class FakeS3Server {
       this.handler(req, res)
     })
     this.server.on('connection', (socket) => {
+      this.connectionCount++
       this.sockets.add(socket)
       socket.on('close', () => this.sockets.delete(socket))
     })
@@ -46,11 +49,30 @@ class FakeS3Server {
     return `http://127.0.0.1:${port}`
   }
 
+  /** Number of currently-open connections (keep-alive sockets included). */
+  get openConnections(): number {
+    return this.sockets.size
+  }
+
   async close(): Promise<void> {
     for (const socket of this.sockets) socket.destroy()
     await new Promise<void>((resolve, reject) =>
       this.server.close((err) => (err ? reject(err) : resolve())),
     )
+  }
+}
+
+/** Polls `predicate` until it holds, or throws once `timeoutMs` elapses. */
+const waitFor = async (
+  predicate: () => boolean,
+  timeoutMs = 5_000,
+): Promise<void> => {
+  const start = Date.now()
+  while (!predicate()) {
+    if (Date.now() - start > timeoutMs) {
+      throw new Error('Timed out waiting for condition')
+    }
+    await sleep(10)
   }
 }
 
@@ -81,19 +103,21 @@ describe(S3BlobStore, () => {
     await server.close()
   })
 
-  const createBlobStore = (cfg: {
+  const createConfig = (cfg: {
     uploadTimeoutMs?: number
     requestTimeoutMs?: number
     maxAttempts?: number
-  }) => {
-    return new S3BlobStore('did:example:alice', {
-      bucket: 'test-bucket',
-      region: 'us-east-1',
-      endpoint,
-      forcePathStyle: true,
-      credentials: { accessKeyId: 'key', secretAccessKey: 'secret' },
-      ...cfg,
-    })
+  }) => ({
+    bucket: 'test-bucket',
+    region: 'us-east-1',
+    endpoint,
+    forcePathStyle: true,
+    credentials: { accessKeyId: 'key', secretAccessKey: 'secret' },
+    ...cfg,
+  })
+
+  const createBlobStore = (cfg: Parameters<typeof createConfig>[0]) => {
+    return new S3BlobStore('did:example:alice', createConfig(cfg))
   }
 
   it('reaps stalled requests at requestTimeoutMs and succeeds on retry', async () => {
@@ -245,6 +269,153 @@ describe(S3BlobStore, () => {
       })
 
       await expect(store.getBytes(testCid)).rejects.toThrow()
+    })
+  })
+
+  describe('connection reuse', () => {
+    it('shares one connection pool across stores from creator()', async () => {
+      using _handlerMock = vi
+        .spyOn(server, 'handler')
+        .mockImplementation((req, res) => {
+          req.resume()
+          res.writeHead(200, { 'content-length': '3' }).end('foo')
+        })
+
+      const creator = S3BlobStore.creator(createConfig({}))
+      for (let i = 0; i < 10; i++) {
+        await creator(`did:example:user${i}`).getBytes(testCid)
+      }
+
+      expect(server.connectionCount).toBe(1)
+    })
+
+    it('does not cap concurrent connections', async () => {
+      // Hold every response open until all requests have reached the server.
+      // A capped pool (the SDK defaults to 50 sockets) would queue the excess
+      // requests and never get there.
+      const concurrency = 64
+      let release!: () => void
+      const released = new Promise<void>((resolve) => {
+        release = resolve
+      })
+      let received = 0
+      using _handlerMock = vi
+        .spyOn(server, 'handler')
+        .mockImplementation((req, res) => {
+          req.resume()
+          res.writeHead(200, { 'content-length': '3' })
+          res.write('f')
+          if (++received === concurrency) release()
+          released.then(() => res.end('oo'))
+        })
+
+      const creator = S3BlobStore.creator(createConfig({}))
+      const downloads = Array.from({ length: concurrency }, (_, i) =>
+        creator(`did:example:user${i}`).getBytes(testCid),
+      )
+
+      await released
+      await expect(Promise.all(downloads)).resolves.toHaveLength(concurrency)
+      expect(server.connectionCount).toBe(concurrency)
+    })
+  })
+
+  describe('resource cleanup', () => {
+    const getHandler: RequestHandler = (req, res) => {
+      req.resume()
+      res.writeHead(200, { 'content-length': '3' }).end('foo')
+    }
+
+    it('destroys its owned client and frees its sockets on dispose', async () => {
+      using _handlerMock = vi
+        .spyOn(server, 'handler')
+        .mockImplementation(getHandler)
+      using destroySpy = vi.spyOn(S3.prototype, 'destroy')
+
+      // No client passed => the store owns the client it creates.
+      const store = createBlobStore({})
+      await store.getBytes(testCid)
+
+      // The request opened a keep-alive socket that stays open until disposal.
+      expect(server.openConnections).toBe(1)
+      expect(destroySpy).not.toHaveBeenCalled()
+
+      await store[Symbol.asyncDispose]()
+
+      expect(destroySpy).toHaveBeenCalledTimes(1)
+      // Destroying the client tears down its agent, closing the idle socket.
+      await waitFor(() => server.openConnections === 0)
+    })
+
+    it('does not destroy an externally-provided client on dispose', async () => {
+      using _handlerMock = vi
+        .spyOn(server, 'handler')
+        .mockImplementation(getHandler)
+
+      const client = new S3({
+        region: 'us-east-1',
+        endpoint,
+        forcePathStyle: true,
+        credentials: { accessKeyId: 'key', secretAccessKey: 'secret' },
+      })
+      try {
+        const destroySpy = vi.spyOn(client, 'destroy')
+        const store = new S3BlobStore(
+          'did:example:alice',
+          createConfig({}),
+          client,
+        )
+        await store.getBytes(testCid)
+
+        await store[Symbol.asyncDispose]()
+
+        // The store borrows the client; its owner is responsible for teardown.
+        expect(destroySpy).not.toHaveBeenCalled()
+        expect(server.openConnections).toBe(1)
+      } finally {
+        client.destroy()
+      }
+    })
+
+    it('destroys the shared client when the creator is disposed', async () => {
+      using _handlerMock = vi
+        .spyOn(server, 'handler')
+        .mockImplementation(getHandler)
+      using destroySpy = vi.spyOn(S3.prototype, 'destroy')
+
+      const creator = S3BlobStore.creator(createConfig({}))
+      for (let i = 0; i < 3; i++) {
+        await creator(`did:example:user${i}`).getBytes(testCid)
+      }
+
+      // All stores share one client, which the creator (not the stores) owns.
+      expect(server.openConnections).toBe(1)
+      expect(destroySpy).not.toHaveBeenCalled()
+
+      await creator[Symbol.asyncDispose]()
+
+      expect(destroySpy).toHaveBeenCalledTimes(1)
+      await waitFor(() => server.openConnections === 0)
+    })
+
+    it('does not destroy the shared client when a creator store is disposed', async () => {
+      using _handlerMock = vi
+        .spyOn(server, 'handler')
+        .mockImplementation(getHandler)
+      using destroySpy = vi.spyOn(S3.prototype, 'destroy')
+
+      const creator = S3BlobStore.creator(createConfig({}))
+      const store = creator('did:example:alice')
+      await store.getBytes(testCid)
+
+      await store[Symbol.asyncDispose]()
+
+      // The store does not own the shared client, so its socket stays open.
+      expect(destroySpy).not.toHaveBeenCalled()
+      expect(server.openConnections).toBe(1)
+
+      await creator[Symbol.asyncDispose]()
+      expect(destroySpy).toHaveBeenCalledTimes(1)
     })
   })
 })

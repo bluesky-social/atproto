@@ -6,7 +6,7 @@ import {
   type HandleString,
   currentDatetimeString,
   isDidIdentifier,
-} from '@atproto/lex'
+} from '@atproto/lex-schema'
 import { isErrUniqueViolation, notSoftDeletedClause } from '../../db/index.js'
 import type { com } from '../../lexicons/index.js'
 import type { AccountDb, ActorEntry } from '../db/index.js'
@@ -24,6 +24,7 @@ export class UserAlreadyExistsError extends Error {
 export type ActorAccount = ActorEntry & {
   email: string | null
   emailConfirmedAt: string | null
+  emailAuthFactorAt: string | null
   invitesDisabled: 0 | 1 | null
 }
 
@@ -46,6 +47,11 @@ export const selectAccountQB = (db: AccountDb, flags?: AvailabilityFlags) => {
   return db.db
     .selectFrom('actor')
     .leftJoin('account', 'actor.did', 'account.did')
+    .leftJoin(
+      'account_email_auth_factor',
+      'actor.did',
+      'account_email_auth_factor.did',
+    )
     .$if(!includeTakenDown, (qb) =>
       qb.where(notSoftDeletedClause(ref('actor'))),
     )
@@ -62,6 +68,7 @@ export const selectAccountQB = (db: AccountDb, flags?: AvailabilityFlags) => {
       'account.email',
       'account.emailConfirmedAt',
       'account.invitesDisabled',
+      'account_email_auth_factor.emailAuthFactorEnabledAt as emailAuthFactorAt',
     ])
 }
 
@@ -75,7 +82,13 @@ export const getAccount = async (
       if (isDidIdentifier(handleOrDid)) {
         return eb('actor.did', '=', handleOrDid)
       } else {
-        return eb('actor.handle', '=', handleOrDid)
+        // Handles are indexed only as lower("handle"): comparing the bare
+        // column scans every actor.
+        return eb(
+          eb.fn('lower', ['actor.handle']),
+          '=',
+          handleOrDid.toLowerCase(),
+        )
       }
     })
     .executeTakeFirst()
@@ -109,8 +122,23 @@ export const getAccountByEmail = async (
   email: string,
   flags?: AvailabilityFlags,
 ): Promise<ActorAccount | null> => {
+  // Emails are indexed only as lower("email"), like handles. Filtering the
+  // left join on that expression still walks every actor, so find the DID
+  // through the index first.
   const found = await selectAccountQB(db, flags)
-    .where('email', '=', email.toLowerCase())
+    .where((eb) =>
+      eb(
+        'actor.did',
+        'in',
+        db.db
+          .selectFrom('account')
+          .select('account.did')
+          .where((eb2) =>
+            eb2(eb2.fn('lower', ['account.email']), '=', email.toLowerCase()),
+          )
+          .$narrowType<{ did: DidString }>(),
+      ),
+    )
     .executeTakeFirst()
   return found || null
 }
@@ -140,7 +168,9 @@ export const registerActor = async (
       .returning('did'),
   )
   if (!registered) {
-    throw new UserAlreadyExistsError()
+    throw new UserAlreadyExistsError(
+      'Handle is already in use, please choose a different handle.',
+    )
   }
 }
 
@@ -182,6 +212,9 @@ export const deleteAccount = async (
     db.db.deleteFrom('email_token').where('did', '=', did),
   )
   await db.executeWithRetry(
+    db.db.deleteFrom('account_email_auth_factor').where('did', '=', did),
+  )
+  await db.executeWithRetry(
     db.db.deleteFrom('refresh_token').where('did', '=', did),
   )
   await db.executeWithRetry(
@@ -209,7 +242,9 @@ export const updateHandle = async (
           exists(
             db.db
               .selectFrom('actor')
-              .where('handle', '=', handle)
+              .where((eb) =>
+                eb(eb.fn('lower', ['handle']), '=', handle.toLowerCase()),
+              )
               .where('did', '!=', did)
               .selectAll(),
           ),

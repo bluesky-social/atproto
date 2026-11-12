@@ -38,7 +38,7 @@ describe('blob deletes', () => {
     await network?.close()
   })
 
-  const getDbBlobsForDid = (did: string) => {
+  const getDbBlobsForDid = (did: DidString) => {
     return ctx.actorStore.read(did, (store) => store.repo.blob.getBlobCids())
   }
 

@@ -35,6 +35,21 @@ if (data.handle != handle) {
 }
 ```
 
+## SSRF protection
+
+HTTP identity resolution — the handle `/.well-known/atproto-did` endpoint,
+`did:plc`, and `did:web` — is routed through an SSRF-protected fetch by
+default. Private IPs, IP-literal hosts, `http:` URLs, custom ports, and a
+handful of forbidden domain names are refused.
+
+To resolve identities against localhost or another private network — a test
+suite or a local dev stack — pass your own `fetch`. A supplied `fetch` is
+used as-is and is never re-wrapped:
+
+```typescript
+const didres = new IdResolver({ plcUrl, fetch: globalThis.fetch })
+```
+
 ## License
 
 This project is dual-licensed under MIT and Apache 2.0 terms:

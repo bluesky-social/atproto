@@ -1,5 +1,5 @@
 import type { Selectable } from 'kysely'
-import type { $TypeOf, DatetimeString, DidString } from '@atproto/lex'
+import type { $TypeOf, DatetimeString, DidString } from '@atproto/lex-schema'
 import type { ModerationEvent } from '../db/schema/moderation_event.js'
 import type { ModerationSubjectStatus } from '../db/schema/moderation_subject_status.js'
 import type { tools } from '../lexicons/index.js'
@@ -20,25 +20,6 @@ export type ModerationEventRowWithHandle = ModerationEventRow & {
 }
 export type ModerationSubjectStatusRow = Selectable<ModerationSubjectStatus>
 export type ModerationSubjectStatusRowWithStats = ModerationSubjectStatusRow & {
-  // account_events_stats
-  takedownCount: number | null
-  suspendCount: number | null
-  escalateCount: number | null
-  reportCount: number | null
-  appealCount: number | null
-
-  // account_record_events_stats
-  totalReports: number | null
-  reportedCount: number | null
-  escalatedCount: number | null
-  appealedCount: number | null
-
-  // account_record_status_stats
-  subjectCount: number | null
-  pendingCount: number | null
-  processedCount: number | null
-  takendownCount: number | null
-
   // account_strike
   strikeCount: number | null
   totalStrikeCount: number | null
@@ -82,15 +63,4 @@ export type ReporterStats = {
   takendownRecordCount: number
   labeledAccountCount: number
   labeledRecordCount: number
-}
-
-export type ReporterStatsResult = {
-  accountReportCount?: number
-  recordReportCount?: number
-  reportedAccountCount?: number
-  reportedRecordCount?: number
-  takendownAccountCount?: number
-  takendownRecordCount?: number
-  labeledAccountCount?: number
-  labeledRecordCount?: number
 }

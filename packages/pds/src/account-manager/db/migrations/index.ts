@@ -5,9 +5,8 @@ import * as mig004 from './004-oauth.js'
 import * as mig005 from './005-oauth-account-management.js'
 import * as mig006 from './006-oauth-permission-sets.js'
 import * as mig007 from './007-lexicon-failures-index.js'
-import * as mig008 from './008-spaces.js'
-import * as mig009 from './009-space-deletion-and-macs.js'
-import * as mig010 from './010-space-status-notifications.js'
+import * as mig008 from './008-account-email-auth-factor.js'
+import * as mig009 from './009-spaces.js'
 
 export default {
   '001': mig001,
@@ -19,5 +18,4 @@ export default {
   '007': mig007,
   '008': mig008,
   '009': mig009,
-  '010': mig010,
 }

@@ -1,4 +1,4 @@
-import { toDatetimeString } from '@atproto/lex'
+import { toDatetimeString } from '@atproto/lex-schema'
 import type { Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../context.js'
 import { tools } from '../../lexicons/index.js'
@@ -20,6 +20,7 @@ export default function (server: Server, ctx: AppContext) {
         patternType,
         actions,
         reason,
+        source,
         createdBy,
         sortDirection,
       } = input.body
@@ -35,6 +36,7 @@ export default function (server: Server, ctx: AppContext) {
             ? actions.map(getSafelinkAction)
             : undefined,
         reason: reason ? getSafelinkReason(reason) : undefined,
+        source,
         createdBy,
         direction: sortDirection as 'asc' | 'desc' | undefined,
       })
@@ -48,6 +50,7 @@ export default function (server: Server, ctx: AppContext) {
             pattern: rule.pattern,
             action: rule.action,
             reason: rule.reason,
+            source: rule.source,
             createdBy: rule.createdBy,
             createdAt: toDatetimeString(rule.createdAt),
             updatedAt: toDatetimeString(rule.updatedAt),

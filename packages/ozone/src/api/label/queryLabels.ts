@@ -1,4 +1,4 @@
-import type { UriString } from '@atproto/lex'
+import type { UriString } from '@atproto/lex-schema'
 import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../context.js'
 import { com } from '../../lexicons/index.js'
@@ -6,6 +6,14 @@ import { com } from '../../lexicons/index.js'
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.label.queryLabels, async ({ params }) => {
     const { uriPatterns, sources, limit, cursor } = params
+    if (
+      !ctx.cfg.service.labelQueryWildcardsEnabled &&
+      uriPatterns.some((pattern) => pattern.includes('*'))
+    ) {
+      throw new InvalidRequestError(
+        'Support for wildcard label queries is temporarily disabled',
+      )
+    }
     let builder = ctx.db.db.selectFrom('label').selectAll().limit(limit)
     // if includes '*', then we don't need a where clause
     if (!uriPatterns.includes('*')) {

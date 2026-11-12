@@ -42,6 +42,7 @@ export default function (server: Server, ctx: AppContext) {
       // temp
       void features.checkGate(features.Gate.AATest)
       const hydrateCtx = await ctx.hydrator.createContext({
+        xrpcEndpoint: app.bsky.unspecced.getPostThreadV2.$lxm,
         labelers,
         viewer,
         includeTakedowns,

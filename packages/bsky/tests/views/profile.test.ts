@@ -19,6 +19,7 @@ import {
 import { HOUR, MINUTE } from '@atproto/common'
 import { type SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import type { DidString } from '@atproto/syntax'
+import { com } from '../../src/lexicons/index.js'
 import { forSnapshot, stripViewer } from '../_util.js'
 
 describe('pds profile views', () => {
@@ -674,6 +675,243 @@ describe('pds profile views', () => {
         allowIncoming: 'following',
         allowGroupInvites: 'all',
       })
+    })
+  })
+
+  describe('links', () => {
+    let linky: DidString
+
+    const createLink = async (
+      did: DidString,
+      url: string,
+      title?: string,
+      selfLabels?: string[],
+    ) => {
+      const res = await sc.agent.com.atproto.repo.createRecord(
+        {
+          repo: did,
+          collection: 'app.bsky.actor.link',
+          record: {
+            url,
+            title,
+            createdAt: new Date().toISOString(),
+            labels: selfLabels
+              ? com.atproto.label.defs.selfLabels.$build({
+                  values: selfLabels.map((val) => ({ val })),
+                })
+              : undefined,
+          },
+        },
+        { headers: sc.getHeaders(did), encoding: 'application/json' },
+      )
+      return { uri: res.data.uri, cid: res.data.cid }
+    }
+
+    const getLinks = async (labelers?: string) => {
+      const { data } = await agent.api.app.bsky.actor.getProfile(
+        { actor: linky },
+        {
+          headers: {
+            ...(labelers ? { 'atproto-accept-labelers': labelers } : {}),
+            ...(await network.serviceHeaders(
+              alice,
+              ids.AppBskyActorGetProfile,
+            )),
+          },
+        },
+      )
+      return data.links
+    }
+
+    beforeAll(async () => {
+      await sc.createAccount('linky', {
+        handle: 'linky.test',
+        email: 'linky@test.com',
+        password: 'linky-pass',
+      })
+      linky = sc.dids.linky
+    })
+
+    it('omits links for profiles without them', async () => {
+      await updateProfile(linky, { displayName: 'links' })
+      await network.processAll()
+      expect(await getLinks()).toBeUndefined()
+    })
+
+    it('returns link records in profile order, skipping ones that break the rules', async () => {
+      const support = await createLink(
+        linky,
+        'https://ko-fi.com/linky',
+        'Tip jar',
+      )
+      const site = await createLink(linky, 'https://example.com')
+      const shortener = await createLink(linky, 'https://bit.ly/abc')
+      const insecure = await createLink(linky, 'http://example.org')
+      const someoneElses = await createLink(alice, 'https://alice.example')
+      await updateProfile(linky, {
+        displayName: 'links',
+        links: [site, shortener, insecure, someoneElses, support],
+      })
+      await network.processAll()
+
+      const links = await getLinks()
+      expect(links?.map((link) => link.uri)).toEqual([site.uri, support.uri])
+      expect(links?.[1]).toMatchObject({
+        uri: support.uri,
+        cid: support.cid,
+        url: 'https://ko-fi.com/linky',
+        title: 'Tip jar',
+      })
+    })
+
+    it('leaves out a link that was taken down', async () => {
+      const before = await getLinks()
+      const takenDown = before?.[0]?.uri
+      assert(takenDown)
+      await network.bsky.ctx.dataplane.takedownRecord({
+        recordUri: takenDown,
+      })
+      const links = await getLinks()
+      expect(links?.map((link) => link.uri)).toEqual(
+        before?.slice(1).map((link) => link.uri),
+      )
+    })
+
+    it('still returns the profile when link records fail to load', async () => {
+      using getLinksSpy = vi.spyOn(
+        network.bsky.ctx.dataplane,
+        'getProfileLinkRecords',
+      )
+      getLinksSpy.mockRejectedValueOnce(new Error('dataplane unavailable'))
+      const { data } = await agent.api.app.bsky.actor.getProfile(
+        { actor: linky },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyActorGetProfile,
+          ),
+        },
+      )
+      expect(data.did).toEqual(linky)
+      expect(data.links).toBeUndefined()
+    })
+
+    it("does not show another profile's link when profiles are fetched together", async () => {
+      await sc.createAccount('pinto', {
+        handle: 'pinto.test',
+        email: 'pinto@test.com',
+        password: 'pinto-pass',
+      })
+      const pinto = sc.dids.pinto
+      const pintos = await createLink(pinto, 'https://pinto.example')
+      await updateProfile(pinto, { displayName: 'pinto', links: [pintos] })
+      const own = await createLink(linky, 'https://linky.example')
+      await updateProfile(linky, { displayName: 'links', links: [own, pintos] })
+      await network.processAll()
+
+      const { data } = await agent.api.app.bsky.actor.getProfiles(
+        { actors: [linky, pinto] },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyActorGetProfiles,
+          ),
+        },
+      )
+      const linkUris = (did: string) =>
+        data.profiles
+          .find((profile) => profile.did === did)
+          ?.links?.map((link) => link.uri)
+      expect(linkUris(linky)).toEqual([own.uri])
+      expect(linkUris(pinto)).toEqual([pintos.uri])
+    })
+
+    it('exposes labels applied to a link', async () => {
+      const labeled = await createLink(linky, 'https://labeled.example')
+      const unlabeled = await createLink(linky, 'https://unlabeled.example')
+      await updateProfile(linky, {
+        displayName: 'links',
+        links: [labeled, unlabeled],
+      })
+      await createLabel({ uri: labeled.uri, cid: labeled.cid, val: 'spam' })
+      await network.processAll()
+
+      const links = await getLinks(labelerDid)
+      expect(links?.map((link) => link.uri)).toEqual([
+        labeled.uri,
+        unlabeled.uri,
+      ])
+      expect(links?.[0].labels?.map((l) => [l.uri, l.val, l.src])).toEqual([
+        [labeled.uri, 'spam', labelerDid],
+      ])
+      expect(links?.[1].labels).toEqual([])
+    })
+
+    it('exposes self-labels saved on a link', async () => {
+      const selfLabeled = await createLink(
+        linky,
+        'https://self-labeled.example',
+        undefined,
+        ['porn'],
+      )
+      const unlabeled = await createLink(linky, 'https://plain.example')
+      await updateProfile(linky, {
+        displayName: 'links',
+        links: [selfLabeled, unlabeled],
+      })
+      await network.processAll()
+
+      const links = await getLinks()
+      expect(links?.map((link) => link.uri)).toEqual([
+        selfLabeled.uri,
+        unlabeled.uri,
+      ])
+      expect(
+        links?.[0].labels?.map((l) => [l.src, l.uri, l.cid, l.val]),
+      ).toEqual([[linky, selfLabeled.uri, selfLabeled.cid, 'porn']])
+      expect(links?.[1].labels).toEqual([])
+    })
+
+    it('returns hydrated labels followed by self-labels', async () => {
+      const both = await createLink(linky, 'https://both.example', undefined, [
+        'gore',
+      ])
+      await updateProfile(linky, { displayName: 'links', links: [both] })
+      await createLabel({ uri: both.uri, cid: both.cid, val: 'spam' })
+      await network.processAll()
+
+      const links = await getLinks(labelerDid)
+      expect(
+        links?.[0].labels?.map((l) => [l.src, l.uri, l.cid, l.val]),
+      ).toEqual([
+        [labelerDid, both.uri, both.cid, 'spam'],
+        [linky, both.uri, both.cid, 'gore'],
+      ])
+    })
+
+    it('omits only the link with an actionable takedown label', async () => {
+      const kept = await createLink(linky, 'https://kept.example')
+      const removed = await createLink(linky, 'https://removed.example')
+      await updateProfile(linky, {
+        displayName: 'links',
+        links: [removed, kept],
+      })
+      await createLabel({
+        uri: removed.uri,
+        cid: removed.cid,
+        val: '!takedown',
+      })
+      await network.processAll()
+
+      const links = await getLinks(`${labelerDid};redact`)
+      expect(links?.map((link) => link.uri)).toEqual([kept.uri])
+
+      // Without redact authority the label is shown but does not hide the link.
+      const unredacted = await getLinks(labelerDid)
+      expect(unredacted?.map((link) => link.uri)).toEqual([
+        removed.uri,
+        kept.uri,
+      ])
     })
   })
 

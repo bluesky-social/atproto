@@ -108,6 +108,16 @@ export type ApiEndpoints = {
     input: ConfirmEmailVerificationInput
     output: ConfirmEmailVerificationOutput
   }
+  '/enable-email-otp': {
+    method: 'POST'
+    input: EnableEmailAuthFactorInput
+    output: EnableEmailAuthFactorOutput
+  }
+  '/disable-email-otp': {
+    method: 'POST'
+    input: DisableEmailAuthFactorInput
+    output: DisableEmailAuthFactorOutput
+  }
   '/update-handle': {
     method: 'POST'
     input: UpdateHandleInput
@@ -178,7 +188,7 @@ export type EphemeralToken = SignedJwt
 
 export type SignInInput = {
   locale: string
-  username: string
+  identifier: string
   password: string
   emailOtp?: string
   remember?: boolean
@@ -194,6 +204,7 @@ export type SignUpInput = {
   handle: string
   email: string
   password: string
+  remember?: boolean
   inviteCode?: string
   hcaptchaToken?: string
 }
@@ -204,12 +215,12 @@ export type SignUpOutput = {
 }
 
 export type SignOutInput = {
-  did: DidString | DidString[]
+  did: DidString
 }
 
 export type InitiatePasswordResetInput = {
   locale: string
-  email: string
+  identifier: string
 }
 
 export type ConfirmResetPasswordInput = {
@@ -249,6 +260,25 @@ export type ConfirmEmailVerificationInput = {
 }
 
 export type ConfirmEmailVerificationOutput = {
+  account: Account
+}
+
+export type EnableEmailAuthFactorInput = {
+  did: DidString
+  locale?: string
+}
+
+export type DisableEmailAuthFactorInput = {
+  did: DidString
+  token?: string
+  locale?: string
+}
+
+export type EnableEmailAuthFactorOutput = {
+  account: Account
+}
+
+export type DisableEmailAuthFactorOutput = {
   account: Account
 }
 

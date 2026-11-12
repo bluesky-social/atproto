@@ -10,6 +10,7 @@ export type KnownFollowers = app.bsky.actor.defs.KnownFollowers
 export type ProfileAssociatedActivitySubscription =
   app.bsky.actor.defs.ProfileAssociatedActivitySubscription
 export type ProfileAssociatedChat = app.bsky.actor.defs.ProfileAssociatedChat
+export type ProfileLinkView = app.bsky.actor.defs.ProfileLinkView
 export type ProfileView = app.bsky.actor.defs.ProfileView
 export type ProfileViewBasic = app.bsky.actor.defs.ProfileViewBasic
 export type ProfileViewDetailed = app.bsky.actor.defs.ProfileViewDetailed
@@ -43,6 +44,11 @@ export type GalleryImageEmbedView = app.bsky.embed.gallery.ViewImage
 export const isExternalEmbedType = app.bsky.embed.external.$isTypeOf
 export type ExternalEmbed = app.bsky.embed.external.Main
 export type ExternalEmbedView = app.bsky.embed.external.View
+export type ExternalRecordView =
+  | app.bsky.embed.external.ViewArticle
+  | app.bsky.embed.external.ViewArticlePublication
+  | app.bsky.embed.external.ViewGallery
+  | app.bsky.embed.external.ViewLivestream
 export type ExternalEmbedSourceView = app.bsky.embed.external.ViewExternalSource
 export type ExternalEmbedSourceThemeView =
   app.bsky.embed.external.ViewExternalSourceTheme
@@ -94,12 +100,7 @@ export type PostgateRecord = app.bsky.feed.postgate.Main
 export const isPostgateDisableRuleType =
   app.bsky.feed.postgate.disableRule.$isTypeOf
 
-// TODO Temporary off-Lexicon fields used to expose canonical OP thread
-// numbering on feed items while the public response schema remains unchanged.
-export type FeedViewPost = app.bsky.feed.defs.FeedViewPost & {
-  opThreadPostIndex?: number
-  opThreadPostCount?: number
-}
+export type FeedViewPost = app.bsky.feed.defs.FeedViewPost
 export type ReasonPin = app.bsky.feed.defs.ReasonPin
 export type ReasonRepost = app.bsky.feed.defs.ReasonRepost
 export type ReplyRef = app.bsky.feed.defs.ReplyRef
@@ -188,6 +189,7 @@ export const validateStrongRef = com.atproto.repo.strongRef.$safeValidate
 // com.germnetwork.declaration
 
 export type GermDeclarationRecord = com.germnetwork.declaration.Main
+export type ProfileLinkRecord = app.bsky.actor.link.Main
 
 // site.standard
 

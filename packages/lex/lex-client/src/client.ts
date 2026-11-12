@@ -1,23 +1,43 @@
 import type { LexMap, LexValue, TypedLexMap } from '@atproto/lex-data'
-import type {
-  AtIdentifierString,
-  AtUriString,
-  CidString,
-  DidString,
-  Infer,
-  InferMethodInputBody,
-  InferMethodOutputBody,
-  InferRecordKey,
-  LexiconRecordKey,
-  Main,
-  NsidString,
-  Params,
-  Restricted,
+import {
+  type AccountAgent,
+  type Agent,
+  type AgentOptions,
+  type BinaryBodyInit,
+  type RecordKeyOptions,
+  type Service,
+  type XrpcFailure,
+  type XrpcOptions,
+  type XrpcRequestParams,
+  type XrpcResponse,
+  type XrpcResponseBody,
+  applyDefaults,
+  buildAgent,
+  isService,
+  mergeHeaders,
+  rkeyFor,
+  rkeyForCreate,
+  throwIfAborted,
+  xrpc,
+  xrpcSafe,
+} from '@atproto/lex-rpc'
+import {
+  type AtIdentifierString,
+  type AtUriString,
+  type CidString,
+  type DidString,
+  type Infer,
+  type InferMethodInputBody,
+  type InferMethodOutputBody,
+  type Main,
+  type NsidString,
+  type Params,
+  Procedure,
+  Query,
+  type RecordSchema,
+  type Restricted,
+  getMain,
 } from '@atproto/lex-schema'
-import { Procedure, Query, RecordSchema, getMain } from '@atproto/lex-schema'
-import type { Agent, AgentOptions, AuthenticatedAgent } from './agent.js'
-import { buildAgent } from './agent.js'
-import type { XrpcFailure } from './errors.js'
 // @NOTE We could use import { com } from "./lexicons/index.js" here, but some
 // consumers might not know how to properly tree-shake that, so we import only
 // the needed lexicon schemas directly.
@@ -31,57 +51,10 @@ import listRecords, {
 import putRecord from './lexicons/com/atproto/repo/putRecord.js'
 import uploadBlob from './lexicons/com/atproto/repo/uploadBlob.js'
 import getBlob from './lexicons/com/atproto/sync/getBlob.js'
-import type { XrpcResponse, XrpcResponseBody } from './response.js'
-import { type BinaryBodyInit, type Service, isService } from './types.js'
 import {
-  type RecordKeyOptions,
-  applyDefaults,
-  getDefaultRecordKey,
-  getLiteralRecordKey,
-  mergeHeaders,
-  throwIfAborted,
-} from './util.js'
-import {
-  type WriteOperation,
-  type WriteOperationCreateOptions,
-  type WriteOperationDeleteOptions,
   WriteOperationHelper,
-  type WriteOperationUpdateOptions,
   type WriteOperationsFactory,
 } from './write-operation-builder.js'
-import {
-  type XrpcOptions,
-  type XrpcRequestParams,
-  xrpc,
-  xrpcSafe,
-} from './xrpc.js'
-
-export {
-  type AtIdentifierString,
-  type CidString,
-  type DidString,
-  type Infer,
-  type InferMethodInputBody,
-  type InferMethodOutputBody,
-  type InferRecordKey,
-  type LexMap,
-  type LexValue,
-  type LexiconRecordKey,
-  type Main,
-  type NsidString,
-  type Params,
-  Procedure,
-  Query,
-  RecordSchema,
-  type Restricted,
-  type TypedLexMap,
-  type WriteOperation,
-  type WriteOperationCreateOptions,
-  type WriteOperationDeleteOptions,
-  WriteOperationHelper,
-  type WriteOperationUpdateOptions,
-  type WriteOperationsFactory,
-}
 
 /**
  * Configuration options for creating a {@link Client}.
@@ -497,7 +470,7 @@ export class Client {
    */
   public assertAuthenticated(): asserts this is {
     did: DidString
-    agent: AuthenticatedAgent
+    agent: AccountAgent
   } {
     if (!this.did) throw new Error('Client is not authenticated')
   }
@@ -1079,8 +1052,7 @@ export class Client {
     const schema: T = getMain(ns)
     const record = schema.build(input) as TypedLexMap<NsidString>
     if (options?.validateRequest) schema.validate(record)
-    const rkey = options.rkey ?? getDefaultRecordKey(schema)
-    if (rkey !== undefined) schema.keySchema.assert(rkey)
+    const rkey = rkeyForCreate(schema, options?.rkey)
     const response = await this.createRecord(record, rkey, options)
     return response.body
   }
@@ -1108,9 +1080,7 @@ export class Client {
     options: DeleteOptions<T> = {} as DeleteOptions<T>,
   ): Promise<DeleteOutput> {
     const schema = getMain(ns)
-    const rkey = schema.keySchema.parse(
-      options.rkey ?? getLiteralRecordKey(schema),
-    )
+    const rkey = rkeyFor(schema, options.rkey)
     const response = await this.deleteRecord(schema.$type, rkey, options)
     return response.body
   }
@@ -1145,9 +1115,7 @@ export class Client {
     options: GetOptions<T> = {} as GetOptions<T>,
   ): Promise<GetOutput<T>> {
     const schema = getMain(ns)
-    const rkey = schema.keySchema.parse(
-      options.rkey ?? getLiteralRecordKey(schema),
-    )
+    const rkey = rkeyFor(schema, options.rkey)
     const response = await this.getRecord(schema.$type, rkey, options)
     const value = schema.validate(response.body.value)
     return { ...response.body, value }
@@ -1198,7 +1166,7 @@ export class Client {
     const schema: T = getMain(ns)
     const record = schema.build(input) as TypedLexMap<NsidString>
     if (options?.validateRequest) schema.validate(record)
-    const rkey = options.rkey ?? getLiteralRecordKey(schema)
+    const rkey = rkeyFor(schema, options.rkey)
     const response = await this.putRecord(record, rkey, options)
     return response.body
   }

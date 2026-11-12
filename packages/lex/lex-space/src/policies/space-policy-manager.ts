@@ -1,5 +1,5 @@
 import {
-  type AuthenticatedAgent,
+  type AccountAgent,
   type InferMethodOutputBody,
   type XrpcOptions,
   xrpc,
@@ -27,7 +27,7 @@ export declare namespace SpacePolicyManager {
    */
   export interface Class<TInstance = unknown> {
     readonly schema: TypedObjectSchema
-    new (agent: AuthenticatedAgent, ref: SpaceRef, policy: any): TInstance
+    new (agent: AccountAgent, ref: SpaceRef, policy: any): TInstance
   }
 }
 
@@ -60,7 +60,7 @@ export abstract class SpacePolicyManager<P extends { $type?: string }> {
 
   constructor(
     /** The agent of the space authority. */
-    readonly agent: AuthenticatedAgent,
+    readonly agent: AccountAgent,
     readonly ref: SpaceRef,
     policy: P,
   ) {

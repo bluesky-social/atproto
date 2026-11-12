@@ -76,6 +76,7 @@ AuthenticationContext.displayName = 'AuthenticationContext'
 
 export type AuthenticationProviderProps = {
   disableRemember?: boolean
+  rememberDefault?: boolean
   promptMode?: OAuthPromptMode
   forcedIdentifier?: string
   onCancel?: () => void
@@ -88,6 +89,7 @@ export type AuthenticationProviderProps = {
  */
 export function AuthenticationProvider({
   disableRemember = false,
+  rememberDefault = false,
   promptMode,
   forcedIdentifier,
   onCancel,
@@ -227,6 +229,7 @@ export function AuthenticationProvider({
             await api.signUp(data)
             showHome()
           }}
+          rememberDefault={rememberDefault}
         />
       )
     }
@@ -234,7 +237,8 @@ export function AuthenticationProvider({
     if (view === View.ResetPassword) {
       return (
         <ResetPasswordView
-          emailDefault={resetPasswordHint}
+          hint={resetPasswordHint}
+          domains={availableUserDomains}
           initialView={resetPasswordConfirm ? 'confirm' : 'request'}
           onViewChange={(v) => setResetPasswordConfirm(v === 'confirm')}
           onResetPasswordRequest={async (data) => {
@@ -251,6 +255,7 @@ export function AuthenticationProvider({
     return (
       <SignInView
         disableRemember={disableRemember}
+        rememberDefault={rememberDefault}
         forcedIdentifier={forcedIdentifier}
         sessions={sessions}
         session={session}
@@ -261,10 +266,10 @@ export function AuthenticationProvider({
         onSignUp={showSignUpIfAllowed}
         onBack={homeView === View.SignIn ? onCancel : showHome}
         backLabel={homeView === View.SignIn ? <Trans>Cancel</Trans> : undefined}
-        onForgotPassword={(email) => {
+        onForgotPassword={(hint) => {
           setResetPasswordConfirm(false)
           setView(View.ResetPassword)
-          setResetPasswordHint(email)
+          setResetPasswordHint(hint)
         }}
       />
     )

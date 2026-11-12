@@ -1,5 +1,5 @@
 import { randomStr } from '@atproto/crypto'
-import { type DatetimeString, currentDatetimeString } from '@atproto/lex'
+import { type DatetimeString, currentDatetimeString } from '@atproto/lex-schema'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import type { com } from '../../lexicons/index.js'
 import type { AccountDb } from '../db/index.js'

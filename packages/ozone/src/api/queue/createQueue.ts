@@ -19,13 +19,20 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       const {
+        strictAccess = false,
         name,
         subjectTypes = [],
         collection,
         reportTypes = [],
+        reporterTags = [],
+        accountTags = [],
         description,
         recommendedPolicies = [],
+        recommendedLabels = [],
       } = input.body
+      if (strictAccess && !access.isAdmin) {
+        throw new AuthRequiredError('Only admins can create strict queues')
+      }
       const createdBy =
         access.type === 'admin_token' ? 'admin_token' : access.iss
 
@@ -46,26 +53,33 @@ export default function (server: Server, ctx: AppContext) {
         )
       }
 
+      const queue = await ctx.db.transaction(async (dbTxn) => {
+        const queueService = ctx.queueService(dbTxn)
+        await queueService.assertRecommendedPolicies(recommendedPolicies)
+        await queueService.checkConflict({
+          name,
+          subjectTypes,
+          collection,
+          reportTypes,
+          reporterTags,
+          accountTags,
+          recommendedLabels,
+        })
+        return queueService.create({
+          strictAccess,
+          name,
+          subjectTypes,
+          collection,
+          reportTypes,
+          reporterTags,
+          accountTags,
+          description,
+          recommendedPolicies,
+          recommendedLabels,
+          createdBy,
+        })
+      })
       const queueService = ctx.queueService(ctx.db)
-
-      await queueService.assertRecommendedPolicies(recommendedPolicies)
-
-      await queueService.checkConflict({
-        name,
-        subjectTypes,
-        collection,
-        reportTypes,
-      })
-
-      const queue = await queueService.create({
-        name,
-        subjectTypes,
-        collection,
-        reportTypes,
-        description,
-        recommendedPolicies,
-        createdBy,
-      })
 
       return {
         encoding: 'application/json',

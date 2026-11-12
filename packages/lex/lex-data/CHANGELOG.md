@@ -1,5 +1,29 @@
 # @atproto/lex-data
 
+## 0.1.10
+
+### Patch Changes
+
+- [#5825](https://github.com/bluesky-social/atproto/pull/5825) [`8c841f6`](https://github.com/bluesky-social/atproto/commit/8c841f6e73c8365c2dfe816c0613aa9c50490361) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add support for `ArrayLike<number>` in `asUint8Array`
+
+- [#5825](https://github.com/bluesky-social/atproto/pull/5825) [`8c841f6`](https://github.com/bluesky-social/atproto/commit/8c841f6e73c8365c2dfe816c0613aa9c50490361) Thanks [@matthieusieben](https://github.com/matthieusieben)! - `asUint8Array` converts Node.js `Buffer`s into plain `Uint8Array`s. Add `toUint8Array`, which throws a `TypeError` when the input cannot be converted into a `Uint8Array`.
+
+- [#5825](https://github.com/bluesky-social/atproto/pull/5825) [`8c841f6`](https://github.com/bluesky-social/atproto/commit/8c841f6e73c8365c2dfe816c0613aa9c50490361) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add `ui8ConcatAsync()` to `@atproto/lex-data`, type `encode()`'s result in `@atproto/lex-cbor` as `Uint8Array<ArrayBuffer>`, and keep `bytes` schemas from coercing arrays and array-like objects now that `asUint8Array` accepts them.
+
+- [#5825](https://github.com/bluesky-social/atproto/pull/5825) [`8c841f6`](https://github.com/bluesky-social/atproto/commit/8c841f6e73c8365c2dfe816c0613aa9c50490361) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add support for `Iterable<ArrayLike<number>>` as `ui8Concat()` input
+
+## 0.1.9
+
+### Patch Changes
+
+- [#5786](https://github.com/bluesky-social/atproto/pull/5786) [`07c25d4`](https://github.com/bluesky-social/atproto/commit/07c25d410d4f4ad8f6ec80fc14efa0dd8ec55545) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Recommend depending on this package directly, rather than on `@atproto/lex`, unless the code is bundled
+
+## 0.1.8
+
+### Patch Changes
+
+- [#5582](https://github.com/bluesky-social/atproto/pull/5582) [`e8b89ff`](https://github.com/bluesky-social/atproto/commit/e8b89ff4c211a10519b54bd83eb64950035942c3) Thanks [@haileyok](https://github.com/haileyok)! - Reject CID strings longer than 128 characters before decoding them.
+
 ## 0.1.7
 
 ### Patch Changes

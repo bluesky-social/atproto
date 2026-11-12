@@ -1,6 +1,6 @@
 import { type DynamicModule, type SqlBool, sql } from 'kysely'
-import type { AtUriString, DatetimeString } from '@atproto/lex'
-import { toDatetimeString } from '@atproto/lex'
+import type { AtUriString, DatetimeString } from '@atproto/lex-schema'
+import { toDatetimeString } from '@atproto/lex-schema'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import type { AnyQb, DbRef } from './types.js'
 

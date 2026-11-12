@@ -2,8 +2,8 @@ import {
   type WriteOperationCreateOptions,
   type WriteOperationDeleteOptions,
   type WriteOperationUpdateOptions,
-  getDefaultRecordKey,
-  getLiteralRecordKey,
+  rkeyFor,
+  rkeyForCreate,
 } from '@atproto/lex-client'
 import {
   type $Typed,
@@ -53,7 +53,7 @@ export class SpaceWriteOperationHelper {
     return com.atproto.space.applyWrites.create.$build({
       collection: schema.$type,
       value: schema.build(input),
-      rkey: options?.rkey ?? getDefaultRecordKey(schema),
+      rkey: rkeyForCreate(schema, options?.rkey),
     })
   }
 
@@ -77,7 +77,7 @@ export class SpaceWriteOperationHelper {
     return com.atproto.space.applyWrites.update.$build({
       collection: schema.$type,
       value: schema.build(input),
-      rkey: options?.rkey ?? getLiteralRecordKey(schema),
+      rkey: rkeyFor(schema, options?.rkey),
     })
   }
 
@@ -97,7 +97,7 @@ export class SpaceWriteOperationHelper {
     const schema: T = getMain(ns)
     return com.atproto.space.applyWrites.delete.$build({
       collection: schema.$type,
-      rkey: options?.rkey ?? getLiteralRecordKey(schema),
+      rkey: rkeyFor(schema, options?.rkey),
     })
   }
 

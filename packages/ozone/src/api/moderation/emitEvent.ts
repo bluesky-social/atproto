@@ -1,4 +1,4 @@
-import type { DidString } from '@atproto/lex'
+import type { DidString } from '@atproto/lex-schema'
 import {
   AuthRequiredError,
   ForbiddenError,
@@ -11,6 +11,8 @@ import { app, com, tools } from '../../lexicons/index.js'
 import { httpLogger } from '../../logger.js'
 import { processReportAction } from '../../mod-service/report.js'
 import { subjectFromInput } from '../../mod-service/subject.js'
+import { handleReportUpdate } from '../../report/handle-report-update.js'
+import { getEventActivityMetadata } from '../../report/metadata.js'
 import type { SettingService } from '../../setting/service.js'
 import { TagService } from '../../tag-service/index.js'
 import { getTagForReport } from '../../tag-service/util.js'
@@ -48,6 +50,20 @@ const handleModerationEvent = async ({
     input.body.subject,
     input.body.subjectBlobCids,
   )
+
+  if (input.body.reportAction?.allOwned) {
+    if (!subject.isRepo()) {
+      throw new InvalidRequestError('allOwned requires an account subject')
+    }
+    if (
+      handleReportUpdate('open', { type: 'event', eventType: event.$type })
+        .nextStatus !== 'closed'
+    ) {
+      throw new InvalidRequestError(
+        'allOwned requires an event that closes reports',
+      )
+    }
+  }
 
   if (
     tools.ozone.moderation.defs.ageAssuranceEvent.$isTypeOf(event) &&
@@ -220,7 +236,12 @@ const handleModerationEvent = async ({
   }
 
   if (tools.ozone.moderation.defs.modEventReport.$isTypeOf(event)) {
-    await ctx.moderationServiceProfile().validateReasonType(event.reportType)
+    await ctx
+      .moderationServiceProfile()
+      .validateReasonType(
+        event.reportType,
+        tools.ozone.moderation.emitEvent.$lxm,
+      )
   }
 
   const moderationEvent = await db.transaction(async (dbTxn) => {
@@ -248,13 +269,18 @@ const handleModerationEvent = async ({
       if (
         !reportAction.ids?.length &&
         !reportAction.types?.length &&
-        !reportAction.all
+        !reportAction.all &&
+        !reportAction.allOwned
       ) {
         throw new InvalidRequestError(
-          'reportAction must specify ids, types, or all',
+          'reportAction must specify ids, types, all, or allOwned',
         )
       }
     }
+
+    const metadata = input.body.reportAction
+      ? getEventActivityMetadata(input.body.modTool)
+      : undefined
 
     const result = await moderationTxn.logEvent({
       event,
@@ -269,10 +295,13 @@ const handleModerationEvent = async ({
       const subjectUri = subject.isRecord() ? subject.uri : null
       try {
         await processReportAction({
+          inboxStartAt: ctx.cfg.inbox.startAt,
           db: dbTxn,
           reportAction: input.body.reportAction,
+          metadata,
           subjectDid: subject.did,
           subjectUri,
+          subjectType: subject.info().subjectType,
           eventId: result.event.id,
           eventType: event.$type,
           createdBy,
@@ -293,11 +322,11 @@ const handleModerationEvent = async ({
       moderationTxn,
     )
 
-    const initialTags = tools.ozone.moderation.defs.modEventReport.$isTypeOf(
-      event,
-    )
-      ? [getTagForReport(event.reportType)]
-      : undefined
+    const initialTags =
+      !ctx.cfg.service.reportTagsDisabled &&
+      tools.ozone.moderation.defs.modEventReport.$isTypeOf(event)
+        ? [getTagForReport(event.reportType)]
+        : undefined
     await tagService.evaluateForSubject(initialTags)
 
     if (subject.isRepo()) {

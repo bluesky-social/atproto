@@ -93,19 +93,40 @@ export abstract class GenericKeyset<R, LR extends KeysetLabeledResult> {
       }
     }
   }
+  /**
+   * Exclusive bound at the end of the range the cursor walks towards: for
+   * `desc`, only rows above it, with each cursor decreasing towards it.
+   */
+  getSinceSql(labeled?: LR, direction?: 'asc' | 'desc') {
+    if (labeled === undefined) return
+    if (direction === 'asc') {
+      return sql<SqlBool>`((${this.primary}, ${this.secondary}) < (${labeled.primary}, ${labeled.secondary}))`
+    } else {
+      return sql<SqlBool>`((${this.primary}, ${this.secondary}) > (${labeled.primary}, ${labeled.secondary}))`
+    }
+  }
   paginate<QB extends AnyQb>(
     qb: QB,
     opts: {
       limit?: number
       cursor?: string
+      since?: string
       direction?: 'asc' | 'desc'
       tryIndex?: boolean
       // By default, pg does nullsFirst
       nullsLast?: boolean
     },
   ): QB {
-    const { limit, cursor, direction = 'desc', tryIndex, nullsLast } = opts
+    const {
+      limit,
+      cursor,
+      since,
+      direction = 'desc',
+      tryIndex,
+      nullsLast,
+    } = opts
     const keysetSql = this.getSql(this.unpack(cursor), direction, tryIndex)
+    const sinceSql = this.getSinceSql(this.unpack(since), direction)
     return qb
       .$if(!!limit, (q) => q.limit((limit as number) + 1))
       .$if(!nullsLast, (q) =>
@@ -124,7 +145,8 @@ export abstract class GenericKeyset<R, LR extends KeysetLabeledResult> {
               : sql`${this.secondary} desc nulls last`,
           ),
       )
-      .$if(!!keysetSql, (qb) => (keysetSql ? qb.where(keysetSql) : qb)) as QB
+      .$if(!!keysetSql, (qb) => (keysetSql ? qb.where(keysetSql) : qb))
+      .$if(!!sinceSql, (qb) => (sinceSql ? qb.where(sinceSql) : qb)) as QB
   }
 }
 
@@ -185,6 +207,7 @@ export const paginate = <
   opts: {
     limit?: number
     cursor?: string
+    since?: string
     direction?: 'asc' | 'desc'
     keyset: K
     tryIndex?: boolean

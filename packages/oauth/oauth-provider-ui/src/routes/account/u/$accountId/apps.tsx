@@ -54,11 +54,9 @@ function AppsPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <p className="text-sm">
+      <p className="text-muted-foreground text-base leading-snug">
         <Trans>
-          These apps have access to your account. An app may appear multiple
-          times if you use it on different devices. You can revoke access to log
-          out the app until you sign in again.
+          Apps that can use your account. Revoke any you no longer use.
         </Trans>
       </p>
 

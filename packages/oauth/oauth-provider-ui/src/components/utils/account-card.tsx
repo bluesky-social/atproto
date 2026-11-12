@@ -1,4 +1,5 @@
-import { ChevronRightIcon } from 'lucide-react'
+import { Trans } from '@lingui/react/macro'
+import { AtSignIcon, ChevronRightIcon } from 'lucide-react'
 import type { ComponentProps, ReactNode } from 'react'
 import type { Account } from '@atproto/oauth-provider-api'
 import { AccountAvatar } from '#/components/identity/account-avatar.tsx'
@@ -15,8 +16,66 @@ import {
 import type { Override } from '#/lib/util.ts'
 import { cn } from '#/lib/utils.ts'
 
+export type AccountRowProps = ComponentProps<typeof Item>
+
+/**
+ * One row in a list of accounts or account destinations — the same height,
+ * padding and surface wherever such a list appears. Pass `render` to make it a
+ * button or a link, as `Item` does.
+ */
+export function AccountRow({
+  className,
+  variant = 'outline',
+  ...props
+}: AccountRowProps) {
+  return (
+    <Item
+      {...props}
+      variant={variant}
+      className={cn(
+        'bg-muted/30 hover:bg-accent hover:text-accent-foreground w-full gap-4 px-4 py-3 text-left',
+        className,
+      )}
+    />
+  )
+}
+
+export type AccountRowMediaProps = Override<
+  ComponentProps<typeof ItemMedia>,
+  {
+    /**
+     * Draws the disc that stands in for an avatar, sized to match one, for a
+     * row led by an icon instead of a picture.
+     */
+    disc?: boolean
+  }
+>
+
+/**
+ * A row's leading slot.
+ *
+ * @NOTE `ItemMedia` nudges itself to the top when a description is present;
+ * the large avatar (or disc) here reads better vertically centred.
+ */
+export function AccountRowMedia({
+  disc,
+  className,
+  ...props
+}: AccountRowMediaProps) {
+  return (
+    <ItemMedia
+      {...props}
+      className={cn(
+        'group-has-data-[slot=item-description]/item:translate-y-0 group-has-data-[slot=item-description]/item:self-center',
+        disc && 'bg-muted text-muted-foreground size-12 rounded-full border',
+        className,
+      )}
+    />
+  )
+}
+
 export type AccountCardProps = Override<
-  Omit<ComponentProps<typeof Item>, 'render' | 'variant'>,
+  AccountRowProps,
   {
     account: Account
     append?: ReactNode
@@ -32,36 +91,64 @@ export type AccountCardProps = Override<
  */
 export function AccountCard({
   account,
-  append = <ChevronRightIcon aria-hidden className="size-4 shrink-0" />,
-  className,
+  render = <button type="button" />,
+  append = (
+    <ChevronRightIcon
+      aria-hidden
+      className="text-muted-foreground size-5 shrink-0"
+    />
+  ),
   ...props
 }: AccountCardProps) {
   return (
-    <Item
-      {...props}
-      variant="outline"
-      render={<button type="button" />}
-      className={cn(
-        'hover:bg-accent hover:text-accent-foreground w-full text-left',
-        className,
-      )}
-    >
-      <ItemMedia>
-        <AccountAvatar account={account} />
-      </ItemMedia>
+    <AccountRow {...props} render={render}>
+      <AccountRowMedia>
+        <AccountAvatar account={account} size="xl" />
+      </AccountRowMedia>
 
-      <ItemContent className="min-w-0">
+      <ItemContent className="min-w-0 gap-0.5">
         {account.name && (
-          <ItemTitle>
-            <AccountName account={account} className="truncate font-medium" />
+          <ItemTitle className="w-full text-lg leading-tight">
+            <AccountName
+              account={account}
+              className="block min-w-0 truncate font-semibold"
+            />
           </ItemTitle>
         )}
-        <ItemDescription>
+        <ItemDescription className="text-base leading-tight">
           <AccountIdentifier account={account} className="block truncate" />
         </ItemDescription>
       </ItemContent>
 
       <ItemActions>{append}</ItemActions>
-    </Item>
+    </AccountRow>
+  )
+}
+
+export type OtherAccountCardProps = AccountRowProps
+
+export function OtherAccountCard({
+  render = <button type="button" />,
+  ...props
+}: OtherAccountCardProps) {
+  return (
+    <AccountRow {...props} render={render}>
+      <AccountRowMedia disc>
+        <AtSignIcon aria-hidden className="m-[10%] size-[80%]" />
+      </AccountRowMedia>
+      <ItemContent className="min-w-0">
+        <ItemTitle className="w-full text-lg leading-tight">
+          <span className="text-muted-foreground block min-w-0 truncate font-medium">
+            <Trans>Another account</Trans>
+          </span>
+        </ItemTitle>
+      </ItemContent>
+      <ItemActions>
+        <ChevronRightIcon
+          aria-hidden
+          className="text-muted-foreground size-5 shrink-0"
+        />
+      </ItemActions>
+    </AccountRow>
   )
 }

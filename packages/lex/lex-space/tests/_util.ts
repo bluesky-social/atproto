@@ -1,5 +1,5 @@
 import type { TestNetworkNoAppView, TestPds } from '@atproto/dev-env'
-import { type AuthenticatedAgent, Client } from '@atproto/lex-client'
+import { type AccountAgent, Client } from '@atproto/lex-client'
 import { com } from './lexicons/index.js'
 
 export async function createUser(
@@ -27,7 +27,7 @@ export async function processNotifications(network: TestNetworkNoAppView) {
   }
 }
 
-export function agentOf(client: Client): AuthenticatedAgent {
+export function agentOf(client: Client): AccountAgent {
   client.assertAuthenticated()
   return client.agent
 }

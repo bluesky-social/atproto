@@ -43,6 +43,10 @@
               "type": "boolean",
               "description": "Set true when this activity is triggered by an automated process. Defaults to false.",
               "default": false
+            },
+            "meta": {
+              "type": "unknown",
+              "description": "Optional metadata for the report activities. Lifecycle and resolution fields are controlled by the service."
             }
           }
         }

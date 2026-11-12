@@ -1,5 +1,5 @@
 ---
-'@atproto/lex-client': patch
+'@atproto/lex-rpc': patch
 ---
 
-Add the `AuthenticatedAgent` type and the `isAuthenticatedAgent` utility.
+Add the `isAccountAgent` utility.

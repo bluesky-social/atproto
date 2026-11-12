@@ -33,6 +33,7 @@ export default function (server: Server, ctx: AppContext) {
         ctx.authVerifier.parseCreds(auth)
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({
+        xrpcEndpoint: app.bsky.graph.getFollowers.$lxm,
         labelers,
         viewer,
         includeTakedowns,
@@ -84,7 +85,7 @@ const skeleton = async (
   return {
     subjectDid,
     followUris: followers.map((f) => f.uri as AtUriString),
-    cursor: cursor || undefined,
+    cursor,
   }
 }
 

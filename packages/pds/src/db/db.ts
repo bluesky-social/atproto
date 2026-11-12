@@ -18,8 +18,7 @@ const DEFAULT_PRAGMAS = {
   // strict: 'ON', // @TODO strictness should live on table defs instead
 }
 
-export class Database<Schema> {
-  destroyed = false
+export class Database<Schema> implements AsyncDisposable {
   commitHooks: CommitHook[] = []
 
   constructor(public db: Kysely<Schema>) {}
@@ -107,12 +106,23 @@ export class Database<Schema> {
     assert(!this.isTransaction, 'Cannot be in a transaction')
   }
 
-  close(): void {
-    if (this.destroyed) return
-    this.db
+  get destroyed(): boolean {
+    return this.#destroyPromise !== undefined
+  }
+
+  #destroyPromise?: Promise<void>
+
+  async close(): Promise<void> {
+    return (this.#destroyPromise ??= this.db
       .destroy()
-      .then(() => (this.destroyed = true))
-      .catch((err) => dbLogger.error({ err }, 'error closing db'))
+      // @TODO a failed close might indicate that the data was not persisted and
+      // should not be silently ignored! It is like this for historical reasons
+      // and should be handled more robustly in the future.
+      .catch((err) => dbLogger.error({ err }, 'error closing db')))
+  }
+
+  async [Symbol.asyncDispose]() {
+    await this.close()
   }
 }
 

@@ -10,6 +10,7 @@ exports[`safelink management addRule allows admins to add rules 1`] = `
   "id": 1,
   "pattern": "domain",
   "reason": "phishing",
+  "source": "ozone/default",
   "url": "https://malicious-site.com",
 }
 `;
@@ -25,6 +26,7 @@ exports[`safelink management queryEvents allows querying safelink events 1`] = `
     "id": 10,
     "pattern": "domain",
     "reason": "phishing",
+    "source": "ozone/default",
     "url": "https://events-test.com",
   },
   {
@@ -36,6 +38,7 @@ exports[`safelink management queryEvents allows querying safelink events 1`] = `
     "id": 9,
     "pattern": "domain",
     "reason": "spam",
+    "source": "ozone/default",
     "url": "https://events-test.com",
   },
   {
@@ -46,6 +49,7 @@ exports[`safelink management queryEvents allows querying safelink events 1`] = `
     "id": 8,
     "pattern": "url",
     "reason": "spam",
+    "source": "ozone/default",
     "url": "https://query-test2.com/specific-path",
   },
   {
@@ -56,6 +60,7 @@ exports[`safelink management queryEvents allows querying safelink events 1`] = `
     "id": 7,
     "pattern": "domain",
     "reason": "phishing",
+    "source": "ozone/default",
     "url": "https://query-test1.com",
   },
   {
@@ -66,6 +71,7 @@ exports[`safelink management queryEvents allows querying safelink events 1`] = `
     "id": 6,
     "pattern": "domain",
     "reason": "spam",
+    "source": "ozone/default",
     "url": "https://remove-test2.com",
   },
   {
@@ -77,6 +83,7 @@ exports[`safelink management queryEvents allows querying safelink events 1`] = `
     "id": 5,
     "pattern": "url",
     "reason": "csam",
+    "source": "ozone/default",
     "url": "https://remove-test.com",
   },
   {
@@ -88,6 +95,7 @@ exports[`safelink management queryEvents allows querying safelink events 1`] = `
     "id": 4,
     "pattern": "url",
     "reason": "csam",
+    "source": "ozone/default",
     "url": "https://remove-test.com",
   },
   {
@@ -99,6 +107,7 @@ exports[`safelink management queryEvents allows querying safelink events 1`] = `
     "id": 3,
     "pattern": "domain",
     "reason": "phishing",
+    "source": "ozone/default",
     "url": "https://update-test.com",
   },
   {
@@ -110,6 +119,7 @@ exports[`safelink management queryEvents allows querying safelink events 1`] = `
     "id": 2,
     "pattern": "domain",
     "reason": "spam",
+    "source": "ozone/default",
     "url": "https://update-test.com",
   },
   {
@@ -121,6 +131,7 @@ exports[`safelink management queryEvents allows querying safelink events 1`] = `
     "id": 1,
     "pattern": "domain",
     "reason": "phishing",
+    "source": "ozone/default",
     "url": "https://malicious-site.com",
   },
 ]
@@ -134,6 +145,7 @@ exports[`safelink management queryRules allows querying all active rules 1`] = `
     "createdBy": "user(0)",
     "pattern": "url",
     "reason": "spam",
+    "source": "ozone/default",
     "updatedAt": "1970-01-01T00:00:00.000Z",
     "url": "https://query-test2.com/specific-path",
   },
@@ -143,6 +155,7 @@ exports[`safelink management queryRules allows querying all active rules 1`] = `
     "createdBy": "user(0)",
     "pattern": "domain",
     "reason": "phishing",
+    "source": "ozone/default",
     "updatedAt": "1970-01-01T00:00:00.000Z",
     "url": "https://query-test1.com",
   },
@@ -152,6 +165,7 @@ exports[`safelink management queryRules allows querying all active rules 1`] = `
     "createdBy": "user(0)",
     "pattern": "domain",
     "reason": "spam",
+    "source": "ozone/default",
     "updatedAt": "1970-01-01T00:00:00.000Z",
     "url": "https://remove-test2.com",
   },
@@ -162,6 +176,7 @@ exports[`safelink management queryRules allows querying all active rules 1`] = `
     "createdBy": "user(0)",
     "pattern": "domain",
     "reason": "phishing",
+    "source": "ozone/default",
     "updatedAt": "1970-01-01T00:00:00.000Z",
     "url": "https://update-test.com",
   },
@@ -172,6 +187,7 @@ exports[`safelink management queryRules allows querying all active rules 1`] = `
     "createdBy": "user(0)",
     "pattern": "domain",
     "reason": "phishing",
+    "source": "ozone/default",
     "updatedAt": "1970-01-01T00:00:00.000Z",
     "url": "https://malicious-site.com",
   },

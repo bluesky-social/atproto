@@ -1,5 +1,111 @@
 # @atproto/identity
 
+## 0.5.23
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/common-web@0.5.17
+
+## 0.5.22
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto-labs/fetch-node@0.4.5
+
+## 0.5.21
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto-labs/fetch-node@0.4.4
+  - @atproto/common-web@0.5.16
+
+## 0.5.20
+
+### Patch Changes
+
+- Updated dependencies [[`0e60f3f`](https://github.com/bluesky-social/atproto/commit/0e60f3f007cbd9812975489f0da19bf7613da831)]:
+  - @atproto-labs/fetch-node@0.4.3
+
+## 0.5.19
+
+### Patch Changes
+
+- [#5707](https://github.com/bluesky-social/atproto/pull/5707) [`8eac4b0`](https://github.com/bluesky-social/atproto/commit/8eac4b0c0e11170171a1978123078f0a0b17ddd3) Thanks [@foysalit](https://github.com/foysalit)! - Use a bounded in-memory DID cache with configurable Ozone cache limits.
+
+## 0.5.18
+
+### Patch Changes
+
+- Updated dependencies [[`fc60876`](https://github.com/bluesky-social/atproto/commit/fc60876949cca1ca28e98273ecfc97a151d3ebfc)]:
+  - @atproto-labs/fetch-node@0.4.2
+
+## 0.5.17
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto-labs/fetch-node@0.4.1
+  - @atproto/common-web@0.5.15
+
+## 0.5.16
+
+### Patch Changes
+
+- Updated dependencies [[`f8ed258`](https://github.com/bluesky-social/atproto/commit/f8ed25853dc91a16639decfaee2e0dcbb60808cd)]:
+  - @atproto/crypto@0.5.7
+  - @atproto/common-web@0.5.14
+
+## 0.5.15
+
+### Patch Changes
+
+- [#5556](https://github.com/bluesky-social/atproto/pull/5556) [`5019f55`](https://github.com/bluesky-social/atproto/commit/5019f5537317ee75ad4527db212bc27c3085fe67) Thanks [@dependabot](https://github.com/apps/dependabot)! - build(deps-dev): bump the dev-dependencies group across 1 directory with 25 updates
+- Updated dependencies [[`5019f55`](https://github.com/bluesky-social/atproto/commit/5019f5537317ee75ad4527db212bc27c3085fe67)]:
+  - @atproto/common-web@0.5.13
+  - @atproto/crypto@0.5.6
+
+## 0.5.14
+
+### Patch Changes
+
+- [#5391](https://github.com/bluesky-social/atproto/pull/5391) [`30f8149`](https://github.com/bluesky-social/atproto/commit/30f8149e629f9afc3fe41cf66bd8482954d7c052) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove `dotenv` dependency
+
+## 0.5.13
+
+### Patch Changes
+
+- [#5504](https://github.com/bluesky-social/atproto/pull/5504) [`1ff43e6`](https://github.com/bluesky-social/atproto/commit/1ff43e6e592b1c3ac44e9cd5585370063035a90d) Thanks [@devinivy](https://github.com/devinivy)! - Identity resolution now goes through a safe fetch by default. The handle
+  `/.well-known/atproto-did` endpoint, `did:plc` and `did:web` all resolve through
+  it. Each attempt is also bounded by `timeout` (default 3s), which previously had
+  no effect on the handle endpoint.
+
+  This changes behavior for anyone resolving against localhost or a private
+  network — a test suite, a local dev stack, an internal PLC mirror. Those callers
+  pass their own `fetch`, which is used as-is and never re-wrapped:
+
+  ```ts
+  new IdResolver({ plcUrl, fetch: globalThis.fetch })
+  ```
+
+  Non-ok DID responses now have their bodies cancelled explicitly, which a timeout
+  helper had been doing implicitly.
+
+- Updated dependencies [[`f88aa58`](https://github.com/bluesky-social/atproto/commit/f88aa5842df9aba9f208a6073272b43ef9bd089d)]:
+  - @atproto-labs/fetch-node@0.4.0
+
+## 0.5.12
+
+### Patch Changes
+
+- [#5488](https://github.com/bluesky-social/atproto/pull/5488) [`fe4087e`](https://github.com/bluesky-social/atproto/commit/fe4087ecb7a7cc53c7081c9f97d49121e5251c36) Thanks [@dependabot](https://github.com/apps/dependabot)! - Bump the dev-dependencies group across 1 directory with 30 updates
+
+- Updated dependencies [[`fe4087e`](https://github.com/bluesky-social/atproto/commit/fe4087ecb7a7cc53c7081c9f97d49121e5251c36)]:
+  - @atproto/common-web@0.5.12
+  - @atproto/crypto@0.5.5
+
 ## 0.5.11
 
 ### Patch Changes

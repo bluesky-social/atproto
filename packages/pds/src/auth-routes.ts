@@ -45,6 +45,16 @@ export const createRouter = ({ oauthProvider, cfg }: AppContext): Router => {
         },
       }),
     )
+  } else if (cfg.entryway) {
+    // @NOTE The oauth middleware implements this endpoint, only add it there is
+    // no oauth provider configured
+    const changePasswordUrl = new URL(
+      '/.well-known/change-password',
+      cfg.entryway.url,
+    ).href
+    router.get('/.well-known/change-password', (req, res) => {
+      res.redirect(changePasswordUrl)
+    })
   }
 
   return router

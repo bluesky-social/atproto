@@ -108,15 +108,23 @@
           "items": {
             "type": "string"
           },
-          "description": "Target reports matching these report types on the subject (fully qualified NSIDs)"
+          "description": "Target reports matching these report types on the subject (fully qualified NSIDs). Excludes assigned and escalated reports."
         },
         "all": {
           "type": "boolean",
-          "description": "Target ALL reports on the subject"
+          "description": "Target ALL reports on the subject. Excludes assigned and escalated reports."
+        },
+        "allOwned": {
+          "type": "boolean",
+          "description": "Target all eligible reports on the account and its owned subjects, including records, messages, and conversations. Only valid for account subjects and events that close reports. Excludes assigned, escalated, and actively assigned reports unless explicitly targeted by ID."
         },
         "note": {
           "type": "string",
           "description": "Note to send to reporter(s) when actioning their report"
+        },
+        "isAutomated": {
+          "type": "boolean",
+          "description": "Set true when the report activities are created by an automated process."
         }
       }
     }

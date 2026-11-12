@@ -1,6 +1,6 @@
 import { Timestamp } from '@bufbuild/protobuf'
 import { mapDefined } from '@atproto/common'
-import type { AtUriString } from '@atproto/lex'
+import type { AtUriString } from '@atproto/lex-schema'
 import {
   ForbiddenError,
   InvalidRequestError,
@@ -48,6 +48,7 @@ export default function (server: Server, ctx: AppContext) {
 
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({
+        xrpcEndpoint: app.bsky.feed.searchPostsV2.$lxm,
         labelers,
         viewer,
         skipViewerBlocks,

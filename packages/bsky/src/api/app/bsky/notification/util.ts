@@ -1,17 +1,167 @@
+import assert from 'node:assert'
+import type { Un$Typed } from '@atproto/lex-schema'
+import type { AtUriString, DidString } from '@atproto/syntax'
+import { UpstreamFailureError } from '@atproto/xrpc-server'
+import type { AppContext } from '../../../../context.js'
+import type { HydrationState } from '../../../../hydration/hydrator.js'
 import type { app } from '../../../../lexicons/index.js'
 import {
   type FilterableNotificationPreference,
+  type GetNotificationPreferencesResponse,
   NotificationInclude,
   type NotificationPreference,
   type NotificationPreferences,
 } from '../../../../proto/bsky_pb.js'
 import { AppPlatform } from '../../../../proto/courier_pb.js'
+import { uriToDid } from '../../../../util/uris.js'
+import type { Views } from '../../../../views/index.js'
+import { isPostRecordType } from '../../../../views/types.js'
+import { NOTIFICATION_REASON } from './constants.js'
+
+export const shouldFilterReplyByThreadgate = (
+  reason: string,
+  uri: AtUriString,
+  viewer: string,
+  hydration: HydrationState,
+  views: Views,
+): boolean => {
+  if (reason !== NOTIFICATION_REASON.REPLY) return false
+
+  const post = hydration.posts?.get(uri)
+  if (!post) return false
+
+  // Filter out hidden replies only if the viewer owns
+  // the threadgate and they hid the reply.
+  const rootUri = isPostRecordType(post.record)
+    ? post.record.reply?.root.uri
+    : undefined
+  return Boolean(
+    rootUri &&
+    uriToDid(rootUri) === viewer &&
+    views.replyIsHiddenByThreadgate(uri, rootUri, hydration),
+  )
+}
+
+export const shouldFilterHiddenThreadTag = (
+  reason: string,
+  uri: AtUriString,
+  did: DidString,
+  hydration: HydrationState,
+  hiddenTags: ReadonlySet<string>,
+): boolean => {
+  if (
+    reason !== NOTIFICATION_REASON.REPLY &&
+    reason !== NOTIFICATION_REASON.QUOTE &&
+    reason !== NOTIFICATION_REASON.MENTION
+  ) {
+    return false
+  }
+
+  const post = hydration.posts?.get(uri)
+  if (!post || hydration.profileViewers?.get(did)?.following) return false
+
+  // Filter out notifications from users that have thread hide tags and are from people they
+  // are not following.
+  for (const tag of post.tags) {
+    if (hiddenTags.has(tag)) return true
+  }
+  return false
+}
+
+export const shouldFilterForNeedsReview = (
+  reason: string,
+  did: DidString,
+  uri: AtUriString,
+  hydration: HydrationState,
+  views: Views,
+): boolean => {
+  // Filter out notifications from users that need review unless moots.
+  const applies =
+    reason === NOTIFICATION_REASON.REPLY ||
+    reason === NOTIFICATION_REASON.QUOTE ||
+    reason === NOTIFICATION_REASON.MENTION ||
+    reason === NOTIFICATION_REASON.LIKE ||
+    reason === NOTIFICATION_REASON.FOLLOW ||
+    reason === NOTIFICATION_REASON.FOLLOW_BACK
+  return applies && !views.viewerSeesNeedsReview({ did, uri }, hydration)
+}
+
+/** Applies the configured delay to the notification cursor timestamp. */
+export const delayCursor = (
+  cursorStr: string | undefined,
+  delayMs: number,
+): string => {
+  const nowMinusDelay = Date.now() - delayMs
+  if (cursorStr === undefined) return new Date(nowMinusDelay).toISOString()
+  const cursor = new Date(cursorStr).getTime()
+  if (isNaN(cursor)) return cursorStr
+  return new Date(Math.min(cursor, nowMinusDelay)).toISOString()
+}
 
 type DeepPartial<T> = T extends object
   ? {
       [P in keyof T]?: DeepPartial<T[P]>
     }
   : T
+
+type LexNotificationPreferences =
+  Un$Typed<app.bsky.notification.defs.Preferences>
+
+const notificationPreferenceKeys = Object.keys({
+  chat: true,
+  follow: true,
+  like: true,
+  likeViaRepost: true,
+  mention: true,
+  quote: true,
+  reply: true,
+  repost: true,
+  repostViaRepost: true,
+  starterpackJoined: true,
+  subscribedPost: true,
+  unverified: true,
+  verified: true,
+} satisfies Record<keyof LexNotificationPreferences, true>) as Array<
+  keyof LexNotificationPreferences
+>
+
+export const mergeNotificationPreferences = (
+  current: LexNotificationPreferences,
+  updates: Partial<LexNotificationPreferences>,
+): LexNotificationPreferences => {
+  const preferences = { ...current }
+  for (const key of notificationPreferenceKeys) {
+    if (updates[key] !== undefined) {
+      Object.assign(preferences, { [key]: updates[key] })
+    }
+  }
+  return preferences
+}
+
+export const getNotificationPreferences = async (
+  ctx: AppContext,
+  actorDid: string,
+): Promise<LexNotificationPreferences> => {
+  let res: GetNotificationPreferencesResponse
+  try {
+    res = await ctx.dataplane.getNotificationPreferences({
+      dids: [actorDid],
+    })
+  } catch (err) {
+    throw new UpstreamFailureError(
+      'cannot get current notification preferences',
+      'NotificationPreferencesFailed',
+      { cause: err },
+    )
+  }
+
+  assert(
+    res.preferences.length === 1,
+    `expected exactly one preferences entry, got ${res.preferences.length}`,
+  )
+
+  return protobufToLex(res.preferences[0])
+}
 
 const ensureChatPreference = (
   p?: DeepPartial<app.bsky.notification.defs.ChatPreference>,

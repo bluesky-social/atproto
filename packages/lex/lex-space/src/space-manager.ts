@@ -1,10 +1,10 @@
 import {
+  type AccountAgent,
   type Agent,
-  type AuthenticatedAgent,
   type DidString,
   type XrpcOptions,
   type XrpcResponseBody,
-  isAuthenticatedAgent,
+  isAccountAgent,
   xrpc,
 } from '@atproto/lex-client'
 import { SpaceRef, type SpaceRefString } from '@atproto/syntax'
@@ -101,7 +101,7 @@ export class SpaceManager {
     space: SpaceRefString | SpaceRef,
     options?: SpaceManager.ManagePolicyOptions<P>,
   ): Promise<SpaceManager.PolicyManagerOf<P>> {
-    if (!isAuthenticatedAgent(agent)) {
+    if (!isAccountAgent(agent)) {
       throw new TypeError('Agent must be authenticated')
     }
     return new SpaceManager(agent, space).managePolicy(options)
@@ -112,7 +112,7 @@ export class SpaceManager {
    */
   constructor(
     /** The agent of the space authority. */
-    readonly agent: AuthenticatedAgent,
+    readonly agent: AccountAgent,
     ref: SpaceRefString | SpaceRef,
   ) {
     this.ref = typeof ref === 'string' ? SpaceRef.parse(ref) : ref
