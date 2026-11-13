@@ -79,6 +79,7 @@ import updateSeen from './app/bsky/notification/updateSeen.js'
 import getAgeAssuranceState from './app/bsky/unspecced/getAgeAssuranceState.js'
 import getAtmosphereApps from './app/bsky/unspecced/getAtmosphereApps.js'
 import getAtmosphereExploreTab from './app/bsky/unspecced/getAtmosphereExploreTab.js'
+import getAtmosphereRecommendedActivity from './app/bsky/unspecced/getAtmosphereRecommendedActivity.js'
 import getAtmosphereRecordView from './app/bsky/unspecced/getAtmosphereRecordView.js'
 import getAtmosphereRecordViews from './app/bsky/unspecced/getAtmosphereRecordViews.js'
 import getAtmosphereTimeline from './app/bsky/unspecced/getAtmosphereTimeline.js'
@@ -207,6 +208,7 @@ export default function (server: Server, ctx: AppContext) {
   unregisterPush(server, ctx)
   getAtmosphereApps(server, ctx)
   getAtmosphereExploreTab(server, ctx)
+  getAtmosphereRecommendedActivity(server, ctx)
   getAtmosphereRecordView(server, ctx)
   getAtmosphereRecordViews(server, ctx)
   getAtmosphereTimeline(server, ctx)
