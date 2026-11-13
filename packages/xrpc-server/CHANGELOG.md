@@ -1,5 +1,11 @@
 # @atproto/xrpc-server
 
+## 0.13.12
+
+### Patch Changes
+
+- [#5891](https://github.com/bluesky-social/atproto/pull/5891) [`5c3979b`](https://github.com/bluesky-social/atproto/commit/5c3979b3466bf7df0a0a4f2291000491affc31b9) Thanks [@amckinley](https://github.com/amckinley)! - Scratch Redis failures fail open. In `@atproto/xrpc-server`, a route's own rate limit now logs a store error and lets the request through, as global and shared limits already did, unless it sets `failClosed`. In `@atproto/pds`, the scratch Redis client fails a command after 500 ms or at once when disconnected instead of queueing it, the DPoP replay check falls back to process memory when Redis fails, and shutdown no longer fails on a Redis that doesn't answer.
+
 ## 0.13.11
 
 ### Patch Changes

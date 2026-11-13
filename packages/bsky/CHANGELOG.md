@@ -1,5 +1,34 @@
 # @atproto/bsky
 
+## 0.5.8
+
+### Patch Changes
+
+- [#5893](https://github.com/bluesky-social/atproto/pull/5893) [`f0653de`](https://github.com/bluesky-social/atproto/commit/f0653de696169e16dc003f11877b9eb0ae6533c0) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add `app.bsky.unspecced.getAtmosphereTimelineV2`, with actor profiles in `relatedViews`, subject refs for each activity, and publication viewer subscriptions. Livestream views now include `lastSeenAt`.
+
+- [#5882](https://github.com/bluesky-social/atproto/pull/5882) [`ff86b0a`](https://github.com/bluesky-social/atproto/commit/ff86b0afd322048ba0ff141d2a3da4e6c19ed368) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Log entryway session authentication attempts at info level, with the user DID.
+
+- [#5889](https://github.com/bluesky-social/atproto/pull/5889) [`413f04f`](https://github.com/bluesky-social/atproto/commit/413f04f60dc776db280568e4ec1be129d8694bab) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Log the XRPC method, user agent, origin and token issue time of entryway session authentication attempts.
+
+- [#5892](https://github.com/bluesky-social/atproto/pull/5892) [`a704f10`](https://github.com/bluesky-social/atproto/commit/a704f10c040a989244cfa578e65f006ff7de0f83) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Randomly sample Atmosphere Explore publications before the selection cap, preserving location and topic priorities.
+
+- [#5876](https://github.com/bluesky-social/atproto/pull/5876) [`d152ca3`](https://github.com/bluesky-social/atproto/commit/d152ca369314c0d42d3fe2dc6db2d6ec1a7863b1) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Add request counters by authentication verifier, distinguishing entryway sessions from service JWTs.
+
+- [#5892](https://github.com/bluesky-social/atproto/pull/5892) [`a704f10`](https://github.com/bluesky-social/atproto/commit/a704f10c040a989244cfa578e65f006ff7de0f83) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Expose optional App Store and Google Play links on getAtmosphereApps cards, preserving optional profiles and profile-first images.
+
+- [#5880](https://github.com/bluesky-social/atproto/pull/5880) [`e9fbdab`](https://github.com/bluesky-social/atproto/commit/e9fbdab8e2302e3e01ea923c2db5ee4d7ff33681) Thanks [@blackmichael](https://github.com/blackmichael)! - Add optional `photoCount` to gallery views using the dataplane's total `social.grain.gallery.item` backlink count, independently of the hydrated preview items.
+
+- [#5874](https://github.com/bluesky-social/atproto/pull/5874) [`695eb1e`](https://github.com/bluesky-social/atproto/commit/695eb1e97d79769dd8c20204a4bc3a1f4729ff97) Thanks [@cuducos](https://github.com/cuducos)! - Revert the internal `GetPostViewCounts` dataplane contract (added in 0.5.4, [#5815](https://github.com/bluesky-social/atproto/issues/5815)) and replace it with a batched `GetFeatures` RPC, so the AppView can read feature-store entries (keyed by store type and UID) from Atlantis.
+
+- [#5892](https://github.com/bluesky-social/atproto/pull/5892) [`a704f10`](https://github.com/bluesky-social/atproto/commit/a704f10c040a989244cfa578e65f006ff7de0f83) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Expose optional App Store and Google Play links on Atmosphere Explore app cards while preserving optional profiles and profile-first images.
+
+- [#5884](https://github.com/bluesky-social/atproto/pull/5884) [`9c64255`](https://github.com/bluesky-social/atproto/commit/9c64255ee3634a97b60e90bc402052e29cca6612) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Log whether entryway session authentication attempts use an app password.
+- Updated dependencies [[`f0653de`](https://github.com/bluesky-social/atproto/commit/f0653de696169e16dc003f11877b9eb0ae6533c0), [`a704f10`](https://github.com/bluesky-social/atproto/commit/a704f10c040a989244cfa578e65f006ff7de0f83), [`e9fbdab`](https://github.com/bluesky-social/atproto/commit/e9fbdab8e2302e3e01ea923c2db5ee4d7ff33681), [`a704f10`](https://github.com/bluesky-social/atproto/commit/a704f10c040a989244cfa578e65f006ff7de0f83), [`5c3979b`](https://github.com/bluesky-social/atproto/commit/5c3979b3466bf7df0a0a4f2291000491affc31b9)]:
+  - @atproto/api@0.31.2
+  - @atproto/xrpc-server@0.13.12
+  - @atproto-labs/xrpc-utils@0.1.33
+  - @atproto/sync@0.4.26
+
 ## 0.5.7
 
 ### Patch Changes
