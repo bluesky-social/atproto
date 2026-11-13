@@ -58,6 +58,7 @@ import {
   type LocalViewerCreator,
 } from './read-after-write/viewer.js'
 import { getRedisClient } from './redis.js'
+import { FailOpenReplayStore } from './replay-store.js'
 import { Sequencer } from './sequencer/index.js'
 
 export type AppContextOptions = {
@@ -249,6 +250,10 @@ export class AppContext implements AsyncDisposable {
     )
     const redisScratch = cfg.redis
       ? getRedisClient(cfg.redis.address, cfg.redis.password)
+      : undefined
+    // Without Redis the OAuth provider and verifier check replays in memory.
+    const replayStore = redisScratch
+      ? new FailOpenReplayStore(redisScratch)
       : undefined
 
     const bskyAppView = cfg.bskyAppView
@@ -457,7 +462,7 @@ export class AppContext implements AsyncDisposable {
             cfg.service.publicUrl,
             cfg.identity.recoveryDidKey,
           ),
-          redis: redisScratch,
+          replayStore,
           dpopSecret: secrets.dpopSecret,
           inviteCodeRequired: cfg.invites.required,
           availableUserDomains: cfg.identity.serviceHandleDomains,
@@ -558,7 +563,7 @@ export class AppContext implements AsyncDisposable {
         issuer: cfg.oauth.issuer,
         keyset: [await JoseKey.fromKeyLike(jwtPublicKey!, undefined, 'ES256K')],
         dpopSecret: secrets.dpopSecret,
-        redis: redisScratch,
+        replayStore,
         onDecodeToken: async ({ payload, dpopProof }) => {
           // @TODO drop this once oauth provider no longer accepts DPoP proof with
           // query or fragment in "htu" claim.
@@ -703,7 +708,11 @@ export class AppContext implements AsyncDisposable {
           await this.accountManager.close()
         } finally {
           try {
-            await this.redisScratch?.quit()
+            // A Redis that doesn't answer QUIT (it times out) mustn't fail
+            // shutdown: drop the connection instead.
+            await this.redisScratch
+              ?.quit()
+              .catch(() => this.redisScratch?.disconnect())
           } finally {
             try {
               await this.proxyAgent.destroy()
