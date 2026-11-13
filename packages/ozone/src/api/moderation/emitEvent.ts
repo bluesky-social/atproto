@@ -369,6 +369,7 @@ const handleModerationEvent = async ({
       try {
         await processReportAction({
           inboxStartAt: ctx.cfg.inbox.startAt,
+          inboxPushEnabled: ctx.cfg.inbox.pushEnabled,
           db: dbTxn,
           reportAction: input.body.reportAction,
           subjects: reportSubjects,
@@ -446,6 +447,7 @@ const handleModerationEvent = async ({
         await processReportAction({
           db: dbTxn,
           inboxStartAt: ctx.cfg.inbox.startAt,
+          inboxPushEnabled: ctx.cfg.inbox.pushEnabled,
           subjectDid: subject.did,
           subjectUri: null,
           subjectType: com.atproto.admin.defs.repoRef.$type,

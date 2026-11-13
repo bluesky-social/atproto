@@ -228,6 +228,7 @@ export class ScheduledActionProcessor {
       await processReportAction({
         db: moderationTxn.db,
         inboxStartAt: moderationTxn.cfg.inbox.startAt,
+        inboxPushEnabled: moderationTxn.cfg.inbox.pushEnabled,
         subjectDid: action.did,
         subjectUri: null,
         subjectType: com.atproto.admin.defs.repoRef.$type,

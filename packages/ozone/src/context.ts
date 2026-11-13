@@ -214,6 +214,7 @@ export class AppContext {
     const authVerifier = new AuthVerifier(idResolver, {
       serviceDid: cfg.service.did,
       adminPassword: secrets.adminPassword,
+      inboxPushToken: secrets.inboxPushToken,
       teamService: teamService(db),
     })
 

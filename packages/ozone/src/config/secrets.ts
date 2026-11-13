@@ -29,10 +29,10 @@ const parsePdsHeaders = (
 export const envToSecrets = (env: OzoneEnvironment): OzoneSecrets => {
   assert(env.adminPassword)
   assert(env.signingKeyHex)
-
   return {
     adminPassword: env.adminPassword,
     signingKeyHex: env.signingKeyHex,
+    inboxPushToken: env.inboxPushToken,
     pdsHeaders: parsePdsHeaders(env.pdsHeaders),
   }
 }
@@ -40,6 +40,7 @@ export const envToSecrets = (env: OzoneEnvironment): OzoneSecrets => {
 export type OzoneSecrets = {
   adminPassword: string
   signingKeyHex: string
+  inboxPushToken?: string
   // Extra headers sent on every request to the *configured* PDS.
   pdsHeaders?: Record<string, string>
 }
