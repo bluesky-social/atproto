@@ -86,7 +86,6 @@ export interface ServerConfigValues {
   videoThumbnailUrlPattern?: string
   blobRateLimitBypassKey?: string
   blobRateLimitBypassHostname?: string
-  blobSourceHandoffToken?: string
   // identity
   didPlcUrl: string
   handleResolveNameservers?: string[]
@@ -265,9 +264,6 @@ export class ServerConfig {
       !blobRateLimitBypassKey || blobRateLimitBypassHostname,
       'must specify a hostname when using a blob rate limit bypass key',
     )
-    const blobSourceHandoffToken =
-      overrides?.blobSourceHandoffToken ??
-      (process.env.BSKY_BLOB_SOURCE_HANDOFF_TOKEN || undefined)
     const adminPasswords = envList(
       process.env.BSKY_ADMIN_PASSWORDS || process.env.BSKY_ADMIN_PASSWORD,
     )
@@ -490,7 +486,6 @@ export class ServerConfig {
       externalRecordsSafeDomains,
       blobRateLimitBypassKey,
       blobRateLimitBypassHostname,
-      blobSourceHandoffToken,
       adminPasswords,
       modServiceDid,
       eventProxyTrackingEndpoint,
@@ -720,10 +715,6 @@ export class ServerConfig {
 
   get blobRateLimitBypassHostname() {
     return this.cfg.blobRateLimitBypassHostname
-  }
-
-  get blobSourceHandoffToken() {
-    return this.cfg.blobSourceHandoffToken
   }
 
   get didPlcUrl() {

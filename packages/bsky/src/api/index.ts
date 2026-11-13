@@ -114,6 +114,8 @@ export * as wellKnown from './well-known.js'
 
 export * as blobResolver from './blob-resolver.js'
 
+export * as blobSource from './blob-source.js'
+
 export * as external from './external.js'
 
 export * as sitemap from './sitemap.js'
