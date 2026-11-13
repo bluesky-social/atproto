@@ -26,6 +26,8 @@ another test or development environment is using them.
 The stack includes PLC (2582), PDS (2583), AppView (2584), Ozone (2587), and bsync.
 Service URLs and DIDs are available at `http://localhost:2581/`.
 
+For a seeded HTTPS OAuth/FedCM demo, follow [Run the full FedCM example](../oauth/oauth-client-browser-example/README.md#run-the-full-fedcm-example).
+
 ## REPL API
 
 The following methods are available in the REPL.
