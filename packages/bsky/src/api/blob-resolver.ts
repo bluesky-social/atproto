@@ -1,3 +1,4 @@
+import { createHash, timingSafeEqual } from 'node:crypto'
 import { type Duplex, Transform, type Writable } from 'node:stream'
 import { pipeline } from 'node:stream/promises'
 import createError, { isHttpError } from 'http-errors'
@@ -19,13 +20,12 @@ import type { ServerConfig } from '../config.js'
 import type { AppContext } from '../context.js'
 import {
   Code,
-  type DataPlaneClient,
   getServiceEndpoint,
   isDataplaneError,
   unpackIdentityServices,
 } from '../data-plane/index.js'
 import { parseCid } from '../hydration/util.js'
-import { httpLogger as log } from '../logger.js'
+import { httpLogger as log, recordBlobUpstreamDuration } from '../logger.js'
 import {
   type Middleware,
   proxyResponseHeaders,
@@ -36,21 +36,74 @@ import { BSKY_USER_AGENT } from './util.js'
 export function createMiddleware(ctx: AppContext): Middleware {
   // @TODO this should be from configuration
   const maxSize = 100 * 1024 * 1024 // 100 MB
+  const sourceToken = ctx.cfg.blobSourceHandoffToken
+  const expectedToken =
+    sourceToken && createHash('sha256').update(sourceToken).digest()
+  const isSourceAuthorized = (value: string | string[] | undefined) =>
+    !!expectedToken &&
+    typeof value === 'string' &&
+    value.startsWith('Bearer ') &&
+    timingSafeEqual(
+      expectedToken,
+      createHash('sha256').update(value.slice('Bearer '.length)).digest(),
+    )
 
   return async (req, res, next) => {
     if (req.method !== 'GET' && req.method !== 'HEAD') return next()
-    if (!req.url?.startsWith('/blob/')) return next()
-    const { length, 2: didParam, 3: cidParam } = req.url.split('/')
+    const requestUrl = req.url
+    if (!requestUrl) return next()
+    const isSourceRequest = requestUrl.startsWith('/blob-source/')
+    if (!isSourceRequest && !requestUrl.startsWith('/blob/')) return next()
+    if (isSourceRequest) {
+      if (!expectedToken) return next()
+      if (!isSourceAuthorized(req.headers.authorization)) {
+        return next(createError(401, 'Unauthorized'))
+      }
+    }
+
+    const requestPath = isSourceRequest
+      ? requestUrl.split('?', 1)[0]!
+      : requestUrl
+    const { length, 2: didParam, 3: cidParam } = requestPath.split('/')
     if (length !== 4 || !didParam || !cidParam) return next()
 
     // @TODO Check sec-fetch-* headers (e.g. to prevent files from being
     // displayed as a web page) ?
 
     try {
+      if (isSourceRequest) {
+        const source = await resolveBlobSource(ctx, didParam, cidParam)
+        const body = source.takenDown
+          ? { takenDown: true }
+          : { takenDown: false, origin: source.origin }
+        res.statusCode = 200
+        res.setHeader('content-type', 'application/json; charset=utf-8')
+        res.setHeader('cache-control', 'no-store')
+        res.setHeader('x-content-type-options', 'nosniff')
+        res.end(JSON.stringify(body))
+        return
+      }
+
+      let upstreamStartedAt = 0
+      let upstreamFinished = false
+      const onUpstreamClose = () => {
+        if (!upstreamFinished) {
+          recordBlobUpstreamDuration(res, performance.now() - upstreamStartedAt)
+        }
+      }
       const streamOptions: StreamBlobOptions = {
         did: didParam,
         cid: cidParam,
         signal: responseSignal(res),
+        onUpstreamStart: (startedAt) => {
+          upstreamStartedAt = startedAt
+          res.prependOnceListener('close', onUpstreamClose)
+        },
+        onUpstreamFinish: (durationMs) => {
+          upstreamFinished = true
+          res.off('close', onUpstreamClose)
+          recordBlobUpstreamDuration(res, durationMs)
+        },
         // Because we will be verifying the CID, we need to ensure that the
         // upstream response can be de-compressed. We do this by negotiating the
         // "accept-encoding" header based on the downstream client's capabilities.
@@ -159,6 +212,8 @@ export type StreamBlobOptions = {
   did: string
   acceptEncoding?: string
   signal?: AbortSignal
+  onUpstreamStart?: (startedAt: number) => void
+  onUpstreamFinish?: (durationMs: number) => void
 }
 
 export type StreamBlobFactory = (
@@ -175,8 +230,13 @@ export async function streamBlob(
   options: StreamBlobOptions,
   factory: StreamBlobFactory,
 ) {
-  const { did, cid } = parseBlobParams(options)
-  const url = await getBlobUrl(ctx.dataplane, did, cid)
+  const source = await resolveBlobSource(ctx, options.did, options.cid)
+  if (source.takenDown) throw createError(404, 'Blob not found')
+
+  const { did, cid } = source
+  const url = new URL(`/xrpc/com.atproto.sync.getBlob`, source.origin)
+  url.searchParams.set('did', did)
+  url.searchParams.set('cid', cid.toString())
 
   const headers = getBlobHeaders(ctx.cfg, url)
 
@@ -191,6 +251,14 @@ export async function streamBlob(
   )
 
   let headersReceived = false
+  const upstreamStartedAt = performance.now()
+  options.onUpstreamStart?.(upstreamStartedAt)
+  let upstreamFinishRecorded = false
+  const recordUpstreamFinish = () => {
+    if (upstreamFinishRecorded) return
+    upstreamFinishRecorded = true
+    options.onUpstreamFinish?.(performance.now() - upstreamStartedAt)
+  }
 
   return ctx.blobDispatcher
     .stream(
@@ -220,7 +288,11 @@ export async function streamBlob(
             : createError(502, 'Upstream Error', { cause: upstream }) // !200 && !4xx => 502
         }
 
-        return factory(upstream, { url, did, cid })
+        const writable = factory(upstream, { url, did, cid })
+        if (options.onUpstreamFinish) {
+          writable.once('prefinish', recordUpstreamFinish)
+        }
+        return writable
       },
     )
     .catch((err) => {
@@ -237,6 +309,7 @@ export async function streamBlob(
 
       throw err
     })
+    .finally(recordUpstreamFinish)
 }
 
 function parseBlobParams(params: { cid: string; did: string }) {
@@ -247,25 +320,19 @@ function parseBlobParams(params: { cid: string; did: string }) {
   return { cid: cidObj, did }
 }
 
-async function getBlobUrl(
-  dataplane: DataPlaneClient,
-  did: string,
-  cid: Cid,
-): Promise<URL> {
-  const pds = await getBlobPds(dataplane, did, cid)
+type BlobSourceResolution = {
+  did: AtprotoDid
+  cid: Cid
+} & ({ takenDown: true } | { takenDown: false; origin: string })
 
-  const url = new URL(`/xrpc/com.atproto.sync.getBlob`, pds)
-  url.searchParams.set('did', did)
-  url.searchParams.set('cid', cid.toString())
-
-  return url
-}
-
-async function getBlobPds(
-  dataplane: DataPlaneClient,
-  did: string,
-  cid: Cid,
-): Promise<string> {
+/** Resolve blob policy and its PDS without accessing the blob itself. */
+export async function resolveBlobSource(
+  ctx: AppContext,
+  didParam: string,
+  cidParam: string,
+): Promise<BlobSourceResolution> {
+  const { did, cid } = parseBlobParams({ did: didParam, cid: cidParam })
+  const { dataplane } = ctx
   const [identity, { takenDown }] = await Promise.all([
     dataplane.getIdentityByDid({ did }).catch((err) => {
       if (isDataplaneError(err, Code.NotFound)) {
@@ -277,7 +344,7 @@ async function getBlobPds(
   ])
 
   if (takenDown) {
-    throw createError(404, 'Blob not found')
+    return { did, cid, takenDown: true }
   }
 
   const services = identity && unpackIdentityServices(identity.services)
@@ -292,7 +359,7 @@ async function getBlobPds(
     throw createError(404, 'Origin not found')
   }
 
-  return pds
+  return { did, cid, takenDown: false, origin: new URL(pds).origin }
 }
 
 function getBlobHeaders(
