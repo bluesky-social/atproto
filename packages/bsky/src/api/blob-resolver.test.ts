@@ -69,9 +69,10 @@ async function request(ctx: AppContext, path: string, authorization?: string) {
           }),
         )
       })
-    })().catch((err) => {
+    })().catch(() => {
       res.statusCode = 500
-      res.end(JSON.stringify({ message: String(err) }))
+      res.setHeader('content-type', 'application/json')
+      res.end(JSON.stringify({ message: 'Internal error' }))
     })
   })
   server.listen(0, '127.0.0.1')

@@ -116,13 +116,15 @@ describe('HTTP logger', () => {
     const appview = createServer((req, res) => {
       loggerMiddleware(req, res)
       void (async () => {
-        await middleware(req, res, (err) => {
+        await middleware(req, res, () => {
           res.statusCode = 500
-          res.end(JSON.stringify({ message: String(err) }))
+          res.setHeader('content-type', 'application/json')
+          res.end(JSON.stringify({ message: 'Internal error' }))
         })
-      })().catch((err) => {
+      })().catch(() => {
         res.statusCode = 500
-        res.end(JSON.stringify({ message: String(err) }))
+        res.setHeader('content-type', 'application/json')
+        res.end(JSON.stringify({ message: 'Internal error' }))
       })
     })
     appview.listen(0, '127.0.0.1')
