@@ -1662,6 +1662,11 @@ describe('Atmosphere Explore', () => {
   })
 
   describe('apps endpoint', () => {
+    const storeLinks = {
+      appStoreUrl: 'https://apps.apple.com/app/example/id123?ct=explore',
+      googlePlayUrl:
+        'https://play.google.com/store/apps/details?id=com.example&referrer=explore',
+    }
     const apps = Array.from({ length: 12 }, (_, i) => ({
       id: `${i}`,
       category: i < 10 ? 'Social' : 'Writing',
@@ -1684,6 +1689,29 @@ describe('Atmosphere Explore', () => {
       expect(fixture.iris.fetchMock).not.toHaveBeenCalled()
       expect(fixture.fetchMock).toHaveBeenCalledOnce()
       expect(new Request(...fixture.fetchMock.mock.calls[0]).url).toBe(service)
+    })
+
+    it('validates optional store links without requiring profiles', async () => {
+      const cards = [
+        { id: 'both', ...storeLinks },
+        { id: 'apple', appStoreUrl: storeLinks.appStoreUrl },
+        { id: 'google', googlePlayUrl: storeLinks.googlePlayUrl },
+        { id: 'neither' },
+      ]
+      await using fixture = await setup({
+        apps: [
+          cards[0],
+          { ...cards[1], did: null, profileUrl: null },
+          ...cards.slice(2),
+          { id: 'invalid-apple', appStoreUrl: 'not a uri' },
+          { id: 'invalid-google', googlePlayUrl: 5 },
+        ],
+      })
+      using profiles = vi.spyOn(fixture.hydrator, 'hydrateProfilesDetailed')
+      const { status, body } = await fixture.queryApps()
+      expect(status).toBe(200)
+      expect(body.apps).toEqual(cards)
+      expect(profiles).not.toHaveBeenCalled()
     })
 
     test.each([
@@ -1772,6 +1800,7 @@ describe('Atmosphere Explore', () => {
       await using fixture = await setup({
         apps: [appDid, missingDid].map((did) => ({
           did,
+          ...storeLinks,
           logo,
           backgroundImage: banner,
           overlayColor: '#000000',
@@ -1800,7 +1829,8 @@ describe('Atmosphere Explore', () => {
         images.getPresetUri('banner', appDid, photoCid),
       )
       expect(hydrated).not.toHaveProperty('backgroundImage')
-      expect(missing).toEqual({ logo, banner })
+      expect(hydrated).toMatchObject(storeLinks)
+      expect(missing).toEqual({ logo, banner, ...storeLinks })
     })
   })
 
