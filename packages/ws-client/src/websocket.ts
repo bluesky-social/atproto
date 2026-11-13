@@ -1,5 +1,5 @@
 import { CloseCode } from './lib/close-codes.js'
-import { CloseError } from './lib/errors.js'
+import { CloseError, UnexpectedResponseError } from './lib/errors.js'
 import { invokeHook } from './lib/invoke-hook.js'
 import { backoffMs, defaultShouldReconnect } from './lib/reconnect-policy.js'
 import {
@@ -12,9 +12,40 @@ import type {
   Sender,
   TransportFactory,
   TransportOptions,
+  WebSocketHandle,
 } from './transport/transport.js'
+import { takeWebSocket } from './websocket-response.js'
 
 export type Awaitable<T> = T | Promise<T>
+
+/**
+ * The request a {@link WebSocketUrl} function performs when it opens the
+ * connection itself: a `GET` with the handshake headers (`Connection`,
+ * `Upgrade` and, from `protocols`, `Sec-WebSocket-Protocol`) plus the caller's
+ * `headers`, and the attempt's teardown signal.
+ */
+export interface WebSocketHandshakeInit extends RequestInit {
+  method: 'GET'
+  headers: Headers
+  signal: AbortSignal
+}
+
+/**
+ * Where to connect. A function is invoked for every connection attempt,
+ * reconnects included, and returns either the URL to dial, or the `Response`
+ * to a handshake it performed itself — typically by passing the
+ * {@link WebSocketHandshakeInit} to a `fetch()` created with
+ * `createWebSocketFetch()`, possibly through wrappers adding credentials or
+ * retrying the request. Such a response is a `101` that the stream takes over;
+ * any other status fails the attempt with an {@link UnexpectedResponseError}.
+ *
+ * A function that throws or rejects fails the attempt like a connection
+ * failure, classified by `shouldReconnect`.
+ */
+export type WebSocketUrl =
+  | string
+  | URL
+  | ((init: WebSocketHandshakeInit) => Awaitable<string | URL | Response>)
 
 /**
  * The receive, liveness, and flow-control options a transport accepts, as a
@@ -36,9 +67,26 @@ type ConnectionOptions<M extends DataMode> = Partial<
 
 export interface WebSocketOptions<
   M extends DataMode,
+  T = MessageOf<M>,
 > extends ConnectionOptions<M> {
   /** Exponential-backoff ceiling in seconds. Default 64. */
   maxReconnectSeconds?: number
+  /**
+   * Turns each message into what the stream yields, in the scope of the
+   * connection that received it. Runs synchronously when the consumer pulls the
+   * message, not when it arrives, so it adds no work to the receive path.
+   *
+   * The return value is yielded; `undefined` skips the message. A throw ends
+   * the connection that delivered the message — its undelivered buffer is
+   * discarded and it closes with 1000 — and the error is then classified by
+   * `shouldReconnect` exactly like a transport failure: a retry reports it to
+   * `onReconnect` and the stream carries on over a new connection, anything
+   * else reports it to `onError` and the iterator rejects with it. This is how a
+   * caller turns a message that proves the connection is unusable (a malformed
+   * frame, a protocol-level error message) into a reconnect or a terminal
+   * failure, rather than having to end the whole stream.
+   */
+  parseMessage?: (message: MessageOf<M>) => T | undefined
   /** Abort to end the stream permanently; the iterator rejects with the reason. */
   signal?: AbortSignal
   /**
@@ -117,11 +165,10 @@ export interface WebSocketOptions<
  * sent to the server; any other value results in a normal close with code 1000
  * and no message.
  */
-export type WebSocketIterable<M extends DataMode = 'auto'> = AsyncGenerator<
-  MessageOf<M>,
-  void,
-  unknown
->
+export type WebSocketIterable<
+  M extends DataMode = 'auto',
+  T = MessageOf<M>,
+> = AsyncGenerator<T, void, unknown>
 
 /**
  * Binds a platform transport factory into the public `websocket()` generator.
@@ -129,12 +176,15 @@ export type WebSocketIterable<M extends DataMode = 'auto'> = AsyncGenerator<
  * platform.
  */
 
-export async function* websocketFactory<M extends DataMode = 'auto'>(
-  url: string | URL | (() => Awaitable<string | URL>),
+export async function* websocketFactory<
+  M extends DataMode = 'auto',
+  T = MessageOf<M>,
+>(
+  url: WebSocketUrl,
   createTransport: TransportFactory,
-  options: WebSocketOptions<M> = {},
-): WebSocketIterable<M> {
-  const { signal } = options
+  options: WebSocketOptions<M, T> = {},
+): WebSocketIterable<M, T> {
+  const { signal, parseMessage } = options
   const maxMs = 1000 * (options.maxReconnectSeconds ?? 64)
   const shouldReconnect = normalizeShouldReconnect(options.shouldReconnect)
 
@@ -158,11 +208,6 @@ export async function* websocketFactory<M extends DataMode = 'auto'>(
       // and each re-entry after a backoff.
       signal?.throwIfAborted()
 
-      const resolved = typeof url === 'function' ? await url() : url
-      // Resolving the url is an async gap of its own: an abort that lands while
-      // it's in flight must not fall through to a connection nothing tears down.
-      signal?.throwIfAborted()
-
       // A transport is created already connecting and has no close method —
       // aborting is the only way to end it. Forwarding the caller's signal in
       // means an outer abort reaches the socket; aborting in the `finally`
@@ -175,17 +220,36 @@ export async function* websocketFactory<M extends DataMode = 'auto'>(
       // as this stream's ending.
       closeDetail = undefined
       try {
+        // Read once per attempt, since `headers` may be an iterable computing
+        // them as it is iterated: what was read is what this attempt sends,
+        // through the url function's handshake or through the transport.
+        const headers = new Headers(options.headers)
+
+        // Resolved inside the `try`, since the url function may perform the
+        // handshake itself: it fails like any connection attempt.
+        const target =
+          typeof url === 'function'
+            ? await url(handshakeInit(headers, options, teardown.signal))
+            : url
+        // Resolving the url is an async gap of its own: an abort that lands while
+        // it's in flight must not fall through to a connection nothing tears down.
+        signal?.throwIfAborted()
+
+        const socket =
+          target instanceof Response ? await upgradedSocket(target) : undefined
+
         const transport = createTransport<M>({
           // The transport-facing subset of the caller's options
           dataMode: options.dataMode ?? ('auto' as M),
           protocols: options.protocols,
-          headers: options.headers,
+          headers,
           heartbeat: options.heartbeat,
           idleTimeoutMs: options.idleTimeoutMs,
           highWaterMark: options.highWaterMark,
           maxBufferedBytes: options.maxBufferedBytes,
           // Transport options wired by this websocket implementation and not directly by the caller
-          url: resolved,
+          url: target instanceof Response ? undefined : target,
+          socket,
           signal: teardown.signal,
           // The sender handed out is the transport's own: its send() already
           // rejects once this connection is no longer open, which the
@@ -224,7 +288,21 @@ export async function* websocketFactory<M extends DataMode = 'auto'>(
         // A consumer `break` also lands here, resuming with a return
         // completion: it runs the `finally` and leaves the loop without
         // reaching the throw.
-        yield* transport
+        if (parseMessage) {
+          // Same teardown as `yield*` on every exit: a throw from
+          // `parseMessage`, or a consumer `break` or `throw()` at the `yield`,
+          // makes the `for await` close the transport through `return()`, which
+          // settles only once the socket is down. A throw then reaches the
+          // `catch` below and is classified like any connection failure.
+          for await (const message of transport) {
+            const value = parseMessage(message)
+            if (value !== undefined) yield value
+          }
+        } else {
+          // Without a parser the stream yields raw messages, which is what `T`
+          // defaults to.
+          yield* transport as AsyncIterable<T>
+        }
         throw closeError(closeDetail)
       } catch (error) {
         // An abort is the caller's decision, not a connection failure:
@@ -290,6 +368,36 @@ export async function* websocketFactory<M extends DataMode = 'auto'>(
 function closeError(detail: CloseEventDetail | undefined): CloseError {
   const { code, reason, wasClean } = detail ?? ABNORMAL_CLOSE_DETAIL
   return new CloseError(code, reason, wasClean)
+}
+
+function handshakeInit<M extends DataMode, T>(
+  callerHeaders: Headers,
+  options: WebSocketOptions<M, T>,
+  signal: AbortSignal,
+): WebSocketHandshakeInit {
+  // A copy: the caller's headers also go to the transport, if the url function
+  // returns a URL rather than a handshake response.
+  const headers = new Headers(callerHeaders)
+  headers.set('connection', 'Upgrade')
+  headers.set('upgrade', 'websocket')
+  const protocols = [options.protocols ?? []].flat()
+  if (protocols.length > 0) {
+    headers.set('sec-websocket-protocol', protocols.join(', '))
+  }
+  return { method: 'GET', headers, signal }
+}
+
+// The connection of a handshake response, if it was upgraded.
+async function upgradedSocket(response: Response): Promise<WebSocketHandle> {
+  const socket = takeWebSocket(response)
+  if (socket) return socket
+  // Refused by the server, or performed by a fetch that cannot open WebSockets.
+  await response.body?.cancel().catch(() => {})
+  throw new UnexpectedResponseError(
+    response.status,
+    response.statusText,
+    response.headers,
+  )
 }
 
 function normalizeShouldReconnect(

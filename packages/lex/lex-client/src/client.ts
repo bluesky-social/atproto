@@ -13,6 +13,8 @@ import {
   type XrpcResponse,
   type XrpcResponseBody,
   type XrpcResponseOptions,
+  type XrpcSubscribeOptions,
+  type XrpcSubscriptionIterable,
   applyDefaults,
   buildAgent,
   isService,
@@ -22,6 +24,7 @@ import {
   throwIfAborted,
   xrpc,
   xrpcSafe,
+  xrpcSubscribe,
 } from '@atproto/lex-rpc'
 import {
   type AtIdentifierString,
@@ -38,6 +41,7 @@ import {
   Query,
   type RecordSchema,
   type Restricted,
+  type Subscription,
   getMain,
 } from '@atproto/lex-schema'
 // @NOTE We could use import { com } from "./lexicons/index.js" here, but some
@@ -53,6 +57,7 @@ import listRecords, {
 import putRecord from './lexicons/com/atproto/repo/putRecord.js'
 import uploadBlob from './lexicons/com/atproto/repo/uploadBlob.js'
 import getBlob from './lexicons/com/atproto/sync/getBlob.js'
+import { main as subscribeRepos } from './lexicons/com/atproto/sync/subscribeRepos.js'
 import {
   WriteOperationHelper,
   type WriteOperationsFactory,
@@ -249,6 +254,28 @@ export type ApplyWritesOptions = Omit<
 export type UploadBlobOptions = Omit<XrpcOptions<typeof uploadBlob>, 'body'>
 
 export type GetBlobOptions = Omit<XrpcOptions<typeof getBlob>, 'params'>
+
+/**
+ * Options for subscribing to a repository event stream (firehose).
+ *
+ * @see {@link Client.subscribeRepos}
+ */
+export type SubscribeReposOptions = Omit<
+  XrpcSubscribeOptions<typeof subscribeRepos>,
+  'params'
+> & {
+  /**
+   * Where to start the stream from (the last `seq` already processed), or
+   * `undefined` to start from the live tip.
+   *
+   * A value is only the starting point: from then on the cursor follows the
+   * `seq` of each yielded message, so a reconnect resumes right after the last
+   * message handed to the consumer. A function is instead called before every
+   * connection, and nothing is tracked: use it when the consumer persists its
+   * own cursor (e.g. once a message has been processed).
+   */
+  cursor?: number | (() => number | Promise<number>)
+}
 
 /**
  * Type-safe options for {@link Client.create}, combining record options with key requirements.
@@ -554,6 +581,102 @@ export class Client {
     options: XrpcOptions<M> = {} as XrpcOptions<M>,
   ): Promise<XrpcResponse<M> | XrpcFailure<M>> {
     return xrpcSafe(this.agent, ns, this.buildXrpcOptions(options))
+  }
+
+  /**
+   * Subscribes to an XRPC subscription (WebSocket event stream) on the service
+   * this client's agent talks to, yielding its messages validated against the
+   * method's message schema. The connection is opened on the first pull and
+   * re-established when it fails with a retryable error.
+   *
+   * Every connection is opened through the agent's
+   * {@link Agent.fetchHandler}, as a WebSocket handshake request, so the
+   * agent's credentials (and retries) apply to it; its fetch must be able to
+   * open WebSockets (see `createWebSocketFetch()`). This client's `headers`,
+   * `service` and `labelers` do not apply to subscriptions; its
+   * `validateResponse` and `strictResponseProcessing` defaults do.
+   *
+   * @param ns - The lexicon subscription definition
+   * @param options - Subscription options including params, validation, reconnection and lifecycle hooks
+   * @returns An async generator of the subscription's messages
+   *
+   * @example
+   * ```typescript
+   * const controller = new AbortController()
+   * for await (const message of client.subscribe(com.atproto.label.subscribeLabels, {
+   *   params: { cursor: 0 },
+   *   signal: controller.signal,
+   * })) {
+   *   console.log(message)
+   * }
+   * ```
+   *
+   * @see {@link xrpcSubscribe} for a standalone variant
+   */
+  subscribe<const M extends Subscription>(
+    ns: NonNullable<unknown> extends XrpcSubscribeOptions<M>
+      ? Main<M>
+      : Restricted<'This XRPC subscription requires an "options" argument'>,
+  ): XrpcSubscriptionIterable<M>
+  subscribe<const M extends Subscription>(
+    ns: Main<M>,
+    options: XrpcSubscribeOptions<M>,
+  ): XrpcSubscriptionIterable<M>
+  subscribe<const M extends Subscription>(
+    ns: Main<M>,
+    options: XrpcSubscribeOptions<M> = {} as XrpcSubscribeOptions<M>,
+  ): XrpcSubscriptionIterable<M> {
+    return xrpcSubscribe(
+      this.agent,
+      ns,
+      applyDefaults(options, {
+        validateResponse: this.xrpcDefaults.validateResponse,
+        strictResponseProcessing: this.xrpcDefaults.strictResponseProcessing,
+      }),
+    )
+  }
+
+  /**
+   * Subscribes to the repository event stream (firehose) of the service this
+   * client's agent talks to (a PDS or a relay), resuming from the last
+   * received `seq` across reconnects.
+   *
+   * @param options - Subscription options, including the starting {@link SubscribeReposOptions.cursor cursor}
+   * @returns An async generator of `com.atproto.sync.subscribeRepos` messages
+   *
+   * @example
+   * ```typescript
+   * const client = new Client('https://relay.example.com')
+   * for await (const message of client.subscribeRepos({ cursor })) {
+   *   if (message.$type === 'com.atproto.sync.subscribeRepos#commit') {
+   *     console.log(message.repo, message.ops)
+   *   }
+   * }
+   * ```
+   *
+   * @see {@link subscribe} for the generic variant
+   */
+  async *subscribeRepos({
+    cursor: cursorInput,
+    ...options
+  }: SubscribeReposOptions = {}): XrpcSubscriptionIterable<
+    typeof subscribeRepos
+  > {
+    if (typeof cursorInput === 'function') {
+      return yield* this.subscribe(subscribeRepos, {
+        ...options,
+        params: async () => ({ cursor: await cursorInput() }),
+      })
+    }
+
+    let cursor: number | undefined = cursorInput
+    for await (const message of this.subscribe(subscribeRepos, {
+      ...options,
+      params: () => ({ cursor }),
+    })) {
+      if ('seq' in message) cursor = message.seq
+      yield message
+    }
   }
 
   protected buildXrpcOptions<M extends Query | Procedure>(

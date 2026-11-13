@@ -90,6 +90,9 @@ const posts = await client.list(app.bsky.feed.post, { limit: 10 })
     - [`client.assertDid`](#clientassertdid)
   - [Labeler Configuration](#labeler-configuration)
   - [Low-Level XRPC](#low-level-xrpc)
+  - [Subscriptions](#subscriptions)
+    - [Firehose (`client.subscribeRepos()`)](#firehose-clientsubscriberepos)
+    - [Subscription Errors and Reconnects](#subscription-errors-and-reconnects)
 - [Utilities](#utilities)
   - [Datetime Strings](#datetime-strings)
 - [Advanced Usage](#advanced-usage)
@@ -1129,6 +1132,78 @@ const response = await client.xrpc(app.bsky.feed.getTimeline, {
   strictResponseProcessing: false, // Accept non-strict Lex data for this call
   validateResponse: false, // Skip schema validation for this call
 })
+```
+
+### Subscriptions
+
+XRPC subscriptions (WebSocket event streams) are consumed as async generators, through `client.subscribe()` or the standalone `xrpcSubscribe()` (whose first argument is an `Agent | AgentOptions`, like `xrpc()`). Messages are decoded, get their `$type` restored, and are validated against the subscription's message schema. The connection is opened on the first pull, and re-established with backoff when it fails with a retryable error, so a `for await` loop spans reconnects. It is built on [`@atproto/ws-client`](https://github.com/bluesky-social/atproto/tree/main/packages/ws-client), whose connection options (`heartbeat`, `idleTimeoutMs`, `highWaterMark`, `maxBufferedBytes`, `maxReconnectSeconds`, `headers` (Node.js only), and the lifecycle hooks) are accepted as-is.
+
+```typescript
+import { xrpcSubscribe } from '@atproto/lex'
+import * as com from './lexicons/com.js'
+
+const controller = new AbortController()
+
+let cursor: number | undefined
+for await (const message of xrpcSubscribe(
+  'https://labeler.example.com',
+  com.atproto.label.subscribeLabels,
+  {
+    // A function is called before every connection, reconnects included
+    params: () => ({ cursor }),
+    signal: controller.signal, // aborting rejects the loop with the reason
+  },
+)) {
+  if (com.atproto.label.subscribeLabels.labels.$isTypeOf(message)) {
+    cursor = message.seq
+  }
+}
+```
+
+Every connection is opened through the agent's `fetchHandler`, as a WebSocket handshake request (a `GET` with an `Upgrade: websocket` header): the agent sends it like any other request, with its credentials and through its retry logic (a token refresh, a DPoP nonce challenge, …). Its fetch must be able to open WebSockets: `createWebSocketFetch()` wraps a `fetch` so that it does. Agents built from a service URL, and `PasswordSession`, use one by default; pass one as the `fetch` of an OAuth client, or of any agent built with a custom `fetch`. A refused upgrade fails by HTTP status, like an XRPC request. The client's `headers`, `service` and `labelers` do not apply to subscriptions; its `validateResponse` and `strictResponseProcessing` defaults do. Disable `validateResponse` only for a trusted server: messages are then yielded as decoded, without defaults applied.
+
+In the browser, where the WebSocket API cannot send request headers, a handshake carrying any (such as credentials) is refused rather than sent without them.
+
+Breaking out of the loop (or `return`/`throw`) closes the connection. Aborting the `signal` rejects the loop with the abort reason; abort with a `CloseError` (from `@atproto/ws-client`) to choose the close code.
+
+#### Firehose (`client.subscribeRepos()`)
+
+`client.subscribeRepos()` subscribes to `com.atproto.sync.subscribeRepos` and keeps the cursor for you: a `cursor` number is only the starting point, after which reconnects resume right after the last `seq` handed to the loop. Pass a function instead to own the cursor (e.g. one persisted once a message is processed).
+
+```typescript
+const client = new Client('https://relay.example.com')
+
+for await (const message of client.subscribeRepos({ cursor: lastSeq })) {
+  if (message.$type === 'com.atproto.sync.subscribeRepos#commit') {
+    await processCommit(message)
+  }
+}
+```
+
+#### Subscription Errors and Reconnects
+
+Every error that ends the loop, or reaches `shouldReconnect`, `onReconnect` or `onError`, is an `XrpcSubscriptionError` with a `shouldRetry()` classification (except an abort reason, or an error thrown by your own callbacks, which are passed through as-is):
+
+| Class                                 | Meaning                                                                      | Retried by default                                  |
+| ------------------------------------- | ---------------------------------------------------------------------------- | --------------------------------------------------- |
+| `XrpcSubscriptionConnectionError`     | The connection failed (`cause` is the `@atproto/ws-client` error)            | Per the cause (close code, upgrade HTTP status, …)  |
+| `XrpcSubscriptionServerError`         | The server sent an error frame (`error`, `message`, `matchesSchemaErrors()`) | Only for transient codes (`InternalServerError`, …) |
+| `XrpcSubscriptionInvalidMessageError` | The server sent an invalid frame                                             | No                                                  |
+| `XrpcSubscriptionValidationError`     | A message did not match the schema (`value`, `cause`)                        | No                                                  |
+
+`shouldReconnect` replaces the default policy (or disables reconnects with `false`), and `onInvalidMessage` decides what to do with a message failing validation: it throws by default, and returning skips the message.
+
+```typescript
+for await (const message of client.subscribeRepos({
+  // Catch up after being dropped for being too slow
+  shouldReconnect: (error) =>
+    error instanceof XrpcSubscriptionError &&
+    (error.shouldRetry() || error.error === 'ConsumerTooSlow'),
+  // Skip, rather than fail on, messages that do not match the schema
+  onInvalidMessage: (error) => console.warn('Skipping message', error),
+})) {
+  // ...
+}
 ```
 
 ## Utilities

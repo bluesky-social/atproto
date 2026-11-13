@@ -1,7 +1,11 @@
 import { assert, describe, expect, it, vi } from 'vitest'
 import { CloseCode } from '../src/lib/close-codes.js'
 import { CloseError, SocketError } from '../src/lib/errors.js'
-import type { CloseEventDetail, DataMode } from '../src/message-channel.js'
+import type {
+  CloseEventDetail,
+  DataMode,
+  MessageOf,
+} from '../src/message-channel.js'
 import type { Transport, TransportFactory } from '../src/transport/transport.js'
 import {
   type Awaitable,
@@ -10,9 +14,9 @@ import {
 } from '../src/websocket.js'
 
 const createWebSocket = (createTransport: TransportFactory) => {
-  return <M extends DataMode>(
+  return <M extends DataMode, T = MessageOf<M>>(
     url: string | URL | (() => Awaitable<string | URL>),
-    options: WebSocketOptions<M> = {},
+    options: WebSocketOptions<M, T> = {},
   ) => {
     return websocketFactory(url, createTransport, options)
   }
@@ -471,6 +475,107 @@ describe(createWebSocket, () => {
       controller.abort(new Error('stop'))
       await expect(pull).rejects.toThrow()
       expect(urls.length).toBeLessThanOrEqual(1)
+    })
+  })
+
+  describe('parseMessage', () => {
+    // Stands in for a message that proves the connection unusable, the way an
+    // XRPC error frame does.
+    class BadMessageError extends Error {}
+    const parseMessage = (message: MessageOf<'auto'>) => {
+      if (message === 'bad') throw new BadMessageError()
+      if (message === 'skip') return undefined
+      return { parsed: message }
+    }
+
+    it('yields what it returns and skips undefined', async () => {
+      const { createTransport } = scripted([
+        { messages: ['a', 'skip', 'b'], end: 'clean' },
+      ])
+      const websocket = createWebSocket(createTransport)
+      const gen = websocket('ws://x', { ...noBackoff, parseMessage })
+      expect(await drain(gen)).toEqual([{ parsed: 'a' }, { parsed: 'b' }])
+    })
+
+    it('runs on pull, not on arrival', async () => {
+      const { createTransport } = scripted([
+        { messages: ['a', 'b'], end: 'clean' },
+      ])
+      const seen: unknown[] = []
+      const websocket = createWebSocket(createTransport)
+      const gen = websocket('ws://x', {
+        ...noBackoff,
+        parseMessage: (message) => {
+          seen.push(message)
+          return message
+        },
+      })
+      await gen.next()
+      expect(seen).toEqual(['a'])
+      await gen.return()
+    })
+
+    it('ends the connection on a throw and classifies the error like a connection failure', async () => {
+      const { createTransport, signals } = scripted([
+        { messages: ['a', 'bad', 'lost'], end: 'clean' },
+        { messages: ['b'], end: 'clean' },
+      ])
+      const onReconnect = vi.fn()
+      const onError = vi.fn()
+      const websocket = createWebSocket(createTransport)
+      const gen = websocket('ws://x', {
+        ...noBackoff,
+        parseMessage,
+        onReconnect,
+        onError,
+        shouldReconnect: (error) => error instanceof BadMessageError,
+      })
+      // 'lost' was buffered behind the bad message on the same connection, so it
+      // is discarded with it rather than yielded from a connection the caller
+      // just declared unusable.
+      expect(await drain(gen)).toEqual([{ parsed: 'a' }, { parsed: 'b' }])
+      expect(onReconnect).toHaveBeenCalledExactlyOnceWith(
+        expect.any(BadMessageError),
+        { attempt: 0 },
+      )
+      expect(onError).not.toHaveBeenCalled()
+      expect(signals[0].aborted).toBe(true)
+    })
+
+    it('rejects the iterator with the error when the policy declines to retry', async () => {
+      const { createTransport, urls } = scripted([
+        { messages: ['a', 'bad'], end: 'clean' },
+        { messages: ['b'], end: 'clean' },
+      ])
+      const onError = vi.fn()
+      const out: unknown[] = []
+      const websocket = createWebSocket(createTransport)
+      const gen = websocket('ws://x', { ...noBackoff, parseMessage, onError })
+      // The default policy only retries ws-client's own retryable errors.
+      await expect(
+        (async () => {
+          for await (const message of gen) out.push(message)
+        })(),
+      ).rejects.toBeInstanceOf(BadMessageError)
+      expect(out).toEqual([{ parsed: 'a' }])
+      expect(onError).toHaveBeenCalledExactlyOnceWith(
+        expect.any(BadMessageError),
+      )
+      expect(urls).toHaveLength(1)
+    })
+
+    it('still rejects with the abort reason when the signal aborts', async () => {
+      const controller = new AbortController()
+      const { createTransport } = parkingTransport()
+      const websocket = createWebSocket(createTransport)
+      const reason = new Error('stopped')
+      const gen = websocket('ws://x', {
+        signal: controller.signal,
+        parseMessage,
+      })
+      const pull = gen.next()
+      controller.abort(reason)
+      await expect(pull).rejects.toBe(reason)
     })
   })
 

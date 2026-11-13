@@ -42,7 +42,9 @@
     "@atproto/lex-json": "workspace:^",
     "@atproto/lex-builder": "workspace:^",
     "@atproto/lex-installer": "workspace:^",
-    "vitest": "^4.1.10"
+    "@types/ws": "^8.5.4",
+    "vitest": "^4.1.10",
+    "ws": "^8.19.0"
   },
   "scripts": {
     "lex:build": "lex-builder build --out ./src/lexicons --clear --lib @atproto/lex-schema --index-file --default-export",

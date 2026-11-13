@@ -20,6 +20,15 @@ export interface Sender<M extends DataMode = 'auto'> {
 export interface Transport<M extends DataMode = 'auto'>
   extends AsyncIterable<MessageOf<M>, void, unknown>, Sender<M> {}
 
+declare const webSocketHandle: unique symbol
+
+/**
+ * An open connection, established by a platform's `openWebSocket()` handshake,
+ * that the same platform's transport can take over. Opaque everywhere else:
+ * the concrete shape belongs to the platform module that created it.
+ */
+export type WebSocketHandle = { readonly [webSocketHandle]: true }
+
 /** Default protocol-ping interval when `heartbeat` is left unset. */
 export const DEFAULT_HEARTBEAT_INTERVAL_MS = 10_000
 
@@ -33,7 +42,15 @@ export const DEFAULT_HEARTBEAT_INTERVAL_MS = 10_000
  * how `heartbeat` once silently defaulted to off for every consumer.
  */
 export interface TransportOptions<M extends DataMode = 'auto'> {
-  url: string | URL
+  /** Where to connect. Ignored when {@link TransportOptions.socket} is set. */
+  url: undefined | string | URL
+  /**
+   * An already open connection to take over instead of dialing `url`: the
+   * result of a handshake performed through a `fetch()`-like function (see
+   * `createWebSocketFetch()`). `protocols` and `headers` were applied by that
+   * handshake, and are ignored.
+   */
+  socket: undefined | WebSocketHandle
   dataMode: M
   /**
    * Teardown: aborting ends the iteration and closes the socket. Use a

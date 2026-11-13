@@ -8,12 +8,14 @@ import {
   closeGuard,
   createMessageChannel,
 } from '../message-channel.js'
+import { WebSocketResponse, handshakeTarget } from '../websocket-response.js'
 import type {
   HeadersInit,
   Sender,
   Transport,
   TransportFactory,
   TransportOptions,
+  WebSocketHandle,
 } from './transport.js'
 
 export const HEADERS_SUPPORTED = false
@@ -70,6 +72,128 @@ export type WebSocketCtor = new (
   protocols?: string | string[],
 ) => WHATWGWebSocket
 
+// The handshake also detaches its listeners once the socket is taken over.
+interface WHATWGHandshakeWebSocket extends WHATWGWebSocket {
+  removeEventListener(type: 'open', listener: () => void): void
+  removeEventListener(
+    type: 'message',
+    listener: (ev: WHATWGMessageEvent) => void,
+  ): void
+  removeEventListener(
+    type: 'close',
+    listener: (ev: WHATWGCloseEvent) => void,
+  ): void
+  removeEventListener(
+    type: 'error',
+    listener: (ev: WHATWGErrorEvent) => void,
+  ): void
+}
+
+export type HandshakeWebSocketCtor = new (
+  url: string | URL,
+  protocols?: string | string[],
+) => WHATWGHandshakeWebSocket
+
+// An event dispatched to an open socket before a transport listened to it.
+type BufferedEvent =
+  | { type: 'message'; ev: WHATWGMessageEvent }
+  | { type: 'close'; ev: WHATWGCloseEvent }
+  | { type: 'error'; ev: WHATWGErrorEvent }
+
+/**
+ * What {@link openWebSocket} hands over to a transport: an open socket, and,
+ * since the WHATWG API cannot pause one, what it dispatched in the meantime.
+ */
+interface BrowserWebSocketHandle {
+  readonly ws: WHATWGWebSocket
+  /**
+   * Detaches the handshake's own listeners, returning the events the socket
+   * dispatched while waiting to be taken over, in order.
+   */
+  release(): BufferedEvent[]
+}
+
+/**
+ * Performs a WebSocket opening handshake for a `fetch()` request (see
+ * `createWebSocketFetch()`), resolving with a {@link WebSocketResponse} once
+ * the connection is open.
+ *
+ * The WHATWG API can neither send request headers nor expose the handshake
+ * response, so a request carrying headers (other than the handshake's own) is
+ * refused rather than sent without what is usually a credential, and a refused
+ * upgrade rejects with a {@link SocketError}, the server's response being out
+ * of reach.
+ */
+export function openWebSocket(
+  input: string | URL | Request,
+  init?: RequestInit,
+  // Injectable for tests; defaults to the platform global.
+  WebSocketImpl: HandshakeWebSocketCtor = globalThis.WebSocket,
+): Promise<Response> {
+  return new Promise<Response>((resolve, reject) => {
+    const { url, protocols, headers, signal } = handshakeTarget(input, init)
+
+    if (signal?.aborted) {
+      reject(signal.reason)
+      return
+    }
+    if (hasHeaders(headers)) {
+      throw new TypeError(
+        'WebSocket headers are not supported in the browser; use the URL or a subprotocol instead',
+      )
+    }
+    if (!WebSocketImpl) {
+      throw new TypeError('WebSocket is not available in this environment')
+    }
+
+    const ws = new WebSocketImpl(url, protocols)
+    ws.binaryType = 'arraybuffer'
+
+    let opened = false
+    const events: BufferedEvent[] = []
+
+    const onMessage = (ev: WHATWGMessageEvent) => {
+      events.push({ type: 'message', ev })
+    }
+    const onClose = (ev: WHATWGCloseEvent) => {
+      events.push({ type: 'close', ev })
+      if (!opened)
+        reject(new SocketError(new Error('WebSocket handshake failed')))
+    }
+    const onError = (ev: WHATWGErrorEvent) => {
+      events.push({ type: 'error', ev })
+      if (!opened) reject(new SocketError(ev.error))
+    }
+    // Also kept once the promise is settled, until the connection is taken
+    // over: whoever requested it tears it down by aborting, including when the
+    // response never made it back (e.g. dropped by a fetch wrapper).
+    const onAbort = () => {
+      closeSocket(ws, CloseCode.Normal)
+      reject(signal!.reason)
+    }
+
+    ws.addEventListener('message', onMessage)
+    ws.addEventListener('close', onClose)
+    ws.addEventListener('error', onError)
+    signal?.addEventListener('abort', onAbort, { once: true })
+
+    ws.addEventListener('open', () => {
+      opened = true
+      const handle: BrowserWebSocketHandle = {
+        ws,
+        release() {
+          ws.removeEventListener('message', onMessage)
+          ws.removeEventListener('close', onClose)
+          ws.removeEventListener('error', onError)
+          signal?.removeEventListener('abort', onAbort)
+          return events.splice(0)
+        },
+      }
+      resolve(new WebSocketResponse(handle as unknown as WebSocketHandle))
+    })
+  })
+}
+
 // The close codes `WebSocket.close()` accepts: 1000, or the private-use range
 // 3000-4999. Anything else — including RFC 6455 codes an endpoint may legitimately
 // *receive*, like 1002 or 1003 — throws InvalidAccessError synchronously, because
@@ -114,18 +238,23 @@ function createTransportImpl<M extends DataMode>(
   // doesn't ask for.
   WebSocketImpl: WebSocketCtor = globalThis.WebSocket,
 ): Transport<M> {
+  const handle = options.socket as BrowserWebSocketHandle | undefined
+
   // The WHATWG API has no request-header mechanism, so accepting headers here
   // would silently drop what is usually auth. Fail loudly at construction rather
   // than connect with the wrong credentials.
-  if (hasHeaders(options.headers)) {
+  if (!handle && hasHeaders(options.headers)) {
     throw new TypeError(
       'WebSocket headers are not supported in the browser; use the URL or a subprotocol instead',
     )
   }
   // Fail loudly where a global WebSocket is genuinely absent, rather than
   // surfacing a confusing "undefined is not a constructor" a few lines down.
-  if (!WebSocketImpl) {
+  if (!handle && !WebSocketImpl) {
     throw new TypeError('WebSocket is not available in this environment')
+  }
+  if (!handle && options.url === undefined) {
+    throw new TypeError('A WebSocket url or socket is required')
   }
 
   // Marked as aborted once the socket's close event has fired — the transport's
@@ -149,7 +278,9 @@ function createTransportImpl<M extends DataMode>(
     },
   })
 
-  const ws = new WebSocketImpl(options.url, options.protocols)
+  const ws = handle
+    ? handle.ws
+    : new WebSocketImpl(options.url!, options.protocols)
   ws.binaryType = 'arraybuffer'
 
   let open = false
@@ -193,12 +324,12 @@ function createTransportImpl<M extends DataMode>(
     },
   }
 
-  ws.addEventListener('open', () => {
+  function onOpen(): void {
     open = true
     options.onOpen(sender)
-  })
+  }
 
-  ws.addEventListener('message', (ev) => {
+  function onMessage(ev: WHATWGMessageEvent): void {
     const { data } = ev
     // With binaryType 'arraybuffer', a spec-compliant socket delivers text data as a string and binary
     // data as an ArrayBuffer.
@@ -217,13 +348,13 @@ function createTransportImpl<M extends DataMode>(
       )
       ws.close()
     }
-  })
+  }
 
   // Where a connection ends, and normally the only place: per spec every teardown
   // fires `close`, with `error` confined to failures before the connection is
   // established. See the 'error' handler below for the runtime where `close`
   // alone isn't enough.
-  ws.addEventListener('close', (ev) => {
+  function onClose(ev: WHATWGCloseEvent): void {
     open = false
     if (pendingError) {
       // Teardown began with a failure (a socket error, a bad frame, an idle
@@ -243,9 +374,9 @@ function createTransportImpl<M extends DataMode>(
     // `closeGuard` resumes: a consumer that reaches the end of iteration is
     // guaranteed the close was both reported and complete.
     markClosed()
-  })
+  }
 
-  ws.addEventListener('error', (ev) => {
+  function onError(ev: WHATWGErrorEvent): void {
     open = false
     endWith(new SocketError(ev.error))
     // Settled here as well as from 'close', which is defensive against Node 22:
@@ -266,7 +397,30 @@ function createTransportImpl<M extends DataMode>(
     // anything more specific.
     reportClose(ABNORMAL_CLOSE_DETAIL)
     markClosed()
-  })
+  }
+
+  ws.addEventListener('message', onMessage)
+  ws.addEventListener('close', onClose)
+  ws.addEventListener('error', onError)
+
+  if (handle) {
+    // Taken over already open, with every listener now attached. What it
+    // dispatched in the meantime is replayed in order, after the open is
+    // reported (asynchronously, as an 'open' event would be). Nothing else can
+    // be dispatched before then: events are tasks, the replay a microtask.
+    const events = handle.release()
+    queueMicrotask(() => {
+      // Unless torn down in between.
+      if (!pendingError) onOpen()
+      for (const event of events) {
+        if (event.type === 'message') onMessage(event.ev)
+        else if (event.type === 'close') onClose(event.ev)
+        else onError(event.ev)
+      }
+    })
+  } else {
+    ws.addEventListener('open', onOpen)
+  }
 
   options.signal.addEventListener(
     'abort',

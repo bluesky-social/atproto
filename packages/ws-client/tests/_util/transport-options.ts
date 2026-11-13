@@ -24,6 +24,7 @@ export const transportOptionDefaults: Omit<
   maxBufferedBytes: undefined,
   headers: undefined,
   protocols: undefined,
+  socket: undefined,
   onOpen: () => {},
   onClose: () => {},
 })

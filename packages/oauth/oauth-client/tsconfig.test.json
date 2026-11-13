@@ -1,6 +1,7 @@
 {
   "extends": ["../../../tsconfig/vitest.tsconfig.json"],
   "include": ["./tests", "**/*.test.ts", "./src/core-js.d.ts"],
+  "references": [{ "path": "../../ws-client/tsconfig.build.json" }],
   "compilerOptions": {
     "rootDir": ".",
     "noUnusedLocals": false,

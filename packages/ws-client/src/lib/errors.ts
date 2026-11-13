@@ -43,6 +43,33 @@ export class SocketError extends WebSocketClientError {
   }
 }
 
+// HTTP statuses after which a retry may succeed. Kept identical to
+// RETRYABLE_HTTP_STATUS_CODES in @atproto/lex-rpc, so a handshake rejection is
+// classified the same way an XRPC request failure is.
+const RETRYABLE_HTTP_STATUS_CODES: ReadonlySet<number> = new Set([
+  408, 425, 429, 500, 502, 503, 504, 522, 524,
+])
+
+export class UnexpectedResponseError extends WebSocketClientError {
+  constructor(
+    readonly status: number,
+    readonly statusText?: string,
+    readonly headers: Headers = new Headers(),
+  ) {
+    super(
+      `Unexpected server response to the WebSocket upgrade: ${status}${statusText ? ` ${statusText}` : ''}`,
+    )
+  }
+
+  /**
+   * Classified by HTTP status: a server that answered the upgrade with a 404 or
+   * a 401 will answer the next one the same way, while a 503 or a 429 may not.
+   */
+  override shouldRetry(): boolean {
+    return RETRYABLE_HTTP_STATUS_CODES.has(this.status)
+  }
+}
+
 export class HeartbeatTimeoutError extends WebSocketClientError {
   constructor() {
     super('WebSocket heartbeat timed out')

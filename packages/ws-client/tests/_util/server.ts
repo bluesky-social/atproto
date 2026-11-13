@@ -19,7 +19,7 @@ export async function startServer(
   onConnection: (ws: WebSocket, req: IncomingMessage) => void,
   wssOptions?: ServerOptions,
   port = 0,
-): Promise<{ url: string } & AsyncDisposable> {
+): Promise<{ url: string; wss: WebSocketServer } & AsyncDisposable> {
   const server = createServer()
   const { terminate } = createHttpTerminator({ server })
   const wss = new WebSocketServer({ ...wssOptions, server })
@@ -28,6 +28,7 @@ export async function startServer(
   const boundPort = (server.address() as AddressInfo).port
   return {
     url: `ws://localhost:${boundPort}`,
+    wss,
     [Symbol.asyncDispose]: async () => {
       await terminate()
     },

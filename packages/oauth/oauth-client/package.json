@@ -47,7 +47,10 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
-    "vitest": "^4.1.10"
+    "@atproto/ws-client": "workspace:^",
+    "@types/ws": "^8.5.4",
+    "vitest": "^4.1.10",
+    "ws": "^8.19.0"
   },
   "scripts": {
     "build": "tsc --build tsconfig.build.json",

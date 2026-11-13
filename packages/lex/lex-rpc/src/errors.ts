@@ -63,6 +63,18 @@ export const RETRYABLE_HTTP_STATUS_CODES: ReadonlySet<number> = new Set([
   408, 425, 429, 500, 502, 503, 504, 522, 524,
 ])
 
+/**
+ * XRPC error codes that indicate a transient error that may succeed on retry:
+ * the codes generated from {@link RETRYABLE_HTTP_STATUS_CODES} (e.g.
+ * `RateLimitExceeded`, `InternalServerError`, `UpstreamFailure`). Used where an
+ * error code is all there is to classify, such as a subscription's error frame.
+ */
+export const RETRYABLE_ERROR_CODES: ReadonlySet<LexErrorCode> = new Set(
+  Array.from(StatusErrorCodes)
+    .filter(([status]) => RETRYABLE_HTTP_STATUS_CODES.has(status))
+    .map(([, code]) => code),
+)
+
 export { LexError }
 export type { LexErrorCode, LexErrorData }
 

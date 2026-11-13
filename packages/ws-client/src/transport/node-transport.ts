@@ -1,7 +1,10 @@
+import type { IncomingHttpHeaders, IncomingMessage } from 'node:http'
+import { Readable } from 'node:stream'
 import { WebSocket } from 'ws'
 import {
   HeartbeatTimeoutError,
   SocketError,
+  UnexpectedResponseError,
   WebSocketClientError,
 } from '../lib/errors.js'
 import {
@@ -12,12 +15,14 @@ import {
   closeGuard,
   createMessageChannel,
 } from '../message-channel.js'
+import { WebSocketResponse, handshakeTarget } from '../websocket-response.js'
 import {
   DEFAULT_HEARTBEAT_INTERVAL_MS,
   type Sender,
   type Transport,
   type TransportFactory,
   type TransportOptions,
+  type WebSocketHandle,
 } from './transport.js'
 
 export const HEADERS_SUPPORTED = true
@@ -26,6 +31,134 @@ export const HEADERS_SUPPORTED = true
 // the socket is destroyed and 'close' fires anyway. Enforced by `ws` itself via
 // its `closeTimeout` option.
 const CLOSE_TIMEOUT_MS = 1_000
+
+/**
+ * What {@link openWebSocket} hands over to a transport: an open socket, paused
+ * so that no frame is emitted (and lost) before a transport listens to it.
+ */
+interface NodeWebSocketHandle {
+  readonly ws: WebSocket
+  /**
+   * Detaches the handshake's own listeners, returning the error the socket
+   * failed with while waiting to be taken over, if any.
+   */
+  release(): { error?: unknown }
+}
+
+/**
+ * Performs a WebSocket opening handshake for a `fetch()` request (see
+ * `createWebSocketFetch()`): the request's headers (credentials, proofs of
+ * possession, …) are sent with the upgrade request. Resolves with a
+ * {@link WebSocketResponse} once the connection is open, or with the server's
+ * response if it answered with anything but a `101`. Rejects with a
+ * {@link SocketError} when no response was received, or with the abort reason.
+ */
+export function openWebSocket(
+  input: string | URL | Request,
+  init?: RequestInit,
+): Promise<Response> {
+  return new Promise<Response>((resolve, reject) => {
+    const { url, protocols, headers, signal } = handshakeTarget(input, init)
+
+    if (signal?.aborted) {
+      reject(signal.reason)
+      return
+    }
+
+    const wsopts = {
+      headers: Object.fromEntries(headers),
+      closeTimeout: CLOSE_TIMEOUT_MS, // see createTransportImpl
+    }
+    const ws = new WebSocket(url, protocols, wsopts)
+    ws.binaryType = 'nodebuffer'
+
+    let upgradeHeaders: Headers | undefined
+    let failure: { error: unknown } | undefined
+
+    // Also kept once the promise is settled, until the connection is taken
+    // over: whoever requested it tears it down by aborting, including when the
+    // response never made it back (e.g. dropped by a fetch wrapper).
+    const onAbort = () => {
+      ws.terminate()
+      reject(signal!.reason)
+    }
+    signal?.addEventListener('abort', onAbort, { once: true })
+
+    // Also keeps a failure of a socket waiting to be taken over from being an
+    // unhandled 'error' event.
+    const onError = (error: Error) => {
+      failure ??= { error }
+      reject(new SocketError(error))
+    }
+    ws.on('error', onError)
+
+    ws.once('upgrade', (res: IncomingMessage) => {
+      upgradeHeaders = toHeaders(res.headers)
+    })
+
+    // Listening to this event means `ws` neither aborts the handshake nor
+    // reads the response: both are ours to do, once the body was read.
+    ws.once('unexpected-response', (_req, res: IncomingMessage) => {
+      res.once('close', () => {
+        signal?.removeEventListener('abort', onAbort)
+        ws.terminate()
+      })
+      try {
+        resolve(toResponse(res))
+      } catch (error) {
+        res.destroy()
+        reject(new SocketError(error))
+      }
+    })
+
+    ws.once('open', () => {
+      // Hold every frame until a transport listens for them.
+      ws.pause()
+      const handle: NodeWebSocketHandle = {
+        ws,
+        release() {
+          signal?.removeEventListener('abort', onAbort)
+          ws.off('error', onError)
+          return failure ?? {}
+        },
+      }
+      resolve(
+        new WebSocketResponse(
+          handle as unknown as WebSocketHandle,
+          upgradeHeaders,
+        ),
+      )
+    })
+  })
+}
+
+function toHeaders(raw: IncomingHttpHeaders): Headers {
+  const headers = new Headers()
+  for (const [name, value] of Object.entries(raw)) {
+    if (Array.isArray(value)) {
+      for (const v of value) headers.append(name, v)
+    } else if (value !== undefined) {
+      headers.set(name, value)
+    }
+  }
+  return headers
+}
+
+// Throws (a RangeError) for a status the Response constructor rejects.
+function toResponse(res: IncomingMessage): Response {
+  const status = res.statusCode ?? 0
+  const init = {
+    status,
+    statusText: res.statusMessage,
+    headers: toHeaders(res.headers),
+  }
+  // The Response constructor refuses a body for these statuses.
+  if (status === 204 || status === 205 || status === 304) {
+    res.resume()
+    return new Response(null, init)
+  }
+  return new Response(Readable.toWeb(res) as ReadableStream<Uint8Array>, init)
+}
 
 /**
  * Node transport, built on `ws`. Created already connecting; torn down by
@@ -90,7 +223,13 @@ function createTransportImpl<M extends DataMode>(
       : undefined,
     closeTimeout: CLOSE_TIMEOUT_MS, // supported by our version of ws, but not in @types/ws yet
   }
-  const ws = new WebSocket(options.url, options.protocols, wsopts)
+  const handle = options.socket as NodeWebSocketHandle | undefined
+  if (!handle && options.url === undefined) {
+    throw new TypeError('A WebSocket url or socket is required')
+  }
+  const ws = handle
+    ? handle.ws
+    : new WebSocket(options.url!, options.protocols, wsopts)
 
   // Pin the default so every frame, text or binary, arrives as a single Buffer.
   ws.binaryType = 'nodebuffer'
@@ -185,11 +324,13 @@ function createTransportImpl<M extends DataMode>(
     },
   }
 
-  ws.on('open', () => {
+  function onSocketOpen(): void {
     open = true
     startHeartbeat()
     options.onOpen(sender)
-  })
+  }
+
+  if (!handle) ws.on('open', onSocketOpen)
 
   // `ws` delivers control frames through their own events rather than 'message',
   // so without this a pong alone wouldn't count as heartbeat evidence.
@@ -246,6 +387,24 @@ function createTransportImpl<M extends DataMode>(
     markClosed()
   })
 
+  // The server answered the upgrade request with something other than a 101.
+  // With no listener here, `ws` aborts the handshake itself and raises a bare
+  // error, which would classify as a retryable SocketError — so a 404 would be
+  // re-dialed forever. Recording the status first lets it decide instead (the
+  // 'error' that follows is ignored, since `endWith` is first-wins). Listening
+  // also means `ws` leaves the request open, so terminating it is ours to do;
+  // that emits 'error' then 'close', and 'close' settles the channel.
+  ws.on('unexpected-response', (_req, res) => {
+    endWith(
+      new UnexpectedResponseError(
+        res.statusCode ?? 0,
+        res.statusMessage,
+        toHeaders(res.headers),
+      ),
+    )
+    ws.terminate()
+  })
+
   // `ws` is not limited to raising 'error' before the connection opens — a
   // mid-connection socket error raises it too — but it always follows with
   // 'close', on every path. So this only records the outcome; the 'close' handler
@@ -272,6 +431,29 @@ function createTransportImpl<M extends DataMode>(
     },
     { once: true },
   )
+
+  if (handle) {
+    // Taken over already open, with every listener now attached. What the
+    // handshake observed while it waited ends here.
+    const { error } = handle.release()
+    if (ws.readyState === WebSocket.OPEN) {
+      // Reported asynchronously, as an 'open' event would be. Resumed either
+      // way: an abort in between needs to read the peer's close frame.
+      queueMicrotask(() => {
+        if (ws.readyState === WebSocket.OPEN) onSocketOpen()
+        ws.resume()
+      })
+    } else {
+      endWith(new SocketError(error ?? new Error('WebSocket closed')))
+      if (ws.readyState === WebSocket.CLOSED) {
+        // Its 'close' event fired before this transport listened.
+        reportClose(ABNORMAL_CLOSE_DETAIL)
+        markClosed()
+      } else {
+        ws.terminate()
+      }
+    }
+  }
 
   // This lets consumers treat the end of iteration as "teardown is done"
   // (resources have been released).

@@ -1,9 +1,11 @@
-import { assert, describe, expect, it, vi } from 'vitest'
+import { assert, describe, expect, expectTypeOf, it, vi } from 'vitest'
 import {
   CloseCode,
   CloseError,
   type Sender,
+  UnexpectedResponseError,
   WebSocketClientError,
+  type WebSocketIterable,
   websocket,
 } from '../src/index.ts'
 import type { CloseEventDetail } from '../src/message-channel.ts'
@@ -275,6 +277,78 @@ describe('websocket() end-to-end over real sockets', () => {
       reason: 'nope',
       wasClean: true,
     })
+  })
+})
+
+describe('upgrade rejections over real sockets', () => {
+  // A server that answers every upgrade request with `status` until it has
+  // rejected `rejections` of them, then accepts and closes normally.
+  async function rejectingServer(status: number, rejections = Infinity) {
+    let dials = 0
+    const server = await startServer((ws) => ws.close(CloseCode.Normal), {
+      verifyClient: (_info, callback) => {
+        dials++
+        if (dials <= rejections) callback(false, status)
+        else callback(true)
+      },
+    })
+    return Object.assign(server, { dials: () => dials })
+  }
+
+  it('fails without retrying when the upgrade is answered with a 404', async () => {
+    await using server = await rejectingServer(404)
+    const onReconnect = vi.fn()
+    await expect(
+      drain(websocket(server.url, { ...noBackoff, onReconnect })),
+    ).rejects.toSatisfy((err: unknown) => {
+      assert(err instanceof UnexpectedResponseError)
+      expect(err.status).toBe(404)
+      expect(err.shouldRetry()).toBe(false)
+      return true
+    })
+    expect(server.dials()).toBe(1)
+    expect(onReconnect).not.toHaveBeenCalled()
+  })
+
+  it('retries an upgrade answered with a transient status', async () => {
+    await using server = await rejectingServer(503, 2)
+    const onReconnect = vi.fn()
+    await drain(websocket(server.url, { ...noBackoff, onReconnect }))
+    expect(server.dials()).toBe(3)
+    expect(onReconnect).toHaveBeenCalledTimes(2)
+    expect(onReconnect).toHaveBeenCalledWith(
+      expect.any(UnexpectedResponseError),
+      { attempt: 0 },
+    )
+  })
+})
+
+describe('parseMessage over real sockets', () => {
+  it('yields parsed messages typed by the parser', async () => {
+    await using server = await startServer((ws) => {
+      ws.send('{"n":1}')
+      ws.send('{"n":2}', () => ws.close(CloseCode.Normal))
+    })
+    const gen = websocket(server.url, {
+      dataMode: 'text',
+      parseMessage: (message) => JSON.parse(message) as { n: number },
+    })
+    expectTypeOf(gen).toEqualTypeOf<WebSocketIterable<'text', { n: number }>>()
+    expect(await drain(gen)).toEqual([{ n: 1 }, { n: 2 }])
+  })
+
+  it('types the parser input from dataMode and excludes skipped values', () => {
+    const gen = websocket('ws://localhost:1', {
+      dataMode: 'binary',
+      parseMessage: (message) => {
+        expectTypeOf(message).toEqualTypeOf<Uint8Array<ArrayBuffer>>()
+        return message.byteLength > 0 ? message.byteLength : undefined
+      },
+    })
+    expectTypeOf(gen).toEqualTypeOf<AsyncGenerator<number, void, unknown>>()
+    expectTypeOf(websocket('ws://localhost:1')).toEqualTypeOf<
+      AsyncGenerator<string | Uint8Array<ArrayBuffer>, void, unknown>
+    >()
   })
 })
 

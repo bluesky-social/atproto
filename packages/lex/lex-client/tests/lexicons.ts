@@ -6,8 +6,8 @@
  * `app` / `bsky` namespaces). The tests only need a handful of schemas, so they
  * are declared here with the `l` builder instead of being generated:
  *
- * - `com.example.*` — brand-new, test-only record/query/procedure/object schemas
- *   standing in for the former public ones.
+ * - `com.example.*` — brand-new, test-only record/query/procedure/subscription/
+ *   object schemas standing in for the former public ones.
  * - `com.atproto.repo.*` — faithful (trimmed) mirrors of the real repo methods,
  *   defined locally so the tests do not depend on the root lexicons. They must
  *   stay shape-compatible with the wire payloads the `Client` sends/receives
@@ -102,6 +102,26 @@ const profile = l.record(
   l.object({
     displayName: l.optional(l.string({ maxGraphemes: 64, maxLength: 640 })),
   }),
+)
+
+type SubscribeEventsEvent = {
+  $type?: 'com.example.subscribeEvents#event'
+  seq: number
+  text: string
+}
+const subscribeEventsEvent = l.typedObject<SubscribeEventsEvent>(
+  'com.example.subscribeEvents',
+  'event',
+  l.object({ seq: l.integer(), text: l.string() }),
+)
+
+const subscribeEvents = l.subscription(
+  'com.example.subscribeEvents',
+  l.params({ cursor: l.optional(l.integer()) }),
+  l.typedUnion(
+    [l.typedRef<SubscribeEventsEvent>((() => subscribeEventsEvent) as any)],
+    false,
+  ),
 )
 
 /* -------------------------------------------------------------------------- */
@@ -336,5 +356,6 @@ export const com = {
       post,
       generator,
     },
+    subscribeEvents: { main: subscribeEvents, event: subscribeEventsEvent },
   },
 }

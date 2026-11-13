@@ -1,5 +1,10 @@
 import type { Agent, XrpcFailure } from '@atproto/lex-rpc'
-import { buildAgent, xrpc, xrpcSafe } from '@atproto/lex-rpc'
+import {
+  buildAgent,
+  createWebSocketFetch,
+  xrpc,
+  xrpcSafe,
+} from '@atproto/lex-rpc'
 import { LexAuthFactorError } from './error.js'
 import { com } from './lexicons/index.js'
 import { extractPdsEndpoint, extractXrpcErrorCode } from './util.js'
@@ -47,7 +52,10 @@ export type LoginOptions = PasswordSessionOptions & {
 
 export type PasswordSessionOptions = {
   /**
-   * Custom fetch implementation to use for network requests
+   * Custom fetch implementation to use for network requests. Defaults to the
+   * global `fetch`, wrapped with `createWebSocketFetch()` so that the session
+   * can open XRPC subscriptions, with its credentials. A custom fetch is used
+   * as is: build it with `createWebSocketFetch()` to support subscriptions.
    */
   fetch?: typeof globalThis.fetch
 
@@ -231,7 +239,7 @@ export class PasswordSession implements Agent, AsyncDisposable {
     const sessionPromise = this.#sessionPromise
     const sessionData = await sessionPromise
 
-    const fetch = this.options.fetch ?? globalThis.fetch
+    const fetch = this.options.fetch ?? createWebSocketFetch(globalThis.fetch)
 
     headers.set('authorization', `Bearer ${sessionData.accessJwt}`)
     const initialRes = await fetch(fetchUrl(sessionData, path), {

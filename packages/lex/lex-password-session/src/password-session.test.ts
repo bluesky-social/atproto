@@ -1,10 +1,19 @@
 /* eslint-disable @typescript-eslint/no-namespace */
 
 import { afterAll, assert, beforeAll, describe, expect, it, vi } from 'vitest'
-import { XrpcAuthenticationError, buildAgent, xrpcSafe } from '@atproto/lex-rpc'
+import {
+  XrpcAuthenticationError,
+  buildAgent,
+  xrpcSafe,
+  xrpcSubscribe,
+} from '@atproto/lex-rpc'
 import { l } from '@atproto/lex-schema'
 import { LexRouter, LexServerAuthError } from '@atproto/lex-server'
-import { type Server, serve } from '@atproto/lex-server/nodejs'
+import {
+  type Server,
+  serve,
+  upgradeWebSocket,
+} from '@atproto/lex-server/nodejs'
 import { LexAuthFactorError } from './error.js'
 import { com } from './lexicons/index.js'
 import { AuthVerifier } from './password-session-utils.test.js'
@@ -43,6 +52,14 @@ namespace app {
         'app.example.expiredToken',
         l.params(),
         l.payload(),
+      )
+    }
+
+    export namespace subscribeSelf {
+      export const main = l.subscription(
+        'app.example.subscribeSelf',
+        l.params(),
+        l.object({ did: l.string({ format: 'did' }) }),
       )
     }
   }
@@ -144,7 +161,13 @@ describe(PasswordSession, () => {
     const { port } = entrywayServer.address() as { port: number }
     entrywayOrigin = `http://localhost:${port}`
 
-    const pdsRouter = new LexRouter()
+    const pdsRouter = new LexRouter({ upgradeWebSocket })
+      .add(app.example.subscribeSelf, {
+        auth: authVerifier.accessStrategy,
+        handler: async function* ({ credentials: { session } }) {
+          yield { did: session.did }
+        },
+      })
       .add(app.example.customMethod, {
         auth: authVerifier.accessStrategy,
         handler: async ({ input, credentials: { session } }) => {
@@ -263,6 +286,30 @@ describe(PasswordSession, () => {
     expect(deletedResponse.cause).toMatchObject({
       message: 'Logged out',
     })
+  })
+
+  it('subscribes on its PDS, with its credentials', async () => {
+    const session = await PasswordSession.login({
+      ...defaultOptions,
+      service: entrywayOrigin,
+      identifier: 'alice',
+      password: 'password123',
+      authFactorToken: '2fa-token',
+    })
+
+    // The access token goes with the handshake, to the PDS from the session's
+    // DID document (not the entryway it logged in through).
+    const messages = []
+    for await (const message of xrpcSubscribe(
+      session,
+      app.example.subscribeSelf,
+      { shouldReconnect: false },
+    )) {
+      messages.push(message)
+    }
+    expect(messages).toEqual([{ did: 'did:example:alice' }])
+
+    await session.logout()
   })
 
   it('fails to perform unauthenticated call', async () => {

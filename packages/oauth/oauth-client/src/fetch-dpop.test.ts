@@ -1,5 +1,10 @@
+import { once } from 'node:events'
+import { createServer } from 'node:http'
+import type { AddressInfo } from 'node:net'
 import { describe, expect, it, vi } from 'vitest'
+import { WebSocketServer } from 'ws'
 import type { Key } from '@atproto/jwk'
+import { createWebSocketFetch } from '@atproto/ws-client'
 import { SimpleStoreMemory } from '@atproto-labs/simple-store-memory'
 import { dpopFetchWrapper } from './fetch-dpop.js'
 
@@ -123,5 +128,64 @@ describe(dpopFetchWrapper, () => {
     })
 
     await expect(par()).rejects.toBeInstanceOf(TypeError)
+  })
+})
+
+describe('dpopFetchWrapper over a WebSocket handshake', () => {
+  it('retries a handshake refused with a use_dpop_nonce challenge', async () => {
+    const proofs: { nonce?: string; htm: string; htu: string }[] = []
+    const server = createServer()
+    const wss = new WebSocketServer({
+      server,
+      verifyClient: ({ req }, callback) => {
+        const proof = JSON.parse(String(req.headers['dpop']))
+        proofs.push(proof)
+        if (proof.nonce === 'nonce-1') callback(true)
+        else {
+          callback(false, 401, 'Unauthorized', {
+            'WWW-Authenticate': 'DPoP error="use_dpop_nonce"',
+            'DPoP-Nonce': 'nonce-1',
+          })
+        }
+      },
+    })
+    await once(server.listen(0), 'listening')
+    const { port } = server.address() as AddressInfo
+    const url = `http://localhost:${port}/xrpc/io.example.subscribe`
+
+    // A resource server request, as OAuthSession makes them, through a fetch
+    // that can open WebSockets.
+    const dpopFetch = dpopFetchWrapper<void>({
+      key,
+      nonces: new SimpleStoreMemory({ max: 10 }),
+      isAuthServer: false,
+      fetch: createWebSocketFetch(),
+    })
+    const controller = new AbortController()
+
+    try {
+      const response = await dpopFetch(url, {
+        headers: {
+          connection: 'Upgrade',
+          upgrade: 'websocket',
+          authorization: 'DPoP access-token',
+        },
+        signal: controller.signal,
+      })
+
+      expect(response.status).toBe(101)
+      expect(proofs.map((p) => p.nonce)).toEqual([undefined, 'nonce-1'])
+      // The handshake is an HTTP request: its proof is bound to the http URL.
+      expect(proofs.map((p) => [p.htm, p.htu])).toEqual([
+        ['GET', url],
+        ['GET', url],
+      ])
+    } finally {
+      controller.abort() // closes the connection (nobody took it over)
+      for (const ws of wss.clients) ws.terminate()
+      wss.close()
+      server.closeAllConnections()
+      server.close()
+    }
   })
 })

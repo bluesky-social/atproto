@@ -1,9 +1,13 @@
-import { HEADERS_SUPPORTED, createTransport } from '#transport'
-import type { DataMode } from './message-channel.js'
+import { HEADERS_SUPPORTED, createTransport, openWebSocket } from '#transport'
+import type { DataMode, MessageOf } from './message-channel.js'
 import {
-  type Awaitable,
+  type WebSocketFetch,
+  bindWebSocketFetch,
+} from './websocket-response.js'
+import {
   type WebSocketIterable,
   type WebSocketOptions,
+  type WebSocketUrl,
   websocketFactory,
 } from './websocket.js'
 
@@ -21,9 +25,16 @@ export type {
 export type { HeadersInit, Sender } from './transport/transport.js'
 export type {
   Awaitable,
+  WebSocketHandshakeInit,
   WebSocketIterable,
   WebSocketOptions,
+  WebSocketUrl,
 } from './websocket.js'
+export type { WebSocketFetch } from './websocket-response.js'
+export {
+  WebSocketResponse,
+  isWebSocketHandshake,
+} from './websocket-response.js'
 
 export { CloseCode } from './lib/close-codes.js'
 export {
@@ -33,6 +44,7 @@ export {
   HeartbeatTimeoutError,
   IdleTimeoutError,
   SocketError,
+  UnexpectedResponseError,
   WebSocketClientError,
 } from './lib/errors.js'
 export {
@@ -50,29 +62,59 @@ export {
 // @NOTE Must be explicitly typed a boolean
 export const HEADERS_SUPPORTED_PLATFORM: boolean = HEADERS_SUPPORTED
 
-export type NodeWebSocketOptions<M extends DataMode = 'auto'> =
-  WebSocketOptions<M>
-export type BrowserWebSocketOptions<M extends DataMode = 'auto'> = Omit<
-  WebSocketOptions<M>,
-  'headers'
->
+export type NodeWebSocketOptions<
+  M extends DataMode = 'auto',
+  T = MessageOf<M>,
+> = WebSocketOptions<M, T>
+export type BrowserWebSocketOptions<
+  M extends DataMode = 'auto',
+  T = MessageOf<M>,
+> = Omit<WebSocketOptions<M, T>, 'headers'>
 
 /**
  * A function allows building an isomorphic {@link WebSocketIterable}.
  */
 export function websocket(
-  url: string | URL | (() => Awaitable<string | URL>),
+  url: WebSocketUrl,
   options?: WebSocketOptions<'auto'>,
 ): WebSocketIterable<'auto'>
-export function websocket<M extends DataMode>(
-  url: string | URL | (() => Awaitable<string | URL>),
+export function websocket<M extends DataMode, T = MessageOf<M>>(
+  url: WebSocketUrl,
   options: M extends 'auto'
-    ? WebSocketOptions<'auto'>
-    : WebSocketOptions<M> & { dataMode: M },
-): WebSocketIterable<M>
-export function websocket<M extends DataMode>(
-  url: string | URL | (() => Awaitable<string | URL>),
-  options: WebSocketOptions<M> = {},
-): WebSocketIterable<M> {
+    ? WebSocketOptions<'auto', T>
+    : WebSocketOptions<M, T> & { dataMode: M },
+): WebSocketIterable<M, T>
+export function websocket<M extends DataMode, T = MessageOf<M>>(
+  url: WebSocketUrl,
+  options: WebSocketOptions<M, T> = {},
+): WebSocketIterable<M, T> {
   return websocketFactory(url, createTransport, options)
+}
+
+/**
+ * Wraps `fetch` so that it can also open WebSockets: a `GET` request with an
+ * `Upgrade: websocket` header (such as the {@link WebSocketHandshakeInit} that
+ * `websocket()` hands to a {@link WebSocketUrl} function) performs the opening
+ * handshake, sending the request's headers, and resolves with a
+ * {@link WebSocketResponse} (status `101`) once the connection is open, or
+ * with the server's response if it refused the upgrade. Every other request is
+ * passed to `fetch` untouched.
+ *
+ * Since a handshake is just a request, it goes through whatever wraps this
+ * fetch — adding credentials, signing proofs of possession, retrying on a
+ * `401` — and `websocket()` takes the connection over from the response:
+ *
+ * ```ts
+ * const fetch = withCredentials(createWebSocketFetch())
+ * websocket((init) => fetch('https://example.com/subscribe', init))
+ * ```
+ *
+ * In the browser, where the WebSocket API can neither send headers nor expose
+ * the handshake response, a handshake carrying headers is refused, and a
+ * refused upgrade rejects (with a `SocketError`) instead of resolving.
+ */
+export function createWebSocketFetch(
+  fetch: typeof globalThis.fetch = globalThis.fetch,
+): WebSocketFetch {
+  return bindWebSocketFetch(openWebSocket, fetch)
 }

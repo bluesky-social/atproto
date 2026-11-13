@@ -1,4 +1,5 @@
 import type { DidString } from '@atproto/lex-schema'
+import { createWebSocketFetch } from '@atproto/ws-client'
 import { mergeHeaders } from './util.js'
 
 /**
@@ -97,7 +98,8 @@ export type AgentConfig = {
    * Bring your own fetch implementation. Typically useful for testing, logging,
    * mocking, or adding retries, session management, signatures, proof of
    * possession (DPoP), SSRF protection, etc. Defaults to the global `fetch`
-   * function.
+   * function, wrapped with `createWebSocketFetch()`. A custom fetch must be
+   * built on `createWebSocketFetch()` to support XRPC subscriptions.
    */
   fetch?: typeof globalThis.fetch
 
@@ -181,16 +183,17 @@ export function buildAgent(options: Agent | AgentOptions): Agent {
     )
   }
 
-  const {
-    did,
-    service,
-    fetch = globalThis.fetch,
-    headers: defaultHeaders,
-  } = config
+  const { did, service, headers: defaultHeaders } = config
 
-  if (typeof fetch !== 'function') {
+  if (typeof (config.fetch ?? globalThis.fetch) !== 'function') {
     throw new TypeError('fetch() is not available in this environment')
   }
+
+  // The default fetch can also open WebSockets, for XRPC subscriptions. A
+  // caller provided one is used as is: wrapping it would perform handshakes
+  // outside of it (bypassing the credentials or retries it adds), so it is
+  // theirs to build with `createWebSocketFetch()`.
+  const fetch = config.fetch ?? createWebSocketFetch(globalThis.fetch)
 
   return {
     get did() {

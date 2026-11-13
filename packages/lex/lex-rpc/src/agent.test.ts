@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
+import { SocketError } from '@atproto/ws-client'
 import {
   type Agent,
   type AgentConfig,
@@ -154,6 +155,37 @@ describe(buildAgent, () => {
       } finally {
         globalThis.fetch = originalFetch
       }
+    })
+  })
+
+  describe('WebSocket handshakes', () => {
+    const handshake = {
+      headers: { connection: 'Upgrade', upgrade: 'websocket' },
+    }
+
+    it('performs them with the default fetch', async () => {
+      using fetch = vi.spyOn(globalThis, 'fetch')
+      const agent = buildAgent('http://localhost:1')
+
+      // Dialed as a WebSocket (refused here) rather than handed to fetch(),
+      // which would reject the upgrade header.
+      await expect(
+        agent.fetchHandler('/xrpc/io.example.sub', handshake),
+      ).rejects.toBeInstanceOf(SocketError)
+      expect(fetch).not.toHaveBeenCalled()
+
+      fetch.mockResolvedValueOnce(new Response())
+      await agent.fetchHandler('/xrpc/io.example.query', { method: 'GET' })
+      expect(fetch).toHaveBeenCalledOnce()
+    })
+
+    it('leaves them to a custom fetch', async () => {
+      const fetch = vi.fn(async () => new Response())
+      const agent = buildAgent({ service: 'https://example.com', fetch })
+
+      await agent.fetchHandler('/xrpc/io.example.sub', handshake)
+
+      expect(fetch).toHaveBeenCalledOnce()
     })
   })
 

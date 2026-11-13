@@ -10,8 +10,10 @@ import {
   XrpcAuthenticationError,
   XrpcInvalidResponseError,
   XrpcResponseError,
+  XrpcSubscriptionValidationError,
   buildAgent,
 } from '../src/index.js'
+import { frame, startWebSocketServer } from './_util.js'
 import {
   type ApplyWritesOutputBody,
   type CreateRecordOutputBody,
@@ -1145,6 +1147,136 @@ describe(Client, () => {
         })
 
         expect(fetchHandler).toHaveBeenCalledTimes(1)
+      })
+    })
+  })
+
+  describe('subscriptions', () => {
+    // RFC 6455 normal closure
+    const NORMAL_CLOSURE = 1000
+    // maxReconnectSeconds: 0 caps the backoff at 0ms, so reconnects don't wait.
+    const noBackoff = { maxReconnectSeconds: 0 }
+
+    const eventFrame = (seq: number, text = `event ${seq}`) =>
+      frame({ op: 1, t: '#event' }, { seq, text })
+    const invalidEventFrame = () =>
+      frame({ op: 1, t: '#event' }, { seq: 'one', text: 'x' })
+
+    async function drain<T>(
+      gen: AsyncGenerator<T, void, unknown>,
+    ): Promise<T[]> {
+      const out: T[] = []
+      for await (const m of gen) out.push(m)
+      return out
+    }
+
+    describe('subscribe', () => {
+      it('subscribes on the origin of the agent', async () => {
+        await using server = await startWebSocketServer(({ ws }) => {
+          ws.send(eventFrame(1), () => ws.close(NORMAL_CLOSURE))
+        })
+        const client = new Client({ service: server.origin })
+        const messages = await drain(
+          client.subscribe(com.example.subscribeEvents, {
+            params: { cursor: 3 },
+          }),
+        )
+        expect(messages).toEqual([
+          {
+            $type: 'com.example.subscribeEvents#event',
+            seq: 1,
+            text: 'event 1',
+          },
+        ])
+        expect(server.requests.map((r) => r.url)).toEqual([
+          '/xrpc/com.example.subscribeEvents?cursor=3',
+        ])
+      })
+
+      it('applies the client validation defaults', async () => {
+        await using server = await startWebSocketServer(({ ws }) => {
+          ws.send(invalidEventFrame(), () => ws.close(NORMAL_CLOSURE))
+        })
+        const client = new Client(server.origin, { validateResponse: false })
+        const messages = await drain(
+          client.subscribe(com.example.subscribeEvents),
+        )
+        expect(messages).toHaveLength(1)
+      })
+
+      it('lets options override the client defaults', async () => {
+        await using server = await startWebSocketServer(({ ws }) => {
+          ws.send(invalidEventFrame())
+        })
+        const client = new Client(server.origin, { validateResponse: false })
+        await expect(
+          drain(
+            client.subscribe(com.example.subscribeEvents, {
+              ...noBackoff,
+              validateResponse: true,
+            }),
+          ),
+        ).rejects.toBeInstanceOf(XrpcSubscriptionValidationError)
+      })
+    })
+
+    describe('subscribeRepos', () => {
+      const NSID = 'com.atproto.sync.subscribeRepos'
+      const identityFrame = (seq: number) =>
+        frame(
+          { op: 1, t: '#identity' },
+          { seq, did: 'did:plc:alice', time: '2026-01-01T00:00:00.000Z' },
+        )
+
+      it('resumes from the last received seq after a reconnect', async () => {
+        await using server = await startWebSocketServer(({ ws, index }) => {
+          if (index === 0) {
+            ws.send(identityFrame(1))
+            // #info carries no seq, so it leaves the cursor where it was
+            ws.send(frame({ op: 1, t: '#info' }, { name: 'OutdatedCursor' }))
+            ws.send(identityFrame(2), () => ws.terminate())
+          } else {
+            ws.send(identityFrame(3), () => ws.close(NORMAL_CLOSURE))
+          }
+        })
+        const client = new Client(server.origin)
+        const messages = await drain(
+          client.subscribeRepos({ ...noBackoff, cursor: 0 }),
+        )
+        expect(messages.map((m) => m.$type)).toEqual([
+          `${NSID}#identity`,
+          `${NSID}#info`,
+          `${NSID}#identity`,
+          `${NSID}#identity`,
+        ])
+        expect(server.requests.map((r) => r.url)).toEqual([
+          `/xrpc/${NSID}?cursor=0`,
+          `/xrpc/${NSID}?cursor=2`,
+        ])
+      })
+
+      it('starts from the live tip without a cursor', async () => {
+        await using server = await startWebSocketServer(({ ws }) => {
+          ws.close(NORMAL_CLOSURE)
+        })
+        await drain(new Client(server.origin).subscribeRepos(noBackoff))
+        expect(server.requests.map((r) => r.url)).toEqual([`/xrpc/${NSID}`])
+      })
+
+      it('uses a cursor function on every connection without tracking', async () => {
+        await using server = await startWebSocketServer(({ ws, index }) => {
+          if (index === 0) ws.send(identityFrame(5), () => ws.terminate())
+          else ws.close(NORMAL_CLOSURE)
+        })
+        const cursor = vi.fn(async () => 1)
+        await drain(
+          new Client(server.origin).subscribeRepos({ ...noBackoff, cursor }),
+        )
+        expect(cursor).toHaveBeenCalledTimes(2)
+        expect(server.requests.map((r) => r.url)).toEqual([
+          `/xrpc/${NSID}?cursor=1`,
+          `/xrpc/${NSID}?cursor=1`,
+        ])
       })
     })
   })

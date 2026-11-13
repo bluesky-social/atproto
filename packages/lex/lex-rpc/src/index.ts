@@ -1,6 +1,10 @@
 export * from './agent.js'
 export * from './errors.js'
 export * from './response.js'
+export * from './subscription.js'
+export * from './subscription-errors.js'
 export * from './types.js'
 export * from './util.js'
 export * from './xrpc.js'
+
+export { createWebSocketFetch } from '@atproto/ws-client'
