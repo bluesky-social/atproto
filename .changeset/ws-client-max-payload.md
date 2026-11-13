@@ -2,4 +2,4 @@
 '@atproto/ws-client': patch
 ---
 
-Add the `maxPayload` option (Node.js): a larger message fails the connection with a `MessageTooBigError` and a `1009` close.
+Add the `maxPayload` option (Node.js), the size of the largest message accepted (default 100 MiB).

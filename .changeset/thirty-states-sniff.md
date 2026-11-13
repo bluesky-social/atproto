@@ -2,4 +2,4 @@
 '@atproto-labs/fetch-node': patch
 ---
 
-Make `safeFetchWrap`'s return value explicit
+Type the return value of `safeFetchWrap()` as `Fetch<C>`, the type of the `fetch` it wraps.

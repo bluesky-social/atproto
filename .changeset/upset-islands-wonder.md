@@ -1,5 +1,5 @@
 ---
-'@atproto/repo': minor
+'@atproto/repo': patch
 ---
 
-**Breaking**: This package is now isomorphic, which means it can run in any JS environment. Any NodeJS specific APIs were dropped in favor of more generic ones.
+This package is now isomorphic: it no longer depends on Node.js built-ins or on `@atproto/common`, and runs in any JavaScript environment.

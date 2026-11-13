@@ -1,5 +1,5 @@
 ---
-"@atproto/sync": patch
+'@atproto/sync': patch
 ---
 
-Improve performances of `isValidStatus` util
+Speed up account status validation in `parseAccount()`.

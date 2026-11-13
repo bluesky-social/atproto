@@ -2,4 +2,4 @@
 '@atproto-labs/did-resolver': patch
 ---
 
-Make `createDidResolver` options argument optional
+Make the `createDidResolver()` options argument optional.

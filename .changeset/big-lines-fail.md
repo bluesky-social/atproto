@@ -1,5 +1,5 @@
 ---
-'@atproto/aws': minor
+'@atproto/aws': patch
 ---
 
-Properly mark this as a NodeJS library
+Build as a Node.js library, against the Node.js typings rather than the isomorphic ones, and drop the unused `@atproto/common-web` dependency.
