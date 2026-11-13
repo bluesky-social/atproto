@@ -7,19 +7,15 @@ export function createRouter(ctx: AppContext): Router {
   const router = Router()
 
   router.get('/blob-source/:did/:cid', async (req, res, next) => {
+    res.set('Cache-Control', 'no-store')
+    res.set('X-Content-Type-Options', 'nosniff')
     try {
       const source = await resolveBlobSource(
         ctx,
         req.params.did,
         req.params.cid,
       )
-      res.set('Cache-Control', 'no-store')
-      res.set('X-Content-Type-Options', 'nosniff')
-      res.json(
-        source.takenDown
-          ? { takenDown: true }
-          : { takenDown: false, origin: source.origin },
-      )
+      res.json({ origin: source.origin })
     } catch (err) {
       next(
         isHttpError(err)

@@ -175,8 +175,6 @@ export async function streamBlob(
   factory: StreamBlobFactory,
 ) {
   const source = await resolveBlobSource(ctx, options.did, options.cid)
-  if (source.takenDown) throw createError(404, 'Blob not found')
-
   const { did, cid } = source
   const url = new URL(`/xrpc/com.atproto.sync.getBlob`, source.origin)
   url.searchParams.set('did', did)
@@ -254,7 +252,8 @@ function parseBlobParams(params: { cid: string; did: string }) {
 type BlobSourceResolution = {
   did: AtprotoDid
   cid: Cid
-} & ({ takenDown: true } | { takenDown: false; origin: string })
+  origin: string
+}
 
 /** Resolve blob policy and its PDS without accessing the blob itself. */
 export async function resolveBlobSource(
@@ -275,7 +274,7 @@ export async function resolveBlobSource(
   ])
 
   if (takenDown) {
-    return { did, cid, takenDown: true }
+    throw createError(404, 'Blob not found')
   }
 
   const services = identity && unpackIdentityServices(identity.services)
@@ -290,7 +289,7 @@ export async function resolveBlobSource(
     throw createError(404, 'Origin not found')
   }
 
-  return { did, cid, takenDown: false, origin: new URL(pds).origin }
+  return { did, cid, origin: new URL(pds).origin }
 }
 
 function getBlobHeaders(

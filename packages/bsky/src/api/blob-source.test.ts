@@ -78,10 +78,7 @@ describe('blob source', () => {
     const response = await request(fixture.ctx, `/blob-source/${DID}/${CID}`)
 
     expect(response.status).toBe(200)
-    expect(JSON.parse(response.text)).toEqual({
-      takenDown: false,
-      origin: PDS_ENDPOINT,
-    })
+    expect(JSON.parse(response.text)).toEqual({ origin: PDS_ENDPOINT })
     expect(response.headers.get('cache-control')).toBe('no-store')
     expect(response.headers.get('content-type')).toBe(
       'application/json; charset=utf-8',
@@ -102,8 +99,8 @@ describe('blob source', () => {
     const source = await request(fixture.ctx, `/blob-source/${DID}/${CID}`)
     const blob = await request(fixture.ctx, `/blob/${DID}/${CID}`)
 
-    expect(source.status).toBe(200)
-    expect(JSON.parse(source.text)).toEqual({ takenDown: true })
+    expect(source.status).toBe(404)
+    expect(source.headers.get('cache-control')).toBe('no-store')
     expect(blob.status).toBe(404)
     expect(fixture.getBlobTakedown).toHaveBeenCalledTimes(2)
     expect(fixture.stream).not.toHaveBeenCalled()
@@ -117,10 +114,7 @@ describe('blob source', () => {
     )
 
     expect(response.status).toBe(200)
-    expect(JSON.parse(response.text)).toEqual({
-      takenDown: false,
-      origin: PDS_ENDPOINT,
-    })
+    expect(JSON.parse(response.text)).toEqual({ origin: PDS_ENDPOINT })
     expect(fixture.getBlobTakedown).toHaveBeenCalledWith({
       did: DID,
       cid: CID.toString(),
