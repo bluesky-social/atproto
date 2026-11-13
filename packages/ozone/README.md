@@ -21,6 +21,10 @@ The setting applies to reports submitted through both `com.atproto.moderation.cr
 
 Language and embed tags, manually applied tags, and existing report tags are unaffected.
 
+## Language tags
+
+By default, Ozone adds language tags to all record types. Set `OZONE_LANGUAGE_TAG_RECORD_TYPES` to a comma-separated list of record NSIDs and namespace wildcards to restrict automatic language tagging of records, for example `app.bsky.*` or `app.bsky.feed.post`. Multiple entries can be combined, and `*` allows all records. Restart the API after changing this setting. An unset or empty value preserves the default. The filter does not affect account, message, or conversation subjects, other tags, or existing language tags.
+
 ## Report reason rejection metrics
 
 Set `OZONE_METRICS_PORT` on the API to serve Prometheus metrics at `/metrics` on a separate HTTP port. Keep this port accessible only to your monitoring system. When unset, no Prometheus metrics are collected.

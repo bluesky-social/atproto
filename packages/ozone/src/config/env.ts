@@ -18,6 +18,7 @@ export const readEnv = (): OzoneEnvironment => {
     labelStreamBackfillRate: envInt('OZONE_LABEL_STREAM_BACKFILL_RATE'),
     labelQueryWildcardsEnabled: envBool('OZONE_LABEL_QUERY_WILDCARDS_ENABLED'),
     reportTagsDisabled: envBool('OZONE_REPORT_TAGS_DISABLED'),
+    languageTagRecordTypes: envStr('OZONE_LANGUAGE_TAG_RECORD_TYPES'),
     appviewUrl: envStr('OZONE_APPVIEW_URL') as UriString,
     appviewDid: envStr('OZONE_APPVIEW_DID') as DidString,
     appviewPushEvents: envBool('OZONE_APPVIEW_PUSH_EVENTS'),
@@ -89,6 +90,7 @@ export type OzoneEnvironment = {
   labelStreamBackfillRate?: number
   labelQueryWildcardsEnabled?: boolean
   reportTagsDisabled?: boolean
+  languageTagRecordTypes?: string
   appviewUrl?: UriString
   appviewDid?: DidString
   appviewPushEvents?: boolean

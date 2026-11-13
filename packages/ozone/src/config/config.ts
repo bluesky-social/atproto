@@ -6,6 +6,7 @@ import {
   type UriString,
   isDatetimeString,
   isDidString,
+  isNsidString,
   toDatetimeString,
 } from '@atproto/lex-schema'
 import type { OzoneEnvironment } from './env.js'
@@ -37,6 +38,9 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
     labelStreamBackfillRate: env.labelStreamBackfillRate ?? 2000,
     labelQueryWildcardsEnabled: env.labelQueryWildcardsEnabled ?? false,
     reportTagsDisabled: env.reportTagsDisabled ?? false,
+    languageTagRecordTypes: parseLanguageTagRecordTypes(
+      env.languageTagRecordTypes,
+    ),
   }
 
   assert(env.dbPostgresUrl, 'dbPostgresUrl is required')
@@ -237,6 +241,25 @@ export type ServiceConfig = {
   labelQueryWildcardsEnabled?: boolean
   /** Disable automatic report-reason tags; false by default. */
   reportTagsDisabled?: boolean
+  /** Record collections eligible for automatic language tagging; unset allows all. */
+  languageTagRecordTypes?: string[]
+}
+
+function parseLanguageTagRecordTypes(
+  value: string | undefined,
+): string[] | undefined {
+  if (!value?.trim()) return undefined
+  const patterns = value.split(',').map((pattern) => pattern.trim())
+  assert(
+    patterns.every((pattern) => {
+      if (pattern === '*') return true
+      return isNsidString(
+        pattern.endsWith('.*') ? `${pattern.slice(0, -2)}.record` : pattern,
+      )
+    }),
+    'OZONE_LANGUAGE_TAG_RECORD_TYPES must be a comma-separated list of record NSIDs or namespace wildcards',
+  )
+  return patterns
 }
 
 export type BlobDivertConfig = {
