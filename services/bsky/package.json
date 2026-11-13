@@ -3,12 +3,10 @@
   "private": true,
   "type": "module",
   "files": [
-    "api.ts",
-    "tracer.ts"
+    "api.ts"
   ],
   "dependencies": {
     "@atproto/bsky": "workspace:^",
-    "@atproto/crypto": "workspace:^",
-    "dd-trace": "^5.103.0"
+    "@atproto/crypto": "workspace:^"
   }
 }

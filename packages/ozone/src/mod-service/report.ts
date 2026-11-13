@@ -265,10 +265,8 @@ export type FindReportsForSubjectParams = {
    * The URI of the subject for which to find reports. If not provided, will match repo-level subjects.
    */
   subjectUri?: AtUriString | null
-  /**
-   * Narrow synthetic message URIs to the action's conversation.
-   */
-  subjectConvoId?: string
+  /** Conversation containing a message subject, when known. */
+  messageConvoId?: string
   /**
    * The IDs of the reports to include. If not provided, all reports are considered.
    */
@@ -347,13 +345,14 @@ export async function findReportsForSubject(
         ? uri.collection === CHAT_MESSAGE_COLLECTION
           ? eb.and([
               eb('r.subjectMessageId', '=', uri.rkey),
-              ...(params.subjectConvoId !== undefined
+              ...(params.messageConvoId !== undefined
                 ? [
-                    eb(
-                      sql<string>`coalesce(${eb.ref('r.subjectConvoId')}, '')`,
-                      '=',
-                      params.subjectConvoId,
-                    ),
+                    params.messageConvoId
+                      ? eb('r.subjectConvoId', '=', params.messageConvoId)
+                      : eb.or([
+                          eb('r.subjectConvoId', 'is', null),
+                          eb('r.subjectConvoId', '=', ''),
+                        ]),
                   ]
                 : []),
             ])
@@ -398,11 +397,12 @@ export async function findReportsForSubject(
             return eb.and([
               eb('me.subjectType', '=', chat.bsky.convo.defs.messageRef.$type),
               eb('r.subjectMessageId', '=', target.messageId),
-              eb(
-                sql<string>`coalesce(${eb.ref('r.subjectConvoId')}, '')`,
-                '=',
-                target.convoId,
-              ),
+              target.convoId
+                ? eb('r.subjectConvoId', '=', target.convoId)
+                : eb.or([
+                    eb('r.subjectConvoId', 'is', null),
+                    eb('r.subjectConvoId', '=', ''),
+                  ]),
             ])
           }
           return eb.and([
@@ -707,7 +707,7 @@ export type ProcessReportActionParams = {
   subjectDid: DidString
   subjectUri: string | null
   subjectType: string
-  subjectConvoId?: string
+  messageConvoId?: string
   eventId: number
   eventType: string
   createdBy: DidString
@@ -803,8 +803,8 @@ export async function processReportAction(
   const matchingReports = await findReportsForSubject(db, {
     subjectDid,
     subjectUri: subjectUri as AtUriString,
+    messageConvoId: params.messageConvoId,
     reportIds: reportAction.ids,
-    subjectConvoId: params.subjectConvoId,
     reportTypes: reportAction.types,
     targetAll: reportAction.all || reportAction.allOwned,
     includeAllOwned: reportAction.allOwned,

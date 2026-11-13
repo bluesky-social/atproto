@@ -225,8 +225,7 @@ export class AtmosphereTimelineHydrator implements TimelineHydration {
       view,
       viewerState: {
         subscribed: publication
-          ? this.state.externalPublicationSubscriptions?.get(publication) ===
-            true
+          ? !!this.state.externalPublicationSubscriptions?.get(publication)
           : false,
       },
       bskyPostRef,
@@ -324,7 +323,7 @@ export class AtmosphereTimelineHydrator implements TimelineHydration {
         const subscription = publication
           ? this.state.externalPublicationSubscriptions?.get(publication)
           : false
-        subscribed = subscription === true
+        subscribed = !!subscription
         groupable = subscription === false
       } else if (place.stream.livestream.$matches(record)) {
         groupable = !!record.endedAt

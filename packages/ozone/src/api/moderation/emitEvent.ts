@@ -1,5 +1,4 @@
 import type { DidString } from '@atproto/lex-schema'
-import { AtUri } from '@atproto/syntax'
 import {
   AuthRequiredError,
   ForbiddenError,
@@ -55,6 +54,18 @@ const handleModerationEvent = async ({
     input.body.subject,
     input.body.subjectBlobCids,
   )
+
+  // Ozone dispatches takedown enforcement only for repositories and records.
+  if (subject.isMessage() && (isTakedownEvent || isReverseTakedownEvent)) {
+    throw new InvalidRequestError(
+      'Message takedowns are not supported; apply the action to the account instead',
+    )
+  }
+  if (subject.isMessage() && isLabelEvent) {
+    throw new InvalidRequestError(
+      'Message labels are not supported; apply labels to the account instead',
+    )
+  }
 
   if (
     input.body.reportAction?.subjects !== undefined &&
@@ -348,20 +359,13 @@ const handleModerationEvent = async ({
 
     // Update reports if reportAction was provided
     if (input.body.reportAction) {
-      let subjectUri = subject.isRecord() ? subject.uri : null
-      if (subject.isMessage()) {
-        subjectUri = AtUri.make(
-          subject.did,
-          CHAT_MESSAGE_COLLECTION,
-          subject.messageId,
-        ).href
-      } else if (subject.isConvo()) {
-        subjectUri = AtUri.make(
-          subject.did,
-          CHAT_CONVO_COLLECTION,
-          subject.convoId,
-        ).href
-      }
+      const subjectUri = subject.isRecord()
+        ? subject.uri
+        : subject.isMessage()
+          ? `at://${subject.did}/${CHAT_MESSAGE_COLLECTION}/${subject.messageId}`
+          : subject.isConvo()
+            ? `at://${subject.did}/${CHAT_CONVO_COLLECTION}/${subject.convoId}`
+            : null
       try {
         await processReportAction({
           inboxStartAt: ctx.cfg.inbox.startAt,
@@ -371,8 +375,8 @@ const handleModerationEvent = async ({
           metadata,
           subjectDid: subject.did,
           subjectUri,
+          messageConvoId: subject.isMessage() ? subject.convoId : undefined,
           subjectType: subject.info().subjectType,
-          subjectConvoId: subject.isMessage() ? subject.convoId : undefined,
           eventId: result.event.id,
           eventType: event.$type,
           createdBy,
@@ -438,6 +442,23 @@ const handleModerationEvent = async ({
       (isTakedownEvent || isAcknowledgeEvent) &&
       result.event.meta?.acknowledgeAccountSubjects
     ) {
+      if (subject.isRepo()) {
+        await processReportAction({
+          db: dbTxn,
+          inboxStartAt: ctx.cfg.inbox.startAt,
+          subjectDid: subject.did,
+          subjectUri: null,
+          subjectType: com.atproto.admin.defs.repoRef.$type,
+          eventId: result.event.id,
+          eventType: event.$type,
+          createdBy,
+          reportAction: {
+            allOwned: true,
+            isAutomated: input.body.reportAction?.isAutomated,
+          },
+          metadata: getEventActivityMetadata(input.body.modTool),
+        })
+      }
       await moderationTxn.resolveSubjectsForAccount(
         subject.did,
         createdBy,

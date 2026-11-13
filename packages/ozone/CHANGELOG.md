@@ -1,5 +1,35 @@
 # @atproto/ozone
 
+## 0.14.2
+
+### Patch Changes
+
+- [#5887](https://github.com/bluesky-social/atproto/pull/5887) [`0264f20`](https://github.com/bluesky-social/atproto/commit/0264f20f515311158427f87909b45b84d1d441c8) Thanks [@foysalit](https://github.com/foysalit)! - Link eligible reports on an account and its content to the account action when acknowledging account subjects.
+
+- [#5893](https://github.com/bluesky-social/atproto/pull/5893) [`f0653de`](https://github.com/bluesky-social/atproto/commit/f0653de696169e16dc003f11877b9eb0ae6533c0) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add `app.bsky.unspecced.getAtmosphereTimelineV2`, with actor profiles in `relatedViews`, subject refs for each activity, and publication viewer subscriptions. Livestream views now include `lastSeenAt`.
+
+- [#5880](https://github.com/bluesky-social/atproto/pull/5880) [`e9fbdab`](https://github.com/bluesky-social/atproto/commit/e9fbdab8e2302e3e01ea923c2db5ee4d7ff33681) Thanks [@blackmichael](https://github.com/blackmichael)! - Add optional `photoCount` to gallery views using the dataplane's total `social.grain.gallery.item` backlink count, independently of the hydrated preview items.
+
+- [#5892](https://github.com/bluesky-social/atproto/pull/5892) [`a704f10`](https://github.com/bluesky-social/atproto/commit/a704f10c040a989244cfa578e65f006ff7de0f83) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Expose optional App Store and Google Play links on Atmosphere Explore app cards while preserving optional profiles and profile-first images.
+
+- [#5879](https://github.com/bluesky-social/atproto/pull/5879) [`a44c12d`](https://github.com/bluesky-social/atproto/commit/a44c12d63d3aa72cc78b367f37b186606b1caa8b) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Stop the reporterDid backfill test from dropping and re-adding the column, which raced with other packages' tests on the shared test database.
+
+- [#5869](https://github.com/bluesky-social/atproto/pull/5869) [`a65dc6a`](https://github.com/bluesky-social/atproto/commit/a65dc6a807af0184d68e5d275e9f5d93579cebfc) Thanks [@foysalit](https://github.com/foysalit)! - Fix moderation actions, report matching, and status views for chat messages.
+  Message label, takedown, and reverse-takedown events are rejected; apply those
+  actions to the account instead.
+
+- [#5886](https://github.com/bluesky-social/atproto/pull/5886) [`7e9def8`](https://github.com/bluesky-social/atproto/commit/7e9def8d2076a9859487593c01f11cd35f25a8e7) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Fix the inbox chat-history isolation test to seed historical message labels without using the API that now rejects them.
+- Updated dependencies [[`5c3979b`](https://github.com/bluesky-social/atproto/commit/5c3979b3466bf7df0a0a4f2291000491affc31b9)]:
+  - @atproto/xrpc-server@0.13.12
+
+## 0.14.1
+
+### Patch Changes
+
+- [#5853](https://github.com/bluesky-social/atproto/pull/5853) [`57b7a37`](https://github.com/bluesky-social/atproto/commit/57b7a375f571bf7f42709f93f98d3f9bd000fb6d) Thanks [@blackmichael](https://github.com/blackmichael)! - Add optional hydrated viewBskyPost values alongside existing bskyPostRef fields on Atmosphere timeline activities and Explore articles and livestreams. Reuse post hydration and viewer visibility checks, preserving references and external content when posts are unavailable. Refresh consuming contract inputs.
+  
+  Keep Explore and the Atmosphere timeline available when optional post hydration fails, omitting incomplete post views while retaining external content and references. Preserve request cancellation and failures for required timeline root posts.
+
 ## 0.14.0
 
 ### Minor Changes

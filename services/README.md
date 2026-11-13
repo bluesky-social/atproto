@@ -46,7 +46,6 @@ docker run -d --name bsky --network atproto -p 2584:3000 \
   -e BSKY_BSYNC_URL=http://bsync:3000 \
   -e BSKY_BSYNC_API_KEY=bsync-api-key \
   -e MOD_SERVICE_DID=did:web:ozone \
-  -e DD_TRACE_ENABLED=false \
   bsky:local
 
 docker run -d --name ozone --network atproto -p 2587:3000 \
@@ -60,7 +59,6 @@ docker run -d --name ozone --network atproto -p 2587:3000 \
   -e OZONE_DID_PLC_URL=https://plc.directory \
   -e OZONE_ADMIN_PASSWORD=admin-password \
   -e OZONE_SIGNING_KEY_HEX="$(openssl rand -hex 32)" \
-  -e DD_TRACE_ENABLED=false \
   ozone:local
 
 docker run -d --name pds --network atproto -p 2583:2583 \
@@ -84,7 +82,6 @@ Notes:
 
 - bsky listens on `BSKY_PORT` (2584 by default), not on the image's `PORT`.
 - The PDS derives its public URL from its port when `PDS_HOSTNAME` is unset (`http://localhost:<PDS_PORT>`), and only accepts a non-https public URL in dev mode. Keep the container and host ports the same.
-- `DD_TRACE_ENABLED=false` turns off the Datadog tracer loaded by the bsky and ozone images.
 
 To stop and remove everything:
 

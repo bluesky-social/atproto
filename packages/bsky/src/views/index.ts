@@ -54,7 +54,10 @@ import {
   uriToDid,
   uriToDid as creatorFromUri,
 } from '../util/uris.js'
-import { externalRecordView as externalRecordViewBase } from './external.js'
+import {
+  type ExternalRecordViewOptions,
+  externalRecordView as externalRecordViewBase,
+} from './external.js'
 import {
   MAX_PROFILE_LINKS,
   isAllowedProfileLinkUrl,
@@ -2365,8 +2368,9 @@ export class Views {
     state: HydrationState,
     now = Date.now(),
     cid?: string,
+    options?: ExternalRecordViewOptions,
   ): $Typed<ExternalRecordView> | undefined {
-    return externalRecordViewBase(this, uri, state, now, cid)
+    return externalRecordViewBase(this, uri, state, now, cid, options)
   }
 
   externalEmbed(

@@ -191,13 +191,15 @@ describe('viewer appeal outcomes', () => {
     await assertOutcome(appeal.subjectId, 'denied')
   })
 
-  it.each(['emitEvent', 'closeReports'] as const)(
+  it.each(['emitEvent', 'closeReports', 'accountCascade'] as const)(
     'does not infer a record appeal outcome from an account event via %s',
     async (method) => {
       const appeal = await startAppeal()
       const accountEvent = await mod.emitEvent({
         subject: com.atproto.admin.defs.repoRef.$build({ did: sc.dids.alice }),
-        event: tools.ozone.moderation.defs.modEventAcknowledge.$build({}),
+        event: tools.ozone.moderation.defs.modEventAcknowledge.$build({
+          acknowledgeAccountSubjects: method === 'accountCascade',
+        }),
         ...(method === 'emitEvent' && {
           reportAction: { allOwned: true, ids: [appeal.reportId] },
         }),
@@ -217,6 +219,14 @@ describe('viewer appeal outcomes', () => {
           },
         )
       }
+      const closed = await mod.queryReports({
+        subject: appeal.subjectId,
+        status: 'closed',
+      })
+      expect(
+        closed.reports.find((report) => report.id === appeal.reportId)
+          ?.actionEventIds,
+      ).toEqual([appeal.action.id, accountEvent.id])
       const view = await detail(appeal.subjectId)
       expect(view.appeal).toMatchObject({ state: 'resolved' })
       expect(view.appeal).not.toHaveProperty('outcome')
