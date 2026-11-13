@@ -1,5 +1,17 @@
 # @atproto/api
 
+## 0.31.2
+
+### Patch Changes
+
+- [#5893](https://github.com/bluesky-social/atproto/pull/5893) [`f0653de`](https://github.com/bluesky-social/atproto/commit/f0653de696169e16dc003f11877b9eb0ae6533c0) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add `app.bsky.unspecced.getAtmosphereTimelineV2`, with actor profiles in `relatedViews`, subject refs for each activity, and publication viewer subscriptions. Livestream views now include `lastSeenAt`.
+
+- [#5892](https://github.com/bluesky-social/atproto/pull/5892) [`a704f10`](https://github.com/bluesky-social/atproto/commit/a704f10c040a989244cfa578e65f006ff7de0f83) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Expose optional App Store and Google Play links on getAtmosphereApps cards, preserving optional profiles and profile-first images.
+
+- [#5880](https://github.com/bluesky-social/atproto/pull/5880) [`e9fbdab`](https://github.com/bluesky-social/atproto/commit/e9fbdab8e2302e3e01ea923c2db5ee4d7ff33681) Thanks [@blackmichael](https://github.com/blackmichael)! - Add optional `photoCount` to gallery views using the dataplane's total `social.grain.gallery.item` backlink count, independently of the hydrated preview items.
+
+- [#5892](https://github.com/bluesky-social/atproto/pull/5892) [`a704f10`](https://github.com/bluesky-social/atproto/commit/a704f10c040a989244cfa578e65f006ff7de0f83) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Expose optional App Store and Google Play links on Atmosphere Explore app cards while preserving optional profiles and profile-first images.
+
 ## 0.31.1
 
 ### Patch Changes
