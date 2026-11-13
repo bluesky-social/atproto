@@ -7,7 +7,7 @@ import { loadAtmosphereTimeline } from './atmosphere-pagination.js'
 export default function (server: Server, ctx: AppContext) {
   server.add(app.bsky.unspecced.getAtmosphereTimeline, {
     auth: ctx.authVerifier.standard,
-    handler: async ({ auth, params, req }) => {
+    handler: async ({ auth, params, req, signal }) => {
       const now = Date.now()
       const viewer = auth.credentials.iss
       const features = ctx.featureGatesClient.scope(
@@ -27,6 +27,7 @@ export default function (server: Server, ctx: AppContext) {
         hydrateCtx,
         params.cursor,
         now,
+        signal,
       )
       return {
         encoding: 'application/json',

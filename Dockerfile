@@ -114,7 +114,7 @@ COPY --from=bsky-build /deploy /app/services/bsky
 EXPOSE 3000
 ENV PORT=3000
 USER node
-CMD ["node", "--heapsnapshot-signal=SIGUSR2", "--enable-source-maps", "--import=./tracer.ts", "--import=@atproto/bsky/telemetry", "api.ts"]
+CMD ["node", "--heapsnapshot-signal=SIGUSR2", "--enable-source-maps", "--import=@atproto/bsky/telemetry", "api.ts"]
 
 FROM runtime AS bsync
 WORKDIR /app/services/bsync

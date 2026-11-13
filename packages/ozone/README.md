@@ -77,6 +77,14 @@ Reports are visible only when their `createdAt` is at or after the date, even if
 
 Account standing and current enforcement remain live: active restrictions, strikes and labels can predate the inbox start. Preferences and seen watermarks do not expose history; they retain their existing behavior. The cutoff is not a read watermark, so an item created exactly at the start date is initially unread.
 
+## Moderation inbox push
+
+Push work is disabled by default. To enable it, set `OZONE_INBOX_PUSH_ENABLED` on both the API and daemon, and configure a secret `OZONE_INBOX_PUSH_TOKEN` on the API and its authorized consumer. The daemon does not serve the consumer endpoints and does not need the token. Configure the same inbox start date on both processes. Enabling push only queues new notifications; it does not backfill existing inbox history.
+
+The consumer claims work with a 60-second lease and acknowledges it using the lease token. Unacknowledged work can be claimed again after its lease expires. Pushes older than one hour expire; finished rows are retained for seven days and cleaned up during claims.
+
+The outbox table is created by a database migration even when push is disabled. When rolling back to an image that does not contain that migration, do not run migrations using the older image: the migrator rejects an applied migration absent from its code. Leave the outbox table in place until an intentional database rollback has been planned.
+
 Notification producers skip activity before the date and skip transitions on reports or appeal subjects that would be hidden. Lists and unread counts independently enforce the date and target visibility, including existing stored notifications. API and daemon must use the same value. Source reports/actions continue to be recorded normally. Moving the date earlier can reveal more source history, but skipped notifications are not backfilled. Complete the writer rollout before the chosen start date to avoid a notification gap.
 
 Report-first pagination requires the `reporterDid` backfill and the post-retirement catch-up sweep to finish before deploying this reader. Pre-create the reporter/time indexes and `idx_moderation_event_inbox_public_created` concurrently in production before the inbox migration. The latter indexes `(subjectDid, createdAt DESC, id DESC)` so subject history can seek the configured date.

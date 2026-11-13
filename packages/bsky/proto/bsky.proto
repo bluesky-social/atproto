@@ -415,23 +415,6 @@ message GetInteractionCountsResponse {
   repeated int32 bookmarks = 5;
 }
 
-// GetPostViewCounts is an internal read; callers enforce author-only access.
-message GetPostViewCountsRequest {
-  // At most 1000 DID-form app.bsky.feed.post URIs, including duplicates.
-  repeated string uris = 1;
-}
-
-message PostViewCount {
-  string uri = 1;
-  uint64 count = 2;
-}
-
-message GetPostViewCountsResponse {
-  // One entry per distinct requested URI, in no specified order. A missing
-  // counter is zero; a failed read fails the RPC rather than returning zero.
-  repeated PostViewCount counts = 1;
-}
-
 message GetCountsForUsersRequest {
   repeated string dids = 1;
 }
@@ -471,6 +454,50 @@ message GetNewUserCountForRangeRequest {
 
 message GetNewUserCountForRangeResponse {
   int32 count = 1;
+}
+
+//
+// Feature Store
+//
+
+enum FeatureStore {
+  FEATURE_STORE_UNSPECIFIED = 0; // should throw an error (no default value)
+  FEATURE_STORE_AUTHOR = 1;
+  FEATURE_STORE_VIEWER = 2;
+  FEATURE_STORE_POST = 3;
+  FEATURE_STORE_CANDIDATE_GENERATOR = 4;
+  FEATURE_STORE_ATMOSPHERE_RECORD = 5;
+}
+
+message Feature {
+  string key = 1;
+  oneof value {
+    bool bool_val = 2;
+    string string_val = 3;
+    float float_val = 4;
+    sint32 sint_val = 5;
+    string json_val = 6;
+    sint64 sint64_val = 7;
+  }
+}
+
+message FeatureRequest {
+  string uid = 1;
+  repeated string keys = 2; // required, empty value throws an error
+}
+
+message GetFeaturesRequest {
+  FeatureStore store = 1;
+  repeated FeatureRequest requests = 2;
+}
+
+message FeatureResponse {
+  string uid = 1;
+  repeated Feature features = 2;
+}
+
+message GetFeaturesResponse {
+  repeated FeatureResponse entities = 1;
 }
 
 //
@@ -1877,11 +1904,13 @@ service Service {
 
   // Interaction Counts
   rpc GetInteractionCounts(GetInteractionCountsRequest) returns (GetInteractionCountsResponse);
-  rpc GetPostViewCounts(GetPostViewCountsRequest) returns (GetPostViewCountsResponse);
   rpc GetCountsForUsers(GetCountsForUsersRequest) returns (GetCountsForUsersResponse);
   rpc GetStarterPackCounts(GetStarterPackCountsRequest) returns (GetStarterPackCountsResponse);
   rpc GetListCounts(GetListCountsRequest) returns (GetListCountsResponse);
   rpc GetNewUserCountForRange(GetNewUserCountForRangeRequest) returns (GetNewUserCountForRangeResponse);
+
+  // Feature Store
+  rpc GetFeatures(GetFeaturesRequest) returns (GetFeaturesResponse);
 
   // Profile
   rpc GetActors(GetActorsRequest) returns (GetActorsResponse);

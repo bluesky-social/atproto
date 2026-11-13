@@ -1,7 +1,7 @@
+import * as ui8 from 'uint8arrays'
 import { z } from 'zod'
 import type { KwsExternalPayload } from './api/kws/types.js'
 import { serializeExternalPayload } from './api/kws/util.js'
-import { buildBasicAuth } from './auth-verifier.js'
 import type { KwsConfig } from './config.js'
 import { httpLogger as log } from './logger.js'
 
@@ -254,4 +254,11 @@ export class KwsClient {
       minimumAge: 16, // KWS required value
     })
   }
+}
+
+const buildBasicAuth = (username: string, password: string): string => {
+  return (
+    'Basic ' +
+    ui8.toString(ui8.fromString(`${username}:${password}`, 'utf8'), 'base64pad')
+  )
 }

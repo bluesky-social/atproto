@@ -1,13 +1,15 @@
 import { sql } from 'kysely'
-import { ComAtprotoModerationDefs } from '@atproto/api'
+import { ComAtprotoModerationDefs, ids } from '@atproto/api'
 import { type SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { toDatetimeString } from '@atproto/lex'
+import { envToSecrets } from '../src/config/secrets.js'
 import { createInboxNotification } from '../src/inbox/notifications.js'
 import { putNotificationPreferences } from '../src/inbox/preferences.js'
 import {
   ackPushNotifications,
   claimPushNotifications,
 } from '../src/inbox/push-outbox.js'
+import { OzoneService } from '../src/index.js'
 import { com, tools } from '../src/lexicons/index.js'
 import { reportForEvent, resetInbox } from './_inbox.js'
 
@@ -137,6 +139,126 @@ describe('inbox push outbox', () => {
         ),
       ),
     )
+  })
+
+  it('enqueues report pushes for an account action cascade', async () => {
+    const post = await sc.post(sc.dids.alice, 'Cascade report target')
+    const subject = com.atproto.repo.strongRef.$build({
+      uri: post.ref.uriStr,
+      cid: post.ref.cidStr,
+    })
+    const event = await sc.createReport({
+      reasonType: ComAtprotoModerationDefs.REASONSPAM,
+      subject,
+      reportedBy: sc.dids.bob,
+    })
+    await network.processAll()
+    const mod = network.ozone.getModClient()
+    const report = await reportForEvent(mod, event.id, subject.uri)
+    await mod.emitEvent({
+      event: tools.ozone.moderation.defs.modEventAcknowledge.$build({
+        acknowledgeAccountSubjects: true,
+      }),
+      subject: com.atproto.admin.defs.repoRef.$build({ did: sc.dids.alice }),
+    })
+
+    const closed = await reportForEvent(mod, event.id, subject.uri)
+    expect(closed.status).toBe('closed')
+    const { notifications } = await claimPushNotifications(
+      network.ozone.ctx.db,
+      10,
+    )
+    expect(notifications).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          recipientDid: sc.dids.bob,
+          reason: 'reportResolved',
+          category: 'reports',
+          target: expect.objectContaining({ reportId: report.id }),
+        }),
+      ]),
+    )
+  })
+
+  it('enqueues report pushes for a scheduled account action cascade', async () => {
+    const { did } = await sc.createAccount('pushcascade', {
+      handle: 'pushcascade.test',
+      email: 'pushcascade@example.com',
+      password: 'password',
+    })
+    const post = await sc.post(did, 'Scheduled cascade report target')
+    const subject = com.atproto.repo.strongRef.$build({
+      uri: post.ref.uriStr,
+      cid: post.ref.cidStr,
+    })
+    const event = await sc.createReport({
+      reasonType: ComAtprotoModerationDefs.REASONSPAM,
+      subject,
+      reportedBy: sc.dids.bob,
+    })
+    await network.processAll()
+    const report = await reportForEvent(
+      network.ozone.getModClient(),
+      event.id,
+      subject.uri,
+    )
+    await network.ozone.getAgent().tools.ozone.moderation.scheduleAction(
+      {
+        action: {
+          $type: 'tools.ozone.moderation.scheduleAction#takedown',
+          acknowledgeAccountSubjects: true,
+        },
+        subjects: [did],
+        createdBy: network.ozone.moderatorAccnt.did,
+        scheduling: { executeAt: new Date(Date.now() - 1000).toISOString() },
+      },
+      {
+        headers: await network.ozone.modHeaders(
+          ids.ToolsOzoneModerationScheduleAction,
+          'admin',
+        ),
+      },
+    )
+    await network.ozone.daemon.ctx.scheduledActionProcessor.findAndExecuteScheduledActions()
+    expect(
+      (
+        await reportForEvent(
+          network.ozone.getModClient(),
+          event.id,
+          subject.uri,
+        )
+      ).status,
+    ).toBe('closed')
+
+    const { notifications } = await claimPushNotifications(
+      network.ozone.ctx.db,
+      10,
+    )
+    expect(notifications).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          recipientDid: sc.dids.bob,
+          reason: 'reportResolved',
+          category: 'reports',
+          target: expect.objectContaining({ reportId: report.id }),
+        }),
+      ]),
+    )
+  })
+
+  it('requires the consumer token for the API, but not secret parsing for the daemon', async () => {
+    const secrets = envToSecrets({
+      adminPassword: 'test-password',
+      signingKeyHex: 'test-key',
+      inboxPushEnabled: true,
+      adminDids: [],
+      moderatorDids: [],
+      triageDids: [],
+    })
+    expect(secrets.inboxPushToken).toBeUndefined()
+    await expect(
+      OzoneService.create(network.ozone.ctx.cfg, secrets),
+    ).rejects.toThrow('inbox push token is required')
   })
 
   it('enqueues once for newly inserted notifications and respects preferences', async () => {

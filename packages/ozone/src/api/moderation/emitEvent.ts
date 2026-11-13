@@ -10,7 +10,11 @@ import type { AppContext } from '../../context.js'
 import { app, com, tools } from '../../lexicons/index.js'
 import { httpLogger } from '../../logger.js'
 import { processReportAction } from '../../mod-service/report.js'
-import { subjectFromInput } from '../../mod-service/subject.js'
+import {
+  CHAT_CONVO_COLLECTION,
+  CHAT_MESSAGE_COLLECTION,
+  subjectFromInput,
+} from '../../mod-service/subject.js'
 import { handleReportUpdate } from '../../report/handle-report-update.js'
 import { getEventActivityMetadata } from '../../report/metadata.js'
 import type { SettingService } from '../../setting/service.js'
@@ -51,6 +55,27 @@ const handleModerationEvent = async ({
     input.body.subjectBlobCids,
   )
 
+  // Ozone dispatches takedown enforcement only for repositories and records.
+  if (subject.isMessage() && (isTakedownEvent || isReverseTakedownEvent)) {
+    throw new InvalidRequestError(
+      'Message takedowns are not supported; apply the action to the account instead',
+    )
+  }
+  if (subject.isMessage() && isLabelEvent) {
+    throw new InvalidRequestError(
+      'Message labels are not supported; apply labels to the account instead',
+    )
+  }
+
+  if (
+    input.body.reportAction?.subjects !== undefined &&
+    input.body.reportAction?.subjectTypes !== undefined
+  ) {
+    throw new InvalidRequestError(
+      'reportAction subjects and subjectTypes are mutually exclusive',
+    )
+  }
+
   if (input.body.reportAction?.allOwned) {
     if (!subject.isRepo()) {
       throw new InvalidRequestError('allOwned requires an account subject')
@@ -61,6 +86,48 @@ const handleModerationEvent = async ({
     ) {
       throw new InvalidRequestError(
         'allOwned requires an event that closes reports',
+      )
+    }
+  }
+
+  const reportSubjects = input.body.reportAction?.allOwned
+    ? undefined
+    : input.body.reportAction?.subjects?.map((target) =>
+        subjectFromInput(target),
+      )
+  const reportSubjectTypes = input.body.reportAction?.allOwned
+    ? undefined
+    : input.body.reportAction?.subjectTypes
+  if (reportSubjects?.some((target) => target.did !== subject.did)) {
+    throw new InvalidRequestError(
+      'report subjects must belong to the actioned account',
+    )
+  }
+  const subjectInfo = subject.info()
+  const expandsReports = reportSubjects?.some((target) => {
+    const targetInfo = target.info()
+    return (
+      targetInfo.subjectType !== subjectInfo.subjectType ||
+      targetInfo.subjectUri !== subjectInfo.subjectUri ||
+      targetInfo.subjectMessageId !== subjectInfo.subjectMessageId ||
+      targetInfo.subjectConvoId !== subjectInfo.subjectConvoId
+    )
+  })
+  const expandsReportTypes = reportSubjectTypes?.some(
+    (type) => !subject.isRepo() || type !== 'account',
+  )
+  if (expandsReports || expandsReportTypes) {
+    if (!subject.isRepo()) {
+      throw new InvalidRequestError(
+        'additional report subjects require an account event',
+      )
+    }
+    if (
+      handleReportUpdate('open', { type: 'event', eventType: event.$type })
+        .nextStatus !== 'closed'
+    ) {
+      throw new InvalidRequestError(
+        'additional report subjects require an event that closes reports',
       )
     }
   }
@@ -292,16 +359,24 @@ const handleModerationEvent = async ({
 
     // Update reports if reportAction was provided
     if (input.body.reportAction) {
-      const subjectUri = subject.isRecord() ? subject.uri : null
+      const subjectUri = subject.isRecord()
+        ? subject.uri
+        : subject.isMessage()
+          ? `at://${subject.did}/${CHAT_MESSAGE_COLLECTION}/${subject.messageId}`
+          : subject.isConvo()
+            ? `at://${subject.did}/${CHAT_CONVO_COLLECTION}/${subject.convoId}`
+            : null
       try {
         await processReportAction({
           inboxStartAt: ctx.cfg.inbox.startAt,
           inboxPushEnabled: ctx.cfg.inbox.pushEnabled,
           db: dbTxn,
           reportAction: input.body.reportAction,
+          subjects: reportSubjects,
           metadata,
           subjectDid: subject.did,
           subjectUri,
+          messageConvoId: subject.isMessage() ? subject.convoId : undefined,
           subjectType: subject.info().subjectType,
           eventId: result.event.id,
           eventType: event.$type,
@@ -368,6 +443,24 @@ const handleModerationEvent = async ({
       (isTakedownEvent || isAcknowledgeEvent) &&
       result.event.meta?.acknowledgeAccountSubjects
     ) {
+      if (subject.isRepo()) {
+        await processReportAction({
+          db: dbTxn,
+          inboxStartAt: ctx.cfg.inbox.startAt,
+          inboxPushEnabled: ctx.cfg.inbox.pushEnabled,
+          subjectDid: subject.did,
+          subjectUri: null,
+          subjectType: com.atproto.admin.defs.repoRef.$type,
+          eventId: result.event.id,
+          eventType: event.$type,
+          createdBy,
+          reportAction: {
+            allOwned: true,
+            isAutomated: input.body.reportAction?.isAutomated,
+          },
+          metadata: getEventActivityMetadata(input.body.modTool),
+        })
+      }
       await moderationTxn.resolveSubjectsForAccount(
         subject.did,
         createdBy,

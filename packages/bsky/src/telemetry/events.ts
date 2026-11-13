@@ -94,6 +94,15 @@ export type ExternalHydrationWork = {
  * essentially free when telemetry is disabled.
  */
 class EventReporter {
+  #authVerifierRequests = meter.createCounter<{
+    verifier:
+      'standard' | 'entrywaySession' | 'role' | 'modService' | 'anonymous'
+  }>('auth.verifier.requests', {
+    description:
+      'Requests by selected authentication verifier, including failed attempts; wrapper verifiers are not counted separately',
+    valueType: ValueType.INT,
+  })
+
   #hydrationFailedCounter = meter.createCounter<{
     source: HydrationSource
     reason: 'abort' | 'timeout' | 'error'
@@ -251,6 +260,52 @@ class EventReporter {
       eventsLogger.info({ eventName, ...attributes })
     } catch (err) {
       diag.error(`Failed to log event ${eventName}:`, err)
+    }
+  }
+
+  authVerifierRequest(
+    verifier:
+      'standard' | 'entrywaySession' | 'role' | 'modService' | 'anonymous',
+    {
+      did,
+      appPassword,
+      iat,
+      method,
+      userAgent,
+      origin,
+      err,
+    }: {
+      did?: string
+      appPassword?: boolean
+      iat?: number
+      method?: string
+      userAgent?: string
+      origin?: string
+      err?: unknown
+    } = {},
+  ) {
+    if (verifier === 'entrywaySession') {
+      this.#log('auth_verifier_request', {
+        verifier,
+        did,
+        appPassword,
+        iat,
+        method,
+        userAgent,
+        origin,
+        success: err === undefined,
+        error:
+          err === undefined
+            ? undefined
+            : err instanceof Error
+              ? err.message
+              : String(err),
+      })
+    }
+    try {
+      this.#authVerifierRequests.add(1, { verifier })
+    } catch (err) {
+      diag.error('Failed to record auth_verifier_request:', err)
     }
   }
 

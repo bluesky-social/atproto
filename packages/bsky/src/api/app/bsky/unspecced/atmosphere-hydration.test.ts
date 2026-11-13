@@ -15,6 +15,7 @@ import { Service } from '../../../../proto/bsky_connect.js'
 import { RecordLookupStatus } from '../../../../proto/bsky_pb.js'
 import { Views } from '../../../../views/index.js'
 import { VideoUriBuilder } from '../../../../views/util.js'
+import { groupAtmosphereActivities } from './atmosphere-grouping.js'
 import { AtmosphereTimelineHydrator } from './atmosphere-hydration.js'
 
 const author = 'did:plc:author'
@@ -40,7 +41,7 @@ const subscriptionUri = atUri(
 const favoriteUri = atUri(viewer, social.grain.favorite.$type, 'fav')
 const postUri = atUri(viewer, app.bsky.feed.post.$type, 'share')
 
-function setup() {
+function setup(signal = new AbortController().signal) {
   const records = new Map<AtUriString, TypedLexMap>([
     [
       documentUri,
@@ -221,12 +222,14 @@ function setup() {
         getPostRecords: ({ uris }) => {
           postCalls.push(uris)
           return {
-            records: uris.map((uri) => ({
-              cid,
-              record: Buffer.from(
-                lexStringify(records.get(uri as AtUriString)!),
-              ),
-            })),
+            records: uris.map((uri) => {
+              const record = records.get(uri as AtUriString)
+              return {
+                cid,
+                takedownRef: hidden.has(uri) ? 'takedown' : undefined,
+                record: record ? Buffer.from(lexStringify(record)) : undefined,
+              }
+            }),
             meta: uris.map(() => ({})),
           }
         },
@@ -260,9 +263,15 @@ function setup() {
     labelers: { dids: [labeler], redact: new Set([labeler]) },
     features: featureGatesClient.scope({ did: viewer }),
   }) as HydrateCtx & { viewer: string }
-  const timeline = new AtmosphereTimelineHydrator({ hydrator, views }, ctx, now)
+  const timeline = new AtmosphereTimelineHydrator(
+    { hydrator, views },
+    ctx,
+    now,
+    signal,
+  )
   return {
     timeline,
+    dataplane,
     hydrator,
     records,
     cids,
@@ -297,7 +306,10 @@ describe('AtmosphereTimelineHydrator', () => {
     ]
     await f.timeline.hydrate(roots)
     const activities = roots.map((uri) => f.timeline.activity(uri, now))
-    expect(activities.map((activity) => activity?.item.view?.$type)).toEqual([
+    const items = activities.map(
+      (activity) => activity && f.timeline.item(activity),
+    )
+    expect(items.map((item) => item?.view?.$type)).toEqual([
       app.bsky.embed.external.viewArticle.$type,
       app.bsky.embed.external.viewArticlePublication.$type,
       app.bsky.embed.external.viewGallery.$type,
@@ -311,19 +323,92 @@ describe('AtmosphereTimelineHydrator', () => {
       publicationUri,
       galleryUri,
     ])
-    expect(activities[0]?.item.view).toMatchObject({ likeCount: 7 })
-    expect(activities[2]?.item.view).toMatchObject({
+    expect(items[0]?.view).toMatchObject({ likeCount: 7 })
+    expect(items[2]?.view).toMatchObject({
       items: [{ alt: 'Photo' }],
       likeCount: 3,
     })
     expect(activities[3]?.groupable).toBe(false)
-    for (const activity of activities) {
+    for (const item of items) {
       expect(
-        app.bsky.unspecced.getAtmosphereTimeline.activityItem.$matches(
-          activity?.item,
-        ),
+        app.bsky.unspecced.getAtmosphereTimeline.activityItem.$matches(item),
       ).toBe(true)
     }
+  })
+
+  it('attaches collection-specific related activity to a standalone article with visible actors', async () => {
+    const f = setup()
+    const secondRecommendation = atUri(
+      viewer,
+      site.standard.graph.recommend.$type,
+      'second',
+    )
+    f.records.set(secondRecommendation, f.records.get(recommendUri)!)
+    f.subscribed.add(publicationUri)
+    f.records.get(documentUri)!.bskyPostRef = { uri: postUri, cid }
+    const roots = [recommendUri, postUri, secondRecommendation, documentUri]
+    await f.timeline.hydrate(roots)
+    const activities = roots.map((uri, index) =>
+      f.timeline.activity(uri, now - index * 86_400_000)!,
+    )
+    const feed = groupAtmosphereActivities(activities, now, f.timeline)
+    expect(feed).toMatchObject([
+      {
+        $type: app.bsky.unspecced.getAtmosphereTimeline.activityItem.$type,
+        record: { uri: documentUri },
+        collection: site.standard.document.$type,
+        view: { title: 'Article' },
+        viewerState: { subscribed: true },
+        viewBskyPost: { uri: postUri, record: { text: 'Read this' } },
+        relatedActivity: [
+          {
+            collection: site.standard.graph.recommend.$type,
+            activities: [recommendUri, secondRecommendation].map((uri) => ({
+              record: { uri },
+            })),
+            actors: [{ did: reader }, { did: viewer }],
+          },
+          {
+            collection: app.bsky.feed.post.$type,
+            activities: [{ record: { uri: postUri } }],
+            actors: [{ did: viewer }],
+          },
+        ],
+      },
+    ])
+    expect(
+      app.bsky.unspecced.getAtmosphereTimeline.activityItem.$matches(feed[0]),
+    ).toBe(true)
+
+    f.muted.add(reader)
+    const refresh = atUri(
+      reader,
+      site.standard.graph.recommend.$type,
+      'refresh',
+    )
+    f.records.set(refresh, f.records.get(recommendUri)!)
+    await f.timeline.hydrate([refresh])
+    const visible = roots.flatMap((uri, index) => {
+      const activity = f.timeline.activity(uri, now - index * 86_400_000)
+      return activity ? [activity] : []
+    })
+    expect(groupAtmosphereActivities(visible, now, f.timeline)).toMatchObject([
+      {
+        record: { uri: documentUri },
+        relatedActivity: [
+          {
+            collection: app.bsky.feed.post.$type,
+            activities: [{ record: { uri: postUri } }],
+            actors: [{ did: viewer }],
+          },
+          {
+            collection: site.standard.graph.recommend.$type,
+            activities: [{ record: { uri: secondRecommendation } }],
+            actors: [{ did: viewer }],
+          },
+        ],
+      },
+    ])
   })
 
   it('fetches action targets even when they are not roots', async () => {
@@ -345,10 +430,9 @@ describe('AtmosphereTimelineHydrator', () => {
     )
   })
 
-  it('uses the rendered article post reference rather than the recommendation source', async () => {
+  it('hydrates the rendered article post rather than the recommendation source', async () => {
     const f = setup()
-    const articlePost = { uri: postUri, cid }
-    f.records.get(documentUri)!.bskyPostRef = articlePost
+    f.records.get(documentUri)!.bskyPostRef = { uri: postUri, cid }
     f.records.get(recommendUri)!.bskyPostRef = {
       uri: atUri(reader, app.bsky.feed.post.$type, 'other'),
       cid,
@@ -356,11 +440,187 @@ describe('AtmosphereTimelineHydrator', () => {
 
     await f.timeline.hydrate([recommendUri])
 
-    expect(f.timeline.activity(recommendUri, now)?.item).toMatchObject({
+    const item = f.timeline.item(f.timeline.activity(recommendUri, now)!)
+    expect(item).toMatchObject({
       record: { uri: recommendUri },
-      bskyPostRef: articlePost,
+      bskyPostRef: { uri: postUri, cid },
+      viewBskyPost: {
+        uri: postUri,
+        cid,
+        author: { did: viewer },
+        record: { text: 'Read this' },
+        embed: { external: { title: 'Article' } },
+      },
       view: { associatedRefs: [{ uri: documentUri }, { uri: publicationUri }] },
     })
+    expect(
+      app.bsky.unspecced.getAtmosphereTimeline.activityItem.$matches(item),
+    ).toBe(true)
+    await f.timeline.hydrate([documentUri, postUri])
+    expect(f.postCalls.flat()).toEqual([postUri])
+    expect(
+      f.timeline.item(f.timeline.activity(documentUri, now)!)?.viewBskyPost
+        ?.uri,
+    ).toBe(postUri)
+    expect(
+      f.timeline.item(f.timeline.activity(postUri, now)!)?.viewBskyPost,
+    ).toBeUndefined()
+  })
+
+  it('hydrates the livestream announcement independently of the stream view', async () => {
+    const f = setup()
+    f.records.get(streamUri)!.post = { uri: postUri, cid }
+    await f.timeline.hydrate([streamUri])
+    expect(f.timeline.item(f.timeline.activity(streamUri, now)!)).toMatchObject(
+      {
+        view: { $type: app.bsky.embed.external.viewLivestream.$type },
+        bskyPostRef: { uri: postUri, cid },
+        viewBskyPost: { uri: postUri, record: { text: 'Read this' } },
+      },
+    )
+  })
+
+  it.each(['missing', 'takedown', 'unavailable', 'blocked', 'review'])(
+    'keeps articles visible without their %s associated post',
+    async (kind) => {
+      const f = setup()
+      const associatedPostUri = atUri(reader, app.bsky.feed.post.$type, 'post')
+      f.records.set(associatedPostUri, f.records.get(postUri)!)
+      f.records.get(documentUri)!.bskyPostRef = { uri: associatedPostUri, cid }
+      if (kind === 'missing') f.records.delete(associatedPostUri)
+      if (kind === 'takedown') f.hidden.add(associatedPostUri)
+      if (kind === 'unavailable') f.unavailable.add(reader)
+      if (kind === 'blocked') f.blocked.add(reader)
+      if (kind === 'review')
+        f.labels.push({ uri: associatedPostUri, val: 'needs-review' })
+      await f.timeline.hydrate([documentUri])
+      const item = f.timeline.item(f.timeline.activity(documentUri, now)!)
+      expect(item?.view).toMatchObject({ title: 'Article' })
+      expect(item?.bskyPostRef).toEqual({ uri: associatedPostUri, cid })
+      expect(item?.viewBskyPost).toBeUndefined()
+    },
+  )
+
+  it.each(['getPostRecords', 'getInteractionCounts'] as const)(
+    'keeps timeline content on %s failure but still requires root posts',
+    async (method) => {
+      const f = setup()
+      const associatedUri = atUri(
+        author,
+        app.bsky.feed.post.$type,
+        'announcement',
+      )
+      const ref = { uri: associatedUri, cid }
+      f.records.set(associatedUri, f.records.get(postUri)!)
+      f.records.get(documentUri)!.bskyPostRef = ref
+      f.records.get(streamUri)!.post = ref
+      const error = new Error('post hydration failed')
+      using _failure = vi.spyOn(f.dataplane, method).mockRejectedValue(error)
+
+      await f.timeline.hydrate([documentUri, streamUri])
+
+      expect(
+        f.timeline.item(f.timeline.activity(documentUri, now)!),
+      ).toMatchObject({
+        bskyPostRef: ref,
+        view: { title: 'Article' },
+      })
+      expect(
+        f.timeline.item(f.timeline.activity(streamUri, now)!),
+      ).toMatchObject({
+        bskyPostRef: ref,
+        view: { title: 'Stream' },
+      })
+      expect(
+        f.timeline.item(f.timeline.activity(documentUri, now)!)?.viewBskyPost,
+      ).toBeUndefined()
+      expect(
+        f.timeline.item(f.timeline.activity(streamUri, now)!)?.viewBskyPost,
+      ).toBeUndefined()
+      await expect(f.timeline.hydrate([associatedUri])).rejects.toBe(error)
+    },
+  )
+
+  it('keeps root posts when optional associated-post counts fail', async () => {
+    const f = setup()
+    const associatedUri = atUri(
+      author,
+      app.bsky.feed.post.$type,
+      'announcement',
+    )
+    f.records.set(associatedUri, f.records.get(postUri)!)
+    f.records.get(documentUri)!.bskyPostRef = { uri: associatedUri, cid }
+    const getCounts = f.dataplane.getInteractionCounts.bind(f.dataplane)
+    using _failure = vi
+      .spyOn(f.dataplane, 'getInteractionCounts')
+      .mockImplementation((request, options) => {
+        if (request.refs?.some(({ uri }) => uri === associatedUri)) {
+          return Promise.reject(new Error('associated post counts failed'))
+        }
+        return getCounts(request, options)
+      })
+
+    await f.timeline.hydrate([postUri, documentUri])
+
+    expect(
+      f.timeline.item(f.timeline.activity(postUri, now)!)?.view,
+    ).toMatchObject({
+      uri: postUri,
+      record: { text: 'Read this' },
+    })
+    expect(
+      f.timeline.item(f.timeline.activity(documentUri, now)!),
+    ).toMatchObject({
+      bskyPostRef: { uri: associatedUri, cid },
+      view: { title: 'Article' },
+    })
+    expect(
+      f.timeline.item(f.timeline.activity(documentUri, now)!)?.viewBskyPost,
+    ).toBeUndefined()
+  })
+
+  it('propagates cancellation during optional post hydration', async () => {
+    const controller = new AbortController()
+    const f = setup(controller.signal)
+    f.records.get(documentUri)!.bskyPostRef = { uri: postUri, cid }
+    const error = new Error('request cancelled')
+    using _failure = vi
+      .spyOn(f.dataplane, 'getPostRecords')
+      .mockImplementation(async () => {
+        controller.abort()
+        throw error
+      })
+
+    await expect(f.timeline.hydrate([documentUri])).rejects.toBe(error)
+  })
+
+  it('preserves references outside the DID-based post collection without hydration', async () => {
+    const f = setup()
+    f.records.get(documentUri)!.bskyPostRef = { uri: publicationUri, cid }
+    f.records.get(streamUri)!.post = {
+      uri: 'at://author.test/app.bsky.feed.post/post',
+      cid,
+    }
+    await f.timeline.hydrate([documentUri, streamUri])
+    expect(
+      f.timeline.item(f.timeline.activity(documentUri, now)!),
+    ).toMatchObject({
+      bskyPostRef: { uri: publicationUri, cid },
+      view: { title: 'Article' },
+    })
+    expect(f.timeline.item(f.timeline.activity(streamUri, now)!)).toMatchObject(
+      {
+        bskyPostRef: { uri: 'at://author.test/app.bsky.feed.post/post', cid },
+        view: { title: 'Stream' },
+      },
+    )
+    expect(
+      f.timeline.item(f.timeline.activity(documentUri, now)!)?.viewBskyPost,
+    ).toBeUndefined()
+    expect(
+      f.timeline.item(f.timeline.activity(streamUri, now)!)?.viewBskyPost,
+    ).toBeUndefined()
+    expect(f.postCalls).toEqual([])
   })
 
   it.each(['missing', 'takedown', 'unavailable', 'blocked', 'muted', 'review'])(
@@ -380,7 +640,7 @@ describe('AtmosphereTimelineHydrator', () => {
     },
   )
 
-  it('hides roots, actions, and overflow when their author profile was not hydrated', async () => {
+  it('hides roots and actions when their author profile was not hydrated', async () => {
     const f = setup()
     const hydrate = f.hydrator.hydrateEmbedExternalViewFromUris.bind(f.hydrator)
     using _profiles = vi
@@ -409,7 +669,7 @@ describe('AtmosphereTimelineHydrator', () => {
     expect(visible.timeline.activity(documentUri, now)).toBeDefined()
   })
 
-  it('uses needs-review follow exemptions and only loaded visible overflow profiles', async () => {
+  it('uses needs-review follow exemptions and only loaded visible actor profiles', async () => {
     const f = setup()
     expect(f.timeline.profile(author)).toBeUndefined()
     f.labels.push({ uri: documentUri, val: 'needs-review' })
@@ -451,14 +711,22 @@ describe('AtmosphereTimelineHydrator', () => {
       groupable: false,
       item: {
         viewerState: { subscribed: false },
-        view: { title: 'Article' },
       },
+    })
+    expect(
+      f.timeline.item(f.timeline.activity(documentUri, now)!),
+    ).toMatchObject({
+      view: { title: 'Article' },
     })
 
     await f.timeline.hydrate([recommendUri])
     expect(f.timeline.activity(recommendUri, now)).toMatchObject({
       target: documentUri,
-      item: { view: { title: 'Article' } },
+    })
+    expect(
+      f.timeline.item(f.timeline.activity(recommendUri, now)!),
+    ).toMatchObject({
+      view: { title: 'Article' },
     })
     expect(f.timeline.activity(documentUri, now)?.groupable).toBe(false)
     expect(failure).toHaveBeenCalledTimes(1)
@@ -522,12 +790,12 @@ describe('AtmosphereTimelineHydrator', () => {
     expect(f.timeline.activity(postUri, now)).toMatchObject({
       target: documentUri,
       groupable: false,
-      item: {
-        view: {
-          $type: app.bsky.feed.defs.postView.$type,
-          uri: postUri,
-          record: { text: 'Read this' },
-        },
+    })
+    expect(f.timeline.item(f.timeline.activity(postUri, now)!)).toMatchObject({
+      view: {
+        $type: app.bsky.feed.defs.postView.$type,
+        uri: postUri,
+        record: { text: 'Read this' },
       },
     })
     await f.timeline.hydrate([postUri])
@@ -554,7 +822,9 @@ describe('AtmosphereTimelineHydrator', () => {
       expect(f.timeline.isVisible(documentUri)).toBe(true)
       expect(f.timeline.isVisible(postUri)).toBe(sameVersion)
       if (sameVersion) {
-        expect(f.timeline.activity(postUri, now)?.item.view).toMatchObject({
+        expect(
+          f.timeline.item(f.timeline.activity(postUri, now)!)?.view,
+        ).toMatchObject({
           embed: { external: { title: 'Article' } },
         })
       } else {
@@ -581,10 +851,14 @@ describe('AtmosphereTimelineHydrator', () => {
     )
     await f.timeline.hydrate([documentUri])
     expect(f.timeline.isVisible(postUri)).toBe(true)
-    expect(f.timeline.activity(postUri, now)?.item.view).toMatchObject({
+    expect(
+      f.timeline.item(f.timeline.activity(postUri, now)!)?.view,
+    ).toMatchObject({
       embed: { external: { title: 'Article' } },
     })
-    expect(f.timeline.activity(documentUri, now)?.item.view).toMatchObject({
+    expect(
+      f.timeline.item(f.timeline.activity(documentUri, now)!)?.view,
+    ).toMatchObject({
       title: 'Updated article',
     })
   })

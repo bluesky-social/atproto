@@ -1064,12 +1064,12 @@ export class Hydrator {
   }
 
   /**
-   * Like `hydrateEmbedExternalViewFromUris`, but for exact record versions
-   * pinned by strong refs. Roots land only in `externalRecordsByRef`; their
+   * Like `hydrateEmbedExternalViewFromUris`, but accepts optional CID pins per
+   * root. Pinned roots land only in `externalRecordsByRef`; unpinned roots and
    * URI dependencies are hydrated as latest versions by the URI path.
    */
   async hydrateEmbedExternalViewFromRefs(
-    refs: Required<ItemRef>[],
+    refs: ItemRef[],
     ctx: HydrateCtx,
     options: ExternalHydrationOptions = {},
   ): Promise<HydrationState> {
@@ -1423,16 +1423,16 @@ export class Hydrator {
             site.standard.graph.subscription.$type,
           )
           for (const publication of batch) {
-            const subscribed = result.backlinks
+            const subscription = result.backlinks
               .get(publication)
-              ?.some(
+              ?.find(
                 (uri) =>
                   recordUriOf(uri, site.standard.graph.subscription.$type) &&
                   uriToDid(uri) === ctx.viewer,
               )
             publicationSubscriptions.set(
               publication,
-              subscribed ? true : result.truncated ? null : false,
+              subscription ?? (result.truncated ? null : false),
             )
           }
         } catch (err) {

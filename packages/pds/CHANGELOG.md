@@ -1,5 +1,36 @@
 # @atproto/pds
 
+## 0.5.59
+
+### Patch Changes
+
+- [#5895](https://github.com/bluesky-social/atproto/pull/5895) [`3459596`](https://github.com/bluesky-social/atproto/commit/3459596f6f5fa684ae616249deaec6e7a39700bd) Thanks [@gcwill70](https://github.com/gcwill70)! - Update `emitEvent.reportAction` to allow account level actions to target reports on owned subjects using `subjects` and `subjectTypes`.
+
+## 0.5.58
+
+### Patch Changes
+
+- [#5866](https://github.com/bluesky-social/atproto/pull/5866) [`b4dac06`](https://github.com/bluesky-social/atproto/commit/b4dac063aba56e4be8085d0da3888c7bc55e6102) Thanks [@amckinley](https://github.com/amckinley)! - With `PDS_ENTRYWAY_REQUIRE_SERVICE_AUTH=true`, `com.atproto.server.createAccount` now requires the entryway's service JWT, as the other entryway-called routes do: unauthenticated calls are refused with `AuthenticationRequired`. Enable that setting only once the entryway in front of the PDS signs its `createAccount` calls. Without it, unauthenticated calls are still accepted, and PDSes without entryway configuration are unaffected.
+
+- [#5891](https://github.com/bluesky-social/atproto/pull/5891) [`5c3979b`](https://github.com/bluesky-social/atproto/commit/5c3979b3466bf7df0a0a4f2291000491affc31b9) Thanks [@amckinley](https://github.com/amckinley)! - Scratch Redis failures fail open. In `@atproto/xrpc-server`, a route's own rate limit now logs a store error and lets the request through, as global and shared limits already did, unless it sets `failClosed`. In `@atproto/pds`, the scratch Redis client fails a command after 500 ms or at once when disconnected instead of queueing it, the DPoP replay check falls back to process memory when Redis fails, and shutdown no longer fails on a Redis that doesn't answer.
+- Updated dependencies [[`5c3979b`](https://github.com/bluesky-social/atproto/commit/5c3979b3466bf7df0a0a4f2291000491affc31b9)]:
+  - @atproto/xrpc-server@0.13.12
+  - @atproto-labs/xrpc-utils@0.1.33
+
+## 0.5.57
+
+### Patch Changes
+
+- [#5857](https://github.com/bluesky-social/atproto/pull/5857) [`b30ea73`](https://github.com/bluesky-social/atproto/commit/b30ea7305be8df27524ed70d4af7f246014194c2) Thanks [@amckinley](https://github.com/amckinley)! - Add `PDS_DISABLE_IP_RATE_LIMITS`, for a PDS behind a proxy that enforces per-IP rate limits. When set with `PDS_RATE_LIMITS_ENABLED`, the PDS drops its global per-IP limit and the route limits keyed only on the client IP, and keeps its per-account limits. The xrpc-server `rateLimits` option gains `skipDefaultKeyedRouteLimits`, which skips route-specific limits that don't define their own `calcKey`.
+
+- [#5802](https://github.com/bluesky-social/atproto/pull/5802) [`d930c3b`](https://github.com/bluesky-social/atproto/commit/d930c3b6b401df7085b8e85f3fc83dbbc3e28605) Thanks [@foysalit](https://github.com/foysalit)! - Retire moderation subject statistics and count-based filters. Legacy count-based
+  sorts fall back to last reported time.
+
+- [#5863](https://github.com/bluesky-social/atproto/pull/5863) [`bae981e`](https://github.com/bluesky-social/atproto/commit/bae981e238a7bc192b52a53c14f051a76a9f5507) Thanks [@amckinley](https://github.com/amckinley)! - Look up accounts by handle and by email through the existing `lower(handle)` and `lower(email)` indexes. `getAccount` by handle (behind `createSession` and `resolveHandle`), `getAccountByEmail` and `updateHandle`'s check that a handle is free compared the bare column, which those indexes can't serve, so each scanned the whole `actor` or `account` table.
+- Updated dependencies [[`b30ea73`](https://github.com/bluesky-social/atproto/commit/b30ea7305be8df27524ed70d4af7f246014194c2)]:
+  - @atproto/xrpc-server@0.13.11
+  - @atproto-labs/xrpc-utils@0.1.32
+
 ## 0.5.56
 
 ### Patch Changes

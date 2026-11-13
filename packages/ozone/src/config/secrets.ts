@@ -29,11 +29,6 @@ const parsePdsHeaders = (
 export const envToSecrets = (env: OzoneEnvironment): OzoneSecrets => {
   assert(env.adminPassword)
   assert(env.signingKeyHex)
-  assert(
-    !env.inboxPushEnabled || env.inboxPushToken,
-    'inbox push token is required',
-  )
-
   return {
     adminPassword: env.adminPassword,
     signingKeyHex: env.signingKeyHex,

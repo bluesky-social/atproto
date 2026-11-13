@@ -118,6 +118,27 @@
           "type": "boolean",
           "description": "Target all eligible reports on the account and its owned subjects, including records, messages, and conversations. Only valid for account subjects and events that close reports. Excludes assigned, escalated, and actively assigned reports unless explicitly targeted by ID."
         },
+        "subjects": {
+          "type": "array",
+          "maxLength": 100,
+          "items": {
+            "type": "union",
+            "refs": [
+              "com.atproto.admin.defs#repoRef",
+              "com.atproto.repo.strongRef"
+            ]
+          },
+          "description": "Expands report targeting to include additional subjects. Requires event subject to be an account. Mutually exclusive with `subjectTypes`."
+        },
+        "subjectTypes": {
+          "type": "array",
+          "maxLength": 4,
+          "items": {
+            "type": "string",
+            "enum": ["account", "record", "message", "conversation"]
+          },
+          "description": "Expands report targeting to include owned subjects of these types. Requires event subject to be an account. Mutually exclusive with `subjects`."
+        },
         "note": {
           "type": "string",
           "description": "Note to send to reporter(s) when actioning their report"
