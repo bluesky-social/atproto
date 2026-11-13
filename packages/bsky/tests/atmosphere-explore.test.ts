@@ -1662,6 +1662,11 @@ describe('Atmosphere Explore', () => {
   })
 
   describe('apps endpoint', () => {
+    const storeLinks = {
+      appStoreUrl: 'https://apps.apple.com/app/example/id123?ct=explore',
+      googlePlayUrl:
+        'https://play.google.com/store/apps/details?id=com.example&referrer=explore',
+    }
     const apps = Array.from({ length: 12 }, (_, i) => ({
       id: `${i}`,
       category: i < 10 ? 'Social' : 'Writing',
@@ -1684,6 +1689,29 @@ describe('Atmosphere Explore', () => {
       expect(fixture.iris.fetchMock).not.toHaveBeenCalled()
       expect(fixture.fetchMock).toHaveBeenCalledOnce()
       expect(new Request(...fixture.fetchMock.mock.calls[0]).url).toBe(service)
+    })
+
+    it('validates optional store links without requiring profiles', async () => {
+      const cards = [
+        { id: 'both', ...storeLinks },
+        { id: 'apple', appStoreUrl: storeLinks.appStoreUrl },
+        { id: 'google', googlePlayUrl: storeLinks.googlePlayUrl },
+        { id: 'neither' },
+      ]
+      await using fixture = await setup({
+        apps: [
+          cards[0],
+          { ...cards[1], did: null, profileUrl: null },
+          ...cards.slice(2),
+          { id: 'invalid-apple', appStoreUrl: 'not a uri' },
+          { id: 'invalid-google', googlePlayUrl: 5 },
+        ],
+      })
+      using profiles = vi.spyOn(fixture.hydrator, 'hydrateProfilesDetailed')
+      const { status, body } = await fixture.queryApps()
+      expect(status).toBe(200)
+      expect(body.apps).toEqual(cards)
+      expect(profiles).not.toHaveBeenCalled()
     })
 
     test.each([
@@ -1772,6 +1800,7 @@ describe('Atmosphere Explore', () => {
       await using fixture = await setup({
         apps: [appDid, missingDid].map((did) => ({
           did,
+          ...storeLinks,
           logo,
           backgroundImage: banner,
           overlayColor: '#000000',
@@ -1800,7 +1829,8 @@ describe('Atmosphere Explore', () => {
         images.getPresetUri('banner', appDid, photoCid),
       )
       expect(hydrated).not.toHaveProperty('backgroundImage')
-      expect(missing).toEqual({ logo, banner })
+      expect(hydrated).toMatchObject(storeLinks)
+      expect(missing).toEqual({ logo, banner, ...storeLinks })
     })
   })
 
@@ -1854,9 +1884,14 @@ describe('Atmosphere Explore', () => {
         displayName,
         ...(withImages ? { avatar: blob, banner: blob } : {}),
       })
-    const legacy = {
-      logo: 'https://example.com/legacy-logo.png',
-      backgroundImage: 'https://example.com/legacy-bg.png',
+    const overrides = {
+      logo: 'https://example.com/override-logo.png',
+      backgroundImage: 'https://example.com/override-bg.png',
+    }
+    const storeLinks = {
+      appStoreUrl: 'https://apps.apple.com/app/example/id123?ct=explore',
+      googlePlayUrl:
+        'https://play.google.com/store/apps/details?id=com.example&referrer=explore',
     }
     const card = (id: string, extra: object = {}) => ({
       id,
@@ -1865,7 +1900,7 @@ describe('Atmosphere Explore', () => {
       ...extra,
     })
 
-    it('hydrates a detailed profile backing the card images', async () => {
+    it('prefers profile images and preserves store links', async () => {
       const did = appDid('appone')
       const editorial = {
         id: 'one',
@@ -1875,7 +1910,8 @@ describe('Atmosphere Explore', () => {
         category: 'Social',
         overlayColor: '#000000',
         textColor: '#ffffff',
-        ...legacy,
+        ...overrides,
+        ...storeLinks,
       }
       await using fixture = await setup({
         apps: [
@@ -1992,8 +2028,13 @@ describe('Atmosphere Explore', () => {
       const did = appDid('valid')
       await using fixture = await setup({
         apps: [
-          card('missing', legacy),
-          card('null', { did: null, ...legacy }),
+          card('missing', { ...overrides, ...storeLinks }),
+          card('null', {
+            did: null,
+            profileUrl: null,
+            ...overrides,
+            ...storeLinks,
+          }),
           card('invalid', { did: 'not-a-did' }),
           card('number', { did: 5 }),
           card('valid', { did }),
@@ -2009,8 +2050,12 @@ describe('Atmosphere Explore', () => {
         'null',
         'valid',
       ])
-      expect(body.apps[0]).toEqual(card('missing', legacy))
-      expect(body.apps[1]).toEqual(card('null', legacy))
+      expect(body.apps[0]).toEqual(
+        card('missing', { ...overrides, ...storeLinks }),
+      )
+      expect(body.apps[1]).toEqual(
+        card('null', { ...overrides, ...storeLinks }),
+      )
       expect(body.apps[2].profile?.did).toBe(did)
     })
 
@@ -2024,7 +2069,7 @@ describe('Atmosphere Explore', () => {
       ].map(appDid)
       await using fixture = await setup({
         apps: [gone, down, labeled, bare, good].map((did) =>
-          card(did, { did, ...legacy }),
+          card(did, { did, ...overrides }),
         ),
       })
       fixture.actors.set(gone, { exists: false })
@@ -2049,11 +2094,10 @@ describe('Atmosphere Explore', () => {
         good,
       ])
       for (const result of body.apps.slice(0, 3)) {
-        expect(result).toMatchObject(legacy)
+        expect(result).toMatchObject(overrides)
         expect(result).not.toHaveProperty('profile')
       }
-      // Profile without images: legacy images stay on the card only.
-      expect(body.apps[3]).toMatchObject(legacy)
+      expect(body.apps[3]).toMatchObject(overrides)
       expect(body.apps[3].profile).toMatchObject({ displayName: 'Bare' })
       expect(body.apps[3].profile).not.toHaveProperty('avatar')
       expect(body.apps[3].profile).not.toHaveProperty('banner')
@@ -3017,6 +3061,8 @@ describe('Atmosphere Explore', () => {
             null,
             'app',
             { ...app(2), url: 5 },
+            { ...app(2), appStoreUrl: 'not a uri' },
+            { ...app(2), googlePlayUrl: 5 },
             app(3),
           ],
         })
@@ -3200,7 +3246,7 @@ describe('Atmosphere Explore list ordering and caps', () => {
 
   it('shuffles each selected list before hydration', async () => {
     using _now = vi.spyOn(Date, 'now').mockReturnValue(frozenNow)
-    // Index 0 on every swap: [f1, f2, n1, n2] shuffles to [f2, n1, n2, f1].
+    // Index 0 rotates each list left once; publications also rotate before selection.
     // Retired schedules on the `f` entries must not change that order.
     using _random = vi.spyOn(Math, 'random').mockReturnValue(0)
     await using fixture = await setup(
@@ -3229,17 +3275,57 @@ describe('Atmosphere Explore list ordering and caps', () => {
     const { status, body } = await fixture.query()
     expect(status).toBe(200)
 
-    const expected = ['f2', 'n1', 'n2', 'f1']
+    const expected = (key: ListKey) =>
+      key === 'publications'
+        ? ['n1', 'n2', 'f1', 'f2']
+        : ['f2', 'n1', 'n2', 'f1']
     expect(hydrate.mock.calls[0][0]).toEqual(
-      lists.flatMap(({ uriFor }) => expected.map((name) => uriFor(name))),
+      lists.flatMap(({ key, uriFor }) =>
+        expected(key).map((name) => uriFor(name)),
+      ),
     )
     for (const { key, uriFor } of lists) {
       if (key === 'photos') continue
       const items = body[key].items
       expect(items.map(({ view }) => rootOf(view))).toEqual(
-        expected.map((name) => uriFor(name)),
+        expected(key).map((name) => uriFor(name)),
       )
     }
+  })
+
+  it('samples publications from the full list before the selection cap', async () => {
+    const roots = Array.from({ length: 12 }, (_, i) =>
+      atUri(author, site.standard.publication.$type, `publication-${i}`),
+    )
+    await using fixture = await setup({ publications: roots.map(group) })
+    for (const [i, uri] of roots.entries()) {
+      fixture.records.set(uri, {
+        ...fixture.records.get(pubUri)!,
+        name: `Publication ${i}`,
+      })
+    }
+    using hydrate = vi.spyOn(
+      fixture.hydrator,
+      'hydrateEmbedExternalViewFromUris',
+    )
+    const first = await fixture.query()
+    expect(first.status).toBe(200)
+    expect(
+      first.body.publications.items.map(({ view }) => rootOf(view)),
+    ).toEqual(roots.slice(0, 10))
+
+    // Swap the last candidate into the first slot; all other swaps are no-ops.
+    using _random = vi
+      .spyOn(Math, 'random')
+      .mockReturnValue(1 - Number.EPSILON)
+      .mockReturnValueOnce(0)
+    const second = await fixture.query()
+    const expected = [roots[11], ...roots.slice(1, 10)]
+    expect(second.status).toBe(200)
+    expect(
+      second.body.publications.items.map(({ view }) => rootOf(view)),
+    ).toEqual(expected)
+    expect(hydrate).toHaveBeenLastCalledWith(expected, expect.anything())
   })
 
   it('shuffles Iris articles', async () => {

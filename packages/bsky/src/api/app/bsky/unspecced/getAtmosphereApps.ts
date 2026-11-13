@@ -127,6 +127,8 @@ const APP_CARD_FIELDS = [
   'description',
   'logo',
   'url',
+  'appStoreUrl',
+  'googlePlayUrl',
   'category',
 ] as const
 
