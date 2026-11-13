@@ -117,4 +117,5 @@ export {
 } from '@atproto/lex-json'
 export * from '@atproto/lex-json'
 
-export * from './walk.js'
+// @NOTE prefer the 0.3 implementation over lex-schema's newer walk export.
+export { walk } from './walk.js'
