@@ -9,7 +9,7 @@
     { "type": "directory", "path": "../../lexicons-overrides" },
     {
       "type": "http",
-      "base": "https://raw.githubusercontent.com/bluesky-social/bsky/0085726f9fa1d28b0278c3ee0ca953deac8576a9/lexicons/",
+      "base": "https://raw.githubusercontent.com/bluesky-social/bsky/073b01d77237392f136eb65971b06d0c4f19e90f/lexicons/",
       "include": ["app.bsky.feed.defs"]
     },
     {
@@ -663,8 +663,8 @@
       "cid": "bafyreienkrtmhhf45ah742jkltbt53kbk7om53yl42rvjho4vkbka5zg3m"
     },
     "app.bsky.feed.defs": {
-      "uri": "https://raw.githubusercontent.com/bluesky-social/bsky/0085726f9fa1d28b0278c3ee0ca953deac8576a9/lexicons/app/bsky/feed/defs.json",
-      "cid": "bafyreiba3ewwyflsojfagqugkc3xgqjrxr2quwlsrnryaqgrbmr45nipw4"
+      "uri": "https://raw.githubusercontent.com/bluesky-social/bsky/073b01d77237392f136eb65971b06d0c4f19e90f/lexicons/app/bsky/feed/defs.json",
+      "cid": "bafyreigoaszc4ws7brcnry3zbosuahljt2vufevtyaifofxdbp4a6ie7ei"
     },
     "app.bsky.feed.describeFeedGenerator": {
       "uri": "https://raw.githubusercontent.com/bluesky-social/bsky/refs/heads/main/lexicons/app/bsky/feed/describeFeedGenerator.json",

@@ -32,7 +32,7 @@
         "viewCount": {
           "type": "integer",
           "minimum": 0,
-          "description": "Approximate number of times the post has been viewed. Only included in authenticated responses to the post's author when eligible to see the count. Counts less than 100 are omitted. Clients are responsible for hiding counts based on the viewer's age."
+          "description": "Approximate number of times the post has been viewed. Only included in authenticated responses to the post's author when eligible to see the count. Counts less than 100 are omitted."
         },
         "indexedAt": { "type": "string", "format": "datetime" },
         "viewer": { "type": "ref", "ref": "#viewerState" },
