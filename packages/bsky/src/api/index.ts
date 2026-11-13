@@ -82,6 +82,7 @@ import getAtmosphereExploreTab from './app/bsky/unspecced/getAtmosphereExploreTa
 import getAtmosphereRecordView from './app/bsky/unspecced/getAtmosphereRecordView.js'
 import getAtmosphereRecordViews from './app/bsky/unspecced/getAtmosphereRecordViews.js'
 import getAtmosphereTimeline from './app/bsky/unspecced/getAtmosphereTimeline.js'
+import getAtmosphereTimelineV2 from './app/bsky/unspecced/getAtmosphereTimelineV2.js'
 import getConfig from './app/bsky/unspecced/getConfig.js'
 import getOnboardingSuggestedStarterPacks from './app/bsky/unspecced/getOnboardingSuggestedStarterPacks.js'
 import getPopularFeedGenerators from './app/bsky/unspecced/getPopularFeedGenerators.js'
@@ -209,6 +210,7 @@ export default function (server: Server, ctx: AppContext) {
   getAtmosphereRecordView(server, ctx)
   getAtmosphereRecordViews(server, ctx)
   getAtmosphereTimeline(server, ctx)
+  getAtmosphereTimelineV2(server, ctx)
   getConfig(server, ctx)
   getPopularFeedGenerators(server, ctx)
   getTaggedSuggestions(server, ctx)

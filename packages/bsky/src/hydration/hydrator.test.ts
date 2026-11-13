@@ -2173,7 +2173,7 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
 
         expect(state.externalPublicationSubscriptions).toBe(subscriptions)
         expect([...subscriptions]).toEqual([
-          [pubUri, true],
+          [pubUri, subscriptionUri(viewer, 'valid')],
           [pub2Uri, truncated ? null : false],
           [missingPub, truncated ? null : false],
         ])
@@ -2248,7 +2248,7 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
       expect([...subscriptions]).toEqual(
         publications.map((uri, i) => [
           uri,
-          i === 0 ? true : i < 200 ? null : false,
+          i === 0 ? subscriptionUri(viewer, '1') : i < 200 ? null : false,
         ]),
       )
       const batches = byActor.mock.calls.map(([req]) => req.targetUris ?? [])
@@ -2308,7 +2308,9 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
       const state = mergeStates(await first, next)
 
       expect(byActor).toHaveBeenCalledTimes(1)
-      expect(state.externalPublicationSubscriptions?.get(pubUri)).toBe(true)
+      expect(state.externalPublicationSubscriptions?.get(pubUri)).toBe(
+        subscriptionUri(viewer, '1'),
+      )
     })
 
     it('ignores unvalidated and moderated publication sources', async ({
@@ -2459,7 +2461,7 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
       expect(state.externalPublicationSubscriptions).toBe(subscriptions)
       expect([...subscriptions]).toEqual([
         [pubUri, false],
-        [pub2Uri, true],
+        [pub2Uri, subscriptionUri(viewer, '1')],
       ])
       expect(byActor.mock.calls.map(([req]) => req.targetUris)).toEqual([
         [pubUri],
@@ -3073,8 +3075,8 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
 
         expect(state.externalPublicationSubscriptions).toBe(subscriptions)
         expect([...subscriptions]).toEqual([
-          [pubUri, true],
-          [pub2Uri, true],
+          [pubUri, subscriptionUri(viewer, '1')],
+          [pub2Uri, subscriptionUri(viewer, '1')],
         ])
         expect(byActor.mock.calls.map(([req]) => req.targetUris)).toEqual([
           [pubUri],
