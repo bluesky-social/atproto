@@ -226,6 +226,57 @@ describe('viewer appeal outcomes', () => {
     },
   )
 
+  it('rejects linking a content correction to an account appeal', async () => {
+    const appeal = await startAppeal('label', 'account')
+    const notificationsBefore = await resolutionNotifications(appeal.subjectId)
+    const post = await sc.post(sc.dids.alice, 'Content correction')
+    const subject = com.atproto.repo.strongRef.$build({
+      uri: post.ref.uriStr,
+      cid: post.ref.cidStr,
+    })
+    await network.processAll()
+    await mod.emitEvent({
+      subject,
+      event: tools.ozone.moderation.defs.modEventLabel.$build({
+        createLabelVals: ['spam'],
+        negateLabelVals: [],
+      }),
+    })
+    await expect(
+      mod.emitEvent({
+        subject,
+        event: tools.ozone.moderation.defs.modEventLabel.$build({
+          createLabelVals: [],
+          negateLabelVals: ['spam'],
+        }),
+        reportAction: {
+          subjects: [
+            com.atproto.admin.defs.repoRef.$build({ did: sc.dids.alice }),
+          ],
+          ids: [appeal.reportId],
+        },
+      }),
+    ).rejects.toThrow('additional report subjects require an account event')
+    const { data: report } = await mod.agent.tools.ozone.report.getReport(
+      { id: appeal.reportId },
+      {
+        headers: await network.ozone.modHeaders(
+          tools.ozone.report.getReport.$lxm,
+        ),
+      },
+    )
+    expect(report.status).not.toBe('closed')
+    expect(report.actionEventIds).toEqual([appeal.action.id])
+    const view = await detail(appeal.subjectId)
+    expect(view.appeal).toMatchObject({ state: 'pending' })
+    expect(view.appeal).not.toHaveProperty('outcome')
+    expect(view.enforcement.labels).toContain('spam')
+    const notifications = await resolutionNotifications(appeal.subjectId)
+    expect(notifications).toEqual(notificationsBefore)
+    expect((await detail(post.ref.uriStr)).enforcement.labels).toContain('spam')
+    await activity(appeal.reportId, 'closeActivity')
+  })
+
   it('does not infer an appeal outcome from the action being appealed', async () => {
     const appeal = await startAppeal()
     await network.ozone.getAgent().tools.ozone.report.closeReports(
