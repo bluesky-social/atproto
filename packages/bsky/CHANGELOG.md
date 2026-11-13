@@ -1,5 +1,11 @@
 # @atproto/bsky
 
+## 0.5.11
+
+### Patch Changes
+
+- [#5899](https://github.com/bluesky-social/atproto/pull/5899) [`156b4a4`](https://github.com/bluesky-social/atproto/commit/156b4a4ed722d02f0f30f8ab9a00aa366c74782c) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add `app.bsky.unspecced.getAtmosphereRecommendedActivity` to hydrate Iris's mixed article and gallery recommendations.
+
 ## 0.5.10
 
 ### Patch Changes
