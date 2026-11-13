@@ -23,6 +23,7 @@ import { httpLogger } from '../../../../../logger.js'
 import { recordUriOf, uriToDid } from '../../../../../util/uris.js'
 import {
   externalRecordViewRefs,
+  isLivestreamLive,
   isRecordAvailable,
 } from '../../../../../views/external.js'
 import type { Views } from '../../../../../views/index.js'
@@ -173,7 +174,7 @@ export class AtmosphereTimelineHydrator implements TimelineHydration {
         this.state,
         this.now,
         undefined,
-        { publicationViewer: true },
+        { publicationViewer: true, livestreamCreatedAtHeartbeat: true },
       )
       if (view) this.externalViews.set(uri, view)
     }
@@ -214,7 +215,9 @@ export class AtmosphereTimelineHydrator implements TimelineHydration {
           false
         : true
     } else if (place.stream.livestream.$matches(record)) {
-      groupable = !!record.endedAt
+      // @NOTE Ended livestreams are omitted, and live ones stand alone.
+      if (!isLivestreamLive(record, this.now)) return
+      groupable = false
     } else if (!social.grain.gallery.$matches(record)) {
       return
     }

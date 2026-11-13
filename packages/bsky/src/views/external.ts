@@ -24,6 +24,30 @@ export const LIVESTREAM_HEARTBEAT_WINDOW_MS = 2 * MINUTE
 export type ExternalRecordViewOptions = {
   /** Include the viewer's state on publication views, from hydrated subscriptions. */
   publicationViewer?: boolean
+  /** Compute livestream `active` with {@link isLivestreamLive}. */
+  livestreamCreatedAtHeartbeat?: boolean
+}
+
+/**
+ * Live means a heartbeat within the window and no `endedAt` at or before now.
+ * Without any heartbeat yet, a stream created within the window counts as live.
+ */
+export function isLivestreamLive(
+  record: place.stream.livestream.Main,
+  now: number,
+): boolean {
+  const endedAt = record.endedAt ? Date.parse(record.endedAt) : NaN
+  return (
+    isFreshHeartbeat(record.lastSeenAt ?? record.createdAt, now) &&
+    !(endedAt <= now)
+  )
+}
+
+function isFreshHeartbeat(at: string | undefined, now: number): boolean {
+  const heartbeat = at ? Date.parse(at) : NaN
+  // @NOTE The window applies on both sides of now to tolerate clock skew, so
+  // a future heartbeat counts as live for at most twice the window.
+  return Math.abs(now - heartbeat) < LIVESTREAM_HEARTBEAT_WINDOW_MS
 }
 
 /**
@@ -217,10 +241,6 @@ function externalRecordViewOrRefs(
 
   if (place.stream.livestream.$matches(record)) {
     if (refsOnly) return [uri]
-    const lastSeen = record.lastSeenAt ? Date.parse(record.lastSeenAt) : NaN
-    // @NOTE The window applies on both sides of now to tolerate clock skew, so
-    // a future heartbeat counts as live for at most twice the window.
-    const fresh = Math.abs(now - lastSeen) < LIVESTREAM_HEARTBEAT_WINDOW_MS
     return app.bsky.embed.external.viewLivestream.$build({
       ...commonFields(views, [uri], state, info),
       uri: httpUri(record.canonicalUrl) ?? httpUri(record.url) ?? uri,
@@ -234,7 +254,9 @@ function externalRecordViewOrRefs(
             getBlobCidString(record.thumb),
           )
         : undefined,
-      active: !record.endedAt && fresh,
+      active: options.livestreamCreatedAtHeartbeat
+        ? isLivestreamLive(record, now)
+        : !record.endedAt && isFreshHeartbeat(record.lastSeenAt, now),
       startedAt: record.createdAt,
       endedAt: record.endedAt,
       lastSeenAt: record.lastSeenAt,

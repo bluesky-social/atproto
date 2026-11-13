@@ -18,7 +18,7 @@ import { Gate } from '../src/feature-gates/gates.js'
 import { FeatureGatesClient } from '../src/feature-gates/index.js'
 import { Hydrator } from '../src/hydration/hydrator.js'
 import { ImageUriBuilder } from '../src/image/uri.js'
-import { app, site } from '../src/lexicons/index.js'
+import { app, place, site } from '../src/lexicons/index.js'
 import { Service } from '../src/proto/bsky_connect.js'
 import { RecordLookupStatus } from '../src/proto/bsky_pb.js'
 import { Views } from '../src/views/index.js'
@@ -270,6 +270,44 @@ describe('Atmosphere timeline V2 HTTP endpoint', () => {
       ['did:plc:r1', 'did:plc:r3', alice, 'did:plc:r2'].map((did) => ({
         $type: app.bsky.actor.defs.profileViewBasic.$type,
         did,
+      })),
+    )
+  })
+  it('omits ended livestreams and keeps live ones standalone', async () => {
+    using _clock = vi.spyOn(Date, 'now').mockReturnValue(now)
+    const ago = (minutes: number) => toDatetimeString(now - minutes * minute)
+    const streams = {
+      live: { lastSeenAt: ago(1) },
+      justStarted: { createdAt: ago(1) },
+      stale: { lastSeenAt: ago(3) },
+      ended: { lastSeenAt: ago(0), endedAt: ago(1) },
+      noRecentHeartbeat: { createdAt: ago(3) },
+    }
+    const rows = Object.keys(streams).map((rkey, i) => ({
+      uri: atUri(alice, place.stream.livestream.$type, rkey),
+      time: now - i * minute,
+    }))
+    const records = new Map<AtUriString, TypedLexMap>(
+      Object.values(streams).map((fields, i) => [
+        rows[i].uri,
+        place.stream.livestream.$build({
+          title: 'Stream',
+          url: 'https://stream.example.com',
+          createdAt: ago(60),
+          ...fields,
+        }),
+      ]),
+    )
+    await using fixture = await setup(rows, records)
+
+    const { status, body } = await fixture.query()
+
+    expect(status).toBe(200)
+    expect(body.feed).toMatchObject(
+      rows.slice(0, 2).map(({ uri }) => ({
+        $type: endpoint.activityItem.$type,
+        ref: { uri },
+        subject: { view: { active: true } },
       })),
     )
   })
