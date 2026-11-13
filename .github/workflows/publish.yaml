@@ -57,4 +57,8 @@ jobs:
         run: |
           pnpm changeset version --snapshot spaces-alpha
           pnpm build
+          # Publish internal deps as exact versions: pnpm turns `workspace:^`
+          # into `^0.0.0-spaces-alpha-<ts>`, which also matches stray `0.0.0`
+          # and `0.0.0-stage` releases that sort above the snapshot.
+          git ls-files -z '*package.json' | xargs -0 sed -i 's/"workspace:\^"/"workspace:*"/g'
           pnpm publish -r --tag alpha --provenance --no-git-checks --access public
