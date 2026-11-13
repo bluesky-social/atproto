@@ -211,6 +211,7 @@ export async function getReportById(
 export async function getReportsByIds(
   db: Database,
   ids: number[],
+  signal?: AbortSignal,
 ): Promise<ReportWithEvent[]> {
   if (!ids.length) return []
   return reportQuery(db)
@@ -224,7 +225,7 @@ export async function getReportsByIds(
       'me.comment',
       'me.meta',
     ])
-    .execute()
+    .execute({ signal, inflightQueryAbortStrategy: 'cancel query' })
 }
 
 export async function getLatestReport(

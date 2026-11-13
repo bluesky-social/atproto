@@ -395,6 +395,7 @@
     "tools.ozone.report.getReport",
     "tools.ozone.report.listActivities",
     "tools.ozone.report.queryActivities",
+    "tools.ozone.report.queryModeratorActivity",
     "tools.ozone.report.queryReports",
     "tools.ozone.report.reassignQueue",
     "tools.ozone.report.refreshStats",
@@ -1958,6 +1959,10 @@
     "tools.ozone.report.queryActivities": {
       "uri": "file://../../lexicons/tools/ozone/report/queryActivities.json",
       "cid": "bafyreib32f4zbtwyzub34hgif7rgkyhyj3uysmx2spcatapctwvwreouwm"
+    },
+    "tools.ozone.report.queryModeratorActivity": {
+      "uri": "file://../../lexicons/tools/ozone/report/queryModeratorActivity.json",
+      "cid": "bafyreib3cwkpf2wnmwyiila2cwhabb5ffgwtuf6sba2krgyrcosjhc4gvy"
     },
     "tools.ozone.report.queryReports": {
       "uri": "file://../../lexicons/tools/ozone/report/queryReports.json",
