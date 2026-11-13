@@ -413,14 +413,17 @@ export class ModerationService {
     return { cursor: keyset.packFromResult(result), events: resultWithHandles }
   }
 
-  async getEventsByIds(ids: number[]): Promise<ModerationEventRowWithHandle[]> {
+  async getEventsByIds(
+    ids: number[],
+    signal?: AbortSignal,
+  ): Promise<ModerationEventRowWithHandle[]> {
     if (!ids.length) return []
 
     const result = await this.db.db
       .selectFrom('moderation_event')
       .selectAll()
       .where('id', 'in', ids)
-      .execute()
+      .execute({ signal, inflightQueryAbortStrategy: 'cancel query' })
 
     if (!result.length) return []
 
