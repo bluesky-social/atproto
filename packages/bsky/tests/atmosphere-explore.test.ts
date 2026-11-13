@@ -29,6 +29,7 @@ import {
 import { AuthRequiredError, createServer } from '@atproto/xrpc-server'
 import registerApps from '../src/api/app/bsky/unspecced/getAtmosphereApps.js'
 import register from '../src/api/app/bsky/unspecced/getAtmosphereExploreTab.js'
+import registerRecommendedActivity from '../src/api/app/bsky/unspecced/getAtmosphereRecommendedActivity.js'
 import { ServerConfig } from '../src/config.js'
 import type { AppContext } from '../src/context.js'
 import { Gate } from '../src/feature-gates/gates.js'
@@ -360,20 +361,24 @@ async function setup(config: unknown = {}, exploreEnabled = true) {
   const iris = {
     response: { articles: [], recIdStr: '123' } as unknown,
     galleryResponse: { galleries: [], recIdStr: 'gallery-123' } as unknown,
+    activityResponse: { items: [], recIdStr: 'activity-123' } as unknown,
     respond: undefined as
       undefined | ((request: Request) => Response | Promise<Response>),
     fetchMock: vi.fn<typeof globalThis.fetch>(),
   }
   iris.fetchMock.mockImplementation(async (input, init) => {
     const request = new Request(input, init)
-    return iris.respond
-      ? iris.respond(request)
-      : Response.json(
-          new URL(request.url).pathname ===
+    if (iris.respond) return iris.respond(request)
+    const pathname = new URL(request.url).pathname
+    return Response.json(
+      pathname ===
+        `/xrpc/${app.bsky.unspecced.getAtmosphereActivityRecommendations.$lxm}`
+        ? iris.activityResponse
+        : pathname ===
             `/xrpc/${app.bsky.unspecced.getAtmosphereExploreGalleryRecommendations.$lxm}`
-            ? iris.galleryResponse
-            : iris.response,
-        )
+          ? iris.galleryResponse
+          : iris.response,
+    )
   })
   const ctx = {
     cfg,
@@ -414,6 +419,7 @@ async function setup(config: unknown = {}, exploreEnabled = true) {
     .mockImplementation(async () => Response.json(workerBody(config)))
   register(xrpc, ctx)
   registerApps(xrpc, ctx)
+  registerRecommendedActivity(xrpc, ctx)
   const enabledGates = new Set(
     exploreEnabled ? [Gate.AtmosphereScreenEndpointsEnable] : [],
   )
@@ -485,6 +491,30 @@ async function setup(config: unknown = {}, exploreEnabled = true) {
       return {
         status: response.status,
         body: body as app.bsky.unspecced.getAtmosphereExploreTab.$OutputBody,
+      }
+    },
+    queryRecommendedActivity: async (
+      authenticated = false,
+      params: Partial<app.bsky.unspecced.getAtmosphereRecommendedActivity.$Params> = {},
+      headers: Record<string, string> = {},
+    ) => {
+      const url = new URL(
+        `http://127.0.0.1:${address.port}/xrpc/${app.bsky.unspecced.getAtmosphereRecommendedActivity.$lxm}`,
+      )
+      if (params.limit !== undefined)
+        url.searchParams.set('limit', String(params.limit))
+      for (const lang of params.langs ?? [])
+        url.searchParams.append('langs', lang)
+      const response = await nativeFetch(url, {
+        headers: {
+          ...(authenticated ? { authorization: 'Bearer valid' } : {}),
+          ...headers,
+        },
+      })
+      return {
+        status: response.status,
+        headers: response.headers,
+        body: (await response.json()) as app.bsky.unspecced.getAtmosphereRecommendedActivity.$OutputBody,
       }
     },
     queryApps: async (
@@ -4271,5 +4301,216 @@ describe('Atmosphere Explore Iris galleries', () => {
     fixture.ctx.irisClient = undefined
     expect((await fixture.query()).status).toBe(501)
     expect(fixture.fetchMock).not.toHaveBeenCalled()
+  })
+})
+
+describe('Atmosphere recommended activity', () => {
+  test.each([false, true])(
+    'preserves mixed recommendation order (authenticated: %s)',
+    async (authenticated) => {
+      await using f = await setup()
+      f.iris.activityResponse = {
+        items: [doc2Uri, galleryUri, docUri].map((uri) => ({ uri })),
+        recIdStr: 'mixed-rec',
+      }
+      using hydrate = vi.spyOn(f.hydrator, 'hydrateEmbedExternalViewFromUris')
+      const { status, headers, body } = await f.queryRecommendedActivity(
+        authenticated,
+        { limit: 3 },
+      )
+      expect(status).toBe(200)
+      expect(body.recIdStr).toBe('mixed-rec')
+      expect(body.items).toMatchObject([
+        { view: { title: 'Second article' } },
+        { view: { title: 'Gallery' } },
+        { view: { title: 'Article' } },
+      ])
+      expect(body.items.map(({ view }) => view.$type)).toEqual([
+        app.bsky.embed.external.viewArticle.$type,
+        app.bsky.embed.external.viewGallery.$type,
+        app.bsky.embed.external.viewArticle.$type,
+      ])
+      expect(headers.get('atproto-content-labelers')).toBe(`${labeler};redact`)
+      expect(hydrate).toHaveBeenCalledWith(
+        [doc2Uri, galleryUri, docUri],
+        expect.objectContaining({
+          viewer: authenticated ? viewer : null,
+          xrpcEndpoint:
+            app.bsky.unspecced.getAtmosphereRecommendedActivity.$lxm,
+        }),
+        { hydration: 'basic' },
+      )
+      const [input, init] = f.iris.fetchMock.mock.calls[0]
+      const request = new Request(input, init)
+      expect(new URL(request.url).pathname).toBe(
+        `/xrpc/${app.bsky.unspecced.getAtmosphereActivityRecommendations.$lxm}`,
+      )
+      expect(new URL(request.url).searchParams.get('viewer')).toBe(
+        authenticated ? viewer : null,
+      )
+      expect(new URL(request.url).searchParams.get('limit')).toBe('3')
+      expect(f.fetchMock).not.toHaveBeenCalled()
+    },
+  )
+
+  test.each([{ langs: [] }, { langs: ['fr', 'de'] }])(
+    'forwards request-scoped recommendation context (langs: $langs)',
+    async ({ langs }) => {
+      await using f = await setup()
+      const iris = f.ctx.irisClient!
+      using call = vi.spyOn(iris, 'call')
+      const { status } = await f.queryRecommendedActivity(
+        true,
+        { langs: [...langs] },
+        {
+          'accept-language': 'en-US',
+          'x-atproto-bsky-topics': 'art,photography',
+          'x-atproto-device-id': 'device-123',
+          'x-atproto-session-id': 'session-456',
+        },
+      )
+      expect(status).toBe(200)
+      expect(call).toHaveBeenCalledWith(
+        app.bsky.unspecced.getAtmosphereActivityRecommendations,
+        { viewer, limit: 25 },
+        {
+          headers: {
+            'accept-language': langs.length ? langs.join(',') : 'en-US',
+            'x-atproto-bsky-topics': 'art,photography',
+            'x-atproto-device-id': 'device-123',
+            'x-atproto-session-id': 'session-456',
+          },
+          signal: expect.any(AbortSignal),
+          validateResponse: true,
+        },
+      )
+      const [input, init] = f.iris.fetchMock.mock.calls[0]
+      expect(new Request(input, init).headers.get('authorization')).toBe(
+        'Bearer iris-key',
+      )
+    },
+  )
+
+  test.each([false, true])(
+    'checks the screen gate before fetching (authenticated: %s)',
+    async (authenticated) => {
+      await using f = await setup({}, false)
+      expect((await f.queryRecommendedActivity(authenticated)).status).toBe(403)
+      expect(f.iris.fetchMock).not.toHaveBeenCalled()
+    },
+  )
+
+  it('returns 501 when Iris is unavailable', async () => {
+    await using f = await setup()
+    f.ctx.irisClient = undefined
+    expect((await f.queryRecommendedActivity()).status).toBe(501)
+    expect(f.fetchMock).not.toHaveBeenCalled()
+  })
+
+  it('filters unsupported roots, deduplicates and omits unavailable views', async () => {
+    await using f = await setup()
+    f.records.set(doc2Uri, {
+      $type: site.standard.document.$type,
+      title: 'Invalid article without a site or date',
+    })
+    f.galleryItems.set(galleryUri, [])
+    const unsupported = atUri(author, app.bsky.feed.post.$type, 'unsupported')
+    f.iris.activityResponse = {
+      items: [
+        unsupported,
+        `at://author.test/${site.standard.document.$type}/story`,
+        `at://${author}/${site.standard.document.$type}`,
+        `${docUri}?query=1`,
+        missingUri,
+        galleryUri,
+        doc2Uri,
+        docUri,
+        docUri,
+      ].map((uri) => ({ uri })),
+      recIdStr: 'filtered-rec',
+    }
+    using hydrate = vi.spyOn(f.hydrator, 'hydrateEmbedExternalViewFromUris')
+    const { status, body } = await f.queryRecommendedActivity()
+    expect(status).toBe(200)
+    expect(body.items).toMatchObject([{ view: { title: 'Article' } }])
+    expect(body.recIdStr).toBe('filtered-rec')
+    expect(hydrate.mock.calls[0][0]).toEqual([
+      missingUri,
+      galleryUri,
+      doc2Uri,
+      docUri,
+    ])
+  })
+
+  test.each(['takedown', 'actor', 'block'])(
+    'does not expose moderated recommendations: %s',
+    async (kind) => {
+      await using f = await setup()
+      f.iris.activityResponse = {
+        items: [docUri, galleryUri].map((uri) => ({ uri })),
+        recIdStr: 'hidden-rec',
+      }
+      if (kind === 'takedown') {
+        f.takenDown.add(docUri)
+        f.takenDown.add(galleryUri)
+      }
+      if (kind === 'actor') f.takenDownActors.add(author)
+      if (kind === 'block') f.blockedActors.add(author)
+      const { status, body } = await f.queryRecommendedActivity(true)
+      expect(status).toBe(200)
+      expect(body).toEqual({ items: [], recIdStr: 'hidden-rec' })
+    },
+  )
+
+  it('caps upstream results at the requested limit', async () => {
+    await using f = await setup()
+    f.iris.activityResponse = {
+      items: [galleryUri, docUri].map((uri) => ({ uri })),
+      recIdStr: 'capped',
+    }
+    const { status, body } = await f.queryRecommendedActivity(false, {
+      limit: 1,
+    })
+    expect(status).toBe(200)
+    expect(body.items).toMatchObject([{ view: { title: 'Gallery' } }])
+  })
+
+  test.each([0, 101])('rejects an invalid limit: %s', async (limit) => {
+    await using f = await setup()
+    expect((await f.queryRecommendedActivity(false, { limit })).status).toBe(
+      400,
+    )
+    expect(f.iris.fetchMock).not.toHaveBeenCalled()
+  })
+
+  test.each([
+    { items: [] },
+    { items: [{ uri: 'not-an-at-uri' }], recIdStr: 'invalid' },
+  ])(
+    'validates Iris responses even outside debug mode: %j',
+    async (response) => {
+      await using f = await setup()
+      f.iris.activityResponse = response
+      using hydrate = vi.spyOn(f.hydrator, 'hydrateEmbedExternalViewFromUris')
+      expect((await f.queryRecommendedActivity()).status).toBe(502)
+      expect(hydrate).not.toHaveBeenCalled()
+    },
+  )
+
+  it('returns only external views without hydrating associated posts', async () => {
+    await using f = await setup()
+    const postUri = atUri(author, app.bsky.feed.post.$type, 'announcement')
+    f.records.get(docUri)!.bskyPostRef = { uri: postUri, cid }
+    using posts = vi.spyOn(f.hydrator, 'hydratePosts')
+    f.iris.activityResponse = {
+      items: [{ uri: docUri }],
+      recIdStr: 'article',
+    }
+    const { status, body } = await f.queryRecommendedActivity(true)
+    expect(status).toBe(200)
+    expect(body.items).toEqual([
+      { view: expect.objectContaining({ title: 'Article' }) },
+    ])
+    expect(posts).not.toHaveBeenCalled()
   })
 })
