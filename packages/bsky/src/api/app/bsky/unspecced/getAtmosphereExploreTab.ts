@@ -396,6 +396,8 @@ function presentation({
         overlayColor: card.overlayColor,
         textColor: card.textColor,
         url: card.url,
+        appStoreUrl: card.appStoreUrl,
+        googlePlayUrl: card.googlePlayUrl,
         category: card.category,
         profile,
       }
@@ -508,6 +510,8 @@ const APP_CARD_FIELDS = [
   'overlayColor',
   'textColor',
   'url',
+  'appStoreUrl',
+  'googlePlayUrl',
   'category',
 ] as const
 

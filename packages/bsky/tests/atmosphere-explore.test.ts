@@ -1854,9 +1854,14 @@ describe('Atmosphere Explore', () => {
         displayName,
         ...(withImages ? { avatar: blob, banner: blob } : {}),
       })
-    const legacy = {
-      logo: 'https://example.com/legacy-logo.png',
-      backgroundImage: 'https://example.com/legacy-bg.png',
+    const overrides = {
+      logo: 'https://example.com/override-logo.png',
+      backgroundImage: 'https://example.com/override-bg.png',
+    }
+    const storeLinks = {
+      appStoreUrl: 'https://apps.apple.com/app/example/id123?ct=explore',
+      googlePlayUrl:
+        'https://play.google.com/store/apps/details?id=com.example&referrer=explore',
     }
     const card = (id: string, extra: object = {}) => ({
       id,
@@ -1865,7 +1870,7 @@ describe('Atmosphere Explore', () => {
       ...extra,
     })
 
-    it('hydrates a detailed profile backing the card images', async () => {
+    it('prefers profile images and preserves store links', async () => {
       const did = appDid('appone')
       const editorial = {
         id: 'one',
@@ -1875,7 +1880,8 @@ describe('Atmosphere Explore', () => {
         category: 'Social',
         overlayColor: '#000000',
         textColor: '#ffffff',
-        ...legacy,
+        ...overrides,
+        ...storeLinks,
       }
       await using fixture = await setup({
         apps: [
@@ -1992,8 +1998,13 @@ describe('Atmosphere Explore', () => {
       const did = appDid('valid')
       await using fixture = await setup({
         apps: [
-          card('missing', legacy),
-          card('null', { did: null, ...legacy }),
+          card('missing', { ...overrides, ...storeLinks }),
+          card('null', {
+            did: null,
+            profileUrl: null,
+            ...overrides,
+            ...storeLinks,
+          }),
           card('invalid', { did: 'not-a-did' }),
           card('number', { did: 5 }),
           card('valid', { did }),
@@ -2009,8 +2020,12 @@ describe('Atmosphere Explore', () => {
         'null',
         'valid',
       ])
-      expect(body.apps[0]).toEqual(card('missing', legacy))
-      expect(body.apps[1]).toEqual(card('null', legacy))
+      expect(body.apps[0]).toEqual(
+        card('missing', { ...overrides, ...storeLinks }),
+      )
+      expect(body.apps[1]).toEqual(
+        card('null', { ...overrides, ...storeLinks }),
+      )
       expect(body.apps[2].profile?.did).toBe(did)
     })
 
@@ -2024,7 +2039,7 @@ describe('Atmosphere Explore', () => {
       ].map(appDid)
       await using fixture = await setup({
         apps: [gone, down, labeled, bare, good].map((did) =>
-          card(did, { did, ...legacy }),
+          card(did, { did, ...overrides }),
         ),
       })
       fixture.actors.set(gone, { exists: false })
@@ -2049,11 +2064,10 @@ describe('Atmosphere Explore', () => {
         good,
       ])
       for (const result of body.apps.slice(0, 3)) {
-        expect(result).toMatchObject(legacy)
+        expect(result).toMatchObject(overrides)
         expect(result).not.toHaveProperty('profile')
       }
-      // Profile without images: legacy images stay on the card only.
-      expect(body.apps[3]).toMatchObject(legacy)
+      expect(body.apps[3]).toMatchObject(overrides)
       expect(body.apps[3].profile).toMatchObject({ displayName: 'Bare' })
       expect(body.apps[3].profile).not.toHaveProperty('avatar')
       expect(body.apps[3].profile).not.toHaveProperty('banner')
@@ -3017,6 +3031,8 @@ describe('Atmosphere Explore', () => {
             null,
             'app',
             { ...app(2), url: 5 },
+            { ...app(2), appStoreUrl: 'not a uri' },
+            { ...app(2), googlePlayUrl: 5 },
             app(3),
           ],
         })
