@@ -3216,7 +3216,7 @@ describe('Atmosphere Explore list ordering and caps', () => {
 
   it('shuffles each selected list before hydration', async () => {
     using _now = vi.spyOn(Date, 'now').mockReturnValue(frozenNow)
-    // Index 0 on every swap: [f1, f2, n1, n2] shuffles to [f2, n1, n2, f1].
+    // Index 0 rotates each list left once; publications also rotate before selection.
     // Retired schedules on the `f` entries must not change that order.
     using _random = vi.spyOn(Math, 'random').mockReturnValue(0)
     await using fixture = await setup(
@@ -3245,17 +3245,57 @@ describe('Atmosphere Explore list ordering and caps', () => {
     const { status, body } = await fixture.query()
     expect(status).toBe(200)
 
-    const expected = ['f2', 'n1', 'n2', 'f1']
+    const expected = (key: ListKey) =>
+      key === 'publications'
+        ? ['n1', 'n2', 'f1', 'f2']
+        : ['f2', 'n1', 'n2', 'f1']
     expect(hydrate.mock.calls[0][0]).toEqual(
-      lists.flatMap(({ uriFor }) => expected.map((name) => uriFor(name))),
+      lists.flatMap(({ key, uriFor }) =>
+        expected(key).map((name) => uriFor(name)),
+      ),
     )
     for (const { key, uriFor } of lists) {
       if (key === 'photos') continue
       const items = body[key].items
       expect(items.map(({ view }) => rootOf(view))).toEqual(
-        expected.map((name) => uriFor(name)),
+        expected(key).map((name) => uriFor(name)),
       )
     }
+  })
+
+  it('samples publications from the full list before the selection cap', async () => {
+    const roots = Array.from({ length: 12 }, (_, i) =>
+      atUri(author, site.standard.publication.$type, `publication-${i}`),
+    )
+    await using fixture = await setup({ publications: roots.map(group) })
+    for (const [i, uri] of roots.entries()) {
+      fixture.records.set(uri, {
+        ...fixture.records.get(pubUri)!,
+        name: `Publication ${i}`,
+      })
+    }
+    using hydrate = vi.spyOn(
+      fixture.hydrator,
+      'hydrateEmbedExternalViewFromUris',
+    )
+    const first = await fixture.query()
+    expect(first.status).toBe(200)
+    expect(
+      first.body.publications.items.map(({ view }) => rootOf(view)),
+    ).toEqual(roots.slice(0, 10))
+
+    // Swap the last candidate into the first slot; all other swaps are no-ops.
+    using _random = vi
+      .spyOn(Math, 'random')
+      .mockReturnValue(1 - Number.EPSILON)
+      .mockReturnValueOnce(0)
+    const second = await fixture.query()
+    const expected = [roots[11], ...roots.slice(1, 10)]
+    expect(second.status).toBe(200)
+    expect(
+      second.body.publications.items.map(({ view }) => rootOf(view)),
+    ).toEqual(expected)
+    expect(hydrate).toHaveBeenLastCalledWith(expected, expect.anything())
   })
 
   it('shuffles Iris articles', async () => {

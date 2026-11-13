@@ -230,7 +230,10 @@ async function skeleton({
         : completeGroups(select(config.articles)),
     ),
     articleRecIdStr: recommendations?.recIdStr,
-    publications: orderGroups(completeGroups(select(config.publications))),
+    // @NOTE Randomize candidates within priority buckets before selection's cap.
+    publications: orderGroups(
+      completeGroups(select(shuffle(config.publications))),
+    ),
     photos: orderGroups(
       galleryRecommendations && galleryRecommendations.galleries.length > 0
         ? mapDefined(
@@ -576,12 +579,16 @@ type SkeletonState = {
  * so presentation keeps this order.
  */
 function orderGroups<T extends RecordGroup>(groups: T[]): T[] {
-  const shuffled = [...groups]
+  return shuffle(groups).slice(0, MAX_LIST_ITEMS)
+}
+
+function shuffle<T>(items: T[]): T[] {
+  const shuffled = [...items]
   for (let i = shuffled.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1))
     ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
   }
-  return shuffled.slice(0, MAX_LIST_ITEMS)
+  return shuffled
 }
 
 function completeGroups(groups: Group[] = []): RecordGroup[] {
