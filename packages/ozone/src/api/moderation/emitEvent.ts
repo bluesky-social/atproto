@@ -67,6 +67,15 @@ const handleModerationEvent = async ({
     )
   }
 
+  if (
+    input.body.reportAction?.subjects !== undefined &&
+    input.body.reportAction?.subjectTypes !== undefined
+  ) {
+    throw new InvalidRequestError(
+      'reportAction subjects and subjectTypes are mutually exclusive',
+    )
+  }
+
   if (input.body.reportAction?.allOwned) {
     if (!subject.isRepo()) {
       throw new InvalidRequestError('allOwned requires an account subject')
@@ -77,6 +86,48 @@ const handleModerationEvent = async ({
     ) {
       throw new InvalidRequestError(
         'allOwned requires an event that closes reports',
+      )
+    }
+  }
+
+  const reportSubjects = input.body.reportAction?.allOwned
+    ? undefined
+    : input.body.reportAction?.subjects?.map((target) =>
+        subjectFromInput(target),
+      )
+  const reportSubjectTypes = input.body.reportAction?.allOwned
+    ? undefined
+    : input.body.reportAction?.subjectTypes
+  if (reportSubjects?.some((target) => target.did !== subject.did)) {
+    throw new InvalidRequestError(
+      'report subjects must belong to the actioned account',
+    )
+  }
+  const subjectInfo = subject.info()
+  const expandsReports = reportSubjects?.some((target) => {
+    const targetInfo = target.info()
+    return (
+      targetInfo.subjectType !== subjectInfo.subjectType ||
+      targetInfo.subjectUri !== subjectInfo.subjectUri ||
+      targetInfo.subjectMessageId !== subjectInfo.subjectMessageId ||
+      targetInfo.subjectConvoId !== subjectInfo.subjectConvoId
+    )
+  })
+  const expandsReportTypes = reportSubjectTypes?.some(
+    (type) => !subject.isRepo() || type !== 'account',
+  )
+  if (expandsReports || expandsReportTypes) {
+    if (!subject.isRepo()) {
+      throw new InvalidRequestError(
+        'additional report subjects require an account event',
+      )
+    }
+    if (
+      handleReportUpdate('open', { type: 'event', eventType: event.$type })
+        .nextStatus !== 'closed'
+    ) {
+      throw new InvalidRequestError(
+        'additional report subjects require an event that closes reports',
       )
     }
   }
@@ -320,6 +371,7 @@ const handleModerationEvent = async ({
           inboxStartAt: ctx.cfg.inbox.startAt,
           db: dbTxn,
           reportAction: input.body.reportAction,
+          subjects: reportSubjects,
           metadata,
           subjectDid: subject.did,
           subjectUri,

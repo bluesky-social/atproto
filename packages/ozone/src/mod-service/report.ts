@@ -18,7 +18,18 @@ import {
 } from '../report/handle-report-update.js'
 import { getActivityMetadata } from '../report/metadata.js'
 import { notifyReportActivities } from '../report/notifications.js'
-import { CHAT_CONVO_COLLECTION, CHAT_MESSAGE_COLLECTION } from './subject.js'
+import {
+  CHAT_CONVO_COLLECTION,
+  CHAT_MESSAGE_COLLECTION,
+  type ModSubject,
+} from './subject.js'
+
+const REPORT_SUBJECT_TYPES = {
+  account: com.atproto.admin.defs.repoRef.$type,
+  record: com.atproto.repo.strongRef.$type,
+  message: chat.bsky.convo.defs.messageRef.$type,
+  conversation: chat.bsky.convo.defs.convoRef.$type,
+} as const
 
 export type ReportWithEvent = Omit<Report, 'id'> & {
   id: number
@@ -277,8 +288,16 @@ export type FindReportsForSubjectParams = {
    */
   includeAllOwned?: boolean
   /**
+   * Additional exact subjects to include alongside the current subject. Mutually exclusive with subjects.
+   */
+  subjects?: ModSubject[]
+  /**
+   * Additional subject types to include in report targeting. Mutually exclusive with subjects.
+   */
+  subjectTypes?: tools.ozone.moderation.emitEvent.ReportAction['subjectTypes']
+  /**
    * Allow explicit IDs to select records owned by an account subject.
-   * Broad selectors remain scoped to the account unless includeAllOwned is set.
+   * Broad selectors expand only to listed subjects or includeAllOwned.
    */
   includeOwnedRecordIds?: boolean
   /**
@@ -315,54 +334,85 @@ export async function findReportsForSubject(
     .where('me.subjectDid', '=', params.subjectDid)
 
   if (!params.includeAllOwned) {
-    // Match the exact subject, optionally including explicitly selected record
-    // reports for account actions. Broad selectors retain their subject scope.
-    if (params.subjectUri) {
-      const uri = new AtUri(params.subjectUri)
-      if (uri.collection === CHAT_MESSAGE_COLLECTION) {
-        builder = builder.where('r.subjectMessageId', '=', uri.rkey)
-        if (params.messageConvoId !== undefined) {
-          const convoId = params.messageConvoId
-          builder = convoId
-            ? builder.where('r.subjectConvoId', '=', convoId)
-            : builder.where((eb) =>
-                eb.or([
-                  eb('r.subjectConvoId', 'is', null),
-                  eb('r.subjectConvoId', '=', ''),
-                ]),
-              )
-        }
-      } else if (uri.collection === CHAT_CONVO_COLLECTION) {
-        builder = builder
-          .where('r.subjectConvoId', '=', uri.rkey)
-          .where('r.subjectMessageId', 'is', null)
-      } else {
-        builder = builder.where(
-          'r.recordPath',
-          '=',
-          `${uri.collection}/${uri.rkey}`,
-        )
-      }
-    } else {
-      builder = builder.where((eb) =>
-        eb.or([
-          eb.and([
-            eb('r.recordPath', '=', ''),
+    const uri = params.subjectUri ? new AtUri(params.subjectUri) : null
+    builder = builder.where((eb) => {
+      const account = eb.and([
+        eb('r.recordPath', '=', ''),
+        eb('r.subjectMessageId', 'is', null),
+        eb('r.subjectConvoId', 'is', null),
+      ])
+      const current = uri
+        ? uri.collection === CHAT_MESSAGE_COLLECTION
+          ? eb.and([
+              eb('r.subjectMessageId', '=', uri.rkey),
+              ...(params.messageConvoId !== undefined
+                ? [
+                    params.messageConvoId
+                      ? eb('r.subjectConvoId', '=', params.messageConvoId)
+                      : eb.or([
+                          eb('r.subjectConvoId', 'is', null),
+                          eb('r.subjectConvoId', '=', ''),
+                        ]),
+                  ]
+                : []),
+            ])
+          : uri.collection === CHAT_CONVO_COLLECTION
+            ? eb.and([
+                eb('r.subjectConvoId', '=', uri.rkey),
+                eb('r.subjectMessageId', 'is', null),
+              ])
+            : eb('r.recordPath', '=', `${uri.collection}/${uri.rkey}`)
+        : eb.or([
+            account,
+            ...(params.includeOwnedRecordIds && params.reportIds?.length
+              ? [
+                  eb.and([
+                    eb('r.id', 'in', params.reportIds),
+                    eb('me.subjectType', '=', com.atproto.repo.strongRef.$type),
+                    eb('r.recordPath', '!=', ''),
+                  ]),
+                ]
+              : []),
+          ])
+      return eb.or([
+        current,
+        ...(params.subjectTypes?.length
+          ? [
+              eb(
+                'me.subjectType',
+                'in',
+                params.subjectTypes.map((type) => REPORT_SUBJECT_TYPES[type]),
+              ),
+            ]
+          : []),
+        ...(params.subjects ?? []).map((target) => {
+          if (target.isRepo()) return account
+          if (target.isRecord()) {
+            return eb.and([
+              eb('me.subjectType', '=', com.atproto.repo.strongRef.$type),
+              eb('r.recordPath', '=', target.recordPath),
+            ])
+          }
+          if (target.isMessage()) {
+            return eb.and([
+              eb('me.subjectType', '=', chat.bsky.convo.defs.messageRef.$type),
+              eb('r.subjectMessageId', '=', target.messageId),
+              target.convoId
+                ? eb('r.subjectConvoId', '=', target.convoId)
+                : eb.or([
+                    eb('r.subjectConvoId', 'is', null),
+                    eb('r.subjectConvoId', '=', ''),
+                  ]),
+            ])
+          }
+          return eb.and([
+            eb('me.subjectType', '=', chat.bsky.convo.defs.convoRef.$type),
+            eb('r.subjectConvoId', '=', target.convoId ?? ''),
             eb('r.subjectMessageId', 'is', null),
-            eb('r.subjectConvoId', 'is', null),
-          ]),
-          ...(params.includeOwnedRecordIds && params.reportIds?.length
-            ? [
-                eb.and([
-                  eb('r.id', 'in', params.reportIds),
-                  eb('me.subjectType', '=', com.atproto.repo.strongRef.$type),
-                  eb('r.recordPath', '!=', ''),
-                ]),
-              ]
-            : []),
-        ]),
-      )
-    }
+          ])
+        }),
+      ])
+    })
   }
 
   if (params.protectActiveReview) {
@@ -651,14 +701,8 @@ export async function closeReportsForSubject(
 export type ProcessReportActionParams = {
   db: Database
   inboxStartAt?: DatetimeString
-  reportAction: {
-    ids?: number[]
-    types?: string[]
-    all?: boolean
-    allOwned?: boolean
-    note?: string
-    isAutomated?: boolean
-  }
+  reportAction: tools.ozone.moderation.emitEvent.ReportAction
+  subjects?: ModSubject[]
   metadata?: Record<string, unknown>
   subjectDid: DidString
   subjectUri: string | null
@@ -764,6 +808,8 @@ export async function processReportAction(
     reportTypes: reportAction.types,
     targetAll: reportAction.all || reportAction.allOwned,
     includeAllOwned: reportAction.allOwned,
+    subjects: params.subjects,
+    subjectTypes: reportAction.subjectTypes,
     includeOwnedRecordIds:
       closesReports &&
       params.subjectType === com.atproto.admin.defs.repoRef.$type,
