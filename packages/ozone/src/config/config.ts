@@ -249,7 +249,23 @@ function parseLanguageTagRecordTypes(
   value: string | undefined,
 ): string[] | undefined {
   if (!value?.trim()) return undefined
-  const patterns = value.split(',').map((pattern) => pattern.trim())
+  const error =
+    'OZONE_LANGUAGE_TAG_RECORD_TYPES must be a comma-separated list or JSON array of record NSIDs or namespace wildcards'
+  let input: unknown
+  if (value.trim().startsWith('[')) {
+    try {
+      input = JSON.parse(value)
+    } catch {
+      assert.fail(error)
+    }
+  } else {
+    input = value.split(',')
+  }
+  assert(
+    Array.isArray(input) && input.every((item) => typeof item === 'string'),
+    error,
+  )
+  const patterns = input.map((pattern) => pattern.trim())
   assert(
     patterns.every((pattern) => {
       if (pattern === '*') return true
@@ -257,7 +273,7 @@ function parseLanguageTagRecordTypes(
         pattern.endsWith('.*') ? `${pattern.slice(0, -2)}.record` : pattern,
       )
     }),
-    'OZONE_LANGUAGE_TAG_RECORD_TYPES must be a comma-separated list of record NSIDs or namespace wildcards',
+    error,
   )
   return patterns
 }

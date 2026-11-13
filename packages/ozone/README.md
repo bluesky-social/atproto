@@ -23,7 +23,7 @@ Language and embed tags, manually applied tags, and existing report tags are una
 
 ## Language tags
 
-By default, Ozone adds language tags to all record types. Set `OZONE_LANGUAGE_TAG_RECORD_TYPES` to a comma-separated list of record NSIDs and namespace wildcards to restrict automatic language tagging of records, for example `app.bsky.*` or `app.bsky.feed.post`. Multiple entries can be combined, and `*` allows all records. Restart the API after changing this setting. An unset or empty value preserves the default. The filter does not affect account, message, or conversation subjects, other tags, or existing language tags.
+By default, Ozone adds language tags to all record types. Set `OZONE_LANGUAGE_TAG_RECORD_TYPES` to a comma-separated list or JSON array of record NSIDs and namespace wildcards to restrict automatic language tagging of records. For example, `app.bsky.feed.post,com.example.*` and `["app.bsky.feed.post","com.example.*"]` both allow those two patterns. `*` allows all records, while `[]` disables automatic language tagging for records. Restart the API after changing this setting. An unset or empty value preserves the default. The filter does not affect account, message, or conversation subjects, other tags, or existing language tags.
 
 ## Report reason rejection metrics
 

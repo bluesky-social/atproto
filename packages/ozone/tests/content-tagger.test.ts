@@ -96,7 +96,7 @@ describe('moderation subject content tagging', () => {
           )
           expect(otherStatus.tags).toContain('report:spam')
 
-          service.languageTagRecordTypes = ['app.bsky.graph.list']
+          service.languageTagRecordTypes = []
           const postStatus = await report(post.ref.uriStr, post.ref.cidStr)
           expect(postStatus.tags?.some((tag) => tag.startsWith('lang:'))).toBe(
             false,
@@ -143,12 +143,23 @@ describe('moderation subject content tagging', () => {
             ),
           ).toBe(true)
 
-          service.languageTagRecordTypes = ['app.bsky.feed.post']
+          service.languageTagRecordTypes = [
+            'app.bsky.graph.*',
+            'app.bsky.feed.post',
+          ]
+          const allowedList = await sc.createList(
+            sc.dids.carol,
+            '人達＋反AIや絵描きによくない感情',
+            'mod',
+          )
           const allowedPost = await sc.post(
             sc.dids.carol,
             'Xで有名な人達＋反AIや絵描きによくない',
           )
           await network.processAll()
+          expect(
+            (await report(allowedList.uriStr, allowedList.cidStr)).tags,
+          ).toContain('lang:ja')
           expect(
             (await report(allowedPost.ref.uriStr, allowedPost.ref.cidStr)).tags,
           ).toContain('lang:ja')

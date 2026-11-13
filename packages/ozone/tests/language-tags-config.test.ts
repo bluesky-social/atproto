@@ -29,15 +29,29 @@ describe('language tag record type configuration', () => {
     ['app.bsky.*', ['app.bsky.*']],
     ['app.bsky.feed.post', ['app.bsky.feed.post']],
     [' app.bsky.* , com.example.record ', ['app.bsky.*', 'com.example.record']],
+    [
+      '["app.bsky.*", "com.example.record"]',
+      ['app.bsky.*', 'com.example.record'],
+    ],
+    ['[ " app.bsky.* " ]', ['app.bsky.*']],
+    ['[]', []],
     ['*', ['*']],
   ])('parses %s', (value, expected) => {
     expect(readConfig(value)).toEqual(expected)
   })
 
-  it.each(['app.bsky*', 'app.*.post', 'app.bsky.*,', ',app.bsky.*', 'a.*'])(
-    'rejects invalid pattern %s',
-    (value) => {
-      expect(() => readConfig(value)).toThrow('OZONE_LANGUAGE_TAG_RECORD_TYPES')
-    },
-  )
+  it.each([
+    'app.bsky*',
+    'app.*.post',
+    'app.bsky.*,',
+    ',app.bsky.*',
+    'a.*',
+    '["app.bsky.*",]',
+    '["app.bsky.*", 42]',
+    '["app.bsky.*", ""]',
+    '[null]',
+    '["app.bsky.*"',
+  ])('rejects invalid pattern %s', (value) => {
+    expect(() => readConfig(value)).toThrow('OZONE_LANGUAGE_TAG_RECORD_TYPES')
+  })
 })
