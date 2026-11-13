@@ -1,2 +1,2 @@
-export * from './sharp'
-export type { ImageInfo, Options } from './util'
+export * from './sharp.js'
+export type { ImageInfo, Options } from './util.js'

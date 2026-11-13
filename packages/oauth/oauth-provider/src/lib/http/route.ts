@@ -1,9 +1,9 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
-import { SubCtx, subCtx } from './context.js'
-import { MethodMatcherInput, createMethodMatcher } from './method.js'
+import { type SubCtx, subCtx } from './context.js'
+import { type MethodMatcherInput, createMethodMatcher } from './method.js'
 import { combineMiddlewares } from './middleware.js'
-import { Params, Path, createPathMatcher } from './path.js'
-import { Middleware } from './types.js'
+import { type Params, type Path, createPathMatcher } from './path.js'
+import type { Middleware } from './types.js'
 
 export type RouteCtx<
   T extends object | void,

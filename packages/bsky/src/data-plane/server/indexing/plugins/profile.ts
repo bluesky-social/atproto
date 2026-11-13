@@ -1,20 +1,22 @@
-import { CID } from 'multiformats/cid'
+import { type Cid, getBlobCidString } from '@atproto/lex-data'
 import { AtUri } from '@atproto/syntax'
-import * as lex from '../../../../lexicon/lexicons'
-import * as Profile from '../../../../lexicon/types/app/bsky/actor/profile'
-import { BackgroundQueue } from '../../background'
-import { Database } from '../../db'
-import { DatabaseSchema, DatabaseSchemaType } from '../../db/database-schema'
-import { RecordProcessor } from '../processor'
+import { NOTIFICATION_REASON } from '../../../../api/app/bsky/notification/constants.js'
+import { app } from '../../../../lexicons/index.js'
+import type { BackgroundQueue } from '../../background.js'
+import type {
+  DatabaseSchema,
+  DatabaseSchemaType,
+} from '../../db/database-schema.js'
+import type { Database } from '../../db/index.js'
+import { RecordProcessor } from '../processor.js'
 
-const lexId = lex.ids.AppBskyActorProfile
 type IndexedProfile = DatabaseSchemaType['profile']
 
 const insertFn = async (
   db: DatabaseSchema,
   uri: AtUri,
-  cid: CID,
-  obj: Profile.Record,
+  cid: Cid,
+  obj: app.bsky.actor.profile.Main,
   timestamp: string,
 ): Promise<IndexedProfile | null> => {
   if (uri.rkey !== 'self') return null
@@ -26,8 +28,8 @@ const insertFn = async (
       creator: uri.host,
       displayName: obj.displayName,
       description: obj.description,
-      avatarCid: obj.avatar?.ref.toString(),
-      bannerCid: obj.banner?.ref.toString(),
+      avatarCid: getBlobCidString(obj.avatar),
+      bannerCid: getBlobCidString(obj.banner),
       joinedViaStarterPackUri: obj.joinedViaStarterPack?.uri,
       createdAt: obj.createdAt ?? new Date().toISOString(),
       indexedAt: timestamp,
@@ -51,7 +53,7 @@ const notifsForInsert = (obj: IndexedProfile) => {
       author: obj.creator,
       recordUri: obj.uri,
       recordCid: obj.cid,
-      reason: 'starterpack-joined' as const,
+      reason: NOTIFICATION_REASON.STARTERPACK_JOINED,
       reasonSubject: obj.joinedViaStarterPackUri,
       sortAt: obj.indexedAt,
     },
@@ -74,14 +76,13 @@ const notifsForDelete = () => {
   return { notifs: [], toDelete: [] }
 }
 
-export type PluginType = RecordProcessor<Profile.Record, IndexedProfile>
-
+export type PluginType = ReturnType<typeof makePlugin>
 export const makePlugin = (
   db: Database,
-  background: BackgroundQueue,
-): PluginType => {
+  background: BackgroundQueue<Database>,
+) => {
   return new RecordProcessor(db, background, {
-    lexId,
+    schema: app.bsky.actor.profile.main,
     insertFn,
     findDuplicate,
     deleteFn,

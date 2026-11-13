@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest'
 import { ScopePermissionsTransition } from './scope-permissions-transition.js'
 
 describe('ScopePermissionsTransition', () => {

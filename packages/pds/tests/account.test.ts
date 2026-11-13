@@ -1,11 +1,12 @@
-import { EventEmitter, once } from 'node:events'
-import Mail from 'nodemailer/lib/mailer'
-import { AtpAgent, ComAtprotoServerResetPassword } from '@atproto/api'
+import assert from 'node:assert'
+import { jest } from '@jest/globals'
+import { type AtpAgent, ComAtprotoServerResetPassword } from '@atproto/api'
 import * as crypto from '@atproto/crypto'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
-import { IdResolver } from '@atproto/identity'
-import { AppContext } from '../src'
-import { ServerMailer } from '../src/mailer'
+import type { IdResolver } from '@atproto/identity'
+import { isDidString } from '@atproto/lex'
+import type { DidString } from '@atproto/syntax'
+import type { AppContext } from '../src/index.js'
 
 const email = 'alice@test.com'
 const handle = 'alice.test'
@@ -17,10 +18,19 @@ describe('account', () => {
   let network: TestNetworkNoAppView
   let ctx: AppContext
   let agent: AtpAgent
-  let mailer: ServerMailer
   let idResolver: IdResolver
-  const mailCatcher = new EventEmitter()
-  let _origSendMail
+
+  const tryHandle = async (handle: string) => {
+    await agent.api.com.atproto.server.createAccount({
+      email: 'john@test.com',
+      handle,
+      password: 'test123',
+    })
+  }
+
+  let sendMailMock: jest.SpiedFunction<
+    AppContext['mailer']['transporter']['sendMail']
+  >
 
   beforeAll(async () => {
     network = await TestNetworkNoAppView.create({
@@ -29,27 +39,25 @@ describe('account', () => {
         contactEmailAddress: 'abuse@example.com',
         termsOfServiceUrl: 'https://example.com/tos',
         privacyPolicyUrl: 'https://example.com/privacy-policy',
+        blobUploadLimit: 123_456,
       },
     })
-    // @ts-expect-error Error due to circular dependency with the dev-env package
-    mailer = network.pds.ctx.mailer
-    // @ts-expect-error Error due to circular dependency with the dev-env package
     ctx = network.pds.ctx
     idResolver = network.pds.ctx.idResolver
-    agent = network.pds.getClient()
+    agent = network.pds.getAgent()
 
-    // Catch emails for use in tests
-    _origSendMail = mailer.transporter.sendMail
-    mailer.transporter.sendMail = async (opts) => {
-      const result = await _origSendMail.call(mailer.transporter, opts)
-      mailCatcher.emit('mail', opts)
-      return result
-    }
+    sendMailMock = jest
+      .spyOn(ctx.mailer.transporter, 'sendMail')
+      .mockImplementation(async () => {})
+  })
+
+  beforeEach(async () => {
+    // Catch-all: never actually send, but keep recording calls for assertions.
+    sendMailMock.mockClear()
   })
 
   afterAll(async () => {
-    mailer.transporter.sendMail = _origSendMail
-    await network.close()
+    await network?.close()
   })
 
   it('serves the accounts system config', async () => {
@@ -57,6 +65,7 @@ describe('account', () => {
     expect(res.data.inviteCodeRequired).toBe(false)
     expect(res.data.availableUserDomains[0]).toBe('.test')
     expect(typeof res.data.inviteCodeRequired).toBe('boolean')
+    expect(res.data.blobUploadLimit).toBe(123_456)
     expect(res.data.links?.privacyPolicy).toBe(
       'https://example.com/privacy-policy',
     )
@@ -70,7 +79,11 @@ describe('account', () => {
       handle: 'did:bad-handle.test',
       password: 'asdf',
     })
-    await expect(promise).rejects.toThrow('Input/handle must be a valid handle')
+    await expect(promise).rejects.toMatchObject({
+      error: 'InvalidRequest',
+      message: expect.stringContaining('handle'),
+      // - Input/handle must be a valid handle
+    })
   })
 
   describe('email validation', () => {
@@ -89,13 +102,15 @@ describe('account', () => {
         handle: 'bad-email.test',
         password: 'asdf',
       })
-      await expect(promise).rejects.toThrow(
-        'This email address is not supported, please use a different email.',
-      )
+      await expect(promise).rejects.toMatchObject({
+        error: 'InvalidRequest',
+        message: expect.stringContaining('email'),
+        // - This email address is not supported, please use a different email.
+      })
     })
   })
 
-  let did: string
+  let did: DidString
   let jwt: string
 
   it('creates an account', async () => {
@@ -104,12 +119,13 @@ describe('account', () => {
       handle,
       password,
     })
+
+    expect(typeof res.data.accessJwt).toBe('string')
+    assert(isDidString(res.data.did), 'Did is not a valid DidString')
+    expect(res.data.handle).toEqual(handle)
+
     did = res.data.did
     jwt = res.data.accessJwt
-
-    expect(typeof jwt).toBe('string')
-    expect(did.startsWith('did:plc:')).toBeTruthy()
-    expect(res.data.handle).toEqual(handle)
   })
 
   it('generates a properly formatted PLC DID', async () => {
@@ -292,50 +308,89 @@ describe('account', () => {
     ).rejects.toThrow('Handle already taken: bob.test')
   })
 
-  it('disallows improperly formatted handles', async () => {
-    const tryHandle = async (handle: string) => {
-      await agent.api.com.atproto.server.createAccount({
-        email: 'john@test.com',
+  it('disallows the email and handle of a deactivated account', async () => {
+    const email = 'dan@test.com'
+    const handle = 'dan.test'
+    const password = 'test123'
+    const { data: account } = await agent.api.com.atproto.server.createAccount({
+      email,
+      handle,
+      password,
+    })
+
+    await agent.api.com.atproto.server.deactivateAccount(
+      {},
+      {
+        encoding: 'application/json',
+        headers: { authorization: `Bearer ${account.accessJwt}` },
+      },
+    )
+
+    await expect(
+      agent.api.com.atproto.server.createAccount({
+        email: 'erin@test.com',
         handle,
-        password: 'test123',
+        password,
+      }),
+    ).rejects.toThrow(`Handle already taken: ${handle}`)
+
+    await expect(
+      agent.api.com.atproto.server.createAccount({
+        email,
+        handle: 'erin.test',
+        password,
+      }),
+    ).rejects.toThrow(`Email already taken: ${email}`)
+  })
+
+  it('validates input through lexicon schema', async () => {
+    for (const invalidHandle of [
+      'did:john',
+      'jo_hn.test',
+      'jo!hn.test',
+      'jo%hn.test',
+      'jo&hn.test',
+      'jo*hn.test',
+      'jo|hn.test',
+      'jo:hn.test',
+      'jo/hn.test',
+    ]) {
+      await expect(tryHandle(invalidHandle)).rejects.toMatchObject({
+        error: 'InvalidRequest',
+        message: expect.stringContaining('handle'),
       })
     }
-    await expect(tryHandle('did:john')).rejects.toThrow(
-      'Input/handle must be a valid handle',
-    )
-    await expect(tryHandle('john.bsky.io')).rejects.toThrow(
-      'Not a supported handle domain',
-    )
-    await expect(tryHandle('j.test')).rejects.toThrow('Handle too short')
-    await expect(tryHandle('jayromy-johnber12345678910.test')).rejects.toThrow(
-      'Handle too long',
-    )
-    await expect(tryHandle('jo_hn.test')).rejects.toThrow(
-      'Input/handle must be a valid handle',
-    )
-    await expect(tryHandle('jo!hn.test')).rejects.toThrow(
-      'Input/handle must be a valid handle',
-    )
-    await expect(tryHandle('jo%hn.test')).rejects.toThrow(
-      'Input/handle must be a valid handle',
-    )
-    await expect(tryHandle('jo&hn.test')).rejects.toThrow(
-      'Input/handle must be a valid handle',
-    )
-    await expect(tryHandle('jo*hn.test')).rejects.toThrow(
-      'Input/handle must be a valid handle',
-    )
-    await expect(tryHandle('jo|hn.test')).rejects.toThrow(
-      'Input/handle must be a valid handle',
-    )
-    await expect(tryHandle('jo:hn.test')).rejects.toThrow(
-      'Input/handle must be a valid handle',
-    )
-    await expect(tryHandle('jo/hn.test')).rejects.toThrow(
-      'Input/handle must be a valid handle',
-    )
-    await expect(tryHandle('about.test')).rejects.toThrow('Reserved handle')
-    await expect(tryHandle('atp.test')).rejects.toThrow('Reserved handle')
+  })
+
+  it('disallows improperly formatted handles', async () => {
+    await expect(tryHandle('j.test')).rejects.toMatchObject({
+      error: 'InvalidHandle',
+      message: 'Handle too short',
+    })
+    await expect(
+      tryHandle('jayromy-johnber12345678910.test'),
+    ).rejects.toMatchObject({
+      error: 'InvalidHandle',
+      message: 'Handle too long',
+    })
+  })
+
+  it('disallows reserved handles', async () => {
+    await expect(tryHandle('john.bsky.io')).rejects.toMatchObject({
+      error: 'UnsupportedDomain',
+      message: 'Not a supported handle domain',
+    })
+  })
+
+  it('disallows reserved handles', async () => {
+    await expect(tryHandle('about.test')).rejects.toMatchObject({
+      error: 'HandleNotAvailable',
+      message: 'Reserved handle',
+    })
+    await expect(tryHandle('atp.test')).rejects.toMatchObject({
+      error: 'HandleNotAvailable',
+      message: 'Reserved handle',
+    })
   })
 
   it('handles racing signups for same handle', async () => {
@@ -389,31 +444,27 @@ describe('account', () => {
     expect(res.data.email).toBe(email)
   })
 
-  const getMailFrom = async (promise): Promise<Mail.Options> => {
-    const result = await Promise.all([once(mailCatcher, 'mail'), promise])
-    return result[0][0]
-  }
-
-  const getTokenFromMail = (mail: Mail.Options) =>
-    mail.html?.toString().match(/>([a-z0-9]{5}-[a-z0-9]{5})</i)?.[1]
-
   it('can reset account password', async () => {
-    const mail = await getMailFrom(
-      agent.api.com.atproto.server.requestPasswordReset({ email }),
-    )
+    using sendResetPasswordMock = jest.spyOn(ctx.mailer, 'sendResetPassword')
+    await agent.api.com.atproto.server.requestPasswordReset({ email })
 
+    expect(sendResetPasswordMock).toHaveBeenCalledTimes(1)
+    expect(sendMailMock).toHaveBeenCalledTimes(1)
+
+    const [params] = sendResetPasswordMock.mock.lastCall!
+    expect(params).toEqual({
+      handle: 'alice.test',
+      token: expect.any(String),
+    })
+
+    const [mail] = sendMailMock.mock.lastCall!
     expect(mail.to).toEqual(email)
+    expect(mail.subject).toBe('Password Reset Requested')
     expect(mail.html).toContain('Reset password')
     expect(mail.html).toContain('alice.test')
 
-    const token = getTokenFromMail(mail)
-
-    if (token === undefined) {
-      return expect(token).toBeDefined()
-    }
-
     await agent.api.com.atproto.server.resetPassword({
-      token,
+      token: params.token,
       password: passwordAlt,
     })
 
@@ -434,22 +485,25 @@ describe('account', () => {
   })
 
   it('allows only single-use of password reset token', async () => {
-    const mail = await getMailFrom(
-      agent.api.com.atproto.server.requestPasswordReset({ email }),
-    )
+    using sendResetPasswordMock = jest.spyOn(ctx.mailer, 'sendResetPassword')
 
-    const token = getTokenFromMail(mail)
-
-    if (token === undefined) {
-      return expect(token).toBeDefined()
-    }
+    await agent.api.com.atproto.server.requestPasswordReset({ email })
+    expect(sendResetPasswordMock).toHaveBeenCalledTimes(1)
+    const [params] = sendResetPasswordMock.mock.lastCall!
+    expect(params.token).toBeDefined()
 
     // Reset back from passwordAlt to password
-    await agent.api.com.atproto.server.resetPassword({ token, password })
+    await agent.api.com.atproto.server.resetPassword({
+      token: params.token,
+      password,
+    })
 
     // Reuse of token fails
     await expect(
-      agent.api.com.atproto.server.resetPassword({ token, password }),
+      agent.api.com.atproto.server.resetPassword({
+        token: params.token,
+        password,
+      }),
     ).rejects.toThrow(ComAtprotoServerResetPassword.InvalidTokenError)
 
     // Logs in with new password and not previous password
@@ -469,19 +523,13 @@ describe('account', () => {
   })
 
   it('changing password invalidates past refresh tokens', async () => {
-    const mail = await getMailFrom(
-      agent.api.com.atproto.server.requestPasswordReset({ email }),
-    )
+    using sendResetPasswordMock = jest.spyOn(ctx.mailer, 'sendResetPassword')
 
-    expect(mail.to).toEqual(email)
-    expect(mail.html).toContain('Reset password')
-    expect(mail.html).toContain('alice.test')
+    await agent.api.com.atproto.server.requestPasswordReset({ email })
 
-    const token = getTokenFromMail(mail)
-
-    if (token === undefined) {
-      return expect(token).toBeDefined()
-    }
+    expect(sendResetPasswordMock).toHaveBeenCalledTimes(1)
+    const [params] = sendResetPasswordMock.mock.lastCall!
+    expect(params.token).toBeDefined()
 
     const session = await agent.api.com.atproto.server.createSession({
       identifier: handle,
@@ -489,7 +537,7 @@ describe('account', () => {
     })
 
     await agent.api.com.atproto.server.resetPassword({
-      token: token.toLowerCase(), // Reset should work case-insensitively
+      token: params.token.toLowerCase(), // Reset should work case-insensitively
       password,
     })
 

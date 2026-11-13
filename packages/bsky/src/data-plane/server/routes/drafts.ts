@@ -1,9 +1,9 @@
-import { PlainMessage, Timestamp } from '@bufbuild/protobuf'
-import { ServiceImpl } from '@connectrpc/connect'
-import { Service } from '../../../proto/bsky_connect'
-import { DraftInfo } from '../../../proto/bsky_pb'
-import { Database } from '../db'
-import { IsoUpdatedAtKey } from '../db/pagination'
+import { type PlainMessage, Timestamp } from '@bufbuild/protobuf'
+import type { ServiceImpl } from '@connectrpc/connect'
+import type { Service } from '../../../proto/bsky_connect.js'
+import type { DraftInfo } from '../../../proto/bsky_pb.js'
+import type { Database } from '../db/index.js'
+import { IsoUpdatedAtKey } from '../db/pagination.js'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   async getActorDrafts(req) {
@@ -21,17 +21,15 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       limit,
     })
 
-    const res = await builder.execute()
+    const page = key.page(await builder.execute(), limit)
     return {
-      drafts: res.map(
-        (d): PlainMessage<DraftInfo> => ({
-          key: d.key,
-          payload: Buffer.from(d.payload),
-          createdAt: Timestamp.fromDate(new Date(d.createdAt)),
-          updatedAt: Timestamp.fromDate(new Date(d.updatedAt)),
-        }),
-      ),
-      cursor: key.packFromResult(res),
+      drafts: page.items.map((d): PlainMessage<DraftInfo> => ({
+        key: d.key,
+        payload: Buffer.from(d.payload),
+        createdAt: Timestamp.fromDate(new Date(d.createdAt)),
+        updatedAt: Timestamp.fromDate(new Date(d.updatedAt)),
+      })),
+      cursor: page.cursor,
     }
   },
 })

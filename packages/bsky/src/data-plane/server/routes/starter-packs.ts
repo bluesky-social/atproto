@@ -1,7 +1,7 @@
-import { ServiceImpl } from '@connectrpc/connect'
-import { Service } from '../../../proto/bsky_connect'
-import { Database } from '../db'
-import { TimeCidKeyset, paginate } from '../db/pagination'
+import type { ServiceImpl } from '@connectrpc/connect'
+import type { Service } from '../../../proto/bsky_connect.js'
+import type { Database } from '../db/index.js'
+import { TimeCidKeyset, paginate } from '../db/pagination.js'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   async getActorStarterPacks(req) {
@@ -22,11 +22,11 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       cursor,
       keyset,
     })
-    const starterPacks = await builder.execute()
+    const page = keyset.page(await builder.execute(), limit)
 
     return {
-      uris: starterPacks.map((sp) => sp.uri),
-      cursor: keyset.packFromResult(starterPacks),
+      uris: page.items.map((sp) => sp.uri),
+      cursor: page.cursor,
     }
   },
 })

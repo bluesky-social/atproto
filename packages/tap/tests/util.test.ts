@@ -3,7 +3,7 @@ import {
   assureAdminAuth,
   formatAdminAuthHeader,
   parseAdminAuthHeader,
-} from '../src'
+} from '../src/index.js'
 
 describe('util', () => {
   describe('formatAdminAuthHeader', () => {

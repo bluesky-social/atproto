@@ -1,7 +1,11 @@
-import AtpAgent from '@atproto/api'
-import { SeedClient, TestNetwork } from '@atproto/dev-env'
-import { ids } from '../../src/lexicon/lexicons'
-import { Users, feedHiddenRepliesSeed } from '../seed/feed-hidden-replies'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
+import { type AtpAgent, ids } from '@atproto/api'
+import { type SeedClient, TestNetwork } from '@atproto/dev-env'
+import type { DidString } from '@atproto/syntax'
+import {
+  type Users,
+  feedHiddenRepliesSeed,
+} from '../seed/feed-hidden-replies.js'
 
 describe('feed hidden replies', () => {
   let network: TestNetwork
@@ -14,19 +18,16 @@ describe('feed hidden replies', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_tests_feed_hidden_replies',
     })
-    agent = network.bsky.getClient()
-    pdsAgent = network.pds.getClient()
+    agent = network.bsky.getAgent()
+    pdsAgent = network.pds.getAgent()
     sc = network.getSeedClient()
 
     const result = await feedHiddenRepliesSeed(sc)
     users = result.users
-
-    await network.processAll()
   })
 
-  afterAll(async () => {
-    await network.close()
-  })
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
 
   describe(`notifications`, () => {
     it(`[A] -> [B] : B is hidden`, async () => {
@@ -47,7 +48,7 @@ describe('feed hidden replies', () => {
           createdAt: new Date().toISOString(),
           hiddenReplies: [B.ref.uriStr],
         },
-        sc.getHeaders(A.ref.uri.host),
+        sc.getHeaders(A.ref.uri.host as DidString),
       )
 
       await network.processAll()
@@ -90,7 +91,7 @@ describe('feed hidden replies', () => {
           createdAt: new Date().toISOString(),
           hiddenReplies: [B.ref.uriStr],
         },
-        sc.getHeaders(A.ref.uri.host),
+        sc.getHeaders(A.ref.uri.host as DidString),
       )
 
       await network.processAll()
@@ -178,7 +179,7 @@ describe('feed hidden replies', () => {
           createdAt: new Date().toISOString(),
           hiddenReplies: [C.ref.uriStr],
         },
-        sc.getHeaders(A.ref.uri.host),
+        sc.getHeaders(A.ref.uri.host as DidString),
       )
       await network.processAll()
       const D = await sc.reply(users.viewer.did, A.ref, C.ref, `D`)
@@ -237,7 +238,7 @@ describe('feed hidden replies', () => {
           repo: A.ref.uri.host,
           rkey: A.ref.uri.rkey,
         },
-        sc.getHeaders(A.ref.uri.host),
+        sc.getHeaders(A.ref.uri.host as DidString),
       )
       await network.processAll()
     })

@@ -1,8 +1,9 @@
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { ids } from '@atproto/api'
 import { TID, cidForCbor } from '@atproto/common'
 import { TestNetwork } from '@atproto/dev-env'
 import { WriteOpAction } from '@atproto/repo'
 import { AtUri } from '@atproto/syntax'
-import * as lex from '../../src/lexicon/lexicons'
 
 type Database = TestNetwork['bsky']['db']
 
@@ -20,7 +21,7 @@ describe('duplicate record', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   const countRecords = async (db: Database, table: string) => {
@@ -33,9 +34,9 @@ describe('duplicate record', () => {
   }
 
   it('dedupes reposts', async () => {
-    const subject = AtUri.make(did, lex.ids.AppBskyFeedPost, TID.nextStr())
+    const subject = AtUri.make(did, ids.AppBskyFeedPost, TID.nextStr())
     const subjectCid = await cidForCbor({ test: 'blah' })
-    const coll = lex.ids.AppBskyFeedRepost
+    const coll = ids.AppBskyFeedRepost
     const uris: AtUri[] = []
     for (let i = 0; i < 5; i++) {
       const repost = {
@@ -73,9 +74,9 @@ describe('duplicate record', () => {
   })
 
   it('dedupes like', async () => {
-    const subject = AtUri.make(did, lex.ids.AppBskyFeedPost, TID.nextStr())
+    const subject = AtUri.make(did, ids.AppBskyFeedPost, TID.nextStr())
     const subjectCid = await cidForCbor({ test: 'blah' })
-    const coll = lex.ids.AppBskyFeedLike
+    const coll = ids.AppBskyFeedLike
     const uris: AtUri[] = []
     for (let i = 0; i < 5; i++) {
       const like = {
@@ -119,7 +120,7 @@ describe('duplicate record', () => {
   })
 
   it('dedupes follows', async () => {
-    const coll = lex.ids.AppBskyGraphFollow
+    const coll = ids.AppBskyGraphFollow
     const uris: AtUri[] = []
     for (let i = 0; i < 5; i++) {
       const follow = {
@@ -151,5 +152,60 @@ describe('duplicate record', () => {
 
     count = await countRecords(db, 'follow')
     expect(count).toBe(0)
+  })
+
+  it('does not promote duplicate reference-list opt-outs', async () => {
+    const subject = AtUri.make(
+      'did:example:bob',
+      ids.AppBskyGraphList,
+      TID.nextStr(),
+    )
+    const coll = ids.AppBskyGraphReferencelistoptout
+    const uris: AtUri[] = []
+    for (let i = 0; i < 2; i++) {
+      const optOut = {
+        $type: coll,
+        subject: subject.toString(),
+        createdAt: new Date().toISOString(),
+      }
+      const uri = AtUri.make(did, coll, TID.nextStr())
+      const cid = await cidForCbor(optOut)
+      await network.bsky.sub.indexingSvc.indexRecord(
+        uri,
+        cid,
+        optOut,
+        WriteOpAction.Create,
+        optOut.createdAt,
+      )
+      uris.push(uri)
+    }
+
+    expect(await countRecords(db, 'reference_list_opt_out')).toBe(1)
+    await network.bsky.sub.indexingSvc.deleteRecord(uris[0], false)
+    expect(await countRecords(db, 'reference_list_opt_out')).toBe(0)
+  })
+
+  it('does not index invalid reference-list opt-out subjects', async () => {
+    const coll = ids.AppBskyGraphReferencelistoptout
+    const subjects = [
+      AtUri.make('alice.test', ids.AppBskyGraphList, TID.nextStr()),
+      AtUri.make('did:example:bob', ids.AppBskyFeedPost, TID.nextStr()),
+    ]
+    for (const subject of subjects) {
+      const optOut = {
+        $type: coll,
+        subject: subject.toString(),
+        createdAt: new Date().toISOString(),
+      }
+      await network.bsky.sub.indexingSvc.indexRecord(
+        AtUri.make(did, coll, TID.nextStr()),
+        await cidForCbor(optOut),
+        optOut,
+        WriteOpAction.Create,
+        optOut.createdAt,
+      )
+    }
+
+    expect(await countRecords(db, 'reference_list_opt_out')).toBe(0)
   })
 })

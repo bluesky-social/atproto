@@ -1,0 +1,13 @@
+{
+  "extends": ["../../tsconfig/node.tsconfig.json"],
+  "include": ["./**/*.ts"],
+  "exclude": ["./node_modules"],
+  "references": [
+    { "path": "../../packages/aws/tsconfig.build.json" },
+    { "path": "../../packages/ozone/tsconfig.build.json" },
+  ],
+  "compilerOptions": {
+    "rootDir": "./",
+    "noEmit": true,
+  },
+}

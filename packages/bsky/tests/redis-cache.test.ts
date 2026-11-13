@@ -1,6 +1,7 @@
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { wait } from '@atproto/common'
-import { Redis } from '../src/'
-import { ReadThroughCache } from '../src/cache/read-through'
+import { ReadThroughCache } from '../src/cache/read-through.js'
+import { Redis } from '../src/index.js'
 
 describe('redis cache', () => {
   let redis: Redis
@@ -9,9 +10,7 @@ describe('redis cache', () => {
     redis = new Redis({ host: process.env.REDIS_HOST || '' })
   })
 
-  afterAll(async () => {
-    await redis.destroy()
-  })
+  afterAll(async () => redis.destroy())
 
   it('caches according to namespace', async () => {
     const ns1 = redis.withNamespace('ns1')

@@ -3,6 +3,7 @@ import {
   InvalidDidError,
   ensureValidAtUri,
   ensureValidDid,
+  ensureValidNsid,
 } from '@atproto/syntax'
 
 export const validCursor = (cursor: string): number | null => {
@@ -14,19 +15,51 @@ export const validCursor = (cursor: string): number | null => {
   return int
 }
 
-export const combineSignals = (a: AbortSignal, b: AbortSignal) => {
-  const controller = new AbortController()
-  for (const signal of [a, b]) {
-    if (signal.aborted) {
-      controller.abort()
-      return signal
-    }
-    signal.addEventListener('abort', () => controller.abort(signal.reason), {
-      // @ts-ignore https://github.com/DefinitelyTyped/DefinitelyTyped/pull/68625
-      signal: controller.signal,
+export function combineSignals(
+  ...signals: readonly (AbortSignal | undefined)[]
+): AbortController & Disposable {
+  const controller = new DisposableAbortController()
+
+  const onAbort = function (this: AbortSignal, _event: Event) {
+    const reason = new Error('This operation was aborted', {
+      cause: this.reason,
     })
+
+    controller.abort(reason)
   }
-  return controller.signal
+
+  try {
+    for (const sig of signals) {
+      if (sig) {
+        sig.throwIfAborted()
+        sig.addEventListener('abort', onAbort, { signal: controller.signal })
+      }
+    }
+
+    return controller
+  } catch (err) {
+    controller.abort(err)
+    throw err
+  }
+}
+
+export function combinedSignals(
+  ...signals: readonly (AbortSignal | undefined)[]
+): AbortSignal & Disposable {
+  const controller = combineSignals(...signals)
+  return Object.defineProperty(controller.signal, Symbol.dispose, {
+    value: controller[Symbol.dispose].bind(controller),
+  }) as AbortSignal & Disposable
+}
+
+/**
+ * Allows using {@link AbortController} with the `using` keyword, in order to
+ * automatically abort them once the execution block ends.
+ */
+class DisposableAbortController extends AbortController implements Disposable {
+  [Symbol.dispose]() {
+    this.abort(new Error('AbortController was disposed'))
+  }
 }
 
 export const isValidDid = (did: string) => {
@@ -47,5 +80,20 @@ export const isValidAtUri = (uri: string) => {
     return true
   } catch {
     return false
+  }
+}
+
+export const validateNamespace = (namespace: string): void => {
+  const parts = namespace.split('#')
+
+  if (parts.length !== 1 && parts.length !== 2) {
+    throw new Error('namespace must be in the format "nsid[#fragment]"')
+  }
+
+  const [nsid, fragment] = parts
+
+  ensureValidNsid(nsid)
+  if (fragment && !/^[a-zA-Z][a-zA-Z0-9]*$/.test(fragment)) {
+    throw new Error('namespace fragment must be a valid identifier')
   }
 }

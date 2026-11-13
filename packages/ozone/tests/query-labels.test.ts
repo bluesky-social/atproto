@@ -1,67 +1,70 @@
-import { AtpAgent } from '@atproto/api'
+import {
+  type AtpAgent,
+  type ComAtprotoLabelDefs,
+  ComAtprotoLabelSubscribeLabels,
+  ids,
+  lexicons,
+} from '@atproto/api'
 import { cborEncode } from '@atproto/common'
 import { Secp256k1Keypair, verifySignature } from '@atproto/crypto'
 import { EXAMPLE_LABELER, TestNetwork } from '@atproto/dev-env'
-import { DisconnectError } from '@atproto/ws-client'
+import { currentDatetimeString } from '@atproto/lex'
+import type { AtUriString, DidString } from '@atproto/lex'
 import { Subscription } from '@atproto/xrpc-server'
-import { ids, lexicons } from '../src/lexicon/lexicons'
-import { Label } from '../src/lexicon/types/com/atproto/label/defs'
-import {
-  OutputSchema as LabelMessage,
-  isLabels,
-} from '../src/lexicon/types/com/atproto/label/subscribeLabels'
-import { ModerationService } from '../src/mod-service'
-import { getSigningKeyId } from '../src/util'
+import { ModerationService } from '../src/mod-service/index.js'
+import { getSigningKeyId } from '../src/util.js'
 
 describe('ozone query labels', () => {
   let network: TestNetwork
   let agent: AtpAgent
 
-  let labels: Label[]
+  let labels: ComAtprotoLabelDefs.Label[]
 
   beforeAll(async () => {
     network = await TestNetwork.create({
-      dbPostgresSchema: 'ozone_query_labels',
+      dbPostgresSchema: 'ozone_query_labels_wildcard_switch',
     })
+    expect(network.ozone.ctx.cfg.service.labelQueryWildcardsEnabled).toBe(false)
+    network.ozone.ctx.cfg.service.labelQueryWildcardsEnabled = true
 
-    agent = network.ozone.getClient()
+    agent = network.ozone.getAgent()
 
     const toCreate = [
       {
-        src: EXAMPLE_LABELER,
-        uri: 'did:example:blah',
+        src: EXAMPLE_LABELER as DidString,
+        uri: 'did:example:blah' as DidString,
         val: 'spam',
-        cts: new Date().toISOString(),
+        cts: currentDatetimeString(),
       },
       {
-        src: EXAMPLE_LABELER,
-        uri: 'did:example:blah',
+        src: EXAMPLE_LABELER as DidString,
+        uri: 'did:example:blah' as DidString,
         val: 'impersonation',
-        cts: new Date().toISOString(),
+        cts: currentDatetimeString(),
       },
       {
-        src: EXAMPLE_LABELER,
-        uri: 'at://did:example:blah/app.bsky.feed.post/1234abcde',
+        src: EXAMPLE_LABELER as DidString,
+        uri: 'at://did:example:blah/app.bsky.feed.post/1234abcde' as AtUriString,
         val: 'spam',
-        cts: new Date().toISOString(),
+        cts: currentDatetimeString(),
       },
       {
-        src: EXAMPLE_LABELER,
-        uri: 'at://did:example:blah/app.bsky.feed.post/1234abcfg',
+        src: EXAMPLE_LABELER as DidString,
+        uri: 'at://did:example:blah/app.bsky.feed.post/1234abcfg' as AtUriString,
         val: 'spam',
-        cts: new Date().toISOString(),
+        cts: currentDatetimeString(),
       },
       {
-        src: EXAMPLE_LABELER,
-        uri: 'at://did:example:blah/app.bsky.actor.profile/self',
+        src: EXAMPLE_LABELER as DidString,
+        uri: 'at://did:example:blah/app.bsky.actor.profile/self' as AtUriString,
         val: 'spam',
-        cts: new Date().toISOString(),
+        cts: currentDatetimeString(),
       },
       {
-        src: EXAMPLE_LABELER,
-        uri: 'did:example:thing',
+        src: EXAMPLE_LABELER as DidString,
+        uri: 'did:example:thing' as DidString,
         val: 'spam',
-        cts: new Date().toISOString(),
+        cts: currentDatetimeString(),
       },
     ]
 
@@ -70,7 +73,52 @@ describe('ozone query labels', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
+  })
+
+  describe('wildcard queries disabled', () => {
+    beforeEach(() => {
+      network.ozone.ctx.cfg.service.labelQueryWildcardsEnabled = false
+    })
+
+    afterEach(() => {
+      network.ozone.ctx.cfg.service.labelQueryWildcardsEnabled = true
+    })
+
+    it.each([
+      { uriPatterns: ['*'] },
+      { uriPatterns: ['at://did:example:blah*'] },
+      { uriPatterns: ['did:example:blah', 'at://did:example:blah*'] },
+      { uriPatterns: ['did:example:blah', '*'] },
+    ])('rejects wildcard patterns: $uriPatterns', async ({ uriPatterns }) => {
+      await expect(
+        agent.api.com.atproto.label.queryLabels({ uriPatterns }),
+      ).rejects.toMatchObject({
+        status: 400,
+        error: 'InvalidRequest',
+        message: 'Support for wildcard label queries is temporarily disabled',
+      })
+    })
+
+    it('keeps exact matching, source and cursor filters available', async () => {
+      const params = {
+        uriPatterns: ['at://did:example:blah/app.bsky.feed.post/1234abcde'],
+        sources: [EXAMPLE_LABELER],
+        limit: 1,
+      }
+      const first = await agent.api.com.atproto.label.queryLabels(params)
+      const second = await agent.api.com.atproto.label.queryLabels({
+        ...params,
+        cursor: first.data.cursor,
+      })
+      expect(first.data.labels).toEqual([labels[2]])
+      expect(second.data.labels).toEqual([])
+      const otherSource = await agent.api.com.atproto.label.queryLabels({
+        ...params,
+        sources: ['did:example:other-labeler'],
+      })
+      expect(otherSource.data.labels).toEqual([])
+    })
   })
 
   it('returns all labels', async () => {
@@ -162,7 +210,7 @@ describe('ozone query labels', () => {
         ctx.idResolver,
         // @ts-ignore
         modSrvc.eventPusher,
-        modSrvc.appviewAgent,
+        modSrvc.appviewClient,
         ctx.serviceAuthHeaders,
         ctx.strikeService,
       ),
@@ -200,10 +248,16 @@ describe('ozone query labels', () => {
   describe('subscribeLabels', () => {
     it('streams all labels from initial cursor.', async () => {
       const ac = new AbortController()
+      // A sentinel rather than DisconnectError: aborting a subscription now
+      // rejects the iterator with whatever reason it was given, so the test needs
+      // its own marker to tell a deliberate stop from a real failure.
+      // DisconnectError means nothing to a client — it's how a *server* route ends
+      // a stream it serves.
+      const doneReason = new Error('caught up with the label stream')
       let doneTimer: NodeJS.Timeout
       const resetDoneTimer = () => {
         clearTimeout(doneTimer)
-        doneTimer = setTimeout(() => ac.abort(new DisconnectError()), 100)
+        doneTimer = setTimeout(() => ac.abort(doneReason), 100)
       }
       const sub = new Subscription({
         signal: ac.signal,
@@ -213,24 +267,30 @@ describe('ozone query labels', () => {
           return { cursor: 0 }
         },
         validate(obj) {
-          return lexicons.assertValidXrpcMessage<LabelMessage>(
+          return lexicons.assertValidXrpcMessage<ComAtprotoLabelSubscribeLabels.Labels>(
             ids.ComAtprotoLabelSubscribeLabels,
             obj,
           )
         },
       })
-      const streamedLabels: Label[] = []
-      for await (const message of sub) {
-        resetDoneTimer()
-        if (isLabels(message)) {
-          for (const label of message.labels) {
-            // sigs are currently parsed as a Buffer which is a Uint8Array under the hood, but fails our equality test so we cast to Uint8Array
-            streamedLabels.push({
-              ...label,
-              sig: label.sig ? new Uint8Array(label.sig) : undefined,
-            })
+      const streamedLabels: ComAtprotoLabelDefs.Label[] = []
+      try {
+        for await (const message of sub) {
+          resetDoneTimer()
+          if (ComAtprotoLabelSubscribeLabels.isLabels(message)) {
+            for (const label of message.labels) {
+              // sigs are currently parsed as a Buffer which is a Uint8Array under the hood, but fails our equality test so we cast to Uint8Array
+              streamedLabels.push({
+                ...label,
+                sig: label.sig ? new Uint8Array(label.sig) : undefined,
+              })
+            }
           }
         }
+      } catch (err) {
+        // Our own timer-driven stop is the expected way out; anything else is a
+        // genuine failure and must not be swallowed.
+        if (err !== doneReason) throw err
       }
       expect(streamedLabels).toEqual(labels)
     })

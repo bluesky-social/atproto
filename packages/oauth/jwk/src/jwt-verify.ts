@@ -1,5 +1,5 @@
-import { JwtHeader, JwtPayload } from './jwt.js'
-import { RequiredKey } from './util.js'
+import type { JwtHeader, JwtPayload } from './jwt.js'
+import type { RequiredKey } from './util.js'
 
 export type VerifyOptions<C extends string = never> = {
   audience?: string | readonly string[]

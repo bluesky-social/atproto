@@ -1,13 +1,14 @@
-import { CID } from 'multiformats/cid'
 import { request } from 'undici'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { cidForCbor, verifyCidForBytes } from '@atproto/common'
 import { randomBytes } from '@atproto/crypto'
 import { TestNetwork, basicSeed } from '@atproto/dev-env'
+import type { Cid } from '@atproto/lex'
 
 describe('blob resolver', () => {
   let network: TestNetwork
   let fileDid: string
-  let fileCid: CID
+  let fileCid: Cid
   let fileSize: number
 
   beforeAll(async () => {
@@ -16,15 +17,14 @@ describe('blob resolver', () => {
     })
     const sc = network.getSeedClient()
     await basicSeed(sc)
-    await network.processAll()
+
     fileDid = sc.dids.carol
     fileCid = sc.posts[fileDid][0].images[0].image.ref
     fileSize = sc.posts[fileDid][0].images[0].image.size
   })
 
-  afterAll(async () => {
-    await network.close()
-  })
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
 
   it('resolves blob with good signature check.', async () => {
     const response = await request(

@@ -1,10 +1,11 @@
-import { Generated, Selectable } from 'kysely'
+import type { Generated, Selectable } from 'kysely'
+import type { DatetimeString } from '@atproto/lex-schema'
 
 export interface Account {
   did: string
   email: string
   passwordScrypt: string
-  emailConfirmedAt: string | null
+  emailConfirmedAt: DatetimeString | null
   invitesDisabled: Generated<0 | 1>
 }
 

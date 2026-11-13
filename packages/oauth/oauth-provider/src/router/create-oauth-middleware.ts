@@ -9,9 +9,10 @@ import { buildErrorPayload, buildErrorStatus } from '../errors/error-parser.js'
 import { InvalidClientError } from '../errors/invalid-client-error.js'
 import { InvalidGrantError } from '../errors/invalid-grant-error.js'
 import { InvalidRequestError } from '../errors/invalid-request-error.js'
+import { OAuthError } from '../errors/oauth-error.js'
 import { WWWAuthenticateError } from '../errors/www-authenticate-error.js'
 import {
-  Middleware,
+  type Middleware,
   Router,
   cacheControlMiddleware,
   combineMiddlewares,
@@ -20,7 +21,6 @@ import {
   staticJsonMiddleware,
 } from '../lib/http/index.js'
 import { formatError } from '../lib/util/error.js'
-import { OAuthError } from '../oauth-errors.js'
 import type { OAuthProvider } from '../oauth-provider.js'
 import type { MiddlewareOptions } from './middleware-options.js'
 

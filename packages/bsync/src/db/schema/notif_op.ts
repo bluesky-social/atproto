@@ -1,4 +1,4 @@
-import { GeneratedAlways, Selectable } from 'kysely'
+import type { GeneratedAlways, Selectable } from 'kysely'
 
 export interface NotifOp {
   id: GeneratedAlways<number>

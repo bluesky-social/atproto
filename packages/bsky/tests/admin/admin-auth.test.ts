@@ -1,21 +1,21 @@
 import assert from 'node:assert'
-import { AtpAgent } from '@atproto/api'
-import { Secp256k1Keypair } from '@atproto/crypto'
-import { SeedClient, TestNetwork, usersSeed } from '@atproto/dev-env'
-import { createServiceAuthHeaders } from '@atproto/xrpc-server'
-import { ids } from '../../src/lexicon/lexicons'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import {
-  RepoRef,
-  isRepoRef,
-} from '../../src/lexicon/types/com/atproto/admin/defs'
-import { $Typed } from '../../src/lexicon/util'
+  type $Typed,
+  type AtpAgent,
+  ComAtprotoAdminDefs,
+  ids,
+} from '@atproto/api'
+import { Secp256k1Keypair } from '@atproto/crypto'
+import { type SeedClient, TestNetwork, usersSeed } from '@atproto/dev-env'
+import { createServiceAuthHeaders } from '@atproto/xrpc-server'
 
 describe('admin auth', () => {
   let network: TestNetwork
   let agent: AtpAgent
   let sc: SeedClient
 
-  let repoSubject: $Typed<RepoRef>
+  let repoSubject: $Typed<ComAtprotoAdminDefs.RepoRef>
 
   const modServiceDid = 'did:example:mod'
   const altModDid = 'did:example:alt'
@@ -59,7 +59,7 @@ describe('admin auth', () => {
       return origResolve.call(this, did, forceRefresh)
     }
 
-    agent = network.bsky.getClient()
+    agent = network.bsky.getAgent()
     sc = network.getSeedClient()
     await usersSeed(sc)
     await network.processAll()
@@ -70,7 +70,7 @@ describe('admin auth', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('allows service auth requests from the configured appview did', async () => {
@@ -101,7 +101,7 @@ describe('admin auth', () => {
       { did: repoSubject.did },
       getHeaders,
     )
-    assert(isRepoRef(res.data.subject))
+    assert(ComAtprotoAdminDefs.isRepoRef(res.data.subject))
     expect(res.data.subject.did).toBe(repoSubject.did)
     expect(res.data.takedown?.applied).toBe(true)
   })

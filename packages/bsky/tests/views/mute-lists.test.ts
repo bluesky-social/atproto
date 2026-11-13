@@ -1,7 +1,13 @@
-import { AtUri, AtpAgent } from '@atproto/api'
-import { RecordRef, SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
-import { ids } from '../../src/lexicon/lexicons'
-import { forSnapshot } from '../_util'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
+import { AtUri, type AtpAgent, ids } from '@atproto/api'
+import {
+  RecordRef,
+  type SeedClient,
+  TestNetwork,
+  basicSeed,
+} from '@atproto/dev-env'
+import type { DidString } from '@atproto/syntax'
+import { forSnapshot } from '../_util.js'
 
 describe('bsky views with mutes from mute lists', () => {
   let network: TestNetwork
@@ -9,17 +15,17 @@ describe('bsky views with mutes from mute lists', () => {
   let pdsAgent: AtpAgent
   let sc: SeedClient
 
-  let alice: string
-  let bob: string
-  let carol: string
-  let dan: string
+  let alice: DidString
+  let bob: DidString
+  let carol: DidString
+  let dan: DidString
 
   beforeAll(async () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_views_mute_lists',
     })
-    agent = network.bsky.getClient()
-    pdsAgent = network.pds.getClient()
+    agent = network.bsky.getAgent()
+    pdsAgent = network.pds.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc)
     alice = sc.dids.alice
@@ -29,12 +35,10 @@ describe('bsky views with mutes from mute lists', () => {
     // add follows to ensure mutes work even w follows
     await sc.follow(carol, dan)
     await sc.follow(dan, carol)
-    await network.processAll()
   })
 
-  afterAll(async () => {
-    await network.close()
-  })
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
 
   let listUri: string
   let listCid: string
@@ -134,7 +138,9 @@ describe('bsky views with mutes from mute lists', () => {
       },
     )
     expect(
-      res.data.feed.some((post) => [bob, carol].includes(post.post.author.did)),
+      res.data.feed.some((post) =>
+        [bob, carol].includes(post.post.author.did as DidString),
+      ),
     ).toBe(false)
   })
 
@@ -146,7 +152,9 @@ describe('bsky views with mutes from mute lists', () => {
       },
     )
     expect(
-      res.data.feed.some((post) => [bob, carol].includes(post.post.author.did)),
+      res.data.feed.some((post) =>
+        [bob, carol].includes(post.post.author.did as DidString),
+      ),
     ).toBe(false)
   })
 
@@ -165,7 +173,9 @@ describe('bsky views with mutes from mute lists', () => {
       },
     )
     expect(
-      res.data.feed.some((post) => [bob, carol].includes(post.post.author.did)),
+      res.data.feed.some((post) =>
+        [bob, carol].includes(post.post.author.did as DidString),
+      ),
     ).toBe(false)
   })
 
@@ -218,7 +228,7 @@ describe('bsky views with mutes from mute lists', () => {
     )
     expect(
       res.data.notifications.some((notif) =>
-        [bob, carol].includes(notif.author.did),
+        [bob, carol].includes(notif.author.did as DidString),
       ),
     ).toBeFalsy()
   })
@@ -240,7 +250,7 @@ describe('bsky views with mutes from mute lists', () => {
       },
     )
     for (const actor of res.data.actors) {
-      if ([bob, carol].includes(actor.did)) {
+      if ([bob, carol].includes(actor.did as DidString)) {
         expect(actor.viewer?.muted).toBe(true)
         expect(actor.viewer?.mutedByList?.uri).toEqual(listUri)
       } else {
@@ -329,6 +339,7 @@ describe('bsky views with mutes from mute lists', () => {
         ),
       },
     )
+    await network.processAll()
 
     const res = await agent.api.app.bsky.graph.getListMutes(
       {},
@@ -343,6 +354,20 @@ describe('bsky views with mutes from mute lists', () => {
   })
 
   it('paginates getListMutes', async () => {
+    const exact = await network.bsky.ctx.dataplane.getMutelistSubscriptions({
+      actorDid: dan,
+      limit: 2,
+    })
+    const nonterminal =
+      await network.bsky.ctx.dataplane.getMutelistSubscriptions({
+        actorDid: dan,
+        limit: 1,
+      })
+    expect(exact.listUris).toHaveLength(2)
+    expect(exact.cursor).toBe('')
+    expect(nonterminal.listUris).toHaveLength(1)
+    expect(nonterminal.cursor).not.toBe('')
+
     const full = await agent.api.app.bsky.graph.getListMutes(
       {},
       {
@@ -371,7 +396,31 @@ describe('bsky views with mutes from mute lists', () => {
       },
     )
     const combined = [...first.data.lists, ...second.data.lists]
+    expect(first.data.lists).toHaveLength(1)
+    expect(first.data.cursor).toBeDefined()
+    expect(second.data.cursor).toBeUndefined()
     expect(combined).toEqual(full.data.lists)
+
+    await network.bsky.ctx.dataplane.takedownRecord({
+      recordUri: otherListUri,
+    })
+    try {
+      const filtered = await agent.api.app.bsky.graph.getListMutes(
+        { limit: 1 },
+        {
+          headers: await network.serviceHeaders(
+            dan,
+            ids.AppBskyGraphGetListMutes,
+          ),
+        },
+      )
+      expect(filtered.data.lists.map((list) => list.uri)).toEqual([listUri])
+      expect(filtered.data.cursor).toBeUndefined()
+    } finally {
+      await network.bsky.ctx.dataplane.untakedownRecord({
+        recordUri: otherListUri,
+      })
+    }
   })
 
   it('allows unsubscribing from a mute list', async () => {
@@ -387,6 +436,7 @@ describe('bsky views with mutes from mute lists', () => {
         ),
       },
     )
+    await network.processAll()
 
     const res = await agent.api.app.bsky.graph.getListMutes(
       {},
@@ -470,7 +520,9 @@ describe('bsky views with mutes from mute lists', () => {
       },
     )
     expect(
-      res.data.feed.some((post) => [bob, carol].includes(post.post.author.did)),
+      res.data.feed.some((post) =>
+        [bob, carol].includes(post.post.author.did as DidString),
+      ),
     ).toBeTruthy()
   })
 
@@ -492,7 +544,9 @@ describe('bsky views with mutes from mute lists', () => {
       },
     )
     expect(
-      res.data.feed.some((post) => [bob, carol].includes(post.post.author.did)),
+      res.data.feed.some((post) =>
+        [bob, carol].includes(post.post.author.did as DidString),
+      ),
     ).toBeTruthy()
   })
 })

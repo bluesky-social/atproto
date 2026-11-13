@@ -1,16 +1,18 @@
 import { mapDefined } from '@atproto/common'
-import { AppContext } from '../../../../context'
-import { Server } from '../../../../lexicon'
-import { resHeaders } from '../../../util'
+import type { Server } from '@atproto/xrpc-server'
+import type { AppContext } from '../../../../context.js'
+import { app } from '../../../../lexicons/index.js'
+import { resHeaders } from '../../../util.js'
 
 export default function (server: Server, ctx: AppContext) {
-  server.app.bsky.labeler.getServices({
+  server.add(app.bsky.labeler.getServices, {
     auth: ctx.authVerifier.standardOptional,
     handler: async ({ params, auth, req }) => {
       const { dids, detailed } = params
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({
+        xrpcEndpoint: app.bsky.labeler.getServices.$lxm,
         viewer,
         labelers,
       })
@@ -20,17 +22,11 @@ export default function (server: Server, ctx: AppContext) {
         if (detailed) {
           const view = ctx.views.labelerDetailed(did, hydration)
           if (!view) return
-          return {
-            ...view,
-            $type: 'app.bsky.labeler.defs#labelerViewDetailed',
-          }
+          return app.bsky.labeler.defs.labelerViewDetailed.$build(view)
         } else {
           const view = ctx.views.labeler(did, hydration)
           if (!view) return
-          return {
-            ...view,
-            $type: 'app.bsky.labeler.defs#labelerView',
-          }
+          return app.bsky.labeler.defs.labelerView.$build(view)
         }
       })
 

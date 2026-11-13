@@ -1,20 +1,15 @@
+import type { TagDecoder } from 'cborg'
 import {
-  DecodeOptions,
-  EncodeOptions,
-  TagDecoder,
   Token,
   Type,
   decode as cborgDecode,
   decodeFirst as cborgDecodeFirst,
   encode as cborgEncode,
 } from 'cborg'
-import { OptionalTypeEncoder } from 'cborg/lib/encode'
-import { Cid, LexValue, decodeCid, ifCid } from '@atproto/lex-data'
-
-// @NOTE "cborg" version 4 is required to support multi-decoding via the
-// "decodeFirst" function. However, that version only exposes ES modules.
-// Because this package is using "commonjs", "cborg" will be bundled instead of
-// depending on it directly.
+import type { OptionalTypeEncoder } from 'cborg/interface'
+import type { Cid, LexValue } from '@atproto/lex-data'
+import { decodeCid, ifCid } from '@atproto/lex-data'
+import type { CborDecodeOptions, CborEncodeOptions } from './cbor-options.js'
 
 const CID_CBOR_TAG = 42
 
@@ -28,71 +23,80 @@ const CID_CBOR_TAG = 42
  * - `undefined` values are not permitted (undefined object properties will be stripped)
  * - Only safe integer numbers are allowed (no floats or non-integer values)
  */
-export const encodeOptions = Object.freeze<EncodeOptions>({
-  float64: true,
-  ignoreUndefinedProperties: true,
-  typeEncoders: Object.freeze<{ [typeName: string]: OptionalTypeEncoder }>({
-    Map: (map: Map<unknown, unknown>): null => {
-      for (const key of map.keys()) {
-        if (typeof key !== 'string') {
-          throw new Error(
-            'Only string keys are allowed in CBOR "map" by the AT Data Model',
-          )
+export const encodeOptions: Readonly<CborEncodeOptions> =
+  /*#__PURE__*/ Object.freeze({
+    float64: true,
+    ignoreUndefinedProperties: true,
+    typeEncoders: /*#__PURE__*/ Object.freeze<{
+      [typeName: string]: OptionalTypeEncoder
+    }>({
+      Map: (map: Map<unknown, unknown>): null => {
+        for (const key of map.keys()) {
+          if (typeof key !== 'string') {
+            throw new Error(
+              'Only string keys are allowed in CBOR "map" by the AT Data Model',
+            )
+          }
         }
-      }
 
-      // @NOTE Maps will be encoded as CBOR "map", which will be decoded as object.
-      return null
-    },
-    Object: (obj: object): Token[] | null => {
-      const cid = ifCid(obj)
-      if (cid) {
-        const bytes = new Uint8Array(cid.bytes.byteLength + 1)
-        bytes.set(cid.bytes, 1) // prefix is 0x00, for historical reasons
-        return [new Token(Type.tag, CID_CBOR_TAG), new Token(Type.bytes, bytes)]
-      }
+        // @NOTE Maps will be encoded as CBOR "map", which will be decoded as object.
+        return null
+      },
+      Object: (obj: object): Token[] | null => {
+        const cid = ifCid(obj)
+        if (cid) {
+          const bytes = new Uint8Array(cid.bytes.byteLength + 1)
+          bytes.set(cid.bytes, 1) // prefix is 0x00, for historical reasons
+          return [
+            new Token(Type.tag, CID_CBOR_TAG),
+            new Token(Type.bytes, bytes),
+          ]
+        }
 
-      // Fallback to default object encoder
-      return null
-    },
-    undefined: (): null => {
-      throw new Error('`undefined` is not supported by the AT Data Model')
-    },
-    number: (num: number): null => {
-      if (Number.isSafeInteger(num)) return null
+        // Fallback to default object encoder
+        return null
+      },
+      undefined: (): null => {
+        throw new Error('`undefined` is not supported by the AT Data Model')
+      },
+      number: (num: number): null => {
+        if (Number.isSafeInteger(num)) return null
 
-      throw new Error(
-        `Non-integer numbers (${num}) are not supported by the AT Data Model`,
-      )
-    },
-  }),
-})
+        throw new Error(
+          `Non-integer numbers (${num}) are not supported by the AT Data Model`,
+        )
+      },
+    }),
+  })
 
 /**
  * Configuration options for CBOR decoding that enforces AT Protocol data model
  * constraints.
  */
-export const decodeOptions = /*#__PURE__*/ Object.freeze<DecodeOptions>({
-  allowIndefinite: false,
-  coerceUndefinedToNull: true,
-  allowNaN: false,
-  allowInfinity: false,
-  allowBigInt: true,
-  strict: true,
-  useMaps: false,
-  rejectDuplicateMapKeys: true,
-  tags: /*#__PURE__*/ Object.freeze<TagDecoder[]>(
-    /*#__PURE__*/ Object.assign([], {
-      [CID_CBOR_TAG]: (bytes: Uint8Array): Cid => {
-        if (bytes[0] !== 0) {
-          throw new Error('Invalid CID for CBOR tag 42; expected leading 0x00')
-        }
-        const cibBytes = bytes.subarray(1) // ignore leading 0x00
-        return decodeCid(cibBytes)
-      },
-    }),
-  ) as TagDecoder[],
-})
+export const decodeOptions: Readonly<CborDecodeOptions> =
+  /*#__PURE__*/ Object.freeze({
+    allowIndefinite: false,
+    coerceUndefinedToNull: true,
+    allowNaN: false,
+    allowInfinity: false,
+    allowBigInt: true,
+    strict: true,
+    useMaps: false,
+    rejectDuplicateMapKeys: true,
+    tags: /*#__PURE__*/ Object.freeze<TagDecoder[]>(
+      /*#__PURE__*/ Object.assign([], {
+        [CID_CBOR_TAG]: (bytes: Uint8Array): Cid => {
+          if (bytes[0] !== 0) {
+            throw new Error(
+              'Invalid CID for CBOR tag 42; expected leading 0x00',
+            )
+          }
+          const cibBytes = bytes.subarray(1) // ignore leading 0x00
+          return decodeCid(cibBytes)
+        },
+      }),
+    ) as TagDecoder[],
+  })
 
 /**
  * Encodes a LexValue to CBOR bytes using the AT Protocol data model (DRISL format).
@@ -116,8 +120,10 @@ export const decodeOptions = /*#__PURE__*/ Object.freeze<DecodeOptions>({
  * })
  * ```
  */
-export function encode<T extends LexValue = LexValue>(data: T): Uint8Array {
-  return cborgEncode(data, encodeOptions)
+export function encode<T extends LexValue = LexValue>(
+  data: T,
+): Uint8Array<ArrayBuffer> {
+  return cborgEncode(data, encodeOptions) as Uint8Array<ArrayBuffer>
 }
 
 /**

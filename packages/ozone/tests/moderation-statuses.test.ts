@@ -1,25 +1,18 @@
 import assert from 'node:assert'
 import {
+  ComAtprotoAdminDefs,
+  ComAtprotoModerationDefs,
+  ComAtprotoRepoStrongRef,
   ToolsOzoneModerationDefs,
-  ToolsOzoneModerationQueryStatuses,
 } from '@atproto/api'
+import type { ToolsOzoneModerationQueryStatuses } from '@atproto/api'
 import {
-  ModeratorClient,
-  SeedClient,
+  type ModeratorClient,
+  type SeedClient,
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
-import { isRepoRef } from '../src/lexicon/types/com/atproto/admin/defs'
-import {
-  REASONMISLEADING,
-  REASONSPAM,
-} from '../src/lexicon/types/com/atproto/moderation/defs'
-import { isMain as isStrongRef } from '../src/lexicon/types/com/atproto/repo/strongRef'
-import {
-  REVIEWNONE,
-  REVIEWOPEN,
-} from '../src/lexicon/types/tools/ozone/moderation/defs'
-import { forSnapshot } from './_util'
+import { forSnapshot } from './_util.js'
 
 describe('moderation-statuses', () => {
   let network: TestNetwork
@@ -48,14 +41,17 @@ describe('moderation-statuses', () => {
 
     for (let i = 0; i < 4; i++) {
       await sc.createReport({
-        reasonType: i % 2 ? REASONSPAM : REASONMISLEADING,
+        reasonType:
+          i % 2
+            ? ComAtprotoModerationDefs.REASONSPAM
+            : ComAtprotoModerationDefs.REASONMISLEADING,
         reason: 'X',
         //   Report bob's account by alice and vice versa
         subject: i % 2 ? bobsAccount : carlasAccount,
         reportedBy: i % 2 ? sc.dids.alice : sc.dids.bob,
       })
       await sc.createReport({
-        reasonType: REASONSPAM,
+        reasonType: ComAtprotoModerationDefs.REASONSPAM,
         reason: 'X',
         //   Report bob's post by alice and vice versa
         subject: i % 2 ? bobsPost : alicesPost,
@@ -80,10 +76,68 @@ describe('moderation-statuses', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   describe('query statuses', () => {
+    it('omits retired statistics and ignores count-based filters', async () => {
+      const response = await modClient.queryStatuses({})
+      expect(response.subjectStatuses.length).toBeGreaterThan(0)
+      for (const status of response.subjectStatuses) {
+        expect(status).not.toHaveProperty('accountStats')
+        expect(status).not.toHaveProperty('recordsStats')
+      }
+
+      const headers = await network.ozone.modHeaders(
+        'tools.ozone.moderation.queryStatuses',
+      )
+      const queryLegacy = (query: string) =>
+        fetch(
+          `${network.ozone.url}/xrpc/tools.ozone.moderation.queryStatuses?${query}`,
+          { headers },
+        )
+      for (const query of [
+        'minAccountSuspendCount=1',
+        'minReportedRecordsCount=1',
+        'minTakendownRecordsCount=1',
+      ]) {
+        const legacyResponse = await queryLegacy(query)
+        expect(legacyResponse.status).toBe(200)
+        const result = (await legacyResponse.json()) as {
+          subjectStatuses: { id: number }[]
+        }
+        expect(result.subjectStatuses.map((status) => status.id)).toEqual(
+          response.subjectStatuses.map((status) => status.id),
+        )
+      }
+
+      for (const direction of ['asc', 'desc']) {
+        const query = `sortDirection=${direction}&limit=1`
+        const firstPage = (await (await queryLegacy(query)).json()) as {
+          cursor?: string
+          subjectStatuses: { id: number }[]
+        }
+        expect(firstPage.cursor).toBeDefined()
+        for (const sortField of [
+          'reportedRecordsCount',
+          'takendownRecordsCount',
+        ]) {
+          for (const cursor of [
+            '',
+            `&cursor=${encodeURIComponent(firstPage.cursor!)}`,
+          ]) {
+            const expected = await (await queryLegacy(query + cursor)).json()
+            const legacyResponse = await queryLegacy(
+              `${query}&sortField=${sortField}${cursor}`,
+            )
+            expect(legacyResponse.status).toBe(200)
+            expect(await legacyResponse.json()).toEqual(expected)
+          }
+        }
+      }
+      expect((await queryLegacy('sortField=unknown')).status).toBe(400)
+    })
+
     it('returns statuses for subjects that received moderation events', async () => {
       const response = await modClient.queryStatuses({})
 
@@ -188,7 +242,7 @@ describe('moderation-statuses', () => {
         [],
       )
       await sc.createReport({
-        reasonType: REASONSPAM,
+        reasonType: ComAtprotoModerationDefs.REASONSPAM,
         reason: 'X',
         subject: {
           $type: 'com.atproto.repo.strongRef',
@@ -222,13 +276,19 @@ describe('moderation-statuses', () => {
       ])
 
       expect(onlyStarterPackStatuses.subjectStatuses.length).toEqual(1)
-      assert(isStrongRef(onlyStarterPackStatuses.subjectStatuses[0].subject))
+      assert(
+        ComAtprotoRepoStrongRef.isMain(
+          onlyStarterPackStatuses.subjectStatuses[0].subject,
+        ),
+      )
       expect(onlyStarterPackStatuses.subjectStatuses[0].subject.uri).toContain(
         'app.bsky.graph.starterpack',
       )
       expect(onlyAlicesStarterPackStatuses.subjectStatuses.length).toEqual(1)
       assert(
-        isStrongRef(onlyAlicesStarterPackStatuses.subjectStatuses[0].subject),
+        ComAtprotoRepoStrongRef.isMain(
+          onlyAlicesStarterPackStatuses.subjectStatuses[0].subject,
+        ),
       )
       expect(
         onlyAlicesStarterPackStatuses.subjectStatuses[0].subject.uri,
@@ -257,24 +317,159 @@ describe('moderation-statuses', () => {
 
       assert(
         onlyAccountStatuses.subjectStatuses.every(
-          (e) => !isStrongRef(e.subject),
+          (e) => !ComAtprotoRepoStrongRef.isMain(e.subject),
         ),
         'only account statuses are returned, no event has a uri',
       )
 
       assert(
         onlyRecordStatuses.subjectStatuses.every(
-          (e) => isStrongRef(e.subject) && e.subject.uri,
+          (e) => ComAtprotoRepoStrongRef.isMain(e.subject) && e.subject.uri,
         ),
         'only record statuses are returned, all events have a uri',
       )
 
       assert(
         onlyStatusesOnBobsAccount.subjectStatuses.every(
-          (e) => isRepoRef(e.subject) && e.subject.did === sc.dids.bob,
+          (e) =>
+            ComAtprotoAdminDefs.isRepoRef(e.subject) &&
+            e.subject.did === sc.dids.bob,
         ),
         "only bob's account statuses are returned, no events have a URI even though the subjectType is record",
       )
+    })
+
+    it('returns statuses for conversations', async () => {
+      const convoId1 = 'test-convo-123'
+      const convoId2 = 'test-convo-456'
+
+      // Create reports for conversation 1
+      await sc.createReport({
+        reasonType: ComAtprotoModerationDefs.REASONSPAM,
+        reason: 'spam in convo 1',
+        subject: {
+          $type: 'chat.bsky.convo.defs#convoRef',
+          did: sc.dids.carol,
+          convoId: convoId1,
+        },
+        reportedBy: sc.dids.alice,
+      })
+
+      // Create another report for conversation 1
+      await sc.createReport({
+        reasonType: ComAtprotoModerationDefs.REASONMISLEADING,
+        reason: 'misleading in convo 1',
+        subject: {
+          $type: 'chat.bsky.convo.defs#convoRef',
+          did: sc.dids.carol,
+          convoId: convoId1,
+        },
+        reportedBy: sc.dids.bob,
+      })
+
+      // Create report for conversation 2
+      await sc.createReport({
+        reasonType: ComAtprotoModerationDefs.REASONSPAM,
+        reason: 'spam in convo 2',
+        subject: {
+          $type: 'chat.bsky.convo.defs#convoRef',
+          did: sc.dids.carol,
+          convoId: convoId2,
+        },
+        reportedBy: sc.dids.alice,
+      })
+
+      // Query statuses for conversation 1 using AT URI format
+      const convo1Statuses = await modClient.queryStatuses({
+        subject: `at://${sc.dids.carol}/chat.bsky.convo/${convoId1}`,
+      })
+
+      // Query statuses for conversation 2
+      const convo2Statuses = await modClient.queryStatuses({
+        subject: `at://${sc.dids.carol}/chat.bsky.convo/${convoId2}`,
+      })
+
+      // Query all conversation statuses for carol
+      const allCarolConvoStatuses = await modClient.queryStatuses({
+        subject: sc.dids.carol,
+        includeAllUserRecords: true,
+      })
+
+      // Verify conversation 1 has exactly 1 status (multiple reports create one status)
+      expect(convo1Statuses.subjectStatuses.length).toEqual(1)
+      expect(convo1Statuses.subjectStatuses[0].subject.$type).toEqual(
+        'chat.bsky.convo.defs#convoRef',
+      )
+      expect(convo1Statuses.subjectStatuses[0].reviewState).toEqual(
+        ToolsOzoneModerationDefs.REVIEWOPEN,
+      )
+
+      // Verify conversation 2 has exactly 1 status
+      expect(convo2Statuses.subjectStatuses.length).toEqual(1)
+      expect(convo2Statuses.subjectStatuses[0].subject.$type).toEqual(
+        'chat.bsky.convo.defs#convoRef',
+      )
+
+      // Verify statuses are properly isolated by conversation
+      const convo1Subject = convo1Statuses.subjectStatuses[0].subject as any
+      const convo2Subject = convo2Statuses.subjectStatuses[0].subject as any
+      expect(convo1Subject.convoId).toEqual(convoId1)
+      expect(convo2Subject.convoId).toEqual(convoId2)
+
+      // Verify includeAllUserRecords includes conversations
+      const convoStatuses = allCarolConvoStatuses.subjectStatuses.filter(
+        (s) => s.subject.$type === 'chat.bsky.convo.defs#convoRef',
+      )
+      expect(convoStatuses.length).toBeGreaterThanOrEqual(2)
+    })
+
+    it('includes message statuses in conversation filtering', async () => {
+      const did = sc.dids.carol
+      const convoId = 'filter-messages-convo'
+      const conversation = {
+        $type: 'chat.bsky.convo.defs#convoRef',
+        did,
+        convoId,
+      }
+      const message = {
+        $type: 'chat.bsky.convo.defs#messageRef',
+        did,
+        convoId,
+        messageId: 'filter-message',
+      }
+      const legacyMessage = {
+        ...message,
+        convoId: '',
+        messageId: 'legacy-filter-message',
+      }
+      for (const subject of [conversation, message, legacyMessage]) {
+        await sc.createReport({
+          reasonType: ComAtprotoModerationDefs.REASONSPAM,
+          subject,
+          reportedBy: sc.dids.alice,
+        })
+      }
+      await network.processAll()
+      const chat = await modClient.queryStatuses({
+        subjectType: 'conversation',
+        limit: 100,
+      })
+      expect(chat.subjectStatuses.map((status) => status.subject)).toEqual(
+        expect.arrayContaining([conversation, message, legacyMessage]),
+      )
+      const convo = await modClient.queryStatuses({
+        subject: `at://${did}/chat.bsky.convo/${convoId}`,
+      })
+      expect(convo.subjectStatuses.map((status) => status.subject)).toEqual([
+        conversation,
+      ])
+      const records = await modClient.queryStatuses({
+        subjectType: 'record',
+        limit: 100,
+      })
+      expect(
+        records.subjectStatuses.map((status) => status.subject),
+      ).not.toEqual(expect.arrayContaining([message]))
     })
   })
 
@@ -346,19 +541,23 @@ describe('moderation-statuses', () => {
         createdBy: sc.dids.alice,
       })
       const alicesPostStatusAfterTag = await getAlicesPostStatus()
-      expect(alicesPostStatusAfterTag.reviewState).toEqual(REVIEWNONE)
+      expect(alicesPostStatusAfterTag.reviewState).toEqual(
+        ToolsOzoneModerationDefs.REVIEWNONE,
+      )
 
       await modClient.emitEvent({
         subject: alicesPost,
         event: {
           $type: 'tools.ozone.moderation.defs#modEventReport',
-          reportType: REASONMISLEADING,
+          reportType: ComAtprotoModerationDefs.REASONMISLEADING,
           comment: 'X',
         },
         createdBy: sc.dids.alice,
       })
       const alicesPostStatusAfterReport = await getAlicesPostStatus()
-      expect(alicesPostStatusAfterReport.reviewState).toEqual(REVIEWOPEN)
+      expect(alicesPostStatusAfterReport.reviewState).toEqual(
+        ToolsOzoneModerationDefs.REVIEWOPEN,
+      )
     })
   })
 

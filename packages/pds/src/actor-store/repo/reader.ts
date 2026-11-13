@@ -1,9 +1,10 @@
-import { BlobStore } from '@atproto/repo'
-import { SyncEvtData } from '../../repo'
-import { BlobReader } from '../blob/reader'
-import { ActorDb } from '../db'
-import { RecordReader } from '../record/reader'
-import { SqlRepoReader } from './sql-repo-reader'
+import type { DidString } from '@atproto/lex-schema'
+import type { BlobStore } from '@atproto/repo'
+import type { SyncEvtData } from '../../repo/index.js'
+import { BlobReader } from '../blob/reader.js'
+import type { ActorDb } from '../db/index.js'
+import { RecordReader } from '../record/reader.js'
+import { SqlRepoReader } from './sql-repo-reader.js'
 
 export class RepoReader {
   blob: BlobReader
@@ -13,9 +14,10 @@ export class RepoReader {
   constructor(
     public db: ActorDb,
     public blobstore: BlobStore,
+    public did: DidString,
   ) {
     this.blob = new BlobReader(db, blobstore)
-    this.record = new RecordReader(db)
+    this.record = new RecordReader(db, did)
     this.storage = new SqlRepoReader(db)
   }
 

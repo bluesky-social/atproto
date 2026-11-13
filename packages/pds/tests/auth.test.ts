@@ -1,21 +1,39 @@
+import { jest } from '@jest/globals'
 import * as jose from 'jose'
-import { AtpAgent } from '@atproto/api'
+import { request as undiciRequest } from 'undici'
+import type { AtpAgent } from '@atproto/api'
 import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
-import { createRefreshToken } from '../src/account-manager/helpers/auth'
+import { createRefreshToken } from '../src/account-manager/helpers/auth.js'
+import type { AppContext } from '../src/index.js'
 
 describe('auth', () => {
   let network: TestNetworkNoAppView
   let agent: AtpAgent
 
+  let sendMailMock: jest.SpiedFunction<
+    AppContext['mailer']['transporter']['sendMail']
+  >
+
   beforeAll(async () => {
     network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'auth',
     })
-    agent = network.pds.getClient()
+    agent = network.pds.getAgent()
+
+    // Catch-all: never actually deliver, but keep recording calls. Per-test
+    // spies on the individual mailer methods stay un-stubbed, so the real
+    // template still renders into the call this records.
+    sendMailMock = jest
+      .spyOn(network.pds.ctx.mailer.transporter, 'sendMail')
+      .mockImplementation(async () => {})
+  })
+
+  beforeEach(() => {
+    sendMailMock.mockClear()
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   const createAccount = async (info) => {
@@ -61,6 +79,7 @@ describe('auth', () => {
       handle: account.handle,
       email,
       emailConfirmed: false,
+      emailAuthFactor: false,
       active: true,
     })
     // Valid refresh token
@@ -91,6 +110,7 @@ describe('auth', () => {
       handle: session.handle,
       email,
       emailConfirmed: false,
+      emailAuthFactor: false,
       active: true,
     })
     // Valid refresh token
@@ -121,6 +141,94 @@ describe('auth', () => {
     )
   })
 
+  it('returns identical error responses for unknown identifier and known-identifier-with-wrong-password.', async () => {
+    const probe = async (info: { identifier: string; password: string }) => {
+      const res = await fetch(
+        `${network.pds.url}/xrpc/com.atproto.server.createSession`,
+        {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify(info),
+        },
+      )
+      return { status: res.status, body: await res.json() }
+    }
+
+    // bob.test was created above with password 'password'.
+    const unknownIdentifier = await probe({
+      identifier: 'no-such-user.test',
+      password: 'any-password',
+    })
+    const knownIdentifierWrongPassword = await probe({
+      identifier: 'bob.test',
+      password: 'wrong-password',
+    })
+
+    expect(knownIdentifierWrongPassword).toEqual(unknownIdentifier)
+    expect(unknownIdentifier).toEqual({
+      status: 401,
+      body: {
+        error: 'AuthenticationRequired',
+        message: 'Invalid identifier or password',
+      },
+    })
+  })
+
+  it('returns identical error responses for unknown identifier and known-identifier-with-wrong-password in the OAuth sign-in flow.', async () => {
+    const issuer = new URL(network.pds.url)
+    const csrfToken = 'a'.repeat(24)
+    const probe = async (credentials: {
+      identifier: string
+      password: string
+    }) => {
+      // @NOTE We use undici's low-level `request` rather than fetch(),
+      // because the WHATWG fetch API treats `sec-fetch-*` as forbidden
+      // request headers and silently overwrites them with its own values
+      // (notably `sec-fetch-mode: cors` in Node). The endpoint requires
+      // `same-origin` here, so we need raw header control.
+      const res = await undiciRequest(
+        `${issuer.origin}/@atproto/oauth-provider/~api/sign-in`,
+        {
+          method: 'POST',
+          headers: {
+            'content-type': 'application/json',
+            // The endpoint restricts fetches to same-origin navigations
+            // from either `/oauth/authorize` or `/account[/*]`. Use the
+            // first-party `/account` path so we don't need a live OAuth
+            // authorization request to exist in the request store.
+            'sec-fetch-mode': 'same-origin',
+            'sec-fetch-site': 'same-origin',
+            origin: issuer.origin,
+            referer: `${issuer.origin}/account`,
+            'x-csrf-token': csrfToken,
+            cookie: `csrf-token=${csrfToken}`,
+          },
+          body: JSON.stringify({ locale: 'en', ...credentials }),
+        },
+      )
+      return { status: res.statusCode, body: await res.body.json() }
+    }
+
+    // bob.test was created above with password 'password'.
+    const unknownIdentifier = await probe({
+      identifier: 'no-such-user.test',
+      password: 'any-password',
+    })
+    const knownIdentifierWrongPassword = await probe({
+      identifier: 'bob.test',
+      password: 'wrong-password',
+    })
+
+    expect(knownIdentifierWrongPassword).toEqual(unknownIdentifier)
+    expect(unknownIdentifier).toEqual({
+      status: 400,
+      body: {
+        error: 'invalid_request',
+        error_description: 'Invalid identifier or password',
+      },
+    })
+  })
+
   it('provides valid access and refresh token on session refresh.', async () => {
     const email = 'carol@test.com'
     const account = await createAccount({
@@ -136,6 +244,7 @@ describe('auth', () => {
       handle: session.handle,
       email,
       emailConfirmed: false,
+      emailAuthFactor: false,
       active: true,
     })
     // Valid refresh token
@@ -242,7 +351,9 @@ describe('auth', () => {
       password: 'password',
     })
     const refreshWithAccess = refreshSession(account.accessJwt)
-    await expect(refreshWithAccess).rejects.toThrow('Invalid token type')
+    await expect(refreshWithAccess).rejects.toThrow(
+      'Token could not be verified',
+    )
   })
 
   it('expired refresh token cannot be used to refresh a session.', async () => {
@@ -309,6 +420,130 @@ describe('auth', () => {
     )
     await expect(refreshSession(account.refreshJwt)).rejects.toMatchObject({
       error: 'AccountTakedown',
+    })
+  })
+
+  describe('when 2FA is enabled', () => {
+    let jane
+    beforeAll(async () => {
+      const sc = network.getSeedClient()
+
+      jane = await sc.createAccount('jane', {
+        email: 'jane@test.com',
+        handle: 'jane.test',
+        password: 'jane-pass',
+      })
+
+      const confirmationToken =
+        await network.pds.ctx.accountManager.createEmailToken(
+          jane.did,
+          'confirm_email',
+        )
+
+      await network.pds.ctx.accountManager.confirmEmail(
+        jane.did,
+        jane.email,
+        confirmationToken,
+      )
+
+      await network.pds.ctx.accountManager.enableEmailAuthFactor({
+        did: jane.did,
+      })
+    })
+
+    it('challenges for a 2FA token on session creation', async () => {
+      const sessionPromise = createSession({
+        identifier: 'jane.test',
+        password: 'jane-pass',
+      })
+      await expect(sessionPromise).rejects.toThrow(
+        'A sign in code has been sent to your email address',
+      )
+      await expect(sessionPromise).rejects.toMatchObject({
+        error: 'AuthFactorTokenRequired',
+      })
+    })
+
+    it('accepts a 2FA token after challenging on session creation', async () => {
+      using sendSignInAuthFactorMock = jest.spyOn(
+        network.pds.ctx.mailer,
+        'sendSignInAuthFactor',
+      )
+
+      // The challenge itself is the thing that dispatches the code, so it is
+      // expected to reject here.
+      await expect(
+        createSession({ identifier: 'jane.test', password: 'jane-pass' }),
+      ).rejects.toMatchObject({ error: 'AuthFactorTokenRequired' })
+
+      expect(sendMailMock).toHaveBeenCalledTimes(1)
+      const [params] = sendSignInAuthFactorMock.mock.lastCall!
+      // @NOTE `locale: undefined` is the contract, not an oversight:
+      // `com.atproto.server.createSession` declares no locale input, so this
+      // path deliberately falls back to the default template. The OAuth path
+      // (covered in oauth.test.ts) is where a real locale arrives.
+      expect(params).toEqual({
+        handle: 'jane.test',
+        locale: undefined,
+        token: expect.any(String),
+      })
+      const token = params.token
+
+      const session = await createSession({
+        identifier: 'jane.test',
+        password: 'jane-pass',
+        authFactorToken: token,
+      })
+
+      expect(session).toEqual(
+        expect.objectContaining({
+          did: jane.did,
+          handle: jane.handle,
+          email: jane.email,
+          emailConfirmed: true,
+          emailAuthFactor: true,
+          active: true,
+        }),
+      )
+    })
+    it('rejects an invalid 2FA token after challenging on session creation', async () => {
+      using sendSignInAuthFactorMock = jest.spyOn(
+        network.pds.ctx.mailer,
+        'sendSignInAuthFactor',
+      )
+
+      await expect(
+        createSession({ identifier: 'jane.test', password: 'jane-pass' }),
+      ).rejects.toMatchObject({ error: 'AuthFactorTokenRequired' })
+
+      const [params] = sendSignInAuthFactorMock.mock.lastCall!
+      const token = params.token
+      expect(token).not.toBe('AAAAA-AAAAA')
+
+      // Attempt 1: deliberately invalid authFactorToken
+      const sessionPromise = createSession({
+        identifier: 'jane.test',
+        password: 'jane-pass',
+        authFactorToken: 'AAAAA-AAAAA',
+      })
+      await expect(sessionPromise).rejects.toThrow('Token is invalid')
+
+      // Attempt 2: with correct authFactorToken
+      const sessionPromiseWithValidToken = createSession({
+        identifier: 'jane.test',
+        password: 'jane-pass',
+        authFactorToken: token,
+      })
+      await expect(sessionPromiseWithValidToken).resolves.toEqual(
+        expect.objectContaining({
+          did: jane.did,
+          handle: jane.handle,
+          email: jane.email,
+          emailConfirmed: true,
+          emailAuthFactor: true,
+          active: true,
+        }),
+      )
     })
   })
 })

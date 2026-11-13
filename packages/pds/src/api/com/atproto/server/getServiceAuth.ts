@@ -1,21 +1,31 @@
 import { HOUR, MINUTE } from '@atproto/common'
-import { InvalidRequestError, createServiceJwt } from '@atproto/xrpc-server'
+import { isAtprotoDid, isAtprotoDidRefAbsolute } from '@atproto/did'
+import type { l } from '@atproto/lex-schema'
+import {
+  InvalidRequestError,
+  type Server,
+  createServiceJwt,
+} from '@atproto/xrpc-server'
 import {
   AuthScope,
   isAccessPrivileged,
   isTakendown,
-} from '../../../../auth-scope'
-import { AppContext } from '../../../../context'
-import { Server } from '../../../../lexicon'
-import { ids } from '../../../../lexicon/lexicons'
-import { PRIVILEGED_METHODS, PROTECTED_METHODS } from '../../../../pipethrough'
+} from '../../../../auth-scope.js'
+import type { AppContext } from '../../../../context.js'
+import { com } from '../../../../lexicons/index.js'
+import {
+  isPrivilegedMethod,
+  isProtectedMethod,
+} from '../../../../pipethrough.js'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.server.getServiceAuth({
-    auth: ctx.authVerifier.authorization({
+  server.add(com.atproto.server.getServiceAuth, {
+    auth: ctx.authVerifier.authorization<
+      l.InferMethodParams<typeof com.atproto.server.getServiceAuth.main>
+    >({
       additional: [AuthScope.Takendown],
-      authorize: (permissions, ctx) => {
-        const { aud, lxm = '*' } = ctx.params
+      authorize: (permissions, { params }) => {
+        const { aud, lxm = '*' } = params
         permissions.assertRpc({ aud, lxm })
       },
     }),
@@ -25,13 +35,19 @@ export default function (server: Server, ctx: AppContext) {
       // @NOTE "exp" is expressed in seconds since epoch, not milliseconds
       const { aud, exp, lxm = null } = params
 
+      if (!isAtprotoDid(aud) && !isAtprotoDidRefAbsolute(aud)) {
+        throw new InvalidRequestError(
+          'aud must be a valid atproto DID or did#serviceId reference',
+        )
+      }
+
       // Takendown accounts should not be able to generate service auth tokens except for methods necessary for account migration
       if (auth.credentials.type === 'access') {
         // @NOTE We should probably use "ForbiddenError" here. Using
         // "InvalidRequestError" for legacy reasons.
         if (
           isTakendown(auth.credentials.scope) &&
-          lxm !== ids.ComAtprotoServerCreateAccount
+          lxm !== com.atproto.server.createAccount.$lxm
         ) {
           throw new InvalidRequestError('Bad token scope', 'InvalidToken')
         }
@@ -40,7 +56,7 @@ export default function (server: Server, ctx: AppContext) {
         // set in "authorize" method above.
         if (
           lxm != null &&
-          PRIVILEGED_METHODS.has(lxm) &&
+          isPrivilegedMethod(lxm) &&
           !isAccessPrivileged(auth.credentials.scope)
         ) {
           throw new InvalidRequestError(
@@ -69,7 +85,7 @@ export default function (server: Server, ctx: AppContext) {
         }
       }
 
-      if (lxm && PROTECTED_METHODS.has(lxm)) {
+      if (lxm && isProtectedMethod(lxm)) {
         throw new InvalidRequestError(
           `cannot request a service auth token for the following protected method: ${lxm}`,
         )
@@ -85,7 +101,7 @@ export default function (server: Server, ctx: AppContext) {
         keypair,
       })
       return {
-        encoding: 'application/json',
+        encoding: 'application/json' as const,
         body: {
           token,
         },

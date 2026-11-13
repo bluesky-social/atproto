@@ -1,15 +1,15 @@
 import type { ServerResponse } from 'node:http'
-import {
+import type {
   OAuthAuthorizationRequestParameters,
   OAuthResponseMode,
 } from '@atproto/oauth-types'
 import { AuthorizationError } from '../../errors/authorization-error.js'
 import {
-  WriteFormRedirectOptions,
+  type WriteFormRedirectOptions,
   writeFormRedirect,
 } from '../../lib/write-form-redirect.js'
-import { AuthorizationRedirectParameters } from '../../result/authorization-redirect-parameters.js'
-import { AuthorizationResultRedirect } from '../../result/authorization-result-redirect.js'
+import type { AuthorizationRedirectParameters } from '../../result/authorization-redirect-parameters.js'
+import type { AuthorizationResultRedirect } from '../../result/authorization-result-redirect.js'
 
 // https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-11#section-7.5.4
 const REDIRECT_STATUS_CODE = 303

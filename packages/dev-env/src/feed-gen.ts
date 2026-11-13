@@ -1,20 +1,28 @@
 import events from 'node:events'
-import http from 'node:http'
+import type http from 'node:http'
 import * as plc from '@did-plc/lib'
-import express from 'express'
-import getPort from 'get-port'
+import { type HttpTerminator, createHttpTerminator } from 'http-terminator'
 import { Secp256k1Keypair } from '@atproto/crypto'
-import { SkeletonHandler, createLexiconServer } from '@atproto/pds'
-import { InvalidRequestError } from '@atproto/xrpc-server'
+import { type SkeletonHandler, app } from '@atproto/pds'
+import type { AtUriString, DidString } from '@atproto/syntax'
+import { InvalidRequestError, createServer } from '@atproto/xrpc-server'
+import getPort from './get-port.js'
 
 export class TestFeedGen {
-  destroyed = false
+  private terminator: HttpTerminator
+  private terminatorPromise?: Promise<void>
+
+  get destroyed() {
+    return this.terminatorPromise != null
+  }
 
   constructor(
     public port: number,
     public server: http.Server,
     public did: string,
-  ) {}
+  ) {
+    this.terminator = createHttpTerminator({ server })
+  }
 
   static async create(
     plcUrl: string,
@@ -22,10 +30,9 @@ export class TestFeedGen {
   ): Promise<TestFeedGen> {
     const port = await getPort()
     const did = await createFgDid(plcUrl, port)
-    const app = express()
-    const lexServer = createLexiconServer()
+    const xrpcServer = createServer()
 
-    lexServer.app.bsky.feed.getFeedSkeleton(async (args) => {
+    xrpcServer.add(app.bsky.feed.getFeedSkeleton, async (args) => {
       const handler = feeds[args.params.feed]
       if (!handler) {
         throw new InvalidRequestError('unknown feed', 'UnknownFeed')
@@ -33,37 +40,36 @@ export class TestFeedGen {
       return handler(args)
     })
 
-    lexServer.app.bsky.feed.describeFeedGenerator(async () => {
+    xrpcServer.add(app.bsky.feed.describeFeedGenerator, async () => {
       return {
-        encoding: 'application/json',
+        encoding: 'application/json' as const,
         body: {
-          did,
-          feeds: Object.keys(feeds).map((uri) => ({
+          did: did as DidString,
+          feeds: (Object.keys(feeds) as AtUriString[]).map((uri) => ({
             uri,
           })),
         },
       }
     })
 
-    app.use(lexServer.xrpc.router)
-    const server = app.listen(port)
-    await events.once(server, 'listening')
-    return new TestFeedGen(port, server, did)
+    const httpServer = xrpcServer.listen(port)
+    await events.once(httpServer, 'listening')
+    return new TestFeedGen(port, httpServer, did)
   }
 
   close(): Promise<void> {
-    return new Promise((resolve, reject) => {
-      if (this.destroyed) return resolve()
-      this.server.close((err) => {
-        if (err) return reject(err)
-        this.destroyed = true
-        resolve()
-      })
-    })
+    return (this.terminatorPromise ??= this.terminator.terminate())
+  }
+
+  async [Symbol.asyncDispose]() {
+    await this.close()
   }
 }
 
-const createFgDid = async (plcUrl: string, port: number): Promise<string> => {
+const createFgDid = async (
+  plcUrl: string,
+  port: number,
+): Promise<DidString> => {
   const keypair = await Secp256k1Keypair.create()
   const plcClient = new plc.Client(plcUrl)
   const op = await plc.signOperation(
@@ -86,5 +92,5 @@ const createFgDid = async (plcUrl: string, port: number): Promise<string> => {
   )
   const did = await plc.didForCreateOp(op)
   await plcClient.sendOperation(did, op)
-  return did
+  return did as DidString
 }

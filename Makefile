@@ -11,7 +11,7 @@ help: ## Print info about all commands
 	@echo "NOTE: dependencies between commands are not automatic. Eg, you must run 'deps' and 'build' first, and after any changes"
 
 .PHONY: build
-build: ## Compile all modules
+build: codegen ## Compile all modules
 	pnpm build
 
 .PHONY: test
@@ -47,11 +47,42 @@ deps: ## Installs dependent libs using 'pnpm install'
 	pnpm install --frozen-lockfile
 
 .PHONY: clean
-clean: ## Deletes all 'dist' and 'node_package' directories (including nested)
-	rm -rf **/dist **/node_packages
+clean: clean-deps clean-gen
+
+.PHONY: clean-gen
+clean-gen: clean-build clean-prebuild clean-lexicons
+
+.PHONY: clean-deps
+clean-deps: ## Deletes all installed dependencies (node_modules) in all packages
+	find . -type d -name "node_modules" -prune -exec rm -rf {} +;
+
+.PHONY: clean-build
+clean-build: ## Deletes all build artifacts (dist, tsbuildinfo) in all packages
+	find . -type d -name "dist" -not -path "*/node_modules/*" -prune -exec rm -rf {} +;
+	find . -type f -name "*.tsbuildinfo" -not -path "*/node_modules/*" -exec rm {} +;
+
+.PHONY: clean-prebuild
+clean-prebuild: ## Deletes all prebuild artifacts (codegen, lingui, etc.) in all packages
+	rm -rf packages/*/src/proto;
+	rm -rf packages/*/src/lexicons;
+	rm -rf packages/lex/*/src/lexicons;
+	rm -rf packages/lex/*/tests/lexicons;
+	rm -rf packages/oauth/*/src/lexicons;
+	rm -rf packages/oauth/*/src/locales/*/messages.ts;
+	rm -rf packages/api/src/client;
+	rm -rf packages/api/src/moderation/const/labels.ts;
+
+.PHONY: clean-lexicons
+clean-lexicons: ## Restore each package's resolved ./lexicons folder to its committed content
+	for d in packages/*/lexicons packages/*/*/lexicons; do \
+		[ -e "$$d" ] || continue; \
+		git clean -fdX -- "$$d"; \
+		git restore --source=HEAD -- "$$d" 2>/dev/null || true; \
+	done
 
 .PHONY: nvm-setup
 nvm-setup: ## Use NVM to install and activate node+pnpm
-	nvm install 18
-	nvm use 18
+	nvm install
+	nvm use
 	corepack enable
+	corepack install

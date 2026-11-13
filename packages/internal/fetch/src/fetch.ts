@@ -1,4 +1,4 @@
-import { ThisParameterOverride } from './util.js'
+import type { ThisParameterOverride } from './util.js'
 
 export type FetchContext = void | null | typeof globalThis
 

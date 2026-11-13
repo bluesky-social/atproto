@@ -1,12 +1,18 @@
-import { ServiceImpl } from '@connectrpc/connect'
-import { Service } from '../../../proto/bsky_connect'
-import { Database } from '../db'
-import { getAncestorsAndSelfQb, getDescendentsQb } from '../util'
+import type { ServiceImpl } from '@connectrpc/connect'
+import type { Service } from '../../../proto/bsky_connect.js'
+import type { Database } from '../db/index.js'
+import { resolveCanonicalOpThread } from '../op-thread.js'
+import { getAncestorsAndSelfQb, getDescendentsQb } from '../util.js'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   async getThread(req) {
     const { postUri, above, below } = req
-    const [ancestors, descendents] = await Promise.all([
+    const [anchor, ancestors, descendents] = await Promise.all([
+      db.db
+        .selectFrom('post')
+        .select('replyRoot')
+        .where('uri', '=', postUri)
+        .executeTakeFirst(),
       getAncestorsAndSelfQb(db.db, {
         uri: postUri,
         parentHeight: above,
@@ -28,6 +34,17 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       ...ancestors.map((p) => p.uri),
       ...descendents.map((p) => p.uri),
     ]
-    return { uris }
+    const rootUri = anchor?.replyRoot ?? postUri
+    const opReplies = await db.db
+      .selectFrom('op_thread_reply')
+      .select(['uri', 'parentUri', 'deletedAt'])
+      .where('rootUri', '=', rootUri)
+      .execute()
+    const opThread = resolveCanonicalOpThread(rootUri, opReplies)
+
+    return {
+      uris,
+      opThread,
+    }
   },
 })

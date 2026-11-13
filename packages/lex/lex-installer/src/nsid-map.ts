@@ -50,17 +50,17 @@ class MappedMap<K, V, I = any> implements Map<K, V> {
     return this.map.delete(this.encodeKey(key))
   }
 
-  values(): IterableIterator<V> {
+  values(): MapIterator<V> {
     return this.map.values()
   }
 
-  *keys(): IterableIterator<K> {
+  *keys(): MapIterator<K> {
     for (const key of this.map.keys()) {
       yield this.decodeKey(key)
     }
   }
 
-  *entries(): IterableIterator<[K, V]> {
+  *entries(): MapIterator<[K, V]> {
     for (const [key, value] of this.map.entries()) {
       yield [this.decodeKey(key), value]
     }
@@ -75,7 +75,21 @@ class MappedMap<K, V, I = any> implements Map<K, V> {
     }
   }
 
-  [Symbol.iterator](): IterableIterator<[K, V]> {
+  getOrInsert(key: K, defaultValue: V): V {
+    if (this.has(key)) return this.get(key)!
+    this.set(key, defaultValue)
+    return defaultValue
+  }
+
+  getOrInsertComputed(key: K, callback: (key: K) => V): V {
+    if (this.has(key)) return this.get(key)!
+
+    const value = callback(key)
+    this.set(key, value)
+    return value
+  }
+
+  [Symbol.iterator](): MapIterator<[K, V]> {
     return this.entries()
   }
 
@@ -112,13 +126,15 @@ class MappedMap<K, V, I = any> implements Map<K, V> {
  * ```
  */
 export class NsidMap<T> extends MappedMap<NSID, T, string> {
-  /**
-   * Creates a new empty NsidMap.
-   */
   constructor() {
-    super(
-      (key) => key.toString(),
-      (enc) => NSID.from(enc),
-    )
+    super(nsidToString, stringToNsid)
   }
+}
+
+function nsidToString(nsid: NSID): string {
+  return nsid.toString()
+}
+
+function stringToNsid(str: string): NSID {
+  return NSID.from(str)
 }

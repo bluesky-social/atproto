@@ -1,68 +1,67 @@
 import { createHash } from 'node:crypto'
 import type { Redis, RedisOptions } from 'ioredis'
-import { Jwks, Keyset } from '@atproto/jwk'
+import type { Jwks } from '@atproto/jwk'
 import { LexResolver } from '@atproto/lex-resolver'
 import type { Account } from '@atproto/oauth-provider-api'
+import { createOAuthResolver } from '@atproto/oauth-resolver'
 import {
   CLIENT_ASSERTION_TYPE_JWT_BEARER,
-  OAuthAccessToken,
-  OAuthAuthorizationCodeGrantTokenRequest,
-  OAuthAuthorizationRequestJar,
-  OAuthAuthorizationRequestPar,
-  OAuthAuthorizationRequestParameters,
-  OAuthAuthorizationRequestQuery,
-  OAuthAuthorizationServerMetadata,
-  OAuthClientCredentials,
-  OAuthClientMetadata,
-  OAuthParResponse,
-  OAuthRefreshTokenGrantTokenRequest,
-  OAuthTokenIdentification,
-  OAuthTokenRequest,
-  OAuthTokenResponse,
-  OAuthTokenType,
+  type OAuthAccessToken,
+  type OAuthAuthorizationCodeGrantTokenRequest,
+  type OAuthAuthorizationRequestJar,
+  type OAuthAuthorizationRequestPar,
+  type OAuthAuthorizationRequestParameters,
+  type OAuthAuthorizationRequestQuery,
+  type OAuthAuthorizationServerMetadata,
+  type OAuthClientCredentials,
+  type OAuthClientMetadata,
+  type OAuthParResponse,
+  type OAuthRefreshTokenGrantTokenRequest,
+  type OAuthTokenIdentification,
+  type OAuthTokenRequest,
+  type OAuthTokenResponse,
+  type OAuthTokenType,
   atprotoLoopbackClientMetadata,
   oauthAuthorizationRequestParametersSchema,
 } from '@atproto/oauth-types'
+import type { CreateDidResolverOptions } from '@atproto-labs/did-resolver'
 import { safeFetchWrap } from '@atproto-labs/fetch-node'
-import { SimpleStore } from '@atproto-labs/simple-store'
+import {
+  type CreateHandleResolverNodeOptions,
+  createHandleResolverNode,
+} from '@atproto-labs/handle-resolver-node'
+import type { SimpleStore } from '@atproto-labs/simple-store'
 import { SimpleStoreMemory } from '@atproto-labs/simple-store-memory'
 import { AccessTokenMode } from './access-token/access-token-mode.js'
 import { AccountManager } from './account/account-manager.js'
 import {
-  AccountStore,
-  AuthorizedClientData,
-  DeviceAccount,
+  type AccountStore,
+  type AuthorizedClientData,
+  type DeviceAccount,
   asAccountStore,
 } from './account/account-store.js'
-import { ClientAuth, ClientAuthLegacy } from './client/client-auth.js'
-import { ClientId } from './client/client-id.js'
+import { resolveLoginHint } from './account/login-hint.js'
+import type { ClientAuth, ClientAuthLegacy } from './client/client-auth.js'
+import type { ClientId } from './client/client-id.js'
 import {
   ClientManager,
-  LoopbackMetadataGetter,
+  type LoopbackMetadataGetter,
 } from './client/client-manager.js'
-import { ClientStore, ifClientStore } from './client/client-store.js'
-import { Client } from './client/client.js'
+import { type ClientStore, ifClientStore } from './client/client-store.js'
+import type { Client } from './client/client.js'
+import type { Branding, BrandingConfig } from './customization/branding.js'
 import {
-  AUTHENTICATION_MAX_AGE,
-  CONFIDENTIAL_CLIENT_REFRESH_LIFETIME,
-  CONFIDENTIAL_CLIENT_SESSION_LIFETIME,
-  PUBLIC_CLIENT_REFRESH_LIFETIME,
-  PUBLIC_CLIENT_SESSION_LIFETIME,
-  TOKEN_MAX_AGE,
-} from './constants.js'
-import { Branding, BrandingInput } from './customization/branding.js'
-import {
-  Customization,
-  CustomizationInput,
+  type Customization,
+  type CustomizationConfig,
   customizationSchema,
 } from './customization/customization.js'
-import { DeviceId } from './device/device-id.js'
+import type { DeviceId } from './device/device-id.js'
 import {
-  DeviceInfo,
+  type DeviceInfo,
   DeviceManager,
-  DeviceManagerOptions,
+  type DeviceManagerOptions,
 } from './device/device-manager.js'
-import { DeviceStore, asDeviceStore } from './device/device-store.js'
+import { type DeviceStore, asDeviceStore } from './device/device-store.js'
 import { AccountSelectionRequiredError } from './errors/account-selection-required-error.js'
 import { AuthorizationError } from './errors/authorization-error.js'
 import { ConsentRequiredError } from './errors/consent-required-error.js'
@@ -72,56 +71,79 @@ import { InvalidGrantError } from './errors/invalid-grant-error.js'
 import { InvalidRequestError } from './errors/invalid-request-error.js'
 import { LoginRequiredError } from './errors/login-required-error.js'
 import { LexiconManager } from './lexicon/lexicon-manager.js'
-import { LexiconStore, asLexiconStore } from './lexicon/lexicon-store.js'
-import { HcaptchaConfig } from './lib/hcaptcha.js'
-import { RequestMetadata } from './lib/http/request.js'
+import { type LexiconStore, asLexiconStore } from './lexicon/lexicon-store.js'
+import type { HcaptchaConfig } from './lib/hcaptcha.js'
+import type { RequestMetadata } from './lib/http/request.js'
 import { dateToRelativeSeconds } from './lib/util/date.js'
 import { formatError } from './lib/util/error.js'
-import { MultiLangString } from './lib/util/locale.js'
-import { CustomMetadata, buildMetadata } from './metadata/build-metadata.js'
-import { OAuthHooks } from './oauth-hooks.js'
+import type { MultiLangString } from './lib/util/locale.js'
+import { isOlderThan } from './lib/util/time.js'
 import {
-  DpopProof,
+  type CustomMetadata,
+  buildMetadata,
+} from './metadata/build-metadata.js'
+import { AUTHENTICATION_MAX_AGE, TOKEN_MAX_AGE } from './oauth-constants.js'
+import type { OAuthHooks } from './oauth-hooks.js'
+import {
+  type DpopProof,
   OAuthVerifier,
-  OAuthVerifierOptions,
-  VerifyTokenPayloadOptions,
+  type OAuthVerifierOptions,
+  type VerifyTokenPayloadOptions,
 } from './oauth-verifier.js'
-import { ReplayStore, ifReplayStore } from './replay/replay-store.js'
+import { type ReplayStore, ifReplayStore } from './replay/replay-store.js'
 import { codeSchema } from './request/code.js'
 import { RequestManager } from './request/request-manager.js'
-import { RequestStore, asRequestStore } from './request/request-store.js'
+import { type RequestStore, asRequestStore } from './request/request-store.js'
 import { parseRequestUri } from './request/request-uri.js'
-import { AuthorizationRedirectParameters } from './result/authorization-redirect-parameters.js'
-import { AuthorizationResultAuthorizePage } from './result/authorization-result-authorize-page.js'
-import { AuthorizationResultRedirect } from './result/authorization-result-redirect.js'
-import { ErrorHandler } from './router/error-handler.js'
-import { AccessTokenPayload } from './signer/access-token-payload.js'
-import { TokenData } from './token/token-data.js'
+import type { AuthorizationRedirectParameters } from './result/authorization-redirect-parameters.js'
+import type { AuthorizationResultAuthorizePage } from './result/authorization-result-authorize-page.js'
+import type { AuthorizationResultRedirect } from './result/authorization-result-redirect.js'
+import type { ErrorHandler } from './router/error-handler.js'
+import type { AccessTokenPayload } from './signer/access-token-payload.js'
+import { refreshTokenSchema } from './token/refresh-token.js'
+import type { TokenData } from './token/token-data.js'
 import { TokenManager } from './token/token-manager.js'
-import {
-  TokenStore,
-  asTokenStore,
-  refreshTokenSchema,
-} from './token/token-store.js'
+import { type TokenStore, asTokenStore } from './token/token-store.js'
 import { isPARResponseError } from './types/par-response-error.js'
 
-export { AccessTokenMode, Keyset, LexResolver }
+// Re-export dependencies that are part of the public API of this package, so
+// that consumers don't have to install them separately.
+export { safeFetchWrap } from '@atproto-labs/fetch-node'
+export type * from '@atproto/jwk'
+export { Keyset } from '@atproto/jwk'
+export type * from '@atproto/jwk-jose'
+export { JoseKey } from '@atproto/jwk-jose'
+export type * from '@atproto/lex-resolver'
+export { LexResolver, LexResolverError } from '@atproto/lex-resolver'
+
+export { AccessTokenMode }
 export type {
   AccessTokenPayload,
   AuthorizationRedirectParameters,
   AuthorizationResultAuthorizePage as AuthorizationResultAuthorize,
   AuthorizationResultRedirect,
   Branding,
-  BrandingInput,
+  BrandingConfig,
   CustomMetadata,
   Customization,
-  CustomizationInput,
+  CustomizationConfig,
   ErrorHandler,
   HcaptchaConfig,
+  LoopbackMetadataGetter,
   MultiLangString,
   OAuthAuthorizationServerMetadata,
   VerifyTokenPayloadOptions,
 }
+
+export type ClientJwksCache = SimpleStore<string, Jwks>
+export type ClientMetadataCache = SimpleStore<string, OAuthClientMetadata>
+export type OAuthStore = AccountStore &
+  ClientStore &
+  DeviceStore &
+  LexiconStore &
+  ReplayStore &
+  RequestStore &
+  TokenStore
 
 type OAuthProviderConfig = {
   /**
@@ -183,15 +205,7 @@ type OAuthProviderConfig = {
    * this store implements all the interfaces not provided in the other
    * `<name>Store` options.
    */
-  store?: Partial<
-    AccountStore &
-      ClientStore &
-      DeviceStore &
-      LexiconStore &
-      ReplayStore &
-      RequestStore &
-      TokenStore
-  >
+  store?: Partial<OAuthStore>
 
   accountStore?: AccountStore
   clientStore?: ClientStore
@@ -207,7 +221,7 @@ type OAuthProviderConfig = {
    *
    * @note the cached entries should automatically expire after a certain time (typically 10 minutes)
    */
-  clientJwksCache?: SimpleStore<string, Jwks>
+  clientJwksCache?: ClientJwksCache
 
   /**
    * In order to speed up the client fetching process, you can provide a cache
@@ -215,7 +229,7 @@ type OAuthProviderConfig = {
    *
    * @note the cached entries should automatically expire after a certain time (typically 10 minutes)
    */
-  clientMetadataCache?: SimpleStore<string, OAuthClientMetadata>
+  clientMetadataCache?: ClientMetadataCache
 
   /**
    * In order to enable loopback clients, you can provide a function that
@@ -231,8 +245,10 @@ type OAuthProviderConfig = {
 export type OAuthProviderOptions = OAuthProviderConfig &
   OAuthVerifierOptions &
   OAuthHooks &
+  CreateDidResolverOptions &
+  CreateHandleResolverNodeOptions &
   DeviceManagerOptions &
-  CustomizationInput
+  CustomizationConfig
 
 export class OAuthProvider extends OAuthVerifier {
   protected readonly accessTokenMode: AccessTokenMode
@@ -257,10 +273,15 @@ export class OAuthProvider extends OAuthVerifier {
     accessTokenMode = AccessTokenMode.stateless,
 
     metadata,
+    loopbackMetadata = atprotoLoopbackClientMetadata,
 
-    safeFetch = safeFetchWrap(),
-    store, // compound store implementation
+    // Services
+    fetch: unsafeFetch = globalThis.fetch, // Inherited from options
+    safeFetch = safeFetchWrap({ fetch: unsafeFetch }),
     lexResolver = new LexResolver({ fetch: safeFetch }),
+
+    // compound store implementation
+    store,
 
     // Required stores
     accountStore = asAccountStore(store),
@@ -282,9 +303,9 @@ export class OAuthProvider extends OAuthVerifier {
       ttl: 600e3,
     }),
 
-    loopbackMetadata = atprotoLoopbackClientMetadata,
-
     // OAuthHooks &
+    // CreateDidResolverOptions &
+    // CreateHandleResolverNodeOptions &
     // OAuthVerifierOptions &
     // DeviceManagerOptions &
     // Customization
@@ -319,6 +340,15 @@ export class OAuthProvider extends OAuthVerifier {
       this.issuer,
       accountStore,
       this.hooks,
+      createOAuthResolver({
+        handleResolver: createHandleResolverNode({ ...rest, safeFetch }),
+        didResolver: rest.didResolver,
+        didCache: rest.didCache,
+        onDidCacheError: rest.onDidCacheError,
+        plcDirectoryUrl: rest.plcDirectoryUrl,
+        fetch: safeFetch,
+        allowHttp: rest.allowHttp,
+      }),
       this.customization,
     )
     this.clientManager = new ClientManager(
@@ -376,8 +406,7 @@ export class OAuthProvider extends OAuthVerifier {
   }
 
   public checkLoginRequired(deviceAccount: DeviceAccount) {
-    const authAge = Date.now() - deviceAccount.updatedAt.getTime()
-    return authAge > this.authenticationMaxAge
+    return isOlderThan(deviceAccount.updatedAt, this.authenticationMaxAge)
   }
 
   protected async authenticateClient(
@@ -642,6 +671,10 @@ export class OAuthProvider extends OAuthVerifier {
         throw new AccountSelectionRequiredError(parameters)
       }
 
+      const ssoSessions = sessions
+        .filter(hasActiveAccount)
+        .filter(matchesHint, parameters)
+
       // prompt=none
       //
       // > The Authorization Server MUST NOT display any authentication or
@@ -653,7 +686,6 @@ export class OAuthProvider extends OAuthVerifier {
       // > Section 3.1.2.6. This can be used as a method to check for existing
       // > authentication and/or consent.
       if (parameters.prompt === 'none') {
-        const ssoSessions = sessions.filter(matchesHint, parameters)
         if (ssoSessions.length > 1) {
           throw new AccountSelectionRequiredError(parameters)
         }
@@ -669,7 +701,7 @@ export class OAuthProvider extends OAuthVerifier {
           throw new ConsentRequiredError(parameters)
         }
 
-        const code = await this.requestManager.setAuthorized(
+        const { code } = await this.requestManager.setAuthorized(
           requestUri,
           client,
           ssoSession.account,
@@ -682,11 +714,10 @@ export class OAuthProvider extends OAuthVerifier {
 
       // Automatic SSO when a hint was provided that matches a single session
       if (parameters.prompt == null && parameters.login_hint != null) {
-        const ssoSessions = sessions.filter(matchesHint, parameters)
         if (ssoSessions.length === 1) {
           const ssoSession = ssoSessions[0]!
           if (!ssoSession.loginRequired && !ssoSession.consentRequired) {
-            const code = await this.requestManager.setAuthorized(
+            const { code } = await this.requestManager.setAuthorized(
               requestUri,
               client,
               ssoSession.account,
@@ -704,19 +735,19 @@ export class OAuthProvider extends OAuthVerifier {
         client,
         parameters,
         requestUri,
-        sessions: sessions.map((session) => ({
-          // Map to avoid leaking other data that might be present in the session
-          account: session.account,
-          loginRequired: session.loginRequired,
-          consentRequired: session.consentRequired,
-
-          selected:
-            parameters.prompt == null ||
-            parameters.prompt === 'login' ||
-            parameters.prompt === 'consent'
-              ? matchesHint.call(parameters, session)
-              : false,
-        })),
+        sessions: sessions
+          // Strip un-necessary information (like consentRequired)
+          .map(({ account, loginRequired }) => ({ account, loginRequired })),
+        selectedDid:
+          parameters.prompt == null ||
+          parameters.prompt === 'login' ||
+          parameters.prompt === 'consent'
+            ? sessions.find(matchesHint, parameters)?.account.did
+            : undefined,
+        loginHint: await resolveLoginHint(
+          parameters.login_hint,
+          this.accountManager,
+        ),
         permissionSets: await this.lexiconManager
           .getPermissionSetsFromScope(parameters.scope)
           .catch((cause) => {
@@ -879,22 +910,11 @@ export class OAuthProvider extends OAuthVerifier {
     const data = await this.requestManager
       .consumeCode(code)
       .catch(async (err) => {
-        // Code not found in request manager: check for replays
+        // Code not found in request manager: delete the existing OAuth session
+        // if the code was replayed (already converted into a token)
         const tokenInfo = await this.tokenManager.findByCode(code)
         if (tokenInfo) {
-          // try/finally to ensure that both code path get executed (sequentially)
-          try {
-            // "code" was replayed, delete existing session
-            await this.tokenManager.deleteToken(tokenInfo.id)
-          } finally {
-            // As an additional security measure, we also sign the device out,
-            // so that the device cannot be used to access the account anymore
-            // without a new authentication.
-            const { deviceId, sub } = tokenInfo.data
-            if (deviceId) {
-              await this.accountManager.removeDeviceAccount(deviceId, sub)
-            }
-          }
+          await this.tokenManager.deleteToken(tokenInfo.id)
         }
 
         throw InvalidGrantError.from(err, `Invalid code`)
@@ -918,13 +938,17 @@ export class OAuthProvider extends OAuthVerifier {
 
     await this.validateCodeGrant(parameters, input)
 
-    const { account } = await this.accountManager.getAccount(data.sub)
+    const accountData = await this.accountManager.getAccount(data.did)
+
+    if (!accountData) {
+      throw new InvalidGrantError('Account no longer exists')
+    }
 
     return this.tokenManager.createToken(
       client,
       clientAuth,
       clientMetadata,
-      account,
+      accountData.account,
       data.deviceId,
       parameters,
       code,
@@ -1003,14 +1027,17 @@ export class OAuthProvider extends OAuthVerifier {
 
     try {
       const { data } = tokenInfo
+      const now = new Date()
+
       await this.compareClientAuth(client, clientAuth, dpopProof, data)
-      await this.validateRefreshGrant(client, clientAuth, data)
+      await this.validateRefreshGrant(client, data, now)
 
       return await this.tokenManager.rotateToken(
         client,
         clientAuth,
         clientMetadata,
         tokenInfo,
+        now,
       )
     } catch (err) {
       await this.tokenManager.deleteToken(tokenInfo.id)
@@ -1021,24 +1048,21 @@ export class OAuthProvider extends OAuthVerifier {
 
   protected async validateRefreshGrant(
     client: Client,
-    clientAuth: ClientAuth,
     data: TokenData,
+    now = new Date(),
   ): Promise<void> {
-    const [sessionLifetime, refreshLifetime] =
-      clientAuth.method !== 'none' || client.info.isFirstParty
-        ? [
-            CONFIDENTIAL_CLIENT_SESSION_LIFETIME,
-            CONFIDENTIAL_CLIENT_REFRESH_LIFETIME,
-          ]
-        : [PUBLIC_CLIENT_SESSION_LIFETIME, PUBLIC_CLIENT_REFRESH_LIFETIME]
+    if (!client.metadata.grant_types.includes('refresh_token')) {
+      throw new InvalidGrantError(`Refresh token grant not allowed`)
+    }
 
-    const sessionAge = Date.now() - data.createdAt.getTime()
-    if (sessionAge > sessionLifetime) {
+    const sessionAge = now.getTime() - data.createdAt.getTime()
+
+    if (sessionAge > client.sessionLifetime) {
       throw new InvalidGrantError(`Session expired`)
     }
 
-    const refreshAge = Date.now() - data.updatedAt.getTime()
-    if (refreshAge > refreshLifetime) {
+    const refreshAge = now.getTime() - data.updatedAt.getTime()
+    if (refreshAge > client.refreshLifetime) {
       throw new InvalidGrantError(`Refresh token expired`)
     }
   }
@@ -1104,5 +1128,9 @@ function matchesHint(
   const hint = this.login_hint
   if (!hint) return false
 
-  return account.sub === hint || account.preferred_username === hint
+  return account.did === hint || account.handle === hint
+}
+
+function hasActiveAccount({ account }: { account: Account }): boolean {
+  return !account.deactivated
 }

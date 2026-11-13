@@ -1,4 +1,4 @@
-import { FetchHandlerObject } from '@atproto/xrpc'
+import type { FetchHandlerObject } from '@atproto/xrpc'
 
 export interface SessionManager extends FetchHandlerObject {
   readonly did?: string

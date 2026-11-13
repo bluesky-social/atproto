@@ -1,6 +1,6 @@
 import { describe, expect, expectTypeOf, it } from 'vitest'
-import { Infer, UnknownString } from '../core.js'
-import { StringSchemaOptions, string } from './string.js'
+import type { Infer, UnknownString } from '../core.js'
+import { type StringSchemaOptions, string } from './string.js'
 import { token } from './token.js'
 import { withDefault } from './with-default.js'
 
@@ -265,6 +265,69 @@ describe('StringSchema', () => {
       const result = schema.safeParse('12/25/2023')
       expect(result.success).toBe(false)
     })
+
+    it('rejects datetime without timezone', () => {
+      const result = schema.safeParse('2023-12-25T12:00:00')
+      expect(result.success).toBe(false)
+    })
+
+    it('rejects date-only strings', () => {
+      // Date-only is not a valid datetime in either strict or loose mode
+      const result = schema.safeParse('2023-12-25')
+      expect(result.success).toBe(false)
+    })
+
+    describe('loose validation', () => {
+      it('accepts datetime without timezone', () => {
+        const result = schema.safeParse('2023-12-25T12:00:00', {
+          strict: false,
+        })
+        expect(result.success).toBe(true)
+      })
+
+      it('accepts datetime without separator', () => {
+        const result = schema.safeParse('20231225T120000', { strict: false })
+        expect(result.success).toBe(true)
+      })
+
+      it('rejects datetime with "-00:00" timezone offset', () => {
+        const result = schema.safeParse('2023-12-25T12:00:00-00:00', {
+          strict: false,
+        })
+        expect(result.success).toBe(false)
+      })
+
+      it('rejects date-only strings', () => {
+        const result = schema.safeParse('2023-12-25', { strict: false })
+        expect(result.success).toBe(false)
+      })
+
+      it('accepts datetime with timezone offset', () => {
+        const result = schema.safeParse('2023-12-25T12:00:00+05:30', {
+          strict: false,
+        })
+        expect(result.success).toBe(true)
+      })
+
+      it('still rejects completely invalid strings', () => {
+        expect(schema.safeParse('not a date', { strict: false }).success).toBe(
+          false,
+        )
+        expect(schema.safeParse('12/25/2023', { strict: false }).success).toBe(
+          false,
+        )
+        expect(schema.safeParse('', { strict: false }).success).toBe(false)
+      })
+
+      it('uses strict mode by default', () => {
+        // Datetime without timezone is not AT Protocol compliant
+        expect(schema.safeParse('2023-12-25T12:00:00').success).toBe(false)
+        // Date-only is not AT Protocol compliant
+        expect(schema.safeParse('2023-12-25').success).toBe(false)
+        // With timezone offset (AT Protocol compliant)
+        expect(schema.safeParse('2023-12-25T12:00:00+05:30').success).toBe(true)
+      })
+    })
   })
 
   describe('format: uri', () => {
@@ -450,6 +513,34 @@ describe('StringSchema', () => {
     it('rejects invalid language code', () => {
       const result = schema.safeParse('not valid')
       expect(result.success).toBe(false)
+    })
+
+    it('rejects tags with duplicate variant subtags (RFC 5646 §4.1)', () => {
+      const result = schema.safeParse('de-DE-1901-1901')
+      expect(result.success).toBe(false)
+    })
+
+    it('rejects tags with duplicate extension singletons (RFC 5646 §4.1)', () => {
+      const result = schema.safeParse('en-a-foo-a-bar')
+      expect(result.success).toBe(false)
+    })
+
+    describe('loose validation', () => {
+      it('accepts tags with duplicate variant subtags', () => {
+        const result = schema.safeParse('de-DE-1901-1901', { strict: false })
+        expect(result.success).toBe(true)
+      })
+
+      it('accepts tags with duplicate extension singletons', () => {
+        const result = schema.safeParse('en-a-foo-a-bar', { strict: false })
+        expect(result.success).toBe(true)
+      })
+
+      it('still rejects syntactically invalid strings', () => {
+        expect(schema.safeParse('not valid', { strict: false }).success).toBe(
+          false,
+        )
+      })
     })
   })
 
@@ -662,10 +753,10 @@ describe('StringSchema', () => {
   })
 
   it('properly types knownValues in parameters', () => {
-    const schema = string({
+    const _schema = string({
       knownValues: ['active', 'inactive'],
     })
-    type SchemaType = Infer<typeof schema>
+    type SchemaType = Infer<typeof _schema>
     expectTypeOf<{
       foo: SchemaType
     }>().toMatchObjectType<{
@@ -689,8 +780,8 @@ describe('StringSchema', () => {
   })
 
   it('type string<any>() as string', () => {
-    const schema = string<any>()
-    type SchemaType = Infer<typeof schema>
+    const _schema = string<any>()
+    type SchemaType = Infer<typeof _schema>
     expectTypeOf<{
       foo: SchemaType
     }>().toMatchObjectType<{
@@ -699,8 +790,8 @@ describe('StringSchema', () => {
   })
 
   it('type string<StringSchemaOptions>({}) as string', () => {
-    const schema = string<StringSchemaOptions>({})
-    type SchemaType = Infer<typeof schema>
+    const _schema = string<StringSchemaOptions>({})
+    type SchemaType = Infer<typeof _schema>
     expectTypeOf<{
       foo: SchemaType
     }>().toMatchObjectType<{

@@ -23,10 +23,21 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     apiKeys: new Set(env.apiKeys),
   }
 
+  const dataplaneUrls = env.dataplaneUrls ?? []
+  if (dataplaneUrls.length > 0) {
+    assert(env.dataplaneAuthToken, 'missing dataplane auth token')
+  }
+  const dataplaneCfg: ServerConfig['dataplane'] = {
+    urls: dataplaneUrls,
+    authToken: env.dataplaneAuthToken,
+    rejectUnauthorized: !env.dataplaneIgnoreBadTls,
+  }
+
   return {
     service: serviceCfg,
     db: dbCfg,
     auth: authCfg,
+    dataplane: dataplaneCfg,
   }
 }
 
@@ -34,6 +45,7 @@ export type ServerConfig = {
   service: ServiceConfig
   db: DatabaseConfig
   auth: AuthConfig
+  dataplane: DataplaneConfig
 }
 
 type ServiceConfig = {
@@ -55,6 +67,12 @@ type AuthConfig = {
   apiKeys: Set<string>
 }
 
+type DataplaneConfig = {
+  urls: string[]
+  authToken?: string
+  rejectUnauthorized: boolean
+}
+
 export const readEnv = (): ServerEnvironment => {
   return {
     // service
@@ -70,6 +88,9 @@ export const readEnv = (): ServerEnvironment => {
     dbMigrate: envBool('BSYNC_DB_MIGRATE'),
     // secrets
     apiKeys: envList('BSYNC_API_KEYS'),
+    dataplaneUrls: envList('BSYNC_DATAPLANE_URLS'),
+    dataplaneAuthToken: envStr('BSYNC_DATAPLANE_AUTH_TOKEN'),
+    dataplaneIgnoreBadTls: envBool('BSYNC_DATAPLANE_IGNORE_BAD_TLS'),
   }
 }
 
@@ -87,4 +108,7 @@ export type ServerEnvironment = {
   dbMigrate?: boolean
   // secrets
   apiKeys: string[]
+  dataplaneUrls?: string[]
+  dataplaneAuthToken?: string
+  dataplaneIgnoreBadTls?: boolean
 }

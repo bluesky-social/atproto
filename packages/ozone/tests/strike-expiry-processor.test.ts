@@ -1,22 +1,22 @@
-import AtpAgent from '@atproto/api'
+import { ids } from '@atproto/api'
+import type AtpAgent from '@atproto/api'
 import { SECOND } from '@atproto/common'
 import {
-  ModeratorClient,
-  SeedClient,
+  type ModeratorClient,
+  type SeedClient,
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
-import { ids } from '../src/lexicon/lexicons'
-import { SeverityLevelSettingKey } from '../src/setting/constants'
+import { SeverityLevelSettingKey } from '../src/setting/constants.js'
 
 const strikeConfig = {
   'sev-1': {
     strikeCount: 1,
-    expiresInDays: 0, // Set to 0 so we can use future timestamps
+    expiryInDays: 0, // Set to 0 so we can use future timestamps
   },
   'sev-2': {
     strikeCount: 2,
-    expiresInDays: 0,
+    expiryInDays: 0,
   },
 }
 
@@ -59,7 +59,7 @@ describe('strike expiry processor', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'ozone_strike_expiry_processor',
     })
-    agent = network.ozone.getClient()
+    agent = network.ozone.getAgent()
     sc = network.getSeedClient()
     modClient = network.ozone.getModClient()
     await basicSeed(sc)
@@ -68,7 +68,7 @@ describe('strike expiry processor', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('processes expired strikes and updates active strike count', async () => {

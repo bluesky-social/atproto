@@ -1,18 +1,18 @@
 import { TID } from '@atproto/common-web'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
+import { asPredicate } from '../src/client/util.js'
 import {
   AppBskyActorDefs,
-  AppBskyActorProfile,
+  type AppBskyActorProfile,
   AtpAgent,
   ComAtprotoRepoPutRecord,
   DEFAULT_LABEL_SETTINGS,
-} from '../src'
-import { asPredicate } from '../src/client/util'
+} from '../src/index.js'
 import {
   getSavedFeedType,
   savedFeedsToUriArrays,
   validateSavedFeed,
-} from '../src/util'
+} from '../src/util.js'
 
 describe('agent', () => {
   let network: TestNetworkNoAppView
@@ -24,7 +24,7 @@ describe('agent', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   const getProfileDisplayName = async (
@@ -1379,6 +1379,7 @@ describe('agent', () => {
         },
         interests: {
           tags: ['foo', 'bar'],
+          updatedAt: expect.any(String),
         },
         bskyAppState: {
           activeProgressGuide: undefined,
@@ -1397,6 +1398,21 @@ describe('agent', () => {
           hideAllFeeds: false,
         },
       })
+
+      const firstUpdatedAt = (await agent.getPreferences()).interests.updatedAt
+      expect(firstUpdatedAt).toBeDefined()
+
+      await new Promise((resolve) => setTimeout(resolve, 2))
+      await agent.setInterestsPref({ tags: ['baz'] })
+
+      const updatedInterests = (await agent.getPreferences()).interests
+      expect(updatedInterests).toEqual({
+        tags: ['baz'],
+        updatedAt: expect.any(String),
+      })
+      expect(Date.parse(updatedInterests.updatedAt!)).toBeGreaterThan(
+        Date.parse(firstUpdatedAt!),
+      )
     })
 
     it('resolves duplicates correctly', async () => {
@@ -3608,6 +3624,52 @@ describe('agent', () => {
       })
     })
 
+    describe('beta user', () => {
+      it('setIsBetaUser', async () => {
+        const agent = new AtpAgent({ service: network.pds.url })
+
+        await agent.createAccount({
+          handle: 'betauser.test',
+          email: 'betauser@test.com',
+          password: 'password',
+        })
+
+        // unset by default
+        await expect(agent.getPreferences()).resolves.not.toHaveProperty(
+          'bskyAppState.isBetaUser',
+        )
+
+        await agent.setIsBetaUser(true)
+        await expect(agent.getPreferences()).resolves.toHaveProperty(
+          'bskyAppState.isBetaUser',
+          true,
+        )
+
+        await agent.setIsBetaUser(false)
+        await expect(agent.getPreferences()).resolves.toHaveProperty(
+          'bskyAppState.isBetaUser',
+          false,
+        )
+      })
+
+      it('preserves other bskyAppState fields', async () => {
+        const agent = new AtpAgent({ service: network.pds.url })
+
+        await agent.createAccount({
+          handle: 'betauser2.test',
+          email: 'betauser2@test.com',
+          password: 'password',
+        })
+
+        await agent.bskyAppQueueNudges(['keepme'])
+        await agent.setIsBetaUser(true)
+
+        const prefs = await agent.getPreferences()
+        expect(prefs.bskyAppState.isBetaUser).toEqual(true)
+        expect(prefs.bskyAppState.queuedNudges).toEqual(['keepme'])
+      })
+    })
+
     describe('nuxs', () => {
       let agent: AtpAgent
 
@@ -3860,4 +3922,5 @@ describe('agent', () => {
   })
 })
 
-const byType = (a, b) => a.$type.localeCompare(b.$type)
+const byType = (a: { $type: string }, b: { $type: string }) =>
+  a.$type.localeCompare(b.$type)

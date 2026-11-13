@@ -1,20 +1,23 @@
-import { AtpAgent } from '@atproto/api'
 import { mapDefined } from '@atproto/common'
-import { AppContext } from '../../../../context'
-import { DataPlaneClient } from '../../../../data-plane'
-import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
-import { parseString } from '../../../../hydration/util'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/actor/searchActorsTypeahead'
+import type { Client } from '@atproto/lex-client'
+import type { DidString } from '@atproto/lex-schema'
+import type { Server } from '@atproto/xrpc-server'
+import type { AppContext } from '../../../../context.js'
 import {
-  HydrationFnInput,
-  PresentationFnInput,
-  RulesFnInput,
-  SkeletonFnInput,
+  type DataPlaneClient,
+  asInvalidRequest,
+} from '../../../../data-plane/index.js'
+import type { HydrateCtx, Hydrator } from '../../../../hydration/hydrator.js'
+import { app } from '../../../../lexicons/index.js'
+import {
+  type HydrationFnInput,
+  type PresentationFnInput,
+  type RulesFnInput,
+  type SkeletonFnInput,
   createPipeline,
-} from '../../../../pipeline'
-import { Views } from '../../../../views'
-import { resHeaders } from '../../../util'
+} from '../../../../pipeline.js'
+import type { Views } from '../../../../views/index.js'
+import { resHeaders, resolveSearchV2Override } from '../../../util.js'
 
 export default function (server: Server, ctx: AppContext) {
   const searchActorsTypeahead = createPipeline(
@@ -23,14 +26,29 @@ export default function (server: Server, ctx: AppContext) {
     noBlocks,
     presentation,
   )
-  server.app.bsky.actor.searchActorsTypeahead({
+  server.add(app.bsky.actor.searchActorsTypeahead, {
     auth: ctx.authVerifier.standardOptional,
-    handler: async ({ params, auth, req }) => {
+    handler: async ({ params, auth, req, signal }) => {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
-      const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
+      const hydrateCtx = await ctx.hydrator.createContext({
+        xrpcEndpoint: app.bsky.actor.searchActorsTypeahead.$lxm,
+        labelers,
+        viewer,
+        features: ctx.featureGatesClient.scope(
+          ctx.featureGatesClient.parseUserContextFromHandler({
+            viewer,
+            req,
+          }),
+        ),
+      })
       const results = await searchActorsTypeahead(
-        { ...params, hydrateCtx },
+        {
+          ...params,
+          hydrateCtx,
+          signal,
+          isV2Override: resolveSearchV2Override(req, ctx.cfg),
+        },
         ctx,
       )
       return {
@@ -42,7 +60,9 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-const skeleton = async (inputs: SkeletonFnInput<Context, Params>) => {
+const skeletonV1 = async (
+  inputs: SkeletonFnInput<Context, Params>,
+): Promise<Skeleton> => {
   const { ctx, params } = inputs
   const term = params.q ?? params.term ?? ''
 
@@ -50,17 +70,19 @@ const skeleton = async (inputs: SkeletonFnInput<Context, Params>) => {
   // add typeahead option
   // add hits total
 
-  if (ctx.searchAgent) {
-    const { data: res } =
-      await ctx.searchAgent.app.bsky.unspecced.searchActorsSkeleton({
+  if (ctx.searchClient) {
+    const { actors } = await ctx.searchClient.call(
+      app.bsky.unspecced.searchActorsSkeleton,
+      {
         typeahead: true,
         q: term,
         limit: params.limit,
         viewer: params.hydrateCtx.viewer ?? undefined,
-      })
+      },
+      { signal: params.signal },
+    )
     return {
-      dids: res.actors.map(({ did }) => did),
-      cursor: parseString(res.cursor),
+      dids: actors.map(({ did }) => did),
     }
   }
 
@@ -69,9 +91,38 @@ const skeleton = async (inputs: SkeletonFnInput<Context, Params>) => {
     limit: params.limit,
   })
   return {
-    dids: res.dids,
-    cursor: parseString(res.cursor),
+    dids: res.dids as DidString[],
   }
+}
+
+const skeletonV2 = async (
+  inputs: SkeletonFnInput<Context, Params>,
+): Promise<Skeleton> => {
+  const { ctx, params } = inputs
+  const term = params.q ?? params.term ?? ''
+
+  // Surface dataplane InvalidArgument errors as a 400 rather than a 500.
+  const res = await ctx.dataplane
+    .searchActorsTypeahead({
+      params: {
+        query: term,
+        viewer: params.hydrateCtx.viewer ?? undefined,
+        limit: params.limit,
+      },
+    })
+    .catch(asInvalidRequest())
+  return {
+    dids: res.actors.map(({ did }) => did as DidString),
+  }
+}
+
+const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
+  const useV2 =
+    input.params.hydrateCtx.features.checkGate(
+      input.params.hydrateCtx.features.Gate.SearchV2Enable,
+    ) || input.params.isV2Override
+  const skeletonFn = useV2 ? skeletonV2 : skeletonV1
+  return skeletonFn(input)
 }
 
 const hydration = async (
@@ -110,11 +161,15 @@ type Context = {
   dataplane: DataPlaneClient
   hydrator: Hydrator
   views: Views
-  searchAgent?: AtpAgent
+  searchClient?: Client
 }
 
-type Params = QueryParams & { hydrateCtx: HydrateCtx }
+type Params = app.bsky.actor.searchActorsTypeahead.$Params & {
+  hydrateCtx: HydrateCtx
+  signal: AbortSignal
+  isV2Override: boolean
+}
 
 type Skeleton = {
-  dids: string[]
+  dids: DidString[]
 }

@@ -3,15 +3,11 @@ import {
   ToolsOzoneModerationDefs,
 } from '@atproto/api'
 import {
-  ModeratorClient,
-  SeedClient,
+  type ModeratorClient,
+  type SeedClient,
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
-import {
-  REVIEWNONE,
-  REVIEWOPEN,
-} from '../src/lexicon/types/tools/ozone/moderation/defs'
 
 describe('report-muting', () => {
   let network: TestNetwork
@@ -29,7 +25,7 @@ describe('report-muting', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   const assertSubjectStatus = async (
@@ -69,14 +65,20 @@ describe('report-muting', () => {
     })
 
     // Verify that a subject status was not created for bob's post since the reporter was muted
-    await assertSubjectStatus(bobsPostSubject.uri, REVIEWNONE)
+    await assertSubjectStatus(
+      bobsPostSubject.uri,
+      ToolsOzoneModerationDefs.REVIEWNONE,
+    )
     // Verify, however, that the event was logged
     await modClient.queryEvents({
       subject: bobsPostSubject.uri,
     })
 
     // Verify that reporting mute duration is stored for the reporter
-    const carolsStatus = await assertSubjectStatus(sc.dids.carol, REVIEWNONE)
+    const carolsStatus = await assertSubjectStatus(
+      sc.dids.carol,
+      ToolsOzoneModerationDefs.REVIEWNONE,
+    )
     expect(
       new Date(`${carolsStatus?.muteReportingUntil}`).getTime(),
     ).toBeGreaterThan(Date.now())
@@ -95,6 +97,9 @@ describe('report-muting', () => {
     })
 
     // Verify that a subject status was created for bob's post since the reporter was no longer muted
-    await assertSubjectStatus(bobsPostSubject.uri, REVIEWOPEN)
+    await assertSubjectStatus(
+      bobsPostSubject.uri,
+      ToolsOzoneModerationDefs.REVIEWOPEN,
+    )
   })
 })

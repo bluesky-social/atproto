@@ -1,4 +1,4 @@
-import { Kysely, sql } from 'kysely'
+import { type Kysely, sql } from 'kysely'
 
 // @TODO subject indexes, naming?
 // @TODO drop indexes in down()?

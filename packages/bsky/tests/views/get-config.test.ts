@@ -1,4 +1,5 @@
-import AtpAgent from '@atproto/api'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
+import type AtpAgent from '@atproto/api'
 import { TestNetwork } from '@atproto/dev-env'
 
 describe('get config', () => {
@@ -10,14 +11,11 @@ describe('get config', () => {
       network = await TestNetwork.create({
         dbPostgresSchema: 'bsky_tests_live_now_config_off',
       })
-      agent = network.bsky.getClient()
-
-      await network.processAll()
+      agent = network.bsky.getAgent()
     })
 
-    afterAll(async () => {
-      await network.close()
-    })
+    beforeEach(async () => network.processAll())
+    afterAll(async () => network?.close())
 
     it('omits the live now config', async () => {
       const res = await agent.app.bsky.unspecced.getConfig()
@@ -29,11 +27,11 @@ describe('get config', () => {
   describe('when live now is configured', () => {
     const liveNowConfig = [
       {
-        did: 'did:plc:asdf123',
+        did: 'did:plc:asdf123' as const,
         domains: ['example.com', 'atproto.com'],
       },
       {
-        did: 'did:plc:sdfg234',
+        did: 'did:plc:sdfg234' as const,
         domains: ['example.com'],
       },
     ]
@@ -48,13 +46,13 @@ describe('get config', () => {
           liveNowConfig,
         },
       })
-      agent = network.bsky.getClient()
+      agent = network.bsky.getAgent()
 
       await network.processAll()
     })
 
     afterAll(async () => {
-      await network.close()
+      await network?.close()
     })
 
     it(`returns the config`, async () => {

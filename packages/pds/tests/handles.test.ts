@@ -1,15 +1,20 @@
-import { AtpAgent } from '@atproto/api'
-import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
-import { IdResolver } from '@atproto/identity'
-import { AppContext } from '../src'
-import basicSeed from './seeds/basic'
+import type * as DnsPromises from 'node:dns/promises'
+import { jest } from '@jest/globals'
+import type { AtpAgent } from '@atproto/api'
+import type { SeedClient } from '@atproto/dev-env'
+import type { AtIdentifierString, DidString } from '@atproto/syntax'
+import type { AppContext } from '../src/index.js'
 
 // outside of suite so they can be used in mock
-let alice: string
-let bob: string
+let alice: DidString
+let bob: DidString
 
-jest.mock('node:dns/promises', () => {
+jest.unstable_mockModule('node:dns/promises', () => {
+  const originalModule =
+    jest.requireActual<typeof DnsPromises>('node:dns/promises')
+
   return {
+    ...originalModule,
     resolveTxt: (domain: string) => {
       if (domain === '_atproto.alice.external') {
         return [[`did=${alice}`]]
@@ -22,23 +27,39 @@ jest.mock('node:dns/promises', () => {
   }
 })
 
+// Dynamic imports so jest.unstable_mockModule() registers before these modules
+// load node:dns/promises. Static imports link the full dep graph before any code
+// evaluates, which would bypass the mock. Remove once migrated to vitest.
+const { IdResolver } = await import('@atproto/identity')
+const { TestNetworkNoAppView } = await import('@atproto/dev-env')
+const { default: basicSeed } = await import('./seeds/basic.js')
+
 describe('handles', () => {
-  let network: TestNetworkNoAppView
+  let network: InstanceType<typeof TestNetworkNoAppView>
   let agent: AtpAgent
   let sc: SeedClient
   let ctx: AppContext
-  let idResolver: IdResolver
+  let idResolver: InstanceType<typeof IdResolver>
 
   const newHandle = 'alice2.test'
+
+  const tryHandle = async (handle: string) => {
+    await agent.com.atproto.identity.updateHandle(
+      { handle },
+      { headers: sc.getHeaders(alice), encoding: 'application/json' },
+    )
+  }
 
   beforeAll(async () => {
     network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'handles',
     })
-    // @ts-expect-error Error due to circular dependency with the dev-env package
     ctx = network.pds.ctx
-    idResolver = new IdResolver({ plcUrl: ctx.cfg.identity.plcUrl })
-    agent = network.pds.getClient()
+    idResolver = new IdResolver({
+      plcUrl: ctx.cfg.identity.plcUrl,
+      fetch: globalThis.fetch,
+    })
+    agent = network.pds.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc)
     alice = sc.dids.alice
@@ -46,10 +67,12 @@ describe('handles', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
-  const getHandleFromDb = async (did: string): Promise<string | undefined> => {
+  const getHandleFromDb = async (
+    did: AtIdentifierString,
+  ): Promise<string | undefined> => {
     const res = await ctx.accountManager.getAccount(did)
     return res?.handle ?? undefined
   }
@@ -59,6 +82,15 @@ describe('handles', () => {
       handle: 'alice.test',
     })
     expect(res.data.did).toBe(alice)
+  })
+  it('does not resolve unknown handles', async () => {
+    const promise = agent.api.com.atproto.identity.resolveHandle({
+      handle: 'john.test',
+    })
+    await expect(promise).rejects.toMatchObject({
+      error: 'HandleNotFound',
+      message: 'Unable to resolve handle',
+    })
   })
 
   it('resolves non-normalize handles', async () => {
@@ -117,49 +149,53 @@ describe('handles', () => {
     expect(data.handle).toBe(newHandle)
   })
 
-  it('disallows improperly formatted handles', async () => {
-    const tryHandle = async (handle: string) => {
-      await agent.api.com.atproto.identity.updateHandle(
-        { handle },
-        { headers: sc.getHeaders(alice), encoding: 'application/json' },
-      )
-    }
-    await expect(tryHandle('did:john')).rejects.toThrow(
-      'Input/handle must be a valid handle',
-    )
+  it('disallows handles that do not resolve to a DID', async () => {
     await expect(tryHandle('john.bsky.io')).rejects.toThrow(
       'External handle did not resolve to DID',
     )
-    await expect(tryHandle('j.test')).rejects.toThrow('Handle too short')
-    await expect(tryHandle('jayromy-johnber12345678910.test')).rejects.toThrow(
-      'Handle too long',
-    )
-    await expect(tryHandle('jo_hn.test')).rejects.toThrow(
-      'Input/handle must be a valid handle',
-    )
-    await expect(tryHandle('jo!hn.test')).rejects.toThrow(
-      'Input/handle must be a valid handle',
-    )
-    await expect(tryHandle('jo%hn.test')).rejects.toThrow(
-      'Input/handle must be a valid handle',
-    )
-    await expect(tryHandle('jo&hn.test')).rejects.toThrow(
-      'Input/handle must be a valid handle',
-    )
-    await expect(tryHandle('jo*hn.test')).rejects.toThrow(
-      'Input/handle must be a valid handle',
-    )
-    await expect(tryHandle('jo|hn.test')).rejects.toThrow(
-      'Input/handle must be a valid handle',
-    )
-    await expect(tryHandle('jo:hn.test')).rejects.toThrow(
-      'Input/handle must be a valid handle',
-    )
-    await expect(tryHandle('jo/hn.test')).rejects.toThrow(
-      'Input/handle must be a valid handle',
-    )
-    await expect(tryHandle('about.test')).rejects.toThrow('Reserved handle')
-    await expect(tryHandle('atp.test')).rejects.toThrow('Reserved handle')
+  })
+
+  it('validates input through lexicon schema', async () => {
+    for (const invalidHandle of [
+      'did:john',
+      'jo_hn.test',
+      'jo!hn.test',
+      'jo%hn.test',
+      'jo&hn.test',
+      'jo*hn.test',
+      'jo|hn.test',
+      'jo:hn.test',
+      'jo/hn.test',
+    ]) {
+      await expect(tryHandle(invalidHandle)).rejects.toMatchObject({
+        error: 'InvalidRequest',
+        message: expect.stringContaining('handle'),
+      })
+    }
+  })
+
+  it('applies PDS specific handle length constraints', async () => {
+    await expect(tryHandle('j.test')).rejects.toMatchObject({
+      error: 'InvalidHandle',
+      message: 'Handle too short',
+    })
+    await expect(
+      tryHandle('jayromy-johnber12345678910.test'),
+    ).rejects.toMatchObject({
+      error: 'InvalidHandle',
+      message: 'Handle too long',
+    })
+  })
+
+  it('disallows reserved handles', async () => {
+    await expect(tryHandle('about.test')).rejects.toMatchObject({
+      error: 'HandleNotAvailable',
+      message: 'Reserved handle',
+    })
+    await expect(tryHandle('atp.test')).rejects.toMatchObject({
+      error: 'HandleNotAvailable',
+      message: 'Reserved handle',
+    })
   })
 
   it('allows updating to a dns handles', async () => {

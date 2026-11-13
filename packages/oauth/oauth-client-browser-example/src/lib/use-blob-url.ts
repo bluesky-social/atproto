@@ -1,25 +1,22 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo } from 'react'
 
-export function useBlobUrl(data: Blob | null): string | null {
-  const [url, setUrl] = useState<string | null>(null)
+export function useBlobUrl(data: Blob | null | undefined): string | null {
+  const url = useMemo(() => {
+    if (!data) return null
+    return URL.createObjectURL(data)
+  }, [data])
 
   useEffect(() => {
-    if (!data) {
-      setUrl(null)
-      return
+    if (url) {
+      return () => {
+        // Clear the URL after some time to prevent flickering if the blob is
+        // recreated quickly (e.g., avatar updates), or during animations.
+        setTimeout(() => {
+          URL.revokeObjectURL(url)
+        }, 1000)
+      }
     }
-
-    const blobUrl = URL.createObjectURL(data)
-    setUrl(blobUrl)
-
-    return () => {
-      // Clear the URL after some time to prevent flickering if the blob is
-      // recreated quickly (e.g., avatar updates), or during animations.
-      setTimeout(() => {
-        URL.revokeObjectURL(blobUrl)
-      }, 1000)
-    }
-  }, [data])
+  }, [url])
 
   return url
 }

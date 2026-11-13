@@ -1,12 +1,19 @@
-import { ServiceImpl } from '@connectrpc/connect'
-import { Service } from '../../../proto/bsky_connect'
-import { Database } from '../db'
-import { IndexedAtDidKeyset, TimeCidKeyset, paginate } from '../db/pagination'
-import { parsePostSearchQuery } from '../util'
+import type { ServiceImpl } from '@connectrpc/connect'
+import type { Service } from '../../../proto/bsky_connect.js'
+import type { Database } from '../db/index.js'
+import {
+  IndexedAtDidKeyset,
+  TimeCidKeyset,
+  paginate,
+} from '../db/pagination.js'
+import { parsePostSearchQuery } from '../util.js'
 
-export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
-  // @TODO actor search endpoints still fall back to search service
-  async searchActors(req) {
+export default (db: Database): Partial<ServiceImpl<typeof Service>> => {
+  const searchActorsImpl = async (req: {
+    term: string
+    limit: number
+    cursor?: string
+  }) => {
     const { term, limit, cursor } = req
     const { ref } = db.db.dynamic
     let builder = db.db
@@ -25,16 +32,19 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       tryIndex: true,
     })
 
-    const res = await builder.execute()
+    const page = keyset.page(await builder.execute(), limit)
 
     return {
-      dids: res.map((row) => row.did),
-      cursor: keyset.packFromResult(res),
+      dids: page.items.map((row) => row.did),
+      cursor: page.cursor,
     }
-  },
+  }
 
-  // @TODO post search endpoint still falls back to search service
-  async searchPosts(req) {
+  const searchPostsImpl = async (req: {
+    term: string
+    limit: number
+    cursor?: string
+  }) => {
     const { term, limit, cursor } = req
     const { q, author } = parsePostSearchQuery(term)
 
@@ -66,14 +76,18 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       tryIndex: true,
     })
 
-    const res = await builder.execute()
+    const page = keyset.page(await builder.execute(), limit)
     return {
-      uris: res.map((row) => row.uri),
-      cursor: keyset.packFromResult(res),
+      uris: page.items.map((row) => row.uri),
+      cursor: page.cursor,
     }
-  },
+  }
 
-  async searchStarterPacks(req) {
+  const searchStarterPacksImpl = async (req: {
+    term: string
+    limit: number
+    cursor?: string
+  }) => {
     const { term, limit, cursor } = req
     const { ref } = db.db.dynamic
     let builder = db.db
@@ -93,16 +107,75 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       tryIndex: true,
     })
 
-    const res = await builder.execute()
-
-    const cur = keyset.packFromResult(res)
+    const page = keyset.page(await builder.execute(), limit)
 
     return {
-      uris: res.map((row) => row.uri),
-      cursor: cur,
+      uris: page.items.map((row) => row.uri),
+      cursor: page.cursor,
     }
-  },
-})
+  }
+
+  return {
+    // @TODO actor search endpoints still fall back to search service
+    searchActors: searchActorsImpl,
+
+    // @TODO post search endpoint still falls back to search service
+    searchPosts: searchPostsImpl,
+
+    searchStarterPacks: searchStarterPacksImpl,
+
+    // V2 endpoints reuse the V1 SQL for dev env and reshape the response.
+    async searchActorsV2(req) {
+      const { dids, cursor } = await searchActorsImpl({
+        term: req.params?.query ?? '',
+        limit: req.params?.limit ?? 25,
+        cursor: req.params?.cursor,
+      })
+      return {
+        actors: dids.map((did) => ({ did, score: 0 })),
+        pageInfo: { cursor: cursor ?? '', hitsTotal: 0n },
+      }
+    },
+
+    async searchActorsTypeahead(req) {
+      const { dids } = await searchActorsImpl({
+        term: req.params?.query ?? '',
+        limit: req.params?.limit || 10,
+      })
+      return {
+        actors: dids.map((did) => ({ did, score: 0 })),
+      }
+    },
+
+    async searchPostsV2(req) {
+      const author = req.filters?.authors?.[0]
+      const baseQuery = req.params?.query ?? ''
+      const term = author ? `${baseQuery} from:${author}` : baseQuery
+      const { uris, cursor } = await searchPostsImpl({
+        term,
+        limit: req.params?.limit ?? 25,
+        cursor: req.params?.cursor,
+      })
+      return {
+        posts: uris.map((uri) => ({ uri, score: 0 })),
+        pageInfo: { cursor: cursor ?? '', hitsTotal: 0n },
+        detectedQueryLanguages: [],
+      }
+    },
+
+    async searchStarterPacksV2(req) {
+      const { uris, cursor } = await searchStarterPacksImpl({
+        term: req.params?.query ?? '',
+        limit: req.params?.limit ?? 25,
+        cursor: req.params?.cursor,
+      })
+      return {
+        starterPacks: uris.map((uri) => ({ uri, score: 0 })),
+        pageInfo: { cursor: cursor ?? '', hitsTotal: 0n },
+      }
+    },
+  }
+}
 
 // Remove leading @ in case a handle is input that way
 const cleanQuery = (query: string) => query.trim().replace(/^@/g, '')

@@ -1,8 +1,9 @@
-import { type Selectable } from 'kysely'
-import { ModerationEvent } from '../db/schema/moderation_event'
-import { ModerationSubjectStatus } from '../db/schema/moderation_subject_status'
-import { ModEventView } from '../lexicon/types/tools/ozone/moderation/defs'
-import { ModSubject } from './subject'
+import type { Selectable } from 'kysely'
+import type { $TypeOf, DatetimeString, DidString } from '@atproto/lex-schema'
+import type { ModerationEvent } from '../db/schema/moderation_event.js'
+import type { ModerationSubjectStatus } from '../db/schema/moderation_subject_status.js'
+import type { tools } from '../lexicons/index.js'
+import type { ModSubject } from './subject.js'
 
 export type ModerationEventRow = Selectable<ModerationEvent>
 export type ReversibleModerationEvent = Pick<
@@ -19,39 +20,20 @@ export type ModerationEventRowWithHandle = ModerationEventRow & {
 }
 export type ModerationSubjectStatusRow = Selectable<ModerationSubjectStatus>
 export type ModerationSubjectStatusRowWithStats = ModerationSubjectStatusRow & {
-  // account_events_stats
-  takedownCount: number | null
-  suspendCount: number | null
-  escalateCount: number | null
-  reportCount: number | null
-  appealCount: number | null
-
-  // account_record_events_stats
-  totalReports: number | null
-  reportedCount: number | null
-  escalatedCount: number | null
-  appealedCount: number | null
-
-  // account_record_status_stats
-  subjectCount: number | null
-  pendingCount: number | null
-  processedCount: number | null
-  takendownCount: number | null
-
   // account_strike
   strikeCount: number | null
   totalStrikeCount: number | null
-  firstStrikeAt: string | null
-  lastStrikeAt: string | null
+  firstStrikeAt: DatetimeString | null
+  lastStrikeAt: DatetimeString | null
 }
 
 export type ModerationSubjectStatusRowWithHandle =
   ModerationSubjectStatusRowWithStats & { handle: string | null }
 
-export type ModEventType = ModEventView['event']
+export type ModEventType = tools.ozone.moderation.defs.ModEventView['event']
 
 type AccountHostingView = {
-  $type: 'tools.ozone.moderation.defs#accountHosting'
+  $type: $TypeOf<tools.ozone.moderation.defs.AccountHosting>
   status: 'active' | 'takendown' | 'suspended' | 'deleted' | 'deactivated'
   createdAt?: Date
   updatedAt?: Date
@@ -61,7 +43,7 @@ type AccountHostingView = {
 }
 
 type RecordHostingView = {
-  $type: 'tools.ozone.moderation.defs#recordHosting'
+  $type: $TypeOf<tools.ozone.moderation.defs.RecordHosting>
   status: 'active' | 'deleted'
   createdAt?: Date
   updatedAt?: Date
@@ -69,11 +51,10 @@ type RecordHostingView = {
 }
 
 export type ModerationSubjectHostingView =
-  | AccountHostingView
-  | RecordHostingView
+  AccountHostingView | RecordHostingView
 
 export type ReporterStats = {
-  did: string
+  did: DidString
   accountReportCount: number
   recordReportCount: number
   reportedAccountCount: number
@@ -82,15 +63,4 @@ export type ReporterStats = {
   takendownRecordCount: number
   labeledAccountCount: number
   labeledRecordCount: number
-}
-
-export type ReporterStatsResult = {
-  accountReportCount?: number
-  recordReportCount?: number
-  reportedAccountCount?: number
-  reportedRecordCount?: number
-  takendownAccountCount?: number
-  takendownRecordCount?: number
-  labeledAccountCount?: number
-  labeledRecordCount?: number
 }

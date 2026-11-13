@@ -1,59 +1,69 @@
 import assert from 'node:assert'
 import * as plc from '@did-plc/lib'
-import express from 'express'
-import { Redis } from 'ioredis'
+import type express from 'express'
+import type { Redis } from 'ioredis'
 import * as nodemailer from 'nodemailer'
 import * as ui8 from 'uint8arrays'
-import * as undici from 'undici'
-import { AtpAgent } from '@atproto/api'
+import type * as undici from 'undici'
 import { KmsKeypair, S3BlobStore } from '@atproto/aws'
 import * as crypto from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
+import { Client } from '@atproto/lex-client'
+import { parseCid } from '@atproto/lex-data'
 import {
   AccessTokenMode,
   JoseKey,
   LexResolver,
+  LexResolverError,
   OAuthProvider,
-  OAuthVerifier,
-} from '@atproto/oauth-provider'
-import { BlobStore } from '@atproto/repo'
+} from '@atproto/oauth-provider/provider'
+import { OAuthVerifier } from '@atproto/oauth-provider/verifier'
+import type { BlobStoreCreator } from '@atproto/repo'
 import {
   createServiceAuthHeaders,
   createServiceJwt,
 } from '@atproto/xrpc-server'
-import {
-  Fetch,
-  isUnicastIp,
-  safeFetchWrap,
-  unicastLookup,
-} from '@atproto-labs/fetch-node'
-import { AccountManager } from './account-manager/account-manager'
-import { OAuthStore } from './account-manager/oauth-store'
-import { ScopeReferenceGetter } from './account-manager/scope-reference-getter'
-import { ActorStore } from './actor-store/actor-store'
-import { authPassthru, forwardedFor } from './api/proxy'
+import { type Fetch, safeFetchWrap } from '@atproto-labs/fetch-node'
+import { AccountManager } from './account-manager/account-manager.js'
+import { OAuthStore } from './account-manager/oauth-store.js'
+import { ScopeReferenceGetter } from './account-manager/scope-reference-getter.js'
+import { ActorStore } from './actor-store/actor-store.js'
+import { authPassthru, forwardedFor } from './api/proxy.js'
 import {
   AuthVerifier,
   createPublicKeyObject,
   createSecretKeyObject,
-} from './auth-verifier'
-import { BackgroundQueue } from './background'
-import { BskyAppView } from './bsky-app-view'
-import { ServerConfig, ServerSecrets } from './config'
-import { Crawlers } from './crawlers'
-import { DidSqliteCache } from './did-cache'
-import { DiskBlobStore } from './disk-blobstore'
-import { ImageUrlBuilder } from './image/image-url-builder'
-import { fetchLogger, lexiconResolverLogger, oauthLogger } from './logger'
-import { ServerMailer } from './mailer'
-import { ModerationMailer } from './mailer/moderation'
-import { LocalViewer, LocalViewerCreator } from './read-after-write/viewer'
-import { getRedisClient } from './redis'
-import { Sequencer } from './sequencer'
+} from './auth-verifier.js'
+import { BackgroundQueue } from './background.js'
+import { BskyAppView } from './bsky-app-view.js'
+import {
+  type ServerConfig,
+  type ServerEnvironment,
+  type ServerSecrets,
+  envToCfg,
+  envToSecrets,
+  readEnv,
+} from './config/index.js'
+import { Crawlers } from './crawlers.js'
+import { DidSqliteCache } from './did-cache/index.js'
+import { DiskBlobStore } from './disk-blobstore.js'
+import { events } from './events.js'
+import { ImageUrlBuilder } from './image/image-url-builder.js'
+import { fetchLogger, lexiconResolverLogger, oauthLogger } from './logger.js'
+import { ServerMailer } from './mailer/index.js'
+import { ModerationMailer } from './mailer/moderation.js'
+import { buildProxyAgent } from './pipethrough.js'
+import {
+  LocalViewer,
+  type LocalViewerCreator,
+} from './read-after-write/viewer.js'
+import { getRedisClient } from './redis.js'
+import { FailOpenReplayStore } from './replay-store.js'
+import { Sequencer } from './sequencer/index.js'
 
 export type AppContextOptions = {
   actorStore: ActorStore
-  blobstore: (did: string) => BlobStore
+  blobstore: BlobStoreCreator
   localViewer: LocalViewerCreator
   mailer: ServerMailer
   moderationMailer: ModerationMailer
@@ -66,10 +76,10 @@ export type AppContextOptions = {
   redisScratch?: Redis
   crawlers: Crawlers
   bskyAppView?: BskyAppView
-  moderationAgent?: AtpAgent
-  reportingAgent?: AtpAgent
-  entrywayAgent?: AtpAgent
-  entrywayAdminAgent?: AtpAgent
+  moderationClient?: Client
+  reportingClient?: Client
+  entrywayClient?: Client
+  entrywayAdminClient?: Client
   proxyAgent: undici.Dispatcher
   safeFetch: Fetch
   oauthProvider?: OAuthProvider
@@ -78,9 +88,9 @@ export type AppContextOptions = {
   cfg: ServerConfig
 }
 
-export class AppContext {
+export class AppContext implements AsyncDisposable {
   public actorStore: ActorStore
-  public blobstore: (did: string) => BlobStore
+  public blobstore: BlobStoreCreator
   public localViewer: LocalViewerCreator
   public mailer: ServerMailer
   public moderationMailer: ModerationMailer
@@ -93,10 +103,10 @@ export class AppContext {
   public redisScratch?: Redis
   public crawlers: Crawlers
   public bskyAppView?: BskyAppView
-  public moderationAgent: AtpAgent | undefined
-  public reportingAgent: AtpAgent | undefined
-  public entrywayAgent: AtpAgent | undefined
-  public entrywayAdminAgent: AtpAgent | undefined
+  public moderationClient: Client | undefined
+  public reportingClient: Client | undefined
+  public entrywayClient: Client | undefined
+  public entrywayAdminClient: Client | undefined
   public proxyAgent: undici.Dispatcher
   public safeFetch: Fetch
   public authVerifier: AuthVerifier
@@ -119,10 +129,10 @@ export class AppContext {
     this.redisScratch = opts.redisScratch
     this.crawlers = opts.crawlers
     this.bskyAppView = opts.bskyAppView
-    this.moderationAgent = opts.moderationAgent
-    this.reportingAgent = opts.reportingAgent
-    this.entrywayAgent = opts.entrywayAgent
-    this.entrywayAdminAgent = opts.entrywayAdminAgent
+    this.moderationClient = opts.moderationClient
+    this.reportingClient = opts.reportingClient
+    this.entrywayClient = opts.entrywayClient
+    this.entrywayAdminClient = opts.entrywayAdminClient
     this.proxyAgent = opts.proxyAgent
     this.safeFetch = opts.safeFetch
     this.authVerifier = opts.authVerifier
@@ -131,13 +141,25 @@ export class AppContext {
     this.cfg = opts.cfg
   }
 
+  static async fromEnv(
+    env: ServerEnvironment = readEnv(),
+    overrides?: Partial<AppContextOptions>,
+  ): Promise<AppContext> {
+    const cfg = envToCfg(env)
+    const secrets = envToSecrets(env)
+    return AppContext.fromConfig(cfg, secrets, overrides)
+  }
+
   static async fromConfig(
     cfg: ServerConfig,
     secrets: ServerSecrets,
     overrides?: Partial<AppContextOptions>,
   ): Promise<AppContext> {
-    const blobstore =
-      cfg.blobstore.provider === 's3'
+    // @TODO Implement using an AsyncDisposableStack
+
+    const blobstore: BlobStoreCreator =
+      overrides?.blobstore ??
+      (cfg.blobstore.provider === 's3'
         ? S3BlobStore.creator({
             bucket: cfg.blobstore.bucket,
             region: cfg.blobstore.region,
@@ -145,18 +167,24 @@ export class AppContext {
             forcePathStyle: cfg.blobstore.forcePathStyle,
             credentials: cfg.blobstore.credentials,
             uploadTimeoutMs: cfg.blobstore.uploadTimeoutMs,
+            requestTimeoutMs: cfg.blobstore.requestTimeoutMs,
           })
         : DiskBlobStore.creator(
             cfg.blobstore.location,
             cfg.blobstore.tempLocation,
-          )
+          ))
 
     const mailTransport =
       cfg.email !== null
         ? nodemailer.createTransport(cfg.email.smtpUrl)
         : nodemailer.createTransport({ jsonTransport: true })
 
-    const mailer = new ServerMailer(mailTransport, cfg)
+    const mailer = new ServerMailer(
+      mailTransport,
+      cfg.email,
+      cfg.branding,
+      cfg.oauth.issuer,
+    )
 
     const modMailTransport =
       cfg.moderationEmail !== null
@@ -164,131 +192,6 @@ export class AppContext {
         : nodemailer.createTransport({ jsonTransport: true })
 
     const moderationMailer = new ModerationMailer(modMailTransport, cfg)
-
-    const didCache = new DidSqliteCache(
-      cfg.db.didCacheDbLoc,
-      cfg.identity.cacheStaleTTL,
-      cfg.identity.cacheMaxTTL,
-      cfg.db.disableWalAutoCheckpoint,
-    )
-    await didCache.migrateOrThrow()
-
-    const idResolver = new IdResolver({
-      plcUrl: cfg.identity.plcUrl,
-      didCache,
-      timeout: cfg.identity.resolverTimeout,
-      backupNameservers: cfg.identity.handleBackupNameservers,
-    })
-    const plcClient = new plc.Client(cfg.identity.plcUrl)
-
-    const backgroundQueue = new BackgroundQueue()
-    const crawlers = new Crawlers(
-      cfg.service.hostname,
-      cfg.crawlers,
-      backgroundQueue,
-    )
-    const sequencer = new Sequencer(
-      cfg.db.sequencerDbLoc,
-      crawlers,
-      undefined,
-      cfg.db.disableWalAutoCheckpoint,
-    )
-    const redisScratch = cfg.redis
-      ? getRedisClient(cfg.redis.address, cfg.redis.password)
-      : undefined
-
-    const bskyAppView = cfg.bskyAppView
-      ? new BskyAppView(cfg.bskyAppView)
-      : undefined
-
-    const moderationAgent = cfg.modService
-      ? new AtpAgent({ service: cfg.modService.url })
-      : undefined
-    const reportingAgent = cfg.reportService
-      ? new AtpAgent({ service: cfg.reportService.url })
-      : undefined
-    const entrywayAgent = cfg.entryway
-      ? new AtpAgent({ service: cfg.entryway.url })
-      : undefined
-    let entrywayAdminAgent: AtpAgent | undefined
-    if (cfg.entryway && secrets.entrywayAdminToken) {
-      entrywayAdminAgent = new AtpAgent({ service: cfg.entryway.url })
-      entrywayAdminAgent.api.setHeader(
-        'authorization',
-        basicAuthHeader('admin', secrets.entrywayAdminToken),
-      )
-    }
-
-    const jwtSecretKey = createSecretKeyObject(secrets.jwtSecret)
-    const jwtPublicKey = cfg.entryway
-      ? createPublicKeyObject(cfg.entryway.jwtPublicKeyHex)
-      : null
-
-    const imageUrlBuilder = new ImageUrlBuilder(
-      cfg.service.hostname,
-      bskyAppView,
-    )
-
-    const actorStore = new ActorStore(cfg.actorStore, {
-      blobstore,
-      backgroundQueue,
-    })
-
-    const accountManager = new AccountManager(
-      idResolver,
-      jwtSecretKey,
-      cfg.service.did,
-      cfg.identity.serviceHandleDomains,
-      cfg.db,
-    )
-    await accountManager.migrateOrThrow()
-
-    const plcRotationKey =
-      secrets.plcRotationKey.provider === 'kms'
-        ? await KmsKeypair.load({
-            keyId: secrets.plcRotationKey.keyId,
-          })
-        : await crypto.Secp256k1Keypair.import(
-            secrets.plcRotationKey.privateKeyHex,
-          )
-
-    const localViewer = LocalViewer.creator(
-      accountManager,
-      imageUrlBuilder,
-      bskyAppView,
-    )
-
-    // An agent for performing HTTP requests based on user provided URLs.
-    const proxyAgentBase = new undici.Agent({
-      allowH2: cfg.proxy.allowHTTP2, // This is experimental
-      headersTimeout: cfg.proxy.headersTimeout,
-      maxResponseSize: cfg.proxy.maxResponseSize,
-      bodyTimeout: cfg.proxy.bodyTimeout,
-      factory: cfg.proxy.disableSsrfProtection
-        ? undefined
-        : (origin, opts) => {
-            const { protocol, hostname } =
-              origin instanceof URL ? origin : new URL(origin)
-            if (protocol !== 'https:') {
-              throw new Error(`Forbidden protocol "${protocol}"`)
-            }
-            if (isUnicastIp(hostname) === false) {
-              throw new Error('Hostname resolved to non-unicast address')
-            }
-            return new undici.Pool(origin, opts)
-          },
-      connect: {
-        lookup: cfg.proxy.disableSsrfProtection ? undefined : unicastLookup,
-      },
-    })
-    const proxyAgent =
-      cfg.proxy.maxRetries > 0
-        ? new undici.RetryAgent(proxyAgentBase, {
-            statusCodes: [], // Only retry on socket errors
-            methods: ['GET', 'HEAD'],
-            maxRetries: cfg.proxy.maxRetries,
-          })
-        : proxyAgentBase
 
     /**
      * A fetch() function that protects against SSRF attacks, large responses &
@@ -305,15 +208,6 @@ export class AppContext {
       responseMaxSize: cfg.fetch.maxResponseSize,
       ssrfProtection: !cfg.fetch.disableSsrfProtection,
 
-      // @NOTE Since we are using NodeJS <= 20, unicastFetchWrap would normally
-      // *not* be using a keep-alive agent if it we are providing a fetch
-      // function that is different from `globalThis.fetch`. However, since the
-      // fetch function below is indeed calling `globalThis.fetch` without
-      // altering any argument, we can safely force the use of the keep-alive
-      // agent. This would not be the case if we used "loggedFetch" as that
-      // function does wrap the input & init arguments into a Request object,
-      // which, on NodeJS<=20, results in init.dispatcher *not* being used.
-      dangerouslyForceKeepAliveAgent: true,
       fetch: function (input, init) {
         const method =
           init?.method ?? (input instanceof Request ? input.method : 'GET')
@@ -324,6 +218,233 @@ export class AppContext {
         return globalThis.fetch.call(this, input, init)
       },
     })
+
+    const didCache = new DidSqliteCache(
+      cfg.db.didCacheDbLoc,
+      cfg.identity.cacheStaleTTL,
+      cfg.identity.cacheMaxTTL,
+      cfg.db.disableWalAutoCheckpoint,
+    )
+    await didCache.migrateOrThrow()
+
+    const idResolver = new IdResolver({
+      plcUrl: cfg.identity.plcUrl,
+      didCache,
+      timeout: cfg.identity.resolverTimeout,
+      backupNameservers: cfg.identity.handleBackupNameservers,
+      fetch: safeFetch,
+    })
+    const plcClient = new plc.Client(cfg.identity.plcUrl)
+
+    const backgroundQueue = new BackgroundQueue(undefined, { concurrency: 5 })
+    const crawlers = new Crawlers(
+      backgroundQueue,
+      cfg.service.hostname,
+      cfg.crawlers,
+    )
+    const sequencer = new Sequencer(
+      cfg.db.sequencerDbLoc,
+      crawlers,
+      undefined,
+      cfg.db.disableWalAutoCheckpoint,
+    )
+    const redisScratch = cfg.redis
+      ? getRedisClient(cfg.redis.address, cfg.redis.password)
+      : undefined
+    // Without Redis the OAuth provider and verifier check replays in memory.
+    const replayStore = redisScratch
+      ? new FailOpenReplayStore(redisScratch)
+      : undefined
+
+    const bskyAppView = cfg.bskyAppView
+      ? new BskyAppView({
+          ...cfg.bskyAppView,
+          validateResponse: cfg.service.devMode,
+        })
+      : undefined
+
+    const moderationClient = cfg.modService
+      ? new Client(
+          { service: cfg.modService.url },
+          {
+            // Trust internal services to send us well-formed responses
+            strictResponseProcessing: false,
+            validateResponse: cfg.service.devMode,
+          },
+        )
+      : undefined
+    const reportingClient = cfg.reportService
+      ? new Client(
+          { service: cfg.reportService.url },
+          {
+            // Trust internal services to send us well-formed responses
+            strictResponseProcessing: false,
+            validateResponse: cfg.service.devMode,
+          },
+        )
+      : undefined
+    const entrywayClient = cfg.entryway
+      ? new Client(
+          { service: cfg.entryway.apiUrl },
+          {
+            // Trust internal services to send us well-formed responses
+            strictResponseProcessing: false,
+            validateResponse: cfg.service.devMode,
+          },
+        )
+      : undefined
+    const entrywayAdminClient =
+      cfg.entryway && secrets.entrywayAdminToken
+        ? new Client(
+            {
+              service: cfg.entryway.apiUrl,
+              headers: {
+                authorization: basicAuthHeader(
+                  'admin',
+                  secrets.entrywayAdminToken,
+                ),
+              },
+            },
+            {
+              // Trust internal services to send us well-formed responses
+              strictResponseProcessing: false,
+              validateResponse: cfg.service.devMode,
+            },
+          )
+        : undefined
+
+    const jwtSecretKey = createSecretKeyObject(secrets.jwtSecret)
+    const jwtPublicKey = cfg.entryway
+      ? createPublicKeyObject(cfg.entryway.jwtPublicKeyHex)
+      : null
+
+    const imageUrlBuilder = new ImageUrlBuilder(
+      cfg.service.hostname,
+      bskyAppView,
+    )
+
+    const actorStore = new ActorStore(cfg.actorStore, {
+      blobstore,
+      backgroundQueue,
+    })
+
+    const plcRotationKey =
+      overrides?.plcRotationKey ??
+      (secrets.plcRotationKey?.provider === 'kms'
+        ? await KmsKeypair.load({
+            keyId: secrets.plcRotationKey.keyId,
+          })
+        : secrets.plcRotationKey?.provider === 'memory'
+          ? await crypto.Secp256k1Keypair.import(
+              secrets.plcRotationKey.privateKeyHex,
+            )
+          : undefined)
+
+    if (!plcRotationKey) {
+      throw new Error('Must configure plc rotation key')
+    }
+
+    const accountManager = new AccountManager(
+      cfg,
+      actorStore,
+      idResolver,
+      jwtSecretKey,
+      mailer,
+      sequencer,
+      plcClient,
+      plcRotationKey,
+    )
+    await accountManager.migrateOrThrow()
+
+    // @TODO Use this lexResolver instance to implement validation of records
+    // created with the "validate" option. Before doing so, ensure that 1) a
+    // didCache is provided, and 2) that nsid->lexicon are cached.
+    const lexResolver = new LexResolver({
+      fetch: safeFetch,
+      didCache: undefined, // @TODO provide a dedicated cache
+      plcDirectoryUrl: cfg.identity.plcUrl,
+      hooks: {
+        // @NOTE Lexicons hosted by this PDS are read straight from the
+        // actor store. Fetching them over the network would require this
+        // server to reach its own public endpoint, which is not
+        // guaranteed to work (SSRF protection, missing NAT hairpin,
+        // internal reverse proxies, ...).
+        onFetch: async ({ uri, did, nsid, signal }) => {
+          const account = await accountManager.getAccount(did, {
+            includeDeactivated: true,
+            includeTakenDown: true,
+          })
+
+          signal?.throwIfAborted()
+
+          // Mirror what com.atproto.sync.getRecord would answer to an
+          // unauthenticated requester
+          if (account?.takedownRef) {
+            throw new LexResolverError(nsid, `Repo is not available: ${did}`)
+          }
+
+          // Not hosted here: fall back to the network resolution
+          if (!account || account.deactivatedAt) return undefined
+
+          const record = await actorStore.read(account.did, (store) => {
+            return store.record.getRecord(uri, null)
+          })
+
+          if (!record || record.takedownRef != null) {
+            throw new LexResolverError(
+              nsid,
+              `Lexicon record not found at ${uri}`,
+            )
+          }
+
+          return {
+            cid: parseCid(record.cid),
+            record: record.value,
+          }
+        },
+        onFetchResult({ uri, cid, source }) {
+          lexiconResolverLogger.info(
+            { uri: uri.toString(), cid: cid.toString(), source },
+            'Fetched lexicon',
+          )
+        },
+        onFetchError({ err, uri }) {
+          lexiconResolverLogger.error(
+            { uri: uri.toString(), err },
+            'Lexicon fetch error',
+          )
+        },
+        onResolveAuthority: ({ nsid }) => {
+          lexiconResolverLogger.debug(
+            { nsid: nsid.toString() },
+            'Resolving lexicon DID authority',
+          )
+          // Override the lexicon did resolution to point to a custom PDS
+          return cfg.lexicon.didAuthority
+        },
+        onResolveAuthorityResult({ nsid, did, source }) {
+          lexiconResolverLogger.info(
+            { nsid: nsid.toString(), did, source },
+            'Resolved lexicon DID',
+          )
+        },
+        onResolveAuthorityError({ nsid, err }) {
+          lexiconResolverLogger.error(
+            { nsid: nsid.toString(), err },
+            'Lexicon DID resolution error',
+          )
+        },
+      },
+    })
+
+    const localViewer = LocalViewer.creator(
+      accountManager,
+      imageUrlBuilder,
+      bskyAppView,
+    )
+
+    // An agent for performing HTTP requests based on user provided URLs.
+    const proxyAgent = buildProxyAgent(cfg.proxy)
 
     const oauthProvider = cfg.oauth.provider
       ? new OAuthProvider({
@@ -341,51 +462,41 @@ export class AppContext {
             cfg.service.publicUrl,
             cfg.identity.recoveryDidKey,
           ),
-          redis: redisScratch,
+          replayStore,
           dpopSecret: secrets.dpopSecret,
           inviteCodeRequired: cfg.invites.required,
           availableUserDomains: cfg.identity.serviceHandleDomains,
           hcaptcha: cfg.oauth.provider.hcaptcha,
           branding: cfg.oauth.provider.branding,
-          safeFetch,
-          lexResolver: new LexResolver({
-            fetch: safeFetch,
-            plcDirectoryUrl: cfg.identity.plcUrl,
-            hooks: {
-              onResolveAuthority: ({ nsid }) => {
-                lexiconResolverLogger.debug(
-                  { nsid: nsid.toString() },
-                  'Resolving lexicon DID authority',
-                )
-                // Override the lexicon did resolution to point to a custom PDS
-                return cfg.lexicon.didAuthority
-              },
-              onResolveAuthorityResult({ nsid, did }) {
-                lexiconResolverLogger.info(
-                  { nsid: nsid.toString(), did },
-                  'Resolved lexicon DID',
-                )
-              },
-              onResolveAuthorityError({ nsid, err }) {
-                lexiconResolverLogger.error(
-                  { nsid: nsid.toString(), err },
-                  'Lexicon DID resolution error',
-                )
-              },
-              onFetchResult({ uri, cid }) {
-                lexiconResolverLogger.info(
-                  { uri: uri.toString(), cid: cid.toString() },
-                  'Fetched lexicon',
-                )
-              },
-              onFetchError({ err, uri }) {
-                lexiconResolverLogger.error(
-                  { uri: uri.toString(), err },
-                  'Lexicon fetch error',
-                )
-              },
+          // @NOTE Not operator-configurable on purpose: changing the email
+          // address unconditionally clears `emailAuthFactorAt` (see
+          // `account-manager/helpers/account.ts`), so the warning describes
+          // what this implementation always does rather than a preference. This
+          // is because updating email writes an unconfirmed email to the email
+          // column, which means leaving email based 2FA enabled can result in
+          // account lock-out.
+          show2FaWarningOnEmailUpdate: true,
+          allowHttp: cfg.service.devMode,
+          plcDirectoryUrl: cfg.identity.plcUrl,
+          fallbackNameservers: cfg.identity.handleBackupNameservers,
+          handleCache: undefined, // Memory
+          didCache: {
+            // Map didCache to SimpleCache<Did, DidDocument>
+            get: async (did) => {
+              const res = await didCache.checkCache(did)
+              // Expired entries are only ever refreshed by a resolution, so
+              // report them as missing rather than serving them indefinitely.
+              return res && !res.expired ? (res.doc as any) : undefined
             },
-          }),
+            set: async (did, doc) => {
+              await didCache.cacheDid(did, doc as any)
+            },
+            del: async (did) => {
+              await didCache.clearEntry(did)
+            },
+          },
+          safeFetch,
+          lexResolver,
           metadata: {
             protected_resources: [new URL(cfg.oauth.issuer).origin],
           },
@@ -401,11 +512,49 @@ export class AppContext {
               isTrusted: cfg.oauth.provider?.trustedClients?.includes(clientId),
             }
           },
+          onSignedUp({ account, data, clientId }) {
+            events.accountCreated({
+              source: 'oauth',
+              did: account.did,
+              clientId,
+              invited: data.inviteCode != null,
+              deactivated: false,
+            })
+          },
+          onSignedIn({ account, clientId }) {
+            events.signedIn({
+              did: account.did,
+              clientId,
+            })
+          },
+          onAuthorized({ account, client }) {
+            events.oauthAuthorized({
+              did: account.did,
+              clientId: client.id,
+              clientFirstParty: client.isFirstParty,
+              clientTrusted: client.isTrusted,
+              clientConfidential: client.isConfidential,
+            })
+          },
+          onTokenCreated({ account, client }) {
+            events.sessionCreated({
+              source: 'oauth',
+              did: account.did,
+              clientId: client.id,
+            })
+          },
+          onTokenRefreshed({ account, client }) {
+            events.sessionRefreshed({
+              source: 'oauth',
+              did: account.did,
+              clientId: client.id,
+            })
+          },
         })
       : undefined
 
-    const scopeRefGetter = entrywayAgent
-      ? new ScopeReferenceGetter(entrywayAgent, redisScratch)
+    const scopeRefGetter = entrywayClient
+      ? new ScopeReferenceGetter(entrywayClient, redisScratch)
       : undefined
 
     const oauthVerifier: OAuthVerifier =
@@ -414,7 +563,7 @@ export class AppContext {
         issuer: cfg.oauth.issuer,
         keyset: [await JoseKey.fromKeyLike(jwtPublicKey!, undefined, 'ES256K')],
         dpopSecret: secrets.dpopSecret,
-        redis: redisScratch,
+        replayStore,
         onDecodeToken: async ({ payload, dpopProof }) => {
           // @TODO drop this once oauth provider no longer accepts DPoP proof with
           // query or fragment in "htu" claim.
@@ -446,6 +595,15 @@ export class AppContext {
           entryway: cfg.entryway?.did,
           modService: cfg.modService?.did,
         },
+        entrywayServiceAuth: cfg.entryway
+          ? {
+              didKey: crypto.formatDidKey(
+                crypto.SECP256K1_JWT_ALG,
+                ui8.fromString(cfg.entryway.jwtPublicKeyHex, 'hex'),
+              ),
+              required: cfg.entryway.requireServiceAuth,
+            }
+          : undefined,
       },
     )
 
@@ -464,10 +622,10 @@ export class AppContext {
       redisScratch,
       crawlers,
       bskyAppView,
-      moderationAgent,
-      reportingAgent,
-      entrywayAgent,
-      entrywayAdminAgent,
+      moderationClient,
+      reportingClient,
+      entrywayClient,
+      entrywayAdminClient,
       proxyAgent,
       safeFetch,
       authVerifier,
@@ -497,6 +655,26 @@ export class AppContext {
     return forwardedFor(req, authPassthru(req))
   }
 
+  /**
+   * A {@link Client} for a service URL that was resolved from a DID document,
+   * i.e. a URL the PDS does not control. Routes the request through
+   * {@link safeFetch}, which restricts it to https origins that resolve to
+   * unicast addresses, and caps the response size. Lexicon validation follows
+   * the service's dev mode, as it does for the AppView client.
+   *
+   * Any call built from a DID document's service endpoint must use this.
+   */
+  safeClient(service: string | URL): Client {
+    return new Client(
+      { service, fetch: this.safeFetch },
+      {
+        validateRequest: this.cfg.service.devMode,
+        validateResponse: this.cfg.service.devMode,
+        strictResponseProcessing: this.cfg.service.devMode,
+      },
+    )
+  }
+
   async serviceAuthHeaders(did: string, aud: string, lxm: string) {
     const keypair = await this.actorStore.keypair(did)
     return createServiceAuthHeaders({
@@ -515,6 +693,40 @@ export class AppContext {
       lxm,
       keypair,
     })
+  }
+
+  async destroy(): Promise<void> {
+    // @TODO Implement this using an AsyncDisposableStack when it becomes
+    // widely available.
+    try {
+      await this.backgroundQueue.destroy()
+    } finally {
+      try {
+        await this.sequencer.destroy()
+      } finally {
+        try {
+          await this.accountManager.close()
+        } finally {
+          try {
+            // A Redis that doesn't answer QUIT (it times out) mustn't fail
+            // shutdown: drop the connection instead.
+            await this.redisScratch
+              ?.quit()
+              .catch(() => this.redisScratch?.disconnect())
+          } finally {
+            try {
+              await this.proxyAgent.destroy()
+            } finally {
+              await this.blobstore[Symbol.asyncDispose]()
+            }
+          }
+        }
+      }
+    }
+  }
+
+  async [Symbol.asyncDispose]() {
+    await this.destroy()
   }
 }
 

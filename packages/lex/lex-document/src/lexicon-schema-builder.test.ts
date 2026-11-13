@@ -1,7 +1,10 @@
 import { beforeAll, describe, expect, it } from 'vitest'
 import { parseCid } from '@atproto/lex-data'
 import { l } from '@atproto/lex-schema'
-import { LexiconDocument, lexiconDocumentSchema } from './lexicon-document.js'
+import {
+  type LexiconDocument,
+  lexiconDocumentSchema,
+} from './lexicon-document.js'
 import { LexiconIterableIndexer } from './lexicon-iterable-indexer.js'
 import { LexiconSchemaBuilder } from './lexicon-schema-builder.js'
 

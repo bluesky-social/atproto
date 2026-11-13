@@ -1,13 +1,16 @@
 import assert from 'node:assert'
-import { once } from 'node:events'
-import { EventEmitter } from 'node:stream'
 import * as plc from '@did-plc/lib'
-import Mail from 'nodemailer/lib/mailer'
-import { AtpAgent } from '@atproto/api'
+import { jest } from '@jest/globals'
+import type { AtpAgent } from '@atproto/api'
 import { check } from '@atproto/common'
 import { Secp256k1Keypair } from '@atproto/crypto'
-import { SeedClient, TestNetworkNoAppView, basicSeed } from '@atproto/dev-env'
-import { AppContext } from '../src'
+import {
+  type Account,
+  type SeedClient,
+  TestNetworkNoAppView,
+  basicSeed,
+} from '@atproto/dev-env'
+import type { AppContext } from '../src/index.js'
 
 describe('plc operations', () => {
   let network: TestNetworkNoAppView
@@ -15,50 +18,40 @@ describe('plc operations', () => {
   let agent: AtpAgent
   let sc: SeedClient
 
-  const mailCatcher = new EventEmitter()
-  let _origSendMail
-
-  let alice: string
+  let alice: Account
 
   let sampleKey: string
+  let sendMailMock: jest.SpiedFunction<
+    AppContext['mailer']['transporter']['sendMail']
+  >
 
   beforeAll(async () => {
     network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'plc_operations',
     })
-    // @ts-expect-error Error due to circular dependency with the dev-env package
     ctx = network.pds.ctx
-    const mailer = ctx.mailer
 
     sc = network.getSeedClient()
-    agent = network.pds.getClient()
+    agent = network.pds.getAgent()
 
     await basicSeed(sc)
-    alice = sc.dids.alice
+    alice = sc.accounts[sc.dids.alice]
     await network.processAll()
 
     sampleKey = (await Secp256k1Keypair.create()).did()
+    sendMailMock = jest
+      .spyOn(ctx.mailer.transporter, 'sendMail')
+      .mockImplementation(async () => {})
+  })
 
-    // Catch emails for use in tests
-    _origSendMail = mailer.transporter.sendMail
-    mailer.transporter.sendMail = async (opts) => {
-      const result = await _origSendMail.call(mailer.transporter, opts)
-      mailCatcher.emit('mail', opts)
-      return result
-    }
+  beforeEach(() => {
+    // Catch-all: never actually send, but keep recording calls for assertions.
+    sendMailMock.mockClear()
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
-
-  const getMailFrom = async (promise): Promise<Mail.Options> => {
-    const result = await Promise.all([once(mailCatcher, 'mail'), promise])
-    return result[0][0]
-  }
-
-  const getTokenFromMail = (mail: Mail.Options) =>
-    mail.html?.toString().match(/>([a-z0-9]{5}-[a-z0-9]{5})</i)?.[1]
 
   const signOp = async (did: string, op: Partial<plc.Operation>) => {
     const lastOp = await ctx.plcClient.getLastOp(did)
@@ -84,7 +77,7 @@ describe('plc operations', () => {
       { operation },
       {
         encoding: 'application/json',
-        headers: sc.getHeaders(alice),
+        headers: sc.getHeaders(alice.did),
       },
     )
     await expect(attempt).rejects.toThrow(expectedErr)
@@ -92,7 +85,7 @@ describe('plc operations', () => {
 
   it("prevents submitting an operation that removes the server's rotation key", async () => {
     await expectFailedOp(
-      alice,
+      alice.did,
       { rotationKeys: [sampleKey] },
       "Rotation keys do not include server's rotation key",
     )
@@ -100,7 +93,7 @@ describe('plc operations', () => {
 
   it('prevents submitting an operation that incorrectly sets the signing key', async () => {
     await expectFailedOp(
-      alice,
+      alice.did,
       {
         verificationMethods: {
           atproto: sampleKey,
@@ -112,7 +105,7 @@ describe('plc operations', () => {
 
   it('prevents submitting an operation that incorrectly sets the handle', async () => {
     await expectFailedOp(
-      alice,
+      alice.did,
       {
         alsoKnownAs: ['at://new-alice.test'],
       },
@@ -122,7 +115,7 @@ describe('plc operations', () => {
 
   it('prevents submitting an operation that incorrectly sets the pds endpoint', async () => {
     await expectFailedOp(
-      alice,
+      alice.did,
       {
         services: {
           atproto_pds: {
@@ -137,7 +130,7 @@ describe('plc operations', () => {
 
   it('prevents submitting an operation that incorrectly sets the pds service type', async () => {
     await expectFailedOp(
-      alice,
+      alice.did,
       {
         services: {
           atproto_pds: {
@@ -155,7 +148,7 @@ describe('plc operations', () => {
       {
         rotationKeys: [sampleKey],
       },
-      { encoding: 'application/json', headers: sc.getHeaders(alice) },
+      { encoding: 'application/json', headers: sc.getHeaders(alice.did) },
     )
     await expect(attempt).rejects.toThrow(
       'email confirmation token required to sign PLC operations',
@@ -165,18 +158,27 @@ describe('plc operations', () => {
   let token: string
 
   it('requests a plc signature', async () => {
-    const mail = await getMailFrom(
-      agent.api.com.atproto.identity.requestPlcOperationSignature(undefined, {
-        headers: sc.getHeaders(alice),
-      }),
-    )
+    using sendPlcOperationMock = jest.spyOn(ctx.mailer, 'sendPlcOperation')
 
-    expect(mail.to).toEqual(sc.accounts[alice].email)
+    await agent.api.com.atproto.identity.requestPlcOperationSignature(
+      undefined,
+      {
+        headers: sc.getHeaders(alice.did),
+      },
+    )
+    expect(sendPlcOperationMock).toHaveBeenCalledTimes(1)
+    expect(sendMailMock).toHaveBeenCalledTimes(1)
+    const [params] = sendPlcOperationMock.mock.lastCall!
+    expect(params).toEqual({
+      token: expect.any(String),
+    })
+
+    const [mail] = sendMailMock.mock.lastCall!
+    expect(mail.to).toEqual(alice.email)
+    expect(mail.subject).toBe('PLC Update Operation Requested')
     expect(mail.html).toContain('PLC update requested')
 
-    const gotToken = getTokenFromMail(mail)
-    assert(gotToken)
-    token = gotToken
+    token = params.token
   })
 
   it('does not sign a plc operation with a bad token', async () => {
@@ -185,7 +187,7 @@ describe('plc operations', () => {
         token: '123456',
         rotationKeys: [sampleKey],
       },
-      { encoding: 'application/json', headers: sc.getHeaders(alice) },
+      { encoding: 'application/json', headers: sc.getHeaders(alice.did) },
     )
     await expect(attempt).rejects.toThrow('Token is invalid')
   })
@@ -198,9 +200,9 @@ describe('plc operations', () => {
         token,
         rotationKeys: [sampleKey, ctx.plcRotationKey.did()],
       },
-      { encoding: 'application/json', headers: sc.getHeaders(alice) },
+      { encoding: 'application/json', headers: sc.getHeaders(alice.did) },
     )
-    const currData = await ctx.plcClient.getDocumentData(alice)
+    const currData = await ctx.plcClient.getDocumentData(alice.did)
     expect(res.data.operation['alsoKnownAs']).toEqual(currData.alsoKnownAs)
     expect(res.data.operation['verificationMethods']).toEqual(
       currData.verificationMethods,
@@ -218,10 +220,10 @@ describe('plc operations', () => {
       { operation },
       {
         encoding: 'application/json',
-        headers: sc.getHeaders(alice),
+        headers: sc.getHeaders(alice.did),
       },
     )
-    const didData = await ctx.plcClient.getDocumentData(alice)
+    const didData = await ctx.plcClient.getDocumentData(alice.did)
     expect(didData.rotationKeys).toEqual([sampleKey, ctx.plcRotationKey.did()])
   })
 
@@ -233,7 +235,7 @@ describe('plc operations', () => {
       .limit(1)
       .executeTakeFirst()
     assert(lastEvt)
-    expect(lastEvt.did).toBe(alice)
+    expect(lastEvt.did).toBe(alice.did)
     expect(lastEvt.eventType).toBe('identity')
   })
 })

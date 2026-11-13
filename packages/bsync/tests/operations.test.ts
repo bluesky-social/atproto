@@ -3,14 +3,14 @@ import { Code, ConnectError } from '@connectrpc/connect'
 import getPort from 'get-port'
 import { wait } from '@atproto/common'
 import {
-  BsyncClient,
+  type BsyncClient,
   BsyncService,
-  Database,
+  type Database,
   authWithApiKey,
   createClient,
   envToCfg,
-} from '../src'
-import { Method, Operation } from '../src/proto/bsync_pb'
+} from '../src/index.js'
+import { Method, type Operation } from '../src/proto/bsync_pb.js'
 
 describe('operations', () => {
   let bsync: BsyncService

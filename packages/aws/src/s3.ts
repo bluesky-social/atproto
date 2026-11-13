@@ -1,56 +1,146 @@
-import stream from 'node:stream'
-import { NoSuchKey, S3, S3ClientConfig } from '@aws-sdk/client-s3'
+import type stream from 'node:stream'
+import { NoSuchKey, S3, type S3ClientConfig } from '@aws-sdk/client-s3'
 import { Upload } from '@aws-sdk/lib-storage'
-import { CID } from 'multiformats/cid'
+import type { CID } from 'multiformats/cid'
 import { SECOND, aggregateErrors, chunkArray } from '@atproto/common-web'
 import { randomStr } from '@atproto/crypto'
-import { BlobNotFoundError, BlobStore } from '@atproto/repo'
+import {
+  BlobNotFoundError,
+  type BlobStore,
+  type BlobStoreCreator,
+} from '@atproto/repo'
 
 export type S3Config = {
   bucket: string
   /**
-   * The maximum time any request to S3 (including individual blob chunks
-   * uploads) can take, in milliseconds.
+   * The maximum time any single HTTP request to S3 can remain idle (socket
+   * idle timeout), in milliseconds. This acts as a stall detector: a stalled
+   * or dead connection is reaped after this delay and the request is retried
+   * by the SDK. It should be kept short, independently of
+   * {@link S3Config.uploadTimeoutMs}, because blob bytes are buffered in
+   * memory before each S3 request is dispatched (uploads to S3 are never
+   * client-paced).
+   *
+   * @note Do not set this below 6 seconds. For values >= 6s, the SDK's socket
+   * idle timeout is only armed if the response headers take more than 3s to
+   * arrive, so blob *downloads* streamed to slow (client-paced) consumers are
+   * unaffected. Below 6s, the timeout is armed immediately and stays armed
+   * while the response body is streamed, causing slow-but-legitimate
+   * downloads to be reaped mid-transfer (see "downloads" tests in
+   * s3.test.ts).
+   *
+   * @note Maintenance context: the 6s threshold and 3s deferral are
+   * *undocumented internals* of `@smithy/node-http-handler` (the AWS SDK's
+   * node request handler; see `setSocketTimeout` in its `set-socket-timeout`
+   * module, `DEFER_EVENT_LISTENER_TIME`). They are not part of any public API
+   * contract and could change in a future SDK release. The "downloads" tests
+   * in s3.test.ts characterize this behavior and will fail if it drifts — if
+   * they break after a dependency bump, re-read the handler source and
+   * re-evaluate the 6s floor below.
+   *
+   * Defaults to `min(uploadTimeoutMs, 15_000)`, clamped to a minimum of
+   * `6_000`.
    */
   requestTimeoutMs?: number
   /**
-   * The maximum total time a blob upload can take, in milliseconds.
+   * The maximum time establishing a connection to S3 can take, in
+   * milliseconds.
+   *
+   * Defaults to 5_000.
+   */
+  connectionTimeoutMs?: number
+  /**
+   * The maximum total time a blob upload can take, in milliseconds. Since
+   * uploaded bytes are streamed from the client, this timeout should be large
+   * enough to accommodate slow clients uploading large blobs.
    */
   uploadTimeoutMs?: number
+  /**
+   * The maximum number of concurrent connections to S3 per client. Blob
+   * downloads are streamed at the pace of the downstream consumer, so a finite
+   * cap lets slow consumers hold every connection and queue all other blob
+   * reads and writes behind them.
+   *
+   * Defaults to `Infinity`.
+   */
+  maxSockets?: number
 } & Omit<S3ClientConfig, 'apiVersion' | 'requestHandler'>
 
-export class S3BlobStore implements BlobStore {
-  private client: S3
-  private bucket: string
-  private uploadTimeoutMs: number
+const DEFAULT_UPLOAD_TIMEOUT_MS = 10 * SECOND
 
+function createS3Client(cfg: S3Config): S3 {
+  const {
+    bucket,
+    uploadTimeoutMs = DEFAULT_UPLOAD_TIMEOUT_MS,
+    // @NOTE The request timeout acts as a stall detector (socket idle
+    // timeout) and should stay short even when uploadTimeoutMs is large,
+    // so that stalled S3 connections are reaped and retried quickly. The 6s
+    // floor keeps the idle timeout from applying to streamed (client-paced)
+    // blob downloads (see S3Config.requestTimeoutMs).
+    requestTimeoutMs = Math.max(
+      Math.min(uploadTimeoutMs, 15 * SECOND),
+      6 * SECOND,
+    ),
+    connectionTimeoutMs = 5 * SECOND,
+    maxSockets = Infinity,
+    ...rest
+  } = cfg
+  return new S3({
+    ...rest,
+    apiVersion: '2006-03-01',
+    // Ensures that all requests timeout under "requestTimeoutMs".
+    //
+    // @NOTE This will also apply to the upload of each individual blob
+    // chunk when using Upload from @aws-sdk/lib-storage. This is fine
+    // because chunks are buffered in memory before being sent, meaning that
+    // requests to S3 are not client-paced.
+    requestHandler: {
+      requestTimeout: requestTimeoutMs,
+      connectionTimeout: connectionTimeoutMs,
+      httpAgent: { maxSockets },
+      httpsAgent: { maxSockets },
+    },
+  })
+}
+
+export class S3BlobStore implements BlobStore {
+  private readonly clientOwned: boolean
+  private readonly client: S3
+  private readonly bucket: string
+  private readonly uploadTimeoutMs: number
+
+  /**
+   * @param client Shared by every store returned from
+   * {@link S3BlobStore.creator}, so that they reuse one connection pool.
+   * Defaults to a new client built from `cfg`.
+   */
   constructor(
     public did: string,
     cfg: S3Config,
+    client?: S3,
   ) {
-    const {
-      bucket,
-      uploadTimeoutMs = 10 * SECOND,
-      requestTimeoutMs = uploadTimeoutMs,
-      ...rest
-    } = cfg
-    this.bucket = bucket
-    this.uploadTimeoutMs = uploadTimeoutMs
-    this.client = new S3({
-      ...rest,
-      apiVersion: '2006-03-01',
-      // Ensures that all requests timeout under "requestTimeoutMs".
-      //
-      // @NOTE This will also apply to the upload of each individual chunk
-      // when using Upload from @aws-sdk/lib-storage.
-      requestHandler: { requestTimeout: requestTimeoutMs },
-    })
+    this.bucket = cfg.bucket
+    this.uploadTimeoutMs = cfg.uploadTimeoutMs ?? DEFAULT_UPLOAD_TIMEOUT_MS
+    this.client = client ?? createS3Client(cfg)
+    this.clientOwned = client === undefined
   }
 
-  static creator(cfg: S3Config) {
-    return (did: string) => {
-      return new S3BlobStore(did, cfg)
+  static creator(cfg: S3Config): BlobStoreCreator {
+    // @NOTE A store is created for every actor store access. A client per
+    // store would open a fresh TLS connection to S3 for every blob request and
+    // leave it idle in an unreachable pool, exhausting ephemeral ports under
+    // load.
+    const client = createS3Client(cfg)
+    const creator = (did: string): BlobStore => {
+      return new S3BlobStore(did, cfg, client)
     }
+    // The S3BlobStore instances won't own the client, the BlobStoreCreator
+    // does. In order to properly clean up the client, we attach an async
+    // dispose method to the creator itself.
+    Object.defineProperty(creator, Symbol.asyncDispose, {
+      value: async () => client.destroy(),
+    })
+    return creator as BlobStoreCreator
   }
 
   private genKey() {
@@ -89,15 +179,19 @@ export class S3BlobStore implements BlobStore {
         Body: bytes,
         Key: path,
       },
-      // @ts-ignore native implementation fine in node >=15
       abortController,
     })
 
     try {
       await upload.done()
     } catch (err) {
-      // Translate aws-sdk's abort error to something more specific
-      if (err instanceof Error && err.name === 'AbortError') {
+      // Translate aws-sdk's abort error (total upload timeout) and timeout
+      // errors (stalled connections, after the SDK exhausted its retries) to
+      // something more specific
+      if (
+        err instanceof Error &&
+        (err.name === 'AbortError' || err.name === 'TimeoutError')
+      ) {
         throw new Error('Blob upload timed out', { cause: err })
       }
 
@@ -261,6 +355,16 @@ export class S3BlobStore implements BlobStore {
 
       throw err
     }
+  }
+
+  /**
+   * Destroy underlying resources, like sockets. It's usually not necessary to
+   * do this. However in Node.js, it's best to explicitly shut down the client's
+   * agent when it is no longer needed. Otherwise, sockets might stay open for
+   * quite a long time before the server terminates them.
+   */
+  async [Symbol.asyncDispose]() {
+    if (this.clientOwned) this.client.destroy()
   }
 }
 

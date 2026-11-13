@@ -1,6 +1,6 @@
-import { LexValue } from '@atproto/lex-data'
-import { Infer, Schema, Validator } from '../core.js'
-import { ObjectSchema, object } from './object.js'
+import type { LexValue } from '@atproto/lex-data'
+import type { InferInput, Schema, Validator } from '../core.js'
+import { type ObjectSchema, object } from './object.js'
 
 export type { LexValue }
 
@@ -15,7 +15,7 @@ type ToBodyType<
   TSchema,
   TBinary,
 > = TSchema extends Schema
-  ? Infer<TSchema>
+  ? InferInput<TSchema>
   : TEncoding extends `application/json`
     ? LexValue
     : TBinary
@@ -93,13 +93,16 @@ export class Payload<
   const TEncoding extends string | undefined = string | undefined,
   const TSchema extends PayloadSchema<TEncoding> = PayloadSchema<TEncoding>,
 > {
-  constructor(
-    readonly encoding: TEncoding,
-    readonly schema: TSchema,
-  ) {
+  readonly encoding: TEncoding
+  readonly schema: TSchema
+
+  constructor(encoding: TEncoding, schema: TSchema) {
     if (encoding === undefined && schema !== undefined) {
       throw new TypeError('schema cannot be defined when encoding is undefined')
     }
+
+    this.encoding = encoding
+    this.schema = schema
   }
 
   /**
@@ -109,10 +112,9 @@ export class Payload<
   matchesEncoding(contentType: string | undefined): boolean {
     const { encoding } = this
 
-    // Handle undefined cases
     if (encoding === undefined) {
-      // Expecting no body
-      return contentType == null
+      // When the output is not defined, we don't enforce any rule on the payload.
+      return true
     } else if (contentType == null) {
       // Expecting a body, but got no content-type
       return false
@@ -168,7 +170,7 @@ export class Payload<
 export function payload<
   const E extends string | undefined = undefined,
   const S extends PayloadSchema<E> = undefined,
->(encoding: E = undefined as E, validator: S = undefined as S) {
+>(encoding: E = undefined as E, validator: S = undefined as S): Payload<E, S> {
   return new Payload<E, S>(encoding, validator)
 }
 

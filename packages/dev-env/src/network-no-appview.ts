@@ -1,12 +1,12 @@
-import { SkeletonHandler } from '@atproto/pds'
-import { TestFeedGen } from './feed-gen'
-import { TestPds } from './pds'
-import { TestPlc } from './plc'
-import { SeedClient } from './seed/client'
-import { TestServerParams } from './types'
-import { mockNetworkUtilities } from './util'
+import type { SkeletonHandler } from '@atproto/pds'
+import { TestFeedGen } from './feed-gen.js'
+import { TestPds } from './pds.js'
+import { TestPlc } from './plc.js'
+import { SeedClient } from './seed/client.js'
+import type { TestServerParams } from './types.js'
+import { mockNetworkUtilities } from './util.js'
 
-export class TestNetworkNoAppView {
+export class TestNetworkNoAppView implements AsyncDisposable {
   feedGens: TestFeedGen[] = []
   constructor(
     public plc: TestPlc,
@@ -36,8 +36,9 @@ export class TestNetworkNoAppView {
   }
 
   getSeedClient(): SeedClient<typeof this> {
-    const agent = this.pds.getClient()
-    return new SeedClient(this, agent)
+    const agent = this.pds.getAgent()
+    const client = this.pds.getClient()
+    return new SeedClient(this, agent, client)
   }
 
   async processAll() {
@@ -45,8 +46,30 @@ export class TestNetworkNoAppView {
   }
 
   async close() {
-    await Promise.all(this.feedGens.map((fg) => fg.close()))
-    await this.pds.close()
-    await this.plc.close()
+    // @TODO Use disposable stack to implement this
+    const errors = await Promise.allSettled(
+      this.feedGens.map((fg) => fg.close()),
+    ).then((results) =>
+      results.filter((r) => r.status === 'rejected').map((r) => r.reason),
+    )
+
+    try {
+      await this.pds.close()
+    } catch (err) {
+      errors.push(err)
+    }
+
+    try {
+      await this.plc.close()
+    } catch (err) {
+      errors.push(err)
+    }
+
+    if (errors.length === 1) throw errors[0]
+    if (errors.length > 1) throw new AggregateError(errors)
+  }
+
+  async [Symbol.asyncDispose]() {
+    await this.close()
   }
 }

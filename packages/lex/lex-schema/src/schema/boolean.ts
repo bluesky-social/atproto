@@ -1,4 +1,8 @@
-import { Schema, ValidationContext } from '../core.js'
+import {
+  Schema,
+  type ValidationContext,
+  type ValidationResult,
+} from '../core.js'
 import { memoizedOptions } from '../util/memoize.js'
 
 /**
@@ -18,7 +22,10 @@ import { memoizedOptions } from '../util/memoize.js'
 export class BooleanSchema extends Schema<boolean> {
   readonly type = 'boolean' as const
 
-  validateInContext(input: unknown, ctx: ValidationContext) {
+  validateInContext(
+    input: unknown,
+    ctx: ValidationContext,
+  ): ValidationResult<boolean> {
     if (typeof input === 'boolean') {
       return ctx.success(input)
     }
@@ -41,6 +48,6 @@ export class BooleanSchema extends Schema<boolean> {
  * enabledSchema.parse('true') // throws - strings not accepted
  * ```
  */
-export const boolean = /*#__PURE__*/ memoizedOptions(function () {
-  return new BooleanSchema()
-})
+export const boolean: () => BooleanSchema = /*#__PURE__*/ memoizedOptions(
+  () => new BooleanSchema(),
+)

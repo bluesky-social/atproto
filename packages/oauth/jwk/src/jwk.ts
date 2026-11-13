@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { isLastOccurrence } from './util'
+import { isLastOccurrence } from './util.js'
 
 export const PUBLIC_KEY_USAGE = ['verify', 'encrypt', 'wrapKey'] as const
 export const publicKeyUsageSchema = z.enum(PUBLIC_KEY_USAGE)

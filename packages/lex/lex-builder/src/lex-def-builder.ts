@@ -1,10 +1,10 @@
 import {
-  JSDocStructure,
-  OptionalKind,
-  SourceFile,
+  type JSDocStructure,
+  type OptionalKind,
+  type SourceFile,
   VariableDeclarationKind,
 } from 'ts-morph'
-import {
+import type {
   LexiconArray,
   LexiconArrayItems,
   LexiconBlob,
@@ -15,6 +15,7 @@ import {
   LexiconError,
   LexiconIndexer,
   LexiconInteger,
+  LexiconMessage,
   LexiconObject,
   LexiconParameters,
   LexiconPayload,
@@ -32,11 +33,11 @@ import {
 import { l } from '@atproto/lex-schema'
 import {
   RefResolver,
-  RefResolverOptions,
-  ResolvedRef,
+  type RefResolverOptions,
+  type ResolvedRef,
   getPublicIdentifiers,
 } from './ref-resolver.js'
-import { asNamespaceExport } from './ts-lang.js'
+import { asNamespaceExport, isSafeLocalIdentifier } from './ts-lang.js'
 
 /**
  * Configuration options for the {@link LexDefBuilder} class.
@@ -50,24 +51,6 @@ export type LexDefBuilderOptions = RefResolverOptions & {
    * @default '@atproto/lex-schema'
    */
   lib?: string
-  /**
-   * Whether to allow legacy blob references in the generated schemas.
-   *
-   * When `true`, blob types will accept both modern `BlobRef` and legacy
-   * `LegacyBlobRef` formats.
-   *
-   * @default false
-   */
-  allowLegacyBlobs?: boolean
-  /**
-   * Whether to add `#__PURE__` annotations to function calls.
-   *
-   * These annotations help bundlers with tree-shaking by marking
-   * side-effect-free function calls.
-   *
-   * @default false
-   */
-  pureAnnotations?: boolean
 }
 
 /**
@@ -95,21 +78,8 @@ export class LexDefBuilder {
     this.refResolver = new RefResolver(doc, file, indexer, options)
   }
 
-  private pure(code: string) {
-    return this.options.pureAnnotations ? markPure(code) : code
-  }
-
-  async build() {
-    this.file.addVariableStatement({
-      declarationKind: VariableDeclarationKind.Const,
-      declarations: [
-        { name: '$nsid', initializer: JSON.stringify(this.doc.id) },
-      ],
-    })
-
-    this.file.addExportDeclaration({
-      namedExports: [{ name: '$nsid' }],
-    })
+  async build(): Promise<void> {
+    this.addExportedString('$nsid', JSON.stringify(this.doc.id))
 
     const defs = Object.keys(this.doc.defs)
     if (defs.length) {
@@ -124,18 +94,57 @@ export class LexDefBuilder {
     }
   }
 
+  private addExportedString(
+    name: string,
+    initializer: string,
+    {
+      docs,
+    }: {
+      docs?: (OptionalKind<JSDocStructure> | string)[]
+    } = {},
+  ) {
+    if (
+      this.file
+        .getExportDeclarations()
+        .some((exp) => exp.getNamedExports().some((e) => e.getName() === name))
+    ) {
+      throw new Error(`Duplicate export ${name}`)
+    }
+
+    const identifier = isSafeLocalIdentifier(name)
+      ? name
+      : this.refResolver.nextSafeDefinitionIdentifier(name)
+
+    this.file.addVariableStatement({
+      declarationKind: VariableDeclarationKind.Const,
+      docs,
+      declarations: [{ name: identifier, initializer }],
+    })
+
+    this.file.addTypeAlias({
+      name: identifier,
+      type: `typeof ${identifier}`,
+      docs,
+    })
+
+    this.file.addExportDeclaration({
+      namedExports: [
+        {
+          name: identifier,
+          alias: name === identifier ? undefined : asNamespaceExport(name),
+        },
+      ],
+    })
+  }
+
   private addUtils(definitions: Record<string, undefined | string>) {
-    const entries = Object.entries(definitions).filter(
-      (e): e is [(typeof e)[0], NonNullable<(typeof e)[1]>] => e[1] != null,
-    )
-    if (entries.length) {
+    for (const [name, initializer] of Object.entries(definitions)) {
+      if (initializer == null) continue
+
       this.file.addVariableStatement({
         isExported: true,
         declarationKind: VariableDeclarationKind.Const,
-        declarations: entries.map(([name, initializer]) => ({
-          name,
-          initializer,
-        })),
+        declarations: [{ name, initializer }],
       })
     }
   }
@@ -173,7 +182,7 @@ export class LexDefBuilder {
   private async addPermissionSet(hash: string, def: LexiconPermissionSet) {
     const permission = def.permissions.map((def) => {
       const options = stringifyOptions(def, undefined, ['resource', 'type'])
-      return this.pure(
+      return markPure(
         `l.permission(${JSON.stringify(def.resource)}, ${options})`,
       )
     })
@@ -186,10 +195,96 @@ export class LexDefBuilder {
     ] satisfies (keyof l.PermissionSetOptions)[])
 
     await this.addSchema(hash, def, {
-      schema: this.pure(
+      schema: markPure(
         `l.permissionSet($nsid, [${permission.join(',')}], ${options})`,
       ),
     })
+  }
+
+  private async addParameters(parameters?: LexiconParameters): Promise<string> {
+    const varName = '$params'
+
+    this.addUtils({
+      [varName]: await this.compileParamsSchema(parameters),
+    })
+
+    // @TODO Build the types instead of using an inferred type.
+    this.file.addTypeAlias({
+      isExported: true,
+      name: '$Params',
+      type: `l.InferOutput<typeof ${varName}>`,
+      docs: compileDocs(parameters?.description),
+    })
+
+    return varName
+  }
+
+  private async addInput(input?: LexiconPayload): Promise<string> {
+    const varName = '$input'
+
+    this.addUtils({
+      [varName]: await this.compilePayload(input),
+    })
+
+    // @TODO Build the types instead of using an inferred type.
+    this.file.addTypeAlias({
+      isExported: true,
+      name: '$Input<B = l.BinaryData>',
+      type: `l.InferPayload<typeof ${varName}, B>`,
+      docs: compileDocs(input?.description),
+    })
+
+    this.file.addTypeAlias({
+      isExported: true,
+      name: '$InputBody<B = l.BinaryData>',
+      type: `l.InferPayloadBody<typeof ${varName}, B>`,
+      docs: compileDocs(input?.description),
+    })
+
+    return varName
+  }
+
+  private async addOutput(output?: LexiconPayload): Promise<string> {
+    const varName = '$output'
+
+    this.addUtils({
+      [varName]: await this.compilePayload(output),
+    })
+
+    // @TODO Build the types instead of using an inferred type.
+    this.file.addTypeAlias({
+      isExported: true,
+      name: '$Output<B = l.BinaryData>',
+      type: `l.InferPayload<typeof ${varName}, B>`,
+      docs: compileDocs(output?.description),
+    })
+
+    this.file.addTypeAlias({
+      isExported: true,
+      name: '$OutputBody<B = l.BinaryData>',
+      type: `l.InferPayloadBody<typeof ${varName}, B>`,
+      docs: compileDocs(output?.description),
+    })
+
+    return varName
+  }
+
+  private async addMessage(message?: LexiconMessage) {
+    const varName = '$message'
+
+    this.addUtils({
+      [varName]: await this.compileBodySchema(message?.schema),
+    })
+
+    // @TODO Build the types instead of using an inferred type.
+    this.file.addTypeAlias({
+      isExported: true,
+      name: '$Message',
+      type: `l.InferOutput<typeof ${varName}>`,
+      docs: compileDocs(message?.description),
+    })
+
+    return varName
   }
 
   private async addProcedure(hash: string, def: LexiconProcedure) {
@@ -197,27 +292,24 @@ export class LexDefBuilder {
       throw new Error(`Definition ${hash} cannot be of type ${def.type}`)
     }
 
-    // @TODO Build the types instead of using an inferred type.
+    // Declare each piece of the method as its own top-level exported const
+    // *before* `main`. This allows to export those pieces individually instead
+    // of "extracting" them from the "main" definition as below, which is bad
+    // for tree-shaking.
+    //
+    // export const $params = main.params`
 
-    const ref = await this.addSchema(hash, def, {
-      schema: this.pure(`
-        l.procedure(
-          $nsid,
-          ${await this.compileParamsSchema(def.parameters)},
-          ${await this.compilePayload(def.input)},
-          ${await this.compilePayload(def.output)},
-          ${await this.compileErrors(def.errors)}
-        )
-      `),
+    const paramsVar = await this.addParameters(def.parameters)
+    const inputVar = await this.addInput(def.input)
+    const outputVar = await this.addOutput(def.output)
+
+    await this.addSchema(hash, def, {
+      schema: markPure(
+        `l.procedure($nsid, ${paramsVar}, ${inputVar}, ${outputVar}${formatErrorsArg(await this.compileErrors(def.errors))})`,
+      ),
     })
 
-    this.addMethodTypeUtils(ref, def)
-    this.addUtils({
-      $lxm: this.pure(`${ref.varName}.nsid`),
-      $params: this.pure(`${ref.varName}.parameters`),
-      $input: this.pure(`${ref.varName}.input`),
-      $output: this.pure(`${ref.varName}.output`),
-    })
+    this.addExportedString('$lxm', '$nsid')
   }
 
   private async addQuery(hash: string, def: LexiconQuery) {
@@ -225,25 +317,23 @@ export class LexDefBuilder {
       throw new Error(`Definition ${hash} cannot be of type ${def.type}`)
     }
 
-    // @TODO Build the types instead of using an inferred type.
+    // Declare each piece of the method as its own top-level exported const
+    // *before* `main`. This allows to export those pieces individually instead
+    // of "extracting" them from the "main" definition as below, which is bad
+    // for tree-shaking:
+    //
+    // export const $params = main.params
 
-    const ref = await this.addSchema(hash, def, {
-      schema: this.pure(`
-        l.query(
-          $nsid,
-          ${await this.compileParamsSchema(def.parameters)},
-          ${await this.compilePayload(def.output)},
-          ${await this.compileErrors(def.errors)}
-        )
-      `),
+    const paramsVar = await this.addParameters(def.parameters)
+    const outputVar = await this.addOutput(def.output)
+
+    await this.addSchema(hash, def, {
+      schema: markPure(
+        `l.query($nsid, ${paramsVar}, ${outputVar}${formatErrorsArg(await this.compileErrors(def.errors))})`,
+      ),
     })
 
-    this.addMethodTypeUtils(ref, def)
-    this.addUtils({
-      $lxm: this.pure(`${ref.varName}.nsid`),
-      $params: `${ref.varName}.parameters`,
-      $output: `${ref.varName}.output`,
-    })
+    this.addExportedString('$lxm', '$nsid')
   }
 
   private async addSubscription(hash: string, def: LexiconSubscription) {
@@ -251,78 +341,23 @@ export class LexDefBuilder {
       throw new Error(`Definition ${hash} cannot be of type ${def.type}`)
     }
 
-    // @TODO Build the types instead of using an inferred type.
+    // Declare each piece of the method as its own top-level exported const
+    // *before* `main`. This allows to export those pieces individually instead
+    // of "extracting" them from the "main" definition as below, which is bad
+    // for tree-shaking.
+    //
+    // export const $params = main.params`
 
-    const ref = await this.addSchema(hash, def, {
-      schema: this.pure(`
-        l.subscription(
-          $nsid,
-          ${await this.compileParamsSchema(def.parameters)},
-          ${await this.compileBodySchema(def.message?.schema)},
-          ${await this.compileErrors(def.errors)}
-        )
-      `),
+    const paramsVar = await this.addParameters(def.parameters)
+    const messageVar = await this.addMessage(def.message)
+
+    await this.addSchema(hash, def, {
+      schema: markPure(
+        `l.subscription($nsid, ${paramsVar}, ${messageVar}${formatErrorsArg(await this.compileErrors(def.errors))})`,
+      ),
     })
 
-    this.addMethodTypeUtils(ref, def)
-    this.addUtils({
-      $lxm: this.pure(`${ref.varName}.nsid`),
-      $params: `${ref.varName}.parameters`,
-      $message: `${ref.varName}.message`,
-    })
-  }
-
-  addMethodTypeUtils(
-    ref: ResolvedRef,
-    def: LexiconProcedure | LexiconQuery | LexiconSubscription,
-  ) {
-    this.file.addTypeAlias({
-      isExported: true,
-      name: '$Params',
-      type: `l.InferMethodParams<typeof ${ref.varName}>`,
-      docs: compileDocs(def.parameters?.description),
-    })
-
-    if (def.type === 'procedure') {
-      this.file.addTypeAlias({
-        isExported: true,
-        name: '$Input<B = l.BinaryData>',
-        type: `l.InferMethodInput<typeof ${ref.varName}, B>`,
-        docs: compileDocs(def.input?.description),
-      })
-
-      this.file.addTypeAlias({
-        isExported: true,
-        name: '$InputBody<B = l.BinaryData>',
-        type: `l.InferMethodInputBody<typeof ${ref.varName}, B>`,
-        docs: compileDocs(def.input?.description),
-      })
-    }
-
-    if (def.type === 'procedure' || def.type === 'query') {
-      this.file.addTypeAlias({
-        isExported: true,
-        name: '$Output<B = l.BinaryData>',
-        type: `l.InferMethodOutput<typeof ${ref.varName}, B>`,
-        docs: compileDocs(def.output?.description),
-      })
-
-      this.file.addTypeAlias({
-        isExported: true,
-        name: '$OutputBody<B = l.BinaryData>',
-        type: `l.InferMethodOutputBody<typeof ${ref.varName}, B>`,
-        docs: compileDocs(def.output?.description),
-      })
-    }
-
-    if (def.type === 'subscription') {
-      this.file.addTypeAlias({
-        isExported: true,
-        name: '$Message',
-        type: `l.InferSubscriptionMessage<typeof ${ref.varName}>`,
-        docs: compileDocs(def.message?.description),
-      })
-    }
+    this.addExportedString('$lxm', '$nsid')
   }
 
   private async addRecord(hash: string, def: LexiconRecord) {
@@ -339,7 +374,7 @@ export class LexDefBuilder {
     await this.addSchema(hash, def, {
       type: `{ ${properties.join(';')} }`,
       schema: (ref) =>
-        this.pure(
+        markPure(
           `l.record<${key}, ${ref.typeName}>(${key}, $nsid, ${objectSchema})`,
         ),
       objectUtils: true,
@@ -356,7 +391,7 @@ export class LexDefBuilder {
     await this.addSchema(hash, def, {
       type: `{ ${properties.join(';')} }`,
       schema: (ref) =>
-        this.pure(
+        markPure(
           `l.typedObject<${ref.typeName}>($nsid, ${JSON.stringify(hash)}, ${objectSchema})`,
         ),
       objectUtils: true,
@@ -365,10 +400,15 @@ export class LexDefBuilder {
   }
 
   private async addToken(hash: string, def: LexiconToken) {
-    await this.addSchema(hash, def, {
-      schema: this.pure(`l.token($nsid, ${JSON.stringify(hash)})`),
-      type: JSON.stringify(l.$type(this.doc.id, hash)),
+    const ref = await this.addSchema(hash, def, {
+      schema: markPure(`l.token($nsid, ${JSON.stringify(hash)})`),
       validationUtils: true,
+    })
+
+    const pub = getPublicIdentifiers(hash)
+
+    this.addExportedString(pub.typeName, markPure(`${ref.varName}.value`), {
+      docs: compileDocs(def.description),
     })
   }
 
@@ -388,9 +428,7 @@ export class LexDefBuilder {
       // @NOTE Not using compileArraySchema to allow specifying the generic
       // parameter to l.array<>.
       schema: (ref) =>
-        this.pure(
-          `l.array<${ref.typeName}[number]>(${itemSchema}, ${options})`,
-        ),
+        markPure(`l.array<${ref.typeName}[number]>(${itemSchema}, ${options})`),
       validationUtils: true,
     })
   }
@@ -460,10 +498,10 @@ export class LexDefBuilder {
     }
 
     if (hash === 'main' && objectUtils) {
+      this.addExportedString('$type', '$nsid')
       this.addUtils({
         $isTypeOf: markPure(`${ref.varName}.isTypeOf.bind(${ref.varName})`),
         $build: markPure(`${ref.varName}.build.bind(${ref.varName})`),
-        $type: markPure(`${ref.varName}.$type`),
       })
     }
 
@@ -487,20 +525,20 @@ export class LexDefBuilder {
   }
 
   private async compilePayload(def: LexiconPayload | undefined) {
-    if (!def) return this.pure(`l.payload()`)
+    if (!def) return markPure(`l.payload()`)
 
     // Special case for JSON object payloads
     if (def.encoding === 'application/json' && def.schema?.type === 'object') {
       const properties = await this.compilePropertiesSchemas(def.schema)
-      return this.pure(`l.jsonPayload({${properties.join(',')}})`)
+      return markPure(`l.jsonPayload({${properties.join(',')}})`)
     }
 
     const encodedEncoding = JSON.stringify(def.encoding)
     if (def.schema) {
       const bodySchema = await this.compileBodySchema(def.schema)
-      return this.pure(`l.payload(${encodedEncoding}, ${bodySchema})`)
+      return markPure(`l.payload(${encodedEncoding}, ${bodySchema})`)
     } else {
-      return this.pure(`l.payload(${encodedEncoding})`)
+      return markPure(`l.payload(${encodedEncoding})`)
     }
   }
 
@@ -513,10 +551,10 @@ export class LexDefBuilder {
   }
 
   private async compileParamsSchema(def: undefined | LexiconParameters) {
-    if (!def) return this.pure(`l.params()`)
+    if (!def) return markPure(`l.params()`)
 
     const properties = await this.compilePropertiesSchemas(def)
-    return this.pure(
+    return markPure(
       properties.length === 0
         ? `l.params()`
         : `l.params({${properties.join(',')}})`,
@@ -530,7 +568,7 @@ export class LexDefBuilder {
 
   private async compileObjectSchema(def: LexiconObject): Promise<string> {
     const properties = await this.compilePropertiesSchemas(def)
-    return this.pure(`l.object({${properties.join(',')}})`)
+    return markPure(`l.object({${properties.join(',')}})`)
   }
 
   private async compilePropertiesSchemas(options: {
@@ -580,11 +618,11 @@ export class LexDefBuilder {
     let schema = await this.compileContainedSchema(def)
 
     if (isNullable) {
-      schema = this.pure(`l.nullable(${schema})`)
+      schema = markPure(`l.nullable(${schema})`)
     }
 
     if (!isRequired) {
-      schema = this.pure(`l.optional(${schema})`)
+      schema = markPure(`l.optional(${schema})`)
     }
 
     return `${JSON.stringify(key)}:${schema}`
@@ -676,7 +714,7 @@ export class LexDefBuilder {
       'minLength',
       'maxLength',
     ] satisfies (keyof l.ArraySchemaOptions)[])
-    return this.pure(`l.array(${itemSchema}, ${options})`)
+    return markPure(`l.array(${itemSchema}, ${options})`)
   }
 
   private async compileArrayType(def: LexiconArray): Promise<string> {
@@ -684,7 +722,7 @@ export class LexDefBuilder {
   }
 
   private async compileUnknownSchema(_def: LexiconUnknown): Promise<string> {
-    return this.pure(`l.lexMap()`)
+    return markPure(`l.lexMap()`)
   }
 
   private async compileUnknownType(_def: LexiconUnknown): Promise<string> {
@@ -694,9 +732,7 @@ export class LexDefBuilder {
   private withDefault(schema: string, defaultValue: unknown) {
     if (defaultValue === undefined) return schema
 
-    return this.pure(
-      `l.withDefault(${schema}, ${JSON.stringify(defaultValue)})`,
-    )
+    return markPure(`l.withDefault(${schema}, ${JSON.stringify(defaultValue)})`)
   }
 
   private async compileBooleanSchema(def: LexiconBoolean): Promise<string> {
@@ -708,7 +744,7 @@ export class LexDefBuilder {
 
     if (hasConst(def)) return this.compileConstSchema(def)
 
-    return this.withDefault(this.pure(`l.boolean()`), def.default)
+    return this.withDefault(markPure(`l.boolean()`), def.default)
   }
 
   private async compileBooleanType(def: LexiconBoolean): Promise<string> {
@@ -739,7 +775,7 @@ export class LexDefBuilder {
       'minimum',
     ] satisfies (keyof l.IntegerSchemaOptions)[])
 
-    return this.withDefault(this.pure(`l.integer(${options})`), def.default)
+    return this.withDefault(markPure(`l.integer(${options})`), def.default)
   }
 
   private async compileIntegerType(def: LexiconInteger): Promise<string> {
@@ -791,7 +827,7 @@ export class LexDefBuilder {
       : undefined
 
     return this.withDefault(
-      this.pure(`l.string${generic ? `<${generic}>` : ''}(${options})`),
+      markPure(`l.string${generic ? `<${generic}>` : ''}(${options})`),
       def.default,
     )
   }
@@ -844,7 +880,7 @@ export class LexDefBuilder {
       'minLength',
       'maxLength',
     ] satisfies (keyof l.BytesSchemaOptions)[])
-    return this.pure(`l.bytes(${options})`)
+    return markPure(`l.bytes(${options})`)
   }
 
   private async compileBytesType(_def: LexiconBytes): Promise<string> {
@@ -852,23 +888,19 @@ export class LexDefBuilder {
   }
 
   private async compileBlobSchema(def: LexiconBlob): Promise<string> {
-    const opts = { ...def, allowLegacy: this.options.allowLegacyBlobs === true }
-    const options = stringifyOptions(opts, [
+    const options = stringifyOptions(def, [
       'maxSize',
       'accept',
-      'allowLegacy',
     ] satisfies (keyof l.BlobSchemaOptions)[])
-    return this.pure(`l.blob(${options})`)
+    return markPure(`l.blob(${options})`)
   }
 
   private async compileBlobType(_def: LexiconBlob): Promise<string> {
-    return this.options.allowLegacyBlobs
-      ? 'l.BlobRef | l.LegacyBlobRef'
-      : 'l.BlobRef'
+    return 'l.BlobRef'
   }
 
   private async compileCidLinkSchema(_def: LexiconCid): Promise<string> {
-    return this.pure(`l.cid()`)
+    return markPure(`l.cid()`)
   }
 
   private async compileCidLinkType(_def: LexiconCid): Promise<string> {
@@ -879,7 +911,7 @@ export class LexDefBuilder {
     const { varName, typeName } = await this.refResolver.resolve(def.ref)
     // @NOTE "as any" is needed in schemas with circular refs as TypeScript
     // cannot infer the type of a value that depends on its initializer type
-    return this.pure(`l.ref<${typeName}>((() => ${varName}) as any)`)
+    return markPure(`l.ref<${typeName}>((() => ${varName}) as any)`)
   }
 
   private async compileRefType(def: LexiconRef): Promise<string> {
@@ -889,7 +921,7 @@ export class LexDefBuilder {
 
   private async compileRefUnionSchema(def: LexiconRefUnion): Promise<string> {
     if (def.refs.length === 0 && def.closed) {
-      return this.pure(`l.never()`)
+      return markPure(`l.never()`)
     }
 
     const refs = await Promise.all(
@@ -897,13 +929,11 @@ export class LexDefBuilder {
         const { varName, typeName } = await this.refResolver.resolve(ref)
         // @NOTE "as any" is needed in schemas with circular refs as TypeScript
         // cannot infer the type of a value that depends on its initializer type
-        return this.pure(`l.typedRef<${typeName}>((() => ${varName}) as any)`)
+        return markPure(`l.typedRef<${typeName}>((() => ${varName}) as any)`)
       }),
     )
 
-    return this.pure(
-      `l.typedUnion([${refs.join(',')}], ${def.closed ?? false})`,
-    )
+    return markPure(`l.typedUnion([${refs.join(',')}], ${def.closed ?? false})`)
   }
 
   private async compileRefUnionType(def: LexiconRefUnion): Promise<string> {
@@ -921,10 +951,10 @@ export class LexDefBuilder {
     T extends null | number | string | boolean,
   >(def: { const: T; enum?: readonly T[]; default?: T }): Promise<string> {
     if (hasEnum(def) && !def.enum.includes(def.const)) {
-      return this.pure(`l.never()`)
+      return markPure(`l.never()`)
     }
 
-    const result = this.pure(`l.literal(${JSON.stringify(def.const)})`)
+    const result = markPure(`l.literal(${JSON.stringify(def.const)})`)
 
     return this.withDefault(result, def.default)
   }
@@ -943,13 +973,13 @@ export class LexDefBuilder {
     default?: T
   }): Promise<string> {
     if (def.enum.length === 0) {
-      return this.pure(`l.never()`)
+      return markPure(`l.never()`)
     }
 
     const result =
       def.enum.length === 1
-        ? this.pure(`l.literal(${JSON.stringify(def.enum[0])})`)
-        : this.pure(`l.enum(${JSON.stringify(def.enum)})`)
+        ? markPure(`l.literal(${JSON.stringify(def.enum[0])})`)
+        : markPure(`l.enum(${JSON.stringify(def.enum)})`)
 
     return this.withDefault(result, def.default)
   }
@@ -1031,4 +1061,8 @@ function hasEnum<T extends { enum?: readonly unknown[] }>(
 
 function markPure<T extends string>(v: T): `/*#__PURE__*/ ${T}` {
   return `/*#__PURE__*/ ${v}`
+}
+
+function formatErrorsArg(errors: string) {
+  return errors ? `, ${errors}` : ''
 }

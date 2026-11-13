@@ -1,6 +1,6 @@
 {
   "name": "@atproto/oauth-provider-ui",
-  "version": "0.4.3",
+  "version": "0.11.0",
   "license": "MIT",
   "description": "Sign-in & Sign-up UI for the @atproto/oauth-provider",
   "homepage": "https://atproto.com",
@@ -9,10 +9,12 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/oauth/oauth-provider-ui"
   },
-  "engines": {
-    "node": ">=18.7.0"
-  },
-  "type": "commonjs",
+  "files": [
+    "./hydration-data.d.ts",
+    "./dist",
+    "./CHANGELOG.md"
+  ],
+  "type": "module",
   "exports": {
     "./bundle-manifest.json": {
       "default": "./dist/bundle-manifest.json"
@@ -21,44 +23,61 @@
       "types": "./hydration-data.d.ts"
     }
   },
-  "files": [
-    "dist",
-    "hydration-data.d.ts"
-  ],
-  "optionalDependencies": {
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
     "@atproto/oauth-provider-api": "workspace:*"
   },
   "devDependencies": {
     "@atproto-labs/fetch": "workspace:^",
-    "@atproto-labs/rollup-plugin-bundle-manifest": "workspace:^",
+    "@atproto-labs/rolldown-plugin-bundle-manifest": "workspace:^",
     "@atproto/oauth-scopes": "workspace:^",
     "@atproto/oauth-types": "workspace:^",
+    "@atproto/syntax": "workspace:^",
+    "@base-ui/react": "^1.8.0",
     "@hcaptcha/react-hcaptcha": "^1.11.2",
-    "@lingui/cli": "^5.2.0",
-    "@lingui/core": "^5.2.0",
-    "@lingui/react": "^5.2.0",
-    "@lingui/swc-plugin": "^5.4.0",
-    "@lingui/vite-plugin": "^5.2.0",
-    "@tailwindcss/vite": "^4.1.3",
-    "@types/react": "^19.0.10",
-    "@types/react-dom": "^19.0.4",
-    "@vitejs/plugin-react-swc": "^3.8.0",
+    "@lingui/cli": "^6.8.0",
+    "@lingui/conf": "^6.8.0",
+    "@lingui/core": "^6.8.0",
+    "@lingui/format-po": "^6.8.0",
+    "@lingui/react": "^6.8.0",
+    "@lingui/swc-plugin": "^6.7.0",
+    "@lingui/vite-plugin": "^6.8.0",
+    "@tailwindcss/typography": "^0.5.20",
+    "@tailwindcss/vite": "^4.3.3",
+    "@tanstack/react-query": "^5.103.2",
+    "@tanstack/react-router": "^1.170.39",
+    "@tanstack/react-router-devtools": "^1.167.2",
+    "@tanstack/router-plugin": "^1.168.40",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react-swc": "^4.3.3",
+    "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "postcss": "^8.4.38",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "react-error-boundary": "^5.0.0",
-    "tailwindcss": "^4.1.3",
-    "typescript": "^5.6.3",
-    "vite": "^6.2.0"
+    "lucide-react": "^1.48.0",
+    "postcss": "^8.5.28",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "react-error-boundary": "^6.1.6",
+    "tailwind-merge": "^3.7.0",
+    "tailwindcss": "^4.3.3",
+    "tw-animate-css": "^1.4.0",
+    "ua-parser-js": "^2.0.10",
+    "vite": "^8.3.1",
+    "vitest": "^4.1.10"
   },
   "scripts": {
     "i18n:extract": "lingui extract --clean",
     "i18n:compile": "lingui compile --typescript",
     "i18n": "pnpm i18n:extract && pnpm i18n:compile",
-    "prebuild": "pnpm run i18n:compile",
-    "build": "vite build --emptyOutDir -- ignore additional npm args",
+    "codegen:i18n": "pnpm run i18n",
+    "prebuild": "pnpm run '/^(codegen:.+)$/'",
+    "build:ui": "vite build --emptyOutDir",
+    "build:ts": "tsc --build tsconfig.json",
+    "build": "pnpm run build:ui -- ignore additional npm args",
     "dev:ui": "vite --port 5174",
-    "dev:src": "vite build --watch"
+    "dev:src": "vite build --watch",
+    "test": "vitest run"
   }
 }

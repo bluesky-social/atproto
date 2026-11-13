@@ -1,88 +1,82 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
-import type { HydrationData as FeHydrationData } from '@atproto/oauth-provider-frontend/hydration-data'
+import { createRequire } from 'node:module'
 import type { HydrationData as UiHydrationData } from '@atproto/oauth-provider-ui/hydration-data'
+import { buildCustomizationCoep } from '../../customization/build-customization-coep.js'
+import { buildCustomizationCsp } from '../../customization/build-customization-csp.js'
 import { buildCustomizationCss } from '../../customization/build-customization-css.js'
 import { buildCustomizationData } from '../../customization/build-customization-data.js'
-import { Customization } from '../../customization/customization.js'
-import { CspConfig, mergeCsp } from '../../lib/csp/index.js'
+import type { Customization } from '../../customization/customization.js'
+import { type CspConfig, mergeCsp } from '../../lib/csp/index.js'
 import { declareHydrationData } from '../../lib/html/hydration-data.js'
 import { cssCode, html } from '../../lib/html/index.js'
-import { combineMiddlewares } from '../../lib/http/middleware.js'
-import { WriteResponseOptions } from '../../lib/http/response.js'
+import type { WriteResponseOptions } from '../../lib/http/response.js'
 import {
   CrossOriginEmbedderPolicy,
-  SecurityHeadersOptions,
+  type SecurityHeadersOptions,
 } from '../../lib/http/security-headers.js'
 import { mergeDefaults } from '../../lib/util/object.js'
-import { Simplify } from '../../lib/util/type.js'
-import { WriteHtmlOptions, writeHtml } from '../../lib/write-html.js'
+import type { Simplify } from '../../lib/util/type.js'
+import { type WriteHtmlOptions, writeHtml } from '../../lib/write-html.js'
 import { parseAssetsManifest } from './assets-manifest.js'
 import { setupCsrfToken } from './csrf.js'
 
-// If the "ui" and "frontend" packages are ever unified, this can be replaced
-// with a single expression:
-//
-// const { getAssets, assetsMiddleware } = parseAssetsManifest(
-//   require.resolve('@atproto/oauth-provider-ui/bundle-manifest.json'),
-// )
+const require = createRequire(import.meta.url)
 
-const ui = parseAssetsManifest(
+export const { getAssets, assetsMiddleware } = parseAssetsManifest(
   require.resolve('@atproto/oauth-provider-ui/bundle-manifest.json'),
 )
-const fe = parseAssetsManifest(
-  require.resolve('@atproto/oauth-provider-frontend/bundle-manifest.json'),
-)
 
-type HydrationData = Simplify<UiHydrationData & FeHydrationData>
-
-function getAssets(entryName: keyof HydrationData) {
-  const assetRef = ui.getAssets(entryName) || fe.getAssets(entryName)
-  if (assetRef) return assetRef
-
-  // Fool-proof. Should never happen.
-  throw new Error(`Entry "${entryName}" not found in assets`)
-}
-
-export const assetsMiddleware = combineMiddlewares([
-  ui.assetsMiddleware,
-  fe.assetsMiddleware,
-])
+type HydrationData = Simplify<UiHydrationData>
 
 const SPA_CSP: CspConfig = {
   // API calls are made to the same origin
   'connect-src': ["'self'"],
-  // Allow loading of PDS logo & User avatars
-  'img-src': ['data:', 'https:'],
   // Prevent embedding in iframes
   'frame-ancestors': ["'none'"],
 }
 
-/**
- * @see {@link https://docs.hcaptcha.com/#content-security-policy-settings}
- */
-const HCAPTCHA_CSP: CspConfig = {
-  'script-src': ['https://hcaptcha.com', 'https://*.hcaptcha.com'],
-  'frame-src': ['https://hcaptcha.com', 'https://*.hcaptcha.com'],
-  'style-src': ['https://hcaptcha.com', 'https://*.hcaptcha.com'],
-  'connect-src': ['https://hcaptcha.com', 'https://*.hcaptcha.com'],
+// Allow loading of avatars and (trusted) OAuth client images
+const AVATAR_CSP: CspConfig = {
+  // @TODO Find a way to make this narrower (e.g. by proxying avatars through
+  // our own domain and using "'self'" here, or by using the customization data
+  // to allow-list specific origins), or by only allowing "data:" uris. Note
+  // that the current https: value also prevents avatars and client images from
+  // working in dev (which we also may want to find a solution to).
+  'img-src': ['https:'],
 }
 
 export type SendWebAppOptions = SecurityHeadersOptions & WriteResponseOptions
 
+/**
+ * Pre-computes page rendering assets and data and returns a function that can
+ * be used to send the @atproto/oauth-provider-ui web app {@link page} specified
+ * by the {@link P} type parameter.
+ */
 export function sendWebAppFactory<P extends keyof HydrationData>(
   page: P,
   customization: Customization,
   defaults: SendWebAppOptions = {},
 ) {
-  // Pre-computed options:
-  const customizationData = buildCustomizationData(customization)
-  const customizationCss = cssCode(buildCustomizationCss(customization))
-  const { scripts, styles } = getAssets(page)
+  const assets = getAssets(page)
+  if (!assets) throw new Error(`No assets found for page: ${page}`)
 
-  const csp = mergeCsp(
-    SPA_CSP,
-    customization?.hcaptcha ? HCAPTCHA_CSP : undefined,
-  )
+  // Pre-computing as much as possible during the initialization phase
+
+  const customizationCoep = buildCustomizationCoep(customization)
+  const customizationCsp = buildCustomizationCsp(customization)
+  const customizationCss = cssCode(buildCustomizationCss(customization))
+  const customizationData = buildCustomizationData(customization)
+
+  // Since we are loading avatars form other origins, which might not have
+  // CORP headers, we need to use the "credentialless" value, which allows
+  // loading cross-origin resources without credentials (cookies, client
+  // certificates, etc.). This is a more secure alternative to
+  // "unsafe-none". Ideally, we would want to set COEP to "require-corp" and
+  // ensure that all cross-origin resources have the appropriate CORP
+  // headers.
+  const coep = customizationCoep ?? CrossOriginEmbedderPolicy.credentialless
+
+  const csp = mergeCsp(SPA_CSP, AVATAR_CSP, ...customizationCsp)
 
   return async function sendWebApp(
     req: IncomingMessage,
@@ -101,16 +95,13 @@ export function sendWebAppFactory<P extends keyof HydrationData>(
     return writeHtml(
       res,
       mergeDefaults<WriteHtmlOptions>(defaults, options, {
-        bodyAttrs: {
-          class:
-            'bg-white text-slate-900 dark:bg-slate-900 dark:text-slate-100',
-        },
-        csp: options?.csp ? mergeCsp(csp, options.csp) : csp,
-        coep: options?.coep ?? CrossOriginEmbedderPolicy.credentialless,
+        bodyAttrs: { class: 'text-foreground bg-background' },
+        csp: mergeCsp(csp, options.csp),
+        coep: options.coep ?? coep,
         meta: [{ name: 'robots', content: 'noindex' }],
         body: html`<div id="root"></div>`,
-        scripts: [script, ...scripts],
-        styles: [...styles, customizationCss],
+        scripts: [script, ...assets.scripts],
+        styles: [...assets.styles, customizationCss],
       }),
     )
   }

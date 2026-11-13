@@ -1,6 +1,6 @@
-import { LexValue } from '@atproto/lex-data'
+import type { LexValue } from '@atproto/lex-data'
 import { l } from '@atproto/lex-schema'
-import {
+import type {
   LexiconArray,
   LexiconArrayItems,
   LexiconDocument,
@@ -11,7 +11,7 @@ import {
   LexiconRef,
   LexiconRefUnion,
 } from './lexicon-document.js'
-import { LexiconIndexer } from './lexicon-indexer.js'
+import type { LexiconIndexer } from './lexicon-indexer.js'
 
 /**
  * Builds validators for Lexicon documents.
@@ -48,7 +48,7 @@ import { LexiconIndexer } from './lexicon-indexer.js'
  * }
  * ```
  */
-export class LexiconSchemaBuilder {
+export class LexiconSchemaBuilder implements AsyncDisposable {
   /**
    * Builds a validator for a single Lexicon definition reference.
    *
@@ -159,6 +159,10 @@ export class LexiconSchemaBuilder {
    */
   async done(): Promise<void> {
     await this.#asyncTasks.done()
+  }
+
+  async [Symbol.asyncDispose]() {
+    await this.done()
   }
 
   /**

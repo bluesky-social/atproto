@@ -1,23 +1,23 @@
 import { mapDefined } from '@atproto/common'
-import { InvalidRequestError } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context'
-import { DataPlaneClient } from '../../../../data-plane'
-import { Actor } from '../../../../hydration/actor'
-import { FeedItem, Post } from '../../../../hydration/feed'
+import type { AtUriString } from '@atproto/lex-schema'
+import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
+import type { AppContext } from '../../../../context.js'
+import type { DataPlaneClient } from '../../../../data-plane/index.js'
+import type { Actor } from '../../../../hydration/actor.js'
+import type { FeedItem, Post } from '../../../../hydration/feed.js'
 import {
-  HydrateCtx,
-  HydrationState,
-  Hydrator,
+  type HydrateCtx,
+  type HydrationState,
+  type Hydrator,
   mergeStates,
-} from '../../../../hydration/hydrator'
-import { parseString } from '../../../../hydration/util'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getAuthorFeed'
-import { createPipeline } from '../../../../pipeline'
-import { FeedType } from '../../../../proto/bsky_pb'
-import { safePinnedPost, uriToDid } from '../../../../util/uris'
-import { Views } from '../../../../views'
-import { clearlyBadCursor, resHeaders } from '../../../util'
+} from '../../../../hydration/hydrator.js'
+import { parseString } from '../../../../hydration/util.js'
+import { app } from '../../../../lexicons/index.js'
+import { createPipeline } from '../../../../pipeline.js'
+import { FeedType } from '../../../../proto/bsky_pb.js'
+import { safePinnedPost, uriToDid } from '../../../../util/uris.js'
+import type { Views } from '../../../../views/index.js'
+import { clearlyBadCursor, fillPage, resHeaders } from '../../../util.js'
 
 export default function (server: Server, ctx: AppContext) {
   const getAuthorFeed = createPipeline(
@@ -26,18 +26,30 @@ export default function (server: Server, ctx: AppContext) {
     noBlocksOrMutedReposts,
     presentation,
   )
-  server.app.bsky.feed.getAuthorFeed({
+  server.add(app.bsky.feed.getAuthorFeed, {
     auth: ctx.authVerifier.optionalStandardOrRole,
     handler: async ({ params, auth, req }) => {
-      const { viewer, includeTakedowns } = ctx.authVerifier.parseCreds(auth)
+      const { viewer, includeTakedowns, skipViewerBlocks } =
+        ctx.authVerifier.parseCreds(auth)
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({
+        xrpcEndpoint: app.bsky.feed.getAuthorFeed.$lxm,
         labelers,
         viewer,
         includeTakedowns,
+        skipViewerBlocks,
+        features: ctx.featureGatesClient.scope(
+          ctx.featureGatesClient.parseUserContextFromHandler({ viewer, req }),
+        ),
       })
 
-      const result = await getAuthorFeed({ ...params, hydrateCtx }, ctx)
+      const result = await fillPage({
+        cursor: params.cursor,
+        limit: params.limit,
+        fetch: ({ cursor, limit }) =>
+          getAuthorFeed({ ...params, cursor, limit, hydrateCtx }, ctx),
+        items: (r) => r.feed,
+      })
 
       const repoRev = await ctx.hydrator.actor.getRepoRevSafe(viewer)
 
@@ -98,9 +110,9 @@ export const skeleton = async (inputs: {
   })
 
   let items: FeedItem[] = res.items.map((item) => ({
-    post: { uri: item.uri, cid: item.cid || undefined },
+    post: { uri: item.uri as AtUriString, cid: item.cid || undefined },
     repost: item.repost
-      ? { uri: item.repost, cid: item.repostCid || undefined }
+      ? { uri: item.repost as AtUriString, cid: item.repostCid || undefined }
       : undefined,
   }))
 
@@ -132,7 +144,13 @@ const hydration = async (inputs: {
 }): Promise<HydrationState> => {
   const { ctx, params, skeleton } = inputs
   const [feedPostState, profileViewerState] = await Promise.all([
-    ctx.hydrator.hydrateFeedItems(skeleton.items, params.hydrateCtx),
+    ctx.hydrator.hydrateFeedItems(skeleton.items, params.hydrateCtx, {
+      knownLikers:
+        !!params.hydrateCtx.viewer &&
+        params.hydrateCtx.features.checkGate(
+          params.hydrateCtx.features.Gate.KnownLikersFeedEnable,
+        ),
+    }),
     ctx.hydrator.hydrateProfileViewers([skeleton.actor.did], params.hydrateCtx),
   ])
   return mergeStates(feedPostState, profileViewerState)
@@ -146,6 +164,7 @@ const noBlocksOrMutedReposts = (inputs: {
   const { ctx, skeleton, hydration } = inputs
   const relationship = hydration.profileViewers?.get(skeleton.actor.did)
   if (
+    !hydration.ctx?.skipViewerBlocks &&
     relationship &&
     (relationship.blocking || ctx.views.blockingByList(relationship, hydration))
   ) {
@@ -155,6 +174,7 @@ const noBlocksOrMutedReposts = (inputs: {
     )
   }
   if (
+    !hydration.ctx?.skipViewerBlocks &&
     relationship &&
     (relationship.blockedBy || ctx.views.blockedByList(relationship, hydration))
   ) {
@@ -208,20 +228,20 @@ type Context = {
   dataplane: DataPlaneClient
 }
 
-type Params = QueryParams & {
+type Params = app.bsky.feed.getAuthorFeed.$Params & {
   hydrateCtx: HydrateCtx
 }
 
 type Skeleton = {
   actor: Actor
   items: FeedItem[]
-  filter: QueryParams['filter']
+  filter: app.bsky.feed.getAuthorFeed.$Params['filter']
   cursor?: string
 }
 
 class SelfThreadTracker {
-  feedUris = new Set<string>()
-  cache = new Map<string, boolean>()
+  feedUris = new Set<AtUriString>()
+  cache = new Map<AtUriString, boolean>()
 
   constructor(
     items: FeedItem[],
@@ -234,7 +254,7 @@ class SelfThreadTracker {
     })
   }
 
-  ok(uri: string, loop = new Set<string>()) {
+  ok(uri: AtUriString, loop = new Set<AtUriString>()) {
     // if we've already checked this uri, pull from the cache
     if (this.cache.has(uri)) {
       return this.cache.get(uri) ?? false
@@ -252,7 +272,7 @@ class SelfThreadTracker {
     return result
   }
 
-  private _ok(uri: string, loop: Set<string>): boolean {
+  private _ok(uri: AtUriString, loop: Set<AtUriString>): boolean {
     // must be in the feed to be in a self-thread
     if (!this.feedUris.has(uri)) {
       return false

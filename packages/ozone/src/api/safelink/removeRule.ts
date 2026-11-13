@@ -1,15 +1,15 @@
-import { AuthRequiredError } from '@atproto/xrpc-server'
-import { AppContext } from '../../context'
-import { Server } from '../../lexicon'
-import { getSafelinkPattern } from '../util'
+import { AuthRequiredError, type Server } from '@atproto/xrpc-server'
+import type { AppContext } from '../../context.js'
+import { tools } from '../../lexicons/index.js'
+import { getSafelinkPattern } from '../util.js'
 
 export default function (server: Server, ctx: AppContext) {
-  server.tools.ozone.safelink.removeRule({
+  server.add(tools.ozone.safelink.removeRule, {
     auth: ctx.authVerifier.modOrAdminToken,
     handler: async ({ input, auth }) => {
       const access = auth.credentials
       const db = ctx.db
-      const { url, pattern, comment, createdBy } = input.body
+      const { url, pattern, source, comment, createdBy } = input.body
 
       if (!access.isModerator) {
         throw new AuthRequiredError('Must be a moderator to remove URL rules')
@@ -26,6 +26,7 @@ export default function (server: Server, ctx: AppContext) {
       const event = await safelinkRuleService.removeRule({
         url,
         pattern: getSafelinkPattern(pattern),
+        source,
         createdBy:
           access.type === 'admin_token'
             ? createdBy || ctx.cfg.service.did

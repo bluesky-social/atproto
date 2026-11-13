@@ -1,20 +1,20 @@
 import { mapDefined } from '@atproto/common'
-import { InvalidRequestError } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context'
-import { DataPlaneClient } from '../../../../data-plane'
-import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
-import { parseString } from '../../../../hydration/util'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/graph/getActorStarterPacks'
+import type { AtUriString } from '@atproto/syntax'
+import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
+import type { AppContext } from '../../../../context.js'
+import type { DataPlaneClient } from '../../../../data-plane/index.js'
+import type { HydrateCtx, Hydrator } from '../../../../hydration/hydrator.js'
+import { parseString } from '../../../../hydration/util.js'
+import { app } from '../../../../lexicons/index.js'
 import {
-  HydrationFnInput,
-  PresentationFnInput,
-  SkeletonFnInput,
+  type HydrationFnInput,
+  type PresentationFnInput,
+  type SkeletonFnInput,
   createPipeline,
   noRules,
-} from '../../../../pipeline'
-import { Views } from '../../../../views'
-import { resHeaders } from '../../../util'
+} from '../../../../pipeline.js'
+import type { Views } from '../../../../views/index.js'
+import { fillPage, resHeaders } from '../../../util.js'
 
 export default function (server: Server, ctx: AppContext) {
   const getActorStarterPacks = createPipeline(
@@ -23,17 +23,26 @@ export default function (server: Server, ctx: AppContext) {
     noRules,
     presentation,
   )
-  server.app.bsky.graph.getActorStarterPacks({
+  server.add(app.bsky.graph.getActorStarterPacks, {
     auth: ctx.authVerifier.standardOptional,
     handler: async ({ params, auth, req }) => {
-      const { viewer, includeTakedowns } = ctx.authVerifier.parseCreds(auth)
+      const { viewer, includeTakedowns, skipViewerBlocks } =
+        ctx.authVerifier.parseCreds(auth)
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({
+        xrpcEndpoint: app.bsky.graph.getActorStarterPacks.$lxm,
         labelers,
         viewer,
         includeTakedowns,
+        skipViewerBlocks,
       })
-      const result = await getActorStarterPacks({ ...params, hydrateCtx }, ctx)
+      const result = await fillPage({
+        cursor: params.cursor,
+        limit: params.limit,
+        fetch: ({ cursor, limit }) =>
+          getActorStarterPacks({ ...params, cursor, limit, hydrateCtx }, ctx),
+        items: (r) => r.starterPacks,
+      })
       return {
         encoding: 'application/json',
         body: result,
@@ -57,7 +66,7 @@ const skeleton = async (
     limit: params.limit,
   })
   return {
-    starterPackUris: starterPacks.uris,
+    starterPackUris: starterPacks.uris as AtUriString[],
     cursor: parseString(starterPacks.cursor),
   }
 }
@@ -91,9 +100,11 @@ type Context = {
   dataplane: DataPlaneClient
 }
 
-type Params = QueryParams & { hydrateCtx: HydrateCtx }
+type Params = app.bsky.graph.getActorStarterPacks.$Params & {
+  hydrateCtx: HydrateCtx
+}
 
 type SkeletonState = {
-  starterPackUris: string[]
+  starterPackUris: AtUriString[]
   cursor?: string
 }

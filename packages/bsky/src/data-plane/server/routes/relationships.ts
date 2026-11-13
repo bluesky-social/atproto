@@ -1,9 +1,9 @@
-import { ServiceImpl } from '@connectrpc/connect'
+import type { ServiceImpl } from '@connectrpc/connect'
 import { sql } from 'kysely'
 import { keyBy } from '@atproto/common'
-import { Service } from '../../../proto/bsky_connect'
-import { Database } from '../db'
-import { valuesList } from '../db/util'
+import type { Service } from '../../../proto/bsky_connect.js'
+import type { Database } from '../db/index.js'
+import { valuesList } from '../db/util.js'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   async getRelationships(req) {
@@ -21,8 +21,14 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
           .selectFrom('mute')
           .where('mute.mutedByDid', '=', actorDid)
           .whereRef('mute.subjectDid', '=', ref('actor.did'))
-          .select(sql<true>`${true}`.as('val'))
-          .as('muted'),
+          .select('mute.onlyReposts')
+          .as('muteOnlyReposts'),
+        db.db
+          .selectFrom('mute')
+          .where('mute.mutedByDid', '=', actorDid)
+          .whereRef('mute.subjectDid', '=', ref('actor.did'))
+          .select('mute.onlyQuoteposts')
+          .as('muteOnlyQuoteposts'),
         db.db
           .selectFrom('list_item')
           .innerJoin('list_mute', 'list_mute.listUri', 'list_item.listUri')
@@ -74,7 +80,13 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
     const relationships = targetDids.map((did) => {
       const row = byDid.get(did)
       return {
-        muted: row?.muted ?? false,
+        // a null scope column means no mute row exists at all
+        muted:
+          row?.muteOnlyReposts != null &&
+          !row.muteOnlyReposts &&
+          !row.muteOnlyQuoteposts,
+        mutedOnlyReposts: row?.muteOnlyReposts ?? false,
+        mutedOnlyQuoteposts: row?.muteOnlyQuoteposts ?? false,
         mutedByList: row?.mutedByList ?? '',
         blockedBy: row?.blockedBy ?? '',
         blocking: row?.blocking ?? '',
@@ -95,9 +107,11 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
     const { ref } = db.db.dynamic
     const sourceRef = ref('pair.source')
     const targetRef = ref('pair.target')
-    const values = valuesList(pairs.map((p) => sql`${p.a}, ${p.b}`))
+    const values = valuesList<{ source: string; target: string }>(
+      pairs.map((p) => sql`${p.a}, ${p.b}`),
+    )
     const res = await db.db
-      .selectFrom(values.as(sql`pair (source, target)`))
+      .selectFrom(values.as<'pair'>(sql`pair (source, target)`))
       .select([
         sql<string>`${sourceRef}`.as('source'),
         sql<string>`${targetRef}`.as('target'),

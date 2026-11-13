@@ -1,23 +1,50 @@
-import { Sender, WebSocketServer } from 'ws'
-import { AppBskyGraphVerification, AtpAgent } from '@atproto/api'
-import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
-import { forSnapshot } from './_util'
+import { once } from 'node:events'
+import { createServer } from 'node:http'
+import type { AddressInfo } from 'node:net'
+import { type HttpTerminator, createHttpTerminator } from 'http-terminator'
+import { type WebSocket, WebSocketServer } from 'ws'
+import type { AppBskyGraphVerification, AtpAgent } from '@atproto/api'
+import { wait } from '@atproto/common'
+import { type SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import { forSnapshot } from './_util.js'
 
 describe('verification-listener', () => {
   let network: TestNetwork
   let sc: SeedClient
   let adminAgent: AtpAgent
   let jetstream: WebSocketServer
-  let relay: Sender
+  let relay: WebSocket
+  let terminator: HttpTerminator
 
   beforeAll(async () => {
-    const jetstreamPort = 2511
-    jetstream = new WebSocketServer({
-      port: jetstreamPort,
+    const server = createServer()
+    terminator = createHttpTerminator({ server })
+
+    await once(server.listen(0), 'listening')
+    const jetstreamPort = (server.address() as AddressInfo).port
+
+    jetstream = new WebSocketServer({ server })
+    const relayPromise = new Promise<WebSocket>((resolve, reject) => {
+      const cleanup = () => {
+        jetstream.off('connection', onConnection)
+        jetstream.off('error', onError)
+      }
+
+      const onConnection = (ws: WebSocket) => {
+        cleanup()
+        resolve(ws)
+      }
+
+      const onError = (err: Error) => {
+        cleanup()
+        reject(err)
+      }
+
+      jetstream.on('connection', onConnection)
+      jetstream.on('error', onError)
     })
-    jetstream.on('connection', (ws) => {
-      relay = ws
-    })
+    relayPromise.catch(() => {})
+
     network = await TestNetwork.create({
       dbPostgresSchema: 'ozone_verification_listener_test',
       ozone: {
@@ -30,20 +57,20 @@ describe('verification-listener', () => {
     sc = network.getSeedClient()
     await basicSeed(sc)
 
-    adminAgent = network.pds.getClient()
+    adminAgent = network.pds.getAgent()
     await adminAgent.login({
       identifier: sc.accounts[sc.dids.alice].handle,
       password: sc.accounts[sc.dids.alice].password,
     })
     await network.ozone.addAdminDid(sc.dids.alice)
 
-    await network.processAll()
+    relay = await relayPromise
   })
 
-  afterAll(async () => {
-    await jetstream.close()
-    await network.close()
-  })
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
+  afterAll(async () => relay.close())
+  afterAll(async () => terminator?.terminate())
 
   it('indexes new and revoked verifications', async () => {
     const { verificationListener } = network.ozone.daemon.ctx
@@ -82,21 +109,42 @@ describe('verification-listener', () => {
     const verificationService = network.ozone.ctx.verificationService(
       network.ozone.ctx.db,
     )
-    // Wait for the listener to process the events
-    let hasCursorUpdated = false
-    let attempt = 0
-    do {
-      const cursor = await verificationService.getFirehoseCursor()
-      hasCursorUpdated = cursor === 123456799
-      attempt++
-    } while (!hasCursorUpdated && attempt < 20)
-    // Give the processor enough time to handle the events
-    const {
-      data: { verifications },
-    } = await adminAgent.tools.ozone.verification.listVerifications({})
-    const cursor = await verificationListener?.getCursor()
+    let cursor: number | null = null
+    let verifications = (
+      await adminAgent.tools.ozone.verification.listVerifications({})
+    ).data.verifications
+    let verification = verifications.find(
+      (item) => item.issuer === sc.dids.bob && item.subject === sc.dids.alice,
+    )
+    for (let attempt = 0; attempt < 20; attempt++) {
+      cursor = await verificationService.getFirehoseCursor()
+      verifications = (
+        await adminAgent.tools.ozone.verification.listVerifications({})
+      ).data.verifications
+      verification = verifications.find(
+        (item) => item.issuer === sc.dids.bob && item.subject === sc.dids.alice,
+      )
+      if (
+        cursor === 123456799 &&
+        verification?.revokedAt &&
+        verification.revokedBy === sc.dids.bob
+      ) {
+        break
+      }
+      if (attempt < 19) await wait(50)
+    }
 
-    expect(forSnapshot(verifications)).toMatchSnapshot()
     expect(cursor).toEqual(123456799)
+    expect(verification).toEqual(
+      expect.objectContaining({
+        revokedAt: expect.any(String),
+        revokedBy: sc.dids.bob,
+      }),
+    )
+
+    const listenerCursor = await verificationListener?.getCursor()
+
+    expect(listenerCursor).toEqual(123456799)
+    expect(forSnapshot([verification])).toMatchSnapshot()
   })
 })

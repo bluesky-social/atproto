@@ -1,24 +1,25 @@
-import { CID } from 'multiformats/cid'
-import { RepoRecord } from '@atproto/lexicon'
-import { BlobStore, WriteOpAction } from '@atproto/repo'
-import { AtUri } from '@atproto/syntax'
-import { StatusAttr } from '../../lexicon/types/com/atproto/admin/defs'
-import { dbLogger as log } from '../../logger'
-import { ActorDb, Backlink } from '../db'
-import { RecordReader, getBacklinks } from './reader'
+import type { Cid, LexMap } from '@atproto/lex-data'
+import type { DidString } from '@atproto/lex-schema'
+import { type BlobStore, WriteOpAction } from '@atproto/repo'
+import type { AtUri } from '@atproto/syntax'
+import type { com } from '../../lexicons/index.js'
+import { dbLogger as log } from '../../logger.js'
+import type { ActorDb, Backlink } from '../db/index.js'
+import { RecordReader, getBacklinks } from './reader.js'
 
 export class RecordTransactor extends RecordReader {
   constructor(
     public db: ActorDb,
+    public did: DidString,
     public blobstore: BlobStore,
   ) {
-    super(db)
+    super(db, did)
   }
 
   async indexRecord(
     uri: AtUri,
-    cid: CID,
-    record: RepoRecord | null,
+    cid: Cid,
+    record: LexMap | null,
     action: WriteOpAction.Create | WriteOpAction.Update = WriteOpAction.Create,
     repoRev: string,
     timestamp?: string,
@@ -96,9 +97,12 @@ export class RecordTransactor extends RecordReader {
       .execute()
   }
 
-  async updateRecordTakedownStatus(uri: AtUri, takedown: StatusAttr) {
+  async updateRecordTakedownStatus(
+    uri: AtUri,
+    takedown: com.atproto.admin.defs.StatusAttr,
+  ) {
     const takedownRef = takedown.applied
-      ? takedown.ref ?? new Date().toISOString()
+      ? (takedown.ref ?? new Date().toISOString())
       : null
     await this.db.db
       .updateTable('record')

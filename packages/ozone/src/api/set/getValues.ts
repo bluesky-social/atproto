@@ -1,9 +1,13 @@
-import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
-import { AppContext } from '../../context'
-import { Server } from '../../lexicon'
+import {
+  AuthRequiredError,
+  InvalidRequestError,
+  type Server,
+} from '@atproto/xrpc-server'
+import type { AppContext } from '../../context.js'
+import { tools } from '../../lexicons/index.js'
 
 export default function (server: Server, ctx: AppContext) {
-  server.tools.ozone.set.getValues({
+  server.add(tools.ozone.set.getValues, {
     auth: ctx.authVerifier.modOrAdminToken,
     handler: async ({ params, auth }) => {
       const access = auth.credentials

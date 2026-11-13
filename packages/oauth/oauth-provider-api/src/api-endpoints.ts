@@ -1,6 +1,13 @@
 import type { SignedJwt } from '@atproto/jwk'
 import type { OAuthClientMetadata } from '@atproto/oauth-types'
-import type { Account, DeviceMetadata, ISODateString } from './types.js'
+import type {
+  DidString,
+  HandleString,
+  ISODatetimeString,
+} from '@atproto/syntax'
+import type { Account, DeviceMetadata, Session } from './types.js'
+
+export type { DidString }
 
 // These are the endpoints implemented by the OAuth provider, for its UI to
 // call.
@@ -41,7 +48,7 @@ export type ApiEndpoints = {
    */
   '/device-sessions': {
     method: 'GET'
-    output: ActiveDeviceSession[]
+    output: Session[]
   }
   /**
    * Lists all the active OAuth sessions (access/refresh tokens) that where
@@ -59,8 +66,8 @@ export type ApiEndpoints = {
    */
   '/oauth-sessions': {
     method: 'GET'
-    params: { sub: string }
-    output: ActiveOAuthSession[]
+    params: OAuthSessionsInput
+    output: OAuthSessionsOutput
   }
   '/revoke-oauth-session': {
     method: 'POST'
@@ -73,12 +80,87 @@ export type ApiEndpoints = {
    */
   '/account-sessions': {
     method: 'GET'
-    params: { sub: string }
-    output: ActiveAccountSession[]
+    params: AccountSessionsInput
+    output: AccountSessionsOutput
   }
   '/revoke-account-session': {
     method: 'POST'
     input: RevokeAccountSessionInput
+    output: { success: true }
+  }
+  '/update-email-request': {
+    method: 'POST'
+    input: InitiateEmailUpdateInput
+    output: InitiateEmailUpdateOutput
+  }
+  '/update-email-confirm': {
+    method: 'POST'
+    input: ConfirmEmailUpdateInput
+    output: ConfirmEmailUpdateOutput
+  }
+  '/verify-email-request': {
+    method: 'POST'
+    input: InitiateEmailVerificationInput
+    output: { success: true }
+  }
+  '/verify-email-confirm': {
+    method: 'POST'
+    input: ConfirmEmailVerificationInput
+    output: ConfirmEmailVerificationOutput
+  }
+  '/enable-email-otp': {
+    method: 'POST'
+    input: EnableEmailAuthFactorInput
+    output: EnableEmailAuthFactorOutput
+  }
+  '/disable-email-otp': {
+    method: 'POST'
+    input: DisableEmailAuthFactorInput
+    output: DisableEmailAuthFactorOutput
+  }
+  '/update-handle': {
+    method: 'POST'
+    input: UpdateHandleInput
+    output: UpdateHandleOutput
+  }
+  /**
+   * Marks the account as deactivated. The account remains recoverable — the
+   * user can sign back in to reactivate via {@link ApiEndpoints['/reactivate-account']}.
+   * Profile, posts, feeds and lists are hidden across the network until then.
+   */
+  '/deactivate-account': {
+    method: 'POST'
+    input: DeactivateAccountInput
+    output: DeactivateAccountOutput
+  }
+  /**
+   * Reactivates a previously-deactivated account. No-op when the account is
+   * already active.
+   */
+  '/reactivate-account': {
+    method: 'POST'
+    input: ReactivateAccountInput
+    output: ReactivateAccountOutput
+  }
+  /**
+   * Initiates account deletion by sending a confirmation code to the account's
+   * email address. The account is NOT deleted until
+   * {@link ApiEndpoints['/delete-account-confirm']} is called with the matching
+   * token and the user's current password.
+   */
+  '/delete-account-request': {
+    method: 'POST'
+    input: InitiateAccountDeletionInput
+    output: { success: true }
+  }
+  /**
+   * Confirms and finalizes account deletion. Requires both the email
+   * confirmation token issued by {@link ApiEndpoints['/delete-account-request']}
+   * and the user's current password. Deletion is irreversible.
+   */
+  '/delete-account-confirm': {
+    method: 'POST'
+    input: ConfirmAccountDeletionInput
     output: { success: true }
   }
   '/consent': {
@@ -106,7 +188,7 @@ export type EphemeralToken = SignedJwt
 
 export type SignInInput = {
   locale: string
-  username: string
+  identifier: string
   password: string
   emailOtp?: string
   remember?: boolean
@@ -115,7 +197,6 @@ export type SignInInput = {
 export type SignInOutput = {
   account: Account
   ephemeralToken?: EphemeralToken
-  consentRequired?: boolean
 }
 
 export type SignUpInput = {
@@ -123,6 +204,7 @@ export type SignUpInput = {
   handle: string
   email: string
   password: string
+  remember?: boolean
   inviteCode?: string
   hcaptchaToken?: string
 }
@@ -133,12 +215,12 @@ export type SignUpOutput = {
 }
 
 export type SignOutInput = {
-  sub: string | string[]
+  did: DidString
 }
 
 export type InitiatePasswordResetInput = {
   locale: string
-  email: string
+  identifier: string
 }
 
 export type ConfirmResetPasswordInput = {
@@ -146,40 +228,128 @@ export type ConfirmResetPasswordInput = {
   password: string
 }
 
+export type InitiateEmailUpdateInput = {
+  did: DidString
+  locale?: string
+}
+
+export type InitiateEmailUpdateOutput = {
+  tokenRequired: boolean
+}
+
+export type ConfirmEmailUpdateInput = {
+  did: DidString
+  token?: string
+  email: string
+  locale?: string
+}
+
+export type ConfirmEmailUpdateOutput = {
+  account: Account
+}
+
+export type InitiateEmailVerificationInput = {
+  did: DidString
+  locale?: string
+}
+
+export type ConfirmEmailVerificationInput = {
+  did: DidString
+  token: string
+  email: string
+}
+
+export type ConfirmEmailVerificationOutput = {
+  account: Account
+}
+
+export type EnableEmailAuthFactorInput = {
+  did: DidString
+  locale?: string
+}
+
+export type DisableEmailAuthFactorInput = {
+  did: DidString
+  token?: string
+  locale?: string
+}
+
+export type EnableEmailAuthFactorOutput = {
+  account: Account
+}
+
+export type DisableEmailAuthFactorOutput = {
+  account: Account
+}
+
 export type VerifyHandleAvailabilityInput = {
-  handle: string
+  handle: HandleString
+}
+
+export type UpdateHandleInput = {
+  did: DidString
+  handle: HandleString
+}
+
+export type UpdateHandleOutput = {
+  account: Account
+}
+
+export type DeactivateAccountInput = {
+  did: DidString
+}
+
+export type DeactivateAccountOutput = {
+  account: Account
+}
+
+export type ReactivateAccountInput = {
+  did: DidString
+}
+
+export type ReactivateAccountOutput = {
+  account: Account
+}
+
+export type InitiateAccountDeletionInput = {
+  did: DidString
+  locale?: string
+}
+
+export type ConfirmAccountDeletionInput = {
+  did: DidString
+  token: string
+  password: string
 }
 
 export type RevokeAccountSessionInput = {
-  sub: string
+  did: DidString
   deviceId: string
 }
 
+export type OAuthSessionsInput = {
+  did: DidString
+}
+
+export type OAuthSessionsOutput = ActiveOAuthSession[]
+
+export type AccountSessionsInput = {
+  did: DidString
+}
+
+export type AccountSessionsOutput = ActiveAccountSession[]
+
 export type RevokeOAuthSessionInput = {
-  sub: string
+  did: DidString
   tokenId: string
 }
 
 export type ConsentInput = {
-  sub: string
+  did: DidString
   scope?: string
 }
 
 export type RejectInput = Record<string, never>
-
-/**
- * Represents an account that is currently signed-in to the Authorization
- * Server. If the session was created too long ago, the user may be required to
- * re-authenticate ({@link ActiveDeviceSession.loginRequired}).
- */
-export type ActiveDeviceSession = {
-  account: Account
-
-  /**
-   * The session is too old and the user must re-authenticate.
-   */
-  loginRequired: boolean
-}
 
 /**
  * Represents another device on which an account is currently signed-in.
@@ -197,8 +367,10 @@ export type ActiveAccountSession = {
 export type ActiveOAuthSession = {
   tokenId: string
 
-  createdAt: ISODateString
-  updatedAt: ISODateString
+  createdAt: ISODatetimeString
+  updatedAt: ISODatetimeString
+
+  active: boolean
 
   clientId: string
   /** An "undefined" value means that the client metadata could not be fetched */

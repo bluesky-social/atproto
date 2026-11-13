@@ -1,9 +1,13 @@
-import { AtpAgent } from '@atproto/api'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
+import { type AppBskyActorSearchActors, type AtpAgent, ids } from '@atproto/api'
 import { wait } from '@atproto/common'
-import { SeedClient, TestNetwork, usersBulkSeed } from '@atproto/dev-env'
-import { ids } from '../../src/lexicon/lexicons'
-import { OutputSchema as SearchActorsOutputSchema } from '../../src/lexicon/types/app/bsky/actor/searchActors'
-import { forSnapshot, paginateAll, stripViewer } from '../_util'
+import {
+  type SeedClient,
+  TestNetwork,
+  basicSeed,
+  usersBulkSeed,
+} from '@atproto/dev-env'
+import { forSnapshot, paginateAll, stripViewer } from '../_util.js'
 
 // @NOTE skipped to help with CI failures
 // The search code is not used in production & we should switch it out for tests on the search proxy interface
@@ -12,16 +16,18 @@ describe.skip('pds actor search views', () => {
   let agent: AtpAgent
   let sc: SeedClient
   let headers: { [s: string]: string }
+  let headersTypeahead: { [s: string]: string }
 
   beforeAll(async () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_views_actor_search',
     })
-    agent = network.bsky.getClient()
+    agent = network.bsky.getAgent()
     sc = network.getSeedClient()
 
     await wait(50) // allow pending sub to be established
-    await network.bsky.sub.destroy()
+    await network.processAll()
+    await network.bsky.sub.stop()
     await usersBulkSeed(sc)
 
     // Skip did/handle resolution for expediency
@@ -41,21 +47,23 @@ describe.skip('pds actor search views', () => {
 
     // Process remaining profiles
     await network.bsky.sub.restart()
-    await network.processAll(50000)
     headers = await network.serviceHeaders(
+      Object.values(sc.dids)[0],
+      ids.AppBskyActorSearchActors,
+    )
+    headersTypeahead = await network.serviceHeaders(
       Object.values(sc.dids)[0],
       ids.AppBskyActorSearchActorsTypeahead,
     )
   })
 
-  afterAll(async () => {
-    await network.close()
-  })
+  beforeEach(async () => network.processAll(50_000), 50_100)
+  afterAll(async () => network?.close())
 
   it('typeahead gives relevant results', async () => {
     const result = await agent.api.app.bsky.actor.searchActorsTypeahead(
       { term: 'car' },
-      { headers },
+      { headers: headersTypeahead },
     )
 
     const handles = result.data.actors.map((u) => u.handle)
@@ -93,7 +101,7 @@ describe.skip('pds actor search views', () => {
   it('typeahead gives empty result set when provided empty term', async () => {
     const result = await agent.api.app.bsky.actor.searchActorsTypeahead(
       { term: '' },
-      { headers },
+      { headers: headersTypeahead },
     )
 
     expect(result.data.actors).toEqual([])
@@ -102,14 +110,14 @@ describe.skip('pds actor search views', () => {
   it('typeahead applies limit', async () => {
     const full = await agent.api.app.bsky.actor.searchActorsTypeahead(
       { term: 'p' },
-      { headers },
+      { headers: headersTypeahead },
     )
 
     expect(full.data.actors.length).toBeGreaterThan(5)
 
     const limited = await agent.api.app.bsky.actor.searchActorsTypeahead(
       { term: 'p', limit: 5 },
-      { headers },
+      { headers: headersTypeahead },
     )
 
     // @NOTE it's expected that searchActorsTypeahead doesn't have stable pagination
@@ -131,7 +139,7 @@ describe.skip('pds actor search views', () => {
     const { data: authed } =
       await agent.api.app.bsky.actor.searchActorsTypeahead(
         { term: 'car' },
-        { headers },
+        { headers: headersTypeahead },
       )
     const { data: unauthed } =
       await agent.api.app.bsky.actor.searchActorsTypeahead({
@@ -189,7 +197,7 @@ describe.skip('pds actor search views', () => {
   })
 
   it('paginates', async () => {
-    const results = (results: SearchActorsOutputSchema[]) =>
+    const results = (results: AppBskyActorSearchActors.OutputSchema[]) =>
       results.flatMap((res) => res.actors)
     const paginator = async (cursor?: string) => {
       const res = await agent.api.app.bsky.actor.searchActors(
@@ -248,11 +256,76 @@ describe.skip('pds actor search views', () => {
     })
     const result = await agent.api.app.bsky.actor.searchActorsTypeahead(
       { term: 'car' },
-      { headers },
+      { headers: headersTypeahead },
     )
     const handles = result.data.actors.map((u) => u.handle)
     expect(handles).toContain('carlos6.test')
     expect(handles).toContain('carolina-mcderm77.test')
     expect(handles).not.toContain('cara-wiegand69.test')
+  })
+})
+
+describe('actor search pagination', () => {
+  let network: TestNetwork
+  let agent: AtpAgent
+  let sc: SeedClient
+
+  beforeAll(async () => {
+    network = await TestNetwork.create({
+      dbPostgresSchema: 'bsky_views_actor_search_pagination',
+    })
+    agent = network.bsky.getAgent()
+    sc = network.getSeedClient()
+    await basicSeed(sc)
+  })
+
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
+
+  it('serves a page short of the limit after filtering actors, and returns a cursor only when more actors are available', async () => {
+    const full = await network.bsky.ctx.dataplane.searchActors({
+      term: '.test',
+      limit: 100,
+    })
+    expect(full.dids.length).toBeGreaterThan(2)
+
+    const exact = await network.bsky.ctx.dataplane.searchActors({
+      term: '.test',
+      limit: full.dids.length,
+    })
+    expect(exact.dids).toHaveLength(full.dids.length)
+    expect(exact.cursor).toBe('')
+
+    const over = await network.bsky.ctx.dataplane.searchActors({
+      term: '.test',
+      limit: full.dids.length - 1,
+    })
+    expect(over.dids).toHaveLength(full.dids.length - 1)
+    expect(over.cursor).not.toBe('')
+
+    const headers = await network.serviceHeaders(
+      sc.dids.alice,
+      ids.AppBskyActorSearchActors,
+    )
+    const terminal = await agent.app.bsky.actor.searchActors(
+      { term: '.test', limit: full.dids.length },
+      { headers },
+    )
+    expect(terminal.data.actors).toHaveLength(full.dids.length)
+    expect(terminal.data.cursor).toBeUndefined()
+
+    // Taking down the head actor leaves one of the two requested, which is
+    // already half of the limit, so the page is served as is.
+    await network.bsky.ctx.dataplane.takedownActor({ did: full.dids[0] })
+    const short = await agent.app.bsky.actor.searchActors(
+      { term: '.test', limit: 2 },
+      { headers },
+    )
+    expect(short.data.actors).toHaveLength(1)
+    expect(short.data.actors.map((actor) => actor.did)).not.toContain(
+      full.dids[0],
+    )
+    expect(short.data.cursor).toBeDefined()
+    await network.bsky.ctx.dataplane.untakedownActor({ did: full.dids[0] })
   })
 })

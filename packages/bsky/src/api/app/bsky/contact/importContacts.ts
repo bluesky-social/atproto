@@ -1,23 +1,23 @@
 import { mapDefined } from '@atproto/common'
-import { AppContext } from '../../../../context'
-import {
+import type { DidString } from '@atproto/syntax'
+import type { Server } from '@atproto/xrpc-server'
+import type { AppContext } from '../../../../context.js'
+import type {
   HydrateCtx,
   HydrationState,
   Hydrator,
-} from '../../../../hydration/hydrator'
-import { Server } from '../../../../lexicon'
-import { MatchAndContactIndex } from '../../../../lexicon/types/app/bsky/contact/defs'
-import { InputSchema } from '../../../../lexicon/types/app/bsky/contact/importContacts'
+} from '../../../../hydration/hydrator.js'
+import { app } from '../../../../lexicons/index.js'
 import {
-  HydrationFnInput,
-  SkeletonFnInput,
+  type HydrationFnInput,
+  type SkeletonFnInput,
   createPipeline,
   noRules,
-} from '../../../../pipeline'
-import { ImportContactsMatch } from '../../../../proto/rolodex_pb'
-import { RolodexClient } from '../../../../rolodex'
-import { Views } from '../../../../views'
-import { assertRolodexOrThrowUnimplemented, callRolodexClient } from './util'
+} from '../../../../pipeline.js'
+import type { ImportContactsMatch } from '../../../../proto/rolodex_pb.js'
+import type { RolodexClient } from '../../../../rolodex.js'
+import type { Views } from '../../../../views/index.js'
+import { assertRolodexOrThrowUnimplemented, callRolodexClient } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
   const importContacts = createPipeline(
@@ -26,7 +26,7 @@ export default function (server: Server, ctx: AppContext) {
     noRules, //
     presentation,
   )
-  server.app.bsky.contact.importContacts({
+  server.add(app.bsky.contact.importContacts, {
     auth: ctx.authVerifier.standard,
     handler: async ({ input, auth, req }) => {
       assertRolodexOrThrowUnimplemented(ctx)
@@ -34,14 +34,12 @@ export default function (server: Server, ctx: AppContext) {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({
+        xrpcEndpoint: app.bsky.contact.importContacts.$lxm,
         labelers,
         viewer,
       })
 
-      const result = await importContacts(
-        { ...input.body, hydrateCtx: hydrateCtx.copy({ viewer }) },
-        ctx,
-      )
+      const result = await importContacts({ ...input.body, hydrateCtx }, ctx)
 
       return {
         encoding: 'application/json',
@@ -74,7 +72,7 @@ const hydration = async (
 ) => {
   const { ctx, params, skeleton } = input
   const { matches } = skeleton
-  const subjects = matches.map((m) => m.subject)
+  const subjects = matches.map((m) => m.subject as DidString)
   return ctx.hydrator.hydrateProfiles(subjects, params.hydrateCtx)
 }
 
@@ -87,8 +85,11 @@ const presentation = (input: {
   const { ctx, skeleton, hydration } = input
   const matchesAndContactIndexes = mapDefined(
     skeleton.matches,
-    ({ subject, inputIndex }): MatchAndContactIndex | undefined => {
-      const profile = ctx.views.profile(subject, hydration)
+    ({
+      subject,
+      inputIndex,
+    }): app.bsky.contact.defs.MatchAndContactIndex | undefined => {
+      const profile = ctx.views.profile(subject as DidString, hydration)
 
       if (!profile) {
         return undefined
@@ -109,7 +110,7 @@ type Context = {
   views: Views
 }
 
-type Params = InputSchema & {
+type Params = app.bsky.contact.importContacts.$InputBody & {
   hydrateCtx: HydrateCtx & { viewer: string }
 }
 

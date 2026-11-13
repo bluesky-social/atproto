@@ -1,13 +1,16 @@
+import type { DidString } from '@atproto/syntax'
+
 export type EmailTokenPurpose =
   | 'confirm_email'
   | 'update_email'
   | 'reset_password'
   | 'delete_account'
   | 'plc_operation'
+  | 'auth_factor'
 
 export interface EmailToken {
   purpose: EmailTokenPurpose
-  did: string
+  did: DidString
   token: string
   requestedAt: string
 }

@@ -13,20 +13,20 @@ describe('boolean', () => {
         $type: 'com.example.boolConst',
         boolean: true,
       }),
-    ).toThrow('Expected false at $.boolean (got true)')
+    ).toThrow('Expected false (got true) at $.boolean')
 
     expect(() =>
       com.example.boolConst.$parse({
         $type: 'com.example.boolConst',
         boolean: 'true',
       }),
-    ).toThrow('Expected false at $.boolean (got "true")')
+    ).toThrow('Expected false (got "true") at $.boolean')
 
     expect(() =>
       com.example.boolConst.$parse({
         $type: 'com.example.boolConst',
         boolean: 1,
       }),
-    ).toThrow('Expected false at $.boolean (got 1)')
+    ).toThrow('Expected false (got 1) at $.boolean')
   })
 })

@@ -1,10 +1,18 @@
 import assert from 'node:assert'
 import { z } from 'zod'
-import { cborEncode, schema } from '@atproto/common'
+import { schema } from '@atproto/common'
+import { encode as cborEncode } from '@atproto/lex-cbor'
+import {
+  type DatetimeString,
+  type DidString,
+  type HandleString,
+  isDidString,
+  isHandleString,
+} from '@atproto/lex-schema'
 import { BlockMap, blocksToCarFile } from '@atproto/repo'
-import { AccountStatus } from '../account-manager/account-manager'
-import { CommitDataWithOps, SyncEvtData } from '../repo'
-import { RepoSeqInsert } from './db'
+import { AccountStatus } from '../account-manager/account-manager.js'
+import type { CommitDataWithOps, SyncEvtData } from '../repo/index.js'
+import type { RepoSeqInsert } from './db/index.js'
 
 export const formatSeqCommit = async (
   did: string,
@@ -37,7 +45,7 @@ export const formatSeqCommit = async (
 }
 
 export const formatSeqSyncEvt = async (
-  did: string,
+  did: DidString,
   data: SyncEvtData,
 ): Promise<RepoSeqInsert> => {
   const blocks = await blocksToCarFile(data.cid, data.blocks)
@@ -72,15 +80,13 @@ export const syncEvtDataFromCommit = (
 }
 
 export const formatSeqIdentityEvt = async (
-  did: string,
-  handle?: string,
+  did: DidString,
+  handle?: HandleString,
 ): Promise<RepoSeqInsert> => {
-  const evt: IdentityEvt = {
-    did,
-  }
-  if (handle) {
-    evt.handle = handle
-  }
+  const evt: IdentityEvt = handle //
+    ? { did, handle }
+    : { did }
+
   return {
     did,
     eventType: 'identity',
@@ -90,16 +96,13 @@ export const formatSeqIdentityEvt = async (
 }
 
 export const formatSeqAccountEvt = async (
-  did: string,
+  did: DidString,
   status: AccountStatus,
 ): Promise<RepoSeqInsert> => {
-  const evt: AccountEvt = {
-    did,
-    active: status === 'active',
-  }
-  if (status !== AccountStatus.Active) {
-    evt.status = status
-  }
+  const evt: AccountEvt =
+    status === AccountStatus.Active
+      ? { did, active: true }
+      : { did, active: false, status }
 
   return {
     did,
@@ -115,16 +118,19 @@ export const commitEvtOp = z.object({
     z.literal('update'),
     z.literal('delete'),
   ]),
+  // @TODO should we validate that the "path" is a valid "<nsid>/<rkey>" ?
   path: z.string(),
   cid: schema.cid.nullable(),
   prev: schema.cid.optional(),
 })
 export type CommitEvtOp = z.infer<typeof commitEvtOp>
 
+// @TODO This runtime code is only used to generate "types". We should either
+// make use of it or only use types.
 export const commitEvt = z.object({
   rebase: z.boolean(),
   tooBig: z.boolean(),
-  repo: z.string(),
+  repo: z.string().refine(isDidString),
   commit: schema.cid,
   rev: z.string(),
   since: z.string().nullable(),
@@ -136,20 +142,20 @@ export const commitEvt = z.object({
 export type CommitEvt = z.infer<typeof commitEvt>
 
 export const syncEvt = z.object({
-  did: z.string(),
+  did: z.string().refine(isDidString),
   blocks: schema.bytes,
   rev: z.string(),
 })
 export type SyncEvt = z.infer<typeof syncEvt>
 
 export const identityEvt = z.object({
-  did: z.string(),
-  handle: z.string().optional(),
+  did: z.string().refine(isDidString),
+  handle: z.string().refine(isHandleString).optional(),
 })
 export type IdentityEvt = z.infer<typeof identityEvt>
 
 export const accountEvt = z.object({
-  did: z.string(),
+  did: z.string().refine(isDidString),
   active: z.boolean(),
   status: z
     .enum([
@@ -165,29 +171,26 @@ export type AccountEvt = z.infer<typeof accountEvt>
 type TypedCommitEvt = {
   type: 'commit'
   seq: number
-  time: string
+  time: DatetimeString
   evt: CommitEvt
 }
 type TypedSyncEvt = {
   type: 'sync'
   seq: number
-  time: string
+  time: DatetimeString
   evt: SyncEvt
 }
 type TypedIdentityEvt = {
   type: 'identity'
   seq: number
-  time: string
+  time: DatetimeString
   evt: IdentityEvt
 }
 type TypedAccountEvt = {
   type: 'account'
   seq: number
-  time: string
+  time: DatetimeString
   evt: AccountEvt
 }
 export type SeqEvt =
-  | TypedCommitEvt
-  | TypedSyncEvt
-  | TypedIdentityEvt
-  | TypedAccountEvt
+  TypedCommitEvt | TypedSyncEvt | TypedIdentityEvt | TypedAccountEvt

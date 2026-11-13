@@ -1,27 +1,27 @@
 import * as plc from '@did-plc/lib'
-import { Etcd3 } from 'etcd3'
-import express from 'express'
-import { Dispatcher } from 'undici'
-import { AtpAgent } from '@atproto/api'
-import { Keypair } from '@atproto/crypto'
-import { IdResolver } from '@atproto/identity'
-import { AuthVerifier } from './auth-verifier'
-import { BsyncClient } from './bsync'
-import { ServerConfig } from './config'
-import { CourierClient } from './courier'
-import { DataPlaneClient, HostList } from './data-plane/client'
-import { FeatureGatesClient } from './feature-gates'
-import { Hydrator } from './hydration/hydrator'
-import { KwsClient } from './kws'
-import { httpLogger as log } from './logger'
-import { RolodexClient } from './rolodex'
-import { StashClient } from './stash'
+import type { Etcd3 } from 'etcd3'
+import type express from 'express'
+import type { Dispatcher } from 'undici'
+import type { Keypair } from '@atproto/crypto'
+import type { IdResolver } from '@atproto/identity'
+import type { Client } from '@atproto/lex-client'
+import type { AuthVerifier } from './auth/verifier.js'
+import type { BsyncClient } from './bsync.js'
+import type { ServerConfig } from './config.js'
+import type { CourierClient } from './courier.js'
+import type { DataPlaneClient, HostList } from './data-plane/client/index.js'
+import type { FeatureGatesClient } from './feature-gates/index.js'
+import type { Hydrator } from './hydration/hydrator.js'
+import type { KwsClient } from './kws.js'
+import { httpLogger as log } from './logger.js'
+import type { RolodexClient } from './rolodex.js'
+import type { StashClient } from './stash.js'
 import {
-  ParsedLabelers,
+  type ParsedLabelers,
   defaultLabelerHeader,
   parseLabelerHeader,
-} from './util'
-import { Views } from './views'
+} from './util.js'
+import type { Views } from './views/index.js'
 
 export class AppContext {
   constructor(
@@ -30,9 +30,9 @@ export class AppContext {
       etcd: Etcd3 | undefined
       dataplane: DataPlaneClient
       dataplaneHostList: HostList
-      searchAgent: AtpAgent | undefined
-      suggestionsAgent: AtpAgent | undefined
-      topicsAgent: AtpAgent | undefined
+      searchClient: Client | undefined
+      suggestionsClient: Client | undefined
+      irisClient: Client | undefined
       hydrator: Hydrator
       views: Views
       signingKey: Keypair
@@ -44,6 +44,7 @@ export class AppContext {
       authVerifier: AuthVerifier
       featureGatesClient: FeatureGatesClient
       blobDispatcher: Dispatcher
+      federatedFetch: typeof globalThis.fetch
       kwsClient: KwsClient | undefined
     },
   ) {}
@@ -64,16 +65,16 @@ export class AppContext {
     return this.opts.dataplaneHostList
   }
 
-  get searchAgent(): AtpAgent | undefined {
-    return this.opts.searchAgent
+  get searchClient(): Client | undefined {
+    return this.opts.searchClient
   }
 
-  get suggestionsAgent(): AtpAgent | undefined {
-    return this.opts.suggestionsAgent
+  get suggestionsClient(): Client | undefined {
+    return this.opts.suggestionsClient
   }
 
-  get topicsAgent(): AtpAgent | undefined {
-    return this.opts.topicsAgent
+  get irisClient(): Client | undefined {
+    return this.opts.irisClient
   }
 
   get hydrator(): Hydrator {
@@ -122,6 +123,10 @@ export class AppContext {
 
   get blobDispatcher(): Dispatcher {
     return this.opts.blobDispatcher
+  }
+
+  get federatedFetch(): typeof globalThis.fetch {
+    return this.opts.federatedFetch
   }
 
   get kwsClient(): KwsClient | undefined {

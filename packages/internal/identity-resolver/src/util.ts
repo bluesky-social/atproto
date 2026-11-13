@@ -1,4 +1,4 @@
-import {
+import type {
   AtprotoIdentityDidMethods,
   DidDocument,
 } from '@atproto-labs/did-resolver'

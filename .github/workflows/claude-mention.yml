@@ -1,0 +1,25 @@
+name: claude-mention
+
+# Answers @claude on same-repository pull requests, for commenters with write
+# access. The workflow, its hardening, and its trust model live in
+# bluesky-social/.github.
+
+on:
+  issue_comment:
+    types: [created]
+  pull_request_review_comment:
+    types: [created]
+  pull_request_review:
+    types: [submitted]
+
+permissions: {}
+
+jobs:
+  mention:
+    uses: bluesky-social/.github/.github/workflows/claude-mention.yml@v1
+    permissions:
+      contents: read
+      pull-requests: write
+      actions: read
+    secrets:
+      AGENT_GATEWAY_CLAUDE_GH_REVIEW_KEY: ${{ secrets.AGENT_GATEWAY_CLAUDE_GH_REVIEW_KEY }}

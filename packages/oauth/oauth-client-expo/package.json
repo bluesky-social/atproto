@@ -1,6 +1,6 @@
 {
   "name": "@atproto/oauth-client-expo",
-  "version": "0.0.10",
+  "version": "0.2.11",
   "license": "MIT",
   "description": "ATPROTO OAuth client for Expo applications",
   "authors": [
@@ -23,26 +23,36 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/oauth/oauth-client-expo"
   },
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "files": [
+    "./expo-module.config.json",
+    "./android",
+    "./ios",
+    "./dist",
+    "./README.md",
+    "./CHANGELOG.md"
+  ],
+  "type": "module",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     }
   },
+  "engines": {
+    "node": ">=22"
+  },
   "dependencies": {
     "@atproto-labs/simple-store": "workspace:^",
     "@atproto/oauth-client": "workspace:^",
-    "@atproto/oauth-client-browser": "workspace:^",
-    "core-js": "^3",
-    "expo-web-browser": "^15.0.8",
-    "react-native-mmkv": "^3.3.3",
-    "react-native-url-polyfill": "^3.0.0"
+    "@atproto/oauth-client-browser": "workspace:^"
   },
   "peerDependencies": {
+    "core-js": "^3",
     "expo": "*",
-    "react-native": "*"
+    "expo-web-browser": "*",
+    "react-native": "*",
+    "react-native-mmkv": "^4",
+    "react-native-url-polyfill": "*"
   },
   "scripts": {
     "build": "tsc --build tsconfig.build.json"

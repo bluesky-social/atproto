@@ -1,24 +1,27 @@
 import { mapDefined } from '@atproto/common'
-import { AppContext } from '../../../../context'
-import {
-  HydrateCtx,
+import type { DidString } from '@atproto/lex-schema'
+import type { Server } from '@atproto/xrpc-server'
+import type { AppContext } from '../../../../context.js'
+import type {
+  HydrateCtxWithViewer,
   HydrationState,
   Hydrator,
-} from '../../../../hydration/hydrator'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/contact/getMatches'
+} from '../../../../hydration/hydrator.js'
+import { app } from '../../../../lexicons/index.js'
 import {
-  HydrationFnInput,
-  SkeletonFnInput,
+  type HydrationFnInput,
+  type SkeletonFnInput,
   createPipeline,
-} from '../../../../pipeline'
-import { RolodexClient } from '../../../../rolodex'
-import { Views } from '../../../../views'
-import { assertRolodexOrThrowUnimplemented, callRolodexClient } from './util'
+} from '../../../../pipeline.js'
+import type { RolodexClient } from '../../../../rolodex.js'
+import type { Views } from '../../../../views/index.js'
+import { fillPage } from '../../../util.js'
+import { assertRolodexOrThrowUnimplemented, callRolodexClient } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
   const getMatches = createPipeline(skeleton, hydration, noBlocks, presentation)
-  server.app.bsky.contact.getMatches({
+
+  server.add(app.bsky.contact.getMatches, {
     auth: ctx.authVerifier.standard,
     handler: async ({ params, auth, req }) => {
       assertRolodexOrThrowUnimplemented(ctx)
@@ -26,14 +29,18 @@ export default function (server: Server, ctx: AppContext) {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({
+        xrpcEndpoint: app.bsky.contact.getMatches.$lxm,
         labelers,
         viewer,
       })
 
-      const result = await getMatches(
-        { ...params, hydrateCtx: hydrateCtx.copy({ viewer }) },
-        ctx,
-      )
+      const result = await fillPage({
+        cursor: params.cursor,
+        limit: params.limit,
+        fetch: ({ cursor, limit }) =>
+          getMatches({ ...params, cursor, limit, hydrateCtx }, ctx),
+        items: (r) => r.matches,
+      })
 
       return {
         encoding: 'application/json',
@@ -57,8 +64,8 @@ const skeleton = async (
   )
   return {
     actor,
-    subjects,
-    cursor: cursor || undefined,
+    subjects: subjects as DidString[],
+    cursor,
   }
 }
 
@@ -92,7 +99,7 @@ const presentation = (input: {
   const matches = mapDefined(skeleton.subjects, (did) =>
     ctx.views.profile(did, hydration),
   )
-  return { matches }
+  return { matches, cursor: skeleton.cursor }
 }
 
 type Context = {
@@ -101,12 +108,12 @@ type Context = {
   views: Views
 }
 
-type Params = QueryParams & {
-  hydrateCtx: HydrateCtx & { viewer: string }
+type Params = app.bsky.contact.getMatches.$Params & {
+  hydrateCtx: HydrateCtxWithViewer
 }
 
 type SkeletonState = {
   actor: string
-  subjects: string[]
+  subjects: DidString[]
   cursor?: string
 }

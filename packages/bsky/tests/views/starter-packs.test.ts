@@ -1,15 +1,23 @@
 import assert from 'node:assert'
-import { AtpAgent, asPredicate } from '@atproto/api'
-import { RecordRef, SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
-import { ids } from '../../src/lexicon/lexicons'
-import { validateRecord as validateProfileRecord } from '../../src/lexicon/types/app/bsky/actor/profile'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import {
-  OutputSchema as GetStarterPacksWithMembershipOutputSchema,
-  StarterPackWithMembership,
-} from '../../src/lexicon/types/app/bsky/graph/getStarterPacksWithMembership'
-import { forSnapshot, paginateAll } from '../_util'
+  AppBskyActorProfile,
+  type AppBskyGraphGetStarterPacksWithMembership,
+  type AtpAgent,
+  asPredicate,
+  ids,
+} from '@atproto/api'
+import {
+  type RecordRef,
+  type SeedClient,
+  TestNetwork,
+  basicSeed,
+} from '@atproto/dev-env'
+import { NOTIFICATION_REASON } from '../../src/api/app/bsky/notification/constants.js'
+import { app } from '../../src/lexicons/index.js'
+import { forSnapshot, paginateAll } from '../_util.js'
 
-const isValidProfile = asPredicate(validateProfileRecord)
+const isValidProfile = asPredicate(AppBskyActorProfile.validateRecord)
 
 describe('starter packs', () => {
   let network: TestNetwork
@@ -19,17 +27,18 @@ describe('starter packs', () => {
   let sp2: RecordRef
   let sp3: RecordRef
   let sp4: RecordRef
+  let feedgen: RecordRef
 
   beforeAll(async () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_views_starter_packs',
     })
-    agent = network.bsky.getClient()
+    agent = network.bsky.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc)
     await network.processAll()
 
-    const feedgen = await sc.createFeedGen(
+    feedgen = await sc.createFeedGen(
       sc.dids.alice,
       'did:web:example.com',
       "alice's feedgen",
@@ -79,13 +88,10 @@ describe('starter packs', () => {
       [sc.dids.alice, sc.dids.frankie],
       [],
     )
-
-    await network.processAll()
   })
 
-  afterAll(async () => {
-    await network.close()
-  })
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
 
   it('gets actor starter packs.', async () => {
     const { data } = await agent.api.app.bsky.graph.getActorStarterPacks({
@@ -93,6 +99,36 @@ describe('starter packs', () => {
     })
     expect(data.starterPacks).toHaveLength(3)
     expect(forSnapshot(data.starterPacks)).toMatchSnapshot()
+  })
+
+  it('returns a cursor only when more actor starter packs are available', async () => {
+    const exact = await network.bsky.ctx.dataplane.getActorStarterPacks({
+      actorDid: sc.dids.alice,
+      limit: 3,
+    })
+    expect(exact.uris).toHaveLength(3)
+    expect(exact.cursor).toBe('')
+
+    const over = await network.bsky.ctx.dataplane.getActorStarterPacks({
+      actorDid: sc.dids.alice,
+      limit: 2,
+    })
+    expect(over.uris).toHaveLength(2)
+    expect(over.cursor).not.toBe('')
+
+    const terminal = await agent.app.bsky.graph.getActorStarterPacks({
+      actor: sc.dids.alice,
+      limit: 3,
+    })
+    expect(terminal.data.starterPacks).toHaveLength(3)
+    expect(terminal.data.cursor).toBeUndefined()
+
+    const trimmed = await agent.app.bsky.graph.getActorStarterPacks({
+      actor: sc.dids.alice,
+      limit: 2,
+    })
+    expect(trimmed.data.starterPacks).toHaveLength(2)
+    expect(trimmed.data.cursor).toBeDefined()
   })
 
   it('gets starter pack used on profile detail', async () => {
@@ -148,13 +184,92 @@ describe('starter packs', () => {
     )
     expect(notifications).toHaveLength(3)
     notifications.forEach((notif) => {
-      expect(notif.reason).toBe('starterpack-joined')
+      expect(notif.reason).toBe(NOTIFICATION_REASON.STARTERPACK_JOINED)
       expect(notif.reasonSubject).toBe(sp1.uriStr)
       expect(notif.uri).toMatch(/\/app\.bsky\.actor\.profile\/self$/)
       assert(isValidProfile(notif.record), 'record is not profile')
       expect(notif.record.joinedViaStarterPack?.uri).toBe(sp1.uriStr)
     })
     expect(forSnapshot(notifications)).toMatchSnapshot()
+  })
+
+  it('hydrates starter packs in follow notifications', async () => {
+    const followViaStarterPack = await sc.follow(
+      sc.dids.newskie1,
+      sc.dids.bob,
+      { via: sp1.raw },
+    )
+    const followWithoutVia = await sc.follow(sc.dids.newskie2, sc.dids.bob)
+    const followWithoutAttribution = await sc.follow(
+      sc.dids.newskie3,
+      sc.dids.bob,
+      { via: sp1.raw },
+    )
+    await network.processAll()
+
+    await network.bsky.db.db
+      .updateTable('notification')
+      .set({ reasonSubject: sp2.uriStr })
+      .where('recordUri', '=', followViaStarterPack.uriStr)
+      .execute()
+
+    const {
+      data: { notifications },
+    } = await agent.api.app.bsky.notification.listNotifications(
+      { reasons: [NOTIFICATION_REASON.FOLLOW] },
+      {
+        headers: await network.serviceHeaders(
+          sc.dids.bob,
+          ids.AppBskyNotificationListNotifications,
+        ),
+      },
+    )
+
+    const viaStarterPackNotif = notifications.find(
+      (notif) => notif.uri === followViaStarterPack.uriStr,
+    )
+    const withoutViaNotif = notifications.find(
+      (notif) => notif.uri === followWithoutVia.uriStr,
+    )
+    const withoutAttributionNotif = notifications.find(
+      (notif) => notif.uri === followWithoutAttribution.uriStr,
+    )
+    assert(viaStarterPackNotif)
+    assert(withoutViaNotif)
+    assert(withoutAttributionNotif)
+
+    expect(viaStarterPackNotif.record).toMatchObject({ via: sp1.raw })
+    expect(viaStarterPackNotif.starterPack).toMatchObject({ uri: sp2.uriStr })
+    expect(withoutViaNotif.starterPack).toBeUndefined()
+    expect(withoutAttributionNotif.starterPack).toBeUndefined()
+
+    const grouped =
+      await agent.api.app.bsky.notification.getGroupedNotifications(
+        {},
+        {
+          headers: await network.serviceHeaders(
+            sc.dids.bob,
+            ids.AppBskyNotificationGetGroupedNotifications,
+          ),
+        },
+      )
+    const followGroup = grouped.data.groups
+      .map(({ kind }) => kind)
+      .find((kind) =>
+        app.bsky.notification.getGroupedNotifications.followGroup.$matches(
+          kind,
+        ),
+      )
+    assert(followGroup)
+    const groupedItems = followGroup.items
+    expect(
+      groupedItems.find(({ actor }) => actor === sc.dids.newskie1)?.starterPack,
+    ).toBe(sp2.uriStr)
+    const withoutAttributionItem = groupedItems.find(
+      ({ actor }) => actor === sc.dids.newskie3,
+    )
+    assert(withoutAttributionItem)
+    expect(withoutAttributionItem.starterPack).toBeUndefined()
   })
 
   it('does not include users with creator block relationship in list sample for non-creator, in-list viewers', async () => {
@@ -212,6 +327,36 @@ describe('starter packs', () => {
   })
 
   describe('searchStarterPacks', () => {
+    it('returns a cursor only when more starter packs are available', async () => {
+      const exact = await network.bsky.ctx.dataplane.searchStarterPacks({
+        term: 'starter',
+        limit: 4,
+      })
+      expect(exact.uris).toHaveLength(4)
+      expect(exact.cursor).toBe('')
+
+      const over = await network.bsky.ctx.dataplane.searchStarterPacks({
+        term: 'starter',
+        limit: 3,
+      })
+      expect(over.uris).toHaveLength(3)
+      expect(over.cursor).not.toBe('')
+
+      const terminal = await agent.app.bsky.graph.searchStarterPacks({
+        q: 'starter',
+        limit: 4,
+      })
+      expect(terminal.data.starterPacks).toHaveLength(4)
+      expect(terminal.data.cursor).toBeUndefined()
+
+      const trimmed = await agent.app.bsky.graph.searchStarterPacks({
+        q: 'starter',
+        limit: 3,
+      })
+      expect(trimmed.data.starterPacks).toHaveLength(3)
+      expect(trimmed.data.cursor).toBeDefined()
+    })
+
     it('searches starter packs and returns paginated', async () => {
       const { data: page0 } = await agent.app.bsky.graph.searchStarterPacks({
         q: 'starter',
@@ -263,10 +408,141 @@ describe('starter packs', () => {
         expect.objectContaining({ uri: sp4.uriStr }),
       ])
     })
+
+    it('refills through an empty filtered intermediate page', async () => {
+      const headers = await network.serviceHeaders(
+        sc.dids.frankie,
+        ids.AppBskyGraphSearchStarterPacks,
+      )
+
+      // Only sp4 survives the creator block, and it is already half of the
+      // requested limit, so the page is served with a cursor.
+      const short = await agent.app.bsky.graph.searchStarterPacks(
+        { q: 'starter', limit: 2 },
+        { headers },
+      )
+      expect(short.data.starterPacks).toMatchObject([
+        expect.objectContaining({ uri: sp4.uriStr }),
+      ])
+      expect(short.data.cursor).toBeDefined()
+
+      // The remaining starter packs are all filtered out, so refilling walks
+      // every following page and returns nothing.
+      const terminal = await agent.app.bsky.graph.searchStarterPacks(
+        { q: 'starter', limit: 2, cursor: short.data.cursor },
+        { headers },
+      )
+      expect(terminal.data.starterPacks).toEqual([])
+      expect(terminal.data.cursor).toBeUndefined()
+    })
+  })
+
+  describe('searchStarterPacksV2', () => {
+    it('returns a cursor only when more starter packs are available', async () => {
+      const exact = await network.bsky.ctx.dataplane.searchStarterPacksV2({
+        params: { query: 'starter', limit: 4 },
+      })
+      expect(exact.starterPacks).toHaveLength(4)
+      expect(exact.pageInfo?.cursor).toBe('')
+
+      const over = await network.bsky.ctx.dataplane.searchStarterPacksV2({
+        params: { query: 'starter', limit: 3 },
+      })
+      expect(over.starterPacks).toHaveLength(3)
+      expect(over.pageInfo?.cursor).not.toBe('')
+
+      const terminal = await agent.app.bsky.graph.searchStarterPacksV2({
+        q: 'starter',
+        limit: 4,
+      })
+      expect(terminal.data.starterPacks).toHaveLength(4)
+      expect(terminal.data.cursor).toBeUndefined()
+
+      const trimmed = await agent.app.bsky.graph.searchStarterPacksV2({
+        q: 'starter',
+        limit: 3,
+      })
+      expect(trimmed.data.starterPacks).toHaveLength(3)
+      expect(trimmed.data.cursor).toBeDefined()
+    })
+
+    it('returns fully hydrated starter pack views', async () => {
+      const { data } = await agent.app.bsky.graph.searchStarterPacksV2({
+        q: 'starter',
+        limit: 10,
+      })
+
+      expect(data.starterPacks).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            uri: sp1.uriStr,
+            feeds: [expect.objectContaining({ uri: feedgen.uriStr })],
+            list: expect.objectContaining({ listItemCount: 3 }),
+            listItemsSample: expect.arrayContaining([
+              expect.objectContaining({
+                subject: expect.objectContaining({ did: sc.dids.bob }),
+              }),
+              expect.objectContaining({
+                subject: expect.objectContaining({ did: sc.dids.carol }),
+              }),
+              expect.objectContaining({
+                subject: expect.objectContaining({ did: sc.dids.dan }),
+              }),
+            ]),
+          }),
+        ]),
+      )
+    })
+
+    it('does not include starter packs with creator block relationships', async () => {
+      const { data } = await agent.app.bsky.graph.searchStarterPacksV2(
+        { q: 'starter', limit: 10 },
+        {
+          headers: await network.serviceHeaders(
+            sc.dids.frankie,
+            ids.AppBskyGraphSearchStarterPacksV2,
+          ),
+        },
+      )
+
+      expect(data.starterPacks).toHaveLength(1)
+      expect(data.starterPacks).toMatchObject([
+        expect.objectContaining({ uri: sp4.uriStr }),
+      ])
+    })
+
+    it('refills through an empty filtered intermediate page', async () => {
+      const headers = await network.serviceHeaders(
+        sc.dids.frankie,
+        ids.AppBskyGraphSearchStarterPacksV2,
+      )
+
+      // Only sp4 survives the creator block, and it is already half of the
+      // requested limit, so the page is served with a cursor.
+      const short = await agent.app.bsky.graph.searchStarterPacksV2(
+        { q: 'starter', limit: 2 },
+        { headers },
+      )
+      expect(short.data.starterPacks).toMatchObject([
+        expect.objectContaining({ uri: sp4.uriStr }),
+      ])
+      expect(short.data.cursor).toBeDefined()
+
+      // The remaining starter packs are all filtered out, so refilling walks
+      // every following page and returns nothing.
+      const terminal = await agent.app.bsky.graph.searchStarterPacksV2(
+        { q: 'starter', limit: 2, cursor: short.data.cursor },
+        { headers },
+      )
+      expect(terminal.data.starterPacks).toEqual([])
+      expect(terminal.data.cursor).toBeUndefined()
+    })
   })
 
   describe('starter pack membership', () => {
-    const membershipsUris = (lwms: StarterPackWithMembership[]): string[] =>
+    const membershipsUris = (
+      lwms: AppBskyGraphGetStarterPacksWithMembership.StarterPackWithMembership[],
+    ): string[] =>
       lwms
         .map((spwm) => spwm.listItem?.uri)
         .filter((li): li is string => typeof li === 'string')
@@ -351,8 +627,9 @@ describe('starter packs', () => {
       const viewer = sc.dids.alice
       const actor = sc.dids.bob
 
-      const results = (out: GetStarterPacksWithMembershipOutputSchema[]) =>
-        out.flatMap((res) => res.starterPacksWithMembership)
+      const results = (
+        out: AppBskyGraphGetStarterPacksWithMembership.OutputSchema[],
+      ) => out.flatMap((res) => res.starterPacksWithMembership)
       const paginator = async (cursor?: string) => {
         const res = await agent.app.bsky.graph.getStarterPacksWithMembership(
           { actor, limit: 2, cursor },
@@ -389,6 +666,26 @@ describe('starter packs', () => {
         a.starterPack.uri > b.starterPack.uri ? 1 : -1,
       )
       expect(sortedPaginated).toEqual(sortedFull)
+    })
+
+    it('returns a cursor only when more actor starter packs are available', async () => {
+      const headers = await network.serviceHeaders(
+        sc.dids.alice,
+        ids.AppBskyGraphGetStarterPacksWithMembership,
+      )
+      const terminal = await agent.app.bsky.graph.getStarterPacksWithMembership(
+        { actor: sc.dids.bob, limit: 3 },
+        { headers },
+      )
+      expect(terminal.data.starterPacksWithMembership).toHaveLength(3)
+      expect(terminal.data.cursor).toBeUndefined()
+
+      const trimmed = await agent.app.bsky.graph.getStarterPacksWithMembership(
+        { actor: sc.dids.bob, limit: 2 },
+        { headers },
+      )
+      expect(trimmed.data.starterPacksWithMembership).toHaveLength(2)
+      expect(trimmed.data.cursor).toBeDefined()
     })
   })
 })

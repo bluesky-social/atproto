@@ -1,10 +1,19 @@
-import { AuthRequiredError } from '@atproto/xrpc-server'
-import { AppContext } from '../../context'
-import { Member } from '../../db/schema/member'
-import { Server } from '../../lexicon'
+import {
+  AuthRequiredError,
+  InvalidRequestError,
+  type Server,
+} from '@atproto/xrpc-server'
+import type { AppContext } from '../../context.js'
+import type { Member } from '../../db/schema/member.js'
+import { tools } from '../../lexicons/index.js'
+import {
+  PriorityLevelSettingKey,
+  ReportPriorityLevelSettingKey,
+  isReportPrioritySetting,
+} from '../../setting/constants.js'
 
 export default function (server: Server, ctx: AppContext) {
-  server.tools.ozone.setting.removeOptions({
+  server.add(tools.ozone.setting.removeOptions, {
     auth: ctx.authVerifier.modOrAdminToken,
     handler: async ({ input, auth }) => {
       const access = auth.credentials
@@ -12,6 +21,18 @@ export default function (server: Server, ctx: AppContext) {
       const { keys, scope } = input.body
       let did = ctx.cfg.service.did
       let managerRole: Member['role'][] = []
+
+      if (keys.some(isReportPrioritySetting)) {
+        if (scope !== 'instance')
+          throw new InvalidRequestError(
+            'Report priority settings must have instance scope',
+          )
+        if (access.type !== 'admin_token' && !access.isAdmin) {
+          throw new AuthRequiredError(
+            'Only admins can manage report priorities',
+          )
+        }
+      }
 
       if (scope === 'personal') {
         if (access.type !== 'moderator') {
@@ -29,25 +50,41 @@ export default function (server: Server, ctx: AppContext) {
       // triage can remove settings that are manageable by triage role
       if (scope === 'instance') {
         managerRole = [
-          'tools.ozone.team.defs#roleModerator',
-          'tools.ozone.team.defs#roleTriage',
-          'tools.ozone.team.defs#roleAdmin',
-          'tools.ozone.team.defs#roleVerifier',
+          tools.ozone.team.defs.RoleModerator,
+          tools.ozone.team.defs.RoleTriage,
+          tools.ozone.team.defs.RoleAdmin,
+          tools.ozone.team.defs.RoleVerifier,
         ]
 
         if (access.type !== 'admin_token' && !access.isAdmin) {
           if (access.isModerator) {
             managerRole = [
-              'tools.ozone.team.defs#roleModerator',
-              'tools.ozone.team.defs#roleTriage',
+              tools.ozone.team.defs.RoleModerator,
+              tools.ozone.team.defs.RoleTriage,
             ]
           } else if (access.isTriage) {
-            managerRole = ['tools.ozone.team.defs#roleTriage']
+            managerRole = [tools.ozone.team.defs.RoleTriage]
           }
         }
       }
 
       const settingService = ctx.settingService(db)
+      if (
+        scope === 'instance' &&
+        keys.includes(PriorityLevelSettingKey) &&
+        !keys.includes(ReportPriorityLevelSettingKey)
+      ) {
+        const { options } = await settingService.query({
+          limit: 1,
+          scope: 'instance',
+          keys: [ReportPriorityLevelSettingKey],
+        })
+        if (options[0] && Object.keys(options[0].value).length) {
+          throw new InvalidRequestError(
+            'Remove report priority levels before removing priority levels',
+          )
+        }
+      }
 
       await settingService.removeOptions(keys, {
         scope: scope === 'personal' ? 'personal' : 'instance',

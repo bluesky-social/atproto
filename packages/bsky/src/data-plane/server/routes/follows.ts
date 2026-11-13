@@ -1,9 +1,13 @@
-import { ServiceImpl } from '@connectrpc/connect'
+import type { ServiceImpl } from '@connectrpc/connect'
 import { keyBy } from '@atproto/common'
-import { Service } from '../../../proto/bsky_connect'
-import { FollowsFollowing } from '../../../proto/bsky_pb'
-import { Database } from '../db'
-import { TimeCidKeyset, paginate } from '../db/pagination'
+import type { Service } from '../../../proto/bsky_connect.js'
+import {
+  FollowsFollowing,
+  SampledFollowsFollowing,
+} from '../../../proto/bsky_pb.js'
+import type { Database } from '../db/index.js'
+import { TimeCidKeyset, paginate } from '../db/pagination.js'
+import { countAll } from '../db/util.js'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   async getActorFollowsActors(req) {
@@ -47,14 +51,14 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       tryIndex: true,
     })
 
-    const followers = await followersReq.execute()
+    const page = keyset.page(await followersReq.execute(), limit)
     return {
-      followers: followers.map((f) => ({
+      followers: page.items.map((f) => ({
         uri: f.uri,
         actorDid: f.creatorDid,
         subjectDid: f.subjectDid,
       })),
-      cursor: keyset.packFromResult(followers),
+      cursor: page.cursor,
     }
   },
   async getFollows(req) {
@@ -82,15 +86,15 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       tryIndex: true,
     })
 
-    const follows = await followsReq.execute()
+    const page = keyset.page(await followsReq.execute(), limit)
 
     return {
-      follows: follows.map((f) => ({
+      follows: page.items.map((f) => ({
         uri: f.uri,
         actorDid: f.creatorDid,
         subjectDid: f.subjectDid,
       })),
-      cursor: keyset.packFromResult(follows),
+      cursor: page.cursor,
     }
   },
 
@@ -104,38 +108,94 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
    *   If Alice (the viewer) looks at Dan's profile (the subject), she should see that Bob follows Dan
    */
   async getFollowsFollowing(req) {
-    const { actorDid: viewerDid, targetDids: subjectDids } = req
-
-    /*
-     * 1. Get all the people the Alice is following
-     * 2. Get all the people the Dan is followed by
-     * 3. Find the intersection
-     */
-
-    const results: FollowsFollowing[] = []
-
-    for (const subjectDid of subjectDids) {
-      const followsReq = db.db
-        .selectFrom('follow')
-        .where('follow.creator', '=', viewerDid)
-        .where(
-          'follow.subjectDid',
-          'in',
-          db.db
-            .selectFrom('follow')
-            .where('follow.subjectDid', '=', subjectDid)
-            .select(['creator']),
+    const { actorDid: viewerDid, targetDids: subjectDids, limit, cursor } = req
+    const results = await Promise.all(
+      subjectDids.map(async (subjectDid) => {
+        const { dids, cursor: nextCursor } = await getKnownFollowers(
+          db,
+          viewerDid,
+          subjectDid,
+          limit,
+          cursor,
         )
-        .select(['subjectDid'])
-      const rows = await followsReq.execute()
-      results.push(
-        new FollowsFollowing({
+        return new FollowsFollowing({
           targetDid: subjectDid,
-          dids: rows.map((r) => r.subjectDid),
-        }),
-      )
-    }
-
+          dids,
+          cursor: nextCursor,
+        })
+      }),
+    )
+    return { results }
+  },
+  async sampleFollowsFollowing(req) {
+    const { actorDid: viewerDid, targetDids: subjectDids, limit } = req
+    const results = await Promise.all(
+      subjectDids.map(async (subjectDid) => {
+        const { dids, total } = await getKnownFollowers(
+          db,
+          viewerDid,
+          subjectDid,
+          limit,
+        )
+        return new SampledFollowsFollowing({
+          targetDid: subjectDid,
+          dids,
+          totalKnown: total,
+        })
+      }),
+    )
     return { results }
   },
 })
+
+const getKnownFollowers = async (
+  db: Database,
+  viewerDid: string,
+  subjectDid: string,
+  limit?: number,
+  cursor?: string,
+) => {
+  const followsReq = db.db
+    .selectFrom('follow')
+    .where('follow.creator', '=', viewerDid)
+    .where(
+      'follow.subjectDid',
+      'in',
+      db.db
+        .selectFrom('follow')
+        .where('follow.subjectDid', '=', subjectDid)
+        .select(['creator']),
+    )
+    .select(['subjectDid', 'sortAt', 'cid'])
+
+  const totalReq = followsReq
+    .clearSelect()
+    .select(countAll.as('count'))
+    .executeTakeFirst()
+  let pageReq = followsReq
+  let pageLimit: number | undefined
+  if (limit && limit > 0) {
+    pageLimit = limit
+    const { ref } = db.db.dynamic
+    const keyset = new TimeCidKeyset(ref('follow.sortAt'), ref('follow.cid'))
+    pageReq = paginate(pageReq, {
+      limit,
+      cursor,
+      keyset,
+      tryIndex: true,
+    })
+  }
+
+  const [rows, totalRow] = await Promise.all([pageReq.execute(), totalReq])
+  const keyset = new TimeCidKeyset<{ sortAt: string; cid: string }>(
+    db.db.dynamic.ref('follow.sortAt'),
+    db.db.dynamic.ref('follow.cid'),
+  )
+  const page =
+    pageLimit === undefined ? { items: rows } : keyset.page(rows, pageLimit)
+  return {
+    dids: page.items.map((row) => row.subjectDid),
+    total: totalRow?.count ?? 0,
+    cursor: page.cursor,
+  }
+}

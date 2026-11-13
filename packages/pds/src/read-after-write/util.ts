@@ -1,26 +1,19 @@
-import express from 'express'
-import { jsonToLex } from '@atproto/lexicon'
-import { HeadersMap } from '@atproto/xrpc'
-import {
+import type express from 'express'
+import type { LexValue } from '@atproto/lex-data'
+import { lexParse } from '@atproto/lex-json'
+import { type DidString, l } from '@atproto/lex-schema'
+import type {
   HandlerPipeThrough,
   HandlerPipeThroughBuffer,
-  parseReqNsid,
 } from '@atproto/xrpc-server'
-import { AppContext } from '../context'
-import { lexicons } from '../lexicon/lexicons'
-import { readStickyLogger as log } from '../logger'
+import type { AppContext } from '../context.js'
+import { readStickyLogger as log } from '../logger.js'
 import {
   asPipeThroughBuffer,
   isJsonContentType,
   pipethrough,
-} from '../pipethrough'
-import { HandlerResponse, LocalRecords, MungeFn } from './types'
-
-const REPO_REV_HEADER = 'atproto-repo-rev'
-
-export const getRepoRev = (headers: HeadersMap): string | undefined => {
-  return headers[REPO_REV_HEADER]
-}
+} from '../pipethrough.js'
+import type { HandlerResponse, LocalRecords, MungeFn } from './types.js'
 
 export const getLocalLag = (local: LocalRecords): number | undefined => {
   let oldest: string | undefined = local.profile?.indexedAt
@@ -33,17 +26,25 @@ export const getLocalLag = (local: LocalRecords): number | undefined => {
   return Date.now() - new Date(oldest).getTime()
 }
 
-export const pipethroughReadAfterWrite = async <T>(
+export const pipethroughReadAfterWrite = async <
+  M extends (l.Query | l.Procedure) & {
+    output: l.Payload<`application/json`, l.Schema<LexValue>>
+  },
+>(
   ctx: AppContext,
   reqCtx: { req: express.Request; auth: { credentials: { did: string } } },
-  munge: MungeFn<T>,
-): Promise<HandlerResponse<T> | HandlerPipeThrough> => {
+  ns: l.Main<M>,
+  munge: MungeFn<l.InferMethodOutputBody<M>>,
+): Promise<
+  HandlerResponse<l.InferMethodOutputBody<M>> | HandlerPipeThrough
+> => {
   const { req, auth } = reqCtx
-  const requester = auth.credentials.did
+  const requester = auth.credentials.did as DidString
+  const method = l.getMain(ns)
 
   const streamRes = await pipethrough(ctx, req, { iss: requester })
 
-  const rev = getRepoRev(streamRes.headers)
+  const rev = streamRes.headers['atproto-repo-rev']
   if (!rev) return streamRes
 
   if (isJsonContentType(streamRes.headers['content-type']) === false) {
@@ -57,17 +58,23 @@ export const pipethroughReadAfterWrite = async <T>(
   let bufferRes: HandlerPipeThroughBuffer | undefined
 
   try {
-    const lxm = parseReqNsid(req)
-
     return await ctx.actorStore.read(requester, async (store) => {
       const local = await store.record.getRecordsSinceRev(rev)
       if (local.count === 0) return streamRes
 
-      const { buffer } = (bufferRes = await asPipeThroughBuffer(streamRes))
+      const { buffer } = (bufferRes = await asPipeThroughBuffer(
+        streamRes,
+        ctx.cfg.proxy.maxResponseSize,
+      ))
 
-      const lex = jsonToLex(JSON.parse(buffer.toString('utf8')))
+      const lex = lexParse(buffer.toString('utf8'), { strict: false })
 
-      const parsedRes = lexicons.assertValidXrpcOutput(lxm, lex) as T
+      const result = method.output.schema.safeValidate(lex, { strict: false })
+
+      // We won't perform munging with invalid upstream data
+      if (!result.success) return bufferRes
+
+      const parsedRes = result.value as l.InferMethodOutputBody<M, never>
 
       const localViewer = ctx.localViewer(store)
 

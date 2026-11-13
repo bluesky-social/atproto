@@ -2,7 +2,7 @@ import { assert, describe, expect, it } from 'vitest'
 import { ui8ConcatNode, ui8ConcatPonyfill } from './uint8array-concat.js'
 import { ui8Equals } from './uint8array.js'
 
-for (const ui8Concat of [ui8ConcatNode, ui8ConcatPonyfill] as const) {
+describe.each([ui8ConcatNode, ui8ConcatPonyfill])('%o', (ui8Concat) => {
   // Tests should run in NodeJS where implementations are available.
   assert(ui8Concat, 'ui8Concat implementation should not be undefined')
 
@@ -194,4 +194,4 @@ for (const ui8Concat of [ui8ConcatNode, ui8ConcatPonyfill] as const) {
       })
     })
   })
-}
+})

@@ -4,3 +4,8 @@
 3jzfcijpj2z2a
 7777777777777
 3zzzzzzzzzzzz
+
+# letter first characters (decoded value < 16, high bit zero)
+a222222222222
+j222222222222
+azzzzzzzzzzzz

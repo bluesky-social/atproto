@@ -1,12 +1,24 @@
-import { CachedGetter, SimpleStore } from '@atproto-labs/simple-store'
-import { SimpleStoreMemory } from '@atproto-labs/simple-store-memory'
 import {
+  CachedGetter,
+  type SimpleStore,
+  type StoreErrorHandler,
+  swallowStoreErrors,
+} from '@atproto-labs/simple-store'
+import { SimpleStoreMemory } from '@atproto-labs/simple-store-memory'
+import type {
   HandleResolver,
   ResolveHandleOptions,
   ResolvedHandle,
 } from './types.js'
 
 export type HandleCache = SimpleStore<string, ResolvedHandle>
+
+/**
+ * Called when the {@link HandleCache} throws. The cache is treated as
+ * best-effort: failures are logged (by default) and degrade to a cache miss +
+ * resolution from the underlying resolver, rather than being propagated.
+ */
+export type HandleCacheErrorHandler = StoreErrorHandler<string>
 
 export class CachedHandleResolver implements HandleResolver {
   private getter: CachedGetter<string, ResolvedHandle>
@@ -20,10 +32,11 @@ export class CachedHandleResolver implements HandleResolver {
       max: 1000,
       ttl: 10 * 60e3,
     }),
+    onHandleCacheError?: HandleCacheErrorHandler,
   ) {
     this.getter = new CachedGetter<string, ResolvedHandle>(
       (handle, options) => resolver.resolve(handle, options),
-      cache,
+      swallowStoreErrors(cache, onHandleCacheError),
     )
   }
 

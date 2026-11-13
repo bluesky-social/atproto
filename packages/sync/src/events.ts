@@ -1,19 +1,18 @@
-import type { CID } from 'multiformats/cid'
-import { DidDocument } from '@atproto/identity'
-import type { RepoRecord } from '@atproto/lexicon'
-import { BlockMap } from '@atproto/repo'
-import { AtUri } from '@atproto/syntax'
+import type { DidDocument } from '@atproto/identity'
+import type { Cid, LexMap } from '@atproto/lex-data'
+import type { BlockMap } from '@atproto/repo'
+import type { AtUri, DidString } from '@atproto/syntax'
 
 export type Event = CommitEvt | SyncEvt | IdentityEvt | AccountEvt
 
 export type CommitMeta = {
   seq: number
   time: string
-  commit: CID
+  commit: Cid
   blocks: BlockMap
   rev: string
   uri: AtUri
-  did: string
+  did: DidString
   collection: string
   rkey: string
 }
@@ -22,14 +21,14 @@ export type CommitEvt = Create | Update | Delete
 
 export type Create = CommitMeta & {
   event: 'create'
-  record: RepoRecord
-  cid: CID
+  record: LexMap
+  cid: Cid
 }
 
 export type Update = CommitMeta & {
   event: 'update'
-  record: RepoRecord
-  cid: CID
+  record: LexMap
+  cid: Cid
 }
 
 export type Delete = CommitMeta & {
@@ -40,8 +39,8 @@ export type SyncEvt = {
   seq: number
   time: string
   event: 'sync'
-  did: string
-  cid: CID
+  did: DidString
+  cid: Cid
   rev: string
   blocks: BlockMap
 }
@@ -50,7 +49,7 @@ export type IdentityEvt = {
   seq: number
   time: string
   event: 'identity'
-  did: string
+  did: DidString
   handle?: string
   didDocument?: DidDocument
 }
@@ -59,13 +58,10 @@ export type AccountEvt = {
   seq: number
   time: string
   event: 'account'
-  did: string
+  did: DidString
   active: boolean
   status?: AccountStatus
 }
 
 export type AccountStatus =
-  | 'takendown'
-  | 'suspended'
-  | 'deleted'
-  | 'deactivated'
+  'takendown' | 'suspended' | 'deleted' | 'deactivated'

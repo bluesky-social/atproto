@@ -1,7 +1,7 @@
 import type { ServerResponse } from 'node:http'
 import { html, js } from './html/index.js'
 import { setCookie } from './http/request.js'
-import { SecurityHeadersOptions } from './http/security-headers.js'
+import type { SecurityHeadersOptions } from './http/security-headers.js'
 import { writeHtml } from './write-html.js'
 
 export type WriteFormRedirectOptions = SecurityHeadersOptions

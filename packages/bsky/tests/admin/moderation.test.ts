@@ -1,26 +1,26 @@
 import assert from 'node:assert'
-import { AtpAgent } from '@atproto/api'
-import { ImageRef, SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import {
-  RepoBlobRef,
-  RepoRef,
-  isRepoBlobRef,
-  isRepoRef,
-} from '../../src/lexicon/types/com/atproto/admin/defs'
+  type $Typed,
+  type AtpAgent,
+  ComAtprotoAdminDefs,
+  ComAtprotoRepoStrongRef,
+} from '@atproto/api'
 import {
-  Main as StrongRef,
-  isMain as isStrongRef,
-} from '../../src/lexicon/types/com/atproto/repo/strongRef'
-import { $Typed } from '../../src/lexicon/util'
+  type ImageRef,
+  type SeedClient,
+  TestNetwork,
+  basicSeed,
+} from '@atproto/dev-env'
 
 describe('moderation', () => {
   let network: TestNetwork
   let agent: AtpAgent
   let sc: SeedClient
 
-  let repoSubject: $Typed<RepoRef>
-  let recordSubject: $Typed<StrongRef>
-  let blobSubject: $Typed<RepoBlobRef>
+  let repoSubject: $Typed<ComAtprotoAdminDefs.RepoRef>
+  let recordSubject: $Typed<ComAtprotoRepoStrongRef.Main>
+  let blobSubject: $Typed<ComAtprotoAdminDefs.RepoBlobRef>
   let blobRef: ImageRef
 
   beforeAll(async () => {
@@ -28,7 +28,7 @@ describe('moderation', () => {
       dbPostgresSchema: 'bsky_moderation',
     })
 
-    agent = network.bsky.getClient()
+    agent = network.bsky.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc)
     await network.processAll()
@@ -51,7 +51,7 @@ describe('moderation', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('takes down accounts', async () => {
@@ -71,7 +71,7 @@ describe('moderation', () => {
       },
       { headers: network.bsky.adminAuthHeaders() },
     )
-    assert(isRepoRef(res.data.subject))
+    assert(ComAtprotoAdminDefs.isRepoRef(res.data.subject))
     expect(res.data.subject.did).toEqual(sc.dids.bob)
     expect(res.data.takedown?.applied).toBe(true)
     // expect(res.data.takedown?.ref).toBe('test-repo') @TODO add these checks back in once takedown refs make it into dataplane
@@ -94,7 +94,7 @@ describe('moderation', () => {
       },
       { headers: network.bsky.adminAuthHeaders() },
     )
-    assert(isRepoRef(res.data.subject))
+    assert(ComAtprotoAdminDefs.isRepoRef(res.data.subject))
     expect(res.data.subject.did).toEqual(sc.dids.bob)
     expect(res.data.takedown?.applied).toBe(false)
     expect(res.data.takedown?.ref).toBeUndefined()
@@ -117,7 +117,7 @@ describe('moderation', () => {
       },
       { headers: network.bsky.adminAuthHeaders() },
     )
-    assert(isStrongRef(res.data.subject))
+    assert(ComAtprotoRepoStrongRef.isMain(res.data.subject))
     expect(res.data.subject.uri).toEqual(recordSubject.uri)
     expect(res.data.takedown?.applied).toBe(true)
     // expect(res.data.takedown?.ref).toBe('test-record')
@@ -140,7 +140,7 @@ describe('moderation', () => {
       },
       { headers: network.bsky.adminAuthHeaders() },
     )
-    assert(isStrongRef(res.data.subject))
+    assert(ComAtprotoRepoStrongRef.isMain(res.data.subject))
     expect(res.data.subject.uri).toEqual(recordSubject.uri)
     expect(res.data.takedown?.applied).toBe(false)
     expect(res.data.takedown?.ref).toBeUndefined()
@@ -156,9 +156,15 @@ describe('moderation', () => {
         .getPresetUri('feed_thumbnail', blobSubject.did, blobSubject.cid)
         .replace(network.bsky.ctx.cfg.publicUrl || '', network.bsky.url)
       // Warm image server cache
-      await fetch(imageUri)
+      const res = await fetch(imageUri)
+      await res.arrayBuffer() // flush response
+      assert(res.ok)
+      expect(res.headers.get('content-type')).toEqual('image/webp')
       const cached = await fetch(imageUri)
+      await cached.arrayBuffer() // flush response
+      assert(cached.ok)
       expect(cached.headers.get('x-cache')).toEqual('hit')
+      expect(cached.headers.get('content-type')).toEqual('image/webp')
     })
 
     it('takes down blobs', async () => {
@@ -179,7 +185,7 @@ describe('moderation', () => {
         },
         { headers: network.bsky.adminAuthHeaders() },
       )
-      assert(isRepoBlobRef(res.data.subject))
+      assert(ComAtprotoAdminDefs.isRepoBlobRef(res.data.subject))
       expect(res.data.subject.did).toEqual(blobSubject.did)
       expect(res.data.subject.cid).toEqual(blobSubject.cid)
       expect(res.data.takedown?.applied).toBe(true)

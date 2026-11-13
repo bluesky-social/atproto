@@ -1,5 +1,5 @@
 import { InvalidDidError } from '../did-error.js'
-import { Did } from '../did.js'
+import type { Did } from '../did.js'
 
 const DID_PLC_PREFIX = `did:plc:`
 const DID_PLC_PREFIX_LENGTH = DID_PLC_PREFIX.length

@@ -1,7 +1,7 @@
-import { Keyset } from '@atproto/jwk'
+import type { Keyset } from '@atproto/jwk'
 import {
-  OAuthAuthorizationServerMetadata,
-  OAuthIssuerIdentifier,
+  type OAuthAuthorizationServerMetadata,
+  type OAuthIssuerIdentifier,
   oauthAuthorizationServerMetadataValidator,
 } from '@atproto/oauth-types'
 import { Client } from '../client/client.js'

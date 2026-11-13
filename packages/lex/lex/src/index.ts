@@ -1,7 +1,7 @@
 /**
  * The `@atproto/lex` package provides utilities for working with ATProtocol
- * lexicons, including data types, JSON encoding/decoding, schema validation,
- * and HTTP client functionality.
+ * lexicons, including data types, JSON and CBOR encoding/decoding, schema
+ * validation, and HTTP client functionality.
  *
  * @packageDocumentation
  */
@@ -116,3 +116,5 @@ export {
   lexToJson,
 } from '@atproto/lex-json'
 export * from '@atproto/lex-json'
+
+export * from '@atproto/lex-cbor'

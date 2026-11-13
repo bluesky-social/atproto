@@ -1,1 +1,0 @@
-../../../../interop-test-files/syntax/nsid_syntax_valid.txt

@@ -1,3 +1,3 @@
-export * from './types'
-export * from './util'
-export * from './viewer'
+export * from './types.js'
+export * from './util.js'
+export * from './viewer.js'

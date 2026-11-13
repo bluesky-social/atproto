@@ -1,19 +1,24 @@
-import { ServerConfig } from '../../../../config'
-import { AppContext } from '../../../../context'
-import { Code, DataPlaneClient, isDataplaneError } from '../../../../data-plane'
-import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/unspecced/getPostThreadV2'
+import type { AtUriString } from '@atproto/syntax'
+import type { Server } from '@atproto/xrpc-server'
+import type { ServerConfig } from '../../../../config.js'
+import type { AppContext } from '../../../../context.js'
 import {
-  HydrationFnInput,
-  PresentationFnInput,
-  SkeletonFnInput,
+  Code,
+  type DataPlaneClient,
+  isDataplaneError,
+} from '../../../../data-plane/index.js'
+import type { HydrateCtx, Hydrator } from '../../../../hydration/hydrator.js'
+import { app } from '../../../../lexicons/index.js'
+import {
+  type HydrationFnInput,
+  type PresentationFnInput,
+  type SkeletonFnInput,
   createPipeline,
   noRules,
-} from '../../../../pipeline'
-import { postUriToThreadgateUri } from '../../../../util/uris'
-import { Views } from '../../../../views'
-import { resHeaders } from '../../../util'
+} from '../../../../pipeline.js'
+import { postUriToThreadgateUri } from '../../../../util/uris.js'
+import type { Views } from '../../../../views/index.js'
+import { resHeaders } from '../../../util.js'
 
 export default function (server: Server, ctx: AppContext) {
   const getPostThread = createPipeline(
@@ -22,21 +27,28 @@ export default function (server: Server, ctx: AppContext) {
     noRules, // handled in presentation: 3p block-violating replies are turned to #blockedPost, viewer blocks turned to #notFoundPost.
     presentation,
   )
-  server.app.bsky.unspecced.getPostThreadV2({
+  server.add(app.bsky.unspecced.getPostThreadV2, {
     auth: ctx.authVerifier.optionalStandardOrRole,
     handler: async ({ params, auth, req }) => {
-      const { viewer, includeTakedowns, include3pBlocks } =
+      const { viewer, includeTakedowns, include3pBlocks, skipViewerBlocks } =
         ctx.authVerifier.parseCreds(auth)
       const labelers = ctx.reqLabelers(req)
+      const features = ctx.featureGatesClient.scope(
+        ctx.featureGatesClient.parseUserContextFromHandler({
+          viewer,
+          req,
+        }),
+      )
+      // temp
+      void features.checkGate(features.Gate.AATest)
       const hydrateCtx = await ctx.hydrator.createContext({
+        xrpcEndpoint: app.bsky.unspecced.getPostThreadV2.$lxm,
         labelers,
         viewer,
         includeTakedowns,
         include3pBlocks,
-        featureGatesMap: ctx.featureGatesClient.checkGates(
-          ['threads:reply_ranking_exploration:enable'],
-          { viewer, req },
-        ),
+        skipViewerBlocks,
+        features,
       })
 
       return {
@@ -50,7 +62,9 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-const skeleton = async (inputs: SkeletonFnInput<Context, Params>) => {
+const skeleton = async (
+  inputs: SkeletonFnInput<Context, Params>,
+): Promise<Skeleton> => {
   const { ctx, params } = inputs
   const anchor = await ctx.hydrator.resolveUri(params.anchor)
   try {
@@ -61,7 +75,10 @@ const skeleton = async (inputs: SkeletonFnInput<Context, Params>) => {
     })
     return {
       anchor,
-      uris: res.uris,
+      uris: res.uris as AtUriString[],
+      opThread: res.opThread.length
+        ? (res.opThread as AtUriString[])
+        : undefined,
     }
   } catch (err) {
     if (isDataplaneError(err, Code.NotFound)) {
@@ -82,6 +99,11 @@ const hydration = async (
   return ctx.hydrator.hydrateThreadPosts(
     skeleton.uris.map((uri) => ({ uri })),
     params.hydrateCtx,
+    {
+      knownLikers: {
+        subjectUris: [skeleton.anchor],
+      },
+    },
   )
 }
 
@@ -113,11 +135,16 @@ type Context = {
   cfg: ServerConfig
 }
 
-type Params = QueryParams & { hydrateCtx: HydrateCtx }
+type Params = app.bsky.unspecced.getPostThreadV2.$Params & {
+  hydrateCtx: HydrateCtx
+}
 
 type Skeleton = {
-  anchor: string
-  uris: string[]
+  anchor: AtUriString
+  uris: AtUriString[]
+  // The complete OP thread (root first, in chain order), untrimmed by
+  // above/below limits. See GetThreadResponse.op_thread.
+  opThread?: AtUriString[]
 }
 
 const calculateAbove = (ctx: Context, params: Params) => {

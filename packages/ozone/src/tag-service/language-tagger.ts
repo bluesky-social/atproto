@@ -1,12 +1,8 @@
-import {
-  AppBskyActorProfile,
-  AppBskyFeedGenerator,
-  AppBskyFeedPost,
-  AppBskyGraphList,
-} from '@atproto/api'
-import { langLogger as log } from '../logger'
-import { ContentTagger } from './content-tagger'
-import { code3ToCode2 } from './language-data'
+import lande from 'lande'
+import { app } from '../lexicons/index.js'
+import { langLogger as log } from '../logger.js'
+import { ContentTagger } from './content-tagger.js'
+import { code3ToCode2 } from './language-data.js'
 
 const ifString = (value: unknown): string | undefined =>
   typeof value === 'string' ? value : undefined
@@ -35,18 +31,18 @@ export class LanguageTagger extends ContentTagger {
   getTextFromRecord(recordValue: Record<string, unknown>): string | undefined {
     let text: string | undefined
 
-    if (AppBskyGraphList.isRecord(recordValue)) {
+    if (app.bsky.graph.list.main.$isTypeOf(recordValue)) {
       text =
         isStringProp(recordValue, 'description') ||
         isStringProp(recordValue, 'name')
     } else if (
-      AppBskyFeedGenerator.isRecord(recordValue) ||
-      AppBskyActorProfile.isRecord(recordValue)
+      app.bsky.feed.generator.main.$isTypeOf(recordValue) ||
+      app.bsky.actor.profile.main.$isTypeOf(recordValue)
     ) {
       text =
         isStringProp(recordValue, 'description') ||
         isStringProp(recordValue, 'displayName')
-    } else if (AppBskyFeedPost.isRecord(recordValue)) {
+    } else if (app.bsky.feed.post.main.$isTypeOf(recordValue)) {
       text = isStringProp(recordValue, 'text')
     }
 
@@ -87,8 +83,6 @@ export class LanguageTagger extends ContentTagger {
           .map((lang) => lang.split('-')[0])
           .forEach((lang) => langs.add(lang))
       } else if (recordText) {
-        // 'lande' is an esm module, so we need to import it dynamically
-        const { default: lande } = await import('lande')
         const detectedLanguages = lande(recordText)
         if (detectedLanguages.length) {
           const langCode = code3ToCode2(detectedLanguages[0][0])

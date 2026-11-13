@@ -1,16 +1,27 @@
-import { INVALID_HANDLE } from '@atproto/syntax'
-import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
-import { formatAccountStatus } from '../../../../account-manager/account-manager'
-import { AppContext } from '../../../../context'
-import { softDeleted } from '../../../../db/util'
-import { Server } from '../../../../lexicon'
-import { resultPassthru } from '../../../proxy'
-import { didDocForSession } from './util'
+import {
+  type DidString,
+  type HandleString,
+  INVALID_HANDLE,
+} from '@atproto/syntax'
+import {
+  AuthRequiredError,
+  InvalidRequestError,
+  type Server,
+} from '@atproto/xrpc-server'
+import { formatAccountStatus } from '../../../../account-manager/account-manager.js'
+import type { AppContext } from '../../../../context.js'
+import { softDeleted } from '../../../../db/util.js'
+import { events } from '../../../../events.js'
+import { com } from '../../../../lexicons/index.js'
+import { didDocForSession } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.server.refreshSession({
+  server.add(com.atproto.server.refreshSession, {
     auth: ctx.authVerifier.refresh(),
-    handler: async ({ auth, req }) => {
+    handler: async ({
+      auth,
+      req,
+    }): Promise<com.atproto.server.refreshSession.$Output> => {
       const did = auth.credentials.did
       const user = await ctx.accountManager.getAccount(did, {
         includeDeactivated: true,
@@ -28,13 +39,11 @@ export default function (server: Server, ctx: AppContext) {
         )
       }
 
-      if (ctx.entrywayAgent) {
-        return resultPassthru(
-          await ctx.entrywayAgent.com.atproto.server.refreshSession(
-            undefined,
-            ctx.entrywayPassthruHeaders(req),
-          ),
-        )
+      if (ctx.entrywayClient) {
+        const { headers } = ctx.entrywayPassthruHeaders(req)
+        return ctx.entrywayClient.xrpc(com.atproto.server.refreshSession, {
+          headers,
+        })
       }
 
       const [didDoc, rotated] = await Promise.all([
@@ -47,17 +56,24 @@ export default function (server: Server, ctx: AppContext) {
 
       const { status, active } = formatAccountStatus(user)
 
+      events.sessionRefreshed({
+        source: com.atproto.server.refreshSession.$lxm,
+        did: user.did,
+      })
+
       return {
-        encoding: 'application/json',
+        encoding: 'application/json' as const,
         body: {
           accessJwt: rotated.accessJwt,
           refreshJwt: rotated.refreshJwt,
 
-          did: user.did,
+          did: user.did as DidString,
+          // @ts-expect-error https://github.com/bluesky-social/atproto/pull/4406
           didDoc,
-          handle: user.handle ?? INVALID_HANDLE,
+          handle: (user.handle ?? INVALID_HANDLE) as HandleString,
           email: user.email ?? undefined,
           emailConfirmed: !!user.emailConfirmedAt,
+          emailAuthFactor: !!user.emailAuthFactorAt,
           active,
           status,
         },

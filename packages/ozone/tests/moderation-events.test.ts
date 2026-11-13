@@ -1,23 +1,18 @@
 import assert from 'node:assert'
 import EventEmitter, { once } from 'node:events'
 import {
+  ComAtprotoAdminDefs,
+  ComAtprotoModerationDefs,
+  ComAtprotoRepoStrongRef,
   ToolsOzoneModerationDefs,
-  ToolsOzoneModerationEmitEvents,
 } from '@atproto/api'
 import {
-  ModeratorClient,
-  SeedClient,
+  type ModeratorClient,
+  type SeedClient,
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
-import { isRepoRef } from '../src/lexicon/types/com/atproto/admin/defs'
-import {
-  REASONAPPEAL,
-  REASONMISLEADING,
-  REASONSPAM,
-} from '../src/lexicon/types/com/atproto/moderation/defs'
-import { isMain as isStrongRef } from '../src/lexicon/types/com/atproto/repo/strongRef'
-import { forSnapshot } from './_util'
+import { forSnapshot } from './_util.js'
 
 describe('moderation-events', () => {
   let network: TestNetwork
@@ -46,14 +41,17 @@ describe('moderation-events', () => {
 
     for (let i = 0; i < 4; i++) {
       await sc.createReport({
-        reasonType: i % 2 ? REASONSPAM : REASONMISLEADING,
+        reasonType:
+          i % 2
+            ? ComAtprotoModerationDefs.REASONSPAM
+            : ComAtprotoModerationDefs.REASONMISLEADING,
         reason: 'X',
         //   Report bob's account by alice and vice versa
         subject: i % 2 ? bobsAccount : alicesAccount,
         reportedBy: i % 2 ? sc.dids.alice : sc.dids.bob,
       })
       await sc.createReport({
-        reasonType: REASONSPAM,
+        reasonType: ComAtprotoModerationDefs.REASONSPAM,
         reason: 'X',
         //   Report bob's post by alice and vice versa
         subject: i % 2 ? bobsPost : alicesPost,
@@ -78,7 +76,7 @@ describe('moderation-events', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   describe('query events', () => {
@@ -203,15 +201,38 @@ describe('moderation-events', () => {
     it('returns report events matching reportType filters', async () => {
       const [spamEvents, misleadingEvents] = await Promise.all([
         modClient.queryEvents({
-          reportTypes: [REASONSPAM],
+          reportTypes: [ComAtprotoModerationDefs.REASONSPAM],
         }),
         modClient.queryEvents({
-          reportTypes: [REASONMISLEADING, REASONAPPEAL],
+          reportTypes: [
+            ComAtprotoModerationDefs.REASONMISLEADING,
+            ComAtprotoModerationDefs.REASONAPPEAL,
+          ],
         }),
       ])
 
-      expect(misleadingEvents.events.length).toEqual(2)
+      // Verify all spam events have the correct report type
       expect(spamEvents.events.length).toEqual(6)
+      spamEvents.events.forEach((event) => {
+        expect(event.event.$type).toEqual(
+          'tools.ozone.moderation.defs#modEventReport',
+        )
+        expect((event.event as any).reportType).toEqual(
+          ComAtprotoModerationDefs.REASONSPAM,
+        )
+      })
+
+      // Verify all misleading events have one of the correct report types
+      expect(misleadingEvents.events.length).toEqual(2)
+      misleadingEvents.events.forEach((event) => {
+        expect(event.event.$type).toEqual(
+          'tools.ozone.moderation.defs#modEventReport',
+        )
+        expect([
+          ComAtprotoModerationDefs.REASONMISLEADING,
+          ComAtprotoModerationDefs.REASONAPPEAL,
+        ]).toContain((event.event as any).reportType)
+      })
     })
 
     it('returns events matching keyword in comment', async () => {
@@ -235,7 +256,7 @@ describe('moderation-events', () => {
 
     it('returns events matching multiple keywords in comment', async () => {
       await sc.createReport({
-        reasonType: REASONSPAM,
+        reasonType: ComAtprotoModerationDefs.REASONSPAM,
         reason: 'november rain',
         subject: {
           $type: 'com.atproto.admin.defs#repoRef',
@@ -244,7 +265,7 @@ describe('moderation-events', () => {
         reportedBy: sc.dids.bob,
       })
       await sc.createReport({
-        reasonType: REASONSPAM,
+        reasonType: ComAtprotoModerationDefs.REASONSPAM,
         reason: 'rainy days feel lazy',
         subject: {
           $type: 'com.atproto.admin.defs#repoRef',
@@ -379,7 +400,7 @@ describe('moderation-events', () => {
         [],
       )
       await sc.createReport({
-        reasonType: REASONSPAM,
+        reasonType: ComAtprotoModerationDefs.REASONSPAM,
         reason: 'X',
         subject: {
           $type: 'com.atproto.repo.strongRef',
@@ -417,13 +438,21 @@ describe('moderation-events', () => {
       ])
 
       expect(onlyStarterPackReports.events.length).toEqual(1)
-      assert(isStrongRef(onlyStarterPackReports.events[0].subject))
+      assert(
+        ComAtprotoRepoStrongRef.isMain(
+          onlyStarterPackReports.events[0].subject,
+        ),
+      )
       expect(onlyStarterPackReports.events[0].subject.uri).toContain(
         'app.bsky.graph.starterpack',
       )
 
       expect(onlyAlicesStarterPackReports.events.length).toEqual(1)
-      assert(isStrongRef(onlyAlicesStarterPackReports.events[0].subject))
+      assert(
+        ComAtprotoRepoStrongRef.isMain(
+          onlyAlicesStarterPackReports.events[0].subject,
+        ),
+      )
       expect(onlyAlicesStarterPackReports.events[0].subject.uri).toContain(
         sp.uriStr,
       )
@@ -450,20 +479,24 @@ describe('moderation-events', () => {
         ])
 
       assert(
-        onlyAccountReports.events.every((e) => !isStrongRef(e.subject)),
+        onlyAccountReports.events.every(
+          (e) => !ComAtprotoRepoStrongRef.isMain(e.subject),
+        ),
         'only account reports are returned, no event has a uri',
       )
 
       assert(
         onlyRecordReports.events.every(
-          (e) => isStrongRef(e.subject) && e.subject.uri,
+          (e) => ComAtprotoRepoStrongRef.isMain(e.subject) && e.subject.uri,
         ),
         'only record reports are returned, all events have a uri',
       )
 
       assert(
         onlyReportsOnBobsAccount.events.every(
-          (e) => isRepoRef(e.subject) && e.subject.did === sc.dids.bob,
+          (e) =>
+            ComAtprotoAdminDefs.isRepoRef(e.subject) &&
+            e.subject.did === sc.dids.bob,
         ),
         "only bob's account reports are returned, no events have a URI even though the subjectType is record",
       )
@@ -503,6 +536,96 @@ describe('moderation-events', () => {
       events.events.forEach((event) => {
         expect(event.createdBy).toEqual(network.ozone.moderatorAccnt.did)
       })
+    })
+
+    it('queries events by conversation', async () => {
+      const convoId1 = 'conversation-123'
+      const convoId2 = 'conversation-456'
+
+      // create reports
+      await sc.createReport({
+        reasonType: ComAtprotoModerationDefs.REASONSPAM,
+        reason: 'spam in convo 1',
+        subject: {
+          $type: 'chat.bsky.convo.defs#convoRef',
+          did: sc.dids.carol,
+          convoId: convoId1,
+        },
+        reportedBy: sc.dids.alice,
+      })
+      await sc.createReport({
+        reasonType: ComAtprotoModerationDefs.REASONMISLEADING,
+        reason: 'misleading in convo 1',
+        subject: {
+          $type: 'chat.bsky.convo.defs#convoRef',
+          did: sc.dids.carol,
+          convoId: convoId1,
+        },
+        reportedBy: sc.dids.bob,
+      })
+      await sc.createReport({
+        reasonType: ComAtprotoModerationDefs.REASONSPAM,
+        reason: 'spam in convo 2',
+        subject: {
+          $type: 'chat.bsky.convo.defs#convoRef',
+          did: sc.dids.carol,
+          convoId: convoId2,
+        },
+        reportedBy: sc.dids.alice,
+      })
+
+      // Query events (filter by report type since auto-tagging creates extra events)
+      const convo1Events = await modClient.queryEvents({
+        subject: `at://${sc.dids.carol}/chat.bsky.convo/${convoId1}`,
+        includeAllUserRecords: false,
+        types: ['tools.ozone.moderation.defs#modEventReport'],
+      })
+      const convo2Events = await modClient.queryEvents({
+        subject: `at://${sc.dids.carol}/chat.bsky.convo/${convoId2}`,
+        includeAllUserRecords: false,
+        types: ['tools.ozone.moderation.defs#modEventReport'],
+      })
+
+      // Verify conversation 1 events are correct
+      expect(convo1Events.events.length).toBeGreaterThan(0)
+      convo1Events.events.forEach((e) => {
+        // All events should be conversation refs
+        expect(e.subject.$type).toEqual('chat.bsky.convo.defs#convoRef')
+        // All events should be for conversation 1
+        const subject = e.subject as any
+        expect(subject.convoId).toEqual(convoId1)
+        expect(subject.did).toEqual(sc.dids.carol)
+        // All events should be reports
+        expect(e.event.$type).toEqual(
+          'tools.ozone.moderation.defs#modEventReport',
+        )
+      })
+      // Verify we got both reports we created
+      const convo1Comments = convo1Events.events.map(
+        (e) => (e.event as any).comment,
+      )
+      expect(convo1Comments).toContain('spam in convo 1')
+      expect(convo1Comments).toContain('misleading in convo 1')
+
+      // Verify conversation 2 events are correct
+      expect(convo2Events.events.length).toBeGreaterThan(0)
+      convo2Events.events.forEach((e) => {
+        // All events should be conversation refs
+        expect(e.subject.$type).toEqual('chat.bsky.convo.defs#convoRef')
+        // All events should be for conversation 2
+        const subject = e.subject as any
+        expect(subject.convoId).toEqual(convoId2)
+        expect(subject.did).toEqual(sc.dids.carol)
+        // All events should be reports
+        expect(e.event.$type).toEqual(
+          'tools.ozone.moderation.defs#modEventReport',
+        )
+      })
+      // Verify we got the report we created
+      const convo2Comments = convo2Events.events.map(
+        (e) => (e.event as any).comment,
+      )
+      expect(convo2Comments).toContain('spam in convo 2')
     })
   })
 
@@ -600,6 +723,61 @@ describe('moderation-events', () => {
         subjectBlobCids: [post.images[0].image.ref.toString()],
       })
     })
+
+    it('returns account and record takedowns and reversals across pages', async () => {
+      const subject = {
+        $type: 'com.atproto.admin.defs#repoRef',
+        did: sc.dids.carol,
+      }
+      await modClient.emitEvent({
+        event: {
+          $type: 'tools.ozone.moderation.defs#modEventTakedown',
+          durationInHours: 24,
+        },
+        subject,
+      })
+      await modClient.emitEvent({
+        event: { $type: 'tools.ozone.moderation.defs#modEventReverseTakedown' },
+        subject,
+      })
+
+      const types = [
+        'tools.ozone.moderation.defs#modEventTakedown',
+        'tools.ozone.moderation.defs#modEventReverseTakedown',
+      ]
+      const account = await modClient.queryEvents({
+        subject: sc.dids.carol,
+        types,
+      })
+      expect(account.events).toHaveLength(2)
+      expect(
+        account.events.every((event) =>
+          ComAtprotoAdminDefs.isRepoRef(event.subject),
+        ),
+      ).toBe(true)
+      expect(account.events.map((event) => event.event.$type)).toEqual(
+        expect.arrayContaining(types),
+      )
+
+      const events: typeof account.events = []
+      let cursor: string | undefined
+      do {
+        const page = await modClient.queryEvents({
+          subject: sc.dids.carol,
+          includeAllUserRecords: true,
+          types,
+          limit: 1,
+          cursor,
+        })
+        events.push(...page.events)
+        cursor = page.cursor
+      } while (cursor)
+      expect(events).toHaveLength(4)
+      expect(new Set(events.map((event) => event.id)).size).toBe(4)
+      expect(
+        events.filter((event) => ComAtprotoRepoStrongRef.isMain(event.subject)),
+      ).toHaveLength(2)
+    })
   })
 
   describe('email event', () => {
@@ -647,486 +825,6 @@ describe('moderation-events', () => {
         subject: 'Hello',
         html: 'Hey Alice, how are you?',
       })
-    })
-  })
-
-  describe('bulk events', () => {
-    const repoRef = (did: string) => ({
-      $type: 'com.atproto.admin.defs#repoRef' as const,
-      did,
-    })
-
-    const strongRef = (did: string, postIndex = 0) => ({
-      $type: 'com.atproto.repo.strongRef' as const,
-      uri: sc.posts[did][postIndex].ref.uriStr,
-      cid: sc.posts[did][postIndex].ref.cidStr,
-    })
-
-    it('batch of valid acknowledge events on multiple subjects succeeds', async () => {
-      const subjects = [repoRef(sc.dids.alice), repoRef(sc.dids.bob)]
-
-      const result = await modClient.emitEvents({
-        event: {
-          $type: 'tools.ozone.moderation.defs#modEventAcknowledge',
-        },
-        subjects: subjects.map((s) => ({ subject: s })),
-        createdBy: 'did:example:admin',
-      })
-
-      expect(result.events).toHaveLength(2)
-      expect(result.failedEvents).toHaveLength(0)
-      for (const ev of result.events) {
-        expect(ev.event.$type).toBe(
-          'tools.ozone.moderation.defs#modEventAcknowledge',
-        )
-      }
-    })
-
-    it('batch takedown on multiple repo subjects succeeds', async () => {
-      const subjects = [repoRef(sc.dids.carol), repoRef(sc.dids.dan)]
-
-      const result = await modClient.emitEvents({
-        event: {
-          $type: 'tools.ozone.moderation.defs#modEventTakedown',
-        },
-        subjects: subjects.map((s) => ({ subject: s })),
-        createdBy: 'did:example:admin',
-      })
-
-      expect(result.events).toHaveLength(2)
-      expect(result.failedEvents).toHaveLength(0)
-
-      // Reverse the takedowns so they don't interfere with other tests
-      for (const subject of subjects) {
-        await modClient.performReverseTakedown({ subject })
-      }
-    })
-
-    it('batch with partial failure returns mixed results', async () => {
-      // First takedown alice
-      await modClient.performTakedown({ subject: repoRef(sc.dids.alice) })
-
-      const subjects = [
-        repoRef(sc.dids.alice), // already taken down — should fail
-        repoRef(sc.dids.bob), // should succeed
-      ]
-
-      const result = await modClient.emitEvents({
-        event: {
-          $type: 'tools.ozone.moderation.defs#modEventTakedown',
-        },
-        subjects: subjects.map((s) => ({ subject: s })),
-        createdBy: 'did:example:admin',
-      })
-
-      expect(result.events).toHaveLength(1)
-      expect(result.failedEvents).toHaveLength(1)
-      expect(result.failedEvents[0].error).toContain('already taken down')
-
-      // Reverse takedowns
-      await modClient.performReverseTakedown({
-        subject: repoRef(sc.dids.alice),
-      })
-      await modClient.performReverseTakedown({ subject: repoRef(sc.dids.bob) })
-    })
-
-    it('rejects duplicate subjects', async () => {
-      const subject = repoRef(sc.dids.carol)
-      const subjects = [subject, subject]
-
-      await expect(
-        modClient.emitEvents({
-          event: {
-            $type: 'tools.ozone.moderation.defs#modEventAcknowledge',
-          },
-          subjects: subjects.map((s) => ({ subject: s })),
-          createdBy: 'did:example:admin',
-        }),
-      ).rejects.toThrow('Subjects array contains duplicates')
-    })
-
-    it('rejects empty subjects array', async () => {
-      await expect(
-        modClient.emitEvents({
-          event: {
-            $type: 'tools.ozone.moderation.defs#modEventAcknowledge',
-          },
-          subjects: [],
-          createdBy: 'did:example:admin',
-        }),
-      ).rejects.toThrow('Subjects array must not be empty')
-    })
-
-    it('works with strongRef subjects (records)', async () => {
-      const subjects = [strongRef(sc.dids.alice, 0), strongRef(sc.dids.bob, 0)]
-
-      const result = await modClient.emitEvents({
-        event: {
-          $type: 'tools.ozone.moderation.defs#modEventAcknowledge',
-        },
-        subjects: subjects.map((s) => ({ subject: s })),
-        createdBy: 'did:example:admin',
-      })
-
-      expect(result.events).toHaveLength(2)
-      expect(result.failedEvents).toHaveLength(0)
-    })
-
-    it('works with mixed subject types', async () => {
-      const subjects = [repoRef(sc.dids.alice), strongRef(sc.dids.bob, 0)]
-
-      const result = await modClient.emitEvents({
-        event: {
-          $type: 'tools.ozone.moderation.defs#modEventAcknowledge',
-        },
-        subjects: subjects.map((s) => ({ subject: s })),
-        createdBy: 'did:example:admin',
-      })
-
-      expect(result.events).toHaveLength(2)
-      expect(result.failedEvents).toHaveLength(0)
-    })
-
-    it('respects auth — triage can acknowledge but not takedown', async () => {
-      const subjects = [repoRef(sc.dids.alice)]
-
-      // Triage can acknowledge
-      const ackResult = await modClient.emitEvents(
-        {
-          event: {
-            $type: 'tools.ozone.moderation.defs#modEventAcknowledge',
-          },
-          subjects: subjects.map((s) => ({ subject: s })),
-          createdBy: 'did:example:admin',
-        },
-        'triage',
-      )
-      expect(ackResult.events).toHaveLength(1)
-
-      // Triage cannot takedown — should fail per-item
-      const takedownResult = await modClient.emitEvents(
-        {
-          event: {
-            $type: 'tools.ozone.moderation.defs#modEventTakedown',
-          },
-          subjects: subjects.map((s) => ({ subject: s })),
-          createdBy: 'did:example:admin',
-        },
-        'triage',
-      )
-      expect(takedownResult.events).toHaveLength(0)
-      expect(takedownResult.failedEvents).toHaveLength(1)
-      expect(takedownResult.failedEvents[0].error).toContain(
-        'Must be a full moderator',
-      )
-    })
-
-    it('tag events work in bulk', async () => {
-      const subjects = [repoRef(sc.dids.alice), repoRef(sc.dids.bob)]
-
-      const result = await modClient.emitEvents({
-        event: {
-          $type: 'tools.ozone.moderation.defs#modEventTag',
-          add: ['bulk-tag'],
-          remove: [],
-        },
-        subjects: subjects.map((s) => ({ subject: s })),
-        createdBy: 'did:example:admin',
-      })
-
-      expect(result.events).toHaveLength(2)
-      expect(result.failedEvents).toHaveLength(0)
-    })
-
-    it('bulk label events on repo subjects', async () => {
-      const subjects = [repoRef(sc.dids.alice), repoRef(sc.dids.bob)]
-
-      const result = await modClient.emitEvents({
-        event: {
-          $type: 'tools.ozone.moderation.defs#modEventLabel',
-          createLabelVals: ['spam'],
-          negateLabelVals: [],
-        },
-        subjects: subjects.map((s) => ({ subject: s })),
-        createdBy: 'did:example:admin',
-      })
-
-      expect(result.events).toHaveLength(2)
-      expect(result.failedEvents).toHaveLength(0)
-      for (const ev of result.events) {
-        expect(ev.event.$type).toBe(
-          'tools.ozone.moderation.defs#modEventLabel',
-        )
-        expect(
-          (ev.event as ToolsOzoneModerationDefs.ModEventLabel).createLabelVals,
-        ).toEqual(['spam'])
-      }
-    })
-
-    it('bulk label events on record subjects', async () => {
-      const subjects = [strongRef(sc.dids.alice, 0), strongRef(sc.dids.bob, 0)]
-
-      const result = await modClient.emitEvents({
-        event: {
-          $type: 'tools.ozone.moderation.defs#modEventLabel',
-          createLabelVals: ['nsfw'],
-          negateLabelVals: [],
-        },
-        subjects: subjects.map((s) => ({ subject: s })),
-        createdBy: 'did:example:admin',
-      })
-
-      expect(result.events).toHaveLength(2)
-      expect(result.failedEvents).toHaveLength(0)
-      for (const ev of result.events) {
-        expect(ev.event.$type).toBe(
-          'tools.ozone.moderation.defs#modEventLabel',
-        )
-      }
-    })
-
-    it('bulk reverse takedown succeeds when all subjects are taken down', async () => {
-      const subjects = [repoRef(sc.dids.carol), repoRef(sc.dids.dan)]
-
-      // First takedown both subjects
-      for (const subject of subjects) {
-        await modClient.performTakedown({ subject })
-      }
-
-      // Bulk reverse takedown
-      const result = await modClient.emitEvents({
-        event: {
-          $type: 'tools.ozone.moderation.defs#modEventReverseTakedown',
-        },
-        subjects: subjects.map((s) => ({ subject: s })),
-        createdBy: 'did:example:admin',
-      })
-
-      expect(result.events).toHaveLength(2)
-      expect(result.failedEvents).toHaveLength(0)
-    })
-
-    it('bulk reverse takedown — partial failure when subject not taken down', async () => {
-      // Takedown only carol
-      await modClient.performTakedown({ subject: repoRef(sc.dids.carol) })
-
-      const subjects = [
-        repoRef(sc.dids.carol), // taken down — should succeed
-        repoRef(sc.dids.dan), // not taken down — should fail
-      ]
-
-      const result = await modClient.emitEvents({
-        event: {
-          $type: 'tools.ozone.moderation.defs#modEventReverseTakedown',
-        },
-        subjects: subjects.map((s) => ({ subject: s })),
-        createdBy: 'did:example:admin',
-      })
-
-      expect(result.events).toHaveLength(1)
-      expect(result.failedEvents).toHaveLength(1)
-      expect(result.failedEvents[0].error).toContain('not taken down')
-    })
-
-    it('bulk acknowledge events', async () => {
-      const subjects = [repoRef(sc.dids.alice), repoRef(sc.dids.bob)]
-
-      const result = await modClient.emitEvents({
-        event: {
-          $type: 'tools.ozone.moderation.defs#modEventAcknowledge',
-        },
-        subjects: subjects.map((s) => ({ subject: s })),
-        createdBy: 'did:example:admin',
-      })
-
-      expect(result.events).toHaveLength(2)
-      expect(result.failedEvents).toHaveLength(0)
-      for (const ev of result.events) {
-        expect(ev.event.$type).toBe(
-          'tools.ozone.moderation.defs#modEventAcknowledge',
-        )
-      }
-    })
-
-    it('bulk resolve appeal events', async () => {
-      const subjects = [repoRef(sc.dids.alice), repoRef(sc.dids.bob)]
-
-      const result = await modClient.emitEvents({
-        event: {
-          $type: 'tools.ozone.moderation.defs#modEventResolveAppeal',
-        },
-        subjects: subjects.map((s) => ({ subject: s })),
-        createdBy: 'did:example:admin',
-      })
-
-      expect(result.events).toHaveLength(2)
-      expect(result.failedEvents).toHaveLength(0)
-      for (const ev of result.events) {
-        expect(ev.event.$type).toBe(
-          'tools.ozone.moderation.defs#modEventResolveAppeal',
-        )
-      }
-    })
-
-    it('bulk report events', async () => {
-      const subjects = [repoRef(sc.dids.alice), repoRef(sc.dids.bob)]
-
-      const result = await modClient.emitEvents({
-        event: {
-          $type: 'tools.ozone.moderation.defs#modEventReport',
-          reportType: REASONSPAM,
-          comment: 'Bulk report',
-        },
-        subjects: subjects.map((s) => ({ subject: s })),
-        createdBy: 'did:example:admin',
-      })
-
-      expect(result.events).toHaveLength(2)
-      expect(result.failedEvents).toHaveLength(0)
-      for (const ev of result.events) {
-        expect(ev.event.$type).toBe(
-          'tools.ozone.moderation.defs#modEventReport',
-        )
-      }
-    })
-
-    it('bulk takedown on record subjects', async () => {
-      const subjects = [strongRef(sc.dids.alice, 0), strongRef(sc.dids.bob, 0)]
-
-      const result = await modClient.emitEvents({
-        event: {
-          $type: 'tools.ozone.moderation.defs#modEventTakedown',
-        },
-        subjects: subjects.map((s) => ({ subject: s })),
-        createdBy: 'did:example:admin',
-      })
-
-      expect(result.events).toHaveLength(2)
-      expect(result.failedEvents).toHaveLength(0)
-
-      // Reverse the takedowns to clean up
-      for (const subject of subjects) {
-        await modClient.performReverseTakedown({ subject })
-      }
-    })
-
-    it('duplicate takedown in same batch is rejected', async () => {
-      const subject = repoRef(sc.dids.carol)
-      const subjects = [subject, subject]
-
-      await expect(
-        modClient.emitEvents({
-          event: {
-            $type: 'tools.ozone.moderation.defs#modEventTakedown',
-          },
-          subjects: subjects.map((s) => ({ subject: s })),
-          createdBy: 'did:example:admin',
-        }),
-      ).rejects.toThrow('Subjects array contains duplicates')
-    })
-
-    it('bulk email events on repo subjects', async () => {
-      const subjects = [repoRef(sc.dids.alice), repoRef(sc.dids.bob)]
-
-      const result = await modClient.emitEvents({
-        event: {
-          $type: 'tools.ozone.moderation.defs#modEventEmail',
-          subjectLine: 'Bulk notice',
-          content: 'This is a bulk email test',
-        },
-        subjects: subjects.map((s) => ({ subject: s })),
-        createdBy: 'did:example:admin',
-      })
-
-      expect(result.events).toHaveLength(2)
-      expect(result.failedEvents).toHaveLength(0)
-      for (const ev of result.events) {
-        expect(ev.event.$type).toBe(
-          'tools.ozone.moderation.defs#modEventEmail',
-        )
-      }
-    })
-
-    it('bulk email events fail on record subjects', async () => {
-      const subjects = [strongRef(sc.dids.alice, 0), strongRef(sc.dids.bob, 0)]
-
-      const result = await modClient.emitEvents({
-        event: {
-          $type: 'tools.ozone.moderation.defs#modEventEmail',
-          subjectLine: 'Should fail',
-          content: 'Email on records should fail',
-        },
-        subjects: subjects.map((s) => ({ subject: s })),
-        createdBy: 'did:example:admin',
-      })
-
-      expect(result.events).toHaveLength(0)
-      expect(result.failedEvents).toHaveLength(2)
-      expect(result.failedEvents[0].error).toContain(
-        'Email can only be sent to a repo subject',
-      )
-    })
-
-    it.skip('bulk revokeAccountCredentials events on repo subjects', async () => {
-      const subjects = [repoRef(sc.dids.alice), repoRef(sc.dids.bob)]
-
-      const result = await modClient.emitEvents(
-        {
-          event: {
-            $type: 'tools.ozone.moderation.defs#revokeAccountCredentialsEvent',
-            comment: 'Bulk revoke credentials',
-          },
-          subjects: subjects.map((s) => ({ subject: s })),
-          createdBy: 'did:example:admin',
-        },
-        'admin',
-      )
-
-      expect(result.events).toHaveLength(2)
-      expect(result.failedEvents).toHaveLength(0)
-      for (const ev of result.events) {
-        expect(ev.event.$type).toBe(
-          'tools.ozone.moderation.defs#revokeAccountCredentialsEvent',
-        )
-      }
-    })
-
-    it('bulk revokeAccountCredentials fails for non-admin', async () => {
-      const subjects = [repoRef(sc.dids.alice)]
-
-      const result = await modClient.emitEvents(
-        {
-          event: {
-            $type: 'tools.ozone.moderation.defs#revokeAccountCredentialsEvent',
-            comment: 'Should fail for non-admin',
-          },
-          subjects: subjects.map((s) => ({ subject: s })),
-          createdBy: 'did:example:admin',
-        },
-        'moderator',
-      )
-
-      expect(result.events).toHaveLength(0)
-      expect(result.failedEvents).toHaveLength(1)
-      expect(result.failedEvents[0].error).toContain(
-        'Must be an admin to revoke account credentials',
-      )
-    })
-
-    it('rejects bulk label events containing invalid characters', async () => {
-      const subjects = [repoRef(sc.dids.alice), repoRef(sc.dids.bob)]
-
-      await expect(
-        modClient.emitEvents({
-          event: {
-            $type: 'tools.ozone.moderation.defs#modEventLabel',
-            createLabelVals: ['valid', 'has space'],
-            negateLabelVals: [],
-          },
-          subjects: subjects.map((s) => ({ subject: s })),
-          createdBy: 'did:example:admin',
-        }),
-      ).rejects.toThrow('Invalid label')
     })
   })
 })

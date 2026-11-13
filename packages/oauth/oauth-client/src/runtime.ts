@@ -1,7 +1,10 @@
 import { base64url } from 'multiformats/bases/base64'
-import { Key } from '@atproto/jwk'
+import type { Jwk, Key } from '@atproto/jwk'
 import { requestLocalLock } from './lock.js'
-import { RuntimeImplementation, RuntimeLock } from './runtime-implementation.js'
+import type {
+  RuntimeImplementation,
+  RuntimeLock,
+} from './runtime-implementation.js'
 
 export class Runtime {
   readonly hasImplementationLock: boolean
@@ -42,7 +45,7 @@ export class Runtime {
     }
   }
 
-  public async calculateJwkThumbprint(jwk) {
+  public async calculateJwkThumbprint(jwk: Jwk) {
     const components = extractJktComponents(jwk)
     const data = JSON.stringify(components)
     return this.sha256(data)
@@ -64,8 +67,8 @@ export class Runtime {
   }
 }
 
-function extractJktComponents(jwk) {
-  const get = (field) => {
+function extractJktComponents(jwk: Record<string, unknown>) {
+  const get = (field: string) => {
     const value = jwk[field]
     if (typeof value !== 'string' || !value) {
       throw new TypeError(`"${field}" Parameter missing or invalid`)

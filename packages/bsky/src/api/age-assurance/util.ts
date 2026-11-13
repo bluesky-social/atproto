@@ -1,15 +1,17 @@
 import {
+  type AgeAssuranceRuleID,
   type AppBskyAgeassuranceDefs,
   computeAgeAssuranceRegionAccess,
   getAgeAssuranceRegionConfig,
 } from '@atproto/api'
+import type { app } from '../../lexicons/index.js'
 
 /**
  * Compute age assurance access based on verified minimum age. Thrown errors
  * are internal errors, so handle them accordingly.
  */
 export function computeAgeAssuranceAccessOrThrow(
-  config: AppBskyAgeassuranceDefs.Config,
+  config: app.bsky.ageassurance.defs.Config,
   {
     countryCode,
     regionCode,
@@ -19,7 +21,7 @@ export function computeAgeAssuranceAccessOrThrow(
     regionCode?: string
     verifiedMinimumAge: number
   },
-) {
+): { access: AppBskyAgeassuranceDefs.Access; reason: AgeAssuranceRuleID } {
   const region = getAgeAssuranceRegionConfig(config, {
     countryCode,
     regionCode,

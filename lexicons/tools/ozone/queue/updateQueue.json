@@ -1,0 +1,76 @@
+{
+  "lexicon": 1,
+  "id": "tools.ozone.queue.updateQueue",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Update queue properties.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["queueId"],
+          "properties": {
+            "queueId": {
+              "type": "integer",
+              "description": "ID of the queue to update"
+            },
+            "name": {
+              "type": "string",
+              "description": "New display name for the queue"
+            },
+            "enabled": {
+              "type": "boolean",
+              "description": "Enable or disable the queue"
+            },
+            "description": {
+              "type": "string",
+              "description": "Optional description of the queue"
+            },
+            "recommendedPolicies": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Policy keys to recommend when actioning reports in this queue"
+            },
+            "recommendedLabels": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Labels to recommend for this queue and use as fallback appeal routing mappings"
+            },
+            "strictAccess": {
+              "type": "boolean",
+              "description": "Admins can always list this queue and browse its reports. Other roles require an active queue assignment. Individual report and moderation event access is unchanged."
+            }
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["queue"],
+          "properties": {
+            "queue": {
+              "type": "ref",
+              "ref": "tools.ozone.queue.defs#queueView"
+            }
+          }
+        }
+      },
+      "errors": [
+        {
+          "name": "InvalidRecommendedPolicies",
+          "description": "One or more recommended policy keys do not exist in the configured policy list"
+        },
+        {
+          "name": "ConflictingQueue",
+          "description": "The queue configuration conflicts with an existing queue"
+        }
+      ]
+    }
+  }
+}

@@ -2,21 +2,15 @@ import { isAtprotoDid } from '@atproto/did'
 import { LexResolverError } from '@atproto/lex-resolver'
 import type { Account } from '@atproto/oauth-provider-api'
 import { isAtprotoOauthScope } from '@atproto/oauth-scopes'
-import {
+import type {
   OAuthAuthorizationRequestParameters,
   OAuthAuthorizationServerMetadata,
 } from '@atproto/oauth-types'
 import { isValidHandle } from '@atproto/syntax'
-import { ClientAuth } from '../client/client-auth.js'
-import { ClientId } from '../client/client-id.js'
-import { Client } from '../client/client.js'
-import {
-  AUTHORIZATION_INACTIVITY_TIMEOUT,
-  NODE_ENV,
-  PAR_EXPIRES_IN,
-  TOKEN_MAX_AGE,
-} from '../constants.js'
-import { DeviceId } from '../device/device-id.js'
+import type { ClientAuth } from '../client/client-auth.js'
+import type { ClientId } from '../client/client-id.js'
+import type { Client } from '../client/client.js'
+import type { DeviceId } from '../device/device-id.js'
 import { AccessDeniedError } from '../errors/access-denied-error.js'
 import { AuthorizationError } from '../errors/authorization-error.js'
 import { ConsentRequiredError } from '../errors/consent-required-error.js'
@@ -24,19 +18,25 @@ import { InvalidAuthorizationDetailsError } from '../errors/invalid-authorizatio
 import { InvalidGrantError } from '../errors/invalid-grant-error.js'
 import { InvalidRequestError } from '../errors/invalid-request-error.js'
 import { InvalidScopeError } from '../errors/invalid-scope-error.js'
-import { LexiconManager } from '../lexicon/lexicon-manager.js'
-import { RequestMetadata } from '../lib/http/request.js'
-import { OAuthHooks } from '../oauth-hooks.js'
-import { Signer } from '../signer/signer.js'
-import { Code, generateCode } from './code.js'
+import type { LexiconManager } from '../lexicon/lexicon-manager.js'
+import type { RequestMetadata } from '../lib/http/request.js'
 import {
-  RequestDataAuthorized,
+  AUTHORIZATION_INACTIVITY_TIMEOUT,
+  NODE_ENV,
+  PAR_EXPIRES_IN,
+  TOKEN_MAX_AGE,
+} from '../oauth-constants.js'
+import type { OAuthHooks } from '../oauth-hooks.js'
+import type { Signer } from '../signer/signer.js'
+import { type Code, generateCode } from './code.js'
+import {
+  type RequestDataAuthorized,
   isRequestDataAuthorized,
 } from './request-data.js'
 import { generateRequestId } from './request-id.js'
-import { RequestStore, UpdateRequestData } from './request-store.js'
+import type { RequestStore, UpdateRequestData } from './request-store.js'
 import {
-  RequestUri,
+  type RequestUri,
   decodeRequestUri,
   encodeRequestUri,
 } from './request-uri.js'
@@ -78,7 +78,7 @@ export class RequestManager {
       parameters,
       expiresAt,
       deviceId,
-      sub: null,
+      did: null,
       code: null,
     })
 
@@ -254,15 +254,13 @@ export class RequestManager {
       )
     }
 
-    // atproto extension: if the client is not trusted, and not authenticated,
+    // atproto extension: if the client is not trusted, and not confidential,
     // force users to consent to authorization requests. We do this to avoid
     // unauthenticated clients from being able to silently re-authenticate
     // users.
-    if (
-      !client.info.isTrusted &&
-      !client.info.isFirstParty &&
-      client.metadata.token_endpoint_auth_method === 'none'
-    ) {
+    // @NOTE First party clients are trusted by default, but they can
+    // also be explicitly marked as un-trusted.
+    if (!client.isConfidential && !client.isTrusted) {
       if (parameters.prompt === 'none') {
         throw new ConsentRequiredError(
           parameters,
@@ -316,6 +314,18 @@ export class RequestManager {
     return parameters
   }
 
+  /**
+   * Reads the {@link ClientId} associated with a request URI without any of
+   * the validation or side-effects performed by {@link RequestManager.get}
+   *
+   * Returns `undefined` when no such request exists.
+   */
+  async peekClientId(requestUri: RequestUri): Promise<ClientId | undefined> {
+    const requestId = decodeRequestUri(requestUri)
+    const data = await this.store.readRequest(requestId)
+    return data?.clientId
+  }
+
   async get(requestUri: RequestUri, deviceId?: DeviceId, clientId?: ClientId) {
     const requestId = decodeRequestUri(requestUri)
 
@@ -325,7 +335,7 @@ export class RequestManager {
     const updates: UpdateRequestData = {}
 
     try {
-      if (data.sub || data.code) {
+      if (data.did || data.code) {
         // If an account was linked to the request, the next step is to exchange
         // the code for a token.
         throw new AccessDeniedError(
@@ -383,7 +393,10 @@ export class RequestManager {
     deviceId: DeviceId,
     deviceMetadata: RequestMetadata,
     scopeOverride?: string,
-  ): Promise<Code> {
+  ): Promise<{
+    code: Code
+    parameters: Readonly<OAuthAuthorizationRequestParameters>
+  }> {
     const requestId = decodeRequestUri(requestUri)
 
     const data = await this.store.readRequest(requestId)
@@ -392,6 +405,13 @@ export class RequestManager {
     let { parameters } = data
 
     try {
+      if (account.deactivated) {
+        throw new AccessDeniedError(
+          parameters,
+          'This account has been deactivated',
+        )
+      }
+
       if (data.expiresAt < new Date()) {
         throw new AccessDeniedError(parameters, 'This request has expired')
       }
@@ -407,7 +427,7 @@ export class RequestManager {
           'This request was initiated from another device',
         )
       }
-      if (data.sub || data.code) {
+      if (data.did || data.code) {
         throw new AccessDeniedError(
           parameters,
           'This request was already authorized',
@@ -418,30 +438,14 @@ export class RequestManager {
       // that every existing scope in the parameters is also present in the
       // override value. This allows the user to remove scopes from the request,
       // but not to add new ones.
-      if (scopeOverride != null) {
-        const allowedScopes = new Set(scopeOverride.split(' '))
-        const existingScopes = parameters.scope?.split(' ')
-
-        // Compute the intersection of the existing scopes and the overrides.
-        const newScopes = existingScopes?.filter((s) => allowedScopes.has(s))
-
-        // Validate: make sure the new scopes are valid
-        if (!newScopes?.includes('atproto')) {
-          throw new AccessDeniedError(
-            parameters,
-            'The "atproto" scope is required',
-          )
-        }
-
-        parameters = { ...parameters, scope: newScopes.join(' ') }
-      }
+      parameters = narrowAuthorizedScope(parameters, scopeOverride)
 
       // Only response_type=code is supported
       const code = await generateCode()
 
       // Bind the request to the account, preventing it from being used again.
       await this.store.updateRequest(requestId, {
-        sub: account.sub,
+        did: account.did,
         code,
         // Allow the client to exchange the code for a token within the next 60 seconds.
         expiresAt: new Date(Date.now() + AUTHORIZATION_INACTIVITY_TIMEOUT),
@@ -457,7 +461,7 @@ export class RequestManager {
         requestId,
       })
 
-      return code
+      return { code, parameters }
     } catch (err) {
       await this.store.deleteRequest(requestId)
       throw err
@@ -499,4 +503,24 @@ export class RequestManager {
     const requestId = decodeRequestUri(requestUri)
     await this.store.deleteRequest(requestId)
   }
+}
+
+/**
+ * Intersects the requested parameters with the scopes approved on the consent
+ * screen, so a client can never end up with more than it asked for.
+ */
+export function narrowAuthorizedScope<
+  P extends OAuthAuthorizationRequestParameters,
+>(parameters: P, scopeOverride: string | undefined): P {
+  if (scopeOverride == null || parameters.scope == null) return parameters
+
+  const requestedScopes = new Set(parameters.scope.split(' '))
+  const allowedScopes = new Set(scopeOverride.split(' '))
+
+  const newScopes = requestedScopes.intersection(allowedScopes)
+  if (!newScopes.has('atproto')) {
+    throw new AccessDeniedError(parameters, 'The "atproto" scope is required')
+  }
+
+  return { ...parameters, scope: Array.from(newScopes).join(' ') }
 }

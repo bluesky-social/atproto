@@ -1,15 +1,16 @@
 import { MINUTE, lessThanAgoMs } from '@atproto/common'
+import { type DidString, currentDatetimeString } from '@atproto/lex-schema'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { getRandomToken } from '../../api/com/atproto/server/util'
-import { AccountDb, EmailTokenPurpose } from '../db'
+import { getRandomToken } from '../../api/com/atproto/server/util.js'
+import type { AccountDb, EmailTokenPurpose } from '../db/index.js'
 
 export const createEmailToken = async (
   db: AccountDb,
-  did: string,
+  did: DidString,
   purpose: EmailTokenPurpose,
 ): Promise<string> => {
   const token = getRandomToken().toUpperCase()
-  const now = new Date().toISOString()
+  const now = currentDatetimeString()
   await db.executeWithRetry(
     db.db
       .insertInto('email_token')
@@ -23,7 +24,7 @@ export const createEmailToken = async (
 
 export const deleteEmailToken = async (
   db: AccountDb,
-  did: string,
+  did: DidString,
   purpose: EmailTokenPurpose,
 ) => {
   await db.executeWithRetry(
@@ -34,7 +35,7 @@ export const deleteEmailToken = async (
   )
 }
 
-export const deleteAllEmailTokens = async (db: AccountDb, did: string) => {
+export const deleteAllEmailTokens = async (db: AccountDb, did: DidString) => {
   await db.executeWithRetry(
     db.db.deleteFrom('email_token').where('did', '=', did),
   )
@@ -42,10 +43,9 @@ export const deleteAllEmailTokens = async (db: AccountDb, did: string) => {
 
 export const assertValidToken = async (
   db: AccountDb,
-  did: string,
+  did: DidString,
   purpose: EmailTokenPurpose,
   token: string,
-  expirationLen = 15 * MINUTE,
 ) => {
   const res = await db.db
     .selectFrom('email_token')
@@ -57,7 +57,7 @@ export const assertValidToken = async (
   if (!res) {
     throw new InvalidRequestError('Token is invalid', 'InvalidToken')
   }
-  const expired = !lessThanAgoMs(new Date(res.requestedAt), expirationLen)
+  const expired = !lessThanAgoMs(new Date(res.requestedAt), 15 * MINUTE)
   if (expired) {
     throw new InvalidRequestError('Token is expired', 'ExpiredToken')
   }
@@ -67,8 +67,7 @@ export const assertValidTokenAndFindDid = async (
   db: AccountDb,
   purpose: EmailTokenPurpose,
   token: string,
-  expirationLen = 15 * MINUTE,
-): Promise<string> => {
+): Promise<DidString> => {
   const res = await db.db
     .selectFrom('email_token')
     .select(['did', 'requestedAt'])
@@ -78,7 +77,7 @@ export const assertValidTokenAndFindDid = async (
   if (!res) {
     throw new InvalidRequestError('Token is invalid', 'InvalidToken')
   }
-  const expired = !lessThanAgoMs(new Date(res.requestedAt), expirationLen)
+  const expired = !lessThanAgoMs(new Date(res.requestedAt), 15 * MINUTE)
   if (expired) {
     throw new InvalidRequestError('Token is expired', 'ExpiredToken')
   }

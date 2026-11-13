@@ -1,4 +1,11 @@
-import { $type, NsidString, Schema, ValidationContext } from '../core.js'
+import {
+  type $Type,
+  $type,
+  type NsidString,
+  Schema,
+  type ValidationContext,
+  type ValidationResult,
+} from '../core.js'
 
 /**
  * Schema for Lexicon token values.
@@ -19,19 +26,32 @@ export class TokenSchema<
   const TValue extends string = string,
 > extends Schema<TValue> {
   readonly type = 'token' as const
+  readonly value: TValue
 
-  constructor(readonly value: TValue) {
+  constructor(value: TValue) {
     super()
+    this.value = value
   }
 
-  validateInContext(input: unknown, ctx: ValidationContext) {
+  get $token(): TValue {
+    return this.value
+  }
+
+  validateInContext(
+    input: unknown,
+    ctx: ValidationContext,
+  ): ValidationResult<TValue> {
     if (input === this.value) {
       return ctx.success(this.value)
     }
 
     // @NOTE: allow using the token instance itself (but convert to the actual
     // token value)
-    if (input instanceof TokenSchema && input.value === this.value) {
+    if (
+      ctx.options.mode === 'parse' &&
+      input instanceof TokenSchema &&
+      input.value === this.value
+    ) {
       return ctx.success(this.value)
     }
 
@@ -90,6 +110,6 @@ export class TokenSchema<
 export function token<
   const N extends NsidString,
   const H extends string = 'main',
->(nsid: N, hash: H = 'main' as H) {
+>(nsid: N, hash: H = 'main' as H): TokenSchema<$Type<N, H>> {
   return new TokenSchema($type(nsid, hash))
 }

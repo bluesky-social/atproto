@@ -1,11 +1,63 @@
 import assert from 'node:assert'
-import { ServiceImpl } from '@connectrpc/connect'
+import type { ServiceImpl } from '@connectrpc/connect'
+import { sql } from 'kysely'
 import { keyBy } from '@atproto/common'
-import { Service } from '../../../proto/bsky_connect'
-import { Database } from '../db'
-import { TimeCidKeyset, paginate } from '../db/pagination'
+import type { Service } from '../../../proto/bsky_connect.js'
+import type { Database } from '../db/index.js'
+import { TimeCidKeyset, paginate } from '../db/pagination.js'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
+  async getKnownLikers(req) {
+    const { actorDid, subjectUris, limit } = req
+    const results = subjectUris.map((subjectUri) => ({
+      subjectUri,
+      count: 0,
+      dids: [] as string[],
+    }))
+    if (limit <= 0 || subjectUris.length === 0) return { results }
+
+    const { rows } = await sql<{
+      ordinal: string
+      creator: string
+      count: number
+    }>`
+      with "rankedKnownLikers" as (
+        select
+          subjects.ordinal,
+          "recentLikes".creator,
+          count(*) over (partition by subjects.ordinal)::int as count,
+          row_number() over (
+            partition by subjects.ordinal
+            order by "recentLikes"."sortAt" desc
+          ) as rank
+        from unnest(${subjectUris}::varchar[]) with ordinality
+          as subjects("subjectUri", ordinal)
+        cross join lateral (
+          select "like".creator, "like"."sortAt"
+          from "like"
+          where "like".subject = subjects."subjectUri"
+          order by "like"."sortAt" desc
+          limit 500
+        ) as "recentLikes"
+        inner join follow on
+          follow."subjectDid" = "recentLikes".creator
+          and follow.creator = ${actorDid}
+      )
+      select ordinal, creator, count
+      from "rankedKnownLikers"
+      where rank <= ${limit}
+      order by ordinal, rank
+    `.execute(db.db)
+
+    for (const row of rows) {
+      const result = results[Number(row.ordinal) - 1]
+      assert(result)
+      result.count = row.count
+      result.dids.push(row.creator)
+    }
+    return { results }
+  },
+
   async getLikesBySubjectSorted(req) {
     const { subject, cursor, limit } = req
     const { ref } = db.db.dynamic
@@ -27,11 +79,11 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       keyset,
     })
 
-    const likes = await builder.execute()
+    const page = keyset.page(await builder.execute(), limit)
 
     return {
-      uris: likes.map((l) => l.uri),
-      cursor: keyset.packFromResult(likes),
+      uris: page.items.map((l) => l.uri),
+      cursor: page.cursor,
     }
   },
 
@@ -79,14 +131,14 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       keyset,
     })
 
-    const likes = await builder.execute()
+    const page = keyset.page(await builder.execute(), limit)
 
     return {
-      likes: likes.map((l) => ({
+      likes: page.items.map((l) => ({
         uri: l.uri,
         subject: l.subject,
       })),
-      cursor: keyset.packFromResult(likes),
+      cursor: page.cursor,
     }
   },
 })

@@ -1,10 +1,10 @@
-import { InvalidRequestError } from '@atproto/xrpc-server'
-import { AppContext } from '../../context'
-import { Server } from '../../lexicon'
-import { addAccountInfoToRepoViewDetail, getPdsAccountInfos } from '../util'
+import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
+import type { AppContext } from '../../context.js'
+import { tools } from '../../lexicons/index.js'
+import { addAccountInfoToRepoViewDetail, getPdsAccountInfos } from '../util.js'
 
 export default function (server: Server, ctx: AppContext) {
-  server.tools.ozone.moderation.getRepo({
+  server.add(tools.ozone.moderation.getRepo, {
     auth: ctx.authVerifier.modOrAdminToken,
     handler: async ({ params, auth, req }) => {
       const { did } = params

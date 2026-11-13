@@ -1,28 +1,31 @@
-import { EventEmitter } from 'node:stream'
-import TypedEventEmitter from 'typed-emitter'
-import { ServerConfig } from './config'
-import { Database } from './db'
-import { createMuteOpChannel } from './db/schema/mute_op'
-import { createNotifOpChannel } from './db/schema/notif_op'
-import { createOperationChannel } from './db/schema/operation'
+import { EventEmitter } from 'node:events'
+import type { ServerConfig } from './config.js'
+import { type DataplaneClient, createDataplaneClient } from './dataplane.js'
+import { Database } from './db/index.js'
+import type { createMuteOpChannel } from './db/schema/mute_op.js'
+import type { createNotifOpChannel } from './db/schema/notif_op.js'
+import type { createOperationChannel } from './db/schema/operation.js'
 
 export type AppContextOptions = {
   db: Database
   cfg: ServerConfig
   shutdown: AbortSignal
+  dataplaneClients: DataplaneClient[]
 }
 
 export class AppContext {
   db: Database
   cfg: ServerConfig
   shutdown: AbortSignal
-  events: TypedEventEmitter<AppEvents>
+  events: EventEmitter<AppEvents>
+  dataplaneClients: DataplaneClient[]
 
   constructor(opts: AppContextOptions) {
     this.db = opts.db
     this.cfg = opts.cfg
     this.shutdown = opts.shutdown
-    this.events = new EventEmitter() as TypedEventEmitter<AppEvents>
+    this.events = new EventEmitter<AppEvents>()
+    this.dataplaneClients = opts.dataplaneClients
   }
 
   static async fromConfig(
@@ -37,12 +40,25 @@ export class AppContext {
       poolMaxUses: cfg.db.poolMaxUses,
       poolIdleTimeoutMs: cfg.db.poolIdleTimeoutMs,
     })
-    return new AppContext({ db, cfg, shutdown, ...overrides })
+    const dataplaneClients = cfg.dataplane.urls.map((baseUrl) =>
+      createDataplaneClient({
+        baseUrl,
+        authToken: cfg.dataplane.authToken!,
+        rejectUnauthorized: cfg.dataplane.rejectUnauthorized,
+      }),
+    )
+    return new AppContext({
+      db,
+      cfg,
+      shutdown,
+      dataplaneClients,
+      ...overrides,
+    })
   }
 }
 
 export type AppEvents = {
-  [createMuteOpChannel]: () => void
-  [createNotifOpChannel]: () => void
-  [createOperationChannel]: () => void
+  [createMuteOpChannel]: []
+  [createNotifOpChannel]: []
+  [createOperationChannel]: []
 }

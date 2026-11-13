@@ -1,12 +1,13 @@
+import type { JSX } from 'react'
 import { useGetTokenInfoQuery } from '../queries/use-get-token-info-query.ts'
 import { Button } from './Button.tsx'
 import { JsonQueryResult } from './JsonQueryResult.tsx'
 
-export function TokenInfo() {
+export function TokenInfo(props: JSX.IntrinsicElements['div']) {
   const result = useGetTokenInfoQuery()
 
   return (
-    <div>
+    <div {...props}>
       <h2>
         Token info
         <Button

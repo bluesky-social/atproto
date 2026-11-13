@@ -1,19 +1,102 @@
-import { Un$Typed } from '@atproto/api'
+import assert from 'node:assert'
+import type { Un$Typed } from '@atproto/lex-schema'
+import type { AtUriString, DidString } from '@atproto/syntax'
+import { UpstreamFailureError } from '@atproto/xrpc-server'
+import type { AppContext } from '../../../../context.js'
+import type { HydrationState } from '../../../../hydration/hydrator.js'
+import type { app } from '../../../../lexicons/index.js'
 import {
-  ChatPreference,
-  FilterablePreference,
-  Preference,
-  Preferences,
-} from '../../../../lexicon/types/app/bsky/notification/defs'
-import {
-  ChatNotificationInclude,
-  ChatNotificationPreference,
-  FilterableNotificationPreference,
+  type FilterableNotificationPreference,
+  type GetNotificationPreferencesResponse,
   NotificationInclude,
-  NotificationPreference,
-  NotificationPreferences,
-} from '../../../../proto/bsky_pb'
-import { AppPlatform } from '../../../../proto/courier_pb'
+  type NotificationPreference,
+  type NotificationPreferences,
+} from '../../../../proto/bsky_pb.js'
+import { AppPlatform } from '../../../../proto/courier_pb.js'
+import { uriToDid } from '../../../../util/uris.js'
+import type { Views } from '../../../../views/index.js'
+import { isPostRecordType } from '../../../../views/types.js'
+import { NOTIFICATION_REASON } from './constants.js'
+
+export const shouldFilterReplyByThreadgate = (
+  reason: string,
+  uri: AtUriString,
+  viewer: string,
+  hydration: HydrationState,
+  views: Views,
+): boolean => {
+  if (reason !== NOTIFICATION_REASON.REPLY) return false
+
+  const post = hydration.posts?.get(uri)
+  if (!post) return false
+
+  // Filter out hidden replies only if the viewer owns
+  // the threadgate and they hid the reply.
+  const rootUri = isPostRecordType(post.record)
+    ? post.record.reply?.root.uri
+    : undefined
+  return Boolean(
+    rootUri &&
+    uriToDid(rootUri) === viewer &&
+    views.replyIsHiddenByThreadgate(uri, rootUri, hydration),
+  )
+}
+
+export const shouldFilterHiddenThreadTag = (
+  reason: string,
+  uri: AtUriString,
+  did: DidString,
+  hydration: HydrationState,
+  hiddenTags: ReadonlySet<string>,
+): boolean => {
+  if (
+    reason !== NOTIFICATION_REASON.REPLY &&
+    reason !== NOTIFICATION_REASON.QUOTE &&
+    reason !== NOTIFICATION_REASON.MENTION
+  ) {
+    return false
+  }
+
+  const post = hydration.posts?.get(uri)
+  if (!post || hydration.profileViewers?.get(did)?.following) return false
+
+  // Filter out notifications from users that have thread hide tags and are from people they
+  // are not following.
+  for (const tag of post.tags) {
+    if (hiddenTags.has(tag)) return true
+  }
+  return false
+}
+
+export const shouldFilterForNeedsReview = (
+  reason: string,
+  did: DidString,
+  uri: AtUriString,
+  hydration: HydrationState,
+  views: Views,
+): boolean => {
+  // Filter out notifications from users that need review unless moots.
+  const applies =
+    reason === NOTIFICATION_REASON.REPLY ||
+    reason === NOTIFICATION_REASON.QUOTE ||
+    reason === NOTIFICATION_REASON.MENTION ||
+    reason === NOTIFICATION_REASON.LIKE ||
+    reason === NOTIFICATION_REASON.FOLLOW ||
+    reason === NOTIFICATION_REASON.FOLLOW_BACK
+  return applies && !views.viewerSeesNeedsReview({ did, uri }, hydration)
+}
+
+/** Applies the configured delay to the notification cursor timestamp. */
+export const delayCursor = (
+  cursorStr: string | undefined,
+  delayMs: number,
+): string => {
+  const nowMinusDelay = Date.now() - delayMs
+  if (cursorStr === undefined) return new Date(nowMinusDelay).toISOString()
+  const cursor = new Date(cursorStr).getTime()
+  if (isNaN(cursor)) return cursorStr
+  return new Date(Math.min(cursor, nowMinusDelay)).toISOString()
+}
 
 type DeepPartial<T> = T extends object
   ? {
@@ -21,9 +104,68 @@ type DeepPartial<T> = T extends object
     }
   : T
 
+type LexNotificationPreferences =
+  Un$Typed<app.bsky.notification.defs.Preferences>
+
+const notificationPreferenceKeys = Object.keys({
+  chat: true,
+  follow: true,
+  like: true,
+  likeViaRepost: true,
+  mention: true,
+  quote: true,
+  reply: true,
+  repost: true,
+  repostViaRepost: true,
+  starterpackJoined: true,
+  subscribedPost: true,
+  unverified: true,
+  verified: true,
+} satisfies Record<keyof LexNotificationPreferences, true>) as Array<
+  keyof LexNotificationPreferences
+>
+
+export const mergeNotificationPreferences = (
+  current: LexNotificationPreferences,
+  updates: Partial<LexNotificationPreferences>,
+): LexNotificationPreferences => {
+  const preferences = { ...current }
+  for (const key of notificationPreferenceKeys) {
+    if (updates[key] !== undefined) {
+      Object.assign(preferences, { [key]: updates[key] })
+    }
+  }
+  return preferences
+}
+
+export const getNotificationPreferences = async (
+  ctx: AppContext,
+  actorDid: string,
+): Promise<LexNotificationPreferences> => {
+  let res: GetNotificationPreferencesResponse
+  try {
+    res = await ctx.dataplane.getNotificationPreferences({
+      dids: [actorDid],
+    })
+  } catch (err) {
+    throw new UpstreamFailureError(
+      'cannot get current notification preferences',
+      'NotificationPreferencesFailed',
+      { cause: err },
+    )
+  }
+
+  assert(
+    res.preferences.length === 1,
+    `expected exactly one preferences entry, got ${res.preferences.length}`,
+  )
+
+  return protobufToLex(res.preferences[0])
+}
+
 const ensureChatPreference = (
-  p?: DeepPartial<ChatPreference>,
-): ChatPreference => {
+  p?: DeepPartial<app.bsky.notification.defs.ChatPreference>,
+): app.bsky.notification.defs.ChatPreference => {
   const includeValues = ['all', 'accepted']
   return {
     include:
@@ -35,8 +177,8 @@ const ensureChatPreference = (
 }
 
 const ensureFilterablePreference = (
-  p?: DeepPartial<FilterablePreference>,
-): FilterablePreference => {
+  p?: DeepPartial<app.bsky.notification.defs.FilterablePreference>,
+): app.bsky.notification.defs.FilterablePreference => {
   const includeValues = ['all', 'follows']
   return {
     include:
@@ -48,7 +190,9 @@ const ensureFilterablePreference = (
   }
 }
 
-const ensurePreference = (p?: DeepPartial<Preference>): Preference => {
+const ensurePreference = (
+  p?: DeepPartial<app.bsky.notification.defs.Preference>,
+): app.bsky.notification.defs.Preference => {
   return {
     list: p?.list ?? true,
     push: p?.push ?? true,
@@ -56,8 +200,8 @@ const ensurePreference = (p?: DeepPartial<Preference>): Preference => {
 }
 
 const ensurePreferences = (
-  p: DeepPartial<Preferences>,
-): Un$Typed<Preferences> => {
+  p: DeepPartial<app.bsky.notification.defs.Preferences>,
+): app.bsky.notification.defs.Preferences => {
   return {
     chat: ensureChatPreference(p.chat),
     follow: ensureFilterablePreference(p.follow),
@@ -75,19 +219,15 @@ const ensurePreferences = (
   }
 }
 
-const protobufChatPreferenceToLex = (
-  p?: DeepPartial<ChatNotificationPreference>,
-): DeepPartial<ChatPreference> => {
-  return {
-    include:
-      p?.include === ChatNotificationInclude.ACCEPTED ? 'accepted' : 'all',
-    push: p?.push?.enabled,
+export const DEFAULT_CHAT_PREFERENCE: app.bsky.notification.defs.ChatPreference =
+  {
+    include: 'all',
+    push: true,
   }
-}
 
 const protobufFilterablePreferenceToLex = (
   p?: DeepPartial<FilterableNotificationPreference>,
-): DeepPartial<FilterablePreference> => {
+): Partial<app.bsky.notification.defs.FilterablePreference> => {
   return {
     include: p?.include === NotificationInclude.FOLLOWS ? 'follows' : 'all',
     list: p?.list?.enabled,
@@ -97,7 +237,7 @@ const protobufFilterablePreferenceToLex = (
 
 const protobufPreferenceToLex = (
   p?: DeepPartial<NotificationPreference>,
-): DeepPartial<Preference> => {
+): Partial<app.bsky.notification.defs.Preference> => {
   return {
     list: p?.list?.enabled,
     push: p?.push?.enabled,
@@ -106,9 +246,11 @@ const protobufPreferenceToLex = (
 
 export const protobufToLex = (
   res: DeepPartial<NotificationPreferences>,
-): Un$Typed<Preferences> => {
+): app.bsky.notification.defs.Preferences => {
   return ensurePreferences({
-    chat: protobufChatPreferenceToLex(res.chat),
+    // NOTE: See the deprecation notice on the lexicon. This field returns a static default value and shouldn't be used.
+    // Use the chat.bsky.notification.defs#preferences type instead.
+    chat: DEFAULT_CHAT_PREFERENCE,
     follow: protobufFilterablePreferenceToLex(res.follow),
     like: protobufFilterablePreferenceToLex(res.like),
     likeViaRepost: protobufFilterablePreferenceToLex(res.likeViaRepost),

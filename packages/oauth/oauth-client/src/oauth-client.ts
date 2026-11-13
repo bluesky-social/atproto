@@ -1,60 +1,55 @@
 import { Key, Keyset } from '@atproto/jwk'
 import {
-  OAuthAuthorizationRequestParameters,
-  OAuthClientIdDiscoverable,
-  OAuthClientMetadata,
-  OAuthClientMetadataInput,
-  OAuthResponseMode,
+  type CreateOAuthResolverOptions,
+  type OAuthResolver,
+  createOAuthResolver,
+} from '@atproto/oauth-resolver'
+import {
+  type OAuthAuthorizationRequestParameters,
+  type OAuthClientIdDiscoverable,
+  type OAuthClientMetadata,
+  type OAuthClientMetadataInput,
+  type OAuthResponseMode,
   oauthClientMetadataSchema,
 } from '@atproto/oauth-types'
 import {
-  AtprotoDid,
-  DidCache,
+  type AtprotoDid,
+  type DidCache,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   type DidResolverCommonOptions,
   assertAtprotoDid,
 } from '@atproto-labs/did-resolver'
-import { Fetch } from '@atproto-labs/fetch'
-import { HandleCache, HandleResolver } from '@atproto-labs/handle-resolver'
+import type { Fetch } from '@atproto-labs/fetch'
+import type { HandleCache, HandleResolver } from '@atproto-labs/handle-resolver'
 import { HANDLE_INVALID } from '@atproto-labs/identity-resolver'
 import { SimpleStoreMemory } from '@atproto-labs/simple-store-memory'
 import { FALLBACK_ALG } from './constants.js'
 import { AuthMethodUnsatisfiableError } from './errors/auth-method-unsatisfiable-error.js'
 import { TokenRevokedError } from './errors/token-revoked-error.js'
-import {
-  CreateIdentityResolverOptions,
-  createIdentityResolver,
-} from './identity-resolver.js'
-import {
-  AuthorizationServerMetadataCache,
-  OAuthAuthorizationServerMetadataResolver,
-} from './oauth-authorization-server-metadata-resolver.js'
 import { OAuthCallbackError } from './oauth-callback-error.js'
 import { negotiateClientAuthMethod } from './oauth-client-auth.js'
-import {
-  OAuthProtectedResourceMetadataResolver,
-  ProtectedResourceMetadataCache,
-} from './oauth-protected-resource-metadata-resolver.js'
-import { OAuthResolver } from './oauth-resolver.js'
-import { DpopNonceCache, OAuthServerAgent } from './oauth-server-agent.js'
+import type { DpopNonceCache, OAuthServerAgent } from './oauth-server-agent.js'
 import { OAuthServerFactory } from './oauth-server-factory.js'
 import { OAuthSession } from './oauth-session.js'
-import { RuntimeImplementation } from './runtime-implementation.js'
+import type { RuntimeImplementation } from './runtime-implementation.js'
 import { Runtime } from './runtime.js'
 import {
   SessionGetter,
-  SessionHooks,
-  SessionStore,
+  type SessionGetterOptions,
+  type SessionStore,
   isExpectedSessionError,
 } from './session-getter.js'
-import { InternalStateData, StateStore } from './state-store.js'
-import { AuthorizeOptions, CallbackOptions, ClientMetadata } from './types.js'
+import type { InternalStateData, StateStore } from './state-store.js'
+import type {
+  AuthorizeOptions,
+  CallbackOptions,
+  ClientMetadata,
+} from './types.js'
 import { validateClientMetadata } from './validate-client-metadata.js'
 
 // Export all types needed to construct OAuthClientOptions
 export type {
-  AuthorizationServerMetadataCache,
-  CreateIdentityResolverOptions,
+  CreateOAuthResolverOptions,
   DidCache,
   DpopNonceCache,
   Fetch,
@@ -64,9 +59,8 @@ export type {
   OAuthClientMetadata,
   OAuthClientMetadataInput,
   OAuthResponseMode,
-  ProtectedResourceMetadataCache,
   RuntimeImplementation,
-  SessionHooks,
+  SessionGetterOptions,
   SessionStore,
   StateStore,
 }
@@ -97,15 +91,13 @@ export type OAuthClientOptions = {
   // Stores
   stateStore: StateStore
   sessionStore: SessionStore
-  authorizationServerMetadataCache?: AuthorizationServerMetadataCache
-  protectedResourceMetadataCache?: ProtectedResourceMetadataCache
   dpopNonceCache?: DpopNonceCache
 
   // Services
   runtimeImplementation: RuntimeImplementation
   fetch?: Fetch
-} & CreateIdentityResolverOptions &
-  SessionHooks
+} & CreateOAuthResolverOptions &
+  SessionGetterOptions
 
 export type OAuthClientFetchMetadataOptions = {
   clientId: OAuthClientIdDiscoverable
@@ -167,14 +159,6 @@ export class OAuthClient {
       sessionStore,
 
       dpopNonceCache = new SimpleStoreMemory({ ttl: 60e3, max: 100 }),
-      authorizationServerMetadataCache = new SimpleStoreMemory({
-        ttl: 60e3,
-        max: 100,
-      }),
-      protectedResourceMetadataCache = new SimpleStoreMemory({
-        ttl: 60e3,
-        max: 100,
-      }),
 
       responseMode,
       clientMetadata,
@@ -192,19 +176,7 @@ export class OAuthClient {
 
     this.runtime = new Runtime(runtimeImplementation)
     this.fetch = options.fetch ?? globalThis.fetch
-    this.oauthResolver = new OAuthResolver(
-      createIdentityResolver(options),
-      new OAuthProtectedResourceMetadataResolver(
-        protectedResourceMetadataCache,
-        this.fetch,
-        { allowHttpResource: options.allowHttp },
-      ),
-      new OAuthAuthorizationServerMetadataResolver(
-        authorizationServerMetadataCache,
-        this.fetch,
-        { allowHttpIssuer: options.allowHttp },
-      ),
-    )
+    this.oauthResolver = createOAuthResolver(options)
     this.serverFactory = new OAuthServerFactory(
       this.clientMetadata,
       this.runtime,

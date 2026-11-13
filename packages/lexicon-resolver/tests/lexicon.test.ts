@@ -1,21 +1,27 @@
-import { SeedClient, TestNetworkNoAppView, usersSeed } from '@atproto/dev-env'
-import { NSID } from '@atproto/syntax'
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 import {
-  AtprotoLexiconResolver,
+  type SeedClient,
+  TestNetworkNoAppView,
+  usersSeed,
+} from '@atproto/dev-env'
+import { type DidString, NSID } from '@atproto/syntax'
+import {
+  type AtprotoLexiconResolver,
   buildLexiconResolver,
   resolveLexiconDidAuthority,
 } from '../src/index.js'
 
 const dnsEntries: [entry: string, ...result: string[][]][] = []
 
-jest.mock('node:dns/promises', () => {
-  return {
+vi.mock('node:dns/promises', () => {
+  const mock = {
     resolveTxt: (entry: string) => {
       const found = dnsEntries.find(([e]) => e === entry)
       if (found) return found.slice(1)
       return []
     },
   }
+  return { default: mock, ...mock }
 })
 
 describe('Lexicon resolution', () => {
@@ -34,15 +40,14 @@ describe('Lexicon resolution', () => {
       rpc: { fetch },
       idResolver: network.pds.ctx.idResolver,
     })
-  })
+  }, 20_000) // @NOTE seeding can take a while
 
   afterAll(async () => {
-    jest.unmock('node:dns/promises')
-    await network.close()
+    await network?.close()
   })
 
   it('resolves Lexicon.', async () => {
-    const client = network.pds.getClient()
+    const client = network.pds.getAgent()
     const lex = await client.com.atproto.lexicon.schema.create(
       { repo: sc.dids.alice, rkey: 'example.alice.name1' },
       { id: 'example.alice.name1', lexicon: 1, defs: {} },
@@ -64,7 +69,7 @@ describe('Lexicon resolution', () => {
   })
 
   it('fails on mismatched id.', async () => {
-    const client = network.pds.getClient()
+    const client = network.pds.getAgent()
     await client.com.atproto.lexicon.schema.create(
       { repo: sc.dids.alice, rkey: 'example.alice.mismatch' },
       { id: 'example.test1.mismatch.bad', lexicon: 1, defs: {} },
@@ -80,7 +85,7 @@ describe('Lexicon resolution', () => {
   })
 
   it('fails on missing DNS entry.', async () => {
-    const client = network.pds.getClient()
+    const client = network.pds.getAgent()
     await client.com.atproto.lexicon.schema.create(
       { repo: sc.dids.bob, rkey: 'example.bob.name' },
       { id: 'example.bob.name', lexicon: 1, defs: {} },
@@ -104,7 +109,7 @@ describe('Lexicon resolution', () => {
   })
 
   it('fails on bad verification.', async () => {
-    const client = network.pds.getClient()
+    const client = network.pds.getAgent()
     const alicekey = await network.pds.ctx.actorStore.keypair(sc.dids.alice)
     const bobkey = await network.pds.ctx.actorStore.keypair(sc.dids.bob)
     await client.com.atproto.lexicon.schema.create(
@@ -142,7 +147,7 @@ describe('Lexicon resolution', () => {
   })
 
   it('fails on invalid Lexicon document.', async () => {
-    const client = network.pds.getClient()
+    const client = network.pds.getAgent()
     await client.com.atproto.lexicon.schema.create(
       { repo: sc.dids.alice, rkey: 'example.alice.baddoc' },
       { id: 'example.alice.baddoc', lexicon: 999, defs: {} },
@@ -157,14 +162,14 @@ describe('Lexicon resolution', () => {
         name: 'LexiconResolutionError',
         message: 'Invalid Lexicon document (example.alice.baddoc)',
         cause: expect.objectContaining({
-          name: 'ZodError',
+          name: 'LexValidationError',
         }),
       }),
     )
   })
 
   it('resolves Lexicon based on override authority.', async () => {
-    const client = network.pds.getClient()
+    const client = network.pds.getAgent()
     await client.com.atproto.lexicon.schema.create(
       { repo: sc.dids.alice, rkey: 'example.alice.override' },
       {
@@ -184,7 +189,7 @@ describe('Lexicon resolution', () => {
       sc.getHeaders(sc.dids.carol),
     )
     const result = await resolveLexicon('example.alice.override', {
-      didAuthority: sc.dids.carol,
+      didAuthority: sc.dids.carol as DidString,
       forceRefresh: true,
     })
     expect(result.commit.did).toEqual(sc.dids.carol)
@@ -248,6 +253,7 @@ describe('Lexicon resolution', () => {
     })
 
     it('fails on invalid NSID', async () => {
+      // @ts-expect-error testing invalid input
       await expect(resolveLexiconDidAuthority('not an nsid')).rejects.toThrow(
         'Disallowed characters in NSID',
       )

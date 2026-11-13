@@ -1,36 +1,44 @@
 import { mapDefined } from '@atproto/common'
-import { AppContext } from '../../../../context'
-import {
+import type { DidString } from '@atproto/syntax'
+import type { Server } from '@atproto/xrpc-server'
+import type { AppContext } from '../../../../context.js'
+import type {
   HydrateCtx,
   HydrationState,
   Hydrator,
-} from '../../../../hydration/hydrator'
-import { Server } from '../../../../lexicon'
-import { ids } from '../../../../lexicon/lexicons'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/actor/getProfiles'
-import { createPipeline, noRules } from '../../../../pipeline'
-import { Views } from '../../../../views'
-import { resHeaders } from '../../../util'
+} from '../../../../hydration/hydrator.js'
+import { app } from '../../../../lexicons/index.js'
+import { createPipeline, noRules } from '../../../../pipeline.js'
+import type { Views } from '../../../../views/index.js'
+import { resHeaders } from '../../../util.js'
 
 export default function (server: Server, ctx: AppContext) {
   const getProfile = createPipeline(skeleton, hydration, noRules, presentation)
-  server.app.bsky.actor.getProfiles({
+  server.add(app.bsky.actor.getProfiles, {
     auth: ctx.authVerifier.standardOptionalParameterized({
       lxmCheck: (method) => {
         if (!method) return false
         return (
-          method === ids.AppBskyActorGetProfiles ||
+          method === app.bsky.actor.getProfiles.$lxm ||
           method.startsWith('chat.bsky.')
         )
       },
     }),
+    opts: {
+      // @TODO remove after grace period has passed, behavior is non-standard.
+      // temporarily added for compat w/ previous version of xrpc-server to avoid breakage of a few specified parties.
+      paramsParseLoose: true,
+    },
     handler: async ({ auth, params, req }) => {
-      const { viewer, includeTakedowns } = ctx.authVerifier.parseCreds(auth)
+      const { viewer, includeTakedowns, skipViewerBlocks } =
+        ctx.authVerifier.parseCreds(auth)
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({
+        xrpcEndpoint: app.bsky.actor.getProfiles.$lxm,
         viewer,
         labelers,
         includeTakedowns,
+        skipViewerBlocks,
       })
 
       const result = await getProfile({ ...params, hydrateCtx }, ctx)
@@ -64,7 +72,11 @@ const hydration = async (input: {
   skeleton: SkeletonState
 }) => {
   const { ctx, params, skeleton } = input
-  return ctx.hydrator.hydrateProfilesDetailed(skeleton.dids, params.hydrateCtx)
+  return ctx.hydrator.hydrateProfilesDetailed(
+    skeleton.dids,
+    params.hydrateCtx,
+    { knownFollowersDids: skeleton.dids, activitySubscriptions: true },
+  )
 }
 
 const presentation = (input: {
@@ -85,8 +97,8 @@ type Context = {
   views: Views
 }
 
-type Params = QueryParams & {
+type Params = app.bsky.actor.getProfiles.$Params & {
   hydrateCtx: HydrateCtx
 }
 
-type SkeletonState = { dids: string[] }
+type SkeletonState = { dids: DidString[] }

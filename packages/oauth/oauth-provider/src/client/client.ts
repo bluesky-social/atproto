@@ -1,5 +1,5 @@
 import {
-  JWTClaimVerificationOptions,
+  type JWTClaimVerificationOptions,
   type JWTHeaderParameters,
   type JWTPayload,
   type JWTVerifyOptions,
@@ -15,15 +15,14 @@ import {
   exportJWK,
   jwtVerify,
 } from 'jose'
-import { Jwks, SignedJwt, UnsignedJwt } from '@atproto/jwk'
+import type { Jwks, SignedJwt, UnsignedJwt } from '@atproto/jwk'
 import {
   CLIENT_ASSERTION_TYPE_JWT_BEARER,
-  OAuthAuthorizationRequestParameters,
-  OAuthClientCredentials,
-  OAuthClientMetadata,
-  OAuthRedirectUri,
+  type OAuthAuthorizationRequestParameters,
+  type OAuthClientCredentials,
+  type OAuthClientMetadata,
+  type OAuthRedirectUri,
 } from '@atproto/oauth-types'
-import { CLIENT_ASSERTION_MAX_AGE, JAR_MAX_AGE } from '../constants.js'
 import { AuthorizationError } from '../errors/authorization-error.js'
 import { InvalidAuthorizationDetailsError } from '../errors/invalid-authorization-details-error.js'
 import { InvalidClientError } from '../errors/invalid-client-error.js'
@@ -32,10 +31,18 @@ import { InvalidRequestError } from '../errors/invalid-request-error.js'
 import { InvalidScopeError } from '../errors/invalid-scope-error.js'
 import { asArray } from '../lib/util/cast.js'
 import { compareRedirectUri } from '../lib/util/redirect-uri.js'
-import { Awaitable } from '../lib/util/type.js'
-import { ClientAuth } from './client-auth.js'
-import { ClientId } from './client-id.js'
-import { ClientInfo } from './client-info.js'
+import type { Awaitable } from '../lib/util/type.js'
+import {
+  CLIENT_ASSERTION_MAX_AGE,
+  JAR_MAX_AGE,
+  REFRESH_LIFETIME,
+  REFRESH_LIFETIME_EXTENDED,
+  SESSION_LIFETIME,
+  SESSION_LIFETIME_EXTENDED,
+} from '../oauth-constants.js'
+import type { ClientAuth } from './client-auth.js'
+import type { ClientId } from './client-id.js'
+import type { ClientInfo } from './client-info.js'
 
 const { JOSEError } = errors
 
@@ -60,6 +67,41 @@ export class Client {
       jwks || !metadata.jwks_uri
         ? createLocalJWKSet(jwks || { keys: [] })
         : createRemoteJWKSet(new URL(metadata.jwks_uri), {})
+  }
+
+  get isTrusted(): boolean {
+    return this.info.isTrusted
+  }
+
+  get isFirstParty(): boolean {
+    return this.info.isFirstParty
+  }
+
+  get isConfidential(): boolean {
+    return this.metadata.token_endpoint_auth_method !== 'none'
+  }
+
+  /**
+   * Total lifetime of a refresh token for this client. This is the maximum
+   * amount of time a refresh token can be valid for, regardless of activity.
+   *
+   * If a session is not refreshed within this time, the refresh token will be
+   * invalidated and the user will need to re-authenticate.
+   */
+  get refreshLifetime() {
+    return this.isConfidential || (this.isFirstParty && this.isTrusted)
+      ? REFRESH_LIFETIME_EXTENDED
+      : REFRESH_LIFETIME
+  }
+
+  /**
+   * Total lifetime of a session for this client. This is the maximum amount of
+   * time a session can be valid for, regardless of activity.
+   */
+  get sessionLifetime() {
+    return this.isConfidential || (this.isFirstParty && this.isTrusted)
+      ? SESSION_LIFETIME_EXTENDED
+      : SESSION_LIFETIME
   }
 
   /**

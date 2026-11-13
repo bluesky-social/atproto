@@ -7,8 +7,8 @@ import {
   type VerifyOptions,
   type VerifyResult,
 } from '@atproto/oauth-client'
-import type { NativeJwk } from '../ExpoAtprotoOAuthClientModule'
-import { default as NativeModule } from '../ExpoAtprotoOAuthClientModule'
+import type { NativeJwk } from '../ExpoAtprotoOAuthClientModule.js'
+import { default as NativeModule } from '../ExpoAtprotoOAuthClientModule.js'
 
 export type ExpoJwk = Jwk & NativeJwk & { key_ops: ['sign'] }
 export class ExpoKey extends Key<ExpoJwk> {

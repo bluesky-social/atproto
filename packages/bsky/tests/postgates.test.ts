@@ -1,7 +1,7 @@
-import AtpAgent, { AppBskyEmbedRecord } from '@atproto/api'
-import { SeedClient, TestNetwork } from '@atproto/dev-env'
-import { ids } from '../src/lexicon/lexicons'
-import { Users, postgatesSeed } from './seed/postgates'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
+import { AppBskyEmbedRecord, type AtpAgent, ids } from '@atproto/api'
+import { type SeedClient, TestNetwork } from '@atproto/dev-env'
+import { type Users, postgatesSeed } from './seed/postgates.js'
 
 describe('postgates', () => {
   let network: TestNetwork
@@ -14,19 +14,16 @@ describe('postgates', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_tests_postgates',
     })
-    agent = network.bsky.getClient()
-    pdsAgent = network.pds.getClient()
+    agent = network.bsky.getAgent()
+    pdsAgent = network.pds.getAgent()
     sc = network.getSeedClient()
 
     const result = await postgatesSeed(sc)
     users = result.users
-
-    await network.processAll()
   })
 
-  afterAll(async () => {
-    await network.close()
-  })
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
 
   describe(`quotee <-> quoter`, () => {
     it(`quotee detaches own post from quoter`, async () => {

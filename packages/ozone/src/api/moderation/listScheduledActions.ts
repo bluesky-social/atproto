@@ -1,9 +1,10 @@
-import { AppContext } from '../../context'
-import { Server } from '../../lexicon'
-import { getScheduledActionStatus } from '../util'
+import type { Server } from '@atproto/xrpc-server'
+import type { AppContext } from '../../context.js'
+import { tools } from '../../lexicons/index.js'
+import { getScheduledActionStatus } from '../util.js'
 
 export default function (server: Server, ctx: AppContext) {
-  server.tools.ozone.moderation.listScheduledActions({
+  server.add(tools.ozone.moderation.listScheduledActions, {
     auth: ctx.authVerifier.modOrAdminToken,
     handler: async ({ input }) => {
       const db = ctx.db

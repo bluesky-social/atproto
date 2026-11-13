@@ -1,21 +1,22 @@
-import { Selectable } from 'kysely'
-import { CID } from 'multiformats/cid'
-import { AtUri, normalizeDatetimeAlways } from '@atproto/syntax'
-import * as lex from '../../../../lexicon/lexicons'
-import * as List from '../../../../lexicon/types/app/bsky/graph/list'
-import { BackgroundQueue } from '../../background'
-import { Database } from '../../db'
-import { DatabaseSchema, DatabaseSchemaType } from '../../db/database-schema'
-import { RecordProcessor } from '../processor'
+import type { Selectable } from 'kysely'
+import { type Cid, getBlobCidString } from '@atproto/lex-data'
+import { type AtUri, normalizeDatetimeAlways } from '@atproto/syntax'
+import { app } from '../../../../lexicons/index.js'
+import type { BackgroundQueue } from '../../background.js'
+import type {
+  DatabaseSchema,
+  DatabaseSchemaType,
+} from '../../db/database-schema.js'
+import type { Database } from '../../db/index.js'
+import { RecordProcessor } from '../processor.js'
 
-const lexId = lex.ids.AppBskyGraphList
 type IndexedList = Selectable<DatabaseSchemaType['list']>
 
 const insertFn = async (
   db: DatabaseSchema,
   uri: AtUri,
-  cid: CID,
-  obj: List.Record,
+  cid: Cid,
+  obj: app.bsky.graph.list.Main,
   timestamp: string,
 ): Promise<IndexedList | null> => {
   const inserted = await db
@@ -30,7 +31,7 @@ const insertFn = async (
       descriptionFacets: obj.descriptionFacets
         ? JSON.stringify(obj.descriptionFacets)
         : undefined,
-      avatarCid: obj.avatar?.ref.toString(),
+      avatarCid: getBlobCidString(obj.avatar),
       createdAt: normalizeDatetimeAlways(obj.createdAt),
       indexedAt: timestamp,
     })
@@ -64,14 +65,13 @@ const notifsForDelete = () => {
   return { notifs: [], toDelete: [] }
 }
 
-export type PluginType = RecordProcessor<List.Record, IndexedList>
-
+export type PluginType = ReturnType<typeof makePlugin>
 export const makePlugin = (
   db: Database,
-  background: BackgroundQueue,
-): PluginType => {
+  background: BackgroundQueue<Database>,
+) => {
   return new RecordProcessor(db, background, {
-    lexId,
+    schema: app.bsky.graph.list.main,
     insertFn,
     findDuplicate,
     deleteFn,

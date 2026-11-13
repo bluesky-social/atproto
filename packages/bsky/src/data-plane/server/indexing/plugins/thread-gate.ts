@@ -1,21 +1,22 @@
-import { CID } from 'multiformats/cid'
+import type { Cid } from '@atproto/lex-data'
 import { AtUri, normalizeDatetimeAlways } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import * as lex from '../../../../lexicon/lexicons'
-import * as Threadgate from '../../../../lexicon/types/app/bsky/feed/threadgate'
-import { BackgroundQueue } from '../../background'
-import { Database } from '../../db'
-import { DatabaseSchema, DatabaseSchemaType } from '../../db/database-schema'
-import { RecordProcessor } from '../processor'
+import { app } from '../../../../lexicons/index.js'
+import type { BackgroundQueue } from '../../background.js'
+import type {
+  DatabaseSchema,
+  DatabaseSchemaType,
+} from '../../db/database-schema.js'
+import type { Database } from '../../db/index.js'
+import { RecordProcessor } from '../processor.js'
 
-const lexId = lex.ids.AppBskyFeedThreadgate
 type IndexedGate = DatabaseSchemaType['thread_gate']
 
 const insertFn = async (
   db: DatabaseSchema,
   uri: AtUri,
-  cid: CID,
-  obj: Threadgate.Record,
+  cid: Cid,
+  obj: app.bsky.feed.threadgate.Main,
   timestamp: string,
 ): Promise<IndexedGate | null> => {
   const postUri = new AtUri(obj.post)
@@ -48,7 +49,7 @@ const insertFn = async (
 const findDuplicate = async (
   db: DatabaseSchema,
   _uri: AtUri,
-  obj: Threadgate.Record,
+  obj: app.bsky.feed.threadgate.Main,
 ): Promise<AtUri | null> => {
   const found = await db
     .selectFrom('thread_gate')
@@ -85,14 +86,13 @@ const notifsForDelete = () => {
   return { notifs: [], toDelete: [] }
 }
 
-export type PluginType = RecordProcessor<Threadgate.Record, IndexedGate>
-
+export type PluginType = ReturnType<typeof makePlugin>
 export const makePlugin = (
   db: Database,
-  background: BackgroundQueue,
-): PluginType => {
+  background: BackgroundQueue<Database>,
+) => {
   return new RecordProcessor(db, background, {
-    lexId,
+    schema: app.bsky.feed.threadgate.main,
     insertFn,
     findDuplicate,
     deleteFn,

@@ -1,5 +1,5 @@
 import { once } from 'node:events'
-import { Etcd3, Watcher } from 'etcd3'
+import type { Etcd3, Watcher } from 'etcd3'
 
 /**
  * A reactive map based on the keys and values stored within etcd under a given prefix.

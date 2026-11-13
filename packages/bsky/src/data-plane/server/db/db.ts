@@ -2,22 +2,23 @@ import assert from 'node:assert'
 import EventEmitter from 'node:events'
 import {
   Kysely,
-  KyselyPlugin,
-  Migrator,
-  PluginTransformQueryArgs,
-  PluginTransformResultArgs,
+  type KyselyPlugin,
+  type PluginTransformQueryArgs,
+  type PluginTransformResultArgs,
   PostgresDialect,
-  QueryResult,
-  RootOperationNode,
-  UnknownRow,
+  type QueryResult,
+  type RootOperationNode,
+  type UnknownRow,
 } from 'kysely'
-import { Pool as PgPool, types as pgTypes } from 'pg'
-import TypedEmitter from 'typed-emitter'
-import { dbLogger } from '../../../logger'
-import { DatabaseSchema, DatabaseSchemaType } from './database-schema'
-import * as migrations from './migrations'
-import { CtxMigrationProvider } from './migrations/provider'
-import { PgOptions } from './types'
+import { Migrator } from 'kysely/migration'
+import pg from 'pg'
+const { Pool: PgPool, types: pgTypes } = pg
+type PgPool = InstanceType<typeof PgPool>
+import { dbLogger } from '../../../logger.js'
+import type { DatabaseSchema, DatabaseSchemaType } from './database-schema.js'
+import * as migrations from './migrations/index.js'
+import { CtxMigrationProvider } from './migrations/provider.js'
+import type { PgOptions } from './types.js'
 
 export type { DatabaseSchema }
 
@@ -25,7 +26,7 @@ export class Database {
   pool: PgPool
   db: DatabaseSchema
   migrator: Migrator
-  txEvt = new EventEmitter() as TxnEmitter
+  txEvt = new EventEmitter<TxnEvents>()
   destroyed = false
 
   constructor(
@@ -191,10 +192,8 @@ class LeakyTxPlugin implements KyselyPlugin {
   }
 }
 
-type TxnEmitter = TypedEmitter<TxnEvents>
-
 type TxnEvents = {
-  commit: () => void
+  commit: []
 }
 
 const noopAsync = async () => {}

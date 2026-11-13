@@ -2,24 +2,25 @@ import fsSync from 'node:fs'
 import fs from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
-import { Duplex, Readable } from 'node:stream'
-import { pipeline } from 'node:stream/promises'
+import type { Readable } from 'node:stream'
+import { pipeline } from 'node:stream'
+import { pipeline as pipelinePromise } from 'node:stream/promises'
 import createError, { isHttpError } from 'http-errors'
 import {
   VerifyCidError,
   VerifyCidTransform,
-  cloneStream,
   createDecoders,
+  fanOut,
   isErrnoException,
 } from '@atproto/common'
 import { BlobNotFoundError } from '@atproto/repo'
-import { StreamBlobOptions, streamBlob } from '../api/blob-resolver'
-import { AppContext } from '../context'
-import { Middleware, responseSignal } from '../util/http'
-import log from './logger'
-import { createImageProcessor, createImageUpscaler } from './sharp'
-import { BadPathError, ImageUriBuilder } from './uri'
-import { Options, SharpInfo, formatsToMimes } from './util'
+import { type StreamBlobOptions, streamBlob } from '../api/blob-resolver.js'
+import type { AppContext } from '../context.js'
+import type { Middleware } from '../util/http.js'
+import log from './logger.js'
+import { createImageProcessor, createImageUpscaler } from './sharp.js'
+import { BadPathError, ImageUriBuilder } from './uri.js'
+import { type Options, formatsToMimes } from './util.js'
 
 export function createMiddleware(
   ctx: AppContext,
@@ -36,6 +37,9 @@ export function createMiddleware(
 
   const cache = new BlobDiskCache(ctx.cfg.blobCacheLocation)
 
+  // @TODO this should be from configuration
+  const imageMaxSize = 100 * 1024 * 1024 // 100 MB
+
   return async (req, res, next) => {
     if (res.destroyed) return
     if (req.method !== 'GET' && req.method !== 'HEAD') return next()
@@ -45,6 +49,7 @@ export function createMiddleware(
 
     try {
       const options = ImageUriBuilder.getOptions(path)
+      const outputType = getMime(options.format)
 
       const cacheKey = [options.did, options.cid, options.preset].join('::')
 
@@ -54,10 +59,10 @@ export function createMiddleware(
         const cachedImage = await cache.get(cacheKey)
         res.statusCode = 200
         res.setHeader('x-cache', 'hit')
-        res.setHeader('content-type', getMime(options.format))
+        res.setHeader('content-type', outputType)
         res.setHeader('cache-control', `public, max-age=31536000`) // 1 year
         res.setHeader('content-length', cachedImage.size)
-        await pipeline(cachedImage, res)
+        await pipelinePromise(cachedImage, res)
         return
       } catch (err) {
         if (!(err instanceof BlobNotFoundError)) {
@@ -81,7 +86,6 @@ export function createMiddleware(
       const streamOptions: StreamBlobOptions = {
         did: options.did,
         cid: options.cid,
-        signal: responseSignal(res),
       }
 
       await streamBlob(ctx, streamOptions, (upstream, { did, cid, url }) => {
@@ -90,37 +94,62 @@ export function createMiddleware(
           throw createError(400, 'Not an image')
         }
 
-        // Let's transform (decompress, verify CID, upscale), process and respond
+        const contentLength = upstream.headers['content-length']
+          ? Number(upstream.headers['content-length'])
+          : undefined
+        if (contentLength && contentLength > imageMaxSize) {
+          throw createError(400, 'Image too large')
+        }
 
-        const transforms: Duplex[] = [
-          ...createDecoders(upstream.headers['content-encoding']),
+        const streams = [
+          // decompress
+          ...createDecoders(upstream.headers['content-encoding'], {
+            maxSize: imageMaxSize,
+            maxSizeError: () => createError(400, 'Image too large'),
+          }),
+          // verify
           new VerifyCidTransform(cid),
+          // upscale
           createImageUpscaler(options),
+          // format (jpeg/webp)
+          createImageProcessor(options).once('info', (info) => {
+            // @NOTE sharp does emit this in time to be set as a header
+            if (!res.destroyed && !res.headersSent) {
+              res.setHeader('content-length', info.size)
+            }
+          }),
+          // send downstream and save to cache in parallel. Applies backpressure
+          // based on slowest consumer, avoiding memory pressure.
+          fanOut(res, (branch) => {
+            void cache
+              .put(cacheKey, branch)
+              .finally(() => {
+                // Fail-safe: Make sure that the fanOut is no longer waiting for
+                // this branch to drain (note that the cache implementation
+                // should do this automatically).
+                branch.destroy()
+              })
+              .catch((err: unknown) => {
+                log.warn(
+                  { err, did, cid: cid.toString(), pds: url.origin },
+                  'failed to cache processed image',
+                )
+              })
+          }),
         ]
-        const processor = createImageProcessor(options)
-
-        // Cache in the background
-        cache
-          .put(cacheKey, cloneStream(processor))
-          .catch((err) => log.error({ err }, 'failed to cache image'))
 
         res.statusCode = 200
+        res.setHeader('content-type', outputType)
         res.setHeader('cache-control', `public, max-age=31536000`) // 1 year
         res.setHeader('x-cache', 'miss')
-        processor.once('info', ({ size, format }: SharpInfo) => {
-          const type = formatsToMimes.get(format) || 'application/octet-stream'
 
-          // @NOTE sharp does emit this in time to be set as a header
-          res.setHeader('content-length', size)
-          res.setHeader('content-type', type)
-        })
-
-        const streams = [...transforms, processor, res]
-        void pipeline(streams).catch((err: unknown) => {
-          log.warn(
-            { err, did, cid: cid.toString(), pds: url.origin },
-            'blob resolution failed during transmission',
-          )
+        pipeline(streams, (err) => {
+          if (err) {
+            log.warn(
+              { err, did, cid: cid.toString(), pds: url.origin },
+              'blob resolution failed during transmission',
+            )
+          }
         })
 
         return streams[0]!
@@ -214,6 +243,8 @@ export class BlobDiskCache implements BlobCache {
       // Do not overwrite existing file, just ignore the error
       if (isErrnoException(err) && err.code === 'EEXIST') return
       throw err
+    } finally {
+      stream.destroy()
     }
   }
 

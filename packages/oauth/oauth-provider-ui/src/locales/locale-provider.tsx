@@ -1,7 +1,7 @@
 import { I18n } from '@lingui/core'
 import { I18nProvider } from '@lingui/react'
 import {
-  ReactNode,
+  type ReactNode,
   createContext,
   useContext,
   useEffect,
@@ -11,7 +11,7 @@ import {
 // @NOTE run "pnpm run po:compile" to compile the messages from the PO files
 import { messages as en } from './en/messages.ts'
 import { loadMessages } from './load.ts'
-import { Locale, detectLocale, isLocale, locales } from './locales.ts'
+import { type Locale, detectLocale, isLocale, locales } from './locales.ts'
 
 export type LocaleContextValue = {
   locale: string
@@ -20,6 +20,7 @@ export type LocaleContextValue = {
 }
 
 const LocaleContext = createContext<LocaleContextValue | null>(null)
+LocaleContext.displayName = 'LocaleContext'
 
 export function useLocaleContext(): LocaleContextValue {
   const context = useContext(LocaleContext)
@@ -34,7 +35,7 @@ export function useCurrentLocale(): string {
 }
 
 export function LocaleProvider({
-  userLocales = [],
+  userLocales = window.navigator.languages,
   children,
 }: {
   userLocales?: readonly string[]
@@ -105,8 +106,8 @@ export function LocaleProvider({
   )
 
   return (
-    <LocaleContext value={value}>
+    <LocaleContext.Provider value={value}>
       <I18nProvider i18n={i18n}>{initialized && children}</I18nProvider>
-    </LocaleContext>
+    </LocaleContext.Provider>
   )
 }

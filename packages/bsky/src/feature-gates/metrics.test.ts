@@ -1,10 +1,18 @@
-/// <reference types="jest" />
-import { featureGatesLogger } from '../logger'
-import { MetricsClient } from './metrics'
+import {
+  type Mock,
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest'
+import { featureGatesLogger } from '../logger.js'
+import { MetricsClient } from './metrics.js'
 
-jest.mock('../logger', () => ({
+vi.mock('../logger', () => ({
   featureGatesLogger: {
-    error: jest.fn(),
+    error: vi.fn(),
   },
 }))
 
@@ -17,14 +25,14 @@ type TestEvents = {
 const flushPromises = () => new Promise((r) => setImmediate(r))
 
 describe('MetricsClient', () => {
-  let fetchMock: jest.Mock
+  let fetchMock: Mock
   let fetchRequests: { body: any }[]
   let client: MetricsClient<TestEvents>
 
   beforeEach(() => {
-    jest.useFakeTimers({ doNotFake: ['setImmediate', 'performance'] })
+    vi.useFakeTimers({ toFake: ['setTimeout', 'setInterval'] })
     fetchRequests = []
-    fetchMock = jest.fn().mockImplementation(async (_url, options) => {
+    fetchMock = vi.fn().mockImplementation(async (_url, options) => {
       const body = JSON.parse(options.body)
       fetchRequests.push({ body })
       return { ok: true, status: 200, text: async () => '' }
@@ -32,23 +40,23 @@ describe('MetricsClient', () => {
     global.fetch = fetchMock
   })
 
-  afterEach(() => {
-    client?.stop()
-    jest.useRealTimers()
-    jest.clearAllMocks()
+  afterEach(async () => {
+    await client?.stop()
+    vi.useRealTimers()
+    vi.clearAllMocks()
   })
 
   it('flushes events on interval', async () => {
     client = new MetricsClient<TestEvents>({
       trackingEndpoint: 'https://test.metrics.api',
     })
-    client.track('click', { button: 'submit' })
-    client.track('view', { screen: 'home' })
+    await client.track('click', { button: 'submit' })
+    await client.track('view', { screen: 'home' })
 
     expect(fetchRequests).toHaveLength(0)
 
     // Advance past the 10 second interval
-    jest.advanceTimersByTime(10_000)
+    vi.advanceTimersByTime(10_000)
     await flushPromises()
 
     expect(fetchRequests).toHaveLength(1)
@@ -65,13 +73,13 @@ describe('MetricsClient', () => {
 
     // Add events up to maxBatchSize (should not flush yet)
     for (let i = 0; i < 5; i++) {
-      client.track('click', { button: `btn-${i}` })
+      await client.track('click', { button: `btn-${i}` })
     }
 
     expect(fetchRequests).toHaveLength(0)
 
     // One more event should trigger flush (> maxBatchSize)
-    client.track('click', { button: 'btn-trigger' })
+    await client.track('click', { button: 'btn-trigger' })
     await flushPromises()
 
     expect(fetchRequests).toHaveLength(1)
@@ -90,10 +98,10 @@ describe('MetricsClient', () => {
     client = new MetricsClient<TestEvents>({
       trackingEndpoint: 'https://test.metrics.api',
     })
-    client.track('click', { button: 'submit' })
+    await client.track('click', { button: 'submit' })
 
     // Trigger flush via interval
-    jest.advanceTimersByTime(10_000)
+    vi.advanceTimersByTime(10_000)
     await flushPromises()
 
     expect(fetchMock).toHaveBeenCalledTimes(1)
@@ -119,10 +127,10 @@ describe('MetricsClient', () => {
     client = new MetricsClient<TestEvents>({
       trackingEndpoint: 'https://test.metrics.api',
     })
-    client.track('click', { button: 'submit' })
+    await client.track('click', { button: 'submit' })
 
     // Trigger flush - should not throw
-    jest.advanceTimersByTime(10_000)
+    vi.advanceTimersByTime(10_000)
     await flushPromises()
 
     expect(fetchMock).toHaveBeenCalledTimes(1)
@@ -140,12 +148,12 @@ describe('MetricsClient', () => {
     client = new MetricsClient<TestEvents>({
       trackingEndpoint: 'https://test.metrics.api',
     })
-    client.track('click', { button: 'submit' })
+    await client.track('click', { button: 'submit' })
 
     expect(fetchRequests).toHaveLength(0)
 
     // Stop should flush remaining events
-    client.stop()
+    await client.stop()
     await flushPromises()
 
     expect(fetchRequests).toHaveLength(1)
@@ -155,10 +163,10 @@ describe('MetricsClient', () => {
 
   it('does not send if trackingEndpoint is not configured', async () => {
     client = new MetricsClient<TestEvents>({})
-    client.track('click', { button: 'submit' })
+    await client.track('click', { button: 'submit' })
 
     // Trigger flush via interval
-    jest.advanceTimersByTime(10_000)
+    vi.advanceTimersByTime(10_000)
     await flushPromises()
 
     expect(fetchMock).not.toHaveBeenCalled()
@@ -170,12 +178,12 @@ describe('MetricsClient', () => {
     })
 
     // track() calls start() internally
-    client.track('click', { button: 'submit' })
+    await client.track('click', { button: 'submit' })
     client.start()
     client.start()
 
     // Advance past interval - should only flush once
-    jest.advanceTimersByTime(10_000)
+    vi.advanceTimersByTime(10_000)
     await flushPromises()
 
     expect(fetchRequests).toHaveLength(1)
@@ -188,7 +196,7 @@ describe('MetricsClient', () => {
     client.start()
 
     // Advance past interval with empty queue
-    jest.advanceTimersByTime(10_000)
+    vi.advanceTimersByTime(10_000)
     await flushPromises()
 
     expect(fetchMock).not.toHaveBeenCalled()

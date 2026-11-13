@@ -1,4 +1,4 @@
-import { LexMap, LexValue } from '@atproto/lex-client'
+import type { LexMap, LexValue } from '@atproto/lex-rpc'
 import { lexErrorDataSchema } from '@atproto/lex-schema'
 
 export async function extractXrpcErrorCode(
@@ -36,13 +36,24 @@ function extractType({ headers }: Response) {
   return headers.get('Content-Type')?.split(';')[0]?.trim().toLowerCase()
 }
 
-export function extractPdsUrl(didDoc?: LexMap): string | null {
+export function extractPdsEndpoint(didDoc?: LexMap): string | null {
   const pdsService = ifArray(didDoc?.service)?.find((service) =>
     ifString((service as any)?.id)?.endsWith('#atproto_pds'),
   )
   const pdsEndpoint = ifString((pdsService as any)?.serviceEndpoint)
-  return pdsEndpoint && URL.canParse(pdsEndpoint) ? pdsEndpoint : null
+  return pdsEndpoint && canParseUrl(pdsEndpoint) ? pdsEndpoint : null
 }
+
+const canParseUrl =
+  URL.canParse ??
+  ((url: string) => {
+    try {
+      new URL(url)
+      return true
+    } catch {
+      return false
+    }
+  })
 
 const ifString = <T>(v: T) =>
   (typeof v === 'string' ? v : undefined) as unknown extends T

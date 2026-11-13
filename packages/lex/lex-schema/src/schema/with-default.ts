@@ -1,9 +1,10 @@
 import {
-  InferInput,
-  InferOutput,
+  type InferInput,
+  type InferOutput,
   Schema,
-  ValidationContext,
-  Validator,
+  type ValidationContext,
+  type ValidationResult,
+  type Validator,
 } from '../core.js'
 
 /**
@@ -27,17 +28,22 @@ export class WithDefaultSchema<
 > extends Schema<InferInput<TValidator>, InferOutput<TValidator>> {
   readonly type = 'withDefault' as const
 
-  constructor(
-    readonly validator: TValidator,
-    readonly defaultValue: InferInput<TValidator>,
-  ) {
+  readonly validator: TValidator
+  readonly defaultValue: InferInput<TValidator>
+
+  constructor(validator: TValidator, defaultValue: InferInput<TValidator>) {
     super()
+    this.validator = validator
+    this.defaultValue = defaultValue
   }
 
-  validateInContext(input: unknown, ctx: ValidationContext) {
+  validateInContext(
+    input: unknown,
+    ctx: ValidationContext,
+  ): ValidationResult<InferInput<TValidator>> {
     // When in a validation context, the output should not be altered,
     // so we don't apply the default.
-    if (input === undefined && ctx.options.mode !== 'validate') {
+    if (input === undefined && ctx.options.mode === 'parse') {
       return ctx.validate(this.defaultValue, this.validator)
     }
 
@@ -76,6 +82,6 @@ export class WithDefaultSchema<
 export function withDefault<const TValidator extends Validator>(
   validator: TValidator,
   defaultValue: InferInput<TValidator>,
-) {
+): WithDefaultSchema<TValidator> {
   return new WithDefaultSchema<TValidator>(validator, defaultValue)
 }

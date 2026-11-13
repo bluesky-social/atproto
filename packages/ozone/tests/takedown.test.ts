@@ -1,12 +1,12 @@
 import assert from 'node:assert'
 import {
-  AtpAgent,
+  type AtpAgent,
   ComAtprotoAdminDefs,
   ToolsOzoneModerationDefs,
 } from '@atproto/api'
 import {
-  ModeratorClient,
-  SeedClient,
+  type ModeratorClient,
+  type SeedClient,
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
@@ -30,14 +30,14 @@ describe('moderation', () => {
     })
     sc = network.getSeedClient()
     modClient = network.ozone.getModClient()
-    pdsAgent = network.pds.getClient()
-    bskyAgent = network.bsky.getClient()
+    pdsAgent = network.pds.getAgent()
+    bskyAgent = network.bsky.getAgent()
     await basicSeed(sc)
     await network.processAll()
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('allows specifying policy for takedown actions.', async () => {

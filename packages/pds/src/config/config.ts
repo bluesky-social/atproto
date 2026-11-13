@@ -1,9 +1,15 @@
 import assert from 'node:assert'
 import path from 'node:path'
 import { DAY, HOUR, SECOND } from '@atproto/common'
-import { BrandingInput, HcaptchaConfig } from '@atproto/oauth-provider'
-import { ensureValidDid } from '@atproto/syntax'
-import { ServerEnvironment } from './env'
+import type {
+  BrandingConfig,
+  HcaptchaConfig,
+} from '@atproto/oauth-provider/provider'
+import { type DidString, ensureValidDid, isValidDid } from '@atproto/syntax'
+import pkg from '../../package.json' with { type: 'json' }
+import type { ServerEnvironment } from './env.js'
+
+export type { BrandingConfig }
 
 // off-config but still from env:
 // logging: LOG_LEVEL, LOG_SYSTEMS, LOG_ENABLED, LOG_DESTINATION
@@ -16,12 +22,17 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
       ? `http://localhost:${port}`
       : `https://${hostname}`
   const did = env.serviceDid ?? `did:web:${hostname}`
+
+  if (!isValidDid(did)) {
+    throw new Error(`Invalid service DID: ${did}`)
+  }
+
   const serviceCfg: ServerConfig['service'] = {
     port,
     hostname,
     publicUrl,
     did,
-    version: env.version, // default?
+    version: env.version || pkg.version,
     privacyPolicyUrl: env.privacyPolicyUrl,
     termsOfServiceUrl: env.termsOfServiceUrl,
     contactEmailAddress: env.contactEmailAddress,
@@ -59,6 +70,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
       provider: 's3',
       bucket: env.blobstoreS3Bucket,
       uploadTimeoutMs: env.blobstoreS3UploadTimeoutMs || 20000,
+      requestTimeoutMs: env.blobstoreS3RequestTimeoutMs,
       region: env.blobstoreS3Region,
       endpoint: env.blobstoreS3Endpoint,
       forcePathStyle: env.blobstoreS3ForcePathStyle,
@@ -84,6 +96,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     throw new Error('Must configure either S3 or disk blobstore')
   }
 
+  // @NOTE when behind an entryway, this should be configured to match the entryway's domains
   let serviceHandleDomains: string[]
   if (env.serviceHandleDomains && env.serviceHandleDomains.length > 0) {
     serviceHandleDomains = env.serviceHandleDomains
@@ -122,9 +135,11 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     )
     entrywayCfg = {
       url: env.entrywayUrl,
+      apiUrl: env.entrywayApiUrl ?? env.entrywayUrl,
       did: env.entrywayDid,
       jwtPublicKeyHex: env.entrywayJwtVerifyKeyK256PublicKeyHex,
       plcRotationKey: env.entrywayPlcRotationKey,
+      requireServiceAuth: env.entrywayRequireServiceAuth ?? false,
     }
   }
 
@@ -152,6 +167,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     emailCfg = {
       smtpUrl: env.emailSmtpUrl,
       fromAddress: env.emailFromAddress,
+      disableConfirmationLink: env.emailDisableConfirmationLink ?? false,
     }
   }
 
@@ -167,6 +183,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     moderationEmailCfg = {
       smtpUrl: env.moderationEmailSmtpUrl,
       fromAddress: env.moderationEmailAddress,
+      disableConfirmationLink: false,
     }
   }
 
@@ -231,6 +248,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
         bypassIps: env.rateLimitBypassIps?.map((ipOrCidr) =>
           ipOrCidr.split('/')[0]?.trim(),
         ),
+        disableIpLimits: env.disableIpRateLimits,
       }
     : { enabled: false }
 
@@ -254,6 +272,48 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     preferCompressed: env.proxyPreferCompressed ?? false,
   }
 
+  const brandingCfg = {
+    name: env.serviceName ?? `${hostname} PDS`,
+    logo: env.logoUrl,
+    colors: {
+      primary: env.primaryColor,
+
+      error: env.errorColor,
+      warning: env.warningColor,
+      info: env.infoColor,
+      success: env.successColor,
+    },
+    background: {
+      light: env.backgroundLightUrl,
+      dark: env.backgroundDarkUrl,
+    },
+    links: [
+      {
+        title: { en: 'Home', fr: 'Accueil' },
+        href: env.homeUrl,
+        rel: 'canonical' as const, // Prevents login page from being indexed
+      },
+      {
+        title: { en: 'Terms of Service' },
+        href: env.termsOfServiceUrl,
+        rel: 'terms-of-service' as const,
+      },
+      {
+        title: { en: 'Privacy Policy' },
+        href: env.privacyPolicyUrl,
+        rel: 'privacy-policy' as const,
+      },
+      {
+        title: { en: 'Support' },
+        href: env.supportUrl,
+        rel: 'help' as const,
+      },
+    ].filter(
+      <T extends { href?: string }>(f: T): f is T & { href: string } =>
+        f.href != null && f.href !== '',
+    ),
+  }
+
   const oauthCfg: ServerConfig['oauth'] = entrywayCfg
     ? {
         issuer: entrywayCfg.url,
@@ -272,51 +332,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
                   tokenSalt: env.hcaptchaTokenSalt,
                 }
               : undefined,
-          branding: {
-            name: env.serviceName ?? `${hostname} PDS`,
-            logo: env.logoUrl,
-            colors: {
-              light: env.lightColor,
-              dark: env.darkColor,
-              primary: env.primaryColor,
-              primaryContrast: env.primaryColorContrast,
-              primaryHue: env.primaryColorHue,
-              error: env.errorColor,
-              errorContrast: env.errorColorContrast,
-              errorHue: env.errorColorHue,
-              success: env.successColor,
-              successContrast: env.successColorContrast,
-              successHue: env.successColorHue,
-              warning: env.warningColor,
-              warningContrast: env.warningColorContrast,
-              warningHue: env.warningColorHue,
-            },
-            links: [
-              {
-                title: { en: 'Home', fr: 'Accueil' },
-                href: env.homeUrl,
-                rel: 'canonical' as const, // Prevents login page from being indexed
-              },
-              {
-                title: { en: 'Terms of Service' },
-                href: env.termsOfServiceUrl,
-                rel: 'terms-of-service' as const,
-              },
-              {
-                title: { en: 'Privacy Policy' },
-                href: env.privacyPolicyUrl,
-                rel: 'privacy-policy' as const,
-              },
-              {
-                title: { en: 'Support' },
-                href: env.supportUrl,
-                rel: 'help' as const,
-              },
-            ].filter(
-              <T extends { href?: string }>(f: T): f is T & { href: string } =>
-                f.href != null && f.href !== '',
-            ),
-          },
+          branding: brandingCfg,
           trustedClients: env.trustedOAuthClients,
         },
       }
@@ -348,6 +364,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     fetch: fetchCfg,
     lexicon: lexiconCfg,
     proxy: proxyCfg,
+    branding: brandingCfg,
     oauth: oauthCfg,
   }
 }
@@ -371,6 +388,7 @@ export type ServerConfig = {
   crawlers: string[]
   fetch: FetchConfig
   proxy: ProxyConfig
+  branding: BrandingConfig
   oauth: OAuthConfig
   lexicon: LexiconResolverConfig
 }
@@ -379,8 +397,8 @@ export type ServiceConfig = {
   port: number
   hostname: string
   publicUrl: string
-  did: string
-  version?: string
+  did: DidString
+  version: string
   privacyPolicyUrl?: string
   termsOfServiceUrl?: string
   acceptingImports: boolean
@@ -410,6 +428,7 @@ export type S3BlobstoreConfig = {
   endpoint?: string
   forcePathStyle?: boolean
   uploadTimeoutMs?: number
+  requestTimeoutMs?: number
   credentials?: {
     accessKeyId: string
     secretAccessKey: string
@@ -424,6 +443,11 @@ export type DiskBlobstoreConfig = {
 
 export type IdentityConfig = {
   plcUrl: string
+  /**
+   * Bounds each individual identity resolution attempt. Note that
+   * `safeFetch`'s own 10s timeout acts as an upper backstop, so values above
+   * 10s are effectively capped.
+   */
   resolverTimeout: number
   cacheStaleTTL: number
   cacheMaxTTL: number
@@ -434,10 +458,21 @@ export type IdentityConfig = {
 }
 
 export type EntrywayConfig = {
+  /**
+   * The entryway's public URL, which is also the OAuth issuer and the
+   * authorization server this PDS advertises.
+   */
   url: string
+  /**
+   * Where this PDS sends its own requests to the entryway. Defaults to
+   * {@link url}; differs when those requests go through a local proxy, e.g.
+   * one that adds mTLS.
+   */
+  apiUrl: string
   did: string
   jwtPublicKeyHex: string
   plcRotationKey: string
+  requireServiceAuth: boolean
 }
 
 export type FetchConfig = {
@@ -467,7 +502,7 @@ export type OAuthConfig = {
   issuer: string
   provider?: {
     hcaptcha?: HcaptchaConfig
-    branding: BrandingInput
+    branding: BrandingConfig
     trustedClients?: string[]
   }
 }
@@ -489,6 +524,7 @@ export type InvitesConfig =
 export type EmailConfig = {
   smtpUrl: string
   fromAddress: string
+  disableConfirmationLink: boolean
 }
 
 export type SubscriptionConfig = {
@@ -506,6 +542,11 @@ export type RateLimitsConfig =
       enabled: true
       bypassKey?: string
       bypassIps?: string[]
+      /**
+       * Drop the PDS's own per-IP rate limits, for when an upstream proxy
+       * enforces them. Per-account rate limits still apply.
+       */
+      disableIpLimits?: boolean
     }
   | { enabled: false }
 

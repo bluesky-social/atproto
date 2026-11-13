@@ -1,5 +1,5 @@
 import { LRUCache } from 'lru-cache'
-import { Key, SimpleStore, Value } from '@atproto-labs/simple-store'
+import type { Key, SimpleStore, Value } from '@atproto-labs/simple-store'
 import { roughSizeOfObject } from './util.js'
 
 export type SimpleStoreMemoryOptions<K extends Key, V extends Value> = {
@@ -42,9 +42,7 @@ export type SimpleStoreMemoryOptions<K extends Key, V extends Value> = {
    */
   sizeCalculation?: (value: V, key: K) => number
 } & ( // Memory is not infinite, so at least one pruning option is required.
-  | { max: number }
-  | { maxSize: number }
-  | { ttl: number; ttlAutopurge: boolean }
+  { max: number } | { maxSize: number } | { ttl: number; ttlAutopurge: boolean }
 )
 
 // LRUCache does not allow storing "null", so we use a symbol to represent it.
@@ -57,9 +55,10 @@ const toLruValue = <V extends Value>(value: V) =>
 const fromLruValue = <V extends Value>(value: AsLruValue<V>) =>
   (value === nullSymbol ? null : value) as V
 
-export class SimpleStoreMemory<K extends Key, V extends Value>
-  implements SimpleStore<K, V>
-{
+export class SimpleStoreMemory<
+  K extends Key,
+  V extends Value,
+> implements SimpleStore<K, V> {
   #cache: LRUCache<K, AsLruValue<V>>
 
   constructor({ sizeCalculation, ...options }: SimpleStoreMemoryOptions<K, V>) {

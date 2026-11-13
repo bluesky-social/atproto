@@ -1,16 +1,16 @@
-import { InvalidRequestError } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context'
-import { Hydrator } from '../../../../hydration/hydrator'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/notification/getUnreadCount'
+import type { DidString } from '@atproto/syntax'
+import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
+import type { AppContext } from '../../../../context.js'
+import type { Hydrator } from '../../../../hydration/hydrator.js'
+import { app } from '../../../../lexicons/index.js'
 import {
-  HydrationFnInput,
-  PresentationFnInput,
-  SkeletonFnInput,
+  type HydrationFnInput,
+  type PresentationFnInput,
+  type SkeletonFnInput,
   createPipeline,
   noRules,
-} from '../../../../pipeline'
-import { Views } from '../../../../views'
+} from '../../../../pipeline.js'
+import type { Views } from '../../../../views/index.js'
 
 export default function (server: Server, ctx: AppContext) {
   const getUnreadCount = createPipeline(
@@ -19,7 +19,7 @@ export default function (server: Server, ctx: AppContext) {
     noRules,
     presentation,
   )
-  server.app.bsky.notification.getUnreadCount({
+  server.add(app.bsky.notification.getUnreadCount, {
     auth: ctx.authVerifier.standard,
     handler: async ({ auth, params }) => {
       const viewer = auth.credentials.iss
@@ -39,10 +39,8 @@ const skeleton = async (
   if (params.seenAt) {
     throw new InvalidRequestError('The seenAt parameter is unsupported')
   }
-  const priority = params.priority ?? (await getPriority(ctx, params.viewer))
   const res = await ctx.hydrator.dataplane.getUnreadNotificationCount({
     actorDid: params.viewer,
-    priority,
   })
   return {
     count: res.count,
@@ -67,17 +65,10 @@ type Context = {
   views: Views
 }
 
-type Params = QueryParams & {
-  viewer: string
+type Params = app.bsky.notification.getUnreadCount.$Params & {
+  viewer: DidString
 }
 
 type SkeletonState = {
   count: number
-}
-
-const getPriority = async (ctx: Context, did: string) => {
-  const actors = await ctx.hydrator.actor.getActors([did], {
-    skipCacheForDids: [did],
-  })
-  return !!actors.get(did)?.priorityNotifications
 }

@@ -1,8 +1,10 @@
+import type { DatetimeString } from '@atproto/lex-schema'
+
 export interface AppPassword {
   did: string
   name: string
   passwordScrypt: string
-  createdAt: string
+  createdAt: DatetimeString
   privileged: 0 | 1
 }
 

@@ -1,12 +1,18 @@
-import { createDeferrable, wait } from '@atproto/common'
+import { createDeferrable } from '@atproto/common'
 import {
-  SeedClient,
+  type SeedClient,
   TestNetworkNoAppView,
   mockResolvers,
 } from '@atproto/dev-env'
 import { IdResolver } from '@atproto/identity'
-import { Firehose, FirehoseOptions, MemoryRunner } from '../src'
-import { Create, Event } from '../src/events'
+import type { DidString } from '@atproto/syntax'
+import {
+  type Create,
+  type Event,
+  Firehose,
+  type FirehoseOptions,
+  MemoryRunner,
+} from '../src/index.js'
 
 describe('firehose', () => {
   let network: TestNetworkNoAppView
@@ -17,19 +23,21 @@ describe('firehose', () => {
     network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'sync_firehose',
     })
-    idResolver = new IdResolver({ plcUrl: network.plc.url })
+    idResolver = new IdResolver({
+      plcUrl: network.plc.url,
+      fetch: globalThis.fetch,
+    })
     mockResolvers(idResolver, network.pds)
     sc = network.getSeedClient()
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   const createAndReadFirehose = async (
-    count: number,
+    isComplete: (events: Event[]) => boolean,
     opts: Partial<FirehoseOptions> = {},
-    addRandomWait = false,
   ): Promise<Event[]> => {
     const defer = createDeferrable()
     const evts: Event[] = []
@@ -37,31 +45,33 @@ describe('firehose', () => {
       idResolver,
       service: network.pds.url.replace('http', 'ws'),
       handleEvent: async (evt) => {
-        if (addRandomWait) {
-          const time = Math.floor(Math.random()) * 20
-          await wait(time)
-        }
         evts.push(evt)
-        if (evts.length >= count) {
+        if (isComplete(evts)) {
           defer.resolve()
         }
       },
       onError: (err) => {
-        throw err
+        defer.reject(err)
       },
       ...opts,
     })
-    firehose.start()
-    await defer.complete
-    await firehose.destroy()
-    return evts
+    try {
+      firehose.start()
+      await defer.complete
+      return evts
+    } finally {
+      await firehose.destroy()
+    }
   }
 
-  let alice: string
+  let alice: DidString
 
   it('reads events from firehose', async () => {
-    const evtsPromise = createAndReadFirehose(6)
-    await wait(10) // give the websocket just a second to spin up
+    const startCursor = (await network.pds.ctx.sequencer.curr()) ?? 0
+    const runner = new MemoryRunner({ startCursor })
+    const evtsPromise = createAndReadFirehose((events) => events.length >= 6, {
+      runner,
+    })
     const aliceRes = await sc.createAccount('alice', {
       handle: 'alice.test',
       email: 'alice@test.com',
@@ -119,12 +129,12 @@ describe('firehose', () => {
   })
 
   it('does not naively pass through invalid handle evts', async () => {
-    const evtsPromise = createAndReadFirehose(1)
-    await wait(10) // give the websocket just a second to spin up
-    await network.pds.ctx.sequencer.sequenceIdentityEvt(
-      alice,
-      'bad-handle.test',
-    )
+    const startCursor = (await network.pds.ctx.sequencer.curr()) ?? 0
+    const runner = new MemoryRunner({ startCursor })
+    const evtsPromise = createAndReadFirehose((events) => events.length >= 1, {
+      runner,
+    })
+    await network.pds.ctx.sequencer.sequenceIdentity(alice, 'bad-handle.test')
     const evts = await evtsPromise
     expect(evts.at(0)).toMatchObject({ handle: 'alice.test' })
   })
@@ -134,7 +144,15 @@ describe('firehose', () => {
     const runner = new MemoryRunner({
       startCursor: currCursor ?? undefined,
     })
-    const evtsPromise = createAndReadFirehose(24, { runner }, true)
+    const userDids = new Set<DidString>()
+    const evtsPromise = createAndReadFirehose(
+      (events) =>
+        userDids.size === 4 &&
+        [...userDids].every(
+          (did) => events.filter((event) => event.did === did).length >= 6,
+        ),
+      { runner },
+    )
     const createAndPost = async (name: string) => {
       const user = await sc.createAccount('name', {
         handle: `${name}.test`,
@@ -142,6 +160,7 @@ describe('firehose', () => {
         password: `${name}-pass`,
       })
       const did = user.did
+      userDids.add(did)
       const post1 = await sc.post(did, 'one')
       const post2 = await sc.post(did, 'two')
       const post3 = await sc.post(did, 'three')

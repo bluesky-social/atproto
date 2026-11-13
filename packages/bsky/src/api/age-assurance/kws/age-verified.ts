@@ -7,6 +7,12 @@ export const KWSAgeVerifiedStatusSchema = z.object({
   verified: z.boolean(),
   verifiedMinimumAge: z.number(),
   transactionId: z.string().optional(),
+  // A code indicating the reason for failure, or null when verification
+  // succeeded.
+  errorCode: z.string().nullable().optional(),
+  // Epoch seconds indicating when KWS generated the payload. Optional so we
+  // remain compatible with payloads sent before this field was introduced.
+  timestamp: z.number().optional(),
 })
 
 /**

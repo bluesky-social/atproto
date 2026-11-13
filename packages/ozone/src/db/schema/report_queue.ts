@@ -1,0 +1,33 @@
+import type { Generated } from 'kysely'
+import type { DatetimeString, DidString, NsidString } from '@atproto/lex-schema'
+
+export const reportQueueTableName = 'report_queue'
+
+export interface ReportQueue {
+  id: Generated<number>
+  name: string
+  subjectTypes: string[] // ['account'] or ['record'] or ['account', 'record']
+  collection: NsidString | null // Collection name (e.g., 'app.bsky.feed.post'), NULL for accounts
+  reportTypes: string[] // Report reason types; [] matches no reports automatically.
+  /**
+   * Match tags on the account submitting the report.
+   */
+  reporterTags: string[] | null
+  /**
+   * Match tags on the account that is being reported against.
+   */
+  accountTags: string[] | null
+  description: string | null // Optional description of the queue
+  recommendedPolicies: string[] // Policy keys recommended for reports in this queue
+  recommendedLabels: string[] // Label values recommended for this queue and used for appeal routing
+  createdBy: DidString | 'admin_token' // DID of moderator who created this queue
+  createdAt: DatetimeString
+  updatedAt: DatetimeString
+  enabled: boolean
+  strictAccess: Generated<boolean>
+  deletedAt: string | null // NULL = active, timestamp = soft-deleted
+}
+
+export type PartialDB = {
+  [reportQueueTableName]: ReportQueue
+}

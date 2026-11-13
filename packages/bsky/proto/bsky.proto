@@ -90,11 +90,25 @@ message GetPostRecordsRequest {
   repeated string uris = 1;
   optional string process_dynamic_tags_for_view = 2;
   optional string viewer_did = 3;
+  // Include complete canonical OP threads used by AppView to derive position
+  // metadata. This is opt-in because resolving them is more expensive than
+  // the normal post record lookup.
+  bool include_op_thread_metadata = 4;
 }
 
 message GetPostRecordsResponse {
   repeated Record records = 1;
   repeated PostRecordMeta meta = 2;
+  // Complete canonical OP threads for roots represented by the requested
+  // posts. AppView derives each post's index and count from these chains.
+  repeated OpThread op_threads = 3;
+}
+
+message OpThread {
+  string root_uri = 1;
+  // The root post followed by its canonical chain of OP replies. Only chains
+  // containing at least one OP reply are returned.
+  repeated string uris = 2;
 }
 
 message GetProfileRecordsRequest {
@@ -126,6 +140,14 @@ message GetGermDeclarationRecordsRequest {
 }
 
 message GetGermDeclarationRecordsResponse {
+  repeated Record records = 1;
+}
+
+message GetProfileLinkRecordsRequest {
+  repeated string uris = 1;
+}
+
+message GetProfileLinkRecordsResponse {
   repeated Record records = 1;
 }
 
@@ -205,6 +227,7 @@ message GetFollowersRequest {
   string actor_did = 1;
   int32 limit = 2;
   string cursor = 3;
+  string sort = 4;
 }
 
 message FollowInfo {
@@ -224,6 +247,7 @@ message GetFollowsRequest {
   string actor_did = 1;
   int32 limit = 2;
   string cursor = 3;
+  string sort = 4;
 }
 
 message GetFollowsResponse {
@@ -318,10 +342,27 @@ message GetLikesBySubjectSortedResponse {
   string cursor = 2;
 }
 
+message GetKnownLikersRequest {
+  string actor_did = 1;
+  repeated string subject_uris = 2;
+  int32 limit = 3;
+}
+
+message KnownLikersResult {
+  string subject_uri = 1;
+  int32 count = 2;
+  repeated string dids = 3;
+}
+
+message GetKnownLikersResponse {
+  repeated KnownLikersResult results = 1;
+}
+
 message GetQuotesBySubjectSortedRequest {
   RecordRef subject = 1;
   int32 limit = 2;
   string cursor = 3;
+  string sort = 4;
 }
 
 message GetQuotesBySubjectSortedResponse {
@@ -416,6 +457,50 @@ message GetNewUserCountForRangeResponse {
 }
 
 //
+// Feature Store
+//
+
+enum FeatureStore {
+  FEATURE_STORE_UNSPECIFIED = 0; // should throw an error (no default value)
+  FEATURE_STORE_AUTHOR = 1;
+  FEATURE_STORE_VIEWER = 2;
+  FEATURE_STORE_POST = 3;
+  FEATURE_STORE_CANDIDATE_GENERATOR = 4;
+  FEATURE_STORE_ATMOSPHERE_RECORD = 5;
+}
+
+message Feature {
+  string key = 1;
+  oneof value {
+    bool bool_val = 2;
+    string string_val = 3;
+    float float_val = 4;
+    sint32 sint_val = 5;
+    string json_val = 6;
+    sint64 sint64_val = 7;
+  }
+}
+
+message FeatureRequest {
+  string uid = 1;
+  repeated string keys = 2; // required, empty value throws an error
+}
+
+message GetFeaturesRequest {
+  FeatureStore store = 1;
+  repeated FeatureRequest requests = 2;
+}
+
+message FeatureResponse {
+  string uid = 1;
+  repeated Feature features = 2;
+}
+
+message GetFeaturesResponse {
+  repeated FeatureResponse entities = 1;
+}
+
+//
 // Reposts
 //
 
@@ -485,7 +570,7 @@ message ActorInfo {
   string allow_incoming_chats_from = 8;
   string upstream_status = 9;
   google.protobuf.Timestamp created_at = 10;
-  bool priority_notifications = 11;
+  reserved 11; // was "priority_notifications", deprecated
   double pagerank = 12;
   bool trusted_verifier = 13;
   map<string, VerificationMeta> verified_by = 14;
@@ -498,6 +583,7 @@ message ActorInfo {
   optional AgeAssuranceStatus age_assurance_status = 19;
   reserved 20; // DO NOT REMOVE - see dataplane repo
   Record germ_record = 21;
+  string allow_group_chat_invites_from = 22;
 }
 
 message AgeAssuranceStatus {
@@ -536,6 +622,9 @@ message GetRelationshipsRequest {
 }
 
 message Relationships {
+  // whether a full (unscoped) direct mute exists. Mutually exclusive with
+  // the scoped muted_only_* fields: a reposts- or quoteposts-scoped mute reports
+  // muted=false.
   bool muted = 1;
   string muted_by_list = 2;
   string blocked_by = 3;
@@ -544,6 +633,8 @@ message Relationships {
   string blocking_by_list = 6;
   string following = 7;
   string followed_by = 8;
+  bool muted_only_reposts = 9;
+  bool muted_only_quoteposts = 10;
 }
 
 message GetRelationshipsResponse {
@@ -581,6 +672,7 @@ message GetBlockExistenceResponse {
 message ListItemInfo {
   string uri = 1;
   string did = 2;
+  bool subject_opted_out = 3;
 }
 
 // - Return dids of users in list A
@@ -589,6 +681,7 @@ message GetListMembersRequest {
   string list_uri = 1;
   int32 limit = 2;
   string cursor = 3;
+  string viewer_did = 4;
 }
 
 message GetListMembersResponse {
@@ -631,6 +724,15 @@ message GetActorListsResponse {
   string cursor = 2;
 }
 
+message GetReferencelistoptoutsByActorAndSubjectsRequest {
+  string actor_did = 1;
+  repeated string subject_uris = 2;
+}
+
+message GetReferencelistoptoutsByActorAndSubjectsResponse {
+  repeated string uris = 1;
+}
+
 //
 // Mutes
 //
@@ -643,7 +745,19 @@ message GetActorMutesActorRequest {
 }
 
 message GetActorMutesActorResponse {
+  // whether a full (unscoped) mute exists. Mutually exclusive with the
+  // scoped muted_only_* fields.
   bool muted = 1;
+  bool muted_only_reposts = 2;
+  bool muted_only_quoteposts = 3;
+}
+
+message MuteInfo {
+  string did = 1;
+  // scope restrictions: when any is set, just the scoped content is muted;
+  // when none are set, the subject is fully muted.
+  bool only_reposts = 2;
+  bool only_quoteposts = 3;
 }
 
 // - return list of user dids of users who A mutes
@@ -655,8 +769,10 @@ message GetMutesRequest {
 }
 
 message GetMutesResponse {
-  repeated string dids = 1;
+  // Deprecated: use mutes, which carries the scope of each mute.
+  repeated string dids = 1 [deprecated = true];
   string cursor = 2;
+  repeated MuteInfo mutes = 3;
 }
 
 //
@@ -814,20 +930,12 @@ message NotificationPreference {
   NotificationChannelPush push = 2;
 }
 
-enum ChatNotificationInclude {
-  CHAT_NOTIFICATION_INCLUDE_UNSPECIFIED = 0;
-  CHAT_NOTIFICATION_INCLUDE_ALL = 1;
-  CHAT_NOTIFICATION_INCLUDE_ACCEPTED = 2;
-}
-
-message ChatNotificationPreference {
-  ChatNotificationInclude include = 1;
-  NotificationChannelPush push = 2;
-}
-
 message NotificationPreferences {
   bytes entry = 1;
-  ChatNotificationPreference chat = 2;
+
+  reserved 2; // formerly "chat". This is now stored on the chat service.
+  reserved "chat";
+
   FilterableNotificationPreference follow = 3;
   FilterableNotificationPreference like = 4;
   FilterableNotificationPreference like_via_repost = 5;
@@ -849,23 +957,44 @@ message GetNotificationPreferencesResponse {
 // - list recent notifications for a user
 //     - notifications should include a uri for the record that caused the notif & a “reason” for the notification (reply, like, quotepost, etc)
 //     - this should include both read & unread notifs
-message GetNotificationsRequest {
-  string actor_did = 1;
-  int32 limit = 2;
-  string cursor = 3;
-  bool priority = 4;
-}
-
 message Notification {
   string recipient_did = 1;
   string uri = 2;
   string reason = 3;
   string reason_subject = 4;
   google.protobuf.Timestamp timestamp = 5;
-  bool priority = 6;
+  reserved 6; // was "priority", deprecated
+}
+
+message GetNotificationsRequest {
+  string actor_did = 1;
+  int32 limit = 2;
+  string cursor = 3;
+  reserved 4; // was "priority", deprecated
 }
 
 message GetNotificationsResponse {
+  repeated Notification notifications = 1;
+  string cursor = 2;
+}
+
+enum NotificationFeed {
+  NOTIFICATION_FEED_UNSPECIFIED = 0;
+  NOTIFICATION_FEED_ALL = 1;
+  NOTIFICATION_FEED_PEOPLE_I_FOLLOW = 2;
+  NOTIFICATION_FEED_CONVERSATIONS = 3;
+  NOTIFICATION_FEED_FOLLOWERS = 4;
+  NOTIFICATION_FEED_ACTIVITY = 5;
+}
+
+message GetNotificationsV2Request {
+  string actor_did = 1;
+  int32 limit = 2;
+  string cursor = 3;
+  NotificationFeed feed = 4;
+}
+
+message GetNotificationsV2Response {
   repeated Notification notifications = 1;
   string cursor = 2;
 }
@@ -875,7 +1004,7 @@ message GetNotificationsResponse {
 message UpdateNotificationSeenRequest {
   string actor_did = 1;
   google.protobuf.Timestamp timestamp = 2;
-  bool priority = 3;
+  reserved 3; // was "priority", deprecated
 }
 
 message UpdateNotificationSeenResponse {}
@@ -884,7 +1013,7 @@ message UpdateNotificationSeenResponse {}
 //     - hydrating read state onto notifications
 message GetNotificationSeenRequest {
   string actor_did = 1;
-  bool priority = 2;
+  reserved 2; // was "priority", deprecated
 }
 
 message GetNotificationSeenResponse {
@@ -895,7 +1024,7 @@ message GetNotificationSeenResponse {
 //     - `getUnreadCount`
 message GetUnreadNotificationCountRequest {
   string actor_did = 1;
-  bool priority = 2;
+  reserved 2; // was "priority", deprecated
 }
 
 message GetUnreadNotificationCountResponse {
@@ -1035,11 +1164,13 @@ message GetTimelineRequest {
   bool exclude_replies = 4;
   bool exclude_reposts = 5;
   bool exclude_quotes = 6;
+  string since = 7;
 }
 
 message GetTimelineResponse {
   repeated TimelineFeedItem items = 1;
   string cursor = 2;
+  string start_cursor = 3;
 }
 
 message TimelineFeedItem {
@@ -1062,11 +1193,13 @@ message GetListFeedRequest {
   bool exclude_replies = 4;
   bool exclude_reposts = 5;
   bool exclude_quotes = 6;
+  string since = 7;
 }
 
 message GetListFeedResponse {
   repeated TimelineFeedItem items = 1;
   string cursor = 2;
+  string start_cursor = 3;
 }
 
 //
@@ -1082,10 +1215,16 @@ message GetThreadRequest {
 
 message GetThreadResponse {
   repeated string uris = 1;
+  // The complete OP thread: the root post followed by the oldest contiguous
+  // chain of OP replies, in chain order. Never trimmed to the posts present
+  // in uris — callers derive a post's position with indexOf and the thread
+  // length with len, so completeness and ordering are load-bearing. Empty
+  // when the thread has no OP replies.
+  repeated string op_thread = 2;
 }
 
 //
-// Search
+// Search V1
 //
 
 // - Return DIDs of actors matching term, paginated
@@ -1125,6 +1264,173 @@ message SearchStarterPacksRequest {
 message SearchStarterPacksResponse {
   repeated string uris = 1;
   string cursor = 2;
+}
+
+//
+// Search V2
+//
+
+enum SearchSortOrder {
+  SEARCH_SORT_ORDER_UNSPECIFIED = 0;
+  SEARCH_SORT_ORDER_RECENT = 1;
+  SEARCH_SORT_ORDER_TOP = 2;
+}
+
+enum SearchQueryLanguage {
+  SEARCH_QUERY_LANGUAGE_UNSPECIFIED = 0;
+  SEARCH_QUERY_LANGUAGE_JA = 1; // Japanese (Kuromoji)
+  SEARCH_QUERY_LANGUAGE_ZH = 2; // Chinese (smartcn)
+  SEARCH_QUERY_LANGUAGE_KO = 3; // Korean (nori)
+  SEARCH_QUERY_LANGUAGE_TH = 4; // Thai
+  SEARCH_QUERY_LANGUAGE_AR = 5; // Arabic
+}
+
+// Shared request params for paginated methods
+message SearchParams {
+  string query = 1;
+  string viewer = 2;
+
+  // Pagination
+  int32 limit = 3;
+  string cursor = 4;
+}
+
+// Shared params for typeahead-style searches, which aren't paginated.
+message SearchTypeaheadParams {
+  string query = 1;
+  string viewer = 2;
+  int32 limit = 3;
+}
+
+// Shared result types
+
+// SearchRecordResult represents a generic result hit corresponding to a record.
+message SearchRecordResult {
+  // AT URI of the record, e.g. "at://did:example:alice/app.bsky.feed.post/12345"
+  string uri = 1;
+  double score = 2;
+}
+
+message SearchActorResult {
+  string did = 1;
+  double score = 2;
+}
+
+message PageInfo {
+  string cursor = 1;
+  int64 hits_total = 2;
+}
+
+// Search queries
+
+// PostFilters are logical filters that should be used to match or exclude posts.
+// Each repeated field is applied as OR within the field with all fields applied together as AND.
+// example:
+//  filters: {
+//    authors: [alice, bob]
+//    mentions: [carol]
+//  }
+// => (author is alice OR bob) AND (mentions carol)
+//
+message PostsFilters {
+  // Author/mention filters
+  repeated string authors = 1;
+  repeated string mentions = 2;
+
+  // Content filters
+  repeated string domains = 3;
+  repeated string urls = 4;
+  // Canonical request field for posts embedding these AT-URI records.
+  repeated string embedded_at_uris = 5;
+  repeated string hashtags = 6;
+  // Filter posts in any of these languages
+  // Supports 2-char ISO prefixes ("en", "ja", "fr", etc) and compares against
+  // the 2-char prefix of any `langs` field values of the post record.
+  // e.g. a post with langs=["en-US", "fr"] matches ["en"] or ["fr", "ja"] but not ["ja"].
+  repeated string languages = 7;
+}
+
+message SearchPostsV2Request {
+  // Required fields
+  SearchParams params = 1;
+  SearchSortOrder sort = 2;
+
+  // Logical filters and exclude fields applied together as AND
+  //
+  // filters: include posts matching the filters
+  PostsFilters filters = 3;
+
+  // Exclude filters: exclude posts matching the filters
+  PostsFilters exclude = 4;
+
+  // Date range filters
+  optional google.protobuf.Timestamp since = 5;
+  optional google.protobuf.Timestamp until = 6; // defaults to "now"
+  // If false, will only query against last 30 days of posts
+  // so `since` and `until` will silently be capped
+  optional bool all_time = 7;
+
+  // Media filters
+  optional bool has_media = 8;
+  optional bool has_video = 9;
+
+  // Reply filters
+  optional string reply_parent_uri = 10;
+  optional string thread_root_uri = 11;
+  optional bool exclude_replies = 12;
+  optional bool replies_only = 13;
+
+  // Social filters
+  optional bool following = 14;
+
+  // Query analysis hint — forces a specific language analyzer.
+  // Auto-detects from query text when unset.
+  optional SearchQueryLanguage query_language = 15;
+}
+
+message SearchPostsV2Response {
+  repeated SearchRecordResult posts = 1;
+  PageInfo page_info = 2;
+  // Detected CJK/Thai/Arabic languages of the query, usually one. Han-only text
+  // returns ["zh", "ja"] since it's ambiguous between Chinese and Japanese.
+  // set query_language on the request to disambiguate.
+  // Currently left empty for other scripts (e.g. Latin-based languages like English).
+  repeated string detected_query_languages = 3;
+}
+
+message SearchActorsV2Request {
+  SearchParams params = 1;
+}
+
+message SearchActorsV2Response {
+  repeated SearchActorResult actors = 1;
+  PageInfo page_info = 2;
+}
+
+message SearchActorsTypeaheadRequest {
+  SearchTypeaheadParams params = 1;
+}
+
+message SearchActorsTypeaheadResponse {
+  repeated SearchActorResult actors = 1;
+}
+
+message SearchFeedGeneratorsV2Request {
+  SearchParams params = 1;
+}
+
+message SearchFeedGeneratorsV2Response {
+  repeated SearchRecordResult feed_generators = 1;
+  PageInfo page_info = 2;
+}
+
+message SearchStarterPacksV2Request {
+  SearchParams params = 1;
+}
+
+message SearchStarterPacksV2Response {
+  repeated SearchRecordResult starter_packs = 1;
+  PageInfo page_info = 2;
 }
 
 //
@@ -1175,6 +1481,37 @@ message GetLabelsRequest {
 
 message GetLabelsResponse {
   repeated bytes labels = 1;
+}
+
+//
+// Tags
+//
+
+message Tag {
+  string subject = 1;
+  string issuer = 2; // DID of the moderator or service that created the event.
+  string value = 3;
+  google.protobuf.Timestamp indexed_at = 4; // Time Atlantis stored the tag.
+  TagEvent event = 5; // Ozone event metadata; absent for ordinary tag writes.
+  google.protobuf.Timestamp expires_at = 6; // absent means permanent
+  bool removed = 7; // Removal retained to ignore older events.
+}
+
+message GetTagsForSubjectsRequest {
+  repeated string subjects = 1;
+  repeated string sources = 2; // Ozone service DIDs; empty selects all sources.
+}
+
+message GetTagsForSubjectsResponse {
+  repeated Tag tags = 1;
+}
+
+// Ozone event that added or removed a tag.
+message TagEvent {
+  string source = 1; // Ozone service DID.
+  int64 event_id = 2; // Ozone moderation event ID.
+  google.protobuf.Timestamp created_at = 3; // Time Ozone created the event.
+  string cid = 4; // Subject record CID; empty for account tags.
 }
 
 //
@@ -1333,15 +1670,34 @@ message GetActorDraftsResponse {
 message GetFollowsFollowingRequest {
   string actor_did = 1;
   repeated string target_dids = 2;
+  int32 limit = 3;
+  string cursor = 4;
 }
 
 message FollowsFollowing {
   string target_did = 1;
   repeated string dids = 2;
+  string cursor = 3;
 }
 
 message GetFollowsFollowingResponse {
   repeated FollowsFollowing results = 1;
+}
+
+message SampleFollowsFollowingRequest {
+  string actor_did = 1;
+  repeated string target_dids = 2;
+  int32 limit = 3;
+}
+
+message SampledFollowsFollowing {
+  string target_did = 1;
+  repeated string dids = 2;
+  int32 total_known = 3;
+}
+
+message SampleFollowsFollowingResponse {
+  repeated SampledFollowsFollowing results = 1;
 }
 
 message GetSitemapIndexRequest {
@@ -1381,6 +1737,112 @@ message StashRef {
   string key = 3;
 }
 
+// Generic records
+message GetRecordsByRefRequest {
+  repeated RecordRef refs = 1;
+}
+
+enum RecordLookupStatus {
+  RECORD_LOOKUP_STATUS_UNSPECIFIED = 0;
+  RECORD_LOOKUP_STATUS_FOUND = 1;
+  RECORD_LOOKUP_STATUS_NOT_FOUND = 2;
+  RECORD_LOOKUP_STATUS_TAKEN_DOWN = 3;
+  RECORD_LOOKUP_STATUS_INVALID_REF = 4;
+  RECORD_LOOKUP_STATUS_UNSUPPORTED_COLLECTION = 5;
+}
+
+message RecordLookupResult {
+  RecordRef ref = 1;
+  Record record = 2;
+  RecordLookupStatus status = 3;
+}
+
+message GetRecordsByRefResponse {
+  repeated RecordLookupResult results = 1;
+}
+
+message GetRecordsByURIRequest {
+  repeated string uris = 1;
+}
+
+message GetRecordsByURIResponse {
+  repeated RecordLookupResult results = 1;
+}
+
+message AtmosphereActivityItem {
+  string uri = 1;
+  google.protobuf.Timestamp sorted_at = 2;
+}
+
+message GetAtmosphereTimelineRequest {
+  string viewer_did = 1;
+  int32 limit = 2;
+  string cursor = 3;
+}
+
+message GetAtmosphereTimelineResponse {
+  repeated AtmosphereActivityItem items = 1;
+  string cursor = 2;
+}
+
+// Atmosphere backlinks: records in a source collection that reference a
+// target AT-URI through a registered backlink path.
+message AtmosphereBacklink {
+  string uri = 1;
+  google.protobuf.Timestamp sorted_at = 2;
+}
+
+message GetAtmosphereBacklinksRequest {
+  string target_uri = 1;
+  // Source collection NSID, e.g. site.standard.graph.recommend.
+  string collection = 2;
+  int32 limit = 3;
+  string cursor = 4;
+}
+
+message GetAtmosphereBacklinksResponse {
+  repeated AtmosphereBacklink backlinks = 1;
+  string cursor = 2;
+}
+
+message GetAtmosphereBacklinksByActorRequest {
+  string actor_did = 1;
+  // Source collection NSID.
+  string collection = 2;
+  repeated string target_uris = 3;
+}
+
+message AtmosphereBacklinksByActor {
+  string target_uri = 1;
+  // Source record URIs authored by the actor; empty if none.
+  repeated string uris = 2;
+}
+
+message GetAtmosphereBacklinksByActorResponse {
+  // One entry per requested target, in request order.
+  repeated AtmosphereBacklinksByActor results = 1;
+  // True if the actor has more matching records than the response limit, so
+  // some targets may be missing links.
+  bool truncated = 2;
+}
+
+message GetAtmosphereBacklinkCountsRequest {
+  repeated string target_uris = 1;
+  // Optional source collection NSID; empty returns counts for every collection.
+  string collection = 2;
+}
+
+message AtmosphereBacklinkCounts {
+  string target_uri = 1;
+  // Source collection NSID -> number of source records linking to the target.
+  map<string, int64> counts = 2;
+}
+
+message GetAtmosphereBacklinkCountsResponse {
+  // One entry per requested target, in request order.
+  repeated AtmosphereBacklinkCounts results = 1;
+}
+
 service Service {
   //
   // Read Path
@@ -1399,12 +1861,21 @@ service Service {
   rpc GetActorChatDeclarationRecords(GetActorChatDeclarationRecordsRequest) returns (GetActorChatDeclarationRecordsResponse);
   rpc GetNotificationDeclarationRecords(GetNotificationDeclarationRecordsRequest) returns (GetNotificationDeclarationRecordsResponse);
   rpc GetGermDeclarationRecords(GetGermDeclarationRecordsRequest) returns (GetGermDeclarationRecordsResponse);
+  rpc GetProfileLinkRecords(GetProfileLinkRecordsRequest) returns (GetProfileLinkRecordsResponse);
   rpc GetStatusRecords(GetStatusRecordsRequest) returns (GetStatusRecordsResponse);
   rpc GetRepostRecords(GetRepostRecordsRequest) returns (GetRepostRecordsResponse);
   rpc GetThreadGateRecords(GetThreadGateRecordsRequest) returns (GetThreadGateRecordsResponse);
   rpc GetPostgateRecords(GetPostgateRecordsRequest) returns (GetPostgateRecordsResponse);
   rpc GetLabelerRecords(GetLabelerRecordsRequest) returns (GetLabelerRecordsResponse);
   rpc GetStarterPackRecords(GetStarterPackRecordsRequest) returns (GetStarterPackRecordsResponse);
+  rpc GetRecordsByURI(GetRecordsByURIRequest) returns (GetRecordsByURIResponse);
+  rpc GetRecordsByRef(GetRecordsByRefRequest) returns (GetRecordsByRefResponse);
+
+  // Atmosphere
+  rpc GetAtmosphereTimeline(GetAtmosphereTimelineRequest) returns (GetAtmosphereTimelineResponse);
+  rpc GetAtmosphereBacklinks(GetAtmosphereBacklinksRequest) returns (GetAtmosphereBacklinksResponse);
+  rpc GetAtmosphereBacklinksByActor(GetAtmosphereBacklinksByActorRequest) returns (GetAtmosphereBacklinksByActorResponse);
+  rpc GetAtmosphereBacklinkCounts(GetAtmosphereBacklinkCountsRequest) returns (GetAtmosphereBacklinkCountsResponse);
 
   // Follows
   rpc GetActorFollowsActors(GetActorFollowsActorsRequest) returns (GetActorFollowsActorsResponse);
@@ -1419,6 +1890,7 @@ service Service {
   // Likes
   rpc GetLikesBySubject(GetLikesBySubjectRequest) returns (GetLikesBySubjectResponse);
   rpc GetLikesBySubjectSorted(GetLikesBySubjectSortedRequest) returns (GetLikesBySubjectSortedResponse);
+  rpc GetKnownLikers(GetKnownLikersRequest) returns (GetKnownLikersResponse);
   rpc GetLikesByActorAndSubjects(GetLikesByActorAndSubjectsRequest) returns (GetLikesByActorAndSubjectsResponse);
   rpc GetActorLikes(GetActorLikesRequest) returns (GetActorLikesResponse);
 
@@ -1437,6 +1909,9 @@ service Service {
   rpc GetListCounts(GetListCountsRequest) returns (GetListCountsResponse);
   rpc GetNewUserCountForRange(GetNewUserCountForRangeRequest) returns (GetNewUserCountForRangeResponse);
 
+  // Feature Store
+  rpc GetFeatures(GetFeaturesRequest) returns (GetFeaturesResponse);
+
   // Profile
   rpc GetActors(GetActorsRequest) returns (GetActorsResponse);
   rpc GetDidsByHandles(GetDidsByHandlesRequest) returns (GetDidsByHandlesResponse);
@@ -1450,6 +1925,7 @@ service Service {
   rpc GetListMembers(GetListMembersRequest) returns (GetListMembersResponse);
   rpc GetListMembership(GetListMembershipRequest) returns (GetListMembershipResponse);
   rpc GetListCount(GetListCountRequest) returns (GetListCountResponse);
+  rpc GetReferencelistoptoutsByActorAndSubjects(GetReferencelistoptoutsByActorAndSubjectsRequest) returns (GetReferencelistoptoutsByActorAndSubjectsResponse);
 
   // Mutes
   rpc GetActorMutesActor(GetActorMutesActorRequest) returns (GetActorMutesActorResponse);
@@ -1475,6 +1951,7 @@ service Service {
   // Notifications
   rpc GetNotificationPreferences(GetNotificationPreferencesRequest) returns (GetNotificationPreferencesResponse);
   rpc GetNotifications(GetNotificationsRequest) returns (GetNotificationsResponse);
+  rpc GetNotificationsV2(GetNotificationsV2Request) returns (GetNotificationsV2Response);
   rpc GetNotificationSeen(GetNotificationSeenRequest) returns (GetNotificationSeenResponse);
   rpc GetUnreadNotificationCount(GetUnreadNotificationCountRequest) returns (GetUnreadNotificationCountResponse);
   rpc GetActivitySubscriptionDids(GetActivitySubscriptionDidsRequest) returns (GetActivitySubscriptionDidsResponse);
@@ -1495,10 +1972,17 @@ service Service {
   // Threads
   rpc GetThread(GetThreadRequest) returns (GetThreadResponse);
 
-  // Search
+  // Search (V1)
   rpc SearchActors(SearchActorsRequest) returns (SearchActorsResponse);
   rpc SearchPosts(SearchPostsRequest) returns (SearchPostsResponse);
   rpc SearchStarterPacks(SearchStarterPacksRequest) returns (SearchStarterPacksResponse);
+
+  // Search V2
+  rpc SearchPostsV2(SearchPostsV2Request) returns (SearchPostsV2Response);
+  rpc SearchActorsV2(SearchActorsV2Request) returns (SearchActorsV2Response);
+  rpc SearchActorsTypeahead(SearchActorsTypeaheadRequest) returns (SearchActorsTypeaheadResponse);
+  rpc SearchFeedGeneratorsV2(SearchFeedGeneratorsV2Request) returns (SearchFeedGeneratorsV2Response);
+  rpc SearchStarterPacksV2(SearchStarterPacksV2Request) returns (SearchStarterPacksV2Response);
 
   // Suggestions
   rpc GetFollowSuggestions(GetFollowSuggestionsRequest) returns (GetFollowSuggestionsResponse);
@@ -1510,6 +1994,9 @@ service Service {
 
   // Starter packs
   rpc GetActorStarterPacks(GetActorStarterPacksRequest) returns (GetActorStarterPacksResponse);
+
+  // Tags
+  rpc GetTagsForSubjects(GetTagsForSubjectsRequest) returns (GetTagsForSubjectsResponse);
 
   // Sync
   rpc GetLatestRev(GetLatestRevRequest) returns (GetLatestRevResponse);
@@ -1535,6 +2022,7 @@ service Service {
 
   // Graph
   rpc GetFollowsFollowing(GetFollowsFollowingRequest) returns (GetFollowsFollowingResponse);
+  rpc SampleFollowsFollowing(SampleFollowsFollowingRequest) returns (SampleFollowsFollowingResponse);
 
   // Sitemaps
   rpc GetSitemapIndex(GetSitemapIndexRequest) returns (GetSitemapIndexResponse);
@@ -1642,6 +2130,11 @@ message UntakedownRecordResponse {
 message CreateActorMuteRequest {
   string actor_did = 1;
   string subject_did = 2;
+  // scope restrictions: when any is set, just the scoped content is muted;
+  // when none are set, the subject is fully muted. If a mute already exists
+  // for the pair, its stored scope is replaced with this one.
+  bool only_reposts = 3;
+  bool only_quoteposts = 4;
 }
 
 message CreateActorMuteResponse {}

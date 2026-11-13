@@ -1,13 +1,14 @@
 // Must be first
 import './polyfill.js'
 
-import {
-  LexBuilder,
+import type {
   LexBuilderLoadOptions,
   LexBuilderOptions,
   LexBuilderSaveOptions,
 } from './lex-builder.js'
+import { LexBuilder } from './lex-builder.js'
 
+export * from './filter.js'
 export * from './lex-builder.js'
 export * from './lex-def-builder.js'
 export * from './lexicon-directory-indexer.js'
@@ -49,7 +50,7 @@ export type TsProjectBuildOptions = LexBuilderOptions &
  * })
  * ```
  */
-export async function build(options: TsProjectBuildOptions) {
+export async function build(options: TsProjectBuildOptions): Promise<void> {
   const builder = new LexBuilder(options)
   await builder.load(options)
   await builder.save(options)

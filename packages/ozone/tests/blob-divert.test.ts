@@ -1,13 +1,14 @@
 import assert from 'node:assert'
-import { ToolsOzoneModerationDefs } from '@atproto/api'
+import { jest } from '@jest/globals'
+import type { ToolsOzoneModerationDefs } from '@atproto/api'
 import {
-  ModeratorClient,
-  SeedClient,
+  type ModeratorClient,
+  type SeedClient,
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
-import { ResponseType, XRPCError } from '@atproto/xrpc'
-import { forSnapshot, identity } from './_util'
+import { UpstreamHttpError } from '../src/util.js'
+import { forSnapshot, identity } from './_util.js'
 
 describe('blob divert', () => {
   let network: TestNetwork
@@ -29,7 +30,7 @@ describe('blob divert', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   const mockReportServiceResponse = (succeeds: boolean) => {
@@ -39,8 +40,8 @@ describe('blob divert', () => {
       .spyOn(blobDiverter, 'uploadBlob')
       .mockImplementation(async () => {
         if (!succeeds) {
-          // Using an XRPCError to trigger retries
-          throw new XRPCError(ResponseType.Unknown, undefined)
+          // A status-less UpstreamHttpError is what retryHttp always retries
+          throw new UpstreamHttpError(undefined, 'upload failed')
         }
       })
   }
@@ -70,36 +71,30 @@ describe('blob divert', () => {
 
   it('fails and keeps attempt count when report service fails to accept upload.', async () => {
     // Simulate failure to fail upload
-    const reportServiceRequest = mockReportServiceResponse(false)
-    try {
-      await expect(emitDivertEvent()).rejects.toThrow('Failed to process blobs')
+    using reportServiceRequest = mockReportServiceResponse(false)
 
-      // 1 initial attempt + 3 retries
-      expect(reportServiceRequest).toHaveBeenCalledTimes(getImages().length * 4)
-    } finally {
-      reportServiceRequest.mockRestore()
-    }
+    await expect(emitDivertEvent()).rejects.toThrow('Failed to process blobs')
+
+    // 1 initial attempt + 3 retries
+    expect(reportServiceRequest).toHaveBeenCalledTimes(getImages().length * 4)
   })
 
   it('sends blobs to configured divert service and marks divert date', async () => {
     // Simulate success to accept upload
-    const reportServiceRequest = mockReportServiceResponse(true)
-    try {
-      const divertEvent = await emitDivertEvent()
+    using reportServiceRequest = mockReportServiceResponse(true)
 
-      expect(reportServiceRequest).toHaveBeenCalledTimes(getImages().length)
-      expect(forSnapshot(divertEvent)).toMatchSnapshot()
+    const divertEvent = await emitDivertEvent()
 
-      const { subjectStatuses } = await modClient.queryStatuses({
-        subject: getSubject().uri,
-      })
+    expect(reportServiceRequest).toHaveBeenCalledTimes(getImages().length)
+    expect(forSnapshot(divertEvent)).toMatchSnapshot()
 
-      expect(subjectStatuses[0].takendown).toBe(true)
+    const { subjectStatuses } = await modClient.queryStatuses({
+      subject: getSubject().uri,
+    })
 
-      const event = await modClient.getEvent(divertEvent.id)
-      expect(forSnapshot(event)).toMatchSnapshot()
-    } finally {
-      reportServiceRequest.mockRestore()
-    }
+    expect(subjectStatuses[0].takendown).toBe(true)
+
+    const event = await modClient.getEvent(divertEvent.id)
+    expect(forSnapshot(event)).toMatchSnapshot()
   })
 })

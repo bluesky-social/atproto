@@ -1,7 +1,8 @@
-import { SignedJwt, isSignedJwt } from '@atproto/jwk'
+import type { Did } from '@atproto/did'
+import { type SignedJwt, isSignedJwt } from '@atproto/jwk'
 import { LexResolverError } from '@atproto/lex-resolver'
 import type { Account } from '@atproto/oauth-provider-api'
-import {
+import type {
   OAuthAccessToken,
   OAuthAuthorizationRequestParameters,
   OAuthScope,
@@ -9,29 +10,32 @@ import {
   OAuthTokenType,
 } from '@atproto/oauth-types'
 import { AccessTokenMode } from '../access-token/access-token-mode.js'
-import { ClientAuth } from '../client/client-auth.js'
-import { Client } from '../client/client.js'
-import { TOKEN_MAX_AGE } from '../constants.js'
-import { DeviceId } from '../device/device-id.js'
+import type { ClientAuth } from '../client/client-auth.js'
+import type { Client } from '../client/client.js'
+import type { DeviceId } from '../device/device-id.js'
 import { InvalidGrantError } from '../errors/invalid-grant-error.js'
 import { InvalidRequestError } from '../errors/invalid-request-error.js'
 import { InvalidTokenError } from '../errors/invalid-token-error.js'
-import { LexiconManager } from '../lexicon/lexicon-manager.js'
-import { RequestMetadata } from '../lib/http/request.js'
+import type { LexiconManager } from '../lexicon/lexicon-manager.js'
+import type { RequestMetadata } from '../lib/http/request.js'
 import { dateToEpoch, dateToRelativeSeconds } from '../lib/util/date.js'
-import { OAuthHooks } from '../oauth-hooks.js'
-import { Sub } from '../oidc/sub.js'
-import { Code, isCode } from '../request/code.js'
-import { AccessTokenPayload } from '../signer/access-token-payload.js'
+import {
+  REFRESH_LIFETIME_EXTENDED,
+  SESSION_LIFETIME_EXTENDED,
+  TOKEN_MAX_AGE,
+} from '../oauth-constants.js'
+import type { OAuthHooks } from '../oauth-hooks.js'
+import { type Code, isCode } from '../request/code.js'
+import type { AccessTokenPayload } from '../signer/access-token-payload.js'
 import { Signer } from '../signer/signer.js'
 import {
-  RefreshToken,
+  type RefreshToken,
   generateRefreshToken,
   isRefreshToken,
 } from './refresh-token.js'
-import { TokenClaims } from './token-claims.js'
-import { TokenId, generateTokenId, isTokenId } from './token-id.js'
-import { CreateTokenData, TokenInfo, TokenStore } from './token-store.js'
+import type { TokenClaims } from './token-claims.js'
+import { type TokenId, generateTokenId, isTokenId } from './token-id.js'
+import type { CreateTokenData, TokenInfo, TokenStore } from './token-store.js'
 
 export { AccessTokenMode, Signer }
 export type { OAuthHooks, TokenStore }
@@ -46,8 +50,24 @@ export class TokenManager {
     protected readonly tokenMaxAge = TOKEN_MAX_AGE,
   ) {}
 
-  protected createTokenExpiry(now = new Date()) {
-    return new Date(now.getTime() + this.tokenMaxAge)
+  protected createTokenExpiry(
+    client: Client,
+    now: Date,
+    sessionCreationDate: Date = now,
+  ): Date {
+    const lifetime = Math.min(
+      this.tokenMaxAge,
+      // Make sure the token does not stay valid beyond the session lifetime.
+      sessionCreationDate.getTime() + client.sessionLifetime - now.getTime(),
+    )
+
+    // We account for a small buffer to avoid the token being valid for a few
+    // milliseconds
+    if (lifetime <= 250) {
+      throw new InvalidGrantError(`Session expired`)
+    }
+
+    return new Date(now.getTime() + lifetime)
   }
 
   protected async createAccessToken(
@@ -61,10 +81,10 @@ export class TokenManager {
   ): Promise<OAuthAccessToken> {
     const claims: TokenClaims = {
       jti: tokenId,
-      sub: account.sub,
+      sub: account.did,
       iat: dateToEpoch(issuedAt),
       exp: dateToEpoch(expiresAt),
-      aud: account.aud,
+      aud: account.pds,
 
       ...(parameters.dpop_jkt && {
         cnf: { jkt: parameters.dpop_jkt },
@@ -107,7 +127,7 @@ export class TokenManager {
       : undefined
 
     const now = new Date()
-    const expiresAt = this.createTokenExpiry(now)
+    const expiresAt = this.createTokenExpiry(client, now)
 
     const scope = await this.lexiconManager
       .buildTokenScope(parameters.scope!)
@@ -136,7 +156,7 @@ export class TokenManager {
       accessToken,
       refreshToken,
       expiresAt,
-      account.sub,
+      account.did,
       scope,
     )
 
@@ -147,7 +167,7 @@ export class TokenManager {
       clientId: client.id,
       clientAuth,
       deviceId,
-      sub: account.sub,
+      did: account.did,
       parameters,
       details: null,
       scope,
@@ -191,7 +211,7 @@ export class TokenManager {
     accessToken: OAuthAccessToken,
     refreshToken: string | undefined,
     expiresAt: Date,
-    sub: Sub,
+    did: Did,
     scope: string,
   ): OAuthTokenResponse {
     return {
@@ -209,7 +229,7 @@ export class TokenManager {
       // ATPROTO extension: add the sub claim to the token response to allow
       // clients to resolve the PDS url (audience) using the did resolution
       // mechanism.
-      sub,
+      sub: did,
     }
   }
 
@@ -218,6 +238,7 @@ export class TokenManager {
     clientAuth: ClientAuth,
     clientMetadata: RequestMetadata,
     tokenInfo: TokenInfo,
+    now = new Date(),
   ): Promise<OAuthTokenResponse> {
     const { account, data } = tokenInfo
     const { parameters } = data
@@ -227,8 +248,11 @@ export class TokenManager {
     const nextTokenId = await generateTokenId()
     const nextRefreshToken = await generateRefreshToken()
 
-    const now = new Date()
-    const expiresAt = this.createTokenExpiry(now)
+    const expiresAt = this.createTokenExpiry(
+      client,
+      now,
+      tokenInfo.data.createdAt,
+    )
 
     // @NOTE since the permission sets are stored in a persistent store,
     // it's fine to propagate a 500 (server_error) here as the values should
@@ -263,7 +287,7 @@ export class TokenManager {
       accessToken,
       nextRefreshToken,
       expiresAt,
-      account.sub,
+      account.did,
       scope,
     )
 
@@ -305,10 +329,10 @@ export class TokenManager {
     if (!tokenInfo) return null
 
     // Fool-proof: Invalid store implementation ?
-    if (payload.sub !== tokenInfo.account.sub) {
+    if (payload.sub !== tokenInfo.account.did) {
       await this.deleteToken(tokenInfo.id)
       throw new Error(
-        `Account sub (${tokenInfo.account.sub}) does not match token sub (${payload.sub})`,
+        `Account sub (${tokenInfo.account.did}) does not match token sub (${payload.sub})`,
       )
     }
 
@@ -395,21 +419,30 @@ export class TokenManager {
 
     return {
       jti: tokenId,
-      sub: account.sub,
+      sub: account.did,
       iat: dateToEpoch(data.updatedAt),
       exp: dateToEpoch(data.expiresAt),
-      aud: account.aud,
+      aud: account.pds,
       scope: data.scope ?? data.parameters.scope,
       // https://datatracker.ietf.org/doc/html/rfc8693#section-4.3
       client_id: data.clientId,
     }
   }
 
-  async listAccountTokens(sub: Sub): Promise<TokenInfo[]> {
-    const results = await this.store.listAccountTokens(sub)
+  async listAccountTokens(did: Did): Promise<TokenInfo[]> {
+    const results = await this.store.listAccountTokens(did)
     return results
-      .filter((tokenInfo) => tokenInfo.account.sub === sub) // Fool proof
-      .filter((tokenInfo) => !isCurrentTokenExpired(tokenInfo))
+      .filter((tokenInfo) => tokenInfo.account.did === did) // Fool proof
+      .filter(
+        // The session are still active if they are within the session lifetime
+        // and refresh lifetime. We pre-filter here, based on the maximum
+        // possible lifetime of a session, to avoid loading the client metadata
+        // for sessions that are for sure expired. The client metadata is needed
+        // to determine the actual session and refresh lifetimes.
+        ({ data }) =>
+          Date.now() - data.createdAt.getTime() < SESSION_LIFETIME_EXTENDED &&
+          Date.now() - data.updatedAt.getTime() < REFRESH_LIFETIME_EXTENDED,
+      )
   }
 }
 

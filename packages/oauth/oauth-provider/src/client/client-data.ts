@@ -1,5 +1,5 @@
-import { Jwks } from '@atproto/jwk'
-import { OAuthClientMetadata } from '@atproto/oauth-types'
+import type { Jwks } from '@atproto/jwk'
+import type { OAuthClientMetadata } from '@atproto/oauth-types'
 
 export type { OAuthClientMetadata }
 

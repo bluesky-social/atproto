@@ -1,8 +1,9 @@
-import { Selectable } from 'kysely'
-import { Database } from '../db'
-import { TimeIdKeyset, paginate } from '../db/pagination'
-import { SetDetail } from '../db/schema/ozone_set'
-import { SetView } from '../lexicon/types/tools/ozone/set/defs'
+import type { NotNull, Selectable } from 'kysely'
+import { toDatetimeString } from '@atproto/lex-schema'
+import type { Database } from '../db/index.js'
+import { TimeIdKeyset, paginate } from '../db/pagination.js'
+import type { SetDetail } from '../db/schema/ozone_set.js'
+import type { tools } from '../lexicons/index.js'
 
 export type SetServiceCreator = (db: Database) => SetService
 
@@ -14,19 +15,22 @@ export class SetService {
   }
 
   buildQueryForSetWithSize() {
-    return this.db.db.selectFrom('set_detail as s').select([
-      's.id',
-      's.name',
-      's.description',
-      's.createdAt',
-      's.updatedAt',
-      (eb) =>
-        eb
-          .selectFrom('set_value')
-          .select((e) => e.fn.count<number>('setId').as('count'))
-          .whereRef('setId', '=', 's.id')
-          .as('setSize'),
-    ])
+    return this.db.db
+      .selectFrom('set_detail as s')
+      .select([
+        's.id',
+        's.name',
+        's.description',
+        's.createdAt',
+        's.updatedAt',
+        (eb) =>
+          eb
+            .selectFrom('set_value')
+            .select((e) => e.fn.count<number>('setId').as('count'))
+            .whereRef('setId', '=', 's.id')
+            .as('setSize'),
+      ])
+      .$narrowType<{ setSize: NotNull }>()
   }
 
   async query({
@@ -215,13 +219,15 @@ export class SetService {
     })
   }
 
-  view(set: Selectable<SetDetail> & { setSize: number }): SetView {
+  view(
+    set: Selectable<SetDetail> & { setSize: number },
+  ): tools.ozone.set.defs.SetView {
     return {
       name: set.name,
       description: set.description || undefined,
       setSize: set.setSize,
-      createdAt: set.createdAt.toISOString(),
-      updatedAt: set.updatedAt.toISOString(),
+      createdAt: toDatetimeString(set.createdAt),
+      updatedAt: toDatetimeString(set.updatedAt),
     }
   }
 }

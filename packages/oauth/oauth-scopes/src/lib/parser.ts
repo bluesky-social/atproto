@@ -1,5 +1,5 @@
 import { ScopeStringSyntax } from './syntax-string.js'
-import { NeRoArray, ParamValue, ScopeSyntax } from './syntax.js'
+import type { NeRoArray, ParamValue, ScopeSyntax } from './syntax.js'
 
 type InferParamPredicate<T extends (value: ParamValue) => boolean> =
   T extends ((value: ParamValue) => value is infer U extends ParamValue)

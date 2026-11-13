@@ -1,10 +1,11 @@
 import {
-  InferInput,
-  InferOutput,
+  type InferInput,
+  type InferOutput,
   Schema,
-  ValidationContext,
-  Validator,
-  WrappedValidator,
+  type ValidationContext,
+  type ValidationResult,
+  type Validator,
+  type WrappedValidator,
 } from '../core.js'
 
 /**
@@ -32,11 +33,7 @@ export type RefSchemaGetter<out TValidator extends Validator> = () => TValidator
  * ```
  */
 export class RefSchema<const TValidator extends Validator>
-  extends Schema<
-    InferInput<TValidator>,
-    InferOutput<TValidator>,
-    TValidator['__lex']
-  >
+  extends Schema<InferInput<TValidator>, InferOutput<TValidator>>
   implements WrappedValidator<TValidator>
 {
   readonly type = 'ref' as const
@@ -60,7 +57,10 @@ export class RefSchema<const TValidator extends Validator>
     return this.validator
   }
 
-  validateInContext(input: unknown, ctx: ValidationContext) {
+  validateInContext(
+    input: unknown,
+    ctx: ValidationContext,
+  ): ValidationResult<InferInput<TValidator>> {
     return ctx.validate(input, this.validator)
   }
 }

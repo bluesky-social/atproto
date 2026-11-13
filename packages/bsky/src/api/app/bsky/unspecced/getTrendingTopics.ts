@@ -1,19 +1,17 @@
-import AtpAgent from '@atproto/api'
 import { noUndefinedVals } from '@atproto/common'
-import { InternalServerError } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context'
-import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
-import { Server } from '../../../../lexicon'
-import { TrendingTopic } from '../../../../lexicon/types/app/bsky/unspecced/defs'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/unspecced/getTrendingTopics'
+import type { Client } from '@atproto/lex-client'
+import { MethodNotImplementedError, type Server } from '@atproto/xrpc-server'
+import type { AppContext } from '../../../../context.js'
+import type { HydrateCtx, Hydrator } from '../../../../hydration/hydrator.js'
+import { app } from '../../../../lexicons/index.js'
 import {
-  HydrationFnInput,
-  PresentationFnInput,
-  RulesFnInput,
-  SkeletonFnInput,
+  type HydrationFn,
+  type PresentationFn,
+  type RulesFn,
+  type SkeletonFn,
   createPipeline,
-} from '../../../../pipeline'
-import { Views } from '../../../../views'
+} from '../../../../pipeline.js'
+import type { Views } from '../../../../views/index.js'
 
 export default function (server: Server, ctx: AppContext) {
   const getTrendingTopics = createPipeline(
@@ -22,12 +20,16 @@ export default function (server: Server, ctx: AppContext) {
     noBlocksOrMutes,
     presentation,
   )
-  server.app.bsky.unspecced.getTrendingTopics({
+  server.add(app.bsky.unspecced.getTrendingTopics, {
     auth: ctx.authVerifier.standardOptional,
-    handler: async ({ auth, params, req }) => {
+    handler: async ({ auth, params, req, signal }) => {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
-      const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
+      const hydrateCtx = await ctx.hydrator.createContext({
+        labelers,
+        viewer,
+        xrpcEndpoint: app.bsky.unspecced.getTrendingTopics.$lxm,
+      })
       const headers = noUndefinedVals({
         'accept-language': req.headers['accept-language'],
       })
@@ -36,6 +38,7 @@ export default function (server: Server, ctx: AppContext) {
           ...params,
           hydrateCtx,
           headers,
+          signal,
         },
         ctx,
       )
@@ -47,56 +50,54 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
+const skeleton: SkeletonFn<Context, Params, SkeletonState> = async (input) => {
   const { params, ctx } = input
-  if (ctx.topicsAgent) {
-    const res = await ctx.topicsAgent.app.bsky.unspecced.getTrendingTopics(
-      {
-        limit: params.limit,
-        viewer: params.hydrateCtx.viewer ?? undefined,
-      },
-      {
-        headers: params.headers,
-      },
-    )
-    return res.data
-  } else {
-    throw new InternalServerError('Topics agent not available')
+
+  if (!ctx.irisClient) {
+    // Use 501 instead of 500 as these are not considered retry-able by clients
+    throw new MethodNotImplementedError('Iris agent not available')
   }
+
+  return ctx.irisClient.call(
+    app.bsky.unspecced.getTrendingTopics,
+    {
+      limit: params.limit,
+      viewer: params.hydrateCtx.viewer ?? undefined,
+    },
+    {
+      headers: params.headers,
+      signal: params.signal,
+    },
+  )
 }
 
-const hydration = async (
-  _: HydrationFnInput<Context, Params, SkeletonState>,
-) => {
+const hydration: HydrationFn<Context, Params, SkeletonState> = async () => {
   return {}
 }
 
-const noBlocksOrMutes = (
-  input: RulesFnInput<Context, Params, SkeletonState>,
-) => {
-  const { skeleton } = input
-  return skeleton
+const noBlocksOrMutes: RulesFn<Context, Params, SkeletonState> = (input) => {
+  return input.skeleton
 }
 
-const presentation = (
-  input: PresentationFnInput<Context, Params, SkeletonState>,
-) => {
-  const { skeleton } = input
-  return skeleton
+const presentation: PresentationFn<
+  Context,
+  Params,
+  SkeletonState,
+  SkeletonState
+> = (input) => {
+  return input.skeleton
 }
 
 type Context = {
   hydrator: Hydrator
   views: Views
-  topicsAgent: AtpAgent | undefined
+  irisClient: Client | undefined
 }
 
-type Params = Omit<QueryParams, 'viewer'> & {
+type Params = Omit<app.bsky.unspecced.getTrendingTopics.$Params, 'viewer'> & {
   hydrateCtx: HydrateCtx
   headers: Record<string, string>
+  signal: AbortSignal
 }
 
-type SkeletonState = {
-  topics: TrendingTopic[]
-  suggested: TrendingTopic[]
-}
+type SkeletonState = app.bsky.unspecced.getTrendingTopics.$OutputBody

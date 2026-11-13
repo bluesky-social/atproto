@@ -1,6 +1,9 @@
-import { Configuration, MMKV } from 'react-native-mmkv'
+import { type Configuration, type MMKV, createMMKV } from 'react-native-mmkv'
 import type { SimpleStore, Value } from '@atproto-labs/simple-store'
-import { MMKVSimpleStore, MMKVSimpleStoreOptions } from './mmkv-simple-store'
+import {
+  MMKVSimpleStore,
+  type MMKVSimpleStoreOptions,
+} from './mmkv-simple-store.js'
 
 export type MMKVSimpleStoreTTLOptions<V extends Value> =
   MMKVSimpleStoreOptions<V> & {
@@ -30,7 +33,7 @@ export class MMKVSimpleStoreTTL<V extends Value>
   }: MMKVSimpleStoreTTLOptions<V> & Configuration) {
     super({ ...config, encode, decode })
 
-    this.#store = new MMKV({ ...config, id: `${config.id}.exp` })
+    this.#store = createMMKV({ ...config, id: `${config.id}.exp` })
     this.#expiresAt = expiresAt
     if (clearInterval) {
       this.#clearTimer = setInterval(() => this.clearExpired(), clearInterval)
@@ -48,7 +51,7 @@ export class MMKVSimpleStoreTTL<V extends Value>
     super.set(key, value)
 
     const expirationDate = this.#expiresAt.call(null, value)
-    if (expirationDate == null) this.#store.delete(key)
+    if (expirationDate == null) this.#store.remove(key)
     else this.#store.set(key, expirationDate)
   }
 
@@ -63,7 +66,7 @@ export class MMKVSimpleStoreTTL<V extends Value>
 
   override del(key: string): void {
     super.del(key)
-    this.#store.delete(key)
+    this.#store.remove(key)
   }
 
   override clear(): void {

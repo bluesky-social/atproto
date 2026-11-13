@@ -1,17 +1,13 @@
-import { AtpAgent } from '@atproto/api'
+import { ComAtprotoModerationDefs, ids } from '@atproto/api'
+import type { AtpAgent } from '@atproto/api'
 import {
-  ModeratorClient,
-  SeedClient,
+  type ModeratorClient,
+  type SeedClient,
   TestNetwork,
-  TestOzone,
+  type TestOzone,
   basicSeed,
 } from '@atproto/dev-env'
-import { ids } from '../src/lexicon/lexicons'
-import {
-  REASONOTHER,
-  REASONSPAM,
-} from '../src/lexicon/types/com/atproto/moderation/defs'
-import { forSnapshot } from './_util'
+import { forSnapshot } from './_util.js'
 
 describe('admin get records view', () => {
   let network: TestNetwork
@@ -25,7 +21,7 @@ describe('admin get records view', () => {
       dbPostgresSchema: 'ozone_admin_get_records',
     })
     ozone = network.ozone
-    agent = ozone.getClient()
+    agent = ozone.getAgent()
     sc = network.getSeedClient()
     modClient = ozone.getModClient()
     await basicSeed(sc)
@@ -37,13 +33,13 @@ describe('admin get records view', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   beforeAll(async () => {
     await sc.createReport({
       reportedBy: sc.dids.bob,
-      reasonType: REASONSPAM,
+      reasonType: ComAtprotoModerationDefs.REASONSPAM,
       subject: {
         $type: 'com.atproto.repo.strongRef',
         uri: sc.posts[sc.dids.alice][0].ref.uriStr,
@@ -52,7 +48,7 @@ describe('admin get records view', () => {
     })
     await sc.createReport({
       reportedBy: sc.dids.carol,
-      reasonType: REASONOTHER,
+      reasonType: ComAtprotoModerationDefs.REASONOTHER,
       reason: 'defamation',
       subject: {
         $type: 'com.atproto.repo.strongRef',

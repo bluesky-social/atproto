@@ -1,8 +1,8 @@
-import { LexiconPermissionSet } from '@atproto/lex-document'
-import { LexResolver, LexResolverError } from '@atproto/lex-resolver'
-import { IncludeScope, Nsid } from '@atproto/oauth-scopes'
+import type { LexiconPermissionSet } from '@atproto/lex-document'
+import { type LexResolver, LexResolverError } from '@atproto/lex-resolver'
+import { IncludeScope, type Nsid } from '@atproto/oauth-scopes'
 import { LexiconGetter } from './lexicon-getter.js'
-import { LexiconStore } from './lexicon-store.js'
+import type { LexiconStore } from './lexicon-store.js'
 
 export * from './lexicon-store.js'
 
@@ -63,12 +63,12 @@ export class LexiconManager {
     const { lexicon } = await this.lexiconGetter.get(nsid)
 
     if (!lexicon) {
-      throw LexResolverError.from(nsid)
+      throw new LexResolverError(nsid)
     }
 
     if (lexicon.defs.main?.type !== 'permission-set') {
       const description = 'Lexicon document is not a permission set'
-      throw LexResolverError.from(nsid, description)
+      throw new LexResolverError(nsid, description)
     }
 
     return lexicon.defs.main

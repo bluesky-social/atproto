@@ -1,5 +1,5 @@
 import { fromBase64, toBase64 } from '@atproto/lex-data'
-import { JsonValue } from './json.js'
+import type { JsonValue } from './json.js'
 
 /**
  * Parses a `{$bytes: string}` JSON object into a `Uint8Array`.
@@ -29,7 +29,7 @@ import { JsonValue } from './json.js'
  */
 export function parseLexBytes(
   input?: Record<string, unknown>,
-): Uint8Array | undefined {
+): Uint8Array<ArrayBuffer> | undefined {
   if (!input || !('$bytes' in input)) {
     return undefined
   }

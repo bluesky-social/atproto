@@ -1,20 +1,26 @@
-import { AppContext } from '../../../../context'
-import { Server } from '../../../../lexicon'
+import type { UriString } from '@atproto/lex-schema'
+import type { DidString } from '@atproto/syntax'
+import type { Server } from '@atproto/xrpc-server'
+import type { AppContext } from '../../../../context.js'
+import { com } from '../../../../lexicons/index.js'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.server.describeServer(() => {
+  server.add(com.atproto.server.describeServer, () => {
+    const did = ctx.cfg.service.did as DidString
     const availableUserDomains = ctx.cfg.identity.serviceHandleDomains
     const inviteCodeRequired = ctx.cfg.invites.required
-    const privacyPolicy = ctx.cfg.service.privacyPolicyUrl
-    const termsOfService = ctx.cfg.service.termsOfServiceUrl
+    const blobUploadLimit = ctx.cfg.service.blobUploadLimit
+    const privacyPolicy = ctx.cfg.service.privacyPolicyUrl as UriString
+    const termsOfService = ctx.cfg.service.termsOfServiceUrl as UriString
     const contactEmailAddress = ctx.cfg.service.contactEmailAddress
 
     return {
-      encoding: 'application/json',
+      encoding: 'application/json' as const,
       body: {
-        did: ctx.cfg.service.did,
+        did,
         availableUserDomains,
         inviteCodeRequired,
+        blobUploadLimit,
         links: { privacyPolicy, termsOfService },
         contact: {
           email: contactEmailAddress,

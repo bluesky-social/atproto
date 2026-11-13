@@ -1,8 +1,13 @@
-import { AtpAgent } from '@atproto/api'
-import { SeedClient, TestNetwork, likesSeed } from '@atproto/dev-env'
-import { ids } from '../../src/lexicon/lexicons'
-import { OutputSchema as GetLikesOutputSchema } from '../../src/lexicon/types/app/bsky/feed/getLikes'
-import { constantDate, forSnapshot, paginateAll, stripViewer } from '../_util'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
+import { type AppBskyFeedGetLikes, type AtpAgent, ids } from '@atproto/api'
+import { type SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import type { DidString } from '@atproto/syntax'
+import {
+  constantDate,
+  forSnapshot,
+  paginateAll,
+  stripViewer,
+} from '../_util.js'
 
 describe('pds like views', () => {
   let network: TestNetwork
@@ -10,24 +15,30 @@ describe('pds like views', () => {
   let sc: SeedClient
 
   // account dids, for convenience
-  let alice: string
-  let bob: string
-  let carol: string
-  let frankie: string
+  let alice: DidString
+  let bob: DidString
+  let carol: DidString
+  let frankie: DidString
 
   beforeAll(async () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_views_likes',
     })
-    agent = network.bsky.getClient()
+    agent = network.bsky.getAgent()
     sc = network.getSeedClient()
-    await likesSeed(sc)
+    await basicSeed(sc)
+    await sc.createAccount('eve', {
+      email: 'eve@test.com',
+      handle: 'eve.test',
+      password: 'eve-pass',
+    })
+    await sc.like(sc.dids.eve, sc.posts[sc.dids.alice][1].ref)
+    await sc.like(sc.dids.carol, sc.replies[sc.dids.bob][0].ref)
     await sc.createAccount('frankie', {
       handle: 'frankie.test',
       email: 'frankie@frankie.com',
       password: 'password',
     })
-    await network.processAll()
 
     alice = sc.dids.alice
     bob = sc.dids.bob
@@ -35,9 +46,8 @@ describe('pds like views', () => {
     frankie = sc.dids.frankie
   })
 
-  afterAll(async () => {
-    await network.close()
-  })
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
 
   const getCursors = (items: { createdAt?: string }[]) =>
     items.map((item) => item.createdAt ?? constantDate)
@@ -72,7 +82,7 @@ describe('pds like views', () => {
   })
 
   it('paginates', async () => {
-    const results = (results: GetLikesOutputSchema[]) =>
+    const results = (results: AppBskyFeedGetLikes.OutputSchema[]) =>
       results.flatMap((res) => res.likes)
     const paginator = async (cursor?: string) => {
       const res = await agent.api.app.bsky.feed.getLikes(
@@ -92,6 +102,8 @@ describe('pds like views', () => {
     paginatedAll.forEach((res) =>
       expect(res.likes.length).toBeLessThanOrEqual(2),
     )
+    expect(paginatedAll[0].cursor).toBeDefined()
+    expect(paginatedAll.at(-1)?.cursor).toBeUndefined()
 
     const full = await agent.api.app.bsky.feed.getLikes(
       { uri: sc.posts[alice][1].ref.uriStr },
@@ -100,6 +112,20 @@ describe('pds like views', () => {
 
     expect(full.data.likes.length).toEqual(4)
     expect(results(paginatedAll)).toEqual(results([full.data]))
+
+    const exact = await network.bsky.ctx.dataplane.getLikesBySubjectSorted({
+      subject: { uri: sc.posts[alice][1].ref.uriStr },
+      limit: 4,
+    })
+    const nonterminal =
+      await network.bsky.ctx.dataplane.getLikesBySubjectSorted({
+        subject: { uri: sc.posts[alice][1].ref.uriStr },
+        limit: 2,
+      })
+    expect(exact.uris).toHaveLength(4)
+    expect(exact.cursor).toBe('')
+    expect(nonterminal.uris).toHaveLength(2)
+    expect(nonterminal.cursor).not.toBe('')
   })
 
   it('fetches post likes unauthed', async () => {
@@ -185,5 +211,30 @@ describe('pds like views', () => {
       sc.dids.dan,
       sc.dids.bob,
     ])
+
+    // Filtering carol out leaves this page short of the requested 3, but it
+    // already holds half of them, so it is served with a cursor for the rest.
+    const short = await agent.app.bsky.feed.getLikes(
+      { uri: sc.posts[alice][1].ref.uriStr, limit: 3 },
+      { headers: await network.serviceHeaders(bob, ids.AppBskyFeedGetLikes) },
+    )
+    expect(short.data.likes.map((like) => like.actor.did)).toStrictEqual([
+      sc.dids.eve,
+      sc.dids.dan,
+    ])
+    expect(short.data.cursor).toBeDefined()
+
+    const rest = await agent.app.bsky.feed.getLikes(
+      {
+        uri: sc.posts[alice][1].ref.uriStr,
+        limit: 3,
+        cursor: short.data.cursor,
+      },
+      { headers: await network.serviceHeaders(bob, ids.AppBskyFeedGetLikes) },
+    )
+    expect(rest.data.likes.map((like) => like.actor.did)).toStrictEqual([
+      sc.dids.bob,
+    ])
+    expect(rest.data.cursor).toBeUndefined()
   })
 })

@@ -1,22 +1,23 @@
-import AtpAgent from '@atproto/api'
 import { dedupeStrs, mapDefined, noUndefinedVals } from '@atproto/common'
-import { InternalServerError } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context'
+import type { Client } from '@atproto/lex-client'
+import type { DidString } from '@atproto/lex-schema'
+import { MethodNotImplementedError, type Server } from '@atproto/xrpc-server'
+import type { AppContext } from '../../../../context.js'
 import {
-  HydrateCtx,
-  Hydrator,
+  type HydrateCtx,
+  type Hydrator,
   mergeManyStates,
-} from '../../../../hydration/hydrator'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/unspecced/getSuggestedUsers'
+} from '../../../../hydration/hydrator.js'
+import { app } from '../../../../lexicons/index.js'
 import {
-  HydrationFnInput,
-  PresentationFnInput,
-  RulesFnInput,
-  SkeletonFnInput,
+  type HydrationFnInput,
+  type PresentationFnInput,
+  type RulesFnInput,
+  type SkeletonFnInput,
   createPipeline,
-} from '../../../../pipeline'
-import { Views } from '../../../../views'
+} from '../../../../pipeline.js'
+import { getAtprotoPassthroughHeaders } from '../../../../util/headers.js'
+import type { Views } from '../../../../views/index.js'
 
 export default function (server: Server, ctx: AppContext) {
   const getSuggestedUsers = createPipeline(
@@ -25,33 +26,32 @@ export default function (server: Server, ctx: AppContext) {
     noBlocksOrFollows,
     presentation,
   )
-  server.app.bsky.unspecced.getSuggestedUsers({
+  server.add(app.bsky.unspecced.getSuggestedUsers, {
     auth: ctx.authVerifier.standardOptional,
-    handler: async ({ auth, params, req }) => {
+    handler: async ({ auth, params, req, signal }) => {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({
+        xrpcEndpoint: app.bsky.unspecced.getSuggestedUsers.$lxm,
         labelers,
         viewer,
-        featureGatesMap: ctx.featureGatesClient.checkGates(
-          ['suggested_users:discover_agent:enable'],
-          {
+        features: ctx.featureGatesClient.scope(
+          ctx.featureGatesClient.parseUserContextFromHandler({
             viewer,
             req,
-          },
+          }),
         ),
       })
       const headers = noUndefinedVals({
         'accept-language': req.headers['accept-language'],
-        'x-bsky-topics': Array.isArray(req.headers['x-bsky-topics'])
-          ? req.headers['x-bsky-topics'].join(',')
-          : req.headers['x-bsky-topics'],
+        ...getAtprotoPassthroughHeaders(req),
       })
       const result = await getSuggestedUsers(
         {
           ...params,
           hydrateCtx,
           headers,
+          signal,
         },
         ctx,
       )
@@ -63,55 +63,58 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-// TODO: rename to `skeleton` once we can fully migrate to Discover
 const skeletonFromDiscover = async (
   input: SkeletonFnInput<Context, Params>,
-) => {
+): Promise<SkeletonState> => {
   const { params, ctx } = input
-  if (!ctx.suggestionsAgent)
-    throw new InternalServerError('Suggestions agent not available')
+  if (!ctx.suggestionsClient) {
+    throw new MethodNotImplementedError('Suggestions agent not available')
+  }
 
-  const res =
-    await ctx.suggestionsAgent.app.bsky.unspecced.getSuggestedUsersSkeleton(
-      {
-        limit: params.limit,
-        viewer: params.hydrateCtx.viewer ?? undefined,
-        category: params.category,
-      },
-      {
-        headers: params.headers,
-      },
-    )
-
-  return res.data
+  return ctx.suggestionsClient.call(
+    app.bsky.unspecced.getSuggestedUsersSkeleton,
+    {
+      limit: params.limit,
+      category: params.category,
+      viewer: params.hydrateCtx.viewer ?? undefined,
+    },
+    {
+      headers: params.headers,
+      signal: params.signal,
+    },
+  )
 }
 
-const skeletonFromTopics = async (input: SkeletonFnInput<Context, Params>) => {
+const skeletonFromIris = async (
+  input: SkeletonFnInput<Context, Params>,
+): Promise<SkeletonState> => {
   const { params, ctx } = input
-  if (!ctx.topicsAgent)
-    throw new InternalServerError('Topics agent not available')
+  if (!ctx.irisClient) {
+    throw new MethodNotImplementedError('Iris agent not available')
+  }
 
-  const res =
-    await ctx.topicsAgent.app.bsky.unspecced.getSuggestedUsersSkeleton(
-      {
-        limit: params.limit,
-        viewer: params.hydrateCtx.viewer ?? undefined,
-        category: params.category,
-      },
-      {
-        headers: params.headers,
-      },
-    )
-
-  return res.data
+  return ctx.irisClient.call(
+    app.bsky.unspecced.getSuggestedUsersSkeleton,
+    {
+      limit: params.limit,
+      category: params.category,
+      viewer: params.hydrateCtx.viewer ?? undefined,
+    },
+    {
+      headers: params.headers,
+      signal: params.signal,
+    },
+  )
 }
 
 const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
-  const useDiscover = input.params.hydrateCtx.featureGatesMap.get(
-    'suggested_users:discover_agent:enable',
+  const useIris = input.params.hydrateCtx.features.checkGate(
+    input.params.hydrateCtx.features.Gate.SuggestedUsersIrisEnable,
   )
-  const skeletonFn = useDiscover ? skeletonFromDiscover : skeletonFromTopics
-  return skeletonFn(input)
+  if (useIris) {
+    return skeletonFromIris(input)
+  }
+  return skeletonFromDiscover(input)
 }
 
 const hydration = async (
@@ -119,7 +122,7 @@ const hydration = async (
 ) => {
   const { ctx, params, skeleton } = input
   const dids = dedupeStrs(skeleton.dids)
-  const pairs: Map<string, string[]> = new Map()
+  const pairs: Map<DidString, DidString[]> = new Map()
   const viewer = params.hydrateCtx.viewer
   if (viewer) {
     pairs.set(viewer, dids)
@@ -156,6 +159,7 @@ const presentation = (
   const { ctx, skeleton, hydration } = input
   return {
     recId: skeleton.recId,
+    recIdStr: skeleton.recIdStr,
     actors: mapDefined(skeleton.dids, (did) =>
       ctx.views.profile(did, hydration),
     ),
@@ -165,17 +169,19 @@ const presentation = (
 type Context = {
   hydrator: Hydrator
   views: Views
-  topicsAgent: AtpAgent | undefined
-  suggestionsAgent: AtpAgent | undefined
+  suggestionsClient: Client | undefined
+  irisClient: Client | undefined
 }
 
-type Params = QueryParams & {
+type Params = app.bsky.unspecced.getSuggestedUsers.$Params & {
   hydrateCtx: HydrateCtx & { viewer: string | null }
   headers: Record<string, string>
+  signal: AbortSignal
   category?: string
 }
 
 type SkeletonState = {
-  dids: string[]
+  dids: DidString[]
   recId?: string
+  recIdStr?: string
 }

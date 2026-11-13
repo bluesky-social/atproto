@@ -1,6 +1,13 @@
+import assert from 'node:assert'
 import { CID } from 'multiformats/cid'
-import { LexiconDoc, Lexicons, parseLexiconDoc } from '../src/index'
-import LexiconDocs from './_scaffolds/lexicons'
+import {
+  BlobRef,
+  type LexiconDoc,
+  Lexicons,
+  lexiconDoc,
+  parseLexiconDoc,
+} from '../src/index.js'
+import LexiconDocs from './_scaffolds/lexicons.js'
 
 describe('Lexicons collection', () => {
   const lex = new Lexicons(LexiconDocs)
@@ -79,9 +86,8 @@ describe('General validation', () => {
     }
     {
       const res = lex.validate('com.example.kitchenSink#object', {})
-      expect(res.success).toBe(false)
-      if (res.success) throw new Error('Asserted')
-      expect(res.error?.message).toBe('Object must have the property "object"')
+      assert(!res.success)
+      expect(res.error.message).toBe('Object must have the property "object"')
     }
   })
   it('fails when a required property is missing', () => {
@@ -116,6 +122,34 @@ describe('General validation', () => {
     expect(() => {
       parseLexiconDoc(schema)
     }).not.toThrow()
+  })
+  it('safeParse returns validation errors for invalid user types', () => {
+    const schema = {
+      lexicon: 1,
+      id: 'blog.pckt.block.horizontalRule',
+      description:
+        'Horizontal line that visually separates sections of content.',
+      defs: {
+        main: {
+          type: 'object',
+        },
+      },
+    }
+
+    expect(() => lexiconDoc.safeParse(schema)).not.toThrow()
+
+    const result = lexiconDoc.safeParse(schema)
+    expect(result.success).toBe(false)
+    if (!result.success) {
+      expect(result.error.issues).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            path: ['defs', 'main', 'properties'],
+            message: 'Required',
+          }),
+        ]),
+      )
+    }
   })
   it('fails lexicon parsing when uri is invalid', () => {
     const schema: LexiconDoc = {
@@ -225,8 +259,8 @@ describe('General validation', () => {
         test: 123,
       },
     })
-    expect(result.success).toBeFalsy()
-    expect(result['error']?.message).toBe('Object/union/test must be a string')
+    assert(!result.success)
+    expect(result.error.message).toBe('Object/union/test must be a string')
 
     result = lexicon.validate('com.example.testImplicitMain', {
       union: {
@@ -234,8 +268,8 @@ describe('General validation', () => {
         test: 123,
       },
     })
-    expect(result.success).toBeFalsy()
-    expect(result['error']?.message).toBe('Object/union/test must be a string')
+    assert(!result.success)
+    expect(result.error.message).toBe('Object/union/test must be a string')
 
     result = lexicon.validate('com.example.testExplicitMain', {
       union: {
@@ -243,8 +277,8 @@ describe('General validation', () => {
         test: 123,
       },
     })
-    expect(result.success).toBeFalsy()
-    expect(result['error']?.message).toBe('Object/union/test must be a string')
+    assert(!result.success)
+    expect(result.error.message).toBe('Object/union/test must be a string')
 
     result = lexicon.validate('com.example.testExplicitMain', {
       union: {
@@ -252,8 +286,8 @@ describe('General validation', () => {
         test: 123,
       },
     })
-    expect(result.success).toBeFalsy()
-    expect(result['error']?.message).toBe('Object/union/test must be a string')
+    assert(!result.success)
+    expect(result.error.message).toBe('Object/union/test must be a string')
   })
 })
 
@@ -1064,6 +1098,25 @@ describe('Record validation', () => {
         cid: 'abapsdofiuwrpoiasdfuaspdfoiu',
       }),
     ).toThrow('Record/cid must be a cid string')
+  })
+
+  it('Rejects oversized cid strings without decoding them', () => {
+    // base58btc decoding is quadratic in the input length, so this would take
+    // seconds to decode if the length were not checked first.
+    const start = performance.now()
+    expect(() =>
+      lex.assertValidRecord('com.example.cid', {
+        $type: 'com.example.cid',
+        cid: 'Qm' + 'a'.repeat(200_000),
+      }),
+    ).toThrow('Record/cid must be a cid string')
+    expect(() =>
+      BlobRef.fromJsonRef({
+        cid: 'Qm' + 'a'.repeat(200_000),
+        mimeType: 'image/jpeg',
+      }),
+    ).toThrow('CID string too long')
+    expect(performance.now() - start).toBeLessThan(100)
   })
 
   it('Applies language formatting constraint', () => {

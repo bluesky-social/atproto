@@ -1,8 +1,13 @@
-import { ServiceImpl } from '@connectrpc/connect'
-import { Service } from '../../../proto/bsky_connect'
-import { Database } from '../db'
+import type { ServiceImpl } from '@connectrpc/connect'
+import type { Service } from '../../../proto/bsky_connect.js'
+import type { Database } from '../db/index.js'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
+  async getTagsForSubjects() {
+    // @NOTE The local dataplane does not ingest moderation tags.
+    return { tags: [] }
+  },
+
   async getActorTakedown(req) {
     const { did } = req
     const res = await db.db

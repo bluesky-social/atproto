@@ -1,35 +1,36 @@
-import { Jwks, Keyset, jwksPubSchema } from '@atproto/jwk'
+import { type Jwks, type Keyset, jwksPubSchema } from '@atproto/jwk'
 import {
-  OAuthAuthorizationServerMetadata,
-  OAuthClientIdDiscoverable,
-  OAuthClientIdLoopback,
-  OAuthClientMetadata,
-  OAuthClientMetadataInput,
+  type OAuthAuthorizationServerMetadata,
+  type OAuthClientIdDiscoverable,
+  type OAuthClientIdLoopback,
+  type OAuthClientMetadata,
+  type OAuthClientMetadataInput,
   isLocalHostname,
   isOAuthClientIdDiscoverable,
   isOAuthClientIdLoopback,
   oauthClientMetadataSchema,
 } from '@atproto/oauth-types'
 import {
-  Fetch,
+  type Fetch,
   bindFetch,
   fetchJsonProcessor,
   fetchJsonZodProcessor,
   fetchOkProcessor,
-} from '@atproto-labs/fetch'
+} from '@atproto-labs/fetch-node'
 import { pipe } from '@atproto-labs/pipe'
 import {
   CachedGetter,
-  GetCachedOptions,
-  SimpleStore,
+  type GetCachedOptions,
+  type SimpleStore,
+  swallowStoreErrors,
 } from '@atproto-labs/simple-store'
 import { InvalidClientMetadataError } from '../errors/invalid-client-metadata-error.js'
 import { InvalidRedirectUriError } from '../errors/invalid-redirect-uri-error.js'
 import { callAsync } from '../lib/util/function.js'
-import { Awaitable } from '../lib/util/type.js'
-import { OAuthHooks } from '../oauth-hooks.js'
-import { ClientId } from './client-id.js'
-import { ClientStore } from './client-store.js'
+import type { Awaitable } from '../lib/util/type.js'
+import type { OAuthHooks } from '../oauth-hooks.js'
+import type { ClientId } from './client-id.js'
+import type { ClientStore } from './client-store.js'
 import { parseDiscoverableClientId, parseRedirectUri } from './client-utils.js'
 import { Client } from './client.js'
 
@@ -72,7 +73,7 @@ export class ClientManager {
       )
 
       return jwks
-    }, clientJwksCache)
+    }, swallowStoreErrors(clientJwksCache))
 
     this.metadataGetter = new CachedGetter(async (uri, options) => {
       const metadata = await fetch(buildJsonGetRequest(uri, options)).then(
@@ -81,7 +82,7 @@ export class ClientManager {
 
       // Validate within the getter to avoid caching invalid metadata
       return this.validateClientMetadata(uri, metadata)
-    }, clientMetadataCache)
+    }, swallowStoreErrors(clientMetadataCache))
   }
 
   /**
@@ -146,11 +147,7 @@ export class ClientManager {
     )
 
     // Return a map for easy lookups
-    return new Map(
-      clients
-        .filter((c) => c != null && c instanceof Client)
-        .map((c) => [c.id, c]),
-    )
+    return new Map(clients.filter((c) => c != null).map((c) => [c.id, c]))
   }
 
   protected async getClientMetadata(

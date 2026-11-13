@@ -1,0 +1,22 @@
+name: claude-review
+
+# Claude reviews same-repository pull requests opened by people with write
+# access. The workflow, its hardening, and its trust model live in
+# bluesky-social/.github; review guidance stays in
+# .github/claude-review-prompt.md in this repository.
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions: {}
+
+jobs:
+  review:
+    uses: bluesky-social/.github/.github/workflows/claude-review.yml@v1
+    permissions:
+      contents: read
+      pull-requests: write
+      actions: read
+    secrets:
+      AGENT_GATEWAY_CLAUDE_GH_REVIEW_KEY: ${{ secrets.AGENT_GATEWAY_CLAUDE_GH_REVIEW_KEY }}

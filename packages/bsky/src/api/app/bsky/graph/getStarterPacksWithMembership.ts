@@ -1,25 +1,22 @@
 import { mapDefined } from '@atproto/common'
-import { InvalidRequestError } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context'
+import type { AtUriString, DidString } from '@atproto/syntax'
+import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
+import type { AppContext } from '../../../../context.js'
 import {
-  HydrateCtx,
-  Hydrator,
+  type HydrateCtxWithViewer,
+  type Hydrator,
   mergeManyStates,
-} from '../../../../hydration/hydrator'
-import { Server } from '../../../../lexicon'
+} from '../../../../hydration/hydrator.js'
+import { app } from '../../../../lexicons/index.js'
 import {
-  OutputSchema,
-  QueryParams,
-} from '../../../../lexicon/types/app/bsky/graph/getStarterPacksWithMembership'
-import {
-  HydrationFnInput,
-  PresentationFnInput,
-  SkeletonFnInput,
+  type HydrationFnInput,
+  type PresentationFnInput,
+  type SkeletonFnInput,
   createPipeline,
   noRules,
-} from '../../../../pipeline'
-import { Views } from '../../../../views'
-import { clearlyBadCursor, resHeaders } from '../../../util'
+} from '../../../../pipeline.js'
+import type { Views } from '../../../../views/index.js'
+import { clearlyBadCursor, fillPage, resHeaders } from '../../../util.js'
 
 export default function (server: Server, ctx: AppContext) {
   const getStarterPacksWithMembership = createPipeline(
@@ -28,19 +25,26 @@ export default function (server: Server, ctx: AppContext) {
     noRules,
     presentation,
   )
-  server.app.bsky.graph.getStarterPacksWithMembership({
+  server.add(app.bsky.graph.getStarterPacksWithMembership, {
     auth: ctx.authVerifier.standard,
     handler: async ({ params, auth, req }) => {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({
+        xrpcEndpoint: app.bsky.graph.getStarterPacksWithMembership.$lxm,
         labelers,
         viewer,
       })
-      const result = await getStarterPacksWithMembership(
-        { ...params, hydrateCtx: hydrateCtx.copy({ viewer }) },
-        ctx,
-      )
+      const result = await fillPage({
+        cursor: params.cursor,
+        limit: params.limit,
+        fetch: ({ cursor, limit }) =>
+          getStarterPacksWithMembership(
+            { ...params, cursor, limit, hydrateCtx },
+            ctx,
+          ),
+        items: (r) => r.starterPacksWithMembership,
+      })
 
       return {
         encoding: 'application/json',
@@ -69,7 +73,11 @@ const skeleton = async (
       limit: params.limit,
     })
 
-  return { actorDid, starterPackUris, cursor: cursor || undefined }
+  return {
+    actorDid,
+    starterPackUris: starterPackUris as AtUriString[],
+    cursor,
+  }
 }
 
 const hydration = async (
@@ -96,7 +104,7 @@ const hydration = async (
 
 const presentation = (
   input: PresentationFnInput<Context, Params, SkeletonState>,
-): OutputSchema => {
+): app.bsky.graph.getStarterPacksWithMembership.$OutputBody => {
   const { ctx, skeleton, hydration } = input
   const { actorDid, starterPackUris, cursor } = skeleton
 
@@ -124,12 +132,12 @@ type Context = {
   views: Views
 }
 
-type Params = QueryParams & {
-  hydrateCtx: HydrateCtx & { viewer: string }
+type Params = app.bsky.graph.getStarterPacksWithMembership.$Params & {
+  hydrateCtx: HydrateCtxWithViewer
 }
 
 type SkeletonState = {
-  actorDid: string
-  starterPackUris: string[]
+  actorDid: DidString
+  starterPackUris: AtUriString[]
   cursor?: string
 }

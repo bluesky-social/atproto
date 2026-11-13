@@ -86,7 +86,7 @@ const JS_KEYWORDS = new Set([
  * @param word - The identifier to check
  * @returns `true` if the word is a reserved keyword
  */
-export function isJsKeyword(word: string) {
+export function isJsKeyword(word: string): boolean {
   return JS_KEYWORDS.has(word)
 }
 
@@ -147,7 +147,7 @@ const GLOBAL_IDENTIFIERS = new Set([
  * @param word - The identifier to check
  * @returns `true` if the word is a global identifier
  */
-export function isGlobalIdentifier(word: string) {
+export function isGlobalIdentifier(word: string): boolean {
   return GLOBAL_IDENTIFIERS.has(word)
 }
 
@@ -160,7 +160,7 @@ export function isGlobalIdentifier(word: string) {
  * @param name - The identifier to check
  * @returns `true` if the name is safe to use locally
  */
-export function isSafeLocalIdentifier(name: string) {
+export function isSafeLocalIdentifier(name: string): boolean {
   return !isGlobalIdentifier(name) && isValidJsIdentifier(name)
 }
 
@@ -174,7 +174,7 @@ export function isSafeLocalIdentifier(name: string) {
  * @param name - The string to check
  * @returns `true` if the name is a valid identifier
  */
-export function isValidJsIdentifier(name: string) {
+export function isValidJsIdentifier(name: string): boolean {
   return (
     name.length > 0 &&
     !isJsKeyword(name) &&
@@ -192,6 +192,6 @@ export function isValidJsIdentifier(name: string) {
  * @param name - The export name
  * @returns The name as a valid export identifier
  */
-export function asNamespaceExport(name: string) {
+export function asNamespaceExport(name: string): string {
   return isValidJsIdentifier(name) ? name : JSON.stringify(name)
 }

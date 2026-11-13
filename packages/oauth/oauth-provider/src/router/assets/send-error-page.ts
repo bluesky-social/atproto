@@ -1,10 +1,10 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
-import { Customization } from '../../customization/customization.js'
+import type { Customization } from '../../customization/customization.js'
 import {
   buildErrorPayload,
   buildErrorStatus,
 } from '../../errors/error-parser.js'
-import { SendWebAppOptions, sendWebAppFactory } from './assets.js'
+import { type SendWebAppOptions, sendWebAppFactory } from './assets.js'
 
 export function sendErrorPageFactory(
   customization: Customization,

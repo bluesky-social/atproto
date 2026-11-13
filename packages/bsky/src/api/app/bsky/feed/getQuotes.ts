@@ -1,17 +1,18 @@
 import { mapDefined } from '@atproto/common'
-import { AppContext } from '../../../../context'
-import {
+import type { AtUriString } from '@atproto/syntax'
+import type { Server } from '@atproto/xrpc-server'
+import type { AppContext } from '../../../../context.js'
+import type {
   HydrateCtx,
   HydrationState,
   Hydrator,
-} from '../../../../hydration/hydrator'
-import { parseString } from '../../../../hydration/util'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getQuotes'
-import { createPipeline } from '../../../../pipeline'
-import { uriToDid } from '../../../../util/uris'
-import { Views } from '../../../../views'
-import { clearlyBadCursor, resHeaders } from '../../../util'
+} from '../../../../hydration/hydrator.js'
+import { parseString } from '../../../../hydration/util.js'
+import { app } from '../../../../lexicons/index.js'
+import { createPipeline } from '../../../../pipeline.js'
+import { uriToDid } from '../../../../util/uris.js'
+import type { Views } from '../../../../views/index.js'
+import { clearlyBadCursor, fillPage, resHeaders } from '../../../util.js'
 
 export default function (server: Server, ctx: AppContext) {
   const getQuotes = createPipeline(
@@ -20,17 +21,26 @@ export default function (server: Server, ctx: AppContext) {
     noBlocksOrNeedsReview,
     presentation,
   )
-  server.app.bsky.feed.getQuotes({
+  server.add(app.bsky.feed.getQuotes, {
     auth: ctx.authVerifier.standardOptional,
     handler: async ({ params, auth, req }) => {
-      const { viewer, includeTakedowns } = ctx.authVerifier.parseCreds(auth)
+      const { viewer, includeTakedowns, skipViewerBlocks } =
+        ctx.authVerifier.parseCreds(auth)
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({
+        xrpcEndpoint: app.bsky.feed.getQuotes.$lxm,
         labelers,
         viewer,
         includeTakedowns,
+        skipViewerBlocks,
       })
-      const result = await getQuotes({ ...params, hydrateCtx }, ctx)
+      const result = await fillPage({
+        cursor: params.cursor,
+        limit: params.limit,
+        fetch: ({ cursor, limit }) =>
+          getQuotes({ ...params, cursor, limit, hydrateCtx }, ctx),
+        items: (r) => r.posts,
+      })
       return {
         encoding: 'application/json',
         body: result,
@@ -52,9 +62,10 @@ const skeleton = async (inputs: {
     subject: { uri: params.uri, cid: params.cid },
     cursor: params.cursor,
     limit: params.limit,
+    sort: params.sort,
   })
   return {
-    uris: quotesRes.uris,
+    uris: quotesRes.uris as AtUriString[],
     cursor: parseString(quotesRes.cursor),
   }
 }
@@ -63,7 +74,7 @@ const hydration = async (inputs: {
   ctx: Context
   params: Params
   skeleton: Skeleton
-}) => {
+}): Promise<HydrationState> => {
   const { ctx, params, skeleton } = inputs
   return await ctx.hydrator.hydratePosts(
     skeleton.uris.map((uri) => ({ uri })),
@@ -111,9 +122,9 @@ type Context = {
   views: Views
 }
 
-type Params = QueryParams & { hydrateCtx: HydrateCtx }
+type Params = app.bsky.feed.getQuotes.$Params & { hydrateCtx: HydrateCtx }
 
 type Skeleton = {
-  uris: string[]
+  uris: AtUriString[]
   cursor?: string
 }

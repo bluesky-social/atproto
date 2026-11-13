@@ -1,22 +1,14 @@
-import { Server } from 'node:http'
-import { AddressInfo } from 'node:net'
-import { type Express } from 'express'
+import { type RequestListener, createServer } from 'node:http'
+import type { AddressInfo } from 'node:net'
+import { createHttpTerminator } from 'http-terminator'
 import { CID } from 'multiformats/cid'
+import {
+  AppBskyEmbedRecord,
+  AppBskyEmbedRecordWithMedia,
+  AppBskyFeedDefs,
+} from '@atproto/api'
 import { lexToJson } from '@atproto/lexicon'
 import { AtUri } from '@atproto/syntax'
-import {
-  isView as isEmbedRecordView,
-  isViewRecord,
-} from '../src/lexicon/types/app/bsky/embed/record'
-import { isView as isEmbedRecordWithMediaView } from '../src/lexicon/types/app/bsky/embed/recordWithMedia'
-import {
-  FeedViewPost,
-  PostView,
-  ThreadViewPost,
-  isPostView,
-  isReasonRepost,
-  isThreadViewPost,
-} from '../src/lexicon/types/app/bsky/feed/defs'
 
 export const identity = <T>(x: T) => x
 
@@ -64,14 +56,16 @@ export const forSnapshot = (obj: unknown) => {
     if (str.match(/^\d+::bafy/)) {
       return constantKeysetCursor
     }
-    if (str.match(/\/img\/[^/]+\/.+\/did:plc:[^/]+\/[^/]+@[\w]+$/)) {
-      // Match image urls
+    if (str.match(/\/img\/[^/]+\/.+\/did:plc:[^/]+\/[^/@]+(?:@[\w]+)?$/)) {
+      // Match image urls, stripping optional format suffix (e.g. @webp) for stable snapshots
       const match = str.match(
-        /\/img\/[^/]+\/.+\/(did:plc:[^/]+)\/([^/]+)@[\w]+$/,
+        /\/img\/[^/]+\/.+\/(did:plc:[^/]+)\/([^/@]+)(?:@[\w]+)?$/,
       )
       if (!match) return str
       const [, did, cid] = match
-      return str.replace(did, take(users, did)).replace(cid, take(cids, cid))
+      return str
+        .replace(did, take(users, did))
+        .replace(new RegExp(`${cid}(?:@\\w+)?`), take(cids, cid))
     }
     // decent check for 64-byte base64 encoded signatures
     if (str.length === 86 && !str.includes(' ')) {
@@ -93,8 +87,8 @@ export const forSnapshot = (obj: unknown) => {
 
 // Feed testing utils
 
-export const getOriginator = (item: FeedViewPost) => {
-  if (isReasonRepost(item.reason)) {
+export const getOriginator = (item: AppBskyFeedDefs.FeedViewPost) => {
+  if (AppBskyFeedDefs.isReasonRepost(item.reason)) {
     return item.reason.by.did
   } else {
     return item.post.author.did
@@ -162,23 +156,25 @@ export const stripViewer = <T extends { viewer?: unknown }>(val: T): T => {
   return val
 }
 
-const extractRecordEmbed = (embed: PostView['embed']) =>
-  isEmbedRecordView(embed)
-    ? isViewRecord(embed.record)
+const extractRecordEmbed = (embed: AppBskyFeedDefs.PostView['embed']) =>
+  AppBskyEmbedRecord.isView(embed)
+    ? AppBskyEmbedRecord.isViewRecord(embed.record)
       ? embed.record
       : undefined
-    : isEmbedRecordWithMediaView(embed)
-      ? isViewRecord(embed.record.record)
+    : AppBskyEmbedRecordWithMedia.isView(embed)
+      ? AppBskyEmbedRecord.isViewRecord(embed.record.record)
         ? embed.record.record
         : undefined
       : undefined
 
 // @NOTE mutates
-export const stripViewerFromPost = (postUnknown: object): PostView => {
-  if ('$type' in postUnknown && !isPostView(postUnknown)) {
+export const stripViewerFromPost = (
+  postUnknown: object,
+): AppBskyFeedDefs.PostView => {
+  if ('$type' in postUnknown && !AppBskyFeedDefs.isPostView(postUnknown)) {
     throw new Error('Expected post view')
   }
-  const post = postUnknown as PostView
+  const post = postUnknown as AppBskyFeedDefs.PostView
   post.author = stripViewer(post.author)
 
   const recordEmbed = extractRecordEmbed(post.embed)
@@ -195,37 +191,29 @@ export const stripViewerFromPost = (postUnknown: object): PostView => {
 }
 
 // @NOTE mutates
-export const stripViewerFromThread = <T extends ThreadViewPost>(
+export const stripViewerFromThread = <T extends AppBskyFeedDefs.ThreadViewPost>(
   thread: T,
 ): Omit<T, 'viewer'> => {
-  if (!isThreadViewPost(thread)) return thread
+  if (!AppBskyFeedDefs.isThreadViewPost(thread)) return thread
   // @ts-expect-error
   delete thread.viewer
   thread.post = stripViewerFromPost(thread.post)
-  if (isThreadViewPost(thread.parent)) {
+  if (AppBskyFeedDefs.isThreadViewPost(thread.parent)) {
     thread.parent = stripViewerFromThread(thread.parent)
   }
   if (thread.replies) {
     thread.replies = thread.replies.map((r) =>
-      isThreadViewPost(r) ? stripViewerFromThread(r) : r,
+      AppBskyFeedDefs.isThreadViewPost(r) ? stripViewerFromThread(r) : r,
     )
   }
   return thread
 }
 
-export async function startServer(app: Express) {
-  return new Promise<{
-    origin: string
-    server: Server
-    stop: () => Promise<void>
-  }>((resolve, reject) => {
+export async function startServer(listener: RequestListener) {
+  return new Promise<AsyncDisposable & { port: number }>((resolve, reject) => {
     const onListen = () => {
       const port = (server.address() as AddressInfo).port
-      resolve({
-        server,
-        origin: `http://localhost:${port}`,
-        stop: () => stopServer(server),
-      })
+      resolve({ port, [Symbol.asyncDispose]: () => terminator.terminate() })
       cleanup()
     }
     const onError = (err: Error) => {
@@ -237,21 +225,11 @@ export async function startServer(app: Express) {
       server.removeListener('error', onError)
     }
 
-    const server = app
+    const server = createServer(listener)
       .listen(0)
       .once('listening', onListen)
       .once('error', onError)
-  })
-}
 
-export async function stopServer(server: Server) {
-  return new Promise<void>((resolve, reject) => {
-    server.close((err) => {
-      if (err) {
-        reject(err)
-      } else {
-        resolve()
-      }
-    })
+    const terminator = createHttpTerminator({ server })
   })
 }

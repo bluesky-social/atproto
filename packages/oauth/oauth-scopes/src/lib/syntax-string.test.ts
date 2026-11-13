@@ -1,5 +1,6 @@
+import { describe, expect, it } from 'vitest'
 import { ScopeStringSyntax } from './syntax-string.js'
-import { ScopeStringFor } from './syntax.js'
+import type { ScopeStringFor } from './syntax.js'
 
 describe('ScopeStringSyntax', () => {
   for (const { scope, content } of [

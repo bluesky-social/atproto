@@ -1,4 +1,5 @@
-import { Kysely, sql } from 'kysely'
+import { type Kysely, sql } from 'kysely'
+import { tools } from '../../lexicons/index.js'
 
 // support lookup for chat.bsky.moderation.getMessageContext
 
@@ -11,7 +12,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .on('moderation_event')
     // https://github.com/kysely-org/kysely/issues/302
     .expression(
-      sql`"subjectMessageId") WHERE ("subjectMessageId" IS NOT NULL AND "action" = 'tools.ozone.moderation.defs#modEventReport'`,
+      sql`"subjectMessageId") WHERE ("subjectMessageId" IS NOT NULL AND "action" = ${sql.lit(tools.ozone.moderation.defs.modEventReport.$type)}`,
     )
     .execute()
 }

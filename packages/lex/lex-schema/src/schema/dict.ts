@@ -1,11 +1,12 @@
 import { isPlainObject } from '@atproto/lex-data'
 import {
-  InferInput,
-  InferOutput,
+  type InferInput,
+  type InferOutput,
   Schema,
-  ValidationContext,
-  Validator,
+  type ValidationContext,
+  type Validator,
 } from '../core.js'
+import type { ValidationResult } from '../external.js'
 
 /**
  * Schema for validating dictionary/map-like objects with dynamic keys.
@@ -35,19 +36,20 @@ export class DictSchema<
   Record<InferInput<TKey>, InferOutput<TValue>>
 > {
   readonly type = 'dict' as const
+  readonly keySchema: TKey
+  readonly valueSchema: TValue
 
-  constructor(
-    readonly keySchema: TKey,
-    readonly valueSchema: TValue,
-  ) {
+  constructor(keySchema: TKey, valueSchema: TValue) {
     super()
+    this.keySchema = keySchema
+    this.valueSchema = valueSchema
   }
 
   validateInContext(
     input: unknown,
     ctx: ValidationContext,
     options?: { ignoredKeys?: { has(k: string): boolean } },
-  ) {
+  ): ValidationResult<Record<string, unknown>> {
     if (!isPlainObject(input)) {
       return ctx.issueUnexpectedType(input, 'dict')
     }
@@ -117,6 +119,6 @@ export class DictSchema<
 export function dict<
   const TKey extends Validator<string>,
   const TValue extends Validator,
->(key: TKey, value: TValue) {
-  return new DictSchema<TKey, TValue>(key, value)
+>(key: TKey, value: TValue): DictSchema<TKey, TValue> {
+  return new DictSchema(key, value)
 }

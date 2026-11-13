@@ -1,7 +1,16 @@
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+} from 'vitest'
 import { TestNetwork } from '@atproto/dev-env'
-import { ProfileAssociatedChat } from '../dist/lexicon/types/app/bsky/actor/defs'
-import { StashClient } from '../dist/stash'
-import { Namespace } from '../src/stash'
+import { lexStringify } from '@atproto/lex'
+import type { StashClient } from '../dist/stash.js'
+import { app } from '../src/lexicons/index.js'
 
 type Database = TestNetwork['bsky']['db']
 
@@ -12,14 +21,19 @@ describe('private data', () => {
 
   const actorDid = 'did:plc:example'
   // This lexicon has nothing special other than being simple, convenient to use in a test.
-  const namespace = 'app.bsky.actor.defs#profileAssociatedChat' as Namespace
+  const namespace = app.bsky.actor.defs.profileAssociatedChat
   const key = 'self'
 
-  const validPayload0: ProfileAssociatedChat = { allowIncoming: 'all' }
-  const validPayload1: ProfileAssociatedChat = { allowIncoming: 'following' }
-  const invalidPayload: ProfileAssociatedChat = {
+  const validPayload0: app.bsky.actor.defs.ProfileAssociatedChat = {
+    allowIncoming: 'all',
+  }
+  const validPayload1: app.bsky.actor.defs.ProfileAssociatedChat = {
+    allowIncoming: 'following',
+  }
+  const invalidPayload: app.bsky.actor.defs.ProfileAssociatedChat = {
+    // @ts-expect-error we want invalid
     invalid: 'all',
-  } as unknown as ProfileAssociatedChat
+  }
 
   beforeAll(async () => {
     network = await TestNetwork.create({
@@ -29,13 +43,14 @@ describe('private data', () => {
     stashClient = network.bsky.ctx.stashClient
   })
 
+  beforeEach(async () => network.processAll())
   afterEach(async () => {
-    await clearPrivateData(db)
+    // Drain pending bsync ops before clearing, so a stale op can't land after
+    // the reset.
+    await network.processAll()
+    await clearPrivateData(network.bsky.db)
   })
-
-  afterAll(async () => {
-    await network.close()
-  })
+  afterAll(async () => network?.close())
 
   describe('create', () => {
     it('creates entry', async () => {
@@ -51,14 +66,14 @@ describe('private data', () => {
         .selectFrom('private_data')
         .selectAll()
         .where('actorDid', '=', actorDid)
-        .where('namespace', '=', namespace)
+        .where('namespace', '=', namespace.$type)
         .where('key', '=', key)
         .executeTakeFirstOrThrow()
       expect(dbResult).toStrictEqual({
         actorDid,
-        namespace,
+        namespace: namespace.$type,
         key,
-        payload: JSON.stringify({ $type: namespace, ...validPayload0 }),
+        payload: lexStringify({ ...validPayload0, $type: namespace.$type }),
         indexedAt: expect.any(String),
         updatedAt: expect.any(String),
       })
@@ -72,7 +87,11 @@ describe('private data', () => {
           key,
           payload: invalidPayload,
         }),
-      ).toThrow('Object must have the property "allowIncoming"')
+      ).toThrow(
+        expect.objectContaining({
+          message: expect.stringContaining('allowIncoming'),
+        }),
+      )
     })
   })
 
@@ -98,14 +117,14 @@ describe('private data', () => {
         .selectFrom('private_data')
         .selectAll()
         .where('actorDid', '=', actorDid)
-        .where('namespace', '=', namespace)
+        .where('namespace', '=', namespace.$type)
         .where('key', '=', key)
         .executeTakeFirstOrThrow()
       expect(dbResult).toStrictEqual({
         actorDid,
-        namespace,
+        namespace: namespace.$type,
         key,
-        payload: JSON.stringify({ $type: namespace, ...validPayload1 }),
+        payload: lexStringify({ ...validPayload1, $type: namespace.$type }),
         indexedAt: expect.any(String),
         updatedAt: expect.any(String),
       })
@@ -119,7 +138,11 @@ describe('private data', () => {
           key,
           payload: invalidPayload,
         }),
-      ).toThrow('Object must have the property "allowIncoming"')
+      ).toThrow(
+        expect.objectContaining({
+          name: 'LexValidationError',
+        }),
+      )
     })
   })
 
@@ -144,7 +167,7 @@ describe('private data', () => {
         .selectFrom('private_data')
         .selectAll()
         .where('actorDid', '=', actorDid)
-        .where('namespace', '=', namespace)
+        .where('namespace', '=', namespace.$type)
         .where('key', '=', key)
         .executeTakeFirst()
       expect(dbResult).toBe(undefined)

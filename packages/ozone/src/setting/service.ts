@@ -1,10 +1,13 @@
 import assert from 'node:assert'
-import { Selectable } from 'kysely'
+import type { Selectable } from 'kysely'
+import type { LexMap } from '@atproto/lex-data'
+import { toDatetimeString } from '@atproto/lex-schema'
+import type { DidString, NsidString } from '@atproto/lex-schema'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { Database } from '../db'
-import { Member } from '../db/schema/member'
-import { Setting, SettingScope } from '../db/schema/setting'
-import { Option } from '../lexicon/types/tools/ozone/setting/defs'
+import type { Database } from '../db/index.js'
+import type { Member } from '../db/schema/member.js'
+import type { Setting, SettingScope } from '../db/schema/setting.js'
+import type { tools } from '../lexicons/index.js'
 
 export type SettingServiceCreator = (db: Database) => SettingService
 
@@ -25,7 +28,7 @@ export class SettingService {
   }: {
     limit: number
     scope?: 'personal' | 'instance'
-    did?: string
+    did?: DidString
     cursor?: string
     prefix?: string
     keys?: string[]
@@ -76,7 +79,7 @@ export class SettingService {
       .values(option)
       .onConflict((oc) => {
         return oc.columns(['key', 'scope', 'did']).doUpdateSet({
-          value: option.value,
+          value: option.value as LexMap,
           updatedAt: option.updatedAt,
           description: option.description,
           managerRole: option.managerRole,
@@ -89,7 +92,7 @@ export class SettingService {
   async removeOptions(
     keys: string[],
     filters: {
-      did?: string
+      did?: DidString
       scope: SettingScope
       managerRole: Member['role'][]
     },
@@ -118,7 +121,7 @@ export class SettingService {
     await qb.execute()
   }
 
-  view(setting: Selectable<Setting>): Option {
+  view(setting: Selectable<Setting>): tools.ozone.setting.defs.Option {
     const {
       key,
       value,
@@ -133,16 +136,16 @@ export class SettingService {
     } = setting
 
     return {
-      key,
-      value,
+      key: key as NsidString,
+      value: value as LexMap,
       did,
       scope,
       createdBy,
       lastUpdatedBy,
       managerRole: managerRole || undefined,
       description: description || undefined,
-      createdAt: createdAt.toISOString(),
-      updatedAt: updatedAt.toISOString(),
+      createdAt: toDatetimeString(createdAt),
+      updatedAt: toDatetimeString(updatedAt),
     }
   }
 }

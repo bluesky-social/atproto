@@ -1,6 +1,6 @@
-import { AppBskyActorDefs, AtpAgent, asPredicate } from '@atproto/api'
-import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
-import { forSnapshot } from './_util'
+import { AppBskyActorDefs, type AtpAgent, asPredicate } from '@atproto/api'
+import { type SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import { forSnapshot } from './_util.js'
 
 const isValidProfile = asPredicate(AppBskyActorDefs.validateProfileViewDetailed)
 
@@ -14,7 +14,7 @@ describe('verification', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'ozone_verification_test',
     })
-    adminAgent = network.pds.getClient()
+    adminAgent = network.pds.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc)
     await network.processAll()
@@ -26,7 +26,7 @@ describe('verification', () => {
       identifier: sc.accounts[sc.dids.alice].handle,
       password: sc.accounts[sc.dids.alice].password,
     })
-    triageAgent = network.pds.getClient()
+    triageAgent = network.pds.getAgent()
     await triageAgent.login({
       identifier: sc.accounts[sc.dids.carol].handle,
       password: sc.accounts[sc.dids.carol].password,
@@ -51,7 +51,7 @@ describe('verification', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   describe('list', () => {

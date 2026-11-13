@@ -1,23 +1,27 @@
-import { InvalidRequestError } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context'
+import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
+import type { AppContext } from '../../../../context.js'
 import {
   Code,
   getServiceEndpoint,
   isDataplaneError,
   unpackIdentityServices,
-} from '../../../../data-plane'
-import { Server } from '../../../../lexicon'
-import { GetIdentityByDidResponse } from '../../../../proto/bsky_pb'
-import { resHeaders } from '../../../util'
+} from '../../../../data-plane/index.js'
+import { app } from '../../../../lexicons/index.js'
+import type { GetIdentityByDidResponse } from '../../../../proto/bsky_pb.js'
+import { resHeaders } from '../../../util.js'
 
 export default function (server: Server, ctx: AppContext) {
-  server.app.bsky.feed.getFeedGenerator({
+  server.add(app.bsky.feed.getFeedGenerator, {
     auth: ctx.authVerifier.standardOptional,
     handler: async ({ params, auth, req }) => {
       const { feed } = params
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
-      const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
+      const hydrateCtx = await ctx.hydrator.createContext({
+        labelers,
+        viewer,
+        xrpcEndpoint: app.bsky.feed.getFeedGenerator.$lxm,
+      })
       const hydration = await ctx.hydrator.hydrateFeedGens([feed], hydrateCtx)
       const feedInfo = hydration.feedgens?.get(feed)
       if (!feedInfo) {

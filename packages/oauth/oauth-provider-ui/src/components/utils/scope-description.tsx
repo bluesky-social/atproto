@@ -1,33 +1,32 @@
-import type { PermissionSet, PermissionSets } from '#/hydration-data.d.ts'
 import { Trans, useLingui } from '@lingui/react/macro'
-import { Fragment, HTMLAttributes, ReactNode, useMemo } from 'react'
-import { Override } from '#/lib/util'
 import {
-  AudParam,
+  AtomIcon,
+  BadgeCheckIcon,
+  BookOpenIcon,
+  CheckIcon,
+  HandIcon,
+  IdCardIcon,
+  MailIcon,
+  MessageCircleMoreIcon,
+  UserIcon,
+} from 'lucide-react'
+import { Fragment, type HTMLAttributes, type ReactNode, useMemo } from 'react'
+import {
+  type AudParam,
   BlobPermission,
-  CollectionParam,
+  type CollectionParam,
   IncludeScope,
-  LxmParam,
+  type LxmParam,
   RepoPermission,
   RpcPermission,
   ScopePermissionsTransition,
 } from '@atproto/oauth-scopes'
-import { Checkbox } from '../forms/checkbox'
-import { Admonition, AdmonitionProps } from './admonition'
-import { DescriptionCard } from './description-card'
-import {
-  AccountOutlinedIcon,
-  AtSymbolIcon,
-  AtomIcon,
-  AuthenticateIcon,
-  ButterflyIcon,
-  ChatIcon,
-  CheckMarkIcon,
-  EmailIcon,
-  NewspaperIcon,
-  RaisingHandIcon,
-} from './icons'
-import { LangProp } from './lang-string'
+import { Notice } from '#/components/feedback/notice.tsx'
+import type { PermissionSet, PermissionSets } from '#/hydration-data.d.ts'
+import type { Override } from '#/lib/util'
+import { DescriptionCard } from './description-card.tsx'
+import { ButterflyIcon } from './icons.tsx'
+import { LangProp } from './lang-string.tsx'
 
 export type ScopeDescriptionProps = Override<
   HTMLAttributes<HTMLDivElement>,
@@ -35,7 +34,7 @@ export type ScopeDescriptionProps = Override<
     clientTrusted?: boolean
     clientFirstParty?: boolean
     scope?: string
-    permissionSets: PermissionSets
+    permissionSets?: PermissionSets
 
     allowEmail?: boolean
     onAllowEmail?: (allowed: boolean) => void
@@ -95,7 +94,7 @@ export function ScopeDescription({
       <FineGrainedPermissions permissions={permissions} />
 
       {(!clientFirstParty || !clientTrusted) && (
-        <IdentityWarning className="mt-2" permissions={permissions} />
+        <IdentityWarning permissions={permissions} />
       )}
     </div>
   )
@@ -106,21 +105,15 @@ function IncludedPermissions({
   permissionSets,
 }: {
   includeScopes: IncludeScope[]
-  permissionSets: PermissionSets
-}) {
-  if (!includeScopes.length) return null
-
-  return (
-    <>
-      {includeScopes.map((includeScope, i) => (
-        <IncludeScopePermissions
-          key={i}
-          includeScope={includeScope}
-          permissionSet={permissionSets[includeScope.nsid]}
-        />
-      ))}
-    </>
-  )
+  permissionSets?: PermissionSets
+}): ReactNode {
+  return includeScopes.map((includeScope, i) => (
+    <IncludeScopePermissions
+      key={i}
+      includeScope={includeScope}
+      permissionSet={permissionSets?.[includeScope.nsid]}
+    />
+  ))
 }
 
 function IncludeScopePermissions({
@@ -144,9 +137,9 @@ function IncludeScopePermissions({
         isBskyAppNsid(nsid) ? (
           <ButterflyIcon className="size-6" />
         ) : isBskyChatNsid(nsid) ? (
-          <ChatIcon className="size-6" />
+          <MessageCircleMoreIcon className="size-6" />
         ) : nsid.startsWith('com.atproto.moderation.') ? (
-          <RaisingHandIcon className="size-6" />
+          <HandIcon className="size-6" />
         ) : (
           <AtomIcon className="size-6" />
         )
@@ -164,49 +157,42 @@ function IncludeScopePermissions({
           }
         />
       }
+      extra={
+        permissions ? (
+          <>
+            <RpcMethodsTable className="mt-2" permissions={permissions} />
+            <RepoTable className="mt-2" permissions={permissions} />
+          </>
+        ) : null
+      }
     >
-      <p className="mt-1">
-        <Trans>
-          The application requests the permissions necessary to perform the
-          following actions on your behalf:
-        </Trans>
-      </p>
-      {permissions ? (
-        <>
-          <RpcMethodsTable className="mt-2" permissions={permissions} />
-          <RepoTable className="mt-2" permissions={permissions} />
-        </>
-      ) : null}
+      <Trans>
+        The application requests the permissions necessary to perform the
+        following actions on your behalf:
+      </Trans>
     </DescriptionCard>
   )
 }
 
 function IdentityWarning({
   permissions,
-
-  // Admonition
-  type = 'alert',
-  prominent = true,
-  ...props
 }: {
   permissions: ScopePermissionsTransition
-} & AdmonitionProps) {
+}) {
   const hasFullIdentityAccess = useMemo(() => {
     return permissions.allowsIdentity({ attr: '*' })
   }, [permissions])
 
   if (hasFullIdentityAccess) {
     return (
-      <Admonition {...props} type={type} prominent={prominent}>
-        <p>
-          <Trans>
-            The application is asking for full control over your network
-            identity, meaning that it could <b>permanently break</b>, or even{' '}
-            <b>steal</b>, your account. Only grant this permission to
-            applications you really trust.
-          </Trans>
-        </p>
-      </Admonition>
+      <Notice role="status">
+        <Trans>
+          The application is asking for full control over your network identity,
+          meaning that it could <b>permanently break</b>, or even <b>steal</b>,
+          your account. Only grant this permission to applications you really
+          trust.
+        </Trans>
+      </Notice>
     )
   }
 
@@ -235,7 +221,7 @@ function EmailPermissions({
       <label className={onAllowEmail ? 'cursor-pointer' : undefined}>
         <DescriptionCard
           role="listitem"
-          image={<EmailIcon className="size-6" />}
+          image={<MailIcon className="size-6" />}
           title={t`Email`}
           description={
             allowedAction === 'manage' ? (
@@ -246,8 +232,9 @@ function EmailPermissions({
           }
           append={
             onAllowEmail && (
-              <Checkbox
-                className="m-2"
+              <input
+                type="checkbox"
+                className="border-input accent-primary m-2 size-4 shrink-0 rounded-[4px] border"
                 checked={allowEmail}
                 onChange={(e) => onAllowEmail(e.target.checked)}
               />
@@ -275,7 +262,7 @@ function AccountPermissions({
     return (
       <DescriptionCard
         role="listitem"
-        image={<AccountOutlinedIcon className="size-6" />}
+        image={<UserIcon className="size-6" />}
         title={t`Account`}
         description={t`Temporarily activate or deactivate your account`}
       />
@@ -286,7 +273,43 @@ function AccountPermissions({
 }
 
 /**
- * Will display detailed rep and rpc permissions unless the app only has
+ * True when every repo/rpc permission in the request targets Bluesky-specific
+ * collections or methods (app.bsky.*, chat.bsky.*, com.atproto.moderation.
+ * createReport), in which case <BlueskyAppviewPermissions /> /
+ * <BlueskyChatPermissions /> cover them and the generic per-collection details
+ * below are redundant.
+ */
+function hasOnlyBskyAppSpecificPermissions(
+  permissions: ScopePermissionsTransition,
+): boolean {
+  if (permissions.allowsAccount({ attr: 'repo', action: 'manage' })) {
+    return false
+  }
+
+  let foundOne = false
+
+  for (const s of permissions.scopes) {
+    const rpc = RpcPermission.fromString(s)
+    if (rpc) {
+      foundOne = true
+      if (isOfficialBlueskyAppviewServiceId(rpc.aud)) continue
+      if (rpc.lxm.every(isBlueskySpecificNsid)) continue
+      return false
+    }
+
+    const repo = RepoPermission.fromString(s)
+    if (repo) {
+      foundOne = true
+      if (repo.collection.every(isBlueskySpecificNsid)) continue
+      return false
+    }
+  }
+
+  return foundOne
+}
+
+/**
+ * Will display detailed repo and rpc permissions unless the app only has
  * app.bsky or chat.bsky specific permissions, in which case the
  * <BlueskyAppviewPermissions /> and <BlueskyChatPermissions /> components cover
  * them.
@@ -296,34 +319,11 @@ function FineGrainedPermissions({
 }: {
   permissions: ScopePermissionsTransition
 }) {
-  const hasOnlyBskyAppSpecificPermissions = useMemo(() => {
-    if (permissions.allowsAccount({ attr: 'repo', action: 'manage' })) {
-      return false
-    }
-
-    let foundOne = false
-
-    for (const s of permissions.scopes) {
-      const rpc = RpcPermission.fromString(s)
-      if (rpc) {
-        foundOne = true
-        if (isOfficialBlueskyAppviewServiceId(rpc.aud)) continue
-        if (rpc.lxm.every(isBlueskySpecificNsid)) continue
-        return false
-      }
-
-      const repo = RepoPermission.fromString(s)
-      if (repo) {
-        foundOne = true
-        if (repo.collection.every(isBlueskySpecificNsid)) continue
-        return false
-      }
-    }
-
-    return foundOne
+  const hasOnlyBskySpecific = useMemo(() => {
+    return hasOnlyBskyAppSpecificPermissions(permissions)
   }, [permissions])
 
-  if (hasOnlyBskyAppSpecificPermissions) return null
+  if (hasOnlyBskySpecific) return null
 
   return (
     <>
@@ -346,6 +346,31 @@ function BlueskyAppviewPermissions({
     return permissions.scopes.some(scopeEnablesPrivateBskyAppMethods)
   }, [permissions])
 
+  // Whether the request grants broad write access to the account's repository
+  // (any collection / "transition:generic"), as opposed to a handful of
+  // specific app.bsky.* collections. Only broad access warrants the blanket
+  // "profile, posts, likes and follows" wording — narrowly scoped requests
+  // must not overstate what the application can do (see #4424).
+  const hasBroadBskyAppRepo = useMemo(() => {
+    return (
+      permissions.hasTransitionGeneric ||
+      permissions.allowsRepo({ collection: '*', action: 'create' }) ||
+      permissions.allowsRepo({ collection: '*', action: 'update' }) ||
+      permissions.allowsRepo({ collection: '*', action: 'delete' })
+    )
+  }, [permissions])
+
+  // When the request only targets Bluesky-specific collections/methods, the
+  // generic <RepoPermissions /> / <RpcMethodsDetails /> tables below are
+  // suppressed (see <FineGrainedPermissions />). In that case the accurate
+  // per-collection breakdown is surfaced here instead, so a narrowly scoped
+  // request is described precisely rather than with a blanket summary.
+  const hasOnlyBskySpecific = useMemo(() => {
+    return hasOnlyBskyAppSpecificPermissions(permissions)
+  }, [permissions])
+
+  const showDetails = !hasBroadBskyAppRepo && hasOnlyBskySpecific
+
   if (hasBskyAppRepo || hasBskyAppRpc) {
     return (
       <DescriptionCard
@@ -353,16 +378,40 @@ function BlueskyAppviewPermissions({
         image={<ButterflyIcon className="size-6" />}
         title={'Bluesky'}
         description={
-          hasBskyAppRepo && hasBskyAppRpc ? (
+          hasBroadBskyAppRepo && hasBskyAppRpc ? (
             <Trans>
               Manage your profile, posts, likes and follows as well as read your
               private preferences
             </Trans>
-          ) : (
+          ) : hasBroadBskyAppRepo ? (
             <Trans>Manage your profile, posts, likes and follows</Trans>
+          ) : hasBskyAppRepo && hasBskyAppRpc ? (
+            <Trans>
+              Access specific parts of your Bluesky account and read your
+              private preferences
+            </Trans>
+          ) : hasBskyAppRepo ? (
+            <Trans>Access specific parts of your Bluesky account</Trans>
+          ) : (
+            <Trans>Read your private preferences</Trans>
           )
         }
-      />
+        extra={
+          showDetails ? (
+            <>
+              <RpcMethodsTable className="mt-2" permissions={permissions} />
+              <RepoTable className="mt-2" permissions={permissions} />
+            </>
+          ) : null
+        }
+      >
+        {showDetails && (
+          <Trans>
+            The application requests the permissions necessary to perform the
+            following actions on your Bluesky account:
+          </Trans>
+        )}
+      </DescriptionCard>
     )
   }
 
@@ -387,7 +436,7 @@ function BlueskyChatPermissions({
     return (
       <DescriptionCard
         role="listitem"
-        image={<ChatIcon className="size-6" />}
+        image={<MessageCircleMoreIcon className="size-6" />}
         title={t`Chat`}
         description={t`Read and send messages`}
       />
@@ -420,7 +469,7 @@ function IdentityPermissions({
     return (
       <DescriptionCard
         role="listitem"
-        image={<AtSymbolIcon className="h-6" />}
+        image={<IdCardIcon className="size-6" />}
         title={t`Identity`}
         description={
           attr === '*' ? (
@@ -451,19 +500,15 @@ function RpcMethodsDetails({
     return (
       <DescriptionCard
         role="listitem"
-        image={<AuthenticateIcon className="size-6" />}
-        title={t`Authenticate`}
+        image={<BadgeCheckIcon className="size-6" />}
+        title={t({ context: 'OAuthScope', message: 'Authenticate' })}
         description={
           <Trans>
             Perform authenticated actions towards <b>any service</b> on your
             behalf
           </Trans>
         }
-      >
-        <p>
-          <RpcDescription />
-        </p>
-      </DescriptionCard>
+      />
     )
   }
 
@@ -471,36 +516,24 @@ function RpcMethodsDetails({
     return (
       <DescriptionCard
         role="listitem"
-        image={<AuthenticateIcon className="size-6" />}
-        title={t`Authenticate`}
+        image={<BadgeCheckIcon className="size-6" />}
+        title={t({ context: 'OAuthScope', message: 'Authenticate' })}
         description={t`Perform actions on your behalf`}
+        extra={<RpcMethodsTable className="mt-2" permissions={permissions} />}
       >
-        <p>
-          <RpcDescription />
-        </p>
-        <p className="mt-1">
-          <Trans>
-            The application requests the permissions necessary to perform the
-            following actions on your behalf:
-          </Trans>
-        </p>
-        <RpcMethodsTable className="mt-2" permissions={permissions} />
+        <Trans>
+          The AT Protocol network uses an authentication mechanism that allows
+          to uniquely identify users when communicating with external services.
+          This is typically used to retrieve or update data linked to your
+          account, such as chat messages, feeds or moderation content. The
+          application requests the permissions necessary to perform the
+          following authenticated actions on your behalf:
+        </Trans>
       </DescriptionCard>
     )
   }
 
   return null
-}
-
-function RpcDescription() {
-  return (
-    <Trans>
-      The ATProto network uses an authentication mechanism that allows to
-      uniquely identify users when communicating with external services. This is
-      typically used to retrieve or update data linked to your account, such as
-      feed or moderation content.
-    </Trans>
-  )
 }
 
 type RpcMethodsTableProps = Override<
@@ -591,20 +624,14 @@ function RepoPermissions({
     return (
       <DescriptionCard
         role="listitem"
-        image={<NewspaperIcon className="size-6" />}
+        image={<BookOpenIcon className="size-6" />}
         title={t`Repository`}
-        description={t`Create, update, and delete any public record`}
-      >
-        <p>
-          <RepoDescription />
-        </p>
-        <p className="mt-1">
+        description={
           <Trans>
-            The application is asking to be able to create, update, and delete{' '}
-            <b>any data</b> from your repository.
+            Create, update, and delete any public data linked to your account
           </Trans>
-        </p>
-      </DescriptionCard>
+        }
+      />
     )
   }
 
@@ -612,35 +639,23 @@ function RepoPermissions({
     return (
       <DescriptionCard
         role="listitem"
-        image={<NewspaperIcon className="size-6" />}
+        image={<BookOpenIcon className="size-6" />}
         title={t`Repository`}
         description={t`Publish changes`}
+        extra={<RepoTable className="mt-2" permissions={permissions} />}
       >
-        <p>
-          <RepoDescription />
-        </p>
-        <p className="mt-1">
-          <Trans>
-            The application requests the permissions necessary to perform the
-            following actions on your behalf:
-          </Trans>
-        </p>
-        <RepoTable className="mt-2" permissions={permissions} />
+        <Trans>
+          Your repository contains all the data publicly available on the AT
+          Protocol network, such as Bluesky posts, likes, and follows. It also
+          contains data created through other apps you've signed into using this
+          account. The application requests the permissions necessary to publish
+          the following changes to your repository:
+        </Trans>
       </DescriptionCard>
     )
   }
 
   return null
-}
-
-function RepoDescription() {
-  return (
-    <Trans>
-      Your repository contains all the data publicly available on the ATProto
-      network, such as Bluesky posts, likes, and follows. It also contains data
-      created through other apps you've signed into using this account.
-    </Trans>
-  )
 }
 
 type RepoTableProps = Override<
@@ -707,7 +722,7 @@ function RepoTable({ permissions, className, ...attrs }: RepoTableProps) {
     <table className={`w-full table-auto text-left ${className}`} {...attrs}>
       <thead>
         <tr className="text-sm">
-          <th className="font-normal">{t`Collection`}</th>
+          <th className="font-normal">{t`Data`}</th>
           <th className="text-center font-normal">{t`Create`}</th>
           <th className="text-center font-normal">{t`Update`}</th>
           <th className="text-center font-normal">{t`Delete`}</th>
@@ -721,17 +736,17 @@ function RepoTable({ permissions, className, ...attrs }: RepoTableProps) {
             </td>
             <td className="text-center">
               {starActions?.create || actions.create ? (
-                <CheckMarkIcon className="inline-block size-3" />
+                <CheckIcon className="inline-block size-3" />
               ) : null}
             </td>
             <td className="text-center">
               {starActions?.update || actions.update ? (
-                <CheckMarkIcon className="inline-block size-3" />
+                <CheckIcon className="inline-block size-3" />
               ) : null}
             </td>
             <td className="text-center">
               {starActions?.delete || actions.delete ? (
-                <CheckMarkIcon className="inline-block size-3" />
+                <CheckIcon className="inline-block size-3" />
               ) : null}
             </td>
           </tr>
@@ -887,7 +902,7 @@ function ItemDescription({
   ...attrs
 }: ItemDescriptionProps) {
   return (
-    <em {...attrs} className={`text-slate-500 ${className}`}>
+    <em {...attrs} className={`text-muted-foreground ${className}`}>
       {children}
     </em>
   )
@@ -920,7 +935,7 @@ function Identifier({
   ...attrs
 }: IdentifierProps): ReactNode {
   return (
-    <code {...attrs} className={`text-slate-500 ${className}`}>
+    <code {...attrs} className={`text-muted-foreground ${className}`}>
       {children}
     </code>
   )

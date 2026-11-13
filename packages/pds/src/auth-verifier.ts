@@ -1,46 +1,54 @@
-import { KeyObject, createPublicKey, createSecretKey } from 'node:crypto'
-import { IncomingMessage, ServerResponse } from 'node:http'
+import { type KeyObject, createPublicKey, createSecretKey } from 'node:crypto'
+import type { IncomingMessage, ServerResponse } from 'node:http'
+import { secp256k1 } from '@noble/curves/secp256k1'
 import * as jose from 'jose'
-import KeyEncoder from 'key-encoder'
 import { getVerificationMaterial } from '@atproto/common'
-import { IdResolver, getDidKeyFromMultibase } from '@atproto/identity'
+import { type IdResolver, getDidKeyFromMultibase } from '@atproto/identity'
+import {
+  type AtIdentifierString,
+  type DidString,
+  isDidString,
+} from '@atproto/lex-schema'
 import {
   OAuthError,
+  WWWAuthenticateError,
+} from '@atproto/oauth-provider/errors'
+import type {
   OAuthVerifier,
   VerifyTokenPayloadOptions,
-  WWWAuthenticateError,
-} from '@atproto/oauth-provider'
+} from '@atproto/oauth-provider/verifier'
 import {
-  ScopePermissions,
+  type ScopePermissions,
   ScopePermissionsTransition,
 } from '@atproto/oauth-scopes'
 import {
   AuthRequiredError,
-  Awaitable,
+  type Awaitable,
   ForbiddenError,
   InvalidRequestError,
-  MethodAuthContext,
-  MethodAuthVerifier,
-  Params,
+  type MethodAuthContext,
+  type MethodAuthVerifier,
+  type Params,
   XRPCError,
   parseReqNsid,
   verifyJwt as verifyServiceJwt,
 } from '@atproto/xrpc-server'
-import { AccountManager } from './account-manager/account-manager'
-import { ActorAccount } from './account-manager/helpers/account'
-import {
+import type { AccountManager } from './account-manager/account-manager.js'
+import type { ActorAccount } from './account-manager/helpers/account.js'
+import type {
   AccessOutput,
   AdminTokenOutput,
+  EntrywayServiceOutput,
   ModServiceOutput,
   OAuthOutput,
   RefreshOutput,
   UnauthenticatedOutput,
   UserServiceAuthOutput,
-} from './auth-output'
-import { ACCESS_STANDARD, AuthScope, isAuthScope } from './auth-scope'
-import { softDeleted } from './db'
-import { appendVary } from './util/http'
-import { WithRequired } from './util/types'
+} from './auth-output.js'
+import { ACCESS_STANDARD, AuthScope, isAuthScope } from './auth-scope.js'
+import { softDeleted } from './db/index.js'
+import { appendVary } from './util/http.js'
+import type { WithRequired } from './util/types.js'
 
 export type VerifiedOptions = {
   checkTakedown?: boolean
@@ -71,7 +79,15 @@ export type AuthVerifierOpts = {
     entryway?: string
     modService?: string
   }
+  entrywayServiceAuth?: {
+    /** did:key form of the entryway's JWT verify key */
+    didKey: string
+    required: boolean
+  }
 }
+
+const ENTRYWAY_SERVICE_JWT_MAX_LIFETIME_SEC = 5 * 60
+const ENTRYWAY_SERVICE_JWT_CLOCK_TOLERANCE_SEC = 30
 
 export type VerifyBearerJwtOptions<S extends AuthScope = AuthScope> =
   WithRequired<
@@ -82,7 +98,7 @@ export type VerifyBearerJwtOptions<S extends AuthScope = AuthScope> =
   >
 
 export type VerifyBearerJwtResult<S extends AuthScope = AuthScope> = {
-  sub: string
+  sub: DidString
   aud: string
   jti: string | undefined
   scope: S
@@ -92,6 +108,7 @@ export class AuthVerifier {
   private _publicUrl: string
   private _jwtKey: KeyObject
   private _adminPass: string
+  private _entrywayServiceAuth: AuthVerifierOpts['entrywayServiceAuth']
   public dids: AuthVerifierOpts['dids']
 
   constructor(
@@ -103,6 +120,7 @@ export class AuthVerifier {
     this._publicUrl = opts.publicUrl
     this._jwtKey = opts.jwtKey
     this._adminPass = opts.adminPass
+    this._entrywayServiceAuth = opts.entrywayServiceAuth
     this.dids = opts.dids
   }
 
@@ -124,6 +142,7 @@ export class AuthVerifier {
     }
   }
 
+  /** @deprecated We are steering away from this auth method */
   public adminToken: MethodAuthVerifier<AdminTokenOutput> = async (ctx) => {
     setAuthHeaders(ctx.res)
     const parsed = parseBasicAuth(ctx.req)
@@ -154,6 +173,7 @@ export class AuthVerifier {
     }
   }
 
+  /** @deprecated We are steering away from {@link adminToken} auth. Use {@link modService} instead. */
   public moderator: MethodAuthVerifier<AdminTokenOutput | ModServiceOutput> =
     async (ctx) => {
       const type = extractAuthType(ctx.req)
@@ -163,6 +183,54 @@ export class AuthVerifier {
         return this.adminToken(ctx)
       }
     }
+
+  public entrywayService: MethodAuthVerifier<EntrywayServiceOutput> = async (
+    ctx,
+  ) => {
+    setAuthHeaders(ctx.res)
+    const payload = await this.verifyEntrywayServiceJwt(ctx.req)
+    return {
+      credentials: {
+        type: 'entryway_service',
+        did: payload.iss,
+      },
+    }
+  }
+
+  public entrywayServiceOptional: MethodAuthVerifier<
+    EntrywayServiceOutput | UnauthenticatedOutput
+  > = async (ctx) => {
+    if (extractAuthType(ctx.req) === AuthType.BEARER) {
+      return this.entrywayService(ctx)
+    }
+    this.assertEntrywayServiceAuthNotRequired(ctx.res)
+    return this.unauthenticated(ctx)
+  }
+
+  public adminTokenOrEntrywayService: MethodAuthVerifier<
+    AdminTokenOutput | EntrywayServiceOutput
+  > = async (ctx) => {
+    if (!this._entrywayServiceAuth) {
+      return this.adminToken(ctx)
+    }
+    if (extractAuthType(ctx.req) === AuthType.BEARER) {
+      return this.entrywayService(ctx)
+    }
+    this.assertEntrywayServiceAuthNotRequired(ctx.res)
+    return this.adminToken(ctx)
+  }
+
+  public moderatorOrEntrywayService: MethodAuthVerifier<
+    AdminTokenOutput | ModServiceOutput | EntrywayServiceOutput
+  > = async (ctx) => {
+    if (extractAuthType(ctx.req) === AuthType.BEARER) {
+      return this.isEntrywayIssuedJwt(ctx.req)
+        ? this.entrywayService(ctx)
+        : this.modService(ctx)
+    }
+    this.assertEntrywayServiceAuthNotRequired(ctx.res)
+    return this.adminToken(ctx)
+  }
 
   protected access<S extends AuthScope>(
     options: VerifiedOptions & Required<ScopedOptions<S>>,
@@ -268,6 +336,22 @@ export class AuthVerifier {
       }
 
       throw new AuthRequiredError(undefined, 'AuthMissing')
+    }
+  }
+
+  public authorizationOrModService<P extends Params>(
+    opts: VerifiedOptions & ExtraScopedOptions & AuthorizedOptions<P>,
+  ): MethodAuthVerifier<AccessOutput | OAuthOutput | ModServiceOutput, P> {
+    const authorization = this.authorization(opts)
+    return async (ctx) => {
+      try {
+        return await this.modService(ctx)
+      } catch (err) {
+        if (err instanceof AuthRequiredError) {
+          return authorization(ctx)
+        }
+        throw err
+      }
     }
   }
 
@@ -382,7 +466,7 @@ export class AuthVerifier {
           throw err
         })
 
-      if (typeof did !== 'string' || !did.startsWith('did:')) {
+      if (!isDidString(did)) {
         throw new InvalidRequestError('Malformed token', 'InvalidToken')
       }
 
@@ -411,7 +495,7 @@ export class AuthVerifier {
   }
 
   protected async verifyStatus(
-    did: string,
+    did: DidString,
     options: VerifiedOptions,
   ): Promise<void> {
     if (options.checkDeactivated || options.checkTakedown) {
@@ -425,7 +509,7 @@ export class AuthVerifier {
    * `options.checkTakedown` are set to true, respectively).
    */
   public async findAccount(
-    handleOrDid: string,
+    handleOrDid: AtIdentifierString,
     options: VerifiedOptions,
   ): Promise<ActorAccount> {
     const account = await this.accountManager.getAccount(handleOrDid, {
@@ -464,8 +548,8 @@ export class AuthVerifier {
       throw new AuthRequiredError(undefined, 'AuthMissing')
     }
 
-    const { payload, protectedHeader } = await jose
-      .jwtVerify(token, this._jwtKey, { ...options, typ: undefined })
+    const { payload } = await jose
+      .jwtVerify(token, this._jwtKey, options)
       .catch((cause) => {
         if (cause instanceof jose.errors.JWTExpired) {
           throw new InvalidRequestError('Token has expired', 'ExpiredToken', {
@@ -479,14 +563,6 @@ export class AuthVerifier {
           )
         }
       })
-
-    // @NOTE: the "typ" is now set in production environments, so we should be
-    // able to safely check it through jose.jwtVerify(). However, tests depend
-    // on @atproto/pds-entryway which does not set "typ" in the access tokens.
-    // For that reason, we still allow it to be missing.
-    if (protectedHeader.typ && options.typ !== protectedHeader.typ) {
-      throw new InvalidRequestError('Invalid token type', 'InvalidToken')
-    }
 
     const { sub, aud, scope, lxm, cnf, jti } = payload
 
@@ -503,7 +579,7 @@ export class AuthVerifier {
       // https://www.rfc-editor.org/rfc/rfc7800.html
       throw new InvalidRequestError('Malformed token', 'InvalidToken')
     }
-    if (typeof sub !== 'string' || !sub.startsWith('did:')) {
+    if (typeof sub !== 'string' || !isDidString(sub)) {
       throw new InvalidRequestError('Malformed token', 'InvalidToken')
     }
     if (typeof aud !== 'string' || !aud.startsWith('did:')) {
@@ -523,37 +599,38 @@ export class AuthVerifier {
     req: IncomingMessage,
     opts?: { iss?: string[] },
   ) {
-    const getSigningKey = async (
-      iss: string,
-      forceRefresh: boolean,
-    ): Promise<string> => {
-      if (opts?.iss && !opts.iss.includes(iss)) {
-        throw new AuthRequiredError('Untrusted issuer', 'UntrustedIss')
-      }
-      const [did, serviceId] = iss.split('#')
-      const keyId =
-        serviceId === 'atproto_labeler' ? 'atproto_label' : 'atproto'
-      const didDoc = await this.idResolver.did.resolve(did, forceRefresh)
-      if (!didDoc) {
-        throw new AuthRequiredError('could not resolve iss did')
-      }
-      const parsedKey = getVerificationMaterial(didDoc, keyId)
-      if (!parsedKey) {
-        throw new AuthRequiredError('missing or bad key in did doc')
-      }
-      const didKey = getDidKeyFromMultibase(parsedKey)
-      if (!didKey) {
-        throw new AuthRequiredError('missing or bad key in did doc')
-      }
-      return didKey
-    }
-
     const jwtStr = bearerTokenFromReq(req)
     if (!jwtStr) {
       throw new AuthRequiredError('missing jwt', 'MissingJwt')
     }
+
     const nsid = parseReqNsid(req)
-    const payload = await verifyServiceJwt(jwtStr, null, nsid, getSigningKey)
+    const payload = await verifyServiceJwt(
+      jwtStr,
+      null,
+      nsid,
+      async (iss, forceRefresh) => {
+        if (opts?.iss && !opts.iss.includes(iss)) {
+          throw new AuthRequiredError('Untrusted issuer', 'UntrustedIss')
+        }
+        const [did, serviceId] = iss.split('#')
+        const keyId =
+          serviceId === 'atproto_labeler' ? 'atproto_label' : 'atproto'
+        const didDoc = await this.idResolver.did.resolve(did, forceRefresh)
+        if (!didDoc) {
+          throw new AuthRequiredError('could not resolve iss did')
+        }
+        const parsedKey = getVerificationMaterial(didDoc, keyId)
+        if (!parsedKey) {
+          throw new AuthRequiredError('missing or bad key in did doc')
+        }
+        const didKey = getDidKeyFromMultibase(parsedKey)
+        if (!didKey) {
+          throw new AuthRequiredError('missing or bad key in did doc')
+        }
+        return didKey
+      },
+    )
     if (
       payload.aud !== this.dids.pds &&
       (!this.dids.entryway || payload.aud !== this.dids.entryway)
@@ -564,6 +641,76 @@ export class AuthVerifier {
       )
     }
     return payload
+  }
+
+  protected async verifyEntrywayServiceJwt(req: IncomingMessage) {
+    const entrywayDid = this.dids.entryway
+    const didKey = this._entrywayServiceAuth?.didKey
+    if (!entrywayDid || !didKey) {
+      throw new AuthRequiredError('Untrusted issuer', 'UntrustedIss')
+    }
+
+    const jwtStr = bearerTokenFromReq(req)
+    if (!jwtStr) {
+      throw new AuthRequiredError('missing jwt', 'MissingJwt')
+    }
+
+    // @NOTE Unlike this.verifyServiceJwt(), the key comes from config rather
+    // than the issuer's DID document, and the entryway is not an accepted
+    // audience: these tokens are minted for this PDS only.
+    const payload = await verifyServiceJwt(
+      jwtStr,
+      this.dids.pds,
+      parseReqNsid(req),
+      async (iss) => {
+        if (iss !== entrywayDid) {
+          throw new AuthRequiredError('Untrusted issuer', 'UntrustedIss')
+        }
+        return didKey
+      },
+    )
+
+    // @NOTE xrpc-server's verifyJwt pins neither "alg" (an empty one skips its
+    // algorithm check) nor "typ", and does not bound token lifetime; the
+    // entryway token contract requires all three.
+    const { alg, typ } = jose.decodeProtectedHeader(jwtStr)
+    if (alg !== 'ES256K') {
+      throw new AuthRequiredError(`Invalid jwt algorithm "${alg}"`, 'BadJwtAlg')
+    }
+    if (typ !== 'JWT') {
+      throw new AuthRequiredError(`Invalid jwt type "${typ}"`, 'BadJwtType')
+    }
+    const { iat } = jose.decodeJwt(jwtStr)
+    if (
+      typeof iat !== 'number' ||
+      iat > Date.now() / 1000 + ENTRYWAY_SERVICE_JWT_CLOCK_TOLERANCE_SEC
+    ) {
+      throw new AuthRequiredError('jwt iat is missing or invalid', 'BadJwtIat')
+    }
+    if (payload.exp - iat > ENTRYWAY_SERVICE_JWT_MAX_LIFETIME_SEC) {
+      throw new AuthRequiredError('jwt lifetime is too long', 'BadJwtLifetime')
+    }
+
+    return payload
+  }
+
+  protected isEntrywayIssuedJwt(req: IncomingMessage): boolean {
+    if (!this.dids.entryway || !this._entrywayServiceAuth) return false
+    const token = bearerTokenFromReq(req)
+    if (!token) return false
+    try {
+      return jose.decodeJwt(token).iss === this.dids.entryway
+    } catch {
+      // Malformed tokens are left to the fallback verifier to reject.
+      return false
+    }
+  }
+
+  protected assertEntrywayServiceAuthNotRequired(res: ServerResponse): void {
+    if (this._entrywayServiceAuth?.required) {
+      setAuthHeaders(res)
+      throw new AuthRequiredError('Entryway service auth required')
+    }
   }
 }
 
@@ -632,7 +779,7 @@ const extractAuthType = (req: IncomingMessage): AuthType | null => {
   return type
 }
 
-const bearerTokenFromReq = (req: IncomingMessage) => {
+export const bearerTokenFromReq = (req: IncomingMessage) => {
   const [type, token] = parseAuthorizationHeader(req)
   return type === AuthType.BEARER ? token : null
 }
@@ -655,14 +802,25 @@ const parseBasicAuth = (
   }
 }
 
+export { type KeyObject }
+
 export const createSecretKeyObject = (secret: string): KeyObject => {
   return createSecretKey(Buffer.from(secret))
 }
 
-const keyEncoder = new KeyEncoder('secp256k1')
 export const createPublicKeyObject = (publicKeyHex: string): KeyObject => {
-  const key = keyEncoder.encodePublic(publicKeyHex, 'raw', 'pem')
-  return createPublicKey({ format: 'pem', key })
+  // accepts compressed or uncompressed keys; validates the point is on-curve
+  const point =
+    secp256k1.ProjectivePoint.fromHex(publicKeyHex).toRawBytes(false)
+  return createPublicKey({
+    format: 'jwk',
+    key: {
+      kty: 'EC',
+      crv: 'secp256k1',
+      x: Buffer.from(point.subarray(1, 33)).toString('base64url'),
+      y: Buffer.from(point.subarray(33, 65)).toString('base64url'),
+    },
+  })
 }
 
 function setAuthHeaders(res: ServerResponse) {

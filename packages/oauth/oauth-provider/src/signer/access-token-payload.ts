@@ -1,7 +1,7 @@
 import { z } from 'zod'
+import { didSchema } from '@atproto/did'
 import { jwtPayloadSchema } from '@atproto/jwk'
 import { clientIdSchema } from '../client/client-id.js'
-import { subSchema } from '../oidc/sub.js'
 import { tokenIdSchema } from '../token/token-id.js'
 
 export const accessTokenPayloadSchema = jwtPayloadSchema
@@ -9,7 +9,7 @@ export const accessTokenPayloadSchema = jwtPayloadSchema
   .extend({
     // Following are required
     jti: tokenIdSchema,
-    sub: subSchema,
+    sub: didSchema,
     exp: z.number().int(),
     iat: z.number().int(),
     iss: z.string().min(1),

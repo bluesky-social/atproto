@@ -1,5 +1,5 @@
 import { ZodError } from 'zod'
-import { FetchError } from '@atproto-labs/fetch'
+import { FetchError } from '@atproto-labs/fetch-node'
 import { OAuthError } from './oauth-error.js'
 
 /**

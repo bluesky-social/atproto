@@ -1,22 +1,30 @@
 import { mapDefined } from '@atproto/common'
-import { InvalidRequestError } from '@atproto/xrpc-server'
-import { ServerConfig } from '../../../../config'
-import { AppContext } from '../../../../context'
-import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
-import { Server } from '../../../../lexicon'
-import { isRecord as isPostRecord } from '../../../../lexicon/types/app/bsky/feed/post'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/notification/listNotifications'
+import type { AtUriString, DatetimeString } from '@atproto/syntax'
+import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
+import type { ServerConfig } from '../../../../config.js'
+import type { AppContext } from '../../../../context.js'
+import type {
+  HydrateCtxWithViewer,
+  Hydrator,
+} from '../../../../hydration/hydrator.js'
+import { app } from '../../../../lexicons/index.js'
 import {
-  HydrationFnInput,
-  PresentationFnInput,
-  RulesFnInput,
-  SkeletonFnInput,
+  type HydrationFnInput,
+  type PresentationFnInput,
+  type RulesFnInput,
+  type SkeletonFnInput,
   createPipeline,
-} from '../../../../pipeline'
-import { Notification } from '../../../../proto/bsky_pb'
-import { uriToDid as didFromUri } from '../../../../util/uris'
-import { Views } from '../../../../views'
-import { resHeaders } from '../../../util'
+} from '../../../../pipeline.js'
+import type { Notification } from '../../../../proto/bsky_pb.js'
+import { uriToDid as didFromUri } from '../../../../util/uris.js'
+import type { Views } from '../../../../views/index.js'
+import { fillPage, resHeaders } from '../../../util.js'
+import {
+  delayCursor,
+  shouldFilterForNeedsReview,
+  shouldFilterHiddenThreadTag,
+  shouldFilterReplyByThreadgate,
+} from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
   const listNotifications = createPipeline(
@@ -25,16 +33,35 @@ export default function (server: Server, ctx: AppContext) {
     noBlockOrMutesOrNeedsFiltering,
     presentation,
   )
-  server.app.bsky.notification.listNotifications({
+  server.add(app.bsky.notification.listNotifications, {
     auth: ctx.authVerifier.standard,
     handler: async ({ params, auth, req }) => {
+      if (params.seenAt) {
+        throw new InvalidRequestError('The seenAt parameter is unsupported')
+      }
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
-      const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
-      const result = await listNotifications(
-        { ...params, hydrateCtx: hydrateCtx.copy({ viewer }) },
-        ctx,
-      )
+      const hydrateCtx = await ctx.hydrator.createContext({
+        labelers,
+        viewer,
+        xrpcEndpoint: app.bsky.notification.listNotifications.$lxm,
+      })
+
+      const lastSeenRes = await ctx.hydrator.dataplane.getNotificationSeen({
+        actorDid: viewer,
+      })
+      const lastSeen = lastSeenRes.timestamp?.toDate()
+
+      const result = await fillPage({
+        cursor: params.cursor,
+        limit: params.limit,
+        fetch: ({ cursor, limit }) =>
+          listNotifications(
+            { ...params, cursor, limit, hydrateCtx, lastSeen },
+            ctx,
+          ),
+        items: (r) => r.notifications,
+      })
       return {
         encoding: 'application/json',
         body: result,
@@ -46,111 +73,55 @@ export default function (server: Server, ctx: AppContext) {
 
 const paginateNotifications = async (opts: {
   ctx: Context
-  priority: boolean
   reasons?: string[]
   cursor?: string
   limit: number
   viewer: string
 }) => {
-  const { ctx, priority, reasons, limit, viewer } = opts
+  const { ctx, reasons, limit, viewer } = opts
 
-  // if not filtering, then just pass through the response from dataplane
-  if (!reasons) {
-    const res = await ctx.hydrator.dataplane.getNotifications({
-      actorDid: viewer,
-      priority,
-      cursor: opts.cursor,
-      limit,
-    })
-    return {
-      notifications: res.notifications,
-      cursor: res.cursor,
-    }
-  }
-
-  let nextCursor: string | undefined = opts.cursor
-  let toReturn: Notification[] = []
-  const maxAttempts = 10
-  const attemptSize = Math.ceil(limit / 2)
-  for (let i = 0; i < maxAttempts; i++) {
-    const res = await ctx.hydrator.dataplane.getNotifications({
-      actorDid: viewer,
-      priority,
-      cursor: nextCursor,
-      limit,
-    })
-    const filtered = res.notifications.filter((notif) =>
-      reasons.includes(notif.reason),
-    )
-    toReturn = [...toReturn, ...filtered]
-    nextCursor = res.cursor ?? undefined
-    if (toReturn.length >= attemptSize || !nextCursor) {
-      break
-    }
-  }
+  const res = await ctx.hydrator.dataplane.getNotifications({
+    actorDid: viewer,
+    cursor: opts.cursor,
+    limit,
+  })
   return {
-    notifications: toReturn,
-    cursor: nextCursor,
+    notifications: reasons
+      ? res.notifications.filter((notif) => reasons.includes(notif.reason))
+      : res.notifications,
+    cursor: res.cursor,
   }
-}
-
-/**
- * Applies a configurable delay to the datetime string of a cursor,
- * effectively allowing for a delay on listing the notifications.
- * This is useful to allow time for services to process notifications
- * before they are listed to the user.
- */
-export const delayCursor = (
-  cursorStr: string | undefined,
-  delayMs: number,
-): string => {
-  const nowMinusDelay = Date.now() - delayMs
-  if (cursorStr === undefined) return new Date(nowMinusDelay).toISOString()
-  const cursor = new Date(cursorStr).getTime()
-  if (isNaN(cursor)) return cursorStr
-  return new Date(Math.min(cursor, nowMinusDelay)).toISOString()
 }
 
 const skeleton = async (
   input: SkeletonFnInput<Context, Params>,
 ): Promise<SkeletonState> => {
   const { params, ctx } = input
-  if (params.seenAt) {
-    throw new InvalidRequestError('The seenAt parameter is unsupported')
-  }
-
   const originalCursor = params.cursor
   const delayedCursor = delayCursor(
     originalCursor,
     ctx.cfg.notificationsDelayMs,
   )
   const viewer = params.hydrateCtx.viewer
-  const priority = params.priority ?? (await getPriority(ctx, viewer))
-  const [res, lastSeenRes] = await Promise.all([
-    paginateNotifications({
-      ctx,
-      priority,
-      reasons: params.reasons,
-      cursor: delayedCursor,
-      limit: params.limit,
-      viewer,
-    }),
-    ctx.hydrator.dataplane.getNotificationSeen({
-      actorDid: viewer,
-      priority,
-    }),
-  ])
+  const res = await paginateNotifications({
+    ctx,
+    reasons: params.reasons,
+    cursor: delayedCursor,
+    limit: params.limit,
+    viewer,
+  })
   // @NOTE for the first page of results if there's no last-seen time, consider top notification unread
   // rather than all notifications. bit of a hack to be more graceful when seen times are out of sync.
-  let lastSeenDate = lastSeenRes.timestamp?.toDate()
+  let lastSeenDate = params.lastSeen
   if (!lastSeenDate && !originalCursor) {
     lastSeenDate = res.notifications.at(0)?.timestamp?.toDate()
   }
   return {
     notifs: res.notifications,
-    cursor: res.cursor || undefined,
-    priority,
-    lastSeenNotifs: lastSeenDate?.toISOString(),
+    cursor: res.cursor,
+    lastSeenNotifs: lastSeenDate
+      ? (lastSeenDate.toISOString() as DatetimeString)
+      : undefined,
   }
 }
 
@@ -166,67 +137,45 @@ const noBlockOrMutesOrNeedsFiltering = (
 ) => {
   const { skeleton, hydration, ctx, params } = input
   skeleton.notifs = skeleton.notifs.filter((item) => {
-    const did = didFromUri(item.uri)
+    const uri = item.uri as AtUriString
+    const did = didFromUri(uri)
     if (
       ctx.views.viewerBlockExists(did, hydration) ||
       ctx.views.viewerMuteExists(did, hydration)
     ) {
       return false
     }
-    // Filter out hidden replies only if the viewer owns
-    // the threadgate and they hid the reply.
-    if (item.reason === 'reply') {
-      const post = hydration.posts?.get(item.uri)
-      if (post) {
-        const rootPostUri = isPostRecord(post.record)
-          ? post.record.reply?.root.uri
-          : undefined
-        const isRootPostByViewer =
-          rootPostUri && didFromUri(rootPostUri) === params.hydrateCtx?.viewer
-        const isHiddenByThreadgate = isRootPostByViewer
-          ? ctx.views.replyIsHiddenByThreadgate(
-              item.uri,
-              rootPostUri,
-              hydration,
-            )
-          : false
-        if (isHiddenByThreadgate) {
-          return false
-        }
-      }
-    }
-    // Filter out notifications from users that have thread hide tags and are from people they
-    // are not following
+
     if (
-      item.reason === 'reply' ||
-      item.reason === 'quote' ||
-      item.reason === 'mention'
+      shouldFilterReplyByThreadgate(
+        item.reason,
+        uri,
+        params.hydrateCtx.viewer,
+        hydration,
+        ctx.views,
+      )
     ) {
-      const post = hydration.posts?.get(item.uri)
-      if (post) {
-        for (const [tag] of post.tags.entries()) {
-          if (ctx.cfg.threadTagsHide.has(tag)) {
-            if (!hydration.profileViewers?.get(did)?.following) {
-              return false
-            } else {
-              break
-            }
-          }
-        }
-      }
+      return false
     }
-    // Filter out notifications from users that need review unless moots
+
     if (
-      item.reason === 'reply' ||
-      item.reason === 'quote' ||
-      item.reason === 'mention' ||
-      item.reason === 'like' ||
-      item.reason === 'follow'
+      shouldFilterHiddenThreadTag(
+        item.reason,
+        uri,
+        did,
+        hydration,
+        ctx.cfg.threadTagsHide,
+      )
     ) {
-      if (!ctx.views.viewerSeesNeedsReview({ did, uri: item.uri }, hydration)) {
-        return false
-      }
+      return false
     }
+
+    if (
+      shouldFilterForNeedsReview(item.reason, did, uri, hydration, ctx.views)
+    ) {
+      return false
+    }
+
     return true
   })
   return skeleton
@@ -234,7 +183,7 @@ const noBlockOrMutesOrNeedsFiltering = (
 
 const presentation = (
   input: PresentationFnInput<Context, Params, SkeletonState>,
-) => {
+): app.bsky.notification.listNotifications.$OutputBody => {
   const { skeleton, hydration, ctx } = input
   const { notifs, lastSeenNotifs, cursor } = skeleton
   const notifications = mapDefined(notifs, (notif) =>
@@ -243,7 +192,6 @@ const presentation = (
   return {
     notifications,
     cursor,
-    priority: skeleton.priority,
     seenAt: skeleton.lastSeenNotifs,
   }
 }
@@ -254,20 +202,13 @@ type Context = {
   cfg: ServerConfig
 }
 
-type Params = QueryParams & {
-  hydrateCtx: HydrateCtx & { viewer: string }
+type Params = app.bsky.notification.listNotifications.$Params & {
+  hydrateCtx: HydrateCtxWithViewer
+  lastSeen?: Date
 }
 
 type SkeletonState = {
   notifs: Notification[]
-  priority: boolean
-  lastSeenNotifs?: string
+  lastSeenNotifs?: DatetimeString
   cursor?: string
-}
-
-const getPriority = async (ctx: Context, did: string) => {
-  const actors = await ctx.hydrator.actor.getActors([did], {
-    skipCacheForDids: [did],
-  })
-  return !!actors.get(did)?.priorityNotifications
 }

@@ -1,85 +1,70 @@
 import { chunkArray } from '@atproto/common'
-import { XRPCError } from '@atproto/xrpc-server'
-import { AppContext } from '../../context'
-import { Server } from '../../lexicon'
-import { ModEventView } from '../../lexicon/types/tools/ozone/moderation/defs'
-import { OutputSchema } from '../../lexicon/types/tools/ozone/moderation/emitEvents'
-import { httpLogger } from '../../logger'
-import { subjectFromInput } from '../../mod-service/subject'
+import { type Server, XRPCError } from '@atproto/xrpc-server'
+import type { AppContext } from '../../context.js'
+import { tools } from '../../lexicons/index.js'
+import { httpLogger } from '../../logger.js'
 import {
   handleModerationEvent,
   validateEventAuth,
-  validateSubjectForEvent,
   validateSubjects,
-} from './util-event'
-import { ToolsOzoneModerationEmitEvents } from '@atproto/api'
+} from './util-event.js'
 
 const CHUNK_SIZE = 10
 
 export default function (server: Server, ctx: AppContext) {
-  server.tools.ozone.moderation.emitEvents({
+  server.add(tools.ozone.moderation.emitEvents, {
     auth: ctx.authVerifier.modOrAdminToken,
     handler: async ({ input, auth }) => {
       const { event, subjects, createdBy, modTool } = input.body
-      const events: ModEventView[] = []
-      const failedEvents: ToolsOzoneModerationEmitEvents.FailedEvent[] = []
+      const events: tools.ozone.moderation.defs.ModEventView[] = []
+      const failedEvents: tools.ozone.moderation.emitEvents.FailedEvent[] = []
 
       validateSubjects(subjects)
       await validateEventAuth({ event, auth, ctx })
 
       for (const chunk of chunkArray(subjects, CHUNK_SIZE)) {
         const results = await Promise.allSettled(
-          chunk.map(async (entry) => {
-            const subject = subjectFromInput(
-              entry.subject,
-              entry.subjectBlobCids,
-            )
-            validateSubjectForEvent({ event, subject, auth })
-            const moderationEvent = await handleModerationEvent({
+          chunk.map((entry) =>
+            handleModerationEvent({
               auth,
               ctx,
               input: {
-                event,
-                subject: entry.subject,
-                subjectBlobCids: entry.subjectBlobCids,
+                ...entry,
+                // @NOTE Email delivery mutates the event per recipient.
+                event: { ...event },
                 createdBy,
                 modTool,
               },
-            })
-
-            return { moderationEvent, subject }
-          }),
+            }),
+          ),
         )
 
-        for (const settled of results) {
+        for (const [index, settled] of results.entries()) {
           if (settled.status === 'fulfilled') {
-            events.push(settled.value.moderationEvent)
+            events.push(settled.value)
           } else {
-            const idx = results.indexOf(settled)
-            const subject = chunk[idx]
+            const { subject } = chunk[index]
             httpLogger.error(
               { err: settled.reason, subject },
               'failed to emit bulk moderation event',
             )
-            const errorMessage =
-              settled.reason instanceof Error
-                ? settled.reason.message
-                : String(settled.reason)
-            const errorName =
-              settled.reason instanceof XRPCError
-                ? settled.reason.customErrorName
-                : undefined
             failedEvents.push({
-              error: errorMessage,
-              errorName: errorName,
-              subject: subject.subject,
+              error:
+                settled.reason instanceof Error
+                  ? settled.reason.message
+                  : String(settled.reason),
+              errorName:
+                settled.reason instanceof XRPCError
+                  ? settled.reason.error
+                  : undefined,
+              subject,
             })
           }
         }
       }
 
       return {
-        encoding: 'application/json' as const,
+        encoding: 'application/json',
         body: { events, failedEvents },
       }
     },

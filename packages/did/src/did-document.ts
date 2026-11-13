@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { Did, didSchema } from './did.js'
+import { type Did, didSchema } from './did.js'
 import { isFragment } from './lib/uri.js'
 
 /**

@@ -146,3 +146,44 @@ const did = await resolver.resolve('my-handle.bsky.social')
 const did = await resolver.resolve('my-handle.bsky.social') // Result from cache
 const did = await resolver.resolve('my-handle.bsky.social') // Result from cache
 ```
+
+### Observing resolution errors
+
+By default, `WellKnownHandleResolver` (used internally by `AtprotoHandleResolver`
+and `AtprotoHandleResolverNode`) returns `null` for non-abort errors,
+indistinguishable from "no `.well-known/atproto-did` endpoint exists". That is
+correct for the resolver contract, but it hides operational signals such as 5xx
+upstream errors, SSRF blocks, redirect loops, or transient network failures.
+
+To log or surface those failures, pass an `onError` handler when constructing the
+resolver:
+
+```ts
+const resolver = new AtprotoHandleResolverNode({
+  onError: (err, { resolver, handle }) => {
+    console.warn(
+      `[handle-resolver:${resolver}] ${handle} failed to resolve:`,
+      err,
+    )
+  },
+})
+```
+
+Because the handler is set on the instance, it also fires for resolution done on
+your behalf, which a per-call option cannot reach. For example, an OAuth client
+you hand the resolver to:
+
+```ts
+const client = new NodeOAuthClient({
+  handleResolver: new AtprotoHandleResolverNode({ onError: logHandleError }),
+  // ...
+})
+```
+
+The handler is observational only: the resolver still returns `null` on failure,
+so existing behavior does not change. Use it to:
+
+- Log resolution failures for debugging or alerting.
+- Surface specific failures to end users (e.g. distinguishing a misconfigured
+  custom domain from a typo'd handle).
+- Emit telemetry for handle-host operators.

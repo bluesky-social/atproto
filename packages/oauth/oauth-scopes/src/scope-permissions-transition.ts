@@ -1,8 +1,8 @@
 import {
-  AccountPermissionMatch,
-  BlobPermissionMatch,
-  RepoPermissionMatch,
-  RpcPermissionMatch,
+  type AccountPermissionMatch,
+  type BlobPermissionMatch,
+  type RepoPermissionMatch,
+  type RpcPermissionMatch,
   ScopePermissions,
 } from './scope-permissions.js'
 

@@ -1,9 +1,9 @@
-import { Did, DidDocument } from '@atproto/did'
+import type { Did, DidDocument } from '@atproto/did'
 import {
   SimpleStoreMemory,
-  SimpleStoreMemoryOptions,
+  type SimpleStoreMemoryOptions,
 } from '@atproto-labs/simple-store-memory'
-import { DidCache } from './did-cache.js'
+import type { DidCache } from './did-cache.js'
 
 const DEFAULT_TTL = 3600 * 1000 // 1 hour
 const DEFAULT_MAX_SIZE = 50 * 1024 * 1024 // ~50MB

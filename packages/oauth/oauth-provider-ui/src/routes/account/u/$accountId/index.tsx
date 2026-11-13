@@ -1,0 +1,116 @@
+import { useLingui } from '@lingui/react'
+import { Trans } from '@lingui/react/macro'
+import { Link, createFileRoute } from '@tanstack/react-router'
+import { ChevronRightIcon } from 'lucide-react'
+import type { ReactNode } from 'react'
+import type { JSX } from 'react/jsx-runtime'
+import { CustomizationName } from '#/components/customization-name.tsx'
+import { AccountSummary } from '#/components/identity/account-summary.tsx'
+import {
+  useAccountShellLinks,
+  useIsCurrentTarget,
+} from '#/components/layouts/account-shell.tsx'
+import {
+  ItemActions,
+  ItemContent,
+  ItemDescription,
+  ItemTitle,
+} from '#/components/ui/item.tsx'
+import {
+  AccountRow,
+  AccountRowMedia,
+} from '#/components/utils/account-card.tsx'
+import { useAuthenticatedSession } from '#/contexts/authentication.tsx'
+import { cn } from '#/lib/utils.ts'
+
+export const Route = createFileRoute('/account/u/$accountId/')({
+  component: AccountHomePage,
+})
+
+function AccountHomePage() {
+  const { account } = useAuthenticatedSession()
+
+  return (
+    <div className="flex flex-col gap-8">
+      <AccountSummary account={account}>
+        <HostedByParagraph className="text-muted-foreground text-center text-sm" />
+      </AccountSummary>
+
+      <SectionList />
+    </div>
+  )
+}
+
+/**
+ * The shell's navigation entries, listed as content — each with the translated
+ * `description` the shell's sidebar does not show.
+ */
+function SectionList(): ReactNode {
+  const { _ } = useLingui()
+  const isCurrent = useIsCurrentTarget()
+
+  // Drop the current page — on the landing page that is the "Home" entry, which
+  // would otherwise link to itself.
+  const links = useAccountShellLinks().filter((link) => !isCurrent(link))
+  if (!links.length) return null
+
+  return (
+    <div className="flex flex-col gap-4">
+      {links.map(({ title, description, Icon, to, params }) => (
+        <AccountRow key={to} render={<Link to={to} params={params} />}>
+          {Icon && (
+            <AccountRowMedia disc>
+              <Icon aria-hidden className="size-6" />
+            </AccountRowMedia>
+          )}
+          <ItemContent className="min-w-0 gap-0.5">
+            <ItemTitle className="w-full text-lg leading-tight">
+              <span className="block min-w-0 truncate font-semibold">
+                {typeof title === 'object' ? _(title) : title}
+              </span>
+            </ItemTitle>
+            {description && (
+              <ItemDescription className="text-base leading-tight">
+                {typeof description === 'object' ? _(description) : description}
+              </ItemDescription>
+            )}
+          </ItemContent>
+          <ItemActions>
+            <ChevronRightIcon
+              aria-hidden
+              className="text-muted-foreground size-5 shrink-0"
+            />
+          </ItemActions>
+        </AccountRow>
+      ))}
+    </div>
+  )
+}
+
+function HostedByParagraph(props: JSX.IntrinsicElements['p']): ReactNode {
+  const { account } = useAuthenticatedSession()
+  return (
+    <p
+      {...props}
+      // The message's newline only takes effect on phones; from `md` up the
+      // sentence fits on one line. The link is always its own line.
+      className={cn(
+        'whitespace-pre-line md:whitespace-normal',
+        props.className,
+      )}
+    >
+      {/* @NOTE The newline is part of the message so the line always breaks
+        after "account"; translators place their own break. */}
+      <Trans>
+        Your Atmosphere account{'\n'}is hosted by <CustomizationName />.
+      </Trans>
+      <Link
+        to="/account/u/$accountId/about"
+        params={{ accountId: account.handle || account.did }}
+        className="text-foreground mt-1 block underline underline-offset-4"
+      >
+        <Trans>What does this mean?</Trans>
+      </Link>
+    </p>
+  )
+}

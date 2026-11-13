@@ -1,15 +1,18 @@
 import assert from 'node:assert'
-import { AtpAgent } from '@atproto/api'
-import { SeedClient, TestNetwork, verificationsSeed } from '@atproto/dev-env'
-import { ids } from '../../src/lexicon/lexicons'
-import { VerificationState } from '../../src/lexicon/types/app/bsky/actor/defs'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
+import { type AppBskyActorDefs, type AtpAgent, ids } from '@atproto/api'
+import {
+  type SeedClient,
+  TestNetwork,
+  verificationsSeed,
+} from '@atproto/dev-env'
 
 interface ProfileViewTestCase {
   description: string
   // The DIDs are only set during test setup, so data that depends on those DIDs
   // needs to be lazily evaluated by using a function.
   getDid: () => string
-  getExpected: () => VerificationState | undefined
+  getExpected: () => AppBskyActorDefs.VerificationState | undefined
   getExpectedUrisPrefixes?: () => string[]
 }
 
@@ -38,11 +41,10 @@ describe('verification views', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_views_verification',
     })
-    agent = network.bsky.getClient()
+    agent = network.bsky.getAgent()
     sc = network.getSeedClient()
 
     await verificationsSeed(sc)
-    await network.processAll()
 
     labelerDid = network.bsky.ctx.cfg.modServiceDid
     alice = sc.dids.alice
@@ -66,9 +68,8 @@ describe('verification views', () => {
       .execute()
   })
 
-  afterAll(async () => {
-    await network.close()
-  })
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
 
   describe('profile views', () => {
     const testCases: ProfileViewTestCase[] = [
@@ -79,6 +80,8 @@ describe('verification views', () => {
           verifications: [
             {
               createdAt: expect.any(String),
+              issuerDisplayName: 'display-verifier2',
+              issuerHandle: 'verifier2.test',
               isValid: true,
               issuer: verifier2,
               uri: expect.any(String),
@@ -116,12 +119,16 @@ describe('verification views', () => {
           verifications: [
             {
               createdAt: expect.any(String),
+              issuerDisplayName: 'display-verifier1',
+              issuerHandle: 'verifier1.test',
               isValid: true,
               issuer: verifier1,
               uri: expect.any(String),
             },
             {
               createdAt: expect.any(String),
+              issuerDisplayName: 'display-verifier2',
+              issuerHandle: 'verifier2.test',
               isValid: true,
               issuer: verifier2,
               uri: expect.any(String),
@@ -142,12 +149,16 @@ describe('verification views', () => {
           verifications: [
             {
               createdAt: expect.any(String),
+              issuerDisplayName: 'display-verifier1',
+              issuerHandle: 'verifier1.test',
               isValid: true,
               issuer: verifier1,
               uri: expect.any(String),
             },
             {
               createdAt: expect.any(String),
+              issuerDisplayName: 'display-verifier2',
+              issuerHandle: 'verifier2.test',
               isValid: false,
               issuer: verifier2,
               uri: expect.any(String),
@@ -168,6 +179,8 @@ describe('verification views', () => {
           verifications: [
             {
               createdAt: expect.any(String),
+              issuerDisplayName: 'display-verifier1',
+              issuerHandle: 'verifier1.test',
               isValid: true,
               issuer: verifier1,
               uri: expect.any(String),
@@ -194,6 +207,8 @@ describe('verification views', () => {
           verifications: [
             {
               createdAt: expect.any(String),
+              issuerDisplayName: 'display-verifier2',
+              issuerHandle: 'verifier2.test',
               isValid: false,
               issuer: verifier2,
               uri: expect.any(String),
@@ -220,6 +235,8 @@ describe('verification views', () => {
           verifications: [
             {
               createdAt: expect.any(String),
+              issuerDisplayName: 'display-verifier1',
+              issuerHandle: 'verifier1.test',
               isValid: true,
               issuer: verifier1,
               uri: expect.any(String),
@@ -254,10 +271,10 @@ describe('verification views', () => {
         expect(profile.verification).toStrictEqual(getExpected())
 
         const urlPrefixes = getExpectedUrisPrefixes()
-        profile.verification &&
-          expect(urlPrefixes.length).toBe(
-            profile.verification.verifications.length,
-          )
+
+        expect(urlPrefixes.length).toBe(
+          profile.verification?.verifications.length ?? 0,
+        )
         urlPrefixes.forEach((prefix, i) => {
           assert(profile.verification)
           expect(

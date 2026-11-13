@@ -1,8 +1,8 @@
-import { ServiceImpl } from '@connectrpc/connect'
+import type { ServiceImpl } from '@connectrpc/connect'
 import { keyBy } from '@atproto/common'
-import { Service } from '../../../proto/bsky_connect'
-import { Database } from '../db'
-import { TimeCidKeyset, paginate } from '../db/pagination'
+import type { Service } from '../../../proto/bsky_connect.js'
+import type { Database } from '../db/index.js'
+import { TimeCidKeyset, paginate } from '../db/pagination.js'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   async getRepostsBySubject(req) {
@@ -21,11 +21,11 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       keyset,
     })
 
-    const reposts = await builder.execute()
+    const page = keyset.page(await builder.execute(), limit)
 
     return {
-      uris: reposts.map((l) => l.uri),
-      cursor: keyset.packFromResult(reposts),
+      uris: page.items.map((l) => l.uri),
+      cursor: page.cursor,
     }
   },
 
@@ -66,11 +66,11 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       keyset,
     })
 
-    const reposts = await builder.execute()
+    const page = keyset.page(await builder.execute(), limit)
 
     return {
-      uris: reposts.map((l) => l.uri),
-      cursor: keyset.packFromResult(reposts),
+      uris: page.items.map((l) => l.uri),
+      cursor: page.cursor,
     }
   },
 })

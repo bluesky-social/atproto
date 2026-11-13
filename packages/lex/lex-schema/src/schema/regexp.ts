@@ -1,4 +1,8 @@
-import { Schema, ValidationContext } from '../core.js'
+import {
+  Schema,
+  type ValidationContext,
+  type ValidationResult,
+} from '../core.js'
 
 /**
  * Schema for validating strings against a regular expression pattern.
@@ -20,17 +24,29 @@ export class RegexpSchema<
 > extends Schema<TValue> {
   readonly type = 'regexp' as const
 
-  constructor(public readonly pattern: RegExp) {
+  public readonly pattern: RegExp
+  public readonly message?: string
+
+  constructor(pattern: RegExp, message?: string) {
     super()
+    this.pattern = pattern
+    this.message = message
   }
 
-  validateInContext(input: unknown, ctx: ValidationContext) {
+  validateInContext(
+    input: unknown,
+    ctx: ValidationContext,
+  ): ValidationResult<TValue> {
     if (typeof input !== 'string') {
       return ctx.issueUnexpectedType(input, 'string')
     }
 
     if (!this.pattern.test(input)) {
-      return ctx.issueInvalidFormat(input, this.pattern.toString())
+      return ctx.issueInvalidFormat(
+        input,
+        this.pattern.toString(),
+        this.message,
+      )
     }
 
     return ctx.success(input as TValue)
@@ -67,6 +83,9 @@ export class RegexpSchema<
  * ```
  */
 /*@__NO_SIDE_EFFECTS__*/
-export function regexp<TInput extends string = string>(pattern: RegExp) {
-  return new RegexpSchema<TInput>(pattern)
+export function regexp<TInput extends string = string>(
+  pattern: RegExp,
+  message?: string,
+): RegexpSchema<TInput> {
+  return new RegexpSchema<TInput>(pattern, message)
 }

@@ -1,5 +1,5 @@
-import { LexiconDocument } from './lexicon-document.js'
-import { LexiconIndexer } from './lexicon-indexer.js'
+import type { LexiconDocument } from './lexicon-document.js'
+import type { LexiconIndexer } from './lexicon-indexer.js'
 
 /**
  * Lazily indexes Lexicon documents from an iterable source.
@@ -53,7 +53,7 @@ export class LexiconIterableIndexer implements LexiconIndexer, AsyncDisposable {
    * ```
    */
   constructor(
-    readonly source: AsyncIterable<LexiconDocument> | Iterable<LexiconDocument>,
+    source: AsyncIterable<LexiconDocument> | Iterable<LexiconDocument>,
   ) {
     this.#iterator =
       Symbol.asyncIterator in source
@@ -69,7 +69,9 @@ export class LexiconIterableIndexer implements LexiconIndexer, AsyncDisposable {
    *
    * @see {@link LexiconIndexer.get}
    */
-  async get(id: string): Promise<LexiconDocument> {
+  async get(input: string | { toString(): string }): Promise<LexiconDocument> {
+    const id = String(input)
+
     const cached = this.#lexicons.get(id)
     if (cached) return cached
 

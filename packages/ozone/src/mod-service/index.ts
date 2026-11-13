@@ -1,83 +1,77 @@
-import { Insertable, RawBuilder, sql } from 'kysely'
-import { CID } from 'multiformats/cid'
-import { AtpAgent, ToolsOzoneModerationDefs } from '@atproto/api'
-import { addHoursToDate, chunkArray } from '@atproto/common'
-import { Keypair } from '@atproto/crypto'
-import { IdResolver } from '@atproto/identity'
+import { type Insertable, sql } from 'kysely'
+import { DAY, addHoursToDate, chunkArray } from '@atproto/common'
+import type { Keypair } from '@atproto/crypto'
+import type { IdResolver } from '@atproto/identity'
+import type { Client } from '@atproto/lex-client'
+import {
+  type DatetimeString,
+  type DidString,
+  type UriString,
+  currentDatetimeString,
+  isDidString,
+  toDatetimeString,
+} from '@atproto/lex-schema'
 import { AtUri, INVALID_HANDLE } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { getReviewState } from '../api/util'
-import { BackgroundQueue } from '../background'
-import { OzoneConfig } from '../config'
-import { EventPusher } from '../daemon'
-import { Database } from '../db'
-import { StatusKeyset, TimeIdKeyset, paginate } from '../db/pagination'
-import { BlobPushEvent } from '../db/schema/blob_push_event'
-import { LabelChannel } from '../db/schema/label'
-import { ModerationEvent } from '../db/schema/moderation_event'
-import { jsonb } from '../db/types'
-import { ImageInvalidator } from '../image-invalidator'
-import { ids } from '../lexicon/lexicons'
-import { RepoBlobRef, RepoRef } from '../lexicon/types/com/atproto/admin/defs'
-import { Label } from '../lexicon/types/com/atproto/label/defs'
-import { ReasonType } from '../lexicon/types/com/atproto/moderation/defs'
-import { Main as StrongRef } from '../lexicon/types/com/atproto/repo/strongRef'
+import { getReviewState } from '../api/util.js'
+import type { BackgroundQueue } from '../background.js'
+import type { OzoneConfig } from '../config/index.js'
+import type { EventPusher } from '../daemon/index.js'
+import type { Database } from '../db/index.js'
+import { StatusKeyset, TimeIdKeyset, paginate } from '../db/pagination.js'
+import type { BlobPushEvent } from '../db/schema/blob_push_event.js'
+import { LabelChannel } from '../db/schema/label.js'
+import type { ModerationEvent } from '../db/schema/moderation_event.js'
+import { jsonb } from '../db/types.js'
+import type { ImageInvalidator } from '../image-invalidator.js'
+import { InboxNotificationService } from '../inbox/producers.js'
+import { com, tools } from '../lexicons/index.js'
+import { httpLogger as log } from '../logger.js'
+import { LABELER_HEADER_NAME, type ParsedLabelers } from '../util.js'
+import type { VideoInvalidator } from '../video-invalidator.js'
 import {
-  REVIEWESCALATED,
-  REVIEWOPEN,
-  isAccountEvent,
-  isAgeAssuranceEvent,
-  isAgeAssuranceOverrideEvent,
-  isIdentityEvent,
-  isModEventAcknowledge,
-  isModEventComment,
-  isModEventEmail,
-  isModEventLabel,
-  isModEventMute,
-  isModEventPriorityScore,
-  isModEventReport,
-  isModEventReverseTakedown,
-  isModEventTag,
-  isModEventTakedown,
-  isRecordEvent,
-  isScheduleTakedownEvent,
-} from '../lexicon/types/tools/ozone/moderation/defs'
-import { QueryParams as QueryStatusParams } from '../lexicon/types/tools/ozone/moderation/queryStatuses'
-import { httpLogger as log } from '../logger'
-import { LABELER_HEADER_NAME, ParsedLabelers } from '../util'
+  insertExpiringTags,
+  lockTagSubject,
+  removeExpiringTags,
+} from './expiring-tags.js'
 import {
   adjustModerationSubjectStatus,
+  getStatusIdentifierFromEvent,
   getStatusIdentifierFromSubject,
   moderationSubjectStatusQueryBuilder,
-} from './status'
-import { StrikeService, StrikeServiceCreator } from './strike'
+} from './status.js'
+import type { StrikeService, StrikeServiceCreator } from './strike.js'
 import {
-  ModSubject,
-  RecordSubject,
-  RepoSubject,
+  CHAT_CONVO_COLLECTION,
+  CHAT_MESSAGE_COLLECTION,
+  type ModSubject,
+  type RecordSubject,
+  type RepoSubject,
   subjectFromStatusRow,
-} from './subject'
-import {
+} from './subject.js'
+import type {
   ModEventType,
   ModerationEventRow,
+  ModerationEventRowWithHandle,
   ModerationSubjectStatusRow,
   ModerationSubjectStatusRowWithHandle,
   ReporterStats,
-  ReporterStatsResult,
   ReversibleModerationEvent,
-} from './types'
+} from './types.js'
 import {
   dateFromDbDatetime,
   formatLabel,
   formatLabelRow,
-  getPdsAgentForRepo,
+  getPdsClientForRepo,
   signLabel,
-} from './util'
-import { AuthHeaders, ModerationViews } from './views'
+} from './util.js'
+import { type AuthHeaders, ModerationViews } from './views.js'
 
 export type ModerationServiceCreator = (db: Database) => ModerationService
 
 export class ModerationService {
+  readonly views: ModerationViews
+
   constructor(
     public db: Database,
     public signingKey: Keypair,
@@ -86,14 +80,34 @@ export class ModerationService {
     public backgroundQueue: BackgroundQueue,
     public idResolver: IdResolver,
     public eventPusher: EventPusher,
-    public appviewAgent: AtpAgent,
+    public appviewClient: Client,
     private createAuthHeaders: (
       aud: string,
       method: string,
     ) => Promise<AuthHeaders>,
     public strikeService: StrikeService,
     public imgInvalidator?: ImageInvalidator,
-  ) {}
+    public videoInvalidator?: VideoInvalidator,
+  ) {
+    this.views = new ModerationViews(
+      db,
+      signingKey,
+      signingKeyId,
+      appviewClient,
+      async (method: string, labelers?: ParsedLabelers) => {
+        const authHeaders = await this.createAuthHeaders(
+          cfg.appview.did,
+          method,
+        )
+        if (labelers?.dids?.length) {
+          authHeaders.headers[LABELER_HEADER_NAME] = labelers.dids.join(', ')
+        }
+        return authHeaders
+      },
+      idResolver,
+      cfg.service.devMode,
+    )
+  }
 
   static creator(
     signingKey: Keypair,
@@ -102,10 +116,11 @@ export class ModerationService {
     backgroundQueue: BackgroundQueue,
     idResolver: IdResolver,
     eventPusher: EventPusher,
-    appviewAgent: AtpAgent,
+    appviewClient: Client,
     createAuthHeaders: (aud: string, method: string) => Promise<AuthHeaders>,
     strikeServiceCreator: StrikeServiceCreator,
     imgInvalidator?: ImageInvalidator,
+    videoInvalidator?: VideoInvalidator,
   ) {
     return (db: Database) => {
       const strikeService = strikeServiceCreator(db)
@@ -117,32 +132,14 @@ export class ModerationService {
         backgroundQueue,
         idResolver,
         eventPusher,
-        appviewAgent,
+        appviewClient,
         createAuthHeaders,
         strikeService,
         imgInvalidator,
+        videoInvalidator,
       )
     }
   }
-
-  views = new ModerationViews(
-    this.db,
-    this.signingKey,
-    this.signingKeyId,
-    this.appviewAgent,
-    async (method: string, labelers?: ParsedLabelers) => {
-      const authHeaders = await this.createAuthHeaders(
-        this.cfg.appview.did,
-        method,
-      )
-      if (labelers?.dids?.length) {
-        authHeaders.headers[LABELER_HEADER_NAME] = labelers.dids.join(', ')
-      }
-      return authHeaders
-    },
-    this.idResolver,
-    this.cfg.service.devMode,
-  )
 
   async getEvent(id: number): Promise<ModerationEventRow | undefined> {
     return await this.db.db
@@ -175,8 +172,9 @@ export class ModerationService {
   }
 
   async getEvents(opts: {
+    signal?: AbortSignal
     subject?: string
-    createdBy?: string
+    createdBy?: DidString
     limit: number
     cursor?: string
     includeAllUserRecords: boolean
@@ -184,8 +182,8 @@ export class ModerationService {
     sortDirection?: 'asc' | 'desc'
     hasComment?: boolean
     comment?: string
-    createdAfter?: string
-    createdBefore?: string
+    createdAfter?: DatetimeString
+    createdBefore?: DatetimeString
     addedLabels: string[]
     removedLabels: string[]
     addedTags: string[]
@@ -200,6 +198,7 @@ export class ModerationService {
     withStrike?: boolean
   }): Promise<{ cursor?: string; events: ModerationEventRow[] }> {
     const {
+      signal,
       subject,
       createdBy,
       limit,
@@ -227,42 +226,77 @@ export class ModerationService {
     const { ref } = this.db.db.dynamic
     let builder = this.db.db.selectFrom('moderation_event').selectAll()
 
-    if (subject) {
-      const isSubjectAtUri = subject.startsWith('at://')
-      const subjectDid = isSubjectAtUri ? new AtUri(subject).hostname : subject
-      const subjectUri = isSubjectAtUri ? subject : null
+    const subjectAtUri = subject?.startsWith('at://')
+      ? new AtUri(subject)
+      : null
+    const subjectDid = subjectAtUri
+      ? subjectAtUri.did
+      : isDidString(subject)
+        ? subject
+        : null
+
+    if (subjectDid) {
+      const subjectUri = subjectAtUri ? subjectAtUri.href : null
       // regardless of subjectUri check, we always want to query against subjectDid column since that's indexed
       builder = builder.where('subjectDid', '=', subjectDid)
 
-      // if requester wants to include all user records, let's ignore matching on subjectUri
+      // Chat subjects use synthetic URIs; their IDs are stored separately.
       if (!includeAllUserRecords) {
-        builder = builder
-          .if(!subjectUri, (q) => q.where('subjectUri', 'is', null))
-          .if(!!subjectUri, (q) => q.where('subjectUri', '=', subjectUri))
+        if (subjectAtUri?.collection === CHAT_MESSAGE_COLLECTION) {
+          builder = builder.where('subjectMessageId', '=', subjectAtUri.rkey)
+        } else if (subjectAtUri?.collection === CHAT_CONVO_COLLECTION) {
+          builder = builder
+            .where('subjectConvoId', '=', subjectAtUri.rkey)
+            .where('subjectMessageId', 'is', null)
+        } else if (subjectUri) {
+          builder = builder.where('subjectUri', '=', subjectUri)
+        } else {
+          // Account-level: subjectUri IS NULL also matches conversation events,
+          // so explicitly exclude them.
+          builder = builder
+            .where('subjectUri', 'is', null)
+            .where('subjectConvoId', 'is', null)
+            .where('subjectMessageId', 'is', null)
+        }
       }
+    } else if (subject) {
+      // If subject is provided but not a valid DID or at:// URI, return no
+      // results: equivalent to where did = 'invalid-did' which will never match
+      // any rows.
+      return { cursor: undefined, events: [] }
     } else if (subjectType === 'account') {
-      builder = builder.where('subjectUri', 'is', null)
+      builder = builder
+        .where('subjectUri', 'is', null)
+        .where('subjectConvoId', 'is', null)
+        .where('subjectMessageId', 'is', null)
     } else if (subjectType === 'record') {
       builder = builder.where('subjectUri', 'is not', null)
+    } else if (subjectType === 'conversation') {
+      builder = builder
+        .where('subjectConvoId', 'is not', null)
+        .where('subjectMessageId', 'is', null)
     }
 
     // If subjectType is set to 'account' let that take priority and ignore collections filter
     if (collections.length && subjectType !== 'account') {
-      builder = builder.where('subjectUri', 'is not', null).where((qb) => {
-        collections.forEach((collection) => {
-          qb = qb.orWhere('subjectUri', 'like', `%/${collection}/%`)
-        })
-        return qb
-      })
+      builder = builder
+        .where('subjectUri', 'is not', null)
+        .where((eb) =>
+          eb.or(
+            collections.map((collection) =>
+              eb('subjectUri', 'like', `%/${collection}/%` as any),
+            ),
+          ),
+        )
     }
 
     if (types.length) {
-      builder = builder.where((qb) => {
+      builder = builder.where((eb) => {
         if (types.length === 1) {
-          return qb.where('action', '=', types[0])
+          return eb('action', '=', types[0])
         }
 
-        return qb.where('action', 'in', types)
+        return eb('action', 'in', types)
       })
     }
     if (createdBy) {
@@ -279,12 +313,11 @@ export class ModerationService {
       // the input may end in || in which case, there may be item in the array which is just '' and we want to ignore those
       const keywords = comment.split('||').filter((keyword) => !!keyword.trim())
       if (keywords.length > 1) {
-        builder = builder.where((qb) => {
-          keywords.forEach((keyword) => {
-            qb = qb.orWhere('comment', 'ilike', `%${keyword}%`)
-          })
-          return qb
-        })
+        builder = builder.where((eb) =>
+          eb.or(
+            keywords.map((keyword) => eb('comment', 'ilike', `%${keyword}%`)),
+          ),
+        )
       } else if (keywords.length === 1) {
         builder = builder.where('comment', 'ilike', `%${keywords[0]}%`)
       }
@@ -305,23 +338,26 @@ export class ModerationService {
       })
     }
     if (addedTags.length) {
-      builder = builder.where(sql`${ref('addedTags')} @> ${jsonb(addedTags)}`)
+      builder = builder.where(
+        sql<boolean>`${ref('addedTags')} @> ${jsonb(addedTags)}`,
+      )
     }
     if (removedTags.length) {
       builder = builder.where(
-        sql`${ref('removedTags')} @> ${jsonb(removedTags)}`,
+        sql<boolean>`${ref('removedTags')} @> ${jsonb(removedTags)}`,
       )
     }
     if (reportTypes?.length) {
       builder = builder.where(sql`meta->>'reportType'`, 'in', reportTypes)
     }
     if (policies?.length) {
-      builder = builder.where((qb) => {
-        policies.forEach((policy) => {
-          qb = qb.orWhere(sql`meta->>'policies'`, 'ilike', `%${policy}%`)
-        })
-        return qb
-      })
+      builder = builder.where((eb) =>
+        eb.or(
+          policies.map((policy) =>
+            eb(sql`meta->>'policies'`, 'ilike', `%${policy}%`),
+          ),
+        ),
+      )
     }
     if (modTool?.length) {
       builder = builder
@@ -336,8 +372,8 @@ export class ModerationService {
     if (ageAssuranceState) {
       builder = builder
         .where('action', 'in', [
-          'tools.ozone.moderation.defs#ageAssuranceEvent',
-          'tools.ozone.moderation.defs#ageAssuranceOverrideEvent',
+          tools.ozone.moderation.defs.ageAssuranceEvent.$type,
+          tools.ozone.moderation.defs.ageAssuranceOverrideEvent.$type,
         ])
         .where(sql`meta->>'status'`, '=', ageAssuranceState)
     }
@@ -358,7 +394,10 @@ export class ModerationService {
       tryIndex: true,
     })
 
-    const result = await paginatedBuilder.execute()
+    const result = await paginatedBuilder.execute({
+      signal,
+      inflightQueryAbortStrategy: 'cancel query',
+    })
 
     const infos = await this.views.getAccoutInfosByDid([
       ...result.map((row) => row.subjectDid),
@@ -374,38 +413,56 @@ export class ModerationService {
     return { cursor: keyset.packFromResult(result), events: resultWithHandles }
   }
 
+  async getEventsByIds(
+    ids: number[],
+    signal?: AbortSignal,
+  ): Promise<ModerationEventRowWithHandle[]> {
+    if (!ids.length) return []
+
+    const result = await this.db.db
+      .selectFrom('moderation_event')
+      .selectAll()
+      .where('id', 'in', ids)
+      .execute({ signal, inflightQueryAbortStrategy: 'cancel query' })
+
+    if (!result.length) return []
+
+    const infos = await this.views.getAccoutInfosByDid([
+      ...result.map((row) => row.subjectDid),
+      ...result.map((row) => row.createdBy),
+    ])
+
+    return result.map((r) => ({
+      ...r,
+      creatorHandle: infos.get(r.createdBy)?.handle,
+      subjectHandle: infos.get(r.subjectDid)?.handle,
+    }))
+  }
+
   async getReport(id: number): Promise<ModerationEventRow | undefined> {
     return await this.db.db
       .selectFrom('moderation_event')
-      .where('action', '=', 'tools.ozone.moderation.defs#modEventReport')
+      .where('action', '=', tools.ozone.moderation.defs.modEventReport.$type)
       .selectAll()
       .where('id', '=', id)
       .executeTakeFirst()
   }
 
-  async getCurrentStatus(
-    subject: { did: string } | { uri: AtUri } | { cids: CID[] },
-  ) {
-    let builder = this.db.db.selectFrom('moderation_subject_status').selectAll()
-    if ('did' in subject) {
-      builder = builder.where('did', '=', subject.did)
-    } else if ('uri' in subject) {
-      builder = builder.where('recordPath', '=', subject.uri.toString())
-    }
-    // TODO: Handle the cid status
-    return await builder.execute()
-  }
-
   async resolveSubjectsForAccount(
-    did: string,
-    createdBy: string,
+    did: DidString,
+    createdBy: DidString,
     accountEvent: ModerationEventRow,
   ) {
     const subjectsToBeResolved = await this.db.db
       .selectFrom('moderation_subject_status')
       .where('did', '=', did)
-      .where('recordPath', '!=', '')
-      .where('reviewState', 'in', [REVIEWESCALATED, REVIEWOPEN])
+      .where((eb) =>
+        eb.or([eb('recordPath', '!=', ''), eb('convoId', '!=', '')]),
+      )
+      .where('reviewState', 'in', [
+        tools.ozone.moderation.defs.ReviewEscalated,
+        tools.ozone.moderation.defs.ReviewOpen,
+      ])
       .selectAll()
       .execute()
 
@@ -429,19 +486,17 @@ export class ModerationService {
           // For consistency's sake, when acknowledging appealed subjects, we should first resolve the appeal
           if (subject.appealed) {
             await this.logEvent({
-              event: {
-                $type: 'tools.ozone.moderation.defs#modEventResolveAppeal',
+              event: tools.ozone.moderation.defs.modEventResolveAppeal.$build({
                 comment: `[AUTO_RESOLVE_ON_ACCOUNT_ACTION]: Automatically resolving all appealed content due to account level action | ${accountEventInfo}`,
-              },
+              }),
               ...eventData,
             })
           }
 
           await this.logEvent({
-            event: {
-              $type: 'tools.ozone.moderation.defs#modEventAcknowledge',
+            event: tools.ozone.moderation.defs.modEventAcknowledge.$build({
               comment: `[AUTO_RESOLVE_ON_ACCOUNT_ACTION]: Automatically resolving all reported content due to account level action | ${accountEventInfo}`,
-            },
+            }),
             ...eventData,
           })
         }),
@@ -452,10 +507,11 @@ export class ModerationService {
   async logEvent(info: {
     event: ModEventType
     subject: ModSubject
-    createdBy: string
+    createdBy: DidString
     createdAt?: Date
-    modTool?: ToolsOzoneModerationDefs.ModTool
+    modTool?: NonNullable<ModerationEvent['modTool']>
     externalId?: string
+    eventMeta?: Record<string, string | number | boolean>
   }): Promise<{
     event: ModerationEventRow
     subjectStatus: ModerationSubjectStatusRow | null
@@ -468,31 +524,43 @@ export class ModerationService {
       externalId,
       createdAt = new Date(),
       modTool,
+      eventMeta,
     } = info
 
     const createLabelVals =
-      isModEventLabel(event) && event.createLabelVals.length > 0
+      tools.ozone.moderation.defs.modEventLabel.$isTypeOf(event) &&
+      event.createLabelVals.length > 0
         ? event.createLabelVals.join(' ')
         : undefined
     const negateLabelVals =
-      isModEventLabel(event) && event.negateLabelVals.length > 0
+      tools.ozone.moderation.defs.modEventLabel.$isTypeOf(event) &&
+      event.negateLabelVals.length > 0
         ? event.negateLabelVals.join(' ')
         : undefined
 
-    const meta: Record<string, string | number | boolean> = {}
+    const meta: Record<string, string | number | boolean> = {
+      ...eventMeta,
+    }
 
-    const addedTags = isModEventTag(event) ? jsonb(event.add) : null
-    const removedTags = isModEventTag(event) ? jsonb(event.remove) : null
+    const addedTags = tools.ozone.moderation.defs.modEventTag.$isTypeOf(event)
+      ? jsonb(event.add)
+      : null
+    const removedTags = tools.ozone.moderation.defs.modEventTag.$isTypeOf(event)
+      ? jsonb(event.remove)
+      : null
 
-    if (isModEventReport(event)) {
+    if (tools.ozone.moderation.defs.modEventReport.$isTypeOf(event)) {
       meta.reportType = event.reportType
     }
 
-    if (isModEventComment(event) && event.sticky) {
+    if (
+      tools.ozone.moderation.defs.modEventComment.$isTypeOf(event) &&
+      event.sticky
+    ) {
       meta.sticky = event.sticky
     }
 
-    if (isModEventEmail(event)) {
+    if (tools.ozone.moderation.defs.modEventEmail.$isTypeOf(event)) {
       meta.subjectLine = event.subjectLine
       meta.isDelivered = !!event.isDelivered
       if (event.content) {
@@ -503,30 +571,30 @@ export class ModerationService {
       }
     }
 
-    if (isAccountEvent(event)) {
+    if (tools.ozone.moderation.defs.accountEvent.$isTypeOf(event)) {
       meta.active = event.active
       meta.timestamp = event.timestamp
       if (event.status) meta.status = event.status
     }
 
-    if (isModEventPriorityScore(event)) {
+    if (tools.ozone.moderation.defs.modEventPriorityScore.$isTypeOf(event)) {
       meta.priorityScore = event.score
     }
 
-    if (isIdentityEvent(event)) {
+    if (tools.ozone.moderation.defs.identityEvent.$isTypeOf(event)) {
       meta.timestamp = event.timestamp
       if (event.handle) meta.handle = event.handle
       if (event.pdsHost) meta.pdsHost = event.pdsHost
       if (event.tombstone) meta.tombstone = event.tombstone
     }
 
-    if (isRecordEvent(event)) {
+    if (tools.ozone.moderation.defs.recordEvent.$isTypeOf(event)) {
       meta.timestamp = event.timestamp
       meta.op = event.op
       if (event.cid) meta.cid = event.cid
     }
 
-    if (isAgeAssuranceEvent(event)) {
+    if (tools.ozone.moderation.defs.ageAssuranceEvent.$isTypeOf(event)) {
       meta.status = event.status
       meta.createdAt = event.createdAt
       if (event.attemptId) {
@@ -549,14 +617,16 @@ export class ModerationService {
       }
     }
 
-    if (isAgeAssuranceOverrideEvent(event)) {
+    if (
+      tools.ozone.moderation.defs.ageAssuranceOverrideEvent.$isTypeOf(event)
+    ) {
       meta.status = event.status
       if (event.access) {
         meta.access = event.access
       }
     }
 
-    if (isScheduleTakedownEvent(event)) {
+    if (tools.ozone.moderation.defs.scheduleTakedownEvent.$isTypeOf(event)) {
       if (event.executeAfter) {
         meta.executeAfter = event.executeAfter
       }
@@ -569,41 +639,62 @@ export class ModerationService {
     }
 
     if (
-      (isModEventTakedown(event) || isModEventAcknowledge(event)) &&
+      (tools.ozone.moderation.defs.modEventTakedown.$isTypeOf(event) ||
+        tools.ozone.moderation.defs.modEventAcknowledge.$isTypeOf(event)) &&
       event.acknowledgeAccountSubjects
     ) {
       meta.acknowledgeAccountSubjects = true
     }
 
-    if (isModEventTakedown(event) && event.policies?.length) {
+    if (
+      tools.ozone.moderation.defs.modEventTakedown.$isTypeOf(event) &&
+      event.policies?.length
+    ) {
       meta.policies = event.policies.join(',')
     }
 
-    if (isModEventTakedown(event) && event.targetServices?.length) {
+    if (
+      tools.ozone.moderation.defs.modEventTakedown.$isTypeOf(event) &&
+      event.targetServices?.length
+    ) {
       meta.targetServices = event.targetServices.join(',')
     }
 
     // Keep trace of reports that came in while the reporter was in muted stated
-    if (isModEventReport(event)) {
+    if (tools.ozone.moderation.defs.modEventReport.$isTypeOf(event)) {
       const isReportingMuted = await this.isReportingMutedForSubject(createdBy)
       if (isReportingMuted) {
         meta.isReporterMuted = true
       }
+      // Also capture whether the subject was muted at event-creation time, so
+      // the queue-router daemon can populate report.isMuted later without
+      // racing against subsequent mute/unmute changes.
+      const isSubjectMuted = await this.isSubjectMuted(subject.did)
+      if (isSubjectMuted) {
+        meta.isSubjectMuted = true
+      }
     }
 
     const subjectInfo = subject.info()
+    let initialStatusId: number | undefined
+    if (tools.ozone.moderation.defs.modEventTag.$isTypeOf(event)) {
+      initialStatusId = await lockTagSubject(this.db, {
+        ...getStatusIdentifierFromEvent(subjectInfo),
+        recordCid: subjectInfo.subjectCid,
+      })
+    }
 
     // Store severityLevel, strikeCount, and strikeExpiresAt if provided
     // These values should be calculated by the client based on configuration
     // processNewEvent will update the account_strike table with the new strike count
     let severityLevel: string | null = null
     let strikeCount: number | null = null
-    let strikeExpiresAt: string | null = null
+    let strikeExpiresAt: DatetimeString | null = null
 
     if (
-      isModEventTakedown(event) ||
-      isModEventEmail(event) ||
-      isModEventReverseTakedown(event)
+      tools.ozone.moderation.defs.modEventTakedown.$isTypeOf(event) ||
+      tools.ozone.moderation.defs.modEventEmail.$isTypeOf(event) ||
+      tools.ozone.moderation.defs.modEventReverseTakedown.$isTypeOf(event)
     ) {
       // Store severityLevel if provided (for display/tracking)
       if (event.severityLevel) {
@@ -619,6 +710,16 @@ export class ModerationService {
       }
     }
 
+    const notifications = new InboxNotificationService(
+      this.db,
+      this.cfg.strikeSuspension,
+      this.cfg.inbox.startAt,
+    )
+    const previousStanding = await notifications.beforeModerationEvent(
+      subject,
+      event,
+    )
+
     const modEvent = await this.db.db
       .insertInto('moderation_event')
       .values({
@@ -628,7 +729,7 @@ export class ModerationService {
             event.comment) ||
           null,
         action: event.$type as ModerationEvent['action'],
-        createdAt: createdAt.toISOString(),
+        createdAt: toDatetimeString(createdAt),
         createdBy,
         createLabelVals,
         negateLabelVals,
@@ -640,9 +741,10 @@ export class ModerationService {
             : null,
         meta: Object.assign(meta, subjectInfo.meta),
         expiresAt:
-          (isModEventTakedown(event) || isModEventMute(event)) &&
+          (tools.ozone.moderation.defs.modEventTakedown.$isTypeOf(event) ||
+            tools.ozone.moderation.defs.modEventMute.$isTypeOf(event)) &&
           event.durationInHours
-            ? addHoursToDate(event.durationInHours, createdAt).toISOString()
+            ? toDatetimeString(addHoursToDate(event.durationInHours, createdAt))
             : undefined,
         subjectType: subjectInfo.subjectType,
         subjectDid: subjectInfo.subjectDid,
@@ -650,6 +752,7 @@ export class ModerationService {
         subjectCid: subjectInfo.subjectCid,
         subjectBlobCids: jsonb(subjectInfo.subjectBlobCids),
         subjectMessageId: subjectInfo.subjectMessageId,
+        subjectConvoId: subjectInfo.subjectConvoId,
         modTool: modTool ? jsonb(modTool) : null,
         externalId: externalId ?? null,
         severityLevel,
@@ -663,7 +766,38 @@ export class ModerationService {
       this.db,
       modEvent,
       subject.blobCids,
+      initialStatusId,
     )
+
+    // Manage expiring tag rows for temporary tags
+    if (tools.ozone.moderation.defs.modEventTag.$isTypeOf(event)) {
+      // @NOTE the tag-subject lock also serializes expiry replacement.
+      const tagSubject = {
+        did: subjectInfo.subjectDid,
+        recordPath: subjectStatus?.recordPath ?? '',
+        convoId: subjectStatus?.convoId ?? '',
+      }
+      await removeExpiringTags(this.db, {
+        ...tagSubject,
+        tags: [...event.add, ...event.remove],
+      })
+      if (event.durationInHours && event.add.length > 0) {
+        const expiresAt = toDatetimeString(
+          addHoursToDate(event.durationInHours, createdAt),
+        )
+        await insertExpiringTags(this.db, {
+          eventId: modEvent.id,
+          ...tagSubject,
+          tags: event.add.filter((tag) => !event.remove.includes(tag)),
+          expiresAt: expiresAt as DatetimeString,
+          createdBy,
+        })
+      }
+    }
+
+    if (tools.ozone.moderation.defs.ageAssurancePurgeEvent.$isTypeOf(event)) {
+      await this.purgeAgeAssuranceEvents(subjectInfo.subjectDid)
+    }
 
     // Updates are only needed if strikeCount is numeric (in some cases even 0)
     if (modEvent.strikeCount !== null) {
@@ -678,7 +812,22 @@ export class ModerationService {
       }
     }
 
+    await notifications.notifyModerationEvent(
+      subject,
+      modEvent,
+      previousStanding,
+    )
+
     return { event: modEvent, subjectStatus }
+  }
+
+  async purgeAgeAssuranceEvents(subjectDid: DidString) {
+    this.db.assertTransaction()
+    await this.db.db
+      .deleteFrom('moderation_event')
+      .where('subjectDid', '=', subjectDid)
+      .where('action', '=', tools.ozone.moderation.defs.ageAssuranceEvent.$type)
+      .execute()
   }
 
   async getLastReversibleEventForSubject(subject: ReversalSubject) {
@@ -697,19 +846,23 @@ export class ModerationService {
       builder = builder.where(
         'subjectUri',
         'like',
-        `%${subject.subject.recordPath}%`,
+        `%${subject.subject.recordPath}%` as any,
       )
     }
 
     // Means the subject was suspended and needs to be unsuspended
     if (subject.reverseSuspend) {
       builder = builder
-        .where('action', '=', 'tools.ozone.moderation.defs#modEventTakedown')
+        .where(
+          'action',
+          '=',
+          tools.ozone.moderation.defs.modEventTakedown.$type,
+        )
         .where('durationInHours', 'is not', null)
     }
     if (subject.reverseMute) {
       builder = builder
-        .where('action', '=', 'tools.ozone.moderation.defs#modEventMute')
+        .where('action', '=', tools.ozone.moderation.defs.modEventMute.$type)
         .where('durationInHours', 'is not', null)
     }
 
@@ -721,11 +874,12 @@ export class ModerationService {
   }
 
   async getSubjectsDueForReversal(): Promise<ReversalSubject[]> {
-    const now = new Date().toISOString()
+    const now = currentDatetimeString()
     const subjects = await this.db.db
       .selectFrom('moderation_subject_status')
-      .where('suspendUntil', '<', now)
-      .orWhere('muteUntil', '<', now)
+      .where((eb) =>
+        eb.or([eb('suspendUntil', '<', now), eb('muteUntil', '<', now)]),
+      )
       .selectAll()
       .execute()
 
@@ -736,12 +890,13 @@ export class ModerationService {
     }))
   }
 
-  async isSubjectSuspended(did: string): Promise<boolean> {
+  async isSubjectSuspended(did: DidString): Promise<boolean> {
     const res = await this.db.db
       .selectFrom('moderation_subject_status')
       .where('did', '=', did)
       .where('recordPath', '=', '')
-      .where('suspendUntil', '>', new Date().toISOString())
+      .where('convoId', '=', '')
+      .where('suspendUntil', '>', currentDatetimeString())
       .select('did')
       .limit(1)
       .executeTakeFirst()
@@ -756,15 +911,16 @@ export class ModerationService {
     subject,
   }: ReversibleModerationEvent): Promise<ModerationEventRow> {
     const isRevertingTakedown =
-      action === 'tools.ozone.moderation.defs#modEventTakedown'
+      action === tools.ozone.moderation.defs.modEventTakedown.$type
     this.db.assertTransaction()
     const { event } = await this.logEvent({
-      event: {
-        $type: isRevertingTakedown
-          ? 'tools.ozone.moderation.defs#modEventReverseTakedown'
-          : 'tools.ozone.moderation.defs#modEventUnmute',
-        comment: comment ?? undefined,
-      },
+      event: isRevertingTakedown
+        ? tools.ozone.moderation.defs.modEventReverseTakedown.$build({
+            comment: comment ?? undefined,
+          })
+        : tools.ozone.moderation.defs.modEventUnmute.$build({
+            comment: comment ?? undefined,
+          }),
       createdAt,
       createdBy,
       subject,
@@ -931,6 +1087,21 @@ export class ModerationService {
               }),
             )
           }
+
+          if (this.videoInvalidator) {
+            await Promise.allSettled(
+              (subject.blobCids ?? []).map((cid) =>
+                this.videoInvalidator
+                  ?.invalidate(subject.did, cid)
+                  .catch((err) =>
+                    log.error(
+                      { err, did: subject.did, cid },
+                      'failed to invalidate video',
+                    ),
+                  ),
+              ),
+            )
+          }
         })
       })
     }
@@ -973,15 +1144,13 @@ export class ModerationService {
   }
 
   async report(info: {
-    reasonType: ReasonType
+    reasonType: com.atproto.moderation.defs.ReasonType
     reason?: string
     subject: ModSubject
-    reportedBy: string
+    reportedBy: DidString
     createdAt?: Date
-    modTool?: {
-      name: string
-      meta?: { [_ in string]: unknown }
-    }
+    modTool?: NonNullable<ModerationEvent['modTool']>
+    eventMeta?: Record<string, string | number | boolean>
   }): Promise<{
     event: ModerationEventRow
     subjectStatus: ModerationSubjectStatusRow | null
@@ -993,24 +1162,24 @@ export class ModerationService {
       createdAt = new Date(),
       subject,
       modTool,
+      eventMeta,
     } = info
 
-    const result = await this.logEvent({
-      event: {
-        $type: 'tools.ozone.moderation.defs#modEventReport',
+    return await this.logEvent({
+      event: tools.ozone.moderation.defs.modEventReport.$build({
         reportType: reasonType,
         comment: reason,
-      },
+      }),
       createdBy: reportedBy,
       subject,
       createdAt,
       modTool,
+      eventMeta,
     })
-
-    return result
   }
 
   async getSubjectStatuses({
+    signal,
     queueCount,
     queueIndex,
     queueSeed = '',
@@ -1040,13 +1209,12 @@ export class ModerationService {
     excludeTags,
     collections,
     subjectType,
-    minAccountSuspendCount,
-    minReportedRecordsCount,
-    minTakendownRecordsCount,
     minPriorityScore,
     minStrikeCount,
     ageAssuranceState,
-  }: QueryStatusParams): Promise<{
+  }: tools.ozone.moderation.queryStatuses.$Params & {
+    signal?: AbortSignal
+  }): Promise<{
     statuses: ModerationSubjectStatusRowWithHandle[]
     cursor?: string
   }> {
@@ -1063,20 +1231,54 @@ export class ModerationService {
       )
 
       if (!includeAllUserRecords) {
-        builder = builder.where((qb) =>
-          subjectInfo.recordPath
-            ? qb.where(
-                'moderation_subject_status.recordPath',
-                '=',
-                subjectInfo.recordPath,
-              )
-            : qb.where('moderation_subject_status.recordPath', '=', ''),
-        )
+        if (subjectInfo.convoId) {
+          builder = builder
+            .where(
+              'moderation_subject_status.convoId',
+              '=',
+              subjectInfo.convoId,
+            )
+            .where('moderation_subject_status.recordPath', '=', '')
+        } else if (subjectInfo.recordPath) {
+          builder = builder.where(
+            'moderation_subject_status.recordPath',
+            '=',
+            subjectInfo.recordPath,
+          )
+        } else {
+          // Account-level: recordPath = '' also matches conversation statuses,
+          // so explicitly exclude them.
+          builder = builder
+            .where('moderation_subject_status.recordPath', '=', '')
+            .where('moderation_subject_status.convoId', '=', '')
+        }
       }
     } else if (subjectType === 'account') {
-      builder = builder.where('moderation_subject_status.recordPath', '=', '')
+      builder = builder
+        .where('moderation_subject_status.recordPath', '=', '')
+        .where('moderation_subject_status.convoId', '=', '')
     } else if (subjectType === 'record') {
-      builder = builder.where('moderation_subject_status.recordPath', '!=', '')
+      builder = builder
+        .where('moderation_subject_status.recordPath', '!=', '')
+        .where(
+          'moderation_subject_status.recordPath',
+          'not like',
+          `${CHAT_MESSAGE_COLLECTION}/%`,
+        )
+    } else if (subjectType === 'conversation') {
+      builder = builder.where((eb) =>
+        eb.or([
+          eb.and([
+            eb('moderation_subject_status.convoId', '!=', ''),
+            eb('moderation_subject_status.recordPath', '=', ''),
+          ]),
+          eb(
+            'moderation_subject_status.recordPath',
+            'like',
+            `${CHAT_MESSAGE_COLLECTION}/%`,
+          ),
+        ]),
+      )
     }
 
     // Only fetch items that belongs to the specified queue when specified
@@ -1101,22 +1303,35 @@ export class ModerationService {
     if (subjectType !== 'account' && collections?.length) {
       builder = builder
         .where('moderation_subject_status.recordPath', '!=', '')
-        .where((qb) => {
-          for (const collection of collections) {
-            qb = qb.orWhere(
-              'moderation_subject_status.recordPath',
-              'like',
-              `${collection}/%`,
-            )
-          }
-          return qb
-        })
+        .where((eb) =>
+          eb.or(
+            collections.map((collection) =>
+              eb(
+                'moderation_subject_status.recordPath',
+                'like',
+                `${collection}/%`,
+              ),
+            ),
+          ),
+        )
     }
 
-    if (ignoreSubjects?.length) {
-      builder = builder
-        .where('moderation_subject_status.did', 'not in', ignoreSubjects)
-        .where('moderation_subject_status.recordPath', 'not in', ignoreSubjects)
+    const ignoredDids = ignoreSubjects?.filter(isDidString)
+    if (ignoredDids?.length) {
+      builder = builder.where(
+        'moderation_subject_status.did',
+        'not in',
+        ignoredDids,
+      )
+    }
+
+    const ignoredRecordPaths = ignoreSubjects?.filter((r) => !isDidString(r))
+    if (ignoredRecordPaths?.length) {
+      builder = builder.where(
+        'moderation_subject_status.recordPath',
+        'not in',
+        ignoredRecordPaths,
+      )
     }
 
     const reviewStateNormalized = getReviewState(reviewState)
@@ -1220,30 +1435,32 @@ export class ModerationService {
     }
 
     if (!includeMuted) {
-      builder = builder.where((qb) =>
-        qb
-          .where(
+      builder = builder.where((eb) =>
+        eb.or([
+          eb(
             'moderation_subject_status.muteUntil',
             '<',
-            new Date().toISOString(),
-          )
-          .orWhere('moderation_subject_status.muteUntil', 'is', null),
+            currentDatetimeString(),
+          ),
+          eb('moderation_subject_status.muteUntil', 'is', null),
+        ]),
       )
     }
 
     if (onlyMuted) {
-      builder = builder.where((qb) =>
-        qb
-          .where(
+      builder = builder.where((eb) =>
+        eb.or([
+          eb(
             'moderation_subject_status.muteUntil',
             '>',
-            new Date().toISOString(),
-          )
-          .orWhere(
+            currentDatetimeString(),
+          ),
+          eb(
             'moderation_subject_status.muteReportingUntil',
             '>',
-            new Date().toISOString(),
+            currentDatetimeString(),
           ),
+        ]),
       )
     }
 
@@ -1251,54 +1468,28 @@ export class ModerationService {
     const conditions = parseTags(tags)
     if (conditions?.length) {
       // [["tag1"], ["tag2", "tag3"], ["tag4"]] => (tags ? 'tag1') OR (tags ? 'tag2' AND tags ? 'tag3') OR (tags ? 'tag4')
-      builder = builder.where((qb) => {
-        for (const subTags of conditions) {
-          // OR between every conditions items (subTags)
-          qb = qb.orWhere((qb) => {
+      builder = builder.where((eb) =>
+        // OR between every conditions items (subTags)
+        eb.or(
+          conditions.map((subTags) =>
             // AND between every subTags items (subTag)
-            for (const subTag of subTags) {
-              qb = qb.where(
-                sql`${ref('moderation_subject_status.tags')} ? ${subTag}`,
-              )
-            }
-            return qb
-          })
-        }
-        return qb
-      })
+            eb.and(
+              subTags.map(
+                (subTag) =>
+                  sql<boolean>`${ref('moderation_subject_status.tags')} ? ${subTag}`,
+              ),
+            ),
+          ),
+        ),
+      )
     }
 
     if (excludeTags?.length) {
-      builder = builder.where((qb) =>
-        qb
-          .where(
-            sql`NOT(${ref('moderation_subject_status.tags')} ?| array[${sql.join(excludeTags)}]::TEXT[])`,
-          )
-          .orWhere('tags', 'is', null),
-      )
-    }
-
-    if (minAccountSuspendCount != null && minAccountSuspendCount > 0) {
-      builder = builder.where(
-        'account_events_stats.suspendCount',
-        '>=',
-        minAccountSuspendCount,
-      )
-    }
-
-    if (minTakendownRecordsCount != null && minTakendownRecordsCount > 0) {
-      builder = builder.where(
-        'account_record_status_stats.takendownCount',
-        '>=',
-        minTakendownRecordsCount,
-      )
-    }
-
-    if (minReportedRecordsCount != null && minReportedRecordsCount > 0) {
-      builder = builder.where(
-        'account_record_events_stats.reportedCount',
-        '>=',
-        minReportedRecordsCount,
+      builder = builder.where((eb) =>
+        eb.or([
+          sql<boolean>`NOT(${ref('moderation_subject_status.tags')} ?| array[${sql.join(excludeTags)}]::TEXT[])`,
+          eb('tags', 'is', null),
+        ]),
       )
     }
 
@@ -1326,14 +1517,15 @@ export class ModerationService {
       )
     }
 
+    const effectiveSortField =
+      sortField === 'reportedRecordsCount' ||
+      sortField === 'takendownRecordsCount'
+        ? 'lastReportedAt'
+        : sortField
     const keyset = new StatusKeyset(
-      sortField === 'reportedRecordsCount'
-        ? ref(`account_record_events_stats.reportedCount`)
-        : sortField === 'takendownRecordsCount'
-          ? ref(`account_record_status_stats.takendownCount`)
-          : sortField === 'priorityScore'
-            ? ref(`moderation_subject_status.priorityScore`)
-            : ref(`moderation_subject_status.${sortField}`),
+      effectiveSortField === 'priorityScore'
+        ? ref('moderation_subject_status.priorityScore')
+        : ref(`moderation_subject_status.${effectiveSortField}`),
       ref('moderation_subject_status.id'),
     )
     const paginatedBuilder = paginate(builder, {
@@ -1344,7 +1536,10 @@ export class ModerationService {
       tryIndex: true,
       nullsLast: true,
     })
-    const results = await paginatedBuilder.execute()
+    const results = await paginatedBuilder.execute({
+      signal,
+      inflightQueryAbortStrategy: 'cancel query',
+    })
 
     const infos = await this.views.getAccoutInfosByDid(
       results.map((r) => r.did),
@@ -1362,10 +1557,12 @@ export class ModerationService {
   async getStatus(
     subject: ModSubject,
   ): Promise<ModerationSubjectStatusRow | null> {
+    const identifier = getStatusIdentifierFromEvent(subject.info())
     const result = await this.db.db
       .selectFrom('moderation_subject_status')
-      .where('did', '=', subject.did)
-      .where('recordPath', '=', subject.recordPath ?? '')
+      .where('did', '=', identifier.did)
+      .where('recordPath', '=', identifier.recordPath)
+      .where('convoId', '=', identifier.convoId)
       .selectAll()
       .executeTakeFirst()
     return result ?? null
@@ -1373,12 +1570,27 @@ export class ModerationService {
 
   // This is used to check if the reporter of an incoming report is muted from reporting
   // so we want to make sure this look up is as fast as possible
-  async isReportingMutedForSubject(did: string) {
+  async isReportingMutedForSubject(did: DidString) {
     const result = await this.db.db
       .selectFrom('moderation_subject_status')
       .where('did', '=', did)
       .where('recordPath', '=', '')
-      .where('muteReportingUntil', '>', new Date().toISOString())
+      .where('convoId', '=', '')
+      .where('muteReportingUntil', '>', currentDatetimeString())
+      .select(sql`true`.as('status'))
+      .executeTakeFirst()
+
+    return !!result
+  }
+
+  // Check if a subject (the account being reported) has an active mute
+  async isSubjectMuted(did: DidString) {
+    const result = await this.db.db
+      .selectFrom('moderation_subject_status')
+      .where('did', '=', did)
+      .where('recordPath', '=', '')
+      .where('convoId', '=', '')
+      .where('muteUntil', '>', currentDatetimeString())
       .select(sql`true`.as('status'))
       .executeTakeFirst()
 
@@ -1386,14 +1598,14 @@ export class ModerationService {
   }
 
   async formatAndCreateLabels(
-    uri: string,
+    uri: UriString,
     cid: string | null,
     labels: { create?: string[]; negate?: string[] },
     durationInHours?: number,
-  ): Promise<Label[]> {
+  ): Promise<com.atproto.label.defs.Label[]> {
     const exp =
       durationInHours !== undefined
-        ? addHoursToDate(durationInHours).toISOString()
+        ? toDatetimeString(addHoursToDate(durationInHours))
         : undefined
     const { create = [], negate = [] } = labels
     const toCreate = create.map((val) => ({
@@ -1402,7 +1614,7 @@ export class ModerationService {
       cid: cid ?? undefined,
       val,
       exp,
-      cts: new Date().toISOString(),
+      cts: currentDatetimeString(),
     }))
     const toNegate = negate.map((val) => ({
       src: this.cfg.service.did,
@@ -1410,13 +1622,15 @@ export class ModerationService {
       cid: cid ?? undefined,
       val,
       neg: true,
-      cts: new Date().toISOString(),
+      cts: currentDatetimeString(),
     }))
     const formatted = [...toCreate, ...toNegate]
     return this.createLabels(formatted)
   }
 
-  async createLabels(labels: Label[]): Promise<Label[]> {
+  async createLabels(
+    labels: com.atproto.label.defs.Label[],
+  ): Promise<com.atproto.label.defs.Label[]> {
     if (labels.length < 1) return []
     const signedLabels = await Promise.all(
       labels.map((l) => signLabel(l, this.signingKey)),
@@ -1445,223 +1659,101 @@ export class ModerationService {
 
   async sendEmail(opts: {
     content: string
-    recipientDid: string
+    recipientDid: DidString
     subject: string
   }) {
     const { subject, content, recipientDid } = opts
-    const { agent: pdsAgent, url } = await getPdsAgentForRepo(
+    const { client: pdsClient, url } = await getPdsClientForRepo(
       this.idResolver,
       recipientDid,
       this.cfg.service.devMode,
     )
-    if (!pdsAgent) {
+    if (!pdsClient) {
       throw new InvalidRequestError('Invalid pds service in DID doc')
     }
-    const { data: serverInfo } =
-      await pdsAgent.com.atproto.server.describeServer()
+    const serverInfo = await pdsClient.call(com.atproto.server.describeServer)
     if (serverInfo.did !== `did:web:${url.hostname}`) {
       // @TODO do bidirectional check once implemented. in the meantime,
       // matching did to hostname we're talking to is pretty good.
       throw new InvalidRequestError('Invalid pds service in DID doc')
     }
-    const { data: delivery } = await pdsAgent.com.atproto.admin.sendEmail(
+    const delivery = await pdsClient.call(
+      com.atproto.admin.sendEmail,
       {
         subject,
         content,
         recipientDid,
         senderDid: this.cfg.service.did,
       },
-      {
-        encoding: 'application/json',
-        ...(await this.createAuthHeaders(
-          serverInfo.did,
-          ids.ComAtprotoAdminSendEmail,
-        )),
-      },
+      await this.createAuthHeaders(
+        serverInfo.did,
+        com.atproto.admin.sendEmail.$lxm,
+      ),
     )
     if (!delivery.sent) {
       throw new InvalidRequestError('Email was accepted but not sent')
     }
   }
 
-  async buildModerationQuery(
-    subjectType: 'account' | 'record',
-    createdByDids: string[],
-    isActionQuery: boolean,
-  ): Promise<(Partial<ReporterStatsResult> & { did: string })[]> {
-    if (!createdByDids.length) return []
+  async getReporterStats(
+    dids?: DidString[],
+    signal?: AbortSignal,
+  ): Promise<ReporterStats[]> {
+    if (!dids?.length) return []
 
-    const actionTypes = [
-      'tools.ozone.moderation.defs#modEventTakedown',
-      'tools.ozone.moderation.defs#modEventLabel',
-    ] as const
+    const since = toDatetimeString(
+      Date.now() - this.cfg.stats.reporterWindowDays * DAY,
+    )
+    const takedown = sql.lit(tools.ozone.moderation.defs.modEventTakedown.$type)
+    const label = sql.lit(tools.ozone.moderation.defs.modEventLabel.$type)
 
-    const countAll = () => {
-      return sql<number>`COUNT(*)`
-    }
-    const countAllDistinctBy = (ref: RawBuilder) => {
-      return sql<number>`COUNT(DISTINCT ${ref})`
-    }
-    const countTakedownsDistinctBy = (ref: RawBuilder) => {
-      return sql<number>`COUNT(DISTINCT ${ref}) FILTER (
-        WHERE actions."action" = 'tools.ozone.moderation.defs#modEventTakedown'
-      )`
-    }
-    const countLabelsDistinctBy = (ref: RawBuilder) => {
-      return sql<number>`COUNT(DISTINCT ${ref}) FILTER (
-        WHERE actions."action" = 'tools.ozone.moderation.defs#modEventLabel'
-      )`
-    }
-
-    const query = this.db.db
-      .selectFrom('moderation_event as reports')
-      .where(
-        'reports.action',
-        '=',
-        'tools.ozone.moderation.defs#modEventReport',
+    const { rows } = await sql<ReporterStats>`
+      WITH reports AS MATERIALIZED (
+        SELECT r."reporterDid" AS reporter, r.did, r."recordPath", r."actionEventIds"
+        FROM report r
+        WHERE r."reporterDid" IN (${sql.join(dids)})
+          AND r."createdAt" >= ${since}
+          AND r."reportType" <> ${sql.lit(tools.ozone.report.defs.ReasonAppeal)}
+      ), subjects AS (
+        SELECT reporter, did, "recordPath", count(*) AS "reportCount"
+        FROM reports
+        GROUP BY reporter, did, "recordPath"
+      ), linked_actions AS MATERIALIZED (
+        SELECT DISTINCT reporter, did, "recordPath",
+          jsonb_array_elements_text("actionEventIds")::integer AS "actionEventId"
+        FROM reports
+      ), outcomes AS (
+        SELECT l.reporter, l.did, l."recordPath",
+          bool_or(a.action = ${takedown}) AS takendown,
+          bool_or(a.action = ${label}) AS labeled
+        FROM linked_actions l
+        -- @NOTE LIMIT keeps event lookups on the primary key even when JSON
+        -- array cardinality estimates would favor scanning the event table.
+        JOIN LATERAL (
+          SELECT action FROM moderation_event WHERE id = l."actionEventId" LIMIT 1
+        ) a ON true
+        GROUP BY l.reporter, l.did, l."recordPath"
       )
-      .where(
-        'reports.subjectUri',
-        subjectType === 'account' ? 'is' : 'is not',
-        null,
-      )
-      .where('reports.createdBy', 'in', createdByDids)
-      .select(['reports.createdBy as did'])
-
-    if (!isActionQuery) {
-      if (subjectType === 'account') {
-        return query
-          .select([
-            () => countAll().as('accountReportCount'),
-            (eb) =>
-              countAllDistinctBy(eb.ref('reports.subjectDid')).as(
-                'reportedAccountCount',
-              ),
-          ])
-          .groupBy('reports.createdBy')
-          .execute()
-      } else {
-        return query
-          .select([
-            () => countAll().as('recordReportCount'),
-            (eb) =>
-              countAllDistinctBy(eb.ref('reports.subjectUri')).as(
-                'reportedRecordCount',
-              ),
-          ])
-          .groupBy('reports.createdBy')
-          .execute()
-      }
-    }
-
-    if (subjectType === 'account') {
-      return query
-        .leftJoin('moderation_event as actions', (join) =>
-          join
-            .onRef('actions.subjectDid', '=', 'reports.subjectDid')
-            .on('actions.subjectUri', 'is', null)
-            .onRef('actions.createdAt', '>', 'reports.createdAt')
-            .on('actions.action', 'in', actionTypes),
-        )
-        .select([
-          (eb) =>
-            countTakedownsDistinctBy(eb.ref('actions.subjectDid')).as(
-              'takendownAccountCount',
-            ),
-          (eb) =>
-            countLabelsDistinctBy(eb.ref('actions.subjectDid')).as(
-              'labeledAccountCount',
-            ),
-        ])
-        .groupBy('reports.createdBy')
-        .execute()
-    } else {
-      return query
-        .leftJoin('moderation_event as actions', (join) =>
-          join
-            .onRef('actions.subjectDid', '=', 'reports.subjectDid')
-            .onRef('actions.subjectUri', '=', 'reports.subjectUri')
-            .onRef('actions.createdAt', '>', 'reports.createdAt')
-            .on('actions.action', 'in', actionTypes),
-        )
-        .select([
-          (eb) =>
-            countTakedownsDistinctBy(eb.ref('actions.subjectUri')).as(
-              'takendownRecordCount',
-            ),
-          (eb) =>
-            countLabelsDistinctBy(eb.ref('actions.subjectUri')).as(
-              'labeledRecordCount',
-            ),
-        ])
-        .groupBy('reports.createdBy')
-        .execute()
-    }
+      SELECT s.reporter AS did,
+        coalesce(sum(s."reportCount") FILTER (WHERE s."recordPath" = ''), 0)::bigint AS "accountReportCount",
+        coalesce(sum(s."reportCount") FILTER (WHERE s."recordPath" <> ''), 0)::bigint AS "recordReportCount",
+        count(*) FILTER (WHERE s."recordPath" = '') AS "reportedAccountCount",
+        count(*) FILTER (WHERE s."recordPath" <> '') AS "reportedRecordCount",
+        count(*) FILTER (WHERE s."recordPath" = '' AND o.takendown) AS "takendownAccountCount",
+        count(*) FILTER (WHERE s."recordPath" <> '' AND o.takendown) AS "takendownRecordCount",
+        count(*) FILTER (WHERE s."recordPath" = '' AND o.labeled) AS "labeledAccountCount",
+        count(*) FILTER (WHERE s."recordPath" <> '' AND o.labeled) AS "labeledRecordCount"
+      FROM subjects s
+      LEFT JOIN outcomes o USING (reporter, did, "recordPath")
+      GROUP BY s.reporter
+    `.execute(this.db.db, {
+      signal,
+      inflightQueryAbortStrategy: 'cancel query',
+    })
+    return rows
   }
 
-  async getReporterStats(dids: string[]) {
-    const [accountReports, recordReports, accountActions, recordActions] =
-      await Promise.all([
-        this.buildModerationQuery('account', dids, false),
-        this.buildModerationQuery('record', dids, false),
-        this.buildModerationQuery('account', dids, true),
-        this.buildModerationQuery('record', dids, true),
-      ])
-
-    // Create a map to hold the aggregated stats for each `did`
-    const statsMap = new Map<string, ReporterStats>()
-
-    // Helper function to ensure a `did` entry exists in the map
-    const ensureDidEntry = (did: string) => {
-      if (!statsMap.has(did)) {
-        statsMap.set(did, {
-          did,
-          accountReportCount: 0,
-          recordReportCount: 0,
-          reportedAccountCount: 0,
-          reportedRecordCount: 0,
-          takendownAccountCount: 0,
-          takendownRecordCount: 0,
-          labeledAccountCount: 0,
-          labeledRecordCount: 0,
-        })
-      }
-      return statsMap.get(did)!
-    }
-
-    // Merge accountReports
-    for (const report of accountReports) {
-      const entry = ensureDidEntry(report.did)
-      entry.accountReportCount = report.accountReportCount ?? 0
-      entry.reportedAccountCount = report.reportedAccountCount ?? 0
-    }
-
-    // Merge recordReports
-    for (const report of recordReports) {
-      const entry = ensureDidEntry(report.did)
-      entry.recordReportCount = report.recordReportCount ?? 0
-      entry.reportedRecordCount = report.reportedRecordCount ?? 0
-    }
-
-    // Merge accountActions
-    for (const action of accountActions) {
-      const entry = ensureDidEntry(action.did)
-      entry.takendownAccountCount = action.takendownAccountCount ?? 0
-      entry.labeledAccountCount = action.labeledAccountCount ?? 0
-    }
-
-    // Merge recordActions
-    for (const action of recordActions) {
-      const entry = ensureDidEntry(action.did)
-      entry.takendownRecordCount = action.takendownRecordCount ?? 0
-      entry.labeledRecordCount = action.labeledRecordCount ?? 0
-    }
-
-    // Convert map values to an array and return
-    return Array.from(statsMap.values())
-  }
-
-  async getAccountTimeline(did: string) {
+  async getAccountTimeline(did: DidString) {
     const { ref } = this.db.db.dynamic
     // Without the subquery approach, pg tries to do the sort operation first which can be super expensive when a subjectDid has too many entries
     const result = await this.db.db
@@ -1703,8 +1795,12 @@ export const TAKEDOWN_LABEL = '!takedown'
 export const SUSPEND_LABEL = '!suspend'
 
 export type TakedownSubjects = {
-  did: string
-  subjects: (RepoRef | RepoBlobRef | StrongRef)[]
+  did: DidString
+  subjects: (
+    | com.atproto.admin.defs.RepoRef
+    | com.atproto.admin.defs.RepoBlobRef
+    | com.atproto.repo.strongRef.Main
+  )[]
 }
 
 export type ReversalSubject = {

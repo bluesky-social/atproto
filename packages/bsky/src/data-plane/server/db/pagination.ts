@@ -1,7 +1,7 @@
-import { sql } from 'kysely'
+import { type SqlBool, sql } from 'kysely'
 import { ensureValidRecordKey } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { AnyQb, DbRef } from './util'
+import type { AnyQb, DbRef } from './util.js'
 
 type KeysetCursor = { primary: string; secondary: string }
 type KeysetLabeledResult = {
@@ -36,6 +36,19 @@ export abstract class GenericKeyset<R, LR extends KeysetLabeledResult> {
     if (!result) return
     return this.pack(this.labelResult(result))
   }
+  page<Result extends R>(
+    results: Result[],
+    limit: number,
+  ): { items: Result[]; cursor?: string } {
+    const items = results.slice(0, limit)
+    return {
+      items,
+      cursor:
+        results.length > limit && items.length
+          ? this.packFromResult(items[items.length - 1])
+          : undefined,
+    }
+  }
   pack(labeled?: LR): string | undefined {
     if (!labeled) return
     const cursor = this.labeledResultToCursor(labeled)
@@ -67,17 +80,29 @@ export abstract class GenericKeyset<R, LR extends KeysetLabeledResult> {
     if (tryIndex) {
       // The tryIndex param will likely disappear and become the default implementation: here for now for gradual rollout query-by-query.
       if (direction === 'asc') {
-        return sql`((${this.primary}, ${this.secondary}) > (${labeled.primary}, ${labeled.secondary}))`
+        return sql<SqlBool>`((${this.primary}, ${this.secondary}) > (${labeled.primary}, ${labeled.secondary}))`
       } else {
-        return sql`((${this.primary}, ${this.secondary}) < (${labeled.primary}, ${labeled.secondary}))`
+        return sql<SqlBool>`((${this.primary}, ${this.secondary}) < (${labeled.primary}, ${labeled.secondary}))`
       }
     } else {
       // @NOTE this implementation can struggle to use an index on (primary, secondary) for pagination due to the "or" usage.
       if (direction === 'asc') {
-        return sql`((${this.primary} > ${labeled.primary}) or (${this.primary} = ${labeled.primary} and ${this.secondary} > ${labeled.secondary}))`
+        return sql<SqlBool>`((${this.primary} > ${labeled.primary}) or (${this.primary} = ${labeled.primary} and ${this.secondary} > ${labeled.secondary}))`
       } else {
-        return sql`((${this.primary} < ${labeled.primary}) or (${this.primary} = ${labeled.primary} and ${this.secondary} < ${labeled.secondary}))`
+        return sql<SqlBool>`((${this.primary} < ${labeled.primary}) or (${this.primary} = ${labeled.primary} and ${this.secondary} < ${labeled.secondary}))`
       }
+    }
+  }
+  /**
+   * Exclusive bound at the end of the range the cursor walks towards: for
+   * `desc`, only rows above it, with each cursor decreasing towards it.
+   */
+  getSinceSql(labeled?: LR, direction?: 'asc' | 'desc') {
+    if (labeled === undefined) return
+    if (direction === 'asc') {
+      return sql<SqlBool>`((${this.primary}, ${this.secondary}) < (${labeled.primary}, ${labeled.secondary}))`
+    } else {
+      return sql<SqlBool>`((${this.primary}, ${this.secondary}) > (${labeled.primary}, ${labeled.secondary}))`
     }
   }
   paginate<QB extends AnyQb>(
@@ -85,20 +110,29 @@ export abstract class GenericKeyset<R, LR extends KeysetLabeledResult> {
     opts: {
       limit?: number
       cursor?: string
+      since?: string
       direction?: 'asc' | 'desc'
       tryIndex?: boolean
       // By default, pg does nullsFirst
       nullsLast?: boolean
     },
   ): QB {
-    const { limit, cursor, direction = 'desc', tryIndex, nullsLast } = opts
+    const {
+      limit,
+      cursor,
+      since,
+      direction = 'desc',
+      tryIndex,
+      nullsLast,
+    } = opts
     const keysetSql = this.getSql(this.unpack(cursor), direction, tryIndex)
+    const sinceSql = this.getSinceSql(this.unpack(since), direction)
     return qb
-      .if(!!limit, (q) => q.limit(limit as number))
-      .if(!nullsLast, (q) =>
+      .$if(!!limit, (q) => q.limit((limit as number) + 1))
+      .$if(!nullsLast, (q) =>
         q.orderBy(this.primary, direction).orderBy(this.secondary, direction),
       )
-      .if(!!nullsLast, (q) =>
+      .$if(!!nullsLast, (q) =>
         q
           .orderBy(
             direction === 'asc'
@@ -111,7 +145,8 @@ export abstract class GenericKeyset<R, LR extends KeysetLabeledResult> {
               : sql`${this.secondary} desc nulls last`,
           ),
       )
-      .if(!!keysetSql, (qb) => (keysetSql ? qb.where(keysetSql) : qb)) as QB
+      .$if(!!keysetSql, (qb) => (keysetSql ? qb.where(keysetSql) : qb))
+      .$if(!!sinceSql, (qb) => (sinceSql ? qb.where(sinceSql) : qb)) as QB
   }
 }
 
@@ -172,6 +207,7 @@ export const paginate = <
   opts: {
     limit?: number
     cursor?: string
+    since?: string
     direction?: 'asc' | 'desc'
     keyset: K
     tryIndex?: boolean
@@ -203,6 +239,19 @@ export abstract class GenericSingleKey<R, LR extends SingleKeyLabeledResult> {
     if (!result) return
     return this.pack(this.labelResult(result))
   }
+  page<Result extends R>(
+    results: Result[],
+    limit: number,
+  ): { items: Result[]; cursor?: string } {
+    const items = results.slice(0, limit)
+    return {
+      items,
+      cursor:
+        results.length > limit && items.length
+          ? this.packFromResult(items[items.length - 1])
+          : undefined,
+    }
+  }
   pack(labeled?: LR): string | undefined {
     if (!labeled) return
     const cursor = this.labeledResultToCursor(labeled)
@@ -231,9 +280,9 @@ export abstract class GenericSingleKey<R, LR extends SingleKeyLabeledResult> {
   getSql(labeled?: LR, direction?: 'asc' | 'desc') {
     if (labeled === undefined) return
     if (direction === 'asc') {
-      return sql`${this.primary} > ${labeled.primary}`
+      return sql<SqlBool>`${this.primary} > ${labeled.primary}`
     }
-    return sql`${this.primary} < ${labeled.primary}`
+    return sql<SqlBool>`${this.primary} < ${labeled.primary}`
   }
   paginate<QB extends AnyQb>(
     qb: QB,
@@ -248,16 +297,16 @@ export abstract class GenericSingleKey<R, LR extends SingleKeyLabeledResult> {
     const { limit, cursor, direction = 'desc', nullsLast } = opts
     const keySql = this.getSql(this.unpack(cursor), direction)
     return qb
-      .if(!!limit, (q) => q.limit(limit as number))
-      .if(!nullsLast, (q) => q.orderBy(this.primary, direction))
-      .if(!!nullsLast, (q) =>
+      .$if(!!limit, (q) => q.limit((limit as number) + 1))
+      .$if(!nullsLast, (q) => q.orderBy(this.primary, direction))
+      .$if(!!nullsLast, (q) =>
         q.orderBy(
           direction === 'asc'
             ? sql`${this.primary} asc nulls last`
             : sql`${this.primary} desc nulls last`,
         ),
       )
-      .if(!!keySql, (qb) => (keySql ? qb.where(keySql) : qb)) as QB
+      .$if(!!keySql, (qb) => (keySql ? qb.where(keySql) : qb)) as QB
   }
 }
 

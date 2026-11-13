@@ -1,35 +1,42 @@
-import { Duplex, Transform, Writable } from 'node:stream'
+import { type Duplex, Transform, type Writable } from 'node:stream'
 import { pipeline } from 'node:stream/promises'
 import createError, { isHttpError } from 'http-errors'
-import { CID } from 'multiformats/cid'
-import { Dispatcher } from 'undici'
+import type { Dispatcher } from 'undici'
 import {
   VerifyCidError,
   VerifyCidTransform,
   createDecoders,
 } from '@atproto/common'
-import { AtprotoDid, isAtprotoDid } from '@atproto/did'
+import { type AtprotoDid, isAtprotoDid } from '@atproto/did'
+import type { Cid } from '@atproto/lex-data'
 import {
   ACCEPT_ENCODING_COMPRESSED,
   ACCEPT_ENCODING_UNCOMPRESSED,
   buildProxiedContentEncoding,
   formatAcceptHeader,
 } from '@atproto-labs/xrpc-utils'
-import { ServerConfig } from '../config'
-import { AppContext } from '../context'
+import type { ServerConfig } from '../config.js'
+import type { AppContext } from '../context.js'
 import {
   Code,
-  DataPlaneClient,
+  type DataPlaneClient,
   getServiceEndpoint,
   isDataplaneError,
   unpackIdentityServices,
-} from '../data-plane'
-import { parseCid } from '../hydration/util'
-import { httpLogger as log } from '../logger'
-import { Middleware, proxyResponseHeaders, responseSignal } from '../util/http'
-import { BSKY_USER_AGENT } from './util'
+} from '../data-plane/index.js'
+import { parseCid } from '../hydration/util.js'
+import { httpLogger as log } from '../logger.js'
+import {
+  type Middleware,
+  proxyResponseHeaders,
+  responseSignal,
+} from '../util/http.js'
+import { BSKY_USER_AGENT } from './util.js'
 
 export function createMiddleware(ctx: AppContext): Middleware {
+  // @TODO this should be from configuration
+  const maxSize = 100 * 1024 * 1024 // 100 MB
+
   return async (req, res, next) => {
     if (req.method !== 'GET' && req.method !== 'HEAD') return next()
     if (!req.url?.startsWith('/blob/')) return next()
@@ -55,7 +62,7 @@ export function createMiddleware(ctx: AppContext): Middleware {
 
       await streamBlob(ctx, streamOptions, (upstream, { cid, did, url }) => {
         const encoding = upstream.headers['content-encoding']
-        const verifier = createCidVerifier(cid, encoding)
+        const verifier = createCidVerifier(cid, encoding, maxSize)
 
         const logError = (err: unknown) => {
           log.warn(
@@ -159,7 +166,7 @@ export type StreamBlobFactory = (
   info: {
     url: URL
     did: AtprotoDid
-    cid: CID
+    cid: Cid
   },
 ) => Writable
 
@@ -193,7 +200,6 @@ export async function streamBlob(
         path: url.pathname + url.search,
         headers,
         signal: options.signal,
-        maxRedirections: 10,
       },
       (upstream) => {
         headersReceived = true
@@ -244,7 +250,7 @@ function parseBlobParams(params: { cid: string; did: string }) {
 async function getBlobUrl(
   dataplane: DataPlaneClient,
   did: string,
-  cid: CID,
+  cid: Cid,
 ): Promise<URL> {
   const pds = await getBlobPds(dataplane, did, cid)
 
@@ -258,7 +264,7 @@ async function getBlobUrl(
 async function getBlobPds(
   dataplane: DataPlaneClient,
   did: string,
-  cid: CID,
+  cid: Cid,
 ): Promise<string> {
   const [identity, { takenDown }] = await Promise.all([
     dataplane.getIdentityByDid({ did }).catch((err) => {
@@ -321,7 +327,11 @@ function getBlobHeaders(
  * If you need the un-compressed data, you should use a decompress + verify
  * pipeline instead.
  */
-function createCidVerifier(cid: CID, encoding?: string | string[]): Duplex {
+function createCidVerifier(
+  cid: Cid,
+  encoding?: string | string[],
+  maxSize?: number,
+): Duplex {
   // If the upstream content is compressed, we do not want to return a
   // de-compressed stream here. Indeed, the "compression" middleware will
   // compress the response before it is sent downstream, if it is not already
@@ -336,12 +346,11 @@ function createCidVerifier(cid: CID, encoding?: string | string[]): Duplex {
   // will be used to decompress & verify the CID (discarding de-compressed
   // data).
 
-  const decoders = createDecoders(encoding)
+  const decoders = createDecoders(encoding, {
+    maxSize,
+    maxSizeError: () => createError(400, 'Blob too large'),
+  })
   const verifier = new VerifyCidTransform(cid)
-
-  // Optimization: If the content is not compressed, we don't need to "tee" the
-  // stream, we can use the verifier as simple passthrough.
-  if (!decoders.length) return verifier
 
   const pipelineController = new AbortController()
   const pipelineStreams: Duplex[] = [...decoders, verifier]
@@ -366,7 +375,7 @@ function createCidVerifier(cid: CID, encoding?: string | string[]): Duplex {
     },
   )
 
-  // We don't care about the un-compressed data, we only use the verifier to
+  // We don't care about the (un-compressed) data, we only use the verifier to
   // detect any error through the pipelinePromise. We still need to pass the
   // verifier into flowing mode to ensure that the pipelinePromise resolves.
   verifier.resume()

@@ -1,6 +1,6 @@
 import { Project } from 'ts-morph'
 import { describe, expect, it } from 'vitest'
-import { LexiconDocument, LexiconIndexer } from '@atproto/lex-document'
+import type { LexiconDocument, LexiconIndexer } from '@atproto/lex-document'
 import { RefResolver } from './ref-resolver.js'
 
 class DummyIndexer implements LexiconIndexer, AsyncIterable<LexiconDocument> {

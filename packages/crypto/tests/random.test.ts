@@ -1,4 +1,4 @@
-import { randomIntFromSeed } from '../src'
+import { randomIntFromSeed } from '../src/index.js'
 
 describe('randomIntFromSeed()', () => {
   it('has good distribution for low bucket count.', async () => {

@@ -1,20 +1,25 @@
-import { AtpAgent } from '@atproto/api'
 import { mapDefined, noUndefinedVals } from '@atproto/common'
-import { HeadersMap } from '@atproto/xrpc'
-import { InvalidRequestError } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context'
-import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/graph/getSuggestedFollowsByActor'
+import type { Client } from '@atproto/lex-client'
+import type { DidString } from '@atproto/lex-schema'
 import {
-  HydrationFnInput,
-  PresentationFnInput,
-  RulesFnInput,
-  SkeletonFnInput,
+  type Headers as HeadersMap,
+  InternalServerError,
+  InvalidRequestError,
+  type Server,
+} from '@atproto/xrpc-server'
+import type { AppContext } from '../../../../context.js'
+import type { HydrateCtx, Hydrator } from '../../../../hydration/hydrator.js'
+import { app } from '../../../../lexicons/index.js'
+import {
+  type HydrationFnInput,
+  type PresentationFnInput,
+  type RulesFnInput,
+  type SkeletonFnInput,
   createPipeline,
-} from '../../../../pipeline'
-import { Views } from '../../../../views'
-import { resHeaders } from '../../../util'
+} from '../../../../pipeline.js'
+import { getAtprotoPassthroughHeaders } from '../../../../util/headers.js'
+import type { Views } from '../../../../views/index.js'
+import { resHeaders } from '../../../util.js'
 
 export default function (server: Server, ctx: AppContext) {
   const getSuggestedFollowsByActor = createPipeline(
@@ -23,31 +28,51 @@ export default function (server: Server, ctx: AppContext) {
     noBlocksOrMutes,
     presentation,
   )
-  server.app.bsky.graph.getSuggestedFollowsByActor({
-    auth: ctx.authVerifier.standard,
-    handler: async ({ auth, params, req }) => {
+  server.add(app.bsky.graph.getSuggestedFollowsByActor, {
+    auth: ctx.authVerifier.standardOptional,
+    handler: async ({ auth, params, req, signal }) => {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
-      const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
+      const hydrateCtx = await ctx.hydrator.createContext({
+        xrpcEndpoint: app.bsky.graph.getSuggestedFollowsByActor.$lxm,
+        labelers,
+        viewer,
+        features: ctx.featureGatesClient.scope(
+          ctx.featureGatesClient.parseUserContextFromHandler({
+            viewer,
+            req,
+          }),
+        ),
+      })
+
+      const useIris = hydrateCtx.features.checkGate(
+        hydrateCtx.features.Gate.SuggestedUsersIrisEnable,
+      )
+      const client = useIris ? ctx.irisClient : ctx.suggestionsClient
+
+      if (!client) {
+        return {
+          encoding: 'application/json',
+          body: { suggestions: [] },
+          headers: resHeaders({ labelers: hydrateCtx.labelers }),
+        }
+      }
+
       const headers = noUndefinedVals({
         'accept-language': req.headers['accept-language'],
-        'x-bsky-topics': Array.isArray(req.headers['x-bsky-topics'])
-          ? req.headers['x-bsky-topics'].join(',')
-          : req.headers['x-bsky-topics'],
+        ...getAtprotoPassthroughHeaders(req),
       })
-      const { headers: resultHeaders, ...result } =
-        await getSuggestedFollowsByActor(
-          { ...params, hydrateCtx: hydrateCtx.copy({ viewer }), headers },
-          ctx,
-        )
-      const responseHeaders = noUndefinedVals({
-        'content-language': resultHeaders?.['content-language'],
-      })
+
+      const { contentLanguage, ...body } = await getSuggestedFollowsByActor(
+        { ...params, hydrateCtx, headers, signal },
+        ctx,
+      )
+
       return {
         encoding: 'application/json',
-        body: result,
+        body,
         headers: {
-          ...responseHeaders,
+          ...(contentLanguage ? { 'content-language': contentLanguage } : null),
           ...resHeaders({ labelers: hydrateCtx.labelers }),
         },
       }
@@ -55,38 +80,39 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
+const skeleton = async (
+  input: SkeletonFnInput<Context, Params>,
+): Promise<SkeletonState> => {
   const { params, ctx } = input
+
+  const useIris = params.hydrateCtx.features.checkGate(
+    params.hydrateCtx.features.Gate.SuggestedUsersIrisEnable,
+  )
+  const client = useIris ? ctx.irisClient : ctx.suggestionsClient
+
+  // handled above already, this branch should not be reached
+  if (!client) {
+    throw new InternalServerError('Suggestions service not configured')
+  }
+
   const [relativeToDid] = await ctx.hydrator.actor.getDids([params.actor])
   if (!relativeToDid) {
     throw new InvalidRequestError('Actor not found')
   }
 
-  if (ctx.suggestionsAgent) {
-    const res =
-      await ctx.suggestionsAgent.api.app.bsky.unspecced.getSuggestionsSkeleton(
-        {
-          viewer: params.hydrateCtx.viewer ?? undefined,
-          relativeToDid,
-        },
-        { headers: params.headers },
-      )
-    return {
-      isFallback: !res.data.relativeToDid,
-      suggestedDids: res.data.actors.map((a) => a.did),
-      recId: res.data.recId,
-      recIdStr: res.data.recIdStr,
-      headers: res.headers,
-    }
-  } else {
-    const { dids } = await ctx.hydrator.dataplane.getFollowSuggestions({
-      actorDid: params.hydrateCtx.viewer,
+  const res = await client.xrpc(app.bsky.unspecced.getSuggestionsSkeleton, {
+    params: {
+      viewer: params.hydrateCtx.viewer ?? undefined,
       relativeToDid,
-    })
-    return {
-      isFallback: true,
-      suggestedDids: dids,
-    }
+    },
+    headers: params.headers,
+    signal: params.signal,
+  })
+
+  return {
+    recIdStr: res.body.recIdStr,
+    suggestedDids: res.body.actors.map((a) => a.did),
+    contentLanguage: res.headers.get('content-language') ?? undefined,
   }
 }
 
@@ -95,7 +121,19 @@ const hydration = async (
 ) => {
   const { ctx, params, skeleton } = input
   const { suggestedDids } = skeleton
-  return ctx.hydrator.hydrateProfiles(suggestedDids, params.hydrateCtx)
+  if (
+    params.hydrateCtx.features.checkGate(
+      params.hydrateCtx.features.Gate.SuggestedUsersSocialProofEnable,
+    )
+  ) {
+    return ctx.hydrator.hydrateProfilesDetailed(
+      suggestedDids,
+      params.hydrateCtx,
+      { knownFollowersDids: suggestedDids, activitySubscriptions: true },
+    )
+  } else {
+    return ctx.hydrator.hydrateProfiles(suggestedDids, params.hydrateCtx)
+  }
 }
 
 const noBlocksOrMutes = (
@@ -114,34 +152,32 @@ const presentation = (
   input: PresentationFnInput<Context, Params, SkeletonState>,
 ) => {
   const { ctx, hydration, skeleton } = input
-  const { suggestedDids, headers } = skeleton
+  const { suggestedDids, contentLanguage } = skeleton
   const suggestions = mapDefined(suggestedDids, (did) =>
     ctx.views.profile(did, hydration),
   )
   return {
-    isFallback: skeleton.isFallback,
-    suggestions,
-    recId: skeleton.recId,
     recIdStr: skeleton.recIdStr,
-    headers,
+    contentLanguage,
+    suggestions,
   }
 }
 
 type Context = {
   hydrator: Hydrator
   views: Views
-  suggestionsAgent: AtpAgent | undefined
+  suggestionsClient: Client | undefined
+  irisClient: Client | undefined
 }
 
-type Params = QueryParams & {
-  hydrateCtx: HydrateCtx & { viewer: string }
+type Params = app.bsky.graph.getSuggestedFollowsByActor.$Params & {
+  hydrateCtx: HydrateCtx
   headers: HeadersMap
+  signal: AbortSignal
 }
 
 type SkeletonState = {
-  isFallback: boolean
-  suggestedDids: string[]
-  recId?: number
+  suggestedDids: DidString[]
   recIdStr?: string
-  headers?: HeadersMap
+  contentLanguage?: string
 }

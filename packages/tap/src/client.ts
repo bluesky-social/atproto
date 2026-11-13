@@ -1,7 +1,11 @@
-import { DidDocument, didDocument } from '@atproto/common'
-import { TapChannel, TapHandler, TapWebsocketOptions } from './channel'
-import { RepoInfo, repoInfoSchema } from './types'
-import { formatAdminAuthHeader } from './util'
+import { type DidDocument, didDocument } from '@atproto/common'
+import {
+  TapChannel,
+  type TapHandler,
+  type TapWebsocketOptions,
+} from './channel.js'
+import { type RepoInfo, repoInfoSchema } from './types.js'
+import { formatAdminAuthHeader } from './util.js'
 
 export interface TapConfig {
   adminPassword?: string

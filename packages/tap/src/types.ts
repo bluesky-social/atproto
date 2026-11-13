@@ -1,5 +1,6 @@
-import { LexMap, LexValue, l } from '@atproto/lex'
-import { DidString, HandleString, NsidString } from '@atproto/syntax'
+import type { LexMap, LexValue } from '@atproto/lex-data'
+import { l } from '@atproto/lex-schema'
+import type { DidString, HandleString, NsidString } from '@atproto/syntax'
 
 export const recordEventDataSchema = l.object({
   did: l.string({ format: 'did' }),
@@ -65,11 +66,7 @@ export type IdentityEvent = {
 }
 
 export type RepoStatus =
-  | 'active'
-  | 'takendown'
-  | 'suspended'
-  | 'deactivated'
-  | 'deleted'
+  'active' | 'takendown' | 'suspended' | 'deactivated' | 'deleted'
 
 export type TapEvent = IdentityEvent | RecordEvent
 

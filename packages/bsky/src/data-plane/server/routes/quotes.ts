@@ -1,7 +1,7 @@
-import { ServiceImpl } from '@connectrpc/connect'
-import { Service } from '../../../proto/bsky_connect'
-import { Database } from '../db'
-import { TimeCidKeyset, paginate } from '../db/pagination'
+import type { ServiceImpl } from '@connectrpc/connect'
+import type { Service } from '../../../proto/bsky_connect.js'
+import type { Database } from '../db/index.js'
+import { TimeCidKeyset, paginate } from '../db/pagination.js'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   async getQuotesBySubjectSorted(req) {
@@ -22,11 +22,11 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       keyset,
     })
 
-    const quotes = await builder.execute()
+    const page = keyset.page(await builder.execute(), limit)
 
     return {
-      uris: quotes.map((q) => q.uri),
-      cursor: keyset.packFromResult(quotes),
+      uris: page.items.map((q) => q.uri),
+      cursor: page.cursor,
     }
   },
 })

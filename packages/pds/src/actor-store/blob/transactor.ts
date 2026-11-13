@@ -1,30 +1,41 @@
-import crypto from 'node:crypto'
-import stream from 'node:stream'
-import bytes from 'bytes'
-import { fromStream as fileTypeFromStream } from 'file-type'
-import { CID } from 'multiformats/cid'
-import PQueue from 'p-queue'
+import assert from 'node:assert'
+import type stream from 'node:stream'
 import {
-  SECOND,
-  cloneStream,
-  sha256RawToCid,
-  streamSize,
-} from '@atproto/common'
-import { BlobRef } from '@atproto/lexicon'
-import { BlobNotFoundError, BlobStore, WriteOpAction } from '@atproto/repo'
-import { AtUri } from '@atproto/syntax'
+  type Duplex,
+  PassThrough,
+  type TransformCallback,
+  pipeline,
+} from 'node:stream'
+import {
+  type FileTypeOptions,
+  FileTypeParser,
+  type FileTypeResult,
+} from 'file-type'
+import PQueue from 'p-queue'
+import { fromStream } from 'strtok3'
+import { HashPassThrough, MaxSizeChecker, SECOND, Tee } from '@atproto/common'
+import {
+  type BlobRef,
+  type Cid,
+  type TypedBlobRef,
+  cidForRawHash,
+  getBlobCidString,
+  parseCid,
+} from '@atproto/lex-data'
+import { BlobNotFoundError, type BlobStore, WriteOpAction } from '@atproto/repo'
+import { type AtUri, currentDatetimeString } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { BackgroundQueue } from '../../background'
-import { StatusAttr } from '../../lexicon/types/com/atproto/admin/defs'
-import { blobStoreLogger as log } from '../../logger'
-import { PreparedBlobRef, PreparedWrite } from '../../repo/types'
-import { ActorDb, Blob as BlobTable } from '../db'
-import { BlobReader } from './reader'
+import type { BackgroundQueue } from '../../background.js'
+import type { com } from '../../lexicons/index.js'
+import { blobStoreLogger as log } from '../../logger.js'
+import type { PreparedWrite } from '../../repo/types.js'
+import type { ActorDb, Blob as BlobTable } from '../db/index.js'
+import { BlobReader } from './reader.js'
 
 export type BlobMetadata = {
   tempKey: string
   size: number
-  cid: CID
+  cid: Cid
   mimeType: string
 }
 
@@ -38,9 +49,9 @@ export class BlobTransactor extends BlobReader {
   }
 
   async insertBlobs(recordUri: string, blobs: Iterable<BlobRef>) {
-    const values = Array.from(blobs, (cid) => ({
+    const values = Array.from(blobs, (blob) => ({
       recordUri,
-      blobCid: cid.ref.toString(),
+      blobCid: getBlobCidString(blob),
     }))
 
     if (values.length) {
@@ -53,33 +64,55 @@ export class BlobTransactor extends BlobReader {
   }
 
   async uploadBlobAndGetMetadata(
-    userSuggestedMime: string,
     blobStream: stream.Readable,
+    fallbackMime: `${string}/${string}` = 'application/octet-stream',
+    maxSize = Infinity,
   ): Promise<BlobMetadata> {
-    const [tempKey, size, sha256, sniffedMime] = await Promise.all([
-      this.blobstore.putTemp(cloneStream(blobStream)),
-      streamSize(cloneStream(blobStream)),
-      sha256Stream(cloneStream(blobStream)),
-      mimeTypeFromStream(cloneStream(blobStream)),
-    ])
+    try {
+      const hashDuplex = new HashPassThrough('sha256')
+      const sizeDuplex = new MaxSizeChecker(maxSize)
+      const typeDuplex = new FileTypePassThrough()
 
-    const cid = sha256RawToCid(sha256)
-    const mimeType = sniffedMime || userSuggestedMime
+      // @NOTE a pipeline of duplex streams is used to ensure that backpressure
+      // is properly propagated to the input stream. using inputStream.pipe()
+      // with several destinations does **not** propagate backpressure, and
+      // **will** high memory consumption (hash and size duplexes consume the
+      // stream faster than the blobstore can process it).
+      const streams = [blobStream, hashDuplex, sizeDuplex, typeDuplex]
 
-    return {
-      tempKey,
-      size,
-      cid,
-      mimeType,
+      const blobStoreStream = pipeline(streams, (_err) => {
+        // errors will be propagated to the streams, and handled (rethrown) by
+        // the blobStore.
+      }) as Duplex // pipeline() returns the last stream
+
+      // Start the pipeline by reading its output
+      const tempKey = await this.blobstore.putTemp(blobStoreStream)
+
+      // Fool-proof against faulty blobstore implementations
+      assert(
+        streams.every((s) => s.readableEnded),
+        'blobstore did not fully consume the stream',
+      )
+
+      return {
+        tempKey,
+        size: sizeDuplex.totalSize,
+        cid: cidForRawHash(hashDuplex.digest),
+        mimeType: typeDuplex.fileTypeResult?.mime || fallbackMime,
+      }
+    } finally {
+      blobStream.destroy()
     }
   }
 
-  async trackUntetheredBlob(metadata: BlobMetadata) {
+  async trackUntetheredBlob(metadata: BlobMetadata): Promise<TypedBlobRef> {
     const { tempKey, size, cid, mimeType } = metadata
+    const cidStr = cid.toString()
+
     const found = await this.db.db
       .selectFrom('blob')
       .selectAll()
-      .where('cid', '=', cid.toString())
+      .where('cid', '=', cidStr)
       .executeTakeFirst()
     if (found?.takedownRef) {
       throw new InvalidRequestError('Blob has been takendown, cannot re-upload')
@@ -88,11 +121,11 @@ export class BlobTransactor extends BlobReader {
     await this.db.db
       .insertInto('blob')
       .values({
-        cid: cid.toString(),
+        cid: cidStr,
         mimeType,
         size,
         tempKey,
-        createdAt: new Date().toISOString(),
+        createdAt: currentDatetimeString(),
       })
       .onConflict((oc) =>
         oc
@@ -101,7 +134,13 @@ export class BlobTransactor extends BlobReader {
           .where('blob.tempKey', 'is not', null),
       )
       .execute()
-    return new BlobRef(cid, mimeType, size)
+
+    return {
+      $type: 'blob',
+      ref: cid,
+      mimeType,
+      size,
+    }
   }
 
   async processWriteBlobs(rev: string, writes: PreparedWrite[]) {
@@ -143,9 +182,12 @@ export class BlobTransactor extends BlobReader {
     }
   }
 
-  async updateBlobTakedownStatus(cid: CID, takedown: StatusAttr) {
+  async updateBlobTakedownStatus(
+    cid: Cid,
+    takedown: com.atproto.admin.defs.StatusAttr,
+  ) {
     const takedownRef = takedown.applied
-      ? takedown.ref ?? new Date().toISOString()
+      ? (takedown.ref ?? currentDatetimeString())
       : null
     await this.db.db
       .updateTable('blob')
@@ -199,7 +241,7 @@ export class BlobTransactor extends BlobReader {
 
     const newBlobCids = writes
       .filter((w) => isUpdate(w) || isCreate(w))
-      .flatMap((w) => w.blobs.map((b) => b.cid.toString()))
+      .flatMap((w) => w.blobs.map((b) => b.ref.toString()))
 
     const cidsToKeep = [
       ...newBlobCids,
@@ -220,7 +262,7 @@ export class BlobTransactor extends BlobReader {
       this.db.onCommit(() => {
         this.backgroundQueue.add(async () => {
           try {
-            const cids = cidsToDelete.map((cid) => CID.parse(cid))
+            const cids = cidsToDelete.map((cid) => parseCid(cid))
             await this.blobstore.deleteMany(cids)
           } catch (err) {
             log.error(
@@ -234,13 +276,13 @@ export class BlobTransactor extends BlobReader {
   }
 
   async verifyBlobAndMakePermanent(
-    blob: PreparedBlobRef,
+    blob: TypedBlobRef,
     signal?: AbortSignal,
   ): Promise<void> {
     const found = await this.db.db
       .selectFrom('blob')
       .select(['tempKey', 'size', 'mimeType'])
-      .where('cid', '=', blob.cid.toString())
+      .where('cid', '=', blob.ref.toString())
       .where('takedownRef', 'is', null)
       .executeTakeFirst()
 
@@ -248,7 +290,7 @@ export class BlobTransactor extends BlobReader {
 
     if (!found) {
       throw new InvalidRequestError(
-        `Could not find blob: ${blob.cid.toString()}`,
+        `Could not find blob: ${blob.ref.toString()}`,
         'BlobNotFound',
       )
     }
@@ -265,10 +307,10 @@ export class BlobTransactor extends BlobReader {
       // transaction.
 
       await this.blobstore
-        .makePermanent(found.tempKey, blob.cid)
+        .makePermanent(found.tempKey, blob.ref)
         .catch((err) => {
           log.error(
-            { err, cid: blob.cid.toString() },
+            { err, cid: blob.ref.toString() },
             'could not make blob permanent',
           )
 
@@ -285,24 +327,24 @@ export class BlobTransactor extends BlobReader {
     }
   }
 
-  async insertBlobMetadata(blob: PreparedBlobRef): Promise<void> {
+  async insertBlobMetadata(blob: TypedBlobRef): Promise<void> {
     await this.db.db
       .insertInto('blob')
       .values({
-        cid: blob.cid.toString(),
+        cid: blob.ref.toString(),
         mimeType: blob.mimeType,
         size: blob.size,
-        createdAt: new Date().toISOString(),
+        createdAt: currentDatetimeString(),
       })
       .onConflict((oc) => oc.doNothing())
       .execute()
   }
 
-  async associateBlob(blob: PreparedBlobRef, recordUri: AtUri): Promise<void> {
+  async associateBlob(blob: TypedBlobRef, recordUri: AtUri): Promise<void> {
     await this.db.db
       .insertInto('record_blob')
       .values({
-        blobCid: blob.cid.toString(),
+        blobCid: blob.ref.toString(),
         recordUri: recordUri.toString(),
       })
       .onConflict((oc) => oc.doNothing())
@@ -310,76 +352,84 @@ export class BlobTransactor extends BlobReader {
   }
 }
 
-export class CidNotFound extends Error {
-  cid: CID
-  constructor(cid: CID) {
-    super(`cid not found: ${cid.toString()}`)
-    this.cid = cid
-  }
-}
+// "file-type" does not provide a duplex implementation so we create one here
+class FileTypePassThrough extends Tee {
+  readonly fileTypePromise: Promise<FileTypeResult | undefined>
 
-async function sha256Stream(toHash: stream.Readable): Promise<Uint8Array> {
-  const hash = crypto.createHash('sha256')
-  try {
-    for await (const chunk of toHash) {
-      hash.write(chunk)
-    }
-  } catch (err) {
-    hash.end()
-    throw err
+  #fileTypeResult?: PromiseSettledResult<FileTypeResult | undefined>
+  get fileTypeResult(): FileTypeResult | undefined {
+    const result = this.#fileTypeResult
+    if (result) return result.status === 'fulfilled' ? result.value : undefined
+    throw new Error('FileTypePassThrough result is not yet available')
   }
-  hash.end()
-  return hash.read()
-}
 
-async function mimeTypeFromStream(
-  blobStream: stream.Readable,
-): Promise<string | undefined> {
-  const fileType = await fileTypeFromStream(blobStream)
-  blobStream.destroy()
-  return fileType?.mime
-}
+  constructor(options?: FileTypeOptions) {
+    const branch = new PassThrough()
+    super(branch)
 
-function acceptedMime(mime: string, accepted: string[]): boolean {
-  if (accepted.includes('*/*')) return true
-  const globs = accepted.filter((a) => a.endsWith('/*'))
-  for (const glob of globs) {
-    const [start] = glob.split('/')
-    if (mime.startsWith(`${start}/`)) {
-      return true
-    }
-  }
-  return accepted.includes(mime)
-}
+    const parser = new FileTypeParser(options)
 
-function verifyBlob(
-  blob: PreparedBlobRef,
-  found: Pick<BlobTable, 'size' | 'mimeType'>,
-) {
-  const throwInvalid = (msg: string, errName = 'InvalidBlob') => {
-    throw new InvalidRequestError(msg, errName)
-  }
-  if (blob.constraints.maxSize && found.size > blob.constraints.maxSize) {
-    throwInvalid(
-      `This file is too large. It is ${bytes.format(
-        found.size,
-      )} but the maximum size is ${bytes.format(blob.constraints.maxSize)}.`,
-      'BlobTooLarge',
+    // @NOTE file-type does not support NodeJS Readable and recommends wrapping
+    // into a web steam. We use strtok3 to convert the NodeJS Readable into a
+    // tokenizer, bypassing that limitation.
+    this.fileTypePromise = fromStream(branch)
+      .then((tokenizer) => parser.fromTokenizer(tokenizer))
+      // file-type won't destroy() the stream. We need to destroy to allow
+      // the Tee's main stream to flow freely.
+      .finally(() => branch.destroy())
+
+    // avoids unhandled rejections (might be awaited later)
+    this.fileTypePromise.then(
+      (value) => {
+        this.#fileTypeResult = { status: 'fulfilled', value }
+      },
+      (reason) => {
+        this.#fileTypeResult = { status: 'rejected', reason }
+      },
     )
   }
+
+  _final(cb: TransformCallback) {
+    // propagate the result promise to the final callback, so that the stream is
+    // not considered finished until the file type has been determined.
+    super._final((err) => {
+      this.fileTypePromise.then(
+        () => cb(err),
+        () => cb(err),
+      )
+    })
+  }
+
+  _destroy(err: Error | null, cb: (err?: Error | null) => void) {
+    // propagate the result promise to the destroy callback, so that the stream
+    // is not considered finished until the file type has been determined.
+    super._destroy(err, (err) => {
+      this.fileTypePromise.then(
+        () => cb(err),
+        () => cb(err),
+      )
+    })
+  }
+}
+
+/**
+ * Ensures that the blob referenced in the record matches the stored blob.
+ */
+function verifyBlob(
+  blob: TypedBlobRef,
+  found: Pick<BlobTable, 'size' | 'mimeType'>,
+) {
   if (blob.mimeType !== found.mimeType) {
-    throwInvalid(
+    throw new InvalidRequestError(
       `Referenced Mimetype does not match stored blob. Expected: ${found.mimeType}, Got: ${blob.mimeType}`,
       'InvalidMimeType',
     )
   }
-  if (
-    blob.constraints.accept &&
-    !acceptedMime(blob.mimeType, blob.constraints.accept)
-  ) {
-    throwInvalid(
-      `Wrong type of file. It is ${blob.mimeType} but it must match ${blob.constraints.accept}.`,
-      'InvalidMimeType',
+
+  if (blob.size !== found.size) {
+    throw new InvalidRequestError(
+      `Referenced Size does not match stored blob. Expected: ${found.size}, Got: ${blob.size}`,
+      'InvalidSize',
     )
   }
 }

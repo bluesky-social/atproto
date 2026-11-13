@@ -28,13 +28,13 @@ export type RAW_DATA_CODEC = typeof RAW_DATA_CODEC
 /**
  * Hash code that indicates that a CID uses SHA-256.
  */
-export const SHA256_HASH_CODE = sha256.code
+export const SHA256_HASH_CODE: typeof sha256.code = sha256.code
 export type SHA256_HASH_CODE = typeof SHA256_HASH_CODE
 
 /**
  * Hash code that indicates that a CID uses SHA-512.
  */
-export const SHA512_HASH_CODE = sha512.code
+export const SHA512_HASH_CODE: typeof sha512.code = sha512.code
 export type SHA512_HASH_CODE = typeof SHA512_HASH_CODE
 
 /**
@@ -87,6 +87,7 @@ declare module 'multiformats/cid' {
    * we update or swap out `multiformats`, `@atproto/lex-data` provides its own
    * stable {@link Cid} interface.
    */
+  // eslint-disable-next-line @typescript-eslint/no-empty-object-type
   interface CID {}
 }
 
@@ -387,9 +388,21 @@ export function decodeCid(
 }
 
 /**
+ * Maximum length of a CID string accepted by {@link parseCid}.
+ *
+ * The longest CID {@link parseCid} can legitimately produce (CIDv1 with a
+ * sha512 digest) is 110 characters in base32, 105 in base36 and 93 in
+ * base58btc. Longer inputs are rejected before decoding because the base36
+ * and base58btc decoders used by `multiformats` run in time quadratic in the
+ * input length, which lets a single large string block the event loop.
+ */
+export const MAX_CID_STRING_LENGTH = 128
+
+/**
  * Parses a CID string into a Cid object.
  *
- * @throws if the input is not a valid CID string.
+ * @throws if the input is not a valid CID string, or is longer than
+ * {@link MAX_CID_STRING_LENGTH}.
  */
 export function parseCid<TOptions extends CheckCidOptions>(
   input: string,
@@ -397,6 +410,11 @@ export function parseCid<TOptions extends CheckCidOptions>(
 ): InferCheckedCid<TOptions>
 export function parseCid(input: string, options?: CheckCidOptions): Cid
 export function parseCid(input: string, options?: CheckCidOptions): Cid {
+  if (input.length > MAX_CID_STRING_LENGTH) {
+    throw new Error(
+      `CID string too long (${input.length} > ${MAX_CID_STRING_LENGTH})`,
+    )
+  }
   const cid = CID.parse(input)
   return asCid(cid, options)
 }

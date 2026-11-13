@@ -1,4 +1,4 @@
-import { RecordRef, SeedClient } from '@atproto/dev-env'
+import type { RecordRef, SeedClient } from '@atproto/dev-env'
 
 export default async (sc: SeedClient, did, threads: Item[]) => {
   const refByItemId: Record<string, RecordRef> = {}

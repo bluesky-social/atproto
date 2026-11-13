@@ -1,42 +1,45 @@
-import { Selectable, sql } from 'kysely'
-import { CID } from 'multiformats/cid'
-import { AtpAgent, ComAtprotoSyncGetLatestCommit } from '@atproto/api'
+import { type Selectable, sql } from 'kysely'
 import { DAY, HOUR } from '@atproto/common'
-import { IdResolver, getPds } from '@atproto/identity'
-import { ValidationError } from '@atproto/lexicon'
+import { type IdResolver, getPds } from '@atproto/identity'
+import { xrpc, xrpcSafe } from '@atproto/lex-client'
+import { type Cid, isLexMap, parseCid } from '@atproto/lex-data'
+import { lexStringify } from '@atproto/lex-json'
+import { l } from '@atproto/lex-schema'
 import {
-  VerifiedRepo,
+  type VerifiedRepo,
   WriteOpAction,
   getAndParseRecord,
   readCarWithRoot,
   verifyRepo,
 } from '@atproto/repo'
-import { AtUri } from '@atproto/syntax'
-import { subLogger } from '../../../logger'
-import { retryXrpc } from '../../../util/retry'
-import { BackgroundQueue } from '../background'
-import { Database } from '../db'
-import { Actor } from '../db/tables/actor'
-import * as Block from './plugins/block'
-import * as ChatDeclaration from './plugins/chat-declaration'
-import * as FeedGenerator from './plugins/feed-generator'
-import * as Follow from './plugins/follow'
-import * as GermDeclaration from './plugins/germ-declaration'
-import * as Labeler from './plugins/labeler'
-import * as Like from './plugins/like'
-import * as List from './plugins/list'
-import * as ListBlock from './plugins/list-block'
-import * as ListItem from './plugins/list-item'
-import * as NotifDeclaration from './plugins/notif-declaration'
-import * as Post from './plugins/post'
-import * as Postgate from './plugins/post-gate'
-import * as Profile from './plugins/profile'
-import * as Repost from './plugins/repost'
-import * as StarterPack from './plugins/starter-pack'
-import * as Status from './plugins/status'
-import * as Threadgate from './plugins/thread-gate'
-import * as Verification from './plugins/verification'
-import { RecordProcessor } from './processor'
+import { AtUri, type DidString } from '@atproto/syntax'
+import { com } from '../../../lexicons/index.js'
+import { subLogger } from '../../../logger.js'
+import { retryXrpc } from '../../../util/retry.js'
+import type { BackgroundQueue } from '../background.js'
+import type { Database } from '../db/index.js'
+import type { Actor } from '../db/tables/actor.js'
+import * as Block from './plugins/block.js'
+import * as ChatDeclaration from './plugins/chat-declaration.js'
+import * as FeedGenerator from './plugins/feed-generator.js'
+import * as Follow from './plugins/follow.js'
+import * as GermDeclaration from './plugins/germ-declaration.js'
+import * as Labeler from './plugins/labeler.js'
+import * as Like from './plugins/like.js'
+import * as ListBlock from './plugins/list-block.js'
+import * as ListItem from './plugins/list-item.js'
+import * as List from './plugins/list.js'
+import * as NotifDeclaration from './plugins/notif-declaration.js'
+import * as Postgate from './plugins/post-gate.js'
+import * as Post from './plugins/post.js'
+import * as ProfileLink from './plugins/profile-link.js'
+import * as Profile from './plugins/profile.js'
+import * as ReferenceListOptOut from './plugins/reference-list-opt-out.js'
+import * as Repost from './plugins/repost.js'
+import * as StarterPack from './plugins/starter-pack.js'
+import * as Status from './plugins/status.js'
+import * as Threadgate from './plugins/thread-gate.js'
+import * as Verification from './plugins/verification.js'
 
 export class IndexingService {
   records: {
@@ -49,6 +52,7 @@ export class IndexingService {
     profile: Profile.PluginType
     list: List.PluginType
     listItem: ListItem.PluginType
+    referenceListOptOut: ReferenceListOptOut.PluginType
     listBlock: ListBlock.PluginType
     block: Block.PluginType
     feedGenerator: FeedGenerator.PluginType
@@ -57,6 +61,7 @@ export class IndexingService {
     notifDeclaration: NotifDeclaration.PluginType
     chatDeclaration: ChatDeclaration.PluginType
     germDeclaration: GermDeclaration.PluginType
+    profileLink: ProfileLink.PluginType
     verification: Verification.PluginType
     status: Status.PluginType
   }
@@ -64,7 +69,7 @@ export class IndexingService {
   constructor(
     public db: Database,
     public idResolver: IdResolver,
-    public background: BackgroundQueue,
+    public background: BackgroundQueue<Database>,
   ) {
     this.records = {
       post: Post.makePlugin(this.db, this.background),
@@ -76,6 +81,10 @@ export class IndexingService {
       profile: Profile.makePlugin(this.db, this.background),
       list: List.makePlugin(this.db, this.background),
       listItem: ListItem.makePlugin(this.db, this.background),
+      referenceListOptOut: ReferenceListOptOut.makePlugin(
+        this.db,
+        this.background,
+      ),
       listBlock: ListBlock.makePlugin(this.db, this.background),
       block: Block.makePlugin(this.db, this.background),
       feedGenerator: FeedGenerator.makePlugin(this.db, this.background),
@@ -84,6 +93,7 @@ export class IndexingService {
       notifDeclaration: NotifDeclaration.makePlugin(this.db, this.background),
       chatDeclaration: ChatDeclaration.makePlugin(this.db, this.background),
       germDeclaration: GermDeclaration.makePlugin(this.db, this.background),
+      profileLink: ProfileLink.makePlugin(this.db, this.background),
       verification: Verification.makePlugin(this.db, this.background),
       status: Status.makePlugin(this.db, this.background),
     }
@@ -96,17 +106,34 @@ export class IndexingService {
 
   async indexRecord(
     uri: AtUri,
-    cid: CID,
+    cid: Cid,
     obj: unknown,
     action: WriteOpAction.Create | WriteOpAction.Update,
     timestamp: string,
     opts?: { disableNotifs?: boolean; disableLabels?: boolean },
   ) {
     this.db.assertNotTransaction()
-    await this.db.transaction(async (txn) => {
+    return this.db.transaction(async (txn) => {
       const indexingTx = this.transact(txn)
       const indexer = indexingTx.findIndexerForCollection(uri.collection)
-      if (!indexer) return
+      if (!indexer) {
+        if (!isLexMap(obj) || obj.$type !== uri.collection) {
+          throw new TypeError('Record type must match its collection')
+        }
+        // @NOTE Keep third-party records without applying collection-specific validation.
+        // External view builders validate them before interpreting their fields.
+        const record = {
+          cid: cid.toString(),
+          json: lexStringify(obj),
+          indexedAt: timestamp,
+        }
+        await txn.db
+          .insertInto('record')
+          .values({ uri: uri.toString(), did: uri.host, ...record })
+          .onConflict((oc) => oc.column('uri').doUpdateSet(record))
+          .execute()
+        return
+      }
       if (action === WriteOpAction.Create) {
         await indexer.insertRecord(uri, cid, obj, timestamp, opts)
       } else {
@@ -120,7 +147,13 @@ export class IndexingService {
     await this.db.transaction(async (txn) => {
       const indexingTx = this.transact(txn)
       const indexer = indexingTx.findIndexerForCollection(uri.collection)
-      if (!indexer) return
+      if (!indexer) {
+        await txn.db
+          .deleteFrom('record')
+          .where('uri', '=', uri.toString())
+          .execute()
+        return
+      }
       await indexer.deleteRecord(uri, cascading)
     })
   }
@@ -168,18 +201,17 @@ export class IndexingService {
       .executeTakeFirst()
   }
 
-  async indexRepo(did: string, commit?: string) {
+  async indexRepo(did: DidString, commit?: string) {
     this.db.assertNotTransaction()
     const now = new Date().toISOString()
     const { pds, signingKey } = await this.idResolver.did.resolveAtprotoData(
       did,
       true,
     )
-    const { api } = new AtpAgent({ service: pds })
 
-    const { data: car } = await retryXrpc(() =>
-      api.com.atproto.sync.getRepo({ did }),
-    )
+    const { body: car } = await retryXrpc(() => {
+      return xrpc(pds, com.atproto.sync.getRepo, { params: { did } })
+    })
     const { root, blocks } = await readCarWithRoot(car)
     const verifiedRepo = await verifyRepo(blocks, root, did, signingKey)
 
@@ -204,7 +236,7 @@ export class IndexingService {
             )
           }
         } catch (err) {
-          if (err instanceof ValidationError) {
+          if (err instanceof l.LexValidationError) {
             subLogger.warn(
               { did, commit, uri: uri.toString(), cid: cid.toString() },
               'skipping indexing of invalid record',
@@ -230,15 +262,15 @@ export class IndexingService {
       (acc, cur) => {
         acc[cur.uri] = {
           uri: new AtUri(cur.uri),
-          cid: CID.parse(cur.cid),
+          cid: parseCid(cur.cid),
         }
         return acc
       },
-      {} as Record<string, { uri: AtUri; cid: CID }>,
+      {} as Record<string, { uri: AtUri; cid: Cid }>,
     )
   }
 
-  async setCommitLastSeen(did: string, commit: CID, rev: string) {
+  async setCommitLastSeen(did: string, commit: Cid, rev: string) {
     const { ref } = this.db.db.dynamic
     await this.db.db
       .insertInto('actor_sync')
@@ -258,13 +290,18 @@ export class IndexingService {
   }
 
   findIndexerForCollection(collection: string) {
-    const indexers = Object.values(
-      this.records as Record<string, RecordProcessor<unknown, unknown>>,
-    )
-    return indexers.find((indexer) => indexer.collection === collection)
+    for (const indexer of Object.values(this.records)) {
+      if (indexer.collection === collection) {
+        return indexer
+      }
+    }
   }
 
-  async updateActorStatus(did: string, active: boolean, status: string = '') {
+  async updateActorStatus(
+    did: DidString,
+    active: boolean,
+    status: string = '',
+  ) {
     let upstreamStatus: string | null
     if (active) {
       upstreamStatus = null
@@ -280,7 +317,7 @@ export class IndexingService {
       .execute()
   }
 
-  async deleteActor(did: string) {
+  async deleteActor(did: DidString) {
     this.db.assertNotTransaction()
     const actorIsHosted = await this.getActorIsHosted(did)
     if (actorIsHosted === false) {
@@ -293,23 +330,22 @@ export class IndexingService {
     }
   }
 
-  private async getActorIsHosted(did: string) {
+  private async getActorIsHosted(did: DidString): Promise<boolean> {
     const doc = await this.idResolver.did.resolve(did, true)
     const pds = doc && getPds(doc)
     if (!pds) return false
-    const { api } = new AtpAgent({ service: pds })
-    try {
-      await retryXrpc(() => api.com.atproto.sync.getLatestCommit({ did }))
-      return true
-    } catch (err) {
-      if (err instanceof ComAtprotoSyncGetLatestCommit.RepoNotFoundError) {
-        return false
-      }
-      return null
-    }
+
+    return retryXrpc(async () => {
+      const res = await xrpcSafe(pds, com.atproto.sync.getLatestCommit, {
+        params: { did },
+      })
+      if (res.success) return true
+      if (res.error === 'RepoNotFound') return false
+      throw res.reason // let retryXrpc() handle retries for transient errors
+    })
   }
 
-  async unindexActor(did: string) {
+  async unindexActor(did: DidString) {
     this.db.assertNotTransaction()
     // per-record-type indexes
     await this.db.db.deleteFrom('profile').where('creator', '=', did).execute()
@@ -324,6 +360,10 @@ export class IndexingService {
     // lists
     await this.db.db
       .deleteFrom('list_item')
+      .where('creator', '=', did)
+      .execute()
+    await this.db.db
+      .deleteFrom('reference_list_opt_out')
       .where('creator', '=', did)
       .execute()
     await this.db.db.deleteFrom('list').where('creator', '=', did).execute()
@@ -353,6 +393,14 @@ export class IndexingService {
     await this.db.db
       .deleteFrom('post_embed_record')
       .where('post_embed_record.postUri', 'in', postByUser)
+      .execute()
+    await this.db.db
+      .deleteFrom('post_embed_video')
+      .where('post_embed_video.postUri', 'in', postByUser)
+      .execute()
+    await this.db.db
+      .deleteFrom('post_embed_gallery_image')
+      .where('post_embed_gallery_image.postUri', 'in', postByUser)
       .execute()
     await this.db.db.deleteFrom('post').where('creator', '=', did).execute()
     await this.db.db
@@ -384,7 +432,7 @@ export class IndexingService {
 
 type UriAndCid = {
   uri: AtUri
-  cid: CID
+  cid: Cid
 }
 
 type IndexOp =

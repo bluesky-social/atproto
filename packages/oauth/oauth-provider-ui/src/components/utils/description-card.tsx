@@ -1,20 +1,20 @@
 import { useLingui } from '@lingui/react/macro'
-import { HTMLAttributes, ReactNode, useCallback, useRef, useState } from 'react'
-import { Button } from '#/components/forms/button.tsx'
-import { useClickOutside } from '#/hooks/use-click-outside'
-import { useEscapeKey } from '#/hooks/use-escape-key'
-import { useRandomString } from '#/hooks/use-random-string.ts'
-import { Override } from '#/lib/util.ts'
-import { Admonition } from './admonition'
+import { CircleQuestionMarkIcon } from 'lucide-react'
+import type { HTMLAttributes, ReactNode } from 'react'
+import { DialogShell } from '#/components/dialogs/dialog-shell.tsx'
+import { Button } from '#/components/ui/button.tsx'
+import type { Override } from '#/lib/util.ts'
 
 export type DescriptionCardProps = Override<
   HTMLAttributes<HTMLDivElement>,
   {
     hint?: string
     image: ReactNode
-    title?: ReactNode
+    title: ReactNode
     description?: ReactNode
     append?: ReactNode
+    children?: ReactNode
+    extra?: ReactNode
   }
 >
 
@@ -24,73 +24,54 @@ export function DescriptionCard({
   title,
   description,
   append,
+  children,
+  extra,
 
   // HTMLDivElement
-  className,
-  children,
   ...attrs
 }: DescriptionCardProps) {
   const { t } = useLingui()
-  const [open, setOpen] = useState(false)
-  const close = useCallback(() => setOpen(false), [])
-
-  const ref = useRef<HTMLDivElement>(null)
-  useEscapeKey(close)
-  useClickOutside(ref, close)
-
-  const hasChildren = children != null
-  const detailsDivId = useRandomString('details-card-')
 
   return (
-    <div ref={ref} className={className} {...attrs}>
-      <div className={`flex items-center justify-start gap-2`}>
+    <div {...attrs}>
+      <div className="flex items-center justify-start gap-2">
         <div
           className="ml-2 flex w-8 flex-grow-0 items-center justify-center"
           aria-hidden
         >
           {image}
         </div>
-        <div
-          className={`flex flex-1 flex-col`}
-          aria-describedby={hasChildren ? detailsDivId : undefined}
-        >
-          {title && <h3>{title}</h3>}
-          {description && <p className="text-sm">{description}</p>}
+
+        <div className="flex flex-1 flex-col">
+          <h3>{title}</h3>
+          {description && (
+            <p className="text-muted-foreground text-sm">{description}</p>
+          )}
         </div>
-        {append && (
-          <div className="flex shrink-0 grow-0 items-center justify-center">
-            {append}
-          </div>
-        )}
-        {hasChildren && (
-          <Button
-            onClick={(event) => {
-              if (!event.defaultPrevented) {
-                event.preventDefault()
-                setOpen((prev) => !prev)
+
+        <div className="flex shrink-0 grow-0 items-center justify-center">
+          {append}
+          {!!children && (
+            <DialogShell
+              title={title}
+              trigger={
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="rounded-full"
+                  aria-label={hint ?? t`Expand details`}
+                  aria-haspopup="dialog"
+                >
+                  <CircleQuestionMarkIcon className="size-4" aria-hidden />
+                </Button>
               }
-            }}
-            shape="circle"
-            title={open ? t`Collapse details` : hint ?? t`Expand details`}
-            aria-expanded={open}
-            aria-label={open ? t`Collapse details` : hint ?? t`Expand details`}
-            aria-haspopup="true"
-            aria-controls={detailsDivId}
-          >
-            ?
-          </Button>
-        )}
+            >
+              <div className="text-muted-foreground text-sm">{children}</div>
+              {extra}
+            </DialogShell>
+          )}
+        </div>
       </div>
-      {hasChildren && (
-        <Admonition
-          className="mt-4"
-          hidden={!open}
-          id={detailsDivId}
-          aria-hidden={!open}
-        >
-          {children}
-        </Admonition>
-      )}
     </div>
   )
 }

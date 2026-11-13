@@ -1,9 +1,11 @@
 {
   "name": "bsync-service",
   "private": true,
-  "packageManager": "pnpm@8.15.9",
+  "type": "module",
+  "files": [
+    "index.ts"
+  ],
   "dependencies": {
-    "@atproto/bsync": "workspace:^",
-    "dd-trace": "3.13.2"
+    "@atproto/bsync": "workspace:^"
   }
 }

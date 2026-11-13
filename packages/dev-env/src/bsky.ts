@@ -1,23 +1,27 @@
 import { Client as PlcClient } from '@did-plc/lib'
-import getPort from 'get-port'
 import * as ui8 from 'uint8arrays'
 import { AtpAgent } from '@atproto/api'
 import * as bsky from '@atproto/bsky'
+import { SECOND } from '@atproto/common-web'
 import { Secp256k1Keypair } from '@atproto/crypto'
-import { ADMIN_PASSWORD, EXAMPLE_LABELER } from './const'
-import { BskyConfig } from './types'
+import { Client } from '@atproto/lex-client'
+import type { UriString } from '@atproto/lex-schema'
+import type { DidString } from '@atproto/syntax'
+import { ADMIN_PASSWORD, EXAMPLE_LABELER } from './const.js'
+import getPort from './get-port.js'
+import type { BskyConfig } from './types.js'
 export * from '@atproto/bsky'
 
 export class TestBsky {
   constructor(
-    public url: string,
+    public url: UriString,
     public port: number,
     public db: bsky.Database,
     public server: bsky.BskyAppView,
     public dataplane: bsky.DataPlaneServer,
-    public bsync: bsky.MockBsync,
+    public bsyncSub: bsky.BsyncSubscription,
     public sub: bsky.RepoSubscription,
-    public serverDid: string,
+    public serverDid: DidString,
   ) {}
 
   static async create(cfg: BskyConfig): Promise<TestBsky> {
@@ -27,14 +31,14 @@ export class TestBsky {
     const plcClient = new PlcClient(cfg.plcUrl)
 
     const port = cfg.port || (await getPort())
-    const url = `http://localhost:${port}`
-    const serverDid = await plcClient.createDid({
+    const url: UriString = `http://localhost:${port}`
+    const serverDid = (await plcClient.createDid({
       signingKey: serviceKeypair.did(),
       rotationKeys: [serviceKeypair.did()],
       handle: 'bsky.test',
       pds: `http://localhost:${port}`,
       signer: serviceKeypair,
-    })
+    })) as DidString
 
     const endpoint = `http://localhost:${port}`
 
@@ -62,10 +66,9 @@ export class TestBsky {
       db,
       dataplanePort,
       cfg.plcUrl,
+      // Resolves against an in-process PLC on localhost.
+      globalThis.fetch,
     )
-
-    const bsyncPort = await getPort()
-    const bsync = await bsky.MockBsync.create(db, bsyncPort)
 
     const config = new bsky.ServerConfig({
       version: 'unknown',
@@ -76,21 +79,29 @@ export class TestBsky {
       alternateAudienceDids: [],
       dataplaneUrls: [`http://localhost:${dataplanePort}`],
       dataplaneHttpVersion: '1.1',
-      bsyncUrl: `http://localhost:${bsyncPort}`,
       bsyncHttpVersion: '1.1',
+      bsyncApiKey: 'bsync-api-key',
       modServiceDid: cfg.modServiceDid ?? 'did:example:invalidMod',
       labelsFromIssuerDids: [EXAMPLE_LABELER],
       bigThreadUris: new Set(),
       maxThreadParents: cfg.maxThreadParents ?? 50,
       disableSsrfProtection: true,
       searchTagsHide: new Set(),
+      searchTagsHideAll: new Set(),
       threadTagsBumpDown: new Set(),
       threadTagsHide: new Set(),
       visibilityTagHide: '',
       visibilityTagRankPrefix: '',
       debugFieldAllowedDids: new Set(),
       draftsLimit: 500,
+      feedGenSkeletonTimeout: 5 * SECOND,
       ...cfg,
+      notificationsV2MinRawLimit: cfg.notificationsV2MinRawLimit ?? 300,
+      notificationsV2MaxRawItems: cfg.notificationsV2MaxRawItems ?? 3000,
+      notificationsV2MaxFetches: cfg.notificationsV2MaxFetches ?? 3,
+      notificationsV2MaxGroupItemsWithRelatedViews:
+        cfg.notificationsV2MaxGroupItemsWithRelatedViews ?? 10,
+      bskyFeedgenDids: cfg.bskyFeedgenDids ?? new Set(),
       adminPasswords: [ADMIN_PASSWORD],
       etcdHosts: [],
     })
@@ -113,6 +124,11 @@ export class TestBsky {
       signingKey: serviceKeypair,
     })
 
+    const bsyncSub = new bsky.BsyncSubscription({
+      config,
+      db,
+    })
+
     const sub = new bsky.RepoSubscription({
       service: cfg.repoProvider,
       db,
@@ -121,19 +137,35 @@ export class TestBsky {
 
     await server.start()
 
-    sub.start()
+    bsyncSub.start()
+    void sub.start()
 
-    return new TestBsky(url, port, db, server, dataplane, bsync, sub, serverDid)
+    return new TestBsky(
+      url,
+      port,
+      db,
+      server,
+      dataplane,
+      bsyncSub,
+      sub,
+      serverDid,
+    )
   }
 
   get ctx(): bsky.AppContext {
     return this.server.ctx
   }
 
-  getClient(): AtpAgent {
+  getAgent(): AtpAgent {
     const agent = new AtpAgent({ service: this.url })
     agent.configureLabelers([EXAMPLE_LABELER])
     return agent
+  }
+
+  getClient(): Client {
+    const client = new Client({ service: this.url })
+    client.setLabelers([EXAMPLE_LABELER])
+    return client
   }
 
   adminAuth(): string {
@@ -151,10 +183,27 @@ export class TestBsky {
   }
 
   async close() {
-    await this.server.destroy()
-    await this.bsync.destroy()
-    await this.dataplane.destroy()
-    await this.sub.destroy()
-    await this.db.close()
+    // @TODO Use disposable stack when it becomes available (Node24+)
+    try {
+      await this.server.destroy()
+    } finally {
+      try {
+        await this.bsyncSub.destroy()
+      } finally {
+        try {
+          await this.dataplane.destroy()
+        } finally {
+          try {
+            await this.sub.destroy()
+          } finally {
+            await this.db.close()
+          }
+        }
+      }
+    }
+  }
+
+  async [Symbol.asyncDispose]() {
+    await this.close()
   }
 }

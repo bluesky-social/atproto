@@ -1,5 +1,5 @@
 import {
-  OAuthClientIdDiscoverable,
+  type OAuthClientIdDiscoverable,
   isLocalHostname,
   parseOAuthDiscoverableClientId,
 } from '@atproto/oauth-types'

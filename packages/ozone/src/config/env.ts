@@ -1,87 +1,132 @@
 import { envBool, envInt, envList, envStr } from '@atproto/common'
+import type { DidString, UriString } from '@atproto/lex-schema'
 
 export const readEnv = (): OzoneEnvironment => {
+  const onlineMembersActiveWindowMs = envStr(
+    'OZONE_ONLINE_MEMBERS_ACTIVE_WINDOW_MS',
+  )
   return {
     nodeEnv: envStr('NODE_ENV'),
     devMode: envBool('OZONE_DEV_MODE'),
     version: envStr('OZONE_VERSION'),
     port: envInt('OZONE_PORT'),
-    publicUrl: envStr('OZONE_PUBLIC_URL'),
-    serverDid: envStr('OZONE_SERVER_DID'),
+    metricsPort: envInt('OZONE_METRICS_PORT'),
+    daemonMetricsPort: envInt('OZONE_DAEMON_METRICS_PORT'),
+    publicUrl: envStr('OZONE_PUBLIC_URL') as UriString,
+    serverDid: envStr('OZONE_SERVER_DID') as DidString,
     serviceRecordCacheTTL: envInt('OZONE_SERVICE_RECORD_CACHE_TTL'),
-    appviewUrl: envStr('OZONE_APPVIEW_URL'),
-    appviewDid: envStr('OZONE_APPVIEW_DID'),
+    labelStreamBackfillRate: envInt('OZONE_LABEL_STREAM_BACKFILL_RATE'),
+    labelQueryWildcardsEnabled: envBool('OZONE_LABEL_QUERY_WILDCARDS_ENABLED'),
+    reportTagsDisabled: envBool('OZONE_REPORT_TAGS_DISABLED'),
+    appviewUrl: envStr('OZONE_APPVIEW_URL') as UriString,
+    appviewDid: envStr('OZONE_APPVIEW_DID') as DidString,
     appviewPushEvents: envBool('OZONE_APPVIEW_PUSH_EVENTS'),
-    pdsUrl: envStr('OZONE_PDS_URL'),
-    pdsDid: envStr('OZONE_PDS_DID'),
-    chatUrl: envStr('OZONE_CHAT_URL'),
-    chatDid: envStr('OZONE_CHAT_DID'),
+    pdsUrl: envStr('OZONE_PDS_URL') as UriString,
+    pdsDid: envStr('OZONE_PDS_DID') as DidString,
+    chatUrl: envStr('OZONE_CHAT_URL') as UriString,
+    chatDid: envStr('OZONE_CHAT_DID') as DidString,
     dbPostgresUrl: envStr('OZONE_DB_POSTGRES_URL'),
     dbPostgresSchema: envStr('OZONE_DB_POSTGRES_SCHEMA'),
     dbPoolSize: envInt('OZONE_DB_POOL_SIZE'),
     dbPoolMaxUses: envInt('OZONE_DB_POOL_MAX_USES'),
     dbPoolIdleTimeoutMs: envInt('OZONE_DB_POOL_IDLE_TIMEOUT_MS'),
-    dbMaterializedViewRefreshIntervalMs: envInt(
-      'OZONE_DB_MATERIALIZED_VIEW_REFRESH_INTERVAL_MS',
-    ),
     dbTeamProfileRefreshIntervalMs: envInt(
       'OZONE_DB_TEAM_PROFILE_REFRESH_INTERVAL_MS',
     ),
     didPlcUrl: envStr('OZONE_DID_PLC_URL'),
     didCacheStaleTTL: envInt('OZONE_DID_CACHE_STALE_TTL'),
     didCacheMaxTTL: envInt('OZONE_DID_CACHE_MAX_TTL'),
+    didCacheMaxEntries: envInt('OZONE_DID_CACHE_MAX_ENTRIES'),
+    didCacheMaxBytes: envInt('OZONE_DID_CACHE_MAX_BYTES'),
+    didCacheMaxDocBytes: envInt('OZONE_DID_CACHE_MAX_DOC_BYTES'),
     cdnPaths: envList('OZONE_CDN_PATHS'),
-    adminDids: envList('OZONE_ADMIN_DIDS'),
-    moderatorDids: envList('OZONE_MODERATOR_DIDS'),
-    triageDids: envList('OZONE_TRIAGE_DIDS'),
+    adminDids: envList('OZONE_ADMIN_DIDS') as DidString[],
+    moderatorDids: envList('OZONE_MODERATOR_DIDS') as DidString[],
+    triageDids: envList('OZONE_TRIAGE_DIDS') as DidString[],
+    onlineMembersExcludedDids: envList('OZONE_ONLINE_MEMBERS_EXCLUDED_DIDS'),
+    onlineMembersActiveWindowMs:
+      onlineMembersActiveWindowMs === undefined
+        ? undefined
+        : Number(onlineMembersActiveWindowMs),
     adminPassword: envStr('OZONE_ADMIN_PASSWORD'),
     signingKeyHex: envStr('OZONE_SIGNING_KEY_HEX'),
-    blobDivertUrl: envStr('OZONE_BLOB_DIVERT_URL'),
+    pdsHeaders: envList('OZONE_PDS_HEADERS'),
+    blobDivertUrl: envStr('OZONE_BLOB_DIVERT_URL') as UriString,
     blobDivertAdminPassword: envStr('OZONE_BLOB_DIVERT_ADMIN_PASSWORD'),
-    verifierUrl: envStr('OZONE_VERIFIER_URL'),
-    verifierDid: envStr('OZONE_VERIFIER_DID'),
+    blobDivertMaxBytes: envStr('OZONE_BLOB_DIVERT_MAX_BYTES'),
+    verifierUrl: envStr('OZONE_VERIFIER_URL') as UriString,
+    verifierDid: envStr('OZONE_VERIFIER_DID') as DidString,
     verifierPassword: envStr('OZONE_VERIFIER_PASSWORD'),
     verifierIssuersToIndex: envList('OZONE_VERIFIER_ISSUERS_TO_INDEX'),
     jetstreamUrl: envStr('OZONE_JETSTREAM_URL'),
+    assignmentQueueDurationMs: envInt('OZONE_ASSIGNMENT_QUEUE_DURATION_MS'),
+    assignmentReportDurationMs: envInt('OZONE_ASSIGNMENT_REPORT_DURATION_MS'),
+    inboxAppealWindowMonths: envInt('OZONE_INBOX_APPEAL_WINDOW_MONTHS'),
+    inboxStartAt: envStr('OZONE_INBOX_START_AT'),
+    inboxPolicyDefaultUrl: envStr('OZONE_INBOX_POLICY_DEFAULT_URL'),
+    strikeSuspensionConfig: envStr('NEXT_PUBLIC_STRIKE_SUSPENSION_CONFIG'),
+    statsComputerIntervalMinutes: envInt(
+      'OZONE_STATS_COMPUTER_INTERVAL_MINUTES',
+    ),
+    reporterStatsWindowDays: envInt('OZONE_REPORTER_STATS_WINDOW_DAYS'),
   }
 }
 
 export type OzoneEnvironment = {
   nodeEnv?: string
+  strikeSuspensionConfig?: string
+  inboxAppealWindowMonths?: number
+  inboxStartAt?: string
+  inboxPolicyDefaultUrl?: string
   devMode?: boolean
   version?: string
   port?: number
+  metricsPort?: number
+  daemonMetricsPort?: number
   publicUrl?: string
-  serverDid?: string
+  serverDid?: DidString
   serviceRecordCacheTTL?: number
-  appviewUrl?: string
-  appviewDid?: string
+  labelStreamBackfillRate?: number
+  labelQueryWildcardsEnabled?: boolean
+  reportTagsDisabled?: boolean
+  appviewUrl?: UriString
+  appviewDid?: DidString
   appviewPushEvents?: boolean
-  pdsUrl?: string
-  pdsDid?: string
-  chatUrl?: string
-  chatDid?: string
+  pdsUrl?: UriString
+  pdsDid?: DidString
+  chatUrl?: UriString
+  chatDid?: DidString
   dbPostgresUrl?: string
   dbPostgresSchema?: string
   dbPoolSize?: number
   dbPoolMaxUses?: number
   dbPoolIdleTimeoutMs?: number
-  dbMaterializedViewRefreshIntervalMs?: number
   dbTeamProfileRefreshIntervalMs?: number
   didPlcUrl?: string
   didCacheStaleTTL?: number
   didCacheMaxTTL?: number
+  didCacheMaxEntries?: number
+  didCacheMaxBytes?: number
+  didCacheMaxDocBytes?: number
   cdnPaths?: string[]
-  adminDids: string[]
-  moderatorDids: string[]
-  triageDids: string[]
+  adminDids: DidString[]
+  moderatorDids: DidString[]
+  triageDids: DidString[]
+  onlineMembersExcludedDids?: string[]
+  onlineMembersActiveWindowMs?: number
   adminPassword?: string
   signingKeyHex?: string
-  blobDivertUrl?: string
+  pdsHeaders?: string[]
+  blobDivertUrl?: UriString
   blobDivertAdminPassword?: string
-  verifierUrl?: string
-  verifierDid?: string
+  blobDivertMaxBytes?: string
+  verifierUrl?: UriString
+  verifierDid?: DidString
   verifierPassword?: string
   verifierIssuersToIndex?: string[]
   jetstreamUrl?: string
+  assignmentQueueDurationMs?: number
+  assignmentReportDurationMs?: number
+  statsComputerIntervalMinutes?: number
+  reporterStatsWindowDays?: number
 }

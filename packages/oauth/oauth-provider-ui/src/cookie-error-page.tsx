@@ -1,10 +1,14 @@
 import './style.css'
 
-import type { HydrationData } from '#/hydration-data.d.ts'
+import { msg } from '@lingui/core/macro'
+import { Trans } from '@lingui/react/macro'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { LocaleProvider } from './locales/locale-provider.tsx'
-import { CookieErrorView } from './views/error/cookie-error-view.tsx'
+import { ActionButton } from '#/components/forms/form-shell.tsx'
+import { AuthShell } from '#/components/layouts/auth-shell.tsx'
+import { CustomizationProvider } from '#/contexts/customization.tsx'
+import type { HydrationData } from '#/hydration-data.d.ts'
+import { LocaleProvider } from '#/locales/locale-provider.tsx'
 
 const {
   //
@@ -16,11 +20,44 @@ const container = document.getElementById('root')!
 
 createRoot(container).render(
   <StrictMode>
-    <LocaleProvider>
-      <CookieErrorView
-        continueUrl={continueUrl}
-        customizationData={customizationData}
-      />
-    </LocaleProvider>
+    <CustomizationProvider value={customizationData}>
+      <LocaleProvider>
+        <CookieErrorView />
+      </LocaleProvider>
+    </CustomizationProvider>
   </StrictMode>,
 )
+
+function CookieErrorView() {
+  const url = new URL(continueUrl)
+  const hostname = url.hostname
+
+  // Shaped like the error view: heading, one line of copy, a hint, an action.
+  return (
+    <AuthShell
+      title={msg`Cookies are blocked`}
+      subtitle={
+        <Trans>
+          Sign-in needs cookies, and your browser isn't accepting them.
+        </Trans>
+      }
+    >
+      <form action={url.origin} method="GET" className="flex flex-col gap-5">
+        {Array.from(new Map(url.searchParams)).map(([key, value]) => (
+          <input key={key} type="hidden" name={key} value={value} />
+        ))}
+
+        <p className="text-muted-foreground text-center text-sm leading-snug">
+          <Trans>
+            If this keeps happening, allow cookies for {hostname} in your
+            browser's privacy settings.
+          </Trans>
+        </p>
+
+        <ActionButton type="submit" className="w-full">
+          <Trans>Try again</Trans>
+        </ActionButton>
+      </form>
+    </AuthShell>
+  )
+}

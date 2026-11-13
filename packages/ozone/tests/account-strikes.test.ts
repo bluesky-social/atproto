@@ -1,23 +1,23 @@
-import AtpAgent from '@atproto/api'
+import { ids } from '@atproto/api'
+import type AtpAgent from '@atproto/api'
 import {
-  ModeratorClient,
-  SeedClient,
+  type ModeratorClient,
+  type SeedClient,
   TestNetwork,
-  basicSeed,
+  usersSeed,
 } from '@atproto/dev-env'
-import { ids } from '../src/lexicon/lexicons'
-import { SeverityLevelSettingKey } from '../src/setting/constants'
-import { forSnapshot } from './_util'
+import { SeverityLevelSettingKey } from '../src/setting/constants.js'
+import { forSnapshot } from './_util.js'
 
 const strikeConfig = {
   'sev-0': { strikeCount: 0 },
   'sev-1': {
     strikeCount: 1,
     strikeOnOccurrence: 2,
-    expiresInDays: 365,
+    expiryInDays: 365,
   },
-  'sev-2': { strikeCount: 2, expiresInDays: 365 },
-  'sev-4': { strikeCount: 4, expiresInDays: 0 },
+  'sev-2': { strikeCount: 2, expiryInDays: 365 },
+  'sev-4': { strikeCount: 4, expiryInDays: 0 },
   'sev-5': { needsTakedown: true },
 }
 
@@ -56,16 +56,27 @@ describe('account-strikes', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'ozone_account_strikes',
     })
-    agent = network.ozone.getClient()
+    agent = network.ozone.getAgent()
     sc = network.getSeedClient()
     modClient = network.ozone.getModClient()
-    await basicSeed(sc)
+    await usersSeed(sc)
+    // @NOTE Avoid the unrelated background work from the full seed.
+    await sc.post(sc.dids.alice, 'hey there')
+    const root = await sc.post(sc.dids.alice, 'again')
+    await sc.post(sc.dids.alice, 'yoohoo label_me')
+    const bobReply = await sc.reply(
+      sc.dids.bob,
+      root.ref,
+      root.ref,
+      'hear that',
+    )
+    await sc.reply(sc.dids.alice, root.ref, bobReply.ref, 'thanks bob')
     await network.processAll()
     await configureSeverityLevels()
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('tracks strikes and exposes them through queryStatuses and queryEvents', async () => {
@@ -180,5 +191,41 @@ describe('account-strikes', () => {
     })
 
     expect(forSnapshot(eventsWithStrikes.events)).toMatchSnapshot()
+  })
+  it('returns client-supplied reversal expiry and excludes expired signed adjustments', async () => {
+    const subject = repoSubject(sc.dids.bob)
+    const strikeExpiresAt = '2000-01-01T00:00:00.000Z'
+    const takedown = await modClient.emitEvent({
+      subject,
+      event: {
+        $type: 'tools.ozone.moderation.defs#modEventTakedown',
+        severityLevel: 'sev-2',
+        strikeCount: 2,
+      },
+    })
+    expect(takedown.event['strikeExpiresAt']).toBeUndefined()
+    const { event } = await modClient.emitEvent({
+      subject,
+      event: {
+        $type: 'tools.ozone.moderation.defs#modEventReverseTakedown',
+        severityLevel: 'sev-2',
+        strikeCount: -2,
+        strikeExpiresAt,
+      },
+    })
+    expect(event).toMatchObject({ strikeCount: -2, strikeExpiresAt })
+    const { events } = await modClient.queryEvents({
+      subject: sc.dids.bob,
+      withStrike: true,
+      types: ['tools.ozone.moderation.defs#modEventReverseTakedown'],
+    })
+    expect(events[0].event).toMatchObject({ strikeCount: -2, strikeExpiresAt })
+    const { subjectStatuses } = await modClient.queryStatuses({
+      subject: sc.dids.bob,
+    })
+    expect(subjectStatuses[0].accountStrike).toMatchObject({
+      activeStrikeCount: 2,
+      totalStrikeCount: 0,
+    })
   })
 })

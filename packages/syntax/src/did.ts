@@ -64,8 +64,10 @@ export function ensureValidDidRegex<I extends string>(
   }
 }
 
-export function isValidDid<I extends string>(input: I): input is I & DidString {
-  return input.length <= 2048 && DID_REGEX.test(input)
+export function isValidDid<I>(input: I): input is I & DidString {
+  return (
+    typeof input === 'string' && input.length <= 2048 && DID_REGEX.test(input)
+  )
 }
 
 export class InvalidDidError extends Error {}

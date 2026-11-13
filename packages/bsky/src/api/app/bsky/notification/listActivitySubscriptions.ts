@@ -1,17 +1,21 @@
 import { mapDefined } from '@atproto/common'
-import { AppContext } from '../../../../context'
-import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/notification/listActivitySubscriptions'
+import type { DidString } from '@atproto/syntax'
+import type { Server } from '@atproto/xrpc-server'
+import type { AppContext } from '../../../../context.js'
+import type {
+  HydrateCtxWithViewer,
+  Hydrator,
+} from '../../../../hydration/hydrator.js'
+import { app } from '../../../../lexicons/index.js'
 import {
-  HydrationFnInput,
-  PresentationFnInput,
-  RulesFnInput,
-  SkeletonFnInput,
+  type HydrationFnInput,
+  type PresentationFnInput,
+  type RulesFnInput,
+  type SkeletonFnInput,
   createPipeline,
-} from '../../../../pipeline'
-import { Views } from '../../../../views'
-import { clearlyBadCursor, resHeaders } from '../../../util'
+} from '../../../../pipeline.js'
+import type { Views } from '../../../../views/index.js'
+import { clearlyBadCursor, fillPage, resHeaders } from '../../../util.js'
 
 export default function (server: Server, ctx: AppContext) {
   const listActivitySubscriptions = createPipeline(
@@ -20,20 +24,27 @@ export default function (server: Server, ctx: AppContext) {
     noBlocks,
     presentation,
   )
-  server.app.bsky.notification.listActivitySubscriptions({
+  server.add(app.bsky.notification.listActivitySubscriptions, {
     auth: ctx.authVerifier.standard,
     handler: async ({ params, auth, req }) => {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({
+        xrpcEndpoint: app.bsky.notification.listActivitySubscriptions.$lxm,
         labelers,
         viewer,
       })
 
-      const result = await listActivitySubscriptions(
-        { ...params, hydrateCtx: hydrateCtx.copy({ viewer }) },
-        ctx,
-      )
+      const result = await fillPage({
+        cursor: params.cursor,
+        limit: params.limit,
+        fetch: ({ cursor, limit }) =>
+          listActivitySubscriptions(
+            { ...params, cursor, limit, hydrateCtx },
+            ctx,
+          ),
+        items: (r) => r.subscriptions,
+      })
 
       return {
         encoding: 'application/json',
@@ -44,7 +55,9 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
+const skeleton = async (
+  input: SkeletonFnInput<Context, Params>,
+): Promise<SkeletonState> => {
   const { params, ctx } = input
   const actorDid = params.hydrateCtx.viewer
   if (clearlyBadCursor(params.cursor)) {
@@ -58,8 +71,8 @@ const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
     })
   return {
     actorDid,
-    dids,
-    cursor: cursor || undefined,
+    dids: dids as DidString[],
+    cursor,
   }
 }
 
@@ -68,11 +81,9 @@ const hydration = async (
 ) => {
   const { ctx, params, skeleton } = input
   const { dids } = skeleton
-  const state = await ctx.hydrator.hydrateProfilesDetailed(
-    dids,
-    params.hydrateCtx,
-  )
-  return state
+  return ctx.hydrator.hydrateProfiles(dids, params.hydrateCtx, {
+    activitySubscriptions: true,
+  })
 }
 
 const noBlocks = (input: RulesFnInput<Context, Params, SkeletonState>) => {
@@ -99,12 +110,12 @@ type Context = {
   views: Views
 }
 
-type Params = QueryParams & {
-  hydrateCtx: HydrateCtx & { viewer: string }
+type Params = app.bsky.notification.listActivitySubscriptions.$Params & {
+  hydrateCtx: HydrateCtxWithViewer
 }
 
 type SkeletonState = {
-  actorDid: string
-  dids: string[]
+  actorDid: DidString
+  dids: DidString[]
   cursor?: string
 }

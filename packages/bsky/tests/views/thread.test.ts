@@ -1,13 +1,19 @@
 import assert from 'node:assert'
-import { AppBskyFeedGetPostThread, AtUri, AtpAgent } from '@atproto/api'
-import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
-import { ids } from '../../src/lexicon/lexicons'
-import { isThreadViewPost } from '../../src/lexicon/types/app/bsky/feed/defs'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
+import {
+  AppBskyFeedDefs,
+  AppBskyFeedGetPostThread,
+  AtUri,
+  AtpAgent,
+  ids,
+} from '@atproto/api'
+import { type SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import type { DidString } from '@atproto/syntax'
 import {
   assertIsThreadViewPost,
   forSnapshot,
   stripViewerFromThread,
-} from '../_util'
+} from '../_util.js'
 
 describe('appview thread views', () => {
   let network: TestNetwork
@@ -16,16 +22,16 @@ describe('appview thread views', () => {
   let sc: SeedClient
 
   // account dids, for convenience
-  let alice: string
-  let bob: string
-  let carol: string
+  let alice: DidString
+  let bob: DidString
+  let carol: DidString
 
   beforeAll(async () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_views_thread',
     })
-    agent = network.bsky.getClient()
-    pdsAgent = network.pds.getClient()
+    agent = network.bsky.getAgent()
+    pdsAgent = network.pds.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc)
     alice = sc.dids.alice
@@ -35,17 +41,13 @@ describe('appview thread views', () => {
     await sc.like(alice, sc.replies[alice][0].ref)
     await sc.like(alice, sc.replies[bob][0].ref)
     await sc.like(alice, sc.replies[carol][0].ref)
-  })
 
-  beforeAll(async () => {
     // Add a repost of a reply so that we can confirm myState in the thread
     await sc.repost(bob, sc.replies[alice][0].ref)
-    await network.processAll()
   })
 
-  afterAll(async () => {
-    await network.close()
-  })
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
 
   it('fetches deep post thread', async () => {
     const thread = await agent.api.app.bsky.feed.getPostThread(
@@ -408,8 +410,10 @@ describe('appview thread views', () => {
         },
       )
 
-      assert(isThreadViewPost(threadPreTakedown.data.thread))
-      assert(isThreadViewPost(threadPreTakedown.data.thread.parent))
+      assert(AppBskyFeedDefs.isThreadViewPost(threadPreTakedown.data.thread))
+      assert(
+        AppBskyFeedDefs.isThreadViewPost(threadPreTakedown.data.thread.parent),
+      )
 
       const parent = threadPreTakedown.data.thread.parent.post
 
@@ -447,11 +451,19 @@ describe('appview thread views', () => {
         },
       )
 
-      assert(isThreadViewPost(threadPreTakedown.data.thread))
-      assert(isThreadViewPost(threadPreTakedown.data.thread.replies?.[0]))
-      assert(isThreadViewPost(threadPreTakedown.data.thread.replies?.[1]))
+      assert(AppBskyFeedDefs.isThreadViewPost(threadPreTakedown.data.thread))
       assert(
-        isThreadViewPost(
+        AppBskyFeedDefs.isThreadViewPost(
+          threadPreTakedown.data.thread.replies?.[0],
+        ),
+      )
+      assert(
+        AppBskyFeedDefs.isThreadViewPost(
+          threadPreTakedown.data.thread.replies?.[1],
+        ),
+      )
+      assert(
+        AppBskyFeedDefs.isThreadViewPost(
           threadPreTakedown.data.thread.replies?.[1].replies?.[0],
         ),
       )

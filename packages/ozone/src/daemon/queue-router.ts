@@ -1,0 +1,144 @@
+import * as prometheus from 'prom-client'
+import { MINUTE } from '@atproto/common'
+import type { Database } from '../db/index.js'
+import { dbLogger } from '../logger.js'
+import type { QueueServiceCreator } from '../queue/service.js'
+import { initJobCursor } from './job-cursor.js'
+
+const JOB_NAME = 'queue_router'
+const BATCH_SIZE = 100
+
+type QueueRouterMetrics = {
+  // Duration of each poll's routeReports() run, labeled by outcome. Use for
+  // "taking too long" alerts (e.g. p99 over a threshold).
+  duration: prometheus.Histogram<'outcome'>
+  // Unix timestamp of the last successful poll. Use for "stalling" alerts
+  // (e.g. time() - <gauge> exceeds a few poll intervals).
+  lastSuccess: prometheus.Gauge
+}
+
+const createMetrics = (register: prometheus.Registry): QueueRouterMetrics => ({
+  duration: new prometheus.Histogram({
+    name: 'ozone_daemon_queue_router_duration_seconds',
+    help: 'Duration of each queue router poll (routeReports) in seconds',
+    labelNames: ['outcome'],
+    buckets: [0.01, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10, 30],
+    registers: [register],
+  }),
+  lastSuccess: new prometheus.Gauge({
+    name: 'ozone_daemon_queue_router_last_success_timestamp_seconds',
+    help: 'Unix timestamp of the last successful queue router poll, for stall detection',
+    registers: [register],
+  }),
+})
+
+export class QueueRouter {
+  destroyed = false
+  processingPromise: Promise<void> = Promise.resolve()
+  timer?: NodeJS.Timeout
+  private metrics?: QueueRouterMetrics
+
+  constructor(
+    private db: Database,
+    private queueServiceCreator: QueueServiceCreator,
+    // Optional Prometheus registry. When omitted (metrics not opted in), no
+    // instruments are created and polling incurs no measurement overhead.
+    register?: prometheus.Registry,
+  ) {
+    if (register) {
+      this.metrics = createMetrics(register)
+    }
+  }
+
+  start() {
+    this.initializeCursor().then(() => this.poll())
+  }
+
+  poll() {
+    if (this.destroyed) return
+    const stopTimer = this.metrics?.duration.startTimer()
+    this.processingPromise = this.routeReports()
+      .then(
+        () => {
+          stopTimer?.({ outcome: 'success' })
+          this.metrics?.lastSuccess.setToCurrentTime()
+        },
+        (err) => {
+          stopTimer?.({ outcome: 'error' })
+          dbLogger.error({ err }, 'queue routing errored')
+        },
+      )
+      .finally(() => {
+        this.timer = setTimeout(() => this.poll(), getInterval())
+      })
+  }
+
+  async destroy() {
+    this.destroyed = true
+    if (this.timer) {
+      clearTimeout(this.timer)
+      this.timer = undefined
+    }
+    await this.processingPromise
+  }
+
+  async initializeCursor() {
+    await initJobCursor(this.db, JOB_NAME)
+  }
+
+  async getCursor(): Promise<number | null> {
+    const row = await this.db.db
+      .selectFrom('job_cursor')
+      .select('cursor')
+      .where('job', '=', JOB_NAME)
+      .executeTakeFirst()
+    return row?.cursor ? parseInt(row.cursor, 10) : null
+  }
+
+  async routeReports() {
+    await this.db.transaction(async (txn) => {
+      // Acquire row lock on the job_cursor row. A second daemon instance
+      // hitting this same query blocks here until the first transaction
+      // commits, then reads the now-advanced cursor and processes the next
+      // range. The lock is held for the whole batch (~50–200ms).
+      const row = await txn.db
+        .selectFrom('job_cursor')
+        .selectAll()
+        .where('job', '=', JOB_NAME)
+        .forUpdate()
+        .executeTakeFirst()
+      if (!row) return
+      const cursor = row.cursor ? parseInt(row.cursor, 10) : null
+
+      const queueService = this.queueServiceCreator(txn)
+      const result = await queueService.insertReportsFromEvents({
+        cursor,
+        limit: BATCH_SIZE,
+      })
+
+      if (result.processed === 0) {
+        dbLogger.info('no new report events to route')
+        return
+      }
+
+      await txn.db
+        .updateTable('job_cursor')
+        .set({ cursor: String(result.maxEventId) })
+        .where('job', '=', JOB_NAME)
+        .execute()
+
+      dbLogger.info(
+        {
+          processed: result.processed,
+          assigned: result.assigned,
+          unmatched: result.unmatched,
+          maxEventId: result.maxEventId,
+        },
+        'queue routing completed',
+      )
+    })
+  }
+}
+
+// Poll every 1 minute
+const getInterval = (): number => 1 * MINUTE

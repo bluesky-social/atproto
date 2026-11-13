@@ -1,4 +1,7 @@
-import { Options as PrettierOptions, format as prettierFormat } from 'prettier'
+import {
+  type Options as PrettierOptions,
+  format as prettierFormat,
+} from 'prettier'
 
 const DEFAULT_FORMAT_OPTIONS: PrettierOptions = {
   parser: 'typescript',
@@ -72,7 +75,7 @@ export class Formatter {
    * @param code - The TypeScript code to format
    * @returns The formatted code with banner
    */
-  async format(code: string) {
+  async format(code: string): Promise<string> {
     const bannerPadding =
       this.banner && !this.banner.endsWith('\n') ? '\n\n' : ''
     const codePretty = this.prettierOptions

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 
 export type DisabledStep = false | null | undefined
 export type Step = {
-  invalid: boolean
+  invalid?: boolean
 }
 
 const isEnabled = <S extends Step | DisabledStep>(
@@ -14,8 +14,8 @@ const isRequired = <S extends Step | DisabledStep>(
   isEnabled(s) && s.invalid === true
 const isCompleted = <S extends Step | DisabledStep>(
   s: S,
-): s is S extends DisabledStep ? S : S & { invalid: false } =>
-  !isEnabled(s) || s.invalid === false
+): s is S extends DisabledStep ? S : S & { invalid?: false } =>
+  !isEnabled(s) || s.invalid !== true
 
 export function useStepper<const S extends Step>(
   steps: readonly (S | DisabledStep)[],
@@ -61,6 +61,9 @@ export function useStepper<const S extends Step>(
 
   const count = steps.filter(isEnabled).length
   const completed = steps.every(isCompleted)
+  const othersCompleted = steps
+    .filter((s, i) => i !== currentIdx)
+    .every(isCompleted)
 
   const current =
     currentIdx === -1 || !steps[currentIdx] ? undefined : steps[currentIdx]
@@ -76,6 +79,7 @@ export function useStepper<const S extends Step>(
     currentPosition,
     count,
     completed,
+    othersCompleted,
     atFirst: currentPosition === 1,
     atLast: currentPosition === count,
     toFirst,

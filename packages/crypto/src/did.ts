@@ -1,7 +1,7 @@
 import * as uint8arrays from 'uint8arrays'
-import { BASE58_MULTIBASE_PREFIX, DID_KEY_PREFIX } from './const'
-import { plugins } from './plugins'
-import { extractMultikey, extractPrefixedBytes, hasPrefix } from './utils'
+import { BASE58_MULTIBASE_PREFIX, DID_KEY_PREFIX } from './const.js'
+import { plugins } from './plugins.js'
+import { extractMultikey, extractPrefixedBytes, hasPrefix } from './utils.js'
 
 export type ParsedMultikey = {
   jwtAlg: string

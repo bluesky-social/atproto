@@ -1,17 +1,18 @@
 import { validateCidString } from '@atproto/lex-data'
 import {
-  AtIdentifierString,
-  AtUriString,
-  DatetimeString,
-  DidString,
-  HandleString,
-  NsidString,
-  RecordKeyString,
-  TidString,
-  UriString,
-  isValidAtIdentifier as isValidAtId,
-  isValidAtUri,
-  isValidDatetime,
+  type AtIdentifierString,
+  type AtUriString,
+  type DatetimeString,
+  type DidString,
+  type HandleString,
+  type NsidString,
+  type RecordKeyString,
+  type TidString,
+  type UriString,
+  isAtIdentifierString,
+  isAtUriString,
+  isDatetimeString,
+  isDatetimeStringLenient,
   isValidDid,
   isValidHandle,
   isValidLanguage,
@@ -19,43 +20,58 @@ import {
   isValidRecordKey,
   isValidTid,
   isValidUri,
+  parseLanguageString,
 } from '@atproto/syntax'
-import { CheckFn } from '../util/assertion-util.js'
+import type { CheckFn } from '../util/assertion-util.js'
 
 // -----------------------------------------------------------------------------
 // Individual string format types and type guards
 // -----------------------------------------------------------------------------
 
-/**
- * Type guard that checks if a value is a valid AT identifier (DID or handle).
- *
- * @param value - The value to check
- * @returns `true` if the value is a valid AT identifier
- */
-export const isAtIdentifierString: CheckFn<AtIdentifierString> = isValidAtId
-export type {
-  /**
-   * An AT identifier string - either a DID or a handle.
-   *
-   * @example `"did:plc:1234..."` or `"alice.bsky.social"`
-   */
-  AtIdentifierString,
-}
+// Re-exporting from @atproto/syntax without modification to preserve types and
+// documentation for types and utilities that are already well-defined there.
+// @TODO rework other string formats in @atproto/syntax to follow this pattern
+// and re-export here, e.g. language tags, NSIDs, record keys, etc.
+
+export {
+  type AtIdentifierString,
+  asAtIdentifierString,
+  assertAtIdentifierString,
+  ifAtIdentifierString,
+  isAtIdentifierString,
+} from '@atproto/syntax'
+
+// AtIdentifierString utilities
+export { isDidIdentifier, isHandleIdentifier } from '@atproto/syntax'
+
+export {
+  type DatetimeString,
+  asDatetimeString,
+  assertDatetimeString,
+  ifDatetimeString,
+  isDatetimeString,
+  isDatetimeStringLenient,
+} from '@atproto/syntax'
+
+// DatetimeString utilities
+export { currentDatetimeString, toDatetimeString } from '@atproto/syntax'
+
+export {
+  type AtUriString,
+  asAtUriString,
+  assertAtUriString,
+  ifAtUriString,
+  isAtUriString,
+} from '@atproto/syntax'
 
 /**
- * Type guard that checks if a value is a valid AT URI.
+ * Lenient version of {@link isAtUriString} that does not enforce the validity
+ * of the record key (rkey) path component (if present).
  *
- * @param value - The value to check
- * @returns `true` if the value is a valid AT URI
+ * @see {@link isAtUriString}
  */
-export const isAtUriString: CheckFn<AtUriString> = isValidAtUri
-export type {
-  /**
-   * An AT URI string pointing to a resource in the AT Protocol network.
-   *
-   * @example `"at://did:plc:1234.../app.bsky.feed.post/3k2..."`
-   */
-  AtUriString,
+export function isAtUriStringLenient<I>(input: I): input is I & AtUriString {
+  return isAtUriString(input, { strict: false })
 }
 
 /**
@@ -64,7 +80,8 @@ export type {
  * @param value - The value to check
  * @returns `true` if the value is a valid CID string
  */
-export const isCidString = ((v) => validateCidString(v)) as CheckFn<CidString>
+export const isCidString = ((input) =>
+  typeof input === 'string' && validateCidString(input)) as CheckFn<CidString>
 /**
  * A Content Identifier (CID) string.
  *
@@ -73,22 +90,6 @@ export const isCidString = ((v) => validateCidString(v)) as CheckFn<CidString>
  * @example `"bafyreig..."`
  */
 export type CidString = string
-
-/**
- * Type guard that checks if a value is a valid datetime string.
- *
- * @param value - The value to check
- * @returns `true` if the value is a valid datetime string
- */
-export const isDatetimeString: CheckFn<DatetimeString> = isValidDatetime
-export type {
-  /**
-   * An ISO 8601 datetime string.
-   *
-   * @example `"2024-01-15T12:30:00.000Z"`
-   */
-  DatetimeString,
-}
 
 /**
  * Type guard that checks if a value is a valid DID string.
@@ -127,10 +128,26 @@ export type {
 /**
  * Type guard that checks if a value is a valid BCP-47 language tag.
  *
+ * Strict: rejects tags whose syntax is well-formed but violate semantic
+ * constraints from RFC 5646 §4.1 (e.g. repeated variant subtags or repeated
+ * extension singletons). Use {@link isLanguageStringLenient} to accept those.
+ *
  * @param value - The value to check
  * @returns `true` if the value is a valid language string
  */
-export const isLanguageString = isValidLanguage as CheckFn<LanguageString>
+export const isLanguageString = ((input) =>
+  typeof input === 'string' &&
+  parseLanguageString(input) !== null) as CheckFn<LanguageString>
+
+/**
+ * Lenient version of {@link isLanguageString} that only checks well-formed
+ * BCP 47 syntax (RFC 5646 §2.1) and does not enforce semantic constraints
+ * from §4.1.
+ *
+ * @see {@link isLanguageString}
+ */
+export const isLanguageStringLenient =
+  isValidLanguage as CheckFn<LanguageString>
 /**
  * A BCP-47 language tag string.
  *
@@ -230,22 +247,38 @@ type StringFormats = {
 export type StringFormat = Extract<keyof StringFormats, string>
 
 const stringFormatVerifiers: {
-  readonly [K in StringFormat]: CheckFn<StringFormats[K]>
+  readonly [K in StringFormat]: readonly [
+    strict: CheckFn<StringFormats[K]>,
+    lenient?: CheckFn<StringFormats[K]>,
+  ]
 } = /*#__PURE__*/ Object.freeze({
   __proto__: null,
 
-  'at-identifier': isAtIdentifierString,
-  'at-uri': isAtUriString,
-  cid: isCidString,
-  datetime: isDatetimeString,
-  did: isDidString,
-  handle: isHandleString,
-  language: isLanguageString,
-  nsid: isNsidString,
-  'record-key': isRecordKeyString,
-  tid: isTidString,
-  uri: isUriString,
+  'at-identifier': [isAtIdentifierString],
+  'at-uri': [isAtUriString, isAtUriStringLenient],
+  cid: [isCidString],
+  datetime: [isDatetimeString, isDatetimeStringLenient],
+  did: [isDidString],
+  handle: [isHandleString],
+  language: [isLanguageString, isLanguageStringLenient],
+  nsid: [isNsidString],
+  'record-key': [isRecordKeyString],
+  tid: [isTidString],
+  uri: [isUriString],
 })
+
+export type StringFormatValidationOptions = {
+  /**
+   * Allows to be more lenient in validation by using a "lenient" verification
+   * function, if available. The behavior of the lenient verifier depends on the
+   * specific format, but generally it may allow for a wider range of valid
+   * inputs, including values that are not compliant with the AT Protocol
+   * specification.
+   *
+   * @default true
+   */
+  strict?: boolean
+}
 
 /**
  * Infers the string type for a given format name.
@@ -284,12 +317,18 @@ export type InferStringFormat<F extends StringFormat> = F extends StringFormat
 export function isStringFormat<I extends string, F extends StringFormat>(
   input: I,
   format: F,
+  options?: StringFormatValidationOptions,
 ): input is I & StringFormats[F] {
   const formatVerifier = stringFormatVerifiers[format]
   // Fool-proof
   if (!formatVerifier) throw new TypeError(`Unknown string format: ${format}`)
 
-  return formatVerifier(input)
+  const check: CheckFn<StringFormats[F]> =
+    options?.strict === false && formatVerifier.length > 1
+      ? formatVerifier[1]!
+      : formatVerifier[0]
+
+  return check(input)
 }
 
 /**
@@ -311,8 +350,9 @@ export function isStringFormat<I extends string, F extends StringFormat>(
 export function assertStringFormat<I extends string, F extends StringFormat>(
   input: I,
   format: F,
+  options?: StringFormatValidationOptions,
 ): asserts input is I & StringFormats[F] {
-  if (!isStringFormat(input, format)) {
+  if (!isStringFormat(input, format, options)) {
     throw new TypeError(`Invalid string format (${format}): ${input}`)
   }
 }
@@ -339,8 +379,9 @@ export function assertStringFormat<I extends string, F extends StringFormat>(
 export function asStringFormat<I extends string, F extends StringFormat>(
   input: I,
   format: F,
+  options?: StringFormatValidationOptions,
 ): I & StringFormats[F] {
-  assertStringFormat(input, format)
+  assertStringFormat(input, format, options)
   return input
 }
 
@@ -368,8 +409,9 @@ export function asStringFormat<I extends string, F extends StringFormat>(
 export function ifStringFormat<I extends string, F extends StringFormat>(
   input: I,
   format: F,
+  options?: StringFormatValidationOptions,
 ): undefined | (I & StringFormats[F]) {
-  return isStringFormat(input, format) ? input : undefined
+  return isStringFormat(input, format, options) ? input : undefined
 }
 
 /**

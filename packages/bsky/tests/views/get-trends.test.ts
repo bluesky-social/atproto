@@ -1,13 +1,17 @@
 import assert from 'node:assert'
 import { once } from 'node:events'
-import { Server, createServer } from 'node:http'
-import { AddressInfo } from 'node:net'
-import express, { Application } from 'express'
-import AtpAgent from '@atproto/api'
-import { SeedClient, TestNetwork } from '@atproto/dev-env'
-import { ids } from '../../src/lexicon/lexicons'
-import { OutputSchema } from '../../src/lexicon/types/app/bsky/unspecced/getTrendsSkeleton'
-import { Users, trendsSeed } from '../seed/get-trends'
+import { type Server, createServer } from 'node:http'
+import type { AddressInfo } from 'node:net'
+import express, { type Application } from 'express'
+import { type HttpTerminator, createHttpTerminator } from 'http-terminator'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
+import {
+  type AppBskyUnspeccedGetTrendsSkeleton,
+  type AtpAgent,
+  ids,
+} from '@atproto/api'
+import { type SeedClient, TestNetwork } from '@atproto/dev-env'
+import { type Users, trendsSeed } from '../seed/get-trends.js'
 
 describe('getTrends', () => {
   let network: TestNetwork
@@ -23,23 +27,19 @@ describe('getTrends', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_tests_get_trends_test_b',
       bsky: {
-        topicsUrl: mockTrendServer.url,
-        topicsApiKey: 'test',
+        irisUrl: mockTrendServer.url,
       },
     })
-    agent = network.bsky.getClient()
+    agent = network.bsky.getAgent()
     sc = network.getSeedClient()
 
     const result = await trendsSeed(sc)
     users = result.users
-
-    await network.processAll()
   })
 
-  afterAll(async () => {
-    await network.close()
-    await mockTrendServer.stop()
-  })
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
+  afterAll(async () => mockTrendServer?.stop())
 
   describe(`basic handling`, () => {
     beforeAll(() => {
@@ -97,12 +97,19 @@ describe('getTrends', () => {
 class MockTrendsServer {
   app: Application
   server: Server
+  terminator: HttpTerminator
 
-  mockedTrendSkeletons = new Map<string, OutputSchema['trends'][0]>()
+  mockedTrendSkeletons = new Map<
+    string,
+    AppBskyUnspeccedGetTrendsSkeleton.OutputSchema['trends'][0]
+  >()
 
   constructor() {
     this.app = this.createApp()
     this.server = createServer(this.app)
+    this.terminator = createHttpTerminator({
+      server: this.server,
+    })
   }
 
   async listen(port?: number) {
@@ -111,8 +118,11 @@ class MockTrendsServer {
   }
 
   async stop() {
-    this.server.close()
-    await once(this.server, 'close')
+    await this.terminator.terminate()
+  }
+
+  async [Symbol.asyncDispose]() {
+    await this.stop()
   }
 
   get url() {
@@ -123,7 +133,7 @@ class MockTrendsServer {
   private createApp() {
     const app = express()
     app.get('/xrpc/app.bsky.unspecced.getTrendsSkeleton', (req, res) => {
-      const skeleton: OutputSchema = {
+      const skeleton: AppBskyUnspeccedGetTrendsSkeleton.OutputSchema = {
         trends: Array.from(this.mockedTrendSkeletons.values()),
       }
       return res.json(skeleton)

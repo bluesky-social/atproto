@@ -1,11 +1,14 @@
-import { Selectable } from 'kysely'
+import type { Selectable } from 'kysely'
+import type { LexMap } from '@atproto/lex-data'
+import { currentDatetimeString, toDatetimeString } from '@atproto/lex-schema'
+import type { DidString } from '@atproto/lex-schema'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { ScheduledActionStatus, ScheduledActionType } from '../api/util'
-import { Database } from '../db'
-import { ScheduledAction } from '../db/schema/scheduled-action'
-import { ScheduledActionView } from '../lexicon/types/tools/ozone/moderation/defs'
-import { dbLogger } from '../logger'
-import { SchedulingParams } from './types'
+import type { ScheduledActionStatus, ScheduledActionType } from '../api/util.js'
+import type { Database } from '../db/index.js'
+import type { ScheduledAction } from '../db/schema/scheduled-action.js'
+import type { tools } from '../lexicons/index.js'
+import { dbLogger } from '../logger.js'
+import type { SchedulingParams } from './types.js'
 
 export type ScheduledActionServiceCreator = (
   db: Database,
@@ -20,28 +23,28 @@ export class ScheduledActionService {
 
   formatScheduledAction(
     action: Selectable<ScheduledAction>,
-  ): ScheduledActionView {
+  ): tools.ozone.moderation.defs.ScheduledActionView {
     return {
       id: action.id,
       action: action.action,
-      eventData: action.eventData as { [x: string]: unknown } | undefined,
+      eventData: action.eventData as LexMap | undefined,
       did: action.did,
       executeAt: action.executeAt
-        ? new Date(action.executeAt).toISOString()
+        ? toDatetimeString(action.executeAt)
         : undefined,
       executeAfter: action.executeAfter
-        ? new Date(action.executeAfter).toISOString()
+        ? toDatetimeString(action.executeAfter)
         : undefined,
       executeUntil: action.executeUntil
-        ? new Date(action.executeUntil).toISOString()
+        ? toDatetimeString(action.executeUntil)
         : undefined,
       randomizeExecution: action.randomizeExecution,
       createdBy: action.createdBy,
-      createdAt: new Date(action.createdAt).toISOString(),
-      updatedAt: new Date(action.updatedAt).toISOString(),
+      createdAt: toDatetimeString(action.createdAt),
+      updatedAt: toDatetimeString(action.updatedAt),
       status: action.status,
       lastExecutedAt: action.lastExecutedAt
-        ? new Date(action.lastExecutedAt).toISOString()
+        ? toDatetimeString(action.lastExecutedAt)
         : undefined,
       lastFailureReason: action.lastFailureReason || undefined,
       executionEventId: action.executionEventId || undefined,
@@ -75,7 +78,7 @@ export class ScheduledActionService {
       )
     }
 
-    const now = new Date().toISOString()
+    const now = currentDatetimeString()
     const randomizeExecution =
       !('executeAt' in schedulingParams) && 'executeAfter' in schedulingParams
 
@@ -87,12 +90,15 @@ export class ScheduledActionService {
         did,
         executeAt: randomizeExecution
           ? null
-          : schedulingParams.executeAt?.toISOString(),
+          : schedulingParams.executeAt &&
+            toDatetimeString(schedulingParams.executeAt),
         executeAfter: randomizeExecution
-          ? schedulingParams.executeAfter?.toISOString()
+          ? schedulingParams.executeAfter &&
+            toDatetimeString(schedulingParams.executeAfter)
           : null,
         executeUntil: randomizeExecution
-          ? schedulingParams.executeUntil?.toISOString()
+          ? schedulingParams.executeUntil &&
+            toDatetimeString(schedulingParams.executeUntil)
           : null,
         randomizeExecution,
         createdBy,
@@ -107,7 +113,7 @@ export class ScheduledActionService {
   }
 
   async getPendingActionForSubject(
-    did: string,
+    did: DidString,
     action: ScheduledActionType,
   ): Promise<Selectable<ScheduledAction> | null> {
     const scheduledAction = await this.db.db
@@ -134,7 +140,7 @@ export class ScheduledActionService {
     limit?: number
     startTime?: Date
     endTime?: Date
-    subjects?: string[]
+    subjects?: DidString[]
     statuses: ScheduledActionStatus[]
     direction?: 'asc' | 'desc'
   }): Promise<{
@@ -151,24 +157,25 @@ export class ScheduledActionService {
     }
 
     if (startTime) {
-      query = query.where((qb) => {
-        return qb
-          .orWhere('executeAt', '>=', startTime.toISOString())
-          .orWhere('executeAfter', '>=', startTime.toISOString())
-      })
+      query = query.where((eb) =>
+        eb.or([
+          eb('executeAt', '>=', toDatetimeString(startTime)),
+          eb('executeAfter', '>=', toDatetimeString(startTime)),
+        ]),
+      )
     }
 
     if (endTime) {
-      query = query.where((qb) => {
-        return qb
-          .orWhere('executeAt', '<=', endTime.toISOString())
-          .orWhere('executeUntil', '<=', endTime.toISOString())
-          .orWhere((sqb) => {
-            return sqb
-              .where('executeUntil', 'is', null)
-              .where('executeAfter', '<=', endTime.toISOString())
-          })
-      })
+      query = query.where((eb) =>
+        eb.or([
+          eb('executeAt', '<=', toDatetimeString(endTime)),
+          eb('executeUntil', '<=', toDatetimeString(endTime)),
+          eb.and([
+            eb('executeUntil', 'is', null),
+            eb('executeAfter', '<=', toDatetimeString(endTime)),
+          ]),
+        ]),
+      )
     }
 
     if (cursor) {
@@ -187,12 +194,12 @@ export class ScheduledActionService {
     }
   }
 
-  async cancelScheduledActions(subjects: string[]): Promise<{
-    succeeded: string[]
-    failed: { did: string; error: string; errorCode?: string }[]
+  async cancelScheduledActions(subjects: DidString[]): Promise<{
+    succeeded: DidString[]
+    failed: { did: DidString; error: string; errorCode?: string }[]
   }> {
-    const succeeded: string[] = []
-    const failed: { did: string; error: string; errorCode?: string }[] = []
+    const succeeded: DidString[] = []
+    const failed: { did: DidString; error: string; errorCode?: string }[] = []
 
     for (const did of subjects) {
       try {
@@ -200,7 +207,7 @@ export class ScheduledActionService {
           .updateTable('scheduled_action')
           .set({
             status: 'cancelled',
-            updatedAt: new Date().toISOString(),
+            updatedAt: currentDatetimeString(),
           })
           .where('did', '=', did)
           .where('status', '=', 'pending')
@@ -235,11 +242,12 @@ export class ScheduledActionService {
       .selectFrom('scheduled_action')
       .selectAll()
       .where('status', '=', 'pending')
-      .where((qb) => {
-        return qb
-          .orWhere('executeAfter', '<=', now.toISOString())
-          .orWhere('executeAt', '<=', now.toISOString())
-      })
+      .where((eb) =>
+        eb.or([
+          eb('executeAfter', '<=', toDatetimeString(now)),
+          eb('executeAt', '<=', toDatetimeString(now)),
+        ]),
+      )
       .execute()
   }
 
@@ -247,7 +255,7 @@ export class ScheduledActionService {
     actionId: number,
     executionEventId: number,
   ): Promise<void> {
-    const now = new Date().toISOString()
+    const now = currentDatetimeString()
     await this.db.db
       .updateTable('scheduled_action')
       .set({
@@ -264,7 +272,7 @@ export class ScheduledActionService {
     actionId: number,
     failureReason: string,
   ): Promise<void> {
-    const now = new Date().toISOString()
+    const now = currentDatetimeString()
     await this.db.db
       .updateTable('scheduled_action')
       .set({

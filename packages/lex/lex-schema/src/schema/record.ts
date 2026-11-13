@@ -1,19 +1,27 @@
+import type { LexMap } from '@atproto/lex-data'
 import {
-  $Typed,
+  type $Typed,
   $typed,
-  InferInput,
-  InferOutput,
-  LexiconRecordKey,
-  NsidString,
+  type InferInput,
+  type InferOutput,
+  type LexiconRecordKey,
+  type NsidString,
+  type RecordKeyValue,
   Schema,
-  TidString,
-  Unknown$TypedObject,
-  ValidationContext,
-  Validator,
+  type Unknown$TypedObject,
+  type ValidationContext,
+  type ValidationResult,
+  type Validator,
+  isNsidString,
+  isRecordKeyString,
+  isTidString,
 } from '../core.js'
 import { lazyProperty } from '../util/lazy-property.js'
+import { custom } from './custom.js'
 import { literal } from './literal.js'
-import { string } from './string.js'
+import { withDefault } from './with-default.js'
+
+const SELF = 'self'
 
 /**
  * Infers the record key type from a RecordSchema.
@@ -21,7 +29,7 @@ import { string } from './string.js'
  * @template R - The RecordSchema type
  */
 export type InferRecordKey<R extends RecordSchema> =
-  R extends RecordSchema<infer TKey> ? RecordKeySchemaOutput<TKey> : never
+  R extends RecordSchema<infer TKey> ? RecordKeyValue<TKey> : never
 
 export type TypedRecord<
   TType extends NsidString,
@@ -51,27 +59,33 @@ export type TypedRecord<
  * ```
  */
 export class RecordSchema<
-  const TKey extends LexiconRecordKey = any,
-  const TType extends NsidString = any,
-  const TShape extends Validator<{ [k: string]: unknown }> = any,
+  const TKey extends LexiconRecordKey = LexiconRecordKey,
+  const TType extends NsidString = NsidString,
+  const TShape extends Validator<LexMap> = Validator<LexMap>,
 > extends Schema<
   $Typed<InferInput<TShape>, TType>,
   $Typed<InferOutput<TShape>, TType>
 > {
   readonly type = 'record' as const
 
-  keySchema: RecordKeySchema<TKey>
+  readonly key: TKey
+  readonly $type: TType
+  readonly schema: TShape
 
-  constructor(
-    readonly key: TKey,
-    readonly $type: TType,
-    readonly schema: TShape,
-  ) {
+  readonly keySchema: RecordKeySchema<TKey>
+
+  constructor(key: TKey, $type: TType, schema: TShape) {
     super()
-    this.keySchema = recordKey(key)
+    this.key = key
+    this.$type = $type
+    this.schema = schema
+    this.keySchema = recordKey(key) // Validates "key"
   }
 
-  validateInContext(input: unknown, ctx: ValidationContext) {
+  validateInContext(
+    input: unknown,
+    ctx: ValidationContext,
+  ): ValidationResult<InferInput<TShape>> {
     const result = ctx.validate(input, this.schema)
 
     if (!result.success) {
@@ -86,9 +100,13 @@ export class RecordSchema<
   }
 
   build(
-    input: Omit<InferInput<this>, '$type'>,
-  ): $Typed<InferOutput<this>, TType> {
-    return this.parse($typed(input, this.$type))
+    input: Omit<InferOutput<TShape>, '$type'>,
+  ): $Typed<InferOutput<TShape>, TType>
+  build(
+    input: Omit<InferInput<TShape>, '$type'>,
+  ): $Typed<InferInput<TShape>, TType>
+  build(input: Record<string, unknown>) {
+    return $typed(input, this.$type)
   }
 
   isTypeOf<TValue extends { $type?: unknown }>(
@@ -114,40 +132,48 @@ export class RecordSchema<
   }
 }
 
-export type RecordKeySchemaOutput<Key extends LexiconRecordKey> =
-  Key extends 'any'
-    ? string
-    : Key extends 'tid'
-      ? TidString
-      : Key extends 'nsid'
-        ? NsidString
-        : Key extends `literal:${infer L extends string}`
-          ? L
-          : never
-
 export type RecordKeySchema<Key extends LexiconRecordKey> = Schema<
-  RecordKeySchemaOutput<Key>
+  RecordKeyValue<Key>
 >
 
-const keySchema = string({ minLength: 1 })
-const tidSchema = string({ format: 'tid' })
-const nsidSchema = string({ format: 'nsid' })
-const selfLiteralSchema = literal('self')
+const keySchema: RecordKeySchema<'any'> = custom(
+  isRecordKeyString,
+  'Invalid record-key string format',
+)
+const tidSchema: RecordKeySchema<'tid'> = custom(
+  isTidString,
+  'Invalid TID string format',
+)
+const nsidSchema: RecordKeySchema<'nsid'> = custom(
+  isNsidString,
+  'Invalid NSID string format',
+)
+const selfLiteralSchema: RecordKeySchema<'literal:self'> =
+  recordKeyLiteral(SELF)
 
 function recordKey<Key extends LexiconRecordKey>(
   key: Key,
 ): RecordKeySchema<Key> {
   // @NOTE Use cached instances for common schemas
-  if (key === 'any') return keySchema as any
-  if (key === 'tid') return tidSchema as any
-  if (key === 'nsid') return nsidSchema as any
+  if (key === 'any') return keySchema as RecordKeySchema<Key>
+  if (key === 'tid') return tidSchema as RecordKeySchema<Key>
+  if (key === 'nsid') return nsidSchema as RecordKeySchema<Key>
   if (key.startsWith('literal:')) {
-    const value = key.slice(8) as RecordKeySchemaOutput<Key>
-    if (value === 'self') return selfLiteralSchema as any
-    return literal(value)
+    const value = key.slice(8)
+    if (value === SELF) return selfLiteralSchema as RecordKeySchema<Key>
+    return recordKeyLiteral(value) as RecordKeySchema<Key>
   }
 
-  throw new Error(`Unsupported record key type: ${key}`)
+  throw new TypeError(`Unsupported record key type: ${key}`)
+}
+
+function recordKeyLiteral<T extends string>(
+  rkey: T,
+): RecordKeySchema<`literal:${T}`> {
+  if (!isRecordKeyString(rkey)) {
+    throw new TypeError(`Invalid record key value: ${rkey}`)
+  }
+  return withDefault(literal(rkey), rkey) as any
 }
 
 /**
@@ -199,11 +225,11 @@ type AsNsid<T> = T extends `${string}#${string}` ? never : T
 export function record<
   const K extends LexiconRecordKey,
   const T extends NsidString,
-  const S extends Validator<{ [k: string]: unknown }>,
+  const S extends Validator<LexMap>,
 >(key: K, type: AsNsid<T>, validator: S): RecordSchema<K, T, S>
 export function record<
   const K extends LexiconRecordKey,
-  const V extends { $type: NsidString },
+  const V extends LexMap & { $type: NsidString },
 >(
   key: K,
   type: AsNsid<V['$type']>,
@@ -213,7 +239,7 @@ export function record<
 export function record<
   const K extends LexiconRecordKey,
   const T extends NsidString,
-  const S extends Validator<{ [k: string]: unknown }>,
+  const S extends Validator<LexMap>,
 >(key: K, type: T, validator: S) {
   return new RecordSchema<K, T, S>(key, type, validator)
 }

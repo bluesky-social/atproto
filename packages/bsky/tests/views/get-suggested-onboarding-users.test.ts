@@ -1,17 +1,22 @@
 import { once } from 'node:events'
-import { Server, createServer } from 'node:http'
-import { AddressInfo } from 'node:net'
-import express, { Application } from 'express'
-import AtpAgent from '@atproto/api'
-import { SeedClient, TestNetwork } from '@atproto/dev-env'
-import { ids } from '../../src/lexicon/lexicons'
-import { OutputSchema } from '../../src/lexicon/types/app/bsky/unspecced/getSuggestedUsersSkeleton'
+import { type Server, createServer } from 'node:http'
+import type { AddressInfo } from 'node:net'
+import express, { type Application } from 'express'
+import { type HttpTerminator, createHttpTerminator } from 'http-terminator'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
+import {
+  type AppBskyUnspeccedGetOnboardingSuggestedUsersSkeleton,
+  type AtpAgent,
+  ids,
+} from '@atproto/api'
+import { type SeedClient, TestNetwork } from '@atproto/dev-env'
+import type { DidString, HandleString } from '@atproto/syntax'
 
 type User = {
   id: string
-  did: string
+  did: DidString
   email: string
-  handle: string
+  handle: HandleString
   password: string
   displayName: string
   description: string
@@ -71,23 +76,20 @@ describe('getSuggestedOnboardingUsers', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_tests_get_suggested_onboarding_users',
       bsky: {
-        topicsUrl: mockServer.url,
-        topicsApiKey: 'test',
+        suggestionsUrl: mockServer.url,
+        suggestionsApiKey: 'test',
       },
     })
-    agent = network.bsky.getClient()
+    agent = network.bsky.getAgent()
     sc = network.getSeedClient()
 
     const result = await seed(sc)
     seededUsers = result.users
-
-    await network.processAll()
   })
 
-  afterAll(async () => {
-    await network.close()
-    await mockServer.stop()
-  })
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
+  afterAll(async () => mockServer?.stop())
 
   describe(`basic handling`, () => {
     beforeAll(() => {
@@ -147,12 +149,16 @@ describe('getSuggestedOnboardingUsers', () => {
 class MockServer {
   app: Application
   server: Server
+  terminator: HttpTerminator
 
   mockedDids = new Map<string, string>()
 
   constructor() {
     this.app = this.createApp()
     this.server = createServer(this.app)
+    this.terminator = createHttpTerminator({
+      server: this.server,
+    })
   }
 
   async listen(port?: number) {
@@ -161,8 +167,7 @@ class MockServer {
   }
 
   async stop() {
-    this.server.close()
-    await once(this.server, 'close')
+    await this.terminator.terminate()
   }
 
   get url() {
@@ -173,11 +178,12 @@ class MockServer {
   private createApp() {
     const app = express()
     app.get(
-      '/xrpc/app.bsky.unspecced.getSuggestedUsersSkeleton',
+      '/xrpc/app.bsky.unspecced.getOnboardingSuggestedUsersSkeleton',
       (req, res) => {
-        const skeleton: OutputSchema = {
-          dids: Array.from(this.mockedDids.values()),
-        }
+        const skeleton: AppBskyUnspeccedGetOnboardingSuggestedUsersSkeleton.OutputSchema =
+          {
+            dids: Array.from(this.mockedDids.values()),
+          }
         return res.json(skeleton)
       },
     )

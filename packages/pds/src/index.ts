@@ -4,64 +4,154 @@
 // leave at top of file before importing Routes
 import 'express-async-errors'
 
-import events from 'node:events'
-import http from 'node:http'
+import events, { once } from 'node:events'
+import type http from 'node:http'
 import { PlcClientError } from '@did-plc/lib'
 import cors from 'cors'
 import express from 'express'
-import { HttpTerminator, createHttpTerminator } from 'http-terminator'
-import { DAY, HOUR, MINUTE, SECOND } from '@atproto/common'
+import { type HttpTerminator, createHttpTerminator } from 'http-terminator'
+import { DAY, SECOND } from '@atproto/common'
 import {
-  MemoryRateLimiter,
-  MethodHandler,
-  RedisRateLimiter,
+  type MethodHandler,
   ResponseType,
   XRPCError,
+  createServer,
 } from '@atproto/xrpc-server'
-import apiRoutes from './api'
-import * as authRoutes from './auth-routes'
-import * as basicRoutes from './basic-routes'
-import { ServerConfig, ServerSecrets } from './config'
-import { AppContext, AppContextOptions } from './context'
-import * as error from './error'
-import { createServer } from './lexicon'
-import * as AppBskyFeedGetFeedSkeleton from './lexicon/types/app/bsky/feed/getFeedSkeleton'
-import { loggerMiddleware } from './logger'
-import { proxyHandler } from './pipethrough'
-import compression from './util/compression'
-import * as wellKnown from './well-known'
+import apiRoutes from './api/index.js'
+import * as authRoutes from './auth-routes.js'
+import { createPublicKeyObject } from './auth-verifier.js'
+import * as basicRoutes from './basic-routes.js'
+import {
+  type ServerConfig,
+  type ServerEnvironment,
+  type ServerSecrets,
+  envToCfg,
+  envToSecrets,
+  readEnv,
+} from './config/index.js'
+import { AppContext, type AppContextOptions } from './context.js'
+import {
+  entrywayAttribution,
+  entrywayRateLimitBypass,
+} from './entryway-attribution.js'
+import * as error from './error.js'
+import type { app } from './lexicons.js'
+import { loggerMiddleware, pdsLogger } from './logger.js'
+import { proxyHandler } from './pipethrough.js'
+import { buildRateLimitsConfig } from './rate-limits.js'
+import compression from './util/compression.js'
+import * as wellKnown from './well-known.js'
 
-export { createSecretKeyObject } from './auth-verifier'
-export * from './config'
-export { AppContext } from './context'
-export { Database } from './db'
-export { DiskBlobStore } from './disk-blobstore'
-export { createServer as createLexiconServer } from './lexicon'
-export { httpLogger } from './logger'
-export { type CommitDataWithOps, type PreparedWrite } from './repo'
-export * as repoPrepare from './repo/prepare'
-export { scripts } from './scripts'
-export * as sequencer from './sequencer'
+export {
+  type KeyObject,
+  bearerTokenFromReq,
+  createPublicKeyObject,
+  createSecretKeyObject,
+} from './auth-verifier.js'
+export * from './config/index.js'
+export { AppContext, type AppContextOptions } from './context.js'
+export { Database } from './db/index.js'
+export { DiskBlobStore } from './disk-blobstore.js'
+export * from './lexicons.js'
+export { httpLogger } from './logger.js'
+export { type CommitDataWithOps, type PreparedWrite } from './repo/index.js'
+export * as repoPrepare from './repo/prepare.js'
+export { scripts } from './scripts/index.js'
+export * as sequencer from './sequencer/index.js'
 
-// Legacy export for backwards compatibility
+/**
+ * @deprecated Legacy export for backwards compatibility
+ */
 export type SkeletonHandler = MethodHandler<
   void,
-  AppBskyFeedGetFeedSkeleton.QueryParams,
-  AppBskyFeedGetFeedSkeleton.HandlerInput,
-  AppBskyFeedGetFeedSkeleton.HandlerOutput
+  app.bsky.feed.getFeedSkeleton.$Params,
+  void,
+  app.bsky.feed.getFeedSkeleton.$Output
 >
 
-export class PDS {
+export class PDS implements AsyncDisposable {
   public ctx: AppContext
   public app: express.Application
   public server?: http.Server
   private terminator?: HttpTerminator
-  private dbStatsInterval?: NodeJS.Timeout
-  private sequencerStatsInterval?: NodeJS.Timeout
 
   constructor(opts: { ctx: AppContext; app: express.Application }) {
     this.ctx = opts.ctx
     this.app = opts.app
+  }
+
+  static async fromEnv(
+    env: ServerEnvironment = readEnv(),
+    overrides?: Partial<AppContextOptions>,
+  ): Promise<PDS> {
+    const cfg = envToCfg(env)
+    const secrets = envToSecrets(env)
+    return PDS.create(cfg, secrets, overrides)
+  }
+
+  /**
+   * Creates and starts a PDS instance, and waits for a termination signal to
+   * stop it.
+   */
+  static async run({
+    env = undefined,
+    signal: inputSignal,
+    signals = ['SIGINT', 'SIGTERM'],
+    onCreated = undefined,
+    onStarted = undefined,
+  }: {
+    env?: ServerEnvironment
+    signal?: AbortSignal
+    signals?: readonly NodeJS.Signals[]
+    /**
+     * Hook that allows attaching additional logic (like adding custom HTTP
+     * routes) before the PDS is started.
+     */
+    onCreated?: (pds: PDS) => void | Promise<void>
+    onStarted?: (pds: PDS) => void | Promise<void>
+  } = {}): Promise<void> {
+    const ac = new AbortController()
+    const { signal } = ac
+    const abort = () => ac.abort()
+
+    // Always abort the internal signal, ensuring proper resource cleanup
+    using _ = { [Symbol.dispose]: abort }
+
+    // Bind the internal signal to the input signal (will automatically remove
+    // the listener when the internal signal is aborted)
+    inputSignal?.throwIfAborted()
+    inputSignal?.addEventListener('abort', abort, { signal })
+
+    // Bind the internal signal to the process signals (will automatically
+    // remove the listener when the internal signal is aborted)
+    for (const sig of signals) {
+      process.on(sig, abort)
+      signal.addEventListener('abort', () => process.off(sig, abort))
+    }
+
+    await using pds = await PDS.fromEnv(env)
+
+    if (signal.aborted) return
+
+    await onCreated?.(pds)
+
+    if (signal.aborted) return
+
+    pdsLogger.info('starting')
+
+    await pds.start()
+
+    if (signal.aborted) return
+
+    await onStarted?.(pds)
+
+    if (signal.aborted) return
+
+    pdsLogger.info('started')
+
+    await once(signal, 'abort')
+
+    pdsLogger.info('stopping')
   }
 
   static async create(
@@ -73,8 +163,8 @@ export class PDS {
 
     const { rateLimits } = ctx.cfg
 
-    const server = createServer({
-      validateResponse: false,
+    const server = createServer([], {
+      validateResponse: cfg.service.devMode,
       payload: {
         jsonLimit: 150 * 1024, // 150kb
         textLimit: 100 * 1024, // 100kb
@@ -103,45 +193,11 @@ export class PDS {
 
         return XRPCError.fromError(err)
       },
-      rateLimits: rateLimits.enabled
-        ? {
-            creator: ctx.redisScratch
-              ? (opts) => new RedisRateLimiter(ctx.redisScratch, opts)
-              : (opts) => new MemoryRateLimiter(opts),
-            bypass: ({ req }) => {
-              const { bypassKey, bypassIps } = rateLimits
-              if (
-                bypassKey &&
-                bypassKey === req.headers['x-ratelimit-bypass']
-              ) {
-                return true
-              }
-              if (bypassIps && bypassIps.includes(req.ip)) {
-                return true
-              }
-              return false
-            },
-            global: [
-              {
-                name: 'global-ip',
-                durationMs: 5 * MINUTE,
-                points: 3000,
-              },
-            ],
-            shared: [
-              {
-                name: 'repo-write-hour',
-                durationMs: HOUR,
-                points: 5000, // creates=3, puts=2, deletes=1
-              },
-              {
-                name: 'repo-write-day',
-                durationMs: DAY,
-                points: 35000, // creates=3, puts=2, deletes=1
-              },
-            ],
-          }
-        : undefined,
+      rateLimits: buildRateLimitsConfig(
+        rateLimits,
+        ctx.redisScratch,
+        cfg.entryway ? entrywayRateLimitBypass : undefined,
+      ),
     })
 
     apiRoutes(server, ctx)
@@ -156,12 +212,21 @@ export class PDS {
       ...getTrustedIps(cfg),
     ])
     app.use(loggerMiddleware)
+    if (cfg.entryway) {
+      app.use(
+        entrywayAttribution({
+          entrywayDid: cfg.entryway.did,
+          pdsDid: cfg.service.did,
+          key: createPublicKeyObject(cfg.entryway.jwtPublicKeyHex),
+        }),
+      )
+    }
     app.use(compression())
     app.use(authRoutes.createRouter(ctx)) // Before CORS
     app.use(cors({ maxAge: DAY / SECOND }))
     app.use(basicRoutes.createRouter(ctx))
     app.use(wellKnown.createRouter(ctx))
-    app.use(server.xrpc.router)
+    app.use(server.router)
     app.use(error.handler)
 
     return new PDS({
@@ -174,21 +239,22 @@ export class PDS {
     await this.ctx.sequencer.start()
     const server = this.app.listen(this.ctx.cfg.service.port)
     this.server = server
-    this.server.keepAliveTimeout = 90000
+    this.server.keepAliveTimeout = 90_000
     this.terminator = createHttpTerminator({ server })
     await events.once(server, 'listening')
     return server
   }
 
   async destroy(): Promise<void> {
-    await this.ctx.sequencer.destroy()
-    await this.terminator?.terminate()
-    await this.ctx.backgroundQueue.destroy()
-    await this.ctx.accountManager.close()
-    await this.ctx.redisScratch?.quit()
-    await this.ctx.proxyAgent.destroy()
-    clearInterval(this.dbStatsInterval)
-    clearInterval(this.sequencerStatsInterval)
+    try {
+      await this.terminator?.terminate()
+    } finally {
+      await this.ctx.destroy()
+    }
+  }
+
+  async [Symbol.asyncDispose]() {
+    await this.destroy()
   }
 }
 

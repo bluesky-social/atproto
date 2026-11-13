@@ -1,4 +1,4 @@
-import 'core-js/modules/es.symbol.dispose'
+import 'core-js/es/symbol/dispose.js'
 
 export * from '@atproto-labs/did-resolver'
 export {
@@ -10,14 +10,12 @@ export * from '@atproto-labs/handle-resolver'
 
 export * from '@atproto/did'
 export * from '@atproto/jwk'
+export * from '@atproto/oauth-resolver'
 export * from '@atproto/oauth-types'
 
 export * from './lock.js'
-export * from './oauth-authorization-server-metadata-resolver.js'
 export * from './oauth-callback-error.js'
 export * from './oauth-client.js'
-export * from './oauth-protected-resource-metadata-resolver.js'
-export * from './oauth-resolver-error.js'
 export * from './oauth-response-error.js'
 export * from './oauth-server-agent.js'
 export * from './oauth-server-factory.js'

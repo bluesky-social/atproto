@@ -1,0 +1,15 @@
+{
+  // This file is used to type config files (like vite.config.ts,
+  // lingui.config.ts, etc.)
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": ["./node.tsconfig.json"],
+  "compilerOptions": {
+    "module": "Node18",
+    "noEmit": true,
+    "declaration": false,
+    "declarationMap": false,
+    "composite": false,
+    "allowJs": true,
+    "checkJs": true,
+  },
+}

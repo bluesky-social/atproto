@@ -1,5 +1,5 @@
 import { setTimeout as sleep } from 'node:timers/promises'
-import { Awaitable } from './type.js'
+import type { Awaitable } from './type.js'
 
 export function onOvertimeDefault(options: {
   start: number
@@ -46,4 +46,12 @@ export async function constantTime<R>(
       await sleep(remaining)
     }
   }
+}
+
+export function isOlderThan(
+  date: number | Date,
+  duration: number,
+  reference: number | Date = Date.now(),
+): boolean {
+  return date.valueOf() < reference.valueOf() - duration
 }

@@ -1,6 +1,6 @@
 import { fromBase64, graphemeLen, toBase64, utf8Len } from '@atproto/lex-data'
 import {
-  LanguageTag,
+  type LanguageTag,
   isValidLanguage,
   parseLanguageString,
 } from '@atproto/syntax'

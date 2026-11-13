@@ -1,0 +1,16 @@
+{
+  "extends": ["../../tsconfig/jest.tsconfig.json"],
+  "include": ["./jest.setup.ts", "./tests", "./src/**/*.test.ts"],
+  "references": [
+    { "path": "../api/tsconfig.build.json" },
+    { "path": "../dev-env/tsconfig.build.json" },
+    { "path": "../lex/lex/tsconfig.build.json" },
+    { "path": "../oauth/oauth-client-node/tsconfig.build.json" },
+    { "path": "./tsconfig.build.json" },
+  ],
+  "compilerOptions": {
+    "rootDir": ".",
+    // @TODO Change to true and fix implicit any errors
+    "noImplicitAny": false,
+  },
+}

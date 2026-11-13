@@ -1,6 +1,15 @@
-import { dataToCborBlock } from '@atproto/common'
-import { SeedClient, TestNetworkNoAppView, usersSeed } from '@atproto/dev-env'
-import { AtprotoRecordResolver, buildRecordResolver } from '../src/index.js'
+import { afterAll, assert, beforeAll, describe, expect, it } from 'vitest'
+import {
+  type SeedClient,
+  TestNetworkNoAppView,
+  usersSeed,
+} from '@atproto/dev-env'
+import { type AtUriString, l } from '@atproto/lex'
+import { encode } from '@atproto/lex-cbor'
+import {
+  type AtprotoRecordResolver,
+  buildRecordResolver,
+} from '../src/index.js'
 
 describe('Record resolution', () => {
   let network: TestNetworkNoAppView
@@ -17,10 +26,10 @@ describe('Record resolution', () => {
       rpc: { fetch },
       idResolver: network.pds.ctx.idResolver,
     })
-  })
+  }, 20_000) // @NOTE seeding can take a while
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('resolves record by AT-URI object.', async () => {
@@ -36,6 +45,7 @@ describe('Record resolution', () => {
 
   it('resolves record by AT-URI string.', async () => {
     const post = await sc.post(sc.dids.alice, 'post2')
+    assert(l.isAtUriString(post.ref.uriStr))
     const result = await resolveRecord(post.ref.uriStr, {
       forceRefresh: true,
     })
@@ -78,13 +88,13 @@ describe('Record resolution', () => {
 
   it('does not resolve record with corrupted CAR block.', async () => {
     const post = await sc.post(sc.dids.alice, 'post4')
-    const badBlock = await dataToCborBlock({})
+    const badCbor = encode({})
     await network.pds.ctx.actorStore.transact(sc.dids.alice, (txn) =>
       txn.repo.db.db
         .updateTable('repo_block')
         .set({
-          content: badBlock.bytes,
-          size: badBlock.bytes.byteLength,
+          content: badCbor,
+          size: badCbor.byteLength,
         })
         .where('cid', '=', post.ref.cidStr)
         .execute(),
@@ -168,7 +178,7 @@ describe('Record resolution', () => {
         return doc
       },
     )
-    const result = await resolveRecord(post.ref.uriStr, {
+    const result = await resolveRecord(post.ref.uriStr as AtUriString, {
       forceRefresh: true,
     })
     expect(result.commit.did).toEqual(sc.dids.alice)

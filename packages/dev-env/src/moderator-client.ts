@@ -1,24 +1,31 @@
 import {
-  AtpAgent,
-  ToolsOzoneModerationDefs,
-  ToolsOzoneModerationEmitEvent as EmitModerationEvent,
-  ToolsOzoneModerationQueryEvents as QueryModerationEvents,
-  ToolsOzoneModerationQueryStatuses as QueryModerationStatuses,
-  ToolsOzoneModerationEmitEvents as EmitModerationEvents,
-  ToolsOzoneSettingRemoveOptions,
-  ToolsOzoneSettingUpsertOption,
+  type $Typed,
+  type AtpAgent,
+  type ChatBskyConvoDefs,
+  type ComAtprotoAdminDefs,
+  type ComAtprotoRepoStrongRef,
+  type ToolsOzoneModerationDefs,
+  type ToolsOzoneModerationEmitEvent as EmitModerationEvent,
+  type ToolsOzoneModerationEmitEvents as EmitModerationEvents,
+  ToolsOzoneModerationGetReporterStats as _GetReporterStats, // includes types for getReporterStats()
+  type ToolsOzoneModerationQueryEvents as QueryModerationEvents,
+  type ToolsOzoneModerationQueryStatuses as QueryModerationStatuses,
+  type ToolsOzoneReportQueryReports as QueryModerationReports,
+  type ToolsOzoneSettingRemoveOptions,
+  type ToolsOzoneSettingUpsertOption,
 } from '@atproto/api'
-import { TestOzone } from './ozone'
+import type { TestOzone } from './ozone.js'
 
 type TakeActionInput = EmitModerationEvent.InputSchema
 type QueryStatusesParams = QueryModerationStatuses.QueryParams
 type QueryEventsParams = QueryModerationEvents.QueryParams
+type QueryReportsParams = QueryModerationReports.QueryParams
 type ModLevel = 'admin' | 'moderator' | 'triage'
 
 export class ModeratorClient {
   agent: AtpAgent
   constructor(public ozone: TestOzone) {
-    this.agent = ozone.getClient()
+    this.agent = ozone.getAgent()
   }
 
   async getEvent(id: number, role?: ModLevel) {
@@ -70,16 +77,32 @@ export class ModeratorClient {
     return result.data
   }
 
+  async queryReports(input: QueryReportsParams, role?: ModLevel) {
+    const result = await this.agent.tools.ozone.report.queryReports(input, {
+      headers: await this.ozone.modHeaders(
+        'tools.ozone.report.queryReports',
+        role,
+      ),
+    })
+    return result.data
+  }
+
   async emitEvent(
     opts: {
       event: TakeActionInput['event']
-      subject: TakeActionInput['subject']
+      subject:
+        | $Typed<ComAtprotoAdminDefs.RepoRef>
+        | $Typed<ComAtprotoRepoStrongRef.Main>
+        | $Typed<ChatBskyConvoDefs.MessageRef>
+        | $Typed<ChatBskyConvoDefs.ConvoRef>
+        | { $type: string }
       subjectBlobCids?: TakeActionInput['subjectBlobCids']
       reason?: string
       createdBy?: string
       meta?: unknown
       modTool?: ToolsOzoneModerationDefs.ModTool
       externalId?: string
+      reportAction?: TakeActionInput['reportAction']
     },
     role?: ModLevel,
   ) {
@@ -90,6 +113,7 @@ export class ModeratorClient {
       createdBy = 'did:example:admin',
       modTool,
       externalId,
+      reportAction,
     } = opts
     const result = await this.agent.tools.ozone.moderation.emitEvent(
       {
@@ -99,6 +123,7 @@ export class ModeratorClient {
         createdBy,
         modTool,
         externalId,
+        reportAction,
       },
       {
         encoding: 'application/json',
@@ -112,17 +137,21 @@ export class ModeratorClient {
   }
 
   async emitEvents(
-    input: EmitModerationEvents.InputSchema & { createdBy?: string },
+    input: Omit<EmitModerationEvents.InputSchema, 'createdBy'> & {
+      createdBy?: string
+    },
     role?: ModLevel,
   ) {
-    input.createdBy ??= 'did:example:admin'
-    const result = await this.agent.tools.ozone.moderation.emitEvents(input, {
-      encoding: 'application/json',
-      headers: await this.ozone.modHeaders(
-        'tools.ozone.moderation.emitEvents',
-        role,
-      ),
-    })
+    const result = await this.agent.tools.ozone.moderation.emitEvents(
+      { ...input, createdBy: input.createdBy ?? 'did:example:admin' },
+      {
+        encoding: 'application/json',
+        headers: await this.ozone.modHeaders(
+          'tools.ozone.moderation.emitEvents',
+          role,
+        ),
+      },
+    )
     return result.data
   }
 
@@ -165,7 +194,12 @@ export class ModeratorClient {
 
   async performTakedown(
     opts: {
-      subject: TakeActionInput['subject']
+      subject:
+        | $Typed<ComAtprotoAdminDefs.RepoRef>
+        | $Typed<ComAtprotoRepoStrongRef.Main>
+        | $Typed<ChatBskyConvoDefs.MessageRef>
+        | $Typed<ChatBskyConvoDefs.ConvoRef>
+        | { $type: string }
       subjectBlobCids?: TakeActionInput['subjectBlobCids']
       durationInHours?: number
       acknowledgeAccountSubjects?: boolean
@@ -243,5 +277,11 @@ export class ModeratorClient {
     )
 
     return data
+  }
+
+  async computeStats() {
+    const db = this.ozone.ctx.db
+    const statsService = this.ozone.ctx.reportStatsService(db)
+    await statsService.materializeAll({ force: true })
   }
 }

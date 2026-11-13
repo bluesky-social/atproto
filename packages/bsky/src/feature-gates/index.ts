@@ -1,13 +1,19 @@
 import { GrowthBookClient } from '@growthbook/growthbook'
-import { featureGatesLogger } from '../logger'
-import { FeatureGate } from './gates'
-import { MetricsClient } from './metrics'
-import { CheckedFeatureGatesMap, RawUserContext } from './types'
+import type express from 'express'
+import { featureGatesLogger } from '../logger.js'
+import { Gate, IGNORE_METRICS_FOR_GATES } from './gates.js'
+import { MetricsClient } from './metrics.js'
+import type {
+  CheckedFeatureGatesMap,
+  ScopedFeatureGatesClient,
+  UserContext,
+} from './types.js'
 import {
-  extractParsedUserContextFromGrowthBookUserContext,
-  parseRawUserContext,
+  extractUserContextFromGrowthbookUserContext,
+  mergeUserContexts,
+  normalizeUserContext,
   parsedUserContextToTrackingMetadata,
-} from './utils'
+} from './utils.js'
 
 /**
  * We want this to be sufficiently high that we don't time out under
@@ -21,11 +27,25 @@ const FETCH_TIMEOUT = 3e3 // 3 seconds
  */
 const REFETCH_INTERVAL = 60e3 // 1 minute
 
+/**
+ * These need to match what the client sends
+ */
+export const ANALYTICS_HEADER_DEVICE_ID = 'x-atproto-device-id'
+export const ANALYTICS_HEADER_SESSION_ID = 'x-atproto-session-id'
+
+export { type ScopedFeatureGatesClient } from './types.js'
+
 export class FeatureGatesClient {
-  ready = false
-  client: GrowthBookClient | undefined = undefined
-  refreshInterval: NodeJS.Timeout | undefined = undefined
-  metrics: MetricsClient
+  private ready = false
+  private client: GrowthBookClient | undefined = undefined
+  private refreshInterval: NodeJS.Timeout | undefined = undefined
+  private metrics: MetricsClient
+
+  /**
+   * Easy access to the `Gate` enum for consumers of this class, so they don't
+   * need to import it separately.
+   */
+  Gate = Gate
 
   constructor(
     private config: {
@@ -52,8 +72,10 @@ export class FeatureGatesClient {
       this.client = new GrowthBookClient({
         apiHost: this.config.growthBookApiHost,
         clientKey: this.config.growthBookClientKey,
-        onFeatureUsage: (feature, result, userContext) => {
-          this.metrics.track(
+        onFeatureUsage: async (feature, result, userContext) => {
+          if (IGNORE_METRICS_FOR_GATES.has(feature as Gate)) return
+
+          await this.metrics.track(
             'feature:viewed',
             {
               featureId: feature,
@@ -62,19 +84,31 @@ export class FeatureGatesClient {
               variationId: result.experimentResult?.key,
             },
             parsedUserContextToTrackingMetadata(
-              extractParsedUserContextFromGrowthBookUserContext(userContext),
+              extractUserContextFromGrowthbookUserContext(userContext),
             ),
           )
         },
-        trackingCallback: (experiment, result, userContext) => {
-          this.metrics.track(
+        trackingCallback: async (experiment, result, userContext) => {
+          /**
+           * Experiments are only fired in a feature gate has an Experiment
+           * attached in Growthbook. Howerver, we want to be extra sure that a
+           * misconfigured experiment doesn't result in a huge increase in events, so we
+           * protect this here.
+           */
+          if (
+            result.featureId &&
+            IGNORE_METRICS_FOR_GATES.has(result.featureId as Gate)
+          )
+            return
+
+          await this.metrics.track(
             'experiment:viewed',
             {
               experimentId: experiment.key,
               variationId: result.key,
             },
             parsedUserContextToTrackingMetadata(
-              extractParsedUserContextFromGrowthBookUserContext(userContext),
+              extractUserContextFromGrowthbookUserContext(userContext),
             ),
           )
         },
@@ -120,27 +154,82 @@ export class FeatureGatesClient {
     }
   }
 
-  destroy() {
+  async destroy() {
     if (this.ready) {
       this.ready = false
       if (this.refreshInterval) {
         clearInterval(this.refreshInterval)
       }
     }
-    this.metrics.stop()
+    await this.metrics.stop()
+  }
+
+  async [Symbol.asyncDispose]() {
+    await this.destroy()
   }
 
   /**
    * Evaluate multiple feature gates for a given user, returning a map of gate
    * ID to boolean result.
    */
-  checkGates(
-    gates: FeatureGate[],
-    rawUserContext: RawUserContext,
+  private checkGates(
+    gates: Gate[],
+    userContext: UserContext,
   ): CheckedFeatureGatesMap {
     const gb = this.client
-    const attributes = parseRawUserContext(rawUserContext)
+    const attributes = normalizeUserContext(userContext)
     if (!gb || !this.ready) return new Map(gates.map((g) => [g, false]))
     return new Map(gates.map((g) => [g, gb.isOn(g, { attributes })]))
+  }
+
+  scope(scopedUserContext: UserContext): ScopedFeatureGatesClient {
+    /*
+     * Create initial deviceId and sessionId values for the scoped client, to
+     * be used throughout this request lifecycle.
+     */
+    const base = normalizeUserContext(scopedUserContext)
+    return {
+      Gate: this.Gate,
+      checkGates: (
+        gates: Gate[],
+        userContextOverrides?: Pick<UserContext, 'did'>,
+      ) => {
+        const userContext = mergeUserContexts(base, userContextOverrides)
+        return this.checkGates(gates, userContext)
+      },
+      checkGate: (gate: Gate, userContextOverrides?: UserContext) => {
+        const userContext = mergeUserContexts(base, userContextOverrides)
+        return this.checkGates([gate], userContext).get(gate) || false
+      },
+    }
+  }
+
+  /**
+   * Parse properties available in XRPC handlers to `UserContext`. The returned
+   * proeprties are used as GrowthBook `attributes` as well as the metadata
+   * payload for our analytics events. This ensures that the same user properties
+   * are used for both feature gate targeting and analytics.
+   */
+  parseUserContextFromHandler({
+    viewer,
+    req,
+  }: {
+    /**
+     * The user's DID
+     */
+    viewer: string | null
+    /**
+     * The express request object, used to extract analytics headers for the user context
+     */
+    req: express.Request
+  }): UserContext {
+    const deviceId = req.header(ANALYTICS_HEADER_DEVICE_ID)
+    const sessionId = req.header(ANALYTICS_HEADER_SESSION_ID)
+
+    return normalizeUserContext({
+      did: viewer,
+      deviceId,
+      sessionId,
+    })
   }
 }

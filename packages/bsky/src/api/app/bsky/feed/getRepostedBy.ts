@@ -1,17 +1,18 @@
 import { mapDefined } from '@atproto/common'
-import { AppContext } from '../../../../context'
-import {
+import type { AtUriString } from '@atproto/lex-schema'
+import type { Server } from '@atproto/xrpc-server'
+import type { AppContext } from '../../../../context.js'
+import type {
   HydrateCtx,
   HydrationState,
   Hydrator,
-} from '../../../../hydration/hydrator'
-import { parseString } from '../../../../hydration/util'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getRepostedBy'
-import { createPipeline } from '../../../../pipeline'
-import { uriToDid as creatorFromUri } from '../../../../util/uris'
-import { Views } from '../../../../views'
-import { clearlyBadCursor, resHeaders } from '../../../util'
+} from '../../../../hydration/hydrator.js'
+import { parseString } from '../../../../hydration/util.js'
+import { app } from '../../../../lexicons/index.js'
+import { createPipeline } from '../../../../pipeline.js'
+import { uriToDid as creatorFromUri } from '../../../../util/uris.js'
+import type { Views } from '../../../../views/index.js'
+import { clearlyBadCursor, fillPage, resHeaders } from '../../../util.js'
 
 export default function (server: Server, ctx: AppContext) {
   const getRepostedBy = createPipeline(
@@ -20,17 +21,26 @@ export default function (server: Server, ctx: AppContext) {
     noBlocks,
     presentation,
   )
-  server.app.bsky.feed.getRepostedBy({
+  server.add(app.bsky.feed.getRepostedBy, {
     auth: ctx.authVerifier.standardOptional,
     handler: async ({ params, auth, req }) => {
-      const { viewer, includeTakedowns } = ctx.authVerifier.parseCreds(auth)
+      const { viewer, includeTakedowns, skipViewerBlocks } =
+        ctx.authVerifier.parseCreds(auth)
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({
+        xrpcEndpoint: app.bsky.feed.getRepostedBy.$lxm,
         labelers,
         viewer,
         includeTakedowns,
+        skipViewerBlocks,
       })
-      const result = await getRepostedBy({ ...params, hydrateCtx }, ctx)
+      const result = await fillPage({
+        cursor: params.cursor,
+        limit: params.limit,
+        fetch: ({ cursor, limit }) =>
+          getRepostedBy({ ...params, cursor, limit, hydrateCtx }, ctx),
+        items: (r) => r.repostedBy,
+      })
 
       return {
         encoding: 'application/json',
@@ -55,7 +65,7 @@ const skeleton = async (inputs: {
     limit: params.limit,
   })
   return {
-    reposts: res.uris,
+    reposts: res.uris as AtUriString[],
     cursor: parseString(res.cursor),
   }
 }
@@ -110,9 +120,9 @@ type Context = {
   views: Views
 }
 
-type Params = QueryParams & { hydrateCtx: HydrateCtx }
+type Params = app.bsky.feed.getRepostedBy.$Params & { hydrateCtx: HydrateCtx }
 
 type Skeleton = {
-  reposts: string[]
+  reposts: AtUriString[]
   cursor?: string
 }

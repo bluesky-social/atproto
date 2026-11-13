@@ -1,9 +1,37 @@
 /**
- * ADD ALL FEATURE GATES HERE.
+ * Enum of all gates in the system. This should be the single source of truth
+ * for all gates, and should be used in all places where gates are checked or
+ * defined.
  */
+export enum Gate {
+  SuggestedUsersSocialProofEnable = 'suggested_users:social_proof:enable',
+  ThreadsReplyRankingExplorationEnable = 'threads:reply_ranking_exploration:enable',
+  SearchFilteringExplorationEnable = 'search:filtering_exploration:enable',
+  SuggestedUsersForExploreEnable = 'suggested_users:for_explore:enable',
+  SuggestedUsersForDiscoverEnable = 'suggested_users:for_discover:enable',
+  SuggestedUsersForSeeMoreEnable = 'suggested_users:for_see_more:enable',
+  SuggestedUsersIrisEnable = 'suggested_users:iris:enable',
+  SearchV2Enable = 'search:v2:enable',
+  IrisFeed = 'iris:feed:enable',
+  IrisFeedWithFriendsEnable = 'iris:feed:with-friends:enable',
+  IrisFeedThevidsEnable = 'iris:feed:thevids:enable',
+  IrisFeedMutualsEnable = 'iris:feed:mutuals:enable',
+  IrisFeedBskyTeamEnable = 'iris:feed:bsky-team:enable',
+  IrisFeedBestOfFollowsEnable = 'iris:feed:best-of-follows:enable',
+  IrisFeedFollowpicsEnable = 'iris:feed:followpics:enable',
+  IrisFeedLoggedOutEnable = 'iris:feed:logged_out:enable',
+  KnownLikersFeedEnable = 'known_likers:feed:enable',
+  AtmosphereScreenEndpointsEnable = 'atmosphere_screen_endpoints:enable',
+  AtmosphereExploreArticlesIrisEnable = 'atmosphere_explore:articles:iris:enable',
+  AtmosphereExploreGalleriesIrisEnable = 'atmosphere_explore:galleries:iris:enable',
 
-export type FeatureGate =
-  | 'suggested_users:discover_agent:enable'
-  | 'suggested_onboarding_users:discover_agent:enable'
-  | 'threads:reply_ranking_exploration:enable'
-  | 'search:filtering_exploration:enable'
+  // temp
+  AATest = 'aa-test-appview',
+}
+
+/**
+ * Set of gates that should be ignored when tracking gate evaluations for
+ * analytics purposes. This is useful for gates that are not user-facing or are
+ * overly noisy.
+ */
+export const IGNORE_METRICS_FOR_GATES: Set<Gate> = new Set([])

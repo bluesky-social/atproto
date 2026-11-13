@@ -1,5 +1,5 @@
-import { OAuthAuthorizationDetails } from './oauth-authorization-details.js'
-import { OAuthTokenType } from './oauth-token-type.js'
+import type { OAuthAuthorizationDetails } from './oauth-authorization-details.js'
+import type { OAuthTokenType } from './oauth-token-type.js'
 
 // https://datatracker.ietf.org/doc/html/rfc7662#section-2.2
 export type OAuthIntrospectionResponse =

@@ -1,5 +1,17 @@
 import { relative } from 'node:path'
 
+type Negate<R extends boolean> = R extends true
+  ? false
+  : R extends false
+    ? true
+    : boolean
+
+export function negate<A extends readonly any[], R extends boolean>(
+  fn: (...args: A) => R,
+): (...args: A) => Negate<R> {
+  return (...args) => !fn(...args) as Negate<R>
+}
+
 export function memoize<T extends (arg: string) => NonNullable<unknown> | null>(
   fn: T,
 ): T {
@@ -13,16 +25,16 @@ export function memoize<T extends (arg: string) => NonNullable<unknown> | null>(
   }) as T
 }
 
-export function startsWithLower(str: string) {
+export function startsWithLower(str: string): boolean {
   const code = str.charCodeAt(0)
   return code >= 97 && code <= 122 // 'a' to 'z'
 }
 
-export function ucFirst(str: string) {
+export function ucFirst(str: string): string {
   return str.charAt(0).toUpperCase() + str.slice(1)
 }
 
-export function lcFirst(str: string) {
+export function lcFirst(str: string): string {
   return str.charAt(0).toLowerCase() + str.slice(1)
 }
 
@@ -59,14 +71,14 @@ function extractWords(str: string): string[] {
     : [] // Avoid returning [''] for empty strings
 }
 
-export function asRelativePath(from: string, to: string) {
+export function asRelativePath(from: string, to: string): string {
   const relPath = relative(from, to)
   return relPath.startsWith('./') || relPath.startsWith('../')
     ? relPath
     : `./${relPath}`
 }
 
-export function startsWithDigit(str: string) {
+export function startsWithDigit(str: string): boolean {
   const code = str.charCodeAt(0)
   return code >= 48 && code <= 57 // '0' to '9'
 }

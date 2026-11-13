@@ -1,13 +1,13 @@
 import {
-  AtprotoLoopbackClientIdParams,
-  OAuthLoopbackClientIdConfig,
+  type AtprotoLoopbackClientIdParams,
+  type OAuthLoopbackClientIdConfig,
   buildAtprotoLoopbackClientId,
   parseAtprotoLoopbackClientId,
 } from './atproto-loopback-client-id.js'
-import { AtprotoOAuthScope } from './atproto-oauth-scope.js'
-import { OAuthClientIdLoopback } from './oauth-client-id-loopback.js'
-import { OAuthClientMetadataInput } from './oauth-client-metadata.js'
-import { OAuthLoopbackRedirectURI } from './oauth-redirect-uri.js'
+import type { AtprotoOAuthScope } from './atproto-oauth-scope.js'
+import type { OAuthClientIdLoopback } from './oauth-client-id-loopback.js'
+import type { OAuthClientMetadataInput } from './oauth-client-metadata.js'
+import type { OAuthLoopbackRedirectURI } from './oauth-redirect-uri.js'
 
 export type AtprotoLoopbackClientMetadata = OAuthClientMetadataInput & {
   client_id: OAuthClientIdLoopback

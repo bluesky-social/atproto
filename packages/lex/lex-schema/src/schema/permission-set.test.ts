@@ -11,6 +11,7 @@ describe('PermissionSet', () => {
         permission('app.bsky.feed.post:write', {}),
       ] as const
       const options = {
+        description: 'Developer-facing permission set documentation',
         title: 'Post Management',
         detail: 'Allows reading and writing posts',
       }
@@ -21,6 +22,9 @@ describe('PermissionSet', () => {
       expect(perms.nsid).toBe(nsid)
       expect(perms.permissions).toBe(permissions)
       expect(perms.options).toBe(options)
+      expect(perms.options.description).toBe(
+        'Developer-facing permission set documentation',
+      )
     })
 
     it('creates a PermissionSet instance with minimal options', () => {
@@ -57,6 +61,22 @@ describe('PermissionSet', () => {
       const perms = permissionSet(nsid, permissions, options)
 
       expect(perms.options.title).toBe('Like Management')
+      expect(perms.options.detail).toBeUndefined()
+    })
+
+    it('creates a PermissionSet instance with description only', () => {
+      const nsid = 'app.bsky.oauth.permissions'
+      const permissions = [permission('app.bsky.feed.like:read', {})] as const
+      const options = {
+        description: 'Developer-facing permission set documentation',
+      }
+
+      const perms = permissionSet(nsid, permissions, options)
+
+      expect(perms.options.description).toBe(
+        'Developer-facing permission set documentation',
+      )
+      expect(perms.options.title).toBeUndefined()
       expect(perms.options.detail).toBeUndefined()
     })
 

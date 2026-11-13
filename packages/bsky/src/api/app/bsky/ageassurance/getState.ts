@@ -1,29 +1,34 @@
-import { UpstreamFailureError } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context'
-import { Server } from '../../../../lexicon'
-import { ActorInfo } from '../../../../proto/bsky_pb'
+import type { DatetimeString } from '@atproto/syntax'
+import { type Server, UpstreamFailureError } from '@atproto/xrpc-server'
+import type { AppContext } from '../../../../context.js'
+import { app } from '../../../../lexicons/index.js'
+import type { ActorInfo } from '../../../../proto/bsky_pb.js'
 
 export default function (server: Server, ctx: AppContext) {
-  server.app.bsky.ageassurance.getState({
+  server.add(app.bsky.ageassurance.getState, {
     auth: ctx.authVerifier.standard,
-    handler: async ({ auth }) => {
+    handler: async ({
+      auth,
+    }): Promise<app.bsky.ageassurance.getState.$Output> => {
       const viewer = auth.credentials.iss
       const actor = await getActorInfo(ctx, viewer)
+
+      const lastInitiatedAt = actor.ageAssuranceStatus?.lastInitiatedAt
 
       return {
         encoding: 'application/json',
         body: {
           state: {
-            lastInitiatedAt:
-              actor.ageAssuranceStatus?.lastInitiatedAt
-                ?.toDate()
-                .toISOString() || undefined,
+            lastInitiatedAt: lastInitiatedAt
+              ? (lastInitiatedAt.toDate().toISOString() as DatetimeString)
+              : undefined,
             status: actor.ageAssuranceStatus?.status || 'unknown',
             access: actor.ageAssuranceStatus?.access || 'unknown',
           },
           metadata: {
-            accountCreatedAt:
-              actor.createdAt?.toDate().toISOString() || undefined,
+            accountCreatedAt: actor.createdAt
+              ? (actor.createdAt.toDate().toISOString() as DatetimeString)
+              : undefined,
           },
         },
       }

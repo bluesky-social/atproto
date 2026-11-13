@@ -1,0 +1,8 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  // We currently support Node 22+
+  "extends": ["./base.tsconfig.json", "@tsconfig/node22/tsconfig.json"],
+  "compilerOptions": {
+    "types": ["node"],
+  },
+}

@@ -1,6 +1,6 @@
-import { LexValue } from '@atproto/lex-data'
-import { Infer, NsidString, Schema } from '../core.js'
-import { ParamsSchema } from './params.js'
+import type { LexValue } from '@atproto/lex-data'
+import type { Infer, NsidString, Schema } from '../core.js'
+import type { ParamsSchema } from './params.js'
 
 /**
  * Infers the parameters type from a Subscription definition.
@@ -47,17 +47,26 @@ export class Subscription<
   const TParameters extends ParamsSchema = ParamsSchema,
   const TMessage extends Schema<LexValue> = Schema<LexValue>,
   const TErrors extends undefined | readonly string[] =
-    | undefined
-    | readonly string[],
+    undefined | readonly string[],
 > {
   readonly type = 'subscription' as const
 
+  readonly nsid: TNsid
+  readonly parameters: TParameters
+  readonly message: TMessage
+  readonly errors: TErrors
+
   constructor(
-    readonly nsid: TNsid,
-    readonly parameters: TParameters,
-    readonly message: TMessage,
-    readonly errors: TErrors,
-  ) {}
+    nsid: TNsid,
+    parameters: TParameters,
+    message: TMessage,
+    errors: TErrors,
+  ) {
+    this.nsid = nsid
+    this.parameters = parameters
+    this.message = message
+    this.errors = errors
+  }
 }
 
 /**
@@ -103,6 +112,11 @@ export function subscription<
   const P extends ParamsSchema,
   const M extends Schema<LexValue>,
   const E extends undefined | readonly string[] = undefined,
->(nsid: N, parameters: P, message: M, errors: E = undefined as E) {
+>(
+  nsid: N,
+  parameters: P,
+  message: M,
+  errors: E = undefined as E,
+): Subscription<N, P, M, E> {
   return new Subscription<N, P, M, E>(nsid, parameters, message, errors)
 }

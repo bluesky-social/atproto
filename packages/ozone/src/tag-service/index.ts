@@ -1,10 +1,12 @@
-import { langLogger as log } from '../logger'
-import { ModerationService } from '../mod-service'
-import { ModSubject } from '../mod-service/subject'
-import { ModerationSubjectStatusRow } from '../mod-service/types'
-import { ContentTagger } from './content-tagger'
-import { EmbedTagger } from './embed-tagger'
-import { LanguageTagger } from './language-tagger'
+import type { DidString } from '@atproto/lex-schema'
+import { tools } from '../lexicons/index.js'
+import { langLogger as log } from '../logger.js'
+import type { ModerationService } from '../mod-service/index.js'
+import type { ModSubject } from '../mod-service/subject.js'
+import type { ModerationSubjectStatusRow } from '../mod-service/types.js'
+import type { ContentTagger } from './content-tagger.js'
+import { EmbedTagger } from './embed-tagger.js'
+import { LanguageTagger } from './language-tagger.js'
 
 export class TagService {
   private taggers: ContentTagger[]
@@ -12,7 +14,7 @@ export class TagService {
   constructor(
     private subject: ModSubject,
     protected subjectStatus: ModerationSubjectStatusRow | null,
-    private taggerDid: string,
+    private taggerDid: DidString,
     private moderationService: ModerationService,
   ) {
     this.taggers = [
@@ -27,22 +29,27 @@ export class TagService {
     try {
       const tags = new Set(initialTags)
 
-      await Promise.all(
+      // Collect tagger results and add them in declared tagger order, so that
+      // the resulting tag order does not depend on which tagger resolves first
+      const taggerResults = await Promise.all(
         this.taggers.map(async (tagger) => {
           try {
-            const newTags = await tagger.getTags()
-            for (const newTag of newTags) {
-              tags.add(newTag)
-            }
+            return await tagger.getTags()
           } catch (e) {
             // Don't let one tagger error stop the rest from running
             log.error(
               { subject: this.subject, err: e },
               'Error applying tagger',
             )
+            return []
           }
         }),
       )
+      for (const newTags of taggerResults) {
+        for (const newTag of newTags) {
+          tags.add(newTag)
+        }
+      }
 
       // Ensure that before inserting new tags, we discard any tag that may
       // have been evaluated to be added but is already present in the subject
@@ -54,11 +61,10 @@ export class TagService {
 
       if (tags.size) {
         await this.moderationService.logEvent({
-          event: {
-            $type: 'tools.ozone.moderation.defs#modEventTag',
+          event: tools.ozone.moderation.defs.modEventTag.$build({
             add: [...tags],
             remove: [],
-          },
+          }),
           subject: this.subject,
           createdBy: this.taggerDid,
         })

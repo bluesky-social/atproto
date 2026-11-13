@@ -2,17 +2,17 @@ import { createHash } from 'node:crypto'
 import { EmbeddedJWK, calculateJwkThumbprint, errors, jwtVerify } from 'jose'
 import { z } from 'zod'
 import { ValidationError } from '@atproto/jwk'
-import { DPOP_NONCE_MAX_AGE } from '../constants.js'
 import { InvalidDpopProofError } from '../errors/invalid-dpop-proof-error.js'
 import { UseDpopNonceError } from '../errors/use-dpop-nonce-error.js'
 import { ifURL } from '../lib/util/cast.js'
+import { DPOP_NONCE_MAX_AGE } from '../oauth-constants.js'
 import {
   DpopNonce,
-  DpopSecret,
+  type DpopSecret,
   dpopSecretSchema,
   rotationIntervalSchema,
 } from './dpop-nonce.js'
-import { DpopProof } from './dpop-proof.js'
+import type { DpopProof } from './dpop-proof.js'
 
 const { JOSEError } = errors
 

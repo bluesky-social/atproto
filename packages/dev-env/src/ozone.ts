@@ -1,14 +1,16 @@
 import * as plc from '@did-plc/lib'
-import getPort from 'get-port'
 import * as ui8 from 'uint8arrays'
 import { AtpAgent } from '@atproto/api'
-import { Keypair, Secp256k1Keypair } from '@atproto/crypto'
+import { type Keypair, Secp256k1Keypair } from '@atproto/crypto'
+import { Client } from '@atproto/lex-client'
+import type { DidString } from '@atproto/lex-schema'
 import * as ozone from '@atproto/ozone'
 import { createServiceJwt } from '@atproto/xrpc-server'
-import { ADMIN_PASSWORD, EXAMPLE_LABELER } from './const'
-import { ModeratorClient } from './moderator-client'
-import { DidAndKey, OzoneConfig } from './types'
-import { createDidAndKey } from './util'
+import { ADMIN_PASSWORD, EXAMPLE_LABELER } from './const.js'
+import getPort from './get-port.js'
+import { ModeratorClient } from './moderator-client.js'
+import type { DidAndKey, OzoneConfig } from './types.js'
+import { createDidAndKey } from './util.js'
 
 export class TestOzone {
   constructor(
@@ -88,6 +90,7 @@ export class TestOzone {
     // api server
     const server = await ozone.OzoneService.create(cfg, secrets, {
       imgInvalidator: config.imgInvalidator,
+      videoInvalidator: config.videoInvalidator,
     })
     await server.start()
 
@@ -103,17 +106,24 @@ export class TestOzone {
     return this.server.ctx
   }
 
-  getClient(): AtpAgent {
+  /** @deprecated use {@link getClient} instead */
+  getAgent(): AtpAgent {
     const agent = new AtpAgent({ service: this.url })
     agent.configureLabelers([EXAMPLE_LABELER])
     return agent
+  }
+
+  getClient(): Client {
+    return new Client(this.url, {
+      labelers: [EXAMPLE_LABELER],
+    })
   }
 
   getModClient() {
     return new ModeratorClient(this)
   }
 
-  async addAdminDid(did: string) {
+  async addAdminDid(did: DidString) {
     await this.ctx.teamService(this.ctx.db).create({
       did,
       disabled: false,
@@ -125,7 +135,7 @@ export class TestOzone {
     this.ctx.cfg.access.admins.push(did)
   }
 
-  async addModeratorDid(did: string) {
+  async addModeratorDid(did: DidString) {
     await this.ctx.teamService(this.ctx.db).create({
       did,
       disabled: false,
@@ -137,7 +147,7 @@ export class TestOzone {
     this.ctx.cfg.access.moderators.push(did)
   }
 
-  async addTriageDid(did: string) {
+  async addTriageDid(did: DidString) {
     await this.ctx.teamService(this.ctx.db).create({
       did,
       disabled: false,
@@ -246,15 +256,22 @@ export class TestOzone {
   }
 
   async close() {
-    await this.daemon.destroy()
-    await this.server.destroy()
+    try {
+      await this.server.destroy()
+    } finally {
+      await this.daemon.destroy()
+    }
+  }
+
+  async [Symbol.asyncDispose]() {
+    await this.close()
   }
 }
 
 export const createOzoneDid = async (
   plcUrl: string,
   keypair: Keypair,
-): Promise<string> => {
+): Promise<DidString> => {
   const plcClient = new plc.Client(plcUrl)
   const plcOp = await plc.signOperation(
     {
@@ -276,5 +293,5 @@ export const createOzoneDid = async (
   )
   const did = await plc.didForCreateOp(plcOp)
   await plcClient.sendOperation(did, plcOp)
-  return did
+  return did as DidString
 }

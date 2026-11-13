@@ -1,11 +1,15 @@
-import { EXAMPLE_LABELER, SeedClient, TestBsky } from '@atproto/dev-env'
-import { ids } from '../../src/lexicon/lexicons'
-import usersSeed from './users'
+import {
+  EXAMPLE_LABELER,
+  type SeedClient,
+  type TestBsky,
+} from '@atproto/dev-env'
+import { app, com } from '../../src/lexicons/index.js'
+import usersSeed from './users.js'
 
-export default async (
+export default async function basicSeed(
   sc: SeedClient,
   opts?: { inviteCode?: string; addModLabels?: TestBsky },
-) => {
+) {
   await usersSeed(sc, opts)
 
   const alice = sc.dids.alice
@@ -27,10 +31,9 @@ export default async (
   await sc.follow(bob, carol, createdAtMicroseconds())
   await sc.follow(dan, bob, createdAtTimezone())
   await sc.post(alice, posts.alice[0], undefined, undefined, undefined, {
-    labels: {
-      $type: 'com.atproto.label.defs#selfLabels',
+    labels: com.atproto.label.defs.selfLabels.$build({
       values: [{ val: 'self-label' }],
-    },
+    }),
   })
   await sc.post(bob, posts.bob[0], undefined, undefined, undefined, {
     langs: ['en-US', 'i-klingon'],
@@ -59,12 +62,7 @@ export default async (
     [
       {
         index: { byteStart: 0, byteEnd: 18 },
-        features: [
-          {
-            $type: `${ids.AppBskyRichtextFacet}#mention` as const,
-            did: alice,
-          },
-        ],
+        features: [app.bsky.richtext.facet.mention.$build({ did: alice })],
       },
     ],
     undefined,

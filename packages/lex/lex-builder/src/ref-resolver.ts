@@ -1,7 +1,7 @@
 import assert from 'node:assert'
 import { join } from 'node:path'
-import { SourceFile } from 'ts-morph'
-import { LexiconDocument, LexiconIndexer } from '@atproto/lex-document'
+import type { SourceFile } from 'ts-morph'
+import type { LexiconDocument, LexiconIndexer } from '@atproto/lex-document'
 import {
   isGlobalIdentifier,
   isJsKeyword,
@@ -88,8 +88,8 @@ export class RefResolver {
     private options: RefResolverOptions,
   ) {}
 
-  public readonly resolve = memoize(
-    async (ref: string): Promise<ResolvedRef> => {
+  public readonly resolve: (ref: string) => Promise<ResolvedRef> = memoize(
+    async (ref) => {
       const [nsid, hash = 'main'] = ref.split('#')
 
       if (nsid === '' || nsid === this.doc.id) {
@@ -103,7 +103,7 @@ export class RefResolver {
   )
 
   #defCounters = new Map<string, number>()
-  private nextSafeDefinitionIdentifier(name: string) {
+  nextSafeDefinitionIdentifier(name: string): string {
     // use camelCase version of the hash as base name
     const nameSafe =
       startsWithLower(name) && isValidJsIdentifier(name)
@@ -145,8 +145,8 @@ export class RefResolver {
    * @note The returned `typeName` and `varName` are *both* guaranteed to be
    * valid TypeScript identifiers.
    */
-  public readonly resolveLocal = memoize(
-    async (hash: string): Promise<ResolvedRef> => {
+  public readonly resolveLocal: (hash: string) => Promise<ResolvedRef> =
+    memoize(async (hash) => {
       const hashes = Object.keys(this.doc.defs)
 
       if (!hashes.includes(hash)) {
@@ -200,8 +200,7 @@ export class RefResolver {
       assert(varName !== typeName, 'Variable and type name should be different')
 
       return { varName, typeName }
-    },
-  )
+    })
 
   /**
    * @note Since this is a memoized function, and is used to generate the name
@@ -239,7 +238,7 @@ export class RefResolver {
         // > "Cannot use namespace '<nsIdentifier>' as a type."
 
         // Instead the generated code should look like:
-        // import { "<unsafeTypeName>" as <safeIdentifier> } from './<moduleSpecifier>'
+        // import { "<unsafeTypeName>" as <safeIdentifier> } from './<moduleSpecifier>.js'
 
         // Because it requires more complex management of local variables names,
         // and we don't expect this to actually happen with properly designed
@@ -250,7 +249,7 @@ export class RefResolver {
         )
       }
 
-      // import * as <nsIdentifier> from './<moduleSpecifier>'
+      // import * as <nsIdentifier> from './<moduleSpecifier>.js'
       const nsIdentifier = this.getNsIdentifier(nsid, moduleSpecifier)
 
       return {

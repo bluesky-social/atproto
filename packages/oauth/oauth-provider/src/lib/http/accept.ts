@@ -1,7 +1,9 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
-import { mediaType } from '@hapi/accept'
-import { SubCtx, subCtx } from './context.js'
-import { Middleware, NextFunction } from './types.js'
+// @NOTE named imports don't work here
+// SyntaxError: The requested module '@hapi/accept' does not provide an export named 'languages'
+import * as accept from '@hapi/accept'
+import { type SubCtx, subCtx } from './context.js'
+import type { Middleware, NextFunction } from './types.js'
 
 type View<
   T extends object | void,
@@ -61,7 +63,7 @@ export function acceptMiddleware<
   return async function (req, res, next) {
     try {
       const type = req.headers['accept']
-        ? mediaType(req.headers['accept'], preferences) || undefined
+        ? accept.mediaType(req.headers['accept'], preferences) || undefined
         : '' // indicate that the client accepts anything
 
       let view = type != null ? viewsMap.get(type) : undefined

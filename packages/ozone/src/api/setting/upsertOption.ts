@@ -1,15 +1,25 @@
 import assert from 'node:assert'
-import { ToolsOzoneTeamDefs } from '@atproto/api'
-import { AuthRequiredError } from '@atproto/xrpc-server'
-import { AdminTokenOutput, ModeratorOutput } from '../../auth-verifier'
-import { AppContext } from '../../context'
-import { Member } from '../../db/schema/member'
-import { Server } from '../../lexicon'
-import { SettingService } from '../../setting/service'
-import { settingValidators } from '../../setting/validators'
+import type { DidString } from '@atproto/lex-schema'
+import {
+  AuthRequiredError,
+  InvalidRequestError,
+  type Server,
+} from '@atproto/xrpc-server'
+import type { AdminTokenOutput, ModeratorOutput } from '../../auth-verifier.js'
+import type { AppContext } from '../../context.js'
+import type { Member } from '../../db/schema/member.js'
+import { tools } from '../../lexicons/index.js'
+import { isReportPrioritySetting } from '../../setting/constants.js'
+import type { SettingService } from '../../setting/service.js'
+import { settingValidators } from '../../setting/validators.js'
+
+const ROLEADMIN = tools.ozone.team.defs.roleAdmin.value
+const ROLEMODERATOR = tools.ozone.team.defs.roleModerator.value
+const ROLETRIAGE = tools.ozone.team.defs.roleTriage.value
+const ROLEVERIFIER = tools.ozone.team.defs.roleVerifier.value
 
 export default function (server: Server, ctx: AppContext) {
-  server.tools.ozone.setting.upsertOption({
+  server.add(tools.ozone.setting.upsertOption, {
     auth: ctx.authVerifier.modOrAdminToken,
     handler: async ({ input, auth }) => {
       const access = auth.credentials
@@ -22,6 +32,18 @@ export default function (server: Server, ctx: AppContext) {
         throw new AuthRequiredError(
           'Must use moderator auth to create or update a personal setting',
         )
+      }
+
+      if (isReportPrioritySetting(key)) {
+        if (scope !== 'instance')
+          throw new InvalidRequestError(
+            'Report priority settings must have instance scope',
+          )
+        if (access.type !== 'admin_token' && !access.isAdmin) {
+          throw new AuthRequiredError(
+            'Only admins can manage report priorities',
+          )
+        }
       }
 
       // if the caller is using moderator auth and storing personal setting
@@ -71,7 +93,7 @@ export default function (server: Server, ctx: AppContext) {
         }
 
         if (settingValidators.has(key)) {
-          await settingValidators.get(key)?.(option)
+          await settingValidators.get(key)?.(option, settingService)
         }
 
         await settingService.upsert(option)
@@ -97,7 +119,7 @@ export default function (server: Server, ctx: AppContext) {
 
 const getExistingSetting = async (
   settingService: SettingService,
-  did: string,
+  did: DidString,
   key: string,
   scope: string,
 ) => {
@@ -114,12 +136,7 @@ const getExistingSetting = async (
 const getRolesForInstanceOption = (
   access: AdminTokenOutput['credentials'] | ModeratorOutput['credentials'],
 ) => {
-  const fullPermission = [
-    ToolsOzoneTeamDefs.ROLEADMIN,
-    ToolsOzoneTeamDefs.ROLEMODERATOR,
-    ToolsOzoneTeamDefs.ROLETRIAGE,
-    ToolsOzoneTeamDefs.ROLEVERIFIER,
-  ]
+  const fullPermission = [ROLEADMIN, ROLEMODERATOR, ROLETRIAGE, ROLEVERIFIER]
   if (access.type === 'admin_token') {
     return fullPermission
   }
@@ -129,27 +146,27 @@ const getRolesForInstanceOption = (
   }
 
   if (access.isModerator) {
-    return [ToolsOzoneTeamDefs.ROLEMODERATOR, ToolsOzoneTeamDefs.ROLETRIAGE]
+    return [ROLEMODERATOR, ROLETRIAGE]
   }
 
   if (access.isVerifier) {
-    return [ToolsOzoneTeamDefs.ROLEVERIFIER]
+    return [ROLEVERIFIER]
   }
 
-  return [ToolsOzoneTeamDefs.ROLETRIAGE]
+  return [ROLETRIAGE]
 }
 
 const getManagerRole = (role?: string) => {
   let managerRole: Member['role'] | null = null
 
-  if (role === ToolsOzoneTeamDefs.ROLEADMIN) {
-    managerRole = ToolsOzoneTeamDefs.ROLEADMIN
-  } else if (role === ToolsOzoneTeamDefs.ROLEMODERATOR) {
-    managerRole = ToolsOzoneTeamDefs.ROLEMODERATOR
-  } else if (role === ToolsOzoneTeamDefs.ROLETRIAGE) {
-    managerRole = ToolsOzoneTeamDefs.ROLETRIAGE
-  } else if (role === ToolsOzoneTeamDefs.ROLEVERIFIER) {
-    managerRole = ToolsOzoneTeamDefs.ROLEVERIFIER
+  if (role === ROLEADMIN) {
+    managerRole = ROLEADMIN
+  } else if (role === ROLEMODERATOR) {
+    managerRole = ROLEMODERATOR
+  } else if (role === ROLETRIAGE) {
+    managerRole = ROLETRIAGE
+  } else if (role === ROLEVERIFIER) {
+    managerRole = ROLEVERIFIER
   }
 
   return managerRole

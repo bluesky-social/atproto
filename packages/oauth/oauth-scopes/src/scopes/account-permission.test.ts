@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest'
 import { AccountPermission } from './account-permission.js'
 
 describe('AccountPermission', () => {

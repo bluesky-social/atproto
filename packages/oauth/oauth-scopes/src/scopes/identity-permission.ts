@@ -1,7 +1,7 @@
 import { Parser } from '../lib/parser.js'
-import { ResourcePermission } from '../lib/resource-permission.js'
+import type { ResourcePermission } from '../lib/resource-permission.js'
 import { ScopeStringSyntax } from '../lib/syntax-string.js'
-import { ScopeSyntax, isScopeStringFor } from '../lib/syntax.js'
+import { type ScopeSyntax, isScopeStringFor } from '../lib/syntax.js'
 import { knownValuesValidator } from '../lib/util.js'
 
 export const IDENTITY_ATTRIBUTES = Object.freeze(['handle', '*'] as const)
@@ -11,9 +11,10 @@ export type IdentityPermissionMatch = {
   attr: IdentityAttribute
 }
 
-export class IdentityPermission
-  implements ResourcePermission<'identity', IdentityPermissionMatch>
-{
+export class IdentityPermission implements ResourcePermission<
+  'identity',
+  IdentityPermissionMatch
+> {
   constructor(public readonly attr: IdentityAttribute) {}
 
   matches(options: IdentityPermissionMatch) {

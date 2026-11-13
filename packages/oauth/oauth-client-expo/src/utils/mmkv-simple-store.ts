@@ -1,4 +1,4 @@
-import { Configuration, MMKV } from 'react-native-mmkv'
+import { type Configuration, type MMKV, createMMKV } from 'react-native-mmkv'
 import type { SimpleStore, Value } from '@atproto-labs/simple-store'
 
 export type MMKVSimpleStoreOptions<V extends Value> = {
@@ -9,9 +9,10 @@ export type MMKVSimpleStoreOptions<V extends Value> = {
 /**
  * A {@link SimpleStore} implementation using {@link MMKV} for storage.
  */
-export class MMKVSimpleStore<V extends Value>
-  implements SimpleStore<string, V>
-{
+export class MMKVSimpleStore<V extends Value> implements SimpleStore<
+  string,
+  V
+> {
   readonly #store: MMKV
   readonly #encode: (value: V) => string
   readonly #decode: (value: string) => V
@@ -21,7 +22,7 @@ export class MMKVSimpleStore<V extends Value>
     encode,
     ...config
   }: MMKVSimpleStoreOptions<V> & Configuration) {
-    this.#store = new MMKV(config)
+    this.#store = createMMKV(config)
     this.#decode = decode
     this.#encode = encode
   }
@@ -39,7 +40,7 @@ export class MMKVSimpleStore<V extends Value>
   }
 
   del(key: string): void {
-    this.#store.delete(key)
+    this.#store.remove(key)
   }
 
   clear() {

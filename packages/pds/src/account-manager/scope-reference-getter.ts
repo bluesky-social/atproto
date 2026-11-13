@@ -1,14 +1,19 @@
-import Redis from 'ioredis'
-import { Agent, ComAtprotoTempDereferenceScope } from '@atproto/api'
+import type { Redis } from 'ioredis'
 import { DAY, backoffMs, retry } from '@atproto/common'
-import { InvalidTokenError, OAuthScope } from '@atproto/oauth-provider'
+import { type Client, XrpcError } from '@atproto/lex-client'
+import { InvalidTokenError } from '@atproto/oauth-provider/errors'
+import type { OAuthScope } from '@atproto/oauth-provider/store'
 import { UpstreamFailureError } from '@atproto/xrpc-server'
-import { CachedGetter, GetterOptions } from '@atproto-labs/simple-store'
+import {
+  CachedGetter,
+  type GetterOptions,
+  swallowStoreErrors,
+} from '@atproto-labs/simple-store'
 import { SimpleStoreMemory } from '@atproto-labs/simple-store-memory'
 import { SimpleStoreRedis } from '@atproto-labs/simple-store-redis'
+import { com } from '../lexicons.js'
 import { oauthLogger } from '../logger.js'
 
-const { InvalidScopeReferenceError } = ComAtprotoTempDereferenceScope
 const PREFIX = 'ref:'
 
 type ScopeReference = `${typeof PREFIX}${string}`
@@ -22,7 +27,7 @@ export class ScopeReferenceGetter extends CachedGetter<
   OAuthScope
 > {
   constructor(
-    protected readonly entryway: Agent,
+    protected readonly entryway: Client,
     redis?: Redis,
   ) {
     super(
@@ -32,20 +37,33 @@ export class ScopeReferenceGetter extends CachedGetter<
           getWaitMs: (n) => backoffMs(n, 250, 2000),
           retryable: (err) =>
             !options?.signal?.aborted &&
-            !(err instanceof InvalidScopeReferenceError),
+            err instanceof XrpcError &&
+            err.shouldRetry(),
         })
       },
-      redis
-        ? new SimpleStoreRedis(redis, {
-            // tradeoff between wasted memory usage (by no longer used scopes)
-            // and amount of requests to entryway:
-            ttl: 1 * DAY,
+      // The store (redis or memory) acts as a cache in front of entryway.
+      // A store failure should degrade to a cache miss (and a refetch from
+      // entryway) rather than break token verification, so we swallow the
+      // error and log it instead of propagating it.
+      swallowStoreErrors(
+        redis
+          ? new SimpleStoreRedis(redis, {
+              // tradeoff between wasted memory usage (by no longer used scopes)
+              // and amount of requests to entryway:
+              ttl: 1 * DAY,
 
-            keyPrefix: `auth-scope-${PREFIX}`,
-            encode: identity,
-            decode: identity,
-          })
-        : new SimpleStoreMemory({ max: 1000 }),
+              keyPrefix: `auth-scope-${PREFIX}`,
+              encode: identity,
+              decode: identity,
+            })
+          : new SimpleStoreMemory({ max: 1000 }),
+        (err, operation, key) => {
+          oauthLogger.error(
+            { err, operation, ref: key },
+            'Scope reference cache error',
+          )
+        },
+      ),
     )
   }
 
@@ -56,15 +74,14 @@ export class ScopeReferenceGetter extends CachedGetter<
     oauthLogger.info({ ref }, 'Fetching scope reference')
 
     try {
-      const response = await this.entryway.com.atproto.temp.dereferenceScope(
+      const { scope } = await this.entryway.call(
+        com.atproto.temp.dereferenceScope,
         { scope: ref },
         {
           signal: opts?.signal,
           headers: opts?.noCache ? { 'Cache-Control': 'no-cache' } : undefined,
         },
       )
-
-      const { scope } = response.data
 
       oauthLogger.info({ ref, scope }, 'Successfully fetched scope reference')
 
@@ -90,7 +107,7 @@ export class ScopeReferenceGetter extends CachedGetter<
 }
 
 function handleDereferenceError(cause: unknown): never {
-  if (cause instanceof InvalidScopeReferenceError) {
+  if (cause instanceof XrpcError && cause.error === 'InvalidScopeReference') {
     // The scope reference cannot be found on the server.
     // Consider the session as invalid, allowing entryway to
     // re-build the scope as the user re-authenticates. This

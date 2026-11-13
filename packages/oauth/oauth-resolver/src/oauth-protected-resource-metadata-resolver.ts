@@ -1,0 +1,134 @@
+import {
+  type OAuthProtectedResourceMetadata,
+  oauthProtectedResourceMetadataSchema,
+} from '@atproto/oauth-types'
+import {
+  type Fetch,
+  FetchResponseError,
+  bindFetch,
+  cancelBody,
+} from '@atproto-labs/fetch'
+import {
+  CachedGetter,
+  type GetCachedOptions,
+  type SimpleStore,
+  type StoreErrorHandler,
+  swallowStoreErrors,
+} from '@atproto-labs/simple-store'
+import { contentMime } from './util.js'
+
+export type { GetCachedOptions, OAuthProtectedResourceMetadata }
+
+export type ProtectedResourceMetadataCache = SimpleStore<
+  string,
+  OAuthProtectedResourceMetadata | null
+>
+
+export type OAuthProtectedResourceMetadataResolverConfig = {
+  allowHttpResource?: boolean
+
+  /**
+   * Called when the metadata cache throws. The cache is best-effort: failures
+   * are logged (by default) and degrade to a cache miss + refetch, rather than
+   * being propagated.
+   */
+  onCacheError?: StoreErrorHandler<string>
+}
+
+/**
+ * @see {@link https://www.rfc-editor.org/rfc/rfc9728.html}
+ */
+export class OAuthProtectedResourceMetadataResolver extends CachedGetter<
+  string,
+  OAuthProtectedResourceMetadata | null
+> {
+  private readonly fetch: Fetch<unknown>
+  private readonly allowHttpResource: boolean
+
+  constructor(
+    cache: ProtectedResourceMetadataCache,
+    fetch: Fetch = globalThis.fetch,
+    config?: OAuthProtectedResourceMetadataResolverConfig,
+  ) {
+    super(
+      async (origin, options) => this.fetchMetadata(origin, options),
+      swallowStoreErrors(cache, config?.onCacheError),
+    )
+
+    this.fetch = bindFetch(fetch)
+    this.allowHttpResource = config?.allowHttpResource === true
+  }
+
+  async get(
+    resource: string | URL,
+    options?: GetCachedOptions,
+  ): Promise<OAuthProtectedResourceMetadata | null> {
+    const { protocol, origin } = new URL(resource)
+
+    if (protocol !== 'https:' && protocol !== 'http:') {
+      throw new TypeError(
+        `Invalid protected resource metadata URL protocol: ${protocol}`,
+      )
+    }
+
+    if (protocol === 'http:' && !this.allowHttpResource) {
+      throw new TypeError(
+        `Unsecure resource metadata URL (${protocol}) only allowed in development and test environments`,
+      )
+    }
+
+    return super.get(origin, options)
+  }
+
+  private async fetchMetadata(
+    origin: string,
+    options?: GetCachedOptions,
+  ): Promise<OAuthProtectedResourceMetadata | null> {
+    const url = new URL(`/.well-known/oauth-protected-resource`, origin)
+    const request = new Request(url, {
+      signal: options?.signal,
+      headers: { accept: 'application/json' },
+      cache: options?.noCache ? 'no-cache' : undefined,
+      redirect: 'manual', // response must be 200 OK
+    })
+
+    const response = await this.fetch(request)
+
+    if (response.status === 404) {
+      await cancelBody(response, 'log')
+      return null
+    }
+
+    // https://www.rfc-editor.org/rfc/rfc9728.html#section-3.2
+    if (response.status !== 200) {
+      await cancelBody(response, 'log')
+      throw await FetchResponseError.from(
+        response,
+        `Unexpected status code ${response.status} for "${url}"`,
+        undefined,
+        { cause: request },
+      )
+    }
+
+    if (contentMime(response.headers) !== 'application/json') {
+      await cancelBody(response, 'log')
+      throw await FetchResponseError.from(
+        response,
+        `Unexpected content type for "${url}"`,
+        undefined,
+        { cause: request },
+      )
+    }
+
+    const metadata = oauthProtectedResourceMetadataSchema.parse(
+      await response.json(),
+    )
+
+    // https://www.rfc-editor.org/rfc/rfc9728.html#section-3.3
+    if (metadata.resource !== origin) {
+      throw new TypeError(`Invalid issuer ${metadata.resource}`)
+    }
+
+    return metadata
+  }
+}

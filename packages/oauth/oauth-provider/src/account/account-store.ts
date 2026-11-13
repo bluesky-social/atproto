@@ -1,61 +1,102 @@
-import {
+import type { Did } from '@atproto/did'
+import type {
   Account,
+  ConfirmAccountDeletionInput,
+  ConfirmEmailUpdateInput,
+  ConfirmEmailVerificationInput,
   ConfirmResetPasswordInput,
+  DeactivateAccountInput,
+  DisableEmailAuthFactorInput,
+  EnableEmailAuthFactorInput,
+  InitiateAccountDeletionInput,
+  InitiateEmailUpdateInput,
+  InitiateEmailUpdateOutput,
+  InitiateEmailVerificationInput,
   InitiatePasswordResetInput,
+  ReactivateAccountInput,
+  UpdateHandleInput,
 } from '@atproto/oauth-provider-api'
-import { OAuthScope } from '@atproto/oauth-types'
-import { ClientId } from '../client/client-id.js'
-import { DeviceId } from '../device/device-id.js'
-import { DeviceData } from '../device/device-store.js'
-import { HcaptchaVerifyResult } from '../lib/hcaptcha.js'
-import { Awaitable, buildInterfaceChecker } from '../lib/util/type.js'
+import type { OAuthScope } from '@atproto/oauth-types'
 import {
-  HandleUnavailableError,
-  InvalidRequestError,
-  SecondAuthenticationFactorRequiredError,
-} from '../oauth-errors.js'
-import { Sub } from '../oidc/sub.js'
-import { InviteCode } from '../types/invite-code.js'
-import { SignUpInput } from './sign-up-input.js'
+  type AtIdentifierString,
+  type DatetimeString,
+  type HandleString,
+  isAtIdentifierString,
+  isDidIdentifier,
+} from '@atproto/syntax'
+import type { ClientId } from '../client/client-id.js'
+import type { DeviceData } from '../device/device-data.js'
+import type { DeviceId } from '../device/device-id.js'
+import type { SessionId } from '../device/session-id.js'
+import type { HandleUnavailableReason } from '../errors/handle-unavailable-error.js'
+import type { HcaptchaVerifyResult } from '../lib/hcaptcha.js'
+import type { Awaitable } from '../lib/util/type.js'
+import { buildInterfaceChecker } from '../lib/util/type.js'
+import type { IdentifierString } from '../types/indentifier.js'
+import type { InviteCode } from '../types/invite-code.js'
+import type { SignUpInput } from './sign-up-input.js'
 
 // Export all types needed to implement the AccountStore interface
-
-export * from '../client/client-id.js'
-export * from '../device/device-data.js'
-export * from '../device/device-id.js'
-export * from '../oidc/sub.js'
-export * from '../request/request-id.js'
-
 export type {
   Account,
+  AtIdentifierString,
+  ClientId,
+  DeviceData,
+  DeviceId,
+  Did,
+  DisableEmailAuthFactorInput,
+  EnableEmailAuthFactorInput,
+  HandleString,
+  HandleUnavailableReason,
   HcaptchaVerifyResult,
+  IdentifierString,
   InviteCode,
   OAuthScope,
+  SessionId,
   SignUpInput,
 }
 
-export {
-  HandleUnavailableError,
-  InvalidRequestError,
-  SecondAuthenticationFactorRequiredError,
-}
+export { isAtIdentifierString, isDidIdentifier }
 
 export type ResetPasswordRequestInput = InitiatePasswordResetInput
 export type ResetPasswordConfirmInput = ConfirmResetPasswordInput
+
+export type UpdateEmailRequestInput = InitiateEmailUpdateInput
+export type UpdateEmailRequestOutput = InitiateEmailUpdateOutput
+export type UpdateEmailConfirmInput = ConfirmEmailUpdateInput
+export type VerifyEmailRequestInput = InitiateEmailVerificationInput
+export type VerifyEmailConfirmInput = ConfirmEmailVerificationInput
+export type UpdateHandleData = UpdateHandleInput
+
+/**
+ * @NOTE `deleteAfter` is part of the store contract but is not (yet) exposed
+ * over the API, hence the extension of {@link DeactivateAccountInput}.
+ */
+export type DeactivateAccountData = DeactivateAccountInput & {
+  deleteAfter?: DatetimeString | undefined
+}
+export type ReactivateAccountData = ReactivateAccountInput
+export type DeleteAccountRequestInput = InitiateAccountDeletionInput
+export type DeleteAccountConfirmInput = ConfirmAccountDeletionInput
 
 export type CreateAccountData = {
   locale: string
   email: string
   password: string
-  handle: string
+  handle: HandleString
   inviteCode?: string | undefined
 }
 
 export type AuthenticateAccountData = {
-  locale: string
+  identifier: IdentifierString
   password: string
-  username: string
-  emailOtp?: string | undefined
+  locale: string
+  emailOtp: string | undefined
+  /**
+   * Lists the accounts that were previously remembered on the device, allowing
+   * OTP bypass for these accounts (based on the store's own logic)
+   */
+  deviceAccounts: readonly DeviceAccount[]
 }
 
 export type AuthorizedClientData = { authorizedScopes: readonly string[] }
@@ -108,7 +149,10 @@ export interface AccountStore {
   createAccount(data: CreateAccountData): Awaitable<Account>
 
   /**
-   * @throws {InvalidRequestError} - When the credentials are not valid
+   * @throws {InvalidCredentialsError} - When the credentials are not valid.
+   * Populate {@link InvalidCredentialsError.did} with the subject identifier
+   * when the identifier matched an existing account (e.g. wrong password for a
+   * known user); omit it when the identifier was not found.
    * @throws {SecondAuthenticationFactorRequiredError} - To indicate that an {@link SecondAuthenticationFactorRequiredError.type} is required in the credentials
    */
   authenticateAccount(data: AuthenticateAccountData): Awaitable<Account>
@@ -117,15 +161,16 @@ export interface AccountStore {
    * Add a client & scopes to the list of authorized clients for the given account.
    */
   setAuthorizedClient(
-    sub: Sub,
+    did: Did,
     clientId: ClientId,
     data: AuthorizedClientData,
   ): Awaitable<void>
 
   /**
-   * @throws {InvalidRequestError} - When the credentials are not valid
+   * Retrieves the account and its authorized clients for the given handle or
+   * DID. Return `null` if the account is not found.
    */
-  getAccount(sub: Sub): Awaitable<{
+  getAccount(handleOrDid: AtIdentifierString): Awaitable<null | {
     account: Account
     authorizedClients: AuthorizedClients
   }>
@@ -141,7 +186,7 @@ export interface AccountStore {
    * {@link RequestStore.deleteRequest}), all accounts bound to that request
    * should be deleted as well.
    */
-  upsertDeviceAccount(deviceId: DeviceId, sub: Sub): Awaitable<void>
+  upsertDeviceAccount(deviceId: DeviceId, did: Did): Awaitable<void>
 
   /**
    * @param requestId - If provided, the result must either have the same
@@ -152,7 +197,7 @@ export interface AccountStore {
    */
   getDeviceAccount(
     deviceId: DeviceId,
-    sub: Sub,
+    did: Did,
   ): Awaitable<DeviceAccount | null>
 
   /**
@@ -161,14 +206,13 @@ export interface AccountStore {
    *
    * @note Noop if the device-account is not found.
    */
-  removeDeviceAccount(deviceId: DeviceId, sub: Sub): Awaitable<void>
+  removeDeviceAccount(deviceId: DeviceId, did: Did): Awaitable<void>
 
   /**
-   * @returns **all** the device accounts that match the {@link requestId}
-   * criteria and given {@link filter}.
+   * @returns **all** the device accounts matching the given `filter`.
    */
   listDeviceAccounts(
-    filter: { sub: Sub } | { deviceId: DeviceId },
+    filter: { did: Did } | { deviceId: DeviceId },
   ): Awaitable<DeviceAccount[]>
 
   resetPasswordRequest(
@@ -179,23 +223,125 @@ export interface AccountStore {
     data: ResetPasswordConfirmInput,
   ): Awaitable<null | Account>
 
+  updateEmailRequest(
+    data: UpdateEmailRequestInput,
+  ): Awaitable<UpdateEmailRequestOutput>
+  /**
+   * Must trigger a verification email to be sent to the new email address, that
+   * will then be confirmed through {@link updateEmailConfirm}. The account's
+   * {@link Account['emailVerified'] emailVerified} field is expected to become
+   * `false` until the new email is confirmed.
+   */
+  updateEmailConfirm(data: UpdateEmailConfirmInput): Awaitable<Account | null>
+
+  verifyEmailRequest(data: VerifyEmailRequestInput): Awaitable<void>
+  verifyEmailConfirm(data: VerifyEmailConfirmInput): Awaitable<Account | null>
+
+  /**
+   * Enables the email auth factor on the account.
+   *
+   * @returns the updated account, or `null` when the factor was already enabled
+   * (no-op).
+   *
+   * @note when `null` is returned (no-op), the "confirmed" hook is skipped, so
+   *  a repeat request is not counted as a fresh opt-in.
+   *
+   * @throws {InvalidRequestError} - To indicate enabling cannot take place due
+   * to mismatch of email or email not being verified.
+   */
+  enableEmailAuthFactor(data: EnableEmailAuthFactorInput): Awaitable<Account>
+
+  /**
+   * Two-phase disable flow. When `token` is undefined and the factor is still
+   * enabled, an email-based OTP isÒ dispatched and `{ tokenRequired: true }` is
+   * returned (the account is unchanged, nothing has been disabled yet). Calling
+   * again with a valid `token` disables the factor and returns
+   * `{ tokenRequired: false }`. Disabling an already-disabled factor is an
+   * idempotent no-op that returns `{ tokenRequired: false }` without
+   * dispatching an email.
+   *
+   * `updatedAccount` is `null` in both cases where nothing changed — the
+   * OTP-dispatch phase and the already-disabled no-op — and an `Account` only
+   * once the factor has actually been turned off. Callers pair it with
+   * `tokenRequired` to decide whether to fire the "confirmed" hook.
+   *
+   * @throws {InvalidRequestError} - To indicate disabling cannot take place due
+   * to mismatch of email or email not being verified.
+   * @throws {SecondAuthenticationFactorRequiredError} - To indicate that a
+   * second authentication factor is required to complete the action.
+   */
+  disableEmailAuthFactor(data: DisableEmailAuthFactorInput): Awaitable<Account>
+
   /**
    * @throws {HandleUnavailableError} - To indicate that the handle is already taken
    */
-  verifyHandleAvailability(handle: string): Awaitable<void>
+  verifyHandleAvailability(handle: HandleString): Awaitable<void>
+
+  /**
+   * @throws {HandleUnavailableError} - To indicate that the handle is already taken
+   * @throws {InvalidRequestError} - To indicate that the handle is invalid or
+   * cannot be used
+   */
+  updateHandle(data: UpdateHandleData): Awaitable<Account>
+
+  /**
+   * Mark the account as deactivated. The account remains recoverable. Should
+   * be a no-op when the account is already deactivated.
+   *
+   * @throws {InvalidRequestError} - When the account cannot be deactivated
+   * (e.g. unknown account)
+   */
+  deactivateAccount(data: DeactivateAccountData): Awaitable<Account>
+
+  /**
+   * Reactivate a previously-deactivated account. Should be a no-op when the
+   * account is already active.
+   *
+   * @throws {InvalidRequestError} - When the account cannot be reactivated
+   * (e.g. unknown account)
+   */
+  reactivateAccount(data: ReactivateAccountData): Awaitable<Account>
+
+  /**
+   * Initiate account deletion: typically sends a confirmation token to the
+   * account's email address. The account is NOT deleted until
+   * {@link deleteAccountConfirm} is called with the matching token and the
+   * user's current password.
+   */
+  deleteAccountRequest(data: DeleteAccountRequestInput): Awaitable<void>
+
+  /**
+   * Finalize account deletion. Implementations MUST verify both the email
+   * confirmation `token` issued by {@link deleteAccountRequest} and the user's
+   * current `password` before deleting any data. Deletion is irreversible.
+   *
+   * @throws {InvalidRequestError} - When the token or password is invalid.
+   */
+  deleteAccountConfirm(data: DeleteAccountConfirmInput): Awaitable<void>
 }
 
 export const isAccountStore = buildInterfaceChecker<AccountStore>([
-  'createAccount',
   'authenticateAccount',
-  'setAuthorizedClient',
+  'createAccount',
+  'deactivateAccount',
+  'deleteAccountConfirm',
+  'deleteAccountRequest',
+  'disableEmailAuthFactor',
+  'enableEmailAuthFactor',
   'getAccount',
-  'upsertDeviceAccount',
   'getDeviceAccount',
-  'removeDeviceAccount',
   'listDeviceAccounts',
-  'resetPasswordRequest',
+  'reactivateAccount',
+  'removeDeviceAccount',
   'resetPasswordConfirm',
+  'resetPasswordRequest',
+  'setAuthorizedClient',
+  'updateEmailConfirm',
+  'updateEmailRequest',
+  'updateHandle',
+  'upsertDeviceAccount',
+  'verifyEmailConfirm',
+  'verifyEmailRequest',
   'verifyHandleAvailability',
 ])
 

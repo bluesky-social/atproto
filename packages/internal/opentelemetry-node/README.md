@@ -1,0 +1,111 @@
+# @atproto-labs/opentelemetry-node
+
+OpenTelemetry bootstrap for atproto Node.js services.
+
+This package wires up the OpenTelemetry Node SDK from the conventional `OTEL_*`
+environment variables, so a service only has to supply its identity and the list
+of instrumentations it wants.
+
+Telemetry is **opt-in via the exporter endpoint**: the SDK stays disabled until an
+OTLP endpoint is configured (`OTEL_EXPORTER_OTLP_ENDPOINT` or a signal-specific
+variant). `OTEL_SDK_DISABLED` remains a kill switch.
+
+## Configuration
+
+Everything beyond the service identity and instrumentation list is driven by the
+conventional `OTEL_*` environment variables. See the OpenTelemetry docs for the
+full set:
+
+- [General SDK configuration](https://opentelemetry.io/docs/languages/sdk-configuration/general/)
+- [OTLP exporter configuration](https://opentelemetry.io/docs/languages/sdk-configuration/otlp-exporter/)
+
+## Usage
+
+Load it before any instrumented module — typically through Node's `--import` flag:
+
+```ts
+import { setup } from '@atproto-labs/opentelemetry-node'
+import { ATTR_DEPLOYMENT_ENVIRONMENT_NAME } from '@atproto-labs/opentelemetry-node/conventions'
+import { IORedisInstrumentation } from '@opentelemetry/instrumentation-ioredis'
+import pkg from './package.json' with { type: 'json' }
+
+await setup(() => ({
+  name: pkg.name,
+  version: pkg.version,
+  // Optional: override or extend the default resource attributes.
+  defaultResourceAttributes: { [ATTR_DEPLOYMENT_ENVIRONMENT_NAME]: 'staging' },
+  // Service-specific instrumentations. The instrumentations common to atproto
+  // services are always registered in addition to these.
+  instrumentations: [new IORedisInstrumentation()],
+}))
+```
+
+`setup()` takes a thunk so nothing is constructed when telemetry is disabled: the
+options — and therefore the instrumentations — are only built once an OTLP endpoint
+is configured.
+
+### XRPC routes on metrics
+
+Pass the known XRPC methods the service may answer (including the ones it
+proxies) as `xrpcMethods`. This allows to set the `http.route` attribute
+correctly for these methods in the metrics. When `xrpcMethods` is omitted, the
+`http.route` of the metrics is left as set by the Express instrumentation.
+
+```ts
+// @NOTE **do not** import runtime code here (like `ids` from
+// `@atproto/lex-cli`'s `./lexicon/lexicons.js`) as telemetry setup must run
+// before any instrumented module. Importing from the `@atproto/lex` manifest
+// (JSON) is fine.
+
+import { setup } from '@atproto-labs/opentelemetry-node'
+import pkg from './package.json' with { type: 'json' }
+import lex from './lexicons.json' with { type: 'json' }
+
+await setup(() => ({
+  name: pkg.name,
+  version: pkg.version,
+  xrpcMethods: lex.lexicons
+    // @NOTE we only care about methods, which, by convention, have a verb
+    // followed by a capitalized noun (e.g., `getFeed`). Reducing the list
+    // helps keep the attribute low-cardinality.
+    .filter((v) => /[A-Z]/.test(v)),
+}))
+```
+
+This sets the `http.route` attribute of the HTTP server duration metric to
+`/xrpc/<nsid>` for these methods, and to `/xrpc/{unknown}` for any other NSID.
+The list is what keeps the attribute low-cardinality: any client
+can make up an NSID. Span names aren't affected.
+
+Instrumentations you supply must be built on the same
+`@opentelemetry/instrumentation` as this package, or ESM imports of the modules
+they target can't be instrumented: `setup()` then rejects with an
+`InstrumentationMismatchError`, failing the service start. For `better-sqlite3`, use the
+`BetterSqlite3Instrumentation` exposed by the
+`@atproto-labs/opentelemetry-node/better-sqlite3-plugin` entrypoint: a port of
+[`opentelemetry-plugin-better-sqlite3`](https://github.com/sjinks/opentelemetry-plugin-better-sqlite3)
+that satisfies this requirement.
+
+The `@atproto-labs/opentelemetry-node/conventions` entrypoint re-exports
+`@opentelemetry/semantic-conventions` plus the atproto-specific constants: the
+XRPC attribute keys (`ATTR_XRPC_METHOD`, `ATTR_XRPC_PROXIED`,
+`ATTR_XRPC_PROXY`), the bsync stash attribute keys (`ATTR_BSYNC_NAMESPACE`,
+`ATTR_BSYNC_OPERATION`), and `RPC_CALL_DURATION_BUCKETS`. The
+`@atproto-labs/opentelemetry-node/util` entrypoint exposes
+`statusCodeToString()`, which renders a Connect status as the snake_case string
+`rpc.response.status_code` expects.
+
+Both sides of an RPC need to agree on these, so they live here rather than in
+either service — otherwise the caller and the callee end up depending on each
+other just to label a metric.
+
+## License
+
+This project is dual-licensed under MIT and Apache 2.0 terms:
+
+- MIT license ([LICENSE-MIT.txt](https://github.com/bluesky-social/atproto/blob/main/LICENSE-MIT.txt) or http://opensource.org/licenses/MIT)
+- Apache License, Version 2.0, ([LICENSE-APACHE.txt](https://github.com/bluesky-social/atproto/blob/main/LICENSE-APACHE.txt) or http://www.apache.org/licenses/LICENSE-2.0)
+
+Downstream projects and end users may chose either license individually, or both together, at their discretion. The motivation for this dual-licensing is the additional software patent assurance provided by Apache 2.0.
+
+Bluesky Social PBC has committed to a software patent non-aggression pledge. For details see [the original announcement](https://bsky.social/about/blog/10-01-2025-patent-pledge).

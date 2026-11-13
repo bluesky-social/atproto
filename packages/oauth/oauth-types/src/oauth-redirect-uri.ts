@@ -1,8 +1,8 @@
-import { TypeOf, ZodIssueCode, z } from 'zod'
+import { type TypeOf, ZodIssueCode, z } from 'zod'
 import {
-  HttpsUri,
-  LoopbackUri,
-  PrivateUseUri,
+  type HttpsUri,
+  type LoopbackUri,
+  type PrivateUseUri,
   httpsUriSchema,
   loopbackUriSchema,
   privateUseUriSchema,

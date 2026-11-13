@@ -6,4 +6,4 @@ Please do NOT report possible security vulnerabilities in public channels such a
 
 We will acknowledge the vulnerability as soon as possible - within 3 business days - and follow up when a fix lands. Please avoid discussing the vulnerability until we do so.
 
-With your consent, we will add you to the repository [CONTRIBUTORS](https://github.com/bluesky-social/atproto/blob/main/CONTRIBUTORS.md) file.
+With your consent, we will add you to the repository [CONTRIBUTORS](./CONTRIBUTORS.md) file.

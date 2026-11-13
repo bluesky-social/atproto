@@ -1,0 +1,9 @@
+{
+  "extends": ["../../../tsconfig/config.tsconfig.json"],
+  "include": ["./*.js", "./*.cjs", "./*.mjs", "./*.ts"],
+  "references": [
+    {
+      "path": "../../internal/rolldown-plugin-bundle-manifest/tsconfig.build.json",
+    },
+  ],
+}

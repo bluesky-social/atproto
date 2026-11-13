@@ -1,9 +1,13 @@
 {
   "recommendations": [
     "dbaeumer.vscode-eslint",
-    "wengerk.highlight-bad-chars",
     "esbenp.prettier-vscode",
     "streetsidesoftware.code-spell-checker",
-    "vitest.explorer"
-  ]
+    "vitest.explorer",
+    "wengerk.highlight-bad-chars",
+    "yzhang.markdown-all-in-one",
+    // The "TypeScript 7" language server extension — renamed in place on the
+    // marketplace, so the id still says native-preview.
+    "typescriptteam.native-preview",
+  ],
 }

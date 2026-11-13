@@ -1,27 +1,30 @@
-import { InvalidRequestError } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context'
-import {
+import type { DidString } from '@atproto/syntax'
+import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
+import type { AppContext } from '../../../../context.js'
+import type {
   HydrateCtx,
   HydrationState,
   Hydrator,
-} from '../../../../hydration/hydrator'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/actor/getProfile'
-import { createPipeline, noRules } from '../../../../pipeline'
-import { Views } from '../../../../views'
-import { resHeaders } from '../../../util'
+} from '../../../../hydration/hydrator.js'
+import { app } from '../../../../lexicons/index.js'
+import { createPipeline, noRules } from '../../../../pipeline.js'
+import type { Views } from '../../../../views/index.js'
+import { resHeaders } from '../../../util.js'
 
 export default function (server: Server, ctx: AppContext) {
   const getProfile = createPipeline(skeleton, hydration, noRules, presentation)
-  server.app.bsky.actor.getProfile({
+  server.add(app.bsky.actor.getProfile, {
     auth: ctx.authVerifier.optionalStandardOrRole,
     handler: async ({ auth, params, req }) => {
-      const { viewer, includeTakedowns } = ctx.authVerifier.parseCreds(auth)
+      const { viewer, includeTakedowns, skipViewerBlocks } =
+        ctx.authVerifier.parseCreds(auth)
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({
+        xrpcEndpoint: app.bsky.actor.getProfile.$lxm,
         labelers,
         viewer,
         includeTakedowns,
+        skipViewerBlocks,
       })
 
       const result = await getProfile({ ...params, hydrateCtx }, ctx)
@@ -63,6 +66,7 @@ const hydration = async (input: {
     params.hydrateCtx.copy({
       overrideIncludeTakedownsForActor: true,
     }),
+    { knownFollowersDids: [skeleton.did], activitySubscriptions: true },
   )
 }
 
@@ -97,8 +101,8 @@ type Context = {
   views: Views
 }
 
-type Params = QueryParams & {
+type Params = app.bsky.actor.getProfile.$Params & {
   hydrateCtx: HydrateCtx
 }
 
-type SkeletonState = { did: string }
+type SkeletonState = { did: DidString }

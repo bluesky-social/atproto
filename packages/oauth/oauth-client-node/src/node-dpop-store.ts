@@ -1,7 +1,7 @@
-import { Jwk, Key } from '@atproto/jwk'
+import type { Jwk, Key } from '@atproto/jwk'
 import { JoseKey } from '@atproto/jwk-jose'
-import { InternalStateData, Session } from '@atproto/oauth-client'
-import { SimpleStore } from '@atproto-labs/simple-store'
+import type { InternalStateData, Session } from '@atproto/oauth-client'
+import type { SimpleStore } from '@atproto-labs/simple-store'
 
 type ToDpopJwkValue<V extends { dpopKey: Key }> = Omit<V, 'dpopKey'> & {
   dpopJwk: Jwk

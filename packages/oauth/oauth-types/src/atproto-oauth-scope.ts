@@ -1,6 +1,6 @@
 import { z } from 'zod'
-import { OAuthScope, isOAuthScope } from './oauth-scope.js'
-import { SpaceSeparatedValue, isSpaceSeparatedValue } from './util.js'
+import { type OAuthScope, isOAuthScope } from './oauth-scope.js'
+import { type SpaceSeparatedValue, isSpaceSeparatedValue } from './util.js'
 
 export const ATPROTO_SCOPE_VALUE = 'atproto'
 export type AtprotoScopeValue = typeof ATPROTO_SCOPE_VALUE

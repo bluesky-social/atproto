@@ -1,23 +1,23 @@
 import { mapDefined } from '@atproto/common'
-import { InvalidRequestError } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context'
+import type { AtUriString, DidString } from '@atproto/syntax'
+import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
+import type { AppContext } from '../../../../context.js'
 import {
-  HydrateCtx,
-  Hydrator,
+  type HydrateCtx,
+  type Hydrator,
   mergeStates,
-} from '../../../../hydration/hydrator'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/graph/getFollowers'
+} from '../../../../hydration/hydrator.js'
+import { app } from '../../../../lexicons/index.js'
 import {
-  HydrationFnInput,
-  PresentationFnInput,
-  RulesFnInput,
-  SkeletonFnInput,
+  type HydrationFnInput,
+  type PresentationFnInput,
+  type RulesFnInput,
+  type SkeletonFnInput,
   createPipeline,
-} from '../../../../pipeline'
-import { uriToDid as didFromUri } from '../../../../util/uris'
-import { Views } from '../../../../views'
-import { clearlyBadCursor, resHeaders } from '../../../util'
+} from '../../../../pipeline.js'
+import { uriToDid as didFromUri } from '../../../../util/uris.js'
+import type { Views } from '../../../../views/index.js'
+import { clearlyBadCursor, fillPage, resHeaders } from '../../../util.js'
 
 export default function (server: Server, ctx: AppContext) {
   const getFollowers = createPipeline(
@@ -26,18 +26,35 @@ export default function (server: Server, ctx: AppContext) {
     noBlocks,
     presentation,
   )
-  server.app.bsky.graph.getFollowers({
+  server.add(app.bsky.graph.getFollowers, {
     auth: ctx.authVerifier.optionalStandardOrRole,
     handler: async ({ params, auth, req }) => {
-      const { viewer, includeTakedowns } = ctx.authVerifier.parseCreds(auth)
+      const { viewer, includeTakedowns, skipViewerBlocks } =
+        ctx.authVerifier.parseCreds(auth)
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({
+        xrpcEndpoint: app.bsky.graph.getFollowers.$lxm,
         labelers,
         viewer,
         includeTakedowns,
+        skipViewerBlocks,
       })
 
-      const result = await getFollowers({ ...params, hydrateCtx }, ctx)
+      const result = await fillPage({
+        cursor: params.cursor,
+        limit: params.limit,
+        fetch: ({ cursor, limit }) =>
+          getFollowers(
+            {
+              ...params,
+              cursor,
+              limit,
+              hydrateCtx,
+            },
+            ctx,
+          ),
+        items: (r) => r.followers,
+      })
 
       return {
         encoding: 'application/json',
@@ -48,7 +65,9 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
+const skeleton = async (
+  input: SkeletonFnInput<Context, Params>,
+): Promise<SkeletonState> => {
   const { params, ctx } = input
   const [subjectDid] = await ctx.hydrator.actor.getDidsDefined([params.actor])
   if (!subjectDid) {
@@ -61,11 +80,12 @@ const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
     did: subjectDid,
     cursor: params.cursor,
     limit: params.limit,
+    sort: params.sort,
   })
   return {
     subjectDid,
-    followUris: followers.map((f) => f.uri),
-    cursor: cursor || undefined,
+    followUris: followers.map((f) => f.uri as AtUriString),
+    cursor,
   }
 }
 
@@ -111,7 +131,8 @@ const presentation = (
 ) => {
   const { ctx, hydration, skeleton, params } = input
   const { subjectDid, followUris, cursor } = skeleton
-  const isNoHosted = (did: string) => ctx.views.actorIsNoHosted(did, hydration)
+  const isNoHosted = (did: DidString) =>
+    ctx.views.actorIsNoHosted(did, hydration)
 
   const subject = ctx.views.profile(subjectDid, hydration)
   if (
@@ -137,12 +158,12 @@ type Context = {
   views: Views
 }
 
-type Params = QueryParams & {
+type Params = app.bsky.graph.getFollowers.$Params & {
   hydrateCtx: HydrateCtx
 }
 
 type SkeletonState = {
-  subjectDid: string
-  followUris: string[]
+  subjectDid: DidString
+  followUris: AtUriString[]
   cursor?: string
 }

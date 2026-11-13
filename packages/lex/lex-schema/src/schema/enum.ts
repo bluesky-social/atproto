@@ -1,4 +1,8 @@
-import { Schema, ValidationContext } from '../core.js'
+import {
+  Schema,
+  type ValidationContext,
+  type ValidationResult,
+} from '../core.js'
 
 /**
  * Schema that accepts one of several specific literal values.
@@ -20,11 +24,17 @@ export class EnumSchema<
 > extends Schema<TValue> {
   readonly type = 'enum' as const
 
-  constructor(readonly values: readonly TValue[]) {
+  readonly values: readonly TValue[]
+
+  constructor(values: readonly TValue[]) {
     super()
+    this.values = values
   }
 
-  validateInContext(input: unknown, ctx: ValidationContext) {
+  validateInContext(
+    input: unknown,
+    ctx: ValidationContext,
+  ): ValidationResult<TValue> {
     if (!(this.values as readonly unknown[]).includes(input)) {
       return ctx.issueInvalidValue(input, this.values)
     }
@@ -69,7 +79,7 @@ export class EnumSchema<
 /*@__NO_SIDE_EFFECTS__*/
 export function enumSchema<const V extends null | string | number | boolean>(
   value: readonly V[],
-) {
+): EnumSchema<V> {
   return new EnumSchema<V>(value)
 }
 

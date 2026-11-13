@@ -1,10 +1,10 @@
 import {
-  Issue,
+  type Issue,
   IssueCustom,
-  PropertyKey,
   Schema,
-  ValidationContext,
+  type ValidationContext,
 } from '../core.js'
+import type { ValidationResult } from '../external.js'
 
 /**
  * Context object provided to custom assertion functions.
@@ -48,15 +48,25 @@ export type CustomAssertion<TValue> = (
 export class CustomSchema<out TValue = unknown> extends Schema<TValue> {
   readonly type = 'custom' as const
 
+  private readonly assertion: CustomAssertion<TValue>
+  private readonly message: string
+  private readonly path?: PropertyKey | readonly PropertyKey[]
+
   constructor(
-    private readonly assertion: CustomAssertion<TValue>,
-    private readonly message: string,
-    private readonly path?: PropertyKey | readonly PropertyKey[],
+    assertion: CustomAssertion<TValue>,
+    message: string,
+    path?: PropertyKey | readonly PropertyKey[],
   ) {
     super()
+    this.assertion = assertion
+    this.message = message
+    this.path = path
   }
 
-  validateInContext(input: unknown, ctx: ValidationContext) {
+  validateInContext(
+    input: unknown,
+    ctx: ValidationContext,
+  ): ValidationResult<TValue> {
     if (!this.assertion.call(null, input, ctx)) {
       const path = ctx.concatPath(this.path)
       return ctx.issue(new IssueCustom(path, input, this.message))
@@ -107,6 +117,6 @@ export function custom<TValue>(
   assertion: CustomAssertion<TValue>,
   message: string,
   path?: PropertyKey | readonly PropertyKey[],
-) {
-  return new CustomSchema<TValue>(assertion, message, path)
+): CustomSchema<TValue> {
+  return new CustomSchema(assertion, message, path)
 }

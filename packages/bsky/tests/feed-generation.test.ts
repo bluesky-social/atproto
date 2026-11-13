@@ -1,24 +1,35 @@
 import assert from 'node:assert'
-import { AtUri, AtpAgent } from '@atproto/api'
+import {
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest'
+import {
+  AppBskyFeedDefs,
+  type AppBskyFeedGetActorFeeds,
+  type AppBskyFeedGetFeed,
+  AtUri,
+  type AtpAgent,
+  XRPCError,
+  ids,
+} from '@atproto/api'
 import { TID } from '@atproto/common'
 import {
   RecordRef,
-  SeedClient,
-  TestFeedGen,
+  type SeedClient,
+  type TestFeedGen,
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
-import { XRPCError } from '@atproto/xrpc'
-import { AuthRequiredError, MethodHandler } from '@atproto/xrpc-server'
-import { ids } from '../src/lexicon/lexicons'
-import {
-  FeedViewPost,
-  SkeletonFeedPost,
-} from '../src/lexicon/types/app/bsky/feed/defs'
-import { OutputSchema as GetActorFeedsOutputSchema } from '../src/lexicon/types/app/bsky/feed/getActorFeeds'
-import { OutputSchema as GetFeedOutputSchema } from '../src/lexicon/types/app/bsky/feed/getFeed'
-import * as AppBskyFeedGetFeedSkeleton from '../src/lexicon/types/app/bsky/feed/getFeedSkeleton'
-import { forSnapshot, paginateAll } from './_util'
+import type { SkeletonHandler, app } from '@atproto/pds'
+import type { DidString } from '@atproto/syntax'
+import { AuthRequiredError } from '@atproto/xrpc-server'
+import { Gate } from '../src/feature-gates/gates.js'
+import { forSnapshot, paginateAll } from './_util.js'
 
 describe('feed generation', () => {
   let network: TestNetwork
@@ -27,26 +38,40 @@ describe('feed generation', () => {
   let sc: SeedClient
   let gen: TestFeedGen
 
-  let alice: string
+  let alice: DidString
   let feedUriAll: string
   let feedUriAllRef: RecordRef
   let feedUriEven: string
   let feedUriOdd: string // Unsupported by feed gen
   let feedUriBadPaginationLimit: string
   let feedUriBadPaginationCursor: string
+  let feedUriEmptyPageWithCursor: string
   let feedUriPrime: string // Taken-down
   let feedUriPrimeRef: RecordRef
   let feedUriNeedsAuth: string
   let feedUriContentModeVideo: string
   let feedUriAcceptsInteractions: string
+  let feedUriPinned: string
   let starterPackRef: { uri: string; cid: string }
 
   beforeAll(async () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_feed_generation',
+      bsky: { searchV2OverrideHeader: 'test' },
     })
-    agent = network.bsky.getClient()
-    pdsAgent = network.pds.getClient()
+    vi.spyOn(network.bsky.ctx.featureGatesClient, 'scope').mockImplementation(
+      () => ({
+        Gate,
+        checkGate: (gate) => gate === Gate.KnownLikersFeedEnable,
+        checkGates: (gates) =>
+          new Map(
+            gates.map((gate) => [gate, gate === Gate.KnownLikersFeedEnable]),
+          ),
+      }),
+    )
+
+    agent = network.bsky.getAgent()
+    pdsAgent = network.pds.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc)
     await network.processAll()
@@ -62,6 +87,12 @@ describe('feed generation', () => {
       'app.bsky.feed.generator',
       'bad-pagination-cursor',
     )
+    const emptyPageWithCursorUri = AtUri.make(
+      alice,
+      'app.bsky.feed.generator',
+      'empty-page-with-cursor',
+    )
+    feedUriEmptyPageWithCursor = emptyPageWithCursorUri.toString()
     const evenUri = AtUri.make(alice, 'app.bsky.feed.generator', 'even')
     const primeUri = AtUri.make(alice, 'app.bsky.feed.generator', 'prime')
     const needsAuthUri = AtUri.make(
@@ -74,6 +105,7 @@ describe('feed generation', () => {
       'app.bsky.feed.generator',
       'accepts-interactions',
     )
+    const pinnedUri = AtUri.make(alice, 'app.bsky.feed.generator', 'pinned')
     gen = await network.createFeedGen({
       [allUri.toString()]: feedGenHandler('all'),
       [evenUri.toString()]: feedGenHandler('even'),
@@ -83,11 +115,15 @@ describe('feed generation', () => {
       [feedUriBadPaginationCursor.toString()]: feedGenHandler(
         'bad-pagination-cursor',
       ),
+      [emptyPageWithCursorUri.toString()]: feedGenHandler(
+        'empty-page-with-cursor',
+      ),
       [primeUri.toString()]: feedGenHandler('prime'),
       [needsAuthUri.toString()]: feedGenHandler('needs-auth'),
       [acceptsInteractionsUri.toString()]: feedGenHandler(
         'accepts-interactions',
       ),
+      [pinnedUri.toString()]: feedGenHandler('pinned'),
     })
 
     const feedSuggestions = [
@@ -102,10 +138,9 @@ describe('feed generation', () => {
       .execute()
   })
 
-  afterAll(async () => {
-    await gen.close()
-    await network.close()
-  })
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
+  afterAll(async () => gen?.close())
 
   it('feed gen records can be created.', async () => {
     const all = await pdsAgent.api.app.bsky.feed.generator.create(
@@ -208,6 +243,16 @@ describe('feed generation', () => {
         },
         sc.getHeaders(alice),
       )
+    const pinned = await pdsAgent.api.app.bsky.feed.generator.create(
+      { repo: alice, rkey: 'pinned' },
+      {
+        did: gen.did,
+        displayName: 'Pinned',
+        description: 'Returns a post with skeletonReasonPin',
+        createdAt: new Date().toISOString(),
+      },
+      sc.getHeaders(alice),
+    )
     await network.processAll()
     await network.bsky.ctx.dataplane.takedownRecord({
       recordUri: prime.uri,
@@ -224,6 +269,7 @@ describe('feed generation', () => {
     feedUriNeedsAuth = needsAuth.uri
     feedUriContentModeVideo = contentModeVideo.uri
     feedUriAcceptsInteractions = acceptsInteraction.uri
+    feedUriPinned = pinned.uri
   })
 
   it('feed gen records can be updated', async () => {
@@ -250,7 +296,7 @@ describe('feed generation', () => {
     await sc.like(sc.dids.carol, feedUriAllRef)
     await network.processAll()
 
-    const results = (results: GetActorFeedsOutputSchema[]) =>
+    const results = (results: AppBskyFeedGetActorFeeds.OutputSchema[]) =>
       results.flatMap((res) => res.feeds)
     const paginator = async (cursor?: string) => {
       const res = await agent.api.app.bsky.feed.getActorFeeds(
@@ -267,17 +313,58 @@ describe('feed generation', () => {
 
     const paginatedAll = results(await paginateAll(paginator))
 
-    expect(paginatedAll.length).toEqual(8)
+    expect(paginatedAll.length).toEqual(9)
     expect(paginatedAll[0].uri).toEqual(feedUriOdd)
-    expect(paginatedAll[1].uri).toEqual(feedUriAcceptsInteractions)
-    expect(paginatedAll[2].uri).toEqual(feedUriContentModeVideo)
-    expect(paginatedAll[3].uri).toEqual(feedUriNeedsAuth)
-    expect(paginatedAll[4].uri).toEqual(feedUriBadPaginationCursor)
-    expect(paginatedAll[5].uri).toEqual(feedUriBadPaginationLimit)
-    expect(paginatedAll[6].uri).toEqual(feedUriEven)
-    expect(paginatedAll[7].uri).toEqual(feedUriAll)
+    expect(paginatedAll[1].uri).toEqual(feedUriPinned)
+    expect(paginatedAll[2].uri).toEqual(feedUriAcceptsInteractions)
+    expect(paginatedAll[3].uri).toEqual(feedUriContentModeVideo)
+    expect(paginatedAll[4].uri).toEqual(feedUriNeedsAuth)
+    expect(paginatedAll[5].uri).toEqual(feedUriBadPaginationCursor)
+    expect(paginatedAll[6].uri).toEqual(feedUriBadPaginationLimit)
+    expect(paginatedAll[7].uri).toEqual(feedUriEven)
+    expect(paginatedAll[8].uri).toEqual(feedUriAll)
     expect(paginatedAll.map((fg) => fg.uri)).not.toContain(feedUriPrime) // taken-down
     expect(forSnapshot(paginatedAll)).toMatchSnapshot()
+  })
+
+  it('getActorFeeds returns a cursor only when more feeds are available', async () => {
+    const exact = await network.bsky.ctx.dataplane.getActorFeeds({
+      actorDid: alice,
+      limit: 10,
+    })
+    expect(exact.uris).toHaveLength(10)
+    expect(exact.cursor).toBe('')
+
+    const over = await network.bsky.ctx.dataplane.getActorFeeds({
+      actorDid: alice,
+      limit: 9,
+    })
+    expect(over.uris).toHaveLength(9)
+    expect(over.cursor).not.toBe('')
+
+    // The taken-down feed is filtered out, leaving 8 of the 9 requested. That
+    // is already half of the limit, so the page is served with a cursor.
+    const short = await agent.app.bsky.feed.getActorFeeds({
+      actor: alice,
+      limit: 9,
+    })
+    expect(short.data.feeds).toHaveLength(8)
+    expect(short.data.cursor).toBeDefined()
+
+    const terminal = await agent.app.bsky.feed.getActorFeeds({
+      actor: alice,
+      limit: 9,
+      cursor: short.data.cursor,
+    })
+    expect(terminal.data.feeds).toHaveLength(1)
+    expect(terminal.data.cursor).toBeUndefined()
+
+    const trimmed = await agent.app.bsky.feed.getActorFeeds({
+      actor: alice,
+      limit: 8,
+    })
+    expect(trimmed.data.feeds).toHaveLength(7)
+    expect(trimmed.data.cursor).toBeDefined()
   })
 
   it('embeds feed generator records in posts', async () => {
@@ -571,6 +658,47 @@ describe('feed generation', () => {
       expect(forSnapshot(resEven.data)).toMatchSnapshot()
       expect(resEven.data.feeds.map((fg) => fg.uri)).not.toContain(feedUriPrime) // taken-down
     })
+
+    it('serves a page short of the limit after filtering, and returns a cursor only when more feeds are available', async () => {
+      const exact = await network.bsky.ctx.dataplane.getSuggestedFeeds({
+        limit: 4,
+      })
+      expect(exact.uris).toHaveLength(4)
+      expect(exact.cursor).toBe('')
+
+      const over = await network.bsky.ctx.dataplane.getSuggestedFeeds({
+        limit: 3,
+      })
+      expect(over.uris).toHaveLength(3)
+      expect(over.cursor).not.toBe('')
+
+      // Moving the taken-down feed to the head of the results leaves 2 of the
+      // 3 requested, already half of the limit, so the page is served short.
+      await network.bsky.db.db
+        .updateTable('suggested_feed')
+        .set({ order: 0 })
+        .where('uri', '=', feedUriPrime)
+        .execute()
+      const short = await agent.app.bsky.feed.getSuggestedFeeds({ limit: 3 })
+      expect(short.data.feeds).toHaveLength(2)
+      expect(short.data.cursor).toBeDefined()
+
+      const terminal = await agent.app.bsky.feed.getSuggestedFeeds({
+        limit: 3,
+        cursor: short.data.cursor,
+      })
+      expect(terminal.data.feeds).toHaveLength(1)
+      expect(terminal.data.cursor).toBeUndefined()
+      await network.bsky.db.db
+        .updateTable('suggested_feed')
+        .set({ order: 4 })
+        .where('uri', '=', feedUriPrime)
+        .execute()
+
+      const trimmed = await agent.app.bsky.feed.getSuggestedFeeds({ limit: 2 })
+      expect(trimmed.data.feeds).toHaveLength(2)
+      expect(trimmed.data.cursor).toBeDefined()
+    })
   })
 
   describe('getPopularFeedGenerators', () => {
@@ -603,6 +731,40 @@ describe('feed generation', () => {
         },
       )
       expect(res.data.feeds.map((f) => f.uri)).toEqual([feedUriAll])
+    })
+
+    it('paginates v2 feed-generator search', async () => {
+      const dataplaneFirst =
+        await network.bsky.ctx.dataplane.searchFeedGeneratorsV2({
+          params: { query: '', limit: 1 },
+        })
+      const dataplaneSecond =
+        await network.bsky.ctx.dataplane.searchFeedGeneratorsV2({
+          params: {
+            query: '',
+            cursor: dataplaneFirst.pageInfo?.cursor,
+            limit: 1,
+          },
+        })
+
+      expect(dataplaneFirst.pageInfo?.cursor).not.toBe('')
+      expect(dataplaneSecond.feedGenerators[0].uri).not.toBe(
+        dataplaneFirst.feedGenerators[0].uri,
+      )
+
+      const override = { 'x-bsky-search-v2-override': 'test' }
+      const first = await agent.app.bsky.unspecced.getPopularFeedGenerators(
+        { query: 'Bad Pagination', limit: 1 },
+        { headers: override },
+      )
+      const second = await agent.app.bsky.unspecced.getPopularFeedGenerators(
+        { query: 'Bad Pagination', cursor: first.data.cursor, limit: 1 },
+        { headers: override },
+      )
+
+      expect(first.data.cursor).toBeDefined()
+      expect(second.data.feeds).toHaveLength(1)
+      expect(second.data.feeds[0].uri).not.toBe(first.data.feeds[0].uri)
     })
 
     it('paginates', async () => {
@@ -640,6 +802,39 @@ describe('feed generation', () => {
         resFull.data.feeds,
       )
     })
+
+    it('uses bounded feed generator pages and serves filtered suggestions short of the limit', async () => {
+      // Moving the taken-down feed to the head of the results leaves 2 of the
+      // 3 requested, already half of the limit, so the page is served short.
+      await network.bsky.db.db
+        .updateTable('suggested_feed')
+        .set({ order: 0 })
+        .where('uri', '=', feedUriPrime)
+        .execute()
+      const short = await agent.app.bsky.unspecced.getPopularFeedGenerators({
+        limit: 3,
+      })
+      expect(short.data.feeds).toHaveLength(2)
+      expect(short.data.cursor).toBeDefined()
+
+      const terminal = await agent.app.bsky.unspecced.getPopularFeedGenerators({
+        limit: 3,
+        cursor: short.data.cursor,
+      })
+      expect(terminal.data.feeds).toHaveLength(1)
+      expect(terminal.data.cursor).toBeUndefined()
+      await network.bsky.db.db
+        .updateTable('suggested_feed')
+        .set({ order: 4 })
+        .where('uri', '=', feedUriPrime)
+        .execute()
+
+      const over = await agent.app.bsky.unspecced.getPopularFeedGenerators({
+        limit: 2,
+      })
+      expect(over.data.feeds).toHaveLength(2)
+      expect(over.data.cursor).toBeDefined()
+    })
   })
 
   describe('getFeed', () => {
@@ -659,6 +854,13 @@ describe('feed generation', () => {
         sc.posts[sc.dids.carol][0].ref.uriStr,
         sc.replies[sc.dids.carol][0].ref.uriStr,
       ])
+      const carolPost = feed.data.feed.find(
+        (item) => item.post.uri === sc.posts[sc.dids.carol][0].ref.uriStr,
+      )
+      expect(
+        carolPost?.post.viewer?.knownLikers?.actors.map((actor) => actor.did),
+      ).toEqual([sc.dids.bob])
+      expect(carolPost?.post.viewer?.knownLikers?.count).toBe(1)
       expect(forSnapshot(feed.data.feed)).toMatchSnapshot()
     })
 
@@ -673,7 +875,7 @@ describe('feed generation', () => {
     })
 
     it('paginates, handling replies and reposts.', async () => {
-      const results = (results: GetFeedOutputSchema[]) =>
+      const results = (results: AppBskyFeedGetFeed.OutputSchema[]) =>
         results.flatMap((res) => res.feed)
       const paginator = async (cursor?: string) => {
         const res = await agent.api.app.bsky.feed.getFeed(
@@ -689,7 +891,9 @@ describe('feed generation', () => {
         return res.data
       }
 
-      const paginatedAll: FeedViewPost[] = results(await paginateAll(paginator))
+      const paginatedAll: AppBskyFeedDefs.FeedViewPost[] = results(
+        await paginateAll(paginator),
+      )
 
       // Unknown post uri is omitted
       expect(paginatedAll.map((item) => item.post.uri)).toEqual([
@@ -700,6 +904,24 @@ describe('feed generation', () => {
         sc.posts[sc.dids.dan][1].ref.uriStr,
       ])
       expect(forSnapshot(paginatedAll)).toMatchSnapshot()
+    })
+
+    it('does not refill an empty filtered skeleton segment', async () => {
+      const res = await agent.api.app.bsky.feed.getFeed(
+        { feed: feedUriAll, cursor: '2', limit: 2 },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyFeedGetFeed,
+            gen.did,
+          ),
+        },
+      )
+
+      expect(res.data.feed.map((item) => item.post.uri)).toEqual([
+        sc.posts[sc.dids.carol][0].ref.uriStr,
+      ])
+      expect(res.data.cursor).toBe('4')
     })
 
     it('paginates, handling feed not respecting limit.', async () => {
@@ -753,6 +975,34 @@ describe('feed generation', () => {
 
       expect(res.data.cursor).toBeUndefined()
       expect(res.data.feed).toHaveLength(2)
+    })
+
+    it('returns empty cursor when the feed generator returns an empty page', async () => {
+      await pdsAgent.api.app.bsky.feed.generator.create(
+        { repo: alice, rkey: 'empty-page-with-cursor' },
+        {
+          did: gen.did,
+          displayName: 'Empty Page With Cursor',
+          description: 'Returns an empty page with a cursor',
+          createdAt: new Date().toISOString(),
+        },
+        sc.getHeaders(alice),
+      )
+      await network.processAll()
+
+      const res = await agent.api.app.bsky.feed.getFeed(
+        { feed: feedUriEmptyPageWithCursor, limit: 2 },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyFeedGetFeed,
+            gen.did,
+          ),
+        },
+      )
+
+      expect(res.data.feed).toHaveLength(0)
+      expect(res.data.cursor).toBeUndefined()
     })
 
     it('resolves contents of taken-down feed.', async () => {
@@ -809,6 +1059,21 @@ describe('feed generation', () => {
       )
     })
 
+    it('propagates skeletonReasonPin as ReasonPin.', async () => {
+      const feed = await agent.api.app.bsky.feed.getFeed(
+        { feed: feedUriPinned },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyFeedGetFeed,
+            gen.did,
+          ),
+        },
+      )
+      expect(feed.data.feed).toHaveLength(1)
+      expect(AppBskyFeedDefs.isReasonPin(feed.data.feed[0].reason)).toBe(true)
+    })
+
     it('returns an upstream failure error when the feed is down.', async () => {
       await gen.close() // @NOTE must be last test
       const tryGetFeed = agent.api.app.bsky.feed.getFeed(
@@ -833,20 +1098,41 @@ describe('feed generation', () => {
         | 'prime'
         | 'bad-pagination-limit'
         | 'bad-pagination-cursor'
+        | 'empty-page-with-cursor'
         | 'needs-auth'
-        | 'accepts-interactions',
-    ): MethodHandler<
-      void,
-      AppBskyFeedGetFeedSkeleton.QueryParams,
-      AppBskyFeedGetFeedSkeleton.HandlerInput,
-      AppBskyFeedGetFeedSkeleton.HandlerOutput
-    > =>
+        | 'accepts-interactions'
+        | 'pinned',
+    ): SkeletonHandler =>
     async ({ req, params }) => {
+      if (feedName === 'pinned') {
+        return {
+          encoding: 'application/json',
+          body: {
+            feed: [
+              {
+                post: sc.posts[sc.dids.alice][0].ref.uriStr,
+                reason: {
+                  $type: 'app.bsky.feed.defs#skeletonReasonPin',
+                },
+              },
+            ],
+          } satisfies app.bsky.feed.getFeedSkeleton.$OutputBody,
+        }
+      }
+      if (feedName === 'empty-page-with-cursor') {
+        return {
+          encoding: 'application/json',
+          body: {
+            feed: [],
+            cursor: 'next',
+          } satisfies app.bsky.feed.getFeedSkeleton.$OutputBody,
+        }
+      }
       if (feedName === 'needs-auth' && !req.headers.authorization) {
         throw new AuthRequiredError('This feed requires auth')
       }
       const { limit, cursor } = params
-      const candidates: SkeletonFeedPost[] = [
+      const candidates: app.bsky.feed.defs.SkeletonFeedPost[] = [
         { post: sc.posts[sc.dids.alice][0].ref.uriStr },
         { post: sc.posts[sc.dids.bob][0].ref.uriStr },
         { post: sc.posts[sc.dids.carol][0].ref.uriStr },
@@ -868,9 +1154,15 @@ describe('feed generation', () => {
             repost: sc.reposts[sc.dids.carol][0].uriStr,
           },
         },
-      ].map((item, i) => ({ ...item, feedContext: `item-${i}` })) // add a deterministic context to test passthrough
+      ]
+
+      const candidatesWithContext = candidates.map(<I>(item: I, i: number) => ({
+        ...item,
+        feedContext: `item-${i}` as const,
+      })) // add a deterministic context to test passthrough
+
       const offset = cursor ? parseInt(cursor, 10) : 0
-      const fullFeed = candidates.filter((_, i) => {
+      const fullFeed = candidatesWithContext.filter((_, i) => {
         if (feedName === 'even') {
           return i % 2 === 0
         }
@@ -897,8 +1189,9 @@ describe('feed generation', () => {
           feed: feedResults,
           cursor: cursorResult,
           reqId: 'req-id-abc-def-ghi',
-          $auth: jwtBody(req.headers.authorization), // for testing purposes
-        },
+          // @ts-expect-error for testing purposes
+          $auth: jwtBody(req.headers.authorization),
+        } satisfies app.bsky.feed.getFeedSkeleton.$OutputBody,
       }
     }
 })

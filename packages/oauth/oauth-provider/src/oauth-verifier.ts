@@ -1,14 +1,14 @@
 import type { Redis, RedisOptions } from 'ioredis'
 import { Key, Keyset, isSignedJwt } from '@atproto/jwk'
 import {
-  OAuthAccessToken,
-  OAuthIssuerIdentifier,
-  OAuthTokenType,
+  type OAuthAccessToken,
+  type OAuthIssuerIdentifier,
+  type OAuthTokenType,
   oauthIssuerIdentifierSchema,
 } from '@atproto/oauth-types'
-import { DpopManager, DpopManagerOptions } from './dpop/dpop-manager.js'
+import { DpopManager, type DpopManagerOptions } from './dpop/dpop-manager.js'
 import { DpopNonce } from './dpop/dpop-nonce.js'
-import { DpopProof } from './dpop/dpop-proof.js'
+import type { DpopProof } from './dpop/dpop-proof.js'
 import { InvalidDpopKeyBindingError } from './errors/invalid-dpop-key-binding-error.js'
 import { InvalidDpopProofError } from './errors/invalid-dpop-proof-error.js'
 import { InvalidTokenError } from './errors/invalid-token-error.js'
@@ -16,12 +16,12 @@ import { UseDpopNonceError } from './errors/use-dpop-nonce-error.js'
 import { WWWAuthenticateError } from './errors/www-authenticate-error.js'
 import { parseAuthorizationHeader } from './lib/util/authorization-header.js'
 import { includedIn } from './lib/util/function.js'
-import { OAuthHooks } from './oauth-hooks.js'
+import type { OAuthHooks } from './oauth-hooks.js'
 import { ReplayManager } from './replay/replay-manager.js'
 import { ReplayStoreMemory } from './replay/replay-store-memory.js'
 import { ReplayStoreRedis } from './replay/replay-store-redis.js'
-import { ReplayStore } from './replay/replay-store.js'
-import { AccessTokenPayload } from './signer/access-token-payload.js'
+import type { ReplayStore } from './replay/replay-store.js'
+import type { AccessTokenPayload } from './signer/access-token-payload.js'
 import { Signer } from './signer/signer.js'
 
 export type DecodeTokenHook = OAuthHooks['onDecodeToken']

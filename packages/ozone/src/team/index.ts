@@ -1,21 +1,25 @@
-import { Selectable } from 'kysely'
-import AtpAgent from '@atproto/api'
+import { type Selectable, sql } from 'kysely'
 import { chunkArray } from '@atproto/common'
+import type { Client } from '@atproto/lex-client'
+import {
+  type DatetimeString,
+  type DidString,
+  toDatetimeString,
+} from '@atproto/lex-schema'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { Database } from '../db'
-import { Member } from '../db/schema/member'
-import { ids } from '../lexicon/lexicons'
-import { ProfileViewDetailed } from '../lexicon/types/app/bsky/actor/defs'
-import { Member as TeamMember } from '../lexicon/types/tools/ozone/team/defs'
-import { httpLogger } from '../logger'
-import { AuthHeaders } from '../mod-service/views'
+import type { OnlineMembersConfig } from '../config/config.js'
+import type { Database } from '../db/index.js'
+import type { Member } from '../db/schema/member.js'
+import { app, tools } from '../lexicons/index.js'
+import { httpLogger } from '../logger.js'
+import type { AuthHeaders } from '../mod-service/views.js'
 
 export type TeamServiceCreator = (db: Database) => TeamService
 
 export class TeamService {
   constructor(
     public db: Database,
-    private appviewAgent: AtpAgent,
+    private appviewClient: Client,
     private appviewDid: string,
     private createAuthHeaders: (
       aud: string,
@@ -24,12 +28,12 @@ export class TeamService {
   ) {}
 
   static creator(
-    appviewAgent: AtpAgent,
+    appviewClient: Client,
     appviewDid: string,
     createAuthHeaders: (aud: string, method: string) => Promise<AuthHeaders>,
   ) {
     return (db: Database) =>
-      new TeamService(db, appviewAgent, appviewDid, createAuthHeaders)
+      new TeamService(db, appviewClient, appviewDid, createAuthHeaders)
   }
 
   async list({
@@ -52,10 +56,10 @@ export class TeamService {
     if (roles !== undefined) {
       const knownRoles = roles.filter(
         (r) =>
-          r === 'tools.ozone.team.defs#roleAdmin' ||
-          r === 'tools.ozone.team.defs#roleModerator' ||
-          r === 'tools.ozone.team.defs#roleVerifier' ||
-          r === 'tools.ozone.team.defs#roleTriage',
+          r === tools.ozone.team.defs.RoleAdmin ||
+          r === tools.ozone.team.defs.RoleModerator ||
+          r === tools.ozone.team.defs.RoleVerifier ||
+          r === tools.ozone.team.defs.RoleTriage,
       )
 
       // Optimization: no need to query to know that no values will be returned
@@ -67,10 +71,11 @@ export class TeamService {
       builder = builder.where('disabled', disabled ? 'is' : 'is not', true)
     }
     if (q) {
-      builder = builder.where((qb) =>
-        qb
-          .orWhere('handle', 'ilike', `%${q}%`)
-          .orWhere('displayName', 'ilike', `%${q}%`),
+      builder = builder.where((eb) =>
+        eb.or([
+          eb('handle', 'ilike', `%${q}%`),
+          eb('displayName', 'ilike', `%${q}%`),
+        ]),
       )
     }
 
@@ -81,6 +86,67 @@ export class TeamService {
       .execute()
 
     return { members, cursor: members.at(-1)?.createdAt.toISOString() }
+  }
+
+  /** Lists enabled members with recent moderation or report activity. */
+  async listOnlineMembers({
+    excludedDids,
+    activeWindowMs,
+    limit = 50,
+    serviceDid,
+    signal,
+  }: tools.ozone.team.listOnlineMembers.$Params &
+    OnlineMembersConfig & {
+      serviceDid: DidString
+      signal?: AbortSignal
+    }): Promise<tools.ozone.team.listOnlineMembers.OnlineMember[]> {
+    const now = Date.now()
+    const createdAfter = toDatetimeString(new Date(now - activeWindowMs))
+    const createdBefore = toDatetimeString(new Date(now))
+    const exclusions = [...new Set([serviceDid, ...excludedDids])]
+    const lastActive = sql<DatetimeString | null>`greatest(event."createdAt", activity."createdAt")`
+
+    return this.db.db
+      .selectFrom('member as m')
+      .where('m.disabled', '=', false)
+      .where('m.did', 'not in', exclusions)
+      .leftJoinLateral(
+        (eb) =>
+          eb
+            .selectFrom('moderation_event')
+            .whereRef('createdBy', '=', 'm.did')
+            .where('createdAt', '>=', createdAfter)
+            .where('createdAt', '<=', createdBefore)
+            .orderBy('createdAt', 'desc')
+            .orderBy('id', 'desc')
+            .limit(1)
+            .select('createdAt')
+            .as('event'),
+        (join) => join.onTrue(),
+      )
+      .leftJoinLateral(
+        (eb) =>
+          eb
+            .selectFrom('report_activity')
+            .whereRef('createdBy', '=', 'm.did')
+            // @NOTE a literal predicate allows the partial index on human activity.
+            .where('isAutomated', '=', sql<boolean>`false`)
+            .where('createdAt', '>=', createdAfter)
+            .where('createdAt', '<=', createdBefore)
+            .orderBy('createdAt', 'desc')
+            .orderBy('id', 'desc')
+            .limit(1)
+            .select('createdAt')
+            .as('activity'),
+        (join) => join.onTrue(),
+      )
+      .select(['m.did', lastActive.as('lastActive')])
+      .where(lastActive, 'is not', null)
+      .$narrowType<{ lastActive: DatetimeString }>()
+      .orderBy('lastActive', 'desc')
+      .orderBy('m.did', 'asc')
+      .limit(limit)
+      .execute({ signal, inflightQueryAbortStrategy: 'cancel query' })
   }
 
   async create({
@@ -137,7 +203,7 @@ export class TeamService {
   }
 
   async update(
-    did: string,
+    did: DidString,
     updates: Partial<
       Pick<
         Selectable<Member>,
@@ -161,11 +227,11 @@ export class TeamService {
     return updatedMember
   }
 
-  async delete(did: string): Promise<void> {
+  async delete(did: DidString): Promise<void> {
     await this.db.db.deleteFrom('member').where('did', '=', did).execute()
   }
 
-  async assertCanDelete(did: string): Promise<void> {
+  async assertCanDelete(did: DidString): Promise<void> {
     const memberExists = await this.doesMemberExist(did)
 
     if (!memberExists) {
@@ -173,7 +239,7 @@ export class TeamService {
     }
   }
 
-  async doesMemberExist(did: string): Promise<boolean> {
+  async doesMemberExist(did: DidString): Promise<boolean> {
     const member = await this.db.db
       .selectFrom('member')
       .select('did')
@@ -183,7 +249,7 @@ export class TeamService {
     return !!member
   }
 
-  async getMember(did: string): Promise<Selectable<Member> | undefined> {
+  async getMember(did: DidString): Promise<Selectable<Member> | undefined> {
     const member = await this.db.db
       .selectFrom('member')
       .selectAll()
@@ -194,13 +260,13 @@ export class TeamService {
   }
 
   getMemberRole(member?: Selectable<Member>) {
-    const isAdmin = member?.role === 'tools.ozone.team.defs#roleAdmin'
+    const isAdmin = member?.role === tools.ozone.team.defs.RoleAdmin
     const isModerator =
-      isAdmin || member?.role === 'tools.ozone.team.defs#roleModerator'
+      isAdmin || member?.role === tools.ozone.team.defs.RoleModerator
     const isTriage =
-      isModerator || member?.role === 'tools.ozone.team.defs#roleTriage'
+      isModerator || member?.role === tools.ozone.team.defs.RoleTriage
     const isVerifier =
-      isAdmin || member?.role === 'tools.ozone.team.defs#roleVerifier'
+      isAdmin || member?.role === tools.ozone.team.defs.RoleVerifier
 
     return {
       isModerator,
@@ -211,22 +277,25 @@ export class TeamService {
   }
 
   // getProfiles() only allows 25 DIDs at a time so we need to query in chunks
-  async getProfiles(dids: string[]): Promise<Map<string, ProfileViewDetailed>> {
-    const profiles = new Map<string, ProfileViewDetailed>()
+  async getProfiles(
+    dids: DidString[],
+  ): Promise<Map<string, app.bsky.actor.defs.ProfileViewDetailed>> {
+    const profiles = new Map<string, app.bsky.actor.defs.ProfileViewDetailed>()
 
     try {
       const headers = await this.createAuthHeaders(
         this.appviewDid,
-        ids.AppBskyActorGetProfiles,
+        app.bsky.actor.getProfiles.$lxm,
       )
 
       for (const actors of chunkArray(dids, 25)) {
-        const { data } = await this.appviewAgent.getProfiles(
+        const body = await this.appviewClient.call(
+          app.bsky.actor.getProfiles,
           { actors },
           headers,
         )
 
-        data.profiles.forEach((profile) => {
+        body.profiles.forEach((profile) => {
           profiles.set(profile.did, profile)
         })
       }
@@ -238,14 +307,14 @@ export class TeamService {
   }
 
   async syncMemberProfiles(): Promise<void> {
-    let lastDid = ''
+    let lastDid: DidString | undefined
     // Max 25 profiles can be fetched at a time so let's pull 25 members at a time from the db and update their profile details
     do {
       const members = await this.db.db
         .selectFrom('member')
         .select(['did'])
         .limit(25)
-        .if(!!lastDid, (q) => q.where('did', '>', lastDid))
+        .$if(!!lastDid, (q) => q.where('did', '>', lastDid!))
         .orderBy('did', 'asc')
         .execute()
 
@@ -263,11 +332,26 @@ export class TeamService {
           .execute()
       }
 
-      lastDid = dids.at(-1) || ''
+      lastDid = dids.at(-1)
     } while (lastDid)
   }
 
-  async view(members: Selectable<Member>[]): Promise<TeamMember[]> {
+  async viewByDids(
+    dids: DidString[],
+  ): Promise<Map<string, tools.ozone.team.defs.Member>> {
+    if (!dids.length) return new Map()
+    const members = await this.db.db
+      .selectFrom('member')
+      .selectAll()
+      .where('did', 'in', dids)
+      .execute()
+    const memberViews = await this.view(members)
+    return new Map(memberViews.map((m) => [m.did, m]))
+  }
+
+  async view(
+    members: Selectable<Member>[],
+  ): Promise<tools.ozone.team.defs.Member[]> {
     const profiles = await this.getProfiles(members.map(({ did }) => did))
     return members.map((member) => {
       return {
@@ -275,8 +359,8 @@ export class TeamService {
         role: member.role,
         disabled: member.disabled,
         profile: profiles.get(member.did),
-        createdAt: member.createdAt.toISOString(),
-        updatedAt: member.updatedAt.toISOString(),
+        createdAt: toDatetimeString(member.createdAt),
+        updatedAt: toDatetimeString(member.updatedAt),
         lastUpdatedBy: member.lastUpdatedBy,
       }
     })

@@ -1,12 +1,12 @@
-import {
+import { ids } from '@atproto/api'
+import type {
   AtpAgent,
+  ToolsOzoneModerationDefs,
   ToolsOzoneModerationListScheduledActions,
 } from '@atproto/api'
 import { HOUR, MINUTE } from '@atproto/common'
-import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
-import { ModEventTakedown } from '../dist/lexicon/types/tools/ozone/moderation/defs'
-import { ids } from '../src/lexicon/lexicons'
-import { ProtectedTagSettingKey } from '../src/setting/constants'
+import { type SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import { ProtectedTagSettingKey } from '../src/setting/constants.js'
 
 describe('scheduled action processor', () => {
   let network: TestNetwork
@@ -22,7 +22,11 @@ describe('scheduled action processor', () => {
   const scheduleTestAction = async (
     subject: string,
     scheduling: any,
-    emailData?: { emailSubject?: string; emailContent?: string },
+    emailData?: {
+      emailSubject?: string
+      emailContent?: string
+      strikeExpiresAt?: string
+    },
   ) => {
     return await adminAgent.tools.ozone.moderation.scheduleAction(
       {
@@ -66,14 +70,14 @@ describe('scheduled action processor', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'ozone_scheduled_action_processor_test',
     })
-    adminAgent = network.ozone.getClient()
+    adminAgent = network.ozone.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc)
     await network.processAll()
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   describe('findAndExecuteScheduledActions', () => {
@@ -81,12 +85,16 @@ describe('scheduled action processor', () => {
       const testSubject = sc.dids.alice
 
       const pastTime = new Date(Date.now() - 1000).toISOString()
+      const strikeExpiresAt = new Date(
+        Date.now() + 365 * 24 * HOUR,
+      ).toISOString()
       await scheduleTestAction(
         testSubject,
         { executeAt: pastTime },
         {
           emailSubject: 'Test Email Subject',
           emailContent: 'Test Email Content',
+          strikeExpiresAt,
         },
       )
 
@@ -119,6 +127,7 @@ describe('scheduled action processor', () => {
       )
 
       expect(takedownEvent?.event['comment']).toBeDefined()
+      expect(takedownEvent?.event['strikeExpiresAt']).toBe(strikeExpiresAt)
 
       expect(emailEvent?.event['subjectLine']).toBe('Test Email Subject')
       expect(emailEvent?.event['content']).toBe('Test Email Content')
@@ -229,7 +238,8 @@ describe('scheduled action processor', () => {
       // No email was sent
       expect(modEvents.length).toBe(1)
 
-      const takedownEvent = modEvents[0].event as ModEventTakedown
+      const takedownEvent = modEvents[0]
+        .event as ToolsOzoneModerationDefs.ModEventTakedown
       expect(takedownEvent.comment).toContain('[SCHEDULED_ACTION]')
       expect(takedownEvent.comment).toContain('Detailed takedown test')
       expect(takedownEvent.durationInHours).toBe(24)

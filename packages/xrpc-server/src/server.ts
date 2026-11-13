@@ -1,22 +1,21 @@
 import assert from 'node:assert'
-import { IncomingMessage } from 'node:http'
+import type { IncomingMessage } from 'node:http'
 import { Readable } from 'node:stream'
 import { pipeline } from 'node:stream/promises'
 import express, {
-  Application,
-  ErrorRequestHandler,
-  Express,
-  Request,
-  RequestHandler,
+  type Application,
+  type ErrorRequestHandler,
+  type Express,
+  type RequestHandler,
   Router,
 } from 'express'
-import { check, schema } from '@atproto/common'
-import { LexMap, LexValue } from '@atproto/lex-data'
+import type { LexValue } from '@atproto/lex-data'
+import { l } from '@atproto/lex-schema'
 import {
-  LexXrpcProcedure,
-  LexXrpcQuery,
-  LexXrpcSubscription,
-  LexiconDoc,
+  type LexXrpcProcedure,
+  type LexXrpcQuery,
+  type LexXrpcSubscription,
+  type LexiconDoc,
   Lexicons,
   lexToJson,
 } from '@atproto/lexicon'
@@ -26,47 +25,70 @@ import {
   MethodNotImplementedError,
   XRPCError,
   excludeErrorResult,
-  isErrorResult,
-} from './errors'
-import log, { LOGGER_NAME } from './logger'
+} from './errors.js'
+import log, { LOGGER_NAME } from './logger.js'
+import { HttpRateLimiter } from './rate-limiter-http.js'
 import {
-  CalcKeyFn,
-  CalcPointsFn,
-  RateLimiterI,
-  RateLimiterOptions,
-  RouteRateLimiter,
+  type CalcKeyFn,
+  type CalcPointsFn,
+  type RateLimiterErrorHandlerDetails,
+  type RateLimiterI,
+  type RateLimiterOptions,
   WrappedRateLimiter,
-} from './rate-limiter'
-import { ErrorFrame, Frame, MessageFrame, XrpcStreamServer } from './stream'
+} from './rate-limiter.js'
 import {
-  Auth,
-  AuthResult,
-  AuthVerifier,
-  CatchallHandler,
-  HandlerContext,
-  HandlerSuccess,
-  Input,
-  MethodConfig,
-  MethodConfigOrHandler,
-  Options,
-  Params,
-  RouteOptions,
-  ServerRateLimitDescription,
-  StreamConfig,
-  StreamConfigOrHandler,
+  ErrorFrame,
+  Frame,
+  MessageFrame,
+  XrpcStreamServer,
+} from './stream/index.js'
+import {
+  type Auth,
+  type AuthResult,
+  type AuthVerifier,
+  type CatchallHandler,
+  type HandlerContext,
+  type Input,
+  type LexMethodConfig,
+  type LexMethodHandler,
+  type LexMethodInput,
+  type LexMethodOutput,
+  type LexMethodParams,
+  type LexSubscriptionConfig,
+  type LexSubscriptionHandler,
+  type MethodAuthContext,
+  type MethodConfig,
+  type MethodConfigOrHandler,
+  type MethodHandler,
+  type Options,
+  type Output,
+  type Params,
+  type RouteOptions,
+  type ServerRateLimitDescription,
+  type StreamAuthContext,
+  type StreamConfig,
+  type StreamConfigOrHandler,
+  type StreamContext,
   isHandlerPipeThroughBuffer,
   isHandlerPipeThroughStream,
+  isHandlerSuccess,
   isSharedRateLimitOpts,
-} from './types'
+} from './types.js'
 import {
+  type AuthVerifierInternal,
+  type InputVerifierInternal,
+  type OutputVerifierInternal,
+  type ParamsVerifierInternal,
   asArray,
-  createInputVerifier,
-  decodeQueryParams,
+  createLexiconInputVerifier,
+  createLexiconOutputVerifier,
+  createLexiconParamsVerifier,
+  createSchemaInputVerifier,
+  createSchemaOutputVerifier,
+  createSchemaParamsVerifier,
   extractUrlNsid,
-  getQueryParams,
   setHeaders,
-  validateOutput,
-} from './util'
+} from './util.js'
 
 export function createServer(lexicons?: LexiconDoc[], options?: Options) {
   return new Server(lexicons, options)
@@ -78,7 +100,7 @@ export class Server {
   subscriptions = new Map<string, XrpcStreamServer>()
   lex = new Lexicons()
   options: Options
-  globalRateLimiter?: RouteRateLimiter<HandlerContext>
+  globalRateLimiter?: HttpRateLimiter<HandlerContext>
   sharedRateLimiters?: Map<string, RateLimiterI<HandlerContext>>
 
   constructor(lexicons?: LexiconDoc[], opts: Options = {}) {
@@ -97,7 +119,7 @@ export class Server {
       const { global, shared, creator, bypass } = opts.rateLimits
 
       if (global) {
-        this.globalRateLimiter = RouteRateLimiter.from(
+        this.globalRateLimiter = HttpRateLimiter.from(
           global.map((options) => creator(buildRateLimiterOptions(options))),
           { bypass },
         )
@@ -114,13 +136,159 @@ export class Server {
     }
   }
 
+  listen(port: number, callback?: () => void) {
+    return this.router.listen(port, callback)
+  }
+
   // handlers
   // =
+
+  // Routes with auth
+  add<M extends l.Procedure | l.Query | l.Subscription, A extends AuthResult>(
+    ns: l.Main<M>,
+    config: M extends l.Procedure | l.Query
+      ? LexMethodConfig<M, A> & { auth: Exclude<unknown, void> }
+      : M extends l.Subscription
+        ? LexSubscriptionConfig<M, A> & { auth: Exclude<unknown, void> }
+        : never,
+  ): void
+  // Routes without auth
+  add<M extends l.Procedure | l.Query | l.Subscription>(
+    ns: l.Main<M>,
+    config: M extends l.Procedure | l.Query
+      ? LexMethodConfig<M, void> | LexMethodHandler<M, void>
+      : M extends l.Subscription
+        ? LexSubscriptionConfig<M, void> | LexSubscriptionHandler<M, void>
+        : never,
+  ): void
+  add<M extends l.Procedure | l.Query | l.Subscription, A extends Auth>(
+    ns: l.Main<M>,
+    configOfHandler: M extends l.Procedure | l.Query
+      ? LexMethodConfig<M, A> | LexMethodHandler<M, A>
+      : M extends l.Subscription
+        ? LexSubscriptionConfig<M, A> | LexSubscriptionHandler<M, A>
+        : never,
+  ): void {
+    const schema = l.getMain(ns)
+    const config =
+      typeof configOfHandler === 'function'
+        ? { handler: configOfHandler }
+        : configOfHandler
+    switch (schema.type) {
+      case 'procedure':
+        return this.addProcedureSchema(
+          schema,
+          config as LexMethodConfig<l.Procedure, A>,
+        )
+      case 'query':
+        return this.addQuerySchema(
+          schema,
+          config as LexMethodConfig<l.Query, A>,
+        )
+      case 'subscription':
+        return this.addSubscriptionSchema(
+          schema,
+          config as LexSubscriptionConfig<l.Subscription, A>,
+        )
+      default:
+        throw new TypeError(
+          // @ts-expect-error should never happen
+          `Unsupported schema ${schema.nsid} of type ${schema.type}`,
+        )
+    }
+  }
+
+  protected addProcedureSchema<M extends l.Procedure, A extends Auth>(
+    schema: M,
+    config: LexMethodConfig<M, A>,
+  ): void {
+    this.routes.get(`/xrpc/${schema.nsid}`, (req, res, next) => {
+      next(
+        new InvalidRequestError(
+          `Incorrect HTTP method (${req.method}) expected POST`,
+        ),
+      )
+    })
+    this.routes.post(
+      `/xrpc/${schema.nsid}`,
+      this.createHandlerInternal<
+        A,
+        LexMethodParams<M>,
+        LexMethodInput<M>,
+        LexMethodOutput<M>
+      >(
+        this.createAuthVerifier(config),
+        this.createSchemaParamsVerifier(schema, config.opts),
+        this.createSchemaInputVerifier(schema, config.opts),
+        this.createRouteRateLimiter(schema.nsid, config),
+        config.handler,
+        this.createSchemaOutputVerifier(schema),
+      ),
+    )
+  }
+
+  protected addQuerySchema<M extends l.Query, A extends Auth>(
+    schema: M,
+    config: LexMethodConfig<M, A>,
+  ): void {
+    this.routes.post(`/xrpc/${schema.nsid}`, (req, res, next) => {
+      next(
+        new InvalidRequestError(
+          `Incorrect HTTP method (${req.method}) expected GET`,
+        ),
+      )
+    })
+    this.routes.get(
+      `/xrpc/${schema.nsid}`,
+      this.createHandlerInternal<
+        A,
+        LexMethodParams<M>,
+        LexMethodInput<M>,
+        LexMethodOutput<M>
+      >(
+        this.createAuthVerifier(config),
+        this.createSchemaParamsVerifier(schema, config.opts),
+        this.createSchemaInputVerifier(schema, config.opts),
+        this.createRouteRateLimiter(schema.nsid, config),
+        config.handler,
+        this.createSchemaOutputVerifier(schema),
+      ),
+    )
+  }
+
+  protected addSubscriptionSchema<
+    M extends l.Subscription,
+    A extends Auth = void,
+  >(schema: M, config: LexSubscriptionConfig<M, A>): void {
+    const { handler } = config
+    const messageSchema =
+      this.options.validateResponse === false ? undefined : schema.message
+
+    return this.addSubscriptionInternal(
+      schema.nsid,
+      this.createSchemaParamsVerifier(schema),
+      this.createAuthVerifier(config),
+      // Wrap the handler to validate outgoing messages if a message schema
+      // is available
+      messageSchema
+        ? async function* (ctx) {
+            for await (const item of handler(ctx)) {
+              if (item instanceof Frame) {
+                messageSchema.validate(item.body)
+                yield item
+              } else {
+                yield messageSchema.validate(item)
+              }
+            }
+          }
+        : handler,
+    )
+  }
 
   method<A extends Auth = Auth>(
     nsid: string,
     configOrFn: MethodConfigOrHandler<A>,
-  ) {
+  ): void {
     this.addMethod(nsid, configOrFn)
   }
 
@@ -130,6 +298,11 @@ export class Server {
   ) {
     const config =
       typeof configOrFn === 'function' ? { handler: configOrFn } : configOrFn
+    if (config.opts && 'paramsParseLoose' in config.opts) {
+      throw new Error(
+        `paramsParseLoose is not supported with method(), use add() instead`,
+      )
+    }
     const def = this.lex.getDef(nsid)
     if (def?.type === 'query' || def?.type === 'procedure') {
       this.addRoute(nsid, def, config)
@@ -140,14 +313,14 @@ export class Server {
 
   streamMethod<A extends Auth = Auth>(
     nsid: string,
-    configOrFn: StreamConfigOrHandler<A>,
+    configOrFn: StreamConfigOrHandler<A, Params>,
   ) {
     this.addStreamMethod(nsid, configOrFn)
   }
 
   addStreamMethod<A extends Auth = Auth>(
     nsid: string,
-    configOrFn: StreamConfigOrHandler<A>,
+    configOrFn: StreamConfigOrHandler<A, Params>,
   ) {
     const config =
       typeof configOrFn === 'function' ? { handler: configOrFn } : configOrFn
@@ -205,6 +378,9 @@ export class Server {
         await this.globalRateLimiter.handle({
           req,
           res,
+          // The rate limiter does not use the signal; supply a non-aborting one
+          // to satisfy the handler context shape.
+          signal: new AbortController().signal,
           auth: undefined,
           params: {},
           input: undefined,
@@ -239,66 +415,58 @@ export class Server {
     }
   }
 
-  protected createParamsVerifier(
-    nsid: string,
-    def: LexXrpcQuery | LexXrpcProcedure | LexXrpcSubscription,
-  ) {
-    return (req: Request | IncomingMessage): Params => {
-      const queryParams = 'query' in req ? req.query : getQueryParams(req.url)
-      const params: Params = decodeQueryParams(def, queryParams)
-      try {
-        return this.lex.assertValidXrpcParams(nsid, params) as Params
-      } catch (e) {
-        throw new InvalidRequestError(String(e))
-      }
-    }
-  }
-
-  protected createInputVerifier(
+  createHandler<
+    A extends Auth = Auth,
+    P extends Params = Params,
+    I extends Input = Input,
+    O extends Output = Output,
+  >(
     nsid: string,
     def: LexXrpcQuery | LexXrpcProcedure,
-    routeOpts: RouteOptions,
-  ) {
-    return createInputVerifier(nsid, def, routeOpts, this.lex)
-  }
-
-  protected createAuthVerifier<C, A extends Auth>(cfg: {
-    auth?: AuthVerifier<C, A & AuthResult>
-  }): null | ((ctx: C) => Promise<A>) {
-    const { auth } = cfg
-    if (!auth) return null
-
-    return async (ctx: C) => {
-      const result = await auth(ctx)
-      return excludeErrorResult(result)
-    }
-  }
-
-  createHandler<A extends Auth = Auth>(
-    nsid: string,
-    def: LexXrpcQuery | LexXrpcProcedure,
-    cfg: MethodConfig<A>,
+    cfg: MethodConfig<A, P, I, O>,
   ): RequestHandler {
-    const authVerifier = this.createAuthVerifier(cfg)
-    const paramsVerifier = this.createParamsVerifier(nsid, def)
-    const inputVerifier = this.createInputVerifier(nsid, def, {
-      blobLimit: cfg.opts?.blobLimit ?? this.options.payload?.blobLimit,
-      jsonLimit: cfg.opts?.jsonLimit ?? this.options.payload?.jsonLimit,
-      textLimit: cfg.opts?.textLimit ?? this.options.payload?.textLimit,
-    })
+    return this.createHandlerInternal<A, P, I, O>(
+      this.createAuthVerifier(cfg),
+      this.createLexiconParamsVerifier<P>(nsid, def),
+      this.createLexiconInputVerifier<I>(nsid, def, cfg.opts),
+      this.createRouteRateLimiter(nsid, cfg),
+      cfg.handler,
+      this.createLexiconOutputVerifier<O>(nsid, def),
+    )
+  }
 
-    const validateResOutput =
-      this.options.validateResponse === false
-        ? null
-        : (output: void | HandlerSuccess) =>
-            validateOutput(nsid, def, output, this.lex)
-
-    const routeLimiter = this.createRouteRateLimiter(nsid, cfg)
-
+  protected createHandlerInternal<
+    A extends Auth,
+    P extends Params,
+    I extends Input,
+    O extends Output,
+  >(
+    authVerifier: AuthVerifierInternal<MethodAuthContext<P>, A> | null,
+    paramsVerifier: ParamsVerifierInternal<P>,
+    inputVerifier: InputVerifierInternal<I>,
+    routeLimiter: HttpRateLimiter<HandlerContext<A, P, I>> | undefined,
+    handler: MethodHandler<A, P, I, O>,
+    validateResOutput: null | OutputVerifierInternal<O>,
+  ): RequestHandler {
     return async function (req, res, next) {
+      const controller = new AbortController()
+      // Only queries (GET) are cancelled when the client disconnects.
+      // Procedures may modify state, so a mid-flight abort could leave it
+      // half-applied; let those run to completion.
+      const onClose =
+        req.method === 'GET'
+          ? () => {
+              if (!res.writableFinished) controller.abort()
+            }
+          : undefined
+      if (onClose) {
+        // 'close' won't replay for a late listener; if already closed, abort now.
+        if (res.destroyed) onClose()
+        else res.once('close', onClose)
+      }
       try {
         // parse & validate params
-        const params: Params = paramsVerifier(req)
+        const params = paramsVerifier(req)
 
         // authenticate request
         const auth: A = authVerifier
@@ -306,14 +474,15 @@ export class Server {
           : (undefined as A)
 
         // parse & validate input
-        const input: Input = await inputVerifier(req, res)
+        const input: I = await inputVerifier(req, res)
 
-        const ctx: HandlerContext<A> = {
+        const ctx: HandlerContext<A, P, I> = {
           params,
           input,
           auth,
           req,
           res,
+          signal: controller.signal,
           resetRouteRateLimits: async () => routeLimiter?.reset(ctx),
         }
 
@@ -321,7 +490,7 @@ export class Server {
         if (routeLimiter) await routeLimiter.handle(ctx)
 
         // run the handler
-        const output = await cfg.handler(ctx)
+        const output = (await handler(ctx)) as O
 
         if (!output) {
           validateResOutput?.(output)
@@ -337,25 +506,25 @@ export class Server {
           res.status(200)
           res.header('Content-Type', output.encoding)
           res.end(output.buffer)
-        } else if (isErrorResult(output)) {
-          next(XRPCError.fromError(output))
-        } else {
+        } else if (isHandlerSuccess(output)) {
           validateResOutput?.(output)
 
           res.status(200)
           setHeaders(res, output.headers)
 
-          if (
-            output.encoding === 'application/json' ||
-            output.encoding === 'json'
-          ) {
+          const encoding =
+            output.encoding === 'json' ? 'application/json' : output.encoding
+
+          res.header('Content-Type', encoding)
+
+          if (output.body instanceof Readable) {
+            // The "Readable" check comes first to avoid calling "lexToJson" on
+            // a stream, which would be a bug.
+            await pipeline(output.body, res)
+          } else if (encoding === 'application/json') {
             const json = lexToJson(output.body)
             res.json(json)
-          } else if (output.body instanceof Readable) {
-            res.header('Content-Type', output.encoding)
-            await pipeline(output.body, res)
           } else {
-            res.header('Content-Type', output.encoding)
             res.send(
               Buffer.isBuffer(output.body)
                 ? output.body
@@ -364,8 +533,24 @@ export class Server {
                   : output.body,
             )
           }
+        } else {
+          next(XRPCError.fromError(output))
         }
       } catch (err: unknown) {
+        // Once the client has disconnected the socket is closed and no
+        // response is deliverable, so we don't forward the rejection. We key on
+        // the abort flag rather than the error's type on purpose: cancellation
+        // surfaces in different shapes (fetch AbortError, Connect-RPC "canceled"
+        // ConnectError, ...) and matching on one would miss the others. The
+        // error is still logged so a genuine error racing with a disconnect
+        // leaves a trace rather than vanishing.
+        if (controller.signal.aborted) {
+          log.info(
+            { method: req.method, url: req.url, err },
+            'request aborted after client disconnect',
+          )
+          return
+        }
         // Express will not call the next middleware (errorMiddleware in this case)
         // if the value passed to next is false-y (e.g. null, undefined, 0).
         // Hence we replace it with an InternalServerError.
@@ -374,6 +559,8 @@ export class Server {
         } else {
           next(err)
         }
+      } finally {
+        if (onClose) res.off('close', onClose)
       }
     }
   }
@@ -381,12 +568,24 @@ export class Server {
   protected async addSubscription<A extends Auth = Auth>(
     nsid: string,
     def: LexXrpcSubscription,
-    cfg: StreamConfig<A>,
+    cfg: StreamConfig<A, Params>,
   ) {
-    const paramsVerifier = this.createParamsVerifier(nsid, def)
-    const authVerifier = this.createAuthVerifier(cfg)
+    this.addSubscriptionInternal(
+      nsid,
+      this.createLexiconParamsVerifier(nsid, def),
+      this.createAuthVerifier(cfg),
+      // @NOTE outgoing messages are not validated against the lexicon schema
+      // (unlike the handlers for @atproto/lex based subscriptions)
+      cfg.handler,
+    )
+  }
 
-    const { handler } = cfg
+  protected addSubscriptionInternal<A extends Auth, P extends Params>(
+    nsid: string,
+    paramsVerifier: ParamsVerifierInternal<P>,
+    authVerifier: AuthVerifierInternal<StreamAuthContext<P>, A> | null,
+    handler: (ctx: StreamContext<A, P>) => AsyncIterable<unknown>,
+  ) {
     this.subscriptions.set(
       nsid,
       new XrpcStreamServer({
@@ -395,44 +594,99 @@ export class Server {
           try {
             // validate request
             const params = paramsVerifier(req)
+
             // authenticate request
             const auth = authVerifier
               ? await authVerifier({ req, params })
               : (undefined as A)
+
             // stream
             for await (const item of handler({ req, params, auth, signal })) {
-              if (item instanceof Frame) {
-                yield item
-                continue
-              }
-              const type = item?.['$type']
-              if (!check.is(item, schema.map) || typeof type !== 'string') {
-                yield new MessageFrame(item as LexValue)
-                continue
-              }
-              const split = type.split('#')
-              let t: string
-              if (
-                split.length === 2 &&
-                (split[0] === '' || split[0] === nsid)
-              ) {
-                t = `#${split[1]}`
-              } else {
-                t = type
-              }
-              const { $type: _, ...clone } = item as LexMap
-              yield new MessageFrame(clone, { type: t })
+              yield item instanceof Frame
+                ? item
+                : MessageFrame.fromLexValue(item as LexValue, nsid)
             }
           } catch (err) {
-            const xrpcErrPayload = XRPCError.fromError(err).payload
-            yield new ErrorFrame({
-              error: xrpcErrPayload.error ?? 'Unknown',
-              message: xrpcErrPayload.message,
-            })
+            yield ErrorFrame.fromError(err)
           }
         },
       }),
     )
+  }
+
+  private createAuthVerifier<C, A extends AuthResult>(cfg: {
+    auth?: AuthVerifier<C, A>
+  }): null | AuthVerifierInternal<C, A> {
+    const { auth } = cfg
+    if (!auth) return null
+
+    return async (ctx) => {
+      const result = await auth(ctx)
+      return excludeErrorResult(result)
+    }
+  }
+
+  private createLexiconParamsVerifier<P extends Params = Params>(
+    nsid: string,
+    def: LexXrpcQuery | LexXrpcProcedure | LexXrpcSubscription,
+  ) {
+    return createLexiconParamsVerifier<P>(nsid, def, this.lex)
+  }
+
+  private createLexiconInputVerifier<I extends Input = Input>(
+    nsid: string,
+    def: LexXrpcQuery | LexXrpcProcedure,
+    opts?: RouteOptions,
+  ): InputVerifierInternal<I> {
+    return createLexiconInputVerifier(
+      nsid,
+      def,
+      {
+        blobLimit: opts?.blobLimit ?? this.options.payload?.blobLimit,
+        jsonLimit: opts?.jsonLimit ?? this.options.payload?.jsonLimit,
+        textLimit: opts?.textLimit ?? this.options.payload?.textLimit,
+      },
+      this.lex,
+    )
+  }
+
+  private createLexiconOutputVerifier<O extends Output = Output>(
+    nsid: string,
+    def: LexXrpcQuery | LexXrpcProcedure,
+  ): null | OutputVerifierInternal<O> {
+    if (this.options.validateResponse === false) {
+      return null
+    }
+    return createLexiconOutputVerifier(nsid, def, this.lex)
+  }
+
+  private createSchemaParamsVerifier<
+    M extends l.Procedure | l.Query | l.Subscription,
+  >(
+    ns: l.Main<M>,
+    opts?: RouteOptions,
+  ): ParamsVerifierInternal<LexMethodParams<M>> {
+    return createSchemaParamsVerifier<M>(ns, opts)
+  }
+
+  private createSchemaInputVerifier<M extends l.Procedure | l.Query>(
+    ns: l.Main<M>,
+    opts?: RouteOptions,
+  ): InputVerifierInternal<LexMethodInput<M>> {
+    return createSchemaInputVerifier<M>(ns, {
+      blobLimit: opts?.blobLimit ?? this.options.payload?.blobLimit,
+      jsonLimit: opts?.jsonLimit ?? this.options.payload?.jsonLimit,
+      textLimit: opts?.textLimit ?? this.options.payload?.textLimit,
+    })
+  }
+
+  private createSchemaOutputVerifier<M extends l.Procedure | l.Query>(
+    ns: l.Main<M>,
+  ): null | OutputVerifierInternal<LexMethodOutput<M>> {
+    if (this.options.validateResponse === false) {
+      return null
+    }
+    return createSchemaOutputVerifier<M>(ns)
   }
 
   private enableStreamingOnListen(app: Application) {
@@ -452,18 +706,23 @@ export class Server {
     }
   }
 
-  private createRouteRateLimiter<A extends Auth, C extends HandlerContext>(
+  private createRouteRateLimiter<
+    A extends Auth,
+    P extends Params,
+    I extends Input,
+    O extends Output,
+  >(
     nsid: string,
-    config: MethodConfig<A>,
-  ): RouteRateLimiter<C> | undefined {
+    config: MethodConfig<A, P, I, O>,
+  ): HttpRateLimiter<HandlerContext<A, P, I>> | undefined {
     // @NOTE global & shared rate limiters are instantiated with a context of
     // HandlerContext which is compatible (more generic) with the context of
-    // this route specific rate limiters (C). For this reason, it's safe to
-    // cast these with an `any` context
+    // this route specific rate limiters (C). For this reason, it's safe to cast
+    // the context of the global rate limiter to the context of the route
+    // specific rate limiter (HandlerContext<A, P, I>).
 
     const globalRateLimiter = this.globalRateLimiter as
-      | RouteRateLimiter<any>
-      | undefined
+      HttpRateLimiter<HandlerContext<A, P, I>> | undefined
 
     // No route specific rate limiting configured, use the global rate limiter.
     if (!config.rateLimit) return globalRateLimiter
@@ -474,35 +733,56 @@ export class Server {
     // `rateLimits` options was not provided to the constructor.
     if (!rateLimits) return globalRateLimiter
 
-    const { creator, bypass } = rateLimits
+    const { creator, bypass, skipDefaultKeyedRouteLimits } = rateLimits
 
-    const rateLimiters = asArray(config.rateLimit).map((options, i) => {
+    // @NOTE `i` indexes the unfiltered list so that key prefixes don't shift
+    // when `skipDefaultKeyedRouteLimits` drops some of the route's limits.
+    const rateLimiters = asArray(config.rateLimit).flatMap((options, i) => {
       if (isSharedRateLimitOpts(options)) {
-        const rateLimiter = this.sharedRateLimiters?.get(options.name)
+        const rateLimiter = this.sharedRateLimiters?.get(options.name) as
+          RateLimiterI<HandlerContext<A, P, I>> | undefined
 
         // The route config references a shared rate limiter that does not
         // exist. This is a configuration error.
         assert(rateLimiter, `Shared rate limiter "${options.name}" not defined`)
 
-        return WrappedRateLimiter.from<any>(rateLimiter, options)
+        return [
+          WrappedRateLimiter.from<HandlerContext<A, P, I>>(
+            rateLimiter,
+            options,
+          ),
+        ]
+      } else if (!options.calcKey && skipDefaultKeyedRouteLimits) {
+        return []
       } else {
-        return creator({
-          ...options,
-          calcKey: options.calcKey ?? defaultKey,
-          calcPoints: options.calcPoints ?? defaultPoints,
-          keyPrefix: `${nsid}-${i}`,
-        })
+        return [
+          creator({
+            ...options,
+            calcKey: options.calcKey ?? defaultKey,
+            calcPoints: options.calcPoints ?? defaultPoints,
+            keyPrefix: `${nsid}-${i}`,
+            // As for global and shared limits: when the store fails (Redis
+            // down, say), log and let the request through unless the route
+            // asks to fail closed.
+            onError: options.failClosed
+              ? undefined
+              : rateLimiterLoggerErrorHandler,
+          }),
+        ]
       }
     })
 
-    // If the route config contains an empty array, use global rate limiter.
+    // If the route config contains an empty array, or all of its limits were
+    // skipped, use global rate limiter.
     if (!rateLimiters.length) return globalRateLimiter
 
     // The global rate limiter (if present) should be applied in addition to
     // the route specific rate limiters.
     if (globalRateLimiter) rateLimiters.push(globalRateLimiter)
 
-    return RouteRateLimiter.from<any>(rateLimiters, { bypass })
+    return HttpRateLimiter.from<HandlerContext<A, P, I>>(rateLimiters, {
+      bypass,
+    })
   }
 }
 
@@ -517,18 +797,18 @@ function createErrorMiddleware({
     // (id, timing) and logging configuration (serialization, etc.).
     const logger = isPinoHttpRequest(req) ? req.log : log
 
-    const isInternalError = xrpcError instanceof InternalServerError
-
-    const msgPrefix = isInternalError ? 'unhandled exception' : 'error'
-    const msgSuffix = nsid ? `xrpc method ${nsid}` : `${req.method} ${req.url}`
-    const msg = `${msgPrefix} in ${msgSuffix}`
+    const msgError = xrpcError.error || 'Unknown'
+    const msgLoc = nsid ? `xrpc method ${nsid}` : `${req.method} ${req.url}`
+    const msgDetail = xrpcError.message ? ` (${xrpcError.message})` : ''
+    const msg = `${msgError} error in ${msgLoc}${msgDetail}`
 
     logger.error(
       {
         // @NOTE Computation of error stack is an expensive operation, so
-        // we strip it for expected errors.
+        // we strip it for expected (non-server) errors.
         err:
-          isInternalError || process.env.NODE_ENV === 'development'
+          xrpcError instanceof InternalServerError ||
+          process.env.NODE_ENV === 'development'
             ? err
             : toSimplifiedErrorLike(err),
 
@@ -583,9 +863,20 @@ function buildRateLimiterOptions<C extends HandlerContext = HandlerContext>({
   name,
   calcKey = defaultKey,
   calcPoints = defaultPoints,
-  ...desc
+  failClosed = false,
+  durationMs,
+  points,
 }: ServerRateLimitDescription<C>): RateLimiterOptions<C> {
-  return { ...desc, calcKey, calcPoints, keyPrefix: `rl-${name}` }
+  return {
+    durationMs,
+    points,
+    calcKey,
+    calcPoints,
+    keyPrefix: `rl-${name}`,
+    onError: failClosed
+      ? undefined // Let the error propagate
+      : rateLimiterLoggerErrorHandler,
+  }
 }
 
 const defaultPoints: CalcPointsFn = () => 1
@@ -597,3 +888,19 @@ const defaultPoints: CalcPointsFn = () => 1
  * @see {@link https://expressjs.com/en/guide/behind-proxies.html}
  */
 const defaultKey: CalcKeyFn<HandlerContext> = ({ req }) => req.ip
+
+async function rateLimiterLoggerErrorHandler(
+  err: unknown,
+  ctx: HandlerContext,
+  { limiter: { keyPrefix, points, duration } }: RateLimiterErrorHandlerDetails,
+): Promise<null> {
+  const { req } = ctx
+  const logger = isPinoHttpRequest(req) ? req.log : log
+
+  logger.error(
+    { err, keyPrefix, points, duration },
+    'rate limiter failed to consume points',
+  )
+
+  return null
+}

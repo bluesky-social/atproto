@@ -1,17 +1,14 @@
 import { Timestamp } from '@bufbuild/protobuf'
-import { ServiceImpl } from '@connectrpc/connect'
-import { Selectable, sql } from 'kysely'
-import {
-  AppBskyNotificationDeclaration,
-  ChatBskyActorDeclaration,
-} from '@atproto/api'
+import type { ServiceImpl } from '@connectrpc/connect'
+import { type Selectable, sql } from 'kysely'
 import { keyBy } from '@atproto/common'
-import { parseRecordBytes } from '../../../hydration/util'
-import { Service } from '../../../proto/bsky_connect'
-import { VerificationMeta } from '../../../proto/bsky_pb'
-import { Database } from '../db'
-import { Verification } from '../db/tables/verification'
-import { getRecords } from './records'
+import { parseJsonBytes } from '../../../hydration/util.js'
+import { app, chat } from '../../../lexicons/index.js'
+import type { Service } from '../../../proto/bsky_connect.js'
+import type { VerificationMeta } from '../../../proto/bsky_pb.js'
+import type { Database } from '../db/index.js'
+import type { Verification } from '../db/tables/verification.js'
+import { getRecords } from './records.js'
 
 type VerifiedBy = {
   [handle: string]: Pick<
@@ -53,10 +50,8 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
     ] = await Promise.all([
       db.db
         .selectFrom('actor')
-        .leftJoin('actor_state', 'actor_state.did', 'actor.did')
         .where('actor.did', 'in', dids)
         .selectAll('actor')
-        .select('actor_state.priorityNotifs')
         .select([
           db.db
             .selectFrom('labeler')
@@ -96,7 +91,8 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
 
       const status = statuses.records[i]
 
-      const chatDeclaration = parseRecordBytes<ChatBskyActorDeclaration.Record>(
+      const chatDeclaration = parseJsonBytes(
+        chat.bsky.actor.declaration.main,
         chatDeclarations.records[i].record,
       )
 
@@ -115,7 +111,8 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       const ageAssuranceForDids = new Set(returnAgeAssuranceForDids)
 
       const activitySubscription = () => {
-        const record = parseRecordBytes<AppBskyNotificationDeclaration.Record>(
+        const record = parseJsonBytes(
+          app.bsky.notification.declaration.main,
           notifDeclarations.records[i].record,
         )
 
@@ -174,15 +171,18 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
           typeof chatDeclaration?.['allowIncoming'] === 'string'
             ? chatDeclaration['allowIncoming']
             : undefined,
+        allowGroupChatInvitesFrom:
+          typeof chatDeclaration?.['allowGroupInvites'] === 'string'
+            ? chatDeclaration['allowGroupInvites']
+            : undefined,
         upstreamStatus: row?.upstreamStatus ?? '',
         createdAt: profiles.records[i].createdAt, // @NOTE profile creation date not trusted in production
-        priorityNotifications: row?.priorityNotifs ?? false,
         trustedVerifier: row?.trustedVerifier ?? false,
         verifiedBy,
         statusRecord: status,
         germRecord: germDeclaration,
         tags: [],
-        profileTags: [],
+        profileTags: profiles.records[i].tags,
         allowActivitySubscriptionsFrom: activitySubscription(),
         ageAssuranceStatus: ageAssuranceStatus(),
       }

@@ -1,33 +1,32 @@
-import { AtpAgent } from '@atproto/api'
-import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
-import { ids } from '../../src/lexicon/lexicons'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
+import { type AtpAgent, ids } from '@atproto/api'
+import { type SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import type { DidString } from '@atproto/syntax'
 
 describe('bsky account deactivation', () => {
   let network: TestNetwork
   let agent: AtpAgent
   let sc: SeedClient
 
-  let alice: string
+  let alice: DidString
 
   beforeAll(async () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_views_account_deactivation',
     })
-    agent = network.bsky.getClient()
+    agent = network.bsky.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc)
     alice = sc.dids.alice
-    const pdsAgent = network.pds.getClient()
+    const pdsAgent = network.pds.getAgent()
     await pdsAgent.com.atproto.server.deactivateAccount(
       {},
       { encoding: 'application/json', headers: sc.getHeaders(alice) },
     )
-    await network.processAll()
   })
 
-  afterAll(async () => {
-    await network.close()
-  })
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
 
   it('does not return deactivated profiles', async () => {
     const attempt = agent.api.app.bsky.actor.getProfile({

@@ -1,16 +1,16 @@
-import assert from 'node:assert'
-import { Un$Typed } from '@atproto/api'
-import { UpstreamFailureError } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context'
-import { Server } from '../../../../lexicon'
-import { Preferences } from '../../../../lexicon/types/app/bsky/notification/defs'
-import { HandlerInput } from '../../../../lexicon/types/app/bsky/notification/putPreferencesV2'
-import { GetNotificationPreferencesResponse } from '../../../../proto/bsky_pb'
-import { Namespaces } from '../../../../stash'
-import { protobufToLex } from './util'
+import type { Un$Typed } from '@atproto/lex-schema'
+import type { Server } from '@atproto/xrpc-server'
+import type { AppContext } from '../../../../context.js'
+import { app } from '../../../../lexicons/index.js'
+import { Namespaces } from '../../../../stash.js'
+import {
+  DEFAULT_CHAT_PREFERENCE,
+  getNotificationPreferences,
+  mergeNotificationPreferences,
+} from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
-  server.app.bsky.notification.putPreferencesV2({
+  server.add(app.bsky.notification.putPreferencesV2, {
     auth: ctx.authVerifier.standard,
     handler: async ({ auth, input }) => {
       const actorDid = auth.credentials.iss
@@ -37,27 +37,15 @@ export default function (server: Server, ctx: AppContext) {
 const computePreferences = async (
   ctx: AppContext,
   actorDid: string,
-  input: HandlerInput,
-): Promise<Un$Typed<Preferences>> => {
-  let res: GetNotificationPreferencesResponse
-  try {
-    res = await ctx.dataplane.getNotificationPreferences({
-      dids: [actorDid],
-    })
-  } catch (err) {
-    throw new UpstreamFailureError(
-      'cannot get current notification preferences',
-      'NotificationPreferencesFailed',
-      { cause: err },
-    )
-  }
-
-  assert(
-    res.preferences.length === 1,
-    `expected exactly one preferences entry, got ${res.preferences.length}`,
+  input: app.bsky.notification.putPreferencesV2.$Input,
+): Promise<Un$Typed<app.bsky.notification.defs.Preferences>> => {
+  const currentPreferences = await getNotificationPreferences(ctx, actorDid)
+  const preferences = mergeNotificationPreferences(
+    currentPreferences,
+    input.body,
   )
-
-  const currentPreferences = protobufToLex(res.preferences[0])
-  const preferences = { ...currentPreferences, ...input.body }
+  // NOTE: See the deprecation notice on the lexicon. This field returns a static default value and shouldn't be used.
+  // Use the chat.bsky.notification.defs#preferences type instead.
+  preferences.chat = DEFAULT_CHAT_PREFERENCE
   return preferences
 }

@@ -1,45 +1,57 @@
 {
   "name": "@atproto/lexicon-resolver",
-  "version": "0.2.6",
-  "type": "commonjs",
+  "version": "0.4.34",
   "license": "MIT",
   "description": "ATProto Lexicon resolution",
   "keywords": [
     "atproto",
     "lexicon"
   ],
-  "scripts": {
-    "test": "jest",
-    "build": "tsc --build tsconfig.build.json",
-    "codegen": "lex gen-api --yes ./src/client ../../lexicons/com/atproto/sync/getRecord.json"
-  },
   "homepage": "https://atproto.com",
   "repository": {
     "type": "git",
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/lexicon-resolver"
   },
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "files": [
+    "./dist",
+    "./README.md",
+    "./CHANGELOG.md"
+  ],
+  "type": "module",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     }
   },
+  "engines": {
+    "node": ">=22"
+  },
   "dependencies": {
     "@atproto-labs/fetch-node": "workspace:^",
     "@atproto/identity": "workspace:^",
-    "@atproto/lexicon": "workspace:^",
+    "@atproto/lex-client": "workspace:^",
+    "@atproto/lex-data": "workspace:^",
+    "@atproto/lex-document": "workspace:^",
+    "@atproto/lex-schema": "workspace:^",
     "@atproto/repo": "workspace:^",
-    "@atproto/syntax": "workspace:^",
-    "@atproto/xrpc": "workspace:^",
-    "multiformats": "^9.9.0"
+    "@atproto/syntax": "workspace:^"
   },
   "devDependencies": {
-    "@atproto/common": "workspace:^",
-    "@atproto/lex-cli": "workspace:^",
-    "jest": "^28.1.2",
-    "typescript": "^5.6.3"
+    "@atproto/lex": "workspace:^",
+    "@atproto/lex-cbor": "workspace:^",
+    "vitest": "^4.1.10"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "build": "tsc --build tsconfig.build.json",
+    "prebuild": "pnpm run '/^(codegen:.+)$/'",
+    "lex:build": "lex build --clear --indexFile --lib @atproto/lex-schema",
+    "lex:install": "lex install",
+    "postlex:install": "pnpm run lex:build",
+    "lex:update": "lex update",
+    "postlex:update": "pnpm run lex:build",
+    "codegen:lex": "pnpm run lex:install --ci"
   }
 }

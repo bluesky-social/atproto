@@ -1,5 +1,9 @@
-import { LexValue, isLexScalar, isPlainObject } from '@atproto/lex-data'
-import { Schema, ValidationContext } from '../core.js'
+import { type LexValue, isLexScalar, isPlainObject } from '@atproto/lex-data'
+import {
+  Schema,
+  type ValidationContext,
+  type ValidationResult,
+} from '../core.js'
 import { memoizedOptions } from '../util/memoize.js'
 
 export type { LexValue }
@@ -24,7 +28,10 @@ const EXPECTED_TYPES = Object.freeze([
 export class LexValueSchema extends Schema<LexValue> {
   readonly type = 'lexValue' as const
 
-  validateInContext(input: unknown, ctx: ValidationContext) {
+  validateInContext(
+    input: unknown,
+    ctx: ValidationContext,
+  ): ValidationResult<LexValue> {
     // @NOTE We are *not* using "isLexValue" here to allow for more specific
     // error messages about the path and type of the invalid value. The
     // "isLexValue" check is effectively performed by the recursive validation
@@ -55,7 +62,7 @@ export class LexValueSchema extends Schema<LexValue> {
       return ctx.issueInvalidType(input, EXPECTED_TYPES)
     }
 
-    return ctx.success(input)
+    return ctx.success(input as LexValue)
   }
 }
 
@@ -81,6 +88,6 @@ export class LexValueSchema extends Schema<LexValue> {
  * schema.validate({ foo: 1.2 })         // fails - 1.2 is not a valid LexValue (not an integer)
  * ```
  */
-export const lexValue = /*#__PURE__*/ memoizedOptions(function () {
-  return new LexValueSchema()
-})
+export const lexValue: () => LexValueSchema = /*#__PURE__*/ memoizedOptions(
+  () => new LexValueSchema(),
+)

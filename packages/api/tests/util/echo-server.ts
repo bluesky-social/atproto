@@ -1,5 +1,11 @@
 import { once } from 'node:events'
-import { createServer } from 'node:http'
+import { type Server, createServer } from 'node:http'
+import { createHttpTerminator } from 'http-terminator'
+
+export type DisposableServer = Server & {
+  terminate: () => Promise<void>
+  [Symbol.asyncDispose]: () => Promise<void>
+}
 
 export async function createHeaderEchoServer(port: number = 0) {
   const server = createServer((req, res) => {
@@ -15,7 +21,16 @@ export async function createHeaderEchoServer(port: number = 0) {
 
   server.listen(port)
 
+  const terminator = createHttpTerminator({ server })
   await once(server, 'listening')
 
-  return server
+  Object.defineProperty(server, 'terminate', {
+    value: () => terminator.terminate(),
+  })
+
+  Object.defineProperty(server, Symbol.asyncDispose, {
+    value: () => terminator.terminate(),
+  })
+
+  return server as DisposableServer
 }

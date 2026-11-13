@@ -1,11 +1,14 @@
 import { DAY } from '@atproto/common'
-import { UpstreamTimeoutError, parseReqEncoding } from '@atproto/xrpc-server'
-import { BlobMetadata } from '../../../../actor-store/blob/transactor'
-import { AppContext } from '../../../../context'
-import { Server } from '../../../../lexicon'
+import {
+  type Server,
+  UpstreamTimeoutError,
+  parseReqEncoding,
+} from '@atproto/xrpc-server'
+import type { AppContext } from '../../../../context.js'
+import { com } from '../../../../lexicons/index.js'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.repo.uploadBlob({
+  server.add(com.atproto.repo.uploadBlob, {
     auth: ctx.authVerifier.authorizationOrUserServiceAuth({
       checkTakedown: true,
       authorize: (permissions, { req }) => {
@@ -14,6 +17,7 @@ export default function (server: Server, ctx: AppContext) {
       },
     }),
     rateLimit: {
+      calcKey: ({ auth }) => auth.credentials.did,
       durationMs: DAY,
       points: 1000,
     },
@@ -23,36 +27,21 @@ export default function (server: Server, ctx: AppContext) {
       const blob = await ctx.actorStore.writeNoTransaction(
         requester,
         async (store) => {
-          let metadata: BlobMetadata
-          try {
-            metadata = await store.repo.blob.uploadBlobAndGetMetadata(
-              input.encoding,
+          const metadata = await store.repo.blob
+            .uploadBlobAndGetMetadata(
               input.body,
+              input.encoding,
+              ctx.cfg.service.blobUploadLimit,
             )
-          } catch (err) {
-            if (err?.['name'] === 'AbortError') {
-              throw new UpstreamTimeoutError(
-                'Upload timed out, please try again.',
-              )
-            }
-            throw err
-          }
+            .catch(throwAbortAsUpstreamError)
 
           return store.transact(async (actorTxn) => {
             const blobRef =
               await actorTxn.repo.blob.trackUntetheredBlob(metadata)
 
             // make the blob permanent if an associated record is already indexed
-            const recordsForBlob = await actorTxn.repo.blob.getRecordsForBlob(
-              blobRef.ref,
-            )
-            if (recordsForBlob.length > 0) {
-              await actorTxn.repo.blob.verifyBlobAndMakePermanent({
-                cid: blobRef.ref,
-                mimeType: blobRef.mimeType,
-                size: blobRef.size,
-                constraints: {},
-              })
+            if (await actorTxn.repo.blob.hasRecordsForBlob(blobRef.ref)) {
+              await actorTxn.repo.blob.verifyBlobAndMakePermanent(blobRef)
             }
 
             return blobRef
@@ -61,11 +50,23 @@ export default function (server: Server, ctx: AppContext) {
       )
 
       return {
-        encoding: 'application/json',
-        body: {
-          blob,
-        },
+        encoding: 'application/json' as const,
+        body: { blob },
       }
     },
   })
+}
+
+function throwAbortAsUpstreamError(err: unknown): never {
+  // Blob store timeouts surface as AbortError (total upload timeout) or
+  // TimeoutError (stalled connection), possibly wrapped as an error cause
+  // (e.g. S3BlobStore's "Blob upload timed out" error). The depth limit
+  // guards against (pathological) cyclic cause chains.
+  for (let e = err, depth = 0; e instanceof Error && depth < 10; depth++) {
+    if (e.name === 'AbortError' || e.name === 'TimeoutError') {
+      throw new UpstreamTimeoutError('Operation timed out, please try again.')
+    }
+    e = e.cause
+  }
+  throw err
 }

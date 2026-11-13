@@ -1,4 +1,4 @@
-import { Messages } from '@lingui/core'
+import type { Messages } from '@lingui/core'
 
 // @NOTE run "pnpm run po:compile" to compile the messages from the PO files
 

@@ -1,24 +1,26 @@
-import { Insertable, Selectable } from 'kysely'
-import { CID } from 'multiformats/cid'
+import type { Insertable, Selectable } from 'kysely'
+import type { Cid } from '@atproto/lex-data'
 import { AtUri, normalizeDatetimeAlways } from '@atproto/syntax'
-import * as lex from '../../../../lexicon/lexicons'
-import * as Repost from '../../../../lexicon/types/app/bsky/feed/repost'
-import { BackgroundQueue } from '../../background'
-import { Database } from '../../db'
-import { DatabaseSchema, DatabaseSchemaType } from '../../db/database-schema'
-import { Notification } from '../../db/tables/notification'
-import { countAll, excluded } from '../../db/util'
-import { RecordProcessor } from '../processor'
+import { NOTIFICATION_REASON } from '../../../../api/app/bsky/notification/constants.js'
+import { app } from '../../../../lexicons/index.js'
+import type { BackgroundQueue } from '../../background.js'
+import type {
+  DatabaseSchema,
+  DatabaseSchemaType,
+} from '../../db/database-schema.js'
+import type { Database } from '../../db/index.js'
+import type { Notification } from '../../db/tables/notification.js'
+import { countAll, excluded } from '../../db/util.js'
+import { RecordProcessor } from '../processor.js'
 
-const lexId = lex.ids.AppBskyFeedRepost
 type Notif = Insertable<Notification>
 type IndexedRepost = Selectable<DatabaseSchemaType['repost']>
 
 const insertFn = async (
   db: DatabaseSchema,
   uri: AtUri,
-  cid: CID,
-  obj: Repost.Record,
+  cid: Cid,
+  obj: app.bsky.feed.repost.Main,
   timestamp: string,
 ): Promise<IndexedRepost | null> => {
   const repost = {
@@ -62,7 +64,7 @@ const insertFn = async (
 const findDuplicate = async (
   db: DatabaseSchema,
   uri: AtUri,
-  obj: Repost.Record,
+  obj: app.bsky.feed.repost.Main,
 ): Promise<AtUri | null> => {
   const found = await db
     .selectFrom('repost')
@@ -88,7 +90,7 @@ const notifsForInsert = (obj: IndexedRepost) => {
       author: obj.creator,
       recordUri: obj.uri,
       recordCid: obj.cid,
-      reason: 'repost' as const,
+      reason: NOTIFICATION_REASON.REPOST,
       reasonSubject: subjectUri.toString(),
       sortAt: obj.sortAt,
     },
@@ -106,7 +108,7 @@ const notifsForInsert = (obj: IndexedRepost) => {
           author: obj.creator,
           recordUri: obj.uri,
           recordCid: obj.cid,
-          reason: 'repost-via-repost' as const,
+          reason: NOTIFICATION_REASON.REPOST_VIA_REPOST,
           reasonSubject: viaUri.toString(),
           sortAt: obj.sortAt,
         },
@@ -159,14 +161,13 @@ const updateAggregates = async (db: DatabaseSchema, repost: IndexedRepost) => {
   await repostCountQb.execute()
 }
 
-export type PluginType = RecordProcessor<Repost.Record, IndexedRepost>
-
+export type PluginType = ReturnType<typeof makePlugin>
 export const makePlugin = (
   db: Database,
-  background: BackgroundQueue,
-): PluginType => {
+  background: BackgroundQueue<Database>,
+) => {
   return new RecordProcessor(db, background, {
-    lexId,
+    schema: app.bsky.feed.repost.main,
     insertFn,
     findDuplicate,
     deleteFn,

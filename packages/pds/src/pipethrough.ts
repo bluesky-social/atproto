@@ -1,33 +1,80 @@
-import { IncomingHttpHeaders, ServerResponse } from 'node:http'
-import { PassThrough, Readable, finished } from 'node:stream'
-import { Request } from 'express'
-import { Dispatcher } from 'undici'
+import type { IncomingHttpHeaders, ServerResponse } from 'node:http'
 import {
-  decodeStream,
+  type Duplex,
+  PassThrough,
+  type Readable,
+  finished,
+  pipeline,
+} from 'node:stream'
+import type { Request } from 'express'
+import { Agent, type Dispatcher, Pool, interceptors } from 'undici'
+import {
+  createDecoders,
   getServiceEndpoint,
   omit,
   streamToNodeBuffer,
 } from '@atproto/common'
-import { RpcPermissionMatch } from '@atproto/oauth-scopes'
-import { ResponseType, XRPCError as XRPCClientError } from '@atproto/xrpc'
+import type { RpcPermissionMatch } from '@atproto/oauth-scopes'
 import {
-  CatchallHandler,
-  HandlerPipeThroughBuffer,
-  HandlerPipeThroughStream,
+  type CatchallHandler,
+  type HandlerPipeThroughBuffer,
+  type HandlerPipeThroughStream,
   InternalServerError,
   InvalidRequestError,
+  ResponseType,
   XRPCError as XRPCServerError,
   excludeErrorResult,
   parseReqNsid,
 } from '@atproto/xrpc-server'
+import { isUnicastIp, unicastLookup } from '@atproto-labs/fetch-node'
 import { buildProxiedContentEncoding } from '@atproto-labs/xrpc-utils'
-import { isAccessPrivileged } from './auth-scope'
-import { AppContext } from './context'
-import { ids } from './lexicon/lexicons'
-import { httpLogger } from './logger'
+import { AuthScope, isAccessPrivileged } from './auth-scope.js'
+import type { ProxyConfig } from './config/config.js'
+import type { AppContext } from './context.js'
+import { com, tools } from './lexicons/index.js'
+import { httpLogger } from './logger.js'
+
+export function buildProxyAgent(cfg: ProxyConfig): Dispatcher {
+  const agent = new Agent({
+    allowH2: cfg.allowHTTP2,
+    headersTimeout: cfg.headersTimeout,
+    maxResponseSize: cfg.maxResponseSize,
+    bodyTimeout: cfg.bodyTimeout,
+    factory: cfg.disableSsrfProtection
+      ? undefined
+      : (origin, opts) => {
+          const { protocol, hostname } =
+            origin instanceof URL ? origin : new URL(origin)
+          if (protocol !== 'https:') {
+            throw new Error(`Forbidden protocol "${protocol}"`)
+          }
+          if (isUnicastIp(hostname) === false) {
+            throw new Error('Hostname resolved to non-unicast address')
+          }
+          return new Pool(origin, opts)
+        },
+    connect: {
+      lookup: cfg.disableSsrfProtection ? undefined : unicastLookup,
+    },
+  })
+
+  return agent.compose(
+    cfg.maxRetries > 0
+      ? interceptors.retry({
+          statusCodes: [], // Only retry on socket errors
+          methods: ['GET', 'HEAD'],
+          maxRetries: cfg.maxRetries,
+        })
+      : (dispatch) => dispatch,
+  )
+}
 
 export const proxyHandler = (ctx: AppContext): CatchallHandler => {
   const performAuth = ctx.authVerifier.authorization<RpcPermissionMatch>({
+    authorize: (permissions, { params }) => permissions.assertRpc(params),
+  })
+  const performInboxAuth = ctx.authVerifier.authorization<RpcPermissionMatch>({
+    additional: [AuthScope.Takendown],
     authorize: (permissions, { params }) => permissions.assertRpc(params),
   })
 
@@ -52,20 +99,36 @@ export const proxyHandler = (ctx: AppContext): CatchallHandler => {
       }
 
       const lxm = parseReqNsid(req)
-      if (PROTECTED_METHODS.has(lxm)) {
+      if (isProtectedMethod(lxm)) {
         throw new InvalidRequestError('Bad token method', 'InvalidToken')
       }
 
-      const { url: origin, did: aud } = await parseProxyInfo(ctx, req, lxm)
+      const {
+        url: origin,
+        did,
+        serviceId,
+      } = await parseProxyInfo(ctx, req, lxm)
+      // Phase 1 of service auth updates: the scope check sees the combined
+      // did#serviceId form (so OAuth callers' rpc:?aud=did#service scopes
+      // match), while the outbound service-auth JWT keeps bare-DID aud
+      // regardless of session type.
+      const scopeAud = `${did}#${serviceId}`
+      const tokenAud = did
 
-      const authResult = await performAuth({ req, res, params: { lxm, aud } })
+      const authResult = await (
+        lxm.startsWith('tools.ozone.inbox.') ? performInboxAuth : performAuth
+      )({
+        req,
+        res,
+        params: { lxm, aud: scopeAud },
+      })
 
       const { credentials } = excludeErrorResult(authResult)
 
       if (
         credentials.type === 'access' &&
         !isAccessPrivileged(credentials.scope) &&
-        PRIVILEGED_METHODS.has(lxm)
+        isPrivilegedMethod(lxm)
       ) {
         throw new InvalidRequestError('Bad token method', 'InvalidToken')
       }
@@ -74,13 +137,15 @@ export const proxyHandler = (ctx: AppContext): CatchallHandler => {
         'accept-encoding': req.headers['accept-encoding'] || 'identity',
         'accept-language': req.headers['accept-language'],
         'atproto-accept-labelers': req.headers['atproto-accept-labelers'],
+        ...getAtprotoPassthroughHeaders(req.headers),
+        // @NOTE deprecated; use `x-atproto-bsky-topics`
         'x-bsky-topics': req.headers['x-bsky-topics'],
 
         'content-type': body && req.headers['content-type'],
         'content-encoding': body && req.headers['content-encoding'],
         'content-length': body && req.headers['content-length'],
 
-        authorization: `Bearer ${await ctx.serviceAuthJwt(credentials.did, aud, lxm)}`,
+        authorization: `Bearer ${await ctx.serviceAuthJwt(credentials.did, tokenAud, lxm)}`,
       }
 
       const dispatchOptions: Dispatcher.RequestOptions = {
@@ -91,7 +156,7 @@ export const proxyHandler = (ctx: AppContext): CatchallHandler => {
         headers,
       }
 
-      await pipethroughStream(ctx, dispatchOptions, (upstream) => {
+      await pipethroughStream(ctx, req, dispatchOptions, (upstream) => {
         res.status(upstream.statusCode)
 
         for (const [name, val] of responseHeaders(upstream.headers)) {
@@ -165,6 +230,8 @@ export async function pipethrough(
     headers: {
       'accept-language': req.headers['accept-language'],
       'atproto-accept-labelers': req.headers['atproto-accept-labelers'],
+      ...getAtprotoPassthroughHeaders(req.headers),
+      // @NOTE deprecated; use `x-atproto-bsky-topics`
       'x-bsky-topics': req.headers['x-bsky-topics'],
 
       // Because we sometimes need to interpret the response (e.g. during
@@ -188,7 +255,7 @@ export async function pipethrough(
     highWaterMark: 2 * 65536, // twice the default (64KiB)
   }
 
-  const { headers, body } = await pipethroughRequest(ctx, dispatchOptions)
+  const { headers, body } = await pipethroughRequest(ctx, req, dispatchOptions)
 
   return {
     encoding: safeString(headers['content-type']) ?? 'application/json',
@@ -199,6 +266,21 @@ export async function pipethrough(
 
 // Request setup/formatting
 // -------------------
+
+function getAtprotoPassthroughHeaders(
+  headers: IncomingHttpHeaders,
+): IncomingHttpHeaders {
+  // @NOTE node lower-cases all incoming header names, so a case-sensitive
+  // prefix check is sufficient here. This runs on the request hot path, so we
+  // build the result imperatively rather than via intermediate arrays.
+  const result: IncomingHttpHeaders = {}
+  for (const name in headers) {
+    if (name.startsWith('x-atproto-')) {
+      result[name] = headers[name]
+    }
+  }
+  return result
+}
 
 export function computeProxyTo(
   ctx: AppContext,
@@ -216,18 +298,25 @@ export function computeProxyTo(
   throw new InvalidRequestError(`No service configured for ${lxm}`)
 }
 
+// Bare-DID portion of `proxyTo`, suitable as a service-auth JWT audience
+// (Phase 1 of service auth updates).
+export function bareDidFromProxyTo(proxyTo: string): string {
+  const hashIndex = proxyTo.indexOf('#')
+  return hashIndex === -1 ? proxyTo : proxyTo.slice(0, hashIndex)
+}
+
 export async function parseProxyInfo(
   ctx: AppContext,
   req: Request,
   lxm: string,
-): Promise<{ url: string; did: string }> {
+): Promise<{ url: string; did: string; serviceId: string }> {
   // /!\ Hot path
 
   const proxyToHeader = req.header('atproto-proxy')
   if (proxyToHeader) return parseProxyHeader(ctx, proxyToHeader)
 
-  const { serviceInfo } = defaultService(ctx, lxm)
-  if (serviceInfo) return serviceInfo
+  const { serviceId, serviceInfo } = defaultService(ctx, lxm)
+  if (serviceInfo) return { ...serviceInfo, serviceId }
 
   throw new InvalidRequestError(`No service configured for ${lxm}`)
 }
@@ -236,7 +325,7 @@ export const parseProxyHeader = async (
   // Using subset of AppContext for testing purposes
   ctx: Pick<AppContext, 'cfg' | 'idResolver'>,
   proxyTo: string,
-): Promise<{ did: string; url: string }> => {
+): Promise<{ did: string; url: string; serviceId: string }> => {
   // /!\ Hot path
 
   const hashIndex = proxyTo.indexOf('#')
@@ -260,13 +349,14 @@ export const parseProxyHeader = async (
   }
 
   const did = proxyTo.slice(0, hashIndex)
+  const serviceId = proxyTo.slice(hashIndex + 1)
 
   // Special case a configured appview, while still proxying correctly any other appview
   if (
     ctx.cfg.bskyAppView &&
     proxyTo === `${ctx.cfg.bskyAppView.did}#bsky_appview`
   ) {
-    return { did, url: ctx.cfg.bskyAppView.url }
+    return { did, url: ctx.cfg.bskyAppView.url, serviceId }
   }
 
   const didDoc = await ctx.idResolver.did.resolve(did)
@@ -274,13 +364,12 @@ export const parseProxyHeader = async (
     throw new InvalidRequestError('could not resolve proxy did')
   }
 
-  const serviceId = proxyTo.slice(hashIndex)
-  const url = getServiceEndpoint(didDoc, { id: serviceId })
+  const url = getServiceEndpoint(didDoc, { id: `#${serviceId}` })
   if (!url) {
     throw new InvalidRequestError('could not resolve proxy did service url')
   }
 
-  return { did, url }
+  return { did, url, serviceId }
 }
 
 /**
@@ -291,6 +380,7 @@ export const parseProxyHeader = async (
  */
 async function pipethroughStream(
   ctx: AppContext,
+  req: Request,
   dispatchOptions: Dispatcher.RequestOptions,
   successStreamFactory: Dispatcher.StreamFactory,
 ): Promise<void> {
@@ -300,16 +390,14 @@ async function pipethroughStream(
         if (upstream.statusCode >= 400) {
           const passThrough = new PassThrough()
 
-          void tryParsingError(upstream.headers, passThrough).then((parsed) => {
-            const xrpcError = new XRPCClientError(
-              upstream.statusCode === 500
-                ? ResponseType.UpstreamFailure
-                : upstream.statusCode,
-              parsed.error,
-              parsed.message,
-              Object.fromEntries(responseHeaders(upstream.headers, false)),
-              { cause: dispatchOptions },
-            )
+          void tryParsingError(
+            upstream.headers,
+            passThrough,
+            ctx.cfg.proxy.maxResponseSize,
+          ).then((parsed) => {
+            const xrpcError = new PipethroughUpstreamError(upstream, parsed, {
+              cause: dispatchOptions,
+            })
 
             reject(xrpcError)
           }, reject)
@@ -333,7 +421,7 @@ async function pipethroughStream(
       // or writable stream errors. In the latter case, the promise will already
       // be resolved, and reject()ing it there after will have no effect. Those
       // error would still be logged by the successStreamFactory() function.
-      .catch(handleUpstreamRequestError)
+      .catch(handleUpstreamRequestError.bind(req))
       .catch(reject)
   })
 }
@@ -344,6 +432,7 @@ async function pipethroughStream(
  */
 async function pipethroughRequest(
   ctx: AppContext,
+  req: Request,
   dispatchOptions: Dispatcher.RequestOptions,
 ) {
   // HandlerPipeThroughStream requires a readable stream to be returned, so we
@@ -351,36 +440,39 @@ async function pipethroughRequest(
 
   const upstream = await ctx.proxyAgent
     .request(dispatchOptions)
-    .catch(handleUpstreamRequestError)
+    .catch(handleUpstreamRequestError.bind(req))
 
   if (upstream.statusCode >= 400) {
-    const parsed = await tryParsingError(upstream.headers, upstream.body)
-
-    // Note "XRPCClientError" is used instead of "XRPCServerError" in order to
-    // allow users of this function to capture & handle these errors (namely in
-    // "app.bsky.feed.getPostThread").
-    throw new XRPCClientError(
-      upstream.statusCode === 500
-        ? ResponseType.UpstreamFailure
-        : upstream.statusCode,
-      parsed.error,
-      parsed.message,
-      Object.fromEntries(responseHeaders(upstream.headers, false)),
-      { cause: dispatchOptions },
+    const parsed = await tryParsingError(
+      upstream.headers,
+      upstream.body,
+      ctx.cfg.proxy.maxResponseSize,
     )
+
+    throw new PipethroughUpstreamError(upstream, parsed, {
+      cause: dispatchOptions,
+    })
   }
 
   return upstream
 }
 
 function handleUpstreamRequestError(
+  this: Request,
   err: unknown,
   message = 'Upstream service unreachable',
 ): never {
-  httpLogger.error({ err }, message)
+  const logger = isPinoHttpRequest(this) ? this.log : httpLogger
+  logger.error({ err }, message)
   throw new XRPCServerError(ResponseType.UpstreamFailure, message, undefined, {
     cause: err,
   })
+}
+
+function isPinoHttpRequest(req: Request): req is Request & {
+  log: { error: (obj: unknown, msg: string) => void }
+} {
+  return typeof (req as { log?: any }).log?.error === 'function'
 }
 
 // Request parsing/forwarding
@@ -394,6 +486,7 @@ export function isJsonContentType(contentType?: string): boolean | undefined {
 async function tryParsingError(
   headers: IncomingHttpHeaders,
   readable: Readable,
+  maxSize: number,
 ): Promise<{ error?: string; message?: string }> {
   if (isJsonContentType(headers['content-type']) === false) {
     // We don't known how to parse non JSON content types so we can discard the
@@ -424,6 +517,7 @@ async function tryParsingError(
     const buffer = await bufferUpstreamResponse(
       readable,
       headers['content-encoding'],
+      maxSize,
     )
 
     const errInfo: unknown = JSON.parse(buffer.toString('utf8'))
@@ -439,10 +533,26 @@ async function tryParsingError(
 
 async function bufferUpstreamResponse(
   readable: Readable,
-  contentEncoding?: string | string[],
+  contentEncoding: string | string[] | undefined,
+  maxSize: number,
 ): Promise<Buffer> {
   try {
-    return await streamToNodeBuffer(decodeStream(readable, contentEncoding))
+    // @NOTE maxResponseSize bounds the wire stream that undici reads, and
+    // decoding it can yield a much larger buffer, so the decoded stream needs
+    // its own bound. `createDecoders` applies it even when there is no
+    // content-encoding, so that an identity-encoded body is bounded too.
+    return await streamToNodeBuffer(
+      pipeline(
+        [
+          readable,
+          ...createDecoders(contentEncoding, {
+            maxSize,
+            maxSizeError: () => new TypeError('upstream response too large'),
+          }),
+        ],
+        () => {},
+      ) as Duplex,
+    )
   } catch (err) {
     if (!readable.destroyed) readable.destroy()
 
@@ -457,11 +567,13 @@ async function bufferUpstreamResponse(
 
 export async function asPipeThroughBuffer(
   input: HandlerPipeThroughStream,
+  maxSize: number,
 ): Promise<HandlerPipeThroughBuffer> {
   return {
     buffer: await bufferUpstreamResponse(
       input.stream,
       input.headers?.['content-encoding'],
+      maxSize,
     ),
     headers: omit(input.headers, ['content-encoding', 'content-length']),
     encoding: input.encoding,
@@ -515,16 +627,22 @@ function* responseHeaders(
  */
 export class LxmSet {
   private inner: Set<string>
-  private original: Iterable<string>
   constructor(items: Iterable<string>) {
     this.inner = new Set(Array.from(items, normalizeLxm))
-    this.original = items
   }
   has(lxm: string) {
     return this.inner.has(normalizeLxm(lxm))
   }
-  *[Symbol.iterator](): Iterator<string> {
-    yield* this.original
+}
+
+/** Matches methods within a namespace, case-insensitively. */
+export class LxmPrefix {
+  private readonly prefix: string
+  constructor(namespace: string) {
+    this.prefix = `${normalizeLxm(namespace)}.`
+  }
+  has(lxm: string): boolean {
+    return normalizeLxm(lxm).startsWith(this.prefix)
   }
 }
 
@@ -532,48 +650,41 @@ export function normalizeLxm(lxm: string) {
   return lxm.toLowerCase()
 }
 
-export const CHAT_BSKY_METHODS = new LxmSet([
-  ids.ChatBskyActorDeleteAccount,
-  ids.ChatBskyActorExportAccountData,
-  ids.ChatBskyConvoDeleteMessageForSelf,
-  ids.ChatBskyConvoGetConvo,
-  ids.ChatBskyConvoGetConvoForMembers,
-  ids.ChatBskyConvoGetLog,
-  ids.ChatBskyConvoGetMessages,
-  ids.ChatBskyConvoLeaveConvo,
-  ids.ChatBskyConvoListConvos,
-  ids.ChatBskyConvoMuteConvo,
-  ids.ChatBskyConvoSendMessage,
-  ids.ChatBskyConvoSendMessageBatch,
-  ids.ChatBskyConvoUnmuteConvo,
-  ids.ChatBskyConvoUpdateRead,
+/** Whether a method requires full access or a privileged app password. */
+export function isPrivilegedMethod(lxm: string): boolean {
+  return CHAT_PRIVILEGED_METHODS.has(lxm) || LOCAL_PRIVILEGED_METHODS.has(lxm)
+}
+
+const CHAT_PRIVILEGED_METHODS = new LxmPrefix('chat.bsky')
+const LOCAL_PRIVILEGED_METHODS = new LxmSet([
+  com.atproto.server.createAccount.$lxm,
 ])
 
-export const PRIVILEGED_METHODS = new LxmSet([
-  ...CHAT_BSKY_METHODS,
-  ids.ComAtprotoServerCreateAccount,
-])
+/** Whether a method is reserved for direct account-management requests. */
+export function isProtectedMethod(lxm: string): boolean {
+  return PROTECTED_METHODS.has(lxm)
+}
 
 // These endpoints are related to account management and must be used directly,
 // not proxied or service-authed. Service auth may be utilized between PDS and
 // entryway for these methods.
-export const PROTECTED_METHODS = new LxmSet([
-  ids.ComAtprotoAdminSendEmail,
-  ids.ComAtprotoIdentityRequestPlcOperationSignature,
-  ids.ComAtprotoIdentitySignPlcOperation,
-  ids.ComAtprotoIdentityUpdateHandle,
-  ids.ComAtprotoServerActivateAccount,
-  ids.ComAtprotoServerConfirmEmail,
-  ids.ComAtprotoServerCreateAppPassword,
-  ids.ComAtprotoServerDeactivateAccount,
-  ids.ComAtprotoServerGetAccountInviteCodes,
-  ids.ComAtprotoServerGetSession,
-  ids.ComAtprotoServerListAppPasswords,
-  ids.ComAtprotoServerRequestAccountDelete,
-  ids.ComAtprotoServerRequestEmailConfirmation,
-  ids.ComAtprotoServerRequestEmailUpdate,
-  ids.ComAtprotoServerRevokeAppPassword,
-  ids.ComAtprotoServerUpdateEmail,
+const PROTECTED_METHODS = new LxmSet([
+  com.atproto.admin.sendEmail.$lxm,
+  com.atproto.identity.requestPlcOperationSignature.$lxm,
+  com.atproto.identity.signPlcOperation.$lxm,
+  com.atproto.identity.updateHandle.$lxm,
+  com.atproto.server.activateAccount.$lxm,
+  com.atproto.server.confirmEmail.$lxm,
+  com.atproto.server.createAppPassword.$lxm,
+  com.atproto.server.deactivateAccount.$lxm,
+  com.atproto.server.getAccountInviteCodes.$lxm,
+  com.atproto.server.getSession.$lxm,
+  com.atproto.server.listAppPasswords.$lxm,
+  com.atproto.server.requestAccountDelete.$lxm,
+  com.atproto.server.requestEmailConfirmation.$lxm,
+  com.atproto.server.requestEmailUpdate.$lxm,
+  com.atproto.server.revokeAppPassword.$lxm,
+  com.atproto.server.updateEmail.$lxm,
 ])
 
 const defaultService = (
@@ -584,38 +695,41 @@ const defaultService = (
   serviceInfo: { url: string; did: string } | null
 } => {
   switch (nsid) {
-    case ids.ToolsOzoneTeamAddMember:
-    case ids.ToolsOzoneTeamDeleteMember:
-    case ids.ToolsOzoneTeamUpdateMember:
-    case ids.ToolsOzoneTeamListMembers:
-    case ids.ToolsOzoneCommunicationCreateTemplate:
-    case ids.ToolsOzoneCommunicationDeleteTemplate:
-    case ids.ToolsOzoneCommunicationUpdateTemplate:
-    case ids.ToolsOzoneCommunicationListTemplates:
-    case ids.ToolsOzoneModerationEmitEvent:
-    case ids.ToolsOzoneModerationGetEvent:
-    case ids.ToolsOzoneModerationGetRecord:
-    case ids.ToolsOzoneModerationGetRepo:
-    case ids.ToolsOzoneModerationQueryEvents:
-    case ids.ToolsOzoneModerationQueryStatuses:
-    case ids.ToolsOzoneModerationSearchRepos:
-    case ids.ToolsOzoneModerationGetAccountTimeline:
-    case ids.ToolsOzoneVerificationListVerifications:
-    case ids.ToolsOzoneVerificationGrantVerifications:
-    case ids.ToolsOzoneVerificationRevokeVerifications:
-    case ids.ToolsOzoneSafelinkAddRule:
-    case ids.ToolsOzoneSafelinkUpdateRule:
-    case ids.ToolsOzoneSafelinkRemoveRule:
-    case ids.ToolsOzoneSafelinkQueryEvents:
-    case ids.ToolsOzoneSafelinkQueryRules:
-    case ids.ToolsOzoneModerationListScheduledActions:
-    case ids.ToolsOzoneModerationCancelScheduledActions:
-    case ids.ToolsOzoneModerationScheduleAction:
+    case tools.ozone.inbox.appealActionedSubject.$lxm:
+    case tools.ozone.communication.createTemplate.$lxm:
+    case tools.ozone.communication.deleteTemplate.$lxm:
+    case tools.ozone.communication.listTemplates.$lxm:
+    case tools.ozone.communication.updateTemplate.$lxm:
+    case tools.ozone.moderation.cancelScheduledActions.$lxm:
+    case tools.ozone.moderation.emitEvent.$lxm:
+    case tools.ozone.moderation.emitEvents.$lxm:
+    case tools.ozone.moderation.getAccountTimeline.$lxm:
+    case tools.ozone.moderation.getEvent.$lxm:
+    case tools.ozone.moderation.getRecord.$lxm:
+    case tools.ozone.moderation.getRepo.$lxm:
+    case tools.ozone.moderation.listScheduledActions.$lxm:
+    case tools.ozone.moderation.queryEvents.$lxm:
+    case tools.ozone.moderation.queryStatuses.$lxm:
+    case tools.ozone.moderation.scheduleAction.$lxm:
+    case tools.ozone.moderation.searchRepos.$lxm:
+    case tools.ozone.safelink.addRule.$lxm:
+    case tools.ozone.safelink.queryEvents.$lxm:
+    case tools.ozone.safelink.queryRules.$lxm:
+    case tools.ozone.safelink.removeRule.$lxm:
+    case tools.ozone.safelink.syncSource.$lxm:
+    case tools.ozone.safelink.updateRule.$lxm:
+    case tools.ozone.team.addMember.$lxm:
+    case tools.ozone.team.deleteMember.$lxm:
+    case tools.ozone.team.listMembers.$lxm:
+    case tools.ozone.team.updateMember.$lxm:
+    case tools.ozone.verification.grantVerifications.$lxm:
+    case tools.ozone.verification.listVerifications.$lxm:
+    case tools.ozone.verification.revokeVerifications.$lxm:
       return {
         serviceId: 'atproto_labeler',
         serviceInfo: ctx.cfg.modService,
       }
-    case ids.ComAtprotoModerationCreateReport:
+    case com.atproto.moderation.createReport.$lxm:
       return {
         serviceId: 'atproto_labeler',
         serviceInfo: ctx.cfg.reportService,
@@ -634,4 +748,30 @@ const safeString = (str: unknown): string | undefined => {
 
 function logResponseError(this: ServerResponse, err: unknown): void {
   httpLogger.warn({ err }, 'error forwarding upstream response')
+}
+
+export class PipethroughUpstreamError extends XRPCServerError {
+  constructor(
+    readonly upstream: {
+      statusCode: number
+      headers: IncomingHttpHeaders
+    },
+    payload: { message?: string; error?: string },
+    options?: ErrorOptions,
+  ) {
+    const status =
+      upstream.statusCode === 500
+        ? ResponseType.UpstreamFailure
+        : upstream.statusCode
+
+    super(status, payload.message, payload.error, options)
+  }
+
+  get headers(): Record<string, string> {
+    return Object.fromEntries(responseHeaders(this.upstream.headers, false))
+  }
+
+  get error() {
+    return this.customErrorName ?? this.typeName
+  }
 }

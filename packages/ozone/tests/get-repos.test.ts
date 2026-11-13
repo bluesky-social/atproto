@@ -1,17 +1,13 @@
-import { AtpAgent } from '@atproto/api'
+import { ComAtprotoModerationDefs, ids } from '@atproto/api'
+import type { AtpAgent } from '@atproto/api'
 import {
-  ModeratorClient,
-  SeedClient,
+  type ModeratorClient,
+  type SeedClient,
   TestNetwork,
-  TestOzone,
+  type TestOzone,
   basicSeed,
 } from '@atproto/dev-env'
-import { ids } from '../src/lexicon/lexicons'
-import {
-  REASONOTHER,
-  REASONSPAM,
-} from '../src/lexicon/types/com/atproto/moderation/defs'
-import { forSnapshot } from './_util'
+import { forSnapshot } from './_util.js'
 
 describe('admin get multiple repos', () => {
   let network: TestNetwork
@@ -26,8 +22,8 @@ describe('admin get multiple repos', () => {
       dbPostgresSchema: 'ozone_admin_get_repos',
     })
     ozone = network.ozone
-    agent = ozone.getClient()
-    pdsAgent = network.pds.getClient()
+    agent = ozone.getAgent()
+    pdsAgent = network.pds.getAgent()
     sc = network.getSeedClient()
     modClient = ozone.getModClient()
     await basicSeed(sc)
@@ -43,7 +39,7 @@ describe('admin get multiple repos', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   beforeAll(async () => {
@@ -56,7 +52,7 @@ describe('admin get multiple repos', () => {
     })
     await sc.createReport({
       reportedBy: sc.dids.bob,
-      reasonType: REASONSPAM,
+      reasonType: ComAtprotoModerationDefs.REASONSPAM,
       subject: {
         $type: 'com.atproto.admin.defs#repoRef',
         did: sc.dids.alice,
@@ -64,7 +60,7 @@ describe('admin get multiple repos', () => {
     })
     await sc.createReport({
       reportedBy: sc.dids.carol,
-      reasonType: REASONOTHER,
+      reasonType: ComAtprotoModerationDefs.REASONOTHER,
       reason: 'defamation',
       subject: {
         $type: 'com.atproto.admin.defs#repoRef',

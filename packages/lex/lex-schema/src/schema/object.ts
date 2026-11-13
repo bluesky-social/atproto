@@ -1,11 +1,12 @@
 import { isPlainObject } from '@atproto/lex-data'
 import {
-  InferInput,
-  InferOutput,
+  type InferInput,
+  type InferOutput,
   Schema,
-  ValidationContext,
-  Validator,
-  WithOptionalProperties,
+  type ValidationContext,
+  type ValidationResult,
+  type Validator,
+  type WithOptionalProperties,
 } from '../core.js'
 import { lazyProperty } from '../util/lazy-property.js'
 
@@ -45,8 +46,11 @@ export class ObjectSchema<
 > {
   readonly type = 'object' as const
 
-  constructor(readonly shape: TShape) {
+  readonly shape: TShape
+
+  constructor(shape: TShape) {
     super()
+    this.shape = shape
   }
 
   get validatorsMap(): Map<string, Validator> {
@@ -55,7 +59,10 @@ export class ObjectSchema<
     return lazyProperty(this, 'validatorsMap', map)
   }
 
-  validateInContext(input: unknown, ctx: ValidationContext) {
+  validateInContext(
+    input: unknown,
+    ctx: ValidationContext,
+  ): ValidationResult<Record<string, unknown>> {
     if (!isPlainObject(input)) {
       return ctx.issueUnexpectedType(input, 'object')
     }
@@ -131,6 +138,6 @@ export class ObjectSchema<
 /*@__NO_SIDE_EFFECTS__*/
 export function object<const TShape extends ObjectSchemaShape>(
   properties: TShape,
-) {
+): ObjectSchema<TShape> {
   return new ObjectSchema<TShape>(properties)
 }

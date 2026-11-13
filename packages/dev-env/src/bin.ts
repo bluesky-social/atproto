@@ -1,7 +1,6 @@
-import './env'
-import { generateMockSetup } from './mock'
-import { TestNetwork } from './network'
-import { mockMailer } from './util'
+import { generateMockSetup } from './mock/index.js'
+import { TestNetwork } from './network.js'
+import { mockMailer } from './util.js'
 
 const run = async () => {
   console.log(`
@@ -30,12 +29,10 @@ const run = async () => {
       port: 2587,
       chatUrl: 'http://localhost:2590', // must run separate chat service
       chatDid: 'did:example:chat',
-      dbMaterializedViewRefreshIntervalMs: 30_000,
     },
     introspect: { port: 2581 },
   })
   mockMailer(network.pds)
-  await generateMockSetup(network)
 
   if (network.introspect) {
     console.log(
@@ -44,16 +41,22 @@ const run = async () => {
   }
   console.log(`👤 DID Placeholder server http://localhost:${network.plc.port}`)
   console.log(`🌞 Main PDS http://localhost:${network.pds.port}`)
+  console.log(`🌞 Main PDS account DB`, network.pds.ctx.cfg.db.accountDbLoc)
   console.log(
     `🔨 Lexicon authority DID ${network.pds.ctx.cfg.lexicon.didAuthority}`,
   )
   console.log(`🗼 Ozone server http://localhost:${network.ozone.port}`)
   console.log(`🗼 Ozone service DID ${network.ozone.ctx.cfg.service.did}`)
+  console.log(`🔄 Bsync server http://localhost:${network.bsync.port}`)
   console.log(`🌅 Bsky Appview http://localhost:${network.bsky.port}`)
   console.log(`🌅 Bsky Appview DID ${network.bsky.serverDid}`)
   for (const fg of network.feedGens) {
     console.log(`🤖 Feed Generator (${fg.did}) http://localhost:${fg.port}`)
   }
+
+  console.time('✅ Dev environment is ready')
+  await generateMockSetup(network)
+  console.timeEnd('✅ Dev environment is ready')
 }
 
 run()

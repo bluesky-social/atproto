@@ -1,6 +1,7 @@
-import { AtpAgent } from '@atproto/api'
+import type { AtpAgent } from '@atproto/api'
 import { randomStr } from '@atproto/crypto'
-import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
+import { type SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
+import type { DidString } from '@atproto/syntax'
 
 describe('pds admin invite views', () => {
   let network: TestNetworkNoAppView
@@ -15,17 +16,17 @@ describe('pds admin invite views', () => {
         inviteInterval: 1,
       },
     })
-    agent = network.pds.getClient()
+    agent = network.pds.getAgent()
     sc = network.getSeedClient()
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
-  let alice: string
-  let bob: string
-  let carol: string
+  let alice: DidString
+  let bob: DidString
+  let carol: DidString
 
   beforeAll(async () => {
     const adminCode = await agent.api.com.atproto.server.createInviteCode(

@@ -1,19 +1,20 @@
-import { AuthRequiredError } from '@atproto/xrpc-server'
-import { AppContext } from '../../context'
-import { Server } from '../../lexicon'
+import { AuthRequiredError, type Server } from '@atproto/xrpc-server'
+import type { AppContext } from '../../context.js'
+import { tools } from '../../lexicons/index.js'
 import {
   getSafelinkAction,
   getSafelinkPattern,
   getSafelinkReason,
-} from '../util'
+} from '../util.js'
 
 export default function (server: Server, ctx: AppContext) {
-  server.tools.ozone.safelink.updateRule({
+  server.add(tools.ozone.safelink.updateRule, {
     auth: ctx.authVerifier.modOrAdminToken,
     handler: async ({ input, auth }) => {
       const access = auth.credentials
       const db = ctx.db
-      const { url, pattern, action, reason, comment, createdBy } = input.body
+      const { url, pattern, action, reason, source, comment, createdBy } =
+        input.body
 
       if (!access.isModerator) {
         throw new AuthRequiredError('Must be a moderator to update URL rules')
@@ -32,6 +33,7 @@ export default function (server: Server, ctx: AppContext) {
         pattern: getSafelinkPattern(pattern),
         action: getSafelinkAction(action),
         reason: getSafelinkReason(reason),
+        source,
         createdBy:
           access.type === 'admin_token'
             ? createdBy || ctx.cfg.service.did

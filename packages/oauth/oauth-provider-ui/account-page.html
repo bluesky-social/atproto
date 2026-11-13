@@ -1,0 +1,76 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mock - Account Page</title>
+  </head>
+  <body class="text-foreground bg-background">
+    <div id="root"></div>
+    <script>
+      /*
+       * This file's purpose is to provide a way to develop the UI without
+       * running a full featured OAuth server. It mocks the server responses and
+       * provides configuration data to the UI.
+       *
+       * This file is not part of the production build.
+       *
+       * Start the development server with the following command from the
+       * oauth-provider root:
+       *
+       * ```sh
+       * pnpm run start:ui
+       * ```
+       *
+       * Then open the browser at http://localhost:5173/
+       */
+    </script>
+    <style>
+      :root {
+        --branding-color-primary: 10 122 255;
+        --branding-color-primary-contrast: 255 255 255;
+        --branding-color-error: 244 11 66;
+        --branding-color-warning: 251 86 7;
+        --branding-color-success: 2 195 154;
+
+        /* Auth screen background demo (branding.background); mock-assets are dev-only. */
+        --branding-background-light-image: url('/mock-assets/illustration-light.png');
+        --branding-background-dark-image: url('/mock-assets/illustration-dark.png');
+      }
+    </style>
+    <script type="module">
+      // @NOTE Absolute: this document is served for every path under
+      // /account, so a relative specifier would resolve against the wrong
+      // directory on a deep link.
+      import {
+        buildMockFetch,
+        accounts,
+        customizationData,
+        accountDeviceSessions,
+        currentDeviceId,
+      } from '/src/mock-api.ts'
+
+      Object.defineProperty(window, 'fetch', {
+        writable: true,
+        configurable: true,
+        value: buildMockFetch(),
+      })
+
+      // Entered through /account-page.html: move to the path the PDS serves,
+      // so the router's real paths behave the same here. A deep link is
+      // already there and must be left alone.
+      if (!location.pathname.startsWith('/account/')) {
+        history.replaceState(history.state, '', '/account')
+      }
+
+      window.__customizationData = customizationData
+      window.__deviceSessions =
+        accountDeviceSessions.get(currentDeviceId)?.map((s) => ({
+          account: accounts.get(s.did),
+          loginRequired: s.loginRequired,
+        })) ?? []
+
+      await import('/src/account-page.tsx')
+    </script>
+  </body>
+</html>

@@ -1,5 +1,5 @@
 import { describe, expect, expectTypeOf, it } from 'vitest'
-import { UnknownString } from '@atproto/lex-schema'
+import type { UnknownString } from '@atproto/lex-schema'
 import * as com from './lexicons/com.js'
 
 describe('com.example.procedure', () => {
@@ -41,7 +41,7 @@ describe('com.example.procedure', () => {
         integer: 123,
         string: 'string',
       })
-    }).toThrow('Expected boolean value type at $.object.boolean (got string)')
+    }).toThrow('Expected boolean value type (got "string") at $.object.boolean')
   })
 
   it('Rejects missing properties', () => {

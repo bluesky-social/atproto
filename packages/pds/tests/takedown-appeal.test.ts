@@ -1,13 +1,13 @@
-import { AtpAgent, ComAtprotoModerationDefs } from '@atproto/api'
-import { SeedClient, TestNetwork } from '@atproto/dev-env'
-import { ids } from '../src/lexicon/lexicons'
-import { forSubjectStatusSnapshot } from './_util'
+import { type AtpAgent, ComAtprotoModerationDefs } from '@atproto/api'
+import { type SeedClient, TestNetwork } from '@atproto/dev-env'
+import type { DidString } from '@atproto/syntax'
+import { forSubjectStatusSnapshot } from './_util.js'
 
 describe('appeal account takedown', () => {
   let network: TestNetwork
   let agent: AtpAgent
   let sc: SeedClient
-  let moderator: string
+  let moderator: DidString
 
   beforeAll(async () => {
     network = await TestNetwork.create({
@@ -22,11 +22,11 @@ describe('appeal account takedown', () => {
     moderator = modAccount.did
     await network.ozone.addModeratorDid(moderator)
 
-    agent = network.pds.getClient()
+    agent = network.pds.getAgent()
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('actor takedown allows appeal request.', async () => {
@@ -105,6 +105,63 @@ describe('appeal account takedown', () => {
     ).toMatchSnapshot()
   })
 
+  it('allows a takendown actor to appeal an action through the PDS', async () => {
+    const { data: account } = await agent.com.atproto.server.createAccount({
+      handle: 'newappeal.test',
+      email: 'newappeal@test.com',
+      password: 'password',
+    })
+    await network.processAll()
+
+    const action = await network.ozone.getModClient().performTakedown({
+      subject: {
+        $type: 'com.atproto.admin.defs#repoRef',
+        did: account.did,
+      },
+    })
+    await agent.com.atproto.admin.updateSubjectStatus(
+      {
+        subject: {
+          $type: 'com.atproto.admin.defs#repoRef',
+          did: account.did,
+        },
+        takedown: { applied: true },
+      },
+      {
+        encoding: 'application/json',
+        headers: { authorization: network.pds.adminAuth() },
+      },
+    )
+
+    const { data: auth } = await agent.com.atproto.server.createSession({
+      identifier: 'newappeal.test',
+      password: 'password',
+      allowTakendown: true,
+    })
+
+    const { data: view } = await agent.call(
+      'tools.ozone.inbox.appealActionedSubject',
+      undefined,
+      {
+        action: {
+          $type: 'tools.ozone.inbox.appealActionedSubject#actionRef',
+          id: action.id,
+        },
+        subject: {
+          $type: 'com.atproto.admin.defs#repoRef',
+          did: account.did,
+        },
+      },
+      {
+        encoding: 'application/json',
+        headers: { authorization: `Bearer ${auth.accessJwt}` },
+      },
+    )
+
+    expect(view.appeal?.state).toBe('pending')
+    expect(view.subject).toMatchObject({ did: account.did })
+  })
+
   it('takendown actor is not allowed to create reports.', async () => {
     const { data: auth } = await agent.com.atproto.server.createSession({
       identifier: 'jeff.test',
@@ -129,8 +186,12 @@ describe('appeal account takedown', () => {
           },
         },
       ),
-    ).rejects.toThrow('Report not accepted from takendown account')
+    ).rejects.toMatchObject({
+      error: 'AccountTakedown',
+      message: 'Report not accepted from takendown account',
+    })
   })
+
   it('takendown actor is not allowed to create records.', async () => {
     const { data: auth } = await agent.com.atproto.server.createSession({
       identifier: 'jeff.test',
@@ -143,7 +204,7 @@ describe('appeal account takedown', () => {
       agent.com.atproto.repo.createRecord(
         {
           repo: auth.did,
-          collection: ids.AppBskyFeedPost,
+          collection: 'app.bsky.feed.post',
           // rkey: 'self',
           record: {
             text: 'test',

@@ -1,8 +1,9 @@
-import * as bsky from '@atproto/bsky'
-import * as bsync from '@atproto/bsync'
-import { ExportableKeypair, Keypair } from '@atproto/crypto'
-import * as ozone from '@atproto/ozone'
-import * as pds from '@atproto/pds'
+import type * as bsky from '@atproto/bsky'
+import type * as bsync from '@atproto/bsync'
+import type { ExportableKeypair, Keypair } from '@atproto/crypto'
+import type { DidString } from '@atproto/lex-schema'
+import type * as ozone from '@atproto/ozone'
+import type * as pds from '@atproto/pds'
 
 export type IntrospectConfig = {
   port?: number
@@ -19,6 +20,7 @@ export type PdsConfig = Partial<pds.ServerEnvironment> & {
 }
 
 export type BskyConfig = Partial<bsky.ServerConfig> & {
+  bsyncUrl: string
   plcUrl: string
   repoProvider: string
   dbPostgresUrl: string
@@ -41,6 +43,7 @@ export type OzoneConfig = Partial<ozone.OzoneEnvironment> & {
   migration?: string
   signingKey?: ExportableKeypair
   imgInvalidator?: ozone.ImageInvalidator
+  videoInvalidator?: ozone.VideoInvalidator
 }
 
 export type TestServerParams = {
@@ -54,6 +57,6 @@ export type TestServerParams = {
 }
 
 export type DidAndKey = {
-  did: string
+  did: DidString
   key: Keypair
 }

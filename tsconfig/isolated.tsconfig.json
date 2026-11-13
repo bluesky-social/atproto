@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "compilerOptions": {
+    // @TODO isolatedDeclarations allows to improve and speedup the
+    // parallelization of type checking. These should be enabled by default (in
+    // base.tsconfig.json), and disabled for specific cases where checkJs is
+    // needed (e.g. places where JavaScript files are used). In order to
+    // gradually enable this, add this file to the "extends" array of
+    // tsconfig.build.json and tsconfig.test.ts files.
+    "isolatedDeclarations": true,
+    "allowJs": false,
+    "checkJs": false,
+  },
+}

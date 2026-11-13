@@ -1,33 +1,44 @@
 import crypto from 'node:crypto'
 import { once } from 'node:events'
-import { Server, createServer } from 'node:http'
-import { AddressInfo } from 'node:net'
-import express, { Application, json } from 'express'
+import { type Server, createServer } from 'node:http'
+import type { AddressInfo } from 'node:net'
+import express, { type Application, json } from 'express'
+import { type HttpTerminator, createHttpTerminator } from 'http-terminator'
 import {
-  AppBskyAgeassuranceDefs,
-  AtpAgent,
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest'
+import {
+  type AppBskyAgeassuranceBegin,
+  type AppBskyAgeassuranceDefs,
+  type AppBskyAgeassuranceGetState,
+  type AtpAgent,
   ageAssuranceRuleIDs as ruleIds,
+  ids,
 } from '@atproto/api'
-import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import { type SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import {
   type KWSWebhookAgeVerified,
   serializeKWSAgeVerifiedStatus,
-} from '../../src/api/age-assurance/kws/age-verified'
+} from '../../src/api/age-assurance/kws/age-verified.js'
 import {
   KWSExternalPayloadVersion,
   serializeKWSExternalPayloadV1,
   serializeKWSExternalPayloadV2,
-} from '../../src/api/age-assurance/kws/external-payload'
-import { KwsWebhookBody } from '../../src/api/kws/types'
-import { ids } from '../../src/lexicon/lexicons'
-import * as AppBskyAgeassuranceBegin from '../../src/lexicon/types/app/bsky/ageassurance/begin'
-import * as AppBskyAgeassuranceGetState from '../../src/lexicon/types/app/bsky/ageassurance/getState'
+} from '../../src/api/age-assurance/kws/external-payload.js'
+import type { KwsWebhookBody } from '../../src/api/kws/types.js'
 
 type Database = TestNetwork['bsky']['db']
 
 const BSKY_REDIRECT_URL = 'http://bsky'
 
-jest.mock('../../dist/api/age-assurance/const.js', () => {
+vi.mock('../../dist/api/age-assurance/const.js', () => {
   const AGE_ASSURANCE_CONFIG: AppBskyAgeassuranceDefs.Config = {
     regions: [
       {
@@ -69,8 +80,10 @@ jest.mock('../../dist/api/age-assurance/const.js', () => {
   }
 })
 
-jest.mock('../../dist/api/age-assurance/kws/const.js', () => {
-  const actual = jest.requireActual('../../dist/api/age-assurance/kws/const.js')
+vi.mock('../../dist/api/age-assurance/kws/const.js', async () => {
+  const actual = await vi.importActual<Record<string, unknown>>(
+    '../../dist/api/age-assurance/kws/const.js',
+  )
   const KWS_V2_COUNTRIES = new Set(['AA'])
   return {
     ...actual,
@@ -85,9 +98,9 @@ describe('age assurance v2 views', () => {
   let sc: SeedClient
   let kws: MockKwsServer
 
-  const kwsOauthMock = jest.fn()
-  const kwsSendAgeVerifiedFlowEmailMock = jest.fn()
-  const kwsSendAdultVerifiedFlowEmailMock = jest.fn()
+  const kwsOauthMock = vi.fn<MockHandler>()
+  const kwsSendAgeVerifiedFlowEmailMock = vi.fn<MockHandler>()
+  const kwsSendAdultVerifiedFlowEmailMock = vi.fn<MockHandler>()
   const actor = {
     did: '',
     email: '',
@@ -122,7 +135,7 @@ describe('age assurance v2 views', () => {
     kws.setBskyBaseUrl(network.bsky.url)
 
     db = network.bsky.db
-    agent = network.bsky.getClient()
+    agent = network.bsky.getAgent()
     sc = network.getSeedClient()
 
     await basicSeed(sc)
@@ -155,15 +168,16 @@ describe('age assurance v2 views', () => {
   })
 
   afterEach(async () => {
-    jest.resetAllMocks()
+    vi.resetAllMocks()
+    // Drain in-flight bsync ops before resetting state directly, so an op from
+    // a test that doesn't read it back can't leak into the next test.
+    await network.processAll()
     await clearPrivateData(db)
     await clearActorAgeAssurance(db)
   })
 
-  afterAll(async () => {
-    await network.close()
-    await kws.stop()
-  })
+  afterAll(async () => network?.close())
+  afterAll(async () => kws?.stop())
 
   const getState = async (params: AppBskyAgeassuranceGetState.QueryParams) => {
     const { data } = await agent.app.bsky.ageassurance.getState(params, {
@@ -645,6 +659,8 @@ const clearActorAgeAssurance = async (db: Database) => {
     .execute()
 }
 
+type MockHandler = (req: express.Request, res: express.Response) => void
+
 class MockKwsServer {
   verificationSecret = 'verificationSecret' // unused here
   webhookSecret = 'webhookSecret' // unused here
@@ -653,6 +669,7 @@ class MockKwsServer {
 
   private app: Application
   private server: Server
+  private terminator: HttpTerminator
   private bskyUrlBase = ''
 
   constructor({
@@ -660,9 +677,9 @@ class MockKwsServer {
     sendAgeVerifiedFlowEmailMock,
     sendAdultVerifiedFlowEmailMock,
   }: {
-    oauthMock: jest.Mock
-    sendAgeVerifiedFlowEmailMock: jest.Mock
-    sendAdultVerifiedFlowEmailMock: jest.Mock
+    oauthMock: ReturnType<typeof vi.fn<MockHandler>>
+    sendAgeVerifiedFlowEmailMock: ReturnType<typeof vi.fn<MockHandler>>
+    sendAdultVerifiedFlowEmailMock: ReturnType<typeof vi.fn<MockHandler>>
   }) {
     this.app = express()
       .use(json())
@@ -679,6 +696,9 @@ class MockKwsServer {
       })
 
     this.server = createServer(this.app)
+    this.terminator = createHttpTerminator({
+      server: this.server,
+    })
   }
 
   async listen(port?: number) {
@@ -687,8 +707,7 @@ class MockKwsServer {
   }
 
   async stop() {
-    this.server.close()
-    await once(this.server, 'close')
+    await this.terminator.terminate()
   }
 
   setBskyBaseUrl(url: string) {

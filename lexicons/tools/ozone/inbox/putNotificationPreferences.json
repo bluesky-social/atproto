@@ -1,0 +1,43 @@
+{
+  "lexicon": 1,
+  "id": "tools.ozone.inbox.putNotificationPreferences",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Update the authenticated account's moderation push notification preferences. Only provided categories are updated; omitted categories retain their values. At least one category must be provided. Returns all three preferences. These preferences do not hide in-app inbox activity.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "reports": {
+              "type": "boolean",
+              "description": "Notify about outcomes of reports filed by the account."
+            },
+            "account": {
+              "type": "boolean",
+              "description": "Notify about moderation actions against the account or its content, excluding labeling."
+            },
+            "labels": {
+              "type": "boolean",
+              "description": "Notify about labels applied to or removed from the account or its content."
+            }
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["preferences"],
+          "properties": {
+            "preferences": {
+              "type": "ref",
+              "ref": "tools.ozone.inbox.defs#notificationPreferences"
+            }
+          }
+        }
+      }
+    }
+  }
+}

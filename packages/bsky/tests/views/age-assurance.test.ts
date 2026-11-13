@@ -1,20 +1,30 @@
 import crypto from 'node:crypto'
 import { once } from 'node:events'
-import { Server, createServer } from 'node:http'
-import { AddressInfo } from 'node:net'
-import express, { Application } from 'express'
-import { AtpAgent } from '@atproto/api'
-import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import { type Server, createServer } from 'node:http'
+import type { AddressInfo } from 'node:net'
+import express, { type Application, type RequestHandler } from 'express'
+import { type HttpTerminator, createHttpTerminator } from 'http-terminator'
 import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest'
+import { type AtpAgent, ids } from '@atproto/api'
+import { type SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import type {
   KwsExternalPayload,
   KwsVerificationQuery,
   KwsWebhookBody,
-} from '../../src/api/kws/types'
+} from '../../src/api/kws/types.js'
 import {
   parseExternalPayload,
   serializeExternalPayload,
-} from '../../src/api/kws/util'
-import { ids } from '../../src/lexicon/lexicons'
+} from '../../src/api/kws/util.js'
 
 type Database = TestNetwork['bsky']['db']
 
@@ -32,8 +42,17 @@ describe('age assurance views', () => {
   let actorDid: string
 
   let kwsServer: MockKwsServer
-  const authMock = jest.fn()
-  const sendEmailMock = jest.fn()
+
+  const authMock = vi.fn<RequestHandler>((req, res) =>
+    res.json({
+      access_token:
+        'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIn0.INVALID',
+      expires_in: 3600,
+    }),
+  )
+  const sendEmailMock = vi.fn<RequestHandler>((req, res) => {
+    res.json({})
+  })
 
   beforeAll(async () => {
     kwsServer = new MockKwsServer({
@@ -62,41 +81,30 @@ describe('age assurance views', () => {
       },
     })
     db = network.bsky.db
-    agent = network.bsky.getClient()
+    agent = network.bsky.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc)
-    await network.processAll()
-
     actorDid = sc.dids.alice
   })
 
+  beforeEach(async () => network.processAll())
+
   beforeEach(async () => {
-    // Default mocks for KWS endpoints.
-    authMock.mockImplementation(
-      (_req: express.Request, res: express.Response) =>
-        res.json({
-          access_token:
-            'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIn0.INVALID',
-          expires_in: 3600,
-        }),
-    )
-    sendEmailMock.mockImplementation(
-      (_req: express.Request, res: express.Response) => {
-        res.json({})
-      },
-    )
+    // @TODO Use the clearMocks setting in the configuration instead of:
+    authMock.mockClear()
+    sendEmailMock.mockClear()
   })
 
   afterEach(async () => {
-    jest.resetAllMocks()
+    // Drain pending bsync ops before clearing, so a stale op can't land after
+    // the reset.
+    await network.processAll()
     await clearPrivateData(db)
     await clearActorAgeAssurance(db)
   })
 
-  afterAll(async () => {
-    await network.close()
-    await kwsServer.stop()
-  })
+  afterAll(async () => network?.close())
+  afterAll(async () => kwsServer?.stop())
 
   const getAgeAssurance = async (did: string) => {
     const { data } = await agent.app.bsky.unspecced.getAgeAssuranceState(
@@ -219,13 +227,14 @@ describe('age assurance views', () => {
       externalPayload,
       status,
     })
+    await network.processAll()
     const finalizedState = await getAgeAssurance(actor)
     expect(finalizedState).toStrictEqual({
       status: 'assured',
       lastInitiatedAt: expect.any(String),
     })
 
-    await expect(initAgeAssurance(actor)).rejects.toThrowError(
+    await expect(initAgeAssurance(actor)).rejects.toThrow(
       `Cannot initiate age assurance flow from current state: assured`,
     )
   })
@@ -258,6 +267,7 @@ describe('age assurance views', () => {
         `${redirectUrl}?actorDid=${encodeURIComponent(actorDid)}&result=success`,
       )
 
+      await network.processAll()
       const state2 = await getAgeAssurance(actorDid)
       expect(state2).toStrictEqual({
         status: 'assured',
@@ -282,6 +292,7 @@ describe('age assurance views', () => {
         `${redirectUrl}?result=unknown`,
       )
 
+      await network.processAll()
       const state = await getAgeAssurance(actorDid)
       expect(state).toStrictEqual({
         status: 'pending',
@@ -317,6 +328,7 @@ describe('age assurance views', () => {
       })
       expect(webhookRes.status).toBe(200)
 
+      await network.processAll()
       const state2 = await getAgeAssurance(actorDid)
       expect(state2).toStrictEqual({
         status: 'assured',
@@ -340,6 +352,7 @@ describe('age assurance views', () => {
       })
       expect(webhookRes.status).toBe(500)
 
+      await network.processAll()
       const state = await getAgeAssurance(actorDid)
       expect(state).toStrictEqual({
         status: 'pending',
@@ -368,6 +381,7 @@ class MockKwsServer {
   private webhookSecret: string
   private app: Application
   private server: Server
+  private terminator: HttpTerminator
 
   constructor({
     verificationSecret,
@@ -377,21 +391,20 @@ class MockKwsServer {
   }: {
     verificationSecret: string
     webhookSecret: string
-    authMock: jest.Mock
-    sendEmailMock: jest.Mock
+    authMock: RequestHandler
+    sendEmailMock: RequestHandler
   }) {
     this.verificationSecret = verificationSecret
     this.webhookSecret = webhookSecret
 
     this.app = express()
-      .post('/auth/realms/kws/protocol/openid-connect/token', (req, res) =>
-        authMock(req, res),
-      )
-      .post('/v1/verifications/send-email', (req, res) =>
-        sendEmailMock(req, res),
-      )
+      .post('/auth/realms/kws/protocol/openid-connect/token', authMock)
+      .post('/v1/verifications/send-email', sendEmailMock)
 
     this.server = createServer(this.app)
+    this.terminator = createHttpTerminator({
+      server: this.server,
+    })
   }
 
   async listen(port?: number) {
@@ -400,8 +413,7 @@ class MockKwsServer {
   }
 
   async stop() {
-    this.server.close()
-    await once(this.server, 'close')
+    await this.terminator.terminate()
   }
 
   callVerificationResponse(

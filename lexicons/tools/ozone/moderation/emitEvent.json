@@ -35,6 +35,7 @@
                 "tools.ozone.moderation.defs#modEventPriorityScore",
                 "tools.ozone.moderation.defs#ageAssuranceEvent",
                 "tools.ozone.moderation.defs#ageAssuranceOverrideEvent",
+                "tools.ozone.moderation.defs#ageAssurancePurgeEvent",
                 "tools.ozone.moderation.defs#revokeAccountCredentialsEvent",
                 "tools.ozone.moderation.defs#scheduleTakedownEvent",
                 "tools.ozone.moderation.defs#cancelScheduledTakedownEvent"
@@ -65,6 +66,11 @@
             "externalId": {
               "type": "string",
               "description": "An optional external ID for the event, used to deduplicate events from external systems. Fails when an event of same type with the same external ID exists for the same subject."
+            },
+            "reportAction": {
+              "type": "ref",
+              "ref": "#reportAction",
+              "description": "Optional report-level targeting. If provided, this event will be linked to specific reports and reporters may be notified."
             }
           }
         }
@@ -85,6 +91,63 @@
           "description": "An event with the same external ID already exists for the subject."
         }
       ]
+    },
+    "reportAction": {
+      "type": "object",
+      "description": "Target specific reports when emitting a moderation event",
+      "properties": {
+        "ids": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          },
+          "description": "Target specific report IDs"
+        },
+        "types": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Target reports matching these report types on the subject (fully qualified NSIDs). Excludes assigned and escalated reports."
+        },
+        "all": {
+          "type": "boolean",
+          "description": "Target ALL reports on the subject. Excludes assigned and escalated reports."
+        },
+        "allOwned": {
+          "type": "boolean",
+          "description": "Target all eligible reports on the account and its owned subjects, including records, messages, and conversations. Only valid for account subjects and events that close reports. Excludes assigned, escalated, and actively assigned reports unless explicitly targeted by ID."
+        },
+        "subjects": {
+          "type": "array",
+          "maxLength": 100,
+          "items": {
+            "type": "union",
+            "refs": [
+              "com.atproto.admin.defs#repoRef",
+              "com.atproto.repo.strongRef"
+            ]
+          },
+          "description": "Expands report targeting to include additional subjects. Requires event subject to be an account. Mutually exclusive with `subjectTypes`."
+        },
+        "subjectTypes": {
+          "type": "array",
+          "maxLength": 4,
+          "items": {
+            "type": "string",
+            "enum": ["account", "record", "message", "conversation"]
+          },
+          "description": "Expands report targeting to include owned subjects of these types. Requires event subject to be an account. Mutually exclusive with `subjects`."
+        },
+        "note": {
+          "type": "string",
+          "description": "Note to send to reporter(s) when actioning their report"
+        },
+        "isAutomated": {
+          "type": "boolean",
+          "description": "Set true when the report activities are created by an automated process."
+        }
+      }
     }
   }
 }

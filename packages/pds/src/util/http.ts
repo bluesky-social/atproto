@@ -1,4 +1,4 @@
-import { ServerResponse } from 'node:http'
+import type { ServerResponse } from 'node:http'
 
 /**
  * Set or appends a value to the `Vary` header in the response, only if the

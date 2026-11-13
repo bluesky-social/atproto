@@ -1,0 +1,88 @@
+{
+  // Prettier should be configured to handle formatting of all files
+  "format_on_save": "on",
+  // Includes zed defaults, plus claude worktrees
+  "file_scan_exclusions": [
+    "**/.git",
+    "**/.svn",
+    "**/.hg",
+    "**/.jj",
+    "**/CVS",
+    "**/.DS_Store",
+    "**/Thumbs.db",
+    "**/.classpath",
+    "**/.settings",
+    "**/.claude/worktrees",
+  ],
+  "languages": {
+    "JavaScript": {
+      "language_servers": [
+        "vtsls",
+        "!typescript-ls",
+        "!typescript-language-server",
+      ],
+      // Formatting (prettier) applied through eslint
+      "formatter": "none",
+      "code_actions_on_format": {
+        "source.fixAll.eslint": true,
+      },
+    },
+    "TypeScript": {
+      "language_servers": [
+        "vtsls",
+        "!typescript-ls",
+        "!typescript-language-server",
+      ],
+      // Formatting (prettier) applied through eslint
+      "formatter": "none",
+      "code_actions_on_format": {
+        "source.fixAll.eslint": true,
+      },
+    },
+    "TSX": {
+      "language_servers": [
+        "vtsls",
+        "!typescript-ls",
+        "!typescript-language-server",
+      ],
+      // Formatting (prettier) applied through eslint
+      "formatter": "none",
+      "code_actions_on_format": {
+        "source.fixAll.eslint": true,
+      },
+    },
+    "JSON": {
+      "formatter": "prettier",
+    },
+    "JSONC": {
+      "formatter": "prettier",
+    },
+    "Markdown": {
+      "formatter": "prettier",
+    },
+  },
+  "file_types": {
+    "JSON": ["**/lexicons/**/*.json"],
+    "JSONC": [
+      "**/tsconfig/*.json",
+      "**/tsconfig.*.json",
+      "**/tsconfig.json",
+      "**/.vscode/*.json",
+      "**/.zed/*.json",
+    ],
+  },
+  "lsp": {
+    "json-language-server": {
+      "settings": {
+        "json": {
+          "schemas": [
+            {
+              "fileMatch": ["**/tsconfig/*.json", "**/tsconfig.*.json"],
+              "url": "https://json.schemastore.org/tsconfig",
+            },
+          ],
+        },
+      },
+    },
+  },
+}

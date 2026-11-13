@@ -47,7 +47,9 @@ const ObjectToString = Object.prototype.toString
  * isPlainObject(null)                  // false
  * ```
  */
-export function isPlainObject(input: unknown) {
+export function isPlainObject(
+  input: unknown,
+): input is Record<string, unknown> {
   return isObject(input) && isPlainProto(input)
 }
 

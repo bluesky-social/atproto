@@ -1,57 +1,81 @@
 import events from 'node:events'
-import http from 'node:http'
-import { AddressInfo } from 'node:net'
+import type http from 'node:http'
+import type { AddressInfo } from 'node:net'
 import compression from 'compression'
 import cors from 'cors'
 import { Etcd3 } from 'etcd3'
 import express from 'express'
-import { HttpTerminator, createHttpTerminator } from 'http-terminator'
-import { AtpAgent } from '@atproto/api'
+import { type HttpTerminator, createHttpTerminator } from 'http-terminator'
 import { DAY, SECOND } from '@atproto/common'
-import { Keypair } from '@atproto/crypto'
+import type { Keypair } from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
-import API, { blobResolver, external, health, sitemap, wellKnown } from './api'
-import { createBlobDispatcher } from './api/blob-dispatcher'
-import { AuthVerifier, createPublicKeyObject } from './auth-verifier'
-import { authWithApiKey as bsyncAuth, createBsyncClient } from './bsync'
-import { ServerConfig } from './config'
-import { AppContext } from './context'
-import { authWithApiKey as courierAuth, createCourierClient } from './courier'
+import { Client } from '@atproto/lex-client'
+import { createServer } from '@atproto/xrpc-server'
+import { safeFetchWrap } from '@atproto-labs/fetch-node'
+import { createBlobDispatcher } from './api/blob-dispatcher.js'
+import API, {
+  blobResolver,
+  external,
+  health,
+  sitemap,
+  wellKnown,
+} from './api/index.js'
+import { AuthVerifier, createPublicKeyObject } from './auth/verifier.js'
+import { authWithApiKey as bsyncAuth, createBsyncClient } from './bsync.js'
+import type { ServerConfig } from './config.js'
+import { AppContext } from './context.js'
+import {
+  authWithApiKey as courierAuth,
+  createCourierClient,
+} from './courier.js'
 import {
   BasicHostList,
   EtcdHostList,
   createDataPlaneClient,
-} from './data-plane/client'
-import * as error from './error'
-import { FeatureGatesClient } from './feature-gates'
-import { Hydrator } from './hydration/hydrator'
-import * as imageServer from './image/server'
-import { ImageUriBuilder } from './image/uri'
-import { createKwsClient } from './kws'
-import { createServer } from './lexicon'
-import { loggerMiddleware } from './logger'
-import { authWithApiKey as rolodexAuth, createRolodexClient } from './rolodex'
-import { createStashClient } from './stash'
-import { Views } from './views'
-import { VideoUriBuilder } from './views/util'
+} from './data-plane/client/index.js'
+import * as error from './error.js'
+import { FeatureGatesClient } from './feature-gates/index.js'
+import { Hydrator } from './hydration/hydrator.js'
+import * as imageServer from './image/server.js'
+import { ImageUriBuilder } from './image/uri.js'
+import { createKwsClient } from './kws.js'
+import { loggerMiddleware } from './logger.js'
+import {
+  authWithApiKey as rolodexAuth,
+  createRolodexClient,
+} from './rolodex.js'
+import { createStashClient } from './stash.js'
+import {
+  type UndiciAgent,
+  createUndiciAgent,
+  dispatcherFetch,
+} from './undici.js'
+import { Views } from './views/index.js'
+import { VideoUriBuilder } from './views/util.js'
 
-export { ServerConfig } from './config'
-export type { ServerConfigValues } from './config'
-export { AppContext } from './context'
-export * from './data-plane'
-export { BackgroundQueue } from './data-plane/server/background'
-export { Database } from './data-plane/server/db'
-export { Redis } from './redis'
+export { ServerConfig } from './config.js'
+export type { ServerConfigValues } from './config.js'
+export { AppContext } from './context.js'
+export * from './data-plane/index.js'
+export { BackgroundQueue } from './data-plane/server/background.js'
+export { Database } from './data-plane/server/db/index.js'
+export { Redis } from './redis.js'
 
 export class BskyAppView {
   public ctx: AppContext
   public app: express.Application
   public server?: http.Server
   private terminator?: HttpTerminator
+  private dispatchers: UndiciAgent[]
 
-  constructor(opts: { ctx: AppContext; app: express.Application }) {
+  constructor(opts: {
+    ctx: AppContext
+    app: express.Application
+    dispatchers?: UndiciAgent[]
+  }) {
     this.ctx = opts.ctx
     this.app = opts.app
+    this.dispatchers = opts.dispatchers ?? []
   }
 
   static create(opts: {
@@ -69,11 +93,16 @@ export class BskyAppView {
     const idResolver = new IdResolver({
       plcUrl: config.didPlcUrl,
       backupNameservers: config.handleResolveNameservers,
+      fetch: config.disableSsrfProtection ? globalThis.fetch : undefined,
     })
 
-    const imgUriBuilder = new ImageUriBuilder(
-      config.cdnUrl || `${config.publicUrl}/img`,
-    )
+    const imgUriBuilderUrl =
+      config.cdnUrl ||
+      (config.publicUrl ? `${config.publicUrl}/img` : undefined)
+    if (!imgUriBuilderUrl) {
+      throw new Error('No image URI builder URL could be determined')
+    }
+    const imgUriBuilder = new ImageUriBuilder(imgUriBuilderUrl)
     const videoUriBuilder = new VideoUriBuilder({
       playlistUrlPattern:
         config.videoPlaylistUrlPattern ||
@@ -83,29 +112,57 @@ export class BskyAppView {
         `${config.publicUrl}/vid/%s/%s/thumbnail.jpg`,
     })
 
-    const searchAgent = config.searchUrl
-      ? new AtpAgent({ service: config.searchUrl })
+    const searchClient = config.searchUrl
+      ? new Client(
+          {
+            service: config.searchUrl,
+          },
+          {
+            // Trust internal services to send us well-formed responses
+            strictResponseProcessing: false,
+            validateResponse: config.debugMode,
+          },
+        )
       : undefined
 
-    const suggestionsAgent = config.suggestionsUrl
-      ? new AtpAgent({ service: config.suggestionsUrl })
+    const suggestionsClient = config.suggestionsUrl
+      ? new Client(
+          {
+            service: config.suggestionsUrl,
+            headers: config.suggestionsApiKey
+              ? { authorization: `Bearer ${config.suggestionsApiKey}` }
+              : undefined,
+          },
+          {
+            // Trust internal services to send us well-formed responses
+            strictResponseProcessing: false,
+            validateResponse: config.debugMode,
+          },
+        )
       : undefined
-    if (suggestionsAgent && config.suggestionsApiKey) {
-      suggestionsAgent.api.setHeader(
-        'authorization',
-        `Bearer ${config.suggestionsApiKey}`,
-      )
-    }
 
-    const topicsAgent = config.topicsUrl
-      ? new AtpAgent({ service: config.topicsUrl })
+    // @NOTE This bounds the connection phase (TCP + TLS) only; once connected,
+    // the request is not bounded here. It is kept for the lifetime of the
+    // service (pooling connections), and closed on `destroy()`.
+    // An unused agent holds no socket, so it can be built unconditionally.
+    const irisDispatcher = createUndiciAgent({ connectTimeout: SECOND })
+
+    const irisClient = config.irisUrl
+      ? new Client(
+          {
+            service: config.irisUrl,
+            headers: config.irisApiKey
+              ? { authorization: `Bearer ${config.irisApiKey}` }
+              : undefined,
+            fetch: dispatcherFetch(irisDispatcher),
+          },
+          {
+            // Trust internal services to send us well-formed responses
+            strictResponseProcessing: false,
+            validateResponse: config.debugMode,
+          },
+        )
       : undefined
-    if (topicsAgent && config.topicsApiKey) {
-      topicsAgent.api.setHeader(
-        'authorization',
-        `Bearer ${config.topicsApiKey}`,
-      )
-    }
 
     const etcd = config.etcdHosts.length
       ? new Etcd3({ hosts: config.etcdHosts })
@@ -120,12 +177,20 @@ export class BskyAppView {
           )
         : new BasicHostList(config.dataplaneUrls)
 
+    const featureGatesClient = new FeatureGatesClient({
+      growthBookApiHost: config.growthBookApiHost,
+      growthBookClientKey: config.growthBookClientKey,
+      eventProxyTrackingEndpoint: config.eventProxyTrackingEndpoint,
+    })
+
     const dataplane = createDataPlaneClient(dataplaneHostList, {
       httpVersion: config.dataplaneHttpVersion,
       rejectUnauthorized: !config.dataplaneIgnoreBadTls,
     })
     const hydrator = new Hydrator(dataplane, config.labelsFromIssuerDids, {
       debugFieldAllowedDids: config.debugFieldAllowedDids,
+      featureGatesClient,
+      needsReviewTagSources: [config.modServiceDid],
     })
     const views = new Views({
       imgUriBuilder: imgUriBuilder,
@@ -181,22 +246,29 @@ export class BskyAppView {
       entrywayJwtPublicKey,
     })
 
-    const featureGatesClient = new FeatureGatesClient({
-      growthBookApiHost: config.growthBookApiHost,
-      growthBookClientKey: config.growthBookClientKey,
-      eventProxyTrackingEndpoint: config.eventProxyTrackingEndpoint,
-    })
-
     const blobDispatcher = createBlobDispatcher(config)
+    // Egress to hosts named in DID documents, where the destination is chosen by
+    // the account being resolved. Same policy as blobDispatcher: https only,
+    // unicast addresses only, re-checked per hop by the dispatcher. Redirects
+    // stay enabled because xrpcRequestInit sets `redirect: 'follow'`.
+    const federatedFetch = (
+      config.disableSsrfProtection
+        ? globalThis.fetch
+        : safeFetchWrap({
+            allowIpHost: false,
+            allowImplicitRedirect: true,
+            responseMaxSize: 5 * 1024 * 1024,
+          })
+    ) as typeof globalThis.fetch
 
     const ctx = new AppContext({
       cfg: config,
       etcd,
       dataplane,
       dataplaneHostList,
-      searchAgent,
-      suggestionsAgent,
-      topicsAgent,
+      searchClient,
+      suggestionsClient,
+      irisClient,
       hydrator,
       views,
       signingKey,
@@ -208,10 +280,11 @@ export class BskyAppView {
       authVerifier,
       featureGatesClient,
       blobDispatcher,
+      federatedFetch,
       kwsClient,
     })
 
-    let server = createServer({
+    const server = createServer([], {
       validateResponse: config.debugMode,
       payload: {
         jsonLimit: 100 * 1024, // 100kb
@@ -220,7 +293,7 @@ export class BskyAppView {
       },
     })
 
-    server = API(server, ctx)
+    API(server, ctx)
 
     app.use(health.createRouter(ctx))
     app.use(wellKnown.createRouter(ctx))
@@ -231,11 +304,15 @@ export class BskyAppView {
       app.use(sitemap.createRouter(ctx))
     }
 
-    app.use(server.xrpc.router)
+    app.use(server.router)
     app.use(error.handler)
     app.use('/external', external.createRouter(ctx))
 
-    return new BskyAppView({ ctx, app })
+    return new BskyAppView({
+      ctx,
+      app,
+      dispatchers: [irisDispatcher],
+    })
   }
 
   async start(): Promise<http.Server> {
@@ -254,9 +331,23 @@ export class BskyAppView {
   }
 
   async destroy(): Promise<void> {
-    this.ctx.featureGatesClient.destroy()
-    await this.terminator?.terminate()
-    await this.ctx.etcd?.close()
+    try {
+      await this.ctx.featureGatesClient.destroy()
+    } finally {
+      try {
+        await this.terminator?.terminate()
+      } finally {
+        try {
+          await this.ctx.etcd?.close()
+        } finally {
+          await Promise.all(this.dispatchers.map((d) => d.close()))
+        }
+      }
+    }
+  }
+
+  async [Symbol.asyncDispose]() {
+    await this.destroy()
   }
 }
 

@@ -1,0 +1,10 @@
+{
+  "extends": ["../../tsconfig/jest.tsconfig.json"],
+  "include": ["./tests", "./src/**/*.test.ts"],
+  "references": [{ "path": "./tsconfig.build.json" }],
+  "compilerOptions": {
+    "rootDir": ".",
+    // @TODO Change to true and fix implicit any errors
+    "noImplicitAny": false,
+  },
+}

@@ -1,8 +1,7 @@
-/* eslint-disable @typescript-eslint/no-namespace */
-
-import { describe, expect, it } from 'vitest'
-import { DidString, HandleString } from '@atproto/lex-schema'
+import { describe, expect, it, vi } from 'vitest'
+import type { DidString, HandleString } from '@atproto/lex-schema'
 import { LexServerAuthError } from '@atproto/lex-server'
+import { extractPdsEndpoint } from './util.js'
 
 const randomString = () =>
   Math.random().toString(36).substring(2, 10) +
@@ -173,5 +172,71 @@ describe('AuthVerifier', () => {
       }),
     })
     expect(found.session).toBe(session)
+  })
+})
+
+describe(extractPdsEndpoint, () => {
+  const validDidDoc = (serviceEndpoint: string) => ({
+    service: [{ id: 'did:example:alice#atproto_pds', serviceEndpoint }],
+  })
+
+  it('returns the PDS endpoint from a valid DID document', () => {
+    expect(extractPdsEndpoint(validDidDoc('https://pds.example.com'))).toBe(
+      'https://pds.example.com',
+    )
+  })
+
+  it('supports environments without URL.canParse', async () => {
+    const LegacyURL = class extends URL {}
+    Object.defineProperty(LegacyURL, 'canParse', { value: undefined })
+    vi.stubGlobal('URL', LegacyURL)
+
+    try {
+      vi.resetModules()
+      const legacyModule = await import('./util.js')
+
+      expect(
+        legacyModule.extractPdsEndpoint(validDidDoc('https://pds.example.com')),
+      ).toBe('https://pds.example.com')
+      expect(
+        legacyModule.extractPdsEndpoint(validDidDoc('not-a-url')),
+      ).toBeNull()
+    } finally {
+      vi.unstubAllGlobals()
+      vi.resetModules()
+    }
+  })
+
+  it('returns null when no service array is present', () => {
+    expect(extractPdsEndpoint({})).toBeNull()
+  })
+
+  it('returns null when service does not include #atproto_pds', () => {
+    expect(
+      extractPdsEndpoint({
+        service: [
+          {
+            id: 'did:example:alice#other',
+            serviceEndpoint: 'https://other.example.com',
+          },
+        ],
+      }),
+    ).toBeNull()
+  })
+
+  it('returns null when serviceEndpoint is not a valid URL', () => {
+    expect(extractPdsEndpoint(validDidDoc('not-a-url'))).toBeNull()
+  })
+
+  it('returns null when called with undefined', () => {
+    expect(extractPdsEndpoint(undefined)).toBeNull()
+  })
+
+  it('returns null when serviceEndpoint is not a string', () => {
+    expect(
+      extractPdsEndpoint({
+        service: [{ id: 'did:example:alice#atproto_pds', serviceEndpoint: 42 }],
+      }),
+    ).toBeNull()
   })
 })

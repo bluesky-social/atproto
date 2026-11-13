@@ -1,23 +1,16 @@
-import { ComAtprotoRepoStrongRef } from '@atproto/api'
 import {
-  ModeratorClient,
-  RecordRef,
-  SeedClient,
+  ComAtprotoAdminDefs,
+  ComAtprotoModerationDefs,
+  ComAtprotoRepoStrongRef,
+  ToolsOzoneModerationDefs,
+} from '@atproto/api'
+import {
+  type ModeratorClient,
+  type RecordRef,
+  type SeedClient,
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
-import { isRepoRef } from '../src/lexicon/types/com/atproto/admin/defs'
-import {
-  REASONAPPEAL,
-  REASONOTHER,
-  REASONSPAM,
-} from '../src/lexicon/types/com/atproto/moderation/defs'
-import {
-  REVIEWCLOSED,
-  REVIEWESCALATED,
-  REVIEWOPEN,
-  SubjectStatusView,
-} from '../src/lexicon/types/tools/ozone/moderation/defs'
 
 describe('acknowledge all subjects of account', () => {
   let network: TestNetwork
@@ -35,13 +28,15 @@ describe('acknowledge all subjects of account', () => {
     cid: ref.cidStr,
   })
 
-  const getReviewStateBySubject = (subjects: SubjectStatusView[]) => {
-    const states = new Map<string, SubjectStatusView>()
+  const getReviewStateBySubject = (
+    subjects: ToolsOzoneModerationDefs.SubjectStatusView[],
+  ) => {
+    const states = new Map<string, ToolsOzoneModerationDefs.SubjectStatusView>()
 
     subjects.forEach((item) => {
       if (ComAtprotoRepoStrongRef.isMain(item.subject)) {
         states.set(item.subject.uri, item)
-      } else if (isRepoRef(item.subject)) {
+      } else if (ComAtprotoAdminDefs.isRepoRef(item.subject)) {
         states.set(item.subject.did, item)
       }
     })
@@ -54,18 +49,18 @@ describe('acknowledge all subjects of account', () => {
     const postTwo = sc.posts[did][1].ref
     await Promise.all([
       sc.createReport({
-        reasonType: REASONSPAM,
+        reasonType: ComAtprotoModerationDefs.REASONSPAM,
         subject: repoSubject(did),
         reportedBy: sc.dids.carol,
       }),
       sc.createReport({
-        reasonType: REASONOTHER,
+        reasonType: ComAtprotoModerationDefs.REASONOTHER,
         reason: 'defamation',
         subject: recordSubject(postOne),
         reportedBy: sc.dids.carol,
       }),
       sc.createReport({
-        reasonType: REASONOTHER,
+        reasonType: ComAtprotoModerationDefs.REASONOTHER,
         reason: 'defamation',
         subject: recordSubject(postTwo),
         reportedBy: sc.dids.carol,
@@ -74,12 +69,29 @@ describe('acknowledge all subjects of account', () => {
     await modClient.emitEvent({
       event: {
         $type: 'tools.ozone.moderation.defs#modEventReport',
-        reportType: REASONAPPEAL,
+        reportType: ComAtprotoModerationDefs.REASONAPPEAL,
       },
       subject: recordSubject(postTwo),
     })
 
     return { postOne, postTwo }
+  }
+
+  const expectAppealResolutionEvents = async (uri: string) => {
+    const { events } = await modClient.queryEvents({
+      subject: uri,
+      types: [
+        'tools.ozone.moderation.defs#modEventAcknowledge',
+        'tools.ozone.moderation.defs#modEventResolveAppeal',
+      ],
+    })
+    expect(events).toHaveLength(2)
+    expect(events.map((event) => event.event.$type)).toEqual(
+      expect.arrayContaining([
+        'tools.ozone.moderation.defs#modEventResolveAppeal',
+        'tools.ozone.moderation.defs#modEventAcknowledge',
+      ]),
+    )
   }
 
   beforeAll(async () => {
@@ -93,7 +105,7 @@ describe('acknowledge all subjects of account', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('acknowledges all open/escalated review subjects with takedown.', async () => {
@@ -118,20 +130,29 @@ describe('acknowledge all subjects of account', () => {
     const reviewStatesAfter = getReviewStateBySubject(statusesAfter)
 
     // Check that review states before were different for different subjects
-    expect(reviewStatesBefore.get(postOne.uriStr)?.reviewState).toBe(REVIEWOPEN)
-    expect(reviewStatesBefore.get(postTwo.uriStr)?.reviewState).toBe(
-      REVIEWESCALATED,
+    expect(reviewStatesBefore.get(postOne.uriStr)?.reviewState).toBe(
+      ToolsOzoneModerationDefs.REVIEWOPEN,
     )
-    expect(reviewStatesBefore.get(sc.dids.bob)?.reviewState).toBe(REVIEWOPEN)
+    expect(reviewStatesBefore.get(postTwo.uriStr)?.reviewState).toBe(
+      ToolsOzoneModerationDefs.REVIEWESCALATED,
+    )
+    expect(reviewStatesBefore.get(postTwo.uriStr)?.appealed).toBe(true)
+    expect(reviewStatesBefore.get(sc.dids.bob)?.reviewState).toBe(
+      ToolsOzoneModerationDefs.REVIEWOPEN,
+    )
 
     // Check that review states after are all closed
     expect(reviewStatesAfter.get(postOne.uriStr)?.reviewState).toBe(
-      REVIEWCLOSED,
+      ToolsOzoneModerationDefs.REVIEWCLOSED,
     )
     expect(reviewStatesAfter.get(postTwo.uriStr)?.reviewState).toBe(
-      REVIEWCLOSED,
+      ToolsOzoneModerationDefs.REVIEWCLOSED,
     )
-    expect(reviewStatesAfter.get(sc.dids.bob)?.reviewState).toBe(REVIEWCLOSED)
+    expect(reviewStatesAfter.get(postTwo.uriStr)?.appealed).toBe(false)
+    await expectAppealResolutionEvents(postTwo.uriStr)
+    expect(reviewStatesAfter.get(sc.dids.bob)?.reviewState).toBe(
+      ToolsOzoneModerationDefs.REVIEWCLOSED,
+    )
   })
 
   it('acknowledges all open/escalated review subjects with acknowledge.', async () => {
@@ -159,19 +180,28 @@ describe('acknowledge all subjects of account', () => {
     const reviewStatesAfter = getReviewStateBySubject(statusesAfter)
 
     // Check that review states before were different for different subjects
-    expect(reviewStatesBefore.get(postOne.uriStr)?.reviewState).toBe(REVIEWOPEN)
-    expect(reviewStatesBefore.get(postTwo.uriStr)?.reviewState).toBe(
-      REVIEWESCALATED,
+    expect(reviewStatesBefore.get(postOne.uriStr)?.reviewState).toBe(
+      ToolsOzoneModerationDefs.REVIEWOPEN,
     )
-    expect(reviewStatesBefore.get(sc.dids.alice)?.reviewState).toBe(REVIEWOPEN)
+    expect(reviewStatesBefore.get(postTwo.uriStr)?.reviewState).toBe(
+      ToolsOzoneModerationDefs.REVIEWESCALATED,
+    )
+    expect(reviewStatesBefore.get(postTwo.uriStr)?.appealed).toBe(true)
+    expect(reviewStatesBefore.get(sc.dids.alice)?.reviewState).toBe(
+      ToolsOzoneModerationDefs.REVIEWOPEN,
+    )
 
     // Check that review states after are all closed
     expect(reviewStatesAfter.get(postOne.uriStr)?.reviewState).toBe(
-      REVIEWCLOSED,
+      ToolsOzoneModerationDefs.REVIEWCLOSED,
     )
     expect(reviewStatesAfter.get(postTwo.uriStr)?.reviewState).toBe(
-      REVIEWCLOSED,
+      ToolsOzoneModerationDefs.REVIEWCLOSED,
     )
-    expect(reviewStatesAfter.get(sc.dids.alice)?.reviewState).toBe(REVIEWCLOSED)
+    expect(reviewStatesAfter.get(postTwo.uriStr)?.appealed).toBe(false)
+    await expectAppealResolutionEvents(postTwo.uriStr)
+    expect(reviewStatesAfter.get(sc.dids.alice)?.reviewState).toBe(
+      ToolsOzoneModerationDefs.REVIEWCLOSED,
+    )
   })
 })

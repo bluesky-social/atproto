@@ -1,23 +1,29 @@
-import { CID } from 'multiformats/cid'
-import * as crypto from '@atproto/crypto'
-import { BlobStore, Repo, WriteOpAction, formatDataKey } from '@atproto/repo'
-import { AtUri } from '@atproto/syntax'
+import type * as crypto from '@atproto/crypto'
+import { type Cid, parseCid } from '@atproto/lex-data'
+import type { DidString } from '@atproto/lex-schema'
+import {
+  type BlobStore,
+  Repo,
+  WriteOpAction,
+  formatDataKey,
+} from '@atproto/repo'
+import type { AtUri } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { BackgroundQueue } from '../../background'
-import { createWriteToOp, writeToOp } from '../../repo'
+import type { BackgroundQueue } from '../../background.js'
+import { createWriteToOp, writeToOp } from '../../repo/index.js'
 import {
   BadCommitSwapError,
   BadRecordSwapError,
-  CommitDataWithOps,
-  CommitOp,
-  PreparedCreate,
-  PreparedWrite,
-} from '../../repo/types'
-import { BlobTransactor } from '../blob/transactor'
-import { ActorDb } from '../db'
-import { RecordTransactor } from '../record/transactor'
-import { RepoReader } from './reader'
-import { SqlRepoTransactor } from './sql-repo-transactor'
+  type CommitDataWithOps,
+  type CommitOp,
+  type PreparedCreate,
+  type PreparedWrite,
+} from '../../repo/types.js'
+import { BlobTransactor } from '../blob/transactor.js'
+import type { ActorDb } from '../db/index.js'
+import { RecordTransactor } from '../record/transactor.js'
+import { RepoReader } from './reader.js'
+import { SqlRepoTransactor } from './sql-repo-transactor.js'
 
 export class RepoTransactor extends RepoReader {
   blob: BlobTransactor
@@ -27,14 +33,14 @@ export class RepoTransactor extends RepoReader {
   constructor(
     public db: ActorDb,
     public blobstore: BlobStore,
-    public did: string,
+    public did: DidString,
     public signingKey: crypto.Keypair,
     public backgroundQueue: BackgroundQueue,
     public now: string = new Date().toISOString(),
   ) {
-    super(db, blobstore)
+    super(db, blobstore, did)
     this.blob = new BlobTransactor(db, blobstore, backgroundQueue)
-    this.record = new RecordTransactor(db, blobstore)
+    this.record = new RecordTransactor(db, did, blobstore)
     this.storage = new SqlRepoTransactor(db, did, now)
   }
 
@@ -44,7 +50,7 @@ export class RepoTransactor extends RepoReader {
       .select('cid')
       .limit(1)
       .executeTakeFirst()
-    return res ? Repo.load(this.storage, CID.parse(res.cid)) : null
+    return res ? Repo.load(this.storage, parseCid(res.cid)) : null
   }
 
   async createRepo(writes: PreparedCreate[]): Promise<CommitDataWithOps> {
@@ -73,7 +79,7 @@ export class RepoTransactor extends RepoReader {
 
   async processWrites(
     writes: PreparedWrite[],
-    swapCommitCid?: CID,
+    swapCommitCid?: Cid,
   ): Promise<CommitDataWithOps> {
     this.db.assertTransaction()
     if (writes.length > 200) {
@@ -98,7 +104,7 @@ export class RepoTransactor extends RepoReader {
 
   async formatCommit(
     writes: PreparedWrite[],
-    swapCommit?: CID,
+    swapCommit?: Cid,
   ): Promise<CommitDataWithOps> {
     // this is not in a txn, so this won't actually hold the lock,
     // we just check if it is currently held by another txn
@@ -111,7 +117,7 @@ export class RepoTransactor extends RepoReader {
     }
     // cache last commit since there's likely overlap
     await this.storage.cacheRev(currRoot.rev)
-    const newRecordCids: CID[] = []
+    const newRecordCids: Cid[] = []
     const delAndUpdateUris: AtUri[] = []
     const commitOps: CommitOp[] = []
     for (const write of writes) {
@@ -123,7 +129,7 @@ export class RepoTransactor extends RepoReader {
         delAndUpdateUris.push(uri)
       }
       const record = await this.record.getRecord(uri, null, true)
-      const currRecord = record ? CID.parse(record.cid) : null
+      const currRecord = record ? parseCid(record.cid) : null
 
       const op: CommitOp = {
         action,
@@ -144,7 +150,12 @@ export class RepoTransactor extends RepoReader {
         if (action === WriteOpAction.Delete && swapCid === null) {
           throw new BadRecordSwapError(currRecord) // There should be a current record for a delete
         }
-        if ((currRecord || swapCid) && !currRecord?.equals(swapCid)) {
+        if (
+          // If we have either a current CID or a swap CID
+          (currRecord || swapCid) &&
+          // We make sure that both are provided and equal
+          !(swapCid && currRecord && currRecord.equals(swapCid))
+        ) {
           throw new BadRecordSwapError(currRecord)
         }
       }
@@ -203,9 +214,9 @@ export class RepoTransactor extends RepoReader {
   }
 
   async getDuplicateRecordCids(
-    cids: CID[],
+    cids: Cid[],
     touchedUris: AtUri[],
-  ): Promise<CID[]> {
+  ): Promise<Cid[]> {
     if (touchedUris.length === 0 || cids.length === 0) {
       return []
     }
@@ -217,6 +228,6 @@ export class RepoTransactor extends RepoReader {
       .where('uri', 'not in', uriStrs)
       .select('cid')
       .execute()
-    return res.map((row) => CID.parse(row.cid))
+    return res.map((row) => parseCid(row.cid))
   }
 }

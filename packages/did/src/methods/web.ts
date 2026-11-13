@@ -1,5 +1,5 @@
 import { InvalidDidError } from '../did-error.js'
-import { Did, assertDidMsid } from '../did.js'
+import { type Did, assertDidMsid } from '../did.js'
 import { canParse } from '../lib/uri.js'
 
 export const DID_WEB_PREFIX = `did:web:` satisfies Did<'web'>

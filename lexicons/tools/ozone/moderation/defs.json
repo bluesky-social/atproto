@@ -38,6 +38,7 @@
             "#modEventPriorityScore",
             "#ageAssuranceEvent",
             "#ageAssuranceOverrideEvent",
+            "#ageAssurancePurgeEvent",
             "#revokeAccountCredentialsEvent",
             "#scheduleTakedownEvent",
             "#cancelScheduledTakedownEvent"
@@ -48,7 +49,8 @@
           "refs": [
             "com.atproto.admin.defs#repoRef",
             "com.atproto.repo.strongRef",
-            "chat.bsky.convo.defs#messageRef"
+            "chat.bsky.convo.defs#messageRef",
+            "chat.bsky.convo.defs#convoRef"
           ]
         },
         "subjectBlobCids": { "type": "array", "items": { "type": "string" } },
@@ -95,6 +97,7 @@
             "#modEventPriorityScore",
             "#ageAssuranceEvent",
             "#ageAssuranceOverrideEvent",
+            "#ageAssurancePurgeEvent",
             "#revokeAccountCredentialsEvent",
             "#scheduleTakedownEvent",
             "#cancelScheduledTakedownEvent"
@@ -106,7 +109,8 @@
             "#repoView",
             "#repoViewNotFound",
             "#recordView",
-            "#recordViewNotFound"
+            "#recordViewNotFound",
+            "#convoView"
           ]
         },
         "subjectBlobs": {
@@ -128,7 +132,8 @@
           "refs": [
             "com.atproto.admin.defs#repoRef",
             "com.atproto.repo.strongRef",
-            "chat.bsky.convo.defs#messageRef"
+            "chat.bsky.convo.defs#messageRef",
+            "chat.bsky.convo.defs#convoRef"
           ]
         },
         "hosting": {
@@ -204,16 +209,6 @@
           "type": "array",
           "items": { "type": "string" }
         },
-        "accountStats": {
-          "description": "Statistics related to the account subject",
-          "type": "ref",
-          "ref": "#accountStats"
-        },
-        "recordsStats": {
-          "description": "Statistics related to the record subjects authored by the subject's account",
-          "type": "ref",
-          "ref": "#recordsStats"
-        },
         "accountStrike": {
           "description": "Strike information for the account (account-level only)",
           "type": "ref",
@@ -258,70 +253,6 @@
         "record": {
           "type": "ref",
           "ref": "#recordViewDetail"
-        }
-      }
-    },
-    "accountStats": {
-      "description": "Statistics about a particular account subject",
-      "type": "object",
-      "properties": {
-        "reportCount": {
-          "description": "Total number of reports on the account",
-          "type": "integer"
-        },
-        "appealCount": {
-          "description": "Total number of appeals against a moderation action on the account",
-          "type": "integer"
-        },
-        "suspendCount": {
-          "description": "Number of times the account was suspended",
-          "type": "integer"
-        },
-        "escalateCount": {
-          "description": "Number of times the account was escalated",
-          "type": "integer"
-        },
-        "takedownCount": {
-          "description": "Number of times the account was taken down",
-          "type": "integer"
-        }
-      }
-    },
-    "recordsStats": {
-      "description": "Statistics about a set of record subject items",
-      "type": "object",
-      "properties": {
-        "totalReports": {
-          "description": "Cumulative sum of the number of reports on the items in the set",
-          "type": "integer"
-        },
-        "reportedCount": {
-          "description": "Number of items that were reported at least once",
-          "type": "integer"
-        },
-        "escalatedCount": {
-          "description": "Number of items that were escalated at least once",
-          "type": "integer"
-        },
-        "appealedCount": {
-          "description": "Number of items that were appealed at least once",
-          "type": "integer"
-        },
-        "subjectCount": {
-          "description": "Total number of item in the set",
-          "type": "integer"
-        },
-        "pendingCount": {
-          "description": "Number of item currently in \"reviewOpen\" or \"reviewEscalated\" state",
-          "type": "integer"
-        },
-        "processedCount": {
-          "description": "Number of item currently in \"reviewNone\" or \"reviewClosed\" state",
-          "type": "integer"
-        },
-        "takendownCount": {
-          "description": "Number of item currently taken down",
-          "type": "integer"
         }
       }
     },
@@ -436,6 +367,11 @@
         "strikeCount": {
           "type": "integer",
           "description": "Number of strikes to subtract from the user's strike count. Usually set from the last policy infraction's severity."
+        },
+        "strikeExpiresAt": {
+          "type": "string",
+          "format": "datetime",
+          "description": "When the strike should expire. If not provided, the strike never expires."
         }
       }
     },
@@ -467,6 +403,21 @@
       "description": "Report a subject",
       "required": ["reportType"],
       "properties": {
+        "appealSubmittedBy": {
+          "type": "string",
+          "format": "did",
+          "description": "Moderator who submitted this appeal on behalf of the affected account. Returned by moderator event APIs."
+        },
+        "appealActionType": {
+          "type": "string",
+          "description": "Action reference type recorded when this appeal was submitted."
+        },
+        "appealActionId": {
+          "type": "integer"
+        },
+        "appealLabel": {
+          "type": "string"
+        },
         "comment": {
           "type": "string"
         },
@@ -584,6 +535,18 @@
           "type": "string",
           "minLength": 1,
           "description": "Comment describing the reason for the override."
+        }
+      }
+    },
+    "ageAssurancePurgeEvent": {
+      "type": "object",
+      "description": "Purges all age assurance events for the subject. Only works on DID subjects. Moderator-only.",
+      "required": ["comment"],
+      "properties": {
+        "comment": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Comment describing the reason for the purge."
         }
       }
     },
@@ -725,6 +688,10 @@
         "comment": {
           "type": "string",
           "description": "Additional comment about added/removed tags."
+        },
+        "durationInHours": {
+          "type": "integer",
+          "description": "Indicates how long the tags being added should remain before automatically being removed. Only applies to tags being added."
         }
       }
     },
@@ -941,6 +908,14 @@
       "required": ["uri"],
       "properties": {
         "uri": { "type": "string", "format": "at-uri" }
+      }
+    },
+    "convoView": {
+      "type": "object",
+      "required": ["did", "convoId"],
+      "properties": {
+        "did": { "type": "string", "format": "did" },
+        "convoId": { "type": "string" }
       }
     },
     "moderation": {

@@ -1,11 +1,11 @@
-import { Keyset } from '@atproto/jwk'
+import type { Keyset } from '@atproto/jwk'
 import {
-  OAuthClientMetadataInput,
+  type OAuthClientMetadataInput,
   assertOAuthDiscoverableClientId,
   assertOAuthLoopbackClientId,
 } from '@atproto/oauth-types'
 import { FALLBACK_ALG } from './constants.js'
-import { ClientMetadata, clientMetadataSchema } from './types.js'
+import { type ClientMetadata, clientMetadataSchema } from './types.js'
 
 export function validateClientMetadata(
   input: OAuthClientMetadataInput,

@@ -1,5 +1,9 @@
-import { LexMap, isPlainObject } from '@atproto/lex-data'
-import { Schema, ValidationContext } from '../core.js'
+import { type LexMap, isPlainObject } from '@atproto/lex-data'
+import {
+  Schema,
+  type ValidationContext,
+  type ValidationResult,
+} from '../core.js'
 import { memoizedOptions } from '../util/memoize.js'
 import { lexValue } from './lex-value.js'
 
@@ -17,7 +21,10 @@ export type { LexMap }
 export class LexMapSchema extends Schema<LexMap> {
   readonly type = 'lexMap' as const
 
-  validateInContext(input: unknown, ctx: ValidationContext) {
+  validateInContext(
+    input: unknown,
+    ctx: ValidationContext,
+  ): ValidationResult<Record<string, unknown>> {
     if (!isPlainObject(input)) {
       return ctx.issueUnexpectedType(input, 'object')
     }
@@ -55,9 +62,9 @@ export class LexMapSchema extends Schema<LexMap> {
  * schema.validate({ foo: 1.2 })        // fails - 1.2 is not a valid LexValue (not an integer)
  * ```
  */
-export const lexMap = /*#__PURE__*/ memoizedOptions(function () {
-  return new LexMapSchema()
-})
+export const lexMap: () => LexMapSchema = /*#__PURE__*/ memoizedOptions(
+  () => new LexMapSchema(),
+)
 
 /** @deprecated Use {@link lexMap} instead */
-export const unknownObject = lexMap
+export const unknownObject: () => LexMapSchema = lexMap

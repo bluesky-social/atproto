@@ -1,4 +1,5 @@
-import { Generated } from 'kysely'
+import type { Generated } from 'kysely'
+import type { DataplaneNotificationReason } from '../../../../api/app/bsky/notification/constants.js'
 
 export const tableName = 'notification'
 
@@ -8,7 +9,7 @@ export interface Notification {
   recordUri: string
   recordCid: string
   author: string
-  reason: string
+  reason: DataplaneNotificationReason
   reasonSubject: string | null
   sortAt: string
 }

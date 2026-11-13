@@ -6,17 +6,13 @@ type StringPath<P extends Params> = string extends keyof P
     ? `/${string}` | ``
     : {
         [K in keyof P]: K extends string
-          ?
-              | `${`/:${K}` | `/${string}/:${K}`}${StringPath<Omit<P, K>>}`
-              | `${StringPath<Omit<P, K>>}${`/:${K}` | `/:${K}/${string}`}`
+          ? | `${`/:${K}` | `/${string}/:${K}`}${StringPath<Omit<P, K>>}`
+            | `${StringPath<Omit<P, K>>}${`/:${K}` | `/:${K}/${string}`}`
           : never
       }[keyof P]
 
 export type Path<P extends Params> =
-  | string
-  | StringPath<P>
-  | RegExp
-  | PathMatcher<P>
+  string | StringPath<P> | RegExp | PathMatcher<P>
 export type Params = Record<string, undefined | string>
 
 export function createPathMatcher<P extends Params = Params>(

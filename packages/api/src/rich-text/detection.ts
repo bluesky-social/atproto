@@ -1,13 +1,14 @@
-import TLDs from 'tlds'
-import { AppBskyRichtextFacet } from '../client'
-import { UnicodeString } from './unicode'
+import TLDs from 'tlds' with { type: 'json' }
+import { graphemeLen } from '@atproto/common-web'
+import type { AppBskyRichtextFacet } from '../client/index.js'
+import type { UnicodeString } from './unicode.js'
 import {
   CASHTAG_REGEX,
   MENTION_REGEX,
   TAG_REGEX,
   TRAILING_PUNCTUATION_REGEX,
   URL_REGEX,
-} from './util'
+} from './util.js'
 
 export type Facet = AppBskyRichtextFacet.Main
 
@@ -86,7 +87,10 @@ export function detectFacets(text: UnicodeString): Facet[] | undefined {
       // strip ending punctuation and any spaces
       tag = tag.trim().replace(TRAILING_PUNCTUATION_REGEX, '')
 
-      if (tag.length === 0 || tag.length > 64) continue
+      // tag.length (UTF-16) is always >= graphemeLen(tag), so only pay for
+      // the grapheme count when the UTF-16 length already exceeds the limit.
+      if (tag.length === 0 || (tag.length > 64 && graphemeLen(tag) > 64))
+        continue
 
       const index = match.index + leading.length
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { Infer, Unknown$Type, Unknown$TypedObject } from '../core.js'
+import type { Infer, Unknown$Type, Unknown$TypedObject } from '../core.js'
 import { enumSchema } from './enum.js'
 import { integer } from './integer.js'
 import { nullable } from './nullable.js'
@@ -210,10 +210,10 @@ describe('TypedObjectSchema', () => {
     it('properly discriminates Unknown$TypeObject', () => {
       function foo(value: Unknown$TypedObject | Schema) {
         if (schema.isTypeOf(value)) {
-          value.text
+          void value.text
         } else {
           // @ts-expect-error
-          value.text
+          void value.text
         }
       }
 
@@ -302,6 +302,83 @@ describe('TypedObjectSchema', () => {
       const input = {}
       const result = emptySchema.build(input)
       expect(result).toEqual({ $type: 'app.bsky.test' })
+    })
+
+    describe('build() does not validate', () => {
+      const validationSchema = typedObject(
+        'app.bsky.test',
+        'validation',
+        object({
+          actor: string({ format: 'did' }),
+          count: integer(),
+        }),
+      )
+
+      it('does not throw for invalid data', () => {
+        const result = validationSchema.build({
+          // @ts-expect-error
+          actor: 'not-a-did',
+          count: 123,
+        })
+
+        expect(result.$type).toBe('app.bsky.test#validation')
+        expect(result.actor).toBe('not-a-did')
+        expect(result.count).toBe(123)
+      })
+
+      it('does not throw for invalid types', () => {
+        const result = validationSchema.build({
+          actor: 'did:plc:abc123',
+          // @ts-expect-error
+          count: 'not-a-number',
+        })
+
+        expect(result.$type).toBe('app.bsky.test#validation')
+        expect(result.count).toBe('not-a-number')
+      })
+
+      it('does not throw for missing required fields', () => {
+        // @ts-expect-error
+        const result = validationSchema.build({})
+
+        expect(result.$type).toBe('app.bsky.test#validation')
+        expect(result.actor).toBeUndefined()
+        expect(result.count).toBeUndefined()
+      })
+
+      it('does not throw for extra fields', () => {
+        const result = validationSchema.build({
+          actor: 'did:plc:abc123',
+          count: 42,
+          // @ts-expect-error
+          extra: 'unexpected',
+        })
+
+        expect(result.$type).toBe('app.bsky.test#validation')
+        // @ts-expect-error
+        expect(result.extra).toBe('unexpected')
+      })
+
+      it('parse() still validates after build()', () => {
+        const built = validationSchema.build({
+          // @ts-expect-error
+          actor: 'not-a-did',
+          count: 123,
+        })
+
+        expect(() => validationSchema.parse(built)).toThrow('Invalid DID')
+      })
+
+      it('safeParse() can detect validation errors after build()', () => {
+        const built = validationSchema.build({
+          // @ts-expect-error
+          actor: 'not-a-did',
+          count: 123,
+        })
+
+        const result = validationSchema.safeParse(built)
+        expect(result.success).toBe(false)
+      })
     })
   })
 

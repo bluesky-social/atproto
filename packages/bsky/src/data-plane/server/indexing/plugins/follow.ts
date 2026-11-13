@@ -1,22 +1,26 @@
-import { Selectable } from 'kysely'
-import { CID } from 'multiformats/cid'
+import type { Selectable } from 'kysely'
+import type { Cid } from '@atproto/lex-data'
 import { AtUri, normalizeDatetimeAlways } from '@atproto/syntax'
-import * as lex from '../../../../lexicon/lexicons'
-import * as Follow from '../../../../lexicon/types/app/bsky/graph/follow'
-import { BackgroundQueue } from '../../background'
-import { Database } from '../../db'
-import { DatabaseSchema, DatabaseSchemaType } from '../../db/database-schema'
-import { countAll, excluded } from '../../db/util'
-import { RecordProcessor } from '../processor'
+import { NOTIFICATION_REASON } from '../../../../api/app/bsky/notification/constants.js'
+import { app } from '../../../../lexicons/index.js'
+import type { BackgroundQueue } from '../../background.js'
+import type {
+  DatabaseSchema,
+  DatabaseSchemaType,
+} from '../../db/database-schema.js'
+import type { Database } from '../../db/index.js'
+import { countAll, excluded } from '../../db/util.js'
+import { RecordProcessor } from '../processor.js'
 
-const lexId = lex.ids.AppBskyGraphFollow
-type IndexedFollow = Selectable<DatabaseSchemaType['follow']>
+type IndexedFollow = Selectable<DatabaseSchemaType['follow']> & {
+  isFollowBack?: boolean
+}
 
 const insertFn = async (
   db: DatabaseSchema,
   uri: AtUri,
-  cid: CID,
-  obj: Follow.Record,
+  cid: Cid,
+  obj: app.bsky.graph.follow.Main,
   timestamp: string,
 ): Promise<IndexedFollow | null> => {
   const inserted = await db
@@ -32,13 +36,21 @@ const insertFn = async (
     .onConflict((oc) => oc.doNothing())
     .returningAll()
     .executeTakeFirst()
-  return inserted || null
+  if (!inserted) return null
+
+  const followedBack = await db
+    .selectFrom('follow')
+    .select('uri')
+    .where('creator', '=', inserted.subjectDid)
+    .where('subjectDid', '=', inserted.creator)
+    .executeTakeFirst()
+  return { ...inserted, isFollowBack: !!followedBack }
 }
 
 const findDuplicate = async (
   db: DatabaseSchema,
   uri: AtUri,
-  obj: Follow.Record,
+  obj: app.bsky.graph.follow.Main,
 ): Promise<AtUri | null> => {
   const found = await db
     .selectFrom('follow')
@@ -56,7 +68,9 @@ const notifsForInsert = (obj: IndexedFollow) => {
       author: obj.creator,
       recordUri: obj.uri,
       recordCid: obj.cid,
-      reason: 'follow' as const,
+      reason: obj.isFollowBack
+        ? NOTIFICATION_REASON.FOLLOW_BACK
+        : NOTIFICATION_REASON.FOLLOW,
       reasonSubject: null,
       sortAt: obj.sortAt,
     },
@@ -115,14 +129,13 @@ const updateAggregates = async (db: DatabaseSchema, follow: IndexedFollow) => {
   await Promise.all([followersCountQb.execute(), followsCountQb.execute()])
 }
 
-export type PluginType = RecordProcessor<Follow.Record, IndexedFollow>
-
+export type PluginType = ReturnType<typeof makePlugin>
 export const makePlugin = (
   db: Database,
-  background: BackgroundQueue,
-): PluginType => {
+  background: BackgroundQueue<Database>,
+) => {
   return new RecordProcessor(db, background, {
-    lexId,
+    schema: app.bsky.graph.follow.main,
     insertFn,
     findDuplicate,
     deleteFn,

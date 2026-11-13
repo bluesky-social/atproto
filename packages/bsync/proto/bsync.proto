@@ -3,6 +3,8 @@ syntax = "proto3";
 package bsync;
 option go_package = "./;bsync";
 
+import "google/protobuf/timestamp.proto";
+
 //
 // Sync
 //
@@ -19,12 +21,21 @@ message MuteOperation {
   Type type = 2;
   string actor_did = 3;
   string subject = 4;
+  // scope restrictions: when any is set, just the scoped content is muted;
+  // when none are set, the subject is fully muted.
+  bool only_reposts = 5;
+  bool only_quoteposts = 6;
 }
 
 message AddMuteOperationRequest {
   MuteOperation.Type type = 1;
   string actor_did = 2;
   string subject = 3;
+  // scope restrictions: when any is set, just the scoped content is muted;
+  // when none are set, the subject is fully muted. On an add for an
+  // already-muted subject, the stored scope is replaced with this one.
+  bool only_reposts = 4;
+  bool only_quoteposts = 5;
 }
 
 message AddMuteOperationResponse {
@@ -45,15 +56,6 @@ message NotifOperation {
   string id = 1;
   string actor_did = 2;
   optional bool priority = 3;
-}
-
-message AddNotifOperationRequest {
-  string actor_did = 1;
-  optional bool priority = 2;
-}
-
-message AddNotifOperationResponse {
-  NotifOperation operation = 1;
 }
 
 message ScanNotifOperationsRequest {
@@ -105,6 +107,22 @@ message ScanOperationsResponse {
   string cursor = 2;
 }
 
+message DeleteOperationsByActorAndNamespaceRequest {
+  string actor_did = 1;
+  string namespace = 2;
+}
+
+message DeleteOperationsByActorAndNamespaceResponse {
+  int32 deleted_count = 1;
+}
+
+message FanoutNotificationSeenRequest {
+  string actor_did = 1;
+  google.protobuf.Timestamp timestamp = 2;
+}
+
+message FanoutNotificationSeenResponse {}
+
 
 // Ping
 message PingRequest {}
@@ -115,10 +133,11 @@ service Service {
   // Sync
   rpc AddMuteOperation(AddMuteOperationRequest) returns (AddMuteOperationResponse);
   rpc ScanMuteOperations(ScanMuteOperationsRequest) returns (ScanMuteOperationsResponse);
-  rpc AddNotifOperation(AddNotifOperationRequest) returns (AddNotifOperationResponse);
   rpc ScanNotifOperations(ScanNotifOperationsRequest) returns (ScanNotifOperationsResponse);
   rpc PutOperation(PutOperationRequest) returns (PutOperationResponse);
   rpc ScanOperations(ScanOperationsRequest) returns (ScanOperationsResponse);
+  rpc DeleteOperationsByActorAndNamespace(DeleteOperationsByActorAndNamespaceRequest) returns (DeleteOperationsByActorAndNamespaceResponse);
+  rpc FanoutNotificationSeen(FanoutNotificationSeenRequest) returns (FanoutNotificationSeenResponse);
   // Ping
   rpc Ping(PingRequest) returns (PingResponse);
 }

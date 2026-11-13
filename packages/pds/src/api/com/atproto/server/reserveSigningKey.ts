@@ -1,15 +1,17 @@
-import { AppContext } from '../../../../context'
-import { Server } from '../../../../lexicon'
+import type { Server } from '@atproto/xrpc-server'
+import type { AppContext } from '../../../../context.js'
+import { com } from '../../../../lexicons/index.js'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.server.reserveSigningKey({
+  server.add(com.atproto.server.reserveSigningKey, {
+    auth: ctx.cfg.entryway
+      ? ctx.authVerifier.entrywayServiceOptional
+      : undefined,
     handler: async ({ input }) => {
       const signingKey = await ctx.actorStore.reserveKeypair(input.body.did)
       return {
-        encoding: 'application/json',
-        body: {
-          signingKey,
-        },
+        encoding: 'application/json' as const,
+        body: { signingKey },
       }
     },
   })

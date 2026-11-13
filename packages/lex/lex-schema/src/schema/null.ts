@@ -1,4 +1,8 @@
-import { Schema, ValidationContext } from '../core.js'
+import {
+  Schema,
+  type ValidationContext,
+  type ValidationResult,
+} from '../core.js'
 import { memoizedOptions } from '../util/memoize.js'
 
 /**
@@ -17,7 +21,10 @@ import { memoizedOptions } from '../util/memoize.js'
 export class NullSchema extends Schema<null> {
   readonly type = 'null' as const
 
-  validateInContext(input: unknown, ctx: ValidationContext) {
+  validateInContext(
+    input: unknown,
+    ctx: ValidationContext,
+  ): ValidationResult<null> {
     if (input !== null) {
       return ctx.issueUnexpectedType(input, 'null')
     }
@@ -42,8 +49,8 @@ export class NullSchema extends Schema<null> {
  * const nullableStringSchema = l.union([l.string(), l.null()])
  * ```
  */
-export const nullSchema = /*#__PURE__*/ memoizedOptions(function () {
-  return new NullSchema()
-})
+export const nullSchema: () => NullSchema = /*#__PURE__*/ memoizedOptions(
+  () => new NullSchema(),
+)
 
 export { nullSchema as null }

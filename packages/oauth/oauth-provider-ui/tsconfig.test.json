@@ -1,0 +1,24 @@
+{
+  // @NOTE Later entries win: `browser.tsconfig.json` supplies `lib` and `jsx`
+  // the way `tsconfig.build.json` gets them, and `bundler.tsconfig.json` is
+  // last so its Bundler module resolution wins over the Node16 resolution that
+  // `vitest.tsconfig.json` inherits — the sources under test are written for a
+  // bundler (extensionless relative imports, the `#/` alias).
+  "extends": [
+    "../../../tsconfig/vitest.tsconfig.json",
+    "../../../tsconfig/browser.tsconfig.json",
+    "../../../tsconfig/bundler.tsconfig.json",
+  ],
+  "include": ["./src/**/*.test.ts"],
+  "compilerOptions": {
+    "rootDir": "./",
+    // The sources are browser code, but the tests themselves run under node.
+    // Stated here because `browser.tsconfig.json`'s chain resets `types`,
+    // discarding the `["node"]` that `vitest.tsconfig.json` inherits.
+    "types": ["node"],
+    // Tests pull in modules that import via the `#/` subpath alias.
+    "paths": {
+      "#/*": ["./src/*"],
+    },
+  },
+}

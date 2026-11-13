@@ -1,11 +1,11 @@
-import { TypeOf, z } from 'zod'
+import { type TypeOf, z } from 'zod'
 import {
-  OAuthAuthorizationRequestParameters,
+  type OAuthAuthorizationRequestParameters,
   oauthClientIdDiscoverableSchema,
   oauthClientIdLoopbackSchema,
   oauthClientMetadataSchema,
 } from '@atproto/oauth-types'
-import { Simplify } from './util.js'
+import type { Simplify } from './util.js'
 
 // Note: These types are not prefixed with `OAuth` because they are not specific
 // to OAuth. They are specific to this packages. OAuth specific types are in

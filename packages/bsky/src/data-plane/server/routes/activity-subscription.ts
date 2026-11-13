@@ -1,14 +1,14 @@
-import { PlainMessage } from '@bufbuild/protobuf'
-import { ServiceImpl } from '@connectrpc/connect'
+import type { PlainMessage } from '@bufbuild/protobuf'
+import type { ServiceImpl } from '@connectrpc/connect'
 import { keyBy } from '@atproto/common'
-import { Service } from '../../../proto/bsky_connect'
+import type { Service } from '../../../proto/bsky_connect.js'
 import {
-  ActivitySubscription,
+  type ActivitySubscription,
   GetActivitySubscriptionsByActorAndSubjectsResponse,
-} from '../../../proto/bsky_pb'
-import { Namespaces } from '../../../stash'
-import { Database } from '../db'
-import { StashKeyKey } from '../db/pagination'
+} from '../../../proto/bsky_pb.js'
+import { Namespaces } from '../../../stash.js'
+import type { Database } from '../db/index.js'
+import { StashKeyKey } from '../db/pagination.js'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   async getActivitySubscriptionsByActorAndSubjects(req) {
@@ -34,7 +34,8 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
           return {
             actorDid,
             namespace:
-              Namespaces.AppBskyNotificationDefsSubjectActivitySubscription,
+              Namespaces.AppBskyNotificationDefsSubjectActivitySubscription
+                .$type,
             key: '',
             post: undefined,
             reply: undefined,
@@ -45,7 +46,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
         return {
           actorDid,
           namespace:
-            Namespaces.AppBskyNotificationDefsSubjectActivitySubscription,
+            Namespaces.AppBskyNotificationDefsSubjectActivitySubscription.$type,
           key: subject.key,
           post: subject.post ? {} : undefined,
           reply: subject.reply ? {} : undefined,
@@ -73,11 +74,11 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       cursor,
       limit,
     })
-    const res = await builder.execute()
-    const dids = res.map(({ subjectDid }) => subjectDid)
+    const page = key.page(await builder.execute(), limit)
+    const dids = page.items.map(({ subjectDid }) => subjectDid)
     return {
       dids,
-      cursor: key.packFromResult(res),
+      cursor: page.cursor,
     }
   },
 })

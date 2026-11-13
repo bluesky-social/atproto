@@ -1,4 +1,5 @@
-import { Pool as PgPool } from 'pg'
+import type pg from 'pg'
+type PgPool = pg.Pool
 
 export type PgOptions = {
   url: string

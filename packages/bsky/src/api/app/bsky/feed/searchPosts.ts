@@ -1,26 +1,32 @@
-import { AtpAgent } from '@atproto/api'
+import { Timestamp } from '@bufbuild/protobuf'
 import { mapDefined } from '@atproto/common'
-import { ServerConfig } from '../../../../config'
-import { AppContext } from '../../../../context'
-import { DataPlaneClient } from '../../../../data-plane'
+import type { Client } from '@atproto/lex-client'
+import type { AtUriString } from '@atproto/lex-schema'
+import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
+import type { ServerConfig } from '../../../../config.js'
+import type { AppContext } from '../../../../context.js'
 import {
-  PostSearchQuery,
+  type DataPlaneClient,
+  asInvalidRequest,
+} from '../../../../data-plane/index.js'
+import {
+  type PostSearchQuery,
   parsePostSearchQuery,
-} from '../../../../data-plane/server/util'
-import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
-import { parseString } from '../../../../hydration/util'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/searchPosts'
+} from '../../../../data-plane/server/util.js'
+import type { HydrateCtx, Hydrator } from '../../../../hydration/hydrator.js'
+import { parseString } from '../../../../hydration/util.js'
+import { app } from '../../../../lexicons/index.js'
 import {
-  HydrationFnInput,
-  PresentationFnInput,
-  RulesFnInput,
-  SkeletonFnInput,
+  type HydrationFnInput,
+  type PresentationFnInput,
+  type RulesFnInput,
+  type SkeletonFnInput,
   createPipeline,
-} from '../../../../pipeline'
-import { uriToDid as creatorFromUri } from '../../../../util/uris'
-import { Views } from '../../../../views'
-import { resHeaders } from '../../../util'
+} from '../../../../pipeline.js'
+import { SearchSortOrder } from '../../../../proto/bsky_pb.js'
+import { uriToDid as creatorFromUri } from '../../../../util/uris.js'
+import type { Views } from '../../../../views/index.js'
+import { fillPage, resHeaders, resolveSearchV2Override } from '../../../util.js'
 
 export default function (server: Server, ctx: AppContext) {
   const searchPosts = createPipeline(
@@ -29,27 +35,43 @@ export default function (server: Server, ctx: AppContext) {
     noBlocksOrTagged,
     presentation,
   )
-  server.app.bsky.feed.searchPosts({
+  server.add(app.bsky.feed.searchPosts, {
     auth: ctx.authVerifier.standardOptional,
-    handler: async ({ auth, params, req }) => {
-      const { viewer, isModService } = ctx.authVerifier.parseCreds(auth)
+    handler: async ({ auth, params, req, signal }) => {
+      const { viewer, isModService, skipViewerBlocks } =
+        ctx.authVerifier.parseCreds(auth)
 
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({
+        xrpcEndpoint: app.bsky.feed.searchPosts.$lxm,
         labelers,
         viewer,
-        featureGatesMap: ctx.featureGatesClient.checkGates(
-          ['search:filtering_exploration:enable'],
-          {
+        skipViewerBlocks,
+        features: ctx.featureGatesClient.scope(
+          ctx.featureGatesClient.parseUserContextFromHandler({
             viewer,
             req,
-          },
+          }),
         ),
       })
-      const results = await searchPosts(
-        { ...params, hydrateCtx, isModService },
-        ctx,
-      )
+      const results = await fillPage({
+        cursor: params.cursor,
+        limit: params.limit,
+        fetch: ({ cursor, limit }) =>
+          searchPosts(
+            {
+              ...params,
+              cursor,
+              limit,
+              hydrateCtx,
+              signal,
+              isModService,
+              isV2Override: resolveSearchV2Override(req, ctx.cfg),
+            },
+            ctx,
+          ),
+        items: (r) => r.posts,
+      })
       return {
         encoding: 'application/json',
         body: results,
@@ -59,16 +81,19 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-const skeleton = async (inputs: SkeletonFnInput<Context, Params>) => {
+const skeletonV1 = async (
+  inputs: SkeletonFnInput<Context, Params>,
+): Promise<Skeleton> => {
   const { ctx, params } = inputs
   const parsedQuery = parsePostSearchQuery(params.q, {
     author: params.author,
   })
 
-  if (ctx.searchAgent) {
+  if (ctx.searchClient) {
     // @NOTE cursors won't change on appview swap
-    const { data: res } =
-      await ctx.searchAgent.api.app.bsky.unspecced.searchPostsSkeleton({
+    const res = await ctx.searchClient.call(
+      app.bsky.unspecced.searchPostsSkeleton,
+      {
         q: params.q,
         cursor: params.cursor,
         limit: params.limit,
@@ -82,9 +107,11 @@ const skeleton = async (inputs: SkeletonFnInput<Context, Params>) => {
         until: params.until,
         url: params.url,
         viewer: params.hydrateCtx.viewer ?? undefined,
-      })
+      },
+      { signal: params.signal },
+    )
     return {
-      posts: res.posts.map(({ uri }) => uri),
+      posts: res.posts.map(({ uri }) => uri as AtUriString),
       cursor: parseString(res.cursor),
       parsedQuery,
     }
@@ -96,10 +123,60 @@ const skeleton = async (inputs: SkeletonFnInput<Context, Params>) => {
     cursor: params.cursor,
   })
   return {
-    posts: res.uris,
+    posts: res.uris as AtUriString[],
     cursor: parseString(res.cursor),
     parsedQuery,
   }
+}
+
+const skeletonV2 = async (
+  inputs: SkeletonFnInput<Context, Params>,
+): Promise<Skeleton> => {
+  const { ctx, params } = inputs
+  const parsedQuery = parsePostSearchQuery(params.q, {
+    author: params.author,
+  })
+  // Surface dataplane InvalidArgument errors as a 400 rather than a 500.
+  const res = await ctx.dataplane
+    .searchPostsV2({
+      allTime: true, // match v1 behavior, v2 defaults to false
+      params: {
+        query: params.q,
+        viewer: params.hydrateCtx.viewer ?? undefined,
+        limit: params.limit,
+        cursor: sanitizeCursor(params.cursor),
+      },
+      sort: postSortToV2(params.sort),
+      filters: {
+        authors: params.author ? [params.author] : [],
+        mentions: params.mentions ? [params.mentions] : [],
+        domains: params.domain ? [params.domain] : [],
+        urls: params.url ? [params.url] : [],
+        hashtags: params.tag ?? [],
+        languages: params.lang ? [params.lang] : [],
+      },
+      since: parseTimestamp(params.since),
+      until: parseTimestamp(params.until),
+    })
+    .catch(asInvalidRequest())
+  return {
+    posts: res.posts.map(({ uri }) => uri as AtUriString),
+    cursor: parseString(res.pageInfo?.cursor),
+    hitsTotal:
+      res.pageInfo?.hitsTotal != null
+        ? Number(res.pageInfo.hitsTotal)
+        : undefined,
+    parsedQuery,
+  }
+}
+
+const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
+  const useV2 =
+    input.params.hydrateCtx.features.checkGate(
+      input.params.hydrateCtx.features.Gate.SearchV2Enable,
+    ) || input.params.isV2Override
+  const skeletonFn = useV2 ? skeletonV2 : skeletonV1
+  return skeletonFn(input)
 }
 
 const hydration = async (
@@ -111,8 +188,8 @@ const hydration = async (
     params.hydrateCtx,
     undefined,
     {
-      processDynamicTagsForView: params.hydrateCtx.featureGatesMap.get(
-        'search:filtering_exploration:enable',
+      processDynamicTagsForView: params.hydrateCtx.features?.checkGate(
+        params.hydrateCtx.features.Gate.SearchFilteringExplorationEnable,
       )
         ? 'search'
         : undefined,
@@ -139,15 +216,29 @@ const noBlocksOrTagged = (inputs: RulesFnInput<Context, Params, Skeleton>) => {
     // Cases to never show.
     if (ctx.views.viewerBlockExists(creator, hydration)) return false
 
+    // Roll the post's own tags together with moderation tags on its author,
+    // so author-level tags are filtered the same way as post-level tags.
+    const author = hydration.actors?.get(creator)
+    const tags = new Set([
+      ...post.tags,
+      ...(author?.accountModerationTags ?? []),
+      ...(author?.profileModerationTags ?? []),
+    ])
+
+    // Tags that are hidden from all search surfaces (Top and Latest),
+    // regardless of curation or author filtering.
+    const alwaysHidden = [...ctx.cfg.searchTagsHideAll].some((t) => tags.has(t))
+    if (alwaysHidden) return false
+
     let tagged = false
     if (
-      params.hydrateCtx.featureGatesMap.get(
-        'search:filtering_exploration:enable',
+      params.hydrateCtx.features?.checkGate(
+        params.hydrateCtx.features.Gate.SearchFilteringExplorationEnable,
       )
     ) {
-      tagged = post.tags.has(ctx.cfg.visibilityTagHide)
+      tagged = tags.has(ctx.cfg.visibilityTagHide)
     } else {
-      tagged = [...ctx.cfg.searchTagsHide].some((t) => post.tags.has(t))
+      tagged = [...ctx.cfg.searchTagsHide].some((t) => tags.has(t))
     }
 
     // Cases to conditionally show based on tagging.
@@ -180,17 +271,46 @@ type Context = {
   dataplane: DataPlaneClient
   hydrator: Hydrator
   views: Views
-  searchAgent?: AtpAgent
+  searchClient?: Client
 }
 
-type Params = QueryParams & {
+type Params = app.bsky.feed.searchPosts.$Params & {
   hydrateCtx: HydrateCtx
+  signal: AbortSignal
   isModService: boolean
+  isV2Override: boolean
 }
 
 type Skeleton = {
-  posts: string[]
+  posts: AtUriString[]
   hitsTotal?: number
   cursor?: string
   parsedQuery: PostSearchQuery
+}
+
+const postSortToV2 = (sort: string | undefined): SearchSortOrder => {
+  if (sort === 'top') return SearchSortOrder.TOP
+  if (sort === 'latest') return SearchSortOrder.RECENT
+  return SearchSortOrder.UNSPECIFIED
+}
+
+const parseTimestamp = (value: string | undefined): Timestamp | undefined => {
+  if (!value) return undefined
+  const date = new Date(value)
+  if (isNaN(date.getTime())) return undefined
+  return Timestamp.fromDate(date)
+}
+
+const sanitizeCursor = (cursor: string | undefined): string | undefined => {
+  if (!cursor) return undefined
+  try {
+    const decoded = Buffer.from(cursor, 'base64').toString('utf-8')
+    const parsed = JSON.parse(decoded)
+    if (typeof parsed === 'object' && parsed !== null) {
+      return cursor
+    }
+  } catch {
+    // fall through to throw below
+  }
+  throw new InvalidRequestError('Invalid cursor format')
 }

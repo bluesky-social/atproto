@@ -1,4 +1,4 @@
-import { aggregateErrors, bailableWait } from './util'
+import { aggregateErrors, bailableWait } from './util.js'
 
 // reads values from a generator into a list
 // breaks when isDone signals `true` AND `waitFor` completes OR when a max length is reached
@@ -38,22 +38,25 @@ export const readFromGenerator = async <T>(
     }
   } finally {
     hasBroke = true
-    bail && bail()
+    if (bail) bail()
   }
   return evts
 }
 
-export type Deferrable = {
-  resolve: () => void
-  complete: Promise<void>
+export type Deferrable<T = void> = {
+  resolve: (value: T | PromiseLike<T>) => void
+  reject: (reason?: unknown) => void
+  complete: Promise<T>
 }
 
-export const createDeferrable = (): Deferrable => {
-  let resolve
-  const promise: Promise<void> = new Promise((res) => {
-    resolve = () => res()
+export function createDeferrable<T = void>(): Deferrable<T> {
+  let res: (value: T | PromiseLike<T>) => void
+  let rej: (reason?: unknown) => void
+  const promise = new Promise<T>((resolve, reject) => {
+    res = resolve
+    rej = reject
   })
-  return { resolve, complete: promise }
+  return { resolve: res!, reject: rej!, complete: promise }
 }
 
 export const createDeferrables = (count: number): Deferrable[] => {

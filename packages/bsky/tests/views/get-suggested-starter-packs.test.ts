@@ -1,16 +1,20 @@
 import { once } from 'node:events'
-import { Server, createServer } from 'node:http'
-import { AddressInfo } from 'node:net'
-import express, { Application } from 'express'
-import AtpAgent from '@atproto/api'
-import { SeedClient, TestNetwork } from '@atproto/dev-env'
-import { ids } from '../../src/lexicon/lexicons'
-import { OutputSchema } from '../../src/lexicon/types/app/bsky/unspecced/getSuggestedStarterPacksSkeleton'
+import { type Server, createServer } from 'node:http'
+import type { AddressInfo } from 'node:net'
+import express, { type Application } from 'express'
+import { type HttpTerminator, createHttpTerminator } from 'http-terminator'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import {
-  StarterPacks,
-  Users,
+  type AppBskyUnspeccedGetSuggestedStarterPacksSkeleton,
+  type AtpAgent,
+  ids,
+} from '@atproto/api'
+import { type SeedClient, TestNetwork } from '@atproto/dev-env'
+import {
+  type StarterPacks,
+  type Users,
   starterPacksSeed,
-} from '../seed/get-suggested-starter-packs'
+} from '../seed/get-suggested-starter-packs.js'
 
 describe('getSuggestedStarterPacks', () => {
   let network: TestNetwork
@@ -27,24 +31,21 @@ describe('getSuggestedStarterPacks', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_tests_get_suggested_starter_packs',
       bsky: {
-        topicsUrl: mockServer.url,
-        topicsApiKey: 'test',
+        irisUrl: mockServer.url,
+        irisApiKey: 'test',
       },
     })
-    agent = network.bsky.getClient()
+    agent = network.bsky.getAgent()
     sc = network.getSeedClient()
 
     const result = await starterPacksSeed(sc)
     users = result.users
     starterpacks = result.starterpacks
-
-    await network.processAll()
   })
 
-  afterAll(async () => {
-    await network.close()
-    await mockServer.stop()
-  })
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
+  afterAll(async () => mockServer?.stop())
 
   describe(`basic handling`, () => {
     beforeAll(() => {
@@ -89,12 +90,19 @@ describe('getSuggestedStarterPacks', () => {
 class MockServer {
   app: Application
   server: Server
+  terminator: HttpTerminator
 
-  mockedStarterPackUris = new Map<string, OutputSchema['starterPacks'][0]>()
+  mockedStarterPackUris = new Map<
+    string,
+    AppBskyUnspeccedGetSuggestedStarterPacksSkeleton.OutputSchema['starterPacks'][0]
+  >()
 
   constructor() {
     this.app = this.createApp()
     this.server = createServer(this.app)
+    this.terminator = createHttpTerminator({
+      server: this.server,
+    })
   }
 
   async listen(port?: number) {
@@ -103,8 +111,7 @@ class MockServer {
   }
 
   async stop() {
-    this.server.close()
-    await once(this.server, 'close')
+    await this.terminator.terminate()
   }
 
   get url() {
@@ -117,9 +124,10 @@ class MockServer {
     app.get(
       '/xrpc/app.bsky.unspecced.getSuggestedStarterPacksSkeleton',
       (req, res) => {
-        const skeleton: OutputSchema = {
-          starterPacks: Array.from(this.mockedStarterPackUris.values()),
-        }
+        const skeleton: AppBskyUnspeccedGetSuggestedStarterPacksSkeleton.OutputSchema =
+          {
+            starterPacks: Array.from(this.mockedStarterPackUris.values()),
+          }
         return res.json(skeleton)
       },
     )

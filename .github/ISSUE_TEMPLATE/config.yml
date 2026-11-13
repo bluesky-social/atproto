@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Questions & high-level discussion
+    url: https://github.com/bluesky-social/atproto/discussions
+    about: Ask questions and discuss protocol or design topics on the Discussion Forum.
+  - name: Bluesky app (web & mobile) issues
+    url: https://github.com/bluesky-social/social-app/issues
+    about: Bugs in the Bluesky client app belong in the social-app repo, not here.
+  - name: Security vulnerabilities
+    url: https://github.com/bluesky-social/atproto/blob/main/SECURITY.md
+    about: Do not file publicly. Email security@bsky.app instead.

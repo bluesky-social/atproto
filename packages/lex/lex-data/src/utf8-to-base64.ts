@@ -1,12 +1,13 @@
-import { toString } from 'uint8arrays/to-string'
+import { base64, base64url } from 'multiformats/bases/base64'
 import { NodeJSBuffer } from './lib/nodejs-buffer.js'
-import { Base64Alphabet } from './uint8array-base64.js'
+import type { Base64Alphabet } from './uint8array-base64.js'
 import { toBase64Node } from './uint8array-to-base64.js'
 
 const Buffer = NodeJSBuffer
 
-export const utf8ToBase64Node = Buffer
-  ? function utf8ToBase64Node(text: string, alphabet?: Base64Alphabet): string {
+export const utf8ToBase64Node:
+  ((text: string, alphabet?: Base64Alphabet) => string) | null = Buffer
+  ? function utf8ToBase64Node(text, alphabet) {
       const buffer = Buffer.from(text, 'utf8')
       return toBase64Node!(buffer, alphabet)
     }
@@ -18,5 +19,6 @@ export function utf8ToBase64Ponyfill(
   alphabet?: Base64Alphabet,
 ): string {
   const bytes = textEncoder.encode(text)
-  return toString(bytes, alphabet)
+  const codec = alphabet === 'base64url' ? base64url : base64
+  return codec.encoder.encode(bytes).slice(codec.prefix.length)
 }

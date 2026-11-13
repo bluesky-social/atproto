@@ -1,5 +1,4 @@
-import 'core-js/modules/esnext.symbol.async-dispose'
-import 'core-js/modules/esnext.symbol.dispose'
+import './polyfill.js'
 
 export * from './lexicon-document.js'
 export * from './lexicon-indexer.js'

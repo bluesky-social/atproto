@@ -1,0 +1,75 @@
+{
+  "lexicon": 1,
+  "id": "tools.ozone.report.closeReports",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Close eligible reports on a subject matching the given criteria, optionally linking an existing moderation action. Assigned, escalated, and actively assigned reports are excluded. Reports whose current status does not permit a transition to closed are skipped silently.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["subject"],
+          "properties": {
+            "subject": {
+              "type": "string",
+              "format": "uri",
+              "description": "Subject DID (account-level reports) or AT-URI (record-level reports) whose reports should be closed."
+            },
+            "includeAllOwned": {
+              "type": "boolean",
+              "default": false,
+              "description": "If true, also close reports on all subjects owned by the account, including records, messages, and conversations. Only valid when subject is an account DID."
+            },
+            "reportTypes": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "If nonempty, only reports of the given report types (fully qualified reason NSIDs) are closed. When omitted or empty, all eligible reports in the requested subject scope are targeted, except excludedReportTypes. Assigned and escalated reports are always excluded."
+            },
+            "excludedReportTypes": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Reports of these types (fully qualified reason NSIDs) are excluded from closure and left unchanged. When omitted or empty, no report types are excluded."
+            },
+            "actionEventId": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Optional existing moderation event that closes reports. It must target the exact subject or its owning account; account-wide closure requires an account event. The event is linked to each closed report and may predate the report. The link does not imply the action is still in effect."
+            },
+            "internalNote": {
+              "type": "string",
+              "description": "Optional moderator-only note recorded on each close activity. Not visible to reporters."
+            },
+            "isAutomated": {
+              "type": "boolean",
+              "description": "Set true when this action is triggered by an automated process. Defaults to false.",
+              "default": false
+            },
+            "meta": {
+              "type": "unknown",
+              "description": "Optional metadata for the report activities. Lifecycle and resolution fields are controlled by the service."
+            }
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["closedCount", "reportIds"],
+          "properties": {
+            "closedCount": {
+              "type": "integer",
+              "description": "Number of reports that were transitioned to closed."
+            },
+            "reportIds": {
+              "type": "array",
+              "items": { "type": "integer" },
+              "description": "IDs of the reports that were closed."
+            }
+          }
+        }
+      }
+    }
+  }
+}

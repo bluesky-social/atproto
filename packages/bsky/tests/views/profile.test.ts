@@ -1,36 +1,50 @@
 import assert from 'node:assert'
 import fs from 'node:fs/promises'
+import { Timestamp } from '@bufbuild/protobuf'
 import {
-  AppBskyEmbedExternal,
-  AtpAgent,
-  ComGermnetworkDeclaration,
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest'
+import {
+  type AppBskyEmbedExternal,
+  type AtpAgent,
+  type ComGermnetworkDeclaration,
+  ids,
 } from '@atproto/api'
 import { HOUR, MINUTE } from '@atproto/common'
-import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
-import { ids } from '../../src/lexicon/lexicons'
-import { forSnapshot, stripViewer } from '../_util'
+import { type SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import type { DidString } from '@atproto/syntax'
+import { com } from '../../src/lexicons/index.js'
+import { forSnapshot, stripViewer } from '../_util.js'
 
 describe('pds profile views', () => {
   let network: TestNetwork
   let agent: AtpAgent
   let pdsAgent: AtpAgent
   let sc: SeedClient
+  let labelerDid: DidString
 
   // account dids, for convenience
-  let alice: string
-  let bob: string
-  let dan: string
-  let eve: string
-  let frank: string
-  let noprofile: string
+  let alice: DidString
+  let bob: DidString
+  let dan: DidString
+  let eve: DidString
+  let frank: DidString
+  let noprofile: DidString
 
   beforeAll(async () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_views_profile',
     })
-    agent = network.bsky.getClient()
-    pdsAgent = network.pds.getClient()
+    agent = network.bsky.getAgent()
+    pdsAgent = network.pds.getAgent()
     sc = network.getSeedClient()
+    labelerDid = network.bsky.ctx.cfg.labelsFromIssuerDids[0]
     await basicSeed(sc)
 
     await sc.createAccount('eve', {
@@ -73,7 +87,6 @@ describe('pds profile views', () => {
       password: 'noprofile-pass',
     })
 
-    await network.processAll()
     alice = sc.dids.alice
     bob = sc.dids.bob
     dan = sc.dids.dan
@@ -82,9 +95,8 @@ describe('pds profile views', () => {
     noprofile = sc.dids.noprofile
   })
 
-  afterAll(async () => {
-    await network.close()
-  })
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
 
   // @TODO(bsky) blocked by actor takedown via labels.
 
@@ -445,20 +457,12 @@ describe('pds profile views', () => {
       const nowPlus15M = '2021-01-01T01:15:00.000Z'
 
       beforeAll(() => {
-        jest.useFakeTimers({
-          doNotFake: [
-            'nextTick',
-            'performance',
-            'setImmediate',
-            'setInterval',
-            'setTimeout',
-          ],
-        })
-        jest.setSystemTime(new Date(now))
+        vi.useFakeTimers({ toFake: ['Date'] })
+        vi.setSystemTime(new Date(now))
       })
 
       afterAll(async () => {
-        jest.useRealTimers()
+        vi.useRealTimers()
       })
 
       it('returns inactive status', async () => {
@@ -481,7 +485,7 @@ describe('pds profile views', () => {
         )
         await network.processAll()
 
-        jest.setSystemTime(new Date(nowPlus15M))
+        vi.setSystemTime(new Date(nowPlus15M))
 
         const { data } = await agent.api.app.bsky.actor.getProfile(
           { actor: alice },
@@ -498,6 +502,60 @@ describe('pds profile views', () => {
       })
     })
 
+    describe('labeled', () => {
+      beforeAll(async () => {
+        const res = await sc.agent.com.atproto.repo.putRecord(
+          {
+            repo: alice,
+            collection: ids.AppBskyActorStatus,
+            rkey: 'self',
+            record: {
+              status: 'app.bsky.actor.status#live',
+              embed,
+              durationMinutes: 10,
+              createdAt: new Date().toISOString(),
+            },
+          },
+          {
+            headers: sc.getHeaders(alice),
+            encoding: 'application/json',
+          },
+        )
+        await network.processAll()
+
+        await createLabel({
+          src: labelerDid,
+          uri: res.data.uri,
+          cid: res.data.cid,
+          val: 'spam',
+        })
+        await network.processAll()
+      })
+
+      it('returns labels on statusView', async () => {
+        const { data } = await agent.api.app.bsky.actor.getProfile(
+          { actor: alice },
+          {
+            headers: {
+              'atproto-accept-labelers': labelerDid,
+              ...(await network.serviceHeaders(
+                bob,
+                ids.AppBskyActorGetProfile,
+              )),
+            },
+          },
+        )
+
+        expect(data.status?.labels).toBeDefined()
+        expect(data.status?.labels?.length).toBe(1)
+        expect(data.status?.labels?.at(0)?.val).toBe('spam')
+      })
+    })
+
+    /*
+     * THIS ONE MUST BE LAST, since a takedown of a `self` rkey record prevents
+     * subsequent hydrations of that record.
+     */
     describe('when taken down', () => {
       beforeAll(async () => {
         const res = await sc.agent.com.atproto.repo.putRecord(
@@ -556,6 +614,307 @@ describe('pds profile views', () => {
     })
   })
 
+  describe('chat', () => {
+    it('omits chat if no declaration exists', async () => {
+      const { data } = await agent.api.app.bsky.actor.getProfile(
+        { actor: alice },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyActorGetProfile,
+          ),
+        },
+      )
+      expect(data.associated?.chat).toBeUndefined()
+    })
+
+    it('returns allowIncoming when only that field is set', async () => {
+      const { data } = await agent.api.app.bsky.actor.getProfile(
+        { actor: dan },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyActorGetProfile,
+          ),
+        },
+      )
+      expect(data.associated?.chat).toEqual({
+        allowIncoming: 'none',
+      })
+    })
+
+    it('returns both allowIncoming and allowGroupInvites when both are set', async () => {
+      await sc.agent.com.atproto.repo.putRecord(
+        {
+          repo: eve,
+          collection: ids.ChatBskyActorDeclaration,
+          rkey: 'self',
+          record: {
+            $type: ids.ChatBskyActorDeclaration,
+            allowIncoming: 'following',
+            allowGroupInvites: 'all',
+          },
+        },
+        {
+          headers: sc.getHeaders(eve),
+          encoding: 'application/json',
+        },
+      )
+      await network.processAll()
+
+      const { data } = await agent.api.app.bsky.actor.getProfile(
+        { actor: eve },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyActorGetProfile,
+          ),
+        },
+      )
+      expect(data.associated?.chat).toEqual({
+        allowIncoming: 'following',
+        allowGroupInvites: 'all',
+      })
+    })
+  })
+
+  describe('links', () => {
+    let linky: DidString
+
+    const createLink = async (
+      did: DidString,
+      url: string,
+      title?: string,
+      selfLabels?: string[],
+    ) => {
+      const res = await sc.agent.com.atproto.repo.createRecord(
+        {
+          repo: did,
+          collection: 'app.bsky.actor.link',
+          record: {
+            url,
+            title,
+            createdAt: new Date().toISOString(),
+            labels: selfLabels
+              ? com.atproto.label.defs.selfLabels.$build({
+                  values: selfLabels.map((val) => ({ val })),
+                })
+              : undefined,
+          },
+        },
+        { headers: sc.getHeaders(did), encoding: 'application/json' },
+      )
+      return { uri: res.data.uri, cid: res.data.cid }
+    }
+
+    const getLinks = async (labelers?: string) => {
+      const { data } = await agent.api.app.bsky.actor.getProfile(
+        { actor: linky },
+        {
+          headers: {
+            ...(labelers ? { 'atproto-accept-labelers': labelers } : {}),
+            ...(await network.serviceHeaders(
+              alice,
+              ids.AppBskyActorGetProfile,
+            )),
+          },
+        },
+      )
+      return data.links
+    }
+
+    beforeAll(async () => {
+      await sc.createAccount('linky', {
+        handle: 'linky.test',
+        email: 'linky@test.com',
+        password: 'linky-pass',
+      })
+      linky = sc.dids.linky
+    })
+
+    it('omits links for profiles without them', async () => {
+      await updateProfile(linky, { displayName: 'links' })
+      await network.processAll()
+      expect(await getLinks()).toBeUndefined()
+    })
+
+    it('returns link records in profile order, skipping ones that break the rules', async () => {
+      const support = await createLink(
+        linky,
+        'https://ko-fi.com/linky',
+        'Tip jar',
+      )
+      const site = await createLink(linky, 'https://example.com')
+      const shortener = await createLink(linky, 'https://bit.ly/abc')
+      const insecure = await createLink(linky, 'http://example.org')
+      const someoneElses = await createLink(alice, 'https://alice.example')
+      await updateProfile(linky, {
+        displayName: 'links',
+        links: [site, shortener, insecure, someoneElses, support],
+      })
+      await network.processAll()
+
+      const links = await getLinks()
+      expect(links?.map((link) => link.uri)).toEqual([site.uri, support.uri])
+      expect(links?.[1]).toMatchObject({
+        uri: support.uri,
+        cid: support.cid,
+        url: 'https://ko-fi.com/linky',
+        title: 'Tip jar',
+      })
+    })
+
+    it('leaves out a link that was taken down', async () => {
+      const before = await getLinks()
+      const takenDown = before?.[0]?.uri
+      assert(takenDown)
+      await network.bsky.ctx.dataplane.takedownRecord({
+        recordUri: takenDown,
+      })
+      const links = await getLinks()
+      expect(links?.map((link) => link.uri)).toEqual(
+        before?.slice(1).map((link) => link.uri),
+      )
+    })
+
+    it('still returns the profile when link records fail to load', async () => {
+      using getLinksSpy = vi.spyOn(
+        network.bsky.ctx.dataplane,
+        'getProfileLinkRecords',
+      )
+      getLinksSpy.mockRejectedValueOnce(new Error('dataplane unavailable'))
+      const { data } = await agent.api.app.bsky.actor.getProfile(
+        { actor: linky },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyActorGetProfile,
+          ),
+        },
+      )
+      expect(data.did).toEqual(linky)
+      expect(data.links).toBeUndefined()
+    })
+
+    it("does not show another profile's link when profiles are fetched together", async () => {
+      await sc.createAccount('pinto', {
+        handle: 'pinto.test',
+        email: 'pinto@test.com',
+        password: 'pinto-pass',
+      })
+      const pinto = sc.dids.pinto
+      const pintos = await createLink(pinto, 'https://pinto.example')
+      await updateProfile(pinto, { displayName: 'pinto', links: [pintos] })
+      const own = await createLink(linky, 'https://linky.example')
+      await updateProfile(linky, { displayName: 'links', links: [own, pintos] })
+      await network.processAll()
+
+      const { data } = await agent.api.app.bsky.actor.getProfiles(
+        { actors: [linky, pinto] },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyActorGetProfiles,
+          ),
+        },
+      )
+      const linkUris = (did: string) =>
+        data.profiles
+          .find((profile) => profile.did === did)
+          ?.links?.map((link) => link.uri)
+      expect(linkUris(linky)).toEqual([own.uri])
+      expect(linkUris(pinto)).toEqual([pintos.uri])
+    })
+
+    it('exposes labels applied to a link', async () => {
+      const labeled = await createLink(linky, 'https://labeled.example')
+      const unlabeled = await createLink(linky, 'https://unlabeled.example')
+      await updateProfile(linky, {
+        displayName: 'links',
+        links: [labeled, unlabeled],
+      })
+      await createLabel({ uri: labeled.uri, cid: labeled.cid, val: 'spam' })
+      await network.processAll()
+
+      const links = await getLinks(labelerDid)
+      expect(links?.map((link) => link.uri)).toEqual([
+        labeled.uri,
+        unlabeled.uri,
+      ])
+      expect(links?.[0].labels?.map((l) => [l.uri, l.val, l.src])).toEqual([
+        [labeled.uri, 'spam', labelerDid],
+      ])
+      expect(links?.[1].labels).toEqual([])
+    })
+
+    it('exposes self-labels saved on a link', async () => {
+      const selfLabeled = await createLink(
+        linky,
+        'https://self-labeled.example',
+        undefined,
+        ['porn'],
+      )
+      const unlabeled = await createLink(linky, 'https://plain.example')
+      await updateProfile(linky, {
+        displayName: 'links',
+        links: [selfLabeled, unlabeled],
+      })
+      await network.processAll()
+
+      const links = await getLinks()
+      expect(links?.map((link) => link.uri)).toEqual([
+        selfLabeled.uri,
+        unlabeled.uri,
+      ])
+      expect(
+        links?.[0].labels?.map((l) => [l.src, l.uri, l.cid, l.val]),
+      ).toEqual([[linky, selfLabeled.uri, selfLabeled.cid, 'porn']])
+      expect(links?.[1].labels).toEqual([])
+    })
+
+    it('returns hydrated labels followed by self-labels', async () => {
+      const both = await createLink(linky, 'https://both.example', undefined, [
+        'gore',
+      ])
+      await updateProfile(linky, { displayName: 'links', links: [both] })
+      await createLabel({ uri: both.uri, cid: both.cid, val: 'spam' })
+      await network.processAll()
+
+      const links = await getLinks(labelerDid)
+      expect(
+        links?.[0].labels?.map((l) => [l.src, l.uri, l.cid, l.val]),
+      ).toEqual([
+        [labelerDid, both.uri, both.cid, 'spam'],
+        [linky, both.uri, both.cid, 'gore'],
+      ])
+    })
+
+    it('omits only the link with an actionable takedown label', async () => {
+      const kept = await createLink(linky, 'https://kept.example')
+      const removed = await createLink(linky, 'https://removed.example')
+      await updateProfile(linky, {
+        displayName: 'links',
+        links: [removed, kept],
+      })
+      await createLabel({
+        uri: removed.uri,
+        cid: removed.cid,
+        val: '!takedown',
+      })
+      await network.processAll()
+
+      const links = await getLinks(`${labelerDid};redact`)
+      expect(links?.map((link) => link.uri)).toEqual([kept.uri])
+
+      // Without redact authority the label is shown but does not hide the link.
+      const unredacted = await getLinks(labelerDid)
+      expect(unredacted?.map((link) => link.uri)).toEqual([
+        removed.uri,
+        kept.uri,
+      ])
+    })
+  })
+
   describe('germ', () => {
     const germDeclaration: ComGermnetworkDeclaration.Main = {
       $type: ids.ComGermnetworkDeclaration,
@@ -609,7 +968,37 @@ describe('pds profile views', () => {
     })
   })
 
-  async function updateProfile(did: string, record: Record<string, unknown>) {
+  it('filters out Go zero-value dates from dataplane', async () => {
+    using getActorsSpy = vi.spyOn(network.bsky.ctx.dataplane, 'getActors')
+
+    getActorsSpy.mockImplementationOnce(async (req) => {
+      const result = await network.bsky.ctx.dataplane.getActors(req)
+
+      // Inject a Go zero-value date (0001-01-01 00:00:00 UTC)
+      if (result.actors.length > 0 && result.actors[0]) {
+        const actor = result.actors[0]
+        const goZeroDate = new Date(-62135596800000)
+        actor.createdAt = Timestamp.fromDate(goZeroDate)
+      }
+
+      return result
+    })
+
+    const { data } = await agent.app.bsky.actor.getProfile(
+      { actor: alice },
+      {
+        headers: await network.serviceHeaders(bob, ids.AppBskyActorGetProfile),
+      },
+    )
+
+    // The hydration layer filters Go zero-values out
+    expect(data.createdAt).toBeUndefined()
+  })
+
+  async function updateProfile(
+    did: DidString,
+    record: Record<string, unknown>,
+  ) {
     return await pdsAgent.api.com.atproto.repo.putRecord(
       {
         repo: did,
@@ -619,5 +1008,26 @@ describe('pds profile views', () => {
       },
       { headers: sc.getHeaders(did), encoding: 'application/json' },
     )
+  }
+
+  const createLabel = async (opts: {
+    src?: string
+    uri: string
+    cid: string
+    val: string
+    exp?: string
+  }) => {
+    await network.bsky.db.db
+      .insertInto('label')
+      .values({
+        uri: opts.uri,
+        cid: opts.cid,
+        val: opts.val,
+        cts: new Date().toISOString(),
+        exp: opts.exp ?? null,
+        neg: false,
+        src: opts.src ?? labelerDid,
+      })
+      .execute()
   }
 })

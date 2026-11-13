@@ -1,18 +1,19 @@
-import { isPlainObject } from '@atproto/lex-data'
+import { type LexMap, isPlainObject } from '@atproto/lex-data'
 import {
-  $Type,
-  $TypeOf,
-  $Typed,
-  $TypedMaybe,
+  type $Type,
+  type $TypeOf,
+  type $Typed,
+  type $TypedMaybe,
   $type,
   $typed,
-  InferInput,
-  InferOutput,
-  NsidString,
+  type InferInput,
+  type InferOutput,
+  type NsidString,
   Schema,
-  Unknown$TypedObject,
-  ValidationContext,
-  Validator,
+  type Unknown$TypedObject,
+  type ValidationContext,
+  type ValidationResult,
+  type Validator,
 } from '../core.js'
 import { lazyProperty } from '../util/lazy-property.js'
 
@@ -43,21 +44,26 @@ export type MaybeTypedObject<
  */
 export class TypedObjectSchema<
   const TType extends $Type = $Type,
-  const TShape extends Validator<{ [k: string]: unknown }> = any,
+  const TShape extends Validator<LexMap> = Validator<LexMap>,
 > extends Schema<
   $TypedMaybe<InferInput<TShape>, TType>,
   $TypedMaybe<InferOutput<TShape>, TType>
 > {
   readonly type = 'typedObject' as const
 
-  constructor(
-    readonly $type: TType,
-    readonly schema: TShape,
-  ) {
+  readonly $type: TType
+  readonly schema: TShape
+
+  constructor($type: TType, schema: TShape) {
     super()
+    this.$type = $type
+    this.schema = schema
   }
 
-  validateInContext(input: unknown, ctx: ValidationContext) {
+  validateInContext(
+    input: unknown,
+    ctx: ValidationContext,
+  ): ValidationResult<InferInput<TShape>> {
     if (!isPlainObject(input)) {
       return ctx.issueUnexpectedType(input, 'object')
     }
@@ -74,12 +80,13 @@ export class TypedObjectSchema<
   }
 
   build(
-    input: Omit<InferInput<this>, '$type'>,
-  ): $Typed<InferOutput<this>, TType> {
-    return this.parse($typed(input, this.$type)) as $Typed<
-      InferOutput<this>,
-      TType
-    >
+    input: Omit<InferOutput<TShape>, '$type'>,
+  ): $Typed<InferOutput<TShape>, TType>
+  build(
+    input: Omit<InferInput<TShape>, '$type'>,
+  ): $Typed<InferInput<TShape>, TType>
+  build(input: Record<string, unknown>) {
+    return $typed(input, this.$type)
   }
 
   isTypeOf<TValue extends Record<string, unknown>>(
@@ -155,7 +162,7 @@ export class TypedObjectSchema<
 export function typedObject<
   const N extends NsidString,
   const H extends string,
-  const S extends Validator<{ [k: string]: unknown }>,
+  const S extends Validator<LexMap>,
 >(nsid: N, hash: H, validator: S): TypedObjectSchema<$Type<N, H>, S>
 export function typedObject<V extends { $type?: $Type }>(
   nsid: V extends { $type?: infer T extends string }
@@ -174,7 +181,7 @@ export function typedObject<V extends { $type?: $Type }>(
 export function typedObject<
   const N extends NsidString,
   const H extends string,
-  const S extends Validator<{ [k: string]: unknown }>,
+  const S extends Validator<LexMap>,
 >(nsid: N, hash: H, validator: S) {
   return new TypedObjectSchema<$Type<N, H>, S>($type(nsid, hash), validator)
 }

@@ -1,10 +1,10 @@
-import { describe, expect, expectTypeOf, it } from 'vitest'
-import { UnknownString } from '@atproto/lex-schema'
+import { describe, expect, expectTypeOf, it, test } from 'vitest'
+import type { UnknownString } from '@atproto/lex-schema'
 import * as com from './lexicons/com.js'
 
 describe('com.example.stringLength', () => {
   describe('valid cases', () => {
-    for (const string of [
+    test.each([
       'ab',
       'abc',
       'abcd',
@@ -16,67 +16,63 @@ describe('com.example.stringLength', () => {
       'éé', // 'é' + 'é' (2 + 2 bytes = 4 bytes)
       'aaé', // 1 + 1 + 2 = 4 bytes
       '👋', // 4 bytes
-    ]) {
-      it(`accepts valid ${JSON.stringify(string)}`, () => {
-        com.example.stringLength.$parse({
-          $type: 'com.example.stringLength',
-          string,
-        })
+    ])('accepts %j', (string) => {
+      com.example.stringLength.$parse({
+        $type: 'com.example.stringLength',
+        string,
       })
-    }
+    })
   })
 
   describe('invalid cases', () => {
-    for (const { string, error } of [
-      { string: '', error: 'string too small (minimum 2) at $.string (got 0)' },
+    test.each([
+      { string: '', error: 'string too small (minimum 2, got 0) at $.string' },
       {
         string: 'a',
-        error: 'string too small (minimum 2) at $.string (got 1)',
+        error: 'string too small (minimum 2, got 1) at $.string',
       },
       {
         string: 'abcde',
-        error: 'string too big (maximum 4) at $.string (got 5)',
+        error: 'string too big (maximum 4, got 5) at $.string',
       },
       {
         string: 'a\u0301\u0301', // 1 + (2 * 2) = 5 bytes
-        error: 'string too big (maximum 4) at $.string (got 5)',
+        error: 'string too big (maximum 4, got 5) at $.string',
       },
       {
         string: '\uD83D\uD83D', // Two unpaired high surrogates (3 * 2 = 6 bytes)
-        error: 'string too big (maximum 4) at $.string (got 6)',
+        error: 'string too big (maximum 4, got 6) at $.string',
       },
       {
         string: 'ééé', // 2 + 2 + 2 bytes = 6 bytes
-        error: 'string too big (maximum 4) at $.string (got 6)',
+        error: 'string too big (maximum 4, got 6) at $.string',
       },
       {
         string: '👋a', // 4 + 1 bytes = 5 bytes
-        error: 'string too big (maximum 4) at $.string (got 5)',
+        error: 'string too big (maximum 4, got 5) at $.string',
       },
       {
         string: '👨👨', // 4 + 4 = 8 bytes
-        error: 'string too big (maximum 4) at $.string (got 8)',
+        error: 'string too big (maximum 4, got 8) at $.string',
       },
       {
         string: '👨‍👩‍👧‍👧', // 4 emojis × 4 bytes + 3 ZWJs × 3 bytes = 25 bytes
-        error: 'string too big (maximum 4) at $.string (got 25)',
+        error: 'string too big (maximum 4, got 25) at $.string',
       },
-    ]) {
-      it(`rejects invalid ${JSON.stringify(string)}`, () => {
-        expect(() =>
-          com.example.stringLength.$parse({
-            $type: 'com.example.stringLength',
-            string,
-          }),
-        ).toThrow(error)
-      })
-    }
+    ])('rejects $string', ({ string, error }) => {
+      expect(() =>
+        com.example.stringLength.$parse({
+          $type: 'com.example.stringLength',
+          string,
+        }),
+      ).toThrow(error)
+    })
   })
 })
 
 describe('com.example.stringLengthNoMinLength', () => {
   describe('valid cases', () => {
-    for (const string of [
+    test.each([
       // Shorter than two UTF8 characters
       '',
       'a',
@@ -92,56 +88,52 @@ describe('com.example.stringLengthNoMinLength', () => {
       'éé', // 'é' + 'é' (2 + 2 bytes = 4 bytes)
       'aaé', // 1 + 1 + 2 = 4 bytes
       '👋', // 4 bytes
-    ]) {
-      it(`accepts valid ${JSON.stringify(string)}`, () => {
-        com.example.stringLengthNoMinLength.$parse({
-          $type: 'com.example.stringLengthNoMinLength',
-          string,
-        })
+    ])('accepts %j', (string) => {
+      com.example.stringLengthNoMinLength.$parse({
+        $type: 'com.example.stringLengthNoMinLength',
+        string,
       })
-    }
+    })
   })
 
   describe('invalid cases', () => {
-    for (const { string, error } of [
+    test.each([
       {
         string: 'abcde',
-        error: 'string too big (maximum 4) at $.string (got 5)',
+        error: 'string too big (maximum 4, got 5) at $.string',
       },
       {
         string: 'a\u0301\u0301', // 1 + (2 * 2) = 5 bytes
-        error: 'string too big (maximum 4) at $.string (got 5)',
+        error: 'string too big (maximum 4, got 5) at $.string',
       },
       {
         string: '\uD83D\uD83D', // Two unpaired high surrogates (3 * 2 = 6 bytes)
-        error: 'string too big (maximum 4) at $.string (got 6)',
+        error: 'string too big (maximum 4, got 6) at $.string',
       },
       {
         string: 'ééé', // 2 + 2 + 2 bytes = 6 bytes
-        error: 'string too big (maximum 4) at $.string (got 6)',
+        error: 'string too big (maximum 4, got 6) at $.string',
       },
       {
         string: '👋a', // 4 + 1 bytes = 5 bytes
-        error: 'string too big (maximum 4) at $.string (got 5)',
+        error: 'string too big (maximum 4, got 5) at $.string',
       },
       {
         string: '👨👨', // 4 + 4 = 8 bytes
-        error: 'string too big (maximum 4) at $.string (got 8)',
+        error: 'string too big (maximum 4, got 8) at $.string',
       },
       {
         string: '👨‍👩‍👧‍👧', // 4 emojis × 4 bytes + 3 ZWJs × 3 bytes = 25 bytes
-        error: 'string too big (maximum 4) at $.string (got 25)',
+        error: 'string too big (maximum 4, got 25) at $.string',
       },
-    ]) {
-      it(`rejects invalid ${JSON.stringify(string)}`, () => {
-        expect(() =>
-          com.example.stringLengthNoMinLength.$parse({
-            $type: 'com.example.stringLengthNoMinLength',
-            string,
-          }),
-        ).toThrow(error)
-      })
-    }
+    ])('rejects $string', ({ string, error }) => {
+      expect(() =>
+        com.example.stringLengthNoMinLength.$parse({
+          $type: 'com.example.stringLengthNoMinLength',
+          string,
+        }),
+      ).toThrow(error)
+    })
   })
 })
 
@@ -171,7 +163,7 @@ describe('com.example.stringKnownValues', () => {
 
 describe('com.example.stringLengthGrapheme', () => {
   describe('valid cases', () => {
-    for (const string of [
+    test.each([
       'ab',
       'a\u0301b', // 'áb' with combining accent
       'a\u0301b\u0301', // 'áb́'
@@ -179,70 +171,66 @@ describe('com.example.stringLengthGrapheme', () => {
       '12👨‍👩‍👧‍👧',
       'abcd',
       'a\u0301b\u0301c\u0301d\u0301', // 'áb́ćd́'
-    ]) {
-      it(`accepts valid ${JSON.stringify(string)}`, () => {
-        com.example.stringLengthGrapheme.$parse({
-          $type: 'com.example.stringLengthGrapheme',
-          string,
-        })
+    ])('accepts %j', (string) => {
+      com.example.stringLengthGrapheme.$parse({
+        $type: 'com.example.stringLengthGrapheme',
+        string,
       })
-    }
+    })
   })
 
   describe('invalid cases', () => {
-    for (const { string, error } of [
+    test.each([
       // Shorter than two graphemes
       {
         string: '',
-        error: 'grapheme too small (minimum 2) at $.string (got 0)',
+        error: 'grapheme too small (minimum 2, got 0) at $.string',
       },
       {
         string: '\u0301\u0301\u0301', // Three combining acute accents
-        error: 'grapheme too small (minimum 2) at $.string (got 1)',
+        error: 'grapheme too small (minimum 2, got 1) at $.string',
       },
       {
         string: 'a',
-        error: 'grapheme too small (minimum 2) at $.string (got 1)',
+        error: 'grapheme too small (minimum 2, got 1) at $.string',
       },
       {
         string: 'a\u0301\u0301\u0301\u0301', // 'á́́́' ('a' with four combining acute accents)
-        error: 'grapheme too small (minimum 2) at $.string (got 1)',
+        error: 'grapheme too small (minimum 2, got 1) at $.string',
       },
       {
         string: '5\uFE0F', // '5️' with emoji presentation
-        error: 'grapheme too small (minimum 2) at $.string (got 1)',
+        error: 'grapheme too small (minimum 2, got 1) at $.string',
       },
       {
         string: '👨‍👩‍👧‍👧',
-        error: 'grapheme too small (minimum 2) at $.string (got 1)',
+        error: 'grapheme too small (minimum 2, got 1) at $.string',
       },
       // Longer than four graphemes
       {
         string: 'abcde',
-        error: 'grapheme too big (maximum 4) at $.string (got 5)',
+        error: 'grapheme too big (maximum 4, got 5) at $.string',
       },
       {
         string: 'a\u0301b\u0301c\u0301d\u0301e\u0301', // 'áb́ćd́é'
-        error: 'grapheme too big (maximum 4) at $.string (got 5)',
+        error: 'grapheme too big (maximum 4, got 5) at $.string',
       },
       {
         string: '😀😀😀😀😀',
-        error: 'grapheme too big (maximum 4) at $.string (got 5)',
+        error: 'grapheme too big (maximum 4, got 5) at $.string',
       },
       {
         string: 'ab😀de',
-        error: 'grapheme too big (maximum 4) at $.string (got 5)',
+        error: 'grapheme too big (maximum 4, got 5) at $.string',
       },
-    ]) {
-      it(`rejects invalid ${JSON.stringify(string)}`, () => {
-        expect(() =>
-          com.example.stringLengthGrapheme.$parse({
-            $type: 'com.example.stringLengthGrapheme',
-            string,
-          }),
-        ).toThrow(error)
-      })
-    }
+    ])('rejects $string', ({ string, error }) => {
+      expect(() =>
+        com.example.stringLengthGrapheme.$parse({
+          $type: 'com.example.stringLengthGrapheme',
+          string,
+        }),
+      ).toThrow(error)
+    })
   })
 })
 
@@ -257,7 +245,7 @@ describe('com.example.stringEnum', () => {
         $type: 'com.example.stringEnum',
         string: 'c',
       }),
-    ).toThrow('Expected one of "a" or "b" at $.string (got "c")')
+    ).toThrow('Expected one of "a" or "b" (got "c") at $.string')
   })
 })
 describe('com.example.stringConst', () => {
@@ -271,56 +259,58 @@ describe('com.example.stringConst', () => {
         $type: 'com.example.stringConst',
         string: 'b',
       }),
-    ).toThrow('Expected "a" at $.string (got "b")')
+    ).toThrow('Expected "a" (got "b") at $.string')
   })
 })
 describe('com.example.datetime', () => {
-  it('Applies datetime formatting constraint', () => {
-    for (const datetime of [
-      '2022-12-12T00:50:36.809Z',
-      '2022-12-12T00:50:36Z',
-      '2022-12-12T00:50:36.8Z',
-      '2022-12-12T00:50:36.80Z',
-      '2022-12-12T00:50:36+00:00',
-      '2022-12-12T00:50:36.8+00:00',
-      '2022-12-11T19:50:36-05:00',
-      '2022-12-11T19:50:36.8-05:00',
-      '2022-12-11T19:50:36.80-05:00',
-      '2022-12-11T19:50:36.809-05:00',
-    ]) {
-      com.example.datetime.$parse({
-        $type: 'com.example.datetime',
-        datetime,
-      })
-    }
+  test.each([
+    '2022-12-12T00:50:36.809Z',
+    '2022-12-12T00:50:36Z',
+    '2022-12-12T00:50:36.8Z',
+    '2022-12-12T00:50:36.80Z',
+    '2022-12-12T00:50:36+00:00',
+    '2022-12-12T00:50:36.8+00:00',
+    '2022-12-11T19:50:36-05:00',
+    '2022-12-11T19:50:36.8-05:00',
+    '2022-12-11T19:50:36.80-05:00',
+    '2022-12-11T19:50:36.809-05:00',
+  ])('accepts %s', (datetime) => {
+    com.example.datetime.$parse({
+      $type: 'com.example.datetime',
+      datetime,
+    })
+  })
+
+  it('rejects invalid datetimes', () => {
     expect(() =>
       com.example.datetime.$parse({
         $type: 'com.example.datetime',
         datetime: 'bad date',
       }),
-    ).toThrow('Invalid datetime at $.datetime (got "bad date")')
+    ).toThrow('Invalid datetime (got "bad date") at $.datetime')
   })
 })
 describe('com.example.uri', () => {
-  it('Applies uri formatting constraint', () => {
-    for (const uri of [
-      'https://example.com',
-      'https://example.com/with/path',
-      'https://example.com/with/path?and=query',
-      'at://bsky.social',
-      'did:example:test',
-    ]) {
-      com.example.uri.$parse({
-        $type: 'com.example.uri',
-        uri,
-      })
-    }
+  test.each([
+    'https://example.com',
+    'https://example.com/with/path',
+    'https://example.com/with/path?and=query',
+    'at://bsky.social',
+    'did:example:test',
+  ])('accepts %s', (uri) => {
+    com.example.uri.$parse({
+      $type: 'com.example.uri',
+      uri,
+    })
+  })
+
+  it('rejects invalid uris', () => {
     expect(() =>
       com.example.uri.$parse({
         $type: 'com.example.uri',
         uri: 'not a uri',
       }),
-    ).toThrow('Invalid uri at $.uri (got "not a uri")')
+    ).toThrow('Invalid uri (got "not a uri") at $.uri')
   })
 })
 describe('com.example.atUri', () => {
@@ -334,7 +324,7 @@ describe('com.example.atUri', () => {
         $type: 'com.example.atUri',
         atUri: 'http://not-atproto.com',
       }),
-    ).toThrow('Invalid at-uri at $.atUri (got "http://not-atproto.com")')
+    ).toThrow('Invalid at-uri (got "http://not-atproto.com") at $.atUri')
   })
 })
 describe('com.example.did', () => {
@@ -353,13 +343,13 @@ describe('com.example.did', () => {
         $type: 'com.example.did',
         did: 'bad did',
       }),
-    ).toThrow('Invalid DID at $.did (got "bad did")')
+    ).toThrow('Invalid DID (got "bad did") at $.did')
     expect(() =>
       com.example.did.$parse({
         $type: 'com.example.did',
         did: 'did:short',
       }),
-    ).toThrow('Invalid DID at $.did (got "did:short")')
+    ).toThrow('Invalid DID (got "did:short") at $.did')
   })
 })
 describe('com.example.handle', () => {
@@ -378,13 +368,13 @@ describe('com.example.handle', () => {
         $type: 'com.example.handle',
         handle: 'bad handle',
       }),
-    ).toThrow('Invalid handle at $.handle (got "bad handle")')
+    ).toThrow('Invalid handle (got "bad handle") at $.handle')
     expect(() =>
       com.example.handle.$parse({
         $type: 'com.example.handle',
         handle: '-bad-.test',
       }),
-    ).toThrow('Invalid handle at $.handle (got "-bad-.test")')
+    ).toThrow('Invalid handle (got "-bad-.test") at $.handle')
   })
 })
 describe('com.example.atIdentifier', () => {
@@ -403,13 +393,13 @@ describe('com.example.atIdentifier', () => {
         $type: 'com.example.atIdentifier',
         atIdentifier: 'bad id',
       }),
-    ).toThrow('Invalid AT identifier at $.atIdentifier (got "bad id")')
+    ).toThrow('Invalid AT identifier (got "bad id") at $.atIdentifier')
     expect(() =>
       com.example.atIdentifier.$parse({
         $type: 'com.example.atIdentifier',
         atIdentifier: '-bad-.test',
       }),
-    ).toThrow('Invalid AT identifier at $.atIdentifier (got "-bad-.test")')
+    ).toThrow('Invalid AT identifier (got "-bad-.test") at $.atIdentifier')
   })
 })
 describe('com.example.nsid', () => {
@@ -428,13 +418,13 @@ describe('com.example.nsid', () => {
         $type: 'com.example.nsid',
         nsid: 'bad nsid',
       }),
-    ).toThrow('Invalid NSID at $.nsid (got "bad nsid")')
+    ).toThrow('Invalid NSID (got "bad nsid") at $.nsid')
     expect(() =>
       com.example.nsid.$parse({
         $type: 'com.example.nsid',
         nsid: 'com.bad-.foo',
       }),
-    ).toThrow('Invalid NSID at $.nsid (got "com.bad-.foo")')
+    ).toThrow('Invalid NSID (got "com.bad-.foo") at $.nsid')
   })
 })
 describe('com.example.cid', () => {
@@ -449,7 +439,7 @@ describe('com.example.cid', () => {
         cid: 'abapsdofiuwrpoiasdfuaspdfoiu',
       }),
     ).toThrow(
-      'Invalid CID string at $.cid (got "abapsdofiuwrpoiasdfuaspdfoiu")',
+      'Invalid CID string (got "abapsdofiuwrpoiasdfuaspdfoiu") at $.cid',
     )
   })
 })
@@ -464,6 +454,6 @@ describe('com.example.language', () => {
         $type: 'com.example.language',
         language: 'not-a-language-',
       }),
-    ).toThrow('Invalid language at $.language (got "not-a-language-")')
+    ).toThrow('Invalid language (got "not-a-language-") at $.language')
   })
 })

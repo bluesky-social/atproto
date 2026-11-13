@@ -1,8 +1,8 @@
-import { LexError } from '@atproto/lex-data'
+import { LexError, type LexErrorData } from '@atproto/lex-data'
 import { arrayAgg } from '../util/array-agg.js'
-import { ResultFailure, failureReason } from './result.js'
+import type { ResultFailure } from './result.js'
 import {
-  Issue,
+  type Issue,
   IssueInvalidType,
   IssueInvalidValue,
 } from './validation-issue.js'
@@ -23,14 +23,21 @@ import {
  *   new IssueInvalidType(['user', 'age'], 'hello', ['number'])
  * ])
  * console.log(error.message)
- * // "Expected number value type at $.user.age (got string)"
+ * // "Expected integer value type (got "some-string") at $.user.age"
  *
  * console.log(error.issues.length) // 1
  * console.log(error.toJSON())
  * // { error: 'InvalidRequest', message: '...', issues: [...] }
  * ```
+ *
+ * @note this class implements {@link ResultFailure} to allow it to be used
+ * directly as a failure reason in validation results, avoiding the need for
+ * wrapping it in an additional object.
  */
-export class LexValidationError extends LexError<'InvalidRequest'> {
+export class LexValidationError
+  extends LexError<'InvalidRequest'>
+  implements ResultFailure<LexValidationError>
+{
   name = 'LexValidationError'
 
   /**
@@ -39,7 +46,7 @@ export class LexValidationError extends LexError<'InvalidRequest'> {
    * Issues are aggregated when possible (e.g., multiple invalid type issues
    * at the same path are combined into a single issue listing all expected types).
    */
-  readonly issues: Issue[]
+  readonly issues: readonly Issue[]
 
   /**
    * Creates a new validation error from a list of issues.
@@ -56,49 +63,27 @@ export class LexValidationError extends LexError<'InvalidRequest'> {
     this.issues = issuesAgg
   }
 
+  /** @see {ResultFailure.success} */
+  readonly success = false as const
+
+  /** @see {ResultFailure.reason} */
+  get reason(): this {
+    return this
+  }
+
   /**
    * Converts the error to a JSON-serializable object.
    *
    * @returns An object containing the error details and issues details
    */
-  override toJSON() {
+  override toJSON(): LexErrorData & {
+    issues: ReturnType<Issue['toJSON']>[]
+  } {
     return {
       ...super.toJSON(),
       issues: this.issues.map((issue) => issue.toJSON()),
     }
   }
-
-  /**
-   * Creates a validation error by combining multiple validation failures.
-   *
-   * This is useful when validating against multiple possible schemas (e.g., unions)
-   * and all branches fail. The resulting error contains issues from all failures.
-   *
-   * @param failures - The validation failures to combine
-   * @returns A single validation error containing all issues from the failures
-   *
-   * @example
-   * ```typescript
-   * const failures = schemas.map(s => s.safeValidate(data)).filter(r => !r.success)
-   * if (failures.length === schemas.length) {
-   *   throw LexValidationError.fromFailures(failures)
-   * }
-   * ```
-   */
-  static fromFailures(
-    failures: readonly ResultFailure<LexValidationError>[],
-  ): LexValidationError {
-    if (failures.length === 1) return failureReason(failures[0])
-    const issues = failures.flatMap(extractFailureIssues)
-    return new LexValidationError(issues, {
-      // Keep the original errors as the cause chain
-      cause: failures.map(failureReason),
-    })
-  }
-}
-
-function extractFailureIssues(result: ResultFailure<LexValidationError>) {
-  return result.reason.issues
 }
 
 function aggregateIssues(issues: Issue[]): Issue[] {

@@ -1,4 +1,8 @@
-import { Schema, ValidationContext } from '../core.js'
+import {
+  Schema,
+  type ValidationContext,
+  type ValidationFailure,
+} from '../core.js'
 import { memoizedOptions } from '../util/memoize.js'
 
 /**
@@ -16,7 +20,7 @@ import { memoizedOptions } from '../util/memoize.js'
 export class NeverSchema extends Schema<never> {
   readonly type = 'never' as const
 
-  validateInContext(input: unknown, ctx: ValidationContext) {
+  validateInContext(input: unknown, ctx: ValidationContext): ValidationFailure {
     return ctx.issueUnexpectedType(input, 'never')
   }
 }
@@ -51,6 +55,6 @@ export class NeverSchema extends Schema<never> {
  * })
  * ```
  */
-export const never = /*#__PURE__*/ memoizedOptions(function () {
-  return new NeverSchema()
-})
+export const never: () => NeverSchema = /*#__PURE__*/ memoizedOptions(
+  () => new NeverSchema(),
+)

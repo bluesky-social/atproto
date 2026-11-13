@@ -1,33 +1,43 @@
 import { dedupeStrs, mapDefined } from '@atproto/common'
-import { AppContext } from '../../../../context'
-import {
+import type { AtUriString } from '@atproto/syntax'
+import type { Server } from '@atproto/xrpc-server'
+import type { AppContext } from '../../../../context.js'
+import type {
   HydrateCtx,
   HydrationState,
   Hydrator,
-} from '../../../../hydration/hydrator'
-import { Server } from '../../../../lexicon'
-import { ids } from '../../../../lexicon/lexicons'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getPosts'
-import { createPipeline } from '../../../../pipeline'
-import { uriToDid as creatorFromUri } from '../../../../util/uris'
-import { Views } from '../../../../views'
-import { resHeaders } from '../../../util'
+} from '../../../../hydration/hydrator.js'
+import { app } from '../../../../lexicons/index.js'
+import { createPipeline } from '../../../../pipeline.js'
+import { uriToDid as creatorFromUri } from '../../../../util/uris.js'
+import type { Views } from '../../../../views/index.js'
+import { resHeaders } from '../../../util.js'
 
 export default function (server: Server, ctx: AppContext) {
   const getPosts = createPipeline(skeleton, hydration, noBlocks, presentation)
-  server.app.bsky.feed.getPosts({
+  server.add(app.bsky.feed.getPosts, {
     auth: ctx.authVerifier.standardOptionalParameterized({
       lxmCheck: (method) => {
         if (!method) return false
         return (
-          method === ids.AppBskyFeedGetPosts || method.startsWith('chat.bsky.')
+          method === app.bsky.feed.getPosts.$lxm ||
+          method.startsWith('chat.bsky.')
         )
       },
     }),
+    opts: {
+      // @TODO remove after grace period has passed, behavior is non-standard.
+      // temporarily added for compat w/ previous version of xrpc-server to avoid breakage of a few specified parties.
+      paramsParseLoose: true,
+    },
     handler: async ({ params, auth, req }) => {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
-      const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
+      const hydrateCtx = await ctx.hydrator.createContext({
+        xrpcEndpoint: app.bsky.feed.getPosts.$lxm,
+        labelers,
+        viewer,
+      })
 
       const results = await getPosts({ ...params, hydrateCtx }, ctx)
 
@@ -40,7 +50,7 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-const skeleton = async (inputs: { params: Params }) => {
+const skeleton = async (inputs: { params: Params }): Promise<Skeleton> => {
   return { posts: dedupeStrs(inputs.params.uris) }
 }
 
@@ -87,8 +97,8 @@ type Context = {
   views: Views
 }
 
-type Params = QueryParams & { hydrateCtx: HydrateCtx }
+type Params = app.bsky.feed.getPosts.$Params & { hydrateCtx: HydrateCtx }
 
 type Skeleton = {
-  posts: string[]
+  posts: AtUriString[]
 }

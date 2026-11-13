@@ -1,7 +1,8 @@
-import { Selectable } from 'kysely'
-import { Database } from '../db'
-import { CommunicationTemplate } from '../db/schema/communication_template'
-import { TemplateView } from '../lexicon/types/tools/ozone/communication/defs'
+import type { Selectable } from 'kysely'
+import { toDatetimeString } from '@atproto/lex-schema'
+import type { Database } from '../db/index.js'
+import type { CommunicationTemplate } from '../db/schema/communication_template.js'
+import type { tools } from '../lexicons/index.js'
 
 export type CommunicationTemplateServiceCreator = (
   db: Database,
@@ -94,7 +95,9 @@ export class CommunicationTemplateService {
       .execute()
   }
 
-  view(template: Selectable<CommunicationTemplate>): TemplateView {
+  view(
+    template: Selectable<CommunicationTemplate>,
+  ): tools.ozone.communication.defs.TemplateView {
     return {
       id: `${template.id}`,
       name: template.name,
@@ -102,8 +105,8 @@ export class CommunicationTemplateService {
       disabled: template.disabled,
       lang: template.lang || undefined,
       subject: template.subject || undefined,
-      createdAt: template.createdAt.toISOString(),
-      updatedAt: template.updatedAt.toISOString(),
+      createdAt: toDatetimeString(template.createdAt),
+      updatedAt: toDatetimeString(template.updatedAt),
       lastUpdatedBy: template.lastUpdatedBy,
     }
   }

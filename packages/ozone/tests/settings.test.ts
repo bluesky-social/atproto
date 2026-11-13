@@ -1,11 +1,18 @@
-import AtpAgent, {
+import { ids } from '@atproto/api'
+import type {
   ToolsOzoneSettingListOptions,
   ToolsOzoneSettingUpsertOption,
 } from '@atproto/api'
-import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
-import { SettingScope } from '../dist/db/schema/setting'
-import { ids } from '../src/lexicon/lexicons'
-import { forSnapshot } from './_util'
+import type AtpAgent from '@atproto/api'
+import { type SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import type { SettingScope } from '../dist/db/schema/setting.js'
+import { com, tools } from '../src/lexicons/index.js'
+import {
+  PriorityLevelSettingKey,
+  ReportPriorityLevelSettingKey,
+  SeverityLevelSettingKey,
+} from '../src/setting/constants.js'
+import { forSnapshot } from './_util.js'
 
 describe('ozone-settings', () => {
   let network: TestNetwork
@@ -61,14 +68,14 @@ describe('ozone-settings', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'ozone_settings',
     })
-    agent = network.ozone.getClient()
+    agent = network.ozone.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc)
     await network.processAll()
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   describe('upsertOption', () => {
@@ -147,6 +154,241 @@ describe('ozone-settings', () => {
     })
   })
 
+  describe('severity expiry settings', () => {
+    const setting = (value: Record<string, unknown>) => ({
+      scope: 'instance',
+      key: SeverityLevelSettingKey,
+      value,
+      managerRole: tools.ozone.team.defs.RoleAdmin,
+    })
+
+    afterAll(async () => removeOptions([SeverityLevelSettingKey], 'instance'))
+
+    it.each([undefined, 0, 180, 365])(
+      'persists canonical expiry (%s) and permanent severities',
+      async (expiryInDays) => {
+        const value = {
+          'sev-1': {
+            strikeCount: 1,
+            ...(expiryInDays !== undefined && { expiryInDays }),
+          },
+          permanent: { strikeCount: 4 },
+        }
+        await upsertOption(setting(value))
+        const { options } = await listOptions({
+          scope: 'instance',
+          keys: [SeverityLevelSettingKey],
+        })
+        expect(options).toHaveLength(1)
+        expect(options[0].value).toEqual(value)
+      },
+    )
+
+    it.each([-1, 1.5, '365', null, true, Number.MAX_SAFE_INTEGER + 1, 1e20])(
+      'rejects invalid canonical expiry (%s) without replacing the setting',
+      async (expiryInDays) => {
+        const original = { 'sev-1': { strikeCount: 1, expiryInDays: 365 } }
+        await upsertOption(setting(original))
+        await expect(
+          upsertOption(setting({ 'sev-1': { strikeCount: 1, expiryInDays } })),
+        ).rejects.toThrow(
+          /Expiry in days must be a non-negative safe integer|Expected one of .* value type/,
+        )
+        const { options } = await listOptions({
+          scope: 'instance',
+          keys: [SeverityLevelSettingKey],
+        })
+        expect(options[0].value).toEqual(original)
+      },
+    )
+
+    it.each([
+      { expiresInDays: 365 },
+      { expiresInDays: 365, expiryInDays: 365 },
+      { expiresInDays: 365, expiryInDays: 180 },
+    ])('rejects the obsolete expiry property (%#)', async (expiry) => {
+      await expect(
+        upsertOption(setting({ 'sev-1': { strikeCount: 1, ...expiry } })),
+      ).rejects.toThrow('Use expiryInDays instead of expiresInDays')
+    })
+  })
+
+  describe('report priority settings', () => {
+    const levelsKey = PriorityLevelSettingKey
+    const mappingsKey = ReportPriorityLevelSettingKey
+    const reason = com.atproto.moderation.defs.ReasonSpam
+    const level = { name: 'Urgent', targetResolutionMinutes: 720, score: 100 }
+    const setting = (key: string, value: Record<string, unknown>) => ({
+      scope: 'instance',
+      key,
+      value,
+      managerRole: tools.ozone.team.defs.RoleAdmin,
+    })
+
+    beforeEach(async () => removeOptions([levelsKey, mappingsKey], 'instance'))
+    afterAll(async () => removeOptions([levelsKey, mappingsKey], 'instance'))
+
+    it.each(['moderator', 'triage'] as const)(
+      'only admins can create, update, or delete priorities (%s)',
+      async (role) => {
+        for (const key of [levelsKey, mappingsKey]) {
+          await expect(upsertOption(setting(key, {}), role)).rejects.toThrow(
+            'Only admins',
+          )
+          await upsertOption(setting(key, {}))
+          await expect(upsertOption(setting(key, {}), role)).rejects.toThrow(
+            'Only admins',
+          )
+          await expect(removeOptions([key], 'instance', role)).rejects.toThrow(
+            'Only admins',
+          )
+        }
+        expect(
+          (
+            await listOptions({
+              keys: [levelsKey, mappingsKey],
+              scope: 'instance',
+            })
+          ).options,
+        ).toHaveLength(2)
+      },
+    )
+
+    it('rejects personal scope', async () => {
+      for (const key of [levelsKey, mappingsKey]) {
+        await expect(
+          upsertOption({ ...setting(key, {}), scope: 'personal' }),
+        ).rejects.toThrow('instance scope')
+        await expect(removeOptions([key], 'personal')).rejects.toThrow(
+          'instance scope',
+        )
+      }
+    })
+
+    it('requires an admin manager role on creation and update', async () => {
+      for (const key of [levelsKey, mappingsKey]) {
+        for (const managerRole of [
+          undefined,
+          tools.ozone.team.defs.RoleModerator,
+          tools.ozone.team.defs.RoleTriage,
+          tools.ozone.team.defs.RoleVerifier,
+        ]) {
+          await expect(
+            upsertOption({ ...setting(key, {}), managerRole }),
+          ).rejects.toThrow('must have an admin managerRole')
+        }
+
+        await upsertOption(setting(key, {}))
+        await expect(
+          upsertOption({ ...setting(key, {}), managerRole: undefined }),
+        ).rejects.toThrow('must have an admin managerRole')
+        await expect(
+          upsertOption({
+            ...setting(key, {}),
+            managerRole: tools.ozone.team.defs.RoleModerator,
+          }),
+        ).rejects.toThrow('must have an admin managerRole')
+      }
+      const { options } = await listOptions({
+        scope: 'instance',
+        keys: [levelsKey, mappingsKey],
+      })
+      expect(options.map((option) => option.managerRole)).toEqual([
+        tools.ozone.team.defs.RoleAdmin,
+        tools.ozone.team.defs.RoleAdmin,
+      ])
+    })
+
+    it.each([
+      [{ ' ': level }, /Invalid priority level/],
+      [{ ' padded ': level }, /Invalid priority level/],
+      [{ urgent: null }, /Invalid priority level/],
+      [{ urgent: { ...level, name: '' } }, /name/],
+      [{ urgent: { ...level, name: 12 } }, /name/],
+      [{ urgent: { ...level, score: -1 } }, /integer score/],
+      [{ urgent: { ...level, score: 101 } }, /integer score/],
+      [{ urgent: { ...level, score: 1.5 } }, /integer/],
+      [{ urgent: { ...level, score: '50' } }, /integer score/],
+      [{ urgent: level, normal: level }, /unique/],
+      [
+        { urgent: { ...level, targetResolutionMinutes: 0 } },
+        /positive integer/,
+      ],
+      [{ urgent: { ...level, targetResolutionMinutes: 0.5 } }, /integer/],
+      [
+        { urgent: { ...level, targetResolutionMinutes: '720' } },
+        /positive integer/,
+      ],
+      [
+        { urgent: { ...level, targetResolutionMinutes: 2_147_483_648 } },
+        /positive integer/,
+      ],
+    ])('rejects invalid level definitions (%#)', async (value, message) => {
+      await expect(upsertOption(setting(levelsKey, value))).rejects.toThrow(
+        message,
+      )
+    })
+
+    it('accepts empty and partial configuration and boundary values', async () => {
+      await upsertOption(setting(mappingsKey, {}))
+      await expect(
+        upsertOption(setting(mappingsKey, { [reason]: 'urgent' })),
+      ).rejects.toThrow('Unknown priority levels')
+      await upsertOption(
+        setting(levelsKey, {
+          urgent: { ...level, targetResolutionMinutes: 1 },
+          low: { ...level, score: 0, targetResolutionMinutes: 2_147_483_647 },
+        }),
+      )
+      await upsertOption(
+        setting(mappingsKey, {
+          [reason]: 'urgent',
+          [com.atproto.moderation.defs.ReasonOther]: 'urgent',
+        }),
+      )
+      await upsertOption(setting(mappingsKey, {}))
+      await upsertOption(setting(levelsKey, {}))
+    })
+
+    it.each([
+      { '': 'urgent' },
+      { [reason]: '' },
+      { [reason]: 100 },
+      { [reason]: 'missing' },
+      { [reason]: 'constructor' },
+      { [reason]: '__proto__' },
+    ])('rejects invalid reason mappings (%#)', async (value) => {
+      await upsertOption(setting(levelsKey, { urgent: level }))
+      await expect(upsertOption(setting(mappingsKey, value))).rejects.toThrow(
+        /Invalid priority mapping|Unknown priority levels/,
+      )
+    })
+
+    it('requires removing references before deleting or renaming a level', async () => {
+      await upsertOption(setting(levelsKey, { urgent: level }))
+      await upsertOption(setting(mappingsKey, { [reason]: 'urgent' }))
+      await expect(upsertOption(setting(levelsKey, {}))).rejects.toThrow(
+        'Unknown priority levels',
+      )
+      await expect(
+        upsertOption(setting(levelsKey, { renamed: level })),
+      ).rejects.toThrow('Unknown priority levels')
+      await expect(removeOptions([levelsKey], 'instance')).rejects.toThrow(
+        'Remove report priority',
+      )
+      await removeOptions([mappingsKey], 'instance')
+      await removeOptions([levelsKey], 'instance')
+      expect(
+        (
+          await listOptions({
+            scope: 'instance',
+            keys: [levelsKey, mappingsKey],
+          })
+        ).options,
+      ).toHaveLength(0)
+    })
+  })
+
   describe('listOptions', () => {
     beforeAll(async () => {
       await upsertOption({
@@ -160,7 +402,7 @@ describe('ozone-settings', () => {
       await upsertOption({
         scope: 'instance',
         key: 'tools.ozone.setting.client.queueHash',
-        value: { val: 10.5 },
+        value: { val: 10 },
         description:
           'This determines how each queue is balanced when sorted by oldest first',
         managerRole: 'tools.ozone.team.defs#roleAdmin',

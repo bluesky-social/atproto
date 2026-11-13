@@ -1,18 +1,21 @@
 import { mapDefined } from '@atproto/common'
-import { AppContext } from '../../../../context'
-import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/bookmark/getBookmarks'
+import type { Server } from '@atproto/xrpc-server'
+import type { AppContext } from '../../../../context.js'
+import type {
+  HydrateCtxWithViewer,
+  Hydrator,
+} from '../../../../hydration/hydrator.js'
+import { app } from '../../../../lexicons/index.js'
 import {
-  HydrationFnInput,
-  PresentationFnInput,
-  SkeletonFnInput,
+  type HydrationFnInput,
+  type PresentationFnInput,
+  type SkeletonFnInput,
   createPipeline,
   noRules,
-} from '../../../../pipeline'
-import { BookmarkInfo } from '../../../../proto/bsky_pb'
-import { Views } from '../../../../views'
-import { resHeaders } from '../../../util'
+} from '../../../../pipeline.js'
+import type { BookmarkInfo } from '../../../../proto/bsky_pb.js'
+import type { Views } from '../../../../views/index.js'
+import { fillPage, resHeaders } from '../../../util.js'
 
 export default function (server: Server, ctx: AppContext) {
   const getBookmarks = createPipeline(
@@ -21,20 +24,24 @@ export default function (server: Server, ctx: AppContext) {
     noRules, // Blocks are included and handled on views. Mutes are included.
     presentation,
   )
-  server.app.bsky.bookmark.getBookmarks({
+  server.add(app.bsky.bookmark.getBookmarks, {
     auth: ctx.authVerifier.standard,
     handler: async ({ params, auth, req }) => {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({
+        xrpcEndpoint: app.bsky.bookmark.getBookmarks.$lxm,
         labelers,
         viewer,
       })
 
-      const result = await getBookmarks(
-        { ...params, hydrateCtx: hydrateCtx.copy({ viewer }) },
-        ctx,
-      )
+      const result = await fillPage({
+        cursor: params.cursor,
+        limit: params.limit,
+        fetch: ({ cursor, limit }) =>
+          getBookmarks({ ...params, cursor, limit, hydrateCtx }, ctx),
+        items: (r) => r.bookmarks,
+      })
 
       return {
         encoding: 'application/json',
@@ -58,7 +65,7 @@ const skeleton = async (
   return {
     actorDid,
     bookmarkInfos: bookmarks,
-    cursor: cursor || undefined,
+    cursor,
   }
 }
 
@@ -86,8 +93,8 @@ type Context = {
   views: Views
 }
 
-type Params = QueryParams & {
-  hydrateCtx: HydrateCtx & { viewer: string }
+type Params = app.bsky.bookmark.getBookmarks.$Params & {
+  hydrateCtx: HydrateCtxWithViewer
 }
 
 type SkeletonState = {

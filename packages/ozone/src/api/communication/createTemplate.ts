@@ -1,10 +1,14 @@
-import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
-import { isDuplicateTemplateNameError } from '../../communication-service/util'
-import { AppContext } from '../../context'
-import { Server } from '../../lexicon'
+import {
+  AuthRequiredError,
+  InvalidRequestError,
+  type Server,
+} from '@atproto/xrpc-server'
+import { isDuplicateTemplateNameError } from '../../communication-service/util.js'
+import type { AppContext } from '../../context.js'
+import { tools } from '../../lexicons/index.js'
 
 export default function (server: Server, ctx: AppContext) {
-  server.tools.ozone.communication.createTemplate({
+  server.add(tools.ozone.communication.createTemplate, {
     auth: ctx.authVerifier.modOrAdminToken,
     handler: async ({ input, auth }) => {
       const access = auth.credentials

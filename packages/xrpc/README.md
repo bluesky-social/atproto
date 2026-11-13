@@ -5,6 +5,10 @@ TypeScript client library for talking to [atproto](https://atproto.com) services
 [![NPM](https://img.shields.io/npm/v/@atproto/xrpc)](https://www.npmjs.com/package/@atproto/xrpc)
 [![Github CI Status](https://github.com/bluesky-social/atproto/actions/workflows/repo.yaml/badge.svg)](https://github.com/bluesky-social/atproto/actions/workflows/repo.yaml)
 
+> [!NOTE]
+>
+> We recommend using [lex](https://github.com/bluesky-social/atproto/tree/main/packages/lex/lex), our type-safe SDK with Lexicon code generation, for all new projects.
+
 ## Usage
 
 ```typescript

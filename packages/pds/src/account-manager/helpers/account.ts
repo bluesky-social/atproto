@@ -1,13 +1,30 @@
 import { DAY } from '@atproto/common'
-import { isErrUniqueViolation, notSoftDeletedClause } from '../../db'
-import { StatusAttr } from '../../lexicon/types/com/atproto/admin/defs'
-import { AccountDb, ActorEntry } from '../db'
+import {
+  type AtIdentifierString,
+  type DatetimeString,
+  type DidString,
+  type HandleString,
+  currentDatetimeString,
+  isDidIdentifier,
+} from '@atproto/lex-schema'
+import { isErrUniqueViolation, notSoftDeletedClause } from '../../db/index.js'
+import type { com } from '../../lexicons/index.js'
+import type { AccountDb, ActorEntry } from '../db/index.js'
 
-export class UserAlreadyExistsError extends Error {}
+export class UserAlreadyExistsError extends Error {
+  name = 'UserAlreadyExistsError'
+  constructor(
+    message = 'This email address is already in use, please use a different email.',
+    options?: ErrorOptions,
+  ) {
+    super(message, options)
+  }
+}
 
 export type ActorAccount = ActorEntry & {
   email: string | null
   emailConfirmedAt: string | null
+  emailAuthFactorAt: string | null
   invitesDisabled: 0 | 1 | null
 }
 
@@ -30,8 +47,15 @@ export const selectAccountQB = (db: AccountDb, flags?: AvailabilityFlags) => {
   return db.db
     .selectFrom('actor')
     .leftJoin('account', 'actor.did', 'account.did')
-    .if(!includeTakenDown, (qb) => qb.where(notSoftDeletedClause(ref('actor'))))
-    .if(!includeDeactivated, (qb) =>
+    .leftJoin(
+      'account_email_auth_factor',
+      'actor.did',
+      'account_email_auth_factor.did',
+    )
+    .$if(!includeTakenDown, (qb) =>
+      qb.where(notSoftDeletedClause(ref('actor'))),
+    )
+    .$if(!includeDeactivated, (qb) =>
       qb.where('actor.deactivatedAt', 'is', null),
     )
     .select([
@@ -44,20 +68,27 @@ export const selectAccountQB = (db: AccountDb, flags?: AvailabilityFlags) => {
       'account.email',
       'account.emailConfirmedAt',
       'account.invitesDisabled',
+      'account_email_auth_factor.emailAuthFactorEnabledAt as emailAuthFactorAt',
     ])
 }
 
 export const getAccount = async (
   db: AccountDb,
-  handleOrDid: string,
+  handleOrDid: AtIdentifierString,
   flags?: AvailabilityFlags,
 ): Promise<ActorAccount | null> => {
   const found = await selectAccountQB(db, flags)
-    .where((qb) => {
-      if (handleOrDid.startsWith('did:')) {
-        return qb.where('actor.did', '=', handleOrDid)
+    .where((eb) => {
+      if (isDidIdentifier(handleOrDid)) {
+        return eb('actor.did', '=', handleOrDid)
       } else {
-        return qb.where('actor.handle', '=', handleOrDid)
+        // Handles are indexed only as lower("handle"): comparing the bare
+        // column scans every actor.
+        return eb(
+          eb.fn('lower', ['actor.handle']),
+          '=',
+          handleOrDid.toLowerCase(),
+        )
       }
     })
     .executeTakeFirst()
@@ -66,7 +97,7 @@ export const getAccount = async (
 
 export const getAccounts = async (
   db: AccountDb,
-  dids: string[],
+  dids: DidString[],
   flags?: AvailabilityFlags,
 ): Promise<Map<string, ActorAccount>> => {
   const results = new Map<string, ActorAccount>()
@@ -91,8 +122,23 @@ export const getAccountByEmail = async (
   email: string,
   flags?: AvailabilityFlags,
 ): Promise<ActorAccount | null> => {
+  // Emails are indexed only as lower("email"), like handles. Filtering the
+  // left join on that expression still walks every actor, so find the DID
+  // through the index first.
   const found = await selectAccountQB(db, flags)
-    .where('email', '=', email.toLowerCase())
+    .where((eb) =>
+      eb(
+        'actor.did',
+        'in',
+        db.db
+          .selectFrom('account')
+          .select('account.did')
+          .where((eb2) =>
+            eb2(eb2.fn('lower', ['account.email']), '=', email.toLowerCase()),
+          )
+          .$narrowType<{ did: DidString }>(),
+      ),
+    )
     .executeTakeFirst()
   return found || null
 }
@@ -100,8 +146,8 @@ export const getAccountByEmail = async (
 export const registerActor = async (
   db: AccountDb,
   opts: {
-    did: string
-    handle: string
+    did: DidString
+    handle: HandleString
     deactivated?: boolean
   },
 ) => {
@@ -122,7 +168,9 @@ export const registerActor = async (
       .returning('did'),
   )
   if (!registered) {
-    throw new UserAlreadyExistsError()
+    throw new UserAlreadyExistsError(
+      'Handle is already in use, please choose a different handle.',
+    )
   }
 }
 
@@ -153,7 +201,7 @@ export const registerAccount = async (
 
 export const deleteAccount = async (
   db: AccountDb,
-  did: string,
+  did: DidString,
 ): Promise<void> => {
   // Not done in transaction because it would be too long, prone to contention.
   // Also, this can safely be run multiple times if it fails.
@@ -162,6 +210,9 @@ export const deleteAccount = async (
   )
   await db.executeWithRetry(
     db.db.deleteFrom('email_token').where('did', '=', did),
+  )
+  await db.executeWithRetry(
+    db.db.deleteFrom('account_email_auth_factor').where('did', '=', did),
   )
   await db.executeWithRetry(
     db.db.deleteFrom('refresh_token').where('did', '=', did),
@@ -176,26 +227,40 @@ export const deleteAccount = async (
 
 export const updateHandle = async (
   db: AccountDb,
-  did: string,
-  handle: string,
+  did: DidString,
+  handle: HandleString,
 ) => {
+  // No-op if the handle is the same, but still returns 1 row affected, so that
+  // it can be used to check for existence of the account.
   const [res] = await db.executeWithRetry(
     db.db
       .updateTable('actor')
       .set({ handle })
       .where('did', '=', did)
-      .whereNotExists(
-        db.db.selectFrom('actor').where('handle', '=', handle).selectAll(),
+      .where(({ not, exists }) =>
+        not(
+          exists(
+            db.db
+              .selectFrom('actor')
+              .where((eb) =>
+                eb(eb.fn('lower', ['handle']), '=', handle.toLowerCase()),
+              )
+              .where('did', '!=', did)
+              .selectAll(),
+          ),
+        ),
       ),
   )
   if (res.numUpdatedRows < 1) {
-    throw new UserAlreadyExistsError()
+    throw new UserAlreadyExistsError(
+      'Handle is already in use, please choose a different handle.',
+    )
   }
 }
 
 export const updateEmail = async (
   db: AccountDb,
-  did: string,
+  did: DidString,
   email: string,
 ) => {
   try {
@@ -218,8 +283,8 @@ export const updateEmail = async (
 
 export const setEmailConfirmedAt = async (
   db: AccountDb,
-  did: string,
-  emailConfirmedAt: string,
+  did: DidString,
+  emailConfirmedAt: DatetimeString,
 ) => {
   await db.executeWithRetry(
     db.db
@@ -231,8 +296,11 @@ export const setEmailConfirmedAt = async (
 
 export const getAccountAdminStatus = async (
   db: AccountDb,
-  did: string,
-): Promise<{ takedown: StatusAttr; deactivated: StatusAttr } | null> => {
+  did: DidString,
+): Promise<{
+  takedown: com.atproto.admin.defs.StatusAttr
+  deactivated: com.atproto.admin.defs.StatusAttr
+} | null> => {
   const res = await db.db
     .selectFrom('actor')
     .select(['takedownRef', 'deactivatedAt'])
@@ -248,11 +316,11 @@ export const getAccountAdminStatus = async (
 
 export const updateAccountTakedownStatus = async (
   db: AccountDb,
-  did: string,
-  takedown: StatusAttr,
+  did: DidString,
+  takedown: com.atproto.admin.defs.StatusAttr,
 ) => {
   const takedownRef = takedown.applied
-    ? takedown.ref ?? new Date().toISOString()
+    ? (takedown.ref ?? currentDatetimeString())
     : null
   await db.executeWithRetry(
     db.db.updateTable('actor').set({ takedownRef }).where('did', '=', did),
@@ -261,30 +329,47 @@ export const updateAccountTakedownStatus = async (
 
 export const deactivateAccount = async (
   db: AccountDb,
-  did: string,
+  did: DidString,
   deleteAfter: string | null,
-) => {
-  await db.executeWithRetry(
+): Promise<boolean> => {
+  const [res] = await db.executeWithRetry(
     db.db
       .updateTable('actor')
       .set({
-        deactivatedAt: new Date().toISOString(),
+        deactivatedAt: currentDatetimeString(),
         deleteAfter,
       })
       .where('did', '=', did),
   )
+
+  return res.numUpdatedRows > 0
 }
 
-export const activateAccount = async (db: AccountDb, did: string) => {
-  await db.executeWithRetry(
+export const activateAccount = async (
+  db: AccountDb,
+  did: DidString,
+  flags?: AvailabilityFlags,
+): Promise<boolean> => {
+  const { includeTakenDown = false, includeDeactivated = true } = flags ?? {}
+  const { ref } = db.db.dynamic
+
+  const [res] = await db.executeWithRetry(
     db.db
       .updateTable('actor')
       .set({
         deactivatedAt: null,
         deleteAfter: null,
       })
-      .where('did', '=', did),
+      .where('did', '=', did)
+      .$if(!includeTakenDown, (q) =>
+        q.where(notSoftDeletedClause(ref('actor'))),
+      )
+      .$if(!includeDeactivated, (q) =>
+        q.where('actor.deactivatedAt', 'is not', null),
+      ),
   )
+
+  return res.numUpdatedRows > 0
 }
 
 export const formatAccountStatus = (

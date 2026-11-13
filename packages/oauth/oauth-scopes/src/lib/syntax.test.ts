@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest'
 import { isScopeStringFor } from './syntax.js'
 
 describe('isScopeStringFor', () => {

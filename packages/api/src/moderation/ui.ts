@@ -1,4 +1,4 @@
-import { ModerationCause } from './types'
+import type { ModerationCause } from './types.js'
 
 export class ModerationUI {
   noOverride = false

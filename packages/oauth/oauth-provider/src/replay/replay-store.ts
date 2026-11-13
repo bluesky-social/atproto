@@ -1,4 +1,4 @@
-import { Awaitable } from '../lib/util/type.js'
+import type { Awaitable } from '../lib/util/type.js'
 
 // Export all types needed to implement the ReplayStore interface
 export type { Awaitable }

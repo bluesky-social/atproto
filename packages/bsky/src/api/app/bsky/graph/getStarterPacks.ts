@@ -1,15 +1,16 @@
 import { dedupeStrs, mapDefined } from '@atproto/common'
-import { AppContext } from '../../../../context'
-import {
+import type { AtUriString } from '@atproto/lex-schema'
+import type { Server } from '@atproto/xrpc-server'
+import type { AppContext } from '../../../../context.js'
+import type {
   HydrateCtx,
   HydrationState,
   Hydrator,
-} from '../../../../hydration/hydrator'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/graph/getStarterPacks'
-import { createPipeline, noRules } from '../../../../pipeline'
-import { Views } from '../../../../views'
-import { resHeaders } from '../../../util'
+} from '../../../../hydration/hydrator.js'
+import { app } from '../../../../lexicons/index.js'
+import { createPipeline, noRules } from '../../../../pipeline.js'
+import type { Views } from '../../../../views/index.js'
+import { resHeaders } from '../../../util.js'
 
 export default function (server: Server, ctx: AppContext) {
   const getStarterPacks = createPipeline(
@@ -18,15 +19,18 @@ export default function (server: Server, ctx: AppContext) {
     noRules,
     presentation,
   )
-  server.app.bsky.graph.getStarterPacks({
+  server.add(app.bsky.graph.getStarterPacks, {
     auth: ctx.authVerifier.standardOptional,
     handler: async ({ auth, params, req }) => {
-      const { viewer, includeTakedowns } = ctx.authVerifier.parseCreds(auth)
+      const { viewer, includeTakedowns, skipViewerBlocks } =
+        ctx.authVerifier.parseCreds(auth)
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({
+        xrpcEndpoint: app.bsky.graph.getStarterPacks.$lxm,
         viewer,
         labelers,
         includeTakedowns,
+        skipViewerBlocks,
       })
 
       const result = await getStarterPacks({ ...params, hydrateCtx }, ctx)
@@ -74,8 +78,10 @@ type Context = {
   views: Views
 }
 
-type Params = QueryParams & {
+type Params = app.bsky.graph.getStarterPacks.$Params & {
   hydrateCtx: HydrateCtx
 }
 
-type SkeletonState = { uris: string[] }
+type SkeletonState = {
+  uris: AtUriString[]
+}

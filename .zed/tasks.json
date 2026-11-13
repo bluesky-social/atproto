@@ -1,0 +1,21 @@
+[
+  {
+    "label": "vitest: $ZED_SYMBOL",
+    "command": "pnpm",
+    "args": [
+      "exec",
+      "vitest",
+      "run",
+      "$ZED_RELATIVE_FILE",
+      "-t",
+      "$ZED_SYMBOL",
+    ],
+    "tags": ["ts-test", "js-test"],
+  },
+  {
+    "label": "vitest: file",
+    "command": "pnpm",
+    "args": ["exec", "vitest", "run", "$ZED_RELATIVE_FILE"],
+    "tags": ["ts-test", "js-test"],
+  },
+]

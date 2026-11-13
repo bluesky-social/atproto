@@ -1,13 +1,14 @@
 import { once } from 'node:events'
-import http from 'node:http'
-import { AddressInfo } from 'node:net'
+import type http from 'node:http'
+import type { AddressInfo } from 'node:net'
 import { setTimeout as sleep } from 'node:timers/promises'
 import * as plc from '@did-plc/lib'
 import express from 'express'
-import AtpAgent from '@atproto/api'
-import { Keypair } from '@atproto/crypto'
+import { type HttpTerminator, createHttpTerminator } from 'http-terminator'
+import type AtpAgent from '@atproto/api'
+import type { Keypair } from '@atproto/crypto'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
-import { LexiconDoc } from '@atproto/lexicon'
+import type { LexiconDocument } from '@atproto/lex-document'
 
 const lexicons = [
   {
@@ -62,7 +63,7 @@ const lexicons = [
       },
     },
   },
-] as const satisfies LexiconDoc[]
+] as const satisfies LexiconDocument[]
 
 describe('proxy header', () => {
   let network: TestNetworkNoAppView
@@ -83,7 +84,7 @@ describe('proxy header', () => {
       serviceId,
     )
 
-    alice = network.pds.getClient().withProxy(serviceId, proxyServer.did)
+    alice = network.pds.getAgent().withProxy(serviceId, proxyServer.did)
 
     for (const lex of lexicons) alice.lex.add(lex)
 
@@ -132,7 +133,7 @@ describe('proxy header', () => {
   })
 
   it('handles failing upstream requests', async () => {
-    await expect(alice.call('com.example.error')).rejects.toThrowError(
+    await expect(alice.call('com.example.error')).rejects.toThrow(
       expect.objectContaining({
         status: 502,
         error: 'FooBar',
@@ -158,10 +159,14 @@ describe('proxy header', () => {
 })
 
 class ProxyServer {
+  private terminator: HttpTerminator
+
   constructor(
-    private server: http.Server,
+    server: http.Server,
     public did: string,
-  ) {}
+  ) {
+    this.terminator = createHttpTerminator({ server })
+  }
 
   static async create(
     plcClient: plc.Client,
@@ -245,11 +250,6 @@ class ProxyServer {
   }
 
   async close() {
-    await new Promise<void>((resolve, reject) => {
-      this.server.close((err) => {
-        if (err) reject(err)
-        else resolve()
-      })
-    })
+    await this.terminator.terminate()
   }
 }

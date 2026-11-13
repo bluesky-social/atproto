@@ -1,55 +1,61 @@
 import AwaitLock from 'await-lock'
 import { TID, retry } from '@atproto/common-web'
-import { AtUri, ensureValidDid } from '@atproto/syntax'
 import {
-  FetchHandler,
-  FetchHandlerOptions,
+  AtUri,
+  type DidString,
+  currentDatetimeString,
+  ensureValidDidRegex,
+  toDatetimeString,
+} from '@atproto/syntax'
+import {
+  type FetchHandler,
+  type FetchHandlerOptions,
   XrpcClient,
   buildFetchHandler,
 } from '@atproto/xrpc'
 import {
   AppBskyActorDefs,
   AppBskyActorProfile,
-  AppBskyFeedPost,
-  AppBskyLabelerDefs,
+  type AppBskyFeedPost,
+  type AppBskyLabelerDefs,
   AppNS,
   ChatNS,
   ComAtprotoRepoPutRecord,
   ComNS,
   ToolsNS,
-} from './client/index'
-import { schemas } from './client/lexicons'
-import { MutedWord, Nux } from './client/types/app/bsky/actor/defs'
-import { $Typed, Un$Typed } from './client/util'
-import { BSKY_LABELER_DID } from './const'
-import { interpretLabelValueDefinitions } from './moderation'
-import { DEFAULT_LABEL_SETTINGS } from './moderation/const/labels'
-import {
+} from './client/index.js'
+import { schemas } from './client/lexicons.js'
+import type { MutedWord, Nux } from './client/types/app/bsky/actor/defs.js'
+import type { $Typed, Un$Typed } from './client/util.js'
+import { BSKY_LABELER_DID } from './const.js'
+import { DEFAULT_LABEL_SETTINGS } from './moderation/const/labels.js'
+import { interpretLabelValueDefinitions } from './moderation/index.js'
+import type {
   InterpretedLabelValueDefinition,
   LabelPreference,
   ModerationPrefs,
-} from './moderation/types'
-import * as predicate from './predicate'
-import { SessionManager } from './session-manager'
+} from './moderation/types.js'
+import * as predicate from './predicate.js'
+import type { SessionManager } from './session-manager.js'
 import {
-  AtpAgentGlobalOpts,
-  AtprotoProxy,
-  AtprotoServiceType,
-  BskyFeedViewPreference,
-  BskyInterestsPreference,
-  BskyPreferences,
-  BskyThreadViewPreference,
+  type AtpAgentGlobalOpts,
+  type AtprotoProxy,
+  type AtprotoServiceType,
+  type BskyFeedViewPreference,
+  type BskyInterestsPreference,
+  type BskyPreferences,
+  type BskyThreadViewPreference,
   asAtprotoProxy,
   asDid,
   isDid,
-} from './types'
+} from './types.js'
 import {
   getSavedFeedType,
   sanitizeMutedWordValue,
   savedFeedsToUriArrays,
   validateNux,
   validateSavedFeed,
-} from './util'
+} from './util.js'
 
 const FEED_VIEW_PREF_DEFAULTS = {
   hideReplies: false,
@@ -63,7 +69,7 @@ const THREAD_VIEW_PREF_DEFAULTS = {
   sort: 'hotness',
 }
 
-export type { FetchHandler }
+export type { DidString, FetchHandler }
 
 /**
  * An {@link Agent} is an {@link AtpBaseClient} with the following
@@ -207,8 +213,11 @@ export class Agent extends XrpcClient {
   /**
    * Get the authenticated user's DID, if any.
    */
-  get did() {
-    return this.sessionManager.did
+  get did(): DidString | undefined {
+    const { did } = this.sessionManager
+    if (!did) return undefined
+    ensureValidDidRegex(did)
+    return did
   }
 
   /** @deprecated Use {@link Agent.assertDid} instead */
@@ -219,7 +228,7 @@ export class Agent extends XrpcClient {
   /**
    * Get the authenticated user's DID, or throw an error if not authenticated.
    */
-  get assertDid(): string {
+  get assertDid(): DidString {
     this.assertAuthenticated()
     return this.did
   }
@@ -227,7 +236,7 @@ export class Agent extends XrpcClient {
   /**
    * Assert that the user is authenticated.
    */
-  public assertAuthenticated(): asserts this is { did: string } {
+  public assertAuthenticated(): asserts this is { did: DidString } {
     if (!this.did) throw new Error('Not logged in')
   }
 
@@ -499,8 +508,18 @@ export class Agent extends XrpcClient {
     })
   }
 
-  async mute(actor: string) {
-    return this.app.bsky.graph.muteActor({ actor })
+  async mute(
+    actor: string,
+    options: {
+      onlyReposts?: boolean
+      onlyQuoteposts?: boolean
+    } = {},
+  ) {
+    return this.app.bsky.graph.muteActor({
+      actor,
+      onlyReposts: options.onlyReposts,
+      onlyQuoteposts: options.onlyQuoteposts,
+    })
   }
 
   async unmute(actor: string) {
@@ -635,8 +654,14 @@ export class Agent extends XrpcClient {
         const { $type: _, ...v } = pref
         prefs.threadViewPrefs = { ...prefs.threadViewPrefs, ...v }
       } else if (predicate.isValidInterestsPref(pref)) {
-        const { $type: _, ...v } = pref
-        prefs.interests = { ...prefs.interests, ...v }
+        const { $type: _, updatedAt, ...v } = pref
+        prefs.interests = {
+          ...prefs.interests,
+          ...v,
+          ...(updatedAt !== undefined && {
+            updatedAt: toDatetimeString(updatedAt),
+          }),
+        }
       } else if (predicate.isValidMutedWordsPref(pref)) {
         prefs.moderationPrefs.mutedWords = pref.items
 
@@ -653,6 +678,9 @@ export class Agent extends XrpcClient {
         prefs.bskyAppState.queuedNudges = pref.queuedNudges || []
         prefs.bskyAppState.activeProgressGuide = pref.activeProgressGuide
         prefs.bskyAppState.nuxs = pref.nuxs || []
+        if (pref.isBetaUser !== undefined) {
+          prefs.bskyAppState.isBetaUser = pref.isBetaUser
+        }
       } else if (predicate.isValidPostInteractionSettingsPref(pref)) {
         prefs.postInteractionSettings.threadgateAllowRules =
           pref.threadgateAllowRules
@@ -890,7 +918,7 @@ export class Agent extends XrpcClient {
     labelerDid?: string,
   ) {
     if (labelerDid) {
-      ensureValidDid(labelerDid)
+      ensureValidDidRegex(labelerDid)
     }
     await this.updatePreferences((prefs) => {
       const labelPref = prefs
@@ -1057,6 +1085,7 @@ export class Agent extends XrpcClient {
           ...existing,
           ...pref,
           $type: 'app.bsky.actor.defs#interestsPref',
+          updatedAt: currentDatetimeString(),
         })
     })
   }
@@ -1265,6 +1294,23 @@ export class Agent extends XrpcClient {
       }
 
       pref.activeProgressGuide = guide
+
+      return prefs
+        .filter((p) => !AppBskyActorDefs.isBskyAppStatePref(p))
+        .concat(pref)
+    })
+  }
+
+  /**
+   * Set the flag for participating in the beta features program
+   */
+  async setIsBetaUser(isBetaUser: boolean) {
+    await this.updatePreferences((prefs) => {
+      const pref = prefs.findLast(predicate.isValidBskyAppStatePref) || {
+        $type: 'app.bsky.actor.defs#bskyAppStatePref',
+      }
+
+      pref.isBetaUser = isBetaUser
 
       return prefs
         .filter((p) => !AppBskyActorDefs.isBskyAppStatePref(p))

@@ -1,9 +1,10 @@
-import { AppContext } from '../../context'
-import { Server } from '../../lexicon'
-import { addAccountInfoToRepoViewDetail, getPdsAccountInfos } from '../util'
+import type { Server } from '@atproto/xrpc-server'
+import type { AppContext } from '../../context.js'
+import { tools } from '../../lexicons/index.js'
+import { addAccountInfoToRepoViewDetail, getPdsAccountInfos } from '../util.js'
 
 export default function (server: Server, ctx: AppContext) {
-  server.tools.ozone.moderation.getRepos({
+  server.add(tools.ozone.moderation.getRepos, {
     auth: ctx.authVerifier.modOrAdminToken,
     handler: async ({ params, auth, req }) => {
       const { dids } = params
@@ -17,19 +18,17 @@ export default function (server: Server, ctx: AppContext) {
       const repos = dids.map((did) => {
         const partialRepo = partialRepos.get(did)
         if (!partialRepo) {
-          return {
+          return tools.ozone.moderation.defs.repoViewNotFound.$build({
             did,
-            $type: 'tools.ozone.moderation.defs#repoViewNotFound',
-          }
+          })
         }
-        return {
-          ...addAccountInfoToRepoViewDetail(
+        return tools.ozone.moderation.defs.repoViewDetail.$build(
+          addAccountInfoToRepoViewDetail(
             partialRepo,
             accountInfo.get(did) || null,
             auth.credentials.isModerator,
           ),
-          $type: 'tools.ozone.moderation.defs#repoViewDetail',
-        }
+        )
       })
 
       return {
