@@ -15,8 +15,7 @@ or after the cutoff qualify, so importing an older post does not make it eligibl
 AppView reads `unique_views` through Atlantis's `GetFeatures` RPC and includes
 `viewCount` only at 100 views or more. The optional lookup has a 100ms total budget;
 failures omit the count without failing the post response. Deploy compatible
-Atlantis instances before enabling serving. The app handles under-18 age hiding;
-AppView enforces author-only access.
+Atlantis instances before enabling serving. AppView enforces author-only access.
 
 ## License
 
