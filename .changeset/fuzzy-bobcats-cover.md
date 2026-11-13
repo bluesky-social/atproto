@@ -2,4 +2,4 @@
 '@atproto/repo': minor
 ---
 
-`CidSet.size` is now a getter
+**Breaking**: `CidSet.size` is now a getter instead of a method.

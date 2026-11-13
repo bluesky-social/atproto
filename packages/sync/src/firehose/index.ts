@@ -380,19 +380,25 @@ const verifyHandle = async (
 export const parseAccount = (
   evt: com.atproto.sync.subscribeRepos.Account,
 ): AccountEvt | undefined => {
-  if (evt.status && !isValidStatus(evt.status)) return
+  if (evt.status !== undefined && !isValidStatus(evt.status)) return
   return {
     event: 'account',
     seq: evt.seq,
     time: evt.time,
     did: evt.did,
     active: evt.active,
-    status: evt.status as AccountStatus | undefined,
+    status: evt.status,
   }
 }
 
+const validStatuses = new Set([
+  'takendown',
+  'suspended',
+  'deleted',
+  'deactivated',
+] as const)
 const isValidStatus = (str: string): str is AccountStatus => {
-  return ['takendown', 'suspended', 'deleted', 'deactivated'].includes(str)
+  return (validStatuses as Set<string>).has(str)
 }
 
 export class FirehoseValidationError extends Error {

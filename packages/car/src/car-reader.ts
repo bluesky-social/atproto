@@ -78,16 +78,15 @@ export class CarReader
         throw new Error('Could not parse CAR header')
       }
 
+      // Parse the roots
+      const rootCids = roots.map((c) => asCid(c, { flavor: 'cbor' }))
+
       const generator = eventLoopYieldingGenerator(readCarBlocks(reader))
       const blocks = opts?.skipCidVerification
         ? generator
         : verifyIncomingCarBlocks(generator)
 
-      return new CarReader(
-        roots.map((c) => asCid(c, { flavor: 'cbor' })),
-        blocks,
-        reader,
-      )
+      return new CarReader(rootCids, blocks, reader)
     } catch (err) {
       await reader.destroy()
       throw err
