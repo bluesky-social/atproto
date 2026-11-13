@@ -128,7 +128,7 @@
               "com.atproto.repo.strongRef"
             ]
           },
-          "description": "Expands report targeting to include additional subjects. Requires event subject to be an account."
+          "description": "Expands report targeting to include additional subjects. Requires event subject to be an account. Mutually exclusive with `subjectTypes`."
         },
         "subjectTypes": {
           "type": "array",
@@ -137,7 +137,7 @@
             "type": "string",
             "enum": ["account", "record", "message", "conversation"]
           },
-          "description": "Expands report targeting to include owned subjects of these types. Mutually exclusive with subjects."
+          "description": "Expands report targeting to include owned subjects of these types. Requires event subject to be an account. Mutually exclusive with `subjects`."
         },
         "note": {
           "type": "string",
