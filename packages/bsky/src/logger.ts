@@ -1,4 +1,4 @@
-import type { IncomingMessage, ServerResponse } from 'node:http'
+import type { IncomingMessage } from 'node:http'
 import { stdSerializers } from 'pino'
 import { pinoHttp } from 'pino-http'
 import {
@@ -30,25 +30,8 @@ export const httpLogger: ReturnType<typeof subsystemLogger> =
 export const eventsLogger: ReturnType<typeof subsystemLogger> =
   subsystemLogger('bsky:events')
 
-const blobUpstreamMs = Symbol('blobUpstreamMs')
-type ResponseWithBlobUpstreamMs = ServerResponse & {
-  [blobUpstreamMs]?: number
-}
-
-export function recordBlobUpstreamDuration(
-  res: ServerResponse,
-  durationMs: number,
-): void {
-  const response = res as ResponseWithBlobUpstreamMs
-  response[blobUpstreamMs] = durationMs
-}
-
 export const loggerMiddleware = pinoHttp({
   logger: httpLogger,
-  customProps: (_req, res) => {
-    const upstreamMs = (res as ResponseWithBlobUpstreamMs)[blobUpstreamMs]
-    return upstreamMs === undefined ? {} : { upstream_ms: upstreamMs }
-  },
   serializers: {
     res: obfuscateResSerializer,
     err: (err: unknown) => ({

@@ -25,7 +25,7 @@ import {
   unpackIdentityServices,
 } from '../data-plane/index.js'
 import { parseCid } from '../hydration/util.js'
-import { httpLogger as log, recordBlobUpstreamDuration } from '../logger.js'
+import { httpLogger as log } from '../logger.js'
 import {
   type Middleware,
   proxyResponseHeaders,
@@ -84,26 +84,10 @@ export function createMiddleware(ctx: AppContext): Middleware {
         return
       }
 
-      let upstreamStartedAt = 0
-      let upstreamFinished = false
-      const onUpstreamClose = () => {
-        if (!upstreamFinished) {
-          recordBlobUpstreamDuration(res, performance.now() - upstreamStartedAt)
-        }
-      }
       const streamOptions: StreamBlobOptions = {
         did: didParam,
         cid: cidParam,
         signal: responseSignal(res),
-        onUpstreamStart: (startedAt) => {
-          upstreamStartedAt = startedAt
-          res.prependOnceListener('close', onUpstreamClose)
-        },
-        onUpstreamFinish: (durationMs) => {
-          upstreamFinished = true
-          res.off('close', onUpstreamClose)
-          recordBlobUpstreamDuration(res, durationMs)
-        },
         // Because we will be verifying the CID, we need to ensure that the
         // upstream response can be de-compressed. We do this by negotiating the
         // "accept-encoding" header based on the downstream client's capabilities.
@@ -212,8 +196,6 @@ export type StreamBlobOptions = {
   did: string
   acceptEncoding?: string
   signal?: AbortSignal
-  onUpstreamStart?: (startedAt: number) => void
-  onUpstreamFinish?: (durationMs: number) => void
 }
 
 export type StreamBlobFactory = (
@@ -251,14 +233,6 @@ export async function streamBlob(
   )
 
   let headersReceived = false
-  const upstreamStartedAt = performance.now()
-  options.onUpstreamStart?.(upstreamStartedAt)
-  let upstreamFinishRecorded = false
-  const recordUpstreamFinish = () => {
-    if (upstreamFinishRecorded) return
-    upstreamFinishRecorded = true
-    options.onUpstreamFinish?.(performance.now() - upstreamStartedAt)
-  }
 
   return ctx.blobDispatcher
     .stream(
@@ -288,11 +262,7 @@ export async function streamBlob(
             : createError(502, 'Upstream Error', { cause: upstream }) // !200 && !4xx => 502
         }
 
-        const writable = factory(upstream, { url, did, cid })
-        if (options.onUpstreamFinish) {
-          writable.once('prefinish', recordUpstreamFinish)
-        }
-        return writable
+        return factory(upstream, { url, did, cid })
       },
     )
     .catch((err) => {
@@ -309,7 +279,6 @@ export async function streamBlob(
 
       throw err
     })
-    .finally(recordUpstreamFinish)
 }
 
 function parseBlobParams(params: { cid: string; did: string }) {
