@@ -312,6 +312,48 @@ describe('record modality views', () => {
     expect(view.associatedProfiles).toEqual([])
   })
 
+  it('includes publication viewer state only when requested and known', () => {
+    const state = {
+      ...createState(),
+      externalPublicationSubscriptions: new HydrationMap<
+        AtUriString,
+        AtUriString | false
+      >(),
+    }
+    addPublication(state)
+    addArticle(state)
+    const subscription = atUri(
+      'did:plc:viewer',
+      site.standard.graph.subscription.$type,
+      'sub',
+    )
+    const viewer = (
+      uri: AtUriString,
+      options?: { publicationViewer?: boolean },
+    ) => {
+      const view = views.externalRecordView(uri, state, 0, undefined, options)
+      assert(view)
+      assertValid(view)
+      return app.bsky.embed.external.viewArticle.$isTypeOf(view)
+        ? view.publisher?.viewer
+        : app.bsky.embed.external.viewArticlePublication.$isTypeOf(view)
+          ? view.viewer
+          : undefined
+    }
+
+    state.externalPublicationSubscriptions.set(pubUri, subscription)
+    expect(viewer(pubUri)).toBeUndefined()
+    for (const uri of [pubUri, docUri]) {
+      expect(viewer(uri, { publicationViewer: true })).toEqual({
+        subscription,
+      })
+    }
+    state.externalPublicationSubscriptions.set(pubUri, false)
+    expect(viewer(pubUri, { publicationViewer: true })).toEqual({})
+    state.externalPublicationSubscriptions.set(pubUri, null)
+    expect(viewer(pubUri, { publicationViewer: true })).toBeUndefined()
+  })
+
   it('builds a loose document and omits reading time for blank text', () => {
     const state = createState()
     addArticle(state, 'https://example.com/blog/')
@@ -591,10 +633,8 @@ describe('record modality views', () => {
 
     it('treats an explicit endedAt as ended despite a fresh heartbeat', () => {
       const endedAt = seenAgo(30 * SECOND)
-      const view = streamView({
-        lastSeenAt: seenAgo(SECOND),
-        endedAt,
-      })
+      const lastSeenAt = seenAgo(SECOND)
+      const view = streamView({ lastSeenAt, endedAt })
       assert(view && app.bsky.embed.external.viewLivestream.$isTypeOf(view))
       assertValid(view)
       expect(view).toMatchObject({
@@ -603,6 +643,7 @@ describe('record modality views', () => {
         createdAt,
         startedAt: createdAt,
         endedAt,
+        lastSeenAt,
         description: '',
         image: `https://cdn.example.com/img/feed_thumbnail/plain/${did}/${blob.ref}`,
       })
