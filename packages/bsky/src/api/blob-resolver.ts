@@ -19,7 +19,6 @@ import type { ServerConfig } from '../config.js'
 import type { AppContext } from '../context.js'
 import {
   Code,
-  type DataPlaneClient,
   getServiceEndpoint,
   isDataplaneError,
   unpackIdentityServices,
@@ -175,8 +174,11 @@ export async function streamBlob(
   options: StreamBlobOptions,
   factory: StreamBlobFactory,
 ) {
-  const { did, cid } = parseBlobParams(options)
-  const url = await getBlobUrl(ctx.dataplane, did, cid)
+  const source = await resolveBlobSource(ctx, options.did, options.cid)
+  const { did, cid } = source
+  const url = new URL(`/xrpc/com.atproto.sync.getBlob`, source.origin)
+  url.searchParams.set('did', did)
+  url.searchParams.set('cid', cid.toString())
 
   const headers = getBlobHeaders(ctx.cfg, url)
 
@@ -247,25 +249,20 @@ function parseBlobParams(params: { cid: string; did: string }) {
   return { cid: cidObj, did }
 }
 
-async function getBlobUrl(
-  dataplane: DataPlaneClient,
-  did: string,
-  cid: Cid,
-): Promise<URL> {
-  const pds = await getBlobPds(dataplane, did, cid)
-
-  const url = new URL(`/xrpc/com.atproto.sync.getBlob`, pds)
-  url.searchParams.set('did', did)
-  url.searchParams.set('cid', cid.toString())
-
-  return url
+type BlobSourceResolution = {
+  did: AtprotoDid
+  cid: Cid
+  origin: string
 }
 
-async function getBlobPds(
-  dataplane: DataPlaneClient,
-  did: string,
-  cid: Cid,
-): Promise<string> {
+/** Resolve blob policy and its PDS without accessing the blob itself. */
+export async function resolveBlobSource(
+  ctx: AppContext,
+  didParam: string,
+  cidParam: string,
+): Promise<BlobSourceResolution> {
+  const { did, cid } = parseBlobParams({ did: didParam, cid: cidParam })
+  const { dataplane } = ctx
   const [identity, { takenDown }] = await Promise.all([
     dataplane.getIdentityByDid({ did }).catch((err) => {
       if (isDataplaneError(err, Code.NotFound)) {
@@ -292,7 +289,7 @@ async function getBlobPds(
     throw createError(404, 'Origin not found')
   }
 
-  return pds
+  return { did, cid, origin: new URL(pds).origin }
 }
 
 function getBlobHeaders(

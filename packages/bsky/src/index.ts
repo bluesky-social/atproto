@@ -15,6 +15,7 @@ import { safeFetchWrap } from '@atproto-labs/fetch-node'
 import { createBlobDispatcher } from './api/blob-dispatcher.js'
 import API, {
   blobResolver,
+  blobSource,
   external,
   health,
   sitemap,
@@ -307,6 +308,7 @@ export class BskyAppView {
 
     app.use(health.createRouter(ctx))
     app.use(wellKnown.createRouter(ctx))
+    app.use(blobSource.createRouter(ctx))
     app.use(blobResolver.createMiddleware(ctx))
     app.use(imageServer.createMiddleware(ctx, { prefix: '/img/' }))
 
