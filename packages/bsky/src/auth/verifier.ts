@@ -68,6 +68,8 @@ type StandardOutput = {
     /** @note we don't validate this to be a {@link DidString} (we might want to in the future) */
     aud: string
     iss: DidString | `${DidString}#${string}`
+    /** The service JWT from the user's PDS: wrapped in BSG's token as `service_auth`, or sent directly. Undefined for entryway session tokens and for BSG tokens without `service_auth` (OAuth). */
+    serviceJwt?: string
   }
 }
 
@@ -207,11 +209,14 @@ export class AuthVerifier {
               'BadJwtAudience',
             )
           }
+
+          // Direct atproto-proxy token, from the PDS. For deployments without a BSG.
           return {
             credentials: {
               type: 'standard',
               iss,
               aud,
+              serviceJwt: token,
             },
           }
         } else {
@@ -464,6 +469,11 @@ export class AuthVerifier {
         type: 'standard',
         aud: this.ownDid,
         iss: payload.sub,
+        // From atproto-proxy, has a service JWT. From oauth, it doesn't have a service JWT.
+        serviceJwt:
+          typeof payload.service_auth === 'string'
+            ? payload.service_auth
+            : undefined,
       },
     }
   }
