@@ -664,7 +664,7 @@
     },
     "app.bsky.feed.defs": {
       "uri": "https://raw.githubusercontent.com/bluesky-social/bsky/refs/heads/main/lexicons/app/bsky/feed/defs.json",
-      "cid": "bafyreihkshyata32ry6z6akz6upbvcogvomocptg5vdigrwswgugt2g7iy"
+      "cid": "bafyreic6xnliynhdova77i35oxwqmvp3wx5ua6zygcnlc3owzax32kz4ai"
     },
     "app.bsky.feed.describeFeedGenerator": {
       "uri": "https://raw.githubusercontent.com/bluesky-social/bsky/refs/heads/main/lexicons/app/bsky/feed/describeFeedGenerator.json",

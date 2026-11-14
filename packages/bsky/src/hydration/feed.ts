@@ -1,7 +1,9 @@
-import { dedupeStrs } from '@atproto/common'
+import { chunkArray, dedupeStrs } from '@atproto/common'
 import type { AtUriString, DidString } from '@atproto/syntax'
 import type { DataPlaneClient } from '../data-plane/client/index.js'
 import { app } from '../lexicons/index.js'
+import { hydrationLogger } from '../logger.js'
+import { FeatureStore } from '../proto/bsky_pb.js'
 import {
   postUriToPostgateUri,
   postUriToThreadgateUri,
@@ -67,6 +69,8 @@ export type PostAgg = {
 }
 
 export type PostAggs = HydrationMap<AtUriString, PostAgg>
+
+export type PostViewCounts = HydrationMap<AtUriString, number>
 
 export type Like = RecordInfo<LikeRecord>
 export type Likes = HydrationMap<AtUriString, Like>
@@ -314,6 +318,41 @@ export class FeedHydrator {
     }
 
     return map
+  }
+
+  async getPostViewCounts(uris: AtUriString[]): Promise<PostViewCounts> {
+    const map: PostViewCounts = new HydrationMap()
+    if (!uris.length) return map
+
+    // @NOTE Share one budget across chunks and dataplane host retries.
+    const signal = AbortSignal.timeout(100)
+    try {
+      for (const batch of chunkArray(dedupeStrs(uris), 100)) {
+        const response = await this.dataplane.getFeatures(
+          {
+            store: FeatureStore.POST,
+            requests: batch.map((uid) => ({ uid, keys: ['unique_views'] })),
+          },
+          { signal },
+        )
+        const entities = new Map(
+          response.entities.map((entry) => [entry.uid, entry]),
+        )
+        for (const uri of batch) {
+          const feature = entities
+            .get(uri)
+            ?.features.find((f) => f.key === 'unique_views')
+          const value = feature?.value
+          if (value?.case !== 'sint64Val' && value?.case !== 'sintVal') continue
+          const count = Number(value.value)
+          if (Number.isSafeInteger(count) && count >= 100) map.set(uri, count)
+        }
+      }
+      return map
+    } catch (err) {
+      hydrationLogger.warn({ err }, 'failed to hydrate post view counts')
+      return new HydrationMap()
+    }
   }
 
   async getFeedGens(

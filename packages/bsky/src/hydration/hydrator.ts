@@ -72,6 +72,7 @@ import {
   type Likes,
   type Post,
   type PostAggs,
+  type PostViewCounts,
   type PostViewerStates,
   type Postgates,
   type Posts,
@@ -159,6 +160,7 @@ export type HydrationState = {
   profileAggs?: ProfileAggs
   posts?: Posts
   postAggs?: PostAggs
+  postViewCounts?: PostViewCounts
   postViewers?: PostViewerStates
   threadContexts?: ThreadContexts
   postBlocks?: PostBlocks
@@ -265,6 +267,7 @@ export type Bookmarks = HydrationMap<DidString, HydrationMap<string, Bookmark>>
  * Values within this config object may be passed to other sub-hydrators.
  */
 export type HydratorConfig = {
+  postViewCountsStartAt?: Date
   debugFieldAllowedDids: Set<string>
   featureGatesClient: FeatureGatesClient
   needsReviewTagSources?: readonly DidString[]
@@ -775,6 +778,21 @@ export class Hydrator {
       ...embedPostUrisLayer1.map(uriToRef), // supports aggregates on embed #viewRecords
       ...embedPostUrisLayer2.map(uriToRef),
     ]
+    const viewCountsStartAt = this.config.postViewCountsStartAt
+    const viewCountUris =
+      ctx.viewer &&
+      viewCountsStartAt &&
+      viewCountsStartAt.getTime() <= Date.now()
+        ? dedupeStrs(allRefs.map((ref) => ref.uri)).filter((uri) => {
+            const post = posts.get(uri)
+            return (
+              didFromUri(uri) === ctx.viewer &&
+              !!post &&
+              post.indexedAt >= viewCountsStartAt &&
+              post.sortedAt >= viewCountsStartAt
+            )
+          })
+        : []
     const threadRefs = allRefs.map((ref) => ({
       ...ref,
       threadRoot: posts.get(ref.uri)?.record.reply?.root.uri ?? ref.uri,
@@ -812,6 +830,7 @@ export class Hydrator {
 
     const [
       postAggs,
+      postViewCounts,
       postViewers,
       labels,
       {
@@ -828,6 +847,7 @@ export class Hydrator {
       externalState,
     ] = await Promise.all([
       this.feed.getPostAggregates(allRefs, ctx.viewer),
+      this.feed.getPostViewCounts(viewCountUris),
       ctx.viewer
         ? this.feed.getPostViewerStates(threadRefs, ctx.viewer)
         : undefined,
@@ -862,6 +882,7 @@ export class Hydrator {
       {
         posts,
         postAggs,
+        postViewCounts,
         postViewers,
         postBlocks,
         knownLikers,
@@ -2514,6 +2535,7 @@ export const mergeStates = (
     profileViewers: mergeMaps(stateA.profileViewers, stateB.profileViewers),
     posts: mergeMaps(stateA.posts, stateB.posts),
     postAggs: mergeMaps(stateA.postAggs, stateB.postAggs),
+    postViewCounts: mergeMaps(stateA.postViewCounts, stateB.postViewCounts),
     postViewers: mergeMaps(stateA.postViewers, stateB.postViewers),
     threadContexts: mergeMaps(stateA.threadContexts, stateB.threadContexts),
     postBlocks: mergeMaps(stateA.postBlocks, stateB.postBlocks),
