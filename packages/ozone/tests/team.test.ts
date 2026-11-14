@@ -46,8 +46,16 @@ describe('team management', () => {
         triageAgent.tools.ozone.team.listMembers({}),
       ])
 
-      expect(forSnapshot(forAdmin.members)).toMatchSnapshot()
-      expect(forSnapshot(forTriage.members)).toMatchSnapshot()
+      // Members seeded at startup can share the same `createdAt`, so the order
+      // between them changes from run to run.
+      const sorted = (members: ToolsOzoneTeamDefs.Member[]) =>
+        [...members].sort(
+          (a, b) =>
+            a.role.localeCompare(b.role) ||
+            (a.profile?.handle ?? '').localeCompare(b.profile?.handle ?? ''),
+        )
+      expect(forSnapshot(sorted(forAdmin.members))).toMatchSnapshot()
+      expect(forSnapshot(sorted(forTriage.members))).toMatchSnapshot()
       // Validate that the list looks the same to both admin and triage members
 
       expect(forAdmin.members.length).toEqual(forTriage.members.length)
