@@ -68,7 +68,7 @@ type StandardOutput = {
     /** @note we don't validate this to be a {@link DidString} (we might want to in the future) */
     aud: string
     iss: DidString | `${DidString}#${string}`
-    /** The service JWT from the user's PDS: wrapped in BSG's token as `service_auth`, or sent directly. Undefined on anonymous calls. */
+    /** The service JWT from the user's PDS: wrapped in BSG's token as `service_auth`, or sent directly. Undefined for entryway session tokens and for BSG tokens without `service_auth` (OAuth). */
     serviceJwt?: string
   }
 }
