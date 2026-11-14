@@ -55,6 +55,14 @@ export default function (server: Server, ctx: AppContext) {
   server.add(app.bsky.feed.getFeed, {
     auth: ctx.authVerifier.standardReadOptional({
       lxmCheck: (method) => {
+        // lxm check only runs for service JWTs sent directly by the PDS, not for
+        // BSG's token.
+        //
+        // Cases:
+        // 1. PDS with custom getFeed handler (like ours): `lxm` is getFeedSkeleton
+        //    and `aud` is the feed generator's DID (hence `skipAudCheck`).
+        // 2. PDS without custom getFeed handler: `lxm` is getFeed. The feed generator
+        //    gets the same token and may reject it.
         return (
           method === app.bsky.feed.getFeedSkeleton.$lxm ||
           method === app.bsky.feed.getFeed.$lxm

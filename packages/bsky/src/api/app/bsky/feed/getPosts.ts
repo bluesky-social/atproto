@@ -16,15 +16,7 @@ import { resHeaders } from '../../../util.js'
 export default function (server: Server, ctx: AppContext) {
   const getPosts = createPipeline(skeleton, hydration, noBlocks, presentation)
   server.add(app.bsky.feed.getPosts, {
-    auth: ctx.authVerifier.standardReadOptional({
-      lxmCheck: (method) => {
-        if (!method) return false
-        return (
-          method === app.bsky.feed.getPosts.$lxm ||
-          method.startsWith('chat.bsky.')
-        )
-      },
-    }),
+    auth: ctx.authVerifier.standardReadOptional(),
     opts: {
       // @TODO remove after grace period has passed, behavior is non-standard.
       // temporarily added for compat w/ previous version of xrpc-server to avoid breakage of a few specified parties.

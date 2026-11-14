@@ -1788,7 +1788,7 @@
     },
     "internal.bsky.actor.getProfiles": {
       "uri": "file://../../lexicons-overrides/internal/bsky/actor/getProfiles.json",
-      "cid": "bafyreihdyn4pmc3brvufe7vp4c6psldxeumydfmeqvoswfydtw5fjcy6rq"
+      "cid": "bafyreiau3njwaloxz2gx2hdvx6rb4ocunaesvywutp6dlhy2bip3fw2ltu"
     },
     "internal.bsky.feed.getPosts": {
       "uri": "file://../../lexicons-overrides/internal/bsky/feed/getPosts.json",
