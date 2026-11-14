@@ -247,6 +247,7 @@ export class AppContext implements AsyncDisposable {
       crawlers,
       undefined,
       cfg.db.disableWalAutoCheckpoint,
+      cfg.db.synchronousFull,
     )
     const redisScratch = cfg.redis
       ? getRedisClient(cfg.redis.address, cfg.redis.password)
