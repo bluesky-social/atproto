@@ -4,6 +4,7 @@ import { decode as cborDecode } from '@atproto/lex-cbor'
 import type { DatetimeString, DidString, HandleString } from '@atproto/syntax'
 import { AccountStatus } from '../account-manager/helpers/account.js'
 import type { Crawlers } from '../crawlers.js'
+import { retrySqlite } from '../db/index.js'
 import { seqLogger as log } from '../logger.js'
 import type { CommitDataWithOps, SyncEvtData } from '../repo/index.js'
 import {
@@ -39,6 +40,7 @@ export class Sequencer extends EventEmitter<SequencerEvents> {
     public crawlers: Crawlers,
     public lastSeen = 0,
     disableWalAutoCheckpoint = false,
+    private synchronousFull = false,
   ) {
     super()
     // note: this does not err when surpassed, just prints a warning to stderr
@@ -48,6 +50,9 @@ export class Sequencer extends EventEmitter<SequencerEvents> {
 
   async start() {
     await this.db.ensureWal()
+    if (this.synchronousFull) {
+      await retrySqlite(() => this.db.ensureSynchronousFull())
+    }
     const migrator = getMigrator(this.db)
     await migrator.migrateToLatestOrThrow()
     const curr = await this.curr()
