@@ -1,4 +1,6 @@
 import assert from 'node:assert'
+import { randomBytes } from 'node:crypto'
+import * as jose from 'jose'
 import {
   afterAll,
   beforeAll,
@@ -53,11 +55,12 @@ describe('feed generation', () => {
   let feedUriAcceptsInteractions: string
   let feedUriPinned: string
   let starterPackRef: { uri: string; cid: string }
+  const bsgJwtSecret = randomBytes(32).toString('hex')
 
   beforeAll(async () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_feed_generation',
-      bsky: { searchV2OverrideHeader: 'test' },
+      bsky: { searchV2OverrideHeader: 'test', bsgJwtSecret },
     })
     vi.spyOn(network.bsky.ctx.featureGatesClient, 'scope').mockImplementation(
       () => ({
@@ -1072,6 +1075,100 @@ describe('feed generation', () => {
       )
       expect(feed.data.feed).toHaveLength(1)
       expect(AppBskyFeedDefs.isReasonPin(feed.data.feed[0].reason)).toBe(true)
+    })
+
+    describe('service JWT audience', () => {
+      const serviceJwt = async (aud: string) => {
+        const { authorization } = await network.serviceHeaders(
+          alice,
+          ids.AppBskyFeedGetFeedSkeleton,
+          aud,
+        )
+        return authorization.slice('Bearer '.length)
+      }
+
+      const bsgHeaders = async (claims: Record<string, unknown>) => {
+        const token = await new jose.SignJWT({
+          iss: 'bsg',
+          aud: 'bsky',
+          lxm: ids.AppBskyFeedGetFeed,
+          scopes: ['read', 'write:service'],
+          sub: alice,
+          ...claims,
+        })
+          .setProtectedHeader({ alg: 'HS256', typ: 'bsg+jwt' })
+          .setExpirationTime('1m')
+          .sign(Buffer.from(bsgJwtSecret, 'utf8'))
+        return { authorization: `Bearer ${token}` }
+      }
+
+      it('accepts AppView, bare or with its service id.', async () => {
+        const { serverDid } = network.bsky.ctx.cfg
+        for (const aud of [serverDid, `${serverDid}#bsky_appview`]) {
+          const feed = await agent.api.app.bsky.feed.getFeed(
+            { feed: feedUriEven },
+            { headers: { authorization: `Bearer ${await serviceJwt(aud)}` } },
+          )
+          expect(feed.data['$auth']?.['aud']).toEqual(aud)
+        }
+      })
+
+      it('rejects other audiences.', async () => {
+        const tryGetFeed = agent.api.app.bsky.feed.getFeed(
+          { feed: feedUriEven },
+          {
+            headers: {
+              authorization: `Bearer ${await serviceJwt('did:example:other')}`,
+            },
+          },
+        )
+        await expect(tryGetFeed).rejects.toMatchObject({
+          status: 401,
+          error: 'BadJwtAudience',
+        })
+      })
+
+      it('forwards the service JWT wrapped in a BSG token.', async () => {
+        const feed = await agent.api.app.bsky.feed.getFeed(
+          { feed: feedUriEven },
+          {
+            headers: await bsgHeaders({
+              service_auth: await serviceJwt(gen.did),
+            }),
+          },
+        )
+        expect(feed.data['$auth']).toMatchObject({
+          iss: alice,
+          aud: gen.did,
+          lxm: ids.AppBskyFeedGetFeedSkeleton,
+        })
+      })
+
+      it('rejects a service JWT wrapped in a BSG token for another audience.', async () => {
+        const tryGetFeed = agent.api.app.bsky.feed.getFeed(
+          { feed: feedUriEven },
+          {
+            headers: await bsgHeaders({
+              service_auth: await serviceJwt('did:example:other'),
+            }),
+          },
+        )
+        await expect(tryGetFeed).rejects.toMatchObject({
+          status: 401,
+          error: 'BadJwtAudience',
+        })
+      })
+
+      it('rejects a BSG token with a user but without a service JWT.', async () => {
+        const tryGetFeed = agent.api.app.bsky.feed.getFeed(
+          { feed: feedUriEven },
+          { headers: await bsgHeaders({}) },
+        )
+        await expect(tryGetFeed).rejects.toMatchObject({
+          status: 401,
+          error: 'InvalidToken',
+        })
+      })
     })
 
     it('returns an upstream failure error when the feed is down.', async () => {

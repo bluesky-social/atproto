@@ -75,8 +75,26 @@ describe('BSG token', () => {
 
   it('uses sub as the viewer', async () => {
     const token = await createToken({ secret, claims: { sub: userDid } })
-    await expect(verifier.standardRead()(reqCtx(token))).resolves.toEqual({
+    const output = await verifier.standardRead()(reqCtx(token))
+    expect(output).toEqual({
       credentials: { type: 'standard', aud: serviceDid, iss: userDid },
+    })
+    expect(output.credentials.serviceJwt).toBeUndefined()
+  })
+
+  it('passes on the service JWT from service_auth', async () => {
+    const serviceJwt = await createToken({ secret, typ: 'JWT' })
+    const token = await createToken({
+      secret,
+      claims: { sub: userDid, service_auth: serviceJwt },
+    })
+    await expect(verifier.standardRead()(reqCtx(token))).resolves.toEqual({
+      credentials: {
+        type: 'standard',
+        aud: serviceDid,
+        iss: userDid,
+        serviceJwt,
+      },
     })
   })
 
