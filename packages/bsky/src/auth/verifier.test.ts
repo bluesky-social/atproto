@@ -199,7 +199,7 @@ describe('internal service token', () => {
     })
     expect(
       verifier.parseCreds({
-        credentials: { type: 'role', admin: true },
+        credentials: { type: 'role' },
       }),
     ).toMatchObject({ viewer: null, includeTakedowns: true })
   })
@@ -267,7 +267,7 @@ describe('internal service token', () => {
       },
     } as never
     await expect(verifier.internalOrRole(req)).resolves.toMatchObject({
-      credentials: { type: 'role', admin: true },
+      credentials: { type: 'role' },
     })
     await expect(verifier.internal(req)).rejects.toThrow()
   })

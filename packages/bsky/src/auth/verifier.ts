@@ -74,7 +74,6 @@ type StandardOutput = {
 type RoleOutput = {
   credentials: {
     type: 'role'
-    admin: boolean
   }
 }
 
@@ -85,6 +84,15 @@ type InternalOutput = {
     iss: string
     sub: DidString | null
   }
+}
+
+type ParsedCreds = {
+  viewer: StandardOutput['credentials']['iss'] | null
+  includeTakedowns: boolean
+  include3pBlocks: boolean
+  canPerformTakedown: boolean
+  isModService: boolean
+  skipViewerBlocks: boolean
 }
 
 type ModServiceOutput = {
@@ -253,16 +261,10 @@ export class AuthVerifier {
 
   role = (ctx: ReqCtx): RoleOutput => {
     events.authVerifierRequest('role')
-    const creds = this.parseRoleCreds(ctx.req)
-    if (creds.status !== RoleStatus.Valid) {
+    if (this.checkAdminPassword(ctx.req) !== RoleStatus.Valid) {
       throw new AuthRequiredError()
     }
-    return {
-      credentials: {
-        ...creds,
-        type: 'role',
-      },
-    }
+    return { credentials: { type: 'role' } }
   }
 
   standardReadOrRoleOptional = async (
@@ -273,18 +275,13 @@ export class AuthVerifier {
       // `standardRead` would reject it, so this uses `standardReadOptional`.
       return await this.standardReadOptional()(ctx)
     } else {
-      const creds = this.parseRoleCreds(ctx.req)
+      const status = this.checkAdminPassword(ctx.req)
       events.authVerifierRequest(
-        creds.status === RoleStatus.Missing ? 'anonymous' : 'role',
+        status === RoleStatus.Missing ? 'anonymous' : 'role',
       )
-      if (creds.status === RoleStatus.Valid) {
-        return {
-          credentials: {
-            ...creds,
-            type: 'role',
-          },
-        }
-      } else if (creds.status === RoleStatus.Missing) {
+      if (status === RoleStatus.Valid) {
+        return { credentials: { type: 'role' } }
+      } else if (status === RoleStatus.Missing) {
         return this.nullCreds()
       } else {
         throw new AuthRequiredError()
@@ -337,7 +334,7 @@ export class AuthVerifier {
       | InternalOutput
       | ModServiceOutput
       | NullOutput,
-  ) {
+  ): ParsedCreds {
     const viewer =
       creds.credentials.type === 'standard'
         ? creds.credentials.iss
@@ -346,8 +343,7 @@ export class AuthVerifier {
           : null
 
     const isAdminAccess =
-      (creds.credentials.type === 'role' && creds.credentials.admin) ||
-      creds.credentials.type === 'internal'
+      creds.credentials.type === 'role' || creds.credentials.type === 'internal'
 
     const includeTakedownsAnd3pBlocks =
       isAdminAccess ||
@@ -514,7 +510,7 @@ export class AuthVerifier {
     token: string,
     secret: Uint8Array,
     opts: { typ: string; issuer: string; audience: string },
-  ) {
+  ): Promise<jose.JWTPayload> {
     const { payload } = await jose
       .jwtVerify(token, secret, {
         algorithms: ['HS256'],
@@ -543,17 +539,16 @@ export class AuthVerifier {
     return payload
   }
 
-  private parseRoleCreds(req: express.Request) {
+  private checkAdminPassword(req: express.Request): RoleStatus {
     const parsed = parseBasicAuth(req.headers.authorization || '')
-    const { Missing, Valid, Invalid } = RoleStatus
     if (!parsed) {
-      return { status: Missing, admin: false, moderator: false, triage: false }
+      return RoleStatus.Missing
     }
     const { username, password } = parsed
     if (username === 'admin' && this.adminPasses.has(password)) {
-      return { status: Valid, admin: true }
+      return RoleStatus.Valid
     }
-    return { status: Invalid, admin: false }
+    return RoleStatus.Invalid
   }
 
   private async verifyServiceJwt<
@@ -670,7 +665,7 @@ const isBearerToken = (req: express.Request): boolean => {
   return req.headers.authorization?.startsWith(BEARER) ?? false
 }
 
-const bearerTokenFromReq = (req: express.Request) => {
+const bearerTokenFromReq = (req: express.Request): string | null => {
   const header = req.headers.authorization || ''
   if (!header.startsWith(BEARER)) return null
   return header.slice(BEARER.length).trim()
