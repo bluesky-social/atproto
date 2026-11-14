@@ -26,7 +26,7 @@ export default function (server: Server, ctx: AppContext) {
     presentation,
   )
   server.add(app.bsky.feed.getTimeline, {
-    auth: ctx.authVerifier.standard,
+    auth: ctx.authVerifier.standardRead(),
     opts: {
       // @TODO remove after grace period has passed, behavior is non-standard.
       // temporarily added for compat w/ previous version of xrpc-server to avoid breakage of a few specified parties.

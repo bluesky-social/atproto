@@ -84,7 +84,7 @@ Object form for anything else — `auth`, `rateLimit`, `opts`:
 
 ```ts
 server.add(app.bsky.draft.createDraft, {
-  auth: ctx.authVerifier.standard,
+  auth: ctx.authVerifier.standardWriteService(),
   handler: async ({ input, auth }) => {
     const actorDid = auth.credentials.iss
     if (atLimit)

@@ -44,6 +44,8 @@ export interface ServerConfigValues {
   serverDid: DidString
   alternateAudienceDids: DidString[]
   entrywayJwtPublicKeyHex?: string
+  bsgJwtSecret?: string
+  internalServiceSecrets?: Record<string, string>
   liveNowConfig?: LiveNowConfig
   // external services
   etcdHosts: string[]
@@ -152,6 +154,23 @@ export class ServerConfig {
     assert(alternateAudienceDids.every(isDidString))
     const entrywayJwtPublicKeyHex =
       process.env.BSKY_ENTRYWAY_JWT_PUBLIC_KEY_HEX || undefined
+    const bsgJwtSecret = process.env.BSKY_BSG_JWT_SECRET || undefined
+    const internalServiceSecrets = process.env.BSKY_INTERNAL_SERVICE_SECRETS
+      ? (JSON.parse(process.env.BSKY_INTERNAL_SERVICE_SECRETS) as Record<
+          string,
+          string
+        >)
+      : undefined
+    assert(
+      bsgJwtSecret == null || Buffer.byteLength(bsgJwtSecret, 'utf8') >= 32,
+      'BSKY_BSG_JWT_SECRET must be generated from at least 32 random bytes (minimum key length: 32 bytes)',
+    )
+    for (const [name, secret] of Object.entries(internalServiceSecrets ?? {})) {
+      assert(
+        Buffer.byteLength(secret, 'utf8') >= 32,
+        `BSKY_INTERNAL_SERVICE_SECRETS secret for ${name} must be generated from at least 32 random bytes (minimum key length: 32 bytes)`,
+      )
+    }
     let liveNowConfig: LiveNowConfig | undefined
     if (process.env.BSKY_LIVE_NOW_CONFIG) {
       try {
@@ -441,6 +460,8 @@ export class ServerConfig {
       serverDid,
       alternateAudienceDids,
       entrywayJwtPublicKeyHex,
+      bsgJwtSecret,
+      internalServiceSecrets,
       liveNowConfig,
       etcdHosts,
       dataplaneUrls,
@@ -558,6 +579,14 @@ export class ServerConfig {
 
   get entrywayJwtPublicKeyHex() {
     return this.cfg.entrywayJwtPublicKeyHex
+  }
+
+  get bsgJwtSecret() {
+    return this.cfg.bsgJwtSecret
+  }
+
+  get internalServiceSecrets() {
+    return this.cfg.internalServiceSecrets
   }
 
   get liveNowConfig() {

@@ -15,7 +15,7 @@ import { resHeaders } from '../../../util.js'
 export default function (server: Server, ctx: AppContext) {
   const getProfile = createPipeline(skeleton, hydration, noRules, presentation)
   server.add(app.bsky.actor.getProfiles, {
-    auth: ctx.authVerifier.standardOptionalParameterized({
+    auth: ctx.authVerifier.standardReadOptional({
       lxmCheck: (method) => {
         if (!method) return false
         return (

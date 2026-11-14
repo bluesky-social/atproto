@@ -81,7 +81,7 @@ export default function (server: Server, ctx: AppContext) {
   const getExplore = createPipeline(skeleton, hydration, noRules, presentation)
   const fetchExploreTabSkeleton = createFetchExploreTabSkeleton()
   server.add(app.bsky.unspecced.getAtmosphereExploreTab, {
-    auth: ctx.authVerifier.standardOptional,
+    auth: ctx.authVerifier.standardReadOptional(),
     handler: async ({ auth, params, req, signal }) => {
       const viewer = auth.credentials.iss
       const features = ctx.featureGatesClient.scope(

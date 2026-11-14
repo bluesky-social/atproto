@@ -123,18 +123,20 @@ async function setup(rows: Row[], records: Map<AtUriString, TypedLexMap>) {
     featureGatesClient,
     reqLabelers: () => ({ dids: [], redact: new Set() }),
     authVerifier: {
-      standard: async ({ req }) => {
-        if (req.headers.authorization !== 'Bearer viewer')
-          throw new AuthRequiredError()
-        return {
-          credentials: {
-            type: 'standard',
-            iss: viewer,
-            aud: 'did:plc:appview',
-          },
-        }
-      },
-    } satisfies Pick<AppContext['authVerifier'], 'standard'>,
+      standardRead:
+        () =>
+        async ({ req }) => {
+          if (req.headers.authorization !== 'Bearer viewer')
+            throw new AuthRequiredError()
+          return {
+            credentials: {
+              type: 'standard',
+              iss: viewer,
+              aud: 'did:plc:appview',
+            },
+          }
+        },
+    } satisfies Pick<AppContext['authVerifier'], 'standardRead'>,
   } as unknown as AppContext
   // @NOTE Response validation checks every response against the lexicon.
   const xrpc = createServer([], { validateResponse: true })

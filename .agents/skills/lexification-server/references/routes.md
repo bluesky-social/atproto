@@ -16,7 +16,7 @@ object is unchanged:
 ```diff
 - server.app.bsky.feed.getAuthorFeed({
 + server.add(app.bsky.feed.getAuthorFeed, {
-    auth: ctx.authVerifier.optionalStandardOrRole,
+    auth: ctx.authVerifier.standardReadOrRoleOptional,
     handler: async ({ params, auth, req }) => { /* unchanged */ },
   })
 ```

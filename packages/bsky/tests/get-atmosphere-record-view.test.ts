@@ -225,13 +225,15 @@ async function setup() {
     modServiceDid: modService,
     adminPasses: [],
   })
-  authVerifier.standard = async ({ req }) => {
-    const iss = req.headers['x-test-iss']
-    if (typeof iss !== 'string') throw new AuthRequiredError()
-    return {
-      credentials: { type: 'standard', iss: iss as never, aud: 'did:web:x' },
+  authVerifier.standardRead =
+    () =>
+    async ({ req }) => {
+      const iss = req.headers['x-test-iss']
+      if (typeof iss !== 'string') throw new AuthRequiredError()
+      return {
+        credentials: { type: 'standard', iss: iss as never, aud: 'did:web:x' },
+      }
     }
-  }
   const ctx = {
     hydrator,
     views,

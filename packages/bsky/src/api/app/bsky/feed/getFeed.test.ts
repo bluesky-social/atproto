@@ -5,7 +5,7 @@ import {
   irisStagingUrlForFeed,
   irisUrlForFeed,
   irisUrlForTrendingFeed,
-} from './getFeed.js'
+} from './utils.js'
 
 const IRIS_URL = 'http://iris.internal.invalid'
 const IRIS_STAGING_URL = 'http://iris-staging.internal.invalid'

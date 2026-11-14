@@ -22,7 +22,7 @@ export default function (server: Server, ctx: AppContext) {
   const getMatches = createPipeline(skeleton, hydration, noBlocks, presentation)
 
   server.add(app.bsky.contact.getMatches, {
-    auth: ctx.authVerifier.standard,
+    auth: ctx.authVerifier.standardRead(),
     handler: async ({ params, auth, req }) => {
       assertRolodexOrThrowUnimplemented(ctx)
 

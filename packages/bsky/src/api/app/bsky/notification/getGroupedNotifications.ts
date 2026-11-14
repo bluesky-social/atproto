@@ -85,7 +85,7 @@ export default function (server: Server, ctx: AppContext) {
     presentation,
   )
   server.add(app.bsky.notification.getGroupedNotifications, {
-    auth: ctx.authVerifier.standard,
+    auth: ctx.authVerifier.standardRead(),
     handler: async ({ params, auth, req }) => {
       const viewer = auth.credentials.iss
       const features = ctx.featureGatesClient.scope(

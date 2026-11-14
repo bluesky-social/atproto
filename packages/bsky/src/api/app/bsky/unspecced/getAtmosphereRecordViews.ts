@@ -18,7 +18,7 @@ import { resHeaders } from '../../../util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(app.bsky.unspecced.getAtmosphereRecordViews, {
-    auth: ctx.authVerifier.standard,
+    auth: ctx.authVerifier.standardRead(),
     handler: async ({ input, auth, req }) => {
       const refs = input.body.records
       for (const { uri } of refs) {
