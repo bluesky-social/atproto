@@ -16,6 +16,7 @@ export default function (server: Server, ctx: AppContext) {
   server.add(internal.bsky.actor.getProfiles, {
     auth: ctx.authVerifier.internalOrRole,
     handler: async ({ params, auth, req }) => {
+      const creds = ctx.authVerifier.parseCreds(auth)
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({
         xrpcEndpoint: internal.bsky.actor.getProfiles.$lxm,
@@ -24,7 +25,7 @@ export default function (server: Server, ctx: AppContext) {
             ? auth.credentials.sub
             : (params.viewer ?? null),
         labelers,
-        includeTakedowns: params.includeTakedowns,
+        includeTakedowns: params.includeTakedowns && creds.includeTakedowns,
       })
 
       const result = await getProfiles({ ...params, hydrateCtx }, ctx)

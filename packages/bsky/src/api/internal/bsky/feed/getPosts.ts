@@ -18,13 +18,14 @@ export default function (server: Server, ctx: AppContext) {
   server.add(internal.bsky.feed.getPosts, {
     auth: ctx.authVerifier.internalOrRole,
     handler: async ({ params, auth, req }) => {
-      const { viewer } = ctx.authVerifier.parseCreds(auth)
+      const creds = ctx.authVerifier.parseCreds(auth)
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({
         xrpcEndpoint: internal.bsky.feed.getPosts.$lxm,
         labelers,
-        viewer,
-        includeTakedowns: params.includeTakedowns,
+        viewer: creds.viewer,
+        includeTakedowns: params.includeTakedowns && creds.includeTakedowns,
+        include3pBlocks: params.include3pBlocks && creds.include3pBlocks,
       })
 
       const results = await getPosts({ ...params, hydrateCtx }, ctx)

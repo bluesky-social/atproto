@@ -19,6 +19,11 @@
             "type": "boolean",
             "default": false,
             "description": "Include taken-down posts in the response rather than omitting them. For service-to-service moderation use only."
+          },
+          "include3pBlocks": {
+            "type": "boolean",
+            "default": false,
+            "description": "Include quoted posts even when the quoting and quoted authors block each other, rather than replacing them with a blocked embed. For service-to-service moderation use only."
           }
         }
       },

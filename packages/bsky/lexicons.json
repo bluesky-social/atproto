@@ -1792,7 +1792,7 @@
     },
     "internal.bsky.feed.getPosts": {
       "uri": "file://../../lexicons-overrides/internal/bsky/feed/getPosts.json",
-      "cid": "bafyreieysqluf4jrwugai7xt5mc2qob2gh444ilf6hixr5kn37eb6g7ale"
+      "cid": "bafyreifkn4hhfkagqaagiec3xzssii3ofjwmuq75cfqmqnvg6jlruaeowq"
     },
     "place.stream.badge.defs": {
       "uri": "file://../../lexicons-overrides/place/stream/badge/defs.json",
