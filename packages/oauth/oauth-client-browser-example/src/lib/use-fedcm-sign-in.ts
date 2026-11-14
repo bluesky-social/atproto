@@ -1,10 +1,27 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import type { DidString } from '@atproto/lex'
+import { toBase64 } from '@atproto/lex'
+import { clientMetadata, oauthClient } from '../oauthClient.ts'
+import {
+  type FedcmIdentityResolver,
+  type VerifiedFedcmIdentity,
+  verifyFedcmIdToken,
+} from './fedcm-id-token.ts'
 import {
   type FedcmProviders,
   type FedcmSelection,
   requestFedcmSelection,
 } from './fedcm.ts'
+
+// @NOTE a real app should mint the nonce server-side; the prototype generates
+// it in the browser.
+function generateNonce(): string {
+  return toBase64(crypto.getRandomValues(new Uint8Array(16)), 'base64url')
+}
+
+const resolveIdentity: FedcmIdentityResolver = async (did) => {
+  const { didDoc, handle } = await oauthClient.identityResolver.resolve(did)
+  return { didDoc, handle }
+}
 
 type PendingFedcmRequest = {
   controller: AbortController
@@ -12,7 +29,10 @@ type PendingFedcmRequest = {
 
 export function useFedcmSignIn(
   providers: FedcmProviders,
-  onSelection: (did: DidString, signal: AbortSignal) => void | Promise<void>,
+  onSelection: (
+    identity: VerifiedFedcmIdentity,
+    signal: AbortSignal,
+  ) => void | Promise<void>,
   auto: boolean,
 ) {
   const pendingRef = useRef<PendingFedcmRequest | undefined>(undefined)
@@ -43,6 +63,7 @@ export function useFedcmSignIn(
       }
       pendingRef.current = request
 
+      const nonce = generateNonce()
       let selection: Promise<FedcmSelection | null>
       try {
         // @NOTE requestFedcmSelection calls navigator.credentials.get
@@ -51,6 +72,7 @@ export function useFedcmSignIn(
           providers,
           request.controller.signal,
           mode,
+          nonce,
         )
       } catch (err) {
         selection = Promise.reject(err)
@@ -61,7 +83,14 @@ export function useFedcmSignIn(
         .then((selected) => {
           if (!selected) return
           request.controller.signal.throwIfAborted()
-          return onSelection(selected.did, request.controller.signal)
+          return verifyFedcmIdToken(selected.token, {
+            clientId: clientMetadata.client_id,
+            nonce,
+            resolve: resolveIdentity,
+          }).then((identity) => {
+            request.controller.signal.throwIfAborted()
+            return onSelection(identity, request.controller.signal)
+          })
         })
         .catch((err) => {
           if (request.controller.signal.aborted) return

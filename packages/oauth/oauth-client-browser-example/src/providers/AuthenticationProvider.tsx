@@ -5,18 +5,28 @@ import {
   useContext,
   useMemo,
   useRef,
+  useState,
 } from 'react'
 import type { DidString } from '@atproto/lex'
 import type { OAuthSession } from '@atproto/oauth-client-browser'
 import { AtmosphereSignInForm } from '../components/AtmosphereSignInForm.tsx'
+import { IdentitySessionView } from '../components/IdentitySessionView.tsx'
 import { Layout } from '../components/Layout.tsx'
 import {
+  AUTHN_ONLY,
   FEDCM_IDP_REGISTRATION,
   FEDCM_MODE,
   FEDCM_PROVIDER_URLS,
   PDS_OPERATOR_URL,
 } from '../constants.ts'
+import type { VerifiedFedcmIdentity } from '../lib/fedcm-id-token.ts'
 import { type FedcmProviders, createFedcmAppState } from '../lib/fedcm.ts'
+import {
+  type IdentitySession,
+  clearIdentitySession,
+  readIdentitySession,
+  writeIdentitySession,
+} from '../lib/identity-session.ts'
 import { useFedcmSignIn } from '../lib/use-fedcm-sign-in.ts'
 import { oauthClient } from '../oauthClient.ts'
 import { useOAuthContext } from './OAuthProvider.tsx'
@@ -87,9 +97,25 @@ export function AuthenticationProvider({ children }: { children?: ReactNode }) {
   const { session, signIn, signUp, signOut, fedcmDidMismatch } =
     useOAuthContext(AuthenticationProvider.name)
   const fedcmRedirectSignal = useRef<AbortSignal | undefined>(undefined)
+  const [identitySession, setIdentitySession] =
+    useState<IdentitySession | null>(readIdentitySession)
 
   const continueWithFedcmAccount = useCallback(
-    (did: DidString, signal: AbortSignal) => {
+    ({ did, handle, authTime }: VerifiedFedcmIdentity, signal: AbortSignal) => {
+      if (AUTHN_ONLY) {
+        // Authentication flow: the verified token is the whole sign-in.
+        signal.throwIfAborted()
+        const next: IdentitySession = {
+          did,
+          ...(handle !== undefined && { handle }),
+          ...(authTime !== undefined && { authTime }),
+          verifiedAt: Date.now(),
+        }
+        writeIdentitySession(next)
+        setIdentitySession(next)
+        return
+      }
+
       if (fedcmRedirectSignal.current && !fedcmRedirectSignal.current.aborted) {
         return
       }
@@ -116,7 +142,7 @@ export function AuthenticationProvider({ children }: { children?: ReactNode }) {
     pending: fedcmPending,
     requestActiveSelection,
   } = useFedcmSignIn(
-    session ? NO_FEDCM_PROVIDERS : FEDCM_PROVIDERS,
+    session || identitySession ? NO_FEDCM_PROVIDERS : FEDCM_PROVIDERS,
     continueWithFedcmAccount,
     FEDCM_MODE === 'passive' && !fedcmDidMismatch,
   )
@@ -137,10 +163,24 @@ export function AuthenticationProvider({ children }: { children?: ReactNode }) {
     [cancelFedcm, signUp],
   )
 
+  const signOutIdentity = useCallback(() => {
+    clearIdentitySession()
+    setIdentitySession(null)
+  }, [])
+
   const value = useMemo<AuthenticationType | null>(
     () => (session ? { session, signOut } : null),
     [session, signOut],
   )
+
+  if (!value && identitySession) {
+    return (
+      <IdentitySessionView
+        session={identitySession}
+        signOut={signOutIdentity}
+      />
+    )
+  }
 
   if (!value) {
     return (
