@@ -5,6 +5,7 @@ import {
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
+import type { AtUriString } from '@atproto/lex-schema'
 import { com, tools } from '../src/lexicons/index.js'
 
 describe('moderation subject content tagging', () => {
@@ -35,6 +36,139 @@ describe('moderation subject content tagging', () => {
   }
 
   describe('lang tagger', () => {
+    it.each(['createReport', 'emitEvent'])(
+      'filters record language tags through %s',
+      async (endpoint) => {
+        const service = network.ozone.ctx.cfg.service
+        const original = service.languageTagRecordTypes
+        try {
+          const report = async (uri: AtUriString, cid: string) => {
+            const subject = com.atproto.repo.strongRef.$build({ uri, cid })
+            if (endpoint === 'createReport') {
+              await sc.createReport({
+                reasonType: ComAtprotoModerationDefs.REASONSPAM,
+                subject,
+                reportedBy: sc.dids.alice,
+              })
+            } else {
+              await modClient.emitEvent({
+                subject,
+                event: tools.ozone.moderation.defs.modEventReport.$build({
+                  reportType: com.atproto.moderation.defs.ReasonSpam,
+                }),
+              })
+            }
+            return getStatus(uri)
+          }
+
+          const post = await sc.post(
+            sc.dids.carol,
+            'Xで有名な人達＋反AIや絵描きによくない',
+            undefined,
+            sc.posts[sc.dids.carol][0].images,
+          )
+          const list = await sc.createList(
+            sc.dids.carol,
+            '人達＋反AIや絵描きによくない感情',
+            'mod',
+          )
+          const other = await sc.agent.com.atproto.repo.createRecord(
+            {
+              repo: sc.dids.carol,
+              collection: 'app.bskyextra.feed.post',
+              validate: false,
+              record: { $type: 'app.bskyextra.feed.post', langs: ['ja'] },
+            },
+            { headers: sc.getHeaders(sc.dids.carol) },
+          )
+          await network.processAll()
+
+          service.languageTagRecordTypes = ['app.bsky.*']
+          expect((await report(list.uriStr, list.cidStr)).tags).toContain(
+            'lang:ja',
+          )
+          const otherStatus = await report(
+            other.data.uri as AtUriString,
+            other.data.cid,
+          )
+          expect(otherStatus.tags?.some((tag) => tag.startsWith('lang:'))).toBe(
+            false,
+          )
+          expect(otherStatus.tags).toContain('report:spam')
+
+          service.languageTagRecordTypes = []
+          const postStatus = await report(post.ref.uriStr, post.ref.cidStr)
+          expect(postStatus.tags?.some((tag) => tag.startsWith('lang:'))).toBe(
+            false,
+          )
+          expect(postStatus.tags).toEqual(
+            expect.arrayContaining(['report:spam', 'embed:image']),
+          )
+          await modClient.emitEvent({
+            subject: com.atproto.repo.strongRef.$build({
+              uri: post.ref.uriStr,
+              cid: post.ref.cidStr,
+            }),
+            event: tools.ozone.moderation.defs.modEventTag.$build({
+              add: ['lang:manual'],
+              remove: [],
+            }),
+          })
+          expect(
+            (await report(post.ref.uriStr, post.ref.cidStr)).tags,
+          ).toContain('lang:manual')
+
+          const accountDid =
+            endpoint === 'createReport' ? sc.dids.alice : sc.dids.carol
+          const accountSubject = com.atproto.admin.defs.repoRef.$build({
+            did: accountDid,
+          })
+          if (endpoint === 'createReport') {
+            await sc.createReport({
+              reasonType: ComAtprotoModerationDefs.REASONSPAM,
+              subject: accountSubject,
+              reportedBy: sc.dids.bob,
+            })
+          } else {
+            await modClient.emitEvent({
+              subject: accountSubject,
+              event: tools.ozone.moderation.defs.modEventReport.$build({
+                reportType: com.atproto.moderation.defs.ReasonSpam,
+              }),
+            })
+          }
+          expect(
+            (await getStatus(accountDid)).tags?.some((tag) =>
+              tag.startsWith('lang:'),
+            ),
+          ).toBe(true)
+
+          service.languageTagRecordTypes = [
+            'app.bsky.graph.*',
+            'app.bsky.feed.post',
+          ]
+          const allowedList = await sc.createList(
+            sc.dids.carol,
+            '人達＋反AIや絵描きによくない感情',
+            'mod',
+          )
+          const allowedPost = await sc.post(
+            sc.dids.carol,
+            'Xで有名な人達＋反AIや絵描きによくない',
+          )
+          await network.processAll()
+          expect(
+            (await report(allowedList.uriStr, allowedList.cidStr)).tags,
+          ).toContain('lang:ja')
+          expect(
+            (await report(allowedPost.ref.uriStr, allowedPost.ref.cidStr)).tags,
+          ).toContain('lang:ja')
+        } finally {
+          service.languageTagRecordTypes = original
+        }
+      },
+    )
+
     it('Adds language tag to post from text', async () => {
       const createPostAndReport = async (text: string) => {
         const post = await sc.post(sc.dids.carol, text)
