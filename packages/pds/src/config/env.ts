@@ -40,6 +40,7 @@ export function readEnv() {
     // database
     dataDirectory: envStr('PDS_DATA_DIRECTORY'),
     disableWalAutoCheckpoint: envBool('PDS_SQLITE_DISABLE_WAL_AUTO_CHECKPOINT'),
+    synchronousFull: envBool('PDS_SQLITE_SYNCHRONOUS_FULL'),
     accountDbLocation: envStr('PDS_ACCOUNT_DB_LOCATION'),
     sequencerDbLocation: envStr('PDS_SEQUENCER_DB_LOCATION'),
     didCacheDbLocation: envStr('PDS_DID_CACHE_DB_LOCATION'),

@@ -49,6 +49,12 @@ export class Database<Schema> implements AsyncDisposable {
     await sql`PRAGMA journal_mode = WAL`.execute(this.db)
   }
 
+  // Not retried: callers wrap this in retrySqlite(). On a fresh connection it
+  // can be the first statement, which may hit SQLITE_BUSY during WAL recovery.
+  async ensureSynchronousFull() {
+    await sql`PRAGMA synchronous = FULL`.execute(this.db)
+  }
+
   async transactionNoRetry<T>(
     fn: (db: Database<Schema>) => T | PromiseLike<T>,
   ): Promise<T> {
