@@ -203,7 +203,8 @@ export class ServerConfig {
       process.env.BSKY_SEARCH_URL ||
       process.env.BSKY_SEARCH_ENDPOINT ||
       undefined
-    // bsky.Service hosts that serve SearchActorsTypeahead in place of the dataplane
+    // bsky.Service hosts that serve SearchActorsTypeahead in place of the
+    // dataplane, for requests with the TypeaheadServiceEnable gate on
     const typeaheadUrls = envList(process.env.BSKY_TYPEAHEAD_URL)
     // Prohibited search terms CSV, applied only on the typeahead service path
     const typeaheadProhibitedTermsFile =

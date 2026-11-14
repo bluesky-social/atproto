@@ -120,7 +120,11 @@ const skeletonV2 = async (
 
 const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
   const { typeaheadClient, typeaheadProhibitedTerms, dataplane } = input.ctx
-  if (typeaheadClient) {
+  const { features } = input.params.hydrateCtx
+  if (
+    typeaheadClient &&
+    features.checkGate(features.Gate.TypeaheadServiceEnable)
+  ) {
     // @NOTE The dataplane applies prohibited terms itself; the typeahead
     // service doesn't, so they're checked here before calling it.
     const term = input.params.q ?? input.params.term ?? ''
@@ -130,9 +134,8 @@ const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
     return skeletonV2(input, typeaheadClient)
   }
   const useV2 =
-    input.params.hydrateCtx.features.checkGate(
-      input.params.hydrateCtx.features.Gate.SearchV2Enable,
-    ) || input.params.isV2Override
+    features.checkGate(features.Gate.SearchV2Enable) ||
+    input.params.isV2Override
   return useV2 ? skeletonV2(input, dataplane) : skeletonV1(input)
 }
 

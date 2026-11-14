@@ -75,12 +75,12 @@ describe('actor typeahead from a typeahead service', () => {
   })
 
   it.each([
-    { name: 'disabled', gate: undefined },
-    { name: 'enabled', gate: Gate.SearchV2Enable },
+    { name: 'disabled', gates: [] },
+    { name: 'enabled', gates: [Gate.SearchV2Enable] },
   ])(
     'serves the skeleton from the typeahead service with SearchV2Enable $name',
-    async ({ gate }) => {
-      using _gate = mockGate(gate)
+    async ({ gates }) => {
+      using _gates = mockGates(Gate.TypeaheadServiceEnable, ...gates)
       using dataplane = spyDataplane()
 
       const { data } = await agent.app.bsky.actor.searchActorsTypeahead(
@@ -105,6 +105,7 @@ describe('actor typeahead from a typeahead service', () => {
   )
 
   it('returns no actors for a prohibited query without calling the typeahead service', async () => {
+    using _gates = mockGates(Gate.TypeaheadServiceEnable)
     using dataplane = spyDataplane()
 
     const { data } = await agent.app.bsky.actor.searchActorsTypeahead({
@@ -118,6 +119,7 @@ describe('actor typeahead from a typeahead service', () => {
   })
 
   it('returns a 400 when the typeahead service rejects the query', async () => {
+    using _gates = mockGates(Gate.TypeaheadServiceEnable)
     respond = () => {
       throw new ConnectError('bad query', Code.InvalidArgument)
     }
@@ -128,7 +130,7 @@ describe('actor typeahead from a typeahead service', () => {
   })
 
   it('does not fall back to the dataplane when the typeahead service fails', async () => {
-    using _gate = mockGate(Gate.SearchV2Enable)
+    using _gates = mockGates(Gate.TypeaheadServiceEnable, Gate.SearchV2Enable)
     using dataplane = spyDataplane()
     respond = () => {
       throw new ConnectError('overloaded', Code.Unavailable)
@@ -143,28 +145,43 @@ describe('actor typeahead from a typeahead service', () => {
   })
 
   it.each([
-    {
-      name: 'enabled',
-      gate: Gate.SearchV2Enable,
-      method: 'searchActorsTypeahead',
-    },
-    { name: 'disabled', gate: undefined, method: 'searchActors' },
-  ] as const)(
-    'calls the dataplane when no typeahead service is configured, with SearchV2Enable $name',
-    async ({ gate, method }) => {
-      using _gate = mockGate(gate)
-      using _client = vi
-        .spyOn(network.bsky.ctx, 'typeaheadClient', 'get')
-        .mockReturnValue(undefined)
+    { service: 'configured, gate off', configured: true, v2: true },
+    { service: 'configured, gate off', configured: true, v2: false },
+    { service: 'not configured, gate on', configured: false, v2: true },
+    { service: 'not configured, gate on', configured: false, v2: false },
+  ])(
+    'uses the dataplane with the typeahead service $service and SearchV2Enable $v2',
+    async ({ configured, v2 }) => {
+      using _gates = mockGates(
+        ...(configured ? [] : [Gate.TypeaheadServiceEnable]),
+        ...(v2 ? [Gate.SearchV2Enable] : []),
+      )
+      using _client = configured
+        ? undefined
+        : vi
+            .spyOn(network.bsky.ctx, 'typeaheadClient', 'get')
+            .mockReturnValue(undefined)
       using dataplane = spyDataplane()
 
       // The dataplane applies prohibited terms itself, so they aren't checked here.
       await agent.app.bsky.actor.searchActorsTypeahead({ q: 'blockedterm' })
 
-      expect(dataplane[method]).toHaveBeenCalledOnce()
+      expect(
+        v2 ? dataplane.searchActorsTypeahead : dataplane.searchActors,
+      ).toHaveBeenCalledOnce()
       expect(requests).toEqual([])
     },
   )
+
+  it('uses the dataplane when feature gates are unavailable', async () => {
+    using dataplane = spyDataplane()
+
+    // No GrowthBook in tests: every gate is off, as during an outage.
+    await agent.app.bsky.actor.searchActorsTypeahead({ q: 'b' })
+
+    expect(dataplane.searchActors).toHaveBeenCalledOnce()
+    expect(requests).toEqual([])
+  })
 
   async function viewerHeaders() {
     return network.serviceHeaders(
@@ -188,14 +205,14 @@ describe('actor typeahead from a typeahead service', () => {
     }
   }
 
-  function mockGate(enabled?: Gate) {
+  function mockGates(...enabled: Gate[]) {
     return vi
       .spyOn(network.bsky.ctx.featureGatesClient, 'scope')
       .mockImplementation(() => ({
         Gate,
-        checkGate: (gate) => gate === enabled,
+        checkGate: (gate) => enabled.includes(gate),
         checkGates: (gates) =>
-          new Map(gates.map((gate) => [gate, gate === enabled])),
+          new Map(gates.map((gate) => [gate, enabled.includes(gate)])),
       }))
   }
 })
