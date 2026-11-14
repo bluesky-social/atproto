@@ -67,6 +67,8 @@ export interface ServerConfigValues {
   rolodexIgnoreBadTls?: boolean
   externalRecordsSafeDomains?: string[]
   searchUrl?: string
+  typeaheadUrls?: string[]
+  typeaheadProhibitedTermsFile?: string
   searchTagsHide: Set<string>
   searchTagsHideAll: Set<string>
   suggestionsUrl?: string
@@ -201,6 +203,12 @@ export class ServerConfig {
       process.env.BSKY_SEARCH_URL ||
       process.env.BSKY_SEARCH_ENDPOINT ||
       undefined
+    // bsky.Service hosts that serve SearchActorsTypeahead in place of the
+    // dataplane, for requests with the TypeaheadServiceEnable gate on
+    const typeaheadUrls = envList(process.env.BSKY_TYPEAHEAD_URL)
+    // Prohibited search terms CSV, applied only on the typeahead service path
+    const typeaheadProhibitedTermsFile =
+      process.env.BSKY_TYPEAHEAD_PROHIBITED_TERMS_FILE || undefined
     const searchTagsHide = new Set(envList(process.env.BSKY_SEARCH_TAGS_HIDE))
     const searchTagsHideAll = new Set(
       envList(process.env.BSKY_SEARCH_TAGS_HIDE_ALL),
@@ -469,6 +477,8 @@ export class ServerConfig {
       dataplaneHttpVersion,
       dataplaneIgnoreBadTls,
       searchUrl,
+      typeaheadUrls,
+      typeaheadProhibitedTermsFile,
       searchTagsHide,
       searchTagsHideAll,
       suggestionsUrl,
@@ -660,6 +670,14 @@ export class ServerConfig {
 
   get searchUrl() {
     return this.cfg.searchUrl
+  }
+
+  get typeaheadUrls() {
+    return this.cfg.typeaheadUrls ?? []
+  }
+
+  get typeaheadProhibitedTermsFile() {
+    return this.cfg.typeaheadProhibitedTermsFile
   }
 
   get searchTagsHide() {

@@ -16,6 +16,7 @@ import {
   type SkeletonFnInput,
   createPipeline,
 } from '../../../../pipeline.js'
+import type { ProhibitedTerms } from '../../../../prohibited-terms.js'
 import type { Views } from '../../../../views/index.js'
 import { resHeaders, resolveSearchV2Override } from '../../../util.js'
 
@@ -97,12 +98,13 @@ const skeletonV1 = async (
 
 const skeletonV2 = async (
   inputs: SkeletonFnInput<Context, Params>,
+  client: DataPlaneClient,
 ): Promise<Skeleton> => {
-  const { ctx, params } = inputs
+  const { params } = inputs
   const term = params.q ?? params.term ?? ''
 
   // Surface dataplane InvalidArgument errors as a 400 rather than a 500.
-  const res = await ctx.dataplane
+  const res = await client
     .searchActorsTypeahead({
       params: {
         query: term,
@@ -117,12 +119,24 @@ const skeletonV2 = async (
 }
 
 const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
+  const { typeaheadClient, typeaheadProhibitedTerms, dataplane } = input.ctx
+  const { features } = input.params.hydrateCtx
+  if (
+    typeaheadClient &&
+    features.checkGate(features.Gate.TypeaheadServiceEnable)
+  ) {
+    // @NOTE The dataplane applies prohibited terms itself; the typeahead
+    // service doesn't, so they're checked here before calling it.
+    const term = input.params.q ?? input.params.term ?? ''
+    if (typeaheadProhibitedTerms?.isBlocked(term)) return { dids: [] }
+    // @NOTE No fallback to the dataplane when the typeahead service fails: that
+    // would load the dataplane exactly when the typeahead service is overloaded.
+    return skeletonV2(input, typeaheadClient)
+  }
   const useV2 =
-    input.params.hydrateCtx.features.checkGate(
-      input.params.hydrateCtx.features.Gate.SearchV2Enable,
-    ) || input.params.isV2Override
-  const skeletonFn = useV2 ? skeletonV2 : skeletonV1
-  return skeletonFn(input)
+    features.checkGate(features.Gate.SearchV2Enable) ||
+    input.params.isV2Override
+  return useV2 ? skeletonV2(input, dataplane) : skeletonV1(input)
 }
 
 const hydration = async (
@@ -159,6 +173,8 @@ const presentation = (
 
 type Context = {
   dataplane: DataPlaneClient
+  typeaheadClient?: DataPlaneClient
+  typeaheadProhibitedTerms?: ProhibitedTerms
   hydrator: Hydrator
   views: Views
   searchClient?: Client
