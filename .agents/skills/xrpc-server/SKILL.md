@@ -299,7 +299,8 @@ rejects the connection with that error. The subscription context is
 
 `packages/pds/src/api/com/atproto/sync/subscribeRepos.ts` is the reference
 implementation; `packages/ozone/src/api/label/subscribeLabels.ts` follows the
-same shape.
+same shape. To _consume_ a subscription, see the
+[lex-client skill](../lex-client/SKILL.md#subscriptions).
 
 ## File layout
 

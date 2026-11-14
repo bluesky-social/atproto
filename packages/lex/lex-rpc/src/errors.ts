@@ -20,7 +20,7 @@ import { parseWWWAuthenticateHeader } from './www-authenticate.js'
  * to convert non-XRPC error responses from upstream servers into a standardized
  * XRPC error for downstream clients.
  */
-const StatusErrorCodes = new Map<number, LexErrorCode>([
+const STATUS_ERROR_CODES = [
   [400, 'InvalidRequest'],
   [401, 'AuthenticationRequired'],
   [403, 'Forbidden'],
@@ -34,7 +34,15 @@ const StatusErrorCodes = new Map<number, LexErrorCode>([
   [502, 'UpstreamFailure'],
   [503, 'NotEnoughResources'],
   [504, 'UpstreamTimeout'],
-])
+] as const
+const statusErrorCodes = new Map(STATUS_ERROR_CODES)
+export type StatusErrorCode = (typeof STATUS_ERROR_CODES)[number][1]
+export function getStatusErrorCode(status: number): StatusErrorCode {
+  return (
+    (statusErrorCodes as Map<number, StatusErrorCode>).get(status) ??
+    statusErrorCodes.get(status >= 500 ? 502 : 400)!
+  )
+}
 
 export type { XrpcUnknownResponsePayload }
 
@@ -59,9 +67,40 @@ export type DownstreamError<N extends LexErrorCode = LexErrorCode> = {
  * - 522 Connection Timed Out (Cloudflare)
  * - 524 A Timeout Occurred (Cloudflare)
  */
-export const RETRYABLE_HTTP_STATUS_CODES: ReadonlySet<number> = new Set([
+export const RETRYABLE_HTTP_STATUS_CODES = Object.freeze([
   408, 425, 429, 500, 502, 503, 504, 522, 524,
-])
+] as const)
+const retryableHttpStatusCodes = new Set(RETRYABLE_HTTP_STATUS_CODES)
+export type RetryableHttpStatus = (typeof RETRYABLE_HTTP_STATUS_CODES)[number]
+export function isRetryableHttpStatus(
+  status: unknown,
+): status is RetryableHttpStatus {
+  return (retryableHttpStatusCodes as Set<unknown>).has(status)
+}
+
+/**
+ * XRPC error codes that indicate a transient error that may succeed on retry:
+ * the codes generated from {@link RETRYABLE_HTTP_STATUS_CODES} (e.g.
+ * `RateLimitExceeded`, `InternalServerError`, `UpstreamFailure`). Used where an
+ * error code is all there is to classify, such as a subscription's error frame.
+ */
+export const RETRYABLE_ERROR_CODES = Object.freeze(
+  STATUS_ERROR_CODES.filter(
+    (
+      entry,
+    ): entry is Extract<
+      (typeof STATUS_ERROR_CODES)[number],
+      readonly [RetryableHttpStatus, string]
+    > => (retryableHttpStatusCodes as Set<number>).has(entry[0]),
+  ).map(([, code]) => code),
+)
+const retryableErrorCodes = new Set<StatusErrorCode>(RETRYABLE_ERROR_CODES)
+export type RetryableErrorCode = (typeof RETRYABLE_ERROR_CODES)[number]
+export function isRetryableErrorCode(
+  code: unknown,
+): code is RetryableErrorCode {
+  return (retryableErrorCodes as Set<unknown>).has(code)
+}
 
 export { LexError }
 export type { LexErrorCode, LexErrorData }
@@ -193,9 +232,7 @@ export class XrpcResponseError<
     const { error, message } = isXrpcErrorPayload(payload)
       ? payload.body
       : {
-          error:
-            StatusErrorCodes.get(response.status) ??
-            (response.status >= 500 ? 'UpstreamFailure' : 'InvalidRequest'),
+          error: getStatusErrorCode(response.status),
           message: buildResponseOverviewMessage(response),
         }
     super(method, error, message, options)
@@ -206,7 +243,7 @@ export class XrpcResponseError<
   }
 
   override shouldRetry(): boolean {
-    return RETRYABLE_HTTP_STATUS_CODES.has(this.response.status)
+    return isRetryableHttpStatus(this.response.status)
   }
 
   override toJSON(): LexErrorData {
@@ -333,7 +370,7 @@ export class XrpcInvalidResponseError<
   }
 
   override shouldRetry(): boolean {
-    return RETRYABLE_HTTP_STATUS_CODES.has(this.response.status)
+    return isRetryableHttpStatus(this.response.status)
   }
 
   override toDownstreamError(): DownstreamError {

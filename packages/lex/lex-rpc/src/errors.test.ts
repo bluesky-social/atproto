@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { IssueInvalidType, LexValidationError, l } from '@atproto/lex-schema'
 import {
+  RETRYABLE_ERROR_CODES,
   XrpcAuthenticationError,
   XrpcFetchError,
   XrpcInternalError,
@@ -651,5 +652,17 @@ describe('asXrpcFailure', () => {
     })
     const failure = asXrpcFailure(testQuery, err)
     expect(failure).toBeInstanceOf(XrpcInternalError)
+  })
+})
+
+describe('RETRYABLE_ERROR_CODES', () => {
+  it('contains the codes of the retryable HTTP statuses', () => {
+    expect([...RETRYABLE_ERROR_CODES].sort()).toEqual([
+      'InternalServerError',
+      'NotEnoughResources',
+      'RateLimitExceeded',
+      'UpstreamFailure',
+      'UpstreamTimeout',
+    ])
   })
 })

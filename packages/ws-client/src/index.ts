@@ -33,6 +33,7 @@ export {
   HeartbeatTimeoutError,
   IdleTimeoutError,
   SocketError,
+  UnexpectedResponseError,
   WebSocketClientError,
 } from './lib/errors.js'
 export {

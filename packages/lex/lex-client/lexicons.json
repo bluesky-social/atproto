@@ -15,7 +15,8 @@
     "com.atproto.repo.listRecords",
     "com.atproto.repo.putRecord",
     "com.atproto.repo.uploadBlob",
-    "com.atproto.sync.getBlob"
+    "com.atproto.sync.getBlob",
+    "com.atproto.sync.subscribeRepos"
   ],
   "resolutions": {
     "com.atproto.repo.applyWrites": {
@@ -53,6 +54,10 @@
     "com.atproto.sync.getBlob": {
       "uri": "file://../../../lexicons/com/atproto/sync/getBlob.json",
       "cid": "bafyreifdvysv4cqey5zcsc6kwvzseu6lrazbkhw2nk7zojkjryqcbxjcp4"
+    },
+    "com.atproto.sync.subscribeRepos": {
+      "uri": "file://../../../lexicons/com/atproto/sync/subscribeRepos.json",
+      "cid": "bafyreic6fm5atifiaq67u44dtxc3ufjbq3z7yysryjrzrw37hkb32yajbi"
     }
   }
 }

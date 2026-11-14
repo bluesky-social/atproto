@@ -40,9 +40,25 @@ import {
 export type XrpcRequestParams<M extends Procedure | Query | Subscription> =
   InferInput<M['parameters']>
 
-// If all params are optional, allow omitting the params object
-type XrpcRequestParamsOptions<P extends Params> =
-  NonNullable<unknown> extends P ? { params?: P } : { params: P }
+/**
+ * The params of an XRPC method, or a (possibly async) function returning them.
+ * A function is invoked for every attempt: each retry of a request, and each
+ * (re)connection of a subscription — which is how a subscription resumes from
+ * the latest cursor.
+ *
+ * @typeParam P - The params type
+ */
+export type XrpcRequestParamsInit<P extends Params> = P | (() => P | Promise<P>)
+
+/**
+ * The `params` option of an XRPC method: optional when every parameter is.
+ *
+ * @typeParam P - The params type
+ */
+export type XrpcRequestParamsOptions<P extends Params> =
+  NonNullable<unknown> extends P
+    ? { params?: XrpcRequestParamsInit<P> }
+    : { params: XrpcRequestParamsInit<P> }
 
 type XrpcRequestPayload<M extends Procedure | Query> = M extends Procedure
   ? InferPayload<M['input'], BinaryBodyInit>
@@ -224,7 +240,7 @@ export async function xrpcSafe<const M extends Query | Procedure>(
     throwIfAborted(options.signal)
     try {
       const agent = buildAgent(agentOpts)
-      const url = xrpcRequestUrl(method, options)
+      const url = await xrpcRequestUrl(method, options)
       const request = xrpcRequestInit(method, options)
       const response = await agent.fetchHandler(url, request).catch((err) => {
         const cause = extractFetchErrorCause(err)
@@ -252,17 +268,28 @@ export async function xrpcSafe<const M extends Query | Procedure>(
   }
 }
 
-function xrpcRequestUrl<M extends Procedure | Query | Subscription>(
+/**
+ * Builds the path (and query string) of an XRPC request, resolving the params
+ * (see {@link XrpcRequestParamsInit}), validating them against the method's
+ * schema and applying their defaults.
+ */
+export async function xrpcRequestUrl<
+  M extends Procedure | Query | Subscription,
+>(
   method: M,
-  options: { params?: Params },
-): `/xrpc/${NsidString}${'' | `?${string}`}` {
+  options: { params?: XrpcRequestParamsInit<Params> },
+): Promise<`/xrpc/${NsidString}${'' | `?${string}`}`> {
   const path = `/xrpc/${method.nsid}` as const
 
   // @NOTE param.toURLSearchParams() will always validate the params in order to
   // apply default values, so we can't disable it with options.validateRequest
 
   const queryString = method.parameters
-    ?.toURLSearchParams(options.params ?? {})
+    ?.toURLSearchParams(
+      (typeof options.params === 'function'
+        ? await options.params.call(null)
+        : options.params) ?? {},
+    )
     .toString()
 
   return queryString ? (`${path}?${queryString}` as const) : path
