@@ -7,12 +7,12 @@ import {
   expect,
   it,
 } from 'vitest'
-import type { AppBskyActorDefs, AtpAgent } from '@atproto/api'
+import type { AppBskyActorDefs, AppBskyFeedDefs, AtpAgent } from '@atproto/api'
 import { type SeedClient, TestNetwork } from '@atproto/dev-env'
 import type { DidString } from '@atproto/syntax'
 import { knownFollowersSeed } from '../seed/known-followers.js'
 
-describe('internal actor views', () => {
+describe('internal views', () => {
   let network: TestNetwork
   let pdsAgent: AtpAgent
   let seedClient: SeedClient
@@ -21,7 +21,7 @@ describe('internal actor views', () => {
 
   beforeAll(async () => {
     network = await TestNetwork.create({
-      dbPostgresSchema: 'bsky_internal_actor',
+      dbPostgresSchema: 'bsky_views_internal',
     })
     pdsAgent = network.pds.getAgent()
     seedClient = network.getSeedClient()
@@ -179,6 +179,21 @@ describe('internal actor views', () => {
         expect(takendown?.handle).not.toBe('handle.invalid')
         expect(takendown?.displayName).toBe('Taken Down')
       })
+    })
+  })
+
+  describe('getPosts', () => {
+    it('returns the requested posts', async () => {
+      const post = await seedClient.post(dids.mix_view, 'hello')
+      await network.processAll()
+      const uri = post.ref.uriStr
+      const res = await fetch(
+        `${network.bsky.url}/xrpc/internal.bsky.feed.getPosts?uris=${encodeURIComponent(uri)}`,
+        { headers: network.bsky.adminAuthHeaders() },
+      )
+      const body = (await res.json()) as { posts: AppBskyFeedDefs.PostView[] }
+      expect(res.status).toBe(200)
+      expect(body.posts.map((p) => p.uri)).toEqual([uri])
     })
   })
 })

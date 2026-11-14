@@ -6,7 +6,7 @@ import { com } from '../../../../lexicons/index.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.admin.getAccountInfos, {
-    auth: ctx.authVerifier.optionalStandardOrRole,
+    auth: ctx.authVerifier.standardReadOrRoleOptional,
     handler: async ({ params, auth }) => {
       const { dids } = params
       const { includeTakedowns } = ctx.authVerifier.parseCreds(auth)

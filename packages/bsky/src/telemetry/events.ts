@@ -15,6 +15,9 @@ import { isAbortError, isTimeoutError } from './util.js'
 const meter: Meter = metrics.getMeter('@atproto/bsky')
 const logger: Logger = logs.getLogger('@atproto/bsky')
 
+export type AuthVerifierName =
+  'standard' | 'entrywaySession' | 'bsg' | 'role' | 'modService' | 'anonymous'
+
 export type HydrationSource =
   'known_likers' | 'known_followers' | 'activity_subscriptions'
 
@@ -95,8 +98,7 @@ export type ExternalHydrationWork = {
  */
 class EventReporter {
   #authVerifierRequests = meter.createCounter<{
-    verifier:
-      'standard' | 'entrywaySession' | 'role' | 'modService' | 'anonymous'
+    verifier: AuthVerifierName
   }>('auth.verifier.requests', {
     description:
       'Requests by selected authentication verifier, including failed attempts; wrapper verifiers are not counted separately',
@@ -264,8 +266,7 @@ class EventReporter {
   }
 
   authVerifierRequest(
-    verifier:
-      'standard' | 'entrywaySession' | 'role' | 'modService' | 'anonymous',
+    verifier: AuthVerifierName,
     {
       did,
       appPassword,

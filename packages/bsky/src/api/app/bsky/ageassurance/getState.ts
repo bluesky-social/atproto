@@ -6,7 +6,7 @@ import type { ActorInfo } from '../../../../proto/bsky_pb.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(app.bsky.ageassurance.getState, {
-    auth: ctx.authVerifier.standard,
+    auth: ctx.authVerifier.standardRead(),
     handler: async ({
       auth,
     }): Promise<app.bsky.ageassurance.getState.$Output> => {

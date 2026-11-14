@@ -16,7 +16,7 @@ import { resHeaders } from '../../../util.js'
 export default function (server: Server, ctx: AppContext) {
   const getPosts = createPipeline(skeleton, hydration, noBlocks, presentation)
   server.add(app.bsky.feed.getPosts, {
-    auth: ctx.authVerifier.standardOptionalParameterized({
+    auth: ctx.authVerifier.standardReadOptional({
       lxmCheck: (method) => {
         if (!method) return false
         return (

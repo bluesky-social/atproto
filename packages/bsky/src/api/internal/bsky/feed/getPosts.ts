@@ -1,0 +1,92 @@
+import { dedupeStrs, mapDefined } from '@atproto/common'
+import type { AtUriString } from '@atproto/syntax'
+import type { Server } from '@atproto/xrpc-server'
+import type { AppContext } from '../../../../context.js'
+import type {
+  HydrateCtx,
+  HydrationState,
+  Hydrator,
+} from '../../../../hydration/hydrator.js'
+import { internal } from '../../../../lexicons/index.js'
+import { createPipeline } from '../../../../pipeline.js'
+import { uriToDid as creatorFromUri } from '../../../../util/uris.js'
+import type { Views } from '../../../../views/index.js'
+import { resHeaders } from '../../../util.js'
+
+export default function (server: Server, ctx: AppContext) {
+  const getPosts = createPipeline(skeleton, hydration, noBlocks, presentation)
+  server.add(internal.bsky.feed.getPosts, {
+    auth: ctx.authVerifier.internalOrRole,
+    handler: async ({ params, auth, req }) => {
+      const { viewer } = ctx.authVerifier.parseCreds(auth)
+      const labelers = ctx.reqLabelers(req)
+      const hydrateCtx = await ctx.hydrator.createContext({
+        xrpcEndpoint: internal.bsky.feed.getPosts.$lxm,
+        labelers,
+        viewer,
+        includeTakedowns: params.includeTakedowns,
+      })
+
+      const results = await getPosts({ ...params, hydrateCtx }, ctx)
+
+      return {
+        encoding: 'application/json',
+        body: results,
+        headers: resHeaders({ labelers: hydrateCtx.labelers }),
+      }
+    },
+  })
+}
+
+const skeleton = async (inputs: { params: Params }): Promise<Skeleton> => {
+  return { posts: dedupeStrs(inputs.params.uris) }
+}
+
+const hydration = async (inputs: {
+  ctx: Context
+  params: Params
+  skeleton: Skeleton
+}) => {
+  const { ctx, params, skeleton } = inputs
+  return ctx.hydrator.hydratePosts(
+    skeleton.posts.map((uri) => ({ uri })),
+    params.hydrateCtx,
+  )
+}
+
+const noBlocks = (inputs: {
+  ctx: Context
+  skeleton: Skeleton
+  hydration: HydrationState
+}) => {
+  const { ctx, skeleton, hydration } = inputs
+  skeleton.posts = skeleton.posts.filter((uri) => {
+    const creator = creatorFromUri(uri)
+    return !ctx.views.viewerBlockExists(creator, hydration)
+  })
+  return skeleton
+}
+
+const presentation = (inputs: {
+  ctx: Context
+  params: Params
+  skeleton: Skeleton
+  hydration: HydrationState
+}) => {
+  const { ctx, skeleton, hydration } = inputs
+  const posts = mapDefined(skeleton.posts, (uri) =>
+    ctx.views.post(uri, hydration),
+  )
+  return { posts }
+}
+
+type Context = {
+  hydrator: Hydrator
+  views: Views
+}
+
+type Params = internal.bsky.feed.getPosts.$Params & { hydrateCtx: HydrateCtx }
+
+type Skeleton = {
+  posts: AtUriString[]
+}

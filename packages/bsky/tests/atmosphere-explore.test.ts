@@ -395,23 +395,25 @@ async function setup(config: unknown = {}, exploreEnabled = true) {
     ) as Client | undefined,
     reqLabelers: () => ({ dids: [labeler], redact: new Set([labeler]) }),
     authVerifier: {
-      standardOptional: async ({ req }) => {
-        if (
-          req.headers.authorization &&
-          req.headers.authorization !== 'Bearer valid'
-        )
-          throw new AuthRequiredError()
-        return req.headers.authorization
-          ? {
-              credentials: {
-                type: 'standard',
-                iss: viewer,
-                aud: 'did:plc:appview',
-              },
-            }
-          : { credentials: { type: 'none', iss: null } }
-      },
-    } satisfies Pick<AppContext['authVerifier'], 'standardOptional'>,
+      standardReadOptional:
+        () =>
+        async ({ req }) => {
+          if (
+            req.headers.authorization &&
+            req.headers.authorization !== 'Bearer valid'
+          )
+            throw new AuthRequiredError()
+          return req.headers.authorization
+            ? {
+                credentials: {
+                  type: 'standard',
+                  iss: viewer,
+                  aud: 'did:plc:appview',
+                },
+              }
+            : { credentials: { type: 'none', iss: null } }
+        },
+    } satisfies Pick<AppContext['authVerifier'], 'standardReadOptional'>,
   } as unknown as AppContext
   const xrpc = createServer([], { validateResponse: true })
   const fetchMock = vi

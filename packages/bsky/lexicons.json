@@ -83,6 +83,7 @@
     "app.bsky.feed.getRepostedBy",
     "app.bsky.feed.getSuggestedFeeds",
     "app.bsky.feed.getTimeline",
+    "app.bsky.feed.hydrateFeedSkeleton",
     "app.bsky.feed.like",
     "app.bsky.feed.post",
     "app.bsky.feed.postgate",
@@ -346,6 +347,7 @@
     "com.atproto.temp.revokeAccountCredentials",
     "com.germnetwork.declaration",
     "internal.bsky.actor.getProfiles",
+    "internal.bsky.feed.getPosts",
     "place.stream.badge.defs",
     "place.stream.chat.defs",
     "place.stream.chat.pinnedRecord",
@@ -731,6 +733,10 @@
     "app.bsky.feed.getTimeline": {
       "uri": "https://raw.githubusercontent.com/bluesky-social/bsky/refs/heads/main/lexicons/app/bsky/feed/getTimeline.json",
       "cid": "bafyreibcavofg3nlnv4ubkt43f7nj5k4yhex4lz3tvpeny6nqdpqas767e"
+    },
+    "app.bsky.feed.hydrateFeedSkeleton": {
+      "uri": "https://raw.githubusercontent.com/bluesky-social/bsky/refs/heads/main/lexicons/app/bsky/feed/hydrateFeedSkeleton.json",
+      "cid": "bafyreihejsefsbr6wkzbzvdcatf3olbaxc52mk37okl3mskixt62bdapgi"
     },
     "app.bsky.feed.like": {
       "uri": "https://raw.githubusercontent.com/bluesky-social/bsky/refs/heads/main/lexicons/app/bsky/feed/like.json",
@@ -1783,6 +1789,10 @@
     "internal.bsky.actor.getProfiles": {
       "uri": "file://../../lexicons-overrides/internal/bsky/actor/getProfiles.json",
       "cid": "bafyreihdyn4pmc3brvufe7vp4c6psldxeumydfmeqvoswfydtw5fjcy6rq"
+    },
+    "internal.bsky.feed.getPosts": {
+      "uri": "file://../../lexicons-overrides/internal/bsky/feed/getPosts.json",
+      "cid": "bafyreieysqluf4jrwugai7xt5mc2qob2gh444ilf6hixr5kn37eb6g7ale"
     },
     "place.stream.badge.defs": {
       "uri": "file://../../lexicons-overrides/place/stream/badge/defs.json",

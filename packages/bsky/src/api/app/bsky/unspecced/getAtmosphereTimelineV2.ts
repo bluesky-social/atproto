@@ -6,7 +6,7 @@ import { loadAtmosphereTimeline } from './atmosphere-timeline-v2/pagination.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(app.bsky.unspecced.getAtmosphereTimelineV2, {
-    auth: ctx.authVerifier.standard,
+    auth: ctx.authVerifier.standardRead(),
     handler: async ({ auth, params, req, signal }) => {
       const now = Date.now()
       const viewer = auth.credentials.iss

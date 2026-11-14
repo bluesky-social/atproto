@@ -7,7 +7,7 @@ import { validateUri } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(app.bsky.bookmark.createBookmark, {
-    auth: ctx.authVerifier.standard,
+    auth: ctx.authVerifier.standardWriteService(),
     handler: async ({ input, auth }) => {
       const actorDid = auth.credentials.iss
       const { cid, uri } = input.body

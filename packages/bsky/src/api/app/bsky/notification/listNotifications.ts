@@ -34,7 +34,7 @@ export default function (server: Server, ctx: AppContext) {
     presentation,
   )
   server.add(app.bsky.notification.listNotifications, {
-    auth: ctx.authVerifier.standard,
+    auth: ctx.authVerifier.standardRead(),
     handler: async ({ params, auth, req }) => {
       if (params.seenAt) {
         throw new InvalidRequestError('The seenAt parameter is unsupported')

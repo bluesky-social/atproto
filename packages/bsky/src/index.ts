@@ -238,12 +238,22 @@ export class BskyAppView {
     const entrywayJwtPublicKey = config.entrywayJwtPublicKeyHex
       ? createPublicKeyObject(config.entrywayJwtPublicKeyHex)
       : undefined
+    const bsgJwtSecret = config.bsgJwtSecret
+      ? Buffer.from(config.bsgJwtSecret, 'utf8')
+      : undefined
+    const internalServiceSecrets = Object.fromEntries(
+      Object.entries(config.internalServiceSecrets ?? {}).map(
+        ([name, secret]) => [name, Buffer.from(secret, 'utf8')],
+      ),
+    )
     const authVerifier = new AuthVerifier(dataplane, {
       ownDid: config.serverDid,
       alternateAudienceDids: config.alternateAudienceDids,
       modServiceDid: config.modServiceDid,
       adminPasses: config.adminPasswords,
       entrywayJwtPublicKey,
+      bsgJwtSecret,
+      internalServiceSecrets,
     })
 
     const blobDispatcher = createBlobDispatcher(config)

@@ -12,7 +12,7 @@ import { resHeaders } from '../../../util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(app.bsky.unspecced.getAtmosphereRecommendedActivity, {
-    auth: ctx.authVerifier.standardOptional,
+    auth: ctx.authVerifier.standardReadOptional(),
     handler: async ({ auth, params, req, signal }) => {
       const viewer = auth.credentials.iss
       const features = ctx.featureGatesClient.scope(

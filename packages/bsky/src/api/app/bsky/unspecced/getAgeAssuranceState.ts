@@ -6,7 +6,7 @@ import type { ActorInfo } from '../../../../proto/bsky_pb.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(app.bsky.unspecced.getAgeAssuranceState, {
-    auth: ctx.authVerifier.standard,
+    auth: ctx.authVerifier.standardRead(),
     handler: async ({ auth }) => {
       const viewer = auth.credentials.iss
       const actorInfo = await getAgeVerificationState(ctx, viewer)

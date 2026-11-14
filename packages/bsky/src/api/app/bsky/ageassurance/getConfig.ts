@@ -5,7 +5,7 @@ import { app } from '../../../../lexicons/index.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(app.bsky.ageassurance.getConfig, {
-    auth: ctx.authVerifier.standardOptional,
+    auth: ctx.authVerifier.standardReadOptional(),
     handler: async () => {
       return {
         encoding: 'application/json',

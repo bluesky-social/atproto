@@ -9,7 +9,7 @@ import { assertLexPlatform, lexPlatformToProtoPlatform } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(app.bsky.notification.unregisterPush, {
-    auth: ctx.authVerifier.standard,
+    auth: ctx.authVerifier.standardWriteService(),
     handler: async ({ auth, input }) => {
       if (!ctx.courierClient) {
         throw new MethodNotImplementedError(

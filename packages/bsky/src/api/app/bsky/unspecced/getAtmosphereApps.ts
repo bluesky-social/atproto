@@ -21,7 +21,7 @@ type AppEntry = { card: AppCard; did?: DidString }
 export default function (server: Server, ctx: AppContext) {
   const fetchApps = createFetchApps()
   server.add(app.bsky.unspecced.getAtmosphereApps, {
-    auth: ctx.authVerifier.standardOptional,
+    auth: ctx.authVerifier.standardReadOptional(),
     handler: async ({ auth, params, req, signal }) => {
       const viewer = auth.credentials.iss
       const features = ctx.featureGatesClient.scope(

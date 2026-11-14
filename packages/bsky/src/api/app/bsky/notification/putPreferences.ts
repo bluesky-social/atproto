@@ -6,7 +6,7 @@ import { getNotificationPreferences } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(app.bsky.notification.putPreferences, {
-    auth: ctx.authVerifier.standard,
+    auth: ctx.authVerifier.standardWriteService(),
     handler: async ({ input, auth }) => {
       const { priority } = input.body
       const viewer = auth.credentials.iss

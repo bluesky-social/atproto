@@ -14,12 +14,15 @@ import type { Views } from '../../../../views/index.js'
 export default function (server: Server, ctx: AppContext) {
   const getProfiles = createPipeline(skeleton, hydration, noRules, presentation)
   server.add(internal.bsky.actor.getProfiles, {
-    auth: ctx.authVerifier.role,
-    handler: async ({ params, req }) => {
+    auth: ctx.authVerifier.internalOrRole,
+    handler: async ({ params, auth, req }) => {
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({
         xrpcEndpoint: internal.bsky.actor.getProfiles.$lxm,
-        viewer: params.viewer ?? null,
+        viewer:
+          auth.credentials.type === 'internal'
+            ? auth.credentials.sub
+            : (params.viewer ?? null),
         labelers,
         includeTakedowns: params.includeTakedowns,
       })

@@ -5,7 +5,7 @@ import { assertRolodexOrThrowUnimplemented, callRolodexClient } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(app.bsky.contact.dismissMatch, {
-    auth: ctx.authVerifier.standard,
+    auth: ctx.authVerifier.standardWriteService(),
     handler: async ({ input, auth }) => {
       assertRolodexOrThrowUnimplemented(ctx)
 

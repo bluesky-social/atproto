@@ -13,7 +13,7 @@ import { resHeaders } from '../../../util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(app.bsky.unspecced.getAtmosphereRecordView, {
-    auth: ctx.authVerifier.standard,
+    auth: ctx.authVerifier.standardRead(),
     handler: async ({ params, auth, req }) => {
       const { uri, cid } = params
       if (!isCompleteRecordUri(uri)) {
