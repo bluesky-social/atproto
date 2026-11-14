@@ -11,6 +11,7 @@ import type { DeviceId } from '../device/device-id.js'
 import { InvalidCredentialsError } from '../errors/invalid-credentials-error.js'
 import { InvalidRequestError } from '../errors/invalid-request-error.js'
 import { UnknownAtprotoAccountError } from '../errors/unknown-atproto-account-error.js'
+import type { AccountSigner } from '../fedcm/fedcm-id-token.js'
 import { HCaptchaClient, type HcaptchaVerifyResult } from '../lib/hcaptcha.js'
 import { callAsync } from '../lib/util/function.js'
 import { constantTime } from '../lib/util/time.js'
@@ -322,6 +323,13 @@ export class AccountManager {
     if (isOAuthClientIdLoopback(client.id)) return
 
     await this.store.setAuthorizedClient(account.did, client.id, data)
+  }
+
+  public async getAccountSigner(did: Did): Promise<AccountSigner> {
+    if (!this.store.getAccountSigner) {
+      throw new TypeError('AccountStore does not implement getAccountSigner')
+    }
+    return this.store.getAccountSigner(did)
   }
 
   public async getAccount(did: Did): Promise<{
