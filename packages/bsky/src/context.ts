@@ -14,6 +14,7 @@ import type { FeatureGatesClient } from './feature-gates/index.js'
 import type { Hydrator } from './hydration/hydrator.js'
 import type { KwsClient } from './kws.js'
 import { httpLogger as log } from './logger.js'
+import type { ProhibitedTerms } from './prohibited-terms.js'
 import type { RolodexClient } from './rolodex.js'
 import type { StashClient } from './stash.js'
 import {
@@ -31,6 +32,7 @@ export class AppContext {
       dataplane: DataPlaneClient
       dataplaneHostList: HostList
       typeaheadClient: DataPlaneClient | undefined
+      typeaheadProhibitedTerms: ProhibitedTerms | undefined
       searchClient: Client | undefined
       suggestionsClient: Client | undefined
       irisClient: Client | undefined
@@ -68,6 +70,10 @@ export class AppContext {
 
   get typeaheadClient(): DataPlaneClient | undefined {
     return this.opts.typeaheadClient
+  }
+
+  get typeaheadProhibitedTerms(): ProhibitedTerms | undefined {
+    return this.opts.typeaheadProhibitedTerms
   }
 
   get searchClient(): Client | undefined {

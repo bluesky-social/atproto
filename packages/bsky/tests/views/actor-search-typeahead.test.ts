@@ -1,3 +1,6 @@
+import { mkdtemp, rm, writeFile } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { Code, ConnectError } from '@connectrpc/connect'
 import { connectNodeAdapter } from '@connectrpc/connect-node'
 import {
@@ -18,6 +21,11 @@ import { startServer } from '../_util.js'
 
 const UNKNOWN_DID = 'did:plc:unknownactorxxxxxxxxxxxx'
 
+const PROHIBITED_TERMS_CSV = `\
+ID,Date Requested,Value (Term / Hashtag),Match Type,Enforcement Outcome,Surface,Intervention,Priority,Implementation,Effective Start Date,Effective End Date,Date Completed,Status
+1,2026-01-01,blockedterm,Exact,Block (Zero Results),Search Results - All,,P1,,2026-01-01,,,Completed
+`
+
 describe('actor typeahead from a typeahead service', () => {
   let network: TestNetwork
   let agent: AtpAgent
@@ -25,8 +33,12 @@ describe('actor typeahead from a typeahead service', () => {
   let typeahead: AsyncDisposable & { port: number }
   let requests: (SearchTypeaheadParams | undefined)[]
   let respond: () => string[]
+  let termsDir: string
 
   beforeAll(async () => {
+    termsDir = await mkdtemp(join(tmpdir(), 'typeahead-terms-'))
+    const termsFile = join(termsDir, 'prohibited_terms.csv')
+    await writeFile(termsFile, PROHIBITED_TERMS_CSV)
     typeahead = await startServer(
       connectNodeAdapter({
         routes: (router) =>
@@ -42,6 +54,7 @@ describe('actor typeahead from a typeahead service', () => {
       dbPostgresSchema: 'bsky_views_actor_search_typeahead',
       bsky: {
         typeaheadUrls: [`http://localhost:${typeahead.port}`],
+        typeaheadProhibitedTermsFile: termsFile,
       },
     })
     agent = network.bsky.getAgent()
@@ -58,6 +71,7 @@ describe('actor typeahead from a typeahead service', () => {
   afterAll(async () => {
     await network?.close()
     await typeahead?.[Symbol.asyncDispose]()
+    if (termsDir) await rm(termsDir, { recursive: true, force: true })
   })
 
   it.each([
@@ -89,6 +103,19 @@ describe('actor typeahead from a typeahead service', () => {
       expect(dataplane.searchActors).not.toHaveBeenCalled()
     },
   )
+
+  it('returns no actors for a prohibited query without calling the typeahead service', async () => {
+    using dataplane = spyDataplane()
+
+    const { data } = await agent.app.bsky.actor.searchActorsTypeahead({
+      q: '@BlockedTerm',
+    })
+
+    expect(data.actors).toEqual([])
+    expect(requests).toEqual([])
+    expect(dataplane.searchActorsTypeahead).not.toHaveBeenCalled()
+    expect(dataplane.searchActors).not.toHaveBeenCalled()
+  })
 
   it('returns a 400 when the typeahead service rejects the query', async () => {
     respond = () => {
@@ -131,7 +158,8 @@ describe('actor typeahead from a typeahead service', () => {
         .mockReturnValue(undefined)
       using dataplane = spyDataplane()
 
-      await agent.app.bsky.actor.searchActorsTypeahead({ q: 'b' })
+      // The dataplane applies prohibited terms itself, so they aren't checked here.
+      await agent.app.bsky.actor.searchActorsTypeahead({ q: 'blockedterm' })
 
       expect(dataplane[method]).toHaveBeenCalledOnce()
       expect(requests).toEqual([])

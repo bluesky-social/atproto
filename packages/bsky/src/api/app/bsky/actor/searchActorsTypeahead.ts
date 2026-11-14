@@ -16,6 +16,7 @@ import {
   type SkeletonFnInput,
   createPipeline,
 } from '../../../../pipeline.js'
+import type { ProhibitedTerms } from '../../../../prohibited-terms.js'
 import type { Views } from '../../../../views/index.js'
 import { resHeaders, resolveSearchV2Override } from '../../../util.js'
 
@@ -118,10 +119,16 @@ const skeletonV2 = async (
 }
 
 const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
-  const { typeaheadClient, dataplane } = input.ctx
-  // @NOTE No fallback to the dataplane when the typeahead service fails: that
-  // would load the dataplane exactly when the typeahead service is overloaded.
-  if (typeaheadClient) return skeletonV2(input, typeaheadClient)
+  const { typeaheadClient, typeaheadProhibitedTerms, dataplane } = input.ctx
+  if (typeaheadClient) {
+    // @NOTE The dataplane applies prohibited terms itself; the typeahead
+    // service doesn't, so they're checked here before calling it.
+    const term = input.params.q ?? input.params.term ?? ''
+    if (typeaheadProhibitedTerms?.isBlocked(term)) return { dids: [] }
+    // @NOTE No fallback to the dataplane when the typeahead service fails: that
+    // would load the dataplane exactly when the typeahead service is overloaded.
+    return skeletonV2(input, typeaheadClient)
+  }
   const useV2 =
     input.params.hydrateCtx.features.checkGate(
       input.params.hydrateCtx.features.Gate.SearchV2Enable,
@@ -164,6 +171,7 @@ const presentation = (
 type Context = {
   dataplane: DataPlaneClient
   typeaheadClient?: DataPlaneClient
+  typeaheadProhibitedTerms?: ProhibitedTerms
   hydrator: Hydrator
   views: Views
   searchClient?: Client

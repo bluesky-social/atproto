@@ -68,6 +68,7 @@ export interface ServerConfigValues {
   externalRecordsSafeDomains?: string[]
   searchUrl?: string
   typeaheadUrls?: string[]
+  typeaheadProhibitedTermsFile?: string
   searchTagsHide: Set<string>
   searchTagsHideAll: Set<string>
   suggestionsUrl?: string
@@ -204,6 +205,9 @@ export class ServerConfig {
       undefined
     // bsky.Service hosts that serve SearchActorsTypeahead in place of the dataplane
     const typeaheadUrls = envList(process.env.BSKY_TYPEAHEAD_URL)
+    // Prohibited search terms CSV, applied only on the typeahead service path
+    const typeaheadProhibitedTermsFile =
+      process.env.BSKY_TYPEAHEAD_PROHIBITED_TERMS_FILE || undefined
     const searchTagsHide = new Set(envList(process.env.BSKY_SEARCH_TAGS_HIDE))
     const searchTagsHideAll = new Set(
       envList(process.env.BSKY_SEARCH_TAGS_HIDE_ALL),
@@ -473,6 +477,7 @@ export class ServerConfig {
       dataplaneIgnoreBadTls,
       searchUrl,
       typeaheadUrls,
+      typeaheadProhibitedTermsFile,
       searchTagsHide,
       searchTagsHideAll,
       suggestionsUrl,
@@ -668,6 +673,10 @@ export class ServerConfig {
 
   get typeaheadUrls() {
     return this.cfg.typeaheadUrls ?? []
+  }
+
+  get typeaheadProhibitedTermsFile() {
+    return this.cfg.typeaheadProhibitedTermsFile
   }
 
   get searchTagsHide() {
