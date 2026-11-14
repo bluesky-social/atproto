@@ -21,6 +21,7 @@ import queryLabels from './label/queryLabels.js'
 import subscribeLabels from './label/subscribeLabels.js'
 import cancelScheduledActions from './moderation/cancelScheduledActions.js'
 import emitEvent from './moderation/emitEvent.js'
+import emitEvents from './moderation/emitEvents.js'
 import getAccountPreferences from './moderation/getAccountPreferences.js'
 import getAccountTimeline from './moderation/getAccountTimeline.js'
 import getEvent from './moderation/getEvent.js'
@@ -104,6 +105,7 @@ export default function (server: Server, ctx: AppContext) {
   putNotificationPreferences(server, ctx)
   updateSeen(server, ctx)
   emitEvent(server, ctx)
+  emitEvents(server, ctx)
   searchRepos(server, ctx)
   adminGetRecord(server, ctx)
   adminGetRecords(server, ctx)

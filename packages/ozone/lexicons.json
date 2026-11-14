@@ -377,6 +377,7 @@
     "tools.ozone.moderation.cancelScheduledActions",
     "tools.ozone.moderation.defs",
     "tools.ozone.moderation.emitEvent",
+    "tools.ozone.moderation.emitEvents",
     "tools.ozone.moderation.getAccountPreferences",
     "tools.ozone.moderation.getAccountTimeline",
     "tools.ozone.moderation.getEvent",
@@ -1903,6 +1904,10 @@
     "tools.ozone.moderation.emitEvent": {
       "uri": "file://../../lexicons/tools/ozone/moderation/emitEvent.json",
       "cid": "bafyreigxjwdvu4nw5ch2ce7xhjktx3g5b54tpl7m6ddx5uvrqlg7udjmb4"
+    },
+    "tools.ozone.moderation.emitEvents": {
+      "uri": "file://../../lexicons/tools/ozone/moderation/emitEvents.json",
+      "cid": "bafyreiexxga3e7arencsqzva3aq4tn5gsegnxv2xyakfolnzj5sx4eegam"
     },
     "tools.ozone.moderation.getAccountPreferences": {
       "uri": "file://../../lexicons/tools/ozone/moderation/getAccountPreferences.json",

@@ -702,6 +702,7 @@ const defaultService = (
     case tools.ozone.communication.updateTemplate.$lxm:
     case tools.ozone.moderation.cancelScheduledActions.$lxm:
     case tools.ozone.moderation.emitEvent.$lxm:
+    case tools.ozone.moderation.emitEvents.$lxm:
     case tools.ozone.moderation.getAccountTimeline.$lxm:
     case tools.ozone.moderation.getEvent.$lxm:
     case tools.ozone.moderation.getRecord.$lxm:

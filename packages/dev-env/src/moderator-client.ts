@@ -6,6 +6,7 @@ import {
   type ComAtprotoRepoStrongRef,
   type ToolsOzoneModerationDefs,
   type ToolsOzoneModerationEmitEvent as EmitModerationEvent,
+  type ToolsOzoneModerationEmitEvents as EmitModerationEvents,
   ToolsOzoneModerationGetReporterStats as _GetReporterStats, // includes types for getReporterStats()
   type ToolsOzoneModerationQueryEvents as QueryModerationEvents,
   type ToolsOzoneModerationQueryStatuses as QueryModerationStatuses,
@@ -128,6 +129,25 @@ export class ModeratorClient {
         encoding: 'application/json',
         headers: await this.ozone.modHeaders(
           'tools.ozone.moderation.emitEvent',
+          role,
+        ),
+      },
+    )
+    return result.data
+  }
+
+  async emitEvents(
+    input: Omit<EmitModerationEvents.InputSchema, 'createdBy'> & {
+      createdBy?: string
+    },
+    role?: ModLevel,
+  ) {
+    const result = await this.agent.tools.ozone.moderation.emitEvents(
+      { ...input, createdBy: input.createdBy ?? 'did:example:admin' },
+      {
+        encoding: 'application/json',
+        headers: await this.ozone.modHeaders(
+          'tools.ozone.moderation.emitEvents',
           role,
         ),
       },
