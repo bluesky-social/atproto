@@ -6,9 +6,7 @@
 
 [FedCM](https://w3c-fedid.github.io/FedCM/) (Federated Credential Management) is a browser API that lets a website show the user a browser-owned account picker for accounts they're already signed in to with an identity provider.
 
-In atproto, the identity provider is the account's OAuth authorization server, usually its PDS. The app is any atproto OAuth client. With FedCM, the user can pick a remembered account instead of typing a handle. The app then signs the user in with ordinary atproto OAuth.
-
-In the flow the prototype implements today, FedCM selects the account and OAuth signs the user in: the app learns the account's DID from FedCM, then runs OAuth for that DID. The DID that FedCM returns in this flow is an unsigned hint, not proof of identity. An authentication-only mode, where FedCM returns a token the app can verify without OAuth, is planned (see Open questions).
+In atproto, the identity provider is the account's OAuth authorization server, usually its PDS. The app is any atproto OAuth client. With FedCM, the user can pick a remembered account instead of typing a handle. FedCM returns a signed token that proves which account the user picked. An app that only needs to know who the user is can verify the token and stop there. An app that needs access to the account's data runs ordinary atproto OAuth for the picked account.
 
 ## Roles and terms
 
@@ -156,11 +154,12 @@ The browser calls it after the user picks an account, and passes the response to
 
 - `account_id`: the picked account's DID. It must be a valid DID.
 - `client_id`: the app's atproto OAuth `client_id`, which the app passed to FedCM as `clientId`.
-- Any other fields the browser sends (for example `params`, `is_auto_selected`, `disclosure_text_shown`) are ignored.
+- `params`: a JSON string of exactly `{"response_type": "id_token", "nonce": "<1 to 256 characters>"}`. The app passes the object as `params` to FedCM, and the browser sends it as a JSON string. Missing `params`, invalid JSON, other keys, another `response_type`, or a missing or out-of-range `nonce` is refused.
+- Any other fields the browser sends (for example `is_auto_selected`, `disclosure_text_shown`) are ignored.
 
 **Checks, in order:**
 
-1. **Browser request and shape.** `Sec-Fetch-Dest: webidentity` is present, and the body parses with a valid DID and `client_id`. Failure → `400 invalid_request`.
+1. **Browser request and shape.** `Sec-Fetch-Dest: webidentity` is present, and the body parses with a valid DID, `client_id`, and `params`. Failure → `400 invalid_request`.
 2. **Client type.** `client_id` is a discoverable client (an https URL to client metadata). A loopback client is also accepted if the IdP allows loopback clients (a development setting). Failure → `403 unauthorized_client`.
 3. **Origin.** The `Origin` header is a plain origin using https, or http on a loopback host if loopback clients are allowed. Failure → `400 invalid_request`.
 4. **Origin matches the client.**
@@ -170,20 +169,41 @@ The browser calls it after the user picks an account, and passes the response to
    Failure → `403 unauthorized_client`.
 
 5. **Client metadata.** The IdP fetches and validates the client metadata, as it would for OAuth. Failure → `403 unauthorized_client`.
-6. **Account.** `account_id` is an active account on this IdP. Failure → `401 login_required`.
+6. **Device and account.** The request carries the IdP's FedCM device cookie, and `account_id` is one of the eligible accounts (above) of that device. The IdP signs an account only for the browser it is signed in on, and only while the account is eligible. Failure → `401 login_required`.
 
 **Response:** CORS headers allowing the request's origin with credentials, and:
 
 ```json
-{ "token": "did:plc:…" }
+{ "token": "<compact JWS>" }
 ```
 
-**Placeholder (prototype phase):** the token is the DID itself. It's unsigned and is not proof of anything (see App requirements). Whether this should become a verifiable token is an open question (see Open questions).
+The token is a compact JWS, shaped like an OIDC ID token. The app verifies it (see App requirements).
 
-**Session requirement (prototype behavior, open question):** step 6 does **not** require a session for that account on this browser. Chrome may still list an account the IdP pushed earlier after its session ends. Answering anyway lets the app continue to OAuth, where the user signs in again. This differs from FedCM's usual meaning, "this signed-in user agrees to share with this app". It's acceptable here only because the token is a bare hint, and because which PDS hosts a DID, and whether the account is active, is already public in atproto. Alternatives under consideration:
+Header:
 
-- require any account remembered on this browser, including ones that need a password again;
-- require a live session, and re-authenticate in a FedCM `continue_on` popup.
+```json
+{
+  "typ": "atproto-id+jwt",
+  "alg": "<signing algorithm>",
+  "kid": "<did>#atproto"
+}
+```
+
+Payload, with exactly these claims:
+
+| Claim       | Value                                                                        |
+| ----------- | ---------------------------------------------------------------------------- |
+| `iss`       | The account's DID.                                                           |
+| `sub`       | The account's DID, the same as `iss` (self-issued).                          |
+| `aud`       | The app's `client_id`.                                                       |
+| `nonce`     | The nonce from `params`.                                                     |
+| `iat`       | Issue time, in seconds.                                                      |
+| `exp`       | `iat` + 60 seconds.                                                          |
+| `auth_time` | When the account last signed in with a password on this browser, in seconds. |
+
+The token is signed with the account's atproto signing key (the `#atproto` verification method in its DID document). The IdP's own key is not involved, so the token proves what the account's key holder said, not what an authorization server vouches for (see Open questions).
+
+The response has no `continue_on`.
 
 ### Errors and response headers
 
@@ -206,7 +226,13 @@ navigator.credentials.get({
   mediation: 'required',
   identity: {
     mode: 'passive', // or 'active'
-    providers: [{ configURL: '<issuer>/oauth/fedcm/config.json', clientId }],
+    providers: [
+      {
+        configURL: '<issuer>/oauth/fedcm/config.json',
+        clientId,
+        params: { response_type: 'id_token', nonce },
+      },
+    ],
   },
 })
 ```
@@ -214,10 +240,18 @@ navigator.credentials.get({
 Registered provider (Chrome experimental):
 
 ```js
-providers: [{ configURL: 'any', type: 'https://atproto.com', clientId }]
+providers: [
+  {
+    configURL: 'any',
+    type: 'https://atproto.com',
+    clientId,
+    params: { response_type: 'id_token', nonce },
+  },
+]
 ```
 
 - `clientId` **must** be the app's atproto OAuth `client_id`. The page's origin must match it, as described in the assertion checks.
+- `params` **must** be exactly the object shown, with a fresh, unguessable `nonce` (1 to 256 characters) generated for this request. Keep the nonce to check the token.
 - An app may combine explicit config URLs with the `any` entry.
 - `passive` mode can run on page load. `active` mode must be called directly from a user's click, and Chrome then allows exactly one provider entry (`any` counts as one).
 - If the app asks for `any` and no IdP is registered, Chrome rejects with an error. Apps must treat that like any other FedCM failure.
@@ -227,22 +261,29 @@ providers: [{ configURL: 'any', type: 'https://atproto.com', clientId }]
 The browser returns an `IdentityCredential` with `configURL` and `token`.
 
 1. **Check `configURL`.** For a configured provider, it must be one the app requested. For a registered provider the app can't know it in advance, so it must at least be https.
-2. **Check `token` is a DID.** Treat it only as the account the user picked.
-3. **Run atproto OAuth for that DID.** Resolve the DID to its PDS and authorization server as usual, and start OAuth with the DID as the sign-in hint (`login_hint`). Apps should also check that the authorization server's issuer origin matches the origin of `configURL`. The prototype example doesn't do this yet.
-4. **Check the result.** When OAuth completes:
-   - The app **must** complete atproto OAuth's [identity authentication](https://atproto.com/specs/oauth#identity-authentication) checks before trusting `sub`. It resolves the DID document and takes the declared PDS, confirms through the PDS's resource server metadata that the PDS points to the authorization server bound to this session, and confirms that the authorization server metadata's `issuer` matches that server's origin. atproto OAuth client libraries such as `@atproto/oauth-client` already do this. FedCM doesn't change or replace it.
-   - In addition, `sub` **must** equal the DID picked in FedCM. Otherwise reject the session. Keep the picked DID across the redirect, for example in OAuth `state`.
-5. **Fall back.** On any FedCM error, rejection, or dismissal, show the normal handle sign-in.
+2. **Verify the token.** Reject it unless all of these hold:
+   - the header `typ` is `atproto-id+jwt`, and `kid` is `<did>#atproto` for the DID in `sub`;
+   - `iss` equals `sub`, and `sub` is a valid DID;
+   - `aud` equals the app's `client_id`;
+   - `nonce` equals the nonce the app sent for this request;
+   - `exp` is in the future (allow a little clock skew) and `iat` is not in the future beyond that skew;
+   - the signature verifies against the `#atproto` verification method of the DID document, resolved by the app (not taken from the token or the IdP). The app resolves the DID document itself and requires its `id` to equal `sub`.
+3. **Use the result.**
+   - To only authenticate the user, the verified token is enough: `sub` is the signed-in DID. The app should still resolve and display the handle. It gets no access to the account's data.
+   - To access the account, run atproto OAuth for `sub`. Resolve the DID to its PDS and authorization server as usual, and start OAuth with the DID as the sign-in hint (`login_hint`). Apps should also check that the authorization server's issuer origin matches the origin of `configURL`. The prototype example doesn't do this yet. When OAuth completes, the app **must** complete atproto OAuth's [identity authentication](https://atproto.com/specs/oauth#identity-authentication) checks before trusting `sub`. It resolves the DID document and takes the declared PDS, confirms through the PDS's resource server metadata that the PDS points to the authorization server bound to this session, and confirms that the authorization server metadata's `issuer` matches that server's origin. atproto OAuth client libraries such as `@atproto/oauth-client` already do this. FedCM doesn't change or replace it. In addition, `sub` **must** equal the DID in the verified token. Otherwise reject the session.
+4. **Fall back.** On any FedCM error, rejection, or dismissal, show the normal handle sign-in.
 
-In this flow, the token is an unsigned DID that passes through page JavaScript, so the app must not treat it as authentication.
+The token is not a bearer credential for any service. It authenticates the user to the app that requested it, and only that app (`aud`) can accept it.
 
 ## Security and privacy considerations
 
-- **Today's token is a hint.** In the current flow, the proof is the OAuth result: `sub` after atproto OAuth's identity authentication checks, plus the match with the picked DID, as described above.
+- **Check the nonce.** The nonce binds the token to the request that asked for it. An app that doesn't check it can be fed a token that was issued for another request.
+- **Verify where you consume the token.** Verify the token in the code that trusts it, against a DID document the app resolved itself. If a backend accepts the token, it should verify it again and not rely on the page's word. The token lives 60 seconds and has no replay protection beyond the nonce, so a backend must also bind the nonce to its own session.
+- **A signed token needs a live sign-in.** The IdP signs only for accounts eligible on this browser, and reports `auth_time` so an app can apply its own freshness policy.
 - **Malicious registered providers (Chrome experimental).** Registration is silent, so any site can register itself with type `https://atproto.com`, push a fake account, and answer with its own DID. Its authorization server can then approve OAuth, and the app's checks pass, because `sub` really is that DID and its DID document really points to the attacker's PDS and authorization server. The user ends up signed in to the app as the attacker's account (login CSRF that needs the user's click). Apps should show the signed-in handle clearly. The `configURL`-to-issuer check limits inconsistent providers, not malicious ones.
 - **No email addresses.** The IdP never sends email addresses to the browser. Pushed accounts carry `@handle` in Chrome's required `email` field.
 - **Pushed accounts expire** after the authentication max age, unless the IdP pushes again.
-- **What the assertion endpoint reveals:** whether a DID is an active account on this IdP, to FedCM requests from validated clients. This is public in atproto anyway (DID documents and `com.atproto.sync.getRepoStatus`).
+- **What the assertion endpoint reveals:** to a validated client, whether a DID is signed in on this browser, as a signed token or a `login_required` refusal. The browser only calls it for accounts it already listed.
 - **The IdP learns which app the user picked an account for.** It would learn the same through OAuth.
 
 ## Not part of the interoperability contract
@@ -256,10 +297,10 @@ These are details of this implementation that other IdPs may do differently:
 
 ## Open questions
 
-- **Session requirement.** Should the assertion endpoint only answer for accounts signed in on this browser? (See the assertion endpoint.)
 - **Config discovery.** Keep the fixed config path, or advertise the config URL in authorization server metadata?
 - **Issuer check.** Should the `configURL`-to-issuer check be a requirement for apps rather than a recommendation?
 - **Pushed `email`.** Keep `@handle` in `email`, or wait for a first-class handle field in Chrome?
-- **Verifiable token.** The bare-DID token is a placeholder. Should the assertion return a token the app can verify (signed, bound to the app and a nonce), and if so, what signs it, which claims it carries, and how long it lives? A verifiable token would also tighten the session requirement: the IdP shouldn't vouch for an account without a live session.
-- **Authentication-only sign-in.** Should there be a mode that returns a signed token, for apps that don't need OAuth? That would need defined `params`, a token format, and capability discovery, probably as an additional type.
+- **Authentication token issuer.** The token is shaped like an OIDC ID token but signed with the account's atproto signing key, with `iss` = `sub` = the account's DID (self-issued), so it doesn't name the authorization server. The alternative keeps the user's signature and sets `iss` to the authorization server's issuer, binding the token to it; apps would then check that `iss` is the DID's authorization server. Should the token name the authorization server?
+- **Entryway PDSes.** Tokens are signed with the account's atproto key, which a PDS behind an entryway may not hold. The prototype signs only where the IdP holds the key, so entryway deployments can't offer it yet.
+- **Authorization through FedCM.** A `request_uri` (pushed authorization request) in `params` is reserved for a future mode where FedCM starts OAuth authorization. Today the assertion refuses any other `params`.
 - **The handle-based IdP Registration spec.** The current [IdP Registration](https://w3c-fedid.github.io/idp-registration/) draft has moved to handles (`register(handle)`, `federation`, signed handle-verification tokens), which Chrome doesn't implement yet. Registered-provider behavior here follows Chrome's implementation and will change if Chrome adopts the spec.

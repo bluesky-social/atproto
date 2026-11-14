@@ -2,7 +2,7 @@
 
 This single-page app signs in with AT Protocol OAuth and displays the account profile, session, and token information. Run `pnpm dev` here and open <http://127.0.0.1:8080>.
 
-Enter a handle to sign in, or configure FedCM to choose a remembered account first. After selection, the app completes ordinary OAuth. Passive FedCM opens automatically; active FedCM waits for a click on **Choose an account**.
+Enter a handle to sign in, or configure FedCM to choose a remembered account first. With `scope=atproto` alone, selecting an account signs the user in from a verified FedCM token and no OAuth runs; with other scopes, the app then completes ordinary OAuth. Passive FedCM opens automatically; active FedCM waits for a click on **Choose an account**.
 
 `pnpm dev` selects the `development` environment and local dev-env services. Only `env=development` selects local endpoint defaults; use the parameters below to target another stack.
 
@@ -58,14 +58,14 @@ The launcher prints the account manager URL and three app URLs: passive, active,
 
 1. Open the account manager URL (`<tunnel>/account`) and sign in. Check **Remember this account on this device**.
 2. Open the passive URL, where the account picker appears on its own. Or open the active URL and click **Choose an account**.
-3. Pick the account and approve. The app shows the session.
+3. Pick the account and approve. With the default scopes, the app verifies the token and then continues to OAuth. Add `scope=atproto` to the app URL to stop after verification and show an identity session (no OAuth, no tokens).
 
 **4. Try registered IdP mode** (Chrome's experimental FedCM IdP Registration). In this mode the app doesn't name any PDS.
 
 1. Enable both `chrome://flags/#fedcm-idp-registration` and `chrome://flags/#fedcm-lightweight-mode`, then relaunch Chrome. Without lightweight mode, the PDS registers but can't hand Chrome any accounts. You'll see `setStatus ... Overload resolution failed` in the PDS page's console.
 2. Sign in on the PDS with **Remember this account on this device** checked. Either sign in at `<tunnel>/account`, or open the registered IdP URL and type the handle. Any PDS sign-in page registers the PDS with Chrome.
-3. Open the registered IdP URL. Chrome offers the account. Pick it and OAuth follows.
-4. Optional: delete all cookies for the tunnel origin and retry. Chrome still offers the account, and the PDS asks for the password.
+3. Open the registered IdP URL. Chrome offers the account. Pick it to sign in.
+4. Optional: delete all cookies for the tunnel origin and retry. Chrome still offers the account, but the PDS refuses to sign without its device cookie, so the app shows an error. Sign in on the PDS again.
 
 To remove the registration, clear site data for the tunnel origin.
 

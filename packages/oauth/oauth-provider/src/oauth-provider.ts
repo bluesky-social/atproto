@@ -244,8 +244,9 @@ type OAuthProviderConfig = {
   loopbackMetadata?: null | false | LoopbackMetadataGetter
 
   /**
-   * Enables FedCM account selection. The returned DID is a routing hint;
-   * relying parties must complete OAuth before accepting an authenticated session.
+   * Enables FedCM account selection. The assertion returns an `atproto-id+jwt`
+   * signed with the account's atproto key, which relying parties verify to
+   * authenticate the user. Requires `AccountStore.getAccountSigner`.
    */
   fedcm?: false | FedcmOptions
 }
