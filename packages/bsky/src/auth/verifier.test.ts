@@ -186,9 +186,6 @@ describe('internal service token', () => {
     await expect(verifier.internal(reqCtx(token))).resolves.toEqual({
       credentials: { type: 'internal', iss: 'chat', sub: userDid },
     })
-    await expect(verifier.internalOrRole(reqCtx(token))).resolves.toMatchObject(
-      { credentials: { type: 'internal' } },
-    )
   })
 
   it('accepts a token without sub', async () => {
@@ -274,7 +271,7 @@ describe('internal service token', () => {
     await expect(verifier.standardRead()(reqCtx(token))).rejects.toThrow()
   })
 
-  it('accepts the admin password in internalOrRole only', async () => {
+  it('rejects the admin password', async () => {
     const req = {
       req: {
         url: `/xrpc/${method}`,
@@ -284,9 +281,6 @@ describe('internal service token', () => {
         },
       },
     } as never
-    await expect(verifier.internalOrRole(req)).resolves.toMatchObject({
-      credentials: { type: 'role' },
-    })
     await expect(verifier.internal(req)).rejects.toThrow()
   })
 })

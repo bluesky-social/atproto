@@ -338,7 +338,6 @@
     "com.atproto.temp.requestPhoneVerification",
     "com.atproto.temp.revokeAccountCredentials",
     "com.germnetwork.declaration",
-    "internal.bsky.actor.getProfiles",
     "place.stream.badge.defs",
     "place.stream.chat.defs",
     "place.stream.chat.pinnedRecord",
@@ -1747,10 +1746,6 @@
     "com.germnetwork.declaration": {
       "uri": "file://../../lexicons-overrides/com/germnetwork/declaration.json",
       "cid": "bafyreiekwjmxshje655olra4mata7npso7bbgytc4fop77ycjtrbewwi3y"
-    },
-    "internal.bsky.actor.getProfiles": {
-      "uri": "file://../../lexicons-overrides/internal/bsky/actor/getProfiles.json",
-      "cid": "bafyreihdyn4pmc3brvufe7vp4c6psldxeumydfmeqvoswfydtw5fjcy6rq"
     },
     "place.stream.badge.defs": {
       "uri": "file://../../lexicons-overrides/place/stream/badge/defs.json",

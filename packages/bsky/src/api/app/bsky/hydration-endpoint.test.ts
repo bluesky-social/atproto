@@ -243,7 +243,7 @@ describe('hydration endpoint attribution', () => {
           standardRead: () => () => {},
           standardWriteService: () => () => {},
           standardReadOrRoleOptional: () => {},
-          internalOrRole: () => {},
+          internal: () => {},
           role: () => {},
           parseCreds: () => ({ viewer: 'did:plc:viewer' }),
         },
