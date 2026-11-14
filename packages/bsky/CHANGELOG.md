@@ -1,5 +1,13 @@
 # @atproto/bsky
 
+## 0.5.12
+
+### Patch Changes
+
+- [#5905](https://github.com/bluesky-social/atproto/pull/5905) [`9f605e0`](https://github.com/bluesky-social/atproto/commit/9f605e0fb117173dea8b5c1e9d6ad13bd6995c7f) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Accept BSG tokens, with the scope each endpoint requires. Accept internal service tokens on the internal endpoints, and add `app.bsky.feed.hydrateFeedSkeleton` and `internal.bsky.feed.getPosts`.
+
+- [#5910](https://github.com/bluesky-social/atproto/pull/5910) [`1e5118f`](https://github.com/bluesky-social/atproto/commit/1e5118f626ed91f65df248b7c2c9bb1bf37a9407) Thanks [@amckinley](https://github.com/amckinley)! - Add `BSKY_TYPEAHEAD_URL`: when set, `app.bsky.actor.searchActorsTypeahead` gets its skeleton from that `bsky.Service` host's `SearchActorsTypeahead` for requests with the `search:typeahead_service:enable` gate on, instead of the dataplane or search service; other requests are unchanged. Add `BSKY_TYPEAHEAD_PROHIBITED_TERMS_FILE`, the prohibited search terms CSV: on that path, a query matching an active Block rule returns no actors without calling the host.
+
 ## 0.5.11
 
 ### Patch Changes
