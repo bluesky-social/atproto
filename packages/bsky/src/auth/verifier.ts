@@ -29,6 +29,7 @@ import {
   unpackIdentityKeys,
 } from '../data-plane/index.js'
 import type { GetIdentityByDidResponse } from '../proto/bsky_pb.js'
+import { markRequestAuthenticated } from '../real-ip.js'
 import { events } from '../telemetry/events.js'
 
 type ReqCtx = {
@@ -124,6 +125,10 @@ export class AuthVerifier {
       let err: unknown
       try {
         if (isBearerToken(ctx.req)) {
+          // The request presents credentials: even though verification is
+          // still pending (and makes its own data-plane calls), it is not an
+          // anonymous request.
+          markRequestAuthenticated()
           // @NOTE temporarily accept entryway session tokens to shed load from PDS instances
           const token = bearerTokenFromReq(ctx.req)
           const header = token ? jose.decodeProtectedHeader(token) : undefined
@@ -197,6 +202,7 @@ export class AuthVerifier {
     if (creds.status !== RoleStatus.Valid) {
       throw new AuthRequiredError()
     }
+    markRequestAuthenticated()
     return {
       credentials: {
         ...creds,
@@ -226,6 +232,7 @@ export class AuthVerifier {
         creds.status === RoleStatus.Missing ? 'anonymous' : 'role',
       )
       if (creds.status === RoleStatus.Valid) {
+        markRequestAuthenticated()
         return {
           credentials: {
             ...creds,
@@ -242,6 +249,7 @@ export class AuthVerifier {
 
   modService = async (reqCtx: ReqCtx): Promise<ModServiceOutput> => {
     events.authVerifierRequest('modService')
+    markRequestAuthenticated()
     const token = bearerTokenFromReq(reqCtx.req)
     const { iss, aud } = await this.verifyServiceJwt(reqCtx, token, {
       aud: this.ownDid,

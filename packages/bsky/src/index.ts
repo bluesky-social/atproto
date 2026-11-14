@@ -40,6 +40,7 @@ import * as imageServer from './image/server.js'
 import { ImageUriBuilder } from './image/uri.js'
 import { createKwsClient } from './kws.js'
 import { loggerMiddleware } from './logger.js'
+import { realIpMiddleware } from './real-ip.js'
 import {
   authWithApiKey as rolodexAuth,
   createRolodexClient,
@@ -60,6 +61,7 @@ export * from './data-plane/index.js'
 export { BackgroundQueue } from './data-plane/server/background.js'
 export { Database } from './data-plane/server/db/index.js'
 export { Redis } from './redis.js'
+export * from './real-ip.js'
 
 export class BskyAppView {
   public ctx: AppContext
@@ -88,6 +90,9 @@ export class BskyAppView {
     app.use(cors({ maxAge: DAY / SECOND }))
     app.use(loggerMiddleware)
     app.use(compression())
+    // Captures the request's `x-real-ip` address so the data-plane client
+    // can forward it on unauthenticated requests.
+    app.use(realIpMiddleware)
 
     // used solely for handle resolution: identity lookups occur on dataplane
     const idResolver = new IdResolver({
