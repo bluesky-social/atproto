@@ -1,4 +1,6 @@
 import assert from 'node:assert'
+import { randomBytes } from 'node:crypto'
+import * as jose from 'jose'
 import {
   afterAll,
   beforeAll,
@@ -53,11 +55,12 @@ describe('feed generation', () => {
   let feedUriAcceptsInteractions: string
   let feedUriPinned: string
   let starterPackRef: { uri: string; cid: string }
+  const bsgJwtSecret = randomBytes(32).toString('hex')
 
   beforeAll(async () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_feed_generation',
-      bsky: { searchV2OverrideHeader: 'test' },
+      bsky: { searchV2OverrideHeader: 'test', bsgJwtSecret },
     })
     vi.spyOn(network.bsky.ctx.featureGatesClient, 'scope').mockImplementation(
       () => ({
@@ -1072,6 +1075,55 @@ describe('feed generation', () => {
       )
       expect(feed.data.feed).toHaveLength(1)
       expect(AppBskyFeedDefs.isReasonPin(feed.data.feed[0].reason)).toBe(true)
+    })
+
+    describe('BSG token', () => {
+      const serviceJwt = async () => {
+        const { authorization } = await network.serviceHeaders(
+          alice,
+          ids.AppBskyFeedGetFeedSkeleton,
+          gen.did,
+        )
+        return authorization.slice('Bearer '.length)
+      }
+
+      const bsgHeaders = async (claims: Record<string, unknown>) => {
+        const token = await new jose.SignJWT({
+          iss: 'bsg',
+          aud: 'bsky',
+          lxm: ids.AppBskyFeedGetFeed,
+          scopes: ['read', 'write:service'],
+          sub: alice,
+          ...claims,
+        })
+          .setProtectedHeader({ alg: 'HS256', typ: 'bsg+jwt' })
+          .setExpirationTime('1m')
+          .sign(Buffer.from(bsgJwtSecret, 'utf8'))
+        return { authorization: `Bearer ${token}` }
+      }
+
+      it('forwards the service JWT wrapped in a BSG token.', async () => {
+        const feed = await agent.api.app.bsky.feed.getFeed(
+          { feed: feedUriEven },
+          { headers: await bsgHeaders({ service_auth: await serviceJwt() }) },
+        )
+        expect(feed.data['$auth']).toMatchObject({
+          iss: alice,
+          aud: gen.did,
+          lxm: ids.AppBskyFeedGetFeedSkeleton,
+        })
+      })
+
+      it('rejects a BSG token with a user but without a service JWT.', async () => {
+        const tryGetFeed = agent.api.app.bsky.feed.getFeed(
+          { feed: feedUriEven },
+          { headers: await bsgHeaders({}) },
+        )
+        await expect(tryGetFeed).rejects.toMatchObject({
+          status: 401,
+          error: 'InvalidToken',
+        })
+      })
     })
 
     it('returns an upstream failure error when the feed is down.', async () => {

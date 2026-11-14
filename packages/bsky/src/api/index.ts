@@ -38,7 +38,6 @@ import getQuotes from './app/bsky/feed/getQuotes.js'
 import getRepostedBy from './app/bsky/feed/getRepostedBy.js'
 import getSuggestedFeeds from './app/bsky/feed/getSuggestedFeeds.js'
 import getTimeline from './app/bsky/feed/getTimeline.js'
-import hydrateFeedSkeleton from './app/bsky/feed/hydrateFeedSkeleton.js'
 import searchPosts from './app/bsky/feed/searchPosts.js'
 import searchPostsV2 from './app/bsky/feed/searchPostsV2.js'
 import getActorStarterPacks from './app/bsky/graph/getActorStarterPacks.js'
@@ -153,7 +152,6 @@ export default function (server: Server, ctx: AppContext) {
   getPostThreadOtherV2(server, ctx)
   getPostThreadV2(server, ctx)
   getPosts(server, ctx)
-  hydrateFeedSkeleton(server, ctx)
   searchPosts(server, ctx)
   searchPostsV2(server, ctx)
   getActorLikes(server, ctx)

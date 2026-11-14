@@ -83,7 +83,6 @@
     "app.bsky.feed.getRepostedBy",
     "app.bsky.feed.getSuggestedFeeds",
     "app.bsky.feed.getTimeline",
-    "app.bsky.feed.hydrateFeedSkeleton",
     "app.bsky.feed.like",
     "app.bsky.feed.post",
     "app.bsky.feed.postgate",
@@ -733,10 +732,6 @@
     "app.bsky.feed.getTimeline": {
       "uri": "https://raw.githubusercontent.com/bluesky-social/bsky/refs/heads/main/lexicons/app/bsky/feed/getTimeline.json",
       "cid": "bafyreibcavofg3nlnv4ubkt43f7nj5k4yhex4lz3tvpeny6nqdpqas767e"
-    },
-    "app.bsky.feed.hydrateFeedSkeleton": {
-      "uri": "https://raw.githubusercontent.com/bluesky-social/bsky/refs/heads/main/lexicons/app/bsky/feed/hydrateFeedSkeleton.json",
-      "cid": "bafyreihejsefsbr6wkzbzvdcatf3olbaxc52mk37okl3mskixt62bdapgi"
     },
     "app.bsky.feed.like": {
       "uri": "https://raw.githubusercontent.com/bluesky-social/bsky/refs/heads/main/lexicons/app/bsky/feed/like.json",
