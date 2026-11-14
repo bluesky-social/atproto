@@ -290,6 +290,7 @@ export class AuthVerifier {
   }
 
   internal = async (ctx: ReqCtx): Promise<InternalOutput> => {
+    events.authVerifierRequest('internal')
     return this.internalService(ctx)
   }
 

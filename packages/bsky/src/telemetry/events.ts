@@ -16,7 +16,13 @@ const meter: Meter = metrics.getMeter('@atproto/bsky')
 const logger: Logger = logs.getLogger('@atproto/bsky')
 
 export type AuthVerifierName =
-  'standard' | 'entrywaySession' | 'bsg' | 'role' | 'modService' | 'anonymous'
+  | 'standard'
+  | 'entrywaySession'
+  | 'bsg'
+  | 'role'
+  | 'internal'
+  | 'modService'
+  | 'anonymous'
 
 export type HydrationSource =
   'known_likers' | 'known_followers' | 'activity_subscriptions'
