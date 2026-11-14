@@ -135,7 +135,7 @@ browserDescribe('FedCM IdP registration in Chrome', () => {
       plc_directory_url: network.plc.url,
       pds_operator_url: idpOrigin,
       handle_resolver: network.pds.url,
-      scope: 'atproto transition:generic',
+      scope: 'atproto account:email account:status',
       fedcm_idp_registration: 'true',
     })
     appUrl = `http://127.0.0.1:${rpPort}/?${params}`
