@@ -29,7 +29,24 @@ export function buildFedcmConfigUrl(issuer: string): string {
 const assertionInputSchema = z.object({
   account_id: didSchema,
   client_id: oauthClientIdSchema,
+  // @NOTE Chrome's encoding of `params` is unverified; parsed as a JSON string.
+  params: z.string(),
 })
+
+const assertionParamsSchema = z
+  .object({
+    response_type: z.literal('id_token'),
+    nonce: z.string().min(1).max(256),
+  })
+  .strict()
+
+function parseAssertionParams(params: string) {
+  try {
+    return assertionParamsSchema.parse(JSON.parse(params))
+  } catch {
+    throw new FedcmEndpointError(400, 'invalid_request')
+  }
+}
 
 type FedcmErrorCode =
   | 'invalid_request'
@@ -127,7 +144,8 @@ export function createFedcmMiddleware<
       if (!parsedPayload.success) {
         throw new FedcmEndpointError(400, 'invalid_request')
       }
-      const { account_id, client_id } = parsedPayload.data
+      const { account_id, client_id, params } = parsedPayload.data
+      const { nonce } = parseAssertionParams(params)
 
       const isDiscoverableClient = isOAuthClientIdDiscoverable(client_id)
       const isLoopbackClient = isOAuthClientIdLoopback(client_id)
@@ -173,17 +191,18 @@ export function createFedcmMiddleware<
 
       setCorsOrigin(res, origin)
 
-      // TODO(fedcm): final call needed — should the assertion endpoint only
-      // speak for accounts signed in on this device? Prototype answers for any
-      // active local account so Chrome's pushed (possibly stale) accounts still
-      // complete; the DID is only a hint and OAuth re-authenticates.
-      const result = await server.accountManager.getAccount(account_id)
-      const account = result?.account
-      if (!account || account.deactivated) {
-        throw new FedcmEndpointError(401, 'login_required')
-      }
+      const device = await server.deviceManager.readFedcmDevice(req)
+      if (!device) throw new FedcmEndpointError(401, 'login_required')
 
-      return { token: account.did }
+      const accounts = await server.listFedcmAccounts(device.deviceId)
+      const deviceAccount = accounts.find(
+        ({ account }) => account.did === account_id,
+      )
+      if (!deviceAccount) throw new FedcmEndpointError(401, 'login_required')
+
+      return {
+        token: await server.createFedcmIdToken(deviceAccount, client_id, nonce),
+      }
     }),
   )
 
