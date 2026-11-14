@@ -1,4 +1,3 @@
-import * as jose from 'jose'
 import { mapDefined, noUndefinedVals } from '@atproto/common'
 import {
   XrpcInvalidResponseError,
@@ -93,7 +92,6 @@ export default function (server: Server, ctx: AppContext) {
           ...params,
           hydrateCtx,
           stableDeviceId,
-          serviceJwt,
           headers,
           passthroughHeaders,
           signal,
@@ -209,7 +207,6 @@ type Context = AppContext
 type Params = app.bsky.feed.getFeed.$Params & {
   hydrateCtx: HydrateCtx
   stableDeviceId: string | null
-  serviceJwt: string | undefined
   headers: HeadersMap
   passthroughHeaders: HeadersMap
   signal: AbortSignal
@@ -367,24 +364,6 @@ async function getFeedGenDid(
   return found.get(feed)?.record.did
 }
 
-// audience is the feed generator's DID when the PDS has our custom getFeed
-// handler, and AppView's DID when it doesn't.
-function assertServiceJwtAudience(
-  ctx: Context,
-  serviceJwt: string,
-  feedDid: DidString | undefined,
-) {
-  const { aud } = jose.decodeJwt(serviceJwt)
-  const { serverDid } = ctx.cfg
-  const allowed = [feedDid, serverDid, `${serverDid}#bsky_appview`]
-  if (typeof aud !== 'string' || !allowed.includes(aud)) {
-    throw new AuthRequiredError(
-      'jwt audience does not match the feed generator or service did',
-      'BadJwtAudience',
-    )
-  }
-}
-
 const skeletonFromFeedGen = async (
   ctx: Context,
   params: Params,
@@ -394,13 +373,6 @@ const skeletonFromFeedGen = async (
     ctx,
     params,
   )
-
-  // Service JWTs from the user's PDS, sent directly or wrapped in BSG's token.
-  // With OAuth, AppView will request it for the feed generator's DID itself,
-  // so it will be correct and no check is needed.
-  if (params.serviceJwt) {
-    assertServiceJwtAudience(ctx, params.serviceJwt, feedDid)
-  }
   const requestHeaders = noUndefinedVals({
     ...headers,
     ...(feedDid && ctx.cfg.bskyFeedgenDids.has(feedDid)

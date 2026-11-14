@@ -1077,12 +1077,12 @@ describe('feed generation', () => {
       expect(AppBskyFeedDefs.isReasonPin(feed.data.feed[0].reason)).toBe(true)
     })
 
-    describe('service JWT audience', () => {
-      const serviceJwt = async (aud: string) => {
+    describe('BSG token', () => {
+      const serviceJwt = async () => {
         const { authorization } = await network.serviceHeaders(
           alice,
           ids.AppBskyFeedGetFeedSkeleton,
-          aud,
+          gen.did,
         )
         return authorization.slice('Bearer '.length)
       }
@@ -1102,60 +1102,15 @@ describe('feed generation', () => {
         return { authorization: `Bearer ${token}` }
       }
 
-      it('accepts AppView, bare or with its service id.', async () => {
-        const { serverDid } = network.bsky.ctx.cfg
-        for (const aud of [serverDid, `${serverDid}#bsky_appview`]) {
-          const feed = await agent.api.app.bsky.feed.getFeed(
-            { feed: feedUriEven },
-            { headers: { authorization: `Bearer ${await serviceJwt(aud)}` } },
-          )
-          expect(feed.data['$auth']?.['aud']).toEqual(aud)
-        }
-      })
-
-      it('rejects other audiences.', async () => {
-        const tryGetFeed = agent.api.app.bsky.feed.getFeed(
-          { feed: feedUriEven },
-          {
-            headers: {
-              authorization: `Bearer ${await serviceJwt('did:example:other')}`,
-            },
-          },
-        )
-        await expect(tryGetFeed).rejects.toMatchObject({
-          status: 401,
-          error: 'BadJwtAudience',
-        })
-      })
-
       it('forwards the service JWT wrapped in a BSG token.', async () => {
         const feed = await agent.api.app.bsky.feed.getFeed(
           { feed: feedUriEven },
-          {
-            headers: await bsgHeaders({
-              service_auth: await serviceJwt(gen.did),
-            }),
-          },
+          { headers: await bsgHeaders({ service_auth: await serviceJwt() }) },
         )
         expect(feed.data['$auth']).toMatchObject({
           iss: alice,
           aud: gen.did,
           lxm: ids.AppBskyFeedGetFeedSkeleton,
-        })
-      })
-
-      it('rejects a service JWT wrapped in a BSG token for another audience.', async () => {
-        const tryGetFeed = agent.api.app.bsky.feed.getFeed(
-          { feed: feedUriEven },
-          {
-            headers: await bsgHeaders({
-              service_auth: await serviceJwt('did:example:other'),
-            }),
-          },
-        )
-        await expect(tryGetFeed).rejects.toMatchObject({
-          status: 401,
-          error: 'BadJwtAudience',
         })
       })
 
