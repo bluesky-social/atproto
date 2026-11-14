@@ -1,0 +1,14 @@
+{
+  // @NOTE Later entries win: see oauth-provider-ui/tsconfig.test.json
+  "extends": [
+    "../../../tsconfig/vitest.tsconfig.json",
+    "../../../tsconfig/browser.tsconfig.json",
+    "../../../tsconfig/bundler.tsconfig.json",
+  ],
+  "include": ["./src/**/*.test.ts"],
+  "compilerOptions": {
+    "rootDir": "./",
+    // The tests themselves run under node.
+    "types": ["node"],
+  },
+}
