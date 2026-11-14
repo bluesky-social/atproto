@@ -169,7 +169,7 @@ The browser calls it after the user picks an account, and passes the response to
    Failure → `403 unauthorized_client`.
 
 5. **Client metadata.** The IdP fetches and validates the client metadata, as it would for OAuth. Failure → `403 unauthorized_client`.
-6. **Device and account.** The request carries the IdP's FedCM device cookie, and `account_id` is one of the eligible accounts (above) of that device. The IdP signs an account only for the browser it is signed in on, and only while the account is eligible. Failure → `401 login_required`.
+6. **Signed in on this browser.** `account_id` must be an eligible account (above) signed in on the browser making the request, under the IdP's own session state. That state reaches the IdP through the credentials the browser attaches to FedCM requests. The IdP signs only for that browser, and only while the account is eligible. Failure → `401 login_required`.
 
 **Response:** CORS headers allowing the request's origin with credentials, and:
 
@@ -291,6 +291,7 @@ The token is not intended as a bearer credential. It authenticates the user to t
 These are details of this implementation that other IdPs may do differently:
 
 - **Cookies.** The prototype keeps FedCM-only copies of its device and session cookies (`fedcm-dev-id`, `fedcm-ses-id`; `Secure`, `HttpOnly`, `SameSite=None`, `Path=/oauth/fedcm`), so its normal cookies can stay `SameSite=Lax` or `Strict`.
+- **Browser session state.** The prototype identifies the browser by its FedCM device cookie and computes eligibility per device.
 - **Login URL details:** its path and the `fedcm=true` query.
 - **How IdP pages learn what to push:** server-rendered data, in this implementation.
 - **Enabling FedCM on the PDS:** `PDS_OAUTH_FEDCM_ENABLED`, and `PDS_OAUTH_FEDCM_ALLOW_LOOPBACK_CLIENTS` for development.
@@ -300,7 +301,7 @@ These are details of this implementation that other IdPs may do differently:
 - **Config discovery.** Keep the fixed config path, or advertise the config URL in authorization server metadata?
 - **Issuer check.** Should the `configURL`-to-issuer check be a requirement for apps rather than a recommendation?
 - **Pushed `email`.** Keep `@handle` in `email`, or wait for a first-class handle field in Chrome?
-- **Authentication token issuer.** The token is shaped like an OIDC ID token but signed with the account's atproto signing key, with `iss` = `sub` = the account's DID (self-issued), so it doesn't name the authorization server. The alternative keeps the user's signature and sets `iss` to the authorization server's issuer, binding the token to it; apps would then check that `iss` is the DID's authorization server. Should the token name the authorization server?
+- **Authentication token issuer.** The token is shaped like an OIDC ID token but signed with the account's atproto signing key, with `iss` = `sub` = the account's DID (self-issued), so it doesn't name the authorization server. One alternative keeps the user's signature and sets `iss` to the authorization server's issuer, binding the token to it; apps would then check that `iss` is the DID's authorization server. Should the token name the authorization server?
 - **Entryway PDSes.** Tokens are signed with the account's atproto key, which a PDS behind an entryway may not hold. The prototype signs only where the IdP holds the key, so entryway deployments can't offer it yet.
 - **Authorization through FedCM.** A `request_uri` (pushed authorization request) in `params` is reserved for a future mode where FedCM starts OAuth authorization. Today the assertion refuses any other `params`.
 - **The handle-based IdP Registration spec.** The current [IdP Registration](https://w3c-fedid.github.io/idp-registration/) draft has moved to handles (`register(handle)`, `federation`, signed handle-verification tokens), which Chrome doesn't implement yet. Registered-provider behavior here follows Chrome's implementation and will change if Chrome adopts the spec.
