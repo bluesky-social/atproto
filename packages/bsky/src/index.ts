@@ -187,6 +187,12 @@ export class BskyAppView {
       httpVersion: config.dataplaneHttpVersion,
       rejectUnauthorized: !config.dataplaneIgnoreBadTls,
     })
+    const typeaheadClient = config.typeaheadUrls.length
+      ? createDataPlaneClient(new BasicHostList(config.typeaheadUrls), {
+          httpVersion: config.dataplaneHttpVersion,
+          rejectUnauthorized: !config.dataplaneIgnoreBadTls,
+        })
+      : undefined
     const hydrator = new Hydrator(dataplane, config.labelsFromIssuerDids, {
       debugFieldAllowedDids: config.debugFieldAllowedDids,
       featureGatesClient,
@@ -276,6 +282,7 @@ export class BskyAppView {
       etcd,
       dataplane,
       dataplaneHostList,
+      typeaheadClient,
       searchClient,
       suggestionsClient,
       irisClient,

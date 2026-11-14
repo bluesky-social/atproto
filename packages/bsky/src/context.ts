@@ -30,6 +30,7 @@ export class AppContext {
       etcd: Etcd3 | undefined
       dataplane: DataPlaneClient
       dataplaneHostList: HostList
+      typeaheadClient: DataPlaneClient | undefined
       searchClient: Client | undefined
       suggestionsClient: Client | undefined
       irisClient: Client | undefined
@@ -63,6 +64,10 @@ export class AppContext {
 
   get dataplaneHostList(): HostList {
     return this.opts.dataplaneHostList
+  }
+
+  get typeaheadClient(): DataPlaneClient | undefined {
+    return this.opts.typeaheadClient
   }
 
   get searchClient(): Client | undefined {

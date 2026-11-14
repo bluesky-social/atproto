@@ -67,6 +67,7 @@ export interface ServerConfigValues {
   rolodexIgnoreBadTls?: boolean
   externalRecordsSafeDomains?: string[]
   searchUrl?: string
+  typeaheadUrls?: string[]
   searchTagsHide: Set<string>
   searchTagsHideAll: Set<string>
   suggestionsUrl?: string
@@ -201,6 +202,8 @@ export class ServerConfig {
       process.env.BSKY_SEARCH_URL ||
       process.env.BSKY_SEARCH_ENDPOINT ||
       undefined
+    // bsky.Service hosts that serve SearchActorsTypeahead in place of the dataplane
+    const typeaheadUrls = envList(process.env.BSKY_TYPEAHEAD_URL)
     const searchTagsHide = new Set(envList(process.env.BSKY_SEARCH_TAGS_HIDE))
     const searchTagsHideAll = new Set(
       envList(process.env.BSKY_SEARCH_TAGS_HIDE_ALL),
@@ -469,6 +472,7 @@ export class ServerConfig {
       dataplaneHttpVersion,
       dataplaneIgnoreBadTls,
       searchUrl,
+      typeaheadUrls,
       searchTagsHide,
       searchTagsHideAll,
       suggestionsUrl,
@@ -660,6 +664,10 @@ export class ServerConfig {
 
   get searchUrl() {
     return this.cfg.searchUrl
+  }
+
+  get typeaheadUrls() {
+    return this.cfg.typeaheadUrls ?? []
   }
 
   get searchTagsHide() {

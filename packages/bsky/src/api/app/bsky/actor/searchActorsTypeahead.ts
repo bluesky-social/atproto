@@ -97,12 +97,13 @@ const skeletonV1 = async (
 
 const skeletonV2 = async (
   inputs: SkeletonFnInput<Context, Params>,
+  client: DataPlaneClient,
 ): Promise<Skeleton> => {
-  const { ctx, params } = inputs
+  const { params } = inputs
   const term = params.q ?? params.term ?? ''
 
   // Surface dataplane InvalidArgument errors as a 400 rather than a 500.
-  const res = await ctx.dataplane
+  const res = await client
     .searchActorsTypeahead({
       params: {
         query: term,
@@ -117,12 +118,15 @@ const skeletonV2 = async (
 }
 
 const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
+  const { typeaheadClient, dataplane } = input.ctx
+  // @NOTE No fallback to the dataplane when the typeahead service fails: that
+  // would load the dataplane exactly when the typeahead service is overloaded.
+  if (typeaheadClient) return skeletonV2(input, typeaheadClient)
   const useV2 =
     input.params.hydrateCtx.features.checkGate(
       input.params.hydrateCtx.features.Gate.SearchV2Enable,
     ) || input.params.isV2Override
-  const skeletonFn = useV2 ? skeletonV2 : skeletonV1
-  return skeletonFn(input)
+  return useV2 ? skeletonV2(input, dataplane) : skeletonV1(input)
 }
 
 const hydration = async (
@@ -159,6 +163,7 @@ const presentation = (
 
 type Context = {
   dataplane: DataPlaneClient
+  typeaheadClient?: DataPlaneClient
   hydrator: Hydrator
   views: Views
   searchClient?: Client
