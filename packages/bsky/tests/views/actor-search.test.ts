@@ -1,5 +1,16 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
+import {
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest'
 import { type AppBskyActorSearchActors, type AtpAgent, ids } from '@atproto/api'
+// Imported from the package root so the store is the same instance the
+// running service (loaded from dist by dev-env) uses.
+import { realIpStore } from '@atproto/bsky'
 import { wait } from '@atproto/common'
 import {
   type SeedClient,
@@ -7,6 +18,7 @@ import {
   basicSeed,
   usersBulkSeed,
 } from '@atproto/dev-env'
+import { Gate } from '../../src/feature-gates/gates.js'
 import { forSnapshot, paginateAll, stripViewer } from '../_util.js'
 
 // @NOTE skipped to help with CI failures
@@ -327,5 +339,184 @@ describe('actor search pagination', () => {
     )
     expect(short.data.cursor).toBeDefined()
     await network.bsky.ctx.dataplane.untakedownActor({ did: full.dids[0] })
+  })
+})
+
+describe('actor search real-ip forwarding', () => {
+  let network: TestNetwork
+  let agent: AtpAgent
+  let sc: SeedClient
+
+  // Toggled per test to exercise both the v2 (data-plane search) path and
+  // the v1 fallback.
+  let searchV2 = true
+
+  beforeAll(async () => {
+    network = await TestNetwork.create({
+      dbPostgresSchema: 'bsky_views_actor_search_real_ip',
+    })
+    vi.spyOn(network.bsky.ctx.featureGatesClient, 'scope').mockImplementation(
+      () => ({
+        Gate,
+        checkGate: (gate) => (gate === Gate.SearchV2Enable ? searchV2 : false),
+        checkGates: (gates) =>
+          new Map(gates.map((gate) => [gate, gate === Gate.SearchV2Enable])),
+      }),
+    )
+    agent = network.bsky.getAgent()
+    sc = network.getSeedClient()
+    await basicSeed(sc)
+    await network.processAll()
+  })
+
+  afterAll(async () => network?.close())
+
+  // Wraps a data-plane client method so each call records the request-scoped
+  // real-ip state observed at call time, while still calling through.
+  const captureRealIpState = (
+    method: 'searchActors' | 'searchActorsTypeahead' | 'getActors',
+  ) => {
+    const dataplane = network.bsky.ctx.dataplane
+    // Loosely typed: the union of client methods has no single signature.
+    const original: (...args: any[]) => Promise<any> = dataplane[method]
+    const states: { ip?: string; authenticated?: boolean }[] = []
+    const spy = vi
+      .spyOn(dataplane, method)
+      .mockImplementation((...args: any[]) => {
+        states.push({ ...(realIpStore.getStore() ?? {}) })
+        return original.apply(dataplane, args)
+      })
+    return { states, restored: () => spy.mockRestore() }
+  }
+
+  it('forwards a valid ipv4 address on the v2 data-plane call for unauthenticated requests', async () => {
+    const { states, restored } = captureRealIpState('searchActorsTypeahead')
+    try {
+      await agent.api.app.bsky.actor.searchActorsTypeahead(
+        { term: 'car' },
+        { headers: { 'x-real-ip': '203.0.113.7' } },
+      )
+      expect(states).toEqual([{ ip: '203.0.113.7' }])
+    } finally {
+      restored()
+    }
+  })
+
+  it('forwards a valid ipv6 address on the v2 data-plane call for unauthenticated requests', async () => {
+    const { states, restored } = captureRealIpState('searchActorsTypeahead')
+    try {
+      await agent.api.app.bsky.actor.searchActorsTypeahead(
+        { term: 'car' },
+        { headers: { 'x-real-ip': '2001:db8::1' } },
+      )
+      expect(states).toEqual([{ ip: '2001:db8::1' }])
+    } finally {
+      restored()
+    }
+  })
+
+  it('does not forward the address for authenticated requests', async () => {
+    const { states, restored } = captureRealIpState('searchActorsTypeahead')
+    try {
+      const headers = await network.serviceHeaders(
+        sc.dids.alice,
+        ids.AppBskyActorSearchActorsTypeahead,
+      )
+      await agent.api.app.bsky.actor.searchActorsTypeahead(
+        { term: 'car' },
+        { headers: { ...headers, 'x-real-ip': '203.0.113.7' } },
+      )
+      expect(states).toEqual([{ ip: '203.0.113.7', authenticated: true }])
+    } finally {
+      restored()
+    }
+  })
+
+  it('omits the address when the x-real-ip header is missing', async () => {
+    const { states, restored } = captureRealIpState('searchActorsTypeahead')
+    try {
+      await agent.api.app.bsky.actor.searchActorsTypeahead({ term: 'car' })
+      expect(states).toEqual([{ ip: undefined }])
+    } finally {
+      restored()
+    }
+  })
+
+  it('omits malformed and ambiguous addresses without failing the request', async () => {
+    for (const value of ['not-an-ip', '203.0.113.7, 203.0.113.8']) {
+      const { states, restored } = captureRealIpState('searchActorsTypeahead')
+      try {
+        const result = await agent.api.app.bsky.actor.searchActorsTypeahead(
+          { term: 'car' },
+          { headers: { 'x-real-ip': value } },
+        )
+        expect(states, value).toEqual([{ ip: undefined }])
+        expect(Array.isArray(result.data.actors), value).toBe(true)
+      } finally {
+        restored()
+      }
+    }
+  })
+
+  it('sends the same query, viewer, and limit with and without the address', async () => {
+    const dataplane = network.bsky.ctx.dataplane
+    const original = dataplane.searchActorsTypeahead
+    const spy = vi
+      .spyOn(dataplane, 'searchActorsTypeahead')
+      .mockImplementation(async (...args: Parameters<typeof original>) =>
+        original.apply(dataplane, args),
+      )
+    try {
+      const headers = await network.serviceHeaders(
+        sc.dids.alice,
+        ids.AppBskyActorSearchActorsTypeahead,
+      )
+      await agent.api.app.bsky.actor.searchActorsTypeahead(
+        { term: 'car' },
+        { headers },
+      )
+      await agent.api.app.bsky.actor.searchActorsTypeahead(
+        { term: 'car' },
+        { headers: { ...headers, 'x-real-ip': '203.0.113.7' } },
+      )
+      expect(spy).toHaveBeenCalledTimes(2)
+      expect(spy.mock.calls[1][0]).toEqual(spy.mock.calls[0][0])
+      expect(spy.mock.calls[0][0]).toMatchObject({
+        params: { query: 'car', viewer: sc.dids.alice },
+      })
+    } finally {
+      spy.mockRestore()
+    }
+  })
+
+  it('forwards the address on the v1 fallback for unauthenticated requests', async () => {
+    const { states, restored } = captureRealIpState('searchActors')
+    searchV2 = false
+    try {
+      await agent.api.app.bsky.actor.searchActors(
+        { term: 'car' },
+        { headers: { 'x-real-ip': '203.0.113.7' } },
+      )
+      expect(states).toEqual([{ ip: '203.0.113.7' }])
+    } finally {
+      searchV2 = true
+      restored()
+    }
+  })
+
+  it('forwards the address on non-search endpoints for unauthenticated requests', async () => {
+    const { states, restored } = captureRealIpState('getActors')
+    try {
+      await agent.api.app.bsky.actor.getProfiles(
+        { actors: [sc.dids.bob] },
+        { headers: { 'x-real-ip': '203.0.113.7' } },
+      )
+      // Hydration may make several data-plane calls; every one of them must
+      // observe the request's address.
+      expect(states.length).toBeGreaterThan(0)
+      states.forEach((state) => expect(state).toEqual({ ip: '203.0.113.7' }))
+    } finally {
+      restored()
+    }
   })
 })
