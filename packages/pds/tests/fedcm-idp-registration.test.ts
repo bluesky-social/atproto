@@ -405,13 +405,23 @@ browserDescribe('FedCM IdP registration in Chrome', () => {
       accountIndex: 0,
     })
 
+    // @NOTE The sign-in form is visible behind the chooser, so wait for the
+    // refusal itself, then for the app to finish handling it.
+    const deadline = Date.now() + 10_000
+    while (
+      !requests.some((r) => r.path === '/oauth/fedcm/assertion' && r.status) &&
+      Date.now() < deadline
+    ) {
+      await new Promise((resolve) => setTimeout(resolve, 50))
+    }
+    expect(
+      requests.filter((r) => r.path === '/oauth/fedcm/assertion'),
+    ).toMatchObject([{ method: 'POST', status: 401 }])
+    await page.waitForNetworkIdle()
     await page.page.waitForSelector('input[name="identifier"]', {
       visible: true,
     })
     await page.ensureTextVisibility('Login with the Atmosphere', 'h2')
-    expect(
-      requests.filter((r) => r.path === '/oauth/fedcm/assertion'),
-    ).toMatchObject([{ method: 'POST', status: 401 }])
     expect(parRequests()).toHaveLength(0)
     expect(await page.page.$('button::-p-text(Authorize)')).toBeNull()
   })
