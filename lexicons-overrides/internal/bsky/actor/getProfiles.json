@@ -14,11 +14,6 @@
             "items": { "type": "string", "format": "did" },
             "maxLength": 200
           },
-          "viewer": {
-            "type": "string",
-            "format": "did",
-            "description": "DID of the account on whose behalf the request is made (not included for public/unauthenticated requests). Used for viewer-relative state, including social proof."
-          },
           "socialProof": {
             "type": "array",
             "description": "DIDs to hydrate social proof (known followers) for. DIDs not also present in `dids` are ignored.",

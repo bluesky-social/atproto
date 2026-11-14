@@ -16,7 +16,7 @@ import { resHeaders } from '../../../util.js'
 export default function (server: Server, ctx: AppContext) {
   const getPosts = createPipeline(skeleton, hydration, noBlocks, presentation)
   server.add(internal.bsky.feed.getPosts, {
-    auth: ctx.authVerifier.internalOrRole,
+    auth: ctx.authVerifier.internal,
     handler: async ({ params, auth, req }) => {
       const creds = ctx.authVerifier.parseCreds(auth)
       const labelers = ctx.reqLabelers(req)

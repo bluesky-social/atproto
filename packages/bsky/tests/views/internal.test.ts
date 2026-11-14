@@ -1,3 +1,4 @@
+import { SignJWT } from 'jose'
 import {
   afterAll,
   afterEach,
@@ -12,6 +13,16 @@ import { type SeedClient, TestNetwork } from '@atproto/dev-env'
 import type { DidString } from '@atproto/syntax'
 import { knownFollowersSeed } from '../seed/known-followers.js'
 
+const chatSecret = 'chat-secret-for-internal-views-tests'
+
+const internalHeaders = async (lxm: string, sub?: string) => {
+  const token = await new SignJWT({ iss: 'chat', aud: 'bsky', lxm, sub })
+    .setProtectedHeader({ alg: 'HS256', typ: 'internal+jwt' })
+    .setExpirationTime('1m')
+    .sign(Buffer.from(chatSecret, 'utf8'))
+  return { authorization: `Bearer ${token}` }
+}
+
 describe('internal views', () => {
   let network: TestNetwork
   let pdsAgent: AtpAgent
@@ -22,6 +33,7 @@ describe('internal views', () => {
   beforeAll(async () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_views_internal',
+      bsky: { internalServiceSecrets: { chat: chatSecret } },
     })
     pdsAgent = network.pds.getAgent()
     seedClient = network.getSeedClient()
@@ -54,16 +66,17 @@ describe('internal views', () => {
       params: {
         dids: string[]
         socialProof?: string[]
-        viewer?: string
         includeTakedowns?: boolean
       },
-      headers: Record<string, string> = network.bsky.adminAuthHeaders(),
+      opts: { viewer?: string; headers?: Record<string, string> } = {},
     ) => {
       const search = new URLSearchParams()
       params.dids.forEach((did) => search.append('dids', did))
       params.socialProof?.forEach((did) => search.append('socialProof', did))
-      if (params.viewer) search.append('viewer', params.viewer)
       if (params.includeTakedowns) search.append('includeTakedowns', 'true')
+      const headers =
+        opts.headers ??
+        (await internalHeaders('internal.bsky.actor.getProfiles', opts.viewer))
       const res = await fetch(
         `${network.bsky.url}/xrpc/internal.bsky.actor.getProfiles?${search.toString()}`,
         { headers },
@@ -76,24 +89,31 @@ describe('internal views', () => {
       }
     }
 
-    it('requires role auth, rejecting standard user auth', async () => {
+    it('requires internal auth, rejecting standard user auth and the admin password', async () => {
       const userHeaders = await network.serviceHeaders(
         dids.mix_view,
         'internal.bsky.actor.getProfiles',
       )
-      const { status } = await getProfiles(
+      const user = await getProfiles(
         { dids: [dids.mix_sub_1] },
-        userHeaders,
+        { headers: userHeaders },
       )
-      expect(status).toBe(401)
+      expect(user.status).toBe(401)
+      const admin = await getProfiles(
+        { dids: [dids.mix_sub_1] },
+        { headers: network.bsky.adminAuthHeaders() },
+      )
+      expect(admin.status).toBe(401)
     })
 
     it('returns all profiles, with social proof only for the requested subset', async () => {
-      const { status, body } = await getProfiles({
-        dids: [dids.mix_sub_1, dids.mix_sub_2, dids.mix_sub_3],
-        socialProof: [dids.mix_sub_1],
-        viewer: dids.mix_view,
-      })
+      const { status, body } = await getProfiles(
+        {
+          dids: [dids.mix_sub_1, dids.mix_sub_2, dids.mix_sub_3],
+          socialProof: [dids.mix_sub_1],
+        },
+        { viewer: dids.mix_view },
+      )
       expect(status).toBe(200)
       expect(body.profiles).toHaveLength(3)
 
@@ -105,11 +125,13 @@ describe('internal views', () => {
     })
 
     it('ignores socialProof dids that are not in dids', async () => {
-      const { status, body } = await getProfiles({
-        dids: [dids.mix_sub_1],
-        socialProof: [dids.mix_sub_1, dids.mix_sub_2],
-        viewer: dids.mix_view,
-      })
+      const { status, body } = await getProfiles(
+        {
+          dids: [dids.mix_sub_1],
+          socialProof: [dids.mix_sub_1, dids.mix_sub_2],
+        },
+        { viewer: dids.mix_view },
+      )
       expect(status).toBe(200)
       expect(body.profiles).toHaveLength(1)
       expect(body.profiles[0].did).toBe(dids.mix_sub_1)
@@ -117,10 +139,10 @@ describe('internal views', () => {
     })
 
     it('returns no social proof when socialProof is omitted', async () => {
-      const { status, body } = await getProfiles({
-        dids: [dids.mix_sub_1, dids.mix_sub_2],
-        viewer: dids.mix_view,
-      })
+      const { status, body } = await getProfiles(
+        { dids: [dids.mix_sub_1, dids.mix_sub_2] },
+        { viewer: dids.mix_view },
+      )
       expect(status).toBe(200)
       expect(body.profiles).toHaveLength(2)
       for (const profile of body.profiles) {
@@ -128,7 +150,7 @@ describe('internal views', () => {
       }
     })
 
-    it('returns no viewer state when viewer is omitted', async () => {
+    it('returns no viewer state when the token has no sub', async () => {
       const { status, body } = await getProfiles({
         dids: [dids.mix_sub_1],
         socialProof: [dids.mix_sub_1],
@@ -154,10 +176,10 @@ describe('internal views', () => {
 
       it('omits taken-down accounts by default', async () => {
         await network.bsky.ctx.dataplane.takedownActor({ did: dids.mix_sub_2 })
-        const { status, body } = await getProfiles({
-          dids: [dids.mix_sub_1, dids.mix_sub_2, dids.mix_sub_3],
-          viewer: dids.mix_view,
-        })
+        const { status, body } = await getProfiles(
+          { dids: [dids.mix_sub_1, dids.mix_sub_2, dids.mix_sub_3] },
+          { viewer: dids.mix_view },
+        )
         expect(status).toBe(200)
         expect(body.profiles).toHaveLength(2)
         expect(body.profiles.map((p) => p.did)).not.toContain(dids.mix_sub_2)
@@ -165,11 +187,13 @@ describe('internal views', () => {
 
       it('includes taken-down accounts when includeTakedowns is set', async () => {
         await network.bsky.ctx.dataplane.takedownActor({ did: dids.mix_sub_2 })
-        const { status, body } = await getProfiles({
-          dids: [dids.mix_sub_1, dids.mix_sub_2, dids.mix_sub_3],
-          viewer: dids.mix_view,
-          includeTakedowns: true,
-        })
+        const { status, body } = await getProfiles(
+          {
+            dids: [dids.mix_sub_1, dids.mix_sub_2, dids.mix_sub_3],
+            includeTakedowns: true,
+          },
+          { viewer: dids.mix_view },
+        )
         expect(status).toBe(200)
         expect(body.profiles).toHaveLength(3)
         const takendown = body.profiles.find((p) => p.did === dids.mix_sub_2)
@@ -189,7 +213,7 @@ describe('internal views', () => {
       const uri = post.ref.uriStr
       const res = await fetch(
         `${network.bsky.url}/xrpc/internal.bsky.feed.getPosts?uris=${encodeURIComponent(uri)}`,
-        { headers: network.bsky.adminAuthHeaders() },
+        { headers: await internalHeaders('internal.bsky.feed.getPosts') },
       )
       const body = (await res.json()) as { posts: AppBskyFeedDefs.PostView[] }
       expect(res.status).toBe(200)

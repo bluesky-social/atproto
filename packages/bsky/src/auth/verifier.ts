@@ -294,16 +294,6 @@ export class AuthVerifier {
     return this.internalService(ctx)
   }
 
-  internalOrRole = async (
-    ctx: ReqCtx,
-  ): Promise<InternalOutput | RoleOutput> => {
-    if (isBearerToken(ctx.req)) {
-      return this.internal(ctx)
-    } else {
-      return this.role(ctx)
-    }
-  }
-
   modService = async (reqCtx: ReqCtx): Promise<ModServiceOutput> => {
     events.authVerifierRequest('modService')
     const token = bearerTokenFromReq(reqCtx.req)
