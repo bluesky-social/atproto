@@ -204,6 +204,74 @@ describe('createFedcmMiddleware', () => {
     expect(fake.createFedcmIdToken).not.toHaveBeenCalled()
   })
 
+  it('signs for the selected account when several are eligible', async () => {
+    const accountA = {
+      ...account,
+      did: 'did:plc:aaaaaaaaaaaaaaaaaaaaaaaa',
+      handle: 'a.example.com',
+    } as Account
+    const accountB = {
+      ...account,
+      did: 'did:plc:bbbbbbbbbbbbbbbbbbbbbbbb',
+      handle: 'b.example.com',
+    } as Account
+    const deviceA = {
+      account: accountA,
+      updatedAt: new Date(),
+    } as DeviceAccount
+    const deviceB = {
+      account: accountB,
+      updatedAt: new Date(),
+    } as DeviceAccount
+    const fake = provider({ accounts: [deviceA, deviceB] })
+    const origin = await listen(fake)
+    const response = await assertion(origin, {
+      origin: 'https://rp.example',
+      accountId: accountB.did,
+    })
+
+    expect(response.status).toBe(200)
+    expect(fake.createFedcmIdToken).toHaveBeenCalledTimes(1)
+    expect(fake.createFedcmIdToken).toHaveBeenCalledWith(
+      deviceB,
+      clientId,
+      'n-123',
+    )
+    expect(fake.createFedcmIdToken).not.toHaveBeenCalledWith(
+      deviceA,
+      expect.anything(),
+      expect.anything(),
+    )
+  })
+
+  it('refuses an account that is not among the eligible device accounts', async () => {
+    const accountA = {
+      ...account,
+      did: 'did:plc:aaaaaaaaaaaaaaaaaaaaaaaa',
+      handle: 'a.example.com',
+    } as Account
+    const accountB = {
+      ...account,
+      did: 'did:plc:bbbbbbbbbbbbbbbbbbbbbbbb',
+      handle: 'b.example.com',
+    } as Account
+    const fake = provider({
+      accounts: [
+        { account: accountA, updatedAt: new Date() } as DeviceAccount,
+        { account: accountB, updatedAt: new Date() } as DeviceAccount,
+      ],
+    })
+    const origin = await listen(fake)
+    const response = await assertion(origin, {
+      origin: 'https://rp.example',
+      accountId: 'did:plc:cccccccccccccccccccccccc',
+    })
+
+    expect(response.status).toBe(401)
+    expect(await response.json()).toEqual({ error: { code: 'login_required' } })
+    expect(fake.createFedcmIdToken).not.toHaveBeenCalled()
+  })
+
   it('only accepts loopback clients when explicitly enabled and their redirect origin matches', async () => {
     const loopbackClientId =
       'http://localhost?redirect_uri=http%3A%2F%2F127.0.0.1%3A43210%2Fcallback'
