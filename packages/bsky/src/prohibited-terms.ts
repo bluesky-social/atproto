@@ -68,9 +68,9 @@ export class ProhibitedTerms {
   }
 }
 
-// @NOTE Keep in sync with what atlantis applies to actor typeahead (tango,
-// atlantis/bsky/server/models/search/prohibited_terms.go), including which
-// malformed rows it skips and which errors fail the whole file.
+// @NOTE Keep in sync with the rules the dataplane applies to actor typeahead,
+// including which malformed rows it skips and which errors fail the whole
+// file.
 export function parseProhibitedTerms(csv: string, now: Date): BlockRule[] {
   const [header, ...rows] = parseCsv(csv)
   if (!header) throw new Error('prohibited terms file has no header')
