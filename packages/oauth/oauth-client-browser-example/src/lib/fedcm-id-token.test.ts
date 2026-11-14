@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { Secp256k1Keypair } from '@atproto/crypto'
+import { Secp256k1Keypair, bytesToMultibase } from '@atproto/crypto'
 import type {
   AtprotoDid,
   AtprotoIdentityDidMethods,
@@ -184,6 +184,20 @@ describe(verifyFedcmIdToken, () => {
     const didDoc = makeDidDoc(keypair, { id: `${DID}#other` })
     const { verify } = await setup({ didDoc })
     await expect(verify()).rejects.toThrow()
+  })
+
+  it('accepts the legacy secp256k1 key type of older PLC documents', async () => {
+    const keypair = await Secp256k1Keypair.create()
+    const didDoc = makeDidDoc(keypair, {
+      type: 'EcdsaSecp256k1VerificationKey2019',
+      // Legacy keys are bare multibase compressed points, no multicodec prefix.
+      publicKeyMultibase: bytesToMultibase(
+        keypair.publicKeyBytes(),
+        'base58btc',
+      ),
+    })
+    const { verify } = await setup({ didDoc, signer: keypair })
+    await expect(verify()).resolves.toMatchObject({ did: DID })
   })
 
   it('rejects a non-Multikey key type', async () => {

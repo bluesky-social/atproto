@@ -1,4 +1,9 @@
-import { verifySignature } from '@atproto/crypto'
+import {
+  SECP256K1_JWT_ALG,
+  formatDidKey,
+  multibaseToBytes,
+  verifySignature,
+} from '@atproto/crypto'
 import {
   type AtprotoDid,
   type AtprotoIdentityDidMethods,
@@ -99,11 +104,17 @@ export async function verifyFedcmIdToken(
 
   const key = extractAtprotoData(didDoc).key
   if (!key) throw new Error('DID document has no #atproto verification method')
-  if (key.type !== 'Multikey') {
+  let didKey: string
+  if (key.type === 'Multikey') {
+    didKey = `did:key:${key.publicKeyMultibase}`
+  } else if (key.type === 'EcdsaSecp256k1VerificationKey2019') {
+    didKey = formatDidKey(
+      SECP256K1_JWT_ALG,
+      multibaseToBytes(key.publicKeyMultibase),
+    )
+  } else {
     throw new Error(`Unsupported #atproto key type: ${key.type}`)
   }
-
-  const didKey = `did:key:${key.publicKeyMultibase}`
   const signingInput = new TextEncoder().encode(`${headerSeg}.${payloadSeg}`)
   let valid: boolean
   try {
