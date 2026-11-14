@@ -1121,6 +1121,16 @@ console.log(response.headers)
 console.log(response.body)
 ```
 
+Per-request `headers` can also be a (sync or async) function, called for every attempt (retries included), for headers that must differ between attempts:
+
+```typescript
+const response = await client.xrpc(app.bsky.feed.getTimeline, {
+  params: { limit: 50 },
+  maxRetries: 3,
+  headers: async () => ({ 'x-request-nonce': await createNonce() }),
+})
+```
+
 Validation and strictness options (`validateRequest`, `validateResponse`, `strictResponseProcessing`) can also be passed per-call to override the client defaults:
 
 ```typescript
@@ -1584,6 +1594,8 @@ const enableAdultContent: Action<void, Preference[]> = async (
 // Use the high-level action
 await client.call(enableAdultContent)
 ```
+
+Actions whose input is `void`, or optional (e.g. `params?: ListParams`), can be called without input.
 
 ### Using a Single Client for Multiple Services
 

@@ -24,10 +24,14 @@ import {
   atprotoLoopbackClientMetadata,
   oauthAuthorizationRequestParametersSchema,
 } from '@atproto/oauth-types'
-import type { CreateDidResolverOptions } from '@atproto-labs/did-resolver'
+import {
+  type CreateDidResolverOptions,
+  createDidResolver,
+} from '@atproto-labs/did-resolver'
 import { safeFetchWrap } from '@atproto-labs/fetch-node'
 import {
   type CreateHandleResolverNodeOptions,
+  type HandleResolver,
   createHandleResolverNode,
 } from '@atproto-labs/handle-resolver-node'
 import type { SimpleStore } from '@atproto-labs/simple-store'
@@ -70,6 +74,7 @@ import { InvalidDpopProofError } from './errors/invalid-dpop-proof-error.js'
 import { InvalidGrantError } from './errors/invalid-grant-error.js'
 import { InvalidRequestError } from './errors/invalid-request-error.js'
 import { LoginRequiredError } from './errors/login-required-error.js'
+import { IdentityManager } from './identity/identity-manager.js'
 import { LexiconManager } from './lexicon/lexicon-manager.js'
 import { type LexiconStore, asLexiconStore } from './lexicon/lexicon-store.js'
 import type { HcaptchaConfig } from './lib/hcaptcha.js'
@@ -128,6 +133,7 @@ export type {
   Customization,
   CustomizationConfig,
   ErrorHandler,
+  HandleResolver,
   HcaptchaConfig,
   LoopbackMetadataGetter,
   MultiLangString,
@@ -263,11 +269,13 @@ export class OAuthProvider extends OAuthVerifier {
   public readonly deviceManager: DeviceManager
   public readonly clientManager: ClientManager
   public readonly lexiconManager: LexiconManager
+  public readonly identityManager: IdentityManager
   public readonly requestManager: RequestManager
   public readonly tokenManager: TokenManager
 
   public constructor({
     // OAuthProviderConfig
+    plcDirectoryUrl,
     authenticationMaxAge = AUTHENTICATION_MAX_AGE,
     tokenMaxAge = TOKEN_MAX_AGE,
     accessTokenMode = AccessTokenMode.stateless,
@@ -278,7 +286,15 @@ export class OAuthProvider extends OAuthVerifier {
     // Services
     fetch: unsafeFetch = globalThis.fetch, // Inherited from options
     safeFetch = safeFetchWrap({ fetch: unsafeFetch }),
-    lexResolver = new LexResolver({ fetch: safeFetch }),
+    lexResolver = new LexResolver({
+      fetch: safeFetch,
+      plcDirectoryUrl,
+      // We let LexResolver create it's own DidResolver instance, so that it can
+      // have a separate cache. This prevents identity DIDs (accounts, space
+      // authorities) from causing lex resolver caches to expire, and vice-versa.
+      didResolver: undefined,
+      didCache: undefined, // Memory cache
+    }),
 
     // compound store implementation
     store,
@@ -336,18 +352,29 @@ export class OAuthProvider extends OAuthVerifier {
         secure: !this.issuer.startsWith('http:'),
       },
     })
+
+    // Shared by the OAuth resolver (account identities) and the identity
+    // manager (space authorities), so that both use the same caches.
+    const allowHttp = rest.allowHttp ?? false
+    const didResolver = createDidResolver({
+      didResolver: rest.didResolver,
+      didCache: rest.didCache,
+      onDidCacheError: rest.onDidCacheError,
+      plcDirectoryUrl,
+      fetch: safeFetch,
+      allowHttp,
+    })
+    const handleResolver = createHandleResolverNode({ ...rest, safeFetch })
+
     this.accountManager = new AccountManager(
       this.issuer,
       accountStore,
       this.hooks,
       createOAuthResolver({
-        handleResolver: createHandleResolverNode({ ...rest, safeFetch }),
-        didResolver: rest.didResolver,
-        didCache: rest.didCache,
-        onDidCacheError: rest.onDidCacheError,
-        plcDirectoryUrl: rest.plcDirectoryUrl,
+        handleResolver,
+        didResolver,
         fetch: safeFetch,
-        allowHttp: rest.allowHttp,
+        allowHttp,
       }),
       this.customization,
     )
@@ -362,6 +389,7 @@ export class OAuthProvider extends OAuthVerifier {
       clientMetadataCache,
     )
     this.lexiconManager = new LexiconManager(lexiconStore, lexResolver)
+    this.identityManager = new IdentityManager(didResolver, handleResolver)
     this.requestManager = new RequestManager(
       requestStore,
       this.lexiconManager,
@@ -758,6 +786,25 @@ export class OAuthProvider extends OAuthVerifier {
               cause,
             )
           }),
+        spaces: await this.lexiconManager
+          .getSpacesFromScope(parameters.scope)
+          .catch((cause) => {
+            throw new AuthorizationError(
+              parameters,
+              'Unable to retrieve space declarations',
+              'invalid_scope',
+              cause,
+            )
+          }),
+        // @NOTE a handle is only ever displayed, so failing to resolve one
+        // leaves the consent screen showing the raw DID.
+        spaceHandles: await this.identityManager.getSpaceHandlesFromScope(
+          parameters.scope,
+          {
+            // @TODO: Should we log here ?
+            onError: (_did, _error) => {},
+          },
+        ),
       }
     } catch (err) {
       try {

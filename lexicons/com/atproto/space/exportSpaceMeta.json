@@ -1,0 +1,31 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.space.exportSpaceMeta",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "Export a space's state, such as its policy and member list, as a STAR file for account migration. Requires auth as the space authority, implemented by PDS.",
+      "parameters": {
+        "type": "params",
+        "required": ["space"],
+        "properties": {
+          "space": {
+            "type": "string",
+            "format": "space-ref"
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/vnd.dasl.star"
+      },
+      "errors": [
+        {
+          "name": "SpaceNotFound"
+        },
+        {
+          "name": "NotAuthorized"
+        }
+      ]
+    }
+  }
+}

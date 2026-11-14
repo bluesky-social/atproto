@@ -101,13 +101,15 @@ export function asUint8ArrayArrayBuffer(
 
 export type XrpcRequestHeadersOptions = {
   /**
-   * Additional custom HTTP headers to include in the request.
+   * Additional custom HTTP headers to include in the request. A function is
+   * called for every attempt (retries included), for headers that must differ
+   * between attempts.
    *
    * @note "atproto-proxy" and "atproto-accept-labelers" headers might change
    * depending on the `service` and `labelers` options, respectively, if they
    * are provided (which is always the case when using {@link Client.xrpc}).
    */
-  headers?: HeadersInit
+  headers?: HeadersInit | (() => HeadersInit | Promise<HeadersInit>)
 
   /**
    * Labeler DIDs to request labels from for content moderation.
@@ -152,13 +154,15 @@ export type XrpcRequestHeadersOptions = {
  * @see {@link XrpcRequestHeadersOptions}
  * @returns A new Headers object with AT Protocol headers added
  */
-export function buildXrpcRequestHeaders({
+export async function buildXrpcRequestHeaders({
   service,
   labelers,
   appLabelers,
   headers: headersInit,
-}: XrpcRequestHeadersOptions): Headers {
-  const headers = new Headers(headersInit)
+}: XrpcRequestHeadersOptions): Promise<Headers> {
+  const headers = new Headers(
+    typeof headersInit === 'function' ? await headersInit() : headersInit,
+  )
 
   // If provided, the "service" option overrides any existing "atproto-proxy"
   // header. If `null`, the header is removed entirely.

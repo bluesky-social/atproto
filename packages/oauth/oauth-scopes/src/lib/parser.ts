@@ -24,7 +24,7 @@ type ParamsSchema = Record<
     }
 >
 
-type InferParams<S extends ParamsSchema> = {
+export type InferParams<S extends ParamsSchema> = {
   [K in keyof S]:
     | (S[K]['required'] extends true
         ? never

@@ -59,6 +59,7 @@ describe('get Atmosphere record views through Ozone', () => {
     expect(method).toMatchObject({ $lxm: schema.$lxm })
     expect(params).toEqual({ uri, cid })
     assert(options && 'headers' in options)
+    assert(typeof options.headers !== 'function')
     const headers = new Headers(options.headers)
     expect(headers.get(LABELER_HEADER_NAME)).toBe(labelers)
     expect(headers.has('atproto-proxy')).toBe(false)

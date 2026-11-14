@@ -4,8 +4,11 @@ import {
   BufferOverflowError,
   CloseError,
   DataModeError,
+  HandshakeRejectedError,
+  HandshakeTimeoutError,
   HeartbeatTimeoutError,
   IdleTimeoutError,
+  MessageTooBigError,
   SocketError,
   WebSocketClientError,
 } from './errors.js'
@@ -25,6 +28,9 @@ describe('error taxonomy', () => {
     expect(new SocketError(new Error('x')).shouldRetry()).toBe(true)
     expect(new HeartbeatTimeoutError().shouldRetry()).toBe(true)
     expect(new IdleTimeoutError().shouldRetry()).toBe(true)
+    expect(new HandshakeTimeoutError().shouldRetry()).toBe(true)
+    // The server would send the oversized message again.
+    expect(new MessageTooBigError(1024).shouldRetry()).toBe(false)
     // A local resource limit: reconnecting would overflow again.
     expect(new BufferOverflowError(999).shouldRetry()).toBe(false)
     // A protocol mismatch: the server would send the wrong frames again.
@@ -50,5 +56,15 @@ describe('error taxonomy', () => {
     expect(new BufferOverflowError(4096).bufferedBytes).toBe(4096)
     const mode = new DataModeError('text', 'binary')
     expect([mode.expected, mode.received]).toEqual(['text', 'binary'])
+    expect(new MessageTooBigError(1024).maxPayload).toBe(1024)
+  })
+
+  it('classifies a refused upgrade as a retryable socket error', () => {
+    const headers = new Headers({ 'retry-after': '30' })
+    const rejected = new HandshakeRejectedError(503, headers)
+    expect(rejected).toBeInstanceOf(SocketError)
+    expect(rejected.shouldRetry()).toBe(true)
+    expect([rejected.status, rejected.headers]).toEqual([503, headers])
+    expect(rejected.message).toContain('503')
   })
 })

@@ -12,7 +12,6 @@ let bob: DidString
 jest.unstable_mockModule('node:dns/promises', () => {
   const originalModule =
     jest.requireActual<typeof DnsPromises>('node:dns/promises')
-
   return {
     ...originalModule,
     resolveTxt: (domain: string) => {

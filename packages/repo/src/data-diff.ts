@@ -1,5 +1,5 @@
+import { BlockMap } from '@atproto/car'
 import type { Cid } from '@atproto/lex-data'
-import { BlockMap } from './block-map.js'
 import { CidSet } from './cid-set.js'
 import { type MST, type NodeEntry, mstDiff } from './mst/index.js'
 

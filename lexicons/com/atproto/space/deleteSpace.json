@@ -1,0 +1,31 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.space.deleteSpace",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Delete a space, along with the authority's space repo. Requires auth as the space authority, implemented by PDS.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["space"],
+          "properties": {
+            "space": {
+              "type": "string",
+              "format": "space-ref"
+            }
+          }
+        }
+      },
+      "errors": [
+        {
+          "name": "SpaceNotFound"
+        },
+        {
+          "name": "NotAuthorized"
+        }
+      ]
+    }
+  }
+}

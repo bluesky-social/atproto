@@ -1,0 +1,35 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.space.removeWriter",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Remove an account from a space's writer set, as returned by listWriters. The removal is sent to registered syncers. The account is added back if it makes another authorized write to the space. Does nothing if the account is not in the writer set. Requires auth as the space authority, implemented by PDS.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["space", "repo"],
+          "properties": {
+            "space": {
+              "type": "string",
+              "format": "space-ref"
+            },
+            "repo": {
+              "type": "string",
+              "format": "did"
+            }
+          }
+        }
+      },
+      "errors": [
+        {
+          "name": "SpaceNotFound"
+        },
+        {
+          "name": "NotAuthorized"
+        }
+      ]
+    }
+  }
+}

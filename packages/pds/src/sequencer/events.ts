@@ -19,8 +19,8 @@ export const formatSeqCommit = async (
   commitData: CommitDataWithOps,
 ): Promise<RepoSeqInsert> => {
   const blocksToSend = new BlockMap()
-  blocksToSend.addMap(commitData.newBlocks)
-  blocksToSend.addMap(commitData.relevantBlocks)
+  blocksToSend.addBlocks(commitData.newBlocks)
+  blocksToSend.addBlocks(commitData.relevantBlocks)
 
   const evt = {
     repo: did,

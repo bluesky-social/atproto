@@ -1,0 +1,51 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.space.getBlob",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "Get a blob referenced by a record in a space repo. Returns the full blob as originally uploaded. Requires auth as the repo's account or with a space credential; implemented by PDS.",
+      "parameters": {
+        "type": "params",
+        "required": ["space", "repo", "cid"],
+        "properties": {
+          "space": {
+            "type": "string",
+            "format": "space-ref"
+          },
+          "repo": {
+            "type": "string",
+            "format": "did"
+          },
+          "cid": {
+            "type": "string",
+            "format": "cid"
+          }
+        }
+      },
+      "output": {
+        "encoding": "*/*"
+      },
+      "errors": [
+        {
+          "name": "BlobNotFound"
+        },
+        {
+          "name": "SpaceNotFound"
+        },
+        {
+          "name": "RepoNotFound"
+        },
+        {
+          "name": "RepoTakendown"
+        },
+        {
+          "name": "RepoSuspended"
+        },
+        {
+          "name": "RepoDeactivated"
+        }
+      ]
+    }
+  }
+}

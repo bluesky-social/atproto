@@ -11,6 +11,7 @@ import {
   type AtIdentifierString,
   type DidString,
   type HandleString,
+  type SpaceRefString,
   isAtIdentifierString,
 } from '@atproto/lex-schema'
 import {
@@ -49,6 +50,7 @@ import * as emailToken from './helpers/email-token.js'
 import * as invite from './helpers/invite.js'
 import * as password from './helpers/password.js'
 import * as repo from './helpers/repo.js'
+import * as revokedSpaceCredential from './helpers/revoked-space-credential.js'
 import * as scrypt from './helpers/scrypt.js'
 import * as token from './helpers/token.js'
 
@@ -610,6 +612,28 @@ export class AccountManager {
 
   async revokeRefreshToken(id: string) {
     return auth.revokeRefreshToken(this.db, id)
+  }
+
+  async addRevokedSpaceCredentials(
+    space: SpaceRefString,
+    jtis: string[],
+  ): Promise<void> {
+    await revokedSpaceCredential.addRevokedSpaceCredentials(
+      this.db,
+      space,
+      jtis,
+    )
+  }
+
+  async deleteExpiredRevokedSpaceCredentials(): Promise<void> {
+    await revokedSpaceCredential.deleteExpiredRevokedSpaceCredentials(this.db)
+  }
+
+  async isSpaceCredentialRevoked(
+    space: SpaceRefString,
+    jti: string,
+  ): Promise<boolean> {
+    return revokedSpaceCredential.isSpaceCredentialRevoked(this.db, space, jti)
   }
 
   // Login

@@ -1,0 +1,536 @@
+import { TID } from '@atproto/common'
+import { encode } from '@atproto/lex-cbor'
+import { type Cid, cidForCbor, enumBlobRefs, parseCid } from '@atproto/lex-data'
+import { WriteOpAction } from '@atproto/repo'
+import {
+  RepoCommit,
+  type SpaceMetaWriter,
+  type VerifiedRecord,
+} from '@atproto/space'
+import type {
+  AtUriString,
+  DidString,
+  NsidString,
+  SpaceRef,
+  SpaceRefString,
+} from '@atproto/syntax'
+import { InvalidRequestError } from '@atproto/xrpc-server'
+import { toJson } from '../../db/index.js'
+import { BadRecordSwapError, type PreparedWrite } from '../../repo/types.js'
+import type { Policy } from '../../space-policy/policy.js'
+import type { BlobTransactor } from '../blob/transactor.js'
+import type {
+  ActorDb,
+  MemberspaceMember,
+  SpaceRecordOplog,
+} from '../db/index.js'
+import { SpaceReader } from './reader.js'
+
+export class SpaceTransactor extends SpaceReader {
+  constructor(
+    public did: string,
+    public db: ActorDb,
+    public blob: BlobTransactor,
+  ) {
+    super(db)
+  }
+
+  async ensureSpace(ref: SpaceRef): Promise<void> {
+    const uri = ref.toString()
+    const space = {
+      authority: ref.spaceDid,
+      type: ref.spaceType,
+      createdAt: new Date().toISOString(),
+      deletedAt: null,
+    }
+    await this.db.db
+      .insertInto('space')
+      .values({ uri, ...space })
+      .onConflict((oc) => oc.column('uri').doUpdateSet({ deletedAt: null }))
+      .execute()
+    await this.db.db
+      .insertInto('space_repo')
+      .values({ space: uri, setHash: null, rev: null })
+      .onConflict((oc) => oc.column('space').doNothing())
+      .execute()
+  }
+
+  async createSpace(ref: SpaceRef, policy: Policy): Promise<void> {
+    await this.ensureSpace(ref)
+    const policyJson = toJson(policy)
+    await this.db.db
+      .insertInto('space_policy')
+      .values({ uri: ref.toString(), policyJson })
+      .onConflict((oc) => oc.column('uri').doUpdateSet({ policyJson }))
+      .execute()
+  }
+
+  async updateSpacePolicy(uri: SpaceRefString, policy: Policy): Promise<void> {
+    await this.db.db
+      .updateTable('space_policy')
+      .set({ policyJson: toJson(policy) })
+      .where('uri', '=', uri)
+      .execute()
+  }
+
+  // Delete a space this account is the authority for, including its own repo in the
+  // space. The `space` row survives as a tombstone, so authorizeSpaceSync can
+  // keep reporting the space as deleted.
+  async deleteSpace(uri: SpaceRefString): Promise<void> {
+    await this.db.db
+      .updateTable('space')
+      .set({ deletedAt: new Date().toISOString() })
+      .where('uri', '=', uri)
+      .execute()
+    await this.blob.deleteSpaceBlobs(uri)
+    await this.db.db.deleteFrom('space_policy').where('uri', '=', uri).execute()
+    for (const table of [
+      'memberspace_member',
+      'space_writer',
+      'space_notify_registration',
+      'space_record',
+      'space_record_oplog',
+      'space_repo',
+    ] as const) {
+      await this.db.db.deleteFrom(table).where('space', '=', uri).execute()
+    }
+  }
+
+  async putMember(
+    space: SpaceRefString,
+    did: DidString,
+    access: { read: boolean; write: boolean },
+  ): Promise<void> {
+    const values: Pick<MemberspaceMember, 'read' | 'write'> = {
+      read: access.read ? 1 : 0,
+      write: access.write ? 1 : 0,
+    }
+    await this.db.db
+      .insertInto('memberspace_member')
+      .values({ space, did, ...values })
+      .onConflict((oc) => oc.columns(['space', 'did']).doUpdateSet(values))
+      .execute()
+  }
+
+  // Returns whether the DID was a member.
+  async removeMember(space: SpaceRefString, did: DidString): Promise<boolean> {
+    const result = await this.db.db
+      .deleteFrom('memberspace_member')
+      .where('space', '=', space)
+      .where('did', '=', did)
+      .executeTakeFirst()
+    return result.numDeletedRows > 0n
+  }
+
+  async removeAllMembers(space: SpaceRefString): Promise<void> {
+    await this.db.db
+      .deleteFrom('memberspace_member')
+      .where('space', '=', space)
+      .execute()
+  }
+
+  /** Record a newer repo state and advance the space sequence atomically. */
+  async recordWriter(
+    space: SpaceRefString,
+    did: DidString,
+    repoRev: string,
+    data: Uint8Array,
+  ): Promise<{ spaceRev: string; prevSpaceRev?: string } | undefined> {
+    this.db.assertTransaction()
+    const current = await this.getSpace(space)
+    if (!current || current.deletedAt) {
+      throw new InvalidRequestError('Space not found', 'SpaceNotFound')
+    }
+    const writer = await this.db.db
+      .selectFrom('space_writer')
+      .select('repoRev')
+      .where('space', '=', space)
+      .where('did', '=', did)
+      .executeTakeFirst()
+    if (writer && writer.repoRev >= repoRev) return
+
+    const { spaceRev, prevSpaceRev } = await this.nextSpaceRev(space)
+    // A newer write from a removed writer adds it back to the writer set.
+    await this.db.db
+      .insertInto('space_writer')
+      .values({ space, did, repoRev, data, spaceRev, removedAt: null })
+      .onConflict((oc) =>
+        oc
+          .columns(['space', 'did'])
+          .doUpdateSet({ repoRev, data, spaceRev, removedAt: null }),
+      )
+      .execute()
+    return { spaceRev, prevSpaceRev }
+  }
+
+  /**
+   * Remove a repo from the writer set and advance the space sequence atomically.
+   * The row stays behind, marked removed, so that listWriters can report the
+   * removal. Returns undefined if the repo is not in the writer set.
+   */
+  async removeWriter(
+    space: SpaceRefString,
+    did: DidString,
+  ): Promise<{ spaceRev: string; prevSpaceRev?: string } | undefined> {
+    this.db.assertTransaction()
+    const writer = await this.db.db
+      .selectFrom('space_writer')
+      .select('removedAt')
+      .where('space', '=', space)
+      .where('did', '=', did)
+      .executeTakeFirst()
+    if (!writer || writer.removedAt) return
+
+    const { spaceRev, prevSpaceRev } = await this.nextSpaceRev(space)
+    await this.db.db
+      .updateTable('space_writer')
+      .set({ spaceRev, removedAt: new Date().toISOString() })
+      .where('space', '=', space)
+      .where('did', '=', did)
+      .execute()
+    return { spaceRev, prevSpaceRev }
+  }
+
+  private async nextSpaceRev(
+    space: SpaceRefString,
+  ): Promise<{ spaceRev: string; prevSpaceRev?: string }> {
+    const prevSpaceRev = await this.getSpaceRev(space)
+    return { spaceRev: TID.nextStr(prevSpaceRev), prevSpaceRev }
+  }
+
+  /** Replace a space's writer set with the one exported by its previous host. */
+  async importWriters(
+    space: SpaceRefString,
+    writers: SpaceMetaWriter[],
+  ): Promise<void> {
+    await this.db.db
+      .deleteFrom('space_writer')
+      .where('space', '=', space)
+      .execute()
+    for (const { did, repoRev, data, spaceRev } of writers) {
+      await this.db.db
+        .insertInto('space_writer')
+        .values({ space, did, repoRev, data, spaceRev, removedAt: null })
+        .execute()
+    }
+  }
+
+  /**
+   * Apply a batch of writes as one commit, all sharing a single `rev`. Must run in a
+   * transaction. Returns null if there was nothing to write.
+   */
+  async applyWrites(
+    ref: SpaceRef,
+    writes: PreparedWrite[],
+  ): Promise<{ rev: string; setHash: Uint8Array } | null> {
+    this.db.assertTransaction()
+    if (writes.length === 0) return null
+
+    await this.ensureRepo(ref)
+    const space = ref.toString()
+
+    const state = await this.getRepoState(space)
+    const repo = RepoCommit.fromState(state?.setHash)
+    const rev = TID.nextStr(state?.rev ?? undefined)
+
+    const ops: SpaceRecordOplog[] = []
+
+    for (const write of writes) {
+      const uri = write.uri.toString()
+      const { collectionSafe: collection, rkey } = write.uri
+      // Each write lands before the next is read, so this sees what the batch has built
+      // up so far: a batch can create a record and then update it, and a repeated create
+      // is rejected rather than counted into the set hash twice.
+      const prev = await this.getRecordCid(uri)
+
+      // No space lexicon offers a swap yet, so this only fires if one starts to —
+      // better than accepting a compare-and-swap and not performing it.
+      if (write.swapCid && (!prev || !write.swapCid.equals(prev))) {
+        throw new BadRecordSwapError(prev)
+      }
+
+      let cid: Cid | null = null
+      if (write.action === WriteOpAction.Delete) {
+        if (!prev) throw new SpaceRecordNotFoundError(collection, rkey)
+        await this.db.db
+          .deleteFrom('space_record')
+          .where('uri', '=', uri)
+          .execute()
+      } else {
+        if (write.action === WriteOpAction.Create && prev) {
+          throw new SpaceRecordAlreadyExistsError(collection, rkey)
+        }
+        if (write.action === WriteOpAction.Update && !prev) {
+          throw new SpaceRecordNotFoundError(collection, rkey)
+        }
+        const record = {
+          cid: write.cid.toString(),
+          value: encode(write.record),
+          repoRev: rev,
+          indexedAt: new Date().toISOString(),
+        }
+        await this.db.db
+          .insertInto('space_record')
+          .values({ uri, space, collection, rkey, ...record })
+          .onConflict((oc) => oc.column('uri').doUpdateSet(record))
+          .execute()
+        cid = write.cid
+      }
+
+      repo.applyOp({ collection, rkey, cid, prev })
+      ops.push({
+        space,
+        rev,
+        idx: ops.length,
+        action: write.action,
+        uri,
+        collection,
+        rkey,
+        cid: cid?.toString() ?? null,
+        prev: prev?.toString() ?? null,
+      })
+    }
+
+    const setHash = repo.setHash.state()
+    await this.db.db
+      .updateTable('space_repo')
+      .set({ setHash, rev })
+      .where('space', '=', space)
+      .execute()
+    await this.db.db.insertInto('space_record_oplog').values(ops).execute()
+
+    await this.blob.deleteDereferencedSpaceBlobs(writes)
+    for (const write of writes) {
+      if (write.action === WriteOpAction.Delete) continue
+      for (const blob of write.blobs) {
+        await this.blob.associateSpaceBlob(blob, write.uri)
+        await this.blob.verifyBlobAndMakePermanent(blob)
+      }
+    }
+
+    return { rev, setHash }
+  }
+
+  /**
+   * Import the account's repo from its previous host, replacing whatever this host
+   * held for it. Must run in a transaction. Like a migrated public repo, it takes a
+   * new rev here and none of its history. Its records are taken as they are,
+   * including those the PDS publishes from a space's configuration. Its blobs are
+   * uploaded afterwards, so they're associated without being checked.
+   */
+  async importRepo(ref: SpaceRef, records: VerifiedRecord[]): Promise<void> {
+    this.db.assertTransaction()
+    await this.ensureRepo(ref)
+    const space = ref.toString()
+
+    await this.db.db
+      .deleteFrom('space_record_blob')
+      .where('recordUri', 'in', (eb) =>
+        eb.selectFrom('space_record').select('uri').where('space', '=', space),
+      )
+      .execute()
+    await this.db.db
+      .deleteFrom('space_record')
+      .where('space', '=', space)
+      .execute()
+    await this.db.db
+      .deleteFrom('space_record_oplog')
+      .where('space', '=', space)
+      .execute()
+
+    const state = await this.getRepoState(space)
+    const rev = TID.nextStr(state?.rev ?? undefined)
+    const indexedAt = new Date().toISOString()
+    const repo = new RepoCommit()
+
+    for (const { collection, rkey, cid, record } of records) {
+      const uri = ref.recordUri(this.did as DidString, collection, rkey)
+      // Stored re-encoded, as any other write is. A record that wasn't canonical
+      // DRISL in the archive would no longer match its cid, nor the commit data.
+      const value = encode(record)
+      if (!cid.equals(await cidForCbor(value))) {
+        throw new InvalidRequestError(
+          `Invalid STAR: record is not canonical DRISL at ${collection}/${rkey}`,
+          'InvalidRepoFile',
+        )
+      }
+      await this.db.db
+        .insertInto('space_record')
+        .values({
+          uri: uri.toString(),
+          space,
+          collection,
+          rkey,
+          cid: cid.toString(),
+          value,
+          repoRev: rev,
+          indexedAt,
+        })
+        .execute()
+      for (const blob of enumBlobRefs(record, { strict: false })) {
+        await this.blob.associateSpaceBlob(blob, uri)
+      }
+      repo.add(collection, rkey, cid)
+    }
+
+    await this.db.db
+      .updateTable('space_repo')
+      .set({ setHash: repo.setHash.state(), rev })
+      .where('space', '=', space)
+      .execute()
+  }
+
+  /**
+   * Delete every record outside of the `keep` collections and clear the oplog,
+   * leaving the repo at a new `rev`. Must run in a transaction. Returns null if
+   * there was nothing to delete.
+   */
+  async clearRecords(
+    space: SpaceRefString,
+    keep: readonly NsidString[] = [],
+  ): Promise<{ rev: string; setHash: Uint8Array } | null> {
+    this.db.assertTransaction()
+    const state = await this.getRepoState(space)
+    if (!state) return null
+
+    await this.blob.deleteSpaceBlobs(space, keep)
+    const deleted = await this.db.db
+      .deleteFrom('space_record')
+      .where('space', '=', space)
+      .$if(keep.length > 0, (qb) => qb.where('collection', 'not in', keep))
+      .executeTakeFirst()
+    if (deleted.numDeletedRows === 0n) return null
+
+    await this.db.db
+      .deleteFrom('space_record_oplog')
+      .where('space', '=', space)
+      .execute()
+
+    const kept = await this.db.db
+      .selectFrom('space_record')
+      .select(['collection', 'rkey', 'cid'])
+      .where('space', '=', space)
+      .execute()
+    const repo = new RepoCommit()
+    for (const { collection, rkey, cid } of kept) {
+      repo.add(collection, rkey, parseCid(cid, { flavor: 'cbor' }))
+    }
+
+    const rev = TID.nextStr(state.rev ?? undefined)
+    const setHash = repo.setHash.state()
+    await this.db.db
+      .updateTable('space_repo')
+      .set({ setHash, rev })
+      .where('space', '=', space)
+      .execute()
+
+    return { rev, setHash }
+  }
+
+  // A write to another authority's space creates the repo without checking that
+  // the space exists. The authority's own spaces must already exist: a write must
+  // neither conjure an ungoverned space nor revive a deleted one.
+  private async ensureRepo(ref: SpaceRef): Promise<void> {
+    if (ref.spaceDid === this.did) {
+      const existing = await this.getSpace(ref.toString())
+      if (!existing || existing.deletedAt) {
+        throw new InvalidRequestError('Space not found', 'SpaceNotFound')
+      }
+    }
+    await this.ensureSpace(ref)
+  }
+
+  private async getRecordCid(uri: AtUriString): Promise<Cid | null> {
+    const row = await this.db.db
+      .selectFrom('space_record')
+      .select('cid')
+      .where('uri', '=', uri)
+      .executeTakeFirst()
+    return row ? parseCid(row.cid, { flavor: 'cbor' }) : null
+  }
+
+  // Re-registering the same endpoint and token renews the registration. The
+  // space is checked in the same transaction, so a registration can't survive a
+  // concurrent deletion of the space.
+  async putNotifyRegistration(registration: {
+    space: SpaceRefString
+    endpoint: string
+    token: string
+    expiresAt: string
+  }): Promise<void> {
+    this.db.assertTransaction()
+    const { space, endpoint, token, expiresAt } = registration
+    const current = await this.getSpace(space)
+    if (!current) {
+      throw new InvalidRequestError('Space not found', 'SpaceNotFound')
+    }
+    if (current.deletedAt) {
+      throw new InvalidRequestError('Space has been deleted', 'SpaceDeleted')
+    }
+    await this.db.db
+      .insertInto('space_notify_registration')
+      .values({ space, endpoint, token, expiresAt, expiryNotified: 0 })
+      .onConflict((oc) =>
+        oc
+          .columns(['space', 'endpoint', 'token'])
+          .doUpdateSet({ expiresAt, expiryNotified: 0 }),
+      )
+      .execute()
+  }
+
+  // Marks the lapsed registrations that have yet to be sent an expiry notice,
+  // and returns them. Each lapse is claimed once, so a syncer is sent a single
+  // expiry notice however many updates follow.
+  async claimLapsedNotifyRegistrations(
+    space: SpaceRefString,
+    now: string,
+  ): Promise<{ endpoint: string; token: string }[]> {
+    return this.db.db
+      .updateTable('space_notify_registration')
+      .set({ expiryNotified: 1 })
+      .where('space', '=', space)
+      .where('expiresAt', '<=', now)
+      .where('expiryNotified', '=', 0)
+      .returning(['endpoint', 'token'])
+      .execute()
+  }
+
+  async removeNotifyRegistration(
+    space: SpaceRefString,
+    registration: { endpoint: string; token: string },
+  ): Promise<void> {
+    await this.db.db
+      .deleteFrom('space_notify_registration')
+      .where('space', '=', space)
+      .where('endpoint', '=', registration.endpoint)
+      .where('token', '=', registration.token)
+      .execute()
+  }
+
+  // Leaves alone a registration renewed since `lapsedBy`.
+  async removeLapsedNotifyRegistration(
+    space: SpaceRefString,
+    registration: { endpoint: string; token: string },
+    lapsedBy: string,
+  ): Promise<void> {
+    await this.db.db
+      .deleteFrom('space_notify_registration')
+      .where('space', '=', space)
+      .where('endpoint', '=', registration.endpoint)
+      .where('token', '=', registration.token)
+      .where('expiresAt', '<=', lapsedBy)
+      .execute()
+  }
+}
+
+export class SpaceRecordNotFoundError extends InvalidRequestError {
+  constructor(collection: string, rkey: string) {
+    super(`Record not found: ${collection}/${rkey}`, 'RecordNotFound')
+  }
+}
+
+export class SpaceRecordAlreadyExistsError extends InvalidRequestError {
+  constructor(collection: string, rkey: string) {
+    super(`Record already exists: ${collection}/${rkey}`, 'RecordAlreadyExists')
+  }
+}

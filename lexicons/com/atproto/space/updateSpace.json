@@ -1,0 +1,43 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.space.updateSpace",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Replace the policy of a space. Changing to a different policy type discards state held by the previous policy, such as a member list. Requires auth as the space authority, implemented by PDS.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["space", "policy"],
+          "properties": {
+            "space": {
+              "type": "string",
+              "format": "space-ref"
+            },
+            "policy": {
+              "type": "union",
+              "description": "PDSes must support all of the listed policies. Other space hosts may support only some of them, and any host may support policies beyond those listed.",
+              "refs": [
+                "com.atproto.personalspace.policy",
+                "com.atproto.memberspace.policy",
+                "com.atproto.managedspace.policy"
+              ]
+            }
+          }
+        }
+      },
+      "errors": [
+        {
+          "name": "SpaceNotFound"
+        },
+        {
+          "name": "NotAuthorized"
+        },
+        {
+          "name": "UnsupportedPolicy"
+        }
+      ]
+    }
+  }
+}

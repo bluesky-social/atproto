@@ -1,0 +1,66 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.space.listWriters",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "List the repos in a space's writer set, with the latest known state of each: its current revision, or its removal from the writer set. Requires a space credential, implemented by the space host.",
+      "parameters": {
+        "type": "params",
+        "required": ["space"],
+        "properties": {
+          "space": {
+            "type": "string",
+            "format": "space-ref"
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1000,
+            "default": 100
+          },
+          "cursor": {
+            "type": "string",
+            "description": "Return repos updated after this space revision. Removed repos may be garbage collected after 72 hrs, so a syncer whose last seen space revision is older should list the whole writer set instead."
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["repos"],
+          "properties": {
+            "repos": {
+              "type": "array",
+              "items": {
+                "type": "union",
+                "refs": [
+                  "com.atproto.space.defs#repoWrite",
+                  "com.atproto.space.defs#repoRemoved"
+                ]
+              },
+              "description": "The latest update to each repo, ordered by spaceRev, ascending. prevSpaceRev is not set."
+            },
+            "cursor": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "errors": [
+        {
+          "name": "SpaceNotFound"
+        },
+        {
+          "name": "RepoTakendown",
+          "description": "The space authority has been taken down."
+        },
+        {
+          "name": "RepoDeactivated",
+          "description": "The space authority has been deactivated."
+        }
+      ]
+    }
+  }
+}

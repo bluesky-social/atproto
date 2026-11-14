@@ -1,0 +1,53 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.space.notifySpaceUpdate",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Notify a syncing service of an update to a space. Sent by the space host to the notification endpoint registered through authorizeSpaceSync.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["space", "token", "update"],
+          "properties": {
+            "space": {
+              "type": "string",
+              "format": "space-ref"
+            },
+            "token": {
+              "type": "string",
+              "maxLength": 512,
+              "description": "The token the endpoint was registered with."
+            },
+            "update": {
+              "type": "union",
+              "refs": [
+                "com.atproto.space.defs#repoWrite",
+                "com.atproto.space.defs#repoRemoved",
+                "#spaceDeleted",
+                "#registrationExpired"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "spaceDeleted": {
+      "type": "object",
+      "description": "The space has been deleted. Confirm with authorizeSpaceSync before dropping its data.",
+      "properties": {}
+    },
+    "registrationExpired": {
+      "type": "object",
+      "description": "The endpoint's registration has expired. Sent in place of the first update after expiry. Call authorizeSpaceSync to keep receiving notifications.",
+      "required": ["spaceRev"],
+      "properties": {
+        "spaceRev": {
+          "type": "string",
+          "format": "tid"
+        }
+      }
+    }
+  }
+}

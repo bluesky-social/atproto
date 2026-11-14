@@ -1,5 +1,6 @@
 export * from './const.js'
 export * from './did.js'
+export * from './hmac.js'
 export * from './multibase.js'
 export * from './random.js'
 export * from './sha.js'

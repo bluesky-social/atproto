@@ -2,7 +2,11 @@ import { assert, describe, expect, it, vi } from 'vitest'
 import { CloseCode } from '../src/lib/close-codes.js'
 import { CloseError, SocketError } from '../src/lib/errors.js'
 import type { CloseEventDetail, DataMode } from '../src/message-channel.js'
-import type { Transport, TransportFactory } from '../src/transport/transport.js'
+import type {
+  Transport,
+  TransportFactory,
+  TransportOptions,
+} from '../src/transport/transport.js'
 import {
   type Awaitable,
   type WebSocketOptions,
@@ -39,6 +43,8 @@ function scripted(steps: Step[]) {
     queueMicrotask(() => options.onOpen(transport))
     const transport: Transport<'auto'> = {
       async send() {},
+      close() {},
+      protocol: '',
       async *[Symbol.asyncIterator]() {
         for (const m of step.messages) yield m
         if (step.end === 'error') {
@@ -77,6 +83,8 @@ function parkingTransport() {
     queueMicrotask(() => options.onOpen(transport))
     const transport: Transport<'auto'> = {
       async send() {},
+      close() {},
+      protocol: '',
       [Symbol.asyncIterator]: () => ({
         next: () =>
           new Promise<never>((_resolve, reject) => {
@@ -272,6 +280,8 @@ describe(createWebSocket, () => {
         const n = attempt++
         const transport: Transport<'auto'> = {
           async send() {},
+          close() {},
+          protocol: '',
           async *[Symbol.asyncIterator]() {
             if (n === 0) {
               options.onOpen(transport)
@@ -502,6 +512,8 @@ describe(createWebSocket, () => {
         if (attempt++ > 0) throw dialFailure
         const transport: Transport<'auto'> = {
           async send() {},
+          close() {},
+          protocol: '',
           async *[Symbol.asyncIterator]() {
             options.onOpen(transport)
             yield 'from the first connection'
@@ -559,5 +571,161 @@ describe(createWebSocket, () => {
     expect(delays).toHaveLength(2)
     expect(delays[0]).toBeLessThan(2000)
     expect(delays[1]).toBeLessThan(2000)
+  })
+
+  it('restarts the backoff only after a stable connection', async () => {
+    const { createTransport } = scripted([
+      { messages: [], end: 'error', error: new SocketError(new Error('1')) },
+      { messages: ['a'], end: 'error', error: new SocketError(new Error('2')) },
+      { messages: [], end: 'clean' },
+    ])
+    const delays: number[] = []
+    using _spy = vi.spyOn(globalThis, 'setTimeout').mockImplementation(((
+      fn: () => void,
+      ms?: number,
+    ) => {
+      delays.push(ms ?? 0)
+      fn()
+      return 0
+    }) as unknown as typeof setTimeout)
+    const websocket = createWebSocket(createTransport)
+    await drain(websocket('ws://x', { stableConnectionMs: 60_000 }))
+    // The open in between was too short-lived to restart the backoff, so the
+    // second backoff escalates (2s ± 0.5s).
+    expect(delays).toHaveLength(2)
+    expect(delays[0]).toBeLessThan(1500)
+    expect(delays[1]).toBeGreaterThanOrEqual(1500)
+  })
+
+  it('forwards the dial and payload options to the transport', async () => {
+    const seen: TransportOptions<DataMode>[] = []
+    const { createTransport } = scripted([{ messages: [], end: 'clean' }])
+    const capturing = ((options) => {
+      seen.push(options)
+      return createTransport(options)
+    }) as TransportFactory
+    const lookup = () => {}
+    const websocket = createWebSocket(capturing)
+    await drain(
+      websocket('ws://x', {
+        heartbeat: { intervalMs: 20_000, timeoutMs: 10_000 },
+        handshakeTimeoutMs: 5_000,
+        maxPayload: 4_194_304,
+        lookup,
+      }),
+    )
+    expect(seen[0]).toMatchObject({
+      heartbeat: { intervalMs: 20_000, timeoutMs: 10_000 },
+      handshakeTimeoutMs: 5_000,
+      maxPayload: 4_194_304,
+      lookup,
+    })
+  })
+
+  describe('beforeReconnect', () => {
+    it('holds the redial until it resolves', async () => {
+      const { createTransport, urls } = scripted([
+        {
+          messages: ['a'],
+          end: 'error',
+          error: new SocketError(new Error('x')),
+        },
+        { messages: ['b'], end: 'clean' },
+      ])
+      let release!: () => void
+      const beforeReconnect = vi.fn(
+        () =>
+          new Promise<void>((resolve) => {
+            release = resolve
+          }),
+      )
+      const websocket = createWebSocket(createTransport)
+      const gen = websocket('ws://x', { ...noBackoff, beforeReconnect })
+      expect(await gen.next()).toEqual({ value: 'a', done: false })
+      const pull = gen.next()
+      await vi.waitFor(() =>
+        expect(beforeReconnect).toHaveBeenCalledWith({
+          attempt: 0,
+          signal: expect.any(AbortSignal),
+        }),
+      )
+      // Well past the (zero) backoff: only the gate holds the redial now.
+      await new Promise((resolve) => setTimeout(resolve, 20))
+      expect(urls).toHaveLength(1)
+      release()
+      expect(await pull).toEqual({ value: 'b', done: false })
+      expect(urls).toHaveLength(2)
+      await gen.return()
+    })
+
+    it('ends the stream with its rejection', async () => {
+      const { createTransport, urls } = scripted([
+        { messages: [], end: 'error', error: new SocketError(new Error('x')) },
+      ])
+      const refusal = new Error('refused')
+      const onClose = vi.fn()
+      const websocket = createWebSocket(createTransport)
+      await expect(
+        drain(
+          websocket('ws://x', {
+            beforeReconnect: async () => {
+              throw refusal
+            },
+            onClose,
+          }),
+        ),
+      ).rejects.toBe(refusal)
+      expect(urls).toHaveLength(1)
+      expect(onClose).toHaveBeenCalledTimes(1)
+    })
+
+    // A `beforeReconnect` that settles when its signal aborts.
+    function settlesOnAbort(signal: AbortSignal, error: unknown) {
+      return new Promise<never>((_resolve, reject) => {
+        if (signal.aborted) reject(error)
+        signal.addEventListener('abort', () => reject(error), { once: true })
+      })
+    }
+
+    it('hands it an aborted signal when the stream aborted before the wait', async () => {
+      const { createTransport } = scripted([
+        { messages: [], end: 'error', error: new SocketError(new Error('x')) },
+      ])
+      const controller = new AbortController()
+      const reason = new Error('stop')
+      let handedAborted: boolean | undefined
+      const websocket = createWebSocket(createTransport)
+      const gen = websocket('ws://x', {
+        signal: controller.signal,
+        shouldReconnect: () => {
+          controller.abort(reason)
+          return true
+        },
+        beforeReconnect: ({ signal }) => {
+          handedAborted = signal.aborted
+          return settlesOnAbort(signal, signal.reason)
+        },
+      })
+      await expect(gen.next()).rejects.toBe(reason)
+      expect(handedAborted).toBe(true)
+    })
+
+    it('surfaces the abort reason once the signal aborts', async () => {
+      const { createTransport } = scripted([
+        { messages: [], end: 'error', error: new SocketError(new Error('x')) },
+      ])
+      const controller = new AbortController()
+      const reason = new Error('stop')
+      const websocket = createWebSocket(createTransport)
+      const gen = websocket('ws://x', {
+        ...noBackoff,
+        signal: controller.signal,
+        beforeReconnect: ({ signal }) => {
+          queueMicrotask(() => controller.abort(reason))
+          return settlesOnAbort(signal, new Error('gate stopped'))
+        },
+      })
+      await expect(gen.next()).rejects.toBe(reason)
+    })
   })
 })

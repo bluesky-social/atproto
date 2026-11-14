@@ -62,6 +62,8 @@ Stopping always closes the socket politely — it's a request to stop, not a fai
 | `controller.abort(new CloseError(…))` | close with that error's code |
 | `controller.abort(anythingElse)`      | close `1000`                 |
 
+A `CloseError` with code `1006` (`CloseCode.Abnormal`), which is never sent on the wire, drops the socket at once instead of closing politely — e.g. when a response stalls past its deadline. Node.js only: the browser has no way to drop a socket, so it closes with `1000`.
+
 The last row matters for shutdown paths: `controller.abort(new Error('SIGTERM'))` is a deliberate stop, so the peer still gets a clean goodbye. The reason isn't lost — it's what the iterator rejects with. `break` and `throw` are indistinguishable to a generator, so they share the plain clean close.
 
 **In the browser, a `CloseError`'s code carries through only if the platform permits it.** The WHATWG API accepts `1000` and the private-use range `3000`–`4999`, and throws on anything else — the rest of the RFC 6455 codes are reserved for the protocol itself to send, even though an endpoint may legitimately receive them. A code outside that set closes with `1000` instead, so pick from `3000`–`4999` for application-specific codes that need to reach a browser peer. Node.js has no such restriction and sends any code as given.
@@ -81,7 +83,7 @@ try {
 
 ## Reconnects
 
-By default a dropped connection is retried with jittered exponential backoff, capped by `maxReconnectSeconds` (default `64`), and the backoff resets to its base after each connection that opens.
+By default a dropped connection is retried with jittered exponential backoff, capped by `maxReconnectSeconds` (default `64`), and the backoff resets to its base after each connection that opens. Set `stableConnectionMs` to only reset it after a connection that stayed open that long, so a server that accepts and then drops every connection isn't redialed every second. The schedule is exported as `backoffMs(attempt, maxMs)`.
 
 - `url` may be a function: `() => string | URL | Promise<string | URL>`. It's re-invoked on every attempt, including reconnects — the idiom for resuming a stream at a cursor (see the firehose example below).
 - `shouldReconnect` controls whether a failure is retried:
@@ -94,6 +96,8 @@ websocket(url, {
   shouldReconnect: (error, attempt) => attempt < 5,
 })
 ```
+
+- `beforeReconnect({ attempt, signal })` is awaited before each redial, alongside the backoff, so a new connection can wait for whatever the previous one left running (e.g. handlers it cancelled). `signal` aborts with the stream, which still waits for the returned promise, so settle it then. A rejection ends the stream with that error.
 
 Hooks observe the lifecycle at two levels. `onOpen()` and `onClose(detail)` bookend the **stream**, once each; `onConnect(sender)` and `onDisconnect()` bookend each **connection**, as many times as it takes.
 
@@ -125,7 +129,9 @@ Two independent mechanisms detect a dead connection that hasn't told you so:
 - **Heartbeat** (Node.js only): `heartbeat: { intervalMs }` pings each interval and accepts any inbound frame, not just a pong, as evidence of life. A missed round becomes a `HeartbeatTimeoutError` and a reconnect. The browser's WebSocket API has no ping/pong, so this option is ignored there.
 - **Idle timeout** (both platforms): `idleTimeoutMs` ends the connection with an `IdleTimeoutError` if no message arrives within the window. This is the browser's only dead-connection detector, so set it there if you need one.
 
-Only the Node case is on by default: `heartbeat` defaults to a 10s interval (pass `heartbeat: false` to disable, or `{ intervalMs }` to change it), while `idleTimeoutMs` is off unless you set it.
+Only the Node case is on by default: `heartbeat` defaults to a 10s interval (pass `heartbeat: false` to disable, or `{ intervalMs }` to change it), while `idleTimeoutMs` is off unless you set it. `heartbeat: { intervalMs, timeoutMs }` sets a separate deadline for a sign of life after each ping (at most `intervalMs`, its default), e.g. a ping every 20s with a 10s deadline.
+
+Neither covers a dial: `handshakeTimeoutMs` ends one whose opening handshake hasn't completed in time, with a `HandshakeTimeoutError` and a reconnect.
 
 **A connection that fails discards whatever it had buffered but undelivered.** A liveness timeout, a byte-cap overflow, or a transport error drops those messages rather than yielding data from a connection already known to be broken; a _clean_ close still drains what arrived before it. For cursor-based streams that's harmless, since a reconnect resumes from the cursor. If your stream isn't resumable, keep `highWaterMark` low enough that little is ever in flight.
 
@@ -153,6 +159,8 @@ websocket(url, {
 ```
 
 Whatever was buffered is discarded, so only reconnect on overflow if you can resume from where you left off.
+
+`maxPayload` (Node.js only, default 100 MiB) caps the size of a single message: a larger one is rejected before it's buffered, closing with `1009` and ending the stream with a `MessageTooBigError` (non-retryable, since the server would send it again). The browser only hands over complete messages, so it ignores the option.
 
 ## Compression
 
@@ -186,9 +194,11 @@ for await (const message of stream) {
 
 `send()` resolves on hand-off and not on delivery: flushed on Node.js or accepted by the browser's WebSocket.
 
+`sender.close(code, reason?)` ends that connection, not the stream: it ends with a `CloseError` of `code`, which the reconnect policy classifies like any other — so `close(CloseCode.TryAgainLater)` redials, while `close(CloseCode.Normal)` ends the stream under the default policy. As with an abort, `CloseCode.Abnormal` drops the socket (Node.js), and a code the browser rejects goes out as `1000`. `sender.protocol` is the subprotocol the server selected, or `''`.
+
 If you need at-least-once delivery, handle that within the application. If a message needs to be sent when there isn't an active sender, it can be queued then later flushed from `onConnect`.
 
-## Headers (Node.js only)
+## Headers and DNS lookup (Node.js only)
 
 ```ts
 websocket(url, { headers: { Authorization: `Bearer ${token}` } })
@@ -196,18 +206,33 @@ websocket(url, { headers: { Authorization: `Bearer ${token}` } })
 
 `headers` applies to the connection's upgrade request. It's Node.js-only: the WHATWG API used in the browser has no way to set request headers, so passing `headers` there throws at construction rather than silently dropping what is usually an auth credential. `BrowserWebSocketOptions` omits the field entirely, so it's also a compile-time error if you import the browser-specific option type.
 
+`lookup` replaces `dns.lookup()` to resolve the host (e.g. to require that `localhost` resolves to a loopback address). It's Node.js-only for the same reason, and throws in the browser likewise.
+
 ## Errors
 
 Every failure is a `WebSocketClientError`, and each subclass classifies itself via `shouldRetry()` — which is what the default reconnect policy consults:
 
-| Error                   | Meaning                                                    | Retryable by default                |
-| ----------------------- | ---------------------------------------------------------- | ----------------------------------- |
-| `CloseError`            | The connection closed with a given code/reason/cleanliness | Classified by close code (RFC 6455) |
-| `SocketError`           | A transport-level failure (e.g. connection refused)        | Yes                                 |
-| `HeartbeatTimeoutError` | No frame observed within the heartbeat window (Node.js)    | Yes                                 |
-| `IdleTimeoutError`      | No message arrived within `idleTimeoutMs`                  | Yes                                 |
-| `BufferOverflowError`   | Buffered bytes exceeded `maxBufferedBytes`                 | No                                  |
-| `DataModeError`         | A frame's type didn't match `dataMode`                     | No                                  |
+| Error                    | Meaning                                                    | Retryable by default                |
+| ------------------------ | ---------------------------------------------------------- | ----------------------------------- |
+| `CloseError`             | The connection closed with a given code/reason/cleanliness | Classified by close code (RFC 6455) |
+| `SocketError`            | A transport-level failure (e.g. connection refused)        | Yes                                 |
+| `HandshakeRejectedError` | A `SocketError` for a non-`101` upgrade response (Node.js) | Yes                                 |
+| `HandshakeTimeoutError`  | The dial exceeded `handshakeTimeoutMs`                     | Yes                                 |
+| `HeartbeatTimeoutError`  | No frame observed within the heartbeat window (Node.js)    | Yes                                 |
+| `IdleTimeoutError`       | No message arrived within `idleTimeoutMs`                  | Yes                                 |
+| `BufferOverflowError`    | Buffered bytes exceeded `maxBufferedBytes`                 | No                                  |
+| `MessageTooBigError`     | A message exceeded `maxPayload` (Node.js)                  | No                                  |
+| `DataModeError`          | A frame's type didn't match `dataMode`                     | No                                  |
+
+A `HandshakeRejectedError` carries the response's `status` and `headers`, so a policy can stop on, say, a `401`:
+
+```ts
+websocket(url, {
+  shouldReconnect: (error) =>
+    !(error instanceof HandshakeRejectedError && error.status === 401) &&
+    defaultShouldReconnect(error),
+})
+```
 
 A bare `WebSocketClientError` marks misuse of the API itself, like sending on a closed connection, and is never retryable.
 

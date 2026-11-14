@@ -1,14 +1,18 @@
+import type { BlockMap } from '@atproto/car'
 import type { check } from '@atproto/common-web'
 import type { Cid, LexMap } from '@atproto/lex-data'
-import type { BlockMap } from '../block-map.js'
 import { MissingBlockError } from '../error.js'
 import { parseObjByDef } from '../parse.js'
 import { cborToLexRecord } from '../util.js'
+import type { ReadableRepoStorage } from './types.js'
 
-export abstract class ReadableBlockstore {
+export abstract class ReadableBlockstore implements ReadableRepoStorage {
   abstract getBytes(cid: Cid): Promise<Uint8Array | null>
   abstract has(cid: Cid): Promise<boolean>
-  abstract getBlocks(cids: Cid[]): Promise<{ blocks: BlockMap; missing: Cid[] }>
+  abstract getBlocks(cids: Iterable<Cid>): Promise<{
+    blocks: BlockMap<Cid>
+    missing: Cid[]
+  }>
 
   async attemptRead<T>(
     cid: Cid,
@@ -51,5 +55,3 @@ export abstract class ReadableBlockstore {
     return cborToLexRecord(bytes)
   }
 }
-
-export default ReadableBlockstore

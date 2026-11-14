@@ -1,0 +1,63 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.memberspace.listMembers",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "List the members of a space with a memberspace policy. Requires auth as the space authority, implemented by PDS.",
+      "parameters": {
+        "type": "params",
+        "required": ["space"],
+        "properties": {
+          "space": {
+            "type": "string",
+            "format": "space-ref"
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1000,
+            "default": 100
+          },
+          "cursor": {
+            "type": "string"
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["members"],
+          "properties": {
+            "cursor": {
+              "type": "string"
+            },
+            "members": {
+              "type": "array",
+              "items": {
+                "type": "ref",
+                "ref": "com.atproto.memberspace.defs#member"
+              }
+            }
+          }
+        }
+      },
+      "errors": [
+        {
+          "name": "SpaceNotFound"
+        },
+        {
+          "name": "NotAuthorized"
+        },
+        {
+          "name": "PolicyMismatch",
+          "description": "The space does not have a memberspace policy."
+        },
+        {
+          "name": "InvalidCursor"
+        }
+      ]
+    }
+  }
+}

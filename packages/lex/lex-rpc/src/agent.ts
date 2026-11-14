@@ -74,6 +74,10 @@ export function isAgent(value: unknown): value is Agent {
   )
 }
 
+export function isAccountAgent(agent: Agent): agent is AccountAgent {
+  return agent.did != null
+}
+
 export type AgentConfig = {
   /**
    * The identifier (DID) of the user represented by this agent.

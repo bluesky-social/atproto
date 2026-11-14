@@ -1,4 +1,4 @@
-export type RecordKeyString = string
+export type RecordKeyString = string & {}
 
 const RECORD_KEY_MAX_LENGTH = 512
 const RECORD_KEY_MIN_LENGTH = 1

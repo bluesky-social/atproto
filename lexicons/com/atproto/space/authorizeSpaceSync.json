@@ -1,0 +1,109 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.space.authorizeSpaceSync",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Authorize syncing a space, returning a new credential for reading data across it and the space's current revision, and optionally registering for notifications of updates to it. Depending on the space's policy, a delegation token and/or client attestation may be required. Implemented by the space host.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["space", "credentialKey"],
+          "properties": {
+            "space": {
+              "type": "string",
+              "format": "space-ref"
+            },
+            "credentialKey": {
+              "type": "string",
+              "description": "P-256 did:key that the credential is bound to."
+            },
+            "delegationToken": {
+              "type": "string",
+              "description": "Obtained from getDelegationToken."
+            },
+            "clientAttestation": {
+              "type": "string"
+            },
+            "notify": {
+              "type": "ref",
+              "ref": "#notify",
+              "description": "Register an endpoint to be notified of updates to the space via notifySpaceUpdate. The registration stays active while this credential is valid. After it expires, the endpoint receives only a prompt to reauthorize, or notice of the space's deletion."
+            }
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["credential"],
+          "properties": {
+            "credential": {
+              "type": "string"
+            },
+            "spaceRev": {
+              "type": "string",
+              "format": "tid",
+              "description": "The space's current revision. Omitted before the space's first update."
+            }
+          }
+        }
+      },
+      "errors": [
+        {
+          "name": "SpaceNotFound",
+          "description": "May also be returned in place of AccountNotAuthorized, to avoid revealing that the space exists."
+        },
+        {
+          "name": "SpaceDeleted"
+        },
+        {
+          "name": "AccountNotAuthorized"
+        },
+        {
+          "name": "AppNotAuthorized"
+        },
+        {
+          "name": "NotAuthorized",
+          "description": "Generic refusal. May be returned in place of AccountNotAuthorized or AppNotAuthorized."
+        },
+        {
+          "name": "InvalidDelegationToken"
+        },
+        {
+          "name": "InvalidClientAttestation"
+        },
+        {
+          "name": "RegistrationNotConfirmed",
+          "description": "The notify endpoint did not confirm the registration."
+        },
+        {
+          "name": "RepoTakendown",
+          "description": "The space authority has been taken down."
+        },
+        {
+          "name": "RepoDeactivated",
+          "description": "The space authority has been deactivated."
+        }
+      ]
+    },
+    "notify": {
+      "type": "object",
+      "required": ["endpoint", "token"],
+      "properties": {
+        "endpoint": {
+          "type": "string",
+          "format": "uri",
+          "description": "Base HTTPS URL that notification methods are called against."
+        },
+        "token": {
+          "type": "string",
+          "maxLength": 512,
+          "description": "Opaque secret, included in the body of each request to the endpoint. The endpoint and token together identify the registration, so the token should stay the same across authorizations."
+        }
+      }
+    }
+  }
+}

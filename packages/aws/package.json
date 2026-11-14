@@ -2,7 +2,7 @@
   "name": "@atproto/aws",
   "version": "0.3.24",
   "license": "MIT",
-  "description": "Shared AWS cloud API helpers for atproto services",
+  "description": "Shared AWS cloud API helpers for (NodeJS) atproto services",
   "keywords": [
     "atproto",
     "aws"
@@ -30,7 +30,6 @@
   },
   "dependencies": {
     "@atproto/common": "workspace:^",
-    "@atproto/common-web": "workspace:^",
     "@atproto/crypto": "workspace:^",
     "@atproto/repo": "workspace:^",
     "@aws-sdk/client-cloudfront": "^3.879.0",

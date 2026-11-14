@@ -56,7 +56,7 @@ export type VerifyTokenPayloadOptions = {
   scope?: [string, ...string[]]
 }
 
-export { DpopNonce, Key, Keyset }
+export { DpopNonce, Key, Keyset, ReplayManager }
 export type {
   AccessTokenPayload,
   DpopProof,

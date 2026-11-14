@@ -1,0 +1,48 @@
+{
+  "name": "@atproto/space",
+  "version": "0.0.1",
+  "license": "MIT",
+  "description": "atproto permissioned data protocol",
+  "keywords": [
+    "atproto",
+    "space"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "homepage": "https://atproto.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bluesky-social/atproto",
+    "directory": "packages/space"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "build": "tsc --build tsconfig.build.json"
+  },
+  "dependencies": {
+    "@atproto/crypto": "workspace:^",
+    "@atproto/lex-cbor": "workspace:^",
+    "@atproto/lex-data": "workspace:^",
+    "@atproto/lex-schema": "workspace:^",
+    "@atproto/star": "workspace:^",
+    "@atproto/syntax": "workspace:^",
+    "@noble/hashes": "^1.6.1",
+    "structured-headers": "^1.0.1"
+  },
+  "devDependencies": {
+    "vitest": "^4.1.10"
+  },
+  "files": [
+    "./dist",
+    "./README.md",
+    "./CHANGELOG.md"
+  ],
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  }
+}

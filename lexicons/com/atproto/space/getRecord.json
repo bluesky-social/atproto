@@ -1,0 +1,76 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.space.getRecord",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "Get a single record from a space repo. Responses are authenticated with a MAC. Requires auth as the repo's account or with a space credential; implemented by PDS.",
+      "parameters": {
+        "type": "params",
+        "required": ["space", "repo", "collection", "rkey"],
+        "properties": {
+          "space": {
+            "type": "string",
+            "format": "space-ref"
+          },
+          "repo": {
+            "type": "string",
+            "format": "did"
+          },
+          "collection": {
+            "type": "string",
+            "format": "nsid"
+          },
+          "rkey": {
+            "type": "string",
+            "format": "record-key"
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["uri", "cid", "value"],
+          "properties": {
+            "uri": {
+              "type": "string",
+              "format": "at-uri"
+            },
+            "cid": {
+              "type": "string",
+              "format": "cid"
+            },
+            "value": {
+              "type": "unknown"
+            }
+          }
+        }
+      },
+      "errors": [
+        {
+          "name": "InvalidSpaceMac",
+          "description": "The MAC requested in the Accept-Signature header is missing or invalid."
+        },
+        {
+          "name": "RecordNotFound"
+        },
+        {
+          "name": "SpaceNotFound"
+        },
+        {
+          "name": "RepoNotFound"
+        },
+        {
+          "name": "RepoTakendown"
+        },
+        {
+          "name": "RepoSuspended"
+        },
+        {
+          "name": "RepoDeactivated"
+        }
+      ]
+    }
+  }
+}

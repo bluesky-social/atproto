@@ -1,0 +1,23 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.memberspace.member",
+  "defs": {
+    "main": {
+      "type": "record",
+      "description": "A published entry in a space's member list, keyed by the member's DID. Only authoritative in the space authority's repo.",
+      "key": "any",
+      "record": {
+        "type": "object",
+        "required": ["read", "write"],
+        "properties": {
+          "read": {
+            "type": "boolean"
+          },
+          "write": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

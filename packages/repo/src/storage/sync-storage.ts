@@ -1,5 +1,5 @@
+import type { BlockMap } from '@atproto/car'
 import type { Cid } from '@atproto/lex-data'
-import type { BlockMap } from '../block-map.js'
 import { ReadableBlockstore } from './readable-blockstore.js'
 
 export class SyncStorage extends ReadableBlockstore {
@@ -16,13 +16,14 @@ export class SyncStorage extends ReadableBlockstore {
     return this.saved.getBytes(cid)
   }
 
-  async getBlocks(cids: Cid[]): Promise<{ blocks: BlockMap; missing: Cid[] }> {
+  async getBlocks(cids: Iterable<Cid>): Promise<{
+    blocks: BlockMap
+    missing: Cid[]
+  }> {
     const fromStaged = await this.staged.getBlocks(cids)
     const fromSaved = await this.saved.getBlocks(fromStaged.missing)
-    const blocks = fromStaged.blocks
-    blocks.addMap(fromSaved.blocks)
     return {
-      blocks,
+      blocks: fromStaged.blocks.addBlocks(fromSaved.blocks),
       missing: fromSaved.missing,
     }
   }

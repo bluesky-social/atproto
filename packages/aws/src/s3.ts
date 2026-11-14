@@ -1,8 +1,8 @@
-import type stream from 'node:stream'
+import { Readable } from 'node:stream'
 import { NoSuchKey, S3, type S3ClientConfig } from '@aws-sdk/client-s3'
 import { Upload } from '@aws-sdk/lib-storage'
 import type { CID } from 'multiformats/cid'
-import { SECOND, aggregateErrors, chunkArray } from '@atproto/common-web'
+import { SECOND, aggregateErrors, chunkArray } from '@atproto/common'
 import { randomStr } from '@atproto/crypto'
 import {
   BlobNotFoundError,
@@ -159,7 +159,10 @@ export class S3BlobStore implements BlobStore {
     return `quarantine/${this.did}/${cid.toString()}`
   }
 
-  private async uploadBytes(path: string, bytes: Uint8Array | stream.Readable) {
+  private async uploadBytes(
+    path: string,
+    bytes: Uint8Array | Iterable<Uint8Array> | AsyncIterable<Uint8Array>,
+  ) {
     // @NOTE we use Upload rather than client.putObject because stream length is
     // not known in advance. See also aws/aws-sdk-js-v3#2348.
     //
@@ -176,7 +179,10 @@ export class S3BlobStore implements BlobStore {
       client: this.client,
       params: {
         Bucket: this.bucket,
-        Body: bytes,
+        Body:
+          ArrayBuffer.isView(bytes) || bytes instanceof Readable
+            ? bytes
+            : Readable.from(bytes),
         Key: path,
       },
       abortController,
@@ -199,7 +205,9 @@ export class S3BlobStore implements BlobStore {
     }
   }
 
-  async putTemp(bytes: Uint8Array | stream.Readable): Promise<string> {
+  async putTemp(
+    bytes: Uint8Array | Iterable<Uint8Array> | AsyncIterable<Uint8Array>,
+  ): Promise<string> {
     const key = this.genKey()
     await this.uploadBytes(this.getTmpPath(key), bytes)
     return key
@@ -232,7 +240,7 @@ export class S3BlobStore implements BlobStore {
 
   async putPermanent(
     cid: CID,
-    bytes: Uint8Array | stream.Readable,
+    bytes: Uint8Array | AsyncIterable<Uint8Array>,
   ): Promise<void> {
     await this.uploadBytes(this.getStoredPath(cid), bytes)
   }
@@ -257,7 +265,9 @@ export class S3BlobStore implements BlobStore {
       Key: this.getStoredPath(cid),
     })
     if (res.Body) {
-      return res.Body
+      // @NOTE On Node.js, the Body returned by getObject is a Readable stream
+      // (or an IncomingMessage, which extends Readable).
+      return res.Body as typeof res.Body & Readable
     } else {
       throw new BlobNotFoundError()
     }
@@ -268,9 +278,8 @@ export class S3BlobStore implements BlobStore {
     return res.transformToByteArray()
   }
 
-  async getStream(cid: CID): Promise<stream.Readable> {
-    const res = await this.getObject(cid)
-    return res as stream.Readable
+  async getStream(cid: CID): Promise<AsyncIterable<Uint8Array>> {
+    return this.getObject(cid)
   }
 
   async delete(cid: CID): Promise<void> {

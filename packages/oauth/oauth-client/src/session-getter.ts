@@ -37,11 +37,17 @@ export function isExpectedSessionError(err: unknown) {
     err instanceof TokenRefreshError ||
     err instanceof TokenRevokedError ||
     err instanceof TokenInvalidError ||
-    err instanceof AuthMethodUnsatisfiableError ||
-    // The stored session is invalid (e.g. missing properties) and cannot
-    // be used properly
-    err instanceof TypeError
+    err instanceof AuthMethodUnsatisfiableError
   )
+}
+
+/**
+ * The fetches made while getting a session go through `bindFetch()`, so a
+ * `TypeError` means that the stored session is invalid (e.g. missing
+ * properties) and cannot be used properly.
+ */
+function isInvalidSessionError(err: unknown): err is TypeError {
+  return err instanceof TypeError
 }
 
 /**
@@ -189,7 +195,8 @@ export class SessionGetter extends CachedGetter<AtprotoDid, Session> {
                 30e3 * Math.random()
           )
         },
-        deleteOnError: isExpectedSessionError,
+        deleteOnError: (err) =>
+          isInvalidSessionError(err) || isExpectedSessionError(err),
       },
     )
 
@@ -246,28 +253,41 @@ export class SessionGetter extends CachedGetter<AtprotoDid, Session> {
     sub: AtprotoDid,
     options?: GetCachedOptions,
   ): Promise<Session> {
-    const session = await this.#runtime.usingLock(
-      `@atproto-oauth-client-${sub}`,
-      async () => {
-        // Make sure, even if there is no signal in the options, that the
-        // request will be cancelled after at most 30 seconds.
-        const signal = timeoutSignal(30e3)
+    try {
+      const session = await this.#runtime.usingLock(
+        `@atproto-oauth-client-${sub}`,
+        async () => {
+          // Make sure, even if there is no signal in the options, that the
+          // request will be cancelled after at most 30 seconds.
+          const signal = timeoutSignal(30e3)
 
-        using abortController = combineSignals([options?.signal, signal])
+          using abortController = combineSignals([options?.signal, signal])
 
-        return await super.get(sub, {
-          ...options,
-          signal: abortController.signal,
-        })
-      },
-    )
+          return await super.get(sub, {
+            ...options,
+            signal: abortController.signal,
+          })
+        },
+      )
 
-    if (sub !== session.tokenSet.sub) {
-      // Fool-proofing (e.g. against invalid session storage)
-      throw new Error('Token set does not match the expected sub')
+      if (sub !== session.tokenSet.sub) {
+        // Fool-proofing (e.g. against invalid session storage)
+        throw new Error('Token set does not match the expected sub')
+      }
+
+      return session
+    } catch (err) {
+      if (isInvalidSessionError(err)) {
+        const msg = `The stored session for "${sub}" is invalid`
+        const error = new TokenInvalidError(sub, msg, { cause: err })
+        // The getter's failures were deleted already (see `deleteOnError`),
+        // unlike those reading the stored session (e.g. in `isStale`).
+        const stored = await this.getStored(sub).catch(() => null)
+        if (stored !== undefined) await this.delStored(sub, error)
+        throw error
+      }
+      throw err
     }
-
-    return session
   }
 
   /**

@@ -1,0 +1,38 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.space.getRepo",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "Download a space repo as a STAR file. Responses are authenticated with a MAC. Requires auth as the repo's account or with a space credential; implemented by PDS.",
+      "parameters": {
+        "type": "params",
+        "required": ["space", "repo"],
+        "properties": {
+          "space": {
+            "type": "string",
+            "format": "space-ref"
+          },
+          "repo": {
+            "type": "string",
+            "format": "did"
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/vnd.dasl.star"
+      },
+      "errors": [
+        {
+          "name": "InvalidSpaceMac",
+          "description": "The MAC requested in the Accept-Signature header is missing or invalid."
+        },
+        { "name": "SpaceNotFound" },
+        { "name": "RepoNotFound" },
+        { "name": "RepoTakendown" },
+        { "name": "RepoSuspended" },
+        { "name": "RepoDeactivated" }
+      ]
+    }
+  }
+}

@@ -31,7 +31,8 @@ export class ActorStore {
     const directory = path.join(this.cfg.directory, didHash.slice(0, 2), did)
     const dbLocation = path.join(directory, `store.sqlite`)
     const keyLocation = path.join(directory, `key`)
-    return { directory, dbLocation, keyLocation }
+    const kemKeyLocation = path.join(directory, `kem_key`)
+    return { directory, dbLocation, keyLocation, kemKeyLocation }
   }
 
   async exists(did: string): Promise<boolean> {
@@ -45,6 +46,18 @@ export class ActorStore {
     return crypto.Secp256k1Keypair.import(privKey)
   }
 
+  /**
+   * The account's `#atproto_kem` key, used to establish shared secrets for space
+   * MACs. Undefined for an account created before KEM keys existed, until it is
+   * backfilled.
+   */
+  async kemKeypair(did: string): Promise<crypto.P256Keypair | undefined> {
+    const { kemKeyLocation } = await this.getLocation(did)
+    const privKey = await readIfExists(kemKeyLocation)
+    if (!privKey) return undefined
+    return crypto.P256Keypair.import(privKey)
+  }
+
   async openDb(did: string): Promise<ActorDb> {
     const { dbLocation } = await this.getLocation(did)
     const exists = await fileExists(dbLocation)
@@ -54,8 +67,12 @@ export class ActorStore {
 
     const db = getDb(dbLocation, this.cfg.disableWalAutoCheckpoint)
 
-    // run a simple select with retry logic to ensure the db is ready (not in wal recovery mode)
     try {
+      // @TODO ONLY FOR USE DURING THE SPACE ALPH
+      // Remove this line before cutting the production build!
+      await getMigrator(db).migrateToLatestOrThrow()
+
+      // run a simple select with retry logic to ensure the db is ready (not in wal recovery mode)
       await retrySqlite(() =>
         db.db.selectFrom('repo_root').selectAll().execute(),
       )
@@ -109,16 +126,21 @@ export class ActorStore {
     return await fn(writer)
   }
 
-  async create(did: string, keypair: ExportableKeypair) {
-    const { directory, dbLocation, keyLocation } = await this.getLocation(did)
+  async create(
+    did: string,
+    keypair: ExportableKeypair,
+    kemKeypair: ExportableKeypair,
+  ) {
+    const { directory, dbLocation, keyLocation, kemKeyLocation } =
+      await this.getLocation(did)
     // ensure subdir exists
     await mkdir(directory, { recursive: true })
     const exists = await fileExists(dbLocation)
     if (exists) {
       throw new InvalidRequestError('Repo already exists', 'AlreadyExists')
     }
-    const privKey = await keypair.export()
-    await fs.writeFile(keyLocation, privKey)
+    await fs.writeFile(keyLocation, await keypair.export())
+    await fs.writeFile(kemKeyLocation, await kemKeypair.export())
 
     const db: ActorDb = getDb(dbLocation, this.cfg.disableWalAutoCheckpoint)
     try {

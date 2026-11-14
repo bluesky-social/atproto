@@ -1,0 +1,58 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.space.getLatestCommit",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "Get the current commit of a space repo. Responses are authenticated with a MAC. Requires auth as the repo's account or with a space credential; implemented by PDS.",
+      "parameters": {
+        "type": "params",
+        "required": ["space", "repo"],
+        "properties": {
+          "space": {
+            "type": "string",
+            "format": "space-ref"
+          },
+          "repo": {
+            "type": "string",
+            "format": "did"
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "commit": {
+              "type": "ref",
+              "ref": "com.atproto.space.defs#commit"
+            }
+          },
+          "required": ["commit"]
+        }
+      },
+      "errors": [
+        {
+          "name": "InvalidSpaceMac",
+          "description": "The MAC requested in the Accept-Signature header is missing or invalid."
+        },
+        {
+          "name": "SpaceNotFound"
+        },
+        {
+          "name": "RepoNotFound"
+        },
+        {
+          "name": "RepoTakendown"
+        },
+        {
+          "name": "RepoSuspended"
+        },
+        {
+          "name": "RepoDeactivated"
+        }
+      ]
+    }
+  }
+}
