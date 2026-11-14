@@ -169,7 +169,7 @@ browserDescribe('account-first FedCM in Chrome 141+', () => {
       plc_directory_url: network.plc.url,
       pds_operator_url: idpOrigin,
       handle_resolver: network.pds.url,
-      scope: 'atproto',
+      scope: 'atproto transition:generic',
     })
     params.append('fedcm_provider', configUrl)
     params.append('fedcm_provider', otherConfigUrl)

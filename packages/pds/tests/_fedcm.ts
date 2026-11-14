@@ -127,3 +127,24 @@ export function nextDialog(cdp: CDPSession): Promise<FedcmDialog> {
     cdp.once('FedCm.dialogShown', onDialog)
   })
 }
+
+type TokenWindow = Window & { __fedcmToken?: string }
+
+/** Records the token of every `navigator.credentials.get` in the page. */
+export async function captureFedcmToken(page: Page): Promise<void> {
+  await page.evaluateOnNewDocument(() => {
+    const credentials = navigator.credentials
+    const get = credentials.get.bind(credentials)
+    credentials.get = async (options) => {
+      const credential = await get(options)
+      const token = (credential as { token?: string } | null)?.token
+      if (typeof token === 'string')
+        (window as TokenWindow).__fedcmToken = token
+      return credential
+    }
+  })
+}
+
+export function readFedcmToken(page: Page): Promise<string | undefined> {
+  return page.evaluate(() => (window as TokenWindow).__fedcmToken)
+}

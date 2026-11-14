@@ -4,16 +4,19 @@ import { type Server, createServer } from 'node:http'
 import { createServer as createHttpsServer } from 'node:https'
 import type { AddressInfo } from 'node:net'
 import { type Browser, launch } from 'puppeteer'
+import { verifySignature } from '@atproto/crypto'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
 import { type DidString, asStringFormat } from '@atproto/lex'
 import { middleware as oauthClientAssetsMiddleware } from '@atproto/oauth-client-browser-example/server'
 import {
   FedcmPage,
   browserDescribe,
+  captureFedcmToken,
   closeServers,
   createTlsCredentials,
   fedcmBrowserArgs,
   nextDialog,
+  readFedcmToken,
 } from './_fedcm.js'
 
 const idpOrigin = 'https://idp-one.test'
@@ -38,6 +41,8 @@ browserDescribe('FedCM IdP registration in Chrome', () => {
   let tlsServer: Server
   let rpServer: Server
   let appUrl: string
+  let authnAppUrl: string
+  let rpOrigin: string
   let alice: DidString
   const requests: {
     host: string
@@ -130,17 +135,28 @@ browserDescribe('FedCM IdP registration in Chrome', () => {
       plc_directory_url: network.plc.url,
       pds_operator_url: idpOrigin,
       handle_resolver: network.pds.url,
-      scope: 'atproto',
+      scope: 'atproto transition:generic',
       fedcm_idp_registration: 'true',
     })
     appUrl = `http://127.0.0.1:${rpPort}/?${params}`
+    params.set('scope', 'atproto')
+    authnAppUrl = `http://127.0.0.1:${rpPort}/?${params}`
+    rpOrigin = `http://127.0.0.1:${rpPort}`
     requests.length = 0
   })
 
   let cleanup: (() => void) | undefined
-  afterEach(() => {
+  afterEach(async () => {
     cleanup?.()
     cleanup = undefined
+    // The identity session lives in the app origin's localStorage and would
+    // leak into later tests.
+    await using page = new FedcmPage(await browser.newPage())
+    const cdp = await page.page.createCDPSession()
+    await cdp.send('Storage.clearDataForOrigin', {
+      origin: rpOrigin,
+      storageTypes: 'local_storage',
+    })
   })
 
   afterAll(async () => {
@@ -272,6 +288,85 @@ browserDescribe('FedCM IdP registration in Chrome', () => {
     })
   })
 
+  async function signInWithFedcm(page: FedcmPage) {
+    const cdp = await page.cdp()
+    await captureFedcmToken(page.page)
+    const shown = nextDialog(cdp)
+    await page.goto(authnAppUrl)
+    const dialog = await shown
+    await cdp.send('FedCm.selectAccount', {
+      dialogId: dialog.dialogId,
+      accountIndex: 0,
+    })
+    await page.ensureTextVisibility('Signed in with FedCM', 'h1')
+    return cdp
+  }
+
+  it('signs in with a verified token and no OAuth when scope is atproto', async () => {
+    requests.length = 0
+    await using page = new FedcmPage(await browser.newPage())
+    await signInWithFedcm(page)
+    await page.ensureTextVisibility('@alice.test', 'p')
+    await page.ensureTextVisibility(`DID: ${alice}`, 'p')
+    expect(
+      requests.filter((r) => r.path === '/oauth/fedcm/assertion'),
+    ).toMatchObject([{ method: 'POST', status: 200 }])
+    expect(parRequests()).toHaveLength(0)
+
+    const token = await readFedcmToken(page.page)
+    assert(token)
+    const [header, payload, signature] = token.split('.')
+    const claims = JSON.parse(Buffer.from(payload, 'base64url').toString())
+    expect(
+      JSON.parse(Buffer.from(header, 'base64url').toString()),
+    ).toMatchObject({ typ: 'atproto-id+jwt' })
+    expect(claims).toMatchObject({
+      iss: alice,
+      sub: alice,
+      auth_time: expect.any(Number),
+    })
+    // The loopback client_id names this app's redirect URI and scope.
+    const aud = new URL(claims.aud)
+    expect(aud.origin).toBe('http://localhost')
+    expect(aud.searchParams.get('redirect_uri')).toMatch(
+      new RegExp(`^${rpOrigin}/`),
+    )
+    expect(aud.searchParams.get('scope')?.split(' ')).toContain('atproto')
+    const key = await network.pds.ctx.idResolver.did.resolveAtprotoKey(alice)
+    expect(
+      await verifySignature(
+        key,
+        Buffer.from(`${header}.${payload}`),
+        Buffer.from(signature, 'base64url'),
+      ),
+    ).toBe(true)
+  })
+
+  it('identity session survives a reload', async () => {
+    await using page = new FedcmPage(await browser.newPage())
+    await signInWithFedcm(page)
+    await page.page.reload()
+    await page.ensureTextVisibility('Signed in with FedCM', 'h1')
+    await page.ensureTextVisibility('@alice.test', 'p')
+  })
+
+  it('sign out clears the identity session and reload stays signed out', async () => {
+    await using page = new FedcmPage(await browser.newPage())
+    const cdp = await signInWithFedcm(page)
+    // Passive FedCM re-runs after sign out and shows the chooser again.
+    const shown = nextDialog(cdp)
+    await page.page.click('button::-p-text(Sign out)')
+    const dialog = await shown
+    await cdp.send('FedCm.dismissDialog', { dialogId: dialog.dialogId })
+    expect(await page.page.$('h1::-p-text(Signed in with FedCM)')).toBeNull()
+
+    const reshown = nextDialog(cdp)
+    await page.page.reload()
+    const redialog = await reshown
+    await cdp.send('FedCm.dismissDialog', { dialogId: redialog.dialogId })
+    expect(await page.page.$('h1::-p-text(Signed in with FedCM)')).toBeNull()
+  })
+
   // @NOTE Runs last among the dialog tests: it deletes the IdP cookies, so
   // later page loads see no device session.
   it('completes for a pushed account whose device session is gone', async () => {
@@ -310,19 +405,15 @@ browserDescribe('FedCM IdP registration in Chrome', () => {
       accountIndex: 0,
     })
 
-    const password = await page.page.waitForSelector('input[name="password"]', {
+    await page.page.waitForSelector('input[name="identifier"]', {
       visible: true,
     })
-    assert(password)
+    await page.ensureTextVisibility('Login with the Atmosphere', 'h2')
     expect(
       requests.filter((r) => r.path === '/oauth/fedcm/assertion'),
-    ).toMatchObject([{ method: 'POST', status: 200 }])
-    expect(parRequests().filter((r) => r.status === 201)).toHaveLength(1)
+    ).toMatchObject([{ method: 'POST', status: 401 }])
+    expect(parRequests()).toHaveLength(0)
     expect(await page.page.$('button::-p-text(Authorize)')).toBeNull()
-
-    await password.type('alice-pass')
-    await password.press('Enter')
-    await page.ensureTextVisibility('Authorize', 'button')
   })
 
   it('rejects active mode combined with an explicit provider', async () => {
