@@ -306,8 +306,8 @@ browserDescribe('FedCM IdP registration in Chrome', () => {
     requests.length = 0
     await using page = new FedcmPage(await browser.newPage())
     await signInWithFedcm(page)
-    await page.ensureTextVisibility('@alice.test', 'p')
-    await page.ensureTextVisibility(`DID: ${alice}`, 'p')
+    await page.ensureTextVisibility('@alice.test', 'dd')
+    await page.ensureTextVisibility(alice, 'dd')
     expect(
       requests.filter((r) => r.path === '/oauth/fedcm/assertion'),
     ).toMatchObject([{ method: 'POST', status: 200 }])
@@ -347,7 +347,7 @@ browserDescribe('FedCM IdP registration in Chrome', () => {
     await signInWithFedcm(page)
     await page.page.reload()
     await page.ensureTextVisibility('Signed in with FedCM', 'h1')
-    await page.ensureTextVisibility('@alice.test', 'p')
+    await page.ensureTextVisibility('@alice.test', 'dd')
   })
 
   it('sign out clears the identity session and reload stays signed out', async () => {
@@ -355,7 +355,8 @@ browserDescribe('FedCM IdP registration in Chrome', () => {
     const cdp = await signInWithFedcm(page)
     // Passive FedCM re-runs after sign out and shows the chooser again.
     const shown = nextDialog(cdp)
-    await page.page.click('button::-p-text(Sign out)')
+    await page.clickOnAriaLabel('User menu')
+    await page.clickOnText('Sign out')
     const dialog = await shown
     await cdp.send('FedCm.dismissDialog', { dialogId: dialog.dialogId })
     expect(await page.page.$('h1::-p-text(Signed in with FedCM)')).toBeNull()
