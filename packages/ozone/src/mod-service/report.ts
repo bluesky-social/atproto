@@ -490,6 +490,7 @@ export type CloseReportsForSubjectParams = {
   subjectDid: DidString
   subjectUri: string | null
   includeAllOwned?: boolean
+  reportId?: number
   reportTypes?: string[]
   excludedReportTypes?: string[]
   actionEventId?: number
@@ -506,7 +507,7 @@ export type CloseReportsResult = {
 
 /**
  * Closes eligible reports matching the subject and report type filters.
- * Assigned and escalated reports are preserved for explicit review actions.
+ * Active reviews are preserved unless explicitly targeted by reportId.
  * Reports whose current status doesn't permit a transition to closed are
  * skipped silently. An existing moderation event can be linked to each closure.
  */
@@ -526,7 +527,27 @@ export async function closeReportsForSubject(
   const metadata = getActivityMetadata(params.meta)
 
   return db.transaction(async (dbTxn) => {
+    const uri = subjectUri ? new AtUri(subjectUri) : null
     let messageConvoId: string | undefined
+    if (
+      !params.includeAllOwned &&
+      uri?.collection === CHAT_MESSAGE_COLLECTION &&
+      params.reportId !== undefined
+    ) {
+      // @NOTE Synthetic message URIs omit the conversation ID. Use the
+      // explicitly selected report to scope the other matching reports.
+      const current = await dbTxn.db
+        .selectFrom('report')
+        .select('subjectConvoId')
+        .where('id', '=', params.reportId)
+        .where('did', '=', subjectDid)
+        .where('subjectMessageId', '=', uri.rkey)
+        .executeTakeFirst()
+      if (!current) {
+        throw new InvalidRequestError('reportId must match the message subject')
+      }
+      messageConvoId = current.subjectConvoId ?? ''
+    }
     if (params.actionEventId !== undefined) {
       const event = await dbTxn.db
         .selectFrom('moderation_event')
@@ -542,7 +563,6 @@ export async function closeReportsForSubject(
         .executeTakeFirst()
       const accountEvent =
         event?.subjectType === com.atproto.admin.defs.repoRef.$type
-      const uri = subjectUri ? new AtUri(subjectUri) : null
       const exactRecordEvent =
         !params.includeAllOwned &&
         uri &&
@@ -575,13 +595,23 @@ export async function closeReportsForSubject(
         )
       }
       if (exactMessageEvent) {
+        if (
+          messageConvoId !== undefined &&
+          messageConvoId !== (event.subjectConvoId ?? '')
+        ) {
+          throw new InvalidRequestError(
+            'reportId and actionEventId must target the same message',
+          )
+        }
         messageConvoId = event.subjectConvoId ?? ''
       }
     }
     const matchingReports = await findReportsForSubject(dbTxn, {
       subjectDid,
       subjectUri: subjectUri as AtUriString,
+      messageConvoId,
       includeAllOwned: params.includeAllOwned,
+      reportIds: params.reportId !== undefined ? [params.reportId] : undefined,
       reportTypes: reportTypes?.length ? reportTypes : undefined,
       excludedReportTypes: params.excludedReportTypes,
       targetAll: !reportTypes?.length,
