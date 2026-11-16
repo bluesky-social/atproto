@@ -197,6 +197,16 @@ export class SpacesMigrationProgress {
     )
   }
 
+  /** Removes the row of an unswept account that no longer exists. */
+  async removeSwept(did: DidString, owner: string): Promise<void> {
+    await this.db.executeWithRetry(
+      this.db.db
+        .deleteFrom('spaces_migration')
+        .where('did', '=', did)
+        .where('sweepLeaseOwner', '=', owner),
+    )
+  }
+
   /**
    * When the publisher starts. The first process to ask fixes it, and every
    * later start (restarts, rollbacks, re-upgrades) reads it back.
