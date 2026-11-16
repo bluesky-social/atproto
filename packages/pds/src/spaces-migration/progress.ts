@@ -18,6 +18,8 @@ export type SpacesMigrationSummary = {
   keysPublished: number
   unpublishable: number
   failing: number
+  /** Accounts whose store sweep is failing. */
+  sweepFailing: number
 }
 
 const SEED_BATCH_SIZE = 500
@@ -45,6 +47,9 @@ export async function registerSpacesMigration(
     leaseExpiresAt: 0,
     sweepLeaseOwner: null,
     sweepLeaseExpiresAt: 0,
+    sweepAttempts: 0,
+    sweepLastError: null,
+    sweepNextAttemptAt: 0,
   }
   // Replaces any row left by an earlier account with this DID
   await db.executeWithRetry(
@@ -159,6 +164,7 @@ export class SpacesMigrationProgress {
       .selectFrom('spaces_migration')
       .select('did')
       .where('storeMigratedAt', 'is', null)
+      .where('sweepNextAttemptAt', '<=', now)
       .where((eb) =>
         eb.or([
           eb('sweepLeaseOwner', 'is', null),
@@ -172,6 +178,7 @@ export class SpacesMigrationProgress {
         .set({ sweepLeaseOwner: owner, sweepLeaseExpiresAt: now + leaseMs })
         .where('did', 'in', unswept)
         .where('storeMigratedAt', 'is', null)
+        .where('sweepNextAttemptAt', '<=', now)
         .where((eb) =>
           eb.or([
             eb('sweepLeaseOwner', 'is', null),
@@ -189,6 +196,31 @@ export class SpacesMigrationProgress {
         .updateTable('spaces_migration')
         .set({
           storeMigratedAt: new Date().toISOString(),
+          sweepLeaseOwner: null,
+          sweepLeaseExpiresAt: 0,
+          sweepAttempts: 0,
+          sweepLastError: null,
+          sweepNextAttemptAt: 0,
+        })
+        .where('did', '=', did)
+        .where('sweepLeaseOwner', '=', owner),
+    )
+  }
+
+  /** Records a failed sweep and gives up the lease until `nextAttemptAt`. */
+  async recordSweepFailure(
+    did: DidString,
+    owner: string,
+    err: unknown,
+    nextAttemptAt: number,
+  ): Promise<void> {
+    await this.db.executeWithRetry(
+      this.db.db
+        .updateTable('spaces_migration')
+        .set({
+          sweepAttempts: (eb) => eb('sweepAttempts', '+', 1),
+          sweepLastError: errorMessage(err),
+          sweepNextAttemptAt: nextAttemptAt,
           sweepLeaseOwner: null,
           sweepLeaseExpiresAt: 0,
         })
@@ -379,6 +411,21 @@ export class SpacesMigrationProgress {
               .end(),
           )
           .as('failing'),
+        eb.fn
+          .sum<number>(
+            eb
+              .case()
+              .when(
+                eb.and([
+                  eb('storeMigratedAt', 'is', null),
+                  eb('sweepAttempts', '>', 0),
+                ]),
+              )
+              .then(1)
+              .else(0)
+              .end(),
+          )
+          .as('sweepFailing'),
       ])
       .executeTakeFirstOrThrow()
     return {
@@ -387,6 +434,7 @@ export class SpacesMigrationProgress {
       keysPublished: Number(res.keysPublished),
       unpublishable: Number(res.unpublishable ?? 0),
       failing: Number(res.failing ?? 0),
+      sweepFailing: Number(res.sweepFailing ?? 0),
     }
   }
 
