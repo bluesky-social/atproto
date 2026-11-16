@@ -40,7 +40,12 @@ export type SpacesMigrationPublisherOptions = Omit<
   owner?: string
   /** Bounds each PLC call. */
   plcTimeoutMs?: number
-  /** Bounds how long destroy() waits for the step in flight. */
+  /** The first backoff when PLC pushes back, doubling after each. */
+  plcBackoffBaseMs?: number
+  /**
+   * Bounds how long destroy() waits for the step in flight. The publisher and
+   * sweep stop in parallel, within a 10s container stop grace.
+   */
   destroyTimeoutMs?: number
 }
 
@@ -122,7 +127,7 @@ export class SpacesMigrationPublisher implements AsyncDisposable {
     this.waiter?.bail()
     if (!this.running) return
     // A stuck step mustn't hold up shutdown. Its lease expires on its own.
-    const timeoutMs = this.opts.destroyTimeoutMs ?? 10 * SECOND
+    const timeoutMs = this.opts.destroyTimeoutMs ?? 5 * SECOND
     const timeout = bailableWait(timeoutMs)
     const stopped = await Promise.race([
       this.running.then(() => true),
@@ -156,7 +161,8 @@ export class SpacesMigrationPublisher implements AsyncDisposable {
   // Publishes at most one account. Returns how long to wait before the next.
   private async step(): Promise<number> {
     if (this.startAt === undefined) {
-      await this.progress.seed()
+      // Rows come from account creation and the sweep's seed, which runs
+      // wherever the publisher does
       this.startAt = await this.progress.publishStartAt(
         this.ctx.cfg.service.hostname,
         this.opts.jitterWindowMs,
@@ -233,7 +239,7 @@ export class SpacesMigrationPublisher implements AsyncDisposable {
         await progress.release(did, owner)
         const delayMs = backoffMs(
           this.plcBackoffs++,
-          PLC_BACKOFF_BASE_MS,
+          this.opts.plcBackoffBaseMs ?? PLC_BACKOFF_BASE_MS,
           PLC_BACKOFF_CAP_MS,
         )
         this.plcBackoffUntil = Date.now() + delayMs
