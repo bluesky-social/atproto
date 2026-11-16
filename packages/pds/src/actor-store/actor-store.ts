@@ -159,6 +159,9 @@ export class ActorStore {
     if (exists) {
       throw new InvalidRequestError('Repo already exists', 'AlreadyExists')
     }
+    // A kem key with no store beside it is the orphan of a failed create and
+    // was never published: replace it with the caller's key.
+    await rmIfExists(kemKeyLocation)
     const privKey = await keypair.export()
     await fs.writeFile(keyLocation, privKey)
     const storedKem = await writeKemKeyNoClobber(kemKeyLocation, kemKeypair)
@@ -303,7 +306,13 @@ const writeKemKeyNoClobber = async (
 ): Promise<crypto.P256Keypair> => {
   const tmp = `${loc}.${randomUUID()}.tmp`
   try {
-    await fs.writeFile(tmp, await keypair.export())
+    const handle = await fs.open(tmp, 'wx')
+    try {
+      await handle.writeFile(await keypair.export())
+      await handle.sync()
+    } finally {
+      await handle.close()
+    }
     try {
       await fs.link(tmp, loc)
     } catch (err) {
@@ -311,6 +320,13 @@ const writeKemKeyNoClobber = async (
       const winner = await loadKemKey(loc)
       assert(winner, 'kem key vanished after EEXIST')
       return winner
+    }
+    // make the new directory entry durable
+    const dirHandle = await fs.open(path.dirname(loc), 'r')
+    try {
+      await dirHandle.sync()
+    } finally {
+      await dirHandle.close()
     }
     return crypto.P256Keypair.import(await keypair.export(), {
       exportable: true,

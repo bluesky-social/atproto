@@ -55,6 +55,39 @@ describe('kem key storage', () => {
     expect((await store.kemKeypair(did))?.did()).toBe(kem.did())
   })
 
+  it('replaces an orphaned kem key when create runs without a store', async () => {
+    const did = 'did:example:orphan'
+    const { directory, kemKeyLocation } = await store.getLocation(did)
+    await fs.mkdir(directory, { recursive: true })
+    const orphan = await P256Keypair.create({ exportable: true })
+    await fs.writeFile(kemKeyLocation, await orphan.export())
+
+    const kem = await P256Keypair.create({ exportable: true })
+    const signing = await Secp256k1Keypair.create({ exportable: true })
+    await store.create(did, signing, kem)
+    const onDisk = await P256Keypair.import(await fs.readFile(kemKeyLocation))
+    expect(onDisk.did()).toBe(kem.did())
+    expect(onDisk.did()).not.toBe(orphan.did())
+  })
+
+  it('leaves the kem key untouched when the store already exists', async () => {
+    const did = 'did:example:existing'
+    const kem = await P256Keypair.create({ exportable: true })
+    const signing = await Secp256k1Keypair.create({ exportable: true })
+    await store.create(did, signing, kem)
+    const { kemKeyLocation } = await store.getLocation(did)
+    const before = await fs.readFile(kemKeyLocation)
+
+    const otherKem = await P256Keypair.create({ exportable: true })
+    await expect(store.create(did, signing, otherKem)).rejects.toThrow(
+      'Repo already exists',
+    )
+    expect(Buffer.from(await fs.readFile(kemKeyLocation))).toEqual(
+      Buffer.from(before),
+    )
+    expect((await store.kemKeypair(did))?.did()).toBe(kem.did())
+  })
+
   it('reserves and reloads a kem key by did and by key', async () => {
     const did = 'did:example:reserved'
     const keyDid = await store.reserveKemKeypair(did)
