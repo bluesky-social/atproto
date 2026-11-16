@@ -1,4 +1,5 @@
 import assert from 'node:assert'
+import fs from 'node:fs/promises'
 import * as plc from '@did-plc/lib'
 import { jest } from '@jest/globals'
 import type { AtpAgent } from '@atproto/api'
@@ -302,6 +303,50 @@ describe('plc operations', () => {
         error: 'IncorrectKemKey',
         message: 'Incorrect KEM key',
       })
+    })
+  })
+
+  describe('account without a stored kem key', () => {
+    let carol: Account
+
+    beforeAll(async () => {
+      carol = sc.accounts[sc.dids.carol]
+      // Pre-feature account: no kem_key file and nothing published in PLC.
+      const { kemKeyLocation } = await ctx.actorStore.getLocation(carol.did)
+      await fs.rm(kemKeyLocation, { force: true })
+      expect(await ctx.actorStore.kemKeypair(carol.did)).toBeUndefined()
+      await ctx.plcClient.updateData(carol.did, ctx.plcRotationKey, (data) => {
+        const { atproto_kem: _, ...rest } = data.verificationMethods
+        return { ...data, verificationMethods: rest }
+      })
+    })
+
+    const submitWithKem = async (kemKey: string | undefined) => {
+      const data = await ctx.plcClient.getDocumentData(carol.did)
+      const { atproto_kem: _, ...rest } = data.verificationMethods
+      const operation = await signOp(carol.did, {
+        verificationMethods: kemKey ? { ...rest, atproto_kem: kemKey } : rest,
+      })
+      return agent.com.atproto.identity.submitPlcOperation(
+        { operation },
+        {
+          encoding: 'application/json',
+          headers: sc.getHeaders(carol.did),
+        },
+      )
+    }
+
+    it('rejects an op naming a kem key', async () => {
+      await expect(submitWithKem(sampleKey)).rejects.toMatchObject({
+        error: 'IncorrectKemKey',
+        message: 'Incorrect KEM key',
+      })
+    })
+
+    it('accepts an op omitting the kem key', async () => {
+      await submitWithKem(undefined)
+      const data = await ctx.plcClient.getDocumentData(carol.did)
+      expect(data.verificationMethods.atproto_kem).toBeUndefined()
     })
   })
 })
