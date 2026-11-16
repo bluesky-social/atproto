@@ -37,7 +37,6 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .createTable('spaces_migration_state')
     .addColumn('id', 'integer', (col) => col.primaryKey())
     .addColumn('publishStartAt', 'integer', (col) => col.notNull())
-    .addColumn('lastVersion', 'varchar')
     .execute()
 }
 
