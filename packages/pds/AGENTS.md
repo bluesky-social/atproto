@@ -5,9 +5,12 @@
 Every PDS SQLite database (account, sequencer, did-cache, actor stores) may be
 opened by an _older_ PDS after a newer one migrated it: releases are rolled
 back by re-tagging an older image, and `Migrator` (`src/db/migrator.ts`) lets
-older code boot past migrations it doesn't know. So a migration may only add:
-new tables, nullable or defaulted columns, new indexes. Never drop, rename, or
-change the type of anything a previous release reads.
+older code boot past migrations it doesn't know. So a migration may only add
+things a previous release can ignore: new tables, nullable or defaulted
+columns, non-unique indexes. Never drop, rename, or change the type of anything
+a previous release reads, and never add a unique index, constraint, or trigger
+that a previous release's writes could violate. Newer code must also tolerate
+rows that older code wrote, or left unmaintained, while it was rolled back.
 
 ## Migrations run in one transaction
 

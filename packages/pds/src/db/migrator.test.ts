@@ -119,6 +119,34 @@ describe('Migrator', () => {
     ).rejects.toThrow(/corrupted migrations/)
   })
 
+  it('reports failures from migrateToLatest as a result, like kysely', async () => {
+    // A migration table this code can't read
+    await sql`create table kysely_migration (x integer)`.execute(db.db)
+
+    const { error, results } = await new Migrator(
+      db.db,
+      migrationsFor('001'),
+    ).migrateToLatest()
+    expect(error).toBeDefined()
+    expect(results).toBeUndefined()
+  })
+
+  it('forwards migrateToLatest options to kysely', async () => {
+    // Without a transaction, a failing migration leaves its earlier effects,
+    // which shows the option reached kysely.
+    const { error } = await new Migrator(db.db, {
+      '001': {
+        async up(db: Kysely<unknown>) {
+          await createsTable('t_001').up(db)
+          throw new Error('boom')
+        },
+      },
+    }).migrateToLatest({ disableTransactions: true })
+
+    expect(error).toEqual(new Error('boom'))
+    expect(await tableNames(db)).toEqual(['t_001'])
+  })
+
   it('never migrates down past later migrations it does not know', async () => {
     // Migrating "to" an earlier name is a rollback in kysely. With unknown
     // later migrations present it must fail, not delete their rows.

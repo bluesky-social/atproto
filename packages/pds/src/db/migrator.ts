@@ -1,5 +1,6 @@
 import { type Kysely, sql } from 'kysely'
 import {
+  type MigrateOptions,
   type Migration,
   type MigrationResultSet,
   Migrator as KyselyMigrator,
@@ -46,10 +47,17 @@ export class Migrator<T> extends KyselyMigrator {
    * earlier name is a migration down in kysely, and with stubs present it
    * would delete the rows of migrations it doesn't know.
    */
-  override async migrateToLatest(): Promise<MigrationResultSet> {
-    await this.tolerateLaterMigrations()
+  override async migrateToLatest(
+    options?: MigrateOptions,
+  ): Promise<MigrationResultSet> {
     try {
-      return await super.migrateToLatest()
+      await this.tolerateLaterMigrations()
+    } catch (error) {
+      // Like kysely, report failures in the result rather than throwing
+      return { error }
+    }
+    try {
+      return await super.migrateToLatest(options)
     } finally {
       this.provided.migrations = this.known
     }
