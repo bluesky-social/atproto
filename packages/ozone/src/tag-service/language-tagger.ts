@@ -29,9 +29,9 @@ export class LanguageTagger extends ContentTagger {
   async buildTags(): Promise<string[]> {
     try {
       const recordLangs = await this.getRecordLang()
-      return recordLangs
-        ? recordLangs.map((lang) => `${this.tagPrefix}${lang}`)
-        : [`${this.tagPrefix}und`]
+      return (recordLangs ?? [])
+        .filter((lang) => lang.toLowerCase() !== 'und')
+        .map((lang) => `${this.tagPrefix}${lang}`)
     } catch (err) {
       log.error({ subject: this.subject, err }, 'Error getting record langs')
       return []

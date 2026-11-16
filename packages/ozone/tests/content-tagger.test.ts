@@ -110,16 +110,27 @@ describe('moderation subject content tagging', () => {
               cid: post.ref.cidStr,
             }),
             event: tools.ozone.moderation.defs.modEventTag.$build({
-              add: ['lang:manual'],
+              add: ['lang:und'],
               remove: [],
             }),
           })
           expect(
             (await report(post.ref.uriStr, post.ref.cidStr)).tags,
-          ).toContain('lang:manual')
+          ).toContain('lang:und')
 
           const accountDid =
             endpoint === 'createReport' ? sc.dids.alice : sc.dids.carol
+          await sc.post(
+            accountDid,
+            'A post in English',
+            undefined,
+            undefined,
+            undefined,
+            {
+              langs: ['en'],
+            },
+          )
+          await network.processAll()
           const accountSubject = com.atproto.admin.defs.repoRef.$build({
             did: accountDid,
           })
@@ -137,11 +148,7 @@ describe('moderation subject content tagging', () => {
               }),
             })
           }
-          expect(
-            (await getStatus(accountDid)).tags?.some((tag) =>
-              tag.startsWith('lang:'),
-            ),
-          ).toBe(true)
+          expect((await getStatus(accountDid)).tags).toContain('lang:en')
 
           service.languageTagRecordTypes = [
             'app.bsky.graph.*',
@@ -166,6 +173,98 @@ describe('moderation subject content tagging', () => {
         } finally {
           service.languageTagRecordTypes = original
         }
+      },
+    )
+
+    it.each(['createReport', 'emitEvent'])(
+      'omits undetermined language tags through %s',
+      async (endpoint) => {
+        const unspecified = await sc.post(
+          sc.dids.carol,
+          '',
+          undefined,
+          sc.posts[sc.dids.carol][0].images,
+        )
+        const undetermined = await sc.post(
+          sc.dids.carol,
+          '',
+          undefined,
+          undefined,
+          undefined,
+          { langs: ['und-Latn'] },
+        )
+        const mixed = await sc.post(
+          sc.dids.carol,
+          '',
+          undefined,
+          undefined,
+          undefined,
+          { langs: ['und', 'en-US'] },
+        )
+        await network.processAll()
+
+        for (const post of [unspecified, undetermined, mixed]) {
+          const subject = com.atproto.repo.strongRef.$build({
+            uri: post.ref.uriStr,
+            cid: post.ref.cidStr,
+          })
+          if (endpoint === 'createReport') {
+            await sc.createReport({
+              reasonType: ComAtprotoModerationDefs.REASONSPAM,
+              subject,
+              reportedBy: sc.dids.alice,
+            })
+          } else {
+            await modClient.emitEvent({
+              subject,
+              event: tools.ozone.moderation.defs.modEventReport.$build({
+                reportType: com.atproto.moderation.defs.ReasonSpam,
+              }),
+            })
+          }
+        }
+
+        expect((await getStatus(unspecified.ref.uriStr)).tags).toEqual(
+          expect.arrayContaining(['report:spam', 'embed:image']),
+        )
+        expect((await getStatus(unspecified.ref.uriStr)).tags).not.toContain(
+          'lang:und',
+        )
+        expect((await getStatus(undetermined.ref.uriStr)).tags).not.toContain(
+          'lang:und',
+        )
+        expect((await getStatus(mixed.ref.uriStr)).tags).toContain('lang:en')
+        expect((await getStatus(mixed.ref.uriStr)).tags).not.toContain(
+          'lang:und',
+        )
+
+        const updated = await sc.agent.com.atproto.repo.putRecord(
+          {
+            repo: sc.dids.carol,
+            collection: 'app.bsky.feed.post',
+            rkey: undetermined.ref.uri.rkey,
+            record: {
+              $type: 'app.bsky.feed.post',
+              text: '',
+              createdAt: new Date().toISOString(),
+              langs: ['fr'],
+            },
+          },
+          { headers: sc.getHeaders(sc.dids.carol) },
+        )
+        await network.processAll()
+        await modClient.emitEvent({
+          subject: com.atproto.repo.strongRef.$build({
+            uri: undetermined.ref.uriStr,
+            cid: updated.data.cid,
+          }),
+          event: tools.ozone.moderation.defs.modEventReport.$build({
+            reportType: com.atproto.moderation.defs.ReasonSpam,
+          }),
+        })
+        expect((await getStatus(undetermined.ref.uriStr)).tags).toContain(
+          'lang:fr',
+        )
       },
     )
 

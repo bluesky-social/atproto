@@ -88,7 +88,6 @@ exports[`admin get multiple subjects with all relevant details gets multiple sub
           "subjectRepoHandle": "alice.test",
           "tags": [
             "report:other",
-            "lang:und",
           ],
           "takendown": true,
           "updatedAt": "1970-01-01T00:00:00.000Z",
@@ -143,7 +142,6 @@ exports[`admin get multiple subjects with all relevant details gets multiple sub
       "subjectRepoHandle": "alice.test",
       "tags": [
         "report:other",
-        "lang:und",
       ],
       "takendown": true,
       "updatedAt": "1970-01-01T00:00:00.000Z",
@@ -263,7 +261,6 @@ exports[`admin get multiple subjects with all relevant details gets multiple sub
             "subjectRepoHandle": "alice.test",
             "tags": [
               "report:other",
-              "lang:und",
             ],
             "takendown": true,
             "updatedAt": "1970-01-01T00:00:00.000Z",
@@ -353,7 +350,6 @@ exports[`admin get multiple subjects with all relevant details gets multiple sub
           "subjectRepoHandle": "alice.test",
           "tags": [
             "report:other",
-            "lang:und",
           ],
           "takendown": true,
           "updatedAt": "1970-01-01T00:00:00.000Z",
