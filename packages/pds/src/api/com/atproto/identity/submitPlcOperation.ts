@@ -39,6 +39,26 @@ export default function (server: Server, ctx: AppContext) {
       if (op.verificationMethods['atproto'] !== signingKey.did()) {
         throw new InvalidRequestError('Incorrect signing key')
       }
+
+      // Keyed to the current PLC doc so inbound migrations from tools that
+      // build their own op (and so omit the kem key) still work.
+      const ourKemKey = (await ctx.actorStore.kemKeypair(requester))?.did()
+      const opKemKey = op.verificationMethods['atproto_kem']
+      if (opKemKey === undefined) {
+        // omits kem key: only a problem if it would drop the published one
+        const current = await ctx.plcClient.getDocumentData(requester)
+        const currentKemKey = current.verificationMethods['atproto_kem']
+        if (currentKemKey !== undefined && currentKemKey === ourKemKey) {
+          throw new InvalidRequestError(
+            'Operation would remove the KEM key',
+            'IncorrectKemKey',
+          )
+        }
+      } else if (opKemKey !== ourKemKey) {
+        // names a key the PDS does not hold
+        throw new InvalidRequestError('Incorrect KEM key', 'IncorrectKemKey')
+      }
+
       const account = await ctx.accountManager.getAccount(requester, {
         includeDeactivated: true,
       })
