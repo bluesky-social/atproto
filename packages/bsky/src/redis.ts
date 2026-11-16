@@ -1,5 +1,17 @@
 import assert from 'node:assert'
-import { Redis as RedisDriver } from 'ioredis'
+import {
+  Redis as RedisDriver,
+  type RedisOptions as RedisDriverOptions,
+} from 'ioredis'
+
+// @TODO Pins ioredis 5's wire behavior (RESP2, no CLIENT SETINFO on connect)
+// so the ioredis 6 upgrade changes nothing against the Redis servers we run
+// (Redis < 7.2 rejects CLIENT SETINFO). Drop this to use ioredis 6's defaults
+// once those servers are >= 7.2 and RESP3 is verified.
+const DRIVER_DEFAULTS = {
+  protocol: 2,
+  disableClientInfo: true,
+} as const satisfies RedisDriverOptions
 
 export class Redis {
   driver: RedisDriver
@@ -8,6 +20,7 @@ export class Redis {
     if ('sentinel' in opts) {
       assert(opts.sentinel && Array.isArray(opts.hosts) && opts.hosts.length)
       this.driver = new RedisDriver({
+        ...DRIVER_DEFAULTS,
         name: opts.sentinel,
         sentinels: opts.hosts.map((h) => addressParts(h, 26379)),
         password: opts.password,
@@ -17,6 +30,7 @@ export class Redis {
     } else if ('host' in opts) {
       assert(opts.host)
       this.driver = new RedisDriver({
+        ...DRIVER_DEFAULTS,
         ...addressParts(opts.host),
         password: opts.password,
         db: opts.db,
