@@ -893,6 +893,35 @@ describe('bulk moderation events', () => {
     expect(result.failedEvents).toHaveLength(1)
   })
 
+  it('reports subject parsing errors per entry', async () => {
+    const f = await fixture()
+    const subject = com.atproto.repo.strongRef.$build({
+      uri: `at://alice.test/${app.bsky.feed.post.$type}/example`,
+      cid: f.records[0].cid,
+    })
+    const result = await modClient.emitEvents({
+      event: acknowledge(),
+      subjects: [{ subject }, { subject: f.account }],
+    })
+
+    expect(result.events).toHaveLength(1)
+    expect(result.events[0].subject).toEqual(f.account)
+    expect(result.failedEvents).toEqual([
+      {
+        subject,
+        error: expect.stringContaining('does not have a DID hostname'),
+      },
+    ])
+    expect(
+      (
+        await modClient.queryEvents({
+          subject: f.did,
+          types: [tools.ozone.moderation.defs.modEventAcknowledge.$type],
+        })
+      ).events.map((event) => event.id),
+    ).toEqual([result.events[0].id])
+  })
+
   it('records email delivery independently for each recipient', async () => {
     const fixtures = [await fixture(), await fixture()]
     const service = network.ozone.ctx.modService(network.ozone.ctx.db)

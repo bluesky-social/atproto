@@ -546,9 +546,8 @@ export function validateSubjects(
         info.subjectConvoId,
         info.subjectMessageId,
       ])
-    } catch (err) {
-      if (!(err instanceof InvalidRequestError)) throw err
-      // @NOTE Invalid subjects are reported per entry by the handler.
+    } catch {
+      // @NOTE Subject parsing failures are reported per entry by the handler.
       continue
     }
     if (seen.has(key)) {
