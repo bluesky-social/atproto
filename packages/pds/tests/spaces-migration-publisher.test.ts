@@ -477,6 +477,24 @@ describe('spaces migration publisher', () => {
     })
   })
 
+  it('leaves no shutdown timer behind after stopping', async () => {
+    // A distinctive delay picks out destroy()'s own timer
+    const destroyTimeoutMs = 12_345
+    const pub = publisher({ destroyTimeoutMs })
+    await waitFor(async () => pub.state === 'idle')
+
+    using setTimeoutSpy = jest.spyOn(globalThis, 'setTimeout')
+    using clearTimeoutSpy = jest.spyOn(globalThis, 'clearTimeout')
+    await pub.destroy()
+
+    const shutdownTimers = setTimeoutSpy.mock.results
+      .filter((_, i) => setTimeoutSpy.mock.calls[i][1] === destroyTimeoutMs)
+      .map((result) => result.value)
+    expect(shutdownTimers).toHaveLength(1)
+    const cleared = clearTimeoutSpy.mock.calls.map(([timer]) => timer)
+    expect(cleared).toContain(shutdownTimers[0])
+  })
+
   it('stops promptly even with a step stuck', async () => {
     const did = await createPreSpacesAccount()
     using _sequenceIdentity = jest

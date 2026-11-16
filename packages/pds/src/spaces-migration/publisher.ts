@@ -7,7 +7,6 @@ import {
   MINUTE,
   SECOND,
   bailableWait,
-  wait,
 } from '@atproto/common'
 import type { DidString } from '@atproto/syntax'
 import type { SpacesMigrationConfig } from '../config/config.js'
@@ -102,10 +101,14 @@ export class SpacesMigrationPublisher implements AsyncDisposable {
     if (!this.running) return
     // A stuck step mustn't hold up shutdown. Its lease expires on its own.
     const timeoutMs = this.opts.destroyTimeoutMs ?? 10 * SECOND
+    const timeout = bailableWait(timeoutMs)
     const stopped = await Promise.race([
       this.running.then(() => true),
-      wait(timeoutMs).then(() => false),
-    ])
+      timeout.wait().then(() => false),
+    ]).finally(() => {
+      // Don't keep the process alive once the loop has stopped
+      timeout.bail()
+    })
     if (!stopped) {
       log.warn({ timeoutMs }, 'spaces migration publisher did not stop in time')
     }
