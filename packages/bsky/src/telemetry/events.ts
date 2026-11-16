@@ -328,12 +328,18 @@ class EventReporter {
     did,
     lxm,
     method,
+    modService,
   }: {
     did: string
     lxm?: string
     method: string
+    modService: boolean
   }) {
-    this.#log('labeler_service_jwt', { did, lxm })
+    // @NOTE Our own Ozone (the mod service) makes hundreds of these requests
+    // per second, so it's counted but not logged.
+    if (!modService) {
+      this.#log('labeler_service_jwt', { did, lxm })
+    }
     try {
       // @NOTE lxm is attacker-controlled, so the counter only records it when
       // it is the method called, which is one of the methods AppView serves.
