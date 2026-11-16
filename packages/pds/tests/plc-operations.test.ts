@@ -238,4 +238,70 @@ describe('plc operations', () => {
     expect(lastEvt.did).toBe(alice.did)
     expect(lastEvt.eventType).toBe('identity')
   })
+
+  describe('kem key', () => {
+    let bob: Account
+    let ourKemKey: string
+
+    beforeAll(async () => {
+      bob = sc.accounts[sc.dids.bob]
+      const kem = await ctx.actorStore.kemKeypair(bob.did)
+      assert(kem)
+      ourKemKey = kem.did()
+    })
+
+    const setPublishedKem = async (kemKey: string | undefined) => {
+      await ctx.plcClient.updateData(bob.did, ctx.plcRotationKey, (data) => {
+        const { atproto_kem: _, ...rest } = data.verificationMethods
+        return {
+          ...data,
+          verificationMethods: kemKey ? { ...rest, atproto_kem: kemKey } : rest,
+        }
+      })
+    }
+
+    const submitWithKem = async (kemKey: string | undefined) => {
+      const data = await ctx.plcClient.getDocumentData(bob.did)
+      const { atproto_kem: _, ...rest } = data.verificationMethods
+      const operation = await signOp(bob.did, {
+        verificationMethods: kemKey ? { ...rest, atproto_kem: kemKey } : rest,
+      })
+      return agent.com.atproto.identity.submitPlcOperation(
+        { operation },
+        {
+          encoding: 'application/json',
+          headers: sc.getHeaders(bob.did),
+        },
+      )
+    }
+
+    it('accepts an op without a kem key when none is published', async () => {
+      await setPublishedKem(undefined)
+      await submitWithKem(undefined)
+      const data = await ctx.plcClient.getDocumentData(bob.did)
+      expect(data.verificationMethods.atproto_kem).toBeUndefined()
+    })
+
+    it('rejects an op that removes the published kem key', async () => {
+      await setPublishedKem(ourKemKey)
+      await expect(submitWithKem(undefined)).rejects.toMatchObject({
+        error: 'IncorrectKemKey',
+        message: 'Operation would remove the KEM key',
+      })
+    })
+
+    it('accepts an op naming our kem key', async () => {
+      await setPublishedKem(ourKemKey)
+      await submitWithKem(ourKemKey)
+      const data = await ctx.plcClient.getDocumentData(bob.did)
+      expect(data.verificationMethods.atproto_kem).toBe(ourKemKey)
+    })
+
+    it('rejects an op naming another kem key', async () => {
+      await expect(submitWithKem(sampleKey)).rejects.toMatchObject({
+        error: 'IncorrectKemKey',
+        message: 'Incorrect KEM key',
+      })
+    })
+  })
 })
