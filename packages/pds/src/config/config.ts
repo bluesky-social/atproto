@@ -348,6 +348,12 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     lexiconCfg.didAuthority = env.lexiconDidAuthority
   }
 
+  const spacesMigrationCfg: ServerConfig['spacesMigration'] = {
+    disabled: !!env.spacesMigrationDisabled,
+    publishIntervalMs: env.spacesMigrationPublishIntervalMs ?? 5 * SECOND,
+    jitterWindowMs: env.spacesMigrationJitterWindowMs ?? DAY,
+  }
+
   return {
     service: serviceCfg,
     db: dbCfg,
@@ -370,6 +376,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     proxy: proxyCfg,
     branding: brandingCfg,
     oauth: oauthCfg,
+    spacesMigration: spacesMigrationCfg,
   }
 }
 
@@ -395,6 +402,7 @@ export type ServerConfig = {
   branding: BrandingConfig
   oauth: OAuthConfig
   lexicon: LexiconResolverConfig
+  spacesMigration: SpacesMigrationConfig
 }
 
 export type ServiceConfig = {
@@ -518,6 +526,15 @@ export type OAuthConfig = {
     branding: BrandingConfig
     trustedClients?: string[]
   }
+}
+
+export type SpacesMigrationConfig = {
+  /** Pauses all spaces migration work. */
+  disabled: boolean
+  /** The pause between publishing one account's KEM key and the next. */
+  publishIntervalMs: number
+  /** The window over which hosts spread the start of publishing. */
+  jitterWindowMs: number
 }
 
 export type LexiconResolverConfig = {

@@ -221,6 +221,9 @@ export const deleteAccount = async (
     db.db.deleteFrom('account').where('account.did', '=', did),
   )
   await db.executeWithRetry(
+    db.db.deleteFrom('spaces_migration').where('did', '=', did),
+  )
+  await db.executeWithRetry(
     db.db.deleteFrom('actor').where('actor.did', '=', did),
   )
 }

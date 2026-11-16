@@ -205,6 +205,8 @@ export class OAuthStore
             inviteCode,
             repoCid: commit.cid,
             repoRev: commit.rev,
+            // The genesis op names the KEM key
+            kemPublished: true,
           })
 
           try {

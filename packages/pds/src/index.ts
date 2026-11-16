@@ -240,6 +240,7 @@ export class PDS implements AsyncDisposable {
 
   async start(): Promise<http.Server> {
     await this.ctx.sequencer.start()
+    this.ctx.spacesMigration.publisher.start()
     const server = this.app.listen(this.ctx.cfg.service.port)
     this.server = server
     this.server.keepAliveTimeout = 90_000

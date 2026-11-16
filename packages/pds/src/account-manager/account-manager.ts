@@ -34,6 +34,7 @@ import type { com } from '../lexicons/index.js'
 import { httpLogger } from '../logger.js'
 import type { ServerMailer } from '../mailer/index.js'
 import type { Sequencer } from '../sequencer/index.js'
+import { registerSpacesMigration } from '../spaces-migration/progress.js'
 import {
   type AccountDb,
   type EmailTokenPurpose,
@@ -265,6 +266,7 @@ export class AccountManager {
     inviteCode,
     deactivated,
     refreshJwt,
+    kemPublished,
   }: {
     did: DidString
     handle: HandleString
@@ -275,6 +277,11 @@ export class AccountManager {
     inviteCode?: string
     deactivated?: boolean
     refreshJwt?: string
+    /**
+     * The account's genesis op published its KEM key, so the spaces migration
+     * has nothing left to do for it.
+     */
+    kemPublished?: boolean
   }) {
     if (password && password.length > scrypt.NEW_PASSWORD_MAX_LENGTH) {
       throw new InvalidRequestError('Password too long')
@@ -314,6 +321,8 @@ export class AccountManager {
       }
 
       await repo.updateRoot(dbTxn, did, repoCid, repoRev)
+
+      await registerSpacesMigration(dbTxn, did, { kemPublished })
     })
   }
 
@@ -326,6 +335,7 @@ export class AccountManager {
     repoRev: string
     inviteCode?: string
     deactivated?: boolean
+    kemPublished?: boolean
   }) {
     const { accessJwt, refreshJwt } = await auth.createTokens({
       did: opts.did,
