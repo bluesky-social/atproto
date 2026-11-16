@@ -147,6 +147,7 @@ describe('server', () => {
         storesMigrated: expect.any(Number),
         keysPublished: expect.any(Number),
         unpublishable: expect.any(Number),
+        deactivated: expect.any(Number),
         failing: expect.any(Number),
         sweepFailing: expect.any(Number),
       },

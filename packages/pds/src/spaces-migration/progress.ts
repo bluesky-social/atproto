@@ -17,6 +17,13 @@ export type SpacesMigrationSummary = {
   storesMigrated: number
   keysPublished: number
   unpublishable: number
+  /**
+   * Accounts awaiting a key that are deactivated, so not claimed until they
+   * activate. A host is done once `total` is `keysPublished + unpublishable +
+   * deactivated`.
+   */
+  deactivated: number
+  /** Accounts awaiting a key whose last attempt failed, but not deactivated. */
   failing: number
   /** Accounts whose store sweep is failing. */
   sweepFailing: number
@@ -403,6 +410,23 @@ export class SpacesMigrationProgress {
                 eb.and([
                   eb('kemPublishedAt', 'is', null),
                   eb('unpublishableReason', 'is', null),
+                  eb('actor.deactivatedAt', 'is not', null),
+                ]),
+              )
+              .then(1)
+              .else(0)
+              .end(),
+          )
+          .as('deactivated'),
+        eb.fn
+          .sum<number>(
+            eb
+              .case()
+              .when(
+                eb.and([
+                  eb('kemPublishedAt', 'is', null),
+                  eb('unpublishableReason', 'is', null),
+                  eb('actor.deactivatedAt', 'is', null),
                   eb('attempts', '>', 0),
                 ]),
               )
@@ -433,6 +457,7 @@ export class SpacesMigrationProgress {
       storesMigrated: Number(res.storesMigrated),
       keysPublished: Number(res.keysPublished),
       unpublishable: Number(res.unpublishable ?? 0),
+      deactivated: Number(res.deactivated ?? 0),
       failing: Number(res.failing ?? 0),
       sweepFailing: Number(res.sweepFailing ?? 0),
     }

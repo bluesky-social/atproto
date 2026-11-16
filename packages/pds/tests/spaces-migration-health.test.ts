@@ -107,6 +107,12 @@ describe('spaces migration health', () => {
       keysPublished: 0,
     })
 
+    // The context's cache waits 10s between refreshes; use a shorter gap
+    await ctx.spacesMigration.summaryCache.destroy()
+    ctx.spacesMigration.summaryCache = new SummaryCache(progress, {
+      minGapMs: 50,
+    })
+    ctx.spacesMigration.summaryCache.start()
     const onRecorded = () => ctx.spacesMigration.summaryCache.refreshSoon()
     const opts = {
       disabled: false,
@@ -134,6 +140,7 @@ describe('spaces migration health', () => {
         storesMigrated: 2,
         keysPublished: 2,
         unpublishable: 0,
+        deactivated: 0,
         failing: 0,
         sweepFailing: 0,
       },
@@ -149,6 +156,7 @@ describe('spaces migration health', () => {
       storesMigrated: 1,
       keysPublished: 1,
       unpublishable: 0,
+      deactivated: 0,
       failing: 0,
       sweepFailing: 0,
     }
@@ -176,11 +184,50 @@ describe('spaces migration health', () => {
       expect(cache.latest).toEqual(summary)
     })
 
+    it('refreshes at most once per gap however many transitions arrive', async () => {
+      // A sweep records a transition every few ms; each summary is a scan
+      const minGapMs = 1_500
+      const queriedAt: number[] = []
+      const query = jest.fn(async () => {
+        queriedAt.push(Date.now())
+        return summary
+      })
+      const cache = new SummaryCache(
+        { summary: query },
+        { intervalMs: 60_000, minGapMs },
+      )
+      cache.start()
+      try {
+        await waitFor(async () => cache.latest !== undefined)
+        const streamUntil = Date.now() + 2 * minGapMs + 500
+        while (Date.now() < streamUntil) {
+          cache.refreshSoon()
+          await wait(20)
+        }
+        expect(queriedAt.length).toBeGreaterThanOrEqual(2)
+        for (let i = 1; i < queriedAt.length; i++) {
+          expect(queriedAt[i] - queriedAt[i - 1]).toBeGreaterThanOrEqual(
+            minGapMs - 20,
+          )
+        }
+
+        // Once the stream stops, a later transition still gets its refresh
+        await wait(minGapMs)
+        const calls = query.mock.calls.length
+        cache.refreshSoon()
+        await waitFor(async () => query.mock.calls.length === calls + 1)
+        await wait(200)
+        expect(query).toHaveBeenCalledTimes(calls + 1)
+      } finally {
+        await cache.destroy()
+      }
+    })
+
     it('coalesces a burst of transitions into one query', async () => {
       const query = jest.fn(async () => summary)
       const cache = new SummaryCache(
         { summary: query },
-        { intervalMs: 60_000, debounceMs: 20 },
+        { intervalMs: 60_000, minGapMs: 20 },
       )
       cache.start()
       try {
@@ -198,7 +245,7 @@ describe('spaces migration health', () => {
       const query = jest.fn(async () => summary)
       const cache = new SummaryCache(
         { summary: query },
-        { intervalMs: 10, debounceMs: 0 },
+        { intervalMs: 10, minGapMs: 0 },
       )
       cache.start()
       await waitFor(async () => query.mock.calls.length > 1)

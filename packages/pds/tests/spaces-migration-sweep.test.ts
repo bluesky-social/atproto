@@ -169,6 +169,26 @@ describe('spaces migration sweep', () => {
     expect(a.owner).not.toEqual(b.owner)
   })
 
+  it('seeds rows for accounts that have none', async () => {
+    // As left by the release before spaces: no row at all
+    const did = await createPreSpacesAccount()
+    await db.db.deleteFrom('spaces_migration').where('did', '=', did).execute()
+
+    // The publisher may have looked for work before the rows existed
+    const onSeeded = jest.fn()
+    await using s = new SpacesMigrationSweep(
+      ctx,
+      progress,
+      { disabled: false, sweepIntervalMs: 0, pollIntervalMs: 20 },
+      () => {},
+      onSeeded,
+    )
+    s.start()
+    await waitFor(() => isSwept(did))
+    expect(await row(did)).toMatchObject({ kemPublishedAt: null })
+    expect(onSeeded).toHaveBeenCalledTimes(1)
+  })
+
   it('removes the row of an account whose store is gone', async () => {
     const did = await createPreSpacesAccount()
     const { directory } = await ctx.actorStore.getLocation(did)
@@ -242,6 +262,15 @@ describe('spaces migration sweep', () => {
     const started = Date.now()
     await s.destroy()
     expect(Date.now() - started).toBeLessThan(2_000)
+  })
+
+  it('bounds shutdown within a 10s stop grace by default', async () => {
+    const s = sweep({ pollIntervalMs: 60_000 })
+    await waitFor(async () => s.state === 'idle')
+    using setTimeoutSpy = jest.spyOn(globalThis, 'setTimeout')
+    await s.destroy()
+    // Runs alongside the publisher's, so both fit Docker's default grace
+    expect(setTimeoutSpy.mock.calls.map(([, ms]) => ms)).toContain(5_000)
   })
 
   it('does nothing when disabled', async () => {

@@ -168,19 +168,22 @@ export class AppContext implements AsyncDisposable {
     const progress = new SpacesMigrationProgress(this.accountManager.db)
     const summaryCache = new SpacesMigrationSummaryCache(progress)
     const onRecorded = () => summaryCache.refreshSoon()
+    const publisher = new SpacesMigrationPublisher(
+      this,
+      progress,
+      this.cfg.spacesMigration,
+      onRecorded,
+    )
     this.spacesMigration = {
       progress,
-      publisher: new SpacesMigrationPublisher(
-        this,
-        progress,
-        this.cfg.spacesMigration,
-        onRecorded,
-      ),
+      publisher,
+      // Only the sweep seeds; the publisher may have idled before it did
       sweep: new SpacesMigrationSweep(
         this,
         progress,
         this.cfg.spacesMigration,
         onRecorded,
+        () => publisher.wake(),
       ),
       summaryCache,
     }
