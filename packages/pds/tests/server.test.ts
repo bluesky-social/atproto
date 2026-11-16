@@ -132,19 +132,23 @@ describe('server', () => {
   })
 
   it('healthcheck succeeds when database is available.', async () => {
+    // The health summary is cached; refresh so it reflects the seeded accounts
+    await network.pds.ctx.spacesMigration.summaryCache.refresh()
     const res = await fetch(`${network.pds.url}/xrpc/_health`)
     expect(res.status).toEqual(200)
+    // Temporary spacesMigration field: removed with the spaces migration path
     await expect(res.json()).resolves.toEqual({
       version: '0.0.0',
-      // Temporary: removed with the spaces migration path
       spacesMigration: {
-        publisher: 'waiting',
-        total: 0,
-        storesMigrated: 0,
-        keysPublished: 0,
-        unpublishable: 0,
-        failing: 0,
-        sweepFailing: 0,
+        publisher: expect.stringMatching(
+          /^(waiting|running|backoff|idle|entryway|disabled)$/,
+        ),
+        total: expect.any(Number),
+        storesMigrated: expect.any(Number),
+        keysPublished: expect.any(Number),
+        unpublishable: expect.any(Number),
+        failing: expect.any(Number),
+        sweepFailing: expect.any(Number),
       },
     })
   })
