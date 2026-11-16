@@ -22,6 +22,22 @@ export class LeaseLostError extends Error {
   }
 }
 
+/** A PLC call took too long. Treated like PLC pushing back. */
+export class PlcTimeoutError extends Error {
+  constructor(did: string, timeoutMs: number) {
+    super(`plc did not answer within ${timeoutMs}ms for ${did}`)
+  }
+}
+
+// The doc changed between reading it and updating it, so we can't publish
+class UnpublishableError extends Error {
+  constructor(public reason: UnpublishableReason) {
+    super(`kem key unpublishable: ${reason}`)
+  }
+}
+
+export const DEFAULT_PLC_TIMEOUT_MS = 30_000
+
 /**
  * Publishes an account's KEM key in its DID doc and emits `#identity`. Every
  * step is idempotent, so a run cut short at any point is completed by the next:
@@ -38,30 +54,52 @@ export async function publishAccount(
   ctx: PublishContext,
   did: DidString,
   holdsLease: () => Promise<boolean>,
+  opts: { plcTimeoutMs?: number } = {},
 ): Promise<PublishOutcome> {
   if (!(await ctx.actorStore.exists(did))) return 'deleted'
   const kemKey = (await ctx.actorStore.ensureKemKeypair(did)).did()
 
   if (did.startsWith('did:plc:')) {
-    const lastOp = await ctx.plcClient.getLastOp(did)
+    // The PLC client has no timeout of its own
+    const plcTimeoutMs = opts.plcTimeoutMs ?? DEFAULT_PLC_TIMEOUT_MS
+    const bounded = <T>(call: Promise<T>) =>
+      withTimeout(
+        call,
+        plcTimeoutMs,
+        () => new PlcTimeoutError(did, plcTimeoutMs),
+      )
+
+    const lastOp = await bounded(ctx.plcClient.getLastOp(did))
     if (lastOp.type === 'plc_tombstone') {
       return { unpublishable: 'tombstoned' }
     }
-    const { rotationKeys, services, verificationMethods } =
-      plc.normalizeOp(lastOp)
-    if (verificationMethods.atproto_kem !== kemKey) {
-      if (!rotationKeys.includes(ctx.plcRotationKey.did())) {
-        return { unpublishable: 'rotation-key-not-held' }
-      }
-      if (services.atproto_pds?.endpoint !== ctx.cfg.service.publicUrl) {
-        return { unpublishable: 'pds-elsewhere' }
-      }
+    const normalized = plc.normalizeOp(lastOp)
+    if (normalized.verificationMethods.atproto_kem !== kemKey) {
+      const reason = whyUnpublishable(ctx, normalized)
+      if (reason) return { unpublishable: reason }
       // A process that stalled past its lease mustn't publish over another's
       if (!(await holdsLease())) throw new LeaseLostError(did)
-      await ctx.plcClient.updateData(did, ctx.plcRotationKey, (op) => ({
-        ...op,
-        verificationMethods: { ...op.verificationMethods, atproto_kem: kemKey },
-      }))
+      try {
+        await bounded(
+          ctx.plcClient.updateData(did, ctx.plcRotationKey, (op) => {
+            // updateData re-reads the doc, which may have changed since
+            const reason = whyUnpublishable(ctx, op)
+            if (reason) throw new UnpublishableError(reason)
+            return {
+              ...op,
+              verificationMethods: {
+                ...op.verificationMethods,
+                atproto_kem: kemKey,
+              },
+            }
+          }),
+        )
+      } catch (err) {
+        if (err instanceof UnpublishableError) {
+          return { unpublishable: err.reason }
+        }
+        throw err
+      }
     }
   } else {
     const doc = await ctx.idResolver.did.resolve(did, true)
@@ -76,4 +114,35 @@ export async function publishAccount(
 
   await ctx.sequencer.sequenceIdentity(did)
   return 'published'
+}
+
+function whyUnpublishable(
+  ctx: PublishContext,
+  op: Pick<plc.UnsignedOperation, 'rotationKeys' | 'services'>,
+): UnpublishableReason | undefined {
+  if (!op.rotationKeys.includes(ctx.plcRotationKey.did())) {
+    return 'rotation-key-not-held'
+  }
+  if (op.services.atproto_pds?.endpoint !== ctx.cfg.service.publicUrl) {
+    return 'pds-elsewhere'
+  }
+  return undefined
+}
+
+async function withTimeout<T>(
+  promise: Promise<T>,
+  ms: number,
+  onTimeout: () => Error,
+): Promise<T> {
+  // A call that loses the race may still fail later: don't leave that unhandled
+  promise.catch(() => {})
+  let timer: NodeJS.Timeout | undefined
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(onTimeout()), ms)
+  })
+  try {
+    return await Promise.race([promise, timeout])
+  } finally {
+    clearTimeout(timer)
+  }
 }
