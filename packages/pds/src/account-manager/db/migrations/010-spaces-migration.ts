@@ -17,6 +17,11 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('sweepLeaseExpiresAt', 'integer', (col) =>
       col.notNull().defaultTo(0),
     )
+    .addColumn('sweepAttempts', 'integer', (col) => col.notNull().defaultTo(0))
+    .addColumn('sweepLastError', 'varchar')
+    .addColumn('sweepNextAttemptAt', 'integer', (col) =>
+      col.notNull().defaultTo(0),
+    )
     .execute()
   // Partial, so that finished rows (nearly all of them, eventually) aren't
   // scanned when claiming due ones

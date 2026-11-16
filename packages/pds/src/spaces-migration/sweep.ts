@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import {
   type BailableWait,
+  DAY,
   MINUTE,
   SECOND,
   bailableWait,
@@ -9,6 +10,7 @@ import type { DidString } from '@atproto/syntax'
 import type { SpacesMigrationConfig } from '../config/config.js'
 import type { AppContext } from '../context.js'
 import { spacesMigrationLogger as log } from '../logger.js'
+import { backoffMs } from './pacing.js'
 import type { SpacesMigrationProgress } from './progress.js'
 
 export type SpacesMigrationSweepState =
@@ -31,6 +33,8 @@ export type SpacesMigrationSweepOptions = Pick<
 export type SweepContext = Pick<AppContext, 'actorStore' | 'cfg'>
 
 const LEASE_MS = MINUTE
+const RETRY_BASE_MS = MINUTE
+const RETRY_CAP_MS = DAY
 
 /**
  * Opens every account's actor store, which migrates it to the latest schema,
@@ -135,8 +139,14 @@ export class SpacesMigrationSweep implements AsyncDisposable {
       await actorStore.ensureKemKeypair(did)
       await progress.recordSwept(did, owner)
     } catch (err) {
-      // The lease expires and the account is tried again
-      log.error({ err, did }, 'failed to sweep actor store')
+      const attempts = (await progress.get(did))?.sweepAttempts ?? 0
+      const nextAttemptAt =
+        Date.now() + backoffMs(attempts, RETRY_BASE_MS, RETRY_CAP_MS)
+      await progress.recordSweepFailure(did, owner, err, nextAttemptAt)
+      log.error(
+        { err, did, attempt: attempts + 1 },
+        'failed to sweep actor store',
+      )
     }
   }
 

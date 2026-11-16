@@ -45,6 +45,13 @@ describe('kem key storage', () => {
     expect(leftovers).toEqual([])
   })
 
+  it('does not create the directory of an account that is gone', async () => {
+    const did = 'did:example:gone'
+    const { directory } = await store.getLocation(did)
+    await expect(store.ensureKemKeypair(did)).rejects.toThrow()
+    await expect(fs.access(directory)).rejects.toThrow()
+  })
+
   it('never overwrites an existing kem key', async () => {
     const did = 'did:example:created'
     const kem = await P256Keypair.create({ exportable: true })

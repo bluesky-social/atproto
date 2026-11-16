@@ -51,12 +51,15 @@ export class ActorStore {
   }
 
   // A DID doc must never name a KEM key we do not hold, so the key file is
-  // written once and never overwritten.
+  // written once and never overwritten. The account's directory must already
+  // exist: this must not leave a key behind for an account that is gone.
   async ensureKemKeypair(did: string): Promise<crypto.P256Keypair> {
     const { directory, kemKeyLocation } = await this.getLocation(did)
     const existing = await loadKemKey(kemKeyLocation)
     if (existing) return existing
-    await mkdir(directory, { recursive: true })
+    if (!(await fileExists(directory))) {
+      throw new Error('Cannot create a kem key: the account has no store')
+    }
     return writeKemKeyNoClobber(
       kemKeyLocation,
       await crypto.P256Keypair.create({ exportable: true }),
