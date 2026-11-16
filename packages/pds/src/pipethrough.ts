@@ -107,6 +107,7 @@ export const proxyHandler = (ctx: AppContext): CatchallHandler => {
         url: origin,
         did,
         serviceId,
+        isConfiguredAppView,
       } = await parseProxyInfo(ctx, req, lxm)
       // Phase 1 of service auth updates: the scope check sees the combined
       // did#serviceId form (so OAuth callers' rpc:?aud=did#service scopes
@@ -156,7 +157,9 @@ export const proxyHandler = (ctx: AppContext): CatchallHandler => {
         headers,
       }
 
-      await pipethroughStream(ctx, req, dispatchOptions, (upstream) => {
+      const agent = proxyAgentFor(ctx, isConfiguredAppView)
+
+      await pipethroughStream(ctx, req, agent, dispatchOptions, (upstream) => {
         res.status(upstream.statusCode)
 
         for (const [name, val] of responseHeaders(upstream.headers)) {
@@ -221,7 +224,11 @@ export async function pipethrough(
 
   const lxm = parseReqNsid(req)
 
-  const { url: origin, did: aud } = await parseProxyInfo(ctx, req, lxm)
+  const {
+    url: origin,
+    did: aud,
+    isConfiguredAppView,
+  } = await parseProxyInfo(ctx, req, lxm)
 
   const dispatchOptions: Dispatcher.RequestOptions = {
     origin,
@@ -255,7 +262,12 @@ export async function pipethrough(
     highWaterMark: 2 * 65536, // twice the default (64KiB)
   }
 
-  const { headers, body } = await pipethroughRequest(ctx, req, dispatchOptions)
+  const { headers, body } = await pipethroughRequest(
+    ctx,
+    req,
+    proxyAgentFor(ctx, isConfiguredAppView),
+    dispatchOptions,
+  )
 
   return {
     encoding: safeString(headers['content-type']) ?? 'application/json',
@@ -305,18 +317,35 @@ export function bareDidFromProxyTo(proxyTo: string): string {
   return hashIndex === -1 ? proxyTo : proxyTo.slice(0, hashIndex)
 }
 
+export type ProxyInfo = {
+  url: string
+  did: string
+  serviceId: string
+  /**
+   * Whether {@link url} is this PDS's configured AppView, which the operator
+   * set, rather than one resolved from a (user controlled) DID document.
+   */
+  isConfiguredAppView: boolean
+}
+
 export async function parseProxyInfo(
   ctx: AppContext,
   req: Request,
   lxm: string,
-): Promise<{ url: string; did: string; serviceId: string }> {
+): Promise<ProxyInfo> {
   // /!\ Hot path
 
   const proxyToHeader = req.header('atproto-proxy')
   if (proxyToHeader) return parseProxyHeader(ctx, proxyToHeader)
 
   const { serviceId, serviceInfo } = defaultService(ctx, lxm)
-  if (serviceInfo) return { ...serviceInfo, serviceId }
+  if (serviceInfo) {
+    return {
+      ...serviceInfo,
+      serviceId,
+      isConfiguredAppView: serviceInfo === ctx.cfg.bskyAppView,
+    }
+  }
 
   throw new InvalidRequestError(`No service configured for ${lxm}`)
 }
@@ -325,7 +354,7 @@ export const parseProxyHeader = async (
   // Using subset of AppContext for testing purposes
   ctx: Pick<AppContext, 'cfg' | 'idResolver'>,
   proxyTo: string,
-): Promise<{ did: string; url: string; serviceId: string }> => {
+): Promise<ProxyInfo> => {
   // /!\ Hot path
 
   const hashIndex = proxyTo.indexOf('#')
@@ -356,7 +385,12 @@ export const parseProxyHeader = async (
     ctx.cfg.bskyAppView &&
     proxyTo === `${ctx.cfg.bskyAppView.did}#bsky_appview`
   ) {
-    return { did, url: ctx.cfg.bskyAppView.url, serviceId }
+    return {
+      did,
+      url: ctx.cfg.bskyAppView.url,
+      serviceId,
+      isConfiguredAppView: true,
+    }
   }
 
   const didDoc = await ctx.idResolver.did.resolve(did)
@@ -369,7 +403,21 @@ export const parseProxyHeader = async (
     throw new InvalidRequestError('could not resolve proxy did service url')
   }
 
-  return { did, url, serviceId }
+  return { did, url, serviceId, isConfiguredAppView: false }
+}
+
+/**
+ * Only the configured AppView skips SSRF protection. Every other target,
+ * including any URL resolved from a DID document, goes through the protected
+ * {@link AppContext.proxyAgent}.
+ */
+function proxyAgentFor(
+  ctx: AppContext,
+  isConfiguredAppView: boolean,
+): Dispatcher {
+  return isConfiguredAppView && ctx.appViewProxyAgent
+    ? ctx.appViewProxyAgent
+    : ctx.proxyAgent
 }
 
 /**
@@ -381,11 +429,12 @@ export const parseProxyHeader = async (
 async function pipethroughStream(
   ctx: AppContext,
   req: Request,
+  agent: Dispatcher,
   dispatchOptions: Dispatcher.RequestOptions,
   successStreamFactory: Dispatcher.StreamFactory,
 ): Promise<void> {
   return new Promise<void>((resolve, reject) => {
-    void ctx.proxyAgent
+    void agent
       .stream(dispatchOptions, (upstream) => {
         if (upstream.statusCode >= 400) {
           const passThrough = new PassThrough()
@@ -433,12 +482,13 @@ async function pipethroughStream(
 async function pipethroughRequest(
   ctx: AppContext,
   req: Request,
+  agent: Dispatcher,
   dispatchOptions: Dispatcher.RequestOptions,
 ) {
   // HandlerPipeThroughStream requires a readable stream to be returned, so we
   // use the (less efficient) request() function instead.
 
-  const upstream = await ctx.proxyAgent
+  const upstream = await agent
     .request(dispatchOptions)
     .catch(handleUpstreamRequestError.bind(req))
 

@@ -81,6 +81,7 @@ export type AppContextOptions = {
   entrywayClient?: Client
   entrywayAdminClient?: Client
   proxyAgent: undici.Dispatcher
+  appViewProxyAgent?: undici.Dispatcher
   safeFetch: Fetch
   oauthProvider?: OAuthProvider
   authVerifier: AuthVerifier
@@ -108,6 +109,7 @@ export class AppContext implements AsyncDisposable {
   public entrywayClient: Client | undefined
   public entrywayAdminClient: Client | undefined
   public proxyAgent: undici.Dispatcher
+  public appViewProxyAgent: undici.Dispatcher | undefined
   public safeFetch: Fetch
   public authVerifier: AuthVerifier
   public oauthProvider?: OAuthProvider
@@ -134,6 +136,7 @@ export class AppContext implements AsyncDisposable {
     this.entrywayClient = opts.entrywayClient
     this.entrywayAdminClient = opts.entrywayAdminClient
     this.proxyAgent = opts.proxyAgent
+    this.appViewProxyAgent = opts.appViewProxyAgent
     this.safeFetch = opts.safeFetch
     this.authVerifier = opts.authVerifier
     this.oauthProvider = opts.oauthProvider
@@ -446,6 +449,11 @@ export class AppContext implements AsyncDisposable {
 
     // An agent for performing HTTP requests based on user provided URLs.
     const proxyAgent = buildProxyAgent(cfg.proxy)
+    // The operator sets the AppView's URL, so unlike a DID document's service
+    // endpoint, it is allowed to resolve to a private address.
+    const appViewProxyAgent = cfg.bskyAppView
+      ? buildProxyAgent({ ...cfg.proxy, disableSsrfProtection: true })
+      : undefined
 
     const oauthProvider = cfg.oauth.provider
       ? new OAuthProvider({
@@ -628,6 +636,7 @@ export class AppContext implements AsyncDisposable {
       entrywayClient,
       entrywayAdminClient,
       proxyAgent,
+      appViewProxyAgent,
       safeFetch,
       authVerifier,
       oauthProvider,
@@ -718,7 +727,11 @@ export class AppContext implements AsyncDisposable {
             try {
               await this.proxyAgent.destroy()
             } finally {
-              await this.blobstore[Symbol.asyncDispose]()
+              try {
+                await this.appViewProxyAgent?.destroy()
+              } finally {
+                await this.blobstore[Symbol.asyncDispose]()
+              }
             }
           }
         }

@@ -1,3 +1,5 @@
+import { once } from 'node:events'
+import { type AddressInfo, type Server, createServer } from 'node:net'
 import { ComAtprotoModerationDefs } from '@atproto/api'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
 import { startServer } from './_util.js'
@@ -191,6 +193,161 @@ describe('ssrf protection on did-resolved service endpoints', () => {
       expect(upstreamRequests).toEqual([
         'POST /xrpc/com.atproto.moderation.createReport',
       ])
+    })
+  })
+})
+
+// The proxy reaches the configured AppView through its own agent, without SSRF
+// protection, because the operator sets that URL. Every other proxy target,
+// including a DID document's service endpoint, goes through ctx.proxyAgent.
+describe('ssrf protection on proxied requests', () => {
+  const appViewDid = 'did:example:appview'
+
+  let appView: AsyncDisposable & { port: number }
+  let appViewRequests: string[]
+
+  // A DID document's service endpoint on a private address. It is https so
+  // that only the address check, not the protocol check, can refuse it. It
+  // counts connections rather than requests because a request that got
+  // through would fail the TLS handshake before any HTTP was parsed.
+  let privateTarget: Server
+  let privateTargetConnections: number
+
+  beforeAll(async () => {
+    appView = await startServer((req, res) => {
+      appViewRequests.push(`${req.method} ${req.url}`)
+      res.writeHead(200, { 'content-type': 'application/json' })
+      res.end('{}')
+    })
+
+    privateTarget = createServer((socket) => {
+      privateTargetConnections++
+      socket.destroy()
+    }).listen(0, '127.0.0.1')
+    await once(privateTarget, 'listening')
+  })
+
+  beforeEach(() => {
+    appViewRequests = []
+    privateTargetConnections = 0
+  })
+
+  afterAll(async () => {
+    await appView?.[Symbol.asyncDispose]()
+    privateTarget?.close()
+  })
+
+  const setup = async (disableSsrfProtection: boolean) => {
+    const network = await TestNetworkNoAppView.create({
+      pds: {
+        disableSsrfProtection,
+        bskyAppViewUrl: `http://localhost:${appView.port}`,
+        bskyAppViewDid: appViewDid,
+      },
+    })
+    const sc = network.getSeedClient()
+    await sc.createAccount('alice', {
+      handle: 'alice.test',
+      email: 'alice@test.com',
+      password: 'alice-pass',
+    })
+    await sc.createAccount('proxysvc', {
+      handle: 'proxysvc.test',
+      email: 'proxysvc@test.com',
+      password: 'proxysvc-pass',
+    })
+
+    const alice = sc.dids.alice
+    const serviceDid = sc.dids.proxysvc
+    const { port } = privateTarget.address() as AddressInfo
+    await network.plc
+      .getClient()
+      .updateData(serviceDid, network.pds.ctx.plcRotationKey, (x) => {
+        x.services['atproto_test'] = {
+          type: 'AtprotoTest',
+          endpoint: `https://127.0.0.1:${port}`,
+        }
+        return x
+      })
+    const serviceDoc = await network.plc.getClient().getDocument(serviceDid)
+    await network.pds.ctx.idResolver.did.cache?.cacheDid(serviceDid, serviceDoc)
+
+    const headers = sc.getHeaders(alice)
+    const get = async (path: string, proxyTo?: string) => {
+      const res = await fetch(`${network.pds.url}${path}`, {
+        headers: proxyTo ? { ...headers, 'atproto-proxy': proxyTo } : headers,
+      })
+      await res.arrayBuffer()
+      return res.status
+    }
+
+    return {
+      network,
+      // Handled by the catchall proxyHandler.
+      catchall: (proxyTo?: string) => get('/xrpc/com.example.ok', proxyTo),
+      // Handled by a route that calls pipethrough().
+      getProfile: (proxyTo?: string) =>
+        get(`/xrpc/app.bsky.actor.getProfile?actor=${alice}`, proxyTo),
+      alice,
+      serviceProxyTo: `${serviceDid}#atproto_test`,
+    }
+  }
+
+  describe('with ssrf protection enabled', () => {
+    let ctx: Awaited<ReturnType<typeof setup>>
+
+    beforeAll(async () => {
+      ctx = await setup(false)
+    })
+
+    afterAll(async () => {
+      await ctx?.network.close()
+    })
+
+    it('proxies to the configured AppView at a private address.', async () => {
+      expect(await ctx.catchall()).toBe(200)
+      expect(await ctx.getProfile()).toBe(200)
+      expect(appViewRequests).toEqual([
+        'GET /xrpc/com.example.ok',
+        `GET /xrpc/app.bsky.actor.getProfile?actor=${ctx.alice}`,
+      ])
+    })
+
+    it('proxies to the configured AppView named by the atproto-proxy header.', async () => {
+      const proxyTo = `${appViewDid}#bsky_appview`
+      expect(await ctx.catchall(proxyTo)).toBe(200)
+      expect(await ctx.getProfile(proxyTo)).toBe(200)
+      expect(appViewRequests).toEqual([
+        'GET /xrpc/com.example.ok',
+        `GET /xrpc/app.bsky.actor.getProfile?actor=${ctx.alice}`,
+      ])
+    })
+
+    it('refuses to proxy to a DID document endpoint at a private address.', async () => {
+      expect(await ctx.catchall(ctx.serviceProxyTo)).toBe(502)
+      expect(await ctx.getProfile(ctx.serviceProxyTo)).toBe(502)
+      expect(privateTargetConnections).toBe(0)
+    })
+  })
+
+  // Differential control, as above: the same DID document endpoint is reached
+  // once the guard is off, so the refusal above is the guard's doing.
+  describe('with ssrf protection disabled', () => {
+    let ctx: Awaited<ReturnType<typeof setup>>
+
+    beforeAll(async () => {
+      ctx = await setup(true)
+    })
+
+    afterAll(async () => {
+      await ctx?.network.close()
+    })
+
+    it('connects to a DID document endpoint at a private address.', async () => {
+      await ctx.catchall(ctx.serviceProxyTo)
+      expect(privateTargetConnections).toBe(1)
+      await ctx.getProfile(ctx.serviceProxyTo)
+      expect(privateTargetConnections).toBe(2)
     })
   })
 })
