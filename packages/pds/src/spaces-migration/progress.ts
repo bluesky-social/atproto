@@ -1,5 +1,5 @@
 import type { Selectable, UpdateObject } from 'kysely'
-import type { DidString } from '@atproto/syntax'
+import { type DidString, currentDatetimeString } from '@atproto/syntax'
 import type {
   AccountDb,
   DatabaseSchema,
@@ -33,7 +33,7 @@ export async function registerSpacesMigration(
   did: DidString,
   opts: { kemPublished?: boolean },
 ): Promise<void> {
-  const now = new Date().toISOString()
+  const now = currentDatetimeString()
   // A new store is created at the latest schema
   const values = {
     storeMigratedAt: now,
@@ -195,7 +195,7 @@ export class SpacesMigrationProgress {
       this.db.db
         .updateTable('spaces_migration')
         .set({
-          storeMigratedAt: new Date().toISOString(),
+          storeMigratedAt: currentDatetimeString(),
           sweepLeaseOwner: null,
           sweepLeaseExpiresAt: 0,
           sweepAttempts: 0,
@@ -278,7 +278,7 @@ export class SpacesMigrationProgress {
 
   async recordPublished(did: DidString, owner: string): Promise<void> {
     await this.updateLeased(did, owner, {
-      kemPublishedAt: new Date().toISOString(),
+      kemPublishedAt: currentDatetimeString(),
       unpublishableReason: null,
       attempts: 0,
       lastError: null,
@@ -335,7 +335,7 @@ export class SpacesMigrationProgress {
   ): Promise<void> {
     const values = check.published
       ? {
-          kemPublishedAt: new Date().toISOString(),
+          kemPublishedAt: currentDatetimeString(),
           unpublishableReason: check.unpublishableReason,
         }
       : {

@@ -3,7 +3,7 @@ import { jest } from '@jest/globals'
 import SqliteDB from 'better-sqlite3'
 import { wait } from '@atproto/common'
 import { TestPds, TestPlc } from '@atproto/dev-env'
-import type { DidString } from '@atproto/syntax'
+import { type DidString, currentDatetimeString } from '@atproto/syntax'
 import type { AccountDb } from '../src/account-manager/db/index.js'
 import type { AppContext } from '../src/context.js'
 import { SpacesMigrationProgress } from '../src/spaces-migration/progress.js'
@@ -253,7 +253,7 @@ describe('spaces migration sweep', () => {
     // leave nothing behind for other tests
     await db.db
       .updateTable('spaces_migration')
-      .set({ storeMigratedAt: new Date().toISOString() })
+      .set({ storeMigratedAt: currentDatetimeString() })
       .where('did', '=', did)
       .execute()
   })
