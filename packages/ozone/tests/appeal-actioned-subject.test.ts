@@ -618,10 +618,20 @@ describe('appealActionedSubject', () => {
           status: 'queued',
         })
         const report = await latestAppealReport(did)
-        expect(await activities(report.id)).toEqual([])
+        const history = await activities(report.id)
+        expect(history).toHaveLength(1)
+        expect(history[0]).toMatchObject({
+          activity: {
+            $type: tools.ozone.report.defs.queueActivity.$type,
+            previousStatus: 'open',
+          },
+          meta: { fromQueueId: null, toQueueId: sourceQueue.id },
+          isAutomated: true,
+          createdBy: network.ozone.ctx.cfg.service.did,
+        })
         await router.routeReports()
         expect((await latestAppealReport(did)).queueId).toBe(sourceQueue.id)
-        expect(await activities(report.id)).toEqual([])
+        expect(await activities(report.id)).toEqual(history)
       },
     )
 
@@ -646,7 +656,9 @@ describe('appealActionedSubject', () => {
           status: 'queued',
           actionEventIds: null,
         })
-        expect(await activities((await latestAppealReport(did)).id)).toEqual([])
+        expect(
+          await activities((await latestAppealReport(did)).id),
+        ).toHaveLength(1)
       },
     )
 
@@ -689,7 +701,7 @@ describe('appealActionedSubject', () => {
         const report = await latestAppealReport(did)
         const history = await activities(report.id)
         if (affectedTagged) {
-          expect(history).toHaveLength(1)
+          expect(history).toHaveLength(2)
           expect(history[0]).toMatchObject({
             activity: { $type: tools.ozone.report.defs.noteActivity.$type },
             internalNote: `Automatically routed to queue "${reporting.name}" (ID ${reporting.id}). Matched reporterTags: ["${reporterTag}"].`,
@@ -700,7 +712,7 @@ describe('appealActionedSubject', () => {
           await network.ozone.daemon.ctx.queueRouter.routeReports()
           expect(await activities(report.id)).toEqual(history)
         } else {
-          expect(history).toEqual([])
+          expect(history).toHaveLength(1)
         }
       },
     )
@@ -727,7 +739,7 @@ describe('appealActionedSubject', () => {
         const report = await latestAppealReport(did)
         expect(report.queueId).toBe(matches ? tagged.id : ordinary.id)
         const history = await activities(report.id)
-        expect(history).toHaveLength(matches ? 1 : 0)
+        expect(history).toHaveLength(matches ? 2 : 1)
         if (matches) {
           expect(history[0].internalNote).toBe(
             `Automatically routed to queue "${tagged.name}" (ID ${tagged.id}). Matched accountTags: ["${accountTag}"].`,

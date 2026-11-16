@@ -134,7 +134,7 @@ describe('tag-based queue routing', () => {
     return data.activities
   }
 
-  function failRoutingNoteInsert() {
+  function failRoutingActivityInsert() {
     const originalQuery = pg.Client.prototype.query
     return jest
       .spyOn(pg.Client.prototype, 'query')
@@ -143,7 +143,7 @@ describe('tag-based queue routing', () => {
           typeof args[0] === 'string' &&
           args[0].startsWith('insert into "report_activity"')
         ) {
-          return Promise.reject(new Error('routing note write failed'))
+          return Promise.reject(new Error('routing activity write failed'))
         }
         return Reflect.apply(originalQuery, this, args)
       })
@@ -206,7 +206,7 @@ describe('tag-based queue routing', () => {
       expect(routed.reportedBy).toBe(sc.dids.alice)
       expect(routed.priorityScore).toBeUndefined()
       const history = await activities(routed.id)
-      expect(history).toHaveLength(1)
+      expect(history).toHaveLength(2)
       expect(history[0]).toMatchObject({
         activity: { $type: tools.ozone.report.defs.noteActivity.$type },
         internalNote: `Automatically routed to queue "${queue.name}" (ID ${queue.id}). Matched reporterTags: ["${reporterTag}"].`,
@@ -214,6 +214,36 @@ describe('tag-based queue routing', () => {
         createdBy: network.ozone.ctx.cfg.service.did,
       })
       expect(history[0].publicNote).toBeUndefined()
+      expect(history[1]).toMatchObject({
+        reportId: routed.id,
+        activity: {
+          $type: tools.ozone.report.defs.queueActivity.$type,
+          previousStatus: 'open',
+        },
+        meta: { fromQueueId: null, toQueueId: queue.id },
+        isAutomated: true,
+        createdBy: network.ozone.ctx.cfg.service.did,
+      })
+      const { data: page } = await agent.tools.ozone.report.queryActivities(
+        {
+          activityTypes: ['queueActivity'],
+          createdAfter: history[1].createdAt,
+          sortDirection: 'asc',
+        },
+        { headers: await headers(tools.ozone.report.queryActivities.$lxm) },
+      )
+      expect(page.activities).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            id: history[1].id,
+            report: expect.objectContaining({
+              id: routed.id,
+              eventId: event.id,
+              queue: expect.objectContaining({ id: queue.id }),
+            }),
+          }),
+        ]),
+      )
     },
   )
 
@@ -227,7 +257,7 @@ describe('tag-based queue routing', () => {
       const routed = await getReport(event.id)
       expect(routed.queue?.id).toBe(queue.id)
       const history = await activities(routed.id)
-      expect(history).toHaveLength(1)
+      expect(history).toHaveLength(2)
       expect(history[0].internalNote).toBe(
         `Automatically routed to queue "${queue.name}" (ID ${queue.id}). Matched accountTags: ["${accountTag}"].`,
       )
@@ -271,7 +301,7 @@ describe('tag-based queue routing', () => {
             await network.ozone.daemon.ctx.queueRouter.routeReports()
             const routed = await getReport(event.id)
             expect(routed.queue?.id).toBe(tagged.id)
-            expect(await activities(routed.id)).toHaveLength(1)
+            expect(await activities(routed.id)).toHaveLength(2)
 
             await unassign(routed.id)
             expect(await routeExisting(routed.id)).toEqual({
@@ -309,7 +339,7 @@ describe('tag-based queue routing', () => {
       const routed = await getReport(event.id, invalid ? 'open' : 'queued')
       expect(routed.queue?.id).toBe(invalid ? undefined : explicit.id)
       expect(routed.isAutomated).toBe(true)
-      expect(await activities(routed.id)).toEqual([])
+      expect(await activities(routed.id)).toHaveLength(invalid ? 0 : 1)
     },
   )
 
@@ -328,7 +358,7 @@ describe('tag-based queue routing', () => {
     const routed = await getReport(second.id)
     expect(routed.queue?.id).toBe(queue.id)
     const history = await activities(routed.id)
-    expect(history).toHaveLength(1)
+    expect(history).toHaveLength(2)
     expect(history[0].internalNote).toBe(
       `Automatically routed to queue "${queue.name}" (ID ${queue.id}). Matched reporterTags: ["${reporterTag}"]; accountTags: ["${accountTag}"].`,
     )
@@ -391,7 +421,7 @@ describe('tag-based queue routing', () => {
       const routed = await getReport(event.id)
       expect(routed.queue?.id).toBe(queue.id)
       expect(routed.queue?.reportTypes).toEqual(reportTypes)
-      expect(await activities(routed.id)).toEqual([])
+      expect(await activities(routed.id)).toHaveLength(1)
       await unassign(routed.id)
       expect(await routeExisting(routed.id)).toEqual({
         assigned: 1,
@@ -615,7 +645,15 @@ describe('tag-based queue routing', () => {
     expect(routed.queue?.id).toBe(queue.id)
     expect(routed.status).toBe('escalated')
     const history = await activities(routed.id)
-    expect(history).toHaveLength(1)
+    expect(history).toHaveLength(3)
+    expect(history[1]).toMatchObject({
+      activity: {
+        $type: tools.ozone.report.defs.queueActivity.$type,
+        previousStatus: 'escalated',
+      },
+      meta: { fromQueueId: -1, toQueueId: queue.id },
+      isAutomated: true,
+    })
     expect(history[0]).toMatchObject({
       activity: { $type: tools.ozone.report.defs.noteActivity.$type },
       internalNote: `Automatically routed to queue "${queue.name}" (ID ${queue.id}). Matched reporterTags: ["${reporterTag}"].`,
@@ -626,6 +664,7 @@ describe('tag-based queue routing', () => {
     const event = await report()
     await network.ozone.daemon.ctx.queueRouter.routeReports()
     const original = await getReport(event.id)
+    const history = await activities(original.id)
     await createQueue({ reporterTags: [reporterTag] })
     await tagAccount(sc.dids.alice, [reporterTag])
     expect(await routeExisting(original.id)).toEqual({
@@ -638,7 +677,8 @@ describe('tag-based queue routing', () => {
         .insertReportsFromEvents({ cursor: event.id - 1, limit: 1 })
     })
     expect((await getReport(event.id)).queue?.id).toBe(ordinaryQueueId)
-    expect(await activities(original.id)).toHaveLength(0)
+    expect(await activities(original.id)).toEqual(history)
+    expect(history).toHaveLength(1)
   })
 
   it('preserves the routing note after tag removal, queue rename, replay, and legacy-owner repair', async () => {
@@ -648,7 +688,7 @@ describe('tag-based queue routing', () => {
     await network.ozone.daemon.ctx.queueRouter.routeReports()
     const original = await getReport(event.id)
     const history = await activities(original.id)
-    expect(history).toHaveLength(1)
+    expect(history).toHaveLength(2)
     expect(history[0].internalNote).toContain(`"${queue.name}"`)
     expect(history[0].internalNote).toContain(reporterTag)
     await network.ozone.ctx.db.transaction((txn) =>
@@ -696,7 +736,7 @@ describe('tag-based queue routing', () => {
     await network.ozone.daemon.ctx.queueRouter.routeReports()
     const routed = await getReport(event.id)
     const history = await activities(routed.id)
-    expect(history).toHaveLength(1)
+    expect(history).toHaveLength(2)
     expect(history[0].internalNote).toContain(accountTag)
     // @NOTE Move the expiry deadline without sleeping; removal still uses the real worker.
     await network.ozone.ctx.db.db
@@ -720,7 +760,7 @@ describe('tag-based queue routing', () => {
     const original = await getReport(event.id)
     await unassign(original.id, 'Existing review context.')
     const history = await activities(original.id)
-    expect(history).toHaveLength(1)
+    expect(history).toHaveLength(2)
     expect(history[0]).toMatchObject({
       activity: {
         $type: tools.ozone.report.defs.queueActivity.$type,
@@ -741,8 +781,8 @@ describe('tag-based queue routing', () => {
     expect(results.map((result) => result.assigned).sort()).toEqual([0, 1])
     expect((await getReport(event.id)).queue?.id).toBe(queue.id)
     const updated = await activities(original.id)
-    expect(updated).toHaveLength(2)
-    expect(updated[1]).toEqual(history[0])
+    expect(updated).toHaveLength(4)
+    expect(updated.slice(2)).toEqual(history)
     expect(updated[0]).toMatchObject({
       activity: { $type: tools.ozone.report.defs.noteActivity.$type },
       internalNote: `Automatically routed to queue "${queue.name}" (ID ${queue.id}). Matched reporterTags: ["${reporterTag}"].`,
@@ -752,7 +792,7 @@ describe('tag-based queue routing', () => {
     expect(await activities(original.id)).toEqual(updated)
   })
 
-  it('records one note when concurrent ingestion routes the same event', async () => {
+  it('records one queue activity and one note when concurrent ingestion routes the same event', async () => {
     await createQueue({ reporterTags: [reporterTag] })
     await tagAccount(sc.dids.alice, [reporterTag])
     const event = await report()
@@ -763,19 +803,19 @@ describe('tag-based queue routing', () => {
           .insertReportsFromEvents({ cursor: event.id - 1, limit: 1 }),
       )
     await Promise.all([insertReport(), insertReport()])
-    expect(await activities((await getReport(event.id)).id)).toHaveLength(1)
+    expect(await activities((await getReport(event.id)).id)).toHaveLength(2)
   })
 
-  it('rolls back report insertion and the cursor when the routing note cannot be written', async () => {
+  it('rolls back report insertion and the cursor when the routing activity cannot be written', async () => {
     const queue = await createQueue({ reporterTags: [reporterTag] })
     await tagAccount(sc.dids.alice, [reporterTag])
     const event = await report()
     const router = network.ozone.daemon.ctx.queueRouter
     const cursor = await router.getCursor()
     {
-      using queries = failRoutingNoteInsert()
+      using queries = failRoutingActivityInsert()
       await expect(router.routeReports()).rejects.toThrow(
-        'routing note write failed',
+        'routing activity write failed',
       )
       expect(queries).toHaveBeenCalled()
     }
@@ -788,10 +828,10 @@ describe('tag-based queue routing', () => {
     await router.routeReports()
     const routed = await getReport(event.id)
     expect(routed.queue?.id).toBe(queue.id)
-    expect(await activities(routed.id)).toHaveLength(1)
+    expect(await activities(routed.id)).toHaveLength(2)
   })
 
-  it('rolls back rerouting when its internal note cannot be written', async () => {
+  it('rolls back rerouting when its routing activity cannot be written', async () => {
     const event = await report()
     await network.ozone.daemon.ctx.queueRouter.routeReports()
     const original = await getReport(event.id)
@@ -801,7 +841,7 @@ describe('tag-based queue routing', () => {
     const queue = await createQueue({ accountTags: [accountTag] })
     await tagAccount(sc.dids.bob, [accountTag])
     {
-      using queries = failRoutingNoteInsert()
+      using queries = failRoutingActivityInsert()
       await expect(routeExisting(original.id)).rejects.toThrow()
       expect(queries).toHaveBeenCalled()
     }
@@ -809,7 +849,7 @@ describe('tag-based queue routing', () => {
     expect(await activities(original.id)).toEqual(history)
     await routeExisting(original.id)
     expect((await getReport(event.id)).queue?.id).toBe(queue.id)
-    expect(await activities(original.id)).toHaveLength(history.length + 1)
+    expect(await activities(original.id)).toHaveLength(history.length + 2)
   })
 
   it('uses queue ID across tag roles ahead of an older ordinary queue regardless of input order', async () => {
@@ -854,7 +894,7 @@ describe('tag-based queue routing', () => {
           typeof text === 'string' &&
           text.startsWith('insert into "report_activity"'),
       ),
-    ).toHaveLength(1)
+    ).toHaveLength(2)
     expect(lookups[0][1]).toEqual(
       expect.arrayContaining([sc.dids.alice, sc.dids.bob]),
     )

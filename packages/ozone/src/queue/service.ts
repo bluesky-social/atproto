@@ -192,13 +192,57 @@ export class QueueService {
       )
       .returning('id')
       .executeTakeFirstOrThrow()
+    const activityCreatedAt = currentDatetimeString()
+    if (queueId > 0) {
+      await this.insertQueueActivities(
+        [
+          {
+            reportId: inserted.id,
+            fromQueueId: null,
+            toQueueId: queueId,
+            previousStatus: 'open',
+          },
+        ],
+        activityCreatedAt,
+      )
+    }
     if (routingNote) {
       await this.insertRoutingNotes(
         [{ reportId: inserted.id, internalNote: routingNote }],
-        event.createdAt,
+        activityCreatedAt,
       )
     }
     return inserted.id
+  }
+
+  private async insertQueueActivities(
+    assignments: {
+      reportId: number
+      fromQueueId: number | null
+      toQueueId: number
+      previousStatus: string
+    }[],
+    createdAt: DatetimeString,
+    createdBy = this.serviceDid,
+  ): Promise<void> {
+    this.db.assertTransaction()
+    if (!assignments.length) return
+    await this.db.db
+      .insertInto('report_activity')
+      .values(
+        assignments.map(({ reportId, previousStatus, ...meta }) => ({
+          reportId,
+          activityType: 'queueActivity',
+          previousStatus,
+          internalNote: null,
+          publicNote: null,
+          meta,
+          isAutomated: true,
+          createdBy,
+          createdAt,
+        })),
+      )
+      .execute()
   }
 
   /**
@@ -636,6 +680,7 @@ export class QueueService {
         .select([
           'r.id',
           'r.status',
+          'r.queueId',
           'r.reportType',
           'r.did',
           'r.reporterDid',
@@ -696,7 +741,8 @@ export class QueueService {
         id: number
         queueId: number
         nextStatus: string | null
-        activity: { activityType: string; previousStatus: string } | null
+        fromQueueId: number | null
+        previousStatus: string
         routingNote?: string
       }
 
@@ -732,16 +778,15 @@ export class QueueService {
         )
 
         if (assignment.queueId !== -1) {
-          // Existing-row UPDATE path uses handleReportUpdate so that already
-          // escalated/closed/etc. reports keep their status — only open → queued
-          // transitions emit a status change and an activity row.
+          // Routing preserves review state for reports already under review.
           const result = handleReportUpdate(report.status, { type: 'queue' })
           const group = matchedByQueue.get(assignment.queueId) ?? []
           group.push({
             id: report.id,
             queueId: assignment.queueId,
             nextStatus: result.nextStatus,
-            activity: result.activity,
+            fromQueueId: report.queueId,
+            previousStatus: report.status,
             routingNote: assignment.routingNote,
           })
           matchedByQueue.set(assignment.queueId, group)
@@ -799,30 +844,16 @@ export class QueueService {
           .execute()
       }
 
-      // Bulk INSERT activities for matched reports that changed status.
-      if (opts?.serviceDid) {
-        const withActivities = [...matchedByQueue.values()]
-          .flat()
-          .filter((r) => r.activity !== null)
-        if (withActivities.length) {
-          await dbTxn.db
-            .insertInto('report_activity')
-            .values(
-              withActivities.map((r) => ({
-                reportId: r.id,
-                activityType: r.activity!.activityType,
-                previousStatus: r.activity!.previousStatus,
-                internalNote: null,
-                publicNote: null,
-                meta: null,
-                isAutomated: true,
-                createdBy: opts.serviceDid!,
-                createdAt: now,
-              })),
-            )
-            .execute()
-        }
-      }
+      await queueService.insertQueueActivities(
+        [...matchedByQueue.values()].flat().map((report) => ({
+          reportId: report.id,
+          fromQueueId: report.fromQueueId,
+          toQueueId: report.queueId,
+          previousStatus: report.previousStatus,
+        })),
+        now,
+        opts?.serviceDid,
+      )
 
       await queueService.insertRoutingNotes(
         [...matchedByQueue.values()]
@@ -964,7 +995,7 @@ export class QueueService {
       .insertInto('report')
       .values(rows)
       .onConflict((oc) => oc.column('eventId').doNothing())
-      .returning(['id', 'eventId'])
+      .returning(['id', 'eventId', 'queueId'])
       .execute()
 
     // @NOTE Keep repairs separate so only new reports receive routing notes.
@@ -982,6 +1013,22 @@ export class QueueService {
         .where('report.reporterDid', 'is', null)
         .execute()
     }
+
+    await this.insertQueueActivities(
+      inserted.flatMap((report) =>
+        report.queueId !== null && report.queueId > 0
+          ? [
+              {
+                reportId: report.id,
+                fromQueueId: null,
+                toQueueId: report.queueId,
+                previousStatus: 'open',
+              },
+            ]
+          : [],
+      ),
+      now,
+    )
 
     await this.insertRoutingNotes(
       inserted.flatMap((report) => {
