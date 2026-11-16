@@ -620,6 +620,7 @@ export class AuthVerifier {
         did: payload.iss.split('#')[0],
         lxm: payload.lxm,
         method: parseReqNsid(reqCtx.req),
+        modService: this.isModService(payload.iss),
       })
     }
     if (
