@@ -46,6 +46,7 @@ export type CreateActivityParams = {
   isAutomated?: boolean
   createdBy: DidString
   inboxStartAt?: DatetimeString
+  inboxPushEnabled?: boolean
 }
 
 export async function createReportActivity(
@@ -171,6 +172,7 @@ export async function createReportActivity(
         },
       ],
       params.inboxStartAt,
+      params.inboxPushEnabled,
     )
 
     return activity
