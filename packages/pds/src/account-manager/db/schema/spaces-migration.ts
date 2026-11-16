@@ -1,11 +1,11 @@
 import type { Generated } from 'kysely'
-import type { DidString } from '@atproto/syntax'
+import type { DatetimeString, DidString } from '@atproto/syntax'
 
 // One row per account, recording facts about its migration into spaces
 export interface SpacesMigration {
   did: DidString
-  storeMigratedAt: string | null
-  kemPublishedAt: string | null
+  storeMigratedAt: DatetimeString | null
+  kemPublishedAt: DatetimeString | null
   unpublishableReason: string | null
   attempts: Generated<number>
   lastError: string | null

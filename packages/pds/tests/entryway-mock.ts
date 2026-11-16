@@ -9,6 +9,7 @@ import { AtpAgent } from '@atproto/api'
 import { getVerificationMaterial } from '@atproto/common'
 import { type Secp256k1Keypair, randomStr } from '@atproto/crypto'
 import { IdResolver, getDidKeyFromMultibase } from '@atproto/identity'
+import { Client } from '@atproto/lex'
 import type { DidString, HandleString } from '@atproto/syntax'
 import {
   AuthRequiredError,
@@ -20,7 +21,8 @@ import {
   bearerTokenFromReq,
   createPublicKeyObject,
 } from '../src/auth-verifier.js'
-import { com } from '../src/lexicons/index.js'
+import { com, internal } from '../src/lexicons/index.js'
+import { createPlcOp } from '../src/util/plc.js'
 
 interface Account {
   did: DidString
@@ -47,16 +49,27 @@ export class MockEntryway {
   public serviceDid: string
   public plcRotationKey: Secp256k1Keypair
   public idResolver: IdResolver
+  /** Whether new accounts' genesis ops name a KEM key reserved on the PDS. */
+  get includeKemKey(): boolean {
+    return this.settings.includeKemKey
+  }
+  set includeKemKey(include: boolean) {
+    this.settings.includeKemKey = include
+  }
 
   protected server: http.Server
   protected terminator: HttpTerminator
   protected accounts = new Map<string, Account>()
+  protected plcClient: plcLib.Client
+  protected pdsClient: Client
+  protected adminPassword: string
 
   private constructor(
     server: http.Server,
     terminator: HttpTerminator,
     idResolver: IdResolver,
     opts: MockEntrywayOpts,
+    protected settings: { includeKemKey: boolean },
   ) {
     this.server = server
     this.terminator = terminator
@@ -64,6 +77,9 @@ export class MockEntryway {
     this.serviceDid = opts.serviceDid
     this.plcRotationKey = opts.plcRotationKey
     this.idResolver = idResolver
+    this.plcClient = new plcLib.Client(opts.plcUrl)
+    this.pdsClient = new Client({ service: opts.pdsUrl })
+    this.adminPassword = opts.adminPassword
   }
 
   static async create(opts: MockEntrywayOpts): Promise<MockEntryway> {
@@ -85,6 +101,7 @@ export class MockEntryway {
 
     const plcClient = new plcLib.Client(opts.plcUrl)
     const pdsAgent = new AtpAgent({ service: opts.pdsUrl })
+    const pdsClient = new Client({ service: opts.pdsUrl })
     const idResolver = new IdResolver({
       plcUrl: opts.plcUrl,
       fetch: globalThis.fetch,
@@ -190,6 +207,7 @@ export class MockEntryway {
       return serviceAuth({ req })
     }
 
+    const settings = { includeKemKey: true }
     const server = createServer()
 
     server.add(com.atproto.server.createAccount, {
@@ -201,14 +219,24 @@ export class MockEntryway {
           data: { signingKey },
         } = await pdsAgent.com.atproto.server.reserveSigningKey({})
 
-        // Create PLC operation
-        const plcCreate = await plcLib.createOp({
-          signingKey,
-          rotationKeys: [opts.plcRotationKey.did()],
-          handle,
-          pds: opts.pdsUrl,
-          signer: opts.plcRotationKey,
-        })
+        // Create PLC operation, publishing a KEM key reserved on the PDS
+        const plcCreate = settings.includeKemKey
+          ? await createPlcOp({
+              signingKey,
+              kemKey: (await pdsClient.call(internal.pds.reserveKemKey, {}))
+                .kemKey,
+              rotationKeys: [opts.plcRotationKey.did()],
+              handle,
+              pds: opts.pdsUrl,
+              signer: opts.plcRotationKey,
+            })
+          : await plcLib.createOp({
+              signingKey,
+              rotationKeys: [opts.plcRotationKey.did()],
+              handle,
+              pds: opts.pdsUrl,
+              signer: opts.plcRotationKey,
+            })
 
         // Create account on PDS (no auth needed — userServiceAuthOptional)
         await pdsAgent.com.atproto.server.createAccount({
@@ -299,13 +327,10 @@ export class MockEntryway {
         }
 
         // Notify PDS via admin endpoint
-        const adminAuth = Buffer.from(`admin:${opts.adminPassword}`).toString(
-          'base64',
-        )
         await pdsAgent.com.atproto.admin.updateAccountHandle(
           { did: targetDid, handle: newHandle },
           {
-            headers: { authorization: `Basic ${adminAuth}` },
+            headers: adminHeaders(opts.adminPassword),
             encoding: 'application/json',
           },
         )
@@ -327,10 +352,48 @@ export class MockEntryway {
     const httpServer = server.listen(opts.port)
     const terminator = createHttpTerminator({ server: httpServer })
 
-    const instance = new MockEntryway(httpServer, terminator, idResolver, opts)
+    const instance = new MockEntryway(
+      httpServer,
+      terminator,
+      idResolver,
+      opts,
+      settings,
+    )
     instance.accounts = accounts
 
     return instance
+  }
+
+  adminHeaders() {
+    return adminHeaders(this.adminPassword)
+  }
+
+  async prepareSpacesMigration(did: DidString): Promise<string> {
+    const { kemKey } = await this.pdsClient.call(
+      internal.pds.prepareSpacesMigration,
+      { did },
+      { headers: this.adminHeaders() },
+    )
+    return kemKey
+  }
+
+  async completeSpacesMigration(did: DidString): Promise<void> {
+    await this.pdsClient.call(
+      internal.pds.completeSpacesMigration,
+      { did },
+      { headers: this.adminHeaders() },
+    )
+  }
+
+  /** Publishes the account's KEM key in PLC, as the entryway does. */
+  async publishKemKey(did: DidString): Promise<string> {
+    const kemKey = await this.prepareSpacesMigration(did)
+    await this.plcClient.updateData(did, this.plcRotationKey, (op) => ({
+      ...op,
+      verificationMethods: { ...op.verificationMethods, atproto_kem: kemKey },
+    }))
+    await this.completeSpacesMigration(did)
+    return kemKey
   }
 
   getAccount(did: string): Account | undefined {
@@ -345,4 +408,9 @@ export class MockEntryway {
   async destroy(): Promise<void> {
     await this.terminator.terminate()
   }
+}
+
+const adminHeaders = (adminPassword: string) => {
+  const adminAuth = Buffer.from(`admin:${adminPassword}`).toString('base64')
+  return { authorization: `Basic ${adminAuth}` }
 }
