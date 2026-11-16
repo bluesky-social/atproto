@@ -20,7 +20,9 @@
     "./README.md",
     "./CHANGELOG.md"
   ],
-  "sideEffects": false,
+  "sideEffects": [
+    "./dist/polyfill.js"
+  ],
   "type": "module",
   "exports": {
     ".": {

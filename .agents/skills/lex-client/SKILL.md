@@ -367,7 +367,16 @@ const { body } = await client.uploadBlob(bytes, { encoding: 'image/png' })
 body.blob // BlobRef — store this in a record
 
 const image = await client.getBlob(did, cid)
+
+// Large payloads: get the unread ReadableStream instead of a Uint8Array
+await using response = await client.getBlob(did, cid, {
+  responseType: 'stream',
+})
 ```
+
+`responseType: 'stream'` only affects binary outputs, and is per-call only (it
+changes the return type, so it is not a `ClientOptions` default). The caller
+owns the stream: consume it, cancel it, or dispose of the response.
 
 ## Labelers
 

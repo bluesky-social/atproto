@@ -1,13 +1,19 @@
-import { assert, describe, expect, it, vi } from 'vitest'
+import { assert, describe, expect, expectTypeOf, it, vi } from 'vitest'
 import { type LexValue, cidForLex } from '@atproto/lex-cbor'
 import { cidForRawBytes, isTypedBlobRef, parseCid } from '@atproto/lex-data'
 import { lexParse, lexToJson } from '@atproto/lex-json'
-import { LexValidationError, currentDatetimeString } from '@atproto/lex-schema'
+import {
+  LexValidationError,
+  currentDatetimeString,
+  l,
+} from '@atproto/lex-schema'
 import {
   type Action,
   Client,
+  type ClientOptions,
   type FetchHandler,
   XrpcAuthenticationError,
+  type XrpcBinaryStream,
   XrpcInvalidResponseError,
   XrpcResponseError,
   buildAgent,
@@ -841,6 +847,146 @@ describe(Client, () => {
       expect(body.blob.ref).toEqual(
         await cidForRawBytes(new TextEncoder().encode('hello world')),
       )
+    })
+  })
+
+  describe('binary responses', () => {
+    const did = 'did:plc:alice'
+    const cid = 'bafkreifjjcie6lypi6ny7amxnfftagclbuxndqonfipmb64f2km2devei4'
+    const bytes = new Uint8Array([1, 2, 3])
+
+    const getBytes = l.query(
+      'com.example.blob.getBytes',
+      l.params(),
+      l.payload('*/*', undefined),
+    )
+
+    it('fetches blobs as Uint8Array, ignoring the default "service" and "labelers"', async () => {
+      const fetchHandler = vi.fn<FetchHandler>(async (url, init) => {
+        expect(url).toBe(
+          `/xrpc/com.atproto.sync.getBlob?${new URLSearchParams({ did, cid })}`,
+        )
+        const headers = new Headers(init?.headers)
+        expect(headers.has('atproto-proxy')).toBe(false)
+        expect(headers.has('atproto-accept-labelers')).toBe(false)
+        return new Response(bytes, { headers: { 'content-type': 'image/png' } })
+      })
+
+      const client = new Client(fetchHandler, {
+        service: 'did:plc:ewvi7nxzyoun6zhxrhs64oiz#bsky_appview',
+        labelers: ['did:plc:ewvi7nxzyoun6zhxrhs64oiz'],
+      })
+
+      const response = await client.getBlob(did, cid)
+
+      expect(fetchHandler).toHaveBeenCalledOnce()
+      expect(response.encoding).toBe('image/png')
+      expect(response.body).toBeInstanceOf(Uint8Array)
+      expect(response.body).toEqual(bytes)
+    })
+
+    it('returns binary bodies from call()', async () => {
+      const fetchHandler = vi.fn<FetchHandler>(
+        async () =>
+          new Response(bytes, {
+            headers: { 'content-type': 'application/octet-stream' },
+          }),
+      )
+
+      const client = new Client(fetchHandler)
+
+      const body = await client.call(getBytes)
+
+      expect(body).toBeInstanceOf(Uint8Array)
+      expect(body).toEqual(bytes)
+    })
+
+    describe('responseType: "stream"', () => {
+      const fetchHandler: FetchHandler = async () =>
+        new Response(bytes, {
+          headers: { 'content-type': 'application/octet-stream' },
+        })
+
+      async function readStream(stream: ReadableStream<Uint8Array>) {
+        return new Uint8Array(await new Response(stream).arrayBuffer())
+      }
+
+      it('streams xrpc() binary responses', async () => {
+        const client = new Client(fetchHandler)
+
+        await using response = await client.xrpc(getBytes, {
+          responseType: 'stream',
+        })
+
+        expectTypeOf(response.body).toEqualTypeOf<XrpcBinaryStream>()
+        await expect(readStream(response.body)).resolves.toEqual(bytes)
+      })
+
+      it('streams xrpcSafe() binary responses', async () => {
+        const client = new Client(fetchHandler)
+
+        const result = await client.xrpcSafe(getBytes, {
+          responseType: 'stream',
+        })
+
+        assert(result.success)
+        await using response = result
+        expectTypeOf(response.body).toEqualTypeOf<XrpcBinaryStream>()
+        await expect(readStream(response.body)).resolves.toEqual(bytes)
+      })
+
+      it('streams blobs', async () => {
+        const client = new Client(fetchHandler)
+
+        await using response = await client.getBlob(did, cid, {
+          responseType: 'stream',
+        })
+
+        expectTypeOf(response.body).toEqualTypeOf<XrpcBinaryStream>()
+        await expect(readStream(response.body)).resolves.toEqual(bytes)
+      })
+
+      it('streams call() binary bodies', async () => {
+        const client = new Client(fetchHandler)
+
+        const body = await client.call(getBytes, {}, { responseType: 'stream' })
+
+        expectTypeOf(body).toEqualTypeOf<XrpcBinaryStream>()
+        await expect(readStream(body)).resolves.toEqual(bytes)
+      })
+
+      it('preserves excess property checks', async () => {
+        const client = new Client(fetchHandler)
+
+        await using _ = await client.getBlob(did, cid, {
+          responseType: 'stream',
+          // @ts-expect-error unknown option next to a response mode option
+          signl: undefined,
+        })
+
+        const body = await client.call(
+          getBytes,
+          {},
+          {
+            responseType: 'stream',
+            // @ts-expect-error unknown option next to a response mode option
+            signl: undefined,
+          },
+        )
+        await body.cancel()
+      })
+
+      it('cannot be used as a client default', async () => {
+        // @ts-expect-error not allowed as a client-wide default
+        const options: ClientOptions = { responseType: 'stream' }
+
+        const client = new Client(fetchHandler, options)
+
+        const response = await client.xrpc(getBytes, {})
+
+        expectTypeOf(response.body).toEqualTypeOf<Uint8Array<ArrayBuffer>>()
+        expect(response.body).toEqual(bytes)
+      })
     })
   })
 

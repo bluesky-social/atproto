@@ -18,7 +18,13 @@ import type { Agent, AgentOptions } from './agent.js'
 import { buildAgent } from './agent.js'
 import type { XrpcFailure } from './errors.js'
 import { XrpcFetchError, XrpcResponseError, asXrpcFailure } from './errors.js'
-import type { XrpcResponseOptions } from './response.js'
+import type {
+  InferXrpcResponseBinary,
+  XrpcBinaryBody,
+  XrpcResponseModeOptions,
+  XrpcResponseModeParam,
+  XrpcResponseOptions,
+} from './response.js'
 import { XrpcResponse } from './response.js'
 import type { BinaryBodyInit } from './types.js'
 import type { XrpcRequestHeadersOptions } from './util.js'
@@ -143,6 +149,14 @@ export type XrpcRequestProcessingOptions = {
  *   params: { limit: 50 }
  * })
  * ```
+ *
+ * @example Streaming a binary response
+ * ```typescript
+ * await using response = await xrpc(agent, com.atproto.sync.getBlob.main, {
+ *   params: { did, cid },
+ *   responseType: 'stream',
+ * })
+ * ```
  */
 export async function xrpc<const M extends Query | Procedure>(
   agentOpts: Agent | AgentOptions,
@@ -150,17 +164,21 @@ export async function xrpc<const M extends Query | Procedure>(
     ? Main<M>
     : Restricted<'This XRPC method requires an "options" argument'>,
 ): Promise<XrpcResponse<M>>
+export async function xrpc<
+  const M extends Query | Procedure,
+  TOptions extends XrpcResponseModeOptions = NonNullable<unknown>,
+>(
+  agentOpts: Agent | AgentOptions,
+  ns: Main<M>,
+  options: XrpcOptions<M> & XrpcResponseModeParam<TOptions>,
+): Promise<XrpcResponse<M, InferXrpcResponseBinary<TOptions>>>
 export async function xrpc<const M extends Query | Procedure>(
   agentOpts: Agent | AgentOptions,
   ns: Main<M>,
-  options: XrpcOptions<M>,
-): Promise<XrpcResponse<M>>
-export async function xrpc<const M extends Query | Procedure>(
-  agentOpts: Agent | AgentOptions,
-  ns: Main<M>,
-  options: XrpcOptions<M> = {} as XrpcOptions<M>,
-): Promise<XrpcResponse<M>> {
-  const response = await xrpcSafe<M>(agentOpts, ns, options)
+  options: XrpcOptions<M> & XrpcResponseModeOptions = {} as XrpcOptions<M> &
+    XrpcResponseModeOptions,
+): Promise<XrpcResponse<M, XrpcBinaryBody>> {
+  const response = await xrpcSafe(agentOpts, ns, options)
   if (response.success) return response
   else throw response
 }
@@ -172,9 +190,12 @@ export async function xrpc<const M extends Query | Procedure>(
  * that can be used to discriminate between them.
  *
  * @typeParam M - The XRPC method type
+ * @typeParam TBinary - The type of binary response payloads
  */
-export type XrpcResult<M extends Procedure | Query> =
-  XrpcResponse<M> | XrpcFailure<M>
+export type XrpcResult<
+  M extends Procedure | Query,
+  TBinary extends XrpcBinaryBody = Uint8Array<ArrayBuffer>,
+> = XrpcResponse<M, TBinary> | XrpcFailure<M>
 
 /**
  * Makes an XRPC request without throwing on failure.
@@ -208,16 +229,20 @@ export async function xrpcSafe<const M extends Query | Procedure>(
     ? Main<M>
     : Restricted<'This XRPC method requires an "options" argument'>,
 ): Promise<XrpcResult<M>>
+export async function xrpcSafe<
+  const M extends Query | Procedure,
+  O extends XrpcResponseModeOptions = NonNullable<unknown>,
+>(
+  agentOpts: Agent | AgentOptions,
+  ns: Main<M>,
+  options: XrpcOptions<M> & XrpcResponseModeParam<O>,
+): Promise<XrpcResult<M, InferXrpcResponseBinary<O>>>
 export async function xrpcSafe<const M extends Query | Procedure>(
   agentOpts: Agent | AgentOptions,
   ns: Main<M>,
-  options: XrpcOptions<M>,
-): Promise<XrpcResult<M>>
-export async function xrpcSafe<const M extends Query | Procedure>(
-  agentOpts: Agent | AgentOptions,
-  ns: Main<M>,
-  options: XrpcOptions<M> = {} as XrpcOptions<M>,
-): Promise<XrpcResult<M>> {
+  options: XrpcOptions<M> & XrpcResponseModeOptions = {} as XrpcOptions<M> &
+    XrpcResponseModeOptions,
+): Promise<XrpcResult<M, XrpcBinaryBody>> {
   const method: M = getMain(ns)
 
   for (let counter = 1; ; counter++) {
@@ -230,7 +255,7 @@ export async function xrpcSafe<const M extends Query | Procedure>(
         const cause = extractFetchErrorCause(err)
         throw new XrpcFetchError(method, cause)
       })
-      return await XrpcResponse.fromFetchResponse<M>(method, response, options)
+      return await XrpcResponse.fromFetchResponse(method, response, options)
     } catch (cause) {
       const failure = asXrpcFailure(method, cause)
 

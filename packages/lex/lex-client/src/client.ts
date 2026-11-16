@@ -3,8 +3,10 @@ import {
   type Agent,
   type AgentOptions,
   type BinaryBodyInit,
+  type InferXrpcResponseBinary,
   type RecordKeyOptions,
   type Service,
+  type XrpcBinaryBody,
   type XrpcFailure,
   type XrpcOptions,
   type XrpcRequestHeadersOptions,
@@ -12,6 +14,8 @@ import {
   type XrpcRequestProcessingOptions,
   type XrpcResponse,
   type XrpcResponseBody,
+  type XrpcResponseModeOptions,
+  type XrpcResponseModeParam,
   type XrpcResponseOptions,
   applyDefaults,
   buildAgent,
@@ -499,21 +503,35 @@ export class Client {
    * })
    * ```
    *
+   * @example Streaming a binary response
+   * ```typescript
+   * // Disposing of the response cancels the body if it was not fully consumed
+   * await using response = await client.xrpc(com.atproto.sync.getRepo, {
+   *   params: { did },
+   *   responseType: 'stream',
+   * })
+   * ```
+   *
    * @see {@link xrpcSafe} for a non-throwing variant
    */
-  async xrpc<const M extends Query | Procedure>(
-    ns: NonNullable<unknown> extends XrpcOptions<M>
-      ? Main<M>
+  async xrpc<const TMethod extends Query | Procedure>(
+    ns: NonNullable<unknown> extends XrpcOptions<TMethod>
+      ? Main<TMethod>
       : Restricted<'This XRPC method requires an "options" argument'>,
-  ): Promise<XrpcResponse<M>>
-  async xrpc<const M extends Query | Procedure>(
-    ns: Main<M>,
-    options: XrpcOptions<M>,
-  ): Promise<XrpcResponse<M>>
-  async xrpc<const M extends Query | Procedure>(
-    ns: Main<M>,
-    options: XrpcOptions<M> = {} as XrpcOptions<M>,
-  ): Promise<XrpcResponse<M>> {
+  ): Promise<XrpcResponse<TMethod>>
+  async xrpc<
+    const TMethod extends Query | Procedure,
+    TOptions extends XrpcResponseModeOptions = NonNullable<unknown>,
+  >(
+    ns: Main<TMethod>,
+    options: XrpcOptions<TMethod> & XrpcResponseModeParam<TOptions>,
+  ): Promise<XrpcResponse<TMethod, InferXrpcResponseBinary<TOptions>>>
+  async xrpc<const TMethod extends Query | Procedure>(
+    ns: Main<TMethod>,
+    options: XrpcOptions<TMethod> &
+      XrpcResponseModeOptions = {} as XrpcOptions<TMethod> &
+      XrpcResponseModeOptions,
+  ): Promise<XrpcResponse<TMethod, XrpcBinaryBody>> {
     return xrpc(this.agent, ns, this.buildXrpcOptions(options))
   }
 
@@ -540,25 +558,32 @@ export class Client {
    *
    * @see {@link xrpc} for a throwing variant
    */
-  async xrpcSafe<const M extends Query | Procedure>(
-    ns: NonNullable<unknown> extends XrpcOptions<M>
-      ? Main<M>
+  async xrpcSafe<const TMethod extends Query | Procedure>(
+    ns: NonNullable<unknown> extends XrpcOptions<TMethod>
+      ? Main<TMethod>
       : Restricted<'This XRPC method requires an "options" argument'>,
-  ): Promise<XrpcResponse<M> | XrpcFailure<M>>
-  async xrpcSafe<const M extends Query | Procedure>(
-    ns: Main<M>,
-    options: XrpcOptions<M>,
-  ): Promise<XrpcResponse<M> | XrpcFailure<M>>
-  async xrpcSafe<const M extends Query | Procedure>(
-    ns: Main<M>,
-    options: XrpcOptions<M> = {} as XrpcOptions<M>,
-  ): Promise<XrpcResponse<M> | XrpcFailure<M>> {
+  ): Promise<XrpcResponse<TMethod> | XrpcFailure<TMethod>>
+  async xrpcSafe<
+    const TMethod extends Query | Procedure,
+    O extends XrpcResponseModeOptions = NonNullable<unknown>,
+  >(
+    ns: Main<TMethod>,
+    options: XrpcOptions<TMethod> & XrpcResponseModeParam<O>,
+  ): Promise<
+    XrpcResponse<TMethod, InferXrpcResponseBinary<O>> | XrpcFailure<TMethod>
+  >
+  async xrpcSafe<const TMethod extends Query | Procedure>(
+    ns: Main<TMethod>,
+    options: XrpcOptions<TMethod> &
+      XrpcResponseModeOptions = {} as XrpcOptions<TMethod> &
+      XrpcResponseModeOptions,
+  ): Promise<XrpcResponse<TMethod, XrpcBinaryBody> | XrpcFailure<TMethod>> {
     return xrpcSafe(this.agent, ns, this.buildXrpcOptions(options))
   }
 
-  protected buildXrpcOptions<M extends Query | Procedure>(
-    options: XrpcOptions<M>,
-  ): XrpcOptions<M> {
+  protected buildXrpcOptions<TMethod extends Query | Procedure>(
+    options: XrpcOptions<TMethod> & XrpcResponseModeOptions,
+  ): XrpcOptions<TMethod> & XrpcResponseModeOptions {
     // Apply the instance-wide defaults for service, labelers, and validation
     // options.
     const combined = applyDefaults(options, this.xrpcDefaults)
@@ -849,12 +874,29 @@ export class Client {
    * @note This method will ignore the `service` and `labelers` instance wide
    * defaults, and will always use `null` unless explicitly overridden in the
    * options.
+   *
+   * @example Streaming the blob
+   * ```typescript
+   * // Disposing of the response cancels the body if it was not fully consumed
+   * await using response = await client.getBlob(did, cid, {
+   *   responseType: 'stream',
+   * })
+   * ```
    */
+  async getBlob<O extends XrpcResponseModeOptions = NonNullable<unknown>>(
+    did: DidString,
+    cid: CidString,
+    options?: GetBlobOptions & XrpcResponseModeParam<O>,
+  ): Promise<XrpcResponse<typeof getBlob, InferXrpcResponseBinary<O>>>
   async getBlob(
     did: DidString,
     cid: CidString,
-    { service = null, labelers = null, ...options }: GetBlobOptions = {},
-  ): Promise<XrpcResponse<typeof getBlob>> {
+    {
+      service = null,
+      labelers = null,
+      ...options
+    }: GetBlobOptions & XrpcResponseModeOptions = {},
+  ): Promise<XrpcResponse<typeof getBlob, XrpcBinaryBody>> {
     return this.xrpc(getBlob, {
       ...options,
       service,
@@ -895,6 +937,14 @@ export class Client {
    *   profile.displayName = 'Alice'
    * })
    * ```
+   *
+   * @example Streaming a binary response
+   * ```typescript
+   * // The caller must consume or cancel the returned stream
+   * const stream = await client.call(com.atproto.sync.getRepo, { did }, {
+   *   responseType: 'stream',
+   * })
+   * ```
    */
   public async call<const T extends Query>(
     ns: NonNullable<unknown> extends XrpcRequestParams<T>
@@ -911,7 +961,10 @@ export class Client {
       ? Main<T>
       : Restricted<'This action type requires an "input" argument'>,
   ): Promise<InferActionOutput<T>>
-  public async call<const T extends Action | Procedure | Query>(
+  public async call<
+    const T extends Action | Procedure | Query,
+    O extends XrpcResponseModeOptions = NonNullable<unknown>,
+  >(
     ns: Main<T>,
     arg: T extends Action
       ? InferActionInput<T>
@@ -923,17 +976,17 @@ export class Client {
     options?: T extends Action
       ? ActionOptions
       : T extends Procedure
-        ? Omit<XrpcOptions<T>, 'body'>
+        ? Omit<XrpcOptions<T>, 'body'> & XrpcResponseModeParam<O>
         : T extends Query
-          ? Omit<XrpcOptions<T>, 'params'>
+          ? Omit<XrpcOptions<T>, 'params'> & XrpcResponseModeParam<O>
           : never,
   ): Promise<
     T extends Action
       ? InferActionOutput<T>
       : T extends Procedure
-        ? XrpcResponseBody<T>
+        ? XrpcResponseBody<T, InferXrpcResponseBinary<O>>
         : T extends Query
-          ? XrpcResponseBody<T>
+          ? XrpcResponseBody<T, InferXrpcResponseBinary<O>>
           : never
   >
   public async call(
