@@ -59,68 +59,113 @@ export async function publishAccount(
   if (!(await ctx.actorStore.exists(did))) return 'deleted'
   const kemKey = (await ctx.actorStore.ensureKemKeypair(did)).did()
 
-  if (did.startsWith('did:plc:')) {
-    // The PLC client has no timeout of its own
-    const plcTimeoutMs = opts.plcTimeoutMs ?? DEFAULT_PLC_TIMEOUT_MS
-    const bounded = <T>(call: Promise<T>) =>
-      withTimeout(
-        call,
+  const plcTimeoutMs = opts.plcTimeoutMs ?? DEFAULT_PLC_TIMEOUT_MS
+  const live = await inspectKemKey(ctx, did, kemKey, { plcTimeoutMs })
+  if (!live.published) {
+    if (live.unpublishableReason) {
+      return { unpublishable: live.unpublishableReason }
+    }
+    // So it is a did:plc this host can update.
+    // A process that stalled past its lease mustn't publish over another's
+    if (!(await holdsLease())) throw new LeaseLostError(did)
+    try {
+      await boundPlc(
+        did,
         plcTimeoutMs,
-        () => new PlcTimeoutError(did, plcTimeoutMs),
+        ctx.plcClient.updateData(did, ctx.plcRotationKey, (op) => {
+          // updateData re-reads the doc, which may have changed since
+          const reason = whyUnpublishable(ctx, op)
+          if (reason) throw new UnpublishableError(reason)
+          return {
+            ...op,
+            verificationMethods: {
+              ...op.verificationMethods,
+              atproto_kem: kemKey,
+            },
+          }
+        }),
       )
-
-    const lastOp = await bounded(ctx.plcClient.getLastOp(did))
-    if (lastOp.type === 'plc_tombstone') {
-      return { unpublishable: 'tombstoned' }
-    }
-    const normalized = plc.normalizeOp(lastOp)
-    if (normalized.verificationMethods.atproto_kem !== kemKey) {
-      const reason = whyUnpublishable(ctx, normalized)
-      if (reason) return { unpublishable: reason }
-      // A process that stalled past its lease mustn't publish over another's
-      if (!(await holdsLease())) throw new LeaseLostError(did)
-      try {
-        await bounded(
-          ctx.plcClient.updateData(did, ctx.plcRotationKey, (op) => {
-            // updateData re-reads the doc, which may have changed since
-            const reason = whyUnpublishable(ctx, op)
-            if (reason) throw new UnpublishableError(reason)
-            return {
-              ...op,
-              verificationMethods: {
-                ...op.verificationMethods,
-                atproto_kem: kemKey,
-              },
-            }
-          }),
-        )
-      } catch (err) {
-        if (err instanceof UnpublishableError) {
-          return { unpublishable: err.reason }
-        }
-        throw err
+    } catch (err) {
+      if (err instanceof UnpublishableError) {
+        return { unpublishable: err.reason }
       }
+      throw err
     }
-  } else {
-    const doc = await ctx.idResolver.did.resolve(did, true)
-    if (!doc) throw new Error(`could not resolve the DID document of ${did}`)
-    const listsOurKey = (doc.verificationMethod ?? []).some(
-      (method) =>
-        method.id.endsWith('#atproto_kem') &&
-        `did:key:${method.publicKeyMultibase}` === kemKey,
-    )
-    if (!listsOurKey) return { unpublishable: 'did-web' }
   }
 
   await ctx.sequencer.sequenceIdentity(did)
   return 'published'
 }
 
+export type KemKeyState = {
+  /** The DID doc lists the key. */
+  published: boolean
+  /** Why this host can't publish the key, if it isn't published. */
+  unpublishableReason: UnpublishableReason | null
+}
+
+/**
+ * Reads the account's DID doc from its source, not a cache, and reports
+ * whether it lists `kemKey` and, if not, whether this host could publish it.
+ * Writes nothing. With no `kemKey`, the key is never published.
+ */
+export async function inspectKemKey(
+  ctx: Pick<
+    PublishContext,
+    'plcClient' | 'idResolver' | 'plcRotationKey' | 'cfg'
+  >,
+  did: DidString,
+  kemKey: string | undefined,
+  opts: { plcTimeoutMs?: number } = {},
+): Promise<KemKeyState> {
+  if (did.startsWith('did:plc:')) {
+    const lastOp = await boundPlc(
+      did,
+      opts.plcTimeoutMs ?? DEFAULT_PLC_TIMEOUT_MS,
+      ctx.plcClient.getLastOp(did),
+    )
+    if (lastOp.type === 'plc_tombstone') {
+      return { published: false, unpublishableReason: 'tombstoned' }
+    }
+    const normalized = plc.normalizeOp(lastOp)
+    if (
+      kemKey !== undefined &&
+      normalized.verificationMethods.atproto_kem === kemKey
+    ) {
+      return { published: true, unpublishableReason: null }
+    }
+    return {
+      published: false,
+      unpublishableReason: whyUnpublishable(ctx, normalized) ?? null,
+    }
+  }
+  const doc = await ctx.idResolver.did.resolve(did, true)
+  if (!doc) throw new Error(`could not resolve the DID document of ${did}`)
+  const listsOurKey =
+    kemKey !== undefined &&
+    (doc.verificationMethod ?? []).some(
+      (method) =>
+        method.id.endsWith('#atproto_kem') &&
+        `did:key:${method.publicKeyMultibase}` === kemKey,
+    )
+  return listsOurKey
+    ? { published: true, unpublishableReason: null }
+    : { published: false, unpublishableReason: 'did-web' }
+}
+
+// The PLC client has no timeout of its own
+function boundPlc<T>(did: string, timeoutMs: number, call: Promise<T>) {
+  return withTimeout(call, timeoutMs, () => new PlcTimeoutError(did, timeoutMs))
+}
+
 function whyUnpublishable(
-  ctx: PublishContext,
+  ctx: Pick<PublishContext, 'plcRotationKey' | 'cfg'>,
   op: Pick<plc.UnsignedOperation, 'rotationKeys' | 'services'>,
 ): UnpublishableReason | undefined {
-  if (!op.rotationKeys.includes(ctx.plcRotationKey.did())) {
+  // Behind an entryway, the entryway publishes with its own rotation key
+  const rotationKey =
+    ctx.cfg.entryway?.plcRotationKey ?? ctx.plcRotationKey.did()
+  if (!op.rotationKeys.includes(rotationKey)) {
     return 'rotation-key-not-held'
   }
   if (op.services.atproto_pds?.endpoint !== ctx.cfg.service.publicUrl) {

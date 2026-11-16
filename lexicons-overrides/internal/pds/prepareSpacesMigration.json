@@ -1,0 +1,33 @@
+{
+  "lexicon": 1,
+  "id": "internal.pds.prepareSpacesMigration",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Migrate an account's store and make sure it holds a KEM key, returning the key for the caller to publish in the account's DID document. PDS-internal and temporary: it exists for the migration into spaces.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["did"],
+          "properties": {
+            "did": { "type": "string", "format": "did" }
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["kemKey"],
+          "properties": {
+            "kemKey": {
+              "type": "string",
+              "description": "The public key of the account's KEM keypair, as a did:key."
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "lexicon": 1,
+  "id": "internal.pds.checkSpacesMigration",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Check an account's migration into spaces against its live state, and correct the PDS's record of it. Never updates the DID document and never emits events. PDS-internal and temporary: it exists for the migration into spaces.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["did"],
+          "properties": {
+            "did": { "type": "string", "format": "did" }
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["did", "storeMigrated", "kemPublished"],
+          "properties": {
+            "did": { "type": "string", "format": "did" },
+            "storeMigrated": {
+              "type": "boolean",
+              "description": "Whether the account's store is at the latest schema."
+            },
+            "kemKey": {
+              "type": "string",
+              "description": "The public key of the account's KEM keypair, as a did:key, if it holds one."
+            },
+            "kemPublished": {
+              "type": "boolean",
+              "description": "Whether the account's DID document lists its KEM key."
+            },
+            "unpublishableReason": {
+              "type": "string",
+              "description": "Why this PDS cannot publish the KEM key, if it cannot.",
+              "knownValues": [
+                "did-web",
+                "rotation-key-not-held",
+                "pds-elsewhere",
+                "tombstoned"
+              ]
+            },
+            "recordedPublishedAt": {
+              "type": "string",
+              "format": "datetime",
+              "description": "When the KEM key was recorded published, after any correction."
+            }
+          }
+        }
+      }
+    }
+  }
+}
