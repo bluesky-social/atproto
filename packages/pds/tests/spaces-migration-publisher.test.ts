@@ -4,7 +4,11 @@ import { jest } from '@jest/globals'
 import { HOUR, wait } from '@atproto/common'
 import { P256Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import { TestPds, TestPlc } from '@atproto/dev-env'
-import type { DidString, HandleString } from '@atproto/syntax'
+import {
+  type DidString,
+  type HandleString,
+  currentDatetimeString,
+} from '@atproto/syntax'
 import type { AccountDb } from '../src/account-manager/db/index.js'
 import type { AppContext } from '../src/context.js'
 import { SpacesMigrationProgress } from '../src/spaces-migration/progress.js'
@@ -364,6 +368,39 @@ describe('spaces migration publisher', () => {
     expect(updateData).toHaveBeenCalledTimes(1)
   })
 
+  it('holds priority accounts while backing off', async () => {
+    const first = await createPreSpacesAccount()
+    const second = await createPreSpacesAccount()
+    using updateData = jest
+      .spyOn(ctx.plcClient, 'updateData')
+      .mockRejectedValueOnce(
+        new plc.PlcClientError(429, undefined, 'Too Many Requests'),
+      )
+
+    // Only priority accounts are due before the jitter delay ends
+    await using pub = publisher({
+      jitterWindowMs: HOUR,
+      plcBackoffBaseMs: 1_000,
+    })
+    await waitFor(async () => pub.state === 'waiting')
+    await progress.bump(first)
+    pub.wake()
+    await waitFor(async () => pub.state === 'backoff')
+    const backoffAt = Date.now()
+
+    await progress.bump(second)
+    pub.wake()
+    await wait(300)
+    expect(updateData).toHaveBeenCalledTimes(1)
+    expect(await isPublished(second)).toBe(false)
+
+    // Both go once the backoff ends
+    await waitFor(() => isPublished(first))
+    await waitFor(() => isPublished(second))
+    expect(Date.now() - backoffAt).toBeGreaterThanOrEqual(700)
+    expect(updateData).toHaveBeenCalledTimes(3)
+  })
+
   it('backs off a single account on other errors', async () => {
     const did = await createPreSpacesAccount()
     using _updateData = jest
@@ -493,6 +530,15 @@ describe('spaces migration publisher', () => {
     expect(shutdownTimers).toHaveLength(1)
     const cleared = clearTimeoutSpy.mock.calls.map(([timer]) => timer)
     expect(cleared).toContain(shutdownTimers[0])
+  })
+
+  it('bounds shutdown within a 10s stop grace by default', async () => {
+    const pub = publisher()
+    await waitFor(async () => pub.state === 'idle')
+    using setTimeoutSpy = jest.spyOn(globalThis, 'setTimeout')
+    await pub.destroy()
+    // Runs alongside the sweep's, so both fit Docker's default grace
+    expect(setTimeoutSpy.mock.calls.map(([, ms]) => ms)).toContain(5_000)
   })
 
   it('stops promptly even with a step stuck', async () => {
@@ -631,6 +677,14 @@ describe('spaces migration publisher', () => {
     })
   })
 
+  it('leaves seeding to the sweep', async () => {
+    // Both start at boot; one seed scan of the actor table is enough
+    using seed = jest.spyOn(progress, 'seed')
+    await using pub = publisher()
+    await waitFor(async () => pub.state === 'idle')
+    expect(seed).not.toHaveBeenCalled()
+  })
+
   it('stays out of the way when disabled', async () => {
     const did = await createPreSpacesAccount()
     await using pub = publisher({ disabled: true })
@@ -653,8 +707,40 @@ describe('spaces migration publisher', () => {
       storesMigrated: expect.any(Number),
       keysPublished: expect.any(Number),
       unpublishable: expect.any(Number),
+      deactivated: expect.any(Number),
       failing: expect.any(Number),
       sweepFailing: expect.any(Number),
     })
+  })
+
+  it('counts pending deactivated accounts apart from failing ones', async () => {
+    // Deactivated after a failed attempt: never claimed again until activated
+    const did = await createPreSpacesAccount()
+    await db.db
+      .updateTable('spaces_migration')
+      .set({ attempts: 1, lastError: 'boom' })
+      .where('did', '=', did)
+      .execute()
+    const before = await progress.summary()
+    await ctx.accountManager.deactivateAccount(did)
+
+    const after = await progress.summary()
+    expect(after.deactivated).toBe(before.deactivated + 1)
+    expect(after.failing).toBe(before.failing - 1)
+    expect(after.total).toBe(before.total)
+
+    // A host is done once every account is published, unpublishable or
+    // deactivated
+    await db.db
+      .updateTable('spaces_migration')
+      .set({ kemPublishedAt: currentDatetimeString() })
+      .where('kemPublishedAt', 'is', null)
+      .where('unpublishableReason', 'is', null)
+      .where('did', '!=', did)
+      .execute()
+    const done = await progress.summary()
+    expect(done.total).toBe(
+      done.keysPublished + done.unpublishable + done.deactivated,
+    )
   })
 })

@@ -27,7 +27,10 @@ export type SpacesMigrationSweepOptions = Pick<
   pollIntervalMs?: number
   /** Identifies this process in row leases. */
   owner?: string
-  /** Bounds how long destroy() waits for the step in flight. */
+  /**
+   * Bounds how long destroy() waits for the step in flight. The publisher and
+   * sweep stop in parallel, within a 10s container stop grace.
+   */
   destroyTimeoutMs?: number
 }
 
@@ -61,6 +64,8 @@ export class SpacesMigrationSweep implements AsyncDisposable {
       .spacesMigration,
     // Called after each recorded transition, e.g. to refresh the health summary
     private readonly onRecorded: () => void = () => {},
+    // Called once seeding added rows, e.g. to wake an idle publisher
+    private readonly onSeeded: () => void = () => {},
   ) {
     this.owner = opts.owner ?? randomUUID()
     this.pollIntervalMs = opts.pollIntervalMs ?? MINUTE
@@ -77,7 +82,7 @@ export class SpacesMigrationSweep implements AsyncDisposable {
     this.waiter?.bail()
     if (!this.running) return
     // A stuck step mustn't hold up shutdown. Its lease expires on its own.
-    const timeoutMs = this.opts.destroyTimeoutMs ?? 10 * SECOND
+    const timeoutMs = this.opts.destroyTimeoutMs ?? 5 * SECOND
     const timeout = bailableWait(timeoutMs)
     const stopped = await Promise.race([
       this.running.then(() => true),
@@ -111,8 +116,9 @@ export class SpacesMigrationSweep implements AsyncDisposable {
   // Sweeps at most one account. Returns how long to wait before the next.
   private async step(): Promise<number> {
     if (!this.seeded) {
-      await this.progress.seed()
+      const added = await this.progress.seed()
       this.seeded = true
+      if (added > 0) this.onSeeded()
     }
     const [did] = await this.progress.claimUnswept(
       this.owner,
