@@ -1,6 +1,7 @@
 import assert from 'node:assert'
 import fs, { mkdir } from 'node:fs/promises'
 import path from 'node:path'
+import { sql } from 'kysely'
 import { fileExists, readIfExists, rmIfExists } from '@atproto/common'
 import * as crypto from '@atproto/crypto'
 import type { ExportableKeypair, Keypair } from '@atproto/crypto'
@@ -15,6 +16,7 @@ import type { ActorStoreResources } from './actor-store-resources.js'
 import { ActorStoreTransactor } from './actor-store-transactor.js'
 import { ActorStoreWriter } from './actor-store-writer.js'
 import { type ActorDb, getDb, getMigrator } from './db/index.js'
+import { LATEST_ACTOR_MIGRATION } from './db/latest.js'
 
 export class ActorStore {
   reservedKeyDir: string
@@ -57,12 +59,21 @@ export class ActorStore {
     // run a simple select with retry logic to ensure the db is ready (not in wal recovery mode).
     // synchronous is per-connection and its pragma can hit the same busy error, so it shares the retry.
     try {
-      await retrySqlite(async () => {
+      const newest = await retrySqlite(async () => {
         if (this.cfg.synchronousFull) {
           await db.ensureSynchronousFull()
         }
-        return db.db.selectFrom('repo_root').selectAll().execute()
+        // the one cheap read: it surfaces wal recovery, and tells us whether
+        // this store is behind the latest migration
+        const result = await sql<{ name: string }>`
+          select name from kysely_migration order by name desc limit 1
+        `.execute(db.db)
+        return result.rows.at(0)
       })
+      // an empty table is treated as behind, and left to the migrator
+      if (!newest || newest.name.localeCompare(LATEST_ACTOR_MIGRATION) < 0) {
+        await getMigrator(db).migrateToLatestOrThrow()
+      }
     } catch (err) {
       await db.close()
       throw err
