@@ -20,7 +20,7 @@ Publishes an identity event on the PDS's outgoing firehose for the relevant DID.
 
 ### rotate-keys
 
-Ensures that an account's signing key in their PLC DID document matches the signing key that the PDS is holidng for them locally. If not, then update their PLC document. Does not work for `did:web`s. Intended to be used in recovery situations where an accounts' signing key is lost and it needs to be re-generated. This script _does not_ regenerate the key.
+Ensures that an account's signing key and `#atproto_kem` key in their PLC DID document match the keys that the PDS is holding for them locally. If not, then update their PLC document. Does not work for `did:web`s. Intended to be used in recovery situations where an accounts' signing key is lost and it needs to be re-generated. This script _does not_ regenerate the key.
 
 `node run-script.js rotate-keys DID`
 `node run-script.js rotate-keys DID1 DID2 DID3 ...`
@@ -31,7 +31,7 @@ Ensures that an account's signing key in their PLC DID document matches the sign
 
 Replays the sequencer file on top of actor stores. Creates new actor stores & keys for actors that do not exist but are in the sequencer. Deletes actor stores & entries in the accounts DB when processing an account deletion on the stream. This script is meant to be re-runnable. Though because it processes events in parallel, it is important to be discerning about the cursor you pick up from if you stop & start the script.
 
-Does _not_ rotate signing keys even if it generates them. Signing keys that need to be rotated are stored in a recovery DB and can be actually rotated with the `rotate-keys-recovery` script.
+Does _not_ rotate signing or KEM keys even if it generates them. Accounts whose keys need to be rotated are stored in a recovery DB and can be actually rotated with the `rotate-keys-recovery` script.
 
 Intended to be used for recovery from data loss.
 

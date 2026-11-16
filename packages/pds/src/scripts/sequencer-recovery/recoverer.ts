@@ -166,6 +166,8 @@ const processRepoCreation = async (
   await ctx.actorStore.create(
     did,
     keypair,
+    // Recovery re-creates stores with fresh keys, which `rotate-keys-recovery`
+    // publishes afterwards.
     await P256Keypair.create({ exportable: true }),
   )
   const commit: CommitData = {
