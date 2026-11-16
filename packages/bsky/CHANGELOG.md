@@ -1,5 +1,21 @@
 # @atproto/bsky
 
+## 0.5.12
+
+### Patch Changes
+
+- [#5905](https://github.com/bluesky-social/atproto/pull/5905) [`9f605e0`](https://github.com/bluesky-social/atproto/commit/9f605e0fb117173dea8b5c1e9d6ad13bd6995c7f) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Accept BSG tokens, with the scope each endpoint requires. Accept internal service tokens on the internal endpoints, and add `internal.bsky.feed.getPosts`.
+
+- [#5909](https://github.com/bluesky-social/atproto/pull/5909) [`d330b0c`](https://github.com/bluesky-social/atproto/commit/d330b0ca6ff6ecdaaef4ef6ab56caf750d0c4b74) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Accept only internal service tokens on the internal endpoints, and remove the `viewer` parameter from `internal.bsky.actor.getProfiles`. `app.bsky.feed.getPosts` and `app.bsky.actor.getProfiles` no longer accept service JWTs for `chat.bsky.*` methods. Ozone no longer installs the unused `internal.bsky.actor.getProfiles` lexicon.
+
+- [#5910](https://github.com/bluesky-social/atproto/pull/5910) [`1e5118f`](https://github.com/bluesky-social/atproto/commit/1e5118f626ed91f65df248b7c2c9bb1bf37a9407) Thanks [@amckinley](https://github.com/amckinley)! - Add `BSKY_TYPEAHEAD_URL`: when set, `app.bsky.actor.searchActorsTypeahead` gets its skeleton from that `bsky.Service` host's `SearchActorsTypeahead` for requests with the `search:typeahead_service:enable` gate on, instead of the dataplane or search service; other requests are unchanged. Add `BSKY_TYPEAHEAD_PROHIBITED_TERMS_FILE`, the prohibited search terms CSV: on that path, a query matching an active Block rule returns no actors without calling the host.
+
+- [#5912](https://github.com/bluesky-social/atproto/pull/5912) [`918a000`](https://github.com/bluesky-social/atproto/commit/918a0002850b65e370f32779e17682531fda9c29) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - In `app.bsky.feed.getFeed`, forward to the feed generator the service JWT wrapped in BSG's token.
+
+- [#5913](https://github.com/bluesky-social/atproto/pull/5913) [`50877cc`](https://github.com/bluesky-social/atproto/commit/50877ccd37254ad8170c6cdcdd38014b377203d5) Thanks [@foysalit](https://github.com/foysalit)! - Allow bulk report closure to explicitly include the report being reviewed while protecting other active reviews.
+- Updated dependencies [[`b9f1f1d`](https://github.com/bluesky-social/atproto/commit/b9f1f1d2b169cc509e192350496049cf93d6115d), [`50877cc`](https://github.com/bluesky-social/atproto/commit/50877ccd37254ad8170c6cdcdd38014b377203d5)]:
+  - @atproto/api@0.32.1
+
 ## 0.5.11
 
 ### Patch Changes
