@@ -67,6 +67,7 @@ import {
   type GrantsSpaceAccess,
   neverGrantsSpaceAccess,
 } from './spaces-migration/scope.js'
+import { SpacesMigrationSummaryCache } from './spaces-migration/summary-cache.js'
 import { SpacesMigrationSweep } from './spaces-migration/sweep.js'
 
 export type AppContextOptions = {
@@ -103,6 +104,7 @@ export type SpacesMigrationWorkers = {
   progress: SpacesMigrationProgress
   publisher: SpacesMigrationPublisher
   sweep: SpacesMigrationSweep
+  summaryCache: SpacesMigrationSummaryCache
 }
 
 export class AppContext implements AsyncDisposable {
@@ -164,10 +166,23 @@ export class AppContext implements AsyncDisposable {
 
     // Built here rather than in fromConfig: the publisher needs the context
     const progress = new SpacesMigrationProgress(this.accountManager.db)
+    const summaryCache = new SpacesMigrationSummaryCache(progress)
+    const onRecorded = () => summaryCache.refreshSoon()
     this.spacesMigration = {
       progress,
-      publisher: new SpacesMigrationPublisher(this, progress),
-      sweep: new SpacesMigrationSweep(this, progress),
+      publisher: new SpacesMigrationPublisher(
+        this,
+        progress,
+        this.cfg.spacesMigration,
+        onRecorded,
+      ),
+      sweep: new SpacesMigrationSweep(
+        this,
+        progress,
+        this.cfg.spacesMigration,
+        onRecorded,
+      ),
+      summaryCache,
     }
   }
 
@@ -761,6 +776,7 @@ export class AppContext implements AsyncDisposable {
       await Promise.all([
         this.spacesMigration.publisher.destroy(),
         this.spacesMigration.sweep.destroy(),
+        this.spacesMigration.summaryCache.destroy(),
       ])
       await this.backgroundQueue.destroy()
     } finally {

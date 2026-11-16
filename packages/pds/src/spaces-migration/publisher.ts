@@ -11,6 +11,7 @@ import {
 import type { DidString } from '@atproto/syntax'
 import type { SpacesMigrationConfig } from '../config/config.js'
 import type { AppContext } from '../context.js'
+import { events } from '../events.js'
 import { spacesMigrationLogger as log } from '../logger.js'
 import { backoffMs } from './pacing.js'
 import type { SpacesMigrationProgress } from './progress.js'
@@ -60,8 +61,9 @@ const PLC_BACKOFF_CAP_MS = HOUR
  * Several processes can run one each: rows are leased.
  */
 export class SpacesMigrationPublisher implements AsyncDisposable {
-  state: SpacesMigrationPublisherState
   readonly owner: string
+
+  private _state: SpacesMigrationPublisherState
 
   private readonly pollIntervalMs: number
   private running?: Promise<void>
@@ -71,20 +73,37 @@ export class SpacesMigrationPublisher implements AsyncDisposable {
   private startAt?: number
   private plcBackoffs = 0
   private plcBackoffUntil = 0
+  private plcBackingOff = false
 
   constructor(
     private readonly ctx: PublisherContext,
     private readonly progress: SpacesMigrationProgress,
     private readonly opts: SpacesMigrationPublisherOptions = ctx.cfg
       .spacesMigration,
+    // Called after each recorded transition, e.g. to refresh the health summary
+    private readonly onRecorded: () => void = () => {},
   ) {
     this.owner = opts.owner ?? randomUUID()
     this.pollIntervalMs = opts.pollIntervalMs ?? MINUTE
-    this.state = ctx.entrywayClient
+    this._state = ctx.entrywayClient
       ? 'entryway'
       : opts.disabled
         ? 'disabled'
         : 'waiting'
+  }
+
+  get state(): SpacesMigrationPublisherState {
+    return this._state
+  }
+
+  private set state(next: SpacesMigrationPublisherState) {
+    if (next === this._state) return
+    const prev = this._state
+    this._state = next
+    log.info({ from: prev, to: next }, 'spaces migration publisher state')
+    if (next === 'idle') {
+      log.info('spaces migration publisher done: no key is due')
+    }
   }
 
   start(): void {
@@ -144,7 +163,10 @@ export class SpacesMigrationPublisher implements AsyncDisposable {
         Date.now(),
       )
       log.info(
-        { publishStartAt: new Date(this.startAt).toISOString() },
+        {
+          publishStartAt: new Date(this.startAt).toISOString(),
+          delayMs: Math.max(0, this.startAt - Date.now()),
+        },
         'spaces migration publisher started',
       )
     }
@@ -153,6 +175,10 @@ export class SpacesMigrationPublisher implements AsyncDisposable {
     if (now < this.plcBackoffUntil) {
       this.state = 'backoff'
       return this.plcBackoffUntil - now
+    }
+    if (this.plcBackingOff) {
+      this.plcBackingOff = false
+      log.info('spaces migration publisher backoff released')
     }
 
     const beforeStart = now < this.startAt
@@ -186,12 +212,19 @@ export class SpacesMigrationPublisher implements AsyncDisposable {
       )
       if (outcome === 'published') {
         await progress.recordPublished(did, owner)
+        events.spacesMigrationKemPublished()
+        log.info({ did, step: 'publish' }, 'published kem key')
       } else if (outcome === 'deleted') {
         await progress.remove(did, owner)
+        log.info({ did, step: 'publish' }, 'account is gone, dropped its row')
       } else {
-        await progress.recordUnpublishable(did, owner, outcome.unpublishable)
+        const reason = outcome.unpublishable
+        await progress.recordUnpublishable(did, owner, reason)
+        events.spacesMigrationUnpublishable(reason)
+        log.info({ did, step: 'publish', reason }, 'kem key is unpublishable')
       }
       this.plcBackoffs = 0
+      this.onRecorded()
     } catch (err) {
       if (err instanceof LeaseLostError) {
         log.warn({ did }, 'lost the spaces migration lease, skipping')
@@ -205,8 +238,11 @@ export class SpacesMigrationPublisher implements AsyncDisposable {
         )
         this.plcBackoffUntil = Date.now() + delayMs
         this.state = 'backoff'
+        this.plcBackingOff = true
+        events.spacesMigrationPlcBackoff()
+        events.spacesMigrationFailure('publish', failureStatus(err))
         log.warn(
-          { did, err, delayMs },
+          { did, step: 'publish', err, delayMs },
           'plc pushed back, spaces migration publisher backing off',
         )
       } else {
@@ -214,10 +250,12 @@ export class SpacesMigrationPublisher implements AsyncDisposable {
         const nextAttemptAt =
           Date.now() + backoffMs(attempts, RETRY_BASE_MS, RETRY_CAP_MS)
         await progress.recordFailure(did, owner, err, nextAttemptAt)
+        events.spacesMigrationFailure('publish', failureStatus(err))
         log.error(
-          { err, did, attempt: attempts + 1 },
+          { err, did, step: 'publish', attempt: attempts + 1 },
           'failed to publish kem key',
         )
+        this.onRecorded()
       }
     }
   }
@@ -242,4 +280,11 @@ function isPlcBackpressure(err: unknown): boolean {
     (err instanceof plc.PlcClientError &&
       (err.status === 429 || err.status >= 500))
   )
+}
+
+// Low-cardinality: a PLC status, a timeout, or any other error
+function failureStatus(err: unknown): string {
+  if (err instanceof PlcTimeoutError) return 'timeout'
+  if (err instanceof plc.PlcClientError) return String(err.status)
+  return 'error'
 }
