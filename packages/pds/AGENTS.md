@@ -27,8 +27,11 @@ fleet completes; only the progress table stays, per additive-only. While it
 exists:
 
 - A KEM key file is written (no-clobber, fsynced) before it is ever published,
-  and key files are never overwritten: a DID document must never name a KEM key
-  the PDS doesn't hold.
+  and a KEM key beside an existing actor store is never overwritten: a DID
+  document must never name a KEM key the PDS doesn't hold. (`ActorStore.create`
+  may replace an orphaned key from a failed create, which was never published.)
 - The PDS publisher never runs behind an entryway; the entryway publishes and
   the PDS only exposes the `internal.pds.*` endpoints.
 - Background migration workers must never throw out to the process.
+- Progress rows come from account creation and the sweep's seed only, so the
+  publisher must never run where the sweep doesn't.
