@@ -352,6 +352,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     disabled: !!env.spacesMigrationDisabled,
     publishIntervalMs: env.spacesMigrationPublishIntervalMs ?? 5 * SECOND,
     jitterWindowMs: env.spacesMigrationJitterWindowMs ?? DAY,
+    sweepIntervalMs: env.spacesMigrationSweepIntervalMs ?? 50,
   }
 
   return {
@@ -535,6 +536,8 @@ export type SpacesMigrationConfig = {
   publishIntervalMs: number
   /** The window over which hosts spread the start of publishing. */
   jitterWindowMs: number
+  /** The pause between sweeping one account's store and the next. */
+  sweepIntervalMs: number
 }
 
 export type LexiconResolverConfig = {

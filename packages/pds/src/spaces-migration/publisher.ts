@@ -29,7 +29,10 @@ export type SpacesMigrationPublisherState =
   | 'entryway' // the entryway publishes instead
   | 'disabled'
 
-export type SpacesMigrationPublisherOptions = SpacesMigrationConfig & {
+export type SpacesMigrationPublisherOptions = Omit<
+  SpacesMigrationConfig,
+  'sweepIntervalMs'
+> & {
   /** How often to look for new work while there is none. */
   pollIntervalMs?: number
   /** Identifies this process in row leases. */
