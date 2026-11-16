@@ -13,7 +13,17 @@ export class LanguageTagger extends ContentTagger {
   tagPrefix = 'lang:'
 
   isApplicable(): boolean {
-    return !!this.subjectStatus && !this.tagAlreadyExists()
+    if (!this.subjectStatus || this.tagAlreadyExists()) return false
+    const patterns = this.moderationService.cfg.service.languageTagRecordTypes
+    if (!patterns || !this.subject.isRecord()) return true
+    const collection = this.subject.parsedUri.collection
+    return patterns.some(
+      (pattern) =>
+        pattern === '*' ||
+        (pattern.endsWith('.*')
+          ? collection.startsWith(pattern.slice(0, -1))
+          : collection === pattern),
+    )
   }
 
   async buildTags(): Promise<string[]> {
