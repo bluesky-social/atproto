@@ -14,6 +14,7 @@ import type {
   EmailToken,
   RefreshToken,
   RepoRoot,
+  SpacesMigration,
 } from '../src/account-manager/db/index.js'
 import type { AppContext } from '../src/index.js'
 import type { RepoSeq } from '../src/sequencer/db/index.js'
@@ -168,6 +169,12 @@ describe('account deletion', () => {
     expect(updatedDbContents.refreshTokens).toEqual(
       initialDbContents.refreshTokens.filter((row) => row.did !== carol.did),
     )
+    expect(
+      initialDbContents.spacesMigrations.some((row) => row.did === carol.did),
+    ).toBe(true)
+    expect(updatedDbContents.spacesMigrations).toEqual(
+      initialDbContents.spacesMigrations.filter((row) => row.did !== carol.did),
+    )
   })
 
   it('deletes the users actor store', async () => {
@@ -262,6 +269,7 @@ type DbContents = {
   emailTokens: EmailToken[]
   refreshTokens: RefreshToken[]
   repoSeqs: Selectable<RepoSeq>[]
+  spacesMigrations: Selectable<SpacesMigration>[]
 }
 
 const getDbContents = async (ctx: AppContext): Promise<DbContents> => {
@@ -274,6 +282,7 @@ const getDbContents = async (ctx: AppContext): Promise<DbContents> => {
     emailTokens,
     refreshTokens,
     repoSeqs,
+    spacesMigrations,
   ] = await Promise.all([
     db.db.selectFrom('repo_root').orderBy('did').selectAll().execute(),
     db.db.selectFrom('account').orderBy('did').selectAll().execute(),
@@ -286,6 +295,7 @@ const getDbContents = async (ctx: AppContext): Promise<DbContents> => {
     db.db.selectFrom('email_token').orderBy('token').selectAll().execute(),
     db.db.selectFrom('refresh_token').orderBy('id').selectAll().execute(),
     sequencer.db.db.selectFrom('repo_seq').orderBy('seq').selectAll().execute(),
+    db.db.selectFrom('spaces_migration').orderBy('did').selectAll().execute(),
   ])
 
   return {
@@ -295,5 +305,6 @@ const getDbContents = async (ctx: AppContext): Promise<DbContents> => {
     emailTokens,
     refreshTokens,
     repoSeqs,
+    spacesMigrations,
   }
 }
