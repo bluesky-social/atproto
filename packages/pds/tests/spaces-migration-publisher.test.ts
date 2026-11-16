@@ -432,7 +432,7 @@ describe('spaces migration publisher', () => {
     expect(await publishedKem(waiting)).toBeUndefined()
   })
 
-  it('never throws out of the loop', async () => {
+  it('records an account failure and moves on', async () => {
     const failing = await createPreSpacesAccount()
     using _getLastOp = jest
       .spyOn(ctx.plcClient, 'getLastOp')
@@ -446,6 +446,171 @@ describe('spaces migration publisher', () => {
     const next = await createPreSpacesAccount()
     pub.wake()
     await waitFor(() => isPublished(next))
+  })
+
+  it('never throws out of the loop', async () => {
+    const did = await createPreSpacesAccount()
+    using claimDue = jest
+      .spyOn(progress, 'claimDue')
+      .mockRejectedValueOnce(new Error('db boom'))
+
+    await using _pub = publisher({ pollIntervalMs: 20 })
+    await waitFor(() => isPublished(did))
+    expect(claimDue.mock.calls.length).toBeGreaterThan(1)
+  })
+
+  it('backs off the whole publisher when plc does not answer', async () => {
+    const did = await createPreSpacesAccount()
+    using getLastOp = jest
+      .spyOn(ctx.plcClient, 'getLastOp')
+      .mockImplementation(() => new Promise(() => {}))
+
+    await using pub = publisher({ plcTimeoutMs: 50 })
+    await waitFor(async () => pub.state === 'backoff')
+
+    expect(getLastOp).toHaveBeenCalledTimes(1)
+    expect(await row(did)).toMatchObject({
+      attempts: 0,
+      lastError: null,
+      leaseOwner: null,
+      kemPublishedAt: null,
+    })
+  })
+
+  it('stops promptly even with a step stuck', async () => {
+    const did = await createPreSpacesAccount()
+    using _sequenceIdentity = jest
+      .spyOn(ctx.sequencer, 'sequenceIdentity')
+      .mockImplementation(() => new Promise(() => {}))
+    const pub = publisher({ destroyTimeoutMs: 50 })
+    await waitFor(async () => (await publishedKem(did)) !== undefined)
+    await wait(50) // into sequenceIdentity
+
+    const started = Date.now()
+    await pub.destroy()
+    expect(Date.now() - started).toBeLessThan(2_000)
+  })
+
+  it('records the doc moving elsewhere just before the plc update', async () => {
+    const did = await createPreSpacesAccount()
+    const getLastOp = ctx.plcClient.getLastOp.bind(ctx.plcClient)
+    using _getLastOp = jest
+      .spyOn(ctx.plcClient, 'getLastOp')
+      .mockImplementationOnce(async (did) => {
+        const op = await getLastOp(did)
+        // The user moves their PDS, keeping our rotation key
+        await updatePlc(did, (op) => ({
+          ...op,
+          services: {
+            ...op.services,
+            atproto_pds: {
+              type: 'AtprotoPersonalDataServer',
+              endpoint: 'https://elsewhere.test',
+            },
+          },
+        }))
+        return op
+      })
+
+    await using _pub = publisher()
+    await waitFor(async () => (await row(did))?.unpublishableReason != null)
+
+    expect((await row(did))?.unpublishableReason).toBe('pds-elsewhere')
+    expect(await kemOps(did)).toHaveLength(1) // genesis only
+    expect(await publishedKem(did)).toBeUndefined()
+  })
+
+  it('does not publish after losing the lease', async () => {
+    const did = await createPreSpacesAccount()
+    const getLastOp = ctx.plcClient.getLastOp.bind(ctx.plcClient)
+    using _getLastOp = jest
+      .spyOn(ctx.plcClient, 'getLastOp')
+      .mockImplementationOnce(async (did) => {
+        const op = await getLastOp(did)
+        // Another process takes the row, e.g. after this one stalled
+        await db.db
+          .updateTable('spaces_migration')
+          .set({ leaseOwner: 'other', leaseExpiresAt: Date.now() + HOUR })
+          .where('did', '=', did as DidString)
+          .execute()
+        return op
+      })
+    using updateData = jest.spyOn(ctx.plcClient, 'updateData')
+
+    await using pub = publisher()
+    await waitFor(async () => pub.state === 'idle')
+
+    expect(updateData).not.toHaveBeenCalled()
+    expect(await kemOps(did)).toHaveLength(1) // genesis only
+    expect(await row(did)).toMatchObject({
+      leaseOwner: 'other',
+      attempts: 0,
+      kemPublishedAt: null,
+    })
+  })
+
+  it('leaves deactivated accounts until they are activated', async () => {
+    // As an inbound migration: deactivated here, its DID doc still pointing
+    // at the old PDS with the old PDS's rotation key
+    const did = await createPreSpacesAccount()
+    await ctx.accountManager.deactivateAccount(did)
+    const oldPdsKey = await Secp256k1Keypair.create()
+    await updatePlc(did, (op) => ({
+      ...op,
+      rotationKeys: [oldPdsKey.did()],
+      services: {
+        ...op.services,
+        atproto_pds: {
+          type: 'AtprotoPersonalDataServer',
+          endpoint: 'https://old-pds.test',
+        },
+      },
+    }))
+
+    {
+      await using pub = publisher()
+      await waitFor(async () => pub.state === 'idle')
+    }
+    expect(await row(did)).toMatchObject({
+      unpublishableReason: null,
+      attempts: 0,
+      kemPublishedAt: null,
+      leaseOwner: null,
+    })
+
+    // The migration's PLC op points the DID here, then the account activates
+    await ctx.plcClient.updateData(did, oldPdsKey, (op) => ({
+      ...op,
+      rotationKeys: [ctx.plcRotationKey.did()],
+      services: {
+        ...op.services,
+        atproto_pds: {
+          type: 'AtprotoPersonalDataServer',
+          endpoint: ctx.cfg.service.publicUrl,
+        },
+      },
+    }))
+    await ctx.accountManager.activateAccount(did)
+
+    await using _pub = publisher()
+    await waitFor(() => isPublished(did))
+    expect(await publishedKem(did)).toBe(await kemDid(did))
+  })
+
+  it('does not claim deactivated accounts', async () => {
+    const did = await createPreSpacesAccount()
+    await ctx.accountManager.deactivateAccount(did)
+    using updateData = jest.spyOn(ctx.plcClient, 'updateData')
+
+    await using pub = publisher()
+    await waitFor(async () => pub.state === 'idle')
+
+    expect(updateData).not.toHaveBeenCalled()
+    expect(await row(did)).toMatchObject({
+      attempts: 0,
+      kemPublishedAt: null,
+      leaseOwner: null,
+    })
   })
 
   it('stays out of the way when disabled', async () => {

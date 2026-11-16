@@ -111,6 +111,18 @@ export class SpacesMigrationProgress {
       .where((eb) =>
         eb.or([eb('leaseOwner', 'is', null), eb('leaseExpiresAt', '<=', now)]),
       )
+      // A deactivated account may be migrating in, its DID doc not yet
+      // pointing here. It is published once activated.
+      .where(({ not, exists, selectFrom }) =>
+        not(
+          exists(
+            selectFrom('actor')
+              .select('actor.did')
+              .whereRef('actor.did', '=', 'spaces_migration.did')
+              .where('actor.deactivatedAt', 'is not', null),
+          ),
+        ),
+      )
       .orderBy('priority', 'desc')
       .orderBy('nextAttemptAt', 'asc')
       .limit(limit)
@@ -200,7 +212,6 @@ export class SpacesMigrationProgress {
         .values({
           id: 1,
           publishStartAt: now + jitterDelayMs(hostname, windowMs),
-          lastVersion: null,
         })
         .onConflict((oc) => oc.doNothing()),
     )
