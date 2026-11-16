@@ -615,6 +615,13 @@ export class AuthVerifier {
       getSigningKey,
       verifySignatureWithKey,
     )
+    if (payload.iss.endsWith('#atproto_labeler')) {
+      events.labelerServiceJwt({
+        did: payload.iss.split('#')[0],
+        lxm: payload.lxm,
+        method: parseReqNsid(reqCtx.req),
+      })
+    }
     if (
       !payload.iss.endsWith('#atproto_labeler') ||
       payload.lxm !== undefined
