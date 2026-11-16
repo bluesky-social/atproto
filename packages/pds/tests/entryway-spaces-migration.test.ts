@@ -152,6 +152,46 @@ describe('entryway spaces migration', () => {
     await attempt('did:key:../../key', { error: 'IncompatibleDidDoc' })
   })
 
+  it('keeps a kem key reservation through a failed create', async () => {
+    const { signingKey } = await client.call(
+      com.atproto.server.reserveSigningKey,
+      {},
+    )
+    const { kemKey } = await client.call(internal.pds.reserveKemKey, {})
+    const handle = 'ewsretry.test' as HandleString
+    const { did, op } = await createPlcOp({
+      signingKey,
+      kemKey,
+      rotationKeys: [plcRotationKey.did()],
+      handle,
+      pds: pds.ctx.cfg.service.publicUrl,
+      signer: plcRotationKey,
+    })
+    const input = { did: did as DidString, handle, plcOp: op }
+    const reserved = async () =>
+      (await pds.ctx.actorStore.getReservedKemKeypair(kemKey))?.did()
+
+    // Fails past validation, after the reservation was looked up
+    {
+      using transact = jest
+        .spyOn(pds.ctx.actorStore, 'transact')
+        .mockRejectedValueOnce(new Error('disk full'))
+      await expect(
+        client.call(com.atproto.server.createAccount, input),
+      ).rejects.toMatchObject({ error: 'InternalServerError' })
+      expect(transact).toHaveBeenCalledTimes(1)
+    }
+    expect(await pds.ctx.actorStore.exists(did)).toBe(false)
+    expect(await reserved()).toBe(kemKey)
+
+    // The entryway retries with the same genesis op
+    const res = await client.call(com.atproto.server.createAccount, input)
+    expect(res.did).toBe(did)
+    expect(await heldKem(did as DidString)).toBe(kemKey)
+    expect(await publishedKem(did as DidString)).toBe(kemKey)
+    expect(await reserved()).toBeUndefined()
+  })
+
   it('prepares and completes an account for the entryway', async () => {
     const did = await createAccount({ includeKemKey: false })
     // As left by the release before spaces: no kem key on disk
