@@ -112,9 +112,10 @@ class EventReporter {
   })
 
   #labelerServiceJwts = meter.createCounter<{
-    lxm?: string
+    lxm: string
   }>('auth.labeler_service_jwts', {
-    description: 'Labeler-signed service JWTs with a valid signature, by lxm',
+    description:
+      'Labeler-signed service JWTs with a valid signature, by lxm. `mismatch` when lxm is not the method called, and `absent` when there is no lxm',
     valueType: ValueType.INT,
   })
 
@@ -323,10 +324,22 @@ class EventReporter {
     }
   }
 
-  labelerServiceJwt({ did, lxm }: { did: string; lxm?: string }) {
+  labelerServiceJwt({
+    did,
+    lxm,
+    method,
+  }: {
+    did: string
+    lxm?: string
+    method: string
+  }) {
     this.#log('labeler_service_jwt', { did, lxm })
     try {
-      this.#labelerServiceJwts.add(1, { lxm })
+      // @NOTE lxm is attacker-controlled, so the counter only records it when
+      // it is the method called, which is one of the methods AppView serves.
+      this.#labelerServiceJwts.add(1, {
+        lxm: lxm === undefined ? 'absent' : lxm === method ? lxm : 'mismatch',
+      })
     } catch (err) {
       diag.error('Failed to record labeler_service_jwt:', err)
     }

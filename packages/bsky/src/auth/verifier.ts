@@ -619,6 +619,7 @@ export class AuthVerifier {
       events.labelerServiceJwt({
         did: payload.iss.split('#')[0],
         lxm: payload.lxm,
+        method: parseReqNsid(reqCtx.req),
       })
     }
     if (
