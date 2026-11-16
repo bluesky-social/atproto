@@ -1,3 +1,7 @@
+import { mkdtemp, rm } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import path from 'node:path'
+import { setTimeout as sleep } from 'node:timers/promises'
 import type { Kysely } from 'kysely'
 import { sql } from 'kysely'
 import type { Migration } from 'kysely/migration'
@@ -127,5 +131,82 @@ describe('Migrator', () => {
       new Migrator(db.db, migrationsFor('001', '002')).migrateToOrThrow('002'),
     ).rejects.toThrow(/corrupted migrations/)
     expect(await executedNames(db)).toEqual(['001', '002', '003'])
+  })
+})
+
+describe('Migrator on a shared database file', () => {
+  let dir: string
+  let file: string
+
+  beforeEach(async () => {
+    dir = await mkdtemp(path.join(tmpdir(), 'pds-migrator-'))
+    file = path.join(dir, 'test.sqlite')
+    const db = Database.sqlite(file)
+    await db.ensureWal()
+    await db.close()
+  })
+
+  afterEach(async () => {
+    await rm(dir, { recursive: true, force: true })
+  })
+
+  it('serializes concurrent migrations from two connections', async () => {
+    const migrations: Record<string, Migration> = {
+      '001': {
+        async up(db: Kysely<unknown>) {
+          await db.schema.createTable('t_a').addColumn('x', 'integer').execute()
+          // Hold the migration open so the other connection overlaps it
+          await sleep(200)
+          await db.schema.createTable('t_b').addColumn('x', 'integer').execute()
+        },
+      },
+      '002': createsTable('t_c'),
+    }
+    const db1 = Database.sqlite(file)
+    const db2 = Database.sqlite(file)
+    try {
+      const [results1, results2] = await Promise.all([
+        new Migrator(db1.db, migrations).migrateToLatestOrThrow(),
+        new Migrator(db2.db, migrations).migrateToLatestOrThrow(),
+      ])
+
+      // Exactly one connection did the work; the other found nothing pending
+      expect([resultNames(results1), resultNames(results2)].sort()).toEqual([
+        [],
+        ['001', '002'],
+      ])
+      expect(await tableNames(db1)).toEqual(['t_a', 't_b', 't_c'])
+      expect(await executedNames(db1)).toEqual(['001', '002'])
+    } finally {
+      await db1.close()
+      await db2.close()
+    }
+  })
+
+  it('rolls back every pending migration when one fails', async () => {
+    const db = Database.sqlite(file)
+    try {
+      await expect(
+        new Migrator(db.db, {
+          '001': createsTable('t_a'),
+          '002': {
+            async up(db: Kysely<unknown>) {
+              await createsTable('t_c').up(db)
+              throw new Error('boom')
+            },
+          },
+        }).migrateToLatestOrThrow(),
+      ).rejects.toThrow(/boom/)
+      expect(await tableNames(db)).toEqual([])
+      expect(await executedNames(db)).toEqual([])
+
+      const results = await new Migrator(db.db, {
+        '001': createsTable('t_a'),
+        '002': createsTable('t_c'),
+      }).migrateToLatestOrThrow()
+      expect(resultNames(results)).toEqual(['001', '002'])
+    } finally {
+      await db.close()
+    }
   })
 })

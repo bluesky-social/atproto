@@ -5,6 +5,7 @@ import {
   Migrator as KyselyMigrator,
 } from 'kysely/migration'
 import { dbLogger } from '../logger.js'
+import { retrySqlite } from './util.js'
 
 /**
  * Kysely's migrator, made forward compatible: a database that a newer version
@@ -54,26 +55,32 @@ export class Migrator<T> extends KyselyMigrator {
     }
   }
 
+  // Retries SQLITE_BUSY: another connection may hold the migration lock.
   async migrateToOrThrow(migration: string) {
-    const { error, results } = await this.migrateTo(migration)
-    if (error) {
-      throw error
-    }
-    if (!results) {
-      throw new Error('An unknown failure occurred while migrating')
-    }
-    return results
+    return retrySqlite(async () => {
+      const { error, results } = await this.migrateTo(migration)
+      if (error) {
+        throw error
+      }
+      if (!results) {
+        throw new Error('An unknown failure occurred while migrating')
+      }
+      return results
+    })
   }
 
+  // Retries SQLITE_BUSY: another connection may hold the migration lock.
   async migrateToLatestOrThrow() {
-    const { error, results } = await this.migrateToLatest()
-    if (error) {
-      throw error
-    }
-    if (!results) {
-      throw new Error('An unknown failure occurred while migrating')
-    }
-    return results
+    return retrySqlite(async () => {
+      const { error, results } = await this.migrateToLatest()
+      if (error) {
+        throw error
+      }
+      if (!results) {
+        throw new Error('An unknown failure occurred while migrating')
+      }
+      return results
+    })
   }
 
   private async tolerateLaterMigrations(): Promise<void> {
