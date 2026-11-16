@@ -323,3 +323,79 @@ describe('entryway spaces migration', () => {
     await expect(check(did)).rejects.toMatchObject({ error: 'NotFound' })
   })
 })
+
+describe('spaces migration endpoints without an entryway', () => {
+  let plc: TestPlc
+  let pds: TestPds
+  let client: Client
+
+  beforeAll(async () => {
+    plc = await TestPlc.create({})
+    pds = await TestPds.create({
+      didPlcUrl: plc.url,
+      // Nowhere to proxy an unregistered method to
+      bskyAppViewUrl: undefined,
+      bskyAppViewDid: undefined,
+      // Only the endpoints under test may touch the record
+      spacesMigrationDisabled: true,
+    })
+    client = new Client({ service: pds.url })
+  })
+
+  afterAll(async () => {
+    await pds?.close()
+    await plc?.close()
+  })
+
+  it('does not expose the entryway endpoints', async () => {
+    const { did, accessJwt } = await client.call(
+      com.atproto.server.createAccount,
+      {
+        email: 'ewsnotexposed@test.com',
+        handle: 'ewsnotexposed.test',
+        password: 'hunter2',
+      },
+    )
+    // An unregistered method falls through to the proxy, which serves a user
+    // nothing for it. A registered one would refuse the user's token.
+    const headers = { authorization: `Bearer ${accessJwt}` }
+    const notServed = (nsid: string) => ({
+      error: 'InvalidRequest',
+      message: `No service configured for ${nsid}`,
+    })
+    await expect(
+      client.call(internal.pds.reserveKemKey, {}, { headers }),
+    ).rejects.toMatchObject(notServed(internal.pds.reserveKemKey.$lxm))
+    await expect(
+      client.call(internal.pds.prepareSpacesMigration, { did }, { headers }),
+    ).rejects.toMatchObject(notServed(internal.pds.prepareSpacesMigration.$lxm))
+    await expect(
+      client.call(internal.pds.completeSpacesMigration, { did }, { headers }),
+    ).rejects.toMatchObject(
+      notServed(internal.pds.completeSpacesMigration.$lxm),
+    )
+  })
+
+  it('checks accounts with admin auth', async () => {
+    const { did } = await client.call(com.atproto.server.createAccount, {
+      email: 'ewsnoentryway@test.com',
+      handle: 'ewsnoentryway.test',
+      password: 'hunter2',
+    })
+    const res = await client.call(
+      internal.pds.checkSpacesMigration,
+      { did },
+      { headers: pds.adminAuthHeaders() },
+    )
+    expect(res).toEqual({
+      did,
+      storeMigrated: true,
+      kemKey: (await pds.ctx.actorStore.kemKeypair(did))?.did(),
+      kemPublished: true,
+      recordedPublishedAt: expect.any(String),
+    })
+    await expect(
+      client.call(internal.pds.checkSpacesMigration, { did }),
+    ).rejects.toMatchObject({ error: 'AuthenticationRequired' })
+  })
+})
