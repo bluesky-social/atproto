@@ -5,6 +5,7 @@ import { MINUTE, check } from '@atproto/common'
 import {
   type ExportableKeypair,
   type Keypair,
+  P256Keypair,
   Secp256k1Keypair,
 } from '@atproto/crypto'
 import { type AtprotoData, ensureAtpDocument } from '@atproto/identity'
@@ -68,7 +69,11 @@ export default function (server: Server, ctx: AppContext) {
         ? await validateInputsForEntrywayPds(ctx, input.body)
         : await validateInputsForLocalPds(ctx, input.body, requester)
 
-      await ctx.actorStore.create(did, signingKey)
+      await ctx.actorStore.create(
+        did,
+        signingKey,
+        await P256Keypair.create({ exportable: true }),
+      )
 
       try {
         const commit = await ctx.actorStore.transact(did, (actorTxn) => {
