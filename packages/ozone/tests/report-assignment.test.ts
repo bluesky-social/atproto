@@ -797,8 +797,8 @@ describe('report-assignment', () => {
       await assignReport({ reportId, isPermanent: true }, 'moderator')
       expect(await getReportStatus(reportId)).toBe('assigned')
       const before = await listActivities({ reportId })
-      const queueActivities = before.activities.filter((a) =>
-        tools.ozone.report.defs.queueActivity.$isTypeOf(a.activity),
+      const queueActivities = before.activities.filter(
+        (a) => a.activity.$type === tools.ozone.report.defs.queueActivity.$type,
       )
       expect(queueActivities).toHaveLength(1)
 
@@ -808,8 +808,9 @@ describe('report-assignment', () => {
 
       const { activities } = await listActivities({ reportId })
       expect(
-        activities.filter((a) =>
-          tools.ozone.report.defs.queueActivity.$isTypeOf(a.activity),
+        activities.filter(
+          (a) =>
+            a.activity.$type === tools.ozone.report.defs.queueActivity.$type,
         ),
       ).toEqual(queueActivities)
     })
