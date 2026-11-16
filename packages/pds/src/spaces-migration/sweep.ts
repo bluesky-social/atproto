@@ -9,6 +9,7 @@ import {
 import type { DidString } from '@atproto/syntax'
 import type { SpacesMigrationConfig } from '../config/config.js'
 import type { AppContext } from '../context.js'
+import { events } from '../events.js'
 import { spacesMigrationLogger as log } from '../logger.js'
 import { backoffMs } from './pacing.js'
 import type { SpacesMigrationProgress } from './progress.js'
@@ -58,6 +59,8 @@ export class SpacesMigrationSweep implements AsyncDisposable {
     private readonly progress: SpacesMigrationProgress,
     private readonly opts: SpacesMigrationSweepOptions = ctx.cfg
       .spacesMigration,
+    // Called after each recorded transition, e.g. to refresh the health summary
+    private readonly onRecorded: () => void = () => {},
   ) {
     this.owner = opts.owner ?? randomUUID()
     this.pollIntervalMs = opts.pollIntervalMs ?? MINUTE
@@ -138,15 +141,20 @@ export class SpacesMigrationSweep implements AsyncDisposable {
       await actorStore.read(did, () => {})
       await actorStore.ensureKemKeypair(did)
       await progress.recordSwept(did, owner)
+      events.spacesMigrationStoreMigrated()
+      log.info({ did, step: 'sweep' }, 'migrated actor store')
+      this.onRecorded()
     } catch (err) {
       const attempts = (await progress.get(did))?.sweepAttempts ?? 0
       const nextAttemptAt =
         Date.now() + backoffMs(attempts, RETRY_BASE_MS, RETRY_CAP_MS)
       await progress.recordSweepFailure(did, owner, err, nextAttemptAt)
+      events.spacesMigrationFailure('sweep', 'error')
       log.error(
-        { err, did, attempt: attempts + 1 },
+        { err, did, step: 'sweep', attempt: attempts + 1 },
         'failed to sweep actor store',
       )
+      this.onRecorded()
     }
   }
 
