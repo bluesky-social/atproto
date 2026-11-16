@@ -10,6 +10,7 @@ import { httpLogger } from '../logger.js'
 type ReportMethod =
   | typeof com.atproto.moderation.createReport.$lxm
   | typeof tools.ozone.moderation.emitEvent.$lxm
+  | typeof tools.ozone.moderation.emitEvents.$lxm
 
 const KNOWN_REASON_TYPES = new Set<string>(
   [com.atproto.moderation.defs, tools.ozone.report.defs].flatMap((defs) =>
@@ -57,6 +58,7 @@ export class ModerationServiceProfile {
       for (const nsid of [
         com.atproto.moderation.createReport.$lxm,
         tools.ozone.moderation.emitEvent.$lxm,
+        tools.ozone.moderation.emitEvents.$lxm,
       ]) {
         for (const reason_type of [...KNOWN_REASON_TYPES, 'unknown']) {
           reasonRejections.inc({ nsid, reason_type }, 0)
