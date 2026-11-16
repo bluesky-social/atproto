@@ -654,6 +654,7 @@ describe('spaces migration publisher', () => {
       keysPublished: expect.any(Number),
       unpublishable: expect.any(Number),
       failing: expect.any(Number),
+      sweepFailing: expect.any(Number),
     })
   })
 })

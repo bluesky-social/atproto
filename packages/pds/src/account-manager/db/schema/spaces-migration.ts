@@ -15,6 +15,9 @@ export interface SpacesMigration {
   leaseExpiresAt: Generated<number>
   sweepLeaseOwner: string | null
   sweepLeaseExpiresAt: Generated<number>
+  sweepAttempts: Generated<number>
+  sweepLastError: string | null
+  sweepNextAttemptAt: Generated<number>
 }
 
 // A single row, id = 1

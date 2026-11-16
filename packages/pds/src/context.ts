@@ -758,8 +758,10 @@ export class AppContext implements AsyncDisposable {
     // @TODO Implement this using an AsyncDisposableStack when it becomes
     // widely available.
     try {
-      await this.spacesMigration.publisher.destroy()
-      await this.spacesMigration.sweep.destroy()
+      await Promise.all([
+        this.spacesMigration.publisher.destroy(),
+        this.spacesMigration.sweep.destroy(),
+      ])
       await this.backgroundQueue.destroy()
     } finally {
       try {
