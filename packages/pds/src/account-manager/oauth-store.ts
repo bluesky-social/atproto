@@ -2,7 +2,7 @@ import assert from 'node:assert'
 import { type Client, createOp as createPlcOp } from '@did-plc/lib'
 import type { Selectable } from 'kysely'
 import { DAY } from '@atproto/common'
-import { type Keypair, Secp256k1Keypair } from '@atproto/crypto'
+import { type Keypair, P256Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import { getBlobCidString } from '@atproto/lex-data'
 import type { DidString, HandleString } from '@atproto/lex-schema'
 import {
@@ -184,7 +184,11 @@ export class OAuthStore
     const did = plc.did as DidString
 
     try {
-      await this.actorStore.create(did, signingKey)
+      await this.actorStore.create(
+        did,
+        signingKey,
+        await P256Keypair.create({ exportable: true }),
+      )
 
       try {
         const commit = await this.actorStore.transact(did, (actorTxn) => {

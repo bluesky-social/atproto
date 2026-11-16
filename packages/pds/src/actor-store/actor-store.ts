@@ -1,4 +1,5 @@
 import assert from 'node:assert'
+import { randomUUID } from 'node:crypto'
 import fs, { mkdir } from 'node:fs/promises'
 import path from 'node:path'
 import { sql } from 'kysely'
@@ -20,12 +21,14 @@ import { LATEST_ACTOR_MIGRATION } from './db/latest.js'
 
 export class ActorStore {
   reservedKeyDir: string
+  reservedKemKeyDir: string
 
   constructor(
     public cfg: ActorStoreConfig,
     public resources: ActorStoreResources,
   ) {
     this.reservedKeyDir = path.join(cfg.directory, 'reserved_keys')
+    this.reservedKemKeyDir = path.join(this.reservedKeyDir, 'kem')
   }
 
   async getLocation(did: string) {
@@ -33,12 +36,31 @@ export class ActorStore {
     const directory = path.join(this.cfg.directory, didHash.slice(0, 2), did)
     const dbLocation = path.join(directory, `store.sqlite`)
     const keyLocation = path.join(directory, `key`)
-    return { directory, dbLocation, keyLocation }
+    const kemKeyLocation = path.join(directory, `kem_key`)
+    return { directory, dbLocation, keyLocation, kemKeyLocation }
   }
 
   async exists(did: string): Promise<boolean> {
     const location = await this.getLocation(did)
     return await fileExists(location.dbLocation)
+  }
+
+  async kemKeypair(did: string): Promise<crypto.P256Keypair | undefined> {
+    const { kemKeyLocation } = await this.getLocation(did)
+    return loadKemKey(kemKeyLocation)
+  }
+
+  // A DID doc must never name a KEM key we do not hold, so the key file is
+  // written once and never overwritten.
+  async ensureKemKeypair(did: string): Promise<crypto.P256Keypair> {
+    const { directory, kemKeyLocation } = await this.getLocation(did)
+    const existing = await loadKemKey(kemKeyLocation)
+    if (existing) return existing
+    await mkdir(directory, { recursive: true })
+    return writeKemKeyNoClobber(
+      kemKeyLocation,
+      await crypto.P256Keypair.create({ exportable: true }),
+    )
   }
 
   async keypair(did: string): Promise<Keypair> {
@@ -124,8 +146,13 @@ export class ActorStore {
     return await fn(writer)
   }
 
-  async create(did: string, keypair: ExportableKeypair) {
-    const { directory, dbLocation, keyLocation } = await this.getLocation(did)
+  async create(
+    did: string,
+    keypair: ExportableKeypair,
+    kemKeypair: ExportableKeypair,
+  ) {
+    const { directory, dbLocation, keyLocation, kemKeyLocation } =
+      await this.getLocation(did)
     // ensure subdir exists
     await mkdir(directory, { recursive: true })
     const exists = await fileExists(dbLocation)
@@ -134,6 +161,11 @@ export class ActorStore {
     }
     const privKey = await keypair.export()
     await fs.writeFile(keyLocation, privKey)
+    const storedKem = await writeKemKeyNoClobber(kemKeyLocation, kemKeypair)
+    assert(
+      storedKem.did() === kemKeypair.did(),
+      'a different kem key is already stored for this account',
+    )
 
     const db: ActorDb = getDb(dbLocation, this.cfg.disableWalAutoCheckpoint)
     try {
@@ -196,6 +228,39 @@ export class ActorStore {
     }
   }
 
+  async reserveKemKeypair(did?: string): Promise<string> {
+    let keyLoc: string | undefined
+    if (did) {
+      assertSafePathPart(did)
+      keyLoc = path.join(this.reservedKemKeyDir, did)
+      const maybeKey = await loadKemKey(keyLoc)
+      if (maybeKey) {
+        return maybeKey.did()
+      }
+    }
+    const keypair = await crypto.P256Keypair.create({ exportable: true })
+    keyLoc = keyLoc ?? path.join(this.reservedKemKeyDir, keypair.did())
+    await mkdir(this.reservedKemKeyDir, { recursive: true })
+    const stored = await writeKemKeyNoClobber(keyLoc, keypair)
+    return stored.did()
+  }
+
+  async getReservedKemKeypair(
+    keyDidOrDid: string,
+  ): Promise<ExportableKeypair | undefined> {
+    assertSafePathPart(keyDidOrDid)
+    return loadKemKey(path.join(this.reservedKemKeyDir, keyDidOrDid))
+  }
+
+  async clearReservedKemKeypair(keyDid: string, did?: string) {
+    assertSafePathPart(keyDid)
+    await rmIfExists(path.join(this.reservedKemKeyDir, keyDid))
+    if (did) {
+      assertSafePathPart(did)
+      await rmIfExists(path.join(this.reservedKemKeyDir, did))
+    }
+  }
+
   async storePlcOp(did: string, op: Uint8Array) {
     const { directory } = await this.getLocation(did)
     const opLoc = path.join(directory, `did-op`)
@@ -219,6 +284,40 @@ const loadKey = async (loc: string): Promise<ExportableKeypair | undefined> => {
   const privKey = await readIfExists(loc)
   if (!privKey) return undefined
   return crypto.Secp256k1Keypair.import(privKey, { exportable: true })
+}
+
+const loadKemKey = async (
+  loc: string,
+): Promise<crypto.P256Keypair | undefined> => {
+  const privKey = await readIfExists(loc)
+  if (!privKey) return undefined
+  return crypto.P256Keypair.import(privKey, { exportable: true })
+}
+
+// Appears whole or not at all (tmp + link), and never replaces an existing
+// file: on conflict the winner's key is returned. `rename` is deliberately
+// not used since it would overwrite.
+const writeKemKeyNoClobber = async (
+  loc: string,
+  keypair: ExportableKeypair,
+): Promise<crypto.P256Keypair> => {
+  const tmp = `${loc}.${randomUUID()}.tmp`
+  try {
+    await fs.writeFile(tmp, await keypair.export())
+    try {
+      await fs.link(tmp, loc)
+    } catch (err) {
+      if ((err as NodeJS.ErrnoException)?.code !== 'EEXIST') throw err
+      const winner = await loadKemKey(loc)
+      assert(winner, 'kem key vanished after EEXIST')
+      return winner
+    }
+    return crypto.P256Keypair.import(await keypair.export(), {
+      exportable: true,
+    })
+  } finally {
+    await rmIfExists(tmp)
+  }
 }
 
 function assertSafePathPart(part: string) {
