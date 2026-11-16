@@ -61,6 +61,8 @@ import {
 import { getRedisClient } from './redis.js'
 import { FailOpenReplayStore } from './replay-store.js'
 import { Sequencer } from './sequencer/index.js'
+import { SpacesMigrationProgress } from './spaces-migration/progress.js'
+import { SpacesMigrationPublisher } from './spaces-migration/publisher.js'
 
 export type AppContextOptions = {
   actorStore: ActorStore
@@ -90,6 +92,11 @@ export type AppContextOptions = {
   cfg: ServerConfig
 }
 
+export type SpacesMigrationWorkers = {
+  progress: SpacesMigrationProgress
+  publisher: SpacesMigrationPublisher
+}
+
 export class AppContext implements AsyncDisposable {
   public actorStore: ActorStore
   public blobstore: BlobStoreCreator
@@ -116,6 +123,7 @@ export class AppContext implements AsyncDisposable {
   public oauthProvider?: OAuthProvider
   public plcRotationKey: crypto.Keypair
   public cfg: ServerConfig
+  public spacesMigration: SpacesMigrationWorkers
 
   constructor(opts: AppContextOptions) {
     this.actorStore = opts.actorStore
@@ -143,6 +151,13 @@ export class AppContext implements AsyncDisposable {
     this.oauthProvider = opts.oauthProvider
     this.plcRotationKey = opts.plcRotationKey
     this.cfg = opts.cfg
+
+    // Built here rather than in fromConfig: the publisher needs the context
+    const progress = new SpacesMigrationProgress(this.accountManager.db)
+    this.spacesMigration = {
+      progress,
+      publisher: new SpacesMigrationPublisher(this, progress),
+    }
   }
 
   static async fromEnv(
@@ -715,6 +730,7 @@ export class AppContext implements AsyncDisposable {
     // @TODO Implement this using an AsyncDisposableStack when it becomes
     // widely available.
     try {
+      await this.spacesMigration.publisher.destroy()
       await this.backgroundQueue.destroy()
     } finally {
       try {

@@ -66,6 +66,7 @@ export default function (server: Server, ctx: AppContext) {
         signingKey,
         kemKey,
         plcOp,
+        kemPublished,
         deactivated,
       } = ctx.entrywayClient
         ? await validateInputsForEntrywayPds(ctx, input.body)
@@ -101,6 +102,7 @@ export default function (server: Server, ctx: AppContext) {
             repoRev: commit.rev,
             inviteCode,
             deactivated,
+            kemPublished,
           })
 
           try {
@@ -223,6 +225,7 @@ const validateInputsForEntrywayPds = async (
     // @TODO The entryway path does not publish the KEM key yet.
     kemKey: await P256Keypair.create({ exportable: true }),
     plcOp,
+    kemPublished: false,
     deactivated: false,
   }
 }
@@ -323,6 +326,8 @@ const validateInputsForLocalPds = async (
     signingKey,
     kemKey,
     plcOp,
+    // The genesis op names the KEM key. A brought DID publishes it later.
+    kemPublished: plcOp !== null,
     deactivated,
   }
 }
