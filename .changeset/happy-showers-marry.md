@@ -2,4 +2,4 @@
 '@atproto/ozone': patch
 ---
 
-Allow filtering automatic record language tags by record type and omit undetermined language tags except on accounts and self profiles.
+Allow filtering automatic record language tags by record type.

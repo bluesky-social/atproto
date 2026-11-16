@@ -29,11 +29,9 @@ export class LanguageTagger extends ContentTagger {
   async buildTags(): Promise<string[]> {
     try {
       const recordLangs = await this.getRecordLang()
-      const langs = (recordLangs ?? []).filter(
-        (lang) => lang.toLowerCase() !== 'und',
-      )
-      if (!langs.length && this.usesAuthorFeed()) langs.push('und')
-      return langs.map((lang) => `${this.tagPrefix}${lang}`)
+      return recordLangs
+        ? recordLangs.map((lang) => `${this.tagPrefix}${lang}`)
+        : [`${this.tagPrefix}und`]
     } catch (err) {
       log.error({ subject: this.subject, err }, 'Error getting record langs')
       return []
@@ -61,19 +59,14 @@ export class LanguageTagger extends ContentTagger {
     return text?.trim()
   }
 
-  private usesAuthorFeed(): boolean {
-    return (
-      this.subject.isRepo() ||
-      (this.subject.isRecord() &&
-        this.subject.parsedUri.collection === app.bsky.actor.profile.$nsid &&
-        this.subject.parsedUri.rkey === 'self')
-    )
-  }
-
   async getRecordLang(): Promise<string[] | null> {
     const langs = new Set<string>()
 
-    if (this.usesAuthorFeed()) {
+    if (
+      this.subject.isRepo() ||
+      (this.subject.isRecord() &&
+        this.subject.uri.endsWith('/app.bsky.actor.profile/self'))
+    ) {
       const feed = await this.moderationService.views.fetchAuthorFeed(
         this.subject.did,
       )

@@ -23,9 +23,9 @@ Language and embed tags, manually applied tags, and existing report tags are una
 
 ## Language tags
 
-By default, Ozone adds language tags to all record types. Set `OZONE_LANGUAGE_TAG_RECORD_TYPES` to a comma-separated list or JSON array of record NSIDs and namespace wildcards to restrict automatic language tagging of records. For example, `app.bsky.feed.post,com.example.*` and `["app.bsky.feed.post","com.example.*"]` both allow those two patterns. `*` allows all records, while `[]` disables automatic language tagging for records. Restart the API after changing this setting. An unset or empty value preserves the default. The filter does not affect account, message, or conversation subjects, other tags, or existing language tags.
+By default, Ozone adds language tags to all record types. Set `OZONE_LANGUAGE_TAG_RECORD_TYPES` to a comma-separated list or JSON array of record NSIDs and namespace wildcards to restrict automatic language tagging of records. For example, `app.bsky.*,site.standard.document` and `["app.bsky.*","site.standard.document"]` both allow those two patterns. `*` allows all records, while `[]` disables automatic language tagging for records. Restart the API after changing this setting. An unset or empty value preserves the default. The filter does not affect account, message, or conversation subjects, other tags, or existing language tags.
 
-Ozone adds `lang:und` to accounts and `app.bsky.actor.profile/self` records when their language is undetermined. It does not automatically add `lang:und` to other subjects. Existing tags are left in place. Record subjects without a language tag are evaluated again on later reports or moderation events, which can add language tags if the content changes but can also repeat lookups. The record-type filter also applies to profile records.
+Eligible subjects retain the existing `lang:und` fallback when no language can be determined. A language tag prevents later events from repeating language detection. The filter applies to all record types, including profiles.
 
 ## Report reason rejection metrics
 

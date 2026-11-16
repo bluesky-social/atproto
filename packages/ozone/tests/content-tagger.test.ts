@@ -203,7 +203,7 @@ describe('moderation subject content tagging', () => {
       },
     )
 
-    it('only adds the account fallback when no known feed language exists', async () => {
+    it('preserves declared undetermined and known account languages', async () => {
       const unknown = await sc.createAccount('unknown-language', {
         handle: 'unknown-language.test',
         email: 'unknown-language@test.example',
@@ -233,7 +233,7 @@ describe('moderation subject content tagging', () => {
       expect((await getStatus(unknown.did)).tags).toContain('lang:und')
       const mixedTags = (await getStatus(mixed.did)).tags
       expect(mixedTags).toContain('lang:en')
-      expect(mixedTags).not.toContain('lang:und')
+      expect(mixedTags).toContain('lang:und')
     })
 
     it.each(['createReport', 'emitEvent'])(
@@ -281,12 +281,28 @@ describe('moderation subject content tagging', () => {
             },
             { headers: sc.getHeaders(sc.dids.carol) },
           )
+          const standard = await sc.agent.com.atproto.repo.createRecord(
+            {
+              repo: sc.dids.carol,
+              collection: 'site.standard.document',
+              validate: false,
+              record: { $type: 'site.standard.document', langs: ['fr'] },
+            },
+            { headers: sc.getHeaders(sc.dids.carol) },
+          )
           await network.processAll()
 
-          service.languageTagRecordTypes = ['app.bsky.*']
+          service.languageTagRecordTypes = [
+            'app.bsky.*',
+            'site.standard.document',
+          ]
           expect((await report(list.uriStr, list.cidStr)).tags).toContain(
             'lang:ja',
           )
+          expect(
+            (await report(standard.data.uri as AtUriString, standard.data.cid))
+              .tags,
+          ).toContain('lang:fr')
           const otherStatus = await report(
             other.data.uri as AtUriString,
             other.data.cid,
@@ -377,7 +393,7 @@ describe('moderation subject content tagging', () => {
     )
 
     it.each(['createReport', 'emitEvent'])(
-      'omits undetermined language tags through %s',
+      'tags undetermined records once through %s',
       async (endpoint) => {
         const unspecified = await sc.post(
           sc.dids.carol,
@@ -403,7 +419,13 @@ describe('moderation subject content tagging', () => {
         )
         await network.processAll()
 
-        for (const post of [unspecified, undetermined, mixed]) {
+        const ctx = network.ozone.ctx
+        const views = ctx.modService(ctx.db).views
+        using fetchRecords = jest.spyOn(
+          Object.getPrototypeOf(views) as typeof views,
+          'fetchRecords',
+        )
+        const report = async (post: typeof unspecified) => {
           const subject = com.atproto.repo.strongRef.$build({
             uri: post.ref.uriStr,
             cid: post.ref.cidStr,
@@ -423,48 +445,29 @@ describe('moderation subject content tagging', () => {
             })
           }
         }
+        await report(unspecified)
+        const readsAfterFirstReport = fetchRecords.mock.calls.filter(
+          ([subjects]) =>
+            subjects.some((item) => item.uri === unspecified.ref.uriStr),
+        ).length
+        expect(readsAfterFirstReport).toBeGreaterThan(0)
+        await report(unspecified)
+        expect(
+          fetchRecords.mock.calls.filter(([subjects]) =>
+            subjects.some((item) => item.uri === unspecified.ref.uriStr),
+          ),
+        ).toHaveLength(readsAfterFirstReport)
+        await report(undetermined)
+        await report(mixed)
 
         expect((await getStatus(unspecified.ref.uriStr)).tags).toEqual(
-          expect.arrayContaining(['report:spam', 'embed:image']),
+          expect.arrayContaining(['report:spam', 'embed:image', 'lang:und']),
         )
-        expect((await getStatus(unspecified.ref.uriStr)).tags).not.toContain(
-          'lang:und',
-        )
-        expect((await getStatus(undetermined.ref.uriStr)).tags).not.toContain(
+        expect((await getStatus(undetermined.ref.uriStr)).tags).toContain(
           'lang:und',
         )
         expect((await getStatus(mixed.ref.uriStr)).tags).toContain('lang:en')
-        expect((await getStatus(mixed.ref.uriStr)).tags).not.toContain(
-          'lang:und',
-        )
-
-        const updated = await sc.agent.com.atproto.repo.putRecord(
-          {
-            repo: sc.dids.carol,
-            collection: 'app.bsky.feed.post',
-            rkey: undetermined.ref.uri.rkey,
-            record: {
-              $type: 'app.bsky.feed.post',
-              text: '',
-              createdAt: new Date().toISOString(),
-              langs: ['fr'],
-            },
-          },
-          { headers: sc.getHeaders(sc.dids.carol) },
-        )
-        await network.processAll()
-        await modClient.emitEvent({
-          subject: com.atproto.repo.strongRef.$build({
-            uri: undetermined.ref.uriStr,
-            cid: updated.data.cid,
-          }),
-          event: tools.ozone.moderation.defs.modEventReport.$build({
-            reportType: com.atproto.moderation.defs.ReasonSpam,
-          }),
-        })
-        expect((await getStatus(undetermined.ref.uriStr)).tags).toContain(
-          'lang:fr',
-        )
+        expect((await getStatus(mixed.ref.uriStr)).tags).toContain('lang:und')
       },
     )
 
