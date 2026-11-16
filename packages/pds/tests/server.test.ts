@@ -134,7 +134,19 @@ describe('server', () => {
   it('healthcheck succeeds when database is available.', async () => {
     const res = await fetch(`${network.pds.url}/xrpc/_health`)
     expect(res.status).toEqual(200)
-    await expect(res.json()).resolves.toEqual({ version: '0.0.0' })
+    await expect(res.json()).resolves.toEqual({
+      version: '0.0.0',
+      // Temporary: removed with the spaces migration path
+      spacesMigration: {
+        publisher: 'waiting',
+        total: 0,
+        storesMigrated: 0,
+        keysPublished: 0,
+        unpublishable: 0,
+        failing: 0,
+        sweepFailing: 0,
+      },
+    })
   })
 
   // @TODO this is hanging for some unknown reason

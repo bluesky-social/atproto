@@ -18,3 +18,17 @@ migrations in a single transaction that holds SQLite's write lock, so racing
 connections and interrupted runs can't leave a database half-migrated. A
 migration therefore must not use statements SQLite refuses inside a
 transaction, such as `PRAGMA journal_mode` or `VACUUM`.
+
+## Spaces migration path is temporary
+
+Migrating accounts to spaces readiness (publisher, sweep, progress table use,
+`internal.pds.*` endpoints, `spacesMigration` health field) is removed once the
+fleet completes; only the progress table stays, per additive-only. While it
+exists:
+
+- A KEM key file is written (no-clobber, fsynced) before it is ever published,
+  and key files are never overwritten: a DID document must never name a KEM key
+  the PDS doesn't hold.
+- The PDS publisher never runs behind an entryway; the entryway publishes and
+  the PDS only exposes the `internal.pds.*` endpoints.
+- Background migration workers must never throw out to the process.
