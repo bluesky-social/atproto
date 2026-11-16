@@ -38,6 +38,119 @@ describe('moderation subject content tagging', () => {
 
   describe('lang tagger', () => {
     it.each(['createReport', 'emitEvent'])(
+      'avoids repeated self-profile lookups through %s when its language is unknown',
+      async (endpoint) => {
+        const account = await sc.createAccount(
+          `profile-no-language-${endpoint}`,
+          {
+            handle:
+              endpoint === 'createReport' ? 'profile-r.test' : 'profile-e.test',
+            email: `profile-${endpoint}@empty.test`,
+            password: 'hunter2',
+          },
+        )
+        const profile = await sc.updateProfile(account.did, {
+          $type: 'app.bsky.actor.profile',
+        })
+        await network.processAll()
+
+        const ctx = network.ozone.ctx
+        const service = ctx.cfg.service
+        const original = service.languageTagRecordTypes
+        const views = ctx.modService(ctx.db).views
+        using fetchFeed = jest.spyOn(
+          Object.getPrototypeOf(views) as typeof views,
+          'fetchAuthorFeed',
+        )
+        using fetchRecords = jest.spyOn(
+          Object.getPrototypeOf(views) as typeof views,
+          'fetchRecords',
+        )
+        const subject = com.atproto.repo.strongRef.$build(profile.ref.raw)
+        const report = async () => {
+          if (endpoint === 'createReport') {
+            await sc.createReport({
+              reasonType: ComAtprotoModerationDefs.REASONSPAM,
+              subject,
+              reportedBy: sc.dids.alice,
+            })
+          } else {
+            await modClient.emitEvent({
+              subject,
+              event: tools.ozone.moderation.defs.modEventReport.$build({
+                reportType: com.atproto.moderation.defs.ReasonSpam,
+              }),
+            })
+          }
+        }
+        const feedCalls = () =>
+          fetchFeed.mock.calls.filter(([did]) => did === account.did)
+        const recordCalls = () =>
+          fetchRecords.mock.calls.filter(([subjects]) =>
+            subjects.some((item) => item.uri === profile.ref.uriStr),
+          )
+
+        try {
+          service.languageTagRecordTypes = ['app.bsky.feed.post']
+          await report()
+          expect((await getStatus(profile.ref.uriStr)).tags).not.toContain(
+            'lang:und',
+          )
+          expect(feedCalls()).toHaveLength(0)
+          expect(recordCalls()).toHaveLength(0)
+
+          service.languageTagRecordTypes = ['app.bsky.*']
+          await report()
+          await report()
+          expect((await getStatus(profile.ref.uriStr)).tags).toContain(
+            'lang:und',
+          )
+          expect(feedCalls()).toHaveLength(1)
+          expect(recordCalls()).toHaveLength(1)
+          const { events } = await modClient.queryEvents({
+            subject: profile.ref.uriStr,
+            addedTags: ['lang:und'],
+          })
+          expect(events).toHaveLength(1)
+        } finally {
+          service.languageTagRecordTypes = original
+        }
+      },
+    )
+
+    it('uses known languages from the self-profile and author feed', async () => {
+      const account = await sc.createAccount('profile-languages', {
+        handle: 'profile-langs.test',
+        email: 'profile-langs@test.example',
+        password: 'hunter2',
+      })
+      const profile = await sc.updateProfile(account.did, {
+        $type: 'app.bsky.actor.profile',
+        description: 'Xで有名な人達＋反AIや絵描きによくない',
+      })
+      await sc.post(
+        account.did,
+        'A post in English',
+        undefined,
+        undefined,
+        undefined,
+        {
+          langs: ['en-US'],
+        },
+      )
+      await network.processAll()
+      await sc.createReport({
+        reasonType: ComAtprotoModerationDefs.REASONSPAM,
+        subject: com.atproto.repo.strongRef.$build(profile.ref.raw),
+        reportedBy: sc.dids.alice,
+      })
+
+      const tags = (await getStatus(profile.ref.uriStr)).tags
+      expect(tags).toEqual(expect.arrayContaining(['lang:en', 'lang:ja']))
+      expect(tags).not.toContain('lang:und')
+    })
+
+    it.each(['createReport', 'emitEvent'])(
       'uses an undetermined account tag to avoid repeated feed lookups through %s',
       async (endpoint) => {
         const account = await sc.createAccount(`no-language-${endpoint}`, {
