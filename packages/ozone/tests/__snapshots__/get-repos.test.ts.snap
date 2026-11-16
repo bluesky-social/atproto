@@ -44,6 +44,7 @@ exports[`admin get multiple repos gets multiple repos by did 1`] = `
           "subjectBlobCids": [],
           "subjectRepoHandle": "alice.test",
           "tags": [
+            "lang:und",
             "report:spam",
             "report:other",
           ],

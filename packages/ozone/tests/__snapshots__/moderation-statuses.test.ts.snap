@@ -153,6 +153,7 @@ exports[`moderation-statuses query statuses returns statuses for subjects that r
     "subjectRepoHandle": "alice.test",
     "tags": [
       "report:misleading",
+      "lang:und",
     ],
     "takendown": false,
     "updatedAt": "1970-01-01T00:00:00.000Z",

@@ -38,6 +38,7 @@ exports[`moderation-events get event gets an event by specific id 1`] = `
         "subjectRepoHandle": "alice.test",
         "tags": [
           "report:misleading",
+          "lang:und",
           "report:spam",
         ],
         "takendown": false,

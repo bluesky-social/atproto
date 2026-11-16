@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals'
 import { ComAtprotoModerationDefs } from '@atproto/api'
 import {
   type ModeratorClient,
@@ -36,6 +37,92 @@ describe('moderation subject content tagging', () => {
   }
 
   describe('lang tagger', () => {
+    it.each(['createReport', 'emitEvent'])(
+      'uses an undetermined account tag to avoid repeated feed lookups through %s',
+      async (endpoint) => {
+        const account = await sc.createAccount(`no-language-${endpoint}`, {
+          handle:
+            endpoint === 'createReport'
+              ? 'empty-report.test'
+              : 'empty-event.test',
+          email: `${endpoint}@empty.test`,
+          password: 'hunter2',
+        })
+        await network.processAll()
+
+        const ctx = network.ozone.ctx
+        const views = ctx.modService(ctx.db).views
+        using fetchFeed = jest.spyOn(
+          Object.getPrototypeOf(views) as typeof views,
+          'fetchAuthorFeed',
+        )
+        const subject = com.atproto.admin.defs.repoRef.$build({
+          did: account.did,
+        })
+        const report = async () => {
+          if (endpoint === 'createReport') {
+            await sc.createReport({
+              reasonType: ComAtprotoModerationDefs.REASONSPAM,
+              subject,
+              reportedBy: sc.dids.alice,
+            })
+          } else {
+            await modClient.emitEvent({
+              subject,
+              event: tools.ozone.moderation.defs.modEventReport.$build({
+                reportType: com.atproto.moderation.defs.ReasonSpam,
+              }),
+            })
+          }
+        }
+
+        await report()
+        await report()
+        expect((await getStatus(account.did)).tags).toContain('lang:und')
+        expect(
+          fetchFeed.mock.calls.filter(([did]) => did === account.did),
+        ).toHaveLength(1)
+        const { events } = await modClient.queryEvents({
+          subject: account.did,
+          addedTags: ['lang:und'],
+        })
+        expect(events).toHaveLength(1)
+      },
+    )
+
+    it('only adds the account fallback when no known feed language exists', async () => {
+      const unknown = await sc.createAccount('unknown-language', {
+        handle: 'unknown-language.test',
+        email: 'unknown-language@test.example',
+        password: 'hunter2',
+      })
+      const mixed = await sc.createAccount('mixed-language', {
+        handle: 'mixed-language.test',
+        email: 'mixed-language@test.example',
+        password: 'hunter2',
+      })
+      await sc.post(unknown.did, '', undefined, undefined, undefined, {
+        langs: ['und-Latn'],
+      })
+      await sc.post(mixed.did, '', undefined, undefined, undefined, {
+        langs: ['und', 'en-US'],
+      })
+      await network.processAll()
+
+      for (const account of [unknown, mixed]) {
+        await sc.createReport({
+          reasonType: ComAtprotoModerationDefs.REASONSPAM,
+          subject: com.atproto.admin.defs.repoRef.$build({ did: account.did }),
+          reportedBy: sc.dids.alice,
+        })
+      }
+
+      expect((await getStatus(unknown.did)).tags).toContain('lang:und')
+      const mixedTags = (await getStatus(mixed.did)).tags
+      expect(mixedTags).toContain('lang:en')
+      expect(mixedTags).not.toContain('lang:und')
+    })
+
     it.each(['createReport', 'emitEvent'])(
       'filters record language tags through %s',
       async (endpoint) => {

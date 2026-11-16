@@ -41,6 +41,7 @@ exports[`admin get repo view gets a repo by did, even when taken down. 1`] = `
       "subjectBlobCids": [],
       "subjectRepoHandle": "alice.test",
       "tags": [
+        "lang:und",
         "report:spam",
         "report:other",
       ],
