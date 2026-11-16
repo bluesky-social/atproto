@@ -202,22 +202,38 @@ describe('spaces migration sweep', () => {
     expect(claim.mock.calls.length).toBeGreaterThan(1)
   })
 
-  it('retries an account whose sweep failed once its lease expires', async () => {
+  it('records a failed sweep and backs off before retrying it', async () => {
     const did = await createPreSpacesAccount()
     using ensure = jest
       .spyOn(ctx.actorStore, 'ensureKemKeypair')
       .mockRejectedValueOnce(new Error('disk full'))
+    const before = (await progress.summary()).sweepFailing
 
     await using _ = sweep()
-    await waitFor(async () => ensure.mock.calls.length > 0)
+    await waitFor(async () => (await row(did))?.sweepAttempts === 1)
+    const failed = await row(did)
+    expect(failed?.sweepLastError).toBe('disk full')
+    expect(failed?.storeMigratedAt).toBeNull()
+    expect(failed?.sweepLeaseOwner).toBeNull()
+    expect(failed?.sweepNextAttemptAt).toBeGreaterThan(Date.now())
+    expect((await progress.summary()).sweepFailing).toBe(before + 1)
+
+    // Not retried before its time
+    await wait(150)
+    expect(ensure).toHaveBeenCalledTimes(1)
     expect(await isSwept(did)).toBe(false)
-    // Make the lease taken by the failed attempt expire
+
+    // Once the time comes, it succeeds and the failure is cleared
     await db.db
       .updateTable('spaces_migration')
-      .set({ sweepLeaseExpiresAt: 0 })
+      .set({ sweepNextAttemptAt: 0 })
       .where('did', '=', did)
       .execute()
     await waitFor(() => isSwept(did))
+    const swept = await row(did)
+    expect(swept?.sweepAttempts).toBe(0)
+    expect(swept?.sweepLastError).toBeNull()
+    expect((await progress.summary()).sweepFailing).toBe(before)
   })
 
   it('stops promptly on destroy', async () => {
