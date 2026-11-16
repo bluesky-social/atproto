@@ -796,16 +796,22 @@ describe('report-assignment', () => {
       const reportId = await createReport()
       await assignReport({ reportId, isPermanent: true }, 'moderator')
       expect(await getReportStatus(reportId)).toBe('assigned')
+      const before = await listActivities({ reportId })
+      const queueActivities = before.activities.filter((a) =>
+        tools.ozone.report.defs.queueActivity.$isTypeOf(a.activity),
+      )
+      expect(queueActivities).toHaveLength(1)
 
       await unassignReport({ reportId }, 'moderator')
       // No queueId on the assignment, so the report goes back to 'open'.
       expect(await getReportStatus(reportId)).toBe('open')
 
       const { activities } = await listActivities({ reportId })
-      const queueActivity = activities.find(
-        (a) => a.activity.$type === 'tools.ozone.report.defs#queueActivity',
-      )
-      expect(queueActivity).toBeUndefined()
+      expect(
+        activities.filter((a) =>
+          tools.ozone.report.defs.queueActivity.$isTypeOf(a.activity),
+        ),
+      ).toEqual(queueActivities)
     })
   })
 })
