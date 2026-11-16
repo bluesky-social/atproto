@@ -111,6 +111,13 @@ class EventReporter {
     valueType: ValueType.INT,
   })
 
+  #labelerServiceJwts = meter.createCounter<{
+    lxm?: string
+  }>('auth.labeler_service_jwts', {
+    description: 'Labeler-signed service JWTs with a valid signature, by lxm',
+    valueType: ValueType.INT,
+  })
+
   #hydrationFailedCounter = meter.createCounter<{
     source: HydrationSource
     reason: 'abort' | 'timeout' | 'error'
@@ -313,6 +320,15 @@ class EventReporter {
       this.#authVerifierRequests.add(1, { verifier })
     } catch (err) {
       diag.error('Failed to record auth_verifier_request:', err)
+    }
+  }
+
+  labelerServiceJwt({ did, lxm }: { did: string; lxm?: string }) {
+    this.#log('labeler_service_jwt', { did, lxm })
+    try {
+      this.#labelerServiceJwts.add(1, { lxm })
+    } catch (err) {
+      diag.error('Failed to record labeler_service_jwt:', err)
     }
   }
 
