@@ -84,19 +84,15 @@ export class ActorStore {
     // run a simple select with retry logic to ensure the db is ready (not in wal recovery mode).
     // synchronous is per-connection and its pragma can hit the same busy error, so it shares the retry.
     try {
-      const newest = await retrySqlite(async () => {
+      const migrated = await retrySqlite(async () => {
         if (this.cfg.synchronousFull) {
           await db.ensureSynchronousFull()
         }
         // the one cheap read: it surfaces wal recovery, and tells us whether
         // this store is behind the latest migration
-        const result = await sql<{ name: string }>`
-          select name from kysely_migration order by name desc limit 1
-        `.execute(db.db)
-        return result.rows.at(0)
+        return atLatestMigration(db)
       })
-      // an empty table is treated as behind, and left to the migrator
-      if (!newest || newest.name.localeCompare(LATEST_ACTOR_MIGRATION) < 0) {
+      if (!migrated) {
         await getMigrator(db).migrateToLatestOrThrow()
       }
     } catch (err) {
@@ -105,6 +101,16 @@ export class ActorStore {
     }
 
     return db
+  }
+
+  /** Whether the store is at the latest migration. Does not migrate it. */
+  async isMigrated(did: string): Promise<boolean> {
+    const { dbLocation } = await this.getLocation(did)
+    if (!(await fileExists(dbLocation))) {
+      throw new InvalidRequestError('Repo not found', 'NotFound')
+    }
+    await using db = getDb(dbLocation, this.cfg.disableWalAutoCheckpoint)
+    return await retrySqlite(() => atLatestMigration(db))
   }
 
   async read<T>(
@@ -284,6 +290,15 @@ export class ActorStore {
     const opLoc = path.join(directory, `did-op`)
     await rmIfExists(opLoc)
   }
+}
+
+const atLatestMigration = async (db: ActorDb): Promise<boolean> => {
+  const result = await sql<{ name: string }>`
+    select name from kysely_migration order by name desc limit 1
+  `.execute(db.db)
+  const newest = result.rows.at(0)
+  // an empty table is treated as behind, and left to the migrator
+  return !!newest && newest.name.localeCompare(LATEST_ACTOR_MIGRATION) >= 0
 }
 
 const loadKey = async (loc: string): Promise<ExportableKeypair | undefined> => {

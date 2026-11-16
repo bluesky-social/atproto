@@ -122,6 +122,14 @@ export default function (server: Server, ctx: AppContext) {
                     'Failed to clear reserved keypair',
                   )
                 })
+              await ctx.actorStore
+                .clearReservedKemKeypair(kemKey.did(), did)
+                .catch((err) => {
+                  req.log.error(
+                    { did, kemKeyDid: kemKey.did(), err },
+                    'Failed to clear reserved kem keypair',
+                  )
+                })
 
               events.accountCreated({
                 source: com.atproto.server.createAccount.$lxm,
@@ -215,6 +223,20 @@ const validateInputsForEntrywayPds = async (
     signingKey: signingKey.did(),
   })
 
+  // A genesis op that names a KEM key must name one reserved here: a DID doc
+  // must never name a KEM key we do not hold.
+  const opKemKey = plcOp.verificationMethods.atproto_kem
+  let kemKey: ExportableKeypair | undefined
+  if (opKemKey !== undefined) {
+    kemKey = await ctx.actorStore.getReservedKemKeypair(did)
+    if (kemKey?.did() !== opKemKey) {
+      kemKey = await ctx.actorStore.getReservedKemKeypair(opKemKey)
+    }
+    if (kemKey?.did() !== opKemKey) {
+      throw new InvalidRequestError('Unknown KEM key', 'IncorrectKemKey')
+    }
+  }
+
   return {
     did,
     handle,
@@ -222,10 +244,11 @@ const validateInputsForEntrywayPds = async (
     password: undefined,
     inviteCode: undefined,
     signingKey,
-    // @TODO The entryway path does not publish the KEM key yet.
-    kemKey: await P256Keypair.create({ exportable: true }),
+    // Without one in the genesis op, the account gets an unpublished key that
+    // the entryway publishes later
+    kemKey: kemKey ?? (await P256Keypair.create({ exportable: true })),
     plcOp,
-    kemPublished: false,
+    kemPublished: kemKey !== undefined,
     deactivated: false,
   }
 }

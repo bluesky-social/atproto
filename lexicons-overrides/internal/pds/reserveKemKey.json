@@ -1,0 +1,36 @@
+{
+  "lexicon": 1,
+  "id": "internal.pds.reserveKemKey",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Reserve a KEM key on this PDS, for an entryway to name in the genesis PLC operation of an account it creates here. PDS-internal and temporary: it exists for the migration into spaces.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "did": {
+              "type": "string",
+              "format": "did",
+              "description": "The DID to reserve the key for, if already known."
+            }
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["kemKey"],
+          "properties": {
+            "kemKey": {
+              "type": "string",
+              "description": "The public key of the reserved KEM keypair, as a did:key."
+            }
+          }
+        }
+      }
+    }
+  }
+}
