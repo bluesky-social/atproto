@@ -1,5 +1,15 @@
 # @atproto/pds
 
+## 0.5.60
+
+### Patch Changes
+
+- [#5915](https://github.com/bluesky-social/atproto/pull/5915) [`56201be`](https://github.com/bluesky-social/atproto/commit/56201be4acdcb4333f2da430ce62f6e9a42aa79d) Thanks [@amckinley](https://github.com/amckinley)! - Proxy requests to the configured AppView (`PDS_BSKY_APP_VIEW_URL`) skip SSRF protection, so the AppView may be at a private address without setting `PDS_DISABLE_SSRF_PROTECTION`. Every other proxy target, including service endpoints from DID documents, keeps SSRF protection.
+
+- [#5911](https://github.com/bluesky-social/atproto/pull/5911) [`7dd086d`](https://github.com/bluesky-social/atproto/commit/7dd086d4de20d22777a64043ee29f4afa9a5811b) Thanks [@amckinley](https://github.com/amckinley)! - Add `PDS_SQLITE_SYNCHRONOUS_FULL`: when set, the actor store, account and sequencer SQLite databases run with `synchronous = FULL`, so an acknowledged write survives a power cut.
+
+- [#4722](https://github.com/bluesky-social/atproto/pull/4722) [`b9f1f1d`](https://github.com/bluesky-social/atproto/commit/b9f1f1d2b169cc509e192350496049cf93d6115d) Thanks [@gcwill70](https://github.com/gcwill70)! - Add bounded bulk moderation actions with per-subject report targeting, external IDs, and partial-failure results.
+
 ## 0.5.59
 
 ### Patch Changes
