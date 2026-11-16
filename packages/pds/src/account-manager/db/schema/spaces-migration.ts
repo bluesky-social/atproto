@@ -21,7 +21,6 @@ export interface SpacesMigration {
 export interface SpacesMigrationState {
   id: number
   publishStartAt: number
-  lastVersion: string | null
 }
 
 export const tableName = 'spaces_migration'

@@ -7,6 +7,7 @@ import {
   MINUTE,
   SECOND,
   bailableWait,
+  wait,
 } from '@atproto/common'
 import type { DidString } from '@atproto/syntax'
 import type { SpacesMigrationConfig } from '../config/config.js'
@@ -16,6 +17,7 @@ import { backoffMs } from './pacing.js'
 import type { SpacesMigrationProgress } from './progress.js'
 import {
   LeaseLostError,
+  PlcTimeoutError,
   type PublishContext,
   publishAccount,
 } from './publish.js'
@@ -33,6 +35,10 @@ export type SpacesMigrationPublisherOptions = SpacesMigrationConfig & {
   pollIntervalMs?: number
   /** Identifies this process in row leases. */
   owner?: string
+  /** Bounds each PLC call. */
+  plcTimeoutMs?: number
+  /** Bounds how long destroy() waits for the step in flight. */
+  destroyTimeoutMs?: number
 }
 
 export type PublisherContext = PublishContext &
@@ -93,7 +99,16 @@ export class SpacesMigrationPublisher implements AsyncDisposable {
   async destroy(): Promise<void> {
     this.destroyed = true
     this.waiter?.bail()
-    await this.running
+    if (!this.running) return
+    // A stuck step mustn't hold up shutdown. Its lease expires on its own.
+    const timeoutMs = this.opts.destroyTimeoutMs ?? 10 * SECOND
+    const stopped = await Promise.race([
+      this.running.then(() => true),
+      wait(timeoutMs).then(() => false),
+    ])
+    if (!stopped) {
+      log.warn({ timeoutMs }, 'spaces migration publisher did not stop in time')
+    }
   }
 
   async [Symbol.asyncDispose](): Promise<void> {
@@ -157,8 +172,11 @@ export class SpacesMigrationPublisher implements AsyncDisposable {
   private async publish(did: DidString): Promise<void> {
     const { owner, progress } = this
     try {
-      const outcome = await publishAccount(this.ctx, did, () =>
-        progress.holdsLease(did, owner, Date.now()),
+      const outcome = await publishAccount(
+        this.ctx,
+        did,
+        () => progress.holdsLease(did, owner, Date.now()),
+        { plcTimeoutMs: this.opts.plcTimeoutMs },
       )
       if (outcome === 'published') {
         await progress.recordPublished(did, owner)
@@ -182,7 +200,7 @@ export class SpacesMigrationPublisher implements AsyncDisposable {
         this.plcBackoffUntil = Date.now() + delayMs
         this.state = 'backoff'
         log.warn(
-          { did, status: err.status, delayMs },
+          { did, err, delayMs },
           'plc pushed back, spaces migration publisher backing off',
         )
       } else {
@@ -211,9 +229,11 @@ export class SpacesMigrationPublisher implements AsyncDisposable {
   }
 }
 
-function isPlcBackpressure(err: unknown): err is plc.PlcClientError {
+// PLC is overloaded or down: 429, 5xx (incl. network errors), or no answer
+function isPlcBackpressure(err: unknown): boolean {
   return (
-    err instanceof plc.PlcClientError &&
-    (err.status === 429 || err.status >= 500)
+    err instanceof PlcTimeoutError ||
+    (err instanceof plc.PlcClientError &&
+      (err.status === 429 || err.status >= 500))
   )
 }
