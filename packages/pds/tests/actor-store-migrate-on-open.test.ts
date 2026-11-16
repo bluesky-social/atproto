@@ -1,6 +1,7 @@
 import { jest } from '@jest/globals'
 import SqliteDB from 'better-sqlite3'
 import { TestPds, TestPlc } from '@atproto/dev-env'
+import { ActorStore } from '../src/actor-store/actor-store.js'
 import { Migrator } from '../src/db/migrator.js'
 
 const SPACE_TABLES = [
@@ -99,8 +100,12 @@ describe('actor store migration on open', () => {
 
   it('does not run the migrator when the store is current', async () => {
     const did = await createAccount()
+    // dev-env runs the PDS from dist, a different module graph than the spy's,
+    // so open the store through an ActorStore built from src
+    const { cfg, resources } = pds.ctx.actorStore
+    const srcStore = new ActorStore(cfg, resources)
     using spy = jest.spyOn(Migrator.prototype, 'migrateToLatestOrThrow')
-    await pds.ctx.actorStore.read(did, async () => {})
+    await srcStore.read(did, async () => {})
     expect(spy).toHaveBeenCalledTimes(0)
   })
 
