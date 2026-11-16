@@ -1,5 +1,5 @@
 import type { Server } from '@atproto/xrpc-server'
-import { AuthScope } from '../../../../auth-scope.js'
+import { ACCESS_FULL, AuthScope } from '../../../../auth-scope.js'
 import type { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
 import { assertRepoAvailability } from '../sync/util.js'
@@ -8,6 +8,7 @@ import { assertSpaceRead, isSpaceUserOrAdmin, toSpaceRef } from './util.js'
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.space.listBlobs, {
     auth: ctx.authVerifier.authorizationOrSpaceCredential({
+      scopes: ACCESS_FULL,
       additional: [AuthScope.Takendown],
       authorize: () => {
         // Performed in the handler as it requires the `space` param

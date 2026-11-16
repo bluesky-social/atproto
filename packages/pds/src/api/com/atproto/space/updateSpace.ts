@@ -1,4 +1,5 @@
 import type { Server } from '@atproto/xrpc-server'
+import { ACCESS_FULL } from '../../../../auth-scope.js'
 import type { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
 import {
@@ -10,6 +11,7 @@ import {
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.space.updateSpace, {
     auth: ctx.authVerifier.authorization({
+      scopes: ACCESS_FULL,
       checkTakedown: true,
       checkDeactivated: true,
       authorize: () => {

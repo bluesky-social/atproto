@@ -7,7 +7,7 @@ import {
 import type { SpaceRefString } from '@atproto/syntax'
 import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
 import { SpaceReader } from '../../../../actor-store/space/reader.js'
-import { AuthScope } from '../../../../auth-scope.js'
+import { ACCESS_FULL, AuthScope } from '../../../../auth-scope.js'
 import type { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
 import { assertRepoAvailability } from '../sync/util.js'
@@ -23,6 +23,7 @@ import {
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.space.getRepo, {
     auth: ctx.authVerifier.authorizationOrSpaceCredential({
+      scopes: ACCESS_FULL,
       additional: [AuthScope.Takendown],
       authorize: () => {
         // Performed in the handler as it requires the `space` param

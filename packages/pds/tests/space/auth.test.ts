@@ -125,15 +125,15 @@ describe('space auth', () => {
     })
 
     it.each([false, true])(
-      'refuses to mint a delegation token on an app password (privileged: %s)',
+      'refuses an app password on every space route (privileged: %s)',
       async (privileged) => {
-        // An app password carries no space grants to bound it by, and a
-        // delegation token buys whole-space read — including every other
-        // member's repo. Only a full session reaches it. Records it may still
-        // write.
+        // An app password carries no space grants to bound it by, so spaces
+        // take a full session or OAuth.
         const space = await sc.createSpace(alice, {
           skey: `app-pass-${privileged}`,
+          members: [bob],
         })
+        await sc.write(alice, space)
         const agent = network.pds.getAgent()
         const { data: created } =
           await agent.com.atproto.server.createAppPassword(
@@ -144,28 +144,58 @@ describe('space auth', () => {
           identifier: alice.did,
           password: created.password,
         })
-        const appPass = SeedClient.getHeaders(session.accessJwt)
+        const headers = SeedClient.getHeaders(session.accessJwt)
 
-        await expect(
-          alice.client.call(
-            com.atproto.space.getDelegationToken,
-            { space },
-            { headers: appPass },
-          ),
-        ).rejects.toThrow()
-
-        await expect(
-          alice.client.call(
-            com.atproto.space.createRecord,
-            {
-              space,
-              repo: alice.did,
-              collection: TEST_COLLECTION,
-              record: record(TEST_COLLECTION, 'from an app password'),
-            },
-            { headers: appPass },
-          ),
-        ).resolves.toBeDefined()
+        const attempts = [
+          () =>
+            alice.client.call(
+              com.atproto.space.createSpace,
+              {
+                spaceType: TEST_SPACE_TYPE,
+                skey: `app-pass-new-${privileged}`,
+                policy: com.atproto.memberspace.policy.$build({}),
+              },
+              { headers },
+            ),
+          () =>
+            alice.client.call(
+              com.atproto.space.getSpace,
+              { space },
+              { headers },
+            ),
+          () =>
+            alice.client.call(
+              com.atproto.memberspace.putMembers,
+              { space, members: [{ did: carol.did, read: true, write: true }] },
+              { headers },
+            ),
+          () =>
+            alice.client.call(
+              com.atproto.space.createRecord,
+              {
+                space,
+                repo: alice.did,
+                collection: TEST_COLLECTION,
+                record: record(TEST_COLLECTION, 'from an app password'),
+              },
+              { headers },
+            ),
+          () =>
+            alice.client.call(
+              com.atproto.space.listRecords,
+              { space, repo: alice.did },
+              { headers },
+            ),
+          () =>
+            alice.client.call(
+              com.atproto.space.getDelegationToken,
+              { space },
+              { headers },
+            ),
+        ]
+        for (const attempt of attempts) {
+          await expect(attempt()).rejects.toThrow('Bad token scope')
+        }
       },
     )
   })

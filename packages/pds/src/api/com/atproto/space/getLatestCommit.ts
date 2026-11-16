@@ -1,5 +1,6 @@
 import { COMMIT_MAC_PROFILE } from '@atproto/space'
 import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
+import { ACCESS_FULL } from '../../../../auth-scope.js'
 import type { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
 import { assertRepoAvailability } from '../sync/util.js'
@@ -15,6 +16,7 @@ import {
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.space.getLatestCommit, {
     auth: ctx.authVerifier.authorizationOrSpaceCredential({
+      scopes: ACCESS_FULL,
       authorize: () => {
         // Performed in the handler as it requires the `space` param
       },
