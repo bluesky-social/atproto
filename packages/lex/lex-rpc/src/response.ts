@@ -136,7 +136,7 @@ export type XrpcResponseBody<
  */
 export type XrpcResponsePayload<
   TMethod extends Procedure | Query,
-  TBinary extends XrpcBinaryBody,
+  TBinary extends XrpcBinaryBody = Uint8Array<ArrayBuffer>,
 > =
   TMethod['output'] extends Payload<infer TEncoding, infer TSchema>
     ? TEncoding extends string
