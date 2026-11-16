@@ -51,13 +51,19 @@ export class Migrator<T> extends KyselyMigrator {
     options?: MigrateOptions,
   ): Promise<MigrationResultSet> {
     try {
-      await this.tolerateLaterMigrations()
+      const seen = await this.tolerateLaterMigrations()
+      const result = await super.migrateToLatest(options)
+      if (!result.error) return result
+      // The stubs come from a read taken before kysely's lock. If a newer
+      // version migrated in between, kysely's locked read finds a migration
+      // with no stub. Retry once with a fresh read in that case only, so
+      // genuine corruption still fails.
+      const fresh = await this.tolerateLaterMigrations()
+      if (fresh.every((name) => seen.includes(name))) return result
+      return await super.migrateToLatest(options)
     } catch (error) {
       // Like kysely, report failures in the result rather than throwing
       return { error }
-    }
-    try {
-      return await super.migrateToLatest(options)
     } finally {
       this.provided.migrations = this.known
     }
@@ -91,19 +97,26 @@ export class Migrator<T> extends KyselyMigrator {
     })
   }
 
-  private async tolerateLaterMigrations(): Promise<void> {
+  // Sets up stubs for tolerated migrations, returning the executed names read.
+  private async tolerateLaterMigrations(): Promise<string[]> {
+    const executed = await this.readExecutedNames()
     const latestKnown = Object.keys(this.known).sort(compareNames).at(-1)
-    const tolerated = (await this.readExecutedNames()).filter(
+    const tolerated = executed.filter(
       (name) =>
         !Object.hasOwn(this.known, name) &&
         (latestKnown === undefined || compareNames(name, latestKnown) > 0),
     )
-    if (tolerated.length === 0) return
-    dbLogger.warn({ tolerated }, 'database has migrations from a newer version')
     const stubs = Object.fromEntries(
       tolerated.map((name): [string, Migration] => [name, { up: noop }]),
     )
     this.provided.migrations = { ...this.known, ...stubs }
+    if (tolerated.length > 0) {
+      dbLogger.warn(
+        { tolerated },
+        'database has migrations from a newer version',
+      )
+    }
+    return executed
   }
 
   private async readExecutedNames(): Promise<string[]> {

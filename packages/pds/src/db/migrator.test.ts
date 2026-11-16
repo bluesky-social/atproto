@@ -2,6 +2,7 @@ import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { setTimeout as sleep } from 'node:timers/promises'
+import { jest } from '@jest/globals'
 import type { Kysely } from 'kysely'
 import { sql } from 'kysely'
 import type { Migration } from 'kysely/migration'
@@ -208,6 +209,66 @@ describe('Migrator on a shared database file', () => {
     } finally {
       await db1.close()
       await db2.close()
+    }
+  })
+
+  it('retries once when a newer version migrates between its read and its lock', async () => {
+    const older = Database.sqlite(file)
+    const newer = Database.sqlite(file)
+    try {
+      await new Migrator(
+        older.db,
+        migrationsFor('001', '002'),
+      ).migrateToLatestOrThrow()
+
+      // Right after the older migrator's unlocked read, a newer version
+      // commits 003, before the older one takes the migration lock.
+      const migrator = new Migrator(older.db, migrationsFor('001', '002'))
+      const read = migrator['readExecutedNames'].bind(migrator)
+      let interleaved = false
+      using spy = jest
+        .spyOn(migrator as any, 'readExecutedNames')
+        .mockImplementation(async () => {
+          const names = await read()
+          if (!interleaved) {
+            interleaved = true
+            await new Migrator(
+              newer.db,
+              migrationsFor('001', '002', '003'),
+            ).migrateToLatestOrThrow()
+          }
+          return names
+        })
+
+      const results = await migrator.migrateToLatestOrThrow()
+
+      expect(results).toEqual([])
+      expect(spy).toHaveBeenCalledTimes(2)
+      expect(await executedNames(older)).toEqual(['001', '002', '003'])
+    } finally {
+      await older.close()
+      await newer.close()
+    }
+  })
+
+  it('does not retry an unknown migration that sorts before its latest', async () => {
+    const db = Database.sqlite(file)
+    try {
+      await new Migrator(
+        db.db,
+        migrationsFor('001', '002'),
+      ).migrateToLatestOrThrow()
+
+      const migrator = new Migrator(db.db, migrationsFor('001', '003'))
+      using spy = jest.spyOn(migrator as any, 'readExecutedNames')
+
+      await expect(migrator.migrateToLatestOrThrow()).rejects.toThrow(
+        /corrupted migrations/,
+      )
+      // Re-reading found nothing new, so it gave up instead of retrying
+      expect(spy).toHaveBeenCalledTimes(2)
+    } finally {
+      await db.close()
     }
   })
 
