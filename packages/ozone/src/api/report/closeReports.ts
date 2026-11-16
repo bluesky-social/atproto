@@ -18,6 +18,7 @@ export default function (server: Server, ctx: AppContext) {
       const {
         subject,
         includeAllOwned,
+        reportId,
         reportTypes,
         excludedReportTypes,
         actionEventId,
@@ -54,6 +55,7 @@ export default function (server: Server, ctx: AppContext) {
         subjectDid,
         subjectUri,
         includeAllOwned,
+        reportId,
         reportTypes,
         excludedReportTypes,
         actionEventId,
