@@ -93,6 +93,60 @@ describe('space auth', () => {
         await expect(read()).rejects.toMatchObject({ error: 'RepoNotFound' })
       }
     })
+
+    it('are refused for an app password, even a privileged one', async () => {
+      const space = await sc.createSpace(alice)
+      await sc.write(alice, space)
+      const { password } = await alice.client.call(
+        com.atproto.server.createAppPassword,
+        { name: 'space', privileged: true },
+        { headers: alice.headers },
+      )
+      const { accessJwt } = await alice.client.call(
+        com.atproto.server.createSession,
+        { identifier: alice.did, password },
+      )
+      const headers = SeedClient.getHeaders(accessJwt)
+
+      const calls = [
+        () =>
+          alice.client.call(
+            com.atproto.space.createSpace,
+            {
+              spaceType: TEST_SPACE_TYPE,
+              policy: com.atproto.memberspace.policy.$build({}),
+            },
+            { headers },
+          ),
+        () =>
+          alice.client.call(com.atproto.space.getSpace, { space }, { headers }),
+        () =>
+          alice.client.call(
+            com.atproto.memberspace.putMembers,
+            { space, members: [{ did: carol.did, read: true, write: true }] },
+            { headers },
+          ),
+        () => sc.write(alice, space, { headers }),
+        () =>
+          alice.client.call(
+            com.atproto.space.listRecords,
+            { space, repo: alice.did },
+            { headers },
+          ),
+        () =>
+          alice.client.call(
+            com.atproto.space.getDelegationToken,
+            { space },
+            { headers },
+          ),
+      ]
+      for (const call of calls) {
+        await expect(call()).rejects.toMatchObject({
+          error: 'InvalidToken',
+          message: 'Bad token scope',
+        })
+      }
+    })
   })
 
   describe('space credentials', () => {
@@ -341,26 +395,6 @@ describe('space auth', () => {
   })
 
   describe('delegation tokens', () => {
-    it('cannot be minted with an app password', async () => {
-      const space = await sc.createSpace(alice)
-      const { password } = await alice.client.call(
-        com.atproto.server.createAppPassword,
-        { name: 'space', privileged: true },
-        { headers: alice.headers },
-      )
-      const { accessJwt } = await alice.client.call(
-        com.atproto.server.createSession,
-        { identifier: alice.did, password },
-      )
-      await expect(
-        alice.client.call(
-          com.atproto.space.getDelegationToken,
-          { space },
-          { headers: SeedClient.getHeaders(accessJwt) },
-        ),
-      ).rejects.toMatchObject({ error: 'InvalidToken' })
-    })
-
     it('are answered SpaceNotFound by a host that is not the authority', async () => {
       const space = await sc.createSpace(alice, { members: [carol] })
       const token = await sc.delegationTokenFor(carol, space)

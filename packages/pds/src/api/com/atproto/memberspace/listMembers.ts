@@ -1,4 +1,5 @@
 import type { Server } from '@atproto/xrpc-server'
+import { ACCESS_FULL } from '../../../../auth-scope.js'
 import type { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
 import { assertMemberspace } from '../../../../space-policy/policy.js'
@@ -9,6 +10,7 @@ export default function (server: Server, ctx: AppContext) {
     // OAuth only: the member list is the authority's own state, so a space
     // credential does not reach it.
     auth: ctx.authVerifier.authorization({
+      scopes: ACCESS_FULL,
       authorize: () => {
         // Performed in the handler as it requires the `space` param
       },
