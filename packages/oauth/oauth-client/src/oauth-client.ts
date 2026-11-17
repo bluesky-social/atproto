@@ -101,7 +101,20 @@ export type OAuthClientOptions = {
 
 export type OAuthClientFetchMetadataOptions = {
   clientId: OAuthClientIdDiscoverable
+
+  /**
+   * The fetch implementation used to retrieve the client metadata document.
+   *
+   * @note The body of unusable responses (e.g. non-200 responses) gets
+   * cancelled, and that cancellation is awaited (its failures are thrown).
+   * Since cancelling the body of a cloned response only settles once every
+   * clone was consumed or cancelled, implementations that keep clones of the
+   * responses they return (e.g. for caching) must consume or cancel them, or
+   * {@link OAuthClient.fetchMetadata} will never settle.
+   * @default globalThis.fetch
+   */
   fetch?: Fetch
+
   signal?: AbortSignal
 }
 
