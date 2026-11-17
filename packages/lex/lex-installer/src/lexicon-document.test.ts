@@ -47,37 +47,33 @@ const refsOf = (...args: Parameters<typeof listDocumentNsidRefs>) =>
   Array.from(listDocumentNsidRefs(...args), String)
 
 describe(listDocumentNsidRefs, () => {
-  describe('space definitions', () => {
-    it('ignores the declared collections by default', () => {
-      expect(refsOf(spaceDoc)).toEqual([])
-    })
-
-    it('lists the declared collections with includeScopeCollections', () => {
-      expect(refsOf(spaceDoc, { includeScopeCollections: true })).toEqual([
-        'com.example.post',
-        'com.example.comment',
-      ])
-    })
+  it('lists no refs from space definitions or permissions by default', () => {
+    expect(refsOf(spaceDoc)).toEqual([])
+    expect(refsOf(permissionSetDoc)).toEqual([])
   })
 
-  describe('permission sets', () => {
-    it('ignores the permissions by default', () => {
-      expect(refsOf(permissionSetDoc)).toEqual([])
-    })
-
-    it('lists the space permission refs with includePermissionSpace', () => {
-      expect(
-        refsOf(permissionSetDoc, { includePermissionSpace: true }),
-      ).toEqual(['com.example.group', 'com.example.post'])
-    })
-
-    it('applies each permission option to its own resource', () => {
-      expect(refsOf(permissionSetDoc, { includePermissionRpc: true })).toEqual([
-        'com.example.getThing',
-      ])
-      expect(refsOf(permissionSetDoc, { includePermissionRepo: true })).toEqual(
-        ['com.example.thing'],
-      )
-    })
+  it.each([
+    {
+      option: 'includeScopeCollections',
+      doc: spaceDoc,
+      refs: ['com.example.post', 'com.example.comment'],
+    },
+    {
+      option: 'includePermissionRpc',
+      doc: permissionSetDoc,
+      refs: ['com.example.getThing'],
+    },
+    {
+      option: 'includePermissionRepo',
+      doc: permissionSetDoc,
+      refs: ['com.example.thing'],
+    },
+    {
+      option: 'includePermissionSpace',
+      doc: permissionSetDoc,
+      refs: ['com.example.group', 'com.example.post'],
+    },
+  ])('lists only the refs $option adds', ({ option, doc, refs }) => {
+    expect(refsOf(doc, { [option]: true })).toEqual(refs)
   })
 })

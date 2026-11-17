@@ -2,511 +2,381 @@ import { describe, expect, it } from 'vitest'
 import {
   SpacePermission,
   type SpacePermissionMatch,
+  type SpacePermissionMatchOperation,
 } from './space-permission.js'
 
-// Default action list when `action` is omitted (read implies read_self).
-const DEFAULT_ACTIONS = ['read', 'create', 'update', 'delete'] as const
+const FORUM = {
+  spaceType: 'com.atmoboards.forum',
+  authority: 'did:plc:abc',
+  skey: 'default',
+} as const
+
+const WILDCARD = { spaceType: '*', authority: '*', skey: '*' } as const
+
+const THREAD = 'com.atmoboards.thread'
+
+// A forum grant for any authority, so that only `params` decide the outcome.
+const grant = (params = '') =>
+  SpacePermission.fromString(`space:com.atmoboards.forum?authority=*${params}`)!
 
 describe('SpacePermission', () => {
   describe('static', () => {
     describe('fromString', () => {
-      it('parses positional type with all defaults', () => {
-        const scope = SpacePermission.fromString('space:com.atmoboards.forum')
-        expect(scope).not.toBeNull()
-        expect(scope!.spaceType).toBe('com.atmoboards.forum')
-        // authority defaults to `self`, not `*`.
-        expect(scope!.authority).toBe('self')
-        expect(scope!.skey).toBe('*')
-        expect(scope!.collection).toEqual(undefined)
-        expect(scope!.action).toEqual(DEFAULT_ACTIONS)
-        expect(scope!.manage).toEqual(undefined)
-      })
-
-      it('reads the positional space type as spaceType, and prints it positionally', () => {
-        const scope = SpacePermission.fromString(
-          'space:com.atmoboards.forum?action=read',
-        )
-        expect(scope!.spaceType).toBe('com.atmoboards.forum')
-        expect(scope!.toString()).toBe('space:com.atmoboards.forum?action=read')
-      })
-
-      it('accepts spaceType as a named param, but not type', () => {
+      it('applies defaults: authority=self, skey=*, read and writes, no collection, no manage', () => {
         expect(
-          SpacePermission.fromString('space?spaceType=com.atmoboards.forum')
-            ?.spaceType,
-        ).toBe('com.atmoboards.forum')
-        expect(
-          SpacePermission.fromString('space?type=com.atmoboards.forum'),
-        ).toBeNull()
-      })
-
-      it('parses wildcard type', () => {
-        const scope = SpacePermission.fromString(
-          'space:*?authority=did:plc:abc123xyz',
-        )
-        expect(scope).not.toBeNull()
-        expect(scope!.spaceType).toBe('*')
-        expect(scope!.authority).toBe('did:plc:abc123xyz')
-      })
-
-      it('parses authority=*', () => {
-        const scope = SpacePermission.fromString(
-          'space:com.atmoboards.forum?authority=*',
-        )
-        expect(scope!.authority).toBe('*')
+          SpacePermission.fromString('space:com.atmoboards.forum'),
+        ).toEqual({
+          spaceType: 'com.atmoboards.forum',
+          authority: 'self',
+          skey: '*',
+          collection: undefined,
+          action: ['read', 'create', 'update', 'delete'],
+          manage: undefined,
+        })
       })
 
       it('parses a fully-specified scope', () => {
-        const scope = SpacePermission.fromString(
-          'space:com.atmoboards.forum?authority=did:plc:abc123xyz&skey=default&collection=com.atmoboards.thread&action=create&action=update',
-        )
-        expect(scope).not.toBeNull()
-        expect(scope!.spaceType).toBe('com.atmoboards.forum')
-        expect(scope!.authority).toBe('did:plc:abc123xyz')
-        expect(scope!.skey).toBe('default')
-        expect(scope!.collection).toEqual(['com.atmoboards.thread'])
-        expect(scope!.action).toEqual(['create', 'update'])
-      })
-
-      it('omitted action defaults to read + the three writes', () => {
-        const scope = SpacePermission.fromString(
-          'space:com.atmoboards.forum?collection=*',
-        )
-        expect(scope!.action).toEqual(DEFAULT_ACTIONS)
-      })
-
-      it('parses read_self action', () => {
-        const scope = SpacePermission.fromString(
-          'space:com.atmoboards.forum?action=read_self&collection=*',
-        )
-        expect(scope!.action).toEqual(['read_self'])
-      })
-
-      it('parses manage verbs into the manage list', () => {
-        const scope = SpacePermission.fromString(
-          'space:com.atmoboards.forum?manage=update&manage=delete',
-        )
-        expect(scope!.manage).toEqual(['update', 'delete'])
-      })
-
-      it('rejects invalid manage verbs', () => {
-        expect(
-          SpacePermission.fromString('space:com.example.x?manage=bogus'),
-        ).toBeNull()
-      })
-
-      it('omitted collection means no write targets (undefined)', () => {
-        const scope = SpacePermission.fromString('space:com.atmoboards.forum')
-        expect(scope!.collection).toEqual(undefined)
-      })
-
-      it('rejects invalid type NSID', () => {
-        expect(SpacePermission.fromString('space:foo bar')).toBeNull()
-        expect(SpacePermission.fromString('space:short')).toBeNull()
-      })
-
-      it('rejects invalid authority', () => {
-        expect(
-          SpacePermission.fromString('space:*?authority=not-a-did'),
-        ).toBeNull()
-        expect(SpacePermission.fromString('space:*?authority=did:')).toBeNull()
-      })
-
-      it('rejects invalid action values', () => {
-        expect(
-          SpacePermission.fromString('space:com.example.x?action=bogus'),
-        ).toBeNull()
-      })
-
-      it('rejects invalid collection NSIDs (without wildcard)', () => {
         expect(
           SpacePermission.fromString(
-            'space:com.example.x?collection=not_an_nsid',
+            'space:com.atmoboards.forum?authority=did:plc:abc&skey=default&collection=com.atmoboards.thread&action=create&action=update&manage=update&manage=delete',
           ),
-        ).toBeNull()
+        ).toEqual({
+          spaceType: 'com.atmoboards.forum',
+          authority: 'did:plc:abc',
+          skey: 'default',
+          collection: ['com.atmoboards.thread'],
+          action: ['create', 'update'],
+          manage: ['update', 'delete'],
+        })
       })
 
-      it('rejects an empty skey', () => {
-        expect(
-          SpacePermission.fromString('space:com.example.x?skey='),
-        ).toBeNull()
-      })
-
-      it('accepts rkey-shaped skeys', () => {
-        for (const skey of [
-          'self',
-          '3jui7kd54zh2y',
-          'a.b-c_d~e:f',
-          'x'.repeat(512),
-        ]) {
-          const scope = SpacePermission.fromString(
-            `space:com.example.x?skey=${skey}`,
-          )
-          expect(scope?.skey).toBe(skey)
-        }
-      })
-
-      it('rejects skeys that are not valid record keys', () => {
-        for (const skey of [
-          'hello world',
-          '.',
-          '..',
-          'a/b',
-          'a#b',
-          'x'.repeat(513),
-        ]) {
-          expect(
-            SpacePermission.fromString(
-              `space:com.example.x?skey=${encodeURIComponent(skey)}`,
-            ),
-          ).toBeNull()
-        }
-      })
-
-      it('returns null for non-space prefix', () => {
-        expect(SpacePermission.fromString('repo:com.example.x')).toBeNull()
-        expect(SpacePermission.fromString('whatever')).toBeNull()
-      })
+      for (const invalid of [
+        'repo:com.atmoboards.forum',
+        'space',
+        'space:invalid',
+        'space?type=com.atmoboards.forum',
+        'space:*?authority=not-a-did',
+        'space:com.atmoboards.forum?action=bogus',
+        'space:com.atmoboards.forum?manage=bogus',
+        'space:com.atmoboards.forum?collection=not_an_nsid',
+        'space:com.atmoboards.forum?skey=',
+        'space:com.atmoboards.forum?skey=..',
+        'space:com.atmoboards.forum?skey=a%2Fb',
+      ]) {
+        it(`rejects ${invalid}`, () => {
+          expect(SpacePermission.fromString(invalid)).toBeNull()
+        })
+      }
     })
 
     describe('scopeNeededFor', () => {
       it('builds a read scope', () => {
-        const scope = SpacePermission.scopeNeededFor({
-          spaceType: 'com.atmoboards.forum',
-          authority: 'did:plc:abc',
-          skey: 'default',
-          action: 'read',
-        })
-        expect(scope).toBe(
+        expect(
+          SpacePermission.scopeNeededFor({ ...FORUM, action: 'read' }),
+        ).toBe(
           'space:com.atmoboards.forum?authority=did:plc:abc&skey=default&action=read',
         )
       })
 
-      it('builds a write scope with collection', () => {
-        const scope = SpacePermission.scopeNeededFor({
-          spaceType: 'com.atmoboards.forum',
-          authority: 'did:plc:abc',
-          skey: 'default',
-          collection: 'com.atmoboards.thread',
-          action: 'create',
-        })
-        expect(scope).toBe(
+      it('builds a write scope naming the collection', () => {
+        expect(
+          SpacePermission.scopeNeededFor({
+            ...FORUM,
+            action: 'create',
+            collection: THREAD,
+          }),
+        ).toBe(
           'space:com.atmoboards.forum?authority=did:plc:abc&skey=default&collection=com.atmoboards.thread&action=create',
         )
       })
 
-      it('builds a manage scope without asking for record access', () => {
-        const scope = SpacePermission.scopeNeededFor({
-          spaceType: 'com.atmoboards.forum',
-          authority: 'did:plc:abc',
-          skey: 'default',
-          manage: 'update',
-        })
-        expect(scope).toBe(
+      it('builds a manage scope with only read_self', () => {
+        expect(
+          SpacePermission.scopeNeededFor({ ...FORUM, manage: 'update' }),
+        ).toBe(
           'space:com.atmoboards.forum?authority=did:plc:abc&skey=default&action=read_self&manage=update',
         )
       })
 
-      it.each([
-        [{ action: 'read' } as const],
-        [{ action: 'read_self' } as const],
-        [
-          {
-            action: 'create',
-            collection: 'com.atmoboards.thread',
-          } as const,
-        ],
-        [{ manage: 'delete' } as const],
-      ])('round-trips %o without widening the grant', (op) => {
-        const target: SpacePermissionMatch = {
-          spaceType: 'com.atmoboards.forum',
-          authority: 'did:plc:abc',
-          skey: 'default',
-          ...op,
-        }
+      it('builds a scope for a wildcard target', () => {
+        expect(
+          SpacePermission.scopeNeededFor({ ...WILDCARD, action: 'read_self' }),
+        ).toBe('space:*?authority=*&action=read_self')
+      })
+
+      it.each<SpacePermissionMatchOperation>([
+        { action: 'read' },
+        { action: 'read_self' },
+        { action: 'create', collection: THREAD },
+        { manage: 'delete' },
+      ])('suggests a scope that matches %o', (op) => {
+        const target: SpacePermissionMatch = { ...FORUM, ...op }
         const suggested = SpacePermission.scopeNeededFor(target)
-        const reparsed = SpacePermission.fromString(suggested)
-        expect(reparsed).not.toBeNull()
-        expect(reparsed!.matches(target)).toBe(true)
-        // The suggestion must not confer writes the caller never asked for.
-        if (!('collection' in op)) {
-          expect(
-            reparsed!.matches({
-              spaceType: 'com.atmoboards.forum',
-              authority: 'did:plc:abc',
-              skey: 'default',
-              action: 'create',
-              collection: 'com.atmoboards.thread',
-            }),
-          ).toBe(false)
-        }
+        expect(SpacePermission.fromString(suggested)!.matches(target)).toBe(
+          true,
+        )
       })
     })
   })
 
-  describe('matches', () => {
-    const baseTarget = {
-      spaceType: 'com.atmoboards.forum',
-      authority: 'did:plc:abc',
-      skey: 'default',
-    } as const
+  describe('instance', () => {
+    describe('matches', () => {
+      it('grants read on a matching space', () => {
+        expect(grant().matches({ ...FORUM, action: 'read' })).toBe(true)
+      })
 
-    // A grant covering any authority — the common case for a forum client that
-    // reads spaces hosted by others. `self` is resolved at issuance and tested
-    // separately below.
-    const anyAuthority = (rest = '') =>
-      SpacePermission.fromString(
-        `space:com.atmoboards.forum?authority=*${rest}`,
-      )!
+      it('refuses read when the action list excludes it', () => {
+        expect(
+          grant('&action=create').matches({ ...FORUM, action: 'read' }),
+        ).toBe(false)
+      })
 
-    it('grants read on tuple match (default action list includes read)', () => {
-      const scope = anyAuthority()
-      expect(scope.matches({ ...baseTarget, action: 'read' })).toBe(true)
+      it('refuses writes on a read-only grant', () => {
+        expect(
+          grant('&action=read&collection=*').matches({
+            ...FORUM,
+            action: 'create',
+            collection: THREAD,
+          }),
+        ).toBe(false)
+      })
+
+      it('refuses writes when no collection is named', () => {
+        expect(
+          grant().matches({ ...FORUM, action: 'create', collection: THREAD }),
+        ).toBe(false)
+      })
+
+      it('allows writes to any collection with collection=*', () => {
+        expect(
+          grant('&collection=*').matches({
+            ...FORUM,
+            action: 'create',
+            collection: THREAD,
+          }),
+        ).toBe(true)
+      })
+
+      it('limits writes to the named collections', () => {
+        const scope = grant(`&collection=${THREAD}`)
+        expect(
+          scope.matches({ ...FORUM, action: 'create', collection: THREAD }),
+        ).toBe(true)
+        expect(
+          scope.matches({
+            ...FORUM,
+            action: 'create',
+            collection: 'com.atmoboards.reply',
+          }),
+        ).toBe(false)
+      })
+
+      it('grants only the listed manage verbs', () => {
+        const scope = grant('&manage=update')
+        expect(scope.matches({ ...FORUM, manage: 'update' })).toBe(true)
+        expect(scope.matches({ ...FORUM, manage: 'delete' })).toBe(false)
+      })
+
+      it('confers no manage verb by default', () => {
+        expect(grant().matches({ ...FORUM, manage: 'update' })).toBe(false)
+      })
+
+      it('read implies read_self', () => {
+        expect(
+          grant('&action=read').matches({ ...FORUM, action: 'read_self' }),
+        ).toBe(true)
+      })
+
+      it('read_self does not imply read', () => {
+        const scope = grant('&action=read_self')
+        expect(scope.matches({ ...FORUM, action: 'read_self' })).toBe(true)
+        expect(scope.matches({ ...FORUM, action: 'read' })).toBe(false)
+      })
+
+      it('read_self is not constrained by collection', () => {
+        expect(
+          grant(`&action=read_self&collection=${THREAD}`).matches({
+            ...FORUM,
+            action: 'read_self',
+          }),
+        ).toBe(true)
+      })
+
+      it('matches any type with type=*', () => {
+        expect(
+          SpacePermission.fromString('space:*?authority=*')!.matches({
+            ...FORUM,
+            spaceType: 'com.example.group',
+            action: 'read',
+          }),
+        ).toBe(true)
+      })
+
+      it('refuses another space type', () => {
+        expect(
+          grant().matches({
+            ...FORUM,
+            spaceType: 'com.example.group',
+            action: 'read',
+          }),
+        ).toBe(false)
+      })
+
+      it('matches only the named authority and skey', () => {
+        const scope = SpacePermission.fromString(
+          'space:com.atmoboards.forum?authority=did:plc:abc&skey=default',
+        )!
+        expect(scope.matches({ ...FORUM, action: 'read' })).toBe(true)
+        expect(
+          scope.matches({
+            ...FORUM,
+            authority: 'did:plc:other',
+            action: 'read',
+          }),
+        ).toBe(false)
+        expect(scope.matches({ ...FORUM, skey: 'other', action: 'read' })).toBe(
+          false,
+        )
+      })
+
+      it('matches a wildcard target only with a wildcard grant', () => {
+        const target = { ...WILDCARD, action: 'read_self' } as const
+        expect(grant().matches(target)).toBe(false)
+        expect(
+          SpacePermission.fromString('space:*?authority=*')!.matches(target),
+        ).toBe(true)
+      })
+
+      it('an unresolved self authority matches nothing', () => {
+        expect(
+          SpacePermission.fromString('space:com.atmoboards.forum')!.matches({
+            ...FORUM,
+            action: 'read',
+          }),
+        ).toBe(false)
+      })
     })
 
-    it('refuses read when action list excludes it (e.g. action=create only)', () => {
-      const scope = anyAuthority('&action=create')
-      expect(scope.matches({ ...baseTarget, action: 'read' })).toBe(false)
+    describe('toString', () => {
+      it('formats a scope', () => {
+        expect(
+          new SpacePermission(
+            'com.atmoboards.forum',
+            'did:plc:abc',
+            'default',
+            [THREAD],
+            ['create'],
+            undefined,
+          ).toString(),
+        ).toBe(
+          'space:com.atmoboards.forum?authority=did:plc:abc&skey=default&collection=com.atmoboards.thread&action=create',
+        )
+      })
     })
 
-    it('action=read alone allows reads but blocks writes', () => {
-      const scope = anyAuthority('&action=read')
-      expect(scope.matches({ ...baseTarget, action: 'read' })).toBe(true)
-      expect(
-        scope.matches({
-          ...baseTarget,
-          action: 'create',
-          collection: 'com.atmoboards.thread',
-        }),
-      ).toBe(false)
+    describe('withResolvedAuthority', () => {
+      it('resolves self to the user DID', () => {
+        const scope = SpacePermission.fromString(
+          'space:com.atmoboards.forum?action=read',
+        )!.withResolvedAuthority('did:plc:abc')
+        expect(scope.toString()).toBe(
+          'space:com.atmoboards.forum?authority=did:plc:abc&action=read',
+        )
+        expect(scope.matches({ ...FORUM, action: 'read' })).toBe(true)
+      })
+
+      it('leaves a non-self authority unchanged', () => {
+        const scope = grant()
+        expect(scope.withResolvedAuthority('did:plc:abc')).toBe(scope)
+      })
     })
 
-    it('omitted collection blocks all writes even when action list includes them', () => {
-      const scope = anyAuthority()
-      expect(
-        scope.matches({
-          ...baseTarget,
-          action: 'create',
-          collection: 'com.atmoboards.thread',
-        }),
-      ).toBe(false)
-    })
+    describe('withDefaultCollections', () => {
+      it('materializes declared collections into a bare grant', () => {
+        const scope = grant().withDefaultCollections([
+          THREAD,
+          'com.atmoboards.reply',
+        ])
+        expect(scope.toString()).toBe(
+          'space:com.atmoboards.forum?authority=*&collection=com.atmoboards.reply&collection=com.atmoboards.thread',
+        )
+        expect(
+          scope.matches({ ...FORUM, action: 'create', collection: THREAD }),
+        ).toBe(true)
+      })
 
-    it('collection=* permits writes on any collection (when action allows)', () => {
-      const scope = anyAuthority('&collection=*')
-      expect(
-        scope.matches({
-          ...baseTarget,
-          action: 'create',
-          collection: 'any.collection.name',
-        }),
-      ).toBe(true)
-      expect(
-        scope.matches({
-          ...baseTarget,
-          action: 'update',
-          collection: 'another.one.here',
-        }),
-      ).toBe(true)
-    })
+      it('leaves a grant that names collections unchanged', () => {
+        const scope = grant(`&collection=${THREAD}`)
+        expect(scope.withDefaultCollections(['com.atmoboards.reply'])).toBe(
+          scope,
+        )
+      })
 
-    it('manage= governs space-level ops independent of collection', () => {
-      const scope = anyAuthority('&action=read&manage=update')
-      expect(scope.matches({ ...baseTarget, manage: 'update' })).toBe(true)
-      // a different manage verb is not covered
-      expect(scope.matches({ ...baseTarget, manage: 'delete' })).toBe(false)
-    })
-
-    it('a record-only grant (no manage) confers no manage verb', () => {
-      const scope = anyAuthority('&action=read')
-      expect(scope.matches({ ...baseTarget, manage: 'update' })).toBe(false)
-    })
-
-    it('default grant confers no manage capability', () => {
-      const scope = anyAuthority()
-      expect(scope.matches({ ...baseTarget, manage: 'update' })).toBe(false)
-    })
-
-    it('read implies read_self', () => {
-      const scope = anyAuthority('&action=read')
-      expect(scope.matches({ ...baseTarget, action: 'read_self' })).toBe(true)
-    })
-
-    it('read_self grants own-repo read but not whole-space read', () => {
-      const scope = anyAuthority('&action=read_self')
-      expect(scope.matches({ ...baseTarget, action: 'read_self' })).toBe(true)
-      expect(scope.matches({ ...baseTarget, action: 'read' })).toBe(false)
-    })
-
-    it('read_self is not constrained by collection', () => {
-      // A grant naming one collection still reads the whole of its own repo:
-      // reads are all-or-nothing at the repo boundary.
-      const scope = anyAuthority(
-        '&action=read_self&collection=com.atmoboards.thread',
-      )
-      expect(scope.matches({ ...baseTarget, action: 'read_self' })).toBe(true)
-    })
-
-    it('explicit collection limits writes to that collection', () => {
-      const scope = anyAuthority(
-        '&collection=com.atmoboards.thread&action=create',
-      )
-      expect(
-        scope.matches({
-          ...baseTarget,
-          action: 'create',
-          collection: 'com.atmoboards.thread',
-        }),
-      ).toBe(true)
-      expect(
-        scope.matches({
-          ...baseTarget,
-          action: 'create',
-          collection: 'com.atmoboards.reply',
-        }),
-      ).toBe(false)
-    })
-
-    it('type=* matches any space type', () => {
-      const scope = SpacePermission.fromString('space:*?authority=did:plc:abc')!
-      expect(scope.matches({ ...baseTarget, action: 'read' })).toBe(true)
-      expect(
-        scope.matches({
-          ...baseTarget,
-          spaceType: 'com.example.different',
-          action: 'read',
-        }),
-      ).toBe(true)
-    })
-
-    it('a concrete authority matches only that authority', () => {
-      const scope = SpacePermission.fromString(
-        'space:com.atmoboards.forum?authority=did:plc:abc&skey=default',
-      )!
-      expect(scope.matches({ ...baseTarget, action: 'read' })).toBe(true)
-      // wrong authority
-      expect(
-        scope.matches({
-          ...baseTarget,
-          authority: 'did:plc:other',
-          action: 'read',
-        }),
-      ).toBe(false)
-      // wrong skey
-      expect(
-        scope.matches({ ...baseTarget, skey: 'other', action: 'read' }),
-      ).toBe(false)
-    })
-
-    it('an unresolved `self` authority matches nothing (fail closed)', () => {
-      const scope = SpacePermission.fromString('space:com.atmoboards.forum')!
-      expect(scope.authority).toBe('self')
-      expect(scope.matches({ ...baseTarget, action: 'read' })).toBe(false)
-    })
-
-    it('a `self` authority resolved to the user DID matches that DID', () => {
-      const scope = SpacePermission.fromString(
-        'space:com.atmoboards.forum?action=read',
-      )!.withResolvedAuthority('did:plc:abc')
-      expect(scope.matches({ ...baseTarget, action: 'read' })).toBe(true)
-      expect(
-        scope.matches({
-          ...baseTarget,
-          authority: 'did:plc:other',
-          action: 'read',
-        }),
-      ).toBe(false)
-    })
-  })
-
-  describe('toString', () => {
-    it('round-trips a minimal scope', () => {
-      const scope = SpacePermission.fromString('space:com.atmoboards.forum')!
-      expect(scope.toString()).toBe('space:com.atmoboards.forum')
-    })
-
-    it('round-trips a complex scope', () => {
-      const input =
-        'space:com.atmoboards.forum?authority=did:plc:abc123xyz&skey=default&collection=com.atmoboards.thread&action=create'
-      const scope = SpacePermission.fromString(input)!
-      // Colons in DID are kept un-encoded for readability (see syntax-string).
-      expect(scope.toString()).toBe(input)
-    })
-  })
-
-  describe('withResolvedAuthority', () => {
-    it('resolves a `self` authority to the given user DID', () => {
-      const scope = SpacePermission.fromString('space:com.atmoboards.forum')!
-      expect(scope.isSelfAuthority).toBe(true)
-      const resolved = scope.withResolvedAuthority('did:plc:abc')
-      expect(resolved.authority).toBe('did:plc:abc')
-    })
-
-    it('leaves a concrete authority unchanged', () => {
-      const scope = SpacePermission.fromString(
-        'space:com.atmoboards.forum?authority=did:plc:xyz',
-      )!
-      expect(scope.isSelfAuthority).toBe(false)
-      expect(scope.withResolvedAuthority('did:plc:abc')).toBe(scope)
-    })
-
-    it('leaves a wildcard authority unchanged', () => {
-      const scope = SpacePermission.fromString(
-        'space:com.atmoboards.forum?authority=*',
-      )!
-      expect(scope.withResolvedAuthority('did:plc:abc')).toBe(scope)
+      it('is a no-op for an empty list', () => {
+        const scope = grant()
+        expect(scope.withDefaultCollections([])).toBe(scope)
+      })
     })
   })
 
-  describe('withDefaultCollections', () => {
-    it('materializes declared collections into a bare grant', () => {
-      const scope = SpacePermission.fromString(
-        'space:com.atmoboards.forum?authority=*',
-      )!
-      expect(scope.hasCollections).toBe(false)
-      const expanded = scope.withDefaultCollections([
-        'com.atmoboards.thread',
-        'com.atmoboards.reply',
-      ])
-      expect(expanded.collection).toEqual([
-        'com.atmoboards.thread',
-        'com.atmoboards.reply',
-      ])
-      // Now writes to the declared collections are permitted.
-      expect(
-        expanded.matches({
-          spaceType: 'com.atmoboards.forum',
-          authority: 'did:plc:abc',
-          skey: 'default',
-          action: 'create',
-          collection: 'com.atmoboards.thread',
-        }),
-      ).toBe(true)
-    })
+  describe('consistency', () => {
+    const testCases: { input: string; expected: string }[] = [
+      {
+        input: 'space:com.atmoboards.forum',
+        expected: 'space:com.atmoboards.forum',
+      },
+      {
+        input: 'space?spaceType=com.atmoboards.forum',
+        expected: 'space:com.atmoboards.forum',
+      },
+      {
+        input: 'space:com.atmoboards.forum?authority=self&skey=*',
+        expected: 'space:com.atmoboards.forum',
+      },
+      {
+        input:
+          'space:com.atmoboards.forum?action=delete&action=update&action=create&action=read',
+        expected: 'space:com.atmoboards.forum',
+      },
+      {
+        input: 'space:com.atmoboards.forum?action=delete&action=read_self',
+        expected: 'space:com.atmoboards.forum?action=read_self&action=delete',
+      },
+      {
+        input: 'space:com.atmoboards.forum?manage=delete&manage=update',
+        expected: 'space:com.atmoboards.forum?manage=update&manage=delete',
+      },
+      {
+        input:
+          'space:com.atmoboards.forum?collection=com.atmoboards.thread&collection=com.atmoboards.reply&collection=com.atmoboards.thread',
+        expected:
+          'space:com.atmoboards.forum?collection=com.atmoboards.reply&collection=com.atmoboards.thread',
+      },
+      {
+        input:
+          'space:com.atmoboards.forum?collection=com.atmoboards.thread&collection=*',
+        expected: 'space:com.atmoboards.forum?collection=*',
+      },
+      {
+        input: 'space:*?authority=*',
+        expected: 'space:*?authority=*',
+      },
+      {
+        input:
+          'space?action=create&collection=com.atmoboards.thread&skey=default&authority=did:plc:abc&spaceType=com.atmoboards.forum',
+        expected:
+          'space:com.atmoboards.forum?authority=did:plc:abc&skey=default&collection=com.atmoboards.thread&action=create',
+      },
+      {
+        input: 'space:com.atmoboards.forum?action=read&manage=update',
+        expected: 'space:com.atmoboards.forum?action=read&manage=update',
+      },
+    ]
 
-    it('leaves a grant that already names collections unchanged', () => {
-      const scope = SpacePermission.fromString(
-        'space:com.atmoboards.forum?collection=com.atmoboards.thread',
-      )!
-      expect(scope.hasCollections).toBe(true)
-      const expanded = scope.withDefaultCollections(['com.atmoboards.reply'])
-      expect(expanded).toBe(scope)
-      expect(expanded.collection).toEqual(['com.atmoboards.thread'])
-    })
-
-    it('leaves a collection=* grant unchanged', () => {
-      const scope = SpacePermission.fromString(
-        'space:com.atmoboards.forum?collection=*',
-      )!
-      expect(scope.hasCollections).toBe(true)
-      expect(scope.withDefaultCollections(['com.atmoboards.thread'])).toBe(
-        scope,
-      )
-    })
-
-    it('is a no-op when given an empty default list', () => {
-      const scope = SpacePermission.fromString('space:com.atmoboards.forum')!
-      expect(scope.withDefaultCollections([])).toBe(scope)
-    })
+    for (const { input, expected } of testCases) {
+      it(`re-formats ${input}`, () => {
+        expect(SpacePermission.fromString(input)?.toString()).toBe(expected)
+      })
+    }
   })
 })

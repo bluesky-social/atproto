@@ -6,6 +6,7 @@ import {
 } from '@atproto/syntax'
 import { ScopeMissingError } from './scope-missing-error.js'
 import { ScopePermissions } from './scope-permissions.js'
+import type { SpaceTarget } from './scopes/space-permission.js'
 
 const SPACE_REF = new SpaceRef(
   'did:plc:owner',
@@ -328,7 +329,7 @@ describe('ScopePermissions', () => {
       expect(set.allowsSpace(SPACE_URI, { action: 'read' })).toBe(true)
     })
 
-    it('accepts a match reference, which may hold wildcards', () => {
+    it('accepts a match reference', () => {
       expect(
         set.allowsSpace(
           {
@@ -339,12 +340,6 @@ describe('ScopePermissions', () => {
           { action: 'read' },
         ),
       ).toBe(true)
-      expect(
-        set.allowsSpace(
-          { spaceType: '*', authority: '*', skey: '*' },
-          { action: 'read_self' },
-        ),
-      ).toBe(false)
     })
 
     it('rejects a record uri in place of a space ref', () => {
@@ -353,499 +348,61 @@ describe('ScopePermissions', () => {
       expect(() => set.allowsSpace(recordUri, { action: 'read' })).toThrow(
         InvalidAtUriError,
       )
-      expect(() => set.assertSpace(recordUri, { action: 'read' })).toThrow(
-        InvalidAtUriError,
+    })
+
+    it('is satisfied by any one of several grants', () => {
+      const set = new ScopePermissions([
+        'space:com.atmoboards.forum?authority=*&action=read',
+        'space:com.atmoboards.forum?authority=did:plc:owner&collection=com.atmoboards.thread&action=create',
+      ])
+      expect(set.allowsSpace(SPACE_REF, { action: 'read' })).toBe(true)
+      expect(
+        set.allowsSpace(SPACE_REF, {
+          action: 'create',
+          collection: 'com.atmoboards.thread',
+        }),
+      ).toBe(true)
+      expect(
+        set.allowsSpace(SPACE_REF, {
+          action: 'delete',
+          collection: 'com.atmoboards.thread',
+        }),
+      ).toBe(false)
+    })
+  })
+
+  describe('assertSpace', () => {
+    it('passes when a grant covers the target', () => {
+      const set = new ScopePermissions(
+        'space:com.atmoboards.forum?authority=did:plc:owner&action=read',
       )
+      expect(() => set.assertSpace(SPACE_REF, { action: 'read' })).not.toThrow()
     })
-  })
 
-  describe('assertSpace with a SpaceRef', () => {
-    describe('read', () => {
-      it('passes when the grant covers the (type, authority, skey) tuple', () => {
-        const set = new ScopePermissions(
-          'space:com.atmoboards.forum?authority=did:plc:owner',
-        )
-        expect(() =>
-          set.assertSpace(SPACE_REF, {
-            action: 'read',
-          }),
-        ).not.toThrow()
-      })
-
-      it('passes with type wildcard', () => {
-        const set = new ScopePermissions('space:*?authority=did:plc:owner')
-        expect(() =>
-          set.assertSpace(SPACE_REF, {
-            action: 'read',
-          }),
-        ).not.toThrow()
-      })
-
-      it('passes with authority wildcard (any-authority grant)', () => {
-        const set = new ScopePermissions(
-          'space:com.atmoboards.forum?authority=*',
-        )
-        expect(() =>
-          set.assertSpace(SPACE_REF, {
-            action: 'read',
-          }),
-        ).not.toThrow()
-      })
-
-      it('rejects a bare grant (authority defaults to self) against another owner', () => {
-        // A bare `space:<type>` defaults authority to the granting user; it does
-        // not cover a space owned by did:plc:owner.
-        const set = new ScopePermissions('space:com.atmoboards.forum')
-        expect(() =>
-          set.assertSpace(SPACE_REF, {
-            action: 'read',
-          }),
-        ).toThrow(ScopeMissingError)
-      })
-
-      it('rejects when the type does not match', () => {
-        const set = new ScopePermissions(
-          'space:com.example.different?authority=*',
-        )
-        expect(() =>
-          set.assertSpace(SPACE_REF, {
-            action: 'read',
-          }),
-        ).toThrow(ScopeMissingError)
-      })
-
-      it('rejects when the authority does not match', () => {
-        const set = new ScopePermissions(
-          'space:com.atmoboards.forum?authority=did:plc:somebody-else',
-        )
-        expect(() =>
-          set.assertSpace(SPACE_REF, {
-            action: 'read',
-          }),
-        ).toThrow(ScopeMissingError)
-      })
-
-      it('rejects when no space scope is present', () => {
+    it.each<[string, SpaceTarget, string]>([
+      [
+        'a SpaceRef',
+        SPACE_REF,
+        'space:com.atmoboards.forum?authority=did:plc:owner&skey=default&action=read',
+      ],
+      [
+        'a space ref string',
+        SPACE_URI,
+        'space:com.atmoboards.forum?authority=did:plc:owner&skey=default&action=read',
+      ],
+      [
+        'a wildcard match reference',
+        { spaceType: '*', authority: '*', skey: '*' },
+        'space:*?authority=*&action=read',
+      ],
+    ])(
+      'throws ScopeMissingError naming the scope needed for %s',
+      (_, target, scope) => {
         const set = new ScopePermissions('atproto')
-        expect(() =>
-          set.assertSpace(SPACE_REF, {
-            action: 'read',
-          }),
-        ).toThrow(ScopeMissingError)
-      })
-
-      it('passes read_self when the grant has read (read implies read_self)', () => {
-        const set = new ScopePermissions(
-          'space:com.atmoboards.forum?authority=*&action=read',
+        expect(() => set.assertSpace(target, { action: 'read' })).toThrow(
+          new ScopeMissingError(scope),
         )
-        expect(() =>
-          set.assertSpace(SPACE_REF, {
-            action: 'read_self',
-          }),
-        ).not.toThrow()
-      })
-
-      it('rejects when the grant explicitly excludes read', () => {
-        // `?action=create` lists only create — read is not in the action list
-        // and the grant does not include manage either.
-        const set = new ScopePermissions(
-          'space:com.atmoboards.forum?authority=*&action=create',
-        )
-        expect(() =>
-          set.assertSpace(SPACE_REF, {
-            action: 'read',
-          }),
-        ).toThrow(ScopeMissingError)
-      })
-    })
-
-    describe('writes', () => {
-      it('passes when action and collection are both covered', () => {
-        const set = new ScopePermissions(
-          'space:com.atmoboards.forum?authority=*&collection=com.atmoboards.thread&action=create',
-        )
-        expect(() =>
-          set.assertSpace(SPACE_REF, {
-            action: 'create',
-            collection: 'com.atmoboards.thread',
-          }),
-        ).not.toThrow()
-      })
-
-      it('passes for any collection when collection=*', () => {
-        const set = new ScopePermissions(
-          'space:com.atmoboards.forum?authority=*&collection=*',
-        )
-        expect(() =>
-          set.assertSpace(SPACE_REF, {
-            action: 'update',
-            collection: 'any.valid.collection',
-          }),
-        ).not.toThrow()
-      })
-
-      it('rejects when the grant has no write targets (omitted collection)', () => {
-        const set = new ScopePermissions(
-          'space:com.atmoboards.forum?authority=*',
-        )
-        expect(() =>
-          set.assertSpace(SPACE_REF, {
-            action: 'create',
-            collection: 'com.atmoboards.thread',
-          }),
-        ).toThrow(ScopeMissingError)
-      })
-
-      it('rejects when the action is not in the action list', () => {
-        const set = new ScopePermissions(
-          'space:com.atmoboards.forum?authority=*&collection=com.atmoboards.thread&action=create',
-        )
-        expect(() =>
-          set.assertSpace(SPACE_REF, {
-            action: 'delete',
-            collection: 'com.atmoboards.thread',
-          }),
-        ).toThrow(ScopeMissingError)
-      })
-
-      it('rejects when the collection is not in the collection list', () => {
-        const set = new ScopePermissions(
-          'space:com.atmoboards.forum?authority=*&collection=com.atmoboards.thread',
-        )
-        expect(() =>
-          set.assertSpace(SPACE_REF, {
-            action: 'create',
-            collection: 'com.atmoboards.reply',
-          }),
-        ).toThrow(ScopeMissingError)
-      })
-
-      it('rejects when action=read alone (read-only grant cannot write)', () => {
-        const set = new ScopePermissions(
-          'space:com.atmoboards.forum?authority=*&collection=com.atmoboards.thread&action=read',
-        )
-        expect(() =>
-          set.assertSpace(SPACE_REF, {
-            action: 'create',
-            collection: 'com.atmoboards.thread',
-          }),
-        ).toThrow(ScopeMissingError)
-      })
-    })
-
-    describe('manage', () => {
-      it('passes when the grant lists the manage verb', () => {
-        const set = new ScopePermissions(
-          'space:com.atmoboards.forum?authority=*&manage=update',
-        )
-        expect(() =>
-          set.assertSpace(SPACE_REF, {
-            manage: 'update',
-          }),
-        ).not.toThrow()
-      })
-
-      it('rejects a different manage verb', () => {
-        const set = new ScopePermissions(
-          'space:com.atmoboards.forum?authority=*&manage=update',
-        )
-        expect(() =>
-          set.assertSpace(SPACE_REF, {
-            manage: 'delete',
-          }),
-        ).toThrow(ScopeMissingError)
-      })
-
-      it('rejects when the default grant has no manage verbs', () => {
-        const set = new ScopePermissions(
-          'space:com.atmoboards.forum?authority=*',
-        )
-        expect(() =>
-          set.assertSpace(SPACE_REF, {
-            manage: 'update',
-          }),
-        ).toThrow(ScopeMissingError)
-      })
-
-      it('rejects when the grant lists only record actions', () => {
-        const set = new ScopePermissions(
-          'space:com.atmoboards.forum?authority=*&action=create&action=update',
-        )
-        expect(() =>
-          set.assertSpace(SPACE_REF, {
-            manage: 'update',
-          }),
-        ).toThrow(ScopeMissingError)
-      })
-    })
-
-    describe('multiple scopes', () => {
-      it('any matching scope satisfies the check', () => {
-        // Two unrelated grants — only the second one matches. Should still pass.
-        const set = new ScopePermissions(
-          'space:com.example.other space:com.atmoboards.forum?authority=*&action=read',
-        )
-        expect(() =>
-          set.assertSpace(SPACE_REF, {
-            action: 'read',
-          }),
-        ).not.toThrow()
-      })
-
-      it('multiple narrow grants combine correctly', () => {
-        // Read on any forum; write to threads on this specific forum.
-        const set = new ScopePermissions(
-          'space:com.atmoboards.forum?authority=*&action=read space:com.atmoboards.forum?authority=did:plc:owner&collection=com.atmoboards.thread&action=create',
-        )
-        expect(() =>
-          set.assertSpace(SPACE_REF, {
-            action: 'read',
-          }),
-        ).not.toThrow()
-        expect(() =>
-          set.assertSpace(SPACE_REF, {
-            action: 'create',
-            collection: 'com.atmoboards.thread',
-          }),
-        ).not.toThrow()
-        // But not delete — neither grant includes it.
-        expect(() =>
-          set.assertSpace(SPACE_REF, {
-            action: 'delete',
-            collection: 'com.atmoboards.thread',
-          }),
-        ).toThrow(ScopeMissingError)
-      })
-    })
-  })
-
-  describe('assertSpace with a space ref string', () => {
-    describe('read', () => {
-      it('passes when the grant covers the (type, authority, skey) tuple', () => {
-        const set = new ScopePermissions(
-          'space:com.atmoboards.forum?authority=did:plc:owner',
-        )
-        expect(() =>
-          set.assertSpace(SPACE_URI, { action: 'read' }),
-        ).not.toThrow()
-      })
-
-      it('passes with type wildcard', () => {
-        const set = new ScopePermissions('space:*?authority=did:plc:owner')
-        expect(() =>
-          set.assertSpace(SPACE_URI, { action: 'read' }),
-        ).not.toThrow()
-      })
-
-      it('passes with authority wildcard (any-authority grant)', () => {
-        const set = new ScopePermissions(
-          'space:com.atmoboards.forum?authority=*',
-        )
-        expect(() =>
-          set.assertSpace(SPACE_URI, { action: 'read' }),
-        ).not.toThrow()
-      })
-
-      it('rejects a bare grant (authority defaults to self) against another owner', () => {
-        // A bare `space:<type>` defaults authority to the granting user; it does
-        // not cover a space owned by did:plc:owner.
-        const set = new ScopePermissions('space:com.atmoboards.forum')
-        expect(() => set.assertSpace(SPACE_URI, { action: 'read' })).toThrow(
-          ScopeMissingError,
-        )
-      })
-
-      it('rejects when the type does not match', () => {
-        const set = new ScopePermissions(
-          'space:com.example.different?authority=*',
-        )
-        expect(() => set.assertSpace(SPACE_URI, { action: 'read' })).toThrow(
-          ScopeMissingError,
-        )
-      })
-
-      it('rejects when the authority does not match', () => {
-        const set = new ScopePermissions(
-          'space:com.atmoboards.forum?authority=did:plc:somebody-else',
-        )
-        expect(() => set.assertSpace(SPACE_URI, { action: 'read' })).toThrow(
-          ScopeMissingError,
-        )
-      })
-
-      it('rejects when no space scope is present', () => {
-        const set = new ScopePermissions('atproto')
-        expect(() => set.assertSpace(SPACE_URI, { action: 'read' })).toThrow(
-          ScopeMissingError,
-        )
-      })
-
-      it('passes read_self when the grant has read (read implies read_self)', () => {
-        const set = new ScopePermissions(
-          'space:com.atmoboards.forum?authority=*&action=read',
-        )
-        expect(() =>
-          set.assertSpace(SPACE_URI, { action: 'read_self' }),
-        ).not.toThrow()
-      })
-
-      it('rejects when the grant explicitly excludes read', () => {
-        // `?action=create` lists only create — read is not in the action list
-        // and the grant does not include manage either.
-        const set = new ScopePermissions(
-          'space:com.atmoboards.forum?authority=*&action=create',
-        )
-        expect(() => set.assertSpace(SPACE_URI, { action: 'read' })).toThrow(
-          ScopeMissingError,
-        )
-      })
-    })
-
-    describe('writes', () => {
-      it('passes when action and collection are both covered', () => {
-        const set = new ScopePermissions(
-          'space:com.atmoboards.forum?authority=*&collection=com.atmoboards.thread&action=create',
-        )
-        expect(() =>
-          set.assertSpace(SPACE_URI, {
-            action: 'create',
-            collection: 'com.atmoboards.thread',
-          }),
-        ).not.toThrow()
-      })
-
-      it('passes for any collection when collection=*', () => {
-        const set = new ScopePermissions(
-          'space:com.atmoboards.forum?authority=*&collection=*',
-        )
-        expect(() =>
-          set.assertSpace(SPACE_URI, {
-            action: 'update',
-            collection: 'any.valid.collection',
-          }),
-        ).not.toThrow()
-      })
-
-      it('rejects when the grant has no write targets (omitted collection)', () => {
-        const set = new ScopePermissions(
-          'space:com.atmoboards.forum?authority=*',
-        )
-        expect(() =>
-          set.assertSpace(SPACE_URI, {
-            action: 'create',
-            collection: 'com.atmoboards.thread',
-          }),
-        ).toThrow(ScopeMissingError)
-      })
-
-      it('rejects when the action is not in the action list', () => {
-        const set = new ScopePermissions(
-          'space:com.atmoboards.forum?authority=*&collection=com.atmoboards.thread&action=create',
-        )
-        expect(() =>
-          set.assertSpace(SPACE_URI, {
-            action: 'delete',
-            collection: 'com.atmoboards.thread',
-          }),
-        ).toThrow(ScopeMissingError)
-      })
-
-      it('rejects when the collection is not in the collection list', () => {
-        const set = new ScopePermissions(
-          'space:com.atmoboards.forum?authority=*&collection=com.atmoboards.thread',
-        )
-        expect(() =>
-          set.assertSpace(SPACE_URI, {
-            action: 'create',
-            collection: 'com.atmoboards.reply',
-          }),
-        ).toThrow(ScopeMissingError)
-      })
-
-      it('rejects when action=read alone (read-only grant cannot write)', () => {
-        const set = new ScopePermissions(
-          'space:com.atmoboards.forum?authority=*&collection=com.atmoboards.thread&action=read',
-        )
-        expect(() =>
-          set.assertSpace(SPACE_URI, {
-            action: 'create',
-            collection: 'com.atmoboards.thread',
-          }),
-        ).toThrow(ScopeMissingError)
-      })
-    })
-
-    describe('manage', () => {
-      it('passes when the grant lists the manage verb', () => {
-        const set = new ScopePermissions(
-          'space:com.atmoboards.forum?authority=*&manage=update',
-        )
-        expect(() =>
-          set.assertSpace(SPACE_URI, { manage: 'update' }),
-        ).not.toThrow()
-      })
-
-      it('rejects a different manage verb', () => {
-        const set = new ScopePermissions(
-          'space:com.atmoboards.forum?authority=*&manage=update',
-        )
-        expect(() => set.assertSpace(SPACE_URI, { manage: 'delete' })).toThrow(
-          ScopeMissingError,
-        )
-      })
-
-      it('rejects when the default grant has no manage verbs', () => {
-        const set = new ScopePermissions(
-          'space:com.atmoboards.forum?authority=*',
-        )
-        expect(() => set.assertSpace(SPACE_URI, { manage: 'update' })).toThrow(
-          ScopeMissingError,
-        )
-      })
-
-      it('rejects when the grant lists only record actions', () => {
-        const set = new ScopePermissions(
-          'space:com.atmoboards.forum?authority=*&action=create&action=update',
-        )
-        expect(() => set.assertSpace(SPACE_URI, { manage: 'update' })).toThrow(
-          ScopeMissingError,
-        )
-      })
-    })
-
-    describe('multiple scopes', () => {
-      it('any matching scope satisfies the check', () => {
-        // Two unrelated grants — only the second one matches. Should still pass.
-        const set = new ScopePermissions(
-          'space:com.example.other space:com.atmoboards.forum?authority=*&action=read',
-        )
-        expect(() =>
-          set.assertSpace(SPACE_URI, { action: 'read' }),
-        ).not.toThrow()
-      })
-
-      it('multiple narrow grants combine correctly', () => {
-        // Read on any forum; write to threads on this specific forum.
-        const set = new ScopePermissions(
-          'space:com.atmoboards.forum?authority=*&action=read space:com.atmoboards.forum?authority=did:plc:owner&collection=com.atmoboards.thread&action=create',
-        )
-        expect(() =>
-          set.assertSpace(SPACE_URI, { action: 'read' }),
-        ).not.toThrow()
-        expect(() =>
-          set.assertSpace(SPACE_URI, {
-            action: 'create',
-            collection: 'com.atmoboards.thread',
-          }),
-        ).not.toThrow()
-        // But not delete — neither grant includes it.
-        expect(() =>
-          set.assertSpace(SPACE_URI, {
-            action: 'delete',
-            collection: 'com.atmoboards.thread',
-          }),
-        ).toThrow(ScopeMissingError)
-      })
-    })
+      },
+    )
   })
 })

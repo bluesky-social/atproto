@@ -141,7 +141,7 @@ export class AtUri {
 
   unsafelySetCollection(v: string) {
     const segments = this.pathname.split('/').filter(Boolean)
-    segments[this.isSpace ? 4 : 0] = v
+    segments[this.collectionIndex(segments)] = v
     this.pathname = segments.join('/')
   }
 
@@ -162,10 +162,21 @@ export class AtUri {
 
   unsafelySetRkey(v: string) {
     const segments = this.pathname.split('/').filter(Boolean)
-    const collectionAt = this.isSpace ? 4 : 0
+    const collectionAt = this.collectionIndex(segments)
     segments[collectionAt] ||= 'undefined'
     segments[collectionAt + 1] = v
     this.pathname = segments.join('/')
+  }
+
+  /** Where the collection sits in the path, after a space URI's author. */
+  private collectionIndex(segments: string[]): number {
+    if (!this.isSpace) return 0
+    if (segments.length < 4) {
+      throw new InvalidAtUriError(
+        `Cannot set a record path on space URI "${this}" without an author`,
+      )
+    }
+    return 4
   }
 
   get spaceDid(): DidString | undefined {
