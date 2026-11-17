@@ -2,7 +2,6 @@ import type { IncomingMessage, ServerResponse } from 'node:http'
 import PQueue from 'p-queue'
 import { MINUTE, TID, getServiceEndpoint } from '@atproto/common'
 import type { IdResolver } from '@atproto/identity'
-import { xrpc } from '@atproto/lex-client'
 import type { Cid } from '@atproto/lex-data'
 import type { l } from '@atproto/lex-schema'
 import type { SpacePermissionMatchOperation } from '@atproto/oauth-scopes'
@@ -444,14 +443,12 @@ async function deliverSpaceUpdate(
     active.map(({ endpoint, token }) => async () => {
       try {
         // The endpoint is chosen by the syncer, so it's fetched as untrusted.
-        await xrpc(
-          { service: endpoint, fetch: ctx.safeFetch },
-          com.atproto.space.notifySpaceUpdate,
-          {
+        await ctx
+          .safeClient(endpoint)
+          .xrpc(com.atproto.space.notifySpaceUpdate, {
             body: { space, token, update },
             signal: AbortSignal.any([signal, AbortSignal.timeout(10_000)]),
-          },
-        )
+          })
       } catch (err) {
         spaceLogger.warn({ err, space, endpoint }, 'notify failed')
       }

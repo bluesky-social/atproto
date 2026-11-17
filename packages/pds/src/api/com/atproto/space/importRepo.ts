@@ -14,7 +14,7 @@ export default function (server: Server, ctx: AppContext) {
       checkTakedown: true,
       scopes: ACCESS_FULL,
       authorize: () => {
-        // Performed in the handler as it requires the archive's contents
+        // Performed in the handler as it requires the archive's space
       },
     }),
     handler: async ({ input: { body }, auth }) => {
@@ -36,13 +36,13 @@ export default function (server: Server, ctx: AppContext) {
         )
       }
 
+      // An import replaces the account's whole repo in the space, so it takes full
+      // access to the space rather than grants for the collections it happens to hold.
       const ref = toSpaceRef(commit.space)
-      const collections = new Set(records.map((record) => record.collection))
-      for (const collection of collections) {
-        auth.credentials.permissions?.assertSpace(ref, {
-          action: 'create',
-          collection,
-        })
+      const { permissions } = auth.credentials
+      permissions?.assertSpace(ref, { action: 'read' })
+      for (const action of ['create', 'update', 'delete'] as const) {
+        permissions?.assertSpace(ref, { action, collection: '*' })
       }
 
       await ctx.actorStore.transact(did, (actorTxn) =>

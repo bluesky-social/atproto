@@ -1,10 +1,9 @@
 import { SECOND } from '@atproto/common'
 import type { IdResolver } from '@atproto/identity'
-import { xrpc } from '@atproto/lex-client'
+import type { Client } from '@atproto/lex-client'
 import type { SpaceMetaArchive } from '@atproto/space'
 import type { DidString, SpaceRef, UriString } from '@atproto/syntax'
 import { InvalidRequestError, UpstreamFailureError } from '@atproto/xrpc-server'
-import type { Fetch } from '@atproto-labs/fetch-node'
 import type { ActorStore } from '../actor-store/actor-store.js'
 import {
   type RemovedWriter,
@@ -37,7 +36,8 @@ export class SpacePolicyManager {
   constructor(
     public actorStore: ActorStore,
     public idResolver: IdResolver,
-    public safeFetch: Fetch,
+    /** See {@link AppContext.safeClient}. */
+    public safeClient: (service: string) => Client,
   ) {}
 
   // The methods that change a space's configuration also publish it to readers when
@@ -350,13 +350,14 @@ export class SpacePolicyManager {
         lxm,
       })
       if (!target) throw new Error('Could not resolve managing app')
-      const res = await xrpc(
-        { service: target.endpoint, fetch: this.safeFetch },
+      const res = await this.safeClient(target.endpoint).xrpc(
         com.atproto.managedspace.checkAccess,
         {
           headers: target.headers,
           params: { space, repo, clientId },
           signal: AbortSignal.timeout(10 * SECOND),
+          // Validated whatever the dev mode, as the answer grants access.
+          validateResponse: true,
         },
       )
       return { read: res.body.read, write: res.body.write }

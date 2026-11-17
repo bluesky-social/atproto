@@ -108,6 +108,7 @@ describe('SpacePermission', () => {
         { action: 'read' },
         { action: 'read_self' },
         { action: 'create', collection: THREAD },
+        { action: 'delete', collection: '*' },
         { manage: 'delete' },
       ])('suggests a scope that matches %o', (op) => {
         const target: SpacePermissionMatch = { ...FORUM, ...op }
@@ -155,6 +156,14 @@ describe('SpacePermission', () => {
             collection: THREAD,
           }),
         ).toBe(true)
+      })
+
+      it('matches a write to every collection only with collection=*', () => {
+        const op = { action: 'delete', collection: '*' } as const
+        expect(grant('&collection=*').matches({ ...FORUM, ...op })).toBe(true)
+        expect(
+          grant(`&collection=${THREAD}`).matches({ ...FORUM, ...op }),
+        ).toBe(false)
       })
 
       it('limits writes to the named collections', () => {

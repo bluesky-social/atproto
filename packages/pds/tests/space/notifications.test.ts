@@ -200,6 +200,27 @@ describe('space notifications', () => {
       expect(await pending()).toEqual([])
     })
 
+    it.each(['deactivated', 'takendown'] as const)(
+      'delivers to a local authority that is %s without a request to itself',
+      async (status) => {
+        const space = await sc.createSpace(alice, { members: [dan] })
+        {
+          await using _ = await sc.withStatus(alice, status)
+          // Reaching the space host over the network would resolve its DID.
+          using _resolve = jest
+            .spyOn(network.pds.ctx.idResolver.did, 'resolve')
+            .mockRejectedValue(new Error('resolver unavailable'))
+          await notifications.notify(
+            SpaceRef.parse(space),
+            dan.did,
+            makeCommit(),
+          )
+        }
+        expect(await pending()).toEqual([])
+        expect(await sc.writers(space, alice)).toContain(dan.did)
+      },
+    )
+
     it('drops a notification a local space host rejects', async () => {
       const space = await sc.createSpace(alice)
       await notifications.notify(SpaceRef.parse(space), dan.did, makeCommit())

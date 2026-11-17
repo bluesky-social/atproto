@@ -6,6 +6,7 @@ import {
 } from '@atproto/lex-client'
 import type { TypedObjectSchema, Un$Typed } from '@atproto/lex-schema'
 import type { SpaceRef, SpaceRefString } from '@atproto/syntax'
+import { UnsupportedSpacePolicyError } from '../errors.js'
 import getSpace from '../lexicons/com/atproto/space/getSpace.js'
 import updateSpace from '../lexicons/com/atproto/space/updateSpace.js'
 
@@ -82,6 +83,9 @@ export abstract class SpacePolicyManager<P extends { $type?: string }> {
    * Changes the configuration of the policy. The policy is replaced wholesale
    * by the space host: concurrent changes are overwritten (last write wins).
    *
+   * @throws {UnsupportedSpacePolicyError} if the space is now governed by
+   * another policy.
+   *
    * @example
    * ```typescript
    * await manager.updatePolicy({ publicRead: true })
@@ -103,10 +107,12 @@ export abstract class SpacePolicyManager<P extends { $type?: string }> {
       ...options,
       params: { space: this.uri },
     })
-    const prev: P =
-      current.$type === $type
-        ? (current as P) // Trust the server
-        : this.#policy
+    // Sending this manager's policy to a space now governed by another one
+    // would migrate it back, discarding the state of the current policy.
+    if (current.$type !== $type) {
+      throw new UnsupportedSpacePolicyError(current)
+    }
+    const prev = current as P // Trust the server
     // Parse to apply defaults and validation
     const next = (this.constructor as SpacePolicyManager.Class).schema.parse({
       ...(typeof update === 'function' ? update(prev) : { ...prev, ...update }),

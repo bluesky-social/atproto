@@ -249,7 +249,7 @@ describe('space account migration', () => {
     )
   })
 
-  it('replaces what the new host holds when imported again', async () => {
+  it('commits only the difference from what the new host holds when imported again', async () => {
     const space = await sc.createSpace(alice, { members: [bob] })
     await sc.write(alice, space, { rkey: 'kept' })
     await sc.write(alice, space, { rkey: 'deleted' })
@@ -268,6 +268,7 @@ describe('space account migration', () => {
       })
       await txn.space.applyWrites(ref, [write])
     })
+    const since = (await latestCommit(newAlice, space)).commit.rev
 
     await sc.del(alice, space, { rkey: 'deleted' })
     await sc.write(alice, space, { rkey: 'added' })
@@ -283,12 +284,25 @@ describe('space account migration', () => {
     expect((await latestCommit(newAlice, space)).commit.data).toEqual(
       (await latestCommit(alice, space)).commit.data,
     )
+    // One commit, holding only the records that differ: `kept` is left alone.
     const { ops } = await newAlice.client.call(
       com.atproto.space.listRepoOps,
-      { space, repo: alice.did },
+      { space, repo: alice.did, since, excludeValues: true },
       { headers: newAlice.headers },
     )
-    expect(ops).toEqual([])
+    expect(new Set(ops.map((op) => op.rev)).size).toBe(1)
+    const changes = ops.map(({ rkey, cid, prev }) => ({
+      rkey,
+      action: !prev ? 'create' : !cid ? 'delete' : 'update',
+    }))
+    expect(changes).toHaveLength(3)
+    expect(changes).toEqual(
+      expect.arrayContaining([
+        { rkey: 'added', action: 'create' },
+        { rkey: 'deleted', action: 'delete' },
+        { rkey: 'stale', action: 'delete' },
+      ]),
+    )
   })
 
   it("keeps the percent-encoded port of a did:web member's DID", async () => {
@@ -370,27 +384,36 @@ describe('space account migration', () => {
       await importSpaceMeta(oauth, archive)
     })
 
-    it('requires a grant to create each collection in an imported repo', async () => {
+    it('requires full access to the space to import a repo into it', async () => {
       const space = await sc.createSpace(alice)
       await sc.write(alice, space, { collection: TEST_COLLECTION })
       await sc.write(alice, space, { collection: TEST_COLLECTION_ALT })
       await importSpaceMeta(newAlice, await exportSpaceMeta(alice, space))
       const star = await getRepo(alice, space)
 
+      // Grants for each collection in the archive fall short, since an import
+      // replaces the records of every collection.
       {
         using oauth = asOAuth(
           newAlice,
-          `collection=${TEST_COLLECTION}&action=create`,
+          `collection=${TEST_COLLECTION}&collection=${TEST_COLLECTION_ALT}`,
         )
         await expect(importRepo(oauth, star)).rejects.toMatchObject({
           error: 'ScopeMissingError',
-          message: expect.stringContaining(TEST_COLLECTION_ALT),
+          message: expect.stringContaining('collection=*'),
         })
       }
-      using oauth = asOAuth(
-        newAlice,
-        `collection=${TEST_COLLECTION}&collection=${TEST_COLLECTION_ALT}&action=create`,
-      )
+      {
+        using oauth = asOAuth(
+          newAlice,
+          'collection=*&action=create&action=update&action=delete',
+        )
+        await expect(importRepo(oauth, star)).rejects.toMatchObject({
+          error: 'ScopeMissingError',
+          message: expect.stringContaining('action=read'),
+        })
+      }
+      using oauth = asOAuth(newAlice, 'collection=*')
       await importRepo(oauth, star)
     })
   })

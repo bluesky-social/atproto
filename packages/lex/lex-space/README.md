@@ -285,7 +285,7 @@ const members = await SpaceManager.open(client.agent, spaceUri, {
 }) // MemberspacePolicyManager
 ```
 
-`updatePolicy()` replaces the policy wholesale: concurrent changes are overwritten (last write wins).
+`updatePolicy()` replaces the policy wholesale: concurrent changes are overwritten (last write wins). If the space has since been migrated to another policy, it throws `UnsupportedSpacePolicyError` rather than migrating the space back.
 
 A space host may implement other policies, which define their own methods. To manage them the same way, extend `SpacePolicyManager`, with the policy's schema as static `schema`, and list it in `policies`:
 
@@ -329,6 +329,24 @@ Governing a space by a policy of another type discards the state of the previous
 ## Building a sync service
 
 A sync service keeps its own copy of spaces, e.g. to index them for the users of an app. It does not act for one specific user: use a `SpaceReader`, which provides every read above (but no writes) with space credentials only. `SpaceClient` extends it.
+
+### Running on a server
+
+The hosts a reader contacts are named by DID documents (the space authority's PDS, each writer's PDS, a `did:web` host), which anyone can publish, and its requests carry space credentials. The default `fetch` is `globalThis.fetch`, so on a server, pass one that refuses private and loopback addresses, such as `safeFetchWrap()` from `@atproto-labs/fetch-node`. It is used for DID resolution too, unless you pass your own `didResolver`, which must then be built with it:
+
+```typescript
+import { safeFetchWrap } from '@atproto-labs/fetch-node'
+
+const fetch = safeFetchWrap({
+  // The defaults (512 kB, 10 s) are too tight to pull whole repos
+  responseMaxSize: 64 * 1024 * 1024,
+  timeout: 60_000,
+})
+const reader = SpaceReader.openSpace(com.example.forum, spaceUri, {
+  fetch,
+  delegationTokenProvider,
+})
+```
 
 ### Obtaining credentials
 

@@ -576,7 +576,7 @@ export class AppContext implements AsyncDisposable {
     const spacePolicyManager = new SpacePolicyManager(
       actorStore,
       idResolver,
-      safeFetch,
+      (service) => createSafeClient(service, safeFetch, cfg.service.devMode),
     )
 
     const scopeRefGetter = entrywayClient
@@ -700,14 +700,7 @@ export class AppContext implements AsyncDisposable {
    * Any call built from a DID document's service endpoint must use this.
    */
   safeClient(service: string | URL): Client {
-    return new Client(
-      { service, fetch: this.safeFetch },
-      {
-        validateRequest: this.cfg.service.devMode,
-        validateResponse: this.cfg.service.devMode,
-        strictResponseProcessing: this.cfg.service.devMode,
-      },
-    )
+    return createSafeClient(service, this.safeFetch, this.cfg.service.devMode)
   }
 
   async serviceAuthHeaders(did: string, aud: string, lxm: string) {
@@ -768,6 +761,22 @@ export class AppContext implements AsyncDisposable {
   async [Symbol.asyncDispose]() {
     await this.destroy()
   }
+}
+
+/** See {@link AppContext.safeClient}. */
+function createSafeClient(
+  service: string | URL,
+  safeFetch: Fetch,
+  devMode: boolean,
+): Client {
+  return new Client(
+    { service, fetch: safeFetch },
+    {
+      validateRequest: devMode,
+      validateResponse: devMode,
+      strictResponseProcessing: devMode,
+    },
+  )
 }
 
 const basicAuthHeader = (username: string, password: string) => {
