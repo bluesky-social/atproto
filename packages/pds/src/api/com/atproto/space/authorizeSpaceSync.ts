@@ -1,6 +1,5 @@
 import { SECOND } from '@atproto/common'
 import { randomStr } from '@atproto/crypto'
-import { xrpc } from '@atproto/lex-client'
 import {
   createSpaceCredential,
   isP256DidKey,
@@ -152,14 +151,12 @@ async function confirmRegistration(
   const challenge = randomStr(16, 'base32')
   try {
     // The endpoint is chosen by the requester, so it's fetched as untrusted.
-    const res = await xrpc(
-      { service: endpoint, fetch: ctx.safeFetch },
-      com.atproto.space.confirmRegistration,
-      {
+    const res = await ctx
+      .safeClient(endpoint)
+      .xrpc(com.atproto.space.confirmRegistration, {
         body: { space, token, challenge },
         signal: AbortSignal.timeout(10 * SECOND),
-      },
-    )
+      })
     if (res.body.challenge === challenge) return
   } catch (err) {
     spaceLogger.warn({ err, space, endpoint }, 'registration not confirmed')

@@ -107,7 +107,8 @@ export type SpacePermissionMatchOperation =
     }
   | {
       action: 'create' | 'update' | 'delete'
-      collection: NsidString
+      /** `*` is matched only by a grant that covers every collection. */
+      collection: SpaceCollectionParam
       manage?: never
     }
   | {

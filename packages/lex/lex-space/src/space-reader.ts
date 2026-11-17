@@ -129,7 +129,12 @@ export declare namespace SpaceReader {
      */
     credentialProvider?: SpaceCredentialProvider
 
-    /** Used for all requests. */
+    /**
+     * Used for all requests. Defaults to `globalThis.fetch`. On a server, pass
+     * one that refuses private and loopback addresses (e.g. `safeFetchWrap()`
+     * from `@atproto-labs/fetch-node`): the hosts requested are named by DID
+     * documents.
+     */
     fetch?: typeof globalThis.fetch
   }
 

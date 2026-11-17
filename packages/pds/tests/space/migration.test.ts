@@ -268,11 +268,30 @@ describe('space account migration', () => {
       })
       await txn.space.applyWrites(ref, [write])
     })
+    // Read directly: no endpoint exposes the rev a record was indexed at.
+    const indexedRevs = async () => {
+      const rows = await newAlice.pds.ctx.actorStore.read(alice.did, (store) =>
+        store.space.db.db
+          .selectFrom('space_record')
+          .select(['rkey', 'repoRev'])
+          .where('space', '=', space)
+          .execute(),
+      )
+      return Object.fromEntries(rows.map((row) => [row.rkey, row.repoRev]))
+    }
+    const before = await indexedRevs()
 
     await sc.del(alice, space, { rkey: 'deleted' })
     await sc.write(alice, space, { rkey: 'added' })
     await sc.removeMember(alice, space, bob)
     await migrate([space])
+
+    // Only the difference is indexed: the unchanged record is left alone.
+    const after = await indexedRevs()
+    const { rev } = (await latestCommit(newAlice, space)).commit
+    expect(Object.keys(after).sort()).toEqual(['added', 'kept'])
+    expect(after.kept).toBe(before.kept)
+    expect(after.added).toBe(rev)
 
     const original = await readSpaceMetaStar([
       await exportSpaceMeta(alice, space),
@@ -283,12 +302,41 @@ describe('space account migration', () => {
     expect((await latestCommit(newAlice, space)).commit.data).toEqual(
       (await latestCommit(alice, space)).commit.data,
     )
+    // But it isn't recorded as ops: a syncer sees the set hash change and resyncs.
     const { ops } = await newAlice.client.call(
       com.atproto.space.listRepoOps,
       { space, repo: alice.did },
       { headers: newAlice.headers },
     )
     expect(ops).toEqual([])
+  })
+
+  it('releases the blobs of the records a re-import drops, and keeps the rest', async () => {
+    const space = await sc.createSpace(alice)
+    const writeWithBlob = async (rkey: string, bytes: Uint8Array) => {
+      const { body } = await alice.client.uploadBlob(bytes, {
+        headers: alice.headers,
+        encoding: 'image/png',
+      })
+      await sc.write(alice, space, {
+        rkey,
+        record: { $type: TEST_COLLECTION, text: rkey, image: body.blob },
+      })
+      return getBlobCidString(body.blob)
+    }
+    const kept = await writeWithBlob('kept', new Uint8Array([5, 6, 7, 8]))
+    const dropped = await writeWithBlob('dropped', new Uint8Array([9, 10]))
+    await migrate([space])
+    expect(await sc.blobExists(newAlice, kept)).toBe(true)
+    expect(await sc.blobExists(newAlice, dropped)).toBe(true)
+
+    // Imported without moving the blobs again, so the kept one has to survive the
+    // import on its own.
+    await sc.del(alice, space, { rkey: 'dropped' })
+    await importRepo(newAlice, await getRepo(alice, space))
+
+    expect(await sc.blobExists(newAlice, kept)).toBe(true)
+    expect(await sc.blobExists(newAlice, dropped)).toBe(false)
   })
 
   it("keeps the percent-encoded port of a did:web member's DID", async () => {
@@ -370,27 +418,36 @@ describe('space account migration', () => {
       await importSpaceMeta(oauth, archive)
     })
 
-    it('requires a grant to create each collection in an imported repo', async () => {
+    it('requires full access to the space to import a repo into it', async () => {
       const space = await sc.createSpace(alice)
       await sc.write(alice, space, { collection: TEST_COLLECTION })
       await sc.write(alice, space, { collection: TEST_COLLECTION_ALT })
       await importSpaceMeta(newAlice, await exportSpaceMeta(alice, space))
       const star = await getRepo(alice, space)
 
+      // Grants for each collection in the archive fall short, since an import
+      // replaces the records of every collection.
       {
         using oauth = asOAuth(
           newAlice,
-          `collection=${TEST_COLLECTION}&action=create`,
+          `collection=${TEST_COLLECTION}&collection=${TEST_COLLECTION_ALT}`,
         )
         await expect(importRepo(oauth, star)).rejects.toMatchObject({
           error: 'ScopeMissingError',
-          message: expect.stringContaining(TEST_COLLECTION_ALT),
+          message: expect.stringContaining('collection=*'),
         })
       }
-      using oauth = asOAuth(
-        newAlice,
-        `collection=${TEST_COLLECTION}&collection=${TEST_COLLECTION_ALT}&action=create`,
-      )
+      {
+        using oauth = asOAuth(
+          newAlice,
+          'collection=*&action=create&action=update&action=delete',
+        )
+        await expect(importRepo(oauth, star)).rejects.toMatchObject({
+          error: 'ScopeMissingError',
+          message: expect.stringContaining('action=read'),
+        })
+      }
+      using oauth = asOAuth(newAlice, 'collection=*')
       await importRepo(oauth, star)
     })
   })
