@@ -61,7 +61,7 @@ describe(buildSpaceAccessRows, () => {
         level: 'universal',
         read: false,
         readSelf: true,
-        manage: true,
+        manage: new Set(['update']),
         writes: new Map(),
       }),
       expect.objectContaining({
@@ -71,7 +71,7 @@ describe(buildSpaceAccessRows, () => {
         level: 'authority',
         read: true,
         readSelf: false,
-        manage: false,
+        manage: new Set(),
         writes: new Map([
           [
             'com.example.thread',
@@ -80,6 +80,15 @@ describe(buildSpaceAccessRows, () => {
         ]),
       }),
     ])
+  })
+
+  it('keeps each manage operation granted', () => {
+    const [row] = buildSpaceAccessRows([
+      parse(`space:com.example.forum?authority=${DID}&manage=update`),
+      parse(`space:com.example.forum?authority=${DID}&manage=delete`),
+    ])
+
+    expect(row?.manage).toEqual(new Set(['update', 'delete']))
   })
 
   it('leaves the handle of an unverified authority unset', () => {

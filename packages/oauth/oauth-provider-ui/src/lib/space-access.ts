@@ -1,6 +1,7 @@
 import type {
   SpaceAuthorityParam,
   SpaceKeyParam,
+  SpaceManageOp,
   SpacePermission,
   SpaceTypeParam,
 } from '@atproto/oauth-scopes'
@@ -50,7 +51,8 @@ export type SpaceAccessRow = {
   read: boolean
   // `read_self` without `read`: only the user's own data in the space.
   readSelf: boolean
-  manage: boolean
+  // The `manage` operations granted. Empty means none.
+  manage: Set<SpaceManageOp>
   // Keyed by collection NSID or '*'. Empty means no write targets.
   writes: Map<string, SpaceWriteCell>
 }
@@ -98,7 +100,7 @@ export function buildSpaceAccessRows(
         skey: parsed.skey,
         read: false,
         readSelf: false,
-        manage: false,
+        manage: new Set(),
         writes: new Map(),
       }
       map.set(key, row)
@@ -106,7 +108,7 @@ export function buildSpaceAccessRows(
 
     if (parsed.action.includes('read')) row.read = true
     if (parsed.action.includes('read_self')) row.readSelf = true
-    if (parsed.manage != null) row.manage = true
+    for (const op of parsed.manage ?? []) row.manage.add(op)
 
     // A collection only matters to the actions that write to it.
     const writes =

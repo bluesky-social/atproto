@@ -52,16 +52,24 @@ msgstr ""
 msgid "<0>Bluesky Social</0> — General information about the network"
 msgstr ""
 
+#: src/components/utils/scope-description.tsx
+msgid "<0>Create</0> spaces."
+msgstr ""
+
+#: src/components/utils/scope-description.tsx
+msgid "<0>Delete</0> spaces."
+msgstr ""
+
 #: src/routes/account/u/$accountId/-about/en.tsx
 msgid "<0>Learn more</0><1>Want to learn more about the technology and network behind your Atmosphere account?</1>"
 msgstr ""
 
-#: src/components/utils/scope-description.tsx
-msgid "<0>Manage</0> the space: create new spaces, add and remove members."
-msgstr ""
-
 #: src/routes/account/u/$accountId/-about/en.tsx
 msgid "<0>This website: your account control center</0><1>The website you're on right now is your <2>account management hub</2>. Here you can:</1><3><4>Update your email address and password</4><5>Manage your personal data and security settings</5><6>View and manage active sessions across devices (browsers where you're signed in)</6></3><7>This place is where you control the fundamental aspects of your Atmosphere identity, independently of any app-specific details like the profile you have on the <8>Bluesky social app</8>.</7><9>Your Atmosphere account is currently hosted by <10/>, one of many hosting providers in the Atmosphere network. You can switch to a different one at any time without losing your account, identity, or data.</9>"
+msgstr ""
+
+#: src/components/utils/scope-description.tsx
+msgid "<0>Update</0> spaces: change their settings and members."
 msgstr ""
 
 #: src/routes/account/u/$accountId/-about/en.tsx
