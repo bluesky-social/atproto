@@ -76,6 +76,43 @@ describe('Migrator', () => {
     expect(await tableNames(db)).toEqual(['t_001', 't_002', 't_003'])
   })
 
+  it('can reuse a migrator for repeated runs without retaining tolerated migrations', async () => {
+    await new Migrator(
+      db.db,
+      migrationsFor('001', '002', '003'),
+    ).migrateToLatestOrThrow()
+    const older = new Migrator(db.db, migrationsFor('001', '002'))
+
+    for (let run = 0; run < 3; run++) {
+      expect(await older.migrateToLatestOrThrow()).toEqual([])
+      await expect(older.migrateToOrThrow('002')).rejects.toThrow(
+        /corrupted migrations/,
+      )
+      expect(await executedNames(db)).toEqual(['001', '002', '003'])
+      expect(await tableNames(db)).toEqual(['t_001', 't_002', 't_003'])
+    }
+  })
+
+  it('compares tolerated migration names in the same order as Kysely definitions', async () => {
+    await new Migrator(
+      db.db,
+      migrationsFor('001Z', '001a'),
+    ).migrateToLatestOrThrow()
+    // @NOTE avoid Kysely's locale-sensitive timestamp tie-breaker so this
+    // exercises the ordering of migration definitions alone.
+    await sql`update kysely_migration set timestamp = '2000-01-01T00:00:00.000Z' where name = '001Z'`.execute(
+      db.db,
+    )
+    await sql`update kysely_migration set timestamp = '2000-01-02T00:00:00.000Z' where name = '001a'`.execute(
+      db.db,
+    )
+
+    expect(
+      await new Migrator(db.db, migrationsFor('001Z')).migrateToLatestOrThrow(),
+    ).toEqual([])
+    expect(await tableNames(db)).toEqual(['t_001Z', 't_001a'])
+  })
+
   it('runs its own pending migrations alongside tolerated later ones', async () => {
     // A newer version ran 001-003, an older version (knowing 001-002) then
     // booted, and a newer-again version adds 004.
@@ -177,6 +214,35 @@ describe('Migrator on a shared database file', () => {
 
   afterEach(async () => {
     await rm(dir, { recursive: true, force: true })
+  })
+
+  it('resets the lock flag after back-to-back migration runs', async () => {
+    await using db = Database.sqlite(file)
+    const migrations: Record<string, Migration> = {}
+
+    for (const name of ['001', '002', '003']) {
+      migrations[name] = {
+        async up(db: Kysely<unknown>) {
+          const { rows } = await sql<{
+            is_locked: number
+          }>`select is_locked from kysely_migration_lock`.execute(db)
+          expect(rows).toEqual([{ is_locked: 1 }])
+          await createsTable(`t_${name}`).up(db)
+        },
+      }
+      const migrator = new Migrator(db.db, { ...migrations })
+      for (const expected of [[name], []]) {
+        expect(resultNames(await migrator.migrateToLatestOrThrow())).toEqual(
+          expected,
+        )
+        const { rows } = await sql<{
+          is_locked: number
+        }>`select is_locked from kysely_migration_lock`.execute(db.db)
+        expect(rows).toEqual([{ is_locked: 0 }])
+      }
+      expect(await executedNames(db)).toEqual(Object.keys(migrations))
+    }
+    expect(await tableNames(db)).toEqual(['t_001', 't_002', 't_003'])
   })
 
   it('serializes concurrent migrations from two connections', async () => {
@@ -288,6 +354,10 @@ describe('Migrator on a shared database file', () => {
       ).rejects.toThrow(/boom/)
       expect(await tableNames(db)).toEqual([])
       expect(await executedNames(db)).toEqual([])
+      const { rows } = await sql<{
+        is_locked: number
+      }>`select is_locked from kysely_migration_lock`.execute(db.db)
+      expect(rows).toEqual([{ is_locked: 0 }])
 
       const results = await new Migrator(db.db, {
         '001': createsTable('t_a'),

@@ -27,8 +27,8 @@ export class Migrator<T> extends KyselyMigrator {
     public db: Kysely<T>,
     migrations: Record<string, Migration>,
   ) {
-    // Kysely calls the provider while it holds SQLite's only connection, so the
-    // provider must not query the database. The stubs are computed beforehand.
+    // @NOTE Kysely holds sqlite's only connection while calling the provider.
+    // Compute stubs beforehand, since querying from the provider would deadlock.
     const provided = { migrations }
     super({
       db,
@@ -134,6 +134,7 @@ export class Migrator<T> extends KyselyMigrator {
 
 // Kysely's defaults, which every PDS database uses.
 const MIGRATION_TABLE = 'kysely_migration'
-const compareNames = (a: string, b: string) => a.localeCompare(b)
+// @NOTE match Kysely's Object.keys(migrations).sort(), which ignores locale.
+const compareNames = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0)
 
 const noop = async () => {}

@@ -8,7 +8,7 @@ import {
 } from 'kysely'
 
 /**
- * Kysely's SQLite dialect, with migrations that are atomic and serialized
+ * Kysely's sqlite dialect, with migrations that are atomic and serialized
  * across connections and processes.
  */
 export class LockingSqliteDialect extends SqliteDialect {
@@ -18,17 +18,8 @@ export class LockingSqliteDialect extends SqliteDialect {
 }
 
 /**
- * Kysely's stock SQLite adapter runs migrations statement by statement with no
- * lock, so two connections can both apply a migration, and a crash midway
- * leaves a database that no later run can migrate.
- *
- * SQLite DDL is transactional, so this adapter has kysely run the lock, its
- * read of migration state, and every pending migration in one transaction.
- * The lock is a write to kysely's own lock row. As the transaction's first
- * statement, it takes SQLite's write lock before kysely reads which migrations
- * have run, like `BEGIN IMMEDIATE`. A connection that loses the race gets
- * `SQLITE_BUSY` and should retry, after which it finds nothing pending.
- * Commit or rollback releases the lock.
+ * Runs all pending migrations in one transaction, so they either all succeed
+ * or all roll back. Kysely's default sqlite adapter doesn't use a transaction.
  */
 export class LockingSqliteAdapter extends SqliteAdapter {
   override get supportsTransactionalDdl(): boolean {
@@ -39,10 +30,22 @@ export class LockingSqliteAdapter extends SqliteAdapter {
     db: Kysely<any>,
     { lockTable, lockRowId }: MigrationLockOptions,
   ): Promise<void> {
+    // @NOTE sqlite allows only one write transaction at a time. This first
+    // write takes its write lock before Kysely reads the migration history;
+    // competing writers get SQLITE_BUSY and must retry the transaction.
     await sql`update ${sql.table(lockTable)} set is_locked = 1 where id = ${lockRowId}`.execute(
       db,
     )
   }
 
-  override async releaseMigrationLock(): Promise<void> {}
+  override async releaseMigrationLock(
+    db: Kysely<any>,
+    { lockTable, lockRowId }: MigrationLockOptions,
+  ): Promise<void> {
+    // @NOTE resetting the flag keeps the row unchanged between runs. The
+    // write lock remains held until Kysely commits or rolls back the transaction.
+    await sql`update ${sql.table(lockTable)} set is_locked = 0 where id = ${lockRowId}`.execute(
+      db,
+    )
+  }
 }
