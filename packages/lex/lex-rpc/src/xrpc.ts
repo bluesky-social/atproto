@@ -19,7 +19,11 @@ import { buildAgent } from './agent.js'
 import type { XrpcFailure } from './errors.js'
 import { XrpcFetchError, XrpcResponseError, asXrpcFailure } from './errors.js'
 import type { IfXrpcStreamable, XrpcResponseOptions } from './response.js'
-import { XrpcResponse, XrpcStreamResponse } from './response.js'
+import {
+  XrpcResponse,
+  XrpcStreamResponse,
+  assertXrpcStreamable,
+} from './response.js'
 import type { BinaryBodyInit } from './types.js'
 import type { XrpcRequestHeadersOptions } from './util.js'
 import {
@@ -229,8 +233,9 @@ export type XrpcResult<M extends Procedure | Query> =
  *
  * The caller owns the stream and must either consume it or cancel it, which
  * can be done through {@link XrpcStreamResponse.cancel}, or by disposing of
- * the response (`await using`). JSON payloads and error responses are still
- * buffered. Only accepts methods whose output may be a binary payload.
+ * the response (`await using`). Error responses are still buffered. Only
+ * accepts methods declaring a binary output (a non-JSON encoding, without
+ * schema) or no output encoding at all.
  *
  * @returns The successful {@link XrpcStreamResponse}
  * @throws {XrpcFailure} When the request fails. This includes an
@@ -316,13 +321,22 @@ export async function xrpcStreamSafe<const M extends Query | Procedure>(
   ns: Main<M>,
   options: XrpcOptions<M> = {} as XrpcOptions<M>,
 ): Promise<XrpcStreamResult<M>> {
+  const method: M = getMain(ns)
+
+  // Reject untyped calls before sending the request
+  try {
+    assertXrpcStreamable(method)
+  } catch (cause) {
+    return asXrpcFailure(method, cause)
+  }
+
   return xrpcRequest(
     agentOpts,
     ns,
     options,
-    // @NOTE Whether the method is streamable is enforced by the signatures of
-    // the public functions.
-    XrpcStreamResponse.fromFetchResponse as (
+    // @NOTE The method was asserted to be streamable above, which the
+    // (deferred) IfXrpcStreamable<M, M> parameter type cannot reflect.
+    XrpcStreamResponse.fromFetchResponse as unknown as (
       method: M,
       response: Response,
       options: XrpcResponseOptions,

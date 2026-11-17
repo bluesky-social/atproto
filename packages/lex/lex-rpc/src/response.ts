@@ -39,16 +39,39 @@ export type XrpcBinaryStream = ReadableStream<Uint8Array<ArrayBuffer>>
 export type XrpcBinaryBody = Uint8Array<ArrayBuffer> | XrpcBinaryStream
 
 /**
- * Resolves to `T` if the output of `TMethod` may be a binary payload (which
- * {@link XrpcStreamResponse} returns as a stream), and to a type error
+ * Resolves to `T` if `TMethod` declares a binary output (a non-JSON encoding,
+ * without schema) or no output encoding at all, whose payload
+ * {@link XrpcStreamResponse} returns as a stream, and to a type error
  * otherwise.
+ *
+ * @see {@link assertXrpcStreamable} for the equivalent runtime check
  */
 export type IfXrpcStreamable<TMethod extends Procedure | Query, T> =
-  // @NOTE Testing against Uint8Array would not work, since LexValue (JSON
-  // payloads) includes Uint8Array.
-  XrpcBinaryStream extends XrpcResponseBody<TMethod, XrpcBinaryStream>
+  // @NOTE The body type must be the stream, or no payload (for methods without
+  // an output encoding): outputs that may be JSON (schemas, "application/json"
+  // or non-literal encodings) are rejected.
+  [XrpcResponseBody<TMethod, XrpcBinaryStream>] extends [
+    XrpcBinaryStream | undefined,
+  ]
     ? T
-    : Restricted<'This XRPC method never returns a binary payload'>
+    : Restricted<'This XRPC method does not declare a binary output'>
+
+/**
+ * Asserts that `method` declares a binary output (a non-JSON encoding, without
+ * schema) or no output encoding at all, which is required in order to stream
+ * its response payload.
+ *
+ * @throws {TypeError} if the method does not declare a binary output
+ * @see {@link IfXrpcStreamable} for the equivalent type-level check
+ */
+export function assertXrpcStreamable(method: Procedure | Query): void {
+  const { encoding, schema } = method.output
+  if (encoding === CONTENT_TYPE_JSON || schema) {
+    throw new TypeError(
+      `XRPC method "${method.nsid}" does not declare a binary output`,
+    )
+  }
+}
 
 // @NOTE the output schema is used in "parse" mode (safeParse), which means that
 // defaults will be applied and coercions will be performed, so we need to use
@@ -80,7 +103,8 @@ type InferBodyType<
  * The body type of an XRPC response, inferred from the method's output schema.
  *
  * For JSON responses, this is the parsed LexValue. For binary responses,
- * this is `TBinary` (a Uint8Array, unless streamed).
+ * this is `TBinary` (a Uint8Array, unless streamed). The payload of methods
+ * without an output encoding is not parsed (it is binary, if any).
  *
  * @typeParam M - The XRPC method type (Procedure or Query)
  * @typeParam TBinary - The type of binary payloads
@@ -92,7 +116,7 @@ export type XrpcResponseBody<
   TMethod['output'] extends Payload<infer TEncoding, infer TSchema>
     ? TEncoding extends string
       ? InferBodyType<TEncoding, TSchema, TBinary>
-      : undefined | LexValue | TBinary
+      : undefined | TBinary
     : never
 
 /**
@@ -113,9 +137,38 @@ export type XrpcResponsePayload<
           encoding: InferEncodingType<TEncoding>
           body: InferBodyType<TEncoding, TSchema, TBinary>
         }
-      : // If the schema does not specify an output encoding, anything could be
-        // returned, including no payload at all (undefined).
-        undefined | { body: LexValue | TBinary; encoding: string }
+      : // If the schema does not specify an output encoding, any (unparsed)
+        // payload could be returned, or no payload at all (undefined).
+        undefined | { body: TBinary; encoding: string }
+    : never
+
+/**
+ * The payload type of an {@link XrpcStreamResponse}. Since the payload of such
+ * responses is never parsed, its body is always a {@link XrpcBinaryStream}.
+ * Methods without an output encoding may also return no payload at all
+ * (undefined).
+ *
+ * @typeParam TMethod - The XRPC method type (Procedure or Query)
+ */
+export type XrpcStreamResponsePayload<TMethod extends Procedure | Query> =
+  TMethod['output'] extends Payload<infer TEncoding>
+    ? TEncoding extends string
+      ? { encoding: InferEncodingType<TEncoding>; body: XrpcBinaryStream }
+      : undefined | { body: XrpcBinaryStream; encoding: string }
+    : never
+
+/**
+ * The body type of an {@link XrpcStreamResponse}: always a
+ * {@link XrpcBinaryStream}, or undefined for methods without an output
+ * encoding (which may return no payload at all).
+ *
+ * @typeParam TMethod - The XRPC method type (Procedure or Query)
+ */
+export type XrpcStreamResponseBody<TMethod extends Procedure | Query> =
+  TMethod['output'] extends Payload<infer TEncoding>
+    ? TEncoding extends string
+      ? XrpcBinaryStream
+      : undefined | XrpcBinaryStream
     : never
 
 /**
@@ -188,12 +241,12 @@ export type XrpcResponseOptions = {
  * Properties shared by {@link XrpcResponse} and {@link XrpcStreamResponse}.
  *
  * @typeParam M - The XRPC method type (Procedure or Query)
- * @typeParam TBinary - The type of binary payloads
+ * @typeParam TPayload - The type of the response payload
  */
 export abstract class XrpcResponseBase<
   M extends Procedure | Query,
-  TBinary extends XrpcBinaryBody,
-> implements ResultSuccess<XrpcResponseBase<M, TBinary>> {
+  TPayload extends undefined | { encoding?: string; body?: unknown },
+> implements ResultSuccess<XrpcResponseBase<M, TPayload>> {
   /** @see {@link ResultSuccess.success} */
   readonly success = true as const
 
@@ -206,7 +259,7 @@ export abstract class XrpcResponseBase<
     readonly method: M,
     readonly status: number,
     readonly headers: Headers,
-    readonly payload: XrpcResponsePayload<M, TBinary>,
+    readonly payload: TPayload,
   ) {}
 
   /**
@@ -226,16 +279,9 @@ export abstract class XrpcResponseBase<
   }
 
   /**
-   * The parsed response body.
-   *
-   * For 'application/json' responses, this is the parsed and validated LexValue.
-   * For binary responses, this is a Uint8Array ({@link XrpcResponse}) or a
-   * {@link XrpcBinaryStream} ({@link XrpcStreamResponse}).
-   * Returns `undefined` if the response has no body.
+   * The response body. Returns `undefined` if the response has no body.
    */
-  get body() {
-    return this.payload?.body as XrpcResponseBody<M, TBinary>
-  }
+  abstract readonly body: undefined | NonNullable<TPayload>['body']
 }
 
 /**
@@ -264,8 +310,19 @@ export abstract class XrpcResponseBase<
  */
 export class XrpcResponse<M extends Procedure | Query> extends XrpcResponseBase<
   M,
-  Uint8Array<ArrayBuffer>
+  XrpcResponsePayload<M>
 > {
+  /**
+   * The parsed response body.
+   *
+   * For 'application/json' responses, this is the parsed and validated LexValue.
+   * For binary responses, this is a Uint8Array.
+   * Returns `undefined` if the response has no body.
+   */
+  get body(): XrpcResponseBody<M> {
+    return this.payload?.body as XrpcResponseBody<M>
+  }
+
   /**
    * @throws {XrpcResponseError} in case of (valid) XRPC error responses. Use
    * {@link XrpcResponseError.matchesSchemaErrors} to narrow the error type based on
@@ -297,8 +354,9 @@ export class XrpcResponse<M extends Procedure | Query> extends XrpcResponseBase<
 
 /**
  * XRPC response whose binary (non JSON) payload is returned, unread, as a
- * {@link XrpcBinaryStream}. JSON payloads and error responses are still
- * buffered (and validated).
+ * {@link XrpcBinaryStream}. Only methods declaring a binary output (a non-JSON
+ * encoding, without schema), or no output encoding at all, can be streamed.
+ * Error responses are still buffered.
  *
  * The caller owns the stream, and must either consume it or {@link cancel} it
  * in order to release the underlying resources (e.g. connection). Disposing of
@@ -318,7 +376,7 @@ export class XrpcResponse<M extends Procedure | Query> extends XrpcResponseBase<
  * ```
  */
 export class XrpcStreamResponse<M extends Procedure | Query>
-  extends XrpcResponseBase<M, XrpcBinaryStream>
+  extends XrpcResponseBase<M, XrpcStreamResponsePayload<M>>
   implements AsyncDisposable
 {
   readonly #response: Response
@@ -327,7 +385,7 @@ export class XrpcStreamResponse<M extends Procedure | Query>
   constructor(
     method: M,
     response: Response,
-    payload: XrpcResponsePayload<M, XrpcBinaryStream>,
+    payload: XrpcStreamResponsePayload<M>,
     options?: Pick<XrpcResponseOptions, 'onCancellationError'>,
   ) {
     super(method, response.status, response.headers, payload)
@@ -338,21 +396,12 @@ export class XrpcStreamResponse<M extends Procedure | Query>
   }
 
   /**
-   * Whether the response body is a {@link XrpcBinaryStream}. This is always the
-   * case for binary payloads, but methods with an undeclared output may also
-   * return a (parsed) JSON payload, or no payload at all.
-   *
-   * @example
-   * ```typescript
-   * if (response.hasBodyStream()) {
-   *   for await (const chunk of response.body) {
-   *     // ...
-   *   }
-   * }
-   * ```
+   * The (unread) response body, as a {@link XrpcBinaryStream}. Returns
+   * `undefined` if the response has no payload, which can only happen for
+   * methods without an output encoding.
    */
-  hasBodyStream(): this is { readonly body: XrpcBinaryStream } {
-    return isReadableStream(this.payload?.body)
+  get body(): XrpcStreamResponseBody<M> {
+    return this.payload?.body as XrpcStreamResponseBody<M>
   }
 
   /**
@@ -372,10 +421,10 @@ export class XrpcStreamResponse<M extends Procedure | Query>
    * with `await using`).
    */
   async cancel(reason?: unknown): Promise<void> {
-    if (this.hasBodyStream()) {
+    const body: undefined | XrpcBinaryStream = this.body
+    if (body) {
       // @NOTE bodyUsed is the standard (portable) way of telling whether a
       // body stream was disturbed (read from or cancelled).
-      const { body } = this
       const ignoreFailures =
         body === this.#response.body && this.#response.bodyUsed
       await cancelStream(
@@ -390,6 +439,26 @@ export class XrpcStreamResponse<M extends Procedure | Query>
   /** @see {@link XrpcStreamResponse.cancel} */
   async [Symbol.asyncDispose](): Promise<void> {
     await this.cancel()
+  }
+
+  /**
+   * Reads the whole response payload, by proxying the fetch
+   * {@link Response.arrayBuffer} method. This consumes the body, which then no
+   * longer needs to be cancelled.
+   *
+   * @returns `undefined` if there is no payload (like {@link body}), which can
+   * only happen for methods without an output encoding
+   * @throws {TypeError} if the body was already read from, or is locked
+   */
+  async arrayBuffer(): Promise<
+    Exclude<XrpcStreamResponseBody<M>, XrpcBinaryStream> | ArrayBuffer
+  > {
+    // @NOTE The body of responses without payload might already have been
+    // cancelled, so it must not be read.
+    if (!this.body) {
+      return undefined as Exclude<XrpcStreamResponseBody<M>, XrpcBinaryStream>
+    }
+    return this.#response.arrayBuffer()
   }
 
   /**
@@ -417,7 +486,7 @@ export class XrpcStreamResponse<M extends Procedure | Query>
       response,
       options,
       true,
-    )) as XrpcResponsePayload<M, XrpcBinaryStream>
+    )) as XrpcStreamResponsePayload<M>
     return new XrpcStreamResponse<M>(method, response, payload, options)
   }
 }
@@ -443,7 +512,8 @@ async function readXrpcPayload(
     throw err
   }
 
-  // Release the resources of empty bodies that were not read (stream mode)
+  // Release the resources of empty bodies that were not read (stream mode,
+  // for methods without an output encoding)
   if (payload === undefined) {
     await cancelResponseBody(response, undefined, options?.onCancellationError)
   }
@@ -457,6 +527,8 @@ async function processFetchResponse(
   options: undefined | XrpcResponseOptions,
   stream: boolean,
 ): Promise<undefined | XrpcUnknownResponsePayload<XrpcBinaryBody>> {
+  if (stream) assertXrpcStreamable(method)
+
   // Always turn 4xx/5xx responses into XrpcResponseError
   if (response.status >= 400) {
     const payload = await readPayload(method, response, {
@@ -482,17 +554,14 @@ async function processFetchResponse(
   }
 
   const payload = await readPayload(method, response, {
-    // Parse response if there is a schema, or if the encoding is
-    // "application/json"
+    // Only parse the response if there is a schema, or if the encoding is
+    // "application/json". Other payloads (including those of methods without
+    // an output encoding) are binary.
     parse:
       method.output.schema || method.output.encoding === CONTENT_TYPE_JSON
         ? { strict: options?.strictResponseProcessing ?? true }
-        : // If there is no declared output encoding, we'll parse the output (in loose mode)
-          method.output.encoding == null
-          ? { strict: false }
-          : false,
-    // Payloads validated against a schema are always buffered
-    stream: stream && !method.output.schema,
+        : false,
+    stream,
   })
 
   if (!method.output.matchesEncoding(payload?.encoding)) {

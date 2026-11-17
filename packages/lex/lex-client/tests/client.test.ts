@@ -13,6 +13,7 @@ import {
   type FetchHandler,
   XrpcAuthenticationError,
   type XrpcBinaryStream,
+  XrpcInternalError,
   XrpcInvalidResponseError,
   XrpcResponseError,
   XrpcStreamResponse,
@@ -980,18 +981,21 @@ describe(Client, () => {
         await expect(readStream(response.body)).resolves.toEqual(bytes)
       })
 
-      it('rejects methods that never return binary payloads', async () => {
-        const client = new Client(async () =>
-          Response.json({ preferences: [] }),
-        )
+      it('rejects methods that do not declare a binary output', async () => {
+        const fetchHandler = vi.fn<FetchHandler>()
+        const client = new Client(fetchHandler)
 
-        await using response = await client.xrpcStream(
-          // @ts-expect-error JSON-only output
-          com.example.actor.getPreferences,
-        )
-
-        // Still parsed and validated, for untyped callers
-        expect(response.body).toEqual({ preferences: [] })
+        await expect(
+          client.xrpcStream(
+            // @ts-expect-error JSON-only output
+            com.example.actor.getPreferences,
+          ),
+        ).rejects.toSatisfy((err) => {
+          assert(err instanceof XrpcInternalError)
+          expect(err.cause).toBeInstanceOf(TypeError)
+          return true
+        })
+        expect(fetchHandler).not.toHaveBeenCalled()
       })
 
       it('preserves excess property checks', async () => {

@@ -572,7 +572,8 @@ export class Client {
    *
    * The caller owns the stream, and must either consume it or cancel it
    * ({@link XrpcStreamResponse.cancel}, or by disposing of the response).
-   * Only accepts methods whose output may be a binary payload.
+   * Only accepts methods declaring a binary output (a non-JSON encoding,
+   * without schema) or no output encoding at all.
    *
    * @example
    * ```typescript

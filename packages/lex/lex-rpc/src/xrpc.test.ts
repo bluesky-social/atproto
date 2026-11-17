@@ -1,7 +1,7 @@
 import { assert, describe, expect, expectTypeOf, it, vi } from 'vitest'
 import { parseCid } from '@atproto/lex-data'
 import { lexToJson } from '@atproto/lex-json'
-import { type LexValue, l } from '@atproto/lex-schema'
+import { l } from '@atproto/lex-schema'
 import type { FetchHandler } from './agent.js'
 import {
   XrpcAuthenticationError,
@@ -256,7 +256,7 @@ describe(xrpc, () => {
       expect(response.body).toEqual({ value: 'ok' })
     })
 
-    it('ignores output for no-output queries', async () => {
+    it('does not parse the payload of no-output queries', async () => {
       const fetchHandler = vi.fn<FetchHandler>(async () => {
         return Response.json({ unexpected: 'data' })
       })
@@ -264,7 +264,9 @@ describe(xrpc, () => {
       const response = await xrpc(fetchHandler, testNoOutputQuery)
 
       expect(response.success).toBe(true)
-      expect(response.body).toStrictEqual({ unexpected: 'data' })
+      expect(response.body).toEqual(
+        new TextEncoder().encode('{"unexpected":"data"}'),
+      )
     })
 
     it('applies custom headers', async () => {
@@ -1661,29 +1663,36 @@ describe(xrpcStream, () => {
     expect(new Uint8Array(result)).toEqual(bytes)
   })
 
-  it('buffers JSON payloads of undeclared outputs', async () => {
+  it('rejects methods returning JSON, without sending the request', async () => {
+    const fetchHandler = vi.fn<FetchHandler>()
+
+    await expect(
+      // @ts-expect-error not a binary output
+      xrpcStream(fetchHandler, testQuery, {}),
+    ).rejects.toSatisfy((err) => {
+      assert(err instanceof XrpcInternalError)
+      expect(err.shouldRetry()).toBe(false)
+      assert(err.cause instanceof TypeError)
+      expect(err.cause.message).toBe(
+        `XRPC method "${testQuery.nsid}" does not declare a binary output`,
+      )
+      return true
+    })
+    expect(fetchHandler).not.toHaveBeenCalled()
+  })
+
+  it('streams the payload of methods without an output encoding', async () => {
     const fetchHandler: FetchHandler = async () =>
       Response.json({ unexpected: 'data' })
 
     const response = await xrpcStream(fetchHandler, testNoOutputQuery)
 
-    expectTypeOf(response.body).toEqualTypeOf<
-      undefined | LexValue | XrpcBinaryStream
-    >()
-    expect(response.body).toEqual({ unexpected: 'data' })
-  })
-
-  it('rejects methods that never return binary payloads', async () => {
-    const fetchHandler: FetchHandler = async () =>
-      Response.json({ value: 'hello' })
-
-    // @ts-expect-error JSON-only output
-    const response = await xrpcStream(fetchHandler, testQuery, {
-      params: { limit: 10 },
-    })
-
-    // Still parsed and validated, for untyped callers
-    expect(response.body).toEqual({ value: 'hello' })
+    expectTypeOf(response.body).toEqualTypeOf<undefined | XrpcBinaryStream>()
+    assert(response.body)
+    const result = await new Response(response.body).arrayBuffer()
+    expect(new Uint8Array(result)).toEqual(
+      new TextEncoder().encode('{"unexpected":"data"}'),
+    )
   })
 
   it('preserves excess property checks', async () => {

@@ -1133,7 +1133,7 @@ const response = await client.xrpc(app.bsky.feed.getTimeline, {
 
 #### Streaming binary responses
 
-Binary (non JSON) response payloads are read into a `Uint8Array` by default. Use `client.xrpcStream()`, `client.xrpcStreamSafe()` or `client.getBlobStream()` to get the unread `ReadableStream` instead, as an `XrpcStreamResponse`. These only accept methods whose output may be a binary payload. JSON payloads and error responses are always buffered.
+Binary (non JSON) response payloads are read into a `Uint8Array` by default. Use `client.xrpcStream()`, `client.xrpcStreamSafe()` or `client.getBlobStream()` to get the unread `ReadableStream` instead, as an `XrpcStreamResponse`. These only accept methods declaring a binary output (a non-JSON encoding, without schema) or no output encoding at all, and error responses are always buffered. The payload of methods without an output encoding is never parsed: it is returned as binary data (if any), in both modes.
 
 ```typescript
 // Disposing of the response cancels the stream if it was not fully consumed
