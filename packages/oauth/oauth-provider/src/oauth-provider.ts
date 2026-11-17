@@ -788,6 +788,17 @@ export class OAuthProvider extends OAuthVerifier {
         }
       }
 
+      const permissionSets = await this.lexiconManager
+        .getPermissionSetsFromScope(parameters.scope)
+        .catch((cause) => {
+          throw new AuthorizationError(
+            parameters,
+            'Unable to retrieve permission sets',
+            'invalid_scope',
+            cause,
+          )
+        })
+
       return {
         issuer,
         client,
@@ -806,16 +817,7 @@ export class OAuthProvider extends OAuthVerifier {
           parameters.login_hint,
           this.accountManager,
         ),
-        permissionSets: await this.lexiconManager
-          .getPermissionSetsFromScope(parameters.scope)
-          .catch((cause) => {
-            throw new AuthorizationError(
-              parameters,
-              'Unable to retrieve permission sets',
-              'invalid_scope',
-              cause,
-            )
-          }),
+        permissionSets,
         spaces: await this.lexiconManager
           .getSpacesFromScope(parameters.scope)
           .catch((cause) => {
@@ -831,6 +833,7 @@ export class OAuthProvider extends OAuthVerifier {
         spaceHandles: await this.identityManager.getSpaceHandlesFromScope(
           parameters.scope,
           {
+            permissionSets,
             // @TODO: Should we log here ?
             onError: (_did, _error) => {},
           },
