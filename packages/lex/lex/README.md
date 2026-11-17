@@ -1131,6 +1131,21 @@ const response = await client.xrpc(app.bsky.feed.getTimeline, {
 })
 ```
 
+#### Streaming binary responses
+
+Binary (non JSON) response payloads are read into a `Uint8Array` by default. Use `client.xrpcStream()`, `client.xrpcStreamSafe()` or `client.getBlobStream()` to get the unread `ReadableStream` instead, as an `XrpcStreamResponse`. These only accept methods declaring a binary output (a non-JSON encoding, without schema) or no output encoding at all, and error responses are always buffered. The payload of methods without an output encoding is never parsed: it is returned as binary data (if any), in both modes.
+
+```typescript
+// Disposing of the response cancels the stream if it was not fully consumed
+await using response = await client.getBlobStream(did, cid)
+
+for await (const chunk of response.body) {
+  // ...
+}
+```
+
+The caller owns the returned stream and must either consume or cancel it, through `response.cancel()` or by disposing of the response (`await using`, which follows the `onCancellationError` option). The results of `xrpcStreamSafe()`, including failures, are disposable without narrowing. Fetch implementations that do not expose response bodies as streams (e.g. React Native's built-in `fetch`) cause an `XrpcInternalError`.
+
 ## Utilities
 
 Various utilities for working with CIDs, datetime strings, string lengths, language tags, and low-level JSON encoding are exported from the package:
