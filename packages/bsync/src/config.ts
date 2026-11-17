@@ -16,6 +16,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     poolMaxUses: env.dbPoolMaxUses,
     poolIdleTimeoutMs: env.dbPoolIdleTimeoutMs,
     migrate: env.dbMigrate,
+    awsIamAuth: env.dbAwsIamAuth,
   }
 
   assert(env.apiKeys.length > 0, 'missing api keys')
@@ -61,6 +62,7 @@ type DatabaseConfig = {
   poolMaxUses?: number
   poolIdleTimeoutMs?: number
   migrate?: boolean
+  awsIamAuth?: boolean
 }
 
 type AuthConfig = {
@@ -86,6 +88,7 @@ export const readEnv = (): ServerEnvironment => {
     dbPoolMaxUses: envInt('BSYNC_DB_POOL_MAX_USES'),
     dbPoolIdleTimeoutMs: envInt('BSYNC_DB_POOL_IDLE_TIMEOUT_MS'),
     dbMigrate: envBool('BSYNC_DB_MIGRATE'),
+    dbAwsIamAuth: envBool('BSYNC_DB_POSTGRES_AWS_IAM_AUTH'),
     // secrets
     apiKeys: envList('BSYNC_API_KEYS'),
     dataplaneUrls: envList('BSYNC_DATAPLANE_URLS'),
@@ -106,6 +109,7 @@ export type ServerEnvironment = {
   dbPoolMaxUses?: number
   dbPoolIdleTimeoutMs?: number
   dbMigrate?: boolean
+  dbAwsIamAuth?: boolean
   // secrets
   apiKeys: string[]
   dataplaneUrls?: string[]
