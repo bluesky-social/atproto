@@ -15,6 +15,12 @@ export const getRedisClient = (host: string, password?: string): Redis => {
     // doesn't answer, so an outage costs a request at most this much time.
     commandTimeout: REDIS_COMMAND_TIMEOUT_MS,
     enableOfflineQueue: false,
+    // @TODO Pins ioredis 5's wire behavior (RESP2, no CLIENT SETINFO on
+    // connect) so the ioredis 6 upgrade changes nothing against the Redis
+    // servers we run (Redis < 7.2 rejects CLIENT SETINFO). Drop these to use
+    // ioredis 6's defaults once those servers are >= 7.2 and RESP3 is verified.
+    protocol: 2,
+    disableClientInfo: true,
   })
   redis.on('error', (err) => {
     redisLogger.error({ host, err }, 'redis error')
