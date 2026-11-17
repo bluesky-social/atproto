@@ -28,7 +28,6 @@ import {
   type AssociatedSiteStandardRecord,
   type SiteStandardDocument,
   type SiteStandardPublication,
-  genericRecordKey,
   getExternalRootRef,
   getSiteStandardRecordsFromRefs,
 } from '../hydration/external.js'
@@ -44,12 +43,9 @@ import {
 } from '../hydration/util.js'
 import type { ImageUriBuilder } from '../image/uri.js'
 import { app, site } from '../lexicons/index.js'
-import { viewsLogger } from '../logger.js'
 import type { Notification } from '../proto/bsky_pb.js'
-import {
-  estimateReadingTimeMinutes,
-  validateStandardSiteRecordsForUrl,
-} from '../util/external/standard-site.js'
+import { estimateReadingTimeMinutes } from '../util/external/standard-site.js'
+import { validateExternalEmbedRecord } from '../util/external/validation.js'
 import {
   postUriToPostgateUri,
   postUriToThreadgateUri,
@@ -2386,23 +2382,18 @@ export class Views {
     // records were hydrated `ssView` is `undefined` and the spread is a
     // no-op, leaving the base values in place. `associatedRefs` is set
     // last because the post is authoritative about what was pinned.
-    const ssView = this.externalEmbedFromStandardSite({
-      associatedRefs: embed.external.associatedRefs,
-      state,
-      assumedUrl: embed.external.uri,
-    })
     const root = getExternalRootRef(embed.external.associatedRefs)
-    const record = root
-      ? state.externalRecordsByRef?.get(genericRecordKey(root))?.record
+    const verified =
+      root &&
+      validateExternalEmbedRecord({ ref: root, url: embed.external.uri, state })
+    const ssView = verified
+      ? this.externalEmbedFromStandardSite({
+          associatedRefs: embed.external.associatedRefs,
+          state,
+          assumedUrl: embed.external.uri,
+        })
       : undefined
-    const standardSite =
-      record &&
-      (site.standard.document.$isTypeOf(record) ||
-        site.standard.publication.$isTypeOf(record))
-    const data =
-      root && (!standardSite || ssView)
-        ? this.externalRecordView(root, state)
-        : undefined
+    const data = verified ? this.externalRecordView(root, state) : undefined
     // The author-supplied (scraped) thumbnail always wins when present —
     // it's the per-article OG image. Only when the embed has no thumb do
     // we fall back to whatever the SS overlay provides (the document's
@@ -2433,17 +2424,8 @@ export class Views {
    * and the global hydration state. Resolve the selected pinned root and its
    * publication dependency. Used by `externalEmbed`.
    *
-   * Returns a fully-populated `viewExternal['external']` shape (including
-   * the required `uri`/`title`/`description`), or `undefined` if the
-   * records didn't hydrate, didn't pass URL validation, or couldn't
-   * supply the required fields. Callers spread the result over a base
-   * view to layer SS-derived fields on top of post-author-supplied ones.
-   *
-   * `assumedUrl` is the canonical web URL the embed claims to represent
-   * (the post's `external.uri` on the read path, the request's `url` on
-   * compose). Validation logic uses it to confirm the SS records actually
-   * back that URL, and the same value is echoed back as `uri` on the
-   * returned overlay.
+   * The caller must validate the record-to-URL association before rendering.
+   * Returns `undefined` for unavailable records or missing display fields.
    */
   externalEmbedFromStandardSite({
     associatedRefs,
@@ -2484,17 +2466,8 @@ export class Views {
    * that `externalEmbedFromStandardSite` does. Used by
    * `getEmbedExternalView`.
    *
-   * Returns a fully-populated `viewExternal['external']` shape (including
-   * the required `uri`/`title`/`description`), or `undefined` if any of
-   * the validation gates rejected the pair or the records couldn't
-   * supply the required fields.
-   *
-   * `state` is still needed for label hydration. `assumedUrl` is the
-   * canonical web URL the embed claims to represent (the post's
-   * `external.uri` on the read path, the request's `url` on compose);
-   * validation logic uses it to confirm the SS records actually back that
-   * URL, and the same value is echoed back as `uri` on the returned
-   * overlay.
+   * The caller must validate the record-to-URL association before rendering.
+   * `assumedUrl` is echoed as the overlay's URL, not inferred from the records.
    */
   externalEmbedFromStandardSiteRecords({
     document,
@@ -2508,30 +2481,7 @@ export class Views {
     state: HydrationState
     assumedUrl: string
   }): ExternalEmbedView['external'] | undefined {
-    // Three layers of validation gate this overlay:
-    //
-    //  1. Generic hydration nulls taken-down records individually, and
-    //     `externalEmbedFromStandardSite` rejects a moderated root or dependency.
-    //  2. The read-path selection resolves the pinned root and its named
-    //     publication dependency; an unavailable root never falls back to a
-    //     discarded authored ref. The compose path selects its own pair.
-    //  3. `validateStandardSiteRecordsForUrl` below re-checks the doc/pub
-    //     relationship and that the records back the URL the embed claims
-    //     (see `util/external/standard-site.ts`).
-    //
-    // If any layer rejected, callers see `undefined` and fall back to the
-    // bare embed rather than render partial / disagreeing enrichment.
     if (!document && !publication) return undefined
-    if (!validateStandardSiteRecordsForUrl(document, publication, assumedUrl)) {
-      viewsLogger.warn(
-        {
-          documentUri: document?.ref.uri,
-          publicationUri: publication?.ref.uri,
-        },
-        'site.standard URL validation failed',
-      )
-      return undefined
-    }
 
     // viewExternal requires `title` and `description`. If neither side of
     // the pair supplies usable values for both, there's no enrichment to

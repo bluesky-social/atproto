@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import {
   type AtUriString,
   type DatetimeString,
@@ -316,6 +316,19 @@ describe('Views.externalEmbed Standard.site roots', () => {
       })
     },
   )
+
+  it('builds data independently of legacy overlay renderability', () => {
+    using overlay = vi
+      .spyOn(views, 'externalEmbedFromStandardSite')
+      .mockReturnValue(undefined)
+    const view = views.externalEmbed(author, embedOf(docRef), stateOf())
+    expect(overlay).toHaveBeenCalledOnce()
+    expect(view.external.title).toBe('Scraped')
+    expect(view.data).toMatchObject({
+      $type: app.bsky.embed.external.viewArticle.$type,
+      title: 'Document',
+    })
+  })
 
   it('ignores moderated authored refs that are not the root or its dependency', () => {
     const ignored = {

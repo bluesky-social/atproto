@@ -18,10 +18,8 @@ import {
 } from '../../../../pipeline.js'
 import { collectAssociations } from '../../../../util/external/associations.js'
 import { isExternalRecordUrlSafe } from '../../../../util/external/index.js'
-import {
-  getStandardSiteRecordsForUri,
-  validateStandardSiteRecordsForUrl,
-} from '../../../../util/external/standard-site.js'
+import { getStandardSiteRecordsForUri } from '../../../../util/external/standard-site.js'
+import { validateExternalEmbedRecord } from '../../../../util/external/validation.js'
 import type { Views } from '../../../../views/index.js'
 import { resHeaders } from '../../../util.js'
 
@@ -83,19 +81,21 @@ const presentation = (
     hydration.externalRecords,
   )
 
-  // Validate before building any view: trust must not depend on whether the
-  // records happen to be renderable.
+  // @NOTE Trust must not depend on whether the records happen to be renderable.
+  const validAssociation = validateExternalEmbedRecord({
+    ref: { uri: canonicalUri },
+    url: params.url,
+    state: hydration,
+  })
   const standardSite = isStandardSiteUri(canonicalUri)
-  const standardSiteRecords = standardSite
-    ? getStandardSiteRecordsForUri(canonicalUri, hydration.externalRecords)
-    : undefined
-  const verified = standardSiteRecords
-    ? validateStandardSiteRecordsForUrl(
-        standardSiteRecords.document,
-        standardSiteRecords.publication,
-        params.url,
-      )
-    : isExternalRecordUrlSafe(params.url, ctx.cfg.externalRecordsSafeDomains)
+  let verified = false
+  if (standardSite) {
+    verified = validAssociation
+  } else {
+    verified =
+      validAssociation &&
+      isExternalRecordUrlSafe(params.url, ctx.cfg.externalRecordsSafeDomains)
+  }
 
   if (!verified) {
     return {
@@ -107,7 +107,11 @@ const presentation = (
   const data = ctx.views.externalRecordView({ uri: canonicalUri }, hydration)
 
   let view: Output['view']
-  if (standardSiteRecords) {
+  if (standardSite) {
+    const standardSiteRecords = getStandardSiteRecordsForUri(
+      canonicalUri,
+      hydration.externalRecords,
+    )
     const standardSiteView = ctx.views.externalEmbedFromStandardSiteRecords({
       document: standardSiteRecords.document,
       publication: standardSiteRecords.publication,
