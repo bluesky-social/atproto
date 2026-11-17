@@ -439,8 +439,8 @@ export class SpaceReader<S extends Space = Space> {
       }),
     }: SpaceReader.Options = {},
   ) {
-    if (ref.spaceType !== schema.nsid) {
-      throw new TypeError(`${ref} is not a ${schema.nsid} space`)
+    if (ref.spaceType !== schema.type) {
+      throw new TypeError(`${ref} is not a ${schema.type} space`)
     }
     this.uri = ref.toString()
 
@@ -983,7 +983,7 @@ export class SpaceReader<S extends Space = Space> {
     const schema = this.#collectionSchemas.get(collection)
     if (!schema) {
       throw new TypeError(
-        `${collection} is not a collection of ${this.schema.nsid} spaces`,
+        `${collection} is not a collection of ${this.schema.type} spaces`,
       )
     }
     return schema

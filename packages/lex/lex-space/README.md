@@ -12,7 +12,7 @@ import { com } from './lexicons/index.js'
 const client = new Client(oauthSession)
 const forum = com.example.forum // the space type's schema
 
-const { spaces } = await client.call(listSpaces, { spaceType: forum.nsid })
+const { spaces } = await client.call(listSpaces, { spaceType: forum.type })
 const space = SpaceClient.openSpace(forum, spaces[0].space, {
   agent: client.agent,
 })
@@ -93,7 +93,7 @@ const owned = await client.call(listSpaces, { spaceDid: client.did })
 
 // Only the spaces of a given type
 const forums = await client.call(listSpaces, {
-  spaceType: com.example.forum.nsid,
+  spaceType: com.example.forum.type,
 })
 ```
 

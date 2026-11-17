@@ -100,7 +100,7 @@ describe('SpaceClient', () => {
       })
       expect(created).toBeInstanceOf(SpaceClient)
       expect(created.uri).toBe(
-        `at://${alice.assertDid}/space/${group.nsid}/created`,
+        `at://${alice.assertDid}/space/${group.type}/created`,
       )
 
       await created.create(note.$build({ text: 'first' }))
@@ -151,7 +151,7 @@ describe('SpaceClient', () => {
         { agent: bob.agent },
       )
       expect(opened.uri).toBe(
-        `at://${alice.assertDid}/space/${bookmarks.nsid}/self`,
+        `at://${alice.assertDid}/space/${bookmarks.type}/self`,
       )
     })
   })
@@ -194,7 +194,7 @@ describe('SpaceClient', () => {
     it('refuses undeclared collections', async () => {
       const aliceSpace = open(alice, await createGroup(alice))
       const undeclared = new TypeError(
-        `${other.$type} is not a collection of ${group.nsid} spaces`,
+        `${other.$type} is not a collection of ${group.type} spaces`,
       )
       const rkey = '3jzfcijpj2z2a'
 

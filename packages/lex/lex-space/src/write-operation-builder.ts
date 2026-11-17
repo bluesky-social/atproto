@@ -127,7 +127,7 @@ export class SpaceWriteOperationHelper<S extends Space = Space> {
       if (c.$type === collection) return c as SpaceRecordSchema<S, C>
     }
     throw new TypeError(
-      `${collection} is not a collection of ${this.space.nsid} spaces`,
+      `${collection} is not a collection of ${this.space.type} spaces`,
     )
   }
 

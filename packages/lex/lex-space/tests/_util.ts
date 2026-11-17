@@ -55,7 +55,7 @@ export async function createGroup(
   policy: SpacePolicy = com.atproto.memberspace.policy.$build({}),
 ): Promise<SpaceRefString> {
   const { space } = await authority.call(com.atproto.space.createSpace, {
-    spaceType: group.nsid,
+    spaceType: group.type,
     policy,
   })
   if (members.length) {

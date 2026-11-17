@@ -18,7 +18,7 @@ describe(Space, () => {
     expect(sp).toBeInstanceOf(Space)
     expect(sp).toMatchObject({
       key: 'any',
-      nsid: 'com.example.forum',
+      type: 'com.example.forum',
       spaceType: 'com.example.forum',
       collections: [thread, reply],
     })

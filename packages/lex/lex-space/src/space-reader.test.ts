@@ -28,7 +28,7 @@ const task = l.record(
 )
 
 const group = l.space('any', 'com.example.group', [note, task])
-const SPACE = `at://${AUTHORITY}/space/${group.nsid}/main` as const
+const SPACE = `at://${AUTHORITY}/space/${group.type}/main` as const
 
 type Route = (request: Request) => Response | Promise<Response>
 
@@ -282,7 +282,7 @@ describe(SpaceReader, () => {
         // @ts-expect-error not a collection of the space type
         reader.list(other.$type, { repo: ALICE }),
       ).rejects.toThrow(
-        `${other.$type} is not a collection of ${group.nsid} spaces`,
+        `${other.$type} is not a collection of ${group.type} spaces`,
       )
       await expect(
         // @ts-expect-error not a collection of the space type

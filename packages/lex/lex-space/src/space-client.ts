@@ -266,7 +266,7 @@ export class SpaceClient<S extends Space = Space> extends SpaceReader<S> {
         : undefined
     const { body } = await xrpc(agent, createSpace, {
       signal,
-      body: { spaceType: schema.nsid, skey: ref?.skey, policy },
+      body: { spaceType: schema.type, skey: ref?.skey, policy },
     })
     return new SpaceClient(agent, schema, SpaceRef.parse(body.space), options)
   }

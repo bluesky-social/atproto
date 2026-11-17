@@ -20,7 +20,7 @@ import { TypedRefSchema } from './typed-ref.js'
  * into the space — it's a recommendation for clients.
  *
  * @template TKey - The recommended space key type
- * @template TNsid - The NSID identifying this space type
+ * @template TType - The NSID identifying this space type
  * @template TRecord - The record schemas of the recommended collections
  *
  * @example
@@ -30,21 +30,21 @@ import { TypedRefSchema } from './typed-ref.js'
  */
 export class Space<
   const TKey extends LexiconRecordKey = LexiconRecordKey,
-  const TNsid extends NsidString = NsidString,
+  const TType extends NsidString = NsidString,
   const TRecord extends RecordSchema = RecordSchema,
 > {
   readonly key: TKey
-  readonly nsid: TNsid
+  readonly type: TType
 
   readonly #collections: readonly (TRecord | TypedRefSchema<TRecord>)[]
 
   constructor(
     key: TKey,
-    nsid: TNsid,
+    type: TType,
     collections: readonly (TRecord | TypedRefSchema<TRecord>)[],
   ) {
     this.key = asLexiconRecordKey(key)
-    this.nsid = nsid
+    this.type = type
 
     // @NOTE We don't build the resolved collection schemas here; they are
     // lazily resolved on first access via the `collections` getter.
@@ -66,8 +66,8 @@ export class Space<
     )
   }
 
-  get spaceType(): TNsid {
-    return this.nsid
+  get spaceType(): TType {
+    return this.type
   }
 
   /**
@@ -96,8 +96,8 @@ export class Space<
    */
   matchesRef<R extends { spaceType: string; skey: string }>(
     ref: R,
-  ): ref is R & { spaceType: TNsid; skey: RecordKeyValue<TKey> } {
-    return ref.spaceType === this.nsid && this.isKey(ref.skey)
+  ): ref is R & { spaceType: TType; skey: RecordKeyValue<TKey> } {
+    return ref.spaceType === this.type && this.isKey(ref.skey)
   }
 
   spaceRefFor(
@@ -129,7 +129,7 @@ export class Space<
       )
     }
 
-    return new SpaceRef(spaceDid, this.nsid, skey)
+    return new SpaceRef(spaceDid, this.type, skey)
   }
 }
 
@@ -137,7 +137,7 @@ export class Space<
  * Creates a space declaration.
  *
  * @param key - Recommended space key type
- * @param nsid - The NSID identifying this space type
+ * @param type - The NSID identifying this space type
  * @param collections - The record schemas (or references to them) of the
  *   collections recommended for clients of this space type. The schema types
  *   are not inferred from a list mixing schemas and references: use either
@@ -152,15 +152,15 @@ export class Space<
  */
 /*@__NO_SIDE_EFFECTS__*/
 export function space<
-  const K extends LexiconRecordKey,
-  const N extends NsidString,
-  const R extends RecordSchema = never,
+  const TKey extends LexiconRecordKey,
+  const TType extends NsidString,
+  const TRecord extends RecordSchema = never,
 >(
-  key: K,
-  nsid: N,
-  collections: readonly (R | TypedRefSchema<R>)[],
-): Space<K, N, R> {
-  return new Space<K, N, R>(key, nsid, collections)
+  key: TKey,
+  type: TType,
+  collections: readonly (TRecord | TypedRefSchema<TRecord>)[],
+): Space<TKey, TType, TRecord> {
+  return new Space<TKey, TType, TRecord>(key, type, collections)
 }
 
 function getCollectionSchema<T extends RecordSchema>(
