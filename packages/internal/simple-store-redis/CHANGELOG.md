@@ -1,5 +1,11 @@
 # @atproto-labs/simple-store-redis
 
+## 0.1.7
+
+### Patch Changes
+
+- [#5919](https://github.com/bluesky-social/atproto/pull/5919) [`8d84a6c`](https://github.com/bluesky-social/atproto/commit/8d84a6cea64c5d0aa064f291b09c3eea2eb61b65) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Allow `ioredis` 6.x as a peer dependency
+
 ## 0.1.6
 
 ### Patch Changes

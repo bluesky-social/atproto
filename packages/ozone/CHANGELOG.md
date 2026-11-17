@@ -1,5 +1,19 @@
 # @atproto/ozone
 
+## 0.15.2
+
+### Patch Changes
+
+- [#5897](https://github.com/bluesky-social/atproto/pull/5897) [`e1c4481`](https://github.com/bluesky-social/atproto/commit/e1c448148c7ecf21aff45edc8c922630049b9b14) Thanks [@foysalit](https://github.com/foysalit)! - Allow filtering automatic record language tags by record type.
+
+- [#5776](https://github.com/bluesky-social/atproto/pull/5776) [`7efa83f`](https://github.com/bluesky-social/atproto/commit/7efa83ff50c31069b730443978e8a7edc4f1da62) Thanks [@foysalit](https://github.com/foysalit)! - Add optional push notification delivery for the moderation inbox.
+
+- [#5931](https://github.com/bluesky-social/atproto/pull/5931) [`ce21dda`](https://github.com/bluesky-social/atproto/commit/ce21dda25d4ab002bccbcb7b0ea16629ea2ea88b) Thanks [@foysalit](https://github.com/foysalit)! - Skip automatic language tagging for conversation and message subjects.
+- Updated dependencies [[`b5dfe0b`](https://github.com/bluesky-social/atproto/commit/b5dfe0b80ac4f14f56b3c9b797e0e50d2e194a3b), [`b5dfe0b`](https://github.com/bluesky-social/atproto/commit/b5dfe0b80ac4f14f56b3c9b797e0e50d2e194a3b), [`b5dfe0b`](https://github.com/bluesky-social/atproto/commit/b5dfe0b80ac4f14f56b3c9b797e0e50d2e194a3b)]:
+  - @atproto/lex-password-session@0.3.3
+  - @atproto/lex-client@0.5.0
+  - @atproto/xrpc-server@0.13.13
+
 ## 0.15.1
 
 ### Patch Changes
