@@ -2,13 +2,11 @@ import { describe, expect, it } from 'vitest'
 import { SpacePermission } from '@atproto/oauth-scopes'
 import {
   buildSpaceAccessRows,
-  clientHostname,
   highestSpaceAccessLevel,
   spaceAccessLevel,
 } from './space-access.ts'
 
 const DID = 'did:plc:abc123'
-const CLIENT_ID = 'https://atmoboards.com/oauth-client-metadata.json'
 
 const parse = (scope: string) => {
   const permission = SpacePermission.fromString(scope)
@@ -17,105 +15,29 @@ const parse = (scope: string) => {
 }
 
 describe(spaceAccessLevel, () => {
-  const context = {
-    clientId: CLIENT_ID,
-    spaceHandles: { [DID]: 'atmoboards.com' },
-  }
-
   it('rates every space on the network as universal', () => {
-    expect(spaceAccessLevel(parse('space:*?authority=*'), context)).toBe(
-      'universal',
-    )
+    expect(spaceAccessLevel(parse('space:*?authority=*'))).toBe('universal')
   })
 
   it('rates one space type under any authority as broad', () => {
-    expect(
-      spaceAccessLevel(parse('space:com.example.forum?authority=*'), context),
-    ).toBe('broad')
+    expect(spaceAccessLevel(parse('space:com.example.forum?authority=*'))).toBe(
+      'broad',
+    )
   })
 
   it("rates the user's own spaces as broad", () => {
-    expect(spaceAccessLevel(parse('space:*?authority=self'), context)).toBe(
-      'broad',
-    )
+    expect(spaceAccessLevel(parse('space:*?authority=self'))).toBe('broad')
     // `self` is the default authority
-    expect(spaceAccessLevel(parse('space:com.example.forum'), context)).toBe(
-      'broad',
-    )
+    expect(spaceAccessLevel(parse('space:com.example.forum'))).toBe('broad')
   })
 
-  it("rates spaces on the client's own hostname as client", () => {
-    expect(spaceAccessLevel(parse(`space:*?authority=${DID}`), context)).toBe(
-      'client',
+  it('rates the spaces of one authority as authority, whatever their type', () => {
+    expect(spaceAccessLevel(parse(`space:*?authority=${DID}`))).toBe(
+      'authority',
     )
     expect(
-      spaceAccessLevel(
-        parse(`space:com.example.forum?authority=${DID}`),
-        context,
-      ),
-    ).toBe('client')
-  })
-
-  it('compares the handle case-insensitively', () => {
-    expect(
-      spaceAccessLevel(parse(`space:*?authority=${DID}`), {
-        clientId: CLIENT_ID,
-        spaceHandles: { [DID]: 'AtmoBoards.com' },
-      }),
-    ).toBe('client')
-  })
-
-  it('rates spaces on another authority as authority', () => {
-    expect(
-      spaceAccessLevel(parse(`space:*?authority=${DID}`), {
-        clientId: CLIENT_ID,
-        spaceHandles: { [DID]: 'protocol-nerds.atmoboards.com' },
-      }),
+      spaceAccessLevel(parse(`space:com.example.forum?authority=${DID}`)),
     ).toBe('authority')
-  })
-
-  it('rates an authority whose handle did not resolve as broad', () => {
-    expect(
-      spaceAccessLevel(parse(`space:*?authority=${DID}`), {
-        clientId: CLIENT_ID,
-      }),
-    ).toBe('broad')
-  })
-
-  it('requires a conventional client id to match the hostname', () => {
-    for (const clientId of [
-      'https://atmoboards.com/other/client-metadata.json',
-      'https://atmoboards.com:8443/oauth-client-metadata.json',
-      'https://atmoboards.com/oauth-client-metadata.json?v=1',
-      'http://localhost?redirect_uri=http%3A%2F%2F127.0.0.1%2F',
-    ]) {
-      expect(
-        spaceAccessLevel(parse(`space:*?authority=${DID}`), {
-          clientId,
-          spaceHandles: { [DID]: 'atmoboards.com' },
-        }),
-      ).toBe('authority')
-    }
-  })
-
-  it('rates nothing as client without a client id', () => {
-    expect(
-      spaceAccessLevel(parse(`space:*?authority=${DID}`), {
-        spaceHandles: { [DID]: 'atmoboards.com' },
-      }),
-    ).toBe('authority')
-  })
-})
-
-describe(clientHostname, () => {
-  it('returns the hostname of a conventional client id', () => {
-    expect(clientHostname(CLIENT_ID)).toBe('atmoboards.com')
-  })
-
-  it('returns null for any other client id', () => {
-    expect(clientHostname(undefined)).toBeNull()
-    expect(clientHostname('not a url')).toBeNull()
-    expect(clientHostname('https://atmoboards.com/client.json')).toBeNull()
   })
 })
 
@@ -129,10 +51,7 @@ describe(buildSpaceAccessRows, () => {
         ),
         parse('space:*?authority=*&action=read_self&manage=update'),
       ],
-      {
-        clientId: CLIENT_ID,
-        spaceHandles: { [DID]: 'protocol-nerds.atmoboards.com' },
-      },
+      { spaceHandles: { [DID]: 'protocol-nerds.atmoboards.com' } },
     )
 
     expect(rows).toEqual([
@@ -161,6 +80,13 @@ describe(buildSpaceAccessRows, () => {
         ]),
       }),
     ])
+  })
+
+  it('leaves the handle of an unverified authority unset', () => {
+    const [row] = buildSpaceAccessRows([parse(`space:*?authority=${DID}`)])
+
+    expect(row?.level).toBe('authority')
+    expect(row?.authorityHandle).toBeUndefined()
   })
 
   it('ignores collections on grants that do not write', () => {
@@ -201,26 +127,18 @@ describe(highestSpaceAccessLevel, () => {
   })
 
   it('returns the most alarming level present', () => {
-    const rows = buildSpaceAccessRows(
-      [
-        parse(`space:*?authority=${DID}`),
-        parse('space:com.example.forum?authority=*'),
-        parse('space:com.example.chat?authority=did:plc:other'),
-      ],
-      {
-        clientId: CLIENT_ID,
-        spaceHandles: {
-          [DID]: 'atmoboards.com',
-          'did:plc:other': 'chat.example.com',
-        },
-      },
-    )
-
-    expect(rows.map((row) => row.level).sort()).toEqual([
-      'authority',
-      'broad',
-      'client',
+    const rows = buildSpaceAccessRows([
+      parse(`space:*?authority=${DID}`),
+      parse('space:com.example.forum?authority=*'),
     ])
+
+    expect(rows.map((row) => row.level).sort()).toEqual(['authority', 'broad'])
     expect(highestSpaceAccessLevel(rows)).toBe('broad')
+    expect(
+      highestSpaceAccessLevel([
+        ...rows,
+        ...buildSpaceAccessRows([parse('space:*?authority=*')]),
+      ]),
+    ).toBe('universal')
   })
 })

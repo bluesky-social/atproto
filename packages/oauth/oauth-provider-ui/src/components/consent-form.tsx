@@ -84,14 +84,10 @@ export function ConsentForm({
   // on top of the warning <ScopeDescription /> renders.
   const universalSpaceAccess = useMemo(() => {
     const rows = buildSpaceAccessRows(
-      listSpacePermissions(
-        scope?.split(' ') ?? [],
-        (nsid) => permissionSets?.[nsid],
-      ),
-      { clientId, spaces, spaceHandles },
+      listSpacePermissions(scope?.split(' ') ?? []),
     )
     return highestSpaceAccessLevel(rows) === 'universal'
-  }, [scope, permissionSets, clientId, spaces, spaceHandles])
+  }, [scope])
 
   return (
     <FormShell
@@ -174,7 +170,6 @@ export function ConsentForm({
         permissionSets={permissionSets}
         spaces={spaces}
         spaceHandles={spaceHandles}
-        clientId={clientId}
         clientTrusted={clientTrusted}
         clientFirstParty={clientFirstParty}
         allowEmail={canUnsetEmail ? allowEmail : true}
