@@ -301,7 +301,9 @@ async function setup(domains = ['stream.example.com', 'grain.social']) {
     visibilityTagRankPrefix: '',
     externalRecordsSafeDomains: domains,
   })
-  const anonymous = async () => ({ credentials: { type: 'none', iss: null } })
+  const anonymous = async () => ({
+    credentials: { type: 'none' as const, iss: null },
+  })
   const ctx = {
     cfg: { externalRecordsSafeDomains: domains },
     dataplane,
@@ -310,14 +312,20 @@ async function setup(domains = ['stream.example.com', 'grain.social']) {
     featureGatesClient,
     reqLabelers: () => ({ dids: [labeler], redact: new Set([labeler]) }),
     authVerifier: {
-      standardOptionalParameterized: () => anonymous,
-      optionalStandardOrRole: anonymous,
+      standardReadOptional: () => anonymous,
+      standardReadOrRoleOptional: anonymous,
       parseCreds: () => ({
         viewer: null,
         includeTakedowns: false,
+        include3pBlocks: false,
+        canPerformTakedown: false,
+        isModService: false,
         skipViewerBlocks: false,
       }),
-    },
+    } satisfies Pick<
+      AppContext['authVerifier'],
+      'standardReadOptional' | 'standardReadOrRoleOptional' | 'parseCreds'
+    >,
   } as unknown as AppContext
   const xrpc = createServer([], { validateResponse: true })
   registerPosts(xrpc, ctx)
