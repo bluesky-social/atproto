@@ -1,5 +1,11 @@
 # @atproto/ozone
 
+## 0.15.3
+
+### Patch Changes
+
+- [#5927](https://github.com/bluesky-social/atproto/pull/5927) [`bc2ac56`](https://github.com/bluesky-social/atproto/commit/bc2ac561f723e0d85cafcfd2cf80747f00ec4093) Thanks [@amckinley](https://github.com/amckinley)! - Let inbox appeals target moderation actions taken before `OZONE_INBOX_START_AT`. Eligibility uses the full history while displayed history and hidden action dates remain cutoff-filtered.
+
 ## 0.15.2
 
 ### Patch Changes

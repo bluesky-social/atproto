@@ -1,5 +1,13 @@
 # @atproto/bsky
 
+## 0.5.14
+
+### Patch Changes
+
+- [#5890](https://github.com/bluesky-social/atproto/pull/5890) [`d3adef8`](https://github.com/bluesky-social/atproto/commit/d3adef81c0162a71679879391075520ed866ab1f) Thanks [@ds-boyce](https://github.com/ds-boyce)! - Hydrate eligible post view counts only for the authenticated author, with a bounded optional Atlantis lookup. Serving is disabled when `BSKY_POST_VIEW_COUNTS_START_AT` is unset, invalid, or in the future. Invalid values log a warning.
+
+- [#5898](https://github.com/bluesky-social/atproto/pull/5898) [`b54391d`](https://github.com/bluesky-social/atproto/commit/b54391d5d6217389daf7f3a52ba645c9f67d62ac) Thanks [@haileyok](https://github.com/haileyok)! - Add a blob source endpoint.
+
 ## 0.5.13
 
 ### Patch Changes
