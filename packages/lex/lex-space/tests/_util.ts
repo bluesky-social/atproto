@@ -11,9 +11,7 @@ export const note = l.record(
   l.object({ text: l.string() }),
 )
 
-export const group = l.space('any', 'com.example.group', [note.$type], {
-  title: 'Example group',
-})
+export const group = l.space('any', 'com.example.group', [note])
 
 // @NOTE The package only vendors the space lexicons. This is a trimmed mirror
 // of com.atproto.server.createAccount, enough to create the test accounts.
@@ -57,7 +55,7 @@ export async function createGroup(
   policy: SpacePolicy = com.atproto.memberspace.policy.$build({}),
 ): Promise<SpaceRefString> {
   const { space } = await authority.call(com.atproto.space.createSpace, {
-    spaceType: group.nsid,
+    spaceType: group.spaceType,
     policy,
   })
   if (members.length) {

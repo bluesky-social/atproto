@@ -192,9 +192,11 @@ describe('SpaceManager', () => {
 
   it('removes a writer from the writer set', async () => {
     const uri = await createGroup(alice, [bob])
-    await SpaceClient.openSpace(group, uri, { agent: bob.agent }).create(note, {
-      text: 'from bob',
-    })
+    await SpaceClient.openSpace(group, uri, { agent: bob.agent }).create(
+      note.$build({
+        text: 'from bob',
+      }),
+    )
 
     await new SpaceManager(agentOf(alice), uri).removeWriter(bob.assertDid)
 

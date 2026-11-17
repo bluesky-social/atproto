@@ -76,9 +76,11 @@ describe('SpaceClient', () => {
     carol = await createUser(network.pds, 'carol.test')
 
     space = await createGroup(alice, [bob])
-    const { uri } = await open(alice).create(note, { text: 'from alice' })
+    const { uri } = await open(alice).create(
+      note.$build({ text: 'from alice' }),
+    )
     aliceNoteRkey = rkeyOf(uri)
-    await open(bob).create(note, { text: 'from bob' })
+    await open(bob).create(note.$build({ text: 'from bob' }))
   })
 
   afterAll(async () => {
@@ -98,11 +100,11 @@ describe('SpaceClient', () => {
       })
       expect(created).toBeInstanceOf(SpaceClient)
       expect(created.uri).toBe(
-        `at://${alice.assertDid}/space/${group.nsid}/created`,
+        `at://${alice.assertDid}/space/${group.spaceType}/created`,
       )
 
-      await created.create(note, { text: 'first' })
-      const { records } = await created.list(note)
+      await created.create(note.$build({ text: 'first' }))
+      const { records } = await created.list(note.$type)
       expect(records.map((r) => r.value)).toEqual([
         note.$build({ text: 'first' }),
       ])
@@ -121,6 +123,19 @@ describe('SpaceClient', () => {
       })
       expect(isValidTid(created.ref.skey)).toBe(true)
     })
+
+    it('accepts a namespace exporting the space schema as main', async () => {
+      const created = await SpaceClient.createSpace(
+        alice.agent,
+        { main: group },
+        {
+          skey: 'namespaced',
+          policy: com.atproto.memberspace.policy.$build({}),
+        },
+      )
+      expect(created.schema).toBe(group)
+      expectTypeOf(created).toEqualTypeOf<SpaceClient<typeof group>>()
+    })
   })
 
   describe('openSpace', () => {
@@ -130,6 +145,18 @@ describe('SpaceClient', () => {
         SpaceClient.openSpace(forum, space, { agent: bob.agent }),
       ).toThrow(TypeError)
       expect(() => SpaceReader.openSpace(forum, space)).toThrow(TypeError)
+    })
+
+    it('accepts a namespace exporting the space schema as main', () => {
+      const opened = SpaceClient.openSpace({ main: group }, space, {
+        agent: bob.agent,
+      })
+      expect(opened.schema).toBe(group)
+      expectTypeOf(opened).toEqualTypeOf<SpaceClient<typeof group>>()
+
+      const reader = SpaceReader.openSpace({ main: group }, space)
+      expect(reader.schema).toBe(group)
+      expectTypeOf(reader).toEqualTypeOf<SpaceReader<typeof group>>()
     })
 
     it('opens a space by its authority and key', () => {
@@ -149,7 +176,7 @@ describe('SpaceClient', () => {
         { agent: bob.agent },
       )
       expect(opened.uri).toBe(
-        `at://${alice.assertDid}/space/${bookmarks.nsid}/self`,
+        `at://${alice.assertDid}/space/${bookmarks.spaceType}/self`,
       )
     })
   })
@@ -164,71 +191,134 @@ describe('SpaceClient', () => {
         fetch: calls.fetch,
       })
 
-      const rkey = rkeyOf((await bobSpace.create(note, { text: 'new' })).uri)
-      await bobSpace.put(note, { text: 'updated' }, { rkey })
-      expect(await bobSpace.get(note, { rkey })).toMatchObject({
+      const rkey = rkeyOf(
+        (await bobSpace.create(note.$build({ text: 'new' }))).uri,
+      )
+      await bobSpace.put(note.$build({ text: 'updated' }), { rkey })
+      expect(await bobSpace.get(note.$type, { rkey })).toMatchObject({
         value: note.$build({ text: 'updated' }),
       })
 
       await bobSpace.applyWrites((op) => [
-        op.delete(note, { rkey }),
-        op.create(note, { text: 'batched' }),
+        op.delete(note.$type, { rkey }),
+        op.create(op.getSchema(note.$type).$build({ text: 'batched' })),
       ])
-      const { records } = await bobSpace.list(note)
+      const { records } = await bobSpace.list(note.$type)
       expect(records.map((r) => r.value)).toEqual([
         note.$build({ text: 'batched' }),
       ])
 
       await bobSpace.clearRecords()
-      expect(await collect(bobSpace.listAll(note))).toEqual([])
+      expect(await collect(bobSpace.listAll(note.$type))).toEqual([])
 
       expect(calls.requests).toEqual([])
     })
   })
 
   describe('collections', () => {
-    it('refuses undeclared collections unless validateRequest is false', async () => {
+    it('refuses undeclared collections', async () => {
       const aliceSpace = open(alice, await createGroup(alice))
       const undeclared = new TypeError(
-        `${other.$type} is not a collection of ${group.nsid} spaces`,
+        `${other.$type} is not a collection of ${group.spaceType} spaces`,
       )
+      const rkey = '3jzfcijpj2z2a'
 
       await expect(
         // @ts-expect-error not a collection of the space type
-        aliceSpace.create(other, { text: 'refused' }),
+        aliceSpace.create(other.$build({ text: 'refused' })),
       ).rejects.toThrow(undeclared)
       await expect(
         // @ts-expect-error not a collection of the space type
-        aliceSpace.list(other),
+        aliceSpace.put(other.$build({ text: 'refused' }), { rkey }),
       ).rejects.toThrow(undeclared)
       await expect(
         // @ts-expect-error not a collection of the space type
-        aliceSpace.allRecords({ collections: [other] }).next(),
+        aliceSpace.delete(other.$type, { rkey }),
       ).rejects.toThrow(undeclared)
+      await expect(
+        // @ts-expect-error not a collection of the space type
+        aliceSpace.get(other.$type, { rkey }),
+      ).rejects.toThrow(undeclared)
+      await expect(
+        // @ts-expect-error not a collection of the space type
+        aliceSpace.list(other.$type),
+      ).rejects.toThrow(undeclared)
+      await expect(
+        aliceSpace.applyWrites((op) => [
+          // @ts-expect-error not a collection of the space type
+          op.create(other.$build({ text: 'refused' })),
+        ]),
+      ).rejects.toThrow(undeclared)
+      await expect(
+        aliceSpace.applyWrites((op) => [
+          // @ts-expect-error not a collection of the space type
+          op.delete(other.$type, { rkey }),
+        ]),
+      ).rejects.toThrow(undeclared)
+      await expect(
+        aliceSpace.applyWrites((op) => [
+          // @ts-expect-error not a collection of the space type
+          op.create(op.getSchema(other.$type).$build({ text: 'refused' })),
+        ]),
+      ).rejects.toThrow(undeclared)
+    })
 
-      const allowed = other.$build({ text: 'allowed' })
-      await aliceSpace.create(
-        other,
-        { text: 'allowed' },
-        { validateRequest: false },
-      )
-      const { records } = await aliceSpace.list(other, {
-        validateRequest: false,
+    it("validates written records against the space type's schemas", async () => {
+      const aliceSpace = open(alice, await createGroup(alice))
+      // Same collection as "note", but a different schema
+      const foreign = l.record('tid', note.$type, l.object({}))
+      const rkey = '3jzfcijpj2z2a'
+
+      await expect(
+        // @ts-expect-error does not match the space type's schema
+        aliceSpace.create(foreign.$build({})),
+      ).rejects.toThrow(LexValidationError)
+      await expect(
+        // @ts-expect-error does not match the space type's schema
+        aliceSpace.put(foreign.$build({}), { rkey }),
+      ).rejects.toThrow(LexValidationError)
+      await expect(
+        aliceSpace.applyWrites((op) => [
+          // @ts-expect-error does not match the space type's schema
+          op.update(foreign.$build({}), { rkey }),
+        ]),
+      ).rejects.toThrow(LexValidationError)
+      expect(await aliceSpace.list(note.$type)).toMatchObject({ records: [] })
+    })
+
+    it('requires the rkey of records without a literal key', () => {
+      const aliceSpace = open(alice)
+      // Type checks only: these calls are never made
+      void (() => {
+        // @ts-expect-error requires an "options" argument
+        void aliceSpace.get(note.$type)
+        // @ts-expect-error requires an "options" argument
+        void aliceSpace.put(note.$build({ text: 'missing rkey' }))
+        // @ts-expect-error requires an "options" argument
+        void aliceSpace.delete(note.$type)
+        // "tid" keys are generated on create
+        void aliceSpace.create(note.$build({ text: 'generated rkey' }))
+
+        void aliceSpace.applyWrites((op) => [
+          // @ts-expect-error requires an "options" argument
+          op.update(note.$build({ text: 'missing rkey' })),
+          // @ts-expect-error requires an "options" argument
+          op.delete(note.$type),
+          op.create(note.$build({ text: 'generated rkey' })),
+        ])
+
+        void aliceSpace.applyWrites((op) => {
+          expectTypeOf(op.getSchema(note.$type)).toEqualTypeOf<typeof note>()
+          // @ts-expect-error not a collection of the space type
+          void op.getSchema(other.$type)
+          return []
+        })
       })
-      expect(records.map((r) => r.value)).toEqual([allowed])
-      expect(
-        await collect(
-          aliceSpace.allRecords({
-            collections: [other],
-            validateRequest: false,
-          }),
-        ),
-      ).toEqual([expect.objectContaining({ valid: true, record: allowed })])
     })
 
     it('flags the records of undeclared collections', async () => {
       const aliceSpace = open(alice, await createGroup(alice))
-      await aliceSpace.create(note, { text: 'declared' })
+      await aliceSpace.create(note.$build({ text: 'declared' }))
       await aliceSpace.createRecord(other.$build({ text: 'undeclared' }))
 
       const records = await collect(aliceSpace.allRecords())
@@ -254,10 +344,12 @@ describe('SpaceClient', () => {
       const bobSpace = open(bob)
       const fromAlice = note.$build({ text: 'from alice' })
 
-      const { records } = await bobSpace.list(note, { repo: alice.assertDid })
+      const { records } = await bobSpace.list(note.$type, {
+        repo: alice.assertDid,
+      })
       expect(records.map((r) => r.value)).toEqual([fromAlice])
 
-      const record = await bobSpace.get(note, {
+      const record = await bobSpace.get(note.$type, {
         repo: alice.assertDid,
         rkey: aliceNoteRkey,
       })
@@ -279,7 +371,7 @@ describe('SpaceClient', () => {
 
     it('sends the caller headers with the MAC request', async () => {
       const calls = recordCalls()
-      await open(bob, space, { fetch: calls.fetch }).get(note, {
+      await open(bob, space, { fetch: calls.fetch }).get(note.$type, {
         repo: alice.assertDid,
         rkey: aliceNoteRkey,
         headers: async () => ({ 'x-caller': 'yes' }),
@@ -294,7 +386,7 @@ describe('SpaceClient', () => {
       {
         method: com.atproto.space.getRecord,
         read: (s: SpaceClient<typeof group>) =>
-          s.get(note, { repo: alice.assertDid, rkey: aliceNoteRkey }),
+          s.get(note.$type, { repo: alice.assertDid, rkey: aliceNoteRkey }),
       },
       {
         method: com.atproto.space.getLatestCommit,
@@ -336,11 +428,11 @@ describe('SpaceClient', () => {
   describe('space-wide reads', () => {
     it("iterates over a repo's records across pages", async () => {
       const uri = await createGroup(alice, [bob])
-      await open(bob, uri).create(note, { text: 'one' })
-      await open(bob, uri).create(note, { text: 'two' })
+      await open(bob, uri).create(note.$build({ text: 'one' }))
+      await open(bob, uri).create(note.$build({ text: 'two' }))
 
       const records = await collect(
-        open(alice, uri).listAll(note, { repo: bob.assertDid, limit: 1 }),
+        open(alice, uri).listAll(note.$type, { repo: bob.assertDid, limit: 1 }),
       )
       expect(records.map((r) => r.value)).toEqual(
         expect.arrayContaining([
@@ -352,9 +444,7 @@ describe('SpaceClient', () => {
     })
 
     it('iterates over the records of every writer', async () => {
-      const records = await collect(
-        open(alice).allRecords({ collections: [note] }),
-      )
+      const records = await collect(open(alice).allRecords())
       type Valid = Extract<(typeof records)[number], { valid: true }>
       expectTypeOf<Valid['collection']>().toEqualTypeOf<typeof note.$type>()
       expect(records).toEqual([
@@ -373,8 +463,8 @@ describe('SpaceClient', () => {
 
     it('skips repos removed from the writer set', async () => {
       const uri = await createGroup(alice, [bob])
-      await open(alice, uri).create(note, { text: 'from alice' })
-      await open(bob, uri).create(note, { text: 'from bob' })
+      await open(alice, uri).create(note.$build({ text: 'from alice' }))
+      await open(bob, uri).create(note.$build({ text: 'from bob' }))
       await alice.call(com.atproto.space.removeWriter, {
         space: uri,
         repo: bob.assertDid,
@@ -396,9 +486,9 @@ describe('SpaceClient', () => {
     it('pulls a repo in full, then incrementally', async () => {
       const uri = await createGroup(alice, [bob])
       const bobSpace = open(bob, uri)
-      await bobSpace.create(note, { text: 'kept' })
+      await bobSpace.create(note.$build({ text: 'kept' }))
       const updated = rkeyOf(
-        (await bobSpace.create(note, { text: 'before' })).uri,
+        (await bobSpace.create(note.$build({ text: 'before' }))).uri,
       )
       const aliceSpace = open(alice, uri)
 
@@ -409,12 +499,14 @@ describe('SpaceClient', () => {
       )
       expect(index.size).toBe(2)
 
-      await bobSpace.put(note, { text: 'after' }, { rkey: updated })
+      await bobSpace.put(note.$build({ text: 'after' }), { rkey: updated })
       const created = rkeyOf(
-        (await bobSpace.create(note, { text: 'created' })).uri,
+        (await bobSpace.create(note.$build({ text: 'created' }))).uri,
       )
-      const transient = await bobSpace.create(note, { text: 'transient' })
-      await bobSpace.delete(note, { rkey: rkeyOf(transient.uri) })
+      const transient = await bobSpace.create(
+        note.$build({ text: 'transient' }),
+      )
+      await bobSpace.delete(note.$type, { rkey: rkeyOf(transient.uri) })
 
       const pulled = await aliceSpace.pullRepo({
         repo: bob.assertDid,
@@ -470,11 +562,15 @@ describe('SpaceClient', () => {
     it('falls back to a full pull when the known state diverged', async () => {
       const uri = await createGroup(alice, [bob])
       const bobSpace = open(bob, uri)
-      const { uri: recordUri } = await bobSpace.create(note, { text: 'before' })
+      const { uri: recordUri } = await bobSpace.create(
+        note.$build({ text: 'before' }),
+      )
       const aliceSpace = open(alice, uri)
 
       const { head } = await aliceSpace.getRepoSnapshot({ repo: bob.assertDid })
-      await bobSpace.put(note, { text: 'after' }, { rkey: rkeyOf(recordUri) })
+      await bobSpace.put(note.$build({ text: 'after' }), {
+        rkey: rkeyOf(recordUri),
+      })
 
       // A lookup missing the updated record diverges from the operation log
       const lookup = () => undefined
@@ -545,10 +641,10 @@ describe('SpaceClient', () => {
       const bobSpace = open(bob, space, { fetch: calls.fetch })
 
       await Promise.all([
-        bobSpace.list(note, { repo: alice.assertDid }),
+        bobSpace.list(note.$type, { repo: alice.assertDid }),
         bobSpace.listWriters(),
       ])
-      await bobSpace.list(note, { repo: alice.assertDid })
+      await bobSpace.list(note.$type, { repo: alice.assertDid })
 
       expect(calls.to(authorizeSpaceSync)).toHaveLength(1)
     })
@@ -599,7 +695,7 @@ describe('SpaceClient', () => {
         [],
         com.atproto.memberspace.policy.$build({ publicRead: true }),
       )
-      await open(alice, publicSpace).create(note, { text: 'for anyone' })
+      await open(alice, publicSpace).create(note.$build({ text: 'for anyone' }))
 
       const reader = SpaceReader.openSpace(group, publicSpace, { didResolver })
 
