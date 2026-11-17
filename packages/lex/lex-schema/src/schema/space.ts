@@ -19,8 +19,8 @@ import { TypedRefSchema } from './typed-ref.js'
  * The `collections` list does not constrain what may actually be written
  * into the space — it's a recommendation for clients.
  *
- * @template TNsid - The NSID identifying this space type
  * @template TKey - The recommended space key type
+ * @template TNsid - The NSID identifying this space type
  * @template TRecord - The record schemas of the recommended collections
  *
  * @example
@@ -29,8 +29,8 @@ import { TypedRefSchema } from './typed-ref.js'
  * ```
  */
 export class Space<
-  const TNsid extends NsidString = NsidString,
   const TKey extends LexiconRecordKey = LexiconRecordKey,
+  const TNsid extends NsidString = NsidString,
   const TRecord extends RecordSchema = RecordSchema,
 > {
   readonly key: TKey
@@ -152,15 +152,15 @@ export class Space<
  */
 /*@__NO_SIDE_EFFECTS__*/
 export function space<
-  const N extends NsidString,
   const K extends LexiconRecordKey,
+  const N extends NsidString,
   const R extends RecordSchema = never,
 >(
   key: K,
   nsid: N,
   collections: readonly (R | TypedRefSchema<R>)[],
-): Space<N, K, R> {
-  return new Space<N, K, R>(key, nsid, collections)
+): Space<K, N, R> {
+  return new Space<K, N, R>(key, nsid, collections)
 }
 
 function getCollectionSchema<T extends RecordSchema>(

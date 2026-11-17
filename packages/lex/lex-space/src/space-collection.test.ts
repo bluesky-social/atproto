@@ -4,7 +4,7 @@ import type { SpaceCollection, SpaceRecordSchema } from './space-collection.js'
 
 type Note = RecordSchema<'tid', 'com.example.note'>
 type Task = RecordSchema<'tid', 'com.example.task'>
-type Group = Space<'com.example.group', 'any', Note | Task>
+type Group = Space<'any', 'com.example.group', Note | Task>
 
 describe('SpaceRecordSchema', () => {
   it('is the record schema of each collection of a space type', () => {
