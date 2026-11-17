@@ -63,7 +63,7 @@ const document = (title = 'Article') =>
     textContent: 'word '.repeat(201),
   })
 
-async function setup() {
+async function setup(domains = ['stream.example.com', 'grain.social']) {
   const records = new Map<AtUriString, TypedLexMap>()
   const versions = new Map<string, TypedLexMap>()
   const latestCids = new Map<AtUriString, string>()
@@ -298,10 +298,11 @@ async function setup() {
     threadTagsHide: [],
     visibilityTagHide: '',
     visibilityTagRankPrefix: '',
+    externalRecordsSafeDomains: domains,
   })
   const anonymous = async () => ({ credentials: { type: 'none', iss: null } })
   const ctx = {
-    cfg: { externalRecordsSafeDomains: ['stream.example.com', 'grain.social'] },
+    cfg: { externalRecordsSafeDomains: domains },
     dataplane,
     hydrator,
     views,
@@ -568,6 +569,39 @@ describe('feed external modality views over HTTP', () => {
       expect.arrayContaining([ref(docUri), ref(docUri, otherCid)]),
     )
     expect(fixture.latestLookups).not.toContain(docUri)
+  })
+
+  test.each([
+    [galleryUri, 'https://evil.example/gallery'],
+    [galleryUri, 'https://stream.example.com/gallery'],
+    [liveUri, 'https://evil.example/live'],
+    [liveUri, 'https://grain.social/author'],
+    [liveUri, 'https://stream.example.com/author-other'],
+  ] as const)(
+    'keeps the authored card when %s does not back %s',
+    async (recordUri, url) => {
+      await using fixture = await setup()
+      const uri = fixture.post('mismatched-url', [ref(recordUri)], url)
+      const { posts } = await fixture.posts([uri])
+      const embed = externalView(posts[0])
+      expect(embed.external).toMatchObject({ ...authoredCard, uri: url })
+      expect(embed.data).toBeUndefined()
+    },
+  )
+
+  it('requires configured safe domains for non-Standard.site feed embeds', async () => {
+    await using fixture = await setup([])
+    const uris = [
+      fixture.post(
+        'gallery',
+        [ref(galleryUri)],
+        'https://grain.social/gallery',
+      ),
+      fixture.post('live', [ref(liveUri)], 'https://stream.example.com/author'),
+    ]
+    const { posts } = await fixture.posts(uris)
+    expect(posts).toHaveLength(2)
+    for (const post of posts) expect(externalView(post).data).toBeUndefined()
   })
 
   test.each([

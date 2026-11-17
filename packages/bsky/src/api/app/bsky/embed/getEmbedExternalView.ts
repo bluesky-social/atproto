@@ -17,7 +17,6 @@ import {
   noRules,
 } from '../../../../pipeline.js'
 import { collectAssociations } from '../../../../util/external/associations.js'
-import { isExternalRecordUrlSafe } from '../../../../util/external/index.js'
 import { getStandardSiteRecordsForUri } from '../../../../util/external/standard-site.js'
 import { validateExternalEmbedRecord } from '../../../../util/external/validation.js'
 import type { Views } from '../../../../views/index.js'
@@ -82,20 +81,12 @@ const presentation = (
   )
 
   // @NOTE Trust must not depend on whether the records happen to be renderable.
-  const validAssociation = validateExternalEmbedRecord({
+  const verified = validateExternalEmbedRecord({
     ref: { uri: canonicalUri },
     url: params.url,
     state: hydration,
+    safeDomains: ctx.cfg.externalRecordsSafeDomains,
   })
-  const standardSite = isStandardSiteUri(canonicalUri)
-  let verified = false
-  if (standardSite) {
-    verified = validAssociation
-  } else {
-    verified =
-      validAssociation &&
-      isExternalRecordUrlSafe(params.url, ctx.cfg.externalRecordsSafeDomains)
-  }
 
   if (!verified) {
     return {
@@ -107,7 +98,7 @@ const presentation = (
   const data = ctx.views.externalRecordView({ uri: canonicalUri }, hydration)
 
   let view: Output['view']
-  if (standardSite) {
+  if (isStandardSiteUri(canonicalUri)) {
     const standardSiteRecords = getStandardSiteRecordsForUri(
       canonicalUri,
       hydration.externalRecords,

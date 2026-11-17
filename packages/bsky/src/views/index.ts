@@ -193,6 +193,7 @@ export class Views {
       threadTagsHide: readonly string[]
       visibilityTagHide: string
       visibilityTagRankPrefix: string
+      externalRecordsSafeDomains?: readonly string[]
     },
   ) {}
 
@@ -2385,7 +2386,12 @@ export class Views {
     const root = getExternalRootRef(embed.external.associatedRefs)
     const verified =
       root &&
-      validateExternalEmbedRecord({ ref: root, url: embed.external.uri, state })
+      validateExternalEmbedRecord({
+        ref: root,
+        url: embed.external.uri,
+        state,
+        safeDomains: this.opts.externalRecordsSafeDomains,
+      })
     const ssView = verified
       ? this.externalEmbedFromStandardSite({
           associatedRefs: embed.external.associatedRefs,

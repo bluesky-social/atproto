@@ -14,7 +14,10 @@ import { type ExternalRecord, genericRecordKey } from '../hydration/external.js'
 import type { HydrationState } from '../hydration/hydrator.js'
 import type { ItemRef } from '../hydration/util.js'
 import { app, com, place, site, social } from '../lexicons/index.js'
-import { buildExternalRecordUrl } from '../util/external/record-url.js'
+import {
+  buildExternalRecordUrl,
+  getLivestreamUrl,
+} from '../util/external/record-url.js'
 import { estimateReadingTimeMinutes } from '../util/external/standard-site.js'
 import { uriToDid } from '../util/uris.js'
 import type { Views } from './index.js'
@@ -241,7 +244,7 @@ function externalRecordViewOrRefs(
     if (refsOnly) return [uri]
     return app.bsky.embed.external.viewLivestream.$build({
       ...commonFields(views, [uri], state, info),
-      uri: httpUri(record.canonicalUrl) ?? httpUri(record.url) ?? uri,
+      uri: getLivestreamUrl(record) ?? uri,
       title: record.title,
       description: '',
       createdAt: record.createdAt,

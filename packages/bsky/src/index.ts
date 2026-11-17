@@ -211,6 +211,7 @@ export class BskyAppView {
       threadTagsHide: [...config.threadTagsHide],
       visibilityTagHide: config.visibilityTagHide,
       visibilityTagRankPrefix: config.visibilityTagRankPrefix,
+      externalRecordsSafeDomains: config.externalRecordsSafeDomains,
     })
 
     const bsyncClient = createBsyncClient({

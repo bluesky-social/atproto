@@ -6,7 +6,7 @@ import {
   genericRecordKey,
 } from '../../hydration/external.js'
 import { HydrationMap } from '../../hydration/util.js'
-import { site, social } from '../../lexicons/index.js'
+import { place, site, social } from '../../lexicons/index.js'
 import { validateExternalEmbedRecord } from './validation.js'
 
 const author = 'did:plc:author'
@@ -193,21 +193,146 @@ describe(validateExternalEmbedRecord, () => {
     ).toBe(false)
   })
 
-  it('preserves record types that have no embedded-URL validator yet', () => {
-    const state = stateOf()
-    const uri = atUri(author, social.grain.gallery.$type, 'gallery')
-    const ref = { uri, cid }
-    state.externalRecordsByRef.set(
-      genericRecordKey(ref),
-      info(
-        social.grain.gallery.$build({
-          title: 'Gallery',
-          createdAt: publishedAt,
-        }),
-      ),
+  describe('Grain galleries', () => {
+    it.each([
+      ['https://grain.social/gallery', ['grain.social'], true],
+      ['https://grain.social/gallery', [], false],
+      ['http://grain.social/gallery', ['grain.social'], false],
+      ['https://sub.grain.social/gallery', ['*.grain.social'], false],
+      ['https://grain.social.evil/gallery', ['grain.social.evil'], false],
+      ['https://other.example/gallery', ['other.example'], false],
+    ] as const)(
+      'checks the host and configured allowlist: %s',
+      (url, safeDomains, expected) => {
+        const state = stateOf()
+        const uri = atUri(author, social.grain.gallery.$type, 'gallery')
+        const ref = { uri, cid }
+        state.externalRecordsByRef.set(
+          genericRecordKey(ref),
+          info(
+            social.grain.gallery.$build({
+              title: 'Gallery',
+              createdAt: publishedAt,
+            }),
+          ),
+        )
+        expect(
+          validateExternalEmbedRecord({ ref, url, state, safeDomains }),
+        ).toBe(expected)
+      },
     )
-    expect(
-      validateExternalEmbedRecord({ ref, url: 'https://other.example', state }),
-    ).toBe(true)
+  })
+
+  describe('Streamplace livestreams', () => {
+    const cases: {
+      name: string
+      url: string
+      expected: boolean
+      fields?: Partial<place.stream.livestream.Main>
+      safeDomains?: string[]
+    }[] = [
+      {
+        name: 'canonical URL',
+        url: 'https://live.example/alice',
+        expected: true,
+      },
+      {
+        name: 'child path',
+        url: 'https://live.example/alice/watch',
+        expected: true,
+      },
+      {
+        name: 'query and fragment',
+        url: 'https://live.example/alice?watch=1#player',
+        expected: true,
+      },
+      {
+        name: 'neighboring path',
+        url: 'https://live.example/alice-other',
+        expected: false,
+      },
+      {
+        name: 'hostname suffix',
+        url: 'https://live.example.evil/alice',
+        expected: false,
+      },
+      {
+        name: 'other allowlisted origin',
+        url: 'https://other.example/alice',
+        expected: false,
+      },
+      { name: 'HTTP embed', url: 'http://live.example/alice', expected: false },
+      {
+        name: 'canonical URL takes precedence over replication URL',
+        url: 'https://replication.example/alice',
+        expected: false,
+      },
+      {
+        name: 'missing canonical URL',
+        url: 'https://replication.example/alice/watch',
+        fields: { canonicalUrl: undefined },
+        expected: true,
+      },
+      {
+        name: 'non-HTTP canonical URL',
+        url: 'https://replication.example/alice/watch',
+        fields: { canonicalUrl: 'ftp://live.example/alice' },
+        expected: true,
+      },
+      {
+        name: 'no usable record URL',
+        url: 'https://live.example/alice',
+        fields: { canonicalUrl: undefined, url: undefined },
+        expected: false,
+      },
+      {
+        name: 'trailing slash on canonical URL',
+        url: 'https://live.example/alice',
+        fields: { canonicalUrl: 'https://live.example/alice/' },
+        expected: true,
+      },
+      {
+        name: 'different port',
+        url: 'https://live.example/alice',
+        fields: { canonicalUrl: 'https://live.example:8443/alice' },
+        expected: false,
+      },
+      {
+        name: 'empty configured allowlist',
+        url: 'https://live.example/alice',
+        safeDomains: [],
+        expected: false,
+      },
+    ]
+    it.each(cases)('$name', ({ url, expected, fields, safeDomains }) => {
+      const state = stateOf()
+      const uri = atUri(author, place.stream.livestream.$type, 'live')
+      const ref = { uri, cid }
+      state.externalRecordsByRef.set(
+        genericRecordKey(ref),
+        info(
+          place.stream.livestream.$build({
+            title: 'Live',
+            createdAt: publishedAt,
+            canonicalUrl: 'https://live.example/alice',
+            url: 'https://replication.example/alice',
+            ...fields,
+          }),
+        ),
+      )
+      expect(
+        validateExternalEmbedRecord({
+          ref,
+          url,
+          state,
+          safeDomains: safeDomains ?? [
+            'live.example',
+            'live.example.evil',
+            'other.example',
+            'replication.example',
+          ],
+        }),
+      ).toBe(expected)
+    })
   })
 })
