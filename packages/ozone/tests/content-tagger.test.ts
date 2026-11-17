@@ -8,7 +8,7 @@ import {
 } from '@atproto/dev-env'
 import type { AtUriString } from '@atproto/lex-schema'
 import { readEnv } from '../src/config/env.js'
-import { com, tools } from '../src/lexicons/index.js'
+import { chat, com, tools } from '../src/lexicons/index.js'
 
 describe('moderation subject content tagging', () => {
   let network: TestNetwork
@@ -46,6 +46,70 @@ describe('moderation subject content tagging', () => {
   }
 
   describe('lang tagger', () => {
+    it.each(['createReport', 'emitEvent'])(
+      'skips language tags for conversation and message subjects via %s',
+      async (endpoint) => {
+        const convoId = `language-tag-convo-${endpoint}`
+        const messageId = `language-tag-message-${endpoint}`
+        const subjects = [
+          {
+            subject: chat.bsky.convo.defs.convoRef.$build({
+              did: sc.dids.carol,
+              convoId,
+            }),
+            uri: `at://${sc.dids.carol}/chat.bsky.convo/${convoId}`,
+          },
+          {
+            subject: chat.bsky.convo.defs.messageRef.$build({
+              did: sc.dids.carol,
+              convoId,
+              messageId,
+            }),
+            uri: `at://${sc.dids.carol}/chat.bsky.convo.message/${messageId}`,
+          },
+        ]
+
+        for (const { subject, uri } of subjects) {
+          if (endpoint === 'createReport') {
+            await sc.createReport({
+              reasonType: ComAtprotoModerationDefs.REASONSPAM,
+              subject,
+              reportedBy: sc.dids.alice,
+            })
+          } else {
+            await modClient.emitEvent({
+              subject,
+              event: tools.ozone.moderation.defs.modEventReport.$build({
+                reportType: com.atproto.moderation.defs.ReasonSpam,
+              }),
+            })
+          }
+
+          const { events } = await modClient.queryEvents({
+            subject: uri,
+            types: [tools.ozone.moderation.defs.modEventTag.$type],
+          })
+          expect(events).toHaveLength(1)
+          expect(events[0].event).toMatchObject({ add: ['report:spam'] })
+
+          await modClient.emitEvent({
+            subject,
+            event: tools.ozone.moderation.defs.modEventTag.$build({
+              add: ['manual-tag'],
+              remove: [],
+            }),
+          })
+          const status = await getStatus(uri)
+          expect(status.tags).toEqual(
+            expect.arrayContaining(['report:spam', 'manual-tag']),
+          )
+          expect(status.tags?.filter((tag) => tag.startsWith('lang:'))).toEqual(
+            [],
+          )
+        }
+      },
+    )
+
     it('tags only configured record types and preserves other subject tagging', async () => {
       const post = await sc.post(
         sc.dids.carol,
