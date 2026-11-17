@@ -6,47 +6,55 @@ import {
   formatDidKey,
 } from '@atproto/crypto'
 import type { DidString } from '@atproto/syntax'
-import { SpaceKemError, decapsulate, encapsulate } from '../src/index.js'
+import { decapsulate, encapsulate } from './kem.js'
 
 const hex = (str: string) => new Uint8Array(Buffer.from(str, 'hex'))
 
-describe('KEM', () => {
-  it('derives the same shared secret on both sides', async () => {
-    const author = await P256Keypair.create()
-    const { keyShare, sharedSecret } = await encapsulate(
-      author.did() as DidString,
-    )
+const author = await P256Keypair.create()
+const authorKemKey = author.did() as DidString
+const k256Key = (await Secp256k1Keypair.create()).did() as DidString
+
+describe(encapsulate, () => {
+  it('derives the shared secret the author decapsulates', async () => {
+    const { keyShare, sharedSecret } = await encapsulate(authorKemKey)
     expect(sharedSecret).toHaveLength(32)
     expect(decapsulate(author, keyShare)).toEqual(sharedSecret)
   })
 
   it('uses a fresh key share per encapsulation', async () => {
-    const author = await P256Keypair.create()
-    const a = await encapsulate(author.did() as DidString)
-    const b = await encapsulate(author.did() as DidString)
+    const a = await encapsulate(authorKemKey)
+    const b = await encapsulate(authorKemKey)
     expect(a.keyShare).not.toBe(b.keyShare)
     expect(a.sharedSecret).not.toEqual(b.sharedSecret)
   })
 
-  it('derives a different secret under a different author key', async () => {
-    const author = await P256Keypair.create()
-    const other = await P256Keypair.create()
-    const { keyShare, sharedSecret } = await encapsulate(
-      author.did() as DidString,
+  it('rejects an author key that is not P-256', async () => {
+    await expect(encapsulate(k256Key)).rejects.toThrow(
+      /KEM key must be a P-256 did:key/,
     )
+  })
+})
+
+describe(decapsulate, () => {
+  it('derives another secret under another author key', async () => {
+    const other = await P256Keypair.create()
+    const { keyShare, sharedSecret } = await encapsulate(authorKemKey)
     expect(decapsulate(other, keyShare)).not.toEqual(sharedSecret)
   })
 
-  it('rejects a key that is not P-256', async () => {
-    const k256 = await Secp256k1Keypair.create()
-    await expect(encapsulate(k256.did() as DidString)).rejects.toThrow(
-      SpaceKemError,
-    )
-    const author = await P256Keypair.create()
-    expect(() => decapsulate(author, k256.did() as DidString)).toThrow(
-      SpaceKemError,
-    )
-    expect(() => decapsulate(author, 'did:key:nope')).toThrow(SpaceKemError)
+  it.each([
+    {
+      note: 'is not P-256',
+      keyShare: k256Key,
+      message: /KEM key must be a P-256 did:key/,
+    },
+    {
+      note: 'does not parse',
+      keyShare: 'did:key:nope' as DidString,
+      message: /invalid KEM key/,
+    },
+  ])('rejects a key share that $note', ({ keyShare, message }) => {
+    expect(() => decapsulate(author, keyShare)).toThrow(message)
   })
 
   // The keys are from the export-only DHKEM(P-256, HKDF-SHA256) entry of the
@@ -65,8 +73,9 @@ describe('KEM', () => {
       '2060e0558d1b34c10086bc137f849bb79ba59fcdc30544418e35c9cd301f0d0d',
     )
 
-    const author = await P256Keypair.import(skRm)
-    const keyShare = formatDidKey(P256_JWT_ALG, enc)
-    expect(decapsulate(author, keyShare)).toEqual(sharedSecret)
+    const kemKey = await P256Keypair.import(skRm)
+    expect(decapsulate(kemKey, formatDidKey(P256_JWT_ALG, enc))).toEqual(
+      sharedSecret,
+    )
   })
 })

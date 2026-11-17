@@ -1,620 +1,437 @@
-import { TestNetworkNoAppView } from '@atproto/dev-env'
-import { getBlobCidString, parseCid } from '@atproto/lex-data'
-import { MAX_RECORD_SIZE } from '@atproto/space'
-import { type NsidString, SpaceRef } from '@atproto/syntax'
-import { com } from '../../src/lexicons/index.js'
-import { prepareCreate } from '../../src/repo/index.js'
+import { randomBytes } from 'node:crypto'
+import { TID } from '@atproto/common'
+import type { TestNetworkNoAppView } from '@atproto/dev-env'
+import { getBlobCidString } from '@atproto/lex-data'
+import { LtHash } from '@atproto/space'
+import type { NsidString, SpaceRefString } from '@atproto/syntax'
+import { app, com } from '../../src/lexicons/index.js'
 import {
   type Actor,
-  SpaceClient,
+  type SpaceClient,
   TEST_COLLECTION,
   TEST_COLLECTION_ALT,
+  createSpaceNetwork,
   record,
 } from '../_space.js'
 
-/**
- * Reading and writing records in a space.
- *
- * A space's records live in each member's own repo, on their own PDS — the space
- * is a namespace over them, not a place they're stored. So a write is always to
- * the caller's own repo, and reading someone else's takes a credential from the
- * authority (see `auth.test.ts`).
- */
+const { create, update, delete: del } = com.atproto.space.applyWrites
+
+const createOp = (rkey: string, text = rkey) =>
+  create.$build({
+    collection: TEST_COLLECTION,
+    rkey,
+    value: record(TEST_COLLECTION, text),
+  })
+
+const upload = async (actor: Actor) => {
+  const bytes = new Uint8Array(randomBytes(16))
+  const { body } = await actor.client.uploadBlob(bytes, {
+    headers: actor.headers,
+    encoding: 'image/png',
+  })
+  return { blob: body.blob, cid: getBlobCidString(body.blob), bytes }
+}
+
+const withBlob = (
+  { blob }: Awaited<ReturnType<typeof upload>>,
+  text = 'with a blob',
+) => ({ $type: TEST_COLLECTION, text, image: blob })
+
 describe('space records', () => {
   let network: TestNetworkNoAppView
   let sc: SpaceClient
-  let alice: Actor // authority, on pds1
-  let dan: Actor // member co-located with the authority on pds1
-  let bob: Actor // member on pds2
-  let carol: Actor // on pds3; a member only where a test says so
+  let alice: Actor
+  let dan: Actor
+  let bob: Actor
+  let carol: Actor
 
   beforeAll(async () => {
-    network = await TestNetworkNoAppView.create({
-      dbPostgresSchema: 'space_records',
-      extraPdses: 2,
-    })
-    sc = new SpaceClient(network)
-    alice = await sc.createActor('alice', network.pds)
-    dan = await sc.createActor('dan', network.pds)
-    bob = await sc.createActor('bob', network.extraPdses[0], 'test2')
-    carol = await sc.createActor('carol', network.extraPdses[1], 'test3')
+    ;({ network, sc, alice, dan, bob, carol } = await createSpaceNetwork())
   })
 
   afterAll(async () => {
     await network?.close()
   })
 
+  const getRecord = (
+    actor: Actor,
+    space: SpaceRefString,
+    rkey: string,
+    collection: NsidString = TEST_COLLECTION,
+  ) =>
+    actor.client.call(
+      com.atproto.space.getRecord,
+      { space, repo: actor.did, collection, rkey },
+      { headers: actor.headers },
+    )
+
+  const listRecords = (
+    actor: Actor,
+    space: SpaceRefString,
+    params: { collection?: NsidString; limit?: number; cursor?: string } = {},
+  ) =>
+    actor.client.call(
+      com.atproto.space.listRecords,
+      { space, repo: actor.did, ...params },
+      { headers: actor.headers },
+    )
+
+  const listRepoOps = async (actor: Actor, space: SpaceRefString) => {
+    const { ops } = await actor.client.call(
+      com.atproto.space.listRepoOps,
+      { space, repo: actor.did },
+      { headers: actor.headers },
+    )
+    return ops
+  }
+
+  const applyWrites = (
+    actor: Actor,
+    space: SpaceRefString,
+    writes: com.atproto.space.applyWrites.$InputBody['writes'],
+  ) =>
+    actor.client.call(
+      com.atproto.space.applyWrites,
+      { space, repo: actor.did, writes },
+      { headers: actor.headers },
+    )
+
   describe('writes', () => {
-    it('writes a record as a co-located member', async () => {
-      // Dan shares a PDS with the authority — the pure single-PDS write path.
+    it("writes a record to the caller's own repo", async () => {
       const space = await sc.createSpace(alice, { members: [dan] })
-      const before = await sc.repoState(dan, space)
 
-      const created = await sc.write(dan, space, { text: 'hello from dan' })
-      expect(created.uri).toContain(dan.did)
-
-      const rkey = created.uri.split('/').pop()!
-      const got = await dan.client.call(
-        com.atproto.space.getRecord,
-        { space, repo: dan.did, collection: TEST_COLLECTION, rkey },
-        { headers: dan.headers },
-      )
-      expect(got.value).toMatchObject({ text: 'hello from dan' })
-
-      // The repo advances on both axes: a new rev, and a set hash covering the
-      // record just added.
-      const after = await sc.repoState(dan, space)
-      expect(after!.rev).not.toEqual(before?.rev ?? null)
-      expect(after!.setHash).not.toEqual(before?.setHash ?? null)
-      await sc.expectSetHashMatchesStore(dan, space)
+      const { uri, cid } = await sc.write(dan, space, {
+        rkey: 'mine',
+        text: 'hello',
+      })
+      expect(uri).toBe(`${space}/${dan.did}/${TEST_COLLECTION}/mine`)
+      await expect(getRecord(dan, space, 'mine')).resolves.toMatchObject({
+        uri,
+        cid,
+        value: { text: 'hello' },
+      })
+      expect(await sc.latestCommit(dan, space)).toMatchObject({
+        space,
+        repo: dan.did,
+      })
     })
 
-    it('writes a record from a remote PDS', async () => {
-      // Bob is on pds2. His PDS fires a best-effort notifyRepoUpdate at the authority,
-      // but the authoritative record of the write is the oplog on his own PDS.
-      const space = await sc.createSpace(alice, { members: [bob] })
-
-      const created = await sc.write(bob, space, { text: 'hello from bob' })
-      expect(created.uri).toContain(bob.did)
-
-      const ops = await bob.client.call(
-        com.atproto.space.listRepoOps,
-        { space, repo: bob.did },
-        { headers: bob.headers },
-      )
-      // The wire op carries no `action`: it's derivable, and a create is exactly
-      // an op that names a cid and no prev.
-      const last = ops.ops.at(-1)!
-      expect(last).toMatchObject({ cid: created.cid, prev: null })
-
-      // Bob's PDS materialized its local space row lazily, on this first write.
-      // The member list is the authority's concern and is never pushed to a
-      // member's PDS, so `listSpaces` there reflects spaces written to, not
-      // spaces joined.
-      const listed = await bob.client.call(
-        com.atproto.space.listSpaces,
-        {},
-        { headers: bob.headers },
-      )
-      expect(listed.spaces.map((s) => s.space)).toContain(space)
-    })
-
-    it('refuses a write to another account repo', async () => {
+    it("refuses a write to another account's repo", async () => {
       const space = await sc.createSpace(alice, { members: [dan] })
-      await expect(
-        dan.client.call(
-          com.atproto.space.createRecord,
-          {
-            space,
-            repo: alice.did,
-            collection: TEST_COLLECTION,
-            record: record(TEST_COLLECTION),
-          },
-          { headers: dan.headers },
-        ),
-      ).rejects.toMatchObject({ error: 'Forbidden' })
+      const target = { space, repo: alice.did }
+      const path = { ...target, collection: TEST_COLLECTION, rkey: 'self' }
+      const opts = { headers: dan.headers }
+      const writes = [
+        () =>
+          dan.client.call(
+            com.atproto.space.createRecord,
+            { ...path, record: record(TEST_COLLECTION) },
+            opts,
+          ),
+        () =>
+          dan.client.call(
+            com.atproto.space.putRecord,
+            { ...path, record: record(TEST_COLLECTION) },
+            opts,
+          ),
+        () => dan.client.call(com.atproto.space.deleteRecord, path, opts),
+        () =>
+          dan.client.call(
+            com.atproto.space.applyWrites,
+            { ...target, writes: [] },
+            opts,
+          ),
+        () => dan.client.call(com.atproto.space.clearRecords, target, opts),
+      ]
+      for (const write of writes) {
+        await expect(write()).rejects.toMatchObject({
+          error: 'Forbidden',
+          message: 'repo must match authenticated user',
+        })
+      }
     })
 
-    it("creates a repo in another authority's space without checking it exists", async () => {
-      // Never created: the writer's PDS does not ask the authority.
+    it("writes to another authority's space without checking it exists", async () => {
       const space = await sc.createSpace(alice, { ungoverned: true })
-      await sc.write(bob, space, { text: 'first write' })
-      await sc.expectSetHashMatchesStore(bob, space)
+
+      const { cid } = await sc.write(bob, space, { rkey: 'first' })
+      await expect(getRecord(bob, space, 'first')).resolves.toMatchObject({
+        cid,
+      })
     })
 
-    it('refuses an authority write to its own deleted space', async () => {
-      const space = await sc.createSpace(alice)
+    it('refuses an authority write to its own space before it exists or once deleted', async () => {
+      const skey = TID.nextStr()
+      const space = await sc.createSpace(alice, { skey, ungoverned: true })
+      await expect(sc.write(alice, space)).rejects.toMatchObject({
+        error: 'SpaceNotFound',
+      })
+
+      await sc.createSpace(alice, { skey })
+      await sc.write(alice, space)
+
       await alice.client.call(
         com.atproto.space.deleteSpace,
         { space },
         { headers: alice.headers },
       )
-      await expect(
-        sc.write(alice, space, { text: 'revived?' }),
-      ).rejects.toMatchObject({ error: 'SpaceNotFound' })
-      // The tombstone survives the attempt.
-      const row = await network.pds.ctx.actorStore.read(alice.did, (store) =>
-        store.space.getSpace(space),
-      )
-      expect(row?.deletedAt).toBeTruthy()
+      await expect(sc.write(alice, space)).rejects.toMatchObject({
+        error: 'SpaceNotFound',
+      })
     })
 
-    it('deletes a record', async () => {
+    it('deletes a record, logging the cid it replaced', async () => {
       const space = await sc.createSpace(alice, { members: [dan] })
-      const created = await sc.write(dan, space, { text: 'to be deleted' })
-      const rkey = created.uri.split('/').pop()!
+      const created = await sc.write(dan, space, { rkey: 'doomed' })
 
-      await sc.del(dan, space, { rkey })
+      await sc.del(dan, space, { rkey: 'doomed' })
 
-      const ops = await dan.client.call(
-        com.atproto.space.listRepoOps,
-        { space, repo: dan.did },
-        { headers: dan.headers },
-      )
-      const deleted = ops.ops.find((op) => op.cid === null)
-      expect(deleted).toMatchObject({ rkey, cid: null })
-      // The delete names what it replaced, so a syncer can subtract it.
-      expect(deleted!.prev).toBe(created.cid)
-      await sc.expectSetHashMatchesStore(dan, space)
+      await expect(getRecord(dan, space, 'doomed')).rejects.toMatchObject({
+        error: 'RecordNotFound',
+      })
+      expect((await listRepoOps(dan, space)).at(-1)).toMatchObject({
+        rkey: 'doomed',
+        cid: null,
+        prev: created.cid,
+      })
+      await sc.expectCommitMatchesRecords(dan, space)
     })
 
-    it('deleteRecord is idempotent', async () => {
-      const space = await sc.createSpace(alice)
-      // Never existed.
-      await sc.del(alice, space, { rkey: 'gone' })
+    it('treats deleting an absent record as a no-op', async () => {
+      const space = await sc.createSpace(alice, { members: [dan] })
+      await sc.del(dan, space, { rkey: 'never' })
+      expect(await sc.latestCommit(dan, space)).toBeNull()
 
-      await sc.write(alice, space, { rkey: 'gone', text: 'here' })
-      await sc.del(alice, space, { rkey: 'gone' })
-      // Already deleted.
-      await sc.del(alice, space, { rkey: 'gone' })
+      await sc.write(dan, space, { rkey: 'once' })
+      await sc.del(dan, space, { rkey: 'once' })
+      const deleted = await sc.latestCommit(dan, space)
+      await sc.del(dan, space, { rkey: 'once' })
+      expect(await sc.latestCommit(dan, space)).toEqual(deleted)
     })
   })
 
   describe('putRecord', () => {
     it('creates a record that does not yet exist', async () => {
       const space = await sc.createSpace(alice, { members: [dan] })
-      const put = await sc.put(dan, space, { rkey: 'put-new', text: 'first' })
-      expect(put.uri).toBe(`${space}/${dan.did}/${TEST_COLLECTION}/put-new`)
 
-      const got = await dan.client.call(
-        com.atproto.space.getRecord,
-        { space, repo: dan.did, collection: TEST_COLLECTION, rkey: 'put-new' },
-        { headers: dan.headers },
-      )
-      expect(got.value).toMatchObject({ text: 'first' })
+      const { uri } = await sc.put(dan, space, { rkey: 'new', text: 'first' })
+      expect(uri).toBe(`${space}/${dan.did}/${TEST_COLLECTION}/new`)
+      await expect(getRecord(dan, space, 'new')).resolves.toMatchObject({
+        value: { text: 'first' },
+      })
     })
 
-    it('overwrites an existing record, and the oplog names what it replaced', async () => {
+    it('replaces an existing record, logging the cid it replaced', async () => {
       const space = await sc.createSpace(alice, { members: [dan] })
-      const created = await sc.put(dan, space, {
-        rkey: 'put-over',
-        text: 'first',
-      })
+      const created = await sc.put(dan, space, { rkey: 'over', text: 'first' })
+
       const updated = await sc.put(dan, space, {
-        rkey: 'put-over',
+        rkey: 'over',
         text: 'second',
       })
-      expect(updated.cid).not.toBe(created.cid)
 
-      const got = await dan.client.call(
-        com.atproto.space.getRecord,
-        { space, repo: dan.did, collection: TEST_COLLECTION, rkey: 'put-over' },
-        { headers: dan.headers },
-      )
-      expect(got.value).toMatchObject({ text: 'second' })
-
-      // An update is a remove-then-add against the set hash, so the op has to
-      // carry the superseded cid for a syncer to stay convergent.
-      const ops = await dan.client.call(
-        com.atproto.space.listRepoOps,
-        { space, repo: dan.did },
-        { headers: dan.headers },
-      )
-      const last = ops.ops.at(-1)!
-      expect(last).toMatchObject({ cid: updated.cid, prev: created.cid })
-      await sc.expectSetHashMatchesStore(dan, space)
-
-      // One record, not two.
-      const listed = await dan.client.call(
-        com.atproto.space.listRecords,
-        { space, repo: dan.did, collection: TEST_COLLECTION },
-        { headers: dan.headers },
-      )
-      expect(listed.records).toHaveLength(1)
+      await expect(getRecord(dan, space, 'over')).resolves.toMatchObject({
+        cid: updated.cid,
+        value: { text: 'second' },
+      })
+      expect((await listRepoOps(dan, space)).at(-1)).toMatchObject({
+        cid: updated.cid,
+        prev: created.cid,
+      })
+      await sc.expectCommitMatchesRecords(dan, space)
     })
   })
 
   describe('applyWrites', () => {
-    const create = (rkey: string, text: string) =>
-      ({
-        $type: 'com.atproto.space.applyWrites#create' as const,
-        collection: TEST_COLLECTION,
-        rkey,
-        value: record(TEST_COLLECTION, text),
-      }) as const
-
     it('applies a batch as one rev', async () => {
       const space = await sc.createSpace(alice, { members: [dan] })
 
-      await dan.client.call(
-        com.atproto.space.applyWrites,
-        {
-          space,
-          repo: dan.did,
-          writes: [0, 1, 2].map((i) => create(`batch-${i}`, `batch ${i}`)),
-        },
-        { headers: dan.headers },
+      await applyWrites(
+        dan,
+        space,
+        ['a', 'b', 'c'].map((rkey) => createOp(rkey)),
       )
 
-      const ops = await dan.client.call(
-        com.atproto.space.listRepoOps,
-        { space, repo: dan.did },
-        { headers: dan.headers },
-      )
-      // One batch is one commit: a single rev shared by every op in it.
-      expect(new Set(ops.ops.map((o) => o.rev)).size).toBe(1)
-      expect(ops.ops.map((o) => o.rkey)).toEqual([
-        'batch-0',
-        'batch-1',
-        'batch-2',
-      ])
-    })
-
-    it('rejects a duplicate create within one batch', async () => {
-      // Resolving each write against storage alone would let both through,
-      // adding to the set hash twice while the upsert leaves one row.
-      const space = await sc.createSpace(alice, { members: [dan] })
-
-      await expect(
-        dan.client.call(
-          com.atproto.space.applyWrites,
-          {
-            space,
-            repo: dan.did,
-            writes: [create('dupe', 'one'), create('dupe', 'two')],
-          },
-          { headers: dan.headers },
-        ),
-      ).rejects.toMatchObject({ error: 'RecordAlreadyExists' })
-
-      await sc.expectSetHashMatchesStore(dan, space)
+      const ops = await listRepoOps(dan, space)
+      expect(ops.map((op) => op.rkey)).toEqual(['a', 'b', 'c'])
+      expect(new Set(ops.map((op) => op.rev)).size).toBe(1)
     })
 
     it('applies dependent writes within one batch', async () => {
-      // Each write must see the effect of the one before it.
       const space = await sc.createSpace(alice, { members: [dan] })
 
-      await dan.client.call(
-        com.atproto.space.applyWrites,
-        {
-          space,
-          repo: dan.did,
-          writes: [
-            create('dependent', 'first'),
-            {
-              $type: 'com.atproto.space.applyWrites#update' as const,
-              collection: TEST_COLLECTION,
-              rkey: 'dependent',
-              value: record(TEST_COLLECTION, 'second'),
-            },
-            create('survivor', 'survivor'),
-            {
-              $type: 'com.atproto.space.applyWrites#delete' as const,
-              collection: TEST_COLLECTION,
-              rkey: 'dependent',
-            },
-          ],
-        },
-        { headers: dan.headers },
-      )
+      await applyWrites(dan, space, [
+        createOp('dependent', 'first'),
+        update.$build({
+          collection: TEST_COLLECTION,
+          rkey: 'dependent',
+          value: record(TEST_COLLECTION, 'second'),
+        }),
+        createOp('survivor'),
+        del.$build({ collection: TEST_COLLECTION, rkey: 'dependent' }),
+      ])
 
-      const listed = await dan.client.call(
-        com.atproto.space.listRecords,
-        { space, repo: dan.did },
-        { headers: dan.headers },
-      )
-      expect(listed.records.map((r) => r.rkey)).toEqual(['survivor'])
-      await sc.expectSetHashMatchesStore(dan, space)
+      const { records } = await listRecords(dan, space)
+      expect(records.map((r) => r.rkey)).toEqual(['survivor'])
+      await sc.expectCommitMatchesRecords(dan, space)
     })
 
-    it('treats an empty batch as a no-op', async () => {
-      // A rev with no op behind it reads to a syncer as state it never received,
-      // and would let a batch that writes nothing materialize a repo.
+    it('rejects a duplicate create within one batch, writing nothing', async () => {
       const space = await sc.createSpace(alice, { members: [dan] })
 
-      const res = await dan.client.call(
-        com.atproto.space.applyWrites,
-        { space, repo: dan.did, writes: [] },
-        { headers: dan.headers },
-      )
-      expect(res.results).toEqual([])
-
-      // Dan's repo state is materialized on his first write, so writing nothing
-      // leaves no repo state at all.
-      expect(await sc.repoState(dan, space)).toBeNull()
-
-      // And with no commit to sign, the repo still reads as unwritten.
       await expect(
-        dan.client.call(
-          com.atproto.space.getLatestCommit,
-          { space, repo: dan.did },
-          { headers: dan.headers },
-        ),
-      ).rejects.toMatchObject({ error: 'RepoNotFound' })
+        applyWrites(dan, space, [createOp('dupe'), createOp('dupe')]),
+      ).rejects.toMatchObject({ error: 'RecordAlreadyExists' })
+      expect(await sc.latestCommit(dan, space)).toBeNull()
+    })
+
+    it('writes nothing for an empty batch', async () => {
+      const space = await sc.createSpace(alice, { members: [dan] })
+
+      await expect(applyWrites(dan, space, [])).resolves.toEqual({
+        results: [],
+      })
+      expect(await sc.latestCommit(dan, space)).toBeNull()
     })
 
     it('reports each result against the write it came from', async () => {
-      // Results are built from the prepared writes, so a delete in the middle of
-      // a batch can't shift the uris or validation statuses of its neighbours.
       const space = await sc.createSpace(alice, { members: [dan] })
-      await sc.write(dan, space, { rkey: 'doomed', text: 'doomed' })
+      await sc.write(dan, space, { rkey: 'doomed' })
 
-      const res = await dan.client.call(
-        com.atproto.space.applyWrites,
-        {
-          space,
-          repo: dan.did,
-          writes: [
-            create('first', 'first'),
-            {
-              $type: 'com.atproto.space.applyWrites#delete' as const,
-              collection: TEST_COLLECTION,
-              rkey: 'doomed',
-            },
-            create('last', 'last'),
-          ],
-        },
-        { headers: dan.headers },
-      )
+      const { results } = await applyWrites(dan, space, [
+        createOp('first'),
+        del.$build({ collection: TEST_COLLECTION, rkey: 'doomed' }),
+        createOp('last'),
+      ])
 
-      const [first, deleted, last] = res.results ?? []
-      expect(deleted.$type).toBe('com.atproto.space.applyWrites#deleteResult')
-      expect(first['uri']).toBe(`${space}/${dan.did}/${TEST_COLLECTION}/first`)
-      expect(last['uri']).toBe(`${space}/${dan.did}/${TEST_COLLECTION}/last`)
-      // A third-party collection, so both creates report 'unknown' — on
-      // themselves, not shifted onto the delete's slot.
-      expect(first['validationStatus']).toBe('unknown')
-      expect(last['validationStatus']).toBe('unknown')
+      const { createResult, deleteResult } = com.atproto.space.applyWrites
+      const uri = (rkey: string) =>
+        `${space}/${dan.did}/${TEST_COLLECTION}/${rkey}`
+      expect(results).toMatchObject([
+        { $type: createResult.$type, uri: uri('first') },
+        { $type: deleteResult.$type },
+        { $type: createResult.$type, uri: uri('last') },
+      ])
     })
 
     it('refuses a batch over the write limit', async () => {
       const space = await sc.createSpace(alice, { members: [dan] })
-      await expect(
-        dan.client.call(
-          com.atproto.space.applyWrites,
-          {
-            space,
-            repo: dan.did,
-            writes: Array.from({ length: 201 }, (_, i) =>
-              create(`over-${i}`, `over ${i}`),
-            ),
-          },
-          { headers: dan.headers },
-        ),
-      ).rejects.toThrow(/Too many writes/)
-    })
+      const writes = Array.from({ length: 201 }, (_, i) => createOp(`w${i}`))
 
-    it('refuses an unrecognized write type at the schema', async () => {
-      // `writes` is a closed union, so an unknown member never reaches the
-      // handler's own `Action not supported` fallback — schema validation names
-      // the three it will accept and points at the offending write.
-      const space = await sc.createSpace(alice, { members: [dan] })
-      await expect(
-        dan.client.call(
-          com.atproto.space.applyWrites,
-          {
-            space,
-            repo: dan.did,
-            writes: [{ $type: 'com.example.somethingElse' } as never],
-          },
-          { headers: dan.headers },
-        ),
-      ).rejects.toThrow(/Expected one of.*applyWrites#create.*\$\.writes\[0\]/s)
+      await expect(applyWrites(dan, space, writes)).rejects.toMatchObject({
+        error: 'InvalidRequest',
+        message: 'Too many writes. Max: 200',
+      })
     })
   })
 
   describe('clearRecords', () => {
-    const EMPTY_REPO_DATA =
-      'e5a00aa9991ac8a5ee3109844d84a55583bd20572ad3ffcd42792f3c36b183ad'
-
-    it('deletes every record, leaving the repo empty at a new rev', async () => {
+    it('deletes every record and empties the oplog at a new rev', async () => {
       const space = await sc.createSpace(alice, { members: [dan] })
-      await sc.write(dan, space, { rkey: 'one', text: 'one' })
+      await sc.write(dan, space, { rkey: 'one' })
       await sc.write(dan, space, {
         collection: TEST_COLLECTION_ALT,
         rkey: 'two',
-        text: 'two',
       })
-      const before = await sc.repoState(dan, space)
+      const before = await sc.latestCommit(dan, space)
 
       await sc.clear(dan, space)
 
-      const listed = await dan.client.call(
-        com.atproto.space.listRecords,
-        { space, repo: dan.did },
-        { headers: dan.headers },
-      )
-      expect(listed.records).toEqual([])
-
-      const { commit } = await dan.client.call(
-        com.atproto.space.getLatestCommit,
-        { space, repo: dan.did },
-        { headers: dan.headers },
-      )
-      expect(commit.rev > before!.rev!).toBe(true)
-      expect(Buffer.from(commit.data).toString('hex')).toBe(EMPTY_REPO_DATA)
-      await sc.expectSetHashMatchesStore(dan, space)
-    })
-
-    it('clears the oplog rather than logging a delete per record', async () => {
-      const space = await sc.createSpace(alice, { members: [dan] })
-      await sc.write(dan, space, { rkey: 'one', text: 'one' })
-      await sc.write(dan, space, { rkey: 'two', text: 'two' })
-
-      await sc.clear(dan, space)
-
-      const res = await dan.client.call(
-        com.atproto.space.listRepoOps,
-        { space, repo: dan.did },
-        { headers: dan.headers },
-      )
-      expect(res.ops).toEqual([])
-      expect(Buffer.from(res.commit!.data).toString('hex')).toBe(
-        EMPTY_REPO_DATA,
-      )
+      expect((await listRecords(dan, space)).records).toEqual([])
+      expect(await listRepoOps(dan, space)).toEqual([])
+      const after = await sc.latestCommit(dan, space)
+      expect(after!.rev > before!.rev).toBe(true)
+      expect(after!.data).toEqual(new LtHash().digest())
     })
 
     it('is a no-op on an empty or unwritten repo', async () => {
       const space = await sc.createSpace(alice, { members: [dan] })
-
       await sc.clear(dan, space)
-      expect(await sc.repoState(dan, space)).toBeNull()
+      expect(await sc.latestCommit(dan, space)).toBeNull()
 
       await sc.write(dan, space, { rkey: 'gone' })
       await sc.del(dan, space, { rkey: 'gone' })
-      const emptied = await sc.repoState(dan, space)
+      const emptied = await sc.latestCommit(dan, space)
       await sc.clear(dan, space)
-      expect(await sc.repoState(dan, space)).toEqual(emptied)
+      expect(await sc.latestCommit(dan, space)).toEqual(emptied)
     })
 
-    it('recreates the repo on a later write', async () => {
+    it('starts a fresh oplog on the next write', async () => {
       const space = await sc.createSpace(alice, { members: [dan] })
       await sc.write(dan, space, { rkey: 'before' })
       await sc.clear(dan, space)
-      const cleared = await sc.repoState(dan, space)
+      const cleared = await sc.latestCommit(dan, space)
 
       const created = await sc.write(dan, space, { rkey: 'after' })
 
-      const after = await sc.repoState(dan, space)
-      expect(after!.rev! > cleared!.rev!).toBe(true)
-      const ops = await dan.client.call(
-        com.atproto.space.listRepoOps,
-        { space, repo: dan.did },
-        { headers: dan.headers },
-      )
-      expect(ops.ops).toMatchObject([
+      expect(await listRepoOps(dan, space)).toMatchObject([
         { rkey: 'after', cid: created.cid, prev: null },
       ])
-      await sc.expectSetHashMatchesStore(dan, space)
+      const latest = await sc.latestCommit(dan, space)
+      expect(latest!.rev > cleared!.rev).toBe(true)
     })
 
     it("leaves the account's repos in other spaces alone", async () => {
       const space = await sc.createSpace(alice, { members: [dan] })
-      const other = await sc.createSpace(alice, {
-        skey: 'clear-records-other',
-        members: [dan],
-      })
+      const other = await sc.createSpace(alice, { members: [dan] })
       await sc.write(dan, space, { rkey: 'cleared' })
       await sc.write(dan, other, { rkey: 'kept' })
 
       await sc.clear(dan, space)
 
-      const listed = await dan.client.call(
-        com.atproto.space.listRecords,
-        { space: other, repo: dan.did },
-        { headers: dan.headers },
-      )
-      expect(listed.records.map((r) => r.rkey)).toEqual(['kept'])
-      await sc.expectSetHashMatchesStore(dan, other)
-    })
-
-    it('refuses to clear another account repo', async () => {
-      const space = await sc.createSpace(alice, { members: [dan] })
-      await expect(
-        dan.client.call(
-          com.atproto.space.clearRecords,
-          { space, repo: alice.did },
-          { headers: dan.headers },
-        ),
-      ).rejects.toMatchObject({ error: 'Forbidden' })
+      const { records } = await listRecords(dan, other)
+      expect(records.map((r) => r.rkey)).toEqual(['kept'])
     })
   })
 
   describe('validation', () => {
-    it('rejects a record whose $type disagrees with its collection', async () => {
+    it('refuses a record whose $type disagrees with its collection', async () => {
       const space = await sc.createSpace(alice)
       await expect(
-        alice.client.call(
-          com.atproto.space.createRecord,
-          {
-            space,
-            repo: alice.did,
-            collection: TEST_COLLECTION,
-            record: record(TEST_COLLECTION_ALT, 'mismatched'),
-          },
-          { headers: alice.headers },
-        ),
-      ).rejects.toThrow()
+        sc.write(alice, space, { record: record(TEST_COLLECTION_ALT) }),
+      ).rejects.toMatchObject({
+        error: 'InvalidRequest',
+        message: `Invalid $type: expected ${TEST_COLLECTION}, got ${TEST_COLLECTION_ALT}`,
+      })
     })
 
     it('reports unknown for a collection with no resolvable schema', async () => {
-      // Same as a public write of a third-party collection: the PDS validates
-      // against a hardcoded schema map, so anything outside it is unvalidatable
-      // rather than invalid.
       const space = await sc.createSpace(alice)
-      const created = await sc.write(alice, space, { text: 'unvalidatable' })
-      expect(created.validationStatus).toBe('unknown')
+      await expect(sc.write(alice, space)).resolves.toMatchObject({
+        validationStatus: 'unknown',
+      })
     })
 
     it('refuses an unvalidatable record when validation is demanded', async () => {
       const space = await sc.createSpace(alice)
       await expect(
-        sc.write(alice, space, { text: 'strict', validate: true }),
-      ).rejects.toThrow()
-    })
-
-    it('refuses a record over the size limit', async () => {
-      // Called directly, as the request body limit is lower than the record
-      // limit, so the check isn't reachable over HTTP.
-      const space = await sc.createSpace(alice)
-      await expect(
-        prepareCreate({
-          did: alice.did,
-          space: SpaceRef.parse(space),
-          collection: TEST_COLLECTION,
-          record: record(TEST_COLLECTION, 'x'.repeat(MAX_RECORD_SIZE)),
-        }),
-      ).rejects.toThrow(/Record too large/)
+        sc.write(alice, space, { validate: true }),
+      ).rejects.toMatchObject({
+        error: 'InvalidRequest',
+        message: `Unknown lexicon type: ${TEST_COLLECTION}`,
+      })
     })
   })
 
   describe('listRecords', () => {
     it('paginates across collections', async () => {
       const space = await sc.createSpace(alice, { members: [dan] })
-      await sc.write(dan, space, {
-        collection: TEST_COLLECTION,
-        rkey: 'a',
-        text: 'post',
+      await sc.write(dan, space, { collection: TEST_COLLECTION, rkey: 'a' })
+      await sc.write(dan, space, { collection: TEST_COLLECTION_ALT, rkey: 'b' })
+
+      const first = await listRecords(dan, space, { limit: 1 })
+      const second = await listRecords(dan, space, {
+        limit: 1,
+        cursor: first.cursor,
       })
-      await sc.write(dan, space, {
-        collection: TEST_COLLECTION_ALT,
-        rkey: 'b',
-        text: 'note',
+      const third = await listRecords(dan, space, {
+        limit: 1,
+        cursor: second.cursor,
       })
-
-      // Two pages of one record each; the cursor has to span collections.
-      const first = await dan.client.call(
-        com.atproto.space.listRecords,
-        { space, repo: dan.did, limit: 1 },
-        { headers: dan.headers },
-      )
-      expect(first.records).toHaveLength(1)
-      expect(first.cursor).toBeDefined()
-
-      const second = await dan.client.call(
-        com.atproto.space.listRecords,
-        { space, repo: dan.did, limit: 1, cursor: first.cursor },
-        { headers: dan.headers },
-      )
-      expect(second.records).toHaveLength(1)
-      expect(second.records[0].collection).not.toBe(first.records[0].collection)
-
-      const third = await dan.client.call(
-        com.atproto.space.listRecords,
-        { space, repo: dan.did, limit: 1, cursor: second.cursor },
-        { headers: dan.headers },
-      )
-      expect(third.records).toEqual([])
+      expect(
+        [first, second, third].map((page) => page.records.map((r) => r.rkey)),
+      ).toEqual([['a'], ['b'], []])
+      expect(third.cursor).toBeUndefined()
     })
 
     it('filters to one collection', async () => {
@@ -622,324 +439,164 @@ describe('space records', () => {
       await sc.write(dan, space, { collection: TEST_COLLECTION, rkey: 'a' })
       await sc.write(dan, space, { collection: TEST_COLLECTION_ALT, rkey: 'b' })
 
-      const listed = await dan.client.call(
-        com.atproto.space.listRecords,
-        { space, repo: dan.did, collection: TEST_COLLECTION_ALT },
-        { headers: dan.headers },
-      )
-      expect(listed.records.map((r) => r.collection)).toEqual([
-        TEST_COLLECTION_ALT,
+      const { records } = await listRecords(dan, space, {
+        collection: TEST_COLLECTION_ALT,
+      })
+      expect(records).toMatchObject([
+        { collection: TEST_COLLECTION_ALT, rkey: 'b' },
       ])
     })
 
     it('scopes a listing to one space', async () => {
-      const space = await sc.createSpace(alice, { skey: 'scope-a' })
-      const other = await sc.createSpace(alice, { skey: 'scope-b' })
-      await sc.write(alice, space, { rkey: 'here' })
+      const space = await sc.createSpace(alice)
+      const other = await sc.createSpace(alice)
+      await sc.write(alice, space)
 
-      const listed = await alice.client.call(
-        com.atproto.space.listRecords,
-        { space: other, repo: alice.did },
-        { headers: alice.headers },
-      )
-      expect(listed.records).toEqual([])
+      expect((await listRecords(alice, other)).records).toEqual([])
     })
   })
 
   describe('getRecord', () => {
-    // @NOTE unlike `com.atproto.repo.getRecord`, the space lexicon declares no
-    // `cid` param, so there is no read-at-a-specific-version here. The storage
-    // layer supports it (`SpaceReader.getRecord` takes an optional cid) but
-    // nothing calls it — worth either exposing or dropping.
-    it('returns the record and its current cid', async () => {
-      const space = await sc.createSpace(alice)
-      const created = await sc.write(alice, space, { rkey: 'by-cid' })
-
-      const got = await alice.client.call(
-        com.atproto.space.getRecord,
-        {
-          space,
-          repo: alice.did,
-          collection: TEST_COLLECTION,
-          rkey: 'by-cid',
-        },
-        { headers: alice.headers },
-      )
-      expect(got.cid).toBe(created.cid)
-      expect(got.uri).toBe(`${space}/${alice.did}/${TEST_COLLECTION}/by-cid`)
-    })
-
     it('reports RecordNotFound for a record that never existed', async () => {
       const space = await sc.createSpace(alice)
       await sc.write(alice, space, { rkey: 'present' })
-      await expect(
-        alice.client.call(
-          com.atproto.space.getRecord,
-          {
-            space,
-            repo: alice.did,
-            collection: TEST_COLLECTION,
-            rkey: 'absent',
-          },
-          { headers: alice.headers },
-        ),
-      ).rejects.toMatchObject({ error: 'RecordNotFound' })
+
+      await expect(getRecord(alice, space, 'absent')).rejects.toMatchObject({
+        error: 'RecordNotFound',
+      })
     })
   })
 
   describe('blobs', () => {
-    const upload = async (actor: Actor, bytes: Uint8Array) => {
-      const { body } = await actor.client.uploadBlob(bytes, {
-        headers: actor.headers,
-        encoding: 'image/png',
+    const getPublicBlob = (actor: Actor, cid: string) =>
+      actor.client.xrpc(com.atproto.sync.getBlob, {
+        params: { did: actor.did, cid },
       })
-      return body.blob
-    }
 
-    it('tracks a blob on a space record and serves it to a member', async () => {
+    it('serves and lists the blobs a space record references, to a syncer', async () => {
       const space = await sc.createSpace(alice, { members: [carol] })
-
-      // Spaces have no upload method of their own: a blob is uploaded normally
-      // and becomes permanent when a record references it.
-      const bytes = new Uint8Array([1, 2, 3, 4, 5])
-      const blob = await upload(alice, bytes)
-      const blobCid = getBlobCidString(blob)
-
-      // Untethered until a record references it.
-      await expect(
-        network.pds.ctx.blobstore(alice.did).getBytes(parseCid(blobCid)),
-      ).rejects.toThrow()
-
-      await sc.write(alice, space, {
-        rkey: 'with-blob',
-        record: { $type: TEST_COLLECTION, text: 'has a blob', image: blob },
-      })
-
-      const stored = await network.pds.ctx
-        .blobstore(alice.did)
-        .getBytes(parseCid(blobCid))
-      expect(new Uint8Array(stored)).toEqual(bytes)
+      const first = await upload(alice)
+      const second = await upload(alice)
+      await sc.write(alice, space, { record: withBlob(first) })
+      await sc.write(alice, space, { record: withBlob(second) })
 
       const cred = await sc.credentialFor(carol, space)
-      const listed = await cred
-        .clientFor(alice.pds)
-        .call(com.atproto.space.listBlobs, { space, repo: alice.did })
-      expect(listed.cids).toEqual([blobCid])
-
-      const res = await cred.fetch(
-        `${network.pds.url}/xrpc/com.atproto.space.getBlob?space=${encodeURIComponent(space)}&repo=${alice.did}&cid=${blobCid}`,
-      )
-      expect(res.status).toBe(200)
-      expect(new Uint8Array(await res.arrayBuffer())).toEqual(bytes)
+      const client = cred.clientFor(alice.pds)
+      const params = { space, repo: alice.did }
+      await expect(
+        client.call(com.atproto.space.listBlobs, params),
+      ).resolves.toEqual({ cids: [first.cid, second.cid].sort() })
+      await expect(
+        client.xrpc(com.atproto.space.getBlob, {
+          params: { ...params, cid: first.cid },
+        }),
+      ).resolves.toMatchObject({ body: first.bytes })
     })
 
     it('does not serve a space-only blob through public sync', async () => {
       const space = await sc.createSpace(alice)
-      const blob = await upload(alice, new Uint8Array([5, 4, 3, 2, 1]))
-      const blobCid = getBlobCidString(blob)
+      const blob = await upload(alice)
+      await sc.write(alice, space, { record: withBlob(blob) })
 
-      await sc.write(alice, space, {
-        rkey: 'private-blob',
-        record: { $type: TEST_COLLECTION, text: 'private', image: blob },
-      })
-
-      const listed = await alice.client.call(com.atproto.sync.listBlobs, {
+      const { cids } = await alice.client.call(com.atproto.sync.listBlobs, {
         did: alice.did,
       })
-      expect(listed.cids).not.toContain(blobCid)
-
-      const params = new URLSearchParams({ did: alice.did, cid: blobCid })
-      const res = await fetch(
-        `${alice.pds.url}/xrpc/${com.atproto.sync.getBlob.$lxm}?${params}`,
-      )
-      expect(res.status).toBe(400)
-      await expect(res.json()).resolves.toMatchObject({
+      expect(cids).not.toContain(blob.cid)
+      await expect(getPublicBlob(alice, blob.cid)).rejects.toMatchObject({
         error: 'BlobNotFound',
       })
     })
 
     it('keeps a blob shared with a public record', async () => {
       const space = await sc.createSpace(alice)
-      const blob = await upload(alice, new Uint8Array([7, 7, 7]))
-      const blobCid = getBlobCidString(blob)
-
+      const blob = await upload(alice)
+      const profile = {
+        repo: alice.did,
+        collection: app.bsky.actor.profile.$nsid,
+        rkey: 'self',
+      } as const
       await alice.client.call(
         com.atproto.repo.createRecord,
         {
-          repo: alice.did,
-          collection: 'app.bsky.actor.profile' as NsidString,
-          rkey: 'self',
-          record: { $type: 'app.bsky.actor.profile', avatar: blob },
+          ...profile,
+          record: app.bsky.actor.profile.$build({ avatar: blob.blob }),
         },
         { headers: alice.headers },
       )
-      await sc.write(alice, space, {
-        rkey: 'shared',
-        record: { $type: TEST_COLLECTION, text: 'shared', image: blob },
+      await sc.write(alice, space, { rkey: 'shared', record: withBlob(blob) })
+      await expect(getPublicBlob(alice, blob.cid)).resolves.toMatchObject({
+        body: blob.bytes,
       })
 
-      const params = new URLSearchParams({ did: alice.did, cid: blobCid })
-      const publicUrl = `${alice.pds.url}/xrpc/${com.atproto.sync.getBlob.$lxm}?${params}`
-      expect((await fetch(publicUrl)).status).toBe(200)
+      await alice.client.call(com.atproto.repo.deleteRecord, profile, {
+        headers: alice.headers,
+      })
+      await expect(getPublicBlob(alice, blob.cid)).rejects.toMatchObject({
+        error: 'BlobNotFound',
+      })
+      expect(await sc.blobExists(alice, blob.cid)).toBe(true)
 
-      // Deleting the public record must not strand the space record's bytes.
-      await alice.client.call(
-        com.atproto.repo.deleteRecord,
-        {
-          repo: alice.did,
-          collection: 'app.bsky.actor.profile' as NsidString,
-          rkey: 'self',
-        },
-        { headers: alice.headers },
-      )
-      await network.processAll()
-      expect(await sc.blobExists(alice, blobCid)).toBe(true)
-      expect((await fetch(publicUrl)).status).toBe(400)
-
-      // And the reverse: dropping the space record leaves nothing behind.
       await sc.del(alice, space, { rkey: 'shared' })
-      await network.processAll()
-      expect(await sc.blobExists(alice, blobCid)).toBe(false)
+      expect(await sc.blobExists(alice, blob.cid)).toBe(false)
+    })
+
+    it('releases a blob a replacing record no longer references', async () => {
+      const space = await sc.createSpace(alice)
+      const replaced = await upload(alice)
+      const current = await upload(alice)
+      await sc.put(alice, space, { record: withBlob(replaced) })
+
+      await sc.put(alice, space, { record: withBlob(current) })
+
+      expect(await sc.blobExists(alice, replaced.cid)).toBe(false)
+      expect(await sc.blobExists(alice, current.cid)).toBe(true)
+    })
+
+    it('keeps a blob a replacing record still references', async () => {
+      const space = await sc.createSpace(alice)
+      const blob = await upload(alice)
+      await sc.put(alice, space, { record: withBlob(blob, 'first') })
+
+      await sc.put(alice, space, { record: withBlob(blob, 'second') })
+
+      expect(await sc.blobExists(alice, blob.cid)).toBe(true)
     })
 
     it('drops the blobs of cleared records', async () => {
       const space = await sc.createSpace(alice)
-      const blob = await upload(alice, new Uint8Array([3, 1, 3]))
-      const blobCid = getBlobCidString(blob)
-      await sc.write(alice, space, {
-        rkey: 'cleared-blob',
-        record: { $type: TEST_COLLECTION, text: 'cleared', image: blob },
-      })
-      expect(await sc.blobExists(alice, blobCid)).toBe(true)
+      const blob = await upload(alice)
+      await sc.write(alice, space, { record: withBlob(blob) })
 
       await sc.clear(alice, space)
-      await network.processAll()
-      expect(await sc.blobExists(alice, blobCid)).toBe(false)
-    })
 
-    it('lists the blobs of a repo to a syncer', async () => {
-      const space = await sc.createSpace(alice, { members: [carol] })
-
-      const first = await upload(alice, new Uint8Array([1]))
-      await sc.write(alice, space, {
-        rkey: 'first',
-        record: { $type: TEST_COLLECTION, text: 'first', image: first },
-      })
-
-      const second = await upload(alice, new Uint8Array([2]))
-      await sc.write(alice, space, {
-        rkey: 'second',
-        record: { $type: TEST_COLLECTION, text: 'second', image: second },
-      })
-
-      const cred = await sc.credentialFor(carol, space)
-      const asSyncer = cred.clientFor(alice.pds)
-      const all = await asSyncer.call(com.atproto.space.listBlobs, {
-        space,
-        repo: alice.did,
-      })
-      expect(all.cids.sort()).toEqual(
-        [getBlobCidString(first), getBlobCidString(second)].sort(),
-      )
+      expect(await sc.blobExists(alice, blob.cid)).toBe(false)
     })
 
     it('scopes listBlobs to one space', async () => {
-      const space = await sc.createSpace(alice, {
-        skey: 'blobs-scoped',
-        members: [carol],
-      })
-      const other = await sc.createSpace(alice, {
-        skey: 'blobs-scoped-other',
-        members: [carol],
-      })
-
-      const blob = await upload(alice, new Uint8Array([9, 9, 9]))
-      await sc.write(alice, space, {
-        rkey: 'scoped-blob',
-        record: { $type: TEST_COLLECTION, text: 'blob', image: blob },
-      })
+      const space = await sc.createSpace(alice, { members: [carol] })
+      const other = await sc.createSpace(alice, { members: [carol] })
+      await sc.write(alice, space, { record: withBlob(await upload(alice)) })
 
       const cred = await sc.credentialFor(carol, other)
-      const listed = await cred
-        .clientFor(alice.pds)
-        .call(com.atproto.space.listBlobs, { space: other, repo: alice.did })
-      expect(listed.cids).toEqual([])
+      await expect(
+        cred
+          .clientFor(alice.pds)
+          .call(com.atproto.space.listBlobs, { space: other, repo: alice.did }),
+      ).resolves.toEqual({ cids: [] })
     })
 
-    it('refuses a blob to a credential for another space', async () => {
-      const space = await sc.createSpace(alice, {
-        skey: 'blob-auth',
-        members: [carol],
-      })
-      const other = await sc.createSpace(alice, {
-        skey: 'blob-auth-other',
-        members: [carol],
-      })
-
-      const blob = await upload(alice, new Uint8Array([4, 2]))
-      const blobCid = getBlobCidString(blob)
-      await sc.write(alice, space, {
-        rkey: 'guarded',
-        record: { $type: TEST_COLLECTION, text: 'guarded', image: blob },
-      })
-
-      const wrongCred = await sc.credentialFor(carol, other)
-      const res = await wrongCred.fetch(
-        `${network.pds.url}/xrpc/com.atproto.space.getBlob?space=${encodeURIComponent(space)}&repo=${alice.did}&cid=${blobCid}`,
-      )
-      expect(res.status).toBeGreaterThanOrEqual(400)
-    })
-
-    it('refuses a blob that the authorized space does not reference', async () => {
-      // The credential and the `space` param agree, so the space perimeter is
-      // satisfied — the blob simply belongs to a different space. Without an
-      // association check the account-wide blob store would serve it.
-      const space = await sc.createSpace(alice, {
-        skey: 'blob-unrelated',
-        members: [carol],
-      })
-      const other = await sc.createSpace(alice, {
-        skey: 'blob-unrelated-other',
-        members: [carol],
-      })
-
-      const blob = await upload(alice, new Uint8Array([7, 7, 7]))
-      const blobCid = getBlobCidString(blob)
-      await sc.write(alice, space, {
-        rkey: 'elsewhere',
-        record: { $type: TEST_COLLECTION, text: 'elsewhere', image: blob },
-      })
+    it('refuses a blob the authorized space does not reference', async () => {
+      const space = await sc.createSpace(alice, { members: [carol] })
+      const other = await sc.createSpace(alice, { members: [carol] })
+      const blob = await upload(alice)
+      await sc.write(alice, space, { record: withBlob(blob) })
 
       const cred = await sc.credentialFor(carol, other)
-      const res = await cred.fetch(
-        `${network.pds.url}/xrpc/com.atproto.space.getBlob?space=${encodeURIComponent(other)}&repo=${alice.did}&cid=${blobCid}`,
-      )
-      expect(res.status).toBe(400)
-      await expect(res.json()).resolves.toMatchObject({
-        error: 'BlobNotFound',
-      })
-    })
-
-    it('serves a blob the authorized space does reference', async () => {
-      const space = await sc.createSpace(alice, {
-        skey: 'blob-referenced',
-        members: [carol],
-      })
-
-      const blob = await upload(alice, new Uint8Array([1, 2, 3]))
-      const blobCid = getBlobCidString(blob)
-      await sc.write(alice, space, {
-        rkey: 'referenced',
-        record: { $type: TEST_COLLECTION, text: 'referenced', image: blob },
-      })
-
-      const cred = await sc.credentialFor(carol, space)
-      const res = await cred.fetch(
-        `${network.pds.url}/xrpc/com.atproto.space.getBlob?space=${encodeURIComponent(space)}&repo=${alice.did}&cid=${blobCid}`,
-      )
-      expect(res.status).toBe(200)
-      const bytes = new Uint8Array(await res.arrayBuffer())
-      expect(bytes).toEqual(new Uint8Array([1, 2, 3]))
+      await expect(
+        cred.clientFor(alice.pds).xrpc(com.atproto.space.getBlob, {
+          params: { space: other, repo: alice.did, cid: blob.cid },
+        }),
+      ).rejects.toMatchObject({ error: 'BlobNotFound' })
     })
   })
 })

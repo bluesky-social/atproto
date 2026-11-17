@@ -1,12 +1,13 @@
 import fs from 'node:fs/promises'
 import * as plc from '@did-plc/lib'
 import { jest } from '@jest/globals'
-import { check, fileExists } from '@atproto/common'
+import { check } from '@atproto/common'
 import { Secp256k1Keypair } from '@atproto/crypto'
 import { type SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
 import type { DidString, HandleString } from '@atproto/lex'
 import type { AppContext } from '../../src/index.js'
 import { KemKeyBackfill } from '../../src/kem-key-backfill.js'
+import { com } from '../../src/lexicons/index.js'
 
 describe('kem key backfill', () => {
   let network: TestNetworkNoAppView
@@ -14,9 +15,7 @@ describe('kem key backfill', () => {
   let sc: SeedClient
 
   beforeAll(async () => {
-    network = await TestNetworkNoAppView.create({
-      dbPostgresSchema: 'kem_key_backfill',
-    })
+    network = await TestNetworkNoAppView.create({})
     ctx = network.pds.ctx
     sc = network.getSeedClient()
   })
@@ -136,8 +135,7 @@ describe('kem key backfill', () => {
 
     expect([await opCount(dan), await opCount(eve)]).toEqual(before)
     for (const did of [dan, eve]) {
-      const { kemKeyLocation } = await ctx.actorStore.getLocation(did)
-      expect(await fileExists(kemKeyLocation)).toBe(true)
+      expect(await localKemKey(did)).toMatch(/^did:key:/)
     }
     expect(await isComplete()).toBe(true)
   })
@@ -201,21 +199,21 @@ describe('kem key backfill', () => {
     await using second = createBackfill()
     await second.run()
 
-    const { kemKeyLocation } = await ctx.actorStore.getLocation(did)
-    expect(await fileExists(kemKeyLocation)).toBe(false)
+    expect(await ctx.actorStore.kemKeypair(did)).toBeUndefined()
     expect(await publishedKemKey(did)).toBeUndefined()
   })
 
   it('leaves the KEM key out of identity ops for an account without one', async () => {
     const did = await createAlphaAccount('ivy')
-    const agent = network.pds.getAgent()
+    const client = network.pds.getClient()
     const headers = sc.getHeaders(did)
 
-    const { data } =
-      await agent.com.atproto.identity.getRecommendedDidCredentials(undefined, {
-        headers,
-      })
-    expect(data.verificationMethods).not.toHaveProperty('atproto_kem')
+    const { verificationMethods } = await client.call(
+      com.atproto.identity.getRecommendedDidCredentials,
+      {},
+      { headers },
+    )
+    expect(verificationMethods).not.toHaveProperty('atproto_kem')
 
     // An op without a KEM key is accepted, as there is none it could carry
     const lastOp = await ctx.plcClient.getLastOp(did)
@@ -225,9 +223,10 @@ describe('kem key backfill', () => {
       ctx.plcRotationKey,
       (op) => op,
     )
-    await agent.com.atproto.identity.submitPlcOperation(
+    await client.call(
+      com.atproto.identity.submitPlcOperation,
       { operation },
-      { encoding: 'application/json', headers },
+      { headers },
     )
   })
 })

@@ -55,6 +55,41 @@ describe('P-256 did:key', () => {
   })
 })
 
+describe('formatDidVerificationMethod', () => {
+  // Keys from signature-fixtures.json.
+  const p256DidKey = 'did:key:zDnaembgSGUhZULN2Caob4HLJPaxBh92N7rtH21TErzqf8HQo'
+  const k256DidKey = 'did:key:zQ3shqwJEJyMBsBXCWyCBpUBMqxcon9oHB7mCvx4sSpMdLJwc'
+
+  it.each([
+    {
+      type: 'EcdsaSecp256r1VerificationKey2019',
+      publicKeyMultibase: 'zxdM8dSstjrpZaRUwBmDvjGXweKuEMVN95A9oJBFjkWMh',
+      didKey: p256DidKey,
+    },
+    {
+      type: 'EcdsaSecp256k1VerificationKey2019',
+      publicKeyMultibase: 'z25z9DTpsiYYJKGsWmSPJK2NFN8PcJtZig12K59UgW7q5t',
+      didKey: k256DidKey,
+    },
+    {
+      type: 'Multikey',
+      publicKeyMultibase: p256DidKey.slice('did:key:'.length),
+      didKey: p256DidKey,
+    },
+  ])('formats a $type key as a did:key', ({ didKey, ...key }) => {
+    expect(did.formatDidVerificationMethod(key)).toBe(didKey)
+  })
+
+  it('rejects an unsupported verification method type', () => {
+    expect(() =>
+      did.formatDidVerificationMethod({
+        type: 'JsonWebKey2020',
+        publicKeyMultibase: p256DidKey.slice('did:key:'.length),
+      }),
+    ).toThrow('Unsupported verification method type: JsonWebKey2020')
+  })
+})
+
 // did:key secp256k1 test vectors from W3C
 // https://github.com/w3c-ccg/did-method-key/blob/main/test-vectors/secp256k1.json
 const secpTestVectors = [

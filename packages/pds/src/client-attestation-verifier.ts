@@ -7,7 +7,11 @@ import {
   type OAuthClientMetadata,
   oauthClientMetadataSchema,
 } from '@atproto/oauth-types'
-import { CLIENT_ATTESTATION_TYP, parseSpaceToken } from '@atproto/space'
+import {
+  CLIENT_ATTESTATION_TYP,
+  SpaceTokenError,
+  parseSpaceToken,
+} from '@atproto/space'
 import { type UriString, isValidUri } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { type Fetch, bindFetch } from '@atproto-labs/fetch'
@@ -73,7 +77,7 @@ export class ClientAttestationVerifier {
    * cannot be replayed here.
    */
   async verify(attestation: string, expectedAud: string): Promise<UriString> {
-    const { payload } = parseSpaceToken('clientAttestation', attestation)
+    const { payload } = parseAttestation(attestation)
     const clientId = payload.iss
     if (!isValidUri(clientId)) {
       throw new InvalidRequestError(
@@ -132,6 +136,17 @@ export class ClientAttestationVerifier {
     return this.jwks
       .get(uri)
       .catch(invalid(`Could not resolve client JWKS from "${uri}"`))
+  }
+}
+
+function parseAttestation(attestation: string) {
+  try {
+    return parseSpaceToken('clientAttestation', attestation)
+  } catch (err) {
+    if (err instanceof SpaceTokenError) {
+      return invalid(`Malformed client attestation: ${err.message}`)(err)
+    }
+    throw err
   }
 }
 
