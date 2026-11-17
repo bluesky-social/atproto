@@ -1,5 +1,6 @@
 import type * as http from 'node:http'
 import type { AddressInfo } from 'node:net'
+import type { RateLimiterAbstract } from 'rate-limiter-flexible'
 import { MINUTE } from '@atproto/common'
 import type { LexiconDoc } from '@atproto/lexicon'
 import { XrpcClient } from '@atproto/xrpc'
@@ -490,5 +491,59 @@ describe('skipDefaultKeyedRouteLimits', () => {
       calls.push(makeCall())
     }
     await expect(Promise.all(calls)).rejects.toThrow('Rate Limit Exceeded')
+  })
+})
+
+describe('a failing rate-limit store', () => {
+  let s: http.Server
+  // Every consume fails with a system error, as against a Redis that's down.
+  const storeDown = {
+    consume: async () => {
+      throw new Error('store down')
+    },
+  } as unknown as RateLimiterAbstract
+  const server = xrpcServer.createServer(LEXICONS, {
+    rateLimits: {
+      creator: (opts) => new xrpcServer.RateLimiter(storeDown, opts),
+      global: [{ name: 'global-ip', durationMs: MINUTE, points: 100 }],
+    },
+  })
+  server.method('io.example.routeLimit', {
+    rateLimit: {
+      durationMs: 5 * MINUTE,
+      points: 1,
+      calcKey: ({ params }) => params.str as string,
+    },
+    handler: (ctx) => ({
+      encoding: 'json',
+      body: ctx.params,
+    }),
+  })
+  server.method('io.example.noLimit', {
+    rateLimit: { durationMs: 5 * MINUTE, points: 1, failClosed: true },
+    handler: () => ({
+      encoding: 'json',
+      body: {},
+    }),
+  })
+
+  let client: XrpcClient
+  beforeAll(async () => {
+    s = await createServer(server)
+    const { port } = s.address() as AddressInfo
+    client = new XrpcClient(`http://localhost:${port}`, LEXICONS)
+  })
+  afterAll(async () => {
+    await closeServer(s)
+  })
+
+  it('lets requests through a route limit', async () => {
+    for (let i = 0; i < 3; i++) {
+      await client.call('io.example.routeLimit', { str: 'a' })
+    }
+  })
+
+  it('fails a route limit that asks to fail closed', async () => {
+    await expect(client.call('io.example.noLimit')).rejects.toThrow()
   })
 })

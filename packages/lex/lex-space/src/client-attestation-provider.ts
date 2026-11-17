@@ -1,5 +1,6 @@
 import type { Signer } from '@atproto/crypto'
 import {
+  type ClientAttestationOpts,
   type UnsignedSpaceToken,
   buildClientAttestation,
   createClientAttestation,
@@ -50,7 +51,7 @@ export function clientAttestationProviderFor(
   options?: ClientAttestationOptions,
 ): ClientAttestationProvider {
   return async (aud) => {
-    const opts = {
+    const opts: ClientAttestationOpts = {
       clientId,
       aud,
       kid: options?.kid,

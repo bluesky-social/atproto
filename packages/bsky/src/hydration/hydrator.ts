@@ -1423,16 +1423,16 @@ export class Hydrator {
             site.standard.graph.subscription.$type,
           )
           for (const publication of batch) {
-            const subscribed = result.backlinks
+            const subscription = result.backlinks
               .get(publication)
-              ?.some(
+              ?.find(
                 (uri) =>
                   recordUriOf(uri, site.standard.graph.subscription.$type) &&
                   uriToDid(uri) === ctx.viewer,
               )
             publicationSubscriptions.set(
               publication,
-              subscribed ? true : result.truncated ? null : false,
+              subscription ?? (result.truncated ? null : false),
             )
           }
         } catch (err) {

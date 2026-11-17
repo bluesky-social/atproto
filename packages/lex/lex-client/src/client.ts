@@ -29,6 +29,7 @@ import {
   type Infer,
   type InferMethodInputBody,
   type InferMethodOutputBody,
+  type LexValidationError,
   type Main,
   type NsidString,
   type Params,
@@ -359,8 +360,20 @@ export type ListOutput<T extends RecordSchema> = Omit<
  * operation.
  */
 export type ListRecordItem<Value extends LexMap> =
-  | { uri: AtUriString; cid: CidString; valid: true; value: Value }
-  | { uri: AtUriString; cid: CidString; valid: false; value: LexMap }
+  | {
+      uri: AtUriString
+      cid: CidString
+      valid: true
+      value: Value
+      error?: never
+    }
+  | {
+      uri: AtUriString
+      cid: CidString
+      valid: false
+      value: LexMap
+      error: LexValidationError
+    }
 
 /**
  * The Client class is the primary interface for interacting with AT Protocol
@@ -1252,6 +1265,6 @@ function processListRecord<T extends RecordSchema>(
   if (result.success) {
     return { ...record, valid: true, value: result.value }
   } else {
-    return { ...record, valid: false }
+    return { ...record, valid: false, error: result.reason }
   }
 }

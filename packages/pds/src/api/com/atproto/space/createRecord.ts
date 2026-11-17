@@ -1,4 +1,5 @@
 import { ForbiddenError, type Server } from '@atproto/xrpc-server'
+import { ACCESS_FULL } from '../../../../auth-scope.js'
 import type { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
 import { prepareCreate } from '../../../../repo/index.js'
@@ -8,6 +9,7 @@ import { fireNotifyRepoUpdate, toSpaceRef } from './util.js'
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.space.createRecord, {
     auth: ctx.authVerifier.authorization({
+      scopes: ACCESS_FULL,
       // Checkable during auth, unlike com.atproto.repo.createRecord: `repo` here
       // is always a did, and the handler requires it to be the caller's own.
       checkTakedown: true,

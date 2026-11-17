@@ -21,6 +21,35 @@ import type { ExternalRecordView, Label, ProfileViewBasic } from './types.js'
 
 export const LIVESTREAM_HEARTBEAT_WINDOW_MS = 2 * MINUTE
 
+export type ExternalRecordViewOptions = {
+  /** Include the viewer's state on publication views, from hydrated subscriptions. */
+  publicationViewer?: boolean
+  /** Compute livestream `active` with {@link isLivestreamLive}. */
+  livestreamCreatedAtHeartbeat?: boolean
+}
+
+/**
+ * Live means a heartbeat within the window and no `endedAt` at or before now.
+ * Without any heartbeat yet, a stream created within the window counts as live.
+ */
+export function isLivestreamLive(
+  record: place.stream.livestream.Main,
+  now: number,
+): boolean {
+  const endedAt = record.endedAt ? Date.parse(record.endedAt) : NaN
+  return (
+    isFreshHeartbeat(record.lastSeenAt ?? record.createdAt, now) &&
+    !(endedAt <= now)
+  )
+}
+
+function isFreshHeartbeat(at: string | undefined, now: number): boolean {
+  const heartbeat = at ? Date.parse(at) : NaN
+  // @NOTE The window applies on both sides of now to tolerate clock skew, so
+  // a future heartbeat counts as live for at most twice the window.
+  return Math.abs(now - heartbeat) < LIVESTREAM_HEARTBEAT_WINDOW_MS
+}
+
 /**
  * Build a modality view from validated, available records in hydration state.
  * With `cid`, the root comes from the exact version in `externalRecordsByRef`
@@ -32,8 +61,9 @@ export function externalRecordView(
   state: HydrationState,
   now: number,
   cid?: string,
+  options: ExternalRecordViewOptions = {},
 ): $Typed<ExternalRecordView> | undefined {
-  return externalRecordViewOrRefs(views, uri, state, now, false, cid)
+  return externalRecordViewOrRefs(views, uri, state, now, false, cid, options)
 }
 
 /** Resolve renderable view dependencies without constructing presentation fields. */
@@ -52,6 +82,7 @@ function externalRecordViewOrRefs(
   now: number,
   refsOnly: false,
   cid?: string,
+  options?: ExternalRecordViewOptions,
 ): $Typed<ExternalRecordView> | undefined
 function externalRecordViewOrRefs(
   views: Views,
@@ -67,6 +98,7 @@ function externalRecordViewOrRefs(
   now: number,
   refsOnly: boolean,
   cid?: string,
+  options: ExternalRecordViewOptions = {},
 ): $Typed<ExternalRecordView> | AtUriString[] | undefined {
   const info =
     cid === undefined
@@ -87,7 +119,13 @@ function externalRecordViewOrRefs(
       if (!publication) return
       base = publication.url
       if (!refsOnly) {
-        publisher = publicationView(views, record.site, state, publication)
+        publisher = publicationView(
+          views,
+          record.site,
+          state,
+          publication,
+          options,
+        )
       }
       refs.push(record.site)
     }
@@ -125,7 +163,7 @@ function externalRecordViewOrRefs(
     const publication = publicationRecord(info)
     if (!publication) return
     if (refsOnly) return [uri]
-    return publicationView(views, uri, state, publication)
+    return publicationView(views, uri, state, publication, options)
   }
 
   if (social.grain.gallery.$matches(record)) {
@@ -195,6 +233,7 @@ function externalRecordViewOrRefs(
       description: record.description ?? '',
       createdAt: record.createdAt,
       items,
+      photoCount: backlinkCount(uri, social.grain.gallery.item.$type, state),
       likeCount: backlinkCount(uri, social.grain.favorite.$type, state),
       likers: backlinkProfiles(views, uri, state, 'favorite'),
     })
@@ -202,10 +241,6 @@ function externalRecordViewOrRefs(
 
   if (place.stream.livestream.$matches(record)) {
     if (refsOnly) return [uri]
-    const lastSeen = record.lastSeenAt ? Date.parse(record.lastSeenAt) : NaN
-    // @NOTE The window applies on both sides of now to tolerate clock skew, so
-    // a future heartbeat counts as live for at most twice the window.
-    const fresh = Math.abs(now - lastSeen) < LIVESTREAM_HEARTBEAT_WINDOW_MS
     return app.bsky.embed.external.viewLivestream.$build({
       ...commonFields(views, [uri], state, info),
       uri: httpUri(record.canonicalUrl) ?? httpUri(record.url) ?? uri,
@@ -219,9 +254,12 @@ function externalRecordViewOrRefs(
             getBlobCidString(record.thumb),
           )
         : undefined,
-      active: !record.endedAt && fresh,
+      active: options.livestreamCreatedAtHeartbeat
+        ? isLivestreamLive(record, now)
+        : !record.endedAt && isFreshHeartbeat(record.lastSeenAt, now),
       startedAt: record.createdAt,
       endedAt: record.endedAt,
+      lastSeenAt: record.lastSeenAt,
     })
   }
 }
@@ -231,8 +269,13 @@ function publicationView(
   uri: AtUriString,
   state: HydrationState,
   publication: NonNullable<ReturnType<typeof publicationRecord>>,
+  options: ExternalRecordViewOptions,
 ): $Typed<app.bsky.embed.external.ViewArticlePublication> {
   const { record, url, info } = publication
+  // @NOTE Unknown subscription outcomes omit the viewer state rather than guess.
+  const subscription = options.publicationViewer
+    ? state.externalPublicationSubscriptions?.get(uri)
+    : undefined
   return app.bsky.embed.external.viewArticlePublication.$build({
     ...commonFields(views, [uri], state, info),
     uri: url,
@@ -259,6 +302,10 @@ function publicationView(
       state,
     ),
     subscribers: backlinkProfiles(views, uri, state, 'subscription'),
+    viewer:
+      subscription == null
+        ? undefined
+        : { subscription: subscription || undefined },
   })
 }
 

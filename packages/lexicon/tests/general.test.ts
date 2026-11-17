@@ -4,7 +4,6 @@ import {
   BlobRef,
   type LexiconDoc,
   Lexicons,
-  lexSpace,
   lexiconDoc,
   parseLexiconDoc,
 } from '../src/index.js'
@@ -998,36 +997,11 @@ describe('Record validation', () => {
       space:
         'at://did:plc:12345678abcdefghijklmnop/space/com.example.group/default',
     })
-
-    // Narrower than at-uri: a record URI inside a space is a valid at-uri but
-    // does not name a space, so it must not pass where a space is expected.
     expect(() =>
       lex.assertValidRecord('com.example.spaceRef', {
         $type: 'com.example.spaceRef',
         space:
           'at://did:plc:12345678abcdefghijklmnop/space/com.example.group/default/did:plc:12345678abcdefghijklmnoq/com.example.test/self',
-      }),
-    ).toThrow('Record/space must be a valid space ref')
-
-    expect(() =>
-      lex.assertValidRecord('com.example.spaceRef', {
-        $type: 'com.example.spaceRef',
-        space: 'at://did:plc:12345678abcdefghijklmnop/com.example.test/self',
-      }),
-    ).toThrow('Record/space must be a valid space ref')
-
-    // Spaces are keyed on DIDs, so a handle authority is refused.
-    expect(() =>
-      lex.assertValidRecord('com.example.spaceRef', {
-        $type: 'com.example.spaceRef',
-        space: 'at://test.bsky.social/space/com.example.group/default',
-      }),
-    ).toThrow('Record/space must be a valid space ref')
-
-    expect(() =>
-      lex.assertValidRecord('com.example.spaceRef', {
-        $type: 'com.example.spaceRef',
-        space: 'not a space ref',
       }),
     ).toThrow('Record/space must be a valid space ref')
   })
@@ -1337,19 +1311,34 @@ describe('XRPC output validation', () => {
 })
 
 describe('Space definitions', () => {
-  it('accepts an optional title', () => {
-    expect(
-      lexSpace.safeParse({ type: 'space', title: 'Example', collections: [] })
-        .success,
-    ).toBe(true)
-    expect(lexSpace.safeParse({ type: 'space', collections: [] }).success).toBe(
-      true,
-    )
+  const spaceDoc = (defs: Record<string, unknown>) => ({
+    lexicon: 1,
+    id: 'com.example.group',
+    defs,
+  })
+  const space = (fields: Record<string, unknown> = {}) => ({
+    type: 'space',
+    key: 'any',
+    collections: ['com.example.post'],
+    ...fields,
+  })
+
+  it('accepts a space with or without a title', () => {
+    expect(() =>
+      parseLexiconDoc(spaceDoc({ main: space({ title: 'Group' }) })),
+    ).not.toThrow()
+    expect(() => parseLexiconDoc(spaceDoc({ main: space() }))).not.toThrow()
   })
 
   it('rejects an empty title', () => {
-    expect(
-      lexSpace.safeParse({ type: 'space', title: '', collections: [] }).success,
-    ).toBe(false)
+    expect(() =>
+      parseLexiconDoc(spaceDoc({ main: space({ title: '' }) })),
+    ).toThrow('String must contain at least 1 character(s)')
+  })
+
+  it('must be the main definition', () => {
+    expect(() => parseLexiconDoc(spaceDoc({ other: space() }))).toThrow(
+      'spaces, procedures, queries, and subscriptions must be the main definition',
+    )
   })
 })

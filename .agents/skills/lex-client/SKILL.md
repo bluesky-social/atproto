@@ -302,8 +302,8 @@ to validate), `validateRequest` (validate locally before sending), `swapCommit`
 ### `list` / `listAll` — paginating a collection
 
 Listed records are a discriminated union on `valid`: entries that fail schema
-validation still come back, with `value` widened to `LexMap`. Check `valid`
-before touching typed fields.
+validation still come back, with `value` widened to `LexMap` and the reason in
+`error` (a `LexValidationError`). Check `valid` before touching typed fields.
 
 ```ts
 const page = await client.list(app.bsky.feed.post, { limit: 50, reverse: true })

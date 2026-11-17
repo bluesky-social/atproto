@@ -12,6 +12,7 @@ import type {
   SubjectView,
 } from '../lexicons/tools/ozone/inbox/defs.js'
 import { SUSPEND_LABEL, TAKEDOWN_LABEL } from '../mod-service/index.js'
+import { getStatusIdentifierFromEvent } from '../mod-service/status.js'
 import type { ModSubject } from '../mod-service/subject.js'
 import type {
   ModerationEventRow,
@@ -144,12 +145,13 @@ export const loadSubject = async (
       latestAppealableAt: null,
       appealReport: null,
     }
+  const statusId = getStatusIdentifierFromEvent(subject.info())
   const [status, labelRows, events, totals, appealHistory] = await Promise.all([
     db.db
       .selectFrom('moderation_subject_status')
-      .where('did', '=', subject.did)
-      .where('recordPath', '=', subject.recordPath ?? '')
-      .where('convoId', '=', subject.convoId ?? '')
+      .where('did', '=', statusId.did)
+      .where('recordPath', '=', statusId.recordPath)
+      .where('convoId', '=', statusId.convoId)
       .select(publicStatusSelection)
       .executeTakeFirst(),
 

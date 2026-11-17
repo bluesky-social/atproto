@@ -28,7 +28,7 @@ import { getClientUa } from '../../../kws/util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(app.bsky.ageassurance.begin, {
-    auth: ctx.authVerifier.standard,
+    auth: ctx.authVerifier.standardWriteService(),
     handler: async ({ auth, input, req }) => {
       if (!ctx.kwsClient) {
         throw new MethodNotImplementedError(

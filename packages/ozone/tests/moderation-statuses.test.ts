@@ -422,6 +422,55 @@ describe('moderation-statuses', () => {
       )
       expect(convoStatuses.length).toBeGreaterThanOrEqual(2)
     })
+
+    it('includes message statuses in conversation filtering', async () => {
+      const did = sc.dids.carol
+      const convoId = 'filter-messages-convo'
+      const conversation = {
+        $type: 'chat.bsky.convo.defs#convoRef',
+        did,
+        convoId,
+      }
+      const message = {
+        $type: 'chat.bsky.convo.defs#messageRef',
+        did,
+        convoId,
+        messageId: 'filter-message',
+      }
+      const legacyMessage = {
+        ...message,
+        convoId: '',
+        messageId: 'legacy-filter-message',
+      }
+      for (const subject of [conversation, message, legacyMessage]) {
+        await sc.createReport({
+          reasonType: ComAtprotoModerationDefs.REASONSPAM,
+          subject,
+          reportedBy: sc.dids.alice,
+        })
+      }
+      await network.processAll()
+      const chat = await modClient.queryStatuses({
+        subjectType: 'conversation',
+        limit: 100,
+      })
+      expect(chat.subjectStatuses.map((status) => status.subject)).toEqual(
+        expect.arrayContaining([conversation, message, legacyMessage]),
+      )
+      const convo = await modClient.queryStatuses({
+        subject: `at://${did}/chat.bsky.convo/${convoId}`,
+      })
+      expect(convo.subjectStatuses.map((status) => status.subject)).toEqual([
+        conversation,
+      ])
+      const records = await modClient.queryStatuses({
+        subjectType: 'record',
+        limit: 100,
+      })
+      expect(
+        records.subjectStatuses.map((status) => status.subject),
+      ).not.toEqual(expect.arrayContaining([message]))
+    })
   })
 
   describe('reviewState changes', () => {

@@ -1,4 +1,5 @@
 import { ForbiddenError, type Server } from '@atproto/xrpc-server'
+import { ACCESS_FULL } from '../../../../auth-scope.js'
 import type { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
 import { prepareDelete } from '../../../../repo/index.js'
@@ -8,6 +9,7 @@ import { fireNotifyRepoUpdate, toSpaceRef } from './util.js'
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.space.deleteRecord, {
     auth: ctx.authVerifier.authorization({
+      scopes: ACCESS_FULL,
       checkTakedown: true,
       checkDeactivated: true,
       authorize: () => {

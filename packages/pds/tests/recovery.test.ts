@@ -1,3 +1,4 @@
+import assert from 'node:assert'
 import fs from 'node:fs/promises'
 import * as ui8 from 'uint8arrays'
 import type AtpAgent from '@atproto/api'
@@ -177,10 +178,8 @@ describe('recovery', () => {
 
     const plcData = await ctx.plcClient.getDocumentData(elli)
     expect(plcData.verificationMethods['atproto']).toEqual(elliKey.did())
-    expect(elliKemKey).toBeDefined()
-    expect(plcData.verificationMethods['atproto_kem']).toEqual(
-      elliKemKey?.did(),
-    )
+    assert(elliKemKey)
+    expect(plcData.verificationMethods['atproto_kem']).toEqual(elliKemKey.did())
 
     // it correctly resigned elli's repo
     const elliCar = await getCar(elli)

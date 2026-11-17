@@ -12,6 +12,7 @@ export enum Gate {
   SuggestedUsersForSeeMoreEnable = 'suggested_users:for_see_more:enable',
   SuggestedUsersIrisEnable = 'suggested_users:iris:enable',
   SearchV2Enable = 'search:v2:enable',
+  TypeaheadServiceEnable = 'search:typeahead_service:enable',
   IrisFeed = 'iris:feed:enable',
   IrisFeedWithFriendsEnable = 'iris:feed:with-friends:enable',
   IrisFeedThevidsEnable = 'iris:feed:thevids:enable',
@@ -34,4 +35,7 @@ export enum Gate {
  * analytics purposes. This is useful for gates that are not user-facing or are
  * overly noisy.
  */
-export const IGNORE_METRICS_FOR_GATES: Set<Gate> = new Set([])
+export const IGNORE_METRICS_FOR_GATES: Set<Gate> = new Set([
+  // Checked on every actor typeahead request, i.e. every keystroke.
+  Gate.TypeaheadServiceEnable,
+])

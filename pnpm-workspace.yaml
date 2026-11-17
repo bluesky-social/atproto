@@ -9,16 +9,11 @@ allowBuilds:
   '@bufbuild/buf': true
   '@swc/core': true
   better-sqlite3: true
-  dd-trace: true
   esbuild: true
   protobufjs: true
   puppeteer: true
   sharp: true
   unrs-resolver: true
-  '@datadog/native-appsec': false
-  '@datadog/native-iast-taint-tracking': false
-  '@datadog/native-metrics': false
-  '@datadog/pprof': false
   core-js: false
   rolldown: true
   '@parcel/watcher': true

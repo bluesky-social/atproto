@@ -2,19 +2,19 @@ import { once } from 'node:events'
 import { type Server, createServer } from 'node:http'
 import type { AddressInfo } from 'node:net'
 import * as plc from '@did-plc/lib'
+import { jest } from '@jest/globals'
 import { type HttpTerminator, createHttpTerminator } from 'http-terminator'
-import { getVerificationMaterial } from '@atproto/common'
+import { TID, getVerificationMaterial } from '@atproto/common'
 import { P256Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import {
   EXAMPLE_LABELER,
   SeedClient,
-  type TestNetworkNoAppView,
+  TestNetworkNoAppView,
   type TestPds,
 } from '@atproto/dev-env'
 import type { IdResolver } from '@atproto/identity'
 import { Client, type DidString } from '@atproto/lex'
 import { type LexMap, parseCid } from '@atproto/lex-data'
-import type { l } from '@atproto/lex-schema'
 import { JoseKey } from '@atproto/oauth-provider/provider'
 import { ReplayManager } from '@atproto/oauth-provider/verifier'
 import {
@@ -31,6 +31,7 @@ import {
   verifyCommit,
 } from '@atproto/space'
 import {
+  type HandleString,
   type NsidString,
   type RecordKeyString,
   SpaceRef,
@@ -48,44 +49,36 @@ const MAC_PROFILE_BY_METHOD: Record<string, MacProfile> = {
   [com.atproto.space.getRecord.$lxm]: RECORD_MAC_PROFILE,
 }
 
-// Third-party collections, as a space's are in practice. The PDS validates
-// records against a hardcoded schema map (see `repo/prepare.ts`), so anything
-// outside it reports `validationStatus: 'unknown'` — which is also what a
-// third-party collection would do in production.
+// Collections outside the PDS's built-in schemas, so records validate as `unknown`.
 export const TEST_COLLECTION = 'com.example.spaceRecord' as NsidString
 export const TEST_COLLECTION_ALT = 'com.example.spaceNote' as NsidString
 
-// The space type used by default. `com.example.group` is published as a `space`
-// lexicon by the dev-env lex authority, so an OAuth grant naming it can resolve
-// its declared collections — but only on a network created with
-// `lexiconAuthority: true`.
+// Published as a `space` lexicon by the dev-env lexicon authority.
 export const TEST_SPACE_TYPE = 'com.example.group' as NsidString
-export const SPACE_TYPE_COLLECTIONS = [
-  'com.example.groupNote',
-  'com.example.groupPost',
-] as NsidString[]
 
 /** An account, with everything needed to act as it. */
 export type Actor = {
   name: string
   did: DidString
+  password: string
   headers: { authorization: string }
   pds: TestPds
   client: Client
 }
 
-export type SpaceOptions = {
-  /** Defaults to a slug derived from the current test's name. */
+export type AccountStatus = 'takendown' | 'deactivated'
+
+type SpaceOptions = {
   skey?: string
   spaceType?: NsidString
   members?: Actor[]
   /** Defaults to a memberspace policy with its default configuration. */
   policy?: com.atproto.space.createSpace.$InputBody['policy']
-  /** Skip `space.createSpace`, leaving the space ungoverned. */
+  /** Skip createSpace, naming a space no host governs. */
   ungoverned?: boolean
 }
 
-export type WriteOptions = {
+type WriteOptions = {
   collection?: NsidString
   rkey?: string
   text?: string
@@ -95,101 +88,131 @@ export type WriteOptions = {
   headers?: { authorization: string }
 }
 
-/** A writer set entry: a repo's latest write, or its removal. */
-export type ListedWriter =
-  | l.$Typed<com.atproto.space.defs.RepoWrite>
-  | l.$Typed<com.atproto.space.defs.RepoRemoved>
-
-/**
- * The entries of a `listWriters` page. Their union is open, so this checks that
- * each is of a known kind.
- */
-export function listedWriters(page: {
-  repos: readonly { $type: string }[]
-}): ListedWriter[] {
-  const { repoWrite, repoRemoved } = com.atproto.space.defs
-  return page.repos.map((entry) => {
-    if (repoWrite.$isTypeOf(entry) || repoRemoved.$isTypeOf(entry)) {
-      return entry as ListedWriter
-    }
-    throw new Error(`Unexpected writer set entry: ${entry.$type}`)
-  })
+type AuthorizeOptions = {
+  delegationToken?: string
+  clientAttestation?: string
+  notify?: com.atproto.space.authorizeSpaceSync.Notify
+  key?: P256Keypair
 }
 
 /**
- * Test helper for permissioned spaces, in the spirit of `SeedClient`.
- *
- * Owns the two things that otherwise dominate a space test: the boilerplate of a
- * space write, and the two-hop delegation-token → credential exchange. Every
- * method takes an {@link Actor} so a call site reads as who is doing what, rather
- * than threading did/headers/client separately.
+ * Three PDSes and four accounts: alice (the space authority) and dan on pds1,
+ * bob on pds2, carol on pds3.
  */
+export async function createSpaceNetwork(
+  opts: { lexiconAuthority?: boolean } = {},
+) {
+  const network = await TestNetworkNoAppView.create({
+    extraPdses: 2,
+    lexiconAuthority: opts.lexiconAuthority,
+  })
+  const sc = new SpaceClient(network)
+  const [pds2, pds3] = network.extraPdses
+  return {
+    network,
+    sc,
+    alice: await sc.createActor('alice'),
+    dan: await sc.createActor('dan'),
+    bob: await sc.createActor('bob', pds2),
+    carol: await sc.createActor('carol', pds3),
+  }
+}
+
+/** Test helper for permissioned spaces, in the spirit of `SeedClient`. */
 export class SpaceClient {
   constructor(public network: TestNetworkNoAppView) {}
 
-  /** The space authority in these tests: alice, on pds1. */
+  /** The PDS hosting every space authority in these tests. */
   get authority(): TestPds {
     return this.network.pds
   }
 
-  async createActor(
-    name: string,
-    pds: TestPds,
-    domain = 'test',
-  ): Promise<Actor> {
-    const agent = pds.getAgent()
-    const res = await agent.com.atproto.server.createAccount({
-      handle: `${name}.${domain}`,
-      email: `${name}@test.com`,
-      password: `${name}-pass`,
-    })
+  get idResolver(): IdResolver {
+    return this.authority.ctx.idResolver
+  }
+
+  async createActor(name: string, pds = this.network.pds): Promise<Actor> {
+    const [domain] = pds.ctx.cfg.identity.serviceHandleDomains
+    const password = `${name}-pass`
+    const client = pds.getClient()
+    const { did, accessJwt } = await client.call(
+      com.atproto.server.createAccount,
+      {
+        handle: `${name}${domain}` as HandleString,
+        email: `${name}@test.com`,
+        password,
+      },
+    )
     return {
       name,
-      did: res.data.did as DidString,
-      headers: SeedClient.getHeaders(res.data.accessJwt),
+      did,
+      password,
+      headers: SeedClient.getHeaders(accessJwt),
       pds,
-      client: pds.getClient(),
+      client,
     }
   }
 
-  /**
-   * Create a space anchored on `authority`'s DID, optionally adding members.
-   *
-   * The skey defaults to a slug of the running test's name, so tests don't have
-   * to invent one and restate their own title. Each test gets a distinct space,
-   * which is what keeps them order-independent.
-   */
+  /** Put `actor` in `status` until disposed, through the admin and account APIs. */
+  async withStatus(
+    actor: Actor,
+    status: AccountStatus,
+  ): Promise<AsyncDisposable> {
+    if (status === 'deactivated') {
+      await actor.client.call(
+        com.atproto.server.deactivateAccount,
+        {},
+        { headers: actor.headers },
+      )
+      return {
+        [Symbol.asyncDispose]: async () => {
+          await actor.client.xrpc(com.atproto.server.activateAccount, {
+            headers: actor.headers,
+          })
+        },
+      }
+    }
+
+    const takedown = (applied: boolean) =>
+      actor.client.call(
+        com.atproto.admin.updateSubjectStatus,
+        {
+          subject: com.atproto.admin.defs.repoRef.$build({ did: actor.did }),
+          takedown: { applied },
+        },
+        { headers: actor.pds.adminAuthHeaders() },
+      )
+    await takedown(true)
+    return {
+      [Symbol.asyncDispose]: async () => {
+        await takedown(false)
+      },
+    }
+  }
+
+  /** Create a space anchored on `authority`'s DID, keyed by a fresh TID by default. */
   async createSpace(
     authority: Actor,
     opts: SpaceOptions = {},
   ): Promise<SpaceRefString> {
-    const skey = opts.skey ?? currentTestSkey()
     const spaceType = opts.spaceType ?? TEST_SPACE_TYPE
-
-    const uri =
-      `at://${authority.did}/space/${spaceType}/${skey}` as SpaceRefString
-
-    if (!opts.ungoverned) {
-      const res = await authority.client.call(
-        com.atproto.space.createSpace,
-        {
-          spaceType,
-          skey,
-          policy: opts.policy ?? com.atproto.memberspace.policy.$build({}),
-        },
-        { headers: authority.headers },
-      )
-      // Belt and braces: if the handler ever stops anchoring on the caller's own
-      // DID, every test built on this helper would silently target a stale uri.
-      if (res.space !== uri) {
-        throw new Error(`expected space ${uri}, got ${res.space}`)
-      }
+    const skey = (opts.skey ?? TID.nextStr()) as RecordKeyString
+    if (opts.ungoverned) {
+      return new SpaceRef(authority.did, spaceType, skey).toString()
     }
-
+    const { space } = await authority.client.call(
+      com.atproto.space.createSpace,
+      {
+        spaceType,
+        skey,
+        policy: opts.policy ?? com.atproto.memberspace.policy.$build({}),
+      },
+      { headers: authority.headers },
+    )
     for (const member of opts.members ?? []) {
-      await this.putMember(authority, uri, member)
+      await this.putMember(authority, space, member)
     }
-    return uri
+    return space
   }
 
   async putMember(
@@ -287,54 +310,6 @@ export class SpaceClient {
     )
   }
 
-  /**
-   * Issue a fresh space credential for `actor`: mint a delegation token on their
-   * own PDS, then exchange it with the authority. Two hops, because a repo host
-   * has no member list of its own — only the authority can decide who may read.
-   */
-  async credentialFor(
-    actor: Actor,
-    space: SpaceRefString,
-    opts: {
-      clientAttestation?: string
-      key?: P256Keypair
-      notify?: com.atproto.space.authorizeSpaceSync.Notify
-    } = {},
-  ): Promise<SpaceCredential> {
-    const key = opts.key ?? (await P256Keypair.create())
-    const token = await this.delegationTokenFor(actor, space)
-    const res = await this.authority
-      .getClient()
-      .call(com.atproto.space.authorizeSpaceSync, {
-        space,
-        credentialKey: key.did(),
-        delegationToken: token,
-        clientAttestation: opts.clientAttestation,
-        notify: opts.notify,
-      })
-    return new SpaceCredential(res.credential, key, this.idResolver)
-  }
-
-  get idResolver(): IdResolver {
-    return this.authority.ctx.idResolver
-  }
-
-  /** Request a credential without a delegation token, as for a public space. */
-  async publicCredential(
-    space: SpaceRefString,
-    opts: { clientAttestation?: string } = {},
-  ): Promise<SpaceCredential> {
-    const key = await P256Keypair.create()
-    const res = await this.authority
-      .getClient()
-      .call(com.atproto.space.authorizeSpaceSync, {
-        space,
-        credentialKey: key.did(),
-        clientAttestation: opts.clientAttestation,
-      })
-    return new SpaceCredential(res.credential, key, this.idResolver)
-  }
-
   async delegationTokenFor(
     actor: Actor,
     space: SpaceRefString,
@@ -347,132 +322,128 @@ export class SpaceClient {
     return res.token
   }
 
-  /** Mint a credential with invalid claims and a valid key binding. */
-  async forgedCredential(
-    sign: (keyId: DidString) => Promise<string>,
-  ): Promise<SpaceCredential> {
-    const key = await P256Keypair.create()
-    return new SpaceCredential(
-      await sign(key.did() as DidString),
-      key,
-      this.idResolver,
-    )
-  }
-
-  /** The exchange on its own, for tests about minting rather than about reading. */
-  async mintCredential(
+  /** Ask the authority for a space credential; with no delegation token, as for a public space. */
+  async authorize(
     space: SpaceRefString,
-    token: string,
-    opts: {
-      clientAttestation?: string
-      notify?: com.atproto.space.authorizeSpaceSync.Notify
-    } = {},
-  ) {
-    const key = await P256Keypair.create()
-    return this.authority
+    opts: AuthorizeOptions = {},
+  ): Promise<SpaceCredential> {
+    const key = opts.key ?? (await P256Keypair.create())
+    const res = await this.authority
       .getClient()
       .call(com.atproto.space.authorizeSpaceSync, {
         space,
         credentialKey: key.did(),
-        delegationToken: token,
+        delegationToken: opts.delegationToken,
         clientAttestation: opts.clientAttestation,
         notify: opts.notify,
       })
-  }
-
-  /** Read a repo's state directly. No endpoint exposes the raw set hash. */
-  async repoState(actor: Actor, space: SpaceRefString) {
-    return actor.pds.ctx.actorStore.read(actor.did, (store) =>
-      store.space.getRepoState(space),
+    return new SpaceCredential(
+      res.credential,
+      key,
+      this.idResolver,
+      res.spaceRev,
     )
   }
 
-  /**
-   * Assert a repo's stored set hash still equals one recomputed from its records.
-   * Divergence here is silent and permanent, so it's worth asserting directly —
-   * and there is no protocol surface that would reveal it.
-   */
-  async expectSetHashMatchesStore(actor: Actor, space: SpaceRefString) {
-    const { records, state } = await actor.pds.ctx.actorStore.read(
-      actor.did,
-      async (store) => ({
-        records: await store.space.listRecords(space, { limit: 1000 }),
-        state: await store.space.getRepoState(space),
-      }),
-    )
-    const recomputed = RepoCommit.fromRecords(
-      records.map((r) => ({
-        collection: r.collection,
-        rkey: r.rkey,
-        cid: parseCid(r.cid),
-      })),
-    )
-    expect(
-      recomputed.setHash.equals(RepoCommit.fromState(state?.setHash).setHash),
-    ).toBe(true)
-  }
-
-  /**
-   * The writer set as stored by the authority, leaving out removed writers.
-   *
-   * Reads through storage rather than `listWriters` because the callers that need it
-   * are polling for a best-effort notification to land, and `listWriters` needs a
-   * credential minted per call. Use {@link expectWriterSet} to assert the
-   * published view.
-   */
-  async writerDids(space: SpaceRefString): Promise<string[]> {
-    const { spaceDid } = SpaceRef.parse(space)
-    const writers = await this.authority.ctx.actorStore.read(
-      spaceDid,
-      (store) => store.space.listWriters(space, { limit: 100 }),
-    )
-    return writers.filter((w) => !w.removedAt).map((w) => w.did)
-  }
-
-  /**
-   * The writer set, as `listWriters` publishes it. A repo missing from it, or
-   * reported as removed, is a repo no syncer treats as part of the space.
-   */
-  async expectWriterSet(
+  /** Exchange a delegation token minted on `actor`'s own PDS for a space credential. */
+  async credentialFor(
+    actor: Actor,
     space: SpaceRefString,
-    reader: Actor,
-    expected: Actor[],
-  ) {
-    const cred = await this.credentialFor(reader, space)
-    const res = await cred
-      .clientFor(this.authority)
-      .call(com.atproto.space.listWriters, { space })
-    const writers = res.repos.filter((r) =>
-      com.atproto.space.defs.repoWrite.$isTypeOf(r),
+    opts: Omit<AuthorizeOptions, 'delegationToken'> = {},
+  ): Promise<SpaceCredential> {
+    const delegationToken = await this.delegationTokenFor(actor, space)
+    return this.authorize(space, { ...opts, delegationToken })
+  }
+
+  /** The latest commit of `actor`'s repo, read with its own session; null if unwritten. */
+  async latestCommit(
+    actor: Actor,
+    space: SpaceRefString,
+  ): Promise<SpaceCommit | null> {
+    const res = await actor.client.xrpcSafe(com.atproto.space.getLatestCommit, {
+      params: { space, repo: actor.did },
+      headers: actor.headers,
+    })
+    if (res.success) return res.body.commit
+    if (res.error === 'RepoNotFound') return null
+    throw res
+  }
+
+  /** Assert `actor`'s latest commit covers exactly the records its repo lists. */
+  async expectCommitMatchesRecords(actor: Actor, space: SpaceRefString) {
+    const { records } = await actor.client.call(
+      com.atproto.space.listRecords,
+      { space, repo: actor.did, limit: 1000, excludeValues: true },
+      { headers: actor.headers },
     )
-    expect(writers.map((r) => r.repo).sort()).toEqual(
-      expected.map((a) => a.did).sort(),
+    const commit = await this.latestCommit(actor, space)
+    const fromRecords = RepoCommit.fromRecords(
+      records.map((r) => ({ ...r, cid: parseCid(r.cid) })),
+    )
+    expect(commit && fromRecords.matches(commit)).toBe(true)
+  }
+
+  /** The writer set of `space`, as listWriters publishes it to `reader`. */
+  async writers(space: SpaceRefString, reader: Actor): Promise<DidString[]> {
+    const cred = await this.credentialFor(reader, space)
+    const { repos } = await cred
+      .clientFor(this.authority)
+      .call(com.atproto.space.listWriters, { space, limit: 100 })
+    return repos
+      .filter((r) => com.atproto.space.defs.repoWrite.$isTypeOf(r))
+      .map((r) => r.repo)
+      .sort()
+  }
+
+  /** Make every notification retry queued on `pds` due, and run them. */
+  async retryNotifications(pds: TestPds): Promise<void> {
+    const { db } = pds.ctx.accountManager.db
+    await db
+      .updateTable('space_notification_retry')
+      .set({ retryAt: 0 })
+      .execute()
+    await db
+      .updateTable('space_syncer_notification_retry')
+      .set({ retryAt: 0 })
+      .execute()
+    await pds.ctx.spaceNotifications.retryPending()
+  }
+
+  /** Expire a notify registration, as if it had not been renewed. No endpoint does this. */
+  async lapseRegistration(
+    space: SpaceRefString,
+    endpoint: string,
+  ): Promise<void> {
+    const { spaceDid } = SpaceRef.parse(space)
+    await this.authority.ctx.actorStore.transact(spaceDid, (txn) =>
+      txn.space.db.db
+        .updateTable('space_notify_registration')
+        .set({ expiresAt: new Date(Date.now() - 1000).toISOString() })
+        .where('space', '=', space)
+        .where('endpoint', '=', endpoint)
+        .execute(),
     )
   }
 
   /**
-   * Wait for a condition that a best-effort notification drives.
-   *
-   * `notifyRepoUpdate` is fired from the writer's PDS without awaiting, so there is no
-   * queue on the writer side to drain — polling is the only option. Prefer
-   * `network.pds.ctx.backgroundQueue.processAll()` where the work *is* queued
-   * (the authority's outbound fan-out, `notifySpaceUpdate`).
+   * Accept a DPoP-scheme request on `actor`'s PDS as an OAuth token carrying
+   * `scope`, until disposed. Everything past token verification is real.
    */
-  async awaitNotify<T>(
-    poll: () => Promise<T>,
-    until: (value: T) => boolean,
-    opts: { attempts?: number; delayMs?: number } = {},
-  ): Promise<T> {
-    const { attempts = 50, delayMs = 50 } = opts
-    let last = await poll()
-    for (let i = 0; i < attempts && !until(last); i++) {
-      await new Promise((r) => setTimeout(r, delayMs))
-      last = await poll()
+  asOAuth(actor: Actor, scope: string) {
+    const verifier = actor.pds.ctx.authVerifier.oauthVerifier
+    const spy = jest
+      .spyOn(verifier, 'authenticateRequest')
+      .mockResolvedValue({ sub: actor.did, scope } as Awaited<
+        ReturnType<typeof verifier.authenticateRequest>
+      >)
+    return {
+      client: actor.client,
+      headers: { authorization: 'DPoP test-oauth-token' },
+      [Symbol.dispose]: () => spy.mockRestore(),
     }
-    return last
   }
 
-  /** Whether a blob's bytes are still held for `actor`. */
+  /** Whether a blob's bytes are still held for `actor`. No endpoint exposes this. */
   async blobExists(actor: Actor, cid: string): Promise<boolean> {
     const row = await actor.pds.ctx.actorStore.read(actor.did, (store) =>
       store.repo.blob.db.db
@@ -486,18 +457,18 @@ export class SpaceClient {
 }
 
 /**
- * A space credential and its signing key, with audience DIDs derived from requests.
- *
- * Requests a MAC from the methods that require one, as a syncer would, and keeps
- * the latest request's encapsulation and response headers in `lastMac`.
+ * A space credential and its key, acting as a syncer: signs each request for the
+ * repo it reads, and requests a MAC from the methods that return one.
  */
 export class SpaceCredential {
+  /** The encapsulation and response headers of the latest MAC'd request. */
   lastMac?: VerifyMacParams & { profile: MacProfile }
 
   constructor(
     public credential: string,
     public key: P256Keypair,
     public idResolver: IdResolver,
+    public spaceRev?: string,
   ) {}
 
   clientFor(pds: TestPds): Client {
@@ -506,7 +477,20 @@ export class SpaceCredential {
     return client
   }
 
-  /** For requests made outside the client, e.g. a raw `getRepo` CAR download. */
+  /** Headers presenting this credential to `audience`, for requests made by hand. */
+  async signedHeaders(
+    audience: DidString,
+    opts: { scheme?: string } = {},
+  ): Promise<Record<string, string>> {
+    const scheme = opts.scheme ?? 'Atproto-Space-Credential'
+    const { headers } = await createSpaceSigHeaders({
+      authorization: `${scheme} ${this.credential}`,
+      audience,
+      keypair: this.key,
+    })
+    return headers
+  }
+
   fetch = async (
     input: string | URL | Request,
     init?: RequestInit,
@@ -517,19 +501,14 @@ export class SpaceCredential {
         ? Object.fromEntries(new URL(request.url).searchParams)
         : await request.clone().json()
     const audience = params.repo ?? SpaceRef.parse(params.space).spaceDid
-    const { headers } = await createSpaceSigHeaders({
-      authorization: `Atproto-Space-Credential ${this.credential}`,
-      audience,
-      keypair: this.key,
-    })
-    for (const [name, value] of Object.entries(headers)) {
+    for (const [name, value] of Object.entries(
+      await this.signedHeaders(audience),
+    )) {
       request.headers.set(name, value)
     }
 
-    const profile =
-      MAC_PROFILE_BY_METHOD[
-        new URL(request.url).pathname.replace(/^\/xrpc\//, '')
-      ]
+    const lxm = new URL(request.url).pathname.replace(/^\/xrpc\//, '')
+    const profile = MAC_PROFILE_BY_METHOD[lxm]
     if (!profile || request.headers.has('accept-signature')) {
       return globalThis.fetch(request)
     }
@@ -552,7 +531,6 @@ export class SpaceCredential {
     return `did:key:${kemKey.publicKeyMultibase}`
   }
 
-  /** The encapsulation and response headers of the latest request. */
   lastMacParams(): VerifyMacParams {
     if (!this.lastMac) throw new Error('no MAC was requested')
     return this.lastMac
@@ -574,16 +552,15 @@ export const record = (collection: NsidString, text = 'hello') => ({
   createdAt: new Date().toISOString(),
 })
 
+type MockCall = { lxm: string; body: unknown; auth?: string }
+type MockResponse = { status: number; body: unknown }
+
 /**
- * A local HTTP service with a real PLC-registered DID, so the PDS resolves and
- * reaches it the way it would a managing app or a space host. Also stands in for
- * a syncing service, which registers its URL directly.
- *
- * Records every request it receives, which is how a test observes a fan-out that
- * is otherwise fire-and-forget.
+ * A local XRPC service with a PLC DID, standing in for a managing app, a space
+ * host, or a syncer. Records every request it receives.
  */
 export class MockService {
-  public calls: { lxm: string; body: unknown; auth?: string }[] = []
+  public calls: MockCall[] = []
   private terminator: HttpTerminator
 
   private constructor(
@@ -624,21 +601,14 @@ export class MockService {
     opts: {
       serviceId: string
       /** Defaults to 200 with an empty object. */
-      respond?: (
-        call: MockService['calls'][number],
-      ) =>
-        | { status: number; body: unknown }
-        | Promise<{ status: number; body: unknown }>
-      /**
-       * Whether to confirm notify registrations by echoing the challenge, in
-       * place of `respond`. Defaults to true.
-       */
+      respond?: (call: MockCall) => MockResponse | Promise<MockResponse>
+      /** Whether to confirm notify registrations by echoing the challenge. Defaults to true. */
       confirmRegistrations?: boolean
     },
   ): Promise<MockService> {
     const respond = opts.respond ?? (() => ({ status: 200, body: {} }))
     const confirmRegistrations = opts.confirmRegistrations ?? true
-    const calls: MockService['calls'] = []
+    const calls: MockCall[] = []
 
     const server = createServer((req, res) => {
       const chunks: Buffer[] = []
@@ -646,13 +616,12 @@ export class MockService {
       req.on('end', async () => {
         const raw = Buffer.concat(chunks).toString('utf8')
         const url = new URL(req.url ?? '/', 'http://localhost')
-        const call = {
-          // `/xrpc/<lxm>`
+        const call: MockCall = {
           lxm: url.pathname.replace(/^\/xrpc\//, ''),
           body: raw
             ? safeJson(raw)
             : Object.fromEntries(url.searchParams.entries()),
-          auth: req.headers['authorization'] as string | undefined,
+          auth: req.headers['authorization'],
         }
         calls.push(call)
         const { status, body } =
@@ -668,7 +637,6 @@ export class MockService {
     await once(server, 'listening')
     const url = `http://localhost:${(server.address() as AddressInfo).port}`
 
-    // A real PLC identity, so the PDS's own resolver finds the endpoint.
     const keypair = await Secp256k1Keypair.create()
     const plcOp = await plc.signOperation(
       {
@@ -714,13 +682,8 @@ const safeJson = (raw: string): unknown => {
 }
 
 /**
- * A stand-in OAuth client that publishes real `client-metadata.json` and JWKS
- * documents over HTTP, so `ClientAttestationVerifier` resolves and checks a
- * signature against a key it actually fetched.
- *
- * Needed because the production verifier is built with an SSRF-guarded fetch that
- * won't reach a test server by hostname; {@link installOn} swaps in a verifier
- * bound to plain fetch for the duration of a test.
+ * An OAuth client publishing real `client-metadata.json` and JWKS documents, so
+ * the PDS verifies an attestation against a key it actually fetched.
  */
 export class MockClientApp {
   private terminator: HttpTerminator
@@ -728,16 +691,13 @@ export class MockClientApp {
   private constructor(
     server: Server,
     public clientId: UriString,
-    public jwksUri: string,
     public key: JoseKey,
   ) {
     this.terminator = createHttpTerminator({ server })
   }
 
-  static async create(
-    opts: { kid?: string; publishKeys?: boolean } = {},
-  ): Promise<MockClientApp> {
-    const key = await JoseKey.generate(['ES256'], opts.kid ?? 'key-1')
+  static async create(): Promise<MockClientApp> {
+    const key = await JoseKey.generate(['ES256'], 'key-1')
 
     let base = ''
     const server = createServer((req, res) => {
@@ -757,9 +717,7 @@ export class MockClientApp {
           application_type: 'web',
           token_endpoint_auth_method: 'private_key_jwt',
           dpop_bound_access_tokens: true,
-          ...(opts.publishKeys === false
-            ? {}
-            : { jwks_uri: `${base}/jwks.json` }),
+          jwks_uri: `${base}/jwks.json`,
         })
       }
       if (path === '/jwks.json') {
@@ -769,29 +727,25 @@ export class MockClientApp {
     })
     server.listen(0)
     await once(server, 'listening')
-    // A loopback IP, not `localhost`: RFC 8252 forbids the hostname in
-    // `redirect_uris`, and the client metadata schema enforces that.
+    // A loopback IP: client metadata may not name `localhost` in redirect_uris.
     base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`
 
     return new MockClientApp(
       server,
       `${base}/client-metadata.json` as UriString,
-      `${base}/jwks.json`,
       key,
     )
   }
 
   /**
-   * Point a PDS's attestation verifier at a fetch that can reach this server,
-   * restoring the original on dispose.
+   * Swap in an attestation verifier that can reach this server (the PDS's own
+   * fetch is SSRF-guarded), restoring the original on dispose.
    */
-  installOn(pds: TestPds): { [Symbol.dispose]: () => void } {
+  installOn(pds: TestPds): Disposable {
     const original = pds.ctx.clientAttestationVerifier
-    // dev-env exports AppContext from its built dist/, while we construct the
-    // verifier from src/ — two identical shapes with separate declarations. Cast
-    // at that boundary only; the behaviour under test is the real thing.
     const seen = new Set<string>()
-    const replacement = new ClientAttestationVerifier(
+    // dev-env's AppContext type comes from the built PDS, this verifier from src.
+    pds.ctx.clientAttestationVerifier = new ClientAttestationVerifier(
       ((input: Request) => globalThis.fetch(input)) as never,
       new ReplayManager({
         unique: (namespace, nonce) => {
@@ -802,7 +756,6 @@ export class MockClientApp {
         },
       }),
     ) as unknown as typeof original
-    pds.ctx.clientAttestationVerifier = replacement
     return {
       [Symbol.dispose]: () => {
         pds.ctx.clientAttestationVerifier = original
@@ -813,15 +766,17 @@ export class MockClientApp {
   /** An attestation for `spaceHost`, signed by this app's own key by default. */
   async attest(
     spaceHost: string,
-    opts: { signWith?: JoseKey; iss?: string; expiresInSec?: number } = {},
+    opts: { signWith?: JoseKey; expiresInSec?: number } = {},
   ): Promise<string> {
-    const signer = opts.signWith ?? this.key
     const { header, payload } = buildClientAttestation({
-      clientId: opts.iss ?? this.clientId,
+      clientId: this.clientId,
       aud: spaceHost,
       expiresInSec: opts.expiresInSec,
     })
-    return signer.createJwt({ alg: 'ES256', ...header }, payload)
+    return (opts.signWith ?? this.key).createJwt(
+      { alg: 'ES256', ...header },
+      payload,
+    )
   }
 
   close(): Promise<void> {
@@ -831,20 +786,4 @@ export class MockClientApp {
   async [Symbol.asyncDispose](): Promise<void> {
     await this.close()
   }
-}
-
-/**
- * A record-key-safe slug of the running test's name, so a space doesn't have to
- * be named separately from the test that owns it.
- *
- * Jest reports the name as the describe/it path joined by spaces, e.g.
- * "space records writes a record as a co-located member".
- */
-function currentTestSkey(): string {
-  const slug = (expect.getState().currentTestName ?? 'space')
-    .replace(/[^a-zA-Z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    // Record keys cap at 512 chars; leave room and stay readable.
-    .slice(0, 120)
-  return slug || 'space'
 }
