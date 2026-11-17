@@ -11,7 +11,10 @@ import {
   resolveAppealAction,
   subjectKey,
 } from '../../inbox/appeal.js'
-import { findLatestAppealableAt } from '../../inbox/appealable-events.js'
+import {
+  findLatestAppealableAt,
+  hasVisiblePublicAction,
+} from '../../inbox/appealable-events.js'
 import { getSeenAt } from '../../inbox/seen.js'
 import { inboxHasStarted } from '../../inbox/start.js'
 import {
@@ -100,7 +103,15 @@ export default function (server: Server, ctx: AppContext) {
           labels: snapshot.labels,
           actions: [],
         })
-        if (!latestAppealableAt && enforcement.state === 'none') {
+        if (
+          !latestAppealableAt &&
+          enforcement.state === 'none' &&
+          !(await hasVisiblePublicAction(
+            ctx.db,
+            subject,
+            ctx.cfg.inbox.startAt,
+          ))
+        ) {
           throw new ForbiddenError(
             'Subject has no moderation action to appeal',
             'NotAppealable',

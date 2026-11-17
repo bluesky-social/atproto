@@ -1971,7 +1971,7 @@ describe('appealActionedSubject', () => {
     }
 
     async function notify(subject: EmitSubject) {
-      await modClient.emitEvent({
+      return modClient.emitEvent({
         subject,
         event: {
           $type: tools.ozone.moderation.defs.modEventEmail.$type,
@@ -1988,6 +1988,86 @@ describe('appealActionedSubject', () => {
         { headers: { ...sc.getHeaders(did), 'atproto-proxy': proxyHeader } },
       )
     }
+
+    it('keeps subject-only appeals for a subject with only an email at the cutoff', async () => {
+      const subject = await createSubject('subjectonlyemail')
+      const email = await notify(subject)
+      await network.ozone.ctx.db.db
+        .updateTable('moderation_event')
+        .set({ createdAt: startAt })
+        .where('id', '=', email.id)
+        .execute()
+
+      const result = await legacyAppeal(subject.did).then(
+        ({ data }) => ({ state: data.appeal.state }),
+        (err) => ({ error: err.error, message: err.message }),
+      )
+      expect(result).toEqual({ state: 'pending' })
+      expect(await latestAppealReport(subject.did)).toMatchObject({
+        actionEventIds: null,
+      })
+      await expect(legacyAppeal(subject.did)).rejects.toMatchObject({
+        error: 'AlreadyAppealed',
+      })
+    })
+
+    it('accepts subject-only appeals for a record with only a visible label removal', async () => {
+      const account = await createSubject('subjectonlyrecord')
+      const post = await sc.post(account.did, 'a post')
+      const subject = com.atproto.repo.strongRef.$build({
+        uri: post.ref.uriStr,
+        cid: post.ref.cidStr,
+      })
+      await modClient.emitEvent({
+        subject,
+        event: {
+          $type: tools.ozone.moderation.defs.modEventLabel.$type,
+          createLabelVals: [],
+          negateLabelVals: ['!warn'],
+        },
+      })
+
+      const { data } = await callAppeal({ subject }, account.did)
+      expect(data.appeal.state).toBe('pending')
+      expect(await latestAppealReport(account.did)).toMatchObject({
+        actionEventIds: null,
+      })
+    })
+
+    it('does not use pre-cutoff or another subject’s public activity for the carve-out', async () => {
+      const account = await createSubject('subjectonlyscope')
+      const oldEmail = await notify(account)
+      await backdate(account.did, [oldEmail.id])
+      await expect(legacyAppeal(account.did)).rejects.toMatchObject({
+        error: 'NotAppealable',
+      })
+
+      const post = await sc.post(account.did, 'a different subject')
+      const subject = com.atproto.repo.strongRef.$build({
+        uri: post.ref.uriStr,
+        cid: post.ref.cidStr,
+      })
+      await notify(account)
+      await expect(callAppeal({ subject }, account.did)).rejects.toMatchObject({
+        error: 'NotAppealable',
+      })
+    })
+
+    it('does not treat a visible reversal alone as a public action', async () => {
+      const subject = await createSubject('onlyreversal')
+      const email = await notify(subject)
+      await network.ozone.ctx.db.db
+        .updateTable('moderation_event')
+        .set({
+          action: tools.ozone.moderation.defs.modEventReverseTakedown.$type,
+        })
+        .where('id', '=', email.id)
+        .execute()
+
+      await expect(legacyAppeal(subject.did)).rejects.toMatchObject({
+        error: 'NotAppealable',
+      })
+    })
 
     it('offers an appeal for a hidden takedown when a later email is visible', async () => {
       const subject = await createSubject('precutvisible')
