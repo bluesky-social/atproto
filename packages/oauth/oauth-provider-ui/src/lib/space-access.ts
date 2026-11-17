@@ -5,23 +5,16 @@ import type {
   SpaceTypeParam,
 } from '@atproto/oauth-scopes'
 import type { Space, SpaceHandles, Spaces } from '#/hydration-data.d.ts'
-import { isConventionalOAuthClientId } from './oauth-client.ts'
 
 /**
  * How alarming a space grant is, least to most:
  *
- * - `client`: spaces run by the client's own operator. The authority's
- *   verified handle is the hostname of a conventional client id, so the app is
- *   only reaching spaces its operator already runs.
- * - `authority`: spaces run by one other authority, named by its verified
- *   handle.
- * - `broad`: one space type under any authority, the spaces the user owns
- *   (`self`), or spaces run by an authority whose handle could not be
- *   verified.
+ * - `authority`: spaces of one named authority.
+ * - `broad`: one space type under any authority, or the spaces the user owns
+ *   (`self`).
  * - `universal`: every space on the network.
  */
 export const SPACE_ACCESS_LEVELS = Object.freeze([
-  'client',
   'authority',
   'broad',
   'universal',
@@ -29,14 +22,10 @@ export const SPACE_ACCESS_LEVELS = Object.freeze([
 export type SpaceAccessLevel = (typeof SPACE_ACCESS_LEVELS)[number]
 
 export type SpaceAccessContext = {
-  /**
-   * The client requesting access. Without it, no grant is `client`-level.
-   */
-  clientId?: string
   spaces?: Spaces
   /**
-   * Verified handles of space authorities. An authority without one is
-   * `broad`.
+   * Verified handles of space authorities. An authority without one is shown
+   * as an invalid handle.
    */
   spaceHandles?: SpaceHandles
 }
@@ -68,7 +57,6 @@ export type SpaceAccessRow = {
 
 export function spaceAccessLevel(
   permission: SpacePermission,
-  { clientId, spaceHandles }: SpaceAccessContext = {},
 ): SpaceAccessLevel {
   if (permission.authority === '*') {
     return permission.spaceType === '*' ? 'universal' : 'broad'
@@ -76,24 +64,7 @@ export function spaceAccessLevel(
 
   if (permission.authority === 'self') return 'broad'
 
-  // Without a verified handle, the authority can only be shown as a DID, which
-  // the user has no way to recognize.
-  const handle = spaceHandles?.[permission.authority]
-  if (!handle) return 'broad'
-
-  const hostname = clientHostname(clientId)
-  if (hostname && handle.toLowerCase() === hostname) return 'client'
-
   return 'authority'
-}
-
-/**
- * The hostname a client is known by, when the client id is conventional
- * enough for the consent screen to name the client by its hostname alone.
- */
-export function clientHostname(clientId?: string): string | null {
-  if (!clientId || !isConventionalOAuthClientId(clientId)) return null
-  return new URL(clientId).hostname
 }
 
 export function buildSpaceAccessRows(
@@ -116,7 +87,7 @@ export function buildSpaceAccessRows(
     if (!row) {
       row = {
         key,
-        level: spaceAccessLevel(parsed, context),
+        level: spaceAccessLevel(parsed),
         type: parsed.spaceType,
         space,
         authority: parsed.authority,

@@ -33,15 +33,15 @@ msgid "{remaining, plural, one {Please try again in # second.} other {Please try
 msgstr ""
 
 #: src/components/utils/scope-description.tsx
+msgid "+{more} more"
+msgstr ""
+
+#: src/components/utils/scope-description.tsx
 msgid "<0/> spaces"
 msgstr ""
 
 #: src/components/utils/scope-description.tsx
 msgid "<0/> spaces on <1/>"
-msgstr ""
-
-#: src/components/utils/scope-description.tsx
-msgid "<0/> spaces on any service"
 msgstr ""
 
 #: src/components/utils/scope-description.tsx
@@ -174,6 +174,10 @@ msgstr ""
 #: src/components/forms/fields/email-field.tsx
 #: src/components/forms/fields/identifier-field.tsx
 msgid "alice@example.com"
+msgstr ""
+
+#: src/components/utils/scope-description.tsx
+msgid "All <0/> spaces"
 msgstr ""
 
 #: src/components/utils/scope-description.tsx
@@ -493,6 +497,10 @@ msgstr ""
 
 #: src/routes/account/u/$accountId/route.tsx
 msgid "Devices"
+msgstr ""
+
+#: src/components/utils/scope-description.tsx
+msgid "DID: <0>{authority}</0>"
 msgstr ""
 
 #: src/components/forms/fields/token-field.tsx
@@ -1237,14 +1245,6 @@ msgid "Spaces can hold private data"
 msgstr ""
 
 #: src/components/utils/scope-description.tsx
-msgid "Spaces hold data that only their members can see, like group chats, private forums and shared albums. This app would be able to access that data as you. If you're not sure what spaces are, or why this app needs them, deny access."
-msgstr ""
-
-#: src/components/utils/scope-description.tsx
-msgid "Spaces on {host}"
-msgstr ""
-
-#: src/components/utils/scope-description.tsx
 msgid "Spaces on <0/>"
 msgstr ""
 
@@ -1297,10 +1297,6 @@ msgstr "Términos"
 #: src/components/utils/link-title.tsx
 msgid "Terms of Service"
 msgstr "Términos del servicio"
-
-#: src/components/utils/scope-description.tsx
-msgid "That means every group chat, private forum and shared album you belong to, on any service, including ones you join later. Almost no app needs this. Unless you know exactly why this one does, deny access."
-msgstr ""
 
 #. placeholder {0}: this.payload.identifier
 #: src/lib/api.ts
@@ -1357,10 +1353,6 @@ msgstr ""
 
 #: src/components/deactivate-account-dialog.tsx
 msgid "There is no time limit for account deactivation, come back any time."
-msgstr ""
-
-#: src/components/utils/scope-description.tsx
-msgid "These spaces are run by {host}, the same service that runs this app. The application requests the following access:"
 msgstr ""
 
 #: src/components/oauth-session-details-dialog.tsx
@@ -1511,6 +1503,10 @@ msgstr ""
 msgid "Use a domain name I own"
 msgstr ""
 
+#: src/components/utils/scope-description.tsx
+msgid "Use caution when granting apps access."
+msgstr ""
+
 #: src/components/forms/fields/handle-field.tsx
 #: src/routes/account/u/$accountId/manage.tsx
 msgid "Username"
@@ -1574,6 +1570,10 @@ msgstr "Verifica que eres humano"
 
 #: src/components/verify-email-dialog.tsx
 msgid "Verify your email"
+msgstr ""
+
+#: src/components/utils/scope-description.tsx
+msgid "Very few apps need this. If you don't know why this one does, deny access."
 msgstr ""
 
 #. placeholder {0}: error.issuer

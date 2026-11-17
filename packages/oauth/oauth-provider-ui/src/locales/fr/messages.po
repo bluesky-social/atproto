@@ -33,16 +33,16 @@ msgid "{remaining, plural, one {Please try again in # second.} other {Please try
 msgstr "{remaining, plural, one {Veuillez réessayer dans # seconde.} other {Veuillez réessayer dans # secondes.}}"
 
 #: src/components/utils/scope-description.tsx
+msgid "+{more} more"
+msgstr "+{more} de plus"
+
+#: src/components/utils/scope-description.tsx
 msgid "<0/> spaces"
 msgstr "Espaces <0/>"
 
 #: src/components/utils/scope-description.tsx
 msgid "<0/> spaces on <1/>"
 msgstr "Espaces <0/> sur <1/>"
-
-#: src/components/utils/scope-description.tsx
-msgid "<0/> spaces on any service"
-msgstr "Espaces <0/> sur n'importe quel service"
 
 #: src/components/utils/scope-description.tsx
 msgid "<0/> spaces you own"
@@ -175,6 +175,10 @@ msgstr "alice{0}"
 #: src/components/forms/fields/identifier-field.tsx
 msgid "alice@example.com"
 msgstr "alice@exemple.fr"
+
+#: src/components/utils/scope-description.tsx
+msgid "All <0/> spaces"
+msgstr "Tous les espaces <0/>"
 
 #: src/components/utils/scope-description.tsx
 msgid "All spaces"
@@ -494,6 +498,10 @@ msgstr "Appareil"
 #: src/routes/account/u/$accountId/route.tsx
 msgid "Devices"
 msgstr "Appareils"
+
+#: src/components/utils/scope-description.tsx
+msgid "DID: <0>{authority}</0>"
+msgstr "DID : <0>{authority}</0>"
 
 #: src/components/forms/fields/token-field.tsx
 msgid "Didn't receive a code? <0>Click here to resend.</0>"
@@ -1246,14 +1254,6 @@ msgid "Spaces can hold private data"
 msgstr "Les espaces peuvent contenir des données privées"
 
 #: src/components/utils/scope-description.tsx
-msgid "Spaces hold data that only their members can see, like group chats, private forums and shared albums. This app would be able to access that data as you. If you're not sure what spaces are, or why this app needs them, deny access."
-msgstr "Les espaces contiennent des données que seuls leurs membres peuvent voir, comme les discussions de groupe, les forums privés et les albums partagés. Cette application pourrait accéder à ces données en votre nom. Si vous ne savez pas ce que sont les espaces, ou pourquoi cette application en a besoin, refusez l'accès."
-
-#: src/components/utils/scope-description.tsx
-msgid "Spaces on {host}"
-msgstr "Espaces sur {host}"
-
-#: src/components/utils/scope-description.tsx
 msgid "Spaces on <0/>"
 msgstr "Espaces sur <0/>"
 
@@ -1306,10 +1306,6 @@ msgstr "Conditions"
 #: src/components/utils/link-title.tsx
 msgid "Terms of Service"
 msgstr "Conditions d'Utilisation"
-
-#: src/components/utils/scope-description.tsx
-msgid "That means every group chat, private forum and shared album you belong to, on any service, including ones you join later. Almost no app needs this. Unless you know exactly why this one does, deny access."
-msgstr "Cela comprend chaque discussion de groupe, forum privé et album partagé dont vous êtes membre, sur n'importe quel service, y compris ceux que vous rejoindrez plus tard. Presque aucune application n'en a besoin. À moins de savoir exactement pourquoi celle-ci en a besoin, refusez l'accès."
 
 #. placeholder {0}: this.payload.identifier
 #: src/lib/api.ts
@@ -1367,10 +1363,6 @@ msgstr "Le nom d'utilisateur est invalide"
 #: src/components/deactivate-account-dialog.tsx
 msgid "There is no time limit for account deactivation, come back any time."
 msgstr "Il n'y a pas de limite de temps pour la désactivation du compte, revenez quand vous le souhaitez."
-
-#: src/components/utils/scope-description.tsx
-msgid "These spaces are run by {host}, the same service that runs this app. The application requests the following access:"
-msgstr "Ces espaces sont gérés par {host}, le service qui gère aussi cette application. L'application demande les accès suivants :"
 
 #: src/components/oauth-session-details-dialog.tsx
 msgid "This app can uniquely identify you through your account."
@@ -1520,6 +1512,10 @@ msgstr "Utiliser un nom d'utilisateur par défaut"
 msgid "Use a domain name I own"
 msgstr "Utiliser un nom de domaine que je possède"
 
+#: src/components/utils/scope-description.tsx
+msgid "Use caution when granting apps access."
+msgstr "Soyez prudent avant d'accorder l'accès à une application."
+
 #: src/components/forms/fields/handle-field.tsx
 #: src/routes/account/u/$accountId/manage.tsx
 msgid "Username"
@@ -1584,6 +1580,10 @@ msgstr "Vérifiez que vous êtes humain"
 #: src/components/verify-email-dialog.tsx
 msgid "Verify your email"
 msgstr "Vérifier votre adresse email"
+
+#: src/components/utils/scope-description.tsx
+msgid "Very few apps need this. If you don't know why this one does, deny access."
+msgstr "Très peu d'applications en ont besoin. Si vous ne savez pas pourquoi celle-ci en a besoin, refusez l'accès."
 
 #. placeholder {0}: error.issuer
 #: src/components/reset-password-request-form.tsx

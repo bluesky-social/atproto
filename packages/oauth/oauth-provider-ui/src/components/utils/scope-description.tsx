@@ -33,6 +33,7 @@ import type {
   Spaces,
 } from '#/hydration-data.d.ts'
 import {
+  SPACE_ACCESS_LEVELS,
   type SpaceAccessContext,
   type SpaceAccessRow,
   buildSpaceAccessRows,
@@ -46,7 +47,6 @@ import { LangProp } from './lang-string.tsx'
 export type ScopeDescriptionProps = Override<
   HTMLAttributes<HTMLDivElement>,
   {
-    clientId?: string
     clientTrusted?: boolean
     clientFirstParty?: boolean
     scope?: string
@@ -70,7 +70,6 @@ export function ScopeDescription({
   permissionSets,
   spaces,
   spaceHandles,
-  clientId,
   clientTrusted = false,
   clientFirstParty = false,
   consent = false,
@@ -95,20 +94,17 @@ export function ScopeDescription({
     return new ScopePermissionsTransition(scope)
   }, [scope])
   const spaceContext = useMemo<SpaceAccessContext>(
-    () => ({ clientId, spaces, spaceHandles }),
-    [clientId, spaces, spaceHandles],
+    () => ({ spaces, spaceHandles }),
+    [spaces, spaceHandles],
   )
-  // Every space the app could reach, whether asked for directly or through a
-  // permission set.
+  // Only the spaces asked for directly. Those a permission set carries are
+  // described by its own card, and can only be of the set's own space types.
   const spaceRows = useMemo(() => {
     return buildSpaceAccessRows(
-      listSpacePermissions(
-        permissions.scopes,
-        (nsid) => permissionSets?.[nsid],
-      ),
+      listSpacePermissions(permissions.scopes),
       spaceContext,
     )
-  }, [permissions, permissionSets, spaceContext])
+  }, [permissions, spaceContext])
 
   if (permissions.scopes.size === 0) return null
   if (permissions.scopes.size === 1 && permissions.scopes.has('atproto')) {
@@ -831,8 +827,7 @@ function RepoTable({ permissions, className, ...attrs }: RepoTableProps) {
 
 /**
  * Renders space access by how alarming it is (see `SpaceAccessLevel`): spaces
- * run by the client's own operator read as routine, spaces run by one other
- * authority as informational, and anything broader warns.
+ * of one named authority are informational, and anything broader warns.
  */
 function SpacePermissions({
   rows,
@@ -842,14 +837,11 @@ function SpacePermissions({
   consent: boolean
 }) {
   const groups = useMemo(() => {
-    const client: SpaceAccessRow[] = []
     const authorities = new Map<string, SpaceAccessRow[]>()
     const broad: SpaceAccessRow[] = []
 
     for (const row of rows) {
-      if (row.level === 'client') {
-        client.push(row)
-      } else if (row.level === 'authority') {
+      if (row.level === 'authority') {
         const list = authorities.get(row.authority)
         if (list) list.push(row)
         else authorities.set(row.authority, [row])
@@ -858,14 +850,20 @@ function SpacePermissions({
       }
     }
 
-    return { client, authorities: Array.from(authorities), broad }
+    // The most alarming first, so a long list never hides it.
+    broad.sort(
+      (a, b) =>
+        SPACE_ACCESS_LEVELS.indexOf(b.level) -
+        SPACE_ACCESS_LEVELS.indexOf(a.level),
+    )
+
+    return { authorities: Array.from(authorities), broad }
   }, [rows])
 
   const level = useMemo(() => highestSpaceAccessLevel(rows), [rows])
 
   return (
     <>
-      {groups.client.length > 0 && <ClientSpaces rows={groups.client} />}
       {groups.authorities.map(([authority, authorityRows]) => (
         <AuthoritySpaces
           key={authority}
@@ -882,31 +880,7 @@ function SpacePermissions({
 }
 
 /**
- * Spaces run by the client's own operator, who already runs them.
- */
-function ClientSpaces({ rows }: { rows: readonly SpaceAccessRow[] }) {
-  // Only a verified handle can match the client's hostname, and only one DID
-  // can verify a given handle, so every row shares it.
-  const host = rows[0]?.authorityHandle
-
-  return (
-    <DescriptionCard
-      role="listitem"
-      image={<UsersIcon className="size-6" />}
-      title={<Trans>Spaces on {host}</Trans>}
-      description={<SpaceSummary rows={rows} hideAuthority />}
-      extra={<SpaceDetails className="mt-2" rows={rows} hideAuthority />}
-    >
-      <Trans>
-        These spaces are run by {host}, the same service that runs this app. The
-        application requests the following access:
-      </Trans>
-    </DescriptionCard>
-  )
-}
-
-/**
- * Spaces run by one authority, other than the client's own operator.
+ * Spaces of one authority, named by its verified handle.
  */
 function AuthoritySpaces({
   authority,
@@ -926,7 +900,12 @@ function AuthoritySpaces({
         </Trans>
       }
       description={<SpaceSummary rows={rows} hideAuthority />}
-      extra={<SpaceDetails className="mt-2" rows={rows} hideAuthority />}
+      extra={
+        <>
+          <SpaceAuthorityDid className="mt-2" authority={authority} />
+          <SpaceDetails className="mt-2" rows={rows} hideAuthority />
+        </>
+      }
     >
       <Trans>
         Permissioned spaces (such as group chats, forums, or shared albums) hold
@@ -938,7 +917,7 @@ function AuthoritySpaces({
 }
 
 /**
- * Spaces not tied to any one service: a space type anywhere, the spaces the
+ * Spaces not tied to any one authority: a space type anywhere, the spaces the
  * user owns, or every space on the network.
  */
 function BroadSpaces({ rows }: { rows: readonly SpaceAccessRow[] }) {
@@ -947,7 +926,7 @@ function BroadSpaces({ rows }: { rows: readonly SpaceAccessRow[] }) {
   return (
     <DescriptionCard
       role="listitem"
-      image={<UsersIcon className="text-destructive size-6" />}
+      image={<UsersIcon className="size-6" />}
       title={t`Spaces`}
       description={<SpaceSummary rows={rows} />}
       extra={<SpaceDetails className="mt-2" rows={rows} />}
@@ -961,19 +940,19 @@ function BroadSpaces({ rows }: { rows: readonly SpaceAccessRow[] }) {
   )
 }
 
+/**
+ * @NOTE The title is brought down to the body's size, so the warning reads no
+ * louder than the permissions it accompanies.
+ */
 function BroadSpacesWarning() {
   return (
     <Notice
       role="note"
       variant="error"
+      className="[&_h3]:text-sm"
       title={<Trans>Spaces can hold private data</Trans>}
     >
-      <Trans>
-        Spaces hold data that only their members can see, like group chats,
-        private forums and shared albums. This app would be able to access that
-        data as you. If you're not sure what spaces are, or why this app needs
-        them, deny access.
-      </Trans>
+      <Trans>Use caution when granting apps access.</Trans>
     </Notice>
   )
 }
@@ -1004,13 +983,15 @@ function UniversalSpacesWarning() {
       }
     >
       <Trans>
-        That means every group chat, private forum and shared album you belong
-        to, on any service, including ones you join later. Almost no app needs
-        this. Unless you know exactly why this one does, deny access.
+        Very few apps need this. If you don't know why this one does, deny
+        access.
       </Trans>
     </Notice>
   )
 }
+
+// Beyond this many lines, the summary defers the rest to the details dialog.
+const SPACE_SUMMARY_MAX_LINES = 3
 
 /**
  * One line per space, with its access as badges. Phrasing content only, as it
@@ -1023,17 +1004,32 @@ function SpaceSummary({
   rows: readonly SpaceAccessRow[]
   hideAuthority?: boolean
 }) {
-  return rows.map((row) => (
-    <span
-      key={row.key}
-      className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1"
-    >
-      <span className="text-foreground">
-        <SpaceLabel row={row} hideAuthority={hideAuthority} />
-      </span>
-      <SpaceAccessBadges row={row} />
-    </span>
-  ))
+  const shown =
+    rows.length > SPACE_SUMMARY_MAX_LINES
+      ? rows.slice(0, SPACE_SUMMARY_MAX_LINES - 1)
+      : rows
+  const more = rows.length - shown.length
+
+  return (
+    <>
+      {shown.map((row) => (
+        <span
+          key={row.key}
+          className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1"
+        >
+          <span className="text-foreground">
+            <SpaceLabel row={row} hideAuthority={hideAuthority} />
+          </span>
+          <SpaceAccessBadges row={row} />
+        </span>
+      ))}
+      {more > 0 && (
+        <span className="mt-1 block">
+          <Trans>+{more} more</Trans>
+        </span>
+      )}
+    </>
+  )
 }
 
 function SpaceAccessBadges({ row }: { row: SpaceAccessRow }) {
@@ -1117,6 +1113,10 @@ function SpaceRow({
       <div className="text-sm">
         <SpaceLabel row={row} hideAuthority={hideAuthority} />
       </div>
+
+      {!hideAuthority && row.authority !== '*' && row.authority !== 'self' && (
+        <SpaceAuthorityDid authority={row.authority} />
+      )}
 
       {row.manage && (
         <div className="text-muted-foreground text-xs">
@@ -1220,7 +1220,7 @@ function SpaceLabel({
       <Trans>All spaces on the network</Trans>
     ) : (
       <Trans>
-        <SpaceTypeLabel type={type} space={space} /> spaces on any service
+        All <SpaceTypeLabel type={type} space={space} /> spaces
       </Trans>
     )
   }
@@ -1248,6 +1248,11 @@ function SpaceTypeLabel({ type, space }: { type: string; space?: Space }) {
   return <b>{type}</b>
 }
 
+/**
+ * An authority by its verified handle. One that could not be verified renders
+ * as `handle.invalid`, like an unverified account elsewhere in the network,
+ * and the dialogs list its DID (see <SpaceAuthorityDid />).
+ */
 function SpaceAuthority({ did, handle }: { did: string; handle?: string }) {
   if (handle) {
     return (
@@ -1256,7 +1261,27 @@ function SpaceAuthority({ did, handle }: { did: string; handle?: string }) {
       </b>
     )
   }
-  return <code className="text-muted-foreground">{did}</code>
+  return (
+    <b className="text-destructive" title={did}>
+      handle.invalid
+    </b>
+  )
+}
+
+function SpaceAuthorityDid({
+  authority,
+  className = '',
+}: {
+  authority: string
+  className?: string
+}) {
+  return (
+    <p className={`text-muted-foreground text-xs break-all ${className}`}>
+      <Trans>
+        DID: <code>{authority}</code>
+      </Trans>
+    </p>
+  )
 }
 
 // UTILS
