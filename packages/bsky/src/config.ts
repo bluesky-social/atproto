@@ -288,13 +288,7 @@ export class ServerConfig {
       !indexedAtEpoch || !isNaN(indexedAtEpoch.getTime()),
       'invalid BSKY_INDEXED_AT_EPOCH',
     )
-    const postViewCountsStartAt = process.env.BSKY_POST_VIEW_COUNTS_START_AT
-      ? new Date(process.env.BSKY_POST_VIEW_COUNTS_START_AT)
-      : undefined
-    assert(
-      !postViewCountsStartAt || !isNaN(postViewCountsStartAt.getTime()),
-      'invalid BSKY_POST_VIEW_COUNTS_START_AT',
-    )
+    const postViewCountsStartAt = envDate('BSKY_POST_VIEW_COUNTS_START_AT')
     const bigThreadUris = new Set(envList(process.env.BSKY_BIG_THREAD_URIS))
     const bigThreadDepth = process.env.BSKY_BIG_THREAD_DEPTH
       ? parseInt(process.env.BSKY_BIG_THREAD_DEPTH || '', 10)
@@ -890,6 +884,17 @@ export class ServerConfig {
 function envList(str: string | undefined): string[] {
   if (str === undefined || str.length === 0) return []
   return str.split(',')
+}
+
+function envDate(name: string): Date | undefined {
+  const str = process.env[name]
+  if (!str) return undefined
+  const date = new Date(str)
+  if (isNaN(date.getTime())) {
+    log.warn({ name }, 'Invalid date environment variable')
+    return undefined
+  }
+  return date
 }
 
 function isLiveNowConfig(data: any): data is LiveNowConfig {
