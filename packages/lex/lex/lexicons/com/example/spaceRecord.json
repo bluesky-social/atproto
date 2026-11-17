@@ -1,0 +1,18 @@
+{
+  "lexicon": 1,
+  "id": "com.example.spaceRecord",
+  "defs": {
+    "main": {
+      "type": "record",
+      "description": "A record of a com.example.space collection, referencing a definition of that space lexicon",
+      "key": "tid",
+      "record": {
+        "type": "object",
+        "required": ["meta"],
+        "properties": {
+          "meta": { "type": "ref", "ref": "com.example.space#meta" }
+        }
+      }
+    }
+  }
+}

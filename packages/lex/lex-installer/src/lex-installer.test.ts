@@ -158,6 +158,43 @@ describe('LexInstaller', () => {
       // The higher-priority './a' resolver answered, not './b'.
       expect(installer.resolutions['com.example.foo']?.uri).toContain('/a/')
     })
+
+    it('installs the collections of a space as its dependencies', async () => {
+      const canonical = join(dir, 'canonical')
+      await writeJsonFile(join(canonical, 'com', 'example', 'group.json'), {
+        lexicon: 1,
+        id: 'com.example.group',
+        defs: {
+          main: {
+            type: 'space',
+            key: 'any',
+            collections: ['com.example.post'],
+          },
+        },
+      })
+      await writeJsonFile(join(canonical, 'com', 'example', 'post.json'), {
+        lexicon: 1,
+        id: 'com.example.post',
+        defs: {
+          main: {
+            type: 'record',
+            key: 'tid',
+            record: { type: 'object', properties: {} },
+          },
+        },
+      })
+      const manifest: LexiconsManifestV2 = {
+        version: 2,
+        lexicons: [],
+        resolvers: [{ type: 'directory', path: './canonical' }],
+        resolutions: {},
+      }
+
+      await using installer = makeInstaller(manifest)
+      await installer.install({ additions: ['com.example.group'] })
+
+      expect(installer.resolutions['com.example.post']).toBeDefined()
+    })
   })
 
   describe('install from an existing lock (file reuse)', () => {

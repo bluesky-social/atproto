@@ -20,12 +20,7 @@ import {
   xrpc,
 } from '@atproto/lex-client'
 import type { TypedLexMap } from '@atproto/lex-data'
-import {
-  type RecordKeyValue,
-  type RecordSchema,
-  type Space,
-  getMain,
-} from '@atproto/lex-schema'
+import type { RecordKeyValue, RecordSchema, Space } from '@atproto/lex-schema'
 import { SpaceRef, type SpaceRefString } from '@atproto/syntax'
 import { delegationTokenProviderFor } from './delegation-token-provider.js'
 import { main as applyWrites } from './lexicons/com/atproto/space/applyWrites.js'
@@ -38,7 +33,11 @@ import { main as getRecord } from './lexicons/com/atproto/space/getRecord.js'
 import type { main as listBlobs } from './lexicons/com/atproto/space/listBlobs.js'
 import type { main as listRecords } from './lexicons/com/atproto/space/listRecords.js'
 import { main as putRecord } from './lexicons/com/atproto/space/putRecord.js'
-import type { SpaceCollectionSchema } from './space-collection.js'
+import type {
+  SpaceCollection,
+  SpaceRecordInput,
+  SpaceRecordSchema,
+} from './space-collection.js'
 import { SpaceReader } from './space-reader.js'
 import { SpaceWriteOperationHelper } from './write-operation-builder.js'
 
@@ -54,7 +53,8 @@ export type {
 export declare namespace SpaceClient {
   // From SpaceWriteOperationHelper, for applyWrites()
   export type WriteOperation = SpaceWriteOperationHelper.Operation
-  export type WriteOperationsFactory = SpaceWriteOperationHelper.Factory
+  export type WriteOperationsFactory<S extends Space = Space> =
+    SpaceWriteOperationHelper.Factory<S>
 
   export type Options = Omit<SpaceReader.Options, 'delegationTokenProvider'>
 
@@ -190,10 +190,9 @@ export declare namespace SpaceClient {
  * it.
  *
  * The typed reads and writes (`create()`, `get()`, `list()`, …) only accept
- * the collections declared by the space type, unless `validateRequest` is
- * `false` (with `validateRequest: true`, records are also validated against
- * their schema before being written). The lower level methods
- * (`createRecord()`, …) accept any record.
+ * the collections declared by the space type, and validate records against
+ * the space type's schemas of those collections (including the records being
+ * written). The lower level methods (`createRecord()`, …) accept any record.
  *
  * @example
  * ```typescript
@@ -203,7 +202,7 @@ export declare namespace SpaceClient {
  *
  * for await (const { $type, repo } of space.writers()) {
  *   if ($type !== 'com.atproto.space.defs#repoWrite') continue // removed
- *   const { records } = await space.list(com.example.post, { repo })
+ *   const { records } = await space.list(com.example.post.$type, { repo })
  * }
  * ```
  */
@@ -319,33 +318,15 @@ export class SpaceClient<S extends Space = Space> extends SpaceReader<S> {
     return super.listRecords({ ...options, repo })
   }
 
-  override records(
-    options?: SpaceClient.RecordsOptions & { collections?: undefined },
-  ): AsyncGenerator<SpaceReader.RecordsItem<S>, void, undefined>
-  override records<const T extends RecordSchema>(
-    options: SpaceClient.RecordsOptions & {
-      collections: readonly SpaceCollectionSchema<S, T>[]
-      validateRequest?: true
-    },
-  ): AsyncGenerator<SpaceReader.RecordsItem<S, T>, void, undefined>
-  override records<const T extends RecordSchema>(
-    options: SpaceClient.RecordsOptions & {
-      collections: readonly Main<T>[]
-      validateRequest: false
-    },
-  ): AsyncGenerator<SpaceReader.RecordsItem<S, T>, void, undefined>
   override records({
     repo = this.did,
     ...options
-  }: SpaceClient.RecordsOptions & {
-    collections?: readonly unknown[]
-  } = {}): AsyncGenerator<
-    SpaceReader.RecordsItem<S> | SpaceReader.RecordsItem<S, RecordSchema>,
+  }: SpaceClient.RecordsOptions = {}): AsyncGenerator<
+    SpaceReader.RecordsItem<S>,
     void,
     undefined
   > {
-    // Typed as the first overload: the implementation accepts any of them.
-    return super.records({ ...options, repo } as SpaceReader.RecordsOptions)
+    return super.records({ ...options, repo })
   }
 
   /**
@@ -442,17 +423,20 @@ export class SpaceClient<S extends Space = Space> extends SpaceReader<S> {
 
   /**
    * Applies a batch of writes to the user's repo in the space, atomically.
+   * The operations built with the helper are restricted to the collections
+   * declared by the space type, and their records validated against the space
+   * type's schemas, as with {@link create}, {@link put} and {@link delete}.
    *
    * @example
    * ```typescript
    * await space.applyWrites((op) => [
-   *   op.create(com.example.post, { text: 'Hello' }),
-   *   op.delete(com.example.post, { rkey: '3jxf7z2k3q2' }),
+   *   op.create(com.example.post.$build({ text: 'Hello' })),
+   *   op.delete(com.example.post.$type, { rkey: '3jxf7z2k3q2' }),
    * ])
    * ```
    */
   async applyWrites(
-    factory: SpaceClient.WriteOperationsFactory,
+    factory: SpaceClient.WriteOperationsFactory<S>,
     { validate, ...options }: SpaceClient.ApplyWritesOptions = {},
   ): Promise<XrpcResponse<typeof applyWrites>> {
     return xrpc(this.agent, applyWrites, {
@@ -463,7 +447,7 @@ export class SpaceClient<S extends Space = Space> extends SpaceReader<S> {
         space: this.uri,
         repo: this.did,
         validate,
-        writes: SpaceWriteOperationHelper.build(factory),
+        writes: SpaceWriteOperationHelper.build(this.schema, factory),
       },
     })
   }
@@ -481,176 +465,151 @@ export class SpaceClient<S extends Space = Space> extends SpaceReader<S> {
   }
 
   /**
-   * Creates a record in the user's repo in the space, as `Client.create()`
-   * does in their public repo.
+   * Creates a record in the user's repo in the space, validated against the
+   * space type's schema of its collection.
+   *
+   * @example
+   * ```typescript
+   * await space.create(com.example.post.$build({ text: 'Hello' }))
+   * ```
    */
-  async create<const T extends RecordSchema>(
-    ns: NonNullable<unknown> extends SpaceClient.CreateOptions<T>
-      ? SpaceCollectionSchema<S, T>
+  async create<R extends SpaceRecordInput<S>>(
+    record: NonNullable<unknown> extends SpaceClient.CreateOptions<
+      SpaceRecordSchema<S, R['$type']>
+    >
+      ? R
       : Restricted<'This record type requires an "options" argument'>,
-    input: Omit<Infer<T>, '$type'>,
   ): Promise<SpaceClient.WriteOutput>
-  async create<const T extends RecordSchema>(
-    ns: SpaceCollectionSchema<S, T>,
-    input: Omit<Infer<T>, '$type'>,
-    options: SpaceClient.CreateOptions<T>,
+  async create<R extends SpaceRecordInput<S>>(
+    record: R,
+    options: SpaceClient.CreateOptions<SpaceRecordSchema<S, R['$type']>>,
   ): Promise<SpaceClient.WriteOutput>
-  async create<const T extends RecordSchema>(
-    ns: Main<T>,
-    input: Omit<Infer<T>, '$type'>,
-    options: SpaceClient.CreateOptions<T> & { validateRequest: false },
-  ): Promise<SpaceClient.WriteOutput>
-  async create<const T extends RecordSchema>(
-    ns: Main<T>,
-    input: Omit<Infer<T>, '$type'>,
-    options: SpaceClient.CreateOptions<T> = {} as SpaceClient.CreateOptions<T>,
+  async create(
+    record: TypedLexMap<NsidString>,
+    options: SpaceClient.CreateRecordOptions & { rkey?: string } = {},
   ): Promise<SpaceClient.WriteOutput> {
-    const schema: T = getMain(ns)
-    if (options.validateRequest !== false) this.assertCollection(schema.$type)
-    const record = schema.build(input) as TypedLexMap<NsidString>
-    if (options.validateRequest) schema.validate(record)
+    const schema = this.collectionSchema(record.$type)
+    schema.validate(record)
     const rkey = rkeyForCreate(schema, options.rkey)
-    if (rkey !== undefined) schema.keySchema.assert(rkey)
+    if (rkey !== undefined) schema.keySchema.check(rkey)
     const response = await this.createRecord(record, rkey, options)
     return response.body
   }
 
   /**
-   * Creates or updates a record in the user's repo in the space, as
-   * `Client.put()` does in their public repo.
+   * Creates or updates a record in the user's repo in the space, validated
+   * against the space type's schema of its collection.
+   *
+   * @example
+   * ```typescript
+   * await space.put(com.example.post.$build({ text: 'Edited' }), { rkey })
+   * ```
    */
-  async put<const T extends RecordSchema>(
-    ns: NonNullable<unknown> extends SpaceClient.PutOptions<T>
-      ? SpaceCollectionSchema<S, T>
+  async put<R extends SpaceRecordInput<S>>(
+    record: NonNullable<unknown> extends SpaceClient.PutOptions<
+      SpaceRecordSchema<S, R['$type']>
+    >
+      ? R
       : Restricted<'This record type requires an "options" argument'>,
-    input: Omit<Infer<T>, '$type'>,
   ): Promise<SpaceClient.WriteOutput>
-  async put<const T extends RecordSchema>(
-    ns: SpaceCollectionSchema<S, T>,
-    input: Omit<Infer<T>, '$type'>,
-    options: SpaceClient.PutOptions<T>,
+  async put<R extends SpaceRecordInput<S>>(
+    record: R,
+    options: SpaceClient.PutOptions<SpaceRecordSchema<S, R['$type']>>,
   ): Promise<SpaceClient.WriteOutput>
-  async put<const T extends RecordSchema>(
-    ns: Main<T>,
-    input: Omit<Infer<T>, '$type'>,
-    options: SpaceClient.PutOptions<T> & { validateRequest: false },
-  ): Promise<SpaceClient.WriteOutput>
-  async put<const T extends RecordSchema>(
-    ns: Main<T>,
-    input: Omit<Infer<T>, '$type'>,
-    options: SpaceClient.PutOptions<T> = {} as SpaceClient.PutOptions<T>,
+  async put(
+    record: TypedLexMap<NsidString>,
+    options: SpaceClient.PutRecordOptions & { rkey?: string } = {},
   ): Promise<SpaceClient.WriteOutput> {
-    const schema: T = getMain(ns)
-    if (options.validateRequest !== false) this.assertCollection(schema.$type)
-    const record = schema.build(input) as TypedLexMap<NsidString>
-    if (options.validateRequest) schema.validate(record)
+    const schema = this.collectionSchema(record.$type)
+    schema.validate(record)
     const rkey = schema.keySchema.parse(rkeyFor(schema, options.rkey))
     const response = await this.putRecord(record, rkey, options)
     return response.body
   }
 
-  /** Deletes a record from the user's repo in the space. */
-  async delete<const T extends RecordSchema>(
-    ns: NonNullable<unknown> extends SpaceClient.DeleteOptions<T>
-      ? SpaceCollectionSchema<S, T>
+  /** Deletes a record of a collection from the user's repo in the space. */
+  async delete<const C extends SpaceCollection<S>>(
+    collection: NonNullable<unknown> extends SpaceClient.DeleteOptions<
+      SpaceRecordSchema<S, C>
+    >
+      ? C
       : Restricted<'This record type requires an "options" argument'>,
   ): Promise<void>
-  async delete<const T extends RecordSchema>(
-    ns: SpaceCollectionSchema<S, T>,
-    options: SpaceClient.DeleteOptions<T>,
+  async delete<const C extends SpaceCollection<S>>(
+    collection: C,
+    options: SpaceClient.DeleteOptions<SpaceRecordSchema<S, C>>,
   ): Promise<void>
-  async delete<const T extends RecordSchema>(
-    ns: Main<T>,
-    options: SpaceClient.DeleteOptions<T> & { validateRequest: false },
-  ): Promise<void>
-  async delete<const T extends RecordSchema>(
-    ns: Main<T>,
-    options: SpaceClient.DeleteOptions<T> = {} as SpaceClient.DeleteOptions<T>,
+  async delete(
+    collection: NsidString,
+    options: SpaceClient.DeleteRecordOptions & { rkey?: string } = {},
   ): Promise<void> {
-    const schema = getMain(ns)
-    if (options.validateRequest !== false) this.assertCollection(schema.$type)
+    const schema = this.collectionSchema(collection)
     const rkey = schema.keySchema.parse(rkeyFor(schema, options.rkey))
-    await this.deleteRecord(schema.$type, rkey, options)
+    await this.deleteRecord(collection, rkey, options)
   }
 
   /**
-   * Gets a record, validated against its schema. Reads the user's own repo
-   * unless `options.repo` is set.
+   * Gets a record of a collection, validated against the space type's schema
+   * of the collection. Reads the user's own repo unless `options.repo` is set.
+   *
+   * @example
+   * ```typescript
+   * const { value } = await space.get(com.example.post.$type, { rkey })
+   * ```
    */
-  async get<const T extends RecordSchema>(
-    ns: T['key'] extends `literal:${string}`
-      ? SpaceCollectionSchema<S, T>
+  async get<const C extends SpaceCollection<S>>(
+    collection: SpaceRecordSchema<S, C>['key'] extends `literal:${string}`
+      ? C
       : Restricted<'This record type requires an "options" argument'>,
-  ): Promise<SpaceClient.GetOutput<T>>
-  async get<const T extends RecordSchema>(
-    ns: SpaceCollectionSchema<S, T>,
-    options: SpaceClient.GetOptions<T>,
-  ): Promise<SpaceClient.GetOutput<T>>
-  async get<const T extends RecordSchema>(
-    ns: Main<T>,
-    options: SpaceClient.GetOptions<T> & { validateRequest: false },
-  ): Promise<SpaceClient.GetOutput<T>>
-  async get<const T extends RecordSchema>(
-    ns: Main<T>,
-    options: SpaceClient.GetOptions<T> = {} as SpaceClient.GetOptions<T>,
-  ): Promise<SpaceClient.GetOutput<T>> {
-    const schema = getMain(ns)
-    if (options.validateRequest !== false) this.assertCollection(schema.$type)
+  ): Promise<SpaceClient.GetOutput<SpaceRecordSchema<S, C>>>
+  async get<const C extends SpaceCollection<S>>(
+    collection: C,
+    options: SpaceClient.GetOptions<SpaceRecordSchema<S, C>>,
+  ): Promise<SpaceClient.GetOutput<SpaceRecordSchema<S, C>>>
+  async get(
+    collection: NsidString,
+    options: SpaceClient.GetRecordOptions & { rkey?: string } = {},
+  ): Promise<SpaceClient.GetOutput<RecordSchema>> {
+    const schema = this.collectionSchema(collection)
     const rkey = schema.keySchema.parse(rkeyFor(schema, options.rkey))
-    const response = await this.getRecord(schema.$type, rkey, options)
+    const response = await this.getRecord(collection, rkey, options)
     const value = schema.validate(response.body.value)
     return { ...response.body, value }
   }
 
   /**
-   * Lists a collection's records, each validated against its schema. Lists
-   * the user's own repo unless `options.repo` is set.
+   * Lists a collection's records, each validated against the space type's
+   * schema of the collection. Lists the user's own repo unless `options.repo`
+   * is set.
    *
    * @example
    * ```typescript
-   * const { records, cursor } = await space.list(com.example.post, { repo })
+   * const { records, cursor } = await space.list(com.example.post.$type)
    * for (const record of records) {
    *   if (record.valid) record.value // com.example.post.Main
    * }
    * ```
    */
-  override async list<const T extends RecordSchema>(
-    ns: SpaceCollectionSchema<S, T>,
-    options?: SpaceClient.ListOptions,
-  ): Promise<SpaceClient.ListOutput<T>>
-  override async list<const T extends RecordSchema>(
-    ns: Main<T>,
-    options: SpaceClient.ListOptions & { validateRequest: false },
-  ): Promise<SpaceClient.ListOutput<T>>
-  override async list<const T extends RecordSchema>(
-    ns: Main<T>,
+  override async list<const C extends SpaceCollection<S>>(
+    collection: C,
     { repo = this.did, ...options }: SpaceClient.ListOptions = {},
-  ): Promise<SpaceClient.ListOutput<T>> {
-    // Typed as the first overload: the implementation accepts any of them.
-    return super.list(ns as SpaceCollectionSchema<S, T>, { ...options, repo })
+  ): Promise<SpaceClient.ListOutput<SpaceRecordSchema<S, C>>> {
+    return super.list(collection, { ...options, repo })
   }
 
   /**
-   * Iterates over a collection's records, each validated against its schema,
-   * handling pagination. Lists the user's own repo unless `options.repo` is
-   * set.
+   * Iterates over a collection's records, each validated against the space
+   * type's schema of the collection, handling pagination. Lists the user's own
+   * repo unless `options.repo` is set.
    */
-  override listAll<const T extends RecordSchema>(
-    ns: SpaceCollectionSchema<S, T>,
-    options?: SpaceClient.ListOptions,
-  ): AsyncGenerator<SpaceClient.ListRecordItem<Infer<T>>, void, undefined>
-  override listAll<const T extends RecordSchema>(
-    ns: Main<T>,
-    options: SpaceClient.ListOptions & { validateRequest: false },
-  ): AsyncGenerator<SpaceClient.ListRecordItem<Infer<T>>, void, undefined>
-  override listAll<const T extends RecordSchema>(
-    ns: Main<T>,
+  override listAll<const C extends SpaceCollection<S>>(
+    collection: C,
     { repo = this.did, ...options }: SpaceClient.ListOptions = {},
-  ): AsyncGenerator<SpaceClient.ListRecordItem<Infer<T>>, void, undefined> {
-    // Typed as the first overload: the implementation accepts any of them.
-    return super.listAll(ns as SpaceCollectionSchema<S, T>, {
-      ...options,
-      repo,
-    })
+  ): AsyncGenerator<
+    SpaceClient.ListRecordItem<Infer<SpaceRecordSchema<S, C>>>,
+    void,
+    undefined
+  > {
+    return super.listAll(collection, { ...options, repo })
   }
 }

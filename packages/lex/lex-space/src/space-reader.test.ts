@@ -2,7 +2,6 @@ import { describe, expect, expectTypeOf, it, vi } from 'vitest'
 import { P256Keypair } from '@atproto/crypto'
 import type { Did, DidDocument } from '@atproto/did'
 import { XrpcAuthenticationError } from '@atproto/lex-client'
-import type { TypedLexMap } from '@atproto/lex-data'
 import { LexValidationError, l } from '@atproto/lex-schema'
 import { createSpaceCredential } from '@atproto/space'
 import { collect, nsidOf, recordCalls } from '../tests/_util.js'
@@ -21,9 +20,14 @@ const CID = 'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a'
 
 const note = l.record('tid', 'com.example.note', l.object({ text: l.string() }))
 const other = l.record('tid', 'com.example.other', l.object({}))
-const TASK = 'com.example.task'
 
-const group = l.space('any', 'com.example.group', [note.$type, TASK])
+const task = l.record(
+  'tid',
+  'com.example.task',
+  l.object({ done: l.boolean() }),
+)
+
+const group = l.space('any', 'com.example.group', [note, task])
 const SPACE = `at://${AUTHORITY}/space/${group.nsid}/main` as const
 
 type Route = (request: Request) => Response | Promise<Response>
@@ -118,9 +122,9 @@ const collectionOf = (request: Request) =>
 const classified = [
   listed('valid', note.$type, note.$build({ text: 'hello' })),
   listed('invalid', note.$type, { $type: note.$type }),
-  listed('unvalidated', TASK, { $type: TASK }),
+  listed('task', task.$type, task.$build({ done: true })),
   listed('undeclared', other.$type, { $type: other.$type }),
-  listed('mislisted', note.$type, { $type: TASK }),
+  listed('mislisted', note.$type, task.$build({ done: true })),
   listed('untyped', note.$type, { text: 'hello' }),
   listed('excluded', note.$type),
 ]
@@ -198,18 +202,16 @@ describe(SpaceReader, () => {
       expect(to(listRecords)).toHaveLength(2)
     })
 
-    it('validates the records of the provided collections only', async () => {
+    it("validates records against the space type's schemas", async () => {
       const { reader, to } = stubSpace({
         [listRecords.$lxm]: reply({ records: classified }),
       })
 
-      const records = await collect(
-        reader.records({ repo: ALICE, collections: [note] }),
-      )
+      const records = await collect(reader.records({ repo: ALICE }))
       expect(records.map((r) => [r.rkey, r.valid])).toEqual([
         ['valid', true],
         ['invalid', false],
-        ['unvalidated', true],
+        ['task', true],
         ['undeclared', false],
         ['mislisted', false],
         ['untyped', false],
@@ -218,68 +220,27 @@ describe(SpaceReader, () => {
       for (const r of records) {
         if (!r.valid) expect(r.error).toBeInstanceOf(LexValidationError)
       }
+      expect(records.find((r) => r.rkey === 'undeclared')).toMatchObject({
+        error: {
+          issues: [{ path: ['$type'], values: [note.$type, task.$type] }],
+        },
+      })
       expect(records.find((r) => r.rkey === 'mislisted')).toMatchObject({
         error: { issues: [{ path: ['$type'], values: [note.$type] }] },
       })
-      // Every collection is listed, to yield the others unvalidated.
       expect(to(listRecords).map(collectionOf)).toEqual([null])
 
       type Item = (typeof records)[number]
       expectTypeOf<Item['valid']>().toEqualTypeOf<boolean>()
       expectTypeOf<
         Extract<Item, { valid: true }>['collection']
-      >().toEqualTypeOf<typeof note.$type | typeof TASK>()
+      >().toEqualTypeOf<typeof note.$type | typeof task.$type>()
       expectTypeOf<
         Extract<Item, { collection: typeof note.$type }>['value']['text']
       >().toEqualTypeOf<string>()
       expectTypeOf<
-        Extract<Item, { collection: typeof TASK }>['value']
-      >().toEqualTypeOf<TypedLexMap<typeof TASK>>()
-    })
-
-    it('only checks the collection of records without schemas', async () => {
-      const { reader } = stubSpace({
-        [listRecords.$lxm]: reply({ records: classified }),
-      })
-
-      const records = await collect(reader.records({ repo: ALICE }))
-      expect(records.map((r) => [r.rkey, r.valid])).toEqual([
-        ['valid', true],
-        ['invalid', true],
-        ['unvalidated', true],
-        ['undeclared', false],
-        ['mislisted', false],
-        ['untyped', false],
-        ['excluded', false],
-      ])
-
-      type Item = (typeof records)[number]
-      expectTypeOf<Item['valid']>().toEqualTypeOf<boolean>()
-      expectTypeOf<Extract<Item, { valid: true }>['value']>().toEqualTypeOf<
-        TypedLexMap<typeof note.$type> | TypedLexMap<typeof TASK>
-      >()
-    })
-
-    it('refuses undeclared collections unless validateRequest is false', async () => {
-      const { reader } = stubSpace({
-        [listRecords.$lxm]: reply({ records: classified }),
-      })
-
-      await expect(
-        // @ts-expect-error not a collection of the space type
-        reader.records({ repo: ALICE, collections: [other] }).next(),
-      ).rejects.toThrow(TypeError)
-
-      const records = await collect(
-        reader.records({
-          repo: ALICE,
-          collections: [other],
-          validateRequest: false,
-        }),
-      )
-      expect(records.find((r) => r.rkey === 'undeclared')).toMatchObject({
-        valid: true,
-      })
+        Extract<Item, { collection: typeof task.$type }>['value']['done']
+      >().toEqualTypeOf<boolean>()
     })
   })
 
@@ -289,25 +250,45 @@ describe(SpaceReader, () => {
         [listRecords.$lxm]: reply({ records: classified }),
       })
 
-      const { records } = await reader.list(note, { repo: ALICE })
+      const { records } = await reader.list(note.$type, { repo: ALICE })
       expect(records.map((r) => [r.rkey, r.valid])).toEqual([
         ['valid', true],
         ['invalid', false],
-        ['unvalidated', false],
+        ['task', false],
         ['undeclared', false],
         ['mislisted', false],
         ['untyped', false],
         ['excluded', false],
       ])
-      expect(records.find((r) => r.rkey === 'unvalidated')).toMatchObject({
+      expect(records.find((r) => r.rkey === 'task')).toMatchObject({
         error: { issues: [{ path: ['$type'], values: [note.$type] }] },
       })
       expect(to(listRecords).map(collectionOf)).toEqual([note.$type])
-      expectTypeOf<(typeof records)[number]['valid']>().toEqualTypeOf<boolean>()
+      type Item = (typeof records)[number]
+      expectTypeOf<Item['valid']>().toEqualTypeOf<boolean>()
+      expectTypeOf<
+        Extract<Item, { valid: true }>['value']['text']
+      >().toEqualTypeOf<string>()
 
-      expect(await collect(reader.listAll(note, { repo: ALICE }))).toEqual(
-        records,
+      expect(
+        await collect(reader.listAll(note.$type, { repo: ALICE })),
+      ).toEqual(records)
+    })
+
+    it('refuses collections not declared by the space type', async () => {
+      const { reader, to } = stubSpace()
+
+      await expect(
+        // @ts-expect-error not a collection of the space type
+        reader.list(other.$type, { repo: ALICE }),
+      ).rejects.toThrow(
+        `${other.$type} is not a collection of ${group.nsid} spaces`,
       )
+      await expect(
+        // @ts-expect-error not a collection of the space type
+        reader.listAll(other.$type, { repo: ALICE }).next(),
+      ).rejects.toThrow(TypeError)
+      expect(to(listRecords)).toHaveLength(0)
     })
   })
 

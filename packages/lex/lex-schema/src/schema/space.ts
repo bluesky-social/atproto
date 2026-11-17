@@ -7,7 +7,8 @@ import {
   asLexiconRecordKey,
 } from '../core.js'
 import { lazyProperty } from '../util/lazy-property.js'
-import { type RecordKeySchema, recordKey } from './record.js'
+import { type RecordKeySchema, type RecordSchema, recordKey } from './record.js'
+import { TypedRefSchema } from './typed-ref.js'
 
 /**
  * Configuration options for a space declaration.
@@ -37,14 +38,14 @@ export type SpaceOptions = {
  *
  * @template TNsid - The NSID identifying this space type
  * @template TKey - The recommended space key type
- * @template TCollections - The recommended record collections
+ * @template TRecord - The record schemas of the recommended collections
  *
  * @example
  * ```ts
  * const forum = new Space(
  *   'any',
  *   'com.atmoboards.forum',
- *   ['com.atmoboards.thread', 'com.atmoboards.reply'],
+ *   [thread, reply],
  *   { title: 'AtmoBoards Forum', 'title:lang': { es: 'Foro AtmoBoards' } },
  * )
  * ```
@@ -52,23 +53,42 @@ export type SpaceOptions = {
 export class Space<
   const TNsid extends NsidString = NsidString,
   const TKey extends LexiconRecordKey = LexiconRecordKey,
-  const TCollections extends readonly NsidString[] = readonly NsidString[],
+  const TRecord extends RecordSchema = RecordSchema,
 > {
   readonly key: TKey
   readonly nsid: TNsid
-  readonly collections: TCollections
   readonly options: SpaceOptions
+
+  readonly #collections: readonly (TRecord | TypedRefSchema<TRecord>)[]
 
   constructor(
     key: TKey,
     nsid: TNsid,
-    collections: TCollections,
+    collections: readonly (TRecord | TypedRefSchema<TRecord>)[],
     options: SpaceOptions = {},
   ) {
     this.key = asLexiconRecordKey(key)
     this.nsid = nsid
-    this.collections = collections
     this.options = options
+
+    // @NOTE We don't build the resolved collection schemas here; they are
+    // lazily resolved on first access via the `collections` getter.
+    this.#collections = collections
+  }
+
+  /**
+   * The record schemas of the recommended collections.
+   *
+   * @note Resolved on first access, allowing collections to be declared as
+   * {@link TypedRefSchema} to schemas that are not yet defined (e.g. because
+   * of circular imports).
+   */
+  get collections(): readonly TRecord[] {
+    return lazyProperty(
+      this,
+      'collections',
+      this.#collections.map(getCollectionSchema),
+    )
   }
 
   get title(): string | undefined {
@@ -147,7 +167,10 @@ export class Space<
  *
  * @param key - Recommended space key type
  * @param nsid - The NSID identifying this space type
- * @param collections - Recommended record collections for clients of this space type
+ * @param collections - The record schemas (or references to them) of the
+ *   collections recommended for clients of this space type. The schema types
+ *   are not inferred from a list mixing schemas and references: use either
+ *   form for all of them.
  * @param options - Optional metadata (title, localized titles, description)
  * @returns A new {@link Space} instance
  *
@@ -156,7 +179,8 @@ export class Space<
  * const forum = l.space(
  *   'any',
  *   'com.atmoboards.forum',
- *   ['com.atmoboards.thread', 'com.atmoboards.reply'],
+ *   // Record schemas, or (lazy) references to them
+ *   [thread, reply],
  *   {
  *     title: 'AtmoBoards Forum',
  *     'title:lang': {
@@ -172,7 +196,20 @@ export class Space<
 export function space<
   const N extends NsidString,
   const K extends LexiconRecordKey,
-  const C extends readonly NsidString[],
->(key: K, nsid: N, collections: C, options?: SpaceOptions): Space<N, K, C> {
-  return new Space<N, K, C>(key, nsid, collections, options)
+  const R extends RecordSchema = never,
+>(
+  key: K,
+  nsid: N,
+  collections: readonly (R | TypedRefSchema<R>)[],
+  options?: SpaceOptions,
+): Space<N, K, R> {
+  return new Space<N, K, R>(key, nsid, collections, options)
+}
+
+function getCollectionSchema<T extends RecordSchema>(
+  collection: T | TypedRefSchema<T>,
+): T {
+  return collection instanceof TypedRefSchema
+    ? collection.validator
+    : collection
 }

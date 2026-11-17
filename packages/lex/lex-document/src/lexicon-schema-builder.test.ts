@@ -298,4 +298,43 @@ describe('LexiconSchemaBuilder', () => {
       'No definition found for hash ""nonexistent"" in com.example.invalid',
     )
   })
+
+  describe('space', () => {
+    const postDoc: LexiconDocument = {
+      lexicon: 1,
+      id: 'com.example.post',
+      defs: {
+        main: {
+          type: 'record',
+          key: 'tid',
+          record: { type: 'object', properties: {} },
+        },
+      },
+    }
+
+    const spaceDoc = (collections: l.NsidString[]): LexiconDocument => ({
+      lexicon: 1,
+      id: 'com.example.group',
+      defs: { main: { type: 'space', key: 'any', collections } },
+    })
+
+    it('references the record schemas of its collections', async () => {
+      const schemas = await LexiconSchemaBuilder.buildAll(
+        new LexiconIterableIndexer([spaceDoc(['com.example.post']), postDoc]),
+      )
+      const space = schemas.get('com.example.group#main')
+      expect(space).toBeInstanceOf(l.Space)
+      expect((space as l.Space).collections).toEqual([
+        schemas.get('com.example.post#main'),
+      ])
+    })
+
+    it('fails when a collection is not a record', async () => {
+      await expect(
+        LexiconSchemaBuilder.buildAll(
+          new LexiconIterableIndexer([spaceDoc(['com.example.group'])]),
+        ),
+      ).rejects.toThrow('Space collection com.example.group is not a record')
+    })
+  })
 })

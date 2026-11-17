@@ -1,5 +1,5 @@
 ---
-'@atproto/lex-installer': patch
+'@atproto/lex-installer': minor
 ---
 
-Install lexicons containing `space` definitions. The collections a `space` definition lists are not installed as its dependencies.
+Install lexicons containing `space` definitions. The collections a `space` definition lists are installed as its dependencies, since its generated schema references their record schemas.

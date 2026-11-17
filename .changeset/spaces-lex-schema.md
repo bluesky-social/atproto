@@ -1,8 +1,8 @@
 ---
-'@atproto/lex-schema': patch
+'@atproto/lex-schema': minor
 ---
 
 Support `space` definitions.
 
-- `l.space(key, nsid, collections, options?)` declares a space type as a `Space`, inferring its NSID, key type and collections, and throws on an invalid `key`. `options` holds an optional `title` (with `title:lang`) and `description`.
+- `l.space(key, nsid, collections, options?)` declares a space type as a `Space`, inferring its NSID, key type and collections, and throws on an invalid `key`. `collections` lists the `RecordSchema`s of the recommended collections, or `l.typedRef()`s to them (their types are only inferred from a list of either form). `Space#collections` returns the record schemas, resolved on first access. `options` holds an optional `title` (with `title:lang`) and `description`.
 - `Space#keySchema`, `Space#isKey()` and `Space#matchesRef()` validate a space key or ref against the space type, and `Space#spaceRefFor()` builds its `SpaceRef`.

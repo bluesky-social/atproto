@@ -11,7 +11,7 @@ export const note = l.record(
   l.object({ text: l.string() }),
 )
 
-export const group = l.space('any', 'com.example.group', [note.$type], {
+export const group = l.space('any', 'com.example.group', [note], {
   title: 'Example group',
 })
 
