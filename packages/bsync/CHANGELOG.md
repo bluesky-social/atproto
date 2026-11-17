@@ -1,5 +1,11 @@
 # @atproto/bsync
 
+## 0.1.10
+
+### Patch Changes
+
+- [#5914](https://github.com/bluesky-social/atproto/pull/5914) [`8ed6d3d`](https://github.com/bluesky-social/atproto/commit/8ed6d3d48b0a02a665a5931866d1259cc31c5bfd) Thanks [@amckinley](https://github.com/amckinley)! - Add `BSYNC_DB_POSTGRES_AWS_IAM_AUTH`: when set, bsync authenticates to Postgres with a fresh AWS RDS IAM auth token for every new connection, over TLS verified against the bundled Amazon RDS global CA bundle. The token is signed for the region in `AWS_REGION`, or else the region in the `*.rds.amazonaws.com` hostname, with credentials from the AWS default provider chain. `BSYNC_DB_POSTGRES_URL` must then name the user and host, with no password and no parameters other than `sslmode=verify-full`.
+
 ## 0.1.9
 
 ### Patch Changes

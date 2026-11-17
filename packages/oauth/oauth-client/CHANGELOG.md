@@ -1,5 +1,11 @@
 # @atproto/oauth-client
 
+## 0.9.4
+
+### Patch Changes
+
+- [#5917](https://github.com/bluesky-social/atproto/pull/5917) [`b5dfe0b`](https://github.com/bluesky-social/atproto/commit/b5dfe0b80ac4f14f56b3c9b797e0e50d2e194a3b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Properly propagate request cancellation errors
+
 ## 0.9.3
 
 ### Patch Changes
