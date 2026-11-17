@@ -7,8 +7,8 @@ import { Secp256k1Keypair } from '@atproto/crypto'
 import { TestPds, TestPlc } from '@atproto/dev-env'
 
 /**
- * A release is rolled back by re-tagging an older image, which then boots on
- * a data directory that a newer release already migrated.
+ * After a rollback, an older PDS version must start against a data directory
+ * that a newer version already migrated.
  */
 describe('forward-compatible migrations', () => {
   let plc: TestPlc

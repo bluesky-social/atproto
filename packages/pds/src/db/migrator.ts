@@ -9,13 +9,12 @@ import { dbLogger } from '../logger.js'
 import { retrySqlite } from './util.js'
 
 /**
- * Kysely's migrator, made forward compatible: a database that a newer version
- * of the PDS has already migrated still boots. Releases are rolled back by
- * re-tagging an older image, so older code must accept migrations it doesn't
- * know, provided they all come after its own. Those are supplied to kysely as
- * no-op stubs, which kysely sees as already executed and never runs. A missing
- * migration that sorts before the latest known one still fails, as does any
- * migration down (see {@link Migrator.migrateToLatest}).
+ * Allows older PDS versions to start against databases migrated by newer
+ * versions. Unknown migrations are accepted only if they sort after all known
+ * migrations. Those are supplied to kysely as no-op stubs, which kysely sees
+ * as already executed and never runs. A missing migration that sorts before
+ * the latest known one still fails, as does any migration down (see
+ * {@link Migrator.migrateToLatest}).
  *
  * This relies on migrations being additive only (see packages/pds/AGENTS.md).
  */
@@ -134,7 +133,8 @@ export class Migrator<T> extends KyselyMigrator {
 
 // Kysely's defaults, which every PDS database uses.
 const MIGRATION_TABLE = 'kysely_migration'
-// @NOTE match Kysely's Object.keys(migrations).sort(), which ignores locale.
+// @NOTE match Kysely's Object.keys(migrations).sort(). Avoid localeCompare(),
+// whose ordering can change with the environment or Node.js version.
 const compareNames = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0)
 
 const noop = async () => {}
