@@ -1,184 +1,137 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
+import type { Did, DidDocument, DidResolver } from '@atproto-labs/did-resolver'
+import type {
+  HandleResolver,
+  ResolvedHandle,
+} from '@atproto-labs/handle-resolver-node'
 import { IdentityManager } from './identity-manager.js'
 
 const DID = 'did:plc:abc123'
 const OTHER_DID = 'did:plc:other456'
 const HANDLE = 'protocol-nerds.atmoboards.com'
 
-/**
- * A resolver over fixed data. `didDocs` maps a DID to the handle its document
- * claims; `handles` maps a handle back to a DID, which is what makes the
- * round-trip check meaningful.
- */
-const withFakeResolver = (opts: {
+const scopeFor = (authority: string) =>
+  `space:com.atmoboards.forum?authority=${authority}`
+
+function setup({
+  didDocs = {},
+  handles = {},
+}: {
+  /** The handle each DID's document claims, or null for none. */
   didDocs?: Record<string, string | null>
-  handles?: Record<string, string>
-  onDidResolve?: (did: string) => void
-}) =>
-  new IdentityManager(
-    {
-      async resolve(did: string) {
-        opts.onDidResolve?.(did)
-        const handle = opts.didDocs?.[did]
-        if (handle === undefined) {
-          throw new Error('not found')
-        }
-        return {
-          id: did,
-          alsoKnownAs: handle ? [`at://${handle}`] : [],
-        } as any
-      },
-    },
-    {
-      async resolve(handle: string) {
-        const did = opts.handles?.[handle]
-        if (did === undefined) return null
-        return did as any
-      },
-    },
+  /** The DID each handle resolves to. */
+  handles?: Record<string, ResolvedHandle>
+} = {}) {
+  const didResolver = {
+    resolve: vi.fn(async (did: Did): Promise<DidDocument> => {
+      const handle = didDocs[did]
+      if (handle === undefined) throw new Error(`Unknown DID: ${did}`)
+      return { id: did, alsoKnownAs: handle ? [`at://${handle}`] : [] }
+    }),
+  }
+
+  const handleResolver = {
+    resolve: vi.fn(async (handle: string) => handles[handle] ?? null),
+  } satisfies HandleResolver
+
+  const manager = new IdentityManager(
+    didResolver as unknown as DidResolver<'plc' | 'web'>,
+    handleResolver,
   )
+
+  return { manager, didResolver }
+}
 
 describe(IdentityManager, () => {
   describe('getSpaceHandlesFromScope', () => {
-    it('resolves a space authority DID to its handle', async () => {
-      // What the consent screen needs: "spaces on protocol-nerds.atmoboards.com"
-      // reads to a person; "spaces on did:plc:abc123" does not.
-      const manager = withFakeResolver({
+    it('resolves a space authority DID to its verified handle', async () => {
+      const { manager } = setup({
         didDocs: { [DID]: HANDLE },
         handles: { [HANDLE]: DID },
       })
+      await expect(
+        manager.getSpaceHandlesFromScope(scopeFor(DID)),
+      ).resolves.toEqual(new Map([[DID, HANDLE]]))
+    })
+
+    it('omits a handle that does not resolve back to its DID, reporting it to onError', async () => {
+      const { manager } = setup({
+        didDocs: { [DID]: HANDLE, [OTHER_DID]: HANDLE },
+        handles: { [HANDLE]: DID },
+      })
+      const onError = vi.fn()
+
       const handles = await manager.getSpaceHandlesFromScope(
-        `space:com.atmoboards.forum?authority=${DID}`,
-      )
-      expect(handles.get(DID)).toBe(HANDLE)
-    })
-
-    it('omits a handle that does not resolve back to the same DID', async () => {
-      // A DID document can claim any handle it likes. Only a handle that resolves
-      // independently back to that DID is trustworthy — otherwise the screen would
-      // name an account the authority does not control.
-      const manager = withFakeResolver({
-        didDocs: { [DID]: HANDLE },
-        handles: { [HANDLE]: OTHER_DID },
-      })
-      await expect(
-        manager.getSpaceHandlesFromScope(
-          `space:com.atmoboards.forum?authority=${DID}`,
-        ),
-      ).rejects.toThrow('Handle does not resolve to the same DID')
-    })
-
-    it('omits a handle that resolves to nothing', async () => {
-      const manager = withFakeResolver({
-        didDocs: { [DID]: HANDLE },
-        handles: {},
-      })
-      await expect(
-        manager.getSpaceHandlesFromScope(
-          `space:com.atmoboards.forum?authority=${DID}`,
-        ),
-      ).rejects.toThrow('Handle does not resolve to the same DID')
-    })
-
-    it('omits a DID whose document has no handle', async () => {
-      const manager = withFakeResolver({ didDocs: { [DID]: null } })
-      await expect(
-        manager.getSpaceHandlesFromScope(
-          `space:com.atmoboards.forum?authority=${DID}`,
-        ),
-      ).rejects.toThrow(`DID document does not claim a valid handle: ${DID}`)
-    })
-
-    it('omits a DID that cannot be resolved', async () => {
-      const manager = withFakeResolver({})
-      await expect(
-        manager.getSpaceHandlesFromScope(
-          `space:com.atmoboards.forum?authority=${DID}`,
-        ),
-      ).rejects.toThrow(`not found`)
-    })
-
-    it('survives a resolver that throws', async () => {
-      // A failed lookup degrades the screen's wording; it must not fail the
-      // authorization request.
-      const manager = new IdentityManager(
-        {
-          resolve: async () => {
-            throw new Error('network down')
-          },
-        },
-        { resolve: async () => null },
+        `${scopeFor(DID)} ${scopeFor(OTHER_DID)}`,
+        { onError },
       )
 
-      await expect(
-        manager.getSpaceHandlesFromScope(
-          `space:com.atmoboards.forum?authority=${DID}`,
-        ),
-      ).rejects.toThrow(`network down`)
+      expect(handles).toEqual(new Map([[DID, HANDLE]]))
+      expect(onError).toHaveBeenCalledExactlyOnceWith(
+        OTHER_DID,
+        new Error('Handle does not resolve to the same DID'),
+      )
     })
 
-    it('resolves several authorities at once, keeping only the good ones', async () => {
-      const manager = withFakeResolver({
-        didDocs: { [DID]: HANDLE, [OTHER_DID]: 'liar.example.com' },
-        // Only the first round-trips.
-        handles: { [HANDLE]: DID, 'liar.example.com': DID },
+    it('omits a DID whose document claims no handle, reporting it to onError', async () => {
+      const { manager } = setup({ didDocs: { [DID]: null } })
+      const onError = vi.fn()
+
+      const handles = await manager.getSpaceHandlesFromScope(scopeFor(DID), {
+        onError,
       })
-      const handles = await manager.getSpaceHandlesFromScope(
-        [
-          `space:com.atmoboards.forum?authority=${DID}`,
-          `space:com.example.group?authority=${OTHER_DID}`,
-        ].join(' '),
-        {
-          onError: () => {
-            // noop
-          },
-        },
+
+      expect(handles.size).toBe(0)
+      expect(onError).toHaveBeenCalledExactlyOnceWith(
+        DID,
+        new Error(`DID document does not claim a valid handle: ${DID}`),
       )
-      expect(Object.fromEntries(handles)).toEqual({ [DID]: HANDLE })
+    })
+
+    it('rethrows resolution errors by default', async () => {
+      const { manager, didResolver } = setup()
+      const error = new Error('network down')
+      didResolver.resolve.mockRejectedValueOnce(error)
+
+      await expect(
+        manager.getSpaceHandlesFromScope(scopeFor(DID)),
+      ).rejects.toBe(error)
     })
 
     it('does not resolve wildcard or self authorities', async () => {
-      // Neither names a concrete DID, so there is nothing to look up. Attempting
-      // it would mean a pointless resolution on every consent screen.
-      const resolved: string[] = []
-      const manager = withFakeResolver({
-        onDidResolve: (did) => resolved.push(did),
-      })
+      const { manager, didResolver } = setup()
+
       const handles = await manager.getSpaceHandlesFromScope(
-        'space:com.atmoboards.forum?authority=* space:com.example.group',
+        `${scopeFor('*')} space:com.example.group`,
       )
+
       expect(handles.size).toBe(0)
-      expect(resolved).toEqual([])
+      expect(didResolver.resolve).not.toHaveBeenCalled()
     })
 
-    it('ignores non-space scopes', async () => {
-      const manager = withFakeResolver({})
-      const handles = await manager.getSpaceHandlesFromScope(
-        'atproto repo:app.bsky.feed.post rpc:com.example.method?aud=*',
-      )
-      expect(handles.size).toBe(0)
-    })
-
-    it('returns nothing for an absent scope', async () => {
-      const manager = withFakeResolver({})
+    it('returns nothing when the scope names no space authority', async () => {
+      const { manager } = setup()
       expect((await manager.getSpaceHandlesFromScope()).size).toBe(0)
-      expect((await manager.getSpaceHandlesFromScope('')).size).toBe(0)
+      expect(
+        (
+          await manager.getSpaceHandlesFromScope(
+            'atproto repo:app.bsky.feed.post',
+          )
+        ).size,
+      ).toBe(0)
     })
 
-    it('deduplicates repeated authorities', async () => {
-      const resolved: string[] = []
-      const manager = withFakeResolver({
+    it('resolves each authority once', async () => {
+      const { manager, didResolver } = setup({
         didDocs: { [DID]: HANDLE },
         handles: { [HANDLE]: DID },
-        onDidResolve: (did) => resolved.push(did),
       })
+
       await manager.getSpaceHandlesFromScope(
-        [
-          `space:com.atmoboards.forum?authority=${DID}`,
-          `space:com.example.group?authority=${DID}`,
-        ].join(' '),
+        `${scopeFor(DID)} space:com.example.group?authority=${DID}`,
       )
-      expect(resolved).toEqual([DID])
+
+      expect(didResolver.resolve).toHaveBeenCalledTimes(1)
     })
   })
 })

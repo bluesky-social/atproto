@@ -1,5 +1,14 @@
 import { describe, expect, it, test } from 'vitest'
-import { AtUri } from '../src/index.js'
+import {
+  AtUri,
+  type DidString,
+  InvalidAtUriError,
+  InvalidDidError,
+  InvalidNsidError,
+  InvalidRecordKeyError,
+  type NsidString,
+  SpaceRef,
+} from '../src/index.js'
 import { readInteropFile } from './_utils.js'
 
 describe(AtUri, () => {
@@ -414,5 +423,129 @@ describe(AtUri, () => {
     urip.unsafelySetRkey('not a valid rkey')
     expect(urip.rkey).toBe('not a valid rkey')
     expect(() => urip.rkeySafe).toThrow()
+  })
+
+  describe('space URIs', () => {
+    const SPACE = 'at://did:plc:asdf123/space/com.example.group/default'
+    const RECORD = `${SPACE}/did:plc:user1/com.atproto.feed.post/abc123`
+
+    it('reads the parts of a space ref', () => {
+      expect(new AtUri(SPACE)).toMatchObject({
+        isSpace: true,
+        spaceDid: 'did:plc:asdf123',
+        spaceType: 'com.example.group',
+        skey: 'default',
+        authorDid: undefined,
+        collection: '',
+        rkey: '',
+      })
+    })
+
+    it('reads the record part of a record URI', () => {
+      expect(new AtUri(RECORD)).toMatchObject({
+        isSpace: true,
+        spaceDid: 'did:plc:asdf123',
+        authorDid: 'did:plc:user1',
+        collection: 'com.atproto.feed.post',
+        rkey: 'abc123',
+      })
+    })
+
+    it('has no space parts on a public URI', () => {
+      expect(
+        new AtUri('at://did:plc:asdf123/com.atproto.feed.post/abc'),
+      ).toMatchObject({
+        isSpace: false,
+        authorDid: 'did:plc:asdf123',
+        spaceDid: undefined,
+        spaceType: undefined,
+        skey: undefined,
+      })
+      expect(
+        new AtUri('at://user.bsky.social/com.atproto.feed.post/abc').authorDid,
+      ).toBeUndefined()
+    })
+
+    it('reads invalid space parts as undefined', () => {
+      expect(
+        new AtUri('at://user.bsky.social/space/com.example.group/default')
+          .spaceDid,
+      ).toBeUndefined()
+      expect(
+        new AtUri('at://did:plc:asdf123/space/short/default').spaceType,
+      ).toBeUndefined()
+    })
+
+    it('sets the record part after the author', () => {
+      const uri = new AtUri(RECORD)
+      uri.collection = 'com.example.other'
+      uri.rkey = 'xyz'
+      expect(uri.toString()).toBe(
+        `${SPACE}/did:plc:user1/com.example.other/xyz`,
+      )
+    })
+
+    it('refuses to set a record part on a space ref', () => {
+      const uri = new AtUri(SPACE)
+      expect(() => (uri.collection = 'com.example.post')).toThrow(
+        InvalidAtUriError,
+      )
+      expect(() => (uri.rkey = 'abc')).toThrow(InvalidAtUriError)
+      expect(uri.toString()).toBe(SPACE)
+    })
+  })
+})
+
+describe(SpaceRef, () => {
+  const SPACE = 'at://did:plc:asdf123/space/com.example.group/default'
+  const RECORD = `${SPACE}/did:plc:user1/com.atproto.feed.post/abc123`
+
+  it('parses a space ref', () => {
+    const ref = SpaceRef.parse(SPACE)
+    expect(ref).toMatchObject({
+      spaceDid: 'did:plc:asdf123',
+      spaceType: 'com.example.group',
+      skey: 'default',
+    })
+    expect(ref.toString()).toBe(SPACE)
+  })
+
+  it('parses only a space ref', () => {
+    expect(() => SpaceRef.parse(RECORD)).toThrow(InvalidAtUriError)
+    expect(() =>
+      SpaceRef.parse('at://did:plc:asdf123/com.atproto.feed.post/abc'),
+    ).toThrow(InvalidAtUriError)
+  })
+
+  it('finds the space a record URI belongs to', () => {
+    expect(SpaceRef.for(RECORD).toString()).toBe(SPACE)
+  })
+
+  describe('recordUri', () => {
+    const ref = SpaceRef.parse(SPACE)
+
+    it('builds the URI of a record in the space', () => {
+      expect(
+        ref
+          .recordUri('did:plc:user1', 'com.atproto.feed.post', 'abc123')
+          .toString(),
+      ).toBe(RECORD)
+    })
+
+    it('validates its parts', () => {
+      expect(() =>
+        ref.recordUri(
+          'user.bsky.social' as DidString,
+          'com.atproto.feed.post',
+          'abc123',
+        ),
+      ).toThrow(InvalidDidError)
+      expect(() =>
+        ref.recordUri('did:plc:user1', 'short' as NsidString, 'abc123'),
+      ).toThrow(InvalidNsidError)
+      expect(() =>
+        ref.recordUri('did:plc:user1', 'com.atproto.feed.post', '..'),
+      ).toThrow(InvalidRecordKeyError)
+    })
   })
 })

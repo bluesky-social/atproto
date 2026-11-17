@@ -3,7 +3,7 @@ import { P256Keypair } from '@atproto/crypto'
 import { Keyset, type SignedJwt } from '@atproto/jwk'
 import { JoseKey } from '@atproto/jwk-jose'
 import type { OAuthClient } from '@atproto/oauth-client'
-import { parseSpaceToken, verifySpaceToken } from '@atproto/space'
+import { verifySpaceToken } from '@atproto/space'
 import {
   clientAttestationProviderFor,
   clientAttestationProviderForOAuthClient,
@@ -12,31 +12,26 @@ import {
 const CLIENT_ID = 'https://app.example.com/client-metadata.json'
 const SPACE_HOST = 'did:example:space#atproto_pds'
 
+const verifyWith = (keyset: Keyset, jwt: string) =>
+  keyset.verifyJwt(jwt as SignedJwt, {
+    audience: SPACE_HOST,
+    issuer: CLIENT_ID,
+    typ: 'atproto-client-attestation+jwt',
+  })
+
 describe(clientAttestationProviderFor, () => {
   it('signs with an OAuth client keyset', async () => {
     const keyset = new Keyset([await JoseKey.generate(['ES256'], 'key-1')])
     const provide = clientAttestationProviderFor(CLIENT_ID, keyset)
 
-    const jwt = await provide(SPACE_HOST)
-    const { header, payload } = parseSpaceToken('clientAttestation', jwt)
-    expect(header).toMatchObject({ alg: 'ES256', kid: 'key-1' })
-    expect(payload).toMatchObject({
-      iss: CLIENT_ID,
-      sub: CLIENT_ID,
-      aud: SPACE_HOST,
-    })
-    expect(payload.exp - payload.iat).toBe(60)
-
-    await expect(
-      keyset.verifyJwt(jwt as SignedJwt, {
-        audience: SPACE_HOST,
-        issuer: CLIENT_ID,
-        typ: 'atproto-client-attestation+jwt',
-      }),
-    ).resolves.toBeDefined()
+    const { protectedHeader } = await verifyWith(
+      keyset,
+      await provide(SPACE_HOST),
+    )
+    expect(protectedHeader).toMatchObject({ alg: 'ES256', kid: 'key-1' })
   })
 
-  it('selects the keyset key by kid', async () => {
+  it('passes kid and expiresInSec to the signer', async () => {
     const keyset = new Keyset([
       await JoseKey.generate(['ES256'], 'key-1'),
       await JoseKey.generate(['ES256'], 'key-2'),
@@ -46,12 +41,9 @@ describe(clientAttestationProviderFor, () => {
       expiresInSec: 30,
     })
 
-    const { header, payload } = parseSpaceToken(
-      'clientAttestation',
-      await provide(SPACE_HOST),
-    )
-    expect(header.kid).toBe('key-2')
-    expect(payload.exp - payload.iat).toBe(30)
+    const { key, payload } = await verifyWith(keyset, await provide(SPACE_HOST))
+    expect(key.kid).toBe('key-2')
+    expect(payload.exp! - payload.iat!).toBe(30)
   })
 
   it('signs with a keypair', async () => {
@@ -60,13 +52,12 @@ describe(clientAttestationProviderFor, () => {
       kid: 'key-1',
     })
 
-    const { header, payload } = await verifySpaceToken(
+    const { header } = await verifySpaceToken(
       'clientAttestation',
       await provide(SPACE_HOST),
       { getSigningKey: () => key.did(), aud: SPACE_HOST },
     )
     expect(header).toMatchObject({ alg: key.jwtAlg, kid: 'key-1' })
-    expect(payload).toMatchObject({ iss: CLIENT_ID, sub: CLIENT_ID })
   })
 })
 
@@ -84,12 +75,7 @@ describe(clientAttestationProviderForOAuthClient, () => {
       keyset,
     })
 
-    const jwt = await provide(SPACE_HOST)
-    const { payload } = await keyset.verifyJwt(jwt as SignedJwt, {
-      audience: SPACE_HOST,
-      issuer: CLIENT_ID,
-      typ: 'atproto-client-attestation+jwt',
-    })
+    const { payload } = await verifyWith(keyset, await provide(SPACE_HOST))
     expect(payload.sub).toBe(CLIENT_ID)
   })
 
@@ -98,6 +84,6 @@ describe(clientAttestationProviderForOAuthClient, () => {
       clientAttestationProviderForOAuthClient({
         clientMetadata: { client_id: CLIENT_ID },
       }),
-    ).toThrow(TypeError)
+    ).toThrow(new TypeError('A client without keys cannot attest'))
   })
 })

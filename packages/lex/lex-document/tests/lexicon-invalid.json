@@ -107,6 +107,7 @@
       "defs": {
         "main": {
           "type": "space",
+          "key": "any",
           "title": "Example Space"
         }
       }
@@ -120,6 +121,7 @@
       "defs": {
         "main": {
           "type": "space",
+          "key": "any",
           "title": "Example Space",
           "collections": ["not-a-valid-nsid"]
         }

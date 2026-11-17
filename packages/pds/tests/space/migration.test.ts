@@ -15,6 +15,7 @@ import {
 } from '@atproto/space'
 import {
   type DidString,
+  type HandleString,
   type RecordKeyString,
   SpaceRef,
   type SpaceRefString,
@@ -25,18 +26,15 @@ import {
   type Actor,
   SpaceClient,
   TEST_COLLECTION,
+  TEST_COLLECTION_ALT,
   TEST_SPACE_TYPE,
   record,
 } from '../_space.js'
 
 const { memberspace, personalspace } = com.atproto
 
-/**
- * Moving an account's space data to a new host, on top of the usual account
- * migration. Each space the account is the authority of moves as a space host
- * archive (exportSpaceMeta → importSpaceMeta), then each of its space repos moves as a
- * STAR file (getRepo → importRepo), then the blobs those repos reference.
- */
+type Auth = Pick<Actor, 'client' | 'headers'>
+
 describe('space account migration', () => {
   let network: TestNetworkNoAppView
   let sc: SpaceClient
@@ -46,10 +44,7 @@ describe('space account migration', () => {
   let dan: Actor // read-only member, stays put
 
   beforeAll(async () => {
-    network = await TestNetworkNoAppView.create({
-      dbPostgresSchema: 'space_migration',
-      extraPdses: 1,
-    })
+    network = await TestNetworkNoAppView.create({ extraPdses: 1 })
     sc = new SpaceClient(network)
     alice = await sc.createActor('alice', network.pds)
     bob = await sc.createActor('bob', network.pds)
@@ -69,7 +64,7 @@ describe('space account migration', () => {
     return res.body
   }
 
-  const importSpaceMeta = (actor: Actor, archive: Uint8Array) =>
+  const importSpaceMeta = (actor: Auth, archive: Uint8Array) =>
     actor.client.xrpc(com.atproto.space.importSpaceMeta, {
       body: archive,
       headers: actor.headers,
@@ -83,7 +78,7 @@ describe('space account migration', () => {
     return res.body
   }
 
-  const importRepo = (actor: Actor, star: Uint8Array) =>
+  const importRepo = (actor: Auth, star: Uint8Array) =>
     actor.client.xrpc(com.atproto.space.importRepo, {
       body: star,
       headers: actor.headers,
@@ -107,8 +102,8 @@ describe('space account migration', () => {
     }
   }
 
-  // Steps 2 and 3 of the flow: each space the account is the authority of comes
-  // before the account's own repo in it.
+  // Each space the account is the authority of moves before the account's own
+  // repo in it.
   const migrate = async (spaces: SpaceRefString[]) => {
     for (const space of spaces) {
       if (SpaceRef.parse(space).spaceDid === alice.did) {
@@ -121,11 +116,6 @@ describe('space account migration', () => {
     }
   }
 
-  const writers = (actor: Actor, space: SpaceRefString) =>
-    actor.pds.ctx.actorStore.read(actor.did, (store) =>
-      store.space.listWriters(space),
-    )
-
   const latestCommit = (actor: Actor, space: SpaceRefString) =>
     actor.client.call(
       com.atproto.space.getLatestCommit,
@@ -133,7 +123,7 @@ describe('space account migration', () => {
       { headers: actor.headers },
     )
 
-  it('moves the spaces an account is the authority of, and its repos', async () => {
+  it('moves the spaces an account is the authority of, its repos and their blobs', async () => {
     const space = await sc.createSpace(alice, {
       policy: memberspace.policy.$build({
         publishPolicy: true,
@@ -165,19 +155,12 @@ describe('space account migration', () => {
     })
     await sc.write(alice, guestSpace, { rkey: 'guest' })
 
-    const { spaces } = await alice.client.call(
-      com.atproto.space.listSpaces,
-      {},
-      { headers: alice.headers },
-    )
-    expect(spaces.map((s) => s.space)).toEqual(
-      expect.arrayContaining([space, guestSpace]),
-    )
-
     const original = await readSpaceMetaStar([
       await exportSpaceMeta(alice, space),
     ])
-    const originalWriters = await writers(alice, space)
+    expect(original.writers.map((w) => w.did).sort()).toEqual(
+      [alice.did, bob.did].sort(),
+    )
     const originalCommit = await latestCommit(alice, space)
 
     await migrate([space, guestSpace])
@@ -202,13 +185,8 @@ describe('space account migration', () => {
       ]),
     )
 
-    // The writer set, the authority included, keeps its place in the space sequence.
-    expect(originalWriters.map((w) => w.did).sort()).toEqual(
-      [alice.did, bob.did].sort(),
-    )
-    expect(await writers(newAlice, space)).toEqual(originalWriters)
-
-    // Re-exported from the new host, the space is unchanged.
+    // Re-exported from the new host, the space is unchanged, including each
+    // writer's place in the space sequence.
     const reexported = await readSpaceMetaStar([
       await exportSpaceMeta(newAlice, space),
     ])
@@ -277,7 +255,8 @@ describe('space account migration', () => {
     await sc.write(alice, space, { rkey: 'deleted' })
     await migrate([space])
 
-    // A record the new host holds that the old host never had, along with its op.
+    // A record the old host never had, with its op. Written directly, since the
+    // new host refuses writes while the account is deactivated there.
     await newAlice.pds.ctx.actorStore.transact(alice.did, async (txn) => {
       const ref = SpaceRef.parse(space)
       const write = await prepareCreate({
@@ -354,16 +333,66 @@ describe('space account migration', () => {
     })
   })
 
-  it("imports only the account's own spaces and repos", async () => {
-    const space = await sc.createSpace(bob, { members: [alice] })
-    await sc.write(bob, space)
-
+  it("refuses another authority's space", async () => {
+    const space = await sc.createSpace(bob)
     await expect(
       importSpaceMeta(newAlice, await exportSpaceMeta(bob, space)),
     ).rejects.toMatchObject({ error: 'NotAuthorized' })
+  })
+
+  it("refuses another account's repo", async () => {
+    const space = await sc.createSpace(bob)
+    await sc.write(bob, space)
     await expect(
       importRepo(newAlice, await getRepo(bob, space)),
     ).rejects.toMatchObject({ error: 'RepoMismatch' })
+  })
+
+  describe('OAuth scopes', () => {
+    const asOAuth = (actor: Actor, params: string) =>
+      sc.asOAuth(
+        actor,
+        `atproto space:${TEST_SPACE_TYPE}?authority=${actor.did}&${params}`,
+      )
+
+    it('requires a grant to create and update the space to import it', async () => {
+      const space = await sc.createSpace(alice)
+      const archive = await exportSpaceMeta(alice, space)
+
+      {
+        using oauth = asOAuth(newAlice, 'manage=create')
+        await expect(importSpaceMeta(oauth, archive)).rejects.toMatchObject({
+          error: 'ScopeMissingError',
+          message: expect.stringContaining('manage=update'),
+        })
+      }
+      using oauth = asOAuth(newAlice, 'manage=create&manage=update')
+      await importSpaceMeta(oauth, archive)
+    })
+
+    it('requires a grant to create each collection in an imported repo', async () => {
+      const space = await sc.createSpace(alice)
+      await sc.write(alice, space, { collection: TEST_COLLECTION })
+      await sc.write(alice, space, { collection: TEST_COLLECTION_ALT })
+      await importSpaceMeta(newAlice, await exportSpaceMeta(alice, space))
+      const star = await getRepo(alice, space)
+
+      {
+        using oauth = asOAuth(
+          newAlice,
+          `collection=${TEST_COLLECTION}&action=create`,
+        )
+        await expect(importRepo(oauth, star)).rejects.toMatchObject({
+          error: 'ScopeMissingError',
+          message: expect.stringContaining(TEST_COLLECTION_ALT),
+        })
+      }
+      using oauth = asOAuth(
+        newAlice,
+        `collection=${TEST_COLLECTION}&collection=${TEST_COLLECTION_ALT}&action=create`,
+      )
+      await importRepo(oauth, star)
+    })
   })
 
   describe('rejects an archive', () => {
@@ -390,37 +419,43 @@ describe('space account migration', () => {
       })
     })
 
-    it('with policy state the policy does not define', async () => {
-      const archive = archiveFor('unrecognized-state', {
+    it.each([
+      {
+        state: 'state the policy does not keep',
         policy: memberspace.policy.$build({}),
-        policyState: [
-          {
-            key: `com.example.allowList/${bob.did}`,
-            value: { $type: 'com.example.allowList' },
-          },
-        ],
-        writers: [],
-      })
-      await expect(importArchive(archive)).rejects.toMatchObject({
-        error: 'InvalidSpaceMeta',
-        message: expect.stringContaining('Unrecognized policy state'),
-      })
-    })
-
-    it('with a member list for a policy that keeps none', async () => {
-      const archive = archiveFor('personal-members', {
+        entry: {
+          key: 'com.example.allowList/self',
+          value: { $type: 'com.example.allowList' },
+        },
+        message: 'Unrecognized policy state',
+      },
+      {
+        state: 'a member list for a policy that keeps none',
         policy: personalspace.policy.$build({}),
-        policyState: [
-          {
-            key: `${memberspace.member.$type}/${bob.did}`,
-            value: memberspace.member.$build({ read: true, write: true }),
-          },
-        ],
+        entry: {
+          key: `${memberspace.member.$type}/did:plc:member`,
+          value: memberspace.member.$build({ read: true, write: true }),
+        },
+        message: 'Unrecognized policy state',
+      },
+      {
+        state: 'a member entry that does not parse',
+        policy: memberspace.policy.$build({}),
+        entry: {
+          key: `${memberspace.member.$type}/did:plc:member`,
+          value: { $type: memberspace.member.$type, read: 'yes' },
+        },
+        message: 'Invalid member',
+      },
+    ])('with $state', async ({ policy, entry, message }) => {
+      const archive = archiveFor(TID.nextStr(), {
+        policy,
+        policyState: [entry],
         writers: [],
       })
       await expect(importArchive(archive)).rejects.toMatchObject({
         error: 'InvalidSpaceMeta',
-        message: expect.stringContaining('Unrecognized policy state'),
+        message: expect.stringContaining(message),
       })
     })
 
@@ -452,12 +487,13 @@ async function createMigratedAccount(
     },
     { headers: actor.headers },
   )
+  const [domain] = pds.ctx.cfg.identity.serviceHandleDomains
   const client = pds.getClient()
   const account = await client.call(
     com.atproto.server.createAccount,
     {
       did: actor.did,
-      handle: `${actor.name}.test2`,
+      handle: `${actor.name}${domain}` as HandleString,
       email: `${actor.name}@test.com`,
       password: `${actor.name}-pass`,
     },
