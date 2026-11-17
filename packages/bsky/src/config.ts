@@ -284,16 +284,16 @@ export class ServerConfig {
     const indexedAtEpoch = process.env.BSKY_INDEXED_AT_EPOCH
       ? new Date(process.env.BSKY_INDEXED_AT_EPOCH)
       : undefined
+    assert(
+      !indexedAtEpoch || !isNaN(indexedAtEpoch.getTime()),
+      'invalid BSKY_INDEXED_AT_EPOCH',
+    )
     const postViewCountsStartAt = process.env.BSKY_POST_VIEW_COUNTS_START_AT
       ? new Date(process.env.BSKY_POST_VIEW_COUNTS_START_AT)
       : undefined
     assert(
       !postViewCountsStartAt || !isNaN(postViewCountsStartAt.getTime()),
       'invalid BSKY_POST_VIEW_COUNTS_START_AT',
-    )
-    assert(
-      !indexedAtEpoch || !isNaN(indexedAtEpoch.getTime()),
-      'invalid BSKY_INDEXED_AT_EPOCH',
     )
     const bigThreadUris = new Set(envList(process.env.BSKY_BIG_THREAD_URIS))
     const bigThreadDepth = process.env.BSKY_BIG_THREAD_DEPTH
