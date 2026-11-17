@@ -1,3 +1,4 @@
+import { Readable } from 'node:stream'
 import { assert, describe, expect, expectTypeOf, it, vi } from 'vitest'
 import { type LexValue, l } from '@atproto/lex-schema'
 import {
@@ -7,7 +8,7 @@ import {
   XrpcResponseError,
   XrpcResponseValidationError,
 } from './errors.js'
-import { XrpcResponse } from './response.js'
+import { XrpcResponse, XrpcStreamResponse } from './response.js'
 import type { XrpcBinaryStream } from './response.js'
 
 // Fixtures
@@ -375,14 +376,16 @@ describe(XrpcResponse.fromFetchResponse, () => {
         expect(response.bodyUsed).toBe(true)
       })
 
-      it('does not wait for the cancellation of cloned bodies to settle', async () => {
+      it('does not wait for the cancellation of cloned bodies with "log"', async () => {
         const response = new Response(bytes, { status: 302 })
         // Cancelling one branch of a tee'd body only settles once every branch
         // was consumed or cancelled.
         const clone = response.clone()
 
         await expect(
-          XrpcResponse.fromFetchResponse(binaryQuery, response),
+          XrpcResponse.fromFetchResponse(binaryQuery, response, {
+            onCancellationError: 'log',
+          }),
         ).rejects.toBeInstanceOf(XrpcInvalidResponseError)
 
         await clone.body?.cancel()
@@ -391,8 +394,6 @@ describe(XrpcResponse.fromFetchResponse, () => {
   })
 
   describe('stream mode', () => {
-    const streamMode = { responseType: 'stream' } as const
-
     describe('success', () => {
       it('returns binary payloads as the unread body stream', async () => {
         const { response, cancel } = trackedResponse(
@@ -400,10 +401,9 @@ describe(XrpcResponse.fromFetchResponse, () => {
           { close: true },
         )
 
-        const result = await XrpcResponse.fromFetchResponse(
+        const result = await XrpcStreamResponse.fromFetchResponse(
           binaryQuery,
           response,
-          { responseType: 'stream' },
         )
 
         expectTypeOf(result.body).toEqualTypeOf<XrpcBinaryStream>()
@@ -417,10 +417,9 @@ describe(XrpcResponse.fromFetchResponse, () => {
       it('streams JSON content for "*/*" outputs', async () => {
         const response = Response.json({ value: 'hello' })
 
-        const result = await XrpcResponse.fromFetchResponse(
+        const result = await XrpcStreamResponse.fromFetchResponse(
           anyQuery,
           response,
-          streamMode,
         )
 
         expect(result.encoding).toBe('application/json')
@@ -429,25 +428,24 @@ describe(XrpcResponse.fromFetchResponse, () => {
         )
       })
 
-      it('still parses and validates JSON payloads', async () => {
+      it('rejects methods that never return binary payloads', async () => {
         const response = Response.json({ value: 'hello' })
 
-        const result = await XrpcResponse.fromFetchResponse(
+        const result = await XrpcStreamResponse.fromFetchResponse(
+          // @ts-expect-error JSON-only output
           jsonQuery,
           response,
-          streamMode,
         )
 
-        expectTypeOf(result.body).toEqualTypeOf<{ value: string }>()
+        // Still parsed and validated, for untyped callers
         expect(result.body).toEqual({ value: 'hello' })
         expect(response.bodyUsed).toBe(true)
       })
 
       it('parses JSON and streams other payloads for undeclared outputs', async () => {
-        const json = await XrpcResponse.fromFetchResponse(
+        const json = await XrpcStreamResponse.fromFetchResponse(
           noOutputQuery,
           Response.json({ value: 1.5 }),
-          streamMode,
         )
 
         expectTypeOf(json.body).toEqualTypeOf<
@@ -455,23 +453,158 @@ describe(XrpcResponse.fromFetchResponse, () => {
         >()
         expect(json.body).toEqual({ value: 1.5 })
 
-        const binary = await XrpcResponse.fromFetchResponse(
+        const binary = await XrpcStreamResponse.fromFetchResponse(
           noOutputQuery,
           new Response(bytes, { headers: { 'content-type': 'text/plain' } }),
-          streamMode,
         )
 
         assert(binary.body instanceof ReadableStream)
         await expect(readStream(binary.body)).resolves.toEqual(bytes)
       })
 
+      describe('binary outputs', () => {
+        const carQuery = l.query(
+          'io.example.carQuery',
+          l.params(),
+          l.payload('application/vnd.ipld.car', undefined),
+        )
+        const textQuery = l.query(
+          'io.example.textQuery',
+          l.params(),
+          l.payload('text/plain', undefined),
+        )
+        const applicationQuery = l.query(
+          'io.example.applicationQuery',
+          l.params(),
+          l.payload('application/*', undefined),
+        )
+
+        it('types non-literal encodings as possibly JSON', async () => {
+          const encoding: string = 'application/json'
+          const wideQuery = l.query(
+            'io.example.wideQuery',
+            l.params(),
+            l.payload(encoding, undefined),
+          )
+          const unionQuery = l.query(
+            'io.example.unionQuery',
+            l.params(),
+            l.payload(
+              'image/png' as 'application/json' | 'image/png',
+              undefined,
+            ),
+          )
+
+          expectTypeOf<
+            XrpcStreamResponse<typeof wideQuery>['body']
+          >().toEqualTypeOf<LexValue | XrpcBinaryStream>()
+          expectTypeOf<XrpcResponse<typeof wideQuery>['body']>().toEqualTypeOf<
+            LexValue | Uint8Array<ArrayBuffer>
+          >()
+          expectTypeOf<
+            XrpcStreamResponse<typeof unionQuery>['body']
+          >().toEqualTypeOf<LexValue | XrpcBinaryStream>()
+
+          // Parsed at runtime, since the encoding is "application/json"
+          const result = await XrpcStreamResponse.fromFetchResponse(
+            wideQuery,
+            Response.json({ value: 'hello' }),
+          )
+          expect(result.hasBodyStream()).toBe(false)
+          expect(result.body).toEqual({ value: 'hello' })
+
+          // Streamed at runtime, since the encoding is "image/png"
+          const union = await XrpcStreamResponse.fromFetchResponse(
+            unionQuery,
+            new Response(bytes, { headers: { 'content-type': 'image/png' } }),
+          )
+          assert(union.hasBodyStream())
+          await expect(readStream(union.body)).resolves.toEqual(bytes)
+        })
+
+        it('types the body as a stream, without narrowing', () => {
+          expectTypeOf<
+            XrpcStreamResponse<typeof binaryQuery>['body']
+          >().toEqualTypeOf<XrpcBinaryStream>()
+          expectTypeOf<
+            XrpcStreamResponse<typeof anyQuery>['body']
+          >().toEqualTypeOf<XrpcBinaryStream>()
+          expectTypeOf<
+            XrpcStreamResponse<typeof imageQuery>['body']
+          >().toEqualTypeOf<XrpcBinaryStream>()
+          expectTypeOf<
+            XrpcStreamResponse<typeof carQuery>['body']
+          >().toEqualTypeOf<XrpcBinaryStream>()
+          expectTypeOf<
+            XrpcStreamResponse<typeof textQuery>['body']
+          >().toEqualTypeOf<XrpcBinaryStream>()
+          expectTypeOf<
+            XrpcStreamResponse<typeof applicationQuery>['body']
+          >().toEqualTypeOf<XrpcBinaryStream>()
+        })
+
+        it.each([
+          { method: binaryQuery, contentType: 'application/octet-stream' },
+          { method: anyQuery, contentType: 'application/json' },
+          { method: imageQuery, contentType: 'image/png' },
+          { method: carQuery, contentType: 'application/vnd.ipld.car' },
+          { method: textQuery, contentType: 'text/plain' },
+          { method: applicationQuery, contentType: 'application/json' },
+        ])(
+          'returns an async iterable body for "$contentType" payloads of "$method.output.encoding" outputs',
+          async ({ method, contentType }) => {
+            const response = new Response(bytes, {
+              headers: { 'content-type': contentType },
+            })
+
+            const result = await XrpcStreamResponse.fromFetchResponse(
+              method,
+              response,
+            )
+
+            expect(result.body).toBe(response.body)
+            expect(typeof result.body[Symbol.asyncIterator]).toBe('function')
+            const chunks: number[] = []
+            for await (const chunk of result.body) chunks.push(...chunk)
+            expect(new Uint8Array(chunks)).toEqual(bytes)
+          },
+        )
+      })
+
+      it('tells whether the body is a stream (hasBodyStream)', async () => {
+        const binary = await XrpcStreamResponse.fromFetchResponse(
+          noOutputQuery,
+          new Response(bytes, { headers: { 'content-type': 'text/plain' } }),
+        )
+        const json = await XrpcStreamResponse.fromFetchResponse(
+          noOutputQuery,
+          Response.json({ value: 'hello' }),
+        )
+        const empty = await XrpcStreamResponse.fromFetchResponse(
+          noOutputQuery,
+          new Response(null, { status: 204 }),
+        )
+
+        expectTypeOf(binary.body).toEqualTypeOf<
+          undefined | LexValue | XrpcBinaryStream
+        >()
+        assert(binary.hasBodyStream())
+        expectTypeOf(binary.body).toExtend<XrpcBinaryStream>()
+        for await (const chunk of binary.body) {
+          expectTypeOf(chunk).toEqualTypeOf<Uint8Array<ArrayBuffer>>()
+          expect(chunk).toEqual(bytes)
+        }
+
+        expect(json.hasBodyStream()).toBe(false)
+        expect(empty.hasBodyStream()).toBe(false)
+      })
+
       it('streams a non-empty body without content-type as application/octet-stream', async () => {
         const response = new Response(bytes)
 
-        const result = await XrpcResponse.fromFetchResponse(
+        const result = await XrpcStreamResponse.fromFetchResponse(
           anyQuery,
           response,
-          streamMode,
         )
 
         expect(result.encoding).toBe('application/octet-stream')
@@ -481,10 +614,9 @@ describe(XrpcResponse.fromFetchResponse, () => {
       it('returns no payload for a null body without content-type', async () => {
         const response = new Response(null, { status: 204 })
 
-        const result = await XrpcResponse.fromFetchResponse(
+        const result = await XrpcStreamResponse.fromFetchResponse(
           noOutputQuery,
           response,
-          streamMode,
         )
 
         expect(result.payload).toBeUndefined()
@@ -496,10 +628,9 @@ describe(XrpcResponse.fromFetchResponse, () => {
           { chunks: [] },
         )
 
-        const result = await XrpcResponse.fromFetchResponse(
+        const result = await XrpcStreamResponse.fromFetchResponse(
           noOutputQuery,
           response,
-          streamMode,
         )
 
         expect(result.payload).toBeUndefined()
@@ -512,10 +643,9 @@ describe(XrpcResponse.fromFetchResponse, () => {
           headers: { 'content-type': 'image/png' },
         })
 
-        const result = await XrpcResponse.fromFetchResponse(
+        const result = await XrpcStreamResponse.fromFetchResponse(
           anyQuery,
           response,
-          streamMode,
         )
 
         expect(result.encoding).toBe('image/png')
@@ -527,10 +657,9 @@ describe(XrpcResponse.fromFetchResponse, () => {
       it('does not require stream support when no payload is streamed', async () => {
         const response = withoutBodyStream(Response.json({ value: 'hello' }))
 
-        const result = await XrpcResponse.fromFetchResponse(
-          jsonQuery,
+        const result = await XrpcStreamResponse.fromFetchResponse(
+          noOutputQuery,
           response,
-          streamMode,
         )
 
         expect(result.body).toEqual({ value: 'hello' })
@@ -543,10 +672,9 @@ describe(XrpcResponse.fromFetchResponse, () => {
           headers: { 'content-type': 'image/png' },
         })
 
-        const error = await XrpcResponse.fromFetchResponse(
+        const error = await XrpcStreamResponse.fromFetchResponse(
           binaryQuery,
           response,
-          streamMode,
         ).catch((err) => err)
 
         assert(error instanceof XrpcInvalidResponseError)
@@ -564,7 +692,7 @@ describe(XrpcResponse.fromFetchResponse, () => {
         )
 
         await expect(
-          XrpcResponse.fromFetchResponse(binaryQuery, response, streamMode),
+          XrpcStreamResponse.fromFetchResponse(binaryQuery, response),
         ).rejects.toSatisfy((err) => {
           assert(err instanceof XrpcInvalidResponseError)
           expect(err.message).toBe(
@@ -580,10 +708,9 @@ describe(XrpcResponse.fromFetchResponse, () => {
           headers: { 'content-type': 'invalid' },
         })
 
-        const error = await XrpcResponse.fromFetchResponse(
+        const error = await XrpcStreamResponse.fromFetchResponse(
           binaryQuery,
           response,
-          streamMode,
         ).catch((err) => err)
 
         assert(error instanceof XrpcInvalidResponseError)
@@ -594,7 +721,7 @@ describe(XrpcResponse.fromFetchResponse, () => {
         const { response, cancel } = trackedResponse({ status: 302 })
 
         await expect(
-          XrpcResponse.fromFetchResponse(binaryQuery, response, streamMode),
+          XrpcStreamResponse.fromFetchResponse(binaryQuery, response),
         ).rejects.toBeInstanceOf(XrpcInvalidResponseError)
         expect(cancel).toHaveBeenCalledOnce()
       })
@@ -606,13 +733,33 @@ describe(XrpcResponse.fromFetchResponse, () => {
         })
 
         await expect(
-          XrpcResponse.fromFetchResponse(binaryQuery, response, streamMode),
+          XrpcStreamResponse.fromFetchResponse(binaryQuery, response),
         ).rejects.toSatisfy((err) => {
           assert(err instanceof XrpcResponseError)
           expect(err.payload).toEqual({ encoding: 'text/html', body: bytes })
           return true
         })
         expect(response.bodyUsed).toBe(true)
+      })
+
+      it('throws an XrpcInternalError when the body is not a ReadableStream', async () => {
+        const response = new Response(bytes, {
+          headers: { 'content-type': 'application/octet-stream' },
+        })
+        // e.g. node-fetch, which exposes a Node.js Readable
+        Object.defineProperty(response, 'body', {
+          value: Readable.from([bytes]),
+        })
+
+        await expect(
+          XrpcStreamResponse.fromFetchResponse(binaryQuery, response),
+        ).rejects.toSatisfy((err) => {
+          assert(err instanceof XrpcInternalError)
+          expect(err.message).toBe(
+            'Streaming response payloads is not supported by the fetch() implementation',
+          )
+          return true
+        })
       })
 
       it('throws an XrpcInternalError when the fetch implementation does not support streaming', async () => {
@@ -623,7 +770,7 @@ describe(XrpcResponse.fromFetchResponse, () => {
         )
 
         await expect(
-          XrpcResponse.fromFetchResponse(binaryQuery, response, streamMode),
+          XrpcStreamResponse.fromFetchResponse(binaryQuery, response),
         ).rejects.toSatisfy((err) => {
           assert(err instanceof XrpcInternalError)
           expect(err.message).toBe(
@@ -634,7 +781,7 @@ describe(XrpcResponse.fromFetchResponse, () => {
         })
       })
 
-      it('logs cancellation failures instead of throwing them', async () => {
+      it('logs cancellation failures with "log"', async () => {
         using warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
 
         const cancelError = new Error('cancel failed')
@@ -649,7 +796,9 @@ describe(XrpcResponse.fromFetchResponse, () => {
         })
 
         await expect(
-          XrpcResponse.fromFetchResponse(binaryQuery, response, streamMode),
+          XrpcStreamResponse.fromFetchResponse(binaryQuery, response, {
+            onCancellationError: 'log',
+          }),
         ).rejects.toBeInstanceOf(XrpcInvalidResponseError)
 
         await vi.waitFor(() => {
@@ -660,7 +809,7 @@ describe(XrpcResponse.fromFetchResponse, () => {
         })
       })
 
-      it('does not wait for the cancellation of cloned bodies to settle', async () => {
+      it('does not wait for the cancellation of cloned bodies with "log"', async () => {
         const response = new Response(bytes, {
           headers: { 'content-type': 'image/png' },
         })
@@ -669,29 +818,46 @@ describe(XrpcResponse.fromFetchResponse, () => {
         const clone = response.clone()
 
         await expect(
-          XrpcResponse.fromFetchResponse(binaryQuery, response, streamMode),
+          XrpcStreamResponse.fromFetchResponse(binaryQuery, response, {
+            onCancellationError: 'log',
+          }),
         ).rejects.toBeInstanceOf(XrpcInvalidResponseError)
 
         await clone.body?.cancel()
       })
     })
 
-    describe('disposal', () => {
-      it('cancels unconsumed streams', async () => {
+    describe('cancellation', () => {
+      it('cancels unconsumed streams when disposed', async () => {
         const { response, cancel } = trackedResponse({
           headers: { 'content-type': 'application/octet-stream' },
         })
 
         {
-          await using result = await XrpcResponse.fromFetchResponse(
+          await using result = await XrpcStreamResponse.fromFetchResponse(
             binaryQuery,
             response,
-            streamMode,
           )
           expect(result.body).toBe(response.body)
         }
 
         expect(cancel).toHaveBeenCalledOnce()
+      })
+
+      it('cancels unconsumed streams with the given reason', async () => {
+        const { response, cancel } = trackedResponse({
+          headers: { 'content-type': 'application/octet-stream' },
+        })
+
+        const result = await XrpcStreamResponse.fromFetchResponse(
+          binaryQuery,
+          response,
+        )
+        const reason = new Error('not needed')
+        result.cancel(reason)
+
+        expect(cancel).toHaveBeenCalledExactlyOnceWith(reason)
+        expect(response.bodyUsed).toBe(true)
       })
 
       it('is a no-op for consumed streams', async () => {
@@ -702,10 +868,9 @@ describe(XrpcResponse.fromFetchResponse, () => {
         )
 
         {
-          await using result = await XrpcResponse.fromFetchResponse(
+          await using result = await XrpcStreamResponse.fromFetchResponse(
             binaryQuery,
             response,
-            streamMode,
           )
           await expect(readStream(result.body)).resolves.toEqual(bytes)
         }
@@ -720,14 +885,13 @@ describe(XrpcResponse.fromFetchResponse, () => {
           { close: true },
         )
 
-        const result = await XrpcResponse.fromFetchResponse(
+        const result = await XrpcStreamResponse.fromFetchResponse(
           binaryQuery,
           response,
-          streamMode,
         )
         const reader = result.body.getReader()
 
-        await result[Symbol.asyncDispose]()
+        result.cancel()
 
         expect(cancel).not.toHaveBeenCalled()
         await expect(reader.read()).resolves.toEqual({
@@ -736,17 +900,268 @@ describe(XrpcResponse.fromFetchResponse, () => {
         })
       })
 
-      it('is a no-op for buffered payloads', async () => {
-        const result = await XrpcResponse.fromFetchResponse(
-          binaryQuery,
-          new Response(bytes, {
-            headers: { 'content-type': 'application/octet-stream' },
-          }),
+      it('is a no-op for payloads that are not streamed', async () => {
+        const result = await XrpcStreamResponse.fromFetchResponse(
+          noOutputQuery,
+          Response.json({ value: 'hello' }),
         )
 
-        await expect(result[Symbol.asyncDispose]()).resolves.toBeUndefined()
-        expect(result.body).toEqual(bytes)
+        expect(() => result.cancel()).not.toThrow()
+        expect(result.body).toEqual({ value: 'hello' })
       })
+
+      it('is not available on buffered responses', () => {
+        expectTypeOf<XrpcResponse<typeof binaryQuery>>().not.toExtend<
+          AsyncDisposable | Disposable | { cancel: unknown }
+        >()
+        expectTypeOf<XrpcStreamResponse<typeof binaryQuery>>().toExtend<
+          AsyncDisposable & { cancel: (reason?: unknown) => Promise<void> }
+        >()
+        expectTypeOf<
+          XrpcStreamResponse<typeof binaryQuery>
+        >().not.toExtend<Disposable>()
+      })
+
+      describe('of streams that were read from', () => {
+        it('rethrows read errors as-is when disposing (no SuppressedError)', async () => {
+          const readError = new TypeError('terminated')
+          const body = new ReadableStream<Uint8Array>({
+            start: (controller) => controller.enqueue(bytes),
+            pull: (controller) => controller.error(readError),
+          })
+          const response = new Response(body, {
+            headers: { 'content-type': 'application/octet-stream' },
+          })
+
+          await expect(
+            (async () => {
+              await using result = await XrpcStreamResponse.fromFetchResponse(
+                binaryQuery,
+                response,
+              )
+              await readStream(result.body)
+            })(),
+          ).rejects.toBe(readError)
+        })
+
+        it.each(['propagate', 'log'] as const)(
+          'ignores cancellation failures with "%s"',
+          async (onCancellationError) => {
+            using warn = vi.spyOn(console, 'warn')
+            const events: string[] = []
+            const body = new ReadableStream<Uint8Array>({
+              start: (controller) => {
+                controller.enqueue(bytes)
+                controller.enqueue(bytes)
+              },
+              cancel: () =>
+                new Promise<void>((_, reject) => {
+                  setTimeout(() => {
+                    events.push('cancelled')
+                    reject(new Error('cancel failed'))
+                  }, 0)
+                }),
+            })
+            const response = new Response(body, {
+              headers: { 'content-type': 'application/octet-stream' },
+            })
+
+            const result = await XrpcStreamResponse.fromFetchResponse(
+              binaryQuery,
+              response,
+              { onCancellationError },
+            )
+            const reader = result.body.getReader()
+            await reader.read()
+            reader.releaseLock()
+
+            await expect(result.cancel()).resolves.toBeUndefined()
+            events.push('resolved')
+
+            // Still awaited, unless opted out of
+            await vi.waitFor(() => expect(events).toContain('cancelled'))
+            expect(events).toEqual(
+              onCancellationError === 'propagate'
+                ? ['cancelled', 'resolved']
+                : ['resolved', 'cancelled'],
+            )
+            expect(warn).not.toHaveBeenCalled()
+          },
+        )
+      })
+
+      describe.each([
+        ['cancel()', (r: XrpcStreamResponse<any>) => r.cancel()],
+        ['disposal', (r: XrpcStreamResponse<any>) => r[Symbol.asyncDispose]()],
+      ])('%s', (_, cancel) => {
+        const cancelError = new Error('cancel failed')
+
+        function failingCancelResponse() {
+          const body = new ReadableStream<Uint8Array>({
+            start: (controller) => controller.enqueue(bytes),
+            cancel: () => {
+              throw cancelError
+            },
+          })
+          return new Response(body, {
+            headers: { 'content-type': 'application/octet-stream' },
+          })
+        }
+
+        it('propagates cancellation failures by default', async () => {
+          const result = await XrpcStreamResponse.fromFetchResponse(
+            binaryQuery,
+            failingCancelResponse(),
+          )
+
+          await expect(cancel(result)).rejects.toBe(cancelError)
+        })
+
+        it('logs cancellation failures with "log"', async () => {
+          using warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+          const result = await XrpcStreamResponse.fromFetchResponse(
+            binaryQuery,
+            failingCancelResponse(),
+            { onCancellationError: 'log' },
+          )
+
+          await expect(cancel(result)).resolves.toBeUndefined()
+          await vi.waitFor(() => {
+            expect(warn).toHaveBeenCalledExactlyOnceWith(
+              'Failed to cancel response body',
+              cancelError,
+            )
+          })
+        })
+
+        it('passes cancellation failures to a custom handler', async () => {
+          const onCancellationError = vi.fn()
+          const result = await XrpcStreamResponse.fromFetchResponse(
+            binaryQuery,
+            failingCancelResponse(),
+            { onCancellationError },
+          )
+
+          await expect(cancel(result)).resolves.toBeUndefined()
+          await vi.waitFor(() => {
+            expect(onCancellationError).toHaveBeenCalledExactlyOnceWith(
+              cancelError,
+            )
+          })
+        })
+
+        it('propagates cancellation failures with "propagate"', async () => {
+          const result = await XrpcStreamResponse.fromFetchResponse(
+            binaryQuery,
+            failingCancelResponse(),
+            { onCancellationError: 'propagate' },
+          )
+
+          await expect(cancel(result)).rejects.toBe(cancelError)
+        })
+      })
+    })
+  })
+
+  describe('onCancellationError', () => {
+    const cancelError = new Error('cancel failed')
+
+    function redirectResponse(cancel: UnderlyingSourceCancelCallback) {
+      const body = new ReadableStream<Uint8Array>({
+        start: (controller) => controller.enqueue(bytes),
+        cancel,
+      })
+      return new Response(body, { status: 302 })
+    }
+
+    async function cancellationOrder(
+      options?: Parameters<typeof XrpcResponse.fromFetchResponse>[2],
+    ) {
+      const events: string[] = []
+      const response = redirectResponse(
+        () =>
+          new Promise<void>((resolve) => {
+            setTimeout(() => {
+              events.push('cancelled')
+              resolve()
+            }, 0)
+          }),
+      )
+      await XrpcResponse.fromFetchResponse(
+        binaryQuery,
+        response,
+        options,
+      ).catch(() => events.push('rejected'))
+      return events
+    }
+
+    it('awaits the cancellation by default', async () => {
+      await expect(cancellationOrder()).resolves.toEqual([
+        'cancelled',
+        'rejected',
+      ])
+    })
+
+    it('does not await the cancellation with "log"', async () => {
+      await expect(
+        cancellationOrder({ onCancellationError: 'log' }),
+      ).resolves.toEqual(['rejected'])
+    })
+
+    it('awaits the cancellation with "propagate"', async () => {
+      await expect(
+        cancellationOrder({ onCancellationError: 'propagate' }),
+      ).resolves.toEqual(['cancelled', 'rejected'])
+    })
+
+    it('passes cancellation failures to a custom handler', async () => {
+      using warn = vi.spyOn(console, 'warn')
+      const onCancellationError = vi.fn()
+      const response = redirectResponse(() => {
+        throw cancelError
+      })
+
+      await expect(
+        XrpcResponse.fromFetchResponse(binaryQuery, response, {
+          onCancellationError,
+        }),
+      ).rejects.toBeInstanceOf(XrpcInvalidResponseError)
+
+      await vi.waitFor(() => {
+        expect(onCancellationError).toHaveBeenCalledExactlyOnceWith(cancelError)
+      })
+      expect(warn).not.toHaveBeenCalled()
+    })
+
+    it('throws awaited cancellation failures', async () => {
+      using warn = vi.spyOn(console, 'warn')
+      const response = redirectResponse(() => {
+        throw cancelError
+      })
+
+      await expect(
+        XrpcResponse.fromFetchResponse(binaryQuery, response, {
+          onCancellationError: 'propagate',
+        }),
+      ).rejects.toBe(cancelError)
+      expect(warn).not.toHaveBeenCalled()
+    })
+
+    it('throws awaited cancellation failures of unread empty bodies', async () => {
+      const body = new ReadableStream<Uint8Array>({
+        cancel: () => {
+          throw cancelError
+        },
+      })
+      const response = new Response(body, {
+        headers: { 'content-length': '0' },
+      })
+
+      await expect(
+        XrpcStreamResponse.fromFetchResponse(noOutputQuery, response, {
+          onCancellationError: 'propagate',
+        }),
+      ).rejects.toBe(cancelError)
     })
   })
 })

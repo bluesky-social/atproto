@@ -273,7 +273,12 @@ export class PasswordSession implements Agent, AsyncDisposable {
     // would be to tee() the input stream but that would bufferize the entire
     // stream in memory which can lead to memory starvation. Instead, we will
     // return the original response and let the calling code handle retries.
-    if (ReadableStream && init?.body instanceof ReadableStream) {
+    // @NOTE ReadableStream is not defined in every environment (e.g. React
+    // Native), in which case referencing it would throw a ReferenceError.
+    if (
+      typeof ReadableStream === 'function' &&
+      init?.body instanceof ReadableStream
+    ) {
       return initialRes
     }
 

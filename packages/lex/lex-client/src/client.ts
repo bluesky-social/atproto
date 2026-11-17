@@ -3,10 +3,10 @@ import {
   type Agent,
   type AgentOptions,
   type BinaryBodyInit,
-  type InferXrpcResponseBinary,
+  type IfXrpcStreamable,
   type RecordKeyOptions,
   type Service,
-  type XrpcBinaryBody,
+  type XrpcCancellationErrorHandler,
   type XrpcFailure,
   type XrpcOptions,
   type XrpcRequestHeadersOptions,
@@ -14,9 +14,9 @@ import {
   type XrpcRequestProcessingOptions,
   type XrpcResponse,
   type XrpcResponseBody,
-  type XrpcResponseModeOptions,
-  type XrpcResponseModeParam,
   type XrpcResponseOptions,
+  type XrpcStreamResponse,
+  type XrpcStreamResult,
   applyDefaults,
   buildAgent,
   isService,
@@ -26,6 +26,8 @@ import {
   throwIfAborted,
   xrpc,
   xrpcSafe,
+  xrpcStream,
+  xrpcStreamSafe,
 } from '@atproto/lex-rpc'
 import {
   type AtIdentifierString,
@@ -71,6 +73,7 @@ import {
  * @property {@link ClientOptions.validateRequest} - If true, validates request bodies against their lexicon schemas before sending. Defaults to false for performance.
  * @property {@link ClientOptions.validateResponse} - If false, skips validation of response bodies against their lexicon schemas. Defaults to true to catch errors, but can be disabled for performance if you trust the server responses. Note that defaults will not be applied if validation is disabled, which can cause typing inconsistencies, so use with caution.
  * @property {@link ClientOptions.strictResponseProcessing} - If false, relaxes certain validation rules during response processing (e.g., allowing floats, deeper nesting, etc.). Defaults to true for strict compliance with {@link https://atproto.com/specs/data-model lexicon data model}, but can be disabled to handle non-compliant responses.
+ * @property {@link ClientOptions.onCancellationError} - How discarded response bodies get cancelled. Defaults to `"propagate"` (awaited, failures thrown). Fetch handlers that may return responses with pending clones must use `"log"` (not awaited, failures logged) or a function, to avoid dead locks.
  *
  * @see {@link XrpcRequestHeadersOptions}
  * @see {@link XrpcRequestProcessingOptions}
@@ -383,6 +386,7 @@ export class Client {
     validateRequest: boolean
     validateResponse: boolean
     strictResponseProcessing: boolean
+    onCancellationError: XrpcCancellationErrorHandler
   }>
 
   constructor(agent: Agent | AgentOptions, options: ClientOptions = {}) {
@@ -408,6 +412,7 @@ export class Client {
       validateRequest: options.validateRequest ?? false,
       validateResponse: options.validateResponse ?? true,
       strictResponseProcessing: options.strictResponseProcessing ?? true,
+      onCancellationError: options.onCancellationError ?? 'propagate',
     })
   }
 
@@ -503,35 +508,22 @@ export class Client {
    * })
    * ```
    *
-   * @example Streaming a binary response
-   * ```typescript
-   * // Disposing of the response cancels the body if it was not fully consumed
-   * await using response = await client.xrpc(com.atproto.sync.getRepo, {
-   *   params: { did },
-   *   responseType: 'stream',
-   * })
-   * ```
-   *
    * @see {@link xrpcSafe} for a non-throwing variant
+   * @see {@link xrpcStream} to stream binary payloads instead
    */
   async xrpc<const TMethod extends Query | Procedure>(
     ns: NonNullable<unknown> extends XrpcOptions<TMethod>
       ? Main<TMethod>
       : Restricted<'This XRPC method requires an "options" argument'>,
   ): Promise<XrpcResponse<TMethod>>
-  async xrpc<
-    const TMethod extends Query | Procedure,
-    TOptions extends XrpcResponseModeOptions = NonNullable<unknown>,
-  >(
-    ns: Main<TMethod>,
-    options: XrpcOptions<TMethod> & XrpcResponseModeParam<TOptions>,
-  ): Promise<XrpcResponse<TMethod, InferXrpcResponseBinary<TOptions>>>
   async xrpc<const TMethod extends Query | Procedure>(
     ns: Main<TMethod>,
-    options: XrpcOptions<TMethod> &
-      XrpcResponseModeOptions = {} as XrpcOptions<TMethod> &
-      XrpcResponseModeOptions,
-  ): Promise<XrpcResponse<TMethod, XrpcBinaryBody>> {
+    options: XrpcOptions<TMethod>,
+  ): Promise<XrpcResponse<TMethod>>
+  async xrpc<const TMethod extends Query | Procedure>(
+    ns: Main<TMethod>,
+    options: XrpcOptions<TMethod> = {} as XrpcOptions<TMethod>,
+  ): Promise<XrpcResponse<TMethod>> {
     return xrpc(this.agent, ns, this.buildXrpcOptions(options))
   }
 
@@ -563,27 +555,93 @@ export class Client {
       ? Main<TMethod>
       : Restricted<'This XRPC method requires an "options" argument'>,
   ): Promise<XrpcResponse<TMethod> | XrpcFailure<TMethod>>
-  async xrpcSafe<
-    const TMethod extends Query | Procedure,
-    O extends XrpcResponseModeOptions = NonNullable<unknown>,
-  >(
-    ns: Main<TMethod>,
-    options: XrpcOptions<TMethod> & XrpcResponseModeParam<O>,
-  ): Promise<
-    XrpcResponse<TMethod, InferXrpcResponseBinary<O>> | XrpcFailure<TMethod>
-  >
   async xrpcSafe<const TMethod extends Query | Procedure>(
     ns: Main<TMethod>,
-    options: XrpcOptions<TMethod> &
-      XrpcResponseModeOptions = {} as XrpcOptions<TMethod> &
-      XrpcResponseModeOptions,
-  ): Promise<XrpcResponse<TMethod, XrpcBinaryBody> | XrpcFailure<TMethod>> {
+    options: XrpcOptions<TMethod>,
+  ): Promise<XrpcResponse<TMethod> | XrpcFailure<TMethod>>
+  async xrpcSafe<const TMethod extends Query | Procedure>(
+    ns: Main<TMethod>,
+    options: XrpcOptions<TMethod> = {} as XrpcOptions<TMethod>,
+  ): Promise<XrpcResponse<TMethod> | XrpcFailure<TMethod>> {
     return xrpcSafe(this.agent, ns, this.buildXrpcOptions(options))
   }
 
+  /**
+   * Makes an XRPC request, returning binary (non JSON) payloads unread, as a
+   * {@link ReadableStream}. Throws on failure.
+   *
+   * The caller owns the stream, and must either consume it or cancel it
+   * ({@link XrpcStreamResponse.cancel}, or by disposing of the response).
+   * Only accepts methods whose output may be a binary payload.
+   *
+   * @example
+   * ```typescript
+   * await using response = await client.xrpcStream(com.atproto.sync.getRepo, {
+   *   params: { did },
+   * })
+   *
+   * for await (const chunk of response.body) {
+   *   // ...
+   * }
+   * ```
+   *
+   * @see {@link xrpc} for the buffered variant
+   * @see {@link xrpcStreamSafe} for a non-throwing variant
+   */
+  async xrpcStream<const TMethod extends Query | Procedure>(
+    ns: NonNullable<unknown> extends XrpcOptions<TMethod>
+      ? IfXrpcStreamable<TMethod, Main<TMethod>>
+      : Restricted<'This XRPC method requires an "options" argument'>,
+  ): Promise<XrpcStreamResponse<TMethod>>
+  async xrpcStream<const TMethod extends Query | Procedure>(
+    ns: IfXrpcStreamable<TMethod, Main<TMethod>>,
+    options: XrpcOptions<TMethod>,
+  ): Promise<XrpcStreamResponse<TMethod>>
+  async xrpcStream<const TMethod extends Query | Procedure>(
+    ns: IfXrpcStreamable<TMethod, Main<TMethod>>,
+    options: XrpcOptions<TMethod> = {} as XrpcOptions<TMethod>,
+  ): Promise<XrpcStreamResponse<TMethod>> {
+    return xrpcStream(this.agent, ns, this.buildXrpcOptions(options))
+  }
+
+  /**
+   * Same as {@link xrpcStream}, but returns failures instead of throwing them.
+   *
+   * @returns Either a successful {@link XrpcStreamResponse} or an
+   * {@link XrpcFailure}, both of which are disposable.
+   *
+   * @example
+   * ```typescript
+   * await using result = await client.xrpcStreamSafe(com.atproto.sync.getRepo, {
+   *   params: { did },
+   * })
+   *
+   * if (result.success) {
+   *   for await (const chunk of result.body) {
+   *     // ...
+   *   }
+   * }
+   * ```
+   */
+  async xrpcStreamSafe<const TMethod extends Query | Procedure>(
+    ns: NonNullable<unknown> extends XrpcOptions<TMethod>
+      ? IfXrpcStreamable<TMethod, Main<TMethod>>
+      : Restricted<'This XRPC method requires an "options" argument'>,
+  ): Promise<XrpcStreamResult<TMethod>>
+  async xrpcStreamSafe<const TMethod extends Query | Procedure>(
+    ns: IfXrpcStreamable<TMethod, Main<TMethod>>,
+    options: XrpcOptions<TMethod>,
+  ): Promise<XrpcStreamResult<TMethod>>
+  async xrpcStreamSafe<const TMethod extends Query | Procedure>(
+    ns: IfXrpcStreamable<TMethod, Main<TMethod>>,
+    options: XrpcOptions<TMethod> = {} as XrpcOptions<TMethod>,
+  ): Promise<XrpcStreamResult<TMethod>> {
+    return xrpcStreamSafe(this.agent, ns, this.buildXrpcOptions(options))
+  }
+
   protected buildXrpcOptions<TMethod extends Query | Procedure>(
-    options: XrpcOptions<TMethod> & XrpcResponseModeOptions,
-  ): XrpcOptions<TMethod> & XrpcResponseModeOptions {
+    options: XrpcOptions<TMethod>,
+  ): XrpcOptions<TMethod> {
     // Apply the instance-wide defaults for service, labelers, and validation
     // options.
     const combined = applyDefaults(options, this.xrpcDefaults)
@@ -875,29 +933,40 @@ export class Client {
    * defaults, and will always use `null` unless explicitly overridden in the
    * options.
    *
-   * @example Streaming the blob
-   * ```typescript
-   * // Disposing of the response cancels the body if it was not fully consumed
-   * await using response = await client.getBlob(did, cid, {
-   *   responseType: 'stream',
-   * })
-   * ```
+   * @see {@link getBlobStream} to stream the blob instead
    */
-  async getBlob<O extends XrpcResponseModeOptions = NonNullable<unknown>>(
-    did: DidString,
-    cid: CidString,
-    options?: GetBlobOptions & XrpcResponseModeParam<O>,
-  ): Promise<XrpcResponse<typeof getBlob, InferXrpcResponseBinary<O>>>
   async getBlob(
     did: DidString,
     cid: CidString,
-    {
-      service = null,
-      labelers = null,
-      ...options
-    }: GetBlobOptions & XrpcResponseModeOptions = {},
-  ): Promise<XrpcResponse<typeof getBlob, XrpcBinaryBody>> {
+    { service = null, labelers = null, ...options }: GetBlobOptions = {},
+  ): Promise<XrpcResponse<typeof getBlob>> {
     return this.xrpc(getBlob, {
+      ...options,
+      service,
+      labelers,
+      params: { did, cid },
+    })
+  }
+
+  /**
+   * Same as {@link getBlob}, but returns the blob unread, as a
+   * {@link ReadableStream} (see {@link xrpcStream}).
+   *
+   * @example
+   * ```typescript
+   * await using response = await client.getBlobStream(did, cid)
+   *
+   * for await (const chunk of response.body) {
+   *   // ...
+   * }
+   * ```
+   */
+  async getBlobStream(
+    did: DidString,
+    cid: CidString,
+    { service = null, labelers = null, ...options }: GetBlobOptions = {},
+  ): Promise<XrpcStreamResponse<typeof getBlob>> {
+    return this.xrpcStream(getBlob, {
       ...options,
       service,
       labelers,
@@ -937,14 +1006,6 @@ export class Client {
    *   profile.displayName = 'Alice'
    * })
    * ```
-   *
-   * @example Streaming a binary response
-   * ```typescript
-   * // The caller must consume or cancel the returned stream
-   * const stream = await client.call(com.atproto.sync.getRepo, { did }, {
-   *   responseType: 'stream',
-   * })
-   * ```
    */
   public async call<const T extends Query>(
     ns: NonNullable<unknown> extends XrpcRequestParams<T>
@@ -961,10 +1022,7 @@ export class Client {
       ? Main<T>
       : Restricted<'This action type requires an "input" argument'>,
   ): Promise<InferActionOutput<T>>
-  public async call<
-    const T extends Action | Procedure | Query,
-    O extends XrpcResponseModeOptions = NonNullable<unknown>,
-  >(
+  public async call<const T extends Action | Procedure | Query>(
     ns: Main<T>,
     arg: T extends Action
       ? InferActionInput<T>
@@ -976,17 +1034,17 @@ export class Client {
     options?: T extends Action
       ? ActionOptions
       : T extends Procedure
-        ? Omit<XrpcOptions<T>, 'body'> & XrpcResponseModeParam<O>
+        ? Omit<XrpcOptions<T>, 'body'>
         : T extends Query
-          ? Omit<XrpcOptions<T>, 'params'> & XrpcResponseModeParam<O>
+          ? Omit<XrpcOptions<T>, 'params'>
           : never,
   ): Promise<
     T extends Action
       ? InferActionOutput<T>
       : T extends Procedure
-        ? XrpcResponseBody<T, InferXrpcResponseBinary<O>>
+        ? XrpcResponseBody<T>
         : T extends Query
-          ? XrpcResponseBody<T, InferXrpcResponseBinary<O>>
+          ? XrpcResponseBody<T>
           : never
   >
   public async call(

@@ -8,6 +8,7 @@ import type {
   Payload,
   Procedure,
   Query,
+  Restricted,
   ResultSuccess,
   Validator,
 } from '@atproto/lex-schema'
@@ -28,7 +29,7 @@ const CONTENT_TYPE_JSON = 'application/json'
 /**
  * A binary response payload that was not read yet.
  *
- * @see {@link XrpcResponseModeOptions.responseType}
+ * @see {@link XrpcStreamResponse}
  */
 export type XrpcBinaryStream = ReadableStream<Uint8Array<ArrayBuffer>>
 
@@ -37,53 +38,17 @@ export type XrpcBinaryStream = ReadableStream<Uint8Array<ArrayBuffer>>
  */
 export type XrpcBinaryBody = Uint8Array<ArrayBuffer> | XrpcBinaryStream
 
-export type XrpcResponseType = 'buffer' | 'stream'
-
 /**
- * Options that determine the type of the response payload. Since they are
- * inferred from the options of each request (see
- * {@link XrpcResponseModeParam}), they cannot be configured through
- * instance-wide defaults.
+ * Resolves to `T` if the output of `TMethod` may be a binary payload (which
+ * {@link XrpcStreamResponse} returns as a stream), and to a type error
+ * otherwise.
  */
-export type XrpcResponseModeOptions = {
-  /**
-   * How binary (non JSON) response payloads are returned:
-   *
-   * - `"buffer"`: the payload is fully read into a {@link Uint8Array}.
-   * - `"stream"`: the payload is returned, unread, as a {@link ReadableStream}.
-   *   The caller becomes responsible for either consuming or cancelling it,
-   *   which can be done by disposing of the response (`await using`). Fetch
-   *   implementations that do not support streaming response bodies (e.g.
-   *   React Native's built-in fetch) will cause an {@link XrpcInternalError}.
-   *
-   * JSON payloads and error responses are always buffered.
-   *
-   * @default "buffer"
-   */
-  responseType?: XrpcResponseType
-}
-
-/**
- * Picks the {@link XrpcResponseModeOptions} of `TOptions`. Typing request options as
- * `XrpcRequestOptions & XrpcResponseModeParam<TOptions>` allows `TOptions` to be inferred
- * from the options, while preserving excess property checks on the whole
- * options object.
- */
-export type XrpcResponseModeParam<TOptions extends XrpcResponseModeOptions> =
-  Pick<TOptions, keyof TOptions & keyof XrpcResponseModeOptions>
-
-/**
- * The type of binary response payloads, according to the response mode
- * options `TOptions`.
- */
-export type InferXrpcResponseBinary<TOptions extends XrpcResponseModeOptions> =
-  TOptions extends { responseType?: infer T }
-    ? BinaryForResponseType<T>
-    : Uint8Array<ArrayBuffer>
-
-type BinaryForResponseType<T> = T extends 'stream'
-  ? XrpcBinaryStream
-  : Uint8Array<ArrayBuffer>
+export type IfXrpcStreamable<TMethod extends Procedure | Query, T> =
+  // @NOTE Testing against Uint8Array would not work, since LexValue (JSON
+  // payloads) includes Uint8Array.
+  XrpcBinaryStream extends XrpcResponseBody<TMethod, XrpcBinaryStream>
+    ? T
+    : Restricted<'This XRPC method never returns a binary payload'>
 
 // @NOTE the output schema is used in "parse" mode (safeParse), which means that
 // defaults will be applied and coercions will be performed, so we need to use
@@ -105,7 +70,11 @@ type InferBodyType<
   ? InferOutput<TSchema>
   : TEncoding extends `application/json`
     ? LexValue
-    : TBinary
+    : // Non-literal encodings (e.g. `string`) may be "application/json" at
+      // runtime, in which case the payload gets parsed.
+      `application/json` extends TEncoding
+      ? LexValue | TBinary
+      : TBinary
 
 /**
  * The body type of an XRPC response, inferred from the method's output schema.
@@ -149,6 +118,25 @@ export type XrpcResponsePayload<
         undefined | { body: LexValue | TBinary; encoding: string }
     : never
 
+/**
+ * Determines how a response body gets cancelled, and how failures to do so are
+ * handled:
+ *
+ * - `"propagate"` (default): the cancellation is awaited, and its failures are
+ *   thrown. If the body is discarded because of another error, the
+ *   cancellation failure is thrown instead of that error.
+ * - `"log"`: the cancellation is not awaited, and its failures are logged.
+ * - a function: the cancellation is not awaited, and its failures are passed
+ *   to that function.
+ *
+ * @note Cancelling the body of a response that was cloned only settles once
+ * every clone was consumed or cancelled. Responses that may have pending clones
+ * (e.g. created by the fetch handler) must use `"log"` or a function, as
+ * `"propagate"` would otherwise result in a dead lock.
+ */
+export type XrpcCancellationErrorHandler =
+  'propagate' | 'log' | ((err: unknown) => void)
+
 export type XrpcResponseOptions = {
   /**
    * Whether to validate the response against the method's output schema.
@@ -184,49 +172,28 @@ export type XrpcResponseOptions = {
    * @see {@link LexParseOptions.strict}
    */
   strictResponseProcessing?: boolean
+
+  /**
+   * Determines how response bodies that are discarded (e.g. because the
+   * response is invalid) get cancelled, in order to release their underlying
+   * resources (e.g. connection).
+   *
+   * @see {@link XrpcCancellationErrorHandler}
+   * @default "propagate"
+   */
+  onCancellationError?: XrpcCancellationErrorHandler
 }
 
 /**
- * Small container for XRPC response.
+ * Properties shared by {@link XrpcResponse} and {@link XrpcStreamResponse}.
  *
- * @implements {ResultSuccess<XrpcResponse<M>>} for convenience in result handling contexts.
- *
- * @example
- *
- * ```typescript
- * import { app } from '#/lexicons'
- * import { XrpcResponse } from '@atproto/lex-client'
- *
- * const fetchResponse = await fetch('https://example.com/xrpc/app.bsky.feed.getTimeline')
- *
- * const response = await XrpcResponse.fromFetchResponse(
- *   app.bsky.feed.getTimeline.main,
- *   fetchResponse,
- * )
- *
- * // Fully typed (validated) response body, according to the method's output schema
- * const { cursor, feed } = response.body
- * ```
- *
- * @example Streaming a binary response
- *
- * ```typescript
- * // Disposing of the response cancels the body if it was not fully consumed
- * await using response = await XrpcResponse.fromFetchResponse(
- *   com.atproto.sync.getBlob.main,
- *   fetchResponse,
- *   { responseType: 'stream' },
- * )
- *
- * for await (const chunk of response.body) {
- *   // ...
- * }
- * ```
+ * @typeParam M - The XRPC method type (Procedure or Query)
+ * @typeParam TBinary - The type of binary payloads
  */
-export class XrpcResponse<
+export abstract class XrpcResponseBase<
   M extends Procedure | Query,
-  TBinary extends XrpcBinaryBody = Uint8Array<ArrayBuffer>,
-> implements ResultSuccess<XrpcResponse<M, TBinary>> {
+  TBinary extends XrpcBinaryBody,
+> implements ResultSuccess<XrpcResponseBase<M, TBinary>> {
   /** @see {@link ResultSuccess.success} */
   readonly success = true as const
 
@@ -262,27 +229,43 @@ export class XrpcResponse<
    * The parsed response body.
    *
    * For 'application/json' responses, this is the parsed and validated LexValue.
-   * For binary responses, this is a Uint8Array, or a {@link XrpcBinaryStream}
-   * when using the "stream" {@link XrpcResponseModeOptions.responseType}.
+   * For binary responses, this is a Uint8Array ({@link XrpcResponse}) or a
+   * {@link XrpcBinaryStream} ({@link XrpcStreamResponse}).
    * Returns `undefined` if the response has no body.
    */
   get body() {
     return this.payload?.body as XrpcResponseBody<M, TBinary>
   }
+}
 
-  /**
-   * Cancels the response body if it is a {@link XrpcBinaryStream} that is not
-   * locked (e.g. by a reader). This is a no-op for buffered payloads, and for
-   * streams that were already fully consumed.
-   *
-   * @note The cancellation is initiated, but not awaited, as it would never
-   * settle for responses that were cloned (until every clone is consumed).
-   */
-  async [Symbol.asyncDispose](): Promise<void> {
-    const body = this.payload?.body
-    if (isReadableStream(body)) cancelStream(body)
-  }
-
+/**
+ * Small container for XRPC response, with binary payloads read into a
+ * Uint8Array.
+ *
+ * @implements {ResultSuccess<XrpcResponse<M>>} for convenience in result handling contexts.
+ * @see {@link XrpcStreamResponse} to stream binary payloads instead
+ *
+ * @example
+ *
+ * ```typescript
+ * import { app } from '#/lexicons'
+ * import { XrpcResponse } from '@atproto/lex-client'
+ *
+ * const fetchResponse = await fetch('https://example.com/xrpc/app.bsky.feed.getTimeline')
+ *
+ * const response = await XrpcResponse.fromFetchResponse(
+ *   app.bsky.feed.getTimeline.main,
+ *   fetchResponse,
+ * )
+ *
+ * // Fully typed (validated) response body, according to the method's output schema
+ * const { cursor, feed } = response.body
+ * ```
+ */
+export class XrpcResponse<M extends Procedure | Query> extends XrpcResponseBase<
+  M,
+  Uint8Array<ArrayBuffer>
+> {
   /**
    * @throws {XrpcResponseError} in case of (valid) XRPC error responses. Use
    * {@link XrpcResponseError.matchesSchemaErrors} to narrow the error type based on
@@ -290,40 +273,190 @@ export class XrpcResponse<
    * {@link XrpcAuthenticationError} if the error is an authentication error.
    * @throws {XrpcInvalidResponseError} when the response is not a valid XRPC
    * response, or if the response does not conform to the method's schema.
-   * @throws {XrpcInternalError} when streaming the response payload is not
-   * supported by the fetch implementation.
-   * @note The response body is always consumed or cancelled, unless it gets
-   * returned as a {@link XrpcBinaryStream}.
+   * @note The response body is always consumed or cancelled.
    */
-  static async fromFetchResponse<
-    const M extends Procedure | Query,
-    O extends XrpcResponseModeOptions = NonNullable<unknown>,
-  >(
-    method: M,
-    response: Response,
-    options?: XrpcResponseOptions & XrpcResponseModeParam<O>,
-  ): Promise<XrpcResponse<M, InferXrpcResponseBinary<O>>>
   static async fromFetchResponse<const M extends Procedure | Query>(
     method: M,
     response: Response,
-    options?: XrpcResponseOptions & XrpcResponseModeOptions,
-  ): Promise<XrpcResponse<M, XrpcBinaryBody>> {
-    try {
-      return await processFetchResponse(method, response, options)
-    } catch (err) {
-      // Release the resources (e.g. undici connection) associated with the
-      // response, in case it was not fully consumed.
-      cancelResponseBody(response, err)
-      throw err
-    }
+    options?: XrpcResponseOptions,
+  ): Promise<XrpcResponse<M>> {
+    const payload = (await readXrpcPayload(
+      method,
+      response,
+      options,
+      false,
+    )) as XrpcResponsePayload<M>
+    return new XrpcResponse<M>(
+      method,
+      response.status,
+      response.headers,
+      payload,
+    )
   }
 }
 
-async function processFetchResponse<M extends Procedure | Query>(
-  method: M,
+/**
+ * XRPC response whose binary (non JSON) payload is returned, unread, as a
+ * {@link XrpcBinaryStream}. JSON payloads and error responses are still
+ * buffered (and validated).
+ *
+ * The caller owns the stream, and must either consume it or {@link cancel} it
+ * in order to release the underlying resources (e.g. connection). Disposing of
+ * the response (`await using`) cancels the stream if it was not consumed.
+ *
+ * @example
+ *
+ * ```typescript
+ * await using response = await XrpcStreamResponse.fromFetchResponse(
+ *   com.atproto.sync.getBlob.main,
+ *   fetchResponse,
+ * )
+ *
+ * for await (const chunk of response.body) {
+ *   // ...
+ * }
+ * ```
+ */
+export class XrpcStreamResponse<M extends Procedure | Query>
+  extends XrpcResponseBase<M, XrpcBinaryStream>
+  implements AsyncDisposable
+{
+  readonly #response: Response
+  readonly #onCancellationError: XrpcCancellationErrorHandler | undefined
+
+  constructor(
+    method: M,
+    response: Response,
+    payload: XrpcResponsePayload<M, XrpcBinaryStream>,
+    options?: Pick<XrpcResponseOptions, 'onCancellationError'>,
+  ) {
+    super(method, response.status, response.headers, payload)
+    this.#response = response
+    // @NOTE The options object is not kept, as it can be the whole request
+    // options (see xrpc()), whose request body must not be retained.
+    this.#onCancellationError = options?.onCancellationError
+  }
+
+  /**
+   * Whether the response body is a {@link XrpcBinaryStream}. This is always the
+   * case for binary payloads, but methods with an undeclared output may also
+   * return a (parsed) JSON payload, or no payload at all.
+   *
+   * @example
+   * ```typescript
+   * if (response.hasBodyStream()) {
+   *   for await (const chunk of response.body) {
+   *     // ...
+   *   }
+   * }
+   * ```
+   */
+  hasBodyStream(): this is { readonly body: XrpcBinaryStream } {
+    return isReadableStream(this.payload?.body)
+  }
+
+  /**
+   * Cancels the response body, releasing its underlying resources (e.g.
+   * connection). This is a no-op if the body is not a stream (e.g. a JSON
+   * payload), if it was fully consumed, or if it is locked (in which case it
+   * must be cancelled through its reader).
+   *
+   * The cancellation is performed as determined by the
+   * {@link XrpcResponseOptions.onCancellationError} option this response was
+   * created with. By default (`"propagate"`), the cancellation is awaited, and
+   * its failures are thrown.
+   *
+   * Cancellation failures are ignored once the body was read from, as they
+   * would then typically be the error the reader already got (e.g. a network
+   * error, which would otherwise be thrown twice when disposing of the response
+   * with `await using`).
+   */
+  async cancel(reason?: unknown): Promise<void> {
+    if (this.hasBodyStream()) {
+      // @NOTE bodyUsed is the standard (portable) way of telling whether a
+      // body stream was disturbed (read from or cancelled).
+      const { body } = this
+      const ignoreFailures =
+        body === this.#response.body && this.#response.bodyUsed
+      await cancelStream(
+        body,
+        reason,
+        this.#onCancellationError,
+        ignoreFailures,
+      )
+    }
+  }
+
+  /** @see {@link XrpcStreamResponse.cancel} */
+  async [Symbol.asyncDispose](): Promise<void> {
+    await this.cancel()
+  }
+
+  /**
+   * @throws {XrpcResponseError} in case of (valid) XRPC error responses.
+   * @throws {XrpcInvalidResponseError} when the response is not a valid XRPC
+   * response, or if the response does not conform to the method's schema.
+   * @throws {XrpcInternalError} when the fetch implementation does not expose
+   * the response body as a stream (e.g. React Native's built-in fetch).
+   * @note The response body is always consumed or cancelled, unless it is
+   * returned as a {@link XrpcBinaryStream}.
+   * @see {@link XrpcResponse.fromFetchResponse}
+   */
+  static async fromFetchResponse<const M extends Procedure | Query>(
+    method: IfXrpcStreamable<M, M>,
+    response: Response,
+    options?: XrpcResponseOptions,
+  ): Promise<XrpcStreamResponse<M>>
+  static async fromFetchResponse<const M extends Procedure | Query>(
+    method: M,
+    response: Response,
+    options?: XrpcResponseOptions,
+  ): Promise<XrpcStreamResponse<M>> {
+    const payload = (await readXrpcPayload(
+      method,
+      response,
+      options,
+      true,
+    )) as XrpcResponsePayload<M, XrpcBinaryStream>
+    return new XrpcStreamResponse<M>(method, response, payload, options)
+  }
+}
+
+/**
+ * @note The response body is always consumed or cancelled, unless it is
+ * returned as a stream.
+ */
+async function readXrpcPayload(
+  method: Procedure | Query,
   response: Response,
-  options?: XrpcResponseOptions & XrpcResponseModeOptions,
-): Promise<XrpcResponse<M, XrpcBinaryBody>> {
+  options: undefined | XrpcResponseOptions,
+  stream: boolean,
+): Promise<undefined | XrpcUnknownResponsePayload<XrpcBinaryBody>> {
+  let payload: undefined | XrpcUnknownResponsePayload<XrpcBinaryBody>
+
+  try {
+    payload = await processFetchResponse(method, response, options, stream)
+  } catch (err) {
+    // Release the resources (e.g. undici connection) associated with the
+    // response, in case it was not fully consumed.
+    await cancelResponseBody(response, err, options?.onCancellationError)
+    throw err
+  }
+
+  // Release the resources of empty bodies that were not read (stream mode)
+  if (payload === undefined) {
+    await cancelResponseBody(response, undefined, options?.onCancellationError)
+  }
+
+  return payload
+}
+
+async function processFetchResponse(
+  method: Procedure | Query,
+  response: Response,
+  options: undefined | XrpcResponseOptions,
+  stream: boolean,
+): Promise<undefined | XrpcUnknownResponsePayload<XrpcBinaryBody>> {
   // Always turn 4xx/5xx responses into XrpcResponseError
   if (response.status >= 400) {
     const payload = await readPayload(method, response, {
@@ -332,10 +465,10 @@ async function processFetchResponse<M extends Procedure | Query>(
     })
 
     if (response.status === 401) {
-      throw new XrpcAuthenticationError<M>(method, response, payload)
+      throw new XrpcAuthenticationError(method, response, payload)
     }
 
-    throw new XrpcResponseError<M>(method, response, payload)
+    throw new XrpcResponseError(method, response, payload)
   }
 
   // @NOTE redirect is set to 'follow', so we shouldn't get 3xx responses here
@@ -359,7 +492,7 @@ async function processFetchResponse<M extends Procedure | Query>(
           ? { strict: false }
           : false,
     // Payloads validated against a schema are always buffered
-    stream: options?.responseType === 'stream' && !method.output.schema,
+    stream: stream && !method.output.schema,
   })
 
   if (!method.output.matchesEncoding(payload?.encoding)) {
@@ -398,26 +531,11 @@ async function processFetchResponse<M extends Procedure | Query>(
         )
       }
 
-      const parsedPayload = {
-        body: result.value,
-        encoding: payload.encoding,
-      } as XrpcResponsePayload<M, XrpcBinaryBody>
-
-      return new XrpcResponse<M, XrpcBinaryBody>(
-        method,
-        response.status,
-        response.headers,
-        parsedPayload,
-      )
+      return { body: result.value as LexValue, encoding: payload.encoding }
     }
   }
 
-  return new XrpcResponse<M, XrpcBinaryBody>(
-    method,
-    response.status,
-    response.headers,
-    payload as XrpcResponsePayload<M, XrpcBinaryBody>,
-  )
+  return payload
 }
 
 type ReadPayloadOptions = {
@@ -439,7 +557,7 @@ type ReadPayloadOptions = {
 
 /**
  * @note this function always consumes the response body, unless it is returned
- * as a stream.
+ * as a stream, or known to be empty without being read (stream mode).
  */
 async function readPayload(
   method: Query | Procedure,
@@ -474,7 +592,6 @@ async function readPayload(
           response.body === null ||
           response.headers.get('content-length')?.trim() === '0'
         ) {
-          cancelResponseBody(response)
           return undefined
         }
 
@@ -533,8 +650,6 @@ function getBodyStream(
 ): XrpcBinaryStream {
   const { body } = response
 
-  if (body) return body
-
   // A null body is a body without content (e.g. 204 responses)
   if (body === null) {
     return new ReadableStream({
@@ -542,8 +657,11 @@ function getBodyStream(
     })
   }
 
-  // Some fetch implementations (e.g. React Native's built-in fetch) do not
-  // expose the response body as a stream.
+  if (isReadableStream(body)) return body
+
+  // Some fetch implementations do not expose the response body as a
+  // ReadableStream: React Native's built-in fetch does not expose it at all,
+  // and node-fetch exposes a Node.js Readable instead.
   throw new XrpcInternalError(
     method,
     'Streaming response payloads is not supported by the fetch() implementation',
@@ -566,24 +684,61 @@ function isReadableStream(value: unknown): value is ReadableStream {
   )
 }
 
-function cancelResponseBody(response: Response, reason?: unknown): void {
-  if (response.body && !response.bodyUsed) {
-    cancelStream(response.body, reason)
+/**
+ * Cancels the response body, if it was not consumed yet.
+ *
+ * @see {@link XrpcResponseOptions.onCancellationError}
+ */
+async function cancelResponseBody(
+  response: Response,
+  reason: unknown,
+  onCancellationError?: XrpcCancellationErrorHandler,
+): Promise<void> {
+  const { body } = response
+  if (body && !response.bodyUsed) {
+    await cancelStream(body, reason, onCancellationError)
   }
 }
 
 /**
- * Cancels a stream that is not locked, in order to release its underlying
- * resources (e.g. undici connection).
+ * Cancels a stream, unless it is locked (e.g. by a reader).
  *
- * @note The cancellation is not awaited (and failures are logged) because, if
- * the response it originates from was cloned, cancel() only settles once every
- * clone was consumed or cancelled, which could result in a dead lock.
+ * @param ignoreFailures - Whether to silence cancellation failures, regardless
+ * of `onCancellationError` (which still determines whether the cancellation
+ * is awaited).
+ * @see {@link XrpcCancellationErrorHandler}
  */
-function cancelStream(stream: ReadableStream, reason?: unknown): void {
-  if (stream.locked) return
-  stream.cancel(reason).catch(logCancellationError)
+async function cancelStream(
+  stream: ReadableStream,
+  reason: unknown,
+  onCancellationError: XrpcCancellationErrorHandler = 'propagate',
+  ignoreFailures = false,
+): Promise<void> {
+  if (
+    stream.locked ||
+    // Support for alternative fetch implementations
+    typeof stream.cancel !== 'function'
+  ) {
+    return
+  }
+
+  if (onCancellationError === 'propagate') {
+    try {
+      await stream.cancel(reason)
+    } catch (err) {
+      if (!ignoreFailures) throw err
+    }
+  } else {
+    const errorHandler = ignoreFailures
+      ? ignoreError
+      : onCancellationError === 'log'
+        ? logCancellationError
+        : onCancellationError
+    void stream.cancel(reason).catch(errorHandler)
+  }
 }
+
+function ignoreError(): void {}
 
 function logCancellationError(err: unknown): void {
   console.warn('Failed to cancel response body', err)

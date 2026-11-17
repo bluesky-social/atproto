@@ -120,14 +120,14 @@ export class OAuthClient {
     const response = await fetch(request)
 
     if (response.status !== 200) {
-      response.body?.cancel?.()
+      await response.body?.cancel?.()
       throw new TypeError(`Failed to fetch client metadata: ${response.status}`)
     }
 
     // https://www.ietf.org/archive/id/draft-ietf-oauth-client-id-metadata-document-00.html#section-4.1
     const mime = response.headers.get('content-type')?.split(';')[0].trim()
     if (mime !== 'application/json') {
-      response.body?.cancel?.()
+      await response.body?.cancel?.()
       throw new TypeError(`Invalid client metadata content type: ${mime}`)
     }
 

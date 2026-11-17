@@ -10,12 +10,12 @@ import {
 import {
   type Action,
   Client,
-  type ClientOptions,
   type FetchHandler,
   XrpcAuthenticationError,
   type XrpcBinaryStream,
   XrpcInvalidResponseError,
   XrpcResponseError,
+  XrpcStreamResponse,
   buildAgent,
 } from '../src/index.js'
 import {
@@ -901,7 +901,7 @@ describe(Client, () => {
       expect(body).toEqual(bytes)
     })
 
-    describe('responseType: "stream"', () => {
+    describe('streaming', () => {
       const fetchHandler: FetchHandler = async () =>
         new Response(bytes, {
           headers: { 'content-type': 'application/octet-stream' },
@@ -911,81 +911,177 @@ describe(Client, () => {
         return new Uint8Array(await new Response(stream).arrayBuffer())
       }
 
-      it('streams xrpc() binary responses', async () => {
+      it('streams binary responses with xrpcStream()', async () => {
         const client = new Client(fetchHandler)
 
-        await using response = await client.xrpc(getBytes, {
-          responseType: 'stream',
-        })
+        await using response = await client.xrpcStream(getBytes)
 
+        expect(response).toBeInstanceOf(XrpcStreamResponse)
         expectTypeOf(response.body).toEqualTypeOf<XrpcBinaryStream>()
         await expect(readStream(response.body)).resolves.toEqual(bytes)
       })
 
-      it('streams xrpcSafe() binary responses', async () => {
+      it('returns disposable results from xrpcStreamSafe()', async () => {
         const client = new Client(fetchHandler)
 
-        const result = await client.xrpcSafe(getBytes, {
-          responseType: 'stream',
-        })
+        await using result = await client.xrpcStreamSafe(getBytes)
 
         assert(result.success)
-        await using response = result
-        expectTypeOf(response.body).toEqualTypeOf<XrpcBinaryStream>()
-        await expect(readStream(response.body)).resolves.toEqual(bytes)
+        expectTypeOf(result.body).toEqualTypeOf<XrpcBinaryStream>()
+        await expect(readStream(result.body)).resolves.toEqual(bytes)
       })
 
-      it('streams blobs', async () => {
-        const client = new Client(fetchHandler)
+      it('returns disposable failures from xrpcStreamSafe()', async () => {
+        const client = new Client(async () =>
+          Response.json({ error: 'InvalidRequest' }, { status: 400 }),
+        )
 
-        await using response = await client.getBlob(did, cid, {
-          responseType: 'stream',
+        await using result = await client.xrpcStreamSafe(getBytes)
+
+        assert(!result.success)
+        expect(result).toBeInstanceOf(XrpcResponseError)
+      })
+
+      it('allows cancelling unconsumed streams', async () => {
+        const response = new Response(bytes, {
+          headers: { 'content-type': 'application/octet-stream' },
+        })
+        const client = new Client(async () => response)
+
+        const result = await client.xrpcStream(getBytes)
+        result.cancel()
+
+        expect(response.bodyUsed).toBe(true)
+      })
+
+      it('streams blobs, ignoring the default "service" and "labelers"', async () => {
+        const fetchHandler = vi.fn<FetchHandler>(async (url, init) => {
+          expect(url).toBe(
+            `/xrpc/com.atproto.sync.getBlob?${new URLSearchParams({ did, cid })}`,
+          )
+          const headers = new Headers(init?.headers)
+          expect(headers.has('atproto-proxy')).toBe(false)
+          expect(headers.has('atproto-accept-labelers')).toBe(false)
+          return new Response(bytes, {
+            headers: { 'content-type': 'image/png' },
+          })
         })
 
+        const client = new Client(fetchHandler, {
+          service: 'did:plc:ewvi7nxzyoun6zhxrhs64oiz#bsky_appview',
+          labelers: ['did:plc:ewvi7nxzyoun6zhxrhs64oiz'],
+        })
+
+        await using response = await client.getBlobStream(did, cid)
+
+        expect(fetchHandler).toHaveBeenCalledOnce()
+        expect(response.encoding).toBe('image/png')
         expectTypeOf(response.body).toEqualTypeOf<XrpcBinaryStream>()
         await expect(readStream(response.body)).resolves.toEqual(bytes)
       })
 
-      it('streams call() binary bodies', async () => {
-        const client = new Client(fetchHandler)
+      it('rejects methods that never return binary payloads', async () => {
+        const client = new Client(async () =>
+          Response.json({ preferences: [] }),
+        )
 
-        const body = await client.call(getBytes, {}, { responseType: 'stream' })
+        await using response = await client.xrpcStream(
+          // @ts-expect-error JSON-only output
+          com.example.actor.getPreferences,
+        )
 
-        expectTypeOf(body).toEqualTypeOf<XrpcBinaryStream>()
-        await expect(readStream(body)).resolves.toEqual(bytes)
+        // Still parsed and validated, for untyped callers
+        expect(response.body).toEqual({ preferences: [] })
       })
 
       it('preserves excess property checks', async () => {
         const client = new Client(fetchHandler)
 
-        await using _ = await client.getBlob(did, cid, {
-          responseType: 'stream',
-          // @ts-expect-error unknown option next to a response mode option
+        await using _ = await client.getBlobStream(did, cid, {
+          // @ts-expect-error unknown option
           signl: undefined,
         })
-
-        const body = await client.call(
-          getBytes,
-          {},
-          {
-            responseType: 'stream',
-            // @ts-expect-error unknown option next to a response mode option
-            signl: undefined,
-          },
-        )
-        await body.cancel()
       })
 
-      it('cannot be used as a client default', async () => {
-        // @ts-expect-error not allowed as a client-wide default
-        const options: ClientOptions = { responseType: 'stream' }
+      it('applies the client-wide "onCancellationError" option', async () => {
+        const cancelError = new Error('cancel failed')
+        const onCancellationError = vi.fn()
+        const client = new Client(
+          async () =>
+            new Response(
+              new ReadableStream<Uint8Array>({
+                start: (controller) => controller.enqueue(bytes),
+                cancel: () => {
+                  throw cancelError
+                },
+              }),
+              { status: 302 },
+            ),
+          { onCancellationError },
+        )
 
-        const client = new Client(fetchHandler, options)
+        await expect(client.xrpc(getBytes, {})).rejects.toBeInstanceOf(
+          XrpcInvalidResponseError,
+        )
 
-        const response = await client.xrpc(getBytes, {})
+        await vi.waitFor(() => {
+          expect(onCancellationError).toHaveBeenCalledExactlyOnceWith(
+            cancelError,
+          )
+        })
+        expect(new Client(fetchHandler).xrpcDefaults.onCancellationError).toBe(
+          'propagate',
+        )
+        expect(
+          new Client(fetchHandler, { onCancellationError: 'log' }).xrpcDefaults
+            .onCancellationError,
+        ).toBe('log')
+      })
 
-        expectTypeOf(response.body).toEqualTypeOf<Uint8Array<ArrayBuffer>>()
-        expect(response.body).toEqual(bytes)
+      it('applies "onCancellationError" when disposing of responses', async () => {
+        const cancelError = new Error('cancel failed')
+        const failingCancelResponse = async () =>
+          new Response(
+            new ReadableStream<Uint8Array>({
+              start: (controller) => controller.enqueue(bytes),
+              cancel: () => {
+                throw cancelError
+              },
+            }),
+            { headers: { 'content-type': 'application/octet-stream' } },
+          )
+
+        const onCancellationError = vi.fn()
+        const client = new Client(failingCancelResponse, {
+          onCancellationError,
+        })
+        {
+          await using _ = await client.xrpcStream(getBytes)
+        }
+        await vi.waitFor(() => {
+          expect(onCancellationError).toHaveBeenCalledExactlyOnceWith(
+            cancelError,
+          )
+        })
+
+        const strictClient = new Client(failingCancelResponse, {
+          onCancellationError: 'propagate',
+        })
+        await expect(
+          (async () => {
+            await using _ = await strictClient.xrpcStream(getBytes)
+          })(),
+        ).rejects.toBe(cancelError)
+      })
+
+      it('does not make buffered responses disposable', async () => {
+        const client = new Client(fetchHandler)
+
+        const response = await client.getBlob(did, cid)
+        const result = await client.xrpcSafe(getBytes, {})
+
+        expectTypeOf(response).not.toExtend<AsyncDisposable | Disposable>()
+        expectTypeOf(result).not.toExtend<AsyncDisposable | Disposable>()
       })
     })
   })
