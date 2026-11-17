@@ -27,13 +27,13 @@ import {
   PUBLIC_EVENT_ACTIONS,
   REVERSE_TAKEDOWN,
   TAKEDOWN,
-  appealableEventFilter,
   eventSubjectFilter,
   findAppealHistory,
   hasKnownLatestAppealable,
   subjectLabelUri,
   toAppealState,
 } from './appeal.js'
+import { findLatestAppealableAt } from './appealable-events.js'
 import {
   type PolicyList,
   loadPolicyList,
@@ -123,6 +123,33 @@ type EventTotals = {
   latestAppealableAt: DatetimeString | null
 }
 
+/** Load current enforcement independently of the visible event history. */
+export async function loadSubjectEnforcement(
+  db: Database,
+  subject: ModSubject,
+) {
+  const statusId = getStatusIdentifierFromEvent(subject.info())
+  const [status, labelRows] = await Promise.all([
+    db.db
+      .selectFrom('moderation_subject_status')
+      .where('did', '=', statusId.did)
+      .where('recordPath', '=', statusId.recordPath)
+      .where('convoId', '=', statusId.convoId)
+      .select(publicStatusSelection)
+      .executeTakeFirst(),
+    db.db
+      .selectFrom('label')
+      .where('uri', '=', subjectLabelUri(subject))
+      .where('neg', '=', false)
+      .where((eb) =>
+        eb.or([eb('exp', 'is', null), eb('exp', '>', currentDatetimeString())]),
+      )
+      .select('val')
+      .execute(),
+  ])
+  return { status: status ?? null, labels: labelRows.map((row) => row.val) }
+}
+
 /**
  * Load the public moderation state needed to hydrate one subject view.
  *
@@ -145,26 +172,8 @@ export const loadSubject = async (
       latestAppealableAt: null,
       appealReport: null,
     }
-  const statusId = getStatusIdentifierFromEvent(subject.info())
-  const [status, labelRows, events, totals, appealHistory] = await Promise.all([
-    db.db
-      .selectFrom('moderation_subject_status')
-      .where('did', '=', statusId.did)
-      .where('recordPath', '=', statusId.recordPath)
-      .where('convoId', '=', statusId.convoId)
-      .select(publicStatusSelection)
-      .executeTakeFirst(),
-
-    db.db
-      .selectFrom('label')
-      .where('uri', '=', subjectLabelUri(subject))
-      .where('neg', '=', false)
-      .where((eb) =>
-        eb.or([eb('exp', 'is', null), eb('exp', '>', currentDatetimeString())]),
-      )
-      .select('val')
-      .execute(),
-
+  const [enforcement, events, totals, appealHistory] = await Promise.all([
+    loadSubjectEnforcement(db, subject),
     db.db
       .selectFrom('moderation_event')
       .where((eb) => eventSubjectFilter(eb, subject))
@@ -201,22 +210,17 @@ export const loadSubject = async (
   ])
 
   let latestAppealableAt = totals.latestAppealableAt
-  if (!hasKnownLatestAppealable(latestAppealableAt, events)) {
-    const latest = await db.db
-      .selectFrom('moderation_event')
-      .where((eb) => eventSubjectFilter(eb, subject))
-      .where('action', 'in', [...PUBLIC_EVENT_ACTIONS])
-      .where(appealableEventFilter)
-      .$if(startAt !== undefined, (qb) => qb.where('createdAt', '>=', startAt!))
-      .select(sql<DatetimeString | null>`max("createdAt")`.as('createdAt'))
-      .executeTakeFirstOrThrow()
-    latestAppealableAt = latest.createdAt
+  if (
+    (startAt && !latestAppealableAt) ||
+    !hasKnownLatestAppealable(latestAppealableAt, events)
+  ) {
+    latestAppealableAt = await findLatestAppealableAt(db, subject)
   }
 
   return {
-    status: status ?? null,
+    status: enforcement.status,
     events,
-    labels: labelRows.map((row) => row.val),
+    labels: enforcement.labels,
     actionCount: totals.actionCount,
     firstActionAt: totals.firstActionAt,
     latestAppealableAt,
@@ -486,6 +490,13 @@ export const toSubjectView = ({
     latestAppealableAt: snapshot.latestAppealableAt,
     windowMonths: cfg.appealWindowMonths,
   })
+  if (
+    cfg.startAt &&
+    snapshot.latestAppealableAt &&
+    snapshot.latestAppealableAt < cfg.startAt
+  ) {
+    delete appeal.appealableUntil
+  }
 
   // The subject dates from its first action, not from whenever Ozone first
   // opened a status row for it. A status row older than the inbox start would

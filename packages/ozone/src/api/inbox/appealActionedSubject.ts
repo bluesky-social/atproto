@@ -11,11 +11,12 @@ import {
   resolveAppealAction,
   subjectKey,
 } from '../../inbox/appeal.js'
+import { findLatestAppealableAt } from '../../inbox/appealable-events.js'
 import { getSeenAt } from '../../inbox/seen.js'
 import { inboxHasStarted } from '../../inbox/start.js'
 import {
   hydrateSubjectView,
-  loadSubject,
+  loadSubjectEnforcement,
   toEnforcementView,
 } from '../../inbox/views.js'
 import { tools } from '../../lexicons/index.js'
@@ -89,14 +90,17 @@ export default function (server: Server, ctx: AppContext) {
       // @NOTE The inbox start date bounds displayed history, not eligibility:
       // a subject actioned before it remains appealable.
       if (ctx.cfg.inbox.startAt && !action) {
-        const snapshot = await loadSubject(ctx.db, subject)
+        const [latestAppealableAt, snapshot] = await Promise.all([
+          findLatestAppealableAt(ctx.db, subject),
+          loadSubjectEnforcement(ctx.db, subject),
+        ])
         const enforcement = toEnforcementView({
           subject,
           status: snapshot.status,
           labels: snapshot.labels,
           actions: [],
         })
-        if (!snapshot.latestAppealableAt && enforcement.state === 'none') {
+        if (!latestAppealableAt && enforcement.state === 'none') {
           throw new ForbiddenError(
             'Subject has no moderation action to appeal',
             'NotAppealable',

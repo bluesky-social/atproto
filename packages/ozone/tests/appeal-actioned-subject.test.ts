@@ -1970,6 +1970,114 @@ describe('appealActionedSubject', () => {
         .execute()
     }
 
+    async function notify(subject: EmitSubject) {
+      await modClient.emitEvent({
+        subject,
+        event: {
+          $type: tools.ozone.moderation.defs.modEventEmail.$type,
+          subjectLine: 'Update',
+        },
+      })
+    }
+
+    async function detail(did: DidString, subject: string) {
+      return sc.agent.call(
+        tools.ozone.inbox.getActionedSubject.$lxm,
+        { subject },
+        undefined,
+        { headers: { ...sc.getHeaders(did), 'atproto-proxy': proxyHeader } },
+      )
+    }
+
+    it('offers an appeal for a hidden takedown when a later email is visible', async () => {
+      const subject = await createSubject('precutvisible')
+      const action = await takedown(subject)
+      await backdate(subject.did, [action.id])
+      await notify(subject)
+
+      const listed = await getAccountView(subject.did)
+      const { data } = await detail(subject.did, subject.did)
+      for (const view of [listed, data]) {
+        expect(view.availableActions).toEqual(['appeal'])
+        expect(view.appeal.state).toBe('none')
+        expect(view.appeal.appealableUntil).toBeUndefined()
+      }
+      expect(data.actions).toHaveLength(1)
+      expect(data.actions[0].id).not.toBe(action.id)
+      await expect(appealTakedown(subject, subject.did)).resolves.toMatchObject(
+        {
+          data: { appeal: { state: 'pending' } },
+        },
+      )
+    })
+
+    it('finds a hidden applied label behind a visible label removal', async () => {
+      const account = await createSubject('precutrecord')
+      const post = await sc.post(account.did, 'a labeled post')
+      const subject = com.atproto.repo.strongRef.$build({
+        uri: post.ref.uriStr,
+        cid: post.ref.cidStr,
+      })
+      const action = await label(subject)
+      await backdate(account.did, [action.id])
+      await modClient.emitEvent({
+        subject,
+        event: {
+          $type: tools.ozone.moderation.defs.modEventLabel.$type,
+          createLabelVals: [],
+          negateLabelVals: ['!warn'],
+        },
+      })
+
+      const { data } = await detail(account.did, subject.uri)
+      const list = await sc.agent.call(
+        tools.ozone.inbox.listActionedSubjects.$lxm,
+        {},
+        undefined,
+        {
+          headers: {
+            ...sc.getHeaders(account.did),
+            'atproto-proxy': proxyHeader,
+          },
+        },
+      )
+      const listed = list.data.subjects.find(
+        (view: { subject: { uri?: string } }) =>
+          view.subject.uri === subject.uri,
+      )
+      expect(listed?.availableActions).toEqual(['appeal'])
+      expect(data.availableActions).toEqual(['appeal'])
+      expect(data.appeal.appealableUntil).toBeUndefined()
+      expect(data.actions).toHaveLength(1)
+      expect(data.actions[0].id).not.toBe(action.id)
+      await expect(appeal(action.id, account.did)).resolves.toMatchObject({
+        data: { appeal: { state: 'pending' } },
+      })
+    })
+
+    it('does not offer another appeal for an old action when its appeal is closed', async () => {
+      const subject = await createSubject('precutclosed')
+      const action = await label(subject)
+      await appeal(action.id, subject.did)
+      const reportId = await closeLatestAppeal(subject.did)
+      await backdate(subject.did, [action.id], 2)
+      const closedAt = toDatetimeString(startMs - 1)
+      await network.ozone.ctx.db.db
+        .updateTable('report')
+        .set({ createdAt: closedAt, updatedAt: closedAt, closedAt })
+        .where('id', '=', reportId)
+        .execute()
+      await notify(subject)
+
+      expect((await getAccountView(subject.did)).availableActions).toEqual([])
+      expect(
+        (await detail(subject.did, subject.did)).data.availableActions,
+      ).toEqual([])
+      await expect(legacyAppeal(subject.did)).rejects.toMatchObject({
+        error: 'AlreadyAppealed',
+      })
+    })
+
     it('appeals a takedown applied before the inbox start without showing it', async () => {
       const subject = await createSubject('precuttakedown')
       const action = await takedown(subject)
@@ -2031,6 +2139,24 @@ describe('appealActionedSubject', () => {
       })
     })
 
+    it('retains the existing window difference for old action and subject-only appeals', async () => {
+      const subject = await createSubject('precutoldwindow')
+      const action = await takedown(subject)
+      await backdate(subject.did, [action.id], 200 * 24 * 60 * 60 * 1000)
+      await notify(subject)
+
+      const { data } = await detail(subject.did, subject.did)
+      expect(data.appeal.state).toBe('expired')
+      expect(data.appeal.appealableUntil).toBeUndefined()
+      expect(data.availableActions).toEqual([])
+      await expect(appealTakedown(subject, subject.did)).rejects.toMatchObject({
+        error: 'AppealWindowExpired',
+      })
+      await expect(legacyAppeal(subject.did)).resolves.toMatchObject({
+        data: { appeal: { state: 'pending' } },
+      })
+    })
+
     it('accepts a subject appeal for a suspension that ended before the inbox start', async () => {
       const subject = await createSubject('precutended')
       const suspension = await modClient.emitEvent({
@@ -2071,6 +2197,14 @@ describe('appealActionedSubject', () => {
         .set({ createdAt: closedAt, updatedAt: closedAt, closedAt })
         .where('id', '=', closedId)
         .execute()
+
+      await notify(subject)
+      expect((await getAccountView(subject.did)).availableActions).toEqual([
+        'appeal',
+      ])
+      expect(
+        (await detail(subject.did, subject.did)).data.availableActions,
+      ).toEqual(['appeal'])
 
       const { data } = await legacyAppeal(subject.did)
 

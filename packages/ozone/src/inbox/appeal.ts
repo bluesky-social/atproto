@@ -265,6 +265,7 @@ export const eventSubjectFilter = (
   return eb.and([
     eb('subjectDid', '=', subjectDid),
     eb('subjectType', '=', subjectType),
+    eb('subjectUri', 'is', null),
   ])
 }
 
@@ -276,7 +277,9 @@ export const findAppealedEvent = async (
   let query = ctx.db.db
     .selectFrom('moderation_event')
     .where((eb) => eventSubjectFilter(eb, subject))
-    .where('action', '=', action.type === 'label' ? LABEL : TAKEDOWN)
+    .where(
+      sql<boolean>`action = ${sql.lit(action.type === 'label' ? LABEL : TAKEDOWN)}`,
+    )
 
   if (action.type === 'label') {
     query = query.where(
@@ -448,8 +451,8 @@ export const findAppealHistory = async (db: Database, subject: ModSubject) => {
 /**
  * Reject an appeal the subject is no longer entitled to.
  *
- * Answers the same question as the `availableActions` the read path
- * advertises, through {@link appealsExhausted}, so the two cannot drift.
+ * Shares {@link appealsExhausted} with the read path. Action-specific window
+ * validation is separate; subject-only submissions retain their legacy rules.
  */
 export const assertAppealAllowed = async (
   dbTxn: Database,
@@ -479,7 +482,7 @@ export const assertAppealAllowed = async (
     const latest = await dbTxn.db
       .selectFrom('moderation_event')
       .where((eb) => eventSubjectFilter(eb, subject))
-      .where('action', 'in', [...PUBLIC_EVENT_ACTIONS])
+      .where(sql<boolean>`action IN (${sql.lit(TAKEDOWN)}, ${sql.lit(LABEL)})`)
       .where(appealableEventFilter)
       .where('createdAt', '>', eligibility.lastClosedAt)
       .orderBy('createdAt', 'desc')
