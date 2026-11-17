@@ -300,6 +300,111 @@ describe('pds author feed views', () => {
     expect(data.cursor).toBeUndefined()
   })
 
+  it('includes authored posts and replies without reposts only when requested', async () => {
+    const { data: defaultFeed } = await agent.api.app.bsky.feed.getAuthorFeed({
+      actor: eve,
+    })
+    const { data: mixedFeed } = await agent.api.app.bsky.feed.getAuthorFeed({
+      actor: eve,
+      filter: 'posts_with_replies',
+    })
+    expect(mixedFeed).toEqual(defaultFeed)
+    expect(
+      mixedFeed.feed.some((item) =>
+        AppBskyFeedDefs.isReasonRepost(item.reason),
+      ),
+    ).toBe(true)
+
+    const hydrateFeedItems = vi.spyOn(
+      network.bsky.ctx.hydrator,
+      'hydrateFeedItems',
+    )
+    try {
+      const { data } = await agent.api.app.bsky.feed.getAuthorFeed({
+        actor: eve,
+        filter: 'posts_and_replies_only',
+      })
+      expect(data.feed).toEqual(
+        mixedFeed.feed.filter(
+          (item) => !AppBskyFeedDefs.isReasonRepost(item.reason),
+        ),
+      )
+      expect(data.feed.some((item) => item.reply)).toBe(true)
+      expect(data.feed.some((item) => !item.reply)).toBe(true)
+      expect(data.feed.every((item) => item.post.author.did === eve)).toBe(true)
+      expect(hydrateFeedItems).toHaveBeenCalled()
+      for (const [items] of hydrateFeedItems.mock.calls) {
+        expect(items.every((item) => !item.repost)).toBe(true)
+      }
+    } finally {
+      hydrateFeedItems.mockRestore()
+    }
+  })
+
+  it('bounds repost scanning and continues to older authored content', async () => {
+    const author = await sc.createAccount('author-feed-reposts', {
+      handle: 'author-reposts.test',
+      email: 'author-reposts@example.com',
+      password: 'hunter2',
+    })
+    const source = await sc.createAccount('author-feed-repost-source', {
+      handle: 'repost-source.test',
+      email: 'author-repost-source@example.com',
+      password: 'hunter2',
+    })
+    const post = await sc.post(author.did, 'older authored post')
+    await network.processAll()
+    const reply = await sc.reply(
+      author.did,
+      post.ref,
+      post.ref,
+      'authored reply',
+    )
+    await network.processAll()
+    await sc.repost(author.did, post.ref)
+    for (let i = 0; i < 10; i++) {
+      const otherPost = await sc.post(source.did, `reposted post ${i}`)
+      await sc.repost(author.did, otherPost.ref)
+    }
+    await network.processAll()
+
+    const getAuthorFeed = vi.spyOn(network.bsky.ctx.dataplane, 'getAuthorFeed')
+    try {
+      const params = {
+        actor: author.did,
+        filter: 'posts_and_replies_only',
+        limit: 1,
+      }
+      const { data: first } =
+        await agent.api.app.bsky.feed.getAuthorFeed(params)
+      expect(first.feed).toEqual([])
+      expect(first.cursor).toBeDefined()
+      expect(getAuthorFeed).toHaveBeenCalledTimes(10)
+
+      getAuthorFeed.mockClear()
+      const { data: second } = await agent.api.app.bsky.feed.getAuthorFeed({
+        ...params,
+        cursor: first.cursor,
+      })
+      expect(second.feed.map((item) => item.post.uri)).toEqual([
+        reply.ref.uriStr,
+      ])
+      expect(second.cursor).toBeDefined()
+      expect(second.cursor).not.toBe(first.cursor)
+      expect(getAuthorFeed).toHaveBeenCalledTimes(2)
+
+      const { data: last } = await agent.api.app.bsky.feed.getAuthorFeed({
+        ...params,
+        cursor: second.cursor,
+      })
+      expect(last.feed.map((item) => item.post.uri)).toEqual([post.ref.uriStr])
+      expect(last.feed[0].reason).toBeUndefined()
+      expect(last.cursor).toBeUndefined()
+    } finally {
+      getAuthorFeed.mockRestore()
+    }
+  })
+
   it('fetches results unauthed.', async () => {
     const { data: authed } = await agent.api.app.bsky.feed.getAuthorFeed(
       { actor: sc.accounts[alice].handle },

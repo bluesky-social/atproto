@@ -67,6 +67,7 @@ export default function (server: Server, ctx: AppContext) {
 
 const FILTER_TO_FEED_TYPE = {
   posts_with_replies: undefined, // default: all posts, replies, and reposts
+  posts_and_replies_only: undefined,
   posts_no_replies: FeedType.POSTS_NO_REPLIES,
   posts_with_media: FeedType.POSTS_WITH_MEDIA,
   posts_and_author_threads: FeedType.POSTS_AND_AUTHOR_THREADS,
@@ -115,6 +116,10 @@ export const skeleton = async (inputs: {
       ? { uri: item.repost as AtUriString, cid: item.repostCid || undefined }
       : undefined,
   }))
+
+  if (params.filter === 'posts_and_replies_only') {
+    items = items.filter((item) => !item.repost)
+  }
 
   if (shouldInsertPinnedPost && pinnedPost) {
     const pinnedItem = {
