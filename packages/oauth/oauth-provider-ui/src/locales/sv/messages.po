@@ -33,10 +33,6 @@ msgid "{remaining, plural, one {Please try again in # second.} other {Please try
 msgstr ""
 
 #: src/components/utils/scope-description.tsx
-msgid "{host}'s own app, for the spaces it already runs."
-msgstr ""
-
-#: src/components/utils/scope-description.tsx
 msgid "<0/> spaces"
 msgstr ""
 
@@ -1254,6 +1250,10 @@ msgid "Spaces hold data that only their members can see, like group chats, priva
 msgstr ""
 
 #: src/components/utils/scope-description.tsx
+msgid "Spaces on {host}"
+msgstr ""
+
+#: src/components/utils/scope-description.tsx
 msgid "Spaces on <0/>"
 msgstr ""
 
@@ -1756,10 +1756,6 @@ msgstr "Ditt dataarkiv innehåller all din publika data som finns tillgänglig i
 #: src/contexts/session.tsx
 msgid "Your session has expired. Please sign in again."
 msgstr "Din session har gått ut. Logga in igen."
-
-#: src/components/utils/scope-description.tsx
-msgid "Your spaces on {host}"
-msgstr ""
 
 #: src/data/handle.ts
 msgid "Your username has been updated."

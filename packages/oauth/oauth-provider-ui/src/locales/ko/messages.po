@@ -33,10 +33,6 @@ msgid "{remaining, plural, one {Please try again in # second.} other {Please try
 msgstr ""
 
 #: src/components/utils/scope-description.tsx
-msgid "{host}'s own app, for the spaces it already runs."
-msgstr ""
-
-#: src/components/utils/scope-description.tsx
 msgid "<0/> spaces"
 msgstr ""
 
@@ -1254,6 +1250,10 @@ msgid "Spaces hold data that only their members can see, like group chats, priva
 msgstr ""
 
 #: src/components/utils/scope-description.tsx
+msgid "Spaces on {host}"
+msgstr ""
+
+#: src/components/utils/scope-description.tsx
 msgid "Spaces on <0/>"
 msgstr ""
 
@@ -1756,10 +1756,6 @@ msgstr "내 저장소에는 Bluesky 게시물, 좋아요, 팔로우 등 AT 프�
 #: src/contexts/session.tsx
 msgid "Your session has expired. Please sign in again."
 msgstr "세션이 만료되었습니다. 다시 로그인해 주세요."
-
-#: src/components/utils/scope-description.tsx
-msgid "Your spaces on {host}"
-msgstr ""
 
 #: src/data/handle.ts
 msgid "Your username has been updated."

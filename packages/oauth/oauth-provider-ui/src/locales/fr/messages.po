@@ -33,10 +33,6 @@ msgid "{remaining, plural, one {Please try again in # second.} other {Please try
 msgstr "{remaining, plural, one {Veuillez réessayer dans # seconde.} other {Veuillez réessayer dans # secondes.}}"
 
 #: src/components/utils/scope-description.tsx
-msgid "{host}'s own app, for the spaces it already runs."
-msgstr "L'application de {host}, pour les espaces qu'il gère déjà."
-
-#: src/components/utils/scope-description.tsx
 msgid "<0/> spaces"
 msgstr "Espaces <0/>"
 
@@ -1254,6 +1250,10 @@ msgid "Spaces hold data that only their members can see, like group chats, priva
 msgstr "Les espaces contiennent des données que seuls leurs membres peuvent voir, comme les discussions de groupe, les forums privés et les albums partagés. Cette application pourrait accéder à ces données en votre nom. Si vous ne savez pas ce que sont les espaces, ou pourquoi cette application en a besoin, refusez l'accès."
 
 #: src/components/utils/scope-description.tsx
+msgid "Spaces on {host}"
+msgstr "Espaces sur {host}"
+
+#: src/components/utils/scope-description.tsx
 msgid "Spaces on <0/>"
 msgstr "Espaces sur <0/>"
 
@@ -1756,10 +1756,6 @@ msgstr "Votre dépôt contient toutes les données publiquement disponibles sur 
 #: src/contexts/session.tsx
 msgid "Your session has expired. Please sign in again."
 msgstr "Votre session a expiré. Veuillez vous reconnecter."
-
-#: src/components/utils/scope-description.tsx
-msgid "Your spaces on {host}"
-msgstr "Vos espaces sur {host}"
 
 #: src/data/handle.ts
 msgid "Your username has been updated."

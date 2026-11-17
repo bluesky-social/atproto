@@ -1,16 +1,10 @@
-import {
-  IncludeScope,
-  type SpaceAuthorityParam,
-  type SpaceKeyParam,
-  SpacePermission,
-  type SpaceTypeParam,
-} from '@atproto/oauth-scopes'
 import type {
-  PermissionSets,
-  Space,
-  SpaceHandles,
-  Spaces,
-} from '#/hydration-data.d.ts'
+  SpaceAuthorityParam,
+  SpaceKeyParam,
+  SpacePermission,
+  SpaceTypeParam,
+} from '@atproto/oauth-scopes'
+import type { Space, SpaceHandles, Spaces } from '#/hydration-data.d.ts'
 import { isConventionalOAuthClientId } from './oauth-client.ts'
 
 /**
@@ -19,9 +13,11 @@ import { isConventionalOAuthClientId } from './oauth-client.ts'
  * - `client`: spaces run by the client's own operator. The authority's
  *   verified handle is the hostname of a conventional client id, so the app is
  *   only reaching spaces its operator already runs.
- * - `authority`: spaces run by one other, named authority.
- * - `broad`: one space type under any authority, or the spaces the user owns
- *   (`self`). Not tied to any service the user could recognize.
+ * - `authority`: spaces run by one other authority, named by its verified
+ *   handle.
+ * - `broad`: one space type under any authority, the spaces the user owns
+ *   (`self`), or spaces run by an authority whose handle could not be
+ *   verified.
  * - `universal`: every space on the network.
  */
 export const SPACE_ACCESS_LEVELS = Object.freeze([
@@ -38,6 +34,10 @@ export type SpaceAccessContext = {
    */
   clientId?: string
   spaces?: Spaces
+  /**
+   * Verified handles of space authorities. An authority without one is
+   * `broad`.
+   */
   spaceHandles?: SpaceHandles
 }
 
@@ -66,34 +66,6 @@ export type SpaceAccessRow = {
   writes: Map<string, SpaceWriteCell>
 }
 
-/**
- * The space permissions among `scopes`, including those carried by any
- * `include:` scope whose permission set is known.
- */
-export function listSpacePermissions(
-  scopes: Iterable<string>,
-  permissionSets?: PermissionSets,
-): SpacePermission[] {
-  const result: SpacePermission[] = []
-
-  for (const scope of scopes) {
-    const include = IncludeScope.fromString(scope)
-    if (include) {
-      const permissionSet = permissionSets?.[include.nsid]
-      if (!permissionSet) continue
-      for (const permission of include.toPermissions(permissionSet)) {
-        if (permission instanceof SpacePermission) result.push(permission)
-      }
-      continue
-    }
-
-    const permission = SpacePermission.fromString(scope)
-    if (permission) result.push(permission)
-  }
-
-  return result
-}
-
 export function spaceAccessLevel(
   permission: SpacePermission,
   { clientId, spaceHandles }: SpaceAccessContext = {},
@@ -104,9 +76,13 @@ export function spaceAccessLevel(
 
   if (permission.authority === 'self') return 'broad'
 
+  // Without a verified handle, the authority can only be shown as a DID, which
+  // the user has no way to recognize.
   const handle = spaceHandles?.[permission.authority]
+  if (!handle) return 'broad'
+
   const hostname = clientHostname(clientId)
-  if (handle && hostname && handle.toLowerCase() === hostname) return 'client'
+  if (hostname && handle.toLowerCase() === hostname) return 'client'
 
   return 'authority'
 }

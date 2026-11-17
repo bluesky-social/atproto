@@ -1,3 +1,5 @@
+import type { NsidString } from '@atproto/syntax'
+import type { LexiconPermissionSet } from './lib/lexicon.js'
 import { type ScopeStringFor, isScopeStringFor } from './lib/syntax.js'
 import { isNonNullable } from './lib/util.js'
 import { AccountPermission } from './scopes/account-permission.js'
@@ -80,4 +82,33 @@ export function normalizeAtprotoOauthScopeValue(
   }
 
   return null
+}
+
+/**
+ * The space permissions among `scopes`, including those carried by `include:`
+ * scopes. An `include:` whose permission set `getPermissionSet` does not
+ * provide is skipped.
+ */
+export function listSpacePermissions(
+  scopes: Iterable<string>,
+  getPermissionSet?: (nsid: NsidString) => LexiconPermissionSet | undefined,
+): SpacePermission[] {
+  const result: SpacePermission[] = []
+
+  for (const scope of scopes) {
+    const include = IncludeScope.fromString(scope)
+    if (include) {
+      const permissionSet = getPermissionSet?.(include.nsid)
+      if (!permissionSet) continue
+      for (const permission of include.toPermissions(permissionSet)) {
+        if (permission instanceof SpacePermission) result.push(permission)
+      }
+      continue
+    }
+
+    const permission = SpacePermission.fromString(scope)
+    if (permission) result.push(permission)
+  }
+
+  return result
 }
