@@ -583,6 +583,11 @@ describe('feed external modality views over HTTP', () => {
     [galleryUri, 'https://evil.example/gallery'],
     [galleryUri, 'https://stream.example.com/gallery'],
     [galleryUri, 'https://grain.social/profile/alice.test/gallery/other'],
+    [galleryUri, 'https://grain.social/profile/did:plc:victim/gallery/gallery'],
+    [
+      galleryUri,
+      'https://grain.social/profile/did%3Aplc%3Avictim/gallery/gallery',
+    ],
     [
       galleryUri,
       'https://grain.social/profile/alice.test/gallery/gallery-other',

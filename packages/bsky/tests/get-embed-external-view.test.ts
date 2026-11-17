@@ -1064,6 +1064,16 @@ describe('app.bsky.embed.getEmbedExternalView', () => {
     test.each([
       ['an unlisted host', ['good.com'], galleryUrl],
       [
+        'a different gallery DID',
+        safeDomains,
+        'https://grain.social/profile/did:plc:victim/gallery/gallery',
+      ],
+      [
+        'a URL-encoded different gallery DID',
+        safeDomains,
+        'https://grain.social/profile/did%3Aplc%3Avictim/gallery/gallery',
+      ],
+      [
         'a different gallery rkey',
         safeDomains,
         'https://grain.social/profile/alice.test/gallery/other',

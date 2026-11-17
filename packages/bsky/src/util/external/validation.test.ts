@@ -201,6 +201,26 @@ describe(validateExternalEmbedRecord, () => {
         true,
       ],
       [
+        `https://grain.social/profile/${encodeURIComponent(author)}/gallery/gallery`,
+        ['grain.social'],
+        true,
+      ],
+      [
+        'https://grain.social/profile/did:plc:victim/gallery/gallery',
+        ['grain.social'],
+        false,
+      ],
+      [
+        'https://grain.social/profile/did%3Aplc%3Avictim/gallery/gallery',
+        ['grain.social'],
+        false,
+      ],
+      [
+        'https://grain.social/profile/%ZZ/gallery/gallery',
+        ['grain.social'],
+        false,
+      ],
+      [
         'https://grain.social/profile/alice.test/gallery/gallery',
         ['grain.social'],
         true,
@@ -254,7 +274,7 @@ describe(validateExternalEmbedRecord, () => {
         false,
       ],
     ] as const)(
-      'checks the gallery rkey, host and configured allowlist: %s',
+      'checks the gallery DID, rkey, host and configured allowlist: %s',
       (url, safeDomains, expected) => {
         const state = stateOf()
         const uri = atUri(author, social.grain.gallery.$type, 'gallery')

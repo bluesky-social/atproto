@@ -63,11 +63,18 @@ export function validateExternalEmbedRecord({
     case social.grain.gallery.$type: {
       if (!isExternalRecordUrlSafe(url, safeDomains)) return false
       if (!isExternalRecordUrlSafe(url, ['grain.social'])) return false
-      // @NOTE Profile segments may be handles; only the gallery rkey is checked.
       const match = new URL(url).pathname.match(
-        /^\/profile\/[^/]+\/gallery\/([^/]+)\/?$/,
+        /^\/profile\/([^/]+)\/gallery\/([^/]+)\/?$/,
       )
-      return match !== null && match[1] === parsed.value.rkey
+      if (!match || match[2] !== parsed.value.rkey) return false
+      let profile: string
+      try {
+        profile = decodeURIComponent(match[1])
+      } catch {
+        return false
+      }
+      // @NOTE Handles are not resolved here; DID profile segments must match the repo.
+      return !profile.startsWith('did:') || profile === parsed.value.authority
     }
     case place.stream.livestream.$type:
       if (!isExternalRecordUrlSafe(url, safeDomains)) return false
