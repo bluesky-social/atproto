@@ -12,6 +12,7 @@ import {
 import { AtUri, normalizeDatetimeAlways } from '@atproto/syntax'
 import { type ExternalRecord, genericRecordKey } from '../hydration/external.js'
 import type { HydrationState } from '../hydration/hydrator.js'
+import type { ItemRef } from '../hydration/util.js'
 import { app, com, place, site, social } from '../lexicons/index.js'
 import { buildExternalRecordUrl } from '../util/external/record-url.js'
 import { estimateReadingTimeMinutes } from '../util/external/standard-site.js'
@@ -52,18 +53,17 @@ function isFreshHeartbeat(at: string | undefined, now: number): boolean {
 
 /**
  * Build a modality view from validated, available records in hydration state.
- * With `cid`, the root comes from the exact version in `externalRecordsByRef`
+ * With `ref.cid`, the root comes from the exact version in `externalRecordsByRef`
  * (never falling back to latest); everything else stays URI-based.
  */
 export function externalRecordView(
   views: Views,
-  uri: AtUriString,
+  ref: ItemRef,
   state: HydrationState,
   now: number,
-  cid?: string,
   options: ExternalRecordViewOptions = {},
 ): $Typed<ExternalRecordView> | undefined {
-  return externalRecordViewOrRefs(views, uri, state, now, false, cid, options)
+  return externalRecordViewOrRefs(views, ref, state, now, false, options)
 }
 
 /** Resolve renderable view dependencies without constructing presentation fields. */
@@ -72,32 +72,30 @@ export function externalRecordViewRefs(
   uri: AtUriString,
   state: HydrationState,
 ): AtUriString[] | undefined {
-  return externalRecordViewOrRefs(views, uri, state, 0, true)
+  return externalRecordViewOrRefs(views, { uri }, state, 0, true)
 }
 
 function externalRecordViewOrRefs(
   views: Views,
-  uri: AtUriString,
+  ref: ItemRef,
   state: HydrationState,
   now: number,
   refsOnly: false,
-  cid?: string,
   options?: ExternalRecordViewOptions,
 ): $Typed<ExternalRecordView> | undefined
 function externalRecordViewOrRefs(
   views: Views,
-  uri: AtUriString,
+  ref: ItemRef,
   state: HydrationState,
   now: number,
   refsOnly: true,
 ): AtUriString[] | undefined
 function externalRecordViewOrRefs(
   views: Views,
-  uri: AtUriString,
+  { uri, cid }: ItemRef,
   state: HydrationState,
   now: number,
   refsOnly: boolean,
-  cid?: string,
   options: ExternalRecordViewOptions = {},
 ): $Typed<ExternalRecordView> | AtUriString[] | undefined {
   const info =

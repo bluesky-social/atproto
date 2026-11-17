@@ -37,6 +37,7 @@ import type { Follow, Verification } from '../hydration/graph.js'
 import type { HydrationState } from '../hydration/hydrator.js'
 import type { Label } from '../hydration/label.js'
 import {
+  type ItemRef,
   type RecordInfo,
   getStarterPackUriFromNotification,
   parseString,
@@ -2366,13 +2367,12 @@ export class Views {
 
   /** Build a supported record modality from generic record and backlink hydration. */
   externalRecordView(
-    uri: AtUriString,
+    ref: ItemRef,
     state: HydrationState,
     now = Date.now(),
-    cid?: string,
     options?: ExternalRecordViewOptions,
   ): $Typed<ExternalRecordView> | undefined {
-    return externalRecordViewBase(this, uri, state, now, cid, options)
+    return externalRecordViewBase(this, ref, state, now, options)
   }
 
   externalEmbed(
@@ -2401,7 +2401,7 @@ export class Views {
         site.standard.publication.$isTypeOf(record))
     const data =
       root && (!standardSite || ssView)
-        ? this.externalRecordView(root.uri, state, undefined, root.cid)
+        ? this.externalRecordView(root, state)
         : undefined
     // The author-supplied (scraped) thumbnail always wins when present —
     // it's the per-article OG image. Only when the embed has no thumb do

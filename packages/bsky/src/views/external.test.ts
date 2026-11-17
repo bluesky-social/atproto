@@ -237,7 +237,7 @@ describe('record modality views', () => {
       [site.standard.graph.subscription.$type]: 50,
     })
 
-    const view = views.externalRecordView(docUri, state)
+    const view = views.externalRecordView({ uri: docUri }, state)
     assert(view && app.bsky.embed.external.viewArticle.$isTypeOf(view))
     assertValid(view)
     expect(view).toMatchObject({
@@ -301,7 +301,7 @@ describe('record modality views', () => {
   it('builds a standalone publication without inventing timestamps or engagement', () => {
     const state = createState()
     addPublication(state)
-    const view = views.externalRecordView(pubUri, state)
+    const view = views.externalRecordView({ uri: pubUri }, state)
     assert(
       view && app.bsky.embed.external.viewArticlePublication.$isTypeOf(view),
     )
@@ -331,7 +331,7 @@ describe('record modality views', () => {
       uri: AtUriString,
       options?: { publicationViewer?: boolean },
     ) => {
-      const view = views.externalRecordView(uri, state, 0, undefined, options)
+      const view = views.externalRecordView({ uri }, state, 0, options)
       assert(view)
       assertValid(view)
       return app.bsky.embed.external.viewArticle.$isTypeOf(view)
@@ -358,7 +358,7 @@ describe('record modality views', () => {
     const state = createState()
     addArticle(state, 'https://example.com/blog/')
     state.externalRecords.get(docUri)!.record.textContent = '  \n\t '
-    const view = views.externalRecordView(docUri, state)
+    const view = views.externalRecordView({ uri: docUri }, state)
     assert(view && app.bsky.embed.external.viewArticle.$isTypeOf(view))
     assertValid(view)
     expect(view.uri).toBe('https://example.com/blog/article')
@@ -382,7 +382,7 @@ describe('record modality views', () => {
           did: publisherDid,
           blocking: atUri(did, app.bsky.graph.block.$type, 'block'),
         })
-      expect(views.externalRecordView(docUri, state)).toBeUndefined()
+      expect(views.externalRecordView({ uri: docUri }, state)).toBeUndefined()
     },
   )
 
@@ -391,7 +391,7 @@ describe('record modality views', () => {
     (url) => {
       const state = createState()
       addArticle(state, url)
-      expect(views.externalRecordView(docUri, state)).toBeUndefined()
+      expect(views.externalRecordView({ uri: docUri }, state)).toBeUndefined()
     },
   )
 
@@ -405,7 +405,7 @@ describe('record modality views', () => {
     addLabel(state, first.photoUri, 'photo-label')
     const before = [...state.externalRecordBacklinks.get(galleryUri)!]
 
-    const view = views.externalRecordView(galleryUri, state)
+    const view = views.externalRecordView({ uri: galleryUri }, state)
     assert(view && app.bsky.embed.external.viewGallery.$isTypeOf(view))
     assertValid(view)
     expect(view.uri).toBe(`https://grain.social/profile/${did}/gallery/gallery`)
@@ -449,7 +449,7 @@ describe('record modality views', () => {
       addPhoto(state, 'preview')
       if (counts) state.externalRecordBacklinkCounts.set(galleryUri, counts)
 
-      const view = views.externalRecordView(galleryUri, state)
+      const view = views.externalRecordView({ uri: galleryUri }, state)
       assert(view && app.bsky.embed.external.viewGallery.$isTypeOf(view))
       assertValid(view)
       expect(view.photoCount).toBe(expected)
@@ -476,7 +476,7 @@ describe('record modality views', () => {
     const takenDown = addPhoto(state, 'taken-down')
     addLabel(state, takenDown.photoUri, '!takedown', true)
     state.externalRecordBacklinks.get(galleryUri)!.push(good.linkUri)
-    const view = views.externalRecordView(galleryUri, state)
+    const view = views.externalRecordView({ uri: galleryUri }, state)
     assert(view && app.bsky.embed.external.viewGallery.$isTypeOf(view))
     assertValid(view)
     expect(
@@ -498,7 +498,7 @@ describe('record modality views', () => {
     const withoutAlt = addPhoto(state, 'without-alt', 1)
     delete state.externalRecords.get(withoutAlt.photoUri)!.record.alt
 
-    const view = views.externalRecordView(galleryUri, state)
+    const view = views.externalRecordView({ uri: galleryUri }, state)
     assert(view && app.bsky.embed.external.viewGallery.$isTypeOf(view))
     assertValid(view)
     const items = view.items.filter(
@@ -532,7 +532,7 @@ describe('record modality views', () => {
     delete record.alt
     record.photo = photo
 
-    const view = views.externalRecordView(galleryUri, state)
+    const view = views.externalRecordView({ uri: galleryUri }, state)
     assert(view && app.bsky.embed.external.viewGallery.$isTypeOf(view))
     assertValid(view)
     expect(
@@ -550,7 +550,7 @@ describe('record modality views', () => {
   it('allows an empty gallery', () => {
     const state = createState()
     addGallery(state)
-    const view = views.externalRecordView(galleryUri, state)
+    const view = views.externalRecordView({ uri: galleryUri }, state)
     assert(view && app.bsky.embed.external.viewGallery.$isTypeOf(view))
     assertValid(view)
     expect(view.items).toEqual([])
@@ -579,7 +579,7 @@ describe('record modality views', () => {
         }),
       )
       const before = lexStringify(state.externalRecords.get(streamUri)!.record)
-      const view = views.externalRecordView(streamUri, state, now)
+      const view = views.externalRecordView({ uri: streamUri }, state, now)
       expect(lexStringify(state.externalRecords.get(streamUri)!.record)).toBe(
         before,
       )
@@ -684,7 +684,9 @@ describe('record modality views', () => {
           url: url as place.stream.livestream.Main['url'],
         }),
       )
-      expect(views.externalRecordView(streamUri, state)?.uri).toBe(expected)
+      expect(views.externalRecordView({ uri: streamUri }, state)?.uri).toBe(
+        expected,
+      )
     },
   )
 
@@ -723,7 +725,7 @@ describe('record modality views', () => {
     state.externalRecordBacklinkCounts.set(galleryUri, {
       [social.grain.favorite.$type]: 100,
     })
-    const view = views.externalRecordView(galleryUri, state)
+    const view = views.externalRecordView({ uri: galleryUri }, state)
     assert(view && app.bsky.embed.external.viewGallery.$isTypeOf(view))
     assertValid(view)
     expect(view.likeCount).toBe(100)
@@ -733,7 +735,7 @@ describe('record modality views', () => {
       'did:plc:d',
     ])
     state.externalRecordBacklinks.set(galleryUri, backlinks.toReversed())
-    expect(views.externalRecordView(galleryUri, state)).toEqual(view)
+    expect(views.externalRecordView({ uri: galleryUri }, state)).toEqual(view)
 
     state.profileViewers.set('did:plc:c', {
       did: 'did:plc:c',
@@ -745,7 +747,7 @@ describe('record modality views', () => {
       '!takedown',
       true,
     )
-    const filtered = views.externalRecordView(galleryUri, state)
+    const filtered = views.externalRecordView({ uri: galleryUri }, state)
     assert(filtered && app.bsky.embed.external.viewGallery.$isTypeOf(filtered))
     expect(filtered.likers?.map((p) => p.did)).toEqual([
       'did:plc:b',
@@ -781,7 +783,7 @@ describe('record modality views', () => {
     )
     state.externalRecordBacklinks.set(docUri, [recommend, subscribe])
     state.externalRecordBacklinks.set(pubUri, [recommend, subscribe])
-    const view = views.externalRecordView(docUri, state)
+    const view = views.externalRecordView({ uri: docUri }, state)
     assert(view && app.bsky.embed.external.viewArticle.$isTypeOf(view))
     assertValid(view)
     expect(view.likers?.map((p) => p.did)).toEqual(['did:plc:reader'])
@@ -799,7 +801,7 @@ describe('record modality views', () => {
         galleryUri,
         count === undefined ? {} : { [social.grain.favorite.$type]: count },
       )
-      const view = views.externalRecordView(galleryUri, state)
+      const view = views.externalRecordView({ uri: galleryUri }, state)
       assert(view && app.bsky.embed.external.viewGallery.$isTypeOf(view))
       expect(view.likeCount).toBe(
         count === undefined || count === 0 ? 0 : undefined,
@@ -846,7 +848,7 @@ describe('record modality views', () => {
       addLabel(state, galleryUri, 'needs-review')
       state.labels.get(galleryUri)!.needsReview = true
     }
-    expect(views.externalRecordView(galleryUri, state)).toBeUndefined()
+    expect(views.externalRecordView({ uri: galleryUri }, state)).toBeUndefined()
   })
 
   describe('with actors from normal hydration', () => {
@@ -899,7 +901,9 @@ describe('record modality views', () => {
         addGallery(state)
         await hydrateActors(state, { [did]: status })
         expect(state.actors.get(did)).toBeNull()
-        expect(views.externalRecordView(galleryUri, state)).toBeUndefined()
+        expect(
+          views.externalRecordView({ uri: galleryUri }, state),
+        ).toBeUndefined()
       },
     )
 
@@ -916,7 +920,7 @@ describe('record modality views', () => {
         addGallery(state)
         await hydrateActors(state, { [did]: status }, true)
         expect(state.actors.get(did) === null).toBe(!available)
-        const view = views.externalRecordView(galleryUri, state)
+        const view = views.externalRecordView({ uri: galleryUri }, state)
         if (available) {
           assertValid(view)
           expect(view?.associatedProfiles?.map((p) => p.did)).toEqual([did])
@@ -931,7 +935,7 @@ describe('record modality views', () => {
       addGallery(state)
       await hydrateActors(state, { [reader]: 'active' })
       expect(state.actors.has(did)).toBe(false)
-      const view = views.externalRecordView(galleryUri, state)
+      const view = views.externalRecordView({ uri: galleryUri }, state)
       assertValid(view)
       expect(view?.associatedProfiles).toEqual([])
     })
@@ -943,8 +947,8 @@ describe('record modality views', () => {
         addPublication(state)
         addArticle(state)
         await hydrateActors(state, { [did]: 'active', [publisherDid]: status })
-        expect(views.externalRecordView(pubUri, state)).toBeUndefined()
-        expect(views.externalRecordView(docUri, state)).toBeUndefined()
+        expect(views.externalRecordView({ uri: pubUri }, state)).toBeUndefined()
+        expect(views.externalRecordView({ uri: docUri }, state)).toBeUndefined()
       },
     )
 
@@ -985,7 +989,7 @@ describe('record modality views', () => {
         })
         await hydrateActors(state, { [did]: 'active', [reader]: status })
 
-        const view = views.externalRecordView(galleryUri, state)
+        const view = views.externalRecordView({ uri: galleryUri }, state)
         assert(view && app.bsky.embed.external.viewGallery.$isTypeOf(view))
         assertValid(view)
         expect(
@@ -1059,7 +1063,7 @@ describe('record modality views', () => {
       const state = createState()
       add(state)
       const before = lexStringify(state.externalRecords.get(uri)!.record)
-      expect(views.externalRecordView(uri, state)).toBeUndefined()
+      expect(views.externalRecordView({ uri }, state)).toBeUndefined()
       expect(lexStringify(state.externalRecords.get(uri)!.record)).toBe(before)
     })
 
@@ -1071,8 +1075,8 @@ describe('record modality views', () => {
         ...blob,
         mimeType: 'application/pdf',
       }
-      expect(views.externalRecordView(pubUri, state)).toBeUndefined()
-      expect(views.externalRecordView(docUri, state)).toBeUndefined()
+      expect(views.externalRecordView({ uri: pubUri }, state)).toBeUndefined()
+      expect(views.externalRecordView({ uri: docUri }, state)).toBeUndefined()
     })
 
     it('omits gallery items and photos with timezone-less timestamps', () => {
@@ -1083,7 +1087,7 @@ describe('record modality views', () => {
       state.externalRecords.get(badLink.linkUri)!.record.createdAt = naive
       const badPhoto = addPhoto(state, 'bad-photo')
       state.externalRecords.get(badPhoto.photoUri)!.record.createdAt = naive
-      const view = views.externalRecordView(galleryUri, state)
+      const view = views.externalRecordView({ uri: galleryUri }, state)
       assert(view && app.bsky.embed.external.viewGallery.$isTypeOf(view))
       assertValid(view)
       expect(view.associatedRefs?.map((ref) => ref.uri)).toEqual([
@@ -1144,14 +1148,14 @@ describe('record modality views', () => {
         [social.grain.favorite.$type]: 5,
       })
 
-      const article = views.externalRecordView(docUri, state)
+      const article = views.externalRecordView({ uri: docUri }, state)
       assert(article && app.bsky.embed.external.viewArticle.$isTypeOf(article))
       assertValid(article)
       expect(article.likers).toEqual([])
       expect(article.likeCount).toBe(3)
       expect(article.publisher?.subscribers).toEqual([])
       expect(article.publisher?.subscriptionCount).toBe(4)
-      const gallery = views.externalRecordView(galleryUri, state)
+      const gallery = views.externalRecordView({ uri: galleryUri }, state)
       assert(gallery && app.bsky.embed.external.viewGallery.$isTypeOf(gallery))
       assertValid(gallery)
       expect(gallery.likers).toEqual([])
@@ -1170,10 +1174,10 @@ describe('record modality views', () => {
       const before = [docUri, streamUri].map((uri) =>
         lexStringify(state.externalRecords.get(uri)!.record),
       )
-      const article = views.externalRecordView(docUri, state)
+      const article = views.externalRecordView({ uri: docUri }, state)
       assertValid(article)
       expect(article).toMatchObject({ createdAt, updatedAt })
-      const stream = views.externalRecordView(streamUri, state)
+      const stream = views.externalRecordView({ uri: streamUri }, state)
       assertValid(stream)
       expect(stream).toMatchObject({
         createdAt,
@@ -1197,7 +1201,7 @@ describe('record modality views', () => {
       uri,
       app.bsky.feed.post.$build({ text: 'Not a modality', createdAt }),
     )
-    expect(views.externalRecordView(uri, state)).toBeUndefined()
+    expect(views.externalRecordView({ uri }, state)).toBeUndefined()
   })
 
   it('preserves generic record hydration when merging states', () => {
@@ -1394,12 +1398,12 @@ describe('pinned root selection by CID', () => {
       setup(state)
       addActor(state, did)
       addActor(state, publisherDid)
-      const latest = views.externalRecordView(uri, state)
+      const latest = views.externalRecordView({ uri }, state)
       assert(latest)
       pin(state, uri, pinned)
       const snapshot = JSON.stringify([...state.externalRecords!])
 
-      const view = views.externalRecordView(uri, state, undefined, pinCid)
+      const view = views.externalRecordView({ uri, cid: pinCid }, state)
       assert(view)
       expect(view.title).toBe(title)
       expect(view.title).not.toBe(latest.title)
@@ -1423,8 +1427,8 @@ describe('pinned root selection by CID', () => {
         url: 'https://pinned.example.com',
       }),
     )
-    expect(views.externalRecordView(pubUri, state)).toBeUndefined()
-    const view = views.externalRecordView(pubUri, state, undefined, pinCid)
+    expect(views.externalRecordView({ uri: pubUri }, state)).toBeUndefined()
+    const view = views.externalRecordView({ uri: pubUri, cid: pinCid }, state)
     expect(view?.title).toBe('Only pinned')
     expect(view?.associatedRefs).toEqual([
       expect.objectContaining({ uri: pubUri, cid: pinCid }),
@@ -1434,16 +1438,16 @@ describe('pinned root selection by CID', () => {
   test('missing or null pin never falls back to latest', () => {
     const state = createState()
     addGallery(state)
-    expect(views.externalRecordView(galleryUri, state)).toBeDefined()
+    expect(views.externalRecordView({ uri: galleryUri }, state)).toBeDefined()
     expect(
-      views.externalRecordView(galleryUri, state, undefined, pinCid),
+      views.externalRecordView({ uri: galleryUri, cid: pinCid }, state),
     ).toBeUndefined()
     state.externalRecordsByRef!.set(
       genericRecordKey({ uri: galleryUri, cid: pinCid }),
       null,
     )
     expect(
-      views.externalRecordView(galleryUri, state, undefined, pinCid),
+      views.externalRecordView({ uri: galleryUri, cid: pinCid }, state),
     ).toBeUndefined()
   })
 
@@ -1459,13 +1463,13 @@ describe('pinned root selection by CID', () => {
       }),
     )
     expect(
-      views.externalRecordView(pubUri, state, undefined, pinCid),
+      views.externalRecordView({ uri: pubUri, cid: pinCid }, state),
     ).toBeUndefined()
-    expect(views.externalRecordView(pubUri, state)).toBeDefined()
+    expect(views.externalRecordView({ uri: pubUri }, state)).toBeDefined()
     // no dependence on latest being renderable
     state.externalRecords!.delete(pubUri)
     expect(
-      views.externalRecordView(pubUri, state, undefined, pinCid),
+      views.externalRecordView({ uri: pubUri, cid: pinCid }, state),
     ).toBeUndefined()
   })
 
@@ -1478,11 +1482,14 @@ describe('pinned root selection by CID', () => {
       social.grain.gallery.$build({ title: 'Pinned gallery', createdAt }),
     )
     addLabel(state, galleryUri, 'warn')
-    const view = views.externalRecordView(galleryUri, state, undefined, pinCid)
+    const view = views.externalRecordView(
+      { uri: galleryUri, cid: pinCid },
+      state,
+    )
     expect(view?.labels?.map((l) => l.val)).toEqual(['warn'])
     addLabel(state, galleryUri, '!takedown', true)
     expect(
-      views.externalRecordView(galleryUri, state, undefined, pinCid),
+      views.externalRecordView({ uri: galleryUri, cid: pinCid }, state),
     ).toBeUndefined()
   })
 })

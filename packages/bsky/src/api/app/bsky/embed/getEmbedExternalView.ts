@@ -104,7 +104,7 @@ const presentation = (
     }
   }
 
-  const data = ctx.views.externalRecordView(canonicalUri, hydration)
+  const data = ctx.views.externalRecordView({ uri: canonicalUri }, hydration)
 
   let view: Output['view']
   if (standardSiteRecords) {

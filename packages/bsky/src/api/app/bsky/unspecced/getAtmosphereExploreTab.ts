@@ -333,7 +333,7 @@ function presentation({
     announcementBanner: skeleton.announcementBanner,
     articles: {
       items: mapDefined(articles, ({ uri }) => {
-        const view = ctx.views.externalRecordView(uri, state, now)
+        const view = ctx.views.externalRecordView({ uri }, state, now)
         if (!view || !app.bsky.embed.external.viewArticle.$isTypeOf(view))
           return
         const bskyPostRef = getAtmospherePostRef(
@@ -350,7 +350,7 @@ function presentation({
     },
     publications: {
       items: mapDefined(publications, ({ uri }) => {
-        const view = ctx.views.externalRecordView(uri, state, now)
+        const view = ctx.views.externalRecordView({ uri }, state, now)
         return view &&
           app.bsky.embed.external.viewArticlePublication.$isTypeOf(view)
           ? { featured: false, view }
@@ -359,7 +359,7 @@ function presentation({
     },
     photos: {
       items: mapDefined(photos, ({ uri }) => {
-        const view = ctx.views.externalRecordView(uri, state, now)
+        const view = ctx.views.externalRecordView({ uri }, state, now)
         return view &&
           app.bsky.embed.external.viewGallery.$isTypeOf(view) &&
           view.items.length
@@ -370,7 +370,7 @@ function presentation({
     },
     livestreams: {
       items: mapDefined(livestreams, ({ uri, startsAt }) => {
-        const view = ctx.views.externalRecordView(uri, state, now)
+        const view = ctx.views.externalRecordView({ uri }, state, now)
         if (!view || !app.bsky.embed.external.viewLivestream.$isTypeOf(view))
           return
         const bskyPostRef = getAtmospherePostRef(
