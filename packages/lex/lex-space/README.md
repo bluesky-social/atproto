@@ -24,11 +24,28 @@ for await (const { repo, collection, record } of space.allRecords()) {
 
 - [Concepts](#concepts)
 - [Getting started](#getting-started)
+  - [1. Install](#1-install)
+  - [2. Request access to spaces](#2-request-access-to-spaces)
+  - [3. List the user's spaces](#3-list-the-users-spaces)
+  - [4. Open a space](#4-open-a-space)
+  - [5. Read and write the user's own records](#5-read-and-write-the-users-own-records)
+  - [6. Read other members' records](#6-read-other-members-records)
+  - [7. Read the whole space](#7-read-the-whole-space)
+  - [8. Fetch blobs](#8-fetch-blobs)
 - [Errors and verification](#errors-and-verification)
 - [Managing a space](#managing-a-space)
+  - [The policy](#the-policy)
+  - [The lifecycle](#the-lifecycle)
 - [Building a sync service](#building-a-sync-service)
+  - [Obtaining credentials](#obtaining-credentials)
+  - [Syncing repos](#syncing-repos)
+  - [Notifications](#notifications)
 - [Configuration](#configuration)
 - [Reference](#reference)
+  - [How requests are routed](#how-requests-are-routed)
+  - [Methods](#methods)
+  - [Current limitations](#current-limitations)
+- [License](#license)
 
 ## Concepts
 
@@ -171,29 +188,37 @@ const { value } = await space.get(com.example.post, { repo, rkey })
 
 ### 7. Read the whole space
 
-`allRecords()` reads every repo of the writer set. Each repo is fetched in full and verified (its commit against its host's MAC, its records against its commit) before its records are yielded:
+`allRecords()` reads every repo of the writer set. Each repo is fetched in full and verified (its commit against its host's MAC, its records against its commit) before its records are yielded. Every record is yielded, flagged with `valid`:
+
+- `true`: of a collection declared by the space type and, if its schema is passed in `collections`, matching it. Checking `collection` narrows `record`: to the schema's type, or else to a `TypedLexMap` of that collection.
+- `false`: of a collection the space type does not declare, stored under a collection other than its `$type`, or not matching its schema. The reason is in `error`.
 
 ```typescript
-// Every record, flagged with whether its collection is declared by the space type
-for await (const {
-  repo,
-  collection,
-  rkey,
-  valid,
-  record,
-} of space.allRecords()) {
-  if (valid) record // of a declared collection (not validated)
+// Every record: only its collection is checked
+for await (const record of space.allRecords()) {
+  if (record.valid) {
+    record.record // a TypedLexMap of one of the space type's collections
+  } else {
+    record.record // typed as LexMap
+    record.error // a LexValidationError
+  }
 }
 
-// The records of some collections, validated against their schema
-for await (const post of space.allRecords({
+// The records of some collections are also validated against their schema
+for await (const record of space.allRecords({
   collections: [com.example.post],
 })) {
-  if (post.valid) post.record // typed as com.example.post.Main
+  if (!record.valid) {
+    record.error // a LexValidationError
+  } else if (record.collection === com.example.post.$type) {
+    record.record // typed as com.example.post.Main
+  } else {
+    record.record // a TypedLexMap of another of the space type's collections
+  }
 }
 ```
 
-Repos that are unavailable (not found, taken down, suspended or deactivated) are skipped.
+Repos that are unavailable (not found, taken down, suspended or deactivated) are skipped. `records({ repo, collections })` classifies the records of a single repo the same way, from its listed records (not covered by a MAC). Records are checked by the client, as not every host enforces the space type.
 
 ### 8. Fetch blobs
 
@@ -442,13 +467,14 @@ const space = SpaceClient.openSpace(com.example.forum, spaceUri, {
 | ------------------------------------------------------------------------------------ | ---------------------------------------------------------------- | ----------------------------- |
 | `authorize()`                                                                        | Obtain (or renew) the space credential, to check access early    | `SpaceReader` / `SpaceClient` |
 | `writers()`, `listWriters()`                                                         | The writer set                                                   | `SpaceReader` / `SpaceClient` |
-| `records()`, `listRecords()`                                                         | A repo's records (not covered by a MAC)                          | `SpaceReader` / `SpaceClient` |
+| `records()`, `listRecords()`                                                         | A repo's records, classified or raw (not covered by a MAC)       | `SpaceReader` / `SpaceClient` |
+| `list()`, `listAll()`                                                                | A collection's records, validated (not covered by a MAC)         | `SpaceReader` / `SpaceClient` |
 | `getRecord()`                                                                        | A record, verified                                               | `SpaceReader` / `SpaceClient` |
 | `allRecords()`                                                                       | The records of every repo in the writer set, verified            | `SpaceReader` / `SpaceClient` |
 | `getLatestCommit()`, `getRepo()`, `listRepoOps()`                                    | A repo's commit, full content and operation log, verified        | `SpaceReader` / `SpaceClient` |
 | `getRepoSnapshot()`, `syncRepo()`, `pullRepo()`                                      | Full and incremental repo sync                                   | `SpaceReader` / `SpaceClient` |
 | `getBlob()`, `listBlobs()`                                                           | Blobs referenced by a repo's records                             | `SpaceReader` / `SpaceClient` |
-| `list()`, `listAll()`, `get()`                                                       | Typed reads, of the space type's collections                     | `SpaceClient`                 |
+| `get()`                                                                              | Typed read, of the space type's collections                      | `SpaceClient`                 |
 | `create()`, `put()`, `delete()`                                                      | Typed writes to the user's repo, of the space type's collections | `SpaceClient`                 |
 | `createRecord()`, `putRecord()`, `deleteRecord()`, `applyWrites()`, `clearRecords()` | Lower level writes to the user's repo, of any collection         | `SpaceClient`                 |
 

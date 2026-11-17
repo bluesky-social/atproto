@@ -10,7 +10,7 @@ import {
 import { TestNetworkNoAppView } from '@atproto/dev-env'
 import type { CidString, Client } from '@atproto/lex-client'
 import { getBlobCidString } from '@atproto/lex-data'
-import { l } from '@atproto/lex-schema'
+import { LexValidationError, l } from '@atproto/lex-schema'
 import { SpaceRef, type SpaceRefString, isValidTid } from '@atproto/syntax'
 import { createDidResolver } from '@atproto-labs/did-resolver'
 import {
@@ -242,6 +242,7 @@ describe('SpaceClient', () => {
           expect.objectContaining({
             valid: false,
             record: other.$build({ text: 'undeclared' }),
+            error: expect.any(LexValidationError),
           }),
         ]),
       )
@@ -354,9 +355,8 @@ describe('SpaceClient', () => {
       const records = await collect(
         open(alice).allRecords({ collections: [note] }),
       )
-      expectTypeOf<(typeof records)[number]['collection']>().toEqualTypeOf<
-        typeof note.$type
-      >()
+      type Valid = Extract<(typeof records)[number], { valid: true }>
+      expectTypeOf<Valid['collection']>().toEqualTypeOf<typeof note.$type>()
       expect(records).toEqual([
         expect.objectContaining({
           repo: alice.assertDid,

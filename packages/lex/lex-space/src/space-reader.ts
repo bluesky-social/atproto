@@ -6,6 +6,7 @@ import {
   type CidString,
   type DidString,
   type Infer,
+  type InferMethodOutputBody,
   type LexMap,
   type Main,
   type NsidString,
@@ -23,10 +24,15 @@ import {
   type TypedLexMap,
   checkCid,
   isCidForBytes,
+  isPlainObject,
   parseCid,
 } from '@atproto/lex-data'
 import {
   type $Typed,
+  type Issue,
+  IssueInvalidType,
+  IssueInvalidValue,
+  LexValidationError,
   type RecordKeyValue,
   type RecordSchema,
   type Space,
@@ -147,6 +153,63 @@ export declare namespace SpaceReader {
       cursor?: string
       excludeValues?: boolean
     }
+
+  export type RecordsOptions = Omit<
+    ListRecordsOptions,
+    'collection' | 'excludeValues'
+  >
+
+  export type ListOptions = RecordsOptions
+
+  export type ListOutput<T extends RecordSchema> = Omit<
+    InferMethodOutputBody<typeof listRecords>,
+    'records'
+  > & {
+    /** Every listed record, flagged with whether it matched the schema. */
+    records: ListRecordItem<Infer<T>>[]
+  }
+
+  export type ListRecordItem<Value extends LexMap> = Omit<
+    ListedRecord,
+    'value'
+  > &
+    (
+      | { valid: true; value: Value }
+      | { valid: false; value?: LexMap; error: LexValidationError }
+    )
+
+  /** The collections of `S` described by no schema of `T`. */
+  type UnvalidatedCollection<S extends Space, T extends RecordSchema> = Exclude<
+    SpaceCollection<S>,
+    T['$type']
+  >
+
+  /**
+   * A listed record of a repo, flagged with whether it is valid: of a
+   * collection declared by the space type and, when a schema describes its
+   * collection, matching that schema. Checking `collection` narrows `value`,
+   * to the schema's type, or else to a `TypedLexMap` of that collection.
+   */
+  export type RecordsItem<
+    S extends Space = Space,
+    T extends RecordSchema = never,
+  > = Omit<ListedRecord, 'collection' | 'value'> &
+    (
+      | (T extends unknown // Distributes over unions
+          ? { valid: true; collection: T['$type']; value: Infer<T> }
+          : never)
+      | (UnvalidatedCollection<S, T> extends infer C extends string
+          ? C extends unknown // Distributes over unions
+            ? { valid: true; collection: C; value: TypedLexMap<C> }
+            : never
+          : never)
+      | {
+          valid: false
+          collection: NsidString
+          value?: LexMap
+          error: LexValidationError
+        }
+    )
 
   export type GetRecordOptions = ReaderXrpcOptions<typeof getRecord, 'params'> &
     RepoParam
@@ -286,41 +349,33 @@ export declare namespace SpaceReader {
   }
 
   /**
-   * A record of the space, flagged with whether its collection is one of the
-   * collections declared by the space type. It is not validated.
+   * A record of the space, flagged with whether it is valid, as
+   * {@link RecordsItem} is. Checking `collection` narrows `record`.
    */
-  export type AllRecordsItem<S extends Space = Space> = {
+  export type AllRecordsItem<
+    S extends Space = Space,
+    T extends RecordSchema = never,
+  > = {
     /** The account whose repo holds the record. */
     repo: DidString
     rkey: RecordKeyString
     cid: Cid
   } & (
+    | (T extends unknown // Distributes over unions
+        ? { valid: true; collection: T['$type']; record: Infer<T> }
+        : never)
+    | (UnvalidatedCollection<S, T> extends infer C extends string
+        ? C extends unknown // Distributes over unions
+          ? { valid: true; collection: C; record: TypedLexMap<C> }
+          : never
+        : never)
     | {
-        valid: true
-        collection: SpaceCollection<S>
-        record: TypedLexMap<SpaceCollection<S>>
+        valid: false
+        collection: NsidString
+        record: LexMap
+        error: LexValidationError
       }
-    | { valid: false; collection: NsidString; record: LexMap }
   )
-
-  /**
-   * A record of the space, of a collection described by `T`, flagged with
-   * whether it matched its schema. With several schemas, checking `collection`
-   * narrows `record`.
-   */
-  export type AllRecordsSchemaItem<T extends RecordSchema> =
-    // Distributes over unions, so that checking `collection` narrows `record`
-    T extends unknown
-      ? {
-          /** The account whose repo holds the record. */
-          repo: DidString
-          collection: T['$type']
-          rkey: RecordKeyString
-          cid: Cid
-        } & (
-          { valid: true; record: Infer<T> } | { valid: false; record: LexMap }
-        )
-      : never
 }
 
 /**
@@ -477,18 +532,136 @@ export class SpaceReader<S extends Space = Space> {
   }
 
   /**
-   * Iterates over the records of a repo.
+   * Iterates over the records of a repo, in every collection, flagged with
+   * whether they are valid: of a collection declared by the space type and,
+   * when a schema of `collections` describes their collection, matching that
+   * schema. These must be collections declared by the space type, unless
+   * `validateRequest` is `false`. Records listed under a collection other than
+   * their `$type` are invalid.
    *
    * @note Listed records are not covered by a MAC; see {@link getRepo} for a
    * verified copy of a repo.
+   *
+   * @example
+   * ```typescript
+   * for await (const record of space.records({ repo, collections: [com.example.post] })) {
+   *   if (!record.valid) record.error // LexValidationError
+   *   else if (record.collection === com.example.post.$type) record.value // com.example.post.Main
+   *   else record.value // TypedLexMap of another collection of the space type
+   * }
+   * ```
    */
-  async *records(
+  records(
+    options: SpaceReader.RecordsOptions & { collections?: undefined },
+  ): AsyncGenerator<SpaceReader.RecordsItem<S>, void, undefined>
+  records<const T extends RecordSchema>(
+    options: SpaceReader.RecordsOptions & {
+      collections: readonly SpaceCollectionSchema<S, T>[]
+      validateRequest?: true
+    },
+  ): AsyncGenerator<SpaceReader.RecordsItem<S, T>, void, undefined>
+  records<const T extends RecordSchema>(
+    options: SpaceReader.RecordsOptions & {
+      collections: readonly Main<T>[]
+      validateRequest: false
+    },
+  ): AsyncGenerator<SpaceReader.RecordsItem<S, T>, void, undefined>
+  async *records({
+    collections,
+    ...options
+  }: SpaceReader.RecordsOptions & {
+    collections?: readonly unknown[]
+  }): AsyncGenerator<
+    SpaceReader.RecordsItem<S> | SpaceReader.RecordsItem<S, RecordSchema>,
+    void,
+    undefined
+  > {
+    const classify = this.#recordClassifier(
+      collections,
+      options.validateRequest,
+      this.schema.collections,
+    )
+    for await (const record of this.#listedRecords(options)) {
+      const result = classify(record.collection, record.value)
+      yield (
+        result.valid
+          ? { ...record, valid: true, value: result.value }
+          : { ...record, valid: false, error: result.error }
+      ) as SpaceReader.RecordsItem<S>
+    }
+  }
+
+  /**
+   * Lists a page of a collection's records, each validated against its
+   * schema. Records listed outside of the collection are invalid.
+   *
+   * @example
+   * ```typescript
+   * const { records, cursor } = await space.list(com.example.post, { repo })
+   * for (const record of records) {
+   *   if (record.valid) record.value // com.example.post.Main
+   * }
+   * ```
+   */
+  async list<const T extends RecordSchema>(
+    ns: SpaceCollectionSchema<S, T>,
+    options: SpaceReader.ListOptions,
+  ): Promise<SpaceReader.ListOutput<T>>
+  async list<const T extends RecordSchema>(
+    ns: Main<T>,
+    options: SpaceReader.ListOptions & { validateRequest: false },
+  ): Promise<SpaceReader.ListOutput<T>>
+  async list<const T extends RecordSchema>(
+    ns: Main<T>,
+    options: SpaceReader.ListOptions,
+  ): Promise<SpaceReader.ListOutput<T>> {
+    const schema = getMain(ns)
+    const classify = this.#recordClassifier([schema], options.validateRequest)
+    const { body } = await this.listRecords({
+      ...options,
+      collection: schema.$type,
+    })
+    const records = body.records.map((record) =>
+      listRecordItem<Infer<T>>(record, classify),
+    )
+    return { ...body, records }
+  }
+
+  /**
+   * Iterates over a collection's records, each validated against its schema,
+   * handling pagination. Records listed outside of the collection are invalid.
+   */
+  listAll<const T extends RecordSchema>(
+    ns: SpaceCollectionSchema<S, T>,
+    options: SpaceReader.ListOptions,
+  ): AsyncGenerator<SpaceReader.ListRecordItem<Infer<T>>, void, undefined>
+  listAll<const T extends RecordSchema>(
+    ns: Main<T>,
+    options: SpaceReader.ListOptions & { validateRequest: false },
+  ): AsyncGenerator<SpaceReader.ListRecordItem<Infer<T>>, void, undefined>
+  async *listAll<const T extends RecordSchema>(
+    ns: Main<T>,
+    options: SpaceReader.ListOptions,
+  ): AsyncGenerator<SpaceReader.ListRecordItem<Infer<T>>, void, undefined> {
+    const schema = getMain(ns)
+    const classify = this.#recordClassifier([schema], options.validateRequest)
+    for await (const record of this.#listedRecords({
+      ...options,
+      collection: schema.$type,
+    })) {
+      yield listRecordItem<Infer<T>>(record, classify)
+    }
+  }
+
+  /** Iterates over the listed records of a repo, across pages. */
+  async *#listedRecords(
     options: SpaceReader.ListRecordsOptions,
   ): AsyncGenerator<ListRecordsRecord, void, undefined> {
     let { cursor } = options
     do {
       const { body } = await this.listRecords({ ...options, cursor })
       yield* body.records
+      // Guard against a server returning the same cursor
       if (body.cursor === cursor) return
       cursor = body.cursor
     } while (cursor)
@@ -782,38 +955,41 @@ export class SpaceReader<S extends Space = Space> {
    * yielded. Repos removed from the writer set, and repos that are unavailable
    * (not found, taken down, suspended or deactivated), are skipped.
    *
-   * Every record is yielded, flagged with whether its collection is declared
-   * by the space type. With `collections`, only the records of these
-   * collections are yielded, flagged with whether they match their schema.
+   * Every record is yielded, flagged with whether it is valid, as by
+   * {@link records}: of a collection declared by the space type and, when a
+   * schema of `collections` describes its collection, matching that schema.
    * These must be collections declared by the space type, unless
-   * `validateRequest` is `false`.
+   * `validateRequest` is `false`. Records stored under a collection other than
+   * their `$type` are invalid.
    *
    * @example
    * ```typescript
    * for await (const record of space.allRecords()) {
-   *   if (record.valid) record.record // of a declared collection
+   *   if (record.valid) record.record // TypedLexMap of a collection of the space type
    * }
    *
-   * for await (const post of space.allRecords({ collections: [com.example.post] })) {
-   *   if (post.valid) post.record // com.example.post.Main
+   * for await (const record of space.allRecords({ collections: [com.example.post] })) {
+   *   if (record.valid && record.collection === com.example.post.$type) {
+   *     record.record // com.example.post.Main
+   *   }
    * }
    * ```
    */
   allRecords(
-    options?: SpaceReader.AllRecordsOptions,
+    options?: SpaceReader.AllRecordsOptions & { collections?: undefined },
   ): AsyncGenerator<SpaceReader.AllRecordsItem<S>, void, undefined>
   allRecords<const T extends RecordSchema>(
     options: SpaceReader.AllRecordsOptions & {
       collections: readonly SpaceCollectionSchema<S, T>[]
       validateRequest?: true
     },
-  ): AsyncGenerator<SpaceReader.AllRecordsSchemaItem<T>, void, undefined>
+  ): AsyncGenerator<SpaceReader.AllRecordsItem<S, T>, void, undefined>
   allRecords<const T extends RecordSchema>(
     options: SpaceReader.AllRecordsOptions & {
       collections: readonly Main<T>[]
       validateRequest: false
     },
-  ): AsyncGenerator<SpaceReader.AllRecordsSchemaItem<T>, void, undefined>
+  ): AsyncGenerator<SpaceReader.AllRecordsItem<S, T>, void, undefined>
   async *allRecords({
     collections,
     validateRequest,
@@ -823,17 +999,15 @@ export class SpaceReader<S extends Space = Space> {
     collections?: readonly unknown[]
     validateRequest?: boolean
   } = {}): AsyncGenerator<
-    | SpaceReader.AllRecordsItem<S>
-    | SpaceReader.AllRecordsSchemaItem<RecordSchema>,
+    SpaceReader.AllRecordsItem<S> | SpaceReader.AllRecordsItem<S, RecordSchema>,
     void,
     undefined
   > {
-    const schemas = (
-      collections as readonly Main<RecordSchema>[] | undefined
-    )?.map(getMain)
-    if (schemas && validateRequest !== false) {
-      for (const { $type } of schemas) this.assertCollection($type)
-    }
+    const classify = this.#recordClassifier(
+      collections,
+      validateRequest,
+      this.schema.collections,
+    )
 
     // A repo listed again was updated while listing: its last entry is current.
     const writers = new Map<DidString, SpaceReader.ListedWriter>()
@@ -866,21 +1040,34 @@ export class SpaceReader<S extends Space = Space> {
       for (const [i, snapshot] of snapshots.entries()) {
         for (const record of snapshot?.records ?? []) {
           const item = { ...record, repo: batch[i] }
-          if (!schemas) {
-            yield this.isCollection(record.collection)
-              ? ({ ...item, valid: true } as SpaceReader.AllRecordsItem<S>)
-              : { ...item, valid: false }
-            continue
-          }
-          const schema = schemas.find((s) => s.$type === record.collection)
-          if (!schema) continue
-          const result = schema.safeValidate(record.record)
-          yield result.success
-            ? { ...item, valid: true, record: result.value }
-            : { ...item, valid: false }
+          const result = classify(record.collection, record.record)
+          yield (
+            result.valid
+              ? { ...item, valid: true, record: result.value }
+              : { ...item, valid: false, error: result.error }
+          ) as SpaceReader.AllRecordsItem<S>
         }
       }
     }
+  }
+
+  /**
+   * Classifies records (see {@link recordClassifier}) against the schemas
+   * described by `collections`, and the `unvalidated` collections.
+   *
+   * @throws {TypeError} if a collection described by `collections` is not
+   * declared by the space type, unless `validateRequest` is `false`
+   */
+  #recordClassifier(
+    collections: readonly unknown[] = [],
+    validateRequest?: boolean,
+    unvalidated: readonly NsidString[] = [],
+  ): RecordClassifier {
+    const schemas = (collections as readonly Main<RecordSchema>[]).map(getMain)
+    if (validateRequest !== false) {
+      for (const { $type } of schemas) this.assertCollection($type)
+    }
+    return recordClassifier(schemas, unvalidated)
   }
 
   /** Whether `collection` is one of the collections declared by the space type. */
@@ -1127,4 +1314,71 @@ function isVerificationError(err: unknown): boolean {
 
 function cidEquals(a: Cid | null, b: Cid | null): boolean {
   return a === null || b === null ? a === b : a.equals(b)
+}
+
+/** How a record is classified (see `SpaceReader.RecordsItem`). */
+type Classification =
+  { valid: true; value: LexMap } | { valid: false; error: LexValidationError }
+
+type RecordClassifier = (
+  collection: NsidString,
+  value: unknown,
+) => Classification
+
+/**
+ * Classifies the records of a space: valid if they match the schema of their
+ * collection among `schemas`, or if their collection is one of `unvalidated`.
+ * The records of other collections, and the records stored under a collection
+ * other than their `$type` (not every host checks it), are invalid.
+ */
+function recordClassifier(
+  schemas: readonly RecordSchema[],
+  unvalidated: readonly NsidString[],
+): RecordClassifier {
+  const schemasByType = new Map<string, RecordSchema>(
+    schemas.map((schema) => [schema.$type, schema]),
+  )
+  const expected = [...new Set([...schemasByType.keys(), ...unvalidated])]
+
+  return (collection, value) => {
+    if (!isPlainObject(value) || !('$type' in value)) {
+      return invalid(new IssueInvalidType([], value, ['$typed']))
+    }
+
+    const { $type } = value
+    if (typeof $type !== 'string') {
+      return invalid(new IssueInvalidType(['$type'], $type, ['string']))
+    }
+    if ($type !== collection) {
+      return invalid(new IssueInvalidValue(['$type'], $type, [collection]))
+    }
+
+    const schema = schemasByType.get($type)
+    if (schema) {
+      const result = schema.safeValidate(value)
+      return result.success
+        ? { valid: true, value: result.value }
+        : { valid: false, error: result.reason }
+    }
+
+    if ((unvalidated as readonly string[]).includes($type)) {
+      return { valid: true, value: value as TypedLexMap }
+    }
+
+    return invalid(new IssueInvalidValue(['$type'], $type, expected))
+  }
+}
+
+function invalid(issue: Issue): { valid: false; error: LexValidationError } {
+  return { valid: false, error: new LexValidationError([issue]) }
+}
+
+function listRecordItem<Value extends LexMap>(
+  record: ListRecordsRecord,
+  classify: RecordClassifier,
+): SpaceReader.ListRecordItem<Value> {
+  const result = classify(record.collection, record.value)
+  return result.valid
+    ? { ...record, valid: true, value: result.value as Value }
+    : { ...record, valid: false, error: result.error }
 }

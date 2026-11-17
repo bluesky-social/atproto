@@ -93,6 +93,9 @@ export declare namespace SpaceClient {
   > &
     RepoOptions
 
+  export type RecordsOptions = Omit<SpaceReader.RecordsOptions, 'repo'> &
+    RepoOptions
+
   export type GetRecordOptions = Omit<SpaceReader.GetRecordOptions, 'repo'> &
     RepoOptions
 
@@ -148,10 +151,7 @@ export declare namespace SpaceClient {
   export type GetOptions<T extends RecordSchema> = GetRecordOptions &
     RecordKeyOptions<T>
 
-  export type ListOptions = Omit<
-    ListRecordsOptions,
-    'collection' | 'excludeValues'
-  >
+  export type ListOptions = Omit<SpaceReader.ListOptions, 'repo'> & RepoOptions
 
   export type WriteOutput = InferMethodOutputBody<
     typeof createRecord,
@@ -163,19 +163,10 @@ export declare namespace SpaceClient {
     'value'
   > & { value: Infer<T> }
 
-  export type ListOutput<T extends RecordSchema> = Omit<
-    InferMethodOutputBody<typeof listRecords>,
-    'records'
-  > & {
-    /** Every listed record, flagged with whether it matched the schema. */
-    records: ListRecordItem<Infer<T>>[]
-  }
+  export type ListOutput<T extends RecordSchema> = SpaceReader.ListOutput<T>
 
-  export type ListRecordItem<Value extends LexMap> = Omit<
-    SpaceReader.ListedRecord,
-    'value'
-  > &
-    ({ valid: true; value: Value } | { valid: false; value?: LexMap })
+  export type ListRecordItem<Value extends LexMap> =
+    SpaceReader.ListRecordItem<Value>
 }
 
 /**
@@ -328,15 +319,33 @@ export class SpaceClient<S extends Space = Space> extends SpaceReader<S> {
     return super.listRecords({ ...options, repo })
   }
 
+  override records(
+    options?: SpaceClient.RecordsOptions & { collections?: undefined },
+  ): AsyncGenerator<SpaceReader.RecordsItem<S>, void, undefined>
+  override records<const T extends RecordSchema>(
+    options: SpaceClient.RecordsOptions & {
+      collections: readonly SpaceCollectionSchema<S, T>[]
+      validateRequest?: true
+    },
+  ): AsyncGenerator<SpaceReader.RecordsItem<S, T>, void, undefined>
+  override records<const T extends RecordSchema>(
+    options: SpaceClient.RecordsOptions & {
+      collections: readonly Main<T>[]
+      validateRequest: false
+    },
+  ): AsyncGenerator<SpaceReader.RecordsItem<S, T>, void, undefined>
   override records({
     repo = this.did,
     ...options
-  }: SpaceClient.ListRecordsOptions = {}): AsyncGenerator<
-    SpaceReader.ListedRecord,
+  }: SpaceClient.RecordsOptions & {
+    collections?: readonly unknown[]
+  } = {}): AsyncGenerator<
+    SpaceReader.RecordsItem<S> | SpaceReader.RecordsItem<S, RecordSchema>,
     void,
     undefined
   > {
-    return super.records({ ...options, repo })
+    // Typed as the first overload: the implementation accepts any of them.
+    return super.records({ ...options, repo } as SpaceReader.RecordsOptions)
   }
 
   /**
@@ -605,26 +614,20 @@ export class SpaceClient<S extends Space = Space> extends SpaceReader<S> {
    * }
    * ```
    */
-  async list<const T extends RecordSchema>(
+  override async list<const T extends RecordSchema>(
     ns: SpaceCollectionSchema<S, T>,
     options?: SpaceClient.ListOptions,
   ): Promise<SpaceClient.ListOutput<T>>
-  async list<const T extends RecordSchema>(
+  override async list<const T extends RecordSchema>(
     ns: Main<T>,
     options: SpaceClient.ListOptions & { validateRequest: false },
   ): Promise<SpaceClient.ListOutput<T>>
-  async list<const T extends RecordSchema>(
+  override async list<const T extends RecordSchema>(
     ns: Main<T>,
-    options: SpaceClient.ListOptions = {},
+    { repo = this.did, ...options }: SpaceClient.ListOptions = {},
   ): Promise<SpaceClient.ListOutput<T>> {
-    const schema = getMain(ns)
-    if (options.validateRequest !== false) this.assertCollection(schema.$type)
-    const { body } = await this.listRecords({
-      ...options,
-      collection: schema.$type,
-    })
-    const records = body.records.map(processListRecord, schema)
-    return { ...body, records }
+    // Typed as the first overload: the implementation accepts any of them.
+    return super.list(ns as SpaceCollectionSchema<S, T>, { ...options, repo })
   }
 
   /**
@@ -632,37 +635,22 @@ export class SpaceClient<S extends Space = Space> extends SpaceReader<S> {
    * handling pagination. Lists the user's own repo unless `options.repo` is
    * set.
    */
-  listAll<const T extends RecordSchema>(
+  override listAll<const T extends RecordSchema>(
     ns: SpaceCollectionSchema<S, T>,
     options?: SpaceClient.ListOptions,
   ): AsyncGenerator<SpaceClient.ListRecordItem<Infer<T>>, void, undefined>
-  listAll<const T extends RecordSchema>(
+  override listAll<const T extends RecordSchema>(
     ns: Main<T>,
     options: SpaceClient.ListOptions & { validateRequest: false },
   ): AsyncGenerator<SpaceClient.ListRecordItem<Infer<T>>, void, undefined>
-  async *listAll<const T extends RecordSchema>(
+  override listAll<const T extends RecordSchema>(
     ns: Main<T>,
-    options: SpaceClient.ListOptions = {},
+    { repo = this.did, ...options }: SpaceClient.ListOptions = {},
   ): AsyncGenerator<SpaceClient.ListRecordItem<Infer<T>>, void, undefined> {
-    const schema = getMain(ns)
-    if (options.validateRequest !== false) this.assertCollection(schema.$type)
-    for await (const record of this.records({
+    // Typed as the first overload: the implementation accepts any of them.
+    return super.listAll(ns as SpaceCollectionSchema<S, T>, {
       ...options,
-      collection: schema.$type,
-    })) {
-      yield processListRecord.call(schema, record)
-    }
-  }
-}
-
-function processListRecord<T extends RecordSchema>(
-  this: T,
-  record: SpaceReader.ListedRecord,
-): SpaceClient.ListRecordItem<Infer<T>> {
-  const result = this.safeValidate(record.value)
-  if (result.success) {
-    return { ...record, valid: true, value: result.value }
-  } else {
-    return { ...record, valid: false }
+      repo,
+    })
   }
 }
