@@ -67,6 +67,8 @@ export default function (server: Server, ctx: AppContext) {
 
 const FILTER_TO_FEED_TYPE = {
   posts_with_replies: undefined, // default: all posts, replies, and reposts
+  // @NOTE no dedicated Tango feed type; use the mixed feed and exclude reposts
+  // before hydration so bounded page filling counts only eligible items.
   posts_and_replies_only: undefined,
   posts_no_replies: FeedType.POSTS_NO_REPLIES,
   posts_with_media: FeedType.POSTS_WITH_MEDIA,
