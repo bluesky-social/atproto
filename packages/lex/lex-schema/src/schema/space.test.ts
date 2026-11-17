@@ -12,20 +12,16 @@ const reply = record('tid', 'com.example.reply', object({}))
 const post = record('tid', 'com.example.post', object({}))
 
 describe(Space, () => {
-  it('exposes its key, nsid, collections and options', () => {
-    const options = { title: 'Forum', 'title:lang': { es: 'Foro' } }
-    const sp = space('any', 'com.example.forum', [thread, reply], options)
+  it('exposes its key, nsid and collections', () => {
+    const sp = space('any', 'com.example.forum', [thread, reply])
 
     expect(sp).toBeInstanceOf(Space)
     expect(sp).toMatchObject({
       key: 'any',
       nsid: 'com.example.forum',
       spaceType: 'com.example.forum',
-      title: 'Forum',
       collections: [thread, reply],
-      options,
     })
-    expect(space('any', 'com.example.forum', []).options).toEqual({})
   })
 
   it('resolves the record schemas of its collections', () => {

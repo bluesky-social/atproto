@@ -11,30 +11,13 @@ import { type RecordKeySchema, type RecordSchema, recordKey } from './record.js'
 import { TypedRefSchema } from './typed-ref.js'
 
 /**
- * Configuration options for a space declaration.
- *
- * @property title - Human-readable title shown on OAuth consent screens, which
- *   show the NSID when it is absent
- * @property title:lang - Localized titles by language code
- * @property description - Developer-facing description of the space type
- */
-export type SpaceOptions = {
-  title?: string
-  'title:lang'?: Record<string, undefined | string>
-  description?: string
-}
-
-/**
  * Declares a space type in AT Protocol.
  *
- * A space declaration establishes an NSID for a kind of permissioned space
- * and may supply the human-readable title shown on OAuth consent screens when
- * an application requests access to a space of this type. It also lists the
- * recommended record collections for clients of this space type.
+ * A space declaration establishes an NSID for a kind of permissioned space,
+ * and lists the recommended record collections for clients of this space type.
  *
  * The `collections` list does not constrain what may actually be written
- * into the space — it's a recommendation for clients and (along with `title`)
- * informs how OAuth consent screens describe the access being requested.
+ * into the space — it's a recommendation for clients.
  *
  * @template TNsid - The NSID identifying this space type
  * @template TKey - The recommended space key type
@@ -42,12 +25,7 @@ export type SpaceOptions = {
  *
  * @example
  * ```ts
- * const forum = new Space(
- *   'any',
- *   'com.atmoboards.forum',
- *   [thread, reply],
- *   { title: 'AtmoBoards Forum', 'title:lang': { es: 'Foro AtmoBoards' } },
- * )
+ * const forum = new Space('any', 'com.atmoboards.forum', [thread, reply])
  * ```
  */
 export class Space<
@@ -57,7 +35,6 @@ export class Space<
 > {
   readonly key: TKey
   readonly nsid: TNsid
-  readonly options: SpaceOptions
 
   readonly #collections: readonly (TRecord | TypedRefSchema<TRecord>)[]
 
@@ -65,11 +42,9 @@ export class Space<
     key: TKey,
     nsid: TNsid,
     collections: readonly (TRecord | TypedRefSchema<TRecord>)[],
-    options: SpaceOptions = {},
   ) {
     this.key = asLexiconRecordKey(key)
     this.nsid = nsid
-    this.options = options
 
     // @NOTE We don't build the resolved collection schemas here; they are
     // lazily resolved on first access via the `collections` getter.
@@ -89,10 +64,6 @@ export class Space<
       'collections',
       this.#collections.map(getCollectionSchema),
     )
-  }
-
-  get title(): string | undefined {
-    return this.options.title
   }
 
   get spaceType(): TNsid {
@@ -171,25 +142,12 @@ export class Space<
  *   collections recommended for clients of this space type. The schema types
  *   are not inferred from a list mixing schemas and references: use either
  *   form for all of them.
- * @param options - Optional metadata (title, localized titles, description)
  * @returns A new {@link Space} instance
  *
  * @example
  * ```ts
- * const forum = l.space(
- *   'any',
- *   'com.atmoboards.forum',
- *   // Record schemas, or (lazy) references to them
- *   [thread, reply],
- *   {
- *     title: 'AtmoBoards Forum',
- *     'title:lang': {
- *       es: 'Foro AtmoBoards',
- *       ja: 'AtmoBoards 掲示板',
- *     },
- *     description: 'A discussion forum',
- *   },
- * )
+ * // Record schemas, or (lazy) references to them
+ * const forum = l.space('any', 'com.atmoboards.forum', [thread, reply])
  * ```
  */
 /*@__NO_SIDE_EFFECTS__*/
@@ -201,9 +159,8 @@ export function space<
   key: K,
   nsid: N,
   collections: readonly (R | TypedRefSchema<R>)[],
-  options?: SpaceOptions,
 ): Space<N, K, R> {
-  return new Space<N, K, R>(key, nsid, collections, options)
+  return new Space<N, K, R>(key, nsid, collections)
 }
 
 function getCollectionSchema<T extends RecordSchema>(

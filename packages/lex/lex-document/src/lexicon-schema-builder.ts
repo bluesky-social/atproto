@@ -266,7 +266,6 @@ export class LexiconSchemaBuilder implements AsyncDisposable {
           def.collections.map((nsid) =>
             l.typedRef(this.buildRecordGetter(nsid)),
           ),
-          def,
         )
       case 'procedure':
         return l.procedure(

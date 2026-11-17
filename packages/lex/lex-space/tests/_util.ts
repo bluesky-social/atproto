@@ -11,9 +11,7 @@ export const note = l.record(
   l.object({ text: l.string() }),
 )
 
-export const group = l.space('any', 'com.example.group', [note], {
-  title: 'Example group',
-})
+export const group = l.space('any', 'com.example.group', [note])
 
 // @NOTE The package only vendors the space lexicons. This is a trimmed mirror
 // of com.atproto.server.createAccount, enough to create the test accounts.

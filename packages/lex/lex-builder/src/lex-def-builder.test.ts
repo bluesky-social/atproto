@@ -48,7 +48,7 @@ async function buildMain(main: MainLexiconDefinition): Promise<string> {
 }
 
 describe(LexDefBuilder, () => {
-  it('emits a space def with its title options', async () => {
+  it('emits a space def without its title', async () => {
     const source = await buildMain({
       type: 'space',
       key: 'any',
@@ -57,8 +57,9 @@ describe(LexDefBuilder, () => {
       collections: ['com.example.post'],
     })
     expect(source).toContain(
-      'l.space("any", $nsid, [/*#__PURE__*/ l.typedRef(() => ExamplePost.main)], {"title":"Example Group","title:lang":{"fr":"Groupe Exemple"}})',
+      'l.space("any", $nsid, [/*#__PURE__*/ l.typedRef(() => ExamplePost.main)])',
     )
+    expect(source).not.toContain('title')
   })
 
   it('references the record schemas of the space collections', async () => {
@@ -82,18 +83,6 @@ describe(LexDefBuilder, () => {
     ).rejects.toThrow(
       `Collection ${nsid} of space com.example.group is not a record`,
     )
-  })
-
-  it('emits a space def without options when it has no title', async () => {
-    const source = await buildMain({
-      type: 'space',
-      key: 'any',
-      collections: ['com.example.post'],
-    })
-    expect(source).toContain(
-      'l.space("any", $nsid, [/*#__PURE__*/ l.typedRef(() => ExamplePost.main)],',
-    )
-    expect(source).not.toContain('"title"')
   })
 
   it('types a space-ref string as a SpaceRefString', async () => {

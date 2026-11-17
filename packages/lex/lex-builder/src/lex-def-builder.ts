@@ -209,14 +209,9 @@ export class LexDefBuilder {
       def.collections.map((nsid) => this.compileSpaceCollectionRef(nsid)),
     )
 
-    const options = stringifyOptions(def, [
-      'title',
-      'title:lang',
-    ] satisfies (keyof l.SpaceOptions)[])
-
     await this.addSchema(hash, def, {
       schema: markPure(
-        `l.space(${JSON.stringify(def.key)}, $nsid, [${collections.join(',')}], ${options})`,
+        `l.space(${JSON.stringify(def.key)}, $nsid, [${collections.join(',')}])`,
       ),
     })
   }
