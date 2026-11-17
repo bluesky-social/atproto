@@ -249,7 +249,7 @@ describe('space account migration', () => {
     )
   })
 
-  it('commits only the difference from what the new host holds when imported again', async () => {
+  it('replaces what the new host holds when imported again', async () => {
     const space = await sc.createSpace(alice, { members: [bob] })
     await sc.write(alice, space, { rkey: 'kept' })
     await sc.write(alice, space, { rkey: 'deleted' })
@@ -268,12 +268,30 @@ describe('space account migration', () => {
       })
       await txn.space.applyWrites(ref, [write])
     })
-    const since = (await latestCommit(newAlice, space)).commit.rev
+    // Read directly: no endpoint exposes the rev a record was indexed at.
+    const indexedRevs = async () => {
+      const rows = await newAlice.pds.ctx.actorStore.read(alice.did, (store) =>
+        store.space.db.db
+          .selectFrom('space_record')
+          .select(['rkey', 'repoRev'])
+          .where('space', '=', space)
+          .execute(),
+      )
+      return Object.fromEntries(rows.map((row) => [row.rkey, row.repoRev]))
+    }
+    const before = await indexedRevs()
 
     await sc.del(alice, space, { rkey: 'deleted' })
     await sc.write(alice, space, { rkey: 'added' })
     await sc.removeMember(alice, space, bob)
     await migrate([space])
+
+    // Only the difference is indexed: the unchanged record is left alone.
+    const after = await indexedRevs()
+    const { rev } = (await latestCommit(newAlice, space)).commit
+    expect(Object.keys(after).sort()).toEqual(['added', 'kept'])
+    expect(after.kept).toBe(before.kept)
+    expect(after.added).toBe(rev)
 
     const original = await readSpaceMetaStar([
       await exportSpaceMeta(alice, space),
@@ -284,25 +302,41 @@ describe('space account migration', () => {
     expect((await latestCommit(newAlice, space)).commit.data).toEqual(
       (await latestCommit(alice, space)).commit.data,
     )
-    // One commit, holding only the records that differ: `kept` is left alone.
+    // But it isn't recorded as ops: a syncer sees the set hash change and resyncs.
     const { ops } = await newAlice.client.call(
       com.atproto.space.listRepoOps,
-      { space, repo: alice.did, since, excludeValues: true },
+      { space, repo: alice.did },
       { headers: newAlice.headers },
     )
-    expect(new Set(ops.map((op) => op.rev)).size).toBe(1)
-    const changes = ops.map(({ rkey, cid, prev }) => ({
-      rkey,
-      action: !prev ? 'create' : !cid ? 'delete' : 'update',
-    }))
-    expect(changes).toHaveLength(3)
-    expect(changes).toEqual(
-      expect.arrayContaining([
-        { rkey: 'added', action: 'create' },
-        { rkey: 'deleted', action: 'delete' },
-        { rkey: 'stale', action: 'delete' },
-      ]),
-    )
+    expect(ops).toEqual([])
+  })
+
+  it('releases the blobs of the records a re-import drops, and keeps the rest', async () => {
+    const space = await sc.createSpace(alice)
+    const writeWithBlob = async (rkey: string, bytes: Uint8Array) => {
+      const { body } = await alice.client.uploadBlob(bytes, {
+        headers: alice.headers,
+        encoding: 'image/png',
+      })
+      await sc.write(alice, space, {
+        rkey,
+        record: { $type: TEST_COLLECTION, text: rkey, image: body.blob },
+      })
+      return getBlobCidString(body.blob)
+    }
+    const kept = await writeWithBlob('kept', new Uint8Array([5, 6, 7, 8]))
+    const dropped = await writeWithBlob('dropped', new Uint8Array([9, 10]))
+    await migrate([space])
+    expect(await sc.blobExists(newAlice, kept)).toBe(true)
+    expect(await sc.blobExists(newAlice, dropped)).toBe(true)
+
+    // Imported without moving the blobs again, so the kept one has to survive the
+    // import on its own.
+    await sc.del(alice, space, { rkey: 'dropped' })
+    await importRepo(newAlice, await getRepo(alice, space))
+
+    expect(await sc.blobExists(newAlice, kept)).toBe(true)
+    expect(await sc.blobExists(newAlice, dropped)).toBe(false)
   })
 
   it("keeps the percent-encoded port of a did:web member's DID", async () => {

@@ -219,14 +219,10 @@ export class SpaceTransactor extends SpaceReader {
   /**
    * Apply a batch of writes as one commit, all sharing a single `rev`. Must run in a
    * transaction. Returns null if there was nothing to write.
-   *
-   * With `verifyBlobs: false`, the writes' blobs are associated without being
-   * checked or made permanent, for an import whose blobs are uploaded afterwards.
    */
   async applyWrites(
     ref: SpaceRef,
     writes: PreparedWrite[],
-    { verifyBlobs = true }: { verifyBlobs?: boolean } = {},
   ): Promise<{ rev: string; setHash: Uint8Array } | null> {
     this.db.assertTransaction()
     if (writes.length === 0) return null
@@ -309,7 +305,7 @@ export class SpaceTransactor extends SpaceReader {
       if (write.action === WriteOpAction.Delete) continue
       for (const blob of write.blobs) {
         await this.blob.associateSpaceBlob(blob, write.uri)
-        if (verifyBlobs) await this.blob.verifyBlobAndMakePermanent(blob)
+        await this.blob.verifyBlobAndMakePermanent(blob)
       }
     }
 
@@ -318,49 +314,56 @@ export class SpaceTransactor extends SpaceReader {
 
   /**
    * Import the account's repo from its previous host, replacing whatever this host
-   * held for it. Must run in a transaction. Like com.atproto.repo.importRepo, it
-   * commits only the difference from what this host holds, at a new rev: unchanged
-   * records are left alone and the blobs of removed records are released. Its
-   * records are taken as they are, including those the PDS publishes from a space's
-   * configuration. Its blobs are uploaded afterwards, so they're associated without
-   * being checked. Returns null if there was nothing to change.
+   * held for it. Must run in a transaction. Like com.atproto.repo.importRepo, only
+   * the records that differ from what this host holds are indexed, but the
+   * difference isn't recorded as ops: the op log is cleared and the repo reset to a
+   * new rev, so a syncer finds its set hash no longer matches and resyncs from the
+   * full repo. Its records are taken as they are, including those the PDS publishes
+   * from a space's configuration. Its blobs are uploaded afterwards, so they're
+   * associated without being checked.
    */
-  async importRepo(
-    ref: SpaceRef,
-    records: VerifiedRecord[],
-  ): Promise<{ rev: string; setHash: Uint8Array } | null> {
+  async importRepo(ref: SpaceRef, records: VerifiedRecord[]): Promise<void> {
     this.db.assertTransaction()
-    // Checked even when there is nothing to change: the authority's own space must
-    // have been imported first.
     await this.ensureRepo(ref)
+    const space = ref.toString()
     const did = this.did as DidString
 
     const existing = await this.db.db
       .selectFrom('space_record')
-      .select(['collection', 'rkey', 'cid'])
-      .where('space', '=', ref.toString())
+      .select(['uri', 'cid'])
+      .where('space', '=', space)
       .execute()
-    const current = new Map(
-      existing.map(({ collection, rkey, cid }) => [
-        ref.recordUri(did, collection, rkey).toString(),
-        cid,
-      ]),
-    )
+    const current = new Map(existing.map(({ uri, cid }) => [uri, cid]))
 
+    const state = await this.getRepoState(space)
+    const rev = TID.nextStr(state?.rev ?? undefined)
+    const indexedAt = new Date().toISOString()
+    const repo = new RepoCommit()
     const writes: PreparedWrite[] = []
+
     for (const { collection, rkey, cid, record } of records) {
       // Stored re-encoded, as any other write is. A record that wasn't canonical
       // DRISL in the archive would no longer match its cid, nor the commit data.
-      if (!cid.equals(await cidForCbor(encode(record)))) {
+      const value = encode(record)
+      if (!cid.equals(await cidForCbor(value))) {
         throw new InvalidRequestError(
           `Invalid STAR: record is not canonical DRISL at ${collection}/${rkey}`,
           'InvalidRepoFile',
         )
       }
+      repo.add(collection, rkey, cid)
+
       const uri = ref.recordUri(did, collection, rkey)
       const prev = current.get(uri.toString())
       current.delete(uri.toString())
       if (prev === cid.toString()) continue
+
+      const row = { cid: cid.toString(), value, repoRev: rev, indexedAt }
+      await this.db.db
+        .insertInto('space_record')
+        .values({ uri: uri.toString(), space, collection, rkey, ...row })
+        .onConflict((oc) => oc.column('uri').doUpdateSet(row))
+        .execute()
       writes.push({
         action: prev ? WriteOpAction.Update : WriteOpAction.Create,
         uri,
@@ -370,10 +373,30 @@ export class SpaceTransactor extends SpaceReader {
       })
     }
     for (const uri of current.keys()) {
+      await this.db.db
+        .deleteFrom('space_record')
+        .where('uri', '=', uri)
+        .execute()
       writes.push({ action: WriteOpAction.Delete, uri: new AtUri(uri) })
     }
 
-    return this.applyWrites(ref, writes, { verifyBlobs: false })
+    await this.blob.deleteDereferencedSpaceBlobs(writes)
+    for (const write of writes) {
+      if (write.action === WriteOpAction.Delete) continue
+      for (const blob of write.blobs) {
+        await this.blob.associateSpaceBlob(blob, write.uri)
+      }
+    }
+
+    await this.db.db
+      .deleteFrom('space_record_oplog')
+      .where('space', '=', space)
+      .execute()
+    await this.db.db
+      .updateTable('space_repo')
+      .set({ setHash: repo.setHash.state(), rev })
+      .where('space', '=', space)
+      .execute()
   }
 
   /**
