@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, test } from 'vitest'
 import { type AtUriString, type TypedLexMap, atUri } from '@atproto/lex'
 import {
   type ExactRecordKey,
@@ -194,15 +194,67 @@ describe(validateExternalEmbedRecord, () => {
   })
 
   describe('Grain galleries', () => {
-    it.each([
-      ['https://grain.social/gallery', ['grain.social'], true],
-      ['https://grain.social/gallery', [], false],
-      ['http://grain.social/gallery', ['grain.social'], false],
-      ['https://sub.grain.social/gallery', ['*.grain.social'], false],
-      ['https://grain.social.evil/gallery', ['grain.social.evil'], false],
-      ['https://other.example/gallery', ['other.example'], false],
+    test.each([
+      [
+        `https://grain.social/profile/${author}/gallery/gallery`,
+        ['grain.social'],
+        true,
+      ],
+      [
+        'https://grain.social/profile/alice.test/gallery/gallery',
+        ['grain.social'],
+        true,
+      ],
+      [
+        'https://grain.social/profile/alice.test/gallery/gallery/?view=grid#photos',
+        ['grain.social'],
+        true,
+      ],
+      [
+        'https://grain.social/profile/alice.test/gallery/other',
+        ['grain.social'],
+        false,
+      ],
+      [
+        'https://grain.social/profile/alice.test/gallery/gallery-other',
+        ['grain.social'],
+        false,
+      ],
+      [
+        'https://grain.social/profile/alice.test/gallery/gallery/photo',
+        ['grain.social'],
+        false,
+      ],
+      [
+        'https://grain.social/profile/alice.test/gallery',
+        ['grain.social'],
+        false,
+      ],
+      ['https://grain.social/gallery', ['grain.social'], false],
+      ['https://grain.social/other/gallery/gallery', ['grain.social'], false],
+      ['https://grain.social/profile/alice.test/gallery/gallery', [], false],
+      [
+        'http://grain.social/profile/alice.test/gallery/gallery',
+        ['grain.social'],
+        false,
+      ],
+      [
+        'https://sub.grain.social/profile/alice.test/gallery/gallery',
+        ['*.grain.social'],
+        false,
+      ],
+      [
+        'https://grain.social.evil/profile/alice.test/gallery/gallery',
+        ['grain.social.evil'],
+        false,
+      ],
+      [
+        'https://other.example/profile/alice.test/gallery/gallery',
+        ['other.example'],
+        false,
+      ],
     ] as const)(
-      'checks the host and configured allowlist: %s',
+      'checks the gallery rkey, host and configured allowlist: %s',
       (url, safeDomains, expected) => {
         const state = stateOf()
         const uri = atUri(author, social.grain.gallery.$type, 'gallery')

@@ -34,6 +34,7 @@ const nativeFetch = globalThis.fetch
 const docUri = atUri(author, site.standard.document.$type, 'article')
 const pubUri = atUri(publisher, site.standard.publication.$type, 'publication')
 const galleryUri = atUri(author, social.grain.gallery.$type, 'gallery')
+const galleryUrl = `https://grain.social/profile/${author}/gallery/gallery`
 const itemUri = atUri(author, social.grain.gallery.item.$type, 'item')
 const photoUri = atUri(author, social.grain.photo.$type, 'photo')
 const liveUri = atUri(author, place.stream.livestream.$type, 'live')
@@ -468,7 +469,6 @@ describe('feed external modality views over HTTP', () => {
 
   it('hydrates gallery items and a deterministic ended livestream without replacing authored cards', async () => {
     await using fixture = await setup()
-    const galleryUrl = 'https://grain.social/gallery'
     const liveUrl = 'https://stream.example.com/author'
     const gallery = fixture.post('gallery', [ref(galleryUri)], galleryUrl)
     const live = fixture.post('live', [ref(liveUri)], liveUrl)
@@ -574,6 +574,11 @@ describe('feed external modality views over HTTP', () => {
   test.each([
     [galleryUri, 'https://evil.example/gallery'],
     [galleryUri, 'https://stream.example.com/gallery'],
+    [galleryUri, 'https://grain.social/profile/alice.test/gallery/other'],
+    [
+      galleryUri,
+      'https://grain.social/profile/alice.test/gallery/gallery-other',
+    ],
     [liveUri, 'https://evil.example/live'],
     [liveUri, 'https://grain.social/author'],
     [liveUri, 'https://stream.example.com/author-other'],
@@ -592,11 +597,7 @@ describe('feed external modality views over HTTP', () => {
   it('requires configured safe domains for non-Standard.site feed embeds', async () => {
     await using fixture = await setup([])
     const uris = [
-      fixture.post(
-        'gallery',
-        [ref(galleryUri)],
-        'https://grain.social/gallery',
-      ),
+      fixture.post('gallery', [ref(galleryUri)], galleryUrl),
       fixture.post('live', [ref(liveUri)], 'https://stream.example.com/author'),
     ]
     const { posts } = await fixture.posts(uris)

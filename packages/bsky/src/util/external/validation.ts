@@ -60,11 +60,15 @@ export function validateExternalEmbedRecord({
             )
       return validateStandardSiteRecordsForUrl(document, publication, url)
     }
-    case social.grain.gallery.$type:
-      return (
-        isExternalRecordUrlSafe(url, safeDomains) &&
-        isExternalRecordUrlSafe(url, ['grain.social'])
+    case social.grain.gallery.$type: {
+      if (!isExternalRecordUrlSafe(url, safeDomains)) return false
+      if (!isExternalRecordUrlSafe(url, ['grain.social'])) return false
+      // @NOTE Profile segments may be handles; only the gallery rkey is checked.
+      const match = new URL(url).pathname.match(
+        /^\/profile\/[^/]+\/gallery\/([^/]+)\/?$/,
       )
+      return match !== null && match[1] === parsed.value.rkey
+    }
     case place.stream.livestream.$type:
       if (!isExternalRecordUrlSafe(url, safeDomains)) return false
       if (!place.stream.livestream.$matches(root.record)) return false
