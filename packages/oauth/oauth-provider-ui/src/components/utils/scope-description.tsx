@@ -1054,12 +1054,12 @@ function SpaceAccessBadges({ row }: { row: SpaceAccessRow }) {
           <Trans context="SpaceAccess">Write</Trans>
         </Badge>
       )}
-      {row.manage && (
+      {row.manage.size > 0 && (
         <Badge variant={variant}>
           <Trans context="SpaceAccess">Manage</Trans>
         </Badge>
       )}
-      {!row.read && !row.readSelf && !row.writes.size && !row.manage && (
+      {!row.read && !row.readSelf && !row.writes.size && !row.manage.size && (
         <Badge variant="outline">
           <Trans context="SpaceAccess">No access</Trans>
         </Badge>
@@ -1118,10 +1118,24 @@ function SpaceRow({
         <SpaceAuthorityDid authority={row.authority} />
       )}
 
-      {row.manage && (
+      {row.manage.has('create') && (
         <div className="text-muted-foreground text-xs">
           <Trans>
-            <b>Manage</b> the space: create new spaces, add and remove members.
+            <b>Create</b> spaces.
+          </Trans>
+        </div>
+      )}
+      {row.manage.has('update') && (
+        <div className="text-muted-foreground text-xs">
+          <Trans>
+            <b>Update</b> spaces: change their settings and members.
+          </Trans>
+        </div>
+      )}
+      {row.manage.has('delete') && (
+        <div className="text-muted-foreground text-xs">
+          <Trans>
+            <b>Delete</b> spaces.
           </Trans>
         </div>
       )}
@@ -1135,10 +1149,10 @@ function SpaceRow({
       {writeEntries.length === 0 ? (
         <div className="text-muted-foreground text-xs">
           {row.read ? (
-            row.manage ? null : (
+            row.manage.size ? null : (
               <Trans>Read-only access.</Trans>
             )
-          ) : row.readSelf || row.manage ? null : (
+          ) : row.readSelf || row.manage.size ? null : (
             <Trans>No access.</Trans>
           )}
         </div>

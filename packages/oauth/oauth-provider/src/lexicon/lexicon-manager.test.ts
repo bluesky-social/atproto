@@ -94,6 +94,36 @@ describe('LexiconManager', () => {
       expect(spaces).toEqual(new Map([[FORUM, space([THREAD, REPLY])]]))
     })
 
+    it('requires the declaration of a bare grant, as token issuance does', async () => {
+      const { manager } = setup({})
+      const scope = `space:${FORUM}?authority=${OWNER_DID}`
+      await expect(manager.getSpacesFromScope(scope)).rejects.toThrow(
+        new LexResolverError(FORUM),
+      )
+      await expect(manager.buildTokenScope(scope, USER_DID)).rejects.toThrow(
+        new LexResolverError(FORUM),
+      )
+    })
+
+    it('does without the declaration of a grant that names collections, as token issuance does', async () => {
+      // GROUP cannot be resolved, and BUNDLE is not a space.
+      const { manager } = setup({
+        [FORUM]: space([THREAD]),
+        [BUNDLE]: permissionSet([]),
+      })
+      const scope = [
+        `space:${FORUM}?authority=${OWNER_DID}&collection=${THREAD}`,
+        `space:${GROUP}?authority=${OWNER_DID}&collection=${REPLY}`,
+        `space:${BUNDLE}?authority=${OWNER_DID}&collection=${REPLY}`,
+      ].join(' ')
+      await expect(manager.getSpacesFromScope(scope)).resolves.toEqual(
+        new Map([[FORUM, space([THREAD])]]),
+      )
+      await expect(manager.buildTokenScope(scope, USER_DID)).resolves.toBe(
+        scope,
+      )
+    })
+
     it('skips a wildcard space type', async () => {
       const { manager, lexResolver } = setup({})
       const spaces = await manager.getSpacesFromScope('space:*?authority=*')
