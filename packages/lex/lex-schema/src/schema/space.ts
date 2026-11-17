@@ -8,7 +8,7 @@ import {
 } from '../core.js'
 import { lazyProperty } from '../util/lazy-property.js'
 import { type RecordKeySchema, type RecordSchema, recordKey } from './record.js'
-import { TypedRefSchema } from './typed-ref.js'
+import type { TypedRefSchema } from './typed-ref.js'
 
 /**
  * Declares a space type in AT Protocol.
@@ -20,7 +20,7 @@ import { TypedRefSchema } from './typed-ref.js'
  * into the space — it's a recommendation for clients.
  *
  * @template TKey - The recommended space key type
- * @template TType - The NSID identifying this space type
+ * @template TSpaceType - The NSID identifying this space type
  * @template TRecord - The record schemas of the recommended collections
  *
  * @example
@@ -30,21 +30,23 @@ import { TypedRefSchema } from './typed-ref.js'
  */
 export class Space<
   const TKey extends LexiconRecordKey = LexiconRecordKey,
-  const TType extends NsidString = NsidString,
+  const TSpaceType extends NsidString = NsidString,
   const TRecord extends RecordSchema = RecordSchema,
 > {
+  readonly type = 'space' as const
+
   readonly key: TKey
-  readonly type: TType
+  readonly spaceType: TSpaceType
 
   readonly #collections: readonly (TRecord | TypedRefSchema<TRecord>)[]
 
   constructor(
     key: TKey,
-    type: TType,
+    spaceType: TSpaceType,
     collections: readonly (TRecord | TypedRefSchema<TRecord>)[],
   ) {
     this.key = asLexiconRecordKey(key)
-    this.type = type
+    this.spaceType = spaceType
 
     // @NOTE We don't build the resolved collection schemas here; they are
     // lazily resolved on first access via the `collections` getter.
@@ -66,8 +68,10 @@ export class Space<
     )
   }
 
-  get spaceType(): TType {
-    return this.type
+  // @NOTE Expose the space type as a property with a `$` prefix for convenience
+  // and consistency with other `$`-prefixed helpers from lex-builder.
+  get $spaceType(): TSpaceType {
+    return this.spaceType
   }
 
   /**
@@ -96,8 +100,8 @@ export class Space<
    */
   matchesRef<R extends { spaceType: string; skey: string }>(
     ref: R,
-  ): ref is R & { spaceType: TType; skey: RecordKeyValue<TKey> } {
-    return ref.spaceType === this.type && this.isKey(ref.skey)
+  ): ref is R & { spaceType: TSpaceType; skey: RecordKeyValue<TKey> } {
+    return ref.spaceType === this.spaceType && this.isKey(ref.skey)
   }
 
   spaceRefFor(
@@ -129,7 +133,7 @@ export class Space<
       )
     }
 
-    return new SpaceRef(spaceDid, this.type, skey)
+    return new SpaceRef(spaceDid, this.spaceType, skey)
   }
 }
 
@@ -137,7 +141,7 @@ export class Space<
  * Creates a space declaration.
  *
  * @param key - Recommended space key type
- * @param type - The NSID identifying this space type
+ * @param spaceType - The NSID identifying this space type
  * @param collections - The record schemas (or references to them) of the
  *   collections recommended for clients of this space type. The schema types
  *   are not inferred from a list mixing schemas and references: use either
@@ -153,20 +157,18 @@ export class Space<
 /*@__NO_SIDE_EFFECTS__*/
 export function space<
   const TKey extends LexiconRecordKey,
-  const TType extends NsidString,
+  const TSpaceType extends NsidString,
   const TRecord extends RecordSchema = never,
 >(
   key: TKey,
-  type: TType,
+  spaceType: TSpaceType,
   collections: readonly (TRecord | TypedRefSchema<TRecord>)[],
-): Space<TKey, TType, TRecord> {
-  return new Space<TKey, TType, TRecord>(key, type, collections)
+): Space<TKey, TSpaceType, TRecord> {
+  return new Space<TKey, TSpaceType, TRecord>(key, spaceType, collections)
 }
 
 function getCollectionSchema<T extends RecordSchema>(
   collection: T | TypedRefSchema<T>,
 ): T {
-  return collection instanceof TypedRefSchema
-    ? collection.validator
-    : collection
+  return collection.type === 'typedRef' ? collection.validator : collection
 }

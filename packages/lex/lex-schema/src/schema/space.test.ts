@@ -12,13 +12,13 @@ const reply = record('tid', 'com.example.reply', object({}))
 const post = record('tid', 'com.example.post', object({}))
 
 describe(Space, () => {
-  it('exposes its key, nsid and collections', () => {
+  it('exposes its key, space type and collections', () => {
     const sp = space('any', 'com.example.forum', [thread, reply])
 
     expect(sp).toBeInstanceOf(Space)
     expect(sp).toMatchObject({
+      type: 'space',
       key: 'any',
-      type: 'com.example.forum',
       spaceType: 'com.example.forum',
       collections: [thread, reply],
     })

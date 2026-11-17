@@ -205,6 +205,10 @@ export class LexDefBuilder {
   }
 
   private async addSpace(hash: string, def: LexiconSpace) {
+    if (hash !== 'main') {
+      throw new Error(`Definition ${hash} cannot be of type ${def.type}`)
+    }
+
     const collections = await Promise.all(
       def.collections.map((nsid) => this.compileSpaceCollectionRef(nsid)),
     )
@@ -214,6 +218,8 @@ export class LexDefBuilder {
         `l.space(${JSON.stringify(def.key)}, $nsid, [${collections.join(',')}])`,
       ),
     })
+
+    this.addExportedString('$spaceType', '$nsid')
   }
 
   private async compileSpaceCollectionRef(nsid: string): Promise<string> {

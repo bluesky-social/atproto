@@ -100,7 +100,7 @@ describe('SpaceClient', () => {
       })
       expect(created).toBeInstanceOf(SpaceClient)
       expect(created.uri).toBe(
-        `at://${alice.assertDid}/space/${group.type}/created`,
+        `at://${alice.assertDid}/space/${group.spaceType}/created`,
       )
 
       await created.create(note.$build({ text: 'first' }))
@@ -123,6 +123,19 @@ describe('SpaceClient', () => {
       })
       expect(isValidTid(created.ref.skey)).toBe(true)
     })
+
+    it('accepts a namespace exporting the space schema as main', async () => {
+      const created = await SpaceClient.createSpace(
+        alice.agent,
+        { main: group },
+        {
+          skey: 'namespaced',
+          policy: com.atproto.memberspace.policy.$build({}),
+        },
+      )
+      expect(created.schema).toBe(group)
+      expectTypeOf(created).toEqualTypeOf<SpaceClient<typeof group>>()
+    })
   })
 
   describe('openSpace', () => {
@@ -132,6 +145,18 @@ describe('SpaceClient', () => {
         SpaceClient.openSpace(forum, space, { agent: bob.agent }),
       ).toThrow(TypeError)
       expect(() => SpaceReader.openSpace(forum, space)).toThrow(TypeError)
+    })
+
+    it('accepts a namespace exporting the space schema as main', () => {
+      const opened = SpaceClient.openSpace({ main: group }, space, {
+        agent: bob.agent,
+      })
+      expect(opened.schema).toBe(group)
+      expectTypeOf(opened).toEqualTypeOf<SpaceClient<typeof group>>()
+
+      const reader = SpaceReader.openSpace({ main: group }, space)
+      expect(reader.schema).toBe(group)
+      expectTypeOf(reader).toEqualTypeOf<SpaceReader<typeof group>>()
     })
 
     it('opens a space by its authority and key', () => {
@@ -151,7 +176,7 @@ describe('SpaceClient', () => {
         { agent: bob.agent },
       )
       expect(opened.uri).toBe(
-        `at://${alice.assertDid}/space/${bookmarks.type}/self`,
+        `at://${alice.assertDid}/space/${bookmarks.spaceType}/self`,
       )
     })
   })
@@ -194,7 +219,7 @@ describe('SpaceClient', () => {
     it('refuses undeclared collections', async () => {
       const aliceSpace = open(alice, await createGroup(alice))
       const undeclared = new TypeError(
-        `${other.$type} is not a collection of ${group.type} spaces`,
+        `${other.$type} is not a collection of ${group.spaceType} spaces`,
       )
       const rkey = '3jzfcijpj2z2a'
 

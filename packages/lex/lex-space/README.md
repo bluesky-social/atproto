@@ -10,9 +10,11 @@ import { SpaceClient, listSpaces } from '@atproto/lex-space'
 import { com } from './lexicons/index.js'
 
 const client = new Client(oauthSession)
-const forum = com.example.forum // the space type's schema
+const forum = com.example.forum // the space type (its schema is forum.main)
 
-const { spaces } = await client.call(listSpaces, { spaceType: forum.type })
+const { spaces } = await client.call(listSpaces, {
+  spaceType: forum.$spaceType,
+})
 const space = SpaceClient.openSpace(forum, spaces[0].space, {
   agent: client.agent,
 })
@@ -93,7 +95,7 @@ const owned = await client.call(listSpaces, { spaceDid: client.did })
 
 // Only the spaces of a given type
 const forums = await client.call(listSpaces, {
-  spaceType: com.example.forum.type,
+  spaceType: com.example.forum.$spaceType,
 })
 ```
 

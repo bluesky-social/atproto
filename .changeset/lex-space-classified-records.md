@@ -16,3 +16,5 @@ Check the records yielded by `SpaceReader` consistently, against the space type'
 - `SpaceCollectionSchema<S, T>` is removed. `SpaceCollection<S>` is the NSID of a collection of `S`, `SpaceRecordSchema<S, C>` its record schema, and `SpaceRecordInput<S, C>` a record of it.
 
 `list()` and `listAll()` move from `SpaceClient` to `SpaceReader`, where `repo` is required.
+
+`SpaceReader.openSpace()`, `SpaceClient.openSpace()` and `SpaceClient.createSpace()` also accept a namespace exporting the space schema as `main` (e.g. `com.example.forum`).

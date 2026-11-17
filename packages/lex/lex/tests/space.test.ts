@@ -5,6 +5,14 @@ import * as com from './lexicons/com.js'
 describe('com.example.space', () => {
   const space = com.example.space.main
 
+  it('exports its space type', () => {
+    expect(com.example.space.$spaceType).toBe('com.example.space')
+    expect(com.example.space.$spaceType).toBe(space.spaceType)
+    expectTypeOf<
+      typeof com.example.space.$spaceType
+    >().toEqualTypeOf<'com.example.space'>()
+  })
+
   it('references the record schemas of its collections', () => {
     expect(space).toBeInstanceOf(l.Space)
     expect(space.collections).toEqual([com.example.spaceRecord.main])

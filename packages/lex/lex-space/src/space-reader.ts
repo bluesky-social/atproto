@@ -35,6 +35,7 @@ import {
   type RecordKeyValue,
   type RecordSchema,
   type Space,
+  getMain,
 } from '@atproto/lex-schema'
 import {
   COMMIT_MAC_PROFILE,
@@ -396,15 +397,18 @@ export class SpaceReader<S extends Space = Space> {
   readonly #classify: RecordClassifier
 
   /**
-   * Reads a space, identified by its URI or by its authority and key.
+   * Reads a space, identified by its URI or by its authority and key, of the
+   * type described by `ns` (a space schema, or a namespace exporting one as
+   * `main`).
    *
-   * @throws {TypeError} if the space is not of the type described by `schema`
+   * @throws {TypeError} if the space is not of that type
    */
   static openSpace<const S extends Space>(
-    schema: S,
+    ns: Main<S>,
     space: SpaceRefString | SpaceRef | SpaceReader.AuthorityRef<S>,
     options?: SpaceReader.Options,
   ): SpaceReader<S> {
+    const schema = getMain(ns)
     const ref =
       typeof space === 'string'
         ? SpaceRef.parse(space)
@@ -439,8 +443,8 @@ export class SpaceReader<S extends Space = Space> {
       }),
     }: SpaceReader.Options = {},
   ) {
-    if (ref.spaceType !== schema.type) {
-      throw new TypeError(`${ref} is not a ${schema.type} space`)
+    if (ref.spaceType !== schema.spaceType) {
+      throw new TypeError(`${ref} is not a ${schema.spaceType} space`)
     }
     this.uri = ref.toString()
 
@@ -983,7 +987,7 @@ export class SpaceReader<S extends Space = Space> {
     const schema = this.#collectionSchemas.get(collection)
     if (!schema) {
       throw new TypeError(
-        `${collection} is not a collection of ${this.schema.type} spaces`,
+        `${collection} is not a collection of ${this.schema.spaceType} spaces`,
       )
     }
     return schema

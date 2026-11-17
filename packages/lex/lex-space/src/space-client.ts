@@ -20,7 +20,12 @@ import {
   xrpc,
 } from '@atproto/lex-client'
 import type { TypedLexMap } from '@atproto/lex-data'
-import type { RecordKeyValue, RecordSchema, Space } from '@atproto/lex-schema'
+import {
+  type RecordKeyValue,
+  type RecordSchema,
+  type Space,
+  getMain,
+} from '@atproto/lex-schema'
 import { SpaceRef, type SpaceRefString } from '@atproto/syntax'
 import { delegationTokenProviderFor } from './delegation-token-provider.js'
 import { main as applyWrites } from './lexicons/com/atproto/space/applyWrites.js'
@@ -208,20 +213,22 @@ export declare namespace SpaceClient {
  */
 export class SpaceClient<S extends Space = Space> extends SpaceReader<S> {
   /**
-   * Opens a space for the user of `agent`. No request is made until the space
-   * is used.
+   * Opens a space for the user of `agent`, of the type described by `ns` (a
+   * space schema, or a namespace exporting one as `main`). No request is made
+   * until the space is used.
    *
    * @throws {TypeError} if `agent` is not authenticated, or if the space is not
-   * of the type described by `schema`
+   * of that type
    */
   static openSpace<const S extends Space>(
-    schema: S,
+    ns: Main<S>,
     space: SpaceRefString | SpaceRef | SpaceReader.AuthorityRef<S>,
     { agent, ...options }: SpaceClient.OpenSpaceOptions,
   ): SpaceClient<S> {
     if (!isAccountAgent(agent)) {
       throw new TypeError('Agent must be authenticated')
     }
+    const schema = getMain(ns)
     const ref =
       typeof space === 'string'
         ? SpaceRef.parse(space)
@@ -235,8 +242,9 @@ export class SpaceClient<S extends Space = Space> extends SpaceReader<S> {
   }
 
   /**
-   * Creates a space of the type described by `schema`, with the user of
-   * `agent` as its authority, and opens it.
+   * Creates a space of the type described by `ns` (a space schema, or a
+   * namespace exporting one as `main`), with the user of `agent` as its
+   * authority, and opens it.
    *
    * @throws {XrpcResponseError} with `SpaceAlreadyExists` if the user already
    * has a space of that type and key, or `UnsupportedPolicy` if their PDS does
@@ -252,13 +260,14 @@ export class SpaceClient<S extends Space = Space> extends SpaceReader<S> {
    */
   static async createSpace<const S extends Space>(
     agent: Agent,
-    schema: S,
+    ns: Main<S>,
     { policy, skey }: SpaceClient.CreateSpaceInput<S>,
     { signal, ...options }: SpaceClient.CreateSpaceOptions = {},
   ): Promise<SpaceClient<S>> {
     if (!isAccountAgent(agent)) {
       throw new TypeError('Agent must be authenticated')
     }
+    const schema = getMain(ns)
     // Validates the key, and defaults it for literal keys
     const ref =
       skey != null || schema.key.startsWith('literal:')
@@ -266,7 +275,7 @@ export class SpaceClient<S extends Space = Space> extends SpaceReader<S> {
         : undefined
     const { body } = await xrpc(agent, createSpace, {
       signal,
-      body: { spaceType: schema.type, skey: ref?.skey, policy },
+      body: { spaceType: schema.spaceType, skey: ref?.skey, policy },
     })
     return new SpaceClient(agent, schema, SpaceRef.parse(body.space), options)
   }

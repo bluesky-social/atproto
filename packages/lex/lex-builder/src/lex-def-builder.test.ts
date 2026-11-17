@@ -62,6 +62,16 @@ describe(LexDefBuilder, () => {
     expect(source).not.toContain('title')
   })
 
+  it('exports the space type of a space def', async () => {
+    const source = await buildMain({
+      type: 'space',
+      key: 'any',
+      collections: [],
+    })
+    expect(source).toContain('const $spaceType = $nsid')
+    expect(source).toContain('export { $spaceType }')
+  })
+
   it('references the record schemas of the space collections', async () => {
     const source = await buildMain({
       type: 'space',
