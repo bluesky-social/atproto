@@ -121,6 +121,36 @@ describe(IdentityManager, () => {
       ).toBe(0)
     })
 
+    it('resolves authorities named by included permission sets', async () => {
+      const { manager } = setup({
+        didDocs: { [DID]: HANDLE },
+        handles: { [HANDLE]: DID },
+      })
+      const permissionSets = new Map([
+        [
+          'com.atmoboards.basePermissions',
+          {
+            type: 'permission-set' as const,
+            permissions: [
+              {
+                type: 'permission' as const,
+                resource: 'space',
+                spaceType: 'com.atmoboards.forum',
+                authority: DID,
+              },
+            ],
+          },
+        ],
+      ])
+
+      await expect(
+        manager.getSpaceHandlesFromScope(
+          'atproto include:com.atmoboards.basePermissions',
+          { permissionSets },
+        ),
+      ).resolves.toEqual(new Map([[DID, HANDLE]]))
+    })
+
     it('resolves each authority once', async () => {
       const { manager, didResolver } = setup({
         didDocs: { [DID]: HANDLE },

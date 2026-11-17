@@ -29,12 +29,24 @@ msgid "{0, plural, one {yesterday} other {# days ago}}"
 msgstr "{0, plural, one {hier} other {il y a # jours}}"
 
 #: src/components/utils/scope-description.tsx
+msgid "{host}'s own app, for the spaces it already runs."
+msgstr "L'application de {host}, pour les espaces qu'il gère déjà."
+
+#: src/components/utils/scope-description.tsx
 msgid "<0/> spaces"
-msgstr ""
+msgstr "Espaces <0/>"
 
 #: src/components/utils/scope-description.tsx
 msgid "<0/> spaces on <1/>"
-msgstr ""
+msgstr "Espaces <0/> sur <1/>"
+
+#: src/components/utils/scope-description.tsx
+msgid "<0/> spaces on any service"
+msgstr "Espaces <0/> sur n'importe quel service"
+
+#: src/components/utils/scope-description.tsx
+msgid "<0/> spaces you own"
+msgstr "Vos espaces <0/>"
 
 #: src/routes/account/u/$accountId/-about/en.tsx
 msgid "<0>AT Protocol</0> — Technical documentation for developers"
@@ -50,7 +62,7 @@ msgstr "<0>En savoir plus</0><1>Vous voulez en savoir plus sur la technologie et
 
 #: src/components/utils/scope-description.tsx
 msgid "<0>Manage</0> the space: create new spaces, add and remove members."
-msgstr ""
+msgstr "<0>Gérer</0> l'espace : créer de nouveaux espaces, ajouter et retirer des membres."
 
 #: src/routes/account/u/$accountId/-about/en.tsx
 msgid "<0>This website: your account control center</0><1>The website you're on right now is your <2>account management hub</2>. Here you can:</1><3><4>Update your email address and password</4><5>Manage your personal data and security settings</5><6>View and manage active sessions across devices (browsers where you're signed in)</6></3><7>This place is where you control the fundamental aspects of your Atmosphere identity, independently of any app-specific details like the profile you have on the <8>Bluesky social app</8>.</7><9>Your Atmosphere account is currently hosted by <10/>, one of many hosting providers in the Atmosphere network. You can switch to a different one at any time without losing your account, identity, or data.</9>"
@@ -91,10 +103,6 @@ msgstr "Un service contrôlé par <0>{domain}</0>"
 #: src/routes/account/u/$accountId/route.tsx
 msgid "About"
 msgstr "À propos"
-
-#: src/components/utils/scope-description.tsx
-msgid "Access permissioned spaces"
-msgstr ""
 
 #: src/components/utils/scope-description.tsx
 msgid "Access specific parts of your Bluesky account"
@@ -169,12 +177,20 @@ msgid "alice@example.com"
 msgstr "alice@exemple.fr"
 
 #: src/components/utils/scope-description.tsx
+msgid "All spaces"
+msgstr "Tous les espaces"
+
+#: src/components/utils/scope-description.tsx
 msgid "All spaces on <0/>"
-msgstr ""
+msgstr "Tous les espaces sur <0/>"
 
 #: src/components/utils/scope-description.tsx
 msgid "All spaces on the network"
-msgstr ""
+msgstr "Tous les espaces du réseau"
+
+#: src/components/utils/scope-description.tsx
+msgid "All spaces you own"
+msgstr "Tous vos espaces"
 
 #: src/components/disable-email-auth-factor-dialog.tsx
 #: src/components/reset-password-view.tsx
@@ -767,6 +783,10 @@ msgid "HTTP"
 msgstr "HTTP"
 
 #: src/components/utils/scope-description.tsx
+msgid "I understand this app can access all of my private space data"
+msgstr "Je comprends que cette application pourra accéder à toutes les données de mes espaces privés"
+
+#: src/components/utils/scope-description.tsx
 msgid "Identity"
 msgstr "Identité"
 
@@ -851,6 +871,11 @@ msgstr "Rendez un fichier texte avec le contenu ci-dessous disponible à l'URL s
 msgid "Make visible"
 msgstr "Rendre visible"
 
+#: src/components/utils/scope-description.tsx
+msgctxt "SpaceAccess"
+msgid "Manage"
+msgstr "Gestion"
+
 #: src/routes/account/u/$accountId/route.tsx
 msgid "Manage applications that have access to your account"
 msgstr "Gérer les applications qui ont accès à votre compte"
@@ -922,8 +947,13 @@ msgid "Next"
 msgstr "Suivant"
 
 #: src/components/utils/scope-description.tsx
+msgctxt "SpaceAccess"
+msgid "No access"
+msgstr "Aucun accès"
+
+#: src/components/utils/scope-description.tsx
 msgid "No access."
-msgstr ""
+msgstr "Aucun accès."
 
 #: src/components/session-list.tsx
 msgid "No matches"
@@ -989,7 +1019,7 @@ msgstr "Effectuer des actions authentifiées vers <0>n'importe quel service</0> 
 
 #: src/components/utils/scope-description.tsx
 msgid "Permissioned spaces (such as group chats, forums, or shared albums) hold data that's only visible to their members. The application requests the following access:"
-msgstr ""
+msgstr "Les espaces privés (comme les discussions de groupe, les forums ou les albums partagés) contiennent des données visibles uniquement par leurs membres. L'application demande les accès suivants :"
 
 #: src/components/authenticate-welcome-view.tsx
 msgid "Please authenticate to continue"
@@ -1056,6 +1086,11 @@ msgid "Reactivating makes your profile and content visible again."
 msgstr "La réactivation rend votre profil et votre contenu à nouveau visibles."
 
 #: src/components/utils/scope-description.tsx
+msgctxt "SpaceAccess"
+msgid "Read"
+msgstr "Lecture"
+
+#: src/components/utils/scope-description.tsx
 msgid "Read and send messages"
 msgstr "Lire et envoyer des messages"
 
@@ -1065,7 +1100,12 @@ msgstr "Lire et mettre à jour l'adresse email de votre compte"
 
 #: src/components/utils/scope-description.tsx
 msgid "Read only your own data."
-msgstr ""
+msgstr "Lire uniquement vos propres données."
+
+#: src/components/utils/scope-description.tsx
+msgctxt "SpaceAccess"
+msgid "Read own data"
+msgstr "Lecture de vos données"
 
 #: src/components/utils/scope-description.tsx
 msgid "Read your account's email address"
@@ -1077,7 +1117,7 @@ msgstr "Lire vos préférences privées"
 
 #: src/components/utils/scope-description.tsx
 msgid "Read-only access."
-msgstr ""
+msgstr "Accès en lecture seule."
 
 #: src/components/sign-in-form.tsx
 msgid "Remember this account on this device"
@@ -1198,7 +1238,19 @@ msgstr "Une erreur s'est produite"
 
 #: src/components/utils/scope-description.tsx
 msgid "Spaces"
-msgstr ""
+msgstr "Espaces"
+
+#: src/components/utils/scope-description.tsx
+msgid "Spaces can hold private data"
+msgstr "Les espaces peuvent contenir des données privées"
+
+#: src/components/utils/scope-description.tsx
+msgid "Spaces hold data that only their members can see, like group chats, private forums and shared albums. This app would be able to access that data as you. If you're not sure what spaces are, or why this app needs them, deny access."
+msgstr "Les espaces contiennent des données que seuls leurs membres peuvent voir, comme les discussions de groupe, les forums privés et les albums partagés. Cette application pourrait accéder à ces données en votre nom. Si vous ne savez pas ce que sont les espaces, ou pourquoi cette application en a besoin, refusez l'accès."
+
+#: src/components/utils/scope-description.tsx
+msgid "Spaces on <0/>"
+msgstr "Espaces sur <0/>"
 
 #: src/components/feedback/error-details.tsx
 msgctxt "Error"
@@ -1249,6 +1301,10 @@ msgstr "Conditions"
 #: src/components/utils/link-title.tsx
 msgid "Terms of Service"
 msgstr "Conditions d'Utilisation"
+
+#: src/components/utils/scope-description.tsx
+msgid "That means every group chat, private forum and shared album you belong to, on any service, including ones you join later. Almost no app needs this. Unless you know exactly why this one does, deny access."
+msgstr "Cela comprend chaque discussion de groupe, forum privé et album partagé dont vous êtes membre, sur n'importe quel service, y compris ceux que vous rejoindrez plus tard. Presque aucune application n'en a besoin. À moins de savoir exactement pourquoi celle-ci en a besoin, refusez l'accès."
 
 #. placeholder {0}: this.payload.identifier
 #: src/lib/api.ts
@@ -1307,6 +1363,10 @@ msgstr "Le nom d'utilisateur est invalide"
 msgid "There is no time limit for account deactivation, come back any time."
 msgstr "Il n'y a pas de limite de temps pour la désactivation du compte, revenez quand vous le souhaitez."
 
+#: src/components/utils/scope-description.tsx
+msgid "These spaces are run by {host}, the same service that runs this app. The application requests the following access:"
+msgstr "Ces espaces sont gérés par {host}, le service qui gère aussi cette application. L'application demande les accès suivants :"
+
 #: src/components/oauth-session-details-dialog.tsx
 msgid "This app can uniquely identify you through your account."
 msgstr "Cette application peut vous identifier de manière unique grâce à votre compte."
@@ -1315,13 +1375,13 @@ msgstr "Cette application peut vous identifier de manière unique grâce à votr
 msgid "This app has access to your account with the following permissions:"
 msgstr "Cette application a accès à votre compte avec les autorisations suivantes :"
 
+#: src/components/utils/scope-description.tsx
+msgid "This app wants every private space you're in"
+msgstr "Cette application veut accéder à tous vos espaces privés"
+
 #: src/components/consent-form.tsx
 msgid "This application identifies itself as:"
 msgstr "Cette application s'identifie comme :"
-
-#: src/components/utils/scope-description.tsx
-msgid "This application is requesting access to <0>every space on the network</0>. This is a very broad permission. Only grant it to applications you deeply trust."
-msgstr ""
 
 #: src/components/consent-form.tsx
 msgid "This application is requesting the following permissions (scopes) to access your account:"
@@ -1558,6 +1618,11 @@ msgstr "Où votre compte est connecté. Déconnectez tout appareil que vous ne r
 msgid "Why is this time so recent?"
 msgstr "Pourquoi cette heure est-elle si récente ?"
 
+#: src/components/utils/scope-description.tsx
+msgctxt "SpaceAccess"
+msgid "Write"
+msgstr "Écriture"
+
 #: src/lib/api.ts
 msgid "Wrong identifier or password"
 msgstr "Identifiant ou mot de passe incorrect"
@@ -1674,6 +1739,10 @@ msgstr "Votre dépôt contient toutes les données publiquement disponibles sur 
 #: src/contexts/session.tsx
 msgid "Your session has expired. Please sign in again."
 msgstr "Votre session a expiré. Veuillez vous reconnecter."
+
+#: src/components/utils/scope-description.tsx
+msgid "Your spaces on {host}"
+msgstr "Vos espaces sur {host}"
 
 #: src/data/handle.ts
 msgid "Your username has been updated."

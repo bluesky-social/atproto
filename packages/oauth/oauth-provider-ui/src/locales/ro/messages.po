@@ -34,11 +34,23 @@ msgid "{0, plural, one {yesterday} other {# days ago}}"
 msgstr "{0, plural, one {ieri} few {# zile în urmă} other {# de zile în urmă}}"
 
 #: src/components/utils/scope-description.tsx
+msgid "{host}'s own app, for the spaces it already runs."
+msgstr ""
+
+#: src/components/utils/scope-description.tsx
 msgid "<0/> spaces"
 msgstr ""
 
 #: src/components/utils/scope-description.tsx
 msgid "<0/> spaces on <1/>"
+msgstr ""
+
+#: src/components/utils/scope-description.tsx
+msgid "<0/> spaces on any service"
+msgstr ""
+
+#: src/components/utils/scope-description.tsx
+msgid "<0/> spaces you own"
 msgstr ""
 
 #: src/routes/account/u/$accountId/-about/en.tsx
@@ -96,10 +108,6 @@ msgstr "Un serviciu controlat de <0>{domain}</0>"
 #: src/routes/account/u/$accountId/route.tsx
 msgid "About"
 msgstr "Despre"
-
-#: src/components/utils/scope-description.tsx
-msgid "Access permissioned spaces"
-msgstr ""
 
 #: src/components/utils/scope-description.tsx
 msgid "Access specific parts of your Bluesky account"
@@ -174,11 +182,19 @@ msgid "alice@example.com"
 msgstr ""
 
 #: src/components/utils/scope-description.tsx
+msgid "All spaces"
+msgstr ""
+
+#: src/components/utils/scope-description.tsx
 msgid "All spaces on <0/>"
 msgstr ""
 
 #: src/components/utils/scope-description.tsx
 msgid "All spaces on the network"
+msgstr ""
+
+#: src/components/utils/scope-description.tsx
+msgid "All spaces you own"
 msgstr ""
 
 #: src/components/disable-email-auth-factor-dialog.tsx
@@ -772,6 +788,10 @@ msgid "HTTP"
 msgstr "HTTP"
 
 #: src/components/utils/scope-description.tsx
+msgid "I understand this app can access all of my private space data"
+msgstr ""
+
+#: src/components/utils/scope-description.tsx
 msgid "Identity"
 msgstr "Identitate"
 
@@ -856,6 +876,11 @@ msgstr "Faceți un fișier text cu conținutul de mai jos disponibil la următor
 msgid "Make visible"
 msgstr "Faceți vizibil"
 
+#: src/components/utils/scope-description.tsx
+msgctxt "SpaceAccess"
+msgid "Manage"
+msgstr ""
+
 #: src/routes/account/u/$accountId/route.tsx
 msgid "Manage applications that have access to your account"
 msgstr "Gestionați aplicațiile care au acces la contul dvs."
@@ -925,6 +950,11 @@ msgstr "Parolă nouă"
 #: src/components/reset-password-view.tsx
 msgid "Next"
 msgstr "Următorul"
+
+#: src/components/utils/scope-description.tsx
+msgctxt "SpaceAccess"
+msgid "No access"
+msgstr ""
 
 #: src/components/utils/scope-description.tsx
 msgid "No access."
@@ -1061,6 +1091,11 @@ msgid "Reactivating makes your profile and content visible again."
 msgstr "Reactivarea face ca profilul și conținutul dvs. să fie din nou vizibile."
 
 #: src/components/utils/scope-description.tsx
+msgctxt "SpaceAccess"
+msgid "Read"
+msgstr ""
+
+#: src/components/utils/scope-description.tsx
 msgid "Read and send messages"
 msgstr "Citește și trimite mesaje"
 
@@ -1070,6 +1105,11 @@ msgstr "Citește și actualizează adresa de e-mail a contului"
 
 #: src/components/utils/scope-description.tsx
 msgid "Read only your own data."
+msgstr ""
+
+#: src/components/utils/scope-description.tsx
+msgctxt "SpaceAccess"
+msgid "Read own data"
 msgstr ""
 
 #: src/components/utils/scope-description.tsx
@@ -1205,6 +1245,18 @@ msgstr "Ceva nu a funcționat"
 msgid "Spaces"
 msgstr ""
 
+#: src/components/utils/scope-description.tsx
+msgid "Spaces can hold private data"
+msgstr ""
+
+#: src/components/utils/scope-description.tsx
+msgid "Spaces hold data that only their members can see, like group chats, private forums and shared albums. This app would be able to access that data as you. If you're not sure what spaces are, or why this app needs them, deny access."
+msgstr ""
+
+#: src/components/utils/scope-description.tsx
+msgid "Spaces on <0/>"
+msgstr ""
+
 #: src/components/feedback/error-details.tsx
 msgctxt "Error"
 msgid "Stack"
@@ -1254,6 +1306,10 @@ msgstr "Termeni"
 #: src/components/utils/link-title.tsx
 msgid "Terms of Service"
 msgstr "Termenii de Serviciu"
+
+#: src/components/utils/scope-description.tsx
+msgid "That means every group chat, private forum and shared album you belong to, on any service, including ones you join later. Almost no app needs this. Unless you know exactly why this one does, deny access."
+msgstr ""
 
 #. placeholder {0}: this.payload.identifier
 #: src/lib/api.ts
@@ -1312,6 +1368,10 @@ msgstr "Numele de utilizator este invalid"
 msgid "There is no time limit for account deactivation, come back any time."
 msgstr "Nu există limită de timp pentru dezactivarea contului, puteți revenii oricând."
 
+#: src/components/utils/scope-description.tsx
+msgid "These spaces are run by {host}, the same service that runs this app. The application requests the following access:"
+msgstr ""
+
 #: src/components/oauth-session-details-dialog.tsx
 msgid "This app can uniquely identify you through your account."
 msgstr "Această aplicație vă poate identifica în mod unic prin intermediul contului."
@@ -1320,13 +1380,13 @@ msgstr "Această aplicație vă poate identifica în mod unic prin intermediul c
 msgid "This app has access to your account with the following permissions:"
 msgstr "Această aplicație are acces la contul dvs. cu următoarele permisiuni:"
 
+#: src/components/utils/scope-description.tsx
+msgid "This app wants every private space you're in"
+msgstr ""
+
 #: src/components/consent-form.tsx
 msgid "This application identifies itself as:"
 msgstr "Această aplicație se identifică drept:"
-
-#: src/components/utils/scope-description.tsx
-msgid "This application is requesting access to <0>every space on the network</0>. This is a very broad permission. Only grant it to applications you deeply trust."
-msgstr ""
 
 #: src/components/consent-form.tsx
 msgid "This application is requesting the following permissions (scopes) to access your account:"
@@ -1563,6 +1623,11 @@ msgstr "Unde este conectat contul dvs. Deconectați orice dispozitiv pe care nu 
 msgid "Why is this time so recent?"
 msgstr "De ce este această perioadă atât de recentă?"
 
+#: src/components/utils/scope-description.tsx
+msgctxt "SpaceAccess"
+msgid "Write"
+msgstr ""
+
 #: src/lib/api.ts
 msgid "Wrong identifier or password"
 msgstr "Identificator sau parolă greșită"
@@ -1679,6 +1744,10 @@ msgstr "Repozitoriul dvs. conține toate datele disponibile public în rețeaua 
 #: src/contexts/session.tsx
 msgid "Your session has expired. Please sign in again."
 msgstr "Sesiunea dvs. a expirat. Vă rugăm să vă conectați din nou."
+
+#: src/components/utils/scope-description.tsx
+msgid "Your spaces on {host}"
+msgstr ""
 
 #: src/data/handle.ts
 msgid "Your username has been updated."

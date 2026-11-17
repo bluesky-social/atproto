@@ -1,5 +1,5 @@
 import { Trans, useLingui } from '@lingui/react/macro'
-import { type ReactNode, useState } from 'react'
+import { type ReactNode, useMemo, useState } from 'react'
 import { AccountPermission } from '@atproto/oauth-scopes'
 import type { OAuthClientMetadata } from '@atproto/oauth-types'
 import { ClientAvatar } from '#/components/identity/client-avatar.tsx'
@@ -10,6 +10,11 @@ import type {
   SpaceHandles,
   Spaces,
 } from '#/hydration-data.d.ts'
+import {
+  buildSpaceAccessRows,
+  highestSpaceAccessLevel,
+  listSpacePermissions,
+} from '#/lib/space-access.ts'
 import { ActionButton, FormShell } from './forms/form-shell.tsx'
 import { DescriptionCard } from './utils/description-card.tsx'
 import { ScopeDescription } from './utils/scope-description.tsx'
@@ -76,6 +81,16 @@ export function ConsentForm({
 
   const [allowEmail, setAllowEmail] = useState(true)
 
+  // Access to every space on the network turns the submit button destructive,
+  // on top of the warning <ScopeDescription /> renders.
+  const universalSpaceAccess = useMemo(() => {
+    const rows = buildSpaceAccessRows(
+      listSpacePermissions(scope?.split(' ') ?? [], permissionSets),
+      { clientId, spaces, spaceHandles },
+    )
+    return highestSpaceAccessLevel(rows) === 'universal'
+  }, [scope, permissionSets, clientId, spaces, spaceHandles])
+
   return (
     <FormShell
       onBack={onBack}
@@ -83,6 +98,7 @@ export function ConsentForm({
       onValues={() => reject.reset()}
       disabled={reject.loading}
       submitLabel={<Trans context="OAuthConsent">Authorize</Trans>}
+      submitVariant={universalSpaceAccess ? 'destructive' : 'default'}
       handler={() => {
         return onConsent({
           scope:
@@ -151,10 +167,12 @@ export function ConsentForm({
       </DescriptionCard>
 
       <ScopeDescription
+        consent
         scope={scope}
         permissionSets={permissionSets}
         spaces={spaces}
         spaceHandles={spaceHandles}
+        clientId={clientId}
         clientTrusted={clientTrusted}
         clientFirstParty={clientFirstParty}
         allowEmail={canUnsetEmail ? allowEmail : true}
