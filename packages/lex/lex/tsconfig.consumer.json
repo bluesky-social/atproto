@@ -1,0 +1,18 @@
+{
+  // Type-checks the built declarations of @atproto/lex, and of the workspace
+  // packages they reach, as a strict NodeNext consumer would. Deliberately
+  // standalone (not extending the repo base) to mirror a downstream project.
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "files": ["./tests/consumer.ts"],
+  "references": [{ "path": "./tsconfig.build.json" }],
+  "compilerOptions": {
+    "strict": true,
+    "noEmit": true,
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "target": "ES2023",
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "types": ["node"],
+    "skipLibCheck": false,
+  },
+}
