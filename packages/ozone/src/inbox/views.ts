@@ -233,6 +233,12 @@ export type SubjectViewInput = {
   snapshot: SubjectSnapshot
   policyList?: PolicyList
   seenAt?: DatetimeString | null
+  /**
+   * Hide a subject whose public actions all predate `cfg.startAt`. Defaults to
+   * true; the appeal response disables it because such a subject stays
+   * appealable.
+   */
+  requireVisibleActions?: boolean
 }
 
 export type EnforcementViewInput = {
@@ -443,9 +449,10 @@ export const toSubjectView = ({
   cfg,
   policyList = {},
   seenAt = null,
+  requireVisibleActions = true,
 }: SubjectViewInput): SubjectView | null => {
   if (!inboxHasStarted(cfg.startAt)) return null
-  if (cfg.startAt && !snapshot.actionCount) return null
+  if (requireVisibleActions && cfg.startAt && !snapshot.actionCount) return null
   if (!snapshot.status && !snapshot.actionCount) return null
 
   const actions = toActionViews(
@@ -481,10 +488,16 @@ export const toSubjectView = ({
   })
 
   // The subject dates from its first action, not from whenever Ozone first
-  // opened a status row for it.
+  // opened a status row for it. A status row older than the inbox start would
+  // date the subject by hidden history, so the visible appeal dates it instead.
+  const statusCreatedAt =
+    cfg.startAt && snapshot.status && snapshot.status.createdAt < cfg.startAt
+      ? null
+      : snapshot.status?.createdAt
   const createdAt =
     snapshot.firstActionAt ??
-    snapshot.status?.createdAt ??
+    statusCreatedAt ??
+    publicAppeal?.createdAt ??
     currentDatetimeString()
   const updatedAt =
     latest(
@@ -523,6 +536,7 @@ export const hydrateSubjectView = async (
   serviceDid: DidString,
   cfg: InboxConfig,
   seenAt?: DatetimeString | null,
+  options: Pick<SubjectViewInput, 'requireVisibleActions'> = {},
 ): Promise<SubjectView | null> => {
   const [snapshot, policyList] = await Promise.all([
     loadSubject(db, subject, cfg.startAt),
@@ -535,5 +549,6 @@ export const hydrateSubjectView = async (
     seenAt,
     snapshot,
     policyList,
+    ...options,
   })
 }

@@ -277,9 +277,6 @@ export const findAppealedEvent = async (
     .selectFrom('moderation_event')
     .where((eb) => eventSubjectFilter(eb, subject))
     .where('action', '=', action.type === 'label' ? LABEL : TAKEDOWN)
-    .$if(ctx.cfg.inbox.startAt !== undefined, (qb) =>
-      qb.where('createdAt', '>=', ctx.cfg.inbox.startAt!),
-    )
 
   if (action.type === 'label') {
     query = query.where(
@@ -460,7 +457,6 @@ export const assertAppealAllowed = async (
   options: {
     actionAt?: DatetimeString
     unresolvedAction?: boolean
-    startAt?: DatetimeString
     windowMonths: number
   },
 ) => {
@@ -486,9 +482,6 @@ export const assertAppealAllowed = async (
       .where('action', 'in', [...PUBLIC_EVENT_ACTIONS])
       .where(appealableEventFilter)
       .where('createdAt', '>', eligibility.lastClosedAt)
-      .$if(options.startAt !== undefined, (qb) =>
-        qb.where('createdAt', '>=', options.startAt!),
-      )
       .orderBy('createdAt', 'desc')
       .orderBy('id', 'desc')
       .select('createdAt')
@@ -689,7 +682,6 @@ export const fileAppeal = async (
     await assertAppealAllowed(dbTxn, subject, {
       actionAt: resolvedActionAt,
       unresolvedAction: !!action && !resolvedActionAt,
-      startAt: ctx.cfg.inbox.startAt,
       windowMonths: ctx.cfg.inbox.appealWindowMonths,
     })
 

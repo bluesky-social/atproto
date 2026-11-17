@@ -1927,4 +1927,188 @@ describe('appealActionedSubject', () => {
     const report = await latestAppealReport(account.did)
     expect(report).toMatchObject({ reportType: APPEAL_REASON_TYPE })
   })
+
+  describe('with an inbox start date', () => {
+    const startAt = toDatetimeString(Date.now() - 60_000)
+    const startMs = Date.parse(startAt)
+    let previousStartAt: typeof startAt | undefined
+
+    beforeAll(() => {
+      previousStartAt = network.ozone.ctx.cfg.inbox.startAt
+      network.ozone.ctx.cfg.inbox.startAt = startAt
+    })
+    afterAll(() => {
+      network.ozone.ctx.cfg.inbox.startAt = previousStartAt
+    })
+
+    async function createSubject(name: string) {
+      const account = await sc.createAccount(name, {
+        handle: `${name}.test`,
+        email: `${name}@test.com`,
+        password: `${name}-pass`,
+      })
+      return {
+        $type: 'com.atproto.admin.defs#repoRef' as const,
+        did: account.did,
+      }
+    }
+
+    // Move an account's history behind the inbox start, as for any subject
+    // actioned before the inbox launched.
+    async function backdate(did: DidString, eventIds: number[], msBefore = 1) {
+      const createdAt = toDatetimeString(startMs - msBefore)
+      const { db } = network.ozone.ctx.db
+      await db
+        .updateTable('moderation_event')
+        .set({ createdAt })
+        .where('id', 'in', eventIds)
+        .execute()
+      await db
+        .updateTable('moderation_subject_status')
+        .set({ createdAt })
+        .where('did', '=', did)
+        .execute()
+    }
+
+    it('appeals a takedown applied before the inbox start without showing it', async () => {
+      const subject = await createSubject('precuttakedown')
+      const action = await takedown(subject)
+      await backdate(subject.did, [action.id])
+
+      // The suspended-account screen's request shape.
+      const { data } = await appealTakedown(subject, subject.did)
+
+      expect(tools.ozone.inbox.defs.subjectView.safeParse(data).success).toBe(
+        true,
+      )
+      expect(data).toMatchObject({
+        subject,
+        enforcement: { state: 'takendown' },
+        appeal: { state: 'pending' },
+        availableActions: [],
+      })
+      // The action predates the inbox, so neither it nor its date is shown.
+      expect(data).not.toHaveProperty('latestAction')
+      expect(data).not.toHaveProperty('actionCount')
+      expect(Date.parse(data.createdAt)).toBeGreaterThanOrEqual(startMs)
+      expect(Date.parse(data.updatedAt)).toBeGreaterThanOrEqual(startMs)
+      expect(await latestAppealReport(subject.did)).toMatchObject({
+        reportType: APPEAL_REASON_TYPE,
+        actionEventIds: [action.id],
+      })
+    })
+
+    it('appeals a label applied before the inbox start', async () => {
+      const subject = await createSubject('precutlabel')
+      const action = await label(subject)
+      await backdate(subject.did, [action.id])
+
+      const { data } = await appealLabel('!warn', subject, subject.did)
+
+      expect(tools.ozone.inbox.defs.subjectView.safeParse(data).success).toBe(
+        true,
+      )
+      expect(data).toMatchObject({
+        enforcement: { state: 'labeled', labels: ['!warn'] },
+        appeal: { state: 'pending' },
+      })
+      expect(data).not.toHaveProperty('latestAction')
+      expect(await latestAppealReport(subject.did)).toMatchObject({
+        actionEventIds: [action.id],
+      })
+    })
+
+    it('accepts a subject appeal when every action predates the inbox start', async () => {
+      const subject = await createSubject('precutsubject')
+      const action = await takedown(subject)
+      await backdate(subject.did, [action.id])
+
+      const { data } = await legacyAppeal(subject.did)
+
+      expect(data.appeal).toMatchObject({ state: 'pending' })
+      expect(await latestAppealReport(subject.did)).toMatchObject({
+        actionEventIds: null,
+      })
+    })
+
+    it('accepts a subject appeal for a suspension that ended before the inbox start', async () => {
+      const subject = await createSubject('precutended')
+      const suspension = await modClient.emitEvent({
+        event: {
+          $type: 'tools.ozone.moderation.defs#modEventTakedown',
+          durationInHours: 24,
+        },
+        subject,
+      })
+      const reversal = await modClient.emitEvent({
+        event: { $type: 'tools.ozone.moderation.defs#modEventReverseTakedown' },
+        subject,
+      })
+      await backdate(subject.did, [suspension.id, reversal.id])
+
+      const { data } = await legacyAppeal(subject.did)
+
+      // Nothing is enforced now; the hidden suspension is what makes it
+      // appealable.
+      expect(data).toMatchObject({
+        enforcement: { state: 'none' },
+        appeal: { state: 'pending' },
+      })
+    })
+
+    it('finds a new action before the inbox start for a repeat appeal', async () => {
+      const subject = await createSubject('precutrepeat')
+      const first = await label(subject)
+      await appeal(first.id, subject.did)
+      const closedId = await closeLatestAppeal(subject.did)
+      const second = await takedown(subject)
+      // first action < closed appeal < second action < inbox start
+      await backdate(subject.did, [first.id], 3)
+      await backdate(subject.did, [second.id], 1)
+      const closedAt = toDatetimeString(startMs - 2)
+      await network.ozone.ctx.db.db
+        .updateTable('report')
+        .set({ createdAt: closedAt, updatedAt: closedAt, closedAt })
+        .where('id', '=', closedId)
+        .execute()
+
+      const { data } = await legacyAppeal(subject.did)
+
+      expect(data.appeal).toMatchObject({ state: 'pending' })
+    })
+
+    it('still shows an appealed action taken after the inbox start', async () => {
+      const subject = await createSubject('postcut')
+      const action = await takedown(subject)
+
+      const { data } = await appealTakedown(subject, subject.did)
+
+      expect(data).toMatchObject({
+        enforcement: { state: 'takendown', scope: 'network' },
+        appeal: { state: 'pending' },
+        latestAction: { id: action.id, type: 'accountTakedown' },
+        actionCount: 1,
+        createdAt: action.createdAt,
+      })
+    })
+
+    it('refuses an appeal when the subject has no moderation action', async () => {
+      const subject = await createSubject('precutnone')
+
+      await expect(legacyAppeal(subject.did)).rejects.toMatchObject({
+        error: 'NotAppealable',
+        message: 'Subject has no moderation action to appeal',
+      })
+      await expect(appealTakedown(subject, subject.did)).rejects.toMatchObject({
+        error: 'NotAppealable',
+        message: 'No matching moderation action to appeal',
+      })
+      const { events } = await modClient.queryEvents({
+        subject: subject.did,
+        types: [tools.ozone.moderation.defs.modEventReport.$type],
+        reportTypes: [APPEAL_REASON_TYPE],
+      })
+      expect(events).toEqual([])
+    })
+  })
 })
