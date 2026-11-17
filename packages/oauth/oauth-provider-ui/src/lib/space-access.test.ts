@@ -4,7 +4,6 @@ import {
   buildSpaceAccessRows,
   clientHostname,
   highestSpaceAccessLevel,
-  listSpacePermissions,
   spaceAccessLevel,
 } from './space-access.ts'
 
@@ -75,12 +74,12 @@ describe(spaceAccessLevel, () => {
     ).toBe('authority')
   })
 
-  it('rates an authority whose handle did not resolve as authority', () => {
+  it('rates an authority whose handle did not resolve as broad', () => {
     expect(
       spaceAccessLevel(parse(`space:*?authority=${DID}`), {
         clientId: CLIENT_ID,
       }),
-    ).toBe('authority')
+    ).toBe('broad')
   })
 
   it('requires a conventional client id to match the hostname', () => {
@@ -117,50 +116,6 @@ describe(clientHostname, () => {
     expect(clientHostname(undefined)).toBeNull()
     expect(clientHostname('not a url')).toBeNull()
     expect(clientHostname('https://atmoboards.com/client.json')).toBeNull()
-  })
-})
-
-describe(listSpacePermissions, () => {
-  const permissionSets = {
-    'com.example.forum.basePermissions': {
-      type: 'permission-set' as const,
-      permissions: [
-        {
-          type: 'permission' as const,
-          resource: 'space',
-          spaceType: 'com.example.forum.space',
-          authority: '*',
-        },
-        {
-          type: 'permission' as const,
-          resource: 'repo',
-          collection: ['com.example.forum.post'],
-        },
-      ],
-    },
-  }
-
-  it('lists space scopes and the space permissions of included sets', () => {
-    const permissions = listSpacePermissions(
-      [
-        'atproto',
-        'repo:com.example.post',
-        `space:*?authority=${DID}`,
-        'include:com.example.forum.basePermissions',
-      ],
-      permissionSets,
-    )
-
-    expect(permissions.map(String)).toEqual([
-      `space:*?authority=${DID}`,
-      'space:com.example.forum.space?authority=*',
-    ])
-  })
-
-  it('skips included sets that are not known', () => {
-    expect(
-      listSpacePermissions(['include:com.example.forum.basePermissions']),
-    ).toEqual([])
   })
 })
 
@@ -252,7 +207,13 @@ describe(highestSpaceAccessLevel, () => {
         parse('space:com.example.forum?authority=*'),
         parse('space:com.example.chat?authority=did:plc:other'),
       ],
-      { clientId: CLIENT_ID, spaceHandles: { [DID]: 'atmoboards.com' } },
+      {
+        clientId: CLIENT_ID,
+        spaceHandles: {
+          [DID]: 'atmoboards.com',
+          'did:plc:other': 'chat.example.com',
+        },
+      },
     )
 
     expect(rows.map((row) => row.level).sort()).toEqual([

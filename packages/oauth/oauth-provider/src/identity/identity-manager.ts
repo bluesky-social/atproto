@@ -1,9 +1,8 @@
 import { chunkArray } from '@atproto/common'
 import type { DidString } from '@atproto/oauth-provider-api'
 import {
-  IncludeScope,
   type LexiconPermissionSet,
-  SpacePermission,
+  listSpacePermissions,
 } from '@atproto/oauth-scopes'
 import { type HandleString, isValidHandle } from '@atproto/syntax'
 import type { DidResolver } from '@atproto-labs/did-resolver'
@@ -93,7 +92,11 @@ function extractSpaceDids(
   const dids = new Set<DidString>()
   if (!scope) return dids
 
-  for (const permission of spacePermissions(scope, permissionSets)) {
+  const permissions = listSpacePermissions(scope.split(' '), (nsid) =>
+    permissionSets?.get(nsid),
+  )
+
+  for (const permission of permissions) {
     // Only include DID authorities
     if (permission.authority === '*' || permission.authority === 'self') {
       continue
@@ -103,24 +106,4 @@ function extractSpaceDids(
   }
 
   return dids
-}
-
-function* spacePermissions(
-  scope: string,
-  permissionSets?: ReadonlyMap<string, LexiconPermissionSet>,
-): Generator<SpacePermission> {
-  for (const value of scope.split(' ')) {
-    const include = IncludeScope.fromString(value)
-    if (include) {
-      const permissionSet = permissionSets?.get(include.nsid)
-      if (!permissionSet) continue
-      for (const permission of include.toPermissions(permissionSet)) {
-        if (permission instanceof SpacePermission) yield permission
-      }
-      continue
-    }
-
-    const parsed = SpacePermission.fromString(value)
-    if (parsed) yield parsed
-  }
 }

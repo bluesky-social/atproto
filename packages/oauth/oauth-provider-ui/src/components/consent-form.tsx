@@ -1,6 +1,6 @@
 import { Trans, useLingui } from '@lingui/react/macro'
 import { type ReactNode, useMemo, useState } from 'react'
-import { AccountPermission } from '@atproto/oauth-scopes'
+import { AccountPermission, listSpacePermissions } from '@atproto/oauth-scopes'
 import type { OAuthClientMetadata } from '@atproto/oauth-types'
 import { ClientAvatar } from '#/components/identity/client-avatar.tsx'
 import { ClientName } from '#/components/identity/client-name.tsx'
@@ -13,7 +13,6 @@ import type {
 import {
   buildSpaceAccessRows,
   highestSpaceAccessLevel,
-  listSpacePermissions,
 } from '#/lib/space-access.ts'
 import { ActionButton, FormShell } from './forms/form-shell.tsx'
 import { DescriptionCard } from './utils/description-card.tsx'
@@ -85,7 +84,10 @@ export function ConsentForm({
   // on top of the warning <ScopeDescription /> renders.
   const universalSpaceAccess = useMemo(() => {
     const rows = buildSpaceAccessRows(
-      listSpacePermissions(scope?.split(' ') ?? [], permissionSets),
+      listSpacePermissions(
+        scope?.split(' ') ?? [],
+        (nsid) => permissionSets?.[nsid],
+      ),
       { clientId, spaces, spaceHandles },
     )
     return highestSpaceAccessLevel(rows) === 'universal'

@@ -21,6 +21,7 @@ import {
   RepoPermission,
   RpcPermission,
   ScopePermissionsTransition,
+  listSpacePermissions,
 } from '@atproto/oauth-scopes'
 import { Notice } from '#/components/feedback/notice.tsx'
 import { Badge } from '#/components/ui/badge.tsx'
@@ -36,7 +37,6 @@ import {
   type SpaceAccessRow,
   buildSpaceAccessRows,
   highestSpaceAccessLevel,
-  listSpacePermissions,
 } from '#/lib/space-access.ts'
 import type { Override } from '#/lib/util'
 import { DescriptionCard } from './description-card.tsx'
@@ -102,7 +102,10 @@ export function ScopeDescription({
   // permission set.
   const spaceRows = useMemo(() => {
     return buildSpaceAccessRows(
-      listSpacePermissions(permissions.scopes, permissionSets),
+      listSpacePermissions(
+        permissions.scopes,
+        (nsid) => permissionSets?.[nsid],
+      ),
       spaceContext,
     )
   }, [permissions, permissionSets, spaceContext])
@@ -890,10 +893,8 @@ function ClientSpaces({ rows }: { rows: readonly SpaceAccessRow[] }) {
     <DescriptionCard
       role="listitem"
       image={<UsersIcon className="size-6" />}
-      title={<Trans>Your spaces on {host}</Trans>}
-      description={
-        <Trans>{host}'s own app, for the spaces it already runs.</Trans>
-      }
+      title={<Trans>Spaces on {host}</Trans>}
+      description={<SpaceSummary rows={rows} hideAuthority />}
       extra={<SpaceDetails className="mt-2" rows={rows} hideAuthority />}
     >
       <Trans>

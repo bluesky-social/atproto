@@ -34,10 +34,6 @@ msgid "{0, plural, one {yesterday} other {# days ago}}"
 msgstr "{0, plural, one {ieri} few {# zile în urmă} other {# de zile în urmă}}"
 
 #: src/components/utils/scope-description.tsx
-msgid "{host}'s own app, for the spaces it already runs."
-msgstr ""
-
-#: src/components/utils/scope-description.tsx
 msgid "<0/> spaces"
 msgstr ""
 
@@ -1254,6 +1250,10 @@ msgid "Spaces hold data that only their members can see, like group chats, priva
 msgstr ""
 
 #: src/components/utils/scope-description.tsx
+msgid "Spaces on {host}"
+msgstr ""
+
+#: src/components/utils/scope-description.tsx
 msgid "Spaces on <0/>"
 msgstr ""
 
@@ -1744,10 +1744,6 @@ msgstr "Repozitoriul dvs. conține toate datele disponibile public în rețeaua 
 #: src/contexts/session.tsx
 msgid "Your session has expired. Please sign in again."
 msgstr "Sesiunea dvs. a expirat. Vă rugăm să vă conectați din nou."
-
-#: src/components/utils/scope-description.tsx
-msgid "Your spaces on {host}"
-msgstr ""
 
 #: src/data/handle.ts
 msgid "Your username has been updated."

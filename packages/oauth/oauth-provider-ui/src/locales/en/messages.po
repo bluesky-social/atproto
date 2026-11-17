@@ -29,10 +29,6 @@ msgid "{0, plural, one {yesterday} other {# days ago}}"
 msgstr "{0, plural, one {yesterday} other {# days ago}}"
 
 #: src/components/utils/scope-description.tsx
-msgid "{host}'s own app, for the spaces it already runs."
-msgstr "{host}'s own app, for the spaces it already runs."
-
-#: src/components/utils/scope-description.tsx
 msgid "<0/> spaces"
 msgstr "<0/> spaces"
 
@@ -1249,6 +1245,10 @@ msgid "Spaces hold data that only their members can see, like group chats, priva
 msgstr "Spaces hold data that only their members can see, like group chats, private forums and shared albums. This app would be able to access that data as you. If you're not sure what spaces are, or why this app needs them, deny access."
 
 #: src/components/utils/scope-description.tsx
+msgid "Spaces on {host}"
+msgstr "Spaces on {host}"
+
+#: src/components/utils/scope-description.tsx
 msgid "Spaces on <0/>"
 msgstr "Spaces on <0/>"
 
@@ -1739,10 +1739,6 @@ msgstr "Your repository contains all the data publicly available on the AT Proto
 #: src/contexts/session.tsx
 msgid "Your session has expired. Please sign in again."
 msgstr "Your session has expired. Please sign in again."
-
-#: src/components/utils/scope-description.tsx
-msgid "Your spaces on {host}"
-msgstr "Your spaces on {host}"
 
 #: src/data/handle.ts
 msgid "Your username has been updated."

@@ -29,10 +29,6 @@ msgid "{0, plural, one {yesterday} other {# days ago}}"
 msgstr "{0, plural, one {昨日} other {# 日前}}"
 
 #: src/components/utils/scope-description.tsx
-msgid "{host}'s own app, for the spaces it already runs."
-msgstr ""
-
-#: src/components/utils/scope-description.tsx
 msgid "<0/> spaces"
 msgstr ""
 
@@ -1248,6 +1244,10 @@ msgid "Spaces hold data that only their members can see, like group chats, priva
 msgstr ""
 
 #: src/components/utils/scope-description.tsx
+msgid "Spaces on {host}"
+msgstr ""
+
+#: src/components/utils/scope-description.tsx
 msgid "Spaces on <0/>"
 msgstr ""
 
@@ -1738,10 +1738,6 @@ msgstr "あなたのリポジトリには、Blueskyの投稿、いいね、フ�
 #: src/contexts/session.tsx
 msgid "Your session has expired. Please sign in again."
 msgstr "セッションの有効期限が切れました。もう一度サインインしてください。"
-
-#: src/components/utils/scope-description.tsx
-msgid "Your spaces on {host}"
-msgstr ""
 
 #: src/data/handle.ts
 msgid "Your username has been updated."
