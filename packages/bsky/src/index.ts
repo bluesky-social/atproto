@@ -199,6 +199,7 @@ export class BskyAppView {
         ? ProhibitedTerms.load(config.typeaheadProhibitedTermsFile)
         : undefined
     const hydrator = new Hydrator(dataplane, config.labelsFromIssuerDids, {
+      postViewCountsStartAt: config.postViewCountsStartAt,
       debugFieldAllowedDids: config.debugFieldAllowedDids,
       featureGatesClient,
       needsReviewTagSources: [config.modServiceDid],
