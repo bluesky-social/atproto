@@ -109,6 +109,9 @@ describe(XrpcResponse.fromFetchResponse, () => {
           response,
         )
 
+        expectTypeOf(
+          result.encoding,
+        ).toEqualTypeOf<'application/octet-stream'>()
         expect(result.encoding).toBe('application/octet-stream')
         expect(result.body).toBeInstanceOf(Uint8Array)
         expect(result.body).toEqual(bytes)
@@ -209,6 +212,8 @@ describe(XrpcResponse.fromFetchResponse, () => {
         expectTypeOf(result.body).toEqualTypeOf<
           undefined | Uint8Array<ArrayBuffer>
         >()
+        expectTypeOf(result.encoding).toEqualTypeOf<undefined | string>()
+        expect(result.encoding).toBe('application/json')
         expect(result.payload).toEqual({
           encoding: 'application/json',
           body: new TextEncoder().encode('{"value":1.5}'),
@@ -602,6 +607,7 @@ describe(XrpcResponse.fromFetchResponse, () => {
           expectTypeOf(result.body).toEqualTypeOf<
             undefined | XrpcBinaryStream
           >()
+          expectTypeOf(result.encoding).toEqualTypeOf<undefined | string>()
           expect(result.encoding).toBe('application/json')
           assert(result.body)
           await expect(readStream(result.body)).resolves.toEqual(
