@@ -47,6 +47,7 @@ describe('report-close-reports', () => {
   const closeReports = async (input: {
     subject: string
     includeAllOwned?: boolean
+    reportId?: number
     reportTypes?: string[]
     excludedReportTypes?: string[]
     actionEventId?: number
@@ -234,6 +235,142 @@ describe('report-close-reports', () => {
       expect(await listActivities(report.id)).toEqual(activities)
     }
   }
+
+  describe.each(['account', 'record', 'message', 'conversation'] as const)(
+    '%s explicitly targeted report',
+    (kind) => {
+      it('closes the current assigned report and eligible matching reports', async () => {
+        const f = await fixture()
+        const current = await report(
+          f[kind],
+          com.atproto.moderation.defs.ReasonRude,
+        )
+        await setStatus(current.id, 'assigned')
+        const matching = await report(f[kind])
+        const assigned = await report(f[kind])
+        await setStatus(assigned.id, 'assigned')
+        const activeAssignment = await report(f[kind])
+        await setStatus(activeAssignment.id, 'assigned')
+        await setStatus(activeAssignment.id, 'queued')
+        const escalated = await report(f[kind])
+        await setStatus(escalated.id, 'escalated')
+        const otherType = await report(
+          f[kind],
+          com.atproto.moderation.defs.ReasonRude,
+        )
+        const otherSubject = await report(
+          kind === 'account' ? f.record : f.account,
+        )
+        const before = await snapshotReports([
+          assigned,
+          activeAssignment,
+          escalated,
+          otherType,
+          otherSubject,
+        ])
+        const subject =
+          kind === 'account'
+            ? f.did
+            : kind === 'record'
+              ? f.record.uri
+              : `at://${f.did}/${kind === 'message' ? CHAT_MESSAGE_COLLECTION : CHAT_CONVO_COLLECTION}/${kind === 'message' ? f.message.messageId : f.conversation.convoId}`
+        const input = {
+          subject,
+          reportId: current.id,
+          reportTypes: [com.atproto.moderation.defs.ReasonSpam],
+          internalNote: 'reviewed',
+        }
+
+        expect((await closeReports(input)).data).toEqual({
+          closedCount: 2,
+          reportIds: [current.id, matching.id],
+        })
+        for (const r of [current, matching]) {
+          expect((await detail(r.id)).status).toBe('closed')
+          expect(await listActivities(r.id)).toContainEqual(
+            expect.objectContaining({
+              internalNote: 'reviewed',
+              meta: { resolution: 'noAction' },
+            }),
+          )
+        }
+        await expectUnchanged(before)
+        expect((await closeReports(input)).data).toEqual({
+          closedCount: 0,
+          reportIds: [],
+        })
+      })
+    },
+  )
+
+  it.each([false, true])(
+    'closes the current report with all eligible reports when includeAllOwned is %s',
+    async (includeAllOwned) => {
+      const f = await fixture()
+      const current = await report(f.account)
+      await setStatus(current.id, 'assigned')
+      const otherAccount = await report(f.account)
+      const record = await report(f.record)
+      const protectedRecord = await report(f.record)
+      await setStatus(protectedRecord.id, 'assigned')
+
+      const { data } = await closeReports({
+        subject: f.did,
+        reportId: current.id,
+        includeAllOwned,
+      })
+      expect(data).toEqual({
+        closedCount: includeAllOwned ? 3 : 2,
+        reportIds: includeAllOwned
+          ? [current.id, otherAccount.id, record.id]
+          : [current.id, otherAccount.id],
+      })
+      expect((await detail(current.id)).status).toBe('closed')
+      expect((await detail(protectedRecord.id)).status).toBe('assigned')
+      expect((await detail(record.id)).status).toBe(
+        includeAllOwned ? 'closed' : 'open',
+      )
+    },
+  )
+
+  it('does not allow an explicit report outside the subject scope or excluded types', async () => {
+    const f = await fixture()
+    const outside = await report(f.record)
+    await setStatus(outside.id, 'assigned')
+    const excluded = await report(
+      f.account,
+      com.atproto.moderation.defs.ReasonRude,
+    )
+    await setStatus(excluded.id, 'escalated')
+    const before = await snapshotReports([outside, excluded])
+
+    expect(
+      (
+        await closeReports({
+          subject: f.did,
+          reportId: outside.id,
+          reportTypes: [com.atproto.moderation.defs.ReasonSpam],
+        })
+      ).data,
+    ).toEqual({ closedCount: 0, reportIds: [] })
+    expect(
+      (
+        await closeReports({
+          subject: f.did,
+          reportId: excluded.id,
+          excludedReportTypes: [com.atproto.moderation.defs.ReasonRude],
+        })
+      ).data,
+    ).toEqual({ closedCount: 0, reportIds: [] })
+    await expectUnchanged(before)
+
+    expect(
+      (await closeReports({ subject: f.did, reportId: excluded.id })).data,
+    ).toEqual({
+      closedCount: 1,
+      reportIds: [excluded.id],
+    })
+  })
 
   describe.each(['account', 'record', 'message', 'conversation'] as const)(
     '%s active review',
@@ -634,6 +771,39 @@ describe('report-close-reports', () => {
       expect((await detail(untouched.id)).status).toBe('open')
     },
   )
+
+  it('uses the current message report to distinguish conversations', async () => {
+    const f = await fixture()
+    const current = await report(
+      f.message,
+      com.atproto.moderation.defs.ReasonRude,
+    )
+    await setStatus(current.id, 'assigned')
+    const matching = await report(f.message)
+    const otherMessage = chat.bsky.convo.defs.messageRef.$build({
+      ...f.message,
+      convoId: 'other-conversation',
+    })
+    const other = await report(otherMessage)
+    const action = await network.ozone.getModClient().emitEvent({
+      subject: otherMessage,
+      event: tools.ozone.moderation.defs.modEventAcknowledge.$build({}),
+    })
+    const input = {
+      subject: `at://${f.did}/${CHAT_MESSAGE_COLLECTION}/${f.message.messageId}`,
+      reportId: current.id,
+      reportTypes: [com.atproto.moderation.defs.ReasonSpam],
+    }
+
+    await expect(
+      closeReports({ ...input, actionEventId: action.id }),
+    ).rejects.toMatchObject({ error: 'InvalidRequest' })
+    expect((await closeReports(input)).data).toEqual({
+      closedCount: 2,
+      reportIds: [current.id, matching.id],
+    })
+    expect((await detail(other.id)).status).toBe('open')
+  })
 
   it('does not link a message event to the same message ID in another conversation', async () => {
     const f = await fixture()

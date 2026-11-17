@@ -38,7 +38,9 @@ import {
 } from './status.js'
 import {
   CHAT_CONVO_COLLECTION,
+  CHAT_MESSAGE_COLLECTION,
   type ModSubject,
+  messageStatusKey,
   subjectFromEventRow,
   subjectFromStatusRow,
 } from './subject.js'
@@ -743,6 +745,50 @@ export class ModerationViews {
     return request
   }
 
+  async getMessageSubjectStatuses(
+    messages: { did: DidString; messageId: string; convoId: string }[],
+  ): Promise<Map<string, ModerationSubjectStatusRowWithHandle>> {
+    if (!messages.length) return new Map()
+    const unique = Array.from(
+      new Map(
+        messages.map((message) => [
+          messageStatusKey(message.did, message.messageId, message.convoId),
+          message,
+        ]),
+      ).values(),
+    )
+    const [rows, accounts] = await Promise.all([
+      moderationSubjectStatusQueryBuilder(this.db.db)
+        .where((eb) =>
+          eb.or(
+            unique.map((message) =>
+              eb.and([
+                eb('moderation_subject_status.did', '=', message.did),
+                eb(
+                  'moderation_subject_status.recordPath',
+                  '=',
+                  `${CHAT_MESSAGE_COLLECTION}/${message.messageId}`,
+                ),
+                eb('moderation_subject_status.convoId', '=', message.convoId),
+              ]),
+            ),
+          ),
+        )
+        .execute(),
+      this.getAccoutInfosByDid(unique.map((message) => message.did)),
+    ])
+    return new Map(
+      rows.map((row) => [
+        messageStatusKey(
+          row.did,
+          row.recordPath.slice(CHAT_MESSAGE_COLLECTION.length + 1),
+          row.convoId,
+        ),
+        { ...row, handle: accounts.get(row.did)?.handle ?? INVALID_HANDLE },
+      ]),
+    )
+  }
+
   private async fetchSubjectStatus(
     subjects: (UriString | AtUri)[],
   ): Promise<Map<string, ModerationSubjectStatusRowWithHandle>> {
@@ -762,7 +808,9 @@ export class ModerationViews {
                 '=',
                 sub.recordPath ?? '',
               ),
-              eb('moderation_subject_status.convoId', '=', sub.convoId),
+              ...(sub.recordPath.startsWith(`${CHAT_MESSAGE_COLLECTION}/`)
+                ? []
+                : [eb('moderation_subject_status.convoId', '=', sub.convoId)]),
             ]),
           ),
         ),
@@ -773,13 +821,19 @@ export class ModerationViews {
       this.getAccoutInfosByDid(parsedSubjects.map((s) => s.did)),
     ])
 
-    return new Map(
-      statusRes.map((row): [string, ModerationSubjectStatusRowWithHandle] => {
-        const subjectId = formatSubjectId(row.did, row.recordPath, row.convoId)
-        const handle = accountsByDid.get(row.did)?.handle ?? INVALID_HANDLE
-        return [subjectId, { ...row, handle }]
-      }),
-    )
+    const statusMap = new Map<string, ModerationSubjectStatusRowWithHandle>()
+    const ambiguous = new Set<string>()
+    for (const row of statusRes) {
+      const subjectId = formatSubjectId(row.did, row.recordPath, row.convoId)
+      const handle = accountsByDid.get(row.did)?.handle ?? INVALID_HANDLE
+      if (statusMap.has(subjectId)) {
+        statusMap.delete(subjectId)
+        ambiguous.add(subjectId)
+      } else if (!ambiguous.has(subjectId)) {
+        statusMap.set(subjectId, { ...row, handle })
+      }
+    }
+    return statusMap
   }
 
   formatSubjectStatus(

@@ -30,6 +30,204 @@ describe('report-action', () => {
   })
 
   describe('emitEvent with reportAction', () => {
+    it('actions only the selected message report', async () => {
+      const did = sc.dids.carol
+      const message = {
+        $type: 'chat.bsky.convo.defs#messageRef',
+        did,
+        convoId: 'report-action-convo',
+        messageId: 'report-action-message',
+      }
+      const otherMessage = { ...message, messageId: 'report-action-other' }
+      const conversation = {
+        $type: 'chat.bsky.convo.defs#convoRef',
+        did,
+        convoId: message.convoId,
+      }
+      const account = { $type: 'com.atproto.admin.defs#repoRef', did }
+      for (const subject of [message, otherMessage, conversation, account]) {
+        await sc.createReport({
+          reasonType: ComAtprotoModerationDefs.REASONSPAM,
+          subject,
+          reportedBy: sc.dids.alice,
+        })
+      }
+      await network.processAll()
+
+      const uri = `at://${did}/chat.bsky.convo.message/${message.messageId}`
+      const otherUri = `at://${did}/chat.bsky.convo.message/${otherMessage.messageId}`
+      const convoUri = `at://${did}/chat.bsky.convo/${conversation.convoId}`
+      const target = await modClient.queryReports({
+        status: 'open',
+        subject: uri,
+      })
+      expect(target.reports).toHaveLength(1)
+      expect(target.reports[0].subject.status?.subject).toMatchObject(message)
+      await expect(
+        modClient.emitEvent({
+          subject: message,
+          event: { $type: 'tools.ozone.moderation.defs#modEventTakedown' },
+          reportAction: { ids: [target.reports[0].id] },
+        }),
+      ).rejects.toThrow('Message takedowns are not supported')
+      expect(
+        (await modClient.queryReports({ status: 'open', subject: uri }))
+          .reports,
+      ).toHaveLength(1)
+      const messageEvents = await modClient.queryEvents({ subject: uri })
+      expect(messageEvents.events.length).toBeGreaterThan(0)
+      for (const event of messageEvents.events)
+        expect(event.subject).toEqual(message)
+      const convoEvents = await modClient.queryEvents({ subject: convoUri })
+      expect(convoEvents.events.length).toBeGreaterThan(0)
+      for (const event of convoEvents.events)
+        expect(event.subject).toEqual(conversation)
+      await modClient.emitEvent({
+        subject: message,
+        event: { $type: 'tools.ozone.moderation.defs#modEventAcknowledge' },
+        reportAction: { ids: [target.reports[0].id] },
+      })
+
+      expect(
+        (
+          await modClient.queryReports({ status: 'closed', subject: uri })
+        ).reports.map((report) => report.id),
+      ).toContain(target.reports[0].id)
+      const closed = await modClient.queryReports({
+        status: 'closed',
+        subject: uri,
+      })
+      const closedReport = closed.reports.find(
+        (report) => report.id === target.reports[0].id,
+      )
+      expect(closedReport?.subject.status?.reviewState).toBe(
+        'tools.ozone.moderation.defs#reviewClosed',
+      )
+      expect(closedReport?.subject.status?.subject).toMatchObject(message)
+      for (const subject of [otherUri, convoUri, did]) {
+        expect(
+          (await modClient.queryReports({ status: 'open', subject })).reports
+            .length,
+        ).toBeGreaterThan(0)
+      }
+      const messageStatus = await modClient.queryStatuses({ subject: uri })
+      expect(messageStatus.subjectStatuses).toHaveLength(1)
+      expect(messageStatus.subjectStatuses[0].subject).toMatchObject({
+        $type: 'chat.bsky.convo.defs#messageRef',
+        did,
+        convoId: message.convoId,
+        messageId: message.messageId,
+      })
+      expect(messageStatus.subjectStatuses[0].reviewState).toBe(
+        'tools.ozone.moderation.defs#reviewClosed',
+      )
+      for (const subject of [otherUri, convoUri, did]) {
+        const status = await modClient.queryStatuses({ subject })
+        expect(status.subjectStatuses[0].reviewState).toBe(
+          'tools.ozone.moderation.defs#reviewOpen',
+        )
+      }
+      const sameIdOtherConvo = { ...message, convoId: 'another-conversation' }
+      await sc.createReport({
+        reasonType: ComAtprotoModerationDefs.REASONSPAM,
+        subject: message,
+        reportedBy: sc.dids.alice,
+      })
+      await network.processAll()
+      const sameConvo = await modClient.queryReports({
+        status: 'open',
+        subject: uri,
+      })
+      expect(sameConvo.reports).toHaveLength(1)
+      await sc.createReport({
+        reasonType: ComAtprotoModerationDefs.REASONSPAM,
+        subject: sameIdOtherConvo,
+        reportedBy: sc.dids.alice,
+      })
+      await network.processAll()
+      const both = await modClient.queryReports({
+        status: 'open',
+        subject: uri,
+      })
+      expect(both.reports).toHaveLength(2)
+      const statuses = await modClient.queryStatuses({ subject: uri })
+      expect(statuses.subjectStatuses.map((status) => status.subject)).toEqual(
+        expect.arrayContaining([message, sameIdOtherConvo]),
+      )
+      const foreignId = both.reports.find(
+        (report) => report.id !== sameConvo.reports[0].id,
+      )!.id
+      expect(
+        both.reports.find((report) => report.id === sameConvo.reports[0].id)
+          ?.subject.status?.subject,
+      ).toMatchObject(message)
+      expect(
+        both.reports.find((report) => report.id === foreignId)?.subject.status
+          ?.subject,
+      ).toMatchObject(sameIdOtherConvo)
+      await modClient.emitEvent({
+        subject: message,
+        event: { $type: 'tools.ozone.moderation.defs#modEventAcknowledge' },
+        reportAction: { all: true },
+      })
+      expect(
+        (
+          await modClient.queryReports({ status: 'open', subject: uri })
+        ).reports.map((report) => report.id),
+      ).toEqual([foreignId])
+
+      await expect(
+        modClient.emitEvent({
+          subject: message,
+          event: {
+            $type: 'tools.ozone.moderation.defs#modEventLabel',
+            createLabelVals: ['message-test-label'],
+            negateLabelVals: [],
+          },
+        }),
+      ).rejects.toThrow('Message labels are not supported')
+      await expect(
+        modClient.emitEvent({
+          subject: message,
+          event: {
+            $type: 'tools.ozone.moderation.defs#modEventLabel',
+            createLabelVals: [],
+            negateLabelVals: ['message-test-label'],
+          },
+        }),
+      ).rejects.toThrow('Message labels are not supported')
+      const agent = network.ozone.getAgent()
+      const messageLabels = await agent.api.com.atproto.label.queryLabels({
+        uriPatterns: [uri],
+      })
+      expect(messageLabels.data.labels).toEqual([])
+      const accountLabels = await agent.api.com.atproto.label.queryLabels({
+        uriPatterns: [did],
+      })
+      expect(
+        accountLabels.data.labels.some(
+          (label) => label.val === 'message-test-label',
+        ),
+      ).toBe(false)
+      await modClient.emitEvent({
+        subject: account,
+        event: {
+          $type: 'tools.ozone.moderation.defs#modEventLabel',
+          createLabelVals: ['message-test-label'],
+          negateLabelVals: [],
+        },
+      })
+      const updatedAccountLabels =
+        await agent.api.com.atproto.label.queryLabels({
+          uriPatterns: [did],
+        })
+      expect(updatedAccountLabels.data.labels).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ val: 'message-test-label' }),
+        ]),
+      )
+    })
+
     it('actions specific report IDs and updates status to closed', async () => {
       // Create 3 reports on bob's account
       const bobsAccount = {

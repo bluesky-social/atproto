@@ -8,7 +8,7 @@ import { MARK_READ_GENERIC } from './constants.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(app.bsky.notification.updateSeen, {
-    auth: ctx.authVerifier.standard,
+    auth: ctx.authVerifier.standardWriteService(),
     handler: async ({ input, auth }) => {
       const viewer = auth.credentials.iss
       const seenAt = new Date(input.body.seenAt)

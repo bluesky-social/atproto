@@ -18,7 +18,7 @@ type InputSchema = app.bsky.unspecced.initAgeAssurance.$InputBody
 
 export default function (server: Server, ctx: AppContext) {
   server.add(app.bsky.unspecced.initAgeAssurance, {
-    auth: ctx.authVerifier.standard,
+    auth: ctx.authVerifier.standardWriteService(),
     handler: async ({ auth, input, req }) => {
       if (!ctx.kwsClient) {
         throw new MethodNotImplementedError(

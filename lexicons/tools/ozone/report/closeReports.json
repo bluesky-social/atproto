@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Close eligible reports on a subject matching the given criteria, optionally linking an existing moderation action. Assigned, escalated, and actively assigned reports are excluded. Reports whose current status does not permit a transition to closed are skipped silently.",
+      "description": "Close eligible reports on a subject matching the given criteria, optionally linking an existing moderation action. Assigned, escalated, and actively assigned reports are excluded unless explicitly targeted by reportId. Reports whose current status does not permit a transition to closed are skipped silently.",
       "input": {
         "encoding": "application/json",
         "schema": {
@@ -21,10 +21,15 @@
               "default": false,
               "description": "If true, also close reports on all subjects owned by the account, including records, messages, and conversations. Only valid when subject is an account DID."
             },
+            "reportId": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "An explicitly targeted report in the requested subject scope. It is included even if assigned, escalated, or not in reportTypes; excludedReportTypes still applies."
+            },
             "reportTypes": {
               "type": "array",
               "items": { "type": "string" },
-              "description": "If nonempty, only reports of the given report types (fully qualified reason NSIDs) are closed. When omitted or empty, all eligible reports in the requested subject scope are targeted, except excludedReportTypes. Assigned and escalated reports are always excluded."
+              "description": "If nonempty, eligible reports of the given report types (fully qualified reason NSIDs) are closed, in addition to reportId. When omitted or empty, all eligible reports in the requested subject scope are targeted, except excludedReportTypes. Assigned, escalated, and actively assigned reports are excluded unless explicitly targeted by reportId."
             },
             "excludedReportTypes": {
               "type": "array",

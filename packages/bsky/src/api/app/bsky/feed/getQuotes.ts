@@ -22,7 +22,7 @@ export default function (server: Server, ctx: AppContext) {
     presentation,
   )
   server.add(app.bsky.feed.getQuotes, {
-    auth: ctx.authVerifier.standardOptional,
+    auth: ctx.authVerifier.standardReadOptional(),
     handler: async ({ params, auth, req }) => {
       const { viewer, includeTakedowns, skipViewerBlocks } =
         ctx.authVerifier.parseCreds(auth)

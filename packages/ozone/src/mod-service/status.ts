@@ -14,7 +14,7 @@ import type { Database } from '../db/index.js'
 import type { DatabaseSchema } from '../db/schema/index.js'
 import { jsonb } from '../db/types.js'
 import { tools } from '../lexicons/index.js'
-import { CHAT_CONVO_COLLECTION } from './subject.js'
+import { CHAT_CONVO_COLLECTION, CHAT_MESSAGE_COLLECTION } from './subject.js'
 import type { ModerationEventRow, ModerationSubjectStatusRow } from './types.js'
 
 const getSubjectStatusForModerationEvent = ({
@@ -244,6 +244,7 @@ export const adjustModerationSubjectStatus = async (
     subjectUri,
     subjectCid,
     subjectConvoId,
+    subjectMessageId,
     createdBy,
     meta,
     addedTags,
@@ -253,10 +254,12 @@ export const adjustModerationSubjectStatus = async (
   } = moderationEvent
 
   // If subjectUri exists, it's not a repoRef so pass along the uri to get identifier back
-  const identifier = getStatusIdentifierFromSubject(
-    subjectUri ? subjectUri : subjectDid,
+  const identifier = getStatusIdentifierFromEvent({
+    subjectDid,
+    subjectUri,
     subjectConvoId,
-  )
+    subjectMessageId,
+  })
 
   db.assertTransaction()
 
@@ -515,4 +518,23 @@ export const getStatusIdentifierFromSubject = (
     recordPath: `${uri.collection}/${uri.rkey}`,
     convoId: '',
   }
+}
+
+export const getStatusIdentifierFromEvent = (event: {
+  subjectDid: DidString
+  subjectUri: UriString | null
+  subjectConvoId: string | null
+  subjectMessageId: string | null
+}) => {
+  if (event.subjectMessageId) {
+    return {
+      did: event.subjectDid,
+      recordPath: `${CHAT_MESSAGE_COLLECTION}/${event.subjectMessageId}`,
+      convoId: event.subjectConvoId ?? '',
+    }
+  }
+  return getStatusIdentifierFromSubject(
+    event.subjectUri ?? event.subjectDid,
+    event.subjectConvoId,
+  )
 }

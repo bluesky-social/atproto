@@ -7,6 +7,7 @@ import {
 } from '@atproto/dev-env'
 import { type DidString, jsonToLex, toDatetimeString } from '@atproto/lex'
 import { tools } from '../src/lexicons/index.js'
+import { MessageSubject } from '../src/mod-service/subject.js'
 
 describe('viewer inbox subjects', () => {
   let network: TestNetwork
@@ -316,15 +317,18 @@ describe('viewer inbox subjects', () => {
       $type: 'com.atproto.admin.defs#repoRef',
       did,
     })
-    await label(
-      {
-        $type: 'chat.bsky.convo.defs#messageRef',
-        did,
-        convoId: 'private-convo',
-        messageId: 'private-message',
-      },
-      ['porn'],
-    )
+    // @NOTE The API rejects new message labels, but historical events must
+    // still be excluded from the account inbox.
+    await network.ozone.ctx.db.transaction(async (db) => {
+      await network.ozone.ctx.modService(db).logEvent({
+        subject: new MessageSubject(did, 'private-convo', 'private-message'),
+        event: tools.ozone.moderation.defs.modEventLabel.$build({
+          createLabelVals: ['porn'],
+          negateLabelVals: [],
+        }),
+        createdBy: did,
+      })
+    })
     await label(
       { $type: 'chat.bsky.convo.defs#convoRef', did, convoId: 'private-convo' },
       ['sexual'],

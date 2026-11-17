@@ -48,10 +48,13 @@ export type ExternalRecords = HydrationMap<AtUriString, ExternalRecord>
 /** Keyed by `genericRecordKey({ uri, cid })` to retain versions of a URI. */
 export type ExternalRecordsByRef = HydrationMap<ExactRecordKey, ExternalRecord>
 export type ExternalRecordBacklinks = HydrationMap<AtUriString, AtUriString[]>
-/** Viewer subscription outcomes per publication; null means unknown. */
+/**
+ * The viewer's subscription record per publication, false when not subscribed,
+ * and null when unknown.
+ */
 export type ExternalPublicationSubscriptions = HydrationMap<
   AtUriString,
-  boolean
+  AtUriString | false
 >
 
 export type AtmosphereActivityItem = {

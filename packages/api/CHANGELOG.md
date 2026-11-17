@@ -1,5 +1,37 @@
 # @atproto/api
 
+## 0.32.1
+
+### Patch Changes
+
+- [#4722](https://github.com/bluesky-social/atproto/pull/4722) [`b9f1f1d`](https://github.com/bluesky-social/atproto/commit/b9f1f1d2b169cc509e192350496049cf93d6115d) Thanks [@gcwill70](https://github.com/gcwill70)! - Add bounded bulk moderation actions with per-subject report targeting, external IDs, and partial-failure results.
+
+- [#5913](https://github.com/bluesky-social/atproto/pull/5913) [`50877cc`](https://github.com/bluesky-social/atproto/commit/50877ccd37254ad8170c6cdcdd38014b377203d5) Thanks [@foysalit](https://github.com/foysalit)! - Allow bulk report closure to explicitly include the report being reviewed while protecting other active reviews.
+
+## 0.32.0
+
+### Minor Changes
+
+- [#5900](https://github.com/bluesky-social/atproto/pull/5900) [`f174012`](https://github.com/bluesky-social/atproto/commit/f174012f740357c0dfa6c2525a9d69562dbd7f38) Thanks [@gcwill70](https://github.com/gcwill70)! - Add admin-only moderator activity history combining human report activities and moderation events in chronological order.
+
+## 0.31.3
+
+### Patch Changes
+
+- [#5895](https://github.com/bluesky-social/atproto/pull/5895) [`3459596`](https://github.com/bluesky-social/atproto/commit/3459596f6f5fa684ae616249deaec6e7a39700bd) Thanks [@gcwill70](https://github.com/gcwill70)! - Update `emitEvent.reportAction` to allow account level actions to target reports on owned subjects using `subjects` and `subjectTypes`.
+
+## 0.31.2
+
+### Patch Changes
+
+- [#5893](https://github.com/bluesky-social/atproto/pull/5893) [`f0653de`](https://github.com/bluesky-social/atproto/commit/f0653de696169e16dc003f11877b9eb0ae6533c0) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add `app.bsky.unspecced.getAtmosphereTimelineV2`, with actor profiles in `relatedViews`, subject refs for each activity, and publication viewer subscriptions. Livestream views now include `lastSeenAt`.
+
+- [#5892](https://github.com/bluesky-social/atproto/pull/5892) [`a704f10`](https://github.com/bluesky-social/atproto/commit/a704f10c040a989244cfa578e65f006ff7de0f83) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Expose optional App Store and Google Play links on getAtmosphereApps cards, preserving optional profiles and profile-first images.
+
+- [#5880](https://github.com/bluesky-social/atproto/pull/5880) [`e9fbdab`](https://github.com/bluesky-social/atproto/commit/e9fbdab8e2302e3e01ea923c2db5ee4d7ff33681) Thanks [@blackmichael](https://github.com/blackmichael)! - Add optional `photoCount` to gallery views using the dataplane's total `social.grain.gallery.item` backlink count, independently of the hydrated preview items.
+
+- [#5892](https://github.com/bluesky-social/atproto/pull/5892) [`a704f10`](https://github.com/bluesky-social/atproto/commit/a704f10c040a989244cfa578e65f006ff7de0f83) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Expose optional App Store and Google Play links on Atmosphere Explore app cards while preserving optional profiles and profile-first images.
+
 ## 0.31.1
 
 ### Patch Changes

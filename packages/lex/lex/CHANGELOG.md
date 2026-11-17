@@ -92,6 +92,12 @@
   - @atproto/lex-client@0.4.0
   - @atproto/lex-schema@0.2.9
 
+## 0.3.15
+
+### Patch Changes
+
+- [`631ac94`](https://github.com/bluesky-social/atproto/commit/631ac946b2a2ec45c8f49921966f6a557f1666c6) Fix conflicting `walk` exports when resolving newer `@atproto/lex-schema` releases. Explicitly re-export the original Lex 0.3 implementation to preserve its API and traversal behavior.
+
 ## 0.3.14
 
 ### Patch Changes

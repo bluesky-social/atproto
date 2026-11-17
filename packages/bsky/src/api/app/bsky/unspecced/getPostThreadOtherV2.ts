@@ -37,7 +37,7 @@ export default function (server: Server, ctx: AppContext) {
     presentation,
   )
   server.add(app.bsky.unspecced.getPostThreadOtherV2, {
-    auth: ctx.authVerifier.optionalStandardOrRole,
+    auth: ctx.authVerifier.standardReadOrRoleOptional,
     handler: async ({ params, auth, req }) => {
       const { viewer, includeTakedowns, include3pBlocks, skipViewerBlocks } =
         ctx.authVerifier.parseCreds(auth)

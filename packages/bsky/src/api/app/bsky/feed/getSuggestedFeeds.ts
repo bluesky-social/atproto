@@ -8,7 +8,7 @@ import { fillPage, resHeaders } from '../../../util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(app.bsky.feed.getSuggestedFeeds, {
-    auth: ctx.authVerifier.standardOptional,
+    auth: ctx.authVerifier.standardReadOptional(),
     handler: async ({ auth, params, req }) => {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)

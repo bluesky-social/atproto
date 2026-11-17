@@ -24,7 +24,7 @@ export default function (server: Server, ctx: AppContext) {
     presentation,
   )
   server.add(app.bsky.feed.getActorLikes, {
-    auth: ctx.authVerifier.standardOptional,
+    auth: ctx.authVerifier.standardReadOptional(),
     handler: async ({ params, auth, req }) => {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)

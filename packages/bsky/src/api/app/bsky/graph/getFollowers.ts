@@ -27,7 +27,7 @@ export default function (server: Server, ctx: AppContext) {
     presentation,
   )
   server.add(app.bsky.graph.getFollowers, {
-    auth: ctx.authVerifier.optionalStandardOrRole,
+    auth: ctx.authVerifier.standardReadOrRoleOptional,
     handler: async ({ params, auth, req }) => {
       const { viewer, includeTakedowns, skipViewerBlocks } =
         ctx.authVerifier.parseCreds(auth)

@@ -239,11 +239,12 @@ describe('hydration endpoint attribution', () => {
         : { Gate: { AATest: 'AATest' }, checkGate: () => false }
       const ctx = {
         authVerifier: {
-          standardOptional: () => {},
-          standard: () => {},
-          optionalStandardOrRole: () => {},
+          standardReadOptional: () => () => {},
+          standardRead: () => () => {},
+          standardWriteService: () => () => {},
+          standardReadOrRoleOptional: () => {},
+          internal: () => {},
           role: () => {},
-          standardOptionalParameterized: () => () => {},
           parseCreds: () => ({ viewer: 'did:plc:viewer' }),
         },
         reqLabelers: () => ({ dids: [], redact: new Set() }),

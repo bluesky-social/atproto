@@ -5,7 +5,7 @@ import { MuteOperation_Type } from '../../../../proto/bsync_pb.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(app.bsky.graph.muteActorList, {
-    auth: ctx.authVerifier.standard,
+    auth: ctx.authVerifier.standardWriteService(),
     handler: async ({ auth, input }) => {
       const { list } = input.body
       const requester = auth.credentials.iss

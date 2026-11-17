@@ -22,7 +22,7 @@ import type { Views } from '../../../../views/index.js'
 export default function (server: Server, ctx: AppContext) {
   const getTrends = createPipeline(skeleton, hydration, noBlocks, presentation)
   server.add(app.bsky.unspecced.getTrends, {
-    auth: ctx.authVerifier.standardOptional,
+    auth: ctx.authVerifier.standardReadOptional(),
     handler: async ({ auth, params, req, signal }) => {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)

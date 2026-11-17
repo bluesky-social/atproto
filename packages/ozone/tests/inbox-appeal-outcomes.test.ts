@@ -191,13 +191,15 @@ describe('viewer appeal outcomes', () => {
     await assertOutcome(appeal.subjectId, 'denied')
   })
 
-  it.each(['emitEvent', 'closeReports'] as const)(
+  it.each(['emitEvent', 'closeReports', 'accountCascade'] as const)(
     'does not infer a record appeal outcome from an account event via %s',
     async (method) => {
       const appeal = await startAppeal()
       const accountEvent = await mod.emitEvent({
         subject: com.atproto.admin.defs.repoRef.$build({ did: sc.dids.alice }),
-        event: tools.ozone.moderation.defs.modEventAcknowledge.$build({}),
+        event: tools.ozone.moderation.defs.modEventAcknowledge.$build({
+          acknowledgeAccountSubjects: method === 'accountCascade',
+        }),
         ...(method === 'emitEvent' && {
           reportAction: { allOwned: true, ids: [appeal.reportId] },
         }),
@@ -217,6 +219,14 @@ describe('viewer appeal outcomes', () => {
           },
         )
       }
+      const closed = await mod.queryReports({
+        subject: appeal.subjectId,
+        status: 'closed',
+      })
+      expect(
+        closed.reports.find((report) => report.id === appeal.reportId)
+          ?.actionEventIds,
+      ).toEqual([appeal.action.id, accountEvent.id])
       const view = await detail(appeal.subjectId)
       expect(view.appeal).toMatchObject({ state: 'resolved' })
       expect(view.appeal).not.toHaveProperty('outcome')
@@ -225,6 +235,57 @@ describe('viewer appeal outcomes', () => {
       expect(notifications[0].target).not.toHaveProperty('appealOutcome')
     },
   )
+
+  it('rejects linking a content correction to an account appeal', async () => {
+    const appeal = await startAppeal('label', 'account')
+    const notificationsBefore = await resolutionNotifications(appeal.subjectId)
+    const post = await sc.post(sc.dids.alice, 'Content correction')
+    const subject = com.atproto.repo.strongRef.$build({
+      uri: post.ref.uriStr,
+      cid: post.ref.cidStr,
+    })
+    await network.processAll()
+    await mod.emitEvent({
+      subject,
+      event: tools.ozone.moderation.defs.modEventLabel.$build({
+        createLabelVals: ['spam'],
+        negateLabelVals: [],
+      }),
+    })
+    await expect(
+      mod.emitEvent({
+        subject,
+        event: tools.ozone.moderation.defs.modEventLabel.$build({
+          createLabelVals: [],
+          negateLabelVals: ['spam'],
+        }),
+        reportAction: {
+          subjects: [
+            com.atproto.admin.defs.repoRef.$build({ did: sc.dids.alice }),
+          ],
+          ids: [appeal.reportId],
+        },
+      }),
+    ).rejects.toThrow('additional report subjects require an account event')
+    const { data: report } = await mod.agent.tools.ozone.report.getReport(
+      { id: appeal.reportId },
+      {
+        headers: await network.ozone.modHeaders(
+          tools.ozone.report.getReport.$lxm,
+        ),
+      },
+    )
+    expect(report.status).not.toBe('closed')
+    expect(report.actionEventIds).toEqual([appeal.action.id])
+    const view = await detail(appeal.subjectId)
+    expect(view.appeal).toMatchObject({ state: 'pending' })
+    expect(view.appeal).not.toHaveProperty('outcome')
+    expect(view.enforcement.labels).toContain('spam')
+    const notifications = await resolutionNotifications(appeal.subjectId)
+    expect(notifications).toEqual(notificationsBefore)
+    expect((await detail(post.ref.uriStr)).enforcement.labels).toContain('spam')
+    await activity(appeal.reportId, 'closeActivity')
+  })
 
   it('does not infer an appeal outcome from the action being appealed', async () => {
     const appeal = await startAppeal()

@@ -1,0 +1,42 @@
+{
+  "lexicon": 1,
+  "id": "tools.ozone.inbox.ackPushNotifications",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["items"],
+          "properties": {
+            "items": {
+              "type": "array",
+              "minLength": 1,
+              "maxLength": 100,
+              "items": { "type": "ref", "ref": "#item" }
+            }
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["acknowledged"],
+          "properties": {
+            "acknowledged": { "type": "array", "items": { "type": "integer" } }
+          }
+        }
+      }
+    },
+    "item": {
+      "type": "object",
+      "required": ["id", "leaseToken"],
+      "properties": {
+        "id": { "type": "integer" },
+        "leaseToken": { "type": "string", "maxLength": 64 }
+      }
+    }
+  }
+}

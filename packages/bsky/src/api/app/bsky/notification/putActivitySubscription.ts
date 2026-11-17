@@ -7,7 +7,7 @@ import { Namespaces } from '../../../../stash.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(app.bsky.notification.putActivitySubscription, {
-    auth: ctx.authVerifier.standard,
+    auth: ctx.authVerifier.standardWriteService(),
     handler: async ({ input, auth }) => {
       const actorDid = auth.credentials.iss
       const { subject, activitySubscription } = input.body

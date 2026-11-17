@@ -59,6 +59,7 @@ import {
   type LocalViewerCreator,
 } from './read-after-write/viewer.js'
 import { getRedisClient } from './redis.js'
+import { FailOpenReplayStore } from './replay-store.js'
 import { Sequencer } from './sequencer/index.js'
 import { SpaceNotifications } from './space-notifications.js'
 import { SpacePolicyManager } from './space-policy/manager.js'
@@ -83,6 +84,7 @@ export type AppContextOptions = {
   entrywayClient?: Client
   entrywayAdminClient?: Client
   proxyAgent: undici.Dispatcher
+  appViewProxyAgent?: undici.Dispatcher
   safeFetch: Fetch
   clientAttestationVerifier: ClientAttestationVerifier
   spacePolicyManager: SpacePolicyManager
@@ -112,6 +114,7 @@ export class AppContext implements AsyncDisposable {
   public entrywayClient: Client | undefined
   public entrywayAdminClient: Client | undefined
   public proxyAgent: undici.Dispatcher
+  public appViewProxyAgent: undici.Dispatcher | undefined
   public safeFetch: Fetch
   public clientAttestationVerifier: ClientAttestationVerifier
   public spaceNotifications: SpaceNotifications
@@ -141,6 +144,7 @@ export class AppContext implements AsyncDisposable {
     this.entrywayClient = opts.entrywayClient
     this.entrywayAdminClient = opts.entrywayAdminClient
     this.proxyAgent = opts.proxyAgent
+    this.appViewProxyAgent = opts.appViewProxyAgent
     this.safeFetch = opts.safeFetch
     this.clientAttestationVerifier = opts.clientAttestationVerifier
     this.spacePolicyManager = opts.spacePolicyManager
@@ -257,9 +261,14 @@ export class AppContext implements AsyncDisposable {
       crawlers,
       undefined,
       cfg.db.disableWalAutoCheckpoint,
+      cfg.db.synchronousFull,
     )
     const redisScratch = cfg.redis
       ? getRedisClient(cfg.redis.address, cfg.redis.password)
+      : undefined
+    // Without Redis the OAuth provider and verifier check replays in memory.
+    const replayStore = redisScratch
+      ? new FailOpenReplayStore(redisScratch)
       : undefined
 
     const bskyAppView = cfg.bskyAppView
@@ -451,6 +460,11 @@ export class AppContext implements AsyncDisposable {
 
     // An agent for performing HTTP requests based on user provided URLs.
     const proxyAgent = buildProxyAgent(cfg.proxy)
+    // The operator sets the AppView's URL, so unlike a DID document's service
+    // endpoint, it is allowed to resolve to a private address.
+    const appViewProxyAgent = cfg.bskyAppView
+      ? buildProxyAgent({ ...cfg.proxy, disableSsrfProtection: true })
+      : undefined
 
     const oauthProvider = cfg.oauth.provider
       ? new OAuthProvider({
@@ -468,7 +482,7 @@ export class AppContext implements AsyncDisposable {
             cfg.service.publicUrl,
             cfg.identity.recoveryDidKey,
           ),
-          redis: redisScratch,
+          replayStore,
           dpopSecret: secrets.dpopSecret,
           inviteCodeRequired: cfg.invites.required,
           availableUserDomains: cfg.identity.serviceHandleDomains,
@@ -575,7 +589,7 @@ export class AppContext implements AsyncDisposable {
         issuer: cfg.oauth.issuer,
         keyset: [await JoseKey.fromKeyLike(jwtPublicKey!, undefined, 'ES256K')],
         dpopSecret: secrets.dpopSecret,
-        redis: redisScratch,
+        replayStore,
         onDecodeToken: async ({ payload, dpopProof }) => {
           // @TODO drop this once oauth provider no longer accepts DPoP proof with
           // query or fragment in "htu" claim.
@@ -645,6 +659,7 @@ export class AppContext implements AsyncDisposable {
       entrywayClient,
       entrywayAdminClient,
       proxyAgent,
+      appViewProxyAgent,
       safeFetch,
       clientAttestationVerifier,
       spacePolicyManager,
@@ -729,12 +744,20 @@ export class AppContext implements AsyncDisposable {
           await this.accountManager.close()
         } finally {
           try {
-            await this.redisScratch?.quit()
+            // A Redis that doesn't answer QUIT (it times out) mustn't fail
+            // shutdown: drop the connection instead.
+            await this.redisScratch
+              ?.quit()
+              .catch(() => this.redisScratch?.disconnect())
           } finally {
             try {
               await this.proxyAgent.destroy()
             } finally {
-              await this.blobstore[Symbol.asyncDispose]()
+              try {
+                await this.appViewProxyAgent?.destroy()
+              } finally {
+                await this.blobstore[Symbol.asyncDispose]()
+              }
             }
           }
         }

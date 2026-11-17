@@ -1,10 +1,11 @@
 /*
   How AppView verifies auth:
-  1. `standard`: called by app clients. Service JWT signed with the user's account key, or an entryway session token. Used across `app.bsky.*`.
-  2. `role`: called by internal services such as Chat and Rolodex, and administrators. Basic auth with username `admin` and a configured admin password. Used for internal profile lookup, contact notifications, and admin-capable routes.
-  3. `modService`: called by Ozone. Service JWT signed with its labeler key, or its account key for legacy issuers without a fragment. Accepted on `com.atproto.admin.getSubjectStatus` and `com.atproto.admin.updateSubjectStatus` through `roleOrModService`.
+  1. `standardRead`, `standardWriteService`, `standardReadOptional`: called by app clients. Service JWT signed with the user's account key, an entryway session token, or a BSG token carrying the scope in the verifier's name (`read` or `write:service`). Service JWTs and entryway session tokens are accepted by all three. Used across `app.bsky.*`.
+  2. `role`: called by administrators and internal services such as Rolodex. Basic auth with username `admin` and a configured admin password. Used for contact notifications and admin-capable routes.
+  3. `internal`: called by internal services such as Chat. Token signed with the secret configured for the service named by `iss`. `sub` is the user's DID, when the call is for a user. Same access as the admin password.
+  4. `modService`: called by Ozone. Service JWT signed with its labeler key, or its account key for legacy issuers without a fragment. Accepted on `com.atproto.admin.getSubjectStatus` and `com.atproto.admin.updateSubjectStatus` through `roleOrModService`.
 
-  Optional variants allow anonymous requests. `standardOrRole`, `optionalStandardOrRole`, and `roleOrModService` combine the corresponding verifiers.
+  Optional variants allow anonymous requests.
 */
 import crypto, { type KeyObject } from 'node:crypto'
 import { secp256k1 } from '@noble/curves/secp256k1'
@@ -15,8 +16,10 @@ import { SECP256K1_JWT_ALG, parseDidKey } from '@atproto/crypto'
 import { type DidString, isDidString } from '@atproto/lex-schema'
 import {
   AuthRequiredError,
+  ForbiddenError,
   type VerifySignatureWithKeyFn,
   cryptoVerifySignatureWithKey,
+  extractUrlNsid,
   parseReqNsid,
   verifyJwt as verifyServiceJwt,
 } from '@atproto/xrpc-server'
@@ -28,7 +31,7 @@ import {
   unpackIdentityKeys,
 } from '../data-plane/index.js'
 import type { GetIdentityByDidResponse } from '../proto/bsky_pb.js'
-import { events } from '../telemetry/events.js'
+import { type AuthVerifierName, events } from '../telemetry/events.js'
 
 type ReqCtx = {
   req: express.Request
@@ -38,6 +41,13 @@ type StandardAuthOpts = {
   skipAudCheck?: boolean
   lxmCheck?: (method?: string) => boolean
 }
+
+type ScopedStandardAuthOpts = StandardAuthOpts & {
+  scope: BsgScope
+  requireUser: boolean
+}
+
+type BsgScope = 'read' | 'write:service'
 
 enum RoleStatus {
   Valid,
@@ -58,14 +68,33 @@ type StandardOutput = {
     /** @note we don't validate this to be a {@link DidString} (we might want to in the future) */
     aud: string
     iss: DidString | `${DidString}#${string}`
+    /** The service JWT from the user's PDS: wrapped in BSG's token as `service_auth`, or sent directly. Undefined for entryway session tokens and for BSG tokens without `service_auth` (OAuth). */
+    serviceJwt?: string
   }
 }
 
 type RoleOutput = {
   credentials: {
     type: 'role'
-    admin: boolean
   }
+}
+
+type InternalOutput = {
+  credentials: {
+    type: 'internal'
+    /** Name of the internal service, such as `chat` */
+    iss: string
+    sub: DidString | null
+  }
+}
+
+type ParsedCreds = {
+  viewer: StandardOutput['credentials']['iss'] | null
+  includeTakedowns: boolean
+  include3pBlocks: boolean
+  canPerformTakedown: boolean
+  isModService: boolean
+  skipViewerBlocks: boolean
 }
 
 type ModServiceOutput = {
@@ -88,6 +117,8 @@ type AuthVerifierOpts = {
   modServiceDid: DidString
   adminPasses: string[]
   entrywayJwtPublicKey?: KeyObject
+  bsgJwtSecret?: Uint8Array
+  internalServiceSecrets?: Record<string, Uint8Array>
 }
 
 export class AuthVerifier {
@@ -96,6 +127,8 @@ export class AuthVerifier {
   public modServiceDid: DidString
   private adminPasses: Set<string>
   private entrywayJwtPublicKey?: KeyObject
+  private bsgJwtSecret?: Uint8Array
+  private internalServiceSecrets: Map<string, Uint8Array>
 
   constructor(
     public dataplane: DataPlaneClient,
@@ -109,26 +142,57 @@ export class AuthVerifier {
     this.modServiceDid = opts.modServiceDid
     this.adminPasses = new Set(opts.adminPasses)
     this.entrywayJwtPublicKey = opts.entrywayJwtPublicKey
+    this.bsgJwtSecret = opts.bsgJwtSecret
+    this.internalServiceSecrets = new Map(
+      Object.entries(opts.internalServiceSecrets ?? {}),
+    )
   }
 
   // #region Auth-verification methods.
 
-  standardOptionalParameterized =
-    (opts: StandardAuthOpts) =>
-    async (ctx: ReqCtx): Promise<StandardOutput | NullOutput> => {
-      let verifier: 'standard' | 'entrywaySession' | 'anonymous' = 'standard'
+  // `scope` is the scope required from BSG tokens. With `requireUser`, a
+  // request without a user is rejected inside the try, so it's counted as a
+  // failure.
+  private standardOptionalParameterized(
+    opts: ScopedStandardAuthOpts & { requireUser: true },
+  ): (ctx: ReqCtx) => Promise<StandardOutput>
+  private standardOptionalParameterized(
+    opts: ScopedStandardAuthOpts & { requireUser: false },
+  ): (ctx: ReqCtx) => Promise<StandardOutput | NullOutput>
+  private standardOptionalParameterized(opts: ScopedStandardAuthOpts) {
+    return async (ctx: ReqCtx): Promise<StandardOutput | NullOutput> => {
+      let verifier: AuthVerifierName = 'standard'
+      let did: string | undefined
+      let appPassword: boolean | undefined
+      let iat: number | undefined
+      let err: unknown
       try {
         if (isBearerToken(ctx.req)) {
           // @NOTE temporarily accept entryway session tokens to shed load from PDS instances
           const token = bearerTokenFromReq(ctx.req)
-          const header = token ? jose.decodeProtectedHeader(token) : undefined
-          if (header?.typ === 'at+jwt') {
+          if (!token) {
+            throw new AuthRequiredError('missing jwt', 'MissingJwt')
+          }
+          const header = jose.decodeProtectedHeader(token)
+          if (header.typ === BSG_JWT_TYP) {
+            verifier = 'bsg'
+            // await so a rejection is caught below and logged as a failure
+            const output = await this.bsg(ctx, token, opts.scope)
+            if (opts.requireUser && output.credentials.type === 'none') {
+              throw new AuthRequiredError(undefined, 'AuthMissing')
+            }
+            return output
+          }
+          if (header.typ === 'at+jwt') {
             verifier = 'entrywaySession'
+            // Claimed session, for logging. Only trusted once entrywaySession() succeeds.
+            ;({ did, appPassword, iat } = claimedSession(token))
             // we should never use entryway session tokens in the case of flexible auth audiences (namely in the case of getFeed)
             if (opts.skipAudCheck) {
               throw new AuthRequiredError('Malformed token', 'InvalidToken')
             }
-            return this.entrywaySession(token)
+            // await so a rejection is caught below and logged as a failure
+            return await this.entrywaySession(token)
           }
 
           const { iss, aud } = await this.verifyServiceJwt(ctx, token, {
@@ -145,80 +209,94 @@ export class AuthVerifier {
               'BadJwtAudience',
             )
           }
+
+          // Direct atproto-proxy token, from the PDS. For deployments without a BSG.
           return {
             credentials: {
               type: 'standard',
               iss,
               aud,
+              serviceJwt: token,
             },
           }
         } else {
+          if (opts.requireUser) {
+            throw new AuthRequiredError(undefined, 'AuthMissing')
+          }
           verifier = 'anonymous'
           return this.nullCreds()
         }
+      } catch (e) {
+        err = e
+        throw e
       } finally {
-        events.authVerifierRequest(verifier)
+        events.authVerifierRequest(verifier, {
+          did,
+          appPassword,
+          iat,
+          method: extractUrlNsid(ctx.req.originalUrl),
+          userAgent: ctx.req.headers['user-agent'],
+          origin: ctx.req.headers.origin,
+          err,
+        })
       }
     }
-
-  standardOptional: (ctx: ReqCtx) => Promise<StandardOutput | NullOutput> =
-    this.standardOptionalParameterized({})
-
-  standard = async (ctx: ReqCtx): Promise<StandardOutput> => {
-    const output = await this.standardOptional(ctx)
-    if (output.credentials.type === 'none') {
-      throw new AuthRequiredError(undefined, 'AuthMissing')
-    }
-    return output as StandardOutput
   }
+
+  standardReadOptional = (opts: StandardAuthOpts = {}) =>
+    this.standardOptionalParameterized({
+      ...opts,
+      scope: 'read',
+      requireUser: false,
+    })
+
+  standardRead = (opts: StandardAuthOpts = {}) =>
+    this.standardOptionalParameterized({
+      ...opts,
+      scope: 'read',
+      requireUser: true,
+    })
+
+  standardWriteService = (opts: StandardAuthOpts = {}) =>
+    this.standardOptionalParameterized({
+      ...opts,
+      scope: 'write:service',
+      requireUser: true,
+    })
 
   role = (ctx: ReqCtx): RoleOutput => {
     events.authVerifierRequest('role')
-    const creds = this.parseRoleCreds(ctx.req)
-    if (creds.status !== RoleStatus.Valid) {
+    if (this.checkAdminPassword(ctx.req) !== RoleStatus.Valid) {
       throw new AuthRequiredError()
     }
-    return {
-      credentials: {
-        ...creds,
-        type: 'role',
-      },
-    }
+    return { credentials: { type: 'role' } }
   }
 
-  standardOrRole = async (
-    ctx: ReqCtx,
-  ): Promise<StandardOutput | RoleOutput> => {
-    if (isBearerToken(ctx.req)) {
-      return this.standard(ctx)
-    } else {
-      return this.role(ctx)
-    }
-  }
-
-  optionalStandardOrRole = async (
+  standardReadOrRoleOptional = async (
     ctx: ReqCtx,
   ): Promise<StandardOutput | RoleOutput | NullOutput> => {
     if (isBearerToken(ctx.req)) {
-      return await this.standard(ctx)
+      // A bearer token can be a BSG token without `sub` (anonymous request).
+      // `standardRead` would reject it, so this uses `standardReadOptional`.
+      return await this.standardReadOptional()(ctx)
     } else {
-      const creds = this.parseRoleCreds(ctx.req)
+      const status = this.checkAdminPassword(ctx.req)
       events.authVerifierRequest(
-        creds.status === RoleStatus.Missing ? 'anonymous' : 'role',
+        status === RoleStatus.Missing ? 'anonymous' : 'role',
       )
-      if (creds.status === RoleStatus.Valid) {
-        return {
-          credentials: {
-            ...creds,
-            type: 'role',
-          },
-        }
-      } else if (creds.status === RoleStatus.Missing) {
+      if (status === RoleStatus.Valid) {
+        return { credentials: { type: 'role' } }
+      } else if (status === RoleStatus.Missing) {
         return this.nullCreds()
       } else {
         throw new AuthRequiredError()
       }
     }
+  }
+
+  internal = async (ctx: ReqCtx): Promise<InternalOutput> => {
+    events.authVerifierRequest('internal')
+    return this.internalService(ctx)
   }
 
   modService = async (reqCtx: ReqCtx): Promise<ModServiceOutput> => {
@@ -246,20 +324,31 @@ export class AuthVerifier {
   // #region Credential parsing.
 
   parseCreds(
-    creds: StandardOutput | RoleOutput | ModServiceOutput | NullOutput,
-  ) {
+    creds:
+      | StandardOutput
+      | RoleOutput
+      | InternalOutput
+      | ModServiceOutput
+      | NullOutput,
+  ): ParsedCreds {
     const viewer =
-      creds.credentials.type === 'standard' ? creds.credentials.iss : null
+      creds.credentials.type === 'standard'
+        ? creds.credentials.iss
+        : creds.credentials.type === 'internal'
+          ? creds.credentials.sub
+          : null
+
+    const isAdminAccess =
+      creds.credentials.type === 'role' || creds.credentials.type === 'internal'
 
     const includeTakedownsAnd3pBlocks =
-      (creds.credentials.type === 'role' && creds.credentials.admin) ||
+      isAdminAccess ||
       creds.credentials.type === 'mod_service' ||
       (creds.credentials.type === 'standard' &&
         this.isModService(creds.credentials.iss))
 
     const canPerformTakedown =
-      (creds.credentials.type === 'role' && creds.credentials.admin) ||
-      creds.credentials.type === 'mod_service'
+      isAdminAccess || creds.credentials.type === 'mod_service'
 
     const isModService =
       creds.credentials.type === 'mod_service' ||
@@ -337,17 +426,130 @@ export class AuthVerifier {
     }
   }
 
-  private parseRoleCreds(req: express.Request) {
+  // Permission token issued by BSG for the requests it forwards. Without `sub`,
+  // the request is anonymous.
+  private bsg = async (
+    reqCtx: ReqCtx,
+    token: string,
+    scope: BsgScope,
+  ): Promise<StandardOutput | NullOutput> => {
+    if (!this.bsgJwtSecret) {
+      throw new AuthRequiredError('Malformed token', 'InvalidToken')
+    }
+
+    const payload = await this.verifyHmacJwt(reqCtx, token, this.bsgJwtSecret, {
+      typ: BSG_JWT_TYP,
+      issuer: BSG_JWT_ISSUER,
+      audience: BSG_JWT_AUDIENCE,
+    })
+    if (!Array.isArray(payload.scopes) || !payload.scopes.includes(scope)) {
+      throw new ForbiddenError(
+        `token lacks required scope: ${scope}`,
+        'InsufficientScope',
+      )
+    }
+    if (payload.sub === undefined) {
+      return this.nullCreds()
+    }
+    if (!isDidString(payload.sub)) {
+      throw new AuthRequiredError('Malformed token', 'InvalidToken')
+    }
+    return {
+      credentials: {
+        type: 'standard',
+        aud: this.ownDid,
+        iss: payload.sub,
+        // From atproto-proxy, has a service JWT. From oauth, it doesn't have a service JWT.
+        serviceJwt:
+          typeof payload.service_auth === 'string'
+            ? payload.service_auth
+            : undefined,
+      },
+    }
+  }
+
+  // Token signed by an internal service, such as Chat, with the secret
+  // configured for it.
+  private internalService = async (reqCtx: ReqCtx): Promise<InternalOutput> => {
+    const token = bearerTokenFromReq(reqCtx.req)
+    if (!token) throw new AuthRequiredError(undefined, 'AuthMissing')
+
+    let issuer: unknown
+    try {
+      issuer = jose.decodeJwt(token).iss
+    } catch {
+      throw new AuthRequiredError('Malformed token', 'InvalidToken')
+    }
+    if (typeof issuer !== 'string') {
+      throw new AuthRequiredError('Malformed token', 'InvalidToken')
+    }
+    const secret = this.internalServiceSecrets.get(issuer)
+    if (!secret) {
+      throw new AuthRequiredError('Malformed token', 'InvalidToken')
+    }
+
+    const payload = await this.verifyHmacJwt(reqCtx, token, secret, {
+      typ: INTERNAL_JWT_TYP,
+      issuer,
+      audience: INTERNAL_JWT_AUDIENCE,
+    })
+    if (payload.sub !== undefined && !isDidString(payload.sub)) {
+      throw new AuthRequiredError('Malformed token', 'InvalidToken')
+    }
+    return {
+      credentials: {
+        type: 'internal',
+        iss: issuer,
+        sub: payload.sub ?? null,
+      },
+    }
+  }
+
+  // Verifies tokens signed with a shared secret.
+  private async verifyHmacJwt(
+    reqCtx: ReqCtx,
+    token: string,
+    secret: Uint8Array,
+    opts: { typ: string; issuer: string; audience: string },
+  ): Promise<jose.JWTPayload> {
+    const { payload } = await jose
+      .jwtVerify(token, secret, {
+        algorithms: ['HS256'],
+        typ: opts.typ,
+        issuer: opts.issuer,
+        audience: opts.audience,
+        requiredClaims: ['exp', 'lxm'],
+      })
+      .catch((err) => {
+        if (err?.['code'] === 'ERR_JWT_EXPIRED') {
+          throw new AuthRequiredError('Token has expired', 'ExpiredToken')
+        }
+        throw new AuthRequiredError(
+          'Token could not be verified',
+          'InvalidToken',
+        )
+      })
+
+    const lxm = parseReqNsid(reqCtx.req)
+    if (payload.lxm !== lxm) {
+      throw new AuthRequiredError(
+        `bad jwt lexicon method ("lxm"). must match: ${lxm}`,
+        'BadJwtLexiconMethod',
+      )
+    }
+    return payload
+  }
+
+  private checkAdminPassword(req: express.Request): RoleStatus {
     const parsed = parseBasicAuth(req.headers.authorization || '')
-    const { Missing, Valid, Invalid } = RoleStatus
     if (!parsed) {
-      return { status: Missing, admin: false, moderator: false, triage: false }
+      return RoleStatus.Missing
     }
     const { username, password } = parsed
     if (username === 'admin' && this.adminPasses.has(password)) {
-      return { status: Valid, admin: true }
+      return RoleStatus.Valid
     }
-    return { status: Invalid, admin: false }
+    return RoleStatus.Invalid
   }
 
   private async verifyServiceJwt<
@@ -413,6 +615,14 @@ export class AuthVerifier {
       getSigningKey,
       verifySignatureWithKey,
     )
+    if (payload.iss.endsWith('#atproto_labeler')) {
+      events.labelerServiceJwt({
+        did: payload.iss.split('#')[0],
+        lxm: payload.lxm,
+        method: parseReqNsid(reqCtx.req),
+        modService: this.isModService(payload.iss),
+      })
+    }
     if (
       !payload.iss.endsWith('#atproto_labeler') ||
       payload.lxm !== undefined
@@ -454,14 +664,38 @@ export class AuthVerifier {
 const BEARER = 'Bearer '
 const BASIC = 'Basic '
 
+const BSG_JWT_TYP = 'bsg+jwt'
+const BSG_JWT_ISSUER = 'bsg'
+const BSG_JWT_AUDIENCE = 'bsky'
+const INTERNAL_JWT_TYP = 'internal+jwt'
+const INTERNAL_JWT_AUDIENCE = 'bsky'
+
 const isBearerToken = (req: express.Request): boolean => {
   return req.headers.authorization?.startsWith(BEARER) ?? false
 }
 
-const bearerTokenFromReq = (req: express.Request) => {
+const bearerTokenFromReq = (req: express.Request): string | null => {
   const header = req.headers.authorization || ''
   if (!header.startsWith(BEARER)) return null
   return header.slice(BEARER.length).trim()
+}
+
+const claimedSession = (
+  token: string | null,
+): { did?: string; appPassword?: boolean; iat?: number } => {
+  if (!token) return {}
+  try {
+    const { sub, scope, iat } = jose.decodeJwt(token)
+    return {
+      did: typeof sub === 'string' ? sub : undefined,
+      appPassword:
+        scope === 'com.atproto.appPass' ||
+        scope === 'com.atproto.appPassPrivileged',
+      iat: typeof iat === 'number' ? iat : undefined,
+    }
+  } catch {
+    return {}
+  }
 }
 
 const parseBasicAuth = (

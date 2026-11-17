@@ -198,24 +198,26 @@ async function setup(pages: Row[][]) {
     featureGatesClient,
     reqLabelers: () => ({ dids: [], redact: new Set() }),
     authVerifier: {
-      standard: async ({ req }) => {
-        if (
-          req.headers.authorization !== 'Bearer viewer' &&
-          req.headers.authorization !== 'Bearer other'
-        )
-          throw new AuthRequiredError()
-        return {
-          credentials: {
-            type: 'standard',
-            iss:
-              req.headers.authorization === 'Bearer other'
-                ? 'did:plc:other'
-                : viewer,
-            aud: 'did:plc:appview',
-          },
-        }
-      },
-    } satisfies Pick<AppContext['authVerifier'], 'standard'>,
+      standardRead:
+        () =>
+        async ({ req }) => {
+          if (
+            req.headers.authorization !== 'Bearer viewer' &&
+            req.headers.authorization !== 'Bearer other'
+          )
+            throw new AuthRequiredError()
+          return {
+            credentials: {
+              type: 'standard',
+              iss:
+                req.headers.authorization === 'Bearer other'
+                  ? 'did:plc:other'
+                  : viewer,
+              aud: 'did:plc:appview',
+            },
+          }
+        },
+    } satisfies Pick<AppContext['authVerifier'], 'standardRead'>,
   } as unknown as AppContext
   const xrpc = createServer([], { validateResponse: true })
   register(xrpc, ctx)

@@ -6,7 +6,7 @@ import { app } from '../../../../lexicons/index.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(app.bsky.draft.getDrafts, {
-    auth: ctx.authVerifier.standard,
+    auth: ctx.authVerifier.standardRead(),
     handler: async ({ params, auth }) => {
       const viewer = auth.credentials.iss
 
