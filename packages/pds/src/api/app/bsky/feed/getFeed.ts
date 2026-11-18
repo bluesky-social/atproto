@@ -3,11 +3,14 @@ import { AtUri } from '@atproto/syntax'
 import type { Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../../../context.js'
 import { app, com } from '../../../../lexicons/index.js'
-import { computeProxyTo, pipethrough } from '../../../../pipethrough.js'
+import {
+  computeProxyTo,
+  pipethrough,
+  proxyTarget,
+} from '../../../../pipethrough.js'
 
 export default function (server: Server, ctx: AppContext) {
-  const { bskyAppView } = ctx
-  if (!bskyAppView) return
+  if (!ctx.bskyAppView) return
 
   server.add(app.bsky.feed.getFeed, {
     auth: ctx.authVerifier.authorization({
@@ -23,7 +26,10 @@ export default function (server: Server, ctx: AppContext) {
 
       const feedUrl = new AtUri(params.feed)
 
-      const data = await bskyAppView.client.call(com.atproto.repo.getRecord, {
+      // The feed record is looked up on the service this request is proxied to
+      const { client } = await proxyTarget(ctx, req, app.bsky.feed.getFeed.$lxm)
+
+      const data = await client.call(com.atproto.repo.getRecord, {
         repo: feedUrl.host,
         collection: feedUrl.collectionSafe,
         rkey: feedUrl.rkeySafe,

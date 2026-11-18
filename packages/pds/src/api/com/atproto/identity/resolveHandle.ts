@@ -4,9 +4,10 @@ import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../../../context.js'
 import { baseNormalizeAndValidate } from '../../../../handle/index.js'
 import { com } from '../../../../lexicons/index.js'
+import { proxyTarget } from '../../../../pipethrough.js'
 
 export default function (server: Server, ctx: AppContext) {
-  server.add(com.atproto.identity.resolveHandle, async ({ params }) => {
+  server.add(com.atproto.identity.resolveHandle, async ({ params, req }) => {
     const handle = baseNormalizeAndValidate(params.handle)
 
     // when behind an entryway, the entryway is authoritative for handles
@@ -32,16 +33,24 @@ export default function (server: Server, ctx: AppContext) {
       }
     }
 
+    const resolveDirectly = (): Promise<DidString> =>
+      ctx.idResolver.handle
+        .resolve(handle)
+        .then(
+          (v) => (v && isDidString(v) ? v : throwInvalidRequestError()),
+          throwInvalidRequestError,
+        )
+
+    // Ask the service this request is proxied to, and resolve the handle
+    // directly if that fails, so that an appview outage does not break
+    // handle resolution.
     const did: DidString = ctx.bskyAppView
-      ? await ctx.bskyAppView.client
-          .call(com.atproto.identity.resolveHandle, { handle })
-          .then((r) => r.did, throwInvalidRequestError)
-      : await ctx.idResolver.handle
-          .resolve(handle)
-          .then(
-            (v) => (v && isDidString(v) ? v : throwInvalidRequestError()),
-            throwInvalidRequestError,
+      ? await proxyTarget(ctx, req, com.atproto.identity.resolveHandle.$lxm)
+          .then(({ client }) =>
+            client.call(com.atproto.identity.resolveHandle, { handle }),
           )
+          .then((r) => r.did, resolveDirectly)
+      : await resolveDirectly()
 
     return {
       encoding: 'application/json' as const,

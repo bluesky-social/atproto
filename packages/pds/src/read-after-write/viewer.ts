@@ -9,15 +9,17 @@ import {
 import { createServiceAuthHeaders } from '@atproto/xrpc-server'
 import type { AccountManager } from '../account-manager/account-manager.js'
 import type { ActorStoreReader } from '../actor-store/actor-store-reader.js'
-import type { BskyAppView } from '../bsky-app-view.js'
 import type { ImageUrlBuilder } from '../image/image-url-builder.js'
 import { app } from '../lexicons/index.js'
+import type { ProxyTarget } from '../pipethrough.js'
 import type { LocalRecords, RecordDescript } from './types.js'
 
 type CommonSignedUris = 'avatar' | 'banner' | 'feed_thumbnail' | 'feed_fullsize'
 
 export type LocalViewerCreator = (
   actorStoreReader: ActorStoreReader,
+  /** Defaults to the configured appview. */
+  bskyAppView?: ProxyTarget,
 ) => LocalViewer
 
 export class LocalViewer {
@@ -25,7 +27,7 @@ export class LocalViewer {
     public readonly actorStoreReader: ActorStoreReader,
     public readonly accountManager: AccountManager,
     public readonly imageUrlBuilder: ImageUrlBuilder,
-    public readonly bskyAppView?: BskyAppView,
+    public readonly bskyAppView?: ProxyTarget,
   ) {}
 
   get did() {
@@ -35,9 +37,9 @@ export class LocalViewer {
   static creator(
     accountManager: AccountManager,
     imageUrlBuilder: ImageUrlBuilder,
-    bskyAppView?: BskyAppView,
+    defaultAppView?: ProxyTarget,
   ): LocalViewerCreator {
-    return (actorStore) =>
+    return (actorStore, bskyAppView = defaultAppView) =>
       new LocalViewer(actorStore, accountManager, imageUrlBuilder, bskyAppView)
   }
 
