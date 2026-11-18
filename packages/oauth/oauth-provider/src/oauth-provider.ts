@@ -71,6 +71,7 @@ import { InvalidDpopProofError } from './errors/invalid-dpop-proof-error.js'
 import { InvalidGrantError } from './errors/invalid-grant-error.js'
 import { InvalidRequestError } from './errors/invalid-request-error.js'
 import { LoginRequiredError } from './errors/login-required-error.js'
+import { createFedcmIdToken } from './fedcm/fedcm-id-token.js'
 import { LexiconManager } from './lexicon/lexicon-manager.js'
 import { type LexiconStore, asLexiconStore } from './lexicon/lexicon-store.js'
 import type { HcaptchaConfig } from './lib/hcaptcha.js'
@@ -243,8 +244,9 @@ type OAuthProviderConfig = {
   loopbackMetadata?: null | false | LoopbackMetadataGetter
 
   /**
-   * Enables FedCM account selection. The returned DID is a routing hint;
-   * relying parties must complete OAuth before accepting an authenticated session.
+   * Enables FedCM account selection. The assertion returns an `atproto-id+jwt`
+   * signed with the account's atproto key, which relying parties verify to
+   * authenticate the user. Requires `AccountStore.getAccountSigner`.
    */
   fedcm?: false | FedcmOptions
 }
@@ -351,6 +353,11 @@ export class OAuthProvider extends OAuthVerifier {
       if (new URL(this.issuer).protocol !== 'https:') {
         throw new TypeError('FedCM requires an HTTPS issuer')
       }
+      if (typeof accountStore.getAccountSigner !== 'function') {
+        throw new TypeError(
+          'FedCM requires an AccountStore that implements getAccountSigner',
+        )
+      }
       this.fedcm = fedcmOptionsSchema.parse(fedcm)
     }
 
@@ -444,15 +451,37 @@ export class OAuthProvider extends OAuthVerifier {
 
   /**
    * Lists accounts available to FedCM on an existing browser session.
+   * Accounts without a handle are left out: the browser would have to show the
+   * DID, which is not user readable.
    */
   public async listFedcmAccounts(deviceId: DeviceId): Promise<DeviceAccount[]> {
     const deviceAccounts =
       await this.accountManager.listDeviceAccounts(deviceId)
     return deviceAccounts.filter(
       (deviceAccount) =>
+        deviceAccount.account.handle &&
         !deviceAccount.account.deactivated &&
         !this.checkLoginRequired(deviceAccount),
     )
+  }
+
+  /**
+   * Creates the `atproto-id+jwt` returned by the FedCM assertion endpoint,
+   * signed with the account's atproto key.
+   */
+  public async createFedcmIdToken(
+    deviceAccount: DeviceAccount,
+    clientId: ClientId,
+    nonce: string,
+  ): Promise<string> {
+    const did = deviceAccount.account.did
+    const signer = await this.accountManager.getAccountSigner(did)
+    return createFedcmIdToken(signer, {
+      did,
+      clientId,
+      nonce,
+      authTime: deviceAccount.updatedAt,
+    })
   }
 
   protected async authenticateClient(

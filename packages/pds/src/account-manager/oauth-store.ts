@@ -13,6 +13,7 @@ import {
 } from '@atproto/oauth-provider/errors'
 import type {
   Account,
+  AccountSigner,
   AccountStore,
   AtIdentifierString,
   AuthenticateAccountData,
@@ -312,6 +313,10 @@ export class OAuthStore
       }
       throw err
     }
+  }
+
+  async getAccountSigner(did: Did): Promise<AccountSigner> {
+    return this.actorStore.keypair(did)
   }
 
   async setAuthorizedClient(

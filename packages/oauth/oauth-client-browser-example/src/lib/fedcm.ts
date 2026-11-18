@@ -11,7 +11,12 @@ type FedcmCredential = Credential & {
 type FedcmRequestOptions = CredentialRequestOptions & {
   identity: {
     mode: 'passive' | 'active'
-    providers: { configURL: string; clientId: string; type?: string }[]
+    providers: {
+      configURL: string
+      clientId: string
+      type?: string
+      params: { response_type: 'id_token'; nonce: string }
+    }[]
   }
 }
 
@@ -21,7 +26,8 @@ type FedcmCredentialsContainer = {
 
 export type FedcmSelection = {
   configURL: string
-  did: DidString
+  /** The `atproto-id+jwt` id token; unverified. */
+  token: string
 }
 
 // @NOTE IdP registration: `configUrls` becomes unnecessary once registered
@@ -36,7 +42,8 @@ const FEDCM_IDP_TYPE = 'https://atproto.com'
 export function requestFedcmSelection(
   { configUrls, idpRegistration }: FedcmProviders,
   signal: AbortSignal,
-  mode: 'passive' | 'active' = 'passive',
+  mode: 'passive' | 'active',
+  nonce: string,
 ): Promise<FedcmSelection | null> {
   // The "any" registered-IdP entry counts as one provider.
   if (
@@ -46,10 +53,12 @@ export function requestFedcmSelection(
     throw new Error('Active FedCM requires exactly one provider.')
   }
 
+  const ID_TOKEN_PARAMS = { response_type: 'id_token', nonce } as const
   const providers: FedcmRequestOptions['identity']['providers'] =
     configUrls.map((configURL) => ({
       configURL: new URL(configURL).href,
       clientId: clientMetadata.client_id,
+      params: ID_TOKEN_PARAMS,
     }))
   if (idpRegistration) {
     // @NOTE IdP registration: the browser expands "any" to each registered IdP
@@ -58,6 +67,7 @@ export function requestFedcmSelection(
       configURL: 'any',
       type: FEDCM_IDP_TYPE,
       clientId: clientMetadata.client_id,
+      params: ID_TOKEN_PARAMS,
     })
   }
   if (!providers.length) return Promise.resolve(null)
@@ -103,11 +113,11 @@ export function requestFedcmSelection(
         throw new Error('FedCM returned an unconfigured provider configURL')
       }
 
-      if (!isDidString(fedcmCredential.token)) {
-        throw new Error('FedCM returned an invalid DID token')
+      if (typeof fedcmCredential.token !== 'string') {
+        throw new Error('FedCM did not return an id token string')
       }
 
-      return { configURL, did: fedcmCredential.token }
+      return { configURL, token: fedcmCredential.token }
     })
 }
 

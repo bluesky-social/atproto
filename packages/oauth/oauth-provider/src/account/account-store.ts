@@ -29,6 +29,7 @@ import type { DeviceData } from '../device/device-data.js'
 import type { DeviceId } from '../device/device-id.js'
 import type { SessionId } from '../device/session-id.js'
 import type { HandleUnavailableReason } from '../errors/handle-unavailable-error.js'
+import type { AccountSigner } from '../fedcm/fedcm-id-token.js'
 import type { HcaptchaVerifyResult } from '../lib/hcaptcha.js'
 import type { Awaitable } from '../lib/util/type.js'
 import { buildInterfaceChecker } from '../lib/util/type.js'
@@ -39,6 +40,7 @@ import type { SignUpInput } from './sign-up-input.js'
 // Export all types needed to implement the AccountStore interface
 export type {
   Account,
+  AccountSigner,
   AtIdentifierString,
   ClientId,
   DeviceData,
@@ -142,6 +144,12 @@ export type SignUpData = SignUpInput & {
 }
 
 export interface AccountStore {
+  /**
+   * Returns a signer backed by the account's atproto signing key. Required
+   * when FedCM is enabled, which uses it to sign `atproto-id+jwt` tokens.
+   */
+  getAccountSigner?(did: Did): Awaitable<AccountSigner>
+
   /**
    * @throws {HandleUnavailableError} - To indicate that the handle is already taken
    * @throws {InvalidRequestError} - To indicate that some data is invalid
@@ -320,7 +328,10 @@ export interface AccountStore {
   deleteAccountConfirm(data: DeleteAccountConfirmInput): Awaitable<void>
 }
 
-export const isAccountStore = buildInterfaceChecker<AccountStore>([
+// `getAccountSigner` is optional: it is only required when FedCM is enabled
+export const isAccountStore = buildInterfaceChecker<
+  Omit<AccountStore, 'getAccountSigner'>
+>([
   'authenticateAccount',
   'createAccount',
   'deactivateAccount',

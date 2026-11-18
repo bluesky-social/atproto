@@ -1,8 +1,10 @@
 # OAuth browser example
 
-- FedCM is optional account selection. Validate the configured provider
-  (as https only when `"any"` was requested; the OAuth `sub` check is then the
-  guard) and DID, then use ordinary OAuth; never accept the DID hint as authentication.
+- FedCM returns an `atproto-id+jwt` token. Validate the configured provider
+  (as https only when `"any"` was requested) and verify the token
+  (`verifyFedcmIdToken`) before using its DID for anything. `scope=atproto`
+  with FedCM enabled signs in without OAuth (an identity session); other
+  scopes use the verified DID as the OAuth `login_hint`.
 - `fedcm_mode=active` must call `navigator.credentials.get()` synchronously from
   a genuine click and supports exactly one provider entry (`"any"` counts as one).
 - Preserve the selected DID in OAuth app state and reject a different callback

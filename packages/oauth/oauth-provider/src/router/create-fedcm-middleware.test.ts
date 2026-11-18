@@ -24,7 +24,7 @@ const deviceInfo = {
   deviceMetadata: { ipAddress: '127.0.0.1', port: 1234 },
 } as DeviceInfo
 
-const deviceAccount = { account } as DeviceAccount
+const deviceAccount = { account, updatedAt: new Date() } as DeviceAccount
 const servers: Server[] = []
 
 afterEach(async () => {
@@ -126,7 +126,7 @@ describe('createFedcmMiddleware', () => {
     expect(nullOrigin.headers.get('access-control-allow-origin')).toBeNull()
   })
 
-  it('returns the selected DID without starting OAuth when the RP origin matches', async () => {
+  it('returns a signed token for an eligible device account', async () => {
     const fake = provider()
     const origin = await listen(fake)
     const response = await assertion(origin, { origin: 'https://rp.example' })
@@ -136,10 +136,140 @@ describe('createFedcmMiddleware', () => {
     expect(response.headers.get('access-control-allow-origin')).toBe(
       'https://rp.example',
     )
-    expect(await response.json()).toEqual({ token: account.did })
+    expect(await response.json()).toEqual({ token: 'signed.jwt.token' })
+    expect(fake.createFedcmIdToken).toHaveBeenCalledWith(
+      deviceAccount,
+      clientId,
+      'n-123',
+    )
     expect(fake.clientManager.getClient).toHaveBeenCalledWith(clientId)
     expect(fake.pushedAuthorizationRequest).not.toHaveBeenCalled()
     expect(fake.token).not.toHaveBeenCalled()
+  })
+
+  it('rejects malformed params', async () => {
+    const nonce = 'n-123'
+    const cases: (string | null)[] = [
+      null,
+      '',
+      'not json',
+      '"x"',
+      'null',
+      '[]',
+      '{}',
+      JSON.stringify({ response_type: 'code', nonce }),
+      JSON.stringify({ response_type: 'id_token' }),
+      JSON.stringify({ response_type: 'id_token', nonce: '' }),
+      JSON.stringify({ response_type: 'id_token', nonce: 'a'.repeat(257) }),
+      JSON.stringify({
+        request_uri: 'urn:x',
+        response_type: 'id_token',
+        nonce,
+      }),
+    ]
+    const fake = provider()
+    const origin = await listen(fake)
+
+    for (const params of cases) {
+      const response = await assertion(origin, {
+        origin: 'https://rp.example',
+        params,
+      })
+      expect(response.status, String(params)).toBe(400)
+      expect(await response.json()).toEqual({
+        error: { code: 'invalid_request' },
+      })
+    }
+    expect(fake.createFedcmIdToken).not.toHaveBeenCalled()
+  })
+
+  it('requires a FedCM device session', async () => {
+    const fake = provider({ device: null })
+    const origin = await listen(fake)
+    const response = await assertion(origin, { origin: 'https://rp.example' })
+
+    expect(response.status).toBe(401)
+    expect(await response.json()).toEqual({ error: { code: 'login_required' } })
+    expect(fake.createFedcmIdToken).not.toHaveBeenCalled()
+  })
+
+  it('refuses accounts that are not eligible on this device', async () => {
+    const fake = provider({ accounts: [] })
+    const origin = await listen(fake)
+    const response = await assertion(origin, { origin: 'https://rp.example' })
+
+    expect(response.status).toBe(401)
+    expect(await response.json()).toEqual({ error: { code: 'login_required' } })
+    expect(fake.listFedcmAccounts).toHaveBeenCalledWith(deviceInfo.deviceId)
+    expect(fake.createFedcmIdToken).not.toHaveBeenCalled()
+  })
+
+  it('signs for the selected account when several are eligible', async () => {
+    const accountA = {
+      ...account,
+      did: 'did:plc:aaaaaaaaaaaaaaaaaaaaaaaa',
+      handle: 'a.example.com',
+    } as Account
+    const accountB = {
+      ...account,
+      did: 'did:plc:bbbbbbbbbbbbbbbbbbbbbbbb',
+      handle: 'b.example.com',
+    } as Account
+    const deviceA = {
+      account: accountA,
+      updatedAt: new Date(),
+    } as DeviceAccount
+    const deviceB = {
+      account: accountB,
+      updatedAt: new Date(),
+    } as DeviceAccount
+    const fake = provider({ accounts: [deviceA, deviceB] })
+    const origin = await listen(fake)
+    const response = await assertion(origin, {
+      origin: 'https://rp.example',
+      accountId: accountB.did,
+    })
+
+    expect(response.status).toBe(200)
+    expect(fake.createFedcmIdToken).toHaveBeenCalledTimes(1)
+    expect(fake.createFedcmIdToken).toHaveBeenCalledWith(
+      deviceB,
+      clientId,
+      'n-123',
+    )
+    expect(fake.createFedcmIdToken).not.toHaveBeenCalledWith(
+      deviceA,
+      expect.anything(),
+      expect.anything(),
+    )
+  })
+
+  it('refuses an account that is not among the eligible device accounts', async () => {
+    const accountA = {
+      ...account,
+      did: 'did:plc:aaaaaaaaaaaaaaaaaaaaaaaa',
+      handle: 'a.example.com',
+    } as Account
+    const accountB = {
+      ...account,
+      did: 'did:plc:bbbbbbbbbbbbbbbbbbbbbbbb',
+      handle: 'b.example.com',
+    } as Account
+    const fake = provider({
+      accounts: [
+        { account: accountA, updatedAt: new Date() } as DeviceAccount,
+        { account: accountB, updatedAt: new Date() } as DeviceAccount,
+      ],
+    })
+    const origin = await listen(fake)
+    const response = await assertion(origin, {
+      origin: 'https://rp.example',
+      accountId: 'did:plc:cccccccccccccccccccccccc',
+    })
+
+    expect(response.status).toBe(401)
+    expect(await response.json()).toEqual({ error: { code: 'login_required' } })
+    expect(fake.createFedcmIdToken).not.toHaveBeenCalled()
   })
 
   it('only accepts loopback clients when explicitly enabled and their redirect origin matches', async () => {
@@ -163,47 +293,7 @@ describe('createFedcmMiddleware', () => {
       origin: 'http://127.0.0.1:43210',
     })
     expect(accepted.status).toBe(200)
-    expect(await accepted.json()).toEqual({ token: account.did })
-  })
-
-  it('asserts an active local account without a device session', async () => {
-    const fake = provider({ device: null, accounts: [] })
-    const origin = await listen(fake)
-    const response = await assertion(origin, { origin: 'https://rp.example' })
-
-    expect(response.status).toBe(200)
-    expect(await response.json()).toEqual({ token: account.did })
-    expect(fake.deviceManager.readFedcmDevice).not.toHaveBeenCalled()
-  })
-
-  it('rejects DIDs that are not active local accounts', async () => {
-    const unknownDid = 'did:plc:ewvi7nxzyoun6zhxrhs64oiz'
-    const deactivatedDid = didSchema.parse('did:plc:z72i7hdynmk6r22z27h6tvur')
-    const takenDownDid = 'did:plc:5zspv27pk4iqtrl2ql2nykjh'
-    const fake = provider({
-      accountsByDid: {
-        [account.did]: { account, authorizedClients: new Map() },
-        [deactivatedDid]: {
-          account: { ...account, did: deactivatedDid, deactivated: true },
-          authorizedClients: new Map(),
-        },
-        // Taken-down accounts are excluded by getAccount (includeTakenDown: false)
-        [takenDownDid]: null,
-      },
-    })
-    const origin = await listen(fake)
-
-    for (const accountId of [unknownDid, deactivatedDid, takenDownDid]) {
-      const response = await assertion(origin, {
-        accountId,
-        origin: 'https://rp.example',
-      })
-      expect(response.status).toBe(401)
-      expect(await response.json()).toEqual({
-        error: { code: 'login_required' },
-      })
-    }
-    expect(fake.accountManager.getAccount).toHaveBeenCalledTimes(3)
+    expect(await accepted.json()).toEqual({ token: 'signed.jwt.token' })
   })
 
   it('requires an existing shadow session for the accounts endpoint', async () => {
@@ -218,7 +308,7 @@ describe('createFedcmMiddleware', () => {
     expect(fake.listFedcmAccounts).not.toHaveBeenCalled()
   })
 
-  it('filters deactivated and stale accounts from the FedCM account list', async () => {
+  it('filters deactivated, stale and handle-less accounts from the FedCM account list', async () => {
     const now = new Date()
     const staleAccount = {
       ...account,
@@ -229,10 +319,17 @@ describe('createFedcmMiddleware', () => {
       did: didSchema.parse('did:plc:z72i7hdynmk6r22z27h6tvur'),
       deactivated: true,
     }
+    // A DID is not user readable, so an account with no handle can't be shown.
+    const handlelessAccount = {
+      ...account,
+      did: didSchema.parse('did:plc:44ybard66vv44zksje25o7dz'),
+      handle: undefined,
+    }
     const deviceAccounts = [
       { account, updatedAt: now },
       { account: staleAccount, updatedAt: new Date(now.getTime() - 60_000) },
       { account: deactivatedAccount, updatedAt: now },
+      { account: handlelessAccount, updatedAt: now },
     ] as DeviceAccount[]
     const fake = {
       accountManager: {
@@ -272,18 +369,11 @@ function provider({
   accounts = [deviceAccount],
   redirectUris = ['https://rp.example/callback'],
   device = deviceInfo,
-  accountsByDid = {
-    [account.did]: { account, authorizedClients: new Map() },
-  },
 }: {
   fedcm?: false | { allowLoopbackClients?: boolean }
   accounts?: DeviceAccount[]
   redirectUris?: string[]
   device?: DeviceInfo | null
-  accountsByDid?: Record<
-    string,
-    { account: Account; authorizedClients: Map<string, unknown> } | null
-  >
 } = {}) {
   return {
     issuer,
@@ -292,9 +382,7 @@ function provider({
       readFedcmDevice: vi.fn(async () => device),
       load: vi.fn(),
     },
-    accountManager: {
-      getAccount: vi.fn(async (did: string) => accountsByDid[did] ?? null),
-    },
+    createFedcmIdToken: vi.fn(async () => 'signed.jwt.token'),
     listFedcmAccounts: vi.fn(async () => accounts),
     clientManager: {
       getClient: vi.fn(async (id: string) => ({
@@ -313,7 +401,13 @@ async function assertion(
     clientId: requestedClientId = clientId,
     accountId = account.did,
     origin: rpOrigin,
-  }: { clientId?: string; accountId?: string; origin: string },
+    params = JSON.stringify({ response_type: 'id_token', nonce: 'n-123' }),
+  }: {
+    clientId?: string
+    accountId?: string
+    origin: string
+    params?: string | null
+  },
 ): Promise<Response> {
   return fetch(`${origin}/oauth/fedcm/assertion`, {
     method: 'POST',
@@ -328,6 +422,7 @@ async function assertion(
       client_id: requestedClientId,
       disclosure_text_shown: 'true',
       is_auto_selected: 'false',
+      ...(params === null ? {} : { params }),
     }),
   })
 }

@@ -44,6 +44,8 @@
   },
   "devDependencies": {
     "@atproto-labs/rolldown-plugin-bundle-manifest": "workspace:^",
+    "@atproto/crypto": "workspace:^",
+    "@atproto/did": "workspace:^",
     "@atproto/lex": "workspace:^",
     "@atproto/oauth-client-browser": "workspace:^",
     "@phosphor-icons/react": "^2.1.10",
@@ -55,7 +57,8 @@
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "tailwindcss": "^4.3.3",
-    "vite": "^8.3.1"
+    "vite": "^8.3.1",
+    "vitest": "^4.1.10"
   },
   "scripts": {
     "lex:build": "lex build --clear --indexFile",
@@ -67,6 +70,7 @@
     "prebuild": "pnpm run '/^(codegen:.+)$/'",
     "build:ui": "vite build --emptyOutDir",
     "build": "pnpm run build:ui -- ignore additional npm args",
+    "test": "vitest run",
     "dev": "vite --port 8080 --host 127.0.0.1"
   }
 }

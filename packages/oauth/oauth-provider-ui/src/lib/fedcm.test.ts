@@ -57,7 +57,11 @@ const mkSession = (
   account: Partial<Account> & { did: DidString },
   extra: Partial<Omit<FedcmSyncSession, 'account'>> = {},
 ): FedcmSyncSession => ({
-  account: { deactivated: false, ...account } as Account,
+  account: {
+    deactivated: false,
+    handle: `${account.did.split(':').pop()}.test`,
+    ...account,
+  } as Account,
   loginRequired: false,
   ...extra,
 })
@@ -86,12 +90,9 @@ describe(toFedcmPushedAccounts, () => {
     ])
   })
 
-  it('falls back to the handle, then the DID', () => {
-    const [bob, carol] = toFedcmPushedAccounts(
-      [
-        mkSession({ did: 'did:plc:bob', handle: 'bob.test' }),
-        mkSession({ did: 'did:plc:carol' }),
-      ],
+  it('falls back to the handle for the name', () => {
+    const [bob] = toFedcmPushedAccounts(
+      [mkSession({ did: 'did:plc:bob', handle: 'bob.test' })],
       [],
     )
     expect(bob).toEqual({
@@ -99,12 +100,19 @@ describe(toFedcmPushedAccounts, () => {
       name: '@bob.test',
       email: '@bob.test',
     })
-    expect(carol).toEqual({
-      id: 'did:plc:carol',
-      name: 'did:plc:carol',
-      email: 'did:plc:carol',
-    })
-    expect(JSON.stringify([bob, carol])).not.toContain('undefined')
+    expect(JSON.stringify(bob)).not.toContain('undefined')
+  })
+
+  it('excludes accounts without a handle, since a DID is not user readable', () => {
+    expect(
+      toFedcmPushedAccounts(
+        [
+          mkSession({ did: 'did:plc:carol', name: 'Carol', handle: undefined }),
+          mkSession({ did: 'did:plc:dan', handle: undefined }),
+        ],
+        ['did:plc:carol', 'did:plc:dan'],
+      ),
+    ).toEqual([])
   })
 
   it('treats an empty display name as missing', () => {

@@ -1,3 +1,5 @@
+import { isAuthnOnlyScope } from './lib/identity-session.ts'
+
 const { searchParams } = new URL(window.location.href)
 const getParam = <T extends string | undefined>(
   name: string,
@@ -88,6 +90,10 @@ export const FEDCM_PROVIDER_URLS = searchParams.getAll('fedcm_provider')
 // API) instead of, or alongside, explicit `fedcm_provider` URLs.
 export const FEDCM_IDP_REGISTRATION =
   searchParams.get('fedcm_idp_registration') === 'true'
+export const FEDCM_ENABLED =
+  FEDCM_PROVIDER_URLS.length > 0 || FEDCM_IDP_REGISTRATION
+// FedCM sign-in alone authenticates the user: no OAuth session is created.
+export const AUTHN_ONLY = FEDCM_ENABLED && isAuthnOnlyScope(OAUTH_SCOPE)
 export const FEDCM_MODE =
   searchParams.get('fedcm_mode') === 'active' ? 'active' : 'passive'
 
