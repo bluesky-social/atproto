@@ -13,6 +13,7 @@ import {
   type Restricted,
   type Subscription,
   getMain,
+  paramsToURLSearchParams,
 } from '@atproto/lex-schema'
 import type { Agent, AgentOptions } from './agent.js'
 import { buildAgent } from './agent.js'
@@ -131,12 +132,11 @@ export type XrpcRequestProcessingOptions = {
   signal?: AbortSignal
 
   /**
-   * Whether to validate the request against the method's input schema. Enabling
-   * this can help catch errors early but may have a performance cost. This
-   * would typically only be set to `true` in development or debugging
-   * scenarios.
-   *
-   * @default false
+   * Whether to validate the request against the method's schema: its input
+   * only when `true`, and its params (applying their defaults) unless `false`.
+   * Validating the input can help catch errors early but may have a
+   * performance cost, so it would typically only be enabled in development or
+   * debugging scenarios.
    */
   validateRequest?: boolean
 }
@@ -380,7 +380,6 @@ async function xrpcRequest<M extends Query | Procedure, R>(
       const agent = buildAgent(agentOpts)
       const url = await xrpcRequestUrl(method, options)
       const request = await xrpcRequestInit(method, options)
-      throwIfAborted(options.signal)
       const response = await agent.fetchHandler(url, request).catch((err) => {
         const cause = extractFetchErrorCause(err)
         throw new XrpcFetchError(method, cause)
@@ -419,22 +418,35 @@ export async function xrpcRequestUrl<
   M extends Procedure | Query | Subscription,
 >(
   method: M,
-  options: XrpcRequestParamsOptions<M>,
+  {
+    params: paramsInput,
+    signal,
+    validateRequest = true,
+  }: XrpcRequestProcessingOptions & XrpcRequestParamsOptions<M>,
 ): Promise<`/xrpc/${NsidString}${'' | `?${string}`}`> {
   const path = `/xrpc/${method.nsid}` as const
 
-  // @NOTE param.toURLSearchParams() will always validate the params in order to
-  // apply default values, so we can't disable it with options.validateRequest
+  const { parameters } = method
+  if (!parameters) return path
 
-  const queryString = method.parameters
-    ?.toURLSearchParams(
-      (typeof options.params === 'function'
-        ? await options.params.call(null)
-        : options.params) ?? {},
-    )
-    .toString()
+  const paramsObject =
+    typeof paramsInput === 'function' ? await paramsInput() : paramsInput
 
-  return queryString ? (`${path}?${queryString}` as const) : path
+  if (signal) throwIfAborted(signal)
+
+  // @NOTE Parsing also applies the params' defaults, so that a server with
+  // different defaults still receives every expected parameter. It is only
+  // skipped, along with validation, when options.validateRequest is false.
+  const paramsParsed: Params | undefined = validateRequest
+    ? parameters.parse(paramsObject ?? {})
+    : paramsObject
+
+  if (!paramsParsed) return path
+
+  const queryString = paramsToURLSearchParams(paramsParsed)
+  if (!queryString.size) return path
+
+  return `${path}?${queryString}` as const
 }
 
 async function xrpcRequestInit<T extends Procedure | Query>(
@@ -446,6 +458,8 @@ async function xrpcRequestInit<T extends Procedure | Query>(
     },
 ): Promise<RequestInit & { duplex?: 'half' }> {
   const headers = await buildXrpcRequestHeaders(options)
+
+  throwIfAborted(options.signal)
 
   // Tell the server what type of response we're expecting
   if (schema.output.encoding) {

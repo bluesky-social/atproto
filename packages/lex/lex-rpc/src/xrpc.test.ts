@@ -1394,6 +1394,25 @@ describe(xrpcSafe, () => {
         foo: 'foo-value',
       })
     })
+
+    it('sends params as given with validateRequest: false', async () => {
+      const fetchHandler = vi.fn<FetchHandler>(async (path) => {
+        const url = new URL(path, 'http://localhost')
+
+        // no default applied while building the request
+        expect(url.searchParams.has('foo')).toBe(false)
+
+        return Response.json({ foo: 'foo-value' })
+      })
+
+      const result = await xrpcSafe(fetchHandler, testQueryWithDefaults, {
+        params: {},
+        validateRequest: false,
+      })
+
+      expect(fetchHandler).toHaveBeenCalled()
+      assert(result.success)
+    })
   })
 
   describe('blob constraints', () => {
