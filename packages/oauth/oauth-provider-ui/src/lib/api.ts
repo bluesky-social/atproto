@@ -316,7 +316,7 @@ export function parseApiErrorPayload(
   status: number,
   headers: Headers,
   payload: Json,
-): OAuthErrorResponse | undefined {
+): JsonErrorResponse | undefined {
   for (const ErrorClass of [
     // @NOTE Most specific errors must come first!
     RateLimitExceededError,
@@ -336,7 +336,7 @@ export function parseApiErrorPayload(
     OAuthErrorResponse,
   ] as Array<{
     is(status: number, headers: Headers, payload: Json): boolean
-    new (status: number, headers: Headers, payload: any): OAuthErrorResponse
+    new (status: number, headers: Headers, payload: any): JsonErrorResponse
   }>) {
     if (ErrorClass.is(status, headers, payload)) {
       return new ErrorClass(status, headers, payload)
@@ -645,11 +645,12 @@ export class CaptchaRejectedError<
 }
 
 /**
- * Any HTTP 429 response, regardless of its OAuth error code.
+ * Any HTTP 429 response, regardless of its payload, which is not even JSON
+ * (`null`) when a proxy in front of the server rate limited the request.
  */
 export class RateLimitExceededError<
-  P extends OAuthErrorPayload = OAuthErrorPayload,
-> extends OAuthErrorResponse<P> {
+  P extends Json = Json,
+> extends JsonErrorResponse<P> {
   override name = 'RateLimitExceededError'
   override msg = msg`Too many attempts.`
 
@@ -660,18 +661,15 @@ export class RateLimitExceededError<
     status: number,
     headers: Headers,
     payload: P,
-    message = payload.error_description || 'Rate limit exceeded',
+    message = (isOAuthErrorPayload(payload) && payload.error_description) ||
+      'Rate limit exceeded',
   ) {
     super(status, headers, payload, message)
     this.retryAfter = parseRetryAfter(headers.get('retry-after'))
   }
 
-  static is(
-    status: number,
-    headers: Headers,
-    payload: Json,
-  ): payload is OAuthErrorPayload {
-    return super.is(status, headers, payload) && status === 429
+  static is(status: number, _headers: Headers, _payload: Json): boolean {
+    return status === 429
   }
 }
 
