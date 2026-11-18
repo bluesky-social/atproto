@@ -244,7 +244,10 @@ export class JsonBytesDecoder {
               this.pos++
               const cidStr = this.decodeUnescapedString(cidStart, cidEnd)
               try {
-                return parseCid(cidStr)
+                const cid = parseCid(cidStr)
+                // AT Protocol links must be CIDv1; CIDv0 is only tolerated in non-strict mode
+                if (!this.strict || cid.version === 1) return cid
+                throw new TypeError('CIDv0 is not a valid $link')
               } catch (cause) {
                 if (this.strict) {
                   throw new TypeError('Invalid $link object', { cause })

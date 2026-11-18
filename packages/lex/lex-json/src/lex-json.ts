@@ -320,7 +320,8 @@ export function parseSpecialJsonObject(
 
   if (input.$link !== undefined) {
     const cid = parseLexLink(input)
-    if (cid) return cid
+    // AT Protocol links must be CIDv1; CIDv0 is only tolerated in non-strict mode
+    if (cid && (!options.strict || cid.version === 1)) return cid
     if (options.strict) throw new TypeError(`Invalid $link object`)
   } else if (input.$bytes !== undefined) {
     const bytes = parseLexBytes(input)

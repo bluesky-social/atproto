@@ -384,6 +384,12 @@ export const invalidVectors: Array<{
       $link: '.',
     },
   },
+  {
+    note: 'link with CIDv0',
+    json: {
+      $link: 'QmYwAPJzv5CZsnA625s3Xf2nemtYgPpDdWEz79ojWnPbdG',
+    },
+  },
 ]
 
 describe(lexParse, () => {
