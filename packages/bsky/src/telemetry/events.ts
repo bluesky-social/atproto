@@ -111,6 +111,14 @@ class EventReporter {
     valueType: ValueType.INT,
   })
 
+  #labelerServiceJwts = meter.createCounter<{
+    lxm: string
+  }>('auth.labeler_service_jwts', {
+    description:
+      'Labeler-signed service JWTs with a valid signature, by lxm. `mismatch` when lxm is not the method called, and `absent` when there is no lxm',
+    valueType: ValueType.INT,
+  })
+
   #hydrationFailedCounter = meter.createCounter<{
     source: HydrationSource
     reason: 'abort' | 'timeout' | 'error'
@@ -313,6 +321,33 @@ class EventReporter {
       this.#authVerifierRequests.add(1, { verifier })
     } catch (err) {
       diag.error('Failed to record auth_verifier_request:', err)
+    }
+  }
+
+  labelerServiceJwt({
+    did,
+    lxm,
+    method,
+    modService,
+  }: {
+    did: string
+    lxm?: string
+    method: string
+    modService: boolean
+  }) {
+    // @NOTE Our own Ozone (the mod service) makes hundreds of these requests
+    // per second, so it's counted but not logged.
+    if (!modService) {
+      this.#log('labeler_service_jwt', { did, lxm })
+    }
+    try {
+      // @NOTE lxm is attacker-controlled, so the counter only records it when
+      // it is the method called, which is one of the methods AppView serves.
+      this.#labelerServiceJwts.add(1, {
+        lxm: lxm === undefined ? 'absent' : lxm === method ? lxm : 'mismatch',
+      })
+    } catch (err) {
+      diag.error('Failed to record labeler_service_jwt:', err)
     }
   }
 

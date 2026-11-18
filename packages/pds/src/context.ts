@@ -53,6 +53,7 @@ import { fetchLogger, lexiconResolverLogger, oauthLogger } from './logger.js'
 import { ServerMailer } from './mailer/index.js'
 import { ModerationMailer } from './mailer/moderation.js'
 import { buildProxyAgent } from './pipethrough.js'
+import { buildOAuthRateLimiterFactory } from './rate-limits.js'
 import {
   LocalViewer,
   type LocalViewerCreator,
@@ -472,6 +473,11 @@ export class AppContext implements AsyncDisposable {
             cfg.identity.recoveryDidKey,
           ),
           replayStore,
+          rateLimits: cfg.rateLimits.enabled
+            ? {
+                factory: buildOAuthRateLimiterFactory(redisScratch),
+              }
+            : undefined,
           dpopSecret: secrets.dpopSecret,
           inviteCodeRequired: cfg.invites.required,
           availableUserDomains: cfg.identity.serviceHandleDomains,
@@ -521,12 +527,12 @@ export class AppContext implements AsyncDisposable {
               isTrusted: cfg.oauth.provider?.trustedClients?.includes(clientId),
             }
           },
-          onSignedUp({ account, data, clientId }) {
+          onSignedUp({ account, input, clientId }) {
             events.accountCreated({
               source: 'oauth',
               did: account.did,
               clientId,
-              invited: data.inviteCode != null,
+              invited: input.inviteCode != null,
               deactivated: false,
             })
           },

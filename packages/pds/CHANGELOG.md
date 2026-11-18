@@ -1,5 +1,33 @@
 # @atproto/pds
 
+## 0.5.61
+
+### Patch Changes
+
+- [#5919](https://github.com/bluesky-social/atproto/pull/5919) [`8d84a6c`](https://github.com/bluesky-social/atproto/commit/8d84a6cea64c5d0aa064f291b09c3eea2eb61b65) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Upgrade `ioredis` to 6.x. By default, the Redis clients these packages create stay on RESP2 and skip `CLIENT SETINFO` on connect, as with `ioredis` 5, and take `ioredis` 6's other new defaults:
+  
+  - `family` is `0` (was `4`): hostnames resolve to IPv4 or IPv6 addresses, not only IPv4.
+  - `retryStrategy` waits 50ms × 2^(attempt − 1), up to 5s, plus up to 200ms of jitter, between reconnection attempts (was 50ms × attempt, up to 2s).
+  - `keepAlive` is `30000`: TCP keepalive probes start after 30s of idle (was off).
+  
+  The `redis` option of `OAuthProvider` now expects an `ioredis` 6 `Redis` instance, which is used as is, or `RedisOptions`, which can override these defaults.
+- Updated dependencies [[`8d84a6c`](https://github.com/bluesky-social/atproto/commit/8d84a6cea64c5d0aa064f291b09c3eea2eb61b65), [`b5dfe0b`](https://github.com/bluesky-social/atproto/commit/b5dfe0b80ac4f14f56b3c9b797e0e50d2e194a3b), [`b5dfe0b`](https://github.com/bluesky-social/atproto/commit/b5dfe0b80ac4f14f56b3c9b797e0e50d2e194a3b), [`8d84a6c`](https://github.com/bluesky-social/atproto/commit/8d84a6cea64c5d0aa064f291b09c3eea2eb61b65)]:
+  - @atproto/oauth-provider@0.26.0
+  - @atproto/lex-client@0.5.0
+  - @atproto-labs/simple-store-redis@0.1.7
+  - @atproto/xrpc-server@0.13.13
+  - @atproto-labs/xrpc-utils@0.1.34
+
+## 0.5.60
+
+### Patch Changes
+
+- [#5915](https://github.com/bluesky-social/atproto/pull/5915) [`56201be`](https://github.com/bluesky-social/atproto/commit/56201be4acdcb4333f2da430ce62f6e9a42aa79d) Thanks [@amckinley](https://github.com/amckinley)! - Proxy requests to the configured AppView (`PDS_BSKY_APP_VIEW_URL`) skip SSRF protection, so the AppView may be at a private address without setting `PDS_DISABLE_SSRF_PROTECTION`. Every other proxy target, including service endpoints from DID documents, keeps SSRF protection.
+
+- [#5911](https://github.com/bluesky-social/atproto/pull/5911) [`7dd086d`](https://github.com/bluesky-social/atproto/commit/7dd086d4de20d22777a64043ee29f4afa9a5811b) Thanks [@amckinley](https://github.com/amckinley)! - Add `PDS_SQLITE_SYNCHRONOUS_FULL`: when set, the actor store, account and sequencer SQLite databases run with `synchronous = FULL`, so an acknowledged write survives a power cut.
+
+- [#4722](https://github.com/bluesky-social/atproto/pull/4722) [`b9f1f1d`](https://github.com/bluesky-social/atproto/commit/b9f1f1d2b169cc509e192350496049cf93d6115d) Thanks [@gcwill70](https://github.com/gcwill70)! - Add bounded bulk moderation actions with per-subject report targeting, external IDs, and partial-failure results.
+
 ## 0.5.59
 
 ### Patch Changes

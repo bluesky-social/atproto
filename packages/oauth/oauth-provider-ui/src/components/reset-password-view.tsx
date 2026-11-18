@@ -3,8 +3,14 @@ import { Trans, useLingui } from '@lingui/react/macro'
 import { useState } from 'react'
 import { AuthShell } from '#/components/layouts/auth-shell.tsx'
 import { Button } from '#/components/ui/button.tsx'
-import { ResetPasswordConfirmForm } from './reset-password-confirm-form.tsx'
-import { ResetPasswordRequestForm } from './reset-password-request-form.tsx'
+import {
+  type ResetPasswordConfirmData,
+  ResetPasswordConfirmForm,
+} from './reset-password-confirm-form.tsx'
+import {
+  type ResetPasswordRequestData,
+  ResetPasswordRequestForm,
+} from './reset-password-request-form.tsx'
 
 export type ResetPasswordViewProps = {
   hint?: string
@@ -20,13 +26,12 @@ export type ResetPasswordViewProps = {
    * 'request'.
    */
   onViewChange?: (view: 'request' | 'confirm') => void
-  onResetPasswordRequest: (data: {
-    identifier: string
-  }) => void | PromiseLike<void>
-  onResetPasswordConfirm: (data: {
-    token: string
-    password: string
-  }) => void | PromiseLike<void>
+  onResetPasswordRequest: (
+    data: ResetPasswordRequestData,
+  ) => void | PromiseLike<void>
+  onResetPasswordConfirm: (
+    data: ResetPasswordConfirmData,
+  ) => void | PromiseLike<void>
   onBack?: () => void
 }
 
@@ -72,9 +77,9 @@ export function ResetPasswordView({
           hint={currentHint}
           domains={domains}
           submitLabel={<Trans>Next</Trans>}
-          handler={async ({ identifier }) => {
-            await onResetPasswordRequest({ identifier })
-            setCurrentHint(identifier)
+          handler={async (values) => {
+            await onResetPasswordRequest(values)
+            setCurrentHint(values.identifier)
             setView(View.ConfirmReset)
           }}
           onBack={onBack}

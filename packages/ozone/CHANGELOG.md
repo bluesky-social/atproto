@@ -1,5 +1,35 @@
 # @atproto/ozone
 
+## 0.15.3
+
+### Patch Changes
+
+- [#5927](https://github.com/bluesky-social/atproto/pull/5927) [`bc2ac56`](https://github.com/bluesky-social/atproto/commit/bc2ac561f723e0d85cafcfd2cf80747f00ec4093) Thanks [@amckinley](https://github.com/amckinley)! - Let inbox appeals target moderation actions taken before `OZONE_INBOX_START_AT`. Eligibility uses the full history while displayed history and hidden action dates remain cutoff-filtered.
+
+## 0.15.2
+
+### Patch Changes
+
+- [#5897](https://github.com/bluesky-social/atproto/pull/5897) [`e1c4481`](https://github.com/bluesky-social/atproto/commit/e1c448148c7ecf21aff45edc8c922630049b9b14) Thanks [@foysalit](https://github.com/foysalit)! - Allow filtering automatic record language tags by record type.
+
+- [#5776](https://github.com/bluesky-social/atproto/pull/5776) [`7efa83f`](https://github.com/bluesky-social/atproto/commit/7efa83ff50c31069b730443978e8a7edc4f1da62) Thanks [@foysalit](https://github.com/foysalit)! - Add optional push notification delivery for the moderation inbox.
+
+- [#5931](https://github.com/bluesky-social/atproto/pull/5931) [`ce21dda`](https://github.com/bluesky-social/atproto/commit/ce21dda25d4ab002bccbcb7b0ea16629ea2ea88b) Thanks [@foysalit](https://github.com/foysalit)! - Skip automatic language tagging for conversation and message subjects.
+- Updated dependencies [[`b5dfe0b`](https://github.com/bluesky-social/atproto/commit/b5dfe0b80ac4f14f56b3c9b797e0e50d2e194a3b), [`b5dfe0b`](https://github.com/bluesky-social/atproto/commit/b5dfe0b80ac4f14f56b3c9b797e0e50d2e194a3b), [`b5dfe0b`](https://github.com/bluesky-social/atproto/commit/b5dfe0b80ac4f14f56b3c9b797e0e50d2e194a3b)]:
+  - @atproto/lex-password-session@0.3.3
+  - @atproto/lex-client@0.5.0
+  - @atproto/xrpc-server@0.13.13
+
+## 0.15.1
+
+### Patch Changes
+
+- [#5909](https://github.com/bluesky-social/atproto/pull/5909) [`d330b0c`](https://github.com/bluesky-social/atproto/commit/d330b0ca6ff6ecdaaef4ef6ab56caf750d0c4b74) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Accept only internal service tokens on the internal endpoints, and remove the `viewer` parameter from `internal.bsky.actor.getProfiles`. `app.bsky.feed.getPosts` and `app.bsky.actor.getProfiles` no longer accept service JWTs for `chat.bsky.*` methods. Ozone no longer installs the unused `internal.bsky.actor.getProfiles` lexicon.
+
+- [#4722](https://github.com/bluesky-social/atproto/pull/4722) [`b9f1f1d`](https://github.com/bluesky-social/atproto/commit/b9f1f1d2b169cc509e192350496049cf93d6115d) Thanks [@gcwill70](https://github.com/gcwill70)! - Add bounded bulk moderation actions with per-subject report targeting, external IDs, and partial-failure results.
+
+- [#5913](https://github.com/bluesky-social/atproto/pull/5913) [`50877cc`](https://github.com/bluesky-social/atproto/commit/50877ccd37254ad8170c6cdcdd38014b377203d5) Thanks [@foysalit](https://github.com/foysalit)! - Allow bulk report closure to explicitly include the report being reviewed while protecting other active reviews.
+
 ## 0.15.0
 
 ### Minor Changes

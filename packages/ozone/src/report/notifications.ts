@@ -29,6 +29,7 @@ export async function notifyReportActivities(
   db: Database,
   activities: NotifiableReportActivity[],
   startAt?: DatetimeString,
+  pushEnabled = false,
 ): Promise<void> {
   if (!inboxHasStarted(startAt)) return
   const transitions = activities.filter(
@@ -150,7 +151,7 @@ export async function notifyReportActivities(
           createdAt: activity.createdAt,
         })
       }
-      await createInboxNotifications(txn, notifications, startAt)
+      await createInboxNotifications(txn, notifications, startAt, pushEnabled)
     }
   })
 }

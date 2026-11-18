@@ -163,7 +163,7 @@ export default [
             {
               name: '@atproto/lex',
               message:
-                'Import from the @atproto/lex-* package that re-exports it (lex-client, lex-schema, lex-data, lex-json, lex-cbor), and depend on it instead.',
+                'Import from the @atproto/lex-* package that re-exports it (lex-client, lex-schema, lex-data, lex-json, lex-cbor, etc.), and depend on it instead.',
             },
           ],
         },

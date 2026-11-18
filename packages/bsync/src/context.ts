@@ -39,6 +39,7 @@ export class AppContext {
       poolSize: cfg.db.poolSize,
       poolMaxUses: cfg.db.poolMaxUses,
       poolIdleTimeoutMs: cfg.db.poolIdleTimeoutMs,
+      awsIamAuth: cfg.db.awsIamAuth,
     })
     const dataplaneClients = cfg.dataplane.urls.map((baseUrl) =>
       createDataplaneClient({

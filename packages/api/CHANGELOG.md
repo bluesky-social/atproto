@@ -1,5 +1,19 @@
 # @atproto/api
 
+## 0.32.2
+
+### Patch Changes
+
+- [#5925](https://github.com/bluesky-social/atproto/pull/5925) [`3f7eb87`](https://github.com/bluesky-social/atproto/commit/3f7eb87d02831bffc2f8a67907ce739aeaa300f0) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add the opt-in posts_and_replies_only author feed filter, excluding reposts before hydration and bounded page filling while preserving existing filters.
+
+## 0.32.1
+
+### Patch Changes
+
+- [#4722](https://github.com/bluesky-social/atproto/pull/4722) [`b9f1f1d`](https://github.com/bluesky-social/atproto/commit/b9f1f1d2b169cc509e192350496049cf93d6115d) Thanks [@gcwill70](https://github.com/gcwill70)! - Add bounded bulk moderation actions with per-subject report targeting, external IDs, and partial-failure results.
+
+- [#5913](https://github.com/bluesky-social/atproto/pull/5913) [`50877cc`](https://github.com/bluesky-social/atproto/commit/50877ccd37254ad8170c6cdcdd38014b377203d5) Thanks [@foysalit](https://github.com/foysalit)! - Allow bulk report closure to explicitly include the report being reviewed while protecting other active reviews.
+
 ## 0.32.0
 
 ### Minor Changes

@@ -1,5 +1,53 @@
 # @atproto/bsky
 
+## 0.5.14
+
+### Patch Changes
+
+- [#5890](https://github.com/bluesky-social/atproto/pull/5890) [`d3adef8`](https://github.com/bluesky-social/atproto/commit/d3adef81c0162a71679879391075520ed866ab1f) Thanks [@ds-boyce](https://github.com/ds-boyce)! - Hydrate eligible post view counts only for the authenticated author, with a bounded optional Atlantis lookup. Serving is disabled when `BSKY_POST_VIEW_COUNTS_START_AT` is unset, invalid, or in the future. Invalid values log a warning.
+
+- [#5898](https://github.com/bluesky-social/atproto/pull/5898) [`b54391d`](https://github.com/bluesky-social/atproto/commit/b54391d5d6217389daf7f3a52ba645c9f67d62ac) Thanks [@haileyok](https://github.com/haileyok)! - Add a blob source endpoint.
+
+## 0.5.13
+
+### Patch Changes
+
+- [#5919](https://github.com/bluesky-social/atproto/pull/5919) [`8d84a6c`](https://github.com/bluesky-social/atproto/commit/8d84a6cea64c5d0aa064f291b09c3eea2eb61b65) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Upgrade `ioredis` to 6.x. By default, the Redis clients these packages create stay on RESP2 and skip `CLIENT SETINFO` on connect, as with `ioredis` 5, and take `ioredis` 6's other new defaults:
+  
+  - `family` is `0` (was `4`): hostnames resolve to IPv4 or IPv6 addresses, not only IPv4.
+  - `retryStrategy` waits 50ms × 2^(attempt − 1), up to 5s, plus up to 200ms of jitter, between reconnection attempts (was 50ms × attempt, up to 2s).
+  - `keepAlive` is `30000`: TCP keepalive probes start after 30s of idle (was off).
+  
+  The `redis` option of `OAuthProvider` now expects an `ioredis` 6 `Redis` instance, which is used as is, or `RedisOptions`, which can override these defaults.
+
+- [#5925](https://github.com/bluesky-social/atproto/pull/5925) [`3f7eb87`](https://github.com/bluesky-social/atproto/commit/3f7eb87d02831bffc2f8a67907ce739aeaa300f0) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add the opt-in posts_and_replies_only author feed filter, excluding reposts before hydration and bounded page filling while preserving existing filters.
+
+- [#5918](https://github.com/bluesky-social/atproto/pull/5918) [`b575ca1`](https://github.com/bluesky-social/atproto/commit/b575ca131e66ae2f71efcd9d1cabe03e392c218f) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Log and count labeler-signed service JWTs by `lxm`.
+
+- [#5921](https://github.com/bluesky-social/atproto/pull/5921) [`137591c`](https://github.com/bluesky-social/atproto/commit/137591c05548c263fad91062376ecdb320c11ff3) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Don't log the mod service's labeler-signed service JWTs. They are still counted.
+- Updated dependencies [[`3f7eb87`](https://github.com/bluesky-social/atproto/commit/3f7eb87d02831bffc2f8a67907ce739aeaa300f0), [`b5dfe0b`](https://github.com/bluesky-social/atproto/commit/b5dfe0b80ac4f14f56b3c9b797e0e50d2e194a3b), [`b5dfe0b`](https://github.com/bluesky-social/atproto/commit/b5dfe0b80ac4f14f56b3c9b797e0e50d2e194a3b)]:
+  - @atproto/api@0.32.2
+  - @atproto/lex-client@0.5.0
+  - @atproto/xrpc-server@0.13.13
+  - @atproto/sync@0.4.27
+  - @atproto-labs/xrpc-utils@0.1.34
+
+## 0.5.12
+
+### Patch Changes
+
+- [#5905](https://github.com/bluesky-social/atproto/pull/5905) [`9f605e0`](https://github.com/bluesky-social/atproto/commit/9f605e0fb117173dea8b5c1e9d6ad13bd6995c7f) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Accept BSG tokens, with the scope each endpoint requires. Accept internal service tokens on the internal endpoints, and add `internal.bsky.feed.getPosts`.
+
+- [#5909](https://github.com/bluesky-social/atproto/pull/5909) [`d330b0c`](https://github.com/bluesky-social/atproto/commit/d330b0ca6ff6ecdaaef4ef6ab56caf750d0c4b74) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Accept only internal service tokens on the internal endpoints, and remove the `viewer` parameter from `internal.bsky.actor.getProfiles`. `app.bsky.feed.getPosts` and `app.bsky.actor.getProfiles` no longer accept service JWTs for `chat.bsky.*` methods. Ozone no longer installs the unused `internal.bsky.actor.getProfiles` lexicon.
+
+- [#5910](https://github.com/bluesky-social/atproto/pull/5910) [`1e5118f`](https://github.com/bluesky-social/atproto/commit/1e5118f626ed91f65df248b7c2c9bb1bf37a9407) Thanks [@amckinley](https://github.com/amckinley)! - Add `BSKY_TYPEAHEAD_URL`: when set, `app.bsky.actor.searchActorsTypeahead` gets its skeleton from that `bsky.Service` host's `SearchActorsTypeahead` for requests with the `search:typeahead_service:enable` gate on, instead of the dataplane or search service; other requests are unchanged. Add `BSKY_TYPEAHEAD_PROHIBITED_TERMS_FILE`, the prohibited search terms CSV: on that path, a query matching an active Block rule returns no actors without calling the host.
+
+- [#5912](https://github.com/bluesky-social/atproto/pull/5912) [`918a000`](https://github.com/bluesky-social/atproto/commit/918a0002850b65e370f32779e17682531fda9c29) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - In `app.bsky.feed.getFeed`, forward to the feed generator the service JWT wrapped in BSG's token.
+
+- [#5913](https://github.com/bluesky-social/atproto/pull/5913) [`50877cc`](https://github.com/bluesky-social/atproto/commit/50877ccd37254ad8170c6cdcdd38014b377203d5) Thanks [@foysalit](https://github.com/foysalit)! - Allow bulk report closure to explicitly include the report being reviewed while protecting other active reviews.
+- Updated dependencies [[`b9f1f1d`](https://github.com/bluesky-social/atproto/commit/b9f1f1d2b169cc509e192350496049cf93d6115d), [`50877cc`](https://github.com/bluesky-social/atproto/commit/50877ccd37254ad8170c6cdcdd38014b377203d5)]:
+  - @atproto/api@0.32.1
+
 ## 0.5.11
 
 ### Patch Changes

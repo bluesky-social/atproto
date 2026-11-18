@@ -139,6 +139,38 @@ describe(createWebSocket, () => {
     expect(urls).toEqual(['ws://async'])
   })
 
+  it('classifies a url function failure like a failed dial', async () => {
+    const { createTransport, urls } = scripted([
+      { messages: ['a'], end: 'clean' },
+    ])
+    const websocket = createWebSocket(createTransport)
+    const failure = new SocketError(new Error('lookup failed'))
+    const onReconnect = vi.fn()
+    let n = 0
+    const url = async () => {
+      if (n++ === 0) throw failure
+      return 'ws://x'
+    }
+    expect(await drain(websocket(url, { ...noBackoff, onReconnect }))).toEqual([
+      'a',
+    ])
+    expect(onReconnect).toHaveBeenCalledExactlyOnceWith(failure, { attempt: 0 })
+    expect(urls).toEqual(['ws://x'])
+  })
+
+  it('reports a fatal url function failure to onError', async () => {
+    const { createTransport, urls } = scripted([])
+    const websocket = createWebSocket(createTransport)
+    const failure = new Error('no url')
+    const onError = vi.fn()
+    const url = () => {
+      throw failure
+    }
+    await expect(drain(websocket(url, { onError }))).rejects.toBe(failure)
+    expect(onError).toHaveBeenCalledExactlyOnceWith(failure)
+    expect(urls).toEqual([])
+  })
+
   it('tears each connection down when it ends', async () => {
     const { createTransport, signals } = scripted([
       { messages: [], end: 'error', error: new SocketError(new Error('x')) },
@@ -471,6 +503,60 @@ describe(createWebSocket, () => {
       controller.abort(new Error('stop'))
       await expect(pull).rejects.toThrow()
       expect(urls.length).toBeLessThanOrEqual(1)
+    })
+  })
+
+  describe('throw()', () => {
+    // Stands in for a message that proves the connection unusable, the way an
+    // XRPC error frame does.
+    class BadMessageError extends Error {}
+
+    it('ends the connection and classifies the error like a connection failure', async () => {
+      const { createTransport, signals } = scripted([
+        { messages: ['a', 'bad', 'lost'], end: 'clean' },
+        { messages: ['b'], end: 'clean' },
+      ])
+      const onReconnect = vi.fn()
+      const onError = vi.fn()
+      const websocket = createWebSocket(createTransport)
+      const gen = websocket('ws://x', {
+        ...noBackoff,
+        onReconnect,
+        onError,
+        shouldReconnect: (error) => error instanceof BadMessageError,
+      })
+      expect(await gen.next()).toEqual({ value: 'a', done: false })
+      expect(await gen.next()).toEqual({ value: 'bad', done: false })
+      // 'lost' was buffered behind the bad message on the same connection, so it
+      // is discarded with it rather than yielded from a connection the caller
+      // just declared unusable.
+      expect(await gen.throw(new BadMessageError())).toEqual({
+        value: 'b',
+        done: false,
+      })
+      expect(onReconnect).toHaveBeenCalledExactlyOnceWith(
+        expect.any(BadMessageError),
+        { attempt: 0 },
+      )
+      expect(signals[0].aborted).toBe(true)
+      expect(await gen.next()).toEqual({ value: undefined, done: true })
+      expect(onError).not.toHaveBeenCalled()
+    })
+
+    it('rejects with the error when the policy declines to retry', async () => {
+      const { createTransport, urls } = scripted([
+        { messages: ['bad'], end: 'clean' },
+        { messages: ['b'], end: 'clean' },
+      ])
+      const onError = vi.fn()
+      const websocket = createWebSocket(createTransport)
+      const gen = websocket('ws://x', { ...noBackoff, onError })
+      await gen.next()
+      // The default policy only retries ws-client's own retryable errors.
+      const error = new BadMessageError()
+      await expect(gen.throw(error)).rejects.toBe(error)
+      expect(onError).toHaveBeenCalledExactlyOnceWith(error)
+      expect(urls).toHaveLength(1)
     })
   })
 

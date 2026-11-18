@@ -166,27 +166,18 @@ export function createAuthorizationPageMiddleware<
               // @NOTE AuthorizationError thrown here will be caught by the
               // error handler middleware defined below, and cause a redirect
               // back to the client with the error parameters.
-              if ('request_uri' in query) {
-                // Load and delete the authorization request
-                const requestUri = parseRequestUri(query.request_uri, {
-                  path: ['query', 'request_uri'],
-                })
-                const data = await server.requestManager.get(
-                  requestUri,
-                  undefined,
-                  query.client_id,
-                )
-                await server.requestManager.delete(requestUri)
-                throw new AuthorizationError(data.parameters, message)
-              } else if ('request' in query) {
-                const client = await server.clientManager.getClient(
-                  query.client_id,
-                )
-                const parameters = await server.decodeJAR(client, query)
-                throw new AuthorizationError(parameters, message)
-              } else {
-                throw new AuthorizationError(query, message)
-              }
+
+              // Load and delete the authorization request
+              const requestUri = parseRequestUri(query.request_uri, {
+                path: ['query', 'request_uri'],
+              })
+              const data = await server.requestManager.get(
+                requestUri,
+                undefined,
+                query.client_id,
+              )
+              await server.requestManager.delete(requestUri)
+              throw new AuthorizationError(data.parameters, message)
             }
           }
         }
@@ -263,10 +254,14 @@ export function createAuthorizationPageMiddleware<
   }
 }
 
-function parseOAuthAuthorizationRequestQuery(
-  url: URL,
-): OAuthAuthorizationRequestQuery {
+function parseOAuthAuthorizationRequestQuery(url: URL): Extract<
+  OAuthAuthorizationRequestQuery,
+  {
+    request_uri: NonNullable<unknown>
+  }
+> {
   const query = Object.fromEntries(url.searchParams)
+
   const result = oauthAuthorizationRequestQuerySchema.safeParse(query, {
     path: ['query'],
   })
@@ -275,6 +270,18 @@ function parseOAuthAuthorizationRequestQuery(
     const message = 'Invalid request parameters'
     const err = result.error
     throw new InvalidRequestError(formatError(err, message), err)
+  }
+
+  // https://datatracker.ietf.org/doc/html/rfc9126#section-4
+  //
+  // > [...] the authorization server [...] will refuse, using the
+  // > "invalid_request" error code, to process any request to the
+  // > authorization endpoint that does not have a "request_uri" parameter
+  // > with a value obtained from the PAR endpoint.
+  if (result.data.request_uri == null) {
+    // @NOTE Not an AuthorizationError, which would redirect the user to a
+    // redirect_uri that was never validated against the client metadata.
+    throw new InvalidRequestError('Pushed authorization request required')
   }
 
   return result.data

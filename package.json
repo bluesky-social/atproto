@@ -27,7 +27,7 @@
     "lint": "eslint .",
     "style:fix": "prettier --experimental-cli --write .",
     "style": "prettier --experimental-cli --check .",
-    "verify": "pnpm run --recursive --parallel --include-workspace-root '/^verify:.+$/'",
+    "verify": "pnpm run --recursive --parallel --include-workspace-root '/^verify:.+$/' < /dev/null",
     "verify:style": "pnpm run style",
     "verify:lint": "pnpm lint",
     "verify:package-files": "pnpm -r exec node -e \"require('./package.json').files || (console.error(process.cwd() + ': package.json needs a files field'), process.exit(1))\"",

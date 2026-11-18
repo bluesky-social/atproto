@@ -18,6 +18,7 @@ export const readEnv = (): OzoneEnvironment => {
     labelStreamBackfillRate: envInt('OZONE_LABEL_STREAM_BACKFILL_RATE'),
     labelQueryWildcardsEnabled: envBool('OZONE_LABEL_QUERY_WILDCARDS_ENABLED'),
     reportTagsDisabled: envBool('OZONE_REPORT_TAGS_DISABLED'),
+    languageTagRecordTypes: envStr('OZONE_LANGUAGE_TAG_RECORD_TYPES'),
     appviewUrl: envStr('OZONE_APPVIEW_URL') as UriString,
     appviewDid: envStr('OZONE_APPVIEW_DID') as DidString,
     appviewPushEvents: envBool('OZONE_APPVIEW_PUSH_EVENTS'),
@@ -63,6 +64,8 @@ export const readEnv = (): OzoneEnvironment => {
     assignmentReportDurationMs: envInt('OZONE_ASSIGNMENT_REPORT_DURATION_MS'),
     inboxAppealWindowMonths: envInt('OZONE_INBOX_APPEAL_WINDOW_MONTHS'),
     inboxStartAt: envStr('OZONE_INBOX_START_AT'),
+    inboxPushEnabled: envBool('OZONE_INBOX_PUSH_ENABLED'),
+    inboxPushToken: envStr('OZONE_INBOX_PUSH_TOKEN'),
     inboxPolicyDefaultUrl: envStr('OZONE_INBOX_POLICY_DEFAULT_URL'),
     strikeSuspensionConfig: envStr('NEXT_PUBLIC_STRIKE_SUSPENSION_CONFIG'),
     statsComputerIntervalMinutes: envInt(
@@ -77,6 +80,8 @@ export type OzoneEnvironment = {
   strikeSuspensionConfig?: string
   inboxAppealWindowMonths?: number
   inboxStartAt?: string
+  inboxPushEnabled?: boolean
+  inboxPushToken?: string
   inboxPolicyDefaultUrl?: string
   devMode?: boolean
   version?: string
@@ -89,6 +94,7 @@ export type OzoneEnvironment = {
   labelStreamBackfillRate?: number
   labelQueryWildcardsEnabled?: boolean
   reportTagsDisabled?: boolean
+  languageTagRecordTypes?: string
   appviewUrl?: UriString
   appviewDid?: DidString
   appviewPushEvents?: boolean
