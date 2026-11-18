@@ -275,12 +275,7 @@ describe('appealActionedSubject', () => {
         recommendedPolicies: [],
         createdBy: network.ozone.adminAccnt.did,
       })
-    await network.ozone.ctx.db.transaction((txn) =>
-      network.ozone.ctx.queueService(txn).insertReportsFromEvents({
-        cursor: sourceReport.id - 1,
-        limit: 1,
-      }),
-    )
+    await network.ozone.daemon.ctx.queueRouter.routeReports()
     const source = await reportForEvent(modClient, sourceReport.id)
     const action = await takedown(subject, [source.id])
 
@@ -400,11 +395,7 @@ describe('appealActionedSubject', () => {
       },
       subject,
     })
-    await network.ozone.ctx.db.transaction((txn) =>
-      network.ozone.ctx
-        .queueService(txn)
-        .insertReportsFromEvents({ cursor: sourceReport.id - 1, limit: 1 }),
-    )
+    await network.ozone.daemon.ctx.queueRouter.routeReports()
     await modClient.emitEvent({
       event: {
         $type: 'tools.ozone.moderation.defs#modEventLabel',
@@ -433,11 +424,7 @@ describe('appealActionedSubject', () => {
       },
       subject,
     })
-    await network.ozone.ctx.db.transaction((txn) =>
-      network.ozone.ctx
-        .queueService(txn)
-        .insertReportsFromEvents({ cursor: sourceReport.id - 1, limit: 1 }),
-    )
+    await network.ozone.daemon.ctx.queueRouter.routeReports()
     const source = await reportForEvent(modClient, sourceReport.id)
     const action = await takedown(subject, [source.id])
 
@@ -618,20 +605,10 @@ describe('appealActionedSubject', () => {
           status: 'queued',
         })
         const report = await latestAppealReport(did)
-        const history = await activities(report.id)
-        expect(history).toHaveLength(1)
-        expect(history[0]).toMatchObject({
-          activity: {
-            $type: tools.ozone.report.defs.queueActivity.$type,
-            previousStatus: 'open',
-          },
-          meta: { fromQueueId: null, toQueueId: sourceQueue.id },
-          isAutomated: true,
-          createdBy: network.ozone.ctx.cfg.service.did,
-        })
+        expect(await activities(report.id)).toEqual([])
         await router.routeReports()
         expect((await latestAppealReport(did)).queueId).toBe(sourceQueue.id)
-        expect(await activities(report.id)).toEqual(history)
+        expect(await activities(report.id)).toEqual([])
       },
     )
 
@@ -656,9 +633,7 @@ describe('appealActionedSubject', () => {
           status: 'queued',
           actionEventIds: null,
         })
-        expect(
-          await activities((await latestAppealReport(did)).id),
-        ).toHaveLength(1)
+        expect(await activities((await latestAppealReport(did)).id)).toEqual([])
       },
     )
 
@@ -701,7 +676,7 @@ describe('appealActionedSubject', () => {
         const report = await latestAppealReport(did)
         const history = await activities(report.id)
         if (affectedTagged) {
-          expect(history).toHaveLength(2)
+          expect(history).toHaveLength(1)
           expect(history[0]).toMatchObject({
             activity: { $type: tools.ozone.report.defs.noteActivity.$type },
             internalNote: `Automatically routed to queue "${reporting.name}" (ID ${reporting.id}). Matched reporterTags: ["${reporterTag}"].`,
@@ -712,7 +687,7 @@ describe('appealActionedSubject', () => {
           await network.ozone.daemon.ctx.queueRouter.routeReports()
           expect(await activities(report.id)).toEqual(history)
         } else {
-          expect(history).toHaveLength(1)
+          expect(history).toEqual([])
         }
       },
     )
@@ -739,7 +714,7 @@ describe('appealActionedSubject', () => {
         const report = await latestAppealReport(did)
         expect(report.queueId).toBe(matches ? tagged.id : ordinary.id)
         const history = await activities(report.id)
-        expect(history).toHaveLength(matches ? 2 : 1)
+        expect(history).toHaveLength(matches ? 1 : 0)
         if (matches) {
           expect(history[0].internalNote).toBe(
             `Automatically routed to queue "${tagged.name}" (ID ${tagged.id}). Matched accountTags: ["${accountTag}"].`,

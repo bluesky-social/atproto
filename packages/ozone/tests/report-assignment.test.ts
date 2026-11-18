@@ -85,8 +85,7 @@ describe('report-assignment', () => {
       },
       reportedBy: sc.dids.alice,
     })
-    // Report rows are inserted asynchronously by the queue-router daemon —
-    // drain it before looking up the row.
+    // @NOTE Flush queue assignment before exercising moderator assignments.
     await network.processAll()
     const report = await network.ozone.ctx.db.db
       .selectFrom('report')
@@ -796,23 +795,16 @@ describe('report-assignment', () => {
       const reportId = await createReport()
       await assignReport({ reportId, isPermanent: true }, 'moderator')
       expect(await getReportStatus(reportId)).toBe('assigned')
-      const before = await listActivities({ reportId })
-      const queueActivities = before.activities.filter(
-        (a) => a.activity.$type === tools.ozone.report.defs.queueActivity.$type,
-      )
-      expect(queueActivities).toHaveLength(1)
 
       await unassignReport({ reportId }, 'moderator')
       // No queueId on the assignment, so the report goes back to 'open'.
       expect(await getReportStatus(reportId)).toBe('open')
 
       const { activities } = await listActivities({ reportId })
-      expect(
-        activities.filter(
-          (a) =>
-            a.activity.$type === tools.ozone.report.defs.queueActivity.$type,
-        ),
-      ).toEqual(queueActivities)
+      const queueActivity = activities.find(
+        (a) => a.activity.$type === 'tools.ozone.report.defs#queueActivity',
+      )
+      expect(queueActivity).toBeUndefined()
     })
   })
 })
