@@ -696,10 +696,9 @@ export class Client {
       combined.appLabelers = (this.constructor as typeof Client).appLabelers
     }
 
-    const { headers } = combined
-
     // @NOTE Needs custom merging logic for headers as applyDefaults only deals
     // with plain objects.
+    const { headers } = options
     combined.headers =
       typeof headers === 'function'
         ? async () => mergeHeaders(this.headers, await headers())
