@@ -696,33 +696,14 @@ export class Client {
       combined.appLabelers = (this.constructor as typeof Client).appLabelers
     }
 
-    const { headers } = options
-    if (typeof headers === 'function') {
-      // Called for every attempt, so merged lazily. Not knowing its headers
-      // beforehand, it cannot provide a fallback for the "service" option.
-      combined.headers = async () => mergeHeaders(this.headers, await headers())
-    } else {
-      const optionsHeaders = headers != null ? new Headers(headers) : null
+    const { headers } = combined
 
-      // @NOTE we allow the "service" options to fallback to the "atproto-proxy"
-      // header if it is present in the request-specific headers.
-      if (
-        options.service === undefined &&
-        optionsHeaders?.has('atproto-proxy')
-      ) {
-        const serviceHeader = optionsHeaders.get('atproto-proxy')?.trim()
-        if (serviceHeader != null && isService(serviceHeader)) {
-          combined.service = serviceHeader
-        }
-      }
-
-      // Merge the instance-wide headers with the request-specific headers.
-      // Request-specific headers take precedence. This cannot be done in the
-      // applyDefaults step above because headers require special merging logic.
-      combined.headers = optionsHeaders
-        ? mergeHeaders(this.headers, optionsHeaders)
-        : new Headers(this.headers)
-    }
+    // @NOTE Needs custom merging logic for headers as applyDefaults only deals
+    // with plain objects.
+    combined.headers =
+      typeof headers === 'function'
+        ? async () => mergeHeaders(this.headers, await headers())
+        : mergeHeaders(this.headers, headers)
 
     // @NOTE Since the combined options here always contain a defined
     // "service" (even if null), any "atproto-proxy" header in either the

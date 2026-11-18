@@ -35,25 +35,28 @@ const cborCid = parseCid(
 
 describe(Client, () => {
   describe('atproto-* headers', () => {
-    it('defaults "service" to atproto-proxy headers set through the per-request headers option', async () => {
+    it('overrides atproto-proxy headers set through the per-request headers option', async () => {
       const fetchHandler = vi.fn<FetchHandler>(async (_url, _init) => {
         return Response.json({ preferences: [] })
       })
 
-      const client = new Client(fetchHandler)
+      const headers = { 'atproto-proxy': 'did:plc:existing#service' }
 
-      await client.xrpc(com.example.actor.getPreferences, {
-        headers: {
-          'atproto-proxy': 'did:plc:existing#service',
-        },
+      // Removed when the client has no "service"
+      await new Client(fetchHandler).xrpc(com.example.actor.getPreferences, {
+        headers,
       })
 
-      expect(fetchHandler).toHaveBeenCalledOnce()
+      // Replaced by the client's "service"
+      await new Client(fetchHandler, {
+        service: 'did:plc:client#service',
+      }).xrpc(com.example.actor.getPreferences, { headers })
 
-      const [_url, init] = fetchHandler.mock.calls[0]
-      const headers = new Headers(init?.headers)
-
-      expect(headers.get('atproto-proxy')).toBe('did:plc:existing#service')
+      expect(fetchHandler).toHaveBeenCalledTimes(2)
+      const proxies = fetchHandler.mock.calls.map(([_url, init]) =>
+        new Headers(init?.headers).get('atproto-proxy'),
+      )
+      expect(proxies).toEqual([null, 'did:plc:client#service'])
     })
 
     it('uses the "atproto-proxy" header as fallback for the "service" option', async () => {
