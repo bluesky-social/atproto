@@ -27,22 +27,28 @@ export class Database<Schema> implements AsyncDisposable {
     location: string,
     opts?: { pragmas?: Record<string, string> },
   ): Database<T> {
-    const sqliteDb = new SqliteDB(location, {
-      timeout: 0, // handled by application
-    })
-    const pragmas = {
-      ...DEFAULT_PRAGMAS,
-      ...(opts?.pragmas ?? {}),
+    try {
+      const sqliteDb = new SqliteDB(location, {
+        timeout: 0, // handled by application
+      })
+      const pragmas = {
+        ...DEFAULT_PRAGMAS,
+        ...(opts?.pragmas ?? {}),
+      }
+      for (const pragma of Object.keys(pragmas)) {
+        sqliteDb.pragma(`${pragma} = ${pragmas[pragma]}`)
+      }
+      const db = new Kysely<T>({
+        dialect: new SqliteDialect({
+          database: sqliteDb,
+        }),
+      })
+      dbLogger.info({ location: location }, 'Database.sqlite')
+      return new Database(db)
+    } catch (error) {
+      dbLogger.error({ location: location, error }, 'Database.sqlite')
+      throw error
     }
-    for (const pragma of Object.keys(pragmas)) {
-      sqliteDb.pragma(`${pragma} = ${pragmas[pragma]}`)
-    }
-    const db = new Kysely<T>({
-      dialect: new SqliteDialect({
-        database: sqliteDb,
-      }),
-    })
-    return new Database(db)
   }
 
   async ensureWal() {
