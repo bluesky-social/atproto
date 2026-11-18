@@ -1,3 +1,4 @@
+import { Timestamp } from '@bufbuild/protobuf'
 import { Code, ConnectError, type ServiceImpl } from '@connectrpc/connect'
 import { sql } from 'kysely'
 import { ensureValidRecordKey } from '@atproto/syntax'
@@ -21,7 +22,7 @@ export default (ctx: AppContext): Partial<ServiceImpl<typeof Service>> => ({
     authWithApiKey(ctx, handlerCtx)
     const { db } = ctx
     const op = validateOp(req)
-    const id = await db.transaction(async (txn) => {
+    const { id, createdAt } = await db.transaction(async (txn) => {
       return putOp(txn, op)
     })
     return new PutOperationResponse({
@@ -32,6 +33,7 @@ export default (ctx: AppContext): Partial<ServiceImpl<typeof Service>> => ({
         key: op.key,
         method: op.method,
         payload: op.payload,
+        createdAt: Timestamp.fromDate(createdAt),
       },
     })
   },
@@ -39,7 +41,7 @@ export default (ctx: AppContext): Partial<ServiceImpl<typeof Service>> => ({
 
 const putOp = async (db: Database, op: Operation) => {
   const { ref } = db.db.dynamic
-  const { id } = await db.db
+  const created = await db.db
     .insertInto('operation')
     .values({
       actorDid: op.actorDid,
@@ -48,10 +50,10 @@ const putOp = async (db: Database, op: Operation) => {
       method: op.method,
       payload: op.payload,
     })
-    .returning('id')
+    .returning(['id', 'createdAt'])
     .executeTakeFirstOrThrow()
   await sql`notify ${ref(createOperationChannel)}`.execute(db.db) // emitted transactionally
-  return id
+  return created
 }
 
 const validateOp = (req: PutOperationRequest): Operation => {
