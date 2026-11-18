@@ -24,6 +24,67 @@ export type FetchHandler = (
 ) => Promise<Response>
 
 /**
+ * The per-subscription options a {@link WebSocketHandler} receives.
+ */
+export type WebSocketHandlerOptions = {
+  /**
+   * Ends the stream when aborted, closing its connection. The iterator rejects
+   * with the abort reason.
+   */
+  signal?: AbortSignal
+  /**
+   * Headers of the upgrade requests, taking precedence over the handler's own.
+   */
+  headers?: HeadersInit
+}
+
+/**
+ * A function that opens a stream of binary WebSocket messages towards a
+ * service endpoint, used for XRPC subscriptions. The WebSocket counterpart of
+ * {@link FetchHandler}: the handler is responsible for adding the origin (with
+ * a `ws(s)` protocol) to the provided path, and any connection configuration
+ * (headers, liveness, …).
+ *
+ * The handler owns the connection lifecycle, and may reconnect (with a new
+ * path) when a connection fails, so a stream can span several connections. A
+ * frame that fails to decode or validate is handed back through the iterator's
+ * `throw()`, when it implements one, so the handler can drop the connection
+ * that delivered it and decide whether to reconnect, typically with
+ * `isRetryableSubscriptionError()`.
+ *
+ * @throws {TransientError} if the connection fails and the error is classified as transient or not.
+ * @see {@link AgentConfig.websocket} for building one with {@link buildAgent}.
+ */
+export type WebSocketHandler = (
+  /**
+   * Returns the URL (pathname + query parameters) to connect to, without the
+   * origin. Must be invoked before every connection, reconnects included, since
+   * the query parameters (e.g. a cursor) can change between connections.
+   */
+  path: () => Promise<`/${string}`>,
+  options: WebSocketHandlerOptions,
+) => AsyncIterable<Uint8Array<ArrayBuffer>>
+
+/**
+ * A function that opens a stream of binary WebSocket messages towards a URL:
+ * the WebSocket counterpart of `fetch()`, from which {@link buildAgent} builds
+ * a {@link WebSocketHandler}. `@atproto/lex-rpc/subscription` exports
+ * `defaultWebsocket`, over `@atproto/ws-client` (whose `websocket()` is
+ * compatible once set to binary frames), and `createWebSocketFactory()`, to
+ * create one with other connection options.
+ *
+ * The (`ws:` or `wss:`) URL is given as a function, that must be invoked before
+ * every connection (reconnects included), since its query parameters (e.g. a
+ * cursor) can change between connections.
+ *
+ * @see {@link WebSocketHandler} for the expected behavior of the stream.
+ */
+export type WebSocketFactory = (
+  url: () => Promise<URL>,
+  options: WebSocketHandlerOptions,
+) => AsyncIterable<Uint8Array<ArrayBuffer>>
+
+/**
  * Core interface for making XRPC requests towards a specific service.
  *
  * An {@link Agent} encapsulates an identity and request handling for AT
@@ -55,6 +116,11 @@ export interface Agent {
   readonly did?: DidString
   /** The fetch handler used to make HTTP requests. */
   fetchHandler: FetchHandler
+  /**
+   * The WebSocket handler used to open XRPC subscriptions, if the agent
+   * supports them.
+   */
+  websocketHandler?: WebSocketHandler
 }
 
 export interface AccountAgent extends Agent {
@@ -70,7 +136,10 @@ export function isAgent(value: unknown): value is Agent {
     typeof value.fetchHandler === 'function' &&
     (!('did' in value) ||
       value.did === undefined ||
-      typeof value.did === 'string')
+      typeof value.did === 'string') &&
+    (!('websocketHandler' in value) ||
+      value.websocketHandler === undefined ||
+      typeof value.websocketHandler === 'function')
   )
 }
 
@@ -101,10 +170,39 @@ export type AgentConfig = {
    */
   fetch?: typeof globalThis.fetch
 
+  /**
+   * Enables XRPC subscriptions: the agent's {@link WebSocketHandler} connects
+   * through this function, to the {@link AgentConfig.service service} (its
+   * `http(s)` protocol mapped to `ws(s)`), with {@link AgentConfig.headers}
+   * merged into the subscription's own.
+   *
+   * @example
+   * ```typescript
+   * import { defaultWebsocket } from '@atproto/lex-rpc/subscription'
+   *
+   * const agent = buildAgent({
+   *   service: 'https://relay.example.com',
+   *   websocket: defaultWebsocket,
+   * })
+   * ```
+   *
+   * @example With custom connection options
+   * ```typescript
+   * import { createWebSocketFactory } from '@atproto/lex-rpc/subscription'
+   *
+   * const agent = buildAgent({
+   *   service: 'https://relay.example.com',
+   *   websocket: createWebSocketFactory({ idleTimeoutMs: 60_000 }),
+   * })
+   * ```
+   */
+  websocket?: WebSocketFactory
+
   // Because this type get unioned with `Agent`, we need to prevent TypeScript
   // from accepting `headers` when `fetchHandler` is provided, since `headers`
   // would not be used (while the user might expect it to be).
   fetchHandler?: never
+  websocketHandler?: never
 }
 
 /**
@@ -186,6 +284,7 @@ export function buildAgent(options: Agent | AgentOptions): Agent {
     service,
     fetch = globalThis.fetch,
     headers: defaultHeaders,
+    websocket,
   } = config
 
   if (typeof fetch !== 'function') {
@@ -208,5 +307,38 @@ export function buildAgent(options: Agent | AgentOptions): Agent {
         headers !== init.headers ? { ...init, headers } : init,
       )
     },
+
+    websocketHandler: websocket
+      ? function (path, options) {
+          const headers =
+            defaultHeaders != null && options.headers != null
+              ? mergeHeaders(defaultHeaders, options.headers)
+              : defaultHeaders || options.headers
+
+          return websocket(async () => toWebSocketUrl(await path(), service), {
+            ...options,
+            headers,
+          })
+        }
+      : undefined,
+  }
+}
+
+function toWebSocketUrl(path: `/${string}`, service: string | URL): URL {
+  const url = new URL(path, service)
+  switch (url.protocol) {
+    case 'https:':
+      url.protocol = 'wss:'
+      return url
+    case 'http:':
+      url.protocol = 'ws:'
+      return url
+    case 'wss:':
+    case 'ws:':
+      return url
+    default:
+      throw new TypeError(
+        `Unsupported protocol "${url.protocol}" for an XRPC subscription`,
+      )
   }
 }

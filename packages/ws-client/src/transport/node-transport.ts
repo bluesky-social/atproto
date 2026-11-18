@@ -2,6 +2,7 @@ import { WebSocket } from 'ws'
 import {
   HeartbeatTimeoutError,
   SocketError,
+  UnexpectedResponseError,
   WebSocketClientError,
 } from '../lib/errors.js'
 import {
@@ -244,6 +245,18 @@ function createTransportImpl<M extends DataMode>(
     // `closeGuard` resumes: a consumer that reaches the end of iteration is
     // guaranteed the close was both reported and complete.
     markClosed()
+  })
+
+  // The server answered the upgrade request with something other than a 101.
+  // With no listener here, `ws` aborts the handshake itself and raises a bare
+  // error, which would classify as a retryable SocketError — so a 404 would be
+  // re-dialed forever. Recording the status first lets it decide instead (the
+  // 'error' that follows is ignored, since `endWith` is first-wins). Listening
+  // also means `ws` leaves the request open, so terminating it is ours to do;
+  // that emits 'error' then 'close', and 'close' settles the channel.
+  ws.on('unexpected-response', (_req, res) => {
+    endWith(new UnexpectedResponseError(res.statusCode ?? 0, res.statusMessage))
+    ws.terminate()
   })
 
   // `ws` is not limited to raising 'error' before the connection opens — a
