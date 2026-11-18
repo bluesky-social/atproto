@@ -1,13 +1,17 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { DidString } from '@atproto/lex'
-import { type FedcmSelection, requestFedcmSelection } from './fedcm.ts'
+import {
+  type FedcmProviders,
+  type FedcmSelection,
+  requestFedcmSelection,
+} from './fedcm.ts'
 
 type PendingFedcmRequest = {
   controller: AbortController
 }
 
 export function useFedcmSignIn(
-  providerConfigUrls: readonly string[],
+  providers: FedcmProviders,
   onSelection: (did: DidString, signal: AbortSignal) => void | Promise<void>,
   auto: boolean,
 ) {
@@ -44,7 +48,7 @@ export function useFedcmSignIn(
         // @NOTE requestFedcmSelection calls navigator.credentials.get
         // synchronously, before this user-initiated flow does async work.
         selection = requestFedcmSelection(
-          providerConfigUrls,
+          providers,
           request.controller.signal,
           mode,
         )
@@ -70,7 +74,7 @@ export function useFedcmSignIn(
           if (pendingRef.current === request) setPending(false)
         })
     },
-    [cancel, onSelection, providerConfigUrls],
+    [cancel, onSelection, providers],
   )
 
   const requestActiveSelection = useCallback(
@@ -79,7 +83,9 @@ export function useFedcmSignIn(
   )
 
   useEffect(() => {
-    if (!auto || !providerConfigUrls.length) return
+    // @NOTE IdP registration: enabled by registered IdPs even with no URLs.
+    if (!auto || (!providers.configUrls.length && !providers.idpRegistration))
+      return
 
     // @NOTE StrictMode cleans up the first effect setup before this timer runs,
     // so replaying the effect does not open two passive FedCM prompts.
@@ -95,7 +101,7 @@ export function useFedcmSignIn(
       }
       cancel()
     }
-  }, [auto, cancel, providerConfigUrls, requestSelection])
+  }, [auto, cancel, providers, requestSelection])
 
   useEffect(() => cancel, [cancel])
 

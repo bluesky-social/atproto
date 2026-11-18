@@ -106,6 +106,18 @@ equals `location.pathname`. Test the current page with `useMatchRoute`
 `activeOptions={{ exact: true }}`; without `exact`, the account home matches
 every page below it.
 
+## FedCM IdP registration
+
+When hydration carries `__fedcmRegistrationData`, `SessionProvider` runs
+`syncFedcmRegistration` on every `sessions` change (page load, sign-in/up/out).
+It pushes `navigator.login.setStatus('logged-in', { accounts, expiration })`
+then calls `IdentityProvider.register(configUrl)`; with no eligible account it
+pushes `'logged-out'` only. Eligible = not ephemeral, not deactivated, and
+either not `loginRequired` or listed in `eligibleDids` (the server's `Set-Login`
+source; `prompt=login` flags every session `loginRequired`, so don't filter on
+that alone). Every call is feature-detected and best-effort (`console.warn` on
+failure, silent when the API is absent).
+
 ## Components
 
 - `components/ui/*` — shadcn primitives, style `base-nova`, on `@base-ui/react`.

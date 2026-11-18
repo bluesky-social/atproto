@@ -44,3 +44,10 @@ export type DeviceMetadata = {
   ipAddress: string
   lastSeenAt: ISODatetimeString
 }
+
+export type FedcmRegistrationData = {
+  configUrl: string
+  accountsExpiration: number
+  /** Device accounts the server reports as FedCM-eligible (`Set-Login`). */
+  eligibleDids: DidString[]
+}

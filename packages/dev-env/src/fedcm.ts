@@ -1,10 +1,18 @@
 import console from 'node:console'
-import { randomBytes } from 'node:crypto'
 import { once } from 'node:events'
 import process from 'node:process'
-import { generateMockSetup } from './mock/index.js'
-import { TestNetwork } from './network.js'
+import { TestNetworkNoAppView } from './network-no-appview.js'
 import { mockMailer } from './util.js'
+
+// @NOTE The FedCM demo runs only a PDS (SQLite) and an in-memory PLC, so it
+// needs no Docker. Without an AppView, the example app is told
+// `bsky_api_did=none` and skips its Bluesky profile features.
+const ACCOUNTS = [
+  { handle: 'alice.test', displayName: 'Alice' },
+  { handle: 'bob.test', displayName: 'Bob' },
+  { handle: 'carla.test', displayName: 'Carla' },
+]
+const PASSWORD = 'hunter2'
 
 function parseIdpOrigin(value: string | undefined): URL {
   if (!value) {
@@ -39,26 +47,17 @@ function parseIdpOrigin(value: string | undefined): URL {
   return url
 }
 
-function createBrowserExampleUrls(idpOrigin: URL, network: TestNetwork) {
-  const appViewDid = network.bsky.serverDid
+function createBrowserExampleUrls(
+  idpOrigin: URL,
+  network: TestNetworkNoAppView,
+) {
   const url = new URL('http://127.0.0.1:8080')
   url.searchParams.set('env', 'development')
   url.searchParams.set('pds_operator_url', idpOrigin.origin)
   url.searchParams.set('plc_directory_url', network.plc.url)
   url.searchParams.set('handle_resolver', network.pds.url)
-  url.searchParams.set('bsky_api_url', network.bsky.url)
-  url.searchParams.set('bsky_api_did', appViewDid)
-  url.searchParams.set(
-    'scope',
-    [
-      'atproto',
-      'account:email',
-      'account:status',
-      'repo:app.bsky.actor.profile',
-      `rpc:app.bsky.actor.getPreferences?aud=${appViewDid}#bsky_appview`,
-      `rpc:app.bsky.actor.getProfile?aud=${appViewDid}#bsky_appview`,
-    ].join(' '),
-  )
+  url.searchParams.set('bsky_api_did', 'none')
+  url.searchParams.set('scope', 'atproto account:email account:status')
   url.searchParams.set(
     'fedcm_provider',
     new URL('/oauth/fedcm/config.json', idpOrigin).href,
@@ -67,7 +66,12 @@ function createBrowserExampleUrls(idpOrigin: URL, network: TestNetwork) {
   const activeUrl = new URL(url)
   activeUrl.searchParams.set('fedcm_mode', 'active')
 
-  return { passiveUrl: url, activeUrl }
+  // Registered IdP mode: no configured provider, the browser supplies it.
+  const registrationUrl = new URL(url)
+  registrationUrl.searchParams.delete('fedcm_provider')
+  registrationUrl.searchParams.set('fedcm_idp_registration', 'true')
+
+  return { passiveUrl: url, activeUrl, registrationUrl }
 }
 
 const abortController = new AbortController()
@@ -90,13 +94,7 @@ async function run() {
   const idpOrigin = parseIdpOrigin(process.env.FEDCM_IDP_ORIGIN)
   if (signal.aborted) return
 
-  // @NOTE Bsync schema names allow letters and underscores only.
-  const schemaSuffix = Array.from(randomBytes(12), (byte) =>
-    String.fromCharCode(97 + (byte % 26)),
-  ).join('')
-
-  await using network = await TestNetwork.create({
-    dbPostgresSchema: `fedcm_${schemaSuffix}`,
+  await using network = await TestNetworkNoAppView.create({
     pds: {
       port: 2583,
       hostname: idpOrigin.hostname,
@@ -105,35 +103,41 @@ async function run() {
       bskyAppViewCdnUrlPattern: undefined,
       enableDidDocWithSession: false,
     },
-    bsky: {
-      port: 2584,
-      publicUrl: 'http://localhost:2584',
-    },
     plc: { port: 2582 },
-    ozone: {
-      port: 2587,
-      chatUrl: 'http://localhost:2590',
-      chatDid: 'did:example:chat',
-    },
-    introspect: { port: 2581 },
   })
 
   if (signal.aborted) return
 
   mockMailer(network.pds)
   console.time('FedCM dev environment is ready')
-  await generateMockSetup(network)
+  for (const { handle, displayName } of ACCOUNTS) {
+    const agent = network.pds.getAgent()
+    await agent.createAccount({
+      handle,
+      email: `${handle.split('.')[0]}@test.com`,
+      password: PASSWORD,
+    })
+    await agent.app.bsky.actor.profile.create(
+      { repo: agent.assertDid },
+      { displayName },
+    )
+  }
   await network.processAll()
   console.timeEnd('FedCM dev environment is ready')
 
-  const { passiveUrl, activeUrl } = createBrowserExampleUrls(idpOrigin, network)
+  const { passiveUrl, activeUrl, registrationUrl } = createBrowserExampleUrls(
+    idpOrigin,
+    network,
+  )
 
   console.log(`PDS account manager: ${new URL('/account', idpOrigin)}`)
   console.log(`OAuth browser example (passive FedCM): ${passiveUrl}`)
   console.log(`OAuth browser example (active FedCM): ${activeUrl}`)
-  console.log(`AppView DID: ${network.bsky.serverDid}`)
   console.log(
-    'Test accounts: alice.test, bob.test, carla.test (password: hunter2)',
+    `OAuth browser example (registered IdP, needs chrome://flags/#fedcm-idp-registration and #fedcm-lightweight-mode): ${registrationUrl}`,
+  )
+  console.log(
+    `Test accounts: ${ACCOUNTS.map((a) => a.handle).join(', ')} (password: ${PASSWORD})`,
   )
 
   if (!signal.aborted) await once(signal, 'abort')

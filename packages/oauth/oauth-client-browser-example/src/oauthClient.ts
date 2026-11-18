@@ -5,6 +5,7 @@ import {
 } from '@atproto/oauth-client-browser'
 import {
   BSKY_API_DID,
+  BSKY_API_ENABLED,
   ENV,
   HANDLE_RESOLVER_URL,
   LOOPBACK_CANONICAL_LOCATION,
@@ -19,8 +20,12 @@ export const clientMetadata = buildAtprotoLoopbackClientMetadata({
       // Always required
       'atproto',
       // Permission required by this app
-      `rpc:app.bsky.actor.getProfile?aud=${BSKY_API_DID}#bsky_appview`,
-      `rpc:app.bsky.actor.getPreferences?aud=${BSKY_API_DID}#bsky_appview`,
+      ...(BSKY_API_ENABLED
+        ? [
+            `rpc:app.bsky.actor.getProfile?aud=${BSKY_API_DID}#bsky_appview`,
+            `rpc:app.bsky.actor.getPreferences?aud=${BSKY_API_DID}#bsky_appview`,
+          ]
+        : []),
       // Additional scopes from env
       ...OAUTH_SCOPE.split(' ').filter(Boolean),
     ]),

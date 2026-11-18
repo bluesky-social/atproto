@@ -23,6 +23,7 @@ import type { Awaitable } from '../lib/util/type.js'
 import { writeFormRedirect } from '../lib/write-form-redirect.js'
 import type { OAuthProvider } from '../oauth-provider.js'
 import { parseRequestUri, requestUriSchema } from '../request/request-uri.js'
+import { getFedcmRegistrationData } from './assets/fedcm-registration-data.js'
 import { sendAuthorizePageFactory } from './assets/send-authorization-page.js'
 import { sendCookieErrorPageFactory } from './assets/send-cookie-error-page.js'
 import { sendErrorPageFactory } from './assets/send-error-page.js'
@@ -195,14 +196,21 @@ export function createAuthorizationPageMiddleware<
 
       // Normal authorization flow
       const device = await server.deviceManager.load(req, res)
-      await setFedcmLoginStatus(server, device.deviceId, res)
+      const fedcmAccounts = await setFedcmLoginStatus(
+        server,
+        device.deviceId,
+        res,
+      )
 
       const result = await server.authorize(query, device)
 
       if ('redirect' in result) {
         return sendAuthorizationResultRedirect(res, result, securityOptions)
       } else {
-        return sendAuthorizePage(req, res, result)
+        return sendAuthorizePage(req, res, {
+          ...result,
+          fedcmRegistration: getFedcmRegistrationData(server, fedcmAccounts),
+        })
       }
     }),
   )

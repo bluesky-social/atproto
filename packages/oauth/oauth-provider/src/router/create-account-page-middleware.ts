@@ -10,6 +10,7 @@ import {
 } from '../lib/http/index.js'
 import type { SecurityHeadersOptions } from '../lib/http/security-headers.js'
 import type { OAuthProvider } from '../oauth-provider.js'
+import { getFedcmRegistrationData } from './assets/fedcm-registration-data.js'
 import { sendAccountPageFactory } from './assets/send-account-page.js'
 import { sendErrorPageFactory } from './assets/send-error-page.js'
 import type { MiddlewareOptions } from './middleware-options.js'
@@ -63,13 +64,14 @@ export function createAccountPageMiddleware<
       const deviceAccounts =
         await server.accountManager.listDeviceAccounts(deviceId)
 
-      await setFedcmLoginStatus(server, deviceId, res)
+      const fedcmAccounts = await setFedcmLoginStatus(server, deviceId, res)
 
       sendAccountPage(req, res, {
         deviceSessions: deviceAccounts.map((deviceAccount): Session => ({
           account: deviceAccount.account,
           loginRequired: server.checkLoginRequired(deviceAccount),
         })),
+        fedcmRegistration: getFedcmRegistrationData(server, fedcmAccounts),
       })
     } catch (err) {
       onError?.(

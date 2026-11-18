@@ -79,6 +79,8 @@ type CookieValue = {
 }
 
 // @NOTE FedCM sends only SameSite=None cookies; ordinary cookies stay Lax/Strict.
+// @NOTE IdP registration: only the FedCM accounts endpoint reads these, and
+// Chrome never fetches it for registered IdPs.
 const FEDCM_DEVICE_COOKIE = 'fedcm-dev-id'
 const FEDCM_SESSION_COOKIE = 'fedcm-ses-id'
 const FEDCM_COOKIE_PATH = '/oauth/fedcm'

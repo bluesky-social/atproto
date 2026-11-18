@@ -20,6 +20,7 @@ import { queryClient, router } from '#/router.tsx'
 const {
   __customizationData: customizationData,
   __deviceSessions: deviceSessions,
+  __fedcmRegistrationData: fedcmRegistration,
 } = window as typeof window & HydrationData['account-page']
 
 const container = document.getElementById('root')!
@@ -96,6 +97,7 @@ createRoot(container).render(
               disableRemember={isPopup}
               rememberDefault={true}
               fedcm={isFedcm}
+              fedcmRegistration={fedcmRegistration}
               forcedIdentifier={forcedIdentifier}
               leave={done}
             >

@@ -1,5 +1,8 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
-import type { Session } from '@atproto/oauth-provider-api'
+import type {
+  FedcmRegistrationData,
+  Session,
+} from '@atproto/oauth-provider-api'
 import type { Customization } from '../../customization/customization.js'
 import { type SendWebAppOptions, sendWebAppFactory } from './assets.js'
 
@@ -14,10 +17,16 @@ export function sendAccountPageFactory(
     res: ServerResponse,
     data: {
       deviceSessions: readonly Session[]
+      fedcmRegistration?: FedcmRegistrationData
     },
   ): Promise<void> {
     return sendApp(req, res, {
-      data: { __deviceSessions: data.deviceSessions },
+      data: {
+        __deviceSessions: data.deviceSessions,
+        ...(data.fedcmRegistration && {
+          __fedcmRegistrationData: data.fedcmRegistration,
+        }),
+      },
     })
   }
 }

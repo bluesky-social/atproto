@@ -11,11 +11,12 @@ import type { OAuthSession } from '@atproto/oauth-client-browser'
 import { AtmosphereSignInForm } from '../components/AtmosphereSignInForm.tsx'
 import { Layout } from '../components/Layout.tsx'
 import {
+  FEDCM_IDP_REGISTRATION,
   FEDCM_MODE,
   FEDCM_PROVIDER_URLS,
   PDS_OPERATOR_URL,
 } from '../constants.ts'
-import { createFedcmAppState } from '../lib/fedcm.ts'
+import { type FedcmProviders, createFedcmAppState } from '../lib/fedcm.ts'
 import { useFedcmSignIn } from '../lib/use-fedcm-sign-in.ts'
 import { oauthClient } from '../oauthClient.ts'
 import { useOAuthContext } from './OAuthProvider.tsx'
@@ -29,6 +30,19 @@ export const AuthenticationContext = createContext<AuthenticationType | null>(
   null,
 )
 AuthenticationContext.displayName = 'AuthenticationContext'
+
+const FEDCM_PROVIDERS: FedcmProviders = {
+  configUrls: FEDCM_PROVIDER_URLS,
+  idpRegistration: FEDCM_IDP_REGISTRATION,
+}
+const NO_FEDCM_PROVIDERS: FedcmProviders = {
+  configUrls: [],
+  idpRegistration: false,
+}
+// @NOTE IdP registration: counts the registered-IdP "any" entry as one
+// provider; once registration is universal this is just the registration flag.
+const FEDCM_PROVIDER_COUNT =
+  FEDCM_PROVIDER_URLS.length + (FEDCM_IDP_REGISTRATION ? 1 : 0)
 
 async function fedcmSignInRedirect(
   did: DidString,
@@ -102,7 +116,7 @@ export function AuthenticationProvider({ children }: { children?: ReactNode }) {
     pending: fedcmPending,
     requestActiveSelection,
   } = useFedcmSignIn(
-    session ? [] : FEDCM_PROVIDER_URLS,
+    session ? NO_FEDCM_PROVIDERS : FEDCM_PROVIDERS,
     continueWithFedcmAccount,
     FEDCM_MODE === 'passive' && !fedcmDidMismatch,
   )
@@ -137,13 +151,13 @@ export function AuthenticationProvider({ children }: { children?: ReactNode }) {
             signIn={signInAfterFedcm}
             signUp={signUpAfterFedcm}
             fedcmSignIn={
-              FEDCM_MODE === 'active' && FEDCM_PROVIDER_URLS.length === 1
+              FEDCM_MODE === 'active' && FEDCM_PROVIDER_COUNT === 1
                 ? requestActiveSelection
                 : undefined
             }
             fedcmPending={fedcmPending}
             fedcmError={
-              FEDCM_MODE === 'active' && FEDCM_PROVIDER_URLS.length > 1
+              FEDCM_MODE === 'active' && FEDCM_PROVIDER_COUNT > 1
                 ? 'Active FedCM requires exactly one provider.'
                 : FEDCM_MODE === 'active' && fedcmError
                   ? String(fedcmError)

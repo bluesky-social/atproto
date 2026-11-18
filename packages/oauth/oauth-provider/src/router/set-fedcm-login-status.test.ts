@@ -12,17 +12,20 @@ describe(setFedcmLoginStatus, () => {
     const fake = provider({ fedcm: false })
     const { res, setHeader } = response()
 
-    await setFedcmLoginStatus(fake, deviceId, res)
+    await expect(setFedcmLoginStatus(fake, deviceId, res)).resolves.toEqual([])
 
     expect(fake.listFedcmAccounts).not.toHaveBeenCalled()
     expect(setHeader).not.toHaveBeenCalled()
   })
 
   it('keeps login status when an eligible account remains', async () => {
-    const fake = provider({ accounts: [{} as DeviceAccount] })
+    const accounts = [{} as DeviceAccount]
+    const fake = provider({ accounts })
     const { res, setHeader } = response()
 
-    await setFedcmLoginStatus(fake, deviceId, res)
+    await expect(setFedcmLoginStatus(fake, deviceId, res)).resolves.toBe(
+      accounts,
+    )
 
     expect(fake.listFedcmAccounts).toHaveBeenCalledWith(deviceId)
     expect(setHeader).toHaveBeenCalledOnce()

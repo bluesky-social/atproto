@@ -1,11 +1,9 @@
 import { type PropsWithChildren, createContext, use, useContext } from 'react'
 import { type Agent, Client } from '@atproto/lex'
 import { type OAuthSession, asDid } from '@atproto/oauth-client-browser'
-import { BSKY_API_DID, BSKY_API_URL } from '../constants.ts'
+import { BSKY_API_DID, BSKY_API_ENABLED, BSKY_API_URL } from '../constants.ts'
 import * as app from '../lexicons/app.ts'
 import { useOAuthContext } from './OAuthProvider.tsx'
-
-const BSKY_APPVIEW_DID_SERVICE = `${asDid(BSKY_API_DID)}#bsky_appview` as const
 
 const unauthenticatedClient = new Client(BSKY_API_URL)
 
@@ -66,7 +64,7 @@ function useConfiguredClient(session?: OAuthSession): Client {
   // promise for `use()`.
 
   let promise: Promise<Client>
-  if (session) {
+  if (session && BSKY_API_ENABLED) {
     if (!cache.has(session)) cache.set(session, buildClient(session))
     promise = cache.get(session)!
   } else {
@@ -77,7 +75,9 @@ function useConfiguredClient(session?: OAuthSession): Client {
 }
 
 async function buildClient(session: OAuthSession) {
-  const client = new Client(session, { service: BSKY_APPVIEW_DID_SERVICE })
+  const client = new Client(session, {
+    service: `${asDid(BSKY_API_DID)}#bsky_appview`,
+  })
   await configureClient(client)
   return client
 }
