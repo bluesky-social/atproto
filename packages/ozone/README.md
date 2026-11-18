@@ -83,7 +83,7 @@ Account standing and current enforcement remain live: active restrictions, strik
 
 ## Moderation inbox push
 
-Push work is disabled by default. To enable it, set `OZONE_INBOX_PUSH_ENABLED` on both the API and daemon, and configure a secret `OZONE_INBOX_PUSH_TOKEN` on the API and its authorized consumer. The daemon does not serve the consumer endpoints and does not need the token. Configure the same inbox start date on both processes. Enabling push only queues new notifications; it does not backfill existing inbox history.
+Push work is disabled by default. To enable it, set `OZONE_INBOX_PUSH_ENABLED` on both the API and daemon. Consumer endpoints require the Ozone admin credentials. Configure the same inbox start date on both processes. Enabling push only queues new notifications; it does not backfill existing inbox history.
 
 The consumer claims work with a 60-second lease and acknowledges it using the lease token. Unacknowledged work can be claimed again after its lease expires. Pushes older than one hour expire; finished rows are retained for seven days and cleaned up during claims.
 

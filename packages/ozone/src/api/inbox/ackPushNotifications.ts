@@ -5,7 +5,7 @@ import { tools } from '../../lexicons/index.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(tools.ozone.inbox.ackPushNotifications, {
-    auth: ctx.authVerifier.inboxPush,
+    auth: ctx.authVerifier.adminToken,
     handler: async ({ input }) => {
       if (!ctx.cfg.inbox.pushEnabled) throw new MethodNotImplementedError()
       return {
