@@ -227,9 +227,7 @@ export class DaemonContext {
 
   async processAll() {
     await this.eventPusher.processAll()
-    // Drain pending modEventReport rows into the report table so test code
-    // that calls processAll() after creating reports sees the report rows
-    // immediately (in production this happens via the 1-min poll).
+    // @NOTE Flush report ingestion and queue assignment before returning to tests.
     await this.queueRouter.routeReports()
     await this.teamProfileSynchronizer.run()
   }

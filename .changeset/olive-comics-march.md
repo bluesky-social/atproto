@@ -2,4 +2,4 @@
 "@atproto/ozone": patch
 ---
 
-Record automated queue assignments for new reports.
+Create report rows atomically with report events and route pending reports independently of event ingestion.
