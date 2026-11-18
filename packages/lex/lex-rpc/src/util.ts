@@ -363,3 +363,12 @@ export function wait(
 export function trim(value: string): string {
   return value.trim()
 }
+
+export function isCausedBySignal(err: unknown, signal?: AbortSignal) {
+  if (!signal?.aborted) return false
+  if (signal.reason == null) return false // Ignore nullish reasons
+  return (
+    err === signal.reason ||
+    (err instanceof Error && err.cause === signal.reason)
+  )
+}

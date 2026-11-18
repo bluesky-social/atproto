@@ -1,8 +1,9 @@
-import { describe, expect, it, vi } from 'vitest'
+import { assert, describe, expect, it, vi } from 'vitest'
 import {
   type Agent,
   type AgentConfig,
   type FetchHandler,
+  type WebSocketFactory,
   buildAgent,
   isAgent,
 } from './agent.js'
@@ -49,6 +50,15 @@ describe(isAgent, () => {
       false,
     )
   })
+
+  it('returns false when websocketHandler is not a function', () => {
+    expect(
+      isAgent({
+        fetchHandler: async () => new Response(),
+        websocketHandler: 'not-a-function',
+      }),
+    ).toBe(false)
+  })
 })
 
 // ============================================================================
@@ -74,9 +84,19 @@ describe(buildAgent, () => {
       expect(agent.did).toBeUndefined()
       expect(typeof agent.fetchHandler).toBe('function')
     })
+
+    it('does not support subscriptions', () => {
+      const agent = buildAgent(async () => new Response())
+      expect(agent.websocketHandler).toBeUndefined()
+    })
   })
 
   describe('from string URL', () => {
+    it('creates an agent that does not support subscriptions', () => {
+      const agent = buildAgent('https://example.com')
+      expect(agent.websocketHandler).toBeUndefined()
+    })
+
     it('creates an agent that prepends the service URL', async () => {
       const fetchFn = vi.fn<typeof globalThis.fetch>(async () =>
         Response.json({ ok: true }),
@@ -211,6 +231,76 @@ describe(buildAgent, () => {
       const headers = new Headers(init?.headers)
       expect(headers.get('Authorization')).toBe('Bearer override')
       expect(headers.get('X-Default')).toBe('yes')
+    })
+  })
+
+  describe('websocket', () => {
+    function setup(config: Omit<AgentConfig, 'websocket'>) {
+      const websocket = vi.fn<WebSocketFactory>(() => ({
+        async *[Symbol.asyncIterator]() {},
+      }))
+      const { websocketHandler } = buildAgent({ ...config, websocket })
+      assert(websocketHandler)
+      return { websocket, websocketHandler }
+    }
+
+    it('creates no websocketHandler without a websocket function', () => {
+      const agent = buildAgent({ service: 'https://example.com' })
+      expect(agent.websocketHandler).toBeUndefined()
+    })
+
+    it.each([
+      ['https://example.com/prefix', 'wss://example.com/xrpc/x?cursor=1'],
+      ['http://localhost:2583', 'ws://localhost:2583/xrpc/x?cursor=1'],
+      ['wss://example.com', 'wss://example.com/xrpc/x?cursor=1'],
+      [new URL('ws://localhost:2583'), 'ws://localhost:2583/xrpc/x?cursor=1'],
+    ])(
+      'resolves the URL of %s on every connection',
+      async (service, expected) => {
+        const { websocket, websocketHandler } = setup({ service })
+        const path = vi.fn(async () => '/xrpc/x?cursor=1' as const)
+        websocketHandler(path, {})
+        const [url] = websocket.mock.calls[0]
+        expect(path).not.toHaveBeenCalled()
+        expect((await url()).href).toBe(expected)
+        await url()
+        expect(path).toHaveBeenCalledTimes(2)
+      },
+    )
+
+    it('rejects a non-http(s), non-ws(s) service', async () => {
+      const { websocket, websocketHandler } = setup({
+        service: 'ftp://example.com',
+      })
+      websocketHandler(async () => '/xrpc/x', {})
+      const [url] = websocket.mock.calls[0]
+      await expect(url()).rejects.toThrow(TypeError)
+    })
+
+    it('merges config and subscription headers, with subscription taking priority', () => {
+      const { websocket, websocketHandler } = setup({
+        service: 'https://example.com',
+        headers: { Authorization: 'Bearer default', 'X-Default': 'yes' },
+      })
+      const signal = AbortSignal.abort()
+      websocketHandler(async () => '/xrpc/x', {
+        signal,
+        headers: { Authorization: 'Bearer override' },
+      })
+      const [, options] = websocket.mock.calls[0]
+      expect(options.signal).toBe(signal)
+      const headers = new Headers(options.headers)
+      expect(headers.get('Authorization')).toBe('Bearer override')
+      expect(headers.get('X-Default')).toBe('yes')
+    })
+
+    it('passes no headers when neither config nor subscription has any', () => {
+      const { websocket, websocketHandler } = setup({
+        service: 'https://example.com',
+      })
+      websocketHandler(async () => '/xrpc/x', {})
+      const [, options] = websocket.mock.calls[0]
+      expect(options.headers).toBeUndefined()
     })
   })
 })

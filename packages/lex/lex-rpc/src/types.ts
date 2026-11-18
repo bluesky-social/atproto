@@ -114,3 +114,20 @@ export type XrpcUnknownResponsePayload<
   encoding: EncodingString
   body: LexValue | TBinary
 }
+
+/**
+ * Represents an error that may or may not be transient, indicating whether a
+ * retry should be attempted.
+ */
+export interface TransientError extends Error {
+  shouldRetry(): boolean
+}
+
+export function isTransientError(error: unknown): error is TransientError {
+  return (
+    error instanceof Error &&
+    'shouldRetry' in error &&
+    typeof error.shouldRetry === 'function' &&
+    error.shouldRetry.length === 0
+  )
+}
