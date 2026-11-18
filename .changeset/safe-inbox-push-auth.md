@@ -2,4 +2,4 @@
 "@atproto/ozone": minor
 ---
 
-Use admin credentials for moderation inbox push consumers.
+Use moderator or admin authentication for moderation inbox push consumers.

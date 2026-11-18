@@ -639,7 +639,7 @@ describe('inbox push outbox', () => {
     ).toHaveLength(0)
   })
 
-  it('restricts all cross-account push endpoints to admin credentials', async () => {
+  it('restricts cross-account push endpoints to moderators and admins', async () => {
     const basic = (user: string, password: string) =>
       `Basic ${Buffer.from(`${user}:${password}`).toString('base64')}`
     await createInboxNotification(
@@ -658,18 +658,22 @@ describe('inbox push outbox', () => {
           },
           ...(body && { body: JSON.stringify(body) }),
         })
-      const moderator = await network.ozone.modHeaders(lxm, 'moderator')
+      const triage = await network.ozone.modHeaders(lxm, 'triage')
       for (const credential of [
         undefined,
         'Bearer invalid',
         basic('admin', 'wrong'),
         basic('moderator', ADMIN_PASSWORD),
-        moderator.authorization,
+        triage.authorization,
       ]) {
         expect((await request(credential)).status).toBe(401)
       }
-      const response = await request(basic('admin', ADMIN_PASSWORD))
+      const moderator = await network.ozone.modHeaders(lxm, 'moderator')
+      const response = await request(moderator.authorization)
       expect(response.status).toBe(200)
+      const admin = await network.ozone.modHeaders(lxm, 'admin')
+      expect((await request(admin.authorization)).status).toBe(200)
+      expect((await request(basic('admin', ADMIN_PASSWORD))).status).toBe(200)
       return response.json()
     }
     const claimed = await call(
