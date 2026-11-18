@@ -205,14 +205,17 @@ export class PDS implements AsyncDisposable {
     apiRoutes(server, ctx)
 
     const app = express()
-    app.set('trust proxy', [
-      // e.g. load balancer
-      'loopback',
-      'linklocal',
-      'uniquelocal',
-      // e.g. trust x-forwarded-for via entryway ip
-      ...getTrustedIps(cfg),
-    ])
+    app.set(
+      'trust proxy',
+      cfg.service.trustedProxies ?? [
+        // e.g. load balancer
+        'loopback',
+        'linklocal',
+        'uniquelocal',
+        // e.g. trust x-forwarded-for via entryway ip
+        ...((cfg.rateLimits.enabled && cfg.rateLimits.bypassIps) || []),
+      ],
+    )
     app.use(loggerMiddleware)
     if (cfg.entryway) {
       app.use(
@@ -262,11 +265,4 @@ export class PDS implements AsyncDisposable {
   async [Symbol.asyncDispose]() {
     await this.destroy()
   }
-}
-
-export default PDS
-
-const getTrustedIps = (cfg: ServerConfig) => {
-  if (!cfg.rateLimits.enabled) return []
-  return cfg.rateLimits.bypassIps ?? []
 }

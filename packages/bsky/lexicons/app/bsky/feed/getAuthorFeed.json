@@ -19,9 +19,10 @@
           "cursor": { "type": "string" },
           "filter": {
             "type": "string",
-            "description": "Combinations of post/repost types to include in response.",
+            "description": "Combinations of post/repost types to include in response. The posts_and_replies_only filter includes authored top-level posts and replies, but excludes reposts.",
             "knownValues": [
               "posts_with_replies",
+              "posts_and_replies_only",
               "posts_no_replies",
               "posts_with_media",
               "posts_and_author_threads",
@@ -29,7 +30,10 @@
             ],
             "default": "posts_with_replies"
           },
-          "includePins": { "type": "boolean", "default": false }
+          "includePins": {
+            "type": "boolean",
+            "default": false
+          }
         }
       },
       "output": {

@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import PQueue from 'p-queue'
 import { DAY, HOUR, MINUTE, SECOND, allFulfilled } from '@atproto/common'
-import { RETRYABLE_HTTP_STATUS_CODES, XrpcError } from '@atproto/lex-client'
+import { XrpcError, isRetryableHttpStatus } from '@atproto/lex-client'
 import type { l } from '@atproto/lex-schema'
 import { LtHash, spaceHostAud } from '@atproto/space'
 import { type DidString, SpaceRef, type SpaceRefString } from '@atproto/syntax'
@@ -543,7 +543,7 @@ export class SpaceNotifications implements AsyncDisposable {
 function isRetryableError(err: unknown): boolean {
   if (err instanceof XrpcError) return err.shouldRetry()
   if (err instanceof XRPCError) {
-    return RETRYABLE_HTTP_STATUS_CODES.has(err.statusCode)
+    return isRetryableHttpStatus(err.statusCode)
   }
   // @NOTE Resolution and local storage failures can precede an XRPC request.
   return true

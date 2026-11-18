@@ -1,5 +1,11 @@
 # @atproto/api
 
+## 0.32.2
+
+### Patch Changes
+
+- [#5925](https://github.com/bluesky-social/atproto/pull/5925) [`3f7eb87`](https://github.com/bluesky-social/atproto/commit/3f7eb87d02831bffc2f8a67907ce739aeaa300f0) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add the opt-in posts_and_replies_only author feed filter, excluding reposts before hydration and bounded page filling while preserving existing filters.
+
 ## 0.32.1
 
 ### Patch Changes

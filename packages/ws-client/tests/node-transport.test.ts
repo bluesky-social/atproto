@@ -6,10 +6,10 @@ import type { WebSocket as WsSocket } from 'ws'
 import { CloseCode, isReconnectableClose } from '../src/lib/close-codes.js'
 import {
   CloseError,
-  HandshakeRejectedError,
   HandshakeTimeoutError,
   HeartbeatTimeoutError,
   MessageTooBigError,
+  UnexpectedResponseError,
   WebSocketClientError,
 } from '../src/lib/errors.js'
 import type { CloseEventDetail, MessageOf } from '../src/message-channel.js'
@@ -175,6 +175,31 @@ describe(createTransport, () => {
     assert(detail)
     expect(detail.wasClean).toBe(false)
     expect(isReconnectableClose(detail.code)).toBe(true)
+  })
+
+  it('fails with the HTTP status when the server rejects the upgrade', async () => {
+    await using server = await startServer(() => {}, {
+      verifyClient: (_info, callback) => callback(false, 401),
+    })
+    const closes: CloseEventDetail[] = []
+    const onOpen = vi.fn()
+    const transport = createTransport({
+      ...transportOptionDefaults,
+      url: server.url,
+      dataMode: 'auto',
+      signal: new AbortController().signal,
+      onOpen,
+      onClose: (detail) => closes.push(detail),
+    })
+    const { error } = await drain(transport)
+    assert(error instanceof UnexpectedResponseError)
+    expect(error.status).toBe(401)
+    expect(error.statusText).toBe('Unauthorized')
+    expect(error.shouldRetry()).toBe(false)
+    // Settled through the same path as every other failed dial: closed, never
+    // opened.
+    expect(onOpen).not.toHaveBeenCalled()
+    expect(closes).toEqual([{ code: 1006, reason: '', wasClean: false }])
   })
 
   it('resolves send() once the message is flushed to the server', async () => {
@@ -698,27 +723,6 @@ describe(createTransport, () => {
     expect(error.maxPayload).toBe(1024)
     expect(error.shouldRetry()).toBe(false)
     await vi.waitFor(() => expect(serverSaw).toBe(CloseCode.MessageTooBig))
-  })
-
-  it('carries the status and headers of a refused upgrade', async () => {
-    await using server = await startServer(() => {}, {
-      verifyClient: (_info, cb) =>
-        cb(false, 401, 'Unauthorized', { 'WWW-Authenticate': 'Bearer' }),
-    })
-    const onClose = vi.fn()
-    const transport = createTransport({
-      ...transportOptionDefaults,
-      url: server.url,
-      dataMode: 'text',
-      signal: new AbortController().signal,
-      onClose,
-    })
-    const { error } = await drain(transport)
-    assert(error instanceof HandshakeRejectedError)
-    expect(error.status).toBe(401)
-    expect(error.headers.get('www-authenticate')).toBe('Bearer')
-    expect(error.shouldRetry()).toBe(true)
-    expect(onClose).toHaveBeenCalledTimes(1)
   })
 
   it('fails with HandshakeTimeoutError when the upgrade never completes', async () => {

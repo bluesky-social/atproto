@@ -34,12 +34,12 @@ export {
   BufferOverflowError,
   CloseError,
   DataModeError,
-  HandshakeRejectedError,
   HandshakeTimeoutError,
   HeartbeatTimeoutError,
   IdleTimeoutError,
   MessageTooBigError,
   SocketError,
+  UnexpectedResponseError,
   WebSocketClientError,
 } from './lib/errors.js'
 export {

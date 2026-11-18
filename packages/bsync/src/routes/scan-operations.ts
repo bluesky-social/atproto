@@ -1,4 +1,5 @@
 import { once } from 'node:events'
+import { Timestamp } from '@bufbuild/protobuf'
 import type { ServiceImpl } from '@connectrpc/connect'
 import type { AppContext } from '../context.js'
 import { createOperationChannel } from '../db/schema/operation.js'
@@ -64,6 +65,7 @@ export default (ctx: AppContext): Partial<ServiceImpl<typeof Service>> => ({
         key: op.key,
         method: op.method,
         payload: op.payload,
+        createdAt: Timestamp.fromDate(op.createdAt),
       })),
       cursor: lastOp.id.toString(),
     })

@@ -27,6 +27,11 @@ export class WWWAuthenticateError extends OAuthError {
   get wwwAuthenticateHeader() {
     return formatWWWAuthenticateHeader(this.wwwAuthenticate)
   }
+
+  *getResponseHeaders(): Generator<[string, string], void, unknown> {
+    yield* super.getResponseHeaders()
+    yield ['WWW-Authenticate', this.wwwAuthenticateHeader]
+  }
 }
 
 function formatWWWAuthenticateHeader(wwwAuthenticate: WWWAuthenticate): string {

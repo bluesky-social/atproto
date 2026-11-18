@@ -85,7 +85,7 @@ try {
 
 By default a dropped connection is retried with jittered exponential backoff, capped by `maxReconnectSeconds` (default `64`), and the backoff resets to its base after each connection that opens. Set `stableConnectionMs` to only reset it after a connection that stayed open that long, so a server that accepts and then drops every connection isn't redialed every second. The schedule is exported as `backoffMs(attempt, maxMs)`.
 
-- `url` may be a function: `() => string | URL | Promise<string | URL>`. It's re-invoked on every attempt, including reconnects — the idiom for resuming a stream at a cursor (see the firehose example below).
+- `url` may be a function: `() => string | URL | Promise<string | URL>`. It's re-invoked on every attempt, including reconnects — the idiom for resuming a stream at a cursor (see the firehose example below). A throw (or rejection) fails that attempt, and is classified by `shouldReconnect` like any connection failure.
 - `shouldReconnect` controls whether a failure is retried:
   - `true` (default) — the built-in policy: each typed error self-classifies, and close codes are classified per RFC 6455.
   - `false` — never reconnect; the first end is terminal.
@@ -98,6 +98,28 @@ websocket(url, {
 ```
 
 - `beforeReconnect({ attempt, signal })` is awaited before each redial, alongside the backoff, so a new connection can wait for whatever the previous one left running (e.g. handlers it cancelled). `signal` aborts with the stream, which still waits for the returned promise, so settle it then. A rejection ends the stream with that error.
+
+To reject a connection over a message it delivered (a malformed frame, a protocol-level error message), call `throw(error)` on the generator. It closes that connection with `1000`, discarding what it had buffered, and `error` is then handled like any connection failure: if `shouldReconnect` retries it, it goes to `onReconnect` and `throw()` resolves with the first message of the next connection; otherwise it goes to `onError` and `throw()` rejects with it. The default policy only retries this library's own retryable errors, so pass a `shouldReconnect` that accepts yours. A throw inside a `for await` can't do this — the loop calls `return()`, which ends the stream — so step through the generator by hand:
+
+```ts
+const gen = websocket(url, {
+  dataMode: 'text',
+  shouldReconnect: (error) =>
+    error instanceof BadFrameError || defaultShouldReconnect(error),
+})
+let result = await gen.next()
+while (!result.done) {
+  let event: Event
+  try {
+    event = parseEvent(result.value) // throws BadFrameError
+  } catch (err) {
+    result = await gen.throw(err) // reconnects, or rejects with err
+    continue
+  }
+  handle(event)
+  result = await gen.next()
+}
+```
 
 Hooks observe the lifecycle at two levels. `onOpen()` and `onClose(detail)` bookend the **stream**, once each; `onConnect(sender)` and `onDisconnect()` bookend each **connection**, as many times as it takes.
 
@@ -212,29 +234,21 @@ websocket(url, { headers: { Authorization: `Bearer ${token}` } })
 
 Every failure is a `WebSocketClientError`, and each subclass classifies itself via `shouldRetry()` — which is what the default reconnect policy consults:
 
-| Error                    | Meaning                                                    | Retryable by default                |
-| ------------------------ | ---------------------------------------------------------- | ----------------------------------- |
-| `CloseError`             | The connection closed with a given code/reason/cleanliness | Classified by close code (RFC 6455) |
-| `SocketError`            | A transport-level failure (e.g. connection refused)        | Yes                                 |
-| `HandshakeRejectedError` | A `SocketError` for a non-`101` upgrade response (Node.js) | Yes                                 |
-| `HandshakeTimeoutError`  | The dial exceeded `handshakeTimeoutMs`                     | Yes                                 |
-| `HeartbeatTimeoutError`  | No frame observed within the heartbeat window (Node.js)    | Yes                                 |
-| `IdleTimeoutError`       | No message arrived within `idleTimeoutMs`                  | Yes                                 |
-| `BufferOverflowError`    | Buffered bytes exceeded `maxBufferedBytes`                 | No                                  |
-| `MessageTooBigError`     | A message exceeded `maxPayload` (Node.js)                  | No                                  |
-| `DataModeError`          | A frame's type didn't match `dataMode`                     | No                                  |
-
-A `HandshakeRejectedError` carries the response's `status` and `headers`, so a policy can stop on, say, a `401`:
-
-```ts
-websocket(url, {
-  shouldReconnect: (error) =>
-    !(error instanceof HandshakeRejectedError && error.status === 401) &&
-    defaultShouldReconnect(error),
-})
-```
+| Error                     | Meaning                                                         | Retryable by default                                                      |
+| ------------------------- | --------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| `CloseError`              | The connection closed with a given code/reason/cleanliness      | Classified by close code (RFC 6455)                                       |
+| `SocketError`             | A transport-level failure (e.g. connection refused)             | Yes                                                                       |
+| `UnexpectedResponseError` | The server answered the upgrade with a non-101 status (Node.js) | Only for transient statuses (408, 425, 429, 500, 502, 503, 504, 522, 524) |
+| `HandshakeTimeoutError`   | The dial exceeded `handshakeTimeoutMs`                          | Yes                                                                       |
+| `HeartbeatTimeoutError`   | No frame observed within the heartbeat window (Node.js)         | Yes                                                                       |
+| `IdleTimeoutError`        | No message arrived within `idleTimeoutMs`                       | Yes                                                                       |
+| `BufferOverflowError`     | Buffered bytes exceeded `maxBufferedBytes`                      | No                                                                        |
+| `MessageTooBigError`      | A message exceeded `maxPayload` (Node.js)                       | No                                                                        |
+| `DataModeError`           | A frame's type didn't match `dataMode`                          | No                                                                        |
 
 A bare `WebSocketClientError` marks misuse of the API itself, like sending on a closed connection, and is never retryable.
+
+**A rejected upgrade is only classified by status on Node.js.** The WHATWG API exposes nothing about a failed handshake, so in the browser a `404` is indistinguishable from a network failure: it surfaces as a retryable `SocketError` (or a `1006` close) and is retried with backoff.
 
 ## Examples
 

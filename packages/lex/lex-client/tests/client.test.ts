@@ -2,14 +2,21 @@ import { assert, describe, expect, expectTypeOf, it, vi } from 'vitest'
 import { type LexValue, cidForLex } from '@atproto/lex-cbor'
 import { cidForRawBytes, isTypedBlobRef, parseCid } from '@atproto/lex-data'
 import { lexParse, lexToJson } from '@atproto/lex-json'
-import { LexValidationError, currentDatetimeString } from '@atproto/lex-schema'
+import {
+  LexValidationError,
+  currentDatetimeString,
+  l,
+} from '@atproto/lex-schema'
 import {
   type Action,
   Client,
   type FetchHandler,
   XrpcAuthenticationError,
+  type XrpcBinaryStream,
+  XrpcInternalError,
   XrpcInvalidResponseError,
   XrpcResponseError,
+  XrpcStreamResponse,
   buildAgent,
 } from '../src/index.js'
 import {
@@ -974,6 +981,245 @@ describe(Client, () => {
       expect(body.blob.ref).toEqual(
         await cidForRawBytes(new TextEncoder().encode('hello world')),
       )
+    })
+  })
+
+  describe('binary responses', () => {
+    const did = 'did:plc:alice'
+    const cid = 'bafkreifjjcie6lypi6ny7amxnfftagclbuxndqonfipmb64f2km2devei4'
+    const bytes = new Uint8Array([1, 2, 3])
+
+    const getBytes = l.query(
+      'com.example.blob.getBytes',
+      l.params(),
+      l.payload('*/*', undefined),
+    )
+
+    it('fetches blobs as Uint8Array, ignoring the default "service" and "labelers"', async () => {
+      const fetchHandler = vi.fn<FetchHandler>(async (url, init) => {
+        expect(url).toBe(
+          `/xrpc/com.atproto.sync.getBlob?${new URLSearchParams({ did, cid })}`,
+        )
+        const headers = new Headers(init?.headers)
+        expect(headers.has('atproto-proxy')).toBe(false)
+        expect(headers.has('atproto-accept-labelers')).toBe(false)
+        return new Response(bytes, { headers: { 'content-type': 'image/png' } })
+      })
+
+      const client = new Client(fetchHandler, {
+        service: 'did:plc:ewvi7nxzyoun6zhxrhs64oiz#bsky_appview',
+        labelers: ['did:plc:ewvi7nxzyoun6zhxrhs64oiz'],
+      })
+
+      const response = await client.getBlob(did, cid)
+
+      expect(fetchHandler).toHaveBeenCalledOnce()
+      expect(response.encoding).toBe('image/png')
+      expect(response.body).toBeInstanceOf(Uint8Array)
+      expect(response.body).toEqual(bytes)
+    })
+
+    it('returns binary bodies from call()', async () => {
+      const fetchHandler = vi.fn<FetchHandler>(
+        async () =>
+          new Response(bytes, {
+            headers: { 'content-type': 'application/octet-stream' },
+          }),
+      )
+
+      const client = new Client(fetchHandler)
+
+      const body = await client.call(getBytes)
+
+      expect(body).toBeInstanceOf(Uint8Array)
+      expect(body).toEqual(bytes)
+    })
+
+    describe('streaming', () => {
+      const fetchHandler: FetchHandler = async () =>
+        new Response(bytes, {
+          headers: { 'content-type': 'application/octet-stream' },
+        })
+
+      async function readStream(stream: ReadableStream<Uint8Array>) {
+        return new Uint8Array(await new Response(stream).arrayBuffer())
+      }
+
+      it('streams binary responses with xrpcStream()', async () => {
+        const client = new Client(fetchHandler)
+
+        await using response = await client.xrpcStream(getBytes)
+
+        expect(response).toBeInstanceOf(XrpcStreamResponse)
+        expectTypeOf(response.body).toEqualTypeOf<XrpcBinaryStream>()
+        await expect(readStream(response.body)).resolves.toEqual(bytes)
+      })
+
+      it('returns disposable results from xrpcStreamSafe()', async () => {
+        const client = new Client(fetchHandler)
+
+        await using result = await client.xrpcStreamSafe(getBytes)
+
+        assert(result.success)
+        expectTypeOf(result.body).toEqualTypeOf<XrpcBinaryStream>()
+        await expect(readStream(result.body)).resolves.toEqual(bytes)
+      })
+
+      it('returns disposable failures from xrpcStreamSafe()', async () => {
+        const client = new Client(async () =>
+          Response.json({ error: 'InvalidRequest' }, { status: 400 }),
+        )
+
+        await using result = await client.xrpcStreamSafe(getBytes)
+
+        assert(!result.success)
+        expect(result).toBeInstanceOf(XrpcResponseError)
+      })
+
+      it('allows cancelling unconsumed streams', async () => {
+        const response = new Response(bytes, {
+          headers: { 'content-type': 'application/octet-stream' },
+        })
+        const client = new Client(async () => response)
+
+        const result = await client.xrpcStream(getBytes)
+        result.cancel()
+
+        expect(response.bodyUsed).toBe(true)
+      })
+
+      it('streams blobs, ignoring the default "service" and "labelers"', async () => {
+        const fetchHandler = vi.fn<FetchHandler>(async (url, init) => {
+          expect(url).toBe(
+            `/xrpc/com.atproto.sync.getBlob?${new URLSearchParams({ did, cid })}`,
+          )
+          const headers = new Headers(init?.headers)
+          expect(headers.has('atproto-proxy')).toBe(false)
+          expect(headers.has('atproto-accept-labelers')).toBe(false)
+          return new Response(bytes, {
+            headers: { 'content-type': 'image/png' },
+          })
+        })
+
+        const client = new Client(fetchHandler, {
+          service: 'did:plc:ewvi7nxzyoun6zhxrhs64oiz#bsky_appview',
+          labelers: ['did:plc:ewvi7nxzyoun6zhxrhs64oiz'],
+        })
+
+        await using response = await client.getBlobStream(did, cid)
+
+        expect(fetchHandler).toHaveBeenCalledOnce()
+        expect(response.encoding).toBe('image/png')
+        expectTypeOf(response.body).toEqualTypeOf<XrpcBinaryStream>()
+        await expect(readStream(response.body)).resolves.toEqual(bytes)
+      })
+
+      it('rejects methods that do not declare a binary output', async () => {
+        const fetchHandler = vi.fn<FetchHandler>()
+        const client = new Client(fetchHandler)
+
+        await expect(
+          client.xrpcStream(
+            // @ts-expect-error JSON-only output
+            com.example.actor.getPreferences,
+          ),
+        ).rejects.toSatisfy((err) => {
+          assert(err instanceof XrpcInternalError)
+          expect(err.cause).toBeInstanceOf(TypeError)
+          return true
+        })
+        expect(fetchHandler).not.toHaveBeenCalled()
+      })
+
+      it('preserves excess property checks', async () => {
+        const client = new Client(fetchHandler)
+
+        await using _ = await client.getBlobStream(did, cid, {
+          // @ts-expect-error unknown option
+          signl: undefined,
+        })
+      })
+
+      it('applies the client-wide "onCancellationError" option', async () => {
+        const cancelError = new Error('cancel failed')
+        const onCancellationError = vi.fn()
+        const client = new Client(
+          async () =>
+            new Response(
+              new ReadableStream<Uint8Array>({
+                start: (controller) => controller.enqueue(bytes),
+                cancel: () => {
+                  throw cancelError
+                },
+              }),
+              { status: 302 },
+            ),
+          { onCancellationError },
+        )
+
+        await expect(client.xrpc(getBytes, {})).rejects.toBeInstanceOf(
+          XrpcInvalidResponseError,
+        )
+
+        await vi.waitFor(() => {
+          expect(onCancellationError).toHaveBeenCalledExactlyOnceWith(
+            cancelError,
+          )
+        })
+        expect(new Client(fetchHandler).xrpcDefaults.onCancellationError).toBe(
+          'propagate',
+        )
+        expect(
+          new Client(fetchHandler, { onCancellationError: 'log' }).xrpcDefaults
+            .onCancellationError,
+        ).toBe('log')
+      })
+
+      it('applies "onCancellationError" when disposing of responses', async () => {
+        const cancelError = new Error('cancel failed')
+        const failingCancelResponse = async () =>
+          new Response(
+            new ReadableStream<Uint8Array>({
+              start: (controller) => controller.enqueue(bytes),
+              cancel: () => {
+                throw cancelError
+              },
+            }),
+            { headers: { 'content-type': 'application/octet-stream' } },
+          )
+
+        const onCancellationError = vi.fn()
+        const client = new Client(failingCancelResponse, {
+          onCancellationError,
+        })
+        {
+          await using _ = await client.xrpcStream(getBytes)
+        }
+        await vi.waitFor(() => {
+          expect(onCancellationError).toHaveBeenCalledExactlyOnceWith(
+            cancelError,
+          )
+        })
+
+        const strictClient = new Client(failingCancelResponse, {
+          onCancellationError: 'propagate',
+        })
+        await expect(
+          (async () => {
+            await using _ = await strictClient.xrpcStream(getBytes)
+          })(),
+        ).rejects.toBe(cancelError)
+      })
+
+      it('does not make buffered responses disposable', async () => {
+        const client = new Client(fetchHandler)
+
+        const response = await client.getBlob(did, cid)
+        const result = await client.xrpcSafe(getBytes, {})
+
+        expectTypeOf(response).not.toExtend<AsyncDisposable | Disposable>()
+        expectTypeOf(result).not.toExtend<AsyncDisposable | Disposable>()
+      })
     })
   })
 

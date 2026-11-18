@@ -17,9 +17,10 @@ export function sendErrorPageFactory(
     res: ServerResponse,
     err: unknown,
   ): Promise<void> {
+    const status = buildErrorStatus(err)
     return sendApp(req, res, {
-      status: buildErrorStatus(err),
-      data: { __errorData: buildErrorPayload(err) },
+      status,
+      data: { __errorStatus: status, __errorData: buildErrorPayload(err) },
     })
   }
 }

@@ -18,6 +18,7 @@
     "./README.md",
     "./CHANGELOG.md"
   ],
+  "sideEffects": false,
   "type": "module",
   "exports": {
     ".": {

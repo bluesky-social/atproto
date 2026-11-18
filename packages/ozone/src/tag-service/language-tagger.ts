@@ -14,6 +14,7 @@ export class LanguageTagger extends ContentTagger {
 
   isApplicable(): boolean {
     if (!this.subjectStatus || this.tagAlreadyExists()) return false
+    if (this.subject.isConvo() || this.subject.isMessage()) return false
     const patterns = this.moderationService.cfg.service.languageTagRecordTypes
     if (!patterns || !this.subject.isRecord()) return true
     const collection = this.subject.parsedUri.collection

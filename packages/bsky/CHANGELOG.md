@@ -1,5 +1,37 @@
 # @atproto/bsky
 
+## 0.5.14
+
+### Patch Changes
+
+- [#5890](https://github.com/bluesky-social/atproto/pull/5890) [`d3adef8`](https://github.com/bluesky-social/atproto/commit/d3adef81c0162a71679879391075520ed866ab1f) Thanks [@ds-boyce](https://github.com/ds-boyce)! - Hydrate eligible post view counts only for the authenticated author, with a bounded optional Atlantis lookup. Serving is disabled when `BSKY_POST_VIEW_COUNTS_START_AT` is unset, invalid, or in the future. Invalid values log a warning.
+
+- [#5898](https://github.com/bluesky-social/atproto/pull/5898) [`b54391d`](https://github.com/bluesky-social/atproto/commit/b54391d5d6217389daf7f3a52ba645c9f67d62ac) Thanks [@haileyok](https://github.com/haileyok)! - Add a blob source endpoint.
+
+## 0.5.13
+
+### Patch Changes
+
+- [#5919](https://github.com/bluesky-social/atproto/pull/5919) [`8d84a6c`](https://github.com/bluesky-social/atproto/commit/8d84a6cea64c5d0aa064f291b09c3eea2eb61b65) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Upgrade `ioredis` to 6.x. By default, the Redis clients these packages create stay on RESP2 and skip `CLIENT SETINFO` on connect, as with `ioredis` 5, and take `ioredis` 6's other new defaults:
+  
+  - `family` is `0` (was `4`): hostnames resolve to IPv4 or IPv6 addresses, not only IPv4.
+  - `retryStrategy` waits 50ms × 2^(attempt − 1), up to 5s, plus up to 200ms of jitter, between reconnection attempts (was 50ms × attempt, up to 2s).
+  - `keepAlive` is `30000`: TCP keepalive probes start after 30s of idle (was off).
+  
+  The `redis` option of `OAuthProvider` now expects an `ioredis` 6 `Redis` instance, which is used as is, or `RedisOptions`, which can override these defaults.
+
+- [#5925](https://github.com/bluesky-social/atproto/pull/5925) [`3f7eb87`](https://github.com/bluesky-social/atproto/commit/3f7eb87d02831bffc2f8a67907ce739aeaa300f0) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add the opt-in posts_and_replies_only author feed filter, excluding reposts before hydration and bounded page filling while preserving existing filters.
+
+- [#5918](https://github.com/bluesky-social/atproto/pull/5918) [`b575ca1`](https://github.com/bluesky-social/atproto/commit/b575ca131e66ae2f71efcd9d1cabe03e392c218f) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Log and count labeler-signed service JWTs by `lxm`.
+
+- [#5921](https://github.com/bluesky-social/atproto/pull/5921) [`137591c`](https://github.com/bluesky-social/atproto/commit/137591c05548c263fad91062376ecdb320c11ff3) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Don't log the mod service's labeler-signed service JWTs. They are still counted.
+- Updated dependencies [[`3f7eb87`](https://github.com/bluesky-social/atproto/commit/3f7eb87d02831bffc2f8a67907ce739aeaa300f0), [`b5dfe0b`](https://github.com/bluesky-social/atproto/commit/b5dfe0b80ac4f14f56b3c9b797e0e50d2e194a3b), [`b5dfe0b`](https://github.com/bluesky-social/atproto/commit/b5dfe0b80ac4f14f56b3c9b797e0e50d2e194a3b)]:
+  - @atproto/api@0.32.2
+  - @atproto/lex-client@0.5.0
+  - @atproto/xrpc-server@0.13.13
+  - @atproto/sync@0.4.27
+  - @atproto-labs/xrpc-utils@0.1.34
+
 ## 0.5.12
 
 ### Patch Changes

@@ -32,6 +32,8 @@ export {
 } from '@atproto/lex-client'
 export * from '@atproto/lex-client'
 
+export * from '@atproto/lex-rpc/subscription'
+
 export {
   /**
    * The {@link l} namespace (from `@atproto/lex-schema`) provides an imperative API for building schemas:

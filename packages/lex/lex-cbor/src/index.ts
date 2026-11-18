@@ -10,9 +10,7 @@ export { decode, decodeAll, encode } from './encoding.js'
 export {
   decode as cborDecode,
   decodeAll as cborDecodeAll,
-  decodeOptions,
   encode as cborEncode,
-  encodeOptions,
 } from './encoding.js'
 
 /**
