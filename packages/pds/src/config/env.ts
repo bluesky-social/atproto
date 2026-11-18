@@ -18,6 +18,9 @@ export function readEnv() {
     maxImportSize: envInt('PDS_MAX_REPO_IMPORT_SIZE'),
     blobUploadLimit: envInt('PDS_BLOB_UPLOAD_LIMIT'),
     devMode: envBool('PDS_DEV_MODE'),
+    trustedProxies: envStr('PDS_TRUSTED_PROXIES')
+      ?.split(',')
+      .map((addr) => addr.trim()),
 
     // hCaptcha
     hcaptchaSiteKey: envStr('PDS_HCAPTCHA_SITE_KEY'),
