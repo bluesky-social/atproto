@@ -8,7 +8,9 @@ import {
   useMemo,
   useState,
 } from 'react'
+import type { DidString } from '@atproto/lex'
 import type { OAuthSession } from '@atproto/oauth-client-browser'
+import { readFedcmAppState } from '../lib/fedcm.ts'
 import { useAbortableEffect } from '../lib/use-abortable-effect.js'
 import { initPromise, oauthClient, oauthEvents } from '../oauthClient.js'
 
@@ -26,6 +28,7 @@ export type OAuthValue = {
   /** State saved when we last left this app to complete the oauth flow */
   state?: string | null
   session?: OAuthSession
+  fedcmDidMismatch?: { expected: DidString; actual: DidString }
 
   signIn: SignInFunction
   signUp: SignUpFunction
@@ -41,7 +44,33 @@ export function OAuthProvider({ children }: OAuthProviderProps) {
   const initSession = use(initPromise)
 
   const state = initSession?.state
-  const [session, setSession] = useState(initSession?.session)
+  const expectedFedcmDid = readFedcmAppState(state)
+  const initialFedcmDidMismatch =
+    expectedFedcmDid &&
+    initSession?.session &&
+    initSession.session.sub !== expectedFedcmDid
+      ? {
+          expected: expectedFedcmDid,
+          actual: initSession.session.sub,
+        }
+      : undefined
+  const [fedcmDidMismatch, setFedcmDidMismatch] = useState(
+    initialFedcmDidMismatch,
+  )
+  const mismatchedSession = initialFedcmDidMismatch
+    ? initSession?.session
+    : undefined
+  const [session, setSession] = useState(
+    initialFedcmDidMismatch ? undefined : initSession?.session,
+  )
+
+  useEffect(() => {
+    if (!mismatchedSession) return
+
+    void mismatchedSession.signOut().catch((err) => {
+      console.error('Failed to discard the mismatched OAuth session:', err)
+    })
+  }, [mismatchedSession])
 
   // Keep tabs in sync by listening to the oauth client's events and updating
   // the session state accordingly. The deletion part is needed because the
@@ -50,6 +79,8 @@ export function OAuthProvider({ children }: OAuthProviderProps) {
   // update part is optional.
   useAbortableEffect(
     (signal) => {
+      if (fedcmDidMismatch) return
+
       // If the session is removed from another tab, we should update the state
       // in this tab as well.
       if (session) {
@@ -74,7 +105,7 @@ export function OAuthProvider({ children }: OAuthProviderProps) {
         )
       }
     },
-    [oauthEvents, session],
+    [fedcmDidMismatch, oauthEvents, session],
   )
 
   // When initializing the AuthProvider, we used "false" as restore's refresh
@@ -102,6 +133,7 @@ export function OAuthProvider({ children }: OAuthProviderProps) {
         .restore(input, true)
         .catch(async (_err) => oauthClient.signIn(input, options))
 
+      setFedcmDidMismatch(undefined)
       setSession(session)
     },
     [oauthClient],
@@ -121,14 +153,15 @@ export function OAuthProvider({ children }: OAuthProviderProps) {
         prompt: 'create',
       })
 
+      setFedcmDidMismatch(undefined)
       setSession(session)
     },
     [oauthClient],
   )
 
   const value = useMemo<OAuthValue | null>(
-    () => ({ session, state, signIn, signUp, signOut }),
-    [session, state, signIn, signUp, signOut],
+    () => ({ session, state, fedcmDidMismatch, signIn, signUp, signOut }),
+    [session, state, fedcmDidMismatch, signIn, signUp, signOut],
   )
 
   return <OAuthContext.Provider value={value}>{children}</OAuthContext.Provider>

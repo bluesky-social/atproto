@@ -50,6 +50,10 @@ export class TestNetwork extends TestNetworkNoAppView {
     const thirdPartyPds = await TestPds.create({
       didPlcUrl: plc.url,
       ...params.pds,
+      // @NOTE Keep the bootstrap PDS local when the main PDS has a public
+      // hostname.
+      hostname: 'localhost',
+      oauthFedcmEnabled: false,
       inviteRequired: false,
       port: await getPort(),
     })

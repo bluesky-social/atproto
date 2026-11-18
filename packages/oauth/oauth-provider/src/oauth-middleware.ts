@@ -6,6 +6,7 @@ import { assetsMiddleware } from './router/assets/assets.js'
 import { createAccountPageMiddleware } from './router/create-account-page-middleware.js'
 import { createApiMiddleware } from './router/create-api-middleware.js'
 import { createAuthorizationPageMiddleware } from './router/create-authorization-page-middleware.js'
+import { createFedcmMiddleware } from './router/create-fedcm-middleware.js'
 import { createOAuthMiddleware } from './router/create-oauth-middleware.js'
 import type { ErrorHandler } from './router/error-handler.js'
 import type { MiddlewareOptions } from './router/middleware-options.js'
@@ -44,6 +45,7 @@ export function oauthMiddleware<
   const middleware = combineMiddlewares([
     assetsMiddleware,
     createOAuthMiddleware(server, options),
+    createFedcmMiddleware(server, options),
     createApiMiddleware(server, options),
     createAuthorizationPageMiddleware(server, options),
     createAccountPageMiddleware(server, options),

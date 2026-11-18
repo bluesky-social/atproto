@@ -13,6 +13,7 @@ import type { OAuthProvider } from '../oauth-provider.js'
 import { sendAccountPageFactory } from './assets/send-account-page.js'
 import { sendErrorPageFactory } from './assets/send-error-page.js'
 import type { MiddlewareOptions } from './middleware-options.js'
+import { setFedcmLoginStatus } from './set-fedcm-login-status.js'
 
 export function createAccountPageMiddleware<
   Ctx extends object | void = void,
@@ -61,6 +62,8 @@ export function createAccountPageMiddleware<
       const { deviceId } = await server.deviceManager.load(req, res)
       const deviceAccounts =
         await server.accountManager.listDeviceAccounts(deviceId)
+
+      await setFedcmLoginStatus(server, deviceId, res)
 
       sendAccountPage(req, res, {
         deviceSessions: deviceAccounts.map((deviceAccount): Session => ({

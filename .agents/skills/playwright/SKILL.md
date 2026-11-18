@@ -109,7 +109,11 @@ Both files share the `PageHelper` wrapper in [`packages/pds/tests/_puppeteer.ts`
 
 `PageHelper` is `AsyncDisposable`; open pages with `await using page = await PageHelper.from(browser, { languages })` so they close even when a test throws.
 
-Two recurring gotchas visible in the existing tests:
+Recurring gotchas visible in the existing tests:
+
+- Chrome can create internal `other` targets before a popup's `page` target.
+  Keep the `targetcreated` listener until a usable page arrives, and allow
+  disposal after the popup has already closed itself.
 
 - `clickOnText` matches on substring via puppeteer's `::-p-text()`, so a label that is a prefix of another ("Réactiver" inside "Réactiver le compte") hits whichever comes first in DOM order. Target the element directly instead — e.g. `clickOn('[role="dialog"] button[type="submit"]')`.
 - Mailed tokens are obtained by spying on the mailer (`jest.spyOn(network.pds.ctx.mailer, 'sendResetPassword')`) and reading `mock.lastCall`; those calls also assert the negotiated `locale`, which is how the i18n path stays covered.

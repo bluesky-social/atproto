@@ -3,6 +3,7 @@ import path from 'node:path'
 import { DAY, HOUR, SECOND } from '@atproto/common'
 import type {
   BrandingConfig,
+  FedcmOptions,
   HcaptchaConfig,
 } from '@atproto/oauth-provider/provider'
 import { type DidString, ensureValidDid, isValidDid } from '@atproto/syntax'
@@ -317,6 +318,14 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     ),
   }
 
+  if (env.oauthFedcmEnabled) {
+    assert(!entrywayCfg, 'FedCM must be configured on the entryway')
+    assert(
+      serviceCfg.publicUrl.startsWith('https:'),
+      'FedCM requires an HTTPS PDS hostname',
+    )
+  }
+
   const oauthCfg: ServerConfig['oauth'] = entrywayCfg
     ? {
         issuer: entrywayCfg.url,
@@ -337,6 +346,12 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
               : undefined,
           branding: brandingCfg,
           trustedClients: env.trustedOAuthClients,
+          fedcm: env.oauthFedcmEnabled
+            ? {
+                allowLoopbackClients:
+                  env.devMode && env.oauthFedcmAllowLoopbackClients,
+              }
+            : undefined,
         },
       }
 
@@ -509,6 +524,7 @@ export type OAuthConfig = {
     hcaptcha?: HcaptchaConfig
     branding: BrandingConfig
     trustedClients?: string[]
+    fedcm?: FedcmOptions
   }
 }
 

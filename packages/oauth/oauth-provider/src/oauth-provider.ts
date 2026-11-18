@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto'
 import type { Redis, RedisOptions } from 'ioredis'
+import { z } from 'zod'
 import type { Jwks } from '@atproto/jwk'
 import { LexResolver } from '@atproto/lex-resolver'
 import type { Account } from '@atproto/oauth-provider-api'
@@ -240,7 +241,26 @@ type OAuthProviderConfig = {
    * @default is as specified by ATPROTO
    */
   loopbackMetadata?: null | false | LoopbackMetadataGetter
+
+  /**
+   * Enables FedCM account selection. The returned DID is a routing hint;
+   * relying parties must complete OAuth before accepting an authenticated session.
+   */
+  fedcm?: false | FedcmOptions
 }
+
+export type FedcmOptions = {
+  /**
+   * Allow validated OAuth loopback clients to use FedCM during development.
+   *
+   * @default false
+   */
+  allowLoopbackClients?: boolean
+}
+
+const fedcmOptionsSchema = z
+  .object({ allowLoopbackClients: z.boolean().default(false) })
+  .strict()
 
 export type OAuthProviderOptions = OAuthProviderConfig &
   OAuthVerifierOptions &
@@ -256,6 +276,7 @@ export class OAuthProvider extends OAuthVerifier {
 
   public readonly metadata: OAuthAuthorizationServerMetadata
   public readonly customization: Customization
+  public readonly fedcm?: FedcmOptions
 
   public readonly authenticationMaxAge: number
 
@@ -274,6 +295,7 @@ export class OAuthProvider extends OAuthVerifier {
 
     metadata,
     loopbackMetadata = atprotoLoopbackClientMetadata,
+    fedcm = false,
 
     // Services
     fetch: unsafeFetch = globalThis.fetch, // Inherited from options
@@ -325,17 +347,28 @@ export class OAuthProvider extends OAuthVerifier {
     this.metadata = buildMetadata(this.issuer, this.keyset, metadata)
     this.customization = customizationSchema.parse(rest)
 
-    this.deviceManager = new DeviceManager(deviceStore, {
-      ...rest,
-      cookie: {
-        ...rest.cookie,
-        // "secure" defaults to "true" in DeviceManager. For the oauth routes to
-        // work from localhost on Safari, we need to explicitly set secure to
-        // false for localhost usage. This is not really an issue with Chrome
-        // and Firefox, but Safari enforces it strictly.
-        secure: !this.issuer.startsWith('http:'),
+    if (fedcm !== false) {
+      if (new URL(this.issuer).protocol !== 'https:') {
+        throw new TypeError('FedCM requires an HTTPS issuer')
+      }
+      this.fedcm = fedcmOptionsSchema.parse(fedcm)
+    }
+
+    this.deviceManager = new DeviceManager(
+      deviceStore,
+      {
+        ...rest,
+        cookie: {
+          ...rest.cookie,
+          // "secure" defaults to "true" in DeviceManager. For the oauth routes to
+          // work from localhost on Safari, we need to explicitly set secure to
+          // false for localhost usage. This is not really an issue with Chrome
+          // and Firefox, but Safari enforces it strictly.
+          secure: !this.issuer.startsWith('http:'),
+        },
       },
-    })
+      this.fedcm != null,
+    )
     this.accountManager = new AccountManager(
       this.issuer,
       accountStore,
@@ -407,6 +440,19 @@ export class OAuthProvider extends OAuthVerifier {
 
   public checkLoginRequired(deviceAccount: DeviceAccount) {
     return isOlderThan(deviceAccount.updatedAt, this.authenticationMaxAge)
+  }
+
+  /**
+   * Lists accounts available to FedCM on an existing browser session.
+   */
+  public async listFedcmAccounts(deviceId: DeviceId): Promise<DeviceAccount[]> {
+    const deviceAccounts =
+      await this.accountManager.listDeviceAccounts(deviceId)
+    return deviceAccounts.filter(
+      (deviceAccount) =>
+        !deviceAccount.account.deactivated &&
+        !this.checkLoginRequired(deviceAccount),
+    )
   }
 
   protected async authenticateClient(

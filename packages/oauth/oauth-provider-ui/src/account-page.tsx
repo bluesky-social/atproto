@@ -42,6 +42,7 @@ const forcedIdentifier = searchParams.get('login_hint') || undefined
 const nonce = searchParams.get('nonce') || undefined
 const callbackUrl = searchParams.get('redirect_uri') || undefined
 const isPopup = searchParams.get('display') === 'popup'
+const isFedcm = searchParams.get('fedcm') === 'true'
 
 const done = forcedIdentifier
   ? callbackUrl && nonce
@@ -94,6 +95,7 @@ createRoot(container).render(
               initialSelected={InitialSelectedSession.Only}
               disableRemember={isPopup}
               rememberDefault={true}
+              fedcm={isFedcm}
               forcedIdentifier={forcedIdentifier}
               leave={done}
             >

@@ -53,6 +53,11 @@ the path alone when it is already under `/account/`.
 
 ## Routing
 
+FedCM login windows capture `fedcm=true` once at account-page entry and retain
+it in session context across SPA navigation. Close only after an explicit
+eligible remembered-account choice or persisted active sign-in/sign-up; never
+close for ephemeral sessions or because an account existed at initial load.
+
 **File-based.** `src/routes/` is the route tree, and `src/routeTree.gen.ts` is
 generated from it by `@tanstack/router-plugin` on every dev run and build. The
 generated file is committed; don't edit it, and don't add it to a lint or format
