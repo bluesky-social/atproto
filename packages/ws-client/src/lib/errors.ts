@@ -53,7 +53,8 @@ const RETRYABLE_HTTP_STATUS_CODES: ReadonlySet<number> = new Set([
 export class UnexpectedResponseError extends WebSocketClientError {
   constructor(
     readonly status: number,
-    readonly statusText?: string,
+    readonly statusText: string | undefined,
+    readonly headers: Headers,
   ) {
     super(
       `Unexpected server response to the WebSocket upgrade: ${status}${statusText ? ` ${statusText}` : ''}`,

@@ -179,7 +179,8 @@ describe(createTransport, () => {
 
   it('fails with the HTTP status when the server rejects the upgrade', async () => {
     await using server = await startServer(() => {}, {
-      verifyClient: (_info, callback) => callback(false, 401),
+      verifyClient: (_info, callback) =>
+        callback(false, 401, 'Unauthorized', { 'WWW-Authenticate': 'Bearer' }),
     })
     const closes: CloseEventDetail[] = []
     const onOpen = vi.fn()
@@ -195,6 +196,7 @@ describe(createTransport, () => {
     assert(error instanceof UnexpectedResponseError)
     expect(error.status).toBe(401)
     expect(error.statusText).toBe('Unauthorized')
+    expect(error.headers.get('www-authenticate')).toBe('Bearer')
     expect(error.shouldRetry()).toBe(false)
     // Settled through the same path as every other failed dial: closed, never
     // opened.

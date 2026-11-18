@@ -344,7 +344,17 @@ function createTransportImpl<M extends DataMode>(
   // also means `ws` leaves the request open, so terminating it is ours to do;
   // that emits 'error' then 'close', and 'close' settles the channel.
   ws.on('unexpected-response', (_req, res) => {
-    endWith(new UnexpectedResponseError(res.statusCode ?? 0, res.statusMessage))
+    const headers = new Headers()
+    for (let i = 0; i + 1 < res.rawHeaders.length; i += 2) {
+      headers.append(res.rawHeaders[i], res.rawHeaders[i + 1])
+    }
+    endWith(
+      new UnexpectedResponseError(
+        res.statusCode ?? 0,
+        res.statusMessage,
+        headers,
+      ),
+    )
     ws.terminate()
   })
 

@@ -246,6 +246,8 @@ Every failure is a `WebSocketClientError`, and each subclass classifies itself v
 | `MessageTooBigError`      | A message exceeded `maxPayload` (Node.js)                       | No                                                                        |
 | `DataModeError`           | A frame's type didn't match `dataMode`                          | No                                                                        |
 
+An `UnexpectedResponseError` carries the response's `status`, `statusText` and `headers`, so a policy can, say, honor a `retry-after`.
+
 A bare `WebSocketClientError` marks misuse of the API itself, like sending on a closed connection, and is never retryable.
 
 **A rejected upgrade is only classified by status on Node.js.** The WHATWG API exposes nothing about a failed handshake, so in the browser a `404` is indistinguishable from a network failure: it surfaces as a retryable `SocketError` (or a `1006` close) and is retried with backoff.
