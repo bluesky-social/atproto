@@ -336,7 +336,7 @@ describe('Atmosphere timeline HTTP endpoint', () => {
     expect(fetched).toEqual(items.map(({ uri }) => uri))
   })
 
-  it('retains all actor-group URIs and resumes after the last consumed batch', async () => {
+  it('splits actor groups at 150 URIs and resumes after the last consumed batch', async () => {
     using _clock = vi.spyOn(Date, 'now').mockReturnValue(now)
     const items = Array.from({ length: 300 }, (_, i) =>
       row(i, i * 1000, 'did:plc:alice'),
@@ -352,7 +352,12 @@ describe('Atmosphere timeline HTTP endpoint', () => {
       {
         $type: endpoint.activityActorGroup.$type,
         item: { record: { uri: items[0].uri } },
-        uris: items.slice(0, 250).map(({ uri }) => uri),
+        uris: items.slice(0, 150).map(({ uri }) => uri),
+      },
+      {
+        $type: endpoint.activityActorGroup.$type,
+        item: { record: { uri: items[150].uri } },
+        uris: items.slice(150, 250).map(({ uri }) => uri),
       },
     ])
     expect(
