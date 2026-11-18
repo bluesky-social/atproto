@@ -1,93 +1,34 @@
 import { type Selectable, sql } from 'kysely'
 import type { DatetimeString, DidString, NsidString } from '@atproto/lex-schema'
 import { currentDatetimeString, isDidString } from '@atproto/lex-schema'
-import { AtUri } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import type { Database } from '../db/index.js'
 import { TimeIdKeyset, paginate } from '../db/pagination.js'
 import type { ReportQueue } from '../db/schema/report_queue.js'
 import { jsonb } from '../db/types.js'
-import { com, tools } from '../lexicons/index.js'
+import { tools } from '../lexicons/index.js'
 import type { ModerationEventRow } from '../mod-service/types.js'
+import { reportRowFromEvent } from '../report/create.js'
 import { handleReportUpdate } from '../report/handle-report-update.js'
 import { ReportStatsService } from '../report/stats.js'
 import { viewQueueStats } from '../report/views.js'
 import { PolicyListSettingKey } from '../setting/constants.js'
 import { resolveReportPriorities } from '../setting/report.js'
 import { SettingService } from '../setting/service.js'
-import type { ResolvedReportPriority } from '../setting/types.js'
 import type { QueueAccess } from './access.js'
 
 type SubjectType = 'account' | 'record' | 'message' | 'conversation'
 
 type ResolvedAssignment = {
   queueId: number
-  queuedAt: DatetimeString | null
-  status: 'queued' | 'open'
   routingNote?: string
 }
 
-type ReportEvent = Pick<
-  ModerationEventRow,
-  | 'id'
-  | 'createdBy'
-  | 'subjectDid'
-  | 'subjectUri'
-  | 'subjectMessageId'
-  | 'subjectConvoId'
-  | 'meta'
-  | 'modTool'
->
-
-function subjectTypeFromEvent(event: ReportEvent): SubjectType {
-  if (event.subjectMessageId) return 'message'
-  if (event.subjectConvoId) return 'conversation'
-  if (event.subjectUri) return 'record'
-  return 'account'
-}
-
-function reportRowFromEvent({
-  event,
-  reportType,
-  assignment,
-  priority,
-  createdAt,
-  actionEventIds = null,
-}: {
-  event: ReportEvent
-  reportType: string
-  assignment: ResolvedAssignment
-  priority: ResolvedReportPriority | undefined
-  createdAt: DatetimeString
-  actionEventIds?: number[] | null
-}) {
-  let recordPath = ''
-  if (event.subjectUri) {
-    const uri = new AtUri(event.subjectUri)
-    recordPath = `${uri.collection}/${uri.rkey}`
-  }
-
-  return {
-    eventId: event.id,
-    reporterDid: event.createdBy,
-    queueId: assignment.queueId,
-    queuedAt: assignment.queuedAt,
-    actionEventIds: actionEventIds === null ? null : jsonb(actionEventIds),
-    actionNote: null,
-    isMuted: !!event.meta?.isReporterMuted || !!event.meta?.isSubjectMuted,
-    isAutomated: parseModTool(event.modTool).isAutomated,
-    status: assignment.status,
-    reportType,
-    priorityLevel: priority?.level ?? null,
-    priorityScore: priority?.score ?? null,
-    priorityTargetMinutes: priority?.targetResolutionMinutes ?? null,
-    did: event.subjectDid,
-    recordPath,
-    subjectMessageId: event.subjectMessageId,
-    subjectConvoId: event.subjectConvoId,
-    createdAt,
-    updatedAt: createdAt,
-  }
+type ReportRoutingResult = {
+  processed: number
+  assigned: number
+  unmatched: number
+  maxId: number
 }
 
 /**
@@ -98,15 +39,14 @@ function resolveAssignment(
   collection: string | null,
   reportType: string,
   queues: Selectable<ReportQueue>[],
-  now: DatetimeString,
   explicitQueueId: number | undefined,
   reporterTags: readonly string[],
   accountTags: readonly string[],
 ): ResolvedAssignment {
   if (explicitQueueId !== undefined) {
     const target = queues.find((q) => q.id === explicitQueueId)
-    if (target) return { queueId: target.id, queuedAt: now, status: 'queued' }
-    return { queueId: -1, queuedAt: null, status: 'open' }
+    if (target) return { queueId: target.id }
+    return { queueId: -1 }
   }
   const matched = findMatchingQueue(
     queues,
@@ -119,12 +59,10 @@ function resolveAssignment(
   if (matched) {
     return {
       queueId: matched.id,
-      queuedAt: now,
-      status: 'queued',
       routingNote: getQueueRoutingNote(matched, reporterTags, accountTags),
     }
   }
-  return { queueId: -1, queuedAt: null, status: 'open' }
+  return { queueId: -1 }
 }
 
 /**
@@ -155,8 +93,8 @@ export class QueueService {
     return (db: Database) => new QueueService(db, serviceDid)
   }
 
-  /** Insert an immediately routed report in the caller's transaction. */
-  async insertReportFromEvent({
+  /** Set the initial queue and action links in an appeal creation transaction. */
+  async assignReportFromEvent({
     event,
     reportType,
     queueId,
@@ -173,76 +111,28 @@ export class QueueService {
   }): Promise<number> {
     this.db.assertTransaction()
     const priorities = await resolveReportPriorities(this.db, [reportType])
-    const assignment: ResolvedAssignment = {
-      queueId,
-      queuedAt,
-      status: queueId > 0 ? 'queued' : 'open',
-    }
-    const inserted = await this.db.db
-      .insertInto('report')
-      .values(
-        reportRowFromEvent({
-          event,
-          reportType,
-          assignment,
-          priority: priorities.get(reportType),
-          createdAt: event.createdAt,
-          actionEventIds,
-        }),
-      )
+    const priority = priorities.get(reportType)
+    const report = await this.db.db
+      .updateTable('report')
+      .set({
+        queueId,
+        queuedAt,
+        status: queueId > 0 ? 'queued' : 'open',
+        actionEventIds: actionEventIds == null ? null : jsonb(actionEventIds),
+        priorityLevel: priority?.level ?? null,
+        priorityScore: priority?.score ?? null,
+        priorityTargetMinutes: priority?.targetResolutionMinutes ?? null,
+      })
+      .where('eventId', '=', event.id)
       .returning('id')
       .executeTakeFirstOrThrow()
-    const activityCreatedAt = currentDatetimeString()
-    if (queueId > 0) {
-      await this.insertQueueActivities(
-        [
-          {
-            reportId: inserted.id,
-            fromQueueId: null,
-            toQueueId: queueId,
-            previousStatus: 'open',
-          },
-        ],
-        activityCreatedAt,
-      )
-    }
     if (routingNote) {
       await this.insertRoutingNotes(
-        [{ reportId: inserted.id, internalNote: routingNote }],
-        activityCreatedAt,
+        [{ reportId: report.id, internalNote: routingNote }],
+        event.createdAt,
       )
     }
-    return inserted.id
-  }
-
-  private async insertQueueActivities(
-    assignments: {
-      reportId: number
-      fromQueueId: number | null
-      toQueueId: number
-      previousStatus: string
-    }[],
-    createdAt: DatetimeString,
-    createdBy = this.serviceDid,
-  ): Promise<void> {
-    this.db.assertTransaction()
-    if (!assignments.length) return
-    await this.db.db
-      .insertInto('report_activity')
-      .values(
-        assignments.map(({ reportId, previousStatus, ...meta }) => ({
-          reportId,
-          activityType: 'queueActivity',
-          previousStatus,
-          internalNote: null,
-          publicNote: null,
-          meta,
-          isAutomated: true,
-          createdBy,
-          createdAt,
-        })),
-      )
-      .execute()
+    return report.id
   }
 
   /**
@@ -655,254 +545,269 @@ export class QueueService {
     return new Map(accounts.map((account) => [account.did, account.tags ?? []]))
   }
 
-  /**
-   * Re-route unassigned reports and refresh their priority from current settings.
-   * Used by the manual `tools.ozone.queue.routeReports` endpoint to pick up
-   * reports after queues are created or modified. New reports are inserted
-   * by the daemon via `insertReportsFromEvents`, not here.
-   */
+  /** Re-route active, unassigned reports in an explicit ID range. */
   async assignReportBatch(
     params: { start: number; end: number; limit: number },
     opts?: { includeUnmatched?: boolean; serviceDid?: DidString },
-  ): Promise<{
-    processed: number
-    assigned: number
-    unmatched: number
-    maxId: number
-  }> {
-    return this.db.transaction(async (dbTxn) => {
-      const queueService = new QueueService(dbTxn, this.serviceDid)
-      const { queues } = await queueService.list({ limit: 1000, enabled: true })
+  ): Promise<ReportRoutingResult> {
+    return this.db.transaction((txn) =>
+      new QueueService(txn, this.serviceDid).assignReports(params, opts),
+    )
+  }
 
-      let query = dbTxn.db
-        .selectFrom('report as r')
-        .innerJoin('moderation_event as me', 'me.id', 'r.eventId')
-        .select([
-          'r.id',
-          'r.status',
-          'r.queueId',
-          'r.reportType',
-          'r.did',
-          'r.reporterDid',
-          'r.recordPath',
-          'r.subjectMessageId',
-          'r.subjectConvoId',
-          'me.modTool',
-          'me.createdBy as eventReporterDid',
-        ])
-        .where('r.status', '!=', 'closed')
-        .where('r.id', '>=', params.start)
-        .where('r.id', '<=', params.end)
-        .orderBy('r.id', 'asc')
-        .limit(params.limit)
-        .forUpdate('r')
-
-      if (opts?.includeUnmatched) {
-        query = query.where((eb) =>
-          eb.or([eb('r.queueId', 'is', null), eb('r.queueId', '=', -1)]),
-        )
-      } else {
-        query = query.where('r.queueId', 'is', null)
-      }
-
-      const reports = await query.execute()
-
-      if (!reports.length) {
-        return { processed: 0, assigned: 0, unmatched: 0, maxId: 0 }
-      }
-
-      const accountTags = await queueService.loadAccountTags(
-        queues,
-        reports.flatMap((report) => [
-          report.did,
-          report.reporterDid ?? report.eventReporterDid,
-        ]),
-      )
-      const priorities = await resolveReportPriorities(
-        dbTxn,
-        reports.map((report) => report.reportType),
-      )
-      const prioritiesByType = jsonb(Object.fromEntries(priorities))
-      const priorityUpdates = {
-        priorityLevel: sql<
-          string | null
-        >`${prioritiesByType} -> "reportType" ->> 'level'`,
-        priorityScore: sql<
-          number | null
-        >`(${prioritiesByType} -> "reportType" ->> 'score')::integer`,
-        priorityTargetMinutes: sql<
-          number | null
-        >`(${prioritiesByType} -> "reportType" ->> 'targetResolutionMinutes')::integer`,
-      }
-      const now = currentDatetimeString()
-
-      // Resolve each report's destination in memory — no DB calls in this loop
-      type MatchedEntry = {
-        id: number
-        queueId: number
-        nextStatus: string | null
-        fromQueueId: number | null
-        previousStatus: string
-        routingNote?: string
-      }
-
-      const matchedByQueue = new Map<number, MatchedEntry[]>()
-      const unmatchedIds: number[] = []
-      let maxReportId = 0
-
-      for (const report of reports) {
-        const subjectType: SubjectType = report.subjectMessageId
-          ? 'message'
-          : report.subjectConvoId
-            ? 'conversation'
-            : report.recordPath
-              ? 'record'
-              : 'account'
-
-        // recordPath is 'collection/rkey' for records, '' for accounts
-        const slashIdx = report.recordPath.indexOf('/')
-        const collection =
-          slashIdx > 0 ? report.recordPath.slice(0, slashIdx) : null
-
-        const tool = parseModTool(report.modTool)
-
-        const assignment = resolveAssignment(
-          subjectType,
-          collection,
-          report.reportType,
-          queues,
-          now,
-          tool.queueId,
-          accountTags.get(report.reporterDid ?? report.eventReporterDid) ?? [],
-          accountTags.get(report.did) ?? [],
-        )
-
-        if (assignment.queueId !== -1) {
-          // Routing preserves review state for reports already under review.
-          const result = handleReportUpdate(report.status, { type: 'queue' })
-          const group = matchedByQueue.get(assignment.queueId) ?? []
-          group.push({
-            id: report.id,
-            queueId: assignment.queueId,
-            nextStatus: result.nextStatus,
-            fromQueueId: report.queueId,
-            previousStatus: report.status,
-            routingNote: assignment.routingNote,
-          })
-          matchedByQueue.set(assignment.queueId, group)
-        } else {
-          unmatchedIds.push(report.id)
-        }
-
-        if (report.id > maxReportId) maxReportId = report.id
-      }
-
-      // Bulk UPDATE matched reports — split by whether status should change.
-      // handleReportUpdate returns nextStatus only for open → queued;
-      // other statuses keep their current status but still get routed.
-      for (const [queueId, group] of matchedByQueue) {
-        const withTransition = group
-          .filter((r) => r.nextStatus !== null)
-          .map((r) => r.id)
-        const withoutTransition = group
-          .filter((r) => r.nextStatus === null)
-          .map((r) => r.id)
-
-        if (withTransition.length) {
-          await dbTxn.db
-            .updateTable('report')
-            .set({
-              ...priorityUpdates,
-              queueId,
-              queuedAt: now,
-              status: 'queued',
-              updatedAt: now,
-            })
-            .where('id', 'in', withTransition)
-            .execute()
-        }
-        if (withoutTransition.length) {
-          await dbTxn.db
-            .updateTable('report')
-            .set({ ...priorityUpdates, queueId, queuedAt: now, updatedAt: now })
-            .where('id', 'in', withoutTransition)
-            .execute()
-        }
-      }
-
-      // Bulk UPDATE unmatched reports — status stays unchanged
-      if (unmatchedIds.length) {
-        await dbTxn.db
-          .updateTable('report')
-          .set({
-            ...priorityUpdates,
-            queueId: -1,
-            queuedAt: null,
-            updatedAt: now,
-          })
-          .where('id', 'in', unmatchedIds)
-          .execute()
-      }
-
-      await queueService.insertQueueActivities(
-        [...matchedByQueue.values()].flat().map((report) => ({
-          reportId: report.id,
-          fromQueueId: report.fromQueueId,
-          toQueueId: report.queueId,
-          previousStatus: report.previousStatus,
-        })),
-        now,
-        opts?.serviceDid,
-      )
-
-      await queueService.insertRoutingNotes(
-        [...matchedByQueue.values()]
-          .flat()
-          .flatMap((report) =>
-            report.routingNote
-              ? [{ reportId: report.id, internalNote: report.routingNote }]
-              : [],
-          ),
-        now,
-      )
-
-      const assigned = [...matchedByQueue.values()].reduce(
-        (sum, g) => sum + g.length,
-        0,
-      )
-
-      return {
-        processed: reports.length,
-        assigned,
-        unmatched: unmatchedIds.length,
-        maxId: maxReportId,
-      }
-    })
+  /** Route pending reports, including reports closed before initial routing. */
+  async assignUnroutedReports(limit: number): Promise<ReportRoutingResult> {
+    return this.assignReports({ limit }, { includeClosed: true })
   }
 
   /**
-   * Read newly-created modEventReport rows from `moderation_event` and
-   * insert corresponding `report` rows with `queueId` already resolved.
-   * Used by the queue-router daemon. On conflict, a null reporter DID is
-   * repaired from the source event while existing report state is preserved.
-   *
-   * Even when no queues are configured, report rows are still inserted with
-   * `queueId = -1` so the invariant "every modEventReport has a `report` row"
-   * holds.
-   * Expected to be called within a database transaction.
+   * Assign reports to queues based on routing rules and priorities.
    */
+  private async assignReports(
+    params: { start?: number; end?: number; limit: number },
+    opts?: {
+      includeUnmatched?: boolean
+      includeClosed?: boolean
+      serviceDid?: DidString
+    },
+  ): Promise<ReportRoutingResult> {
+    this.db.assertTransaction()
+    const { queues } = await this.list({ limit: 1000, enabled: true })
+
+    let query = this.db.db
+      .selectFrom('report as r')
+      .innerJoin('moderation_event as me', 'me.id', 'r.eventId')
+      .select([
+        'r.id',
+        'r.status',
+        'r.reportType',
+        'r.did',
+        'r.reporterDid',
+        'r.recordPath',
+        'r.subjectMessageId',
+        'r.subjectConvoId',
+        'me.modTool',
+        'me.createdBy as eventReporterDid',
+      ])
+      .orderBy('r.id', 'asc')
+      .limit(params.limit)
+      .forUpdate('r')
+
+    if (opts?.includeClosed !== true) {
+      query = query.where('r.status', '!=', 'closed')
+    }
+    if (params.start !== undefined)
+      query = query.where('r.id', '>=', params.start)
+    if (params.end !== undefined) query = query.where('r.id', '<=', params.end)
+
+    if (opts?.includeUnmatched) {
+      query = query.where((eb) =>
+        eb.or([eb('r.queueId', 'is', null), eb('r.queueId', '=', -1)]),
+      )
+    } else {
+      query = query.where('r.queueId', 'is', null)
+    }
+
+    const reports = await query.execute()
+
+    if (!reports.length) {
+      return { processed: 0, assigned: 0, unmatched: 0, maxId: 0 }
+    }
+
+    const accountTags = await this.loadAccountTags(
+      queues,
+      reports.flatMap((report) => [
+        report.did,
+        report.reporterDid ?? report.eventReporterDid,
+      ]),
+    )
+    const priorities = await resolveReportPriorities(
+      this.db,
+      reports.map((report) => report.reportType),
+    )
+    const prioritiesByType = jsonb(Object.fromEntries(priorities))
+    const priorityUpdates = {
+      priorityLevel: sql<
+        string | null
+      >`${prioritiesByType} -> "reportType" ->> 'level'`,
+      priorityScore: sql<
+        number | null
+      >`(${prioritiesByType} -> "reportType" ->> 'score')::integer`,
+      priorityTargetMinutes: sql<
+        number | null
+      >`(${prioritiesByType} -> "reportType" ->> 'targetResolutionMinutes')::integer`,
+    }
+    const now = currentDatetimeString()
+
+    // Resolve each report's destination in memory — no DB calls in this loop
+    type MatchedEntry = {
+      id: number
+      queueId: number
+      nextStatus: string | null
+      activity: { activityType: string; previousStatus: string } | null
+      routingNote?: string
+    }
+
+    const matchedByQueue = new Map<number, MatchedEntry[]>()
+    const unmatchedIds: number[] = []
+    let maxReportId = 0
+
+    for (const report of reports) {
+      const subjectType: SubjectType = report.subjectMessageId
+        ? 'message'
+        : report.subjectConvoId
+          ? 'conversation'
+          : report.recordPath
+            ? 'record'
+            : 'account'
+
+      // recordPath is 'collection/rkey' for records, '' for accounts
+      const slashIdx = report.recordPath.indexOf('/')
+      const collection =
+        slashIdx > 0 ? report.recordPath.slice(0, slashIdx) : null
+
+      const tool = parseModTool(report.modTool)
+
+      const reporterTags =
+        accountTags.get(report.reporterDid ?? report.eventReporterDid) ?? []
+      const subjectTags = accountTags.get(report.did) ?? []
+
+      const assignment = resolveAssignment(
+        subjectType,
+        collection,
+        report.reportType,
+        queues,
+        tool.queueId,
+        reporterTags,
+        subjectTags,
+      )
+
+      if (assignment.queueId !== -1) {
+        // @NOTE Queue assignment must preserve closure and active review state.
+        const result = handleReportUpdate(report.status, { type: 'queue' })
+        const group = matchedByQueue.get(assignment.queueId) ?? []
+        group.push({
+          id: report.id,
+          queueId: assignment.queueId,
+          nextStatus: result.nextStatus,
+          activity: result.activity,
+          routingNote: assignment.routingNote,
+        })
+        matchedByQueue.set(assignment.queueId, group)
+      } else {
+        unmatchedIds.push(report.id)
+      }
+
+      if (report.id > maxReportId) maxReportId = report.id
+    }
+
+    // Bulk UPDATE matched reports — split by whether status should change.
+    // handleReportUpdate returns nextStatus only for open → queued;
+    // other statuses keep their current status but still get routed.
+    for (const [queueId, group] of matchedByQueue) {
+      const withTransition = group
+        .filter((r) => r.nextStatus !== null)
+        .map((r) => r.id)
+      const withoutTransition = group
+        .filter((r) => r.nextStatus === null)
+        .map((r) => r.id)
+
+      if (withTransition.length) {
+        await this.db.db
+          .updateTable('report')
+          .set({
+            ...priorityUpdates,
+            queueId,
+            queuedAt: now,
+            status: 'queued',
+            updatedAt: now,
+          })
+          .where('id', 'in', withTransition)
+          .execute()
+      }
+      if (withoutTransition.length) {
+        await this.db.db
+          .updateTable('report')
+          .set({ ...priorityUpdates, queueId, queuedAt: now, updatedAt: now })
+          .where('id', 'in', withoutTransition)
+          .execute()
+      }
+    }
+
+    // Bulk UPDATE unmatched reports — status stays unchanged
+    if (unmatchedIds.length) {
+      await this.db.db
+        .updateTable('report')
+        .set({
+          ...priorityUpdates,
+          queueId: -1,
+          queuedAt: null,
+          updatedAt: now,
+        })
+        .where('id', 'in', unmatchedIds)
+        .execute()
+    }
+
+    // Bulk INSERT activities for matched reports that changed status.
+    if (opts?.serviceDid) {
+      const withActivities = [...matchedByQueue.values()]
+        .flat()
+        .filter((r) => r.activity !== null)
+      if (withActivities.length) {
+        await this.db.db
+          .insertInto('report_activity')
+          .values(
+            withActivities.map((r) => ({
+              reportId: r.id,
+              activityType: r.activity!.activityType,
+              previousStatus: r.activity!.previousStatus,
+              internalNote: null,
+              publicNote: null,
+              meta: null,
+              isAutomated: true,
+              createdBy: opts.serviceDid!,
+              createdAt: now,
+            })),
+          )
+          .execute()
+      }
+    }
+
+    // Bulk INSERT routing notes for reports that have them
+    await this.insertRoutingNotes(
+      [...matchedByQueue.values()]
+        .flat()
+        .flatMap((report) =>
+          report.routingNote
+            ? [{ reportId: report.id, internalNote: report.routingNote }]
+            : [],
+        ),
+      now,
+    )
+
+    const assigned = [...matchedByQueue.values()].reduce(
+      (sum, g) => sum + g.length,
+      0,
+    )
+
+    return {
+      processed: reports.length,
+      assigned,
+      unmatched: unmatchedIds.length,
+      maxId: maxReportId,
+    }
+  }
+
+  /** Insert pending reports for events from writers that do not create report rows. */
   async insertReportsFromEvents(params: {
     cursor: number | null
     limit: number
   }): Promise<{
     processed: number
-    assigned: number
-    unmatched: number
+    inserted: number
     maxEventId: number
   }> {
     this.db.assertTransaction()
-
-    const { queues } = await this.list({ limit: 1000, enabled: true })
 
     let query = this.db.db
       .selectFrom('moderation_event')
@@ -928,77 +833,19 @@ export class QueueService {
     const events = await query.execute()
 
     if (!events.length) {
-      return { processed: 0, assigned: 0, unmatched: 0, maxEventId: 0 }
+      return { processed: 0, inserted: 0, maxEventId: 0 }
     }
 
-    const accountTags = await this.loadAccountTags(
-      queues,
-      events.flatMap((event) => [event.createdBy, event.subjectDid]),
-    )
-    const now = currentDatetimeString()
-    let maxEventId = 0
-    let assigned = 0
-    let unmatched = 0
-
-    const reportTypes = events.map(
-      (event) =>
-        (event.meta?.reportType as string | undefined) ??
-        com.atproto.moderation.defs.ReasonOther,
-    )
-    const priorities = await resolveReportPriorities(this.db, reportTypes)
-    const routingNotes = new Map<number, string>()
-
-    const rows = events.map((event) => {
-      const subjectType = subjectTypeFromEvent(event)
-
-      let collection: string | null = null
-      if (event.subjectUri) {
-        const uri = new AtUri(event.subjectUri)
-        collection = uri.collection
-      }
-
-      const reportType =
-        (event.meta?.reportType as string | undefined) ??
-        com.atproto.moderation.defs.ReasonOther
-      const priority = priorities.get(reportType)
-
-      const tool = parseModTool(event.modTool)
-
-      const assignment = resolveAssignment(
-        subjectType,
-        collection,
-        reportType,
-        queues,
-        now,
-        tool.queueId,
-        accountTags.get(event.createdBy) ?? [],
-        accountTags.get(event.subjectDid) ?? [],
-      )
-
-      if (assignment.queueId === -1) unmatched++
-      else assigned++
-      if (event.id > maxEventId) maxEventId = event.id
-      if (assignment.routingNote) {
-        routingNotes.set(event.id, assignment.routingNote)
-      }
-
-      return reportRowFromEvent({
-        event,
-        reportType,
-        assignment,
-        priority,
-        createdAt: now,
-      })
-    })
+    const rows = events.map(reportRowFromEvent)
 
     const inserted = await this.db.db
       .insertInto('report')
       .values(rows)
       .onConflict((oc) => oc.column('eventId').doNothing())
-      .returning(['id', 'eventId', 'queueId'])
+      .returning(['id', 'eventId'])
       .execute()
 
-    // @NOTE Keep repairs separate so only new reports receive routing notes.
+    // @NOTE Replays may repair the reporter without changing report lifecycle state.
     if (inserted.length < rows.length) {
       await this.db.db
         .updateTable('report')
@@ -1014,35 +861,10 @@ export class QueueService {
         .execute()
     }
 
-    await this.insertQueueActivities(
-      inserted.flatMap((report) =>
-        report.queueId !== null && report.queueId > 0
-          ? [
-              {
-                reportId: report.id,
-                fromQueueId: null,
-                toQueueId: report.queueId,
-                previousStatus: 'open',
-              },
-            ]
-          : [],
-      ),
-      now,
-    )
-
-    await this.insertRoutingNotes(
-      inserted.flatMap((report) => {
-        const internalNote = routingNotes.get(report.eventId)
-        return internalNote ? [{ reportId: report.id, internalNote }] : []
-      }),
-      now,
-    )
-
     return {
       processed: events.length,
-      assigned,
-      unmatched,
-      maxEventId,
+      inserted: inserted.length,
+      maxEventId: events[events.length - 1].id,
     }
   }
 }
@@ -1052,7 +874,7 @@ export function hasTagCriteria(queue: Selectable<ReportQueue>): boolean {
   return !!(queue.reporterTags?.length || queue.accountTags?.length)
 }
 
-/** Snapshot the mutable tag values that matched an automatic destination. */
+/** Get a routing note for a report. Currently used for tagging-based routing. */
 export function getQueueRoutingNote(
   queue: Selectable<ReportQueue>,
   reporterTags: readonly string[],
