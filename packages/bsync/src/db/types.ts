@@ -14,4 +14,5 @@ export type PgOptions = {
   poolSize?: number
   poolMaxUses?: number
   poolIdleTimeoutMs?: number
+  awsIamAuth?: boolean
 }

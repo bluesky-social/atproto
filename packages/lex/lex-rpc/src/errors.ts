@@ -1,3 +1,4 @@
+import './polyfill.js'
 import type { LexErrorCode, LexErrorData, LexValue } from '@atproto/lex-data'
 import { LexError } from '@atproto/lex-data'
 import {
@@ -153,6 +154,16 @@ export abstract class XrpcError<
   matchesSchemaErrors(): this is XrpcError<M, InferMethodError<M>> {
     return this.method.errors?.includes(this.error) ?? false
   }
+
+  /**
+   * No-op: failures never hold a response body (error payloads are always
+   * buffered). This allows disposing of `xrpcStreamSafe()` results
+   * (`await using`) without narrowing them first.
+   *
+   * @note this class does not explicitly implement {@link Disposable} because
+   * the disposal logic is a no-op for XRPC error.
+   */
+  [Symbol.dispose](): void {}
 }
 
 /**

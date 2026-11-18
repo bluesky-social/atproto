@@ -1,5 +1,120 @@
 # @atproto/pds
 
+## 0.5.61
+
+### Patch Changes
+
+- [#5919](https://github.com/bluesky-social/atproto/pull/5919) [`8d84a6c`](https://github.com/bluesky-social/atproto/commit/8d84a6cea64c5d0aa064f291b09c3eea2eb61b65) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Upgrade `ioredis` to 6.x. By default, the Redis clients these packages create stay on RESP2 and skip `CLIENT SETINFO` on connect, as with `ioredis` 5, and take `ioredis` 6's other new defaults:
+  
+  - `family` is `0` (was `4`): hostnames resolve to IPv4 or IPv6 addresses, not only IPv4.
+  - `retryStrategy` waits 50ms × 2^(attempt − 1), up to 5s, plus up to 200ms of jitter, between reconnection attempts (was 50ms × attempt, up to 2s).
+  - `keepAlive` is `30000`: TCP keepalive probes start after 30s of idle (was off).
+  
+  The `redis` option of `OAuthProvider` now expects an `ioredis` 6 `Redis` instance, which is used as is, or `RedisOptions`, which can override these defaults.
+- Updated dependencies [[`8d84a6c`](https://github.com/bluesky-social/atproto/commit/8d84a6cea64c5d0aa064f291b09c3eea2eb61b65), [`b5dfe0b`](https://github.com/bluesky-social/atproto/commit/b5dfe0b80ac4f14f56b3c9b797e0e50d2e194a3b), [`b5dfe0b`](https://github.com/bluesky-social/atproto/commit/b5dfe0b80ac4f14f56b3c9b797e0e50d2e194a3b), [`8d84a6c`](https://github.com/bluesky-social/atproto/commit/8d84a6cea64c5d0aa064f291b09c3eea2eb61b65)]:
+  - @atproto/oauth-provider@0.26.0
+  - @atproto/lex-client@0.5.0
+  - @atproto-labs/simple-store-redis@0.1.7
+  - @atproto/xrpc-server@0.13.13
+  - @atproto-labs/xrpc-utils@0.1.34
+
+## 0.5.60
+
+### Patch Changes
+
+- [#5915](https://github.com/bluesky-social/atproto/pull/5915) [`56201be`](https://github.com/bluesky-social/atproto/commit/56201be4acdcb4333f2da430ce62f6e9a42aa79d) Thanks [@amckinley](https://github.com/amckinley)! - Proxy requests to the configured AppView (`PDS_BSKY_APP_VIEW_URL`) skip SSRF protection, so the AppView may be at a private address without setting `PDS_DISABLE_SSRF_PROTECTION`. Every other proxy target, including service endpoints from DID documents, keeps SSRF protection.
+
+- [#5911](https://github.com/bluesky-social/atproto/pull/5911) [`7dd086d`](https://github.com/bluesky-social/atproto/commit/7dd086d4de20d22777a64043ee29f4afa9a5811b) Thanks [@amckinley](https://github.com/amckinley)! - Add `PDS_SQLITE_SYNCHRONOUS_FULL`: when set, the actor store, account and sequencer SQLite databases run with `synchronous = FULL`, so an acknowledged write survives a power cut.
+
+- [#4722](https://github.com/bluesky-social/atproto/pull/4722) [`b9f1f1d`](https://github.com/bluesky-social/atproto/commit/b9f1f1d2b169cc509e192350496049cf93d6115d) Thanks [@gcwill70](https://github.com/gcwill70)! - Add bounded bulk moderation actions with per-subject report targeting, external IDs, and partial-failure results.
+
+## 0.5.59
+
+### Patch Changes
+
+- [#5895](https://github.com/bluesky-social/atproto/pull/5895) [`3459596`](https://github.com/bluesky-social/atproto/commit/3459596f6f5fa684ae616249deaec6e7a39700bd) Thanks [@gcwill70](https://github.com/gcwill70)! - Update `emitEvent.reportAction` to allow account level actions to target reports on owned subjects using `subjects` and `subjectTypes`.
+
+## 0.5.58
+
+### Patch Changes
+
+- [#5866](https://github.com/bluesky-social/atproto/pull/5866) [`b4dac06`](https://github.com/bluesky-social/atproto/commit/b4dac063aba56e4be8085d0da3888c7bc55e6102) Thanks [@amckinley](https://github.com/amckinley)! - With `PDS_ENTRYWAY_REQUIRE_SERVICE_AUTH=true`, `com.atproto.server.createAccount` now requires the entryway's service JWT, as the other entryway-called routes do: unauthenticated calls are refused with `AuthenticationRequired`. Enable that setting only once the entryway in front of the PDS signs its `createAccount` calls. Without it, unauthenticated calls are still accepted, and PDSes without entryway configuration are unaffected.
+
+- [#5891](https://github.com/bluesky-social/atproto/pull/5891) [`5c3979b`](https://github.com/bluesky-social/atproto/commit/5c3979b3466bf7df0a0a4f2291000491affc31b9) Thanks [@amckinley](https://github.com/amckinley)! - Scratch Redis failures fail open. In `@atproto/xrpc-server`, a route's own rate limit now logs a store error and lets the request through, as global and shared limits already did, unless it sets `failClosed`. In `@atproto/pds`, the scratch Redis client fails a command after 500 ms or at once when disconnected instead of queueing it, the DPoP replay check falls back to process memory when Redis fails, and shutdown no longer fails on a Redis that doesn't answer.
+- Updated dependencies [[`5c3979b`](https://github.com/bluesky-social/atproto/commit/5c3979b3466bf7df0a0a4f2291000491affc31b9)]:
+  - @atproto/xrpc-server@0.13.12
+  - @atproto-labs/xrpc-utils@0.1.33
+
+## 0.5.57
+
+### Patch Changes
+
+- [#5857](https://github.com/bluesky-social/atproto/pull/5857) [`b30ea73`](https://github.com/bluesky-social/atproto/commit/b30ea7305be8df27524ed70d4af7f246014194c2) Thanks [@amckinley](https://github.com/amckinley)! - Add `PDS_DISABLE_IP_RATE_LIMITS`, for a PDS behind a proxy that enforces per-IP rate limits. When set with `PDS_RATE_LIMITS_ENABLED`, the PDS drops its global per-IP limit and the route limits keyed only on the client IP, and keeps its per-account limits. The xrpc-server `rateLimits` option gains `skipDefaultKeyedRouteLimits`, which skips route-specific limits that don't define their own `calcKey`.
+
+- [#5802](https://github.com/bluesky-social/atproto/pull/5802) [`d930c3b`](https://github.com/bluesky-social/atproto/commit/d930c3b6b401df7085b8e85f3fc83dbbc3e28605) Thanks [@foysalit](https://github.com/foysalit)! - Retire moderation subject statistics and count-based filters. Legacy count-based
+  sorts fall back to last reported time.
+
+- [#5863](https://github.com/bluesky-social/atproto/pull/5863) [`bae981e`](https://github.com/bluesky-social/atproto/commit/bae981e238a7bc192b52a53c14f051a76a9f5507) Thanks [@amckinley](https://github.com/amckinley)! - Look up accounts by handle and by email through the existing `lower(handle)` and `lower(email)` indexes. `getAccount` by handle (behind `createSession` and `resolveHandle`), `getAccountByEmail` and `updateHandle`'s check that a handle is free compared the bare column, which those indexes can't serve, so each scanned the whole `actor` or `account` table.
+- Updated dependencies [[`b30ea73`](https://github.com/bluesky-social/atproto/commit/b30ea7305be8df27524ed70d4af7f246014194c2)]:
+  - @atproto/xrpc-server@0.13.11
+  - @atproto-labs/xrpc-utils@0.1.32
+
+## 0.5.56
+
+### Patch Changes
+
+- [#5846](https://github.com/bluesky-social/atproto/pull/5846) [`39d702c`](https://github.com/bluesky-social/atproto/commit/39d702c851d469d7340fc0c5946959063769f849) Thanks [@amckinley](https://github.com/amckinley)! - Add `PDS_ENTRYWAY_API_URL`, the URL this PDS uses for its own requests to the entryway, e.g. a local proxy that adds mTLS. It defaults to `PDS_ENTRYWAY_URL`, which remains the entryway's public URL: the OAuth issuer and the authorization server the PDS advertises.
+
+- [#5847](https://github.com/bluesky-social/atproto/pull/5847) [`0849c24`](https://github.com/bluesky-social/atproto/commit/0849c24d492a9286e90c1734f2483d6ed7423d73) Thanks [@amckinley](https://github.com/amckinley)! - Accept the entryway's service JWT on `com.atproto.server.createAccount` when the PDS runs behind an entryway, on the same terms as the other entryway-called routes (`lxm` `com.atproto.server.createAccount`, `aud` this PDS's service DID); a valid one bypasses rate limits. Behind an entryway, a bearer token on this route must be such a JWT: other bearer tokens are no longer verified as user service auth. Unauthenticated calls are still accepted, even with `PDS_ENTRYWAY_REQUIRE_SERVICE_AUTH=true`, so that the entryway can start signing this call; enforcement under that setting follows in a later release, once it does. PDSes without entryway configuration are unaffected.
+
+- [#5845](https://github.com/bluesky-social/atproto/pull/5845) [`7f619af`](https://github.com/bluesky-social/atproto/commit/7f619aff86f452f1ac2320b6926d88a8968b319d) Thanks [@amckinley](https://github.com/amckinley)! - Attribute entryway traffic for rate limiting by signed tokens instead of by IP address. A request that a route authenticates with the entryway service JWT bypasses rate limits; routes that do not authenticate apply them as usual. A user request the entryway proxies may carry an `x-entryway-relay` token (ES256K, `typ: "JWT"`, issued by `PDS_ENTRYWAY_DID` for this PDS's service DID, no `lxm`, at most 120 seconds long, signed with the `PDS_ENTRYWAY_JWT_VERIFY_KEY_K256_PUBLIC_KEY_HEX` key); when it verifies, the request's IP address (`req.ip`) becomes the token's `client_ip`, in canonical form, so rate limits key on the end user. Invalid relay tokens are ignored and logged at debug level with a short reason code, and request logs redact the `x-entryway-relay` header. `com.atproto.admin.getSubjectStatus` now also accepts the entryway service JWT. `PDS_RATE_LIMIT_BYPASS_IPS` keeps working as before, and PDSes without entryway configuration are unaffected.
+
+- [#5844](https://github.com/bluesky-social/atproto/pull/5844) [`1033419`](https://github.com/bluesky-social/atproto/commit/103341946f8bdb2abb5409866b234ad17812f7b8) Thanks [@amckinley](https://github.com/amckinley)! - Accept short-lived service JWTs from the entryway on `com.atproto.admin.deleteAccount`, `com.atproto.admin.updateAccountHandle`, `com.atproto.admin.updateSubjectStatus` and `com.atproto.server.reserveSigningKey`. Tokens must be ES256K with `typ: "JWT"`, issued by `PDS_ENTRYWAY_DID` for this PDS's service DID, bound to the called method through `lxm`, live at most 5 minutes, and be signed with the `PDS_ENTRYWAY_JWT_VERIFY_KEY_K256_PUBLIC_KEY_HEX` key. Setting `PDS_ENTRYWAY_REQUIRE_SERVICE_AUTH=true` makes these routes refuse the admin password and unauthenticated callers; `updateSubjectStatus` still accepts the moderation service. PDSes without entryway configuration are unaffected.
+
+- [#5852](https://github.com/bluesky-social/atproto/pull/5852) [`870a534`](https://github.com/bluesky-social/atproto/commit/870a5346d0e9374cb99e60bf88a98c27d3d34cfe) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Increase the app.bsky.actor.putPreferences JSON request-body limit from 150 KiB to 300 KiB without changing the global PDS limit.
+
+- [#5762](https://github.com/bluesky-social/atproto/pull/5762) [`7a46712`](https://github.com/bluesky-social/atproto/commit/7a467120982d9ff1559afeb3a26989dad5877d17) Thanks [@haileyok](https://github.com/haileyok)! - Redact cookie and set-cookie headers in HTTP request and response logs.
+- Updated dependencies [[`ac78dcf`](https://github.com/bluesky-social/atproto/commit/ac78dcf2cba6505f822b6db093a14d489eee1c49), [`7a46712`](https://github.com/bluesky-social/atproto/commit/7a467120982d9ff1559afeb3a26989dad5877d17)]:
+  - @atproto/lex-cbor@0.1.10
+  - @atproto/common@0.8.10
+  - @atproto/repo@0.11.5
+  - @atproto/xrpc-server@0.13.10
+  - @atproto/aws@0.3.24
+  - @atproto/oauth-provider@0.25.6
+  - @atproto-labs/xrpc-utils@0.1.31
+
+## 0.5.55
+
+### Patch Changes
+
+- [#5817](https://github.com/bluesky-social/atproto/pull/5817) [`d4f2c91`](https://github.com/bluesky-social/atproto/commit/d4f2c919697d37af8f411f724e12b8ce2b88f922) Thanks [@foysalit](https://github.com/foysalit)! - Support linking report closures to existing moderation events and targeting all subjects owned by an account from a moderation event.
+- Updated dependencies [[`32c4f74`](https://github.com/bluesky-social/atproto/commit/32c4f7401b5ffd402790ccdbea60f0f12f06adfd), [`8c841f6`](https://github.com/bluesky-social/atproto/commit/8c841f6e73c8365c2dfe816c0613aa9c50490361), [`8c841f6`](https://github.com/bluesky-social/atproto/commit/8c841f6e73c8365c2dfe816c0613aa9c50490361), [`8c841f6`](https://github.com/bluesky-social/atproto/commit/8c841f6e73c8365c2dfe816c0613aa9c50490361), [`8c841f6`](https://github.com/bluesky-social/atproto/commit/8c841f6e73c8365c2dfe816c0613aa9c50490361)]:
+  - @atproto-labs/xrpc-utils@0.1.30
+  - @atproto/lex-data@0.1.10
+  - @atproto/lex-cbor@0.1.9
+  - @atproto/lex-schema@0.2.11
+  - @atproto/common@0.8.9
+  - @atproto/lex-client@0.4.2
+  - @atproto/lex-document@0.1.16
+  - @atproto/lex-json@0.1.9
+  - @atproto/repo@0.11.4
+  - @atproto/xrpc-server@0.13.9
+  - @atproto/aws@0.3.23
+  - @atproto/oauth-provider@0.25.5
+  - @atproto/identity@0.5.23
+
+## 0.5.54
+
+### Patch Changes
+
+- [#5799](https://github.com/bluesky-social/atproto/pull/5799) [`9537a65`](https://github.com/bluesky-social/atproto/commit/9537a659a9d85bbeef1bb423fcb4be9d2e618ff2) Thanks [@dholms](https://github.com/dholms)! - Add the `com.atproto.label.record` lexicon
+
+- [#5813](https://github.com/bluesky-social/atproto/pull/5813) [`43b0be2`](https://github.com/bluesky-social/atproto/commit/43b0be2fa15e49479c11254101a056e9da137c84) Thanks [@foysalit](https://github.com/foysalit)! - Expose account enforcement and best-effort profile information in the moderation inbox.
+- Updated dependencies []:
+  - @atproto-labs/fetch-node@0.4.5
+  - @atproto/oauth-provider@0.25.4
+  - @atproto/identity@0.5.22
+
 ## 0.5.53
 
 ### Patch Changes

@@ -80,6 +80,64 @@ describe('moderation-statuses', () => {
   })
 
   describe('query statuses', () => {
+    it('omits retired statistics and ignores count-based filters', async () => {
+      const response = await modClient.queryStatuses({})
+      expect(response.subjectStatuses.length).toBeGreaterThan(0)
+      for (const status of response.subjectStatuses) {
+        expect(status).not.toHaveProperty('accountStats')
+        expect(status).not.toHaveProperty('recordsStats')
+      }
+
+      const headers = await network.ozone.modHeaders(
+        'tools.ozone.moderation.queryStatuses',
+      )
+      const queryLegacy = (query: string) =>
+        fetch(
+          `${network.ozone.url}/xrpc/tools.ozone.moderation.queryStatuses?${query}`,
+          { headers },
+        )
+      for (const query of [
+        'minAccountSuspendCount=1',
+        'minReportedRecordsCount=1',
+        'minTakendownRecordsCount=1',
+      ]) {
+        const legacyResponse = await queryLegacy(query)
+        expect(legacyResponse.status).toBe(200)
+        const result = (await legacyResponse.json()) as {
+          subjectStatuses: { id: number }[]
+        }
+        expect(result.subjectStatuses.map((status) => status.id)).toEqual(
+          response.subjectStatuses.map((status) => status.id),
+        )
+      }
+
+      for (const direction of ['asc', 'desc']) {
+        const query = `sortDirection=${direction}&limit=1`
+        const firstPage = (await (await queryLegacy(query)).json()) as {
+          cursor?: string
+          subjectStatuses: { id: number }[]
+        }
+        expect(firstPage.cursor).toBeDefined()
+        for (const sortField of [
+          'reportedRecordsCount',
+          'takendownRecordsCount',
+        ]) {
+          for (const cursor of [
+            '',
+            `&cursor=${encodeURIComponent(firstPage.cursor!)}`,
+          ]) {
+            const expected = await (await queryLegacy(query + cursor)).json()
+            const legacyResponse = await queryLegacy(
+              `${query}&sortField=${sortField}${cursor}`,
+            )
+            expect(legacyResponse.status).toBe(200)
+            expect(await legacyResponse.json()).toEqual(expected)
+          }
+        }
+      }
+      expect((await queryLegacy('sortField=unknown')).status).toBe(400)
+    })
+
     it('returns statuses for subjects that received moderation events', async () => {
       const response = await modClient.queryStatuses({})
 
@@ -363,6 +421,55 @@ describe('moderation-statuses', () => {
         (s) => s.subject.$type === 'chat.bsky.convo.defs#convoRef',
       )
       expect(convoStatuses.length).toBeGreaterThanOrEqual(2)
+    })
+
+    it('includes message statuses in conversation filtering', async () => {
+      const did = sc.dids.carol
+      const convoId = 'filter-messages-convo'
+      const conversation = {
+        $type: 'chat.bsky.convo.defs#convoRef',
+        did,
+        convoId,
+      }
+      const message = {
+        $type: 'chat.bsky.convo.defs#messageRef',
+        did,
+        convoId,
+        messageId: 'filter-message',
+      }
+      const legacyMessage = {
+        ...message,
+        convoId: '',
+        messageId: 'legacy-filter-message',
+      }
+      for (const subject of [conversation, message, legacyMessage]) {
+        await sc.createReport({
+          reasonType: ComAtprotoModerationDefs.REASONSPAM,
+          subject,
+          reportedBy: sc.dids.alice,
+        })
+      }
+      await network.processAll()
+      const chat = await modClient.queryStatuses({
+        subjectType: 'conversation',
+        limit: 100,
+      })
+      expect(chat.subjectStatuses.map((status) => status.subject)).toEqual(
+        expect.arrayContaining([conversation, message, legacyMessage]),
+      )
+      const convo = await modClient.queryStatuses({
+        subject: `at://${did}/chat.bsky.convo/${convoId}`,
+      })
+      expect(convo.subjectStatuses.map((status) => status.subject)).toEqual([
+        conversation,
+      ])
+      const records = await modClient.queryStatuses({
+        subjectType: 'record',
+        limit: 100,
+      })
+      expect(
+        records.subjectStatuses.map((status) => status.subject),
+      ).not.toEqual(expect.arrayContaining([message]))
     })
   })
 

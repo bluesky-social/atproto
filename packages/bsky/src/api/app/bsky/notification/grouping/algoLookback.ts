@@ -6,8 +6,8 @@ import type {
   NotificationItem,
 } from './grouping.js'
 import {
-  MAX_GROUP_SIZE,
   canGroupNotification,
+  getMaxGroupSize,
   isNotificationRead,
 } from './shared.js'
 
@@ -48,7 +48,7 @@ export const createAlgoLookbackGroupBuilder: GroupBuilderFactory = (
       const active = activeGroups.get(key)
       if (
         active &&
-        active.itemCount < MAX_GROUP_SIZE &&
+        active.itemCount < getMaxGroupSize(item.raw.reason) &&
         isWithinLookback(active.items[0]!, item, now, 1)
       ) {
         active.actorDids.push(item.actorDid)

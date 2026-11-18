@@ -21,10 +21,7 @@ import { CtxMigrationProvider } from './migrations/provider.js'
 import type { DatabaseSchema, DatabaseSchemaType } from './schema/index.js'
 import type { PgOptions } from './types.js'
 
-export {
-  MATERIALIZED_VIEW_REFRESH_LOCK_ID,
-  STATS_COMPUTER_LOCK_ID,
-} from '../daemon/locks.js'
+export { STATS_COMPUTER_LOCK_ID } from '../daemon/locks.js'
 
 export class Database {
   pool: PgPool

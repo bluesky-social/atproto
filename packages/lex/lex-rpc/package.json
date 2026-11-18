@@ -1,6 +1,6 @@
 {
   "name": "@atproto/lex-rpc",
-  "version": "0.0.2",
+  "version": "0.1.0",
   "license": "MIT",
   "description": "Utilities for building and processing AT Protocol XRPC requests (Lexicon RPC)",
   "keywords": [
@@ -20,7 +20,9 @@
     "./README.md",
     "./CHANGELOG.md"
   ],
-  "sideEffects": false,
+  "sideEffects": [
+    "./dist/polyfill.js"
+  ],
   "type": "module",
   "exports": {
     ".": {

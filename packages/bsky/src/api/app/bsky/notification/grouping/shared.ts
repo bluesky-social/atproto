@@ -1,11 +1,32 @@
 import { NotificationFeed } from '../../../../../proto/bsky_pb.js'
 import {
+  APPVIEW_NOTIFICATION_REASON,
+  type AppviewNotificationReason,
   type DataplaneNotificationReason,
   NOTIFICATION_REASON,
 } from '../constants.js'
 import type { NotificationGroup } from './grouping.js'
 
-export const MAX_GROUP_SIZE = 200
+const DEFAULT_MAX_GROUP_SIZE = 100
+
+// @NOTE These kinds must not exceed a certain number of items: the frontend puts all item URIs
+// in a URL query string, and larger groups make the URL too long and break navigation.
+const MAX_GROUP_SIZE_OVERRIDES: Partial<
+  Record<AppviewNotificationReason, number>
+> = {
+  [NOTIFICATION_REASON.SUBSCRIBED_POST]: 150,
+  [APPVIEW_NOTIFICATION_REASON.MULTI_POST_LIKE]: 150,
+  [APPVIEW_NOTIFICATION_REASON.MULTI_POST_REPOST]: 150,
+  [APPVIEW_NOTIFICATION_REASON.MULTI_POST_LIKE_VIA_REPOST]: 150,
+  [APPVIEW_NOTIFICATION_REASON.MULTI_POST_REPOST_VIA_REPOST]: 150,
+}
+
+export function getMaxGroupSize(kind: AppviewNotificationReason): number {
+  return Math.min(
+    DEFAULT_MAX_GROUP_SIZE,
+    MAX_GROUP_SIZE_OVERRIDES[kind] ?? DEFAULT_MAX_GROUP_SIZE,
+  )
+}
 
 // Notification timestamps never collide; no tie-breaker is needed.
 export const compareNotificationGroupsNewestFirst = (

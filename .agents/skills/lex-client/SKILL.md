@@ -367,7 +367,15 @@ const { body } = await client.uploadBlob(bytes, { encoding: 'image/png' })
 body.blob // BlobRef — store this in a record
 
 const image = await client.getBlob(did, cid)
+
+// Large payloads: get the unread ReadableStream instead of a Uint8Array
+await using response = await client.getBlobStream(did, cid)
 ```
+
+`xrpcStream()` / `xrpcStreamSafe()` / `getBlobStream()` return an
+`XrpcStreamResponse` (binary outputs only). The caller owns the stream: consume
+it, `cancel()` it, or dispose of the response. Buffered responses are not
+disposable.
 
 ## Labelers
 

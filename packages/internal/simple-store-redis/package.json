@@ -1,6 +1,6 @@
 {
   "name": "@atproto-labs/simple-store-redis",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "license": "MIT",
   "description": "Redis based simple-store implementation",
   "keywords": [
@@ -32,7 +32,7 @@
     "@atproto-labs/simple-store": "workspace:^"
   },
   "peerDependencies": {
-    "ioredis": "^5.3.2"
+    "ioredis": "^5.3.2 || ^6.0.0"
   },
   "scripts": {
     "build": "tsc --build tsconfig.build.json"

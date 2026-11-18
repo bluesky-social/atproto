@@ -297,7 +297,11 @@ describe('viewer inbox reports', () => {
     await network.processAll()
     const getStanding = async () =>
       (await call(did, 'tools.ozone.inbox.getAccountStatus')).data
-    expect((await getStanding()).standing).toBe('good')
+    expect(await getStanding()).toMatchObject({
+      standing: 'good',
+      hasActiveStrikes: false,
+      enforcement: { state: 'none' },
+    })
     for (const [index, expected] of ['good', 'warning', 'atRisk'].entries()) {
       const { ref } = sc.posts[did][index]
       await modClient.emitEvent({
@@ -311,7 +315,13 @@ describe('viewer inbox reports', () => {
           cid: ref.cidStr,
         },
       })
-      expect((await getStanding()).standing).toBe(expected)
+      const result = await getStanding()
+      expect(result).toMatchObject({
+        standing: expected,
+        hasActiveStrikes: true,
+        enforcement: { state: 'none' },
+      })
+      expect(result).not.toHaveProperty('activeStrikeCount')
     }
     const { ref } = sc.posts[did][2]
     await modClient.emitEvent({
@@ -325,11 +335,48 @@ describe('viewer inbox reports', () => {
         cid: ref.cidStr,
       },
     })
-    expect((await getStanding()).standing).toBe('good')
+    expect(await getStanding()).toMatchObject({
+      standing: 'good',
+      hasActiveStrikes: false,
+    })
+    await modClient.emitEvent({
+      event: {
+        $type: 'tools.ozone.moderation.defs#modEventTakedown',
+        durationInHours: 24,
+        targetServices: ['appview'],
+      },
+      subject: { $type: 'com.atproto.admin.defs#repoRef', did },
+    })
+    expect((await getStanding()).enforcement).toEqual({
+      state: 'suspended',
+      expiresAt: expect.any(String),
+    })
+    const expiredAt = toDatetimeString(Date.now() - 1_000)
+    // @NOTE Simulate an expiry before the daemon has processed the reversal.
+    await network.ozone.ctx.db.db
+      .updateTable('moderation_subject_status')
+      .set({ suspendUntil: expiredAt })
+      .where('did', '=', did)
+      .where('recordPath', '=', '')
+      .where('convoId', '=', '')
+      .execute()
+    expect(await getStanding()).toMatchObject({
+      enforcement: { state: 'suspended', expiresAt: expiredAt },
+      expiresAt: expiredAt,
+    })
+    await modClient.emitEvent({
+      event: { $type: 'tools.ozone.moderation.defs#modEventReverseTakedown' },
+      subject: { $type: 'com.atproto.admin.defs#repoRef', did },
+    })
+    expect((await getStanding()).enforcement).toEqual({ state: 'none' })
     await modClient.emitEvent({
       event: { $type: 'tools.ozone.moderation.defs#modEventTakedown' },
       subject: { $type: 'com.atproto.admin.defs#repoRef', did },
     })
-    expect((await getStanding()).standing).toBe('atRisk')
+    expect(await getStanding()).toMatchObject({
+      standing: 'atRisk',
+      hasActiveStrikes: false,
+      enforcement: { state: 'takendown' },
+    })
   })
 })

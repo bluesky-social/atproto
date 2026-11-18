@@ -1,5 +1,21 @@
 # @atproto/lex-password-session
 
+## 0.3.3
+
+### Patch Changes
+
+- [#5917](https://github.com/bluesky-social/atproto/pull/5917) [`b5dfe0b`](https://github.com/bluesky-social/atproto/commit/b5dfe0b80ac4f14f56b3c9b797e0e50d2e194a3b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Fix `ReferenceError`s in environments that do not define a `ReadableStream` global (e.g. React Native), when sending `Blob` request bodies, when processing failed requests, and when refreshing expired password sessions.
+- Updated dependencies [[`b5dfe0b`](https://github.com/bluesky-social/atproto/commit/b5dfe0b80ac4f14f56b3c9b797e0e50d2e194a3b), [`b5dfe0b`](https://github.com/bluesky-social/atproto/commit/b5dfe0b80ac4f14f56b3c9b797e0e50d2e194a3b), [`b5dfe0b`](https://github.com/bluesky-social/atproto/commit/b5dfe0b80ac4f14f56b3c9b797e0e50d2e194a3b)]:
+  - @atproto/lex-rpc@0.1.0
+
+## 0.3.2
+
+### Patch Changes
+
+- Updated dependencies [[`8c841f6`](https://github.com/bluesky-social/atproto/commit/8c841f6e73c8365c2dfe816c0613aa9c50490361)]:
+  - @atproto/lex-schema@0.2.11
+  - @atproto/lex-rpc@0.0.3
+
 ## 0.3.1
 
 ### Patch Changes

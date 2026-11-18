@@ -79,7 +79,11 @@ import updateSeen from './app/bsky/notification/updateSeen.js'
 import getAgeAssuranceState from './app/bsky/unspecced/getAgeAssuranceState.js'
 import getAtmosphereApps from './app/bsky/unspecced/getAtmosphereApps.js'
 import getAtmosphereExploreTab from './app/bsky/unspecced/getAtmosphereExploreTab.js'
+import getAtmosphereRecommendedActivity from './app/bsky/unspecced/getAtmosphereRecommendedActivity.js'
+import getAtmosphereRecordView from './app/bsky/unspecced/getAtmosphereRecordView.js'
+import getAtmosphereRecordViews from './app/bsky/unspecced/getAtmosphereRecordViews.js'
 import getAtmosphereTimeline from './app/bsky/unspecced/getAtmosphereTimeline.js'
+import getAtmosphereTimelineV2 from './app/bsky/unspecced/getAtmosphereTimelineV2.js'
 import getConfig from './app/bsky/unspecced/getConfig.js'
 import getOnboardingSuggestedStarterPacks from './app/bsky/unspecced/getOnboardingSuggestedStarterPacks.js'
 import getPopularFeedGenerators from './app/bsky/unspecced/getPopularFeedGenerators.js'
@@ -104,12 +108,15 @@ import queryLabels from './com/atproto/label/queryLabels.js'
 import getRecord from './com/atproto/repo/getRecord.js'
 import fetchLabels from './com/atproto/temp/fetchLabels.js'
 import internalGetProfiles from './internal/bsky/actor/getProfiles.js'
+import internalGetPosts from './internal/bsky/feed/getPosts.js'
 
 export * as health from './health.js'
 
 export * as wellKnown from './well-known.js'
 
 export * as blobResolver from './blob-resolver.js'
+
+export * as blobSource from './blob-source.js'
 
 export * as external from './external.js'
 
@@ -204,7 +211,11 @@ export default function (server: Server, ctx: AppContext) {
   unregisterPush(server, ctx)
   getAtmosphereApps(server, ctx)
   getAtmosphereExploreTab(server, ctx)
+  getAtmosphereRecommendedActivity(server, ctx)
+  getAtmosphereRecordView(server, ctx)
+  getAtmosphereRecordViews(server, ctx)
   getAtmosphereTimeline(server, ctx)
+  getAtmosphereTimelineV2(server, ctx)
   getConfig(server, ctx)
   getPopularFeedGenerators(server, ctx)
   getTaggedSuggestions(server, ctx)
@@ -223,4 +234,5 @@ export default function (server: Server, ctx: AppContext) {
   queryLabels(server, ctx)
   // internal.bsky
   internalGetProfiles(server, ctx)
+  internalGetPosts(server, ctx)
 }

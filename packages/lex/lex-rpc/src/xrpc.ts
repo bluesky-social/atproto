@@ -18,8 +18,12 @@ import type { Agent, AgentOptions } from './agent.js'
 import { buildAgent } from './agent.js'
 import type { XrpcFailure } from './errors.js'
 import { XrpcFetchError, XrpcResponseError, asXrpcFailure } from './errors.js'
-import type { XrpcResponseOptions } from './response.js'
-import { XrpcResponse } from './response.js'
+import type { IfXrpcStreamable, XrpcResponseOptions } from './response.js'
+import {
+  XrpcResponse,
+  XrpcStreamResponse,
+  assertXrpcStreamable,
+} from './response.js'
 import type { BinaryBodyInit } from './types.js'
 import type { XrpcRequestHeadersOptions } from './util.js'
 import {
@@ -143,6 +147,8 @@ export type XrpcRequestProcessingOptions = {
  *   params: { limit: 50 }
  * })
  * ```
+ *
+ * @see {@link xrpcStream} to stream binary payloads instead
  */
 export async function xrpc<const M extends Query | Procedure>(
   agentOpts: Agent | AgentOptions,
@@ -164,17 +170,6 @@ export async function xrpc<const M extends Query | Procedure>(
   if (response.success) return response
   else throw response
 }
-
-/**
- * Union type representing either a successful response or a failure.
- *
- * Both {@link XrpcResponse} and {@link XrpcFailure} have a `success` property
- * that can be used to discriminate between them.
- *
- * @typeParam M - The XRPC method type
- */
-export type XrpcResult<M extends Procedure | Query> =
-  XrpcResponse<M> | XrpcFailure<M>
 
 /**
  * Makes an XRPC request without throwing on failure.
@@ -218,6 +213,147 @@ export async function xrpcSafe<const M extends Query | Procedure>(
   ns: Main<M>,
   options: XrpcOptions<M> = {} as XrpcOptions<M>,
 ): Promise<XrpcResult<M>> {
+  return xrpcRequest(agentOpts, ns, options, XrpcResponse.fromFetchResponse)
+}
+
+/**
+ * Union type representing either a successful response or a failure.
+ *
+ * Both {@link XrpcResponse} and {@link XrpcFailure} have a `success` property
+ * that can be used to discriminate between them.
+ *
+ * @typeParam M - The XRPC method type
+ */
+export type XrpcResult<M extends Procedure | Query> =
+  XrpcResponse<M> | XrpcFailure<M>
+
+/**
+ * Makes an XRPC request, returning binary (non JSON) response payloads unread,
+ * as a {@link ReadableStream}, and throws on failure.
+ *
+ * The caller owns the stream and must either consume it or cancel it, which
+ * can be done through {@link XrpcStreamResponse.cancel}, or by disposing of
+ * the response (`await using`). Error responses are still buffered. Only
+ * accepts methods declaring a binary output (a non-JSON encoding, without
+ * schema) or no output encoding at all.
+ *
+ * @returns The successful {@link XrpcStreamResponse}
+ * @throws {XrpcFailure} When the request fails. This includes an
+ * {@link XrpcInternalError} when the fetch implementation does not expose the
+ * response body as a stream (e.g. React Native's built-in fetch).
+ *
+ * @example
+ * ```typescript
+ * await using response = await xrpcStream(agent, com.atproto.sync.getBlob.main, {
+ *   params: { did, cid },
+ * })
+ *
+ * for await (const chunk of response.body) {
+ *   // ...
+ * }
+ * ```
+ *
+ * @see {@link xrpc} for the buffered variant
+ */
+export async function xrpcStream<const M extends Query | Procedure>(
+  agentOpts: Agent | AgentOptions,
+  ns: NonNullable<unknown> extends XrpcOptions<M>
+    ? IfXrpcStreamable<M, Main<M>>
+    : Restricted<'This XRPC method requires an "options" argument'>,
+): Promise<XrpcStreamResponse<M>>
+export async function xrpcStream<const M extends Query | Procedure>(
+  agentOpts: Agent | AgentOptions,
+  ns: IfXrpcStreamable<M, Main<M>>,
+  options: XrpcOptions<M>,
+): Promise<XrpcStreamResponse<M>>
+export async function xrpcStream<const M extends Query | Procedure>(
+  agentOpts: Agent | AgentOptions,
+  ns: IfXrpcStreamable<M, Main<M>>,
+  options: XrpcOptions<M> = {} as XrpcOptions<M>,
+): Promise<XrpcStreamResponse<M>> {
+  const response = await xrpcStreamSafe(agentOpts, ns, options)
+  if (response.success) return response
+  else throw response
+}
+
+/**
+ * Union type representing either a successful {@link XrpcStreamResponse} or a
+ * failure. Both are disposable, allowing to dispose of the result (`await using`)
+ * without narrowing it first.
+ *
+ * @typeParam M - The XRPC method type
+ */
+export type XrpcStreamResult<M extends Procedure | Query> =
+  XrpcStreamResponse<M> | XrpcFailure<M>
+
+/**
+ * Same as {@link xrpcStream}, but returns failures instead of throwing them.
+ *
+ * @returns Either a successful {@link XrpcStreamResponse} or an
+ * {@link XrpcFailure}, both of which are disposable.
+ *
+ * @example
+ * ```typescript
+ * await using result = await xrpcStreamSafe(agent, com.atproto.sync.getBlob.main, {
+ *   params: { did, cid },
+ * })
+ *
+ * if (result.success) {
+ *   for await (const chunk of result.body) {
+ *     // ...
+ *   }
+ * }
+ * ```
+ */
+export async function xrpcStreamSafe<const M extends Query | Procedure>(
+  agentOpts: Agent | AgentOptions,
+  ns: NonNullable<unknown> extends XrpcOptions<M>
+    ? IfXrpcStreamable<M, Main<M>>
+    : Restricted<'This XRPC method requires an "options" argument'>,
+): Promise<XrpcStreamResult<M>>
+export async function xrpcStreamSafe<const M extends Query | Procedure>(
+  agentOpts: Agent | AgentOptions,
+  ns: IfXrpcStreamable<M, Main<M>>,
+  options: XrpcOptions<M>,
+): Promise<XrpcStreamResult<M>>
+export async function xrpcStreamSafe<const M extends Query | Procedure>(
+  agentOpts: Agent | AgentOptions,
+  ns: Main<M>,
+  options: XrpcOptions<M> = {} as XrpcOptions<M>,
+): Promise<XrpcStreamResult<M>> {
+  const method: M = getMain(ns)
+
+  // Reject untyped calls before sending the request
+  try {
+    assertXrpcStreamable(method)
+  } catch (cause) {
+    return asXrpcFailure(method, cause)
+  }
+
+  return xrpcRequest(
+    agentOpts,
+    ns,
+    options,
+    // @NOTE The method was asserted to be streamable above, which the
+    // (deferred) IfXrpcStreamable<M, M> parameter type cannot reflect.
+    XrpcStreamResponse.fromFetchResponse as unknown as (
+      method: M,
+      response: Response,
+      options: XrpcResponseOptions,
+    ) => Promise<XrpcStreamResponse<M>>,
+  )
+}
+
+async function xrpcRequest<M extends Query | Procedure, R>(
+  agentOpts: Agent | AgentOptions,
+  ns: Main<M>,
+  options: XrpcOptions<M>,
+  fromFetchResponse: (
+    method: M,
+    response: Response,
+    options: XrpcResponseOptions,
+  ) => Promise<R>,
+): Promise<R | XrpcFailure<M>> {
   const method: M = getMain(ns)
 
   for (let counter = 1; ; counter++) {
@@ -230,13 +366,16 @@ export async function xrpcSafe<const M extends Query | Procedure>(
         const cause = extractFetchErrorCause(err)
         throw new XrpcFetchError(method, cause)
       })
-      return await XrpcResponse.fromFetchResponse<M>(method, response, options)
+      return await fromFetchResponse(method, response, options)
     } catch (cause) {
       const failure = asXrpcFailure(method, cause)
 
       // Cannot retry a request with a consumable body
       if (
-        options.body instanceof ReadableStream ||
+        // @NOTE ReadableStream is not defined in every environment (e.g.
+        // React Native)
+        (typeof ReadableStream === 'function' &&
+          options.body instanceof ReadableStream) ||
         isAsyncIterable(options.body)
       ) {
         return failure
@@ -363,7 +502,9 @@ function xrpcProcedureInput(
         return buildPayload(input, asUint8ArrayArrayBuffer(body), encodingHint)
       } else if (
         body instanceof ArrayBuffer ||
-        body instanceof ReadableStream
+        // @NOTE ReadableStream is not defined in every environment (e.g.
+        // React Native)
+        (typeof ReadableStream === 'function' && body instanceof ReadableStream)
       ) {
         return buildPayload(input, body, encodingHint)
       } else if (isAsyncIterable(body)) {

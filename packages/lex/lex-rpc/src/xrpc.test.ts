@@ -11,8 +11,10 @@ import {
   XrpcResponseError,
   XrpcResponseValidationError,
 } from './errors.js'
-import { XrpcResponse } from './response.js'
-import { xrpc, xrpcSafe } from './xrpc.js'
+import { XrpcResponse, XrpcStreamResponse } from './response.js'
+import type { XrpcBinaryStream } from './response.js'
+import { xrpc, xrpcSafe, xrpcStream, xrpcStreamSafe } from './xrpc.js'
+import type { XrpcResult, XrpcStreamResult } from './xrpc.js'
 
 // Fixtures
 
@@ -79,6 +81,22 @@ const testQueryGetBlobRef = l.query(
     }),
   }),
 )
+
+/**
+ * Removes a global until disposed, to simulate environments that do not define
+ * it (e.g. React Native and ReadableStream). Since Node's own fetch()
+ * implementation depends on ReadableStream, Request and Response objects must
+ * be created beforehand.
+ */
+function withoutGlobal(name: string): Disposable {
+  const descriptor = Object.getOwnPropertyDescriptor(globalThis, name)
+  delete (globalThis as Record<string, unknown>)[name]
+  return {
+    [Symbol.dispose]() {
+      if (descriptor) Object.defineProperty(globalThis, name, descriptor)
+    },
+  }
+}
 
 describe(xrpc, () => {
   describe('success paths', () => {
@@ -148,6 +166,23 @@ describe(xrpc, () => {
       expect(response.success).toBe(true)
       expect(response.body).toBeInstanceOf(Uint8Array)
       expect(response.body).toEqual(bytes)
+    })
+
+    it('sends Blob bodies when the environment has no ReadableStream', async () => {
+      const response = new Response(new Uint8Array([10, 20, 30]), {
+        headers: { 'content-type': 'application/octet-stream' },
+      })
+      const fetchHandler = vi.fn<FetchHandler>(async () => response)
+      const body = new Blob([new Uint8Array([99])], { type: 'image/png' })
+
+      using _ = withoutGlobal('ReadableStream')
+
+      const result = await xrpc(fetchHandler, testBinaryProcedure, { body })
+
+      expect(result.body).toEqual(new Uint8Array([10, 20, 30]))
+      const [, init] = fetchHandler.mock.calls[0]
+      expect(init.body).toBe(body)
+      expect(new Headers(init.headers).get('content-type')).toBe('image/png')
     })
 
     it('returns no body for a no-output query', async () => {
@@ -221,7 +256,7 @@ describe(xrpc, () => {
       expect(response.body).toEqual({ value: 'ok' })
     })
 
-    it('ignores output for no-output queries', async () => {
+    it('does not parse the payload of no-output queries', async () => {
       const fetchHandler = vi.fn<FetchHandler>(async () => {
         return Response.json({ unexpected: 'data' })
       })
@@ -229,7 +264,9 @@ describe(xrpc, () => {
       const response = await xrpc(fetchHandler, testNoOutputQuery)
 
       expect(response.success).toBe(true)
-      expect(response.body).toStrictEqual({ unexpected: 'data' })
+      expect(response.body).toEqual(
+        new TextEncoder().encode('{"unexpected":"data"}'),
+      )
     })
 
     it('applies custom headers', async () => {
@@ -1546,6 +1583,249 @@ describe(xrpcSafe, () => {
       expect(result.message).toMatch('Unable to parse response payload')
       assert(result.cause instanceof TypeError)
       expect(result.cause.message).toBe('Invalid non-integer number: 1.5')
+    })
+  })
+
+  describe('retries', () => {
+    it('retries retryable failures and releases every failed response body', async () => {
+      const responses: Response[] = []
+      const fetchHandler = vi.fn<FetchHandler>(async () => {
+        const response =
+          responses.length < 2
+            ? Response.json({ error: 'NotEnoughResources' }, { status: 503 })
+            : new Response(new Uint8Array([1, 2, 3]), {
+                headers: { 'content-type': 'application/octet-stream' },
+              })
+        responses.push(response)
+        return response
+      })
+
+      const result = await xrpcSafe(fetchHandler, testBinaryQuery, {
+        maxRetries: 2,
+        minRetryTimeout: 0,
+      })
+
+      assert(result.success)
+      expect(result.body).toEqual(new Uint8Array([1, 2, 3]))
+      expect(fetchHandler).toHaveBeenCalledTimes(3)
+      expect(responses.map((r) => r.bodyUsed)).toEqual([true, true, true])
+    })
+
+    it('returns the last failure once maxRetries is reached', async () => {
+      const fetchHandler = vi.fn<FetchHandler>(async () =>
+        Response.json({ error: 'NotEnoughResources' }, { status: 503 }),
+      )
+
+      const result = await xrpcSafe(fetchHandler, testBinaryQuery, {
+        maxRetries: 1,
+        minRetryTimeout: 0,
+      })
+
+      assert(!result.success)
+      expect(result).toBeInstanceOf(XrpcResponseError)
+      expect(fetchHandler).toHaveBeenCalledTimes(2)
+    })
+
+    it('does not retry non-retryable failures', async () => {
+      const fetchHandler = vi.fn<FetchHandler>(async () =>
+        Response.json({ error: 'InvalidRequest' }, { status: 400 }),
+      )
+
+      const result = await xrpcSafe(fetchHandler, testBinaryQuery, {
+        maxRetries: 2,
+        minRetryTimeout: 0,
+      })
+
+      assert(!result.success)
+      expect(fetchHandler).toHaveBeenCalledOnce()
+    })
+  })
+})
+
+describe(xrpcStream, () => {
+  const bytes = new Uint8Array([1, 2, 3])
+  const binaryResponse: FetchHandler = async () =>
+    new Response(bytes, {
+      headers: { 'content-type': 'application/octet-stream' },
+    })
+
+  it('returns binary payloads as an unread stream', async () => {
+    const response = await xrpcStream(binaryResponse, testBinaryProcedure, {
+      body: new Uint8Array([99]),
+      encoding: 'image/png',
+    })
+
+    expect(response).toBeInstanceOf(XrpcStreamResponse)
+    expect(response).not.toBeInstanceOf(XrpcResponse)
+    expectTypeOf(response.body).toEqualTypeOf<XrpcBinaryStream>()
+    assert(response.body instanceof ReadableStream)
+    const result = await new Response(response.body).arrayBuffer()
+    expect(new Uint8Array(result)).toEqual(bytes)
+  })
+
+  it('rejects methods returning JSON, without sending the request', async () => {
+    const fetchHandler = vi.fn<FetchHandler>()
+
+    await expect(
+      // @ts-expect-error not a binary output
+      xrpcStream(fetchHandler, testQuery, {}),
+    ).rejects.toSatisfy((err) => {
+      assert(err instanceof XrpcInternalError)
+      expect(err.shouldRetry()).toBe(false)
+      assert(err.cause instanceof TypeError)
+      expect(err.cause.message).toBe(
+        `XRPC method "${testQuery.nsid}" does not declare a binary output`,
+      )
+      return true
+    })
+    expect(fetchHandler).not.toHaveBeenCalled()
+  })
+
+  it('streams the payload of methods without an output encoding', async () => {
+    const fetchHandler: FetchHandler = async () =>
+      Response.json({ unexpected: 'data' })
+
+    const response = await xrpcStream(fetchHandler, testNoOutputQuery)
+
+    expectTypeOf(response.body).toEqualTypeOf<undefined | XrpcBinaryStream>()
+    assert(response.body)
+    const result = await new Response(response.body).arrayBuffer()
+    expect(new Uint8Array(result)).toEqual(
+      new TextEncoder().encode('{"unexpected":"data"}'),
+    )
+  })
+
+  it('preserves excess property checks', async () => {
+    await using _ = await xrpcStream(binaryResponse, testBinaryQuery, {
+      // @ts-expect-error unknown option
+      signl: undefined,
+    })
+  })
+
+  it('throws failures', async () => {
+    const response = Response.json(
+      { error: 'InvalidRequest', message: 'bad request' },
+      { status: 400 },
+    )
+
+    await expect(
+      xrpcStream(async () => response, testBinaryQuery),
+    ).rejects.toBeInstanceOf(XrpcResponseError)
+    expect(response.bodyUsed).toBe(true)
+  })
+})
+
+describe(xrpcStreamSafe, () => {
+  const bytes = new Uint8Array([1, 2, 3])
+
+  it('returns disposable successful results', async () => {
+    const response = new Response(bytes, {
+      headers: { 'content-type': 'application/octet-stream' },
+    })
+
+    {
+      await using result = await xrpcStreamSafe(
+        async () => response,
+        testBinaryQuery,
+      )
+
+      expectTypeOf(result).toEqualTypeOf<
+        XrpcStreamResult<typeof testBinaryQuery>
+      >()
+      assert(result.success)
+      expect(result.body).toBe(response.body)
+      expect(response.bodyUsed).toBe(false)
+    }
+
+    expect(response.bodyUsed).toBe(true)
+  })
+
+  it('returns disposable failures', async () => {
+    {
+      await using result = await xrpcStreamSafe(
+        async () => Response.json({ error: 'InvalidRequest' }, { status: 400 }),
+        testBinaryQuery,
+      )
+
+      assert(!result.success)
+      expect(result).toBeInstanceOf(XrpcResponseError)
+    }
+  })
+
+  it('is the only variant returning disposable results', () => {
+    expectTypeOf<XrpcStreamResult<typeof testBinaryQuery>>().toExtend<
+      AsyncDisposable | Disposable
+    >()
+    expectTypeOf<XrpcResult<typeof testBinaryQuery>>().not.toExtend<
+      AsyncDisposable | Disposable
+    >()
+  })
+
+  describe('retries', () => {
+    it('releases every failed response body', async () => {
+      const responses: Response[] = []
+      const fetchHandler = vi.fn<FetchHandler>(async () => {
+        const response =
+          responses.length < 2
+            ? Response.json({ error: 'NotEnoughResources' }, { status: 503 })
+            : new Response(bytes, {
+                headers: { 'content-type': 'application/octet-stream' },
+              })
+        responses.push(response)
+        return response
+      })
+
+      await using result = await xrpcStreamSafe(fetchHandler, testBinaryQuery, {
+        maxRetries: 2,
+        minRetryTimeout: 0,
+      })
+
+      assert(result.success)
+      expectTypeOf(result.body).toEqualTypeOf<XrpcBinaryStream>()
+      expect(result.body).toBe(responses[2].body)
+      expect(responses.map((r) => r.bodyUsed)).toEqual([true, true, false])
+
+      result.cancel()
+      expect(responses[2].bodyUsed).toBe(true)
+    })
+
+    it('does not retry when streaming is not supported', async () => {
+      const fetchHandler = vi.fn<FetchHandler>(async () => {
+        const response = new Response(bytes, {
+          headers: { 'content-type': 'application/octet-stream' },
+        })
+        // e.g. React Native's built-in fetch
+        Object.defineProperty(response, 'body', { value: undefined })
+        return response
+      })
+
+      const result = await xrpcStreamSafe(fetchHandler, testBinaryQuery, {
+        maxRetries: 2,
+        minRetryTimeout: 0,
+      })
+
+      assert(!result.success)
+      expect(result).toBeInstanceOf(XrpcInternalError)
+      expect(fetchHandler).toHaveBeenCalledOnce()
+    })
+
+    it('returns failures when the environment has no ReadableStream', async () => {
+      const response = new Response(bytes, {
+        headers: { 'content-type': 'application/octet-stream' },
+      })
+      // e.g. React Native's built-in fetch
+      Object.defineProperty(response, 'body', { value: undefined })
+
+      using _ = withoutGlobal('ReadableStream')
+
+      const result = await xrpcStreamSafe(
+        async () => response,
+        testBinaryQuery,
+        { maxRetries: 2, minRetryTimeout: 0 },
+      )
+
+      assert(!result.success)
+      expect(result).toBeInstanceOf(XrpcInternalError)
     })
   })
 })

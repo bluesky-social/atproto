@@ -23,7 +23,7 @@ import type { ActorStore } from '../actor-store/actor-store.js'
 import { assertValidDidDocumentForService } from '../api/com/atproto/server/util.js'
 import { AuthScope } from '../auth-scope.js'
 import type { ServerConfig } from '../config/config.js'
-import { softDeleted } from '../db/index.js'
+import { retrySqlite, softDeleted } from '../db/index.js'
 import { hasExplicitSlur } from '../handle/explicit-slurs.js'
 import {
   baseNormalizeAndValidate,
@@ -136,6 +136,9 @@ export class AccountManager {
 
   async migrateOrThrow() {
     await this.db.ensureWal()
+    if (this.cfg.db.synchronousFull) {
+      await retrySqlite(() => this.db.ensureSynchronousFull())
+    }
     await getMigrator(this.db).migrateToLatestOrThrow()
   }
 

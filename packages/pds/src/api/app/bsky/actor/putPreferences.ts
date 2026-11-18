@@ -22,6 +22,9 @@ export default function (server: Server, ctx: AppContext) {
         permissions.assertRpc({ aud, lxm })
       },
     }),
+    opts: {
+      jsonLimit: 300 * 1024,
+    },
     handler: async ({ req, auth, input }) => {
       const { did } = auth.credentials
 

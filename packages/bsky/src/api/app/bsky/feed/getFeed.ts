@@ -7,6 +7,7 @@ import {
 import type { DidString } from '@atproto/lex-schema'
 import { AtUri } from '@atproto/syntax'
 import {
+  AuthRequiredError,
   type Headers as HeadersMap,
   InvalidRequestError,
   type Server,
@@ -47,8 +48,16 @@ export default function (server: Server, ctx: AppContext) {
     presentation,
   )
   server.add(app.bsky.feed.getFeed, {
-    auth: ctx.authVerifier.standardOptionalParameterized({
+    auth: ctx.authVerifier.standardReadOptional({
       lxmCheck: (method) => {
+        // lxm check only runs for service JWTs sent directly by the PDS, not for
+        // BSG's token.
+        //
+        // Cases:
+        // 1. PDS with custom getFeed handler (like ours): `lxm` is getFeedSkeleton
+        //    and `aud` is the feed generator's DID (hence `skipAudCheck`).
+        // 2. PDS without custom getFeed handler: `lxm` is getFeed. The feed generator
+        //    gets the same token and may reject it.
         return (
           method === app.bsky.feed.getFeedSkeleton.$lxm ||
           method === app.bsky.feed.getFeed.$lxm
@@ -68,9 +77,18 @@ export default function (server: Server, ctx: AppContext) {
           ctx.featureGatesClient.parseUserContextFromHandler({ viewer, req }),
         ),
       })
+      const serviceJwt =
+        auth.credentials.type === 'standard'
+          ? auth.credentials.serviceJwt
+          : undefined
+      if (!serviceJwt && viewer) {
+        // @TODO With OAuth, BSG's token has no service JWT. AppView will get
+        // one from BSG here.
+        throw new AuthRequiredError('Malformed token', 'InvalidToken')
+      }
       const headers = noUndefinedVals({
         'user-agent': BSKY_USER_AGENT,
-        authorization: req.headers['authorization'],
+        authorization: serviceJwt ? `Bearer ${serviceJwt}` : undefined,
         'accept-language': req.headers['accept-language'],
       })
       const passthroughHeaders = getAtprotoPassthroughHeaders(req)

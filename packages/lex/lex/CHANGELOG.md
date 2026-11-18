@@ -1,5 +1,47 @@
 # @atproto/lex
 
+## 0.5.0
+
+### Minor Changes
+
+- [#5917](https://github.com/bluesky-social/atproto/pull/5917) [`b5dfe0b`](https://github.com/bluesky-social/atproto/commit/b5dfe0b80ac4f14f56b3c9b797e0e50d2e194a3b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - **Breaking:** the response payload of methods without a declared output encoding is no longer parsed as JSON. It is returned as binary data (a `Uint8Array`, or a `ReadableStream` with `xrpcStream()`), or `undefined` when there is none, and callers that expect JSON must parse it themselves (e.g. `lexParse(new TextDecoder().decode(body))`). Only `application/json` outputs, and outputs with a schema, are parsed.
+
+### Patch Changes
+
+- [#5917](https://github.com/bluesky-social/atproto/pull/5917) [`b5dfe0b`](https://github.com/bluesky-social/atproto/commit/b5dfe0b80ac4f14f56b3c9b797e0e50d2e194a3b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add `xrpcStream()` / `xrpcStreamSafe()` (and `Client.xrpcStream()`, `Client.xrpcStreamSafe()`, `Client.getBlobStream()`), returning binary response payloads as an unread `ReadableStream` through a disposable `XrpcStreamResponse`. Response bodies are now always released (cancelled) when response processing fails, as configured by the new `onCancellationError` response option (defaults to `"propagate"`).
+- Updated dependencies [[`b5dfe0b`](https://github.com/bluesky-social/atproto/commit/b5dfe0b80ac4f14f56b3c9b797e0e50d2e194a3b), [`b5dfe0b`](https://github.com/bluesky-social/atproto/commit/b5dfe0b80ac4f14f56b3c9b797e0e50d2e194a3b)]:
+  - @atproto/lex-client@0.5.0
+  - @atproto/lex-installer@0.2.9
+
+## 0.4.8
+
+### Patch Changes
+
+- [#5855](https://github.com/bluesky-social/atproto/pull/5855) [`ac78dcf`](https://github.com/bluesky-social/atproto/commit/ac78dcf2cba6505f822b6db093a14d489eee1c49) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Fix CBOR option declarations so strict NodeNext consumers can import Lex without checking cborg's incompatible declarations. Add a packed-consumer regression check for both entrypoints.
+- Updated dependencies [[`ac78dcf`](https://github.com/bluesky-social/atproto/commit/ac78dcf2cba6505f822b6db093a14d489eee1c49)]:
+  - @atproto/lex-cbor@0.1.10
+  - @atproto/lex-installer@0.2.8
+
+## 0.4.7
+
+### Patch Changes
+
+- Updated dependencies [[`8c841f6`](https://github.com/bluesky-social/atproto/commit/8c841f6e73c8365c2dfe816c0613aa9c50490361), [`8c841f6`](https://github.com/bluesky-social/atproto/commit/8c841f6e73c8365c2dfe816c0613aa9c50490361), [`8c841f6`](https://github.com/bluesky-social/atproto/commit/8c841f6e73c8365c2dfe816c0613aa9c50490361), [`8c841f6`](https://github.com/bluesky-social/atproto/commit/8c841f6e73c8365c2dfe816c0613aa9c50490361)]:
+  - @atproto/lex-data@0.1.10
+  - @atproto/lex-cbor@0.1.9
+  - @atproto/lex-schema@0.2.11
+  - @atproto/lex-client@0.4.2
+  - @atproto/lex-installer@0.2.7
+  - @atproto/lex-json@0.1.9
+  - @atproto/lex-builder@0.1.20
+
+## 0.4.6
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/lex-installer@0.2.6
+
 ## 0.4.5
 
 ### Patch Changes
@@ -62,6 +104,12 @@
   - @atproto/lex-builder@0.1.18
   - @atproto/lex-client@0.4.0
   - @atproto/lex-schema@0.2.9
+
+## 0.3.15
+
+### Patch Changes
+
+- [`631ac94`](https://github.com/bluesky-social/atproto/commit/631ac946b2a2ec45c8f49921966f6a557f1666c6) Fix conflicting `walk` exports when resolving newer `@atproto/lex-schema` releases. Explicitly re-export the original Lex 0.3 implementation to preserve its API and traversal behavior.
 
 ## 0.3.14
 

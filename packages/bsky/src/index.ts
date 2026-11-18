@@ -15,12 +15,13 @@ import { safeFetchWrap } from '@atproto-labs/fetch-node'
 import { createBlobDispatcher } from './api/blob-dispatcher.js'
 import API, {
   blobResolver,
+  blobSource,
   external,
   health,
   sitemap,
   wellKnown,
 } from './api/index.js'
-import { AuthVerifier, createPublicKeyObject } from './auth-verifier.js'
+import { AuthVerifier, createPublicKeyObject } from './auth/verifier.js'
 import { authWithApiKey as bsyncAuth, createBsyncClient } from './bsync.js'
 import type { ServerConfig } from './config.js'
 import { AppContext } from './context.js'
@@ -40,6 +41,7 @@ import * as imageServer from './image/server.js'
 import { ImageUriBuilder } from './image/uri.js'
 import { createKwsClient } from './kws.js'
 import { loggerMiddleware } from './logger.js'
+import { ProhibitedTerms } from './prohibited-terms.js'
 import {
   authWithApiKey as rolodexAuth,
   createRolodexClient,
@@ -187,7 +189,18 @@ export class BskyAppView {
       httpVersion: config.dataplaneHttpVersion,
       rejectUnauthorized: !config.dataplaneIgnoreBadTls,
     })
+    const typeaheadClient = config.typeaheadUrls.length
+      ? createDataPlaneClient(new BasicHostList(config.typeaheadUrls), {
+          httpVersion: config.dataplaneHttpVersion,
+          rejectUnauthorized: !config.dataplaneIgnoreBadTls,
+        })
+      : undefined
+    const typeaheadProhibitedTerms =
+      typeaheadClient && config.typeaheadProhibitedTermsFile
+        ? ProhibitedTerms.load(config.typeaheadProhibitedTermsFile)
+        : undefined
     const hydrator = new Hydrator(dataplane, config.labelsFromIssuerDids, {
+      postViewCountsStartAt: config.postViewCountsStartAt,
       debugFieldAllowedDids: config.debugFieldAllowedDids,
       featureGatesClient,
       needsReviewTagSources: [config.modServiceDid],
@@ -238,12 +251,22 @@ export class BskyAppView {
     const entrywayJwtPublicKey = config.entrywayJwtPublicKeyHex
       ? createPublicKeyObject(config.entrywayJwtPublicKeyHex)
       : undefined
+    const bsgJwtSecret = config.bsgJwtSecret
+      ? Buffer.from(config.bsgJwtSecret, 'utf8')
+      : undefined
+    const internalServiceSecrets = Object.fromEntries(
+      Object.entries(config.internalServiceSecrets ?? {}).map(
+        ([name, secret]) => [name, Buffer.from(secret, 'utf8')],
+      ),
+    )
     const authVerifier = new AuthVerifier(dataplane, {
       ownDid: config.serverDid,
       alternateAudienceDids: config.alternateAudienceDids,
       modServiceDid: config.modServiceDid,
       adminPasses: config.adminPasswords,
       entrywayJwtPublicKey,
+      bsgJwtSecret,
+      internalServiceSecrets,
     })
 
     const blobDispatcher = createBlobDispatcher(config)
@@ -266,6 +289,8 @@ export class BskyAppView {
       etcd,
       dataplane,
       dataplaneHostList,
+      typeaheadClient,
+      typeaheadProhibitedTerms,
       searchClient,
       suggestionsClient,
       irisClient,
@@ -297,6 +322,7 @@ export class BskyAppView {
 
     app.use(health.createRouter(ctx))
     app.use(wellKnown.createRouter(ctx))
+    app.use(blobSource.createRouter(ctx))
     app.use(blobResolver.createMiddleware(ctx))
     app.use(imageServer.createMiddleware(ctx, { prefix: '/img/' }))
 
@@ -320,6 +346,7 @@ export class BskyAppView {
       await this.ctx.dataplaneHostList.connect()
     }
     this.ctx.featureGatesClient.start() // lazy, no await
+    this.ctx.typeaheadProhibitedTerms?.start()
     const server = this.app.listen(this.ctx.cfg.port)
     this.server = server
     server.keepAliveTimeout = 90000
@@ -331,6 +358,7 @@ export class BskyAppView {
   }
 
   async destroy(): Promise<void> {
+    this.ctx.typeaheadProhibitedTerms?.destroy()
     try {
       await this.ctx.featureGatesClient.destroy()
     } finally {

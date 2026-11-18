@@ -11,9 +11,17 @@ import {
   resolveAppealAction,
   subjectKey,
 } from '../../inbox/appeal.js'
+import {
+  findLatestAppealableAt,
+  hasVisiblePublicAction,
+} from '../../inbox/appealable-events.js'
 import { getSeenAt } from '../../inbox/seen.js'
 import { inboxHasStarted } from '../../inbox/start.js'
-import { hydrateSubjectView, loadSubject } from '../../inbox/views.js'
+import {
+  hydrateSubjectView,
+  loadSubjectEnforcement,
+  toEnforcementView,
+} from '../../inbox/views.js'
 import { tools } from '../../lexicons/index.js'
 import {
   subjectFromEventRow,
@@ -39,13 +47,9 @@ export default function (server: Server, ctx: AppContext) {
 
       const inputSubject = subjectFromInput(subjectInput)
       const action = await resolveAppealAction(ctx, inputSubject, actionInput)
-      if (
-        ctx.cfg.inbox.startAt &&
-        ((actionInput && !action) ||
-          (action && action.createdAt < ctx.cfg.inbox.startAt))
-      ) {
+      if (ctx.cfg.inbox.startAt && actionInput && !action) {
         throw new ForbiddenError(
-          'Moderation action is not visible in the inbox',
+          'No matching moderation action to appeal',
           'NotAppealable',
         )
       }
@@ -86,14 +90,33 @@ export default function (server: Server, ctx: AppContext) {
       if (!canAppealForOthers && requester !== subject.did) {
         throw new ForbiddenError('Subject is not appealable', 'NotAppealable')
       }
-      if (
-        ctx.cfg.inbox.startAt &&
-        !(await loadSubject(ctx.db, subject, ctx.cfg.inbox.startAt)).actionCount
-      ) {
-        throw new ForbiddenError(
-          'Subject is not visible in the inbox',
-          'NotAppealable',
-        )
+      // @NOTE The inbox start date bounds displayed history, not eligibility:
+      // a subject actioned before it remains appealable.
+      if (ctx.cfg.inbox.startAt && !action) {
+        const [latestAppealableAt, snapshot] = await Promise.all([
+          findLatestAppealableAt(ctx.db, subject),
+          loadSubjectEnforcement(ctx.db, subject),
+        ])
+        const enforcement = toEnforcementView({
+          subject,
+          status: snapshot.status,
+          labels: snapshot.labels,
+          actions: [],
+        })
+        if (
+          !latestAppealableAt &&
+          enforcement.state === 'none' &&
+          !(await hasVisiblePublicAction(
+            ctx.db,
+            subject,
+            ctx.cfg.inbox.startAt,
+          ))
+        ) {
+          throw new ForbiddenError(
+            'Subject has no moderation action to appeal',
+            'NotAppealable',
+          )
+        }
       }
 
       await fileAppeal(ctx, {
@@ -111,7 +134,8 @@ export default function (server: Server, ctx: AppContext) {
       // the subject view. Read after the commit so the view reflects the appeal
       // that was just filed, and treat a missing snapshot as a bug rather than
       // papering over it - the subject provably has moderation history, since
-      // the write above just added to it.
+      // the write above just added to it. That history may all predate the
+      // inbox start, which hides the actions but not the subject.
       const seenAt = await getSeenAt(ctx.db, subject.did, 'subjects')
       const view = await hydrateSubjectView(
         ctx.db,
@@ -119,6 +143,7 @@ export default function (server: Server, ctx: AppContext) {
         ctx.cfg.service.did,
         ctx.cfg.inbox,
         seenAt,
+        { requireVisibleActions: false },
       )
       if (!view) {
         throw new InternalServerError(

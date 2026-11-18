@@ -6,9 +6,9 @@ import type {
   NotificationItem,
 } from './grouping.js'
 import {
-  MAX_GROUP_SIZE,
   canGroupNotification,
   compareNotificationGroupsNewestFirst,
+  getMaxGroupSize,
   isNotificationRead,
 } from './shared.js'
 
@@ -70,7 +70,7 @@ export const createAlgoGravityGroupBuilder: GroupBuilderFactory = (
         now,
         zones,
       ).map((candidateGroup) =>
-        candidateGroup.items.length === MAX_GROUP_SIZE
+        candidateGroup.items.length === getMaxGroupSize(item.raw.reason)
           ? { ...candidateGroup, closed: true }
           : candidateGroup,
       )

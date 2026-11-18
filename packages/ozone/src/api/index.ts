@@ -5,10 +5,13 @@ import createTemplate from './communication/createTemplate.js'
 import deleteTemplate from './communication/deleteTemplate.js'
 import listTemplates from './communication/listTemplates.js'
 import updateTemplate from './communication/updateTemplate.js'
+import ackPushNotifications from './inbox/ackPushNotifications.js'
 import appealActionedSubject from './inbox/appealActionedSubject.js'
+import claimPushNotifications from './inbox/claimPushNotifications.js'
 import getAccountStatus from './inbox/getAccountStatus.js'
 import getActionedSubject from './inbox/getActionedSubject.js'
 import getNotificationPreferences from './inbox/getNotificationPreferences.js'
+import getPushPreference from './inbox/getPushPreference.js'
 import getInboxReport from './inbox/getReport.js'
 import getUnreadCount from './inbox/getUnreadCount.js'
 import listActionedSubjects from './inbox/listActionedSubjects.js'
@@ -21,6 +24,7 @@ import queryLabels from './label/queryLabels.js'
 import subscribeLabels from './label/subscribeLabels.js'
 import cancelScheduledActions from './moderation/cancelScheduledActions.js'
 import emitEvent from './moderation/emitEvent.js'
+import emitEvents from './moderation/emitEvents.js'
 import getAccountPreferences from './moderation/getAccountPreferences.js'
 import getAccountTimeline from './moderation/getAccountTimeline.js'
 import getEvent from './moderation/getEvent.js'
@@ -55,6 +59,7 @@ import getLiveStats from './report/getLiveStats.js'
 import getReport from './report/getReport.js'
 import listActivities from './report/listActivities.js'
 import queryActivities from './report/queryActivities.js'
+import queryModeratorActivity from './report/queryModeratorActivity.js'
 import queryReports from './report/queryReports.js'
 import reassignQueue from './report/reassignQueue.js'
 import refreshStats from './report/refreshStats.js'
@@ -92,8 +97,11 @@ export * as wellKnown from './well-known.js'
 export default function (server: Server, ctx: AppContext) {
   createReport(server, ctx)
   appealActionedSubject(server, ctx)
+  ackPushNotifications(server, ctx)
+  claimPushNotifications(server, ctx)
   getAccountStatus(server, ctx)
   getNotificationPreferences(server, ctx)
+  getPushPreference(server, ctx)
   getUnreadCount(server, ctx)
   getActionedSubject(server, ctx)
   getInboxReport(server, ctx)
@@ -103,6 +111,7 @@ export default function (server: Server, ctx: AppContext) {
   putNotificationPreferences(server, ctx)
   updateSeen(server, ctx)
   emitEvent(server, ctx)
+  emitEvents(server, ctx)
   searchRepos(server, ctx)
   adminGetRecord(server, ctx)
   adminGetRecords(server, ctx)
@@ -173,6 +182,7 @@ export default function (server: Server, ctx: AppContext) {
   closeReports(server, ctx)
   listActivities(server, ctx)
   queryActivities(server, ctx)
+  queryModeratorActivity(server, ctx)
   reassignQueue(server, ctx)
   return server
 }

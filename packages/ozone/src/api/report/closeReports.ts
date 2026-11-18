@@ -18,8 +18,10 @@ export default function (server: Server, ctx: AppContext) {
       const {
         subject,
         includeAllOwned,
+        reportId,
         reportTypes,
         excludedReportTypes,
+        actionEventId,
         internalNote,
         isAutomated,
         meta,
@@ -49,12 +51,15 @@ export default function (server: Server, ctx: AppContext) {
 
       const result = await closeReportsForSubject({
         inboxStartAt: ctx.cfg.inbox.startAt,
+        inboxPushEnabled: ctx.cfg.inbox.pushEnabled,
         db: ctx.db,
         subjectDid,
         subjectUri,
         includeAllOwned,
+        reportId,
         reportTypes,
         excludedReportTypes,
+        actionEventId,
         internalNote: internalNote ?? undefined,
         isAutomated: isAutomated ?? false,
         meta,

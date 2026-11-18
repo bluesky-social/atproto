@@ -277,6 +277,15 @@ describe('inbox enforcement mapper', () => {
     })
   })
 
+  it('keeps an expired temporary takedown temporary until reversal', () => {
+    const suspendUntil = past()
+    expect(enforcement(ACCOUNT, { takendown: true, suspendUntil })).toEqual({
+      state: 'suspended',
+      scope: 'app',
+      expiresAt: suspendUntil,
+    })
+  })
+
   it('reports a record takedown as removed', () => {
     expect(enforcement(RECORD, { takendown: true })).toMatchObject({
       state: 'removed',

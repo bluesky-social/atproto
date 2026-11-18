@@ -84,6 +84,7 @@ describe('proxy header', () => {
       did: proxyServer.did,
       url: proxyServer.url,
       serviceId: 'atproto_test',
+      isConfiguredAppView: false,
     })
   })
 

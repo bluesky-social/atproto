@@ -34,7 +34,7 @@ export default (db: Database, idResolver: IdResolver) =>
   (router: ConnectRouter) =>
     router.service(Service, {
       ...activitySubscription(db),
-      ...atmosphere(),
+      ...atmosphere(db),
       ...blocks(db),
       ...bookmarks(db),
       ...drafts(db),

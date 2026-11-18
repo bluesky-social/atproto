@@ -214,6 +214,11 @@
           "type": "unknown",
           "description": "Raw record JSON for the subject, when the subject is a record and the record is available."
         },
+        "account": {
+          "type": "ref",
+          "ref": "#accountPreview",
+          "description": "Best-effort current profile information for an account subject."
+        },
         "enforcement": {
           "type": "ref",
           "ref": "#enforcementView"
@@ -254,6 +259,17 @@
         "updatedAt": {
           "type": "string",
           "format": "datetime"
+        }
+      }
+    },
+    "accountPreview": {
+      "type": "object",
+      "description": "Current account information, when available; this is not a snapshot of the account at the time of the action.",
+      "properties": {
+        "handle": { "type": "string", "format": "handle" },
+        "profile": {
+          "type": "unknown",
+          "description": "Raw app.bsky.actor.profile record, when available."
         }
       }
     },

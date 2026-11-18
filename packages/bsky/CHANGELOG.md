@@ -1,5 +1,200 @@
 # @atproto/bsky
 
+## 0.5.14
+
+### Patch Changes
+
+- [#5890](https://github.com/bluesky-social/atproto/pull/5890) [`d3adef8`](https://github.com/bluesky-social/atproto/commit/d3adef81c0162a71679879391075520ed866ab1f) Thanks [@ds-boyce](https://github.com/ds-boyce)! - Hydrate eligible post view counts only for the authenticated author, with a bounded optional Atlantis lookup. Serving is disabled when `BSKY_POST_VIEW_COUNTS_START_AT` is unset, invalid, or in the future. Invalid values log a warning.
+
+- [#5898](https://github.com/bluesky-social/atproto/pull/5898) [`b54391d`](https://github.com/bluesky-social/atproto/commit/b54391d5d6217389daf7f3a52ba645c9f67d62ac) Thanks [@haileyok](https://github.com/haileyok)! - Add a blob source endpoint.
+
+## 0.5.13
+
+### Patch Changes
+
+- [#5919](https://github.com/bluesky-social/atproto/pull/5919) [`8d84a6c`](https://github.com/bluesky-social/atproto/commit/8d84a6cea64c5d0aa064f291b09c3eea2eb61b65) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Upgrade `ioredis` to 6.x. By default, the Redis clients these packages create stay on RESP2 and skip `CLIENT SETINFO` on connect, as with `ioredis` 5, and take `ioredis` 6's other new defaults:
+  
+  - `family` is `0` (was `4`): hostnames resolve to IPv4 or IPv6 addresses, not only IPv4.
+  - `retryStrategy` waits 50ms × 2^(attempt − 1), up to 5s, plus up to 200ms of jitter, between reconnection attempts (was 50ms × attempt, up to 2s).
+  - `keepAlive` is `30000`: TCP keepalive probes start after 30s of idle (was off).
+  
+  The `redis` option of `OAuthProvider` now expects an `ioredis` 6 `Redis` instance, which is used as is, or `RedisOptions`, which can override these defaults.
+
+- [#5925](https://github.com/bluesky-social/atproto/pull/5925) [`3f7eb87`](https://github.com/bluesky-social/atproto/commit/3f7eb87d02831bffc2f8a67907ce739aeaa300f0) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add the opt-in posts_and_replies_only author feed filter, excluding reposts before hydration and bounded page filling while preserving existing filters.
+
+- [#5918](https://github.com/bluesky-social/atproto/pull/5918) [`b575ca1`](https://github.com/bluesky-social/atproto/commit/b575ca131e66ae2f71efcd9d1cabe03e392c218f) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Log and count labeler-signed service JWTs by `lxm`.
+
+- [#5921](https://github.com/bluesky-social/atproto/pull/5921) [`137591c`](https://github.com/bluesky-social/atproto/commit/137591c05548c263fad91062376ecdb320c11ff3) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Don't log the mod service's labeler-signed service JWTs. They are still counted.
+- Updated dependencies [[`3f7eb87`](https://github.com/bluesky-social/atproto/commit/3f7eb87d02831bffc2f8a67907ce739aeaa300f0), [`b5dfe0b`](https://github.com/bluesky-social/atproto/commit/b5dfe0b80ac4f14f56b3c9b797e0e50d2e194a3b), [`b5dfe0b`](https://github.com/bluesky-social/atproto/commit/b5dfe0b80ac4f14f56b3c9b797e0e50d2e194a3b)]:
+  - @atproto/api@0.32.2
+  - @atproto/lex-client@0.5.0
+  - @atproto/xrpc-server@0.13.13
+  - @atproto/sync@0.4.27
+  - @atproto-labs/xrpc-utils@0.1.34
+
+## 0.5.12
+
+### Patch Changes
+
+- [#5905](https://github.com/bluesky-social/atproto/pull/5905) [`9f605e0`](https://github.com/bluesky-social/atproto/commit/9f605e0fb117173dea8b5c1e9d6ad13bd6995c7f) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Accept BSG tokens, with the scope each endpoint requires. Accept internal service tokens on the internal endpoints, and add `internal.bsky.feed.getPosts`.
+
+- [#5909](https://github.com/bluesky-social/atproto/pull/5909) [`d330b0c`](https://github.com/bluesky-social/atproto/commit/d330b0ca6ff6ecdaaef4ef6ab56caf750d0c4b74) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Accept only internal service tokens on the internal endpoints, and remove the `viewer` parameter from `internal.bsky.actor.getProfiles`. `app.bsky.feed.getPosts` and `app.bsky.actor.getProfiles` no longer accept service JWTs for `chat.bsky.*` methods. Ozone no longer installs the unused `internal.bsky.actor.getProfiles` lexicon.
+
+- [#5910](https://github.com/bluesky-social/atproto/pull/5910) [`1e5118f`](https://github.com/bluesky-social/atproto/commit/1e5118f626ed91f65df248b7c2c9bb1bf37a9407) Thanks [@amckinley](https://github.com/amckinley)! - Add `BSKY_TYPEAHEAD_URL`: when set, `app.bsky.actor.searchActorsTypeahead` gets its skeleton from that `bsky.Service` host's `SearchActorsTypeahead` for requests with the `search:typeahead_service:enable` gate on, instead of the dataplane or search service; other requests are unchanged. Add `BSKY_TYPEAHEAD_PROHIBITED_TERMS_FILE`, the prohibited search terms CSV: on that path, a query matching an active Block rule returns no actors without calling the host.
+
+- [#5912](https://github.com/bluesky-social/atproto/pull/5912) [`918a000`](https://github.com/bluesky-social/atproto/commit/918a0002850b65e370f32779e17682531fda9c29) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - In `app.bsky.feed.getFeed`, forward to the feed generator the service JWT wrapped in BSG's token.
+
+- [#5913](https://github.com/bluesky-social/atproto/pull/5913) [`50877cc`](https://github.com/bluesky-social/atproto/commit/50877ccd37254ad8170c6cdcdd38014b377203d5) Thanks [@foysalit](https://github.com/foysalit)! - Allow bulk report closure to explicitly include the report being reviewed while protecting other active reviews.
+- Updated dependencies [[`b9f1f1d`](https://github.com/bluesky-social/atproto/commit/b9f1f1d2b169cc509e192350496049cf93d6115d), [`50877cc`](https://github.com/bluesky-social/atproto/commit/50877ccd37254ad8170c6cdcdd38014b377203d5)]:
+  - @atproto/api@0.32.1
+
+## 0.5.11
+
+### Patch Changes
+
+- [#5899](https://github.com/bluesky-social/atproto/pull/5899) [`156b4a4`](https://github.com/bluesky-social/atproto/commit/156b4a4ed722d02f0f30f8ab9a00aa366c74782c) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add `app.bsky.unspecced.getAtmosphereRecommendedActivity` to hydrate Iris's mixed article and gallery recommendations.
+
+## 0.5.10
+
+### Patch Changes
+
+- Updated dependencies [[`f174012`](https://github.com/bluesky-social/atproto/commit/f174012f740357c0dfa6c2525a9d69562dbd7f38)]:
+  - @atproto/api@0.32.0
+
+## 0.5.9
+
+### Patch Changes
+
+- [#5895](https://github.com/bluesky-social/atproto/pull/5895) [`3459596`](https://github.com/bluesky-social/atproto/commit/3459596f6f5fa684ae616249deaec6e7a39700bd) Thanks [@gcwill70](https://github.com/gcwill70)! - Update `emitEvent.reportAction` to allow account level actions to target reports on owned subjects using `subjects` and `subjectTypes`.
+- Updated dependencies [[`3459596`](https://github.com/bluesky-social/atproto/commit/3459596f6f5fa684ae616249deaec6e7a39700bd)]:
+  - @atproto/api@0.31.3
+
+## 0.5.8
+
+### Patch Changes
+
+- [#5893](https://github.com/bluesky-social/atproto/pull/5893) [`f0653de`](https://github.com/bluesky-social/atproto/commit/f0653de696169e16dc003f11877b9eb0ae6533c0) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add `app.bsky.unspecced.getAtmosphereTimelineV2`, with actor profiles in `relatedViews`, subject refs for each activity, and publication viewer subscriptions. Livestream views now include `lastSeenAt`.
+
+- [#5882](https://github.com/bluesky-social/atproto/pull/5882) [`ff86b0a`](https://github.com/bluesky-social/atproto/commit/ff86b0afd322048ba0ff141d2a3da4e6c19ed368) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Log entryway session authentication attempts at info level, with the user DID.
+
+- [#5889](https://github.com/bluesky-social/atproto/pull/5889) [`413f04f`](https://github.com/bluesky-social/atproto/commit/413f04f60dc776db280568e4ec1be129d8694bab) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Log the XRPC method, user agent, origin and token issue time of entryway session authentication attempts.
+
+- [#5892](https://github.com/bluesky-social/atproto/pull/5892) [`a704f10`](https://github.com/bluesky-social/atproto/commit/a704f10c040a989244cfa578e65f006ff7de0f83) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Randomly sample Atmosphere Explore publications before the selection cap, preserving location and topic priorities.
+
+- [#5876](https://github.com/bluesky-social/atproto/pull/5876) [`d152ca3`](https://github.com/bluesky-social/atproto/commit/d152ca369314c0d42d3fe2dc6db2d6ec1a7863b1) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Add request counters by authentication verifier, distinguishing entryway sessions from service JWTs.
+
+- [#5892](https://github.com/bluesky-social/atproto/pull/5892) [`a704f10`](https://github.com/bluesky-social/atproto/commit/a704f10c040a989244cfa578e65f006ff7de0f83) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Expose optional App Store and Google Play links on getAtmosphereApps cards, preserving optional profiles and profile-first images.
+
+- [#5880](https://github.com/bluesky-social/atproto/pull/5880) [`e9fbdab`](https://github.com/bluesky-social/atproto/commit/e9fbdab8e2302e3e01ea923c2db5ee4d7ff33681) Thanks [@blackmichael](https://github.com/blackmichael)! - Add optional `photoCount` to gallery views using the dataplane's total `social.grain.gallery.item` backlink count, independently of the hydrated preview items.
+
+- [#5874](https://github.com/bluesky-social/atproto/pull/5874) [`695eb1e`](https://github.com/bluesky-social/atproto/commit/695eb1e97d79769dd8c20204a4bc3a1f4729ff97) Thanks [@cuducos](https://github.com/cuducos)! - Revert the internal `GetPostViewCounts` dataplane contract (added in 0.5.4, [#5815](https://github.com/bluesky-social/atproto/issues/5815)) and replace it with a batched `GetFeatures` RPC, so the AppView can read feature-store entries (keyed by store type and UID) from Atlantis.
+
+- [#5892](https://github.com/bluesky-social/atproto/pull/5892) [`a704f10`](https://github.com/bluesky-social/atproto/commit/a704f10c040a989244cfa578e65f006ff7de0f83) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Expose optional App Store and Google Play links on Atmosphere Explore app cards while preserving optional profiles and profile-first images.
+
+- [#5884](https://github.com/bluesky-social/atproto/pull/5884) [`9c64255`](https://github.com/bluesky-social/atproto/commit/9c64255ee3634a97b60e90bc402052e29cca6612) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Log whether entryway session authentication attempts use an app password.
+- Updated dependencies [[`f0653de`](https://github.com/bluesky-social/atproto/commit/f0653de696169e16dc003f11877b9eb0ae6533c0), [`a704f10`](https://github.com/bluesky-social/atproto/commit/a704f10c040a989244cfa578e65f006ff7de0f83), [`e9fbdab`](https://github.com/bluesky-social/atproto/commit/e9fbdab8e2302e3e01ea923c2db5ee4d7ff33681), [`a704f10`](https://github.com/bluesky-social/atproto/commit/a704f10c040a989244cfa578e65f006ff7de0f83), [`5c3979b`](https://github.com/bluesky-social/atproto/commit/5c3979b3466bf7df0a0a4f2291000491affc31b9)]:
+  - @atproto/api@0.31.2
+  - @atproto/xrpc-server@0.13.12
+  - @atproto-labs/xrpc-utils@0.1.33
+  - @atproto/sync@0.4.26
+
+## 0.5.7
+
+### Patch Changes
+
+- [#5872](https://github.com/bluesky-social/atproto/pull/5872) [`b43dd14`](https://github.com/bluesky-social/atproto/commit/b43dd14e0b1ca2aff9d6470d9a5d726c9be301fb) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Remove admin impersonation through Basic authentication and the `appview-as-did` header.
+
+- [#5873](https://github.com/bluesky-social/atproto/pull/5873) [`3b93b6f`](https://github.com/bluesky-social/atproto/commit/3b93b6f2bcfde14c0e69a45a80d0967aa3032f93) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Reduce notification group sizes to 100 while preserving per-kind URL length limits.
+
+- [#5853](https://github.com/bluesky-social/atproto/pull/5853) [`57b7a37`](https://github.com/bluesky-social/atproto/commit/57b7a375f571bf7f42709f93f98d3f9bd000fb6d) Thanks [@blackmichael](https://github.com/blackmichael)! - Add optional hydrated viewBskyPost values alongside existing bskyPostRef fields on Atmosphere timeline activities and Explore articles and livestreams. Reuse post hydration and viewer visibility checks, preserving references and external content when posts are unavailable. Refresh consuming contract inputs.
+  
+  Keep Explore and the Atmosphere timeline available when optional post hydration fails, omitting incomplete post views while retaining external content and references. Preserve request cancellation and failures for required timeline root posts.
+
+- [#5860](https://github.com/bluesky-social/atproto/pull/5860) [`3fb2578`](https://github.com/bluesky-social/atproto/commit/3fb2578a59813b3183fb1e443120e25a43ab4aba) Thanks [@blackmichael](https://github.com/blackmichael)! - Add the authenticated app.bsky.unspecced.getAtmosphereRecordViews batch procedure accepting record objects with a URI and optional CID, shared hydration, and visibility-filtered raw associations.
+
+- [#5871](https://github.com/bluesky-social/atproto/pull/5871) [`4ca55db`](https://github.com/bluesky-social/atproto/commit/4ca55dbc6d9e04d721fc14abffb73ce33158e002) Thanks [@blackmichael](https://github.com/blackmichael)! - Rework Atmosphere timeline groups: replace overflow with complete group item URIs and hydrate only the newest actor-group item. Keep subject groups to one collection and multiple actors, and return article creations as standalone items with collection-specific related activity references and actor profiles.
+  
+  Require complete actor lists for subject groups and related-activity buckets, preserving the existing record fallbacks when profiles are unavailable.
+- Updated dependencies [[`57b7a37`](https://github.com/bluesky-social/atproto/commit/57b7a375f571bf7f42709f93f98d3f9bd000fb6d), [`4ca55db`](https://github.com/bluesky-social/atproto/commit/4ca55dbc6d9e04d721fc14abffb73ce33158e002)]:
+  - @atproto/api@0.31.1
+
+## 0.5.6
+
+### Patch Changes
+
+- [#5858](https://github.com/bluesky-social/atproto/pull/5858) [`dd74699`](https://github.com/bluesky-social/atproto/commit/dd74699050a2ef0049736466e45c13842b71e0b9) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Limit subscribed-post and all spotlight notification groups to 150 items.
+
+- [#5802](https://github.com/bluesky-social/atproto/pull/5802) [`d930c3b`](https://github.com/bluesky-social/atproto/commit/d930c3b6b401df7085b8e85f3fc83dbbc3e28605) Thanks [@foysalit](https://github.com/foysalit)! - Retire moderation subject statistics and count-based filters. Legacy count-based
+  sorts fall back to last reported time.
+
+- [#5861](https://github.com/bluesky-social/atproto/pull/5861) [`211c9e8`](https://github.com/bluesky-social/atproto/commit/211c9e8acceccca2e983b7bc8ebfc0756664c956) Thanks [@blackmichael](https://github.com/blackmichael)! - Use Iris Grain gallery recommendations in Atmosphere Explore behind `atmosphere_explore:galleries:iris:enable`, independently of article recommendations. Return the gallery recommendation ID in `photos.recIdStr`. Retain curated photos when Iris returns an empty list or fails.
+  
+  Update the shared Explore contract description for recommended photo galleries.
+- Updated dependencies [[`b30ea73`](https://github.com/bluesky-social/atproto/commit/b30ea7305be8df27524ed70d4af7f246014194c2), [`d930c3b`](https://github.com/bluesky-social/atproto/commit/d930c3b6b401df7085b8e85f3fc83dbbc3e28605), [`211c9e8`](https://github.com/bluesky-social/atproto/commit/211c9e8acceccca2e983b7bc8ebfc0756664c956)]:
+  - @atproto/xrpc-server@0.13.11
+  - @atproto/api@0.31.0
+  - @atproto-labs/xrpc-utils@0.1.32
+  - @atproto/sync@0.4.25
+
+## 0.5.5
+
+### Patch Changes
+
+- [#5835](https://github.com/bluesky-social/atproto/pull/5835) [`1ec24ff`](https://github.com/bluesky-social/atproto/commit/1ec24ff2a123e3ea9d125d0dea950a8ee3adfca4) Thanks [@gcwill70](https://github.com/gcwill70)! - Support local Atmosphere record hydration and backlinks, and seed reusable moderation fixtures.
+
+- [#5762](https://github.com/bluesky-social/atproto/pull/5762) [`7a46712`](https://github.com/bluesky-social/atproto/commit/7a467120982d9ff1559afeb3a26989dad5877d17) Thanks [@haileyok](https://github.com/haileyok)! - Redact cookie and set-cookie headers in HTTP request and response logs.
+- Updated dependencies [[`7a46712`](https://github.com/bluesky-social/atproto/commit/7a467120982d9ff1559afeb3a26989dad5877d17)]:
+  - @atproto/common@0.8.10
+  - @atproto/repo@0.11.5
+  - @atproto/xrpc-server@0.13.10
+  - @atproto/sync@0.4.24
+  - @atproto-labs/xrpc-utils@0.1.31
+
+## 0.5.4
+
+### Patch Changes
+
+- [#5815](https://github.com/bluesky-social/atproto/pull/5815) [`0f77a7d`](https://github.com/bluesky-social/atproto/commit/0f77a7d61ef22f47e7c14138aa2e040346ac6316) Thanks [@ds-boyce](https://github.com/ds-boyce)! - Add the internal GetPostViewCounts RPC contract for batched author-facing view-count reads from Atlantis.
+
+- [#5837](https://github.com/bluesky-social/atproto/pull/5837) [`896c727`](https://github.com/bluesky-social/atproto/commit/896c727632798ca14a68009c8d052321cd8b3c44) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Hydrate known followers for `getAtmosphereExploreTab` apps, and only return apps the worker marks `featured: true`.
+
+## 0.5.3
+
+### Patch Changes
+
+- [#5817](https://github.com/bluesky-social/atproto/pull/5817) [`d4f2c91`](https://github.com/bluesky-social/atproto/commit/d4f2c919697d37af8f411f724e12b8ce2b88f922) Thanks [@foysalit](https://github.com/foysalit)! - Support linking report closures to existing moderation events and targeting all subjects owned by an account from a moderation event.
+- Updated dependencies [[`32c4f74`](https://github.com/bluesky-social/atproto/commit/32c4f7401b5ffd402790ccdbea60f0f12f06adfd), [`8c841f6`](https://github.com/bluesky-social/atproto/commit/8c841f6e73c8365c2dfe816c0613aa9c50490361), [`8c841f6`](https://github.com/bluesky-social/atproto/commit/8c841f6e73c8365c2dfe816c0613aa9c50490361), [`d4f2c91`](https://github.com/bluesky-social/atproto/commit/d4f2c919697d37af8f411f724e12b8ce2b88f922), [`8c841f6`](https://github.com/bluesky-social/atproto/commit/8c841f6e73c8365c2dfe816c0613aa9c50490361), [`8c841f6`](https://github.com/bluesky-social/atproto/commit/8c841f6e73c8365c2dfe816c0613aa9c50490361)]:
+  - @atproto-labs/xrpc-utils@0.1.30
+  - @atproto/lex-data@0.1.10
+  - @atproto/api@0.30.3
+  - @atproto/lex-schema@0.2.11
+  - @atproto/common@0.8.9
+  - @atproto/lex-client@0.4.2
+  - @atproto/lex-json@0.1.9
+  - @atproto/repo@0.11.4
+  - @atproto/sync@0.4.23
+  - @atproto/xrpc-server@0.13.9
+  - @atproto/identity@0.5.23
+
+## 0.5.2
+
+### Patch Changes
+
+- [#5816](https://github.com/bluesky-social/atproto/pull/5816) [`8f12ce8`](https://github.com/bluesky-social/atproto/commit/8f12ce8bb8f5963bff137e100ec50a8f4b3739ae) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add the authenticated `app.bsky.unspecced.getAtmosphereRecordView` query for viewing a single Atmosphere record, latest or pinned by CID.
+
+- [#5809](https://github.com/bluesky-social/atproto/pull/5809) [`7b640e8`](https://github.com/bluesky-social/atproto/commit/7b640e8fee709d22a0d62262068db0ddb3106741) Thanks [@blackmichael](https://github.com/blackmichael)! - Expose optional author-declared bskyPostRef strong references beside view on unspecced Atmosphere timeline activities and Explore article and livestream items, without changing external embed schemas or fetching the referenced post.
+
+- [#5813](https://github.com/bluesky-social/atproto/pull/5813) [`43b0be2`](https://github.com/bluesky-social/atproto/commit/43b0be2fa15e49479c11254101a056e9da137c84) Thanks [@foysalit](https://github.com/foysalit)! - Expose account enforcement and best-effort profile information in the moderation inbox.
+
+- [#5818](https://github.com/bluesky-social/atproto/pull/5818) [`ba75afa`](https://github.com/bluesky-social/atproto/commit/ba75afad9fab6d1f5c207b1b5d12a7ecfc5b379d) Thanks [@foysalit](https://github.com/foysalit)! - Expose whether an account has active strikes in its moderation inbox status.
+
+- [#5806](https://github.com/bluesky-social/atproto/pull/5806) [`b794e18`](https://github.com/bluesky-social/atproto/commit/b794e186bc81ce979d29de18f3ca9ab03b7e3d29) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Use geo headers instead of countryCode and regionCode query parameters when selecting curated Atmosphere Explore content.
+- Updated dependencies [[`7b640e8`](https://github.com/bluesky-social/atproto/commit/7b640e8fee709d22a0d62262068db0ddb3106741), [`9537a65`](https://github.com/bluesky-social/atproto/commit/9537a659a9d85bbeef1bb423fcb4be9d2e618ff2), [`43b0be2`](https://github.com/bluesky-social/atproto/commit/43b0be2fa15e49479c11254101a056e9da137c84), [`ba75afa`](https://github.com/bluesky-social/atproto/commit/ba75afad9fab6d1f5c207b1b5d12a7ecfc5b379d), [`b794e18`](https://github.com/bluesky-social/atproto/commit/b794e186bc81ce979d29de18f3ca9ab03b7e3d29)]:
+  - @atproto/api@0.30.2
+  - @atproto-labs/fetch-node@0.4.5
+  - @atproto/identity@0.5.22
+  - @atproto/sync@0.4.22
+
 ## 0.5.1
 
 ### Patch Changes

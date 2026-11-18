@@ -40,6 +40,7 @@ export function readEnv() {
     // database
     dataDirectory: envStr('PDS_DATA_DIRECTORY'),
     disableWalAutoCheckpoint: envBool('PDS_SQLITE_DISABLE_WAL_AUTO_CHECKPOINT'),
+    synchronousFull: envBool('PDS_SQLITE_SYNCHRONOUS_FULL'),
     accountDbLocation: envStr('PDS_ACCOUNT_DB_LOCATION'),
     sequencerDbLocation: envStr('PDS_SEQUENCER_DB_LOCATION'),
     didCacheDbLocation: envStr('PDS_DID_CACHE_DB_LOCATION'),
@@ -74,11 +75,13 @@ export function readEnv() {
 
     // entryway
     entrywayUrl: envStr('PDS_ENTRYWAY_URL'),
+    entrywayApiUrl: envStr('PDS_ENTRYWAY_API_URL'),
     entrywayDid: envStr('PDS_ENTRYWAY_DID'),
     entrywayJwtVerifyKeyK256PublicKeyHex: envStr(
       'PDS_ENTRYWAY_JWT_VERIFY_KEY_K256_PUBLIC_KEY_HEX',
     ),
     entrywayPlcRotationKey: envStr('PDS_ENTRYWAY_PLC_ROTATION_KEY'),
+    entrywayRequireServiceAuth: envBool('PDS_ENTRYWAY_REQUIRE_SERVICE_AUTH'),
 
     // invites
     inviteRequired: envBool('PDS_INVITE_REQUIRED'),
@@ -115,6 +118,7 @@ export function readEnv() {
     rateLimitsEnabled: envBool('PDS_RATE_LIMITS_ENABLED'),
     rateLimitBypassKey: envStr('PDS_RATE_LIMIT_BYPASS_KEY'),
     rateLimitBypassIps: envList('PDS_RATE_LIMIT_BYPASS_IPS'),
+    disableIpRateLimits: envBool('PDS_DISABLE_IP_RATE_LIMITS'),
 
     // redis
     redisScratchAddress: envStr('PDS_REDIS_SCRATCH_ADDRESS'),

@@ -11,7 +11,7 @@ import {
 
 export default function (server: Server, ctx: AppContext) {
   server.add(app.bsky.notification.putPreferencesV2, {
-    auth: ctx.authVerifier.standard,
+    auth: ctx.authVerifier.standardWriteService(),
     handler: async ({ auth, input }) => {
       const actorDid = auth.credentials.iss
       const preferences = await computePreferences(ctx, actorDid, input)

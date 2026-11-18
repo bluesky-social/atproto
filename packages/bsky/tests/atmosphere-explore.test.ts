@@ -29,6 +29,7 @@ import {
 import { AuthRequiredError, createServer } from '@atproto/xrpc-server'
 import registerApps from '../src/api/app/bsky/unspecced/getAtmosphereApps.js'
 import register from '../src/api/app/bsky/unspecced/getAtmosphereExploreTab.js'
+import registerRecommendedActivity from '../src/api/app/bsky/unspecced/getAtmosphereRecommendedActivity.js'
 import { ServerConfig } from '../src/config.js'
 import type { AppContext } from '../src/context.js'
 import { Gate } from '../src/feature-gates/gates.js'
@@ -106,6 +107,19 @@ const lists = [
 type ListKey = (typeof lists)[number]['key']
 // Only livestreams honor schedule fields.
 const unscheduledLists = lists.filter(({ key }) => key !== 'livestreams')
+
+// The explore tab only shows `featured: true` apps, so fixture apps default to
+// featured. Override with `featured: false`/`undefined` to exercise the filter.
+function workerBody(config: unknown) {
+  const { apps, ...rest } = (config ?? {}) as { apps?: unknown }
+  if (!Array.isArray(apps)) return config
+  const isObject = (a: unknown): a is object =>
+    typeof a === 'object' && a !== null && !Array.isArray(a)
+  return {
+    ...rest,
+    apps: apps.map((a) => (isObject(a) ? { featured: true, ...a } : a)),
+  }
+}
 
 async function setup(config: unknown = {}, exploreEnabled = true) {
   const records = new Map<AtUriString, TypedLexMap>([
@@ -297,6 +311,30 @@ async function setup(config: unknown = {}, exploreEnabled = true) {
         getLabels: () => ({
           labels: labels.map((label) => Buffer.from(lexStringify(label))),
         }),
+        getPostRecords: ({ uris }) => ({
+          records: uris.map((uri) => {
+            const record = records.get(uri as AtUriString)
+            return {
+              cid,
+              takedownRef: takenDown.has(uri) ? 'takedown' : undefined,
+              record: record ? Buffer.from(lexStringify(record)) : undefined,
+            }
+          }),
+          meta: uris.map(() => ({})),
+        }),
+        getRecordsByRef: ({ refs }) => ({
+          results: refs.map(({ uri }) => lookup(uri)),
+        }),
+        getInteractionCounts: ({ refs }) => ({
+          likes: refs.map(() => 12),
+          replies: refs.map(() => 3),
+        }),
+        getLikesByActorAndSubjects: ({ refs }) => ({
+          uris: refs.map(() => atUri(viewer, app.bsky.feed.like.$type, 'like')),
+        }),
+        getRepostsByActorAndSubjects: () => ({}),
+        getBookmarksByActorAndSubjects: () => ({}),
+        getThreadMutesOnSubjects: () => ({}),
       })
     }),
   )
@@ -322,13 +360,25 @@ async function setup(config: unknown = {}, exploreEnabled = true) {
   // worker content.
   const iris = {
     response: { articles: [], recIdStr: '123' } as unknown,
+    galleryResponse: { galleries: [], recIdStr: 'gallery-123' } as unknown,
+    activityResponse: { items: [], recIdStr: 'activity-123' } as unknown,
     respond: undefined as
       undefined | ((request: Request) => Response | Promise<Response>),
     fetchMock: vi.fn<typeof globalThis.fetch>(),
   }
   iris.fetchMock.mockImplementation(async (input, init) => {
     const request = new Request(input, init)
-    return iris.respond ? iris.respond(request) : Response.json(iris.response)
+    if (iris.respond) return iris.respond(request)
+    const pathname = new URL(request.url).pathname
+    return Response.json(
+      pathname ===
+        `/xrpc/${app.bsky.unspecced.getAtmosphereActivityRecommendations.$lxm}`
+        ? iris.activityResponse
+        : pathname ===
+            `/xrpc/${app.bsky.unspecced.getAtmosphereExploreGalleryRecommendations.$lxm}`
+          ? iris.galleryResponse
+          : iris.response,
+    )
   })
   const ctx = {
     cfg,
@@ -345,30 +395,33 @@ async function setup(config: unknown = {}, exploreEnabled = true) {
     ) as Client | undefined,
     reqLabelers: () => ({ dids: [labeler], redact: new Set([labeler]) }),
     authVerifier: {
-      standardOptional: async ({ req }) => {
-        if (
-          req.headers.authorization &&
-          req.headers.authorization !== 'Bearer valid'
-        )
-          throw new AuthRequiredError()
-        return req.headers.authorization
-          ? {
-              credentials: {
-                type: 'standard',
-                iss: viewer,
-                aud: 'did:plc:appview',
-              },
-            }
-          : { credentials: { type: 'none', iss: null } }
-      },
-    } satisfies Pick<AppContext['authVerifier'], 'standardOptional'>,
+      standardReadOptional:
+        () =>
+        async ({ req }) => {
+          if (
+            req.headers.authorization &&
+            req.headers.authorization !== 'Bearer valid'
+          )
+            throw new AuthRequiredError()
+          return req.headers.authorization
+            ? {
+                credentials: {
+                  type: 'standard',
+                  iss: viewer,
+                  aud: 'did:plc:appview',
+                },
+              }
+            : { credentials: { type: 'none', iss: null } }
+        },
+    } satisfies Pick<AppContext['authVerifier'], 'standardReadOptional'>,
   } as unknown as AppContext
   const xrpc = createServer([], { validateResponse: true })
   const fetchMock = vi
     .spyOn(globalThis, 'fetch')
-    .mockImplementation(async () => Response.json(config))
+    .mockImplementation(async () => Response.json(workerBody(config)))
   register(xrpc, ctx)
   registerApps(xrpc, ctx)
+  registerRecommendedActivity(xrpc, ctx)
   const enabledGates = new Set(
     exploreEnabled ? [Gate.AtmosphereScreenEndpointsEnable] : [],
   )
@@ -409,6 +462,10 @@ async function setup(config: unknown = {}, exploreEnabled = true) {
       else enabledGates.delete(Gate.AtmosphereExploreArticlesIrisEnable)
       return gateScope
     },
+    setGalleryIrisGate(enabled = true) {
+      if (enabled) enabledGates.add(Gate.AtmosphereExploreGalleriesIrisEnable)
+      else enabledGates.delete(Gate.AtmosphereExploreGalleriesIrisEnable)
+    },
     query: async (
       authenticated = false,
       params: app.bsky.unspecced.getAtmosphereExploreTab.$Params = {},
@@ -436,6 +493,30 @@ async function setup(config: unknown = {}, exploreEnabled = true) {
       return {
         status: response.status,
         body: body as app.bsky.unspecced.getAtmosphereExploreTab.$OutputBody,
+      }
+    },
+    queryRecommendedActivity: async (
+      authenticated = false,
+      params: Partial<app.bsky.unspecced.getAtmosphereRecommendedActivity.$Params> = {},
+      headers: Record<string, string> = {},
+    ) => {
+      const url = new URL(
+        `http://127.0.0.1:${address.port}/xrpc/${app.bsky.unspecced.getAtmosphereRecommendedActivity.$lxm}`,
+      )
+      if (params.limit !== undefined)
+        url.searchParams.set('limit', String(params.limit))
+      for (const lang of params.langs ?? [])
+        url.searchParams.append('langs', lang)
+      const response = await nativeFetch(url, {
+        headers: {
+          ...(authenticated ? { authorization: 'Bearer valid' } : {}),
+          ...headers,
+        },
+      })
+      return {
+        status: response.status,
+        headers: response.headers,
+        body: (await response.json()) as app.bsky.unspecced.getAtmosphereRecommendedActivity.$OutputBody,
       }
     },
     queryApps: async (
@@ -517,21 +598,162 @@ describe('Atmosphere Explore access gate', () => {
 })
 
 describe('Atmosphere Explore', () => {
-  it('hydrates canonical views, associations, and ordering', async () => {
+  test.each([false, true])(
+    'hydrates article and livestream posts over HTTP (authenticated: %s)',
+    async (authenticated) => {
+      await using fixture = await setup(curated)
+      using exactRecords = vi.spyOn(fixture.dataplane, 'getRecordsByRef')
+      const postAuthor = 'did:plc:announcer'
+      const postUri = atUri(
+        postAuthor,
+        app.bsky.feed.post.$type,
+        'announcement',
+      )
+      fixture.records.set(
+        postUri,
+        app.bsky.feed.post.$build({
+          text: 'Read and watch',
+          createdAt: publishedAt,
+          embed: app.bsky.embed.external.$build({
+            external: {
+              uri: 'https://example.com/blog/story',
+              title: 'Author-supplied title',
+              description: '',
+              associatedRefs: [{ uri: docUri, cid }],
+            },
+          }),
+        }),
+      )
+      // @NOTE The declared reference can pin an older version of the post.
+      const postRef = {
+        uri: postUri,
+        cid: 'bafyreidp33zeeo7kwlj6qw5wyvbkdcs4fl4uj4dhgifpzgno3nfbl4amoq',
+      }
+      fixture.records.get(docUri)!.bskyPostRef = postRef
+      fixture.records.get(liveUri)!.post = postRef
+
+      const { status, body } = await fixture.query(authenticated)
+      expect(status).toBe(200)
+      expect(exactRecords).not.toHaveBeenCalled()
+      for (const item of [body.articles.items[0], body.livestreams.items[0]]) {
+        expect(item.viewBskyPost).toMatchObject({
+          uri: postUri,
+          cid,
+          author: { did: postAuthor },
+          record: { text: 'Read and watch' },
+          likeCount: 12,
+          replyCount: 3,
+          embed: {
+            external: { title: 'Article' },
+          },
+        })
+        expect(item.viewBskyPost?.viewer?.like).toBe(
+          authenticated
+            ? atUri(viewer, app.bsky.feed.like.$type, 'like')
+            : undefined,
+        )
+        expect(item.bskyPostRef).toEqual(postRef)
+      }
+    },
+  )
+
+  test.each([
+    'missing',
+    'takedown',
+    'unavailable',
+    'blocked',
+    'no-unauthenticated',
+  ])('keeps external views when their associated post is %s', async (kind) => {
     await using fixture = await setup(curated)
-    using hydrate = vi.spyOn(
-      fixture.hydrator,
-      'hydrateEmbedExternalViewFromUris',
-    )
-    const { status, body } = await fixture.query()
-    expect(hydrate).toHaveBeenCalledWith(
-      [missingUri, docUri, pubUri, galleryUri, liveUri],
-      expect.objectContaining({
-        viewer: null,
-        xrpcEndpoint: app.bsky.unspecced.getAtmosphereExploreTab.$lxm,
+    const postAuthor = 'did:plc:announcer'
+    const postUri = atUri(postAuthor, app.bsky.feed.post.$type, 'announcement')
+    fixture.records.set(
+      postUri,
+      app.bsky.feed.post.$build({
+        text: 'Read and watch',
+        createdAt: publishedAt,
       }),
     )
-    expect(hydrate.mock.calls.filter(([, , seen]) => !seen)).toHaveLength(1)
+    fixture.records.get(docUri)!.bskyPostRef = { uri: postUri, cid }
+    fixture.records.get(liveUri)!.post = { uri: postUri, cid }
+    if (kind === 'missing') fixture.records.delete(postUri)
+    if (kind === 'takedown') fixture.takenDown.add(postUri)
+    if (kind === 'unavailable')
+      fixture.actors.set(postAuthor, { exists: false })
+    if (kind === 'blocked') fixture.blockedActors.add(postAuthor)
+    if (kind === 'no-unauthenticated') {
+      fixture.labels.push({
+        src: labeler,
+        uri: postAuthor,
+        val: '!no-unauthenticated',
+        cts: publishedAt,
+      })
+    }
+
+    const { status, body } = await fixture.query(kind === 'blocked')
+    expect(status).toBe(200)
+    expect(body.articles.items[0].view.title).toBe('Article')
+    expect(body.livestreams.items[0].view.title).toBe('Live')
+    expect(body.articles.items[0].bskyPostRef).toEqual({ uri: postUri, cid })
+    expect(body.livestreams.items[0].bskyPostRef).toEqual({ uri: postUri, cid })
+    expect(body.articles.items[0]).not.toHaveProperty('viewBskyPost')
+    expect(body.livestreams.items[0]).not.toHaveProperty('viewBskyPost')
+  })
+
+  test.each(['getPostRecords', 'getInteractionCounts'] as const)(
+    'preserves Explore content and references when %s fails',
+    async (method) => {
+      await using fixture = await setup(curated)
+      const postUri = atUri(author, app.bsky.feed.post.$type, 'announcement')
+      const postRef = { uri: postUri, cid }
+      fixture.records.set(
+        postUri,
+        app.bsky.feed.post.$build({
+          text: 'Read and watch',
+          createdAt: publishedAt,
+        }),
+      )
+      fixture.records.get(docUri)!.bskyPostRef = postRef
+      fixture.records.get(liveUri)!.post = postRef
+      using _failure = vi
+        .spyOn(fixture.dataplane, method)
+        .mockRejectedValue(
+          new ConnectError('post lookup failed', Code.Unavailable),
+        )
+
+      const { status, body } = await fixture.query(true)
+
+      expect(status).toBe(200)
+      expect(body).toMatchObject({
+        publications: {
+          items: [
+            {
+              view: {
+                $type: app.bsky.embed.external.viewArticlePublication.$type,
+              },
+            },
+          ],
+        },
+        photos: {
+          items: [
+            { view: { $type: app.bsky.embed.external.viewGallery.$type } },
+          ],
+        },
+        apps: curated.apps,
+        announcementBanner: curatedBanner,
+      })
+      expect(body.articles.items[0].view.title).toBe('Article')
+      expect(body.livestreams.items[0].view.title).toBe('Live')
+      for (const item of [...body.articles.items, ...body.livestreams.items]) {
+        expect(item.bskyPostRef).toEqual(postRef)
+        expect(item).not.toHaveProperty('viewBskyPost')
+      }
+    },
+  )
+
+  it('hydrates canonical views, associations, and ordering', async () => {
+    await using fixture = await setup(curated)
+    const { status, body } = await fixture.query()
     expect(status).toBe(200)
     expect(body.announcementBanner).toEqual(curatedBanner)
     expect(body.apps).toEqual(curated.apps)
@@ -1472,6 +1694,11 @@ describe('Atmosphere Explore', () => {
   })
 
   describe('apps endpoint', () => {
+    const storeLinks = {
+      appStoreUrl: 'https://apps.apple.com/app/example/id123?ct=explore',
+      googlePlayUrl:
+        'https://play.google.com/store/apps/details?id=com.example&referrer=explore',
+    }
     const apps = Array.from({ length: 12 }, (_, i) => ({
       id: `${i}`,
       category: i < 10 ? 'Social' : 'Writing',
@@ -1494,6 +1721,29 @@ describe('Atmosphere Explore', () => {
       expect(fixture.iris.fetchMock).not.toHaveBeenCalled()
       expect(fixture.fetchMock).toHaveBeenCalledOnce()
       expect(new Request(...fixture.fetchMock.mock.calls[0]).url).toBe(service)
+    })
+
+    it('validates optional store links without requiring profiles', async () => {
+      const cards = [
+        { id: 'both', ...storeLinks },
+        { id: 'apple', appStoreUrl: storeLinks.appStoreUrl },
+        { id: 'google', googlePlayUrl: storeLinks.googlePlayUrl },
+        { id: 'neither' },
+      ]
+      await using fixture = await setup({
+        apps: [
+          cards[0],
+          { ...cards[1], did: null, profileUrl: null },
+          ...cards.slice(2),
+          { id: 'invalid-apple', appStoreUrl: 'not a uri' },
+          { id: 'invalid-google', googlePlayUrl: 5 },
+        ],
+      })
+      using profiles = vi.spyOn(fixture.hydrator, 'hydrateProfilesDetailed')
+      const { status, body } = await fixture.queryApps()
+      expect(status).toBe(200)
+      expect(body.apps).toEqual(cards)
+      expect(profiles).not.toHaveBeenCalled()
     })
 
     test.each([
@@ -1582,6 +1832,7 @@ describe('Atmosphere Explore', () => {
       await using fixture = await setup({
         apps: [appDid, missingDid].map((did) => ({
           did,
+          ...storeLinks,
           logo,
           backgroundImage: banner,
           overlayColor: '#000000',
@@ -1610,7 +1861,8 @@ describe('Atmosphere Explore', () => {
         images.getPresetUri('banner', appDid, photoCid),
       )
       expect(hydrated).not.toHaveProperty('backgroundImage')
-      expect(missing).toEqual({ logo, banner })
+      expect(hydrated).toMatchObject(storeLinks)
+      expect(missing).toEqual({ logo, banner, ...storeLinks })
     })
   })
 
@@ -1664,9 +1916,14 @@ describe('Atmosphere Explore', () => {
         displayName,
         ...(withImages ? { avatar: blob, banner: blob } : {}),
       })
-    const legacy = {
-      logo: 'https://example.com/legacy-logo.png',
-      backgroundImage: 'https://example.com/legacy-bg.png',
+    const overrides = {
+      logo: 'https://example.com/override-logo.png',
+      backgroundImage: 'https://example.com/override-bg.png',
+    }
+    const storeLinks = {
+      appStoreUrl: 'https://apps.apple.com/app/example/id123?ct=explore',
+      googlePlayUrl:
+        'https://play.google.com/store/apps/details?id=com.example&referrer=explore',
     }
     const card = (id: string, extra: object = {}) => ({
       id,
@@ -1675,7 +1932,7 @@ describe('Atmosphere Explore', () => {
       ...extra,
     })
 
-    it('hydrates a detailed profile backing the card images', async () => {
+    it('prefers profile images and preserves store links', async () => {
       const did = appDid('appone')
       const editorial = {
         id: 'one',
@@ -1685,7 +1942,8 @@ describe('Atmosphere Explore', () => {
         category: 'Social',
         overlayColor: '#000000',
         textColor: '#ffffff',
-        ...legacy,
+        ...overrides,
+        ...storeLinks,
       }
       await using fixture = await setup({
         apps: [
@@ -1750,6 +2008,9 @@ describe('Atmosphere Explore', () => {
       expect(profiles).toHaveBeenCalledTimes(1)
       expect(profiles.mock.calls[0][0]).toEqual(names.map(appDid))
       expect(profiles.mock.calls[0][1]).toBe(external.mock.calls[0][1])
+      expect(profiles.mock.calls[0][2]).toEqual({
+        knownFollowersDids: names.map(appDid),
+      })
       expect(body.apps).toHaveLength(10)
       expect(body.apps.map(({ profile }) => profile?.did)).toEqual(
         Array.from({ length: 10 }, (_, i) => appDid(names[i % 3])),
@@ -1765,12 +2026,47 @@ describe('Atmosphere Explore', () => {
       expect(body.apps).toEqual(curated.apps)
     })
 
+    it('only returns featured apps, but still lists them all in the apps endpoint', async () => {
+      await using fixture = await setup({
+        apps: [
+          card('yes'),
+          card('no', { featured: false }),
+          card('missing', { featured: undefined }),
+          card('string', { featured: 'true' }),
+        ],
+      })
+      const { status, body } = await fixture.query()
+      expect(status).toBe(200)
+      expect(body.apps.map(({ id }) => id)).toEqual(['yes'])
+      const all = await fixture.queryApps()
+      expect(all.body.apps.map(({ id }) => id)).toEqual([
+        'yes',
+        'no',
+        'missing',
+        'string',
+      ])
+    })
+
+    it('returns no apps when none are featured', async () => {
+      await using fixture = await setup({
+        apps: [card('no', { featured: false })],
+      })
+      const { status, body } = await fixture.query()
+      expect(status).toBe(200)
+      expect(body.apps).toEqual([])
+    })
+
     it('keeps apps with a missing or null DID and drops a malformed one', async () => {
       const did = appDid('valid')
       await using fixture = await setup({
         apps: [
-          card('missing', legacy),
-          card('null', { did: null, ...legacy }),
+          card('missing', { ...overrides, ...storeLinks }),
+          card('null', {
+            did: null,
+            profileUrl: null,
+            ...overrides,
+            ...storeLinks,
+          }),
           card('invalid', { did: 'not-a-did' }),
           card('number', { did: 5 }),
           card('valid', { did }),
@@ -1786,8 +2082,12 @@ describe('Atmosphere Explore', () => {
         'null',
         'valid',
       ])
-      expect(body.apps[0]).toEqual(card('missing', legacy))
-      expect(body.apps[1]).toEqual(card('null', legacy))
+      expect(body.apps[0]).toEqual(
+        card('missing', { ...overrides, ...storeLinks }),
+      )
+      expect(body.apps[1]).toEqual(
+        card('null', { ...overrides, ...storeLinks }),
+      )
       expect(body.apps[2].profile?.did).toBe(did)
     })
 
@@ -1801,7 +2101,7 @@ describe('Atmosphere Explore', () => {
       ].map(appDid)
       await using fixture = await setup({
         apps: [gone, down, labeled, bare, good].map((did) =>
-          card(did, { did, ...legacy }),
+          card(did, { did, ...overrides }),
         ),
       })
       fixture.actors.set(gone, { exists: false })
@@ -1826,11 +2126,10 @@ describe('Atmosphere Explore', () => {
         good,
       ])
       for (const result of body.apps.slice(0, 3)) {
-        expect(result).toMatchObject(legacy)
+        expect(result).toMatchObject(overrides)
         expect(result).not.toHaveProperty('profile')
       }
-      // Profile without images: legacy images stay on the card only.
-      expect(body.apps[3]).toMatchObject(legacy)
+      expect(body.apps[3]).toMatchObject(overrides)
       expect(body.apps[3].profile).toMatchObject({ displayName: 'Bare' })
       expect(body.apps[3].profile).not.toHaveProperty('avatar')
       expect(body.apps[3].profile).not.toHaveProperty('banner')
@@ -2794,6 +3093,8 @@ describe('Atmosphere Explore', () => {
             null,
             'app',
             { ...app(2), url: 5 },
+            { ...app(2), appStoreUrl: 'not a uri' },
+            { ...app(2), googlePlayUrl: 5 },
             app(3),
           ],
         })
@@ -2977,7 +3278,7 @@ describe('Atmosphere Explore list ordering and caps', () => {
 
   it('shuffles each selected list before hydration', async () => {
     using _now = vi.spyOn(Date, 'now').mockReturnValue(frozenNow)
-    // Index 0 on every swap: [f1, f2, n1, n2] shuffles to [f2, n1, n2, f1].
+    // Index 0 rotates each list left once; publications also rotate before selection.
     // Retired schedules on the `f` entries must not change that order.
     using _random = vi.spyOn(Math, 'random').mockReturnValue(0)
     await using fixture = await setup(
@@ -3006,17 +3307,57 @@ describe('Atmosphere Explore list ordering and caps', () => {
     const { status, body } = await fixture.query()
     expect(status).toBe(200)
 
-    const expected = ['f2', 'n1', 'n2', 'f1']
+    const expected = (key: ListKey) =>
+      key === 'publications'
+        ? ['n1', 'n2', 'f1', 'f2']
+        : ['f2', 'n1', 'n2', 'f1']
     expect(hydrate.mock.calls[0][0]).toEqual(
-      lists.flatMap(({ uriFor }) => expected.map((name) => uriFor(name))),
+      lists.flatMap(({ key, uriFor }) =>
+        expected(key).map((name) => uriFor(name)),
+      ),
     )
     for (const { key, uriFor } of lists) {
       if (key === 'photos') continue
       const items = body[key].items
       expect(items.map(({ view }) => rootOf(view))).toEqual(
-        expected.map((name) => uriFor(name)),
+        expected(key).map((name) => uriFor(name)),
       )
     }
+  })
+
+  it('samples publications from the full list before the selection cap', async () => {
+    const roots = Array.from({ length: 12 }, (_, i) =>
+      atUri(author, site.standard.publication.$type, `publication-${i}`),
+    )
+    await using fixture = await setup({ publications: roots.map(group) })
+    for (const [i, uri] of roots.entries()) {
+      fixture.records.set(uri, {
+        ...fixture.records.get(pubUri)!,
+        name: `Publication ${i}`,
+      })
+    }
+    using hydrate = vi.spyOn(
+      fixture.hydrator,
+      'hydrateEmbedExternalViewFromUris',
+    )
+    const first = await fixture.query()
+    expect(first.status).toBe(200)
+    expect(
+      first.body.publications.items.map(({ view }) => rootOf(view)),
+    ).toEqual(roots.slice(0, 10))
+
+    // Swap the last candidate into the first slot; all other swaps are no-ops.
+    using _random = vi
+      .spyOn(Math, 'random')
+      .mockReturnValue(1 - Number.EPSILON)
+      .mockReturnValueOnce(0)
+    const second = await fixture.query()
+    const expected = [roots[11], ...roots.slice(1, 10)]
+    expect(second.status).toBe(200)
+    expect(
+      second.body.publications.items.map(({ view }) => rootOf(view)),
+    ).toEqual(expected)
+    expect(hydrate).toHaveBeenLastCalledWith(expected, expect.anything())
   })
 
   it('shuffles Iris articles', async () => {
@@ -3734,5 +4075,444 @@ describe('Atmosphere Explore Iris requirements and failures', () => {
     expect(status).toBe(200)
     // @NOTE The first 10 contain 3 wrong-collection roots and 7 valid articles.
     expect(body.articles.items).toHaveLength(7)
+  })
+})
+
+function seedGallery(fixture: Fixture, rkey: string) {
+  const uri = atUri(author, grainGallery.$type, rkey)
+  const item = atUri(author, grainGalleryItem.$type, rkey)
+  fixture.records.set(
+    uri,
+    grainGallery.$build({ title: rkey, createdAt: publishedAt }),
+  )
+  fixture.records.set(
+    item,
+    grainGalleryItem.$build({
+      gallery: uri,
+      item: photoUri,
+      createdAt: publishedAt,
+    }),
+  )
+  fixture.galleryItems.set(uri, [item])
+  return uri
+}
+
+describe('Atmosphere Explore Iris galleries', () => {
+  test.each([
+    { articles: false, galleries: false },
+    { articles: true, galleries: false },
+    { articles: false, galleries: true },
+    { articles: true, galleries: true },
+  ])('selects independent sources: %j', async ({ articles, galleries }) => {
+    await using fixture = await setup(curated)
+    const uri = seedGallery(fixture, 'recommended')
+    fixture.setIrisGate(articles)
+    fixture.setGalleryIrisGate(galleries)
+    fixture.iris.response = {
+      articles: [{ uri: doc2Uri }],
+      recIdStr: 'article-rec',
+    }
+    fixture.iris.galleryResponse = {
+      galleries: [{ uri }],
+      recIdStr: 'gallery-rec',
+    }
+    const { status, body } = await fixture.query(true)
+
+    expect(status).toBe(200)
+    expect(body.articles.items.map(({ view }) => view.title)).toEqual(
+      articles ? ['Second article'] : ['Article', 'Article'],
+    )
+    expect(body.articles.recIdStr).toBe(articles ? 'article-rec' : undefined)
+    expect(body.photos.items.map(({ view }) => view.title)).toEqual(
+      galleries ? ['recommended'] : ['Gallery'],
+    )
+    expect(body.photos.recIdStr).toBe(galleries ? 'gallery-rec' : undefined)
+    const gallery = body.photos.items[0].view
+    expect(gallery.items[0]).toMatchObject({ alt: 'A photo' })
+    expect(gallery.associatedRefs?.map(({ uri }) => uri)).toEqual([
+      galleries ? uri : galleryUri,
+      galleries
+        ? atUri(author, grainGalleryItem.$type, 'recommended')
+        : itemUri,
+      photoUri,
+    ])
+  })
+
+  it('ignores worker selection and hydrates only the Iris gallery roots', async () => {
+    await using fixture = await setup({
+      photos: [{ canonicalUri: galleryUri, locations: ['JP'] }],
+    })
+    fixture.setGalleryIrisGate()
+    const uri = seedGallery(fixture, 'recommended')
+    fixture.iris.galleryResponse = {
+      galleries: [{ uri }],
+      recIdStr: 'gallery-rec',
+    }
+    using lookup = vi.spyOn(fixture.dataplane, 'getRecordsByURI')
+    const { status, body } = await fixture.query(
+      false,
+      {},
+      {
+        'x-atproto-bsky-geo-country': 'US',
+        'x-atproto-bsky-topics': 'unrelated',
+      },
+    )
+
+    expect(status).toBe(200)
+    expect(body.photos.items.map(({ view }) => view.title)).toEqual([
+      'recommended',
+    ])
+    expect(lookup.mock.calls.flatMap(([params]) => params.uris)).not.toContain(
+      galleryUri,
+    )
+  })
+
+  test.each([
+    {
+      name: 'empty list',
+      response: { galleries: [], recIdStr: 'empty-rec' },
+      recIdStr: 'empty-rec',
+    },
+    {
+      name: 'missing list',
+      response: { recIdStr: 'invalid' },
+      recIdStr: undefined,
+    },
+    {
+      name: 'missing rec ID',
+      response: { galleries: [] },
+      recIdStr: undefined,
+    },
+    {
+      name: 'invalid gallery',
+      response: { galleries: [{ uri: 7 }], recIdStr: 'invalid' },
+      recIdStr: undefined,
+    },
+  ])(
+    'falls back to curated photos on $name',
+    async ({ response, recIdStr }) => {
+      await using fixture = await setup(curated)
+      fixture.setGalleryIrisGate()
+      fixture.iris.galleryResponse = response
+      const { status, body } = await fixture.query()
+      expect(status).toBe(200)
+      expect(body.photos.items.map(({ view }) => view.title)).toEqual([
+        'Gallery',
+      ])
+      expect(body.photos.recIdStr).toBe(recIdStr)
+    },
+  )
+
+  test.each(['articles', 'galleries'] as const)(
+    'keeps the other Iris source when %s fails',
+    async (failed) => {
+      await using fixture = await setup(curated)
+      fixture.setIrisGate()
+      fixture.setGalleryIrisGate()
+      const uri = seedGallery(fixture, 'recommended')
+      fixture.iris.respond = async (request) => {
+        const isArticle = new URL(request.url).pathname.endsWith(
+          'ArticleRecommendations',
+        )
+        if (isArticle === (failed === 'articles'))
+          return new Response('', { status: 503 })
+        return Response.json(
+          isArticle
+            ? { articles: [{ uri: doc2Uri }], recIdStr: 'article-rec' }
+            : { galleries: [{ uri }], recIdStr: 'gallery-rec' },
+        )
+      }
+      const { status, body } = await fixture.query()
+      expect(status).toBe(200)
+      expect(body.articles.items.map(({ view }) => view.title)).toEqual(
+        failed === 'articles' ? ['Article', 'Article'] : ['Second article'],
+      )
+      expect(body.articles.recIdStr).toBe(
+        failed === 'articles' ? undefined : 'article-rec',
+      )
+      expect(body.photos.items.map(({ view }) => view.title)).toEqual(
+        failed === 'galleries' ? ['Gallery'] : ['recommended'],
+      )
+      expect(body.photos.recIdStr).toBe(
+        failed === 'galleries' ? undefined : 'gallery-rec',
+      )
+    },
+  )
+
+  it('caps and filters Iris roots before shuffling without backfill', async () => {
+    await using fixture = await setup(curated)
+    fixture.setGalleryIrisGate()
+    const uris = Array.from({ length: 10 }, (_, i) =>
+      seedGallery(fixture, `iris-${i}`),
+    )
+    fixture.iris.galleryResponse = {
+      galleries: [docUri, ...uris].map((uri) => ({ uri })),
+      recIdStr: 'capped',
+    }
+    vi.mocked(Math.random).mockReturnValue(0)
+    const { status, body } = await fixture.query()
+    expect(status).toBe(200)
+    expect(body.photos.items.map(({ view }) => view.title)).toEqual([
+      ...Array.from({ length: 8 }, (_, i) => `iris-${i + 1}`),
+      'iris-0',
+    ])
+    expect(body.photos.recIdStr).toBe('capped')
+  })
+
+  test.each([
+    'roots',
+    'missing',
+    'empty',
+    'record',
+    'photo',
+    'actor',
+    'block',
+  ] as const)(
+    'does not fall back after filtering a nonempty Iris list: %s',
+    async (kind) => {
+      await using fixture = await setup(curated)
+      fixture.setGalleryIrisGate()
+      const uri = seedGallery(fixture, 'recommended')
+      fixture.iris.galleryResponse = {
+        galleries: (kind === 'roots'
+          ? [
+              docUri,
+              `at://${author}`,
+              `at://${author}/${grainGallery.$type}`,
+              `at://author.test/${grainGallery.$type}/gallery`,
+            ]
+          : [uri]
+        ).map((uri) => ({ uri })),
+        recIdStr: 'filtered',
+      }
+      if (kind === 'missing') fixture.records.delete(uri)
+      if (kind === 'empty') fixture.galleryItems.set(uri, [])
+      if (kind === 'record') fixture.takenDown.add(uri)
+      if (kind === 'photo') fixture.takenDown.add(photoUri)
+      if (kind === 'actor') fixture.takenDownActors.add(author)
+      if (kind === 'block') fixture.blockedActors.add(author)
+      const { status, body } = await fixture.query(true)
+      expect(status).toBe(200)
+      expect(body.photos).toEqual({ items: [], recIdStr: 'filtered' })
+    },
+  )
+
+  it('requires an Iris client when only the gallery gate is enabled', async () => {
+    await using fixture = await setup(curated)
+    fixture.setGalleryIrisGate()
+    fixture.ctx.irisClient = undefined
+    expect((await fixture.query()).status).toBe(501)
+    expect(fixture.fetchMock).not.toHaveBeenCalled()
+  })
+})
+
+describe('Atmosphere recommended activity', () => {
+  test.each([false, true])(
+    'preserves mixed recommendation order (authenticated: %s)',
+    async (authenticated) => {
+      await using f = await setup()
+      f.iris.activityResponse = {
+        items: [doc2Uri, galleryUri, docUri].map((uri) => ({ uri })),
+        recIdStr: 'mixed-rec',
+      }
+      using hydrate = vi.spyOn(f.hydrator, 'hydrateEmbedExternalViewFromUris')
+      const { status, headers, body } = await f.queryRecommendedActivity(
+        authenticated,
+        { limit: 3 },
+      )
+      expect(status).toBe(200)
+      expect(body.recIdStr).toBe('mixed-rec')
+      expect(body.items).toMatchObject([
+        { view: { title: 'Second article' } },
+        { view: { title: 'Gallery' } },
+        { view: { title: 'Article' } },
+      ])
+      expect(body.items.map(({ view }) => view.$type)).toEqual([
+        app.bsky.embed.external.viewArticle.$type,
+        app.bsky.embed.external.viewGallery.$type,
+        app.bsky.embed.external.viewArticle.$type,
+      ])
+      expect(headers.get('atproto-content-labelers')).toBe(`${labeler};redact`)
+      expect(hydrate).toHaveBeenCalledWith(
+        [doc2Uri, galleryUri, docUri],
+        expect.objectContaining({
+          viewer: authenticated ? viewer : null,
+          xrpcEndpoint:
+            app.bsky.unspecced.getAtmosphereRecommendedActivity.$lxm,
+        }),
+        { hydration: 'basic' },
+      )
+      const [input, init] = f.iris.fetchMock.mock.calls[0]
+      const request = new Request(input, init)
+      expect(new URL(request.url).pathname).toBe(
+        `/xrpc/${app.bsky.unspecced.getAtmosphereActivityRecommendations.$lxm}`,
+      )
+      expect(new URL(request.url).searchParams.get('viewer')).toBe(
+        authenticated ? viewer : null,
+      )
+      expect(new URL(request.url).searchParams.get('limit')).toBe('3')
+      expect(f.fetchMock).not.toHaveBeenCalled()
+    },
+  )
+
+  test.each([{ langs: [] }, { langs: ['fr', 'de'] }])(
+    'forwards request-scoped recommendation context (langs: $langs)',
+    async ({ langs }) => {
+      await using f = await setup()
+      const iris = f.ctx.irisClient!
+      using call = vi.spyOn(iris, 'call')
+      const { status } = await f.queryRecommendedActivity(
+        true,
+        { langs: [...langs] },
+        {
+          'accept-language': 'en-US',
+          'x-atproto-bsky-topics': 'art,photography',
+          'x-atproto-device-id': 'device-123',
+          'x-atproto-session-id': 'session-456',
+        },
+      )
+      expect(status).toBe(200)
+      expect(call).toHaveBeenCalledWith(
+        app.bsky.unspecced.getAtmosphereActivityRecommendations,
+        { viewer, limit: 25 },
+        {
+          headers: {
+            'accept-language': langs.length ? langs.join(',') : 'en-US',
+            'x-atproto-bsky-topics': 'art,photography',
+            'x-atproto-device-id': 'device-123',
+            'x-atproto-session-id': 'session-456',
+          },
+          signal: expect.any(AbortSignal),
+          validateResponse: true,
+        },
+      )
+      const [input, init] = f.iris.fetchMock.mock.calls[0]
+      expect(new Request(input, init).headers.get('authorization')).toBe(
+        'Bearer iris-key',
+      )
+    },
+  )
+
+  test.each([false, true])(
+    'checks the screen gate before fetching (authenticated: %s)',
+    async (authenticated) => {
+      await using f = await setup({}, false)
+      expect((await f.queryRecommendedActivity(authenticated)).status).toBe(403)
+      expect(f.iris.fetchMock).not.toHaveBeenCalled()
+    },
+  )
+
+  it('returns 501 when Iris is unavailable', async () => {
+    await using f = await setup()
+    f.ctx.irisClient = undefined
+    expect((await f.queryRecommendedActivity()).status).toBe(501)
+    expect(f.fetchMock).not.toHaveBeenCalled()
+  })
+
+  it('filters unsupported roots, deduplicates and omits unavailable views', async () => {
+    await using f = await setup()
+    f.records.set(doc2Uri, {
+      $type: site.standard.document.$type,
+      title: 'Invalid article without a site or date',
+    })
+    f.galleryItems.set(galleryUri, [])
+    const unsupported = atUri(author, app.bsky.feed.post.$type, 'unsupported')
+    f.iris.activityResponse = {
+      items: [
+        unsupported,
+        `at://author.test/${site.standard.document.$type}/story`,
+        `at://${author}/${site.standard.document.$type}`,
+        `${docUri}?query=1`,
+        missingUri,
+        galleryUri,
+        doc2Uri,
+        docUri,
+        docUri,
+      ].map((uri) => ({ uri })),
+      recIdStr: 'filtered-rec',
+    }
+    using hydrate = vi.spyOn(f.hydrator, 'hydrateEmbedExternalViewFromUris')
+    const { status, body } = await f.queryRecommendedActivity()
+    expect(status).toBe(200)
+    expect(body.items).toMatchObject([{ view: { title: 'Article' } }])
+    expect(body.recIdStr).toBe('filtered-rec')
+    expect(hydrate.mock.calls[0][0]).toEqual([
+      missingUri,
+      galleryUri,
+      doc2Uri,
+      docUri,
+    ])
+  })
+
+  test.each(['takedown', 'actor', 'block'])(
+    'does not expose moderated recommendations: %s',
+    async (kind) => {
+      await using f = await setup()
+      f.iris.activityResponse = {
+        items: [docUri, galleryUri].map((uri) => ({ uri })),
+        recIdStr: 'hidden-rec',
+      }
+      if (kind === 'takedown') {
+        f.takenDown.add(docUri)
+        f.takenDown.add(galleryUri)
+      }
+      if (kind === 'actor') f.takenDownActors.add(author)
+      if (kind === 'block') f.blockedActors.add(author)
+      const { status, body } = await f.queryRecommendedActivity(true)
+      expect(status).toBe(200)
+      expect(body).toEqual({ items: [], recIdStr: 'hidden-rec' })
+    },
+  )
+
+  it('caps upstream results at the requested limit', async () => {
+    await using f = await setup()
+    f.iris.activityResponse = {
+      items: [galleryUri, docUri].map((uri) => ({ uri })),
+      recIdStr: 'capped',
+    }
+    const { status, body } = await f.queryRecommendedActivity(false, {
+      limit: 1,
+    })
+    expect(status).toBe(200)
+    expect(body.items).toMatchObject([{ view: { title: 'Gallery' } }])
+  })
+
+  test.each([0, 101])('rejects an invalid limit: %s', async (limit) => {
+    await using f = await setup()
+    expect((await f.queryRecommendedActivity(false, { limit })).status).toBe(
+      400,
+    )
+    expect(f.iris.fetchMock).not.toHaveBeenCalled()
+  })
+
+  test.each([
+    { items: [] },
+    { items: [{ uri: 'not-an-at-uri' }], recIdStr: 'invalid' },
+  ])(
+    'validates Iris responses even outside debug mode: %j',
+    async (response) => {
+      await using f = await setup()
+      f.iris.activityResponse = response
+      using hydrate = vi.spyOn(f.hydrator, 'hydrateEmbedExternalViewFromUris')
+      expect((await f.queryRecommendedActivity()).status).toBe(502)
+      expect(hydrate).not.toHaveBeenCalled()
+    },
+  )
+
+  it('returns only external views without hydrating associated posts', async () => {
+    await using f = await setup()
+    const postUri = atUri(author, app.bsky.feed.post.$type, 'announcement')
+    f.records.get(docUri)!.bskyPostRef = { uri: postUri, cid }
+    using posts = vi.spyOn(f.hydrator, 'hydratePosts')
+    f.iris.activityResponse = {
+      items: [{ uri: docUri }],
+      recIdStr: 'article',
+    }
+    const { status, body } = await f.queryRecommendedActivity(true)
+    expect(status).toBe(200)
+    expect(body.items).toEqual([
+      { view: expect.objectContaining({ title: 'Article' }) },
+    ])
+    expect(posts).not.toHaveBeenCalled()
   })
 })

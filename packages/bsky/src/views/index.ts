@@ -54,7 +54,10 @@ import {
   uriToDid,
   uriToDid as creatorFromUri,
 } from '../util/uris.js'
-import { externalRecordView as externalRecordViewBase } from './external.js'
+import {
+  type ExternalRecordViewOptions,
+  externalRecordView as externalRecordViewBase,
+} from './external.js'
 import {
   MAX_PROFILE_LINKS,
   isAllowedProfileLinkUrl,
@@ -1144,6 +1147,10 @@ export class Views {
           ? this.embed(uri, post.record.embed, state, depth + 1)
           : undefined,
       bookmarkCount: aggs?.bookmarks ?? 0,
+      viewCount:
+        state.ctx?.viewer === authorDid
+          ? (state.postViewCounts?.get(uri) ?? undefined)
+          : undefined,
       replyCount: aggs?.replies ?? 0,
       repostCount: aggs?.reposts ?? 0,
       likeCount: aggs?.likes ?? 0,
@@ -2364,8 +2371,10 @@ export class Views {
     uri: AtUriString,
     state: HydrationState,
     now = Date.now(),
+    cid?: string,
+    options?: ExternalRecordViewOptions,
   ): $Typed<ExternalRecordView> | undefined {
-    return externalRecordViewBase(this, uri, state, now)
+    return externalRecordViewBase(this, uri, state, now, cid, options)
   }
 
   externalEmbed(

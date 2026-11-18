@@ -40,9 +40,12 @@ export class BytesSchema extends Schema<Uint8Array> {
     input: unknown,
     ctx: ValidationContext,
   ): ValidationResult<Uint8Array> {
-    // In "parse" mode, coerce different binary formats into Uint8Array
+    // In "parse" mode, coerce different binary formats into Uint8Array. Plain
+    // arrays and array-like objects are not binary data and are rejected.
     const bytes =
-      ctx.options.mode === 'parse' ? asUint8Array(input) : ifUint8Array(input)
+      ctx.options.mode === 'parse' && isBinary(input)
+        ? asUint8Array(input)
+        : ifUint8Array(input)
     if (!bytes) {
       return ctx.issueUnexpectedType(input, 'bytes')
     }
@@ -59,6 +62,10 @@ export class BytesSchema extends Schema<Uint8Array> {
 
     return ctx.success(bytes)
   }
+}
+
+function isBinary(input: unknown): input is ArrayBuffer | ArrayBufferView {
+  return input instanceof ArrayBuffer || ArrayBuffer.isView(input)
 }
 
 /**

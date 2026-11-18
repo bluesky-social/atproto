@@ -17,7 +17,7 @@ import {
 // In the future may take into consideration popularity via likes w/ its own dataplane endpoint.
 export default function (server: Server, ctx: AppContext) {
   server.add(app.bsky.unspecced.getPopularFeedGenerators, {
-    auth: ctx.authVerifier.standardOptional,
+    auth: ctx.authVerifier.standardReadOptional(),
     handler: async ({ auth, params, req }) => {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)

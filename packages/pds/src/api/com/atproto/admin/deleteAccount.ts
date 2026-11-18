@@ -4,7 +4,7 @@ import { com } from '../../../../lexicons/index.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.admin.deleteAccount, {
-    auth: ctx.authVerifier.adminToken,
+    auth: ctx.authVerifier.adminTokenOrEntrywayService,
     handler: async ({ input }) => {
       const { did } = input.body
 

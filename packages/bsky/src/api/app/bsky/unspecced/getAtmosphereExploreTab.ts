@@ -17,7 +17,7 @@ import {
   type Hydrator,
   mergeStates,
 } from '../../../../hydration/hydrator.js'
-import { app, site } from '../../../../lexicons/index.js'
+import { app, site, social } from '../../../../lexicons/index.js'
 import { httpLogger } from '../../../../logger.js'
 import {
   type HydrationFnInput,
@@ -28,6 +28,11 @@ import {
 } from '../../../../pipeline.js'
 import { getAtprotoPassthroughHeaders } from '../../../../util/headers.js'
 import type { Views } from '../../../../views/index.js'
+import {
+  getAtmospherePostRef,
+  getAtmospherePostUris,
+  getAtmospherePostView,
+} from './atmosphere-hydration.js'
 
 const MAX_CONFIG_BYTES = 512 * 1024
 const MAX_LIST_ITEMS = 10
@@ -76,7 +81,7 @@ export default function (server: Server, ctx: AppContext) {
   const getExplore = createPipeline(skeleton, hydration, noRules, presentation)
   const fetchExploreTabSkeleton = createFetchExploreTabSkeleton()
   server.add(app.bsky.unspecced.getAtmosphereExploreTab, {
-    auth: ctx.authVerifier.standardOptional,
+    auth: ctx.authVerifier.standardReadOptional(),
     handler: async ({ auth, params, req, signal }) => {
       const viewer = auth.credentials.iss
       const features = ctx.featureGatesClient.scope(
@@ -105,11 +110,14 @@ export default function (server: Server, ctx: AppContext) {
         features,
         xrpcEndpoint: app.bsky.unspecced.getAtmosphereExploreTab.$lxm,
       })
-      const useIris = hydrateCtx.features.checkGate(
+      const useIrisArticles = hydrateCtx.features.checkGate(
         hydrateCtx.features.Gate.AtmosphereExploreArticlesIrisEnable,
       )
+      const useIrisGalleries = hydrateCtx.features.checkGate(
+        hydrateCtx.features.Gate.AtmosphereExploreGalleriesIrisEnable,
+      )
       // Use 501 instead of 500 as these are not considered retry-able by clients
-      if (useIris && !ctx.irisClient)
+      if ((useIrisArticles || useIrisGalleries) && !ctx.irisClient)
         throw new MethodNotImplementedError('Iris agent not available')
       const result = await getExplore(
         {
@@ -132,7 +140,9 @@ export default function (server: Server, ctx: AppContext) {
         {
           hydrator: ctx.hydrator,
           views: ctx.views,
-          irisClient: useIris ? ctx.irisClient : undefined,
+          irisClient: ctx.irisClient,
+          useIrisArticles,
+          useIrisGalleries,
           fetchExploreTabSkeleton,
         },
       )
@@ -145,9 +155,9 @@ async function skeleton({
   ctx,
   params,
 }: SkeletonFnInput<Context, Params>): Promise<SkeletonState> {
-  const [config, recommendations] = await Promise.all([
+  const [config, recommendations, galleryRecommendations] = await Promise.all([
     ctx.fetchExploreTabSkeleton(params.workerUrl, params.signal),
-    ctx.irisClient
+    ctx.useIrisArticles && ctx.irisClient
       ? ctx.irisClient
           .call(
             app.bsky.unspecced.getAtmosphereExploreArticleRecommendations,
@@ -167,6 +177,29 @@ async function skeleton({
             httpLogger.warn(
               { err },
               'Unable to fetch Atmosphere Explore article recommendations',
+            )
+            return undefined
+          })
+      : undefined,
+    ctx.useIrisGalleries && ctx.irisClient
+      ? ctx.irisClient
+          .call(
+            app.bsky.unspecced.getAtmosphereExploreGalleryRecommendations,
+            {
+              limit: MAX_LIST_ITEMS,
+              viewer: params.hydrateCtx.viewer ?? undefined,
+            },
+            {
+              headers: params.headers,
+              signal: params.signal,
+              validateResponse: true,
+            },
+          )
+          .catch((err) => {
+            if (params.signal.aborted) throw err
+            httpLogger.warn(
+              { err },
+              'Unable to fetch Atmosphere Explore gallery recommendations',
             )
             return undefined
           })
@@ -197,8 +230,25 @@ async function skeleton({
         : completeGroups(select(config.articles)),
     ),
     articleRecIdStr: recommendations?.recIdStr,
-    publications: orderGroups(completeGroups(select(config.publications))),
-    photos: orderGroups(completeGroups(select(config.photos))),
+    // @NOTE Randomize candidates within priority buckets before selection's cap.
+    publications: orderGroups(
+      completeGroups(select(shuffle(config.publications))),
+    ),
+    photos: orderGroups(
+      galleryRecommendations && galleryRecommendations.galleries.length > 0
+        ? mapDefined(
+            galleryRecommendations.galleries.slice(0, MAX_LIST_ITEMS),
+            ({ uri }) => {
+              const root = recordUri(uri)
+              return root &&
+                new AtUri(root).collection === social.grain.gallery.$type
+                ? { uri: root }
+                : undefined
+            },
+          )
+        : completeGroups(select(config.photos)),
+    ),
+    galleryRecIdStr: galleryRecommendations?.recIdStr,
     // Expired and not-yet-previewed livestreams are dropped before selection,
     // so they never consume the cap.
     livestreams: orderGroups(
@@ -234,11 +284,39 @@ async function hydration({
   const [externalState, appProfileState] = await Promise.all([
     ctx.hydrator.hydrateEmbedExternalViewFromUris(uris, params.hydrateCtx),
     dids.length
-      ? ctx.hydrator.hydrateProfilesDetailed(dids, params.hydrateCtx)
+      ? ctx.hydrator.hydrateProfilesDetailed(dids, params.hydrateCtx, {
+          knownFollowersDids: dids,
+        })
       : {},
   ])
-  // Detailed profile state goes second so it wins any overlapping actor state.
-  return mergeStates(externalState, appProfileState)
+  const postUris = getAtmospherePostUris(externalState)
+  const postState = postUris.length
+    ? await ctx.hydrator
+        .hydratePosts(
+          postUris.map((uri) => ({ uri })),
+          params.hydrateCtx,
+          // @NOTE Failed hydration must not leak partially loaded posts.
+          { ...externalState },
+          {
+            externalSeenRecordKeys: new Set([
+              ...(externalState.externalRecords?.keys() ?? []),
+              ...(externalState.externalRecordsByRef?.keys() ?? []),
+            ]),
+            externalPublicationSubscriptions:
+              externalState.externalPublicationSubscriptions,
+          },
+        )
+        .catch((err) => {
+          if (params.signal.aborted) throw err
+          httpLogger.warn(
+            { err },
+            'Unable to hydrate Atmosphere Explore associated posts',
+          )
+          return {}
+        })
+    : {}
+  // Detailed profile state goes last so it wins any overlapping actor state.
+  return mergeStates(mergeStates(externalState, postState), appProfileState)
 }
 
 function presentation({
@@ -256,9 +334,17 @@ function presentation({
     articles: {
       items: mapDefined(articles, ({ uri }) => {
         const view = ctx.views.externalRecordView(uri, state, now)
-        return view && app.bsky.embed.external.viewArticle.$isTypeOf(view)
-          ? { featured: false, view }
-          : undefined
+        if (!view || !app.bsky.embed.external.viewArticle.$isTypeOf(view))
+          return
+        const bskyPostRef = getAtmospherePostRef(
+          state.externalRecords?.get(uri)?.record,
+        )
+        return {
+          featured: false,
+          view,
+          bskyPostRef,
+          viewBskyPost: getAtmospherePostView(ctx.views, bskyPostRef, state),
+        }
       }),
       recIdStr: skeleton.articleRecIdStr,
     },
@@ -280,16 +366,26 @@ function presentation({
           ? { featured: false, view }
           : undefined
       }),
+      recIdStr: skeleton.galleryRecIdStr,
     },
     livestreams: {
       items: mapDefined(livestreams, ({ uri, startsAt }) => {
         const view = ctx.views.externalRecordView(uri, state, now)
         if (!view || !app.bsky.embed.external.viewLivestream.$isTypeOf(view))
           return
+        const bskyPostRef = getAtmospherePostRef(
+          state.externalRecords?.get(uri)?.record,
+        )
         // Previewed streams are never live; copy rather than mutate the view.
-        return startsAt != null && Date.parse(startsAt) > now
-          ? { featured: false, view: { ...view, active: false } }
-          : { featured: false, view }
+        return {
+          featured: false,
+          view:
+            startsAt != null && Date.parse(startsAt) > now
+              ? { ...view, active: false }
+              : view,
+          bskyPostRef,
+          viewBskyPost: getAtmospherePostView(ctx.views, bskyPostRef, state),
+        }
       }),
     },
     apps: apps.map(({ card, did }) => {
@@ -303,6 +399,8 @@ function presentation({
         overlayColor: card.overlayColor,
         textColor: card.textColor,
         url: card.url,
+        appStoreUrl: card.appStoreUrl,
+        googlePlayUrl: card.googlePlayUrl,
         category: card.category,
         profile,
       }
@@ -415,18 +513,22 @@ const APP_CARD_FIELDS = [
   'overlayColor',
   'textColor',
   'url',
+  'appStoreUrl',
+  'googlePlayUrl',
   'category',
 ] as const
 
 /**
  * Validates an app entry. Only the public card fields are copied (so a
  * supplied `profile` or `profileUrl` is never read) and only `did` is kept
- * beyond them. A present but malformed `did` drops the app.
+ * beyond them. A present but malformed `did` drops the app, as does anything
+ * not explicitly `featured: true`.
  */
 function parseApp(entry: unknown): AppEntry | undefined {
   if (typeof entry !== 'object' || entry === null || Array.isArray(entry))
     return
   const raw = entry as Record<string, unknown>
+  if (raw.featured !== true) return
   const did = appDidSchema.safeParse(raw.did)
   if (!did.success) return
   const card = app.bsky.unspecced.getAtmosphereExploreTab.appCard.safeParse(
@@ -442,6 +544,8 @@ type Context = {
   hydrator: Hydrator
   views: Views
   irisClient: Client | undefined
+  useIrisArticles: boolean
+  useIrisGalleries: boolean
   fetchExploreTabSkeleton: ReturnType<typeof createFetchExploreTabSkeleton>
 }
 
@@ -465,6 +569,7 @@ type SkeletonState = {
   articleRecIdStr?: string
   publications: RecordGroup[]
   photos: RecordGroup[]
+  galleryRecIdStr?: string
   livestreams: LivestreamRecordGroup[]
   apps: AppEntry[]
 }
@@ -474,12 +579,16 @@ type SkeletonState = {
  * so presentation keeps this order.
  */
 function orderGroups<T extends RecordGroup>(groups: T[]): T[] {
-  const shuffled = [...groups]
+  return shuffle(groups).slice(0, MAX_LIST_ITEMS)
+}
+
+function shuffle<T>(items: T[]): T[] {
+  const shuffled = [...items]
   for (let i = shuffled.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1))
     ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
   }
-  return shuffled.slice(0, MAX_LIST_ITEMS)
+  return shuffled
 }
 
 function completeGroups(groups: Group[] = []): RecordGroup[] {

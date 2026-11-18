@@ -6,6 +6,7 @@ import {
 import type { Database } from '@atproto/bsky'
 import { AtUri, type AtUriString } from '@atproto/syntax'
 import { EXAMPLE_LABELER, RecordRef, type TestNetwork } from '../index.js'
+import { seedAtmosphere } from '../seed/atmosphere.js'
 import { postTexts, replyTexts } from './data.js'
 import blurHashB64 from './img/blur-hash-avatar-b64.js'
 import labeledImgB64 from './img/labeled-img-b64.js'
@@ -676,6 +677,20 @@ export async function generateMockSetup(env: TestNetwork) {
   }
 
   await setVerifier(env.bsky.db, alice.assertDid)
+
+  const atmosphere = await seedAtmosphere(env, {
+    author: alice,
+    photographer: bob,
+    streamer: carla,
+    reporter: triage,
+  })
+  console.table(
+    atmosphere.records.map(({ title, reportId, uri }) => ({
+      fixture: title,
+      reportId,
+      uri,
+    })),
+  )
 
   // @TODO These are useful when testing complex threads, but don't need to be enabled all the time. We could make it configurable.
   // import * as seedThreadV2 from '../seed/thread-v2.js'

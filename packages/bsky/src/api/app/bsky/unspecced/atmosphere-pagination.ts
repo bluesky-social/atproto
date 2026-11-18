@@ -2,7 +2,6 @@ import { mapDefined } from '@atproto/common'
 import {
   type AtUriString,
   type DidString,
-  type NsidString,
   isDidString,
 } from '@atproto/lex-schema'
 import { parseAtUriString } from '@atproto/syntax'
@@ -10,7 +9,7 @@ import { InvalidRequestError, UpstreamFailureError } from '@atproto/xrpc-server'
 import type { AppContext } from '../../../../context.js'
 import { asInvalidRequest } from '../../../../data-plane/index.js'
 import type { HydrateCtxWithViewer } from '../../../../hydration/hydrator.js'
-import { app } from '../../../../lexicons/index.js'
+import type { app } from '../../../../lexicons/index.js'
 import {
   atmosphereWindow,
   groupAtmosphereActivities,
@@ -27,15 +26,6 @@ const MAX_NATIVE_CURSOR_LENGTH = 4096
 type Root = {
   uri: AtUriString
   sortedAt: number
-  position: number
-}
-
-type Bucket = {
-  author: DidString
-  collection: NsidString
-  retained: number
-  overflow: number
-  position: number
 }
 
 /** Consume whole native batches, then group only the visible activity on this page. */
@@ -44,17 +34,16 @@ export async function loadAtmosphereTimeline(
   hydrateCtx: HydrateCtxWithViewer,
   cursor: string | undefined,
   now: number,
+  signal: AbortSignal,
 ): Promise<app.bsky.unspecced.getAtmosphereTimeline.$OutputBody> {
   const viewer = hydrateCtx.viewer as DidString
   let next = cursor === undefined ? undefined : decodeCursor(cursor, viewer)
   let terminal = false
   let batchesFetched = 0
-  let position = 0
   const roots: Root[] = []
   const seenUris = new Set<string>()
   const seenCursors = new Set<string>()
-  const buckets = new Map<string, Bucket>()
-  const hydration = new AtmosphereTimelineHydrator(ctx, hydrateCtx, now)
+  const hydration = new AtmosphereTimelineHydrator(ctx, hydrateCtx, now, signal)
 
   async function fetchBatch() {
     batchesFetched++
@@ -79,25 +68,7 @@ export async function loadAtmosphereTimeline(
       )
         continue
       seenUris.add(item.uri)
-      const { authority: author, collection } = parsed.value
-      const key = `${author}\0${collection}`
-      let bucket = buckets.get(key)
-      if (!bucket) {
-        bucket = { author, collection, retained: 0, overflow: 0, position: 0 }
-        buckets.set(key, bucket)
-      }
-      if (bucket.retained < 5) {
-        bucket.retained++
-        roots.push({
-          uri: item.uri,
-          sortedAt: item.sortedAt.getTime(),
-          position,
-        })
-      } else {
-        if (bucket.overflow === 0) bucket.position = position
-        bucket.overflow++
-      }
-      position++
+      roots.push({ uri: item.uri, sortedAt: item.sortedAt.getTime() })
     }
     next = page.cursor
     terminal = next === undefined
@@ -133,31 +104,8 @@ export async function loadAtmosphereTimeline(
     hydration.activity(uri, sortedAt),
   )
 
-  const positions = new Map(roots.map(({ uri, position }) => [uri, position]))
-  const output = groupAtmosphereActivities(activities, now).map((item) => ({
-    position: positions.get(
-      'items' in item ? item.items[0].record.uri : item.record.uri,
-    )!,
-    item: item as app.bsky.unspecced.getAtmosphereTimeline.$OutputBody['feed'][number],
-  }))
-  for (const bucket of buckets.values()) {
-    if (!bucket.overflow) continue
-    const profile = hydration.profile(bucket.author)
-    if (!profile) continue
-    output.push({
-      position: bucket.position,
-      item: app.bsky.unspecced.getAtmosphereTimeline.activityItemOverflow.$build(
-        {
-          collection: bucket.collection,
-          count: bucket.overflow,
-          associatedProfiles: [profile],
-        },
-      ),
-    })
-  }
-  output.sort((a, b) => a.position - b.position)
   return {
-    feed: output.map(({ item }) => item),
+    feed: groupAtmosphereActivities(activities, now, hydration),
     cursor: terminal ? undefined : encodeCursor(next!, viewer),
   }
 }

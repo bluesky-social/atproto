@@ -12,6 +12,7 @@ import type { ReportWithEvent } from '../mod-service/report.js'
 import {
   CHAT_CONVO_COLLECTION,
   CHAT_MESSAGE_COLLECTION,
+  messageStatusKey,
 } from '../mod-service/subject.js'
 import type { ModerationSubjectStatusRowWithHandle } from '../mod-service/types.js'
 import type { ParsedLabelers } from '../util.js'
@@ -31,6 +32,9 @@ type ReportViews = {
   getSubjectStatus(
     subjects: (UriString | DidString)[],
   ): Promise<Map<string, ModerationSubjectStatusRowWithHandle>>
+  getMessageSubjectStatuses(
+    messages: { did: DidString; messageId: string; convoId: string }[],
+  ): Promise<Map<string, ModerationSubjectStatusRowWithHandle>>
   formatSubjectStatus(
     status: ModerationSubjectStatusRowWithHandle,
   ): tools.ozone.moderation.defs.SubjectStatusView
@@ -44,6 +48,7 @@ export type HydratedReport = {
   queues: Map<number, tools.ozone.queue.defs.QueueView>
   memberViews: Map<string, tools.ozone.team.defs.Member>
   convoStatuses: Map<string, tools.ozone.moderation.defs.SubjectStatusView>
+  messageStatuses: Map<string, tools.ozone.moderation.defs.SubjectStatusView>
 }
 
 export async function hydrateReportInfo(
@@ -64,12 +69,27 @@ export async function hydrateReportInfo(
   const dids = new Set<DidString>()
   const uris = new Set<string>()
   const convoUris = new Set<AtUriString>()
+  const messages = new Map<
+    string,
+    { did: DidString; messageId: string; convoId: string }
+  >()
   const queueIds = new Set<number>()
   const assignmentDids: DidString[] = []
   for (const report of reports) {
     dids.add(report.subjectDid)
     dids.add(report.reportedBy)
     if (report.subjectUri) uris.add(report.subjectUri)
+    if (report.subjectMessageId) {
+      const message = {
+        did: report.subjectDid,
+        messageId: report.subjectMessageId,
+        convoId: report.subjectConvoId ?? '',
+      }
+      messages.set(
+        messageStatusKey(message.did, message.messageId, message.convoId),
+        message,
+      )
+    }
     if (report.subjectConvoId && !report.subjectMessageId) {
       convoUris.add(
         `at://${report.subjectDid}/${CHAT_CONVO_COLLECTION}/${report.subjectConvoId}`,
@@ -103,6 +123,7 @@ export async function hydrateReportInfo(
     queues,
     memberViews,
     convoStatuses,
+    messageStatuses,
   ] = await Promise.all([
     views.repoDetails(didsArray, labelers),
     getAccountInfos(didsArray),
@@ -114,6 +135,17 @@ export async function hydrateReportInfo(
     getQueues(Array.from(queueIds)),
     getTeamMembers(assignmentDids),
     getConvoStatuses(),
+    views
+      .getMessageSubjectStatuses(Array.from(messages.values()))
+      .then(
+        (rows) =>
+          new Map(
+            Array.from(rows, ([key, row]) => [
+              key,
+              views.formatSubjectStatus(row),
+            ]),
+          ),
+      ),
   ])
 
   return {
@@ -124,6 +156,7 @@ export async function hydrateReportInfo(
     queues,
     memberViews,
     convoStatuses,
+    messageStatuses,
   }
 }
 
@@ -141,6 +174,7 @@ export function buildReportView(
     queues,
     memberViews,
     convoStatuses,
+    messageStatuses,
   } = hydrated
 
   // flags
@@ -170,13 +204,19 @@ export function buildReportView(
       : isConvo
         ? `at://${report.subjectDid}/${CHAT_CONVO_COLLECTION}/${report.subjectConvoId}`
         : report.subjectDid
-  // Convos have their own subject status, keyed by synthetic at-uri. Messages
-  // don't have one of their own and map to the account's subject status.
   const subjectStatus = isRecord
     ? record?.moderation.subjectStatus
-    : isConvo
-      ? convoStatuses.get(subject)
-      : repo?.moderation.subjectStatus
+    : isMessage
+      ? messageStatuses.get(
+          messageStatusKey(
+            did,
+            report.subjectMessageId!,
+            report.subjectConvoId ?? '',
+          ),
+        )
+      : isConvo
+        ? convoStatuses.get(subject)
+        : repo?.moderation.subjectStatus
 
   // report
   const reportType = report.meta?.reportType as string

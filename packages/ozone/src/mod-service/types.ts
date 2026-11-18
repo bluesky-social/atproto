@@ -20,25 +20,6 @@ export type ModerationEventRowWithHandle = ModerationEventRow & {
 }
 export type ModerationSubjectStatusRow = Selectable<ModerationSubjectStatus>
 export type ModerationSubjectStatusRowWithStats = ModerationSubjectStatusRow & {
-  // account_events_stats
-  takedownCount: number | null
-  suspendCount: number | null
-  escalateCount: number | null
-  reportCount: number | null
-  appealCount: number | null
-
-  // account_record_events_stats
-  totalReports: number | null
-  reportedCount: number | null
-  escalatedCount: number | null
-  appealedCount: number | null
-
-  // account_record_status_stats
-  subjectCount: number | null
-  pendingCount: number | null
-  processedCount: number | null
-  takendownCount: number | null
-
   // account_strike
   strikeCount: number | null
   totalStrikeCount: number | null

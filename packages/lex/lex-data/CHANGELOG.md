@@ -1,5 +1,17 @@
 # @atproto/lex-data
 
+## 0.1.10
+
+### Patch Changes
+
+- [#5825](https://github.com/bluesky-social/atproto/pull/5825) [`8c841f6`](https://github.com/bluesky-social/atproto/commit/8c841f6e73c8365c2dfe816c0613aa9c50490361) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add support for `ArrayLike<number>` in `asUint8Array`
+
+- [#5825](https://github.com/bluesky-social/atproto/pull/5825) [`8c841f6`](https://github.com/bluesky-social/atproto/commit/8c841f6e73c8365c2dfe816c0613aa9c50490361) Thanks [@matthieusieben](https://github.com/matthieusieben)! - `asUint8Array` converts Node.js `Buffer`s into plain `Uint8Array`s. Add `toUint8Array`, which throws a `TypeError` when the input cannot be converted into a `Uint8Array`.
+
+- [#5825](https://github.com/bluesky-social/atproto/pull/5825) [`8c841f6`](https://github.com/bluesky-social/atproto/commit/8c841f6e73c8365c2dfe816c0613aa9c50490361) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add `ui8ConcatAsync()` to `@atproto/lex-data`, type `encode()`'s result in `@atproto/lex-cbor` as `Uint8Array<ArrayBuffer>`, and keep `bytes` schemas from coercing arrays and array-like objects now that `asUint8Array` accepts them.
+
+- [#5825](https://github.com/bluesky-social/atproto/pull/5825) [`8c841f6`](https://github.com/bluesky-social/atproto/commit/8c841f6e73c8365c2dfe816c0613aa9c50490361) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add support for `Iterable<ArrayLike<number>>` as `ui8Concat()` input
+
 ## 0.1.9
 
 ### Patch Changes
