@@ -1,0 +1,117 @@
+{
+  "lexicon": 1,
+  "id": "tools.ozone.report.getStatGroupDetails",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "Get additional details for a stat group. Omit all group selectors for aggregate details.",
+      "parameters": {
+        "type": "params",
+        "properties": {
+          "queueId": {
+            "type": "integer",
+            "minimum": -1,
+            "description": "Queue stat group. Use -1 for unqueued reports; otherwise use a positive queue ID. Requires queue access."
+          },
+          "moderatorDid": {
+            "type": "string",
+            "format": "did",
+            "description": "Moderator stat group, based on current report assignment. Requires administrator access."
+          },
+          "reportTypes": {
+            "type": "array",
+            "minLength": 1,
+            "maxLength": 100,
+            "items": {
+              "type": "string"
+            },
+            "description": "Report-type stat group. Counts only the specified reasons."
+          },
+          "startDate": {
+            "type": "string",
+            "format": "datetime",
+            "description": "First UTC calendar day to include, inclusive. Defaults to today. The range must not exceed 120 calendar days."
+          },
+          "endDate": {
+            "type": "string",
+            "format": "datetime",
+            "description": "Last UTC calendar day to include, inclusive. Defaults to today."
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": [
+            "computedAt",
+            "startDate",
+            "endDate",
+            "reportTypeBreakdown"
+          ],
+          "properties": {
+            "computedAt": {
+              "type": "string",
+              "format": "datetime",
+              "description": "When the live query started."
+            },
+            "startDate": {
+              "type": "string",
+              "format": "datetime",
+              "description": "First included UTC calendar day, at midnight."
+            },
+            "endDate": {
+              "type": "string",
+              "format": "datetime",
+              "description": "Last included UTC calendar day, at midnight."
+            },
+            "reportTypeBreakdown": {
+              "type": "ref",
+              "ref": "#reportTypeBreakdown"
+            }
+          }
+        }
+      },
+      "errors": [
+        {
+          "name": "QueueNotFound",
+          "description": "Queue does not exist or is not accessible."
+        }
+      ]
+    },
+    "reportTypeStats": {
+      "type": "object",
+      "required": ["reportType", "inboundCount"],
+      "properties": {
+        "reportType": {
+          "type": "string",
+          "description": "Fully qualified report reason."
+        },
+        "inboundCount": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Unmuted reports received during the requested UTC calendar days."
+        }
+      }
+    },
+    "reportTypeBreakdown": {
+      "type": "object",
+      "description": "Unmuted inbound reports by actual reason, across all statuses, within the selected stat group and UTC date range.",
+      "required": ["totalCount", "stats"],
+      "properties": {
+        "totalCount": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Total unmuted inbound reports in this breakdown."
+        },
+        "stats": {
+          "type": "array",
+          "items": {
+            "type": "ref",
+            "ref": "#reportTypeStats"
+          }
+        }
+      }
+    }
+  }
+}

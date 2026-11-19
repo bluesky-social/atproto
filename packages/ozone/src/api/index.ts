@@ -53,6 +53,7 @@ import getHistoricalStats from './report/getHistoricalStats.js'
 import getLatestReport from './report/getLatestReport.js'
 import getLiveStats from './report/getLiveStats.js'
 import getReport from './report/getReport.js'
+import getStatGroupDetails from './report/getStatGroupDetails.js'
 import listActivities from './report/listActivities.js'
 import queryActivities from './report/queryActivities.js'
 import queryReports from './report/queryReports.js'
@@ -160,6 +161,7 @@ export default function (server: Server, ctx: AppContext) {
   cancelScheduledActions(server, ctx)
   routeReports(server, ctx)
   getLiveStats(server, ctx)
+  getStatGroupDetails(server, ctx)
   getHistoricalStats(server, ctx)
   refreshStats(server, ctx)
   assignQueueModerator(server, ctx)
