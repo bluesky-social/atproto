@@ -5,6 +5,13 @@ const REGEX = {
   ESCAPE: /[[\]{}()*+?.\\^$|\s]/g,
   SEPARATORS: /[/\-–—()[\]_]+/g,
   WORD_BOUNDARY: /[\s\n\t\r\f\v]+?/g,
+  /**
+   * Scripts written without spaces between words. A muted word containing any
+   * of these can't be isolated by splitting on whitespace, so it's matched as
+   * a substring whatever the post's langs (which are often missing or wrong).
+   */
+  NO_SPACE_SCRIPT:
+    /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}\p{Script=Thai}]/u,
 }
 
 /**
@@ -53,7 +60,9 @@ export function matchMuteWords({
   languages,
   actor,
 }: Params): MuteWordMatch[] | undefined {
-  const exception = LANGUAGE_EXCEPTIONS.includes(languages?.[0] || '')
+  const exception = !!languages?.some((lang) =>
+    LANGUAGE_EXCEPTIONS.includes(lang),
+  )
   const tags = ([] as string[])
     .concat(outlineTags || [])
     .concat(
@@ -87,7 +96,12 @@ export function matchMuteWords({
     // rest of the checks are for `content` only
     if (!muteWord.targets.includes('content')) continue
     // single character or other exception, has to use includes
-    if ((mutedWord.length === 1 || exception) && postText.includes(mutedWord)) {
+    if (
+      (mutedWord.length === 1 ||
+        exception ||
+        REGEX.NO_SPACE_SCRIPT.test(mutedWord)) &&
+      postText.includes(mutedWord)
+    ) {
       matches.push({ word: muteWord, predicate: muteWord.value })
       continue
     }
