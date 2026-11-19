@@ -1,13 +1,34 @@
 import { isDidString } from '@atproto/lex-schema'
 import type { DidString } from '@atproto/syntax'
-import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
+import {
+  InvalidRequestError,
+  type Server,
+  excludeErrorResult,
+} from '@atproto/xrpc-server'
 import type { AppContext } from '../../../../context.js'
 import { baseNormalizeAndValidate } from '../../../../handle/index.js'
 import { com } from '../../../../lexicons/index.js'
-import { proxyTarget } from '../../../../pipethrough.js'
+import { computeProxyTo, pipethrough } from '../../../../pipethrough.js'
 
 export default function (server: Server, ctx: AppContext) {
-  server.add(com.atproto.identity.resolveHandle, async ({ params, req }) => {
+  server.add(com.atproto.identity.resolveHandle, async (reqCtx) => {
+    const { params, req } = reqCtx
+
+    // A request with an `atproto-proxy` header is service proxied, which
+    // requires an authenticated user
+    if (req.headers['atproto-proxy']) {
+      const { credentials } = excludeErrorResult(
+        await ctx.authVerifier.authorization({
+          authorize: (permissions) => {
+            const lxm = com.atproto.identity.resolveHandle.$lxm
+            const aud = computeProxyTo(ctx, req, lxm)
+            permissions.assertRpc({ aud, lxm })
+          },
+        })(reqCtx),
+      )
+      return pipethrough(ctx, req, { iss: credentials.did })
+    }
+
     const handle = baseNormalizeAndValidate(params.handle)
 
     // when behind an entryway, the entryway is authoritative for handles
@@ -41,14 +62,11 @@ export default function (server: Server, ctx: AppContext) {
           throwInvalidRequestError,
         )
 
-    // Ask the service this request is proxied to, and resolve the handle
-    // directly if that fails, so that an appview outage does not break
-    // handle resolution.
+    // The AppView is used as a cache here: when it cannot answer, the handle
+    // is resolved directly
     const did: DidString = ctx.bskyAppView
-      ? await proxyTarget(ctx, req, com.atproto.identity.resolveHandle.$lxm)
-          .then(({ client }) =>
-            client.call(com.atproto.identity.resolveHandle, { handle }),
-          )
+      ? await ctx.bskyAppView.client
+          .call(com.atproto.identity.resolveHandle, { handle })
           .then((r) => r.did, resolveDirectly)
       : await resolveDirectly()
 

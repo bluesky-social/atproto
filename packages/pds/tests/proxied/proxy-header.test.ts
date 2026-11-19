@@ -274,24 +274,55 @@ describe('proxy header', () => {
     await expectServiceAuth(parents, 'app.bsky.feed.getPostThread')
   })
 
-  it('resolves handles on the service from the header', async () => {
-    const path = `/xrpc/com.atproto.identity.resolveHandle?handle=${EXTERNAL_HANDLE}`
-    const res = await fetch(`${network.pds.url}${path}`, {
-      headers: { 'atproto-proxy': `${proxyServer.did}#atproto_test` },
+  describe('com.atproto.identity.resolveHandle', () => {
+    const handle = EXTERNAL_HANDLE
+    const did = EXTERNAL_DID
+    const path = `/xrpc/com.atproto.identity.resolveHandle?handle=${handle}`
+
+    it('is service proxied based on header', async () => {
+      const res = await fetch(`${network.pds.url}${path}`, {
+        headers: {
+          ...sc.getHeaders(alice),
+          'atproto-proxy': `${proxyServer.did}#atproto_test`,
+        },
+      })
+      await res.arrayBuffer() // drain
+      expect(res.status).toBe(200)
+
+      const req = proxyServer.requests.at(-1)
+      assert(req)
+      expect(req.url).toEqual(path)
+      assert(req.auth)
+      const verified = await verifyJwt(
+        req.auth.replace('Bearer ', ''),
+        proxyServer.did,
+        'com.atproto.identity.resolveHandle',
+        (iss) => network.pds.ctx.idResolver.did.resolveAtprotoKey(iss, true),
+      )
+      expect(verified.aud).toBe(proxyServer.did)
+      expect(verified.iss).toBe(alice)
     })
-    await expect(res.json()).resolves.toEqual({ did: EXTERNAL_DID })
-    expect(proxyServer.requests.at(-1)?.url).toEqual(path)
-  })
 
-  it('resolves handles directly when the appview is unreachable', async () => {
-    using resolve = jest
-      .spyOn(network.pds.ctx.idResolver.handle, 'resolve')
-      .mockResolvedValue(EXTERNAL_DID)
+    it('requires auth to be service proxied', async () => {
+      const requestCount = proxyServer.requests.length
+      const res = await fetch(`${network.pds.url}${path}`, {
+        headers: { 'atproto-proxy': `${proxyServer.did}#atproto_test` },
+      })
+      await res.arrayBuffer() // drain
+      expect(res.status).toBe(401)
+      expect(proxyServer.requests.length).toBe(requestCount)
+    })
 
-    const path = `/xrpc/com.atproto.identity.resolveHandle?handle=${EXTERNAL_HANDLE}`
-    const res = await fetch(`${network.pds.url}${path}`)
-    await expect(res.json()).resolves.toEqual({ did: EXTERNAL_DID })
-    expect(resolve).toHaveBeenCalledWith(EXTERNAL_HANDLE)
+    it('resolves the handle directly when the appview is unreachable', async () => {
+      using resolve = jest
+        .spyOn(network.pds.ctx.idResolver.handle, 'resolve')
+        .mockResolvedValue(did)
+
+      // The configured appview is unreachable in this network
+      const res = await fetch(`${network.pds.url}${path}`)
+      await expect(res.json()).resolves.toEqual({ did })
+      expect(resolve).toHaveBeenCalledWith(handle)
+    })
   })
 
   async function createPost(record: Record<string, unknown>) {
