@@ -136,27 +136,31 @@ describe('strict queue access', () => {
   it('defaults existing queues to unrestricted access and supports schema rollback', async () => {
     const schema = 'queue_strict_migration_fixture'
     const db = new Database({ ...network.ozone.ctx.db.opts, schema })
-    const migrationDb = db.db as unknown as Kysely<unknown>
+    // @NOTE Other packages' tests migrate against this database concurrently,
+    // and Kysely's introspector fails on a schema dropped mid-scan. A fixture
+    // built in a never-committed transaction is invisible to other sessions.
+    const trx = await db.db.startTransaction().execute()
+    const migrationDb = trx as unknown as Kysely<unknown>
     try {
-      await db.db.schema.createSchema(schema).execute()
-      await db.db.schema
+      await trx.schema.createSchema(schema).execute()
+      await trx.schema
         .createTable('report_queue')
         .addColumn('id', 'integer', (col) => col.primaryKey())
         .execute()
-      await sql`INSERT INTO report_queue (id) VALUES (1)`.execute(db.db)
+      await sql`INSERT INTO report_queue (id) VALUES (1)`.execute(trx)
       await up(migrationDb)
       expect(
-        await db.db.selectFrom('report_queue').select('strictAccess').execute(),
+        await trx.selectFrom('report_queue').select('strictAccess').execute(),
       ).toEqual([{ strictAccess: false }])
       const { rows } = await sql<{
         is_nullable: string
         column_default: string
       }>`SELECT is_nullable, column_default FROM information_schema.columns WHERE table_schema = ${schema} AND table_name = 'report_queue' AND column_name = 'strictAccess'`.execute(
-        db.db,
+        trx,
       )
       expect(rows).toEqual([{ is_nullable: 'NO', column_default: 'false' }])
       await down(migrationDb)
-      const tables = await db.db.introspection.getTables()
+      const tables = await trx.introspection.getTables()
       expect(
         tables
           .find(
@@ -166,10 +170,10 @@ describe('strict queue access', () => {
       ).toEqual(['id'])
       await up(migrationDb)
       expect(
-        await db.db.selectFrom('report_queue').select('strictAccess').execute(),
+        await trx.selectFrom('report_queue').select('strictAccess').execute(),
       ).toEqual([{ strictAccess: false }])
     } finally {
-      await db.db.schema.dropSchema(schema).cascade().execute()
+      await trx.rollback().execute()
       await db.close()
     }
   })
