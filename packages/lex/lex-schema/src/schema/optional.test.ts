@@ -1,7 +1,8 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
+import { IssueCustom, ValidationContext } from '../core.js'
 import { boolean } from './boolean.js'
 import { integer } from './integer.js'
-import { optional } from './optional.js'
+import { OptionalSchema, optional } from './optional.js'
 import { string } from './string.js'
 import { withDefault } from './with-default.js'
 
@@ -312,6 +313,65 @@ describe('OptionalSchema', () => {
       if (result.success) {
         expect(result.value).toBe(false)
       }
+    })
+  })
+
+  describe('parsing undefined repeatedly', () => {
+    it('keeps returning undefined when the inner schema rejects it', () => {
+      const schema = new OptionalSchema(string())
+
+      for (const strict of [true, false, true, false]) {
+        expect(schema.safeParse(undefined, { strict })).toEqual({
+          success: true,
+          value: undefined,
+        })
+      }
+    })
+
+    it('keeps applying defaults', () => {
+      const schema = new OptionalSchema(withDefault(string(), 'default'))
+
+      for (const strict of [true, false, true, false]) {
+        expect(schema.parse(undefined, { strict })).toBe('default')
+      }
+    })
+
+    it('runs a rejecting inner schema once per strict option', () => {
+      const inner = string()
+      const spy = vi.spyOn(inner, 'validateInContext')
+      const schema = new OptionalSchema(inner)
+
+      for (const strict of [true, false, true, false]) {
+        schema.parse(undefined, { strict })
+      }
+
+      expect(spy).toHaveBeenCalledTimes(2)
+    })
+
+    it('still runs the inner schema on defined values', () => {
+      const inner = string()
+      const spy = vi.spyOn(inner, 'validateInContext')
+      const schema = new OptionalSchema(inner)
+
+      schema.parse(undefined)
+      expect(schema.parse('hello')).toBe('hello')
+      expect(schema.safeParse(123).success).toBe(false)
+
+      expect(spy).toHaveBeenCalledTimes(3)
+    })
+
+    it('is not affected by issues collected earlier in the same validation', () => {
+      const schema = new OptionalSchema(withDefault(string(), 'default'))
+
+      const ctx = new ValidationContext({
+        path: [],
+        mode: 'parse',
+        strict: true,
+      })
+      ctx.addIssue(new IssueCustom([], undefined, 'unrelated issue'))
+      expect(ctx.validate(undefined, schema).success).toBe(false)
+
+      expect(schema.parse(undefined)).toBe('default')
     })
   })
 

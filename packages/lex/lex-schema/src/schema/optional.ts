@@ -3,7 +3,7 @@ import {
   type InferOutput,
   Schema,
   type UnwrapValidator,
-  type ValidationContext,
+  ValidationContext,
   type ValidationResult,
   type Validator,
 } from '../core.js'
@@ -35,6 +35,14 @@ export class OptionalSchema<TValidator extends Validator> extends Schema<
   readonly type = 'optional' as const
   readonly validator: TValidator
 
+  /**
+   * Whether the inner validator accepts `undefined` in "parse" mode, with
+   * `strict: true` and `strict: false` respectively. Computed on first use by
+   * {@link parsesUndefined}.
+   */
+  private strictParsesUndefined?: boolean
+  private lenientParsesUndefined?: boolean
+
   constructor(validator: TValidator) {
     super()
     this.validator = validator
@@ -44,8 +52,19 @@ export class OptionalSchema<TValidator extends Validator> extends Schema<
     input: unknown,
     ctx: ValidationContext,
   ): ValidationResult<InferOutput<TValidator> | undefined> {
+    if (input !== undefined) {
+      return ctx.validate(input, this.validator)
+    }
+
     // Optimization: No need to apply child schema defaults in validation mode
-    if (input === undefined && ctx.options.mode === 'validate') {
+    if (ctx.options.mode === 'validate') {
+      return ctx.success(input)
+    }
+
+    // Optimization: Most inner validators reject undefined. Running them anyway
+    // builds a LexValidationError that is immediately discarded, which adds up
+    // when parsing payloads with many absent optional properties.
+    if (!this.parsesUndefined(ctx.options.strict)) {
       return ctx.success(input)
     }
 
@@ -57,11 +76,30 @@ export class OptionalSchema<TValidator extends Validator> extends Schema<
       return result
     }
 
-    if (input === undefined) {
-      return ctx.success(input)
-    }
+    return ctx.success(input)
+  }
 
-    return result
+  /**
+   * Validators are stateless, so whether the inner validator accepts
+   * `undefined` only depends on the options, and is only computed once per
+   * value of the `strict` option. It is computed in a fresh context, so that
+   * issues already collected by the context being validated can't affect it.
+   */
+  private parsesUndefined(strict: boolean): boolean {
+    const known = strict
+      ? this.strictParsesUndefined
+      : this.lenientParsesUndefined
+    if (known !== undefined) return known
+
+    const { success } = ValidationContext.validate(undefined, this.validator, {
+      mode: 'parse',
+      strict,
+    })
+
+    if (strict) this.strictParsesUndefined = success
+    else this.lenientParsesUndefined = success
+
+    return success
   }
 }
 
