@@ -1,15 +1,21 @@
 import { isPlainObject } from '@atproto/lex-data'
 import {
+  type Definitely$Typed,
   type InferInput,
   type InferOutput,
   Schema,
   type Unknown$TypedObject,
   type ValidationContext,
   type ValidationResult,
+  type Validator,
 } from '../core.js'
 import { lazyProperty } from '../util/lazy-property.js'
-import type { TypedObjectSchema } from './typed-object.js'
-import type { TypedRefSchema } from './typed-ref.js'
+
+export interface TypedUnionValidator<
+  TType extends string = string,
+> extends Validator<{ $type?: TType }> {
+  $type: TType
+}
 
 /**
  * Schema for Lexicon typed unions (unions discriminated by $type).
@@ -18,7 +24,7 @@ import type { TypedRefSchema } from './typed-ref.js'
  * field. Can be "open" (accept unknown types) or "closed" (only accept
  * known types).
  *
- * @template TValidators - Tuple of {@link TypedRefSchema} or {@link TypedObjectSchema} instances
+ * @template TValidators - Tuple of {@link TypedUnionValidator} instances
  * @template TClosed - Whether the union is closed (rejects unknown $types)
  *
  * @example
@@ -30,16 +36,15 @@ import type { TypedRefSchema } from './typed-ref.js'
  * ```
  */
 export class TypedUnionSchema<
-  const TValidators extends readonly (TypedRefSchema | TypedObjectSchema)[] =
-    [],
+  const TValidators extends readonly TypedUnionValidator[] = [],
   const TClosed extends boolean = boolean,
 > extends Schema<
   TClosed extends true
-    ? InferInput<TValidators[number]>
-    : InferInput<TValidators[number]> | Unknown$TypedObject,
+    ? Definitely$Typed<InferInput<TValidators[number]>>
+    : Definitely$Typed<InferInput<TValidators[number]>> | Unknown$TypedObject,
   TClosed extends true
-    ? InferOutput<TValidators[number]>
-    : InferOutput<TValidators[number]> | Unknown$TypedObject
+    ? Definitely$Typed<InferOutput<TValidators[number]>>
+    : Definitely$Typed<InferOutput<TValidators[number]>> | Unknown$TypedObject
 > {
   readonly type = 'typedUnion' as const
 
@@ -128,8 +133,8 @@ export class TypedUnionSchema<
  */
 /*@__NO_SIDE_EFFECTS__*/
 export function typedUnion<
-  const R extends readonly TypedRefSchema[],
-  const C extends boolean,
->(refs: R, closed: C): TypedUnionSchema<R, C> {
-  return new TypedUnionSchema<R, C>(refs, closed)
+  const TValidators extends readonly TypedUnionValidator[],
+  const TClosed extends boolean,
+>(refs: TValidators, closed: TClosed): TypedUnionSchema<TValidators, TClosed> {
+  return new TypedUnionSchema<TValidators, TClosed>(refs, closed)
 }

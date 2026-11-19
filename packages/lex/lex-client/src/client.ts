@@ -1,5 +1,6 @@
 import type { LexMap, LexValue, TypedLexMap } from '@atproto/lex-data'
 import {
+  type AccountAgent,
   type Agent,
   type AgentOptions,
   type BinaryBodyInit,
@@ -9,12 +10,9 @@ import {
   type XrpcCancellationErrorHandler,
   type XrpcFailure,
   type XrpcOptions,
-  type XrpcRequestHeadersOptions,
   type XrpcRequestParams,
-  type XrpcRequestProcessingOptions,
   type XrpcResponse,
   type XrpcResponseBody,
-  type XrpcResponseOptions,
   type XrpcStreamResponse,
   type XrpcStreamResult,
   applyDefaults,
@@ -37,6 +35,7 @@ import {
   type Infer,
   type InferMethodInputBody,
   type InferMethodOutputBody,
+  type LexValidationError,
   type Main,
   type NsidString,
   type Params,
@@ -91,9 +90,38 @@ import {
  * }
  * ```
  */
-export type ClientOptions = XrpcRequestHeadersOptions &
-  Pick<XrpcRequestProcessingOptions, 'validateRequest'> &
-  XrpcResponseOptions
+export type ClientOptions = {
+  /** @see {@link XrpcRequestHeadersOptions.headers} */
+  headers?: HeadersInit
+
+  /** @see {@link XrpcRequestProcessingOptions.validateRequest} */
+  validateRequest?: boolean
+
+  /** @see {@link XrpcResponseOptions.validateResponse} */
+  validateResponse?: boolean
+
+  /** @see {@link XrpcResponseOptions.strictResponseProcessing} */
+  strictResponseProcessing?: boolean
+
+  /** @see {@link XrpcResponseOptions.onCancellationError} */
+  onCancellationError?: XrpcCancellationErrorHandler
+
+  /** @see {@link XrpcRequestHeadersOptions.labelers} */
+  labelers?: null | Iterable<DidString>
+
+  /** @see {@link XrpcRequestHeadersOptions.appLabelers} */
+  appLabelers?: null | Iterable<DidString>
+
+  /** @see {@link XrpcRequestHeadersOptions.service} */
+  service?: null | Service
+}
+
+// @NOTE When several overloads apply, TypeScript first selects them with the
+// (stricter) subtype relation, which a value only passes against this type if
+// it has the (never present) property. Overloads accepting it are thus only
+// selected with the assignability relation, i.e. after every other overload.
+declare const subtypePassGuard: unique symbol
+type SubtypePassGuard = { readonly [subtypePassGuard]?: never }
 
 export type ActionOptions = {
   /** AbortSignal to cancel the request. */
@@ -342,8 +370,20 @@ export type ListOutput<T extends RecordSchema> = Omit<
  * operation.
  */
 export type ListRecordItem<Value extends LexMap> =
-  | { uri: AtUriString; cid: CidString; valid: true; value: Value }
-  | { uri: AtUriString; cid: CidString; valid: false; value: LexMap }
+  | {
+      uri: AtUriString
+      cid: CidString
+      valid: true
+      value: Value
+      error?: never
+    }
+  | {
+      uri: AtUriString
+      cid: CidString
+      valid: false
+      value: LexMap
+      error: LexValidationError
+    }
 
 /**
  * The Client class is the primary interface for interacting with AT Protocol
@@ -453,7 +493,10 @@ export class Client {
    * console.log(client.did)
    * ```
    */
-  public assertAuthenticated(): asserts this is { did: DidString } {
+  public assertAuthenticated(): asserts this is {
+    did: DidString
+    agent: AccountAgent
+  } {
     if (!this.did) throw new Error('Client is not authenticated')
   }
 
@@ -653,24 +696,13 @@ export class Client {
       combined.appLabelers = (this.constructor as typeof Client).appLabelers
     }
 
-    const optionsHeaders =
-      options.headers != null ? new Headers(options.headers) : null
-
-    // @NOTE we allow the "service" options to fallback to the "atproto-proxy"
-    // header if it is present in the request-specific headers.
-    if (options.service === undefined && optionsHeaders?.has('atproto-proxy')) {
-      const serviceHeader = optionsHeaders.get('atproto-proxy')?.trim()
-      if (serviceHeader != null && isService(serviceHeader)) {
-        combined.service = serviceHeader
-      }
-    }
-
-    // Merge the instance-wide headers with the request-specific headers.
-    // Request-specific headers take precedence. This cannot be done in the
-    // applyDefaults step above because headers require special merging logic.
-    combined.headers = optionsHeaders
-      ? mergeHeaders(this.headers, optionsHeaders)
-      : new Headers(this.headers)
+    // @NOTE Needs custom merging logic for headers as applyDefaults only deals
+    // with plain objects.
+    const { headers } = options
+    combined.headers =
+      typeof headers === 'function'
+        ? async () => mergeHeaders(this.headers, await headers())
+        : mergeHeaders(this.headers, headers)
 
     // @NOTE Since the combined options here always contain a defined
     // "service" (even if null), any "atproto-proxy" header in either the
@@ -1019,12 +1051,25 @@ export class Client {
       : Restricted<'This procedure type requires an "input" argument'>,
   ): Promise<XrpcResponseBody<T>>
   public async call<const T extends Action>(
-    ns: void extends InferActionInput<T>
+    ns: undefined extends InferActionInput<T>
       ? Main<T>
       : Restricted<'This action type requires an "input" argument'>,
   ): Promise<InferActionOutput<T>>
+  // @NOTE Inferring the input and output from the action's own signature, rather
+  // than through InferActionInput / InferActionOutput, lets generic actions
+  // infer their type parameters from the input. Intersecting the input with its
+  // mapped type lowers the priority of the inference from the input, so that
+  // excess properties are still reported (for non-generic actions). A generic
+  // action fails the subtype relation when its input has optional properties
+  // left out, hence the guard on the next overload, which would otherwise be
+  // selected (with the type parameters of the action erased).
+  public async call<I, O>(
+    ns: (client: Client, input: I, options: ActionOptions) => O | Promise<O>,
+    arg: I & { [K in keyof I]: I[K] },
+    options?: ActionOptions,
+  ): Promise<O>
   public async call<const T extends Action | Procedure | Query>(
-    ns: Main<T>,
+    ns: Main<T> & SubtypePassGuard,
     arg: T extends Action
       ? InferActionInput<T>
       : T extends Procedure
@@ -1315,6 +1360,6 @@ function processListRecord<T extends RecordSchema>(
   if (result.success) {
     return { ...record, valid: true, value: result.value }
   } else {
-    return { ...record, valid: false }
+    return { ...record, valid: false, error: result.reason }
   }
 }

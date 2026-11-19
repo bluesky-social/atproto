@@ -35,25 +35,28 @@ const cborCid = parseCid(
 
 describe(Client, () => {
   describe('atproto-* headers', () => {
-    it('defaults "service" to atproto-proxy headers set through the per-request headers option', async () => {
+    it('overrides atproto-proxy headers set through the per-request headers option', async () => {
       const fetchHandler = vi.fn<FetchHandler>(async (_url, _init) => {
         return Response.json({ preferences: [] })
       })
 
-      const client = new Client(fetchHandler)
+      const headers = { 'atproto-proxy': 'did:plc:existing#service' }
 
-      await client.xrpc(com.example.actor.getPreferences, {
-        headers: {
-          'atproto-proxy': 'did:plc:existing#service',
-        },
+      // Removed when the client has no "service"
+      await new Client(fetchHandler).xrpc(com.example.actor.getPreferences, {
+        headers,
       })
 
-      expect(fetchHandler).toHaveBeenCalledOnce()
+      // Replaced by the client's "service"
+      await new Client(fetchHandler, {
+        service: 'did:plc:client#service',
+      }).xrpc(com.example.actor.getPreferences, { headers })
 
-      const [_url, init] = fetchHandler.mock.calls[0]
-      const headers = new Headers(init?.headers)
-
-      expect(headers.get('atproto-proxy')).toBe('did:plc:existing#service')
+      expect(fetchHandler).toHaveBeenCalledTimes(2)
+      const proxies = fetchHandler.mock.calls.map(([_url, init]) =>
+        new Headers(init?.headers).get('atproto-proxy'),
+      )
+      expect(proxies).toEqual([null, 'did:plc:client#service'])
     })
 
     it('uses the "atproto-proxy" header as fallback for the "service" option', async () => {
@@ -132,6 +135,35 @@ describe(Client, () => {
       const headers = new Headers(init?.headers)
       expect(headers.get('atproto-proxy')).toBe('did:plc:new#service')
       expect(headers.get('atproto-accept-labelers')).toBe('did:plc:new')
+    })
+
+    it('merges per-request headers provided as a function with the instance headers', async () => {
+      const service = 'did:plc:ewvi7nxzyoun6zhxrhs64oiz#bsky_appview'
+
+      const fetchHandler = vi.fn<FetchHandler>(async (_url, _init) => {
+        return Response.json({ preferences: [] })
+      })
+
+      const client = new Client(fetchHandler, {
+        service,
+        headers: { 'x-instance': 'instance', 'x-shared': 'instance' },
+      })
+
+      await client.xrpc(com.example.actor.getPreferences, {
+        headers: async () => ({
+          'x-shared': 'request',
+          'atproto-proxy': 'did:plc:ignored#service',
+        }),
+      })
+
+      expect(fetchHandler).toHaveBeenCalledOnce()
+
+      const [_url, init] = fetchHandler.mock.calls[0]
+      const headers = new Headers(init?.headers)
+      expect(headers.get('x-instance')).toBe('instance')
+      expect(headers.get('x-shared')).toBe('request')
+      // Not used as fallback: the client's default "service" applies
+      expect(headers.get('atproto-proxy')).toBe(service)
     })
 
     it('allows default proxy and labeler headers to be disabled per request', async () => {
@@ -415,6 +447,110 @@ describe(Client, () => {
           enabled: 'not-a-boolean',
         })
       }).rejects.toThrow('Expected boolean value')
+    })
+
+    it('calls actions without input when their input is optional', async () => {
+      const client = new Client(vi.fn<FetchHandler>())
+
+      async function optionalInput(
+        _client: Client,
+        input?: { value: string },
+      ): Promise<string> {
+        return input?.value ?? 'default'
+      }
+      const voidInput: Action<void, string> = async () => 'void'
+      const requiredInput: Action<{ value: string }, string> = async (
+        _client,
+        input,
+      ) => input.value
+
+      await expect(client.call(optionalInput)).resolves.toBe('default')
+      await expect(client.call(optionalInput, { value: 'set' })).resolves.toBe(
+        'set',
+      )
+      await expect(client.call(voidInput)).resolves.toBe('void')
+
+      // @ts-expect-error required input
+      await expect(client.call(requiredInput)).rejects.toThrow()
+    })
+
+    it('infers the type parameters of generic actions', async () => {
+      const client = new Client(vi.fn<FetchHandler>())
+
+      type Shape = { kind: string }
+      type Square = { kind: 'square' }
+      type Circle = { kind: 'circle' }
+
+      // An omitted `shapes` falls back to the constraint of S (not to its
+      // default), hence `undefined` in the constraint.
+      async function pick<
+        const S extends readonly Shape[] | undefined = undefined,
+      >(
+        _client: Client,
+        input: { shapes?: S },
+      ): Promise<undefined extends S ? Square : NonNullable<S>[number]> {
+        return (input.shapes?.[0] ?? { kind: 'square' }) as any
+      }
+
+      const circle: Circle = { kind: 'circle' }
+      const square: Square = { kind: 'square' }
+      const shapes: readonly Shape[] = [circle]
+
+      expectTypeOf(
+        await client.call(pick, { shapes: [circle] }),
+      ).toEqualTypeOf<Circle>()
+      expectTypeOf(
+        await client.call(pick, { shapes: [circle, square] }),
+      ).toEqualTypeOf<Circle | Square>()
+      expectTypeOf(await client.call(pick, {})).toEqualTypeOf<Square>()
+      expectTypeOf(await client.call(pick, { shapes })).toEqualTypeOf<Shape>()
+
+      await expect(client.call(pick, { shapes: [circle] })).resolves.toEqual(
+        circle,
+      )
+
+      // With optional input properties left out
+      async function pickWith<
+        const S extends readonly Shape[] | undefined = undefined,
+      >(
+        _client: Client,
+        input: { shapes?: S; filter?: (shape: Shape) => boolean },
+      ): Promise<undefined extends S ? Square : NonNullable<S>[number]> {
+        return (input.shapes?.find(input.filter ?? Boolean) ?? square) as any
+      }
+
+      expectTypeOf(
+        await client.call(pickWith, { shapes: [circle] }),
+      ).toEqualTypeOf<Circle>()
+    })
+
+    it('infers the input and output of non-generic actions', async () => {
+      const client = new Client(vi.fn<FetchHandler>())
+
+      const plain: Action<{ value: string }, number> = async (_c, input) =>
+        input.value.length
+      async function binary(_client: Client, input: Uint8Array) {
+        return input.length
+      }
+      function sync(_client: Client, input: 'a' | 'b'): 'sync' {
+        return input && 'sync'
+      }
+
+      expectTypeOf(
+        await client.call(plain, { value: 'abc' }),
+      ).toEqualTypeOf<number>()
+      expectTypeOf(
+        await client.call(binary, new Uint8Array(3)),
+      ).toEqualTypeOf<number>()
+      expectTypeOf(await client.call(sync, 'a')).toEqualTypeOf<'sync'>()
+      expectTypeOf(
+        await client.call({ main: plain }, { value: 'abc' }),
+      ).toEqualTypeOf<number>()
+
+      // @ts-expect-error excess property
+      await client.call(plain, { value: 'abc', extra: true })
+      // @ts-expect-error invalid input
+      await client.call(sync, 'c')
     })
   })
 
