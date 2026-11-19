@@ -6,7 +6,6 @@ import {
 import type { AppContext } from '../../context.js'
 import { tools } from '../../lexicons/index.js'
 import { QueueAccess } from '../../queue/access.js'
-import { getStatGroupDetails } from '../../report/stat-group-details.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(tools.ozone.report.getStatGroupDetails, {
@@ -37,7 +36,12 @@ export default function (server: Server, ctx: AppContext) {
           throw new InvalidRequestError('Queue not found', 'QueueNotFound')
         }
       }
-      const body = await getStatGroupDetails(ctx.db, params, access, signal)
+      const reportStatsService = ctx.reportStatsService(ctx.db)
+      const body = await reportStatsService.getStatGroupDetails(
+        params,
+        access,
+        signal,
+      )
       return { encoding: 'application/json', body }
     },
   })
