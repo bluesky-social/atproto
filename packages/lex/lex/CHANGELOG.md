@@ -1,5 +1,34 @@
 # @atproto/lex
 
+## 0.6.0
+
+### Minor Changes
+
+- [#5885](https://github.com/bluesky-social/atproto/pull/5885) [`6ee0f4d`](https://github.com/bluesky-social/atproto/commit/6ee0f4d7971dcc71efaab785aff4d4ef341a1c32) Thanks [@matthieusieben](https://github.com/matthieusieben)! - **Breaking:** `RETRYABLE_HTTP_STATUS_CODES` is now a frozen, literal-typed array instead of a `ReadonlySet<number>`. Replace `RETRYABLE_HTTP_STATUS_CODES.has(status)` with the new `isRetryableHttpStatus(status)` type guard (narrowing to the new `RetryableHttpStatus` type).
+  
+  Also add `RETRYABLE_ERROR_CODES` and its `isRetryableErrorCode()` type guard (the XRPC error codes matching a retryable HTTP status, for classifying an error by code alone), and `getStatusErrorCode()`, mapping an HTTP status to the XRPC error code used for non-XRPC error responses.
+
+### Patch Changes
+
+- [#5950](https://github.com/bluesky-social/atproto/pull/5950) [`b9b1ca7`](https://github.com/bluesky-social/atproto/commit/b9b1ca7f176b93d12e39685799c5f2e1f9a63be7) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update `vitest` to v5, `vite` to v8.3.8 and `rolldown` to v1.3.3 (dev dependencies)
+
+- [#5930](https://github.com/bluesky-social/atproto/pull/5930) [`118a827`](https://github.com/bluesky-social/atproto/commit/118a82770430c01ed47ded26569fffcbd68afcf4) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove the `encodeOptions` and `decodeOptions` exports from `@atproto/lex-cbor`, and so from `@atproto/lex`, which re-exports it. They were internal cborg configuration, not meant to be public; use `encode`, `decode` and `decodeAll` instead.
+
+- [#5885](https://github.com/bluesky-social/atproto/pull/5885) [`6ee0f4d`](https://github.com/bluesky-social/atproto/commit/6ee0f4d7971dcc71efaab785aff4d4ef341a1c32) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Re-export XRPC subscription support from `@atproto/lex-rpc/subscription`: `xrpcSubscribe()`, `createWebSocketFactory()`, `defaultWebsocket` and `defaultSubscriptionShouldReconnect()`.
+
+- [#5948](https://github.com/bluesky-social/atproto/pull/5948) [`ce37237`](https://github.com/bluesky-social/atproto/commit/ce37237663b7ea87e8cc04cb995377d0ee5d2efd) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Document per-request `headers` functions.
+
+- [#5948](https://github.com/bluesky-social/atproto/pull/5948) [`ce37237`](https://github.com/bluesky-social/atproto/commit/ce37237663b7ea87e8cc04cb995377d0ee5d2efd) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Document calling actions whose input is optional without input.
+- Updated dependencies [[`ce37237`](https://github.com/bluesky-social/atproto/commit/ce37237663b7ea87e8cc04cb995377d0ee5d2efd), [`b9b1ca7`](https://github.com/bluesky-social/atproto/commit/b9b1ca7f176b93d12e39685799c5f2e1f9a63be7), [`118a827`](https://github.com/bluesky-social/atproto/commit/118a82770430c01ed47ded26569fffcbd68afcf4), [`6ee0f4d`](https://github.com/bluesky-social/atproto/commit/6ee0f4d7971dcc71efaab785aff4d4ef341a1c32), [`ce37237`](https://github.com/bluesky-social/atproto/commit/ce37237663b7ea87e8cc04cb995377d0ee5d2efd), [`ce37237`](https://github.com/bluesky-social/atproto/commit/ce37237663b7ea87e8cc04cb995377d0ee5d2efd), [`ce37237`](https://github.com/bluesky-social/atproto/commit/ce37237663b7ea87e8cc04cb995377d0ee5d2efd), [`ce37237`](https://github.com/bluesky-social/atproto/commit/ce37237663b7ea87e8cc04cb995377d0ee5d2efd), [`ce37237`](https://github.com/bluesky-social/atproto/commit/ce37237663b7ea87e8cc04cb995377d0ee5d2efd), [`ce37237`](https://github.com/bluesky-social/atproto/commit/ce37237663b7ea87e8cc04cb995377d0ee5d2efd), [`ce37237`](https://github.com/bluesky-social/atproto/commit/ce37237663b7ea87e8cc04cb995377d0ee5d2efd), [`ce37237`](https://github.com/bluesky-social/atproto/commit/ce37237663b7ea87e8cc04cb995377d0ee5d2efd), [`ce37237`](https://github.com/bluesky-social/atproto/commit/ce37237663b7ea87e8cc04cb995377d0ee5d2efd), [`ce37237`](https://github.com/bluesky-social/atproto/commit/ce37237663b7ea87e8cc04cb995377d0ee5d2efd), [`ce37237`](https://github.com/bluesky-social/atproto/commit/ce37237663b7ea87e8cc04cb995377d0ee5d2efd), [`ce37237`](https://github.com/bluesky-social/atproto/commit/ce37237663b7ea87e8cc04cb995377d0ee5d2efd), [`ce37237`](https://github.com/bluesky-social/atproto/commit/ce37237663b7ea87e8cc04cb995377d0ee5d2efd), [`ce37237`](https://github.com/bluesky-social/atproto/commit/ce37237663b7ea87e8cc04cb995377d0ee5d2efd), [`6ee0f4d`](https://github.com/bluesky-social/atproto/commit/6ee0f4d7971dcc71efaab785aff4d4ef341a1c32), [`ce37237`](https://github.com/bluesky-social/atproto/commit/ce37237663b7ea87e8cc04cb995377d0ee5d2efd)]:
+  - @atproto/lex-rpc@0.2.0
+  - @atproto/lex-builder@0.1.21
+  - @atproto/lex-cbor@0.1.11
+  - @atproto/lex-client@0.6.0
+  - @atproto/lex-data@0.1.11
+  - @atproto/lex-installer@0.2.10
+  - @atproto/lex-json@0.1.10
+  - @atproto/lex-schema@0.3.0
+
 ## 0.5.0
 
 ### Minor Changes

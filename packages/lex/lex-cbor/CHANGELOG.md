@@ -1,5 +1,15 @@
 # @atproto/lex-cbor
 
+## 0.1.11
+
+### Patch Changes
+
+- [#5950](https://github.com/bluesky-social/atproto/pull/5950) [`b9b1ca7`](https://github.com/bluesky-social/atproto/commit/b9b1ca7f176b93d12e39685799c5f2e1f9a63be7) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update `vitest` to v5, `vite` to v8.3.8 and `rolldown` to v1.3.3 (dev dependencies)
+
+- [#5930](https://github.com/bluesky-social/atproto/pull/5930) [`118a827`](https://github.com/bluesky-social/atproto/commit/118a82770430c01ed47ded26569fffcbd68afcf4) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove the `encodeOptions` and `decodeOptions` exports from `@atproto/lex-cbor`, and so from `@atproto/lex`, which re-exports it. They were internal cborg configuration, not meant to be public; use `encode`, `decode` and `decodeAll` instead.
+- Updated dependencies [[`b9b1ca7`](https://github.com/bluesky-social/atproto/commit/b9b1ca7f176b93d12e39685799c5f2e1f9a63be7), [`ce37237`](https://github.com/bluesky-social/atproto/commit/ce37237663b7ea87e8cc04cb995377d0ee5d2efd)]:
+  - @atproto/lex-data@0.1.11
+
 ## 0.1.10
 
 ### Patch Changes
