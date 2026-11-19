@@ -32,9 +32,9 @@ function fixturePath(name: string) {
 }
 
 // Guards that our better-sqlite3 instrumentation (./better-sqlite3-plugin)
-// instruments ESM imports, which only works if setup() opened the loader hook's
-// message channel before constructing it. Production queries (run through
-// Kysely) produce the prepared statement spans.
+// instruments ESM imports, which only works if setup() includes the modules it
+// targets in the loader hook. Production queries (run through Kysely) produce
+// the prepared statement spans.
 test('better-sqlite3 queries are traced', async () => {
   await using collector = await startOtlpCollector()
 
