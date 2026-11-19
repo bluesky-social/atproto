@@ -426,8 +426,8 @@ export class AuthVerifier {
     }
   }
 
-  // Permission token issued by BSG for the requests it forwards. Without `sub`,
-  // the request is anonymous.
+  // BSG token, issued by BSG for the requests it forwards. Without `sub`, the
+  // request is anonymous.
   private bsg = async (
     reqCtx: ReqCtx,
     token: string,
