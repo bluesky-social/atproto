@@ -52,7 +52,7 @@ describe('moderation inbox report subject status', () => {
         (await call(sc.dids.bob, tools.ozone.inbox.getReport.$lxm, { id })).data
 
       const before = await detail()
-      expect(before.report.subjectStatus).toEqual({ removed: false })
+      expect(before.report.subjectStatus).toEqual({ takendown: false })
       expect(before.report.status).toBe('pending')
 
       await mod.emitEvent({
@@ -90,7 +90,7 @@ describe('moderation inbox report subject status', () => {
       expect(unavailable.report).toMatchObject({
         status: 'pending',
         accountStatus: { enforcement: 'suspended', hosting: 'deleted' },
-        subjectStatus: { removed: false, deleted: true },
+        subjectStatus: { takendown: false, deleted: true },
       })
       expect(unavailable.resolution).toBeUndefined()
       const accountDetail = await call(
@@ -141,7 +141,7 @@ describe('moderation inbox report subject status', () => {
         'admin',
       )
       expect((await detail()).report.subjectStatus).toEqual({
-        removed: true,
+        takendown: true,
         deleted: false,
       })
     } finally {

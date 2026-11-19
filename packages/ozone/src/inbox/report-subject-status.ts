@@ -51,7 +51,7 @@ export async function loadReportSubjectStatuses(
   let subjectStatus: tools.ozone.inbox.getReport.RecordStatus | undefined
   if (record) {
     subjectStatus = {
-      removed:
+      takendown:
         record.takendown ||
         (!!record.suspendUntil &&
           record.suspendUntil > currentDatetimeString()),
