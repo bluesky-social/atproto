@@ -701,7 +701,7 @@ export const fileAppeal = async (
         ...(submittedBy ? { appealSubmittedBy: submittedBy } : {}),
       },
     })
-    return ctx.queueService(dbTxn).insertReportFromEvent({
+    return ctx.queueService(dbTxn).assignReportFromEvent({
       event: reportEvent,
       reportType: APPEAL_REASON_TYPE,
       queueId,

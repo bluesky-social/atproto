@@ -7,7 +7,7 @@ import {
   basicSeed,
 } from '@atproto/dev-env'
 import type { AtUriString, DidString } from '@atproto/lex'
-import { currentDatetimeString, isDidString } from '@atproto/lex'
+import { isDidString } from '@atproto/lex'
 
 const REASON_SPAM = 'com.atproto.moderation.defs#reasonSpam'
 const REASON_THREAT = 'tools.ozone.report.defs#reasonViolenceThreats'
@@ -164,38 +164,8 @@ describe('queue-router', () => {
     const unmatchedReport = await getLatestReportForSubject(sc.dids.bob)
     expect(unmatchedReport.queueId).toBe(-1)
 
-    // Create an unassigned (queueId IS NULL) report — this state no longer
-    // arises from the normal flow, since the daemon always sets a queueId,
-    // but the manual routeReports endpoint still handles legacy NULL rows.
-    // Simulate it via a direct DB insert of a report event + report row.
+    // @NOTE Reports remain pending until the daemon routes them.
     await reportAccount(sc.dids.carol, REASON_MISLEADING)
-    const carolEvent = await network.ozone.daemon.ctx.db.db
-      .selectFrom('moderation_event')
-      .select(['id', 'subjectDid', 'meta'])
-      .where('subjectDid', '=', sc.dids.carol)
-      .where('action', '=', 'tools.ozone.moderation.defs#modEventReport')
-      .orderBy('id', 'desc')
-      .limit(1)
-      .executeTakeFirstOrThrow()
-    const now = currentDatetimeString()
-    await network.ozone.daemon.ctx.db.db
-      .insertInto('report')
-      .values({
-        eventId: carolEvent.id,
-        queueId: null,
-        actionEventIds: null,
-        actionNote: null,
-        isMuted: false,
-        isAutomated: false,
-        status: 'open',
-        reportType: REASON_MISLEADING,
-        did: carolEvent.subjectDid,
-        recordPath: '',
-        subjectMessageId: null,
-        createdAt: now,
-        updatedAt: now,
-      })
-      .execute()
     const unassignedReport = await getLatestReportForSubject(sc.dids.carol)
     expect(unassignedReport.queueId).toBeNull()
 
@@ -298,8 +268,7 @@ describe('queue-router', () => {
     it('returns latest report', async () => {
       // Create a new report so we know what the latest should be
       await reportAccount(sc.dids.dan, REASON_SPAM)
-      // Report rows are inserted asynchronously by the queue-router daemon —
-      // drain it before querying.
+      // @NOTE Flush queue assignment before querying routed reports.
       await network.processAll()
 
       const latest = await getLatest()
