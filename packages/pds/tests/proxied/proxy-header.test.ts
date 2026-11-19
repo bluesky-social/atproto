@@ -176,33 +176,49 @@ describe('proxy header', () => {
     expect(res.status).toBe(501)
   })
 
-  it('looks up the getFeed record on the service from the header', async () => {
-    // The configured appview is unreachable in this network, so this only
-    // succeeds if the feed record lookup follows the proxy header too.
+  it('fetches the getFeed record from its repo when the appview is unreachable', async () => {
+    const res = await fetch(
+      `${network.pds.url}/xrpc/com.atproto.repo.createRecord`,
+      {
+        method: 'POST',
+        headers: {
+          ...sc.getHeaders(alice),
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({
+          repo: alice,
+          collection: 'app.bsky.feed.generator',
+          rkey: 'test',
+          record: {
+            $type: 'app.bsky.feed.generator',
+            did: FEEDGEN_DID,
+            displayName: 'Test feed',
+            createdAt: new Date().toISOString(),
+          },
+        }),
+      },
+    )
+    await res.arrayBuffer() // drain
+    assert(res.ok)
+
+    // The configured appview is unreachable in this network
+    const requestCount = proxyServer.requests.length
     const feed = `at://${alice}/app.bsky.feed.generator/test`
     const path = `/xrpc/app.bsky.feed.getFeed?feed=${encodeURIComponent(feed)}`
-    const res = await fetch(`${network.pds.url}${path}`, {
+    const proxiedRes = await fetch(`${network.pds.url}${path}`, {
       headers: {
         ...sc.getHeaders(alice),
         'atproto-proxy': `${proxyServer.did}#atproto_test`,
       },
     })
-    await res.arrayBuffer() // drain
-    expect(res.status).toBe(200)
+    await proxiedRes.arrayBuffer() // drain
+    expect(proxiedRes.status).toBe(200)
 
-    const [lookup, proxied] = proxyServer.requests.slice(-2)
-    assert(lookup && proxied)
-
-    const lookupUrl = new URL(lookup.url, proxyServer.url)
-    expect(lookupUrl.pathname).toBe('/xrpc/com.atproto.repo.getRecord')
-    expect(Object.fromEntries(lookupUrl.searchParams)).toEqual({
-      repo: alice,
-      collection: 'app.bsky.feed.generator',
-      rkey: 'test',
-    })
-
+    // Only the proxied request reaches the service named in the header
+    expect(proxyServer.requests.length).toBe(requestCount + 1)
+    const proxied = proxyServer.requests.at(-1)
+    assert(proxied?.auth)
     expect(proxied.url).toEqual(path)
-    assert(proxied.auth)
     const verified = await verifyJwt(
       proxied.auth.replace('Bearer ', ''),
       FEEDGEN_DID,
@@ -403,20 +419,6 @@ class ProxyServer {
     // This is a PDS endpoint which uses a manual pipethrough() in its handler
     app.get('/xrpc/app.bsky.actor.getPreferences', (req, res) => {
       res.sendStatus(501)
-    })
-
-    app.get('/xrpc/com.atproto.repo.getRecord', (req, res) => {
-      record(req)
-      const { repo, collection, rkey } = req.query
-      res.json({
-        uri: `at://${repo}/${collection}/${rkey}`,
-        value: {
-          $type: 'app.bsky.feed.generator',
-          did: FEEDGEN_DID,
-          displayName: 'Test feed',
-          createdAt: new Date().toISOString(),
-        },
-      })
     })
 
     app.get('/xrpc/com.atproto.identity.resolveHandle', (req, res) => {
