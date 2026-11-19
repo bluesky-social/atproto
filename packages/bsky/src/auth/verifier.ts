@@ -200,6 +200,7 @@ export class AuthVerifier {
             iss: null,
             aud: null,
           })
+          events.standardServiceJwtIssuer(iss)
           if (
             !opts.skipAudCheck &&
             !(this.standardAudienceDids as Set<string>).has(aud)
