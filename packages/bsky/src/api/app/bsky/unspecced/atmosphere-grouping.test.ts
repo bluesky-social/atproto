@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, test, vi } from 'vitest'
 import {
   type AtUriString,
   type NsidString,
@@ -774,16 +774,33 @@ describe(groupAtmosphereActivities, () => {
     expectConserved(result, input)
   })
 
-  it('retains all actor-group URIs without a five-item cap', () => {
-    const input = Array.from({ length: 12 }, (_, index) =>
-      activity(`article${index}`, index * MINUTE),
-    )
-    const views = hydration()
-    const result = groupAtmosphereActivities(input, now, views)
-    expect(rootUris(result)).toEqual([input.map(({ item }) => item.record.uri)])
-    expect(views.item.mock.calls).toEqual([[input[0]]])
-    expectConserved(result, input)
-  })
+  test.each([150, 151, 302])(
+    'caps actor groups at 150 URIs without losing any of %i activities',
+    (count) => {
+      const input = Array.from({ length: count }, (_, index) =>
+        activity(`article${index}`, index),
+      )
+      const views = hydration()
+      const result = groupAtmosphereActivities(input, now, views)
+      const chunks = [
+        input.slice(0, 150),
+        input.slice(150, 300),
+        input.slice(300),
+      ].filter((chunk) => chunk.length)
+      expect(rootUris(result)).toEqual(
+        chunks.map((chunk) => chunk.map(({ item }) => item.record.uri)),
+      )
+      expect(result.map(({ $type }) => $type)).toEqual(
+        chunks.map((chunk) =>
+          chunk.length === 1
+            ? timeline.activityItem.$type
+            : timeline.activityActorGroup.$type,
+        ),
+      )
+      expect(views.item.mock.calls).toEqual(chunks.map(([first]) => [first]))
+      expectConserved(result, input)
+    },
+  )
 
   it('returns empty pages and hydrated singletons without subject or profile hydration', () => {
     const views = hydration()

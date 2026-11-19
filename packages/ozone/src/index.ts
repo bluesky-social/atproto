@@ -1,4 +1,3 @@
-import assert from 'node:assert'
 import events from 'node:events'
 import type http from 'node:http'
 import type { AddressInfo } from 'node:net'
@@ -65,10 +64,6 @@ export class OzoneService {
     // metrics are collected and no per-request timing overhead is incurred.
     register?: prometheus.Registry,
   ): Promise<OzoneService> {
-    assert(
-      !cfg.inbox.pushEnabled || secrets.inboxPushToken,
-      'inbox push token is required',
-    )
     const app = express()
     app.set('trust proxy', true)
     app.use(cors({ maxAge: DAY / SECOND }))

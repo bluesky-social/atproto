@@ -65,7 +65,6 @@ export const readEnv = (): OzoneEnvironment => {
     inboxAppealWindowMonths: envInt('OZONE_INBOX_APPEAL_WINDOW_MONTHS'),
     inboxStartAt: envStr('OZONE_INBOX_START_AT'),
     inboxPushEnabled: envBool('OZONE_INBOX_PUSH_ENABLED'),
-    inboxPushToken: envStr('OZONE_INBOX_PUSH_TOKEN'),
     inboxPolicyDefaultUrl: envStr('OZONE_INBOX_POLICY_DEFAULT_URL'),
     strikeSuspensionConfig: envStr('NEXT_PUBLIC_STRIKE_SUSPENSION_CONFIG'),
     statsComputerIntervalMinutes: envInt(
@@ -81,7 +80,6 @@ export type OzoneEnvironment = {
   inboxAppealWindowMonths?: number
   inboxStartAt?: string
   inboxPushEnabled?: boolean
-  inboxPushToken?: string
   inboxPolicyDefaultUrl?: string
   devMode?: boolean
   version?: string

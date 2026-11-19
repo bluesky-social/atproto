@@ -10,6 +10,9 @@ import { app, site } from '../../../../../lexicons/index.js'
 
 const timeline = app.bsky.unspecced.getAtmosphereTimelineV2
 
+// @NOTE Match social-app's MAX_ACTIVITY_LIST_URIS so "View all" fits in its URL.
+const MAX_ACTOR_GROUP_SIZE = 150
+
 /** Profiles of at most this many newest actors per subject group or related collection. */
 const RELATED_ACTOR_LIMIT = 3
 
@@ -135,6 +138,7 @@ export function groupAtmosphereActivities(
         let end = start + 1
         while (
           end < indices.length &&
+          (groupBy !== 'actor' || end - start < MAX_ACTOR_GROUP_SIZE) &&
           (!windowed ||
             first.sortedAt - activities[indices[end]].sortedAt <= window)
         ) {
