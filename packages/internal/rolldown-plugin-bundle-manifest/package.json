@@ -37,7 +37,7 @@
     "rolldown": "^1.2.11"
   },
   "devDependencies": {
-    "rolldown": "^1.2.11"
+    "rolldown": "^1.3.3"
   },
   "scripts": {
     "build": "tsc --build tsconfig.json"

@@ -275,12 +275,7 @@ describe('appealActionedSubject', () => {
         recommendedPolicies: [],
         createdBy: network.ozone.adminAccnt.did,
       })
-    await network.ozone.ctx.db.transaction((txn) =>
-      network.ozone.ctx.queueService(txn).insertReportsFromEvents({
-        cursor: sourceReport.id - 1,
-        limit: 1,
-      }),
-    )
+    await network.ozone.daemon.ctx.queueRouter.routeReports()
     const source = await reportForEvent(modClient, sourceReport.id)
     const action = await takedown(subject, [source.id])
 
@@ -400,11 +395,7 @@ describe('appealActionedSubject', () => {
       },
       subject,
     })
-    await network.ozone.ctx.db.transaction((txn) =>
-      network.ozone.ctx
-        .queueService(txn)
-        .insertReportsFromEvents({ cursor: sourceReport.id - 1, limit: 1 }),
-    )
+    await network.ozone.daemon.ctx.queueRouter.routeReports()
     await modClient.emitEvent({
       event: {
         $type: 'tools.ozone.moderation.defs#modEventLabel',
@@ -433,11 +424,7 @@ describe('appealActionedSubject', () => {
       },
       subject,
     })
-    await network.ozone.ctx.db.transaction((txn) =>
-      network.ozone.ctx
-        .queueService(txn)
-        .insertReportsFromEvents({ cursor: sourceReport.id - 1, limit: 1 }),
-    )
+    await network.ozone.daemon.ctx.queueRouter.routeReports()
     const source = await reportForEvent(modClient, sourceReport.id)
     const action = await takedown(subject, [source.id])
 

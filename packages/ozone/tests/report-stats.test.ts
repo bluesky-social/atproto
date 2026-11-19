@@ -320,8 +320,7 @@ describe('report-stats', () => {
           },
           reportedBy: sc.dids.bob,
         })
-        // Report rows are inserted asynchronously by the queue-router daemon —
-        // drain it before looking up the row.
+        // @NOTE Flush queue assignment before querying routed reports.
         await network.processAll()
         const backdate = toDatetimeString(Date.now() - ts * 1000)
         const report = await db.db

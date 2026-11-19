@@ -116,22 +116,23 @@ export class QueueRouter {
         limit: BATCH_SIZE,
       })
 
-      if (result.processed === 0) {
-        dbLogger.info('no new report events to route')
-        return
-      }
+      const routed = await queueService.assignUnroutedReports(BATCH_SIZE)
 
-      await txn.db
-        .updateTable('job_cursor')
-        .set({ cursor: String(result.maxEventId) })
-        .where('job', '=', JOB_NAME)
-        .execute()
+      if (result.processed > 0) {
+        await txn.db
+          .updateTable('job_cursor')
+          .set({ cursor: String(result.maxEventId) })
+          .where('job', '=', JOB_NAME)
+          .execute()
+      }
 
       dbLogger.info(
         {
-          processed: result.processed,
-          assigned: result.assigned,
-          unmatched: result.unmatched,
+          processedEvents: result.processed,
+          inserted: result.inserted,
+          processedReports: routed.processed,
+          assigned: routed.assigned,
+          unmatched: routed.unmatched,
           maxEventId: result.maxEventId,
         },
         'queue routing completed',
