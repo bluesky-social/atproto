@@ -17,6 +17,7 @@ const LEXICONS: LexiconDoc[] = [
           type: 'params',
           properties: {
             shouldErr: { type: 'boolean' },
+            closeListeners: { type: 'integer' },
           },
         },
         output: {
@@ -30,7 +31,20 @@ const LEXICONS: LexiconDoc[] = [
 describe('Responses', () => {
   let s: http.Server
   const server = xrpcServer.createServer(LEXICONS)
+  let closeListenersExceeded = false
   server.method('io.example.readableStream', async (ctx) => {
+    // Stand-ins for middleware listeners (logging, tracing)
+    for (let i = 0; i < Number(ctx.params.closeListeners ?? 0); i++) {
+      ctx.res.on('close', () => {})
+    }
+    ctx.res.on('newListener', (event) => {
+      if (
+        event === 'close' &&
+        ctx.res.listenerCount('close') >= ctx.res.getMaxListeners()
+      ) {
+        closeListenersExceeded = true
+      }
+    })
     async function* iter(): AsyncIterable<Uint8Array> {
       for (let i = 0; i < 5; i++) {
         yield new Uint8Array([i])
@@ -68,5 +82,10 @@ describe('Responses', () => {
       shouldErr: true,
     })
     await expect(attempt).rejects.toThrow()
+  })
+
+  it('streams without exceeding the listener limit', async () => {
+    await client.call('io.example.readableStream', { closeListeners: 3 })
+    expect(closeListenersExceeded).toBe(false)
   })
 })

@@ -1,5 +1,5 @@
 import assert from 'node:assert'
-import type { IncomingMessage } from 'node:http'
+import type { IncomingMessage, ServerResponse } from 'node:http'
 import { Readable } from 'node:stream'
 import { pipeline } from 'node:stream/promises'
 import express, {
@@ -500,7 +500,7 @@ export class Server {
           setHeaders(res, output.headers)
           res.status(200)
           res.header('Content-Type', output.encoding)
-          await pipeline(output.stream, res)
+          await pipeToResponse(output.stream, res)
         } else if (isHandlerPipeThroughBuffer(output)) {
           setHeaders(res, output.headers)
           res.status(200)
@@ -520,7 +520,7 @@ export class Server {
           if (output.body instanceof Readable) {
             // The "Readable" check comes first to avoid calling "lexToJson" on
             // a stream, which would be a bug.
-            await pipeline(output.body, res)
+            await pipeToResponse(output.body, res)
           } else if (encoding === 'application/json') {
             const json = lexToJson(output.body)
             res.json(json)
@@ -784,6 +784,12 @@ export class Server {
       bypass,
     })
   }
+}
+
+// pipeline() adds 7 'close' listeners to a ServerResponse.
+function pipeToResponse(stream: Readable, res: ServerResponse) {
+  res.setMaxListeners(res.getMaxListeners() + 7)
+  return pipeline(stream, res)
 }
 
 function createErrorMiddleware({
