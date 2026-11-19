@@ -68,6 +68,24 @@ describe('auth', () => {
     )
   })
 
+  it('uses the DID as the caller of a did#atproto_labeler service JWT', async () => {
+    const labeler = network.bsky.ctx.cfg.modServiceDid
+    await sc.follow(sc.dids.bob, labeler)
+    await network.processAll()
+
+    const jwt = await createServiceJwt({
+      iss: `${labeler}#atproto_labeler`,
+      aud: network.bsky.ctx.cfg.serverDid,
+      lxm: ids.AppBskyNotificationGetUnreadCount,
+      keypair: network.ozone.ctx.signingKey,
+    })
+    const { data } = await agent.api.app.bsky.notification.getUnreadCount(
+      {},
+      { headers: { authorization: `Bearer ${jwt}` } },
+    )
+    expect(data.count).toBe(1)
+  })
+
   it('throws if the user key is incorrect', async () => {
     const bobKeypair = await network.pds.ctx.actorStore.keypair(bob)
 

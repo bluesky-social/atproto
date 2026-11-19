@@ -117,7 +117,7 @@ import {
 
 export class HydrateCtx {
   labelers = this.vals.labelers
-  viewer = this.vals.viewer !== null ? serviceRefToDid(this.vals.viewer) : null
+  viewer = this.vals.viewer
   includeTakedowns = this.vals.includeTakedowns
   overrideIncludeTakedownsForActor = this.vals.overrideIncludeTakedownsForActor
   include3pBlocks = this.vals.include3pBlocks
@@ -2371,12 +2371,6 @@ export class Hydrator {
     uri.hostname = did
     return uri.toString()
   }
-}
-
-// service refs may look like "did:plc:example#service_id". we want to extract the did part "did:plc:example".
-const serviceRefToDid = (serviceRef: string) => {
-  const idx = serviceRef.indexOf('#')
-  return (idx !== -1 ? serviceRef.slice(0, idx) : serviceRef) as DidString
 }
 
 const listUrisFromProfileViewer = (
