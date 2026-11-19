@@ -1,4 +1,4 @@
-import { bench, describe } from 'vitest'
+import { describe, test } from 'vitest'
 import type { JsonValue } from './json.js'
 import {
   type LexParseOptions,
@@ -111,15 +111,17 @@ function benchData(data: unknown, options?: LexParseOptions) {
     return jsonToLex(JSON.parse(input), options) as any
   }
 
-  bench('current', () => {
-    lexParse(jsonString, options)
-  })
-
-  bench('with-reviver', () => {
-    withReviver(jsonString, options)
-  })
-
-  bench('naive', () => {
-    naiveParse(jsonString, options)
+  test('implementations', async ({ bench }) => {
+    await bench.compare(
+      bench('current', () => {
+        lexParse(jsonString, options)
+      }),
+      bench('with-reviver', () => {
+        withReviver(jsonString, options)
+      }),
+      bench('naive', () => {
+        naiveParse(jsonString, options)
+      }),
+    )
   })
 }

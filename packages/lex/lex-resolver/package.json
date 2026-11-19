@@ -44,7 +44,7 @@
   },
   "devDependencies": {
     "@atproto/lex-builder": "workspace:^",
-    "vitest": "^4.1.10"
+    "vitest": "^5.1.1"
   },
   "scripts": {
     "codegen:lex": "lex-builder build --lexicons ../../../lexicons --out ./src/lexicons --clear --lib @atproto/lex-schema --include com.atproto.sync.getRecord --include com.atproto.lexicon.schema",

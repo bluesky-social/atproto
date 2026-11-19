@@ -1,6 +1,6 @@
 # Vitest patterns
 
-Repo-specific conventions and setup. Assumes working knowledge of vitest itself (currently v4) — only the things this codebase does differently from the defaults are documented here.
+Repo-specific conventions and setup. Assumes working knowledge of vitest itself (currently v5) — only the things this codebase does differently from the defaults are documented here.
 
 ## Adopting vitest in a new package
 

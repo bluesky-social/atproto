@@ -101,7 +101,7 @@
     "@types/express-serve-static-core": "^4.17.36",
     "@types/pg": "^8.15.5",
     "@types/qs": "^6.15.1",
-    "vitest": "^4.1.10"
+    "vitest": "^5.1.1"
   },
   "scripts": {
     "codegen:buf": "buf generate node_modules/@atproto/bsync/proto && buf generate ./proto",
