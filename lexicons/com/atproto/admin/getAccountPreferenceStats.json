@@ -1,0 +1,113 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.admin.getAccountPreferenceStats",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "Get size and count statistics about an account's stored app.bsky preferences, for diagnosing oversized preferences. Never returns preference values.",
+      "parameters": {
+        "type": "params",
+        "required": ["did"],
+        "properties": {
+          "did": { "type": "string", "format": "did" }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": [
+            "did",
+            "bodyBytes",
+            "preferenceCount",
+            "byType",
+            "savedFeeds",
+            "legacySavedFeeds",
+            "mutedWords"
+          ],
+          "properties": {
+            "did": { "type": "string", "format": "did" },
+            "bodyBytes": {
+              "type": "integer",
+              "description": "UTF-8 byte length of the JSON body {\"preferences\":[...]} holding every stored app.bsky preference, as app.bsky.actor.putPreferences would receive it: the size that counts against that method's request body limit. Preferences the server derives rather than stores (app.bsky.actor.defs#declaredAgePref) are excluded, though a client may send them back too."
+            },
+            "preferenceCount": {
+              "type": "integer",
+              "description": "Number of stored app.bsky preferences."
+            },
+            "byType": {
+              "type": "array",
+              "description": "Stored app.bsky preferences grouped by $type, largest total size first.",
+              "items": { "type": "ref", "ref": "#typeStats" }
+            },
+            "savedFeeds": { "type": "ref", "ref": "#savedFeedsStats" },
+            "legacySavedFeeds": {
+              "type": "ref",
+              "ref": "#legacySavedFeedsStats"
+            },
+            "mutedWords": { "type": "ref", "ref": "#mutedWordsStats" }
+          }
+        }
+      }
+    },
+    "typeStats": {
+      "type": "object",
+      "required": ["type", "count", "bytes"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "The preferences' $type, eg app.bsky.actor.defs#savedFeedsPrefV2."
+        },
+        "count": {
+          "type": "integer",
+          "description": "Number of stored preferences of this $type."
+        },
+        "bytes": {
+          "type": "integer",
+          "description": "Total UTF-8 byte length of their JSON serializations, excluding the separators counted in bodyBytes."
+        }
+      }
+    },
+    "savedFeedsStats": {
+      "type": "object",
+      "description": "Totals over every stored app.bsky.actor.defs#savedFeedsPrefV2 preference.",
+      "required": ["items", "pinned"],
+      "properties": {
+        "items": {
+          "type": "integer",
+          "description": "Number of saved feeds (entries in items)."
+        },
+        "pinned": {
+          "type": "integer",
+          "description": "Number of saved feeds whose pinned is true."
+        }
+      }
+    },
+    "legacySavedFeedsStats": {
+      "type": "object",
+      "description": "Totals over every stored app.bsky.actor.defs#savedFeedsPref preference.",
+      "required": ["saved", "pinned"],
+      "properties": {
+        "saved": {
+          "type": "integer",
+          "description": "Number of entries in saved."
+        },
+        "pinned": {
+          "type": "integer",
+          "description": "Number of entries in pinned."
+        }
+      }
+    },
+    "mutedWordsStats": {
+      "type": "object",
+      "description": "Totals over every stored app.bsky.actor.defs#mutedWordsPref preference.",
+      "required": ["items"],
+      "properties": {
+        "items": {
+          "type": "integer",
+          "description": "Number of muted words (entries in items)."
+        }
+      }
+    }
+  }
+}

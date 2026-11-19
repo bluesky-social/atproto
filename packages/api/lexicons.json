@@ -251,6 +251,7 @@
     "com.atproto.admin.enableAccountInvites",
     "com.atproto.admin.getAccountInfo",
     "com.atproto.admin.getAccountInfos",
+    "com.atproto.admin.getAccountPreferenceStats",
     "com.atproto.admin.getInviteCodes",
     "com.atproto.admin.getSubjectStatus",
     "com.atproto.admin.searchAccounts",
@@ -1385,6 +1386,10 @@
     "com.atproto.admin.getAccountInfos": {
       "uri": "file://../../lexicons/com/atproto/admin/getAccountInfos.json",
       "cid": "bafyreicnusy7d4o6kebwhhvx7axe44i3pbnuobgcfpxpory77rfbyigkbm"
+    },
+    "com.atproto.admin.getAccountPreferenceStats": {
+      "uri": "file://../../lexicons/com/atproto/admin/getAccountPreferenceStats.json",
+      "cid": "bafyreibmmxioshjnlbyc5op227a7ueqleuqtntr6mrybb3zfazglrrkdi4"
     },
     "com.atproto.admin.getInviteCodes": {
       "uri": "file://../../lexicons/com/atproto/admin/getInviteCodes.json",

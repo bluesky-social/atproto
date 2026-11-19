@@ -6,6 +6,7 @@ import disableInviteCodes from './disableInviteCodes.js'
 import enableAccountInvites from './enableAccountInvites.js'
 import getAccountInfo from './getAccountInfo.js'
 import getAccountInfos from './getAccountInfos.js'
+import getAccountPreferenceStats from './getAccountPreferenceStats.js'
 import getInviteCodes from './getInviteCodes.js'
 import getSubjectStatus from './getSubjectStatus.js'
 import sendEmail from './sendEmail.js'
@@ -19,6 +20,7 @@ export default function (server: Server, ctx: AppContext) {
   getSubjectStatus(server, ctx)
   getAccountInfo(server, ctx)
   getAccountInfos(server, ctx)
+  getAccountPreferenceStats(server, ctx)
   enableAccountInvites(server, ctx)
   disableAccountInvites(server, ctx)
   disableInviteCodes(server, ctx)
