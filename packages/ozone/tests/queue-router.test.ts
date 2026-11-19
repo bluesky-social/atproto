@@ -6,10 +6,22 @@ import {
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
+import { chat, com, tools } from '../src/lexicons/index.js'
+import { RepoSubject } from '../src/mod-service/subject.js'
 
 const REASON_SPAM = 'com.atproto.moderation.defs#reasonSpam'
 const REASON_THREAT = 'tools.ozone.report.defs#reasonViolenceThreats'
 const REASON_MISLEADING = 'com.atproto.moderation.defs#reasonMisleading'
+
+function deferred<T>() {
+  let resolve!: (value: T | PromiseLike<T>) => void
+  let reject!: (reason?: unknown) => void
+  const promise = new Promise<T>((res, rej) => {
+    resolve = res
+    reject = rej
+  })
+  return { promise, resolve, reject }
+}
 
 describe('queue-router', () => {
   let network: TestNetwork
@@ -119,6 +131,7 @@ describe('queue-router', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'ozone_queue_router',
     })
+    await network.ozone.daemon.ctx.queueRouter.destroy()
     agent = network.ozone.getAgent()
     sc = network.getSeedClient()
     modClient = network.ozone.getModClient()
@@ -130,10 +143,7 @@ describe('queue-router', () => {
     await network?.close()
   })
 
-  it('inserts report rows with no queue assignment when no queues are configured', async () => {
-    // This test intentionally runs before any queues are created. The daemon
-    // still inserts the report row (with queueId = -1) so the invariant
-    // "every modEventReport has a corresponding report row" holds.
+  it('marks pending reports unmatched when no queues are configured', async () => {
     const event = await reportAccount(sc.dids.alice, REASON_SPAM)
 
     await network.ozone.daemon.ctx.queueRouter.routeReports()
@@ -209,6 +219,105 @@ describe('queue-router', () => {
     })
   })
 
+  it.each(['account', 'record', 'message', 'conversation'] as const)(
+    'creates a pending %s report before emitEvent returns',
+    async (subjectType) => {
+      const subject =
+        subjectType === 'account'
+          ? com.atproto.admin.defs.repoRef.$build({ did: sc.dids.alice })
+          : subjectType === 'record'
+            ? com.atproto.repo.strongRef.$build({
+                uri: sc.posts[sc.dids.alice][0].ref.uriStr,
+                cid: sc.posts[sc.dids.alice][0].ref.cidStr,
+              })
+            : subjectType === 'message'
+              ? chat.bsky.convo.defs.messageRef.$build({
+                  did: sc.dids.alice,
+                  messageId: 'pending-message',
+                  convoId: 'pending-conversation',
+                })
+              : chat.bsky.convo.defs.convoRef.$build({
+                  did: sc.dids.alice,
+                  convoId: 'pending-conversation',
+                })
+      const event = await modClient.emitEvent({
+        subject,
+        event: tools.ozone.moderation.defs.modEventReport.$build({
+          reportType: REASON_SPAM,
+        }),
+        modTool: { name: 'report-test', meta: { isAutomated: true } },
+      })
+      const { reports } = await modClient.queryReports({ status: 'open' })
+      const report = reports.find((r) => r.eventId === event.id)
+      expect(report).toMatchObject({
+        status: 'open',
+        reportType: REASON_SPAM,
+        reportedBy: event.createdBy,
+        isAutomated: true,
+        createdAt: event.createdAt,
+      })
+      expect(report?.queue).toBeUndefined()
+      expect(report?.queuedAt).toBeUndefined()
+      const { data } = await agent.tools.ozone.report.listActivities(
+        { reportId: report!.id },
+        { headers: await modHeaders(tools.ozone.report.listActivities.$lxm) },
+      )
+      expect(data.activities).toEqual([])
+      await network.ozone.daemon.ctx.queueRouter.routeReports()
+    },
+  )
+
+  it('creates a pending report before createReport returns', async () => {
+    const event = await sc.createReport({
+      reasonType: REASON_SPAM,
+      reportedBy: sc.dids.bob,
+      subject: com.atproto.admin.defs.repoRef.$build({ did: sc.dids.alice }),
+    })
+    const { reports } = await modClient.queryReports({ status: 'open' })
+    expect(reports.find((r) => r.eventId === event.id)).toMatchObject({
+      status: 'open',
+      reportedBy: sc.dids.bob,
+      createdAt: event.createdAt,
+    })
+    await network.ozone.daemon.ctx.queueRouter.routeReports()
+  })
+
+  it('creates the report row in the source event transaction and rolls both back', async () => {
+    const db = network.ozone.ctx.db
+    let eventId = 0
+    await expect(
+      db.transaction(async (txn) => {
+        const { event } = await network.ozone.ctx.modService(txn).report({
+          reasonType: REASON_SPAM,
+          reportedBy: sc.dids.bob,
+          subject: new RepoSubject(sc.dids.alice),
+        })
+        eventId = event.id
+        const pending = await txn.db
+          .selectFrom('report')
+          .select(['status', 'queueId'])
+          .where('eventId', '=', event.id)
+          .executeTakeFirstOrThrow()
+        expect(pending).toEqual({ status: 'open', queueId: null })
+        throw new Error('abort report transaction')
+      }),
+    ).rejects.toThrow('abort report transaction')
+    expect(
+      await db.db
+        .selectFrom('report')
+        .select('id')
+        .where('eventId', '=', eventId)
+        .execute(),
+    ).toEqual([])
+    expect(
+      await db.db
+        .selectFrom('moderation_event')
+        .select('id')
+        .where('id', '=', eventId)
+        .execute(),
+    ).toEqual([])
+  })
+
   describe('with queues configured', () => {
     let spamAccountQueueId: number
     let threatAccountQueueId: number
@@ -246,6 +355,145 @@ describe('queue-router', () => {
         deleteQueue(spamPostQueueId).catch(() => {}),
       ])
     })
+
+    it('inserts and routes a missing report row from an event-only writer', async () => {
+      const event = await reportAccount(sc.dids.bob, REASON_SPAM)
+      // @NOTE Simulate an older writer that committed only the moderation event.
+      await network.ozone.ctx.db.db
+        .deleteFrom('report')
+        .where('eventId', '=', event.id)
+        .execute()
+      await network.ozone.daemon.ctx.queueRouter.routeReports()
+      const report = await queryLatestReportForSubject(sc.dids.bob)
+      expect(report.eventId).toBe(event.id)
+      expect(report.queue?.id).toBe(spamAccountQueueId)
+      expect(report.createdAt).toBe(event.createdAt)
+    })
+
+    it('routes pending reports even when the event cursor has already passed them', async () => {
+      const event = await reportAccount(sc.dids.bob, REASON_SPAM)
+      await network.ozone.ctx.db.db
+        .updateTable('job_cursor')
+        .set({ cursor: String(event.id) })
+        .where('job', '=', 'queue_router')
+        .execute()
+      await network.ozone.daemon.ctx.queueRouter.routeReports()
+      const report = await queryLatestReportForSubject(sc.dids.bob)
+      expect(report.eventId).toBe(event.id)
+      expect(report.queue?.id).toBe(spamAccountQueueId)
+    })
+
+    it('routes a report that commits after a later event has been processed', async () => {
+      const ready = deferred<number>()
+      const release = deferred<void>()
+      const db = network.ozone.ctx.db
+      const writing = db.transaction(async (txn) => {
+        const { event } = await network.ozone.ctx.modService(txn).report({
+          subject: new RepoSubject(sc.dids.alice),
+          reasonType: REASON_SPAM,
+          reportedBy: sc.dids.bob,
+        })
+        ready.resolve(event.id)
+        await release.promise
+      })
+      // @NOTE Surface transaction failures without leaving the test waiting on its gate.
+      writing.catch(ready.reject)
+      const router = network.ozone.daemon.ctx.queueRouter
+      let eventId: number
+      try {
+        eventId = await ready.promise
+        const later = await reportAccount(sc.dids.bob, REASON_SPAM)
+        await router.routeReports()
+        expect(await router.getCursor()).toBe(later.id)
+        expect((await queryLatestReportForSubject(sc.dids.bob)).eventId).toBe(
+          later.id,
+        )
+      } finally {
+        release.resolve()
+        await writing
+      }
+      await router.routeReports()
+      const report = await queryLatestReportForSubject(sc.dids.alice)
+      expect(report.eventId).toBe(eventId)
+      expect(report.queue?.id).toBe(spamAccountQueueId)
+    })
+
+    it('routes at most 100 pending reports per pass', async () => {
+      const eventIds: number[] = []
+      const db = network.ozone.ctx.db
+      await db.transaction(async (txn) => {
+        const service = network.ozone.ctx.modService(txn)
+        for (let i = 0; i < 101; i++) {
+          const { event } = await service.report({
+            subject: new RepoSubject(sc.dids.bob),
+            reasonType: REASON_SPAM,
+            reportedBy: sc.dids.alice,
+          })
+          eventIds.push(event.id)
+        }
+      })
+      const pending = () =>
+        db.db
+          .selectFrom('report')
+          .select('eventId')
+          .where('eventId', 'in', eventIds)
+          .where('queueId', 'is', null)
+          .execute()
+      const router = network.ozone.daemon.ctx.queueRouter
+      await router.routeReports()
+      expect(await pending()).toHaveLength(1)
+      await router.routeReports()
+      expect(await pending()).toEqual([])
+    })
+
+    it.each(['closure first', 'routing first', 'concurrently'])(
+      'preserves closure and assigns a queue when actioning and routing run %s',
+      async (order) => {
+        const event = await reportAccount(sc.dids.bob, REASON_SPAM)
+        const pending = await queryLatestReportForSubject(sc.dids.bob, 'open')
+        const close = () =>
+          modClient.emitEvent({
+            subject: com.atproto.admin.defs.repoRef.$build({
+              did: sc.dids.bob,
+            }),
+            event: tools.ozone.moderation.defs.modEventAcknowledge.$build({}),
+            reportAction: { ids: [pending.id] },
+          })
+        const route = () => network.ozone.daemon.ctx.queueRouter.routeReports()
+        let action: Awaited<ReturnType<typeof close>>
+        if (order === 'closure first') {
+          action = await close()
+          const closed = await network.ozone.ctx.db.db
+            .selectFrom('report')
+            .select(['closedAt', 'actionEventIds'])
+            .where('id', '=', pending.id)
+            .executeTakeFirstOrThrow()
+          await route()
+          expect(
+            await network.ozone.ctx.db.db
+              .selectFrom('report')
+              .select(['closedAt', 'actionEventIds'])
+              .where('id', '=', pending.id)
+              .executeTakeFirstOrThrow(),
+          ).toEqual(closed)
+        } else if (order === 'routing first') {
+          await route()
+          action = await close()
+        } else {
+          ;[action] = await Promise.all([close(), route()])
+        }
+        const report = await queryLatestReportForSubject(sc.dids.bob, 'closed')
+        expect(report.eventId).toBe(event.id)
+        expect(report.status).toBe('closed')
+        expect(report.queue?.id).toBe(spamAccountQueueId)
+        expect(report.actionEventIds).toEqual([action.id])
+        const before = report
+        await route()
+        expect(
+          await queryLatestReportForSubject(sc.dids.bob, 'closed'),
+        ).toEqual(before)
+      },
+    )
 
     it('routes an account report to the matching queue', async () => {
       await reportAccount(sc.dids.bob, REASON_SPAM)

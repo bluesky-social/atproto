@@ -85,8 +85,7 @@ describe('report-assignment', () => {
       },
       reportedBy: sc.dids.alice,
     })
-    // Report rows are inserted asynchronously by the queue-router daemon —
-    // drain it before looking up the row.
+    // @NOTE Flush queue assignment before exercising moderator assignments.
     await network.processAll()
     const report = await network.ozone.ctx.db.db
       .selectFrom('report')

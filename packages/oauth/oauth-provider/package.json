@@ -96,7 +96,7 @@
     "@types/cookie": "^0.6.0",
     "@types/forwarded": "0.1.4",
     "@types/http-errors": "^2.0.4",
-    "vitest": "^4.1.10"
+    "vitest": "^5.1.1"
   },
   "scripts": {
     "build": "tsc --build tsconfig.build.json",

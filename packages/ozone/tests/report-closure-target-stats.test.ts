@@ -69,7 +69,6 @@ describe('report closure target statistics', () => {
       subject: com.atproto.admin.defs.repoRef.$build({ did: sc.dids.bob }),
       reportedBy: sc.dids.alice,
     })
-    await network.ozone.daemon.ctx.queueRouter.routeReports()
     return network.ozone.ctx.db.db
       .updateTable('report')
       .set({
