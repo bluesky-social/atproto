@@ -95,6 +95,10 @@ export interface FormShellProps<
   onLoadingChange?: (loading: boolean) => void
 }
 
+export const defaultRenderError = (error: unknown): ReactNode => (
+  <ErrorNotice key="error" error={error} />
+)
+
 /**
  * The frame every form shares: the action row, and the root error.
  *
@@ -121,7 +125,7 @@ export function FormShell<TValues extends FormValues>({
   loading: loadingProp = false,
   disabled: disabledProp = false,
   onLoadingChange,
-  renderError = (error) => <ErrorNotice key="error" error={error} />,
+  renderError = defaultRenderError,
 
   // Form.Props
   children,

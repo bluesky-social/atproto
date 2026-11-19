@@ -41,6 +41,22 @@ const paramScalarSchema: Schema<ParamScalar> = union([
  */
 export type Param = ParamScalar | boolean[] | number[] | string[]
 
+export function paramsToURLSearchParams(params: Params): URLSearchParams {
+  const urlSearchParams = new URLSearchParams()
+
+  for (const [key, value] of Object.entries(params)) {
+    if (Array.isArray(value)) {
+      for (const v of value) {
+        urlSearchParams.append(key, String(v))
+      }
+    } else if (value !== undefined) {
+      urlSearchParams.append(key, String(value))
+    }
+  }
+
+  return urlSearchParams
+}
+
 /**
  * Schema for validating individual parameter values.
  */
@@ -246,23 +262,9 @@ export class ParamsSchema<
   }
 
   toURLSearchParams(input: InferInput<this>): URLSearchParams {
-    const urlSearchParams = new URLSearchParams()
-
-    // @NOTE We apply defaults here to ensure that server with different
+    // @NOTE We apply defaults here (parse) to ensure that server with different
     // defaults still receive all expected parameters.
-    const params = this.parse(input)
-
-    for (const [key, value] of Object.entries(params)) {
-      if (Array.isArray(value)) {
-        for (const v of value) {
-          urlSearchParams.append(key, String(v))
-        }
-      } else if (value !== undefined) {
-        urlSearchParams.append(key, String(value))
-      }
-    }
-
-    return urlSearchParams
+    return paramsToURLSearchParams(this.parse(input))
   }
 }
 

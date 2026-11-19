@@ -60,7 +60,7 @@ export function ConsentForm({
   onBack,
 }: ConsentFormProps) {
   const { t } = useLingui()
-  const reject = useAsyncAction(onReject)
+  const action = useAsyncAction(onReject)
 
   // Require the granular scope system to be able to unset the `account:email`
   // scope.
@@ -72,8 +72,8 @@ export function ConsentForm({
     <FormShell
       onBack={onBack}
       // Clear a previous rejection error as soon as the user changes anything.
-      onValues={() => reject.reset()}
-      disabled={reject.loading}
+      onValues={() => action.reset()}
+      loading={action.loading}
       submitLabel={<Trans context="OAuthConsent">Authorize</Trans>}
       handler={() => {
         return onConsent({
@@ -87,10 +87,10 @@ export function ConsentForm({
         <ActionButton
           type="button"
           variant="secondary"
-          disabled={reject.loading}
+          disabled={action.loading}
           onClick={(event) => {
             event.preventDefault()
-            void reject.run()
+            void action.run()
           }}
         >
           <Trans context="OAuthConsent">Deny access</Trans>

@@ -18,6 +18,7 @@
     "./README.md",
     "./CHANGELOG.md"
   ],
+  "sideEffects": false,
   "type": "module",
   "exports": {
     ".": {
@@ -40,7 +41,7 @@
   "devDependencies": {
     "@types/ws": "^8.5.4",
     "http-terminator": "^3.2.0",
-    "vitest": "^4.0.16"
+    "vitest": "^5.1.1"
   },
   "scripts": {
     "test": "vitest run",

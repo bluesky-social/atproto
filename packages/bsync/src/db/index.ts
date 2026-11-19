@@ -15,6 +15,7 @@ import pg from 'pg'
 const { Pool: PgPool, types: pgTypes } = pg
 type PgPool = InstanceType<typeof PgPool>
 import { dbLogger } from '../logger.js'
+import { pgAwsIamAuthConfig } from './aws-iam-auth.js'
 import * as migrations from './migrations/index.js'
 import { DbMigrationProvider } from './migrations/provider.js'
 import type { DatabaseSchema, DatabaseSchemaType } from './schema/index.js'
@@ -41,7 +42,9 @@ export class Database {
       const pool =
         opts.pool ??
         new PgPool({
-          connectionString: url,
+          ...(opts.awsIamAuth
+            ? pgAwsIamAuthConfig(url)
+            : { connectionString: url }),
           max: opts.poolSize,
           maxUses: opts.poolMaxUses,
           idleTimeoutMillis: opts.poolIdleTimeoutMs,

@@ -752,7 +752,7 @@ describe('tag-based queue routing', () => {
     expect(await activities(original.id)).toEqual(updated)
   })
 
-  it('records one note when concurrent ingestion routes the same event', async () => {
+  it('records one note when concurrent routers process the same pending report', async () => {
     await createQueue({ reporterTags: [reporterTag] })
     await tagAccount(sc.dids.alice, [reporterTag])
     const event = await report()
@@ -763,10 +763,12 @@ describe('tag-based queue routing', () => {
           .insertReportsFromEvents({ cursor: event.id - 1, limit: 1 }),
       )
     await Promise.all([insertReport(), insertReport()])
+    const router = network.ozone.daemon.ctx.queueRouter
+    await Promise.all([router.routeReports(), router.routeReports()])
     expect(await activities((await getReport(event.id)).id)).toHaveLength(1)
   })
 
-  it('rolls back report insertion and the cursor when the routing note cannot be written', async () => {
+  it('preserves the pending report and rolls back routing and the cursor when its note cannot be written', async () => {
     const queue = await createQueue({ reporterTags: [reporterTag] })
     await tagAccount(sc.dids.alice, [reporterTag])
     const event = await report()
@@ -785,6 +787,9 @@ describe('tag-based queue routing', () => {
       limit: 100,
     })
     expect(reports.some((entry) => entry.eventId === event.id)).toBe(false)
+    const pending = await getReport(event.id, 'open')
+    expect(pending.queue).toBeUndefined()
+    expect(await activities(pending.id)).toEqual([])
     await router.routeReports()
     const routed = await getReport(event.id)
     expect(routed.queue?.id).toBe(queue.id)
@@ -904,6 +909,9 @@ describe('tag-based queue routing', () => {
       limit: 100,
     })
     expect(reports.some((entry) => entry.eventId === event.id)).toBe(false)
+    const pending = await getReport(event.id, 'open')
+    expect(pending.queue).toBeUndefined()
+    expect(await activities(pending.id)).toEqual([])
     await router.routeReports()
     expect((await getReport(event.id)).queue?.reporterTags).toEqual([
       reporterTag,

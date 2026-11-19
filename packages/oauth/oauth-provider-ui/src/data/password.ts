@@ -6,7 +6,7 @@ import type {
 } from '@atproto/oauth-provider-api'
 import { useNotificationsContext } from '#/contexts/notifications.tsx'
 import { useApi } from '#/contexts/session.tsx'
-import type { WithOptionalLocale } from '#/lib/api.ts'
+import { CaptchaRequiredError, type WithOptionalLocale } from '#/lib/api.ts'
 
 export function useResetPasswordRequest() {
   const api = useApi()
@@ -23,6 +23,8 @@ export function useResetPasswordRequest() {
       })
     },
     onError(error, _variables, _context) {
+      // The form shows a challenge, and re-submits once it is solved
+      if (error instanceof CaptchaRequiredError) return
       notifyError(error, {
         title: msg`Failed to request password reset`,
         description: msg`Please check the email address and try again.`,
@@ -46,6 +48,8 @@ export function useResetPasswordConfirm() {
       })
     },
     onError(error, _variables, _context) {
+      // The form shows a challenge, and re-submits once it is solved
+      if (error instanceof CaptchaRequiredError) return
       notifyError(error, {
         title: msg`Failed to reset password`,
         description: msg`Please check your reset code and try again.`,

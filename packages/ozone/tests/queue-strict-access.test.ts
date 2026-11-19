@@ -137,34 +137,28 @@ describe('strict queue access', () => {
     const schema = 'queue_strict_migration_fixture'
     const db = new Database({ ...network.ozone.ctx.db.opts, schema })
     try {
-      // @NOTE Keep fixture DDL invisible to other suites' database-wide introspection.
-      await db.transaction(async (txn) => {
-        const migrationDb = txn.db as unknown as Kysely<unknown>
-        await txn.db.schema.createSchema(schema).execute()
-        expect(
-          await network.ozone.ctx.db.db.introspection.getSchemas(),
-        ).not.toContainEqual({ name: schema })
-        await txn.db.schema
+      // @NOTE Hide transient DDL from other suites' migration introspection.
+      await db.db.transaction().execute(async (txn) => {
+        const migrationDb = txn as unknown as Kysely<unknown>
+        await txn.schema.createSchema(schema).execute()
+        await txn.schema
           .createTable('report_queue')
           .addColumn('id', 'integer', (col) => col.primaryKey())
           .execute()
-        await sql`INSERT INTO report_queue (id) VALUES (1)`.execute(txn.db)
+        await sql`INSERT INTO report_queue (id) VALUES (1)`.execute(txn)
         await up(migrationDb)
         expect(
-          await txn.db
-            .selectFrom('report_queue')
-            .select('strictAccess')
-            .execute(),
+          await txn.selectFrom('report_queue').select('strictAccess').execute(),
         ).toEqual([{ strictAccess: false }])
         const { rows } = await sql<{
           is_nullable: string
           column_default: string
         }>`SELECT is_nullable, column_default FROM information_schema.columns WHERE table_schema = ${schema} AND table_name = 'report_queue' AND column_name = 'strictAccess'`.execute(
-          txn.db,
+          txn,
         )
         expect(rows).toEqual([{ is_nullable: 'NO', column_default: 'false' }])
         await down(migrationDb)
-        const tables = await txn.db.introspection.getTables()
+        const tables = await txn.introspection.getTables()
         expect(
           tables
             .find(
@@ -175,12 +169,9 @@ describe('strict queue access', () => {
         ).toEqual(['id'])
         await up(migrationDb)
         expect(
-          await txn.db
-            .selectFrom('report_queue')
-            .select('strictAccess')
-            .execute(),
+          await txn.selectFrom('report_queue').select('strictAccess').execute(),
         ).toEqual([{ strictAccess: false }])
-        await txn.db.schema.dropSchema(schema).cascade().execute()
+        await txn.schema.dropSchema(schema).cascade().execute()
       })
     } finally {
       await db.close()

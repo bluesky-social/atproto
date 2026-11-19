@@ -7,6 +7,7 @@ import { utf8FromBytesNative, utf8FromBytesNode } from './utf8-from-bytes.js'
 import { graphemeLenNative, graphemeLenPonyfill } from './utf8-grapheme-len.js'
 import { utf8LenCompute, utf8LenNode } from './utf8-len.js'
 import { utf8ToBase64Node, utf8ToBase64Ponyfill } from './utf8-to-base64.js'
+import { isWellFormedPonyfill, isWellFormedRegExp } from './utf8-well-formed.js'
 
 /**
  * Converts a Uint8Array to a UTF-8 string.
@@ -86,6 +87,25 @@ if (graphemeLen === graphemeLenPonyfill) {
  */
 export const utf8Len: (string: string) => number =
   /* v8 ignore next -- @preserve */ utf8LenNode ?? utf8LenCompute
+
+/**
+ * Whether a string is well-formed, i.e. contains no lone surrogate, which has
+ * no UTF-8 encoding (it would be replaced by U+FFFD when encoded), like
+ * {@link String.prototype.isWellFormed}.
+ *
+ * Uses a Unicode property escape RegExp when supported, falling back to a
+ * ponyfill.
+ *
+ * @example
+ * ```typescript
+ * import { isWellFormedString } from '@atproto/lex-data'
+ *
+ * isWellFormedString('\u{1F600}')  // true (surrogate pair)
+ * isWellFormedString('\uD83D')     // false (lone high surrogate)
+ * ```
+ */
+export const isWellFormedString: (str: string) => boolean =
+  /* v8 ignore next -- @preserve */ isWellFormedRegExp ?? isWellFormedPonyfill
 
 /**
  * Encodes a UTF-8 string to base64.

@@ -1,6 +1,6 @@
 {
   "name": "@atproto/lex-client",
-  "version": "0.4.2",
+  "version": "0.5.0",
   "license": "MIT",
   "description": "HTTP client for interacting with Lexicon based APIs",
   "keywords": [
@@ -42,7 +42,7 @@
     "@atproto/lex-json": "workspace:^",
     "@atproto/lex-builder": "workspace:^",
     "@atproto/lex-installer": "workspace:^",
-    "vitest": "^4.1.10"
+    "vitest": "^5.1.1"
   },
   "scripts": {
     "lex:build": "lex-builder build --out ./src/lexicons --clear --lib @atproto/lex-schema --index-file --default-export",

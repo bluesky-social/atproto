@@ -7,11 +7,11 @@ import {
   type PluginTransformResultArgs,
   type QueryResult,
   type RootOperationNode,
-  SqliteDialect,
   type UnknownRow,
   sql,
 } from 'kysely'
 import { dbLogger } from '../logger.js'
+import { LockingSqliteDialect } from './sqlite-dialect.js'
 import { retrySqlite } from './util.js'
 
 const DEFAULT_PRAGMAS = {
@@ -38,7 +38,7 @@ export class Database<Schema> implements AsyncDisposable {
       sqliteDb.pragma(`${pragma} = ${pragmas[pragma]}`)
     }
     const db = new Kysely<T>({
-      dialect: new SqliteDialect({
+      dialect: new LockingSqliteDialect({
         database: sqliteDb,
       }),
     })

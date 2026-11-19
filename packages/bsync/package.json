@@ -1,6 +1,6 @@
 {
   "name": "@atproto/bsync",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "license": "MIT",
   "description": "Sychronizing service for app.bsky App View (Bluesky API)",
   "keywords": [
@@ -15,6 +15,7 @@
   },
   "files": [
     "./dist",
+    "./certs",
     "./README.md",
     "./CHANGELOG.md"
   ],
@@ -39,6 +40,8 @@
     "@atproto-labs/opentelemetry-node": "workspace:^",
     "@atproto/common": "workspace:^",
     "@atproto/syntax": "workspace:^",
+    "@aws-sdk/credential-providers": "^3.1169.0",
+    "@aws-sdk/rds-signer": "^3.1169.0",
     "@bufbuild/protobuf": "^1.5.0",
     "@connectrpc/connect": "^1.1.4",
     "@connectrpc/connect-node": "^1.1.4",

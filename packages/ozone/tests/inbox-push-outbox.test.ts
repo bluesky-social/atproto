@@ -1,27 +1,29 @@
 import { sql } from 'kysely'
 import { ComAtprotoModerationDefs, ids } from '@atproto/api'
-import { type SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import {
+  ADMIN_PASSWORD,
+  type SeedClient,
+  TestNetwork,
+  basicSeed,
+} from '@atproto/dev-env'
 import { toDatetimeString } from '@atproto/lex'
-import { envToSecrets } from '../src/config/secrets.js'
 import { createInboxNotification } from '../src/inbox/notifications.js'
 import { putNotificationPreferences } from '../src/inbox/preferences.js'
 import {
   ackPushNotifications,
   claimPushNotifications,
 } from '../src/inbox/push-outbox.js'
-import { OzoneService } from '../src/index.js'
 import { com, tools } from '../src/lexicons/index.js'
 import { reportForEvent, resetInbox } from './_inbox.js'
 
 describe('inbox push outbox', () => {
   let network: TestNetwork
   let sc: SeedClient
-  const token = 'test-push-service-token'
 
   beforeAll(async () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'ozone_inbox_push_outbox',
-      ozone: { inboxPushEnabled: true, inboxPushToken: token },
+      ozone: { inboxPushEnabled: true },
     })
     sc = network.getSeedClient()
     await basicSeed(sc)
@@ -244,21 +246,6 @@ describe('inbox push outbox', () => {
         }),
       ]),
     )
-  })
-
-  it('requires the consumer token for the API, but not secret parsing for the daemon', async () => {
-    const secrets = envToSecrets({
-      adminPassword: 'test-password',
-      signingKeyHex: 'test-key',
-      inboxPushEnabled: true,
-      adminDids: [],
-      moderatorDids: [],
-      triageDids: [],
-    })
-    expect(secrets.inboxPushToken).toBeUndefined()
-    await expect(
-      OzoneService.create(network.ozone.ctx.cfg, secrets),
-    ).rejects.toThrow('inbox push token is required')
   })
 
   it('enqueues once for newly inserted notifications and respects preferences', async () => {
@@ -652,27 +639,60 @@ describe('inbox push outbox', () => {
     ).toHaveLength(0)
   })
 
-  it('restricts the cross-account consumer to its configured credential', async () => {
-    const url = `${network.ozone.url}/xrpc/tools.ozone.inbox.claimPushNotifications`
-    const request = (credential?: string) =>
-      fetch(url, {
-        method: 'POST',
-        headers: {
-          'content-type': 'application/json',
-          ...(credential && { authorization: credential }),
-        },
-        body: JSON.stringify({ limit: 10 }),
-      })
+  it('restricts cross-account push endpoints to moderators and admins', async () => {
+    const basic = (user: string, password: string) =>
+      `Basic ${Buffer.from(`${user}:${password}`).toString('base64')}`
     await createInboxNotification(
       network.ozone.ctx.db,
       notification('test:auth'),
       undefined,
       true,
     )
-    expect((await request()).status).toBe(401)
-    expect((await request('Bearer invalid')).status).toBe(401)
-    const response = await request(`Bearer ${token}`)
-    expect(response.status).toBe(200)
-    expect((await response.json()).notifications).toHaveLength(1)
+    const call = async (lxm: string, params: string, body?: object) => {
+      const request = (credential?: string) =>
+        fetch(`${network.ozone.url}/xrpc/${lxm}${params}`, {
+          method: body ? 'POST' : 'GET',
+          headers: {
+            ...(body && { 'content-type': 'application/json' }),
+            ...(credential && { authorization: credential }),
+          },
+          ...(body && { body: JSON.stringify(body) }),
+        })
+      const triage = await network.ozone.modHeaders(lxm, 'triage')
+      for (const credential of [
+        undefined,
+        'Bearer invalid',
+        basic('admin', 'wrong'),
+        basic('moderator', ADMIN_PASSWORD),
+        triage.authorization,
+      ]) {
+        expect((await request(credential)).status).toBe(401)
+      }
+      const moderator = await network.ozone.modHeaders(lxm, 'moderator')
+      const response = await request(moderator.authorization)
+      expect(response.status).toBe(200)
+      const admin = await network.ozone.modHeaders(lxm, 'admin')
+      expect((await request(admin.authorization)).status).toBe(200)
+      expect((await request(basic('admin', ADMIN_PASSWORD))).status).toBe(200)
+      return response.json()
+    }
+    const claimed = await call(
+      tools.ozone.inbox.claimPushNotifications.$lxm,
+      '',
+      { limit: 10 },
+    )
+    expect(claimed.notifications).toHaveLength(1)
+    const item = claimed.notifications[0]
+    const acknowledged = await call(
+      tools.ozone.inbox.ackPushNotifications.$lxm,
+      '',
+      { items: [{ id: item.id, leaseToken: item.leaseToken }] },
+    )
+    expect(acknowledged.acknowledged).toEqual([item.id])
+    const preference = await call(
+      tools.ozone.inbox.getPushPreference.$lxm,
+      `?recipientDid=${encodeURIComponent(sc.dids.bob)}&category=account`,
+    )
+    expect(preference.enabled).toBe(true)
   })
 })

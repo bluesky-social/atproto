@@ -162,21 +162,26 @@ describe('inbox history cutoff', () => {
         subject: oldRecordUri,
       }),
     ).rejects.toMatchObject({ error: 'NotFound' })
-    await expect(
-      sc.agent.call(
-        tools.ozone.inbox.appealActionedSubject.$lxm,
-        {},
-        {
-          subject: com.atproto.admin.defs.repoRef.$build({
-            did: sc.dids.alice,
-          }),
-          action: tools.ozone.inbox.appealActionedSubject.actionRef.$build({
-            id: oldActionId,
-          }),
-        },
-        { headers: inboxHeaders(network, sc, sc.dids.alice) },
-      ),
-    ).rejects.toMatchObject({ error: 'NotAppealable' })
+    // An older action stays appealable, but the response keeps it hidden.
+    const appeal = await sc.agent.call(
+      tools.ozone.inbox.appealActionedSubject.$lxm,
+      {},
+      {
+        subject: com.atproto.admin.defs.repoRef.$build({
+          did: sc.dids.alice,
+        }),
+        action: tools.ozone.inbox.appealActionedSubject.actionRef.$build({
+          id: oldActionId,
+        }),
+      },
+      { headers: inboxHeaders(network, sc, sc.dids.alice) },
+    )
+    expect(appeal.data).toMatchObject({
+      appeal: { state: 'pending' },
+      actionCount: 1,
+      latestAction: { createdAt: startAt },
+      createdAt: startAt,
+    })
   })
 
   it('returns empty history before a future launch and prevents appeals', async () => {

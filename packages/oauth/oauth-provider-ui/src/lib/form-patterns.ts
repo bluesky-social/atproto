@@ -1,3 +1,4 @@
+import type { IdentifierString } from '@atproto/oauth-provider-api'
 import { isAtIdentifierString, isValidHandle } from '@atproto/syntax'
 import { MIN_PASSWORD_LENGTH } from './password.ts'
 
@@ -28,7 +29,7 @@ export const DOMAIN_LESS_IDENTIFIER_PATTERN = `(?:@?${HANDLE_SEGMENT_PATTERN})|(
 
 const EMAIL_IDENTIFIER_REGEX = /^[^@\s]+@[^@\s]+\.[^@\s]+$/
 
-export function isIdentifier(value: string): boolean {
+export function isIdentifier(value: string): value is IdentifierString {
   if (value.startsWith('@')) return isValidHandle(value.slice(1))
   return isAtIdentifierString(value) || EMAIL_IDENTIFIER_REGEX.test(value)
 }
@@ -76,4 +77,13 @@ export function normalizeIdentifier(
     return `${normalized}${domains[0]}`
   }
   return normalized
+}
+
+export function asNormalizedIdentifier(
+  value: unknown,
+  domains?: readonly string[],
+): IdentifierString | undefined {
+  if (typeof value !== 'string') return undefined
+  const normalized = normalizeIdentifier(value, domains)
+  return isIdentifier(normalized) ? normalized : undefined
 }

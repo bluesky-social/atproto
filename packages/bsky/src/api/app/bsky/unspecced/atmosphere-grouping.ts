@@ -8,6 +8,9 @@ import type {
 import { app, site } from '../../../../lexicons/index.js'
 import { uriToDid } from '../../../../util/uris.js'
 
+// @NOTE Match social-app's MAX_ACTIVITY_LIST_URIS so "View all" fits in its URL.
+const MAX_ACTOR_GROUP_SIZE = 150
+
 type ActivityItem = app.bsky.unspecced.getAtmosphereTimeline.ActivityItem
 type ActivitySubject = app.bsky.unspecced.getAtmosphereTimeline.ActivitySubject
 
@@ -164,6 +167,7 @@ export function groupAtmosphereActivities(
         let end = start + 1
         while (
           end < indices.length &&
+          (groupBy !== 'actor' || end - start < MAX_ACTOR_GROUP_SIZE) &&
           (article ||
             first.sortedAt - activities[indices[end]].sortedAt <= window)
         ) {
