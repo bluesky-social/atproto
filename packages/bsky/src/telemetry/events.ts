@@ -24,6 +24,9 @@ export type AuthVerifierName =
   | 'modService'
   | 'anonymous'
 
+export type GetFeedServiceJwtKind =
+  'feedgen_skeleton' | 'appview_feed' | 'other'
+
 export type HydrationSource =
   'known_likers' | 'known_followers' | 'activity_subscriptions'
 
@@ -116,6 +119,14 @@ class EventReporter {
   }>('auth.labeler_service_jwts', {
     description:
       'Labeler-signed service JWTs with a valid signature, by lxm. `mismatch` when lxm is not the method called, and `absent` when there is no lxm',
+    valueType: ValueType.INT,
+  })
+
+  #getFeedServiceJwts = meter.createCounter<{
+    kind: GetFeedServiceJwtKind
+  }>('auth.get_feed_service_jwts', {
+    description:
+      'Service JWTs forwarded by getFeed to feed generators, by `aud` and `lxm`. `feedgen_skeleton`: `aud` is the feed generator, `lxm` is getFeedSkeleton. `appview_feed`: `aud` is AppView, `lxm` is getFeed. `other`: any other combination',
     valueType: ValueType.INT,
   })
 
@@ -348,6 +359,14 @@ class EventReporter {
       })
     } catch (err) {
       diag.error('Failed to record labeler_service_jwt:', err)
+    }
+  }
+
+  getFeedServiceJwt(kind: GetFeedServiceJwtKind) {
+    try {
+      this.#getFeedServiceJwts.add(1, { kind })
+    } catch (err) {
+      diag.error('Failed to record get_feed_service_jwt:', err)
     }
   }
 
