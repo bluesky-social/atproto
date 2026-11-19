@@ -1,5 +1,11 @@
 import * as uint8arrays from 'uint8arrays'
-import { BASE58_MULTIBASE_PREFIX, DID_KEY_PREFIX } from './const.js'
+import {
+  BASE58_MULTIBASE_PREFIX,
+  DID_KEY_PREFIX,
+  P256_JWT_ALG,
+  SECP256K1_JWT_ALG,
+} from './const.js'
+import { multibaseToBytes } from './multibase.js'
 import { plugins } from './plugins.js'
 import { extractMultikey, extractPrefixedBytes, hasPrefix } from './utils.js'
 
@@ -45,9 +51,30 @@ export const parseDidKey = (did: string): ParsedMultikey => {
   return parseMultikey(multikey)
 }
 
-export function formatDidKey(
-  jwtAlg: string,
-  keyBytes: Uint8Array,
-): `did:key:${string}` {
+export type DidKey = `did:key:${string}`
+export function formatDidKey(jwtAlg: string, keyBytes: Uint8Array): DidKey {
   return `${DID_KEY_PREFIX}${formatMultikey(jwtAlg, keyBytes)}` as const
+}
+
+export function formatDidVerificationMethod(key: {
+  type: string
+  publicKeyMultibase: string
+}): DidKey {
+  switch (key.type) {
+    case 'EcdsaSecp256r1VerificationKey2019': {
+      const keyBytes = multibaseToBytes(key.publicKeyMultibase)
+      return formatDidKey(P256_JWT_ALG, keyBytes)
+    }
+    case 'EcdsaSecp256k1VerificationKey2019': {
+      const keyBytes = multibaseToBytes(key.publicKeyMultibase)
+      return formatDidKey(SECP256K1_JWT_ALG, keyBytes)
+    }
+    case 'Multikey': {
+      const { jwtAlg, keyBytes } = parseMultikey(key.publicKeyMultibase)
+      return formatDidKey(jwtAlg, keyBytes)
+    }
+    default: {
+      throw new Error(`Unsupported verification method type: ${key.type}`)
+    }
+  }
 }

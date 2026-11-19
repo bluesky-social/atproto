@@ -12,7 +12,6 @@ describe('com.example.stringLength', () => {
       'a\u0301', // 'a' + combining acute accent (1 + 2 bytes = 3 bytes)
       'aé', // 'a' (1 byte) + 'é' (2 bytes) = 3 bytes
       '一', // CJK character (3 bytes)
-      '\uD83D', // Unpaired high surrogate (3 bytes)
       'éé', // 'é' + 'é' (2 + 2 bytes = 4 bytes)
       'aaé', // 1 + 1 + 2 = 4 bytes
       '👋', // 4 bytes
@@ -40,8 +39,12 @@ describe('com.example.stringLength', () => {
         error: 'string too big (maximum 4, got 5) at $.string',
       },
       {
-        string: '\uD83D\uD83D', // Two unpaired high surrogates (3 * 2 = 6 bytes)
-        error: 'string too big (maximum 4, got 6) at $.string',
+        string: '\uD83D', // Unpaired high surrogate (no UTF-8 encoding)
+        error: 'String contains a lone surrogate at $.string',
+      },
+      {
+        string: '\uD83D\uD83D', // Two unpaired high surrogates
+        error: 'String contains a lone surrogate at $.string',
       },
       {
         string: 'ééé', // 2 + 2 + 2 bytes = 6 bytes
@@ -83,7 +86,6 @@ describe('com.example.stringLengthNoMinLength', () => {
       'aé', // 'a' (1 byte) + 'é' (2 bytes) = 3 bytes
       'abc',
       '一', // CJK character (3 bytes)
-      '\uD83D', // Unpaired high surrogate (3 bytes)
       'abcd',
       'éé', // 'é' + 'é' (2 + 2 bytes = 4 bytes)
       'aaé', // 1 + 1 + 2 = 4 bytes
@@ -107,8 +109,12 @@ describe('com.example.stringLengthNoMinLength', () => {
         error: 'string too big (maximum 4, got 5) at $.string',
       },
       {
-        string: '\uD83D\uD83D', // Two unpaired high surrogates (3 * 2 = 6 bytes)
-        error: 'string too big (maximum 4, got 6) at $.string',
+        string: '\uD83D', // Unpaired high surrogate (no UTF-8 encoding)
+        error: 'String contains a lone surrogate at $.string',
+      },
+      {
+        string: '\uD83D\uD83D', // Two unpaired high surrogates
+        error: 'String contains a lone surrogate at $.string',
       },
       {
         string: 'ééé', // 2 + 2 + 2 bytes = 6 bytes

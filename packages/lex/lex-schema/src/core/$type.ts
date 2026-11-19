@@ -95,6 +95,10 @@ export type $Typed<V, T extends string = string> = Simplify<
   }
 >
 
+export type Definitely$Typed<T extends { $type?: string }> = T extends unknown
+  ? Simplify<Omit<T, '$type'> & { $type: NonNullable<T['$type']> }>
+  : never
+
 /**
  * Ensures an object has the specified `$type` property.
  *
