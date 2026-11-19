@@ -960,7 +960,7 @@ describe(Client, () => {
 
       const { body } = await client.uploadBlob(data)
 
-      expect(fetchHandler).toHaveBeenCalledTimes(2)
+      expect(fetchHandler).toHaveBeenCalledTimes(1)
       assert(isTypedBlobRef(body.blob))
       expect(body.blob.$type).toBe('blob')
       expect(body.blob.mimeType).toBe('application/octet-stream')
@@ -976,7 +976,7 @@ describe(Client, () => {
 
       const { body } = await client.uploadBlob(data)
 
-      expect(fetchHandler).toHaveBeenCalledTimes(3)
+      expect(fetchHandler).toHaveBeenCalledTimes(1)
       assert(isTypedBlobRef(body.blob))
       expect(body.blob.$type).toBe('blob')
       expect(body.blob.mimeType).toBe('application/octet-stream')

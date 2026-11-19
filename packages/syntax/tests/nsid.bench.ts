@@ -1,4 +1,4 @@
-import { bench, describe } from 'vitest'
+import { describe, test } from 'vitest'
 import { type Result, failure, success } from '../src/lib/result.js'
 import { validateNsid, validateNsidRegex } from '../src/nsid.js'
 
@@ -96,13 +96,19 @@ function benchNsids(expectedResult: boolean, cases: string[]) {
         throw new Error(`Validator ${name} gave wrong result for "${value}"`)
       }
     }
-
-    bench(name, () => {
-      for (const value of cases) {
-        validate(value)
-      }
-    })
   }
+
+  test('validators', async ({ bench }) => {
+    await bench.compare(
+      ...Object.entries(validators).map(([name, validate]) =>
+        bench(name, () => {
+          for (const value of cases) {
+            validate(value)
+          }
+        }),
+      ),
+    )
+  })
 }
 
 function validateNsidOptimized(value: string): Result<string> {
