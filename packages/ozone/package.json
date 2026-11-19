@@ -35,7 +35,7 @@
     "./package.json": "./package.json"
   },
   "engines": {
-    "node": ">=22"
+    "node": "^22.22.3 || ^24.11.1 || >=25.1.0"
   },
   "dependencies": {
     "@atproto-labs/fetch-node": "workspace:^",
