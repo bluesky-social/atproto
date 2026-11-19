@@ -202,12 +202,12 @@
           // 'rpc:app.bsky.feed.getFeed?aud=*',
           // 'rpc:app.bsky.feed.getFeedSkeleton?aud=*',
           // 'rpc:com.atproto.moderation.createReport?aud=*',
-          // 'space:com.example.forum?authority=did:plc:abc123&skey=default&collection=com.example.thread&action=read&action=create',
-          // 'space:com.example.forum?authority=did:plc:abc123&skey=backup&action=read_self',
-          // 'space:com.example.forum?authority=*&action=read_self&manage=update&manage=delete',
-          'space:*?authority=did:plc:abc123',
-          // 'space:com.unknown.space?authority=*',
-          // 'space:*?authority=*',
+          // 'space:com.example.forum?spaceDid=did:plc:abc123&skey=default&collection=com.example.thread&action=read&action=create',
+          // 'space:com.example.forum?spaceDid=did:plc:abc123&skey=backup&action=read_self',
+          // 'space:com.example.forum?spaceDid=*&action=read_self&manage=update&manage=delete',
+          'space:*?spaceDid=did:plc:abc123',
+          // 'space:com.unknown.space?spaceDid=*',
+          // 'space:*?spaceDid=*',
         ].join(' '),
       }
 

@@ -862,7 +862,7 @@ type SpaceTableRow = {
   key: string
   type: string
   space?: Space
-  authority: string
+  spaceDid: string
   ownerHandle?: string
   skey: string
   read: boolean
@@ -891,7 +891,7 @@ function SpaceTable({
   ...attrs
 }: SpaceTableProps) {
   const rows = useMemo<SpaceTableRow[]>(() => {
-    // Scopes sharing a (type, authority, skey) tuple merge into one row.
+    // Scopes sharing a (type, spaceDid, skey) tuple merge into one row.
     const map = new Map<string, SpaceTableRow>()
 
     for (const s of permissions.scopes) {
@@ -905,17 +905,17 @@ function SpaceTable({
         ? raw.withDefaultCollections(space.collections)
         : raw
 
-      const key = `${parsed.spaceType}|${parsed.authority}|${parsed.skey}`
+      const key = `${parsed.spaceType}|${parsed.spaceDid}|${parsed.skey}`
       let row = map.get(key)
       if (!row) {
         row = {
           key,
           type: parsed.spaceType,
           space,
-          authority: parsed.authority,
+          spaceDid: parsed.spaceDid,
           ownerHandle:
-            parsed.authority !== '*'
-              ? spaceHandles?.[parsed.authority]
+            parsed.spaceDid !== '*'
+              ? spaceHandles?.[parsed.spaceDid]
               : undefined,
           skey: parsed.skey,
           read: false,
@@ -1040,11 +1040,11 @@ function SpaceRow({ row }: { row: SpaceTableRow }) {
 }
 
 function SpaceLabel({ row }: { row: SpaceTableRow }) {
-  if (row.type !== '*' && row.authority !== '*') {
+  if (row.type !== '*' && row.spaceDid !== '*') {
     return (
       <Trans>
         <SpaceTypeLabel type={row.type} space={row.space} /> spaces on{' '}
-        <SpaceOwner did={row.authority} handle={row.ownerHandle} />
+        <SpaceOwner did={row.spaceDid} handle={row.ownerHandle} />
       </Trans>
     )
   }
@@ -1055,11 +1055,10 @@ function SpaceLabel({ row }: { row: SpaceTableRow }) {
       </Trans>
     )
   }
-  if (row.authority !== '*') {
+  if (row.spaceDid !== '*') {
     return (
       <Trans>
-        All spaces on{' '}
-        <SpaceOwner did={row.authority} handle={row.ownerHandle} />
+        All spaces on <SpaceOwner did={row.spaceDid} handle={row.ownerHandle} />
       </Trans>
     )
   }
@@ -1097,7 +1096,7 @@ function SpaceUniversalWarning({
     return permissions.scopes.some((s) => {
       const parsed = SpacePermission.fromString(s)
       return (
-        parsed != null && parsed.spaceType === '*' && parsed.authority === '*'
+        parsed != null && parsed.spaceType === '*' && parsed.spaceDid === '*'
       )
     })
   }, [permissions])

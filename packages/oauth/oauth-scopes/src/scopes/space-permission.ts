@@ -60,10 +60,8 @@ export type SpaceTypeParam = '*' | NsidString
 export const isSpaceTypeParam = (value: unknown): value is SpaceTypeParam =>
   value === '*' || isValidNsid(value)
 
-export type SpaceAuthorityParam = '*' | 'self' | DidString
-export const isSpaceAuthorityParam = (
-  value: unknown,
-): value is SpaceAuthorityParam =>
+export type SpaceDidParam = '*' | 'self' | DidString
+export const isSpaceDidParam = (value: unknown): value is SpaceDidParam =>
   value === '*' || value === 'self' || isValidDid(value)
 
 export type SpaceKeyParam = '*' | SpaceKeyString
@@ -77,7 +75,7 @@ export const isSpaceCollectionParam = (
 
 export type SpacePermissionMatchReference = {
   spaceType: SpaceTypeParam
-  authority: SpaceAuthorityParam
+  spaceDid: SpaceDidParam
   skey: SpaceKeyParam
 }
 
@@ -85,14 +83,7 @@ export type SpacePermissionMatchReference = {
  * The space a permission check is about. A match reference may hold wildcards,
  * for checks that span several spaces (e.g. listing them).
  */
-export type SpaceTarget =
-  | SpaceRefString
-  | {
-      readonly spaceDid: DidString
-      readonly spaceType: NsidString
-      readonly skey: RecordKeyString
-    }
-  | SpacePermissionMatchReference
+export type SpaceTarget = SpaceRefString | SpacePermissionMatchReference
 
 export type SpacePermissionMatchOperation =
   | {
@@ -126,7 +117,7 @@ export class SpacePermission implements ResourcePermission<
 > {
   constructor(
     public readonly spaceType: SpaceTypeParam,
-    public readonly authority: SpaceAuthorityParam,
+    public readonly spaceDid: SpaceDidParam,
     public readonly skey: SpaceKeyParam,
     public readonly collection: undefined | NeRoArray<SpaceCollectionParam>,
     public readonly action: NeRoArray<SpaceAction>,
@@ -134,12 +125,12 @@ export class SpacePermission implements ResourcePermission<
   ) {}
 
   matches(target: SpacePermissionMatch) {
-    // An unresolved `self` authority matches nothing, since `target.authority`
+    // An unresolved `self` space DID matches nothing, since `target.spaceDid`
     // is always a concrete DID.
     if (this.spaceType !== '*' && this.spaceType !== target.spaceType) {
       return false
     }
-    if (this.authority !== '*' && this.authority !== target.authority) {
+    if (this.spaceDid !== '*' && this.spaceDid !== target.spaceDid) {
       return false
     }
     if (this.skey !== '*' && this.skey !== target.skey) return false
@@ -186,7 +177,7 @@ export class SpacePermission implements ResourcePermission<
     if (!isNonEmpty(collections)) return this
     return new SpacePermission(
       this.spaceType,
-      this.authority,
+      this.spaceDid,
       this.skey,
       collections,
       this.action,
@@ -194,16 +185,16 @@ export class SpacePermission implements ResourcePermission<
     )
   }
 
-  get isSelfAuthority(): boolean {
-    return this.authority === 'self'
+  get isSelfSpaceDid(): boolean {
+    return this.spaceDid === 'self'
   }
 
   /**
-   * Resolves an `authority` of `self` to the granting user's DID. Called at
+   * Resolves a `spaceDid` of `self` to the granting user's DID. Called at
    * token-issuance time, alongside {@link withDefaultCollections}.
    */
-  withResolvedAuthority(userDid: DidString): SpacePermission {
-    if (this.authority !== 'self') return this
+  withResolvedSpaceDid(userDid: DidString): SpacePermission {
+    if (this.spaceDid !== 'self') return this
     return new SpacePermission(
       this.spaceType,
       userDid,
@@ -226,11 +217,11 @@ export class SpacePermission implements ResourcePermission<
         required: true,
         validate: isSpaceTypeParam,
       },
-      authority: {
+      spaceDid: {
         multiple: false,
         required: false,
         default: 'self' as const,
-        validate: isSpaceAuthorityParam,
+        validate: isSpaceDidParam,
       },
       skey: {
         multiple: false,
@@ -283,7 +274,7 @@ export class SpacePermission implements ResourcePermission<
 
     return new SpacePermission(
       result.spaceType,
-      result.authority,
+      result.spaceDid,
       result.skey,
       result.collection,
       result.action,
@@ -297,7 +288,7 @@ export class SpacePermission implements ResourcePermission<
       'manage' in options && options.manage != null
         ? {
             spaceType: options.spaceType,
-            authority: options.authority,
+            spaceDid: options.spaceDid,
             skey: options.skey,
             collection: undefined,
             action: ['read_self'], // Use the narrowest action to avoid suggesting broader permissions
@@ -305,7 +296,7 @@ export class SpacePermission implements ResourcePermission<
           }
         : {
             spaceType: options.spaceType,
-            authority: options.authority,
+            spaceDid: options.spaceDid,
             skey: options.skey,
             collection:
               options.action === 'read' || options.action === 'read_self'

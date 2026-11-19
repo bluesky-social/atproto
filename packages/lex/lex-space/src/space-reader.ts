@@ -334,11 +334,11 @@ export declare namespace SpaceReader {
     | { type: 'empty' }
 
   /**
-   * A space of type `S`, by its authority and key. The key can be left out for
+   * A space of type `S`, by its DID and key. The key can be left out for
    * space types with a literal key.
    */
-  export type AuthorityRef<S extends Space> = {
-    authority: DidString
+  export type SpaceDidRef<S extends Space> = {
+    spaceDid: DidString
   } & (S['key'] extends `literal:${string}`
     ? { skey?: RecordKeyValue<S['key']> }
     : { skey: RecordKeyValue<S['key']> })
@@ -402,7 +402,7 @@ export class SpaceReader<S extends Space = Space> {
   readonly #classify: RecordClassifier
 
   /**
-   * Reads a space, identified by its URI or by its authority and key, of the
+   * Reads a space, identified by its URI or by its DID and key, of the
    * type described by `ns` (a space schema, or a namespace exporting one as
    * `main`).
    *
@@ -410,7 +410,7 @@ export class SpaceReader<S extends Space = Space> {
    */
   static openSpace<const S extends Space>(
     ns: Main<S>,
-    space: SpaceRefString | SpaceRef | SpaceReader.AuthorityRef<S>,
+    space: SpaceRefString | SpaceRef | SpaceReader.SpaceDidRef<S>,
     options?: SpaceReader.Options,
   ): SpaceReader<S> {
     const schema = getMain(ns)
@@ -420,7 +420,7 @@ export class SpaceReader<S extends Space = Space> {
         : space instanceof SpaceRef
           ? space
           : schema.spaceRefFor(
-              space.authority,
+              space.spaceDid,
               space.skey as RecordKeyValue<S['key']>,
             )
     return new SpaceReader(schema, ref, options)

@@ -64,7 +64,7 @@ export class LexiconManager {
     // or the granting user's identity has to be resolved here, at issuance.
     const expanded = await this.expandSpaceCollections(concreteScopes)
     const resolved = expanded.map((value) =>
-      resolveSpaceSelfAuthority(value, userDid),
+      resolveSpaceSelfDid(value, userDid),
     )
 
     return resolved.join(' ')
@@ -170,10 +170,10 @@ export class LexiconManager {
   }
 }
 
-function resolveSpaceSelfAuthority(value: string, userDid: DidString): string {
+function resolveSpaceSelfDid(value: string, userDid: DidString): string {
   const parsed = SpacePermission.fromString(value)
-  if (!parsed?.isSelfAuthority) return value
-  return parsed.withResolvedAuthority(userDid).toString()
+  if (!parsed?.isSelfSpaceDid) return value
+  return parsed.withResolvedSpaceDid(userDid).toString()
 }
 
 function extractSpaceTypeNsids(scopes: readonly string[]): Set<NsidString> {

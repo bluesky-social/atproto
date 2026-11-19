@@ -127,9 +127,7 @@ export class ScopePermissions {
 function toMatchReference(target: SpaceTarget): SpacePermissionMatchReference {
   // A string must be a space ref: a record uri within a space is rejected
   // rather than read as the space it belongs to.
-  const ref = typeof target === 'string' ? SpaceRef.parse(target) : target
-  if ('spaceDid' in ref) {
-    return { spaceType: ref.spaceType, authority: ref.spaceDid, skey: ref.skey }
-  }
-  return ref
+  if (typeof target !== 'string') return target
+  const { spaceType, spaceDid, skey } = SpaceRef.parse(target)
+  return { spaceType, spaceDid, skey }
 }

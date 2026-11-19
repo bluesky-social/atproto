@@ -73,7 +73,7 @@ describe('LexiconManager', () => {
         [GROUP]: space([]),
       })
       const spaces = await manager.getSpacesFromScope(
-        `space:${FORUM}?authority=${OWNER_DID} space:${GROUP}`,
+        `space:${FORUM}?spaceDid=${OWNER_DID} space:${GROUP}`,
       )
       expect(spaces).toEqual(
         new Map([
@@ -96,7 +96,7 @@ describe('LexiconManager', () => {
 
     it('skips a wildcard space type', async () => {
       const { manager, lexResolver } = setup({})
-      const spaces = await manager.getSpacesFromScope('space:*?authority=*')
+      const spaces = await manager.getSpacesFromScope('space:*?spaceDid=*')
       expect(spaces.size).toBe(0)
       expect(lexResolver.get).not.toHaveBeenCalled()
     })
@@ -113,11 +113,11 @@ describe('LexiconManager', () => {
       const { manager } = setup({ [FORUM]: space([THREAD, REPLY]) })
       await expect(
         manager.buildTokenScope(
-          `space:${FORUM}?authority=${OWNER_DID}`,
+          `space:${FORUM}?spaceDid=${OWNER_DID}`,
           USER_DID,
         ),
       ).resolves.toBe(
-        `space:${FORUM}?authority=${OWNER_DID}&collection=${REPLY}&collection=${THREAD}`,
+        `space:${FORUM}?spaceDid=${OWNER_DID}&collection=${REPLY}&collection=${THREAD}`,
       )
     })
 
@@ -131,14 +131,14 @@ describe('LexiconManager', () => {
       await expect(
         manager.buildTokenScope(`include:${BUNDLE}`, USER_DID),
       ).resolves.toBe(
-        `space:${FORUM}?authority=${USER_DID}&collection=${THREAD}`,
+        `space:${FORUM}?spaceDid=${USER_DID}&collection=${THREAD}`,
       )
     })
 
     it('does not look up a grant that already names collections', async () => {
       // Expanding it would widen the grant beyond what the user consented to.
       const { manager, lexResolver } = setup({})
-      const scope = `space:${FORUM}?authority=${OWNER_DID}&collection=${THREAD}`
+      const scope = `space:${FORUM}?spaceDid=${OWNER_DID}&collection=${THREAD}`
       await expect(manager.buildTokenScope(scope, USER_DID)).resolves.toBe(
         scope,
       )
@@ -147,7 +147,7 @@ describe('LexiconManager', () => {
 
     it('does not look up a wildcard space type', async () => {
       const { manager, lexResolver } = setup({})
-      const scope = `space:*?authority=${OWNER_DID}`
+      const scope = `space:*?spaceDid=${OWNER_DID}`
       await expect(manager.buildTokenScope(scope, USER_DID)).resolves.toBe(
         scope,
       )
@@ -156,7 +156,7 @@ describe('LexiconManager', () => {
 
     it('leaves a bare grant alone when the space declares no collections', async () => {
       const { manager } = setup({ [FORUM]: space([]) })
-      const scope = `space:${FORUM}?authority=${OWNER_DID}`
+      const scope = `space:${FORUM}?spaceDid=${OWNER_DID}`
       await expect(manager.buildTokenScope(scope, USER_DID)).resolves.toBe(
         scope,
       )
@@ -168,7 +168,7 @@ describe('LexiconManager', () => {
       const { manager } = setup({})
       await expect(
         manager.buildTokenScope(
-          `space:${FORUM}?authority=${OWNER_DID}`,
+          `space:${FORUM}?spaceDid=${OWNER_DID}`,
           USER_DID,
         ),
       ).rejects.toThrow(new LexResolverError(FORUM))
@@ -178,7 +178,7 @@ describe('LexiconManager', () => {
       const { manager } = setup({ [BUNDLE]: permissionSet([]) })
       await expect(
         manager.buildTokenScope(
-          `space:${BUNDLE}?authority=${OWNER_DID}`,
+          `space:${BUNDLE}?spaceDid=${OWNER_DID}`,
           USER_DID,
         ),
       ).rejects.toThrow(
@@ -186,12 +186,12 @@ describe('LexiconManager', () => {
       )
     })
 
-    it('resolves a self authority to the granting user', async () => {
+    it('resolves a self space DID to the granting user', async () => {
       const { manager } = setup({ [FORUM]: space([THREAD]) })
       await expect(
         manager.buildTokenScope(`space:${FORUM}`, USER_DID),
       ).resolves.toBe(
-        `space:${FORUM}?authority=${USER_DID}&collection=${THREAD}`,
+        `space:${FORUM}?spaceDid=${USER_DID}&collection=${THREAD}`,
       )
     })
 
@@ -203,17 +203,17 @@ describe('LexiconManager', () => {
       const scope = await manager.buildTokenScope(
         [
           'atproto',
-          `space:${FORUM}?authority=${OWNER_DID}`,
+          `space:${FORUM}?spaceDid=${OWNER_DID}`,
           'repo:app.bsky.feed.post',
-          `space:${GROUP}?authority=${OWNER_DID}`,
+          `space:${GROUP}?spaceDid=${OWNER_DID}`,
         ].join(' '),
         USER_DID,
       )
       expect(scope.split(' ')).toEqual([
         'atproto',
-        `space:${FORUM}?authority=${OWNER_DID}&collection=${THREAD}`,
+        `space:${FORUM}?spaceDid=${OWNER_DID}&collection=${THREAD}`,
         'repo:app.bsky.feed.post',
-        `space:${GROUP}?authority=${OWNER_DID}&collection=${REPLY}`,
+        `space:${GROUP}?spaceDid=${OWNER_DID}&collection=${REPLY}`,
       ])
     })
   })

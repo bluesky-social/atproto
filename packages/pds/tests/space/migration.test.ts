@@ -400,7 +400,7 @@ describe('space account migration', () => {
     const asOAuth = (actor: Actor, params: string) =>
       sc.asOAuth(
         actor,
-        `atproto space:${TEST_SPACE_TYPE}?authority=${actor.did}&${params}`,
+        `atproto space:${TEST_SPACE_TYPE}?spaceDid=${actor.did}&${params}`,
       )
 
     it('requires a grant to create and update the space to import it', async () => {

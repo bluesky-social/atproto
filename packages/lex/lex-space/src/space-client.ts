@@ -222,7 +222,7 @@ export class SpaceClient<S extends Space = Space> extends SpaceReader<S> {
    */
   static openSpace<const S extends Space>(
     ns: Main<S>,
-    space: SpaceRefString | SpaceRef | SpaceReader.AuthorityRef<S>,
+    space: SpaceRefString | SpaceRef | SpaceReader.SpaceDidRef<S>,
     { agent, ...options }: SpaceClient.OpenSpaceOptions,
   ): SpaceClient<S> {
     if (!isAccountAgent(agent)) {
@@ -235,7 +235,7 @@ export class SpaceClient<S extends Space = Space> extends SpaceReader<S> {
         : space instanceof SpaceRef
           ? space
           : schema.spaceRefFor(
-              space.authority,
+              space.spaceDid,
               space.skey as RecordKeyValue<S['key']>,
             )
     return new SpaceClient(agent, schema, ref, options)

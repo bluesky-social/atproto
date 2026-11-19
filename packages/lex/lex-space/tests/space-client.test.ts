@@ -159,11 +159,11 @@ describe('SpaceClient', () => {
       expectTypeOf(reader).toEqualTypeOf<SpaceReader<typeof group>>()
     })
 
-    it('opens a space by its authority and key', () => {
+    it('opens a space by its DID and key', () => {
       const { skey } = SpaceRef.parse(space)
       const opened = SpaceClient.openSpace(
         group,
-        { authority: alice.assertDid, skey },
+        { spaceDid: alice.assertDid, skey },
         { agent: bob.agent },
       )
       expect(opened.uri).toBe(space)
@@ -172,7 +172,7 @@ describe('SpaceClient', () => {
     it('defaults the key of a literal key type', () => {
       const opened = SpaceClient.openSpace(
         bookmarks,
-        { authority: alice.assertDid },
+        { spaceDid: alice.assertDid },
         { agent: bob.agent },
       )
       expect(opened.uri).toBe(

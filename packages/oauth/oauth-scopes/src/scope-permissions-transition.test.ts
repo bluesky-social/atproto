@@ -48,7 +48,7 @@ describe('ScopePermissionsTransition', () => {
   describe('allowsSpace', () => {
     const target = {
       spaceType: 'com.example.forum',
-      authority: 'did:plc:abc',
+      spaceDid: 'did:plc:abc',
       skey: 'default',
     } as const
 
@@ -68,7 +68,7 @@ describe('ScopePermissionsTransition', () => {
 
     it('should allow space with a covering space scope', () => {
       const set = new ScopePermissionsTransition(
-        'space:com.example.forum?authority=did:plc:abc&action=read',
+        'space:com.example.forum?spaceDid=did:plc:abc&action=read',
       )
       expect(set.allowsSpace(target, { action: 'read' })).toBe(true)
     })

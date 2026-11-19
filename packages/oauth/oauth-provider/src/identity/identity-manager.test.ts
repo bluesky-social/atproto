@@ -11,7 +11,7 @@ const OTHER_DID = 'did:plc:other456'
 const HANDLE = 'protocol-nerds.atmoboards.com'
 
 const scopeFor = (authority: string) =>
-  `space:com.atmoboards.forum?authority=${authority}`
+  `space:com.atmoboards.forum?spaceDid=${authority}`
 
 function setup({
   didDocs = {},
@@ -128,7 +128,7 @@ describe(IdentityManager, () => {
       })
 
       await manager.getSpaceHandlesFromScope(
-        `${scopeFor(DID)} space:com.example.group?authority=${DID}`,
+        `${scopeFor(DID)} space:com.example.group?spaceDid=${DID}`,
       )
 
       expect(didResolver.resolve).toHaveBeenCalledTimes(1)

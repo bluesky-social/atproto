@@ -72,13 +72,13 @@ Space types and records are typed with Lexicon schemas: install and build those 
 
 Access to spaces is granted through `space:` OAuth scopes, by space type and authority. For example:
 
-| Scope                                                  | Grants                                                                                |
-| ------------------------------------------------------ | ------------------------------------------------------------------------------------- |
-| `space:com.example.bookmarks`                          | The user's own bookmarks spaces: read, and write the collections the type declares    |
-| `space:com.example.forum?authority=*`                  | Every forum the user is in, under any authority: read, and write declared collections |
-| `space:com.example.forum?authority=*&action=read`      | The same forums, read-only                                                            |
-| `space:com.example.forum?authority=*&action=read_self` | Only the user's own repo in those forums, read-only                                   |
-| `space:*?authority=*&action=read_self`                 | List all of the user's spaces, and read the user's own repo in each                   |
+| Scope                                                 | Grants                                                                                |
+| ----------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| `space:com.example.bookmarks`                         | The user's own bookmarks spaces: read, and write the collections the type declares    |
+| `space:com.example.forum?spaceDid=*`                  | Every forum the user is in, under any authority: read, and write declared collections |
+| `space:com.example.forum?spaceDid=*&action=read`      | The same forums, read-only                                                            |
+| `space:com.example.forum?spaceDid=*&action=read_self` | Only the user's own repo in those forums, read-only                                   |
+| `space:*?spaceDid=*&action=read_self`                 | List all of the user's spaces, and read the user's own repo in each                   |
 
 A `read` grant lets the app read every repo in the space. A `read_self` grant only covers the user's own repo: enough to read the user's own data, but not to obtain a space credential.
 
@@ -111,10 +111,10 @@ const space = SpaceClient.openSpace(
   { agent: client.agent },
 )
 
-// By authority and key (the key can be left out for space types with a literal key)
+// By DID and key (the key can be left out for space types with a literal key)
 const space = SpaceClient.openSpace(
   com.example.forum,
-  { authority: 'did:plc:abc', skey: 'general' },
+  { spaceDid: 'did:plc:abc', skey: 'general' },
   { agent: client.agent },
 )
 ```
@@ -367,7 +367,7 @@ const reader = SpaceReader.openSpace(com.example.forum, spaceUri, {
 })
 
 // For spaces with public read access, which need no delegation token
-const reader = SpaceReader.openSpace(com.example.forum, { authority, skey })
+const reader = SpaceReader.openSpace(com.example.forum, { spaceDid, skey })
 ```
 
 ### Syncing repos

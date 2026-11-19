@@ -23,7 +23,7 @@ export default function (server: Server, ctx: AppContext) {
         auth.credentials.permissions.assertSpace(
           {
             spaceType: spaceType ?? '*',
-            authority: spaceDid ?? '*',
+            spaceDid: spaceDid ?? '*',
             skey: '*',
           },
           { action: 'read_self' },

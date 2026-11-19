@@ -318,7 +318,7 @@ describe('ScopePermissions', () => {
 
   describe('allowsSpace', () => {
     const set = new ScopePermissions(
-      'space:com.atmoboards.forum?authority=did:plc:owner&action=read',
+      'space:com.atmoboards.forum?spaceDid=did:plc:owner&action=read',
     )
 
     it('accepts a SpaceRef', () => {
@@ -334,7 +334,7 @@ describe('ScopePermissions', () => {
         set.allowsSpace(
           {
             spaceType: 'com.atmoboards.forum',
-            authority: 'did:plc:owner',
+            spaceDid: 'did:plc:owner',
             skey: '*',
           },
           { action: 'read' },
@@ -352,8 +352,8 @@ describe('ScopePermissions', () => {
 
     it('is satisfied by any one of several grants', () => {
       const set = new ScopePermissions([
-        'space:com.atmoboards.forum?authority=*&action=read',
-        'space:com.atmoboards.forum?authority=did:plc:owner&collection=com.atmoboards.thread&action=create',
+        'space:com.atmoboards.forum?spaceDid=*&action=read',
+        'space:com.atmoboards.forum?spaceDid=did:plc:owner&collection=com.atmoboards.thread&action=create',
       ])
       expect(set.allowsSpace(SPACE_REF, { action: 'read' })).toBe(true)
       expect(
@@ -374,7 +374,7 @@ describe('ScopePermissions', () => {
   describe('assertSpace', () => {
     it('passes when a grant covers the target', () => {
       const set = new ScopePermissions(
-        'space:com.atmoboards.forum?authority=did:plc:owner&action=read',
+        'space:com.atmoboards.forum?spaceDid=did:plc:owner&action=read',
       )
       expect(() => set.assertSpace(SPACE_REF, { action: 'read' })).not.toThrow()
     })
@@ -383,17 +383,17 @@ describe('ScopePermissions', () => {
       [
         'a SpaceRef',
         SPACE_REF,
-        'space:com.atmoboards.forum?authority=did:plc:owner&skey=default&action=read',
+        'space:com.atmoboards.forum?spaceDid=did:plc:owner&skey=default&action=read',
       ],
       [
         'a space ref string',
         SPACE_URI,
-        'space:com.atmoboards.forum?authority=did:plc:owner&skey=default&action=read',
+        'space:com.atmoboards.forum?spaceDid=did:plc:owner&skey=default&action=read',
       ],
       [
         'a wildcard match reference',
-        { spaceType: '*', authority: '*', skey: '*' },
-        'space:*?authority=*&action=read',
+        { spaceType: '*', spaceDid: '*', skey: '*' },
+        'space:*?spaceDid=*&action=read',
       ],
     ])(
       'throws ScopeMissingError naming the scope needed for %s',

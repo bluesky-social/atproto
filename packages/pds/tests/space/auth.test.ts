@@ -676,8 +676,8 @@ describe('space auth', () => {
   })
 
   describe('OAuth scopes', () => {
-    const grant = (params: string, authority = alice.did) =>
-      `atproto space:${TEST_SPACE_TYPE}?authority=${authority}&${params}`
+    const grant = (params: string, spaceDid = alice.did) =>
+      `atproto space:${TEST_SPACE_TYPE}?spaceDid=${spaceDid}&${params}`
 
     it('enforces the collection a grant names', async () => {
       const space = await sc.createSpace(alice)

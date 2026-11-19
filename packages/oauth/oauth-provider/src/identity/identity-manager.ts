@@ -86,9 +86,9 @@ function extractSpaceDids(scope?: string): Set<DidString> {
     if (!parsed) continue
 
     // Only include DID authorities
-    if (parsed.authority === '*' || parsed.authority === 'self') continue
+    if (parsed.spaceDid === '*' || parsed.spaceDid === 'self') continue
 
-    dids.add(parsed.authority)
+    dids.add(parsed.spaceDid)
   }
 
   return dids
