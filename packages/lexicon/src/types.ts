@@ -423,6 +423,10 @@ export const lexUserType = z.unknown().superRefine((val, ctx) => {
 
 export const lexiconDoc = z
   .object({
+    // Lexicon JSON documents carry "$type": "com.atproto.lexicon.schema";
+    // generated lexicons.ts files embed docs verbatim, so the type must
+    // allow it or the satisfies check against LexiconDoc fails.
+    $type: z.string().optional(),
     lexicon: z.literal(1),
     id: z.string().refine(isValidNsid, {
       message: 'Must be a valid NSID',

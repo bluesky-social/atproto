@@ -151,6 +151,23 @@ describe('General validation', () => {
       )
     }
   })
+  // https://github.com/bluesky-social/atproto/issues/5388
+  it('accepts the $type discriminator emitted by lexicon codegen', () => {
+    // Generated lexicons.ts files embed each doc's JSON verbatim, including
+    // "$type": "com.atproto.lexicon.schema" — the satisfies check against
+    // Record<string, LexiconDoc> fails if the type does not allow it.
+    const doc: LexiconDoc = {
+      $type: 'com.atproto.lexicon.schema',
+      lexicon: 1,
+      id: 'com.example.withType',
+      defs: {},
+    }
+
+    const parsed = lexiconDoc.parse(doc)
+
+    expect(parsed.$type).toBe('com.atproto.lexicon.schema')
+    expect(lexiconDoc.safeParse(doc).success).toBe(true)
+  })
   it('fails lexicon parsing when uri is invalid', () => {
     const schema: LexiconDoc = {
       lexicon: 1,
