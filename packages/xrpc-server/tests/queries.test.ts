@@ -1,6 +1,7 @@
 import { once } from 'node:events'
 import * as http from 'node:http'
 import type { AddressInfo } from 'node:net'
+import { Readable } from 'node:stream'
 import type { LexiconDoc } from '@atproto/lexicon'
 import { XrpcClient } from '@atproto/xrpc'
 import type * as xrpcServer from '../src/index.js'
@@ -258,6 +259,42 @@ for (const buildServer of [buildMethodLexicons, buildAddLexicons]) {
       await new Promise((r) => setTimeout(r, 50))
       expect(handlerSignal?.aborted).toBe(false)
       proceed.resolve()
+    })
+
+    test('destroys a returned stream when the client disconnects before the handler resolves', async () => {
+      const started = deferred<void>()
+      const streamReady = deferred<Readable>()
+      const server = await buildServer(LEXICONS, {
+        ...handlers,
+        'io.example.pingOne': async (ctx: xrpcServer.HandlerContext) => {
+          started.resolve()
+          // Wait until the disconnect is observed, like a handler that
+          // keeps working after the client goes away (eg. getBlob).
+          await new Promise<void>((resolve) =>
+            ctx.signal.aborted
+              ? resolve()
+              : ctx.signal.addEventListener('abort', () => resolve(), {
+                  once: true,
+                }),
+          )
+          const stream = new Readable({ read() {} })
+          streamReady.resolve(stream)
+          return { encoding: 'text/plain', body: stream }
+        },
+      })
+      await using localServer = await createServer(server)
+      const { port } = localServer.address() as AddressInfo
+      const request = http.get(
+        `http://localhost:${port}/xrpc/io.example.pingOne?message=hello`,
+      )
+      request.on('error', () => {})
+
+      await started.promise
+      request.destroy()
+
+      const stream = await streamReady.promise
+      await once(stream, 'close')
+      expect(stream.destroyed).toBe(true)
     })
   })
 }
