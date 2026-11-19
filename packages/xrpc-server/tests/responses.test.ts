@@ -18,6 +18,7 @@ const LEXICONS: LexiconDoc[] = [
           properties: {
             shouldErr: { type: 'boolean' },
             closeListeners: { type: 'integer' },
+            maxListeners: { type: 'integer' },
           },
         },
         output: {
@@ -37,10 +38,15 @@ describe('Responses', () => {
     for (let i = 0; i < Number(ctx.params.closeListeners ?? 0); i++) {
       ctx.res.on('close', () => {})
     }
+    if (ctx.params.maxListeners !== undefined) {
+      ctx.res.setMaxListeners(Number(ctx.params.maxListeners))
+    }
     ctx.res.on('newListener', (event) => {
+      const max = ctx.res.getMaxListeners()
       if (
         event === 'close' &&
-        ctx.res.listenerCount('close') >= ctx.res.getMaxListeners()
+        max > 0 &&
+        ctx.res.listenerCount('close') >= max
       ) {
         closeListenersExceeded = true
       }
@@ -86,6 +92,14 @@ describe('Responses', () => {
 
   it('streams without exceeding the listener limit', async () => {
     await client.call('io.example.readableStream', { closeListeners: 3 })
+    expect(closeListenersExceeded).toBe(false)
+  })
+
+  it('leaves an unlimited listener limit unlimited', async () => {
+    await client.call('io.example.readableStream', {
+      closeListeners: 3,
+      maxListeners: 0,
+    })
     expect(closeListenersExceeded).toBe(false)
   })
 })

@@ -786,9 +786,10 @@ export class Server {
   }
 }
 
-// pipeline() adds 7 'close' listeners to a ServerResponse.
+// pipeline() adds 7 'close' listeners to a ServerResponse. 0 means unlimited.
 function pipeToResponse(stream: Readable, res: ServerResponse) {
-  res.setMaxListeners(res.getMaxListeners() + 7)
+  const max = res.getMaxListeners()
+  if (max > 0) res.setMaxListeners(max + 7)
   return pipeline(stream, res)
 }
 
