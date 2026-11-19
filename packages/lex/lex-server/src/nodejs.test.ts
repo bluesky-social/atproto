@@ -6,6 +6,7 @@ import { type Server, serve } from './nodejs.js'
 describe('Node.js RequestListener', () => {
   let server: Server
   let address: string
+  let disconnectSignalAborted: boolean | undefined
 
   beforeAll(async () => {
     server = await serve(async (request) => {
@@ -22,6 +23,13 @@ describe('Node.js RequestListener', () => {
           status: 200,
           headers: { 'Content-Type': 'application/octet-stream' },
         })
+      } else if (pathname === '/signal') {
+        await request.text()
+        return Response.json({ aborted: request.signal.aborted })
+      } else if (pathname === '/signal-delay') {
+        await scheduler.wait(200)
+        disconnectSignalAborted = request.signal.aborted
+        return new Response('ok')
       }
       return new Response('Not Found', { status: 404 })
     })
@@ -102,5 +110,41 @@ describe('Node.js RequestListener', () => {
     const text = await res.text()
     expect(res.status).toBe(200)
     expect(text).toBe(body)
+  })
+
+  it('should not abort the request signal after a POST body is read', async () => {
+    const res = await fetch(new URL(`/signal`, address), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ hello: 'world' }),
+    })
+    expect(res.status).toBe(200)
+    await expect(res.json()).resolves.toEqual({ aborted: false })
+  })
+
+  it('should abort the request signal when the client disconnects', async () => {
+    disconnectSignalAborted = undefined
+
+    const controller = new AbortController()
+    const body = new ReadableStream({
+      start(streamController) {
+        streamController.enqueue(new TextEncoder().encode('partial'))
+      },
+    })
+
+    const request = fetch(new URL(`/signal-delay`, address), {
+      method: 'POST',
+      // @ts-expect-error
+      duplex: 'half',
+      body,
+      signal: controller.signal,
+    }).catch(() => undefined)
+
+    await scheduler.wait(50)
+    controller.abort()
+    await request
+    await scheduler.wait(300)
+
+    expect(disconnectSignalAborted).toBe(true)
   })
 })

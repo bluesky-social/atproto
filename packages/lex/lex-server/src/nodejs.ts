@@ -216,22 +216,33 @@ function toRequest(req: IncomingMessage): Request {
 }
 
 function requestSignal(req: IncomingMessage): AbortSignal {
-  if (req.destroyed) return AbortSignal.abort()
+  if (req.destroyed || req.socket.destroyed) return AbortSignal.abort()
 
   const abortController = new AbortController()
+  const socket = req.socket
 
   const abort = (err?: Error | WebSocket) => {
     abortController.abort(err instanceof Error ? err : undefined)
 
-    req.off('close', abort)
+    socket.off('close', abort)
+    req.off('close', onRequestClose)
     req.off('error', abort)
-    req.off('end', abort)
     req.off(kUpgradeEvent, abort)
   }
 
-  req.on('close', abort)
+  // `req` 'end' and 'close' also fire on normal request completion, so only an
+  // incomplete request closing indicates the client went away. A completed
+  // request's signal is governed by the socket instead, since keep-alive
+  // connections outlive individual requests.
+  const onRequestClose = () => {
+    if (!req.complete) {
+      abort()
+    }
+  }
+
+  socket.on('close', abort)
+  req.on('close', onRequestClose)
   req.on('error', abort)
-  req.on('end', abort)
   req.on(kUpgradeEvent, abort)
 
   return abortController.signal
