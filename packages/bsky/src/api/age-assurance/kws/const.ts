@@ -25,9 +25,15 @@ export const KWS_SUPPORTED_LANGUAGES = new Set([
 ])
 
 /**
- * Regions where our "version 2" using the `age-verified` KWS flow is
- * available. In these regions, we'll use a different KWS flow from the
- * existing `adult-verified` flow, pass along a different external payload, and
- * handle webhooks/redirects differently in the appview.
+ * KWS verification boundaries, with region-specific entries overriding country defaults.
  */
-export const KWS_V2_COUNTRIES = new Set(['AU'])
+export const KWS_AGE_VERIFICATION_CONFIG: Record<
+  string,
+  { ageBoundary: number } | undefined
+> = {
+  AU: { ageBoundary: 16 },
+  GB: { ageBoundary: 18 },
+  BR: { ageBoundary: 18 },
+  US: { ageBoundary: 18 },
+  'US-VA': { ageBoundary: 16 },
+}
