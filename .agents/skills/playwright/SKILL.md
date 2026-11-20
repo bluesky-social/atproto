@@ -101,7 +101,7 @@ The two browser test files are [`packages/pds/tests/oauth.test.ts`](../../../pac
 Both files share the `PageHelper` wrapper in [`packages/pds/tests/_puppeteer.ts`](../../../packages/pds/tests/_puppeteer.ts) — use it rather than raw puppeteer:
 
 - `goto(url)` / `reload()` — navigate.
-- `assertTitle(text)` — waits for network idle, then asserts `document.title`.
+- `assertTitle(text)` — waits for `document.title` to match without requiring network idle.
 - `clickOnText(text, tag = 'button')` / `clickOnAriaLabel(label, tag = 'button')` / `clickOn(selector)` — each waits for the element to be _visible_ first.
 - `typeInInput(name, text)` (targets `input[name="…"]`) / `typeIn(selector, text)` — both clear the field first and return the `ElementHandle`, so you can `press('Enter')` on it.
 - `ensureTextVisibility(text, tag = 'p', timeout = 5000)` / `ensureNotification(text)` (`tag = 'div'`).
