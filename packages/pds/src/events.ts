@@ -127,6 +127,15 @@ class EventReporter {
     },
   )
 
+  #spacesStatsDriftCounter = meter.createCounter(
+    'spaces_migration.stats_drift',
+    {
+      description:
+        'Writes after which the spaces migration stats were impossible',
+      valueType: ValueType.INT,
+    },
+  )
+
   /**
    * Fans a single event out to both the pino logger (stdout/stderr) and the
    * OTEL Logs SDK (structured record).
@@ -267,6 +276,10 @@ class EventReporter {
 
   spacesMigrationPlcBackoff() {
     this.#spacesPlcBackoffCounter.add(1)
+  }
+
+  spacesMigrationStatsDrift() {
+    this.#spacesStatsDriftCounter.add(1)
   }
 }
 

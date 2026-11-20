@@ -132,8 +132,6 @@ describe('server', () => {
   })
 
   it('healthcheck succeeds when database is available.', async () => {
-    // The health summary is cached; refresh so it reflects the seeded accounts
-    await network.pds.ctx.spacesMigration.summaryCache.refresh()
     const res = await fetch(`${network.pds.url}/xrpc/_health`)
     expect(res.status).toEqual(200)
     // Temporary spacesMigration field: removed with the spaces migration path

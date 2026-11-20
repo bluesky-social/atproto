@@ -87,8 +87,6 @@ export class SpacesMigrationPublisher implements AsyncDisposable {
     private readonly progress: SpacesMigrationProgress,
     private readonly opts: SpacesMigrationPublisherOptions = ctx.cfg
       .spacesMigration,
-    // Called after each recorded transition, e.g. to refresh the health summary
-    private readonly onRecorded: () => void = () => {},
   ) {
     this.owner = opts.owner ?? randomUUID()
     this.pollIntervalMs = opts.pollIntervalMs ?? MINUTE
@@ -238,7 +236,6 @@ export class SpacesMigrationPublisher implements AsyncDisposable {
         log.info({ did, step: 'publish', reason }, 'kem key is unpublishable')
       }
       this.plcBackoffs = 0
-      this.onRecorded()
     } catch (err) {
       if (err instanceof LeaseLostError) {
         log.warn({ did }, 'lost the spaces migration lease, skipping')
@@ -269,7 +266,6 @@ export class SpacesMigrationPublisher implements AsyncDisposable {
           { err, did, step: 'publish', attempt: attempts + 1 },
           'failed to publish kem key',
         )
-        this.onRecorded()
       }
     }
   }

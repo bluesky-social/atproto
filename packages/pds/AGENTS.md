@@ -22,9 +22,9 @@ transaction, such as `PRAGMA journal_mode` or `VACUUM`.
 ## Spaces migration path is temporary
 
 Migrating accounts to spaces readiness (publisher, sweep, progress table use,
-`internal.pds.*` endpoints, `spacesMigration` health field) is removed once the
-fleet completes; only the progress table stays, per additive-only. While it
-exists:
+the `internal.pds.*` endpoints but `reserveKemKey`, `spacesMigration` health
+field) is removed once the fleet completes; only its tables stay, per
+additive-only. `reserveKemKey` stays for entryway signups. While it exists:
 
 - A KEM key file is written (no-clobber, fsynced) before it is ever published,
   and a KEM key beside an existing actor store is never overwritten: a DID
@@ -38,10 +38,14 @@ exists:
   stores, so the publisher must never run where the sweep doesn't.
 - A deactivated account's row is parked (`nextAttemptAt` null) and only
   `AccountManager.activateAccount` unparks it, in the activation's transaction.
+- Claims scan one priority at a time so that `nextAttemptAt` bounds the index
+  scan; a claim that visits parked or backing-off rows is a regression.
 - `PDS_SPACES_MIGRATION=complete` lets code assume every held KEM key is
   published, instead of reading the progress table or PLC. Any such shortcut
   must be safe when set wrongly: it may refuse a request, never corrupt data.
-  Claims scan one priority at a time so that `nextAttemptAt` bounds the index
-  scan; a claim that visits parked or backing-off rows is a regression.
-- SQLite queries block the event loop. A recurring query over every row (the
-  health summary) runs in keyset chunks, yielding between them.
+- `spaces_migration_stats` is kept up to date by every write that can change a
+  counter: such writes go through `trackStats()`, in the same transaction.
+  Only lease columns may be written around it. Drifted stats are reported,
+  never enforced, and only corrected by `internal.pds.recountSpacesMigration`.
+  Nothing scans the progress table on a schedule: sqlite queries block the
+  event loop.
