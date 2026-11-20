@@ -412,6 +412,7 @@
     "tools.ozone.report.getLatestReport",
     "tools.ozone.report.getLiveStats",
     "tools.ozone.report.getReport",
+    "tools.ozone.report.getStatGroupDetails",
     "tools.ozone.report.listActivities",
     "tools.ozone.report.queryActivities",
     "tools.ozone.report.queryModeratorActivity",
@@ -2046,6 +2047,10 @@
     "tools.ozone.report.getReport": {
       "uri": "file://../../lexicons/tools/ozone/report/getReport.json",
       "cid": "bafyreidj4ypkkit6t5gxr7nxxnlhy4agrgblxlr2kwezs4too6vmazpygi"
+    },
+    "tools.ozone.report.getStatGroupDetails": {
+      "uri": "file://../../lexicons/tools/ozone/report/getStatGroupDetails.json",
+      "cid": "bafyreicdol3rhz6r6vmof6wgb4og5ni35adf22i2ocybzohtjgbxzcxtw4"
     },
     "tools.ozone.report.listActivities": {
       "uri": "file://../../lexicons/tools/ozone/report/listActivities.json",
