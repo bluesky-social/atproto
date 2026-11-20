@@ -329,10 +329,10 @@ const loadKemKey = async (
 // Appears whole or not at all (tmp + link), and never replaces an existing
 // file: on conflict the winner's key is returned. `rename` is deliberately
 // not used since it would overwrite.
-const writeKemKeyNoClobber = async (
+const writeKemKeyNoClobber = async <K extends ExportableKeypair>(
   loc: string,
-  keypair: ExportableKeypair,
-): Promise<crypto.P256Keypair> => {
+  keypair: K,
+): Promise<K | crypto.P256Keypair> => {
   const tmp = `${loc}.${randomUUID()}.tmp`
   try {
     const handle = await fs.open(tmp, 'wx')
@@ -357,9 +357,7 @@ const writeKemKeyNoClobber = async (
     } finally {
       await dirHandle.close()
     }
-    return crypto.P256Keypair.import(await keypair.export(), {
-      exportable: true,
-    })
+    return keypair
   } finally {
     await rmIfExists(tmp)
   }
