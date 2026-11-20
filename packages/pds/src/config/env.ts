@@ -161,7 +161,7 @@ export function readEnv() {
     lexiconDidAuthority: envStr('PDS_LEXICON_AUTHORITY_DID'),
 
     // spaces migration
-    spacesMigrationDisabled: envBool('PDS_SPACES_MIGRATION_DISABLED'),
+    spacesMigration: envStr('PDS_SPACES_MIGRATION'),
     spacesMigrationPublishIntervalMs: envInt(
       'PDS_SPACES_MIGRATION_PUBLISH_INTERVAL_MS',
     ),

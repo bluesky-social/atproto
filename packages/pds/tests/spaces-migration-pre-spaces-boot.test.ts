@@ -101,7 +101,7 @@ describe('booting on a pre-spaces data directory', () => {
     // spaces release added is reverted, as the release before it left them
     const before = await TestPds.create({
       ...env,
-      spacesMigrationDisabled: true,
+      spacesMigration: 'disabled',
     })
     const dids: DidString[] = []
     for (let n = 0; n < 2; n++) {

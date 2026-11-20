@@ -8,6 +8,7 @@ import {
   type DidString,
   type HandleString,
   currentDatetimeString,
+  toDatetimeString,
 } from '@atproto/syntax'
 import type { AccountDb } from '../src/account-manager/db/index.js'
 import type { AppContext } from '../src/context.js'
@@ -29,7 +30,7 @@ describe('spaces migration publisher', () => {
     pds = await TestPds.create({
       didPlcUrl: plcServer.url,
       // Only the publishers under test may publish
-      spacesMigrationDisabled: true,
+      spacesMigration: 'disabled',
     })
     ctx = pds.ctx as unknown as AppContext
     db = ctx.accountManager.db
@@ -45,7 +46,7 @@ describe('spaces migration publisher', () => {
     // Each test sees only its own unpublished accounts: park the others
     await db.db
       .updateTable('spaces_migration')
-      .set({ nextAttemptAt: Number.MAX_SAFE_INTEGER, priority: 0 })
+      .set({ nextAttemptAt: null, priority: 0 })
       .where('kemPublishedAt', 'is', null)
       .execute()
     await db.db.deleteFrom('spaces_migration_state').execute()
@@ -53,7 +54,7 @@ describe('spaces migration publisher', () => {
 
   const publisher = (opts: Partial<SpacesMigrationPublisherOptions> = {}) => {
     const publisher = new SpacesMigrationPublisher(ctx, progress, {
-      disabled: false,
+      state: 'enabled',
       publishIntervalMs: 0,
       jitterWindowMs: 0,
       ...opts,
@@ -77,6 +78,10 @@ describe('spaces migration publisher', () => {
       .where('did', '=', did as DidString)
       .executeTakeFirst()
   }
+
+  // A datetime at or before now; null is parked, never due
+  const isDue = (at: string | null | undefined) =>
+    typeof at === 'string' && at <= currentDatetimeString()
 
   const isPublished = async (did: string) =>
     (await row(did))?.kemPublishedAt != null
@@ -333,7 +338,7 @@ describe('spaces migration publisher', () => {
     // Retry now rather than after the backoff
     await db.db
       .updateTable('spaces_migration')
-      .set({ nextAttemptAt: 0 })
+      .set({ nextAttemptAt: currentDatetimeString() })
       .where('did', '=', did)
       .execute()
     await using _publisher = publisher()
@@ -359,10 +364,11 @@ describe('spaces migration publisher', () => {
     expect(await row(did)).toMatchObject({
       attempts: 0,
       lastError: null,
-      nextAttemptAt: 0,
       leaseOwner: null,
       kemPublishedAt: null,
     })
+    // Not the account's fault: still due
+    expect(isDue((await row(did))?.nextAttemptAt)).toBe(true)
     // Still backing off: the account isn't retried right away
     await wait(200)
     expect(updateData).toHaveBeenCalledTimes(1)
@@ -412,7 +418,9 @@ describe('spaces migration publisher', () => {
 
     const failed = await row(did)
     expect(failed?.lastError).toContain('Bad op')
-    expect(failed?.nextAttemptAt).toBeGreaterThan(Date.now() + 30_000)
+    expect(Date.parse(failed?.nextAttemptAt ?? '')).toBeGreaterThan(
+      Date.now() + 30_000,
+    )
     expect(failed?.leaseOwner).toBeNull()
     expect(pub.state).not.toBe('backoff')
   })
@@ -537,8 +545,9 @@ describe('spaces migration publisher', () => {
     await waitFor(async () => pub.state === 'idle')
     using setTimeoutSpy = jest.spyOn(globalThis, 'setTimeout')
     await pub.destroy()
-    // Runs alongside the sweep's, so both fit Docker's default grace
-    expect(setTimeoutSpy.mock.calls.map(([, ms]) => ms)).toContain(5_000)
+    // Runs after or before the other worker's, so both fit Docker's default
+    // grace with room for the rest of shutdown
+    expect(setTimeoutSpy.mock.calls.map(([, ms]) => ms)).toContain(3_000)
   })
 
   it('stops promptly even with a step stuck', async () => {
@@ -594,7 +603,10 @@ describe('spaces migration publisher', () => {
         // Another process takes the row, e.g. after this one stalled
         await db.db
           .updateTable('spaces_migration')
-          .set({ leaseOwner: 'other', leaseExpiresAt: Date.now() + HOUR })
+          .set({
+            leaseOwner: 'other',
+            leaseExpiresAt: toDatetimeString(Date.now() + HOUR),
+          })
           .where('did', '=', did as DidString)
           .execute()
         return op
@@ -661,7 +673,7 @@ describe('spaces migration publisher', () => {
     expect(await publishedKem(did)).toBe(await kemDid(did))
   })
 
-  it('does not claim deactivated accounts', async () => {
+  it('parks deactivated accounts until they are activated', async () => {
     const did = await createPreSpacesAccount()
     await ctx.accountManager.deactivateAccount(did)
     using updateData = jest.spyOn(ctx.plcClient, 'updateData')
@@ -674,7 +686,27 @@ describe('spaces migration publisher', () => {
       attempts: 0,
       kemPublishedAt: null,
       leaseOwner: null,
+      nextAttemptAt: null,
     })
+
+    await ctx.accountManager.activateAccount(did)
+    expect(isDue((await row(did))?.nextAttemptAt)).toBe(true)
+  })
+
+  it('does not pace parking', async () => {
+    const dids = [
+      await createPreSpacesAccount(),
+      await createPreSpacesAccount(),
+    ]
+    for (const did of dids) await ctx.accountManager.deactivateAccount(did)
+
+    // Paced, the second would wait an hour behind the first
+    await using pub = publisher({ publishIntervalMs: HOUR })
+    await waitFor(async () => {
+      const rows = await Promise.all(dids.map(row))
+      return rows.every((r) => r?.nextAttemptAt === null)
+    })
+    expect(pub.state).not.toBe('backoff')
   })
 
   it('leaves seeding to the sweep', async () => {
@@ -687,7 +719,7 @@ describe('spaces migration publisher', () => {
 
   it('stays out of the way when disabled', async () => {
     const did = await createPreSpacesAccount()
-    await using pub = publisher({ disabled: true })
+    await using pub = publisher({ state: 'disabled' })
     await wait(100)
     expect(pub.state).toBe('disabled')
     expect(await isPublished(did)).toBe(false)

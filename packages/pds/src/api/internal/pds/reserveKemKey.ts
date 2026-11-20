@@ -3,10 +3,11 @@ import type { AppContext } from '../../../context.js'
 import { internal } from '../../../lexicons/index.js'
 
 export default function (server: Server, ctx: AppContext) {
-  // Authed like com.atproto.server.reserveSigningKey behind an entryway, the
-  // only place this is registered
+  // Authed like the other internal.pds endpoints. Unlike
+  // com.atproto.server.reserveSigningKey it is never public: each call writes
+  // a key to disk.
   server.add(internal.pds.reserveKemKey, {
-    auth: ctx.authVerifier.entrywayServiceOptional,
+    auth: ctx.authVerifier.adminTokenOrEntrywayService,
     handler: async ({ input }) => {
       const kemKey = await ctx.actorStore.reserveKemKeypair(input.body.did)
       return {

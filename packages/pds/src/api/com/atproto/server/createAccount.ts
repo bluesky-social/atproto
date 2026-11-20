@@ -248,7 +248,8 @@ const validateInputsForEntrywayPds = async (
     // the entryway publishes later
     kemKey: kemKey ?? (await P256Keypair.create({ exportable: true })),
     plcOp,
-    kemPublished: kemKey !== undefined,
+    // In the genesis op, which is sent to PLC before the account is recorded
+    kemPublished: opKemKey !== undefined,
     deactivated: false,
   }
 }

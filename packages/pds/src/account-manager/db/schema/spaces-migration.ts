@@ -9,21 +9,21 @@ export interface SpacesMigration {
   unpublishableReason: string | null
   attempts: Generated<number>
   lastError: string | null
-  nextAttemptAt: Generated<number>
+  nextAttemptAt: Generated<DatetimeString | null>
   priority: Generated<number>
   leaseOwner: string | null
-  leaseExpiresAt: Generated<number>
+  leaseExpiresAt: DatetimeString | null
   sweepLeaseOwner: string | null
-  sweepLeaseExpiresAt: Generated<number>
+  sweepLeaseExpiresAt: DatetimeString | null
   sweepAttempts: Generated<number>
   sweepLastError: string | null
-  sweepNextAttemptAt: Generated<number>
+  sweepNextAttemptAt: Generated<DatetimeString>
 }
 
 // A single row, id = 1
 export interface SpacesMigrationState {
   id: number
-  publishStartAt: number
+  publishStartAt: DatetimeString
 }
 
 export const tableName = 'spaces_migration'
