@@ -204,6 +204,14 @@ describe('entryway service auth', () => {
         { headers, encoding: 'application/json' },
       )
 
+  const reserveKemKey = (target: TestPds, headers: Headers) =>
+    target
+      .getAgent()
+      .com.atproto.server.reserveKemKey(
+        {},
+        { headers, encoding: 'application/json' },
+      )
+
   const takedownRef = async (target: TestPds, did: DidString) => {
     const account = await target.ctx.accountManager.getAccount(did, {
       includeTakenDown: true,
@@ -240,6 +248,10 @@ describe('entryway service auth', () => {
     {
       lxm: com.atproto.server.reserveSigningKey.$lxm,
       call: (target, headers) => reserveSigningKey(target, headers),
+    },
+    {
+      lxm: com.atproto.server.reserveKemKey.$lxm,
+      call: (target, headers) => reserveKemKey(target, headers),
     },
     {
       lxm: com.atproto.server.createAccount.$lxm,

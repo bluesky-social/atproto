@@ -141,6 +141,7 @@
     "com.atproto.server.requestEmailConfirmation",
     "com.atproto.server.requestEmailUpdate",
     "com.atproto.server.requestPasswordReset",
+    "com.atproto.server.reserveKemKey",
     "com.atproto.server.reserveSigningKey",
     "com.atproto.server.resetPassword",
     "com.atproto.server.revokeAppPassword",
@@ -827,6 +828,10 @@
     "com.atproto.server.requestPasswordReset": {
       "uri": "file://../../lexicons/com/atproto/server/requestPasswordReset.json",
       "cid": "bafyreibs4jk6ndisvztiqprofgm24rluzkotwqbzbqn6i26upcaxa4xr2y"
+    },
+    "com.atproto.server.reserveKemKey": {
+      "uri": "file://../../lexicons/com/atproto/server/reserveKemKey.json",
+      "cid": "bafyreifctrk262us4lkvxycv4o7onigvuqarup5ulcwf5qlwkwzudroehy"
     },
     "com.atproto.server.reserveSigningKey": {
       "uri": "file://../../lexicons/com/atproto/server/reserveSigningKey.json",

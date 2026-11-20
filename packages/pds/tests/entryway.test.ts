@@ -3,10 +3,11 @@ import * as plcLib from '@did-plc/lib'
 import getPort from 'get-port'
 import { request } from 'undici'
 import { AtpAgent } from '@atproto/api'
-import { Secp256k1Keypair } from '@atproto/crypto'
+import { P256Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import { SeedClient, TestPds, TestPlc, mockResolvers } from '@atproto/dev-env'
 import { isDidString } from '@atproto/lex'
 import type { DidString, HandleString } from '@atproto/syntax'
+import { createPlcOp } from '../src/util/plc.js'
 import { MockEntryway } from './entryway-mock.js'
 
 describe('entryway', () => {
@@ -76,6 +77,16 @@ describe('entryway', () => {
     const account = await pds.ctx.accountManager.getAccount(alice)
     expect(account?.did).toEqual(alice)
     expect(account?.handle).toEqual('alice.test')
+  })
+
+  it('publishes the reserved KEM key.', async () => {
+    const kemKey = await pds.ctx.actorStore.kemKeypair(alice)
+    assert(kemKey)
+    const data = await pds.ctx.plcClient.getDocumentData(alice)
+    expect(data.verificationMethods['atproto_kem']).toEqual(kemKey.did())
+    await expect(
+      pds.ctx.actorStore.getReservedKemKeypair(kemKey.did()),
+    ).resolves.toBeUndefined()
   })
 
   it('auths with both services.', async () => {
@@ -204,5 +215,28 @@ describe('entryway', () => {
       handle: 'weirdalice.test',
     })
     await expect(tryCreateAccount).rejects.toThrow('invalid plc operation')
+  })
+
+  it('rejects a KEM key that the pds did not reserve.', async () => {
+    const {
+      data: { signingKey },
+    } = await pdsAgent.api.com.atproto.server.reserveSigningKey({})
+    const kemKey = await P256Keypair.create()
+    const plcCreate = await createPlcOp({
+      signingKey,
+      kemKey: kemKey.did(),
+      rotationKeys: [entryway.plcRotationKey.did()],
+      handle: 'unreserved-kem.test',
+      pds: pds.ctx.cfg.service.publicUrl,
+      signer: entryway.plcRotationKey,
+    })
+    const tryCreateAccount = pdsAgent.api.com.atproto.server.createAccount({
+      did: plcCreate.did,
+      plcOp: plcCreate.op,
+      handle: 'unreserved-kem.test',
+    })
+    await expect(tryCreateAccount).rejects.toThrow(
+      'reserved KEM key does not exist',
+    )
   })
 })

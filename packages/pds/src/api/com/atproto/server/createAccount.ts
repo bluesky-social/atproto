@@ -111,13 +111,21 @@ export default function (server: Server, ctx: AppContext) {
 
             try {
               await ctx.actorStore
-                .clearReservedKeypair(signingKey.did(), did)
+                .clearReservedKeys(did, {
+                  signingKey: signingKey.did(),
+                  kemKey: kemKey.did(),
+                })
                 .catch((err) => {
                   // @NOTE This is a cleanup operation so we won't fail the whole
                   // flow if it fails, but we log it just in case
                   req.log.error(
-                    { did, signingKeyDid: signingKey.did(), err },
-                    'Failed to clear reserved keypair',
+                    {
+                      did,
+                      signingKeyDid: signingKey.did(),
+                      kemKeyDid: kemKey.did(),
+                      err,
+                    },
+                    'Failed to clear reserved keys',
                   )
                 })
 
@@ -198,10 +206,10 @@ const validateInputsForEntrywayPds = async (
 
   let signingKey: ExportableKeypair | undefined
   if (input.did) {
-    signingKey = await ctx.actorStore.getReservedKeypair(input.did)
+    signingKey = await ctx.actorStore.getReservedSigningKeypair(input.did)
   }
   if (!signingKey) {
-    signingKey = await ctx.actorStore.getReservedKeypair(data.signingKey)
+    signingKey = await ctx.actorStore.getReservedSigningKeypair(data.signingKey)
   }
   if (!signingKey) {
     throw new InvalidRequestError('reserved signing key does not exist')
@@ -213,8 +221,7 @@ const validateInputsForEntrywayPds = async (
     signingKey: signingKey.did(),
   })
 
-  // @TODO the entryway formats the PLC op, so this key is not yet published
-  const kemKey = await P256Keypair.create({ exportable: true })
+  const kemKey = await getReservedKemKey(ctx, did, plcOp)
 
   return {
     did,
@@ -227,6 +234,32 @@ const validateInputsForEntrywayPds = async (
     plcOp,
     deactivated: false,
   }
+}
+
+const getReservedKemKey = async (
+  ctx: AppContext,
+  did: string,
+  plcOp: plc.Operation,
+): Promise<ExportableKeypair> => {
+  const publishedKemKey = plcOp.verificationMethods['atproto_kem']
+  if (!publishedKemKey) {
+    // @TODO require atproto_kem once the entryway reserves KEM keys. Until then
+    // the key is generated here and left unpublished.
+    return P256Keypair.create({ exportable: true })
+  }
+  const kemKey =
+    (await ctx.actorStore.getReservedKemKeypair(did)) ??
+    (await ctx.actorStore.getReservedKemKeypair(publishedKemKey))
+  if (!kemKey) {
+    throw new InvalidRequestError('reserved KEM key does not exist')
+  }
+  if (kemKey.did() !== publishedKemKey) {
+    throw new InvalidRequestError(
+      'DID document KEM key does not match service KEM key',
+      'IncompatibleDidDoc',
+    )
+  }
+  return kemKey
 }
 
 const validateInputsForLocalPds = async (
