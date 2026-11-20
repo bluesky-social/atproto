@@ -1,3 +1,10 @@
+/**
+ * Base64 encode the given string.
+ * Return as a string: 'Basic admin:${string}'.
+ *
+ * @param {string} password Password string
+ * @returns {string} base64 encoded, prefixed with 'Basic admin:'
+ */
 export const formatAdminAuthHeader = (password: string) => {
   return 'Basic ' + Buffer.from(`admin:${password}`).toString('base64')
 }
