@@ -1,7 +1,14 @@
 import { describe, expect, it, vi } from 'vitest'
-import { IssueCustom, ValidationContext } from '../core.js'
+import {
+  type DatetimeString,
+  IssueCustom,
+  type Schema,
+  ValidationContext,
+} from '../core.js'
 import { boolean } from './boolean.js'
 import { integer } from './integer.js'
+import { nullable } from './nullable.js'
+import { object } from './object.js'
 import { OptionalSchema, optional } from './optional.js'
 import { string } from './string.js'
 import { withDefault } from './with-default.js'
@@ -244,15 +251,18 @@ describe('OptionalSchema', () => {
   })
 
   describe('inner schema with invalid default value', () => {
-    const schema = optional(string({ default: 'bad', minLength: 5 }))
+    const schema = optional(withDefault(string({ minLength: 5 }), 'bad'))
 
-    it('returns undefined when default value violates constraints', () => {
-      const result = schema.safeParse(undefined)
-      expect(result.success).toBe(true)
-      if (result.success) {
-        expect(result.value).toBe(undefined)
-      }
-    })
+    it.each([true, false])(
+      'returns undefined when default value violates constraints (strict: %s)',
+      (strict) => {
+        const result = schema.safeParse(undefined, { strict })
+        expect(result.success).toBe(true)
+        if (result.success) {
+          expect(result.value).toBe(undefined)
+        }
+      },
+    )
 
     it('still validates conforming explicit values', () => {
       const result = schema.safeParse('valid')
@@ -338,7 +348,7 @@ describe('OptionalSchema', () => {
 
     it('runs a rejecting inner schema once per strict option', () => {
       const inner = string()
-      const spy = vi.spyOn(inner, 'validateInContext')
+      using spy = vi.spyOn(inner, 'validateInContext')
       const schema = new OptionalSchema(inner)
 
       for (const strict of [true, false, true, false]) {
@@ -348,9 +358,24 @@ describe('OptionalSchema', () => {
       expect(spy).toHaveBeenCalledTimes(2)
     })
 
+    it('runs an inner schema that accepts undefined as-is once per strict option', () => {
+      const inner = optional(string())
+      using spy = vi.spyOn(inner, 'validateInContext')
+      const schema = new OptionalSchema(inner)
+
+      for (const strict of [true, false, true, false]) {
+        expect(schema.safeParse(undefined, { strict })).toEqual({
+          success: true,
+          value: undefined,
+        })
+      }
+
+      expect(spy).toHaveBeenCalledTimes(2)
+    })
+
     it('still runs the inner schema on defined values', () => {
       const inner = string()
-      const spy = vi.spyOn(inner, 'validateInContext')
+      using spy = vi.spyOn(inner, 'validateInContext')
       const schema = new OptionalSchema(inner)
 
       schema.parse(undefined)
@@ -372,6 +397,116 @@ describe('OptionalSchema', () => {
       expect(ctx.validate(undefined, schema).success).toBe(false)
 
       expect(schema.parse(undefined)).toBe('default')
+    })
+  })
+
+  describe('defaults in parse mode', () => {
+    describe.each([
+      ['false', withDefault(boolean(), false), false],
+      ['0', withDefault(integer(), 0), 0],
+      ['empty string', withDefault(string(), ''), ''],
+      ['null', withDefault(nullable(string()), null), null],
+    ] as [name: string, inner: Schema, expected: unknown][])(
+      'falsy default (%s)',
+      (_, inner, expected) => {
+        it.each([true, false])('is applied (strict: %s)', (strict) => {
+          const schema = new OptionalSchema(inner)
+          expect(schema.parse(undefined, { strict })).toBe(expected)
+          expect(schema.parse(undefined, { strict })).toBe(expected)
+        })
+      },
+    )
+
+    describe('default only valid in non-strict mode', () => {
+      // Not a valid DatetimeString, but accepted by isDatetimeStringLenient()
+      const lenientDatetime = '1985-04-12T23:20:50' as DatetimeString
+      const makeSchema = () =>
+        new OptionalSchema(
+          withDefault(string({ format: 'datetime' }), lenientDatetime),
+        )
+
+      it.each([
+        [true, false],
+        [false, true],
+      ])(
+        'is applied only when strict is false (strict: %s first)',
+        (first, second) => {
+          const schema = makeSchema()
+
+          for (const strict of [first, second, first, second]) {
+            expect(schema.parse(undefined, { strict })).toBe(
+              strict ? undefined : lenientDatetime,
+            )
+          }
+        },
+      )
+    })
+
+    it('is applied through nested optionals', () => {
+      const schema = optional(optional(withDefault(integer(), 0)))
+
+      for (const strict of [true, false]) {
+        expect(schema.parse(undefined, { strict })).toBe(0)
+      }
+    })
+
+    it.each([true, false])(
+      'is applied to absent object properties (strict: %s)',
+      (strict) => {
+        const schema = object({
+          count: optional(withDefault(integer(), 0)),
+          flag: optional(withDefault(boolean(), false)),
+          name: optional(string()),
+        })
+
+        expect(schema.parse({}, { strict })).toStrictEqual({
+          count: 0,
+          flag: false,
+        })
+        expect(schema.parse({ name: 'x' }, { strict })).toStrictEqual({
+          count: 0,
+          flag: false,
+          name: 'x',
+        })
+      },
+    )
+  })
+
+  describe('validate mode', () => {
+    it.each([true, false])('does not apply defaults (strict: %s)', (strict) => {
+      const schema = new OptionalSchema(withDefault(integer(), 42))
+
+      expect(schema.validate(undefined, { strict })).toBe(undefined)
+      // Parse mode must not be affected by a previous validate-mode call
+      expect(schema.parse(undefined, { strict })).toBe(42)
+      expect(schema.validate(undefined, { strict })).toBe(undefined)
+    })
+
+    it('does not run the inner schema on undefined', () => {
+      const inner = withDefault(integer(), 42)
+      using spy = vi.spyOn(inner, 'validateInContext')
+      const schema = new OptionalSchema(inner)
+
+      for (const strict of [true, false]) {
+        expect(schema.matches(undefined, { strict })).toBe(true)
+      }
+
+      expect(spy).not.toHaveBeenCalled()
+    })
+
+    it('validates defined values against the inner schema', () => {
+      const schema = optional(withDefault(integer(), 42))
+
+      expect(schema.validate(7)).toBe(7)
+      expect(schema.safeValidate('7').success).toBe(false)
+    })
+
+    it('leaves absent object properties absent', () => {
+      const schema = object({ count: optional(withDefault(integer(), 0)) })
+      const input = {}
+
+      expect(schema.validate(input)).toBe(input)
+      expect(input).toStrictEqual({})
     })
   })
 

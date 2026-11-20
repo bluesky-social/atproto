@@ -35,14 +35,6 @@ export class OptionalSchema<TValidator extends Validator> extends Schema<
   readonly type = 'optional' as const
   readonly validator: TValidator
 
-  /**
-   * Whether the inner validator accepts `undefined` in "parse" mode, with
-   * `strict: true` and `strict: false` respectively. Computed on first use by
-   * {@link parsesUndefined}.
-   */
-  private strictParsesUndefined?: boolean
-  private lenientParsesUndefined?: boolean
-
   constructor(validator: TValidator) {
     super()
     this.validator = validator
@@ -56,50 +48,49 @@ export class OptionalSchema<TValidator extends Validator> extends Schema<
       return ctx.validate(input, this.validator)
     }
 
-    // Optimization: No need to apply child schema defaults in validation mode
-    if (ctx.options.mode === 'validate') {
-      return ctx.success(input)
-    }
-
-    // Optimization: Most inner validators reject undefined. Running them anyway
-    // builds a LexValidationError that is immediately discarded, which adds up
-    // when parsing payloads with many absent optional properties.
-    if (!this.parsesUndefined(ctx.options.strict)) {
-      return ctx.success(input)
-    }
-
-    // @NOTE The inner schema might apply a default value so we need to run it
-    // even if input is undefined.
-    const result = ctx.validate(input, this.validator)
-
-    if (result.success) {
-      return result
+    // @NOTE In parse mode, the inner validator might replace undefined with a
+    // default value, so it needs to run.
+    if (ctx.options.mode === 'parse') {
+      // Optimization: Most inner validators either reject undefined (building a
+      // LexValidationError that is immediately discarded) or return it as-is.
+      // Skipping them adds up when parsing payloads with many absent optional
+      // properties.
+      if (this.appliesDefault(ctx.options.strict)) {
+        const result = ctx.validate(input, this.validator)
+        if (result.success) return result
+      }
     }
 
     return ctx.success(input)
   }
 
+  #strictAppliesDefault?: boolean
+  #lenientAppliesDefault?: boolean
+
   /**
-   * Validators are stateless, so whether the inner validator accepts
-   * `undefined` only depends on the options, and is only computed once per
-   * value of the `strict` option. It is computed in a fresh context, so that
-   * issues already collected by the context being validated can't affect it.
+   * Whether the inner validator replaces `undefined` with a value (eg. applies
+   * a default) in "parse" mode. Validators are stateless, so this only depends
+   * on the `strict` option, and is computed once per value of that option. It
+   * is computed in a fresh context, so that issues already collected by the
+   * context being validated can't affect it.
    */
-  private parsesUndefined(strict: boolean): boolean {
+  private appliesDefault(strict: boolean): boolean {
     const known = strict
-      ? this.strictParsesUndefined
-      : this.lenientParsesUndefined
+      ? this.#strictAppliesDefault
+      : this.#lenientAppliesDefault
     if (known !== undefined) return known
 
-    const { success } = ValidationContext.validate(undefined, this.validator, {
+    const result = ValidationContext.validate(undefined, this.validator, {
       mode: 'parse',
       strict,
     })
 
-    if (strict) this.strictParsesUndefined = success
-    else this.lenientParsesUndefined = success
+    const appliesDefault = result.success && result.value !== undefined
 
-    return success
+    if (strict) this.#strictAppliesDefault = appliesDefault
+    else this.#lenientAppliesDefault = appliesDefault
+
+    return appliesDefault
   }
 }
 
