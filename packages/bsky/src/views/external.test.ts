@@ -285,6 +285,38 @@ describe('record modality views', () => {
     expect(view.likers).toBeUndefined()
   })
 
+  test.each([
+    { url: 'https://pckt.blog', providerId: 'pckt.blog' },
+    { url: 'https://author.pckt.blog', providerId: 'pckt.blog' },
+    { url: 'https://Author.Leaflet.Pub', providerId: 'leaflet.pub' },
+    { url: 'https://offprint.app/publication', providerId: 'offprint.app' },
+    { url: 'https://custom.example.com', providerId: undefined },
+    { url: 'https://leaflet.pub.evil.com', providerId: undefined },
+    { url: 'https://notpckt.blog', providerId: undefined },
+  ])('attributes Standard.site views from $url', ({ url, providerId }) => {
+    const state = createState()
+    addPublication(state)
+    state.externalRecords.get(pubUri)!.record.url = url
+    addArticle(state)
+
+    const publication = views.externalRecordView(pubUri, state)
+    assert(publication)
+    assertValid(publication)
+    expect(publication.providerId).toBe(providerId)
+
+    const article = views.externalRecordView(docUri, state)
+    assert(article && app.bsky.embed.external.viewArticle.$isTypeOf(article))
+    assertValid(article)
+    expect(article.providerId).toBe(providerId)
+    expect(article.publisher?.providerId).toBe(providerId)
+
+    addArticle(state, url)
+    const looseArticle = views.externalRecordView(docUri, state)
+    assert(looseArticle)
+    assertValid(looseArticle)
+    expect(looseArticle.providerId).toBe(providerId)
+  })
+
   it('checks only the supplied record, never the latest map entry', () => {
     const state = createState()
     addGallery(state)
@@ -409,6 +441,7 @@ describe('record modality views', () => {
     assert(view && app.bsky.embed.external.viewGallery.$isTypeOf(view))
     assertValid(view)
     expect(view.uri).toBe(`https://grain.social/profile/${did}/gallery/gallery`)
+    expect(view.providerId).toBe('grain.social')
     expect(view.description).toBe('')
     expect(
       view.items
@@ -590,6 +623,7 @@ describe('record modality views', () => {
       const view = streamView(fields)
       assert(view && app.bsky.embed.external.viewLivestream.$isTypeOf(view))
       assertValid(view)
+      expect(view.providerId).toBe('stream.place')
       return view.active
     }
 
