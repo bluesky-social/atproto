@@ -12,7 +12,10 @@ import {
 } from '@atproto/syntax'
 import type { AccountDb } from '../src/account-manager/db/index.js'
 import type { AppContext } from '../src/context.js'
-import { SpacesMigrationProgress } from '../src/spaces-migration/progress.js'
+import {
+  SpacesMigrationProgress,
+  trackStats,
+} from '../src/spaces-migration/progress.js'
 import {
   SpacesMigrationPublisher,
   type SpacesMigrationPublisherOptions,
@@ -44,11 +47,20 @@ describe('spaces migration publisher', () => {
 
   beforeEach(async () => {
     // Each test sees only its own unpublished accounts: park the others
-    await db.db
-      .updateTable('spaces_migration')
-      .set({ nextAttemptAt: null, priority: 0 })
+    const unpublished = await db.db
+      .selectFrom('spaces_migration')
+      .select('did')
       .where('kemPublishedAt', 'is', null)
       .execute()
+    await tracked(
+      unpublished.map(({ did }) => did),
+      (txn) =>
+        txn.db
+          .updateTable('spaces_migration')
+          .set({ nextAttemptAt: null, priority: 0 })
+          .where('kemPublishedAt', 'is', null)
+          .execute(),
+    )
     await db.db.deleteFrom('spaces_migration_state').execute()
   })
 
@@ -82,6 +94,12 @@ describe('spaces migration publisher', () => {
   // A datetime at or before now; null is parked, never due
   const isDue = (at: string | null | undefined) =>
     typeof at === 'string' && at <= currentDatetimeString()
+
+  // Test writes keep the stats up to date, as the code's writes do
+  const tracked = <T>(
+    dids: DidString[],
+    write: (txn: AccountDb) => Promise<T>,
+  ) => trackStats(db, dids, write)
 
   const isPublished = async (did: string) =>
     (await row(did))?.kemPublishedAt != null
@@ -118,7 +136,9 @@ describe('spaces migration publisher', () => {
       const { atproto_kem: _, ...verificationMethods } = op.verificationMethods
       return { ...op, verificationMethods }
     })
-    await db.db.deleteFrom('spaces_migration').where('did', '=', did).execute()
+    await tracked([did], (txn) =>
+      txn.db.deleteFrom('spaces_migration').where('did', '=', did).execute(),
+    )
     await progress.seed()
     return did
   }
@@ -336,11 +356,13 @@ describe('spaces migration publisher', () => {
     expect(updateData).toHaveBeenCalledTimes(1)
 
     // Retry now rather than after the backoff
-    await db.db
-      .updateTable('spaces_migration')
-      .set({ nextAttemptAt: currentDatetimeString() })
-      .where('did', '=', did)
-      .execute()
+    await tracked([did], (txn) =>
+      txn.db
+        .updateTable('spaces_migration')
+        .set({ nextAttemptAt: currentDatetimeString() })
+        .where('did', '=', did)
+        .execute(),
+    )
     await using _publisher = publisher()
     await waitFor(() => isPublished(did))
 
@@ -751,17 +773,25 @@ describe('spaces migration publisher', () => {
     })
   })
 
-  it('counts pending deactivated accounts apart from failing ones', async () => {
-    // Deactivated after a failed attempt: never claimed again until activated
+  it('counts parked deactivated accounts apart from failing ones', async () => {
+    // Deactivated after a failed attempt: parked once claimed, until activated
     const did = await createPreSpacesAccount()
-    await db.db
-      .updateTable('spaces_migration')
-      .set({ attempts: 1, lastError: 'boom' })
-      .where('did', '=', did)
-      .execute()
+    await tracked([did], (txn) =>
+      txn.db
+        .updateTable('spaces_migration')
+        .set({ attempts: 1, lastError: 'boom' })
+        .where('did', '=', did)
+        .execute(),
+    )
     const before = await progress.summary()
     await ctx.accountManager.deactivateAccount(did)
+    // Counted once parked, not when deactivated
+    expect(await progress.summary()).toEqual(before)
 
+    {
+      await using _pub = publisher()
+      await waitFor(async () => (await row(did))?.nextAttemptAt === null)
+    }
     const after = await progress.summary()
     expect(after.deactivated).toBe(before.deactivated + 1)
     expect(after.failing).toBe(before.failing - 1)
@@ -769,13 +799,24 @@ describe('spaces migration publisher', () => {
 
     // A host is done once every account is published, unpublishable or
     // deactivated
-    await db.db
-      .updateTable('spaces_migration')
-      .set({ kemPublishedAt: currentDatetimeString() })
+    const pending = await db.db
+      .selectFrom('spaces_migration')
+      .select('did')
       .where('kemPublishedAt', 'is', null)
       .where('unpublishableReason', 'is', null)
       .where('did', '!=', did)
       .execute()
+    await tracked(
+      pending.map((r) => r.did),
+      (txn) =>
+        txn.db
+          .updateTable('spaces_migration')
+          .set({ kemPublishedAt: currentDatetimeString() })
+          .where('kemPublishedAt', 'is', null)
+          .where('unpublishableReason', 'is', null)
+          .where('did', '!=', did)
+          .execute(),
+    )
     const done = await progress.summary()
     expect(done.total).toBe(
       done.keysPublished + done.unpublishable + done.deactivated,

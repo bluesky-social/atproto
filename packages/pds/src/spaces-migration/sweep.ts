@@ -63,8 +63,6 @@ export class SpacesMigrationSweep implements AsyncDisposable {
     private readonly progress: SpacesMigrationProgress,
     private readonly opts: SpacesMigrationSweepOptions = ctx.cfg
       .spacesMigration,
-    // Called after each recorded transition, e.g. to refresh the health summary
-    private readonly onRecorded: () => void = () => {},
     // Called once seeding added rows, e.g. to wake an idle publisher
     private readonly onSeeded: () => void = () => {},
   ) {
@@ -150,7 +148,6 @@ export class SpacesMigrationSweep implements AsyncDisposable {
       await progress.recordSwept(did, owner)
       events.spacesMigrationStoreMigrated()
       log.info({ did, step: 'sweep' }, 'migrated actor store')
-      this.onRecorded()
     } catch (err) {
       const attempts = (await progress.get(did))?.sweepAttempts ?? 0
       const nextAttemptAt =
@@ -161,7 +158,6 @@ export class SpacesMigrationSweep implements AsyncDisposable {
         { err, did, step: 'sweep', attempt: attempts + 1 },
         'failed to sweep actor store',
       )
-      this.onRecorded()
     }
   }
 

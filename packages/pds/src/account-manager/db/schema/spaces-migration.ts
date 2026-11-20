@@ -26,10 +26,24 @@ export interface SpacesMigrationState {
   publishStartAt: DatetimeString
 }
 
+// A single row, id = 1: counts over spaces_migration
+export interface SpacesMigrationStats {
+  id: number
+  total: number
+  storesMigrated: number
+  keysPublished: number
+  unpublishable: number
+  deactivated: number
+  failing: number
+  sweepFailing: number
+}
+
 export const tableName = 'spaces_migration'
 export const stateTableName = 'spaces_migration_state'
+export const statsTableName = 'spaces_migration_stats'
 
 export type PartialDB = {
   [tableName]: SpacesMigration
   [stateTableName]: SpacesMigrationState
+  [statsTableName]: SpacesMigrationStats
 }

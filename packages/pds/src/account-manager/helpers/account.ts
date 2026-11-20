@@ -9,6 +9,7 @@ import {
 } from '@atproto/lex-schema'
 import { isErrUniqueViolation, notSoftDeletedClause } from '../../db/index.js'
 import type { com } from '../../lexicons/index.js'
+import { trackStats } from '../../spaces-migration/progress.js'
 import type { AccountDb, ActorEntry } from '../db/index.js'
 
 export class UserAlreadyExistsError extends Error {
@@ -220,8 +221,8 @@ export const deleteAccount = async (
   await db.executeWithRetry(
     db.db.deleteFrom('account').where('account.did', '=', did),
   )
-  await db.executeWithRetry(
-    db.db.deleteFrom('spaces_migration').where('did', '=', did),
+  await trackStats(db, [did], (txn) =>
+    txn.db.deleteFrom('spaces_migration').where('did', '=', did).execute(),
   )
   await db.executeWithRetry(
     db.db.deleteFrom('actor').where('actor.did', '=', did),
