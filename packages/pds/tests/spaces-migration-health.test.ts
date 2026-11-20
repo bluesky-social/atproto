@@ -5,9 +5,11 @@ import type { TestPds, TestPlc } from '@atproto/dev-env'
 import type { DidString } from '@atproto/syntax'
 import type { AccountDb } from '../src/account-manager/db/index.js'
 import type { AppContext } from '../src/context.js'
-import type { SpacesMigrationProgress } from '../src/spaces-migration/progress.js'
+import type {
+  SpacesMigrationProgress,
+  trackStats as TrackStats,
+} from '../src/spaces-migration/progress.js'
 import type { SpacesMigrationPublisher } from '../src/spaces-migration/publisher.js'
-import type { SpacesMigrationSummaryCache } from '../src/spaces-migration/summary-cache.js'
 import type { SpacesMigrationSweep } from '../src/spaces-migration/sweep.js'
 
 type Counts = Record<string, { value: number; attrs: unknown }[]>
@@ -49,7 +51,7 @@ describe('spaces migration health', () => {
   let progress: SpacesMigrationProgress
   let Publisher: typeof SpacesMigrationPublisher
   let Sweep: typeof SpacesMigrationSweep
-  let SummaryCache: typeof SpacesMigrationSummaryCache
+  let trackStats: typeof TrackStats
 
   beforeAll(async () => {
     // Loaded now, after the meter provider is installed: the workers create
@@ -58,10 +60,9 @@ describe('spaces migration health', () => {
       await import('../src/spaces-migration/publisher.js'))
     ;({ SpacesMigrationSweep: Sweep } =
       await import('../src/spaces-migration/sweep.js'))
-    ;({ SpacesMigrationSummaryCache: SummaryCache } =
-      await import('../src/spaces-migration/summary-cache.js'))
-    const { SpacesMigrationProgress } =
+    const { SpacesMigrationProgress, trackStats: track } =
       await import('../src/spaces-migration/progress.js')
+    trackStats = track
     const { TestPds, TestPlc } = await import('@atproto/dev-env')
     plcServer = await TestPlc.create({})
     pds = await TestPds.create({
@@ -95,11 +96,12 @@ describe('spaces migration health', () => {
       dids.push(res.data.did as DidString)
     }
     // As left by the release before spaces: nothing migrated or published
-    await db.db
-      .updateTable('spaces_migration')
-      .set({ storeMigratedAt: null, kemPublishedAt: null })
-      .execute()
-    await ctx.spacesMigration.summaryCache.refresh()
+    await trackStats(db, dids, (txn) =>
+      txn.db
+        .updateTable('spaces_migration')
+        .set({ storeMigratedAt: null, kemPublishedAt: null })
+        .execute(),
+    )
     const before = await health()
     expect(before.spacesMigration).toMatchObject({
       total: 2,
@@ -107,13 +109,6 @@ describe('spaces migration health', () => {
       keysPublished: 0,
     })
 
-    // The context's cache waits 10s between refreshes; use a shorter gap
-    await ctx.spacesMigration.summaryCache.destroy()
-    ctx.spacesMigration.summaryCache = new SummaryCache(progress, {
-      minGapMs: 50,
-    })
-    ctx.spacesMigration.summaryCache.start()
-    const onRecorded = () => ctx.spacesMigration.summaryCache.refreshSoon()
     const opts = {
       state: 'enabled' as const,
       publishIntervalMs: 0,
@@ -121,12 +116,12 @@ describe('spaces migration health', () => {
       sweepIntervalMs: 0,
       pollIntervalMs: 20,
     }
-    await using sweep = new Sweep(ctx, progress, opts, onRecorded)
-    await using publisher = new Publisher(ctx, progress, opts, onRecorded)
+    await using sweep = new Sweep(ctx, progress, opts)
+    await using publisher = new Publisher(ctx, progress, opts)
     sweep.start()
     publisher.start()
 
-    // Refreshed after the transitions, without waiting for the interval
+    // Kept up to date by the transitions themselves
     await waitFor(async () => {
       const { spacesMigration } = await health()
       return spacesMigration.keysPublished === 2
@@ -150,111 +145,6 @@ describe('spaces migration health', () => {
     expect(counts['spaces_migration.kem_published']?.length).toBe(2)
   })
 
-  describe('summary cache', () => {
-    const summary = {
-      total: 1,
-      storesMigrated: 1,
-      keysPublished: 1,
-      unpublishable: 0,
-      deactivated: 0,
-      failing: 0,
-      sweepFailing: 0,
-    }
-
-    it('has no summary until the first refresh', async () => {
-      const cache = new SummaryCache({
-        summary: async () => summary,
-      })
-      expect(cache.latest).toBeUndefined()
-      await cache.refresh()
-      expect(cache.latest).toEqual(summary)
-    })
-
-    it('keeps the last summary when a refresh fails', async () => {
-      let fail = false
-      const cache = new SummaryCache({
-        summary: async () => {
-          if (fail) throw new Error('db down')
-          return summary
-        },
-      })
-      await cache.refresh()
-      fail = true
-      await expect(cache.refresh()).resolves.toBeUndefined()
-      expect(cache.latest).toEqual(summary)
-    })
-
-    it('refreshes at most once per gap however many transitions arrive', async () => {
-      // A sweep records a transition every few ms; each summary is a scan
-      const minGapMs = 1_500
-      const queriedAt: number[] = []
-      const query = jest.fn(async () => {
-        queriedAt.push(Date.now())
-        return summary
-      })
-      const cache = new SummaryCache(
-        { summary: query },
-        { intervalMs: 60_000, minGapMs },
-      )
-      cache.start()
-      try {
-        await waitFor(async () => cache.latest !== undefined)
-        const streamUntil = Date.now() + 2 * minGapMs + 500
-        while (Date.now() < streamUntil) {
-          cache.refreshSoon()
-          await wait(20)
-        }
-        expect(queriedAt.length).toBeGreaterThanOrEqual(2)
-        for (let i = 1; i < queriedAt.length; i++) {
-          expect(queriedAt[i] - queriedAt[i - 1]).toBeGreaterThanOrEqual(
-            minGapMs - 20,
-          )
-        }
-
-        // Once the stream stops, a later transition still gets its refresh
-        await wait(minGapMs)
-        const calls = query.mock.calls.length
-        cache.refreshSoon()
-        await waitFor(async () => query.mock.calls.length === calls + 1)
-        await wait(200)
-        expect(query).toHaveBeenCalledTimes(calls + 1)
-      } finally {
-        await cache.destroy()
-      }
-    })
-
-    it('coalesces a burst of transitions into one query', async () => {
-      const query = jest.fn(async () => summary)
-      const cache = new SummaryCache(
-        { summary: query },
-        { intervalMs: 60_000, minGapMs: 20 },
-      )
-      cache.start()
-      try {
-        await waitFor(async () => cache.latest !== undefined)
-        query.mockClear()
-        for (let i = 0; i < 20; i++) cache.refreshSoon()
-        await wait(150)
-        expect(query).toHaveBeenCalledTimes(1)
-      } finally {
-        await cache.destroy()
-      }
-    })
-
-    it('stops refreshing once destroyed', async () => {
-      const query = jest.fn(async () => summary)
-      const cache = new SummaryCache(
-        { summary: query },
-        { intervalMs: 10, minGapMs: 0 },
-      )
-      cache.start()
-      await waitFor(async () => query.mock.calls.length > 1)
-      await cache.destroy()
-      const calls = query.mock.calls.length
-      await wait(50)
-      expect(query).toHaveBeenCalledTimes(calls)
-    })
-  })
   describe('once the migration is complete', () => {
     it('runs no workers and reports only the state', async () => {
       const { TestPds, TestPlc } = await import('@atproto/dev-env')

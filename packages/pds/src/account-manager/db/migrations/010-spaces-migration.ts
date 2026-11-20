@@ -44,6 +44,25 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .where(sql.ref('storeMigratedAt'), 'is', null)
     .execute()
 
+  // Counts over spaces_migration, kept up to date by every write that can
+  // change one. A single row, id = 1.
+  await db.schema
+    .createTable('spaces_migration_stats')
+    .addColumn('id', 'integer', (col) => col.primaryKey())
+    .addColumn('total', 'integer', (col) => col.notNull())
+    .addColumn('storesMigrated', 'integer', (col) => col.notNull())
+    .addColumn('keysPublished', 'integer', (col) => col.notNull())
+    .addColumn('unpublishable', 'integer', (col) => col.notNull())
+    .addColumn('deactivated', 'integer', (col) => col.notNull())
+    .addColumn('failing', 'integer', (col) => col.notNull())
+    .addColumn('sweepFailing', 'integer', (col) => col.notNull())
+    .execute()
+  await sql`
+    insert into spaces_migration_stats
+      (id, total, storesMigrated, keysPublished, unpublishable, deactivated, failing, sweepFailing)
+    values (1, 0, 0, 0, 0, 0, 0, 0)
+  `.execute(db)
+
   await db.schema
     .createTable('spaces_migration_state')
     .addColumn('id', 'integer', (col) => col.primaryKey())
@@ -53,5 +72,6 @@ export async function up(db: Kysely<unknown>): Promise<void> {
 
 export async function down(db: Kysely<unknown>): Promise<void> {
   await db.schema.dropTable('spaces_migration_state').execute()
+  await db.schema.dropTable('spaces_migration_stats').execute()
   await db.schema.dropTable('spaces_migration').execute()
 }

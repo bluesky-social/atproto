@@ -6,7 +6,10 @@ import { TestPds, TestPlc } from '@atproto/dev-env'
 import { type DidString, currentDatetimeString } from '@atproto/syntax'
 import type { AccountDb } from '../src/account-manager/db/index.js'
 import type { AppContext } from '../src/context.js'
-import { SpacesMigrationProgress } from '../src/spaces-migration/progress.js'
+import {
+  SpacesMigrationProgress,
+  trackStats,
+} from '../src/spaces-migration/progress.js'
 import {
   SpacesMigrationSweep,
   type SpacesMigrationSweepOptions,
@@ -113,11 +116,13 @@ describe('spaces migration sweep', () => {
     })
     const { kemKeyLocation } = await ctx.actorStore.getLocation(did)
     await rm(kemKeyLocation, { force: true })
-    await db.db
-      .updateTable('spaces_migration')
-      .set({ storeMigratedAt: null })
-      .where('did', '=', did)
-      .execute()
+    await trackStats(db, [did], (txn) =>
+      txn.db
+        .updateTable('spaces_migration')
+        .set({ storeMigratedAt: null })
+        .where('did', '=', did)
+        .execute(),
+    )
     return did
   }
 
@@ -172,7 +177,9 @@ describe('spaces migration sweep', () => {
   it('seeds rows for accounts that have none', async () => {
     // As left by the release before spaces: no row at all
     const did = await createPreSpacesAccount()
-    await db.db.deleteFrom('spaces_migration').where('did', '=', did).execute()
+    await trackStats(db, [did], (txn) =>
+      txn.db.deleteFrom('spaces_migration').where('did', '=', did).execute(),
+    )
 
     // The publisher may have looked for work before the rows existed
     const onSeeded = jest.fn()
@@ -180,7 +187,6 @@ describe('spaces migration sweep', () => {
       ctx,
       progress,
       { state: 'enabled', sweepIntervalMs: 0, pollIntervalMs: 20 },
-      () => {},
       onSeeded,
     )
     s.start()
@@ -246,11 +252,13 @@ describe('spaces migration sweep', () => {
     expect(await isSwept(did)).toBe(false)
 
     // Once the time comes, it succeeds and the failure is cleared
-    await db.db
-      .updateTable('spaces_migration')
-      .set({ sweepNextAttemptAt: currentDatetimeString() })
-      .where('did', '=', did)
-      .execute()
+    await trackStats(db, [did], (txn) =>
+      txn.db
+        .updateTable('spaces_migration')
+        .set({ sweepNextAttemptAt: currentDatetimeString() })
+        .where('did', '=', did)
+        .execute(),
+    )
     await waitFor(() => isSwept(did))
     const swept = await row(did)
     expect(swept?.sweepAttempts).toBe(0)
@@ -283,11 +291,13 @@ describe('spaces migration sweep', () => {
     expect(s.state).toBe('disabled')
     expect(await isSwept(did)).toBe(false)
     // leave nothing behind for other tests
-    await db.db
-      .updateTable('spaces_migration')
-      .set({ storeMigratedAt: currentDatetimeString() })
-      .where('did', '=', did)
-      .execute()
+    await trackStats(db, [did], (txn) =>
+      txn.db
+        .updateTable('spaces_migration')
+        .set({ storeMigratedAt: currentDatetimeString() })
+        .where('did', '=', did)
+        .execute(),
+    )
   })
 
   describe('space authorization', () => {
