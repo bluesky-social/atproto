@@ -94,6 +94,9 @@ import {
 import { RateLimitManager } from './rate-limit/rate-limit-manager.js'
 import {
   DEFAULT_RATE_LIMIT_POLICIES,
+  type RateLimitClientContext,
+  type RateLimitContext,
+  type RateLimitDeviceContext,
   type RateLimitKeyGetter,
   type RateLimitPolicies,
   type RateLimitPolicy,
@@ -150,7 +153,7 @@ export {
 export type {
   AccessTokenPayload,
   AuthorizationRedirectParameters,
-  AuthorizationResultAuthorizePage as AuthorizationResultAuthorize,
+  AuthorizationResultAuthorizePage,
   AuthorizationResultRedirect,
   Branding,
   BrandingConfig,
@@ -162,6 +165,9 @@ export type {
   LoopbackMetadataGetter,
   MultiLangString,
   OAuthAuthorizationServerMetadata,
+  RateLimitClientContext,
+  RateLimitContext,
+  RateLimitDeviceContext,
   RateLimitKeyGetter,
   RateLimitPolicies,
   RateLimitPolicy,
