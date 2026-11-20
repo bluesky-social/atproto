@@ -98,6 +98,16 @@ export function SignInForm({
         }
       }}
       handler={async (values, signal) => {
+        // @NOTE The credentials sent here are the ones a 2FA challenge applies
+        // to. `onValues` alone can miss them: IdentifierField normalizes its
+        // value on blur and Enter without an input event, and password
+        // managers may fill fields without one, so the first keystroke in the
+        // 2FA field would otherwise look like a credential change.
+        prevValuesRef.current = {
+          identifier: values.identifier,
+          password: values.password,
+        }
+
         const identifier = asNormalizedIdentifier(values.identifier, domains)
         // @NOTE IdentifierField should ensure prevent submission of the form
         // if the identifier is invalid. The following should never happen.
