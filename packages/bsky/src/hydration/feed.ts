@@ -9,13 +9,18 @@ import {
   postUriToThreadgateUri,
   uriToDid as didFromUri,
 } from '../util/uris.js'
-import type {
-  FeedGenRecord,
-  GateRecord,
-  LikeRecord,
-  PostRecord,
-  PostgateRecord,
-  RepostRecord,
+import {
+  type FeedGenRecord,
+  type GateRecord,
+  type LikeRecord,
+  type PostRecord,
+  type PostgateRecord,
+  type RecordEmbed,
+  type RecordWithMedia,
+  type RepostRecord,
+  isListRuleType,
+  isRecordEmbedType,
+  isRecordWithMediaType,
 } from '../views/types.js'
 import {
   HydrationMap,
@@ -116,7 +121,10 @@ export type GetPostsHydrationOptions = {
 }
 
 export class FeedHydrator {
-  constructor(public dataplane: DataPlaneClient) {}
+  constructor(
+    public dataplane: DataPlaneClient,
+    private resolveUris?: (uris: AtUriString[]) => Promise<AtUriString[]>,
+  ) {}
 
   async getPosts(
     uris: AtUriString[],
@@ -125,7 +133,8 @@ export class FeedHydrator {
     viewer?: string | null,
     options: GetPostsHydrationOptions = {},
   ): Promise<Posts> {
-    const [have, need] = split(uris, (uri) => given.has(uri))
+    const resolvedUris = this.resolveUris ? await this.resolveUris(uris) : uris
+    const [have, need] = split(resolvedUris, (uri) => given.has(uri))
     const base: Posts = new HydrationMap()
 
     for (const uri of have) {
@@ -157,12 +166,13 @@ export class FeedHydrator {
         }
       }
 
+      const records = need.map((_, i) =>
+        parseRecord(app.bsky.feed.post.main, res.records[i], includeTakedowns),
+      )
+      await this.resolveRecordUris(records)
+
       for (let i = 0; i < need.length; i++) {
-        const record = parseRecord(
-          app.bsky.feed.post.main,
-          res.records[i],
-          includeTakedowns,
-        )
+        const record = records[i]
         const violatesThreadGate = res.meta[i].violatesThreadGate
         const violatesEmbeddingRules = res.meta[i].violatesEmbeddingRules
         const hasThreadGate = res.meta[i].hasThreadGate
@@ -429,13 +439,16 @@ export class FeedHydrator {
     if (!uris.length) return map
 
     const res = await this.dataplane.getThreadGateRecords({ uris })
-    for (let i = 0; i < uris.length; i++) {
-      const record = parseRecord(
+    const records = uris.map((_, i) =>
+      parseRecord(
         app.bsky.feed.threadgate.main,
         res.records[i],
         includeTakedowns,
-      )
-      map.set(uris[i], record ?? null)
+      ),
+    )
+    await this.resolveGateRecordUris(records)
+    for (let i = 0; i < uris.length; i++) {
+      map.set(uris[i], records[i] ?? null)
     }
 
     return map
@@ -508,4 +521,82 @@ export class FeedHydrator {
 
     return map
   }
+
+  /**
+   * Rewrites handle authorities in record at-uris to DIDs so downstream
+   * hydration and views only ever see canonical DID-form references.
+   */
+  private async resolveRecordUris(
+    records: (RecordInfo<PostRecord> | undefined)[],
+  ): Promise<void> {
+    const resolveUris = this.resolveUris
+    if (!resolveUris) return
+    const uris: AtUriString[] = []
+    for (const info of records) {
+      const record = info?.record
+      if (!record) continue
+      if (record.reply) {
+        uris.push(record.reply.root.uri, record.reply.parent.uri)
+      }
+      const embedUri = recordEmbedUri(record)
+      if (embedUri) uris.push(embedUri)
+    }
+    if (!uris.length) return
+    const resolved = await resolveUris(uris)
+    const resolvedByUri = new Map(uris.map((uri, i) => [uri, resolved[i]]))
+    const resolve = (uri: AtUriString) => resolvedByUri.get(uri) ?? uri
+    for (const info of records) {
+      const record = info?.record
+      if (!record) continue
+      if (record.reply) {
+        record.reply.root.uri = resolve(record.reply.root.uri)
+        record.reply.parent.uri = resolve(record.reply.parent.uri)
+      }
+      const embed = record.embed
+      if (embed && isRecordEmbedType(embed)) {
+        const recordEmbed = embed as RecordEmbed
+        recordEmbed.record.uri = resolve(recordEmbed.record.uri)
+      } else if (embed && isRecordWithMediaType(embed)) {
+        const mediaEmbed = embed as RecordWithMedia
+        mediaEmbed.record.record.uri = resolve(mediaEmbed.record.record.uri)
+      }
+    }
+  }
+
+  private async resolveGateRecordUris(
+    records: (RecordInfo<GateRecord> | undefined)[],
+  ): Promise<void> {
+    const resolveUris = this.resolveUris
+    if (!resolveUris) return
+    const uris: AtUriString[] = []
+    for (const info of records) {
+      for (const rule of info?.record.allow ?? []) {
+        if (isListRuleType(rule)) {
+          uris.push((rule as { list: AtUriString }).list)
+        }
+      }
+    }
+    if (!uris.length) return
+    const resolved = await resolveUris(uris)
+    const resolvedByUri = new Map(uris.map((uri, i) => [uri, resolved[i]]))
+    for (const info of records) {
+      for (const rule of info?.record.allow ?? []) {
+        if (isListRuleType(rule)) {
+          const listRule = rule as { list: AtUriString }
+          listRule.list = resolvedByUri.get(listRule.list) ?? listRule.list
+        }
+      }
+    }
+  }
+}
+
+const recordEmbedUri = (record: PostRecord): AtUriString | undefined => {
+  const embed = record.embed
+  if (embed && isRecordEmbedType(embed)) {
+    return (embed as RecordEmbed).record.uri
+  }
+  if (embed && isRecordWithMediaType(embed)) {
+    return (embed as RecordWithMedia).record.record.uri
+  }
+  return undefined
 }

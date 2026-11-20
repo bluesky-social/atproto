@@ -27,6 +27,12 @@ export function assertIsThreadViewPost(
   })
 }
 
+export const uriWithHandleAuthority = (uri: string, handle: string): string => {
+  const parsed = new AtUri(uri)
+  parsed.hostname = handle
+  return parsed.toString()
+}
+
 // Swap out identifiers and dates with stable
 // values for the purpose of snapshot testing
 export const forSnapshot = (obj: unknown) => {

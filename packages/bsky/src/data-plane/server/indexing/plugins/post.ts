@@ -2,7 +2,11 @@ import { type Insertable, type Selectable, sql } from 'kysely'
 import { type Cid, getBlobCidString } from '@atproto/lex-data'
 import { lexParse } from '@atproto/lex-json'
 import type { $Typed } from '@atproto/lex-schema'
-import { AtUri, normalizeDatetimeAlways } from '@atproto/syntax'
+import {
+  AtUri,
+  type AtUriString,
+  normalizeDatetimeAlways,
+} from '@atproto/syntax'
 import { NOTIFICATION_REASON } from '../../../../api/app/bsky/notification/constants.js'
 import { app } from '../../../../lexicons/index.js'
 import {
@@ -27,6 +31,7 @@ import {
   violatesThreadGate as checkViolatesThreadGate,
 } from '../../util.js'
 import { RecordProcessor } from '../processor.js'
+import { normalizeUriAuthorities } from '../uris.js'
 
 type Notif = Insertable<Notification>
 type Post = Selectable<DatabaseSchemaType['post']>
@@ -70,6 +75,7 @@ const insertFn = async (
   obj: app.bsky.feed.post.Main,
   timestamp: string,
 ): Promise<IndexedPost | null> => {
+  await normalizePostRecordUris(db, obj)
   const post = {
     uri: uri.toString(),
     cid: cid.toString(),
@@ -579,6 +585,34 @@ export const makePlugin = (
 }
 
 export default makePlugin
+
+const normalizePostRecordUris = async (
+  db: DatabaseSchema,
+  obj: app.bsky.feed.post.Main,
+): Promise<void> => {
+  const { reply, embed } = obj
+  const uris: string[] = []
+  if (reply) {
+    uris.push(reply.root.uri, reply.parent.uri)
+  }
+  if (embed && app.bsky.embed.recordWithMedia.$matches(embed)) {
+    uris.push(embed.record.record.uri)
+  } else if (embed && app.bsky.embed.record.$matches(embed)) {
+    uris.push(embed.record.uri)
+  }
+  if (!uris.length) return
+  const resolved = await normalizeUriAuthorities(db, uris)
+  let i = 0
+  if (reply) {
+    reply.root.uri = resolved[i++] as AtUriString
+    reply.parent.uri = resolved[i++] as AtUriString
+  }
+  if (embed && app.bsky.embed.recordWithMedia.$matches(embed)) {
+    embed.record.record.uri = resolved[i++] as AtUriString
+  } else if (embed && app.bsky.embed.record.$matches(embed)) {
+    embed.record.uri = resolved[i++] as AtUriString
+  }
+}
 
 function separateEmbeds(
   embed: app.bsky.feed.post.Main['embed'],

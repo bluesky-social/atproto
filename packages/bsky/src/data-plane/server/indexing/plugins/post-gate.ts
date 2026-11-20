@@ -9,6 +9,7 @@ import type {
 } from '../../db/database-schema.js'
 import type { Database } from '../../db/index.js'
 import { RecordProcessor } from '../processor.js'
+import { normalizeUriAuthorities } from '../uris.js'
 
 type IndexedGate = DatabaseSchemaType['post_gate']
 
@@ -19,7 +20,8 @@ const insertFn = async (
   obj: app.bsky.feed.postgate.Main,
   timestamp: string,
 ): Promise<IndexedGate | null> => {
-  const postUri = new AtUri(obj.post)
+  const [post] = await normalizeUriAuthorities(db, [obj.post])
+  const postUri = new AtUri(post)
   if (postUri.host !== uri.host || postUri.rkey !== uri.rkey) {
     throw new InvalidRequestError(
       'Creator and rkey of post gate does not match its post',
@@ -31,7 +33,7 @@ const insertFn = async (
       uri: uri.toString(),
       cid: cid.toString(),
       creator: uri.host,
-      postUri: obj.post,
+      postUri: postUri.toString(),
       createdAt: normalizeDatetimeAlways(obj.createdAt),
       indexedAt: timestamp,
     })
@@ -51,9 +53,10 @@ const findDuplicate = async (
   _uri: AtUri,
   obj: app.bsky.feed.postgate.Main,
 ): Promise<AtUri | null> => {
+  const [post] = await normalizeUriAuthorities(db, [obj.post])
   const found = await db
     .selectFrom('post_gate')
-    .where('postUri', '=', obj.post)
+    .where('postUri', '=', new AtUri(post).toString())
     .selectAll()
     .executeTakeFirst()
   return found ? new AtUri(found.uri) : null
