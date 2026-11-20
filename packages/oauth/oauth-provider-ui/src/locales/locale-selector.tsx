@@ -20,7 +20,7 @@ export function LocaleSelector({ className }: LocaleSelectorProps) {
   return (
     <Select
       value={locale}
-      onValueChange={(value) => setLocale(value as keyof typeof locales)}
+      onValueChange={(value) => value && setLocale(value)}
     >
       <SelectTrigger
         size="sm"
@@ -34,14 +34,14 @@ export function LocaleSelector({ className }: LocaleSelectorProps) {
           {(value) => {
             const entry = locales[value as keyof typeof locales]
             if (!entry) return value
-            return entry.flag ? `${entry.flag} ${entry.name}` : entry.name
+            return entry.name
           }}
         </SelectValue>
       </SelectTrigger>
       <SelectContent>
-        {Object.entries(locales).map(([key, { name, flag }]) => (
+        {Object.entries(locales).map(([key, { name }]) => (
           <SelectItem key={key} value={key}>
-            {flag ? `${flag} ${name}` : name}
+            {name}
           </SelectItem>
         ))}
       </SelectContent>
