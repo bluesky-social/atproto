@@ -48,6 +48,11 @@ export type ExternalRecords = HydrationMap<AtUriString, ExternalRecord>
 /** Keyed by `genericRecordKey({ uri, cid })` to retain versions of a URI. */
 export type ExternalRecordsByRef = HydrationMap<ExactRecordKey, ExternalRecord>
 export type ExternalRecordBacklinks = HydrationMap<AtUriString, AtUriString[]>
+/** Distinct followed accounts, excluding the viewer; actors are newest first. */
+export type ExternalKnownInteractors = HydrationMap<
+  AtUriString,
+  { count: number; actors: DidString[] }
+>
 /**
  * The viewer's recommend/favorite record per target, false when absent,
  * and null when unknown.
@@ -105,12 +110,18 @@ export type ExternalHydrationLevel = 'basic' | 'detailed'
  * the whole traversal (default `'detailed'`): `'basic'` hydrates renderable
  * content, moderation and aggregate backlink counts; `'detailed'` also samples
  * social-preview backlinks and hydrates their records and participants.
- * Viewer likes and publication subscriptions are hydrated for authenticated
- * requests; `recordLikes` and `publicationSubscriptions` share their caches
- * across traversals. The remaining fields are shared traversal state.
+ * Known interactors are a separate authenticated opt-in at either depth;
+ * `knownInteractorsCache` shares their outcomes across traversals. Viewer likes
+ * and publication subscriptions are hydrated for authenticated requests;
+ * `recordLikes` and `publicationSubscriptions` share their caches across
+ * traversals. The remaining fields are shared traversal state.
  */
 export type ExternalHydrationOptions = {
   hydration?: ExternalHydrationLevel
+  /** Opt into personalized social proof independently of hydration depth. */
+  knownInteractors?: boolean
+  /** Request-scoped outcomes, including null for unknown/failed lookups. */
+  knownInteractorsCache?: ExternalKnownInteractors
   seenRecordKeys?: Set<string>
   hydrationPass?: number
   hydrationMetrics?: ExternalHydrationTracker
@@ -123,9 +134,8 @@ export type ExternalHydrationOptions = {
  * but keeps gallery items. Direct publication/photo references are singular.
  */
 export const EXTERNAL_HYDRATION_LIMITS = {
-  [site.standard.document.$type]: { recommendationPreviews: 3 },
   [site.standard.publication.$type]: { subscriberPreviews: 3 },
-  [social.grain.gallery.$type]: { items: 10, favoritePreviews: 3 },
+  [social.grain.gallery.$type]: { items: 10 },
 } as const
 
 /** Maximum in-flight backlink sample RPCs, not a dependency-count limit. */
@@ -199,6 +209,19 @@ export class ExternalHydrator {
       }
     }
     return map
+  }
+
+  /**
+   * Fetch total distinct followed-account counts and up to three newest actors
+   * per target. Undefined means unavailable, not a successful empty result.
+   */
+  async getKnownInteractors(
+    _targetUris: AtUriString[],
+    _viewer: DidString,
+    _collection: NsidString,
+  ): Promise<ExternalKnownInteractors | undefined> {
+    // @TODO Wire the follow-aware lookup once the dataplane contract is ready.
+    return undefined
   }
 
   /** Fetch a page of activity refs for subsequent generic record hydration. */

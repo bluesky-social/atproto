@@ -323,7 +323,7 @@ async function setup(domains: string[] = safeDomains) {
     /** Root hydration invocations, excluding nested dependency passes. */
     roots: () =>
       spies.hydrate.mock.calls
-        .filter(([, , seen]) => !seen)
+        .filter(([, , options]) => !options?.seenRecordKeys)
         .map(([uris]) => uris),
     lookedUp: () => spies.lookup.mock.calls.flatMap(([{ uris }]) => uris),
     query: async (
@@ -480,6 +480,7 @@ describe('app.bsky.embed.getEmbedExternalView', () => {
         expect.objectContaining({
           xrpcEndpoint: app.bsky.embed.getEmbedExternalView.$lxm,
         }),
+        { knownInteractors: true },
       )
       expect(fixture.lookedUp()).not.toContain(docUri)
       expect(fixture.lookedUp()).not.toContain(pubUri)
@@ -734,21 +735,18 @@ describe('app.bsky.embed.getEmbedExternalView', () => {
     }
 
     test.each(formats(docUri, docUrl))(
-      'an article renders recommender and subscriber previews but persists only the document and publication (%s)',
+      'an article renders subscriber previews but persists only the document and publication (%s)',
       async (_, query) => {
         await using fixture = await setup()
         fixture.linkEngagement()
         const { body } = await fixture.query(query)
-        expect(fixture.lookedUp()).toContain(recommendUri)
+        expect(fixture.lookedUp()).not.toContain(recommendUri)
         expect(fixture.lookedUp()).toContain(subscriptionUri)
         expect(app.bsky.embed.external.viewArticle.$matches(body.data)).toBe(
           true,
         )
-        const data = body.data as {
-          likers?: unknown
-          publisher?: { subscribers?: unknown }
-        }
-        expect(didsOf(data.likers)).toEqual([recommender])
+        const data = body.data as { publisher?: { subscribers?: unknown } }
+        expect(data).not.toHaveProperty('likers')
         expect(didsOf(data.publisher?.subscribers)).toEqual([subscriber])
         expectPersisted(body.associatedRefs, body.associatedRecords, [
           docUri,
@@ -787,22 +785,20 @@ describe('app.bsky.embed.getEmbedExternalView', () => {
       expect(uriList(body.view?.external.associatedRefs)).toEqual([pubUri])
     })
 
-    it('a gallery renders liker previews and images but persists only the gallery, item and photo', async () => {
+    it('a gallery renders images but persists only the gallery, item and photo', async () => {
       await using fixture = await setup()
       fixture.linkEngagement()
       const { body } = await fixture.query({
         url: 'https://good.com/gallery/1',
         canonicalUri: galleryUri,
       })
-      expect(fixture.lookedUp()).toContain(favoriteUri)
+      expect(fixture.lookedUp()).not.toContain(favoriteUri)
       expect(app.bsky.embed.external.viewGallery.$matches(body.data)).toBe(true)
       expect(body.data).toMatchObject({
         uri: `https://grain.social/profile/${author}/gallery/gallery`,
         items: [{ alt: 'A photo' }],
       })
-      expect(didsOf((body.data as { likers?: unknown }).likers)).toEqual([
-        favoriter,
-      ])
+      expect(body.data).not.toHaveProperty('likers')
       expectPersisted(body.associatedRefs, body.associatedRecords, [
         galleryUri,
         itemUri,

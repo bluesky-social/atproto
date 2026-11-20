@@ -19,6 +19,7 @@ import {
 import {
   type AtUriString,
   Client,
+  type DidString,
   type TypedLexMap,
   atUri,
   currentDatetimeString,
@@ -884,8 +885,11 @@ describe('Atmosphere Explore', () => {
     expect(hydrate).toHaveBeenCalledWith(
       [docUri, pubUri, galleryUri, liveUri],
       expect.objectContaining({ viewer: null }),
+      { knownInteractors: true },
     )
-    expect(hydrate.mock.calls.filter(([, , seen]) => !seen)).toHaveLength(1)
+    expect(
+      hydrate.mock.calls.filter(([, , options]) => !options?.seenRecordKeys),
+    ).toHaveLength(1)
     expect(lookup.mock.calls[0][0].uris).toEqual([
       docUri,
       pubUri,
@@ -2212,8 +2216,9 @@ describe('Atmosphere Explore', () => {
           .status,
       ).toBe(200)
       return (
-        hydrate.mock.calls.find(([, , seen]) => !seen)?.[0] ??
-        ([] as AtUriString[])
+        hydrate.mock.calls.find(
+          ([, , options]) => !options?.seenRecordKeys,
+        )?.[0] ?? ([] as AtUriString[])
       )
     }
 
@@ -2277,7 +2282,11 @@ describe('Atmosphere Explore', () => {
         using lookup = vi.spyOn(fixture.dataplane, 'getRecordsByURI')
         expect((await fixture.query(false, {}, us)).status).toBe(200)
         const selected = [roots[11], ...roots.slice(0, 9)]
-        expect(hydrate.mock.calls.filter(([, , seen]) => !seen)).toHaveLength(1)
+        expect(
+          hydrate.mock.calls.filter(
+            ([, , options]) => !options?.seenRecordKeys,
+          ),
+        ).toHaveLength(1)
         expect(hydrate.mock.calls[0][0]).toEqual(selected)
         expect(lookup.mock.calls[0][0].uris).toEqual(selected)
         const looked = lookup.mock.calls.flatMap(([params]) => params.uris)
@@ -2861,36 +2870,24 @@ describe('Atmosphere Explore', () => {
     expect((await fixture.query()).body.articles.items).toEqual([])
   })
 
-  it('uses bounded, deduplicated profile previews', async () => {
+  it('uses bounded, deduplicated subscriber previews and no article previews', async () => {
     await using fixture = await setup({ articles: [group(docUri)] })
+    const subscription = (did: DidString, rkey: string) =>
+      atUri(did, site.standard.graph.subscription.$type, rkey)
     using backlinks = vi
       .spyOn(fixture.dataplane, 'getAtmosphereBacklinks')
-      .mockResolvedValue(
-        new GetAtmosphereBacklinksResponse({
-          backlinks: [
-            {
-              uri: atUri(
-                'did:plc:z',
-                site.standard.graph.recommend.$type,
-                'one',
-              ),
-            },
-            {
-              uri: atUri(
-                'did:plc:a',
-                site.standard.graph.recommend.$type,
-                'one',
-              ),
-            },
-            {
-              uri: atUri(
-                'did:plc:a',
-                site.standard.graph.recommend.$type,
-                'two',
-              ),
-            },
-          ],
-        }),
+      .mockImplementation(
+        async ({ collection }) =>
+          new GetAtmosphereBacklinksResponse({
+            backlinks:
+              collection === site.standard.graph.subscription.$type
+                ? [
+                    { uri: subscription('did:plc:z', 'one') },
+                    { uri: subscription('did:plc:a', 'one') },
+                    { uri: subscription('did:plc:a', 'two') },
+                  ]
+                : [],
+          }),
       )
     for (const [did, rkey] of [
       ['did:plc:z', 'one'],
@@ -2898,38 +2895,45 @@ describe('Atmosphere Explore', () => {
       ['did:plc:a', 'two'],
     ] as const) {
       fixture.records.set(
-        atUri(did, site.standard.graph.recommend.$type, rkey),
-        site.standard.graph.recommend.$build({
-          document: docUri,
-          createdAt: publishedAt,
-        }),
+        subscription(did, rkey),
+        site.standard.graph.subscription.$build({ publication: pubUri }),
       )
     }
     using lookup = vi.spyOn(fixture.dataplane, 'getRecordsByURI')
     const { body } = await fixture.query()
     expect(lookup).toHaveBeenCalledWith({
       uris: [
-        pubUri,
-        atUri('did:plc:z', site.standard.graph.recommend.$type, 'one'),
-        atUri('did:plc:a', site.standard.graph.recommend.$type, 'one'),
-        atUri('did:plc:a', site.standard.graph.recommend.$type, 'two'),
+        subscription('did:plc:z', 'one'),
+        subscription('did:plc:a', 'one'),
+        subscription('did:plc:a', 'two'),
       ],
     })
-    expect(body.articles.items[0].view.likers?.map(({ did }) => did)).toEqual([
+    const view = body.articles.items[0].view
+    expect(view).not.toHaveProperty('likers')
+    expect(view.publisher?.subscribers?.map(({ did }) => did)).toEqual([
       'did:plc:a',
       'did:plc:z',
     ])
-    expect(backlinks.mock.calls.every(([params]) => params.limit === 3)).toBe(
-      true,
-    )
+    expect(
+      backlinks.mock.calls.map(([params]) => params.collection),
+    ).not.toContain(site.standard.graph.recommend.$type)
+    expect(
+      backlinks.mock.calls
+        .filter(
+          ([params]) =>
+            params.collection === site.standard.graph.subscription.$type,
+        )
+        .every(([params]) => params.limit === 3),
+    ).toBe(true)
     for (const [uri, record] of fixture.records) {
-      if (site.standard.graph.recommend.$isTypeOf(record)) {
+      if (site.standard.graph.subscription.$isTypeOf(record)) {
         fixture.takenDown.add(uri)
       }
     }
     const moderated = (await fixture.query()).body.articles.items[0].view
-    expect(moderated.likers).toEqual([])
+    expect(moderated.publisher?.subscribers).toEqual([])
     expect(moderated.likeCount).toBe(7)
+    expect(moderated.publisher?.subscriptionCount).toBe(4)
   })
 
   it('rejects gallery items associated with a different gallery', async () => {
@@ -3386,7 +3390,9 @@ describe('Atmosphere Explore list ordering and caps', () => {
     expect(
       second.body.publications.items.map(({ view }) => rootOf(view)),
     ).toEqual(expected)
-    expect(hydrate).toHaveBeenLastCalledWith(expected, expect.anything())
+    expect(hydrate).toHaveBeenLastCalledWith(expected, expect.anything(), {
+      knownInteractors: true,
+    })
   })
 
   it('shuffles Iris articles', async () => {
@@ -3541,8 +3547,11 @@ describe('Atmosphere Explore article source (gate on)', () => {
     expect(hydrate).toHaveBeenCalledWith(
       [doc2Uri, docUri, pubUri, galleryUri, liveUri],
       expect.objectContaining({ viewer: null }),
+      { knownInteractors: true },
     )
-    expect(hydrate.mock.calls.filter(([, , seen]) => !seen)).toHaveLength(1)
+    expect(
+      hydrate.mock.calls.filter(([, , options]) => !options?.seenRecordKeys),
+    ).toHaveLength(1)
     expect(lookup.mock.calls.flatMap(([params]) => params.uris)).not.toContain(
       missingUri,
     )
@@ -3670,6 +3679,7 @@ describe('Atmosphere Explore article source (gate on)', () => {
     expect(hydrate).toHaveBeenCalledWith(
       [docUri],
       expect.objectContaining({ viewer: null }),
+      { knownInteractors: true },
     )
     expect(body.articles.items).toHaveLength(1)
     expect(body.articles.recIdStr).toBe('rec-1')
@@ -4033,6 +4043,7 @@ describe('Atmosphere Explore Iris requirements and failures', () => {
       expect(hydrate).toHaveBeenCalledWith(
         [missingUri, docUri, pubUri, galleryUri, liveUri],
         expect.objectContaining({ viewer: null }),
+        { knownInteractors: true },
       )
       expect(fixture.fetchMock).toHaveBeenCalledOnce()
       expect(fixture.iris.fetchMock).toHaveBeenCalledOnce()
@@ -4440,7 +4451,7 @@ describe('Atmosphere recommended activity', () => {
           xrpcEndpoint:
             app.bsky.unspecced.getAtmosphereRecommendedActivity.$lxm,
         }),
-        { hydration: 'basic' },
+        { hydration: 'basic', knownInteractors: true },
       )
       const [input, init] = f.iris.fetchMock.mock.calls[0]
       const request = new Request(input, init)

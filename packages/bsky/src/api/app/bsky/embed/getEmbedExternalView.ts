@@ -66,6 +66,7 @@ const hydration = async (
   return ctx.hydrator.hydrateEmbedExternalViewFromUris(
     [skeleton.canonicalUri],
     params.hydrateCtx,
+    { knownInteractors: true },
   )
 }
 

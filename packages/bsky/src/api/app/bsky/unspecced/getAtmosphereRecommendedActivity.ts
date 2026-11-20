@@ -60,7 +60,7 @@ export default function (server: Server, ctx: AppContext) {
       const state = await ctx.hydrator.hydrateEmbedExternalViewFromUris(
         uris,
         hydrateCtx,
-        { hydration: 'basic' },
+        { hydration: 'basic', knownInteractors: true },
       )
       const items = mapDefined(uris, (uri) => {
         const view = ctx.views.externalRecordView(uri, state)
