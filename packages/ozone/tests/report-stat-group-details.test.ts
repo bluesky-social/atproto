@@ -17,12 +17,14 @@ describe('report stat details', () => {
 
   beforeAll(async () => {
     network = await TestNetwork.create({
-      dbPostgresSchema: 'ozone_queue_inbound_type_breakdown',
+      dbPostgresSchema: 'ozone_report_stat_group_details',
     })
     agent = network.ozone.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc)
     await network.processAll()
+    // @NOTE Fixture queue assignments must remain stable between requests.
+    await network.ozone.daemon.ctx.queueRouter.destroy()
     const db = network.ozone.ctx.db.db
     await db.deleteFrom('report_activity').execute()
     await db.deleteFrom('moderator_assignment').execute()
@@ -60,7 +62,7 @@ describe('report stat details', () => {
       reason?: string
       status?: string
       muted?: boolean
-      queue?: number
+      queue?: number | null
       assignedTo?: `did:${string}:${string}`
     } = {},
   ) {
@@ -73,7 +75,7 @@ describe('report stat details', () => {
     return network.ozone.ctx.db.db
       .updateTable('report')
       .set({
-        queueId: opts.queue ?? queueId,
+        queueId: opts.queue === undefined ? queueId : opts.queue,
         reportType: opts.reason ?? spam,
         assignedTo: opts.assignedTo ?? null,
         status: opts.status ?? 'queued',
@@ -292,31 +294,26 @@ describe('report stat details', () => {
   })
 
   it('includes both null and -1 queue IDs in the unqueued group', async () => {
-    const unassigned = await createReport()
-    await network.ozone.ctx.db.db
-      .updateTable('report')
-      .set({ queueId: null })
-      .where('id', '=', unassigned.id)
-      .execute()
     await createReport({ queue: -1, reason: threat })
     await createReport()
-    expect(
-      (await details({ queueId: -1 })).reportTypeBreakdown.totalCount,
-    ).toBe(2)
+    // @NOTE Later fixture creation runs the router and would assign null queues.
+    await createReport({ queue: null })
+    expect((await details({ queueId: -1 })).reportTypeBreakdown).toEqual({
+      totalCount: 2,
+      stats: [
+        { reportType: spam, inboundCount: 1 },
+        { reportType: threat, inboundCount: 1 },
+      ],
+    })
   })
 
   it('excludes inaccessible queues from aggregate and report-type details, while retaining unqueued reports', async () => {
     await createReport()
     await createReport({ queue: otherQueueId, reason: threat })
-    const unassigned = await createReport({
-      queue: otherQueueId,
+    await createReport({
+      queue: null,
       reason: threat,
     })
-    await network.ozone.ctx.db.db
-      .updateTable('report')
-      .set({ queueId: null })
-      .where('id', '=', unassigned.id)
-      .execute()
     await agent.tools.ozone.queue.updateQueue(
       { queueId: otherQueueId, strictAccess: true },
       { headers: await headers(tools.ozone.queue.updateQueue.$lxm) },
