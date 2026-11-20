@@ -156,6 +156,7 @@ function externalRecordViewOrRefs(
       readingTime: record.textContent
         ? estimateReadingTimeMinutes(record.textContent)
         : undefined,
+      viewer: likeViewerState(uri, state),
       likeCount: backlinkCount(uri, site.standard.graph.recommend.$type, state),
       likers: backlinkProfiles(views, uri, state, 'recommend'),
     })
@@ -237,6 +238,7 @@ function externalRecordViewOrRefs(
       createdAt: record.createdAt,
       items,
       photoCount: backlinkCount(uri, social.grain.gallery.item.$type, state),
+      viewer: likeViewerState(uri, state),
       likeCount: backlinkCount(uri, social.grain.favorite.$type, state),
       likers: backlinkProfiles(views, uri, state, 'favorite'),
     })
@@ -266,6 +268,13 @@ function externalRecordViewOrRefs(
       lastSeenAt: record.lastSeenAt,
     })
   }
+}
+
+function likeViewerState(uri: AtUriString, state: HydrationState) {
+  const like = state.ctx?.viewer
+    ? state.externalRecordLikes?.get(uri)
+    : undefined
+  return like == null ? undefined : { like: like || undefined }
 }
 
 function publicationView(

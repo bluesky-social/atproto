@@ -397,6 +397,65 @@ describe('record modality views', () => {
     expect(view.associatedProfiles).toEqual([])
   })
 
+  test.each([
+    {
+      name: 'article',
+      uri: docUri,
+      collection: site.standard.graph.recommend.$type,
+      add: addArticle,
+    },
+    {
+      name: 'gallery',
+      uri: galleryUri,
+      collection: social.grain.favorite.$type,
+      add: addGallery,
+    },
+  ] as const)(
+    'includes the viewer-owned like URI on a $name only when authenticated and known',
+    ({ uri, collection, add }) => {
+      const viewerDid: DidString = 'did:plc:viewer'
+      const state = {
+        ...createState(),
+        ctx: new HydrateCtx({
+          viewer: viewerDid,
+          labelers: { dids: [], redact: new Set() },
+          features: {} as never,
+        }),
+        externalRecordLikes: new HydrationMap<
+          AtUriString,
+          AtUriString | false
+        >(),
+      }
+      addPublication(state)
+      add(state)
+      const like = atUri(viewerDid, collection, 'like')
+      const viewer = (cid?: string) => {
+        const view = views.externalRecordView(uri, state, 0, cid)
+        assert(
+          view &&
+            (app.bsky.embed.external.viewArticle.$isTypeOf(view) ||
+              app.bsky.embed.external.viewGallery.$isTypeOf(view)),
+        )
+        assertValid(view)
+        return view.viewer
+      }
+      const info = state.externalRecords.get(uri)!
+      state.externalRecordsByRef.set(genericRecordKey({ uri, cid }), info)
+
+      expect(viewer()).toBeUndefined()
+      state.externalRecordLikes.set(uri, like)
+      expect(viewer()).toEqual({ like })
+      expect(viewer(cid)).toEqual({ like })
+      state.externalRecordLikes.set(uri, false)
+      expect(viewer()).toEqual({})
+      state.externalRecordLikes.set(uri, null)
+      expect(viewer()).toBeUndefined()
+      state.externalRecordLikes.set(uri, like)
+      state.ctx = state.ctx.copy({ viewer: null })
+      expect(viewer()).toBeUndefined()
+    },
+  )
+
   it('includes publication viewer state only when requested and known', () => {
     const state = {
       ...createState(),

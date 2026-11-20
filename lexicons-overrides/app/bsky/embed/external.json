@@ -142,6 +142,7 @@
         "image": { "type": "string", "format": "uri" },
         "publisher": { "type": "ref", "ref": "#viewArticlePublication" },
         "readingTime": { "type": "integer", "minimum": 1 },
+        "viewer": { "type": "ref", "ref": "#viewArticleViewerState" },
         "likeCount": { "type": "integer", "minimum": 0 },
         "likers": {
           "type": "array",
@@ -151,6 +152,17 @@
             "type": "ref",
             "ref": "app.bsky.actor.defs#profileViewBasic"
           }
+        }
+      }
+    },
+    "viewArticleViewerState": {
+      "type": "object",
+      "description": "Metadata about the requesting account's relationship with the subject article. Only has meaningful content for authed requests.",
+      "properties": {
+        "like": {
+          "type": "string",
+          "format": "at-uri",
+          "description": "The requesting account's site.standard.graph.recommend record for this article, if recommended."
         }
       }
     },
@@ -268,6 +280,7 @@
           "items": { "type": "union", "refs": ["#viewGalleryImage"] },
           "description": "The media items in the gallery. Each item may be of a different type, but all types must be supported by the client."
         },
+        "viewer": { "type": "ref", "ref": "#viewGalleryViewerState" },
         "photoCount": {
           "type": "integer",
           "minimum": 0,
@@ -282,6 +295,17 @@
             "type": "ref",
             "ref": "app.bsky.actor.defs#profileViewBasic"
           }
+        }
+      }
+    },
+    "viewGalleryViewerState": {
+      "type": "object",
+      "description": "Metadata about the requesting account's relationship with the subject gallery. Only has meaningful content for authed requests.",
+      "properties": {
+        "like": {
+          "type": "string",
+          "format": "at-uri",
+          "description": "The requesting account's social.grain.favorite record for this gallery, if favorited."
         }
       }
     },

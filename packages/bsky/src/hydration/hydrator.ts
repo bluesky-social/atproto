@@ -53,6 +53,7 @@ import {
   type ExternalPublicationSubscriptions,
   type ExternalRecordBacklinkCounts,
   type ExternalRecordBacklinks,
+  type ExternalRecordLikes,
   type ExternalRecords,
   type ExternalRecordsByRef,
   MAX_CONCURRENT_BACKLINK_REQUESTS,
@@ -198,6 +199,7 @@ export type HydrationState = {
   /** Available backlink source URIs per target, potentially from a partial page. */
   externalRecordBacklinks?: ExternalRecordBacklinks
   externalRecordBacklinkCounts?: ExternalRecordBacklinkCounts
+  externalRecordLikes?: ExternalRecordLikes
   externalPublicationSubscriptions?: ExternalPublicationSubscriptions
 }
 
@@ -865,6 +867,7 @@ export class Hydrator {
         hydration: 'basic',
         seenRecordKeys: options.externalSeenRecordKeys,
         publicationSubscriptions: options.externalPublicationSubscriptions,
+        recordLikes: state.externalRecordLikes,
       }),
     ])
     if (!ctx.includeTakedowns) {
@@ -1066,6 +1069,7 @@ export class Hydrator {
       hydrationPass = 1,
       hydrationMetrics,
       publicationSubscriptions,
+      recordLikes = ctx.viewer ? new HydrationMap() : undefined,
     } = options
     return trackExternalHydration(
       'uris',
@@ -1080,6 +1084,7 @@ export class Hydrator {
           hydrationPass,
           hydrationMetrics,
           publicationSubscriptions,
+          recordLikes,
         ),
     )
   }
@@ -1100,6 +1105,7 @@ export class Hydrator {
       hydrationPass = 1,
       hydrationMetrics,
       publicationSubscriptions,
+      recordLikes = ctx.viewer ? new HydrationMap() : undefined,
     } = options
     return trackExternalHydration(
       'refs',
@@ -1114,6 +1120,7 @@ export class Hydrator {
           hydrationPass,
           hydrationMetrics,
           publicationSubscriptions,
+          recordLikes,
         ),
     )
   }
@@ -1126,6 +1133,7 @@ export class Hydrator {
     hydrationPass: number,
     hydrationMetrics: ExternalHydrationTracker,
     publicationSubscriptions: ExternalPublicationSubscriptions | undefined,
+    recordLikes: ExternalRecordLikes | undefined,
   ): Promise<HydrationState> {
     // Filter at the entry point so each lookup runs at most once per shared
     // traversal, even for callers that did not prefilter their input. Null or
@@ -1133,9 +1141,11 @@ export class Hydrator {
     // no hydration work, and no pass is consumed.
     const items = takeUnseenRefs(refs, seenRecordKeys)
     if (!items.length) {
-      return publicationSubscriptions
-        ? { ctx, externalPublicationSubscriptions: publicationSubscriptions }
-        : { ctx }
+      return {
+        ctx,
+        externalPublicationSubscriptions: publicationSubscriptions,
+        externalRecordLikes: recordLikes,
+      }
     }
     // Get any bare URIs to fetch
     const byUriValues = items
@@ -1190,6 +1200,7 @@ export class Hydrator {
       externalRecords,
       externalRecordsByRef,
       externalPublicationSubscriptions: publicationSubscriptions,
+      externalRecordLikes: recordLikes,
     })
     actionExternalRecordTakedowns(baseState, ctx.includeTakedowns)
 
@@ -1204,6 +1215,7 @@ export class Hydrator {
         hydrationPass,
         hydrationMetrics,
         publicationSubscriptions,
+        recordLikes,
       },
     )
 
@@ -1243,6 +1255,8 @@ export class Hydrator {
       hydrationPass = 1,
       hydrationMetrics,
       publicationSubscriptions,
+      recordLikes = state.externalRecordLikes ??
+        (ctx.viewer ? new HydrationMap() : undefined),
     } = options
     return trackExternalHydration(
       'dependencies',
@@ -1258,6 +1272,7 @@ export class Hydrator {
           hydrationPass,
           hydrationMetrics,
           publicationSubscriptions,
+          recordLikes,
         ),
     )
   }
@@ -1271,6 +1286,7 @@ export class Hydrator {
     hydrationPass: number,
     hydrationMetrics: ExternalHydrationTracker,
     publicationSubscriptions: ExternalPublicationSubscriptions | undefined,
+    recordLikes: ExternalRecordLikes | undefined,
   ): Promise<HydrationState> {
     // Social-preview backlink sources to sample per target, each with its own
     // bound. A target with no samples still gets its aggregate count.
@@ -1280,6 +1296,8 @@ export class Hydrator {
     >()
     const discoveredUris = new Set<AtUriString>()
     const publicationUris = new Set<AtUriString>()
+    const documentUris = new Set<AtUriString>()
+    const galleryUris = new Set<AtUriString>()
 
     const rootBatch = !hydrationMetrics.rootsCounted
     hydrationMetrics.rootsCounted = true
@@ -1323,6 +1341,7 @@ export class Hydrator {
         collection === site.standard.document.$type &&
         site.standard.document.$matches(record, { strict: false })
       ) {
+        documentUris.add(uri)
         const limits = EXTERNAL_HYDRATION_LIMITS[site.standard.document.$type]
         targets.set(
           uri,
@@ -1371,6 +1390,7 @@ export class Hydrator {
         collection === social.grain.gallery.$type &&
         social.grain.gallery.$matches(record, { strict: false })
       ) {
+        galleryUris.add(uri)
         const limits = EXTERNAL_HYDRATION_LIMITS[social.grain.gallery.$type]
         // Membership items are content, sampled at every level.
         const samples: { collection: NsidString; limit: number }[] = []
@@ -1426,41 +1446,55 @@ export class Hydrator {
       }
     }
 
-    if (publicationSubscriptions && ctx.viewer) {
-      const publications = [...publicationUris].filter(
-        (uri) => !publicationSubscriptions.has(uri),
-      )
-      // @NOTE Reserve even unknown outcomes before awaiting, so concurrent roots
-      // sharing this request's cache never repeat a subscription lookup.
-      for (const uri of publications) publicationSubscriptions.set(uri, null)
+    for (const { uris, collection, interactions } of [
+      {
+        uris: publicationUris,
+        collection: site.standard.graph.subscription.$type,
+        interactions: publicationSubscriptions,
+      },
+      {
+        uris: documentUris,
+        collection: site.standard.graph.recommend.$type,
+        interactions: recordLikes,
+      },
+      {
+        uris: galleryUris,
+        collection: social.grain.favorite.$type,
+        interactions: recordLikes,
+      },
+    ] as const) {
+      if (!interactions || !ctx.viewer) continue
+      const uncached = [...uris].filter((uri) => !interactions.has(uri))
+      // @NOTE Reserve unknown outcomes before awaiting so shared request caches
+      // never repeat lookups, including failed or truncated ones.
+      for (const uri of uncached) interactions.set(uri, null)
       for (const batch of chunkArray(
-        publications,
+        uncached,
         ExternalHydrator.MAX_BACKLINK_ACTOR_TARGETS_PER_REQUEST,
       )) {
         try {
           const result = await this.external.getAtmosphereBacklinksByActor(
             batch,
             ctx.viewer,
-            site.standard.graph.subscription.$type,
+            collection,
           )
-          for (const publication of batch) {
-            const subscription = result.backlinks
-              .get(publication)
+          for (const target of batch) {
+            const interaction = result.backlinks
+              .get(target)
               ?.find(
                 (uri) =>
-                  recordUriOf(uri, site.standard.graph.subscription.$type) &&
-                  uriToDid(uri) === ctx.viewer,
+                  recordUriOf(uri, collection) && uriToDid(uri) === ctx.viewer,
               )
-            publicationSubscriptions.set(
-              publication,
-              subscription ?? (result.truncated ? null : false),
+            interactions.set(
+              target,
+              interaction ?? (result.truncated ? null : false),
             )
           }
         } catch (err) {
           hydrationMetrics.partial = true
           hydrationLogger.warn(
-            { err },
-            'failed to hydrate external publication subscriptions',
+            { err, collection },
+            'failed to hydrate external record viewer state',
           )
         }
       }
@@ -1555,6 +1589,7 @@ export class Hydrator {
           hydrationPass: hydrationPass + 1,
           hydrationMetrics,
           publicationSubscriptions,
+          recordLikes,
         })
       } catch (err) {
         // Skip the whole batch; partial child state could miss moderation.
@@ -1572,6 +1607,7 @@ export class Hydrator {
         externalRecordBacklinks,
         externalRecordBacklinkCounts,
         externalPublicationSubscriptions: publicationSubscriptions,
+        externalRecordLikes: recordLikes,
       },
       nested,
     )
@@ -2586,6 +2622,10 @@ export const mergeStates = (
     externalRecordBacklinkCounts: mergeMaps(
       stateA.externalRecordBacklinkCounts,
       stateB.externalRecordBacklinkCounts,
+    ),
+    externalRecordLikes: mergeMaps(
+      stateA.externalRecordLikes,
+      stateB.externalRecordLikes,
     ),
     externalPublicationSubscriptions: mergeMaps(
       stateA.externalPublicationSubscriptions,
