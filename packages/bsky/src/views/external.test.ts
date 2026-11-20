@@ -317,6 +317,59 @@ describe('record modality views', () => {
     expect(looseArticle.providerId).toBe(providerId)
   })
 
+  test.each([
+    {
+      providerId: 'pckt.blog',
+      contentType: 'blog.pckt.content',
+      themeType: 'blog.pckt.theme',
+    },
+    {
+      providerId: 'leaflet.pub',
+      contentType: 'pub.leaflet.content',
+      themeType: 'pub.leaflet.publication#theme',
+    },
+    {
+      providerId: 'offprint.app',
+      contentType: 'app.offprint.content',
+      themeType: 'app.offprint.theme',
+    },
+  ])(
+    'attributes custom-domain records to $providerId',
+    ({ providerId, contentType, themeType }) => {
+      const state = createState()
+      addPublication(state)
+      const publicationRecord = state.externalRecords.get(pubUri)!.record
+      publicationRecord.theme = { $type: themeType }
+      const publication = views.externalRecordView(pubUri, state)
+      assert(publication)
+      assertValid(publication)
+      expect(publication.providerId).toBe(providerId)
+
+      addArticle(state)
+      const inherited = views.externalRecordView(docUri, state)
+      assert(
+        inherited && app.bsky.embed.external.viewArticle.$isTypeOf(inherited),
+      )
+      assertValid(inherited)
+      expect(inherited.providerId).toBe(providerId)
+      expect(inherited.publisher?.providerId).toBe(providerId)
+
+      publicationRecord.theme = { $type: 'blog.pckt.theme' }
+      state.externalRecords.get(docUri)!.record.content = { $type: contentType }
+      const article = views.externalRecordView(docUri, state)
+      assert(article)
+      assertValid(article)
+      expect(article.providerId).toBe(providerId)
+
+      addArticle(state, 'https://pckt.blog')
+      state.externalRecords.get(docUri)!.record.content = { $type: contentType }
+      const loose = views.externalRecordView(docUri, state)
+      assert(loose)
+      assertValid(loose)
+      expect(loose.providerId).toBe(providerId)
+    },
+  )
+
   it('checks only the supplied record, never the latest map entry', () => {
     const state = createState()
     addGallery(state)
