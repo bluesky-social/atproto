@@ -96,7 +96,7 @@ function recordView(
     }
   }
   return {
-    view: ctx.views.externalRecordView(uri, state, undefined, cid),
+    view: ctx.views.externalRecordView({ uri, cid }, state),
     ...collectAssociations(uri, dependencies, root),
   }
 }

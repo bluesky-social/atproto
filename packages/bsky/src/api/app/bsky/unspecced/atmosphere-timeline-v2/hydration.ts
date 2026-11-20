@@ -169,13 +169,10 @@ export class AtmosphereTimelineHydrator implements TimelineHydration {
   private externalView(uri: AtUriString) {
     let view = this.externalViews.get(uri)
     if (!view) {
-      view = this.ctx.views.externalRecordView(
-        uri,
-        this.state,
-        this.now,
-        undefined,
-        { publicationViewer: true, livestreamCreatedAtHeartbeat: true },
-      )
+      view = this.ctx.views.externalRecordView({ uri }, this.state, this.now, {
+        publicationViewer: true,
+        livestreamCreatedAtHeartbeat: true,
+      })
       if (view) this.externalViews.set(uri, view)
     }
     return view

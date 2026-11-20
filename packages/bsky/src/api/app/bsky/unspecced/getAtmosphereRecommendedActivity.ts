@@ -63,7 +63,7 @@ export default function (server: Server, ctx: AppContext) {
         { hydration: 'basic' },
       )
       const items = mapDefined(uris, (uri) => {
-        const view = ctx.views.externalRecordView(uri, state)
+        const view = ctx.views.externalRecordView({ uri }, state)
         if (!view) return
         if (app.bsky.embed.external.viewGallery.$isTypeOf(view)) {
           return view.items.length ? { view } : undefined

@@ -236,11 +236,11 @@ export class AtmosphereTimelineHydrator implements TimelineHydration {
   private externalView(uri: AtUriString, state: HydrationState) {
     // @NOTE Pinned shares have restricted records, even for the same root CID.
     if (state !== this.state) {
-      return this.ctx.views.externalRecordView(uri, state, this.now)
+      return this.ctx.views.externalRecordView({ uri }, state, this.now)
     }
     let view = this.externalViews.get(uri)
     if (!view) {
-      view = this.ctx.views.externalRecordView(uri, state, this.now)
+      view = this.ctx.views.externalRecordView({ uri }, state, this.now)
       if (view) this.externalViews.set(uri, view)
     }
     return view

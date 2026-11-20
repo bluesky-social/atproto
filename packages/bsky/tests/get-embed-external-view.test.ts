@@ -43,6 +43,7 @@ const webDocUri = atUri(author, site.standard.document.$type, 'web')
 const pubUri = atUri(author, site.standard.publication.$type, 'publication')
 const pub2Uri = atUri(author, site.standard.publication.$type, 'publication2')
 const galleryUri = atUri(author, grainGallery.$type, 'gallery')
+const galleryUrl = `https://grain.social/profile/${author}/gallery/gallery`
 const itemUri = atUri(author, grainGalleryItem.$type, 'item')
 const photoUri = atUri(author, grainPhoto.$type, 'photo')
 const liveUri = atUri(author, place.stream.livestream.$type, 'live')
@@ -70,7 +71,7 @@ const favoriteUri = atUri(favoriter, social.grain.favorite.$type, 'favorite')
 
 const docUrl = 'https://example.com/blog/story'
 const webDocUrl = 'https://web.example.com/posts/hello'
-const safeDomains = ['good.com', '*.good.com']
+const safeDomains = ['good.com', '*.good.com', 'grain.social']
 const blob = {
   $type: 'blob' as const,
   ref: parseCid('bafkreihdwdcefgh4dqkjv67uzcmw7ojee6xedzdetojuzjevtenxquvyku'),
@@ -399,7 +400,7 @@ describe('app.bsky.embed.getEmbedExternalView', () => {
     it('prefers canonicalUri over every legacy URI', async () => {
       await using fixture = await setup()
       const { body } = await fixture.query({
-        url: 'https://good.com/gallery',
+        url: galleryUrl,
         canonicalUri: galleryUri,
         uris: [docUri, pubUri],
       })
@@ -720,7 +721,7 @@ describe('app.bsky.embed.getEmbedExternalView', () => {
       await using fixture = await setup()
       fixture.linkEngagement()
       const { body } = await fixture.query({
-        url: 'https://good.com/gallery/1',
+        url: galleryUrl,
         canonicalUri: galleryUri,
       })
       expect(fixture.lookedUp()).toContain(favoriteUri)
@@ -755,7 +756,7 @@ describe('app.bsky.embed.getEmbedExternalView', () => {
         }),
       )
       const { body } = await fixture.query({
-        url: 'https://good.com/gallery/1',
+        url: galleryUrl,
         canonicalUri: galleryUri,
       })
       expect(app.bsky.embed.external.viewGallery.$matches(body.data)).toBe(true)
@@ -861,7 +862,7 @@ describe('app.bsky.embed.getEmbedExternalView', () => {
       fixture.linkEngagement()
       fixture.records.delete(itemUri)
       const { body } = await fixture.query({
-        url: 'https://good.com/gallery/1',
+        url: galleryUrl,
         canonicalUri: galleryUri,
       })
       expectPersisted(body.associatedRefs, body.associatedRecords, [galleryUri])
@@ -974,7 +975,7 @@ describe('app.bsky.embed.getEmbedExternalView', () => {
         .spyOn(fixture.dataplane, 'getAtmosphereBacklinks')
         .mockRejectedValue(failure())
       const { status, body } = await fixture.query({
-        url: 'https://good.com/gallery/1',
+        url: galleryUrl,
         canonicalUri: galleryUri,
       })
       expect(status).toBe(200)
@@ -988,7 +989,7 @@ describe('app.bsky.embed.getEmbedExternalView', () => {
       await using fixture = await setup()
       fixture.failing.add(photoUri)
       const { status, body } = await fixture.query({
-        url: 'https://good.com/gallery/1',
+        url: galleryUrl,
         canonicalUri: galleryUri,
       })
       expect(status).toBe(200)
@@ -1024,7 +1025,7 @@ describe('app.bsky.embed.getEmbedExternalView', () => {
     it('returns gallery data with dependencies, normal associations, and no legacy view', async () => {
       await using fixture = await setup()
       const { status, body } = await fixture.query({
-        url: 'https://good.com/gallery/1',
+        url: galleryUrl,
         canonicalUri: galleryUri,
       })
       expect(status).toBe(200)
@@ -1045,6 +1046,10 @@ describe('app.bsky.embed.getEmbedExternalView', () => {
 
     it('returns livestream data on a wildcard-trusted host', async () => {
       await using fixture = await setup(['*.good.com'])
+      fixture.records.set(liveUri, {
+        ...fixture.records.get(liveUri)!,
+        canonicalUrl: 'https://sub.good.com/live',
+      })
       const { body } = await fixture.query({
         url: 'https://sub.good.com/live',
         canonicalUri: liveUri,
@@ -1057,10 +1062,39 @@ describe('app.bsky.embed.getEmbedExternalView', () => {
     })
 
     test.each([
-      ['an unlisted host', safeDomains, 'https://evil.com/gallery'],
-      ['a wildcard apex', ['*.good.com'], 'https://good.com/gallery'],
-      ['plain HTTP', safeDomains, 'http://good.com/gallery'],
-      ['an empty allowlist', [], 'https://good.com/gallery'],
+      ['an unlisted host', ['good.com'], galleryUrl],
+      [
+        'a different gallery DID',
+        safeDomains,
+        'https://grain.social/profile/did:plc:victim/gallery/gallery',
+      ],
+      [
+        'a URL-encoded different gallery DID',
+        safeDomains,
+        'https://grain.social/profile/did%3Aplc%3Avictim/gallery/gallery',
+      ],
+      [
+        'a different gallery rkey',
+        safeDomains,
+        'https://grain.social/profile/alice.test/gallery/other',
+      ],
+      [
+        'a gallery rkey prefix',
+        safeDomains,
+        'https://grain.social/profile/alice.test/gallery/gallery-other',
+      ],
+      [
+        'an allowlisted non-Grain host',
+        safeDomains,
+        'https://good.com/gallery',
+      ],
+      ['a wildcard apex', ['*.grain.social'], galleryUrl],
+      [
+        'plain HTTP',
+        safeDomains,
+        'http://grain.social/profile/alice.test/gallery/gallery',
+      ],
+      ['an empty allowlist', [], galleryUrl],
     ] as [string, string[], string][])(
       'returns unverified output without building views for %s',
       async (_, domains, url) => {
@@ -1085,20 +1119,21 @@ describe('app.bsky.embed.getEmbedExternalView', () => {
       },
     )
 
-    it('validates the request url, not a url declared by the record', async () => {
+    it('requires both a matching livestream URL and an allowlisted request host', async () => {
       await using fixture = await setup(['evil.com'])
-      // The livestream record declares good.com URLs, which are not trusted.
-      const { body } = await fixture.query({
+      const mismatch = await fixture.query({
         url: 'https://evil.com/live',
         canonicalUri: liveUri,
       })
-      expect(body.data).toBeDefined()
+      expect(mismatch.body.data).toBeUndefined()
+      expect(mismatch.body.unverifiedAssociatedRefs).toBeDefined()
       const untrusted = await fixture.query({
-        url: 'https://good.com/live',
+        url: 'https://good.com/author',
         canonicalUri: liveUri,
       })
       expect(untrusted.body.data).toBeUndefined()
       expect(untrusted.body.unverifiedAssociatedRefs).toBeDefined()
+      expect(fixture.spies.data).not.toHaveBeenCalled()
     })
 
     it('returns normal associations without data for a supported-url record that has no modality', async () => {
@@ -1116,7 +1151,7 @@ describe('app.bsky.embed.getEmbedExternalView', () => {
     it('returns {} for a missing canonical record', async () => {
       await using fixture = await setup()
       const { body } = await fixture.query({
-        url: 'https://good.com/gallery',
+        url: galleryUrl,
         canonicalUri: atUri(author, grainGallery.$type, 'nope'),
       })
       expect(body).toEqual({})
@@ -1126,7 +1161,7 @@ describe('app.bsky.embed.getEmbedExternalView', () => {
       await using fixture = await setup()
       fixture.takenDown.add(galleryUri)
       const { body } = await fixture.query({
-        url: 'https://good.com/gallery',
+        url: galleryUrl,
         canonicalUri: galleryUri,
       })
       expect(body).toEqual({})
@@ -1141,7 +1176,7 @@ describe('app.bsky.embed.getEmbedExternalView', () => {
         cts: publishedAt,
       })
       const { body } = await fixture.query({
-        url: 'https://good.com/gallery',
+        url: galleryUrl,
         canonicalUri: galleryUri,
       })
       expect(body).toEqual({})

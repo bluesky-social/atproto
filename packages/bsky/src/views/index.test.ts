@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import {
   type AtUriString,
   type DatetimeString,
@@ -305,8 +305,30 @@ describe('Views.externalEmbed Standard.site roots', () => {
         source: { title: 'Latest publication' },
         associatedRefs: refs,
       })
+      expect(view.data).toMatchObject({
+        $type: app.bsky.embed.external.viewArticle.$type,
+        title: 'Document',
+        associatedRefs: [
+          { uri: docUri, cid: docRef.cid },
+          { uri: pubUri, cid: 'pub-v2' },
+        ],
+        publisher: { title: 'Latest publication' },
+      })
     },
   )
+
+  it('builds data independently of legacy overlay renderability', () => {
+    using overlay = vi
+      .spyOn(views, 'externalEmbedFromStandardSite')
+      .mockReturnValue(undefined)
+    const view = views.externalEmbed(author, embedOf(docRef), stateOf())
+    expect(overlay).toHaveBeenCalledOnce()
+    expect(view.external.title).toBe('Scraped')
+    expect(view.data).toMatchObject({
+      $type: app.bsky.embed.external.viewArticle.$type,
+      title: 'Document',
+    })
+  })
 
   it('ignores moderated authored refs that are not the root or its dependency', () => {
     const ignored = {
@@ -330,6 +352,7 @@ describe('Views.externalEmbed Standard.site roots', () => {
     const view = views.externalEmbed(author, embedOf(pubRef, docRef), state)
     expect(view.external.title).toBe('Scraped')
     expect(view.external.source).toBeUndefined()
+    expect(view.data).toBeUndefined()
   })
 
   it('keeps the bare card when nothing is pinned', () => {
@@ -339,6 +362,7 @@ describe('Views.externalEmbed Standard.site roots', () => {
       description: 'Scraped description',
     })
     expect(view.external.source).toBeUndefined()
+    expect(view.data).toBeUndefined()
   })
 
   it.each([docRef, pubRef])(
@@ -352,6 +376,7 @@ describe('Views.externalEmbed Standard.site roots', () => {
         associatedRefs: [docRef, pubRef],
       })
       expect(view.external.source).toBeUndefined()
+      expect(view.data).toBeUndefined()
     },
   )
 
@@ -383,6 +408,11 @@ describe('Views.externalEmbed Standard.site roots', () => {
     expect(view.external).toMatchObject({
       title: 'Publication',
       source: { title: 'Publication' },
+    })
+    expect(view.data).toMatchObject({
+      $type: app.bsky.embed.external.viewArticlePublication.$type,
+      title: 'Publication',
+      associatedRefs: [{ uri: pubUri, cid: pubRef.cid }],
     })
   })
 })

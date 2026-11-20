@@ -63,7 +63,7 @@ export default function (server: Server, ctx: AppContext) {
           )
         }
         body = {
-          view: ctx.views.externalRecordView(uri, state, undefined, cid),
+          view: ctx.views.externalRecordView({ uri, cid }, state),
           ...collectAssociations(uri, dependencies, root),
         }
       }
