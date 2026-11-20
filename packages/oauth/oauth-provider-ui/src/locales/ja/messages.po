@@ -8,7 +8,7 @@ msgstr ""
 "Language: ja\n"
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"PO-Revision-Date: 2026-08-07 18:00+0900\n"
+"PO-Revision-Date: 2026-11-20 20:00+0900\n"
 "Last-Translator: dolciss\n"
 "Language-Team: Japanese\n"
 "Plural-Forms: \n"
@@ -30,7 +30,7 @@ msgstr "{0, plural, one {昨日} other {# 日前}}"
 
 #: src/components/feedback/retry-after-notice.tsx
 msgid "{remaining, plural, one {Please try again in # second.} other {Please try again in # seconds.}}"
-msgstr ""
+msgstr "{remaining, plural, other {# 秒後に再試行してください。}}"
 
 #: src/routes/account/u/$accountId/-about/en.tsx
 msgid "<0>AT Protocol</0> — Technical documentation for developers"
@@ -1326,7 +1326,7 @@ msgstr "メールアドレスを確認するには、<0>{email}</0> に送信さ
 
 #: src/lib/api.ts
 msgid "Too many attempts."
-msgstr ""
+msgstr "試行回数が多すぎます。"
 
 #: src/components/utils/scope-description.tsx
 msgctxt "RPC aud"
@@ -1360,7 +1360,7 @@ msgstr "ユーザー名を入力"
 
 #: src/lib/api.ts
 msgid "Unable to verify that you are human. Please try again later."
-msgstr ""
+msgstr "あなたが人間であることを確認できません。後でもう一度お試しください。"
 
 #: src/contexts/session.tsx
 msgid "Unauthorized"
@@ -1565,7 +1565,7 @@ msgstr "新しいパスワードでサインインできるようになりまし
 
 #: src/components/feedback/retry-after-notice.tsx
 msgid "You can try again now."
-msgstr ""
+msgstr "再試行できます。"
 
 #: src/data/email.ts
 msgid "You will no longer be prompted for a code to sign in."
