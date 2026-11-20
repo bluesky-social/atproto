@@ -1,5 +1,11 @@
 # @atproto/pds
 
+## 0.5.64
+
+### Patch Changes
+
+- [#5966](https://github.com/bluesky-social/atproto/pull/5966) [`1079900`](https://github.com/bluesky-social/atproto/commit/1079900b5ba5e8b31ef01d3efcd22a556a611a8a) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Avoid waiting for unrelated network requests when asserting page titles in browser tests.
+
 ## 0.5.63
 
 ### Patch Changes

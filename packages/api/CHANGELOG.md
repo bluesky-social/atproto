@@ -1,5 +1,15 @@
 # @atproto/api
 
+## 0.32.5
+
+### Patch Changes
+
+- [#5966](https://github.com/bluesky-social/atproto/pull/5966) [`1079900`](https://github.com/bluesky-social/atproto/commit/1079900b5ba5e8b31ef01d3efcd22a556a611a8a) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add optional `providerId` attribution to external article, publication, gallery, and livestream views. Detect providers server-side from known record types, Standard.site document content and publication theme type tags (including custom domains), and URL fallbacks. Attribution is best-effort and cosmetic, not verified provenance.
+
+- [#5973](https://github.com/bluesky-social/atproto/pull/5973) [`2c3b0a2`](https://github.com/bluesky-social/atproto/commit/2c3b0a20905a8269437ba8f7ba48e15c1ba9527e) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Use upstream Atmosphere and external embed lexicons in place of local overrides, and remove app store links from Atmosphere app cards.
+
+- [#5967](https://github.com/bluesky-social/atproto/pull/5967) [`b6408e5`](https://github.com/bluesky-social/atproto/commit/b6408e54bc62eb7d5d32c4d401865af6aec0085c) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add `viewer.like` to external article and gallery views, containing the requesting account's Standard.site recommendation or Grain favorite record URI.
+
 ## 0.32.4
 
 ### Patch Changes
