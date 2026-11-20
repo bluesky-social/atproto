@@ -50,6 +50,7 @@ export class MockEntryway {
   public plcRotationKey: Secp256k1Keypair
   public idResolver: IdResolver
   /** Whether new accounts' genesis ops name a KEM key reserved on the PDS. */
+
   get includeKemKey(): boolean {
     return this.settings.includeKemKey
   }
@@ -223,8 +224,13 @@ export class MockEntryway {
         const plcCreate = settings.includeKemKey
           ? await createPlcOp({
               signingKey,
-              kemKey: (await pdsClient.call(internal.pds.reserveKemKey, {}))
-                .kemKey,
+              kemKey: (
+                await pdsClient.call(
+                  internal.pds.reserveKemKey,
+                  {},
+                  { headers: adminHeaders(opts.adminPassword) },
+                )
+              ).kemKey,
               rotationKeys: [opts.plcRotationKey.did()],
               handle,
               pds: opts.pdsUrl,

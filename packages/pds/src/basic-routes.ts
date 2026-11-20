@@ -45,17 +45,15 @@ Most API routes are under /xrpc/
       res.status(503).send({ version, error: 'Service Unavailable' })
       return
     }
-    // Omitted until the first summary is in. Never queried per request.
+    // Omitted until the first summary is in, and never queried per request.
+    // Once complete, only the state is reported.
+    const publisher = ctx.spacesMigration.publisher.state
     const summary = ctx.spacesMigration.summaryCache.latest
-    res.send({
-      version,
-      ...(summary && {
-        spacesMigration: {
-          publisher: ctx.spacesMigration.publisher.state,
-          ...summary,
-        },
-      }),
-    })
+    const spacesMigration =
+      ctx.cfg.spacesMigration.state === 'complete'
+        ? { publisher }
+        : summary && { publisher, ...summary }
+    res.send({ version, ...(spacesMigration && { spacesMigration }) })
   })
 
   return router

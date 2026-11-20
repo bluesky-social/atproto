@@ -66,7 +66,7 @@ describe('spaces migration health', () => {
     plcServer = await TestPlc.create({})
     pds = await TestPds.create({
       didPlcUrl: plcServer.url,
-      spacesMigrationDisabled: true,
+      spacesMigration: 'disabled',
     })
     ctx = pds.ctx as unknown as AppContext
     db = ctx.accountManager.db
@@ -115,7 +115,7 @@ describe('spaces migration health', () => {
     ctx.spacesMigration.summaryCache.start()
     const onRecorded = () => ctx.spacesMigration.summaryCache.refreshSoon()
     const opts = {
-      disabled: false,
+      state: 'enabled' as const,
       publishIntervalMs: 0,
       jitterWindowMs: 0,
       sweepIntervalMs: 0,
@@ -253,6 +253,35 @@ describe('spaces migration health', () => {
       const calls = query.mock.calls.length
       await wait(50)
       expect(query).toHaveBeenCalledTimes(calls)
+    })
+  })
+  describe('once the migration is complete', () => {
+    it('runs no workers and reports only the state', async () => {
+      const { TestPds, TestPlc } = await import('@atproto/dev-env')
+      const { SpacesMigrationProgress } =
+        await import('../src/spaces-migration/progress.js')
+      using summary = jest.spyOn(SpacesMigrationProgress.prototype, 'summary')
+      using seed = jest.spyOn(SpacesMigrationProgress.prototype, 'seed')
+      const plc = await TestPlc.create({})
+      const done = await TestPds.create({
+        didPlcUrl: plc.url,
+        spacesMigration: 'complete',
+      })
+      try {
+        await wait(100)
+        const res = await fetch(`${done.url}/xrpc/_health`)
+        expect(await res.json()).toEqual({
+          version: expect.any(String),
+          spacesMigration: { publisher: 'complete' },
+        })
+        const doneCtx = done.ctx as unknown as AppContext
+        expect(doneCtx.spacesMigration.sweep.state).toBe('complete')
+        expect(summary).not.toHaveBeenCalled()
+        expect(seed).not.toHaveBeenCalled()
+      } finally {
+        await done.close()
+        await plc.close()
+      }
     })
   })
 })

@@ -1,5 +1,15 @@
-import type { Selectable, UpdateObject } from 'kysely'
-import { type DidString, currentDatetimeString } from '@atproto/syntax'
+import type {
+  Expression,
+  ExpressionBuilder,
+  Selectable,
+  SqlBool,
+  UpdateObject,
+} from 'kysely'
+import {
+  type DidString,
+  currentDatetimeString,
+  toDatetimeString,
+} from '@atproto/syntax'
 import type {
   AccountDb,
   DatabaseSchema,
@@ -30,6 +40,9 @@ export type SpacesMigrationSummary = {
 }
 
 const SEED_BATCH_SIZE = 500
+// Rows per summary query. Small enough that each one barely blocks the event
+// loop, since sqlite queries run synchronously on it.
+const SUMMARY_CHUNK_SIZE = 2000
 
 /**
  * Adds a new account's row. An account whose genesis op published its KEM key
@@ -48,15 +61,15 @@ export async function registerSpacesMigration(
     unpublishableReason: null,
     attempts: 0,
     lastError: null,
-    nextAttemptAt: 0,
+    nextAttemptAt: now,
     priority: 0,
     leaseOwner: null,
-    leaseExpiresAt: 0,
+    leaseExpiresAt: null,
     sweepLeaseOwner: null,
-    sweepLeaseExpiresAt: 0,
+    sweepLeaseExpiresAt: null,
     sweepAttempts: 0,
     sweepLastError: null,
-    sweepNextAttemptAt: 0,
+    sweepNextAttemptAt: now,
   }
   // Replaces any row left by an earlier account with this DID
   await db.executeWithRetry(
@@ -68,13 +81,37 @@ export async function registerSpacesMigration(
 }
 
 /**
+ * Makes a parked account due, e.g. once it is activated. A parked row's
+ * `nextAttemptAt` is null: no attempt is scheduled until an event unparks it.
+ */
+export async function unparkSpacesMigration(
+  db: AccountDb,
+  did: DidString,
+): Promise<void> {
+  await db.executeWithRetry(
+    db.db
+      .updateTable('spaces_migration')
+      .set({ nextAttemptAt: currentDatetimeString() })
+      .where('did', '=', did)
+      .where('nextAttemptAt', 'is', null),
+  )
+}
+
+/**
  * The account DB's record of each account's migration into spaces. Columns
  * record facts (store migrated, key published, why it can't be published,
  * failures) rather than a single state. Background workers claim rows with
  * per-row leases so that several processes can share the work.
  */
 export class SpacesMigrationProgress {
-  constructor(public db: AccountDb) {}
+  private readonly summaryChunkSize: number
+
+  constructor(
+    public db: AccountDb,
+    opts: { summaryChunkSize?: number } = {},
+  ) {
+    this.summaryChunkSize = opts.summaryChunkSize ?? SUMMARY_CHUNK_SIZE
+  }
 
   /** Adds a row for every account without one. Returns the rows added. */
   async seed(): Promise<number> {
@@ -103,30 +140,73 @@ export class SpacesMigrationProgress {
   }
 
   /**
-   * Leases up to `limit` accounts whose key is due to be published, highest
-   * priority first. With `priorityOnly`, only prioritized accounts.
+   * Leases up to `limit` accounts of the given priority whose key is due.
+   * Deactivated accounts are claimed too, for the caller to park.
    */
   async claimDue(
     owner: string,
     now: number,
     limit: number,
     leaseMs: number,
-    opts?: { priorityOnly?: boolean },
+    priority: 0 | 1,
   ): Promise<DidString[]> {
     const { db } = this.db
-    let due = db
+    const nowAt = toDatetimeString(now)
+    // Equality on priority lets nextAttemptAt bound the scan of
+    // spaces_migration_due_idx
+    const due = db
       .selectFrom('spaces_migration')
       .select('did')
       .where('kemPublishedAt', 'is', null)
       .where('unpublishableReason', 'is', null)
-      .where('nextAttemptAt', '<=', now)
+      .where('priority', '=', priority)
+      .where('nextAttemptAt', '<=', nowAt)
       .where((eb) =>
-        eb.or([eb('leaseOwner', 'is', null), eb('leaseExpiresAt', '<=', now)]),
+        eb.or([
+          eb('leaseOwner', 'is', null),
+          eb('leaseExpiresAt', '<=', nowAt),
+        ]),
       )
-      // A deactivated account may be migrating in, its DID doc not yet
-      // pointing here. It is published once activated.
-      .where(({ not, exists, selectFrom }) =>
-        not(
+      .orderBy('nextAttemptAt', 'asc')
+      .limit(limit)
+    // One statement, so the lease is taken atomically: the conditions are
+    // re-checked against each row as it is updated
+    const claimed = await this.db.executeWithRetry(
+      db
+        .updateTable('spaces_migration')
+        .set({
+          leaseOwner: owner,
+          leaseExpiresAt: toDatetimeString(now + leaseMs),
+        })
+        .where('did', 'in', due)
+        .where('kemPublishedAt', 'is', null)
+        .where('unpublishableReason', 'is', null)
+        .where((eb) =>
+          eb.or([
+            eb('leaseOwner', 'is', null),
+            eb('leaseExpiresAt', '<=', nowAt),
+          ]),
+        )
+        .returning('did'),
+    )
+    return claimed.map(({ did }) => did)
+  }
+
+  /**
+   * Parks a leased account if it is deactivated, releasing the lease. A
+   * deactivated account may be migrating in, its DID doc not yet pointing
+   * here, so it waits for activation to unpark it. Checked in the same
+   * statement as the write, so an account activated since its claim is never
+   * parked.
+   */
+  async parkIfDeactivated(did: DidString, owner: string): Promise<boolean> {
+    const [res] = await this.db.executeWithRetry(
+      this.db.db
+        .updateTable('spaces_migration')
+        .set({ nextAttemptAt: null, leaseOwner: null, leaseExpiresAt: null })
+        .where('did', '=', did)
+        .where('leaseOwner', '=', owner)
+        .where(({ exists, selectFrom }) =>
           exists(
             selectFrom('actor')
               .select('actor.did')
@@ -134,29 +214,8 @@ export class SpacesMigrationProgress {
               .where('actor.deactivatedAt', 'is not', null),
           ),
         ),
-      )
-      .orderBy('priority', 'desc')
-      .orderBy('nextAttemptAt', 'asc')
-      .limit(limit)
-    if (opts?.priorityOnly) due = due.where('priority', '>', 0)
-    // One statement, so the lease is taken atomically: the conditions are
-    // re-checked against each row as it is updated
-    const claimed = await this.db.executeWithRetry(
-      db
-        .updateTable('spaces_migration')
-        .set({ leaseOwner: owner, leaseExpiresAt: now + leaseMs })
-        .where('did', 'in', due)
-        .where('kemPublishedAt', 'is', null)
-        .where('unpublishableReason', 'is', null)
-        .where((eb) =>
-          eb.or([
-            eb('leaseOwner', 'is', null),
-            eb('leaseExpiresAt', '<=', now),
-          ]),
-        )
-        .returning('did'),
     )
-    return claimed.map(({ did }) => did)
+    return res.numUpdatedRows > 0
   }
 
   /** Leases up to `limit` accounts whose store hasn't been swept. */
@@ -167,29 +226,33 @@ export class SpacesMigrationProgress {
     leaseMs: number,
   ): Promise<DidString[]> {
     const { db } = this.db
+    const nowAt = toDatetimeString(now)
     const unswept = db
       .selectFrom('spaces_migration')
       .select('did')
       .where('storeMigratedAt', 'is', null)
-      .where('sweepNextAttemptAt', '<=', now)
+      .where('sweepNextAttemptAt', '<=', nowAt)
       .where((eb) =>
         eb.or([
           eb('sweepLeaseOwner', 'is', null),
-          eb('sweepLeaseExpiresAt', '<=', now),
+          eb('sweepLeaseExpiresAt', '<=', nowAt),
         ]),
       )
       .limit(limit)
     const claimed = await this.db.executeWithRetry(
       db
         .updateTable('spaces_migration')
-        .set({ sweepLeaseOwner: owner, sweepLeaseExpiresAt: now + leaseMs })
+        .set({
+          sweepLeaseOwner: owner,
+          sweepLeaseExpiresAt: toDatetimeString(now + leaseMs),
+        })
         .where('did', 'in', unswept)
         .where('storeMigratedAt', 'is', null)
-        .where('sweepNextAttemptAt', '<=', now)
+        .where('sweepNextAttemptAt', '<=', nowAt)
         .where((eb) =>
           eb.or([
             eb('sweepLeaseOwner', 'is', null),
-            eb('sweepLeaseExpiresAt', '<=', now),
+            eb('sweepLeaseExpiresAt', '<=', nowAt),
           ]),
         )
         .returning('did'),
@@ -204,10 +267,9 @@ export class SpacesMigrationProgress {
         .set({
           storeMigratedAt: currentDatetimeString(),
           sweepLeaseOwner: null,
-          sweepLeaseExpiresAt: 0,
+          sweepLeaseExpiresAt: null,
           sweepAttempts: 0,
           sweepLastError: null,
-          sweepNextAttemptAt: 0,
         })
         .where('did', '=', did)
         .where('sweepLeaseOwner', '=', owner),
@@ -227,9 +289,9 @@ export class SpacesMigrationProgress {
         .set({
           sweepAttempts: (eb) => eb('sweepAttempts', '+', 1),
           sweepLastError: errorMessage(err),
-          sweepNextAttemptAt: nextAttemptAt,
+          sweepNextAttemptAt: toDatetimeString(nextAttemptAt),
           sweepLeaseOwner: null,
-          sweepLeaseExpiresAt: 0,
+          sweepLeaseExpiresAt: null,
         })
         .where('did', '=', did)
         .where('sweepLeaseOwner', '=', owner),
@@ -260,7 +322,9 @@ export class SpacesMigrationProgress {
         .insertInto('spaces_migration_state')
         .values({
           id: 1,
-          publishStartAt: now + jitterDelayMs(hostname, windowMs),
+          publishStartAt: toDatetimeString(
+            now + jitterDelayMs(hostname, windowMs),
+          ),
         })
         .onConflict((oc) => oc.doNothing()),
     )
@@ -269,7 +333,7 @@ export class SpacesMigrationProgress {
       .select('publishStartAt')
       .where('id', '=', 1)
       .executeTakeFirstOrThrow()
-    return state.publishStartAt
+    return Date.parse(state.publishStartAt)
   }
 
   async holdsLease(did: DidString, owner: string, now: number) {
@@ -278,7 +342,7 @@ export class SpacesMigrationProgress {
       .select('did')
       .where('did', '=', did)
       .where('leaseOwner', '=', owner)
-      .where('leaseExpiresAt', '>', now)
+      .where('leaseExpiresAt', '>', toDatetimeString(now))
       .executeTakeFirst()
     return held !== undefined
   }
@@ -289,7 +353,6 @@ export class SpacesMigrationProgress {
       unpublishableReason: null,
       attempts: 0,
       lastError: null,
-      nextAttemptAt: 0,
     })
   }
 
@@ -310,7 +373,7 @@ export class SpacesMigrationProgress {
     await this.updateLeased(did, owner, {
       attempts: (eb) => eb('attempts', '+', 1),
       lastError: errorMessage(err),
-      nextAttemptAt,
+      nextAttemptAt: toDatetimeString(nextAttemptAt),
     })
   }
 
@@ -350,7 +413,7 @@ export class SpacesMigrationProgress {
           unpublishableReason: check.unpublishableReason,
           attempts: 0,
           lastError: null,
-          nextAttemptAt: 0,
+          nextAttemptAt: currentDatetimeString(),
         }
     await this.db.executeWithRetry(
       this.db.db
@@ -362,7 +425,7 @@ export class SpacesMigrationProgress {
 
   /** Publishes the account ahead of others, and before the start delay. */
   async bump(did: DidString): Promise<void> {
-    const values = { priority: 1, nextAttemptAt: 0 }
+    const values = { priority: 1, nextAttemptAt: currentDatetimeString() }
     await this.db.executeWithRetry(
       this.db.db
         .insertInto('spaces_migration')
@@ -379,88 +442,96 @@ export class SpacesMigrationProgress {
       .executeTakeFirst()
   }
 
+  /**
+   * Counts in chunks of rows, yielding to the event loop between them. Chunks
+   * are read at different moments, so under concurrent writes the counts are
+   * approximate, but each row is counted exactly once.
+   */
   async summary(): Promise<SpacesMigrationSummary> {
-    const res = await this.db.db
+    const totals: SpacesMigrationSummary = {
+      total: 0,
+      storesMigrated: 0,
+      keysPublished: 0,
+      unpublishable: 0,
+      deactivated: 0,
+      failing: 0,
+      sweepFailing: 0,
+    }
+    let cursor: DidString | undefined
+    for (;;) {
+      const chunk = await this.summarizeChunk(cursor)
+      if (chunk.last === null) return totals
+      for (const key of Object.keys(totals) as (keyof typeof totals)[]) {
+        totals[key] += Number(chunk[key] ?? 0)
+      }
+      cursor = chunk.last
+      await yieldToEventLoop()
+    }
+  }
+
+  private async summarizeChunk(after: DidString | undefined) {
+    const { db } = this.db
+    let rows = db
       .selectFrom('spaces_migration')
       .innerJoin('actor', 'actor.did', 'spaces_migration.did')
+      .select([
+        'spaces_migration.did',
+        'storeMigratedAt',
+        'kemPublishedAt',
+        'unpublishableReason',
+        'attempts',
+        'sweepAttempts',
+        'actor.deactivatedAt',
+      ])
+      .orderBy('spaces_migration.did')
+      .limit(this.summaryChunkSize)
+    if (after !== undefined) {
+      rows = rows.where('spaces_migration.did', '>', after)
+    }
+    const pending = (eb: ExpressionBuilder<ChunkRow, 'chunk'>) =>
+      eb.and([
+        eb('kemPublishedAt', 'is', null),
+        eb('unpublishableReason', 'is', null),
+      ])
+    const countWhen = (
+      eb: ExpressionBuilder<ChunkRow, 'chunk'>,
+      cond: Expression<SqlBool>,
+    ) => eb.fn.sum<number>(eb.case().when(cond).then(1).else(0).end())
+    return db
+      .selectFrom(rows.as('chunk'))
       .select((eb) => [
+        eb.fn.max<DidString | null>('did').as('last'),
         eb.fn.countAll<number>().as('total'),
         eb.fn.count<number>('storeMigratedAt').as('storesMigrated'),
         eb.fn.count<number>('kemPublishedAt').as('keysPublished'),
-        eb.fn
-          .sum<number>(
-            eb
-              .case()
-              .when(
-                eb.and([
-                  eb('kemPublishedAt', 'is', null),
-                  eb('unpublishableReason', 'is not', null),
-                ]),
-              )
-              .then(1)
-              .else(0)
-              .end(),
-          )
-          .as('unpublishable'),
-        eb.fn
-          .sum<number>(
-            eb
-              .case()
-              .when(
-                eb.and([
-                  eb('kemPublishedAt', 'is', null),
-                  eb('unpublishableReason', 'is', null),
-                  eb('actor.deactivatedAt', 'is not', null),
-                ]),
-              )
-              .then(1)
-              .else(0)
-              .end(),
-          )
-          .as('deactivated'),
-        eb.fn
-          .sum<number>(
-            eb
-              .case()
-              .when(
-                eb.and([
-                  eb('kemPublishedAt', 'is', null),
-                  eb('unpublishableReason', 'is', null),
-                  eb('actor.deactivatedAt', 'is', null),
-                  eb('attempts', '>', 0),
-                ]),
-              )
-              .then(1)
-              .else(0)
-              .end(),
-          )
-          .as('failing'),
-        eb.fn
-          .sum<number>(
-            eb
-              .case()
-              .when(
-                eb.and([
-                  eb('storeMigratedAt', 'is', null),
-                  eb('sweepAttempts', '>', 0),
-                ]),
-              )
-              .then(1)
-              .else(0)
-              .end(),
-          )
-          .as('sweepFailing'),
+        countWhen(
+          eb,
+          eb.and([
+            eb('kemPublishedAt', 'is', null),
+            eb('unpublishableReason', 'is not', null),
+          ]),
+        ).as('unpublishable'),
+        countWhen(
+          eb,
+          eb.and([pending(eb), eb('deactivatedAt', 'is not', null)]),
+        ).as('deactivated'),
+        countWhen(
+          eb,
+          eb.and([
+            pending(eb),
+            eb('deactivatedAt', 'is', null),
+            eb('attempts', '>', 0),
+          ]),
+        ).as('failing'),
+        countWhen(
+          eb,
+          eb.and([
+            eb('storeMigratedAt', 'is', null),
+            eb('sweepAttempts', '>', 0),
+          ]),
+        ).as('sweepFailing'),
       ])
       .executeTakeFirstOrThrow()
-    return {
-      total: Number(res.total),
-      storesMigrated: Number(res.storesMigrated),
-      keysPublished: Number(res.keysPublished),
-      unpublishable: Number(res.unpublishable ?? 0),
-      deactivated: Number(res.deactivated ?? 0),
-      failing: Number(res.failing ?? 0),
-      sweepFailing: Number(res.sweepFailing ?? 0),
-    }
   }
 
   // Updates the row and releases its lease, if `owner` still holds it
@@ -472,12 +543,27 @@ export class SpacesMigrationProgress {
     await this.db.executeWithRetry(
       this.db.db
         .updateTable('spaces_migration')
-        .set({ ...values, leaseOwner: null, leaseExpiresAt: 0 })
+        .set({ ...values, leaseOwner: null, leaseExpiresAt: null })
         .where('did', '=', did)
         .where('leaseOwner', '=', owner),
     )
   }
 }
+
+type ChunkRow = {
+  chunk: {
+    did: DidString
+    storeMigratedAt: string | null
+    kemPublishedAt: string | null
+    unpublishableReason: string | null
+    attempts: number
+    sweepAttempts: number
+    deactivatedAt: string | null
+  }
+}
+
+const yieldToEventLoop = () =>
+  new Promise<void>((resolve) => setImmediate(resolve))
 
 function errorMessage(err: unknown): string {
   const message = err instanceof Error ? err.message : String(err)

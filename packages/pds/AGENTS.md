@@ -33,5 +33,15 @@ exists:
 - The PDS publisher never runs behind an entryway; the entryway publishes and
   the PDS only exposes the `internal.pds.*` endpoints.
 - Background migration workers must never throw out to the process.
-- Progress rows come from account creation and the sweep's seed only, so the
-  publisher must never run where the sweep doesn't.
+- Progress rows come from account creation and the sweep's seed, and are also
+  upserted by `bump()` and `recordChecked()`. Only the sweep migrates their
+  stores, so the publisher must never run where the sweep doesn't.
+- A deactivated account's row is parked (`nextAttemptAt` null) and only
+  `AccountManager.activateAccount` unparks it, in the activation's transaction.
+- `PDS_SPACES_MIGRATION=complete` lets code assume every held KEM key is
+  published, instead of reading the progress table or PLC. Any such shortcut
+  must be safe when set wrongly: it may refuse a request, never corrupt data.
+  Claims scan one priority at a time so that `nextAttemptAt` bounds the index
+  scan; a claim that visits parked or backing-off rows is a regression.
+- SQLite queries block the event loop. A recurring query over every row (the
+  health summary) runs in keyset chunks, yielding between them.
