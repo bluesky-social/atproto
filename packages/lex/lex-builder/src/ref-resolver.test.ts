@@ -56,6 +56,50 @@ describe('RefResolver', () => {
     expect(imports[0].getModuleSpecifierValue()).toBe('./bar.defs.js')
   })
 
+  it('resolves refs to a parent namespace', async () => {
+    const project = new Project({ useInMemoryFileSystem: true })
+    const file = project.createSourceFile('/com/example/foo/child.defs.ts')
+    const childDoc: LexiconDocument = {
+      lexicon: 1,
+      id: 'com.example.foo.child',
+      defs: {
+        main: { type: 'token' },
+      },
+    }
+    const indexer = new DummyIndexer([...docs, childDoc])
+    const resolver = new RefResolver(childDoc, file, indexer, {})
+
+    await resolver.resolve('com.example.foo#main')
+
+    const imports = file.getImportDeclarations()
+    expect(imports).toHaveLength(1)
+    expect(imports[0].getModuleSpecifierValue()).toBe('../foo.defs.js')
+  })
+
+  it('resolves refs to a grandparent namespace without import extension', async () => {
+    const project = new Project({ useInMemoryFileSystem: true })
+    const file = project.createSourceFile(
+      '/com/example/foo/child/grandchild.defs.ts',
+    )
+    const grandchildDoc: LexiconDocument = {
+      lexicon: 1,
+      id: 'com.example.foo.child.grandchild',
+      defs: {
+        main: { type: 'token' },
+      },
+    }
+    const indexer = new DummyIndexer([...docs, grandchildDoc])
+    const resolver = new RefResolver(grandchildDoc, file, indexer, {
+      importExt: '',
+    })
+
+    await resolver.resolve('com.example.foo#main')
+
+    const imports = file.getImportDeclarations()
+    expect(imports).toHaveLength(1)
+    expect(imports[0].getModuleSpecifierValue()).toBe('../../foo.defs')
+  })
+
   it('uses custom moduleSpecifier when provided', async () => {
     const project = new Project({ useInMemoryFileSystem: true })
     const file = project.createSourceFile('/com/example/foo.defs.ts')
