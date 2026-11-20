@@ -291,40 +291,43 @@ describe('spaces migration sweep', () => {
   })
 
   describe('space authorization', () => {
-    // The hook the provider calls before it answers an authorization
+    // The hook the provider calls once it issues a token, with the token's
+    // scope (permission sets expanded)
     const authorize = async (did: DidString, scope: string) => {
       const provider = ctx.oauthProvider as unknown as {
-        hooks: { onAuthorized: (data: unknown) => Promise<void> }
+        hooks: { onTokenCreated: (data: unknown) => Promise<void> }
       }
-      await provider.hooks.onAuthorized({
+      await provider.hooks.onTokenCreated({
         account: { did },
         client: { id: 'https://client.example/meta.json' },
-        parameters: { scope },
+        parameters: { scope: 'atproto include:com.example.perms' },
+        scope,
       })
     }
 
     it('bumps an account that authorizes with space access', async () => {
       const did = await createAccount()
       expect((await row(did))?.priority).toBe(0)
-      using wake = jest.spyOn(ctx.spacesMigration.publisher, 'wake')
+      using bump = jest.spyOn(ctx.spacesMigration.progress, 'bump')
 
+      // As expanded from a permission set
       await authorize(did, 'atproto space:foo')
 
       expect((await row(did))?.priority).toBe(1)
-      expect(wake).toHaveBeenCalledTimes(1)
+      expect(bump).toHaveBeenCalledTimes(1)
     })
 
     it('leaves an account that authorizes without space access', async () => {
       const did = await createAccount()
-      using wake = jest.spyOn(ctx.spacesMigration.publisher, 'wake')
+      using bump = jest.spyOn(ctx.spacesMigration.progress, 'bump')
 
       await authorize(did, 'atproto')
 
       expect((await row(did))?.priority).toBe(0)
-      expect(wake).not.toHaveBeenCalled()
+      expect(bump).not.toHaveBeenCalled()
     })
 
-    it('authorization succeeds when the bump fails', async () => {
+    it('issuing the token succeeds when the bump fails', async () => {
       const did = await createAccount()
       using bump = jest
         .spyOn(ctx.spacesMigration.progress, 'bump')

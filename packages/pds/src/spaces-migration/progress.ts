@@ -105,6 +105,7 @@ export async function unparkSpacesMigration(
  */
 export class SpacesMigrationProgress {
   private readonly summaryChunkSize: number
+  private readonly bumpListeners = new Set<() => void>()
 
   constructor(
     public db: AccountDb,
@@ -423,6 +424,12 @@ export class SpacesMigrationProgress {
     )
   }
 
+  /** Calls `listener` after each bump, e.g. to wake the publisher. */
+  onBump(listener: () => void): () => void {
+    this.bumpListeners.add(listener)
+    return () => this.bumpListeners.delete(listener)
+  }
+
   /** Publishes the account ahead of others, and before the start delay. */
   async bump(did: DidString): Promise<void> {
     const values = { priority: 1, nextAttemptAt: currentDatetimeString() }
@@ -432,6 +439,7 @@ export class SpacesMigrationProgress {
         .values({ did, ...values })
         .onConflict((oc) => oc.column('did').doUpdateSet(values)),
     )
+    for (const listener of this.bumpListeners) listener()
   }
 
   async get(did: DidString): Promise<SpacesMigrationRow | undefined> {

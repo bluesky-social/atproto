@@ -76,6 +76,7 @@ export class SpacesMigrationPublisher implements AsyncDisposable {
   private destroyed = false
   private woken = false
   private waiter?: BailableWait
+  private stopWakingOnBump?: () => void
   private startAt?: number
   private plcBackoffs = 0
   private plcBackoffUntil = 0
@@ -114,6 +115,8 @@ export class SpacesMigrationPublisher implements AsyncDisposable {
 
   start(): void {
     if (this.state === 'entryway' || this.opts.state !== 'enabled') return
+    // A bumped account is due now, wherever it was bumped
+    this.stopWakingOnBump ??= this.progress.onBump(() => this.wake())
     this.running ??= this.run()
   }
 
@@ -125,6 +128,7 @@ export class SpacesMigrationPublisher implements AsyncDisposable {
 
   async destroy(): Promise<void> {
     this.destroyed = true
+    this.stopWakingOnBump?.()
     this.waiter?.bail()
     if (!this.running) return
     // A stuck step mustn't hold up shutdown. Its lease expires on its own.
