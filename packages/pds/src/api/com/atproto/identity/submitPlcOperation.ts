@@ -40,12 +40,23 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError('Incorrect signing key')
       }
 
-      // Keyed to the current PLC doc so inbound migrations from tools that
-      // build their own op (and so omit the kem key) still work.
       const ourKemKey = (await ctx.actorStore.kemKeypair(requester))?.did()
       const opKemKey = op.verificationMethods['atproto_kem']
-      if (opKemKey === undefined) {
-        // omits kem key: only a problem if it would drop the published one
+      if (ctx.cfg.spacesMigration.state === 'complete') {
+        // Every key we hold is published, so an op must keep ours. Set
+        // wrongly, this only refuses an op that omits a key we hold.
+        if (opKemKey !== ourKemKey) {
+          throw new InvalidRequestError(
+            opKemKey === undefined
+              ? 'Operation would remove the KEM key'
+              : 'Incorrect KEM key',
+            'IncorrectKemKey',
+          )
+        }
+      } else if (opKemKey === undefined) {
+        // Keyed to the current PLC doc so inbound migrations from tools that
+        // build their own op (and so omit the kem key) still work.
+        // Omitting it is only a problem if it would drop the published one.
         const current = await ctx.plcClient.getDocumentData(requester)
         const currentKemKey = current.verificationMethods['atproto_kem']
         if (currentKemKey !== undefined && currentKemKey === ourKemKey) {

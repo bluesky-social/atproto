@@ -9,7 +9,7 @@ import type { ExportableKeypair, Keypair } from '@atproto/crypto'
 import type { DidString } from '@atproto/lex-schema'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import type { ActorStoreConfig } from '../config/index.js'
-import { retrySqlite } from '../db/index.js'
+import { MIGRATION_TABLE, retrySqlite } from '../db/index.js'
 import { DiskBlobStore } from '../disk-blobstore.js'
 import { blobStoreLogger } from '../logger.js'
 import { ActorStoreReader } from './actor-store-reader.js'
@@ -54,16 +54,21 @@ export class ActorStore {
   // written once and never overwritten. The account's directory must already
   // exist: this must not leave a key behind for an account that is gone.
   async ensureKemKeypair(did: string): Promise<crypto.P256Keypair> {
-    const { directory, kemKeyLocation } = await this.getLocation(did)
+    const { kemKeyLocation } = await this.getLocation(did)
     const existing = await loadKemKey(kemKeyLocation)
     if (existing) return existing
-    if (!(await fileExists(directory))) {
-      throw new Error('Cannot create a kem key: the account has no store')
+    try {
+      return await writeKemKeyNoClobber(
+        kemKeyLocation,
+        await crypto.P256Keypair.create({ exportable: true }),
+      )
+    } catch (err) {
+      // The write never creates the account's directory
+      if ((err as NodeJS.ErrnoException)?.code === 'ENOENT') {
+        throw new Error('Cannot create a kem key: the account has no store')
+      }
+      throw err
     }
-    return writeKemKeyNoClobber(
-      kemKeyLocation,
-      await crypto.P256Keypair.create({ exportable: true }),
-    )
   }
 
   async keypair(did: string): Promise<Keypair> {
@@ -257,16 +262,18 @@ export class ActorStore {
     return stored.did()
   }
 
+  // A reservation is filed under the account's DID if one was given, else
+  // under the KEM public key (did:key), like reserved signing keys
   async getReservedKemKeypair(
-    keyDidOrDid: string,
+    kemKeyOrDid: string,
   ): Promise<ExportableKeypair | undefined> {
-    assertSafePathPart(keyDidOrDid)
-    return loadKemKey(path.join(this.reservedKemKeyDir, keyDidOrDid))
+    assertSafePathPart(kemKeyOrDid)
+    return loadKemKey(path.join(this.reservedKemKeyDir, kemKeyOrDid))
   }
 
-  async clearReservedKemKeypair(keyDid: string, did?: string) {
-    assertSafePathPart(keyDid)
-    await rmIfExists(path.join(this.reservedKemKeyDir, keyDid))
+  async clearReservedKemKeypair(kemKey: string, did?: string) {
+    assertSafePathPart(kemKey)
+    await rmIfExists(path.join(this.reservedKemKeyDir, kemKey))
     if (did) {
       assertSafePathPart(did)
       await rmIfExists(path.join(this.reservedKemKeyDir, did))
@@ -292,13 +299,17 @@ export class ActorStore {
   }
 }
 
+// Migrations are additive and run in order, so a store at or past ours has run
+// ours. A lookup by name avoids comparing names, unlike `order by name`.
+// Kysely's Migrator.getMigrations() would read every row after checking the
+// table exists: two queries where opening a store gets one.
 const atLatestMigration = async (db: ActorDb): Promise<boolean> => {
   const result = await sql<{ name: string }>`
-    select name from kysely_migration order by name desc limit 1
+    select name from ${sql.table(MIGRATION_TABLE)}
+    where name = ${LATEST_ACTOR_MIGRATION}
   `.execute(db.db)
-  const newest = result.rows.at(0)
   // an empty table is treated as behind, and left to the migrator
-  return !!newest && newest.name.localeCompare(LATEST_ACTOR_MIGRATION) >= 0
+  return result.rows.length > 0
 }
 
 const loadKey = async (loc: string): Promise<ExportableKeypair | undefined> => {

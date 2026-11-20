@@ -174,6 +174,7 @@ function whyUnpublishable(
   return undefined
 }
 
+// @review a signal / AbortSignal.timeout() is always preferable when possible.
 async function withTimeout<T>(
   promise: Promise<T>,
   ms: number,

@@ -29,6 +29,7 @@ export type SpacesMigrationPublisherState =
   | 'idle' // nothing due
   | 'entryway' // the entryway publishes instead
   | 'disabled'
+  | 'complete'
 
 export type SpacesMigrationPublisherOptions = Omit<
   SpacesMigrationConfig,
@@ -44,7 +45,7 @@ export type SpacesMigrationPublisherOptions = Omit<
   plcBackoffBaseMs?: number
   /**
    * Bounds how long destroy() waits for the step in flight. The publisher and
-   * sweep stop in parallel, within a 10s container stop grace.
+   * sweep stop one after the other, within a 10s container stop grace.
    */
   destroyTimeoutMs?: number
 }
@@ -92,9 +93,9 @@ export class SpacesMigrationPublisher implements AsyncDisposable {
     this.pollIntervalMs = opts.pollIntervalMs ?? MINUTE
     this._state = ctx.entrywayClient
       ? 'entryway'
-      : opts.disabled
-        ? 'disabled'
-        : 'waiting'
+      : opts.state === 'enabled'
+        ? 'waiting'
+        : opts.state
   }
 
   get state(): SpacesMigrationPublisherState {
@@ -112,7 +113,7 @@ export class SpacesMigrationPublisher implements AsyncDisposable {
   }
 
   start(): void {
-    if (this.state === 'entryway' || this.state === 'disabled') return
+    if (this.state === 'entryway' || this.opts.state !== 'enabled') return
     this.running ??= this.run()
   }
 
@@ -127,7 +128,7 @@ export class SpacesMigrationPublisher implements AsyncDisposable {
     this.waiter?.bail()
     if (!this.running) return
     // A stuck step mustn't hold up shutdown. Its lease expires on its own.
-    const timeoutMs = this.opts.destroyTimeoutMs ?? 5 * SECOND
+    const timeoutMs = this.opts.destroyTimeoutMs ?? 3 * SECOND
     const timeout = bailableWait(timeoutMs)
     const stopped = await Promise.race([
       this.running.then(() => true),
@@ -161,7 +162,7 @@ export class SpacesMigrationPublisher implements AsyncDisposable {
   // Publishes at most one account. Returns how long to wait before the next.
   private async step(): Promise<number> {
     if (this.startAt === undefined) {
-      // Rows come from account creation and the sweep's seed, which runs
+      // The sweep, which migrates the stores of the rows claimed here, runs
       // wherever the publisher does
       this.startAt = await this.progress.publishStartAt(
         this.ctx.cfg.service.hostname,
@@ -188,12 +189,10 @@ export class SpacesMigrationPublisher implements AsyncDisposable {
     }
 
     const beforeStart = now < this.startAt
-    let [did] = await this.progress.claimDue(this.owner, now, 1, LEASE_MS, {
-      priorityOnly: true,
-    })
+    let [did] = await this.progress.claimDue(this.owner, now, 1, LEASE_MS, 1)
     const priority = did !== undefined
     if (!priority && !beforeStart) {
-      ;[did] = await this.progress.claimDue(this.owner, now, 1, LEASE_MS)
+      ;[did] = await this.progress.claimDue(this.owner, now, 1, LEASE_MS, 0)
     }
     if (did === undefined) {
       this.state = beforeStart ? 'waiting' : 'idle'
@@ -203,6 +202,11 @@ export class SpacesMigrationPublisher implements AsyncDisposable {
     }
 
     this.state = 'running'
+    // Parking touches no PLC, so it isn't paced
+    if (await this.progress.parkIfDeactivated(did, this.owner)) {
+      log.info({ did, step: 'publish' }, 'account is deactivated, parked it')
+      return 0
+    }
     await this.publish(did)
     return priority ? 0 : this.opts.publishIntervalMs
   }
