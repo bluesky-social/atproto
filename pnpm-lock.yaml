@@ -317,9 +317,6 @@ importers:
       '@atproto/common':
         specifier: workspace:^
         version: link:../common
-      '@atproto/common-web':
-        specifier: workspace:^
-        version: link:../common-web
       '@atproto/crypto':
         specifier: workspace:^
         version: link:../crypto
@@ -617,6 +614,28 @@ importers:
       jest:
         specifier: ^30.5.2
         version: 30.5.2(@types/node@22.20.4)(babel-plugin-macros@3.1.0)(supports-color@8.1.1)(ts-node@10.8.2(@swc/core@1.16.2)(@types/node@22.20.4)(@typescript/typescript6@6.0.2))
+
+  packages/car:
+    dependencies:
+      '@atproto/lex-cbor':
+        specifier: workspace:^
+        version: link:../lex/lex-cbor
+      '@atproto/lex-data':
+        specifier: workspace:^
+        version: link:../lex/lex-data
+      tslib:
+        specifier: ^2.8.1
+        version: 2.8.1
+      varint:
+        specifier: ^6.0.0
+        version: 6.0.0
+    devDependencies:
+      '@types/varint':
+        specifier: ^6.0.3
+        version: 6.0.3
+      vitest:
+        specifier: ^4.1.10
+        version: 4.1.12(@opentelemetry/api@1.10.0)(@types/node@22.20.4)(@vitest/coverage-v8@5.1.1)(vite@8.3.8(@types/node@22.20.4)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.1))
 
   packages/common:
     dependencies:
@@ -1425,6 +1444,67 @@ importers:
         specifier: ^5.1.1
         version: 5.1.1(@opentelemetry/api@1.10.0)(@types/node@22.20.4)(@vitest/coverage-v8@5.1.1)(vite@8.3.8(@types/node@22.20.4)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.1))
 
+  packages/lex/lex-space:
+    dependencies:
+      '@atproto-labs/did-resolver':
+        specifier: workspace:^
+        version: link:../../internal/did-resolver
+      '@atproto-labs/simple-store':
+        specifier: workspace:^
+        version: link:../../internal/simple-store
+      '@atproto-labs/simple-store-memory':
+        specifier: workspace:^
+        version: link:../../internal/simple-store-memory
+      '@atproto/crypto':
+        specifier: workspace:^
+        version: link:../../crypto
+      '@atproto/did':
+        specifier: workspace:^
+        version: link:../../did
+      '@atproto/lex-cbor':
+        specifier: workspace:^
+        version: link:../lex-cbor
+      '@atproto/lex-client':
+        specifier: workspace:^
+        version: link:../lex-client
+      '@atproto/lex-data':
+        specifier: workspace:^
+        version: link:../lex-data
+      '@atproto/lex-schema':
+        specifier: workspace:^
+        version: link:../lex-schema
+      '@atproto/space':
+        specifier: workspace:^
+        version: link:../../space
+      '@atproto/syntax':
+        specifier: workspace:^
+        version: link:../../syntax
+      tslib:
+        specifier: ^2.8.1
+        version: 2.8.1
+    devDependencies:
+      '@atproto/dev-env':
+        specifier: workspace:^
+        version: link:../../dev-env
+      '@atproto/jwk':
+        specifier: workspace:^
+        version: link:../../oauth/jwk
+      '@atproto/jwk-jose':
+        specifier: workspace:^
+        version: link:../../oauth/jwk-jose
+      '@atproto/lex-builder':
+        specifier: workspace:^
+        version: link:../lex-builder
+      '@atproto/lex-installer':
+        specifier: workspace:^
+        version: link:../lex-installer
+      '@atproto/oauth-client':
+        specifier: workspace:^
+        version: link:../../oauth/oauth-client
+      vitest:
+        specifier: ^4.1.10
+        version: 4.1.12(@opentelemetry/api@1.10.0)(@types/node@22.20.4)(@vitest/coverage-v8@5.1.1)(vite@8.3.8(@types/node@22.20.4)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.1))
+
   packages/lexicon:
     dependencies:
       '@atproto/common-web':
@@ -2114,6 +2194,9 @@ importers:
 
   packages/pds:
     dependencies:
+      '@atproto-labs/fetch':
+        specifier: workspace:^
+        version: link:../internal/fetch
       '@atproto-labs/fetch-node':
         specifier: workspace:^
         version: link:../internal/fetch-node
@@ -2147,6 +2230,9 @@ importers:
       '@atproto/identity':
         specifier: workspace:^
         version: link:../identity
+      '@atproto/jwk':
+        specifier: workspace:^
+        version: link:../oauth/jwk
       '@atproto/lex-cbor':
         specifier: workspace:^
         version: link:../lex/lex-cbor
@@ -2171,9 +2257,18 @@ importers:
       '@atproto/oauth-scopes':
         specifier: workspace:^
         version: link:../oauth/oauth-scopes
+      '@atproto/oauth-types':
+        specifier: workspace:^
+        version: link:../oauth/oauth-types
       '@atproto/repo':
         specifier: workspace:^
         version: link:../repo
+      '@atproto/space':
+        specifier: workspace:^
+        version: link:../space
+      '@atproto/star':
+        specifier: workspace:^
+        version: link:../star
       '@atproto/syntax':
         specifier: workspace:^
         version: link:../syntax
@@ -2310,9 +2405,9 @@ importers:
 
   packages/repo:
     dependencies:
-      '@atproto/common':
+      '@atproto/car':
         specifier: workspace:^
-        version: link:../common
+        version: link:../car
       '@atproto/common-web':
         specifier: workspace:^
         version: link:../common-web
@@ -2328,9 +2423,6 @@ importers:
       '@atproto/syntax':
         specifier: workspace:^
         version: link:../syntax
-      varint:
-        specifier: ^6.0.0
-        version: 6.0.0
       zod:
         specifier: ^3.23.8
         version: 3.24.2
@@ -2338,6 +2430,50 @@ importers:
       jest:
         specifier: ^30.5.2
         version: 30.5.2(@types/node@22.20.4)(babel-plugin-macros@3.1.0)(supports-color@8.1.1)(ts-node@10.8.2(@swc/core@1.16.2)(@types/node@22.20.4)(@typescript/typescript6@6.0.2))
+
+  packages/space:
+    dependencies:
+      '@atproto/crypto':
+        specifier: workspace:^
+        version: link:../crypto
+      '@atproto/lex-cbor':
+        specifier: workspace:^
+        version: link:../lex/lex-cbor
+      '@atproto/lex-data':
+        specifier: workspace:^
+        version: link:../lex/lex-data
+      '@atproto/lex-schema':
+        specifier: workspace:^
+        version: link:../lex/lex-schema
+      '@atproto/star':
+        specifier: workspace:^
+        version: link:../star
+      '@atproto/syntax':
+        specifier: workspace:^
+        version: link:../syntax
+      '@noble/hashes':
+        specifier: ^1.6.1
+        version: 1.7.0
+      structured-headers:
+        specifier: ^1.0.1
+        version: 1.0.1
+    devDependencies:
+      vitest:
+        specifier: ^4.1.10
+        version: 4.1.12(@opentelemetry/api@1.10.0)(@types/node@22.20.4)(@vitest/coverage-v8@5.1.1)(vite@8.3.8(@types/node@22.20.4)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.1))
+
+  packages/star:
+    dependencies:
+      '@atproto/lex-cbor':
+        specifier: workspace:^
+        version: link:../lex/lex-cbor
+      '@atproto/lex-data':
+        specifier: workspace:^
+        version: link:../lex/lex-data
+    devDependencies:
+      vitest:
+        specifier: ^4.1.10
+        version: 4.1.12(@opentelemetry/api@1.10.0)(@types/node@22.20.4)(@vitest/coverage-v8@5.1.1)(vite@8.3.8(@types/node@22.20.4)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.1))
 
   packages/sync:
     dependencies:
@@ -5933,6 +6069,9 @@ packages:
   '@types/uuid@9.0.8':
     resolution: {integrity: sha512-jg+97EGIcY9AGHJJRaaPVgetKDsrTgbRjQ5Msgjh/DQKEFl0DtyRr/VCOyD1T2R1MNeWPK/u7JoGhlDZnKBAfA==}
 
+  '@types/varint@6.0.3':
+    resolution: {integrity: sha512-DHukoGWdJ2aYkveZJTB2rN2lp6m7APzVsoJQ7j/qy1fQxyamJTPD5xQzCMoJ2Qtgn0mE3wWeNOpbTyBFvF+dyA==}
+
   '@types/ws@8.18.1':
     resolution: {integrity: sha512-ThVF6DCVhA8kUGy+aazFQ4kXQ7E1Ty7A3ypFOe0IcJV8O/M511G99AW24irKrW56Wt44yG9+ij8FaqoBGkuBXg==}
 
@@ -6401,6 +6540,9 @@ packages:
       '@vitest/browser':
         optional: true
 
+  '@vitest/expect@4.1.12':
+    resolution: {integrity: sha512-vFlTt+YEu9WBpNjdGayNmlMVzrWPi1+sv853/7t2FU7hpO5gAFBKHzQmkCq5Xjpr+evegF2994LQT3hF3mRlqQ==}
+
   '@vitest/istanbul-lib-coverage@2.1.0':
     resolution: {integrity: sha512-WOjuS+xcjSIy7ruYBQ+9BUcV7XZQ0FyVcbWbWxW9TRx/kLGx5SQaeFRIFDJxjNplb6YsT7SpKo2zuXXUo91OIQ==}
     engines: {node: '>=22'}
@@ -6408,6 +6550,17 @@ packages:
   '@vitest/istanbul-lib-report@2.1.0':
     resolution: {integrity: sha512-+ZFta25nWtGCOBG9/IET8w1RO5Oawsd6H8Uf6AJ9EA/StFuKVtKAEJEJ6uRt84OH+T4YkI0ASmIHAhRA+0KVxw==}
     engines: {node: '>=22'}
+
+  '@vitest/mocker@4.1.12':
+    resolution: {integrity: sha512-fKShNpKZzupWZuY0z7egydvL0sqW4INEZBEExMBMAa6izlENEVHwoXgdaTCaBZ5fwlr4xf2o1wXC83n9RpO+NA==}
+    peerDependencies:
+      msw: ^2.4.9
+      vite: ^6.0.0 || ^7.0.0 || ^8.0.0
+    peerDependenciesMeta:
+      msw:
+        optional: true
+      vite:
+        optional: true
 
   '@vitest/mocker@5.1.1':
     resolution: {integrity: sha512-b2OgTB4+3ImWIVafXKazJXwLKwQxUNnix6b3xUvUTMh7RyXlrtzoxfZr8aEz9zkHOMAS4K5lu3TvFWoiVeVTQg==}
@@ -6420,8 +6573,23 @@ packages:
       vite:
         optional: true
 
+  '@vitest/pretty-format@4.1.12':
+    resolution: {integrity: sha512-XW9O8+Mxx4VpCtkYdMJLZQQwsVryP9wk7cPKDxtXFfwSak6yRh5+2fep/Y0XF/ElBvJHq8bcYdi6aeuai0opZA==}
+
+  '@vitest/runner@4.1.12':
+    resolution: {integrity: sha512-NKlVKCr5QnCe8jijdMnmkpHHU+WTqiLFR6G0pHji9uRjXK9xJl1k1nTw6F3pOOj2PDcsDt2GKQMI7wIsaT491w==}
+
+  '@vitest/snapshot@4.1.12':
+    resolution: {integrity: sha512-ko1y1Qgb/slzQ9mr+b89Cuqud8WG1TKtsPD8r7ZUBdvVOGt85Af2HwCqHujrhwJq95hs/9RM7fcAPg57o1vlzw==}
+
+  '@vitest/spy@4.1.12':
+    resolution: {integrity: sha512-RGq9x4JNGNTZHEJxvN0oSiJjeSCExm0n2gZKKJZHY9cX5AVA6M7VJILBT3ZJ/tJ/0J9uWT7fETV9/btoi//vSg==}
+
   '@vitest/spy@5.1.1':
     resolution: {integrity: sha512-6K8C6alQG1/Yc8/ZI22iJS7JEsxPdVzqtqDq+/xM4Z0mGVykemMVjLhqMy/q6/IHYG3kKD8hKSwRen/ZdyI9vQ==}
+
+  '@vitest/utils@4.1.12':
+    resolution: {integrity: sha512-Q3awXrwOfEV+qc3WmO5ONyE0yO7Q1gQ9/oyHxGLZ/pl7N3NO/ZztqQwKLuwMkV+CA1JYSIeO3gkHnRDIo4AVaA==}
 
   '@xmldom/xmldom@0.8.13':
     resolution: {integrity: sha512-KRYzxepc14G/CEpEGc3Yn+JKaAeT63smlDr+vjB8jRfgTBBI9wRj/nkQEO+ucV8p8I9bfKLWp37uHgFrbntPvw==}
@@ -8984,6 +9152,10 @@ packages:
     resolution: {integrity: sha512-NuAESUOUMrlIXOfHKzD6bpPu3tYt3xvjNdRIQ+FeT0lNb4K8WR70CaDxhuNguS2XG+GjkyMwOzsN5ZktImfhLA==}
     engines: {node: '>= 0.4'}
 
+  obug@2.2.1:
+    resolution: {integrity: sha512-XrsrhT5sybtKI6wakr2SPOlGZWWYbUXZ7a0jT8/QOeAPau+1X/bSegNe5YR75oJmEZQbKningirmGOEJCIk61Q==}
+    engines: {node: '>=12.20.0'}
+
   obug@3.0.0:
     resolution: {integrity: sha512-5vvB5+W7ePv+p3uqxi+RcW1XAzLW0/hxt3/4X4Lc4qHudzOhmBiBwOY6DRob4WnanAEGvNcLjF+KNOufrUoEQw==}
     engines: {node: '>=12.20.0'}
@@ -9762,6 +9934,9 @@ packages:
     resolution: {integrity: sha512-6x6dK6zJdpTzF4sQeNYxwtvBzf6Eg4GtlesS94HOvTudUeyK2WXAaIfmDgsyslYrRBeFIlsi54AYsFGUuhmvrQ==}
     engines: {node: '>= 0.4'}
 
+  siginfo@2.0.0:
+    resolution: {integrity: sha512-ybx0WO1/8bSBLEWXZvEd7gMW3Sn3JFlW3TvX1nREbDLRNQNaeNN8WK0meBwPdAaOI7TtRRRJn/Es1zhrrCHu7g==}
+
   signal-exit@3.0.7:
     resolution: {integrity: sha512-wnD2ZE+l+SPC/uoS0vXeE9L1+0wuaMqKlfz9AMUo38JsyLSBWSFcHR1Rri62LZc12vLr1gb3jl7iwQhgwpAbGQ==}
 
@@ -9838,6 +10013,9 @@ packages:
   stack-utils@2.0.6:
     resolution: {integrity: sha512-XlkWvfIm6RmsWtNJx+uqtKLS8eqFbxUg0ZzLXqY0caEy9l7hruX8IpiDnjsLavoBgqCCR71TqWO8MaXYheJ3RQ==}
     engines: {node: '>=10'}
+
+  stackback@0.0.2:
+    resolution: {integrity: sha512-1XMJE5fQo1jGH6Y/7ebnwPOBEkIEnT4QF32d5R1+VXdXveM0IBMJt8zfaxX1P3QhVwrYe+576+jkANtSS2mBbw==}
 
   stackframe@1.3.4:
     resolution: {integrity: sha512-oeVtt7eWQS+Na6F//S4kJ2K2VbRlS9D43mAlMyVpVWovy9o+jfgH8O9agzANzaiLjclA0oYzUXEM4PurhSUChw==}
@@ -10024,6 +10202,9 @@ packages:
 
   throat@5.0.0:
     resolution: {integrity: sha512-fcwX4mndzpLQKBS1DVYhGAcYaYt7vsHNIvQV+WXMvnow5cgjPphq5CaayLaGsjRdSCKZFNGt7/GYAuXaNOiYCA==}
+
+  tinybench@2.9.0:
+    resolution: {integrity: sha512-0+DUvqWMValLmha6lr4kD8iAMK1HzV0/aKnCtWb9v9641TnP/MFb7Pc2bxoxQjTXAErryXVgUOfv2YqNllqGeg==}
 
   tinybench@6.2.3:
     resolution: {integrity: sha512-Al01C2JIBnO2CXCAPbpAl6sUiOZHeThGtHYNTa51JRw9PyWOCdr+9Ong05R4qg/Sk3+H645E8ov1h2c58ityNw==}
@@ -10360,6 +10541,47 @@ packages:
       yaml:
         optional: true
 
+  vitest@4.1.12:
+    resolution: {integrity: sha512-5eWdz2yb3ajxWF3C8C4TjkXl7FGm3n2E/VlazALrQHzK7nYMSGFnCZto0bbPNl77AwkOZVLk0YnBAejUu0NiWA==}
+    engines: {node: ^20.0.0 || ^22.0.0 || >=24.0.0}
+    hasBin: true
+    peerDependencies:
+      '@edge-runtime/vm': '*'
+      '@opentelemetry/api': ^1.9.0
+      '@types/node': ^20.0.0 || ^22.0.0 || >=24.0.0
+      '@vitest/browser-playwright': 4.1.12
+      '@vitest/browser-preview': 4.1.12
+      '@vitest/browser-webdriverio': ^4.1.11
+      '@vitest/coverage-istanbul': 4.1.12
+      '@vitest/coverage-v8': 4.1.12
+      '@vitest/ui': 4.1.12
+      happy-dom: '*'
+      jsdom: '*'
+      vite: ^6.0.0 || ^7.0.0 || ^8.0.0
+    peerDependenciesMeta:
+      '@edge-runtime/vm':
+        optional: true
+      '@opentelemetry/api':
+        optional: true
+      '@types/node':
+        optional: true
+      '@vitest/browser-playwright':
+        optional: true
+      '@vitest/browser-preview':
+        optional: true
+      '@vitest/browser-webdriverio':
+        optional: true
+      '@vitest/coverage-istanbul':
+        optional: true
+      '@vitest/coverage-v8':
+        optional: true
+      '@vitest/ui':
+        optional: true
+      happy-dom:
+        optional: true
+      jsdom:
+        optional: true
+
   vitest@5.1.1:
     resolution: {integrity: sha512-trVmzUFOSraCZcI3uZIMD5FqBh4atFkC/XuJP/IU7qtyQay0FCs3Ia+0QiQ2JJwGyWG/xrcBoJNel2+O7kEZ0g==}
     engines: {node: ^22.12.0 || ^24.0.0 || >=26.0.0}
@@ -10429,6 +10651,11 @@ packages:
   which@2.0.2:
     resolution: {integrity: sha512-BLI3Tl1TW3Pvl70l3yq3Y64i+awpwXqsGBYWkkqMtnbXgrMD+yj7rhW0kuEDxzJaYXGjEW5ogapKNMEKNMjibA==}
     engines: {node: '>= 8'}
+    hasBin: true
+
+  why-is-node-running@2.3.0:
+    resolution: {integrity: sha512-hUrmaWBdVDcxvYqnyh09zunKzROWjbZTiNy8dBEjkS7ehEDQibXJ7XvlmtbwuTclUiIyN+CyXQD4Vmko8fNm8w==}
+    engines: {node: '>=8'}
     hasBin: true
 
   why-is-node-running@3.2.1:
@@ -13284,7 +13511,7 @@ snapshots:
   '@jridgewell/trace-mapping@0.3.9':
     dependencies:
       '@jridgewell/resolve-uri': 3.1.1
-      '@jridgewell/sourcemap-codec': 1.5.5
+      '@jridgewell/sourcemap-codec': 1.6.0
     optional: true
 
   '@js-sdsl/ordered-map@4.4.2': {}
@@ -15267,6 +15494,10 @@ snapshots:
 
   '@types/uuid@9.0.8': {}
 
+  '@types/varint@6.0.3':
+    dependencies:
+      '@types/node': 22.20.4
+
   '@types/ws@8.18.1':
     dependencies:
       '@types/node': 22.20.4
@@ -15611,11 +15842,28 @@ snapshots:
       tinyrainbow: 3.2.0
       vitest: 5.1.1(@opentelemetry/api@1.10.0)(@types/node@22.19.17)(@vitest/coverage-v8@5.1.1)(vite@8.3.8(@types/node@22.19.17)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.1))
 
+  '@vitest/expect@4.1.12':
+    dependencies:
+      '@standard-schema/spec': 1.1.0
+      '@types/chai': 5.2.3
+      '@vitest/spy': 4.1.12
+      '@vitest/utils': 4.1.12
+      chai: 6.3.0
+      tinyrainbow: 3.2.0
+
   '@vitest/istanbul-lib-coverage@2.1.0': {}
 
   '@vitest/istanbul-lib-report@2.1.0':
     dependencies:
       '@vitest/istanbul-lib-coverage': 2.1.0
+
+  '@vitest/mocker@4.1.12(vite@8.3.8(@types/node@22.20.4)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.1))':
+    dependencies:
+      '@vitest/spy': 4.1.12
+      estree-walker: 3.0.3
+      magic-string: 0.30.21
+    optionalDependencies:
+      vite: 8.3.8(@types/node@22.20.4)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.1)
 
   '@vitest/mocker@5.1.1(vite@8.3.8(@types/node@22.19.17)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.1))':
     dependencies:
@@ -15635,7 +15883,31 @@ snapshots:
     optionalDependencies:
       vite: 8.3.8(@types/node@22.20.4)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.1)
 
+  '@vitest/pretty-format@4.1.12':
+    dependencies:
+      tinyrainbow: 3.2.0
+
+  '@vitest/runner@4.1.12':
+    dependencies:
+      '@vitest/utils': 4.1.12
+      pathe: 2.0.3
+
+  '@vitest/snapshot@4.1.12':
+    dependencies:
+      '@vitest/pretty-format': 4.1.12
+      '@vitest/utils': 4.1.12
+      magic-string: 0.30.21
+      pathe: 2.0.3
+
+  '@vitest/spy@4.1.12': {}
+
   '@vitest/spy@5.1.1': {}
+
+  '@vitest/utils@4.1.12':
+    dependencies:
+      '@vitest/pretty-format': 4.1.12
+      convert-source-map: 2.0.0
+      tinyrainbow: 3.2.0
 
   '@xmldom/xmldom@0.8.13': {}
 
@@ -18361,7 +18633,7 @@ snapshots:
 
   magic-string@0.30.21:
     dependencies:
-      '@jridgewell/sourcemap-codec': 1.5.5
+      '@jridgewell/sourcemap-codec': 1.6.0
 
   magic-string@1.4.5:
     dependencies:
@@ -18721,6 +18993,8 @@ snapshots:
   object-inspect@1.13.4: {}
 
   object-keys@1.1.1: {}
+
+  obug@2.2.1: {}
 
   obug@3.0.0: {}
 
@@ -19622,6 +19896,8 @@ snapshots:
       side-channel-map: 1.0.1
       side-channel-weakmap: 1.0.2
 
+  siginfo@2.0.0: {}
+
   signal-exit@3.0.7: {}
 
   signal-exit@4.1.0: {}
@@ -19686,6 +19962,8 @@ snapshots:
   stack-utils@2.0.6:
     dependencies:
       escape-string-regexp: 2.0.0
+
+  stackback@0.0.2: {}
 
   stackframe@1.3.4: {}
 
@@ -19865,6 +20143,8 @@ snapshots:
       real-require: 1.0.0
 
   throat@5.0.0: {}
+
+  tinybench@2.9.0: {}
 
   tinybench@6.2.3: {}
 
@@ -20197,6 +20477,35 @@ snapshots:
       terser: 5.44.0
       yaml: 2.9.1
 
+  vitest@4.1.12(@opentelemetry/api@1.10.0)(@types/node@22.20.4)(@vitest/coverage-v8@5.1.1)(vite@8.3.8(@types/node@22.20.4)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.1)):
+    dependencies:
+      '@vitest/expect': 4.1.12
+      '@vitest/mocker': 4.1.12(vite@8.3.8(@types/node@22.20.4)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.1))
+      '@vitest/pretty-format': 4.1.12
+      '@vitest/runner': 4.1.12
+      '@vitest/snapshot': 4.1.12
+      '@vitest/spy': 4.1.12
+      '@vitest/utils': 4.1.12
+      es-module-lexer: 2.3.2
+      expect-type: 1.4.0
+      magic-string: 0.30.21
+      obug: 2.2.1
+      pathe: 2.0.3
+      picomatch: 4.0.7
+      std-env: 4.3.0
+      tinybench: 2.9.0
+      tinyexec: 1.3.1
+      tinyglobby: 0.2.17
+      tinyrainbow: 3.2.0
+      vite: 8.3.8(@types/node@22.20.4)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.1)
+      why-is-node-running: 2.3.0
+    optionalDependencies:
+      '@opentelemetry/api': 1.10.0
+      '@types/node': 22.20.4
+      '@vitest/coverage-v8': 5.1.1(vitest@5.1.1)
+    transitivePeerDependencies:
+      - msw
+
   vitest@5.1.1(@opentelemetry/api@1.10.0)(@types/node@22.19.17)(@vitest/coverage-v8@5.1.1)(vite@8.3.8(@types/node@22.19.17)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.1)):
     dependencies:
       '@types/chai': 5.2.3
@@ -20266,6 +20575,11 @@ snapshots:
   which@2.0.2:
     dependencies:
       isexe: 2.0.0
+
+  why-is-node-running@2.3.0:
+    dependencies:
+      siginfo: 2.0.0
+      stackback: 0.0.2
 
   why-is-node-running@3.2.1: {}
 

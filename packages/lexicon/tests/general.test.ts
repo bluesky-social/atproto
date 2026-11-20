@@ -991,6 +991,21 @@ describe('Record validation', () => {
     ).toThrow('Record/atUri must be a valid at-uri')
   })
 
+  it('Applies space-ref formatting constraint', () => {
+    lex.assertValidRecord('com.example.spaceRef', {
+      $type: 'com.example.spaceRef',
+      space:
+        'at://did:plc:12345678abcdefghijklmnop/space/com.example.group/default',
+    })
+    expect(() =>
+      lex.assertValidRecord('com.example.spaceRef', {
+        $type: 'com.example.spaceRef',
+        space:
+          'at://did:plc:12345678abcdefghijklmnop/space/com.example.group/default/did:plc:12345678abcdefghijklmnoq/com.example.test/self',
+      }),
+    ).toThrow('Record/space must be a valid space ref')
+  })
+
   it('Applies did formatting constraint', () => {
     lex.assertValidRecord('com.example.did', {
       $type: 'com.example.did',
@@ -1292,5 +1307,38 @@ describe('XRPC output validation', () => {
     expect(() =>
       lex.assertValidXrpcOutput('com.example.procedure', {}),
     ).toThrow('Output must have the property "object"')
+  })
+})
+
+describe('Space definitions', () => {
+  const spaceDoc = (defs: Record<string, unknown>) => ({
+    lexicon: 1,
+    id: 'com.example.group',
+    defs,
+  })
+  const space = (fields: Record<string, unknown> = {}) => ({
+    type: 'space',
+    key: 'any',
+    collections: ['com.example.post'],
+    ...fields,
+  })
+
+  it('accepts a space with or without a title', () => {
+    expect(() =>
+      parseLexiconDoc(spaceDoc({ main: space({ title: 'Group' }) })),
+    ).not.toThrow()
+    expect(() => parseLexiconDoc(spaceDoc({ main: space() }))).not.toThrow()
+  })
+
+  it('rejects an empty title', () => {
+    expect(() =>
+      parseLexiconDoc(spaceDoc({ main: space({ title: '' }) })),
+    ).toThrow('String must contain at least 1 character(s)')
+  })
+
+  it('must be the main definition', () => {
+    expect(() => parseLexiconDoc(spaceDoc({ other: space() }))).toThrow(
+      'spaces, procedures, queries, and subscriptions must be the main definition',
+    )
   })
 })

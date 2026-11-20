@@ -36,6 +36,7 @@ import {
 } from './auth-verifier.js'
 import { BackgroundQueue } from './background.js'
 import { BskyAppView } from './bsky-app-view.js'
+import { ClientAttestationVerifier } from './client-attestation-verifier.js'
 import {
   type ServerConfig,
   type ServerEnvironment,
@@ -61,6 +62,8 @@ import {
 import { getRedisClient } from './redis.js'
 import { FailOpenReplayStore } from './replay-store.js'
 import { Sequencer } from './sequencer/index.js'
+import { SpaceNotifications } from './space-notifications.js'
+import { SpacePolicyManager } from './space-policy/manager.js'
 
 export type AppContextOptions = {
   actorStore: ActorStore
@@ -84,6 +87,8 @@ export type AppContextOptions = {
   proxyAgent: undici.Dispatcher
   appViewProxyAgent?: undici.Dispatcher
   safeFetch: Fetch
+  clientAttestationVerifier: ClientAttestationVerifier
+  spacePolicyManager: SpacePolicyManager
   oauthProvider?: OAuthProvider
   authVerifier: AuthVerifier
   plcRotationKey: crypto.Keypair
@@ -112,6 +117,9 @@ export class AppContext implements AsyncDisposable {
   public proxyAgent: undici.Dispatcher
   public appViewProxyAgent: undici.Dispatcher | undefined
   public safeFetch: Fetch
+  public clientAttestationVerifier: ClientAttestationVerifier
+  public spaceNotifications: SpaceNotifications
+  public spacePolicyManager: SpacePolicyManager
   public authVerifier: AuthVerifier
   public oauthProvider?: OAuthProvider
   public plcRotationKey: crypto.Keypair
@@ -139,10 +147,13 @@ export class AppContext implements AsyncDisposable {
     this.proxyAgent = opts.proxyAgent
     this.appViewProxyAgent = opts.appViewProxyAgent
     this.safeFetch = opts.safeFetch
+    this.clientAttestationVerifier = opts.clientAttestationVerifier
+    this.spacePolicyManager = opts.spacePolicyManager
     this.authVerifier = opts.authVerifier
     this.oauthProvider = opts.oauthProvider
     this.plcRotationKey = opts.plcRotationKey
     this.cfg = opts.cfg
+    this.spaceNotifications = new SpaceNotifications(this)
   }
 
   static async fromEnv(
@@ -568,6 +579,12 @@ export class AppContext implements AsyncDisposable {
         })
       : undefined
 
+    const spacePolicyManager = new SpacePolicyManager(
+      actorStore,
+      idResolver,
+      (service) => createSafeClient(service, safeFetch, cfg.service.devMode),
+    )
+
     const scopeRefGetter = entrywayClient
       ? new ScopeReferenceGetter(entrywayClient, redisScratch)
       : undefined
@@ -596,6 +613,12 @@ export class AppContext implements AsyncDisposable {
           return payload
         },
       })
+
+    const clientAttestationVerifier = new ClientAttestationVerifier(
+      safeFetch,
+      oauthVerifier.replayManager,
+      redisScratch,
+    )
 
     const authVerifier = new AuthVerifier(
       accountManager,
@@ -644,6 +667,8 @@ export class AppContext implements AsyncDisposable {
       proxyAgent,
       appViewProxyAgent,
       safeFetch,
+      clientAttestationVerifier,
+      spacePolicyManager,
       authVerifier,
       oauthProvider,
       plcRotationKey,
@@ -681,14 +706,7 @@ export class AppContext implements AsyncDisposable {
    * Any call built from a DID document's service endpoint must use this.
    */
   safeClient(service: string | URL): Client {
-    return new Client(
-      { service, fetch: this.safeFetch },
-      {
-        validateRequest: this.cfg.service.devMode,
-        validateResponse: this.cfg.service.devMode,
-        strictResponseProcessing: this.cfg.service.devMode,
-      },
-    )
+    return createSafeClient(service, this.safeFetch, this.cfg.service.devMode)
   }
 
   async serviceAuthHeaders(did: string, aud: string, lxm: string) {
@@ -714,6 +732,7 @@ export class AppContext implements AsyncDisposable {
   async destroy(): Promise<void> {
     // @TODO Implement this using an AsyncDisposableStack when it becomes
     // widely available.
+    await this.spaceNotifications.destroy()
     try {
       await this.backgroundQueue.destroy()
     } finally {
@@ -748,6 +767,22 @@ export class AppContext implements AsyncDisposable {
   async [Symbol.asyncDispose]() {
     await this.destroy()
   }
+}
+
+/** See {@link AppContext.safeClient}. */
+function createSafeClient(
+  service: string | URL,
+  safeFetch: Fetch,
+  devMode: boolean,
+): Client {
+  return new Client(
+    { service, fetch: safeFetch },
+    {
+      validateRequest: devMode,
+      validateResponse: devMode,
+      strictResponseProcessing: devMode,
+    },
+  )
 }
 
 const basicAuthHeader = (username: string, password: string) => {

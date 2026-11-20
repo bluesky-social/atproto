@@ -1,0 +1,32 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.space.getDelegationToken",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "Get a delegation token for a space, to exchange with the space host for a space credential. Requires auth, implemented by PDS.",
+      "parameters": {
+        "type": "params",
+        "required": ["space"],
+        "properties": {
+          "space": {
+            "type": "string",
+            "format": "space-ref"
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["token"],
+          "properties": {
+            "token": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  }
+}

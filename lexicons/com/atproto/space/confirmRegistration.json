@@ -1,0 +1,44 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.space.confirmRegistration",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Confirm a new notification registration. Called by the space host on an endpoint passed to authorizeSpaceSync, before registering it. The syncing service checks that it issued the token for the space, and echoes back the challenge.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["space", "token", "challenge"],
+          "properties": {
+            "space": {
+              "type": "string",
+              "format": "space-ref"
+            },
+            "token": {
+              "type": "string",
+              "maxLength": 512
+            },
+            "challenge": {
+              "type": "string",
+              "maxLength": 512
+            }
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["challenge"],
+          "properties": {
+            "challenge": {
+              "type": "string",
+              "maxLength": 512
+            }
+          }
+        }
+      }
+    }
+  }
+}

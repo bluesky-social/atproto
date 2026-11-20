@@ -1,4 +1,4 @@
-import type stream from 'node:stream'
+import { Readable } from 'node:stream'
 import { type Cid, parseCid } from '@atproto/lex-data'
 import { BlobNotFoundError, type BlobStore } from '@atproto/repo'
 import type { AtUriString } from '@atproto/syntax'
@@ -35,7 +35,7 @@ export class BlobReader {
   async getBlob(cid: Cid): Promise<{
     size: number
     mimeType?: `${string}/${string}`
-    stream: stream.Readable
+    stream: Readable
   }> {
     const metadata = await this.getBlobMetadata(cid)
     const stream = await this.blobstore.getStream(cid).catch((err) => {
@@ -45,7 +45,7 @@ export class BlobReader {
       throw err
     })
 
-    return { ...metadata, stream }
+    return { ...metadata, stream: Readable.from(stream) }
   }
 
   async listBlobs(opts: {
@@ -89,6 +89,16 @@ export class BlobReader {
   async hasRecordsForBlob(cid: Cid): Promise<boolean> {
     const res = await this.db.db
       .selectFrom('record_blob')
+      .where('blobCid', '=', cid.toString())
+      .select('blobCid')
+      .limit(1)
+      .executeTakeFirst()
+    return res != null
+  }
+
+  async hasSpaceRecordsForBlob(cid: Cid): Promise<boolean> {
+    const res = await this.db.db
+      .selectFrom('space_record_blob')
       .where('blobCid', '=', cid.toString())
       .select('blobCid')
       .limit(1)

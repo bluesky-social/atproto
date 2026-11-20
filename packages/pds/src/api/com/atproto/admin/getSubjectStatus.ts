@@ -31,22 +31,41 @@ export default function (server: Server, ctx: AppContext) {
         }
       } else if (uri) {
         const parsedUri = new AtUri(uri)
-        const [takedown, cid] = await ctx.actorStore.read(
-          parsedUri.did,
-          (store) =>
-            Promise.all([
-              store.record.getRecordTakedownStatus(parsedUri),
-              store.record.getCurrentRecordCid(parsedUri),
-            ]),
-        )
-        if (cid && takedown) {
-          body = {
-            subject: {
-              $type: 'com.atproto.repo.strongRef',
-              uri: parsedUri.toString(),
-              cid: cid.toString(),
-            },
-            takedown,
+        if (parsedUri.isSpace) {
+          // @NOTE space records can't be taken down (see updateSubjectStatus)
+          const record = parsedUri.authorDid
+            ? await ctx.actorStore.read(parsedUri.authorDid, (store) =>
+                store.space.getRecord(uri),
+              )
+            : null
+          if (record) {
+            body = {
+              subject: {
+                $type: com.atproto.repo.strongRef.$type,
+                uri,
+                cid: record.cid,
+              },
+              takedown: { applied: false },
+            }
+          }
+        } else {
+          const [takedown, cid] = await ctx.actorStore.read(
+            parsedUri.did,
+            (store) =>
+              Promise.all([
+                store.record.getRecordTakedownStatus(parsedUri),
+                store.record.getCurrentRecordCid(parsedUri),
+              ]),
+          )
+          if (cid && takedown) {
+            body = {
+              subject: {
+                $type: 'com.atproto.repo.strongRef',
+                uri: parsedUri.toString(),
+                cid: cid.toString(),
+              },
+              takedown,
+            }
           }
         }
       } else if (did) {

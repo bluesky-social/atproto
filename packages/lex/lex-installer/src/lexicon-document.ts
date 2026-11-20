@@ -51,6 +51,18 @@ type DefRefsOptions = {
 
   includePermissionRpc?: boolean
   includePermissionRepo?: boolean
+
+  /**
+   * Determines whether to include the space type and collections of `space`
+   * permissions when listing lexicon dependencies.
+   */
+  includePermissionSpace?: boolean
+
+  /**
+   * Determines whether to include the collections declared by `space`
+   * definitions when listing lexicon dependencies.
+   */
+  includeScopeCollections?: boolean
 }
 
 function* defRefs(
@@ -122,6 +134,11 @@ function* defRefs(
         yield* defRefs(permission, options)
       }
       return
+    case 'space':
+      if (options?.includeScopeCollections) {
+        yield* def.collections
+      }
+      return
     case 'permission':
       if (def.resource === 'rpc') {
         if (options?.includePermissionRpc && Array.isArray(def.lxm)) {
@@ -136,6 +153,19 @@ function* defRefs(
           for (const lxm of def.collection) {
             if (typeof lxm === 'string') {
               yield lxm
+            }
+          }
+        }
+      } else if (def.resource === 'space') {
+        if (options?.includePermissionSpace) {
+          if (typeof def.spaceType === 'string') {
+            yield def.spaceType
+          }
+          if (Array.isArray(def.collection)) {
+            for (const collection of def.collection) {
+              if (typeof collection === 'string') {
+                yield collection
+              }
             }
           }
         }

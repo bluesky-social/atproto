@@ -103,6 +103,24 @@ describe('plc operations', () => {
     )
   })
 
+  it('prevents submitting an operation that drops or changes the KEM key', async () => {
+    const { verificationMethods } = await ctx.plcClient.getDocumentData(
+      alice.did,
+    )
+    await expectFailedOp(
+      alice.did,
+      { verificationMethods: { atproto: verificationMethods['atproto'] } },
+      'Incorrect KEM key',
+    )
+    await expectFailedOp(
+      alice.did,
+      {
+        verificationMethods: { ...verificationMethods, atproto_kem: sampleKey },
+      },
+      'Incorrect KEM key',
+    )
+  })
+
   it('prevents submitting an operation that incorrectly sets the handle', async () => {
     await expectFailedOp(
       alice.did,

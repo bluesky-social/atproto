@@ -26,6 +26,8 @@ describe(isReconnectableClose, () => {
       expected: true,
     },
     { note: 'internal error', code: CloseCode.InternalError, expected: true },
+    { note: 'service restart', code: CloseCode.ServiceRestart, expected: true },
+    { note: 'try again later', code: CloseCode.TryAgainLater, expected: true },
     { note: 'policy violation', code: CloseCode.Policy, expected: true },
   ])('$note', ({ code, expected }) => {
     expect(isReconnectableClose(code)).toBe(expected)

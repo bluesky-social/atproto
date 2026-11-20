@@ -380,6 +380,24 @@ describe('StringSchema', () => {
     })
   })
 
+  describe('format: space-ref', () => {
+    const schema = string({ format: 'space-ref' })
+
+    it('accepts a space ref', () => {
+      const result = schema.safeParse(
+        'at://did:plc:abc123/space/com.example.group/default',
+      )
+      expect(result.success).toBe(true)
+    })
+
+    it('rejects a record URI within a space', () => {
+      const result = schema.safeParse(
+        'at://did:plc:abc123/space/com.example.group/default/did:plc:user1/app.bsky.feed.post/3jzfcijpj2z2a',
+      )
+      expect(result.success).toBe(false)
+    })
+  })
+
   describe('format: did', () => {
     const schema = string({ format: 'did' })
 

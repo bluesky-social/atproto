@@ -117,6 +117,7 @@ export class LexiconSchemaBuilder implements AsyncDisposable {
       | l.Subscription
       | l.Procedure
       | l.PermissionSet
+      | l.Space
     >()
     if (!isAsyncIterableObject(indexer)) {
       throw new Error('An iterable indexer is required to build all schemas')
@@ -223,6 +224,25 @@ export class LexiconSchemaBuilder implements AsyncDisposable {
     }
   }
 
+  protected buildRecordGetter(nsid: string): () => l.RecordSchema {
+    let validator: l.RecordSchema
+
+    this.#asyncTasks.add(
+      this.buildFullRef(`${nsid}#main`).then((v) => {
+        if (v instanceof l.RecordSchema) {
+          validator = v
+        } else {
+          throw new Error(`Space collection ${nsid} is not a record`)
+        }
+      }),
+    )
+
+    return () => {
+      if (validator) return validator
+      throw new Error('Validator not yet built. Did you await done()?')
+    }
+  }
+
   protected compileDef(doc: LexiconDocument, hash: string) {
     const def = Object.hasOwn(doc.defs, hash) ? doc.defs[hash] : null
     if (!def) {
@@ -238,6 +258,14 @@ export class LexiconSchemaBuilder implements AsyncDisposable {
             l.permission(resource, p),
           ),
           def,
+        )
+      case 'space':
+        return l.space(
+          def.key,
+          doc.id,
+          def.collections.map((nsid) =>
+            l.typedRef(this.buildRecordGetter(nsid)),
+          ),
         )
       case 'procedure':
         return l.procedure(

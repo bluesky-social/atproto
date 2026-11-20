@@ -1,7 +1,7 @@
-import fsSync from 'node:fs'
+import { createReadStream } from 'node:fs'
 import fs from 'node:fs/promises'
 import path from 'node:path'
-import type stream from 'node:stream'
+import type { Readable } from 'node:stream'
 import {
   aggregateErrors,
   chunkArray,
@@ -82,7 +82,9 @@ export class DiskBlobStore implements BlobStore {
     return fileExists(this.getStoredPath(cid))
   }
 
-  async putTemp(bytes: Uint8Array | stream.Readable): Promise<string> {
+  async putTemp(
+    bytes: Uint8Array | Iterable<Uint8Array> | AsyncIterable<Uint8Array>,
+  ): Promise<string> {
     await this.ensureTemp()
     const key = this.genKey()
     await fs.writeFile(this.getTmpPath(key), bytes)
@@ -107,7 +109,7 @@ export class DiskBlobStore implements BlobStore {
 
   async putPermanent(
     cid: Cid,
-    bytes: Uint8Array | stream.Readable,
+    bytes: Uint8Array | Iterable<Uint8Array> | AsyncIterable<Uint8Array>,
   ): Promise<void> {
     await this.ensureDir()
     await fs.writeFile(this.getStoredPath(cid), bytes)
@@ -139,13 +141,13 @@ export class DiskBlobStore implements BlobStore {
     }
   }
 
-  async getStream(cid: Cid): Promise<stream.Readable> {
+  async getStream(cid: Cid): Promise<Readable> {
     const path = this.getStoredPath(cid)
     const exists = await fileExists(path)
     if (!exists) {
       throw new BlobNotFoundError()
     }
-    return fsSync.createReadStream(path)
+    return createReadStream(path)
   }
 
   async delete(cid: Cid): Promise<void> {

@@ -1,5 +1,7 @@
 import { assert, describe, expect, it, vi } from 'vitest'
 import type { Key } from '@atproto/jwk'
+import { AuthMethodUnsatisfiableError } from './errors/auth-method-unsatisfiable-error.js'
+import { TokenInvalidError } from './errors/token-invalid-error.js'
 import type { AtprotoDid } from './oauth-server-agent.ts'
 import type { OAuthServerFactory } from './oauth-server-factory.js'
 import type { Runtime } from './runtime.js'
@@ -7,6 +9,7 @@ import {
   type Session,
   SessionGetter,
   type SessionStore,
+  isExpectedSessionError,
 } from './session-getter.js'
 
 const SUB = 'did:plc:example' satisfies AtprotoDid
@@ -38,7 +41,10 @@ function makeGetter(opts: {
   const serverFactory = {
     fromIssuer: vi.fn(async () => ({ revoke })),
   } as unknown as OAuthServerFactory
-  const runtime = {} as unknown as Runtime
+  const runtime = {
+    hasImplementationLock: true,
+    usingLock: (_name: string, fn: () => unknown) => fn(),
+  } as unknown as Runtime
 
   const getter = new SessionGetter(opts.store, serverFactory, runtime, {
     onSessionUpdated: opts.onSessionUpdated,
@@ -47,7 +53,60 @@ function makeGetter(opts: {
   return { getter, serverFactory, revoke }
 }
 
+describe(isExpectedSessionError, () => {
+  it('matches session errors', () => {
+    expect(isExpectedSessionError(new TokenInvalidError(SUB))).toBe(true)
+    expect(isExpectedSessionError(new AuthMethodUnsatisfiableError())).toBe(
+      true,
+    )
+  })
+
+  it('does not match a network failure', () => {
+    expect(isExpectedSessionError(new TypeError('fetch failed'))).toBe(false)
+  })
+})
+
 describe(SessionGetter, () => {
+  describe('get', () => {
+    // An invalid stored session: missing its token set.
+    function invalidSessionStore() {
+      const { tokenSet: _, ...invalid } = makeSession()
+      let stored: Session | undefined = invalid as Session
+      return {
+        get: async () => stored,
+        set: vi.fn(async () => {}),
+        del: vi.fn(async () => {
+          stored = undefined
+        }),
+      } satisfies SessionStore
+    }
+
+    // Fails in the getter (`deleteOnError`) when refreshing, and in `isStale`
+    // otherwise.
+    it.each([
+      ['refreshing', true],
+      ['not refreshing', 'auto'],
+    ] as const)(
+      'reports, and deletes once, an invalid stored session when %s',
+      async (_, refresh) => {
+        const store = invalidSessionStore()
+        const onSessionDeleted = vi.fn()
+        const { getter } = makeGetter({ store, onSessionDeleted })
+
+        await expect(getter.getSession(SUB, refresh)).rejects.toSatisfy(
+          (err) => {
+            assert(err instanceof TokenInvalidError)
+            expect(err.cause).toBeInstanceOf(TypeError)
+            return true
+          },
+        )
+        expect(store.del).toHaveBeenCalledTimes(1)
+        expect(store.del).toHaveBeenCalledWith(SUB)
+        expect(onSessionDeleted).toHaveBeenCalledTimes(1)
+      },
+    )
+  })
+
   describe('setStored', () => {
     it('rejects a session whose tokenSet.sub does not match the key', async () => {
       const store: SessionStore = {

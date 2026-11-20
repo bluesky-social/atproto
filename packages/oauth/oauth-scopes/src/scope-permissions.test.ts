@@ -1,5 +1,19 @@
 import { describe, expect, it } from 'vitest'
+import {
+  InvalidAtUriError,
+  SpaceRef,
+  type SpaceRefString,
+} from '@atproto/syntax'
+import { ScopeMissingError } from './scope-missing-error.js'
 import { ScopePermissions } from './scope-permissions.js'
+import type { SpaceTarget } from './scopes/space-permission.js'
+
+const SPACE_REF = new SpaceRef(
+  'did:plc:owner',
+  'com.atmoboards.forum',
+  'default',
+)
+const SPACE_URI = SPACE_REF.toString()
 
 describe('ScopePermissions', () => {
   describe('allowsAccount', () => {
@@ -300,5 +314,95 @@ describe('ScopePermissions', () => {
         }),
       ).not.toThrow()
     })
+  })
+
+  describe('allowsSpace', () => {
+    const set = new ScopePermissions(
+      'space:com.atmoboards.forum?authority=did:plc:owner&action=read',
+    )
+
+    it('accepts a SpaceRef', () => {
+      expect(set.allowsSpace(SPACE_REF, { action: 'read' })).toBe(true)
+    })
+
+    it('accepts a space ref string', () => {
+      expect(set.allowsSpace(SPACE_URI, { action: 'read' })).toBe(true)
+    })
+
+    it('accepts a match reference', () => {
+      expect(
+        set.allowsSpace(
+          {
+            spaceType: 'com.atmoboards.forum',
+            authority: 'did:plc:owner',
+            skey: '*',
+          },
+          { action: 'read' },
+        ),
+      ).toBe(true)
+    })
+
+    it('rejects a record uri in place of a space ref', () => {
+      const recordUri =
+        `${SPACE_URI}/did:plc:alice/com.atmoboards.thread/abc` as SpaceRefString
+      expect(() => set.allowsSpace(recordUri, { action: 'read' })).toThrow(
+        InvalidAtUriError,
+      )
+    })
+
+    it('is satisfied by any one of several grants', () => {
+      const set = new ScopePermissions([
+        'space:com.atmoboards.forum?authority=*&action=read',
+        'space:com.atmoboards.forum?authority=did:plc:owner&collection=com.atmoboards.thread&action=create',
+      ])
+      expect(set.allowsSpace(SPACE_REF, { action: 'read' })).toBe(true)
+      expect(
+        set.allowsSpace(SPACE_REF, {
+          action: 'create',
+          collection: 'com.atmoboards.thread',
+        }),
+      ).toBe(true)
+      expect(
+        set.allowsSpace(SPACE_REF, {
+          action: 'delete',
+          collection: 'com.atmoboards.thread',
+        }),
+      ).toBe(false)
+    })
+  })
+
+  describe('assertSpace', () => {
+    it('passes when a grant covers the target', () => {
+      const set = new ScopePermissions(
+        'space:com.atmoboards.forum?authority=did:plc:owner&action=read',
+      )
+      expect(() => set.assertSpace(SPACE_REF, { action: 'read' })).not.toThrow()
+    })
+
+    it.each<[string, SpaceTarget, string]>([
+      [
+        'a SpaceRef',
+        SPACE_REF,
+        'space:com.atmoboards.forum?authority=did:plc:owner&skey=default&action=read',
+      ],
+      [
+        'a space ref string',
+        SPACE_URI,
+        'space:com.atmoboards.forum?authority=did:plc:owner&skey=default&action=read',
+      ],
+      [
+        'a wildcard match reference',
+        { spaceType: '*', authority: '*', skey: '*' },
+        'space:*?authority=*&action=read',
+      ],
+    ])(
+      'throws ScopeMissingError naming the scope needed for %s',
+      (_, target, scope) => {
+        const set = new ScopePermissions('atproto')
+        expect(() => set.assertSpace(target, { action: 'read' })).toThrow(
+          new ScopeMissingError(scope),
+        )
+      },
+    )
   })
 })

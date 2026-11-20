@@ -1,0 +1,22 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.managedspace.policy",
+  "defs": {
+    "main": {
+      "type": "object",
+      "description": "Space policy that delegates access decisions to an external app through checkAccess.",
+      "required": ["managingApp"],
+      "properties": {
+        "managingApp": {
+          "type": "string",
+          "description": "The `did#serviceId` reference of the managing app."
+        },
+        "publishPolicy": {
+          "type": "boolean",
+          "default": false,
+          "description": "Publish the policy as a com.atproto.space.policy record in the space."
+        }
+      }
+    }
+  }
+}

@@ -1,4 +1,5 @@
 import type { AtprotoIdentityDidMethods } from '@atproto/did'
+import { DidCacheMemory } from './did-cache-memory.js'
 import {
   type DidCache,
   type DidCacheErrorHandler,
@@ -14,12 +15,16 @@ export type { AtprotoIdentityDidMethods }
 
 export type CreateDidResolverOptions = {
   didResolver?: DidResolver<AtprotoIdentityDidMethods>
+  /**
+   * Custom cache for resolved DIDs. If not provided, the resolver will use an
+   * in-memory cache ({@link DidCacheMemory}).
+   */
   didCache?: DidCache
   onDidCacheError?: DidCacheErrorHandler
 } & Partial<DidResolverCommonOptions>
 
 export function createDidResolver(
-  options: CreateDidResolverOptions,
+  options: CreateDidResolverOptions = {},
 ): DidResolver<AtprotoIdentityDidMethods> {
   const { didResolver, didCache, onDidCacheError } = options
 
@@ -29,7 +34,7 @@ export function createDidResolver(
 
   return new DidResolverCached(
     didResolver ?? new DidResolverCommon(options),
-    didCache,
+    didCache ?? new DidCacheMemory(),
     onDidCacheError,
   )
 }

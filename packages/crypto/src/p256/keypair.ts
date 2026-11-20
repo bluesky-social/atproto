@@ -61,6 +61,15 @@ export class P256Keypair implements Keypair {
     return sig.toCompactRawBytes()
   }
 
+  /**
+   * Elliptic-curve Diffie-Hellman with another P-256 public key (compressed or
+   * uncompressed). Returns the 32-byte x-coordinate of the shared point.
+   */
+  ecdh(publicKey: Uint8Array): Uint8Array {
+    const sharedPoint = p256.getSharedSecret(this.privateKey, publicKey, true)
+    return sharedPoint.slice(1)
+  }
+
   async export(): Promise<Uint8Array> {
     if (!this.exportable) {
       throw new Error('Private key is not exportable')
