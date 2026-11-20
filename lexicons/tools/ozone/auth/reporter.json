@@ -1,0 +1,13 @@
+{
+  "lexicon": 1,
+  "id": "tools.ozone.auth.reporter",
+  "defs": {
+    "main": {
+      "type": "auth-bundle",
+      "description": "Report content and view status of reports",
+      "permissions": [
+        "com.atproto.resource.authentication?aud=*&lxm=tools.ozone.moderation.createReport"
+      ]
+    }
+  }
+}
