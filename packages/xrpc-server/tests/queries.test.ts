@@ -278,6 +278,9 @@ for (const buildServer of [buildMethodLexicons, buildAddLexicons]) {
                 }),
           )
           const stream = new Readable({ read() {} })
+          // pipeline() may destroy the stream with a premature-close
+          // error depending on timing; the test only asserts it closes.
+          stream.on('error', () => {})
           streamReady.resolve(stream)
           return { encoding: 'text/plain', body: stream }
         },
@@ -293,7 +296,8 @@ for (const buildServer of [buildMethodLexicons, buildAddLexicons]) {
       request.destroy()
 
       const stream = await streamReady.promise
-      await once(stream, 'close')
+      // events.once() would reject if the stream errors before closing.
+      await new Promise<void>((resolve) => stream.once('close', resolve))
       expect(stream.destroyed).toBe(true)
     })
   })
