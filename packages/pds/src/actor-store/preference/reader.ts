@@ -39,9 +39,27 @@ export class PreferenceReader {
 
     return prefs.filter((pref) => prefAllowed(pref.$type, opts))
   }
+
+  /**
+   * Stored preference rows in the namespace, unparsed and unfiltered by
+   * access level, for callers that must not fail on a malformed value.
+   */
+  async getPreferenceRows(namespace: string): Promise<PreferenceRow[]> {
+    const rows = await this.db.db
+      .selectFrom('account_pref')
+      .orderBy('id')
+      .select(['name', 'valueJson'])
+      .execute()
+    return rows.filter((row) => prefMatchNamespace(namespace, row.name))
+  }
 }
 
 export type AccountPreference = app.bsky.actor.defs.Preferences[number]
+
+export type PreferenceRow = {
+  name: string
+  valueJson: string
+}
 
 export const prefMatchNamespace = (namespace: string, fullname: string) => {
   return fullname === namespace || fullname.startsWith(`${namespace}.`)
