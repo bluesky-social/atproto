@@ -7,21 +7,33 @@ import {
   logs,
   metrics,
 } from '@opentelemetry/api'
+import type { NsidString } from '@atproto/lex-schema'
 import type { NotificationsV2Algorithm } from '../config.js'
-import type { app } from '../lexicons/index.js'
 import { eventsLogger } from '../logger.js'
 import { isAbortError, isTimeoutError } from './util.js'
 
 const meter: Meter = metrics.getMeter('@atproto/bsky')
 const logger: Logger = logs.getLogger('@atproto/bsky')
 
+export type AuthVerifierName =
+  | 'standard'
+  | 'entrywaySession'
+  | 'bsg'
+  | 'role'
+  | 'internal'
+  | 'modService'
+  | 'anonymous'
+
+export type GetFeedServiceJwtKind =
+  'feedgen_skeleton' | 'appview_feed' | 'other'
+
+export type IssuerFragment = 'empty' | '#atproto' | '#atproto_labeler' | 'other'
+
 export type HydrationSource =
   'known_likers' | 'known_followers' | 'activity_subscriptions'
 
 /** XRPC method that owns a hydration; set on `HydrateCtx` from the method's `$lxm`. */
-export type HydrationXrpcEndpoint =
-  | app.bsky.embed.getEmbedExternalView.$lxm
-  | app.bsky.unspecced.getAtmosphereExploreTab.$lxm
+export type HydrationXrpcEndpoint = NsidString
 
 /** Reported XRPC endpoint of an external hydration traversal. */
 export type ExternalHydrationXrpcEndpoint = HydrationXrpcEndpoint | 'unknown'
@@ -44,8 +56,8 @@ type ExternalHydrationAttributes = {
 
 /**
  * Generic record lookup work of one external hydration traversal, across the
- * root and all nested dependency batches. Excludes profile/label hydration,
- * backlink sample/count RPCs, and legacy Standard Site reads.
+ * root and all nested dependency batches. Excludes profile/label hydration
+ * and backlink sample/count RPCs.
  */
 export type ExternalHydrationWork = {
   /**
@@ -96,6 +108,38 @@ export type ExternalHydrationWork = {
  * essentially free when telemetry is disabled.
  */
 class EventReporter {
+  #authVerifierRequests = meter.createCounter<{
+    verifier: AuthVerifierName
+  }>('auth.verifier.requests', {
+    description:
+      'Requests by selected authentication verifier, including failed attempts; wrapper verifiers are not counted separately',
+    valueType: ValueType.INT,
+  })
+
+  #labelerServiceJwts = meter.createCounter<{
+    lxm: string
+  }>('auth.labeler_service_jwts', {
+    description:
+      'Labeler-signed service JWTs with a valid signature, by lxm. `mismatch` when lxm is not the method called, and `absent` when there is no lxm',
+    valueType: ValueType.INT,
+  })
+
+  #standardServiceJwtIssuerFragments = meter.createCounter<{
+    fragment: IssuerFragment
+  }>('auth.standard_service_jwt_issuer_fragments', {
+    description:
+      'Service JWTs with a valid signature in the standard verifier, by the fragment of `iss`. `empty` when there is no fragment, `other` for any fragment other than `#atproto` and `#atproto_labeler`',
+    valueType: ValueType.INT,
+  })
+
+  #getFeedServiceJwts = meter.createCounter<{
+    kind: GetFeedServiceJwtKind
+  }>('auth.get_feed_service_jwts', {
+    description:
+      'Service JWTs forwarded by getFeed to feed generators, by `aud` and `lxm`. `feedgen_skeleton`: `aud` is the feed generator, `lxm` is getFeedSkeleton. `appview_feed`: `aud` is AppView, `lxm` is getFeed. `other`: any other combination',
+    valueType: ValueType.INT,
+  })
+
   #hydrationFailedCounter = meter.createCounter<{
     source: HydrationSource
     reason: 'abort' | 'timeout' | 'error'
@@ -173,6 +217,20 @@ class EventReporter {
     },
   })
 
+  #notificationHydrationDuration = meter.createHistogram(
+    'notifications.grouped.hydration.duration',
+    {
+      description: 'Wall time of the grouped notifications hydration phase',
+      unit: 'ms',
+      valueType: ValueType.DOUBLE,
+      advice: {
+        explicitBucketBoundaries: [
+          1, 2.5, 5, 10, 25, 50, 100, 250, 500, 1000, 2500, 5000,
+        ],
+      },
+    },
+  )
+
   #groupedNotificationsDataplaneFetches = meter.createHistogram(
     'notifications.grouped.dataplane_fetches',
     {
@@ -239,6 +297,109 @@ class EventReporter {
       eventsLogger.info({ eventName, ...attributes })
     } catch (err) {
       diag.error(`Failed to log event ${eventName}:`, err)
+    }
+  }
+
+  authVerifierRequest(
+    verifier: AuthVerifierName,
+    {
+      did,
+      appPassword,
+      iat,
+      method,
+      userAgent,
+      origin,
+      err,
+    }: {
+      did?: string
+      appPassword?: boolean
+      iat?: number
+      method?: string
+      userAgent?: string
+      origin?: string
+      err?: unknown
+    } = {},
+  ) {
+    if (verifier === 'entrywaySession') {
+      this.#log('auth_verifier_request', {
+        verifier,
+        did,
+        appPassword,
+        iat,
+        method,
+        userAgent,
+        origin,
+        success: err === undefined,
+        error:
+          err === undefined
+            ? undefined
+            : err instanceof Error
+              ? err.message
+              : String(err),
+      })
+    }
+    try {
+      this.#authVerifierRequests.add(1, { verifier })
+    } catch (err) {
+      diag.error('Failed to record auth_verifier_request:', err)
+    }
+  }
+
+  labelerServiceJwt({
+    did,
+    lxm,
+    method,
+    modService,
+  }: {
+    did: string
+    lxm?: string
+    method: string
+    modService: boolean
+  }) {
+    // @NOTE Our own Ozone (the mod service) makes hundreds of these requests
+    // per second, so it's counted but not logged.
+    if (!modService) {
+      this.#log('labeler_service_jwt', { did, lxm })
+    }
+    try {
+      // @NOTE lxm is attacker-controlled, so the counter only records it when
+      // it is the method called, which is one of the methods AppView serves.
+      this.#labelerServiceJwts.add(1, {
+        lxm: lxm === undefined ? 'absent' : lxm === method ? lxm : 'mismatch',
+      })
+    } catch (err) {
+      diag.error('Failed to record labeler_service_jwt:', err)
+    }
+  }
+
+  standardServiceJwtIssuer(iss: string) {
+    const idx = iss.indexOf('#')
+    const did = idx === -1 ? iss : iss.slice(0, idx)
+    const value = idx === -1 ? undefined : iss.slice(idx)
+    const fragment: IssuerFragment =
+      value === undefined
+        ? 'empty'
+        : value === '#atproto' || value === '#atproto_labeler'
+          ? value
+          : 'other'
+    if (fragment === 'other') {
+      this.#log('standard_service_jwt_issuer_fragment', {
+        did,
+        fragment: value,
+      })
+    }
+    try {
+      this.#standardServiceJwtIssuerFragments.add(1, { fragment })
+    } catch (err) {
+      diag.error('Failed to record standard_service_jwt_issuer:', err)
+    }
+  }
+
+  getFeedServiceJwt(kind: GetFeedServiceJwtKind) {
+    try {
+      this.#getFeedServiceJwts.add(1, { kind })
+    } catch (err) {
+      diag.error('Failed to record get_feed_service_jwt:', err)
     }
   }
 
@@ -330,20 +491,23 @@ class EventReporter {
     }
   }
 
-  /** Reports dataplane fetches and raw-item counts once per completed page. */
+  /** Reports dataplane fetches, raw-item counts, and hydration time once per completed page. */
   groupedNotifications({
     itemsFetched,
     itemsReturned,
     dataplaneFetches,
+    hydrationDurationMs,
   }: {
     itemsFetched: number
     itemsReturned: number
     dataplaneFetches: number
+    hydrationDurationMs: number
   }) {
     try {
       this.#groupedNotificationsItemsFetched.record(itemsFetched)
       this.#groupedNotificationsItemsReturned.record(itemsReturned)
       this.#groupedNotificationsDataplaneFetches.record(dataplaneFetches)
+      this.#notificationHydrationDuration.record(hydrationDurationMs)
     } catch (err) {
       diag.error('Failed to record grouped_notifications:', err)
     }

@@ -77,14 +77,15 @@ Validation that returns a result rather than a boolean is `$safeValidate` (or
 ```diff
 - import { CURATELIST, MODLIST } from '../../../../lexicon/types/app/bsky/graph/defs'
 + import { app } from '../../../../lexicons/index.js'
-+ const CURATELIST = app.bsky.graph.defs.curatelist.$token
-+ const MODLIST = app.bsky.graph.defs.modlist.$token
++ const CURATELIST = app.bsky.graph.defs.Curatelist
++ const MODLIST = app.bsky.graph.defs.Modlist
 ```
 
-Use `$token`, per [STYLE_GUIDE.md](../../../../STYLE_GUIDE.md). It reads as one
-of the `$`-prefixed schema constants (`$type`, `$lxm`, `$nsid`) rather than as a
-field on the value. Some older call sites use `.value`, which resolves to
-the same string — replace them if you are editing that file.
+Use the PascalCase export, per [STYLE_GUIDE.md](../../../../STYLE_GUIDE.md): it
+is the token's string value, and shares its name with the string literal type.
+`$token` on the camelCase schema (`app.bsky.graph.defs.curatelist.$token`) and
+the `.value` some older call sites use resolve to the same string — replace
+them if you are editing that file.
 
 ## `$build()` for `$type`-carrying values
 
@@ -179,7 +180,7 @@ Casting later, after the value has been passed around, means every
 intermediate signature stays `string` and the brand buys nothing.
 
 These types are re-exported from `@atproto/syntax` unchanged, so
-`import { DidString } from '@atproto/lex'` and
+`import { DidString } from '@atproto/lex-schema'` and
 `from '@atproto/syntax'` are the same type — migrated files use both, and
 files already importing other things from `@atproto/syntax` keep doing so.
 Full list and semantics: [lex-data skill](../../lex-data/SKILL.md).

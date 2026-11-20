@@ -2,7 +2,7 @@ import {
   type AtIdentifierString,
   type DidString,
   isDidString,
-} from '@atproto/lex'
+} from '@atproto/lex-schema'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import type { AdminTokenOutput, ModeratorOutput } from '../auth-verifier.js'
 import type { AppContext } from '../context.js'

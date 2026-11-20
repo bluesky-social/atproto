@@ -1,5 +1,54 @@
 # @atproto/bsync
 
+## 0.1.11
+
+### Patch Changes
+
+- [#5934](https://github.com/bluesky-social/atproto/pull/5934) [`c310166`](https://github.com/bluesky-social/atproto/commit/c310166de0faf14674a22f0717f8f1260e2b64ff) Thanks [@treethought](https://github.com/treethought)! - Expose operation creation timestamps in Bsync responses.
+- Updated dependencies [[`b9b1ca7`](https://github.com/bluesky-social/atproto/commit/b9b1ca7f176b93d12e39685799c5f2e1f9a63be7)]:
+  - @atproto/common@0.8.11
+  - @atproto-labs/opentelemetry-node@0.5.1
+  - @atproto/syntax@0.7.8
+
+## 0.1.10
+
+### Patch Changes
+
+- [#5914](https://github.com/bluesky-social/atproto/pull/5914) [`8ed6d3d`](https://github.com/bluesky-social/atproto/commit/8ed6d3d48b0a02a665a5931866d1259cc31c5bfd) Thanks [@amckinley](https://github.com/amckinley)! - Add `BSYNC_DB_POSTGRES_AWS_IAM_AUTH`: when set, bsync authenticates to Postgres with a fresh AWS RDS IAM auth token for every new connection, over TLS verified against the bundled Amazon RDS global CA bundle. The token is signed for the region in `AWS_REGION`, or else the region in the `*.rds.amazonaws.com` hostname, with credentials from the AWS default provider chain. `BSYNC_DB_POSTGRES_URL` must then name the user and host, with no password and no parameters other than `sslmode=verify-full`.
+
+## 0.1.9
+
+### Patch Changes
+
+- [#5762](https://github.com/bluesky-social/atproto/pull/5762) [`7a46712`](https://github.com/bluesky-social/atproto/commit/7a467120982d9ff1559afeb3a26989dad5877d17) Thanks [@haileyok](https://github.com/haileyok)! - Redact cookie and set-cookie headers in HTTP request and response logs.
+- Updated dependencies [[`7a46712`](https://github.com/bluesky-social/atproto/commit/7a467120982d9ff1559afeb3a26989dad5877d17)]:
+  - @atproto/common@0.8.10
+
+## 0.1.8
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/common@0.8.9
+
+## 0.1.7
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/common@0.8.8
+
+## 0.1.6
+
+### Patch Changes
+
+- [#5723](https://github.com/bluesky-social/atproto/pull/5723) [`ea28612`](https://github.com/bluesky-social/atproto/commit/ea286121ab421e320bf70f7e5a5dbb82c4c8b15e) Thanks [@blackmichael](https://github.com/blackmichael)! - Remove datadog tracer from bsync
+
+- [#5746](https://github.com/bluesky-social/atproto/pull/5746) [`1c8c3a3`](https://github.com/bluesky-social/atproto/commit/1c8c3a3a8ea27a060f38cda71172339aa1728113) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update to OpenTelemetry JS SDK 3.x (`@opentelemetry/api` 1.10), which requires Node.js `>=22.15.0`. Event log records are now emitted through `@opentelemetry/api` (`@opentelemetry/api-logs` was removed upstream). The HTTP instrumentation only reports the stable `http.server.request.duration` and `http.client.request.duration` metrics: the legacy `http.server.duration` and `http.client.duration` metrics are gone, and `OTEL_SEMCONV_STABILITY_OPT_IN=http` no longer has any effect. Instrumentations passed to `setup()` now also instrument modules loaded through ESM imports, not only `require()`d ones, when built on the same `@opentelemetry/instrumentation` as `@atproto-labs/opentelemetry-node`; otherwise `setup()` now throws an `InstrumentationMismatchError` instead of silently missing them. The new `@atproto-labs/opentelemetry-node/better-sqlite3-plugin` export, a port of `opentelemetry-plugin-better-sqlite3` producing identical spans, replaces that package in the PDS.
+- Updated dependencies [[`3bfd00f`](https://github.com/bluesky-social/atproto/commit/3bfd00f484dc144482c82a4ed248adc49e6be769), [`3bfd00f`](https://github.com/bluesky-social/atproto/commit/3bfd00f484dc144482c82a4ed248adc49e6be769), [`1c8c3a3`](https://github.com/bluesky-social/atproto/commit/1c8c3a3a8ea27a060f38cda71172339aa1728113), [`1c8c3a3`](https://github.com/bluesky-social/atproto/commit/1c8c3a3a8ea27a060f38cda71172339aa1728113), [`1c8c3a3`](https://github.com/bluesky-social/atproto/commit/1c8c3a3a8ea27a060f38cda71172339aa1728113), [`3bfd00f`](https://github.com/bluesky-social/atproto/commit/3bfd00f484dc144482c82a4ed248adc49e6be769), [`3bfd00f`](https://github.com/bluesky-social/atproto/commit/3bfd00f484dc144482c82a4ed248adc49e6be769)]:
+  - @atproto/common@0.8.7
+  - @atproto-labs/opentelemetry-node@0.5.0
+
 ## 0.1.5
 
 ### Patch Changes

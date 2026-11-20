@@ -1,5 +1,5 @@
 import assert from 'node:assert'
-import type { DidString } from '@atproto/lex'
+import type { DidString } from '@atproto/lex-schema'
 import {
   AuthRequiredError,
   InvalidRequestError,

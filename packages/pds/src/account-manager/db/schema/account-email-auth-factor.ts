@@ -1,5 +1,5 @@
 import type { Selectable } from 'kysely'
-import type { DatetimeString } from '@atproto/lex'
+import type { DatetimeString } from '@atproto/lex-schema'
 
 /**
  * Email-based two-factor authentication, kept out of `account` so that adding

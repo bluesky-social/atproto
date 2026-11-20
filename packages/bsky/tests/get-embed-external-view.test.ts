@@ -258,10 +258,10 @@ async function setup(domains: string[] = safeDomains) {
     views,
     reqLabelers: () => ({ dids: [labeler], redact: new Set([labeler]) }),
     authVerifier: {
-      standardOptional: async () => ({
+      standardReadOptional: () => async () => ({
         credentials: { type: 'none', iss: null },
       }),
-    } satisfies Pick<AppContext['authVerifier'], 'standardOptional'>,
+    } satisfies Pick<AppContext['authVerifier'], 'standardReadOptional'>,
   } as unknown as AppContext
   const xrpc = createServer([], { validateResponse: true })
   register(xrpc, ctx)

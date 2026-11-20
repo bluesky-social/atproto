@@ -450,8 +450,7 @@ describe('query-reports', () => {
         },
         reportedBy: sc.dids.alice,
       })
-      // Report rows are inserted asynchronously by the queue-router daemon —
-      // drain it before querying.
+      // @NOTE Flush queue assignment before querying routed reports.
       await network.processAll()
     })
 
@@ -528,19 +527,19 @@ describe('query-reports', () => {
       })
     })
 
-    it('maps message reports to the account subject status', async () => {
+    it('includes the message subject status on message reports', async () => {
       const response = await modClient.queryReports({
         status: 'open',
         subjectType: 'message',
       })
 
-      // Messages don't have their own subject status; the account's status is
-      // surfaced instead.
       const status = response.reports[0].subject.status
       expect(status).toBeDefined()
       expect(status?.subject).toMatchObject({
-        $type: 'com.atproto.admin.defs#repoRef',
+        $type: 'chat.bsky.convo.defs#messageRef',
         did: sc.dids.carol,
+        convoId,
+        messageId,
       })
     })
 
@@ -602,8 +601,7 @@ describe('query-reports', () => {
         },
       })
 
-      // Report rows are inserted asynchronously by the queue-router daemon —
-      // drain it before querying.
+      // @NOTE Flush queue assignment before querying routed reports.
       await network.processAll()
 
       // Find the report we just created (most recent)
@@ -646,8 +644,7 @@ describe('query-reports', () => {
         },
       })
 
-      // Report rows are inserted asynchronously by the queue-router daemon —
-      // drain it before querying.
+      // @NOTE Flush queue assignment before querying routed reports.
       await network.processAll()
 
       // Find the muted subject report

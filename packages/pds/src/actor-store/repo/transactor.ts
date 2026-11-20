@@ -1,6 +1,6 @@
 import type * as crypto from '@atproto/crypto'
-import type { DidString } from '@atproto/lex'
 import { type Cid, parseCid } from '@atproto/lex-data'
+import type { DidString } from '@atproto/lex-schema'
 import {
   type BlobStore,
   Repo,

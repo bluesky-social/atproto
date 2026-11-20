@@ -1,5 +1,5 @@
 import type { Generated } from 'kysely'
-import type { DatetimeString, DidString, NsidString } from '@atproto/lex'
+import type { DatetimeString, DidString, NsidString } from '@atproto/lex-schema'
 
 export const reportQueueTableName = 'report_queue'
 

@@ -1,5 +1,31 @@
 # @atproto/lex-data
 
+## 0.1.11
+
+### Patch Changes
+
+- [#5950](https://github.com/bluesky-social/atproto/pull/5950) [`b9b1ca7`](https://github.com/bluesky-social/atproto/commit/b9b1ca7f176b93d12e39685799c5f2e1f9a63be7) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update `vitest` to v5, `vite` to v8.3.8 and `rolldown` to v1.3.3 (dev dependencies)
+
+- [#5948](https://github.com/bluesky-social/atproto/pull/5948) [`ce37237`](https://github.com/bluesky-social/atproto/commit/ce37237663b7ea87e8cc04cb995377d0ee5d2efd) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add `isWellFormedString()`, which tells whether a string has a UTF-8 encoding, i.e. contains no lone surrogate.
+
+## 0.1.10
+
+### Patch Changes
+
+- [#5825](https://github.com/bluesky-social/atproto/pull/5825) [`8c841f6`](https://github.com/bluesky-social/atproto/commit/8c841f6e73c8365c2dfe816c0613aa9c50490361) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add support for `ArrayLike<number>` in `asUint8Array`
+
+- [#5825](https://github.com/bluesky-social/atproto/pull/5825) [`8c841f6`](https://github.com/bluesky-social/atproto/commit/8c841f6e73c8365c2dfe816c0613aa9c50490361) Thanks [@matthieusieben](https://github.com/matthieusieben)! - `asUint8Array` converts Node.js `Buffer`s into plain `Uint8Array`s. Add `toUint8Array`, which throws a `TypeError` when the input cannot be converted into a `Uint8Array`.
+
+- [#5825](https://github.com/bluesky-social/atproto/pull/5825) [`8c841f6`](https://github.com/bluesky-social/atproto/commit/8c841f6e73c8365c2dfe816c0613aa9c50490361) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add `ui8ConcatAsync()` to `@atproto/lex-data`, type `encode()`'s result in `@atproto/lex-cbor` as `Uint8Array<ArrayBuffer>`, and keep `bytes` schemas from coercing arrays and array-like objects now that `asUint8Array` accepts them.
+
+- [#5825](https://github.com/bluesky-social/atproto/pull/5825) [`8c841f6`](https://github.com/bluesky-social/atproto/commit/8c841f6e73c8365c2dfe816c0613aa9c50490361) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add support for `Iterable<ArrayLike<number>>` as `ui8Concat()` input
+
+## 0.1.9
+
+### Patch Changes
+
+- [#5786](https://github.com/bluesky-social/atproto/pull/5786) [`07c25d4`](https://github.com/bluesky-social/atproto/commit/07c25d410d4f4ad8f6ec80fc14efa0dd8ec55545) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Recommend depending on this package directly, rather than on `@atproto/lex`, unless the code is bundled
+
 ## 0.1.8
 
 ### Patch Changes

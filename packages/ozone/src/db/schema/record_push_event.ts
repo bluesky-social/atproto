@@ -1,5 +1,5 @@
 import type { Generated } from 'kysely'
-import type { AtUriString, DidString } from '@atproto/lex'
+import type { AtUriString, DidString } from '@atproto/lex-schema'
 
 export const eventTableName = 'record_push_event'
 

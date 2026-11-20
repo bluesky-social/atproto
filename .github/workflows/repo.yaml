@@ -41,7 +41,7 @@ jobs:
         with:
           cache: pnpm
           node-version-file: package.json
-      - run: pnpm install --frozen-lockfile
+      - run: pnpm install --frozen-lockfile --ignore-scripts
         env:
           PUPPETEER_SKIP_DOWNLOAD: true
       - if: github.head_ref != 'changeset-release/main'
@@ -140,7 +140,7 @@ jobs:
           # @NOTE Keep tests on Node 22 for compatibility; 22.23.4 is the minimum
           # release containing the required security fixes.
           node-version: '^22.23.4'
-      - run: echo "CURRENT_MONTH=$(date +'%Y-%m')" >> $GITHUB_ENV
+      - run: echo "CURRENT_MONTH=$(date +'%Y-%m')" >> "$GITHUB_ENV"
       - uses: actions/cache@v6
         name: Cache Puppeteer browser binaries
         with:

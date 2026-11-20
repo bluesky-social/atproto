@@ -6,8 +6,9 @@ import {
   type UriString,
   isDatetimeString,
   isDidString,
+  isNsidString,
   toDatetimeString,
-} from '@atproto/lex'
+} from '@atproto/lex-schema'
 import type { OzoneEnvironment } from './env.js'
 import {
   type StrikeSuspensionConfig,
@@ -37,6 +38,9 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
     labelStreamBackfillRate: env.labelStreamBackfillRate ?? 2000,
     labelQueryWildcardsEnabled: env.labelQueryWildcardsEnabled ?? false,
     reportTagsDisabled: env.reportTagsDisabled ?? false,
+    languageTagRecordTypes: parseLanguageTagRecordTypes(
+      env.languageTagRecordTypes,
+    ),
   }
 
   assert(env.dbPostgresUrl, 'dbPostgresUrl is required')
@@ -46,8 +50,6 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
     poolSize: env.dbPoolSize,
     poolMaxUses: env.dbPoolMaxUses,
     poolIdleTimeoutMs: env.dbPoolIdleTimeoutMs,
-    materializedViewRefreshIntervalMs: env.dbMaterializedViewRefreshIntervalMs,
-    materializedViewRefreshTimeoutMs: env.dbMaterializedViewRefreshTimeoutMs,
     teamProfileRefreshIntervalMs: env.dbTeamProfileRefreshIntervalMs,
   }
 
@@ -93,11 +95,22 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
     cacheMaxDocBytes: env.didCacheMaxDocBytes,
   }
 
+  const blobDivertMaxBytes = env.blobDivertMaxBytes
+    ? Number(env.blobDivertMaxBytes)
+    : 300 * 1024 * 1024
+  assert(
+    (env.blobDivertMaxBytes === undefined ||
+      /^\d+$/.test(env.blobDivertMaxBytes)) &&
+      Number.isSafeInteger(blobDivertMaxBytes) &&
+      blobDivertMaxBytes > 0,
+    'OZONE_BLOB_DIVERT_MAX_BYTES must be a positive integer',
+  )
   const blobDivertServiceCfg =
     env.blobDivertUrl && env.blobDivertAdminPassword
       ? {
           url: env.blobDivertUrl,
           adminPassword: env.blobDivertAdminPassword,
+          maxBytes: blobDivertMaxBytes,
         }
       : null
   const accessCfg: OzoneConfig['access'] = {
@@ -141,6 +154,7 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
     appealWindowMonths: env.inboxAppealWindowMonths ?? 6,
     policyDefaultUrl: env.inboxPolicyDefaultUrl ?? DEFAULT_INBOX_POLICY_URL,
     startAt: parseInboxStartAt(env.inboxStartAt),
+    pushEnabled: env.inboxPushEnabled ?? false,
   }
 
   const statsCfg: OzoneConfig['stats'] = {
@@ -228,11 +242,47 @@ export type ServiceConfig = {
   labelQueryWildcardsEnabled?: boolean
   /** Disable automatic report-reason tags; false by default. */
   reportTagsDisabled?: boolean
+  /** Record collections eligible for automatic language tagging; unset allows all. */
+  languageTagRecordTypes?: string[]
+}
+
+function parseLanguageTagRecordTypes(
+  value: string | undefined,
+): string[] | undefined {
+  if (!value?.trim()) return undefined
+  const error =
+    'OZONE_LANGUAGE_TAG_RECORD_TYPES must be a comma-separated list or JSON array of record NSIDs or namespace wildcards'
+  let input: unknown
+  if (value.trim().startsWith('[')) {
+    try {
+      input = JSON.parse(value)
+    } catch {
+      assert.fail(error)
+    }
+  } else {
+    input = value.split(',')
+  }
+  assert(
+    Array.isArray(input) && input.every((item) => typeof item === 'string'),
+    error,
+  )
+  const patterns = input.map((pattern) => pattern.trim())
+  assert(
+    patterns.every((pattern) => {
+      if (pattern === '*') return true
+      return isNsidString(
+        pattern.endsWith('.*') ? `${pattern.slice(0, -2)}.record` : pattern,
+      )
+    }),
+    error,
+  )
+  return patterns
 }
 
 export type BlobDivertConfig = {
   url: UriString
   adminPassword: string
+  maxBytes: number
 }
 
 export type DatabaseConfig = {
@@ -241,8 +291,6 @@ export type DatabaseConfig = {
   poolSize?: number
   poolMaxUses?: number
   poolIdleTimeoutMs?: number
-  materializedViewRefreshIntervalMs?: number
-  materializedViewRefreshTimeoutMs?: number
   teamProfileRefreshIntervalMs?: number
 }
 
@@ -290,6 +338,7 @@ export type VerifierConfig = {
 }
 
 export type InboxConfig = {
+  pushEnabled?: boolean
   /** Inclusive creation-time cutoff for inbox history; unset exposes all history. */
   startAt?: DatetimeString
   /**

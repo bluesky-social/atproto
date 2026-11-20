@@ -1,5 +1,5 @@
 import { createRetryable } from '@atproto/common'
-import { XrpcError } from '@atproto/lex'
+import { XrpcError } from '@atproto/lex-client'
 
 export const RETRYABLE_HTTP_STATUS_CODES = new Set([
   408, 425, 429, 500, 502, 503, 504, 522, 524,

@@ -7,7 +7,7 @@ Runtime schema system for AT Protocol [Lexicons](https://atproto.com/specs/lexic
 
 Schemas expose validation helpers (`$parse`, `$validate`, `$matches`, `$assert`, …) and implement the [Standard Schema](https://standardschema.dev/) interface.
 
-This is a building block of [`@atproto/lex`](https://github.com/bluesky-social/atproto/tree/main/packages/lex/lex), which re-exports it — prefer depending on that package.
+This is a building block of [`@atproto/lex`](https://github.com/bluesky-social/atproto/tree/main/packages/lex/lex), which re-exports it. Depend on this package directly unless your code is bundled — see the `@atproto/lex` [Installation](https://github.com/bluesky-social/atproto/tree/main/packages/lex/lex#installation) section.
 
 ## License
 

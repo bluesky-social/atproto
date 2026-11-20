@@ -1,5 +1,5 @@
 import type { Generated } from 'kysely'
-import type { DatetimeString, DidString } from '@atproto/lex'
+import type { DatetimeString, DidString } from '@atproto/lex-schema'
 
 /**
  * A calendar day in `YYYY-MM-DD` form. Typed as a template literal so it

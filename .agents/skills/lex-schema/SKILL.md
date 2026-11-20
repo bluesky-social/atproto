@@ -227,7 +227,7 @@ Lexicon JSON exists — otherwise prefer `./lexicons/`, which stays in sync with
 the contract.
 
 ```ts
-import { l } from '@atproto/lex'
+import { l } from '@atproto/lex-schema'
 
 const thing = l.typedObject(
   'com.example.thing', // NSID
@@ -261,8 +261,9 @@ string types and format guards, and the datetime helpers
 (`l.currentDatetimeString`, `l.toDatetimeString`, `l.asDatetimeString`,
 `l.isDatetimeString`, `l.ifDatetimeString`).
 
-`@atproto/lex` re-exports all of it flat as well, but importing `l` avoids
-colliding with globals and generic names (`string`, `object`, `record`).
+`@atproto/lex-schema` (and `@atproto/lex`) also export all of it flat, but
+importing `l` avoids colliding with globals and generic names (`string`,
+`object`, `record`).
 
 `ParamsSchema` additionally exposes `fromURLSearchParams()` (coercing each
 string to the declared scalar type) and `toURLSearchParams()` — use these

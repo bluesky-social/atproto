@@ -8,3 +8,5 @@ export { default as repostsSeed } from './reposts.js'
 export { default as usersBulkSeed } from './users-bulk.js'
 export { default as usersSeed } from './users.js'
 export { default as verificationsSeed } from './verifications.js'
+
+export * from './atmosphere.js'

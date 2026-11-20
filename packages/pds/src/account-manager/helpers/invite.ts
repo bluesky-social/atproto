@@ -3,7 +3,7 @@ import {
   type DatetimeString,
   type DidString,
   currentDatetimeString,
-} from '@atproto/lex'
+} from '@atproto/lex-schema'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { countAll } from '../../db/index.js'
 import type { com } from '../../lexicons/index.js'

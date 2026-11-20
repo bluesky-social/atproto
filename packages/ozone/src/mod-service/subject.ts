@@ -1,4 +1,9 @@
-import type { $TypeOf, $Typed, AtUriString, DidString } from '@atproto/lex'
+import type {
+  $TypeOf,
+  $Typed,
+  AtUriString,
+  DidString,
+} from '@atproto/lex-schema'
 import { AtUri } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { chat, com, type tools } from '../lexicons/index.js'
@@ -13,6 +18,12 @@ type SubjectInput =
 // subject statuses). The rkey is the convoId / messageId respectively.
 export const CHAT_CONVO_COLLECTION = 'chat.bsky.convo'
 export const CHAT_MESSAGE_COLLECTION = 'chat.bsky.convo.message'
+
+export const messageStatusKey = (
+  did: string,
+  messageId: string,
+  convoId: string,
+) => JSON.stringify([did, messageId, convoId])
 
 type StrongRef = com.atproto.repo.strongRef.Main
 const isStrongRef = com.atproto.repo.strongRef.main.$matches
@@ -118,6 +129,13 @@ export const subjectFromStatusRow = (
     'did' | 'recordPath' | 'recordCid' | 'blobCids' | 'convoId'
   >,
 ): ModSubject => {
+  if (row.recordPath?.startsWith(`${CHAT_MESSAGE_COLLECTION}/`)) {
+    return new MessageSubject(
+      row.did,
+      row.convoId,
+      row.recordPath.slice(CHAT_MESSAGE_COLLECTION.length + 1),
+    )
+  }
   if (row.recordPath && row.recordCid) {
     // Not too intuitive but the recordpath is basically <collection>/<rkey>
     // which is what the last 2 params of .make() arguments are

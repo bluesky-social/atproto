@@ -3,7 +3,7 @@ import {
   type DidString,
   type UriString,
   atUri,
-} from '@atproto/lex'
+} from '@atproto/lex-schema'
 import type { DataPlaneClient } from '../data-plane/client/index.js'
 import { app, com } from '../lexicons/index.js'
 import type { ParsedLabelers } from '../util.js'

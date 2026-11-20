@@ -20,11 +20,10 @@ const IRIS_API_KEY = 'test-iris-api-key'
 
 type Route = {
   name: string
-  gate: Gate
-  // The legacy backend when the gate is off: Topics for feeds/starter packs,
-  // seeemore (suggestionsUrl) for user suggestions. The dedicated user
-  // skeletons fall back to the base getSuggestedUsersSkeleton on seeemore.
-  legacy: 'topics' | 'suggestions'
+  // Routes without a gate always go to Iris. Gated routes fall back to
+  // seeemore (suggestionsUrl) when the gate is off; the dedicated user
+  // skeletons fall back to the base getSuggestedUsersSkeleton there.
+  gate?: Gate
   legacyMethod?: string
   // NSID of the app-facing endpoint, for service-auth headers.
   lxm?: string
@@ -42,8 +41,6 @@ type Route = {
 const routes: Route[] = [
   {
     name: 'suggested feeds',
-    gate: Gate.SuggestedFeedsV2Enable,
-    legacy: 'topics',
     skeletonMethod: ids.AppBskyUnspeccedGetSuggestedFeedsSkeleton,
     recIdStr: 'suggested-feeds-rec-id',
     onIrisUnavailable: 'throws',
@@ -52,8 +49,6 @@ const routes: Route[] = [
   },
   {
     name: 'suggested starter packs',
-    gate: Gate.SuggestedStarterPacksV2Enable,
-    legacy: 'topics',
     skeletonMethod: ids.AppBskyUnspeccedGetSuggestedStarterPacksSkeleton,
     recIdStr: 'suggested-starter-packs-rec-id',
     onIrisUnavailable: 'throws',
@@ -62,8 +57,6 @@ const routes: Route[] = [
   },
   {
     name: 'onboarding suggested starter packs',
-    gate: Gate.SuggestedStarterPacksOnboardingV2Enable,
-    legacy: 'topics',
     skeletonMethod:
       ids.AppBskyUnspeccedGetOnboardingSuggestedStarterPacksSkeleton,
     recIdStr: 'onboarding-suggested-starter-packs-rec-id',
@@ -75,7 +68,6 @@ const routes: Route[] = [
   {
     name: 'suggested users',
     gate: Gate.SuggestedUsersIrisEnable,
-    legacy: 'topics',
     skeletonMethod: ids.AppBskyUnspeccedGetSuggestedUsersSkeleton,
     recIdStr: 'suggested-users-rec-id',
     onIrisUnavailable: 'throws',
@@ -85,7 +77,6 @@ const routes: Route[] = [
   {
     name: 'suggested users for discover',
     gate: Gate.SuggestedUsersIrisEnable,
-    legacy: 'suggestions',
     legacyMethod: ids.AppBskyUnspeccedGetSuggestedUsersSkeleton,
     skeletonMethod: ids.AppBskyUnspeccedGetSuggestedUsersForDiscoverSkeleton,
     recIdStr: 'suggested-users-discover-rec-id',
@@ -97,7 +88,6 @@ const routes: Route[] = [
   {
     name: 'suggested users for explore',
     gate: Gate.SuggestedUsersIrisEnable,
-    legacy: 'suggestions',
     legacyMethod: ids.AppBskyUnspeccedGetSuggestedUsersSkeleton,
     skeletonMethod: ids.AppBskyUnspeccedGetSuggestedUsersForExploreSkeleton,
     recIdStr: 'suggested-users-explore-rec-id',
@@ -109,7 +99,6 @@ const routes: Route[] = [
   {
     name: 'suggested users for see more',
     gate: Gate.SuggestedUsersIrisEnable,
-    legacy: 'suggestions',
     legacyMethod: ids.AppBskyUnspeccedGetSuggestedUsersSkeleton,
     skeletonMethod: ids.AppBskyUnspeccedGetSuggestedUsersForSeeMoreSkeleton,
     recIdStr: 'suggested-users-seemore-rec-id',
@@ -121,7 +110,6 @@ const routes: Route[] = [
   {
     name: 'onboarding suggested users',
     gate: Gate.SuggestedUsersIrisEnable,
-    legacy: 'suggestions',
     skeletonMethod: ids.AppBskyUnspeccedGetOnboardingSuggestedUsersSkeleton,
     recIdStr: 'onboarding-users-rec-id',
     onIrisUnavailable: 'throws',
@@ -132,7 +120,6 @@ const routes: Route[] = [
   {
     name: 'actor suggestions',
     gate: Gate.SuggestedUsersIrisEnable,
-    legacy: 'suggestions',
     lxm: ids.AppBskyActorGetSuggestions,
     skeletonMethod: ids.AppBskyUnspeccedGetSuggestionsSkeleton,
     recIdStr: 'suggestions-rec-id',
@@ -144,7 +131,6 @@ const routes: Route[] = [
   {
     name: 'suggested follows by actor',
     gate: Gate.SuggestedUsersIrisEnable,
-    legacy: 'suggestions',
     skeletonMethod: ids.AppBskyUnspeccedGetSuggestionsSkeleton,
     recIdStr: 'suggestions-rec-id',
     onIrisUnavailable: 'empty',
@@ -160,25 +146,18 @@ const routes: Route[] = [
 describe('suggested content routing', () => {
   let network: TestNetwork
   let agent: AtpAgent
-  let topicsServer: MockSuggestedContentServer
   let suggestionsServer: MockSuggestedContentServer
   let irisServer: MockSuggestedContentServer
   let aliceDid: string
 
   beforeAll(async () => {
-    topicsServer = new MockSuggestedContentServer()
     suggestionsServer = new MockSuggestedContentServer()
     irisServer = new MockSuggestedContentServer()
-    await Promise.all([
-      topicsServer.listen(),
-      suggestionsServer.listen(),
-      irisServer.listen(),
-    ])
+    await Promise.all([suggestionsServer.listen(), irisServer.listen()])
 
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_suggested_content_routing',
       bsky: {
-        topicsUrl: topicsServer.url,
         suggestionsUrl: suggestionsServer.url,
         irisUrl: irisServer.url,
         irisApiKey: IRIS_API_KEY,
@@ -199,27 +178,21 @@ describe('suggested content routing', () => {
   })
 
   beforeEach(() => {
-    topicsServer.reset()
     suggestionsServer.reset()
     irisServer.reset()
   })
 
   afterAll(async () => {
     await network?.close()
-    await Promise.all([
-      topicsServer?.stop(),
-      suggestionsServer?.stop(),
-      irisServer?.stop(),
-    ])
+    await Promise.all([suggestionsServer?.stop(), irisServer?.stop()])
   })
-
-  const legacyServer = (route: Route) =>
-    route.legacy === 'topics' ? topicsServer : suggestionsServer
 
   const headers = async (route: Route) =>
     route.lxm ? await network.serviceHeaders(aliceDid, route.lxm) : undefined
 
-  it.each(routes)(
+  const gatedRoutes = routes.filter((route) => route.gate)
+
+  it.each(gatedRoutes)(
     '$name calls the legacy backend when its gate is disabled',
     async (route) => {
       using _scope = mockGate()
@@ -227,7 +200,7 @@ describe('suggested content routing', () => {
       await route.call(agent, await headers(route))
 
       expect(
-        legacyServer(route).requestCount(
+        suggestionsServer.requestCount(
           route.legacyMethod ?? route.skeletonMethod,
         ),
       ).toBe(1)
@@ -236,14 +209,14 @@ describe('suggested content routing', () => {
   )
 
   it.each(routes)(
-    '$name calls Iris when its gate is enabled',
+    '$name calls Iris when its gate is enabled (or it has no gate)',
     async (route) => {
       using _scope = mockGate(route.gate)
 
       const recIdStr = await route.call(agent, await headers(route))
 
       expect(
-        legacyServer(route).requestCount(
+        suggestionsServer.requestCount(
           route.legacyMethod ?? route.skeletonMethod,
         ),
       ).toBe(0)
@@ -272,7 +245,7 @@ describe('suggested content routing', () => {
         // returns an empty list.
         await route.call(agent, await headers(route))
       }
-      expect(legacyServer(route).requestCount(route.skeletonMethod)).toBe(0)
+      expect(suggestionsServer.requestCount(route.skeletonMethod)).toBe(0)
       expect(irisServer.requestCount(route.skeletonMethod)).toBe(0)
     },
   )

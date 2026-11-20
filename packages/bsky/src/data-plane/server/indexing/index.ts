@@ -1,7 +1,10 @@
 import { type Selectable, sql } from 'kysely'
 import { DAY, HOUR } from '@atproto/common'
 import { type IdResolver, getPds } from '@atproto/identity'
-import { type Cid, l, parseCid, xrpc, xrpcSafe } from '@atproto/lex'
+import { xrpc, xrpcSafe } from '@atproto/lex-client'
+import { type Cid, isLexMap, parseCid } from '@atproto/lex-data'
+import { lexStringify } from '@atproto/lex-json'
+import { l } from '@atproto/lex-schema'
 import {
   type VerifiedRepo,
   WriteOpAction,
@@ -113,7 +116,24 @@ export class IndexingService {
     return this.db.transaction(async (txn) => {
       const indexingTx = this.transact(txn)
       const indexer = indexingTx.findIndexerForCollection(uri.collection)
-      if (!indexer) return
+      if (!indexer) {
+        if (!isLexMap(obj) || obj.$type !== uri.collection) {
+          throw new TypeError('Record type must match its collection')
+        }
+        // @NOTE Keep third-party records without applying collection-specific validation.
+        // External view builders validate them before interpreting their fields.
+        const record = {
+          cid: cid.toString(),
+          json: lexStringify(obj),
+          indexedAt: timestamp,
+        }
+        await txn.db
+          .insertInto('record')
+          .values({ uri: uri.toString(), did: uri.host, ...record })
+          .onConflict((oc) => oc.column('uri').doUpdateSet(record))
+          .execute()
+        return
+      }
       if (action === WriteOpAction.Create) {
         await indexer.insertRecord(uri, cid, obj, timestamp, opts)
       } else {
@@ -127,7 +147,13 @@ export class IndexingService {
     await this.db.transaction(async (txn) => {
       const indexingTx = this.transact(txn)
       const indexer = indexingTx.findIndexerForCollection(uri.collection)
-      if (!indexer) return
+      if (!indexer) {
+        await txn.db
+          .deleteFrom('record')
+          .where('uri', '=', uri.toString())
+          .execute()
+        return
+      }
       await indexer.deleteRecord(uri, cascading)
     })
   }

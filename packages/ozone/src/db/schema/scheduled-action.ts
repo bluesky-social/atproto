@@ -1,5 +1,5 @@
 import type { GeneratedAlways } from 'kysely'
-import type { DatetimeString, DidString } from '@atproto/lex'
+import type { DatetimeString, DidString } from '@atproto/lex-schema'
 
 export const scheduledActionTableName = 'scheduled_action'
 

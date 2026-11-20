@@ -1,20 +1,20 @@
 // This may require better organization but for now, just dumping functions here containing DB queries for moderation status
 
 import { HOUR } from '@atproto/common'
-import type { DatetimeString, DidString, UriString } from '@atproto/lex'
+import type { DatetimeString, DidString, UriString } from '@atproto/lex-schema'
 import {
   asDatetimeString,
   currentDatetimeString,
   isDidString,
   toDatetimeString,
-} from '@atproto/lex'
+} from '@atproto/lex-schema'
 import { AtUri } from '@atproto/syntax'
 import { isAppealReport } from '../api/util.js'
 import type { Database } from '../db/index.js'
 import type { DatabaseSchema } from '../db/schema/index.js'
 import { jsonb } from '../db/types.js'
 import { tools } from '../lexicons/index.js'
-import { CHAT_CONVO_COLLECTION } from './subject.js'
+import { CHAT_CONVO_COLLECTION, CHAT_MESSAGE_COLLECTION } from './subject.js'
 import type { ModerationEventRow, ModerationSubjectStatusRow } from './types.js'
 
 const getSubjectStatusForModerationEvent = ({
@@ -161,7 +161,11 @@ const getSubjectStatusForRecordEvent = ({
         hostingStatus: 'deleted',
         hostingDeletedAt: timestamp,
       }
-    } else if (event.meta?.op === 'update') {
+    } else if (
+      event.meta?.op === 'update' ||
+      (event.meta?.op === 'create' &&
+        currentStatus?.hostingStatus === 'deleted')
+    ) {
       return {
         hostingStatus: 'active',
         hostingUpdatedAt: timestamp,
@@ -215,53 +219,9 @@ const getSubjectStatusForRecordEvent = ({
 }
 
 export const moderationSubjectStatusQueryBuilder = (db: DatabaseSchema) => {
-  // @NOTE: Using select() instead of selectAll() below because the materialized
-  // views might be incomplete, and we don't want the null `did` columns to
-  // interfere with the (never null) `did` column from the
-  // `moderation_subject_status` table in the results
   return db
     .selectFrom('moderation_subject_status')
     .selectAll('moderation_subject_status')
-    .leftJoin('account_events_stats', (join) =>
-      join.onRef(
-        'moderation_subject_status.did',
-        '=',
-        'account_events_stats.subjectDid',
-      ),
-    )
-    .select([
-      'account_events_stats.takedownCount',
-      'account_events_stats.suspendCount',
-      'account_events_stats.escalateCount',
-      'account_events_stats.reportCount',
-      'account_events_stats.appealCount',
-    ])
-    .leftJoin('account_record_events_stats', (join) =>
-      join.onRef(
-        'moderation_subject_status.did',
-        '=',
-        'account_record_events_stats.subjectDid',
-      ),
-    )
-    .select([
-      'account_record_events_stats.totalReports',
-      'account_record_events_stats.reportedCount',
-      'account_record_events_stats.escalatedCount',
-      'account_record_events_stats.appealedCount',
-    ])
-    .leftJoin('account_record_status_stats', (join) =>
-      join.onRef(
-        'moderation_subject_status.did',
-        '=',
-        'account_record_status_stats.did',
-      ),
-    )
-    .select([
-      'account_record_status_stats.subjectCount',
-      'account_record_status_stats.pendingCount',
-      'account_record_status_stats.processedCount',
-      'account_record_status_stats.takendownCount',
-    ])
     .leftJoin('account_strike', (join) =>
       join.onRef('moderation_subject_status.did', '=', 'account_strike.did'),
     )
@@ -288,6 +248,7 @@ export const adjustModerationSubjectStatus = async (
     subjectUri,
     subjectCid,
     subjectConvoId,
+    subjectMessageId,
     createdBy,
     meta,
     addedTags,
@@ -297,10 +258,12 @@ export const adjustModerationSubjectStatus = async (
   } = moderationEvent
 
   // If subjectUri exists, it's not a repoRef so pass along the uri to get identifier back
-  const identifier = getStatusIdentifierFromSubject(
-    subjectUri ? subjectUri : subjectDid,
+  const identifier = getStatusIdentifierFromEvent({
+    subjectDid,
+    subjectUri,
     subjectConvoId,
-  )
+    subjectMessageId,
+  })
 
   db.assertTransaction()
 
@@ -559,4 +522,23 @@ export const getStatusIdentifierFromSubject = (
     recordPath: `${uri.collection}/${uri.rkey}`,
     convoId: '',
   }
+}
+
+export const getStatusIdentifierFromEvent = (event: {
+  subjectDid: DidString
+  subjectUri: UriString | null
+  subjectConvoId: string | null
+  subjectMessageId: string | null
+}) => {
+  if (event.subjectMessageId) {
+    return {
+      did: event.subjectDid,
+      recordPath: `${CHAT_MESSAGE_COLLECTION}/${event.subjectMessageId}`,
+      convoId: event.subjectConvoId ?? '',
+    }
+  }
+  return getStatusIdentifierFromSubject(
+    event.subjectUri ?? event.subjectDid,
+    event.subjectConvoId,
+  )
 }

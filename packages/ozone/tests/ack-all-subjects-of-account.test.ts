@@ -77,6 +77,23 @@ describe('acknowledge all subjects of account', () => {
     return { postOne, postTwo }
   }
 
+  const expectAppealResolutionEvents = async (uri: string) => {
+    const { events } = await modClient.queryEvents({
+      subject: uri,
+      types: [
+        'tools.ozone.moderation.defs#modEventAcknowledge',
+        'tools.ozone.moderation.defs#modEventResolveAppeal',
+      ],
+    })
+    expect(events).toHaveLength(2)
+    expect(events.map((event) => event.event.$type)).toEqual(
+      expect.arrayContaining([
+        'tools.ozone.moderation.defs#modEventResolveAppeal',
+        'tools.ozone.moderation.defs#modEventAcknowledge',
+      ]),
+    )
+  }
+
   beforeAll(async () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'ozone_ack_all_subjects_of_account',
@@ -119,6 +136,7 @@ describe('acknowledge all subjects of account', () => {
     expect(reviewStatesBefore.get(postTwo.uriStr)?.reviewState).toBe(
       ToolsOzoneModerationDefs.REVIEWESCALATED,
     )
+    expect(reviewStatesBefore.get(postTwo.uriStr)?.appealed).toBe(true)
     expect(reviewStatesBefore.get(sc.dids.bob)?.reviewState).toBe(
       ToolsOzoneModerationDefs.REVIEWOPEN,
     )
@@ -130,6 +148,8 @@ describe('acknowledge all subjects of account', () => {
     expect(reviewStatesAfter.get(postTwo.uriStr)?.reviewState).toBe(
       ToolsOzoneModerationDefs.REVIEWCLOSED,
     )
+    expect(reviewStatesAfter.get(postTwo.uriStr)?.appealed).toBe(false)
+    await expectAppealResolutionEvents(postTwo.uriStr)
     expect(reviewStatesAfter.get(sc.dids.bob)?.reviewState).toBe(
       ToolsOzoneModerationDefs.REVIEWCLOSED,
     )
@@ -166,6 +186,7 @@ describe('acknowledge all subjects of account', () => {
     expect(reviewStatesBefore.get(postTwo.uriStr)?.reviewState).toBe(
       ToolsOzoneModerationDefs.REVIEWESCALATED,
     )
+    expect(reviewStatesBefore.get(postTwo.uriStr)?.appealed).toBe(true)
     expect(reviewStatesBefore.get(sc.dids.alice)?.reviewState).toBe(
       ToolsOzoneModerationDefs.REVIEWOPEN,
     )
@@ -177,6 +198,8 @@ describe('acknowledge all subjects of account', () => {
     expect(reviewStatesAfter.get(postTwo.uriStr)?.reviewState).toBe(
       ToolsOzoneModerationDefs.REVIEWCLOSED,
     )
+    expect(reviewStatesAfter.get(postTwo.uriStr)?.appealed).toBe(false)
+    await expectAppealResolutionEvents(postTwo.uriStr)
     expect(reviewStatesAfter.get(sc.dids.alice)?.reviewState).toBe(
       ToolsOzoneModerationDefs.REVIEWCLOSED,
     )

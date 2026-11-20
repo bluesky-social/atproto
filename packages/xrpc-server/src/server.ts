@@ -1,5 +1,5 @@
 import assert from 'node:assert'
-import type { IncomingMessage } from 'node:http'
+import type { IncomingMessage, ServerResponse } from 'node:http'
 import { Readable } from 'node:stream'
 import { pipeline } from 'node:stream/promises'
 import express, {
@@ -500,7 +500,7 @@ export class Server {
           setHeaders(res, output.headers)
           res.status(200)
           res.header('Content-Type', output.encoding)
-          await pipeline(output.stream, res)
+          await pipeToResponse(output.stream, res)
         } else if (isHandlerPipeThroughBuffer(output)) {
           setHeaders(res, output.headers)
           res.status(200)
@@ -520,7 +520,7 @@ export class Server {
           if (output.body instanceof Readable) {
             // The "Readable" check comes first to avoid calling "lexToJson" on
             // a stream, which would be a bug.
-            await pipeline(output.body, res)
+            await pipeToResponse(output.body, res)
           } else if (encoding === 'application/json') {
             const json = lexToJson(output.body)
             res.json(json)
@@ -733,9 +733,11 @@ export class Server {
     // `rateLimits` options was not provided to the constructor.
     if (!rateLimits) return globalRateLimiter
 
-    const { creator, bypass } = rateLimits
+    const { creator, bypass, skipDefaultKeyedRouteLimits } = rateLimits
 
-    const rateLimiters = asArray(config.rateLimit).map((options, i) => {
+    // @NOTE `i` indexes the unfiltered list so that key prefixes don't shift
+    // when `skipDefaultKeyedRouteLimits` drops some of the route's limits.
+    const rateLimiters = asArray(config.rateLimit).flatMap((options, i) => {
       if (isSharedRateLimitOpts(options)) {
         const rateLimiter = this.sharedRateLimiters?.get(options.name) as
           RateLimiterI<HandlerContext<A, P, I>> | undefined
@@ -744,21 +746,34 @@ export class Server {
         // exist. This is a configuration error.
         assert(rateLimiter, `Shared rate limiter "${options.name}" not defined`)
 
-        return WrappedRateLimiter.from<HandlerContext<A, P, I>>(
-          rateLimiter,
-          options,
-        )
+        return [
+          WrappedRateLimiter.from<HandlerContext<A, P, I>>(
+            rateLimiter,
+            options,
+          ),
+        ]
+      } else if (!options.calcKey && skipDefaultKeyedRouteLimits) {
+        return []
       } else {
-        return creator({
-          ...options,
-          calcKey: options.calcKey ?? defaultKey,
-          calcPoints: options.calcPoints ?? defaultPoints,
-          keyPrefix: `${nsid}-${i}`,
-        })
+        return [
+          creator({
+            ...options,
+            calcKey: options.calcKey ?? defaultKey,
+            calcPoints: options.calcPoints ?? defaultPoints,
+            keyPrefix: `${nsid}-${i}`,
+            // As for global and shared limits: when the store fails (Redis
+            // down, say), log and let the request through unless the route
+            // asks to fail closed.
+            onError: options.failClosed
+              ? undefined
+              : rateLimiterLoggerErrorHandler,
+          }),
+        ]
       }
     })
 
-    // If the route config contains an empty array, use global rate limiter.
+    // If the route config contains an empty array, or all of its limits were
+    // skipped, use global rate limiter.
     if (!rateLimiters.length) return globalRateLimiter
 
     // The global rate limiter (if present) should be applied in addition to
@@ -769,6 +784,13 @@ export class Server {
       bypass,
     })
   }
+}
+
+// pipeline() adds 7 'close' listeners to a ServerResponse. 0 means unlimited.
+function pipeToResponse(stream: Readable, res: ServerResponse) {
+  const max = res.getMaxListeners()
+  if (max > 0) res.setMaxListeners(max + 7)
+  return pipeline(stream, res)
 }
 
 function createErrorMiddleware({

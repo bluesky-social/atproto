@@ -1,3 +1,4 @@
+import './polyfill.js'
 import type { LexParseOptions } from '@atproto/lex-json'
 import { jsonToLex } from '@atproto/lex-json'
 import type {
@@ -7,11 +8,14 @@ import type {
   Payload,
   Procedure,
   Query,
+  Restricted,
   ResultSuccess,
   Validator,
 } from '@atproto/lex-schema'
 import {
   XrpcAuthenticationError,
+  XrpcError,
+  XrpcInternalError,
   XrpcInvalidResponseError,
   XrpcResponseError,
   XrpcResponseValidationError,
@@ -22,11 +26,67 @@ import type { EncodingString, XrpcUnknownResponsePayload } from './types.js'
 const CONTENT_TYPE_BINARY = 'application/octet-stream'
 const CONTENT_TYPE_JSON = 'application/json'
 
+/**
+ * A binary response payload that was not read yet.
+ *
+ * @see {@link XrpcStreamResponse}
+ */
+export type XrpcBinaryStream = ReadableStream<Uint8Array<ArrayBuffer>>
+
+/**
+ * The possible representations of a binary (non JSON) response payload.
+ */
+export type XrpcBinaryBody = Uint8Array<ArrayBuffer> | XrpcBinaryStream
+
+/**
+ * Resolves to `T` if `TMethod` declares a binary output (a non-JSON encoding,
+ * without schema) or no output encoding at all, whose payload
+ * {@link XrpcStreamResponse} returns as a stream, and to a type error
+ * otherwise.
+ *
+ * @see {@link assertXrpcStreamable} for the equivalent runtime check
+ */
+export type IfXrpcStreamable<TMethod extends Procedure | Query, T> =
+  // @NOTE The body type must be the stream, or no payload (for methods without
+  // an output encoding): outputs that may be JSON (schemas, "application/json"
+  // or non-literal encodings) are rejected.
+  [XrpcResponseBody<TMethod, XrpcBinaryStream>] extends [
+    XrpcBinaryStream | undefined,
+  ]
+    ? T
+    : Restricted<'This XRPC method does not declare a binary output'>
+
+/**
+ * Asserts that `method` declares a binary output (a non-JSON encoding, without
+ * schema) or no output encoding at all, which is required in order to stream
+ * its response payload.
+ *
+ * @throws {TypeError} if the method does not declare a binary output
+ * @see {@link IfXrpcStreamable} for the equivalent type-level check
+ */
+export function assertXrpcStreamable(method: Procedure | Query): void {
+  const { encoding, schema } = method.output
+  if (encoding === CONTENT_TYPE_JSON || schema) {
+    throw new TypeError(
+      `XRPC method "${method.nsid}" does not declare a binary output`,
+    )
+  }
+}
+
 // @NOTE the output schema is used in "parse" mode (safeParse), which means that
 // defaults will be applied and coercions will be performed, so we need to use
 // InferOutput here to get the final parsed type, not Infer/InferInput. For this
 // reason, we cannot use InferMethodOutputBody and InferMethodOutput from
 // lex-schema here.
+
+/**
+ * The type of the encoding of an XRPC response. Methods without an output
+ * encoding accept any payload, so their encoding can be any content type.
+ */
+type InferResponseEncoding<M extends Procedure | Query> =
+  InferMethodOutputEncoding<M> extends undefined
+    ? undefined | string
+    : InferMethodOutputEncoding<M>
 
 type InferEncodingType<TEncoding extends string> = TEncoding extends '*/*'
   ? EncodingString
@@ -37,25 +97,35 @@ type InferEncodingType<TEncoding extends string> = TEncoding extends '*/*'
 type InferBodyType<
   TEncoding extends string,
   TSchema,
+  TBinary extends XrpcBinaryBody,
 > = TSchema extends Validator
   ? InferOutput<TSchema>
   : TEncoding extends `application/json`
     ? LexValue
-    : Uint8Array<ArrayBuffer>
+    : // Non-literal encodings (e.g. `string`) may be "application/json" at
+      // runtime, in which case the payload gets parsed.
+      `application/json` extends TEncoding
+      ? LexValue | TBinary
+      : TBinary
 
 /**
  * The body type of an XRPC response, inferred from the method's output schema.
  *
  * For JSON responses, this is the parsed LexValue. For binary responses,
- * this is a Uint8Array.
+ * this is `TBinary` (a Uint8Array, unless streamed). The payload of methods
+ * without an output encoding is not parsed (it is binary, if any).
  *
  * @typeParam M - The XRPC method type (Procedure or Query)
+ * @typeParam TBinary - The type of binary payloads
  */
-export type XrpcResponseBody<M extends Procedure | Query> =
-  M['output'] extends Payload<infer TEncoding, infer TSchema>
+export type XrpcResponseBody<
+  TMethod extends Procedure | Query,
+  TBinary extends XrpcBinaryBody = Uint8Array<ArrayBuffer>,
+> =
+  TMethod['output'] extends Payload<infer TEncoding, infer TSchema>
     ? TEncoding extends string
-      ? InferBodyType<TEncoding, TSchema>
-      : undefined | LexValue | Uint8Array<ArrayBuffer>
+      ? InferBodyType<TEncoding, TSchema, TBinary>
+      : undefined | TBinary
     : never
 
 /**
@@ -64,19 +134,70 @@ export type XrpcResponseBody<M extends Procedure | Query> =
  * Returns `null` for methods that have no output.
  *
  * @typeParam M - The XRPC method type (Procedure or Query)
+ * @typeParam TBinary - The type of binary payloads
  */
-export type XrpcResponsePayload<M extends Procedure | Query> =
-  M['output'] extends Payload<infer TEncoding, infer TSchema>
+export type XrpcResponsePayload<
+  TMethod extends Procedure | Query,
+  TBinary extends XrpcBinaryBody = Uint8Array<ArrayBuffer>,
+> =
+  TMethod['output'] extends Payload<infer TEncoding, infer TSchema>
     ? TEncoding extends string
       ? {
           encoding: InferEncodingType<TEncoding>
-          body: InferBodyType<TEncoding, TSchema>
+          body: InferBodyType<TEncoding, TSchema, TBinary>
         }
-      : // If the schema does not specify an output encoding, anything could be
-        // returned, including no payload at all (undefined).
-        | undefined
-        | { body: LexValue | Uint8Array<ArrayBuffer>; encoding: string }
+      : // If the schema does not specify an output encoding, any (unparsed)
+        // payload could be returned, or no payload at all (undefined).
+        undefined | { body: TBinary; encoding: string }
     : never
+
+/**
+ * The payload type of an {@link XrpcStreamResponse}. Since the payload of such
+ * responses is never parsed, its body is always a {@link XrpcBinaryStream}.
+ * Methods without an output encoding may also return no payload at all
+ * (undefined).
+ *
+ * @typeParam TMethod - The XRPC method type (Procedure or Query)
+ */
+export type XrpcStreamResponsePayload<TMethod extends Procedure | Query> =
+  TMethod['output'] extends Payload<infer TEncoding>
+    ? TEncoding extends string
+      ? { encoding: InferEncodingType<TEncoding>; body: XrpcBinaryStream }
+      : undefined | { body: XrpcBinaryStream; encoding: string }
+    : never
+
+/**
+ * The body type of an {@link XrpcStreamResponse}: always a
+ * {@link XrpcBinaryStream}, or undefined for methods without an output
+ * encoding (which may return no payload at all).
+ *
+ * @typeParam TMethod - The XRPC method type (Procedure or Query)
+ */
+export type XrpcStreamResponseBody<TMethod extends Procedure | Query> =
+  TMethod['output'] extends Payload<infer TEncoding>
+    ? TEncoding extends string
+      ? XrpcBinaryStream
+      : undefined | XrpcBinaryStream
+    : never
+
+/**
+ * Determines how a response body gets cancelled, and how failures to do so are
+ * handled:
+ *
+ * - `"propagate"` (default): the cancellation is awaited, and its failures are
+ *   thrown. If the body is discarded because of another error, the
+ *   cancellation failure is thrown instead of that error.
+ * - `"log"`: the cancellation is not awaited, and its failures are logged.
+ * - a function: the cancellation is not awaited, and its failures are passed
+ *   to that function.
+ *
+ * @note Cancelling the body of a response that was cloned only settles once
+ * every clone was consumed or cancelled. Responses that may have pending clones
+ * (e.g. created by the fetch handler) must use `"log"` or a function, as
+ * `"propagate"` would otherwise result in a dead lock.
+ */
+export type XrpcCancellationErrorHandler =
+  'propagate' | 'log' | ((err: unknown) => void)
 
 export type XrpcResponseOptions = {
   /**
@@ -113,12 +234,71 @@ export type XrpcResponseOptions = {
    * @see {@link LexParseOptions.strict}
    */
   strictResponseProcessing?: boolean
+
+  /**
+   * Determines how response bodies that are discarded (e.g. because the
+   * response is invalid) get cancelled, in order to release their underlying
+   * resources (e.g. connection).
+   *
+   * @see {@link XrpcCancellationErrorHandler}
+   * @default "propagate"
+   */
+  onCancellationError?: XrpcCancellationErrorHandler
 }
 
 /**
- * Small container for XRPC response.
+ * Properties shared by {@link XrpcResponse} and {@link XrpcStreamResponse}.
+ *
+ * @typeParam M - The XRPC method type (Procedure or Query)
+ * @typeParam TPayload - The type of the response payload
+ */
+export abstract class XrpcResponseBase<
+  M extends Procedure | Query,
+  TPayload extends undefined | { encoding?: string; body?: unknown },
+> implements ResultSuccess<XrpcResponseBase<M, TPayload>> {
+  /** @see {@link ResultSuccess.success} */
+  readonly success = true as const
+
+  /** @see {@link ResultSuccess.value} */
+  get value(): this {
+    return this
+  }
+
+  constructor(
+    readonly method: M,
+    readonly status: number,
+    readonly headers: Headers,
+    readonly payload: TPayload,
+  ) {}
+
+  /**
+   * Whether the response payload was parsed as {@link LexValue} (`true`) or is
+   * in binary form (`false`).
+   */
+  get isParsed(): boolean {
+    return this.method.output.encoding === CONTENT_TYPE_JSON
+  }
+
+  /**
+   * The Content-Type encoding of the response (e.g., 'application/json').
+   * Returns `undefined` if the response has no body.
+   */
+  get encoding(): InferResponseEncoding<M> {
+    return this.payload?.encoding as InferResponseEncoding<M>
+  }
+
+  /**
+   * The response body. Returns `undefined` if the response has no body.
+   */
+  abstract readonly body: undefined | NonNullable<TPayload>['body']
+}
+
+/**
+ * Small container for XRPC response, with binary payloads read into a
+ * Uint8Array.
  *
  * @implements {ResultSuccess<XrpcResponse<M>>} for convenience in result handling contexts.
+ * @see {@link XrpcStreamResponse} to stream binary payloads instead
  *
  * @example
  *
@@ -137,40 +317,10 @@ export type XrpcResponseOptions = {
  * const { cursor, feed } = response.body
  * ```
  */
-export class XrpcResponse<M extends Procedure | Query> implements ResultSuccess<
-  XrpcResponse<M>
+export class XrpcResponse<M extends Procedure | Query> extends XrpcResponseBase<
+  M,
+  XrpcResponsePayload<M>
 > {
-  /** @see {@link ResultSuccess.success} */
-  readonly success = true as const
-
-  /** @see {@link ResultSuccess.value} */
-  get value(): this {
-    return this
-  }
-
-  constructor(
-    readonly method: M,
-    readonly status: number,
-    readonly headers: Headers,
-    readonly payload: XrpcResponsePayload<M>,
-  ) {}
-
-  /**
-   * Whether the response payload was parsed as {@link LexValue} (`true`) or is
-   * in binary form {@link Uint8Array} (`false`).
-   */
-  get isParsed(): boolean {
-    return this.method.output.encoding === CONTENT_TYPE_JSON
-  }
-
-  /**
-   * The Content-Type encoding of the response (e.g., 'application/json').
-   * Returns `undefined` if the response has no body.
-   */
-  get encoding() {
-    return this.payload?.encoding as InferMethodOutputEncoding<M>
-  }
-
   /**
    * The parsed response body.
    *
@@ -178,7 +328,7 @@ export class XrpcResponse<M extends Procedure | Query> implements ResultSuccess<
    * For binary responses, this is a Uint8Array.
    * Returns `undefined` if the response has no body.
    */
-  get body() {
+  get body(): XrpcResponseBody<M> {
     return this.payload?.body as XrpcResponseBody<M>
   }
 
@@ -189,15 +339,183 @@ export class XrpcResponse<M extends Procedure | Query> implements ResultSuccess<
    * {@link XrpcAuthenticationError} if the error is an authentication error.
    * @throws {XrpcInvalidResponseError} when the response is not a valid XRPC
    * response, or if the response does not conform to the method's schema.
+   * @note The response body is always consumed or cancelled.
    */
   static async fromFetchResponse<const M extends Procedure | Query>(
     method: M,
     response: Response,
     options?: XrpcResponseOptions,
   ): Promise<XrpcResponse<M>> {
-    // @NOTE The body MUST either be read or canceled to avoid resource leaks.
-    // Since nothing should cause an exception before "readPayload" is
-    // called, we can safely not use a try/finally here.
+    const payload = (await readXrpcPayload(
+      method,
+      response,
+      options,
+      false,
+    )) as XrpcResponsePayload<M>
+    return new XrpcResponse<M>(
+      method,
+      response.status,
+      response.headers,
+      payload,
+    )
+  }
+}
+
+/**
+ * XRPC response whose binary (non JSON) payload is returned, unread, as a
+ * {@link XrpcBinaryStream}. Only methods declaring a binary output (a non-JSON
+ * encoding, without schema), or no output encoding at all, can be streamed.
+ * Error responses are still buffered.
+ *
+ * The caller owns the stream, and must either consume it or {@link cancel} it
+ * in order to release the underlying resources (e.g. connection). Disposing of
+ * the response (`await using`) cancels the stream if it was not consumed.
+ *
+ * @example
+ *
+ * ```typescript
+ * await using response = await XrpcStreamResponse.fromFetchResponse(
+ *   com.atproto.sync.getBlob.main,
+ *   fetchResponse,
+ * )
+ *
+ * for await (const chunk of response.body) {
+ *   // ...
+ * }
+ * ```
+ */
+export class XrpcStreamResponse<M extends Procedure | Query>
+  extends XrpcResponseBase<M, XrpcStreamResponsePayload<M>>
+  implements AsyncDisposable
+{
+  readonly #response: Response
+  readonly #onCancellationError: XrpcCancellationErrorHandler | undefined
+
+  constructor(
+    method: M,
+    response: Response,
+    payload: XrpcStreamResponsePayload<M>,
+    options?: Pick<XrpcResponseOptions, 'onCancellationError'>,
+  ) {
+    super(method, response.status, response.headers, payload)
+    this.#response = response
+    // @NOTE The options object is not kept, as it can be the whole request
+    // options (see xrpc()), whose request body must not be retained.
+    this.#onCancellationError = options?.onCancellationError
+  }
+
+  /**
+   * The (unread) response body, as a {@link XrpcBinaryStream}. Returns
+   * `undefined` if the response has no payload, which can only happen for
+   * methods without an output encoding.
+   */
+  get body(): XrpcStreamResponseBody<M> {
+    return this.payload?.body as XrpcStreamResponseBody<M>
+  }
+
+  /**
+   * Cancels the response body, releasing its underlying resources (e.g.
+   * connection). This is a no-op if the body is not a stream (e.g. a JSON
+   * payload), if it was fully consumed, or if it is locked (in which case it
+   * must be cancelled through its reader).
+   *
+   * The cancellation is performed as determined by the
+   * {@link XrpcResponseOptions.onCancellationError} option this response was
+   * created with. By default (`"propagate"`), the cancellation is awaited, and
+   * its failures are thrown.
+   *
+   * Cancellation failures are ignored once the body was read from, as they
+   * would then typically be the error the reader already got (e.g. a network
+   * error, which would otherwise be thrown twice when disposing of the response
+   * with `await using`).
+   */
+  async cancel(reason?: unknown): Promise<void> {
+    const body: undefined | XrpcBinaryStream = this.body
+    if (body) {
+      // @NOTE bodyUsed is the standard (portable) way of telling whether a
+      // body stream was disturbed (read from or cancelled).
+      const ignoreFailures =
+        body === this.#response.body && this.#response.bodyUsed
+      await cancelStream(
+        body,
+        reason,
+        this.#onCancellationError,
+        ignoreFailures,
+      )
+    }
+  }
+
+  /** @see {@link XrpcStreamResponse.cancel} */
+  async [Symbol.asyncDispose](): Promise<void> {
+    await this.cancel()
+  }
+
+  /**
+   * Reads the whole response payload, by proxying the fetch
+   * {@link Response.arrayBuffer} method. This consumes the body, which then no
+   * longer needs to be cancelled.
+   *
+   * @returns `undefined` if there is no payload (like {@link body}), which can
+   * only happen for methods without an output encoding
+   * @throws {TypeError} if the body was already read from, or is locked
+   */
+  async arrayBuffer(): Promise<
+    Exclude<XrpcStreamResponseBody<M>, XrpcBinaryStream> | ArrayBuffer
+  > {
+    // @NOTE The body of responses without payload might already have been
+    // cancelled, so it must not be read.
+    if (!this.body) {
+      return undefined as Exclude<XrpcStreamResponseBody<M>, XrpcBinaryStream>
+    }
+    return this.#response.arrayBuffer()
+  }
+
+  /**
+   * @throws {XrpcResponseError} in case of (valid) XRPC error responses.
+   * @throws {XrpcInvalidResponseError} when the response is not a valid XRPC
+   * response, or if the response does not conform to the method's schema.
+   * @throws {XrpcInternalError} when the fetch implementation does not expose
+   * the response body as a stream (e.g. React Native's built-in fetch).
+   * @note The response body is always consumed or cancelled, unless it is
+   * returned as a {@link XrpcBinaryStream}.
+   * @see {@link XrpcResponse.fromFetchResponse}
+   */
+  static async fromFetchResponse<const M extends Procedure | Query>(
+    method: IfXrpcStreamable<M, M>,
+    response: Response,
+    options?: XrpcResponseOptions,
+  ): Promise<XrpcStreamResponse<M>>
+  static async fromFetchResponse<const M extends Procedure | Query>(
+    method: M,
+    response: Response,
+    options?: XrpcResponseOptions,
+  ): Promise<XrpcStreamResponse<M>> {
+    const payload = (await readXrpcPayload(
+      method,
+      response,
+      options,
+      true,
+    )) as XrpcStreamResponsePayload<M>
+    return new XrpcStreamResponse<M>(method, response, payload, options)
+  }
+}
+
+/**
+ * Reads the payload of an XRPC response, either parsed or buffered (see
+ * {@link readPayload}), or as an unread stream (see {@link readStreamPayload}),
+ * and validates it against the method's output.
+ *
+ * @note The response body is always consumed or cancelled, unless it is
+ * returned as a stream.
+ */
+async function readXrpcPayload(
+  method: Procedure | Query,
+  response: Response,
+  options: undefined | XrpcResponseOptions,
+  stream: boolean,
+): Promise<undefined | XrpcUnknownResponsePayload<XrpcBinaryBody>> {
+  try {
+    if (stream) assertXrpcStreamable(method)
 
     // Always turn 4xx/5xx responses into XrpcResponseError
     if (response.status >= 400) {
@@ -207,16 +525,14 @@ export class XrpcResponse<M extends Procedure | Query> implements ResultSuccess<
       })
 
       if (response.status === 401) {
-        throw new XrpcAuthenticationError<M>(method, response, payload)
+        throw new XrpcAuthenticationError(method, response, payload)
       }
 
-      throw new XrpcResponseError<M>(method, response, payload)
+      throw new XrpcResponseError(method, response, payload)
     }
 
     // @NOTE redirect is set to 'follow', so we shouldn't get 3xx responses here
     if (response.status < 200 || response.status >= 300) {
-      await response.body?.cancel()
-
       throw new XrpcInvalidResponseError(
         method,
         response,
@@ -225,71 +541,111 @@ export class XrpcResponse<M extends Procedure | Query> implements ResultSuccess<
       )
     }
 
-    const payload = await readPayload(method, response, {
-      // Parse response if there is a schema, or if the encoding is
-      // "application/json"
-      parse:
-        method.output.schema || method.output.encoding === CONTENT_TYPE_JSON
-          ? { strict: options?.strictResponseProcessing ?? true }
-          : // If there is no declared output encoding, we'll parse the output (in loose mode)
-            method.output.encoding == null
-            ? { strict: false }
-            : false,
-    })
-
-    if (!method.output.matchesEncoding(payload?.encoding)) {
-      throw new XrpcInvalidResponseError(
-        method,
-        response,
-        payload,
-        `Expected ${stringifyEncoding(method.output.encoding)} response (got ${stringifyEncoding(payload?.encoding)})`,
-      )
-    }
-
-    // Response is successful (2xx). Validate payload (data and encoding) against schema.
-    if (method.output.encoding != null) {
-      // If the schema specifies an output, verify that the response properly
-      // matches the expected format (encoding and schema, if present). If no
-      // output is specified, any payload could be returned.
-
-      // Needed for type safety. Should never happen since matchesEncoding()
-      // should return not succeed if there is a schema encoding but no payload.
-      if (!payload) throw new Error('Expected payload')
-
-      // Assert valid response body.
-      if (method.output.schema && options?.validateResponse !== false) {
-        const result = method.output.schema.safeParse(payload.body, {
-          strict: options?.strictResponseProcessing ?? true,
+    const payload = stream
+      ? readStreamPayload(method, response)
+      : await readPayload(method, response, {
+          // Only parse the response if there is a schema, or if the encoding is
+          // "application/json". Other payloads (including those of methods
+          // without an output encoding) are binary.
+          parse:
+            method.output.schema || method.output.encoding === CONTENT_TYPE_JSON
+              ? { strict: options?.strictResponseProcessing ?? true }
+              : false,
         })
 
-        if (!result.success) {
-          throw new XrpcResponseValidationError(
-            method,
-            response,
-            payload,
-            result.reason,
-          )
-        }
+    assertMethodPayloadEncoding(method, response, payload)
 
-        const parsedPayload = {
-          body: result.value,
-          encoding: payload.encoding,
-        } as XrpcResponsePayload<M>
-
-        return new XrpcResponse<M>(
-          method,
-          response.status,
-          response.headers,
-          parsedPayload,
-        )
-      }
+    // No payload, which is only allowed for methods without an output encoding
+    if (!payload) {
+      // Release the resources of empty bodies that were not read (stream mode)
+      await cancelResponseBody(
+        response,
+        undefined,
+        options?.onCancellationError,
+      )
+      return undefined
     }
 
-    return new XrpcResponse<M>(
+    // @NOTE Payloads with a schema are never streamed (see assertXrpcStreamable)
+    if (method.output.schema && options?.validateResponse !== false) {
+      const result = method.output.schema.safeParse(payload.body, {
+        strict: options?.strictResponseProcessing ?? true,
+      })
+
+      if (!result.success) {
+        throw new XrpcResponseValidationError(
+          method,
+          response,
+          payload as XrpcUnknownResponsePayload,
+          result.reason,
+        )
+      }
+
+      return { body: result.value as LexValue, encoding: payload.encoding }
+    }
+
+    return payload
+  } catch (err) {
+    // Release the resources (e.g. undici connection) associated with the
+    // response, in case it was not fully consumed.
+    await cancelResponseBody(response, err, options?.onCancellationError)
+    throw err
+  }
+}
+
+/**
+ * Returns the (lowercase) mime type of the response's content-type, if any.
+ *
+ * @throws {XrpcInvalidResponseError} if the content-type is invalid
+ */
+function getResponseEncoding(
+  method: Procedure | Query,
+  response: Response,
+): undefined | EncodingString {
+  const encoding = response.headers
+    .get('content-type')
+    ?.split(';')[0]
+    .trim()
+    .toLowerCase()
+
+  if (!encoding) return undefined
+
+  if (!isEncodingString(encoding)) {
+    const cause = new TypeError(
+      `Invalid content-type "${encoding}" in response`,
+    )
+    throw new XrpcInvalidResponseError(
       method,
-      response.status,
-      response.headers,
-      payload as XrpcResponsePayload<M>,
+      response,
+      undefined,
+      `Unable to parse response payload: ${cause.message}`,
+      { cause },
+    )
+  }
+
+  return encoding
+}
+
+/**
+ * Asserts that the encoding of a response payload matches the output encoding
+ * declared by the method.
+ *
+ * @throws {XrpcInvalidResponseError} if the encoding does not match
+ */
+function assertMethodPayloadEncoding(
+  method: Procedure | Query,
+  response: Response,
+  payload: undefined | XrpcUnknownResponsePayload<XrpcBinaryBody>,
+): void {
+  if (!method.output.matchesEncoding(payload?.encoding)) {
+    throw new XrpcInvalidResponseError(
+      method,
+      response,
+      // Streamed payloads are not exposed through errors (they get cancelled)
+      payload && !isReadableStream(payload.body)
+        ? (payload as XrpcUnknownResponsePayload)
+        : undefined,
+      `Expected ${stringifyEncoding(method.output.encoding)} response (got ${stringifyEncoding(payload?.encoding)})`,
     )
   }
 }
@@ -315,11 +671,7 @@ async function readPayload(
     // @TODO Should we limit the maximum response size here (this could also be
     // done by the FetchHandler)?
 
-    const encoding = response.headers
-      .get('content-type')
-      ?.split(';')[0]
-      .trim()
-      .toLowerCase()
+    const encoding = getResponseEncoding(method, response)
 
     // Response content-type is undefined
     if (!encoding) {
@@ -334,10 +686,6 @@ async function readPayload(
       }
     }
 
-    if (!isEncodingString(encoding)) {
-      throw new TypeError(`Invalid content-type "${encoding}" in response`)
-    }
-
     if (options?.parse && encoding === CONTENT_TYPE_JSON) {
       // @NOTE See ./response.bench.ts to comparison of different parsing approaches.
       const json = await response.json()
@@ -348,6 +696,8 @@ async function readPayload(
     const arrayBuffer = await response.arrayBuffer()
     return { encoding, body: new Uint8Array(arrayBuffer) }
   } catch (cause) {
+    if (cause instanceof XrpcError) throw cause
+
     const message = 'Unable to parse response payload'
     const messageDetail = cause instanceof TypeError ? cause.message : undefined
     throw new XrpcInvalidResponseError(
@@ -358,6 +708,118 @@ async function readPayload(
       { cause },
     )
   }
+}
+
+/**
+ * Returns the payload of a response as a stream, without reading it.
+ *
+ * @note this function never consumes the response body. When there is no
+ * payload, the (empty) body is left untouched, and must be cancelled.
+ * @throws {XrpcInternalError} if the fetch implementation does not expose the
+ * response body as a {@link ReadableStream}
+ */
+function readStreamPayload(
+  method: Query | Procedure,
+  response: Response,
+): undefined | { encoding: EncodingString; body: XrpcBinaryStream } {
+  const encoding =
+    getResponseEncoding(method, response) ??
+    // Without content-type, determine whether there is a payload (treated as
+    // binary) without reading the body.
+    (response.body === null ||
+    response.headers.get('content-length')?.trim() === '0'
+      ? undefined
+      : CONTENT_TYPE_BINARY)
+
+  if (!encoding) return undefined
+
+  const { body } = response
+
+  // A null body is a body without content (e.g. 204 responses)
+  if (body === null) {
+    const empty = new ReadableStream({ start: (c) => c.close() })
+    return { encoding, body: empty }
+  }
+
+  if (isReadableStream(body)) return { encoding, body }
+
+  // Some fetch implementations do not expose the response body as a
+  // ReadableStream: React Native's built-in fetch does not expose it at all,
+  // and node-fetch exposes a Node.js Readable instead.
+  throw new XrpcInternalError(
+    method,
+    'Streaming response payloads is not supported by the fetch() implementation',
+  )
+}
+
+function isReadableStream(value: unknown): value is ReadableStream {
+  // @NOTE Using duck typing to support ReadableStream polyfills
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    typeof (value as ReadableStream).getReader === 'function' &&
+    typeof (value as ReadableStream).cancel === 'function'
+  )
+}
+
+/**
+ * Cancels the response body, if it was not consumed yet.
+ *
+ * @see {@link XrpcResponseOptions.onCancellationError}
+ */
+async function cancelResponseBody(
+  response: Response,
+  reason: unknown,
+  onCancellationError?: XrpcCancellationErrorHandler,
+): Promise<void> {
+  const { body } = response
+  if (body && !response.bodyUsed) {
+    await cancelStream(body, reason, onCancellationError)
+  }
+}
+
+/**
+ * Cancels a stream, unless it is locked (e.g. by a reader).
+ *
+ * @param ignoreFailures - Whether to silence cancellation failures, regardless
+ * of `onCancellationError` (which still determines whether the cancellation
+ * is awaited).
+ * @see {@link XrpcCancellationErrorHandler}
+ */
+async function cancelStream(
+  stream: ReadableStream,
+  reason: unknown,
+  onCancellationError: XrpcCancellationErrorHandler = 'propagate',
+  ignoreFailures = false,
+): Promise<void> {
+  if (
+    stream.locked ||
+    // Support for alternative fetch implementations
+    typeof stream.cancel !== 'function'
+  ) {
+    return
+  }
+
+  if (onCancellationError === 'propagate') {
+    try {
+      await stream.cancel(reason)
+    } catch (err) {
+      if (!ignoreFailures) throw err
+    }
+  } else {
+    const errorHandler = ignoreFailures
+      ? ignoreError
+      : onCancellationError === 'log'
+        ? logCancellationError
+        : onCancellationError
+    void stream.cancel(reason).catch(errorHandler)
+  }
+}
+
+function ignoreError(): void {}
+
+function logCancellationError(err: unknown): void {
+  console.warn('Failed to cancel response body', err)
 }
 
 function stringifyEncoding(encoding: string | undefined) {

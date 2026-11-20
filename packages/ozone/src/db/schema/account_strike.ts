@@ -1,4 +1,4 @@
-import type { DatetimeString, DidString } from '@atproto/lex'
+import type { DatetimeString, DidString } from '@atproto/lex-schema'
 export const accountStrikeTableName = 'account_strike'
 
 export interface AccountStrike {

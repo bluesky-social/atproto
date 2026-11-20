@@ -1,6 +1,6 @@
 import assert from 'node:assert'
 import { SECOND, noUndefinedVals } from '@atproto/common'
-import { type DidString, isDidString } from '@atproto/lex'
+import { type DidString, isDidString } from '@atproto/lex-schema'
 import { subLogger as log } from './logger.js'
 
 type LiveNowConfig = {
@@ -44,7 +44,8 @@ export interface ServerConfigValues {
   serverDid: DidString
   alternateAudienceDids: DidString[]
   entrywayJwtPublicKeyHex?: string
-  bffJwtSecret?: string
+  bsgJwtSecret?: string
+  internalServiceSecrets?: Record<string, string>
   liveNowConfig?: LiveNowConfig
   // external services
   etcdHosts: string[]
@@ -66,13 +67,13 @@ export interface ServerConfigValues {
   rolodexIgnoreBadTls?: boolean
   externalRecordsSafeDomains?: string[]
   searchUrl?: string
+  typeaheadUrls?: string[]
+  typeaheadProhibitedTermsFile?: string
   searchTagsHide: Set<string>
   searchTagsHideAll: Set<string>
   suggestionsUrl?: string
   suggestionsApiKey?: string
   atmosphereExploreTabService?: string
-  topicsUrl?: string
-  topicsApiKey?: string
   irisUrl?: string
   irisServiceDid?: DidString
   seemoreServiceDid?: DidString
@@ -97,6 +98,7 @@ export interface ServerConfigValues {
   adminPasswords: string[]
   labelsFromIssuerDids?: DidString[]
   indexedAtEpoch?: Date
+  postViewCountsStartAt?: Date
   // misc/dev
   blobCacheLocation?: string
   eventProxyTrackingEndpoint?: string
@@ -138,13 +140,7 @@ export interface ServerConfigValues {
 
 export class ServerConfig {
   private assignedPort?: number
-  constructor(private cfg: ServerConfigValues) {
-    assert(
-      cfg.bffJwtSecret == null ||
-        Buffer.byteLength(cfg.bffJwtSecret, 'utf8') >= 32,
-      'BSKY_BFF_JWT_SECRET must be generated from at least 32 random bytes (minimum key length: 32 bytes)',
-    )
-  }
+  constructor(private cfg: ServerConfigValues) {}
 
   static readEnv(overrides?: Partial<ServerConfigValues>) {
     const version = process.env.BSKY_VERSION || undefined
@@ -161,7 +157,23 @@ export class ServerConfig {
     assert(alternateAudienceDids.every(isDidString))
     const entrywayJwtPublicKeyHex =
       process.env.BSKY_ENTRYWAY_JWT_PUBLIC_KEY_HEX || undefined
-    const bffJwtSecret = process.env.BSKY_BFF_JWT_SECRET || undefined
+    const bsgJwtSecret = process.env.BSKY_BSG_JWT_SECRET || undefined
+    const internalServiceSecrets = process.env.BSKY_INTERNAL_SERVICE_SECRETS
+      ? (JSON.parse(process.env.BSKY_INTERNAL_SERVICE_SECRETS) as Record<
+          string,
+          string
+        >)
+      : undefined
+    assert(
+      bsgJwtSecret == null || Buffer.byteLength(bsgJwtSecret, 'utf8') >= 32,
+      'BSKY_BSG_JWT_SECRET must be generated from at least 32 random bytes (minimum key length: 32 bytes)',
+    )
+    for (const [name, secret] of Object.entries(internalServiceSecrets ?? {})) {
+      assert(
+        Buffer.byteLength(secret, 'utf8') >= 32,
+        `BSKY_INTERNAL_SERVICE_SECRETS secret for ${name} must be generated from at least 32 random bytes (minimum key length: 32 bytes)`,
+      )
+    }
     let liveNowConfig: LiveNowConfig | undefined
     if (process.env.BSKY_LIVE_NOW_CONFIG) {
       try {
@@ -192,6 +204,12 @@ export class ServerConfig {
       process.env.BSKY_SEARCH_URL ||
       process.env.BSKY_SEARCH_ENDPOINT ||
       undefined
+    // bsky.Service hosts that serve SearchActorsTypeahead in place of the
+    // dataplane, for requests with the TypeaheadServiceEnable gate on
+    const typeaheadUrls = envList(process.env.BSKY_TYPEAHEAD_URL)
+    // Prohibited search terms CSV, applied only on the typeahead service path
+    const typeaheadProhibitedTermsFile =
+      process.env.BSKY_TYPEAHEAD_PROHIBITED_TERMS_FILE || undefined
     const searchTagsHide = new Set(envList(process.env.BSKY_SEARCH_TAGS_HIDE))
     const searchTagsHideAll = new Set(
       envList(process.env.BSKY_SEARCH_TAGS_HIDE_ALL),
@@ -200,8 +218,6 @@ export class ServerConfig {
     const suggestionsApiKey = process.env.BSKY_SUGGESTIONS_API_KEY || undefined
     const atmosphereExploreTabService =
       process.env.BSKY_ATMOSPHERE_EXPLORE_TAB_SERVICE || undefined
-    const topicsUrl = process.env.BSKY_TOPICS_URL || undefined
-    const topicsApiKey = process.env.BSKY_TOPICS_API_KEY
     const irisUrl = process.env.BSKY_IRIS_URL || undefined
     const irisServiceDid = process.env.BSKY_IRIS_SERVICE_DID || undefined
     assert(irisServiceDid == null || isDidString(irisServiceDid))
@@ -299,6 +315,7 @@ export class ServerConfig {
       !indexedAtEpoch || !isNaN(indexedAtEpoch.getTime()),
       'invalid BSKY_INDEXED_AT_EPOCH',
     )
+    const postViewCountsStartAt = envDate('BSKY_POST_VIEW_COUNTS_START_AT')
     const bigThreadUris = new Set(envList(process.env.BSKY_BIG_THREAD_URIS))
     const bigThreadDepth = process.env.BSKY_BIG_THREAD_DEPTH
       ? parseInt(process.env.BSKY_BIG_THREAD_DEPTH || '', 10)
@@ -453,7 +470,8 @@ export class ServerConfig {
       serverDid,
       alternateAudienceDids,
       entrywayJwtPublicKeyHex,
-      bffJwtSecret,
+      bsgJwtSecret,
+      internalServiceSecrets,
       liveNowConfig,
       etcdHosts,
       dataplaneUrls,
@@ -461,13 +479,13 @@ export class ServerConfig {
       dataplaneHttpVersion,
       dataplaneIgnoreBadTls,
       searchUrl,
+      typeaheadUrls,
+      typeaheadProhibitedTermsFile,
       searchTagsHide,
       searchTagsHideAll,
       suggestionsUrl,
       suggestionsApiKey,
       atmosphereExploreTabService,
-      topicsUrl,
-      topicsApiKey,
       irisUrl,
       irisServiceDid,
       seemoreServiceDid,
@@ -509,6 +527,7 @@ export class ServerConfig {
       clientCheckEmailConfirmed,
       topicsEnabled,
       indexedAtEpoch,
+      postViewCountsStartAt,
       bigThreadUris,
       bigThreadDepth,
       maxThreadDepth,
@@ -575,8 +594,12 @@ export class ServerConfig {
     return this.cfg.entrywayJwtPublicKeyHex
   }
 
-  get bffJwtSecret() {
-    return this.cfg.bffJwtSecret
+  get bsgJwtSecret() {
+    return this.cfg.bsgJwtSecret
+  }
+
+  get internalServiceSecrets() {
+    return this.cfg.internalServiceSecrets
   }
 
   get liveNowConfig() {
@@ -652,6 +675,14 @@ export class ServerConfig {
     return this.cfg.searchUrl
   }
 
+  get typeaheadUrls() {
+    return this.cfg.typeaheadUrls ?? []
+  }
+
+  get typeaheadProhibitedTermsFile() {
+    return this.cfg.typeaheadProhibitedTermsFile
+  }
+
   get searchTagsHide() {
     return this.cfg.searchTagsHide
   }
@@ -670,14 +701,6 @@ export class ServerConfig {
 
   get atmosphereExploreTabService() {
     return this.cfg.atmosphereExploreTabService
-  }
-
-  get topicsUrl() {
-    return this.cfg.topicsUrl
-  }
-
-  get topicsApiKey() {
-    return this.cfg.topicsApiKey
   }
 
   get irisUrl() {
@@ -792,6 +815,10 @@ export class ServerConfig {
     return this.cfg.indexedAtEpoch
   }
 
+  get postViewCountsStartAt() {
+    return this.cfg.postViewCountsStartAt
+  }
+
   get bigThreadUris() {
     return this.cfg.bigThreadUris
   }
@@ -904,6 +931,17 @@ export class ServerConfig {
 function envList(str: string | undefined): string[] {
   if (str === undefined || str.length === 0) return []
   return str.split(',')
+}
+
+function envDate(name: string): Date | undefined {
+  const str = process.env[name]
+  if (!str) return undefined
+  const date = new Date(str)
+  if (isNaN(date.getTime())) {
+    log.warn({ name }, 'Invalid date environment variable')
+    return undefined
+  }
+  return date
 }
 
 function isLiveNowConfig(data: any): data is LiveNowConfig {

@@ -43,8 +43,10 @@ const posts = await client.list(app.bsky.feed.post, { limit: 10 })
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
+- [Installation](#installation)
 - [Quick Start](#quick-start)
 - [Lexicon Schemas](#lexicon-schemas)
+  - [Local resolution (`resolvers`)](#local-resolution-resolvers)
 - [TypeScript Schemas](#typescript-schemas)
   - [Generated Schema Structure](#generated-schema-structure)
   - [Type definitions](#type-definitions)
@@ -89,6 +91,8 @@ const posts = await client.list(app.bsky.feed.post, { limit: 10 })
     - [`client.assertDid`](#clientassertdid)
   - [Labeler Configuration](#labeler-configuration)
   - [Low-Level XRPC](#low-level-xrpc)
+  - [Subscriptions](#subscriptions)
+    - [Subscription Errors and Reconnects](#subscription-errors-and-reconnects)
 - [Utilities](#utilities)
   - [Datetime Strings](#datetime-strings)
 - [Advanced Usage](#advanced-usage)
@@ -122,6 +126,30 @@ const posts = await client.list(app.bsky.feed.post, { limit: 10 })
 - [License](#license)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
+## Installation
+
+`@atproto/lex` provides the `lex` CLI, and re-exports the runtime packages listed below. The CLI depends on the Lexicon installation and code generation tooling, which your code does not need at runtime. Install `@atproto/lex` as a dev dependency:
+
+```bash
+npm install --save-dev @atproto/lex
+```
+
+Only `import` from `@atproto/lex` directly when your code is bundled (e.g. with Vite, Rolldown, esbuild or webpack): the bundler only includes the code you use, so the tooling never reaches the output. Otherwise, for example in a Node.js service or a published library, `@atproto/lex` would have to be installed at runtime, along with all of its tooling. Depend on the runtime packages it re-exports instead, import from them, and pass `--lib @atproto/lex-schema` to `lex build` so that the generated schemas import from `@atproto/lex-schema` too:
+
+```bash
+npm install @atproto/lex-client @atproto/lex-schema
+lex build --lib @atproto/lex-schema
+```
+
+| Package               | Provides                                                                                                                  |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `@atproto/lex-client` | `Client`, `xrpc()`, `xrpcSafe()` and XRPC errors                                                                          |
+| `@atproto/lex-rpc`    | `xrpcSubscribe()`, `createWebSocketFactory()` and `defaultWebsocket`, from the `@atproto/lex-rpc/subscription` entrypoint |
+| `@atproto/lex-schema` | The `l` schema utility, identifier and datetime string types and helpers                                                  |
+| `@atproto/lex-data`   | Data model types and helpers: `LexValue`, `Cid`, blob references, …                                                       |
+| `@atproto/lex-json`   | JSON encoding: `lexParse()`, `lexStringify()`, `jsonToLex()`, `lexToJson()`                                               |
+| `@atproto/lex-cbor`   | CBOR encoding: `encode()`, `decode()`, `cidForLex()`                                                                      |
 
 ## Quick Start
 
@@ -260,7 +288,7 @@ Options:
 - `--ignore-invalid-lexicons` - Skip lexicon files that fail validation instead of exiting with an error
 - `--exclude <patterns...>` - List of strings or regex patterns to exclude lexicon documents by their IDs
 - `--include <patterns...>` - List of strings or regex patterns to include lexicon documents by their IDs
-- `--lib <package>` - Package name of the library to import the lex schema utility "l" from (default: `@atproto/lex`)
+- `--lib <package>` - Package name of the library to import the lex schema utility "l" from (default: `@atproto/lex`; use `@atproto/lex-schema` when `@atproto/lex` is a dev dependency, see [Installation](#installation))
 - `--import-ext <ext>` - File extension to use for import statements in generated files (default: `.js`). Use `--import-ext ""` to generate extension-less imports
 - `--file-ext <ext>` - File extension to use for generated files (default: `.ts`)
 - `--index-file` - Generate an "index" file that re-exports all root-level namespaces (disabled by default)
@@ -590,11 +618,10 @@ const obj = lexToJson({
 
 ### CBOR Encoding
 
-Use `@atproto/lex-cbor` to encode/decode the data model to/from CBOR ([DRISL](https://dasl.ing/drisl.html)) format for storage and authentication:
+The package re-exports `@atproto/lex-cbor` to encode/decode the data model to/from CBOR ([DRISL](https://dasl.ing/drisl.html)) format for storage and authentication:
 
 ```typescript
-import { encode, decode } from '@atproto/lex-cbor'
-import type { LexValue } from '@atproto/lex'
+import { encode, decode, type LexValue } from '@atproto/lex'
 
 // Encode data model to CBOR bytes
 const cborBytes = encode(someLexValue)
@@ -1098,6 +1125,16 @@ console.log(response.headers)
 console.log(response.body)
 ```
 
+Per-request `headers` can also be a (sync or async) function, called for every attempt (retries included), for headers that must differ between attempts:
+
+```typescript
+const response = await client.xrpc(app.bsky.feed.getTimeline, {
+  params: { limit: 50 },
+  maxRetries: 3,
+  headers: async () => ({ 'x-request-nonce': await createNonce() }),
+})
+```
+
 Validation and strictness options (`validateRequest`, `validateResponse`, `strictResponseProcessing`) can also be passed per-call to override the client defaults:
 
 ```typescript
@@ -1106,6 +1143,105 @@ const response = await client.xrpc(app.bsky.feed.getTimeline, {
   strictResponseProcessing: false, // Accept non-strict Lex data for this call
   validateResponse: false, // Skip schema validation for this call
 })
+```
+
+#### Streaming binary responses
+
+Binary (non JSON) response payloads are read into a `Uint8Array` by default. Use `client.xrpcStream()`, `client.xrpcStreamSafe()` or `client.getBlobStream()` to get the unread `ReadableStream` instead, as an `XrpcStreamResponse`. These only accept methods declaring a binary output (a non-JSON encoding, without schema) or no output encoding at all, and error responses are always buffered. The payload of methods without an output encoding is never parsed: it is returned as binary data (if any), in both modes.
+
+```typescript
+// Disposing of the response cancels the stream if it was not fully consumed
+await using response = await client.getBlobStream(did, cid)
+
+for await (const chunk of response.body) {
+  // ...
+}
+```
+
+The caller owns the returned stream and must either consume or cancel it, through `response.cancel()` or by disposing of the response (`await using`, which follows the `onCancellationError` option). The results of `xrpcStreamSafe()`, including failures, are disposable without narrowing. Fetch implementations that do not expose response bodies as streams (e.g. React Native's built-in `fetch`) cause an `XrpcInternalError`.
+
+### Subscriptions
+
+XRPC subscriptions (WebSocket event streams) are consumed as async generators, through `xrpcSubscribe()`. Messages are decoded, get their `$type` restored, and are validated against the subscription's message schema. Frames with an unknown `op` are skipped without being decoded past their header, so that servers can introduce new kinds of frames. The stream is opened on the first pull, through the agent's `websocketHandler`, which owns the connection and may reconnect, so a `for await` loop spans reconnects.
+
+`@atproto/lex` exports `xrpcSubscribe()`, which bundlers drop (along with [`@atproto/ws-client`](https://github.com/bluesky-social/atproto/tree/main/packages/ws-client)) when unused. When depending on the runtime packages instead (see [Installation](#installation)), import it from the `@atproto/lex-rpc/subscription` entrypoint: it is kept out of the main one, so that `@atproto/ws-client` is only loaded by code that subscribes.
+
+```typescript
+import { xrpcSubscribe } from '@atproto/lex'
+import * as com from './lexicons/com.js'
+
+const controller = new AbortController()
+
+let cursor: number | undefined
+for await (const message of xrpcSubscribe(
+  'https://labeler.example.com',
+  com.atproto.label.subscribeLabels,
+  {
+    // A function is called before every connection, reconnects included
+    params: () => ({ cursor }),
+    signal: controller.signal, // aborting rejects the loop with the reason
+  },
+)) {
+  if (com.atproto.label.subscribeLabels.labels.$isTypeOf(message)) {
+    cursor = message.seq
+  }
+}
+```
+
+The first argument is the service to connect to (its `http(s)` protocol mapped to `ws(s)`), as a URL or an `AgentConfig` (e.g. to set `headers`, merged into the subscription's own), or an `Agent`. From a URL or a config, the subscription connects through `defaultWebsocket`, a `WebSocketFactory` (the WebSocket counterpart of `fetch`) over `@atproto/ws-client`: it reconnects, with backoff, after the failures `@atproto/ws-client` retries by default and after the transient failures of the subscription itself (see `defaultSubscriptionShouldReconnect()`). For other connection options (`heartbeat`, `idleTimeoutMs`, `maxReconnectSeconds`, `shouldReconnect`, the lifecycle hooks, …), set the config's `websocket` to a factory created by `createWebSocketFactory()`, which takes the options of `@atproto/ws-client`'s `websocket()` (except `signal` and `headers`, which come from each subscription):
+
+```typescript
+import { createWebSocketFactory, xrpcSubscribe } from '@atproto/lex'
+
+const messages = xrpcSubscribe(
+  {
+    service: 'https://labeler.example.com',
+    websocket: createWebSocketFactory({ idleTimeoutMs: 60_000 }),
+  },
+  com.atproto.label.subscribeLabels,
+)
+```
+
+A `WebSocketFactory` can also be written from scratch: it is called with a function returning the URL to connect to, to invoke before every connection, and with the subscription's `signal` and `headers`, and returns an `AsyncIterable` of binary frames.
+
+An `Agent` is used as-is, and `xrpcSubscribe()` throws a `TypeError` if it has no `websocketHandler`. `buildAgent()` builds one from an `AgentConfig` with a `websocket`, and so does the `Client` constructor: the `agent` of a `new Client({ service, websocket })` can subscribe. A custom `Agent` can implement `websocketHandler(path, { signal, headers })` itself: it adds the origin to `path` (a function to invoke before every connection) and returns an `AsyncIterable` of binary frames. Browsers cannot send headers with a WebSocket upgrade (`@atproto/ws-client` throws), so don't set `headers` on an agent (or config) used for subscriptions in a browser.
+
+Disable `validateResponse` only for a trusted server: messages are then yielded as decoded, without defaults applied. `strictResponseProcessing: false` relaxes their validation instead.
+
+Breaking out of the loop (or `return`/`throw`) closes the connection. Aborting the `signal` rejects the loop with the abort reason; with `@atproto/ws-client`, abort with a `CloseError` to choose the close code.
+
+#### Subscription Errors and Reconnects
+
+Reconnects are decided by the agent's `websocket` function (with `@atproto/ws-client`, by its `shouldReconnect` option). A frame that fails to decode or validate, an error frame included, is handed back to it through the stream's `throw()`, which ends the connection that delivered it. `isRetryableSubscriptionError()` tells whether a reconnect may then succeed. `@atproto/ws-client`'s own `defaultShouldReconnect` only classifies its own errors: `defaultSubscriptionShouldReconnect()` (the default `shouldReconnect` of `createWebSocketFactory()`) combines both, so build a custom `shouldReconnect` on it, or transient error frames end the loop.
+
+Every error that ends the loop is an `XrpcSubscriptionError` with a `shouldRetry()` classification, except an abort reason, which is passed through as-is. The hooks of `@atproto/ws-client` receive connection failures unwrapped. A `params` function failing with a transient error (e.g. an `XrpcError` from a cursor looked up over XRPC) is retried, and invoked again on the reconnect.
+
+| Class                             | Meaning                                                                                    | `shouldRetry()`                                     |
+| --------------------------------- | ------------------------------------------------------------------------------------------ | --------------------------------------------------- |
+| `XrpcSubscriptionParamsError`     | The URL could not be built: a `params` function threw, or the params are invalid (`cause`) | Per the cause (if it has a `shouldRetry()` method)  |
+| `XrpcSubscriptionConnectionError` | The connection failed (`cause` is the error, e.g. from `@atproto/ws-client`)               | Per the cause (close code, upgrade HTTP status, …)  |
+| `XrpcSubscriptionServerError`     | The server sent an error frame (`error`, `message`, `matchesSchemaErrors()`)               | Only for transient codes (`InternalServerError`, …) |
+| `XrpcSubscriptionFrameError`      | The server sent an invalid frame                                                           | No                                                  |
+| `XrpcSubscriptionMessageError`    | A message did not match the schema (`value`, `cause`)                                      | No                                                  |
+
+A message failing validation is not retryable, since resuming from the last cursor would receive it again: to skip such messages, pass an `onMessageError` callback that returns instead of throwing (it receives each `XrpcSubscriptionMessageError`), or disable validation (`validateResponse: false`) and check each message yourself.
+
+```typescript
+import {
+  createWebSocketFactory,
+  defaultSubscriptionShouldReconnect,
+} from '@atproto/lex'
+
+const relay: AgentConfig = {
+  service: 'https://relay.example.com',
+  websocket: createWebSocketFactory({
+    // Catch up after being dropped for being too slow
+    shouldReconnect: (error) =>
+      defaultSubscriptionShouldReconnect(error) ||
+      (error instanceof XrpcSubscriptionServerError &&
+        error.error === 'ConsumerTooSlow'),
+  }),
+}
 ```
 
 ## Utilities
@@ -1561,6 +1697,8 @@ const enableAdultContent: Action<void, Preference[]> = async (
 // Use the high-level action
 await client.call(enableAdultContent)
 ```
+
+Actions whose input is `void`, or optional (e.g. `params?: ListParams`), can be called without input.
 
 ### Using a Single Client for Multiple Services
 

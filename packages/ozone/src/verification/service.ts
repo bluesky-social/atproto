@@ -6,7 +6,7 @@ import {
   type DidString,
   asUnknown$TypedObject,
   currentDatetimeString,
-} from '@atproto/lex'
+} from '@atproto/lex-schema'
 import { AtUri } from '@atproto/syntax'
 import type { Database } from '../db/index.js'
 import { CreatedAtUriKeyset, paginate } from '../db/pagination.js'

@@ -104,13 +104,24 @@ function parseAcceptEncoding(
 ): Accept[] {
   if (!acceptEncodings?.length) return []
 
-  return Array.isArray(acceptEncodings)
-    ? acceptEncodings.flatMap(parseAcceptEncoding)
-    : acceptEncodings.split(',').map(parseAcceptEncodingDefinition)
+  if (Array.isArray(acceptEncodings)) {
+    return acceptEncodings.flatMap(parseAcceptEncoding)
+  }
+
+  const accepts: Accept[] = []
+  for (const def of acceptEncodings.split(',')) {
+    const accept = parseAcceptEncodingDefinition(def)
+    if (accept) accepts.push(accept)
+  }
+  return accepts
 }
 
-function parseAcceptEncodingDefinition(def: string): Accept {
-  const { length, 0: encoding, 1: params } = def.trim().split(';', 3)
+function parseAcceptEncodingDefinition(def: string): Accept | undefined {
+  const trimmed = def.trim()
+  // @NOTE RFC 9110 §5.6.1.2 requires recipients to ignore empty list elements.
+  if (!trimmed) return undefined
+
+  const { length, 0: encoding, 1: params } = trimmed.split(';', 3)
 
   if (length > 2) {
     throw new InvalidRequestError(`Invalid accept-encoding: "${def}"`)

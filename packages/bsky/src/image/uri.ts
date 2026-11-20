@@ -1,4 +1,4 @@
-import { type UriString, isUriString } from '@atproto/lex'
+import { type UriString, isUriString } from '@atproto/lex-schema'
 import type { Options } from './util.js'
 
 // @NOTE if there are any additions here, ensure to include them on ImageUriBuilder.presets

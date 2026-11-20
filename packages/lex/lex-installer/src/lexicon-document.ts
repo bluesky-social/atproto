@@ -82,11 +82,11 @@ function* defRefs(
       }
       return
     case 'array':
-      return yield* defRefs(def.items)
+      return yield* defRefs(def.items, options)
     case 'params':
     case 'object':
       for (const prop of Object.values(def.properties)) {
-        yield* defRefs(prop)
+        yield* defRefs(prop, options)
       }
       return
     case 'union':
@@ -97,29 +97,29 @@ function* defRefs(
       return
     }
     case 'record':
-      yield* defRefs(def.record)
+      yield* defRefs(def.record, options)
       return
     case 'procedure':
       if (def.input?.schema) {
-        yield* defRefs(def.input.schema)
+        yield* defRefs(def.input.schema, options)
       }
     // fallthrough
     case 'query':
       if (def.output?.schema) {
-        yield* defRefs(def.output.schema)
+        yield* defRefs(def.output.schema, options)
       }
     // fallthrough
     case 'subscription':
       if (def.parameters) {
-        yield* defRefs(def.parameters)
+        yield* defRefs(def.parameters, options)
       }
       if ('message' in def && def.message?.schema) {
-        yield* defRefs(def.message.schema)
+        yield* defRefs(def.message.schema, options)
       }
       return
     case 'permission-set':
       for (const permission of def.permissions) {
-        yield* defRefs(permission)
+        yield* defRefs(permission, options)
       }
       return
     case 'permission':

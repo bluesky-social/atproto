@@ -9,6 +9,10 @@ Backend service for moderating the Bluesky network.
 
 The API uses a bounded in-memory DID document cache. Configure its limits with `OZONE_DID_CACHE_MAX_ENTRIES` (default 10,000), `OZONE_DID_CACHE_MAX_BYTES` (default 33,554,432 bytes for serialized documents and DID keys), and `OZONE_DID_CACHE_MAX_DOC_BYTES` (default 65,536 bytes per serialized document). Set any limit to `0` to disable retention. Documents exceeding a limit can still be resolved but are not cached. Restart the API after changing these settings.
 
+## Blob diversion
+
+`OZONE_BLOB_DIVERT_MAX_BYTES` sets the maximum size of a blob downloaded for diversion. It must be a positive integer and defaults to 314,572,800 bytes (300 MiB). The receiving service must support the same size. Restart the API after changing this setting.
+
 ## Report tags
 
 Reports automatically add a reason tag such as `report:spam` to their subject by default. Set `OZONE_REPORT_TAGS_DISABLED=true` and restart the API to disable these automatic report tags. Unset or `false` keeps them enabled.
@@ -16,6 +20,36 @@ Reports automatically add a reason tag such as `report:spam` to their subject by
 The setting applies to reports submitted through both `com.atproto.moderation.createReport` and `tools.ozone.moderation.emitEvent`.
 
 Language and embed tags, manually applied tags, and existing report tags are unaffected.
+
+## Language tags
+
+Set `OZONE_LANGUAGE_TAG_RECORD_TYPES` to a comma-separated list or JSON array of record types and namespace patterns to restrict automatic language tagging of records.
+
+## Report reason rejection metrics
+
+Set `OZONE_METRICS_PORT` on the API to serve Prometheus metrics at `/metrics` on a separate HTTP port. Keep this port accessible only to your monitoring system. When unset, no Prometheus metrics are collected.
+
+`ozone_report_reason_rejections_total{nsid, reason_type}` counts report attempts rejected because their reason type is absent from the labeler's configured `reasonTypes` list. `nsid` identifies `com.atproto.moderation.createReport` or `tools.ozone.moderation.emitEvent`. Recognized modern and legacy reason types retain their exact values; all custom, malformed, and unrecognized values share `reason_type="unknown"` to bound the number of time series.
+
+Accepted reports and other request errors do not increment this counter. An omitted `reasonTypes` list is unrestricted and produces no allowlist rejections; an empty list rejects every report reason. Counters are per API process, reset on restart, and count retries as separate attempts. Rejected report contents and account identifiers are not stored by this metric.
+
+For rejection attempts per second over five minutes, summed across API processes:
+
+```promql
+sum by (nsid, reason_type) (rate(ozone_report_reason_rejections_total[5m]))
+```
+
+Configure alert thresholds and notification routing in Prometheus, Grafana, or your monitoring system.
+
+## Closing reports with moderation actions
+
+`tools.ozone.moderation.emitEvent` accepts `reportAction: { allOwned: true }` on an account event that closes reports. It links the event to eligible reports on the account and its records, messages, and conversations. `allOwned` targets all report types; explicit `ids` also include those reports even when they are assigned or escalated. The event and closures are committed together.
+
+`tools.ozone.report.closeReports` accepts an existing `actionEventId`. The event must be a report-closing event on the requested subject or its owning account; `includeAllOwned` requires an account event. The selected reports are linked to that event and closed in one transaction. Without an event ID, closures retain their no-action outcome. Both APIs protect assigned, escalated, and actively assigned reports from broad selection. `closeReports` can additionally filter or exclude report types.
+
+For a message event, matching reports must also have the event's conversation ID. This keeps messages with the same ID in different conversations separate.
+
+The linked event may predate a report. The resulting action attribution refers to that event, which may no longer be in effect. An event that predates an appeal, or an account event linked to an appeal about another subject, does not determine the appeal's outcome: appeal outcomes require a later event on the appealed subject.
 
 ## Wildcard label queries
 
@@ -43,9 +77,17 @@ Set `NEXT_PUBLIC_STRIKE_SUSPENSION_CONFIG` to the same value used by Ozone UI, f
 
 Set `OZONE_INBOX_START_AT` on both the API and daemon to an ISO 8601 timestamp with a timezone, for example `2026-10-15T00:00:00.000Z`. Configuration normalizes it to UTC milliseconds and rejects invalid values at startup. Unset exposes all history. A future date keeps history empty until eligible activity occurs; changing the value requires restarting the services.
 
-Reports are visible only when their `createdAt` is at or after the date, even if an older report is later resolved or reopened. The same bound applies to report detail and resolution actions. Subjects require a public action created at or after the date; action counts, first-action dates, latest actions, detail history and report summaries exclude earlier history. Older appeal history is hidden, while eligibility still respects earlier appeals. Inbox appeals cannot target hidden actions or subjects. Moderator previews use the same cutoff.
+Reports are visible only when their `createdAt` is at or after the date, even if an older report is later resolved or reopened. The same bound applies to report detail and resolution actions. Subjects require a public action created at or after the date; action counts, first-action dates, latest actions, detail history and report summaries exclude earlier history. Older appeal history is hidden, while eligibility still respects earlier appeals. Appeal eligibility ignores the date: inbox appeals can target older actions and subjects, and the appeal response leaves their older history hidden. While the date is set, an appeal must name an existing action or, naming none, a subject with an appealable action, active enforcement, or a visible public action. Moderator previews use the same cutoff.
 
 Account standing and current enforcement remain live: active restrictions, strikes and labels can predate the inbox start. Preferences and seen watermarks do not expose history; they retain their existing behavior. The cutoff is not a read watermark, so an item created exactly at the start date is initially unread.
+
+## Moderation inbox push
+
+Push work is disabled by default. To enable it, set `OZONE_INBOX_PUSH_ENABLED` on both the API and daemon. Consumer endpoints require moderator or admin authentication. Configure the same inbox start date on both processes. Enabling push only queues new notifications; it does not backfill existing inbox history.
+
+The consumer claims work with a 60-second lease and acknowledges it using the lease token. Unacknowledged work can be claimed again after its lease expires. Pushes older than one hour expire; finished rows are retained for seven days and cleaned up during claims.
+
+The outbox table is created by a database migration even when push is disabled. When rolling back to an image that does not contain that migration, do not run migrations using the older image: the migrator rejects an applied migration absent from its code. Leave the outbox table in place until an intentional database rollback has been planned.
 
 Notification producers skip activity before the date and skip transitions on reports or appeal subjects that would be hidden. Lists and unread counts independently enforce the date and target visibility, including existing stored notifications. API and daemon must use the same value. Source reports/actions continue to be recorded normally. Moving the date earlier can reveal more source history, but skipped notifications are not backfilled. Complete the writer rollout before the chosen start date to avoid a notification gap.
 

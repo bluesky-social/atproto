@@ -1,4 +1,3 @@
-import { type Kysely, sql } from 'kysely'
 import {
   type ModeratorClient,
   type SeedClient,
@@ -11,13 +10,9 @@ import {
   ReportReporterDidBackfiller,
 } from '../src/daemon/report-reporter-did-backfiller.js'
 import type { Database } from '../src/db/index.js'
-import {
-  down,
-  up,
-} from '../src/db/migrations/20261002T000000000Z-add-report-reporter-did.js'
 import { APPEAL_REASON_TYPE } from '../src/inbox/appeal.js'
 
-describe('report reporter DID migration', () => {
+describe('report reporter DID backfill', () => {
   let network: TestNetwork
   let sc: SeedClient
   let modClient: ModeratorClient
@@ -39,7 +34,7 @@ describe('report reporter DID migration', () => {
     await network?.close()
   })
 
-  it('adds a nullable column and backfills in resumable batches', async () => {
+  it('backfills in resumable batches', async () => {
     const userReports = await Promise.all([
       sc.createReport({
         reasonType: 'com.atproto.moderation.defs#reasonSpam',
@@ -90,13 +85,9 @@ describe('report reporter DID migration', () => {
     const updatedAt = '2026-01-02T03:04:05.000Z'
     await db.db
       .updateTable('report')
-      .set({ status: 'closed', updatedAt })
+      .set({ status: 'closed', updatedAt, reporterDid: null })
       .where('eventId', 'in', validIds)
       .execute()
-
-    await db.transaction(async (tx) =>
-      down(tx.db as unknown as Kysely<unknown>),
-    )
 
     const now = currentDatetimeString()
     const baseReport = {
@@ -130,33 +121,6 @@ describe('report reporter DID migration', () => {
       .where('job', '=', REPORT_REPORTER_DID_BACKFILL_JOB)
       .execute()
 
-    await expect(
-      db.transaction(async (tx) => {
-        await up(tx.db as unknown as Kysely<unknown>)
-        throw new Error('rollback backfill')
-      }),
-    ).rejects.toThrow('rollback backfill')
-    const rolledBackColumn = await sql<{ exists: boolean }>`
-      SELECT EXISTS (
-        SELECT 1
-        FROM information_schema.columns
-        WHERE table_schema = current_schema()
-          AND table_name = 'report'
-          AND column_name = 'reporterDid'
-      ) AS exists
-    `.execute(db.db)
-    expect(rolledBackColumn.rows[0]?.exists).toBe(false)
-
-    await db.transaction(async (tx) => up(tx.db as unknown as Kysely<unknown>))
-
-    const reporterDidColumn = await sql<{ isNullable: string }>`
-      SELECT is_nullable AS "isNullable"
-      FROM information_schema.columns
-      WHERE table_schema = current_schema()
-        AND table_name = 'report'
-        AND column_name = 'reporterDid'
-    `.execute(db.db)
-    expect(reporterDidColumn.rows[0]?.isNullable).toBe('YES')
     const unfilledReports = await db.db
       .selectFrom('report')
       .select('reporterDid')

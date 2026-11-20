@@ -45,7 +45,7 @@ describe('report action matching', () => {
     }
   }
 
-  type Subject = Parameters<ModeratorClient['emitEvent']>[0]['subject']
+  type Subject = Awaited<ReturnType<typeof fixture>>['account' | 'record']
 
   async function report(
     subject: Subject,
@@ -57,7 +57,21 @@ describe('report action matching', () => {
       reportedBy: sc.dids.bob,
     })
     await network.processAll()
-    return reportForEvent(mod, event.id)
+    return reportForEvent(
+      mod,
+      event.id,
+      'uri' in subject ? subject.uri : subject.did,
+    )
+  }
+
+  async function getReport(id: number) {
+    const { data } = await mod.agent.tools.ozone.report.getReport(
+      { id },
+      {
+        headers: await network.ozone.modHeaders(ids.ToolsOzoneReportGetReport),
+      },
+    )
+    return { ...data, actionEventIds: data.actionEventIds ?? null }
   }
 
   async function activities(reportId?: number) {
@@ -142,8 +156,7 @@ describe('report action matching', () => {
               reportAction: { ids: [existing!.id] },
             })
           }
-          const before =
-            existing && (await reportForEvent(mod, existing.eventId))
+          const before = existing && (await getReport(existing.id))
           const activityIds = await activities()
           const event = await mod.emitEvent({
             subject,
@@ -165,13 +178,13 @@ describe('report action matching', () => {
             expect(view.labels?.map(({ val }) => val)).toContain('spam')
           }
           if (reportState === 'matching') {
-            const after = await reportForEvent(mod, existing!.eventId)
+            const after = await getReport(existing!.id)
             expect(after.status).toBe('closed')
             expect(after.actionEventIds).toEqual([event.id])
           } else {
             expect(await activities()).toEqual(activityIds)
             if (existing) {
-              const after = await reportForEvent(mod, existing.eventId)
+              const after = await getReport(existing.id)
               expect(after.status).toBe(before!.status)
               expect(after.actionEventIds).toEqual(before!.actionEventIds)
               expect(after.updatedAt).toBe(before!.updatedAt)
@@ -214,7 +227,7 @@ describe('report action matching', () => {
             : reportState === 'partially-missing'
               ? [existing.id, 999999999]
               : [existing.id]
-        const before = await reportForEvent(mod, existing.eventId)
+        const before = await getReport(existing.id)
         const activityIds = await activities(existing.id)
         await expect(
           mod.emitEvent({
@@ -239,7 +252,7 @@ describe('report action matching', () => {
         expect(
           (await state(f, kind)).moderation.subjectStatus?.takendown,
         ).not.toBe(true)
-        const after = await reportForEvent(mod, existing.eventId)
+        const after = await getReport(existing.id)
         expect(after.status).toBe(before.status)
         expect(after.actionEventIds).toEqual(before.actionEventIds)
         expect(await activities(existing.id)).toEqual(activityIds)
@@ -297,11 +310,11 @@ describe('report action matching', () => {
           types: [com.atproto.moderation.defs.ReasonSpam],
         },
       })
-      expect(await reportForEvent(mod, selected.eventId)).toMatchObject({
+      expect(await getReport(selected.id)).toMatchObject({
         status: 'escalated',
         actionEventIds: [event.id],
       })
-      expect(await reportForEvent(mod, other.eventId)).toMatchObject({
+      expect(await getReport(other.id)).toMatchObject({
         status: other.status,
         actionEventIds: other.actionEventIds,
         updatedAt: other.updatedAt,
@@ -319,7 +332,7 @@ describe('report action matching', () => {
           event: label(),
           reportAction: { ids: [current.id] },
         })
-        expect(await reportForEvent(mod, current.eventId)).toMatchObject({
+        expect(await getReport(current.id)).toMatchObject({
           status: 'closed',
           actionEventIds: [event.id],
         })
@@ -354,7 +367,7 @@ describe('report action matching', () => {
         }
         const before = await Promise.all(
           protectedReports.map(async (r) => ({
-            report: await reportForEvent(mod, r.eventId),
+            report: await getReport(r.id),
             activities: await activities(r.id),
           })),
         )
@@ -396,7 +409,7 @@ describe('report action matching', () => {
           reportAction: { ...broadSelection(), ids: [explicit.id] },
         })
         for (const r of [temporary, ended, unassigned, explicit]) {
-          expect(await reportForEvent(mod, r.eventId)).toMatchObject({
+          expect(await getReport(r.id)).toMatchObject({
             status: 'closed',
             actionEventIds: [event.id],
           })
@@ -407,9 +420,7 @@ describe('report action matching', () => {
           reportAction: broadSelection(),
         })
         for (const snapshot of before) {
-          expect(
-            await reportForEvent(mod, snapshot.report.eventId),
-          ).toMatchObject({
+          expect(await getReport(snapshot.report.id)).toMatchObject({
             status: snapshot.report.status,
             updatedAt: snapshot.report.updatedAt,
             actionEventIds: snapshot.report.actionEventIds,
@@ -442,7 +453,7 @@ describe('report action matching', () => {
           )
           const protectedBefore = await Promise.all(
             [assigned, escalated].map(async (r) => ({
-              report: await reportForEvent(mod, r.eventId),
+              report: await getReport(r.id),
               activities: await activities(r.id),
             })),
           )
@@ -461,7 +472,7 @@ describe('report action matching', () => {
             },
           })
           for (const r of [current, open, queued]) {
-            expect(await reportForEvent(mod, r.eventId)).toMatchObject({
+            expect(await getReport(r.id)).toMatchObject({
               status: 'closed',
               actionEventIds: [event.id],
             })
@@ -470,13 +481,13 @@ describe('report action matching', () => {
             previousActivities.length + 1,
           )
           for (const before of protectedBefore) {
-            const after = await reportForEvent(mod, before.report.eventId)
+            const after = await getReport(before.report.id)
             expect(after.status).toBe(before.report.status)
             expect(after.updatedAt).toBe(before.report.updatedAt)
             expect(after.actionEventIds).toEqual(before.report.actionEventIds)
             expect(await activities(after.id)).toEqual(before.activities)
           }
-          expect((await reportForEvent(mod, unrelated.eventId)).status).toBe(
+          expect((await getReport(unrelated.id)).status).toBe(
             selector === 'all' ? 'closed' : 'open',
           )
         },
@@ -497,7 +508,7 @@ describe('report action matching', () => {
           true,
         )
         for (const [i, r] of existing.entries()) {
-          expect((await reportForEvent(mod, r.eventId)).status).toBe(
+          expect((await getReport(r.id)).status).toBe(
             i === 0 ? 'assigned' : 'escalated',
           )
           expect(await activities(r.id)).toEqual(before[i])
@@ -519,7 +530,7 @@ describe('report action matching', () => {
               reportAction: { ids: [selected.id] },
             })
           }
-          const before = await reportForEvent(mod, matching.eventId)
+          const before = await getReport(matching.id)
           const beforeActivities = await activities(matching.id)
           await expect(
             mod.emitEvent({
@@ -534,7 +545,7 @@ describe('report action matching', () => {
           expect(
             (await state(f, kind)).moderation.subjectStatus?.takendown,
           ).not.toBe(true)
-          expect(await reportForEvent(mod, matching.eventId)).toMatchObject({
+          expect(await getReport(matching.id)).toMatchObject({
             status: before.status,
             actionEventIds: before.actionEventIds,
             updatedAt: before.updatedAt,
@@ -561,7 +572,7 @@ describe('report action matching', () => {
             ...(selector === 'ids' ? { ids: [existing.id] } : { all: true }),
           },
         })
-        const after = await reportForEvent(mod, existing.eventId)
+        const after = await getReport(existing.id)
         expect(after.status).toBe('closed')
         expect(after.actionEventIds).toEqual([event.id])
       },
@@ -577,7 +588,7 @@ describe('report action matching', () => {
       event: takedown(),
       reportAction: { types: [com.atproto.moderation.defs.ReasonSpam] },
     })
-    const after = await reportForEvent(mod, existing.eventId)
+    const after = await getReport(existing.id)
     expect(after.status).toBe(existing.status)
     expect(after.actionEventIds).toEqual(existing.actionEventIds)
     expect(await activities(existing.id)).toEqual(activityIds)

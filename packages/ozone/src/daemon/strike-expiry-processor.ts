@@ -1,5 +1,5 @@
 import { HOUR } from '@atproto/common'
-import { type DatetimeString, toDatetimeString } from '@atproto/lex'
+import { type DatetimeString, toDatetimeString } from '@atproto/lex-schema'
 import type { StrikeSuspensionConfig } from '../config/strike-suspension.js'
 import type { Database } from '../db/index.js'
 import { InboxNotificationService } from '../inbox/producers.js'
@@ -19,6 +19,7 @@ export class StrikeExpiryProcessor {
     private strikeServiceCreator: StrikeServiceCreator,
     private strikeSuspension: StrikeSuspensionConfig = {},
     private inboxStartAt?: DatetimeString,
+    private inboxPushEnabled = false,
   ) {}
 
   start() {
@@ -82,6 +83,7 @@ export class StrikeExpiryProcessor {
           txn,
           this.strikeSuspension,
           this.inboxStartAt,
+          this.inboxPushEnabled,
         )
         const before = await notifications.captureStanding(subjectDid)
         await this.strikeServiceCreator(txn).updateSubjectStrikeCount(

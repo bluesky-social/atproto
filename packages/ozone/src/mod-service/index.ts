@@ -2,15 +2,15 @@ import { type Insertable, sql } from 'kysely'
 import { DAY, addHoursToDate, chunkArray } from '@atproto/common'
 import type { Keypair } from '@atproto/crypto'
 import type { IdResolver } from '@atproto/identity'
+import type { Client } from '@atproto/lex-client'
 import {
-  type Client,
   type DatetimeString,
   type DidString,
   type UriString,
   currentDatetimeString,
   isDidString,
   toDatetimeString,
-} from '@atproto/lex'
+} from '@atproto/lex-schema'
 import { AtUri, INVALID_HANDLE } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { getReviewState } from '../api/util.js'
@@ -27,6 +27,7 @@ import type { ImageInvalidator } from '../image-invalidator.js'
 import { InboxNotificationService } from '../inbox/producers.js'
 import { com, tools } from '../lexicons/index.js'
 import { httpLogger as log } from '../logger.js'
+import { reportRowFromEvent } from '../report/create.js'
 import { LABELER_HEADER_NAME, type ParsedLabelers } from '../util.js'
 import type { VideoInvalidator } from '../video-invalidator.js'
 import {
@@ -36,12 +37,14 @@ import {
 } from './expiring-tags.js'
 import {
   adjustModerationSubjectStatus,
+  getStatusIdentifierFromEvent,
   getStatusIdentifierFromSubject,
   moderationSubjectStatusQueryBuilder,
 } from './status.js'
 import type { StrikeService, StrikeServiceCreator } from './strike.js'
 import {
   CHAT_CONVO_COLLECTION,
+  CHAT_MESSAGE_COLLECTION,
   type ModSubject,
   type RecordSubject,
   type RepoSubject,
@@ -238,10 +241,14 @@ export class ModerationService {
       // regardless of subjectUri check, we always want to query against subjectDid column since that's indexed
       builder = builder.where('subjectDid', '=', subjectDid)
 
-      // subjectUri or subjectConvoId
+      // Chat subjects use synthetic URIs; their IDs are stored separately.
       if (!includeAllUserRecords) {
-        if (subjectAtUri?.collection === CHAT_CONVO_COLLECTION) {
-          builder = builder.where('subjectConvoId', '=', subjectAtUri.rkey)
+        if (subjectAtUri?.collection === CHAT_MESSAGE_COLLECTION) {
+          builder = builder.where('subjectMessageId', '=', subjectAtUri.rkey)
+        } else if (subjectAtUri?.collection === CHAT_CONVO_COLLECTION) {
+          builder = builder
+            .where('subjectConvoId', '=', subjectAtUri.rkey)
+            .where('subjectMessageId', 'is', null)
         } else if (subjectUri) {
           builder = builder.where('subjectUri', '=', subjectUri)
         } else {
@@ -250,6 +257,7 @@ export class ModerationService {
           builder = builder
             .where('subjectUri', 'is', null)
             .where('subjectConvoId', 'is', null)
+            .where('subjectMessageId', 'is', null)
         }
       }
     } else if (subject) {
@@ -261,10 +269,13 @@ export class ModerationService {
       builder = builder
         .where('subjectUri', 'is', null)
         .where('subjectConvoId', 'is', null)
+        .where('subjectMessageId', 'is', null)
     } else if (subjectType === 'record') {
       builder = builder.where('subjectUri', 'is not', null)
     } else if (subjectType === 'conversation') {
-      builder = builder.where('subjectConvoId', 'is not', null)
+      builder = builder
+        .where('subjectConvoId', 'is not', null)
+        .where('subjectMessageId', 'is', null)
     }
 
     // If subjectType is set to 'account' let that take priority and ignore collections filter
@@ -403,14 +414,17 @@ export class ModerationService {
     return { cursor: keyset.packFromResult(result), events: resultWithHandles }
   }
 
-  async getEventsByIds(ids: number[]): Promise<ModerationEventRowWithHandle[]> {
+  async getEventsByIds(
+    ids: number[],
+    signal?: AbortSignal,
+  ): Promise<ModerationEventRowWithHandle[]> {
     if (!ids.length) return []
 
     const result = await this.db.db
       .selectFrom('moderation_event')
       .selectAll()
       .where('id', 'in', ids)
-      .execute()
+      .execute({ signal, inflightQueryAbortStrategy: 'cancel query' })
 
     if (!result.length) return []
 
@@ -666,10 +680,7 @@ export class ModerationService {
     let initialStatusId: number | undefined
     if (tools.ozone.moderation.defs.modEventTag.$isTypeOf(event)) {
       initialStatusId = await lockTagSubject(this.db, {
-        ...getStatusIdentifierFromSubject(
-          subjectInfo.subjectUri ?? subjectInfo.subjectDid,
-          subjectInfo.subjectConvoId,
-        ),
+        ...getStatusIdentifierFromEvent(subjectInfo),
         recordCid: subjectInfo.subjectCid,
       })
     }
@@ -704,6 +715,7 @@ export class ModerationService {
       this.db,
       this.cfg.strikeSuspension,
       this.cfg.inbox.startAt,
+      this.cfg.inbox.pushEnabled,
     )
     const previousStanding = await notifications.beforeModerationEvent(
       subject,
@@ -751,6 +763,13 @@ export class ModerationService {
       })
       .returningAll()
       .executeTakeFirstOrThrow()
+
+    if (tools.ozone.moderation.defs.modEventReport.$isTypeOf(event)) {
+      await this.db.db
+        .insertInto('report')
+        .values(reportRowFromEvent(modEvent))
+        .execute()
+    }
 
     const subjectStatus = await adjustModerationSubjectStatus(
       this.db,
@@ -1199,9 +1218,6 @@ export class ModerationService {
     excludeTags,
     collections,
     subjectType,
-    minAccountSuspendCount,
-    minReportedRecordsCount,
-    minTakendownRecordsCount,
     minPriorityScore,
     minStrikeCount,
     ageAssuranceState,
@@ -1225,11 +1241,13 @@ export class ModerationService {
 
       if (!includeAllUserRecords) {
         if (subjectInfo.convoId) {
-          builder = builder.where(
-            'moderation_subject_status.convoId',
-            '=',
-            subjectInfo.convoId,
-          )
+          builder = builder
+            .where(
+              'moderation_subject_status.convoId',
+              '=',
+              subjectInfo.convoId,
+            )
+            .where('moderation_subject_status.recordPath', '=', '')
         } else if (subjectInfo.recordPath) {
           builder = builder.where(
             'moderation_subject_status.recordPath',
@@ -1249,9 +1267,27 @@ export class ModerationService {
         .where('moderation_subject_status.recordPath', '=', '')
         .where('moderation_subject_status.convoId', '=', '')
     } else if (subjectType === 'record') {
-      builder = builder.where('moderation_subject_status.recordPath', '!=', '')
+      builder = builder
+        .where('moderation_subject_status.recordPath', '!=', '')
+        .where(
+          'moderation_subject_status.recordPath',
+          'not like',
+          `${CHAT_MESSAGE_COLLECTION}/%`,
+        )
     } else if (subjectType === 'conversation') {
-      builder = builder.where('moderation_subject_status.convoId', '!=', '')
+      builder = builder.where((eb) =>
+        eb.or([
+          eb.and([
+            eb('moderation_subject_status.convoId', '!=', ''),
+            eb('moderation_subject_status.recordPath', '=', ''),
+          ]),
+          eb(
+            'moderation_subject_status.recordPath',
+            'like',
+            `${CHAT_MESSAGE_COLLECTION}/%`,
+          ),
+        ]),
+      )
     }
 
     // Only fetch items that belongs to the specified queue when specified
@@ -1466,30 +1502,6 @@ export class ModerationService {
       )
     }
 
-    if (minAccountSuspendCount != null && minAccountSuspendCount > 0) {
-      builder = builder.where(
-        'account_events_stats.suspendCount',
-        '>=',
-        minAccountSuspendCount,
-      )
-    }
-
-    if (minTakendownRecordsCount != null && minTakendownRecordsCount > 0) {
-      builder = builder.where(
-        'account_record_status_stats.takendownCount',
-        '>=',
-        minTakendownRecordsCount,
-      )
-    }
-
-    if (minReportedRecordsCount != null && minReportedRecordsCount > 0) {
-      builder = builder.where(
-        'account_record_events_stats.reportedCount',
-        '>=',
-        minReportedRecordsCount,
-      )
-    }
-
     if (minPriorityScore != null && minPriorityScore >= 0) {
       builder = builder.where(
         'moderation_subject_status.priorityScore',
@@ -1514,14 +1526,15 @@ export class ModerationService {
       )
     }
 
+    const effectiveSortField =
+      sortField === 'reportedRecordsCount' ||
+      sortField === 'takendownRecordsCount'
+        ? 'lastReportedAt'
+        : sortField
     const keyset = new StatusKeyset(
-      sortField === 'reportedRecordsCount'
-        ? ref(`account_record_events_stats.reportedCount`)
-        : sortField === 'takendownRecordsCount'
-          ? ref(`account_record_status_stats.takendownCount`)
-          : sortField === 'priorityScore'
-            ? ref(`moderation_subject_status.priorityScore`)
-            : ref(`moderation_subject_status.${sortField}`),
+      effectiveSortField === 'priorityScore'
+        ? ref('moderation_subject_status.priorityScore')
+        : ref(`moderation_subject_status.${effectiveSortField}`),
       ref('moderation_subject_status.id'),
     )
     const paginatedBuilder = paginate(builder, {
@@ -1553,11 +1566,12 @@ export class ModerationService {
   async getStatus(
     subject: ModSubject,
   ): Promise<ModerationSubjectStatusRow | null> {
+    const identifier = getStatusIdentifierFromEvent(subject.info())
     const result = await this.db.db
       .selectFrom('moderation_subject_status')
-      .where('did', '=', subject.did)
-      .where('recordPath', '=', subject.recordPath ?? '')
-      .where('convoId', '=', subject.convoId ?? '')
+      .where('did', '=', identifier.did)
+      .where('recordPath', '=', identifier.recordPath)
+      .where('convoId', '=', identifier.convoId)
       .selectAll()
       .executeTakeFirst()
     return result ?? null

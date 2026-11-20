@@ -25,11 +25,12 @@ export default function (server: Server, ctx: AppContext) {
     presentation,
   )
   server.add(app.bsky.notification.listActivitySubscriptions, {
-    auth: ctx.authVerifier.standard,
+    auth: ctx.authVerifier.standardRead(),
     handler: async ({ params, auth, req }) => {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({
+        xrpcEndpoint: app.bsky.notification.listActivitySubscriptions.$lxm,
         labelers,
         viewer,
       })

@@ -1,5 +1,5 @@
 import type express from 'express'
-import type { l } from '@atproto/lex'
+import type { l } from '@atproto/lex-schema'
 import { INVALID_HANDLE } from '@atproto/syntax'
 import type { ActorAccount } from '../../../../account-manager/helpers/account.js'
 import type { CodeDetail } from '../../../../account-manager/helpers/invite.js'

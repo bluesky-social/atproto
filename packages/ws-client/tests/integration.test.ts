@@ -3,6 +3,7 @@ import {
   CloseCode,
   CloseError,
   type Sender,
+  UnexpectedResponseError,
   WebSocketClientError,
   websocket,
 } from '../src/index.ts'
@@ -275,6 +276,76 @@ describe('websocket() end-to-end over real sockets', () => {
       reason: 'nope',
       wasClean: true,
     })
+  })
+})
+
+describe('upgrade rejections over real sockets', () => {
+  // A server that answers every upgrade request with `status` until it has
+  // rejected `rejections` of them, then accepts and closes normally.
+  async function rejectingServer(status: number, rejections = Infinity) {
+    let dials = 0
+    const server = await startServer((ws) => ws.close(CloseCode.Normal), {
+      verifyClient: (_info, callback) => {
+        dials++
+        if (dials <= rejections) callback(false, status)
+        else callback(true)
+      },
+    })
+    return Object.assign(server, { dials: () => dials })
+  }
+
+  it('fails without retrying when the upgrade is answered with a 404', async () => {
+    await using server = await rejectingServer(404)
+    const onReconnect = vi.fn()
+    await expect(
+      drain(websocket(server.url, { ...noBackoff, onReconnect })),
+    ).rejects.toSatisfy((err: unknown) => {
+      assert(err instanceof UnexpectedResponseError)
+      expect(err.status).toBe(404)
+      expect(err.shouldRetry()).toBe(false)
+      return true
+    })
+    expect(server.dials()).toBe(1)
+    expect(onReconnect).not.toHaveBeenCalled()
+  })
+
+  it('retries an upgrade answered with a transient status', async () => {
+    await using server = await rejectingServer(503, 2)
+    const onReconnect = vi.fn()
+    await drain(websocket(server.url, { ...noBackoff, onReconnect }))
+    expect(server.dials()).toBe(3)
+    expect(onReconnect).toHaveBeenCalledTimes(2)
+    expect(onReconnect).toHaveBeenCalledWith(
+      expect.any(UnexpectedResponseError),
+      { attempt: 0 },
+    )
+  })
+})
+
+describe('throw() over real sockets', () => {
+  it('closes the connection normally and reconnects when the policy retries', async () => {
+    class BadMessageError extends Error {}
+    const serverSaw: number[] = []
+    let connections = 0
+    await using server = await startServer((ws) => {
+      ws.on('close', (code) => serverSaw.push(code))
+      if (connections++ === 0) ws.send('bad')
+      else ws.send('good', () => ws.close(CloseCode.Normal))
+    })
+    const gen = websocket(server.url, {
+      ...noBackoff,
+      dataMode: 'text',
+      shouldReconnect: (error) => error instanceof BadMessageError,
+    })
+    expect(await gen.next()).toEqual({ value: 'bad', done: false })
+    expect(await gen.throw(new BadMessageError())).toEqual({
+      value: 'good',
+      done: false,
+    })
+    expect(await gen.next()).toEqual({ value: undefined, done: true })
+    await vi.waitFor(() =>
+      expect(serverSaw).toEqual([CloseCode.Normal, CloseCode.Normal]),
+    )
   })
 })
 

@@ -1,12 +1,14 @@
+import * as jose from 'jose'
 import { mapDefined, noUndefinedVals } from '@atproto/common'
 import {
-  type DidString,
   XrpcInvalidResponseError,
   XrpcResponseError,
   xrpcSafe,
-} from '@atproto/lex'
+} from '@atproto/lex-client'
+import type { DidString } from '@atproto/lex-schema'
 import { AtUri } from '@atproto/syntax'
 import {
+  AuthRequiredError,
   type Headers as HeadersMap,
   InvalidRequestError,
   type Server,
@@ -36,6 +38,10 @@ import {
   createPipeline,
 } from '../../../../pipeline.js'
 import type { GetIdentityByDidResponse } from '../../../../proto/bsky_pb.js'
+import {
+  type GetFeedServiceJwtKind,
+  events,
+} from '../../../../telemetry/events.js'
 import { getAtprotoPassthroughHeaders } from '../../../../util/headers.js'
 import { BSKY_USER_AGENT, resHeaders } from '../../../util.js'
 
@@ -47,8 +53,16 @@ export default function (server: Server, ctx: AppContext) {
     presentation,
   )
   server.add(app.bsky.feed.getFeed, {
-    auth: ctx.authVerifier.standardOptionalParameterized({
+    auth: ctx.authVerifier.standardReadOptional({
       lxmCheck: (method) => {
+        // lxm check only runs for service JWTs sent directly by the PDS, not for
+        // BSG's token.
+        //
+        // Cases:
+        // 1. PDS with custom getFeed handler (like ours): `lxm` is getFeedSkeleton
+        //    and `aud` is the feed generator's DID (hence `skipAudCheck`).
+        // 2. PDS without custom getFeed handler: `lxm` is getFeed. The feed generator
+        //    gets the same token and may reject it.
         return (
           method === app.bsky.feed.getFeedSkeleton.$lxm ||
           method === app.bsky.feed.getFeed.$lxm
@@ -61,15 +75,25 @@ export default function (server: Server, ctx: AppContext) {
       const stableDeviceId = req.header(ANALYTICS_HEADER_DEVICE_ID) ?? null
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({
+        xrpcEndpoint: app.bsky.feed.getFeed.$lxm,
         labelers,
         viewer,
         features: ctx.featureGatesClient.scope(
           ctx.featureGatesClient.parseUserContextFromHandler({ viewer, req }),
         ),
       })
+      const serviceJwt =
+        auth.credentials.type === 'standard'
+          ? auth.credentials.serviceJwt
+          : undefined
+      if (!serviceJwt && viewer) {
+        // @TODO With OAuth, BSG's token has no service JWT. AppView will get
+        // one from BSG here.
+        throw new AuthRequiredError('Malformed token', 'InvalidToken')
+      }
       const headers = noUndefinedVals({
         'user-agent': BSKY_USER_AGENT,
-        authorization: req.headers['authorization'],
+        authorization: serviceJwt ? `Bearer ${serviceJwt}` : undefined,
         'accept-language': req.headers['accept-language'],
       })
       const passthroughHeaders = getAtprotoPassthroughHeaders(req)
@@ -81,6 +105,7 @@ export default function (server: Server, ctx: AppContext) {
           ...params,
           hydrateCtx,
           stableDeviceId,
+          serviceJwt,
           headers,
           passthroughHeaders,
           signal,
@@ -196,6 +221,7 @@ type Context = AppContext
 type Params = app.bsky.feed.getFeed.$Params & {
   hydrateCtx: HydrateCtx
   stableDeviceId: string | null
+  serviceJwt?: string
   headers: HeadersMap
   passthroughHeaders: HeadersMap
   signal: AbortSignal
@@ -362,6 +388,14 @@ const skeletonFromFeedGen = async (
     ctx,
     params,
   )
+  if (params.serviceJwt) {
+    events.getFeedServiceJwt(
+      getFeedServiceJwtKind(params.serviceJwt, {
+        feedDid,
+        appviewDids: ctx.authVerifier.standardAudienceDids,
+      }),
+    )
+  }
   const requestHeaders = noUndefinedVals({
     ...headers,
     ...(feedDid && ctx.cfg.bskyFeedgenDids.has(feedDid)
@@ -441,6 +475,32 @@ const skeletonFromFeedGen = async (
     cursor:
       feedSkele.length === 0 || cursor === params.cursor ? undefined : cursor,
   }
+}
+
+// The JWT was already verified, by AppView or by BSG.
+const getFeedServiceJwtKind = (
+  serviceJwt: string,
+  {
+    feedDid,
+    appviewDids,
+  }: { feedDid: DidString | undefined; appviewDids: Set<string> },
+): GetFeedServiceJwtKind => {
+  let claims: jose.JWTPayload
+  try {
+    claims = jose.decodeJwt(serviceJwt)
+  } catch {
+    return 'other'
+  }
+  const audDid =
+    typeof claims.aud === 'string' ? claims.aud.split('#')[0] : undefined
+  if (!audDid) return 'other'
+  if (audDid === feedDid && claims.lxm === app.bsky.feed.getFeedSkeleton.$lxm) {
+    return 'feedgen_skeleton'
+  }
+  if (appviewDids.has(audDid) && claims.lxm === app.bsky.feed.getFeed.$lxm) {
+    return 'appview_feed'
+  }
+  return 'other'
 }
 
 export type AlgoResponse = {

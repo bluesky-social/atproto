@@ -3,7 +3,7 @@ import {
   type DatetimeString,
   type DidString,
   currentDatetimeString,
-} from '@atproto/lex'
+} from '@atproto/lex-schema'
 import type { InboxConfig } from '../config/config.js'
 import type { Database } from '../db/index.js'
 import { com } from '../lexicons/index.js'
@@ -16,11 +16,11 @@ import {
 import {
   PUBLIC_EVENT_ACTIONS,
   appealReportTypeFilter,
-  appealableEventFilter,
   eligibilityFromCandidates,
   hasKnownLatestAppealable,
   subjectLabelUri,
 } from './appeal.js'
+import { findLatestAppealableByUri } from './appealable-events.js'
 import { loadPolicyList } from './policies.js'
 import type { ActionedSubjectRow } from './subjects.js'
 import { publicEventSelection, toSubjectView } from './views.js'
@@ -169,31 +169,14 @@ export async function hydrateSubjectViews(
     const subjectEvents = events.filter(
       (event) => (event.subjectUri ?? did) === uris[i],
     )
-    return hasKnownLatestAppealable(row.latestAppealableAt, subjectEvents)
-      ? []
-      : [uris[i]]
+    return (cfg.startAt && !row.latestAppealableAt) ||
+      !hasKnownLatestAppealable(row.latestAppealableAt, subjectEvents)
+      ? [uris[i]]
+      : []
   })
   const latestByUri = fallbackUris.length
-    ? await db.db
-        .selectFrom('moderation_event')
-        .where('subjectDid', '=', did)
-        .where('subjectType', 'in', [
-          com.atproto.admin.defs.repoRef.$type,
-          com.atproto.repo.strongRef.$type,
-        ])
-        .where(
-          sql<boolean>`coalesce("subjectUri", "subjectDid") IN (${sql.join(fallbackUris)})`,
-        )
-        .where('action', 'in', [...PUBLIC_EVENT_ACTIONS])
-        .where(appealableEventFilter)
-        .$if(cfg.startAt !== undefined, (qb) =>
-          qb.where('createdAt', '>=', cfg.startAt!),
-        )
-        .select(sql<string>`coalesce("subjectUri", "subjectDid")`.as('uri'))
-        .select(sql<DatetimeString>`max("createdAt")`.as('createdAt'))
-        .groupBy(sql`coalesce("subjectUri", "subjectDid")`)
-        .execute()
-    : []
+    ? await findLatestAppealableByUri(db, did, fallbackUris)
+    : new Map()
   return rows.flatMap((row, i) => {
     const subject = subjects[i]
     const appealReport =
@@ -214,8 +197,7 @@ export async function hydrateSubjectViews(
         firstActionAt: row.firstActionAt,
         lastActionAt: row.lastActionAt,
         latestAppealableAt: fallbackUris.includes(uris[i])
-          ? (latestByUri.find((entry) => entry.uri === uris[i])?.createdAt ??
-            null)
+          ? (latestByUri.get(uris[i]) ?? null)
           : row.latestAppealableAt,
         appealReport,
         eligibility: appealReport

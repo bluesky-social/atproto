@@ -6,7 +6,7 @@ import {
   type UriString,
   currentDatetimeString,
   toDatetimeString,
-} from '@atproto/lex'
+} from '@atproto/lex-schema'
 import { AtUri } from '@atproto/syntax'
 import { ForbiddenError, InvalidRequestError } from '@atproto/xrpc-server'
 import type { AppContext } from '../context.js'
@@ -15,7 +15,10 @@ import type { DatabaseSchemaType } from '../db/schema/index.js'
 import { jsonb } from '../db/types.js'
 import { tools } from '../lexicons/index.js'
 import type { AppealView } from '../lexicons/tools/ozone/inbox/defs.js'
-import type { ModSubject } from '../mod-service/subject.js'
+import {
+  CHAT_MESSAGE_COLLECTION,
+  type ModSubject,
+} from '../mod-service/subject.js'
 import type { ModerationSubjectStatusRow } from '../mod-service/types.js'
 import { findMatchingQueue, getQueueRoutingNote } from '../queue/service.js'
 import {
@@ -262,6 +265,7 @@ export const eventSubjectFilter = (
   return eb.and([
     eb('subjectDid', '=', subjectDid),
     eb('subjectType', '=', subjectType),
+    eb('subjectUri', 'is', null),
   ])
 }
 
@@ -273,9 +277,8 @@ export const findAppealedEvent = async (
   let query = ctx.db.db
     .selectFrom('moderation_event')
     .where((eb) => eventSubjectFilter(eb, subject))
-    .where('action', '=', action.type === 'label' ? LABEL : TAKEDOWN)
-    .$if(ctx.cfg.inbox.startAt !== undefined, (qb) =>
-      qb.where('createdAt', '>=', ctx.cfg.inbox.startAt!),
+    .where(
+      sql<boolean>`action = ${sql.lit(action.type === 'label' ? LABEL : TAKEDOWN)}`,
     )
 
   if (action.type === 'label') {
@@ -320,7 +323,9 @@ export const resolveAppealAction = async (
  * account.
  */
 export const subjectLabelUri = (subject: ModSubject): UriString =>
-  (subject.info().subjectUri ?? subject.did) as UriString
+  subject.isMessage()
+    ? `at://${subject.did}/${CHAT_MESSAGE_COLLECTION}/${subject.messageId}`
+    : ((subject.info().subjectUri ?? subject.did) as UriString)
 
 /**
  * Whether the subject's appeal history blocks this action.
@@ -446,8 +451,8 @@ export const findAppealHistory = async (db: Database, subject: ModSubject) => {
 /**
  * Reject an appeal the subject is no longer entitled to.
  *
- * Answers the same question as the `availableActions` the read path
- * advertises, through {@link appealsExhausted}, so the two cannot drift.
+ * Shares {@link appealsExhausted} with the read path. Action-specific window
+ * validation is separate; subject-only submissions retain their legacy rules.
  */
 export const assertAppealAllowed = async (
   dbTxn: Database,
@@ -455,7 +460,6 @@ export const assertAppealAllowed = async (
   options: {
     actionAt?: DatetimeString
     unresolvedAction?: boolean
-    startAt?: DatetimeString
     windowMonths: number
   },
 ) => {
@@ -478,12 +482,9 @@ export const assertAppealAllowed = async (
     const latest = await dbTxn.db
       .selectFrom('moderation_event')
       .where((eb) => eventSubjectFilter(eb, subject))
-      .where('action', 'in', [...PUBLIC_EVENT_ACTIONS])
+      .where(sql<boolean>`action IN (${sql.lit(TAKEDOWN)}, ${sql.lit(LABEL)})`)
       .where(appealableEventFilter)
       .where('createdAt', '>', eligibility.lastClosedAt)
-      .$if(options.startAt !== undefined, (qb) =>
-        qb.where('createdAt', '>=', options.startAt!),
-      )
       .orderBy('createdAt', 'desc')
       .orderBy('id', 'desc')
       .select('createdAt')
@@ -684,7 +685,6 @@ export const fileAppeal = async (
     await assertAppealAllowed(dbTxn, subject, {
       actionAt: resolvedActionAt,
       unresolvedAction: !!action && !resolvedActionAt,
-      startAt: ctx.cfg.inbox.startAt,
       windowMonths: ctx.cfg.inbox.appealWindowMonths,
     })
 
@@ -701,7 +701,7 @@ export const fileAppeal = async (
         ...(submittedBy ? { appealSubmittedBy: submittedBy } : {}),
       },
     })
-    return ctx.queueService(dbTxn).insertReportFromEvent({
+    return ctx.queueService(dbTxn).assignReportFromEvent({
       event: reportEvent,
       reportType: APPEAL_REASON_TYPE,
       queueId,

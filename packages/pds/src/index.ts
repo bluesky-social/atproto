@@ -19,6 +19,7 @@ import {
 } from '@atproto/xrpc-server'
 import apiRoutes from './api/index.js'
 import * as authRoutes from './auth-routes.js'
+import { createPublicKeyObject } from './auth-verifier.js'
 import * as basicRoutes from './basic-routes.js'
 import {
   type ServerConfig,
@@ -29,6 +30,10 @@ import {
   readEnv,
 } from './config/index.js'
 import { AppContext, type AppContextOptions } from './context.js'
+import {
+  entrywayAttribution,
+  entrywayRateLimitBypass,
+} from './entryway-attribution.js'
 import * as error from './error.js'
 import type { app } from './lexicons.js'
 import { loggerMiddleware, pdsLogger } from './logger.js'
@@ -188,21 +193,37 @@ export class PDS implements AsyncDisposable {
 
         return XRPCError.fromError(err)
       },
-      rateLimits: buildRateLimitsConfig(rateLimits, ctx.redisScratch),
+      rateLimits: buildRateLimitsConfig(
+        rateLimits,
+        ctx.redisScratch,
+        cfg.entryway ? entrywayRateLimitBypass : undefined,
+      ),
     })
 
     apiRoutes(server, ctx)
 
     const app = express()
-    app.set('trust proxy', [
-      // e.g. load balancer
-      'loopback',
-      'linklocal',
-      'uniquelocal',
-      // e.g. trust x-forwarded-for via entryway ip
-      ...getTrustedIps(cfg),
-    ])
+    app.set(
+      'trust proxy',
+      cfg.service.trustedProxies ?? [
+        // e.g. load balancer
+        'loopback',
+        'linklocal',
+        'uniquelocal',
+        // e.g. trust x-forwarded-for via entryway ip
+        ...((cfg.rateLimits.enabled && cfg.rateLimits.bypassIps) || []),
+      ],
+    )
     app.use(loggerMiddleware)
+    if (cfg.entryway) {
+      app.use(
+        entrywayAttribution({
+          entrywayDid: cfg.entryway.did,
+          pdsDid: cfg.service.did,
+          key: createPublicKeyObject(cfg.entryway.jwtPublicKeyHex),
+        }),
+      )
+    }
     app.use(compression())
     app.use(authRoutes.createRouter(ctx)) // Before CORS
     app.use(cors({ maxAge: DAY / SECOND }))
@@ -238,11 +259,4 @@ export class PDS implements AsyncDisposable {
   async [Symbol.asyncDispose]() {
     await this.destroy()
   }
-}
-
-export default PDS
-
-const getTrustedIps = (cfg: ServerConfig) => {
-  if (!cfg.rateLimits.enabled) return []
-  return cfg.rateLimits.bypassIps ?? []
 }

@@ -69,6 +69,8 @@ Prettier (`pnpm run style`) and ESLint (`pnpm run lint`) enforce what can be enf
 
   Each constant is emitted once per schema, so every reference shares one string instance instead of duplicating the literal at each call site — and the schema stays the single source of truth.
 
+- Lexicon changes must preserve backward compatibility. Do not remove existing required response fields or make them optional; deprecate them in place and keep emitting valid values.
+
 ## Logging
 
 - Never instantiate a logger inline. Each package declares its loggers as exported constants in its own `src/logger.ts`, built with `subsystemLogger('<package>:<subsystem>')`, and imports them where needed.

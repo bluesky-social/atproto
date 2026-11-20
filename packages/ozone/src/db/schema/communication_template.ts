@@ -1,5 +1,5 @@
 import type { Generated, GeneratedAlways } from 'kysely'
-import type { DidString } from '@atproto/lex'
+import type { DidString } from '@atproto/lex-schema'
 
 export const communicationTemplateTableName = 'communication_template'
 

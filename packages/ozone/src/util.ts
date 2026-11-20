@@ -2,11 +2,11 @@ import assert from 'node:assert'
 import { parseList } from 'structured-headers'
 import { createRetryable } from '@atproto/common'
 import {
-  type DidString,
   XrpcFetchError,
   XrpcInternalError,
   XrpcResponseError,
-} from '@atproto/lex'
+} from '@atproto/lex-client'
+import type { DidString } from '@atproto/lex-schema'
 import { ResponseType, XRPCError } from '@atproto/xrpc-server'
 import type { Database } from './db/index.js'
 

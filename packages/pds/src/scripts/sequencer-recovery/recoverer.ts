@@ -1,6 +1,10 @@
 import { rmIfExists } from '@atproto/common'
 import { Secp256k1Keypair } from '@atproto/crypto'
-import { type DidString, isNsidString, isRecordKeyString } from '@atproto/lex'
+import {
+  type DidString,
+  isNsidString,
+  isRecordKeyString,
+} from '@atproto/lex-schema'
 import {
   BlockMap,
   CidSet,

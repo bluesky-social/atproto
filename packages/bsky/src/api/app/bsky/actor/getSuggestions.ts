@@ -1,5 +1,6 @@
 import { mapDefined, noUndefinedVals } from '@atproto/common'
-import { type Client, type DidString, isDidString } from '@atproto/lex'
+import type { Client } from '@atproto/lex-client'
+import { type DidString, isDidString } from '@atproto/lex-schema'
 import type { Headers as HeadersMap, Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../../../context.js'
 import type { DataPlaneClient } from '../../../../data-plane/index.js'
@@ -23,11 +24,12 @@ export default function (server: Server, ctx: AppContext) {
     presentation,
   )
   server.add(app.bsky.actor.getSuggestions, {
-    auth: ctx.authVerifier.standardOptional,
+    auth: ctx.authVerifier.standardReadOptional(),
     handler: async ({ params, auth, req, signal }) => {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({
+        xrpcEndpoint: app.bsky.actor.getSuggestions.$lxm,
         viewer,
         labelers,
         features: ctx.featureGatesClient.scope(

@@ -1,4 +1,5 @@
 export * from './db.js'
 export * from './cast.js'
 export * from './migrator.js'
+export * from './sqlite-dialect.js'
 export * from './util.js'

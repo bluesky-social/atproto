@@ -1,4 +1,4 @@
-import type { DidString } from '@atproto/lex'
+import type { DidString } from '@atproto/lex-schema'
 import { ForbiddenError } from '@atproto/xrpc-server'
 import type { AuthVerifier } from '../auth-verifier.js'
 

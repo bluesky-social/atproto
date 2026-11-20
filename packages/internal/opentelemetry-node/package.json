@@ -1,6 +1,6 @@
 {
   "name": "@atproto-labs/opentelemetry-node",
-  "version": "0.4.0",
+  "version": "0.5.1",
   "license": "MIT",
   "description": "OpenTelemetry Node.js bootstrap and XRPC-aware helpers for atproto services",
   "keywords": [
@@ -64,7 +64,7 @@
     "@opentelemetry/sdk-trace": "^3.0.0",
     "@types/better-sqlite3": "^7.6.13",
     "better-sqlite3": "^12.9.0",
-    "vitest": "^4.1.10"
+    "vitest": "^5.1.1"
   },
   "scripts": {
     "test": "vitest run",

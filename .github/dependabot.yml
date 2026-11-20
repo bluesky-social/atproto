@@ -31,16 +31,12 @@ updates:
         patterns:
           - '*'
   - package-ecosystem: 'docker'
-    directories:
-      - '/services/bsky'
-      - '/services/bsync'
-      - '/services/ozone'
-      - '/services/pds'
+    directory: '/'
     schedule:
       interval: 'weekly'
     groups:
-      # All four services pin the same node:*-alpine base image; group them so
-      # a base image bump is one PR instead of four near-identical ones.
+      # The build and runtime stages pin the same node:*-alpine base image;
+      # group them so a base image bump is one PR.
       base-images:
         patterns:
           - '*'

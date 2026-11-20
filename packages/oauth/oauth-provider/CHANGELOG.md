@@ -1,5 +1,140 @@
 # @atproto/oauth-provider
 
+## 0.27.0
+
+### Minor Changes
+
+- [#5798](https://github.com/bluesky-social/atproto/pull/5798) [`bb765e9`](https://github.com/bluesky-social/atproto/commit/bb765e9bd2330900088755f29a6fb530138e39c4) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Only accept pushed authorization requests on the authorization endpoint (RFC 9126 §4), as advertised by `require_pushed_authorization_requests`
+  
+  **Breaking changes**:
+  
+  - `/oauth/authorize` only accepts a `request_uri` obtained from the PAR endpoint. Authorization requests passed by value, as plain parameters or as a request object (`request=`), are refused with `invalid_request`. Clients that skip PAR must push their authorization requests first (request objects remain supported through PAR).
+  - `OAuthProvider.authorize()` only accepts PAR queries (`client_id` and `request_uri`).
+
+- [#5798](https://github.com/bluesky-social/atproto/pull/5798) [`bb765e9`](https://github.com/bluesky-social/atproto/commit/bb765e9bd2330900088755f29a6fb530138e39c4) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add rate limiting to the OAuth provider, with two tiers on account flows when hCaptcha is configured (captcha required, then blocked)
+  
+  **Breaking changes** in `@atproto/oauth-provider`:
+  
+  - `OAuthProvider.pushedAuthorizationRequest()` requires a new `deviceMetadata` argument (the PAR requests are rate limited).
+  - `AccountManager` no longer verifies hCaptcha tokens: the API routes do, through the rate limits, before calling it. `processHcaptchaToken()` and `buildSignupData()` were removed, and `authenticateAccount()` receives a `SignInInput`.
+  - The `SignInData` and `SignUpData` types were removed. Hooks and stores receive the form inputs instead (`SignInInput`, `SignUpInput`, `InitiatePasswordResetInput` and `ConfirmResetPasswordInput`, from `@atproto/oauth-provider-api`), including the `hcaptchaToken` when one was submitted:
+    - `onSignInAttempt`, `onSignedIn` and `onSignInFailed` receive `input` instead of `data`.
+    - `onSignedUp` receives `input` instead of `data`, the invite code being `input.inviteCode`. It no longer receives the hCaptcha verification result (`data.hcaptchaResult`): use the `onHcaptchaResult` hook (`action: 'sign-up'`) instead.
+    - `AccountStore.createAccount()` receives the `inviteCode` as submitted, even when invite codes are not required (it used to be omitted). The PDS now validates and uses an invite code submitted on an OAuth sign-up whatever its configuration, as `com.atproto.server.createAccount` does.
+    - The password reset hooks (`onResetPasswordRequest`, `onResetPasswordRequested`, `onResetPasswordConfirm` and `onResetPasswordConfirmed`), as well as `AccountStore.resetPasswordRequest()` and `AccountStore.resetPasswordConfirm()`, may receive an `hcaptchaToken`.
+  - The `onSignUpAttempt` hook is now called after the sign-up rate limits and captcha verification.
+  - The `onHcaptchaResult` hook data is a union discriminated on `action` (`sign-up`, `sign-in`, `reset-password-request` or `reset-password-confirm`), each carrying its form `input`, as the hook is now called whenever a captcha is verified.
+  - `HcaptchaClientTokens.hashedHandle` was renamed `hashedIdentifier`, and is only present when the form has an identifier (the handle on sign-up). The identifier is now trimmed, lowercased and stripped of any leading `@` before being hashed, and the sign-up email is hashed as `hashedEmail`. This changes the `client_tokens` sent to hCaptcha, and the `tokens` provided to the `onHcaptchaResult` hook.
+  - A failed hCaptcha verification (including on sign-up, and when hCaptcha can't be reached) is now reported as `captcha_rejected` instead of `invalid_request`.
+  
+  New features in `@atproto/oauth-provider`:
+  
+  - `rateLimits` option: the host provides a `RateLimiterFactory` backend, and may override the `DEFAULT_RATE_LIMIT_POLICIES`. Without it, no rate limiting is performed, though the rules that have no points still apply. Each rule computes its key with a `key` function, from the context its policy provides (see `RateLimitPolicyContexts`); `ipKey`, `identifierKey`, `identifierIpKey`, `authenticatedClientKey` and `publicClientIpKey` are provided. PAR requests are limited per authenticated client (shared by all its users, 3,000 per 5 minutes), and per client and IP address for public clients (which anyone can claim to be, 50 per 5 minutes).
+  - The sign-in, sign-up, password reset request and password reset confirmation policies support a captcha tier. Sign-ups requiring a captcha is now the default captcha tier of the `sign-up` policy: a rule with no points, which every request exceeds. Such rules need no storage, so they apply even without the `rateLimits` option.
+  - `captcha_required` (HTTP 400, no hCaptcha token was provided), `captcha_rejected` (HTTP 400, the hCaptcha token failed verification) and `rate_limit_exceeded` (HTTP 429, with a `Retry-After` header) errors.
+  - `OAuthError.getResponseHeaders()` lists the headers to send along an error response (e.g. `WWW-Authenticate`, `Retry-After`).
+  
+  **Breaking changes** in `@atproto/oauth-provider-api`:
+  
+  - The `EmailString` and `IdentifierString` types are exported, and used to type `SignInInput.identifier`, `InitiatePasswordResetInput.identifier`, `SignUpInput.email` and `Account.email`. `SignUpInput.handle` is a `HandleString`.
+  - `SignInInput`, `InitiatePasswordResetInput` and `ConfirmResetPasswordInput` accept an `hcaptchaToken`.
+  
+  The sign-in and password reset forms (request and confirmation), including the account page's password change dialog, show an hCaptcha challenge when the server requires one, and how long to wait when rate limited. A 429 from a proxy in front of the server (e.g. a rate limiting edge) is reported as a rate limit whatever its body, and other error responses that are not JSON as unexpected server responses rather than as an invalid content type. That dialog no longer has an inline "Resend" button: "Back" returns to the request step, as in the signed-out flow. The PDS enables these rate limits along with its XRPC rate limits (`PDS_RATE_LIMITS_ENABLED`), using the same storage; the bypass settings (`PDS_RATE_LIMIT_BYPASS_IPS`, `PDS_RATE_LIMIT_BYPASS_KEY`) do not apply to them.
+
+### Patch Changes
+
+- [#5950](https://github.com/bluesky-social/atproto/pull/5950) [`b9b1ca7`](https://github.com/bluesky-social/atproto/commit/b9b1ca7f176b93d12e39685799c5f2e1f9a63be7) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update `vitest` to v5, `vite` to v8.3.8 and `rolldown` to v1.3.3 (dev dependencies)
+
+- [#5798](https://github.com/bluesky-social/atproto/pull/5798) [`bb765e9`](https://github.com/bluesky-social/atproto/commit/bb765e9bd2330900088755f29a6fb530138e39c4) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Provide the error page with the HTTP status it is served with (new `__errorStatus` hydration data), allowing it to recognize the errors that depend on it (e.g. rate limits)
+- Updated dependencies [[`b9b1ca7`](https://github.com/bluesky-social/atproto/commit/b9b1ca7f176b93d12e39685799c5f2e1f9a63be7), [`bb765e9`](https://github.com/bluesky-social/atproto/commit/bb765e9bd2330900088755f29a6fb530138e39c4), [`bb765e9`](https://github.com/bluesky-social/atproto/commit/bb765e9bd2330900088755f29a6fb530138e39c4), [`bb765e9`](https://github.com/bluesky-social/atproto/commit/bb765e9bd2330900088755f29a6fb530138e39c4), [`bb765e9`](https://github.com/bluesky-social/atproto/commit/bb765e9bd2330900088755f29a6fb530138e39c4), [`ce37237`](https://github.com/bluesky-social/atproto/commit/ce37237663b7ea87e8cc04cb995377d0ee5d2efd)]:
+  - @atproto/common@0.8.11
+  - @atproto-labs/fetch-node@0.4.6
+  - @atproto-labs/simple-store@0.5.2
+  - @atproto/lex-document@0.1.17
+  - @atproto/lex-resolver@0.4.7
+  - @atproto/oauth-provider-ui@0.11.1
+  - @atproto/oauth-resolver@0.0.4
+  - @atproto/oauth-scopes@0.5.15
+  - @atproto/syntax@0.7.8
+  - @atproto/oauth-provider-api@0.12.0
+  - @atproto/oauth-types@0.8.0
+  - @atproto-labs/did-resolver@0.3.14
+  - @atproto-labs/handle-resolver-node@0.2.18
+  - @atproto-labs/simple-store-memory@0.2.7
+
+## 0.26.0
+
+### Minor Changes
+
+- [#5919](https://github.com/bluesky-social/atproto/pull/5919) [`8d84a6c`](https://github.com/bluesky-social/atproto/commit/8d84a6cea64c5d0aa064f291b09c3eea2eb61b65) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Upgrade `ioredis` to 6.x. By default, the Redis clients these packages create stay on RESP2 and skip `CLIENT SETINFO` on connect, as with `ioredis` 5, and take `ioredis` 6's other new defaults:
+  
+  - `family` is `0` (was `4`): hostnames resolve to IPv4 or IPv6 addresses, not only IPv4.
+  - `retryStrategy` waits 50ms × 2^(attempt − 1), up to 5s, plus up to 200ms of jitter, between reconnection attempts (was 50ms × attempt, up to 2s).
+  - `keepAlive` is `30000`: TCP keepalive probes start after 30s of idle (was off).
+  
+  The `redis` option of `OAuthProvider` now expects an `ioredis` 6 `Redis` instance, which is used as is, or `RedisOptions`, which can override these defaults.
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/lex-resolver@0.4.6
+
+## 0.25.6
+
+### Patch Changes
+
+- Updated dependencies [[`7a46712`](https://github.com/bluesky-social/atproto/commit/7a467120982d9ff1559afeb3a26989dad5877d17)]:
+  - @atproto/common@0.8.10
+  - @atproto/lex-resolver@0.4.5
+
+## 0.25.5
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/common@0.8.9
+  - @atproto/lex-document@0.1.16
+  - @atproto/lex-resolver@0.4.4
+
+## 0.25.4
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto-labs/did-resolver@0.3.13
+  - @atproto-labs/fetch-node@0.4.5
+  - @atproto/oauth-provider-ui@0.11.0
+  - @atproto/oauth-resolver@0.0.3
+  - @atproto/lex-resolver@0.4.3
+  - @atproto-labs/handle-resolver-node@0.2.17
+
+## 0.25.3
+
+### Patch Changes
+
+- [#5782](https://github.com/bluesky-social/atproto/pull/5782) [`7aa8e7e`](https://github.com/bluesky-social/atproto/commit/7aa8e7e9e1422f053447879def4d4cf92a05adbb) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Match TypeScript project references to workspace dependencies
+- Updated dependencies [[`07c25d4`](https://github.com/bluesky-social/atproto/commit/07c25d410d4f4ad8f6ec80fc14efa0dd8ec55545), [`7aa8e7e`](https://github.com/bluesky-social/atproto/commit/7aa8e7e9e1422f053447879def4d4cf92a05adbb)]:
+  - @atproto/lex-document@0.1.15
+  - @atproto-labs/pipe@0.2.5
+  - @atproto/lex-resolver@0.4.2
+  - @atproto-labs/did-resolver@0.3.12
+  - @atproto-labs/fetch-node@0.4.4
+  - @atproto/common@0.8.8
+  - @atproto/oauth-provider-ui@0.11.0
+  - @atproto/oauth-resolver@0.0.2
+  - @atproto-labs/handle-resolver-node@0.2.16
+
+## 0.25.2
+
+### Patch Changes
+
+- [#5747](https://github.com/bluesky-social/atproto/pull/5747) [`63bc474`](https://github.com/bluesky-social/atproto/commit/63bc4747175c82497596e9ffaeaaaf83804b0311) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Record the scopes a user approved on the consent screen, not the scopes the client requested.
+
+- [#5753](https://github.com/bluesky-social/atproto/pull/5753) [`3bfd00f`](https://github.com/bluesky-social/atproto/commit/3bfd00f484dc144482c82a4ed248adc49e6be769) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Bound the decoded size of every stage of a multi-coding `content-encoding` chain, and reject bodies listing too many content-codings
+- Updated dependencies [[`3bfd00f`](https://github.com/bluesky-social/atproto/commit/3bfd00f484dc144482c82a4ed248adc49e6be769), [`3bfd00f`](https://github.com/bluesky-social/atproto/commit/3bfd00f484dc144482c82a4ed248adc49e6be769), [`3bfd00f`](https://github.com/bluesky-social/atproto/commit/3bfd00f484dc144482c82a4ed248adc49e6be769), [`3bfd00f`](https://github.com/bluesky-social/atproto/commit/3bfd00f484dc144482c82a4ed248adc49e6be769)]:
+  - @atproto/common@0.8.7
+  - @atproto/lex-resolver@0.4.1
+
 ## 0.25.1
 
 ### Patch Changes

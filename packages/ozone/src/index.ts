@@ -13,7 +13,7 @@ import {
   Query,
   Subscription,
   walk,
-} from '@atproto/lex'
+} from '@atproto/lex-schema'
 import { createServer, extractUrlNsid } from '@atproto/xrpc-server'
 import API, { health, wellKnown } from './api/index.js'
 import type { OzoneConfig, OzoneSecrets } from './config/index.js'
@@ -70,7 +70,7 @@ export class OzoneService {
     app.use(loggerMiddleware)
     app.use(compression())
 
-    const ctx = await AppContext.fromConfig(cfg, secrets, overrides)
+    const ctx = await AppContext.fromConfig(cfg, secrets, overrides, register)
 
     let server = createServer([], {
       validateResponse: false,

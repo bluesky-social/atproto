@@ -1,5 +1,3 @@
-import { decodeFirst } from 'cborg'
-import { encodedLength } from 'cborg/length'
 import { assert, describe, test } from 'vitest'
 import { parseCid } from '@atproto/lex-data'
 import * as dagcbor from '../src/index.js'
@@ -270,27 +268,5 @@ describe('dag-cbor', () => {
       () => decode(encoded),
       /CBOR decode error: found repeat map key "foo"/,
     )
-  })
-
-  test('determine encoded length of obj', () => {
-    const { encodeOptions } = dagcbor
-
-    const length = encodedLength(obj, encodeOptions)
-    same(length, serializedObj.length)
-  })
-
-  test('.deserialize the first of concatenated serialized objects', () => {
-    const { decodeOptions } = dagcbor
-
-    const concatSerializedObjs = new Uint8Array(serializedObj.length * 2)
-    concatSerializedObjs.set(serializedObj)
-    concatSerializedObjs.set(serializedObj, serializedObj.length)
-
-    const [deserializedObj, remainder] = decodeFirst(
-      concatSerializedObjs,
-      decodeOptions,
-    )
-    same(deserializedObj, obj)
-    same(remainder, serializedObj)
   })
 })

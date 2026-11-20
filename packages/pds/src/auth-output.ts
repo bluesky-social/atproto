@@ -19,6 +19,13 @@ export type ModServiceOutput = {
   }
 }
 
+export type EntrywayServiceOutput = {
+  credentials: {
+    type: 'entryway_service'
+    did: DidString
+  }
+}
+
 export type AccessOutput<S extends AuthScope = AuthScope> = {
   credentials: {
     type: 'access'

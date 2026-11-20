@@ -1,5 +1,5 @@
 import assert from 'node:assert'
-import type { Un$Typed } from '@atproto/lex'
+import type { Un$Typed } from '@atproto/lex-schema'
 import type { AtUriString, DidString } from '@atproto/syntax'
 import { UpstreamFailureError } from '@atproto/xrpc-server'
 import type { AppContext } from '../../../../context.js'

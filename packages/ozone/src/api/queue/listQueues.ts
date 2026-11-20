@@ -1,4 +1,4 @@
-import { isNsidString } from '@atproto/lex'
+import { isNsidString } from '@atproto/lex-schema'
 import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../context.js'
 import { tools } from '../../lexicons/index.js'

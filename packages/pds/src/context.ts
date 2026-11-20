@@ -8,7 +8,7 @@ import type * as undici from 'undici'
 import { KmsKeypair, S3BlobStore } from '@atproto/aws'
 import * as crypto from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
-import { Client } from '@atproto/lex'
+import { Client } from '@atproto/lex-client'
 import { parseCid } from '@atproto/lex-data'
 import {
   AccessTokenMode,
@@ -53,11 +53,13 @@ import { fetchLogger, lexiconResolverLogger, oauthLogger } from './logger.js'
 import { ServerMailer } from './mailer/index.js'
 import { ModerationMailer } from './mailer/moderation.js'
 import { buildProxyAgent } from './pipethrough.js'
+import { buildOAuthRateLimiterFactory } from './rate-limits.js'
 import {
   LocalViewer,
   type LocalViewerCreator,
 } from './read-after-write/viewer.js'
 import { getRedisClient } from './redis.js'
+import { FailOpenReplayStore } from './replay-store.js'
 import { Sequencer } from './sequencer/index.js'
 
 export type AppContextOptions = {
@@ -80,6 +82,7 @@ export type AppContextOptions = {
   entrywayClient?: Client
   entrywayAdminClient?: Client
   proxyAgent: undici.Dispatcher
+  appViewProxyAgent?: undici.Dispatcher
   safeFetch: Fetch
   oauthProvider?: OAuthProvider
   authVerifier: AuthVerifier
@@ -107,6 +110,7 @@ export class AppContext implements AsyncDisposable {
   public entrywayClient: Client | undefined
   public entrywayAdminClient: Client | undefined
   public proxyAgent: undici.Dispatcher
+  public appViewProxyAgent: undici.Dispatcher | undefined
   public safeFetch: Fetch
   public authVerifier: AuthVerifier
   public oauthProvider?: OAuthProvider
@@ -133,6 +137,7 @@ export class AppContext implements AsyncDisposable {
     this.entrywayClient = opts.entrywayClient
     this.entrywayAdminClient = opts.entrywayAdminClient
     this.proxyAgent = opts.proxyAgent
+    this.appViewProxyAgent = opts.appViewProxyAgent
     this.safeFetch = opts.safeFetch
     this.authVerifier = opts.authVerifier
     this.oauthProvider = opts.oauthProvider
@@ -246,9 +251,14 @@ export class AppContext implements AsyncDisposable {
       crawlers,
       undefined,
       cfg.db.disableWalAutoCheckpoint,
+      cfg.db.synchronousFull,
     )
     const redisScratch = cfg.redis
       ? getRedisClient(cfg.redis.address, cfg.redis.password)
+      : undefined
+    // Without Redis the OAuth provider and verifier check replays in memory.
+    const replayStore = redisScratch
+      ? new FailOpenReplayStore(redisScratch)
       : undefined
 
     const bskyAppView = cfg.bskyAppView
@@ -280,7 +290,7 @@ export class AppContext implements AsyncDisposable {
       : undefined
     const entrywayClient = cfg.entryway
       ? new Client(
-          { service: cfg.entryway.url },
+          { service: cfg.entryway.apiUrl },
           {
             // Trust internal services to send us well-formed responses
             strictResponseProcessing: false,
@@ -292,7 +302,7 @@ export class AppContext implements AsyncDisposable {
       cfg.entryway && secrets.entrywayAdminToken
         ? new Client(
             {
-              service: cfg.entryway.url,
+              service: cfg.entryway.apiUrl,
               headers: {
                 authorization: basicAuthHeader(
                   'admin',
@@ -440,6 +450,11 @@ export class AppContext implements AsyncDisposable {
 
     // An agent for performing HTTP requests based on user provided URLs.
     const proxyAgent = buildProxyAgent(cfg.proxy)
+    // The operator sets the AppView's URL, so unlike a DID document's service
+    // endpoint, it is allowed to resolve to a private address.
+    const appViewProxyAgent = cfg.bskyAppView
+      ? buildProxyAgent({ ...cfg.proxy, disableSsrfProtection: true })
+      : undefined
 
     const oauthProvider = cfg.oauth.provider
       ? new OAuthProvider({
@@ -457,7 +472,12 @@ export class AppContext implements AsyncDisposable {
             cfg.service.publicUrl,
             cfg.identity.recoveryDidKey,
           ),
-          redis: redisScratch,
+          replayStore,
+          rateLimits: cfg.rateLimits.enabled
+            ? {
+                factory: buildOAuthRateLimiterFactory(redisScratch),
+              }
+            : undefined,
           dpopSecret: secrets.dpopSecret,
           inviteCodeRequired: cfg.invites.required,
           availableUserDomains: cfg.identity.serviceHandleDomains,
@@ -507,12 +527,12 @@ export class AppContext implements AsyncDisposable {
               isTrusted: cfg.oauth.provider?.trustedClients?.includes(clientId),
             }
           },
-          onSignedUp({ account, data, clientId }) {
+          onSignedUp({ account, input, clientId }) {
             events.accountCreated({
               source: 'oauth',
               did: account.did,
               clientId,
-              invited: data.inviteCode != null,
+              invited: input.inviteCode != null,
               deactivated: false,
             })
           },
@@ -558,7 +578,7 @@ export class AppContext implements AsyncDisposable {
         issuer: cfg.oauth.issuer,
         keyset: [await JoseKey.fromKeyLike(jwtPublicKey!, undefined, 'ES256K')],
         dpopSecret: secrets.dpopSecret,
-        redis: redisScratch,
+        replayStore,
         onDecodeToken: async ({ payload, dpopProof }) => {
           // @TODO drop this once oauth provider no longer accepts DPoP proof with
           // query or fragment in "htu" claim.
@@ -590,6 +610,15 @@ export class AppContext implements AsyncDisposable {
           entryway: cfg.entryway?.did,
           modService: cfg.modService?.did,
         },
+        entrywayServiceAuth: cfg.entryway
+          ? {
+              didKey: crypto.formatDidKey(
+                crypto.SECP256K1_JWT_ALG,
+                ui8.fromString(cfg.entryway.jwtPublicKeyHex, 'hex'),
+              ),
+              required: cfg.entryway.requireServiceAuth,
+            }
+          : undefined,
       },
     )
 
@@ -613,6 +642,7 @@ export class AppContext implements AsyncDisposable {
       entrywayClient,
       entrywayAdminClient,
       proxyAgent,
+      appViewProxyAgent,
       safeFetch,
       authVerifier,
       oauthProvider,
@@ -694,12 +724,20 @@ export class AppContext implements AsyncDisposable {
           await this.accountManager.close()
         } finally {
           try {
-            await this.redisScratch?.quit()
+            // A Redis that doesn't answer QUIT (it times out) mustn't fail
+            // shutdown: drop the connection instead.
+            await this.redisScratch
+              ?.quit()
+              .catch(() => this.redisScratch?.disconnect())
           } finally {
             try {
               await this.proxyAgent.destroy()
             } finally {
-              await this.blobstore[Symbol.asyncDispose]()
+              try {
+                await this.appViewProxyAgent?.destroy()
+              } finally {
+                await this.blobstore[Symbol.asyncDispose]()
+              }
             }
           }
         }

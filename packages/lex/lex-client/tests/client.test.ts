@@ -1,15 +1,22 @@
-import { assert, describe, expect, it, vi } from 'vitest'
+import { assert, describe, expect, expectTypeOf, it, vi } from 'vitest'
 import { type LexValue, cidForLex } from '@atproto/lex-cbor'
 import { cidForRawBytes, isTypedBlobRef, parseCid } from '@atproto/lex-data'
 import { lexParse, lexToJson } from '@atproto/lex-json'
-import { LexValidationError, currentDatetimeString } from '@atproto/lex-schema'
+import {
+  LexValidationError,
+  currentDatetimeString,
+  l,
+} from '@atproto/lex-schema'
 import {
   type Action,
   Client,
   type FetchHandler,
   XrpcAuthenticationError,
+  type XrpcBinaryStream,
+  XrpcInternalError,
   XrpcInvalidResponseError,
   XrpcResponseError,
+  XrpcStreamResponse,
   buildAgent,
 } from '../src/index.js'
 import {
@@ -28,25 +35,28 @@ const cborCid = parseCid(
 
 describe(Client, () => {
   describe('atproto-* headers', () => {
-    it('defaults "service" to atproto-proxy headers set through the per-request headers option', async () => {
+    it('overrides atproto-proxy headers set through the per-request headers option', async () => {
       const fetchHandler = vi.fn<FetchHandler>(async (_url, _init) => {
         return Response.json({ preferences: [] })
       })
 
-      const client = new Client(fetchHandler)
+      const headers = { 'atproto-proxy': 'did:plc:existing#service' }
 
-      await client.xrpc(com.example.actor.getPreferences, {
-        headers: {
-          'atproto-proxy': 'did:plc:existing#service',
-        },
+      // Removed when the client has no "service"
+      await new Client(fetchHandler).xrpc(com.example.actor.getPreferences, {
+        headers,
       })
 
-      expect(fetchHandler).toHaveBeenCalledOnce()
+      // Replaced by the client's "service"
+      await new Client(fetchHandler, {
+        service: 'did:plc:client#service',
+      }).xrpc(com.example.actor.getPreferences, { headers })
 
-      const [_url, init] = fetchHandler.mock.calls[0]
-      const headers = new Headers(init?.headers)
-
-      expect(headers.get('atproto-proxy')).toBe('did:plc:existing#service')
+      expect(fetchHandler).toHaveBeenCalledTimes(2)
+      const proxies = fetchHandler.mock.calls.map(([_url, init]) =>
+        new Headers(init?.headers).get('atproto-proxy'),
+      )
+      expect(proxies).toEqual([null, 'did:plc:client#service'])
     })
 
     it('uses the "atproto-proxy" header as fallback for the "service" option', async () => {
@@ -125,6 +135,35 @@ describe(Client, () => {
       const headers = new Headers(init?.headers)
       expect(headers.get('atproto-proxy')).toBe('did:plc:new#service')
       expect(headers.get('atproto-accept-labelers')).toBe('did:plc:new')
+    })
+
+    it('merges per-request headers provided as a function with the instance headers', async () => {
+      const service = 'did:plc:ewvi7nxzyoun6zhxrhs64oiz#bsky_appview'
+
+      const fetchHandler = vi.fn<FetchHandler>(async (_url, _init) => {
+        return Response.json({ preferences: [] })
+      })
+
+      const client = new Client(fetchHandler, {
+        service,
+        headers: { 'x-instance': 'instance', 'x-shared': 'instance' },
+      })
+
+      await client.xrpc(com.example.actor.getPreferences, {
+        headers: async () => ({
+          'x-shared': 'request',
+          'atproto-proxy': 'did:plc:ignored#service',
+        }),
+      })
+
+      expect(fetchHandler).toHaveBeenCalledOnce()
+
+      const [_url, init] = fetchHandler.mock.calls[0]
+      const headers = new Headers(init?.headers)
+      expect(headers.get('x-instance')).toBe('instance')
+      expect(headers.get('x-shared')).toBe('request')
+      // Not used as fallback: the client's default "service" applies
+      expect(headers.get('atproto-proxy')).toBe(service)
     })
 
     it('allows default proxy and labeler headers to be disabled per request', async () => {
@@ -408,6 +447,110 @@ describe(Client, () => {
           enabled: 'not-a-boolean',
         })
       }).rejects.toThrow('Expected boolean value')
+    })
+
+    it('calls actions without input when their input is optional', async () => {
+      const client = new Client(vi.fn<FetchHandler>())
+
+      async function optionalInput(
+        _client: Client,
+        input?: { value: string },
+      ): Promise<string> {
+        return input?.value ?? 'default'
+      }
+      const voidInput: Action<void, string> = async () => 'void'
+      const requiredInput: Action<{ value: string }, string> = async (
+        _client,
+        input,
+      ) => input.value
+
+      await expect(client.call(optionalInput)).resolves.toBe('default')
+      await expect(client.call(optionalInput, { value: 'set' })).resolves.toBe(
+        'set',
+      )
+      await expect(client.call(voidInput)).resolves.toBe('void')
+
+      // @ts-expect-error required input
+      await expect(client.call(requiredInput)).rejects.toThrow()
+    })
+
+    it('infers the type parameters of generic actions', async () => {
+      const client = new Client(vi.fn<FetchHandler>())
+
+      type Shape = { kind: string }
+      type Square = { kind: 'square' }
+      type Circle = { kind: 'circle' }
+
+      // An omitted `shapes` falls back to the constraint of S (not to its
+      // default), hence `undefined` in the constraint.
+      async function pick<
+        const S extends readonly Shape[] | undefined = undefined,
+      >(
+        _client: Client,
+        input: { shapes?: S },
+      ): Promise<undefined extends S ? Square : NonNullable<S>[number]> {
+        return (input.shapes?.[0] ?? { kind: 'square' }) as any
+      }
+
+      const circle: Circle = { kind: 'circle' }
+      const square: Square = { kind: 'square' }
+      const shapes: readonly Shape[] = [circle]
+
+      expectTypeOf(
+        await client.call(pick, { shapes: [circle] }),
+      ).toEqualTypeOf<Circle>()
+      expectTypeOf(
+        await client.call(pick, { shapes: [circle, square] }),
+      ).toEqualTypeOf<Circle | Square>()
+      expectTypeOf(await client.call(pick, {})).toEqualTypeOf<Square>()
+      expectTypeOf(await client.call(pick, { shapes })).toEqualTypeOf<Shape>()
+
+      await expect(client.call(pick, { shapes: [circle] })).resolves.toEqual(
+        circle,
+      )
+
+      // With optional input properties left out
+      async function pickWith<
+        const S extends readonly Shape[] | undefined = undefined,
+      >(
+        _client: Client,
+        input: { shapes?: S; filter?: (shape: Shape) => boolean },
+      ): Promise<undefined extends S ? Square : NonNullable<S>[number]> {
+        return (input.shapes?.find(input.filter ?? Boolean) ?? square) as any
+      }
+
+      expectTypeOf(
+        await client.call(pickWith, { shapes: [circle] }),
+      ).toEqualTypeOf<Circle>()
+    })
+
+    it('infers the input and output of non-generic actions', async () => {
+      const client = new Client(vi.fn<FetchHandler>())
+
+      const plain: Action<{ value: string }, number> = async (_c, input) =>
+        input.value.length
+      async function binary(_client: Client, input: Uint8Array) {
+        return input.length
+      }
+      function sync(_client: Client, input: 'a' | 'b'): 'sync' {
+        return input && 'sync'
+      }
+
+      expectTypeOf(
+        await client.call(plain, { value: 'abc' }),
+      ).toEqualTypeOf<number>()
+      expectTypeOf(
+        await client.call(binary, new Uint8Array(3)),
+      ).toEqualTypeOf<number>()
+      expectTypeOf(await client.call(sync, 'a')).toEqualTypeOf<'sync'>()
+      expectTypeOf(
+        await client.call({ main: plain }, { value: 'abc' }),
+      ).toEqualTypeOf<number>()
+
+      // @ts-expect-error excess property
+      await client.call(plain, { value: 'abc', extra: true })
+      // @ts-expect-error invalid input
+      await client.call(sync, 'c')
     })
   })
 
@@ -817,7 +960,7 @@ describe(Client, () => {
 
       const { body } = await client.uploadBlob(data)
 
-      expect(fetchHandler).toHaveBeenCalledTimes(2)
+      expect(fetchHandler).toHaveBeenCalledTimes(1)
       assert(isTypedBlobRef(body.blob))
       expect(body.blob.$type).toBe('blob')
       expect(body.blob.mimeType).toBe('application/octet-stream')
@@ -833,7 +976,7 @@ describe(Client, () => {
 
       const { body } = await client.uploadBlob(data)
 
-      expect(fetchHandler).toHaveBeenCalledTimes(3)
+      expect(fetchHandler).toHaveBeenCalledTimes(1)
       assert(isTypedBlobRef(body.blob))
       expect(body.blob.$type).toBe('blob')
       expect(body.blob.mimeType).toBe('application/octet-stream')
@@ -841,6 +984,245 @@ describe(Client, () => {
       expect(body.blob.ref).toEqual(
         await cidForRawBytes(new TextEncoder().encode('hello world')),
       )
+    })
+  })
+
+  describe('binary responses', () => {
+    const did = 'did:plc:alice'
+    const cid = 'bafkreifjjcie6lypi6ny7amxnfftagclbuxndqonfipmb64f2km2devei4'
+    const bytes = new Uint8Array([1, 2, 3])
+
+    const getBytes = l.query(
+      'com.example.blob.getBytes',
+      l.params(),
+      l.payload('*/*', undefined),
+    )
+
+    it('fetches blobs as Uint8Array, ignoring the default "service" and "labelers"', async () => {
+      const fetchHandler = vi.fn<FetchHandler>(async (url, init) => {
+        expect(url).toBe(
+          `/xrpc/com.atproto.sync.getBlob?${new URLSearchParams({ did, cid })}`,
+        )
+        const headers = new Headers(init?.headers)
+        expect(headers.has('atproto-proxy')).toBe(false)
+        expect(headers.has('atproto-accept-labelers')).toBe(false)
+        return new Response(bytes, { headers: { 'content-type': 'image/png' } })
+      })
+
+      const client = new Client(fetchHandler, {
+        service: 'did:plc:ewvi7nxzyoun6zhxrhs64oiz#bsky_appview',
+        labelers: ['did:plc:ewvi7nxzyoun6zhxrhs64oiz'],
+      })
+
+      const response = await client.getBlob(did, cid)
+
+      expect(fetchHandler).toHaveBeenCalledOnce()
+      expect(response.encoding).toBe('image/png')
+      expect(response.body).toBeInstanceOf(Uint8Array)
+      expect(response.body).toEqual(bytes)
+    })
+
+    it('returns binary bodies from call()', async () => {
+      const fetchHandler = vi.fn<FetchHandler>(
+        async () =>
+          new Response(bytes, {
+            headers: { 'content-type': 'application/octet-stream' },
+          }),
+      )
+
+      const client = new Client(fetchHandler)
+
+      const body = await client.call(getBytes)
+
+      expect(body).toBeInstanceOf(Uint8Array)
+      expect(body).toEqual(bytes)
+    })
+
+    describe('streaming', () => {
+      const fetchHandler: FetchHandler = async () =>
+        new Response(bytes, {
+          headers: { 'content-type': 'application/octet-stream' },
+        })
+
+      async function readStream(stream: ReadableStream<Uint8Array>) {
+        return new Uint8Array(await new Response(stream).arrayBuffer())
+      }
+
+      it('streams binary responses with xrpcStream()', async () => {
+        const client = new Client(fetchHandler)
+
+        await using response = await client.xrpcStream(getBytes)
+
+        expect(response).toBeInstanceOf(XrpcStreamResponse)
+        expectTypeOf(response.body).toEqualTypeOf<XrpcBinaryStream>()
+        await expect(readStream(response.body)).resolves.toEqual(bytes)
+      })
+
+      it('returns disposable results from xrpcStreamSafe()', async () => {
+        const client = new Client(fetchHandler)
+
+        await using result = await client.xrpcStreamSafe(getBytes)
+
+        assert(result.success)
+        expectTypeOf(result.body).toEqualTypeOf<XrpcBinaryStream>()
+        await expect(readStream(result.body)).resolves.toEqual(bytes)
+      })
+
+      it('returns disposable failures from xrpcStreamSafe()', async () => {
+        const client = new Client(async () =>
+          Response.json({ error: 'InvalidRequest' }, { status: 400 }),
+        )
+
+        await using result = await client.xrpcStreamSafe(getBytes)
+
+        assert(!result.success)
+        expect(result).toBeInstanceOf(XrpcResponseError)
+      })
+
+      it('allows cancelling unconsumed streams', async () => {
+        const response = new Response(bytes, {
+          headers: { 'content-type': 'application/octet-stream' },
+        })
+        const client = new Client(async () => response)
+
+        const result = await client.xrpcStream(getBytes)
+        result.cancel()
+
+        expect(response.bodyUsed).toBe(true)
+      })
+
+      it('streams blobs, ignoring the default "service" and "labelers"', async () => {
+        const fetchHandler = vi.fn<FetchHandler>(async (url, init) => {
+          expect(url).toBe(
+            `/xrpc/com.atproto.sync.getBlob?${new URLSearchParams({ did, cid })}`,
+          )
+          const headers = new Headers(init?.headers)
+          expect(headers.has('atproto-proxy')).toBe(false)
+          expect(headers.has('atproto-accept-labelers')).toBe(false)
+          return new Response(bytes, {
+            headers: { 'content-type': 'image/png' },
+          })
+        })
+
+        const client = new Client(fetchHandler, {
+          service: 'did:plc:ewvi7nxzyoun6zhxrhs64oiz#bsky_appview',
+          labelers: ['did:plc:ewvi7nxzyoun6zhxrhs64oiz'],
+        })
+
+        await using response = await client.getBlobStream(did, cid)
+
+        expect(fetchHandler).toHaveBeenCalledOnce()
+        expect(response.encoding).toBe('image/png')
+        expectTypeOf(response.body).toEqualTypeOf<XrpcBinaryStream>()
+        await expect(readStream(response.body)).resolves.toEqual(bytes)
+      })
+
+      it('rejects methods that do not declare a binary output', async () => {
+        const fetchHandler = vi.fn<FetchHandler>()
+        const client = new Client(fetchHandler)
+
+        await expect(
+          client.xrpcStream(
+            // @ts-expect-error JSON-only output
+            com.example.actor.getPreferences,
+          ),
+        ).rejects.toSatisfy((err) => {
+          assert(err instanceof XrpcInternalError)
+          expect(err.cause).toBeInstanceOf(TypeError)
+          return true
+        })
+        expect(fetchHandler).not.toHaveBeenCalled()
+      })
+
+      it('preserves excess property checks', async () => {
+        const client = new Client(fetchHandler)
+
+        await using _ = await client.getBlobStream(did, cid, {
+          // @ts-expect-error unknown option
+          signl: undefined,
+        })
+      })
+
+      it('applies the client-wide "onCancellationError" option', async () => {
+        const cancelError = new Error('cancel failed')
+        const onCancellationError = vi.fn()
+        const client = new Client(
+          async () =>
+            new Response(
+              new ReadableStream<Uint8Array>({
+                start: (controller) => controller.enqueue(bytes),
+                cancel: () => {
+                  throw cancelError
+                },
+              }),
+              { status: 302 },
+            ),
+          { onCancellationError },
+        )
+
+        await expect(client.xrpc(getBytes, {})).rejects.toBeInstanceOf(
+          XrpcInvalidResponseError,
+        )
+
+        await vi.waitFor(() => {
+          expect(onCancellationError).toHaveBeenCalledExactlyOnceWith(
+            cancelError,
+          )
+        })
+        expect(new Client(fetchHandler).xrpcDefaults.onCancellationError).toBe(
+          'propagate',
+        )
+        expect(
+          new Client(fetchHandler, { onCancellationError: 'log' }).xrpcDefaults
+            .onCancellationError,
+        ).toBe('log')
+      })
+
+      it('applies "onCancellationError" when disposing of responses', async () => {
+        const cancelError = new Error('cancel failed')
+        const failingCancelResponse = async () =>
+          new Response(
+            new ReadableStream<Uint8Array>({
+              start: (controller) => controller.enqueue(bytes),
+              cancel: () => {
+                throw cancelError
+              },
+            }),
+            { headers: { 'content-type': 'application/octet-stream' } },
+          )
+
+        const onCancellationError = vi.fn()
+        const client = new Client(failingCancelResponse, {
+          onCancellationError,
+        })
+        {
+          await using _ = await client.xrpcStream(getBytes)
+        }
+        await vi.waitFor(() => {
+          expect(onCancellationError).toHaveBeenCalledExactlyOnceWith(
+            cancelError,
+          )
+        })
+
+        const strictClient = new Client(failingCancelResponse, {
+          onCancellationError: 'propagate',
+        })
+        await expect(
+          (async () => {
+            await using _ = await strictClient.xrpcStream(getBytes)
+          })(),
+        ).rejects.toBe(cancelError)
+      })
+
+      it('does not make buffered responses disposable', async () => {
+        const client = new Client(fetchHandler)
+
+        const response = await client.getBlob(did, cid)
+        const result = await client.xrpcSafe(getBytes, {})
+
+        expectTypeOf(response).not.toExtend<AsyncDisposable | Disposable>()
+        expectTypeOf(result).not.toExtend<AsyncDisposable | Disposable>()
+      })
     })
   })
 

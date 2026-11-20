@@ -8,11 +8,8 @@ import {
   type AtIdentifierString,
   type DidString,
   isDidString,
-} from '@atproto/lex'
-import {
-  OAuthError,
-  WWWAuthenticateError,
-} from '@atproto/oauth-provider/errors'
+} from '@atproto/lex-schema'
+import { OAuthError } from '@atproto/oauth-provider/errors'
 import type {
   OAuthVerifier,
   VerifyTokenPayloadOptions,
@@ -38,6 +35,7 @@ import type { ActorAccount } from './account-manager/helpers/account.js'
 import type {
   AccessOutput,
   AdminTokenOutput,
+  EntrywayServiceOutput,
   ModServiceOutput,
   OAuthOutput,
   RefreshOutput,
@@ -78,7 +76,15 @@ export type AuthVerifierOpts = {
     entryway?: string
     modService?: string
   }
+  entrywayServiceAuth?: {
+    /** did:key form of the entryway's JWT verify key */
+    didKey: string
+    required: boolean
+  }
 }
+
+const ENTRYWAY_SERVICE_JWT_MAX_LIFETIME_SEC = 5 * 60
+const ENTRYWAY_SERVICE_JWT_CLOCK_TOLERANCE_SEC = 30
 
 export type VerifyBearerJwtOptions<S extends AuthScope = AuthScope> =
   WithRequired<
@@ -99,6 +105,7 @@ export class AuthVerifier {
   private _publicUrl: string
   private _jwtKey: KeyObject
   private _adminPass: string
+  private _entrywayServiceAuth: AuthVerifierOpts['entrywayServiceAuth']
   public dids: AuthVerifierOpts['dids']
 
   constructor(
@@ -110,6 +117,7 @@ export class AuthVerifier {
     this._publicUrl = opts.publicUrl
     this._jwtKey = opts.jwtKey
     this._adminPass = opts.adminPass
+    this._entrywayServiceAuth = opts.entrywayServiceAuth
     this.dids = opts.dids
   }
 
@@ -172,6 +180,54 @@ export class AuthVerifier {
         return this.adminToken(ctx)
       }
     }
+
+  public entrywayService: MethodAuthVerifier<EntrywayServiceOutput> = async (
+    ctx,
+  ) => {
+    setAuthHeaders(ctx.res)
+    const payload = await this.verifyEntrywayServiceJwt(ctx.req)
+    return {
+      credentials: {
+        type: 'entryway_service',
+        did: payload.iss,
+      },
+    }
+  }
+
+  public entrywayServiceOptional: MethodAuthVerifier<
+    EntrywayServiceOutput | UnauthenticatedOutput
+  > = async (ctx) => {
+    if (extractAuthType(ctx.req) === AuthType.BEARER) {
+      return this.entrywayService(ctx)
+    }
+    this.assertEntrywayServiceAuthNotRequired(ctx.res)
+    return this.unauthenticated(ctx)
+  }
+
+  public adminTokenOrEntrywayService: MethodAuthVerifier<
+    AdminTokenOutput | EntrywayServiceOutput
+  > = async (ctx) => {
+    if (!this._entrywayServiceAuth) {
+      return this.adminToken(ctx)
+    }
+    if (extractAuthType(ctx.req) === AuthType.BEARER) {
+      return this.entrywayService(ctx)
+    }
+    this.assertEntrywayServiceAuthNotRequired(ctx.res)
+    return this.adminToken(ctx)
+  }
+
+  public moderatorOrEntrywayService: MethodAuthVerifier<
+    AdminTokenOutput | ModServiceOutput | EntrywayServiceOutput
+  > = async (ctx) => {
+    if (extractAuthType(ctx.req) === AuthType.BEARER) {
+      return this.isEntrywayIssuedJwt(ctx.req)
+        ? this.entrywayService(ctx)
+        : this.modService(ctx)
+    }
+    this.assertEntrywayServiceAuthNotRequired(ctx.res)
+    return this.adminToken(ctx)
+  }
 
   protected access<S extends AuthScope>(
     options: VerifiedOptions & Required<ScopedOptions<S>>,
@@ -390,17 +446,14 @@ export class AuthVerifier {
           verifyTokenOptions,
         )
         .catch((err) => {
-          // Make sure to include any WWW-Authenticate header in the response
-          // (particularly useful for DPoP's "use_dpop_nonce" error)
-          if (err instanceof WWWAuthenticateError) {
-            res.setHeader('WWW-Authenticate', err.wwwAuthenticateHeader)
-            res.appendHeader(
-              'Access-Control-Expose-Headers',
-              'WWW-Authenticate',
-            )
-          }
-
           if (err instanceof OAuthError) {
+            if (!res.headersSent) {
+              for (const [name, value] of err.getResponseHeaders()) {
+                res.setHeader(name, value)
+                res.appendHeader('Access-Control-Expose-Headers', name)
+              }
+            }
+
             throw new XRPCError(err.status, err.error_description, err.error)
           }
 
@@ -582,6 +635,76 @@ export class AuthVerifier {
       )
     }
     return payload
+  }
+
+  protected async verifyEntrywayServiceJwt(req: IncomingMessage) {
+    const entrywayDid = this.dids.entryway
+    const didKey = this._entrywayServiceAuth?.didKey
+    if (!entrywayDid || !didKey) {
+      throw new AuthRequiredError('Untrusted issuer', 'UntrustedIss')
+    }
+
+    const jwtStr = bearerTokenFromReq(req)
+    if (!jwtStr) {
+      throw new AuthRequiredError('missing jwt', 'MissingJwt')
+    }
+
+    // @NOTE Unlike this.verifyServiceJwt(), the key comes from config rather
+    // than the issuer's DID document, and the entryway is not an accepted
+    // audience: these tokens are minted for this PDS only.
+    const payload = await verifyServiceJwt(
+      jwtStr,
+      this.dids.pds,
+      parseReqNsid(req),
+      async (iss) => {
+        if (iss !== entrywayDid) {
+          throw new AuthRequiredError('Untrusted issuer', 'UntrustedIss')
+        }
+        return didKey
+      },
+    )
+
+    // @NOTE xrpc-server's verifyJwt pins neither "alg" (an empty one skips its
+    // algorithm check) nor "typ", and does not bound token lifetime; the
+    // entryway token contract requires all three.
+    const { alg, typ } = jose.decodeProtectedHeader(jwtStr)
+    if (alg !== 'ES256K') {
+      throw new AuthRequiredError(`Invalid jwt algorithm "${alg}"`, 'BadJwtAlg')
+    }
+    if (typ !== 'JWT') {
+      throw new AuthRequiredError(`Invalid jwt type "${typ}"`, 'BadJwtType')
+    }
+    const { iat } = jose.decodeJwt(jwtStr)
+    if (
+      typeof iat !== 'number' ||
+      iat > Date.now() / 1000 + ENTRYWAY_SERVICE_JWT_CLOCK_TOLERANCE_SEC
+    ) {
+      throw new AuthRequiredError('jwt iat is missing or invalid', 'BadJwtIat')
+    }
+    if (payload.exp - iat > ENTRYWAY_SERVICE_JWT_MAX_LIFETIME_SEC) {
+      throw new AuthRequiredError('jwt lifetime is too long', 'BadJwtLifetime')
+    }
+
+    return payload
+  }
+
+  protected isEntrywayIssuedJwt(req: IncomingMessage): boolean {
+    if (!this.dids.entryway || !this._entrywayServiceAuth) return false
+    const token = bearerTokenFromReq(req)
+    if (!token) return false
+    try {
+      return jose.decodeJwt(token).iss === this.dids.entryway
+    } catch {
+      // Malformed tokens are left to the fallback verifier to reject.
+      return false
+    }
+  }
+
+  protected assertEntrywayServiceAuthNotRequired(res: ServerResponse): void {
+    if (this._entrywayServiceAuth?.required) {
+      setAuthHeaders(res)
+      throw new AuthRequiredError('Entryway service auth required')
+    }
   }
 }
 

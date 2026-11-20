@@ -120,7 +120,7 @@ These suites are stateful — each `it` builds on the account state the previous
 
 ```sh
 cd packages/pds
-pnpm test -- tests/oauth.test.ts
+pnpm test tests/oauth.test.ts
 ```
 
 Go through `pnpm test`: it wraps jest in the postgres/redis script, and `pretest` installs the Chrome build puppeteer needs.

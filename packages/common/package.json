@@ -1,6 +1,6 @@
 {
   "name": "@atproto/common",
-  "version": "0.8.6",
+  "version": "0.8.11",
   "license": "MIT",
   "description": "Shared web-platform-friendly code for atproto libraries",
   "keywords": [
@@ -36,7 +36,7 @@
   },
   "devDependencies": {
     "uint8arrays": "^5.0.0",
-    "vitest": "^4.1.10"
+    "vitest": "^5.1.1"
   },
   "scripts": {
     "test": "vitest run",

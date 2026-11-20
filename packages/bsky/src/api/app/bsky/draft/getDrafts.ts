@@ -1,11 +1,12 @@
-import { type DatetimeString, lexParse } from '@atproto/lex'
+import { lexParse } from '@atproto/lex-json'
+import type { DatetimeString } from '@atproto/lex-schema'
 import type { Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../../../context.js'
 import { app } from '../../../../lexicons/index.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(app.bsky.draft.getDrafts, {
-    auth: ctx.authVerifier.standard,
+    auth: ctx.authVerifier.standardRead(),
     handler: async ({ params, auth }) => {
       const viewer = auth.credentials.iss
 

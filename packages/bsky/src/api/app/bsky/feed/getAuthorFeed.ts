@@ -1,5 +1,5 @@
 import { mapDefined } from '@atproto/common'
-import type { AtUriString } from '@atproto/lex'
+import type { AtUriString } from '@atproto/lex-schema'
 import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../../../context.js'
 import type { DataPlaneClient } from '../../../../data-plane/index.js'
@@ -27,12 +27,13 @@ export default function (server: Server, ctx: AppContext) {
     presentation,
   )
   server.add(app.bsky.feed.getAuthorFeed, {
-    auth: ctx.authVerifier.optionalStandardOrRole,
+    auth: ctx.authVerifier.standardReadOrRoleOptional,
     handler: async ({ params, auth, req }) => {
       const { viewer, includeTakedowns, skipViewerBlocks } =
         ctx.authVerifier.parseCreds(auth)
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({
+        xrpcEndpoint: app.bsky.feed.getAuthorFeed.$lxm,
         labelers,
         viewer,
         includeTakedowns,
@@ -66,6 +67,9 @@ export default function (server: Server, ctx: AppContext) {
 
 const FILTER_TO_FEED_TYPE = {
   posts_with_replies: undefined, // default: all posts, replies, and reposts
+  // @NOTE no dedicated Tango feed type; use the mixed feed and exclude reposts
+  // before hydration so bounded page filling counts only eligible items.
+  posts_and_replies_only: undefined,
   posts_no_replies: FeedType.POSTS_NO_REPLIES,
   posts_with_media: FeedType.POSTS_WITH_MEDIA,
   posts_and_author_threads: FeedType.POSTS_AND_AUTHOR_THREADS,
@@ -114,6 +118,10 @@ export const skeleton = async (inputs: {
       ? { uri: item.repost as AtUriString, cid: item.repostCid || undefined }
       : undefined,
   }))
+
+  if (params.filter === 'posts_and_replies_only') {
+    items = items.filter((item) => !item.repost)
+  }
 
   if (shouldInsertPinnedPost && pinnedPost) {
     const pinnedItem = {

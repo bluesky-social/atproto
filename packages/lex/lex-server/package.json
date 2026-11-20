@@ -1,6 +1,6 @@
 {
   "name": "@atproto/lex-server",
-  "version": "0.2.0",
+  "version": "0.2.6",
   "license": "MIT",
   "description": "Request router for Atproto Lexicon protocols and schemas",
   "keywords": [
@@ -51,7 +51,7 @@
   "devDependencies": {
     "@atproto/lex-client": "workspace:^",
     "@types/ws": "^8.18.1",
-    "vitest": "^4.1.10"
+    "vitest": "^5.1.1"
   },
   "scripts": {
     "build": "tsc --build tsconfig.build.json",

@@ -23,7 +23,7 @@ Jest packages extend [tsconfig/jest.tsconfig.json](../../../../tsconfig/jest.tsc
 }
 ```
 
-`./tsconfig.build.json` covers the package's own build-time deps and is all most jest packages have. Of the 13, only `api`, `ozone`, `pds`, and `sync` add the `dev-env` entry, because their tests import `@atproto/dev-env` while `src` doesn't. `packages/did` has jest tests but no `tsconfig.test.json` at all — a gap, not a pattern.
+`./tsconfig.build.json` covers the package's own build-time deps and is all most jest packages have. Of the jest packages, only `api`, `ozone`, `pds`, and `sync` add the `dev-env` entry, because their tests import `@atproto/dev-env` while `src` doesn't. `packages/did` has jest tests but no `tsconfig.test.json` at all — a gap, not a pattern.
 
 The `include` glob covers colocated `src/**/*.test.ts` even though jest packages barely use them (`packages/api/src/age-assurance.test.ts` is the only one) — leave it as-is so the two runners' configs stay uniform. A package adding custom matchers also needs them declared: [packages/api](../../../../packages/api/tsconfig.test.json) sets `"types": ["jest", "./jest.d.ts"]` to pick up its ambient `jest.d.ts`.
 

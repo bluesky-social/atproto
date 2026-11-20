@@ -112,13 +112,14 @@
           },
           "sortField": {
             "type": "string",
+            "description": "The reportedRecordsCount and takendownRecordsCount values are deprecated and use lastReportedAt instead.",
             "default": "lastReportedAt",
             "enum": [
               "lastReviewedAt",
               "lastReportedAt",
+              "priorityScore",
               "reportedRecordsCount",
-              "takendownRecordsCount",
-              "priorityScore"
+              "takendownRecordsCount"
             ]
           },
           "sortDirection": {
@@ -170,18 +171,6 @@
             "type": "string",
             "description": "If specified, subjects of the given type (account, record, or conversation) will be returned. When this is set to 'account' the 'collections' parameter will be ignored. When includeAllUserRecords or subject is set, this will be ignored.",
             "knownValues": ["account", "record", "conversation"]
-          },
-          "minAccountSuspendCount": {
-            "type": "integer",
-            "description": "If specified, only subjects that belong to an account that has at least this many suspensions will be returned."
-          },
-          "minReportedRecordsCount": {
-            "type": "integer",
-            "description": "If specified, only subjects that belong to an account that has at least this many reported records will be returned."
-          },
-          "minTakendownRecordsCount": {
-            "type": "integer",
-            "description": "If specified, only subjects that belong to an account that has at least this many taken down records will be returned."
           },
           "minPriorityScore": {
             "minimum": 0,

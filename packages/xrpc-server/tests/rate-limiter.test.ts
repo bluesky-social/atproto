@@ -1,5 +1,6 @@
 import type * as http from 'node:http'
 import type { AddressInfo } from 'node:net'
+import type { RateLimiterAbstract } from 'rate-limiter-flexible'
 import { MINUTE } from '@atproto/common'
 import type { LexiconDoc } from '@atproto/lexicon'
 import { XrpcClient } from '@atproto/xrpc'
@@ -8,6 +9,18 @@ import { MemoryRateLimiter } from '../src/index.js'
 import { closeServer, createServer } from './_util.js'
 
 const LEXICONS: LexiconDoc[] = [
+  {
+    lexicon: 1,
+    id: 'io.example.authLimit',
+    defs: {
+      main: {
+        type: 'query',
+        output: {
+          encoding: 'application/json',
+        },
+      },
+    },
+  },
   {
     lexicon: 1,
     id: 'io.example.routeLimit',
@@ -116,6 +129,18 @@ const LEXICONS: LexiconDoc[] = [
   },
   {
     lexicon: 1,
+    id: 'io.example.defaultKeyLimit',
+    defs: {
+      main: {
+        type: 'query',
+        output: {
+          encoding: 'application/json',
+        },
+      },
+    },
+  },
+  {
+    lexicon: 1,
     id: 'io.example.nonExistent',
     defs: {
       main: {
@@ -133,7 +158,9 @@ describe('Parameters', () => {
   const server = xrpcServer.createServer(LEXICONS, {
     rateLimits: {
       creator: (opts) => new MemoryRateLimiter(opts),
-      bypass: ({ req }) => req.headers['x-ratelimit-bypass'] === 'bypass',
+      bypass: ({ req, auth }) =>
+        req.headers['x-ratelimit-bypass'] === 'bypass' ||
+        (auth ? auth.credentials === 'trusted' : false),
       shared: [
         {
           name: 'shared-limit',
@@ -149,6 +176,19 @@ describe('Parameters', () => {
         },
       ],
     },
+  })
+  server.method('io.example.authLimit', {
+    auth: ({ req }) => ({
+      credentials: req.headers['x-trusted'] === 'yes' ? 'trusted' : null,
+    }),
+    rateLimit: {
+      durationMs: 5 * MINUTE,
+      points: 1,
+    },
+    handler: () => ({
+      encoding: 'json',
+      body: {},
+    }),
   })
   server.method('io.example.routeLimit', {
     rateLimit: {
@@ -337,5 +377,173 @@ describe('Parameters', () => {
       calls.push(makeCall())
     }
     await Promise.all(calls)
+  })
+
+  it('can bypass rate limits based on the auth result', async () => {
+    const makeCall = (headers: Record<string, string>) =>
+      client.call('io.example.authLimit', {}, {}, { headers })
+    for (let i = 0; i < 3; i++) {
+      await makeCall({ 'x-trusted': 'yes' })
+    }
+    await expect(Promise.all([makeCall({}), makeCall({})])).rejects.toThrow(
+      'Rate Limit Exceeded',
+    )
+  })
+})
+
+describe('skipDefaultKeyedRouteLimits', () => {
+  let s: http.Server
+  const server = xrpcServer.createServer(LEXICONS, {
+    rateLimits: {
+      creator: (opts) => new MemoryRateLimiter(opts),
+      skipDefaultKeyedRouteLimits: true,
+      shared: [
+        {
+          name: 'shared-limit',
+          durationMs: 5 * MINUTE,
+          points: 2,
+        },
+      ],
+      global: [
+        {
+          name: 'global-ip',
+          durationMs: 5 * MINUTE,
+          points: 100,
+        },
+      ],
+    },
+  })
+  server.method('io.example.defaultKeyLimit', {
+    rateLimit: {
+      durationMs: 5 * MINUTE,
+      points: 1,
+    },
+    handler: () => ({
+      encoding: 'json',
+      body: {},
+    }),
+  })
+  server.method('io.example.routeLimit', {
+    rateLimit: [
+      {
+        durationMs: 5 * MINUTE,
+        points: 1,
+      },
+      {
+        durationMs: 5 * MINUTE,
+        points: 2,
+        calcKey: ({ params }) => params.str as string,
+      },
+    ],
+    handler: (ctx) => ({
+      encoding: 'json',
+      body: ctx.params,
+    }),
+  })
+  server.method('io.example.sharedLimitOne', {
+    rateLimit: {
+      name: 'shared-limit',
+      calcPoints: ({ params }) => params.points as number,
+    },
+    handler: (ctx) => ({
+      encoding: 'json',
+      body: ctx.params,
+    }),
+  })
+
+  let client: XrpcClient
+  beforeAll(async () => {
+    s = await createServer(server)
+    const { port } = s.address() as AddressInfo
+    client = new XrpcClient(`http://localhost:${port}`, LEXICONS)
+  })
+  afterAll(async () => {
+    await closeServer(s)
+  })
+
+  it('skips route limits without their own calcKey', async () => {
+    for (let i = 0; i < 3; i++) {
+      await client.call('io.example.defaultKeyLimit')
+    }
+  })
+
+  it('applies route limits with their own calcKey', async () => {
+    const makeCall = (str: string) =>
+      client.call('io.example.routeLimit', { str })
+    await makeCall('a')
+    await makeCall('a')
+    await expect(makeCall('a')).rejects.toThrow('Rate Limit Exceeded')
+    await makeCall('b')
+  })
+
+  it('applies shared limits', async () => {
+    await client.call('io.example.sharedLimitOne', { points: 1 })
+    await client.call('io.example.sharedLimitOne', { points: 1 })
+    await expect(
+      client.call('io.example.sharedLimitOne', { points: 1 }),
+    ).rejects.toThrow('Rate Limit Exceeded')
+  })
+
+  it('applies global limits to routes whose limits were all skipped', async () => {
+    const makeCall = () => client.call('io.example.defaultKeyLimit')
+    const calls: Promise<unknown>[] = []
+    for (let i = 0; i < 110; i++) {
+      calls.push(makeCall())
+    }
+    await expect(Promise.all(calls)).rejects.toThrow('Rate Limit Exceeded')
+  })
+})
+
+describe('a failing rate-limit store', () => {
+  let s: http.Server
+  // Every consume fails with a system error, as against a Redis that's down.
+  const storeDown = {
+    consume: async () => {
+      throw new Error('store down')
+    },
+  } as unknown as RateLimiterAbstract
+  const server = xrpcServer.createServer(LEXICONS, {
+    rateLimits: {
+      creator: (opts) => new xrpcServer.RateLimiter(storeDown, opts),
+      global: [{ name: 'global-ip', durationMs: MINUTE, points: 100 }],
+    },
+  })
+  server.method('io.example.routeLimit', {
+    rateLimit: {
+      durationMs: 5 * MINUTE,
+      points: 1,
+      calcKey: ({ params }) => params.str as string,
+    },
+    handler: (ctx) => ({
+      encoding: 'json',
+      body: ctx.params,
+    }),
+  })
+  server.method('io.example.noLimit', {
+    rateLimit: { durationMs: 5 * MINUTE, points: 1, failClosed: true },
+    handler: () => ({
+      encoding: 'json',
+      body: {},
+    }),
+  })
+
+  let client: XrpcClient
+  beforeAll(async () => {
+    s = await createServer(server)
+    const { port } = s.address() as AddressInfo
+    client = new XrpcClient(`http://localhost:${port}`, LEXICONS)
+  })
+  afterAll(async () => {
+    await closeServer(s)
+  })
+
+  it('lets requests through a route limit', async () => {
+    for (let i = 0; i < 3; i++) {
+      await client.call('io.example.routeLimit', { str: 'a' })
+    }
+  })
+
+  it('fails a route limit that asks to fail closed', async () => {
+    await expect(client.call('io.example.noLimit')).rejects.toThrow()
   })
 })

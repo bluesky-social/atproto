@@ -1,6 +1,6 @@
 import { sql } from 'kysely'
 import { MINUTE } from '@atproto/common'
-import { currentDatetimeString } from '@atproto/lex'
+import { currentDatetimeString } from '@atproto/lex-schema'
 import type { Database } from '../db/index.js'
 import type { DateString } from '../db/schema/report_stat.js'
 import { dbLogger } from '../logger.js'

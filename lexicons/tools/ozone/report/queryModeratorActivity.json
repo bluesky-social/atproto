@@ -1,0 +1,107 @@
+{
+  "lexicon": 1,
+  "id": "tools.ozone.report.queryModeratorActivity",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "Read authorized moderator events and report activity in one chronological history.",
+      "parameters": {
+        "type": "params",
+        "required": ["moderator", "createdAfter", "createdBefore"],
+        "properties": {
+          "moderator": {
+            "type": "string",
+            "format": "did"
+          },
+          "createdAfter": {
+            "type": "string",
+            "format": "datetime",
+            "description": "Inclusive UTC lower bound."
+          },
+          "createdBefore": {
+            "type": "string",
+            "format": "datetime",
+            "description": "Exclusive UTC upper bound."
+          },
+          "types": {
+            "type": "array",
+            "maxLength": 40,
+            "items": {
+              "type": "string"
+            }
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "default": 50
+          },
+          "cursor": {
+            "type": "string",
+            "maxLength": 512
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["rows"],
+          "properties": {
+            "rows": {
+              "type": "array",
+              "items": {
+                "type": "ref",
+                "ref": "#activityRow"
+              }
+            },
+            "cursor": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "activityRow": {
+      "type": "object",
+      "required": ["source", "id", "createdAt", "createdBy", "type"],
+      "properties": {
+        "source": {
+          "type": "string",
+          "enum": ["event", "activity"]
+        },
+        "id": {
+          "type": "integer"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "datetime"
+        },
+        "createdBy": {
+          "type": "string",
+          "format": "did"
+        },
+        "type": {
+          "type": "string"
+        },
+        "subject": {
+          "type": "string"
+        },
+        "reportId": {
+          "type": "integer"
+        },
+        "actionEventId": {
+          "type": "integer"
+        },
+        "event": {
+          "type": "ref",
+          "ref": "tools.ozone.moderation.defs#modEventView"
+        },
+        "activity": {
+          "type": "ref",
+          "ref": "tools.ozone.report.defs#reportActivityView"
+        }
+      }
+    }
+  }
+}

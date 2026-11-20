@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Close eligible reports on a subject matching the given criteria. Assigned and escalated reports are excluded. Reports whose current status does not permit a transition to closed are skipped silently. Intended for automated flows that resolve reports without taking action on the subject.",
+      "description": "Close eligible reports on a subject matching the given criteria, optionally linking an existing moderation action. Assigned, escalated, and actively assigned reports are excluded unless explicitly targeted by reportId. Reports whose current status does not permit a transition to closed are skipped silently.",
       "input": {
         "encoding": "application/json",
         "schema": {
@@ -21,15 +21,25 @@
               "default": false,
               "description": "If true, also close reports on all subjects owned by the account, including records, messages, and conversations. Only valid when subject is an account DID."
             },
+            "reportId": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "An explicitly targeted report in the requested subject scope. It is included even if assigned, escalated, or not in reportTypes; excludedReportTypes still applies."
+            },
             "reportTypes": {
               "type": "array",
               "items": { "type": "string" },
-              "description": "If nonempty, only reports of the given report types (fully qualified reason NSIDs) are closed. When omitted or empty, all eligible reports in the requested subject scope are targeted, except excludedReportTypes. Assigned and escalated reports are always excluded."
+              "description": "If nonempty, eligible reports of the given report types (fully qualified reason NSIDs) are closed, in addition to reportId. When omitted or empty, all eligible reports in the requested subject scope are targeted, except excludedReportTypes. Assigned, escalated, and actively assigned reports are excluded unless explicitly targeted by reportId."
             },
             "excludedReportTypes": {
               "type": "array",
               "items": { "type": "string" },
               "description": "Reports of these types (fully qualified reason NSIDs) are excluded from closure and left unchanged. When omitted or empty, no report types are excluded."
+            },
+            "actionEventId": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Optional existing moderation event that closes reports. It must target the exact subject or its owning account; account-wide closure requires an account event. The event is linked to each closed report and may predate the report. The link does not imply the action is still in effect."
             },
             "internalNote": {
               "type": "string",

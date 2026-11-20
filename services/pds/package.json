@@ -2,6 +2,10 @@
   "name": "pds-service",
   "private": true,
   "type": "module",
+  "files": [
+    "index.ts",
+    "run-script.ts"
+  ],
   "dependencies": {
     "@atproto/pds": "workspace:^"
   }

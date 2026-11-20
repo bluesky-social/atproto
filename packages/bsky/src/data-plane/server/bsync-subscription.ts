@@ -1,5 +1,5 @@
 import assert from 'node:assert'
-import { lexParse } from '@atproto/lex'
+import { lexParse } from '@atproto/lex-json'
 import { AtUri } from '@atproto/syntax'
 import {
   type BsyncClient,

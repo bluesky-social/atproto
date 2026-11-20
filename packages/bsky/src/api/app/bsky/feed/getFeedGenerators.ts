@@ -20,7 +20,7 @@ export default function (server: Server, ctx: AppContext) {
     presentation,
   )
   server.add(app.bsky.feed.getFeedGenerators, {
-    auth: ctx.authVerifier.standardOptional,
+    auth: ctx.authVerifier.standardReadOptional(),
     opts: {
       // @TODO remove after grace period has passed, behavior is non-standard.
       // temporarily added for compat w/ previous version of xrpc-server to avoid breakage of a few specified parties.
@@ -29,7 +29,11 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ params, auth, req }) => {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
-      const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
+      const hydrateCtx = await ctx.hydrator.createContext({
+        labelers,
+        viewer,
+        xrpcEndpoint: app.bsky.feed.getFeedGenerators.$lxm,
+      })
       const view = await getFeedGenerators({ ...params, hydrateCtx }, ctx)
       return {
         encoding: 'application/json',

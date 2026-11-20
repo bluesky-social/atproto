@@ -12,12 +12,16 @@ import { resHeaders } from '../../../util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(app.bsky.feed.getFeedGenerator, {
-    auth: ctx.authVerifier.standardOptional,
+    auth: ctx.authVerifier.standardReadOptional(),
     handler: async ({ params, auth, req }) => {
       const { feed } = params
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
-      const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
+      const hydrateCtx = await ctx.hydrator.createContext({
+        labelers,
+        viewer,
+        xrpcEndpoint: app.bsky.feed.getFeedGenerator.$lxm,
+      })
       const hydration = await ctx.hydrator.hydrateFeedGens([feed], hydrateCtx)
       const feedInfo = hydration.feedgens?.get(feed)
       if (!feedInfo) {

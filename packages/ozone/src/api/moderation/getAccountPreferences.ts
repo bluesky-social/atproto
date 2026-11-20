@@ -1,4 +1,4 @@
-import { buildAgent, xrpc } from '@atproto/lex'
+import { buildAgent, xrpc } from '@atproto/lex-client'
 import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../context.js'
 import { app, com, tools } from '../../lexicons/index.js'

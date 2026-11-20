@@ -7,11 +7,11 @@ import {
   type PluginTransformResultArgs,
   type QueryResult,
   type RootOperationNode,
-  SqliteDialect,
   type UnknownRow,
   sql,
 } from 'kysely'
 import { dbLogger } from '../logger.js'
+import { LockingSqliteDialect } from './sqlite-dialect.js'
 import { retrySqlite } from './util.js'
 
 const DEFAULT_PRAGMAS = {
@@ -38,7 +38,7 @@ export class Database<Schema> implements AsyncDisposable {
       sqliteDb.pragma(`${pragma} = ${pragmas[pragma]}`)
     }
     const db = new Kysely<T>({
-      dialect: new SqliteDialect({
+      dialect: new LockingSqliteDialect({
         database: sqliteDb,
       }),
     })
@@ -47,6 +47,12 @@ export class Database<Schema> implements AsyncDisposable {
 
   async ensureWal() {
     await sql`PRAGMA journal_mode = WAL`.execute(this.db)
+  }
+
+  // Not retried: callers wrap this in retrySqlite(). On a fresh connection it
+  // can be the first statement, which may hit SQLITE_BUSY during WAL recovery.
+  async ensureSynchronousFull() {
+    await sql`PRAGMA synchronous = FULL`.execute(this.db)
   }
 
   async transactionNoRetry<T>(

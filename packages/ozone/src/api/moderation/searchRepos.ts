@@ -1,5 +1,5 @@
 import { mapDefined } from '@atproto/common'
-import { isDidString } from '@atproto/lex'
+import { isDidString } from '@atproto/lex-schema'
 import type { Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../context.js'
 import { app, tools } from '../../lexicons/index.js'

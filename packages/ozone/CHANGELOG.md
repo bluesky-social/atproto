@@ -1,5 +1,221 @@
 # @atproto/ozone
 
+## 0.16.0
+
+### Minor Changes
+
+- [#5943](https://github.com/bluesky-social/atproto/pull/5943) [`b6adb51`](https://github.com/bluesky-social/atproto/commit/b6adb51325ae1822f081ea447174671b2744e074) Thanks [@foysalit](https://github.com/foysalit)! - Use moderator or admin authentication for moderation inbox push consumers.
+
+### Patch Changes
+
+- [#5947](https://github.com/bluesky-social/atproto/pull/5947) [`57ac20d`](https://github.com/bluesky-social/atproto/commit/57ac20d8f387707e66fc88cdf57ff88b76678331) Thanks [@foysalit](https://github.com/foysalit)! - Include current account and record status in moderation inbox report details.
+
+- [#5922](https://github.com/bluesky-social/atproto/pull/5922) [`f1155c4`](https://github.com/bluesky-social/atproto/commit/f1155c41163947e583036a041ea6195b7efd0247) Thanks [@gcwill70](https://github.com/gcwill70)! - Create report rows atomically with report events and route pending reports independently of event ingestion.
+
+- [#5951](https://github.com/bluesky-social/atproto/pull/5951) [`6ebb491`](https://github.com/bluesky-social/atproto/commit/6ebb491acbc5158b64ff9e3dbb14aed0de5cd3f1) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Build the strict-queue migration test fixture in a rolled-back transaction, so it no longer drops a schema in the shared test database while other packages run migrations.
+- Updated dependencies [[`b9b1ca7`](https://github.com/bluesky-social/atproto/commit/b9b1ca7f176b93d12e39685799c5f2e1f9a63be7), [`6ee0f4d`](https://github.com/bluesky-social/atproto/commit/6ee0f4d7971dcc71efaab785aff4d4ef341a1c32), [`ce37237`](https://github.com/bluesky-social/atproto/commit/ce37237663b7ea87e8cc04cb995377d0ee5d2efd), [`ce37237`](https://github.com/bluesky-social/atproto/commit/ce37237663b7ea87e8cc04cb995377d0ee5d2efd), [`6ee0f4d`](https://github.com/bluesky-social/atproto/commit/6ee0f4d7971dcc71efaab785aff4d4ef341a1c32), [`ce37237`](https://github.com/bluesky-social/atproto/commit/ce37237663b7ea87e8cc04cb995377d0ee5d2efd), [`ce37237`](https://github.com/bluesky-social/atproto/commit/ce37237663b7ea87e8cc04cb995377d0ee5d2efd), [`ce37237`](https://github.com/bluesky-social/atproto/commit/ce37237663b7ea87e8cc04cb995377d0ee5d2efd), [`ce37237`](https://github.com/bluesky-social/atproto/commit/ce37237663b7ea87e8cc04cb995377d0ee5d2efd), [`ce37237`](https://github.com/bluesky-social/atproto/commit/ce37237663b7ea87e8cc04cb995377d0ee5d2efd), [`ce37237`](https://github.com/bluesky-social/atproto/commit/ce37237663b7ea87e8cc04cb995377d0ee5d2efd), [`ce37237`](https://github.com/bluesky-social/atproto/commit/ce37237663b7ea87e8cc04cb995377d0ee5d2efd), [`ce37237`](https://github.com/bluesky-social/atproto/commit/ce37237663b7ea87e8cc04cb995377d0ee5d2efd), [`ce37237`](https://github.com/bluesky-social/atproto/commit/ce37237663b7ea87e8cc04cb995377d0ee5d2efd), [`ce37237`](https://github.com/bluesky-social/atproto/commit/ce37237663b7ea87e8cc04cb995377d0ee5d2efd), [`ce37237`](https://github.com/bluesky-social/atproto/commit/ce37237663b7ea87e8cc04cb995377d0ee5d2efd), [`ce37237`](https://github.com/bluesky-social/atproto/commit/ce37237663b7ea87e8cc04cb995377d0ee5d2efd), [`6ee0f4d`](https://github.com/bluesky-social/atproto/commit/6ee0f4d7971dcc71efaab785aff4d4ef341a1c32), [`6ee0f4d`](https://github.com/bluesky-social/atproto/commit/6ee0f4d7971dcc71efaab785aff4d4ef341a1c32), [`ce37237`](https://github.com/bluesky-social/atproto/commit/ce37237663b7ea87e8cc04cb995377d0ee5d2efd), [`8a0e077`](https://github.com/bluesky-social/atproto/commit/8a0e077d4667a59df2aa10dfde0f9c4bc1a9fd1b)]:
+  - @atproto/common@0.8.11
+  - @atproto-labs/fetch-node@0.4.6
+  - @atproto-labs/opentelemetry-node@0.5.1
+  - @atproto/lex-client@0.6.0
+  - @atproto/lex-data@0.1.11
+  - @atproto/lex-password-session@0.3.4
+  - @atproto/lex-schema@0.3.0
+  - @atproto/syntax@0.7.8
+  - @atproto/ws-client@0.2.2
+  - @atproto/crypto@0.5.8
+  - @atproto/xrpc-server@0.13.14
+  - @atproto/identity@0.5.24
+
+## 0.15.3
+
+### Patch Changes
+
+- [#5927](https://github.com/bluesky-social/atproto/pull/5927) [`bc2ac56`](https://github.com/bluesky-social/atproto/commit/bc2ac561f723e0d85cafcfd2cf80747f00ec4093) Thanks [@amckinley](https://github.com/amckinley)! - Let inbox appeals target moderation actions taken before `OZONE_INBOX_START_AT`. Eligibility uses the full history while displayed history and hidden action dates remain cutoff-filtered.
+
+## 0.15.2
+
+### Patch Changes
+
+- [#5897](https://github.com/bluesky-social/atproto/pull/5897) [`e1c4481`](https://github.com/bluesky-social/atproto/commit/e1c448148c7ecf21aff45edc8c922630049b9b14) Thanks [@foysalit](https://github.com/foysalit)! - Allow filtering automatic record language tags by record type.
+
+- [#5776](https://github.com/bluesky-social/atproto/pull/5776) [`7efa83f`](https://github.com/bluesky-social/atproto/commit/7efa83ff50c31069b730443978e8a7edc4f1da62) Thanks [@foysalit](https://github.com/foysalit)! - Add optional push notification delivery for the moderation inbox.
+
+- [#5931](https://github.com/bluesky-social/atproto/pull/5931) [`ce21dda`](https://github.com/bluesky-social/atproto/commit/ce21dda25d4ab002bccbcb7b0ea16629ea2ea88b) Thanks [@foysalit](https://github.com/foysalit)! - Skip automatic language tagging for conversation and message subjects.
+- Updated dependencies [[`b5dfe0b`](https://github.com/bluesky-social/atproto/commit/b5dfe0b80ac4f14f56b3c9b797e0e50d2e194a3b), [`b5dfe0b`](https://github.com/bluesky-social/atproto/commit/b5dfe0b80ac4f14f56b3c9b797e0e50d2e194a3b), [`b5dfe0b`](https://github.com/bluesky-social/atproto/commit/b5dfe0b80ac4f14f56b3c9b797e0e50d2e194a3b)]:
+  - @atproto/lex-password-session@0.3.3
+  - @atproto/lex-client@0.5.0
+  - @atproto/xrpc-server@0.13.13
+
+## 0.15.1
+
+### Patch Changes
+
+- [#5909](https://github.com/bluesky-social/atproto/pull/5909) [`d330b0c`](https://github.com/bluesky-social/atproto/commit/d330b0ca6ff6ecdaaef4ef6ab56caf750d0c4b74) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Accept only internal service tokens on the internal endpoints, and remove the `viewer` parameter from `internal.bsky.actor.getProfiles`. `app.bsky.feed.getPosts` and `app.bsky.actor.getProfiles` no longer accept service JWTs for `chat.bsky.*` methods. Ozone no longer installs the unused `internal.bsky.actor.getProfiles` lexicon.
+
+- [#4722](https://github.com/bluesky-social/atproto/pull/4722) [`b9f1f1d`](https://github.com/bluesky-social/atproto/commit/b9f1f1d2b169cc509e192350496049cf93d6115d) Thanks [@gcwill70](https://github.com/gcwill70)! - Add bounded bulk moderation actions with per-subject report targeting, external IDs, and partial-failure results.
+
+- [#5913](https://github.com/bluesky-social/atproto/pull/5913) [`50877cc`](https://github.com/bluesky-social/atproto/commit/50877ccd37254ad8170c6cdcdd38014b377203d5) Thanks [@foysalit](https://github.com/foysalit)! - Allow bulk report closure to explicitly include the report being reviewed while protecting other active reviews.
+
+## 0.15.0
+
+### Minor Changes
+
+- [#5900](https://github.com/bluesky-social/atproto/pull/5900) [`f174012`](https://github.com/bluesky-social/atproto/commit/f174012f740357c0dfa6c2525a9d69562dbd7f38) Thanks [@gcwill70](https://github.com/gcwill70)! - Add admin-only moderator activity history combining human report activities and moderation events in chronological order.
+
+## 0.14.3
+
+### Patch Changes
+
+- [#5895](https://github.com/bluesky-social/atproto/pull/5895) [`3459596`](https://github.com/bluesky-social/atproto/commit/3459596f6f5fa684ae616249deaec6e7a39700bd) Thanks [@gcwill70](https://github.com/gcwill70)! - Update `emitEvent.reportAction` to allow account level actions to target reports on owned subjects using `subjects` and `subjectTypes`.
+
+## 0.14.2
+
+### Patch Changes
+
+- [#5887](https://github.com/bluesky-social/atproto/pull/5887) [`0264f20`](https://github.com/bluesky-social/atproto/commit/0264f20f515311158427f87909b45b84d1d441c8) Thanks [@foysalit](https://github.com/foysalit)! - Link eligible reports on an account and its content to the account action when acknowledging account subjects.
+
+- [#5893](https://github.com/bluesky-social/atproto/pull/5893) [`f0653de`](https://github.com/bluesky-social/atproto/commit/f0653de696169e16dc003f11877b9eb0ae6533c0) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add `app.bsky.unspecced.getAtmosphereTimelineV2`, with actor profiles in `relatedViews`, subject refs for each activity, and publication viewer subscriptions. Livestream views now include `lastSeenAt`.
+
+- [#5880](https://github.com/bluesky-social/atproto/pull/5880) [`e9fbdab`](https://github.com/bluesky-social/atproto/commit/e9fbdab8e2302e3e01ea923c2db5ee4d7ff33681) Thanks [@blackmichael](https://github.com/blackmichael)! - Add optional `photoCount` to gallery views using the dataplane's total `social.grain.gallery.item` backlink count, independently of the hydrated preview items.
+
+- [#5892](https://github.com/bluesky-social/atproto/pull/5892) [`a704f10`](https://github.com/bluesky-social/atproto/commit/a704f10c040a989244cfa578e65f006ff7de0f83) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Expose optional App Store and Google Play links on Atmosphere Explore app cards while preserving optional profiles and profile-first images.
+
+- [#5879](https://github.com/bluesky-social/atproto/pull/5879) [`a44c12d`](https://github.com/bluesky-social/atproto/commit/a44c12d63d3aa72cc78b367f37b186606b1caa8b) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Stop the reporterDid backfill test from dropping and re-adding the column, which raced with other packages' tests on the shared test database.
+
+- [#5869](https://github.com/bluesky-social/atproto/pull/5869) [`a65dc6a`](https://github.com/bluesky-social/atproto/commit/a65dc6a807af0184d68e5d275e9f5d93579cebfc) Thanks [@foysalit](https://github.com/foysalit)! - Fix moderation actions, report matching, and status views for chat messages.
+  Message label, takedown, and reverse-takedown events are rejected; apply those
+  actions to the account instead.
+
+- [#5886](https://github.com/bluesky-social/atproto/pull/5886) [`7e9def8`](https://github.com/bluesky-social/atproto/commit/7e9def8d2076a9859487593c01f11cd35f25a8e7) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Fix the inbox chat-history isolation test to seed historical message labels without using the API that now rejects them.
+- Updated dependencies [[`5c3979b`](https://github.com/bluesky-social/atproto/commit/5c3979b3466bf7df0a0a4f2291000491affc31b9)]:
+  - @atproto/xrpc-server@0.13.12
+
+## 0.14.1
+
+### Patch Changes
+
+- [#5853](https://github.com/bluesky-social/atproto/pull/5853) [`57b7a37`](https://github.com/bluesky-social/atproto/commit/57b7a375f571bf7f42709f93f98d3f9bd000fb6d) Thanks [@blackmichael](https://github.com/blackmichael)! - Add optional hydrated viewBskyPost values alongside existing bskyPostRef fields on Atmosphere timeline activities and Explore articles and livestreams. Reuse post hydration and viewer visibility checks, preserving references and external content when posts are unavailable. Refresh consuming contract inputs.
+  
+  Keep Explore and the Atmosphere timeline available when optional post hydration fails, omitting incomplete post views while retaining external content and references. Preserve request cancellation and failures for required timeline root posts.
+
+## 0.14.0
+
+### Minor Changes
+
+- [#5802](https://github.com/bluesky-social/atproto/pull/5802) [`d930c3b`](https://github.com/bluesky-social/atproto/commit/d930c3b6b401df7085b8e85f3fc83dbbc3e28605) Thanks [@foysalit](https://github.com/foysalit)! - Retire moderation subject statistics and count-based filters. Legacy count-based
+  sorts fall back to last reported time.
+
+### Patch Changes
+
+- [#5861](https://github.com/bluesky-social/atproto/pull/5861) [`211c9e8`](https://github.com/bluesky-social/atproto/commit/211c9e8acceccca2e983b7bc8ebfc0756664c956) Thanks [@blackmichael](https://github.com/blackmichael)! - Use Iris Grain gallery recommendations in Atmosphere Explore behind `atmosphere_explore:galleries:iris:enable`, independently of article recommendations. Return the gallery recommendation ID in `photos.recIdStr`. Retain curated photos when Iris returns an empty list or fails.
+  
+  Update the shared Explore contract description for recommended photo galleries.
+- Updated dependencies [[`b30ea73`](https://github.com/bluesky-social/atproto/commit/b30ea7305be8df27524ed70d4af7f246014194c2)]:
+  - @atproto/xrpc-server@0.13.11
+
+## 0.13.0
+
+### Minor Changes
+
+- [#5828](https://github.com/bluesky-social/atproto/pull/5828) [`c03fb8d`](https://github.com/bluesky-social/atproto/commit/c03fb8dde754508529f82b80d626332198f33f44) Thanks [@gcwill70](https://github.com/gcwill70)! - **Breaking:** Treat the labeler service record's `reasonTypes` as an exact allowlist for non-appeal reports through `com.atproto.moderation.createReport` and report events through `tools.ozone.moderation.emitEvent`. A modern non-appeal reason is no longer implicitly accepted when only its mapped legacy reason is listed. Unlisted non-appeal reasons return `InvalidRequest` before creating a report or associated moderation writes.
+  
+  An omitted `reasonTypes` list continues to accept all reason types. An empty list rejects all non-appeal reasons. Modern (`tools.ozone.report.defs#reasonAppeal`) and legacy (`com.atproto.moderation.defs#reasonAppeal`) appeals bypass the allowlist, including when the list is empty. Appeal ownership and eligibility checks still apply. Explicitly listed modern, legacy, and custom reasons remain valid; existing reports retain their original reasons.
+  
+  Before upgrading, use the updated Ozone labeler configuration editor to explicitly list every reason the labeler should accept. The editor offers current and legacy reasons and preserves existing configured lists and custom values. Verify each labeler's published list and allow for profile propagation and service-record cache refresh before enabling strict validation.
+  
+  When metrics are enabled with `OZONE_METRICS_PORT`, `ozone_report_reason_rejections_total` counts allowlist rejections from `createReport` and report events through `emitEvent`. Labels identify the endpoint and recognized modern or legacy reason type; other strings share the `unknown` reason bucket. The counter records attempts, including retries, without storing rejected reports. Operators can configure alert thresholds in their monitoring system.
+
+### Patch Changes
+
+- [#5762](https://github.com/bluesky-social/atproto/pull/5762) [`7a46712`](https://github.com/bluesky-social/atproto/commit/7a467120982d9ff1559afeb3a26989dad5877d17) Thanks [@haileyok](https://github.com/haileyok)! - Redact cookie and set-cookie headers in HTTP request and response logs.
+
+- [#5839](https://github.com/bluesky-social/atproto/pull/5839) [`fe343a1`](https://github.com/bluesky-social/atproto/commit/fe343a1b90c1de470a45b0469628a9e75e7d883f) Thanks [@gcwill70](https://github.com/gcwill70)! - Allow account moderation events to close explicitly selected reports on records owned by the account, linking the event to each report.
+- Updated dependencies [[`7a46712`](https://github.com/bluesky-social/atproto/commit/7a467120982d9ff1559afeb3a26989dad5877d17)]:
+  - @atproto/common@0.8.10
+  - @atproto/xrpc-server@0.13.10
+
+## 0.12.3
+
+### Patch Changes
+
+- [#5827](https://github.com/bluesky-social/atproto/pull/5827) [`bce6f7e`](https://github.com/bluesky-social/atproto/commit/bce6f7e45897fc7c0f8217c412b54adbae36b774) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Proxy authenticated Atmosphere record view requests to AppView with Ozone service credentials and the requested labelers.
+
+- [#5817](https://github.com/bluesky-social/atproto/pull/5817) [`d4f2c91`](https://github.com/bluesky-social/atproto/commit/d4f2c919697d37af8f411f724e12b8ce2b88f922) Thanks [@foysalit](https://github.com/foysalit)! - Support linking report closures to existing moderation events and targeting all subjects owned by an account from a moderation event.
+- Updated dependencies [[`8c841f6`](https://github.com/bluesky-social/atproto/commit/8c841f6e73c8365c2dfe816c0613aa9c50490361), [`8c841f6`](https://github.com/bluesky-social/atproto/commit/8c841f6e73c8365c2dfe816c0613aa9c50490361), [`8c841f6`](https://github.com/bluesky-social/atproto/commit/8c841f6e73c8365c2dfe816c0613aa9c50490361), [`8c841f6`](https://github.com/bluesky-social/atproto/commit/8c841f6e73c8365c2dfe816c0613aa9c50490361)]:
+  - @atproto/lex-data@0.1.10
+  - @atproto/lex-schema@0.2.11
+  - @atproto/common@0.8.9
+  - @atproto/lex-client@0.4.2
+  - @atproto/xrpc-server@0.13.9
+  - @atproto/lex-password-session@0.3.2
+  - @atproto/identity@0.5.23
+
+## 0.12.2
+
+### Patch Changes
+
+- [#5809](https://github.com/bluesky-social/atproto/pull/5809) [`7b640e8`](https://github.com/bluesky-social/atproto/commit/7b640e8fee709d22a0d62262068db0ddb3106741) Thanks [@blackmichael](https://github.com/blackmichael)! - Expose optional author-declared bskyPostRef strong references beside view on unspecced Atmosphere timeline activities and Explore article and livestream items, without changing external embed schemas or fetching the referenced post.
+
+- [#5813](https://github.com/bluesky-social/atproto/pull/5813) [`43b0be2`](https://github.com/bluesky-social/atproto/commit/43b0be2fa15e49479c11254101a056e9da137c84) Thanks [@foysalit](https://github.com/foysalit)! - Expose account enforcement and best-effort profile information in the moderation inbox.
+
+- [#5818](https://github.com/bluesky-social/atproto/pull/5818) [`ba75afa`](https://github.com/bluesky-social/atproto/commit/ba75afad9fab6d1f5c207b1b5d12a7ecfc5b379d) Thanks [@foysalit](https://github.com/foysalit)! - Expose whether an account has active strikes in its moderation inbox status.
+
+- [#5806](https://github.com/bluesky-social/atproto/pull/5806) [`b794e18`](https://github.com/bluesky-social/atproto/commit/b794e186bc81ce979d29de18f3ca9ab03b7e3d29) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Use geo headers instead of countryCode and regionCode query parameters when selecting curated Atmosphere Explore content.
+- Updated dependencies []:
+  - @atproto-labs/fetch-node@0.4.5
+  - @atproto/identity@0.5.22
+
+## 0.12.1
+
+### Patch Changes
+
+- [#5782](https://github.com/bluesky-social/atproto/pull/5782) [`7aa8e7e`](https://github.com/bluesky-social/atproto/commit/7aa8e7e9e1422f053447879def4d4cf92a05adbb) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Match TypeScript project references to workspace dependencies
+
+- [#5780](https://github.com/bluesky-social/atproto/pull/5780) [`d38661d`](https://github.com/bluesky-social/atproto/commit/d38661dacd8afb19a2eb87eb8aa7e40656b37c92) Thanks [@foysalit](https://github.com/foysalit)! - Reduce unnecessary report hydration in integration tests.
+
+- [#5786](https://github.com/bluesky-social/atproto/pull/5786) [`07c25d4`](https://github.com/bluesky-social/atproto/commit/07c25d410d4f4ad8f6ec80fc14efa0dd8ec55545) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Depend on the `@atproto/lex-*` packages that `@atproto/lex` re-exports instead of `@atproto/lex`, which also installs the lexicon codegen tooling
+- Updated dependencies [[`07c25d4`](https://github.com/bluesky-social/atproto/commit/07c25d410d4f4ad8f6ec80fc14efa0dd8ec55545), [`07c25d4`](https://github.com/bluesky-social/atproto/commit/07c25d410d4f4ad8f6ec80fc14efa0dd8ec55545)]:
+  - @atproto/lex-client@0.4.1
+  - @atproto/lex-data@0.1.9
+  - @atproto/lex-schema@0.2.10
+  - @atproto/xrpc-server@0.13.8
+  - @atproto-labs/fetch-node@0.4.4
+  - @atproto/common@0.8.8
+  - @atproto/lex-password-session@0.3.1
+  - @atproto/identity@0.5.21
+
+## 0.12.0
+
+### Minor Changes
+
+- [#5783](https://github.com/bluesky-social/atproto/pull/5783) [`d6e1945`](https://github.com/bluesky-social/atproto/commit/d6e1945e095da70e0b188d5c6684a5797ce9ee8c) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Keep `featured` as a required, deprecated compatibility field on `app.bsky.unspecced.getAtmosphereExploreTab` article, publication, photo, and livestream items; it is always `false`. Retired content scheduling no longer selects or orders articles, publications, and photos. Livestreams are shown from `previewAt` (or `startsAt`) until `endsAt`, and are reported inactive until `startsAt`. App cards now include an optional `profile` (`app.bsky.actor.defs#profileViewDetailed`) hydrated from the app's account, whose avatar and banner back `logo` and `backgroundImage`.
+
+### Patch Changes
+
+- [#5770](https://github.com/bluesky-social/atproto/pull/5770) [`c2b5ce3`](https://github.com/bluesky-social/atproto/commit/c2b5ce39ebf1c33857595340a87551800689e8fd) Thanks [@foysalit](https://github.com/foysalit)! - Allow configuring the blob diversion size limit, defaulting to 300 MiB.
+
+- [#5779](https://github.com/bluesky-social/atproto/pull/5779) [`a2dd244`](https://github.com/bluesky-social/atproto/commit/a2dd244d6072216735198db5777909d014b0638e) Thanks [@foysalit](https://github.com/foysalit)! - Include tag event durations in moderation event responses.
+
+## 0.11.0
+
+### Minor Changes
+
+- [#5756](https://github.com/bluesky-social/atproto/pull/5756) [`54f54ea`](https://github.com/bluesky-social/atproto/commit/54f54ea831f37fe9f722844177f7e1bed8ae8bdc) Thanks [@gcwill70](https://github.com/gcwill70)! - Protect assigned and escalated reports from broad moderation-event and batch report closure, including owned subjects.
+
+### Patch Changes
+
+- [#5757](https://github.com/bluesky-social/atproto/pull/5757) [`6ed6fe3`](https://github.com/bluesky-social/atproto/commit/6ed6fe39dded20f1e8995042135fba83b31d7b26) Thanks [@foysalit](https://github.com/foysalit)! - Allow new appeals when a moderation action follows a resolved appeal.
+
+- [#5750](https://github.com/bluesky-social/atproto/pull/5750) [`03a76ee`](https://github.com/bluesky-social/atproto/commit/03a76ee15e4acc123dc45446fc7b6fa46ba0e64e) Thanks [@gcwill70](https://github.com/gcwill70)! - Allow moderation events to succeed when reportAction.types matches no reports, while retaining strict validation for explicit report IDs.
+
+- [#5746](https://github.com/bluesky-social/atproto/pull/5746) [`1c8c3a3`](https://github.com/bluesky-social/atproto/commit/1c8c3a3a8ea27a060f38cda71172339aa1728113) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update to OpenTelemetry JS SDK 3.x (`@opentelemetry/api` 1.10), which requires Node.js `>=22.15.0`. Event log records are now emitted through `@opentelemetry/api` (`@opentelemetry/api-logs` was removed upstream). The HTTP instrumentation only reports the stable `http.server.request.duration` and `http.client.request.duration` metrics: the legacy `http.server.duration` and `http.client.duration` metrics are gone, and `OTEL_SEMCONV_STABILITY_OPT_IN=http` no longer has any effect. Instrumentations passed to `setup()` now also instrument modules loaded through ESM imports, not only `require()`d ones, when built on the same `@opentelemetry/instrumentation` as `@atproto-labs/opentelemetry-node`; otherwise `setup()` now throws an `InstrumentationMismatchError` instead of silently missing them. The new `@atproto-labs/opentelemetry-node/better-sqlite3-plugin` export, a port of `opentelemetry-plugin-better-sqlite3` producing identical spans, replaces that package in the PDS.
+- Updated dependencies [[`3bfd00f`](https://github.com/bluesky-social/atproto/commit/3bfd00f484dc144482c82a4ed248adc49e6be769), [`3bfd00f`](https://github.com/bluesky-social/atproto/commit/3bfd00f484dc144482c82a4ed248adc49e6be769), [`1c8c3a3`](https://github.com/bluesky-social/atproto/commit/1c8c3a3a8ea27a060f38cda71172339aa1728113), [`1c8c3a3`](https://github.com/bluesky-social/atproto/commit/1c8c3a3a8ea27a060f38cda71172339aa1728113), [`1c8c3a3`](https://github.com/bluesky-social/atproto/commit/1c8c3a3a8ea27a060f38cda71172339aa1728113), [`3bfd00f`](https://github.com/bluesky-social/atproto/commit/3bfd00f484dc144482c82a4ed248adc49e6be769), [`3bfd00f`](https://github.com/bluesky-social/atproto/commit/3bfd00f484dc144482c82a4ed248adc49e6be769), [`3bfd00f`](https://github.com/bluesky-social/atproto/commit/3bfd00f484dc144482c82a4ed248adc49e6be769)]:
+  - @atproto/common@0.8.7
+  - @atproto-labs/opentelemetry-node@0.5.0
+  - @atproto/xrpc-server@0.13.7
+  - @atproto/lex@0.4.4
+
 ## 0.10.10
 
 ### Patch Changes

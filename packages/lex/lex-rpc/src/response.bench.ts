@@ -1,4 +1,4 @@
-import { bench, describe } from 'vitest'
+import { describe, test } from 'vitest'
 import {
   type LexParseOptions,
   jsonToLex,
@@ -96,18 +96,20 @@ function benchData(data: unknown, options?: LexParseOptions) {
     headers: { 'Content-Type': 'application/json' },
   }
 
-  bench('lexParse(await response.text())', async () => {
-    const response = new Response(body, init)
-    lexParse(await response.text(), options)
-  })
-
-  bench('jsonToLex(await response.json())', async () => {
-    const response = new Response(body, init)
-    jsonToLex(await response.json(), options)
-  })
-
-  bench('lexParseJsonBytes(await response.bytes())', async () => {
-    const response = new Response(body, init)
-    lexParseJsonBytes(await response.bytes(), options)
+  test('parsers', async ({ bench }) => {
+    await bench.compare(
+      bench('lexParse(await response.text())', async () => {
+        const response = new Response(body, init)
+        lexParse(await response.text(), options)
+      }),
+      bench('jsonToLex(await response.json())', async () => {
+        const response = new Response(body, init)
+        jsonToLex(await response.json(), options)
+      }),
+      bench('lexParseJsonBytes(await response.bytes())', async () => {
+        const response = new Response(body, init)
+        lexParseJsonBytes(await response.bytes(), options)
+      }),
+    )
   })
 }

@@ -1,5 +1,11 @@
 # @atproto-labs/pipe
 
+## 0.2.5
+
+### Patch Changes
+
+- [#5782](https://github.com/bluesky-social/atproto/pull/5782) [`7aa8e7e`](https://github.com/bluesky-social/atproto/commit/7aa8e7e9e1422f053447879def4d4cf92a05adbb) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Only publish `dist` and `CHANGELOG.md`
+
 ## 0.2.4
 
 ### Patch Changes

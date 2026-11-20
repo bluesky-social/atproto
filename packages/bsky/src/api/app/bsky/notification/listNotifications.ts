@@ -34,14 +34,18 @@ export default function (server: Server, ctx: AppContext) {
     presentation,
   )
   server.add(app.bsky.notification.listNotifications, {
-    auth: ctx.authVerifier.standard,
+    auth: ctx.authVerifier.standardRead(),
     handler: async ({ params, auth, req }) => {
       if (params.seenAt) {
         throw new InvalidRequestError('The seenAt parameter is unsupported')
       }
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
-      const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
+      const hydrateCtx = await ctx.hydrator.createContext({
+        labelers,
+        viewer,
+        xrpcEndpoint: app.bsky.notification.listNotifications.$lxm,
+      })
 
       const lastSeenRes = await ctx.hydrator.dataplane.getNotificationSeen({
         actorDid: viewer,

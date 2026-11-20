@@ -19,7 +19,8 @@ import type {
   ComAtprotoModerationCreateReport,
   ComAtprotoRepoStrongRef,
 } from '@atproto/api'
-import type { CidString, Client } from '@atproto/lex'
+import type { Client } from '@atproto/lex-client'
+import type { CidString } from '@atproto/lex-schema'
 import type { BlobRef } from '@atproto/lexicon'
 import {
   AtUri,

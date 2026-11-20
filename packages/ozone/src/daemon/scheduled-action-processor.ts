@@ -1,20 +1,22 @@
 import type { Selectable } from 'kysely'
 import { MINUTE, SECOND } from '@atproto/common'
-import type { DidString } from '@atproto/lex'
+import type { DidString } from '@atproto/lex-schema'
 import {
   assertProtectedTagAction,
   getProtectedTags,
 } from '../api/moderation/util.js'
 import type { Database } from '../db/index.js'
 import type { ScheduledAction } from '../db/schema/scheduled-action.js'
-import { tools } from '../lexicons/index.js'
+import { com, tools } from '../lexicons/index.js'
 import { dbLogger } from '../logger.js'
 import type {
   ModerationService,
   ModerationServiceCreator,
 } from '../mod-service/index.js'
+import { processReportAction } from '../mod-service/report.js'
 import { RepoSubject } from '../mod-service/subject.js'
 import type { ModEventType } from '../mod-service/types.js'
+import { getEventActivityMetadata } from '../report/metadata.js'
 import type { ScheduledActionServiceCreator } from '../scheduled-action/service.js'
 import type {
   SettingService,
@@ -221,6 +223,22 @@ export class ScheduledActionProcessor {
           : undefined,
       ),
     )
+
+    if (moderationEvent.event.meta?.acknowledgeAccountSubjects) {
+      await processReportAction({
+        db: moderationTxn.db,
+        inboxStartAt: moderationTxn.cfg.inbox.startAt,
+        inboxPushEnabled: moderationTxn.cfg.inbox.pushEnabled,
+        subjectDid: action.did,
+        subjectUri: null,
+        subjectType: com.atproto.admin.defs.repoRef.$type,
+        eventId: moderationEvent.event.id,
+        eventType: event.$type,
+        createdBy: action.createdBy,
+        reportAction: { allOwned: true, isAutomated: true },
+        metadata: getEventActivityMetadata(modTool),
+      })
+    }
 
     if (email.content && email.subject) {
       let isDelivered = false

@@ -1,4 +1,4 @@
-import type { DidString, UriString } from '@atproto/lex'
+import type { DidString, UriString } from '@atproto/lex-schema'
 import type { Database } from '../db/index.js'
 import type { ActionView } from '../lexicons/tools/ozone/inbox/defs.js'
 import { PolicyListSettingKey } from '../setting/constants.js'

@@ -111,11 +111,20 @@ export interface WebSocketOptions<
 /**
  * A reconnecting stream of WebSocket messages: `for await` over it and the
  * stream spans reconnects, so a consumer never has to notice that the
- * underlying connection was torn down and replaced. Ends on `break`, `throw`,
- * or an aborted `signal` (see {@link WebSocketOptions.signal}). When throwing,
- * or aborting, use a {@link CloseError} to control the close code and message
- * sent to the server; any other value results in a normal close with code 1000
- * and no message.
+ * underlying connection was torn down and replaced. Ends on `break` (or a
+ * throw) out of the loop, or an aborted `signal` (see
+ * {@link WebSocketOptions.signal}). When aborting, use a {@link CloseError} to
+ * control the close code and message sent to the server; any other reason
+ * results in a normal close with code 1000 and no message.
+ *
+ * Calling `throw(error)` on the generator ends the current connection with a
+ * normal close, discarding what it had buffered, and handles `error` exactly
+ * like a connection failure: when {@link WebSocketOptions.shouldReconnect}
+ * retries it, it is reported to `onReconnect` and `throw()` resolves with the
+ * first message of the next connection; otherwise it is reported to `onError`
+ * and `throw()` rejects with it. This
+ * is how a caller rejects a connection over a message it received (a malformed
+ * frame, a protocol-level error message).
  */
 export type WebSocketIterable<M extends DataMode = 'auto'> = AsyncGenerator<
   MessageOf<M>,
@@ -158,11 +167,6 @@ export async function* websocketFactory<M extends DataMode = 'auto'>(
       // and each re-entry after a backoff.
       signal?.throwIfAborted()
 
-      const resolved = typeof url === 'function' ? await url() : url
-      // Resolving the url is an async gap of its own: an abort that lands while
-      // it's in flight must not fall through to a connection nothing tears down.
-      signal?.throwIfAborted()
-
       // A transport is created already connecting and has no close method —
       // aborting is the only way to end it. Forwarding the caller's signal in
       // means an outer abort reaches the socket; aborting in the `finally`
@@ -175,6 +179,15 @@ export async function* websocketFactory<M extends DataMode = 'auto'>(
       // as this stream's ending.
       closeDetail = undefined
       try {
+        // Resolved within the attempt, so that a failure (a transient one, while
+        // looking up where to connect) is classified like a failed dial rather
+        // than ending the stream behind the policy's and the hooks' back.
+        const resolved = typeof url === 'function' ? await url() : url
+        // Resolving the url is an async gap of its own: an abort that lands
+        // while it's in flight must not fall through to a connection nothing
+        // tears down.
+        signal?.throwIfAborted()
+
         const transport = createTransport<M>({
           // The transport-facing subset of the caller's options
           dataMode: options.dataMode ?? ('auto' as M),
@@ -224,6 +237,11 @@ export async function* websocketFactory<M extends DataMode = 'auto'>(
         // A consumer `break` also lands here, resuming with a return
         // completion: it runs the `finally` and leaves the loop without
         // reaching the throw.
+        //
+        // A consumer `throw()` is forwarded to the transport, which closes the
+        // connection and rejects with the thrown error once the socket is down.
+        // That lands in the `catch` below like any connection failure, which is
+        // how a caller rejects a connection over a message it received.
         yield* transport
         throw closeError(closeDetail)
       } catch (error) {

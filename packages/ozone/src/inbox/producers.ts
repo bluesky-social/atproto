@@ -1,5 +1,5 @@
 import { sql } from 'kysely'
-import type { DatetimeString, DidString } from '@atproto/lex'
+import type { DatetimeString, DidString } from '@atproto/lex-schema'
 import type { StrikeSuspensionConfig } from '../config/strike-suspension.js'
 import type { Database } from '../db/index.js'
 import { com, tools } from '../lexicons/index.js'
@@ -25,6 +25,7 @@ export class InboxNotificationService {
     private db: Database,
     private config: StrikeSuspensionConfig,
     private startAt?: DatetimeString,
+    private pushEnabled = false,
   ) {}
 
   async captureStanding(did: DidString): Promise<Standing | undefined> {
@@ -124,7 +125,12 @@ export class InboxNotificationService {
             ),
           )
       }
-      await createInboxNotifications(txn, notifications, this.startAt)
+      await createInboxNotifications(
+        txn,
+        notifications,
+        this.startAt,
+        this.pushEnabled,
+      )
     })
   }
 
@@ -153,6 +159,7 @@ export class InboxNotificationService {
             ),
           ],
           this.startAt,
+          this.pushEnabled,
         )
     })
   }

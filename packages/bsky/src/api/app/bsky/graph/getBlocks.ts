@@ -20,11 +20,15 @@ import { clearlyBadCursor, fillPage, resHeaders } from '../../../util.js'
 export default function (server: Server, ctx: AppContext) {
   const getBlocks = createPipeline(skeleton, hydration, noRules, presentation)
   server.add(app.bsky.graph.getBlocks, {
-    auth: ctx.authVerifier.standard,
+    auth: ctx.authVerifier.standardRead(),
     handler: async ({ params, auth, req }) => {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
-      const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
+      const hydrateCtx = await ctx.hydrator.createContext({
+        labelers,
+        viewer,
+        xrpcEndpoint: app.bsky.graph.getBlocks.$lxm,
+      })
       const result = await fillPage({
         cursor: params.cursor,
         limit: params.limit,

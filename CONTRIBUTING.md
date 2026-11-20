@@ -74,6 +74,8 @@ The seed data is regenerated from scratch on every run, so feel free to break th
 
 Beyond style, two things are worth calling out up front: don't change tooling or frameworks without prior discussion, and don't add dependencies without strong justification.
 
+**Adding a package.** Declare a `files` field in its `package.json` listing everything the package needs at runtime — usually `./dist` and `./CHANGELOG.md`. The service images are built with `pnpm deploy`, which copies each workspace dependency according to that field, as `npm pack` would. `pnpm verify` fails if a package the services depend on has no `files` field, but nothing checks that the list is complete: a list that misses a runtime asset builds fine, then breaks the services (and npm consumers) at runtime.
+
 **Before opening the PR**
 
 - **The project must build and pass verification.** Run this from the repo root and make sure it comes back clean:

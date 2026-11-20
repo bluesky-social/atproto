@@ -1,5 +1,5 @@
 import type { Keypair } from '@atproto/crypto'
-import type { DidString } from '@atproto/lex'
+import type { DidString } from '@atproto/lex-schema'
 import type { BlobStore } from '@atproto/repo'
 import type { ActorStoreResources } from './actor-store-resources.js'
 import { ActorStoreTransactor } from './actor-store-transactor.js'

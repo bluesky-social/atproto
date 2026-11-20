@@ -4,7 +4,7 @@ import path from 'node:path'
 import { fileExists, readIfExists, rmIfExists } from '@atproto/common'
 import * as crypto from '@atproto/crypto'
 import type { ExportableKeypair, Keypair } from '@atproto/crypto'
-import type { DidString } from '@atproto/lex'
+import type { DidString } from '@atproto/lex-schema'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import type { ActorStoreConfig } from '../config/index.js'
 import { retrySqlite } from '../db/index.js'
@@ -54,11 +54,15 @@ export class ActorStore {
 
     const db = getDb(dbLocation, this.cfg.disableWalAutoCheckpoint)
 
-    // run a simple select with retry logic to ensure the db is ready (not in wal recovery mode)
+    // run a simple select with retry logic to ensure the db is ready (not in wal recovery mode).
+    // synchronous is per-connection and its pragma can hit the same busy error, so it shares the retry.
     try {
-      await retrySqlite(() =>
-        db.db.selectFrom('repo_root').selectAll().execute(),
-      )
+      await retrySqlite(async () => {
+        if (this.cfg.synchronousFull) {
+          await db.ensureSynchronousFull()
+        }
+        return db.db.selectFrom('repo_root').selectAll().execute()
+      })
     } catch (err) {
       await db.close()
       throw err
@@ -123,6 +127,9 @@ export class ActorStore {
     const db: ActorDb = getDb(dbLocation, this.cfg.disableWalAutoCheckpoint)
     try {
       await db.ensureWal()
+      if (this.cfg.synchronousFull) {
+        await retrySqlite(() => db.ensureSynchronousFull())
+      }
       const migrator = getMigrator(db)
       await migrator.migrateToLatestOrThrow()
     } finally {

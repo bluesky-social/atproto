@@ -1,4 +1,4 @@
-import type { Un$Typed } from '@atproto/lex'
+import type { Un$Typed } from '@atproto/lex-schema'
 import type { Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../../../context.js'
 import { app } from '../../../../lexicons/index.js'
@@ -11,7 +11,7 @@ import {
 
 export default function (server: Server, ctx: AppContext) {
   server.add(app.bsky.notification.putPreferencesV2, {
-    auth: ctx.authVerifier.standard,
+    auth: ctx.authVerifier.standardWriteService(),
     handler: async ({ auth, input }) => {
       const actorDid = auth.credentials.iss
       const preferences = await computePreferences(ctx, actorDid, input)

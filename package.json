@@ -9,7 +9,7 @@
   "engines": {
     "node": ">=22"
   },
-  "packageManager": "pnpm@11.11.0",
+  "packageManager": "pnpm@12.16.1+sha512.091d1dee7927575661b25dab3c2ae31cafc1c54d6b71ed6a6600cf0c1cb10434a447eae14015f1b23e2e6bedeed79df94a932e2164d2832280dce3fb32f656d1",
   "devEngines": {
     "runtime": {
       "name": "node",
@@ -18,7 +18,7 @@
     },
     "packageManager": {
       "name": "pnpm",
-      "version": "11.11.0",
+      "version": "12.16.1",
       "onFail": "error"
     }
   },
@@ -27,9 +27,11 @@
     "lint": "eslint .",
     "style:fix": "prettier --experimental-cli --write .",
     "style": "prettier --experimental-cli --check .",
-    "verify": "pnpm run --recursive --parallel --include-workspace-root '/^verify:.+$/'",
+    "verify": "pnpm run --recursive --parallel --include-workspace-root '/^verify:.+$/' < /dev/null",
     "verify:style": "pnpm run style",
     "verify:lint": "pnpm lint",
+    "verify:package-files": "pnpm -r exec node -e \"require('./package.json').files || (console.error(process.cwd() + ': package.json needs a files field'), process.exit(1))\"",
+    "verify:tsconfig-references": "node ./scripts/verify-tsconfig-references.mjs",
     "lex:update": "pnpm run --recursive --parallel lex:update",
     "lex:update-local": "pnpm run --recursive --parallel lex:update com.atproto.* tools.ozone.*",
     "format": "pnpm lint:fix && pnpm style:fix",
@@ -45,7 +47,7 @@
     "test": "LOG_ENABLED=false ./packages/dev-infra/with-test-redis-and-db.sh pnpm --recursive --stream test",
     "test:withFlags": "pnpm run test",
     "test:unit": "vitest --run",
-    "bench": "vitest bench --run",
+    "bench": "vitest bench --run --reporter=verbose",
     "changeset": "changeset",
     "publish-script": "pnpm build && changeset git-tag && pnpm publish -r --provenance --no-git-checks --access public",
     "version-script": "changeset version && git add ."
@@ -66,7 +68,7 @@
     "@typescript-eslint/eslint-plugin": "^8.70.1",
     "@typescript-eslint/parser": "^8.70.1",
     "@typescript/native": "npm:typescript@^7.0.2",
-    "@vitest/coverage-v8": "^4.1.10",
+    "@vitest/coverage-v8": "^5.1.1",
     "eslint": "^10.11.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-import-resolver-typescript": "^4.4.5",
@@ -79,7 +81,7 @@
     "prettier": "^3.9.6",
     "prettier-plugin-tailwindcss": "^0.8.1",
     "typescript": "npm:@typescript/typescript6@^6.0.2",
-    "vitest": "^4.1.10"
+    "vitest": "^5.1.1"
   },
   "workspace": [
     "packages/*",

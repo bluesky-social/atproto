@@ -1,5 +1,5 @@
 import { MINUTE } from '@atproto/common'
-import { currentDatetimeString } from '@atproto/lex'
+import { currentDatetimeString } from '@atproto/lex-schema'
 import type { Database } from '../db/index.js'
 import { tools } from '../lexicons/index.js'
 import { dbLogger } from '../logger.js'

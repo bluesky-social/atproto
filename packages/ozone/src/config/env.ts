@@ -1,5 +1,5 @@
 import { envBool, envInt, envList, envStr } from '@atproto/common'
-import type { DidString, UriString } from '@atproto/lex'
+import type { DidString, UriString } from '@atproto/lex-schema'
 
 export const readEnv = (): OzoneEnvironment => {
   const onlineMembersActiveWindowMs = envStr(
@@ -18,6 +18,7 @@ export const readEnv = (): OzoneEnvironment => {
     labelStreamBackfillRate: envInt('OZONE_LABEL_STREAM_BACKFILL_RATE'),
     labelQueryWildcardsEnabled: envBool('OZONE_LABEL_QUERY_WILDCARDS_ENABLED'),
     reportTagsDisabled: envBool('OZONE_REPORT_TAGS_DISABLED'),
+    languageTagRecordTypes: envStr('OZONE_LANGUAGE_TAG_RECORD_TYPES'),
     appviewUrl: envStr('OZONE_APPVIEW_URL') as UriString,
     appviewDid: envStr('OZONE_APPVIEW_DID') as DidString,
     appviewPushEvents: envBool('OZONE_APPVIEW_PUSH_EVENTS'),
@@ -30,12 +31,6 @@ export const readEnv = (): OzoneEnvironment => {
     dbPoolSize: envInt('OZONE_DB_POOL_SIZE'),
     dbPoolMaxUses: envInt('OZONE_DB_POOL_MAX_USES'),
     dbPoolIdleTimeoutMs: envInt('OZONE_DB_POOL_IDLE_TIMEOUT_MS'),
-    dbMaterializedViewRefreshIntervalMs: envInt(
-      'OZONE_DB_MATERIALIZED_VIEW_REFRESH_INTERVAL_MS',
-    ),
-    dbMaterializedViewRefreshTimeoutMs: envInt(
-      'OZONE_DB_MATERIALIZED_VIEW_REFRESH_TIMEOUT_MS',
-    ),
     dbTeamProfileRefreshIntervalMs: envInt(
       'OZONE_DB_TEAM_PROFILE_REFRESH_INTERVAL_MS',
     ),
@@ -59,6 +54,7 @@ export const readEnv = (): OzoneEnvironment => {
     pdsHeaders: envList('OZONE_PDS_HEADERS'),
     blobDivertUrl: envStr('OZONE_BLOB_DIVERT_URL') as UriString,
     blobDivertAdminPassword: envStr('OZONE_BLOB_DIVERT_ADMIN_PASSWORD'),
+    blobDivertMaxBytes: envStr('OZONE_BLOB_DIVERT_MAX_BYTES'),
     verifierUrl: envStr('OZONE_VERIFIER_URL') as UriString,
     verifierDid: envStr('OZONE_VERIFIER_DID') as DidString,
     verifierPassword: envStr('OZONE_VERIFIER_PASSWORD'),
@@ -68,6 +64,7 @@ export const readEnv = (): OzoneEnvironment => {
     assignmentReportDurationMs: envInt('OZONE_ASSIGNMENT_REPORT_DURATION_MS'),
     inboxAppealWindowMonths: envInt('OZONE_INBOX_APPEAL_WINDOW_MONTHS'),
     inboxStartAt: envStr('OZONE_INBOX_START_AT'),
+    inboxPushEnabled: envBool('OZONE_INBOX_PUSH_ENABLED'),
     inboxPolicyDefaultUrl: envStr('OZONE_INBOX_POLICY_DEFAULT_URL'),
     strikeSuspensionConfig: envStr('NEXT_PUBLIC_STRIKE_SUSPENSION_CONFIG'),
     statsComputerIntervalMinutes: envInt(
@@ -82,6 +79,7 @@ export type OzoneEnvironment = {
   strikeSuspensionConfig?: string
   inboxAppealWindowMonths?: number
   inboxStartAt?: string
+  inboxPushEnabled?: boolean
   inboxPolicyDefaultUrl?: string
   devMode?: boolean
   version?: string
@@ -94,6 +92,7 @@ export type OzoneEnvironment = {
   labelStreamBackfillRate?: number
   labelQueryWildcardsEnabled?: boolean
   reportTagsDisabled?: boolean
+  languageTagRecordTypes?: string
   appviewUrl?: UriString
   appviewDid?: DidString
   appviewPushEvents?: boolean
@@ -106,8 +105,6 @@ export type OzoneEnvironment = {
   dbPoolSize?: number
   dbPoolMaxUses?: number
   dbPoolIdleTimeoutMs?: number
-  dbMaterializedViewRefreshIntervalMs?: number
-  dbMaterializedViewRefreshTimeoutMs?: number
   dbTeamProfileRefreshIntervalMs?: number
   didPlcUrl?: string
   didCacheStaleTTL?: number
@@ -126,6 +123,7 @@ export type OzoneEnvironment = {
   pdsHeaders?: string[]
   blobDivertUrl?: UriString
   blobDivertAdminPassword?: string
+  blobDivertMaxBytes?: string
   verifierUrl?: UriString
   verifierDid?: DidString
   verifierPassword?: string

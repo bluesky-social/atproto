@@ -28,7 +28,7 @@ export default function (server: Server, ctx: AppContext) {
     presentation,
   )
   server.add(app.bsky.feed.getPostThread, {
-    auth: ctx.authVerifier.optionalStandardOrRole,
+    auth: ctx.authVerifier.standardReadOrRoleOptional,
     opts: {
       // @TODO remove after grace period has passed, behavior is non-standard.
       // temporarily added for compat w/ previous version of xrpc-server to avoid breakage of a few specified parties.
@@ -39,6 +39,7 @@ export default function (server: Server, ctx: AppContext) {
         ctx.authVerifier.parseCreds(auth)
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({
+        xrpcEndpoint: app.bsky.feed.getPostThread.$lxm,
         labelers,
         viewer,
         includeTakedowns,

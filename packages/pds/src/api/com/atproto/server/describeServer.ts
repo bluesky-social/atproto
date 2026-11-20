@@ -1,4 +1,4 @@
-import type { UriString } from '@atproto/lex'
+import type { UriString } from '@atproto/lex-schema'
 import type { DidString } from '@atproto/syntax'
 import type { Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../../../context.js'

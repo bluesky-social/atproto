@@ -6,10 +6,12 @@ description: >
   service, wiring one service to call another, logging in with OAuth or an app
   password, reading or writing repository records, uploading or fetching blobs,
   configuring headers, labelers, service proxying, retries, or request/response
-  validation, handling XRPC errors, or composing reusable client actions. Also
-  use when replacing `AtpAgent`, `XrpcClient`, or a hand-rolled `fetch` call to
-  an `/xrpc/` endpoint. For a full migration off the legacy client stack, use
-  the lexification-client skill.
+  validation, handling XRPC errors, composing reusable client actions, or
+  consuming an XRPC subscription (WebSocket event stream, firehose,
+  `subscribeRepos`, `subscribeLabels`). Also use when replacing `AtpAgent`,
+  `XrpcClient`, `@atproto/xrpc-server`'s `Subscription`, or a hand-rolled
+  `fetch` call to an `/xrpc/` endpoint. For a full migration off the legacy
+  client stack, use the lexification-client skill.
 disable-model-invocation: false
 ---
 
@@ -28,7 +30,7 @@ calls. Their first argument is an `Agent | AgentOptions` — a URL string, `URL`
 options, responses, and errors as the client methods.
 
 ```ts
-import { xrpc } from '@atproto/lex'
+import { xrpc } from '@atproto/lex-client'
 
 await xrpc(hostUrl, com.atproto.sync.requestCrawl, { body: { hostname } })
 ```
@@ -39,7 +41,7 @@ The constructor takes an `Agent` (anything with `fetchHandler`, optionally
 `did`) or `AgentOptions` (a URL string/`URL`, or an `AgentConfig`).
 
 ```ts
-import { Client } from '@atproto/lex'
+import { Client } from '@atproto/lex-client'
 
 // Unauthenticated
 const client = new Client('https://public.api.bsky.app')
@@ -270,12 +272,60 @@ Set `maxRetries` (default `0`); tune with `minRetryTimeout` (500ms),
 codes (408, 425, 429, 5xx) and network errors, so do not wrap calls in a manual
 retry loop.
 
+## Subscriptions
+
+`xrpcSubscribe(agent, ns, options)` returns an async generator of validated
+messages (`$type` restored) that spans reconnects. Use it instead of
+`@atproto/xrpc-server`'s `Subscription` or a raw WebSocket, and don't wrap it in
+a reconnect loop.
+
+- Import it from `@atproto/lex`, or from the `@atproto/lex-rpc/subscription`
+  entrypoint when depending on the runtime packages. Only that entrypoint loads
+  `ws-client`: keep it out of the main entrypoints of `lex-rpc` and
+  `lex-client` (which aren't always bundled), so that code without
+  subscriptions doesn't load it. `Client` has no subscription method.
+- Its first argument is a service URL, an `AgentConfig` or an `Agent`. A URL or
+  config connects through `defaultWebsocket` (a `WebSocketFactory`, the
+  WebSocket counterpart of `fetch`, over `ws-client`) unless the config sets its
+  own `websocket`, with the config's `headers` merged into the subscription's
+  (Node.js only: `ws-client` throws on headers in browsers). An `Agent` without
+  a `websocketHandler` throws a `TypeError`; `buildAgent()` and the `Client`
+  constructor build one from a config with a `websocket` (pass `client.agent`).
+- Connection behavior (backoff, heartbeat, hooks, `shouldReconnect`) belongs to
+  the `websocket` factory: for other options, use
+  `createWebSocketFactory(options)` (`ws-client`'s `websocket()` options, minus
+  `signal` and `headers`) rather than wrapping `ws-client` by hand.
+  `xrpcSubscribe()` only takes `params`, `signal`, `headers`,
+  `validateResponse`, `strictResponseProcessing` and `onMessageError`.
+- Frames failing to decode or validate, error frames included, are handed back
+  to the stream with `throw()` as `XrpcSubscriptionError`s, which `ws-client`'s
+  `defaultShouldReconnect()` never retries. `createWebSocketFactory()` defaults
+  to `defaultSubscriptionShouldReconnect()`, which also accepts
+  `isRetryableSubscriptionError(err)`: build a custom `shouldReconnect` on it,
+  or transient error frames end the stream. Retrying e.g. `ConsumerTooSlow` is
+  an explicit extra condition.
+- Resume from a cursor with a function: `params: () => ({ cursor })` is
+  re-invoked on every connection, so update `cursor` from each message's `seq`
+  (or once it is processed).
+- The loop rejects with an `XrpcSubscriptionError`, except an abort reason,
+  which passes through unchanged. A handler error with a `shouldRetry()` method
+  is wrapped in `XrpcSubscriptionConnectionError`, and an error thrown by a
+  `params` function (or invalid params) in `XrpcSubscriptionParamsError`, both
+  as `cause` and retried when it is transient (so a `params` function looking
+  up a cursor over XRPC is invoked again on the reconnect). `ws-client` hooks
+  see connection failures unwrapped.
+- A message failing validation ends the connection with an
+  `XrpcSubscriptionMessageError`, not retryable (a resume from the last
+  cursor would receive it again). To skip them, pass an `onMessageError` that
+  returns instead of throwing, or pass `validateResponse: false` and validate
+  each message yourself.
+
 ## Records
 
 ### `create` / `get` / `put` / `delete`
 
 ```ts
-import { currentDatetimeString } from '@atproto/lex'
+import { currentDatetimeString } from '@atproto/lex-schema'
 
 const { uri, cid } = await client.create(app.bsky.feed.post, {
   text: 'Hello, world!',
@@ -367,7 +417,15 @@ const { body } = await client.uploadBlob(bytes, { encoding: 'image/png' })
 body.blob // BlobRef — store this in a record
 
 const image = await client.getBlob(did, cid)
+
+// Large payloads: get the unread ReadableStream instead of a Uint8Array
+await using response = await client.getBlobStream(did, cid)
 ```
+
+`xrpcStream()` / `xrpcStreamSafe()` / `getBlobStream()` return an
+`XrpcStreamResponse` (binary outputs only). The caller owns the stream: consume
+it, `cancel()` it, or dispose of the response. Buffered responses are not
+disposable.
 
 ## Labelers
 
@@ -398,7 +456,8 @@ An `Action<Input, Output>` is `(client, input, options) => Output | Promise<Outp
 interchangeable with a lexicon method at the call site.
 
 ```ts
-import { type Action, Client, currentDatetimeString } from '@atproto/lex'
+import { type Action, Client } from '@atproto/lex-client'
+import { currentDatetimeString } from '@atproto/lex-schema'
 import { app } from './lexicons/index.js'
 
 type LikeInput = { uri: AtUriString; cid: CidString }

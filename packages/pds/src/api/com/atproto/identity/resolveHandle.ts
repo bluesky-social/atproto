@@ -1,4 +1,4 @@
-import { isDidString } from '@atproto/lex'
+import { isDidString } from '@atproto/lex-schema'
 import type { DidString } from '@atproto/syntax'
 import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../../../context.js'

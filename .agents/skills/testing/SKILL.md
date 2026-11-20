@@ -21,7 +21,7 @@ Full workflow, `PageHelper` API, and dev-env boot instructions: [playwright skil
 
 ## Choosing a runner
 
-Vitest is the standard and now covers the majority of the repo (~25 packages, ~270 test files) — including `bsky`, all of `packages/lex/*`, `packages/oauth/*`, and the tested `packages/internal/*`. Jest remains in 13 unmigrated packages (~165 files), among them `pds`, `ozone`, `api`, `repo`, and `xrpc-server`. Jest is deprecated: don't introduce it anywhere new, and prefer migrating a file to vitest over deepening its jest usage.
+Vitest is the standard and now covers the majority of the repo — including `bsky`, all of `packages/lex/*`, `packages/oauth/*`, and the tested `packages/internal/*`. Jest remains in about a dozen unmigrated packages, among them `pds`, `ozone`, `api`, `repo`, and `xrpc-server`. Jest is deprecated: don't introduce it anywhere new, and prefer migrating a file to vitest over deepening its jest usage.
 
 Decide from the package's own config files, not from a memorized list — they are the only drift-proof signal:
 

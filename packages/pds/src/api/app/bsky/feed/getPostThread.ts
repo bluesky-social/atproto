@@ -1,5 +1,5 @@
 import assert from 'node:assert'
-import { isHandleString, type l } from '@atproto/lex'
+import { isHandleString, type l } from '@atproto/lex-schema'
 import { AtUri, type AtUriString } from '@atproto/syntax'
 import type { Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../../../context.js'

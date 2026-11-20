@@ -4,8 +4,8 @@ import type express from 'express'
 import type { Dispatcher } from 'undici'
 import type { Keypair } from '@atproto/crypto'
 import type { IdResolver } from '@atproto/identity'
-import type { Client } from '@atproto/lex'
-import type { AuthVerifier } from './auth-verifier.js'
+import type { Client } from '@atproto/lex-client'
+import type { AuthVerifier } from './auth/verifier.js'
 import type { BsyncClient } from './bsync.js'
 import type { ServerConfig } from './config.js'
 import type { CourierClient } from './courier.js'
@@ -14,6 +14,7 @@ import type { FeatureGatesClient } from './feature-gates/index.js'
 import type { Hydrator } from './hydration/hydrator.js'
 import type { KwsClient } from './kws.js'
 import { httpLogger as log } from './logger.js'
+import type { ProhibitedTerms } from './prohibited-terms.js'
 import type { RolodexClient } from './rolodex.js'
 import type { StashClient } from './stash.js'
 import {
@@ -30,9 +31,10 @@ export class AppContext {
       etcd: Etcd3 | undefined
       dataplane: DataPlaneClient
       dataplaneHostList: HostList
+      typeaheadClient: DataPlaneClient | undefined
+      typeaheadProhibitedTerms: ProhibitedTerms | undefined
       searchClient: Client | undefined
       suggestionsClient: Client | undefined
-      topicsClient: Client | undefined
       irisClient: Client | undefined
       hydrator: Hydrator
       views: Views
@@ -66,16 +68,20 @@ export class AppContext {
     return this.opts.dataplaneHostList
   }
 
+  get typeaheadClient(): DataPlaneClient | undefined {
+    return this.opts.typeaheadClient
+  }
+
+  get typeaheadProhibitedTerms(): ProhibitedTerms | undefined {
+    return this.opts.typeaheadProhibitedTerms
+  }
+
   get searchClient(): Client | undefined {
     return this.opts.searchClient
   }
 
   get suggestionsClient(): Client | undefined {
     return this.opts.suggestionsClient
-  }
-
-  get topicsClient(): Client | undefined {
-    return this.opts.topicsClient
   }
 
   get irisClient(): Client | undefined {

@@ -74,8 +74,6 @@
       "Bash(brew install *)",
       "Bash(dropdb *)",
       "Bash(git clean -fd *)",
-      "Bash(git push *)",
-      "Bash(git push)",
       "Bash(rm -rf /)",
       "Bash(rm -rf ~)"
     ]

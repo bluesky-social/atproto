@@ -1,12 +1,8 @@
 import type { Insertable } from 'kysely'
 import { chunkArray } from '@atproto/common'
-import {
-  type Cid,
-  type l,
-  lexParse,
-  lexStringify,
-  parseCid,
-} from '@atproto/lex'
+import { type Cid, parseCid } from '@atproto/lex-data'
+import { lexParse, lexStringify } from '@atproto/lex-json'
+import type { l } from '@atproto/lex-schema'
 import { AtUri } from '@atproto/syntax'
 import type { BackgroundQueue } from '../background.js'
 import type { DatabaseSchema } from '../db/database-schema.js'

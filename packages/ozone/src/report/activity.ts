@@ -1,10 +1,10 @@
+import type { LexMap } from '@atproto/lex-data'
 import type {
   DatetimeString,
   DidString,
-  LexMap,
   Unknown$Type,
-} from '@atproto/lex'
-import { currentDatetimeString } from '@atproto/lex'
+} from '@atproto/lex-schema'
+import { currentDatetimeString } from '@atproto/lex-schema'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import type { Database } from '../db/index.js'
 import { TimeIdKeyset, paginate } from '../db/pagination.js'
@@ -46,6 +46,7 @@ export type CreateActivityParams = {
   isAutomated?: boolean
   createdBy: DidString
   inboxStartAt?: DatetimeString
+  inboxPushEnabled?: boolean
 }
 
 export async function createReportActivity(
@@ -171,6 +172,7 @@ export async function createReportActivity(
         },
       ],
       params.inboxStartAt,
+      params.inboxPushEnabled,
     )
 
     return activity

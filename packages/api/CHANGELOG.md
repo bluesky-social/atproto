@@ -1,5 +1,125 @@
 # @atproto/api
 
+## 0.32.3
+
+### Patch Changes
+
+- [#5947](https://github.com/bluesky-social/atproto/pull/5947) [`57ac20d`](https://github.com/bluesky-social/atproto/commit/57ac20d8f387707e66fc88cdf57ff88b76678331) Thanks [@foysalit](https://github.com/foysalit)! - Include current account and record status in moderation inbox report details.
+- Updated dependencies [[`b9b1ca7`](https://github.com/bluesky-social/atproto/commit/b9b1ca7f176b93d12e39685799c5f2e1f9a63be7)]:
+  - @atproto/syntax@0.7.8
+  - @atproto/common-web@0.5.18
+  - @atproto/lexicon@0.7.20
+  - @atproto/xrpc@0.8.19
+
+## 0.32.2
+
+### Patch Changes
+
+- [#5925](https://github.com/bluesky-social/atproto/pull/5925) [`3f7eb87`](https://github.com/bluesky-social/atproto/commit/3f7eb87d02831bffc2f8a67907ce739aeaa300f0) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add the opt-in posts_and_replies_only author feed filter, excluding reposts before hydration and bounded page filling while preserving existing filters.
+
+## 0.32.1
+
+### Patch Changes
+
+- [#4722](https://github.com/bluesky-social/atproto/pull/4722) [`b9f1f1d`](https://github.com/bluesky-social/atproto/commit/b9f1f1d2b169cc509e192350496049cf93d6115d) Thanks [@gcwill70](https://github.com/gcwill70)! - Add bounded bulk moderation actions with per-subject report targeting, external IDs, and partial-failure results.
+
+- [#5913](https://github.com/bluesky-social/atproto/pull/5913) [`50877cc`](https://github.com/bluesky-social/atproto/commit/50877ccd37254ad8170c6cdcdd38014b377203d5) Thanks [@foysalit](https://github.com/foysalit)! - Allow bulk report closure to explicitly include the report being reviewed while protecting other active reviews.
+
+## 0.32.0
+
+### Minor Changes
+
+- [#5900](https://github.com/bluesky-social/atproto/pull/5900) [`f174012`](https://github.com/bluesky-social/atproto/commit/f174012f740357c0dfa6c2525a9d69562dbd7f38) Thanks [@gcwill70](https://github.com/gcwill70)! - Add admin-only moderator activity history combining human report activities and moderation events in chronological order.
+
+## 0.31.3
+
+### Patch Changes
+
+- [#5895](https://github.com/bluesky-social/atproto/pull/5895) [`3459596`](https://github.com/bluesky-social/atproto/commit/3459596f6f5fa684ae616249deaec6e7a39700bd) Thanks [@gcwill70](https://github.com/gcwill70)! - Update `emitEvent.reportAction` to allow account level actions to target reports on owned subjects using `subjects` and `subjectTypes`.
+
+## 0.31.2
+
+### Patch Changes
+
+- [#5893](https://github.com/bluesky-social/atproto/pull/5893) [`f0653de`](https://github.com/bluesky-social/atproto/commit/f0653de696169e16dc003f11877b9eb0ae6533c0) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add `app.bsky.unspecced.getAtmosphereTimelineV2`, with actor profiles in `relatedViews`, subject refs for each activity, and publication viewer subscriptions. Livestream views now include `lastSeenAt`.
+
+- [#5892](https://github.com/bluesky-social/atproto/pull/5892) [`a704f10`](https://github.com/bluesky-social/atproto/commit/a704f10c040a989244cfa578e65f006ff7de0f83) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Expose optional App Store and Google Play links on getAtmosphereApps cards, preserving optional profiles and profile-first images.
+
+- [#5880](https://github.com/bluesky-social/atproto/pull/5880) [`e9fbdab`](https://github.com/bluesky-social/atproto/commit/e9fbdab8e2302e3e01ea923c2db5ee4d7ff33681) Thanks [@blackmichael](https://github.com/blackmichael)! - Add optional `photoCount` to gallery views using the dataplane's total `social.grain.gallery.item` backlink count, independently of the hydrated preview items.
+
+- [#5892](https://github.com/bluesky-social/atproto/pull/5892) [`a704f10`](https://github.com/bluesky-social/atproto/commit/a704f10c040a989244cfa578e65f006ff7de0f83) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Expose optional App Store and Google Play links on Atmosphere Explore app cards while preserving optional profiles and profile-first images.
+
+## 0.31.1
+
+### Patch Changes
+
+- [#5853](https://github.com/bluesky-social/atproto/pull/5853) [`57b7a37`](https://github.com/bluesky-social/atproto/commit/57b7a375f571bf7f42709f93f98d3f9bd000fb6d) Thanks [@blackmichael](https://github.com/blackmichael)! - Add optional hydrated viewBskyPost values alongside existing bskyPostRef fields on Atmosphere timeline activities and Explore articles and livestreams. Reuse post hydration and viewer visibility checks, preserving references and external content when posts are unavailable. Refresh consuming contract inputs.
+  
+  Keep Explore and the Atmosphere timeline available when optional post hydration fails, omitting incomplete post views while retaining external content and references. Preserve request cancellation and failures for required timeline root posts.
+
+- [#5871](https://github.com/bluesky-social/atproto/pull/5871) [`4ca55db`](https://github.com/bluesky-social/atproto/commit/4ca55dbc6d9e04d721fc14abffb73ce33158e002) Thanks [@blackmichael](https://github.com/blackmichael)! - Rework Atmosphere timeline groups: replace overflow with complete group item URIs and hydrate only the newest actor-group item. Keep subject groups to one collection and multiple actors, and return article creations as standalone items with collection-specific related activity references and actor profiles.
+  
+  Require complete actor lists for subject groups and related-activity buckets, preserving the existing record fallbacks when profiles are unavailable.
+
+## 0.31.0
+
+### Minor Changes
+
+- [#5802](https://github.com/bluesky-social/atproto/pull/5802) [`d930c3b`](https://github.com/bluesky-social/atproto/commit/d930c3b6b401df7085b8e85f3fc83dbbc3e28605) Thanks [@foysalit](https://github.com/foysalit)! - Retire moderation subject statistics and count-based filters. Legacy count-based
+  sorts fall back to last reported time.
+
+### Patch Changes
+
+- [#5861](https://github.com/bluesky-social/atproto/pull/5861) [`211c9e8`](https://github.com/bluesky-social/atproto/commit/211c9e8acceccca2e983b7bc8ebfc0756664c956) Thanks [@blackmichael](https://github.com/blackmichael)! - Use Iris Grain gallery recommendations in Atmosphere Explore behind `atmosphere_explore:galleries:iris:enable`, independently of article recommendations. Return the gallery recommendation ID in `photos.recIdStr`. Retain curated photos when Iris returns an empty list or fails.
+  
+  Update the shared Explore contract description for recommended photo galleries.
+
+## 0.30.3
+
+### Patch Changes
+
+- [#5817](https://github.com/bluesky-social/atproto/pull/5817) [`d4f2c91`](https://github.com/bluesky-social/atproto/commit/d4f2c919697d37af8f411f724e12b8ce2b88f922) Thanks [@foysalit](https://github.com/foysalit)! - Support linking report closures to existing moderation events and targeting all subjects owned by an account from a moderation event.
+- Updated dependencies []:
+  - @atproto/common-web@0.5.17
+  - @atproto/lexicon@0.7.19
+  - @atproto/xrpc@0.8.18
+
+## 0.30.2
+
+### Patch Changes
+
+- [#5809](https://github.com/bluesky-social/atproto/pull/5809) [`7b640e8`](https://github.com/bluesky-social/atproto/commit/7b640e8fee709d22a0d62262068db0ddb3106741) Thanks [@blackmichael](https://github.com/blackmichael)! - Expose optional author-declared bskyPostRef strong references beside view on unspecced Atmosphere timeline activities and Explore article and livestream items, without changing external embed schemas or fetching the referenced post.
+
+- [#5799](https://github.com/bluesky-social/atproto/pull/5799) [`9537a65`](https://github.com/bluesky-social/atproto/commit/9537a659a9d85bbeef1bb423fcb4be9d2e618ff2) Thanks [@dholms](https://github.com/dholms)! - Add the `com.atproto.label.record` lexicon
+
+- [#5813](https://github.com/bluesky-social/atproto/pull/5813) [`43b0be2`](https://github.com/bluesky-social/atproto/commit/43b0be2fa15e49479c11254101a056e9da137c84) Thanks [@foysalit](https://github.com/foysalit)! - Expose account enforcement and best-effort profile information in the moderation inbox.
+
+- [#5818](https://github.com/bluesky-social/atproto/pull/5818) [`ba75afa`](https://github.com/bluesky-social/atproto/commit/ba75afad9fab6d1f5c207b1b5d12a7ecfc5b379d) Thanks [@foysalit](https://github.com/foysalit)! - Expose whether an account has active strikes in its moderation inbox status.
+
+- [#5806](https://github.com/bluesky-social/atproto/pull/5806) [`b794e18`](https://github.com/bluesky-social/atproto/commit/b794e186bc81ce979d29de18f3ca9ab03b7e3d29) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Use geo headers instead of countryCode and regionCode query parameters when selecting curated Atmosphere Explore content.
+
+## 0.30.1
+
+### Patch Changes
+
+- [#5801](https://github.com/bluesky-social/atproto/pull/5801) [`11f52c5`](https://github.com/bluesky-social/atproto/commit/11f52c5588279d159ab12404a1b323731a467fdd) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add getAtmosphereApps with optional category filtering and known followers in app profiles.
+- Updated dependencies []:
+  - @atproto/common-web@0.5.16
+  - @atproto/lexicon@0.7.18
+  - @atproto/xrpc@0.8.17
+
+## 0.30.0
+
+### Minor Changes
+
+- [#5783](https://github.com/bluesky-social/atproto/pull/5783) [`d6e1945`](https://github.com/bluesky-social/atproto/commit/d6e1945e095da70e0b188d5c6684a5797ce9ee8c) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Keep `featured` as a required, deprecated compatibility field on `app.bsky.unspecced.getAtmosphereExploreTab` article, publication, photo, and livestream items; it is always `false`. Retired content scheduling no longer selects or orders articles, publications, and photos. Livestreams are shown from `previewAt` (or `startsAt`) until `endsAt`, and are reported inactive until `startsAt`. App cards now include an optional `profile` (`app.bsky.actor.defs#profileViewDetailed`) hydrated from the app's account, whose avatar and banner back `logo` and `backgroundImage`.
+
+## 0.29.6
+
+### Patch Changes
+
+- [#5756](https://github.com/bluesky-social/atproto/pull/5756) [`54f54ea`](https://github.com/bluesky-social/atproto/commit/54f54ea831f37fe9f722844177f7e1bed8ae8bdc) Thanks [@gcwill70](https://github.com/gcwill70)! - Protect assigned and escalated reports from broad moderation-event and batch report closure, including owned subjects.
+
 ## 0.29.5
 
 ### Patch Changes

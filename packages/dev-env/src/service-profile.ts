@@ -1,5 +1,5 @@
 import type { AtpAgent } from '@atproto/api'
-import type { DidString } from '@atproto/lex'
+import type { DidString } from '@atproto/lex-schema'
 import type { TestPds } from './pds.js'
 
 export type ServiceUserDetails = {

@@ -1,4 +1,9 @@
-import { type Infer, type Main, type RecordSchema, getMain } from '@atproto/lex'
+import {
+  type Infer,
+  type Main,
+  type RecordSchema,
+  getMain,
+} from '@atproto/lex-schema'
 import type { AtUriString, NsidString } from '@atproto/syntax'
 import type { HandlerOpts, TapHandler } from './channel.js'
 import type { IdentityEvent, RecordEvent, TapEvent } from './types.js'

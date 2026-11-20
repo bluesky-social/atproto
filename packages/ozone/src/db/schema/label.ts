@@ -1,5 +1,5 @@
 import type { Generated, Selectable } from 'kysely'
-import type { DatetimeString, DidString, UriString } from '@atproto/lex'
+import type { DatetimeString, DidString, UriString } from '@atproto/lex-schema'
 
 export const tableName = 'label'
 

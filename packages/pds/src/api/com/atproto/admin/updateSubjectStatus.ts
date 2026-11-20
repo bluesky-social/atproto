@@ -6,7 +6,7 @@ import { com } from '../../../../lexicons/index.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.admin.updateSubjectStatus, {
-    auth: ctx.authVerifier.moderator,
+    auth: ctx.authVerifier.moderatorOrEntrywayService,
     handler: async ({ input }) => {
       const { subject, takedown, deactivated } = input.body
 

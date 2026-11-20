@@ -5,6 +5,27 @@ A command-line application for developers to construct and manage development en
 [![NPM](https://img.shields.io/npm/v/@atproto/dev-env)](https://www.npmjs.com/package/@atproto/dev-env)
 [![Github CI Status](https://github.com/bluesky-social/atproto/actions/workflows/repo.yaml/badge.svg)](https://github.com/bluesky-social/atproto/actions/workflows/repo.yaml)
 
+## Run the local stack
+
+Use the Node version in the repository's `.nvmrc`. From the repository root,
+install dependencies and build the generated schemas, services, and PDS UI:
+
+```sh
+pnpm install --frozen-lockfile
+pnpm run build
+cd packages/dev-env
+pnpm start
+```
+
+Docker must be running. The startup helper starts disposable PostgreSQL and Redis
+containers, or reuses the existing test containers. Use a fresh database for a
+fresh fixture set; the seed is intended to run once per environment. Stopping the
+helper removes containers it created. Do not reset shared test containers while
+another test or development environment is using them.
+
+The stack includes PLC (2582), PDS (2583), AppView (2584), Ozone (2587), and bsync.
+Service URLs and DIDs are available at `http://localhost:2581/`.
+
 ## REPL API
 
 The following methods are available in the REPL.

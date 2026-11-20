@@ -29,7 +29,6 @@ const parsePdsHeaders = (
 export const envToSecrets = (env: OzoneEnvironment): OzoneSecrets => {
   assert(env.adminPassword)
   assert(env.signingKeyHex)
-
   return {
     adminPassword: env.adminPassword,
     signingKeyHex: env.signingKeyHex,
