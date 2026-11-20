@@ -139,19 +139,22 @@ export function isDatetimeStringLenient<I>(
 
   if (typeof input !== 'string') return false
 
-  try {
-    if (isValidISODateString(input)) return true
-  } catch {
-    // isValidISODateString can throw on some inputs.
-  }
-
   // @NOTE The "iso-datestring-validator" implementation is *not* compliant with
   // the AT Protocol datetime specification. In particular, it rejects some
   // valid AT Protocol datetimes (eg: "1985-04-12T23:20:50.1235678912345Z",
   // "1985-04-12T23:20:50.123+01:45", "1985-04-12T23:20:50.1234567890Z"). For
-  // this reason, we run "isDatetimeString" validation if "isValidISODateString"
-  // does not return true.
-  return isDatetimeString(input)
+  // this reason, we accept anything that passes "isDatetimeString" validation.
+  // That check runs first because it is much cheaper ("isValidISODateString"
+  // compiles new RegExp objects on every call), and because virtually every
+  // datetime found in practice passes it.
+  if (isDatetimeString(input)) return true
+
+  try {
+    return isValidISODateString(input)
+  } catch {
+    // isValidISODateString can throw on some inputs.
+    return false
+  }
 }
 
 /**

@@ -3,7 +3,7 @@ import {
   type InferOutput,
   Schema,
   type UnwrapValidator,
-  type ValidationContext,
+  ValidationContext,
   type ValidationResult,
   type Validator,
 } from '../core.js'
@@ -44,24 +44,53 @@ export class OptionalSchema<TValidator extends Validator> extends Schema<
     input: unknown,
     ctx: ValidationContext,
   ): ValidationResult<InferOutput<TValidator> | undefined> {
-    // Optimization: No need to apply child schema defaults in validation mode
-    if (input === undefined && ctx.options.mode === 'validate') {
-      return ctx.success(input)
+    if (input !== undefined) {
+      return ctx.validate(input, this.validator)
     }
 
-    // @NOTE The inner schema might apply a default value so we need to run it
-    // even if input is undefined.
-    const result = ctx.validate(input, this.validator)
-
-    if (result.success) {
-      return result
+    // @NOTE In parse mode, the inner validator might replace undefined with a
+    // default value, so it needs to run.
+    if (ctx.options.mode === 'parse') {
+      // Optimization: Most inner validators either reject undefined (building a
+      // LexValidationError that is immediately discarded) or return it as-is.
+      // Skipping them adds up when parsing payloads with many absent optional
+      // properties.
+      if (this.appliesDefault(ctx.options.strict)) {
+        const result = ctx.validate(input, this.validator)
+        if (result.success) return result
+      }
     }
 
-    if (input === undefined) {
-      return ctx.success(input)
-    }
+    return ctx.success(input)
+  }
 
-    return result
+  #strictAppliesDefault?: boolean
+  #lenientAppliesDefault?: boolean
+
+  /**
+   * Whether the inner validator replaces `undefined` with a value (eg. applies
+   * a default) in "parse" mode. Validators are stateless, so this only depends
+   * on the `strict` option, and is computed once per value of that option. It
+   * is computed in a fresh context, so that issues already collected by the
+   * context being validated can't affect it.
+   */
+  private appliesDefault(strict: boolean): boolean {
+    const known = strict
+      ? this.#strictAppliesDefault
+      : this.#lenientAppliesDefault
+    if (known !== undefined) return known
+
+    const result = ValidationContext.validate(undefined, this.validator, {
+      mode: 'parse',
+      strict,
+    })
+
+    const appliesDefault = result.success && result.value !== undefined
+
+    if (strict) this.#strictAppliesDefault = appliesDefault
+    else this.#lenientAppliesDefault = appliesDefault
+
+    return appliesDefault
   }
 }
 
