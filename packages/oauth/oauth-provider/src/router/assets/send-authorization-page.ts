@@ -1,6 +1,6 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import type { Customization } from '../../customization/customization.js'
-import type { AuthorizationResultAuthorizePage } from '../../result/authorization-result-authorize-page.js'
+import type { AuthorizationResultAuthorize } from '../../result/authorization-result-authorize.js'
 import { type SendWebAppOptions, sendWebAppFactory } from './assets.js'
 
 export function sendAuthorizePageFactory(
@@ -16,7 +16,7 @@ export function sendAuthorizePageFactory(
   return async function sendAuthorizePage(
     req: IncomingMessage,
     res: ServerResponse,
-    data: AuthorizationResultAuthorizePage,
+    data: AuthorizationResultAuthorize,
   ): Promise<void> {
     return sendApp(req, res, {
       data: {
