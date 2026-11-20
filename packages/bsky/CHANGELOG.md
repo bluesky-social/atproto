@@ -1,5 +1,28 @@
 # @atproto/bsky
 
+## 0.5.16
+
+### Patch Changes
+
+- [#5960](https://github.com/bluesky-social/atproto/pull/5960) [`2a3aa1d`](https://github.com/bluesky-social/atproto/commit/2a3aa1d1ae4b56c7a6db12d442e525ce951ba763) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - For a service JWT with `iss` `did:plc:x#atproto_labeler`, the `viewer` is set as `did:plc:x` instead of `did:plc:x#atproto_labeler`. Service JWTs with an `iss` service id other than `#atproto` and `#atproto_labeler` are rejected.
+
+- [#5961](https://github.com/bluesky-social/atproto/pull/5961) [`d9cdc54`](https://github.com/bluesky-social/atproto/commit/d9cdc5400d893880203bd625e0748434d99fd02b) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - getFeed rejects service JWTs whose `aud` doesn't match their `lxm`: the feed generator for getFeedSkeleton, AppView for getFeed.
+
+- [#5960](https://github.com/bluesky-social/atproto/pull/5960) [`2a3aa1d`](https://github.com/bluesky-social/atproto/commit/2a3aa1d1ae4b56c7a6db12d442e525ce951ba763) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Stop logging and counting labeler-signed service JWTs.
+
+- [#5961](https://github.com/bluesky-social/atproto/pull/5961) [`d9cdc54`](https://github.com/bluesky-social/atproto/commit/d9cdc5400d893880203bd625e0748434d99fd02b) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Service JWTs with `iss` `did:plc:x#atproto_labeler` now require `lxm`, like all other service JWTs.
+- Updated dependencies [[`ee63e5e`](https://github.com/bluesky-social/atproto/commit/ee63e5ede255e40251a9e761befec9d623dfb1ec), [`ee63e5e`](https://github.com/bluesky-social/atproto/commit/ee63e5ede255e40251a9e761befec9d623dfb1ec), [`33d620b`](https://github.com/bluesky-social/atproto/commit/33d620b2ffc4b9a5b4959cbcc1262c5138c8a506), [`1403383`](https://github.com/bluesky-social/atproto/commit/1403383ea89737ff1910346107a4ef822e4ef6d5)]:
+  - @atproto/syntax@0.7.9
+  - @atproto/lex-schema@0.3.1
+  - @atproto/api@0.32.4
+  - @atproto/repo@0.11.7
+  - @atproto/sync@0.4.29
+  - @atproto/lex-client@0.6.1
+  - @atproto/xrpc-server@0.13.15
+  - @atproto/common@0.8.12
+  - @atproto/identity@0.5.25
+  - @atproto-labs/xrpc-utils@0.1.36
+
 ## 0.5.15
 
 ### Patch Changes

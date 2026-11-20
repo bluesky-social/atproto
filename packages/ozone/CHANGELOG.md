@@ -1,5 +1,19 @@
 # @atproto/ozone
 
+## 0.16.1
+
+### Patch Changes
+
+- [#5956](https://github.com/bluesky-social/atproto/pull/5956) [`1403383`](https://github.com/bluesky-social/atproto/commit/1403383ea89737ff1910346107a4ef822e4ef6d5) Thanks [@gcwill70](https://github.com/gcwill70)! - Add stat group details with an inbound report-type breakdown for a selected UTC date range.
+- Updated dependencies [[`ee63e5e`](https://github.com/bluesky-social/atproto/commit/ee63e5ede255e40251a9e761befec9d623dfb1ec), [`ee63e5e`](https://github.com/bluesky-social/atproto/commit/ee63e5ede255e40251a9e761befec9d623dfb1ec), [`33d620b`](https://github.com/bluesky-social/atproto/commit/33d620b2ffc4b9a5b4959cbcc1262c5138c8a506)]:
+  - @atproto/syntax@0.7.9
+  - @atproto/lex-schema@0.3.1
+  - @atproto/lex-client@0.6.1
+  - @atproto/lex-password-session@0.3.5
+  - @atproto/xrpc-server@0.13.15
+  - @atproto/common@0.8.12
+  - @atproto/identity@0.5.25
+
 ## 0.16.0
 
 ### Minor Changes

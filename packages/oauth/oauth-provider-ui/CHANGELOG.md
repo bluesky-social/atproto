@@ -1,5 +1,13 @@
 # @atproto/oauth-provider-ui
 
+## 0.11.2
+
+### Patch Changes
+
+- [#5970](https://github.com/bluesky-social/atproto/pull/5970) [`6569065`](https://github.com/bluesky-social/atproto/commit/65690650c877cca4aa5c0b88136c865e64d60f56) Thanks [@Spotchi](https://github.com/Spotchi)! - Keep the 2FA field on the sign-in form when the identifier was normalized (domain appended on blur or Enter) or filled without an input event. The submitted credentials are now the reference for detecting a credential change, so the first keystroke in the code field no longer clears the second factor
+- Updated dependencies []:
+  - @atproto/oauth-provider-api@0.12.1
+
 ## 0.11.1
 
 ### Patch Changes

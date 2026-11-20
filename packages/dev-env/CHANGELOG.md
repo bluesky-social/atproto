@@ -1,5 +1,24 @@
 # @atproto/dev-env
 
+## 0.7.17
+
+### Patch Changes
+
+- Updated dependencies [[`ee63e5e`](https://github.com/bluesky-social/atproto/commit/ee63e5ede255e40251a9e761befec9d623dfb1ec), [`ee63e5e`](https://github.com/bluesky-social/atproto/commit/ee63e5ede255e40251a9e761befec9d623dfb1ec), [`2a3aa1d`](https://github.com/bluesky-social/atproto/commit/2a3aa1d1ae4b56c7a6db12d442e525ce951ba763), [`d9cdc54`](https://github.com/bluesky-social/atproto/commit/d9cdc5400d893880203bd625e0748434d99fd02b), [`2a3aa1d`](https://github.com/bluesky-social/atproto/commit/2a3aa1d1ae4b56c7a6db12d442e525ce951ba763), [`d9cdc54`](https://github.com/bluesky-social/atproto/commit/d9cdc5400d893880203bd625e0748434d99fd02b), [`33d620b`](https://github.com/bluesky-social/atproto/commit/33d620b2ffc4b9a5b4959cbcc1262c5138c8a506), [`1403383`](https://github.com/bluesky-social/atproto/commit/1403383ea89737ff1910346107a4ef822e4ef6d5)]:
+  - @atproto/syntax@0.7.9
+  - @atproto/lex-schema@0.3.1
+  - @atproto/bsky@0.5.16
+  - @atproto/api@0.32.4
+  - @atproto/ozone@0.16.1
+  - @atproto/bsync@0.1.12
+  - @atproto/common-web@0.5.19
+  - @atproto/lexicon@0.7.21
+  - @atproto/pds@0.5.63
+  - @atproto/sync@0.4.29
+  - @atproto/lex-client@0.6.1
+  - @atproto/xrpc-server@0.13.15
+  - @atproto/identity@0.5.25
+
 ## 0.7.16
 
 ### Patch Changes

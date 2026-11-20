@@ -1,5 +1,14 @@
 # @atproto/lex-server
 
+## 0.2.7
+
+### Patch Changes
+
+- [#5789](https://github.com/bluesky-social/atproto/pull/5789) [`57c2b30`](https://github.com/bluesky-social/atproto/commit/57c2b3086b17bccd13b48ab7555292ef4ecf29c2) Thanks [@kuldeepsinh19](https://github.com/kuldeepsinh19)! - Fix `request.signal` being aborted by `@atproto/lex-server/nodejs` as soon as the request body was read. The signal is now aborted when the response closes before completing (e.g. the client disconnected).
+- Updated dependencies [[`ee63e5e`](https://github.com/bluesky-social/atproto/commit/ee63e5ede255e40251a9e761befec9d623dfb1ec)]:
+  - @atproto/lex-schema@0.3.1
+  - @atproto/lex-rpc@0.2.1
+
 ## 0.2.6
 
 ### Patch Changes

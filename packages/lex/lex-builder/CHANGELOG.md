@@ -1,5 +1,14 @@
 # @atproto/lex-builder
 
+## 0.1.22
+
+### Patch Changes
+
+- [#5962](https://github.com/bluesky-social/atproto/pull/5962) [`603f55b`](https://github.com/bluesky-social/atproto/commit/603f55b801b2bab56972ce18b71ad75236e7a613) Thanks [@Till3005](https://github.com/Till3005)! - Fix generated import specifiers for refs to a parent namespace. A lexicon like `com.example.foo.child` referencing `com.example.foo` previously produced `./.defs.js` (or `./...defs` for deeper nesting) because the `.defs` suffix was appended after computing the relative path; the suffix now participates in the path resolution, yielding `../foo.defs.js`.
+- Updated dependencies [[`ee63e5e`](https://github.com/bluesky-social/atproto/commit/ee63e5ede255e40251a9e761befec9d623dfb1ec)]:
+  - @atproto/lex-schema@0.3.1
+  - @atproto/lex-document@0.1.18
+
 ## 0.1.21
 
 ### Patch Changes
