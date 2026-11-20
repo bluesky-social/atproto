@@ -102,6 +102,38 @@ describe('auth', () => {
     ).rejects.toThrow('missing jwt lexicon method ("lxm")')
   })
 
+  it('uses the DID as the caller of a did#atproto service JWT', async () => {
+    await sc.follow(sc.dids.alice, sc.dids.bob)
+    await network.processAll()
+
+    const jwt = await createServiceJwt({
+      iss: `${alice}#atproto`,
+      aud: network.bsky.ctx.cfg.serverDid,
+      lxm: ids.AppBskyActorGetProfile,
+      keypair: await network.pds.ctx.actorStore.keypair(alice),
+    })
+    const { data } = await agent.api.app.bsky.actor.getProfile(
+      { actor: bob },
+      { headers: { authorization: `Bearer ${jwt}` } },
+    )
+    expect(data.viewer?.following).toBeDefined()
+  })
+
+  it('rejects a service JWT with an unsupported service id', async () => {
+    const jwt = await createServiceJwt({
+      iss: `${alice}#atproto_other`,
+      aud: network.bsky.ctx.cfg.serverDid,
+      lxm: ids.AppBskyActorGetProfile,
+      keypair: await network.pds.ctx.actorStore.keypair(alice),
+    })
+    await expect(
+      agent.api.app.bsky.actor.getProfile(
+        { actor: bob },
+        { headers: { authorization: `Bearer ${jwt}` } },
+      ),
+    ).rejects.toThrow('unsupported jwt iss service id: #atproto_other')
+  })
+
   it('throws if the user key is incorrect', async () => {
     const bobKeypair = await network.pds.ctx.actorStore.keypair(bob)
 

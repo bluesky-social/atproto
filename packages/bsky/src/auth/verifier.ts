@@ -201,7 +201,6 @@ export class AuthVerifier {
             iss: null,
             aud: null,
           })
-          events.standardServiceJwtIssuer(iss)
           if (
             !opts.skipAudCheck &&
             !(this.standardAudienceDids as Set<string>).has(aud)
@@ -574,8 +573,13 @@ export class AuthVerifier {
         throw new AuthRequiredError('identity unknown')
       }
 
-      const keyId =
-        serviceId === 'atproto_labeler' ? 'atproto_label' : 'atproto'
+      const keyId = serviceKeyId(serviceId)
+      if (!keyId) {
+        throw new AuthRequiredError(
+          `unsupported jwt iss service id: #${serviceId}`,
+          'BadJwtIss',
+        )
+      }
       let identity: GetIdentityByDidResponse
       try {
         identity = await this.dataplane.getIdentityByDid({ did })
@@ -679,6 +683,15 @@ const bearerTokenFromReq = (req: express.Request): string | null => {
 // service refs may look like "did:plc:example#service_id". we want to extract the did part "did:plc:example".
 const issuerDid = (iss: DidString | `${DidString}#${string}`): DidString =>
   iss.split('#')[0] as DidString
+
+// The service id in `iss` selects the key that signed the JWT: the account key
+// for `#atproto` (or no service id), the labeler key for `#atproto_labeler`.
+// Other service ids are unsupported.
+const serviceKeyId = (serviceId: string | undefined): string | undefined => {
+  if (serviceId === undefined || serviceId === 'atproto') return 'atproto'
+  if (serviceId === 'atproto_labeler') return 'atproto_label'
+  return undefined
+}
 
 const claimedSession = (
   token: string | null,
