@@ -20,13 +20,6 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError('Invalid operation')
       }
 
-      const rotationKey =
-        ctx.cfg.entryway?.plcRotationKey ?? ctx.plcRotationKey.did()
-      if (!op.rotationKeys.includes(rotationKey)) {
-        throw new InvalidRequestError(
-          "Rotation keys do not include server's rotation key",
-        )
-      }
       if (op.services['atproto_pds']?.type !== 'AtprotoPersonalDataServer') {
         throw new InvalidRequestError('Incorrect type on atproto_pds service')
       }
