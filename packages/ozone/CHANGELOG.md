@@ -1,5 +1,11 @@
 # @atproto/ozone
 
+## 0.16.3
+
+### Patch Changes
+
+- [#5976](https://github.com/bluesky-social/atproto/pull/5976) [`58e882b`](https://github.com/bluesky-social/atproto/commit/58e882b7b0bbe6bb186fd0652be87dd88ba1e935) Thanks [@foysalit](https://github.com/foysalit)! - Allow inbox appeals for active, explicitly configured moderation tags.
+
 ## 0.16.2
 
 ### Patch Changes
