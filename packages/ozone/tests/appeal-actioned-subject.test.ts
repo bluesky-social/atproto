@@ -8,7 +8,11 @@ import {
 import { toDatetimeString } from '@atproto/lex'
 import type { DidString } from '@atproto/syntax'
 import { jsonb } from '../src/db/types.js'
-import { APPEAL_REASON_TYPE, appealWindowEnd } from '../src/inbox/appeal.js'
+import {
+  APPEAL_REASON_TYPE,
+  appealWindowEnd,
+  assertAppealAllowed,
+} from '../src/inbox/appeal.js'
 import { loadSubject } from '../src/inbox/views.js'
 import { com, tools } from '../src/lexicons/index.js'
 import {
@@ -1975,6 +1979,189 @@ describe('appealActionedSubject', () => {
         { headers: { ...sc.getHeaders(did), 'atproto-proxy': proxyHeader } },
       )
     }
+
+    describe('configured appealable tags', () => {
+      let previousTags: string[] | undefined
+
+      beforeAll(() => {
+        previousTags = network.ozone.ctx.cfg.inbox.appealableTags
+        network.ozone.ctx.cfg.inbox.appealableTags = [
+          'appealable-test-tag',
+          'other-restriction',
+        ]
+      })
+      afterAll(() => {
+        network.ozone.ctx.cfg.inbox.appealableTags = previousTags
+      })
+
+      async function tag(
+        subject: EmitSubject,
+        add: string[],
+        remove: string[] = [],
+      ) {
+        return modClient.emitEvent({
+          subject,
+          event: tools.ozone.moderation.defs.modEventTag.$build({
+            add,
+            remove,
+          }),
+        })
+      }
+
+      it('only accepts configured, active tags without revealing them', async () => {
+        const subject = await createSubject('appealtagactive')
+        const unlisted = await tag(subject, ['private-note'])
+        await expect(legacyAppeal(subject.did)).rejects.toMatchObject({
+          error: 'NotAppealable',
+        })
+        await expect(appeal(unlisted.id, subject.did)).rejects.toMatchObject({
+          error: 'NotAppealable',
+        })
+
+        const allowed = await tag(subject, ['appealable-test-tag'])
+        network.ozone.ctx.cfg.inbox.appealableTags = []
+        await expect(legacyAppeal(subject.did)).rejects.toMatchObject({
+          error: 'NotAppealable',
+        })
+        await expect(appeal(allowed.id, subject.did)).rejects.toMatchObject({
+          error: 'NotAppealable',
+        })
+        network.ozone.ctx.cfg.inbox.appealableTags = [
+          'appealable-test-tag',
+          'other-restriction',
+        ]
+
+        await expect(appeal(unlisted.id, subject.did)).rejects.toMatchObject({
+          error: 'NotAppealable',
+        })
+        await expect(appeal(allowed.id, subject.did)).rejects.toMatchObject({
+          error: 'NotAppealable',
+        })
+        await expect(
+          callAppeal({ subject }, sc.dids.alice),
+        ).rejects.toMatchObject({
+          error: 'NotAppealable',
+        })
+
+        const { data } = await legacyAppeal(subject.did)
+        expect(data.appeal.state).toBe('pending')
+        expect(data).not.toHaveProperty('latestAction')
+        expect(data).not.toHaveProperty('actionCount')
+        expect(JSON.stringify(data)).not.toContain('appealable-test-tag')
+        const report = await latestAppealReport(subject.did)
+        expect(report).toMatchObject({ actionEventIds: null })
+        expect(data.createdAt).toBe(report.createdAt)
+      })
+
+      it('rejects removed tags and ignores tags on a different subject', async () => {
+        const account = await createSubject('appealtagscope')
+        const post = await sc.post(account.did, 'a post')
+        const record = com.atproto.repo.strongRef.$build({
+          uri: post.ref.uriStr,
+          cid: post.ref.cidStr,
+        })
+        const action = await tag(record, ['appealable-test-tag'])
+        await expect(legacyAppeal(account.did)).rejects.toMatchObject({
+          error: 'NotAppealable',
+        })
+        await expect(
+          callAppeal({ subject: record }, account.did),
+        ).rejects.toMatchObject({ error: 'NotAppealable' })
+        await tag(account, ['appealable-test-tag'])
+        await expect(
+          callAppeal({ subject: record }, account.did),
+        ).rejects.toMatchObject({ error: 'NotAppealable' })
+        await tag(record, [], ['appealable-test-tag'])
+        await expect(
+          callAppeal({ subject: record }, account.did),
+        ).rejects.toMatchObject({ error: 'NotAppealable' })
+        await expect(appeal(action.id, account.did)).rejects.toMatchObject({
+          error: 'NotAppealable',
+        })
+      })
+
+      it('rechecks a tag before committing the appeal', async () => {
+        const subject = await createSubject('appealtagrace')
+        await tag(subject, ['appealable-test-tag'])
+        const guard = () =>
+          network.ozone.ctx.db.transaction((dbTxn) =>
+            assertAppealAllowed(dbTxn, new RepoSubject(subject.did), {
+              windowMonths: 6,
+              appealableTags: ['appealable-test-tag'],
+              requireAppealableTag: true,
+            }),
+          )
+        await expect(guard()).resolves.toBeUndefined()
+        await tag(subject, [], ['appealable-test-tag'])
+        await expect(guard()).rejects.toMatchObject({ error: 'NotAppealable' })
+      })
+
+      it('keeps tag history private even when it predates the inbox', async () => {
+        const subject = await createSubject('appealtagprecut')
+        const action = await tag(subject, ['appealable-test-tag'])
+        await backdate(subject.did, [action.id], 200 * 24 * 60 * 60 * 1000)
+        await expect(appeal(action.id, subject.did)).rejects.toMatchObject({
+          error: 'NotAppealable',
+        })
+        const { data } = await legacyAppeal(subject.did)
+        expect(data.appeal.state).toBe('pending')
+        expect(data).not.toHaveProperty('latestAction')
+        expect(JSON.stringify(data)).not.toContain('appealable-test-tag')
+      })
+
+      it('accepts a configured current tag without an addition event', async () => {
+        const subject = await createSubject('appealtagstatus')
+        const action = await tag(subject, ['other-restriction'])
+        await network.ozone.ctx.db.db
+          .updateTable('moderation_event')
+          .set({ addedTags: null })
+          .where('id', '=', action.id)
+          .execute()
+        await expect(legacyAppeal(subject.did)).resolves.toMatchObject({
+          data: { appeal: { state: 'pending' } },
+        })
+      })
+
+      it('permits another appeal only after a new eligible tag addition', async () => {
+        const subject = await createSubject('appealtagrepeat')
+        const first = await tag(subject, ['appealable-test-tag'])
+        await network.ozone.ctx.db.db
+          .updateTable('moderation_event')
+          .set({ createdAt: toDatetimeString(Date.now() - 3000) })
+          .where('id', '=', first.id)
+          .execute()
+        await legacyAppeal(subject.did)
+        await expect(legacyAppeal(subject.did)).rejects.toMatchObject({
+          error: 'AlreadyAppealed',
+        })
+        const reportId = await closeLatestAppeal(subject.did)
+        await network.ozone.ctx.db.db
+          .updateTable('report')
+          .set({ closedAt: toDatetimeString(Date.now() - 1000) })
+          .where('id', '=', reportId)
+          .execute()
+        await expect(legacyAppeal(subject.did)).rejects.toMatchObject({
+          error: 'AlreadyAppealed',
+        })
+        await tag(subject, ['private-note'])
+        await expect(legacyAppeal(subject.did)).rejects.toMatchObject({
+          error: 'AlreadyAppealed',
+        })
+        await tag(subject, ['other-restriction'])
+        await tag(subject, [], ['other-restriction'])
+        await expect(legacyAppeal(subject.did)).rejects.toMatchObject({
+          error: 'AlreadyAppealed',
+        })
+        await tag(subject, [], ['appealable-test-tag'])
+        await expect(legacyAppeal(subject.did)).rejects.toMatchObject({
+          error: 'NotAppealable',
+        })
+        await tag(subject, ['appealable-test-tag'])
+        await expect(legacyAppeal(subject.did)).resolves.toMatchObject({
+          data: { appeal: { state: 'pending' } },
+        })
+      })
+    })
 
     it('keeps subject-only appeals for a subject with only an email at the cutoff', async () => {
       const subject = await createSubject('subjectonlyemail')
