@@ -1,6 +1,7 @@
 /*
   How AppView verifies auth:
-  1. `standardRead`, `standardWriteService`, `standardReadOptional`: called by app clients. Service JWT signed with the user's account key, an entryway session token, or a BSG token carrying the scope in the verifier's name (`read` or `write:service`). Service JWTs and entryway session tokens are accepted by all three. Used across `app.bsky.*`.
+  1. `standardRead`, `standardWriteService`, `standardReadOptional`: called by app clients or 3p labelers. Service JWT signed with the user's account key (or with a labeler's label key when `iss` is `did:plc:x#atproto_labeler`),
+      an entryway session token, or a BSG token carrying the scope in the verifier's name (`read` or `write:service`). Service JWTs and entryway session tokens are accepted by all three. Used across `app.bsky.*`.
   2. `role`: called by administrators and internal services such as Rolodex. Basic auth with username `admin` and a configured admin password. Used for contact notifications and admin-capable routes.
   3. `internal`: called by internal services such as Chat. Token signed with the secret configured for the service named by `iss`. `sub` is the user's DID, when the call is for a user. Same access as the admin password.
   4. `modService`: called by Ozone. Service JWT signed with its labeler key, or its account key for legacy issuers without a fragment. Accepted on `com.atproto.admin.getSubjectStatus` and `com.atproto.admin.updateSubjectStatus` through `roleOrModService`.
@@ -67,7 +68,7 @@ type StandardOutput = {
     type: 'standard'
     /** @note we don't validate this to be a {@link DidString} (we might want to in the future) */
     aud: string
-    iss: DidString | `${DidString}#${string}`
+    iss: DidString
     /** The service JWT from the user's PDS: wrapped in BSG's token as `service_auth`, or sent directly. Undefined for entryway session tokens and for BSG tokens without `service_auth` (OAuth). */
     serviceJwt?: string
   }
@@ -200,7 +201,6 @@ export class AuthVerifier {
             iss: null,
             aud: null,
           })
-          events.standardServiceJwtIssuer(iss)
           if (
             !opts.skipAudCheck &&
             !(this.standardAudienceDids as Set<string>).has(aud)
@@ -215,7 +215,8 @@ export class AuthVerifier {
           return {
             credentials: {
               type: 'standard',
-              iss,
+              // The fragment only selects the key to be used for verification.
+              iss: issuerDid(iss),
               aud,
               serviceJwt: token,
             },
@@ -422,7 +423,7 @@ export class AuthVerifier {
       credentials: {
         type: 'standard',
         aud: this.ownDid,
-        iss: sub as DidString | `${DidString}#${string}`,
+        iss: sub as DidString,
       },
     }
   }
@@ -572,8 +573,13 @@ export class AuthVerifier {
         throw new AuthRequiredError('identity unknown')
       }
 
-      const keyId =
-        serviceId === 'atproto_labeler' ? 'atproto_label' : 'atproto'
+      const keyId = serviceKeyId(serviceId)
+      if (!keyId) {
+        throw new AuthRequiredError(
+          `unsupported jwt iss service id: #${serviceId}`,
+          'BadJwtIss',
+        )
+      }
       let identity: GetIdentityByDidResponse
       try {
         identity = await this.dataplane.getIdentityByDid({ did })
@@ -616,14 +622,6 @@ export class AuthVerifier {
       getSigningKey,
       verifySignatureWithKey,
     )
-    if (payload.iss.endsWith('#atproto_labeler')) {
-      events.labelerServiceJwt({
-        did: payload.iss.split('#')[0],
-        lxm: payload.lxm,
-        method: parseReqNsid(reqCtx.req),
-        modService: this.isModService(payload.iss),
-      })
-    }
     assertLxmCheck()
 
     return {
@@ -672,6 +670,19 @@ const bearerTokenFromReq = (req: express.Request): string | null => {
   const header = req.headers.authorization || ''
   if (!header.startsWith(BEARER)) return null
   return header.slice(BEARER.length).trim()
+}
+
+// service refs may look like "did:plc:example#service_id". we want to extract the did part "did:plc:example".
+const issuerDid = (iss: DidString | `${DidString}#${string}`): DidString =>
+  iss.split('#')[0] as DidString
+
+// The service id in `iss` selects the key that signed the JWT: the account key
+// for `#atproto` (or no service id), the labeler key for `#atproto_labeler`.
+// Other service ids are unsupported.
+const serviceKeyId = (serviceId: string | undefined): string | undefined => {
+  if (serviceId === undefined || serviceId === 'atproto') return 'atproto'
+  if (serviceId === 'atproto_labeler') return 'atproto_label'
+  return undefined
 }
 
 const claimedSession = (

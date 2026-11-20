@@ -2,4 +2,4 @@
 '@atproto/bsky': patch
 ---
 
-Count the service JWTs that getFeed forwards to feed generators, by `aud` and `lxm`.
+getFeed rejects service JWTs whose `aud` doesn't match their `lxm`: the feed generator for getFeedSkeleton, AppView for getFeed.
