@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Apply a batch transaction of repository creates, updates, and deletes. Requires auth, implemented by PDS.",
+      "description": "Apply a batch transaction of repository creates, updates, and deletes, in a single commit. Requires auth, implemented by PDS.",
       "input": {
         "encoding": "application/json",
         "schema": {
