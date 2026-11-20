@@ -114,6 +114,11 @@
       "type": "object",
       "required": ["uri", "title", "description"],
       "properties": {
+        "providerId": {
+          "type": "string",
+          "maxLength": 128,
+          "description": "Best-effort provider domain for cosmetic attribution, such as pckt.blog. Not verified provenance."
+        },
         "uri": { "type": "string", "format": "uri" },
         "title": { "type": "string" },
         "description": { "type": "string" },
@@ -153,6 +158,11 @@
       "type": "object",
       "required": ["uri", "title", "description"],
       "properties": {
+        "providerId": {
+          "type": "string",
+          "maxLength": 128,
+          "description": "Best-effort provider domain for cosmetic attribution, such as pckt.blog. Not verified provenance."
+        },
         "uri": { "type": "string", "format": "uri" },
         "title": { "type": "string" },
         "description": { "type": "string" },
@@ -228,6 +238,11 @@
       "type": "object",
       "required": ["uri", "title", "description", "items"],
       "properties": {
+        "providerId": {
+          "type": "string",
+          "maxLength": 128,
+          "description": "Best-effort provider domain for cosmetic attribution, such as grain.social. Not verified provenance."
+        },
         "uri": { "type": "string", "format": "uri" },
         "title": { "type": "string" },
         "description": { "type": "string" },
@@ -298,6 +313,11 @@
       "type": "object",
       "required": ["uri", "title", "description", "active"],
       "properties": {
+        "providerId": {
+          "type": "string",
+          "maxLength": 128,
+          "description": "Best-effort provider domain for cosmetic attribution, such as stream.place. Not verified provenance."
+        },
         "uri": { "type": "string", "format": "uri" },
         "title": { "type": "string" },
         "description": { "type": "string" },
