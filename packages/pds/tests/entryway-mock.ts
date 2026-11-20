@@ -13,6 +13,7 @@ import type { DidString, HandleString } from '@atproto/syntax'
 import {
   AuthRequiredError,
   createServer,
+  createServiceJwt,
   parseReqNsid,
   verifyJwt as verifyServiceJwt,
 } from '@atproto/xrpc-server'
@@ -91,6 +92,12 @@ export class MockEntryway {
     })
 
     const accounts = new Map<string, Account>()
+
+    // The entryway calls back into the PDS's admin routes with the PDS's admin
+    // password, as the real entryway does.
+    const adminAuthHeader = `Basic ${Buffer.from(
+      `admin:${opts.adminPassword}`,
+    ).toString('base64')}`
 
     const getSigningKey = async (
       iss: string,
@@ -176,6 +183,18 @@ export class MockEntryway {
       }
     }
 
+    // Auth: service auth when a bearer token is present, unauthenticated otherwise
+    const serviceAuthOptional = async ({
+      req,
+    }: {
+      req: http.IncomingMessage
+    }): Promise<ServiceAuthResult | { credentials: null }> => {
+      if (!bearerTokenFromReq(req)) {
+        return { credentials: null }
+      }
+      return serviceAuth({ req })
+    }
+
     // Auth: accept either access token or service auth
     const accessOrServiceAuth = async ({
       req,
@@ -193,36 +212,67 @@ export class MockEntryway {
     const server = createServer()
 
     server.add(com.atproto.server.createAccount, {
-      handler: async ({ input }) => {
+      auth: serviceAuthOptional,
+      handler: async ({ input, auth }) => {
         const { email, handle } = input.body
 
-        // Reserve a signing key on the PDS
-        const {
-          data: { signingKey },
-        } = await pdsAgent.com.atproto.server.reserveSigningKey({})
+        let did: DidString
+        if (input.body.did) {
+          // Migrating an existing account in: the user proves control of the
+          // DID with a service auth token minted by their current PDS. The
+          // entryway then asks the PDS to create the (deactivated) account,
+          // authenticating with its own service JWT.
+          //
+          // -> entryway(server.createAccount) [verify user service auth]
+          // -> pds(server.createAccount)      [entryway service auth, create deactivated]
+          if (
+            auth.credentials?.type !== 'service' ||
+            auth.credentials.did !== input.body.did
+          ) {
+            throw new AuthRequiredError(
+              `Missing auth to create account with did: ${input.body.did}`,
+            )
+          }
+          did = input.body.did
+          const serviceJwt = await createServiceJwt({
+            iss: opts.serviceDid,
+            aud: opts.pdsDid,
+            lxm: com.atproto.server.createAccount.$lxm,
+            keypair: opts.jwtSigningKey,
+          })
+          await pdsAgent.com.atproto.server.createAccount(
+            { did, handle },
+            {
+              encoding: 'application/json',
+              headers: { authorization: `Bearer ${serviceJwt}` },
+            },
+          )
+        } else {
+          // Reserve a signing key on the PDS
+          const {
+            data: { signingKey },
+          } = await pdsAgent.com.atproto.server.reserveSigningKey({})
 
-        // Create PLC operation
-        const plcCreate = await plcLib.createOp({
-          signingKey,
-          rotationKeys: [opts.plcRotationKey.did()],
-          handle,
-          pds: opts.pdsUrl,
-          signer: opts.plcRotationKey,
-        })
+          // Create PLC operation
+          const plcCreate = await plcLib.createOp({
+            signingKey,
+            rotationKeys: [opts.plcRotationKey.did()],
+            handle,
+            pds: opts.pdsUrl,
+            signer: opts.plcRotationKey,
+          })
 
-        // Create account on PDS (no auth needed — userServiceAuthOptional)
-        await pdsAgent.com.atproto.server.createAccount({
-          did: plcCreate.did,
-          handle,
-          plcOp: plcCreate.op,
-        })
+          // Create account on PDS (no auth needed — userServiceAuthOptional)
+          await pdsAgent.com.atproto.server.createAccount({
+            did: plcCreate.did,
+            handle,
+            plcOp: plcCreate.op,
+          })
+          did = plcCreate.did as DidString
+        }
 
         // Store account in memory
-        accounts.set(plcCreate.did, {
-          did: plcCreate.did as DidString,
-          handle,
-          email,
-        })
+        accounts.set(did, { did, handle, email })
 
         // Sign access + refresh JWTs
         const now = Math.floor(Date.now() / 1000)
@@ -230,7 +280,7 @@ export class MockEntryway {
           scope: 'com.atproto.access',
         })
           .setProtectedHeader({ alg: 'ES256K', typ: 'at+jwt' })
-          .setSubject(plcCreate.did)
+          .setSubject(did)
           .setAudience(opts.pdsDid)
           .setIssuedAt(now)
           .setExpirationTime(now + 60 * 60)
@@ -241,7 +291,7 @@ export class MockEntryway {
           scope: 'com.atproto.refresh',
         })
           .setProtectedHeader({ alg: 'ES256K', typ: 'at+jwt' })
-          .setSubject(plcCreate.did)
+          .setSubject(did)
           .setAudience(opts.pdsDid)
           .setIssuedAt(now)
           .setExpirationTime(now + 90 * 24 * 60 * 60)
@@ -251,12 +301,33 @@ export class MockEntryway {
         return {
           encoding: 'application/json' as const,
           body: {
-            did: plcCreate.did as DidString,
+            did,
             handle,
             accessJwt,
             refreshJwt,
           },
         }
+      },
+    })
+
+    server.add(com.atproto.server.activateAccount, {
+      auth: accessAuth,
+      handler: async ({ auth }) => {
+        // -> pds(server.activateAccount)      [proxied here]
+        // -> entryway(server.activateAccount)
+        // -> pds(admin.updateSubjectStatus)   [validate did doc, activate]
+        await pdsAgent.com.atproto.admin.updateSubjectStatus(
+          {
+            subject: com.atproto.admin.defs.repoRef.$build({
+              did: auth.credentials.did as DidString,
+            }),
+            deactivated: { applied: false },
+          },
+          {
+            encoding: 'application/json',
+            headers: { authorization: adminAuthHeader },
+          },
+        )
       },
     })
 
@@ -299,13 +370,10 @@ export class MockEntryway {
         }
 
         // Notify PDS via admin endpoint
-        const adminAuth = Buffer.from(`admin:${opts.adminPassword}`).toString(
-          'base64',
-        )
         await pdsAgent.com.atproto.admin.updateAccountHandle(
           { did: targetDid, handle: newHandle },
           {
-            headers: { authorization: `Basic ${adminAuth}` },
+            headers: { authorization: adminAuthHeader },
             encoding: 'application/json',
           },
         )
