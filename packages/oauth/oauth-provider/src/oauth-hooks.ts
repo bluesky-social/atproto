@@ -569,6 +569,11 @@ export type OAuthHooks = {
     clientMetadata: RequestMetadata
     account: Account
     parameters: OAuthAuthorizationRequestParameters
+    /**
+     * The scope the token grants: `parameters.scope` with `include:`
+     * permission sets expanded.
+     */
+    scope: string
   }) => Awaitable<void>
 
   /**

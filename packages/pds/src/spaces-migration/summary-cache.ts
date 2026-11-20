@@ -19,12 +19,15 @@ export type SpacesMigrationSummaryCacheOptions = {
   minGapMs?: number
 }
 
-// @review how does the cache work out for hosts with multiple pds processes?
 /**
  * Keeps the latest migration summary in memory for the health endpoint, so
  * that no request queries the DB. Refreshed on an interval, and soon after
  * each recorded transition, though never twice within `minGapMs`. A failed
  * refresh keeps the last summary.
+ *
+ * Each process keeps its own cache over the shared account db: with several
+ * processes the counts are each read separately, so they agree up to the
+ * moment each was refreshed, and the scans multiply with the process count.
  */
 export class SpacesMigrationSummaryCache implements AsyncDisposable {
   /** Undefined until the first refresh completes. */
