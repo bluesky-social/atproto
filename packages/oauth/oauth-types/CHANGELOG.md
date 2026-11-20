@@ -1,5 +1,15 @@
 # @atproto/oauth-types
 
+## 0.8.0
+
+### Minor Changes
+
+- [#5798](https://github.com/bluesky-social/atproto/pull/5798) [`bb765e9`](https://github.com/bluesky-social/atproto/commit/bb765e9bd2330900088755f29a6fb530138e39c4) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Make the variants of `oauthAuthorizationRequestQuerySchema` mutually exclusive
+  
+  A query carrying a `request_uri` is now always parsed as a reference to a pushed authorization request, ignoring any other authorization request parameter. It used to be parsed as a plain authorization request, silently dropping the `request_uri`, whenever it also carried a `response_type`. Queries carrying both a `request_uri` and a `request` are now rejected.
+  
+  **Breaking change**: each variant of `OAuthAuthorizationRequestQuery` declares the other variants' parameters as `undefined` (`request?: undefined`, `request_uri?: undefined`), so an `in` check no longer narrows the type: check the value instead (e.g. `query.request_uri != null`).
+
 ## 0.7.7
 
 ### Patch Changes

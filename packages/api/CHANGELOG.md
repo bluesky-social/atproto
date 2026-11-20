@@ -1,5 +1,16 @@
 # @atproto/api
 
+## 0.32.3
+
+### Patch Changes
+
+- [#5947](https://github.com/bluesky-social/atproto/pull/5947) [`57ac20d`](https://github.com/bluesky-social/atproto/commit/57ac20d8f387707e66fc88cdf57ff88b76678331) Thanks [@foysalit](https://github.com/foysalit)! - Include current account and record status in moderation inbox report details.
+- Updated dependencies [[`b9b1ca7`](https://github.com/bluesky-social/atproto/commit/b9b1ca7f176b93d12e39685799c5f2e1f9a63be7)]:
+  - @atproto/syntax@0.7.8
+  - @atproto/common-web@0.5.18
+  - @atproto/lexicon@0.7.20
+  - @atproto/xrpc@0.8.19
+
 ## 0.32.2
 
 ### Patch Changes

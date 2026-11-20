@@ -293,30 +293,23 @@ const response = await boundClient.call('com.example.query')
 
 ### Listening for session updates and deletion
 
-The `OAuthClient` will emit events whenever a session is updated or deleted.
+The `OAuthClient` reports session changes through the `onSessionUpdated` and
+`onSessionDeleted` options.
 
 ```ts
 import {
-  Session,
+  TokenInvalidError,
   TokenRefreshError,
   TokenRevokedError,
 } from '@atproto/oauth-client'
 
-client.addEventListener('updated', (event: CustomEvent<Session>) => {
-  console.log('Refreshed tokens were saved in the store:', event.detail)
-})
-
-client.addEventListener(
-  'deleted',
-  (
-    event: CustomEvent<{
-      sub: string
-      cause: TokenRefreshError | TokenRevokedError | unknown
-    }>,
-  ) => {
-    console.log('Session was deleted from the session store:', event.detail)
-
-    const { cause } = event.detail
+const client = new OAuthClient({
+  // ...other client options
+  onSessionUpdated: (sub, session) => {
+    console.log('Refreshed tokens were saved in the store:', session)
+  },
+  onSessionDeleted: (sub, cause) => {
+    console.log('Session was deleted from the session store:', cause)
 
     if (cause instanceof TokenRefreshError) {
       // - refresh_token unavailable or expired
@@ -326,11 +319,13 @@ client.addEventListener(
       // Session was revoked through:
       // - agent.signOut()
       // - client.revoke(sub)
+    } else if (cause instanceof TokenInvalidError) {
+      // The stored session was invalid or failed validation
     } else {
       // An unexpected error occurred, causing the session to be deleted
     }
   },
-)
+})
 ```
 
 ### Force user to re-authenticate

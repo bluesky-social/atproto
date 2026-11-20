@@ -1,5 +1,14 @@
 # @atproto-labs/did-resolver
 
+## 0.3.14
+
+### Patch Changes
+
+- Updated dependencies [[`b9b1ca7`](https://github.com/bluesky-social/atproto/commit/b9b1ca7f176b93d12e39685799c5f2e1f9a63be7)]:
+  - @atproto-labs/fetch@0.4.3
+  - @atproto-labs/simple-store@0.5.2
+  - @atproto-labs/simple-store-memory@0.2.7
+
 ## 0.3.13
 
 ### Patch Changes

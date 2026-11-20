@@ -57,6 +57,8 @@ Run the formatter/linter once the work is complete: when about to commit, or whe
 
 For Ozone integration tests, verify state through existing endpoints (for example, `queryEvents` for appeal events and `queryReports` for report state). Use direct database access only for fixtures that cannot be created through an API, or for tests specifically exercising database behavior.
 
+All packages' tests run concurrently against one Postgres database, isolated only by schema. A test must never commit a drop or rename of a schema, table, or column there: Kysely's `Migrator` scans every schema during dev-env setup and fails if one disappears mid-scan, breaking an unrelated package. Run schema changes (including migration `up`/`down` checks) inside a transaction that is rolled back.
+
 Before writing or extending any test, invoke the `testing` skill ([.agents/skills/testing/SKILL.md](.agents/skills/testing/SKILL.md)). It covers runner selection (vitest vs jest), file layout, and tsconfig setup. For browser-driven UI tests, or for demoing/debugging the OAuth flows or the Account Manager interface, invoke the `playwright` skill ([.agents/skills/playwright/SKILL.md](.agents/skills/playwright/SKILL.md)) instead.
 
 ## Codegen

@@ -1,5 +1,13 @@
 # @atproto/crypto
 
+## 0.5.8
+
+### Patch Changes
+
+- [#5948](https://github.com/bluesky-social/atproto/pull/5948) [`ce37237`](https://github.com/bluesky-social/atproto/commit/ce37237663b7ea87e8cc04cb995377d0ee5d2efd) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Export the `DidKey` type (`` `did:key:${string}` ``), returned by `formatDidKey()` and `formatDidVerificationMethod()`.
+
+- [#5948](https://github.com/bluesky-social/atproto/pull/5948) [`ce37237`](https://github.com/bluesky-social/atproto/commit/ce37237663b7ea87e8cc04cb995377d0ee5d2efd) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add `formatDidVerificationMethod()` to convert a DID document verification method (`Multikey`, `EcdsaSecp256r1VerificationKey2019` or `EcdsaSecp256k1VerificationKey2019`) into a `did:key`.
+
 ## 0.5.7
 
 ### Patch Changes
