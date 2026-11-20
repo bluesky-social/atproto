@@ -129,6 +129,7 @@ async function setup() {
   const versions = new Map<string, TypedLexMap>([
     [`${docUri}@${cidB}`, document('Pinned')],
   ])
+  const viewerLikes = new Map<AtUriString, AtUriString>()
   const takenDown = new Set<string>()
   const blocked = new Set<string>()
   const backlinks = new Map<string, AtUriString[]>([
@@ -186,6 +187,22 @@ async function setup() {
           backlinks: (backlinks.get(`${targetUri}|${collection}`) ?? []).map(
             (uri) => ({ uri }),
           ),
+        }),
+        getAtmosphereBacklinksByActor: ({
+          targetUris,
+          actorDid,
+          collection,
+        }) => ({
+          results: targetUris.map((targetUri) => {
+            const like =
+              actorDid === viewer
+                ? viewerLikes.get(targetUri as AtUriString)
+                : undefined
+            return {
+              targetUri,
+              uris: like?.includes(`/${collection}/`) ? [like] : [],
+            }
+          }),
         }),
         getActors: ({ dids }) => ({
           actors: dids.map(() => ({ exists: true, handle: 'author.test' })),
@@ -258,6 +275,7 @@ async function setup() {
   return {
     latest,
     versions,
+    viewerLikes,
     takenDown,
     blocked,
     spies,
@@ -549,6 +567,51 @@ describe('app.bsky.unspecced.getAtmosphereRecordViews', () => {
       [docUri, missingUri, postUri],
       [pubUri, otherPub],
     ])
+  })
+
+  it('returns viewer recommendations and favorites for latest and exact roots, isolated by account and request', async () => {
+    await using fixture = await setup()
+    const recommend = atUri(
+      viewer,
+      site.standard.graph.recommend.$type,
+      'my-recommend',
+    )
+    const favorite = atUri(viewer, social.grain.favorite.$type, 'my-favorite')
+    fixture.viewerLikes.set(docUri, recommend)
+    fixture.viewerLikes.set(galleryUri, favorite)
+    const input = {
+      records: [
+        { uri: docUri },
+        { uri: docUri, cid: cidB },
+        { uri: galleryUri },
+      ],
+    }
+    const { status, body } = await fixture.fetchBatch(input)
+    expect(status).toBe(200)
+    expect(body.views.map((result) => result.view)).toMatchObject([
+      { viewer: { like: recommend } },
+      { viewer: { like: recommend } },
+      { viewer: { like: favorite } },
+    ])
+    const associated = body.views.flatMap(
+      (result) => uris(result.associatedRefs) ?? [],
+    )
+    expect(associated).not.toContain(recommend)
+    expect(associated).not.toContain(favorite)
+    expect((await fixture.query({ uri: docUri })).body.view).toMatchObject({
+      viewer: { like: recommend },
+    })
+    const other = await fixture.fetchBatch(input, 'did:plc:other')
+    expect(other.status).toBe(200)
+    expect(other.body.views.map((result) => result.view)).toMatchObject([
+      { viewer: {} },
+      { viewer: {} },
+      { viewer: {} },
+    ])
+    fixture.viewerLikes.clear()
+    expect((await fixture.query({ uri: galleryUri })).body.view).toMatchObject({
+      viewer: {},
+    })
   })
 
   it('keeps gallery associations separate from unrelated batch roots', async () => {

@@ -49,6 +49,11 @@ export type ExternalRecords = HydrationMap<AtUriString, ExternalRecord>
 export type ExternalRecordsByRef = HydrationMap<ExactRecordKey, ExternalRecord>
 export type ExternalRecordBacklinks = HydrationMap<AtUriString, AtUriString[]>
 /**
+ * The viewer's recommend/favorite record per target, false when absent,
+ * and null when unknown.
+ */
+export type ExternalRecordLikes = HydrationMap<AtUriString, AtUriString | false>
+/**
  * The viewer's subscription record per publication, false when not subscribed,
  * and null when unknown.
  */
@@ -100,8 +105,10 @@ export type ExternalHydrationLevel = 'basic' | 'detailed'
  * the whole traversal (default `'detailed'`): `'basic'` hydrates renderable
  * content, moderation and aggregate backlink counts; `'detailed'` also samples
  * social-preview backlinks and hydrates their records and participants.
- * `publicationSubscriptions` opts an authenticated viewer into request-cached
- * subscription discovery. The remaining fields are shared traversal state.
+ * Viewer likes are hydrated for authenticated requests; `recordLikes` shares
+ * their cache across traversals. `publicationSubscriptions` opts into
+ * request-cached subscription discovery. The remaining fields are shared
+ * traversal state.
  */
 export type ExternalHydrationOptions = {
   hydration?: ExternalHydrationLevel
@@ -109,6 +116,7 @@ export type ExternalHydrationOptions = {
   hydrationPass?: number
   hydrationMetrics?: ExternalHydrationTracker
   publicationSubscriptions?: ExternalPublicationSubscriptions
+  recordLikes?: ExternalRecordLikes
 }
 
 /**

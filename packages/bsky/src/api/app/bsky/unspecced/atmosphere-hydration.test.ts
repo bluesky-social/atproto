@@ -179,8 +179,10 @@ function setup(signal = new AbortController().signal) {
               ? [{ uri: itemUri }]
               : [],
         }),
-        getAtmosphereBacklinksByActor: ({ targetUris }) => {
-          subscriptionCalls.push(targetUris)
+        getAtmosphereBacklinksByActor: ({ targetUris, collection }) => {
+          if (collection === site.standard.graph.subscription.$type) {
+            subscriptionCalls.push(targetUris)
+          }
           return {
             truncated,
             results: targetUris.map((targetUri) => ({
@@ -729,7 +731,12 @@ describe('AtmosphereTimelineHydrator', () => {
       view: { title: 'Article' },
     })
     expect(f.timeline.activity(documentUri, now)?.groupable).toBe(false)
-    expect(failure).toHaveBeenCalledTimes(1)
+    expect(
+      failure.mock.calls.filter(
+        ([, , collection]) =>
+          collection === site.standard.graph.subscription.$type,
+      ),
+    ).toHaveLength(1)
   })
 
   it('batches viewer subscription lookups at 100 targets', async () => {
