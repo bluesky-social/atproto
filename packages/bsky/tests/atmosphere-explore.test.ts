@@ -1694,11 +1694,6 @@ describe('Atmosphere Explore', () => {
   })
 
   describe('apps endpoint', () => {
-    const storeLinks = {
-      appStoreUrl: 'https://apps.apple.com/app/example/id123?ct=explore',
-      googlePlayUrl:
-        'https://play.google.com/store/apps/details?id=com.example&referrer=explore',
-    }
     const apps = Array.from({ length: 12 }, (_, i) => ({
       id: `${i}`,
       category: i < 10 ? 'Social' : 'Writing',
@@ -1723,21 +1718,10 @@ describe('Atmosphere Explore', () => {
       expect(new Request(...fixture.fetchMock.mock.calls[0]).url).toBe(service)
     })
 
-    it('validates optional store links without requiring profiles', async () => {
-      const cards = [
-        { id: 'both', ...storeLinks },
-        { id: 'apple', appStoreUrl: storeLinks.appStoreUrl },
-        { id: 'google', googlePlayUrl: storeLinks.googlePlayUrl },
-        { id: 'neither' },
-      ]
+    it('returns cards without requiring profiles', async () => {
+      const cards = [{ id: 'one' }, { id: 'two' }]
       await using fixture = await setup({
-        apps: [
-          cards[0],
-          { ...cards[1], did: null, profileUrl: null },
-          ...cards.slice(2),
-          { id: 'invalid-apple', appStoreUrl: 'not a uri' },
-          { id: 'invalid-google', googlePlayUrl: 5 },
-        ],
+        apps: [cards[0], { ...cards[1], did: null, profileUrl: null }],
       })
       using profiles = vi.spyOn(fixture.hydrator, 'hydrateProfilesDetailed')
       const { status, body } = await fixture.queryApps()
@@ -1832,7 +1816,6 @@ describe('Atmosphere Explore', () => {
       await using fixture = await setup({
         apps: [appDid, missingDid].map((did) => ({
           did,
-          ...storeLinks,
           logo,
           backgroundImage: banner,
           overlayColor: '#000000',
@@ -1861,8 +1844,7 @@ describe('Atmosphere Explore', () => {
         images.getPresetUri('banner', appDid, photoCid),
       )
       expect(hydrated).not.toHaveProperty('backgroundImage')
-      expect(hydrated).toMatchObject(storeLinks)
-      expect(missing).toEqual({ logo, banner, ...storeLinks })
+      expect(missing).toEqual({ logo, banner })
     })
   })
 
@@ -1920,11 +1902,6 @@ describe('Atmosphere Explore', () => {
       logo: 'https://example.com/override-logo.png',
       backgroundImage: 'https://example.com/override-bg.png',
     }
-    const storeLinks = {
-      appStoreUrl: 'https://apps.apple.com/app/example/id123?ct=explore',
-      googlePlayUrl:
-        'https://play.google.com/store/apps/details?id=com.example&referrer=explore',
-    }
     const card = (id: string, extra: object = {}) => ({
       id,
       title: `App ${id}`,
@@ -1932,7 +1909,7 @@ describe('Atmosphere Explore', () => {
       ...extra,
     })
 
-    it('prefers profile images and preserves store links', async () => {
+    it('prefers profile images and preserves editorial metadata', async () => {
       const did = appDid('appone')
       const editorial = {
         id: 'one',
@@ -1943,7 +1920,6 @@ describe('Atmosphere Explore', () => {
         overlayColor: '#000000',
         textColor: '#ffffff',
         ...overrides,
-        ...storeLinks,
       }
       await using fixture = await setup({
         apps: [
@@ -2060,12 +2036,11 @@ describe('Atmosphere Explore', () => {
       const did = appDid('valid')
       await using fixture = await setup({
         apps: [
-          card('missing', { ...overrides, ...storeLinks }),
+          card('missing', overrides),
           card('null', {
             did: null,
             profileUrl: null,
             ...overrides,
-            ...storeLinks,
           }),
           card('invalid', { did: 'not-a-did' }),
           card('number', { did: 5 }),
@@ -2082,12 +2057,8 @@ describe('Atmosphere Explore', () => {
         'null',
         'valid',
       ])
-      expect(body.apps[0]).toEqual(
-        card('missing', { ...overrides, ...storeLinks }),
-      )
-      expect(body.apps[1]).toEqual(
-        card('null', { ...overrides, ...storeLinks }),
-      )
+      expect(body.apps[0]).toEqual(card('missing', overrides))
+      expect(body.apps[1]).toEqual(card('null', overrides))
       expect(body.apps[2].profile?.did).toBe(did)
     })
 
@@ -3093,8 +3064,6 @@ describe('Atmosphere Explore', () => {
             null,
             'app',
             { ...app(2), url: 5 },
-            { ...app(2), appStoreUrl: 'not a uri' },
-            { ...app(2), googlePlayUrl: 5 },
             app(3),
           ],
         })

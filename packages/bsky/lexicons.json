@@ -634,8 +634,8 @@
       "cid": "bafyreibvucawor4ulbdorsclmbqdmknh27smp6xgswnxrfwthpeymebcxu"
     },
     "app.bsky.embed.external": {
-      "uri": "file://../../lexicons-overrides/app/bsky/embed/external.json",
-      "cid": "bafyreiemp3zvmhsmc3dh67jjidtex5aemlwjrjq53uda4t22gpfepdbdqy"
+      "uri": "https://raw.githubusercontent.com/bluesky-social/bsky/fa66186d0b7c89fb756b4f70bd6905a291158c1b/lexicons/app/bsky/embed/external.json",
+      "cid": "bafyreie26k3xh2usobpgfogum2rk52irpvpaxore7ciqfmajsjj3hpe4m4"
     },
     "app.bsky.embed.gallery": {
       "uri": "https://raw.githubusercontent.com/bluesky-social/bsky/refs/heads/main/lexicons/app/bsky/embed/gallery.json",
@@ -974,43 +974,43 @@
       "cid": "bafyreih4xza4elgwnr7oazzbuftplgvnbye2eleiaui7zfkrtlgmhiidfm"
     },
     "app.bsky.unspecced.getAtmosphereActivityRecommendations": {
-      "uri": "file://../../lexicons-overrides/app/bsky/unspecced/getAtmosphereActivityRecommendations.json",
+      "uri": "https://raw.githubusercontent.com/bluesky-social/bsky/fa66186d0b7c89fb756b4f70bd6905a291158c1b/lexicons/app/bsky/unspecced/getAtmosphereActivityRecommendations.json",
       "cid": "bafyreidwcpb6zk2foqpvzj55uyvi2p7l7eyv7kqkzd74lpsfy7sw3drvsy"
     },
     "app.bsky.unspecced.getAtmosphereApps": {
-      "uri": "file://../../lexicons-overrides/app/bsky/unspecced/getAtmosphereApps.json",
-      "cid": "bafyreibhdohdekwztogxf7fp6x2y2vtgj24r7se2vfshpyodn6wih2i5jq"
+      "uri": "https://raw.githubusercontent.com/bluesky-social/bsky/fa66186d0b7c89fb756b4f70bd6905a291158c1b/lexicons/app/bsky/unspecced/getAtmosphereApps.json",
+      "cid": "bafyreifl5smpd6l4caewvgxdpybnjhbwxla54wj4gkzqjvar3wvwdqf33u"
     },
     "app.bsky.unspecced.getAtmosphereExploreArticleRecommendations": {
       "uri": "https://raw.githubusercontent.com/bluesky-social/bsky/refs/heads/main/lexicons/app/bsky/unspecced/getAtmosphereExploreArticleRecommendations.json",
       "cid": "bafyreial4vi2raxz7nfbwovdx6m4pdlb5hnpf37teistounxjxe6svbdsi"
     },
     "app.bsky.unspecced.getAtmosphereExploreGalleryRecommendations": {
-      "uri": "file://../../lexicons-overrides/app/bsky/unspecced/getAtmosphereExploreGalleryRecommendations.json",
+      "uri": "https://raw.githubusercontent.com/bluesky-social/bsky/fa66186d0b7c89fb756b4f70bd6905a291158c1b/lexicons/app/bsky/unspecced/getAtmosphereExploreGalleryRecommendations.json",
       "cid": "bafyreibsqntzzfnxal4g4riz7tqb7cmfsigff27vt7o7vtljdl5mumpshi"
     },
     "app.bsky.unspecced.getAtmosphereExploreTab": {
-      "uri": "file://../../lexicons-overrides/app/bsky/unspecced/getAtmosphereExploreTab.json",
-      "cid": "bafyreicztq47cvaj4xyswhr2m7whyuug5z5hxoxx3os6qh4ke5cq5s42ey"
+      "uri": "https://raw.githubusercontent.com/bluesky-social/bsky/fa66186d0b7c89fb756b4f70bd6905a291158c1b/lexicons/app/bsky/unspecced/getAtmosphereExploreTab.json",
+      "cid": "bafyreiam6dyovbegt4oudus25a23m7ss2cca2v5rzdcxxkm4bsew3dr724"
     },
     "app.bsky.unspecced.getAtmosphereRecommendedActivity": {
-      "uri": "file://../../lexicons-overrides/app/bsky/unspecced/getAtmosphereRecommendedActivity.json",
+      "uri": "https://raw.githubusercontent.com/bluesky-social/bsky/fa66186d0b7c89fb756b4f70bd6905a291158c1b/lexicons/app/bsky/unspecced/getAtmosphereRecommendedActivity.json",
       "cid": "bafyreiejhbrkbo7rtz62eqgwgbs4ktyfpi4gh3a75n4kodge2zj2djf4ti"
     },
     "app.bsky.unspecced.getAtmosphereRecordView": {
-      "uri": "file://../../lexicons-overrides/app/bsky/unspecced/getAtmosphereRecordView.json",
+      "uri": "https://raw.githubusercontent.com/bluesky-social/bsky/fa66186d0b7c89fb756b4f70bd6905a291158c1b/lexicons/app/bsky/unspecced/getAtmosphereRecordView.json",
       "cid": "bafyreigc3pdtr77li2zp32br4pvysah6sd67345xlkjuy4finc35asvmc4"
     },
     "app.bsky.unspecced.getAtmosphereRecordViews": {
-      "uri": "file://../../lexicons-overrides/app/bsky/unspecced/getAtmosphereRecordViews.json",
+      "uri": "https://raw.githubusercontent.com/bluesky-social/bsky/fa66186d0b7c89fb756b4f70bd6905a291158c1b/lexicons/app/bsky/unspecced/getAtmosphereRecordViews.json",
       "cid": "bafyreiezb7d6z2x7ay6tlcltibinxtwvbrka2btokd5g3xl5hirtaw3rb4"
     },
     "app.bsky.unspecced.getAtmosphereTimeline": {
-      "uri": "file://../../lexicons-overrides/app/bsky/unspecced/getAtmosphereTimeline.json",
+      "uri": "https://raw.githubusercontent.com/bluesky-social/bsky/fa66186d0b7c89fb756b4f70bd6905a291158c1b/lexicons/app/bsky/unspecced/getAtmosphereTimeline.json",
       "cid": "bafyreicspzwzz74a2xovpvz5qt5v6f362j7j3o3epuqsxfeowqkclycgbm"
     },
     "app.bsky.unspecced.getAtmosphereTimelineV2": {
-      "uri": "file://../../lexicons-overrides/app/bsky/unspecced/getAtmosphereTimelineV2.json",
+      "uri": "https://raw.githubusercontent.com/bluesky-social/bsky/fa66186d0b7c89fb756b4f70bd6905a291158c1b/lexicons/app/bsky/unspecced/getAtmosphereTimelineV2.json",
       "cid": "bafyreieczkg6w4bhosu3dhl7jtos7elsz7vsrljf67coqjox24esdw4vum"
     },
     "app.bsky.unspecced.getConfig": {
