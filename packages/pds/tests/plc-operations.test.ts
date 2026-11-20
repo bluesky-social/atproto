@@ -192,6 +192,22 @@ describe('plc operations', () => {
     await expect(attempt).rejects.toThrow('Token is invalid')
   })
 
+  it('rejects malformed verificationMethods and services without consuming the token', async () => {
+    const sign = (body: Record<string, unknown>) =>
+      agent.api.com.atproto.identity.signPlcOperation(
+        { token, ...body },
+        { encoding: 'application/json', headers: sc.getHeaders(alice.did) },
+      )
+    await expect(
+      sign({ verificationMethods: { atproto: 'not-a-did-key' } }),
+    ).rejects.toThrow('verificationMethods.atproto must start with "did:key:"')
+    await expect(
+      sign({
+        services: { atproto_pds: { type: 'AtprotoPersonalDataServer' } },
+      }),
+    ).rejects.toThrow('services.atproto_pds.endpoint must be a string')
+  })
+
   let operation: any
 
   it('signs a plc operation with a valid token', async () => {
