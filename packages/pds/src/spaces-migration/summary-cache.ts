@@ -19,6 +19,7 @@ export type SpacesMigrationSummaryCacheOptions = {
   minGapMs?: number
 }
 
+// @review how does the cache work out for hosts with multiple pds processes?
 /**
  * Keeps the latest migration summary in memory for the health endpoint, so
  * that no request queries the DB. Refreshed on an interval, and soon after

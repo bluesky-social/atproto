@@ -368,8 +368,14 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     lexiconCfg.didAuthority = env.lexiconDidAuthority
   }
 
+  const spacesMigrationState = env.spacesMigration ?? 'enabled'
+  if (!isSpacesMigrationState(spacesMigrationState)) {
+    throw new Error(
+      `PDS_SPACES_MIGRATION must be one of ${SPACES_MIGRATION_STATES.join(', ')}, got "${spacesMigrationState}"`,
+    )
+  }
   const spacesMigrationCfg: ServerConfig['spacesMigration'] = {
-    disabled: !!env.spacesMigrationDisabled,
+    state: spacesMigrationState,
     publishIntervalMs: env.spacesMigrationPublishIntervalMs ?? 5 * SECOND,
     jitterWindowMs: env.spacesMigrationJitterWindowMs ?? DAY,
     sweepIntervalMs: env.spacesMigrationSweepIntervalMs ?? 50,
@@ -549,9 +555,22 @@ export type OAuthConfig = {
   }
 }
 
+const SPACES_MIGRATION_STATES = ['disabled', 'enabled', 'complete'] as const
+
+/**
+ * - `enabled`: migration workers run.
+ * - `disabled`: they are paused; everything else is as when enabled.
+ * - `complete`: the operator says every account is migrated. Workers don't
+ *   run, and code may assume every account's KEM key is published, as long
+ *   as a wrong `complete` can only refuse requests, never corrupt data.
+ */
+export type SpacesMigrationState = (typeof SPACES_MIGRATION_STATES)[number]
+
+const isSpacesMigrationState = (state: string): state is SpacesMigrationState =>
+  (SPACES_MIGRATION_STATES as readonly string[]).includes(state)
+
 export type SpacesMigrationConfig = {
-  /** Pauses all spaces migration work. */
-  disabled: boolean
+  state: SpacesMigrationState
   /** The pause between publishing one account's KEM key and the next. */
   publishIntervalMs: number
   /** The window over which hosts spread the start of publishing. */

@@ -34,7 +34,10 @@ import type { com } from '../lexicons/index.js'
 import { httpLogger } from '../logger.js'
 import type { ServerMailer } from '../mailer/index.js'
 import type { Sequencer } from '../sequencer/index.js'
-import { registerSpacesMigration } from '../spaces-migration/progress.js'
+import {
+  registerSpacesMigration,
+  unparkSpacesMigration,
+} from '../spaces-migration/progress.js'
 import {
   type AccountDb,
   type EmailTokenPurpose,
@@ -506,10 +509,15 @@ export class AccountManager {
   async activateAccount(did: DidString) {
     await assertValidDidDocumentForService(this, did)
 
-    const found = await accountHelpers.activateAccount(this.db, did, {
-      // We cannot activate a takendown account
-      includeTakenDown: false,
-      includeDeactivated: true,
+    const found = await this.db.transaction(async (dbTxn) => {
+      const activated = await accountHelpers.activateAccount(dbTxn, did, {
+        // We cannot activate a takendown account
+        includeTakenDown: false,
+        includeDeactivated: true,
+      })
+      // Its KEM key waited for activation, see SpacesMigrationPublisher
+      if (activated) await unparkSpacesMigration(dbTxn, did)
+      return activated
     })
     if (!found) {
       throw new InvalidRequestError('user not found', 'AccountNotFound')

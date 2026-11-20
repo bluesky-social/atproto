@@ -37,7 +37,7 @@ describe('spaces migration sweep', () => {
       {
         didPlcUrl: plcServer.url,
         // Only the workers under test may run
-        spacesMigrationDisabled: true,
+        spacesMigration: 'disabled',
       },
       { grantsSpaceAccess: (scope) => scope.includes('space') },
     )
@@ -53,7 +53,7 @@ describe('spaces migration sweep', () => {
 
   const sweep = (opts: Partial<SpacesMigrationSweepOptions> = {}) => {
     const sweep = new SpacesMigrationSweep(ctx, progress, {
-      disabled: false,
+      state: 'enabled',
       sweepIntervalMs: 0,
       pollIntervalMs: 20,
       ...opts,
@@ -179,7 +179,7 @@ describe('spaces migration sweep', () => {
     await using s = new SpacesMigrationSweep(
       ctx,
       progress,
-      { disabled: false, sweepIntervalMs: 0, pollIntervalMs: 20 },
+      { state: 'enabled', sweepIntervalMs: 0, pollIntervalMs: 20 },
       () => {},
       onSeeded,
     )
@@ -235,7 +235,9 @@ describe('spaces migration sweep', () => {
     expect(failed?.sweepLastError).toBe('disk full')
     expect(failed?.storeMigratedAt).toBeNull()
     expect(failed?.sweepLeaseOwner).toBeNull()
-    expect(failed?.sweepNextAttemptAt).toBeGreaterThan(Date.now())
+    expect(Date.parse(failed?.sweepNextAttemptAt ?? '')).toBeGreaterThan(
+      Date.now(),
+    )
     expect((await progress.summary()).sweepFailing).toBe(before + 1)
 
     // Not retried before its time
@@ -246,7 +248,7 @@ describe('spaces migration sweep', () => {
     // Once the time comes, it succeeds and the failure is cleared
     await db.db
       .updateTable('spaces_migration')
-      .set({ sweepNextAttemptAt: 0 })
+      .set({ sweepNextAttemptAt: currentDatetimeString() })
       .where('did', '=', did)
       .execute()
     await waitFor(() => isSwept(did))
@@ -269,13 +271,14 @@ describe('spaces migration sweep', () => {
     await waitFor(async () => s.state === 'idle')
     using setTimeoutSpy = jest.spyOn(globalThis, 'setTimeout')
     await s.destroy()
-    // Runs alongside the publisher's, so both fit Docker's default grace
-    expect(setTimeoutSpy.mock.calls.map(([, ms]) => ms)).toContain(5_000)
+    // Runs after or before the other worker's, so both fit Docker's default
+    // grace with room for the rest of shutdown
+    expect(setTimeoutSpy.mock.calls.map(([, ms]) => ms)).toContain(3_000)
   })
 
   it('does nothing when disabled', async () => {
     const did = await createPreSpacesAccount()
-    await using s = sweep({ disabled: true })
+    await using s = sweep({ state: 'disabled' })
     await wait(100)
     expect(s.state).toBe('disabled')
     expect(await isSwept(did)).toBe(false)

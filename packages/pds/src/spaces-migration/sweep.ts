@@ -18,10 +18,11 @@ export type SpacesMigrationSweepState =
   | 'running'
   | 'idle' // nothing left to sweep
   | 'disabled'
+  | 'complete'
 
 export type SpacesMigrationSweepOptions = Pick<
   SpacesMigrationConfig,
-  'disabled' | 'sweepIntervalMs'
+  'state' | 'sweepIntervalMs'
 > & {
   /** How often to look for new work while there is none. */
   pollIntervalMs?: number
@@ -29,7 +30,7 @@ export type SpacesMigrationSweepOptions = Pick<
   owner?: string
   /**
    * Bounds how long destroy() waits for the step in flight. The publisher and
-   * sweep stop in parallel, within a 10s container stop grace.
+   * sweep stop one after the other, within a 10s container stop grace.
    */
   destroyTimeoutMs?: number
 }
@@ -69,11 +70,11 @@ export class SpacesMigrationSweep implements AsyncDisposable {
   ) {
     this.owner = opts.owner ?? randomUUID()
     this.pollIntervalMs = opts.pollIntervalMs ?? MINUTE
-    this.state = opts.disabled ? 'disabled' : 'idle'
+    this.state = opts.state === 'enabled' ? 'idle' : opts.state
   }
 
   start(): void {
-    if (this.state === 'disabled') return
+    if (this.opts.state !== 'enabled') return
     this.running ??= this.run()
   }
 
@@ -82,7 +83,7 @@ export class SpacesMigrationSweep implements AsyncDisposable {
     this.waiter?.bail()
     if (!this.running) return
     // A stuck step mustn't hold up shutdown. Its lease expires on its own.
-    const timeoutMs = this.opts.destroyTimeoutMs ?? 5 * SECOND
+    const timeoutMs = this.opts.destroyTimeoutMs ?? 3 * SECOND
     const timeout = bailableWait(timeoutMs)
     const stopped = await Promise.race([
       this.running.then(() => true),

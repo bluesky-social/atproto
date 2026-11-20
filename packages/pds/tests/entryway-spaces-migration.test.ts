@@ -6,7 +6,11 @@ import { wait } from '@atproto/common'
 import { P256Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import { TestPds, TestPlc, mockResolvers } from '@atproto/dev-env'
 import { Client } from '@atproto/lex'
-import type { DidString, HandleString } from '@atproto/syntax'
+import {
+  type DidString,
+  type HandleString,
+  currentDatetimeString,
+} from '@atproto/syntax'
 import { com, internal } from '../src/lexicons/index.js'
 import { createPlcOp } from '../src/util/plc.js'
 import { MockEntryway } from './entryway-mock.js'
@@ -157,7 +161,11 @@ describe('entryway spaces migration', () => {
       com.atproto.server.reserveSigningKey,
       {},
     )
-    const { kemKey } = await client.call(internal.pds.reserveKemKey, {})
+    const { kemKey } = await client.call(
+      internal.pds.reserveKemKey,
+      {},
+      { headers: pds.adminAuthHeaders() },
+    )
     const handle = 'ewsretry.test' as HandleString
     const { did, op } = await createPlcOp({
       signingKey,
@@ -260,8 +268,10 @@ describe('entryway spaces migration', () => {
     expect(await row(did)).toMatchObject({
       kemPublishedAt: null,
       unpublishableReason: null,
-      nextAttemptAt: 0,
     })
+    // Re-queued: due now
+    const requeued = (await row(did))?.nextAttemptAt
+    expect(requeued != null && requeued <= currentDatetimeString()).toBe(true)
     expect(await pds.ctx.plcClient.getOperationLog(did)).toEqual(opsBefore)
     expect(sequenceIdentity).not.toHaveBeenCalled()
   })
@@ -345,8 +355,11 @@ describe('entryway spaces migration', () => {
     ).rejects.toMatchObject({ error: 'AuthenticationRequired' })
   })
 
-  it('prepare and complete require admin or entryway auth', async () => {
+  it('reserve, prepare and complete require admin or entryway auth', async () => {
     const did = await createAccount({ includeKemKey: false })
+    await expect(
+      client.call(internal.pds.reserveKemKey, {}),
+    ).rejects.toMatchObject({ error: 'AuthenticationRequired' })
     await expect(
       client.call(internal.pds.prepareSpacesMigration, { did }),
     ).rejects.toMatchObject({ error: 'AuthenticationRequired' })
@@ -377,7 +390,7 @@ describe('spaces migration endpoints without an entryway', () => {
       bskyAppViewUrl: undefined,
       bskyAppViewDid: undefined,
       // Only the endpoints under test may touch the record
-      spacesMigrationDisabled: true,
+      spacesMigration: 'disabled',
     })
     client = new Client({ service: pds.url })
   })

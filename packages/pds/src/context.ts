@@ -163,7 +163,7 @@ export class AppContext implements AsyncDisposable {
     this.oauthProvider = opts.oauthProvider
     this.plcRotationKey = opts.plcRotationKey
     this.cfg = opts.cfg
-    this.grantsSpaceAccess = opts.grantsSpaceAccess ?? neverGrantsSpaceAccess
+    this.grantsSpaceAccess = opts.grantsSpaceAccess ?? neverGrantsSpaceAccess // @review why is this implementation injected?  do we take into account permission sets when checking grantsSpaceAccess()?
 
     // Built here rather than in fromConfig: the publisher needs the context
     const progress = new SpacesMigrationProgress(this.accountManager.db)
@@ -628,7 +628,7 @@ export class AppContext implements AsyncDisposable {
             // Runs before the authorization response: it must never throw
             // or wait on PLC
             try {
-              const { grantsSpaceAccess, spacesMigration } = getCtx()
+              const { grantsSpaceAccess, spacesMigration } = getCtx() // @review if we don't need this circular dep, that would be ideal.  this is the simplest way to do it, no worries.
               if (grantsSpaceAccess(parameters.scope ?? '')) {
                 await spacesMigration.progress.bump(account.did)
                 spacesMigration.publisher.wake()
@@ -807,11 +807,10 @@ export class AppContext implements AsyncDisposable {
     // @TODO Implement this using an AsyncDisposableStack when it becomes
     // widely available.
     try {
-      await Promise.all([
-        this.spacesMigration.publisher.destroy(),
-        this.spacesMigration.sweep.destroy(),
-        this.spacesMigration.summaryCache.destroy(),
-      ])
+      // Workers first: they report to the summary cache
+      await this.spacesMigration.publisher.destroy()
+      await this.spacesMigration.sweep.destroy()
+      await this.spacesMigration.summaryCache.destroy()
       await this.backgroundQueue.destroy()
     } finally {
       try {

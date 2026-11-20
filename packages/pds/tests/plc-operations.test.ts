@@ -304,6 +304,46 @@ describe('plc operations', () => {
         message: 'Incorrect KEM key',
       })
     })
+
+    describe('once the migration is complete', () => {
+      const prevState = () => ctx.cfg.spacesMigration.state
+      let restore: typeof ctx.cfg.spacesMigration.state
+
+      beforeAll(() => {
+        restore = prevState()
+        ctx.cfg.spacesMigration.state = 'complete'
+      })
+
+      afterAll(() => {
+        ctx.cfg.spacesMigration.state = restore
+      })
+
+      it('requires our kem key without reading the published one', async () => {
+        // Even with none published, omitting the key is refused
+        await setPublishedKem(undefined)
+        const data = await ctx.plcClient.getDocumentData(bob.did)
+        const operation = await signOp(bob.did, {
+          verificationMethods: data.verificationMethods,
+        })
+        using getDocumentData = jest.spyOn(ctx.plcClient, 'getDocumentData')
+        await expect(
+          agent.com.atproto.identity.submitPlcOperation(
+            { operation },
+            {
+              encoding: 'application/json',
+              headers: sc.getHeaders(bob.did),
+            },
+          ),
+        ).rejects.toMatchObject({ error: 'IncorrectKemKey' })
+        expect(getDocumentData).not.toHaveBeenCalled()
+      })
+
+      it('accepts an op naming our kem key', async () => {
+        await submitWithKem(ourKemKey)
+        const data = await ctx.plcClient.getDocumentData(bob.did)
+        expect(data.verificationMethods.atproto_kem).toBe(ourKemKey)
+      })
+    })
   })
 
   describe('account without a stored kem key', () => {
