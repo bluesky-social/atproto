@@ -1,4 +1,5 @@
 import { Secp256k1Keypair } from '@atproto/crypto'
+import type { NsidString } from '@atproto/syntax'
 import {
   MemoryBlockstore,
   Repo,
@@ -47,7 +48,7 @@ describe('verifyRepoCar on generated repos', () => {
     const storage = new MemoryBlockstore()
     const keypair = await Secp256k1Keypair.create()
     let repo = await Repo.create(storage, keypair.did(), keypair)
-    const collections = [
+    const collections: NsidString[] = [
       'app.bsky.feed.post',
       'app.bsky.graph.follow',
       'com.example.custom',
