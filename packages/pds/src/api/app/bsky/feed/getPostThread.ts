@@ -7,6 +7,7 @@ import { app } from '../../../../lexicons/index.js'
 import {
   PipethroughUpstreamError,
   computeProxyTo,
+  proxyTarget,
 } from '../../../../pipethrough.js'
 import {
   type LocalViewer,
@@ -46,7 +47,7 @@ export default function (server: Server, ctx: AppContext) {
           err instanceof PipethroughUpstreamError &&
           err.error === 'NotFound'
         ) {
-          const { auth, params } = reqCtx
+          const { auth, params, req } = reqCtx
           const requester = auth.credentials.did
 
           const rev = err.headers?.['atproto-repo-rev']
@@ -64,10 +65,14 @@ export default function (server: Server, ctx: AppContext) {
           }
           if (uri.hostname !== requester) throw err
 
+          const appView = await proxyTarget(
+            ctx,
+            req,
+            app.bsky.feed.getPostThread.$lxm,
+          )
           const local = await ctx.actorStore.read(requester, (store) => {
-            const localViewer = ctx.localViewer(store)
+            const localViewer = ctx.localViewer(store, appView)
             return readAfterWriteNotFound(
-              ctx,
               localViewer,
               params,
               requester,
@@ -182,7 +187,6 @@ const threadPostView = async (
 // ---------------------
 
 const readAfterWriteNotFound = async (
-  ctx: AppContext,
   localViewer: LocalViewer,
   params: app.bsky.feed.getPostThread.$Params,
   requester: string,
@@ -209,11 +213,11 @@ const readAfterWriteNotFound = async (
   const highestParent = getHighestParent(thread)
   if (highestParent) {
     try {
-      assert(ctx.bskyAppView)
-      const parentsRes = await ctx.bskyAppView.client.call(
+      assert(localViewer.bskyAppView)
+      const parentsRes = await localViewer.bskyAppView.client.call(
         app.bsky.feed.getPostThread,
         { uri: highestParent, parentHeight: params.parentHeight, depth: 0 },
-        await ctx.appviewAuthHeaders(
+        await localViewer.serviceAuthHeaders(
           requester,
           app.bsky.feed.getPostThread.$lxm,
         ),

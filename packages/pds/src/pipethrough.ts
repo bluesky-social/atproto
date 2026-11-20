@@ -14,6 +14,7 @@ import {
   omit,
   streamToNodeBuffer,
 } from '@atproto/common'
+import type { Client } from '@atproto/lex-client'
 import type { RpcPermissionMatch } from '@atproto/oauth-scopes'
 import {
   type CatchallHandler,
@@ -348,6 +349,28 @@ export async function parseProxyInfo(
   }
 
   throw new InvalidRequestError(`No service configured for ${lxm}`)
+}
+
+/** A service the PDS calls on behalf of a request, and its DID. */
+export type ProxyTarget = { client: Client; did: string }
+
+/**
+ * The service a request is proxied to, for calls the PDS makes itself while
+ * handling that request. Any such call must go to this target rather than to
+ * `ctx.bskyAppView` directly, so that it follows the `atproto-proxy` header
+ * like the proxied request does.
+ */
+export async function proxyTarget(
+  ctx: AppContext,
+  req: Request,
+  lxm: string,
+): Promise<ProxyTarget> {
+  const { url, did, isConfiguredAppView } = await parseProxyInfo(ctx, req, lxm)
+  const client =
+    isConfiguredAppView && ctx.bskyAppView
+      ? ctx.bskyAppView.client
+      : ctx.safeClient(url)
+  return { client, did }
 }
 
 export const parseProxyHeader = async (

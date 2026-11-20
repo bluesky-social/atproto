@@ -12,6 +12,7 @@ import {
   asPipeThroughBuffer,
   isJsonContentType,
   pipethrough,
+  proxyTarget,
 } from '../pipethrough.js'
 import type { HandlerResponse, LocalRecords, MungeFn } from './types.js'
 
@@ -76,7 +77,10 @@ export const pipethroughReadAfterWrite = async <
 
       const parsedRes = result.value as l.InferMethodOutputBody<M, never>
 
-      const localViewer = ctx.localViewer(store)
+      const localViewer = ctx.localViewer(
+        store,
+        await proxyTarget(ctx, req, method.nsid),
+      )
 
       const data = await munge(localViewer, parsedRes, local, requester)
       return formatMungedResponse(data, getLocalLag(local))

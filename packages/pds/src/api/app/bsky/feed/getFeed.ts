@@ -1,3 +1,5 @@
+import { getPdsEndpoint } from '@atproto/common'
+import { isDidString } from '@atproto/lex-schema'
 import { InvalidRequestError } from '@atproto/oauth-provider/errors'
 import { AtUri } from '@atproto/syntax'
 import type { Server } from '@atproto/xrpc-server'
@@ -23,11 +25,32 @@ export default function (server: Server, ctx: AppContext) {
 
       const feedUrl = new AtUri(params.feed)
 
-      const data = await bskyAppView.client.call(com.atproto.repo.getRecord, {
-        repo: feedUrl.host,
-        collection: feedUrl.collectionSafe,
-        rkey: feedUrl.rkeySafe,
-      })
+      // The AppView is used as a cache here: when it cannot answer, the record
+      // is fetched from its repo's PDS
+      const data = await bskyAppView.client
+        .call(com.atproto.repo.getRecord, {
+          repo: feedUrl.host,
+          collection: feedUrl.collectionSafe,
+          rkey: feedUrl.rkeySafe,
+        })
+        .catch(async () => {
+          const did = isDidString(feedUrl.host)
+            ? feedUrl.host
+            : await ctx.idResolver.handle.resolve(feedUrl.host)
+          const didDoc = did && (await ctx.idResolver.did.resolve(did))
+          const pds = didDoc && getPdsEndpoint(didDoc)
+          if (!isDidString(did) || !pds) {
+            throw new InvalidRequestError(
+              'could not resolve feed did',
+              'UnknownFeed',
+            )
+          }
+          return ctx.safeClient(pds).call(com.atproto.repo.getRecord, {
+            repo: did,
+            collection: feedUrl.collectionSafe,
+            rkey: feedUrl.rkeySafe,
+          })
+        })
 
       const feedDid = data.value['did']
       if (typeof feedDid !== 'string') {
