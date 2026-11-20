@@ -2131,6 +2131,91 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
       expect(warn).toHaveBeenCalledTimes(1)
     })
   })
+  it('runs viewer lookups concurrently with backlink counts and samples', async ({
+    fixture,
+  }) => {
+    const { hydrator, ctx, records, seedBasic } = fixture
+    seedBasic()
+    const viewer: DidString = 'did:plc:viewer'
+    const gallery = atUri('did:plc:gallery', social.grain.gallery.$type, '1')
+    records.set(gallery, {
+      body: social.grain.gallery.$build({
+        title: 'Gallery',
+        createdAt: '2026-10-01T00:00:00.000Z',
+      }),
+    })
+    const roots = [doc1, pubUri, gallery]
+    const externalRecords = await hydrator.external.getRecordsByURI(roots)
+    const gate = new EventEmitter()
+    const response = once(gate, 'response')
+    using byActor = vi
+      .spyOn(hydrator.external, 'getAtmosphereBacklinksByActor')
+      .mockImplementation(async (uris, _viewer, collection) => {
+        await response
+        return {
+          backlinks: new HydrationMap(
+            uris.map((uri) => [
+              uri,
+              [atUri(viewer, collection, 'interaction')],
+            ]),
+          ),
+          truncated: false,
+        }
+      })
+    using counts = vi
+      .spyOn(hydrator.external, 'getAtmosphereBacklinkCounts')
+      .mockImplementation(async () => {
+        await response
+        return new HydrationMap()
+      })
+    using samples = vi
+      .spyOn(hydrator.external, 'getAtmosphereBacklinks')
+      .mockImplementation(async () => {
+        await response
+        return { backlinks: [] }
+      })
+    const subscriptions: ExternalPublicationSubscriptions = new HydrationMap()
+    const likes: ExternalRecordLikes = new HydrationMap()
+    const scopedCtx = ctx.copy({ viewer })
+    const pending = hydrator.hydrateExternalViewDependencies(
+      { ctx: scopedCtx, externalRecords },
+      roots.map((uri) => ({ uri })),
+      scopedCtx,
+      {
+        seenRecordKeys: new Set(roots),
+        publicationSubscriptions: subscriptions,
+        recordLikes: likes,
+      },
+    )
+    try {
+      expect([...byActor.mock.calls]).toEqual([
+        [[pubUri], viewer, site.standard.graph.subscription.$type],
+        [[doc1], viewer, site.standard.graph.recommend.$type],
+        [[gallery], viewer, social.grain.favorite.$type],
+      ])
+      expect(counts).toHaveBeenCalledExactlyOnceWith(roots)
+      expect(samples).toHaveBeenCalledTimes(4)
+      expect([...subscriptions]).toEqual([[pubUri, null]])
+      expect([...likes]).toEqual([
+        [doc1, null],
+        [gallery, null],
+      ])
+    } finally {
+      gate.emit('response')
+      await pending
+    }
+    const state = await pending
+    expect(state.externalPublicationSubscriptions?.get(pubUri)).toBe(
+      subscriptionUri(viewer, 'interaction'),
+    )
+    expect(state.externalRecordLikes?.get(doc1)).toBe(
+      recommendUri(viewer, 'interaction'),
+    )
+    expect(state.externalRecordLikes?.get(gallery)).toBe(
+      atUri(viewer, social.grain.favorite.$type, 'interaction'),
+    )
+  })
+
   describe.each([
     {
       name: 'recommendations',

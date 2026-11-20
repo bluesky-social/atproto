@@ -1446,24 +1446,26 @@ export class Hydrator {
       }
     }
 
-    for (const { uris, collection, interactions } of [
-      {
-        uris: publicationUris,
-        collection: site.standard.graph.subscription.$type,
-        interactions: publicationSubscriptions,
-      },
-      {
-        uris: documentUris,
-        collection: site.standard.graph.recommend.$type,
-        interactions: recordLikes,
-      },
-      {
-        uris: galleryUris,
-        collection: social.grain.favorite.$type,
-        interactions: recordLikes,
-      },
-    ] as const) {
-      if (!interactions || !ctx.viewer) continue
+    const viewerLookups = (
+      [
+        {
+          uris: publicationUris,
+          collection: site.standard.graph.subscription.$type,
+          interactions: publicationSubscriptions,
+        },
+        {
+          uris: documentUris,
+          collection: site.standard.graph.recommend.$type,
+          interactions: recordLikes,
+        },
+        {
+          uris: galleryUris,
+          collection: social.grain.favorite.$type,
+          interactions: recordLikes,
+        },
+      ] as const
+    ).map(async ({ uris, collection, interactions }) => {
+      if (!interactions || !ctx.viewer) return
       const uncached = [...uris].filter((uri) => !interactions.has(uri))
       // @NOTE Reserve unknown outcomes before awaiting so shared request caches
       // never repeat lookups, including failed or truncated ones.
@@ -1498,7 +1500,7 @@ export class Hydrator {
           )
         }
       }
-    }
+    })
 
     let externalRecordBacklinks: ExternalRecordBacklinks | undefined
     let externalRecordBacklinkCounts: ExternalRecordBacklinkCounts | undefined
@@ -1560,9 +1562,12 @@ export class Hydrator {
             )
           }
         })(),
+        ...viewerLookups,
       ])
       externalRecordBacklinks = backlinks
       externalRecordBacklinkCounts = counts
+    } else {
+      await Promise.all(viewerLookups)
     }
 
     const newUris = [...discoveredUris].filter(
