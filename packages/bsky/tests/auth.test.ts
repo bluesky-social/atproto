@@ -86,6 +86,22 @@ describe('auth', () => {
     expect(data.count).toBe(1)
   })
 
+  it('rejects a did#atproto_labeler service JWT without lxm', async () => {
+    const labeler = network.bsky.ctx.cfg.modServiceDid
+    const jwt = await createServiceJwt({
+      iss: `${labeler}#atproto_labeler`,
+      aud: network.bsky.ctx.cfg.serverDid,
+      lxm: null,
+      keypair: network.ozone.ctx.signingKey,
+    })
+    await expect(
+      agent.api.app.bsky.notification.getUnreadCount(
+        {},
+        { headers: { authorization: `Bearer ${jwt}` } },
+      ),
+    ).rejects.toThrow('missing jwt lexicon method ("lxm")')
+  })
+
   it('throws if the user key is incorrect', async () => {
     const bobKeypair = await network.pds.ctx.actorStore.keypair(bob)
 

@@ -201,6 +201,7 @@ export class AuthVerifier {
             iss: null,
             aud: null,
           })
+          events.standardServiceJwtIssuer(iss)
           if (
             !opts.skipAudCheck &&
             !(this.standardAudienceDids as Set<string>).has(aud)
@@ -428,8 +429,8 @@ export class AuthVerifier {
     }
   }
 
-  // Permission token issued by BSG for the requests it forwards. Without `sub`,
-  // the request is anonymous.
+  // BSG token, issued by BSG for the requests it forwards. Without `sub`, the
+  // request is anonymous.
   private bsg = async (
     reqCtx: ReqCtx,
     token: string,
@@ -625,14 +626,7 @@ export class AuthVerifier {
         modService: this.isModService(payload.iss),
       })
     }
-    if (
-      !payload.iss.endsWith('#atproto_labeler') ||
-      payload.lxm !== undefined
-    ) {
-      // @TODO currently permissive of labelers who dont set lxm yet.
-      // we'll allow ozone self-hosters to upgrade before removing this condition.
-      assertLxmCheck()
-    }
+    assertLxmCheck()
 
     return {
       iss: payload.iss as (DidString | `${DidString}#${string}`) &

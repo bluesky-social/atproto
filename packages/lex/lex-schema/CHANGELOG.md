@@ -1,5 +1,26 @@
 # @atproto/lex-schema
 
+## 0.3.0
+
+### Minor Changes
+
+- [#5948](https://github.com/bluesky-social/atproto/pull/5948) [`ce37237`](https://github.com/bluesky-social/atproto/commit/ce37237663b7ea87e8cc04cb995377d0ee5d2efd) Thanks [@matthieusieben](https://github.com/matthieusieben)! - `asLexiconRecordKey` returns the type of the value it is given (`T & LexiconRecordKey`), as `isLexiconRecordKey` narrows to it.
+
+- [#5948](https://github.com/bluesky-social/atproto/pull/5948) [`ce37237`](https://github.com/bluesky-social/atproto/commit/ce37237663b7ea87e8cc04cb995377d0ee5d2efd) Thanks [@matthieusieben](https://github.com/matthieusieben)! - String schemas reject strings containing a lone surrogate, which has no UTF-8 encoding.
+
+### Patch Changes
+
+- [#5950](https://github.com/bluesky-social/atproto/pull/5950) [`b9b1ca7`](https://github.com/bluesky-social/atproto/commit/b9b1ca7f176b93d12e39685799c5f2e1f9a63be7) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update `vitest` to v5, `vite` to v8.3.8 and `rolldown` to v1.3.3 (dev dependencies)
+
+- [#5948](https://github.com/bluesky-social/atproto/pull/5948) [`ce37237`](https://github.com/bluesky-social/atproto/commit/ce37237663b7ea87e8cc04cb995377d0ee5d2efd) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Support `RecordSchema` in `typedUnion()`, without the need to wrap them inside `typedRef()`. `typedUnion()` now supports any `Validator` that has a `$type: string` property and validates objects with a `$type` property (exported as a new `TypedUnionValidator` interface)
+
+- [#5948](https://github.com/bluesky-social/atproto/pull/5948) [`ce37237`](https://github.com/bluesky-social/atproto/commit/ce37237663b7ea87e8cc04cb995377d0ee5d2efd) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add `paramsToURLSearchParams()`, which serializes params as `ParamsSchema#toURLSearchParams()` does, without parsing them first.
+
+- [#5948](https://github.com/bluesky-social/atproto/pull/5948) [`ce37237`](https://github.com/bluesky-social/atproto/commit/ce37237663b7ea87e8cc04cb995377d0ee5d2efd) Thanks [@matthieusieben](https://github.com/matthieusieben)! - When validating (not parsing), string schemas reject values they would coerce to a string (`Date`, `URL`, CID, token, `String` object) with an `invalid_type` issue, instead of checking the string constraints of the coerced value before failing with an `invalid_value` issue.
+- Updated dependencies [[`b9b1ca7`](https://github.com/bluesky-social/atproto/commit/b9b1ca7f176b93d12e39685799c5f2e1f9a63be7), [`ce37237`](https://github.com/bluesky-social/atproto/commit/ce37237663b7ea87e8cc04cb995377d0ee5d2efd)]:
+  - @atproto/lex-data@0.1.11
+  - @atproto/syntax@0.7.8
+
 ## 0.2.11
 
 ### Patch Changes
