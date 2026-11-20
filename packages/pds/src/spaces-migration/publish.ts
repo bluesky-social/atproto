@@ -69,9 +69,7 @@ export async function publishAccount(
     // A process that stalled past its lease mustn't publish over another's
     if (!(await holdsLease())) throw new LeaseLostError(did)
     try {
-      await boundPlc(
-        did,
-        plcTimeoutMs,
+      await boundPlc(did, plcTimeoutMs, () =>
         ctx.plcClient.updateData(did, ctx.plcRotationKey, (op) => {
           // updateData re-reads the doc, which may have changed since
           const reason = whyUnpublishable(ctx, op)
@@ -122,7 +120,7 @@ export async function inspectKemKey(
     const lastOp = await boundPlc(
       did,
       opts.plcTimeoutMs ?? DEFAULT_PLC_TIMEOUT_MS,
-      ctx.plcClient.getLastOp(did),
+      () => ctx.plcClient.getLastOp(did),
     )
     if (lastOp.type === 'plc_tombstone') {
       return { published: false, unpublishableReason: 'tombstoned' }
@@ -154,8 +152,16 @@ export async function inspectKemKey(
 }
 
 // The PLC client has no timeout of its own
-function boundPlc<T>(did: string, timeoutMs: number, call: Promise<T>) {
-  return withTimeout(call, timeoutMs, () => new PlcTimeoutError(did, timeoutMs))
+function boundPlc<T>(
+  did: string,
+  timeoutMs: number,
+  call: (signal: AbortSignal) => Promise<T>,
+) {
+  return withSignal(
+    call,
+    AbortSignal.timeout(timeoutMs),
+    () => new PlcTimeoutError(did, timeoutMs),
+  )
 }
 
 function whyUnpublishable(
@@ -174,21 +180,27 @@ function whyUnpublishable(
   return undefined
 }
 
-// @review a signal / AbortSignal.timeout() is always preferable when possible.
-async function withTimeout<T>(
-  promise: Promise<T>,
-  ms: number,
+// Rejects with `onTimeout()` once `signal` aborts, whether or not the call
+// settles: the timeout holds without the call's cooperation. The PLC client
+// can't take the signal yet, so a timed-out request isn't cancelled; its late
+// result is ignored. @TODO pass the signal through once @did-plc/lib accepts it.
+async function withSignal<T>(
+  call: (signal: AbortSignal) => Promise<T>,
+  signal: AbortSignal,
   onTimeout: () => Error,
 ): Promise<T> {
+  const promise = call(signal)
   // A call that loses the race may still fail later: don't leave that unhandled
   promise.catch(() => {})
-  let timer: NodeJS.Timeout | undefined
-  const timeout = new Promise<never>((_, reject) => {
-    timer = setTimeout(() => reject(onTimeout()), ms)
+  let onAbort: (() => void) | undefined
+  const aborted = new Promise<never>((_, reject) => {
+    onAbort = () => reject(onTimeout())
+    if (signal.aborted) onAbort()
+    else signal.addEventListener('abort', onAbort, { once: true })
   })
   try {
-    return await Promise.race([promise, timeout])
+    return await Promise.race([promise, aborted])
   } finally {
-    clearTimeout(timer)
+    if (onAbort) signal.removeEventListener('abort', onAbort)
   }
 }

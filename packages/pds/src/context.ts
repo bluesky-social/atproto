@@ -97,8 +97,13 @@ export type AppContextOptions = {
   authVerifier: AuthVerifier
   plcRotationKey: crypto.Keypair
   cfg: ServerConfig
-  /** Whether a scope asks for space access. Defaults to never. */
+  /**
+   * Whether a token's scope, with permission sets expanded, grants space
+   * access. Injected because nothing does until spaces are served: tests, and
+   * the release that serves spaces, supply it. Defaults to never.
+   */
   grantsSpaceAccess?: GrantsSpaceAccess
+  spacesMigrationProgress: SpacesMigrationProgress
 }
 
 export type SpacesMigrationWorkers = {
@@ -135,7 +140,6 @@ export class AppContext implements AsyncDisposable {
   public plcRotationKey: crypto.Keypair
   public cfg: ServerConfig
   public spacesMigration: SpacesMigrationWorkers
-  public grantsSpaceAccess: GrantsSpaceAccess
 
   constructor(opts: AppContextOptions) {
     this.actorStore = opts.actorStore
@@ -163,10 +167,9 @@ export class AppContext implements AsyncDisposable {
     this.oauthProvider = opts.oauthProvider
     this.plcRotationKey = opts.plcRotationKey
     this.cfg = opts.cfg
-    this.grantsSpaceAccess = opts.grantsSpaceAccess ?? neverGrantsSpaceAccess // @review why is this implementation injected?  do we take into account permission sets when checking grantsSpaceAccess()?
 
     // Built here rather than in fromConfig: the publisher needs the context
-    const progress = new SpacesMigrationProgress(this.accountManager.db)
+    const progress = opts.spacesMigrationProgress
     const summaryCache = new SpacesMigrationSummaryCache(progress)
     const onRecorded = () => summaryCache.refreshSoon()
     const publisher = new SpacesMigrationPublisher(
@@ -531,6 +534,13 @@ export class AppContext implements AsyncDisposable {
         )
       : undefined
 
+    // The OAuth provider's hooks prioritize accounts granted space access
+    const spacesMigrationProgress = new SpacesMigrationProgress(
+      accountManager.db,
+    )
+    const grantsSpaceAccess =
+      overrides?.grantsSpaceAccess ?? neverGrantsSpaceAccess
+
     const oauthProvider = cfg.oauth.provider
       ? new OAuthProvider({
           issuer: cfg.oauth.issuer,
@@ -617,7 +627,7 @@ export class AppContext implements AsyncDisposable {
               clientId,
             })
           },
-          async onAuthorized({ account, client, parameters }) {
+          onAuthorized({ account, client }) {
             events.oauthAuthorized({
               did: account.did,
               clientId: client.id,
@@ -625,13 +635,18 @@ export class AppContext implements AsyncDisposable {
               clientTrusted: client.isTrusted,
               clientConfidential: client.isConfidential,
             })
-            // Runs before the authorization response: it must never throw
-            // or wait on PLC
+          },
+          async onTokenCreated({ account, client, scope }) {
+            events.sessionCreated({
+              source: 'oauth',
+              did: account.did,
+              clientId: client.id,
+            })
+            // The scope has permission sets expanded. A throw here would
+            // revoke the token, and nothing here may wait on PLC.
             try {
-              const { grantsSpaceAccess, spacesMigration } = getCtx() // @review if we don't need this circular dep, that would be ideal.  this is the simplest way to do it, no worries.
-              if (grantsSpaceAccess(parameters.scope ?? '')) {
-                await spacesMigration.progress.bump(account.did)
-                spacesMigration.publisher.wake()
+              if (grantsSpaceAccess(scope)) {
+                await spacesMigrationProgress.bump(account.did)
               }
             } catch (err) {
               oauthLogger.error(
@@ -639,13 +654,6 @@ export class AppContext implements AsyncDisposable {
                 'failed to prioritize space authorization',
               )
             }
-          },
-          onTokenCreated({ account, client }) {
-            events.sessionCreated({
-              source: 'oauth',
-              did: account.did,
-              clientId: client.id,
-            })
           },
           onTokenRefreshed({ account, client }) {
             events.sessionRefreshed({
@@ -711,8 +719,6 @@ export class AppContext implements AsyncDisposable {
       },
     )
 
-    const getCtx = () => ctx
-
     const ctx = new AppContext({
       actorStore,
       blobstore,
@@ -739,6 +745,7 @@ export class AppContext implements AsyncDisposable {
       oauthProvider,
       plcRotationKey,
       cfg,
+      spacesMigrationProgress,
       ...(overrides ?? {}),
     })
     return ctx
