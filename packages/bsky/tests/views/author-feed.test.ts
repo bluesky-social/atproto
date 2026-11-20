@@ -21,7 +21,12 @@ import {
   asPredicate,
   ids,
 } from '@atproto/api'
-import { type SeedClient, TestNetwork, authorFeedSeed } from '@atproto/dev-env'
+import {
+  RecordRef,
+  type SeedClient,
+  TestNetwork,
+  authorFeedSeed,
+} from '@atproto/dev-env'
 import type { DidString } from '@atproto/syntax'
 import { Gate } from '../../src/feature-gates/gates.js'
 import { uriToDid } from '../../src/util/uris.js'
@@ -30,6 +35,7 @@ import {
   paginateAll,
   stripViewer,
   stripViewerFromPost,
+  uriWithHandleAuthority,
 } from '../_util.js'
 
 const isValidReplyRef = asPredicate(AppBskyFeedPost.validateReplyRef)
@@ -339,6 +345,38 @@ describe('pds author feed views', () => {
     } finally {
       hydrateFeedItems.mockRestore()
     }
+  })
+
+  it('fetches replies feed containing handle-authority refs', async () => {
+    const author = await sc.createAccount('author-feed-handles', {
+      handle: 'author-handles.test',
+      email: 'author-handles@example.com',
+      password: 'hunter2',
+    })
+    const root = await sc.post(author.did, 'root post for handle refs')
+    await network.processAll()
+    const handleRoot = new RecordRef(
+      uriWithHandleAuthority(root.ref.uriStr, 'author-handles.test'),
+      root.ref.cid,
+    )
+    const reply = await sc.reply(
+      author.did,
+      handleRoot,
+      handleRoot,
+      'reply with handle refs',
+    )
+    await network.processAll()
+
+    const { data } = await agent.api.app.bsky.feed.getAuthorFeed({
+      actor: author.did,
+      filter: 'posts_with_replies',
+    })
+    const item = data.feed.find((item) => item.post.uri === reply.ref.uriStr)
+    assert(item?.reply)
+    assert(AppBskyFeedDefs.isPostView(item.reply.root))
+    assert(AppBskyFeedDefs.isPostView(item.reply.parent))
+    expect(item.reply.root.uri).toBe(root.ref.uriStr)
+    expect(item.reply.parent.uri).toBe(root.ref.uriStr)
   })
 
   it('bounds repost scanning and continues to older authored content', async () => {

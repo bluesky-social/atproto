@@ -42,8 +42,14 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-const skeleton = async (inputs: { params: Params }): Promise<Skeleton> => {
-  return { posts: dedupeStrs(inputs.params.uris) }
+const skeleton = async (inputs: {
+  ctx: Context
+  params: Params
+}): Promise<Skeleton> => {
+  const uris = await inputs.ctx.hydrator.resolveUris(
+    dedupeStrs(inputs.params.uris),
+  )
+  return { posts: dedupeStrs(uris) }
 }
 
 const hydration = async (inputs: {

@@ -9,8 +9,17 @@ import {
   type Un$Typed,
   ids,
 } from '@atproto/api'
-import { type SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
-import { forSnapshot, stripViewerFromPost } from '../_util.js'
+import {
+  RecordRef,
+  type SeedClient,
+  TestNetwork,
+  basicSeed,
+} from '@atproto/dev-env'
+import {
+  forSnapshot,
+  stripViewerFromPost,
+  uriWithHandleAuthority,
+} from '../_util.js'
 
 describe('pds posts views', () => {
   let network: TestNetwork
@@ -195,6 +204,49 @@ describe('pds posts views', () => {
       sc.posts[sc.dids.bob][0].ref.uriStr,
     ].sort()
     expect(receivedUris).toEqual(expected)
+  })
+
+  it('resolves handle authorities in requested uris', async () => {
+    const post = sc.posts[sc.dids.alice][0]
+    const handleUri = uriWithHandleAuthority(
+      post.ref.uriStr,
+      sc.accounts[sc.dids.alice].handle,
+    )
+
+    const posts = await agent.api.app.bsky.feed.getPosts({ uris: [handleUri] })
+
+    expect(posts.data.posts.length).toBe(1)
+    expect(posts.data.posts[0].uri).toBe(post.ref.uriStr)
+  })
+
+  it('resolves handle authorities in reply references', async () => {
+    const author = await sc.createAccount('posts-hreply', {
+      handle: 'posts-hreply.test',
+      email: 'posts-hreply@example.com',
+      password: 'hunter2',
+    })
+    const root = await sc.post(author.did, 'root post')
+    await network.processAll()
+    const handleRoot = new RecordRef(
+      uriWithHandleAuthority(root.ref.uriStr, 'posts-hreply.test'),
+      root.ref.cid,
+    )
+    const reply = await sc.reply(
+      author.did,
+      handleRoot,
+      handleRoot,
+      'reply with handle refs',
+    )
+    await network.processAll()
+
+    const posts = await agent.api.app.bsky.feed.getPosts({
+      uris: [reply.ref.uriStr],
+    })
+
+    expect(posts.data.posts.length).toBe(1)
+    const record = posts.data.posts[0].record as AppBskyFeedPost.Record
+    expect(record.reply?.root.uri).toBe(root.ref.uriStr)
+    expect(record.reply?.parent.uri).toBe(root.ref.uriStr)
   })
 
   it('allows for creating posts with tags', async () => {

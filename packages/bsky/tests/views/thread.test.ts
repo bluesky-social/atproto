@@ -7,12 +7,18 @@ import {
   AtpAgent,
   ids,
 } from '@atproto/api'
-import { type SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import {
+  RecordRef,
+  type SeedClient,
+  TestNetwork,
+  basicSeed,
+} from '@atproto/dev-env'
 import type { DidString } from '@atproto/syntax'
 import {
   assertIsThreadViewPost,
   forSnapshot,
   stripViewerFromThread,
+  uriWithHandleAuthority,
 } from '../_util.js'
 
 describe('appview thread views', () => {
@@ -95,6 +101,42 @@ describe('appview thread views', () => {
     )
 
     expect(forSnapshot(thread.data.thread)).toMatchSnapshot()
+  })
+
+  it('fetches thread for a reply with handle-authority refs', async () => {
+    const author = await sc.createAccount('thread-hreply', {
+      handle: 'thread-hreply.test',
+      email: 'thread-hreply@example.com',
+      password: 'hunter2',
+    })
+    const root = await sc.post(author.did, 'thread root post')
+    await network.processAll()
+    const handleRoot = new RecordRef(
+      uriWithHandleAuthority(root.ref.uriStr, 'thread-hreply.test'),
+      root.ref.cid,
+    )
+    const reply = await sc.reply(
+      author.did,
+      handleRoot,
+      handleRoot,
+      'thread reply with handle refs',
+    )
+    await network.processAll()
+
+    const thread = await agent.api.app.bsky.feed.getPostThread(
+      { uri: reply.ref.uriStr },
+      {
+        headers: await network.serviceHeaders(
+          bob,
+          ids.AppBskyFeedGetPostThread,
+        ),
+      },
+    )
+
+    assertIsThreadViewPost(thread.data.thread)
+    assertIsThreadViewPost(thread.data.thread.parent)
+    expect(thread.data.thread.post.uri).toBe(reply.ref.uriStr)
+    expect(thread.data.thread.parent.post.uri).toBe(root.ref.uriStr)
   })
 
   it('fetches ancestors', async () => {
