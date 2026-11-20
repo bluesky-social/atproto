@@ -9,7 +9,7 @@ import type { ScheduledAction } from '../db/schema/scheduled-action.js'
 import { runNotificationWork } from '../inbox/notification-work.js'
 import type { tools } from '../lexicons/index.js'
 import { dbLogger } from '../logger.js'
-import { createReportActivity } from '../report/activity.js'
+import { bulkInsertReportActivities } from '../report/activity.js'
 import { getEventActivityMetadata } from '../report/metadata.js'
 import { notifyReportActivities } from '../report/notifications.js'
 import type { ScheduledTakedownEventData, SchedulingParams } from './types.js'
@@ -383,49 +383,73 @@ export class ScheduledActionService {
   }
 
   /**
-   * Attempt to reopen the oldest report associated with an action.
+   * Reopen reports whose current closure belongs to the failed action.
    */
-  async reopenOldestScheduledReport(
+  async reopenScheduledReports(
     action: Selectable<ScheduledAction>,
     failureReason: string,
-    inboxStartAt?: DatetimeString,
   ): Promise<void> {
     this.db.assertTransaction()
     const query = this.scheduledReportQuery(action)
     if (!query) return
 
-    for (;;) {
-      const report = await query
-        .select('r.id')
-        .orderBy('r.createdAt')
-        .orderBy('r.id')
-        .limit(1)
-        .forUpdate('r')
-        .executeTakeFirst()
-      if (!report) return
-      const eligible = await query
-        .where('r.id', '=', report.id)
-        .select('r.id')
-        .executeTakeFirst()
-      if (!eligible) continue
-
-      const eventData = action.eventData as ScheduledTakedownEventData
-      await createReportActivity(this.db, {
-        reportId: report.id,
-        activityType: 'reopenActivity',
-        createdBy: action.createdBy,
-        isAutomated: true,
-        inboxStartAt,
-        internalNote: 'Scheduled takedown failed',
-        meta: {
-          ...getEventActivityMetadata(eventData.modTool),
-          scheduledActionId: action.id,
-          schedulingEventId: eventData.reportEventId,
-          failureReason,
-        },
-      })
-      return
+    const eventData = action.eventData as ScheduledTakedownEventData
+    const internalNote = [
+      `Scheduled takedown failed: ${failureReason}`,
+      "This report was reopened for review. Check the account's current status and retry or reschedule if appropriate.",
+      `Original scheduling event: ${eventData.reportEventId}.`,
+    ].join('\n')
+    const meta = {
+      ...getEventActivityMetadata(eventData.modTool),
+      scheduledActionId: action.id,
+      schedulingEventId: eventData.reportEventId,
+      failureReason,
     }
+    let cursor = 0
+    let batchSize: number
+    do {
+      const reports = await query
+        .where('r.id', '>', cursor)
+        .select('r.id')
+        .orderBy('r.id')
+        .limit(500)
+        .forUpdate('r')
+        .execute()
+      batchSize = reports.length
+      if (!batchSize) return
+
+      // @NOTE Recheck closure history after acquiring locks with a fresh snapshot.
+      const eligible = query
+        .where(
+          'r.id',
+          'in',
+          reports.map((report) => report.id),
+        )
+        .select('r.id')
+      const now = currentDatetimeString()
+      const reopened = await this.db.db
+        .updateTable('report')
+        .set({ status: 'open', closedAt: null, updatedAt: now })
+        .where('id', 'in', eligible)
+        .returning('id')
+        .execute()
+
+      // @NOTE Reporter-visible status was already pending; recovery is internal.
+      await bulkInsertReportActivities(
+        this.db,
+        reopened.map((report) => ({
+          reportId: report.id,
+          activityType: 'reopenActivity',
+          previousStatus: 'closed',
+          createdBy: action.createdBy,
+          createdAt: now,
+          isAutomated: true,
+          internalNote,
+          meta,
+        })),
+      )
+      cursor = reports[reports.length - 1].id
+    } while (batchSize === 500)
   }
 
   async markActionAsFailed(

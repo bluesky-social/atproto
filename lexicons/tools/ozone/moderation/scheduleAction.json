@@ -40,7 +40,7 @@
             "reportAction": {
               "type": "ref",
               "ref": "tools.ozone.moderation.emitEvent#reportAction",
-              "description": "Close selected reports on each scheduled account immediately. Reports are linked to the scheduling event. If execution fails, the oldest closed report is reopened."
+              "description": "Close selected reports on each scheduled account immediately. Reports are linked to the scheduling event. If execution fails, reports still closed by this schedule are reopened for review."
             }
           }
         }

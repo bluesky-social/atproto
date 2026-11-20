@@ -507,7 +507,9 @@ describe('scheduled action reports', () => {
       expect((await reportForEvent(mod, first.eventId)).status).toBe(
         outcome === 'failed' ? 'open' : 'closed',
       )
-      expect((await reportForEvent(mod, second.eventId)).status).toBe('closed')
+      expect((await reportForEvent(mod, second.eventId)).status).toBe(
+        outcome === 'failed' ? 'open' : 'closed',
+      )
       expect(
         (await inboxReports({ filter: 'pending' }, reporter.did)).reports
           .map((r) => r.id)
@@ -541,81 +543,130 @@ describe('scheduled action reports', () => {
     expect(await reportNotifications(first.id)).toEqual([])
   })
 
-  it('resolves and notifies all originally closed reports across execution batches', async () => {
-    const f = await fixture()
-    const reporter = await fixture()
-    const first = await report(f.subject, spam, reporter.did)
-    // @NOTE Clone source rows to exercise the 500-row database batch boundary.
-    const db = network.ozone.ctx.db
-    const { id: eventId, ...event } = await db.db
-      .selectFrom('moderation_event')
-      .where('id', '=', first.eventId)
-      .selectAll()
-      .executeTakeFirstOrThrow()
-    const {
-      id: reportId,
-      eventId: sourceId,
-      ...row
-    } = await db.db
-      .selectFrom('report')
-      .where('id', '=', first.id)
-      .selectAll()
-      .executeTakeFirstOrThrow()
-    const events = await db.db
-      .insertInto('moderation_event')
-      .values(Array.from({ length: 500 }, () => event))
-      .returning('id')
-      .execute()
-    await db.db
-      .insertInto('report')
-      .values(events.map(({ id }) => ({ ...row, eventId: id })))
-      .execute()
-    try {
-      await schedule(f.did, { all: true })
-      const [scheduled] = await actions(f.did)
-      await processor().executeScheduledAction(scheduled.id)
-      await processor().executeScheduledAction(scheduled.id)
-      expect((await actions(f.did))[0].status).toBe('executed')
-      expect(
-        (await inboxReports({ filter: 'pending' }, reporter.did)).reports,
-      ).toEqual([])
-      const notifications: number[] = []
-      let cursor: string | undefined
-      do {
-        const { data } = await sc.agent.tools.ozone.inbox.listNotifications(
-          { reasons: ['reportResolved', 'reportReopened'], limit: 100, cursor },
-          { headers: inboxHeaders(network, sc, reporter.did) },
-        )
-        for (const notification of data.notifications) {
-          expect(notification.reason).toBe('reportResolved')
-          expect('reportId' in notification.target).toBe(true)
-          if ('reportId' in notification.target)
-            notifications.push(notification.target.reportId)
+  it.each(['success', 'failure'] as const)(
+    'handles all originally closed reports across batches on %s',
+    async (outcome) => {
+      const f = await fixture()
+      const reporter = await fixture()
+      const first = await report(f.subject, spam, reporter.did)
+      // @NOTE Clone source rows to exercise the 500-row database batch boundary.
+      const db = network.ozone.ctx.db
+      const { id: eventId, ...event } = await db.db
+        .selectFrom('moderation_event')
+        .where('id', '=', first.eventId)
+        .selectAll()
+        .executeTakeFirstOrThrow()
+      const {
+        id: reportId,
+        eventId: sourceId,
+        ...row
+      } = await db.db
+        .selectFrom('report')
+        .where('id', '=', first.id)
+        .selectAll()
+        .executeTakeFirstOrThrow()
+      const events = await db.db
+        .insertInto('moderation_event')
+        .values(Array.from({ length: 500 }, () => event))
+        .returning('id')
+        .execute()
+      await db.db
+        .insertInto('report')
+        .values(events.map(({ id }) => ({ ...row, eventId: id })))
+        .execute()
+      try {
+        await schedule(f.did, { all: true })
+        const [scheduled] = await actions(f.did)
+        using failure = jest.spyOn(processor(), 'performTakedown')
+        if (outcome === 'failure') {
+          failure.mockRejectedValue(new Error('Example batch failure'))
         }
-        cursor = data.cursor
-        expect(notifications.length).toBeLessThanOrEqual(501)
-      } while (cursor)
-      expect(new Set(notifications).size).toBe(501)
-      expect(notifications).toHaveLength(501)
-      expect(
-        (await inboxReport(Math.max(...notifications), reporter.did))
-          .resolution,
-      ).toMatchObject({
-        outcome: 'actionTaken',
-        actionTaken: 'accountTakedown',
-      })
-    } finally {
-      const eventIds = events.map(({ id }) => id)
-      await db.db
-        .deleteFrom('report')
-        .where('eventId', 'in', eventIds)
-        .execute()
-      await db.db
-        .deleteFrom('moderation_event')
-        .where('id', 'in', eventIds)
-        .execute()
-    }
-  })
+        await processor().executeScheduledAction(scheduled.id)
+        await processor().executeScheduledAction(scheduled.id)
+        if (outcome === 'failure') {
+          expect((await actions(f.did))[0].status).toBe('failed')
+          const reopenedIds: number[] = []
+          let cursor: string | undefined
+          do {
+            const page = await mod.queryReports({
+              subject: f.did,
+              status: 'open',
+              limit: 100,
+              cursor,
+            })
+            reopenedIds.push(...page.reports.map((report) => report.id))
+            cursor = page.cursor
+            expect(reopenedIds.length).toBeLessThanOrEqual(501)
+          } while (cursor)
+          expect(new Set(reopenedIds).size).toBe(501)
+          expect(reopenedIds).toHaveLength(501)
+          for (const id of [
+            reopenedIds[0],
+            reopenedIds[499],
+            reopenedIds[500],
+          ]) {
+            const reopens = (await activities(id)).filter((activity) =>
+              activity.activity.$type.endsWith('#reopenActivity'),
+            )
+            expect(reopens).toHaveLength(1)
+            expect(reopens[0].internalNote).toContain('Example batch failure')
+            expect((await inboxReport(id, reporter.did)).report.status).toBe(
+              'pending',
+            )
+          }
+          const { data } = await sc.agent.tools.ozone.inbox.listNotifications(
+            { reasons: ['reportResolved', 'reportReopened'] },
+            { headers: inboxHeaders(network, sc, reporter.did) },
+          )
+          expect(data.notifications).toEqual([])
+          return
+        }
+        expect((await actions(f.did))[0].status).toBe('executed')
+        expect(
+          (await inboxReports({ filter: 'pending' }, reporter.did)).reports,
+        ).toEqual([])
+        const notifications: number[] = []
+        let cursor: string | undefined
+        do {
+          const { data } = await sc.agent.tools.ozone.inbox.listNotifications(
+            {
+              reasons: ['reportResolved', 'reportReopened'],
+              limit: 100,
+              cursor,
+            },
+            { headers: inboxHeaders(network, sc, reporter.did) },
+          )
+          for (const notification of data.notifications) {
+            expect(notification.reason).toBe('reportResolved')
+            expect('reportId' in notification.target).toBe(true)
+            if ('reportId' in notification.target)
+              notifications.push(notification.target.reportId)
+          }
+          cursor = data.cursor
+          expect(notifications.length).toBeLessThanOrEqual(501)
+        } while (cursor)
+        expect(new Set(notifications).size).toBe(501)
+        expect(notifications).toHaveLength(501)
+        expect(
+          (await inboxReport(Math.max(...notifications), reporter.did))
+            .resolution,
+        ).toMatchObject({
+          outcome: 'actionTaken',
+          actionTaken: 'accountTakedown',
+        })
+      } finally {
+        const eventIds = events.map(({ id }) => id)
+        await db.db
+          .deleteFrom('report')
+          .where('eventId', 'in', eventIds)
+          .execute()
+        await db.db
+          .deleteFrom('moderation_event')
+          .where('id', 'in', eventIds)
+          .execute()
+      }
+    },
+  )
 
   it.each(['ids', 'types', 'all'] as const)(
     'closes %s targets immediately with scheduling history',
@@ -890,7 +941,7 @@ describe('scheduled action reports', () => {
     ).toHaveLength(1)
   })
 
-  it('reopens only the oldest linked report after failure and never repeats recovery', async () => {
+  it('reopens all linked reports with internal retry guidance exactly once after failure', async () => {
     const f = await fixture()
     const first = await report(f.subject)
     const second = await report(f.subject)
@@ -909,26 +960,81 @@ describe('scheduled action reports', () => {
       lastFailureReason: 'Example execution failure',
     })
     expect((await reportForEvent(mod, first.eventId)).status).toBe('open')
-    expect((await reportForEvent(mod, second.eventId)).status).toBe('closed')
+    expect((await reportForEvent(mod, second.eventId)).status).toBe('open')
     expect((await reportForEvent(mod, unrelated.eventId)).status).toBe(
       unrelated.status,
     )
-    const reopens = (await activities(first.id)).filter((a) =>
-      a.activity.$type.endsWith('#reopenActivity'),
-    )
-    expect(reopens).toHaveLength(1)
-    expect(reopens[0]).toMatchObject({
-      isAutomated: true,
-      meta: {
-        scheduledActionId: scheduled.id,
-        failureReason: 'Example execution failure',
-      },
-    })
-    expect(
-      (await activities(second.id)).filter((a) =>
+    for (const row of [first, second]) {
+      const reopens = (await activities(row.id)).filter((a) =>
         a.activity.$type.endsWith('#reopenActivity'),
-      ),
-    ).toEqual([])
+      )
+      expect(reopens).toHaveLength(1)
+      expect(reopens[0]).toMatchObject({
+        isAutomated: true,
+        internalNote: expect.stringContaining(
+          'Scheduled takedown failed: Example execution failure',
+        ),
+        meta: {
+          source: 'example',
+          scheduledActionId: scheduled.id,
+          schedulingEventId: expect.any(Number),
+          failureReason: 'Example execution failure',
+        },
+      })
+      expect(reopens[0].internalNote).toContain(
+        `Original scheduling event: ${reopens[0].meta?.schedulingEventId}.`,
+      )
+      expect(reopens[0].internalNote).toContain(
+        'retry or reschedule if appropriate',
+      )
+      expect(reopens[0].publicNote).toBeUndefined()
+      expect(JSON.stringify(await inboxReport(row.id))).not.toContain(
+        'Example execution failure',
+      )
+      expect(await reportNotifications(row.id)).toEqual([])
+    }
+  })
+
+  it('resolves every recovered report when a moderator reschedules after failure', async () => {
+    const f = await fixture()
+    const first = await report(f.subject, spam, sc.dids.bob)
+    const second = await report(f.subject, spam, sc.dids.carol)
+    await schedule(f.did, { all: true })
+    const [failed] = await actions(f.did)
+    {
+      using failure = jest.spyOn(processor(), 'performTakedown')
+      failure.mockRejectedValue(new Error('Example retryable failure'))
+      await processor().executeScheduledAction(failed.id)
+    }
+    for (const row of [first, second]) {
+      expect((await reportForEvent(mod, row.eventId)).status).toBe('open')
+    }
+
+    expect((await schedule(f.did, { all: true })).succeeded).toEqual([f.did])
+    const retry = (await actions(f.did)).find(
+      (action) => action.status === 'pending',
+    )!
+    await processor().executeScheduledAction(retry.id)
+    const executed = (await actions(f.did)).find(
+      (action) => action.id === retry.id,
+    )!
+    expect(executed.status).toBe('executed')
+    for (const [row, reporter] of [
+      [first, sc.dids.bob],
+      [second, sc.dids.carol],
+    ] as const) {
+      const detail = await inboxReport(row.id, reporter)
+      expect(detail.report.status).toBe('resolved')
+      expect(detail.resolution).toMatchObject({
+        outcome: 'actionTaken',
+        actionTaken: 'accountTakedown',
+      })
+      const after = await reportForEvent(mod, row.eventId)
+      expect(after.actionEventIds).toContain(executed.executionEventId)
+      expect(await reportNotifications(row.id, reporter)).toMatchObject([
+        { reason: 'reportResolved' },
+      ])
+    }
   })
 
   it.each(['failure', 'success'] as const)(
@@ -1061,7 +1167,7 @@ describe('scheduled action reports', () => {
     )
   })
 
-  it('breaks oldest-report timestamp ties by report ID', async () => {
+  it('reopens all reports with matching timestamps', async () => {
     const f = await fixture()
     const first = await report(f.subject)
     const second = await report(f.subject)
@@ -1077,7 +1183,7 @@ describe('scheduled action reports', () => {
     failure.mockRejectedValue(new Error('Example failure'))
     await processor().executeScheduledAction(scheduled.id)
     expect((await reportForEvent(mod, first.eventId)).status).toBe('open')
-    expect((await reportForEvent(mod, second.eventId)).status).toBe('closed')
+    expect((await reportForEvent(mod, second.eventId)).status).toBe('open')
   })
 
   it.each(['failure', 'success'] as const)(

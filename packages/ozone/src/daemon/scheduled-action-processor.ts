@@ -164,11 +164,7 @@ export class ScheduledActionProcessor {
 
         // mark as failed
         await scheduledActionTxn.markActionAsFailed(actionId, errorMessage)
-        await scheduledActionTxn.reopenOldestScheduledReport(
-          action,
-          errorMessage,
-          this.modService(dbTxn).cfg.inbox.startAt,
-        )
+        await scheduledActionTxn.reopenScheduledReports(action, errorMessage)
 
         dbLogger.error(
           {
