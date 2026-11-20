@@ -1,5 +1,23 @@
 # @atproto/pds
 
+## 0.5.63
+
+### Patch Changes
+
+- Updated dependencies [[`ee63e5e`](https://github.com/bluesky-social/atproto/commit/ee63e5ede255e40251a9e761befec9d623dfb1ec), [`ee63e5e`](https://github.com/bluesky-social/atproto/commit/ee63e5ede255e40251a9e761befec9d623dfb1ec), [`3c869f7`](https://github.com/bluesky-social/atproto/commit/3c869f7431400053555f73628199028058df926e), [`3c869f7`](https://github.com/bluesky-social/atproto/commit/3c869f7431400053555f73628199028058df926e), [`33d620b`](https://github.com/bluesky-social/atproto/commit/33d620b2ffc4b9a5b4959cbcc1262c5138c8a506)]:
+  - @atproto/syntax@0.7.9
+  - @atproto/lex-schema@0.3.1
+  - @atproto/oauth-provider@0.27.1
+  - @atproto/oauth-scopes@0.5.16
+  - @atproto/repo@0.11.7
+  - @atproto/lex-client@0.6.1
+  - @atproto/lex-document@0.1.18
+  - @atproto/xrpc-server@0.13.15
+  - @atproto/aws@0.3.26
+  - @atproto/common@0.8.12
+  - @atproto/identity@0.5.25
+  - @atproto-labs/xrpc-utils@0.1.36
+
 ## 0.5.62
 
 ### Patch Changes
