@@ -48,4 +48,5 @@ export type { EmailToken, EmailTokenPurpose } from './email-token.js'
 export type {
   SpacesMigration,
   SpacesMigrationState,
+  SpacesMigrationStats,
 } from './spaces-migration.js'

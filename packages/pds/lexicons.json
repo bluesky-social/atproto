@@ -164,6 +164,7 @@
     "internal.pds.checkSpacesMigration",
     "internal.pds.completeSpacesMigration",
     "internal.pds.prepareSpacesMigration",
+    "internal.pds.recountSpacesMigration",
     "internal.pds.reserveKemKey",
     "place.stream.chat.pinnedRecord",
     "place.stream.chat.profile",
@@ -884,6 +885,10 @@
     "internal.pds.prepareSpacesMigration": {
       "uri": "file://../../lexicons-overrides/internal/pds/prepareSpacesMigration.json",
       "cid": "bafyreigyxwb4da2t57c7l4e7yc2v7mg7m2x3dtzd62qwpeo54xdoueyir4"
+    },
+    "internal.pds.recountSpacesMigration": {
+      "uri": "file://../../lexicons-overrides/internal/pds/recountSpacesMigration.json",
+      "cid": "bafyreihylqh4nuhafdppexx7voymolqgszgoylcwrunr5xsjaphogwvtsu"
     },
     "internal.pds.reserveKemKey": {
       "uri": "file://../../lexicons-overrides/internal/pds/reserveKemKey.json",

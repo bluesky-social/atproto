@@ -16,6 +16,7 @@ const ACCOUNT_SPACES_TABLES = [
   'revoked_space_credential',
   'space_syncer_notification_retry',
   'spaces_migration',
+  'spaces_migration_stats',
   'spaces_migration_state',
 ]
 
@@ -170,7 +171,6 @@ describe('booting on a pre-spaces data directory', () => {
       expect(verificationMethods.atproto_kem).toBe(held)
     }
 
-    await ctx.spacesMigration.summaryCache.refresh()
     const res = await fetch(`${pds.url}/xrpc/_health`)
     expect(await res.json()).toMatchObject({
       spacesMigration: {
