@@ -6,6 +6,7 @@ import {
 import type { AppContext } from '../../context.js'
 import {
   fileAppeal,
+  getAppealableAccountTags,
   isAppealWindowOpen,
   isAppealableEvent,
   resolveAppealAction,
@@ -47,6 +48,7 @@ export default function (server: Server, ctx: AppContext) {
 
       const inputSubject = subjectFromInput(subjectInput)
       const action = await resolveAppealAction(ctx, inputSubject, actionInput)
+      let requireAppealableTag = false
       if (ctx.cfg.inbox.startAt && actionInput && !action) {
         throw new ForbiddenError(
           'No matching moderation action to appeal',
@@ -93,9 +95,14 @@ export default function (server: Server, ctx: AppContext) {
       // @NOTE The inbox start date bounds displayed history, not eligibility:
       // a subject actioned before it remains appealable.
       if (ctx.cfg.inbox.startAt && !action) {
-        const [latestAppealableAt, snapshot] = await Promise.all([
+        const [latestAppealableAt, snapshot, activeTags] = await Promise.all([
           findLatestAppealableAt(ctx.db, subject),
           loadSubjectEnforcement(ctx.db, subject),
+          getAppealableAccountTags(
+            ctx.db,
+            subject,
+            ctx.cfg.inbox.appealableTags ?? [],
+          ),
         ])
         const enforcement = toEnforcementView({
           subject,
@@ -112,10 +119,13 @@ export default function (server: Server, ctx: AppContext) {
             ctx.cfg.inbox.startAt,
           ))
         ) {
-          throw new ForbiddenError(
-            'Subject has no moderation action to appeal',
-            'NotAppealable',
-          )
+          if (!activeTags.length) {
+            throw new ForbiddenError(
+              'Subject has no moderation action to appeal',
+              'NotAppealable',
+            )
+          }
+          requireAppealableTag = true
         }
       }
 
@@ -126,6 +136,7 @@ export default function (server: Server, ctx: AppContext) {
         action: actionInput,
         resolvedActionId: action?.id,
         resolvedActionAt: action?.createdAt,
+        requireAppealableTag,
         reason: input.body.reason,
         modTool: input.body.modTool,
       })
@@ -143,7 +154,10 @@ export default function (server: Server, ctx: AppContext) {
         ctx.cfg.service.did,
         ctx.cfg.inbox,
         seenAt,
-        { requireVisibleActions: false },
+        {
+          requireVisibleActions: false,
+          hideStatusCreatedAt: requireAppealableTag,
+        },
       )
       if (!view) {
         throw new InternalServerError(
