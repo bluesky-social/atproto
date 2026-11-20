@@ -1,4 +1,3 @@
-import { register } from 'node:module'
 import { type Attributes, diag } from '@opentelemetry/api'
 import { getResourceDetectors } from '@opentelemetry/auto-instrumentations-node'
 import {
@@ -12,7 +11,7 @@ import {
   resourceFromAttributes,
 } from '@opentelemetry/resources'
 import { NodeSDK } from '@opentelemetry/sdk-node'
-import { createAddHookMessageChannel } from 'import-in-the-middle'
+import { register as registerImportHooks } from 'import-in-the-middle/register-hooks.mjs'
 import {
   ATTR_DEPLOYMENT_ENVIRONMENT_NAME,
   ATTR_SERVICE_NAME,
@@ -23,6 +22,7 @@ import {
   type BuildInstrumentationsOptions,
   InstrumentationMismatchError,
   buildInstrumentations,
+  getInstrumentedModules,
 } from './instrumentations.js'
 import { FilteredW3CTraceContextPropagator } from './propagators/filtered-w3c-trace-context-propagator.js'
 
@@ -67,30 +67,18 @@ export async function setup(getOptions: () => SetupOptions): Promise<void> {
   if (!otelEnabled) return
 
   try {
+    const options = getOptions()
+    const instrumentations = buildInstrumentations(options)
+
     // Restrict import-in-the-middle to modules targeted by the configured
     // instrumentations. Wrapping every ESM module can alter legal `export *`
     // graphs in unrelated packages.
     //
-    // @TODO module.register() is deprecated (DEP0205) in favor of the
-    // in-thread module.registerHooks(), which import-in-the-middle supports
-    // through "import-in-the-middle/register-hooks.mjs" (no message channel
-    // needed). Switch to it once the minimum supported Node.js version is >=
-    // 24.11.1 (or >= 22.22.3): registerHooks() exists since 22.15.0, but its
-    // load hook rejects the CommonJS source import-in-the-middle returns before
-    // https://github.com/nodejs/node/pull/59929 (see its supportsSyncHooks()).
-    const { registerOptions, waitForAllMessagesAcknowledged } =
-      createAddHookMessageChannel()
-    register(
-      '@opentelemetry/instrumentation/hook.mjs',
-      import.meta.url,
-      registerOptions,
-    )
-
-    // @NOTE Must run after createAddHookMessageChannel(): instrumentations
-    // enable themselves when constructed, and only report the modules they
-    // target to the loader hook if the channel already exists. Otherwise, ESM
-    // imports of those modules are not instrumented.
-    const options = getOptions()
+    // @NOTE This in-thread loader hook (module.registerHooks()) only knows the
+    // modules listed here: unlike with the deprecated off-thread
+    // module.register() (DEP0205), the hooks instrumentations create when
+    // constructed don't report their modules to it.
+    registerImportHooks({ include: getInstrumentedModules(instrumentations) })
 
     const sdk = new NodeSDK({
       textMapPropagator: propagatorsConfigured
@@ -114,7 +102,7 @@ export async function setup(getOptions: () => SetupOptions): Promise<void> {
       // @NOTE Unlike sdk-node's default detectors, these include the
       // "container" detector.
       resourceDetectors: getResourceDetectors(),
-      instrumentations: buildInstrumentations(options),
+      instrumentations,
 
       // @NOTE The gate above enables the SDK as soon as *any* signal is
       // configured, but NodeSDK then defaults every unspecified
@@ -129,10 +117,6 @@ export async function setup(getOptions: () => SetupOptions): Promise<void> {
     })
 
     sdk.start()
-
-    // Ensure the loader hook has received its instrumentation registrations
-    // before application imports begin resolving.
-    await waitForAllMessagesAcknowledged()
 
     // @NOTE On SIGINT/SIGTERM the service releases its resources without calling
     // process.exit(), so the event loop empties and Node emits "beforeExit"
