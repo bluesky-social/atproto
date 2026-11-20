@@ -8,6 +8,7 @@ import {
   Database,
   MetricsService,
   OzoneService,
+  RenditionCacheInvalidator,
   VideoInvalidator,
   envToCfg,
   envToSecrets,
@@ -24,6 +25,19 @@ const main = async () => {
   const imgUriEndpoint = process.env.OZONE_IMG_URI_ENDPOINT ?? ''
   const bunnyAccessKey = process.env.OZONE_BUNNY_ACCESS_KEY
   const cfDistributionId = process.env.OZONE_CF_DISTRIBUTION_ID
+
+  const cacheEndpoint = process.env.OZONE_RENDITION_CACHE_URL
+  const cacheToken = process.env.OZONE_RENDITION_CACHE_TOKEN
+  if (Boolean(cacheEndpoint) !== Boolean(cacheToken)) {
+    throw new Error('rendition cache URL and token must be configured together')
+  }
+  const renditionCacheController =
+    cacheEndpoint && cacheToken
+      ? new RenditionCacheInvalidator({
+          endpoint: cacheEndpoint,
+          token: cacheToken,
+        })
+      : undefined
 
   const imgInvalidators: (BunnyInvalidator | CloudfrontInvalidator)[] = []
 
@@ -79,7 +93,7 @@ const main = async () => {
   const ozone = await OzoneService.create(
     cfg,
     secrets,
-    { imgInvalidator, videoInvalidator },
+    { imgInvalidator, videoInvalidator, renditionCacheController },
     register,
   )
 

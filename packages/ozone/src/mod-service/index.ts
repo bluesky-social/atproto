@@ -23,7 +23,10 @@ import type { BlobPushEvent } from '../db/schema/blob_push_event.js'
 import { LabelChannel } from '../db/schema/label.js'
 import type { ModerationEvent } from '../db/schema/moderation_event.js'
 import { jsonb } from '../db/types.js'
-import type { ImageInvalidator } from '../image-invalidator.js'
+import type {
+  ImageInvalidator,
+  RenditionCacheController,
+} from '../image-invalidator.js'
 import { InboxNotificationService } from '../inbox/producers.js'
 import { com, tools } from '../lexicons/index.js'
 import { httpLogger as log } from '../logger.js'
@@ -89,6 +92,7 @@ export class ModerationService {
     public strikeService: StrikeService,
     public imgInvalidator?: ImageInvalidator,
     public videoInvalidator?: VideoInvalidator,
+    public renditionCache?: RenditionCacheController,
   ) {
     this.views = new ModerationViews(
       db,
@@ -122,6 +126,7 @@ export class ModerationService {
     strikeServiceCreator: StrikeServiceCreator,
     imgInvalidator?: ImageInvalidator,
     videoInvalidator?: VideoInvalidator,
+    renditionCache?: RenditionCacheController,
   ) {
     return (db: Database) => {
       const strikeService = strikeServiceCreator(db)
@@ -138,6 +143,7 @@ export class ModerationService {
         strikeService,
         imgInvalidator,
         videoInvalidator,
+        renditionCache,
       )
     }
   }
@@ -1079,6 +1085,21 @@ export class ModerationService {
             ),
           )
 
+          if (this.renditionCache) {
+            await Promise.allSettled(
+              (subject.blobCids ?? []).map((cid) =>
+                this.renditionCache
+                  ?.invalidate(subject.did, cid)
+                  .catch((err) =>
+                    log.error(
+                      { err, did: subject.did, cid },
+                      'failed to invalidate persistent image renditions',
+                    ),
+                  ),
+              ),
+            )
+          }
+
           if (this.imgInvalidator) {
             await Promise.allSettled(
               (subject.blobCids ?? []).map((cid) => {
@@ -1094,6 +1115,21 @@ export class ModerationService {
                     ),
                   )
               }),
+            )
+          }
+
+          if (this.renditionCache) {
+            await Promise.allSettled(
+              (subject.blobCids ?? []).map((cid) =>
+                this.renditionCache
+                  ?.restore(subject.did, cid)
+                  .catch((err) =>
+                    log.error(
+                      { err, did: subject.did, cid },
+                      'failed to restore persistent image renditions',
+                    ),
+                  ),
+              ),
             )
           }
 
