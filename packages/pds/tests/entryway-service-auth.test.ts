@@ -4,6 +4,7 @@ import { TestPds, TestPlc } from '@atproto/dev-env'
 import type { DidString, HandleString } from '@atproto/syntax'
 import { createServiceAuthHeaders } from '@atproto/xrpc-server'
 import { com } from '../src/lexicons/index.js'
+import { createPlcOp } from '../src/util/plc.js'
 
 const ENTRYWAY_DID = 'did:example:entryway'
 const PDS_DID = 'did:example:pds'
@@ -133,8 +134,21 @@ describe('entryway service auth', () => {
         encoding: 'application/json',
       },
     )
-    const plcCreate = await plcLib.createOp({
+    const {
+      data: { kemKey },
+    } = await agent.com.atproto.server.reserveKemKey(
+      {},
+      {
+        headers: await entrywayHeaders(
+          target,
+          com.atproto.server.reserveKemKey.$lxm,
+        ),
+        encoding: 'application/json',
+      },
+    )
+    const plcCreate = await createPlcOp({
       signingKey,
+      kemKey,
       rotationKeys: [plcRotationKey.did()],
       handle,
       pds: target.ctx.cfg.service.publicUrl,
