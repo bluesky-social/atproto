@@ -183,6 +183,7 @@ export class TokenManager {
         clientMetadata,
         account,
         parameters,
+        scope,
       })
 
       return response

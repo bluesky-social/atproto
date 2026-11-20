@@ -462,14 +462,20 @@ describe('spaces migration publisher', () => {
     const bumped = await createPreSpacesAccount()
     expect(ctx.cfg.service.hostname).toBe('localhost')
 
+    using claimDue = jest.spyOn(progress, 'claimDue')
     await using pub = publisher({
       jitterWindowMs: HOUR,
       publishIntervalMs: HOUR,
+      pollIntervalMs: HOUR,
     })
-    await waitFor(async () => pub.state === 'waiting')
+    // It starts out waiting: let it look for work, find none, and sleep
+    await waitFor(async () => claimDue.mock.calls.length > 0)
+    await claimDue.mock.results[0].value
+    await wait(50)
+    expect(pub.state).toBe('waiting')
 
+    // The bump wakes the publisher: no wait for its next poll
     await progress.bump(bumped)
-    pub.wake()
     await waitFor(() => isPublished(bumped))
     await waitFor(async () => pub.state === 'waiting')
 
