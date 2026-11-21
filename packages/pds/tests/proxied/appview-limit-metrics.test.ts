@@ -98,6 +98,21 @@ describe('PDS metrics for its limit on requests to the AppView', () => {
     ])
   })
 
+  // resolveHandle asks the AppView with ctx.bskyAppView.client, not through
+  // the proxy agent, for a handle this PDS does not host.
+  it("records the wait of a handler's own request to the AppView", async () => {
+    const url = new URL(
+      '/xrpc/com.atproto.identity.resolveHandle',
+      network.pds.url,
+    )
+    url.searchParams.set('handle', 'bob.example.com')
+    await (await fetch(url)).text()
+
+    expect(named('appview.request.limit.wait')).toEqual([
+      { name: 'appview.request.limit.wait', value: 0, attributes: undefined },
+    ])
+  })
+
   it('counts a request the limit turned away', async () => {
     holding = true
     const inFlight = getRemoteRecord()

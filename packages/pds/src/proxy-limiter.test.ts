@@ -6,6 +6,7 @@ import { Agent } from 'undici'
 import {
   ProxyLimitExceededError,
   ProxyLimiter,
+  limiterFetch,
   limiterInterceptor,
 } from './proxy-limiter.js'
 
@@ -178,6 +179,22 @@ describe('ProxyLimiter', () => {
     release()
     await jest.advanceTimersByTimeAsync(0)
     expect(late.state).toBe('granted')
+  })
+
+  // A zero-length queue has no drain time, but "retry after 0 seconds" would
+  // bring the caller straight back into the limit that turned it away.
+  it('never tells a rejected acquisition to retry sooner than one second', async () => {
+    const limiter = new ProxyLimiter({
+      maxRequestsPerSecond: 1,
+      maxConcurrentRequests: 0,
+      maxQueuedRequests: 0,
+      maxQueueMs: 60_000,
+    })
+    await limiter.acquire()
+    const overflow = observe(limiter.acquire())
+    await jest.advanceTimersByTimeAsync(0)
+    expect(overflow.state).toBe('rejected')
+    expect(overflow.error).toMatchObject({ retryAfterMs: 1000 })
   })
 
   it('treats 0 as no limit for the rate and for the in-flight cap', async () => {
@@ -472,5 +489,85 @@ describe('limiterInterceptor', () => {
       releaseAll()
       await agent.close()
     }
+  })
+})
+
+describe('limiterFetch', () => {
+  type Call = {
+    resolve: (response: Response) => void
+    reject: (error: unknown) => void
+  }
+
+  /** A fetch whose calls stay pending until the test settles them. */
+  const pendingFetch = () => {
+    const calls: Call[] = []
+    const fetch: typeof globalThis.fetch = () =>
+      new Promise<Response>((resolve, reject) => {
+        calls.push({ resolve, reject })
+      })
+    return { calls, fetch }
+  }
+
+  const oneAtATime = (maxQueuedRequests: number) =>
+    new ProxyLimiter({
+      maxRequestsPerSecond: 0,
+      maxConcurrentRequests: 1,
+      maxQueuedRequests,
+      maxQueueMs: 60_000,
+    })
+
+  /** Lets every promise callback that is already due run. */
+  const settle = () => new Promise((resolve) => setImmediate(resolve))
+
+  it('holds a call until the limiter grants it, and frees the slot when the response arrives', async () => {
+    const { calls, fetch } = pendingFetch()
+    const limited = limiterFetch(oneAtATime(10), fetch)
+
+    const first = limited('http://appview.test/first')
+    const second = limited('http://appview.test/second')
+    await settle()
+    expect(calls).toHaveLength(1)
+
+    calls[0].resolve(new Response('one'))
+    expect(await (await first).text()).toBe('one')
+    await settle()
+    expect(calls).toHaveLength(2)
+
+    calls[1].resolve(new Response('two'))
+    expect(await (await second).text()).toBe('two')
+  })
+
+  it('frees the slot when the call fails', async () => {
+    const { calls, fetch } = pendingFetch()
+    const limited = limiterFetch(oneAtATime(10), fetch)
+
+    const first = limited('http://appview.test/first')
+    const second = limited('http://appview.test/second')
+    await settle()
+    expect(calls).toHaveLength(1)
+
+    calls[0].reject(new Error('connection refused'))
+    await expect(first).rejects.toThrow('connection refused')
+    await settle()
+    expect(calls).toHaveLength(2)
+
+    calls[1].resolve(new Response('two'))
+    expect(await (await second).text()).toBe('two')
+  })
+
+  // Nothing to change for this one: acquire() rejects before fetch is reached.
+  it('fails a call the limiter turns away with the limiter error, without sending it', async () => {
+    const { calls, fetch } = pendingFetch()
+    const limited = limiterFetch(oneAtATime(0), fetch)
+
+    const first = limited('http://appview.test/first')
+    await settle()
+    await expect(limited('http://appview.test/second')).rejects.toBeInstanceOf(
+      ProxyLimitExceededError,
+    )
+    expect(calls).toHaveLength(1)
+
+    calls[0].resolve(new Response('one'))
+    await first
   })
 })

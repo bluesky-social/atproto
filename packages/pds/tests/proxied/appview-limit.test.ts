@@ -251,6 +251,125 @@ describe('PDS limit on requests to the AppView', () => {
     await Promise.all(responses.map((r) => r.text()))
   })
 
+  // com.atproto.identity.resolveHandle asks the AppView itself, with
+  // ctx.bskyAppView.client, for a handle this PDS does not host. That call
+  // does not go through appViewProxyAgent.
+  it("counts a handler's own call to the AppView against the cap", async () => {
+    appview.hold()
+    const inFlight = getLikes()
+    await appview.waitForArrivals(1)
+
+    const resolving = pdsGet(
+      network.pds.url,
+      'com.atproto.identity.resolveHandle',
+      { handle: 'bob.example.com' },
+    )
+    await sleep(200)
+    expect(appview.arrivals).toHaveLength(1)
+
+    appview.release(1)
+    await appview.waitForArrivals(2)
+    expect(
+      appview.arrivalsFor('com.atproto.identity.resolveHandle'),
+    ).toHaveLength(1)
+
+    appview.release()
+    const responses = await Promise.all([inFlight, resolving])
+    await Promise.all(responses.map((r) => r.text()))
+  })
+
+  // app.bsky.feed.getFeed first fetches the feed's record from the AppView
+  // with ctx.bskyAppView.client. A limiter rejection there comes back from the
+  // lex client wrapped in a fetch error, which would otherwise answer 502.
+  it("answers 429 with Retry-After when the limit turns away a handler's own call", async () => {
+    appview.hold()
+    const inFlight = getLikes()
+    await appview.waitForArrivals(1)
+    const queued = getLikes()
+    await sleep(200)
+
+    const rejected = await pdsGet(
+      network.pds.url,
+      'app.bsky.feed.getFeed',
+      { feed: 'at://did:example:feedgen/app.bsky.feed.generator/test' },
+      { accessJwt },
+    )
+    expect(rejected.status).toBe(429)
+    expect(await rejected.json()).toMatchObject({ error: 'RateLimitExceeded' })
+    expect(Number(rejected.headers.get('retry-after'))).toBeGreaterThanOrEqual(
+      1,
+    )
+    expect(appview.arrivalsFor('com.atproto.repo.getRecord')).toHaveLength(0)
+
+    appview.release()
+    const responses = await Promise.all([inFlight, queued])
+    await Promise.all(responses.map((r) => r.text()))
+  })
+
+  // Both handlers send the AppView a POST themselves, with
+  // ctx.bskyAppView.client, when the push service named is the AppView.
+  it.each([
+    'app.bsky.notification.registerPush',
+    'app.bsky.notification.unregisterPush',
+  ])('answers 429 with Retry-After from %s too', async (nsid) => {
+    appview.hold()
+    const inFlight = getLikes()
+    await appview.waitForArrivals(1)
+    const queued = getLikes()
+    await sleep(200)
+
+    const rejected = await pdsPost(
+      network.pds.url,
+      nsid,
+      {
+        serviceDid: APPVIEW_DID,
+        token: 'push-token',
+        platform: 'ios',
+        appId: 'xyz.blueskyweb.app',
+      },
+      { accessJwt },
+    )
+    expect(rejected.status).toBe(429)
+    expect(await rejected.json()).toMatchObject({ error: 'RateLimitExceeded' })
+    expect(Number(rejected.headers.get('retry-after'))).toBeGreaterThanOrEqual(
+      1,
+    )
+    expect(appview.arrivalsFor(nsid)).toHaveLength(0)
+
+    appview.release()
+    const responses = await Promise.all([inFlight, queued])
+    await Promise.all(responses.map((r) => r.text()))
+  })
+
+  // resolveHandle answers every failure of its AppView lookup with 400
+  // "Unable to resolve handle". A limiter rejection is not one of those: the
+  // handle was never looked up, and a client told 400 would not try again.
+  it('answers 429, not 400, when the limit turns away a handle lookup', async () => {
+    appview.hold()
+    const inFlight = getLikes()
+    await appview.waitForArrivals(1)
+    const queued = getLikes()
+    await sleep(200)
+
+    const rejected = await pdsGet(
+      network.pds.url,
+      'com.atproto.identity.resolveHandle',
+      { handle: 'bob.example.com' },
+    )
+    expect(rejected.status).toBe(429)
+    expect(await rejected.json()).toMatchObject({ error: 'RateLimitExceeded' })
+    expect(Number(rejected.headers.get('retry-after'))).toBeGreaterThanOrEqual(
+      1,
+    )
+    expect(
+      appview.arrivalsFor('com.atproto.identity.resolveHandle'),
+    ).toHaveLength(0)
+
+    appview.release()
+    const responses = await Promise.all([inFlight, queued])
+    await Promise.all(responses.map((r) => r.text()))
+  })
+
   it('does not apply the AppView limit to other proxied services', async () => {
     appview.hold()
     const inFlight = getLikes()
@@ -272,6 +391,96 @@ describe('PDS limit on requests to the AppView', () => {
     appview.release()
     const responses = await Promise.all([inFlight, queued])
     await Promise.all(responses.map((r) => r.text()))
+  })
+})
+
+describe('PDS limit on a read-after-write lookup', () => {
+  let appview: FakeUpstream
+  let network: TestNetworkNoAppView
+  let accessJwt: string
+  let did: string
+
+  const createPost = async (record: Record<string, unknown>) => {
+    const res = await pdsPost(
+      network.pds.url,
+      'com.atproto.repo.createRecord',
+      {
+        repo: did,
+        collection: 'app.bsky.feed.post',
+        record: {
+          $type: 'app.bsky.feed.post',
+          createdAt: new Date().toISOString(),
+          ...record,
+        },
+      },
+      { accessJwt },
+    )
+    expect(res.status).toBe(200)
+    return (await res.json()) as {
+      uri: string
+      cid: string
+      commit: { rev: string }
+    }
+  }
+
+  beforeAll(async () => {
+    appview = await FakeUpstream.start()
+    // One request a second and no queue: the request a test sends takes the
+    // grant, and the lookup the PDS makes while answering it is turned away.
+    network = await createNetworkWithAppView(appview, {
+      bskyAppViewMaxRequestsPerSecond: 1,
+      bskyAppViewMaxConcurrentRequests: 0,
+      bskyAppViewMaxQueuedRequests: 0,
+    })
+    const res = await network.pds.getAgent().createAccount({
+      email: 'alice@test.com',
+      handle: 'alice.test',
+      password: 'alice-pass',
+    })
+    accessJwt = res.data.accessJwt
+    did = res.data.did
+    await network.processAll()
+  })
+
+  afterAll(async () => {
+    await network?.close()
+    await appview?.close()
+  })
+
+  // When the AppView has not indexed the requester's new post yet,
+  // getPostThread builds the thread from the local record. For a quote post
+  // that takes a lookup of the quoted post, with ctx.bskyAppView.client.
+  it('answers 429 with Retry-After when the limit turns away the lookup of a quoted post', async () => {
+    const quoted = await createPost({ text: 'first' })
+    const quote = await createPost({
+      text: 'second',
+      embed: {
+        $type: 'app.bsky.embed.record',
+        record: { uri: quoted.uri, cid: quoted.cid },
+      },
+    })
+    // The AppView says it has the repo up to the first post only.
+    appview.respondTo('app.bsky.feed.getPostThread', {
+      status: 404,
+      headers: { 'atproto-repo-rev': quoted.commit.rev },
+      body: { error: 'NotFound', message: 'Post not found' },
+    })
+    // Leave the one-second window empty for the request below.
+    await sleep(1100)
+
+    const rejected = await pdsGet(
+      network.pds.url,
+      'app.bsky.feed.getPostThread',
+      { uri: quote.uri },
+      { accessJwt },
+    )
+    expect(rejected.status).toBe(429)
+    expect(await rejected.json()).toMatchObject({ error: 'RateLimitExceeded' })
+    expect(Number(rejected.headers.get('retry-after'))).toBeGreaterThanOrEqual(
+      1,
+    )
+    expect(appview.arrivalsFor('app.bsky.feed.getPostThread')).toHaveLength(1)
+    expect(appview.arrivalsFor('app.bsky.feed.getPosts')).toHaveLength(0)
   })
 })
 
@@ -309,6 +518,21 @@ async function pdsGet(
   return fetch(url, { headers })
 }
 
+async function pdsPost(
+  pdsUrl: string,
+  nsid: string,
+  body: Record<string, unknown>,
+  opts: { accessJwt?: string } = {},
+): Promise<Response> {
+  const headers = new Headers({ 'content-type': 'application/json' })
+  if (opts.accessJwt) headers.set('authorization', `Bearer ${opts.accessJwt}`)
+  return fetch(new URL(`/xrpc/${nsid}`, pdsUrl), {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(body),
+  })
+}
+
 async function registerServiceDid(
   plcClient: plc.Client,
   keypair: Keypair,
@@ -343,14 +567,22 @@ type Arrival = {
   hasAuthorization: boolean
 }
 
+type CannedResponse = {
+  status: number
+  headers?: Record<string, string>
+  body: unknown
+}
+
 /**
  * HTTP server standing in for an XRPC service. Every request gets 200 with
- * `{"nsid": "<nsid>"}`. After hold(), responses wait until release().
+ * `{"nsid": "<nsid>"}`, unless respondTo() set another answer for its method.
+ * After hold(), responses wait until release().
  */
 class FakeUpstream {
   readonly arrivals: Arrival[] = []
   private holding = false
   private held: Array<() => void> = []
+  private canned = new Map<string, CannedResponse>()
   private waiters: Array<{ count: number; resolve: () => void }> = []
 
   private constructor(
@@ -404,9 +636,15 @@ class FakeUpstream {
     return new Promise((resolve) => this.waiters.push({ count, resolve }))
   }
 
+  /** Answers requests for `nsid` with `response` until reset(). */
+  respondTo(nsid: string, response: CannedResponse): void {
+    this.canned.set(nsid, response)
+  }
+
   reset(): void {
     this.release()
     this.arrivals.length = 0
+    this.canned.clear()
   }
 
   async close(): Promise<void> {
@@ -432,9 +670,13 @@ class FakeUpstream {
       return false
     })
 
+    const canned = this.canned.get(nsid)
     const send = () => {
-      res.writeHead(200, { 'content-type': 'application/json' })
-      res.end(JSON.stringify({ nsid }))
+      res.writeHead(canned?.status ?? 200, {
+        'content-type': 'application/json',
+        ...canned?.headers,
+      })
+      res.end(JSON.stringify(canned?.body ?? { nsid }))
     }
     if (this.holding) this.held.push(send)
     else send()

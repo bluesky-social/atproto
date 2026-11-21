@@ -101,11 +101,18 @@ export class ProxyLimiter {
     }
   }
 
-  /** Estimated time for the current queue to drain at the configured rate. */
+  /**
+   * Estimated time for the current queue to drain at the configured rate, and
+   * never less than one window: a short or zero-length queue drains at once,
+   * but a caller told to retry at once comes straight back into the limit.
+   */
   private queueDrainMs(): number {
     const rate = this.opts.maxRequestsPerSecond
     if (rate === 0) return WINDOW_MS
-    return Math.ceil((this.queue.length / rate) * WINDOW_MS)
+    return Math.max(
+      WINDOW_MS,
+      Math.ceil((this.queue.length / rate) * WINDOW_MS),
+    )
   }
 
   private pump(): void {
@@ -221,5 +228,27 @@ function neverSentController(reason: Error): Dispatcher.DispatchController {
     abort: () => {},
     pause: () => {},
     resume: () => {},
+  }
+}
+
+/**
+ * A `fetch` that holds each call until `limiter` grants it, for the requests
+ * that do not go through an undici agent with {@link limiterInterceptor}.
+ *
+ * The slot is freed when `fetch` settles, which is when the response headers
+ * arrive, not when the body has been read: a caller that never reads the body
+ * would otherwise keep its slot for good.
+ */
+export function limiterFetch(
+  limiter: ProxyLimiter,
+  fetch: typeof globalThis.fetch = globalThis.fetch,
+): typeof globalThis.fetch {
+  return async (input, init) => {
+    const release = await limiter.acquire()
+    try {
+      return await fetch(input, init)
+    } finally {
+      release()
+    }
   }
 }
