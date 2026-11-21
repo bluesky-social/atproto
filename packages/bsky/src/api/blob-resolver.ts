@@ -255,15 +255,27 @@ type BlobSourceResolution = {
   origin: string
 }
 
+export type ResolveBlobSourceOptions = {
+  /**
+   * Also refuse the blobs of an account its PDS has taken down or deactivated
+   * (the appview's `upstreamStatus`), or that no longer exists. The blob route leaves this off: it asks the
+   * PDS for the blob, and the PDS refuses such an account itself. A caller that reads
+   * the blob without asking the PDS (`/blob-source`, whose callers may read it
+   * from the PDS's object storage) has no other check, so it sets this.
+   */
+  checkActor?: boolean
+}
+
 /** Resolve blob policy and its PDS without accessing the blob itself. */
 export async function resolveBlobSource(
   ctx: AppContext,
   didParam: string,
   cidParam: string,
+  options: ResolveBlobSourceOptions = {},
 ): Promise<BlobSourceResolution> {
   const { did, cid } = parseBlobParams({ did: didParam, cid: cidParam })
   const { dataplane } = ctx
-  const [identity, { takenDown }] = await Promise.all([
+  const [identity, { takenDown }, actors] = await Promise.all([
     dataplane.getIdentityByDid({ did }).catch((err) => {
       if (isDataplaneError(err, Code.NotFound)) {
         return undefined
@@ -271,10 +283,37 @@ export async function resolveBlobSource(
       throw err
     }),
     dataplane.getBlobTakedown({ did, cid: cid.toString() }),
+    options.checkActor ? dataplane.getActors({ dids: [did] }) : undefined,
   ])
 
   if (takenDown) {
     throw createError(404, 'Blob not found')
+  }
+
+  if (actors) {
+    // What `getBlob` refuses on is the PDS's own account state: the `#account`
+    // status the appview keeps as `upstreamStatus` (takendown or deactivated),
+    // and a repo the PDS no longer has. The appview removes a deleted account's
+    // actor row, so `exists` stands in for that last one: the PDS deletes the
+    // account's blobs on deletion, but best-effort, so an object can outlive it.
+    // It also refuses an account the appview has not indexed yet, which `/blob`
+    // would serve; the appview emits no blob URLs for such an account, so that
+    // costs nothing in practice, and the safe side is the right one to err on.
+    // The appview's own takedown (`takenDown`) and its tombstone are not the
+    // PDS's state, and `/blob` serves the blob whatever they say, so they are
+    // not tested here. An answer with no entry means the state is unknown, not
+    // that it is fine: that is an error, and a caller that gets one goes
+    // through `/blob`.
+    const actor = actors.actors[0]
+    if (!actor) {
+      throw createError(502, 'Upstream Error')
+    }
+    if (
+      !actor.exists ||
+      (actor.upstreamStatus && actor.upstreamStatus !== 'active')
+    ) {
+      throw createError(404, 'Blob not found')
+    }
   }
 
   const services = identity && unpackIdentityServices(identity.services)

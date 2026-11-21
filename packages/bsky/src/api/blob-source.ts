@@ -14,6 +14,7 @@ export function createRouter(ctx: AppContext): Router {
         ctx,
         req.params.did,
         req.params.cid,
+        { checkActor: true },
       )
       res.json({ origin: source.origin })
     } catch (err) {
