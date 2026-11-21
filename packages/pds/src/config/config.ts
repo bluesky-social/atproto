@@ -206,7 +206,27 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
       url: env.bskyAppViewUrl,
       did: env.bskyAppViewDid,
       cdnUrlPattern: env.bskyAppViewCdnUrlPattern,
+      maxRequestsPerSecond: env.bskyAppViewMaxRequestsPerSecond ?? 300,
+      maxConcurrentRequests: env.bskyAppViewMaxConcurrentRequests ?? 100,
+      maxQueuedRequests: env.bskyAppViewMaxQueuedRequests ?? 1500,
+      maxQueueMs: env.bskyAppViewMaxQueueMs ?? 5000,
     }
+    assert(
+      bskyAppViewCfg.maxRequestsPerSecond >= 0,
+      'PDS_BSKY_APP_VIEW_MAX_REQUESTS_PER_SECOND must not be negative (0 means no limit).',
+    )
+    assert(
+      bskyAppViewCfg.maxConcurrentRequests >= 0,
+      'PDS_BSKY_APP_VIEW_MAX_CONCURRENT_REQUESTS must not be negative (0 means no limit).',
+    )
+    assert(
+      bskyAppViewCfg.maxQueuedRequests >= 0,
+      'PDS_BSKY_APP_VIEW_MAX_QUEUED_REQUESTS must not be negative.',
+    )
+    assert(
+      bskyAppViewCfg.maxQueueMs >= 0,
+      'PDS_BSKY_APP_VIEW_MAX_QUEUE_MS must not be negative (0 means never wait).',
+    )
   }
 
   let modServiceCfg: ServerConfig['modService'] = null
@@ -567,6 +587,53 @@ export type BksyAppViewConfig = {
   url: string
   did: string
   cdnUrlPattern?: string
+  /**
+   * Most requests this PDS sends to the AppView in any one second
+   * (PDS_BSKY_APP_VIEW_MAX_REQUESTS_PER_SECOND). Default 300, which suits a
+   * PDS of tens of thousands of active accounts. 0 means no limit. The limit
+   * is per PDS process: each process of a multi-process deployment has its
+   * own budget. Requests over the rate wait in a bounded queue (see
+   * maxQueuedRequests and maxQueueMs) and are answered 429 when it is full.
+   *
+   * Removing or raising the rate limit is likely to hit service limits on
+   * Bluesky systems. Bluesky's network edge answers a breach with a temporary
+   * block of the PDS's address (about an hour), during which none of its
+   * users can load timelines, profiles or notifications.
+   */
+  maxRequestsPerSecond: number
+  /**
+   * Most requests to the AppView this PDS process may have in flight at once
+   * (PDS_BSKY_APP_VIEW_MAX_CONCURRENT_REQUESTS). Default 100. 0 means no
+   * limit. Requests over the cap wait in the same bounded queue as requests
+   * over the rate.
+   *
+   * The cap exists because the rate alone does not bound what reaches the
+   * AppView: requests sent while it is slow or unreachable pile up and arrive
+   * together when it recovers. With the cap, the worst-case burst in one
+   * second is the rate plus this cap (400 with the defaults), so removing or
+   * raising it carries the same risk of a temporary block as raising the
+   * rate.
+   */
+  maxConcurrentRequests: number
+  /**
+   * Most requests this PDS process holds waiting for the rate or the
+   * concurrency cap (PDS_BSKY_APP_VIEW_MAX_QUEUED_REQUESTS). Default 1500.
+   * 0 means no queue: a request that cannot be sent at once is answered 429.
+   * The queue is bounded so that a surge is shed with 429 instead of growing
+   * memory and client wait times without limit.
+   */
+  maxQueuedRequests: number
+  /**
+   * Longest time, in milliseconds, a request may wait in the queue before it
+   * is sent (PDS_BSKY_APP_VIEW_MAX_QUEUE_MS); after that it is answered 429.
+   * Default 5000, the time the default queue of 1500 takes to drain at the
+   * default 300 requests per second. 0 means never wait: a request that
+   * cannot be sent at once is answered 429. Per PDS process, like the queue.
+   *
+   * This is separate from PDS_PROXY_HEADERS_TIMEOUT, which bounds the wait
+   * for the AppView's response after the request has been sent.
+   */
+  maxQueueMs: number
 }
 
 export type ModServiceConfig = {
