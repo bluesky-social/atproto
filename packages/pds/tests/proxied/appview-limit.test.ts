@@ -128,6 +128,8 @@ describe('PDS requests to a fake AppView', () => {
 
 describe('PDS limit on requests to the AppView', () => {
   let appview: FakeUpstream
+  let otherService: FakeUpstream
+  let otherServiceDid: string
   let network: TestNetworkNoAppView
   let accessJwt: string
 
@@ -150,6 +152,14 @@ describe('PDS limit on requests to the AppView', () => {
       bskyAppViewMaxQueueMs: 60_000,
     })
 
+    otherService = await FakeUpstream.start()
+    otherServiceDid = await registerServiceDid(
+      network.pds.ctx.plcClient,
+      network.pds.ctx.plcRotationKey,
+      'proxy_test',
+      otherService.url,
+    )
+
     const res = await network.pds.getAgent().createAccount({
       email: 'alice@test.com',
       handle: 'alice.test',
@@ -161,11 +171,13 @@ describe('PDS limit on requests to the AppView', () => {
 
   afterAll(async () => {
     await network?.close()
+    await otherService?.close()
     await appview?.close()
   })
 
   beforeEach(() => {
     appview.reset()
+    otherService.reset()
   })
 
   it('sends no more requests to the AppView than the concurrency cap allows', async () => {
@@ -233,6 +245,29 @@ describe('PDS limit on requests to the AppView', () => {
       1,
     )
     expect(appview.arrivalsFor('com.atproto.repo.getRecord')).toHaveLength(0)
+
+    appview.release()
+    const responses = await Promise.all([inFlight, queued])
+    await Promise.all(responses.map((r) => r.text()))
+  })
+
+  it('does not apply the AppView limit to other proxied services', async () => {
+    appview.hold()
+    const inFlight = getLikes()
+    await appview.waitForArrivals(1)
+    const queued = getLikes()
+    await sleep(200)
+
+    // The AppView limiter is now full: one in flight, one queued.
+    const other = await pdsGet(
+      network.pds.url,
+      'app.bsky.feed.getLikes',
+      { uri: 'at://did:example:alice/app.bsky.feed.post/1' },
+      { accessJwt, proxy: `${otherServiceDid}#proxy_test` },
+    )
+    expect(other.status).toBe(200)
+    await other.text()
+    expect(otherService.arrivals).toHaveLength(1)
 
     appview.release()
     const responses = await Promise.all([inFlight, queued])
