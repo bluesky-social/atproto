@@ -208,6 +208,36 @@ describe('PDS limit on requests to the AppView', () => {
     expect(responses.map((r) => r.status)).toEqual([200, 200])
     await Promise.all(responses.map((r) => r.text()))
   })
+
+  // Buffered path (pipethrough(), appViewProxyAgent.request()): the handler
+  // has only `req`, so this also proves the header reaches the response there.
+  it('answers 429 with Retry-After from a pipethrough() handler too', async () => {
+    appview.hold()
+    const inFlight = getLikes()
+    await appview.waitForArrivals(1)
+    const queued = getLikes()
+    await sleep(200)
+
+    const rejected = await pdsGet(
+      network.pds.url,
+      'com.atproto.repo.getRecord',
+      {
+        repo: 'did:plc:notonthispds',
+        collection: 'app.bsky.feed.post',
+        rkey: 'abc',
+      },
+    )
+    expect(rejected.status).toBe(429)
+    expect(await rejected.json()).toMatchObject({ error: 'RateLimitExceeded' })
+    expect(Number(rejected.headers.get('retry-after'))).toBeGreaterThanOrEqual(
+      1,
+    )
+    expect(appview.arrivalsFor('com.atproto.repo.getRecord')).toHaveLength(0)
+
+    appview.release()
+    const responses = await Promise.all([inFlight, queued])
+    await Promise.all(responses.map((r) => r.text()))
+  })
 })
 
 /**
