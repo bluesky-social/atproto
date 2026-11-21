@@ -108,6 +108,15 @@ export function readEnv() {
     bskyAppViewUrl: envStr('PDS_BSKY_APP_VIEW_URL'),
     bskyAppViewDid: envStr('PDS_BSKY_APP_VIEW_DID'),
     bskyAppViewCdnUrlPattern: envStr('PDS_BSKY_APP_VIEW_CDN_URL_PATTERN'),
+    bskyAppViewMaxRequestsPerSecond: envInt(
+      'PDS_BSKY_APP_VIEW_MAX_REQUESTS_PER_SECOND',
+    ),
+    bskyAppViewMaxConcurrentRequests: envInt(
+      'PDS_BSKY_APP_VIEW_MAX_CONCURRENT_REQUESTS',
+    ),
+    bskyAppViewMaxQueuedRequests: envInt(
+      'PDS_BSKY_APP_VIEW_MAX_QUEUED_REQUESTS',
+    ),
 
     // mod service
     modServiceUrl: envStr('PDS_MOD_SERVICE_URL'),

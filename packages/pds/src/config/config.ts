@@ -206,9 +206,9 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
       url: env.bskyAppViewUrl,
       did: env.bskyAppViewDid,
       cdnUrlPattern: env.bskyAppViewCdnUrlPattern,
-      maxRequestsPerSecond: 300,
-      maxConcurrentRequests: 100,
-      maxQueuedRequests: 1500,
+      maxRequestsPerSecond: env.bskyAppViewMaxRequestsPerSecond ?? 300,
+      maxConcurrentRequests: env.bskyAppViewMaxConcurrentRequests ?? 100,
+      maxQueuedRequests: env.bskyAppViewMaxQueuedRequests ?? 1500,
     }
   }
 
