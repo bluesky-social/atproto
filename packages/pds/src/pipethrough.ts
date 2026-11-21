@@ -528,7 +528,7 @@ function handleUpstreamRequestError(
     // The request was never sent: this PDS's own limit on requests to the
     // AppView turned it away. Answered like any other rate limit so that
     // clients back off, instead of as an upstream failure.
-    this.res?.setHeader('Retry-After', Math.ceil(err.retryAfterMs / 1e3))
+    this.res?.setHeader('Retry-After', retryAfterSeconds(err.retryAfterMs))
     this.res?.appendHeader('Access-Control-Expose-Headers', 'Retry-After')
     throw new XRPCServerError(
       ResponseType.RateLimitExceeded,
@@ -543,6 +543,22 @@ function handleUpstreamRequestError(
   throw new XRPCServerError(ResponseType.UpstreamFailure, message, undefined, {
     cause: err,
   })
+}
+
+const RETRY_AFTER_JITTER_SECONDS = 5
+
+/**
+ * The Retry-After value for a request turned away by the proxy limiter: the
+ * time the queue needs to drain plus a random 0 to 5 seconds. Without the
+ * random part every client turned away in the same moment would come back in
+ * the same moment, and the surge that filled the queue would repeat.
+ */
+export function retryAfterSeconds(
+  retryAfterMs: number,
+  random: () => number = Math.random,
+): number {
+  const jitter = Math.floor(random() * (RETRY_AFTER_JITTER_SECONDS + 1))
+  return Math.ceil(retryAfterMs / 1e3) + jitter
 }
 
 function isPinoHttpRequest(req: Request): req is Request & {

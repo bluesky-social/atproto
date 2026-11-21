@@ -1,7 +1,7 @@
 import { once } from 'node:events'
 import http from 'node:http'
 import type { ProxyConfig } from './config/config.js'
-import { buildProxyAgent } from './pipethrough.js'
+import { buildProxyAgent, retryAfterSeconds } from './pipethrough.js'
 import { ProxyLimiter } from './proxy-limiter.js'
 
 class CountingLimiter extends ProxyLimiter {
@@ -67,5 +67,13 @@ describe('buildProxyAgent', () => {
     } finally {
       await agent.close()
     }
+  })
+})
+
+describe('retryAfterSeconds', () => {
+  it('spreads clients over 5 seconds past the time the queue needs to drain', () => {
+    expect(retryAfterSeconds(2500, () => 0)).toBe(3)
+    expect(retryAfterSeconds(2500, () => 0.5)).toBe(6)
+    expect(retryAfterSeconds(2500, () => 0.999)).toBe(8)
   })
 })
