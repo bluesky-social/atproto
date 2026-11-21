@@ -26,6 +26,8 @@ export class ProxyLimiter {
   private readonly opts: ProxyLimiterOptions
   /** Times of the grants still inside the window, oldest first. */
   private grantTimes: number[] = []
+  /** Grants given and not yet released. */
+  private inFlight = 0
   private queue: Waiter[] = []
   private timer: ReturnType<typeof setTimeout> | undefined
 
@@ -49,6 +51,8 @@ export class ProxyLimiter {
     this.timer = undefined
 
     while (this.queue.length > 0) {
+      // No timer needed: the release of an in-flight grant pumps again.
+      if (this.inFlight >= this.opts.maxConcurrentRequests) return
       // Monotonic clock: a wall clock step would stall the queue or let a
       // burst through.
       const now = performance.now()
@@ -60,7 +64,11 @@ export class ProxyLimiter {
       const waiter = this.queue.shift()
       if (!waiter) return
       this.grantTimes.push(now)
-      waiter.resolve(() => {})
+      this.inFlight++
+      waiter.resolve(() => {
+        this.inFlight--
+        this.pump()
+      })
     }
   }
 

@@ -57,4 +57,25 @@ describe('ProxyLimiter', () => {
     await jest.advanceTimersByTimeAsync(1)
     expect(fourth.state).toBe('granted')
   })
+
+  it('holds the M+1th acquisition until an in-flight grant is released', async () => {
+    const limiter = new ProxyLimiter({
+      maxRequestsPerSecond: 1000,
+      maxConcurrentRequests: 2,
+      maxQueuedRequests: 100,
+      maxQueueMs: 60_000,
+    })
+
+    const release = await limiter.acquire()
+    await limiter.acquire()
+    const third = observe(limiter.acquire())
+
+    // Time alone does not free a slot
+    await jest.advanceTimersByTimeAsync(5000)
+    expect(third.state).toBe('pending')
+
+    release()
+    await jest.advanceTimersByTimeAsync(0)
+    expect(third.state).toBe('granted')
+  })
 })
