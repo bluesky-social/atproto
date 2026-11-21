@@ -58,9 +58,15 @@ export async function publishAccount(
 ): Promise<PublishOutcome> {
   if (!(await ctx.actorStore.exists(did))) return 'deleted'
   const kemKey = (await ctx.actorStore.ensureKemKeypair(did)).did()
+  const signingKey = (await ctx.actorStore.keypair(did)).did()
 
   const plcTimeoutMs = opts.plcTimeoutMs ?? DEFAULT_PLC_TIMEOUT_MS
-  const live = await inspectKemKey(ctx, did, kemKey, { plcTimeoutMs })
+  const live = await inspectKemKey(
+    ctx,
+    did,
+    { kem: kemKey, signing: signingKey },
+    { plcTimeoutMs },
+  )
   if (!live.published) {
     if (live.unpublishableReason) {
       return { unpublishable: live.unpublishableReason }
@@ -72,7 +78,7 @@ export async function publishAccount(
       await boundPlc(did, plcTimeoutMs, () =>
         ctx.plcClient.updateData(did, ctx.plcRotationKey, (op) => {
           // updateData re-reads the doc, which may have changed since
-          const reason = whyUnpublishable(ctx, op)
+          const reason = whyUnpublishable(ctx, op, signingKey)
           if (reason) throw new UnpublishableError(reason)
           return {
             ...op,
@@ -102,10 +108,18 @@ export type KemKeyState = {
   unpublishableReason: UnpublishableReason | null
 }
 
+/** An account's public keys, as did:keys. */
+export type AccountKeys = {
+  /** Absent if the account holds no KEM key yet. */
+  kem: string | undefined
+  /** The repo signing key. */
+  signing: string
+}
+
 /**
  * Reads the account's DID doc from its source, not a cache, and reports
- * whether it lists `kemKey` and, if not, whether this host could publish it.
- * Writes nothing. With no `kemKey`, the key is never published.
+ * whether it lists the KEM key and, if not, whether this host could publish
+ * it. Writes nothing. With no KEM key, the key is never published.
  */
 export async function inspectKemKey(
   ctx: Pick<
@@ -113,9 +127,10 @@ export async function inspectKemKey(
     'plcClient' | 'idResolver' | 'plcRotationKey' | 'cfg'
   >,
   did: DidString,
-  kemKey: string | undefined,
+  keys: AccountKeys,
   opts: { plcTimeoutMs?: number } = {},
 ): Promise<KemKeyState> {
+  const kemKey = keys.kem
   if (did.startsWith('did:plc:')) {
     const lastOp = await boundPlc(
       did,
@@ -134,7 +149,8 @@ export async function inspectKemKey(
     }
     return {
       published: false,
-      unpublishableReason: whyUnpublishable(ctx, normalized) ?? null,
+      unpublishableReason:
+        whyUnpublishable(ctx, normalized, keys.signing) ?? null,
     }
   }
   const doc = await ctx.idResolver.did.resolve(did, true)
@@ -166,7 +182,8 @@ function boundPlc<T>(
 
 function whyUnpublishable(
   ctx: Pick<PublishContext, 'plcRotationKey' | 'cfg'>,
-  op: Pick<plc.UnsignedOperation, 'rotationKeys' | 'services'>,
+  op: Pick<plc.UnsignedOperation, 'rotationKeys' | 'verificationMethods'>,
+  signingKey: string,
 ): UnpublishableReason | undefined {
   // Behind an entryway, the entryway publishes with its own rotation key
   const rotationKey =
@@ -174,8 +191,10 @@ function whyUnpublishable(
   if (!op.rotationKeys.includes(rotationKey)) {
     return 'rotation-key-not-held'
   }
-  if (op.services.atproto_pds?.endpoint !== ctx.cfg.service.publicUrl) {
-    return 'pds-elsewhere'
+  // The doc naming our signing key means we host the account. Its service
+  // endpoint may not match our public URL exactly, e.g. an alias of this host.
+  if (op.verificationMethods.atproto !== signingKey) {
+    return 'signing-key-not-held'
   }
   return undefined
 }

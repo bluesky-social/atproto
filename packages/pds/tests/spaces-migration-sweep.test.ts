@@ -2,10 +2,17 @@ import { rm } from 'node:fs/promises'
 import { jest } from '@jest/globals'
 import SqliteDB from 'better-sqlite3'
 import { wait } from '@atproto/common'
+import { P256Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import { TestPds, TestPlc } from '@atproto/dev-env'
-import { type DidString, currentDatetimeString } from '@atproto/syntax'
+import { Client } from '@atproto/lex'
+import {
+  type DidString,
+  type HandleString,
+  currentDatetimeString,
+} from '@atproto/syntax'
 import type { AccountDb } from '../src/account-manager/db/index.js'
 import type { AppContext } from '../src/context.js'
+import { internal } from '../src/lexicons/index.js'
 import {
   SpacesMigrationProgress,
   trackStats,
@@ -74,8 +81,18 @@ describe('spaces migration sweep', () => {
   }
 
   const row = (did: string) => progress.get(did as DidString)
-  const isSwept = async (did: string) =>
-    (await row(did))?.storeMigratedAt != null
+  const recorded = (did: string) =>
+    progress.recordedKemKeyState(did as DidString)
+  const isSwept = async (did: string) => {
+    // Settled: its store is migrated, and it has no row
+    const actor = await db.db
+      .selectFrom('actor')
+      .select('kemKeyState')
+      .where('did', '=', did as DidString)
+      .executeTakeFirst()
+    if (actor?.kemKeyState) return true
+    return (await row(did))?.storeMigratedAt != null
+  }
 
   let counter = 0
   const createAccount = async () => {
@@ -106,23 +123,34 @@ describe('spaces migration sweep', () => {
         .map((r) => (r as { name: string }).name),
     )
 
-  // An account as left by the release before spaces: a store behind the
-  // latest migration, no kem key, and a row that isn't marked swept.
-  const createPreSpacesAccount = async () => {
+  // An account as left by an older version: neither a settled state nor a
+  // row, until the sweep seeds one.
+  const createUnseededAccount = async () => {
     const did = await createAccount()
+    await trackStats(db, [did], async (txn) => {
+      await txn.db
+        .updateTable('actor')
+        .set({ kemKeyState: null })
+        .where('did', '=', did)
+        .execute()
+      await txn.db
+        .deleteFrom('spaces_migration')
+        .where('did', '=', did)
+        .execute()
+    })
+    return did
+  }
+
+  // An account as left by the release before spaces: unseeded, with a store
+  // behind the latest migration and no kem key.
+  const createPreSpacesAccount = async () => {
+    const did = await createUnseededAccount()
     await withFile(did, (file) => {
       for (const table of SPACE_TABLES) file.exec(`drop table "${table}"`)
       file.prepare('delete from kysely_migration where name = ?').run('002')
     })
     const { kemKeyLocation } = await ctx.actorStore.getLocation(did)
     await rm(kemKeyLocation, { force: true })
-    await trackStats(db, [did], (txn) =>
-      txn.db
-        .updateTable('spaces_migration')
-        .set({ storeMigratedAt: null })
-        .where('did', '=', did)
-        .execute(),
-    )
     return did
   }
 
@@ -177,9 +205,8 @@ describe('spaces migration sweep', () => {
   it('seeds rows for accounts that have none', async () => {
     // As left by the release before spaces: no row at all
     const did = await createPreSpacesAccount()
-    await trackStats(db, [did], (txn) =>
-      txn.db.deleteFrom('spaces_migration').where('did', '=', did).execute(),
-    )
+    // Born settled: never seeded
+    const settled = await createAccount()
 
     // The publisher may have looked for work before the rows existed
     const onSeeded = jest.fn()
@@ -193,10 +220,14 @@ describe('spaces migration sweep', () => {
     await waitFor(() => isSwept(did))
     expect(await row(did)).toMatchObject({ kemPublishedAt: null })
     expect(onSeeded).toHaveBeenCalledTimes(1)
+    expect(await row(settled)).toBeUndefined()
+    expect(await recorded(settled)).toBe('published')
   })
 
   it('removes the row of an account whose store is gone', async () => {
     const did = await createPreSpacesAccount()
+    await progress.seedBatch([did])
+    expect(await row(did)).toBeDefined()
     const { directory } = await ctx.actorStore.getLocation(did)
     await rm(directory, { recursive: true, force: true })
 
@@ -266,6 +297,63 @@ describe('spaces migration sweep', () => {
     expect((await progress.summary()).sweepFailing).toBe(before)
   })
 
+  it('leaves a checked store unrecorded until the sweep gives it a kem key', async () => {
+    const did = 'did:web:sweepweb.test' as DidString
+    const signingKey = await Secp256k1Keypair.create({ exportable: true })
+    const kemKey = await P256Keypair.create({ exportable: true })
+    await ctx.actorStore.create(did, signingKey, kemKey)
+    const commit = await ctx.actorStore.transact(did, (txn) =>
+      txn.repo.createRepo([]),
+    )
+    await ctx.accountManager.createAccount({
+      did,
+      handle: 'sweepweb.test' as HandleString,
+      repoCid: commit.cid,
+      repoRev: commit.rev,
+    })
+    // Never reached by the sweep: no kem key, though the store's schema is
+    // at the latest (opening a store migrates it)
+    await trackStats(db, [did], (txn) =>
+      txn.db
+        .updateTable('spaces_migration')
+        .set({ storeMigratedAt: null })
+        .where('did', '=', did)
+        .execute(),
+    )
+    const { kemKeyLocation } = await ctx.actorStore.getLocation(did)
+    await rm(kemKeyLocation)
+    expect(await ctx.actorStore.isMigrated(did)).toBe(true)
+    using _resolve = jest
+      .spyOn(ctx.idResolver.did, 'resolve')
+      .mockImplementation(async () => ({ '@context': [], id: did }))
+
+    const checked = await new Client({ service: pds.url }).call(
+      internal.pds.checkSpacesMigration,
+      { did },
+      { headers: pds.adminAuthHeaders() },
+    )
+
+    expect(checked).toMatchObject({
+      storeMigrated: true,
+      kemPublished: false,
+      unpublishableReason: 'did-web',
+      recordedKemKeyState: 'did-web',
+    })
+    expect(checked.kemKey).toBeUndefined()
+    // Not settled: settling would leave it without a key for good
+    expect(await row(did)).toMatchObject({
+      storeMigratedAt: null,
+      unpublishableReason: 'did-web',
+    })
+    expect(await isSwept(did)).toBe(false)
+
+    await using _ = sweep()
+    await waitFor(() => isSwept(did))
+    expect(await ctx.actorStore.kemKeypair(did)).toBeDefined()
+    expect(await row(did)).toBeUndefined()
+    expect(await recorded(did)).toBe('did-web')
+  })
+
   it('stops promptly on destroy', async () => {
     const s = sweep({ pollIntervalMs: 60_000 })
     await wait(50)
@@ -289,12 +377,14 @@ describe('spaces migration sweep', () => {
     await using s = sweep({ state: 'disabled' })
     await wait(100)
     expect(s.state).toBe('disabled')
-    expect(await isSwept(did)).toBe(false)
+    // Not even seeded
+    expect(await row(did)).toBeUndefined()
+    expect(await recorded(did)).toBeUndefined()
     // leave nothing behind for other tests
     await trackStats(db, [did], (txn) =>
       txn.db
-        .updateTable('spaces_migration')
-        .set({ storeMigratedAt: currentDatetimeString() })
+        .updateTable('actor')
+        .set({ kemKeyState: 'published' })
         .where('did', '=', did)
         .execute(),
     )
@@ -315,8 +405,15 @@ describe('spaces migration sweep', () => {
       })
     }
 
+    // An account still migrating: an older version's, seeded
+    const createMigratingAccount = async () => {
+      const did = await createUnseededAccount()
+      await progress.seedBatch([did])
+      return did
+    }
+
     it('bumps an account that authorizes with space access', async () => {
-      const did = await createAccount()
+      const did = await createMigratingAccount()
       expect((await row(did))?.priority).toBe(0)
       using bump = jest.spyOn(ctx.spacesMigration.progress, 'bump')
 
@@ -328,13 +425,27 @@ describe('spaces migration sweep', () => {
     })
 
     it('leaves an account that authorizes without space access', async () => {
-      const did = await createAccount()
+      const did = await createMigratingAccount()
       using bump = jest.spyOn(ctx.spacesMigration.progress, 'bump')
 
       await authorize(did, 'atproto')
 
       expect((await row(did))?.priority).toBe(0)
       expect(bump).not.toHaveBeenCalled()
+    })
+
+    it('gives a settled account no row when bumping it', async () => {
+      // Born settled: its key was published by its genesis op
+      const did = await createAccount()
+      const before = await progress.summary()
+      using bump = jest.spyOn(ctx.spacesMigration.progress, 'bump')
+
+      await authorize(did, 'atproto space:foo')
+
+      expect(bump).toHaveBeenCalledTimes(1)
+      expect(await row(did)).toBeUndefined()
+      expect(await recorded(did)).toBe('published')
+      expect(await progress.summary()).toEqual(before)
     })
 
     it('issuing the token succeeds when the bump fails', async () => {

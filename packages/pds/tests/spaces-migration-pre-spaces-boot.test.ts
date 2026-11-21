@@ -133,6 +133,8 @@ describe('booting on a pre-spaces data directory', () => {
       for (const table of ACCOUNT_SPACES_TABLES) {
         db.exec(`drop table "${table}"`)
       }
+      db.exec('drop index "actor_kem_key_state_unknown_idx"')
+      db.exec('alter table "actor" drop column "kemKeyState"')
       db.prepare(
         "delete from kysely_migration where name in ('009', '010')",
       ).run()
@@ -159,10 +161,13 @@ describe('booting on a pre-spaces data directory', () => {
     const { ctx } = pds
     expect(migrations(accountDbLoc)).toContain('010')
 
+    const { progress } = ctx.spacesMigration
     for (const [i, did] of dids.entries()) {
+      // Swept and published: settled out of the table
       await waitFor(
         async () =>
-          (await ctx.spacesMigration.progress.get(did))?.kemPublishedAt != null,
+          (await progress.recordedKemKeyState(did)) === 'published' &&
+          (await progress.get(did)) === undefined,
       )
       expect(migrations(stores[i].dbLocation)).toEqual(['001', '002'])
       const held = (await ctx.actorStore.kemKeypair(did))?.did()
@@ -170,6 +175,13 @@ describe('booting on a pre-spaces data directory', () => {
       const { verificationMethods } = await ctx.plcClient.getDocumentData(did)
       expect(verificationMethods.atproto_kem).toBe(held)
     }
+
+    expect(
+      await ctx.accountManager.db.db
+        .selectFrom('spaces_migration')
+        .selectAll()
+        .execute(),
+    ).toEqual([])
 
     const res = await fetch(`${pds.url}/xrpc/_health`)
     expect(await res.json()).toMatchObject({
