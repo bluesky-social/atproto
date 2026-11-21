@@ -253,6 +253,39 @@ describe('ProxyLimiter memory', () => {
   })
 })
 
+describe('ProxyLimiter observer', () => {
+  beforeEach(() => {
+    jest.useFakeTimers()
+  })
+
+  afterEach(() => {
+    jest.useRealTimers()
+  })
+
+  it('reports each grant with the time the request waited', async () => {
+    const waits: number[] = []
+    const limiter = new ProxyLimiter(
+      {
+        maxRequestsPerSecond: 1,
+        maxConcurrentRequests: 100,
+        maxQueuedRequests: 100,
+        maxQueueMs: 60_000,
+      },
+      { granted: (waitMs) => waits.push(waitMs) },
+    )
+
+    await limiter.acquire()
+    expect(waits).toEqual([0])
+
+    await jest.advanceTimersByTimeAsync(400)
+    const second = observe(limiter.acquire())
+    // The first grant (t=0) leaves the window at t=1000
+    await jest.advanceTimersByTimeAsync(600)
+    expect(second.state).toBe('granted')
+    expect(waits).toEqual([0, 600])
+  })
+})
+
 describe('limiterInterceptor', () => {
   let server: http.Server
   let origin: string

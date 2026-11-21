@@ -9,6 +9,12 @@ export type ProxyLimiterOptions = {
   maxQueueMs: number
 }
 
+/** Told what the limiter did with each request, for metrics. */
+export type ProxyLimiterObserver = {
+  /** `waitMs` is 0 for a request that was granted without queuing. */
+  granted(waitMs: number): void
+}
+
 const WINDOW_MS = 1000
 
 export class ProxyLimitExceededError extends Error {
@@ -24,6 +30,8 @@ export class ProxyLimitExceededError extends Error {
 type Waiter = {
   resolve: (release: () => void) => void
   expiry?: ReturnType<typeof setTimeout>
+  /** Set once the request had to queue. */
+  queuedAt?: number
 }
 
 /**
@@ -37,6 +45,7 @@ type Waiter = {
  */
 export class ProxyLimiter {
   private readonly opts: ProxyLimiterOptions
+  private readonly observer: ProxyLimiterObserver | undefined
   /** Times of the grants still inside the window, oldest first. */
   protected grantTimes: number[] = []
   /** Grants given and not yet released. */
@@ -44,8 +53,9 @@ export class ProxyLimiter {
   private queue: Waiter[] = []
   private timer: ReturnType<typeof setTimeout> | undefined
 
-  constructor(opts: ProxyLimiterOptions) {
+  constructor(opts: ProxyLimiterOptions, observer?: ProxyLimiterObserver) {
     this.opts = opts
+    this.observer = observer
   }
 
   /**
@@ -67,6 +77,7 @@ export class ProxyLimiter {
         reject(new ProxyLimitExceededError(this.queueDrainMs()))
         return
       }
+      waiter.queuedAt = performance.now()
       waiter.expiry = setTimeout(() => {
         this.queue.splice(this.queue.indexOf(waiter), 1)
         reject(new ProxyLimitExceededError(this.queueDrainMs()))
@@ -104,6 +115,9 @@ export class ProxyLimiter {
       // would grow without bound.
       if (this.opts.maxRequestsPerSecond > 0) this.grantTimes.push(now)
       this.inFlight++
+      this.observer?.granted(
+        waiter.queuedAt === undefined ? 0 : now - waiter.queuedAt,
+      )
       let released = false
       waiter.resolve(() => {
         // A caller that reports both an end and an error for one request
