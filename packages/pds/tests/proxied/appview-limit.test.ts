@@ -306,6 +306,41 @@ describe('PDS limit on requests to the AppView', () => {
     await Promise.all(responses.map((r) => r.text()))
   })
 
+  // Both handlers send the AppView a POST themselves, with
+  // ctx.bskyAppView.client, when the push service named is the AppView.
+  it.each([
+    'app.bsky.notification.registerPush',
+    'app.bsky.notification.unregisterPush',
+  ])('answers 429 with Retry-After from %s too', async (nsid) => {
+    appview.hold()
+    const inFlight = getLikes()
+    await appview.waitForArrivals(1)
+    const queued = getLikes()
+    await sleep(200)
+
+    const rejected = await pdsPost(
+      network.pds.url,
+      nsid,
+      {
+        serviceDid: APPVIEW_DID,
+        token: 'push-token',
+        platform: 'ios',
+        appId: 'xyz.blueskyweb.app',
+      },
+      { accessJwt },
+    )
+    expect(rejected.status).toBe(429)
+    expect(await rejected.json()).toMatchObject({ error: 'RateLimitExceeded' })
+    expect(Number(rejected.headers.get('retry-after'))).toBeGreaterThanOrEqual(
+      1,
+    )
+    expect(appview.arrivalsFor(nsid)).toHaveLength(0)
+
+    appview.release()
+    const responses = await Promise.all([inFlight, queued])
+    await Promise.all(responses.map((r) => r.text()))
+  })
+
   it('does not apply the AppView limit to other proxied services', async () => {
     appview.hold()
     const inFlight = getLikes()
@@ -362,6 +397,21 @@ async function pdsGet(
   if (opts.accessJwt) headers.set('authorization', `Bearer ${opts.accessJwt}`)
   if (opts.proxy) headers.set('atproto-proxy', opts.proxy)
   return fetch(url, { headers })
+}
+
+async function pdsPost(
+  pdsUrl: string,
+  nsid: string,
+  body: Record<string, unknown>,
+  opts: { accessJwt?: string } = {},
+): Promise<Response> {
+  const headers = new Headers({ 'content-type': 'application/json' })
+  if (opts.accessJwt) headers.set('authorization', `Bearer ${opts.accessJwt}`)
+  return fetch(new URL(`/xrpc/${nsid}`, pdsUrl), {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(body),
+  })
 }
 
 async function registerServiceDid(
