@@ -130,6 +130,9 @@ describe('blob source', () => {
     ['taken down at its PDS', { upstreamStatus: 'takendown' }],
     ['deactivated at its PDS', { upstreamStatus: 'deactivated' }],
     ['suspended upstream', { upstreamStatus: 'suspended' }],
+    // The appview removes a deleted account's actor row. The PDS deletes the
+    // blobs on deletion, but best-effort, so an object can outlive the account.
+    ['deleted, or not indexed by the appview', { exists: false }],
   ])(
     'refuses the blobs of an account that is %s, as the PDS would',
     async (_state, actor) => {
@@ -150,7 +153,6 @@ describe('blob source', () => {
     ['without an upstream status', { upstreamStatus: '' }],
     // The appview's own takedown is not the PDS's state: `/blob` never looks.
     ['taken down by the appview only', { takenDown: true }],
-    ['unknown to the appview', { exists: false }],
     ['tombstoned in the appview', { tombstonedAt: { seconds: 1n, nanos: 0 } }],
   ])(
     'names the origin of an account that is %s, as /blob serves it',
