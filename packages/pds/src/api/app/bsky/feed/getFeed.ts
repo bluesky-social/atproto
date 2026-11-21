@@ -3,7 +3,11 @@ import { AtUri } from '@atproto/syntax'
 import type { Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../../../context.js'
 import { app, com } from '../../../../lexicons/index.js'
-import { computeProxyTo, pipethrough } from '../../../../pipethrough.js'
+import {
+  computeProxyTo,
+  pipethrough,
+  throwIfLimitExceeded,
+} from '../../../../pipethrough.js'
 
 export default function (server: Server, ctx: AppContext) {
   const { bskyAppView } = ctx
@@ -18,16 +22,21 @@ export default function (server: Server, ctx: AppContext) {
         permissions.assertRpc({ aud, lxm: app.bsky.feed.getFeedSkeleton.$lxm })
       },
     }),
-    handler: async ({ params, auth, req }) => {
+    handler: async ({ params, auth, req, res }) => {
       const requester = auth.credentials.did
 
       const feedUrl = new AtUri(params.feed)
 
-      const data = await bskyAppView.client.call(com.atproto.repo.getRecord, {
-        repo: feedUrl.host,
-        collection: feedUrl.collectionSafe,
-        rkey: feedUrl.rkeySafe,
-      })
+      const data = await bskyAppView.client
+        .call(com.atproto.repo.getRecord, {
+          repo: feedUrl.host,
+          collection: feedUrl.collectionSafe,
+          rkey: feedUrl.rkeySafe,
+        })
+        .catch((err: unknown) => {
+          throwIfLimitExceeded(res, err)
+          throw err
+        })
 
       const feedDid = data.value['did']
       if (typeof feedDid !== 'string') {

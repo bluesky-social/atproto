@@ -63,6 +63,28 @@ class EventReporter {
     valueType: ValueType.INT,
   })
 
+  #appViewRequestWait = meter.createHistogram('appview.request.limit.wait', {
+    description:
+      "Time a request to the AppView waited for this PDS's own request limit (PDS_BSKY_APP_VIEW_MAX_*); 0 when it was sent at once",
+    unit: 'ms',
+    valueType: ValueType.DOUBLE,
+    advice: {
+      // The 0 bucket holds the requests that did not queue. The default
+      // longest wait (PDS_BSKY_APP_VIEW_MAX_QUEUE_MS) is 5000.
+      explicitBucketBoundaries: [
+        0, 5, 10, 25, 50, 100, 250, 500, 1000, 2500, 5000, 10000,
+      ],
+    },
+  })
+
+  #appViewRequestRejectedCounter = meter.createCounter<{
+    reason: 'queue_full' | 'queue_timeout'
+  }>('appview.request.limit.rejected', {
+    description:
+      "Requests to the AppView that this PDS's own request limit turned away (never sent to the AppView)",
+    valueType: ValueType.INT,
+  })
+
   /**
    * Fans a single event out to both the pino logger (stdout/stderr) and the
    * OTEL Logs SDK (structured record).
@@ -161,6 +183,25 @@ class EventReporter {
       clientConfidential,
     })
     this.#oauthAuthorizationCounter.add(1, { clientFirstParty })
+  }
+
+  /**
+   * Metric only, with no log record: this is called for every request sent to
+   * the AppView.
+   */
+  appViewRequestGranted({ waitMs }: { waitMs: number }) {
+    this.#appViewRequestWait.record(waitMs)
+  }
+
+  /**
+   * Metric only: the XRPC error handler already logs the 429 this becomes.
+   */
+  appViewRequestRejected({
+    reason,
+  }: {
+    reason: 'queue_full' | 'queue_timeout'
+  }) {
+    this.#appViewRequestRejectedCounter.add(1, { reason })
   }
 }
 

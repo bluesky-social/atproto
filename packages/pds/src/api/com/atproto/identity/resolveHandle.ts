@@ -4,9 +4,10 @@ import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../../../context.js'
 import { baseNormalizeAndValidate } from '../../../../handle/index.js'
 import { com } from '../../../../lexicons/index.js'
+import { throwIfLimitExceeded } from '../../../../pipethrough.js'
 
 export default function (server: Server, ctx: AppContext) {
-  server.add(com.atproto.identity.resolveHandle, async ({ params }) => {
+  server.add(com.atproto.identity.resolveHandle, async ({ params, res }) => {
     const handle = baseNormalizeAndValidate(params.handle)
 
     // when behind an entryway, the entryway is authoritative for handles
@@ -35,7 +36,13 @@ export default function (server: Server, ctx: AppContext) {
     const did: DidString = ctx.bskyAppView
       ? await ctx.bskyAppView.client
           .call(com.atproto.identity.resolveHandle, { handle })
-          .then((r) => r.did, throwInvalidRequestError)
+          .then(
+            (r) => r.did,
+            (err: unknown) => {
+              throwIfLimitExceeded(res, err)
+              throwInvalidRequestError(err)
+            },
+          )
       : await ctx.idResolver.handle
           .resolve(handle)
           .then(
