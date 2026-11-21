@@ -258,7 +258,7 @@ type BlobSourceResolution = {
 export type ResolveBlobSourceOptions = {
   /**
    * Also refuse the blobs of an account that is taken down, deactivated,
-   * suspended or deleted. The blob route leaves this off: it asks the PDS for
+   * suspended, deleted or unknown to the appview. The blob route leaves this off: it asks the PDS for
    * the blob, and the PDS refuses such an account itself. A caller that reads
    * the blob without asking the PDS (`/blob-source`, whose callers may read it
    * from the PDS's object storage) has no other check, so it sets this.
@@ -290,17 +290,21 @@ export async function resolveBlobSource(
     throw createError(404, 'Blob not found')
   }
 
-  // The same test hydration uses to hide an actor. An actor the appview has
-  // not indexed (`exists` false) is not refused here: the PDS decides, as it
-  // did before this check.
-  const actor = actors?.actors[0]
-  if (
-    actor &&
-    (actor.takenDown ||
+  if (actors) {
+    // The test hydration uses to hide an actor. A deleted account's row is
+    // removed, and the dataplane then answers `exists: false` (no tombstone), so
+    // an actor that does not exist is refused too; an answer with no entry at
+    // all is refused rather than assumed to be fine.
+    const actor = actors.actors[0]
+    if (
+      !actor ||
+      !actor.exists ||
+      actor.takenDown ||
       (actor.upstreamStatus && actor.upstreamStatus !== 'active') ||
-      actor.tombstonedAt)
-  ) {
-    throw createError(404, 'Blob not found')
+      actor.tombstonedAt
+    ) {
+      throw createError(404, 'Blob not found')
+    }
   }
 
   const services = identity && unpackIdentityServices(identity.services)

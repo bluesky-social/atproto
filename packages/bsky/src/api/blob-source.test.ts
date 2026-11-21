@@ -127,7 +127,9 @@ describe('blob source', () => {
     ['deactivated', { upstreamStatus: 'deactivated' }],
     ['suspended', { upstreamStatus: 'suspended' }],
     ['taken down upstream', { upstreamStatus: 'takendown' }],
-    ['deleted', { tombstonedAt: { seconds: 1n, nanos: 0 } }],
+    ['tombstoned', { tombstonedAt: { seconds: 1n, nanos: 0 } }],
+    // A deleted account's row is removed: the dataplane says it does not exist.
+    ['deleted or unknown to the appview', { exists: false }],
   ])(
     'refuses the blobs of an account that is %s, as the PDS would',
     async (_state, actor) => {
@@ -144,7 +146,6 @@ describe('blob source', () => {
   it.each([
     ['active', { upstreamStatus: 'active' }],
     ['no upstream status', { upstreamStatus: '' }],
-    ['not indexed by the appview', { exists: false }],
   ])('names the origin of an account that is %s', async (_state, actor) => {
     const fixture = createFixture({ actor })
     const response = await request(fixture.ctx, `/blob-source/${DID}/${CID}`)
@@ -162,6 +163,14 @@ describe('blob source', () => {
 
     expect(fixture.getActors).not.toHaveBeenCalled()
     expect(fixture.stream).toHaveBeenCalledTimes(1)
+  })
+
+  it('refuses rather than assumes when the account lookup returns no entry', async () => {
+    const fixture = createFixture()
+    fixture.getActors.mockResolvedValueOnce({ actors: [] })
+    const response = await request(fixture.ctx, `/blob-source/${DID}/${CID}`)
+
+    expect(response.status).toBe(404)
   })
 
   it('returns 502 when the account lookup fails', async () => {
