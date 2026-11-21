@@ -1,5 +1,13 @@
+import { once } from 'node:events'
+import http from 'node:http'
+import { setTimeout as sleep } from 'node:timers/promises'
 import { jest } from '@jest/globals'
-import { ProxyLimitExceededError, ProxyLimiter } from './proxy-limiter.js'
+import { Agent } from 'undici'
+import {
+  ProxyLimitExceededError,
+  ProxyLimiter,
+  limiterInterceptor,
+} from './proxy-limiter.js'
 
 type Observed = {
   state: 'pending' | 'granted' | 'rejected'
@@ -218,5 +226,74 @@ describe('ProxyLimiter', () => {
     expect(fourth.state).toBe('pending')
     await jest.advanceTimersByTimeAsync(1)
     expect(fourth.state).toBe('granted')
+  })
+})
+
+describe('limiterInterceptor', () => {
+  let server: http.Server
+  let origin: string
+  let arrivals: number
+  let held: http.ServerResponse[]
+
+  beforeEach(async () => {
+    arrivals = 0
+    held = []
+    server = http.createServer((_req, res) => {
+      arrivals++
+      held.push(res)
+    })
+    server.listen(0, '127.0.0.1')
+    await once(server, 'listening')
+    const address = server.address()
+    if (address === null || typeof address === 'string') {
+      throw new Error('expected a TCP address')
+    }
+    origin = `http://127.0.0.1:${address.port}`
+  })
+
+  const releaseAll = () => {
+    for (const res of held.splice(0)) res.end()
+  }
+
+  afterEach(async () => {
+    releaseAll()
+    server.close()
+    await once(server, 'close')
+  })
+
+  const respond = () => {
+    const res = held.shift()
+    if (!res) throw new Error('no request is waiting for a response')
+    res.end('ok')
+  }
+
+  it('sends a request only once the limiter grants it', async () => {
+    const limiter = new ProxyLimiter({
+      maxRequestsPerSecond: 0,
+      maxConcurrentRequests: 1,
+      maxQueuedRequests: 10,
+      maxQueueMs: 60_000,
+    })
+    const agent = new Agent().compose(limiterInterceptor(limiter))
+    try {
+      const first = agent.request({ origin, path: '/', method: 'GET' })
+      const second = agent.request({ origin, path: '/', method: 'GET' })
+
+      await sleep(100)
+      expect(arrivals).toBe(1)
+
+      respond()
+      await (await first).body.text()
+      await sleep(100)
+      expect(arrivals).toBe(2)
+
+      respond()
+      await (await second).body.text()
+    } finally {
+      // Answer anything still waiting first: close() waits for requests in
+      // flight, so a failed expectation would otherwise hang the test.
+      releaseAll()
+      await agent.close()
+    }
   })
 })

@@ -1,3 +1,5 @@
+import type { Dispatcher } from 'undici'
+
 export type ProxyLimiterOptions = {
   /** 0 = no rate limit */
   maxRequestsPerSecond: number
@@ -123,5 +125,46 @@ export class ProxyLimiter {
     }
     if (this.grantTimes.length < this.opts.maxRequestsPerSecond) return 0
     return this.grantTimes[0] + WINDOW_MS - now
+  }
+}
+
+/**
+ * An undici interceptor that holds each request until `limiter` grants it.
+ * Listed before the retry interceptor in `compose()`, it sees every attempt,
+ * so retries count against the limit too.
+ */
+export function limiterInterceptor(
+  limiter: ProxyLimiter,
+): Dispatcher.DispatcherComposeInterceptor {
+  return (dispatch) => (opts, handler) => {
+    void limiter.acquire().then((release) => {
+      dispatch(opts, releasingHandler(handler, release))
+    })
+    return true
+  }
+}
+
+function releasingHandler(
+  handler: Dispatcher.DispatchHandler,
+  release: () => void,
+): Dispatcher.DispatchHandler {
+  return {
+    onRequestStart: (controller, context) =>
+      handler.onRequestStart?.(controller, context),
+    onRequestUpgrade: (controller, statusCode, headers, socket) =>
+      handler.onRequestUpgrade?.(controller, statusCode, headers, socket),
+    onResponseStart: (controller, statusCode, headers, statusMessage) =>
+      handler.onResponseStart?.(controller, statusCode, headers, statusMessage),
+    onResponseData: (controller, chunk) =>
+      handler.onResponseData?.(controller, chunk),
+    onResponseEnd: (controller, trailers) => {
+      release()
+      handler.onResponseEnd?.(controller, trailers)
+    },
+    onResponseError: (controller, error) =>
+      handler.onResponseError?.(controller, error),
+    onResponseStarted: () => handler.onResponseStarted?.(),
+    onBodySent: (chunk) => handler.onBodySent?.(chunk),
+    onRequestSent: () => handler.onRequestSent?.(),
   }
 }
