@@ -181,6 +181,22 @@ describe('ProxyLimiter', () => {
     expect(late.state).toBe('granted')
   })
 
+  // A zero-length queue has no drain time, but "retry after 0 seconds" would
+  // bring the caller straight back into the limit that turned it away.
+  it('never tells a rejected acquisition to retry sooner than one second', async () => {
+    const limiter = new ProxyLimiter({
+      maxRequestsPerSecond: 1,
+      maxConcurrentRequests: 0,
+      maxQueuedRequests: 0,
+      maxQueueMs: 60_000,
+    })
+    await limiter.acquire()
+    const overflow = observe(limiter.acquire())
+    await jest.advanceTimersByTimeAsync(0)
+    expect(overflow.state).toBe('rejected')
+    expect(overflow.error).toMatchObject({ retryAfterMs: 1000 })
+  })
+
   it('treats 0 as no limit for the rate and for the in-flight cap', async () => {
     const unrated = new ProxyLimiter({
       maxRequestsPerSecond: 0,

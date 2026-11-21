@@ -101,11 +101,18 @@ export class ProxyLimiter {
     }
   }
 
-  /** Estimated time for the current queue to drain at the configured rate. */
+  /**
+   * Estimated time for the current queue to drain at the configured rate, and
+   * never less than one window: a short or zero-length queue drains at once,
+   * but a caller told to retry at once comes straight back into the limit.
+   */
   private queueDrainMs(): number {
     const rate = this.opts.maxRequestsPerSecond
     if (rate === 0) return WINDOW_MS
-    return Math.ceil((this.queue.length / rate) * WINDOW_MS)
+    return Math.max(
+      WINDOW_MS,
+      Math.ceil((this.queue.length / rate) * WINDOW_MS),
+    )
   }
 
   private pump(): void {
