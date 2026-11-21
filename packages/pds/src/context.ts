@@ -460,12 +460,18 @@ export class AppContext implements AsyncDisposable {
     const appViewProxyAgent = cfg.bskyAppView
       ? buildProxyAgent(
           { ...cfg.proxy, disableSsrfProtection: true },
-          new ProxyLimiter({
-            maxRequestsPerSecond: cfg.bskyAppView.maxRequestsPerSecond,
-            maxConcurrentRequests: cfg.bskyAppView.maxConcurrentRequests,
-            maxQueuedRequests: cfg.bskyAppView.maxQueuedRequests,
-            maxQueueMs: cfg.bskyAppView.maxQueueMs,
-          }),
+          new ProxyLimiter(
+            {
+              maxRequestsPerSecond: cfg.bskyAppView.maxRequestsPerSecond,
+              maxConcurrentRequests: cfg.bskyAppView.maxConcurrentRequests,
+              maxQueuedRequests: cfg.bskyAppView.maxQueuedRequests,
+              maxQueueMs: cfg.bskyAppView.maxQueueMs,
+            },
+            {
+              granted: (waitMs) => events.appViewRequestGranted({ waitMs }),
+              rejected: (reason) => events.appViewRequestRejected({ reason }),
+            },
+          ),
         )
       : undefined
 

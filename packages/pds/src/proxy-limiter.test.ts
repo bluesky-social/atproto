@@ -253,6 +253,100 @@ describe('ProxyLimiter memory', () => {
   })
 })
 
+describe('ProxyLimiter observer', () => {
+  beforeEach(() => {
+    jest.useFakeTimers()
+  })
+
+  afterEach(() => {
+    jest.useRealTimers()
+  })
+
+  it('reports each grant with the time the request waited', async () => {
+    const waits: number[] = []
+    const limiter = new ProxyLimiter(
+      {
+        maxRequestsPerSecond: 1,
+        maxConcurrentRequests: 100,
+        maxQueuedRequests: 100,
+        maxQueueMs: 60_000,
+      },
+      { granted: (waitMs) => waits.push(waitMs), rejected: () => {} },
+    )
+
+    await limiter.acquire()
+    expect(waits).toEqual([0])
+
+    await jest.advanceTimersByTimeAsync(400)
+    const second = observe(limiter.acquire())
+    // The first grant (t=0) leaves the window at t=1000
+    await jest.advanceTimersByTimeAsync(600)
+    expect(second.state).toBe('granted')
+    expect(waits).toEqual([0, 600])
+  })
+
+  it('reports a request turned away by a full queue', async () => {
+    const rejections: string[] = []
+    const limiter = new ProxyLimiter(
+      {
+        maxRequestsPerSecond: 1,
+        maxConcurrentRequests: 100,
+        maxQueuedRequests: 0,
+        maxQueueMs: 60_000,
+      },
+      { granted: () => {}, rejected: (reason) => rejections.push(reason) },
+    )
+
+    await limiter.acquire()
+    const overflow = observe(limiter.acquire())
+    await jest.advanceTimersByTimeAsync(0)
+    expect(overflow.state).toBe('rejected')
+    expect(rejections).toEqual(['queue_full'])
+  })
+
+  it('reports a request that queued too long', async () => {
+    const rejections: string[] = []
+    const limiter = new ProxyLimiter(
+      {
+        maxRequestsPerSecond: 1000,
+        maxConcurrentRequests: 1,
+        maxQueuedRequests: 100,
+        maxQueueMs: 500,
+      },
+      { granted: () => {}, rejected: (reason) => rejections.push(reason) },
+    )
+
+    await limiter.acquire()
+    const waiting = observe(limiter.acquire())
+    await jest.advanceTimersByTimeAsync(500)
+    expect(waiting.state).toBe('rejected')
+    expect(rejections).toEqual(['queue_timeout'])
+  })
+
+  it('keeps working when the observer throws', async () => {
+    const failing = () => {
+      throw new Error('metrics are broken')
+    }
+    const limiter = new ProxyLimiter(
+      {
+        maxRequestsPerSecond: 1000,
+        maxConcurrentRequests: 1,
+        maxQueuedRequests: 0,
+        maxQueueMs: 60_000,
+      },
+      { granted: failing, rejected: failing },
+    )
+
+    const release = await limiter.acquire()
+    await expect(limiter.acquire()).rejects.toBeInstanceOf(
+      ProxyLimitExceededError,
+    )
+    // The slot of the first grant was counted once and is freed once
+    release()
+    await expect(limiter.acquire()).resolves.toBeInstanceOf(Function)
+  })
+})
+
 describe('limiterInterceptor', () => {
   let server: http.Server
   let origin: string
