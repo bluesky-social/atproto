@@ -115,6 +115,17 @@ describe('account migration', () => {
       password: 'alice-pass',
     })
 
+    // The brought DID doesn't name the new kem key yet: left for the publisher
+    const progress = await newPds.ctx.accountManager.db.db
+      .selectFrom('spaces_migration')
+      .selectAll()
+      .where('did', '=', alice.did)
+      .executeTakeFirst()
+    expect(progress).toMatchObject({
+      kemPublishedAt: null,
+      storeMigratedAt: expect.any(String),
+    })
+
     const statusRes1 = await newAgent.com.atproto.server.checkAccountStatus()
     expect(statusRes1.data).toMatchObject({
       activated: false,

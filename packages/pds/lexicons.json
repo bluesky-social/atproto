@@ -161,6 +161,11 @@
     "com.atproto.temp.requestPhoneVerification",
     "com.atproto.temp.revokeAccountCredentials",
     "com.germnetwork.declaration",
+    "internal.pds.checkSpacesMigration",
+    "internal.pds.completeSpacesMigration",
+    "internal.pds.prepareSpacesMigration",
+    "internal.pds.recountSpacesMigration",
+    "internal.pds.reserveKemKey",
     "place.stream.chat.pinnedRecord",
     "place.stream.chat.profile",
     "place.stream.livestream",
@@ -868,6 +873,26 @@
     "com.germnetwork.declaration": {
       "uri": "file://../../lexicons-overrides/com/germnetwork/declaration.json",
       "cid": "bafyreiekwjmxshje655olra4mata7npso7bbgytc4fop77ycjtrbewwi3y"
+    },
+    "internal.pds.checkSpacesMigration": {
+      "uri": "file://../../lexicons-overrides/internal/pds/checkSpacesMigration.json",
+      "cid": "bafyreifwvue5ju6nihnuqfpy2nawh3zjglsyypoobo4nw5jolz7cg6apje"
+    },
+    "internal.pds.completeSpacesMigration": {
+      "uri": "file://../../lexicons-overrides/internal/pds/completeSpacesMigration.json",
+      "cid": "bafyreievan2dfejyk62unkhqcnns4tveavytoz765d53u3t5ohh5ydkequ"
+    },
+    "internal.pds.prepareSpacesMigration": {
+      "uri": "file://../../lexicons-overrides/internal/pds/prepareSpacesMigration.json",
+      "cid": "bafyreigyxwb4da2t57c7l4e7yc2v7mg7m2x3dtzd62qwpeo54xdoueyir4"
+    },
+    "internal.pds.recountSpacesMigration": {
+      "uri": "file://../../lexicons-overrides/internal/pds/recountSpacesMigration.json",
+      "cid": "bafyreihylqh4nuhafdppexx7voymolqgszgoylcwrunr5xsjaphogwvtsu"
+    },
+    "internal.pds.reserveKemKey": {
+      "uri": "file://../../lexicons-overrides/internal/pds/reserveKemKey.json",
+      "cid": "bafyreidofehmsjxbe5hate7kkydmgovo5xbn2d5h23chijxgaa5jgfxzmi"
     },
     "place.stream.badge.defs": {
       "uri": "file://../../lexicons-overrides/place/stream/badge/defs.json",

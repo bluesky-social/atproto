@@ -1,0 +1,62 @@
+{
+  "lexicon": 1,
+  "id": "internal.pds.recountSpacesMigration",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Recount the PDS's spaces migration stats from its record of every account, and compare them with the stats kept up to date by each write. Overwrites the stats only when asked. Blocks writes to the record while it counts. PDS-internal and temporary: it exists for the migration into spaces.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "fix": {
+              "type": "boolean",
+              "description": "Overwrite the stats with the recount."
+            }
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["stored", "recounted", "fixed"],
+          "properties": {
+            "stored": {
+              "type": "ref",
+              "ref": "#stats",
+              "description": "The stats as stored, before any fix."
+            },
+            "recounted": { "type": "ref", "ref": "#stats" },
+            "fixed": {
+              "type": "boolean",
+              "description": "Whether the stats were overwritten with the recount."
+            }
+          }
+        }
+      }
+    },
+    "stats": {
+      "type": "object",
+      "required": [
+        "total",
+        "storesMigrated",
+        "keysPublished",
+        "unpublishable",
+        "deactivated",
+        "failing",
+        "sweepFailing"
+      ],
+      "properties": {
+        "total": { "type": "integer" },
+        "storesMigrated": { "type": "integer" },
+        "keysPublished": { "type": "integer" },
+        "unpublishable": { "type": "integer" },
+        "deactivated": { "type": "integer" },
+        "failing": { "type": "integer" },
+        "sweepFailing": { "type": "integer" }
+      }
+    }
+  }
+}

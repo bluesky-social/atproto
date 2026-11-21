@@ -1,5 +1,6 @@
 import { type Kysely, sql } from 'kysely'
 import {
+  DEFAULT_MIGRATION_TABLE,
   type MigrateOptions,
   type Migration,
   type MigrationResultSet,
@@ -99,7 +100,7 @@ export class Migrator<T> extends KyselyMigrator {
   // Sets up stubs for tolerated migrations, returning the executed names read.
   private async tolerateLaterMigrations(): Promise<string[]> {
     const executed = await this.readExecutedNames()
-    const latestKnown = Object.keys(this.known).sort(compareNames).at(-1)
+    const latestKnown = latestMigrationName(this.known)
     const tolerated = executed.filter(
       (name) =>
         !Object.hasOwn(this.known, name) &&
@@ -131,10 +132,15 @@ export class Migrator<T> extends KyselyMigrator {
   }
 }
 
-// Kysely's defaults, which every PDS database uses.
-const MIGRATION_TABLE = 'kysely_migration'
+// Kysely's default, which every PDS database uses.
+export const MIGRATION_TABLE = DEFAULT_MIGRATION_TABLE
 // @NOTE match Kysely's Object.keys(migrations).sort(). Avoid localeCompare(),
 // whose ordering can change with the environment or Node.js version.
 const compareNames = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0)
+
+/** The name kysely runs last, of migrations keyed by name. */
+export const latestMigrationName = (
+  migrations: Record<string, Migration>,
+): string | undefined => Object.keys(migrations).sort(compareNames).at(-1)
 
 const noop = async () => {}

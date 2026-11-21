@@ -1,4 +1,5 @@
 import assert from 'node:assert'
+import fs from 'node:fs/promises'
 import * as plc from '@did-plc/lib'
 import { jest } from '@jest/globals'
 import type { AtpAgent } from '@atproto/api'
@@ -237,5 +238,155 @@ describe('plc operations', () => {
     assert(lastEvt)
     expect(lastEvt.did).toBe(alice.did)
     expect(lastEvt.eventType).toBe('identity')
+  })
+
+  describe('kem key', () => {
+    let bob: Account
+    let ourKemKey: string
+
+    beforeAll(async () => {
+      bob = sc.accounts[sc.dids.bob]
+      const kem = await ctx.actorStore.kemKeypair(bob.did)
+      assert(kem)
+      ourKemKey = kem.did()
+    })
+
+    const setPublishedKem = async (kemKey: string | undefined) => {
+      await ctx.plcClient.updateData(bob.did, ctx.plcRotationKey, (data) => {
+        const { atproto_kem: _, ...rest } = data.verificationMethods
+        return {
+          ...data,
+          verificationMethods: kemKey ? { ...rest, atproto_kem: kemKey } : rest,
+        }
+      })
+    }
+
+    const submitWithKem = async (kemKey: string | undefined) => {
+      const data = await ctx.plcClient.getDocumentData(bob.did)
+      const { atproto_kem: _, ...rest } = data.verificationMethods
+      const operation = await signOp(bob.did, {
+        verificationMethods: kemKey ? { ...rest, atproto_kem: kemKey } : rest,
+      })
+      return agent.com.atproto.identity.submitPlcOperation(
+        { operation },
+        {
+          encoding: 'application/json',
+          headers: sc.getHeaders(bob.did),
+        },
+      )
+    }
+
+    it('accepts an op without a kem key when none is published', async () => {
+      await setPublishedKem(undefined)
+      await submitWithKem(undefined)
+      const data = await ctx.plcClient.getDocumentData(bob.did)
+      expect(data.verificationMethods.atproto_kem).toBeUndefined()
+    })
+
+    it('rejects an op that removes the published kem key', async () => {
+      await setPublishedKem(ourKemKey)
+      await expect(submitWithKem(undefined)).rejects.toMatchObject({
+        error: 'IncorrectKemKey',
+        message: 'Operation would remove the KEM key',
+      })
+    })
+
+    it('accepts an op naming our kem key', async () => {
+      await setPublishedKem(ourKemKey)
+      await submitWithKem(ourKemKey)
+      const data = await ctx.plcClient.getDocumentData(bob.did)
+      expect(data.verificationMethods.atproto_kem).toBe(ourKemKey)
+    })
+
+    it('rejects an op naming another kem key', async () => {
+      await expect(submitWithKem(sampleKey)).rejects.toMatchObject({
+        error: 'IncorrectKemKey',
+        message: 'Incorrect KEM key',
+      })
+    })
+
+    describe('once the migration is complete', () => {
+      const prevState = () => ctx.cfg.spacesMigration.state
+      let restore: typeof ctx.cfg.spacesMigration.state
+
+      beforeAll(() => {
+        restore = prevState()
+        ctx.cfg.spacesMigration.state = 'complete'
+      })
+
+      afterAll(() => {
+        ctx.cfg.spacesMigration.state = restore
+      })
+
+      it('requires our kem key without reading the published one', async () => {
+        // Even with none published, omitting the key is refused
+        await setPublishedKem(undefined)
+        const data = await ctx.plcClient.getDocumentData(bob.did)
+        const operation = await signOp(bob.did, {
+          verificationMethods: data.verificationMethods,
+        })
+        using getDocumentData = jest.spyOn(ctx.plcClient, 'getDocumentData')
+        await expect(
+          agent.com.atproto.identity.submitPlcOperation(
+            { operation },
+            {
+              encoding: 'application/json',
+              headers: sc.getHeaders(bob.did),
+            },
+          ),
+        ).rejects.toMatchObject({ error: 'IncorrectKemKey' })
+        expect(getDocumentData).not.toHaveBeenCalled()
+      })
+
+      it('accepts an op naming our kem key', async () => {
+        await submitWithKem(ourKemKey)
+        const data = await ctx.plcClient.getDocumentData(bob.did)
+        expect(data.verificationMethods.atproto_kem).toBe(ourKemKey)
+      })
+    })
+  })
+
+  describe('account without a stored kem key', () => {
+    let carol: Account
+
+    beforeAll(async () => {
+      carol = sc.accounts[sc.dids.carol]
+      // Pre-feature account: no kem_key file and nothing published in PLC.
+      const { kemKeyLocation } = await ctx.actorStore.getLocation(carol.did)
+      await fs.rm(kemKeyLocation, { force: true })
+      expect(await ctx.actorStore.kemKeypair(carol.did)).toBeUndefined()
+      await ctx.plcClient.updateData(carol.did, ctx.plcRotationKey, (data) => {
+        const { atproto_kem: _, ...rest } = data.verificationMethods
+        return { ...data, verificationMethods: rest }
+      })
+    })
+
+    const submitWithKem = async (kemKey: string | undefined) => {
+      const data = await ctx.plcClient.getDocumentData(carol.did)
+      const { atproto_kem: _, ...rest } = data.verificationMethods
+      const operation = await signOp(carol.did, {
+        verificationMethods: kemKey ? { ...rest, atproto_kem: kemKey } : rest,
+      })
+      return agent.com.atproto.identity.submitPlcOperation(
+        { operation },
+        {
+          encoding: 'application/json',
+          headers: sc.getHeaders(carol.did),
+        },
+      )
+    }
+
+    it('rejects an op naming a kem key', async () => {
+      await expect(submitWithKem(sampleKey)).rejects.toMatchObject({
+        error: 'IncorrectKemKey',
+        message: 'Incorrect KEM key',
+      })
+    })
+
+    it('accepts an op omitting the kem key', async () => {
+      await submitWithKem(undefined)
+      const data = await ctx.plcClient.getDocumentData(carol.did)
+      expect(data.verificationMethods.atproto_kem).toBeUndefined()
+    })
   })
 })
