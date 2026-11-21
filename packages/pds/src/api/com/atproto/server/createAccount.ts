@@ -197,15 +197,9 @@ const validateInputsForEntrywayPds = async (
     throw new InvalidRequestError('invalid plc operation', 'IncompatibleDidDoc')
   }
   const doc = plc.formatDidDoc({ did, ...plcOp })
-  const data = {
+  const data: AtprotoData & { kemKey?: string } = {
     ...ensureAtpDocument(doc),
     kemKey: plcOp.verificationMethods['atproto_kem'],
-  }
-  if (!data.kemKey) {
-    throw new InvalidRequestError(
-      'PLC operation does not include a KEM key',
-      'IncompatibleDidDoc',
-    )
   }
 
   const signingKey =
@@ -214,9 +208,12 @@ const validateInputsForEntrywayPds = async (
   if (!signingKey) {
     throw new InvalidRequestError('reserved signing key does not exist')
   }
-  const kemKey =
-    (await ctx.actorStore.getReservedKemKeypair(did)) ??
-    (await ctx.actorStore.getReservedKemKeypair(data.kemKey))
+  // @TODO require a KEM key in the op once the entryway reserves them. Until
+  // then, an op without one gets a key generated here, left unpublished.
+  const kemKey = data.kemKey
+    ? ((await ctx.actorStore.getReservedKemKeypair(did)) ??
+      (await ctx.actorStore.getReservedKemKeypair(data.kemKey)))
+    : await P256Keypair.create({ exportable: true })
   if (!kemKey) {
     throw new InvalidRequestError('reserved KEM key does not exist')
   }
@@ -366,7 +363,7 @@ const formatDidAndPlcOp = async (
   })
 }
 const validateAtprotoData = (
-  data: AtprotoData & { kemKey: string },
+  data: AtprotoData & { kemKey?: string },
   expected: {
     handle: string
     pds: string
@@ -392,7 +389,7 @@ const validateAtprotoData = (
       'DID document signing key does not match service signing key',
       'IncompatibleDidDoc',
     )
-  } else if (data.kemKey !== expected.kemKey) {
+  } else if (data.kemKey && data.kemKey !== expected.kemKey) {
     throw new InvalidRequestError(
       'DID document KEM key does not match service KEM key',
       'IncompatibleDidDoc',

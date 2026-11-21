@@ -1,3 +1,4 @@
+import assert from 'node:assert'
 import { jest } from '@jest/globals'
 import { AtUri, type AtpAgent } from '@atproto/api'
 import {
@@ -238,5 +239,82 @@ describe('account migration', () => {
     expect(fetchedPost.value.text).toEqual('new pds!')
     const statusRes5 = await newAgent.com.atproto.server.checkAccountStatus()
     expect(statusRes5.data.indexedRecords).toBe(104)
+  })
+
+  it('does not activate an account until its DID document has its KEM key', async () => {
+    await sc.createAccount('bob', {
+      email: 'bob@test.com',
+      handle: 'bob.test',
+      password: 'bob-pass',
+    })
+    const bob = sc.accounts[sc.dids.bob]
+    const bobOldAgent = network.pds.getAgent()
+    await bobOldAgent.login({ identifier: bob.handle, password: bob.password })
+
+    const describeRes = await newAgent.api.com.atproto.server.describeServer()
+    const serviceJwtRes = await bobOldAgent.com.atproto.server.getServiceAuth({
+      aud: describeRes.data.did,
+      lxm: 'com.atproto.server.createAccount',
+    })
+    const bobNewAgent = newPds.getAgent()
+    await bobNewAgent.api.com.atproto.server.createAccount(
+      {
+        handle: 'new-bob.test',
+        email: 'bob@test.com',
+        password: 'bob-pass',
+        did: bob.did,
+      },
+      {
+        headers: { authorization: `Bearer ${serviceJwtRes.data.token}` },
+        encoding: 'application/json',
+      },
+    )
+    await bobNewAgent.login({
+      identifier: 'new-bob.test',
+      password: 'bob-pass',
+    })
+
+    // Point the DID document at the new PDS without its KEM key, as a client
+    // submitting the op straight to PLC could
+    const signingKey = await newPds.ctx.actorStore.keypair(bob.did)
+    const kemKey = await newPds.ctx.actorStore.kemKeypair(bob.did)
+    assert(kemKey)
+    await network.pds.ctx.plcClient.updateData(
+      bob.did,
+      network.pds.ctx.plcRotationKey,
+      (op) => ({
+        ...op,
+        rotationKeys: [newPds.ctx.plcRotationKey.did()],
+        services: {
+          atproto_pds: {
+            type: 'AtprotoPersonalDataServer',
+            endpoint: newPds.ctx.cfg.service.publicUrl,
+          },
+        },
+        verificationMethods: { atproto: signingKey.did() },
+      }),
+    )
+
+    await expect(
+      bobNewAgent.com.atproto.server.activateAccount(),
+    ).rejects.toThrow('does not match expected KEM key')
+    const statusRes1 = await bobNewAgent.com.atproto.server.checkAccountStatus()
+    expect(statusRes1.data).toMatchObject({ activated: false, validDid: false })
+
+    await newPds.ctx.plcClient.updateData(
+      bob.did,
+      newPds.ctx.plcRotationKey,
+      (op) => ({
+        ...op,
+        verificationMethods: {
+          ...op.verificationMethods,
+          atproto_kem: kemKey.did(),
+        },
+      }),
+    )
+
+    await bobNewAgent.com.atproto.server.activateAccount()
+    const statusRes2 = await bobNewAgent.com.atproto.server.checkAccountStatus()
+    expect(statusRes2.data).toMatchObject({ activated: true, validDid: true })
   })
 })

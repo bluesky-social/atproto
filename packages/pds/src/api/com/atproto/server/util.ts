@@ -1,7 +1,15 @@
 import type * as plc from '@did-plc/lib'
-import { getPdsEndpoint, getSigningDidKey } from '@atproto/common'
+import {
+  getPdsEndpoint,
+  getSigningDidKey,
+  getVerificationMaterial,
+} from '@atproto/common'
 import * as crypto from '@atproto/crypto'
-import type { DidDocument, IdResolver } from '@atproto/identity'
+import {
+  type DidDocument,
+  type IdResolver,
+  getDidKeyFromMultibase,
+} from '@atproto/identity'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import type { ActorStore } from '../../../../actor-store/actor-store.js'
 import type { ServerConfig } from '../../../../config/index.js'
@@ -84,6 +92,7 @@ export const assertValidDidDocumentForService = async (
     await assertValidDocContents(ctx, did, {
       pdsEndpoint: resolved.services['atproto_pds']?.endpoint,
       signingKey: resolved.verificationMethods['atproto'],
+      kemKey: resolved.verificationMethods['atproto_kem'],
       rotationKeys: resolved.rotationKeys,
     })
   } else {
@@ -91,9 +100,11 @@ export const assertValidDidDocumentForService = async (
     if (!resolved) {
       throw new InvalidRequestError('Could not resolve DID')
     }
+    const kemKey = getVerificationMaterial(resolved, 'atproto_kem')
     await assertValidDocContents(ctx, did, {
       pdsEndpoint: getPdsEndpoint(resolved),
       signingKey: getSigningDidKey(resolved),
+      kemKey: kemKey && getDidKeyFromMultibase(kemKey),
     })
   }
 }
@@ -107,11 +118,12 @@ const assertValidDocContents = async (
   did: string,
   contents: {
     signingKey?: string
+    kemKey?: string
     pdsEndpoint?: string
     rotationKeys?: string[]
   },
 ) => {
-  const { signingKey, pdsEndpoint, rotationKeys } = contents
+  const { signingKey, kemKey, pdsEndpoint, rotationKeys } = contents
 
   const plcRotationKey =
     ctx.cfg.entryway?.plcRotationKey ?? ctx.plcRotationKey.did()
@@ -131,6 +143,15 @@ const assertValidDocContents = async (
   if (!signingKey || signingKey !== keypair.did()) {
     throw new InvalidRequestError(
       'DID document verification method does not match expected signing key',
+    )
+  }
+
+  // Accounts the KEM key backfill has yet to reach have no KEM key.
+  // @TODO also require it behind an entryway, once the entryway publishes it.
+  const kemKeypair = await ctx.actorStore.kemKeypair(did)
+  if (kemKeypair && !ctx.cfg.entryway && kemKey !== kemKeypair.did()) {
+    throw new InvalidRequestError(
+      'DID document verification method does not match expected KEM key',
     )
   }
 }

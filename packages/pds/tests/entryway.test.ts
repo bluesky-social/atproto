@@ -217,7 +217,7 @@ describe('entryway', () => {
     await expect(tryCreateAccount).rejects.toThrow('invalid plc operation')
   })
 
-  it('rejects an op without a KEM key.', async () => {
+  it('creates an account from an op without a KEM key.', async () => {
     const {
       data: { signingKey },
     } = await pdsAgent.api.com.atproto.server.reserveSigningKey({})
@@ -228,14 +228,16 @@ describe('entryway', () => {
       pds: pds.ctx.cfg.service.publicUrl,
       signer: entryway.plcRotationKey,
     })
-    const tryCreateAccount = pdsAgent.api.com.atproto.server.createAccount({
+    const res = await pdsAgent.api.com.atproto.server.createAccount({
       did: plcCreate.did,
       plcOp: plcCreate.op,
       handle: 'no-kem.test',
     })
-    await expect(tryCreateAccount).rejects.toThrow(
-      'PLC operation does not include a KEM key',
-    )
+    expect(res.data.did).toEqual(plcCreate.did)
+    // the pds still holds a KEM key for the account, unpublished
+    await expect(
+      pds.ctx.actorStore.kemKeypair(plcCreate.did),
+    ).resolves.toBeDefined()
   })
 
   it('rejects a KEM key that the pds did not reserve.', async () => {
