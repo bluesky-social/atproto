@@ -4,6 +4,20 @@ import { type Kysely, sql } from 'kysely'
 const nowDatetime = sql`(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))`
 
 export async function up(db: Kysely<unknown>): Promise<void> {
+  // Settled accounts' KEM key state, so they leave spaces_migration. Null while
+  // unsettled or unseeded. Indexed only while null, so settled rows (nearly
+  // all of them, eventually) aren't in it.
+  await db.schema
+    .alterTable('actor')
+    .addColumn('kemKeyState', 'varchar')
+    .execute()
+  await db.schema
+    .createIndex('actor_kem_key_state_unknown_idx')
+    .on('actor')
+    .column('did')
+    .where(sql.ref('kemKeyState'), 'is', null)
+    .execute()
+
   await db.schema
     .createTable('spaces_migration')
     .addColumn('did', 'varchar', (col) => col.primaryKey())
@@ -44,8 +58,9 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .where(sql.ref('storeMigratedAt'), 'is', null)
     .execute()
 
-  // Counts over spaces_migration, kept up to date by every write that can
-  // change one. A single row, id = 1.
+  // Counts over spaces_migration rows plus settled actors (non-null
+  // kemKeyState), kept up to date by every write that can change one. A single
+  // row, id = 1.
   await db.schema
     .createTable('spaces_migration_stats')
     .addColumn('id', 'integer', (col) => col.primaryKey())
@@ -71,6 +86,8 @@ export async function up(db: Kysely<unknown>): Promise<void> {
 }
 
 export async function down(db: Kysely<unknown>): Promise<void> {
+  await db.schema.dropIndex('actor_kem_key_state_unknown_idx').execute()
+  await db.schema.alterTable('actor').dropColumn('kemKeyState').execute()
   await db.schema.dropTable('spaces_migration_state').execute()
   await db.schema.dropTable('spaces_migration_stats').execute()
   await db.schema.dropTable('spaces_migration').execute()

@@ -10,6 +10,7 @@ import {
 import { BlobNotFoundError } from '@atproto/repo'
 import type {
   Account,
+  Actor,
   AppPassword,
   EmailToken,
   RefreshToken,
@@ -18,6 +19,7 @@ import type {
 } from '../src/account-manager/db/index.js'
 import type { AppContext } from '../src/index.js'
 import type { RepoSeq } from '../src/sequencer/db/index.js'
+import type { SpacesMigrationSummary } from '../src/spaces-migration/progress.js'
 import basicSeed from './seeds/basic.js'
 
 describe('account deletion', () => {
@@ -169,12 +171,23 @@ describe('account deletion', () => {
     expect(updatedDbContents.refreshTokens).toEqual(
       initialDbContents.refreshTokens.filter((row) => row.did !== carol.did),
     )
-    expect(
-      initialDbContents.spacesMigrations.some((row) => row.did === carol.did),
-    ).toBe(true)
+    // Born settled, her migration state goes with her actor
+    expect(initialDbContents.kemKeyStates).toContainEqual({
+      did: carol.did,
+      kemKeyState: 'published',
+    })
+    expect(updatedDbContents.kemKeyStates).toEqual(
+      initialDbContents.kemKeyStates.filter((row) => row.did !== carol.did),
+    )
     expect(updatedDbContents.spacesMigrations).toEqual(
       initialDbContents.spacesMigrations.filter((row) => row.did !== carol.did),
     )
+    expect(updatedDbContents.spacesMigrationStats).toEqual({
+      ...initialDbContents.spacesMigrationStats,
+      total: initialDbContents.spacesMigrationStats.total - 1,
+      storesMigrated: initialDbContents.spacesMigrationStats.storesMigrated - 1,
+      keysPublished: initialDbContents.spacesMigrationStats.keysPublished - 1,
+    })
   })
 
   it('deletes the users actor store', async () => {
@@ -270,6 +283,8 @@ type DbContents = {
   refreshTokens: RefreshToken[]
   repoSeqs: Selectable<RepoSeq>[]
   spacesMigrations: Selectable<SpacesMigration>[]
+  kemKeyStates: Pick<Selectable<Actor>, 'did' | 'kemKeyState'>[]
+  spacesMigrationStats: SpacesMigrationSummary
 }
 
 const getDbContents = async (ctx: AppContext): Promise<DbContents> => {
@@ -283,6 +298,8 @@ const getDbContents = async (ctx: AppContext): Promise<DbContents> => {
     refreshTokens,
     repoSeqs,
     spacesMigrations,
+    kemKeyStates,
+    spacesMigrationStats,
   ] = await Promise.all([
     db.db.selectFrom('repo_root').orderBy('did').selectAll().execute(),
     db.db.selectFrom('account').orderBy('did').selectAll().execute(),
@@ -296,6 +313,12 @@ const getDbContents = async (ctx: AppContext): Promise<DbContents> => {
     db.db.selectFrom('refresh_token').orderBy('id').selectAll().execute(),
     sequencer.db.db.selectFrom('repo_seq').orderBy('seq').selectAll().execute(),
     db.db.selectFrom('spaces_migration').orderBy('did').selectAll().execute(),
+    db.db
+      .selectFrom('actor')
+      .select(['did', 'kemKeyState'])
+      .orderBy('did')
+      .execute(),
+    ctx.spacesMigration.progress.summary(),
   ])
 
   return {
@@ -306,5 +329,7 @@ const getDbContents = async (ctx: AppContext): Promise<DbContents> => {
     refreshTokens,
     repoSeqs,
     spacesMigrations,
+    kemKeyStates,
+    spacesMigrationStats,
   }
 }

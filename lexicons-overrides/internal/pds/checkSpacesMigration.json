@@ -40,14 +40,21 @@
               "knownValues": [
                 "did-web",
                 "rotation-key-not-held",
-                "pds-elsewhere",
+                "signing-key-not-held",
                 "tombstoned"
               ]
             },
-            "recordedPublishedAt": {
+            "recordedKemKeyState": {
               "type": "string",
-              "format": "datetime",
-              "description": "When the KEM key was recorded published, after any correction."
+              "description": "What is recorded of the KEM key, after any correction.",
+              "knownValues": [
+                "published",
+                "did-web",
+                "tombstoned",
+                "rotation-key-not-held",
+                "signing-key-not-held",
+                "pending"
+              ]
             }
           }
         }

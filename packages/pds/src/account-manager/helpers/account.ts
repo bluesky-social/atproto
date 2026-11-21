@@ -66,6 +66,7 @@ export const selectAccountQB = (db: AccountDb, flags?: AvailabilityFlags) => {
       'actor.takedownRef',
       'actor.deactivatedAt',
       'actor.deleteAfter',
+      'actor.kemKeyState',
       'account.email',
       'account.emailConfirmedAt',
       'account.invitesDisabled',
@@ -221,12 +222,10 @@ export const deleteAccount = async (
   await db.executeWithRetry(
     db.db.deleteFrom('account').where('account.did', '=', did),
   )
-  await trackStats(db, [did], (txn) =>
-    txn.db.deleteFrom('spaces_migration').where('did', '=', did).execute(),
-  )
-  await db.executeWithRetry(
-    db.db.deleteFrom('actor').where('actor.did', '=', did),
-  )
+  await trackStats(db, [did], async (txn) => {
+    await txn.db.deleteFrom('spaces_migration').where('did', '=', did).execute()
+    await txn.db.deleteFrom('actor').where('actor.did', '=', did).execute()
+  })
 }
 
 export const updateHandle = async (

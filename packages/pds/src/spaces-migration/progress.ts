@@ -1,4 +1,5 @@
 import {
+  type ExpressionBuilder,
   type RawBuilder,
   type Selectable,
   type UpdateObject,
@@ -14,12 +15,20 @@ import type {
   DatabaseSchema,
   SpacesMigration,
 } from '../account-manager/db/index.js'
+import type { ActorKemKeyState } from '../account-manager/db/schema/actor.js'
+import type { UnpublishableReason } from '../account-manager/db/schema/spaces-migration.js'
 import { events } from '../events.js'
 import { spacesMigrationLogger as log } from '../logger.js'
 import { jitterDelayMs } from './pacing.js'
 
-export type UnpublishableReason =
-  'did-web' | 'rotation-key-not-held' | 'pds-elsewhere' | 'tombstoned'
+export type { UnpublishableReason }
+
+/**
+ * What is recorded of an account's key: its settled state, else a row's
+ * published key, else why it can't be published, else `'pending'`.
+ */
+export type RecordedKemKeyState =
+  ActorKemKeyState | UnpublishableReason | 'pending'
 
 export type SpacesMigrationRow = Selectable<SpacesMigration>
 
@@ -69,17 +78,54 @@ const CONTRIBUTION: Record<
   sweepFailing: sql`"storeMigratedAt" is null and "sweepAttempts" > 0`,
 }
 
-// Sums of the contributions of spaces_migration's rows, optionally only some
-const contributionsOf = (dids?: DidString[]) => sql<SpacesMigrationSummary>`
+// A settled actor's contribution (actor.kemKeyState not null): its row has
+// been dropped, so it counts as store migrated and as published or not.
+const SETTLED_CONTRIBUTION: Record<
+  keyof SpacesMigrationSummary,
+  RawBuilder<unknown>
+> = {
+  total: sql`1`,
+  storesMigrated: sql`1`,
+  keysPublished: sql`"kemKeyState" = 'published'`,
+  unpublishable: sql`"kemKeyState" in ('did-web', 'tombstoned')`,
+  deactivated: sql`0`,
+  failing: sql`0`,
+  sweepFailing: sql`0`,
+}
+
+// One select of every counter's contribution per source row
+const contributionsFrom = (
+  contribution: Record<keyof SpacesMigrationSummary, RawBuilder<unknown>>,
+  table: 'spaces_migration' | 'actor',
+  where: RawBuilder<unknown>,
+) => sql`
   select ${sql.join(
     COUNTERS.map(
-      (counter) =>
-        sql`coalesce(sum(${CONTRIBUTION[counter]}), 0) as ${sql.ref(counter)}`,
+      (counter) => sql`${contribution[counter]} as ${sql.ref(counter)}`,
     ),
   )}
-  from spaces_migration
-  ${dids === undefined ? sql`` : sql`where did in (${sql.join(dids)})`}
+  from ${sql.table(table)}
+  where ${where}
 `
+
+// Sums of the contributions of spaces_migration's rows and of settled actors,
+// optionally only those of some DIDs
+const contributionsOf = (dids?: DidString[]) => {
+  const only = dids === undefined ? sql`1` : sql`did in (${sql.join(dids)})`
+  return sql<SpacesMigrationSummary>`
+    select ${sql.join(
+      COUNTERS.map(
+        (counter) =>
+          sql`coalesce(sum(${sql.ref(counter)}), 0) as ${sql.ref(counter)}`,
+      ),
+    )}
+    from (
+      ${contributionsFrom(CONTRIBUTION, 'spaces_migration', only)}
+      union all
+      ${contributionsFrom(SETTLED_CONTRIBUTION, 'actor', sql`"kemKeyState" is not null and ${only}`)}
+    )
+  `
+}
 
 /** Adds (or subtracts) the rows' current contributions to the stats. */
 export const statsAdjustment = (dids: DidString[], sign: 1 | -1) => sql`
@@ -149,9 +195,75 @@ async function reportDrift(db: AccountDb): Promise<void> {
   }
 }
 
+// Rows whose store is migrated and whose key is final: published, or
+// unpublishable for a reason that can't change
+const isFinal = (eb: ExpressionBuilder<DatabaseSchema, 'spaces_migration'>) =>
+  eb.and([
+    eb('spaces_migration.storeMigratedAt', 'is not', null),
+    eb.or([
+      eb('spaces_migration.kemPublishedAt', 'is not', null),
+      eb('spaces_migration.unpublishableReason', 'in', [
+        'did-web',
+        'tombstoned',
+      ] satisfies ActorKemKeyState[]),
+    ]),
+  ])
+
 /**
- * Adds a new account's row. An account whose genesis op published its KEM key
- * is born done, so the publisher never re-sequences `#identity` for it.
+ * Moves the final rows of `dids` into `actor.kemKeyState` and deletes them.
+ * Runs inside the tracked write that made them final, so the stats net to
+ * zero.
+ */
+async function settle(txn: AccountDb, dids: DidString[]): Promise<void> {
+  if (dids.length === 0) return
+  await txn.db
+    .updateTable('actor')
+    .from('spaces_migration')
+    .set((eb) => ({
+      kemKeyState: eb
+        .case()
+        .when('spaces_migration.kemPublishedAt', 'is not', null)
+        .then(sql.lit<ActorKemKeyState>('published'))
+        // A final row not published is did-web or tombstoned
+        .else(
+          sql<ActorKemKeyState>`${eb.ref('spaces_migration.unpublishableReason')}`,
+        )
+        .end(),
+    }))
+    .whereRef('actor.did', '=', 'spaces_migration.did')
+    .where('spaces_migration.did', 'in', dids)
+    .where(isFinal)
+    .execute()
+  // Also a final row whose actor is gone (deleted by an older version): it
+  // gets no state, as the account no longer exists
+  await txn.db
+    .deleteFrom('spaces_migration')
+    .where('did', 'in', dids)
+    .where(isFinal)
+    .execute()
+}
+
+// Sets an account's settled state, crashing on a missing actor: an account
+// left without one would vanish from the migration and its stats
+async function setKemKeyState(
+  txn: AccountDb,
+  did: DidString,
+  kemKeyState: ActorKemKeyState | null,
+): Promise<void> {
+  const { numUpdatedRows } = await txn.db
+    .updateTable('actor')
+    .set({ kemKeyState })
+    .where('did', '=', did)
+    .executeTakeFirstOrThrow()
+  if (numUpdatedRows === 0n) {
+    throw new Error(`No actor to register a spaces migration for: ${did}`)
+  }
+}
+
+/**
+ * Registers a new account's migration. An account whose genesis op published
+ * its KEM key is born settled, so the publisher never re-sequences
+ * `#identity` for it. Any other gets a row, its store born migrated.
  */
 export async function registerSpacesMigration(
   db: AccountDb,
@@ -162,7 +274,7 @@ export async function registerSpacesMigration(
   // A new store is created at the latest schema
   const values = {
     storeMigratedAt: now,
-    kemPublishedAt: opts.kemPublished ? now : null,
+    kemPublishedAt: null,
     unpublishableReason: null,
     attempts: 0,
     lastError: null,
@@ -176,14 +288,23 @@ export async function registerSpacesMigration(
     sweepLastError: null,
     sweepNextAttemptAt: now,
   }
-  // Replaces any row left by an earlier account with this DID
-  await trackStats(db, [did], (txn) =>
-    txn.db
-      .insertInto('spaces_migration')
-      .values({ did, ...values })
-      .onConflict((oc) => oc.column('did').doUpdateSet(values))
-      .execute(),
-  )
+  // Replaces any row or state left by an earlier account with this DID
+  await trackStats(db, [did], async (txn) => {
+    if (opts.kemPublished) {
+      await setKemKeyState(txn, did, 'published')
+      await txn.db
+        .deleteFrom('spaces_migration')
+        .where('did', '=', did)
+        .execute()
+    } else {
+      await setKemKeyState(txn, did, null)
+      await txn.db
+        .insertInto('spaces_migration')
+        .values({ did, ...values })
+        .onConflict((oc) => oc.column('did').doUpdateSet(values))
+        .execute()
+    }
+  })
 }
 
 /**
@@ -222,32 +343,56 @@ export class SpacesMigrationProgress {
     return trackStats(this.db, dids, write)
   }
 
-  /** Adds a row for every account without one. Returns the rows added. */
+  /**
+   * Adds a row for every account with neither a row nor a settled state.
+   * Returns the rows added.
+   */
   async seed(): Promise<number> {
     let added = 0
     let cursor: DidString | undefined
     for (;;) {
+      // Pages through actor_kem_key_state_unknown_idx, which shrinks as
+      // accounts settle. Accounts that already have a row are left to the
+      // insert to skip: filtering them here would scan past each of them in
+      // one query, when restarting midway.
       let query = this.db.db
         .selectFrom('actor')
         .select('did')
+        .where('kemKeyState', 'is', null)
         .orderBy('did')
         .limit(SEED_BATCH_SIZE)
       if (cursor !== undefined) query = query.where('did', '>', cursor)
-      const actors = await query.execute()
-      if (actors.length === 0) break
-      const dids = actors.map(({ did }) => did)
-      const inserted = await this.tracked(dids, (txn) =>
-        txn.db
-          .insertInto('spaces_migration')
-          .values(dids.map((did) => ({ did })))
-          .onConflict((oc) => oc.doNothing())
-          .returning('did')
-          .execute(),
-      )
-      added += inserted.length
-      cursor = actors[actors.length - 1].did
+      const candidates = await this.db.executeWithRetry(query)
+      if (candidates.length === 0) break
+      added += await this.seedBatch(candidates.map(({ did }) => did))
+      cursor = candidates[candidates.length - 1].did
     }
     return added
+  }
+
+  /**
+   * Adds rows for those of `dids` with neither a row nor a settled state.
+   * The state is rechecked inside the write, so a stale batch never brings
+   * back an account settled since. Returns the rows added.
+   */
+  async seedBatch(dids: DidString[]): Promise<number> {
+    if (dids.length === 0) return 0
+    const inserted = await this.tracked(dids, (txn) =>
+      txn.db
+        .insertInto('spaces_migration')
+        .columns(['did'])
+        .expression(
+          txn.db
+            .selectFrom('actor')
+            .select('did')
+            .where('did', 'in', dids)
+            .where('kemKeyState', 'is', null),
+        )
+        .onConflict((oc) => oc.doNothing())
+        .returning('did')
+        .execute(),
+    )
+    return inserted.length
   }
 
   /**
@@ -373,8 +518,8 @@ export class SpacesMigrationProgress {
   }
 
   async recordSwept(did: DidString, owner: string): Promise<void> {
-    await this.tracked([did], (txn) =>
-      txn.db
+    await this.tracked([did], async (txn) => {
+      await txn.db
         .updateTable('spaces_migration')
         .set({
           storeMigratedAt: currentDatetimeString(),
@@ -385,8 +530,9 @@ export class SpacesMigrationProgress {
         })
         .where('did', '=', did)
         .where('sweepLeaseOwner', '=', owner)
-        .execute(),
-    )
+        .execute()
+      await settle(txn, [did])
+    })
   }
 
   /** Records a failed sweep and gives up the lease until `nextAttemptAt`. */
@@ -510,18 +656,22 @@ export class SpacesMigrationProgress {
 
   /**
    * Corrects the record from a live check of the account. Needs no lease.
-   * Clearing `kemPublishedAt` re-queues the account.
+   * Clearing `kemPublishedAt` re-queues the account, settled or not. A
+   * migrated store is recorded, never un-recorded, and a settled account's
+   * store is migrated.
    */
   async recordChecked(
     did: DidString,
     check: {
       published: boolean
       unpublishableReason: UnpublishableReason | null
+      storeMigrated: boolean
     },
   ): Promise<void> {
+    const now = currentDatetimeString()
     const values = check.published
       ? {
-          kemPublishedAt: currentDatetimeString(),
+          kemPublishedAt: now,
           unpublishableReason: check.unpublishableReason,
         }
       : {
@@ -529,15 +679,37 @@ export class SpacesMigrationProgress {
           unpublishableReason: check.unpublishableReason,
           attempts: 0,
           lastError: null,
-          nextAttemptAt: currentDatetimeString(),
+          nextAttemptAt: now,
         }
-    await this.tracked([did], (txn) =>
-      txn.db
+    await this.tracked([did], async (txn) => {
+      // Unsettled while it has a row; settled again below if still final
+      const { numUpdatedRows } = await txn.db
+        .updateTable('actor')
+        .set({ kemKeyState: null })
+        .where('did', '=', did)
+        .where('kemKeyState', 'is not', null)
+        .executeTakeFirstOrThrow()
+      // A settled account's store was migrated and held its key
+      const storeMigrated = check.storeMigrated || numUpdatedRows > 0n
+      await txn.db
         .insertInto('spaces_migration')
-        .values({ did, ...values })
-        .onConflict((oc) => oc.column('did').doUpdateSet(values))
-        .execute(),
-    )
+        .values({
+          did,
+          ...values,
+          ...(storeMigrated && { storeMigratedAt: now }),
+        })
+        .onConflict((oc) =>
+          oc.column('did').doUpdateSet({
+            ...values,
+            ...(storeMigrated && {
+              storeMigratedAt: (eb) =>
+                eb.fn.coalesce('spaces_migration.storeMigratedAt', eb.val(now)),
+            }),
+          }),
+        )
+        .execute()
+      await settle(txn, [did])
+    })
   }
 
   /** Calls `listener` after each bump, e.g. to wake the publisher. */
@@ -546,14 +718,17 @@ export class SpacesMigrationProgress {
     return () => this.bumpListeners.delete(listener)
   }
 
-  /** Publishes the account ahead of others, and before the start delay. */
+  /**
+   * Publishes the account ahead of others, and before the start delay. Only
+   * an account with a row: a settled one is done, and a DID without an
+   * account has nothing to publish.
+   */
   async bump(did: DidString): Promise<void> {
-    const values = { priority: 1, nextAttemptAt: currentDatetimeString() }
     await this.tracked([did], (txn) =>
       txn.db
-        .insertInto('spaces_migration')
-        .values({ did, ...values })
-        .onConflict((oc) => oc.column('did').doUpdateSet(values))
+        .updateTable('spaces_migration')
+        .set({ priority: 1, nextAttemptAt: currentDatetimeString() })
+        .where('did', '=', did)
         .execute(),
     )
     for (const listener of this.bumpListeners) listener()
@@ -567,6 +742,25 @@ export class SpacesMigrationProgress {
       .executeTakeFirst()
   }
 
+  /**
+   * What is recorded of the account's key, whether settled or in the table.
+   * Undefined for an account with neither.
+   */
+  async recordedKemKeyState(
+    did: DidString,
+  ): Promise<RecordedKemKeyState | undefined> {
+    const actor = await this.db.db
+      .selectFrom('actor')
+      .select('kemKeyState')
+      .where('did', '=', did)
+      .executeTakeFirst()
+    if (actor?.kemKeyState) return actor.kemKeyState
+    const row = await this.get(did)
+    if (!row) return undefined
+    if (row.kemPublishedAt) return 'published'
+    return row.unpublishableReason ?? 'pending'
+  }
+
   /** The stats, as kept up to date by every write. One row, by key. */
   async summary(): Promise<SpacesMigrationSummary> {
     return readStats(this.db)
@@ -576,7 +770,7 @@ export class SpacesMigrationProgress {
    * Compares the stats with a fresh count, and with `fix` overwrites them.
    * Holds sqlite's write lock throughout, so no tracked write lands between
    * the count and the overwrite: the result is exact. Blocks writes for one
-   * scan of the table.
+   * scan of spaces_migration and one of the settled actors.
    */
   async recountStats(opts: { fix: boolean }): Promise<{
     stored: SpacesMigrationSummary
@@ -603,7 +797,10 @@ export class SpacesMigrationProgress {
     })
   }
 
-  /** Counts every row afresh: one scan of the table, for checking the stats. */
+  /**
+   * Counts every row and settled actor afresh, for checking the stats: one
+   * scan of spaces_migration and one of the settled actors.
+   */
   async recount(db: AccountDb = this.db): Promise<SpacesMigrationSummary> {
     const { rows } = await contributionsOf().execute(db.db)
     const [counts] = rows
@@ -618,9 +815,10 @@ export class SpacesMigrationProgress {
     owner: string,
     values: UpdateObject<DatabaseSchema, 'spaces_migration'>,
   ): Promise<void> {
-    await this.tracked([did], (txn) =>
-      this.leasedUpdate(txn, did, owner, values).execute(),
-    )
+    await this.tracked([did], async (txn) => {
+      await this.leasedUpdate(txn, did, owner, values).execute()
+      await settle(txn, [did])
+    })
   }
 
   private leasedUpdate(
