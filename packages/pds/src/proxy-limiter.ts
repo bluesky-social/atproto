@@ -9,6 +9,16 @@ export type ProxyLimiterOptions = {
 
 const WINDOW_MS = 1000
 
+export class ProxyLimitExceededError extends Error {
+  readonly retryAfterMs: number
+
+  constructor(retryAfterMs: number) {
+    super('Too many requests to the upstream service')
+    this.name = 'ProxyLimitExceededError'
+    this.retryAfterMs = retryAfterMs
+  }
+}
+
 type Waiter = {
   resolve: (release: () => void) => void
 }
@@ -40,10 +50,21 @@ export class ProxyLimiter {
    * must call release exactly once when the request has finished.
    */
   acquire(): Promise<() => void> {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
+      if (this.queue.length >= this.opts.maxQueuedRequests) {
+        reject(new ProxyLimitExceededError(this.queueDrainMs()))
+        return
+      }
       this.queue.push({ resolve })
       this.pump()
     })
+  }
+
+  /** Estimated time for the current queue to drain at the configured rate. */
+  private queueDrainMs(): number {
+    return Math.ceil(
+      (this.queue.length / this.opts.maxRequestsPerSecond) * WINDOW_MS,
+    )
   }
 
   private pump(): void {

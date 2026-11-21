@@ -1,7 +1,10 @@
 import { jest } from '@jest/globals'
-import { ProxyLimiter } from './proxy-limiter.js'
+import { ProxyLimitExceededError, ProxyLimiter } from './proxy-limiter.js'
 
-type Observed = { state: 'pending' | 'granted' | 'rejected' }
+type Observed = {
+  state: 'pending' | 'granted' | 'rejected'
+  error?: unknown
+}
 
 const observe = (acquisition: Promise<() => void>): Observed => {
   const observed: Observed = { state: 'pending' }
@@ -9,8 +12,9 @@ const observe = (acquisition: Promise<() => void>): Observed => {
     () => {
       observed.state = 'granted'
     },
-    () => {
+    (error: unknown) => {
       observed.state = 'rejected'
+      observed.error = error
     },
   )
   return observed
@@ -96,5 +100,34 @@ describe('ProxyLimiter', () => {
     release()
     await jest.advanceTimersByTimeAsync(0)
     expect([third.state, fourth.state]).toEqual(['granted', 'pending'])
+  })
+
+  it('rejects an acquisition when the queue is full', async () => {
+    const limiter = new ProxyLimiter({
+      maxRequestsPerSecond: 2,
+      maxConcurrentRequests: 100,
+      maxQueuedRequests: 3,
+      maxQueueMs: 60_000,
+    })
+
+    const granted = [limiter.acquire(), limiter.acquire()].map(observe)
+    const queued = [
+      limiter.acquire(),
+      limiter.acquire(),
+      limiter.acquire(),
+    ].map(observe)
+    const overflow = observe(limiter.acquire())
+
+    await jest.advanceTimersByTimeAsync(0)
+    expect(granted.map((o) => o.state)).toEqual(['granted', 'granted'])
+    expect(queued.map((o) => o.state)).toEqual([
+      'pending',
+      'pending',
+      'pending',
+    ])
+    expect(overflow.state).toBe('rejected')
+    expect(overflow.error).toBeInstanceOf(ProxyLimitExceededError)
+    // 3 queued requests drain in 1.5 s at 2 requests per second
+    expect(overflow.error).toMatchObject({ retryAfterMs: 1500 })
   })
 })
