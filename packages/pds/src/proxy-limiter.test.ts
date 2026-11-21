@@ -303,6 +303,25 @@ describe('ProxyLimiter observer', () => {
     expect(overflow.state).toBe('rejected')
     expect(rejections).toEqual(['queue_full'])
   })
+
+  it('reports a request that queued too long', async () => {
+    const rejections: string[] = []
+    const limiter = new ProxyLimiter(
+      {
+        maxRequestsPerSecond: 1000,
+        maxConcurrentRequests: 1,
+        maxQueuedRequests: 100,
+        maxQueueMs: 500,
+      },
+      { granted: () => {}, rejected: (reason) => rejections.push(reason) },
+    )
+
+    await limiter.acquire()
+    const waiting = observe(limiter.acquire())
+    await jest.advanceTimersByTimeAsync(500)
+    expect(waiting.state).toBe('rejected')
+    expect(rejections).toEqual(['queue_timeout'])
+  })
 })
 
 describe('limiterInterceptor', () => {

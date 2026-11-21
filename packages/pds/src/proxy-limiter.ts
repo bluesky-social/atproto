@@ -13,7 +13,7 @@ export type ProxyLimiterOptions = {
 export type ProxyLimiterObserver = {
   /** `waitMs` is 0 for a request that was granted without queuing. */
   granted(waitMs: number): void
-  rejected(reason: 'queue_full'): void
+  rejected(reason: 'queue_full' | 'queue_timeout'): void
 }
 
 const WINDOW_MS = 1000
@@ -82,6 +82,7 @@ export class ProxyLimiter {
       waiter.queuedAt = performance.now()
       waiter.expiry = setTimeout(() => {
         this.queue.splice(this.queue.indexOf(waiter), 1)
+        this.observer?.rejected('queue_timeout')
         reject(new ProxyLimitExceededError(this.queueDrainMs()))
       }, this.opts.maxQueueMs)
     })
