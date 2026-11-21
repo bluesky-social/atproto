@@ -241,7 +241,12 @@ describe('entryway spaces migration', () => {
     const did = await createAccount({ includeKemKey: false })
     using sequenceIdentity = jest.spyOn(pds.ctx.sequencer, 'sequenceIdentity')
 
-    await entryway.prepareSpacesMigration(did)
+    const prepared = await entryway.prepareSpacesMigration(did)
+    const signingKey = await pds.ctx.actorStore.keypair(did)
+    expect(prepared).toEqual({
+      kemKey: await heldKem(did),
+      signingKey: signingKey.did(),
+    })
     await expect(entryway.completeSpacesMigration(did)).rejects.toMatchObject({
       error: 'KemKeyNotPublished',
       message: 'KEM key not published',
