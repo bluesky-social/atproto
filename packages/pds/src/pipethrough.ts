@@ -33,8 +33,12 @@ import type { ProxyConfig } from './config/config.js'
 import type { AppContext } from './context.js'
 import { com, tools } from './lexicons/index.js'
 import { httpLogger } from './logger.js'
+import { type ProxyLimiter, limiterInterceptor } from './proxy-limiter.js'
 
-export function buildProxyAgent(cfg: ProxyConfig): Dispatcher {
+export function buildProxyAgent(
+  cfg: ProxyConfig,
+  limiter?: ProxyLimiter,
+): Dispatcher {
   const agent = new Agent({
     allowH2: cfg.allowHTTP2,
     headersTimeout: cfg.headersTimeout,
@@ -59,6 +63,10 @@ export function buildProxyAgent(cfg: ProxyConfig): Dispatcher {
   })
 
   return agent.compose(
+    // compose() wraps in list order, so the first interceptor is the innermost
+    // one. The limiter has to be inside the retry interceptor for a retried
+    // attempt to count against the limit like any other request on the wire.
+    limiter ? limiterInterceptor(limiter) : (dispatch) => dispatch,
     cfg.maxRetries > 0
       ? interceptors.retry({
           statusCodes: [], // Only retry on socket errors

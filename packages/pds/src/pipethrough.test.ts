@@ -1,0 +1,71 @@
+import { once } from 'node:events'
+import http from 'node:http'
+import type { ProxyConfig } from './config/config.js'
+import { buildProxyAgent } from './pipethrough.js'
+import { ProxyLimiter } from './proxy-limiter.js'
+
+class CountingLimiter extends ProxyLimiter {
+  acquisitions = 0
+
+  override acquire(): Promise<() => void> {
+    this.acquisitions++
+    return super.acquire()
+  }
+}
+
+const proxyConfig: ProxyConfig = {
+  disableSsrfProtection: true,
+  allowHTTP2: false,
+  headersTimeout: 10e3,
+  bodyTimeout: 30e3,
+  maxResponseSize: 1024,
+  maxRetries: 1,
+  preferCompressed: false,
+}
+
+describe('buildProxyAgent', () => {
+  let server: http.Server
+  let origin: string
+  let arrivals: number
+
+  beforeEach(async () => {
+    arrivals = 0
+    // Drops the first connection without answering, which the agent retries.
+    server = http.createServer((req, res) => {
+      arrivals++
+      if (arrivals === 1) req.socket.destroy()
+      else res.end('ok')
+    })
+    server.listen(0, '127.0.0.1')
+    await once(server, 'listening')
+    const address = server.address()
+    if (address === null || typeof address === 'string') {
+      throw new Error('expected a TCP address')
+    }
+    origin = `http://127.0.0.1:${address.port}`
+  })
+
+  afterEach(async () => {
+    server.close()
+    await once(server, 'close')
+  })
+
+  it('takes a limiter grant for every attempt, retries included', async () => {
+    const limiter = new CountingLimiter({
+      maxRequestsPerSecond: 0,
+      maxConcurrentRequests: 0,
+      maxQueuedRequests: 0,
+      maxQueueMs: 0,
+    })
+    const agent = buildProxyAgent(proxyConfig, limiter)
+    try {
+      const res = await agent.request({ origin, path: '/', method: 'GET' })
+      await res.body.text()
+
+      expect(arrivals).toBe(2)
+      expect(limiter.acquisitions).toBe(2)
+    } finally {
+      await agent.close()
+    }
+  })
+})
