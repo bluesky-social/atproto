@@ -122,14 +122,14 @@ describe('blob source', () => {
     expect(fixture.stream).not.toHaveBeenCalled()
   })
 
+  // `/blob` asks the PDS for the blob, and the PDS's `getBlob` refuses a repo
+  // that is taken down or deactivated; `/blob-source` has to say the same for a
+  // caller that never asks the PDS. The appview holds that state as the
+  // account's `upstreamStatus`.
   it.each([
-    ['taken down', { takenDown: true }],
-    ['deactivated', { upstreamStatus: 'deactivated' }],
-    ['suspended', { upstreamStatus: 'suspended' }],
-    ['taken down upstream', { upstreamStatus: 'takendown' }],
-    ['tombstoned', { tombstonedAt: { seconds: 1n, nanos: 0 } }],
-    // A deleted account's row is removed: the dataplane says it does not exist.
-    ['deleted or unknown to the appview', { exists: false }],
+    ['taken down at its PDS', { upstreamStatus: 'takendown' }],
+    ['deactivated at its PDS', { upstreamStatus: 'deactivated' }],
+    ['suspended upstream', { upstreamStatus: 'suspended' }],
   ])(
     'refuses the blobs of an account that is %s, as the PDS would',
     async (_state, actor) => {
@@ -143,16 +143,25 @@ describe('blob source', () => {
     },
   )
 
+  // Everything below is served by `/blob` today (the PDS has no objection), so
+  // `/blob-source` must not refuse it either.
   it.each([
     ['active', { upstreamStatus: 'active' }],
-    ['no upstream status', { upstreamStatus: '' }],
-  ])('names the origin of an account that is %s', async (_state, actor) => {
-    const fixture = createFixture({ actor })
-    const response = await request(fixture.ctx, `/blob-source/${DID}/${CID}`)
+    ['without an upstream status', { upstreamStatus: '' }],
+    // The appview's own takedown is not the PDS's state: `/blob` never looks.
+    ['taken down by the appview only', { takenDown: true }],
+    ['unknown to the appview', { exists: false }],
+    ['tombstoned in the appview', { tombstonedAt: { seconds: 1n, nanos: 0 } }],
+  ])(
+    'names the origin of an account that is %s, as /blob serves it',
+    async (_state, actor) => {
+      const fixture = createFixture({ actor })
+      const response = await request(fixture.ctx, `/blob-source/${DID}/${CID}`)
 
-    expect(response.status).toBe(200)
-    expect(JSON.parse(response.text)).toEqual({ origin: PDS_ENDPOINT })
-  })
+      expect(response.status).toBe(200)
+      expect(JSON.parse(response.text)).toEqual({ origin: PDS_ENDPOINT })
+    },
+  )
 
   it('leaves the blob route to the PDS for account state', async () => {
     // The blob route asks the PDS for the blob, and the PDS refuses a
@@ -165,12 +174,12 @@ describe('blob source', () => {
     expect(fixture.stream).toHaveBeenCalledTimes(1)
   })
 
-  it('refuses rather than assumes when the account lookup returns no entry', async () => {
+  it('treats a lookup with no entry as an error, so the caller goes through /blob', async () => {
     const fixture = createFixture()
     fixture.getActors.mockResolvedValueOnce({ actors: [] })
     const response = await request(fixture.ctx, `/blob-source/${DID}/${CID}`)
 
-    expect(response.status).toBe(404)
+    expect(response.status).toBe(502)
   })
 
   it('returns 502 when the account lookup fails', async () => {
