@@ -74,9 +74,9 @@ export class ProxyLimiter {
 
   /** Estimated time for the current queue to drain at the configured rate. */
   private queueDrainMs(): number {
-    return Math.ceil(
-      (this.queue.length / this.opts.maxRequestsPerSecond) * WINDOW_MS,
-    )
+    const rate = this.opts.maxRequestsPerSecond
+    if (rate === 0) return WINDOW_MS
+    return Math.ceil((this.queue.length / rate) * WINDOW_MS)
   }
 
   private pump(): void {
@@ -85,7 +85,8 @@ export class ProxyLimiter {
 
     while (this.queue.length > 0) {
       // No timer needed: the release of an in-flight grant pumps again.
-      if (this.inFlight >= this.opts.maxConcurrentRequests) return
+      const cap = this.opts.maxConcurrentRequests
+      if (cap > 0 && this.inFlight >= cap) return
       // Monotonic clock: a wall clock step would stall the queue or let a
       // burst through.
       const now = performance.now()
@@ -113,6 +114,7 @@ export class ProxyLimiter {
 
   /** How long until the rate allows another grant; 0 when it does now. */
   private rateWaitMs(now: number): number {
+    if (this.opts.maxRequestsPerSecond === 0) return 0
     while (
       this.grantTimes.length > 0 &&
       this.grantTimes[0] <= now - WINDOW_MS

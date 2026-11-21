@@ -171,4 +171,52 @@ describe('ProxyLimiter', () => {
     await jest.advanceTimersByTimeAsync(0)
     expect(late.state).toBe('granted')
   })
+
+  it('treats 0 as no limit for the rate and for the in-flight cap', async () => {
+    const unrated = new ProxyLimiter({
+      maxRequestsPerSecond: 0,
+      maxConcurrentRequests: 3,
+      maxQueuedRequests: 1,
+      maxQueueMs: 60_000,
+    })
+    const releases = await Promise.all([
+      unrated.acquire(),
+      unrated.acquire(),
+      unrated.acquire(),
+    ])
+    const queued = observe(unrated.acquire())
+    const overflow = observe(unrated.acquire())
+    await jest.advanceTimersByTimeAsync(0)
+    expect([queued.state, overflow.state]).toEqual(['pending', 'rejected'])
+    if (!(overflow.error instanceof ProxyLimitExceededError)) {
+      throw new Error('expected a ProxyLimitExceededError')
+    }
+    // No rate to estimate a drain time from
+    expect(overflow.error.retryAfterMs).toBeGreaterThanOrEqual(1000)
+    releases[0]()
+    await jest.advanceTimersByTimeAsync(0)
+    expect(queued.state).toBe('granted')
+
+    const uncapped = new ProxyLimiter({
+      maxRequestsPerSecond: 3,
+      maxConcurrentRequests: 0,
+      maxQueuedRequests: 100,
+      maxQueueMs: 60_000,
+    })
+    const granted = [
+      uncapped.acquire(),
+      uncapped.acquire(),
+      uncapped.acquire(),
+    ].map(observe)
+    const fourth = observe(uncapped.acquire())
+    await jest.advanceTimersByTimeAsync(999)
+    expect(granted.map((o) => o.state)).toEqual([
+      'granted',
+      'granted',
+      'granted',
+    ])
+    expect(fourth.state).toBe('pending')
+    await jest.advanceTimersByTimeAsync(1)
+    expect(fourth.state).toBe('granted')
+  })
 })
