@@ -184,6 +184,30 @@ describe('PDS limit on requests to the AppView', () => {
     expect(responses.map((r) => r.status)).toEqual([200, 200])
     await Promise.all(responses.map((r) => r.text()))
   })
+
+  // Catch-all path (appViewProxyAgent.stream()).
+  it('answers 429 with Retry-After when the queue is full', async () => {
+    appview.hold()
+    const inFlight = getLikes()
+    await appview.waitForArrivals(1)
+    const queued = getLikes()
+    // Nothing observable outside the PDS says the second request has reached
+    // the queue, so give it time to get there before sending the third.
+    await sleep(200)
+
+    const rejected = await getLikes()
+    expect(rejected.status).toBe(429)
+    expect(await rejected.json()).toMatchObject({ error: 'RateLimitExceeded' })
+    expect(Number(rejected.headers.get('retry-after'))).toBeGreaterThanOrEqual(
+      1,
+    )
+    expect(appview.arrivals).toHaveLength(1)
+
+    appview.release()
+    const responses = await Promise.all([inFlight, queued])
+    expect(responses.map((r) => r.status)).toEqual([200, 200])
+    await Promise.all(responses.map((r) => r.text()))
+  })
 })
 
 /**

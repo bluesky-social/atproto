@@ -33,7 +33,11 @@ import type { ProxyConfig } from './config/config.js'
 import type { AppContext } from './context.js'
 import { com, tools } from './lexicons/index.js'
 import { httpLogger } from './logger.js'
-import { type ProxyLimiter, limiterInterceptor } from './proxy-limiter.js'
+import {
+  ProxyLimitExceededError,
+  type ProxyLimiter,
+  limiterInterceptor,
+} from './proxy-limiter.js'
 
 export function buildProxyAgent(
   cfg: ProxyConfig,
@@ -520,6 +524,20 @@ function handleUpstreamRequestError(
   err: unknown,
   message = 'Upstream service unreachable',
 ): never {
+  if (err instanceof ProxyLimitExceededError) {
+    // The request was never sent: this PDS's own limit on requests to the
+    // AppView turned it away. Answered like any other rate limit so that
+    // clients back off, instead of as an upstream failure.
+    this.res?.setHeader('Retry-After', Math.ceil(err.retryAfterMs / 1e3))
+    this.res?.appendHeader('Access-Control-Expose-Headers', 'Retry-After')
+    throw new XRPCServerError(
+      ResponseType.RateLimitExceeded,
+      'Too many requests to the upstream service',
+      undefined,
+      { cause: err },
+    )
+  }
+
   const logger = isPinoHttpRequest(this) ? this.log : httpLogger
   logger.error({ err }, message)
   throw new XRPCServerError(ResponseType.UpstreamFailure, message, undefined, {
