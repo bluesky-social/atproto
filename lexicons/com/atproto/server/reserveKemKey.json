@@ -1,0 +1,36 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.server.reserveKemKey",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Reserve a KEM key, for use with account creation. Its public key is published as the account's #atproto_kem verification method, which is used to establish shared secrets for spaces. Necessary so that a DID PLC operation can be constructed before the account exists. Counterpart to com.atproto.server.reserveSigningKey. Implemented by PDS.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "did": {
+              "type": "string",
+              "format": "did",
+              "description": "The DID to reserve a key for."
+            }
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["kemKey"],
+          "properties": {
+            "kemKey": {
+              "type": "string",
+              "description": "The public key for the reserved KEM key, in did:key serialization."
+            }
+          }
+        }
+      }
+    }
+  }
+}

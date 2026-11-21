@@ -2,12 +2,7 @@ import * as plc from '@did-plc/lib'
 import { isEmailValid } from '@hapi/address'
 import { isDisposableEmail } from 'disposable-email-domains-js'
 import { MINUTE, check } from '@atproto/common'
-import {
-  type ExportableKeypair,
-  type Keypair,
-  P256Keypair,
-  Secp256k1Keypair,
-} from '@atproto/crypto'
+import { type Keypair, P256Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import { type AtprotoData, ensureAtpDocument } from '@atproto/identity'
 import type { DidString } from '@atproto/syntax'
 import {
@@ -111,13 +106,21 @@ export default function (server: Server, ctx: AppContext) {
 
             try {
               await ctx.actorStore
-                .clearReservedKeypair(signingKey.did(), did)
+                .clearReservedKeys(did, {
+                  signingKey: signingKey.did(),
+                  kemKey: kemKey.did(),
+                })
                 .catch((err) => {
                   // @NOTE This is a cleanup operation so we won't fail the whole
                   // flow if it fails, but we log it just in case
                   req.log.error(
-                    { did, signingKeyDid: signingKey.did(), err },
-                    'Failed to clear reserved keypair',
+                    {
+                      did,
+                      signingKeyDid: signingKey.did(),
+                      kemKeyDid: kemKey.did(),
+                      err,
+                    },
+                    'Failed to clear reserved keys',
                   )
                 })
 
@@ -194,27 +197,33 @@ const validateInputsForEntrywayPds = async (
     throw new InvalidRequestError('invalid plc operation', 'IncompatibleDidDoc')
   }
   const doc = plc.formatDidDoc({ did, ...plcOp })
-  const data = ensureAtpDocument(doc)
+  const data: AtprotoData & { kemKey?: string } = {
+    ...ensureAtpDocument(doc),
+    kemKey: plcOp.verificationMethods['atproto_kem'],
+  }
 
-  let signingKey: ExportableKeypair | undefined
-  if (input.did) {
-    signingKey = await ctx.actorStore.getReservedKeypair(input.did)
-  }
-  if (!signingKey) {
-    signingKey = await ctx.actorStore.getReservedKeypair(data.signingKey)
-  }
+  const signingKey =
+    (await ctx.actorStore.getReservedSigningKeypair(did)) ??
+    (await ctx.actorStore.getReservedSigningKeypair(data.signingKey))
   if (!signingKey) {
     throw new InvalidRequestError('reserved signing key does not exist')
+  }
+  // @TODO require a KEM key in the op once the entryway reserves them. Until
+  // then, an op without one gets a key generated here, left unpublished.
+  const kemKey = data.kemKey
+    ? ((await ctx.actorStore.getReservedKemKeypair(did)) ??
+      (await ctx.actorStore.getReservedKemKeypair(data.kemKey)))
+    : await P256Keypair.create({ exportable: true })
+  if (!kemKey) {
+    throw new InvalidRequestError('reserved KEM key does not exist')
   }
 
   validateAtprotoData(data, {
     handle,
     pds: ctx.cfg.service.publicUrl,
     signingKey: signingKey.did(),
+    kemKey: kemKey.did(),
   })
-
-  // @TODO the entryway formats the PLC op, so this key is not yet published
-  const kemKey = await P256Keypair.create({ exportable: true })
 
   return {
     did,
@@ -354,11 +363,12 @@ const formatDidAndPlcOp = async (
   })
 }
 const validateAtprotoData = (
-  data: AtprotoData,
+  data: AtprotoData & { kemKey?: string },
   expected: {
     handle: string
     pds: string
     signingKey: string
+    kemKey: string
   },
 ) => {
   // if the user is bringing their own did:
@@ -377,6 +387,11 @@ const validateAtprotoData = (
   } else if (data.signingKey !== expected.signingKey) {
     throw new InvalidRequestError(
       'DID document signing key does not match service signing key',
+      'IncompatibleDidDoc',
+    )
+  } else if (data.kemKey && data.kemKey !== expected.kemKey) {
+    throw new InvalidRequestError(
+      'DID document KEM key does not match service KEM key',
       'IncompatibleDidDoc',
     )
   }

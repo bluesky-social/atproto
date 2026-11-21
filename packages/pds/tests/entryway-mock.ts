@@ -21,6 +21,7 @@ import {
   createPublicKeyObject,
 } from '../src/auth-verifier.js'
 import { com } from '../src/lexicons/index.js'
+import { createPlcOp } from '../src/util/plc.js'
 
 interface Account {
   did: DidString
@@ -196,14 +197,23 @@ export class MockEntryway {
       handler: async ({ input }) => {
         const { email, handle } = input.body
 
-        // Reserve a signing key on the PDS
-        const {
-          data: { signingKey },
-        } = await pdsAgent.com.atproto.server.reserveSigningKey({})
+        // Reserve the signing and KEM keys on the PDS
+        const [
+          {
+            data: { signingKey },
+          },
+          {
+            data: { kemKey },
+          },
+        ] = await Promise.all([
+          pdsAgent.com.atproto.server.reserveSigningKey({}),
+          pdsAgent.com.atproto.server.reserveKemKey({}),
+        ])
 
         // Create PLC operation
-        const plcCreate = await plcLib.createOp({
+        const plcCreate = await createPlcOp({
           signingKey,
+          kemKey,
           rotationKeys: [opts.plcRotationKey.did()],
           handle,
           pds: opts.pdsUrl,

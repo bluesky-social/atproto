@@ -212,13 +212,16 @@ export class OAuthStore
 
             try {
               await this.actorStore
-                .clearReservedKeypair(signingKeyDid, did)
+                .clearReservedKeys(did, {
+                  signingKey: signingKeyDid,
+                  kemKey: kemKey.did(),
+                })
                 .catch((err) => {
                   // @NOTE This is a cleanup operation so we won't fail the
                   // whole flow if it fails, but we log it just in case
                   dbLogger.error(
-                    { did, signingKeyDid, err },
-                    'Failed to clear reserved keypair',
+                    { did, signingKeyDid, kemKeyDid: kemKey.did(), err },
+                    'Failed to clear reserved keys',
                   )
                 })
 
