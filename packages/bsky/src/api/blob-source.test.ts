@@ -16,6 +16,12 @@ const PDS_ENDPOINT = 'https://pds.example'
 
 type FixtureOptions = {
   takenDown?: boolean
+  actor?: {
+    exists?: boolean
+    takenDown?: boolean
+    upstreamStatus?: string
+    tombstonedAt?: object
+  }
   identity?: { services: Uint8Array }
   pdsEndpoint?: string
 }
@@ -35,13 +41,23 @@ function createFixture(options: FixtureOptions = {}) {
   const getBlobTakedown = vi.fn(async () => ({
     takenDown: options.takenDown ?? false,
   }))
+  const getActors = vi.fn(async () => ({
+    actors: [
+      {
+        exists: true,
+        takenDown: false,
+        upstreamStatus: '',
+        ...options.actor,
+      },
+    ],
+  }))
   const stream = vi.fn()
   const ctx = {
     cfg: { proxyPreferCompressed: false },
-    dataplane: { getIdentityByDid, getBlobTakedown },
+    dataplane: { getIdentityByDid, getBlobTakedown, getActors },
     blobDispatcher: { stream },
   } as unknown as AppContext
-  return { ctx, getIdentityByDid, getBlobTakedown, stream }
+  return { ctx, getIdentityByDid, getBlobTakedown, getActors, stream }
 }
 
 async function request(ctx: AppContext, path: string, method = 'GET') {
@@ -104,6 +120,56 @@ describe('blob source', () => {
     expect(blob.status).toBe(404)
     expect(fixture.getBlobTakedown).toHaveBeenCalledTimes(2)
     expect(fixture.stream).not.toHaveBeenCalled()
+  })
+
+  it.each([
+    ['taken down', { takenDown: true }],
+    ['deactivated', { upstreamStatus: 'deactivated' }],
+    ['suspended', { upstreamStatus: 'suspended' }],
+    ['taken down upstream', { upstreamStatus: 'takendown' }],
+    ['deleted', { tombstonedAt: { seconds: 1n, nanos: 0 } }],
+  ])(
+    'refuses the blobs of an account that is %s, as the PDS would',
+    async (_state, actor) => {
+      const fixture = createFixture({ actor })
+      const response = await request(fixture.ctx, `/blob-source/${DID}/${CID}`)
+
+      expect(response.status).toBe(404)
+      expect(response.headers.get('cache-control')).toBe('no-store')
+      expect(fixture.getActors).toHaveBeenCalledWith({ dids: [DID] })
+      expect(fixture.stream).not.toHaveBeenCalled()
+    },
+  )
+
+  it.each([
+    ['active', { upstreamStatus: 'active' }],
+    ['no upstream status', { upstreamStatus: '' }],
+    ['not indexed by the appview', { exists: false }],
+  ])('names the origin of an account that is %s', async (_state, actor) => {
+    const fixture = createFixture({ actor })
+    const response = await request(fixture.ctx, `/blob-source/${DID}/${CID}`)
+
+    expect(response.status).toBe(200)
+    expect(JSON.parse(response.text)).toEqual({ origin: PDS_ENDPOINT })
+  })
+
+  it('leaves the blob route to the PDS for account state', async () => {
+    // The blob route asks the PDS for the blob, and the PDS refuses a
+    // taken-down or deactivated repo; it does not pay for a second lookup.
+    const fixture = createFixture({ actor: { takenDown: true } })
+    fixture.stream.mockRejectedValueOnce(new Error('stopped at the dispatcher'))
+    await request(fixture.ctx, `/blob/${DID}/${CID}`)
+
+    expect(fixture.getActors).not.toHaveBeenCalled()
+    expect(fixture.stream).toHaveBeenCalledTimes(1)
+  })
+
+  it('returns 502 when the account lookup fails', async () => {
+    const fixture = createFixture()
+    fixture.getActors.mockRejectedValueOnce(new Error('unavailable'))
+    const response = await request(fixture.ctx, `/blob-source/${DID}/${CID}`)
+
+    expect(response.status).toBe(502)
   })
 
   it('ignores query parameters when resolving the blob', async () => {

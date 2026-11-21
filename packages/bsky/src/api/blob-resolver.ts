@@ -255,15 +255,27 @@ type BlobSourceResolution = {
   origin: string
 }
 
+export type ResolveBlobSourceOptions = {
+  /**
+   * Also refuse the blobs of an account that is taken down, deactivated,
+   * suspended or deleted. The blob route leaves this off: it asks the PDS for
+   * the blob, and the PDS refuses such an account itself. A caller that reads
+   * the blob without asking the PDS (`/blob-source`, whose callers may read it
+   * from the PDS's object storage) has no other check, so it sets this.
+   */
+  checkActor?: boolean
+}
+
 /** Resolve blob policy and its PDS without accessing the blob itself. */
 export async function resolveBlobSource(
   ctx: AppContext,
   didParam: string,
   cidParam: string,
+  options: ResolveBlobSourceOptions = {},
 ): Promise<BlobSourceResolution> {
   const { did, cid } = parseBlobParams({ did: didParam, cid: cidParam })
   const { dataplane } = ctx
-  const [identity, { takenDown }] = await Promise.all([
+  const [identity, { takenDown }, actors] = await Promise.all([
     dataplane.getIdentityByDid({ did }).catch((err) => {
       if (isDataplaneError(err, Code.NotFound)) {
         return undefined
@@ -271,9 +283,23 @@ export async function resolveBlobSource(
       throw err
     }),
     dataplane.getBlobTakedown({ did, cid: cid.toString() }),
+    options.checkActor ? dataplane.getActors({ dids: [did] }) : undefined,
   ])
 
   if (takenDown) {
+    throw createError(404, 'Blob not found')
+  }
+
+  // The same test hydration uses to hide an actor. An actor the appview has
+  // not indexed (`exists` false) is not refused here: the PDS decides, as it
+  // did before this check.
+  const actor = actors?.actors[0]
+  if (
+    actor &&
+    (actor.takenDown ||
+      (actor.upstreamStatus && actor.upstreamStatus !== 'active') ||
+      actor.tombstonedAt)
+  ) {
     throw createError(404, 'Blob not found')
   }
 
