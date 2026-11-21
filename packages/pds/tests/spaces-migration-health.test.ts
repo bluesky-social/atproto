@@ -95,13 +95,21 @@ describe('spaces migration health', () => {
       })
       dids.push(res.data.did as DidString)
     }
-    // As left by the release before spaces: nothing migrated or published
-    await trackStats(db, dids, (txn) =>
-      txn.db
-        .updateTable('spaces_migration')
-        .set({ storeMigratedAt: null, kemPublishedAt: null })
-        .execute(),
-    )
+    // As left by the release before spaces: neither settled nor seeded
+    await trackStats(db, dids, async (txn) => {
+      await txn.db
+        .updateTable('actor')
+        .set({ kemKeyState: null })
+        .where('did', 'in', dids)
+        .execute()
+      await txn.db
+        .deleteFrom('spaces_migration')
+        .where('did', 'in', dids)
+        .execute()
+    })
+    expect((await health()).spacesMigration).toMatchObject({ total: 0 })
+    // Then seeded: nothing migrated or published
+    expect(await progress.seed()).toBe(2)
     const before = await health()
     expect(before.spacesMigration).toMatchObject({
       total: 2,
@@ -124,7 +132,10 @@ describe('spaces migration health', () => {
     // Kept up to date by the transitions themselves
     await waitFor(async () => {
       const { spacesMigration } = await health()
-      return spacesMigration.keysPublished === 2
+      return (
+        spacesMigration.keysPublished === 2 &&
+        spacesMigration.storesMigrated === 2
+      )
     })
     expect(await health()).toEqual({
       version: expect.any(String),
@@ -143,6 +154,13 @@ describe('spaces migration health', () => {
 
     expect(counts['spaces_migration.store_migrated']?.length).toBe(2)
     expect(counts['spaces_migration.kem_published']?.length).toBe(2)
+    // Settled: both finished accounts left the table
+    for (const did of dids) {
+      expect(await progress.recordedKemKeyState(did)).toBe('published')
+    }
+    expect(
+      await db.db.selectFrom('spaces_migration').selectAll().execute(),
+    ).toEqual([])
   })
 
   describe('once the migration is complete', () => {

@@ -21,19 +21,26 @@ export default function (server: Server, ctx: AppContext) {
       }
       const storeMigrated = await actorStore.isMigrated(did)
       const kemKey = (await actorStore.kemKeypair(did))?.did()
-      const live = await inspectKemKey(ctx, did, kemKey)
+      const signingKey = (await actorStore.keypair(did)).did()
+      const live = await inspectKemKey(ctx, did, {
+        kem: kemKey,
+        signing: signingKey,
+      })
 
-      const recorded = await progress.get(did)
       const correct =
         live.published &&
-        !!recorded?.kemPublishedAt &&
-        recorded.unpublishableReason === null
+        (await progress.recordedKemKeyState(did)) === 'published'
       // Keeps the time a correctly recorded key was published
       if (!correct) {
-        // Clearing kemPublishedAt re-queues the account
-        await progress.recordChecked(did, live)
+        // Clearing kemPublishedAt re-queues the account. Opening a store
+        // migrates its schema but not its key: only one holding a key is
+        // recorded migrated, or a did:web account could settle without one.
+        await progress.recordChecked(did, {
+          ...live,
+          storeMigrated: storeMigrated && kemKey !== undefined,
+        })
       }
-      const corrected = await progress.get(did)
+      const recordedKemKeyState = await progress.recordedKemKeyState(did)
 
       return {
         encoding: 'application/json' as const,
@@ -43,7 +50,7 @@ export default function (server: Server, ctx: AppContext) {
           kemKey,
           kemPublished: live.published,
           unpublishableReason: live.unpublishableReason ?? undefined,
-          recordedPublishedAt: corrected?.kemPublishedAt ?? undefined,
+          recordedKemKeyState,
         },
       }
     },
