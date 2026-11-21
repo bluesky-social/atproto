@@ -316,6 +316,12 @@ export const acceptableVectors: Array<{
     },
   },
   {
+    note: 'link with CIDv0',
+    json: {
+      $link: 'QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojWnPbdG',
+    },
+  },
+  {
     note: '$bytes and $link',
     json: {
       $bytes: 'nFERjvLLiw9qm45JrqH9QTzyC2Lu1Xb4ne6+sBrCzI0',
