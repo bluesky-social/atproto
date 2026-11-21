@@ -75,17 +75,30 @@ export class ProxyLimiter {
       // turned away by a full (or zero-length) queue.
       if (this.queue.length > this.opts.maxQueuedRequests) {
         this.queue.pop()
-        this.observer?.rejected('queue_full')
+        this.report((o) => o.rejected('queue_full'))
         reject(new ProxyLimitExceededError(this.queueDrainMs()))
         return
       }
       waiter.queuedAt = performance.now()
       waiter.expiry = setTimeout(() => {
         this.queue.splice(this.queue.indexOf(waiter), 1)
-        this.observer?.rejected('queue_timeout')
+        this.report((o) => o.rejected('queue_timeout'))
         reject(new ProxyLimitExceededError(this.queueDrainMs()))
       }, this.opts.maxQueueMs)
     })
+  }
+
+  /**
+   * An observer that throws must not change what happens to a request: a
+   * throw between counting a grant and handing it out would leak the slot.
+   */
+  private report(event: (observer: ProxyLimiterObserver) => void): void {
+    if (!this.observer) return
+    try {
+      event(this.observer)
+    } catch {
+      // Metrics only: there is nothing useful to do with the failure here.
+    }
   }
 
   /** Estimated time for the current queue to drain at the configured rate. */
@@ -118,9 +131,8 @@ export class ProxyLimiter {
       // would grow without bound.
       if (this.opts.maxRequestsPerSecond > 0) this.grantTimes.push(now)
       this.inFlight++
-      this.observer?.granted(
-        waiter.queuedAt === undefined ? 0 : now - waiter.queuedAt,
-      )
+      const waitMs = waiter.queuedAt === undefined ? 0 : now - waiter.queuedAt
+      this.report((o) => o.granted(waitMs))
       let released = false
       waiter.resolve(() => {
         // A caller that reports both an end and an error for one request

@@ -322,6 +322,29 @@ describe('ProxyLimiter observer', () => {
     expect(waiting.state).toBe('rejected')
     expect(rejections).toEqual(['queue_timeout'])
   })
+
+  it('keeps working when the observer throws', async () => {
+    const failing = () => {
+      throw new Error('metrics are broken')
+    }
+    const limiter = new ProxyLimiter(
+      {
+        maxRequestsPerSecond: 1000,
+        maxConcurrentRequests: 1,
+        maxQueuedRequests: 0,
+        maxQueueMs: 60_000,
+      },
+      { granted: failing, rejected: failing },
+    )
+
+    const release = await limiter.acquire()
+    await expect(limiter.acquire()).rejects.toBeInstanceOf(
+      ProxyLimitExceededError,
+    )
+    // The slot of the first grant was counted once and is freed once
+    release()
+    await expect(limiter.acquire()).resolves.toBeInstanceOf(Function)
+  })
 })
 
 describe('limiterInterceptor', () => {
