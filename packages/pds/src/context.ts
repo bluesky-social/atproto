@@ -469,7 +469,7 @@ export class AppContext implements AsyncDisposable {
             },
             {
               granted: (waitMs) => events.appViewRequestGranted({ waitMs }),
-              rejected: () => {},
+              rejected: (reason) => events.appViewRequestRejected({ reason }),
             },
           ),
         )

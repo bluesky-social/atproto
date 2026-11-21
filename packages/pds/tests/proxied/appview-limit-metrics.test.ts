@@ -1,5 +1,6 @@
 import { once } from 'node:events'
 import http from 'node:http'
+import { setTimeout as sleep } from 'node:timers/promises'
 import { createNoopMeter, metrics } from '@opentelemetry/api'
 
 // The PDS takes its meter when its modules load, so this provider has to be
@@ -95,5 +96,27 @@ describe('PDS metrics for its limit on requests to the AppView', () => {
     expect(named('appview.request.limit.wait')).toEqual([
       { name: 'appview.request.limit.wait', value: 0, attributes: undefined },
     ])
+  })
+
+  it('counts a request the limit turned away', async () => {
+    holding = true
+    const inFlight = getRemoteRecord()
+    // The one slot is taken once the fake AppView holds the first request
+    while (held.length === 0) await sleep(10)
+
+    const rejected = await getRemoteRecord()
+    expect(rejected.status).toBe(429)
+    await rejected.text()
+
+    expect(named('appview.request.limit.rejected')).toEqual([
+      {
+        name: 'appview.request.limit.rejected',
+        value: 1,
+        attributes: { reason: 'queue_full' },
+      },
+    ])
+
+    releaseAll()
+    await (await inFlight).text()
   })
 })
