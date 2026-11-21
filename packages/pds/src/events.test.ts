@@ -40,4 +40,14 @@ describe('AppView request limit metrics', () => {
       ['appview.request.limit.wait', 412.5, undefined],
     ])
   })
+
+  it('counts rejected requests by reason', () => {
+    events.appViewRequestRejected({ reason: 'queue_full' })
+    events.appViewRequestRejected({ reason: 'queue_timeout' })
+
+    expect(add.mock.calls).toEqual([
+      ['appview.request.limit.rejected', 1, { reason: 'queue_full' }],
+      ['appview.request.limit.rejected', 1, { reason: 'queue_timeout' }],
+    ])
+  })
 })

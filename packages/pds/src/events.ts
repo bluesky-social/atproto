@@ -77,6 +77,14 @@ class EventReporter {
     },
   })
 
+  #appViewRequestRejectedCounter = meter.createCounter<{
+    reason: 'queue_full' | 'queue_timeout'
+  }>('appview.request.limit.rejected', {
+    description:
+      "Requests to the AppView that this PDS's own request limit turned away (answered 429 without contacting the AppView)",
+    valueType: ValueType.INT,
+  })
+
   /**
    * Fans a single event out to both the pino logger (stdout/stderr) and the
    * OTEL Logs SDK (structured record).
@@ -183,6 +191,17 @@ class EventReporter {
    */
   appViewRequestGranted({ waitMs }: { waitMs: number }) {
     this.#appViewRequestWait.record(waitMs)
+  }
+
+  /**
+   * Metric only: the XRPC error handler already logs the 429 this becomes.
+   */
+  appViewRequestRejected({
+    reason,
+  }: {
+    reason: 'queue_full' | 'queue_timeout'
+  }) {
+    this.#appViewRequestRejectedCounter.add(1, { reason })
   }
 }
 
