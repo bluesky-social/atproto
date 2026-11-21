@@ -53,6 +53,7 @@ import { fetchLogger, lexiconResolverLogger, oauthLogger } from './logger.js'
 import { ServerMailer } from './mailer/index.js'
 import { ModerationMailer } from './mailer/moderation.js'
 import { buildProxyAgent } from './pipethrough.js'
+import { ProxyLimiter } from './proxy-limiter.js'
 import { buildOAuthRateLimiterFactory } from './rate-limits.js'
 import {
   LocalViewer,
@@ -452,8 +453,20 @@ export class AppContext implements AsyncDisposable {
     const proxyAgent = buildProxyAgent(cfg.proxy)
     // The operator sets the AppView's URL, so unlike a DID document's service
     // endpoint, it is allowed to resolve to a private address.
+    //
+    // Only this agent is limited. The other one serves whatever service a
+    // user names in `atproto-proxy`: a shared cap there would let one user's
+    // slow service hold every slot and starve all other proxied services.
     const appViewProxyAgent = cfg.bskyAppView
-      ? buildProxyAgent({ ...cfg.proxy, disableSsrfProtection: true })
+      ? buildProxyAgent(
+          { ...cfg.proxy, disableSsrfProtection: true },
+          new ProxyLimiter({
+            maxRequestsPerSecond: cfg.bskyAppView.maxRequestsPerSecond,
+            maxConcurrentRequests: cfg.bskyAppView.maxConcurrentRequests,
+            maxQueuedRequests: cfg.bskyAppView.maxQueuedRequests,
+            maxQueueMs: cfg.bskyAppView.maxQueueMs,
+          }),
+        )
       : undefined
 
     const oauthProvider = cfg.oauth.provider

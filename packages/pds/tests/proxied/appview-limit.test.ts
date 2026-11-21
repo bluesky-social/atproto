@@ -1,6 +1,7 @@
 import { once } from 'node:events'
 import http from 'node:http'
 import { performance } from 'node:perf_hooks'
+import { setTimeout as sleep } from 'node:timers/promises'
 import * as plc from '@did-plc/lib'
 import type { Keypair } from '@atproto/crypto'
 import { TestNetworkNoAppView, type TestServerParams } from '@atproto/dev-env'
@@ -122,6 +123,66 @@ describe('PDS requests to a fake AppView', () => {
     expect(all.map((r) => r.status)).toEqual([200, 200])
     await Promise.all(all.map((r) => r.text()))
     expect(appview.heldCount).toBe(0)
+  })
+})
+
+describe('PDS limit on requests to the AppView', () => {
+  let appview: FakeUpstream
+  let network: TestNetworkNoAppView
+  let accessJwt: string
+
+  const getLikes = () =>
+    pdsGet(
+      network.pds.url,
+      'app.bsky.feed.getLikes',
+      { uri: 'at://did:example:alice/app.bsky.feed.post/1' },
+      { accessJwt },
+    )
+
+  beforeAll(async () => {
+    appview = await FakeUpstream.start()
+    // One request in flight and one waiting, so that a test can fill both
+    // with two requests. No rate limit: the tests do not depend on the clock.
+    network = await createNetworkWithAppView(appview, {
+      bskyAppViewMaxRequestsPerSecond: 0,
+      bskyAppViewMaxConcurrentRequests: 1,
+      bskyAppViewMaxQueuedRequests: 1,
+      bskyAppViewMaxQueueMs: 60_000,
+    })
+
+    const res = await network.pds.getAgent().createAccount({
+      email: 'alice@test.com',
+      handle: 'alice.test',
+      password: 'alice-pass',
+    })
+    accessJwt = res.data.accessJwt
+    await network.processAll()
+  })
+
+  afterAll(async () => {
+    await network?.close()
+    await appview?.close()
+  })
+
+  beforeEach(() => {
+    appview.reset()
+  })
+
+  it('sends no more requests to the AppView than the concurrency cap allows', async () => {
+    appview.hold()
+    const pending = [getLikes(), getLikes()]
+
+    await appview.waitForArrivals(1)
+    await sleep(200)
+    expect(appview.arrivals).toHaveLength(1)
+
+    appview.release(1)
+    await appview.waitForArrivals(2)
+
+    appview.release()
+    const responses = await Promise.all(pending)
+    expect(responses.map((r) => r.status)).toEqual([200, 200])
+    await Promise.all(responses.map((r) => r.text()))
   })
 })
 
