@@ -271,7 +271,7 @@ describe('ProxyLimiter observer', () => {
         maxQueuedRequests: 100,
         maxQueueMs: 60_000,
       },
-      { granted: (waitMs) => waits.push(waitMs) },
+      { granted: (waitMs) => waits.push(waitMs), rejected: () => {} },
     )
 
     await limiter.acquire()
@@ -283,6 +283,25 @@ describe('ProxyLimiter observer', () => {
     await jest.advanceTimersByTimeAsync(600)
     expect(second.state).toBe('granted')
     expect(waits).toEqual([0, 600])
+  })
+
+  it('reports a request turned away by a full queue', async () => {
+    const rejections: string[] = []
+    const limiter = new ProxyLimiter(
+      {
+        maxRequestsPerSecond: 1,
+        maxConcurrentRequests: 100,
+        maxQueuedRequests: 0,
+        maxQueueMs: 60_000,
+      },
+      { granted: () => {}, rejected: (reason) => rejections.push(reason) },
+    )
+
+    await limiter.acquire()
+    const overflow = observe(limiter.acquire())
+    await jest.advanceTimersByTimeAsync(0)
+    expect(overflow.state).toBe('rejected')
+    expect(rejections).toEqual(['queue_full'])
   })
 })
 
