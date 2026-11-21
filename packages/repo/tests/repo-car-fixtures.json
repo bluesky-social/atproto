@@ -1,0 +1,71 @@
+[
+  {
+    "comment": "A canonical single-record repository. The control vector.",
+    "name": "valid-canonical",
+    "did": "did:example:repo-verifier",
+    "signingKeyDid": "did:key:zQ3shVc2UkAfJCdc1TR8E66J85h48P43r93q8jGPkPpjF9Ef9",
+    "rev": "3lws4nqc22222",
+    "commitCid": "bafyreieidxanogulwhxae7eij74wamkz3oxk4pycfsi5tymkciltzebena",
+    "dataCid": "bafyreief7civqh2auwk45wh7omqhcc4dd2saycrpwj3t7ijyakzbvbhjvm",
+    "keys": ["com.example.fixture1/main"],
+    "validRepo": true,
+    "tags": [],
+    "carBase64": "OqJlcm9vdHOB2CpYJQABcRIgiB3A1xqLse4CfIhP+WAxWduurj8CLJHZ4YoSFzyQJGhndmVyc2lvbgHZAQFxEiCIHcDXGoux7gJ8iE/5YDFZ266uPwIskdnhihIXPJAkaKZjZGlkeBlkaWQ6ZXhhbXBsZTpyZXBvLXZlcmlmaWVyY3Jldm0zbHdzNG5xYzIyMjIyY3NpZ1hAv7eSvfCM9ZWT7yK1sMahrKp7L9Rhh/46Dviqc/TsQz08L6muFUK2i12yiJAOohtX34fd40yQqTnece2HmGXHmWRkYXRh2CpYJQABcRIghfiRWB9ApZXO2P9zIHELgx6kDAovsnc/oTgCshqE6atkcHJldvZndmVyc2lvbgN6AXESIIX4kVgfQKWVztj/cyBxC4MepAwKL7J3P6E4ArIahOmromFlgaRha1gZY29tLmV4YW1wbGUuZml4dHVyZTEvbWFpbmFwAGF09mF22CpYJQABcRIgJMhfR1MnOfDPHUwp8k/ClDtL5eoKfevEt9eBRovLemxhbPZNAXESICTIX0dTJznwzx1MKfJPwpQ7S+XqCn3rxLfXgUaLy3psomUkdHlwZXRjb20uZXhhbXBsZS5maXh0dXJlMWV2YWx1ZWZyZWNvcmQ="
+  },
+  {
+    "comment": "Every repository path must carry a valid, normalized NSID as its collection segment.",
+    "name": "unnormalized-path-nsid",
+    "did": "did:example:repo-verifier",
+    "signingKeyDid": "did:key:zQ3shVc2UkAfJCdc1TR8E66J85h48P43r93q8jGPkPpjF9Ef9",
+    "rev": "3lws4nqc22223",
+    "commitCid": "bafyreibj33qvecf62ba55wxg5ir6ktrlabdl4h32mkr4x4u33jjywj7czi",
+    "dataCid": "bafyreigmccuv464tivo64gexcp4z4blui5ywnvmyah5xo7pntbn5n3yfte",
+    "keys": ["COM.example.fixture1/main"],
+    "validRepo": false,
+    "tags": ["repo-path", "nsid-normalization"],
+    "carBase64": "OqJlcm9vdHOB2CpYJQABcRIgKd7hUgi+0EHe2ubqI+VOKwBGvh96YqPL8pvaU4sn4spndmVyc2lvbgHZAQFxEiAp3uFSCL7QQd7a5uoj5U4rAEa+H3pio8vym9pTiyfiyqZjZGlkeBlkaWQ6ZXhhbXBsZTpyZXBvLXZlcmlmaWVyY3Jldm0zbHdzNG5xYzIyMjIzY3NpZ1hAhcEitMAK+yab1/g7pVESvBRLM7U9sbJkYcg89/9va0xyqxB9cI8cz5PqpaO6awQ2Fbl7YLf78VgatsU94iEZNGRkYXRh2CpYJQABcRIgzBCpXnuTRV3uGJcT+Z4FdEdxZtWYAft3fe2YW9bvBZlkcHJldvZndmVyc2lvbgN6AXESIMwQqV57k0Vd7hiXE/meBXRHcWbVmAH7d33tmFvW7wWZomFlgaRha1gZQ09NLmV4YW1wbGUuZml4dHVyZTEvbWFpbmFwAGF09mF22CpYJQABcRIgJMhfR1MnOfDPHUwp8k/ClDtL5eoKfevEt9eBRovLemxhbPZNAXESICTIX0dTJznwzx1MKfJPwpQ7S+XqCn3rxLfXgUaLy3psomUkdHlwZXRjb20uZXhhbXBsZS5maXh0dXJlMWV2YWx1ZWZyZWNvcmQ=",
+    "expectedError": "collection is not a normalized NSID"
+  },
+  {
+    "comment": "A key must sit on the MST layer its hash selects, and a child node must be exactly one layer below its parent.",
+    "name": "wrong-mst-key-layer",
+    "did": "did:example:repo-verifier",
+    "signingKeyDid": "did:key:zQ3shVc2UkAfJCdc1TR8E66J85h48P43r93q8jGPkPpjF9Ef9",
+    "rev": "3lws4nqc22224",
+    "commitCid": "bafyreicp7uuww7yjtigw57niso6vqyyikpp6ynmds6u3e2ny6v6nfnhg6i",
+    "dataCid": "bafyreibonbl2ofludt6kdgiupw6xdhprlj2a5jvzn2nyjpybhb3s7djore",
+    "keys": ["com.example.fixture1/main", "com.example.wrongLayer/k0"],
+    "validRepo": false,
+    "tags": ["mst", "key-layer"],
+    "carBase64": "OqJlcm9vdHOB2CpYJQABcRIgT/0pa38Jmg1u/aiTvVhjCFPf7DWDl6myabj1fNK05vJndmVyc2lvbgHZAQFxEiBP/SlrfwmaDW79qJO9WGMIU9/sNYOXqbJpuPV80rTm8qZjZGlkeBlkaWQ6ZXhhbXBsZTpyZXBvLXZlcmlmaWVyY3Jldm0zbHdzNG5xYzIyMjI0Y3NpZ1hAL46Rlk/4lAUiMPnNjf79sEyEaJcMIZOFTNT+llA/akoAQMiCPznx9unXsk/SZrdQc/w9G9LsQgydFmNg8exErmRkYXRh2CpYJQABcRIgLmhXpxV0HPyhmRR9vXGd8Vp0Dqa5bpuEvwE4dy+NLolkcHJldvZndmVyc2lvbgOiAQFxEiAuaFenFXQc/KGZFH29cZ3xWnQOprlum4S/ATh3L40uiaJhZYGkYWtYGWNvbS5leGFtcGxlLmZpeHR1cmUxL21haW5hcABhdNgqWCUAAXESIL9pQNoBjLfapyidDoLva5/eHwELaKEIl+In2lk4wxxiYXbYKlglAAFxEiAkyF9HUyc58M8dTCnyT8KUO0vl6gp968S314FGi8t6bGFs9noBcRIgv2lA2gGMt9qnKJ0Ogu9rn94fAQtooQiX4ifaWTjDHGKiYWWBpGFrWBljb20uZXhhbXBsZS53cm9uZ0xheWVyL2swYXAAYXT2YXbYKlglAAFxEiDO+bkvqxItU++sEe+NWdJnx3uFm3/p/0x1gzlbu3iuhWFs9k0BcRIgJMhfR1MnOfDPHUwp8k/ClDtL5eoKfevEt9eBRovLemyiZSR0eXBldGNvbS5leGFtcGxlLmZpeHR1cmUxZXZhbHVlZnJlY29yZEsBcRIgzvm5L6sSLVPvrBHvjVnSZ8d7hZt/6f9MdYM5W7t4roWiZSR0eXBlcmNvbS5leGFtcGxlLm1hcmtlcmV2YWx1ZWZtYXJrZXI=",
+    "expectedError": "key sits on the wrong MST layer"
+  },
+  {
+    "comment": "Every key in a subtree must fall inside the ordering bounds of the link that reaches it.",
+    "name": "subtree-range",
+    "did": "did:example:repo-verifier",
+    "signingKeyDid": "did:key:zQ3shVc2UkAfJCdc1TR8E66J85h48P43r93q8jGPkPpjF9Ef9",
+    "rev": "3lws4nqc22225",
+    "commitCid": "bafyreieaakxc6jpr3y25wij23g3vc7egwjaqaajzzfzwjhi6nck2qfgqta",
+    "dataCid": "bafyreigskrrllauc3b2bvk7f4nzgxey4tqffazimd4q7fwcpazfskltc5a",
+    "keys": ["com.example.fixture1/main", "com.example.aaaRange/k0"],
+    "validRepo": false,
+    "tags": ["mst", "subtree-bounds"],
+    "carBase64": "OqJlcm9vdHOB2CpYJQABcRIggAKuLyXx3jXbITrZt1F8hrJBAAE5yXNknR5olagU0JhndmVyc2lvbgHZAQFxEiCAAq4vJfHeNdshOtm3UXyGskEAATnJc2SdHmiVqBTQmKZjZGlkeBlkaWQ6ZXhhbXBsZTpyZXBvLXZlcmlmaWVyY3Jldm0zbHdzNG5xYzIyMjI1Y3NpZ1hA1PMnYN9Tcyj381RejqYoFziQnIJ3Pz3IK3eUIYYxemhZUPAz/3cf+j/1t7H6vqYsqMWDXR4NFpNp2Qy2mnUhDWRkYXRh2CpYJQABcRIg0lRitYKC2HQaq+XjcmuTHJwKUGUMHyHy2E8GSyUuYuhkcHJldvZndmVyc2lvbgOiAQFxEiDSVGK1goLYdBqr5eNya5McnApQZQwfIfLYTwZLJS5i6KJhZYGkYWtYGWNvbS5leGFtcGxlLmZpeHR1cmUxL21haW5hcABhdNgqWCUAAXESIO1LC9odrpF24XfjJph1V3mL3oSshMQzqNmvVlv/08+xYXbYKlglAAFxEiAkyF9HUyc58M8dTCnyT8KUO0vl6gp968S314FGi8t6bGFs9ncBcRIg7UsL2h2ukXbhd+MmmHVXeYvehKyExDOo2a9WW//Tz7GiYWWBpGFrV2NvbS5leGFtcGxlLmFhYVJhbmdlL2swYXAAYXT2YXbYKlglAAFxEiDO+bkvqxItU++sEe+NWdJnx3uFm3/p/0x1gzlbu3iuhWFs9k0BcRIgJMhfR1MnOfDPHUwp8k/ClDtL5eoKfevEt9eBRovLemyiZSR0eXBldGNvbS5leGFtcGxlLmZpeHR1cmUxZXZhbHVlZnJlY29yZEsBcRIgzvm5L6sSLVPvrBHvjVnSZ8d7hZt/6f9MdYM5W7t4roWiZSR0eXBlcmNvbS5leGFtcGxlLm1hcmtlcmV2YWx1ZWZtYXJrZXI=",
+    "expectedError": "record keys out of order"
+  },
+  {
+    "comment": "A node entry must use the longest prefix it shares with the preceding key.",
+    "name": "noncanonical-prefix-compression",
+    "did": "did:example:repo-verifier",
+    "signingKeyDid": "did:key:zQ3shVc2UkAfJCdc1TR8E66J85h48P43r93q8jGPkPpjF9Ef9",
+    "rev": "3lws4nqc22226",
+    "commitCid": "bafyreiavntnfirrvkwgqipqnp2qkgnvzb7fo4s2iybymi473x52aeyvsmq",
+    "dataCid": "bafyreigh7y6hxbyeod66r73qqr5pii2oskk6hk56wmg76nlffgnevmrvhu",
+    "keys": ["com.example.prefix/k0", "com.example.prefix/k1"],
+    "validRepo": false,
+    "tags": ["mst", "prefix-compression"],
+    "carBase64": "OqJlcm9vdHOB2CpYJQABcRIgFWzaVEY1VY0EPg1+oKM2uQ/K7ktIwHDEc/u/dAJismRndmVyc2lvbgHZAQFxEiAVbNpURjVVjQQ+DX6goza5D8ruS0jAcMRz+790AmKyZKZjZGlkeBlkaWQ6ZXhhbXBsZTpyZXBvLXZlcmlmaWVyY3Jldm0zbHdzNG5xYzIyMjI2Y3NpZ1hAInvdCCWypuFEOLpj32PPveIiuZUfSDLsSK1i/A4yCAI6JkIn2tv3jZJpSEBo0TyAfauhGYEPe6sQVXvJbL7B+GRkYXRh2CpYJQABcRIgx/48e4cEcP3o/3CEevQjTpKV46u+sw3/NWUpmkqyNT1kcHJldvZndmVyc2lvbgO/AQFxEiDH/jx7hwRw/ej/cIR69CNOkpXjq76zDf81ZSmaSrI1PaJhZYKkYWtVY29tLmV4YW1wbGUucHJlZml4L2swYXAAYXT2YXbYKlglAAFxEiDO+bkvqxItU++sEe+NWdJnx3uFm3/p/0x1gzlbu3iuhaRha1Vjb20uZXhhbXBsZS5wcmVmaXgvazFhcABhdPZhdtgqWCUAAXESIM75uS+rEi1T76wR741Z0mfHe4Wbf+n/THWDOVu7eK6FYWz2SwFxEiDO+bkvqxItU++sEe+NWdJnx3uFm3/p/0x1gzlbu3iuhaJlJHR5cGVyY29tLmV4YW1wbGUubWFya2VyZXZhbHVlZm1hcmtlcg==",
+    "expectedError": "non-canonical prefix compression"
+  }
+]

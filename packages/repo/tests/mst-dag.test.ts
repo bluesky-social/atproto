@@ -9,6 +9,7 @@ import {
   VisitedCidError,
   blocksToCarFile,
 } from '../src/index.js'
+import { countPrefixLen } from '../src/mst/util.js'
 import { MemoryBlockstore } from '../src/storage/index.js'
 import * as sync from '../src/sync/index.js'
 import * as util from '../src/util.js'
@@ -63,9 +64,12 @@ const buildSharedChain = async (blocks: BlockMap, n: number, m: number) => {
     chain = await blocks.add({ l: chain, e: [] })
   }
   const e: NodeData['e'] = []
+  let lastKey = ''
   for (let i = 0; i < n; i++) {
     const key = `com.example.wide/${String(i).padStart(6, '0')}`
-    e.push(leafEntry(key, value, chain))
+    const p = countPrefixLen(lastKey, key)
+    lastKey = key
+    e.push({ p, k: enc.encode(key.slice(p)), v: value, t: chain })
   }
   return blocks.add({ l: null, e })
 }
