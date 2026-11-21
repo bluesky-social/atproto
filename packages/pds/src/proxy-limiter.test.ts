@@ -1,5 +1,6 @@
 import { once } from 'node:events'
 import http from 'node:http'
+import { PassThrough } from 'node:stream'
 import { setTimeout as sleep } from 'node:timers/promises'
 import { jest } from '@jest/globals'
 import { Agent } from 'undici'
@@ -433,6 +434,71 @@ describe('limiterInterceptor', () => {
     } finally {
       // Answer anything still waiting first: close() waits for requests in
       // flight, so a failed expectation would otherwise hang the test.
+      releaseAll()
+      await agent.close()
+    }
+  })
+
+  it('frees the slot when the response headers arrive, before the body ends', async () => {
+    const limiter = new ProxyLimiter({
+      maxRequestsPerSecond: 0,
+      maxConcurrentRequests: 1,
+      maxQueuedRequests: 10,
+      maxQueueMs: 60_000,
+    })
+    const agent = new Agent().compose(limiterInterceptor(limiter))
+    try {
+      const first = agent.request({ origin, path: '/', method: 'GET' })
+      const second = agent.request({ origin, path: '/', method: 'GET' })
+
+      await sleep(100)
+      expect(arrivals).toBe(1)
+
+      // Left in `held`, so that cleanup ends it if an expectation fails.
+      held[0].write('the start of a body that does not end yet')
+      const firstResponse = await first
+      await sleep(100)
+      expect(arrivals).toBe(2)
+
+      respond()
+      await firstResponse.body.text()
+      respond()
+      await (await second).body.text()
+    } finally {
+      releaseAll()
+      await agent.close()
+    }
+  })
+
+  it('holds no slot for a request whose body is a stream', async () => {
+    const limiter = new ProxyLimiter({
+      maxRequestsPerSecond: 0,
+      maxConcurrentRequests: 1,
+      maxQueuedRequests: 10,
+      maxQueueMs: 60_000,
+    })
+    const agent = new Agent().compose(limiterInterceptor(limiter))
+    const upload = new PassThrough()
+    try {
+      const first = agent.request({
+        origin,
+        path: '/',
+        method: 'POST',
+        body: upload,
+      })
+      upload.write('the start of a body that does not end yet')
+      const second = agent.request({ origin, path: '/', method: 'GET' })
+
+      await sleep(100)
+      expect(arrivals).toBe(2)
+
+      // Both at once: the two requests may have arrived in either order.
+      upload.end()
+      releaseAll()
+      await (await first).body.text()
+      await (await second).body.text()
+    } finally {
+      upload.destroy()
       releaseAll()
       await agent.close()
     }

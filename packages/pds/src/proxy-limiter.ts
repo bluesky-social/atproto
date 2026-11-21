@@ -170,6 +170,13 @@ export class ProxyLimiter {
  * An undici interceptor that holds each request until `limiter` grants it.
  * Listed before the retry interceptor in `compose()`, it sees every attempt,
  * so retries count against the limit too.
+ *
+ * A request keeps its in-flight slot only while the upstream service is
+ * working on it: from when it is sent until the response headers arrive. The
+ * PDS's client must not be able to decide how long a slot is kept, so the
+ * slot does not wait for the response body, and a request whose own body is
+ * a stream takes no slot at all (it still waits for the limit like any other
+ * request before it is sent).
  */
 export function limiterInterceptor(
   limiter: ProxyLimiter,
@@ -177,7 +184,14 @@ export function limiterInterceptor(
   return (dispatch) => (opts, handler) => {
     limiter.acquire().then(
       (release) => {
-        dispatch(opts, releasingHandler(handler, release))
+        if (isStreamedBody(opts.body)) {
+          // The PDS forwards its client's request body as it arrives, so the
+          // client would decide how long the slot is kept.
+          release()
+          dispatch(opts, handler)
+        } else {
+          dispatch(opts, releasingHandler(handler, release))
+        }
       },
       (cause: unknown) => {
         const error =
@@ -189,6 +203,13 @@ export function limiterInterceptor(
   }
 }
 
+/** Whether a request body is still to arrive, not already in memory. */
+function isStreamedBody(body: Dispatcher.DispatchOptions['body']): boolean {
+  return (
+    body != null && typeof body !== 'string' && !(body instanceof Uint8Array)
+  )
+}
+
 function releasingHandler(
   handler: Dispatcher.DispatchHandler,
   release: () => void,
@@ -198,8 +219,12 @@ function releasingHandler(
       handler.onRequestStart?.(controller, context),
     onRequestUpgrade: (controller, statusCode, headers, socket) =>
       handler.onRequestUpgrade?.(controller, statusCode, headers, socket),
-    onResponseStart: (controller, statusCode, headers, statusMessage) =>
-      handler.onResponseStart?.(controller, statusCode, headers, statusMessage),
+    onResponseStart: (controller, statusCode, headers, statusMessage) => {
+      // Not at the end of the body: a proxied body is streamed to the PDS's
+      // client, so a client that stopped reading would keep the slot.
+      release()
+      handler.onResponseStart?.(controller, statusCode, headers, statusMessage)
+    },
     onResponseData: (controller, chunk) =>
       handler.onResponseData?.(controller, chunk),
     onResponseEnd: (controller, trailers) => {
