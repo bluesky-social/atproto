@@ -6,6 +6,8 @@ export type AppViewOptions = {
   did: string
   cdnUrlPattern?: string
   validateResponse?: boolean
+  /** Sends the client's requests. Defaults to the global `fetch`. */
+  fetch?: typeof globalThis.fetch
 }
 
 export class BskyAppView {
@@ -18,7 +20,7 @@ export class BskyAppView {
     this.did = options.did
     this.url = options.url
     this.client = new Client(
-      { service: options.url },
+      { service: options.url, fetch: options.fetch },
       {
         strictResponseProcessing: false,
         validateResponse: options.validateResponse ?? false,

@@ -251,6 +251,33 @@ describe('PDS limit on requests to the AppView', () => {
     await Promise.all(responses.map((r) => r.text()))
   })
 
+  // com.atproto.identity.resolveHandle asks the AppView itself, with
+  // ctx.bskyAppView.client, for a handle this PDS does not host. That call
+  // does not go through appViewProxyAgent.
+  it("counts a handler's own call to the AppView against the cap", async () => {
+    appview.hold()
+    const inFlight = getLikes()
+    await appview.waitForArrivals(1)
+
+    const resolving = pdsGet(
+      network.pds.url,
+      'com.atproto.identity.resolveHandle',
+      { handle: 'bob.example.com' },
+    )
+    await sleep(200)
+    expect(appview.arrivals).toHaveLength(1)
+
+    appview.release(1)
+    await appview.waitForArrivals(2)
+    expect(
+      appview.arrivalsFor('com.atproto.identity.resolveHandle'),
+    ).toHaveLength(1)
+
+    appview.release()
+    const responses = await Promise.all([inFlight, resolving])
+    await Promise.all(responses.map((r) => r.text()))
+  })
+
   it('does not apply the AppView limit to other proxied services', async () => {
     appview.hold()
     const inFlight = getLikes()
