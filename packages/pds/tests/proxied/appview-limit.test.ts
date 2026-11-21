@@ -341,6 +341,35 @@ describe('PDS limit on requests to the AppView', () => {
     await Promise.all(responses.map((r) => r.text()))
   })
 
+  // resolveHandle answers every failure of its AppView lookup with 400
+  // "Unable to resolve handle". A limiter rejection is not one of those: the
+  // handle was never looked up, and a client told 400 would not try again.
+  it('answers 429, not 400, when the limit turns away a handle lookup', async () => {
+    appview.hold()
+    const inFlight = getLikes()
+    await appview.waitForArrivals(1)
+    const queued = getLikes()
+    await sleep(200)
+
+    const rejected = await pdsGet(
+      network.pds.url,
+      'com.atproto.identity.resolveHandle',
+      { handle: 'bob.example.com' },
+    )
+    expect(rejected.status).toBe(429)
+    expect(await rejected.json()).toMatchObject({ error: 'RateLimitExceeded' })
+    expect(Number(rejected.headers.get('retry-after'))).toBeGreaterThanOrEqual(
+      1,
+    )
+    expect(
+      appview.arrivalsFor('com.atproto.identity.resolveHandle'),
+    ).toHaveLength(0)
+
+    appview.release()
+    const responses = await Promise.all([inFlight, queued])
+    await Promise.all(responses.map((r) => r.text()))
+  })
+
   it('does not apply the AppView limit to other proxied services', async () => {
     appview.hold()
     const inFlight = getLikes()
