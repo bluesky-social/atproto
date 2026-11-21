@@ -223,3 +223,23 @@ function neverSentController(reason: Error): Dispatcher.DispatchController {
     resume: () => {},
   }
 }
+
+/**
+ * A `fetch` that holds each call until `limiter` grants it, for the requests
+ * that do not go through an undici agent with {@link limiterInterceptor}.
+ *
+ * The slot is freed when `fetch` settles, which is when the response headers
+ * arrive, not when the body has been read: a caller that never reads the body
+ * would otherwise keep its slot for good.
+ */
+export function limiterFetch(
+  limiter: ProxyLimiter,
+  fetch: typeof globalThis.fetch = globalThis.fetch,
+): typeof globalThis.fetch {
+  return async (input, init) => {
+    const release = await limiter.acquire()
+    const response = await fetch(input, init)
+    release()
+    return response
+  }
+}

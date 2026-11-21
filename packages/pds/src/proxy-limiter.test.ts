@@ -6,6 +6,7 @@ import { Agent } from 'undici'
 import {
   ProxyLimitExceededError,
   ProxyLimiter,
+  limiterFetch,
   limiterInterceptor,
 } from './proxy-limiter.js'
 
@@ -472,5 +473,51 @@ describe('limiterInterceptor', () => {
       releaseAll()
       await agent.close()
     }
+  })
+})
+
+describe('limiterFetch', () => {
+  type Call = {
+    resolve: (response: Response) => void
+    reject: (error: unknown) => void
+  }
+
+  /** A fetch whose calls stay pending until the test settles them. */
+  const pendingFetch = () => {
+    const calls: Call[] = []
+    const fetch: typeof globalThis.fetch = () =>
+      new Promise<Response>((resolve, reject) => {
+        calls.push({ resolve, reject })
+      })
+    return { calls, fetch }
+  }
+
+  const oneAtATime = (maxQueuedRequests: number) =>
+    new ProxyLimiter({
+      maxRequestsPerSecond: 0,
+      maxConcurrentRequests: 1,
+      maxQueuedRequests,
+      maxQueueMs: 60_000,
+    })
+
+  /** Lets every promise callback that is already due run. */
+  const settle = () => new Promise((resolve) => setImmediate(resolve))
+
+  it('holds a call until the limiter grants it, and frees the slot when the response arrives', async () => {
+    const { calls, fetch } = pendingFetch()
+    const limited = limiterFetch(oneAtATime(10), fetch)
+
+    const first = limited('http://appview.test/first')
+    const second = limited('http://appview.test/second')
+    await settle()
+    expect(calls).toHaveLength(1)
+
+    calls[0].resolve(new Response('one'))
+    expect(await (await first).text()).toBe('one')
+    await settle()
+    expect(calls).toHaveLength(2)
+
+    calls[1].resolve(new Response('two'))
+    expect(await (await second).text()).toBe('two')
   })
 })
