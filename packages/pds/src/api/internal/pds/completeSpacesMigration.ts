@@ -12,7 +12,11 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError('Repo not found', 'NotFound')
       }
       const kemKey = (await ctx.actorStore.kemKeypair(did))?.did()
-      const live = await inspectKemKey(ctx, did, kemKey)
+      const signingKey = (await ctx.actorStore.keypair(did)).did()
+      const live = await inspectKemKey(ctx, did, {
+        kem: kemKey,
+        signing: signingKey,
+      })
       if (!live.published) {
         throw new InvalidRequestError(
           'KEM key not published',
@@ -20,10 +24,12 @@ export default function (server: Server, ctx: AppContext) {
         )
       }
       await ctx.sequencer.sequenceIdentity(did)
-      // The caller holds no lease, so this is recorded as a check
+      // The caller holds no lease, so this is recorded as a check. Published
+      // implies the key is held, so the schema alone says the store migrated.
       await ctx.spacesMigration.progress.recordChecked(did, {
         published: true,
         unpublishableReason: null,
+        storeMigrated: await ctx.actorStore.isMigrated(did),
       })
       return {
         encoding: 'application/json' as const,

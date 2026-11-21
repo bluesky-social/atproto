@@ -101,8 +101,11 @@ describe('spaces migration publisher', () => {
     write: (txn: AccountDb) => Promise<T>,
   ) => trackStats(db, dids, write)
 
+  const recorded = (did: string) =>
+    progress.recordedKemKeyState(did as DidString)
+
   const isPublished = async (did: string) =>
-    (await row(did))?.kemPublishedAt != null
+    (await recorded(did)) === 'published'
 
   const publishedKem = async (did: string) => {
     const { verificationMethods } = await ctx.plcClient.getDocumentData(did)
@@ -129,16 +132,24 @@ describe('spaces migration publisher', () => {
   ) => ctx.plcClient.updateData(did, ctx.plcRotationKey, fn)
 
   // An account as left by the release before spaces: no kem key in its DID
-  // doc, and no progress row until seeded.
+  // doc, and neither a settled state nor a progress row until seeded.
   const createPreSpacesAccount = async () => {
     const did = await createAccount()
     await updatePlc(did, (op) => {
       const { atproto_kem: _, ...verificationMethods } = op.verificationMethods
       return { ...op, verificationMethods }
     })
-    await tracked([did], (txn) =>
-      txn.db.deleteFrom('spaces_migration').where('did', '=', did).execute(),
-    )
+    await tracked([did], async (txn) => {
+      await txn.db
+        .updateTable('actor')
+        .set({ kemKeyState: null })
+        .where('did', '=', did)
+        .execute()
+      await txn.db
+        .deleteFrom('spaces_migration')
+        .where('did', '=', did)
+        .execute()
+    })
     await progress.seed()
     return did
   }
@@ -155,9 +166,9 @@ describe('spaces migration publisher', () => {
   it('records new accounts as already published', async () => {
     using sequenceIdentity = jest.spyOn(ctx.sequencer, 'sequenceIdentity')
     const did = await createAccount()
-    const created = await row(did)
-    expect(created?.kemPublishedAt).toEqual(expect.any(String))
-    expect(created?.storeMigratedAt).toEqual(expect.any(String))
+    // Born settled: no row for the workers to visit
+    expect(await recorded(did)).toBe('published')
+    expect(await row(did)).toBeUndefined()
 
     const oauthStore = (pds.ctx.oauthProvider as any).accountManager.store
     const account = await oauthStore.createAccount({
@@ -166,9 +177,8 @@ describe('spaces migration publisher', () => {
       email: 'puboauth@test.com',
       password: 'hunter2hunter2',
     })
-    const oauthCreated = await row(account.did)
-    expect(oauthCreated?.kemPublishedAt).toEqual(expect.any(String))
-    expect(oauthCreated?.storeMigratedAt).toEqual(expect.any(String))
+    expect(await recorded(account.did)).toBe('published')
+    expect(await row(account.did)).toBeUndefined()
 
     await using _publisher = publisher()
     await waitFor(async () => _publisher.state === 'idle')
@@ -240,14 +250,12 @@ describe('spaces migration publisher', () => {
       }))
 
     await using _publisher = publisher()
-    await waitFor(async () => (await row(did))?.unpublishableReason != null)
+    await waitFor(async () => (await recorded(did)) !== 'pending')
 
     expect(resolve).toHaveBeenCalledWith(did, true)
-    expect(await row(did)).toMatchObject({
-      unpublishableReason: 'did-web',
-      kemPublishedAt: null,
-      leaseOwner: null,
-    })
+    // Final, its store born migrated: settled
+    expect(await recorded(did)).toBe('did-web')
+    expect(await row(did)).toBeUndefined()
   })
 
   it('records did:web accounts that published the key themselves', async () => {
@@ -285,7 +293,7 @@ describe('spaces migration publisher', () => {
     await waitFor(() => isPublished(did))
 
     expect(sequenceIdentity).toHaveBeenCalledWith(did)
-    expect((await row(did))?.unpublishableReason).toBeNull()
+    expect(await row(did)).toBeUndefined()
   })
 
   it('marks accounts whose rotation key was removed unpublishable', async () => {
@@ -300,24 +308,44 @@ describe('spaces migration publisher', () => {
     expect(await kemOps(did)).toHaveLength(1) // genesis only
   })
 
-  it('marks accounts hosted elsewhere unpublishable', async () => {
+  it('marks accounts whose doc names another signing key unpublishable', async () => {
     const did = await createPreSpacesAccount()
+    const otherKey = await Secp256k1Keypair.create()
     await updatePlc(did, (op) => ({
       ...op,
-      services: {
-        ...op.services,
-        atproto_pds: {
-          type: 'AtprotoPersonalDataServer',
-          endpoint: 'https://elsewhere.test',
-        },
+      verificationMethods: {
+        ...op.verificationMethods,
+        atproto: otherKey.did(),
       },
     }))
 
     await using _publisher = publisher()
     await waitFor(async () => (await row(did))?.unpublishableReason != null)
 
-    expect((await row(did))?.unpublishableReason).toBe('pds-elsewhere')
+    expect((await row(did))?.unpublishableReason).toBe('signing-key-not-held')
     expect(await kemOps(did)).toHaveLength(1) // genesis only
+  })
+
+  it('publishes for accounts whose doc names our signing key at another url', async () => {
+    const did = await createPreSpacesAccount()
+    // e.g. an alias of this host
+    await updatePlc(did, (op) => ({
+      ...op,
+      services: {
+        ...op.services,
+        atproto_pds: {
+          type: 'AtprotoPersonalDataServer',
+          endpoint: 'https://alias.test',
+        },
+      },
+    }))
+
+    await using _publisher = publisher()
+    await waitFor(() => isPublished(did))
+
+    expect(await publishedKem(did)).toBe(
+      (await ctx.actorStore.kemKeypair(did))?.did(),
+    )
   })
 
   it('marks tombstoned accounts unpublishable', async () => {
@@ -594,14 +622,20 @@ describe('spaces migration publisher', () => {
 
   it('records the doc moving elsewhere just before the plc update', async () => {
     const did = await createPreSpacesAccount()
+    const otherKey = await Secp256k1Keypair.create()
     const getLastOp = ctx.plcClient.getLastOp.bind(ctx.plcClient)
     using _getLastOp = jest
       .spyOn(ctx.plcClient, 'getLastOp')
       .mockImplementationOnce(async (did) => {
         const op = await getLastOp(did)
-        // The user moves their PDS, keeping our rotation key
+        // The user moves to another PDS, with its own signing key, keeping
+        // our rotation key
         await updatePlc(did, (op) => ({
           ...op,
+          verificationMethods: {
+            ...op.verificationMethods,
+            atproto: otherKey.did(),
+          },
           services: {
             ...op.services,
             atproto_pds: {
@@ -616,7 +650,7 @@ describe('spaces migration publisher', () => {
     await using _pub = publisher()
     await waitFor(async () => (await row(did))?.unpublishableReason != null)
 
-    expect((await row(did))?.unpublishableReason).toBe('pds-elsewhere')
+    expect((await row(did))?.unpublishableReason).toBe('signing-key-not-held')
     expect(await kemOps(did)).toHaveLength(1) // genesis only
     expect(await publishedKem(did)).toBeUndefined()
   })

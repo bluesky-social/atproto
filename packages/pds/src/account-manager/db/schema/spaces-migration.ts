@@ -1,12 +1,15 @@
 import type { Generated } from 'kysely'
 import type { DatetimeString, DidString } from '@atproto/syntax'
 
+export type UnpublishableReason =
+  'did-web' | 'rotation-key-not-held' | 'signing-key-not-held' | 'tombstoned'
+
 // One row per account, recording facts about its migration into spaces
 export interface SpacesMigration {
   did: DidString
   storeMigratedAt: DatetimeString | null
   kemPublishedAt: DatetimeString | null
-  unpublishableReason: string | null
+  unpublishableReason: UnpublishableReason | null
   attempts: Generated<number>
   lastError: string | null
   nextAttemptAt: Generated<DatetimeString | null>
@@ -26,7 +29,8 @@ export interface SpacesMigrationState {
   publishStartAt: DatetimeString
 }
 
-// A single row, id = 1: counts over spaces_migration
+// A single row, id = 1: counts over spaces_migration's rows and the settled
+// actors (actor.kemKeyState not null)
 export interface SpacesMigrationStats {
   id: number
   total: number

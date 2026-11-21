@@ -12,6 +12,7 @@ import {
   currentDatetimeString,
 } from '@atproto/syntax'
 import { com, internal } from '../src/lexicons/index.js'
+import { trackStats } from '../src/spaces-migration/progress.js'
 import { createPlcOp } from '../src/util/plc.js'
 import { MockEntryway } from './entryway-mock.js'
 
@@ -89,6 +90,9 @@ describe('entryway spaces migration', () => {
   const heldKem = async (did: DidString) =>
     (await pds.ctx.actorStore.kemKeypair(did))?.did()
 
+  const state = (did: DidString) =>
+    pds.ctx.spacesMigration.progress.recordedKemKeyState(did)
+
   const check = (did: DidString) =>
     client.call(
       internal.pds.checkSpacesMigration,
@@ -104,7 +108,10 @@ describe('entryway spaces migration', () => {
     const reserved = await reserve.mock.results[0].value
     expect(await heldKem(did)).toBe(reserved)
     expect(await publishedKem(did)).toBe(reserved)
-    expect((await row(did))?.kemPublishedAt).toEqual(expect.any(String))
+    expect(
+      await pds.ctx.spacesMigration.progress.recordedKemKeyState(did),
+    ).toBe('published')
+    expect(await row(did)).toBeUndefined()
     // The reservation is cleared once the account holds the key
     expect(
       await pds.ctx.actorStore.getReservedKemKeypair(reserved as string),
@@ -205,6 +212,17 @@ describe('entryway spaces migration', () => {
     // As left by the release before spaces: no kem key on disk
     const { kemKeyLocation } = await pds.ctx.actorStore.getLocation(did)
     await rm(kemKeyLocation)
+    // And a row whose store sweep hasn't run, though the store is migrated
+    const { db } = pds.ctx.accountManager
+    await trackStats(db, [did], (txn) =>
+      txn.db
+        .updateTable('spaces_migration')
+        .set({ storeMigratedAt: null })
+        .where('did', '=', did)
+        .execute(),
+    )
+    expect(await row(did)).toMatchObject({ storeMigratedAt: null })
+    expect(await state(did)).toBe('pending')
     using sequenceIdentity = jest.spyOn(pds.ctx.sequencer, 'sequenceIdentity')
 
     const kemKey = await entryway.publishKemKey(did)
@@ -212,10 +230,11 @@ describe('entryway spaces migration', () => {
     expect(await heldKem(did)).toBe(kemKey)
     expect(await publishedKem(did)).toBe(kemKey)
     expect(sequenceIdentity).toHaveBeenCalledWith(did)
-    expect(await row(did)).toMatchObject({
-      kemPublishedAt: expect.any(String),
-      unpublishableReason: null,
-    })
+    // Completing settles the unswept row without waiting for the sweep
+    expect(await state(did)).toBe('published')
+    expect(await row(did)).toBeUndefined()
+    const checked = await check(did)
+    expect(checked.recordedKemKeyState).toBe('published')
   })
 
   it('refuses to complete before the key is published', async () => {
@@ -249,7 +268,7 @@ describe('entryway spaces migration', () => {
   it('check re-queues an account whose published key was dropped', async () => {
     const did = await createAccount()
     const kemKey = await heldKem(did)
-    expect((await row(did))?.kemPublishedAt).toEqual(expect.any(String))
+    expect(await state(did)).toBe('published')
     await pds.ctx.plcClient.updateData(did, plcRotationKey, (op) => {
       const { atproto_kem: _, ...verificationMethods } = op.verificationMethods
       return { ...op, verificationMethods }
@@ -264,6 +283,7 @@ describe('entryway spaces migration', () => {
       storeMigrated: true,
       kemKey,
       kemPublished: false,
+      recordedKemKeyState: 'pending',
     })
     expect(await row(did)).toMatchObject({
       kemPublishedAt: null,
@@ -276,17 +296,41 @@ describe('entryway spaces migration', () => {
     expect(sequenceIdentity).not.toHaveBeenCalled()
   })
 
+  it('check records a doc naming another signing key', async () => {
+    const did = await createAccount()
+    const otherKey = await Secp256k1Keypair.create()
+    await pds.ctx.plcClient.updateData(did, plcRotationKey, (op) => {
+      const { atproto_kem: _, ...verificationMethods } = op.verificationMethods
+      return {
+        ...op,
+        verificationMethods: {
+          ...verificationMethods,
+          atproto: otherKey.did(),
+        },
+      }
+    })
+
+    const res = await check(did)
+
+    expect(res).toMatchObject({
+      kemPublished: false,
+      unpublishableReason: 'signing-key-not-held',
+      recordedKemKeyState: 'signing-key-not-held',
+    })
+  })
+
   it('check leaves a correctly recorded published key alone', async () => {
     const did = await createAccount()
-    const recorded = (await row(did))?.kemPublishedAt
+    expect(await state(did)).toBe('published')
 
     const res = await check(did)
 
     expect(res).toMatchObject({
       kemPublished: true,
-      recordedPublishedAt: recorded,
+      recordedKemKeyState: 'published',
     })
-    expect((await row(did))?.kemPublishedAt).toBe(recorded)
+    expect(await state(did)).toBe('published')
+    expect(await row(did)).toBeUndefined()
   })
 
   it('check records a key the owner published themselves', async () => {
@@ -306,6 +350,7 @@ describe('entryway spaces migration', () => {
     await pds.ctx.spacesMigration.progress.recordChecked(did, {
       published: false,
       unpublishableReason: 'did-web',
+      storeMigrated: true,
     })
     using resolve = jest
       .spyOn(pds.ctx.idResolver.did, 'resolve')
@@ -331,12 +376,10 @@ describe('entryway spaces migration', () => {
       storeMigrated: true,
       kemKey: kemKey.did(),
       kemPublished: true,
-      recordedPublishedAt: expect.any(String),
+      recordedKemKeyState: 'published',
     })
-    expect(await row(did)).toMatchObject({
-      kemPublishedAt: res.recordedPublishedAt,
-      unpublishableReason: null,
-    })
+    expect(await state(did)).toBe('published')
+    expect(await row(did)).toBeUndefined()
     expect(sequenceIdentity).not.toHaveBeenCalled()
   })
 
@@ -445,7 +488,7 @@ describe('spaces migration endpoints without an entryway', () => {
       storeMigrated: true,
       kemKey: (await pds.ctx.actorStore.kemKeypair(did))?.did(),
       kemPublished: true,
-      recordedPublishedAt: expect.any(String),
+      recordedKemKeyState: 'published',
     })
     await expect(
       client.call(internal.pds.checkSpacesMigration, { did }),
