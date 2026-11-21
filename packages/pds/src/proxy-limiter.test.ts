@@ -130,4 +130,19 @@ describe('ProxyLimiter', () => {
     // 3 queued requests drain in 1.5 s at 2 requests per second
     expect(overflow.error).toMatchObject({ retryAfterMs: 1500 })
   })
+
+  it('grants an acquisition that need not wait even with no queue', async () => {
+    const limiter = new ProxyLimiter({
+      maxRequestsPerSecond: 1,
+      maxConcurrentRequests: 100,
+      maxQueuedRequests: 0,
+      maxQueueMs: 60_000,
+    })
+
+    const first = observe(limiter.acquire())
+    const second = observe(limiter.acquire())
+
+    await jest.advanceTimersByTimeAsync(0)
+    expect([first.state, second.state]).toEqual(['granted', 'rejected'])
+  })
 })

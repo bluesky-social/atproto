@@ -51,12 +51,15 @@ export class ProxyLimiter {
    */
   acquire(): Promise<() => void> {
     return new Promise((resolve, reject) => {
-      if (this.queue.length >= this.opts.maxQueuedRequests) {
-        reject(new ProxyLimitExceededError(this.queueDrainMs()))
-        return
-      }
       this.queue.push({ resolve })
       this.pump()
+      // Checked after pumping so that a request that can be sent now is never
+      // turned away by a full (or zero-length) queue. If it is still waiting
+      // and over capacity, it is the newest entry.
+      if (this.queue.length > this.opts.maxQueuedRequests) {
+        this.queue.pop()
+        reject(new ProxyLimitExceededError(this.queueDrainMs()))
+      }
     })
   }
 
