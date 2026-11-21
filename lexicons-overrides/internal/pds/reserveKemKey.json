@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Reserve a KEM key on this PDS, for an entryway to name in the genesis PLC operation of an account it creates here. PDS-internal and temporary: it exists for the migration into spaces.",
+      "description": "Reserve a KEM key on this PDS, for an entryway to name in the genesis PLC operation of an account it creates here. PDS-internal. Unlike the spaces migration endpoints, it is not temporary: entryway signups use it.",
       "input": {
         "encoding": "application/json",
         "schema": {
