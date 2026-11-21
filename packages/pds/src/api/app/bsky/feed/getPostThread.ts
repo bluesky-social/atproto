@@ -7,6 +7,7 @@ import { app } from '../../../../lexicons/index.js'
 import {
   PipethroughUpstreamError,
   computeProxyTo,
+  throwIfLimitExceeded,
 } from '../../../../pipethrough.js'
 import {
   type LocalViewer,
@@ -64,17 +65,24 @@ export default function (server: Server, ctx: AppContext) {
           }
           if (uri.hostname !== requester) throw err
 
-          const local = await ctx.actorStore.read(requester, (store) => {
-            const localViewer = ctx.localViewer(store)
-            return readAfterWriteNotFound(
-              ctx,
-              localViewer,
-              params,
-              requester,
-              rev,
-              uri,
-            )
-          })
+          const local = await ctx.actorStore
+            .read(requester, (store) => {
+              const localViewer = ctx.localViewer(store)
+              return readAfterWriteNotFound(
+                ctx,
+                localViewer,
+                params,
+                requester,
+                rev,
+                uri,
+              )
+            })
+            .catch((localErr: unknown) => {
+              // Building the local view can call the AppView, for the post a
+              // quote post quotes.
+              throwIfLimitExceeded(reqCtx.res, localErr)
+              throw localErr
+            })
           if (local === null) {
             throw err
           } else {
