@@ -296,4 +296,33 @@ describe('limiterInterceptor', () => {
       await agent.close()
     }
   })
+
+  it('frees the slot of a request that failed', async () => {
+    const limiter = new ProxyLimiter({
+      maxRequestsPerSecond: 0,
+      maxConcurrentRequests: 1,
+      maxQueuedRequests: 10,
+      maxQueueMs: 60_000,
+    })
+    const agent = new Agent().compose(limiterInterceptor(limiter))
+    try {
+      // Port 9 (discard) is closed, so the connection is refused.
+      const failed = agent.request({
+        origin: 'http://127.0.0.1:9',
+        path: '/',
+        method: 'GET',
+      })
+      await expect(failed).rejects.toThrow()
+
+      const next = agent.request({ origin, path: '/', method: 'GET' })
+      await sleep(100)
+      expect(arrivals).toBe(1)
+
+      respond()
+      await (await next).body.text()
+    } finally {
+      releaseAll()
+      await agent.close()
+    }
+  })
 })

@@ -161,8 +161,10 @@ function releasingHandler(
       release()
       handler.onResponseEnd?.(controller, trailers)
     },
-    onResponseError: (controller, error) =>
-      handler.onResponseError?.(controller, error),
+    onResponseError: (controller, error) => {
+      release()
+      handler.onResponseError?.(controller, error)
+    },
     onResponseStarted: () => handler.onResponseStarted?.(),
     onBodySent: (chunk) => handler.onBodySent?.(chunk),
     onRequestSent: () => handler.onRequestSent?.(),
