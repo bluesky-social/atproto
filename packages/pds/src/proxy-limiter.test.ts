@@ -229,6 +229,30 @@ describe('ProxyLimiter', () => {
   })
 })
 
+class InspectableLimiter extends ProxyLimiter {
+  get recordedGrants(): number {
+    return this.grantTimes.length
+  }
+}
+
+describe('ProxyLimiter memory', () => {
+  it('keeps no record of grants when there is no rate limit', async () => {
+    const limiter = new InspectableLimiter({
+      maxRequestsPerSecond: 0,
+      maxConcurrentRequests: 10,
+      maxQueuedRequests: 10,
+      maxQueueMs: 1000,
+    })
+
+    for (let i = 0; i < 1000; i++) {
+      const release = await limiter.acquire()
+      release()
+    }
+
+    expect(limiter.recordedGrants).toBe(0)
+  })
+})
+
 describe('limiterInterceptor', () => {
   let server: http.Server
   let origin: string

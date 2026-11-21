@@ -38,7 +38,7 @@ type Waiter = {
 export class ProxyLimiter {
   private readonly opts: ProxyLimiterOptions
   /** Times of the grants still inside the window, oldest first. */
-  private grantTimes: number[] = []
+  protected grantTimes: number[] = []
   /** Grants given and not yet released. */
   private inFlight = 0
   private queue: Waiter[] = []
@@ -100,7 +100,9 @@ export class ProxyLimiter {
       const waiter = this.queue.shift()
       if (!waiter) return
       clearTimeout(waiter.expiry)
-      this.grantTimes.push(now)
+      // With no rate limit nothing reads or prunes these, so recording them
+      // would grow without bound.
+      if (this.opts.maxRequestsPerSecond > 0) this.grantTimes.push(now)
       this.inFlight++
       let released = false
       waiter.resolve(() => {
