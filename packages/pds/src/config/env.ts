@@ -108,6 +108,20 @@ export function readEnv() {
     bskyAppViewUrl: envStr('PDS_BSKY_APP_VIEW_URL'),
     bskyAppViewDid: envStr('PDS_BSKY_APP_VIEW_DID'),
     bskyAppViewCdnUrlPattern: envStr('PDS_BSKY_APP_VIEW_CDN_URL_PATTERN'),
+    // Limit on requests from this PDS process to the AppView (see
+    // BksyAppViewConfig). Defaults: 300 requests per second, 100 in flight,
+    // 1500 queued, 5000 ms in the queue; they suit a PDS of tens of thousands
+    // of active accounts. 0 for the rate or for the concurrency cap means no
+    // limit; 0 for the queue wait means never wait. Requests over the rate
+    // wait in a bounded queue and are answered 429 when it is full. The
+    // worst-case burst in one second is the rate plus the concurrency cap.
+    // The queue wait is separate from PDS_PROXY_HEADERS_TIMEOUT, which bounds
+    // the wait for the AppView's response after the request has been sent.
+    //
+    // Removing or raising the rate limit is likely to hit service limits on
+    // Bluesky systems. Bluesky's network edge answers a breach with a
+    // temporary block of the PDS's address (about an hour), during which none
+    // of its users can load timelines, profiles or notifications.
     bskyAppViewMaxRequestsPerSecond: envInt(
       'PDS_BSKY_APP_VIEW_MAX_REQUESTS_PER_SECOND',
     ),
