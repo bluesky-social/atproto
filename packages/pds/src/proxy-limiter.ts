@@ -137,9 +137,16 @@ export function limiterInterceptor(
   limiter: ProxyLimiter,
 ): Dispatcher.DispatcherComposeInterceptor {
   return (dispatch) => (opts, handler) => {
-    void limiter.acquire().then((release) => {
-      dispatch(opts, releasingHandler(handler, release))
-    })
+    limiter.acquire().then(
+      (release) => {
+        dispatch(opts, releasingHandler(handler, release))
+      },
+      (cause: unknown) => {
+        const error =
+          cause instanceof Error ? cause : new Error('Proxy limiter failed')
+        handler.onResponseError?.(neverSentController(error), error)
+      },
+    )
     return true
   }
 }
@@ -168,5 +175,20 @@ function releasingHandler(
     onResponseStarted: () => handler.onResponseStarted?.(),
     onBodySent: (chunk) => handler.onBodySent?.(chunk),
     onRequestSent: () => handler.onRequestSent?.(),
+  }
+}
+
+/**
+ * The controller handed to `onResponseError` for a request that was never
+ * dispatched: there is nothing to pause, resume or abort.
+ */
+function neverSentController(reason: Error): Dispatcher.DispatchController {
+  return {
+    aborted: true,
+    paused: false,
+    reason,
+    abort: () => {},
+    pause: () => {},
+    resume: () => {},
   }
 }

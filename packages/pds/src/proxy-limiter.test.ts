@@ -234,13 +234,16 @@ describe('limiterInterceptor', () => {
   let origin: string
   let arrivals: number
   let held: http.ServerResponse[]
+  let holding: boolean
 
   beforeEach(async () => {
     arrivals = 0
     held = []
+    holding = true
     server = http.createServer((_req, res) => {
       arrivals++
-      held.push(res)
+      if (holding) held.push(res)
+      else res.end()
     })
     server.listen(0, '127.0.0.1')
     await once(server, 'listening')
@@ -251,7 +254,10 @@ describe('limiterInterceptor', () => {
     origin = `http://127.0.0.1:${address.port}`
   })
 
+  // Also answers requests that arrive later, so that cleanup after a failed
+  // expectation cannot wait on a request that has not reached the server yet.
   const releaseAll = () => {
+    holding = false
     for (const res of held.splice(0)) res.end()
   }
 
@@ -320,6 +326,30 @@ describe('limiterInterceptor', () => {
 
       respond()
       await (await next).body.text()
+    } finally {
+      releaseAll()
+      await agent.close()
+    }
+  })
+
+  it('fails a request the limiter turns away with the limiter error', async () => {
+    const limiter = new ProxyLimiter({
+      maxRequestsPerSecond: 0,
+      maxConcurrentRequests: 1,
+      maxQueuedRequests: 0,
+      maxQueueMs: 60_000,
+    })
+    const agent = new Agent().compose(limiterInterceptor(limiter))
+    try {
+      const first = agent.request({ origin, path: '/', method: 'GET' })
+      const second = agent.request({ origin, path: '/', method: 'GET' })
+
+      await expect(second).rejects.toBeInstanceOf(ProxyLimitExceededError)
+      await sleep(100)
+      expect(arrivals).toBe(1)
+
+      respond()
+      await (await first).body.text()
     } finally {
       releaseAll()
       await agent.close()
