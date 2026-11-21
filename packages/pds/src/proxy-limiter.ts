@@ -65,7 +65,12 @@ export class ProxyLimiter {
       if (!waiter) return
       this.grantTimes.push(now)
       this.inFlight++
+      let released = false
       waiter.resolve(() => {
+        // A caller that reports both an end and an error for one request
+        // would otherwise free two slots and lift the cap for good.
+        if (released) return
+        released = true
         this.inFlight--
         this.pump()
       })

@@ -78,4 +78,23 @@ describe('ProxyLimiter', () => {
     await jest.advanceTimersByTimeAsync(0)
     expect(third.state).toBe('granted')
   })
+
+  it('frees one slot when a release function is called twice', async () => {
+    const limiter = new ProxyLimiter({
+      maxRequestsPerSecond: 1000,
+      maxConcurrentRequests: 2,
+      maxQueuedRequests: 100,
+      maxQueueMs: 60_000,
+    })
+
+    const release = await limiter.acquire()
+    await limiter.acquire()
+    const third = observe(limiter.acquire())
+    const fourth = observe(limiter.acquire())
+
+    release()
+    release()
+    await jest.advanceTimersByTimeAsync(0)
+    expect([third.state, fourth.state]).toEqual(['granted', 'pending'])
+  })
 })
