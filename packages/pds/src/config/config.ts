@@ -211,6 +211,22 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
       maxQueuedRequests: env.bskyAppViewMaxQueuedRequests ?? 1500,
       maxQueueMs: env.bskyAppViewMaxQueueMs ?? 5000,
     }
+    assert(
+      bskyAppViewCfg.maxRequestsPerSecond >= 0,
+      'PDS_BSKY_APP_VIEW_MAX_REQUESTS_PER_SECOND must not be negative (0 means no limit).',
+    )
+    assert(
+      bskyAppViewCfg.maxConcurrentRequests >= 0,
+      'PDS_BSKY_APP_VIEW_MAX_CONCURRENT_REQUESTS must not be negative (0 means no limit).',
+    )
+    assert(
+      bskyAppViewCfg.maxQueuedRequests >= 0,
+      'PDS_BSKY_APP_VIEW_MAX_QUEUED_REQUESTS must not be negative.',
+    )
+    assert(
+      bskyAppViewCfg.maxQueueMs >= 0,
+      'PDS_BSKY_APP_VIEW_MAX_QUEUE_MS must not be negative (0 means never wait).',
+    )
   }
 
   let modServiceCfg: ServerConfig['modService'] = null

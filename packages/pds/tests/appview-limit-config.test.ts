@@ -60,4 +60,19 @@ describe('appview request limit config', () => {
       })
     }
   })
+
+  it.each([
+    [
+      'bskyAppViewMaxRequestsPerSecond',
+      'PDS_BSKY_APP_VIEW_MAX_REQUESTS_PER_SECOND',
+    ],
+    [
+      'bskyAppViewMaxConcurrentRequests',
+      'PDS_BSKY_APP_VIEW_MAX_CONCURRENT_REQUESTS',
+    ],
+    ['bskyAppViewMaxQueuedRequests', 'PDS_BSKY_APP_VIEW_MAX_QUEUED_REQUESTS'],
+    ['bskyAppViewMaxQueueMs', 'PDS_BSKY_APP_VIEW_MAX_QUEUE_MS'],
+  ] as const)('rejects a negative %s, naming %s.', (key, name) => {
+    expect(() => envToCfg({ ...baseEnv, [key]: -1 })).toThrow(name)
+  })
 })
