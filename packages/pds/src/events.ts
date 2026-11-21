@@ -81,7 +81,7 @@ class EventReporter {
     reason: 'queue_full' | 'queue_timeout'
   }>('appview.request.limit.rejected', {
     description:
-      "Requests to the AppView that this PDS's own request limit turned away (answered 429 without contacting the AppView)",
+      "Requests to the AppView that this PDS's own request limit turned away (never sent to the AppView)",
     valueType: ValueType.INT,
   })
 
