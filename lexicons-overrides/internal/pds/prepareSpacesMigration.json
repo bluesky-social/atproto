@@ -19,11 +19,15 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["kemKey"],
+          "required": ["kemKey", "signingKey"],
           "properties": {
             "kemKey": {
               "type": "string",
               "description": "The public key of the account's KEM keypair, as a did:key."
+            },
+            "signingKey": {
+              "type": "string",
+              "description": "The account's repo signing key, as a did:key. The DID document must name it for the caller to publish."
             }
           }
         }
