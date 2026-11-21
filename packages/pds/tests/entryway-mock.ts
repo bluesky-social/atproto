@@ -374,13 +374,12 @@ export class MockEntryway {
     return adminHeaders(this.adminPassword)
   }
 
-  async prepareSpacesMigration(did: DidString): Promise<string> {
-    const { kemKey } = await this.pdsClient.call(
+  async prepareSpacesMigration(did: DidString) {
+    return this.pdsClient.call(
       internal.pds.prepareSpacesMigration,
       { did },
       { headers: this.adminHeaders() },
     )
-    return kemKey
   }
 
   async completeSpacesMigration(did: DidString): Promise<void> {
@@ -393,7 +392,7 @@ export class MockEntryway {
 
   /** Publishes the account's KEM key in PLC, as the entryway does. */
   async publishKemKey(did: DidString): Promise<string> {
-    const kemKey = await this.prepareSpacesMigration(did)
+    const { kemKey } = await this.prepareSpacesMigration(did)
     await this.plcClient.updateData(did, this.plcRotationKey, (op) => ({
       ...op,
       verificationMethods: { ...op.verificationMethods, atproto_kem: kemKey },
