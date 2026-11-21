@@ -1,5 +1,6 @@
 import { once } from 'node:events'
 import http from 'node:http'
+import net from 'node:net'
 import { performance } from 'node:perf_hooks'
 import { setTimeout as sleep } from 'node:timers/promises'
 import * as plc from '@did-plc/lib'
@@ -132,6 +133,14 @@ describe('PDS limit on requests to the AppView', () => {
   let otherServiceDid: string
   let network: TestNetworkNoAppView
   let accessJwt: string
+
+  const getAuthorFeed = () =>
+    pdsGet(
+      network.pds.url,
+      'app.bsky.feed.getAuthorFeed',
+      { actor: 'did:example:alice' },
+      { accessJwt },
+    )
 
   const getLikes = () =>
     pdsGet(
@@ -370,6 +379,45 @@ describe('PDS limit on requests to the AppView', () => {
     await Promise.all(responses.map((r) => r.text()))
   })
 
+  it('frees the slot of a client that does not read the response', async () => {
+    // More than the PDS and its sockets buffer, so the PDS has to wait for
+    // the client before it can finish writing the response.
+    appview.respondTo('app.bsky.feed.getLikes', {
+      status: 200,
+      body: { padding: 'x'.repeat(8_000_000) },
+    })
+    const stalled = await openStalledRequest(
+      network.pds.url,
+      'GET /xrpc/app.bsky.feed.getLikes?uri=at%3A%2F%2Fdid%3Aexample%3Aalice%2Fapp.bsky.feed.post%2F1',
+      { accessJwt },
+    )
+    const next = getAuthorFeed()
+    try {
+      await appview.waitForArrivals(1)
+      expect(await statusWithin(next, 3000)).toBe(200)
+    } finally {
+      stalled.destroy()
+      await (await next).text()
+    }
+  })
+
+  it('holds no slot for a client that stalls while sending its request', async () => {
+    const stalled = await openStalledRequest(
+      network.pds.url,
+      'POST /xrpc/app.bsky.graph.muteActor',
+      { accessJwt, contentLength: 1000, body: '{"actor":' },
+    )
+    let next: Promise<Response> | undefined
+    try {
+      await appview.waitForArrivals(1)
+      next = getAuthorFeed()
+      expect(await statusWithin(next, 3000)).toBe(200)
+    } finally {
+      stalled.destroy()
+      await (await next)?.text()
+    }
+  })
+
   it('does not apply the AppView limit to other proxied services', async () => {
     appview.hold()
     const inFlight = getLikes()
@@ -516,6 +564,45 @@ async function pdsGet(
   if (opts.accessJwt) headers.set('authorization', `Bearer ${opts.accessJwt}`)
   if (opts.proxy) headers.set('atproto-proxy', opts.proxy)
   return fetch(url, { headers })
+}
+
+/**
+ * Sends the start of a request to the PDS on a socket that is never read
+ * from, and for a POST never completes the body. The caller destroys it.
+ */
+async function openStalledRequest(
+  pdsUrl: string,
+  requestLine: string,
+  opts: { accessJwt: string; contentLength?: number; body?: string },
+): Promise<net.Socket> {
+  const url = new URL(pdsUrl)
+  const socket = net.connect(Number(url.port), url.hostname)
+  socket.on('error', () => {})
+  await once(socket, 'connect')
+  const headers = [
+    `${requestLine} HTTP/1.1`,
+    `Host: ${url.host}`,
+    `Authorization: Bearer ${opts.accessJwt}`,
+  ]
+  if (opts.contentLength !== undefined) {
+    headers.push(
+      'Content-Type: application/json',
+      `Content-Length: ${opts.contentLength}`,
+    )
+  }
+  socket.write(`${headers.join('\r\n')}\r\n\r\n${opts.body ?? ''}`)
+  return socket
+}
+
+/** The status of `response`, or `undefined` if it has not come in `ms`. */
+async function statusWithin(
+  response: Promise<Response>,
+  ms: number,
+): Promise<number | undefined> {
+  return Promise.race([
+    response.then((r) => r.status),
+    sleep(ms).then(() => undefined),
+  ])
 }
 
 async function pdsPost(
@@ -679,6 +766,8 @@ class FakeUpstream {
       res.end(JSON.stringify(canned?.body ?? { nsid }))
     }
     if (this.holding) this.held.push(send)
-    else send()
+    else if (req.complete) send()
+    // Like a real service, answers only once the whole request has arrived.
+    else req.resume().once('end', send)
   }
 }

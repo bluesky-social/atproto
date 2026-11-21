@@ -607,6 +607,11 @@ export type BksyAppViewConfig = {
    * limit. Requests over the cap wait in the same bounded queue as requests
    * over the rate.
    *
+   * A request is in flight from when it is sent until the AppView's response
+   * headers arrive. The time a client takes to read a proxied response, or
+   * to upload the body of a proxied POST, is not counted, so a slow client
+   * cannot use up the cap.
+   *
    * The cap exists because the rate alone does not bound what reaches the
    * AppView: requests sent while it is slow or unreachable pile up and arrive
    * together when it recovers. With the cap, the worst-case burst in one
