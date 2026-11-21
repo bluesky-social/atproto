@@ -117,6 +117,7 @@ export function readEnv() {
     bskyAppViewMaxQueuedRequests: envInt(
       'PDS_BSKY_APP_VIEW_MAX_QUEUED_REQUESTS',
     ),
+    bskyAppViewMaxQueueMs: envInt('PDS_BSKY_APP_VIEW_MAX_QUEUE_MS'),
 
     // mod service
     modServiceUrl: envStr('PDS_MOD_SERVICE_URL'),

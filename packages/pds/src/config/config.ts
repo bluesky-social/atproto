@@ -209,6 +209,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
       maxRequestsPerSecond: env.bskyAppViewMaxRequestsPerSecond ?? 300,
       maxConcurrentRequests: env.bskyAppViewMaxConcurrentRequests ?? 100,
       maxQueuedRequests: env.bskyAppViewMaxQueuedRequests ?? 1500,
+      maxQueueMs: env.bskyAppViewMaxQueueMs ?? 5000,
     }
   }
 
@@ -573,6 +574,7 @@ export type BksyAppViewConfig = {
   maxRequestsPerSecond: number
   maxConcurrentRequests: number
   maxQueuedRequests: number
+  maxQueueMs: number
 }
 
 export type ModServiceConfig = {
