@@ -238,8 +238,10 @@ export function limiterFetch(
 ): typeof globalThis.fetch {
   return async (input, init) => {
     const release = await limiter.acquire()
-    const response = await fetch(input, init)
-    release()
-    return response
+    try {
+      return await fetch(input, init)
+    } finally {
+      release()
+    }
   }
 }

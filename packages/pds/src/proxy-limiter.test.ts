@@ -520,4 +520,38 @@ describe('limiterFetch', () => {
     calls[1].resolve(new Response('two'))
     expect(await (await second).text()).toBe('two')
   })
+
+  it('frees the slot when the call fails', async () => {
+    const { calls, fetch } = pendingFetch()
+    const limited = limiterFetch(oneAtATime(10), fetch)
+
+    const first = limited('http://appview.test/first')
+    const second = limited('http://appview.test/second')
+    await settle()
+    expect(calls).toHaveLength(1)
+
+    calls[0].reject(new Error('connection refused'))
+    await expect(first).rejects.toThrow('connection refused')
+    await settle()
+    expect(calls).toHaveLength(2)
+
+    calls[1].resolve(new Response('two'))
+    expect(await (await second).text()).toBe('two')
+  })
+
+  // Nothing to change for this one: acquire() rejects before fetch is reached.
+  it('fails a call the limiter turns away with the limiter error, without sending it', async () => {
+    const { calls, fetch } = pendingFetch()
+    const limited = limiterFetch(oneAtATime(0), fetch)
+
+    const first = limited('http://appview.test/first')
+    await settle()
+    await expect(limited('http://appview.test/second')).rejects.toBeInstanceOf(
+      ProxyLimitExceededError,
+    )
+    expect(calls).toHaveLength(1)
+
+    calls[0].resolve(new Response('one'))
+    await first
+  })
 })
