@@ -278,6 +278,34 @@ describe('PDS limit on requests to the AppView', () => {
     await Promise.all(responses.map((r) => r.text()))
   })
 
+  // app.bsky.feed.getFeed first fetches the feed's record from the AppView
+  // with ctx.bskyAppView.client. A limiter rejection there comes back from the
+  // lex client wrapped in a fetch error, which would otherwise answer 502.
+  it("answers 429 with Retry-After when the limit turns away a handler's own call", async () => {
+    appview.hold()
+    const inFlight = getLikes()
+    await appview.waitForArrivals(1)
+    const queued = getLikes()
+    await sleep(200)
+
+    const rejected = await pdsGet(
+      network.pds.url,
+      'app.bsky.feed.getFeed',
+      { feed: 'at://did:example:feedgen/app.bsky.feed.generator/test' },
+      { accessJwt },
+    )
+    expect(rejected.status).toBe(429)
+    expect(await rejected.json()).toMatchObject({ error: 'RateLimitExceeded' })
+    expect(Number(rejected.headers.get('retry-after'))).toBeGreaterThanOrEqual(
+      1,
+    )
+    expect(appview.arrivalsFor('com.atproto.repo.getRecord')).toHaveLength(0)
+
+    appview.release()
+    const responses = await Promise.all([inFlight, queued])
+    await Promise.all(responses.map((r) => r.text()))
+  })
+
   it('does not apply the AppView limit to other proxied services', async () => {
     appview.hold()
     const inFlight = getLikes()
