@@ -145,4 +145,30 @@ describe('ProxyLimiter', () => {
     await jest.advanceTimersByTimeAsync(0)
     expect([first.state, second.state]).toEqual(['granted', 'rejected'])
   })
+
+  it('rejects a waiter that has queued for maxQueueMs', async () => {
+    const limiter = new ProxyLimiter({
+      maxRequestsPerSecond: 1000,
+      maxConcurrentRequests: 1,
+      maxQueuedRequests: 100,
+      maxQueueMs: 500,
+    })
+
+    const release = await limiter.acquire()
+    const early = observe(limiter.acquire())
+    await jest.advanceTimersByTimeAsync(200)
+    const late = observe(limiter.acquire())
+
+    await jest.advanceTimersByTimeAsync(299)
+    expect([early.state, late.state]).toEqual(['pending', 'pending'])
+
+    await jest.advanceTimersByTimeAsync(1)
+    expect([early.state, late.state]).toEqual(['rejected', 'pending'])
+    expect(early.error).toBeInstanceOf(ProxyLimitExceededError)
+
+    // The expired waiter no longer holds a place: the next slot goes to late
+    release()
+    await jest.advanceTimersByTimeAsync(0)
+    expect(late.state).toBe('granted')
+  })
 })

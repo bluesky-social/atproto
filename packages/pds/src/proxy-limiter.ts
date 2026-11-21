@@ -21,6 +21,7 @@ export class ProxyLimitExceededError extends Error {
 
 type Waiter = {
   resolve: (release: () => void) => void
+  expiry?: ReturnType<typeof setTimeout>
 }
 
 /**
@@ -51,15 +52,23 @@ export class ProxyLimiter {
    */
   acquire(): Promise<() => void> {
     return new Promise((resolve, reject) => {
-      this.queue.push({ resolve })
+      const waiter: Waiter = { resolve }
+      this.queue.push(waiter)
       this.pump()
+      // Pumping only takes from the front, so the new waiter is still queued
+      // exactly when it is still last.
+      if (this.queue.at(-1) !== waiter) return
       // Checked after pumping so that a request that can be sent now is never
-      // turned away by a full (or zero-length) queue. If it is still waiting
-      // and over capacity, it is the newest entry.
+      // turned away by a full (or zero-length) queue.
       if (this.queue.length > this.opts.maxQueuedRequests) {
         this.queue.pop()
         reject(new ProxyLimitExceededError(this.queueDrainMs()))
+        return
       }
+      waiter.expiry = setTimeout(() => {
+        this.queue.splice(this.queue.indexOf(waiter), 1)
+        reject(new ProxyLimitExceededError(this.queueDrainMs()))
+      }, this.opts.maxQueueMs)
     })
   }
 
@@ -87,6 +96,7 @@ export class ProxyLimiter {
       }
       const waiter = this.queue.shift()
       if (!waiter) return
+      clearTimeout(waiter.expiry)
       this.grantTimes.push(now)
       this.inFlight++
       let released = false
