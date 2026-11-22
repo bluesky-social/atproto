@@ -105,6 +105,12 @@ export const assertValidDidDocumentForService = async (
       pdsEndpoint: getPdsEndpoint(resolved),
       signingKey: getSigningDidKey(resolved),
       kemKey: kemKey && getDidKeyFromMultibase(kemKey),
+      // @NOTE The backfill cannot publish did:web keys; their owners must do so.
+      allowMissingKemKey:
+        did.startsWith('did:web:') &&
+        !resolved.verificationMethod?.some(
+          ({ id }) => id === '#atproto_kem' || id === `${did}#atproto_kem`,
+        ),
     })
   }
 }
@@ -119,11 +125,13 @@ const assertValidDocContents = async (
   contents: {
     signingKey?: string
     kemKey?: string
+    allowMissingKemKey?: boolean
     pdsEndpoint?: string
     rotationKeys?: string[]
   },
 ) => {
-  const { signingKey, kemKey, pdsEndpoint, rotationKeys } = contents
+  const { signingKey, kemKey, allowMissingKemKey, pdsEndpoint, rotationKeys } =
+    contents
 
   const plcRotationKey =
     ctx.cfg.entryway?.plcRotationKey ?? ctx.plcRotationKey.did()
@@ -146,10 +154,14 @@ const assertValidDocContents = async (
     )
   }
 
-  // Accounts the KEM key backfill has yet to reach have no KEM key.
-  // @TODO also require it behind an entryway, once the entryway publishes it.
+  // @TODO An entryway could reserve and publish KEM keys before requiring them here.
   const kemKeypair = await ctx.actorStore.kemKeypair(did)
-  if (kemKeypair && !ctx.cfg.entryway && kemKey !== kemKeypair.did()) {
+  if (
+    kemKeypair &&
+    !ctx.cfg.entryway &&
+    !allowMissingKemKey &&
+    kemKey !== kemKeypair.did()
+  ) {
     throw new InvalidRequestError(
       'DID document verification method does not match expected KEM key',
     )

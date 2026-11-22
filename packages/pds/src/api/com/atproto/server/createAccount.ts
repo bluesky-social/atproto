@@ -208,8 +208,8 @@ const validateInputsForEntrywayPds = async (
   if (!signingKey) {
     throw new InvalidRequestError('reserved signing key does not exist')
   }
-  // @TODO require a KEM key in the op once the entryway reserves them. Until
-  // then, an op without one gets a key generated here, left unpublished.
+  // @NOTE An entryway can reserve a KEM key and include it in the op. If it
+  // omits the key, generate one locally and leave it unpublished.
   const kemKey = data.kemKey
     ? ((await ctx.actorStore.getReservedKemKeypair(did)) ??
       (await ctx.actorStore.getReservedKemKeypair(data.kemKey)))

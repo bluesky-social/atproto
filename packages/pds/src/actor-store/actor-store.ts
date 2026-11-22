@@ -30,6 +30,7 @@ export class ActorStore {
   }
 
   async getLocation(did: string) {
+    assertSafePathPart(did)
     const didHash = await crypto.sha256Hex(did)
     const directory = path.join(this.cfg.directory, didHash.slice(0, 2), did)
     const dbLocation = path.join(directory, `store.sqlite`)
@@ -186,6 +187,7 @@ export class ActorStore {
   async getReservedSigningKeypair(
     signingKeyOrDid: string,
   ): Promise<ExportableKeypair | undefined> {
+    assertSafePathPart(signingKeyOrDid)
     return loadKey(
       path.join(this.reservedSigningKeyDir, signingKeyOrDid),
       crypto.Secp256k1Keypair,
@@ -199,6 +201,7 @@ export class ActorStore {
   async getReservedKemKeypair(
     kemKeyOrDid: string,
   ): Promise<ExportableKeypair | undefined> {
+    assertSafePathPart(kemKeyOrDid)
     return loadKey(
       path.join(this.reservedKemKeyDir, kemKeyOrDid),
       crypto.P256Keypair,
@@ -210,6 +213,9 @@ export class ActorStore {
     did: string,
     keys: { signingKey: string; kemKey: string },
   ) {
+    assertSafePathPart(did)
+    assertSafePathPart(keys.signingKey)
+    assertSafePathPart(keys.kemKey)
     await Promise.all([
       rmIfExists(path.join(this.reservedSigningKeyDir, did)),
       rmIfExists(path.join(this.reservedSigningKeyDir, keys.signingKey)),
