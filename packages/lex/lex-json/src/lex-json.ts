@@ -322,10 +322,10 @@ export function parseSpecialJsonObject(
     const cid = parseLexLink(input)
     if (cid) return cid
     if (options.strict) throw new TypeError(`Invalid $link object`)
-  } else if (input.$bytes !== undefined) {
+  } else if ('$bytes' in input) {
     const bytes = parseLexBytes(input)
     if (bytes) return bytes
-    if (options.strict) throw new TypeError(`Invalid $bytes object`)
+    throw new TypeError(`Invalid $bytes object`)
   } else if (input.$type !== undefined) {
     // @NOTE Since blobs are "just" regular lex objects with a special shape,
     // and because an object that does not conform to the blob shape would still
