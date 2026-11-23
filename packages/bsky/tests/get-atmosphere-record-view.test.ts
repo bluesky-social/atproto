@@ -129,7 +129,7 @@ async function setup() {
   const versions = new Map<string, TypedLexMap>([
     [`${docUri}@${cidB}`, document('Pinned')],
   ])
-  const viewerLikes = new Map<AtUriString, AtUriString>()
+  const viewerActions = new Map<AtUriString, AtUriString>()
   const takenDown = new Set<string>()
   const blocked = new Set<string>()
   const backlinks = new Map<string, AtUriString[]>([
@@ -194,13 +194,13 @@ async function setup() {
           collection,
         }) => ({
           results: targetUris.map((targetUri) => {
-            const like =
+            const action =
               actorDid === viewer
-                ? viewerLikes.get(targetUri as AtUriString)
+                ? viewerActions.get(targetUri as AtUriString)
                 : undefined
             return {
               targetUri,
-              uris: like?.includes(`/${collection}/`) ? [like] : [],
+              uris: action?.includes(`/${collection}/`) ? [action] : [],
             }
           }),
         }),
@@ -275,7 +275,7 @@ async function setup() {
   return {
     latest,
     versions,
-    viewerLikes,
+    viewerActions,
     takenDown,
     blocked,
     spies,
@@ -577,8 +577,8 @@ describe('app.bsky.unspecced.getAtmosphereRecordViews', () => {
       'my-recommend',
     )
     const favorite = atUri(viewer, social.grain.favorite.$type, 'my-favorite')
-    fixture.viewerLikes.set(docUri, recommend)
-    fixture.viewerLikes.set(galleryUri, favorite)
+    fixture.viewerActions.set(docUri, recommend)
+    fixture.viewerActions.set(galleryUri, favorite)
     const input = {
       records: [
         { uri: docUri },
@@ -608,10 +608,49 @@ describe('app.bsky.unspecced.getAtmosphereRecordViews', () => {
       { viewer: {} },
       { viewer: {} },
     ])
-    fixture.viewerLikes.clear()
+    fixture.viewerActions.clear()
     expect((await fixture.query({ uri: galleryUri })).body.view).toMatchObject({
       viewer: {},
     })
+  })
+
+  it('populates subscriptions for publication roots and article publishers across single, batch, latest and pinned views', async () => {
+    await using fixture = await setup()
+    const subscription = atUri(
+      viewer,
+      site.standard.graph.subscription.$type,
+      'sub',
+    )
+    fixture.viewerActions.set(pubUri, subscription)
+    const records = [
+      { uri: pubUri },
+      { uri: pubUri, cid: cidA },
+      { uri: docUri },
+      { uri: docUri, cid: cidB },
+    ]
+    const expected = (viewer: { subscription?: AtUriString }) => [
+      { view: { viewer } },
+      { view: { viewer } },
+      { view: { publisher: { viewer } } },
+      { view: { publisher: { viewer } } },
+    ]
+
+    const batch = await fixture.fetchBatch({ records })
+    expect(batch.status).toBe(200)
+    expect(batch.body.views).toMatchObject(expected({ subscription }))
+    for (const [i, record] of records.entries()) {
+      const single = await fixture.query(record)
+      expect(single.status).toBe(200)
+      expect(single.body).toMatchObject(expected({ subscription })[i])
+      expect(uris(single.body.associatedRefs)).not.toContain(subscription)
+    }
+    const other = await fixture.fetchBatch({ records }, 'did:plc:other')
+    expect(other.status).toBe(200)
+    expect(other.body.views).toMatchObject(expected({}))
+    fixture.viewerActions.clear()
+    const unsubscribed = await fixture.fetchBatch({ records })
+    expect(unsubscribed.status).toBe(200)
+    expect(unsubscribed.body.views).toMatchObject(expected({}))
   })
 
   it('keeps gallery associations separate from unrelated batch roots', async () => {

@@ -218,6 +218,7 @@ async function setup(config: unknown = {}, exploreEnabled = true) {
   const galleryItems = new Map<AtUriString, AtUriString[]>([
     [galleryUri, [itemUri]],
   ])
+  const viewerActions = new Map<AtUriString, AtUriString>()
   const takenDown = new Set<string>()
   const takenDownActors = new Set<string>()
   // Per-DID actor overrides; unlisted DIDs are existing, profile-less actors.
@@ -271,6 +272,22 @@ async function setup(config: unknown = {}, exploreEnabled = true) {
                   (uri) => ({ uri }),
                 )
               : [],
+        }),
+        getAtmosphereBacklinksByActor: ({
+          targetUris,
+          actorDid,
+          collection,
+        }) => ({
+          results: targetUris.map((targetUri) => {
+            const action =
+              actorDid === viewer
+                ? viewerActions.get(targetUri as AtUriString)
+                : undefined
+            return {
+              targetUri,
+              uris: action?.includes(`/${collection}/`) ? [action] : [],
+            }
+          }),
         }),
         getActors: ({ dids }) => ({
           actors: dids.map((did) => {
@@ -442,6 +459,7 @@ async function setup(config: unknown = {}, exploreEnabled = true) {
   return {
     records,
     galleryItems,
+    viewerActions,
     takenDown,
     takenDownActors,
     actors,
@@ -598,6 +616,48 @@ describe('Atmosphere Explore access gate', () => {
 })
 
 describe('Atmosphere Explore', () => {
+  it('populates subscriptions on publications and article publishers only for authenticated viewers', async () => {
+    await using fixture = await setup(curated)
+    const subscription = atUri(
+      viewer,
+      site.standard.graph.subscription.$type,
+      'sub',
+    )
+    fixture.viewerActions.set(pubUri, subscription)
+    using byActor = vi.spyOn(fixture.dataplane, 'getAtmosphereBacklinksByActor')
+    const publicationViewers = (
+      body: app.bsky.unspecced.getAtmosphereExploreTab.$OutputBody,
+    ) => [
+      ...body.publications.items.map(({ view }) => view.viewer),
+      ...body.articles.items.map(({ view }) => view.publisher?.viewer),
+    ]
+
+    const anonymous = await fixture.query()
+    expect(anonymous.status).toBe(200)
+    expect(publicationViewers(anonymous.body)).toEqual([
+      undefined,
+      undefined,
+      undefined,
+    ])
+    expect(byActor).not.toHaveBeenCalled()
+    const subscribed = await fixture.query(true)
+    expect(subscribed.status).toBe(200)
+    expect(publicationViewers(subscribed.body)).toEqual([
+      { subscription },
+      { subscription },
+      { subscription },
+    ])
+    expect(
+      byActor.mock.calls.filter(
+        ([req]) => req.collection === site.standard.graph.subscription.$type,
+      ),
+    ).toHaveLength(1)
+    fixture.viewerActions.clear()
+    const unsubscribed = await fixture.query(true)
+    expect(unsubscribed.status).toBe(200)
+    expect(publicationViewers(unsubscribed.body)).toEqual([{}, {}, {}])
+  })
+
   test.each([false, true])(
     'hydrates article and livestream posts over HTTP (authenticated: %s)',
     async (authenticated) => {
@@ -4276,6 +4336,77 @@ describe('Atmosphere Explore Iris galleries', () => {
 })
 
 describe('Atmosphere recommended activity', () => {
+  it('populates article subscriptions alongside article and gallery likes without preview hydration', async () => {
+    await using fixture = await setup()
+    fixture.iris.activityResponse = {
+      items: [docUri, galleryUri, doc2Uri].map((uri) => ({ uri })),
+      recIdStr: 'viewer-states',
+    }
+    const subscription = atUri(
+      viewer,
+      site.standard.graph.subscription.$type,
+      'sub',
+    )
+    const recommend = atUri(
+      viewer,
+      site.standard.graph.recommend.$type,
+      'recommend',
+    )
+    const favorite = atUri(viewer, social.grain.favorite.$type, 'favorite')
+    fixture.viewerActions.set(pubUri, subscription)
+    fixture.viewerActions.set(docUri, recommend)
+    fixture.viewerActions.set(galleryUri, favorite)
+    using byActor = vi.spyOn(fixture.dataplane, 'getAtmosphereBacklinksByActor')
+    using previews = vi.spyOn(fixture.dataplane, 'getAtmosphereBacklinks')
+    const anonymous = await fixture.queryRecommendedActivity()
+    expect(anonymous.status).toBe(200)
+    expect(
+      anonymous.body.items.map(({ view }) => {
+        assert(
+          app.bsky.embed.external.viewArticle.$isTypeOf(view) ||
+            app.bsky.embed.external.viewGallery.$isTypeOf(view),
+        )
+        return view.viewer
+      }),
+    ).toEqual([undefined, undefined, undefined])
+    const anonymousArticle = anonymous.body.items[0].view
+    assert(app.bsky.embed.external.viewArticle.$isTypeOf(anonymousArticle))
+    expect(anonymousArticle.publisher?.viewer).toBeUndefined()
+    expect(byActor).not.toHaveBeenCalled()
+
+    const subscribed = await fixture.queryRecommendedActivity(true)
+    expect(subscribed.status).toBe(200)
+    expect(subscribed.body.items).toMatchObject([
+      {
+        view: {
+          viewer: { like: recommend },
+          publisher: { viewer: { subscription } },
+        },
+      },
+      { view: { viewer: { like: favorite } } },
+      { view: { viewer: {}, publisher: { viewer: { subscription } } } },
+    ])
+    expect(
+      byActor.mock.calls.filter(
+        ([req]) => req.collection === site.standard.graph.subscription.$type,
+      ),
+    ).toHaveLength(1)
+    expect(
+      previews.mock.calls.every(
+        ([req]) => req.collection === grainGalleryItem.$type,
+      ),
+    ).toBe(true)
+
+    fixture.viewerActions.clear()
+    const unsubscribed = await fixture.queryRecommendedActivity(true)
+    expect(unsubscribed.status).toBe(200)
+    expect(unsubscribed.body.items).toMatchObject([
+      { view: { viewer: {}, publisher: { viewer: {} } } },
+      { view: { viewer: {} } },
+      { view: { viewer: {}, publisher: { viewer: {} } } },
+    ])
+  })
+
   test.each([false, true])(
     'preserves mixed recommendation order (authenticated: %s)',
     async (authenticated) => {

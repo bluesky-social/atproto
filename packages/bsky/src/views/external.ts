@@ -23,8 +23,6 @@ import type { ExternalRecordView, Label, ProfileViewBasic } from './types.js'
 export const LIVESTREAM_HEARTBEAT_WINDOW_MS = 2 * MINUTE
 
 export type ExternalRecordViewOptions = {
-  /** Include the viewer's state on publication views, from hydrated subscriptions. */
-  publicationViewer?: boolean
   /** Compute livestream `active` with {@link isLivestreamLive}. */
   livestreamCreatedAtHeartbeat?: boolean
 }
@@ -120,13 +118,7 @@ function externalRecordViewOrRefs(
       if (!publication) return
       base = publication.url
       if (!refsOnly) {
-        publisher = publicationView(
-          views,
-          record.site,
-          state,
-          publication,
-          options,
-        )
+        publisher = publicationView(views, record.site, state, publication)
       }
       refs.push(record.site)
     }
@@ -166,7 +158,7 @@ function externalRecordViewOrRefs(
     const publication = publicationRecord(info)
     if (!publication) return
     if (refsOnly) return [uri]
-    return publicationView(views, uri, state, publication, options)
+    return publicationView(views, uri, state, publication)
   }
 
   if (social.grain.gallery.$matches(record)) {
@@ -282,11 +274,10 @@ function publicationView(
   uri: AtUriString,
   state: HydrationState,
   publication: NonNullable<ReturnType<typeof publicationRecord>>,
-  options: ExternalRecordViewOptions,
 ): $Typed<app.bsky.embed.external.ViewArticlePublication> {
   const { record, url, info } = publication
   // @NOTE Unknown subscription outcomes omit the viewer state rather than guess.
-  const subscription = options.publicationViewer
+  const subscription = state.ctx?.viewer
     ? state.externalPublicationSubscriptions?.get(uri)
     : undefined
   return app.bsky.embed.external.viewArticlePublication.$build({

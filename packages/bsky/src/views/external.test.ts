@@ -456,47 +456,60 @@ describe('record modality views', () => {
     },
   )
 
-  it('includes publication viewer state only when requested and known', () => {
-    const state = {
-      ...createState(),
-      externalPublicationSubscriptions: new HydrationMap<
-        AtUriString,
-        AtUriString | false
-      >(),
-    }
-    addPublication(state)
-    addArticle(state)
-    const subscription = atUri(
-      'did:plc:viewer',
-      site.standard.graph.subscription.$type,
-      'sub',
-    )
-    const viewer = (
-      uri: AtUriString,
-      options?: { publicationViewer?: boolean },
-    ) => {
-      const view = views.externalRecordView(uri, state, 0, undefined, options)
-      assert(view)
-      assertValid(view)
-      return app.bsky.embed.external.viewArticle.$isTypeOf(view)
-        ? view.publisher?.viewer
-        : app.bsky.embed.external.viewArticlePublication.$isTypeOf(view)
-          ? view.viewer
-          : undefined
-    }
+  test.each([
+    { name: 'publication', uri: pubUri },
+    { name: 'article publisher', uri: docUri },
+  ])(
+    'includes $name viewer state only when authenticated and known',
+    ({ uri }) => {
+      const viewerDid: DidString = 'did:plc:viewer'
+      const state = {
+        ...createState(),
+        ctx: new HydrateCtx({
+          viewer: viewerDid,
+          labelers: { dids: [], redact: new Set() },
+          features: {} as never,
+        }),
+        externalPublicationSubscriptions: new HydrationMap<
+          AtUriString,
+          AtUriString | false
+        >(),
+      }
+      addPublication(state)
+      addArticle(state)
+      const subscription = atUri(
+        viewerDid,
+        site.standard.graph.subscription.$type,
+        'sub',
+      )
+      const info = state.externalRecords.get(uri)!
+      state.externalRecordsByRef.set(genericRecordKey({ uri, cid }), info)
+      const viewer = (cid?: string) => {
+        const view = views.externalRecordView(uri, state, 0, cid)
+        assert(view)
+        assertValid(view)
+        return app.bsky.embed.external.viewArticle.$isTypeOf(view)
+          ? view.publisher?.viewer
+          : app.bsky.embed.external.viewArticlePublication.$isTypeOf(view)
+            ? view.viewer
+            : undefined
+      }
 
-    state.externalPublicationSubscriptions.set(pubUri, subscription)
-    expect(viewer(pubUri)).toBeUndefined()
-    for (const uri of [pubUri, docUri]) {
-      expect(viewer(uri, { publicationViewer: true })).toEqual({
-        subscription,
-      })
-    }
-    state.externalPublicationSubscriptions.set(pubUri, false)
-    expect(viewer(pubUri, { publicationViewer: true })).toEqual({})
-    state.externalPublicationSubscriptions.set(pubUri, null)
-    expect(viewer(pubUri, { publicationViewer: true })).toBeUndefined()
-  })
+      for (const version of [undefined, cid]) {
+        expect(viewer(version)).toBeUndefined()
+        state.externalPublicationSubscriptions.set(pubUri, subscription)
+        expect(viewer(version)).toEqual({ subscription })
+        state.externalPublicationSubscriptions.set(pubUri, false)
+        expect(viewer(version)).toEqual({})
+        state.externalPublicationSubscriptions.set(pubUri, null)
+        expect(viewer(version)).toBeUndefined()
+      }
+      state.externalPublicationSubscriptions.set(pubUri, subscription)
+      state.ctx = state.ctx.copy({ viewer: null })
+      expect(viewer()).toBeUndefined()
+      expect(viewer(cid)).toBeUndefined()
+    },
+  )
 
   it('builds a loose document and omits reading time for blank text', () => {
     const state = createState()
