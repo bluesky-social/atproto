@@ -1,5 +1,30 @@
 # @atproto/pds
 
+## 0.5.65
+
+### Patch Changes
+
+- [#5995](https://github.com/bluesky-social/atproto/pull/5995) [`1ec588b`](https://github.com/bluesky-social/atproto/commit/1ec588b282a9a04454994ecfac53d66495c13960) Thanks [@haileyok](https://github.com/haileyok)! - `com.atproto.server.createSession` now passes only its declared inputs to `AccountManager.login()`, rather than forwarding undeclared properties from the request body as login options.
+
+- [#5952](https://github.com/bluesky-social/atproto/pull/5952) [`67fc7db`](https://github.com/bluesky-social/atproto/commit/67fc7db6e644fe32880335c404195b31d3840acf) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Register the import-in-the-middle ESM loader hook in-thread with `module.registerHooks()` instead of the deprecated `module.register()` (DEP0205), and update `@opentelemetry/*` dependencies. `@atproto-labs/opentelemetry-node`, and the services that load it, now require Node.js `^22.22.3 || ^24.11.1 || >=25.1.0`.
+
+- [#5979](https://github.com/bluesky-social/atproto/pull/5979) [`906202d`](https://github.com/bluesky-social/atproto/commit/906202dc65cb9c0ea9a1f46558e98026a058e6a1) Thanks [@sarahmaeve](https://github.com/sarahmaeve)! - Add optional limits on requests from the PDS to its configured AppView. Set `PDS_BSKY_APP_VIEW_MAX_REQUESTS_PER_SECOND` or `PDS_BSKY_APP_VIEW_MAX_CONCURRENT_REQUESTS` to enable them; both default to `0` (no limit). Requests over a limit wait in a bounded queue, then receive a 429 response with `Retry-After` if the queue is full or the wait expires.
+  
+  `PDS_BSKY_APP_VIEW_MAX_QUEUED_REQUESTS` sets the queue size (default `1500`), and `PDS_BSKY_APP_VIEW_MAX_QUEUE_MS` sets the maximum wait in milliseconds (default `5000`). Setting either to `0` prevents waiting.
+  
+  When limits are enabled, the OpenTelemetry histogram `appview.request.limit.wait` records wait times in milliseconds, including `0` for requests sent immediately. The counter `appview.request.limit.rejected` counts rejected requests by reason: `queue_full` or `queue_timeout`.
+- Updated dependencies [[`67fc7db`](https://github.com/bluesky-social/atproto/commit/67fc7db6e644fe32880335c404195b31d3840acf), [`9901412`](https://github.com/bluesky-social/atproto/commit/9901412468741c11399c130a39aa44bc7dd06cb8)]:
+  - @atproto-labs/opentelemetry-node@0.6.0
+  - @atproto/lex-json@0.1.11
+  - @atproto/lex-client@0.6.2
+  - @atproto/xrpc-server@0.13.16
+  - @atproto/aws@0.3.27
+  - @atproto/common@0.8.13
+  - @atproto/identity@0.5.26
+  - @atproto/repo@0.11.8
+  - @atproto-labs/xrpc-utils@0.1.37
+  - @atproto/oauth-provider@0.27.2
+
 ## 0.5.64
 
 ### Patch Changes

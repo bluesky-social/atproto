@@ -1,5 +1,12 @@
 # @atproto/lex-client
 
+## 0.6.2
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/lex-rpc@0.2.2
+
 ## 0.6.1
 
 ### Patch Changes

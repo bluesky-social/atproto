@@ -1,5 +1,13 @@
 # @atproto/tap
 
+## 0.4.23
+
+### Patch Changes
+
+- Updated dependencies [[`9901412`](https://github.com/bluesky-social/atproto/commit/9901412468741c11399c130a39aa44bc7dd06cb8)]:
+  - @atproto/lex-json@0.1.11
+  - @atproto/common@0.8.13
+
 ## 0.4.22
 
 ### Patch Changes
