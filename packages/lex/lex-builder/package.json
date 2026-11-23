@@ -47,7 +47,7 @@
     "yargs": "^18.2.0"
   },
   "devDependencies": {
-    "@ts-morph/common": "^0.29.0",
+    "@ts-morph/common": "^0.29.1",
     "@types/yargs": "^17.0.33",
     "vitest": "^5.1.1"
   },
