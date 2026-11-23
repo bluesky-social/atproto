@@ -105,10 +105,9 @@ export type ExternalHydrationLevel = 'basic' | 'detailed'
  * the whole traversal (default `'detailed'`): `'basic'` hydrates renderable
  * content, moderation and aggregate backlink counts; `'detailed'` also samples
  * social-preview backlinks and hydrates their records and participants.
- * Viewer likes are hydrated for authenticated requests; `recordLikes` shares
- * their cache across traversals. `publicationSubscriptions` opts into
- * request-cached subscription discovery. The remaining fields are shared
- * traversal state.
+ * Viewer likes and publication subscriptions are hydrated for authenticated
+ * requests; `recordLikes` and `publicationSubscriptions` share their caches
+ * across traversals. The remaining fields are shared traversal state.
  */
 export type ExternalHydrationOptions = {
   hydration?: ExternalHydrationLevel

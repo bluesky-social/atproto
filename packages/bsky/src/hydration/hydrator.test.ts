@@ -2602,33 +2602,112 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
       expect(byActor).not.toHaveBeenCalled()
     })
 
-    it.for([
-      { viewer, optIn: false },
-      { viewer: null, optIn: true },
-      { viewer: null, optIn: false },
-    ])(
-      'makes no subscription calls for $viewer with opt-in $optIn',
-      async ({ viewer, optIn }, { fixture }) => {
+    it.for(
+      (['basic', 'detailed'] as const).flatMap((hydration) =>
+        (['uris', 'refs', 'dependencies'] as const).map((root) => ({
+          hydration,
+          root,
+        })),
+      ),
+    )(
+      'automatically hydrates subscriptions through $root with $hydration hydration',
+      async ({ hydration, root }, { fixture }) => {
         const { hydrator, ctx, dataplane, seedBasic } = fixture
         seedBasic()
-        using byActor = vi.spyOn(dataplane, 'getAtmosphereBacklinksByActor')
+        using byActor = vi
+          .spyOn(dataplane, 'getAtmosphereBacklinksByActor')
+          .mockResolvedValue(
+            new GetAtmosphereBacklinksByActorResponse({
+              results: [
+                { targetUri: pubUri, uris: [subscriptionUri(viewer, 'sub')] },
+              ],
+            }),
+          )
+        using _refs = vi.spyOn(dataplane, 'getRecordsByRef').mockResolvedValue(
+          new GetRecordsByRefResponse({
+            results: [
+              {
+                ref: { uri: pubUri },
+                status: RecordLookupStatus.FOUND,
+                record: {
+                  cid: 'pinned',
+                  record: Buffer.from(lexStringify(makePub())),
+                },
+              },
+            ],
+          }),
+        )
+        const scopedCtx = ctx.copy({ viewer })
+        const state =
+          root === 'uris'
+            ? await hydrator.hydrateEmbedExternalViewFromUris(
+                [doc1, doc2],
+                scopedCtx,
+                { hydration },
+              )
+            : root === 'refs'
+              ? await hydrator.hydrateEmbedExternalViewFromRefs(
+                  [{ uri: pubUri, cid: 'pinned' }],
+                  scopedCtx,
+                  { hydration },
+                )
+              : await hydrator.hydrateExternalViewDependencies(
+                  await hydrator.hydrateEmbedExternalViewFromUris(
+                    [pubUri],
+                    ctx,
+                    { hydration },
+                  ),
+                  [{ uri: pubUri }],
+                  scopedCtx,
+                  { hydration },
+                )
+
+        expect(state.externalPublicationSubscriptions?.get(pubUri)).toBe(
+          subscriptionUri(viewer, 'sub'),
+        )
+        const next = await hydrator.hydrateExternalViewDependencies(
+          state,
+          [{ uri: pubUri }],
+          scopedCtx,
+          { hydration },
+        )
+        expect(next.externalPublicationSubscriptions).toBe(
+          state.externalPublicationSubscriptions,
+        )
+        expect(
+          byActor.mock.calls.filter(
+            ([req]) =>
+              req.collection === site.standard.graph.subscription.$type,
+          ),
+        ).toEqual([
+          [
+            {
+              targetUris: [pubUri],
+              actorDid: viewer,
+              collection: site.standard.graph.subscription.$type,
+            },
+          ],
+        ])
+      },
+    )
+
+    it.for([false, true])(
+      'makes no subscription calls for anonymous requests with shared cache %s',
+      async (sharedCache, { fixture }) => {
+        const { hydrator, ctx, dataplane, seedBasic } = fixture
+        seedBasic()
         const subscriptions: ExternalPublicationSubscriptions | undefined =
-          optIn ? new HydrationMap() : undefined
+          sharedCache ? new HydrationMap() : undefined
         const state = await hydrator.hydrateEmbedExternalViewFromUris(
           [doc1],
-          ctx.copy({ viewer }),
+          ctx,
           { hydration: 'basic', publicationSubscriptions: subscriptions },
         )
 
         expect(state.externalRecords?.get(pubUri)?.record).toEqual(makePub())
         expect(state.externalPublicationSubscriptions).toBe(subscriptions)
         expect(subscriptions?.size ?? 0).toBe(0)
-        expect(
-          byActor.mock.calls.filter(
-            ([req]) =>
-              req.collection === site.standard.graph.subscription.$type,
-          ),
-        ).toEqual([])
+        expect(dataplane.getAtmosphereBacklinksByActor).not.toHaveBeenCalled()
       },
     )
   })
@@ -3335,10 +3414,7 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
           [{ uri: feedUri }, { uri: rootUri }],
           scopedCtx,
           uriState,
-          {
-            externalSeenRecordKeys: seenRecordKeys,
-            externalPublicationSubscriptions: subscriptions,
-          },
+          { externalSeenRecordKeys: seenRecordKeys },
         )
         const state = mergeStates(uriState, postState)
 

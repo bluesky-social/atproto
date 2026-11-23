@@ -6,7 +6,7 @@ import {
   createPromiseClient,
   createRouterTransport,
 } from '@connectrpc/connect'
-import { describe, expect, it, test, vi } from 'vitest'
+import { assert, describe, expect, it, test, vi } from 'vitest'
 import {
   type AtUriString,
   type TypedLexMap,
@@ -32,6 +32,7 @@ const grainGalleryItem = social.grain.gallery.item
 const grainPhoto = social.grain.photo
 const nativeFetch = globalThis.fetch
 const author = 'did:plc:author'
+const viewer = 'did:plc:viewer'
 const labeler = 'did:plc:labeler'
 const cid = 'bafyreie5sviu7eeu3vf6n3lrlmqef2vdlwmgzd6zpolov56agdxtshdpda'
 const docCid = 'bafkreihdwdcefgh4dqkjv67uzcmw7ojee6xedzdetojuzjevtenxquvyku'
@@ -181,6 +182,7 @@ async function setup(domains: string[] = safeDomains) {
   const backlinks = new Map<string, AtUriString[]>([
     [backlinkKey(galleryUri, grainGalleryItem.$type), [itemUri]],
   ])
+  const viewerSubscriptions = new Map<AtUriString, AtUriString>()
   const takenDown = new Set<string>()
   // Record batches including any of these URIs fail.
   const failing = new Set<string>()
@@ -224,6 +226,20 @@ async function setup(domains: string[] = safeDomains) {
             backlinks.get(backlinkKey(targetUri, collection)) ?? []
           ).map((uri) => ({ uri })),
         }),
+        getAtmosphereBacklinksByActor: ({
+          targetUris,
+          actorDid,
+          collection,
+        }) => ({
+          results: targetUris.map((targetUri) => {
+            const subscription =
+              actorDid === viewer &&
+              collection === site.standard.graph.subscription.$type
+                ? viewerSubscriptions.get(targetUri as AtUriString)
+                : undefined
+            return { targetUri, uris: subscription ? [subscription] : [] }
+          }),
+        }),
         getActors: ({ dids }) => ({
           actors: dids.map(() => ({ exists: true, handle: 'author.test' })),
         }),
@@ -258,9 +274,12 @@ async function setup(domains: string[] = safeDomains) {
     views,
     reqLabelers: () => ({ dids: [labeler], redact: new Set([labeler]) }),
     authVerifier: {
-      standardReadOptional: () => async () => ({
-        credentials: { type: 'none', iss: null },
-      }),
+      standardReadOptional:
+        () =>
+        async ({ req }) =>
+          req.headers.authorization === 'Bearer viewer'
+            ? { credentials: { type: 'standard', iss: viewer, aud: author } }
+            : { credentials: { type: 'none', iss: null } },
     } satisfies Pick<AppContext['authVerifier'], 'standardReadOptional'>,
   } as unknown as AppContext
   const xrpc = createServer([], { validateResponse: true })
@@ -282,6 +301,7 @@ async function setup(domains: string[] = safeDomains) {
     dataplane,
     records,
     backlinks,
+    viewerSubscriptions,
     /** Link the stored recommendation, subscription and favorite records. */
     linkEngagement: () => {
       backlinks.set(backlinkKey(docUri, site.standard.graph.recommend.$type), [
@@ -306,7 +326,10 @@ async function setup(domains: string[] = safeDomains) {
         .filter(([, , seen]) => !seen)
         .map(([uris]) => uris),
     lookedUp: () => spies.lookup.mock.calls.flatMap(([{ uris }]) => uris),
-    query: async ({ url, canonicalUri, uris }: Query) => {
+    query: async (
+      { url, canonicalUri, uris }: Query,
+      authenticated = false,
+    ) => {
       const request = new URL(
         `http://127.0.0.1:${address.port}/xrpc/${app.bsky.embed.getEmbedExternalView.$lxm}`,
       )
@@ -314,7 +337,9 @@ async function setup(domains: string[] = safeDomains) {
       if (canonicalUri !== undefined)
         request.searchParams.set('canonicalUri', canonicalUri)
       for (const uri of uris ?? []) request.searchParams.append('uris', uri)
-      const response = await nativeFetch(request)
+      const response = await nativeFetch(request, {
+        headers: authenticated ? { authorization: 'Bearer viewer' } : {},
+      })
       return { status: response.status, body: (await response.json()) as Body }
     },
     async [Symbol.asyncDispose]() {
@@ -336,6 +361,52 @@ const formats = (uri: AtUriString, url: string): [string, Query][] => [
 ]
 
 describe('app.bsky.embed.getEmbedExternalView', () => {
+  test.each([
+    {
+      name: 'publication',
+      canonicalUri: pubUri,
+      url: 'https://example.com/blog',
+    },
+    { name: 'article publisher', canonicalUri: docUri, url: docUrl },
+  ])(
+    'populates authenticated $name subscription state in modality data',
+    async ({ canonicalUri, url }) => {
+      await using fixture = await setup()
+      const subscription = atUri(
+        viewer,
+        site.standard.graph.subscription.$type,
+        'sub',
+      )
+      fixture.viewerSubscriptions.set(pubUri, subscription)
+      using byActor = vi.spyOn(
+        fixture.dataplane,
+        'getAtmosphereBacklinksByActor',
+      )
+      const publicationViewer = ({ data }: Body) => {
+        assert(data)
+        if (app.bsky.embed.external.viewArticle.$isTypeOf(data))
+          return data.publisher?.viewer
+        assert(app.bsky.embed.external.viewArticlePublication.$isTypeOf(data))
+        return data.viewer
+      }
+
+      const anonymous = await fixture.query({ canonicalUri, url })
+      expect(anonymous.status).toBe(200)
+      expect(publicationViewer(anonymous.body)).toBeUndefined()
+      expect(byActor).not.toHaveBeenCalled()
+      const subscribed = await fixture.query({ canonicalUri, url }, true)
+      expect(subscribed.status).toBe(200)
+      expect(publicationViewer(subscribed.body)).toEqual({ subscription })
+      expect(uriList(subscribed.body.associatedRefs)).not.toContain(
+        subscription,
+      )
+      fixture.viewerSubscriptions.clear()
+      const unsubscribed = await fixture.query({ canonicalUri, url }, true)
+      expect(unsubscribed.status).toBe(200)
+      expect(publicationViewer(unsubscribed.body)).toEqual({})
+    },
+  )
+
   describe('input normalization', () => {
     test.each([
       ['no URI input', {}],

@@ -176,7 +176,7 @@ export class AtmosphereTimelineHydrator implements TimelineHydration {
         this.state,
         this.now,
         undefined,
-        { publicationViewer: true, livestreamCreatedAtHeartbeat: true },
+        { livestreamCreatedAtHeartbeat: true },
       )
       if (view) this.externalViews.set(uri, view)
     }

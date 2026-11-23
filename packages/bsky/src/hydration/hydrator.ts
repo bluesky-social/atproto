@@ -866,7 +866,9 @@ export class Hydrator {
       this.hydrateEmbedExternalViewFromRefs(externalRefs, ctx, {
         hydration: 'basic',
         seenRecordKeys: options.externalSeenRecordKeys,
-        publicationSubscriptions: options.externalPublicationSubscriptions,
+        publicationSubscriptions:
+          options.externalPublicationSubscriptions ??
+          state.externalPublicationSubscriptions,
         recordLikes: state.externalRecordLikes,
       }),
     ])
@@ -1068,7 +1070,7 @@ export class Hydrator {
       seenRecordKeys = new Set<string>(),
       hydrationPass = 1,
       hydrationMetrics,
-      publicationSubscriptions,
+      publicationSubscriptions = ctx.viewer ? new HydrationMap() : undefined,
       recordLikes = ctx.viewer ? new HydrationMap() : undefined,
     } = options
     return trackExternalHydration(
@@ -1104,7 +1106,7 @@ export class Hydrator {
       seenRecordKeys = new Set<string>(),
       hydrationPass = 1,
       hydrationMetrics,
-      publicationSubscriptions,
+      publicationSubscriptions = ctx.viewer ? new HydrationMap() : undefined,
       recordLikes = ctx.viewer ? new HydrationMap() : undefined,
     } = options
     return trackExternalHydration(
@@ -1254,7 +1256,8 @@ export class Hydrator {
       seenRecordKeys = new Set<string>(),
       hydrationPass = 1,
       hydrationMetrics,
-      publicationSubscriptions,
+      publicationSubscriptions = state.externalPublicationSubscriptions ??
+        (ctx.viewer ? new HydrationMap() : undefined),
       recordLikes = state.externalRecordLikes ??
         (ctx.viewer ? new HydrationMap() : undefined),
     } = options
