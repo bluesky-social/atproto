@@ -9712,9 +9712,9 @@ packages:
     peerDependencies:
       seroval: ^1.0
 
-  seroval@1.6.2:
-    resolution: {integrity: sha512-mPT+SD2TrlB6wvte1KkYOYUkubaTbd6pZ/6Kk3C9nxzrHmCZyhxOO7XGAeL7f+yLKZglzGtM9odUVvg/EhO+vQ==}
-    engines: {node: '>=10'}
+  seroval@1.8.2:
+    resolution: {integrity: sha512-zmMxi/9MdLK1MKazLmIP6Rk39RuK0Xydd+QHeOYntS37olJeTjB3+nwVj4ce/ZWiZJeRhcO5htfxt0mUzQBscQ==}
+    engines: {node: '>=20'}
 
   serve-static@1.15.0:
     resolution: {integrity: sha512-XGuRDNjXUijsUL0vl6nSD7cwURuzEgglbOaFuZM9g3kwDXOWVTck0jLzjPzGD+TazWbboZYu52/9/XPdUgne9g==}
@@ -14956,8 +14956,8 @@ snapshots:
     dependencies:
       '@tanstack/history': 1.162.4
       cookie-es: 3.1.1
-      seroval: 1.6.2
-      seroval-plugins: 1.6.2(seroval@1.6.2)
+      seroval: 1.8.2
+      seroval-plugins: 1.6.2(seroval@1.8.2)
 
   '@tanstack/router-devtools-core@1.168.2(@tanstack/router-core@1.171.32)(csstype@3.2.3)':
     dependencies:
@@ -19525,11 +19525,11 @@ snapshots:
 
   serialize-error@2.1.0: {}
 
-  seroval-plugins@1.6.2(seroval@1.6.2):
+  seroval-plugins@1.6.2(seroval@1.8.2):
     dependencies:
-      seroval: 1.6.2
+      seroval: 1.8.2
 
-  seroval@1.6.2: {}
+  seroval@1.8.2: {}
 
   serve-static@1.15.0(supports-color@8.1.1):
     dependencies:
