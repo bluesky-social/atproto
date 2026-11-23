@@ -61,7 +61,7 @@
     "@opentelemetry/api": "^1.10.0",
     "@opentelemetry/semantic-conventions": "^1.41.1",
     "@types/http-errors": "^2.0.1",
-    "compression": "^1.7.4",
+    "compression": "^1.8.2",
     "cors": "^2.8.5",
     "disposable-email-domains-js": "^1.5.0",
     "etcd3": "^1.1.2",

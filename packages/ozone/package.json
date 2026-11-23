@@ -52,7 +52,7 @@
     "@atproto/xrpc-server": "workspace:^",
     "@did-plc/lib": "^0.0.1",
     "@opentelemetry/instrumentation-pg": "^0.78.0",
-    "compression": "^1.7.4",
+    "compression": "^1.8.2",
     "cors": "^2.8.5",
     "express": "^4.17.2",
     "http-terminator": "^3.2.0",

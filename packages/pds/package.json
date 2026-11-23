@@ -64,7 +64,7 @@
     "@opentelemetry/instrumentation-aws-sdk": "^0.80.0",
     "@opentelemetry/instrumentation-ioredis": "^0.73.0",
     "better-sqlite3": "^12.0.0",
-    "compression": "^1.7.4",
+    "compression": "^1.8.2",
     "cors": "^2.8.5",
     "disposable-email-domains-js": "^1.5.0",
     "express": "^4.17.2",
