@@ -215,6 +215,8 @@ type HydratePostsOptions = Pick<
 > & {
   knownLikers?: HydrateKnownLikersOptions
   skipReplyBlocks?: boolean
+  /** Keep associated posts from expanding into another modality graph. */
+  skipExternalHydration?: boolean
   externalSeenRecordKeys?: Set<string>
   externalPublicationSubscriptions?: ExternalPublicationSubscriptions
 }
@@ -808,12 +810,6 @@ export class Hydrator {
       }
     }
 
-    const externalRefs = externalAssociatedRefsFromPosts(
-      postsLayer0,
-      postsLayer1,
-      postsLayer2,
-    )
-
     // Collect known-liker profiles and author-liker block relationships.
     const knownLikers = await knownLikersPromise
     const knownLikerDids: DidString[] = []
@@ -865,14 +861,24 @@ export class Hydrator {
       this.hydrateLabelers(nestedLabelerDids, ctx),
       this.hydrateStarterPacksBasic(nestedStarterPackUris, ctx),
       this.feed.getPostgatesForPosts([...postUrisWithPostgates.values()]),
-      this.hydrateEmbedExternalViewFromRefs(externalRefs, ctx, {
-        hydration: 'basic',
-        seenRecordKeys: options.externalSeenRecordKeys,
-        publicationSubscriptions:
-          options.externalPublicationSubscriptions ??
-          state.externalPublicationSubscriptions,
-        recordLikes: state.externalRecordLikes,
-      }),
+      options.skipExternalHydration
+        ? {}
+        : this.hydrateEmbedExternalViewFromRefs(
+            externalAssociatedRefsFromPosts(
+              postsLayer0,
+              postsLayer1,
+              postsLayer2,
+            ),
+            ctx,
+            {
+              hydration: 'basic',
+              seenRecordKeys: options.externalSeenRecordKeys,
+              publicationSubscriptions:
+                options.externalPublicationSubscriptions ??
+                state.externalPublicationSubscriptions,
+              recordLikes: state.externalRecordLikes,
+            },
+          ),
     ])
     if (!ctx.includeTakedowns) {
       actionTakedownLabels(allPostUris, posts, labels)

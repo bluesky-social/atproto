@@ -97,18 +97,13 @@ export class AtmosphereTimelineHydrator implements TimelineHydration {
     )
     if (associated.length) {
       for (const uri of associated) this.seenAssociatedPosts.add(uri)
-      const seen = new Set(this.seen)
       const postState = await this.ctx.hydrator
         .hydratePosts(
           associated.map((uri) => ({ uri })),
           this.hydrateCtx,
-          // @NOTE Isolate post mutations and lookup markers until success.
+          // @NOTE Isolate post mutations until success.
           { ...this.state, posts: new HydrationMap(this.state.posts) },
-          {
-            externalSeenRecordKeys: seen,
-            externalPublicationSubscriptions:
-              this.state.externalPublicationSubscriptions,
-          },
+          { skipExternalHydration: true },
         )
         .catch((err) => {
           if (this.signal.aborted) throw err
@@ -120,7 +115,6 @@ export class AtmosphereTimelineHydrator implements TimelineHydration {
         })
       if (postState) {
         this.state = mergeStates(this.state, postState)
-        this.seen = seen
       }
     }
   }
