@@ -321,5 +321,30 @@ describe('email auth factor', () => {
       // No OTP is minted or sent for a trusted device.
       expect(sendMailMock).not.toHaveBeenCalled()
     })
+
+    // `createSession` forwards only the inputs its lexicon declares to
+    // `login()`. Lexicon objects are open, so an undeclared property still
+    // reaches the handler; it should not be treated as a `login()` option.
+    it('ignores an allowOtpBypassFor supplied in the request body', async () => {
+      const res = await fetch(
+        `${network.pds.url}/xrpc/com.atproto.server.createSession`,
+        {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            identifier: faye.did,
+            password: 'faye-pass',
+            allowOtpBypassFor: [faye.did],
+          }),
+        },
+      )
+
+      expect(res.status).toBe(401)
+      await expect(res.json()).resolves.toMatchObject({
+        error: 'AuthFactorTokenRequired',
+      })
+      // The request fell through to the challenge mail, not to a session.
+      expect(sendMailMock).toHaveBeenCalledTimes(1)
+    })
   })
 })
