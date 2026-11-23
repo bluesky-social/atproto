@@ -1,5 +1,5 @@
 import type { Cid } from '@atproto/lex-data'
-import { isValidNsid } from '@atproto/syntax'
+import { isValidNsid, isValidRecordKey } from '@atproto/syntax'
 import { CidSet } from './cid-set.js'
 import { RepoVerificationError } from './error.js'
 import { nodeDataDef } from './mst/mst.js'
@@ -14,22 +14,22 @@ const utf8 = new TextDecoder()
 
 const ascii = (bytes: Uint8Array): string => utf8.decode(bytes)
 
+const LOWERCASE_AUTHORITY = /^[a-z0-9.-]+\.[a-zA-Z][a-zA-Z0-9]*$/
+
 /**
  * A normalized NSID has a lowercase domain authority (all segments but the
  * name); the name segment is case-sensitive and must not be lowercased.
  */
-const isNormalizedNsid = (nsid: string): boolean => {
-  if (!isValidNsid(nsid)) return false
-  const authority = nsid.slice(0, nsid.lastIndexOf('.'))
-  return authority === authority.toLowerCase()
-}
+const isNormalizedNsid = (nsid: string): boolean =>
+  isValidNsid(nsid) && LOWERCASE_AUTHORITY.test(nsid)
 
 /**
  * Walks every node of the MST at `rootCid` and enforces the repository
  * invariants that CID-consistency and signature checks cannot see:
  *
  * - every record key is a `collection/rkey` path whose collection is a
- *   valid, normalized NSID (lowercase domain authority)
+ *   valid, normalized NSID (lowercase domain authority) and whose rkey is
+ *   a valid record key string
  * - keys appear in strictly ascending order across the in-order traversal,
  *   which is equivalent to every key falling inside the bounds of the
  *   subtree link that reaches it
@@ -75,8 +75,12 @@ export const assertValidRepoStructure = async (
         fail(`invalid record key: ${key}`)
       } else {
         const collection = key.slice(0, key.indexOf('/'))
+        const rkey = key.slice(key.indexOf('/') + 1)
         if (!isNormalizedNsid(collection)) {
           fail(`collection is not a normalized NSID in key: ${key}`)
+        }
+        if (!isValidRecordKey(rkey)) {
+          fail(`invalid record key in path: ${key}`)
         }
       }
       if (prevKey !== null && key <= prevKey) {
