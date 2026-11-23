@@ -5,6 +5,7 @@ import { type AtUriString, type DidString, atUri } from '@atproto/lex-schema'
 import { ImageUriBuilder } from '../image/uri.js'
 import { app, site, social } from '../lexicons/index.js'
 import { Service } from '../proto/bsky_connect.js'
+import { events } from '../telemetry/events.js'
 import { Views } from '../views/index.js'
 import { VideoUriBuilder } from '../views/util.js'
 import type { Actors } from './actor.js'
@@ -326,6 +327,37 @@ describe('external known interactors', () => {
     })
   })
 
+  it.for([
+    { lookup: 'unavailable', outcome: 'completed' },
+    { lookup: 'failed', outcome: 'partial' },
+    { lookup: 'incomplete', outcome: 'partial' },
+  ] as const)(
+    'reports $outcome when the known-interactor lookup is $lookup',
+    async ({ lookup, outcome }, { fixture: { hydrator, ctx } }) => {
+      using report = vi
+        .spyOn(events, 'externalHydrationTraversal')
+        .mockImplementation(() => {})
+      const known = vi.mocked(hydrator.external.getKnownInteractors)
+      if (lookup === 'unavailable') known.mockResolvedValue(undefined)
+      else if (lookup === 'failed')
+        known.mockRejectedValue(new Error('lookup failed'))
+      else known.mockResolvedValue(new HydrationMap())
+
+      const state = await hydrator.hydrateEmbedExternalViewFromUris(
+        [document, gallery],
+        ctx,
+        { hydration: 'basic', knownInteractors: true },
+      )
+      expect(report).toHaveBeenCalledTimes(1)
+      expect(report).toHaveBeenCalledWith(expect.objectContaining({ outcome }))
+      for (const uri of [document, gallery, publication]) {
+        expect(state.externalKnownInteractors?.get(uri)).toBeNull()
+      }
+      expect(modalityView(document, state).viewer).toEqual({})
+      expect(hydrator.hydrateBidirectionalBlocks).not.toHaveBeenCalled()
+    },
+  )
+
   it('caches zero, failed, and unavailable outcomes without inventing zero counts', async ({
     fixture: { hydrator, ctx, known },
   }) => {
@@ -373,6 +405,9 @@ describe('external known interactors', () => {
   it.for(['profiles', 'blocks'] as const)(
     'keeps outcomes unknown when %s hydration fails',
     async (failure, { fixture: { hydrator, ctx } }) => {
+      using report = vi
+        .spyOn(events, 'externalHydrationTraversal')
+        .mockImplementation(() => {})
       if (failure === 'profiles') {
         const original = vi
           .mocked(hydrator.hydrateProfilesBasic)
@@ -398,6 +433,9 @@ describe('external known interactors', () => {
       assert(article && app.bsky.embed.external.viewArticle.$isTypeOf(article))
       expect(article.viewer?.knownLikers).toBeUndefined()
       expect(article.title).toBe('Article')
+      expect(report).toHaveBeenCalledWith(
+        expect.objectContaining({ outcome: 'partial' }),
+      )
     },
   )
 

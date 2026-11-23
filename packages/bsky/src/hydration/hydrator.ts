@@ -1676,7 +1676,8 @@ export class Hydrator {
               collection,
             )
             if (!results) {
-              hydrationMetrics.partial = true
+              // TODO: Restore once the dataplane lookup is implemented.
+              // hydrationMetrics.partial = true
               continue
             }
             for (const uri of batch) {
