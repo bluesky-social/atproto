@@ -1,5 +1,11 @@
 # @atproto-labs/opentelemetry-node
 
+## 0.6.0
+
+### Minor Changes
+
+- [#5952](https://github.com/bluesky-social/atproto/pull/5952) [`67fc7db`](https://github.com/bluesky-social/atproto/commit/67fc7db6e644fe32880335c404195b31d3840acf) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Register the import-in-the-middle ESM loader hook in-thread with `module.registerHooks()` instead of the deprecated `module.register()` (DEP0205), and update `@opentelemetry/*` dependencies. `@atproto-labs/opentelemetry-node`, and the services that load it, now require Node.js `^22.22.3 || ^24.11.1 || >=25.1.0`.
+
 ## 0.5.1
 
 ### Patch Changes

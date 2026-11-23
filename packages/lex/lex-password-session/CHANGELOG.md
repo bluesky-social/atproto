@@ -1,5 +1,12 @@
 # @atproto/lex-password-session
 
+## 0.3.6
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/lex-rpc@0.2.2
+
 ## 0.3.5
 
 ### Patch Changes

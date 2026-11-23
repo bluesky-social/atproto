@@ -1,5 +1,15 @@
 # @atproto/sync
 
+## 0.4.30
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/xrpc-server@0.13.16
+  - @atproto/common@0.8.13
+  - @atproto/identity@0.5.26
+  - @atproto/repo@0.11.8
+
 ## 0.4.29
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # @atproto/lex-json
 
+## 0.1.11
+
+### Patch Changes
+
+- [#5843](https://github.com/bluesky-social/atproto/pull/5843) [`9901412`](https://github.com/bluesky-social/atproto/commit/9901412468741c11399c130a39aa44bc7dd06cb8) Thanks [@1AbdullahButt](https://github.com/1AbdullahButt)! - Reject `$link` values that are not data-model CIDs (CIDv1, dag-cbor or raw codec, sha-256), such as CIDv0, when parsing JSON in strict mode.
+
 ## 0.1.10
 
 ### Patch Changes

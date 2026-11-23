@@ -1,6 +1,6 @@
 {
   "name": "@atproto-labs/opentelemetry-node",
-  "version": "0.5.1",
+  "version": "0.6.0",
   "license": "MIT",
   "description": "OpenTelemetry Node.js bootstrap and XRPC-aware helpers for atproto services",
   "keywords": [

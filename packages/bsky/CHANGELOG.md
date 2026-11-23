@@ -1,5 +1,28 @@
 # @atproto/bsky
 
+## 0.5.19
+
+### Patch Changes
+
+- [#5990](https://github.com/bluesky-social/atproto/pull/5990) [`4bcb150`](https://github.com/bluesky-social/atproto/commit/4bcb1507a9b399ac843c11a4c72bf4a3c41e899c) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Populate authenticated publication subscription viewer state consistently across modality views, including nested article publishers.
+
+- [#5993](https://github.com/bluesky-social/atproto/pull/5993) [`5b61edd`](https://github.com/bluesky-social/atproto/commit/5b61edd5a4611fc5669569a492bf69208f70d686) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Prepare opt-in follow-graph social proof on external modality viewer state. Retain the optional article and gallery liker fields in the schema as deprecated in favor of viewer known likers. Dataplane lookup integration is deferred.
+
+- [#5952](https://github.com/bluesky-social/atproto/pull/5952) [`67fc7db`](https://github.com/bluesky-social/atproto/commit/67fc7db6e644fe32880335c404195b31d3840acf) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Register the import-in-the-middle ESM loader hook in-thread with `module.registerHooks()` instead of the deprecated `module.register()` (DEP0205), and update `@opentelemetry/*` dependencies. `@atproto-labs/opentelemetry-node`, and the services that load it, now require Node.js `^22.22.3 || ^24.11.1 || >=25.1.0`.
+
+- [#5993](https://github.com/bluesky-social/atproto/pull/5993) [`5b61edd`](https://github.com/bluesky-social/atproto/commit/5b61edd5a4611fc5669569a492bf69208f70d686) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Skip external-record hydration inside Atmosphere V2 associated posts so their embeds cannot suppress social-proof hydration for later timeline activity.
+- Updated dependencies [[`67fc7db`](https://github.com/bluesky-social/atproto/commit/67fc7db6e644fe32880335c404195b31d3840acf), [`9901412`](https://github.com/bluesky-social/atproto/commit/9901412468741c11399c130a39aa44bc7dd06cb8)]:
+  - @atproto-labs/opentelemetry-node@0.6.0
+  - @atproto/lex-json@0.1.11
+  - @atproto/lex-client@0.6.2
+  - @atproto/xrpc-server@0.13.16
+  - @atproto/api@0.32.6
+  - @atproto/common@0.8.13
+  - @atproto/identity@0.5.26
+  - @atproto/repo@0.11.8
+  - @atproto/sync@0.4.30
+  - @atproto-labs/xrpc-utils@0.1.37
+
 ## 0.5.18
 
 ### Patch Changes
