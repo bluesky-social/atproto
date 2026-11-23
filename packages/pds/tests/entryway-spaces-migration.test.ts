@@ -168,11 +168,7 @@ describe('entryway spaces migration', () => {
       com.atproto.server.reserveSigningKey,
       {},
     )
-    const { kemKey } = await client.call(
-      internal.pds.reserveKemKey,
-      {},
-      { headers: pds.adminAuthHeaders() },
-    )
+    const { kemKey } = await client.call(com.atproto.server.reserveKemKey, {})
     const handle = 'ewsretry.test' as HandleString
     const { did, op } = await createPlcOp({
       signingKey,
@@ -403,11 +399,8 @@ describe('entryway spaces migration', () => {
     ).rejects.toMatchObject({ error: 'AuthenticationRequired' })
   })
 
-  it('reserve, prepare and complete require admin or entryway auth', async () => {
+  it('prepare and complete require admin or entryway auth', async () => {
     const did = await createAccount({ includeKemKey: false })
-    await expect(
-      client.call(internal.pds.reserveKemKey, {}),
-    ).rejects.toMatchObject({ error: 'AuthenticationRequired' })
     await expect(
       client.call(internal.pds.prepareSpacesMigration, { did }),
     ).rejects.toMatchObject({ error: 'AuthenticationRequired' })
@@ -464,9 +457,6 @@ describe('spaces migration endpoints without an entryway', () => {
       error: 'InvalidRequest',
       message: `No service configured for ${nsid}`,
     })
-    await expect(
-      client.call(internal.pds.reserveKemKey, {}, { headers }),
-    ).rejects.toMatchObject(notServed(internal.pds.reserveKemKey.$lxm))
     await expect(
       client.call(internal.pds.prepareSpacesMigration, { did }, { headers }),
     ).rejects.toMatchObject(notServed(internal.pds.prepareSpacesMigration.$lxm))
