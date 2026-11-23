@@ -66,8 +66,17 @@ export default function (server: Server, ctx: AppContext) {
         // @NOTE No translation needed for the second-factor challenge: `login()`
         // throws `AuthFactorRequiredError`, already an `AuthRequiredError`
         // carrying this method's declared `AuthFactorTokenRequired` error name.
+        //
+        // @NOTE Pass only this method's declared inputs to `login()`. Lexicon
+        // objects are open, so `body` can carry properties the schema does not
+        // declare, and spreading it would hand those to `login()` as options.
         const { user, isSoftDeleted, appPassword } =
-          await ctx.accountManager.login({ ...body, locale })
+          await ctx.accountManager.login({
+            identifier: body.identifier,
+            password: body.password,
+            authFactorToken: body.authFactorToken,
+            locale,
+          })
 
         if (!body.allowTakendown && isSoftDeleted) {
           throw new AuthRequiredError(
