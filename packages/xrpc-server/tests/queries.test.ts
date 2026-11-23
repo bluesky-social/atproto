@@ -263,7 +263,10 @@ for (const buildServer of [buildMethodLexicons, buildAddLexicons]) {
 
     test('destroys a returned stream when the client disconnects before the handler resolves', async () => {
       const started = deferred<void>()
-      const streamReady = deferred<Readable>()
+      const stream = new Readable({ read() {} })
+      // pipeline() may destroy the stream with a premature-close error
+      // depending on timing; the test only asserts it closes.
+      stream.on('error', () => {})
       const server = await buildServer(LEXICONS, {
         ...handlers,
         'io.example.pingOne': async (ctx: xrpcServer.HandlerContext) => {
@@ -277,11 +280,6 @@ for (const buildServer of [buildMethodLexicons, buildAddLexicons]) {
                   once: true,
                 }),
           )
-          const stream = new Readable({ read() {} })
-          // pipeline() may destroy the stream with a premature-close
-          // error depending on timing; the test only asserts it closes.
-          stream.on('error', () => {})
-          streamReady.resolve(stream)
           return { encoding: 'text/plain', body: stream }
         },
       })
@@ -295,7 +293,6 @@ for (const buildServer of [buildMethodLexicons, buildAddLexicons]) {
       await started.promise
       request.destroy()
 
-      const stream = await streamReady.promise
       // events.once() would reject if the stream errors before closing.
       await new Promise<void>((resolve) => stream.once('close', resolve))
       expect(stream.destroyed).toBe(true)
