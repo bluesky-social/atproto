@@ -1,6 +1,12 @@
-import type { LexValue } from '@atproto/lex-data'
+import type { CheckCidOptions, LexValue } from '@atproto/lex-data'
 import { fromBase64, parseCid } from '@atproto/lex-data'
 import { parseTypedBlobRef } from './blob.js'
+
+/**
+ * The AT Protocol data model only allows CIDv1 links using the dag-cbor or raw
+ * codec with a sha-256 multihash. Enforced when parsing `$link` in strict mode.
+ */
+const STRICT_CID_CHECK_OPTIONS: CheckCidOptions = { flavor: 'dasl' }
 
 const CHAR_TAB = 0x09
 const CHAR_NEWLINE = 0x0a
@@ -244,7 +250,10 @@ export class JsonBytesDecoder {
               this.pos++
               const cidStr = this.decodeUnescapedString(cidStart, cidEnd)
               try {
-                return parseCid(cidStr)
+                return parseCid(
+                  cidStr,
+                  this.strict ? STRICT_CID_CHECK_OPTIONS : undefined,
+                )
               } catch (cause) {
                 if (this.strict) {
                   throw new TypeError('Invalid $link object', { cause })

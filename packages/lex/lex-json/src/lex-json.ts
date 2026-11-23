@@ -1,5 +1,6 @@
 import type {
   BlobRef,
+  CheckCidOptions,
   Cid,
   LexArray,
   LexMap,
@@ -10,6 +11,12 @@ import { parseTypedBlobRef } from './blob.js'
 import { encodeLexBytes, parseLexBytes } from './bytes.js'
 import type { JsonObject, JsonValue } from './json.js'
 import { encodeLexLink, parseLexLink } from './link.js'
+
+/**
+ * The AT Protocol data model only allows CIDv1 links using the dag-cbor or raw
+ * codec with a sha-256 multihash. Enforced when parsing `$link` in strict mode.
+ */
+const STRICT_CID_CHECK_OPTIONS: CheckCidOptions = { flavor: 'dasl' }
 
 /**
  * Serialize a Lex value to a JSON string.
@@ -319,7 +326,10 @@ export function parseSpecialJsonObject(
   // Hot path: use hints to avoid parsing when possible
 
   if (input.$link !== undefined) {
-    const cid = parseLexLink(input)
+    const cid = parseLexLink(
+      input,
+      options.strict ? STRICT_CID_CHECK_OPTIONS : undefined,
+    )
     if (cid) return cid
     if (options.strict) throw new TypeError(`Invalid $link object`)
   } else if (input.$bytes !== undefined) {
