@@ -635,7 +635,7 @@
     },
     "app.bsky.embed.external": {
       "uri": "file://../../lexicons-overrides/app/bsky/embed/external.json",
-      "cid": "bafyreig6cjqeqlqy7yt2ley4liirgrleii7lvv463ymzlbysvp577wmezq"
+      "cid": "bafyreicj23y55jj33krl4bhvgwojnepqmxutkkusnr5pon5cuxjrmoeu5q"
     },
     "app.bsky.embed.gallery": {
       "uri": "https://raw.githubusercontent.com/bluesky-social/bsky/refs/heads/main/lexicons/app/bsky/embed/gallery.json",

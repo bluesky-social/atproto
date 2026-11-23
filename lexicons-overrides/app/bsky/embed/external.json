@@ -191,6 +191,15 @@
         "likeCount": {
           "type": "integer",
           "minimum": 0
+        },
+        "likers": {
+          "type": "array",
+          "maxLength": 3,
+          "description": "Available profile previews. Selected deterministically by DID; not a ranking. Deprecated: use viewer.knownLikers instead.",
+          "items": {
+            "type": "ref",
+            "ref": "app.bsky.actor.defs#profileViewBasic"
+          }
         }
       }
     },
@@ -362,6 +371,15 @@
         "likeCount": {
           "type": "integer",
           "minimum": 0
+        },
+        "likers": {
+          "type": "array",
+          "maxLength": 3,
+          "description": "Available profile previews. Selected deterministically by DID; not a ranking. Deprecated: use viewer.knownLikers instead.",
+          "items": {
+            "type": "ref",
+            "ref": "app.bsky.actor.defs#profileViewBasic"
+          }
         }
       }
     },
