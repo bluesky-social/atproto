@@ -11,11 +11,11 @@ describe('appview request limit config', () => {
     bskyAppViewDid: 'did:example:appview',
   }
 
-  it('defaults to 300 requests per second, 100 in flight, 1500 queued and a 5000 ms queue wait.', () => {
+  it('defaults to no limits, with 1500 queued and a 5000 ms queue wait when enabled.', () => {
     const cfg = envToCfg(baseEnv)
     expect(cfg.bskyAppView).toMatchObject({
-      maxRequestsPerSecond: 300,
-      maxConcurrentRequests: 100,
+      maxRequestsPerSecond: 0,
+      maxConcurrentRequests: 0,
       maxQueuedRequests: 1500,
       maxQueueMs: 5000,
     })

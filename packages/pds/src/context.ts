@@ -266,20 +266,23 @@ export class AppContext implements AsyncDisposable {
     // proxies (appViewProxyAgent, below) and those its own handlers make
     // (bskyAppView.client). Counting only the first kind would leave the
     // second free to add to a surge the limit is there to hold back.
-    const appViewLimiter = cfg.bskyAppView
-      ? new ProxyLimiter(
-          {
-            maxRequestsPerSecond: cfg.bskyAppView.maxRequestsPerSecond,
-            maxConcurrentRequests: cfg.bskyAppView.maxConcurrentRequests,
-            maxQueuedRequests: cfg.bskyAppView.maxQueuedRequests,
-            maxQueueMs: cfg.bskyAppView.maxQueueMs,
-          },
-          {
-            granted: (waitMs) => events.appViewRequestGranted({ waitMs }),
-            rejected: (reason) => events.appViewRequestRejected({ reason }),
-          },
-        )
-      : undefined
+    const appViewLimiter =
+      cfg.bskyAppView &&
+      (cfg.bskyAppView.maxRequestsPerSecond > 0 ||
+        cfg.bskyAppView.maxConcurrentRequests > 0)
+        ? new ProxyLimiter(
+            {
+              maxRequestsPerSecond: cfg.bskyAppView.maxRequestsPerSecond,
+              maxConcurrentRequests: cfg.bskyAppView.maxConcurrentRequests,
+              maxQueuedRequests: cfg.bskyAppView.maxQueuedRequests,
+              maxQueueMs: cfg.bskyAppView.maxQueueMs,
+            },
+            {
+              granted: (waitMs) => events.appViewRequestGranted({ waitMs }),
+              rejected: (reason) => events.appViewRequestRejected({ reason }),
+            },
+          )
+        : undefined
 
     const bskyAppView = cfg.bskyAppView
       ? new BskyAppView({
