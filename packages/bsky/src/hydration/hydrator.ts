@@ -50,6 +50,7 @@ import {
   type ExternalHydrationOptions,
   type ExternalHydrationTracker,
   ExternalHydrator,
+  type ExternalKnownInteractors,
   type ExternalPublicationSubscriptions,
   type ExternalRecordBacklinkCounts,
   type ExternalRecordBacklinks,
@@ -199,6 +200,7 @@ export type HydrationState = {
   /** Available backlink source URIs per target, potentially from a partial page. */
   externalRecordBacklinks?: ExternalRecordBacklinks
   externalRecordBacklinkCounts?: ExternalRecordBacklinkCounts
+  externalKnownInteractors?: ExternalKnownInteractors
   externalRecordLikes?: ExternalRecordLikes
   externalPublicationSubscriptions?: ExternalPublicationSubscriptions
 }
@@ -213,6 +215,8 @@ type HydratePostsOptions = Pick<
 > & {
   knownLikers?: HydrateKnownLikersOptions
   skipReplyBlocks?: boolean
+  /** Keep associated posts from expanding into another modality graph. */
+  skipExternalHydration?: boolean
   externalSeenRecordKeys?: Set<string>
   externalPublicationSubscriptions?: ExternalPublicationSubscriptions
 }
@@ -806,12 +810,6 @@ export class Hydrator {
       }
     }
 
-    const externalRefs = externalAssociatedRefsFromPosts(
-      postsLayer0,
-      postsLayer1,
-      postsLayer2,
-    )
-
     // Collect known-liker profiles and author-liker block relationships.
     const knownLikers = await knownLikersPromise
     const knownLikerDids: DidString[] = []
@@ -863,14 +861,24 @@ export class Hydrator {
       this.hydrateLabelers(nestedLabelerDids, ctx),
       this.hydrateStarterPacksBasic(nestedStarterPackUris, ctx),
       this.feed.getPostgatesForPosts([...postUrisWithPostgates.values()]),
-      this.hydrateEmbedExternalViewFromRefs(externalRefs, ctx, {
-        hydration: 'basic',
-        seenRecordKeys: options.externalSeenRecordKeys,
-        publicationSubscriptions:
-          options.externalPublicationSubscriptions ??
-          state.externalPublicationSubscriptions,
-        recordLikes: state.externalRecordLikes,
-      }),
+      options.skipExternalHydration
+        ? {}
+        : this.hydrateEmbedExternalViewFromRefs(
+            externalAssociatedRefsFromPosts(
+              postsLayer0,
+              postsLayer1,
+              postsLayer2,
+            ),
+            ctx,
+            {
+              hydration: 'basic',
+              seenRecordKeys: options.externalSeenRecordKeys,
+              publicationSubscriptions:
+                options.externalPublicationSubscriptions ??
+                state.externalPublicationSubscriptions,
+              recordLikes: state.externalRecordLikes,
+            },
+          ),
     ])
     if (!ctx.includeTakedowns) {
       actionTakedownLabels(allPostUris, posts, labels)
@@ -1072,6 +1080,10 @@ export class Hydrator {
       hydrationMetrics,
       publicationSubscriptions = ctx.viewer ? new HydrationMap() : undefined,
       recordLikes = ctx.viewer ? new HydrationMap() : undefined,
+      knownInteractors = false,
+      knownInteractorsCache = knownInteractors && ctx.viewer
+        ? new HydrationMap()
+        : undefined,
     } = options
     return trackExternalHydration(
       'uris',
@@ -1087,6 +1099,7 @@ export class Hydrator {
           hydrationMetrics,
           publicationSubscriptions,
           recordLikes,
+          knownInteractors ? knownInteractorsCache : undefined,
         ),
     )
   }
@@ -1108,6 +1121,10 @@ export class Hydrator {
       hydrationMetrics,
       publicationSubscriptions = ctx.viewer ? new HydrationMap() : undefined,
       recordLikes = ctx.viewer ? new HydrationMap() : undefined,
+      knownInteractors = false,
+      knownInteractorsCache = knownInteractors && ctx.viewer
+        ? new HydrationMap()
+        : undefined,
     } = options
     return trackExternalHydration(
       'refs',
@@ -1123,6 +1140,7 @@ export class Hydrator {
           hydrationMetrics,
           publicationSubscriptions,
           recordLikes,
+          knownInteractors ? knownInteractorsCache : undefined,
         ),
     )
   }
@@ -1136,6 +1154,7 @@ export class Hydrator {
     hydrationMetrics: ExternalHydrationTracker,
     publicationSubscriptions: ExternalPublicationSubscriptions | undefined,
     recordLikes: ExternalRecordLikes | undefined,
+    knownInteractorsCache: ExternalKnownInteractors | undefined,
   ): Promise<HydrationState> {
     // Filter at the entry point so each lookup runs at most once per shared
     // traversal, even for callers that did not prefilter their input. Null or
@@ -1147,6 +1166,7 @@ export class Hydrator {
         ctx,
         externalPublicationSubscriptions: publicationSubscriptions,
         externalRecordLikes: recordLikes,
+        externalKnownInteractors: knownInteractorsCache,
       }
     }
     // Get any bare URIs to fetch
@@ -1203,6 +1223,7 @@ export class Hydrator {
       externalRecordsByRef,
       externalPublicationSubscriptions: publicationSubscriptions,
       externalRecordLikes: recordLikes,
+      externalKnownInteractors: knownInteractorsCache,
     })
     actionExternalRecordTakedowns(baseState, ctx.includeTakedowns)
 
@@ -1218,6 +1239,8 @@ export class Hydrator {
         hydrationMetrics,
         publicationSubscriptions,
         recordLikes,
+        knownInteractors: !!knownInteractorsCache,
+        knownInteractorsCache,
       },
     )
 
@@ -1260,6 +1283,10 @@ export class Hydrator {
         (ctx.viewer ? new HydrationMap() : undefined),
       recordLikes = state.externalRecordLikes ??
         (ctx.viewer ? new HydrationMap() : undefined),
+      knownInteractors = false,
+      knownInteractorsCache = knownInteractors && ctx.viewer
+        ? (state.externalKnownInteractors ?? new HydrationMap())
+        : undefined,
     } = options
     return trackExternalHydration(
       'dependencies',
@@ -1276,6 +1303,7 @@ export class Hydrator {
           hydrationMetrics,
           publicationSubscriptions,
           recordLikes,
+          knownInteractors ? knownInteractorsCache : undefined,
         ),
     )
   }
@@ -1290,6 +1318,7 @@ export class Hydrator {
     hydrationMetrics: ExternalHydrationTracker,
     publicationSubscriptions: ExternalPublicationSubscriptions | undefined,
     recordLikes: ExternalRecordLikes | undefined,
+    knownInteractorsCache: ExternalKnownInteractors | undefined,
   ): Promise<HydrationState> {
     // Social-preview backlink sources to sample per target, each with its own
     // bound. A target with no samples still gets its aggregate count.
@@ -1345,18 +1374,7 @@ export class Hydrator {
         site.standard.document.$matches(record, { strict: false })
       ) {
         documentUris.add(uri)
-        const limits = EXTERNAL_HYDRATION_LIMITS[site.standard.document.$type]
-        targets.set(
-          uri,
-          hydration === 'detailed'
-            ? [
-                {
-                  collection: site.standard.graph.recommend.$type,
-                  limit: limits.recommendationPreviews,
-                },
-              ]
-            : [],
-        )
+        targets.set(uri, [])
 
         const publicationUri = recordUriOf(
           record.site,
@@ -1397,12 +1415,6 @@ export class Hydrator {
         const limits = EXTERNAL_HYDRATION_LIMITS[social.grain.gallery.$type]
         // Membership items are content, sampled at every level.
         const samples: { collection: NsidString; limit: number }[] = []
-        if (hydration === 'detailed') {
-          samples.push({
-            collection: social.grain.favorite.$type,
-            limit: limits.favoritePreviews,
-          })
-        }
         samples.push({
           collection: social.grain.gallery.item.$type,
           limit: limits.items,
@@ -1448,6 +1460,20 @@ export class Hydrator {
         if (galleryUri) discoveredUris.add(galleryUri)
       }
     }
+
+    const knownInteractorsPromise = this.hydrateExternalKnownInteractors(
+      [
+        { uris: documentUris, collection: site.standard.graph.recommend.$type },
+        { uris: galleryUris, collection: social.grain.favorite.$type },
+        {
+          uris: publicationUris,
+          collection: site.standard.graph.subscription.$type,
+        },
+      ],
+      ctx,
+      knownInteractorsCache,
+      hydrationMetrics,
+    )
 
     const viewerLookups = (
       [
@@ -1598,6 +1624,8 @@ export class Hydrator {
           hydrationMetrics,
           publicationSubscriptions,
           recordLikes,
+          knownInteractors: !!knownInteractorsCache,
+          knownInteractorsCache,
         })
       } catch (err) {
         // Skip the whole batch; partial child state could miss moderation.
@@ -1609,16 +1637,106 @@ export class Hydrator {
       }
     }
 
-    return mergeStates(
+    return mergeManyStates(
       {
         ctx,
         externalRecordBacklinks,
         externalRecordBacklinkCounts,
         externalPublicationSubscriptions: publicationSubscriptions,
         externalRecordLikes: recordLikes,
+        externalKnownInteractors: knownInteractorsCache,
       },
+      await knownInteractorsPromise,
       nested,
     )
+  }
+
+  private async hydrateExternalKnownInteractors(
+    subjects: { uris: Set<AtUriString>; collection: NsidString }[],
+    ctx: HydrateCtx,
+    cache: ExternalKnownInteractors | undefined,
+    hydrationMetrics: ExternalHydrationTracker,
+  ): Promise<HydrationState> {
+    if (!ctx.viewer || !cache) return {}
+    const viewer = ctx.viewer
+    const found: ExternalKnownInteractors = new HydrationMap()
+    await Promise.all(
+      subjects.map(async ({ uris, collection }) => {
+        const uncached = [...uris].filter((uri) => !cache.has(uri))
+        // @NOTE Reserve unknown outcomes before awaiting, including failures.
+        for (const uri of uncached) cache.set(uri, null)
+        for (const batch of chunkArray(
+          uncached,
+          ExternalHydrator.MAX_BACKLINK_COUNT_TARGETS_PER_REQUEST,
+        )) {
+          try {
+            const results = await this.external.getKnownInteractors(
+              batch,
+              viewer,
+              collection,
+            )
+            if (!results) {
+              // TODO: Restore once the dataplane lookup is implemented.
+              // hydrationMetrics.partial = true
+              continue
+            }
+            for (const uri of batch) {
+              const result = results.get(uri)
+              if (
+                !result ||
+                !Number.isSafeInteger(result.count) ||
+                result.count < 0
+              ) {
+                hydrationMetrics.partial = true
+                continue
+              }
+              found.set(uri, {
+                count: result.count,
+                actors: dedupeStrs(result.actors)
+                  .filter((did) => did !== viewer)
+                  .slice(0, 3),
+              })
+            }
+          } catch (err) {
+            hydrationMetrics.partial = true
+            hydrationLogger.warn(
+              { err, collection },
+              'failed to hydrate external known interactors',
+            )
+          }
+        }
+      }),
+    )
+
+    const dids = new Set<DidString>()
+    const relationships = new Map<DidString, DidString[]>()
+    for (const [uri, result] of found) {
+      if (!result) continue
+      result.actors.forEach((did) => dids.add(did))
+      const owner = uriToDid(uri)
+      relationships.set(
+        owner,
+        dedupeStrs([...(relationships.get(owner) ?? []), ...result.actors]),
+      )
+    }
+    try {
+      const [profiles, bidirectionalBlocks] = dids.size
+        ? await Promise.all([
+            this.hydrateProfilesBasic([...dids], ctx),
+            this.hydrateBidirectionalBlocks(relationships, ctx),
+          ])
+        : [{}, undefined]
+      // @NOTE Publish only after profile and block hydration both succeed.
+      cache.merge(found)
+      return { ...profiles, bidirectionalBlocks }
+    } catch (err) {
+      hydrationMetrics.partial = true
+      hydrationLogger.warn(
+        { err },
+        'failed to hydrate external known interactor profiles',
+      )
+      return {}
+    }
   }
 
   // app.bsky.feed.defs#threadViewPost
@@ -2630,6 +2748,10 @@ export const mergeStates = (
     externalRecordBacklinkCounts: mergeMaps(
       stateA.externalRecordBacklinkCounts,
       stateB.externalRecordBacklinkCounts,
+    ),
+    externalKnownInteractors: mergeMaps(
+      stateA.externalKnownInteractors,
+      stateB.externalKnownInteractors,
     ),
     externalRecordLikes: mergeMaps(
       stateA.externalRecordLikes,

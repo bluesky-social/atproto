@@ -61,6 +61,7 @@ export class AtmosphereTimelineHydrator implements TimelineHydration {
       ctx: hydrateCtx,
       externalPublicationSubscriptions: new HydrationMap(),
       externalRecordLikes: new HydrationMap(),
+      externalKnownInteractors: new HydrationMap(),
     }
   }
 
@@ -86,6 +87,8 @@ export class AtmosphereTimelineHydrator implements TimelineHydration {
         this.hydrateCtx,
         {
           hydration: 'basic',
+          knownInteractors: true,
+          knownInteractorsCache: this.state.externalKnownInteractors,
           seenRecordKeys: this.seen,
           publicationSubscriptions: this.state.externalPublicationSubscriptions,
           recordLikes: this.state.externalRecordLikes,

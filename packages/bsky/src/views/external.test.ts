@@ -282,7 +282,6 @@ describe('record modality views', () => {
       val: 'nudity',
       cts: createdAt,
     })
-    expect(view.likers).toBeUndefined()
   })
 
   test.each([
@@ -847,52 +846,54 @@ describe('record modality views', () => {
     },
   )
 
-  it('deduplicates and sorts available liker profiles by DID, caps at three, and keeps total counts', () => {
+  it('deduplicates and sorts available subscriber profiles by DID, caps at three, and keeps total counts', () => {
     const state = createState()
-    addGallery(state)
+    addPublication(state)
     const backlinks: AtUriString[] = []
     for (const name of ['e', 'b', 'c', 'a', 'd', 'b']) {
       const actorDid = `did:plc:${name}` as const
       const uri = atUri(
         actorDid,
-        social.grain.favorite.$type,
+        site.standard.graph.subscription.$type,
         String(backlinks.length),
       )
       addRecord(
         state,
         uri,
-        social.grain.favorite.$build({ subject: galleryUri, createdAt }),
+        site.standard.graph.subscription.$build({ publication: pubUri }),
       )
       if (name !== 'a') addActor(state, actorDid)
       backlinks.push(uri)
     }
     const unrelated = atUri(
       'did:plc:unrelated',
-      social.grain.favorite.$type,
-      'like',
+      site.standard.graph.subscription.$type,
+      'subscription',
     )
     addRecord(
       state,
       unrelated,
-      social.grain.favorite.$build({ subject: docUri, createdAt }),
+      site.standard.graph.subscription.$build({ publication: docUri }),
     )
     addActor(state, 'did:plc:unrelated')
     backlinks.push(unrelated)
-    state.externalRecordBacklinks.set(galleryUri, backlinks)
-    state.externalRecordBacklinkCounts.set(galleryUri, {
-      [social.grain.favorite.$type]: 100,
+    state.externalRecordBacklinks.set(pubUri, backlinks)
+    state.externalRecordBacklinkCounts.set(pubUri, {
+      [site.standard.graph.subscription.$type]: 100,
     })
-    const view = views.externalRecordView(galleryUri, state)
-    assert(view && app.bsky.embed.external.viewGallery.$isTypeOf(view))
+    const view = views.externalRecordView(pubUri, state)
+    assert(
+      view && app.bsky.embed.external.viewArticlePublication.$isTypeOf(view),
+    )
     assertValid(view)
-    expect(view.likeCount).toBe(100)
-    expect(view.likers?.map((p) => p.did)).toEqual([
+    expect(view.subscriptionCount).toBe(100)
+    expect(view.subscribers?.map((p) => p.did)).toEqual([
       'did:plc:b',
       'did:plc:c',
       'did:plc:d',
     ])
-    state.externalRecordBacklinks.set(galleryUri, backlinks.toReversed())
-    expect(views.externalRecordView(galleryUri, state)).toEqual(view)
+    state.externalRecordBacklinks.set(pubUri, backlinks.toReversed())
+    expect(views.externalRecordView(pubUri, state)).toEqual(view)
 
     state.profileViewers.set('did:plc:c', {
       did: 'did:plc:c',
@@ -900,20 +901,23 @@ describe('record modality views', () => {
     })
     addLabel(
       state,
-      atUri('did:plc:d', social.grain.favorite.$type, '4'),
+      atUri('did:plc:d', site.standard.graph.subscription.$type, '4'),
       '!takedown',
       true,
     )
-    const filtered = views.externalRecordView(galleryUri, state)
-    assert(filtered && app.bsky.embed.external.viewGallery.$isTypeOf(filtered))
-    expect(filtered.likers?.map((p) => p.did)).toEqual([
+    const filtered = views.externalRecordView(pubUri, state)
+    assert(
+      filtered &&
+        app.bsky.embed.external.viewArticlePublication.$isTypeOf(filtered),
+    )
+    expect(filtered.subscribers?.map((p) => p.did)).toEqual([
       'did:plc:b',
       'did:plc:e',
     ])
-    expect(filtered.likeCount).toBe(100)
+    expect(filtered.subscriptionCount).toBe(100)
   })
 
-  it('selects recommendation and subscription previews using the correct target fields', () => {
+  it('selects subscriber previews using the correct target field and no article or gallery previews', () => {
     const state = createState()
     addPublication(state)
     addArticle(state)
@@ -943,7 +947,7 @@ describe('record modality views', () => {
     const view = views.externalRecordView(docUri, state)
     assert(view && app.bsky.embed.external.viewArticle.$isTypeOf(view))
     assertValid(view)
-    expect(view.likers?.map((p) => p.did)).toEqual(['did:plc:reader'])
+    expect(view).not.toHaveProperty('likers')
     expect(view.publisher?.subscribers?.map((p) => p.did)).toEqual([
       'did:plc:reader',
     ])
@@ -963,7 +967,6 @@ describe('record modality views', () => {
       expect(view.likeCount).toBe(
         count === undefined || count === 0 ? 0 : undefined,
       )
-      expect(view.likers).toBeUndefined()
     },
   )
 
@@ -1108,7 +1111,7 @@ describe('record modality views', () => {
     )
 
     test.each(Object.keys(unavailableStatuses) as Status[])(
-      'drops gallery photos and likers from a %s actor without changing counts',
+      'drops gallery photos from a %s actor without changing counts',
       async (status) => {
         const state = createState()
         addGallery(state)
@@ -1130,15 +1133,7 @@ describe('record modality views', () => {
             position: -1,
           }),
         )
-        const favoriteUri = atUri(reader, social.grain.favorite.$type, 'fav')
-        addRecord(
-          state,
-          favoriteUri,
-          social.grain.favorite.$build({ subject: galleryUri, createdAt }),
-        )
-        state.externalRecordBacklinks
-          .get(galleryUri)!
-          .push(linkUri, favoriteUri)
+        state.externalRecordBacklinks.get(galleryUri)!.push(linkUri)
         state.externalRecordBacklinkCounts.set(galleryUri, {
           [social.grain.favorite.$type]: 7,
         })
@@ -1158,7 +1153,6 @@ describe('record modality views', () => {
           kept.photoUri,
         ])
         expect(view.associatedProfiles?.map((p) => p.did)).toEqual([did])
-        expect(view.likers).toEqual([])
         expect(view.likeCount).toBe(7)
       },
     )
@@ -1252,31 +1246,18 @@ describe('record modality views', () => {
       ])
     })
 
-    it('omits backlink samples with timezone-less timestamps but keeps counts', () => {
+    it('omits subscriber samples with timezone-less timestamps but keeps counts', () => {
       const state = createState()
       addPublication(state)
       addArticle(state)
       addGallery(state)
       const reader = 'did:plc:reader'
       addActor(state, reader)
-      const recommend = atUri(
-        reader,
-        site.standard.graph.recommend.$type,
-        'recommend',
-      )
       const subscribe = atUri(
         reader,
         site.standard.graph.subscription.$type,
         'subscription',
       )
-      const favorite = atUri(reader, social.grain.favorite.$type, 'favorite')
-      addRecord(state, recommend, {
-        ...site.standard.graph.recommend.$build({
-          document: docUri,
-          createdAt,
-        }),
-        createdAt: naive,
-      })
       addRecord(
         state,
         subscribe,
@@ -1286,13 +1267,7 @@ describe('record modality views', () => {
         }),
       )
       state.externalRecords.get(subscribe)!.record.createdAt = naive
-      addRecord(state, favorite, {
-        ...social.grain.favorite.$build({ subject: galleryUri, createdAt }),
-        createdAt: naive,
-      })
-      state.externalRecordBacklinks.set(docUri, [recommend])
       state.externalRecordBacklinks.set(pubUri, [subscribe])
-      state.externalRecordBacklinks.set(galleryUri, [favorite])
       state.externalRecordBacklinkCounts.set(docUri, {
         [site.standard.graph.recommend.$type]: 3,
       })
@@ -1306,14 +1281,12 @@ describe('record modality views', () => {
       const article = views.externalRecordView(docUri, state)
       assert(article && app.bsky.embed.external.viewArticle.$isTypeOf(article))
       assertValid(article)
-      expect(article.likers).toEqual([])
       expect(article.likeCount).toBe(3)
       expect(article.publisher?.subscribers).toEqual([])
       expect(article.publisher?.subscriptionCount).toBe(4)
       const gallery = views.externalRecordView(galleryUri, state)
       assert(gallery && app.bsky.embed.external.viewGallery.$isTypeOf(gallery))
       assertValid(gallery)
-      expect(gallery.likers).toEqual([])
       expect(gallery.likeCount).toBe(5)
     })
 

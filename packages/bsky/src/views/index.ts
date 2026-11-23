@@ -605,6 +605,23 @@ export class Views {
     )
   }
 
+  /** Personalized social proof for an external record, in interaction order. */
+  externalKnownInteractors(
+    uri: AtUriString,
+    state: HydrationState,
+  ): KnownLikers | undefined {
+    const viewer = state.ctx?.viewer
+    const known = viewer ? state.externalKnownInteractors?.get(uri) : undefined
+    if (!known) return
+    return this.knownSubjects(
+      new AtUri(uri).did,
+      known.count,
+      [...new Set(known.actors)].filter((did) => did !== viewer).slice(0, 3),
+      'actors',
+      state,
+    )
+  }
+
   private knownSubjects<Key extends 'followers' | 'actors'>(
     did: DidString,
     count: number,

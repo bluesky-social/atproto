@@ -41,7 +41,7 @@ export default function (server: Server, ctx: AppContext) {
       const state = await ctx.hydrator.hydrateEmbedExternalViewFromRefs(
         refs,
         hydrateCtx,
-        { hydration: 'basic' },
+        { hydration: 'basic', knownInteractors: true },
       )
       return {
         encoding: 'application/json',

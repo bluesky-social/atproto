@@ -148,9 +148,8 @@ function externalRecordViewOrRefs(
       readingTime: record.textContent
         ? estimateReadingTimeMinutes(record.textContent)
         : undefined,
-      viewer: likeViewerState(uri, state),
+      viewer: likeViewerState(views, uri, state),
       likeCount: backlinkCount(uri, site.standard.graph.recommend.$type, state),
-      likers: backlinkProfiles(views, uri, state, 'recommend'),
     })
   }
 
@@ -230,9 +229,8 @@ function externalRecordViewOrRefs(
       createdAt: record.createdAt,
       items,
       photoCount: backlinkCount(uri, social.grain.gallery.item.$type, state),
-      viewer: likeViewerState(uri, state),
+      viewer: likeViewerState(views, uri, state),
       likeCount: backlinkCount(uri, social.grain.favorite.$type, state),
-      likers: backlinkProfiles(views, uri, state, 'favorite'),
     })
   }
 
@@ -262,11 +260,21 @@ function externalRecordViewOrRefs(
   }
 }
 
-function likeViewerState(uri: AtUriString, state: HydrationState) {
+function likeViewerState(
+  views: Views,
+  uri: AtUriString,
+  state: HydrationState,
+) {
   const like = state.ctx?.viewer
     ? state.externalRecordLikes?.get(uri)
     : undefined
-  return like == null ? undefined : { like: like || undefined }
+  // @NOTE Viewer presence confirms the own-like lookup succeeded, even with social proof.
+  if (like == null) return
+  const known = views.externalKnownInteractors(uri, state)
+  return {
+    like: like || undefined,
+    ...(known && { knownLikers: known.actors, knownLikerCount: known.count }),
+  }
 }
 
 function publicationView(
@@ -280,6 +288,7 @@ function publicationView(
   const subscription = state.ctx?.viewer
     ? state.externalPublicationSubscriptions?.get(uri)
     : undefined
+  const known = views.externalKnownInteractors(uri, state)
   return app.bsky.embed.external.viewArticlePublication.$build({
     ...commonFields(views, [uri], state, info),
     providerId: getRecordProviderId(record),
@@ -306,11 +315,17 @@ function publicationView(
       site.standard.graph.subscription.$type,
       state,
     ),
-    subscribers: backlinkProfiles(views, uri, state, 'subscription'),
+    subscribers: subscriberProfiles(views, uri, state),
     viewer:
       subscription == null
         ? undefined
-        : { subscription: subscription || undefined },
+        : {
+            subscription: subscription || undefined,
+            ...(known && {
+              knownSubscribers: known.actors,
+              knownSubscriberCount: known.count,
+            }),
+          },
   })
 }
 
@@ -411,11 +426,10 @@ function backlinkCount(
   return Number.isSafeInteger(count) && count >= 0 ? count : undefined
 }
 
-function backlinkProfiles(
+function subscriberProfiles(
   views: Views,
   uri: AtUriString,
   state: HydrationState,
-  kind: 'recommend' | 'subscription' | 'favorite',
 ): ProfileViewBasic[] | undefined {
   const backlinks = state.externalRecordBacklinks?.get(uri)
   if (!backlinks) return
@@ -425,15 +439,12 @@ function backlinkProfiles(
     const record = isRecordAvailable(info, backlink, state, views)
       ? info.record
       : undefined
-    const matches =
-      kind === 'recommend'
-        ? site.standard.graph.recommend.$matches(record) &&
-          record.document === uri
-        : kind === 'subscription'
-          ? site.standard.graph.subscription.$matches(record) &&
-            record.publication === uri
-          : social.grain.favorite.$matches(record) && record.subject === uri
-    if (matches) dids.add(uriToDid(backlink))
+    if (
+      site.standard.graph.subscription.$matches(record) &&
+      record.publication === uri
+    ) {
+      dids.add(uriToDid(backlink))
+    }
   }
   const profiles: ProfileViewBasic[] = []
   for (const did of [...dids].sort(compareStrings)) {

@@ -9,6 +9,7 @@ import {
 } from '@atproto/lex'
 import { FeatureGatesClient } from '../../../../feature-gates/index.js'
 import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator.js'
+import { HydrationMap } from '../../../../hydration/util.js'
 import { ImageUriBuilder } from '../../../../image/uri.js'
 import { app, place, site, social } from '../../../../lexicons/index.js'
 import { Service } from '../../../../proto/bsky_connect.js'
@@ -17,6 +18,7 @@ import { Views } from '../../../../views/index.js'
 import { VideoUriBuilder } from '../../../../views/util.js'
 import { groupAtmosphereActivities } from './atmosphere-grouping.js'
 import { AtmosphereTimelineHydrator } from './atmosphere-hydration.js'
+import { AtmosphereTimelineHydrator as AtmosphereTimelineHydratorV2 } from './atmosphere-timeline-v2/hydration.js'
 
 const author = 'did:plc:author'
 const publisher = 'did:plc:publisher'
@@ -273,6 +275,8 @@ function setup(signal = new AbortController().signal) {
   )
   return {
     timeline,
+    ctx,
+    views,
     dataplane,
     hydrator,
     records,
@@ -293,6 +297,82 @@ function setup(signal = new AbortController().signal) {
     },
   }
 }
+
+describe('AtmosphereTimelineHydrator V2', () => {
+  it('does not expand associated-post external embeds or suppress later social proof', async () => {
+    const f = setup()
+    const timeline = new AtmosphereTimelineHydratorV2(
+      { hydrator: f.hydrator, views: f.views },
+      f.ctx,
+      now,
+      new AbortController().signal,
+    )
+    const primary = atUri(author, site.standard.document.$type, 'primary')
+    f.records.set(
+      primary,
+      site.standard.document.$build({
+        title: 'Primary article',
+        site: 'https://primary.example.com',
+        publishedAt: createdAt,
+        bskyPostRef: { uri: postUri, cid },
+      }),
+    )
+    f.records.get(documentUri)!.title = 'Hydrated article title'
+    using known = vi
+      .spyOn(f.hydrator.external, 'getKnownInteractors')
+      .mockImplementation(
+        async (uris) =>
+          new HydrationMap(
+            uris.map((uri) => [uri, { count: 1, actors: [reader] }]),
+          ),
+      )
+    using _blocks = vi
+      .spyOn(f.hydrator, 'hydrateBidirectionalBlocks')
+      .mockResolvedValue(new HydrationMap())
+
+    await timeline.hydrate([primary])
+    expect(f.postCalls.flat()).toEqual([postUri])
+    expect(f.exactCalls).toEqual([])
+    expect(f.lookupCalls.flat()).toEqual([primary])
+    const article = timeline.subject(timeline.activity(primary, now)!)
+    expect(article).toMatchObject({
+      view: { title: 'Primary article', viewer: { knownLikerCount: 1 } },
+      bskyPostView: {
+        uri: postUri,
+        record: { text: 'Read this' },
+        embed: {
+          $type: app.bsky.embed.external.view.$type,
+          external: {
+            uri: 'https://example.com/article',
+            title: 'Article',
+            description: '',
+            associatedRefs: [{ uri: documentUri, cid }],
+          },
+        },
+      },
+    })
+
+    await timeline.hydrate([subscriptionUri])
+    expect(f.lookupCalls.flat()).toEqual([
+      primary,
+      subscriptionUri,
+      publicationUri,
+    ])
+    expect(known).toHaveBeenCalledWith(
+      [publicationUri],
+      viewer,
+      site.standard.graph.subscription.$type,
+    )
+    expect(
+      timeline.subject(timeline.activity(subscriptionUri, now)!)?.view,
+    ).toMatchObject({
+      viewer: {
+        knownSubscriberCount: 1,
+        knownSubscribers: [{ did: reader }],
+      },
+    })
+  })
+})
 
 describe('AtmosphereTimelineHydrator', () => {
   it('hydrates every supported root and action target through basic traversal', async () => {

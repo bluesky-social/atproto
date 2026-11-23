@@ -282,7 +282,9 @@ async function hydration({
   ]
   const dids = [...new Set(mapDefined(skeleton.apps, ({ did }) => did))]
   const [externalState, appProfileState] = await Promise.all([
-    ctx.hydrator.hydrateEmbedExternalViewFromUris(uris, params.hydrateCtx),
+    ctx.hydrator.hydrateEmbedExternalViewFromUris(uris, params.hydrateCtx, {
+      knownInteractors: true,
+    }),
     dids.length
       ? ctx.hydrator.hydrateProfilesDetailed(dids, params.hydrateCtx, {
           knownFollowersDids: dids,
