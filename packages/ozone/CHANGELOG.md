@@ -1,5 +1,11 @@
 # @atproto/ozone
 
+## 0.16.5
+
+### Patch Changes
+
+- [#6003](https://github.com/bluesky-social/atproto/pull/6003) [`ea36fae`](https://github.com/bluesky-social/atproto/commit/ea36fae222c5352629cd0b73808825550623668b) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Sync the external embed lexicon with followed-account liker and publication subscriber previews and counts.
+
 ## 0.16.4
 
 ### Patch Changes

@@ -1,5 +1,13 @@
 # @atproto/bsky
 
+## 0.5.20
+
+### Patch Changes
+
+- [#6003](https://github.com/bluesky-social/atproto/pull/6003) [`ea36fae`](https://github.com/bluesky-social/atproto/commit/ea36fae222c5352629cd0b73808825550623668b) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Resolve the external embed lexicon from upstream now that viewer social proof fields are published.
+- Updated dependencies [[`ea36fae`](https://github.com/bluesky-social/atproto/commit/ea36fae222c5352629cd0b73808825550623668b)]:
+  - @atproto/api@0.32.7
+
 ## 0.5.19
 
 ### Patch Changes
