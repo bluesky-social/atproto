@@ -42,7 +42,7 @@
     "@atproto/oauth-resolver": "workspace:^",
     "@atproto/oauth-types": "workspace:^",
     "@atproto/xrpc": "workspace:^",
-    "core-js": "^3.50.0",
+    "core-js": "^3.51.0",
     "multiformats": "^13.0.0",
     "zod": "^3.23.8"
   },
