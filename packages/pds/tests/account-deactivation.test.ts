@@ -1,11 +1,17 @@
+import assert from 'node:assert'
+import { jest } from '@jest/globals'
 import type { AtpAgent } from '@atproto/api'
+import { P256Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import {
   type ImageRef,
   type SeedClient,
   TestNetworkNoAppView,
   basicSeed,
 } from '@atproto/dev-env'
+import type { DidDocument } from '@atproto/identity'
 import type { DidString } from '@atproto/syntax'
+import { createServiceAuthHeaders } from '@atproto/xrpc-server'
+import { com } from '../src/lexicons/index.js'
 
 describe('account deactivation', () => {
   let network: TestNetworkNoAppView
@@ -201,4 +207,99 @@ describe('account deactivation', () => {
     )
     expect(adminRes.data.deactivatedAt).toBeUndefined()
   })
+
+  it.each(['missing', 'matching', 'mismatched', 'unsupported', 'malformed'])(
+    'checks a did:web account with a %s KEM key when reactivating',
+    async (keyState) => {
+      const did: DidString = `did:web:${keyState}.example.com`
+      const handle = `web-${keyState}.test`
+      const originalKey = await Secp256k1Keypair.create()
+      const doc: DidDocument = {
+        id: did,
+        alsoKnownAs: [`at://${handle}`],
+        verificationMethod: [
+          {
+            id: '#atproto',
+            type: 'Multikey',
+            controller: did,
+            publicKeyMultibase: originalKey.did().slice('did:key:'.length),
+          },
+        ],
+        service: [
+          {
+            id: '#atproto_pds',
+            type: 'AtprotoPersonalDataServer',
+            serviceEndpoint: network.pds.ctx.cfg.service.publicUrl,
+          },
+        ],
+      }
+      const resolver = network.pds.ctx.idResolver.did
+      const resolve = resolver.resolve.bind(resolver)
+      using _resolveMock = jest
+        .spyOn(resolver, 'resolve')
+        .mockImplementation((requestedDid, ...args) =>
+          requestedDid === did
+            ? Promise.resolve(doc)
+            : resolve(requestedDid, ...args),
+        )
+      const { headers } = await createServiceAuthHeaders({
+        iss: did,
+        aud: network.pds.ctx.cfg.service.did,
+        lxm: com.atproto.server.createAccount.$lxm,
+        keypair: originalKey,
+      })
+      const webAgent = network.pds.getAgent()
+      await webAgent.com.atproto.server.createAccount(
+        {
+          did,
+          handle,
+          email: `${keyState}@example.com`,
+          password: 'web-password',
+        },
+        { headers, encoding: 'application/json' },
+      )
+
+      const signingKey = await network.pds.ctx.actorStore.keypair(did)
+      const kemKey = await network.pds.ctx.actorStore.kemKeypair(did)
+      assert(kemKey)
+      const verificationMethods: Record<string, string> = {
+        atproto: signingKey.did(),
+      }
+      if (keyState !== 'missing') {
+        verificationMethods.atproto_kem =
+          keyState === 'mismatched'
+            ? (await P256Keypair.create()).did()
+            : kemKey.did()
+      }
+      doc.verificationMethod = Object.entries(verificationMethods).map(
+        ([name, key]) => ({
+          id: `#${name}`,
+          type: 'Multikey',
+          controller: did,
+          publicKeyMultibase: key.slice('did:key:'.length),
+        }),
+      )
+      const method = doc.verificationMethod?.find(
+        ({ id }) => id === '#atproto_kem',
+      )
+      if (method && keyState === 'unsupported') method.type = 'UnsupportedKey'
+      if (method && keyState === 'malformed') method.publicKeyMultibase = ''
+
+      await webAgent.login({ identifier: did, password: 'web-password' })
+      const valid = keyState === 'missing' || keyState === 'matching'
+      const before = await webAgent.com.atproto.server.checkAccountStatus()
+      expect(before.data).toMatchObject({ activated: false, validDid: valid })
+      if (valid) {
+        await webAgent.com.atproto.server.activateAccount()
+        await webAgent.com.atproto.server.deactivateAccount({})
+        await webAgent.com.atproto.server.activateAccount()
+      } else {
+        await expect(
+          webAgent.com.atproto.server.activateAccount(),
+        ).rejects.toThrow('does not match expected KEM key')
+      }
+      const after = await webAgent.com.atproto.server.checkAccountStatus()
+      expect(after.data).toMatchObject({ activated: valid, validDid: valid })
+    },
+  )
 })
