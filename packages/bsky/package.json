@@ -85,7 +85,7 @@
     "undici_v6": "npm:undici@^6.29.1",
     "undici_v7": "npm:undici@^7.30.1",
     "undici_v8": "npm:undici@^8.12.2",
-    "zod": "3.23.8"
+    "zod": "4.6.6"
   },
   "devDependencies": {
     "@atproto/bsync": "workspace:^",

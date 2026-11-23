@@ -36,7 +36,7 @@
     "@atproto-labs/simple-store": "workspace:^",
     "@atproto-labs/simple-store-memory": "workspace:^",
     "@atproto/did": "workspace:^",
-    "zod": "^3.23.8"
+    "zod": "^4.6.6"
   },
   "devDependencies": {
     "vitest": "^5.1.1"
