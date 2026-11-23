@@ -113,21 +113,21 @@ export default function (server: Server, ctx: AppContext) {
 
             try {
               await ctx.actorStore
-                .clearReservedKeypair(signingKey.did(), did)
+                .clearReservedKeys(did, {
+                  signingKey: signingKey.did(),
+                  kemKey: kemKey.did(),
+                })
                 .catch((err) => {
                   // @NOTE This is a cleanup operation so we won't fail the whole
                   // flow if it fails, but we log it just in case
                   req.log.error(
-                    { did, signingKeyDid: signingKey.did(), err },
-                    'Failed to clear reserved keypair',
-                  )
-                })
-              await ctx.actorStore
-                .clearReservedKemKeypair(kemKey.did(), did)
-                .catch((err) => {
-                  req.log.error(
-                    { did, kemKeyDid: kemKey.did(), err },
-                    'Failed to clear reserved kem keypair',
+                    {
+                      did,
+                      signingKeyDid: signingKey.did(),
+                      kemKeyDid: kemKey.did(),
+                      err,
+                    },
+                    'Failed to clear reserved keys',
                   )
                 })
 
@@ -206,13 +206,9 @@ const validateInputsForEntrywayPds = async (
   const doc = plc.formatDidDoc({ did, ...plcOp })
   const data = ensureAtpDocument(doc)
 
-  let signingKey: ExportableKeypair | undefined
-  if (input.did) {
-    signingKey = await ctx.actorStore.getReservedKeypair(input.did)
-  }
-  if (!signingKey) {
-    signingKey = await ctx.actorStore.getReservedKeypair(data.signingKey)
-  }
+  const signingKey =
+    (await ctx.actorStore.getReservedSigningKeypair(did)) ??
+    (await ctx.actorStore.getReservedSigningKeypair(data.signingKey))
   if (!signingKey) {
     throw new InvalidRequestError('reserved signing key does not exist')
   }

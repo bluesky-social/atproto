@@ -132,6 +132,7 @@
     "com.atproto.server.requestEmailConfirmation",
     "com.atproto.server.requestEmailUpdate",
     "com.atproto.server.requestPasswordReset",
+    "com.atproto.server.reserveKemKey",
     "com.atproto.server.reserveSigningKey",
     "com.atproto.server.resetPassword",
     "com.atproto.server.revokeAppPassword",
@@ -165,7 +166,6 @@
     "internal.pds.completeSpacesMigration",
     "internal.pds.prepareSpacesMigration",
     "internal.pds.recountSpacesMigration",
-    "internal.pds.reserveKemKey",
     "place.stream.chat.pinnedRecord",
     "place.stream.chat.profile",
     "place.stream.livestream",
@@ -758,6 +758,10 @@
       "uri": "file://../../lexicons/com/atproto/server/requestPasswordReset.json",
       "cid": "bafyreibs4jk6ndisvztiqprofgm24rluzkotwqbzbqn6i26upcaxa4xr2y"
     },
+    "com.atproto.server.reserveKemKey": {
+      "uri": "file://../../lexicons/com/atproto/server/reserveKemKey.json",
+      "cid": "bafyreifctrk262us4lkvxycv4o7onigvuqarup5ulcwf5qlwkwzudroehy"
+    },
     "com.atproto.server.reserveSigningKey": {
       "uri": "file://../../lexicons/com/atproto/server/reserveSigningKey.json",
       "cid": "bafyreiamtsl3vm5js4f5verpzj7hd7v67e2zulrkc4nacalwzhq6mg7pae"
@@ -889,10 +893,6 @@
     "internal.pds.recountSpacesMigration": {
       "uri": "file://./lexicons/internal/pds/recountSpacesMigration.json",
       "cid": "bafyreihylqh4nuhafdppexx7voymolqgszgoylcwrunr5xsjaphogwvtsu"
-    },
-    "internal.pds.reserveKemKey": {
-      "uri": "file://./lexicons/internal/pds/reserveKemKey.json",
-      "cid": "bafyreidofehmsjxbe5hate7kkydmgovo5xbn2d5h23chijxgaa5jgfxzmi"
     },
     "place.stream.badge.defs": {
       "uri": "file://../../lexicons-overrides/place/stream/badge/defs.json",

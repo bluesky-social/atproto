@@ -225,11 +225,7 @@ export class MockEntryway {
           ? await createPlcOp({
               signingKey,
               kemKey: (
-                await pdsClient.call(
-                  internal.pds.reserveKemKey,
-                  {},
-                  { headers: adminHeaders(opts.adminPassword) },
-                )
+                await pdsClient.call(com.atproto.server.reserveKemKey, {})
               ).kemKey,
               rotationKeys: [opts.plcRotationKey.did()],
               handle,

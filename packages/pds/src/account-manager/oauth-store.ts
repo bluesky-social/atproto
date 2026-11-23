@@ -166,6 +166,7 @@ export class OAuthStore
     const signingKey = await Secp256k1Keypair.create({ exportable: true })
     const signingKeyDid = signingKey.did()
     const kemKey = await P256Keypair.create({ exportable: true })
+    const kemKeyDid = kemKey.did()
 
     const canTombstone =
       // @NOTE IMPORTANT We don't support "bring your own DID" here (yet?). If
@@ -175,7 +176,7 @@ export class OAuthStore
 
     const plc = await createPlcOp({
       signingKey: signingKeyDid,
-      kemKey: kemKey.did(),
+      kemKey: kemKeyDid,
       rotationKeys: this.recoveryDidKey
         ? [this.recoveryDidKey, this.plcRotationKey.did()]
         : [this.plcRotationKey.did()],
@@ -214,13 +215,16 @@ export class OAuthStore
 
             try {
               await this.actorStore
-                .clearReservedKeypair(signingKeyDid, did)
+                .clearReservedKeys(did, {
+                  signingKey: signingKeyDid,
+                  kemKey: kemKeyDid,
+                })
                 .catch((err) => {
                   // @NOTE This is a cleanup operation so we won't fail the
                   // whole flow if it fails, but we log it just in case
                   dbLogger.error(
-                    { did, signingKeyDid, err },
-                    'Failed to clear reserved keypair',
+                    { did, signingKeyDid, kemKeyDid, err },
+                    'Failed to clear reserved keys',
                   )
                 })
 

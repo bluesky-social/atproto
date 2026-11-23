@@ -20,18 +20,21 @@ import { type ActorDb, getDb, getMigrator } from './db/index.js'
 import { LATEST_ACTOR_MIGRATION } from './db/latest.js'
 
 export class ActorStore {
-  reservedKeyDir: string
+  reservedSigningKeyDir: string
   reservedKemKeyDir: string
 
   constructor(
     public cfg: ActorStoreConfig,
     public resources: ActorStoreResources,
   ) {
-    this.reservedKeyDir = path.join(cfg.directory, 'reserved_keys')
-    this.reservedKemKeyDir = path.join(this.reservedKeyDir, 'kem')
+    // @NOTE /reserved_keys dir holds signing keys only. The name predates KEM
+    // keys, and is kept so that reservations made before an upgrade survive it.
+    this.reservedSigningKeyDir = path.join(cfg.directory, 'reserved_keys')
+    this.reservedKemKeyDir = path.join(cfg.directory, 'reserved_kem_keys')
   }
 
   async getLocation(did: string) {
+    assertSafePathPart(did)
     const didHash = await crypto.sha256Hex(did)
     const directory = path.join(this.cfg.directory, didHash.slice(0, 2), did)
     const dbLocation = path.join(directory, `store.sqlite`)
@@ -214,11 +217,11 @@ export class ActorStore {
     await rmIfExists(directory, true)
   }
 
-  async reserveKeypair(did?: string): Promise<string> {
+  async reserveSigningKeypair(did?: string): Promise<string> {
     let keyLoc: string | undefined
     if (did) {
       assertSafePathPart(did)
-      keyLoc = path.join(this.reservedKeyDir, did)
+      keyLoc = path.join(this.reservedSigningKeyDir, did)
       const maybeKey = await loadKey(keyLoc)
       if (maybeKey) {
         return maybeKey.did()
@@ -226,25 +229,20 @@ export class ActorStore {
     }
     const keypair = await crypto.Secp256k1Keypair.create({ exportable: true })
     const keyDid = keypair.did()
-    keyLoc = keyLoc ?? path.join(this.reservedKeyDir, keyDid)
-    await mkdir(this.reservedKeyDir, { recursive: true })
+    keyLoc = keyLoc ?? path.join(this.reservedSigningKeyDir, keyDid)
+    await mkdir(this.reservedSigningKeyDir, { recursive: true })
     await fs.writeFile(keyLoc, await keypair.export())
     return keyDid
   }
 
-  async getReservedKeypair(
+  async getReservedSigningKeypair(
     signingKeyOrDid: string,
   ): Promise<ExportableKeypair | undefined> {
-    return loadKey(path.join(this.reservedKeyDir, signingKeyOrDid))
+    assertSafePathPart(signingKeyOrDid)
+    return loadKey(path.join(this.reservedSigningKeyDir, signingKeyOrDid))
   }
 
-  async clearReservedKeypair(keyDid: string, did?: string) {
-    await rmIfExists(path.join(this.reservedKeyDir, keyDid))
-    if (did) {
-      await rmIfExists(path.join(this.reservedKeyDir, did))
-    }
-  }
-
+  // Written no-clobber: a genesis op may name the key as soon as it's returned
   async reserveKemKeypair(did?: string): Promise<string> {
     let keyLoc: string | undefined
     if (did) {
@@ -271,13 +269,20 @@ export class ActorStore {
     return loadKemKey(path.join(this.reservedKemKeyDir, kemKeyOrDid))
   }
 
-  async clearReservedKemKeypair(kemKey: string, did?: string) {
-    assertSafePathPart(kemKey)
-    await rmIfExists(path.join(this.reservedKemKeyDir, kemKey))
-    if (did) {
-      assertSafePathPart(did)
-      await rmIfExists(path.join(this.reservedKemKeyDir, did))
-    }
+  /** Clears the account's reservations, filed under its DID or under each key. */
+  async clearReservedKeys(
+    did: string,
+    keys: { signingKey: string; kemKey: string },
+  ) {
+    assertSafePathPart(did)
+    assertSafePathPart(keys.signingKey)
+    assertSafePathPart(keys.kemKey)
+    await Promise.all([
+      rmIfExists(path.join(this.reservedSigningKeyDir, did)),
+      rmIfExists(path.join(this.reservedSigningKeyDir, keys.signingKey)),
+      rmIfExists(path.join(this.reservedKemKeyDir, did)),
+      rmIfExists(path.join(this.reservedKemKeyDir, keys.kemKey)),
+    ])
   }
 
   async storePlcOp(did: string, op: Uint8Array) {

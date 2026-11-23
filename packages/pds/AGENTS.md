@@ -22,9 +22,8 @@ transaction, such as `PRAGMA journal_mode` or `VACUUM`.
 ## Spaces migration path is temporary
 
 Migrating accounts to spaces readiness (publisher, sweep, progress table use,
-the `internal.pds.*` endpoints but `reserveKemKey`, `spacesMigration` health
-field) is removed once the fleet completes; only its schema stays, per
-additive-only. `reserveKemKey` stays for entryway signups. While it exists:
+the `internal.pds.*` endpoints, `spacesMigration` health field) is removed once
+the fleet completes; only its schema stays, per additive-only. While it exists:
 
 - A KEM key file is written (no-clobber, fsynced) before it is ever published,
   and a KEM key beside an existing actor store is never overwritten: a DID
@@ -51,6 +50,9 @@ additive-only. `reserveKemKey` stays for entryway signups. While it exists:
 - `PDS_SPACES_MIGRATION=complete` lets code assume every held KEM key is
   published, instead of reading migration progress or PLC. Any such shortcut
   must be safe when set wrongly: it may refuse a request, never corrupt data.
+- Short of `complete`, nothing may require a held KEM key to be published: a
+  deactivated account's key is published only after `activateAccount`, which
+  is why its DID document check is gated on `complete`.
 - `spaces_migration_stats` is kept up to date by every write that can change a
   counter: such writes go through `trackStats()`, in the same transaction.
   Only lease columns may be written around it. Drifted stats are reported,
