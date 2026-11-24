@@ -38,18 +38,14 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('indexedAt', 'varchar', (col) => col.notNull())
     .execute()
 
-  // Serves listRecords, which pages a space by (collection, rkey).
+  // Serves listCollections, clearRecords, importRepo's scan of existing records,
+  // deleteSpaceBlobs, and listRepoOps's join to the current record. Paging a
+  // space's records goes through the uri primary key instead (see uri-range.ts).
   await db.schema
     .createIndex('space_record_path_idx')
     .on('space_record')
     .columns(['space', 'collection', 'rkey'])
     .unique()
-    .execute()
-
-  await db.schema
-    .createIndex('space_record_rev_idx')
-    .on('space_record')
-    .columns(['space', 'repoRev'])
     .execute()
 
   // Keyed by record uri as record_blob is. Metadata stays in `blob`.

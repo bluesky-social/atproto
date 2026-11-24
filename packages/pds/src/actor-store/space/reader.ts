@@ -20,9 +20,13 @@ import type {
   SpaceRepo,
   SpaceWriter,
 } from '../db/index.js'
+import { collectionRecordRange, spaceRecordRange } from './uri-range.js'
 
 export class SpaceReader {
-  constructor(public db: ActorDb) {}
+  constructor(
+    public did: DidString,
+    public db: ActorDb,
+  ) {}
 
   async getSpace(uri: SpaceRefString): Promise<Space | null> {
     const row = await this.db.db
@@ -137,16 +141,19 @@ export class SpaceReader {
     },
   ): Promise<(Omit<SpaceRecord, 'value'> & { value?: LexMap })[]> {
     const { limit, cursor, collection, excludeValues } = opts
+    // A uri range rather than `space = ?`, which would have the planner choose
+    // space_record_path_idx and sort the whole space on every page.
+    const range = collection
+      ? collectionRecordRange(space, this.did, collection)
+      : spaceRecordRange(space)
     let builder = this.db.db
       .selectFrom('space_record')
       .select(RECORD_COLUMNS)
-      .where('space', '=', space)
+      .where('uri', '>', range.gt)
+      .where('uri', '<', range.lt)
       .orderBy('uri', 'desc')
       .limit(limit)
       .$if(!excludeValues, (qb) => qb.select('value'))
-    if (collection) {
-      builder = builder.where('collection', '=', collection)
-    }
     if (cursor) {
       if (!isAtUriString(cursor)) {
         throw new InvalidRequestError('Malformed cursor', 'InvalidCursor')
@@ -161,12 +168,15 @@ export class SpaceReader {
   }
 
   async *streamRecords(space: SpaceRefString): AsyncGenerator<SpaceRecord> {
+    const range = spaceRecordRange(space)
     let cursor: AtUriString | undefined
     while (true) {
       let builder = this.db.db
         .selectFrom('space_record')
         .selectAll()
-        .where('space', '=', space)
+        // A uri range, not `space = ?`: see listRecords.
+        .where('uri', '>', range.gt)
+        .where('uri', '<', range.lt)
         // Every uri in a space repo shares a prefix, so this is also record path
         // order, as a serialized repo requires.
         .orderBy('uri', 'asc')

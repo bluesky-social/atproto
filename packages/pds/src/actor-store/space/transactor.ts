@@ -29,11 +29,11 @@ import { SpaceReader } from './reader.js'
 
 export class SpaceTransactor extends SpaceReader {
   constructor(
-    public did: string,
-    public db: ActorDb,
+    did: DidString,
+    db: ActorDb,
     public blob: BlobTransactor,
   ) {
-    super(db)
+    super(did, db)
   }
 
   async ensureSpace(ref: SpaceRef): Promise<void> {
@@ -326,7 +326,7 @@ export class SpaceTransactor extends SpaceReader {
     this.db.assertTransaction()
     await this.ensureRepo(ref)
     const space = ref.toString()
-    const did = this.did as DidString
+    const did = this.did
 
     const existing = await this.db.db
       .selectFrom('space_record')
