@@ -7,13 +7,17 @@ import type {
   ConfirmResetPasswordInput,
   DeactivateAccountInput,
   DisableEmailAuthFactorInput,
+  EmailString,
   EnableEmailAuthFactorInput,
+  IdentifierString,
   InitiateAccountDeletionInput,
   InitiateEmailUpdateInput,
   InitiateEmailUpdateOutput,
   InitiateEmailVerificationInput,
   InitiatePasswordResetInput,
   ReactivateAccountInput,
+  SignInInput,
+  SignUpInput,
   UpdateHandleInput,
 } from '@atproto/oauth-provider-api'
 import type { OAuthScope } from '@atproto/oauth-types'
@@ -32,9 +36,7 @@ import type { HandleUnavailableReason } from '../errors/handle-unavailable-error
 import type { HcaptchaVerifyResult } from '../lib/hcaptcha.js'
 import type { Awaitable } from '../lib/util/type.js'
 import { buildInterfaceChecker } from '../lib/util/type.js'
-import type { IdentifierString } from '../types/indentifier.js'
 import type { InviteCode } from '../types/invite-code.js'
-import type { SignUpInput } from './sign-up-input.js'
 
 // Export all types needed to implement the AccountStore interface
 export type {
@@ -45,6 +47,7 @@ export type {
   DeviceId,
   Did,
   DisableEmailAuthFactorInput,
+  EmailString,
   EnableEmailAuthFactorInput,
   HandleString,
   HandleUnavailableReason,
@@ -53,6 +56,7 @@ export type {
   InviteCode,
   OAuthScope,
   SessionId,
+  SignInInput,
   SignUpInput,
 }
 
@@ -134,11 +138,6 @@ export type DeviceAccount = {
    * to determine the date at which the user last authenticated on a device
    */
   updatedAt: Date
-}
-
-export type SignUpData = SignUpInput & {
-  hcaptchaResult?: HcaptchaVerifyResult
-  inviteCode?: InviteCode
 }
 
 export interface AccountStore {

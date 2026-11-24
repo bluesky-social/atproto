@@ -54,6 +54,7 @@ import { fetchLogger, lexiconResolverLogger, oauthLogger } from './logger.js'
 import { ServerMailer } from './mailer/index.js'
 import { ModerationMailer } from './mailer/moderation.js'
 import { buildProxyAgent } from './pipethrough.js'
+import { buildOAuthRateLimiterFactory } from './rate-limits.js'
 import {
   LocalViewer,
   type LocalViewerCreator,
@@ -483,6 +484,11 @@ export class AppContext implements AsyncDisposable {
             cfg.identity.recoveryDidKey,
           ),
           replayStore,
+          rateLimits: cfg.rateLimits.enabled
+            ? {
+                factory: buildOAuthRateLimiterFactory(redisScratch),
+              }
+            : undefined,
           dpopSecret: secrets.dpopSecret,
           inviteCodeRequired: cfg.invites.required,
           availableUserDomains: cfg.identity.serviceHandleDomains,
@@ -532,12 +538,12 @@ export class AppContext implements AsyncDisposable {
               isTrusted: cfg.oauth.provider?.trustedClients?.includes(clientId),
             }
           },
-          onSignedUp({ account, data, clientId }) {
+          onSignedUp({ account, input, clientId }) {
             events.accountCreated({
               source: 'oauth',
               did: account.did,
               clientId,
-              invited: data.inviteCode != null,
+              invited: input.inviteCode != null,
               deactivated: false,
             })
           },
@@ -576,7 +582,7 @@ export class AppContext implements AsyncDisposable {
     const spacePolicyManager = new SpacePolicyManager(
       actorStore,
       idResolver,
-      safeFetch,
+      (service) => createSafeClient(service, safeFetch, cfg.service.devMode),
     )
 
     const scopeRefGetter = entrywayClient
@@ -700,14 +706,7 @@ export class AppContext implements AsyncDisposable {
    * Any call built from a DID document's service endpoint must use this.
    */
   safeClient(service: string | URL): Client {
-    return new Client(
-      { service, fetch: this.safeFetch },
-      {
-        validateRequest: this.cfg.service.devMode,
-        validateResponse: this.cfg.service.devMode,
-        strictResponseProcessing: this.cfg.service.devMode,
-      },
-    )
+    return createSafeClient(service, this.safeFetch, this.cfg.service.devMode)
   }
 
   async serviceAuthHeaders(did: string, aud: string, lxm: string) {
@@ -768,6 +767,22 @@ export class AppContext implements AsyncDisposable {
   async [Symbol.asyncDispose]() {
     await this.destroy()
   }
+}
+
+/** See {@link AppContext.safeClient}. */
+function createSafeClient(
+  service: string | URL,
+  safeFetch: Fetch,
+  devMode: boolean,
+): Client {
+  return new Client(
+    { service, fetch: safeFetch },
+    {
+      validateRequest: devMode,
+      validateResponse: devMode,
+      strictResponseProcessing: devMode,
+    },
+  )
 }
 
 const basicAuthHeader = (username: string, password: string) => {

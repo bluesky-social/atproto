@@ -5,15 +5,20 @@ import {
   rkeyFor,
   rkeyForCreate,
 } from '@atproto/lex-client'
-import {
-  type $Typed,
-  type InferInput,
-  type Main,
-  type RecordSchema,
-  type Restricted,
-  getMain,
+import type { TypedLexMap } from '@atproto/lex-data'
+import type {
+  $Typed,
+  NsidString,
+  RecordSchema,
+  Restricted,
+  Space,
 } from '@atproto/lex-schema'
 import { com } from './lexicons/index.js'
+import type {
+  SpaceCollection,
+  SpaceRecordInput,
+  SpaceRecordSchema,
+} from './space-collection.js'
 
 export declare namespace SpaceWriteOperationHelper {
   export type Operation =
@@ -21,89 +26,115 @@ export declare namespace SpaceWriteOperationHelper {
     | $Typed<com.atproto.space.applyWrites.Update>
     | $Typed<com.atproto.space.applyWrites.Delete>
 
-  export type Factory = (
-    helper: SpaceWriteOperationHelper,
+  export type Factory<S extends Space = Space> = (
+    helper: SpaceWriteOperationHelper<S>,
   ) => Iterable<Operation>
 }
 
 /**
- * Builds the operations of a {@link SpaceClient.applyWrites} batch. Same as
- * `WriteOperationHelper` from `@atproto/lex-client`, for space repos.
+ * Builds the operations of a {@link SpaceClient.applyWrites} batch, for the
+ * collections declared by the space type `S`. Records are validated against
+ * the space type's schema of their collection.
  */
-export class SpaceWriteOperationHelper {
-  private constructor() {}
+export class SpaceWriteOperationHelper<S extends Space = Space> {
+  private constructor(protected readonly space: S) {}
 
-  create<const T extends RecordSchema>(
-    ns: NonNullable<unknown> extends WriteOperationCreateOptions<T>
-      ? Main<T>
+  create<R extends SpaceRecordInput<S>>(
+    record: NonNullable<unknown> extends WriteOperationCreateOptions<
+      SpaceRecordSchema<S, R['$type']>
+    >
+      ? R
       : Restricted<'This record type requires an "options" argument'>,
-    input: Omit<InferInput<T>, '$type'>,
   ): $Typed<com.atproto.space.applyWrites.Create>
-  create<const T extends RecordSchema>(
-    ns: Main<T>,
-    input: Omit<InferInput<T>, '$type'>,
-    options: WriteOperationCreateOptions<T>,
+  create<R extends SpaceRecordInput<S>>(
+    record: R,
+    options: WriteOperationCreateOptions<SpaceRecordSchema<S, R['$type']>>,
   ): $Typed<com.atproto.space.applyWrites.Create>
-  create<const T extends RecordSchema>(
-    ns: Main<T>,
-    input: Omit<InferInput<T>, '$type'>,
-    options: WriteOperationCreateOptions<T> = {} as WriteOperationCreateOptions<T>,
+  create(
+    record: TypedLexMap<NsidString>,
+    options: { rkey?: string } = {},
   ): $Typed<com.atproto.space.applyWrites.Create> {
-    const schema: T = getMain(ns)
+    const schema: RecordSchema = this.getSchema(record.$type)
     return com.atproto.space.applyWrites.create.$build({
-      collection: schema.$type,
-      value: schema.build(input),
-      rkey: rkeyForCreate(schema, options?.rkey),
+      collection: record.$type,
+      value: schema.validate(record),
+      rkey: rkeyForCreate(schema, options.rkey),
     })
   }
 
-  update<const T extends RecordSchema>(
-    ns: NonNullable<unknown> extends WriteOperationUpdateOptions<T>
-      ? Main<T>
+  update<R extends SpaceRecordInput<S>>(
+    record: NonNullable<unknown> extends WriteOperationUpdateOptions<
+      SpaceRecordSchema<S, R['$type']>
+    >
+      ? R
       : Restricted<'This record type requires an "options" argument'>,
-    input: Omit<InferInput<T>, '$type'>,
   ): $Typed<com.atproto.space.applyWrites.Update>
-  update<const T extends RecordSchema>(
-    ns: Main<T>,
-    input: Omit<InferInput<T>, '$type'>,
-    options: WriteOperationUpdateOptions<T>,
+  update<R extends SpaceRecordInput<S>>(
+    record: R,
+    options: WriteOperationUpdateOptions<SpaceRecordSchema<S, R['$type']>>,
   ): $Typed<com.atproto.space.applyWrites.Update>
-  update<const T extends RecordSchema>(
-    ns: Main<T>,
-    input: Omit<InferInput<T>, '$type'>,
-    options: WriteOperationUpdateOptions<T> = {} as WriteOperationUpdateOptions<T>,
+  update(
+    record: TypedLexMap<NsidString>,
+    options: { rkey?: string } = {},
   ): $Typed<com.atproto.space.applyWrites.Update> {
-    const schema: T = getMain(ns)
+    const schema: RecordSchema = this.getSchema(record.$type)
     return com.atproto.space.applyWrites.update.$build({
-      collection: schema.$type,
-      value: schema.build(input),
-      rkey: rkeyFor(schema, options?.rkey),
+      collection: record.$type,
+      value: schema.validate(record),
+      rkey: rkeyFor(schema, options.rkey),
     })
   }
 
-  delete<const T extends RecordSchema>(
-    ns: NonNullable<unknown> extends WriteOperationDeleteOptions<T>
-      ? Main<T>
+  delete<const C extends SpaceCollection<S>>(
+    collection: NonNullable<unknown> extends WriteOperationDeleteOptions<
+      SpaceRecordSchema<S, C>
+    >
+      ? C
       : Restricted<'This record type requires an "options" argument'>,
   ): $Typed<com.atproto.space.applyWrites.Delete>
-  delete<const T extends RecordSchema>(
-    ns: Main<T>,
-    options: WriteOperationDeleteOptions<T>,
+  delete<const C extends SpaceCollection<S>>(
+    collection: C,
+    options: WriteOperationDeleteOptions<SpaceRecordSchema<S, C>>,
   ): $Typed<com.atproto.space.applyWrites.Delete>
-  delete<const T extends RecordSchema>(
-    ns: Main<T>,
-    options: WriteOperationDeleteOptions<T> = {} as WriteOperationDeleteOptions<T>,
+  delete(
+    collection: NsidString,
+    options: { rkey?: string } = {},
   ): $Typed<com.atproto.space.applyWrites.Delete> {
-    const schema: T = getMain(ns)
+    const schema: RecordSchema = this.getSchema(collection)
     return com.atproto.space.applyWrites.delete.$build({
-      collection: schema.$type,
-      rkey: rkeyFor(schema, options?.rkey),
+      collection,
+      rkey: rkeyFor(schema, options.rkey),
     })
   }
 
-  static build(
-    factory: SpaceWriteOperationHelper.Factory,
+  /**
+   * The space type's schema of `collection`.
+   *
+   * @throws {TypeError} if `collection` is not declared by the space type
+   *
+   * @example
+   * ```typescript
+   * await space.applyWrites((op) => {
+   *   const post = op.getSchema('com.example.post')
+   *   return texts.map((text) => op.create(post.$build({ text })))
+   * })
+   * ```
+   */
+  getSchema<const C extends SpaceCollection<S>>(
+    collection: C,
+  ): SpaceRecordSchema<S, C> {
+    for (const c of this.space.collections) {
+      if (c.$type === collection) return c as SpaceRecordSchema<S, C>
+    }
+    throw new TypeError(
+      `${collection} is not a collection of ${this.space.spaceType} spaces`,
+    )
+  }
+
+  static build<S extends Space>(
+    space: S,
+    factory: SpaceWriteOperationHelper.Factory<S>,
   ): SpaceWriteOperationHelper.Operation[] {
-    return Array.from(factory(new SpaceWriteOperationHelper()))
+    return Array.from(factory(new SpaceWriteOperationHelper(space)))
   }
 }

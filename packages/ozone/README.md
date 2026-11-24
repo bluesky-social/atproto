@@ -77,13 +77,13 @@ Set `NEXT_PUBLIC_STRIKE_SUSPENSION_CONFIG` to the same value used by Ozone UI, f
 
 Set `OZONE_INBOX_START_AT` on both the API and daemon to an ISO 8601 timestamp with a timezone, for example `2026-10-15T00:00:00.000Z`. Configuration normalizes it to UTC milliseconds and rejects invalid values at startup. Unset exposes all history. A future date keeps history empty until eligible activity occurs; changing the value requires restarting the services.
 
-Reports are visible only when their `createdAt` is at or after the date, even if an older report is later resolved or reopened. The same bound applies to report detail and resolution actions. Subjects require a public action created at or after the date; action counts, first-action dates, latest actions, detail history and report summaries exclude earlier history. Older appeal history is hidden, while eligibility still respects earlier appeals. Inbox appeals cannot target hidden actions or subjects. Moderator previews use the same cutoff.
+Reports are visible only when their `createdAt` is at or after the date, even if an older report is later resolved or reopened. The same bound applies to report detail and resolution actions. Subjects require a public action created at or after the date; action counts, first-action dates, latest actions, detail history and report summaries exclude earlier history. Older appeal history is hidden, while eligibility still respects earlier appeals. Appeal eligibility ignores the date: inbox appeals can target older actions and subjects, and the appeal response leaves their older history hidden. While the date is set, an appeal must name an existing action or, naming none, a subject with an appealable action, active enforcement, or a visible public action. Moderator previews use the same cutoff.
 
 Account standing and current enforcement remain live: active restrictions, strikes and labels can predate the inbox start. Preferences and seen watermarks do not expose history; they retain their existing behavior. The cutoff is not a read watermark, so an item created exactly at the start date is initially unread.
 
 ## Moderation inbox push
 
-Push work is disabled by default. To enable it, set `OZONE_INBOX_PUSH_ENABLED` on both the API and daemon, and configure a secret `OZONE_INBOX_PUSH_TOKEN` on the API and its authorized consumer. The daemon does not serve the consumer endpoints and does not need the token. Configure the same inbox start date on both processes. Enabling push only queues new notifications; it does not backfill existing inbox history.
+Push work is disabled by default. To enable it, set `OZONE_INBOX_PUSH_ENABLED` on both the API and daemon. Consumer endpoints require moderator or admin authentication. Configure the same inbox start date on both processes. Enabling push only queues new notifications; it does not backfill existing inbox history.
 
 The consumer claims work with a 60-second lease and acknowledges it using the lease token. Unacknowledged work can be claimed again after its lease expires. Pushes older than one hour expire; finished rows are retained for seven days and cleaned up during claims.
 

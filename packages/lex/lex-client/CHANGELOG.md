@@ -1,5 +1,49 @@
 # @atproto/lex-client
 
+## 0.6.0
+
+### Minor Changes
+
+- [#5885](https://github.com/bluesky-social/atproto/pull/5885) [`6ee0f4d`](https://github.com/bluesky-social/atproto/commit/6ee0f4d7971dcc71efaab785aff4d4ef341a1c32) Thanks [@matthieusieben](https://github.com/matthieusieben)! - **Breaking:** `RETRYABLE_HTTP_STATUS_CODES` is now a frozen, literal-typed array instead of a `ReadonlySet<number>`. Replace `RETRYABLE_HTTP_STATUS_CODES.has(status)` with the new `isRetryableHttpStatus(status)` type guard (narrowing to the new `RetryableHttpStatus` type).
+  
+  Also add `RETRYABLE_ERROR_CODES` and its `isRetryableErrorCode()` type guard (the XRPC error codes matching a retryable HTTP status, for classifying an error by code alone), and `getStatusErrorCode()`, mapping an HTTP status to the XRPC error code used for non-XRPC error responses.
+
+- [#5948](https://github.com/bluesky-social/atproto/pull/5948) [`ce37237`](https://github.com/bluesky-social/atproto/commit/ce37237663b7ea87e8cc04cb995377d0ee5d2efd) Thanks [@matthieusieben](https://github.com/matthieusieben)! - **Breaking:** an `atproto-proxy` header passed in a request's `headers` no longer sets that request's `service`. The client's `service` now always applies, replacing that header, or removing it when the client has none. Pass `service` in the request options instead.
+
+- [#5948](https://github.com/bluesky-social/atproto/pull/5948) [`ce37237`](https://github.com/bluesky-social/atproto/commit/ce37237663b7ea87e8cc04cb995377d0ee5d2efd) Thanks [@matthieusieben](https://github.com/matthieusieben)! - **Breaking:** `validateRequest: false` now also skips validating an XRPC request's params and applying their defaults, which are then sent as given. Since `Client` defaults `validateRequest` to `false`, its requests no longer validate params unless `validateRequest` is set.
+
+### Patch Changes
+
+- [#5950](https://github.com/bluesky-social/atproto/pull/5950) [`b9b1ca7`](https://github.com/bluesky-social/atproto/commit/b9b1ca7f176b93d12e39685799c5f2e1f9a63be7) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update `vitest` to v5, `vite` to v8.3.8 and `rolldown` to v1.3.3 (dev dependencies)
+
+- [#5948](https://github.com/bluesky-social/atproto/pull/5948) [`ce37237`](https://github.com/bluesky-social/atproto/commit/ce37237663b7ea87e8cc04cb995377d0ee5d2efd) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Infer the type parameters of generic actions from their input in `client.call()`.
+
+- [#5948](https://github.com/bluesky-social/atproto/pull/5948) [`ce37237`](https://github.com/bluesky-social/atproto/commit/ce37237663b7ea87e8cc04cb995377d0ee5d2efd) Thanks [@matthieusieben](https://github.com/matthieusieben)! - `Client#assertAuthenticated()` narrows `client.agent` to an `AccountAgent`.
+
+- [#5948](https://github.com/bluesky-social/atproto/pull/5948) [`ce37237`](https://github.com/bluesky-social/atproto/commit/ce37237663b7ea87e8cc04cb995377d0ee5d2efd) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Include the validation `error` in the invalid records yielded by `Client.list()` and `Client.listAll()`
+
+- [#5948](https://github.com/bluesky-social/atproto/pull/5948) [`ce37237`](https://github.com/bluesky-social/atproto/commit/ce37237663b7ea87e8cc04cb995377d0ee5d2efd) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Allow `client.call()` to be called without input for actions whose input is optional.
+
+- [#5948](https://github.com/bluesky-social/atproto/pull/5948) [`ce37237`](https://github.com/bluesky-social/atproto/commit/ce37237663b7ea87e8cc04cb995377d0ee5d2efd) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Allow the per-request `headers` option to be a (sync or async) function, called for every attempt (retries included). The client-wide `headers` (`ClientOptions`) still only accept a `HeadersInit`.
+  
+  **Breaking**: `buildXrpcRequestHeaders()` is now async (returns a `Promise<Headers>`), and code reading the `headers` of `XrpcRequestHeadersOptions` (thus of `XrpcOptions`) must handle a function.
+- Updated dependencies [[`ce37237`](https://github.com/bluesky-social/atproto/commit/ce37237663b7ea87e8cc04cb995377d0ee5d2efd), [`b9b1ca7`](https://github.com/bluesky-social/atproto/commit/b9b1ca7f176b93d12e39685799c5f2e1f9a63be7), [`6ee0f4d`](https://github.com/bluesky-social/atproto/commit/6ee0f4d7971dcc71efaab785aff4d4ef341a1c32), [`ce37237`](https://github.com/bluesky-social/atproto/commit/ce37237663b7ea87e8cc04cb995377d0ee5d2efd), [`ce37237`](https://github.com/bluesky-social/atproto/commit/ce37237663b7ea87e8cc04cb995377d0ee5d2efd), [`ce37237`](https://github.com/bluesky-social/atproto/commit/ce37237663b7ea87e8cc04cb995377d0ee5d2efd), [`ce37237`](https://github.com/bluesky-social/atproto/commit/ce37237663b7ea87e8cc04cb995377d0ee5d2efd), [`ce37237`](https://github.com/bluesky-social/atproto/commit/ce37237663b7ea87e8cc04cb995377d0ee5d2efd), [`ce37237`](https://github.com/bluesky-social/atproto/commit/ce37237663b7ea87e8cc04cb995377d0ee5d2efd), [`ce37237`](https://github.com/bluesky-social/atproto/commit/ce37237663b7ea87e8cc04cb995377d0ee5d2efd), [`ce37237`](https://github.com/bluesky-social/atproto/commit/ce37237663b7ea87e8cc04cb995377d0ee5d2efd), [`6ee0f4d`](https://github.com/bluesky-social/atproto/commit/6ee0f4d7971dcc71efaab785aff4d4ef341a1c32), [`ce37237`](https://github.com/bluesky-social/atproto/commit/ce37237663b7ea87e8cc04cb995377d0ee5d2efd)]:
+  - @atproto/lex-rpc@0.2.0
+  - @atproto/lex-data@0.1.11
+  - @atproto/lex-schema@0.3.0
+
+## 0.5.0
+
+### Minor Changes
+
+- [#5917](https://github.com/bluesky-social/atproto/pull/5917) [`b5dfe0b`](https://github.com/bluesky-social/atproto/commit/b5dfe0b80ac4f14f56b3c9b797e0e50d2e194a3b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - **Breaking:** the response payload of methods without a declared output encoding is no longer parsed as JSON. It is returned as binary data (a `Uint8Array`, or a `ReadableStream` with `xrpcStream()`), or `undefined` when there is none, and callers that expect JSON must parse it themselves (e.g. `lexParse(new TextDecoder().decode(body))`). Only `application/json` outputs, and outputs with a schema, are parsed.
+
+### Patch Changes
+
+- [#5917](https://github.com/bluesky-social/atproto/pull/5917) [`b5dfe0b`](https://github.com/bluesky-social/atproto/commit/b5dfe0b80ac4f14f56b3c9b797e0e50d2e194a3b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add `xrpcStream()` / `xrpcStreamSafe()` (and `Client.xrpcStream()`, `Client.xrpcStreamSafe()`, `Client.getBlobStream()`), returning binary response payloads as an unread `ReadableStream` through a disposable `XrpcStreamResponse`. Response bodies are now always released (cancelled) when response processing fails, as configured by the new `onCancellationError` response option (defaults to `"propagate"`).
+- Updated dependencies [[`b5dfe0b`](https://github.com/bluesky-social/atproto/commit/b5dfe0b80ac4f14f56b3c9b797e0e50d2e194a3b), [`b5dfe0b`](https://github.com/bluesky-social/atproto/commit/b5dfe0b80ac4f14f56b3c9b797e0e50d2e194a3b), [`b5dfe0b`](https://github.com/bluesky-social/atproto/commit/b5dfe0b80ac4f14f56b3c9b797e0e50d2e194a3b)]:
+  - @atproto/lex-rpc@0.1.0
+
 ## 0.4.2
 
 ### Patch Changes

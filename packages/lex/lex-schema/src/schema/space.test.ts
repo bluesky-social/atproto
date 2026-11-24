@@ -1,34 +1,58 @@
 import { describe, expect, expectTypeOf, it } from 'vitest'
 import { SpaceRef } from '@atproto/syntax'
 import type { LexiconRecordKey } from '../core.js'
+import { object } from './object.js'
+import { record } from './record.js'
 import { Space, space } from './space.js'
+import { typedObject } from './typed-object.js'
+import { typedRef } from './typed-ref.js'
+
+const thread = record('tid', 'com.example.thread', object({}))
+const reply = record('tid', 'com.example.reply', object({}))
+const post = record('tid', 'com.example.post', object({}))
 
 describe(Space, () => {
-  it('exposes its key, nsid, collections and options', () => {
-    const collections = ['com.example.thread', 'com.example.reply'] as const
-    const options = { title: 'Forum', 'title:lang': { es: 'Foro' } }
-    const sp = space('any', 'com.example.forum', collections, options)
+  it('exposes its key, space type and collections', () => {
+    const sp = space('any', 'com.example.forum', [thread, reply])
 
     expect(sp).toBeInstanceOf(Space)
     expect(sp).toMatchObject({
+      type: 'space',
       key: 'any',
-      nsid: 'com.example.forum',
       spaceType: 'com.example.forum',
-      title: 'Forum',
-      collections,
-      options,
+      collections: [thread, reply],
     })
-    expect(space('any', 'com.example.forum', []).options).toEqual({})
   })
 
-  it('infers the collections as a tuple of NSIDs', () => {
-    const sp = space('any', 'com.example.forum', [
-      'com.example.thread',
-      'com.example.reply',
-    ])
+  it('resolves the record schemas of its collections', () => {
+    const sp = space('any', 'com.example.forum', [thread, reply, post])
+    expect(sp.collections).toEqual([thread, reply, post])
+    expect(sp.collections).toBe(sp.collections)
     expectTypeOf(sp.collections).toEqualTypeOf<
-      readonly ['com.example.thread', 'com.example.reply']
+      readonly (typeof thread | typeof reply | typeof post)[]
     >()
+  })
+
+  it('resolves references lazily', () => {
+    const sp = space('any', 'com.example.forum', [typedRef(() => later)])
+    const later = record('tid', 'com.example.later', object({}))
+    expect(sp.collections).toEqual([later])
+    expectTypeOf(sp.collections).toEqualTypeOf<readonly (typeof later)[]>()
+  })
+
+  it('infers no collections from an empty list', () => {
+    const sp = space('any', 'com.example.forum', [])
+    expectTypeOf(sp.collections).toEqualTypeOf<readonly never[]>()
+  })
+
+  it('only accepts record schemas as collections', () => {
+    const view = typedObject('com.example.thread', 'view', object({}))
+    // @ts-expect-error not a record schema
+    space('any', 'com.example.forum', [view])
+    // @ts-expect-error not a record schema
+    space('any', 'com.example.forum', [typedRef(() => view)])
+    // @ts-expect-error not a record schema
+    space('any', 'com.example.forum', ['com.example.thread'])
   })
 
   it('rejects an invalid key type', () => {

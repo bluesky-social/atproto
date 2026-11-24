@@ -54,7 +54,7 @@
       "schema": { "allowComments": true, "allowTrailingCommas": true },
     },
   ],
-  "js/ts.tsdk.path": "node_modules/typescript/lib",
+  "js/ts.tsdk.path": "node_modules/@typescript/native",
   "js/ts.experimental.useTsgo": true,
   "markdown.extension.toc.levels": "2..6",
   "chat.tools.terminal.autoApprove": {

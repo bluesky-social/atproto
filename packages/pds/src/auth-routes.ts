@@ -1,5 +1,6 @@
 import { Router } from 'express'
 import {
+  CaptchaRejectedError,
   HandleUnavailableError,
   InvalidRequestError,
   SecondAuthenticationFactorRequiredError,
@@ -39,8 +40,10 @@ export const createRouter = ({ oauthProvider, cfg }: AppContext): Router => {
     router.use(
       oauthMiddleware(oauthProvider, {
         onError: (req, res, err, msg) => {
+          // Log in the context of the request (for better traceability)
           if (!ignoreError(err)) {
-            oauthLogger.error({ err, req }, msg)
+            const logger = req.log || oauthLogger
+            logger.error({ err }, msg)
           }
         },
       }),
@@ -66,6 +69,10 @@ function ignoreError(err: unknown): boolean {
   }
 
   return (
+    // @NOTE We don't ignore CaptchaRequiredError or RateLimitExceededError to
+    // ensure they are logged, allowing to monitor and adjust rate limits
+    // accordingly.
+    err instanceof CaptchaRejectedError ||
     err instanceof UseDpopNonceError ||
     err instanceof HandleUnavailableError ||
     err instanceof SecondAuthenticationFactorRequiredError

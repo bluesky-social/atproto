@@ -19,6 +19,9 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
  * link — or a refresh on one — falls through to the mock index instead of
  * reaching the router.
  *
+ * The rewrite carries the `base` prefix: this middleware runs before Vite's
+ * own base middleware, which strips it and 404s any URL without it.
+ *
  * @returns {import('vite').Plugin}
  */
 const mockAccountPaths = () => ({
@@ -28,7 +31,7 @@ const mockAccountPaths = () => ({
     server.middlewares.use((req, _res, next) => {
       const [pathname] = (req.url ?? '').split('?')
       if (pathname === '/account' || pathname.startsWith('/account/')) {
-        req.url = '/account-page.html'
+        req.url = `${ASSETS_ENDPOINT_PREFIX}/account-page.html`
       }
       next()
     })

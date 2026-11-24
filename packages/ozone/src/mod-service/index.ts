@@ -27,6 +27,7 @@ import type { ImageInvalidator } from '../image-invalidator.js'
 import { InboxNotificationService } from '../inbox/producers.js'
 import { com, tools } from '../lexicons/index.js'
 import { httpLogger as log } from '../logger.js'
+import { reportRowFromEvent } from '../report/create.js'
 import { LABELER_HEADER_NAME, type ParsedLabelers } from '../util.js'
 import type { VideoInvalidator } from '../video-invalidator.js'
 import {
@@ -762,6 +763,13 @@ export class ModerationService {
       })
       .returningAll()
       .executeTakeFirstOrThrow()
+
+    if (tools.ozone.moderation.defs.modEventReport.$isTypeOf(event)) {
+      await this.db.db
+        .insertInto('report')
+        .values(reportRowFromEvent(modEvent))
+        .execute()
+    }
 
     const subjectStatus = await adjustModerationSubjectStatus(
       this.db,

@@ -1,3 +1,4 @@
+import * as jose from 'jose'
 import { mapDefined, noUndefinedVals } from '@atproto/common'
 import {
   XrpcInvalidResponseError,
@@ -37,6 +38,10 @@ import {
   createPipeline,
 } from '../../../../pipeline.js'
 import type { GetIdentityByDidResponse } from '../../../../proto/bsky_pb.js'
+import {
+  type GetFeedServiceJwtKind,
+  events,
+} from '../../../../telemetry/events.js'
 import { getAtprotoPassthroughHeaders } from '../../../../util/headers.js'
 import { BSKY_USER_AGENT, resHeaders } from '../../../util.js'
 
@@ -100,6 +105,7 @@ export default function (server: Server, ctx: AppContext) {
           ...params,
           hydrateCtx,
           stableDeviceId,
+          serviceJwt,
           headers,
           passthroughHeaders,
           signal,
@@ -215,6 +221,7 @@ type Context = AppContext
 type Params = app.bsky.feed.getFeed.$Params & {
   hydrateCtx: HydrateCtx
   stableDeviceId: string | null
+  serviceJwt?: string
   headers: HeadersMap
   passthroughHeaders: HeadersMap
   signal: AbortSignal
@@ -381,6 +388,14 @@ const skeletonFromFeedGen = async (
     ctx,
     params,
   )
+  if (params.serviceJwt) {
+    events.getFeedServiceJwt(
+      getFeedServiceJwtKind(params.serviceJwt, {
+        feedDid,
+        appviewDids: ctx.authVerifier.standardAudienceDids,
+      }),
+    )
+  }
   const requestHeaders = noUndefinedVals({
     ...headers,
     ...(feedDid && ctx.cfg.bskyFeedgenDids.has(feedDid)
@@ -460,6 +475,32 @@ const skeletonFromFeedGen = async (
     cursor:
       feedSkele.length === 0 || cursor === params.cursor ? undefined : cursor,
   }
+}
+
+// The JWT was already verified, by AppView or by BSG.
+const getFeedServiceJwtKind = (
+  serviceJwt: string,
+  {
+    feedDid,
+    appviewDids,
+  }: { feedDid: DidString | undefined; appviewDids: Set<string> },
+): GetFeedServiceJwtKind => {
+  let claims: jose.JWTPayload
+  try {
+    claims = jose.decodeJwt(serviceJwt)
+  } catch {
+    return 'other'
+  }
+  const audDid =
+    typeof claims.aud === 'string' ? claims.aud.split('#')[0] : undefined
+  if (!audDid) return 'other'
+  if (audDid === feedDid && claims.lxm === app.bsky.feed.getFeedSkeleton.$lxm) {
+    return 'feedgen_skeleton'
+  }
+  if (appviewDids.has(audDid) && claims.lxm === app.bsky.feed.getFeed.$lxm) {
+    return 'appview_feed'
+  }
+  return 'other'
 }
 
 export type AlgoResponse = {

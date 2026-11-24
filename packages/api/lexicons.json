@@ -321,6 +321,7 @@
     "com.atproto.server.requestEmailConfirmation",
     "com.atproto.server.requestEmailUpdate",
     "com.atproto.server.requestPasswordReset",
+    "com.atproto.server.reserveKemKey",
     "com.atproto.server.reserveSigningKey",
     "com.atproto.server.resetPassword",
     "com.atproto.server.revokeAppPassword",
@@ -703,7 +704,7 @@
     },
     "app.bsky.feed.getAuthorFeed": {
       "uri": "https://raw.githubusercontent.com/bluesky-social/bsky/refs/heads/main/lexicons/app/bsky/feed/getAuthorFeed.json",
-      "cid": "bafyreictayk7nnslodm4u6b6d32kmgdsa3d2rllyf5oo2ffgps7ergwmdi"
+      "cid": "bafyreiaisnbepuju5gqsqz255otjyz3bpbrjmgys7nolki2hef4vutptom"
     },
     "app.bsky.feed.getFeed": {
       "uri": "https://raw.githubusercontent.com/bluesky-social/bsky/refs/heads/main/lexicons/app/bsky/feed/getFeed.json",
@@ -1705,6 +1706,10 @@
       "uri": "file://../../lexicons/com/atproto/server/requestPasswordReset.json",
       "cid": "bafyreibs4jk6ndisvztiqprofgm24rluzkotwqbzbqn6i26upcaxa4xr2y"
     },
+    "com.atproto.server.reserveKemKey": {
+      "uri": "file://../../lexicons/com/atproto/server/reserveKemKey.json",
+      "cid": "bafyreifctrk262us4lkvxycv4o7onigvuqarup5ulcwf5qlwkwzudroehy"
+    },
     "com.atproto.server.reserveSigningKey": {
       "uri": "file://../../lexicons/com/atproto/server/reserveSigningKey.json",
       "cid": "bafyreiamtsl3vm5js4f5verpzj7hd7v67e2zulrkc4nacalwzhq6mg7pae"
@@ -1987,7 +1992,7 @@
     },
     "tools.ozone.inbox.getReport": {
       "uri": "file://../../lexicons/tools/ozone/inbox/getReport.json",
-      "cid": "bafyreidrfctwj5o7fpso7k4nyqeit7o3mk3e5neldpps4xodtw6w4h2ghq"
+      "cid": "bafyreiccjh3ugcewsjrqhwvwn3gd3zudt4sf33tvhl2vp2whilihjmqike"
     },
     "tools.ozone.inbox.getUnreadCount": {
       "uri": "file://../../lexicons/tools/ozone/inbox/getUnreadCount.json",

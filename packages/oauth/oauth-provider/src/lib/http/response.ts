@@ -97,25 +97,26 @@ export function jsonHandler<
   Res extends ServerResponse = ServerResponse,
 >(
   buildJson: (this: T, req: Req, res: Res) => Awaitable<JsonResponse>,
+  supportedContentTypes: string[] = ['application/json'],
 ): Middleware<T, Req, Res> {
   return function (req, res, next) {
     // Ensure we can agree on a content encoding & type before starting to
     // build the JSON response.
-    if (negotiateResponseContent(req, ['application/json'])) {
-      // A middleware should not be async, so we wrap the async operation in a
-      // promise and return it.
-      void (async () => {
-        try {
-          const jsonResponse = await buildJson.call(this, req, res)
-          const { json, status = 200, ...options } = jsonResponse
-          writeJson(res, json, { ...options, status })
-        } catch (err) {
-          next(asError(err, 'Failed to build JSON response'))
-        }
-      })()
-    } else {
-      next(createHttpError(406, 'Unsupported media type'))
+    if (!negotiateResponseContent(req, supportedContentTypes)) {
+      return void next(createHttpError(406, 'Unsupported media type'))
     }
+
+    // A middleware should not be async, so we wrap the async operation in a
+    // promise and return it.
+    void (async () => {
+      try {
+        const jsonResponse = await buildJson.call(this, req, res)
+        const { json, status = 200, ...options } = jsonResponse
+        writeJson(res, json, { ...options, status })
+      } catch (err) {
+        next(asError(err, 'Failed to build JSON response'))
+      }
+    })()
   }
 }
 

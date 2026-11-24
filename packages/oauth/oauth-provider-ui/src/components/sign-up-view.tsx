@@ -1,7 +1,9 @@
 import { msg } from '@lingui/core/macro'
 import { Trans } from '@lingui/react/macro'
 import { useState } from 'react'
+import type { SignUpInput } from '@atproto/oauth-provider-api'
 import { useCustomizationData } from '#/contexts/customization.tsx'
+import type { WithOptionalLocale } from '#/lib/api.ts'
 import { SignUpWizard } from './forms/sign-up-wizard.tsx'
 import { AuthShell } from './layouts/auth-shell.tsx'
 import {
@@ -18,16 +20,13 @@ import {
   SignUpHcaptchaForm,
 } from './sign-up-hcaptcha-form.tsx'
 
+export type SignUpViewData = WithOptionalLocale<SignUpInput>
+
 export type SignUpViewProps = {
   rememberDefault?: boolean
   onBack?: () => void
   onValidateNewHandle: (data: SignUpHandleData) => void | PromiseLike<void>
-  onDone: (
-    data: SignUpCredentialsData & {
-      handle: string
-      hcaptchaToken?: string
-    },
-  ) => void | PromiseLike<void>
+  onDone: (data: SignUpViewData) => void | PromiseLike<void>
 }
 
 export function SignUpView({
@@ -125,6 +124,9 @@ export function SignUpView({
               </SignUpCredentialsForm>
             ),
           },
+          // @NOTE We could try without the hCaptcha step and use the
+          // server-side rate limits to enforce captcha when necessary. For now,
+          // we keep the legacy implementation with the hCaptcha step.
           hcaptchaSiteKey != null && {
             titleRender: () => <Trans>Verify you are human</Trans>,
             contentRender: ({ atLast, prev, prevLabel, next, nextLabel }) => (

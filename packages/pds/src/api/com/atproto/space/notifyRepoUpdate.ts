@@ -1,3 +1,4 @@
+import { DAY, HOUR } from '@atproto/common'
 import { spaceHostAud } from '@atproto/space'
 import { ForbiddenError, type Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../../../context.js'
@@ -7,6 +8,19 @@ import { processNotifyRepoUpdate, toSpaceRef } from './util.js'
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.space.notifyRepoUpdate, {
     auth: ctx.authVerifier.serviceAuth,
+    // Per writer, so only a repo writing heavily is refused. Its host retries.
+    rateLimit: [
+      {
+        durationMs: HOUR,
+        points: 1500,
+        calcKey: ({ auth }) => auth.credentials.iss,
+      },
+      {
+        durationMs: DAY,
+        points: 10000,
+        calcKey: ({ auth }) => auth.credentials.iss,
+      },
+    ],
     handler: async ({ input: { body }, auth }) => {
       const { space, repo } = body
 

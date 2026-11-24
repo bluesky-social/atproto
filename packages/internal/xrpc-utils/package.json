@@ -1,6 +1,6 @@
 {
   "name": "@atproto-labs/xrpc-utils",
-  "version": "0.1.33",
+  "version": "0.1.35",
   "license": "MIT",
   "description": "XRPC server utilities for Node.JS",
   "keywords": [
@@ -45,6 +45,6 @@
     "test": "vitest run"
   },
   "devDependencies": {
-    "vitest": "^4.1.10"
+    "vitest": "^5.1.1"
   }
 }

@@ -1,15 +1,30 @@
-import type { Main, Restricted } from '@atproto/lex-client'
-import type { RecordSchema, Space } from '@atproto/lex-schema'
+import type { InferInput, RecordSchema, Space } from '@atproto/lex-schema'
 
 /** The collections declared by a space type. */
-export type SpaceCollection<S extends Space> = S['collections'][number]
+export type SpaceCollection<S extends Space> = S['collections'][number]['$type']
 
 /**
- * A record schema, restricted to the collections declared by `S`. The
- * `SpaceReader` and `SpaceClient` methods taking one accept any record schema
- * with `validateRequest: false`.
+ * The record schemas of the collections declared by a space type, or of its
+ * collections `C` only.
  */
-export type SpaceCollectionSchema<S extends Space, T extends RecordSchema> =
-  T['$type'] extends SpaceCollection<S>
-    ? Main<T>
-    : Restricted<'This record type is not a collection of the space type'>
+export type SpaceRecordSchema<
+  S extends Space,
+  C extends string = SpaceCollection<S>,
+> = S['collections'][number] extends infer T
+  ? T extends RecordSchema // Distributes over unions
+    ? C extends unknown // Distributes over unions
+      ? C extends T['$type']
+        ? T
+        : never
+      : never
+    : never
+  : never
+
+/**
+ * A record of the collections declared by a space type (or of its collections
+ * `C` only), as accepted by the space type's schema of its collection.
+ */
+export type SpaceRecordInput<
+  S extends Space,
+  C extends string = SpaceCollection<S>,
+> = InferInput<SpaceRecordSchema<S, C>>

@@ -178,6 +178,26 @@ describe('SpaceManager', () => {
         allowedApps: ['https://app.example/client.json'],
       })
     })
+
+    it('refuses once the space is governed by another policy', async () => {
+      const uri = await createGroup(alice)
+      const manager = await SpaceManager.open(alice.agent, uri, {
+        policies: [MemberspacePolicyManager],
+      })
+      const space = new SpaceManager(agentOf(alice), uri)
+      await space.updateSpace(managedspace.policy.$build({ managingApp }))
+
+      const result = manager.updatePolicy({ publicRead: true })
+      await expect(result).rejects.toBeInstanceOf(UnsupportedSpacePolicyError)
+      await expect(result).rejects.toMatchObject({
+        policy: { $type: managedspace.policy.$type },
+      })
+      const { policy } = await space.getSpace()
+      expect(policy).toMatchObject({
+        $type: managedspace.policy.$type,
+        managingApp,
+      })
+    })
   })
 
   it('migrates a space to another policy', async () => {
@@ -192,9 +212,11 @@ describe('SpaceManager', () => {
 
   it('removes a writer from the writer set', async () => {
     const uri = await createGroup(alice, [bob])
-    await SpaceClient.openSpace(group, uri, { agent: bob.agent }).create(note, {
-      text: 'from bob',
-    })
+    await SpaceClient.openSpace(group, uri, { agent: bob.agent }).create(
+      note.$build({
+        text: 'from bob',
+      }),
+    )
 
     await new SpaceManager(agentOf(alice), uri).removeWriter(bob.assertDid)
 

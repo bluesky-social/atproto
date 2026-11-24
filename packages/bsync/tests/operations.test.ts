@@ -235,6 +235,7 @@ describe('operations', () => {
       expect(op.key).toBe('key1')
       expect(op.method).toBe(Method.CREATE)
       expect(op.payload).toEqual(new Uint8Array(validPayload0))
+      expect(op.createdAt?.toDate()).toEqual(expect.any(Date))
     })
   })
 

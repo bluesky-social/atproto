@@ -96,11 +96,32 @@ describe(isDatetimeStringLenient, () => {
     })
   })
 
-  // Because of it leniency, the "isDatetimeStringLenient" implementation does
-  // not fail on some of the invalid syntax cases, so these tests are skipped.
-  describe.skip('Interop invalid syntax', () => {
-    test.each(interopInvalidSyntax)('%s', (dt) => {
+  // Because of its leniency, the "isDatetimeStringLenient" implementation does
+  // not fail on some of the invalid syntax cases. These are listed explicitly
+  // so that the current behavior is pinned down.
+  const interopInvalidSyntaxLenient = [
+    '1985-04-12T23:20:50.123',
+    '1985-04-12T23:20:50',
+    '1985-04-12T23:20:5Z',
+    '1985-04-12T23:20:50.123+0000',
+    '0000-01-01T00:00:00+01:00',
+  ]
+
+  describe('Interop invalid syntax', () => {
+    test.each(
+      interopInvalidSyntax.filter(
+        (dt) => !interopInvalidSyntaxLenient.includes(dt),
+      ),
+    )('%s', (dt) => {
       expect(isDatetimeStringLenient(dt)).toBe(false)
+    })
+  })
+
+  describe('Interop invalid syntax, accepted leniently', () => {
+    test.each(interopInvalidSyntaxLenient)('%s', (dt) => {
+      expect(interopInvalidSyntax).toContain(dt)
+      expect(isDatetimeString(dt)).toBe(false)
+      expect(isDatetimeStringLenient(dt)).toBe(true)
     })
   })
 

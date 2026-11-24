@@ -215,8 +215,11 @@ export class RefResolver {
         ? this.options.moduleSpecifier(nsid)
         : `${asRelativePath(
             this.file.getDirectoryPath(),
-            join('/', ...nsid.split('.')),
-          )}.defs${this.options.importExt ?? '.js'}`
+            // `.defs` belongs to the file name, not the directory: a ref to
+            // a parent namespace resolves to `<parent>.defs`, which lives
+            // next to the current file's directory rather than inside it.
+            `${join('/', ...nsid.split('.'))}.defs`,
+          )}${this.options.importExt ?? '.js'}`
 
       // Lets first make sure the referenced lexicon exists
       const srcDoc = await this.indexer.get(nsid)

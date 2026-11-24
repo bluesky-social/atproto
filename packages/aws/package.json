@@ -1,6 +1,6 @@
 {
   "name": "@atproto/aws",
-  "version": "0.3.24",
+  "version": "0.3.25",
   "license": "MIT",
   "description": "Shared AWS cloud API helpers for (NodeJS) atproto services",
   "keywords": [
@@ -45,6 +45,6 @@
     "test": "vitest run"
   },
   "devDependencies": {
-    "vitest": "^4.1.10"
+    "vitest": "^5.1.1"
   }
 }

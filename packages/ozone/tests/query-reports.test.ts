@@ -450,8 +450,7 @@ describe('query-reports', () => {
         },
         reportedBy: sc.dids.alice,
       })
-      // Report rows are inserted asynchronously by the queue-router daemon —
-      // drain it before querying.
+      // @NOTE Flush queue assignment before querying routed reports.
       await network.processAll()
     })
 
@@ -602,8 +601,7 @@ describe('query-reports', () => {
         },
       })
 
-      // Report rows are inserted asynchronously by the queue-router daemon —
-      // drain it before querying.
+      // @NOTE Flush queue assignment before querying routed reports.
       await network.processAll()
 
       // Find the report we just created (most recent)
@@ -646,8 +644,7 @@ describe('query-reports', () => {
         },
       })
 
-      // Report rows are inserted asynchronously by the queue-router daemon —
-      // drain it before querying.
+      // @NOTE Flush queue assignment before querying routed reports.
       await network.processAll()
 
       // Find the muted subject report

@@ -194,14 +194,14 @@ export async function sendResponse(
   }
 }
 
-function toRequest(req: IncomingMessage): Request {
+function toRequest(req: IncomingMessage, res: ServerResponse): Request {
   const host = req.headers.host ?? req.socket.localAddress ?? 'localhost'
   const isEncrypted = (req.socket as any).encrypted === true
   const protocol = isEncrypted ? 'https' : 'http'
   const url = new URL(req.url ?? '/', `${protocol}://${host}`)
   const headers = toHeaders(req.headers)
   const body = toBody(req)
-  const signal = requestSignal(req)
+  const signal = requestSignal(req, res)
 
   return new Request(url, {
     signal,
@@ -215,23 +215,35 @@ function toRequest(req: IncomingMessage): Request {
   })
 }
 
-function requestSignal(req: IncomingMessage): AbortSignal {
-  if (req.destroyed) return AbortSignal.abort()
+function requestSignal(req: IncomingMessage, res: ServerResponse): AbortSignal {
+  if (res.destroyed) return AbortSignal.abort()
 
   const abortController = new AbortController()
 
   const abort = (err?: Error | WebSocket) => {
     abortController.abort(err instanceof Error ? err : undefined)
+    cleanup()
+  }
 
-    req.off('close', abort)
+  // @NOTE req "end" (and, since Node.js 16, "close") fire once the body has
+  // been read, so disconnects are detected from the response closing early.
+  const onClose = () => {
+    if (res.writableFinished) {
+      cleanup()
+    } else {
+      // @NOTE same error as the one thrown when reading the body, if any
+      abort(req.errored ?? undefined)
+    }
+  }
+
+  const cleanup = () => {
+    res.off('close', onClose)
     req.off('error', abort)
-    req.off('end', abort)
     req.off(kUpgradeEvent, abort)
   }
 
-  req.on('close', abort)
+  res.on('close', onClose)
   req.on('error', abort)
-  req.on('end', abort)
   req.on(kUpgradeEvent, abort)
 
   return abortController.signal
@@ -352,7 +364,7 @@ async function handleRequest(
   res: ServerResponse,
   fetchHandler: FetchHandler,
 ) {
-  const request = toRequest(req)
+  const request = toRequest(req, res)
   const info = toConnectionInfo(req)
   const response = await fetchHandler(request, info)
   await sendResponse(req, res, response)

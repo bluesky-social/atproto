@@ -161,7 +161,11 @@ const getSubjectStatusForRecordEvent = ({
         hostingStatus: 'deleted',
         hostingDeletedAt: timestamp,
       }
-    } else if (event.meta?.op === 'update') {
+    } else if (
+      event.meta?.op === 'update' ||
+      (event.meta?.op === 'create' &&
+        currentStatus?.hostingStatus === 'deleted')
+    ) {
       return {
         hostingStatus: 'active',
         hostingUpdatedAt: timestamp,

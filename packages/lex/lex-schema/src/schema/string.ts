@@ -84,7 +84,7 @@ export class StringSchema<
     ctx: ValidationContext,
   ): ValidationResult<string> {
     const str = coerceToString(input)
-    if (str == null) {
+    if (str == null || (str !== input && ctx.options.mode !== 'parse')) {
       return ctx.issueUnexpectedType(input, 'string')
     }
 

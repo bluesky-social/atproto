@@ -40,6 +40,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     maxImportSize: env.maxImportSize,
     blobUploadLimit: env.blobUploadLimit ?? 5 * 1024 * 1024, // 5mb
     devMode: env.devMode ?? false,
+    trustedProxies: env.trustedProxies,
   }
 
   const dbLoc = (name: string) => {
@@ -409,6 +410,13 @@ export type ServiceConfig = {
   blobUploadLimit: number
   contactEmailAddress?: string
   devMode: boolean
+  /**
+   * The proxies trusted to report the client IP through `X-Forwarded-For`, as
+   * IP addresses, CIDR ranges, or the `loopback`, `linklocal` and
+   * `uniquelocal` presets (see Express's "trust proxy" setting). Defaults to
+   * those three presets, plus the rate limit bypass IPs.
+   */
+  trustedProxies?: string[]
 }
 
 export type DatabaseConfig = {

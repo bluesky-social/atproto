@@ -195,11 +195,11 @@ function PasswordUpdateRow(props: Omit<RowProps, 'icon' | 'value'>) {
       currentUsername={email}
       requestPending={resetPasswordRequest.isPending}
       confirmPending={resetPasswordConfirm.isPending}
-      onRequest={async () => {
-        await resetPasswordRequest.mutateAsync({ identifier: email })
+      onRequest={async (data) => {
+        await resetPasswordRequest.mutateAsync({ ...data, identifier: email })
       }}
-      onConfirm={async ({ token, password }) => {
-        await resetPasswordConfirm.mutateAsync({ token, password })
+      onConfirm={async (data) => {
+        await resetPasswordConfirm.mutateAsync(data)
       }}
     >
       <Row {...props} icon={LockIcon}>

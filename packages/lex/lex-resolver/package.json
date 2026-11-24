@@ -1,6 +1,6 @@
 {
   "name": "@atproto/lex-resolver",
-  "version": "0.4.5",
+  "version": "0.4.7",
   "license": "MIT",
   "description": "Lexicon document resolver utility for AT Lexicons",
   "keywords": [
@@ -44,7 +44,7 @@
   },
   "devDependencies": {
     "@atproto/lex-builder": "workspace:^",
-    "vitest": "^4.1.10"
+    "vitest": "^5.1.1"
   },
   "scripts": {
     "codegen:lex": "lex-builder build --lexicons ../../../lexicons --out ./src/lexicons --clear --lib @atproto/lex-schema --include com.atproto.sync.getRecord --include com.atproto.lexicon.schema",

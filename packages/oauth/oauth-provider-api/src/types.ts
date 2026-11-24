@@ -1,8 +1,12 @@
 import type {
+  AtIdentifierString,
   DidString,
   HandleString,
   ISODatetimeString,
 } from '@atproto/syntax'
+
+export type EmailString = `${string}@${string}`
+export type IdentifierString = `${string}@${string}` | AtIdentifierString
 
 export type { DidString }
 
@@ -11,7 +15,7 @@ export type Account = {
   pds: DidString
   deactivated: boolean
   locale?: string
-  email?: string
+  email?: EmailString
   emailVerified?: boolean
   emailAuthFactor?: boolean
   name?: string

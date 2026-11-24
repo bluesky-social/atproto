@@ -1,4 +1,4 @@
-import { bench, describe } from 'vitest'
+import { describe, test } from 'vitest'
 import { utf8FromBytes } from '@atproto/lex-data'
 import { JsonBytesDecoder } from './json-bytes-decoder.js'
 import {
@@ -242,15 +242,17 @@ function benchData(data: unknown, options?: LexParseOptions) {
     return lexParse(jsonString, options)
   }
 
-  bench('current', () => {
-    lexParseJsonBytes(bytes, options)
-  })
-
-  bench(lexParseJsonBytesDecoder, () => {
-    lexParseJsonBytesDecoder(bytes, options)
-  })
-
-  bench(lexParseJsonBytesNaive, () => {
-    lexParseJsonBytesNaive(bytes, options)
+  test('implementations', async ({ bench }) => {
+    await bench.compare(
+      bench('current', () => {
+        lexParseJsonBytes(bytes, options)
+      }),
+      bench(lexParseJsonBytesDecoder, () => {
+        lexParseJsonBytesDecoder(bytes, options)
+      }),
+      bench(lexParseJsonBytesNaive, () => {
+        lexParseJsonBytesNaive(bytes, options)
+      }),
+    )
   })
 }

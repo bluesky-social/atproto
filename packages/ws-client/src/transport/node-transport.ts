@@ -2,11 +2,11 @@ import { WebSocket } from 'ws'
 import { CloseCode } from '../lib/close-codes.js'
 import {
   CloseError,
-  HandshakeRejectedError,
   HandshakeTimeoutError,
   HeartbeatTimeoutError,
   MessageTooBigError,
   SocketError,
+  UnexpectedResponseError,
   WebSocketClientError,
 } from '../lib/errors.js'
 import {
@@ -280,19 +280,6 @@ function createTransportImpl<M extends DataMode>(
     options.onOpen(sender)
   })
 
-  // A refused upgrade. With a listener, `ws` leaves the dial for us to end
-  // instead of failing it with an `Unexpected server response: <status>` error
-  // that carries the status only in its message.
-  ws.on('unexpected-response', (_req, res) => {
-    const headers = new Headers()
-    for (let i = 0; i + 1 < res.rawHeaders.length; i += 2) {
-      headers.append(res.rawHeaders[i], res.rawHeaders[i + 1])
-    }
-    endWith(new HandshakeRejectedError(res.statusCode ?? 0, headers))
-    // Aborts the request, then fires 'error' (already superseded) and 'close'.
-    ws.terminate()
-  })
-
   // `ws` delivers control frames through their own events rather than 'message',
   // so without this a pong alone wouldn't count as heartbeat evidence.
   ws.on('pong', () => {
@@ -347,6 +334,28 @@ function createTransportImpl<M extends DataMode>(
     // `closeGuard` resumes: a consumer that reaches the end of iteration is
     // guaranteed the close was both reported and complete.
     markClosed()
+  })
+
+  // The server answered the upgrade request with something other than a 101.
+  // With no listener here, `ws` aborts the handshake itself and raises a bare
+  // error, which would classify as a retryable SocketError — so a 404 would be
+  // re-dialed forever. Recording the status first lets it decide instead (the
+  // 'error' that follows is ignored, since `endWith` is first-wins). Listening
+  // also means `ws` leaves the request open, so terminating it is ours to do;
+  // that emits 'error' then 'close', and 'close' settles the channel.
+  ws.on('unexpected-response', (_req, res) => {
+    const headers = new Headers()
+    for (let i = 0; i + 1 < res.rawHeaders.length; i += 2) {
+      headers.append(res.rawHeaders[i], res.rawHeaders[i + 1])
+    }
+    endWith(
+      new UnexpectedResponseError(
+        res.statusCode ?? 0,
+        res.statusMessage,
+        headers,
+      ),
+    )
+    ws.terminate()
   })
 
   // `ws` is not limited to raising 'error' before the connection opens — a

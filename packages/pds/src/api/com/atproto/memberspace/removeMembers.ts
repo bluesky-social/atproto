@@ -19,6 +19,18 @@ export default function (server: Server, ctx: AppContext) {
         // Performed in the handler as it requires the request body
       },
     }),
+    rateLimit: [
+      {
+        name: 'space-write-hour',
+        calcKey: ({ auth }) => auth.credentials.did,
+        calcPoints: ({ input }) => input.body.dids.length,
+      },
+      {
+        name: 'space-write-day',
+        calcKey: ({ auth }) => auth.credentials.did,
+        calcPoints: ({ input }) => input.body.dids.length,
+      },
+    ],
     handler: async ({ input: { body }, auth }) => {
       const authorityDid = auth.credentials.did
       const { space, dids } = body

@@ -10,9 +10,11 @@ import { SpaceClient, listSpaces } from '@atproto/lex-space'
 import { com } from './lexicons/index.js'
 
 const client = new Client(oauthSession)
-const forum = com.example.forum // the space type's schema
+const forum = com.example.forum // the space type (its schema is forum.main)
 
-const { spaces } = await client.call(listSpaces, { spaceType: forum.nsid })
+const { spaces } = await client.call(listSpaces, {
+  spaceType: forum.$spaceType,
+})
 const space = SpaceClient.openSpace(forum, spaces[0].space, {
   agent: client.agent,
 })
@@ -50,7 +52,7 @@ for await (const { repo, collection, record } of space.allRecords()) {
 ## Concepts
 
 - A **space** is identified by its authority, its type and its key, in a URI: `at://{authority}/space/{type}/{skey}` (e.g. `at://did:plc:abc/space/com.example.forum/general`).
-- A **space type** is declared by a Lexicon (`"type": "space"`): its key type, an optional title, and the record collections clients should expect in its spaces. Its generated schema (`l.space()`) is required to open, create or read a space.
+- A **space type** is declared by a Lexicon (`"type": "space"`): its key type, an optional title, and the record collections clients should expect in its spaces. Its generated schema (`l.space()`) references the record schemas of those collections, and is required to open, create or read a space.
 - The space **authority** is the DID at the root of the space. Its PDS is the **space host**, which decides who may read the space.
 - Each account writing to a space holds its own **repo** in it, on its own PDS. The accounts holding a repo in a space form its **writer set**.
 - Reading other accounts' repos requires a **space credential**, issued by the space host in exchange for a **delegation token**. The user's PDS mints delegation tokens for apps the user granted access to the space. This package handles both.
@@ -93,7 +95,7 @@ const owned = await client.call(listSpaces, { spaceDid: client.did })
 
 // Only the spaces of a given type
 const forums = await client.call(listSpaces, {
-  spaceType: com.example.forum.nsid,
+  spaceType: com.example.forum.$spaceType,
 })
 ```
 
@@ -138,34 +140,36 @@ const space = await SpaceClient.createSpace(client.agent, com.example.forum, {
 
 ### 5. Read and write the user's own records
 
-`SpaceClient` mirrors the record helpers of `Client`. Writes always target the user's own repo, and reads target it unless `repo` is set:
+`SpaceClient` has record helpers like those of `Client`, for the collections of the space type. Writes always target the user's own repo, and reads target it unless `repo` is set:
 
 ```typescript
 import { com } from './lexicons/index.js'
 
-const { uri } = await space.create(com.example.post, { text: 'Hello, space!' })
+const { uri } = await space.create(
+  com.example.post.$build({ text: 'Hello, space!' }),
+)
 
-const { records, cursor } = await space.list(com.example.post)
+const { records, cursor } = await space.list(com.example.post.$type)
 for (const { rkey, valid, value } of records) {
   if (valid) console.log(rkey, value.text) // typed as com.example.post.Main
 }
 
-const post = await space.get(com.example.post, { rkey })
-await space.put(com.example.post, { text: 'Edited' }, { rkey })
-await space.delete(com.example.post, { rkey })
+const post = await space.get(com.example.post.$type, { rkey })
+await space.put(com.example.post.$build({ text: 'Edited' }), { rkey })
+await space.delete(com.example.post.$type, { rkey })
 
 await space.applyWrites((op) => [
-  op.create(com.example.post, { text: 'First' }),
-  op.create(com.example.post, { text: 'Second' }),
+  op.create(com.example.post.$build({ text: 'First' })),
+  op.create(com.example.post.$build({ text: 'Second' })),
 ])
 ```
 
 Reads and writes of the user's own repo use the user's session, so a `read_self` grant is enough to read it.
 
-These typed methods only accept the collections the space type declares: other record types are rejected at compile time, and throw before any request. Spaces may hold records of any type though: pass `validateRequest: false` to read or write other collections (e.g. with a `collection=*` grant). With `validateRequest: true`, records are also validated against their schema before being written. The lower level methods (`createRecord()`, `putRecord()`, `deleteRecord()`, `applyWrites()`) accept any record, as in `Client`. To restrict your own helpers the same way, use `SpaceCollectionSchema<S, T>` (or `SpaceCollection<S>` for the collection NSIDs).
+These typed methods only accept the collections the space type declares, and rely on the space type's schemas of those collections: `create()` and `put()` take a record (e.g. built with `$build()`), validated against its collection's schema before being written; `get()`, `delete()`, `list()` and `listAll()` take the collection's NSID. Other record types are rejected at compile time, and throw before any request. The operations built by the `applyWrites()` helper (`op.create()`, `op.update()`, `op.delete()`) follow the same rules. Spaces may hold records of any type though: the lower level methods (`createRecord()`, `putRecord()`, `deleteRecord()`) accept any record, as in `Client` (e.g. with a `collection=*` grant), and `applyWrites()` accepts operations built by hand. To restrict your own helpers the same way, use `SpaceCollection<S>` (the NSIDs of the space type's collections), `SpaceRecordSchema<S, C>` (the space type's schema of collection `C`) or `SpaceRecordInput<S, C>` (a record of collection `C`).
 
 ```typescript
-await space.create(app.bsky.feed.post, post, { validateRequest: false })
+await space.createRecord(app.bsky.feed.post.$build(post))
 ```
 
 ### 6. Read other members' records
@@ -177,48 +181,34 @@ Set `repo` to read another account's repo. This requires a `read` grant:
 for await (const { $type, repo } of space.writers()) {
   if ($type !== 'com.atproto.space.defs#repoWrite') continue // removed
   // Every post of each of them, across pages
-  for await (const post of space.listAll(com.example.post, { repo })) {
+  for await (const post of space.listAll(com.example.post.$type, { repo })) {
     if (post.valid) console.log(repo, post.value.text)
   }
 }
 
 // A single record, verified against the MAC its host computed
-const { value } = await space.get(com.example.post, { repo, rkey })
+const { value } = await space.get(com.example.post.$type, { repo, rkey })
 ```
 
 ### 7. Read the whole space
 
 `allRecords()` reads every repo of the writer set. Each repo is fetched in full and verified (its commit against its host's MAC, its records against its commit) before its records are yielded. Every record is yielded, flagged with `valid`:
 
-- `true`: of a collection declared by the space type and, if its schema is passed in `collections`, matching it. Checking `collection` narrows `record`: to the schema's type, or else to a `TypedLexMap` of that collection.
+- `true`: of a collection declared by the space type, and matching the space type's schema of that collection. Checking `collection` narrows `record` to that schema's type.
 - `false`: of a collection the space type does not declare, stored under a collection other than its `$type`, or not matching its schema. The reason is in `error`.
 
 ```typescript
-// Every record: only its collection is checked
 for await (const record of space.allRecords()) {
-  if (record.valid) {
-    record.record // a TypedLexMap of one of the space type's collections
-  } else {
-    record.record // typed as LexMap
-    record.error // a LexValidationError
-  }
-}
-
-// The records of some collections are also validated against their schema
-for await (const record of space.allRecords({
-  collections: [com.example.post],
-})) {
   if (!record.valid) {
+    record.record // typed as LexMap
     record.error // a LexValidationError
   } else if (record.collection === com.example.post.$type) {
     record.record // typed as com.example.post.Main
-  } else {
-    record.record // a TypedLexMap of another of the space type's collections
   }
 }
 ```
 
-Repos that are unavailable (not found, taken down, suspended or deactivated) are skipped. `records({ repo, collections })` classifies the records of a single repo the same way, from its listed records (not covered by a MAC). Records are checked by the client, as not every host enforces the space type.
+Repos that are unavailable (not found, taken down, suspended or deactivated) are skipped. `records({ repo })` classifies the records of a single repo the same way, from its listed records (not covered by a MAC). Records are checked by the client, as not every host enforces the space type.
 
 ### 8. Fetch blobs
 
@@ -244,7 +234,7 @@ const { body } = await space.getBlob({
 | `SpaceRepoVerificationError`                         | A record, commit, repo or blob failed verification                                                                 |
 | `RepoGapError`                                       | A repo cannot be synced incrementally from a known state (see [Building a sync service](#building-a-sync-service)) |
 | `UnsupportedSpacePolicyError`                        | A space is not governed by one of the expected policies (see [Managing a space](#managing-a-space))                |
-| `TypeError`                                          | A space is not of the schema's type, or a record type is not one of its collections (see `validateRequest`)        |
+| `TypeError`                                          | A space is not of the schema's type, or a record type is not one of its collections                                |
 
 Some failures are recovered from automatically:
 
@@ -295,7 +285,7 @@ const members = await SpaceManager.open(client.agent, spaceUri, {
 }) // MemberspacePolicyManager
 ```
 
-`updatePolicy()` replaces the policy wholesale: concurrent changes are overwritten (last write wins).
+`updatePolicy()` replaces the policy wholesale: concurrent changes are overwritten (last write wins). If the space has since been migrated to another policy, it throws `UnsupportedSpacePolicyError` rather than migrating the space back.
 
 A space host may implement other policies, which define their own methods. To manage them the same way, extend `SpacePolicyManager`, with the policy's schema as static `schema`, and list it in `policies`:
 
@@ -339,6 +329,24 @@ Governing a space by a policy of another type discards the state of the previous
 ## Building a sync service
 
 A sync service keeps its own copy of spaces, e.g. to index them for the users of an app. It does not act for one specific user: use a `SpaceReader`, which provides every read above (but no writes) with space credentials only. `SpaceClient` extends it.
+
+### Running on a server
+
+The hosts a reader contacts are named by DID documents (the space authority's PDS, each writer's PDS, a `did:web` host), which anyone can publish, and its requests carry space credentials. The default `fetch` is `globalThis.fetch`, so on a server, pass one that refuses private and loopback addresses, such as `safeFetchWrap()` from `@atproto-labs/fetch-node`. It is used for DID resolution too, unless you pass your own `didResolver`, which must then be built with it:
+
+```typescript
+import { safeFetchWrap } from '@atproto-labs/fetch-node'
+
+const fetch = safeFetchWrap({
+  // The defaults (512 kB, 10 s) are too tight to pull whole repos
+  responseMaxSize: 64 * 1024 * 1024,
+  timeout: 60_000,
+})
+const reader = SpaceReader.openSpace(com.example.forum, spaceUri, {
+  fetch,
+  delegationTokenProvider,
+})
+```
 
 ### Obtaining credentials
 

@@ -10,9 +10,18 @@ export const oauthAuthorizationRequestQuerySchema = z.intersection(
     client_id: oauthClientIdSchema,
   }),
   z.union([
-    oauthAuthorizationRequestParametersSchema,
-    oauthAuthorizationRequestJarSchema,
-    oauthAuthorizationRequestUriSchema,
+    // @NOTE a query should only ever match one of the three types: URI, JAR, or
+    // parameters
+    oauthAuthorizationRequestUriSchema.extend({
+      request: z.never().optional(),
+    }),
+    oauthAuthorizationRequestJarSchema.extend({
+      request_uri: z.never().optional(),
+    }),
+    oauthAuthorizationRequestParametersSchema.extend({
+      request_uri: z.never().optional(),
+      request: z.never().optional(),
+    }),
   ]),
 )
 

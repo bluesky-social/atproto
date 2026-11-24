@@ -7,76 +7,71 @@ import {
   asLexiconRecordKey,
 } from '../core.js'
 import { lazyProperty } from '../util/lazy-property.js'
-import { type RecordKeySchema, recordKey } from './record.js'
-
-/**
- * Configuration options for a space declaration.
- *
- * @property title - Human-readable title shown on OAuth consent screens, which
- *   show the NSID when it is absent
- * @property title:lang - Localized titles by language code
- * @property description - Developer-facing description of the space type
- */
-export type SpaceOptions = {
-  title?: string
-  'title:lang'?: Record<string, undefined | string>
-  description?: string
-}
+import { type RecordKeySchema, type RecordSchema, recordKey } from './record.js'
+import type { TypedRefSchema } from './typed-ref.js'
 
 /**
  * Declares a space type in AT Protocol.
  *
- * A space declaration establishes an NSID for a kind of permissioned space
- * and may supply the human-readable title shown on OAuth consent screens when
- * an application requests access to a space of this type. It also lists the
- * recommended record collections for clients of this space type.
+ * A space declaration establishes an NSID for a kind of permissioned space,
+ * and lists the recommended record collections for clients of this space type.
  *
  * The `collections` list does not constrain what may actually be written
- * into the space — it's a recommendation for clients and (along with `title`)
- * informs how OAuth consent screens describe the access being requested.
+ * into the space — it's a recommendation for clients.
  *
- * @template TNsid - The NSID identifying this space type
  * @template TKey - The recommended space key type
- * @template TCollections - The recommended record collections
+ * @template TSpaceType - The NSID identifying this space type
+ * @template TRecord - The record schemas of the recommended collections
  *
  * @example
  * ```ts
- * const forum = new Space(
- *   'any',
- *   'com.atmoboards.forum',
- *   ['com.atmoboards.thread', 'com.atmoboards.reply'],
- *   { title: 'AtmoBoards Forum', 'title:lang': { es: 'Foro AtmoBoards' } },
- * )
+ * const forum = new Space('any', 'com.atmoboards.forum', [thread, reply])
  * ```
  */
 export class Space<
-  const TNsid extends NsidString = NsidString,
   const TKey extends LexiconRecordKey = LexiconRecordKey,
-  const TCollections extends readonly NsidString[] = readonly NsidString[],
+  const TSpaceType extends NsidString = NsidString,
+  const TRecord extends RecordSchema = RecordSchema,
 > {
+  readonly type = 'space' as const
+
   readonly key: TKey
-  readonly nsid: TNsid
-  readonly collections: TCollections
-  readonly options: SpaceOptions
+  readonly spaceType: TSpaceType
+
+  readonly #collections: readonly (TRecord | TypedRefSchema<TRecord>)[]
 
   constructor(
     key: TKey,
-    nsid: TNsid,
-    collections: TCollections,
-    options: SpaceOptions = {},
+    spaceType: TSpaceType,
+    collections: readonly (TRecord | TypedRefSchema<TRecord>)[],
   ) {
     this.key = asLexiconRecordKey(key)
-    this.nsid = nsid
-    this.collections = collections
-    this.options = options
+    this.spaceType = spaceType
+
+    // @NOTE We don't build the resolved collection schemas here; they are
+    // lazily resolved on first access via the `collections` getter.
+    this.#collections = collections
   }
 
-  get title(): string | undefined {
-    return this.options.title
+  /**
+   * The record schemas of the recommended collections.
+   *
+   * @note Resolved on first access, allowing collections to be declared as
+   * {@link TypedRefSchema} to schemas that are not yet defined (e.g. because
+   * of circular imports).
+   */
+  get collections(): readonly TRecord[] {
+    return lazyProperty(
+      this,
+      'collections',
+      this.#collections.map(getCollectionSchema),
+    )
   }
 
-  get spaceType(): TNsid {
-    return this.nsid
+  // @NOTE Expose the space type as a property with a `$` prefix for convenience
+  // and consistency with other `$`-prefixed helpers from lex-builder.
+  get $spaceType(): TSpaceType {
+    return this.spaceType
   }
 
   /**
@@ -105,8 +100,8 @@ export class Space<
    */
   matchesRef<R extends { spaceType: string; skey: string }>(
     ref: R,
-  ): ref is R & { spaceType: TNsid; skey: RecordKeyValue<TKey> } {
-    return ref.spaceType === this.nsid && this.isKey(ref.skey)
+  ): ref is R & { spaceType: TSpaceType; skey: RecordKeyValue<TKey> } {
+    return ref.spaceType === this.spaceType && this.isKey(ref.skey)
   }
 
   spaceRefFor(
@@ -138,7 +133,7 @@ export class Space<
       )
     }
 
-    return new SpaceRef(spaceDid, this.nsid, skey)
+    return new SpaceRef(spaceDid, this.spaceType, skey)
   }
 }
 
@@ -146,33 +141,34 @@ export class Space<
  * Creates a space declaration.
  *
  * @param key - Recommended space key type
- * @param nsid - The NSID identifying this space type
- * @param collections - Recommended record collections for clients of this space type
- * @param options - Optional metadata (title, localized titles, description)
+ * @param spaceType - The NSID identifying this space type
+ * @param collections - The record schemas (or references to them) of the
+ *   collections recommended for clients of this space type. The schema types
+ *   are not inferred from a list mixing schemas and references: use either
+ *   form for all of them.
  * @returns A new {@link Space} instance
  *
  * @example
  * ```ts
- * const forum = l.space(
- *   'any',
- *   'com.atmoboards.forum',
- *   ['com.atmoboards.thread', 'com.atmoboards.reply'],
- *   {
- *     title: 'AtmoBoards Forum',
- *     'title:lang': {
- *       es: 'Foro AtmoBoards',
- *       ja: 'AtmoBoards 掲示板',
- *     },
- *     description: 'A discussion forum',
- *   },
- * )
+ * // Record schemas, or (lazy) references to them
+ * const forum = l.space('any', 'com.atmoboards.forum', [thread, reply])
  * ```
  */
 /*@__NO_SIDE_EFFECTS__*/
 export function space<
-  const N extends NsidString,
-  const K extends LexiconRecordKey,
-  const C extends readonly NsidString[],
->(key: K, nsid: N, collections: C, options?: SpaceOptions): Space<N, K, C> {
-  return new Space<N, K, C>(key, nsid, collections, options)
+  const TKey extends LexiconRecordKey,
+  const TSpaceType extends NsidString,
+  const TRecord extends RecordSchema = never,
+>(
+  key: TKey,
+  spaceType: TSpaceType,
+  collections: readonly (TRecord | TypedRefSchema<TRecord>)[],
+): Space<TKey, TSpaceType, TRecord> {
+  return new Space<TKey, TSpaceType, TRecord>(key, spaceType, collections)
+}
+
+function getCollectionSchema<T extends RecordSchema>(
+  collection: T | TypedRefSchema<T>,
+): T {
+  return collection.type === 'typedRef' ? collection.validator : collection
 }

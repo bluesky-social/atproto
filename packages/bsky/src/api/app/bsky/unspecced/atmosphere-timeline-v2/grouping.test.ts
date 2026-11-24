@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { assert, describe, expect, it, test } from 'vitest'
 import { DAY, MINUTE as minute } from '@atproto/common'
 import { type AtUriString, type DidString, atUri } from '@atproto/lex'
 import { app, site, social } from '../../../../../lexicons/index.js'
@@ -172,6 +172,51 @@ describe('groupAtmosphereActivities', () => {
       },
     ])
   })
+
+  test.each(
+    [150, 151, 302].flatMap((count) =>
+      [site.standard.document.$type, site.standard.graph.recommend.$type].map(
+        (collection) => ({ count, collection }),
+      ),
+    ),
+  )(
+    'caps actor groups at 150 activities without losing any of $count $collection activities',
+    ({ count, collection }) => {
+      const input = Array.from({ length: count }, (_, i) =>
+        activity(
+          author,
+          collection,
+          `activity${i}`,
+          i,
+          collection === site.standard.graph.recommend.$type
+            ? atUri('did:plc:other', site.standard.document.$type, `doc${i}`)
+            : undefined,
+        ),
+      )
+      const feed = group(input)
+      const refs = feed.flatMap((entry, i) => {
+        const members = input.slice(i * 150, (i + 1) * 150)
+        if (members.length === 1) {
+          assert(timeline.activityItem.$isTypeOf(entry))
+          expect(entry.ref).toEqual(members[0].ref)
+          expect(entry.subject.ref.uri).toBe(members[0].subject)
+          return [entry.ref]
+        }
+        assert(timeline.activityActorGroup.$isTypeOf(entry))
+        expect(entry.activities).toHaveLength(members.length)
+        expect(entry.subjects.map(({ ref }) => ref.uri)).toEqual([
+          members[0].subject,
+        ])
+        expect(entry.activities.map(({ subject }) => subject)).toEqual(
+          members.map(({ subject }) => subject),
+        )
+        return entry.activities.map(({ ref }) => ref)
+      })
+
+      expect(feed).toHaveLength(Math.ceil(count / 150))
+      expect(refs).toEqual(input.map(({ ref }) => ref))
+    },
+  )
 
   it('leaves activity that may not be actor-grouped standalone', () => {
     const subscribedArticles = [0, 1].map((i) =>

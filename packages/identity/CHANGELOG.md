@@ -1,5 +1,14 @@
 # @atproto/identity
 
+## 0.5.24
+
+### Patch Changes
+
+- Updated dependencies [[`b9b1ca7`](https://github.com/bluesky-social/atproto/commit/b9b1ca7f176b93d12e39685799c5f2e1f9a63be7), [`ce37237`](https://github.com/bluesky-social/atproto/commit/ce37237663b7ea87e8cc04cb995377d0ee5d2efd), [`ce37237`](https://github.com/bluesky-social/atproto/commit/ce37237663b7ea87e8cc04cb995377d0ee5d2efd)]:
+  - @atproto-labs/fetch-node@0.4.6
+  - @atproto/crypto@0.5.8
+  - @atproto/common-web@0.5.18
+
 ## 0.5.23
 
 ### Patch Changes

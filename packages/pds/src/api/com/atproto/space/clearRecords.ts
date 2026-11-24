@@ -17,12 +17,12 @@ export default function (server: Server, ctx: AppContext) {
     }),
     rateLimit: [
       {
-        name: 'repo-write-hour',
+        name: 'space-write-hour',
         calcKey: ({ auth }) => auth.credentials.did,
         calcPoints: () => 1,
       },
       {
-        name: 'repo-write-day',
+        name: 'space-write-day',
         calcKey: ({ auth }) => auth.credentials.did,
         calcPoints: () => 1,
       },

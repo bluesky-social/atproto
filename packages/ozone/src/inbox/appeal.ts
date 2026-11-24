@@ -265,6 +265,7 @@ export const eventSubjectFilter = (
   return eb.and([
     eb('subjectDid', '=', subjectDid),
     eb('subjectType', '=', subjectType),
+    eb('subjectUri', 'is', null),
   ])
 }
 
@@ -276,9 +277,8 @@ export const findAppealedEvent = async (
   let query = ctx.db.db
     .selectFrom('moderation_event')
     .where((eb) => eventSubjectFilter(eb, subject))
-    .where('action', '=', action.type === 'label' ? LABEL : TAKEDOWN)
-    .$if(ctx.cfg.inbox.startAt !== undefined, (qb) =>
-      qb.where('createdAt', '>=', ctx.cfg.inbox.startAt!),
+    .where(
+      sql<boolean>`action = ${sql.lit(action.type === 'label' ? LABEL : TAKEDOWN)}`,
     )
 
   if (action.type === 'label') {
@@ -451,8 +451,8 @@ export const findAppealHistory = async (db: Database, subject: ModSubject) => {
 /**
  * Reject an appeal the subject is no longer entitled to.
  *
- * Answers the same question as the `availableActions` the read path
- * advertises, through {@link appealsExhausted}, so the two cannot drift.
+ * Shares {@link appealsExhausted} with the read path. Action-specific window
+ * validation is separate; subject-only submissions retain their legacy rules.
  */
 export const assertAppealAllowed = async (
   dbTxn: Database,
@@ -460,7 +460,6 @@ export const assertAppealAllowed = async (
   options: {
     actionAt?: DatetimeString
     unresolvedAction?: boolean
-    startAt?: DatetimeString
     windowMonths: number
   },
 ) => {
@@ -483,12 +482,9 @@ export const assertAppealAllowed = async (
     const latest = await dbTxn.db
       .selectFrom('moderation_event')
       .where((eb) => eventSubjectFilter(eb, subject))
-      .where('action', 'in', [...PUBLIC_EVENT_ACTIONS])
+      .where(sql<boolean>`action IN (${sql.lit(TAKEDOWN)}, ${sql.lit(LABEL)})`)
       .where(appealableEventFilter)
       .where('createdAt', '>', eligibility.lastClosedAt)
-      .$if(options.startAt !== undefined, (qb) =>
-        qb.where('createdAt', '>=', options.startAt!),
-      )
       .orderBy('createdAt', 'desc')
       .orderBy('id', 'desc')
       .select('createdAt')
@@ -689,7 +685,6 @@ export const fileAppeal = async (
     await assertAppealAllowed(dbTxn, subject, {
       actionAt: resolvedActionAt,
       unresolvedAction: !!action && !resolvedActionAt,
-      startAt: ctx.cfg.inbox.startAt,
       windowMonths: ctx.cfg.inbox.appealWindowMonths,
     })
 
@@ -706,7 +701,7 @@ export const fileAppeal = async (
         ...(submittedBy ? { appealSubmittedBy: submittedBy } : {}),
       },
     })
-    return ctx.queueService(dbTxn).insertReportFromEvent({
+    return ctx.queueService(dbTxn).assignReportFromEvent({
       event: reportEvent,
       reportType: APPEAL_REASON_TYPE,
       queueId,

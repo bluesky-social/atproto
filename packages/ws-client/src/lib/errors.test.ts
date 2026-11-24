@@ -4,7 +4,6 @@ import {
   BufferOverflowError,
   CloseError,
   DataModeError,
-  HandshakeRejectedError,
   HandshakeTimeoutError,
   HeartbeatTimeoutError,
   IdleTimeoutError,
@@ -57,14 +56,5 @@ describe('error taxonomy', () => {
     const mode = new DataModeError('text', 'binary')
     expect([mode.expected, mode.received]).toEqual(['text', 'binary'])
     expect(new MessageTooBigError(1024).maxPayload).toBe(1024)
-  })
-
-  it('classifies a refused upgrade as a retryable socket error', () => {
-    const headers = new Headers({ 'retry-after': '30' })
-    const rejected = new HandshakeRejectedError(503, headers)
-    expect(rejected).toBeInstanceOf(SocketError)
-    expect(rejected.shouldRetry()).toBe(true)
-    expect([rejected.status, rejected.headers]).toEqual([503, headers])
-    expect(rejected.message).toContain('503')
   })
 })

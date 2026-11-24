@@ -1,10 +1,10 @@
 import { type ZodTypeDef, z } from 'zod'
 import { didSchema } from '@atproto/did'
-import type { AtIdentifierString } from '@atproto/syntax'
-import { type EmailString, emailSchema } from './email.js'
+import type { IdentifierString } from '@atproto/oauth-provider-api'
+import { emailSchema } from './email.js'
 import { handleSchema } from './handle.js'
 
-export type IdentifierString = AtIdentifierString | EmailString
+export type { IdentifierString }
 export const identifierSchema = z.union([
   emailSchema,
   didSchema,

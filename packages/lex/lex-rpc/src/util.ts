@@ -109,7 +109,9 @@ export type XrpcRequestHeadersOptions = {
    * depending on the `service` and `labelers` options, respectively, if they
    * are provided (which is always the case when using {@link Client.xrpc}).
    */
-  headers?: HeadersInit | (() => HeadersInit | Promise<HeadersInit>)
+  headers?:
+    | HeadersInit
+    | (() => undefined | HeadersInit | Promise<undefined | HeadersInit>)
 
   /**
    * Labeler DIDs to request labels from for content moderation.
@@ -300,10 +302,12 @@ export function rkeyFor<const T extends RecordSchema>(
 
 export function mergeHeaders(
   defaultHeaders: HeadersInit,
-  requestHeaders: HeadersInit,
+  requestHeaders?: HeadersInit,
 ): Headers {
   // We don't want to alter the original Headers objects, so we create a new one
   const result = new Headers(defaultHeaders)
+
+  if (!requestHeaders) return result
 
   const overrides =
     requestHeaders instanceof Headers
@@ -366,4 +370,13 @@ export function wait(
 
 export function trim(value: string): string {
   return value.trim()
+}
+
+export function isCausedBySignal(err: unknown, signal?: AbortSignal) {
+  if (!signal?.aborted) return false
+  if (signal.reason == null) return false // Ignore nullish reasons
+  return (
+    err === signal.reason ||
+    (err instanceof Error && err.cause === signal.reason)
+  )
 }

@@ -1,11 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import PQueue from 'p-queue'
 import { DAY, HOUR, MINUTE, SECOND, allFulfilled } from '@atproto/common'
-import {
-  RETRYABLE_HTTP_STATUS_CODES,
-  XrpcError,
-  xrpc,
-} from '@atproto/lex-client'
+import { XrpcError, isRetryableHttpStatus } from '@atproto/lex-client'
 import type { l } from '@atproto/lex-schema'
 import { LtHash, spaceHostAud } from '@atproto/space'
 import { type DidString, SpaceRef, type SpaceRefString } from '@atproto/syntax'
@@ -474,7 +470,12 @@ export class SpaceNotifications implements AsyncDisposable {
       data: update.data,
     }
     const { spaceDid } = ref
-    const authority = await this.ctx.accountManager.getAccount(spaceDid)
+    // Taken down and deactivated authorities included, as processNotifyRepoUpdate
+    // does, so the authority's writer set stays current here.
+    const authority = await this.ctx.accountManager.getAccount(spaceDid, {
+      includeDeactivated: true,
+      includeTakenDown: true,
+    })
     if (authority) {
       await processNotifyRepoUpdate(this.ctx, ref, body)
     } else {
@@ -484,15 +485,13 @@ export class SpaceNotifications implements AsyncDisposable {
         lxm: com.atproto.space.notifyRepoUpdate.$lxm,
       })
       if (!target) throw new Error('Could not resolve space host')
-      await xrpc(
-        { service: target.endpoint, fetch: this.ctx.safeFetch },
-        com.atproto.space.notifyRepoUpdate,
-        {
+      await this.ctx
+        .safeClient(target.endpoint)
+        .xrpc(com.atproto.space.notifyRepoUpdate, {
           headers: target.headers,
           body,
           signal,
-        },
-      )
+        })
     }
   }
 
@@ -506,18 +505,16 @@ export class SpaceNotifications implements AsyncDisposable {
     ])
     signal.throwIfAborted()
     // The endpoint is chosen by the syncer, so it's fetched as untrusted.
-    await xrpc(
-      { service: recipient.endpoint, fetch: this.ctx.safeFetch },
-      com.atproto.space.notifySpaceUpdate,
-      {
+    await this.ctx
+      .safeClient(recipient.endpoint)
+      .xrpc(com.atproto.space.notifySpaceUpdate, {
         body: {
           space: recipient.space,
           token: recipient.token,
           update: notice,
         },
         signal,
-      },
-    )
+      })
   }
 
   async destroy(): Promise<void> {
@@ -546,7 +543,7 @@ export class SpaceNotifications implements AsyncDisposable {
 function isRetryableError(err: unknown): boolean {
   if (err instanceof XrpcError) return err.shouldRetry()
   if (err instanceof XRPCError) {
-    return RETRYABLE_HTTP_STATUS_CODES.has(err.statusCode)
+    return isRetryableHttpStatus(err.statusCode)
   }
   // @NOTE Resolution and local storage failures can precede an XRPC request.
   return true

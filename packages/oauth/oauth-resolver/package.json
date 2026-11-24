@@ -1,6 +1,6 @@
 {
   "name": "@atproto/oauth-resolver",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "license": "MIT",
   "description": "OAuth client resolver",
   "keywords": [
@@ -40,7 +40,7 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
-    "vitest": "^4.1.10"
+    "vitest": "^5.1.1"
   },
   "scripts": {
     "build": "tsc --build tsconfig.build.json",
