@@ -2,7 +2,7 @@ import { encode } from '@atproto/lex-cbor'
 import { cidForCbor } from '@atproto/lex-data'
 import { WriteOpAction } from '@atproto/repo'
 import type { DidString, NsidString } from '@atproto/syntax'
-import { SpaceRef } from '@atproto/syntax'
+import { AtUri, SpaceRef } from '@atproto/syntax'
 import {
   SPACE_DID,
   type SpaceTestDb,
@@ -388,5 +388,110 @@ describe('isBlobInSpace', () => {
     expect(await h.space.isBlobInSpace(longerSkey.toString(), BLOB)).toBe(false)
     expect(await h.space.isBlobInSpace(otherType.toString(), BLOB)).toBe(false)
     expect(await h.space.isBlobInSpace(ref.toString(), 'bafyother')).toBe(false)
+  })
+})
+
+// SQLite binds at most 32766 variables per statement.
+describe('batches past the SQL variable limit', () => {
+  let h: SpaceTestDb
+  const ref = new SpaceRef(SPACE_DID, TYPE, 'big')
+  const space = ref.toString()
+  const N = 33_000
+  let blobX: string
+  let blobY: string
+
+  const uriAt = (i: number) =>
+    ref.recordUri(h.space.did, FOO, `r${i}`).toString()
+
+  const seed = (opts: { records: boolean }) => {
+    const now = new Date().toISOString()
+    const insertBlob = h.sqlite.prepare(
+      `insert into blob (cid, mimeType, size, createdAt) values (?, 'image/png', 1, ?)`,
+    )
+    const insertRecord = h.sqlite.prepare(
+      `insert into space_record (uri, space, collection, rkey, cid, value, repoRev, indexedAt) values (?, ?, ?, ?, 'bafyrecord', x'a0', 'rev', ?)`,
+    )
+    const insertLink = h.sqlite.prepare(
+      `insert into space_record_blob (blobCid, recordUri) values (?, ?)`,
+    )
+    h.sqlite.transaction(() => {
+      insertBlob.run(blobX, now)
+      insertBlob.run(blobY, now)
+      for (let i = 0; i < N; i++) {
+        if (opts.records) insertRecord.run(uriAt(i), space, FOO, `r${i}`, now)
+        insertLink.run(blobX, uriAt(i))
+      }
+    })()
+  }
+
+  const blobs = () =>
+    h.sqlite
+      .prepare('select cid from blob order by cid')
+      .all()
+      .map((row) => (row as { cid: string }).cid)
+  const linkCount = () =>
+    (
+      h.sqlite.prepare('select count(*) as n from space_record_blob').get() as {
+        n: number
+      }
+    ).n
+
+  beforeAll(async () => {
+    blobX = (await cidForCbor(encode({ blob: 'x' }))).toString()
+    blobY = (await cidForCbor(encode({ blob: 'y' }))).toString()
+  })
+
+  beforeEach(async () => {
+    h = await createSpaceTestDb()
+  })
+
+  afterEach(async () => {
+    await h.close()
+  })
+
+  it('deleteSpaceBlobs cleans up a blob linked from 33,000 records', async () => {
+    seed({ records: true })
+    // Y is also linked from one space record and from the public repo, so it stays.
+    h.sqlite
+      .prepare(`insert into space_record_blob (blobCid, recordUri) values (?, ?)`)
+      .run(blobY, uriAt(20_000))
+    h.sqlite
+      .prepare(`insert into record_blob (blobCid, recordUri) values (?, ?)`)
+      .run(blobY, `at://${h.space.did}/com.example.post/1`)
+
+    await h.transact((txn) => txn.blob.deleteSpaceBlobs(space))
+
+    expect(linkCount()).toBe(0)
+    expect(blobs()).toEqual([blobY])
+    expect(h.deletedFromBlobstore).toContain(blobX)
+    expect(h.deletedFromBlobstore).not.toContain(blobY)
+  })
+
+  it('deleteDereferencedSpaceBlobs handles 33,000 deletes', async () => {
+    seed({ records: false })
+    const writes = Array.from({ length: N }, (_, i) => ({
+      action: WriteOpAction.Delete as const,
+      uri: new AtUri(uriAt(i)),
+    }))
+
+    await h.transact((txn) => txn.blob.deleteDereferencedSpaceBlobs(writes))
+
+    expect(linkCount()).toBe(0)
+    expect(blobs()).toEqual([blobY])
+  })
+
+  it('applyWrites commits 5,000 creates', async () => {
+    const paths: [string, string][] = Array.from({ length: 5_000 }, (_, i) => [
+      FOO,
+      `r${i}`,
+    ])
+    const commit = await putRecords(h, ref, paths)
+    const idxs = h.sqlite
+      .prepare(
+        'select idx from space_record_oplog where space = ? and rev = ? order by idx',
+      )
+      .all(space, commit!.rev)
+      .map((row) => (row as { idx: number }).idx)
+    expect(idxs).toEqual(Array.from({ length: 5_000 }, (_, i) => i))
   })
 })

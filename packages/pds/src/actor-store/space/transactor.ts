@@ -1,4 +1,4 @@
-import { TID } from '@atproto/common'
+import { TID, chunkArray } from '@atproto/common'
 import { encode } from '@atproto/lex-cbor'
 import { type Cid, cidForCbor, enumBlobRefs, parseCid } from '@atproto/lex-data'
 import { WriteOpAction } from '@atproto/repo'
@@ -295,7 +295,10 @@ export class SpaceTransactor extends SpaceReader {
       .set({ setHash, rev })
       .where('space', '=', space)
       .execute()
-    await this.db.db.insertInto('space_record_oplog').values(ops).execute()
+    // In chunks: a commit can carry more ops than SQLite will bind variables for.
+    for (const chunk of chunkArray(ops, 500)) {
+      await this.db.db.insertInto('space_record_oplog').values(chunk).execute()
+    }
 
     await this.blob.deleteDereferencedSpaceBlobs(writes)
     for (const write of writes) {
