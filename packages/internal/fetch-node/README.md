@@ -20,11 +20,13 @@ By default, `safeFetchWrap` allows HTTPS on port 443, blocks private and reserve
 
 Pass `redirect` explicitly on each call: use `'follow'`, `'manual'`, or `'error'`. Configure the wrapper with options such as `timeout` (milliseconds), `responseMaxSize` (bytes), and `forbiddenDomainNames`. If you supply a custom `fetch`, it must honor Undici's `dispatcher` option; do not pass a separate dispatcher on individual calls.
 
+Hostnames are resolved with `dns.lookup`, which runs on libuv's threadpool and cannot be cancelled, so a few slow nameservers can stall every other lookup in the process. To avoid this, pass a `lookup` function with the signature of `net.connect`'s `lookup` option, for example one built on a `dns.Resolver` with a `timeout`. It must honor `options.all`. Its results are still checked for private and reserved IP addresses.
+
 ## Other helpers
 
 - `unicastFetchWrap()` restricts destinations to public IP addresses, including redirects, without adding the HTTPS, timeout, or response-size rules.
 - `safeDispatchFetchWrap({ checkUrl, lookup })` lets you supply your own destination checks. `checkUrl` receives the origin of each request, including redirects, and returns a reason string to block it or `undefined` to allow it.
-- `unicastLookup` checks DNS results before connecting. `isUnicastIpHostname(hostname)` checks a literal IP address and returns `undefined` for a domain name.
+- `unicastLookup` checks DNS results before connecting, and `unicastLookupWrap(lookup)` applies the same check to a custom lookup function. `isUnicastIpHostname(hostname)` checks a literal IP address and returns `undefined` for a domain name.
 - This package also exports the helpers from `@atproto-labs/fetch` for working with requests, responses, errors, and fetch wrappers.
 
 ## Temporary eMudhra TLS mitigation

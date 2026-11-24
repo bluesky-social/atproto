@@ -1,10 +1,5 @@
 // @TODO: Move some of these to a shared package ?
 
-export type JsonScalar = string | number | boolean | null
-export type Json = JsonScalar | Json[] | { [key: string]: undefined | Json }
-export type JsonObject = { [key: string]: undefined | Json }
-export type JsonArray = Json[]
-
 export type ThisParameterOverride<
   C,
   Fn extends (...a: any) => any,
@@ -59,100 +54,38 @@ export function padLines(input: string, pad: string) {
   return pad + input.replace(LINE_BREAK, `$&${pad}`)
 }
 
-/**
- * @param [onCancellationError] - Callback that will trigger to asynchronously
- * handle any error that occurs while cancelling the response body. Providing
- * this will speed up the process and avoid potential deadlocks. Defaults to
- * awaiting the cancellation operation. use `"log"` to log the error.
- * @see {@link https://undici.nodejs.org/#/?id=garbage-collection}
- * @note awaiting this function's result, when no `onCancellationError` is
- * provided, might result in a dead lock. Indeed, if the response was cloned(),
- * the response.body.cancel() method will not resolve until the other response's
- * body is consumed/cancelled.
- *
- * @example
- * ```ts
- * // Make sure response was not cloned, or that every cloned response was
- * // consumed/cancelled before awaiting this function's result.
- * await cancelBody(response)
- * ```
- * @example
- * ```ts
- * await cancelBody(response, (err) => {
- *   // No biggie, let's just log the error
- *   console.warn('Failed to cancel response body', err)
- * })
- * ```
- * @example
- * ```ts
- * // Will generate an "unhandledRejection" if an error occurs while cancelling
- * // the response body. This will likely crash the process.
- * await cancelBody(response, (err) => { throw err })
- * ```
- */
-export async function cancelBody(
-  body: Body,
-  onCancellationError?: 'log' | ((err: unknown) => void),
-): Promise<void> {
-  if (
-    body.body &&
-    !body.bodyUsed &&
-    !body.body.locked &&
-    // Support for alternative fetch implementations
-    typeof body.body.cancel === 'function'
-  ) {
-    if (typeof onCancellationError === 'function') {
-      void body.body.cancel().catch(onCancellationError)
-    } else if (onCancellationError === 'log') {
-      void body.body.cancel().catch(logCancellationError)
-    } else {
-      await body.body.cancel()
-    }
-  }
-}
-
 export function logCancellationError(err: unknown): void {
   console.warn('Failed to cancel response body', err)
 }
 
-export async function stringifyMessage(input: Body & { headers: Headers }) {
-  try {
-    const headers = stringifyHeaders(input.headers)
-    const payload = await stringifyBody(input)
-    return headers && payload ? `${headers}\n${payload}` : headers || payload
-  } finally {
-    void cancelBody(input, 'log')
+/**
+ * Uses the native `AbortSignal.throwIfAborted()` when available, falling back
+ * for older implementations such as React Native's `abort-controller`.
+ */
+export function throwIfAborted(signal?: AbortSignal): void {
+  if (!signal) return
+  if (typeof signal.throwIfAborted === 'function') {
+    signal.throwIfAborted()
+    return
   }
+  if (signal.aborted) throw getAbortReason(signal)
 }
 
-function stringifyHeaders(headers: Headers) {
-  return Array.from(headers)
-    .map(([name, value]) => `${name}: ${value}`)
-    .join('\n')
+export function getAbortReason(signal: AbortSignal): unknown {
+  if ('reason' in signal) return signal.reason
+  return buildAbortReason()
 }
 
-async function stringifyBody(body: Body) {
-  try {
-    const blob = await body.blob()
-    if (blob.type?.startsWith('text/')) {
-      const text = await blob.text()
-      return JSON.stringify(text)
-    }
-
-    if (/application\/(?:\w+\+)?json/.test(blob.type)) {
-      const text = await blob.text()
-      return text.includes('\n') ? JSON.stringify(JSON.parse(text)) : text
-    }
-
-    return `[Body size: ${blob.size}, type: ${JSON.stringify(blob.type)} ]`
-  } catch {
-    return '[Body could not be read]'
+export function buildAbortReason(
+  message = 'Aborted',
+  name = 'AbortError',
+): unknown {
+  // Fallback for runtimes without a DOMException (React Native)
+  if (typeof DOMException === 'undefined') {
+    const error = new Error(message)
+    Object.defineProperty(error, 'name', { value: name })
+    return error
   }
-}
 
-export const extractUrl = (input: Request | string | URL) =>
-  typeof input === 'string'
-    ? new URL(input)
-    : input instanceof URL
-      ? input
-      : new URL(input.url)
+  return new DOMException(message, name)
+}

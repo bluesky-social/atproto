@@ -23,8 +23,11 @@ type DispatchOptions = {
 }
 type Dispatch = (opts: DispatchOptions, handler: unknown) => boolean
 type DispatchInterceptor = (dispatch: Dispatch) => Dispatch
-type ComposableAgent = {
-  compose?: (interceptor: DispatchInterceptor) => unknown
+interface UnknownAgent {
+  compose(dispatchers: DispatchInterceptor[]): UnknownAgent
+  compose(...dispatchers: DispatchInterceptor[]): UnknownAgent
+
+  destroy(): Promise<void>
 }
 
 export type SafeDispatchFetchWrapOptions<C = FetchContext> = {
@@ -62,10 +65,13 @@ export function safeDispatchFetchWrap<C = FetchContext>({
   fetch = globalThis.fetch,
   checkUrl,
   lookup,
-}: SafeDispatchFetchWrapOptions<C> = {}): Fetch<C> {
+}: SafeDispatchFetchWrapOptions<C> = {}): Fetch<C> & AsyncDisposable {
   const dispatcher = buildDispatcher({ checkUrl, lookup })
 
-  return async function (this: C, input, init): Promise<Response> {
+  const wrappedFetch: Fetch<C> = async function safeDispatchFetch(
+    input,
+    init,
+  ): Promise<Response> {
     if (init != null && 'dispatcher' in init && init.dispatcher != null) {
       const request = asRequest(input, init)
       await request.body?.cancel()
@@ -87,9 +93,20 @@ export function safeDispatchFetchWrap<C = FetchContext>({
       dispatcher,
     })
   }
+
+  Object.defineProperty(wrappedFetch, Symbol.asyncDispose, {
+    value: async () => dispatcher.destroy(),
+    enumerable: false,
+    configurable: true,
+  })
+
+  return wrappedFetch as Fetch<C> & AsyncDisposable
 }
 
-function buildDispatcher({ checkUrl, lookup }: SafeDispatchFetchWrapOptions) {
+function buildDispatcher({
+  checkUrl,
+  lookup,
+}: SafeDispatchFetchWrapOptions): UnknownAgent {
   // @NOTE we parse here instead of top-level to allow version mocking in tests.
   const nodeUndiciVersion = parseVersion(process.versions.undici)
 
@@ -126,9 +143,9 @@ function buildDispatcher({ checkUrl, lookup }: SafeDispatchFetchWrapOptions) {
     )
   }
 
-  if (!checkUrl) return agent
+  const composable = agent as unknown as UnknownAgent
 
-  const composable = agent as unknown as ComposableAgent
+  if (!checkUrl) return composable
 
   // @NOTE Feature-detected rather than gated on a version number: `compose()`
   // landed partway through the undici 6.x line, and guessing the exact release
