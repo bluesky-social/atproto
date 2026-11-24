@@ -321,11 +321,21 @@ export function mergeHeaders(
   return result
 }
 
-function getAbortReason(signal: AbortSignal): unknown {
+export function getAbortReason(signal: AbortSignal): unknown {
   if ('reason' in signal) return signal.reason
-  return typeof DOMException !== 'undefined'
-    ? new DOMException('Aborted', 'AbortError')
-    : new Error('Aborted')
+  return buildAbortReason()
+}
+
+export function buildAbortReason(
+  message = 'Aborted',
+  name = 'AbortError',
+): Error {
+  // Fallback for runtimes without a DOMException (React Native)
+  if (typeof DOMException !== 'function') {
+    return Object.assign(new Error(message), { name })
+  }
+
+  return new DOMException(message, name)
 }
 
 /**
