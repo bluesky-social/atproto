@@ -20,7 +20,11 @@ import type {
   SpaceRepo,
   SpaceWriter,
 } from '../db/index.js'
-import { collectionRecordRange, spaceRecordRange } from './uri-range.js'
+import {
+  authoritySpaceRange,
+  collectionRecordRange,
+  spaceRecordRange,
+} from './uri-range.js'
 
 export class SpaceReader {
   constructor(
@@ -82,7 +86,10 @@ export class SpaceReader {
       .orderBy('space.uri', 'asc')
       .limit(limit)
     if (authority) {
-      builder = builder.where('space.authority', '=', authority)
+      const range = authoritySpaceRange(authority)
+      builder = builder
+        .where('space.uri', '>', range.gt)
+        .where('space.uri', '<', range.lt)
     }
     if (type) {
       builder = builder.where('space.type', '=', type)

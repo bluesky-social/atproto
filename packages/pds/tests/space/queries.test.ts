@@ -1,4 +1,4 @@
-import type { NsidString } from '@atproto/syntax'
+import type { DidString, NsidString } from '@atproto/syntax'
 import { SpaceRef } from '@atproto/syntax'
 import {
   SPACE_DID,
@@ -127,5 +127,98 @@ describe('space record paging', () => {
       'space_record_path_idx',
       'sqlite_autoindex_space_record_1',
     ])
+  })
+})
+
+describe('listSpaces', () => {
+  let h: SpaceTestDb
+  const ALICE = 'did:example:alice' as DidString
+  const A = 'com.example.a' as NsidString
+  const B = 'com.example.b' as NsidString
+  const refs = {
+    1: new SpaceRef(ALICE, A, '1'),
+    2: new SpaceRef(ALICE, A, '2'),
+    3: new SpaceRef(ALICE, B, '3'),
+    4: new SpaceRef(ALICE, A, '4'), // tombstoned
+    5: new SpaceRef('did:example:alicea' as DidString, A, '5'),
+    6: new SpaceRef('did:example:alic' as DidString, A, '6'),
+  }
+
+  const skeys = async (opts: {
+    type?: NsidString
+    authority?: DidString
+    cursor?: string
+    limit?: number
+  }) =>
+    (await h.space.listSpaces({ limit: 10, ...opts })).map(
+      (row) => SpaceRef.parse(row.uri).skey,
+    )
+
+  beforeAll(async () => {
+    h = await createSpaceTestDb()
+    for (const ref of Object.values(refs)) {
+      await h.space.ensureSpace(ref)
+    }
+    await h.db.db
+      .updateTable('space')
+      .set({ deletedAt: new Date().toISOString() })
+      .where('uri', '=', refs[4].toString())
+      .execute()
+  })
+
+  afterAll(async () => {
+    await h.close()
+  })
+
+  it('space keeps type, derives authority from the uri', () => {
+    const columns = h.sqlite
+      .prepare('pragma table_info(space)')
+      .all()
+      .map((row) => (row as { name: string }).name)
+    expect(columns).not.toContain('authority')
+    const { sql } = h.sqlite
+      .prepare(`select sql from sqlite_master where name = 'space_type_idx'`)
+      .get() as { sql: string }
+    expect(sql).toMatch(/\("type", "uri"\) where "deletedAt" is null/)
+  })
+
+  it('reads each filter through an index', async () => {
+    const planOf = async (opts: Parameters<typeof skeys>[0]) => {
+      await skeys(opts)
+      return h.plan(lastQueryOn(h.queries, 'space'))
+    }
+    expectIndexed(await planOf({}), /sqlite_autoindex_space_1/)
+    expectIndexed(
+      await planOf({ authority: ALICE }),
+      /sqlite_autoindex_space_1 \(uri>\? AND uri<\?\)/,
+    )
+    expectIndexed(await planOf({ type: A }), /space_type_idx \(type=\?/)
+    expectIndexed(
+      await planOf({ type: A, authority: ALICE }),
+      /space_type_idx \(type=\? AND uri>\? AND uri<\?\)/,
+    )
+  })
+
+  it('filters by authority and type, leaving out tombstones', async () => {
+    expect(await skeys({ authority: ALICE })).toEqual(['1', '2', '3'])
+    expect(await skeys({ type: A })).toEqual(['6', '1', '2', '5'])
+    expect(await skeys({ type: A, authority: ALICE })).toEqual(['1', '2'])
+  })
+
+  it('pages through an authority with the cursor', async () => {
+    const paged: string[] = []
+    let cursor: string | undefined
+    for (;;) {
+      const page = await h.space.listSpaces({ limit: 1, authority: ALICE, cursor })
+      if (page.length === 0) break
+      paged.push(SpaceRef.parse(page[0].uri).skey)
+      cursor = page[0].uri
+    }
+    expect(paged).toEqual(['1', '2', '3'])
+  })
+
+  it('lists a re-created space again', async () => {
+    await h.space.ensureSpace(refs[4])
+    expect(await skeys({ type: A, authority: ALICE })).toEqual(['1', '2', '4'])
   })
 })

@@ -1,13 +1,21 @@
-import type { Kysely } from 'kysely'
+import { type Kysely, sql } from 'kysely'
 
 export async function up(db: Kysely<unknown>): Promise<void> {
   await db.schema
     .createTable('space')
     .addColumn('uri', 'varchar', (col) => col.primaryKey())
-    .addColumn('authority', 'varchar', (col) => col.notNull())
     .addColumn('type', 'varchar', (col) => col.notNull())
     .addColumn('createdAt', 'varchar', (col) => col.notNull())
     .addColumn('deletedAt', 'varchar')
+    .execute()
+
+  // Serves listSpaces filtered by type. Partial, matching listSpaces' deletedAt
+  // filter. A filter by authority is a range of the uri primary key instead.
+  await db.schema
+    .createIndex('space_type_idx')
+    .on('space')
+    .columns(['type', 'uri'])
+    .where(sql.ref('deletedAt'), 'is', null)
     .execute()
 
   await db.schema

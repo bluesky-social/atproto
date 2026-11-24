@@ -39,7 +39,6 @@ export class SpaceTransactor extends SpaceReader {
   async ensureSpace(ref: SpaceRef): Promise<void> {
     const uri = ref.toString()
     const space = {
-      authority: ref.spaceDid,
       type: ref.spaceType,
       createdAt: new Date().toISOString(),
       deletedAt: null,
