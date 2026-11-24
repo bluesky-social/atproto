@@ -1,3 +1,4 @@
+import { cancelBody } from './cancel-body.js'
 import { FetchRequestError } from './fetch-request.js'
 import { type Fetch, type FetchContext, toRequestTransformer } from './fetch.js'
 import { TransformedResponse } from './transformed-response.js'
@@ -5,7 +6,6 @@ import {
   buildAbortReason,
   getAbortReason,
   padLines,
-  stringifyMessage,
   throwIfAborted,
 } from './util.js'
 
@@ -64,6 +64,41 @@ export function loggedFetch<C = FetchContext>({
       throw error
     }
   })
+}
+
+async function stringifyMessage(input: Body & { headers: Headers }) {
+  try {
+    const headers = stringifyHeaders(input.headers)
+    const payload = await stringifyBody(input)
+    return headers && payload ? `${headers}\n${payload}` : headers || payload
+  } finally {
+    void cancelBody(input, 'log')
+  }
+}
+
+function stringifyHeaders(headers: Headers) {
+  return Array.from(headers)
+    .map(([name, value]) => `${name}: ${value}`)
+    .join('\n')
+}
+
+async function stringifyBody(body: Body) {
+  try {
+    const blob = await body.blob()
+    if (blob.type?.startsWith('text/')) {
+      const text = await blob.text()
+      return JSON.stringify(text)
+    }
+
+    if (/application\/(?:\w+\+)?json/.test(blob.type)) {
+      const text = await blob.text()
+      return text.includes('\n') ? JSON.stringify(JSON.parse(text)) : text
+    }
+
+    return `[Body size: ${blob.size}, type: ${JSON.stringify(blob.type)} ]`
+  } catch {
+    return '[Body could not be read]'
+  }
 }
 
 export const timedFetch = <C = FetchContext>(
