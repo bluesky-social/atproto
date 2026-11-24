@@ -762,6 +762,21 @@ const client = new Client(session, {
 - **`validateResponse`** — When `true`, incoming response bodies are validated against the Lexicon output schema. Disabling this can improve performance when you trust the upstream service. Default: `true`.
 - **`strictResponseProcessing`** — When `true` (default), the client will strictly process responses according to Lex encoding rules, rejecting responses containing invalid Lex data (e.g. floating-point numbers, malformed `$bytes` or `$link` objects). When `false`, the client accepts such responses in a lenient mode: invalid values are returned as-is rather than being rejected or converted, `datetime` string format checks become more lenient (e.g. datetimes without timezones are accepted) while other string formats remain strict, blob MIME type and size constraints are not enforced, and legacy blob reference format (objects with `cid` and `mimeType` properties) is accepted. Default: `true`.
 
+#### Redirects
+
+Requests follow redirects by default. The `redirect` option sets the [redirect mode](https://developer.mozilla.org/en-US/docs/Web/API/RequestInit#redirect) passed to `fetch()`, for all of the client's requests or (as with `xrpc()`) for a single call. This is typically needed when talking to untrusted services through an SSRF-protected `fetch`:
+
+```typescript
+const client = new Client(
+  { service: 'https://pds.example.com', fetch: safeFetch },
+  { redirect: 'error' },
+)
+```
+
+- **`"follow"`** (default) — Redirects are followed by `fetch()`.
+- **`"error"`** — A redirect makes the request fail with an `XrpcFetchError`.
+- **`"manual"`** — A redirect makes the request fail with an `XrpcInvalidResponseError`, whose `response` is the unfollowed redirect response (an opaque response with status `0` in browsers).
+
 ### Core Methods
 
 #### `client.call()`
