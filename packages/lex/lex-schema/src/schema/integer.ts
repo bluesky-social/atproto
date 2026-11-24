@@ -16,7 +16,8 @@ export type IntegerSchemaOptions = {
 /**
  * Schema for validating integer values with optional range constraints.
  *
- * Only accepts safe integers (values that can be exactly represented in JavaScript).
+ * Only accepts safe integers (values that can be exactly represented in JavaScript),
+ * unless validating in non-strict mode, which accepts any integer.
  * Use {@link IntegerSchemaOptions} to constrain the allowed range.
  *
  * @example
@@ -39,7 +40,7 @@ export class IntegerSchema extends Schema<number> {
     input: unknown,
     ctx: ValidationContext,
   ): ValidationResult<number> {
-    if (!isInteger(input)) {
+    if (!isInteger(input, ctx.options.strict)) {
       return ctx.issueUnexpectedType(input, 'integer')
     }
 
@@ -56,17 +57,20 @@ export class IntegerSchema extends Schema<number> {
 }
 
 /**
- * Simple wrapper around {@link Number.isSafeInteger} that acts as a type guard.
+ * Type guard for integer values. Strict mode only accepts safe integers. Non
+ * strict mode also accepts integers beyond {@link Number.MAX_SAFE_INTEGER}: the
+ * data model defines integers as 64-bit, so these are valid even though they
+ * lose precision once decoded as JavaScript numbers.
  */
-function isInteger(input: unknown): input is number {
-  return Number.isSafeInteger(input)
+function isInteger(input: unknown, strict: boolean): input is number {
+  return strict ? Number.isSafeInteger(input) : Number.isInteger(input)
 }
 
 /**
  * Creates an integer schema with optional minimum and maximum constraints.
  *
- * Validates that the input is a safe integer (can be exactly represented in JavaScript)
- * and optionally falls within a specified range.
+ * Validates that the input is a safe integer (can be exactly represented in JavaScript),
+ * or any integer in non-strict mode, and optionally falls within a specified range.
  *
  * @param options - Optional configuration for minimum and maximum values
  * @returns A new {@link IntegerSchema} instance

@@ -12,6 +12,7 @@ import {
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import type { Agent } from './agent.js'
 import type { TransientError, XrpcUnknownResponsePayload } from './types.js'
+import { walkErrorCauses } from './util.js'
 import type { WWWAuthenticate } from './www-authenticate.js'
 import { parseWWWAuthenticateHeader } from './www-authenticate.js'
 
@@ -471,7 +472,10 @@ export class XrpcInternalError<
  * - Request aborted via AbortSignal
  *
  * These errors are optimistically considered retryable, as many fetch errors
- * are transient and may succeed on retry.
+ * are transient and may succeed on retry. Only the failures that a retry cannot
+ * fix and that can be recognized as such (e.g. a redirect while the request's
+ * redirect mode is "error", or an invalid TLS certificate, in Node.js) are not
+ * retryable.
  */
 export class XrpcFetchError<
   M extends Procedure | Query = Procedure | Query,
@@ -484,11 +488,9 @@ export class XrpcFetchError<
   }
 
   override shouldRetry(): boolean {
-    // Ideally, we would inspect the reason to determine if it's retryable (by
-    // detecting network errors, timeouts, etc.). Since these cases are highly
-    // platform-dependent, we optimistically assume all fetch errors are
-    // transient and retryable.
-    return true
+    // Fetch errors are highly platform-dependent, so we optimistically assume
+    // that those we cannot identify are transient and retryable.
+    return !isPermanentFetchFailure(this.cause)
   }
 
   override toJSON(): LexErrorData {
@@ -504,6 +506,66 @@ export class XrpcFetchError<
     // (502).
     return { status: 502, body: this.toJSON() }
   }
+}
+
+/**
+ * Messages of the network errors that undici (Node.js' `fetch()`) rejects with
+ * (as the `cause` of a "fetch failed" `TypeError`) when the request cannot
+ * succeed as is.
+ *
+ * @see {@link https://github.com/nodejs/undici/blob/main/lib/web/fetch/index.js}
+ */
+const PERMANENT_FETCH_FAILURE_MESSAGES = new Set([
+  'unexpected redirect', // redirect: "error"
+  'redirect count exceeded',
+  'bad port',
+  'URL scheme must be a HTTP(S) scheme', // (e.g. redirect to another scheme)
+])
+
+/**
+ * Codes of the Node.js (system, TLS) and undici errors that a retry cannot fix.
+ * Codes of transient failures (`ECONNREFUSED`, `ECONNRESET`, `ETIMEDOUT`,
+ * `EAI_AGAIN`, `UND_ERR_SOCKET`, `UND_ERR_*_TIMEOUT`,
+ * `ERR_TLS_HANDSHAKE_TIMEOUT`, …) are deliberately left out.
+ *
+ * @see {@link https://nodejs.org/api/tls.html#x509-certificate-error-codes}
+ */
+const PERMANENT_FETCH_FAILURE_CODES = new Set([
+  'ENOTFOUND', // (temporary DNS failures are reported as EAI_AGAIN)
+  'UND_ERR_INVALID_ARG',
+  'UND_ERR_NOT_SUPPORTED',
+  'UND_ERR_REQ_CONTENT_LENGTH_MISMATCH',
+  'UND_ERR_RES_EXCEEDED_MAX_SIZE',
+  'UND_ERR_HEADERS_OVERFLOW',
+  'CERT_HAS_EXPIRED',
+  'CERT_NOT_YET_VALID',
+  'DEPTH_ZERO_SELF_SIGNED_CERT',
+  'SELF_SIGNED_CERT_IN_CHAIN',
+  'UNABLE_TO_GET_ISSUER_CERT_LOCALLY',
+  'UNABLE_TO_VERIFY_LEAF_SIGNATURE',
+  'ERR_TLS_CERT_ALTNAME_INVALID',
+])
+
+/**
+ * Whether an error thrown by {@link Agent.fetchHandler} denotes a failure that
+ * retrying the request cannot fix.
+ *
+ * Only the errors of Node.js' `fetch()` (undici) can be recognized, through
+ * their `code` or (fixed) message, including when wrapped (as `cause`) by
+ * another error. Other environments (e.g. browsers) reject network failures
+ * with opaque errors, which are never recognized.
+ */
+function isPermanentFetchFailure(cause: unknown): boolean {
+  for (const err of walkErrorCauses(cause)) {
+    if (PERMANENT_FETCH_FAILURE_MESSAGES.has(err.message)) return true
+
+    const code = 'code' in err ? err.code : undefined
+    if (typeof code === 'string' && PERMANENT_FETCH_FAILURE_CODES.has(code)) {
+      return true
+    }
+  }
+
+  return false
 }
 
 /**

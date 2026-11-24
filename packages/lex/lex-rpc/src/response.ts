@@ -531,7 +531,9 @@ async function readXrpcPayload(
       throw new XrpcResponseError(method, response, payload)
     }
 
-    // @NOTE redirect is set to 'follow', so we shouldn't get 3xx responses here
+    // @NOTE Redirects are followed by default, so 3xx responses (and opaque
+    // redirects, with status 0, in browsers) only reach this point when the
+    // request's redirect mode is "manual". They are reported as invalid.
     if (response.status < 200 || response.status >= 300) {
       throw new XrpcInvalidResponseError(
         method,

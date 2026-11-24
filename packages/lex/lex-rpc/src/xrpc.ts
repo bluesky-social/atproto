@@ -139,6 +139,24 @@ export type XrpcRequestProcessingOptions = {
    * debugging scenarios.
    */
   validateRequest?: boolean
+
+  /**
+   * The {@link RequestInit.redirect redirect mode} of the request, which is
+   * always passed explicitly to the fetch handler (as required by fetch
+   * wrappers that enforce an explicit redirect policy, such as
+   * `@atproto-labs/fetch-node`'s `safeFetchWrap`).
+   *
+   * - `"follow"`: redirects are followed by the fetch implementation.
+   * - `"error"`: a redirect makes the request fail with an
+   *   {@link XrpcFetchError}.
+   * - `"manual"`: a redirect response is returned unfollowed, and the request
+   *   fails with an {@link XrpcInvalidResponseError} exposing that response
+   *   (whose `location` header is readable in server environments, while
+   *   browsers return an opaque response with status `0`).
+   *
+   * @default "follow"
+   */
+  redirect?: RequestRedirect
 }
 
 /**
@@ -485,7 +503,7 @@ async function xrpcRequestInit<T extends Procedure | Query>(
 
     return {
       duplex: 'half',
-      redirect: 'follow',
+      redirect: options.redirect ?? 'follow',
       referrerPolicy: 'strict-origin-when-cross-origin', // (default)
       mode: 'cors', // (default)
       signal: options.signal,
@@ -498,7 +516,7 @@ async function xrpcRequestInit<T extends Procedure | Query>(
   // Requests without body
   return {
     duplex: 'half',
-    redirect: 'follow',
+    redirect: options.redirect ?? 'follow',
     referrerPolicy: 'strict-origin-when-cross-origin', // (default)
     mode: 'cors', // (default)
     signal: options.signal,

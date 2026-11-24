@@ -70,6 +70,7 @@ import {
  * @property {@link ClientOptions.service} - An optional service identifier (DID or URL) for routing requests with service proxying.
  * @property {@link ClientOptions.headers} - Custom headers to include in all requests made by this client instance.
  * @property {@link ClientOptions.validateRequest} - If true, validates request bodies against their lexicon schemas before sending. Defaults to false for performance.
+ * @property {@link ClientOptions.redirect} - The redirect mode of requests made by this client instance. Defaults to `"follow"`.
  * @property {@link ClientOptions.validateResponse} - If false, skips validation of response bodies against their lexicon schemas. Defaults to true to catch errors, but can be disabled for performance if you trust the server responses. Note that defaults will not be applied if validation is disabled, which can cause typing inconsistencies, so use with caution.
  * @property {@link ClientOptions.strictResponseProcessing} - If false, relaxes certain validation rules during response processing (e.g., allowing floats, deeper nesting, etc.). Defaults to true for strict compliance with {@link https://atproto.com/specs/data-model lexicon data model}, but can be disabled to handle non-compliant responses.
  * @property {@link ClientOptions.onCancellationError} - How discarded response bodies get cancelled. Defaults to `"propagate"` (awaited, failures thrown). Fetch handlers that may return responses with pending clones must use `"log"` (not awaited, failures logged) or a function, to avoid dead locks.
@@ -96,6 +97,9 @@ export type ClientOptions = {
 
   /** @see {@link XrpcRequestProcessingOptions.validateRequest} */
   validateRequest?: boolean
+
+  /** @see {@link XrpcRequestProcessingOptions.redirect} */
+  redirect?: RequestRedirect
 
   /** @see {@link XrpcResponseOptions.validateResponse} */
   validateResponse?: boolean
@@ -424,6 +428,7 @@ export class Client {
     labelers: Set<DidString>
     appLabelers?: null | Iterable<DidString>
     validateRequest: boolean
+    redirect: RequestRedirect
     validateResponse: boolean
     strictResponseProcessing: boolean
     onCancellationError: XrpcCancellationErrorHandler
@@ -450,6 +455,7 @@ export class Client {
           ? new Set(options.appLabelers)
           : options.appLabelers,
       validateRequest: options.validateRequest ?? false,
+      redirect: options.redirect ?? 'follow',
       validateResponse: options.validateResponse ?? true,
       strictResponseProcessing: options.strictResponseProcessing ?? true,
       onCancellationError: options.onCancellationError ?? 'propagate',
@@ -686,8 +692,8 @@ export class Client {
   protected buildXrpcOptions<TMethod extends Query | Procedure>(
     options: XrpcOptions<TMethod>,
   ): XrpcOptions<TMethod> {
-    // Apply the instance-wide defaults for service, labelers, and validation
-    // options.
+    // Apply the instance-wide defaults for service, labelers, redirect, and
+    // validation options.
     const combined = applyDefaults(options, this.xrpcDefaults)
 
     // Dynamically apply the class-wide appLabelers if they are not already set
