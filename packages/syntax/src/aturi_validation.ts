@@ -11,6 +11,7 @@ export type AtUriStringBase =
   | `at://${AtIdentifierString}`
   | `at://${AtIdentifierString}/${NsidString}`
   | `at://${AtIdentifierString}/${NsidString}/${string}`
+  | `at:space/${DidString}/${NsidString}/${string}`
 
 export type AtUriStringFragment = `#/${string}`
 
@@ -52,7 +53,17 @@ export type AtUriStringFragment = `#/${string}`
  * - An optional query part is allowed, following generic URI syntax restrictions
  * - An optional fragment part is allowed, using JSON Path syntax
  *
+ * Permissioned space data is addressed by space URIs instead, which reuse the
+ * `at` scheme with a `space/` prefix in place of the `//` authority. Both the
+ * space and the author are identified by DID:
+ *
+ * ```bnf
+ * SPACE-AT-URI = "at:space/" SPACE-DID "/" SPACE-TYPE "/" SKEY
+ *                [ "/" AUTHOR-DID "/" COLLECTION "/" RKEY ]
+ * ```
+ *
  * @example "at://did:plc:ewvi7nxzyoun6zhxrhs64oiz/app.bsky.actor.profile/self"
+ * @example "at:space/did:plc:ewvi7nxzyoun6zhxrhs64oiz/app.bsky.group/default"
  *
  * @see {@link https://atproto.com/specs/at-uri-scheme AT protocol - AT URI Scheme}
  */
@@ -163,7 +174,9 @@ export type ParseAtUriStringOptions = {
   /**
    * If true, the parser will enforce that the record key (rkey) part of the URI
    * is a valid record key (validated by {@link isValidRecordKey}). If false,
-   * any non-empty string of allowed chars will be accepted as a record key.
+   * any non-empty string of allowed chars will be accepted as a record key, and
+   * a space URI may be given in its spaces alpha form (see
+   * {@link fromLegacySpaceUri}).
    *
    * @default true
    */
@@ -207,9 +220,11 @@ const INVALID_CHAR_REGEXP = /[^a-zA-Z0-9._~:@!$&'()*+,;=%/\\[\]#?-]/
 const AT_URI_REGEXP =
   /^(?<uri>at:\/\/(?<authority>[^/?#\s]+)(?:\/(?<collection>[^/?#\s]+)(?:\/(?<rkey>[^/?#\s]+))?)?(?<trailingSlash>\/)?)(?:\?(?<query>[^#\s]*))?(?:#(?<hash>[^\s]*))?$/
 
-export const SPACE_MARKER = 'space'
+export const SPACE_URI_PREFIX = 'at:space/'
+// @TODO remove before beta, with fromLegacySpaceUri().
+const LEGACY_SPACE_URI_REGEXP = /^at:\/\/([^/?#\s]+)\/space\//
 const SPACE_AT_URI_REGEXP =
-  /^at:\/\/(?<authority>[^/?#\s]+)\/space\/(?<spaceType>[^/?#\s]+)\/(?<skey>[^/?#\s]+)(?:\/(?<authorDid>[^/?#\s]+)\/(?<collection>[^/?#\s]+)\/(?<rkey>[^/?#\s]+))?(?<trailingSlash>\/)?(?:\?(?<query>[^#\s]*))?(?:#(?<hash>[^\s]*))?$/
+  /^at:space\/(?<authority>[^/?#\s]+)\/(?<spaceType>[^/?#\s]+)\/(?<skey>[^/?#\s]+)(?:\/(?<authorDid>[^/?#\s]+)\/(?<collection>[^/?#\s]+)\/(?<rkey>[^/?#\s]+))?(?<trailingSlash>\/)?(?:\?(?<query>[^#\s]*))?(?:#(?<hash>[^\s]*))?$/
 
 /**
  * Parses a valid {@link AtUriString} into a {@link AtUriParts} object, or
@@ -233,10 +248,13 @@ export function parseAtUriString(
     return failure('Disallowed characters in ATURI (ASCII)')
   }
 
-  // Space URIs carry extra path segments the public grammar disallows, so they
-  // get their own validation.
   if (isSpaceUri(input)) {
-    return parseSpaceAtUriString(input, options)
+    const current = fromLegacySpaceUri(input)
+    if (current === undefined) return parseSpaceAtUriString(input, options)
+    if (options?.strict !== false) {
+      return failure('Space ATURI must start with "at:space/"')
+    }
+    return parseSpaceAtUriString(current, options)
   }
 
   const match = input.match(AT_URI_REGEXP)
@@ -247,7 +265,7 @@ export function parseAtUriString(
     // a generic error.
     if (options?.detailed) {
       if (!input.startsWith('at://')) {
-        return failure('ATURI must start with "at://"')
+        return failure('ATURI must start with "at://" or "at:space/"')
       }
 
       if (input.includes(' ')) {
@@ -314,16 +332,33 @@ export function parseAtUriString(
 }
 
 /**
- * Whether a string addresses permissioned space data. Checks only for the `space`
- * marker — use {@link isAtUriString} to validate the URI itself.
+ * Whether a string addresses permissioned space data. Checks only for the
+ * `at:space/` prefix (or the alpha form's) — use {@link isAtUriString} to
+ * validate the URI itself.
  */
 function isSpaceUri(input: unknown): boolean {
-  if (typeof input !== 'string') return false
-  if (!input.startsWith('at://')) return false
-  const pathStart = input.indexOf('/', 5) // after "at://"
-  if (pathStart === -1) return false
-  const rest = input.slice(pathStart + 1)
-  return rest === SPACE_MARKER || rest.startsWith(`${SPACE_MARKER}/`)
+  return (
+    typeof input === 'string' &&
+    (input.startsWith(SPACE_URI_PREFIX) || LEGACY_SPACE_URI_REGEXP.test(input))
+  )
+}
+
+/**
+ * Rewrites a space URI in its spaces alpha form, `at://{spaceDid}/space/{rest}`,
+ * as `at:space/{spaceDid}/{rest}`. Returns `undefined` for any other input.
+ *
+ * Records written during the alpha may still embed URIs in the old form, so the
+ * validators accept it in lenient mode (`strict: false`), and {@link AtUri}
+ * reads it and prints the current form. Strict validation and
+ * {@link SpaceRef.parse} accept only the current form.
+ *
+ * @TODO remove before beta, along with support for the old form.
+ */
+export function fromLegacySpaceUri(input: string): string | undefined {
+  const match = LEGACY_SPACE_URI_REGEXP.exec(input)
+  return match
+    ? `${SPACE_URI_PREFIX}${match[1]}/${input.slice(match[0].length)}`
+    : undefined
 }
 
 /** Whether a string is a valid ATURI addressing public repo data. */
@@ -338,10 +373,9 @@ export function isPublicAtUriString<I>(
  * An ATURI addressing permissioned space data: either a space ref or a record
  * within a space.
  *
- * @example "at://did:plc:ewvi7nxzyoun6zhxrhs64oiz/space/app.bsky.group/default/did:plc:44ybard66vv44zksje25o7dz/app.bsky.feed.post/3jui7kd54zh2y"
+ * @example "at:space/did:plc:ewvi7nxzyoun6zhxrhs64oiz/app.bsky.group/default/did:plc:44ybard66vv44zksje25o7dz/app.bsky.feed.post/3jui7kd54zh2y"
  */
-export type SpaceAtUriString = AtUriString &
-  `at://${DidString}/${typeof SPACE_MARKER}/${string}`
+export type SpaceAtUriString = AtUriString & `at:space/${string}`
 
 /** Whether a string is a valid ATURI addressing permissioned space data. */
 export function isSpaceAtUriString<I>(
@@ -354,18 +388,20 @@ export function isSpaceAtUriString<I>(
 /**
  * A reference to a space, as distinct from a record within one.
  *
- * @example "at://did:plc:ewvi7nxzyoun6zhxrhs64oiz/space/app.bsky.group/default"
+ * @example "at:space/did:plc:ewvi7nxzyoun6zhxrhs64oiz/app.bsky.group/default"
  */
-export type SpaceRefString =
-  `at://${DidString}/${typeof SPACE_MARKER}/${NsidString}/${string}`
+export type SpaceRefString = `at:space/${DidString}/${NsidString}/${string}`
 
 /**
  * Whether a string is a valid space ref — the three-part form only. A URI naming
  * a record within a space is not a space ref.
  */
-export function isSpaceRefString<I>(input: I): input is I & SpaceRefString {
-  if (!isSpaceAtUriString(input)) return false
-  const result = parseAtUriString(input)
+export function isSpaceRefString<I>(
+  input: I,
+  options?: Omit<ParseAtUriStringOptions, 'detailed'>,
+): input is I & SpaceRefString {
+  if (!isSpaceUri(input)) return false
+  const result = parseAtUriString(input, options)
   return (
     result.success && result.value.isSpace && result.value.authorDid == null
   )

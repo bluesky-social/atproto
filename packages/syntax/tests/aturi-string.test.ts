@@ -3,6 +3,7 @@ import {
   InvalidAtUriError,
   type SpaceAtUriString,
   assertAtUriString,
+  fromLegacySpaceUri,
   isAtUriString,
   isPublicAtUriString,
   isSpaceAtUriString,
@@ -188,30 +189,41 @@ describe('custom cases', () => {
   })
 
   describe('space URIs', () => {
-    const SPACE = 'at://did:plc:asdf123/space/com.example.group/default'
+    const SPACE = 'at:space/did:plc:asdf123/com.example.group/default'
 
     testValid(SPACE)
     testValid(`${SPACE}/did:plc:user1/com.atproto.feed.post/abc123`)
     testValid(`${SPACE}#/frag`)
 
-    testInvalid('at://did:plc:asdf123/space')
-    testInvalid('at://did:plc:asdf123/space/com.example.group')
-    testInvalid('at://did:plc:asdf123/space/short/default')
-    testInvalid('at://user.bsky.social/space/com.example.group/default')
+    testInvalid('at:space')
+    testInvalid('at:space/did:plc:asdf123')
+    testInvalid('at:space/did:plc:asdf123/com.example.group')
+    testInvalid('at:space/did:plc:asdf123/short/default')
+    testInvalid('at:space/user.bsky.social/com.example.group/default')
+    testInvalid('at:space//did:plc:asdf123/com.example.group/default')
     testInvalid(`${SPACE}/user.bsky.social/com.atproto.feed.post/abc123`)
     testInvalid(`${SPACE}/did:plc:user1`)
+    testInvalid(`${SPACE}/did:plc:user1/com.atproto.feed.post`)
+    testInvalid(`${SPACE}/did:plc:user1/com.atproto.feed.post/abc123/extra`)
     testInvalid(`${SPACE}/did:plc:user1/short/abc123`)
     testInvalid(`${SPACE}#`)
+    // the spaces alpha form is only read in lenient mode
+    testLoose('at://did:plc:asdf123/space/com.example.group/default')
+    testLoose(
+      'at://did:plc:asdf123/space/com.example.group/default/did:plc:user1/com.atproto.feed.post/abc123',
+    )
+    testInvalid('at://user.bsky.social/space/com.example.group/default')
+    testInvalid('at://did:plc:asdf123/space/com.example.group')
 
     // record keys, including the skey, are only checked in strict mode
-    testLoose('at://did:plc:asdf123/space/com.example.group/..')
+    testLoose('at:space/did:plc:asdf123/com.example.group/..')
     testLoose(`${SPACE}/did:plc:user1/com.atproto.feed.post/%%%`)
     testLoose(`${SPACE}?foo=bar`)
     testLoose(`${SPACE}/`)
   })
 
   describe('space and public validators', () => {
-    const SPACE = 'at://did:plc:asdf123/space/com.example.group/default'
+    const SPACE = 'at:space/did:plc:asdf123/com.example.group/default'
     const RECORD = `${SPACE}/did:plc:user1/com.atproto.feed.post/abc123`
     const PUBLIC = 'at://did:plc:asdf123/com.atproto.feed.post/abc'
 
@@ -219,7 +231,7 @@ describe('custom cases', () => {
       expect(isSpaceAtUriString(SPACE)).toBe(true)
       expect(isSpaceAtUriString(RECORD)).toBe(true)
       expect(isSpaceAtUriString(PUBLIC)).toBe(false)
-      expect(isSpaceAtUriString('at://did:plc:asdf123/space')).toBe(false)
+      expect(isSpaceAtUriString('at:space/did:plc:asdf123')).toBe(false)
 
       expect(isPublicAtUriString(PUBLIC)).toBe(true)
       expect(isPublicAtUriString(SPACE)).toBe(false)
@@ -236,6 +248,29 @@ describe('custom cases', () => {
       expect(isSpaceRefString(SPACE)).toBe(true)
       expect(isSpaceRefString(RECORD)).toBe(false)
       expect(isSpaceRefString(PUBLIC)).toBe(false)
+    })
+
+    test('the alpha form of a space URI reads as one in lenient mode', () => {
+      const legacy = 'at://did:plc:asdf123/space/com.example.group/default'
+      const lenient = { strict: false }
+      expect(isSpaceRefString(legacy)).toBe(false)
+      expect(isSpaceRefString(legacy, lenient)).toBe(true)
+      expect(
+        isSpaceRefString(`${legacy}/did:plc:user1/a.b.c/abc`, lenient),
+      ).toBe(false)
+      expect(isSpaceAtUriString(`${legacy}/did:plc:user1/a.b.c/abc`)).toBe(
+        false,
+      )
+      expect(
+        isSpaceAtUriString(`${legacy}/did:plc:user1/a.b.c/abc`, lenient),
+      ).toBe(true)
+      expect(isPublicAtUriString(legacy, lenient)).toBe(false)
+      expect(
+        isAtUriString('at://user.bsky.social/space/a.b.c/default', lenient),
+      ).toBe(false)
+      expect(fromLegacySpaceUri(legacy)).toBe(SPACE)
+      expect(fromLegacySpaceUri(SPACE)).toBeUndefined()
+      expect(fromLegacySpaceUri(PUBLIC)).toBeUndefined()
     })
 
     test('parseAtUriString discriminates on isSpace', () => {

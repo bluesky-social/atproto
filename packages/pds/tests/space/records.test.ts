@@ -411,6 +411,18 @@ describe('space records', () => {
         message: `Unknown lexicon type: ${TEST_COLLECTION}`,
       })
     })
+
+    // @TODO remove before beta, with the alpha form.
+    it('refuses a space param in its alpha form', async () => {
+      // Lenient validation still reads `at://{spaceDid}/space/...`, so records
+      // written in the alpha stay valid, but params are validated strictly, and
+      // handlers look a space up as given.
+      const space = await sc.createSpace(alice)
+      const legacy = space.replace(/^at:space\/([^/]+)\//, 'at://$1/space/')
+      await expect(
+        sc.write(alice, legacy as SpaceRefString),
+      ).rejects.toMatchObject({ error: 'InvalidRequest' })
+    })
   })
 
   describe('listRecords', () => {

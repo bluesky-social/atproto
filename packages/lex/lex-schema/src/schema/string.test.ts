@@ -369,6 +369,23 @@ describe('StringSchema', () => {
       expect(result.success).toBe(true)
     })
 
+    it('accepts space URIs', () => {
+      const space = 'at:space/did:plc:abc123/com.example.group/default'
+      expect(schema.safeParse(space).success).toBe(true)
+      expect(
+        schema.safeParse(`${space}/did:plc:user1/app.bsky.feed.post/xyz`)
+          .success,
+      ).toBe(true)
+    })
+
+    // @TODO remove before beta, with the alpha form.
+    it('accepts the spaces alpha form only in lenient mode', () => {
+      const uri =
+        'at://did:plc:abc123/space/com.example.group/default/did:plc:user1/app.bsky.feed.post/3jzfcijpj2z2a'
+      expect(schema.safeParse(uri).success).toBe(false)
+      expect(schema.safeParse(uri, { strict: false }).success).toBe(true)
+    })
+
     it('rejects invalid AT URI', () => {
       const result = schema.safeParse('https://example.com')
       expect(result.success).toBe(false)
@@ -385,14 +402,26 @@ describe('StringSchema', () => {
 
     it('accepts a space ref', () => {
       const result = schema.safeParse(
-        'at://did:plc:abc123/space/com.example.group/default',
+        'at:space/did:plc:abc123/com.example.group/default',
       )
       expect(result.success).toBe(true)
     })
 
+    // @TODO remove before beta, with the alpha form.
+    it('accepts the spaces alpha form only in lenient mode', () => {
+      const ref = 'at://did:plc:abc123/space/com.example.group/default'
+      expect(schema.safeParse(ref).success).toBe(false)
+      expect(schema.safeParse(ref, { strict: false }).success).toBe(true)
+      expect(
+        schema.safeParse(`${ref}/did:plc:user1/app.bsky.feed.post/abc`, {
+          strict: false,
+        }).success,
+      ).toBe(false)
+    })
+
     it('rejects a record URI within a space', () => {
       const result = schema.safeParse(
-        'at://did:plc:abc123/space/com.example.group/default/did:plc:user1/app.bsky.feed.post/3jzfcijpj2z2a',
+        'at:space/did:plc:abc123/com.example.group/default/did:plc:user1/app.bsky.feed.post/3jzfcijpj2z2a',
       )
       expect(result.success).toBe(false)
     })

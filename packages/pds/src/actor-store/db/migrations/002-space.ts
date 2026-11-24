@@ -1,37 +1,29 @@
-import { type Kysely, sql } from 'kysely'
+import type { Kysely } from 'kysely'
 
 export async function up(db: Kysely<unknown>): Promise<void> {
   await db.schema
     .createTable('space')
     .addColumn('uri', 'varchar', (col) => col.primaryKey())
+    .addColumn('authority', 'varchar', (col) => col.notNull())
     .addColumn('type', 'varchar', (col) => col.notNull())
     .addColumn('createdAt', 'varchar', (col) => col.notNull())
     .addColumn('deletedAt', 'varchar')
     .execute()
 
-  // Serves listSpaces filtered by type. Partial, matching listSpaces' deletedAt
-  // filter. A filter by authority is a range of the uri primary key instead.
   await db.schema
-    .createIndex('space_type_idx')
-    .on('space')
-    .columns(['type', 'uri'])
-    .where(sql.ref('deletedAt'), 'is', null)
-    .execute()
-
-  await db.schema
-    .createTable('space_policy')
+    .createTable('simplespace_config')
     .addColumn('uri', 'varchar', (col) => col.primaryKey())
-    .addColumn('policyJson', 'text', (col) => col.notNull())
+    .addColumn('policy', 'varchar', (col) => col.notNull())
+    .addColumn('managingApp', 'varchar')
+    .addColumn('appAccessType', 'varchar', (col) => col.notNull())
+    .addColumn('appAllowed', 'text', (col) => col.notNull())
     .execute()
 
-  // The member list of a space governed by the memberspace policy.
   await db.schema
-    .createTable('memberspace_member')
+    .createTable('simplespace_member')
     .addColumn('space', 'varchar', (col) => col.notNull())
     .addColumn('did', 'varchar', (col) => col.notNull())
-    .addColumn('read', 'integer', (col) => col.notNull())
-    .addColumn('write', 'integer', (col) => col.notNull())
-    .addPrimaryKeyConstraint('memberspace_member_pkey', ['space', 'did'])
+    .addPrimaryKeyConstraint('simplespace_member_pkey', ['space', 'did'])
     .execute()
 
   await db.schema
@@ -46,14 +38,18 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('indexedAt', 'varchar', (col) => col.notNull())
     .execute()
 
-  // Serves listCollections, clearRecords, importRepo's scan of existing records,
-  // deleteSpaceBlobs, and listRepoOps's join to the current record. Paging a
-  // space's records goes through the uri primary key instead (see uri-range.ts).
+  // Serves listRecords, which pages a space by (collection, rkey).
   await db.schema
     .createIndex('space_record_path_idx')
     .on('space_record')
     .columns(['space', 'collection', 'rkey'])
     .unique()
+    .execute()
+
+  await db.schema
+    .createIndex('space_record_rev_idx')
+    .on('space_record')
+    .columns(['space', 'repoRev'])
     .execute()
 
   // Keyed by record uri as record_blob is. Metadata stays in `blob`.
@@ -83,8 +79,8 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('space', 'varchar', (col) => col.notNull())
     .addColumn('rev', 'varchar', (col) => col.notNull())
     .addColumn('idx', 'integer', (col) => col.notNull())
-    // No uri or action: an op joins to its record by (space, collection, rkey),
-    // and its action follows from cid and prev.
+    .addColumn('action', 'varchar', (col) => col.notNull())
+    .addColumn('uri', 'varchar', (col) => col.notNull()) // used for joins
     .addColumn('collection', 'varchar', (col) => col.notNull())
     .addColumn('rkey', 'varchar', (col) => col.notNull())
     .addColumn('cid', 'varchar')
@@ -96,43 +92,33 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .createTable('space_writer')
     .addColumn('space', 'varchar', (col) => col.notNull())
     .addColumn('did', 'varchar', (col) => col.notNull())
-    .addColumn('spaceRev', 'varchar', (col) => col.notNull())
-    .addColumn('repoRev', 'varchar', (col) => col.notNull())
-    .addColumn('data', 'blob', (col) => col.notNull())
-    .addColumn('removedAt', 'varchar')
+    .addColumn('rev', 'varchar', (col) => col.notNull())
+    .addColumn('hash', 'blob', (col) => col.notNull())
     .addPrimaryKeyConstraint('space_writer_pkey', ['space', 'did'])
     .execute()
-  await db.schema
-    .createIndex('space_writer_space_rev_idx')
-    .on('space_writer')
-    .columns(['space', 'spaceRev'])
-    .execute()
 
-  // Endpoints registered (via authorizeSpaceSync) to receive notifications. A
-  // registration is identified by its endpoint and token together.
+  // Services registered (via registerNotify) to receive write notifications.
   await db.schema
-    .createTable('space_notify_registration')
+    .createTable('space_credential_recipient')
     .addColumn('space', 'varchar', (col) => col.notNull())
-    .addColumn('endpoint', 'varchar', (col) => col.notNull())
-    .addColumn('token', 'varchar', (col) => col.notNull())
+    .addColumn('serviceDid', 'varchar', (col) => col.notNull())
+    .addColumn('serviceEndpoint', 'varchar', (col) => col.notNull())
     .addColumn('expiresAt', 'varchar', (col) => col.notNull())
-    .addColumn('expiryNotified', 'integer', (col) => col.notNull().defaultTo(0))
-    .addPrimaryKeyConstraint('space_notify_registration_pkey', [
+    .addPrimaryKeyConstraint('space_credential_recipient_pkey', [
       'space',
-      'endpoint',
-      'token',
+      'serviceDid',
     ])
     .execute()
 }
 
 export async function down(db: Kysely<unknown>): Promise<void> {
-  await db.schema.dropTable('space_notify_registration').execute()
+  await db.schema.dropTable('space_credential_recipient').execute()
   await db.schema.dropTable('space_writer').execute()
   await db.schema.dropTable('space_record_oplog').execute()
   await db.schema.dropTable('space_repo').execute()
   await db.schema.dropTable('space_record_blob').execute()
   await db.schema.dropTable('space_record').execute()
-  await db.schema.dropTable('memberspace_member').execute()
-  await db.schema.dropTable('space_policy').execute()
+  await db.schema.dropTable('simplespace_member').execute()
+  await db.schema.dropTable('simplespace_config').execute()
   await db.schema.dropTable('space').execute()
 }
