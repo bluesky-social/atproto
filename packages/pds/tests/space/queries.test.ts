@@ -344,3 +344,49 @@ describe('listRepoOps', () => {
     ).toEqual([revs[2]])
   })
 })
+
+describe('isBlobInSpace', () => {
+  let h: SpaceTestDb
+  const ref = new SpaceRef(SPACE_DID, TYPE, 'abc')
+  const longerSkey = new SpaceRef(SPACE_DID, TYPE, 'abcd')
+  const otherType = new SpaceRef(
+    SPACE_DID,
+    'com.example.groupX' as NsidString,
+    'abc',
+  )
+  const BLOB = 'bafyblob'
+
+  beforeAll(async () => {
+    h = await createSpaceTestDb()
+    await putRecords(h, ref, [[FOO, 'a']])
+    await h.db.db
+      .insertInto('space_record_blob')
+      .values({
+        blobCid: BLOB,
+        recordUri: ref.recordUri(h.space.did, FOO, 'a').toString(),
+      })
+      .execute()
+  })
+
+  afterAll(async () => {
+    await h.close()
+  })
+
+  it('is a single covering lookup', async () => {
+    await h.space.isBlobInSpace(ref.toString(), BLOB)
+    const q = lastQueryOn(h.queries, 'space_record_blob')
+    expectIndexed(
+      h.plan(q),
+      /COVERING INDEX sqlite_autoindex_space_record_blob_1 \(blobCid=\? AND recordUri>\? AND recordUri<\?\)/,
+    )
+    expect(q.sql).not.toMatch(/join/i)
+    expect(q.sql).toMatch(/limit/i)
+  })
+
+  it('finds the blob only in its own space', async () => {
+    expect(await h.space.isBlobInSpace(ref.toString(), BLOB)).toBe(true)
+    expect(await h.space.isBlobInSpace(longerSkey.toString(), BLOB)).toBe(false)
+    expect(await h.space.isBlobInSpace(otherType.toString(), BLOB)).toBe(false)
+    expect(await h.space.isBlobInSpace(ref.toString(), 'bafyother')).toBe(false)
+  })
+})

@@ -281,12 +281,15 @@ export class SpaceReader {
     space: SpaceRefString,
     blobCid: string,
   ): Promise<boolean> {
+    // A link's record uri places it in the space, so no join is needed.
+    const range = spaceRecordRange(space)
     const row = await this.db.db
       .selectFrom('space_record_blob')
-      .innerJoin('space_record', 'space_record.uri', 'recordUri')
       .select('blobCid')
-      .where('space_record.space', '=', space)
       .where('blobCid', '=', blobCid)
+      .where('recordUri', '>', range.gt)
+      .where('recordUri', '<', range.lt)
+      .limit(1)
       .executeTakeFirst()
     return !!row
   }
