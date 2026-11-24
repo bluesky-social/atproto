@@ -362,6 +362,12 @@ describe('spaces migration sweep', () => {
     expect(Date.now() - started).toBeLessThan(2_000)
   })
 
+  it('refuses to start once destroyed', async () => {
+    const s = sweep({ pollIntervalMs: 60_000 })
+    await s.destroy()
+    expect(() => s.start()).toThrow('Destroyed')
+  })
+
   it('bounds shutdown within a 10s stop grace by default', async () => {
     const s = sweep({ pollIntervalMs: 60_000 })
     await waitFor(async () => s.state === 'idle')

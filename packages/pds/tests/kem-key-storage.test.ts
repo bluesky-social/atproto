@@ -102,16 +102,11 @@ describe('kem key storage', () => {
     // reserving again for the same did is stable
     expect(await store.reserveKemKeypair(did)).toBe(keyDid)
     expect((await store.getReservedKemKeypair(did))?.did()).toBe(keyDid)
-    const signingKey = (await Secp256k1Keypair.create()).did()
-    await store.clearReservedKeys(did, { signingKey, kemKey: keyDid })
-    expect(await store.getReservedKemKeypair(did)).toBeUndefined()
 
     // without a did, the key is stored under its own did:key
     const anonKeyDid = await store.reserveKemKeypair()
     expect((await store.getReservedKemKeypair(anonKeyDid))?.did()).toBe(
       anonKeyDid,
     )
-    await store.clearReservedKeys(did, { signingKey, kemKey: anonKeyDid })
-    expect(await store.getReservedKemKeypair(anonKeyDid)).toBeUndefined()
   })
 })

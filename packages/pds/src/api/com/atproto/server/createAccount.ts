@@ -112,24 +112,19 @@ export default function (server: Server, ctx: AppContext) {
             }
 
             try {
-              await ctx.actorStore
-                .clearReservedKeys(did, {
-                  signingKey: signingKey.did(),
-                  kemKey: kemKey.did(),
-                })
-                .catch((err) => {
-                  // @NOTE This is a cleanup operation so we won't fail the whole
-                  // flow if it fails, but we log it just in case
-                  req.log.error(
-                    {
-                      did,
-                      signingKeyDid: signingKey.did(),
-                      kemKeyDid: kemKey.did(),
-                      err,
-                    },
-                    'Failed to clear reserved keys',
-                  )
-                })
+              await ctx.actorStore.clearReservedKeys(did).catch((err) => {
+                // @NOTE This is a cleanup operation so we won't fail the whole
+                // flow if it fails, but we log it just in case
+                req.log.error(
+                  {
+                    did,
+                    signingKeyDid: signingKey.did(),
+                    kemKeyDid: kemKey.did(),
+                    err,
+                  },
+                  'Failed to clear reserved keys',
+                )
+              })
 
               events.accountCreated({
                 source: com.atproto.server.createAccount.$lxm,

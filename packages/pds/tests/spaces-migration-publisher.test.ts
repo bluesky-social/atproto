@@ -549,6 +549,12 @@ describe('spaces migration publisher', () => {
     await waitFor(() => isPublished(next))
   })
 
+  it('refuses to start once destroyed', async () => {
+    const pub = publisher({ pollIntervalMs: 60_000 })
+    await pub.destroy()
+    expect(() => pub.start()).toThrow('Destroyed')
+  })
+
   it('never throws out of the loop', async () => {
     const did = await createPreSpacesAccount()
     using claimDue = jest

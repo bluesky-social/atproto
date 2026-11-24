@@ -11,7 +11,7 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 import type { ActorStoreConfig } from '../config/index.js'
 import { MIGRATION_TABLE, retrySqlite } from '../db/index.js'
 import { DiskBlobStore } from '../disk-blobstore.js'
-import { blobStoreLogger } from '../logger.js'
+import { blobStoreLogger, pdsLogger } from '../logger.js'
 import { ActorStoreReader } from './actor-store-reader.js'
 import type { ActorStoreResources } from './actor-store-resources.js'
 import { ActorStoreTransactor } from './actor-store-transactor.js'
@@ -38,9 +38,10 @@ export class ActorStore {
     const didHash = await crypto.sha256Hex(did)
     const directory = path.join(this.cfg.directory, didHash.slice(0, 2), did)
     const dbLocation = path.join(directory, `store.sqlite`)
-    const keyLocation = path.join(directory, `key`)
+    // @NOTE The signing key's file name predates KEM keys
+    const signingKeyLocation = path.join(directory, `key`)
     const kemKeyLocation = path.join(directory, `kem_key`)
-    return { directory, dbLocation, keyLocation, kemKeyLocation }
+    return { directory, dbLocation, signingKeyLocation, kemKeyLocation }
   }
 
   async exists(did: string): Promise<boolean> {
@@ -75,8 +76,8 @@ export class ActorStore {
   }
 
   async keypair(did: string): Promise<Keypair> {
-    const { keyLocation } = await this.getLocation(did)
-    const privKey = await fs.readFile(keyLocation)
+    const { signingKeyLocation } = await this.getLocation(did)
+    const privKey = await fs.readFile(signingKeyLocation)
     return crypto.Secp256k1Keypair.import(privKey)
   }
 
@@ -168,7 +169,7 @@ export class ActorStore {
     keypair: ExportableKeypair,
     kemKeypair: ExportableKeypair,
   ) {
-    const { directory, dbLocation, keyLocation, kemKeyLocation } =
+    const { directory, dbLocation, signingKeyLocation, kemKeyLocation } =
       await this.getLocation(did)
     // ensure subdir exists
     await mkdir(directory, { recursive: true })
@@ -180,7 +181,7 @@ export class ActorStore {
     // was never published: replace it with the caller's key.
     await rmIfExists(kemKeyLocation)
     const privKey = await keypair.export()
-    await fs.writeFile(keyLocation, privKey)
+    await fs.writeFile(signingKeyLocation, privKey)
     const storedKem = await writeKemKeyNoClobber(kemKeyLocation, kemKeypair)
     assert(
       storedKem.did() === kemKeypair.did(),
@@ -269,19 +270,25 @@ export class ActorStore {
     return loadKemKey(path.join(this.reservedKemKeyDir, kemKeyOrDid))
   }
 
-  /** Clears the account's reservations, filed under its DID or under each key. */
-  async clearReservedKeys(
-    did: string,
-    keys: { signingKey: string; kemKey: string },
-  ) {
+  /**
+   * Clears the account's reservations, filed under its DID or under each of its
+   * keys. `create()` stores the reserved keys, so the account's store must
+   * exist: it names the reservations filed by key.
+   */
+  async clearReservedKeys(did: string) {
     assertSafePathPart(did)
-    assertSafePathPart(keys.signingKey)
-    assertSafePathPart(keys.kemKey)
+    const [signingKey, kemKey] = await Promise.all([
+      this.keypair(did),
+      this.kemKeypair(did),
+    ])
+    assert(kemKey, 'the account has no kem key')
+    assertSafePathPart(signingKey.did())
+    assertSafePathPart(kemKey.did())
     await Promise.all([
       rmIfExists(path.join(this.reservedSigningKeyDir, did)),
-      rmIfExists(path.join(this.reservedSigningKeyDir, keys.signingKey)),
+      rmIfExists(path.join(this.reservedSigningKeyDir, signingKey.did())),
       rmIfExists(path.join(this.reservedKemKeyDir, did)),
-      rmIfExists(path.join(this.reservedKemKeyDir, keys.kemKey)),
+      rmIfExists(path.join(this.reservedKemKeyDir, kemKey.did())),
     ])
   }
 
@@ -333,7 +340,8 @@ const loadKemKey = async (
 
 // Appears whole or not at all (tmp + link), and never replaces an existing
 // file: on conflict the winner's key is returned. `rename` is deliberately
-// not used since it would overwrite.
+// not used since it would overwrite. The tmp file sits beside `loc`, since a
+// hard link can't cross filesystems.
 const writeKemKeyNoClobber = async <K extends ExportableKeypair>(
   loc: string,
   keypair: K,
@@ -364,7 +372,10 @@ const writeKemKeyNoClobber = async <K extends ExportableKeypair>(
     }
     return keypair
   } finally {
-    await rmIfExists(tmp)
+    // Neither fail a write that succeeded nor mask the error of one that didn't
+    await rmIfExists(tmp).catch((err) => {
+      pdsLogger.warn({ err, tmp }, 'failed to clean up tmp kem key file')
+    })
   }
 }
 

@@ -214,19 +214,14 @@ export class OAuthStore
             await this.sequencer.sequenceAccountCreation(did, handle, commit)
 
             try {
-              await this.actorStore
-                .clearReservedKeys(did, {
-                  signingKey: signingKeyDid,
-                  kemKey: kemKeyDid,
-                })
-                .catch((err) => {
-                  // @NOTE This is a cleanup operation so we won't fail the
-                  // whole flow if it fails, but we log it just in case
-                  dbLogger.error(
-                    { did, signingKeyDid, kemKeyDid, err },
-                    'Failed to clear reserved keys',
-                  )
-                })
+              await this.actorStore.clearReservedKeys(did).catch((err) => {
+                // @NOTE This is a cleanup operation so we won't fail the
+                // whole flow if it fails, but we log it just in case
+                dbLogger.error(
+                  { did, signingKeyDid, kemKeyDid, err },
+                  'Failed to clear reserved keys',
+                )
+              })
 
               const account = await this.accountManager.getAccount(did)
               assert(account, 'Account not found after creation')
