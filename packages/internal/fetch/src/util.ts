@@ -29,7 +29,10 @@ export class MaxBytesTransformStream extends TransformStream<
    * @param createError - Builds the error the stream fails with once more than
    * `maxBytes` were read.
    */
-  constructor(maxBytes: number, createError: () => unknown) {
+  constructor(
+    maxBytes: number,
+    createError: () => Error = () => new Error('Response too large'),
+  ) {
     // Note: negation accounts for invalid value types (NaN, non numbers)
     if (!(maxBytes >= 0)) {
       throw new TypeError('maxBytes must be a non-negative number')
