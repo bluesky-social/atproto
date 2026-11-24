@@ -8,8 +8,7 @@ import {
   isSpaceCredentialRevoked,
 } from './revoked-space-credential.js'
 
-const SPACE =
-  'at://did:plc:authority/space/com.example.group/a' as SpaceRefString
+const SPACE = 'at:space/did:plc:authority/com.example.group/a' as SpaceRefString
 
 // A credential issued at the edge of the skew can be used until its maximum
 // lifetime plus the skew at both ends.

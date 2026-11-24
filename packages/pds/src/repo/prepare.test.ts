@@ -11,7 +11,7 @@ describe('prepareCreate', () => {
     const prepared = prepareCreate({
       did: 'did:plc:writer',
       space: SpaceRef.parse(
-        'at://did:plc:authority/space/com.example.group/self',
+        'at:space/did:plc:authority/com.example.group/self',
       ),
       collection: COLLECTION,
       record: { $type: COLLECTION, text: 'x'.repeat(MAX_RECORD_SIZE) },

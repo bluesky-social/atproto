@@ -100,7 +100,7 @@ describe('SpaceClient', () => {
       })
       expect(created).toBeInstanceOf(SpaceClient)
       expect(created.uri).toBe(
-        `at://${alice.assertDid}/space/${group.spaceType}/created`,
+        `at:space/${alice.assertDid}/${group.spaceType}/created`,
       )
 
       await created.create(note.$build({ text: 'first' }))
@@ -176,7 +176,7 @@ describe('SpaceClient', () => {
         { agent: bob.agent },
       )
       expect(opened.uri).toBe(
-        `at://${alice.assertDid}/space/${bookmarks.spaceType}/self`,
+        `at:space/${alice.assertDid}/${bookmarks.spaceType}/self`,
       )
     })
   })

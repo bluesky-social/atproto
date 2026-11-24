@@ -1,7 +1,11 @@
 import type { AtIdentifierString } from './at-identifier.js'
 import { ensureValidAtIdentifier, isDidIdentifier } from './at-identifier.js'
 import type { AtUriString, SpaceRefString } from './aturi_validation.js'
-import { InvalidAtUriError, SPACE_MARKER } from './aturi_validation.js'
+import {
+  InvalidAtUriError,
+  SPACE_URI_PREFIX,
+  assertAtUriString,
+} from './aturi_validation.js'
 import type { DidString } from './did.js'
 import { InvalidDidError, ensureValidDid, isValidDid } from './did.js'
 import type { NsidString } from './nsid.js'
@@ -25,39 +29,53 @@ export type Stringifiable = { toString: () => string }
 export const ATP_URI_REGEX =
   // proto-    --did--------------   --name----------------   --path----   --query--   --hash--
   /^(at:\/\/)?((?:did:[a-z0-9:%-]+)|(?:[a-z0-9][a-z0-9.:-]*))(\/[^?#\s]*)?(\?[^#\s]+)?(#[^\s]+)?$/i
+const SPACE_URI_REGEX =
+  // proto------   --did-----------   --path----   --query--   --hash--
+  /^(at:space\/)(did:[a-z0-9:%-]+)(\/[^?#\s]*)?(\?[^#\s]+)?(#[^\s]+)?$/i
 //                       --path-----   --query--  --hash--
 const RELATIVE_REGEX = /^(\/[^?#\s]*)?(\?[^#\s]+)?(#[^\s]+)?$/i
 
 /**
  * An AT URI, addressing either public repo data or permissioned space data:
  *
- *     at://{authorDid}/{collection}/{rkey}                                        (public)
- *     at://{spaceDid}/space/{spaceType}/{skey}[/{authorDid}/{collection}/{rkey}]  (space)
+ *     at://{authorDid}/{collection}/{rkey}                                      (public)
+ *     at:space/{spaceDid}/{spaceType}/{skey}[/{authorDid}/{collection}/{rkey}]  (space)
+ *
+ * On a space URI, `host` holds the space DID and `pathname` the segments after it.
  */
 export class AtUri {
   hash: string
   host: AtIdentifierString
   pathname: string
   searchParams: URLSearchParams
+  readonly isSpace: boolean
 
   constructor(uri: string, base?: string | AtUri) {
     const parsed =
       base !== undefined
         ? typeof base === 'string'
           ? Object.assign(parse(base), parseRelative(uri))
-          : Object.assign({ host: base.host }, parseRelative(uri))
+          : Object.assign(
+              { host: base.host, isSpace: base.isSpace },
+              parseRelative(uri),
+            )
         : parse(uri)
 
-    ensureValidAtIdentifier(parsed.host)
+    ensureValidHost(parsed.host, parsed.isSpace)
 
     this.hash = parsed.hash ?? ''
     this.host = parsed.host
     this.pathname = parsed.pathname ?? ''
     this.searchParams = parsed.searchParams
+    this.isSpace = parsed.isSpace
+
+    // Public URIs are parsed leniently, as invalid ones have historically been
+    // allowed. Space URIs have no such history, so they must be valid in full.
+    if (this.isSpace) assertAtUriString(this.toString())
   }
 
   private get parts(): AtUriPathParts {
-    return parsePath(this.host, this.pathname)
+    return parsePath(this.isSpace, this.host, this.pathname)
   }
 
   static make(handleOrDid: Stringifiable, collection?: Stringifiable): AtUri
@@ -77,16 +95,15 @@ export class AtUri {
     return new AtUri(str)
   }
 
-  get isSpace(): boolean {
-    return this.parts.isSpace
-  }
-
   get protocol(): `at:` {
     return 'at:'
   }
 
-  get origin(): `at://${AtIdentifierString}` {
-    return `at://${this.host}`
+  get origin():
+    `at://${AtIdentifierString}` | `at:space/${AtIdentifierString}` {
+    return this.isSpace
+      ? `${SPACE_URI_PREFIX}${this.host}`
+      : `at://${this.host}`
   }
 
   /**
@@ -112,7 +129,7 @@ export class AtUri {
   }
 
   set hostname(v: string) {
-    ensureValidAtIdentifier(v)
+    ensureValidHost(v, this.isSpace)
     this.host = v
   }
 
@@ -171,12 +188,12 @@ export class AtUri {
   /** Where the collection sits in the path, after a space URI's author. */
   private collectionIndex(segments: string[]): number {
     if (!this.isSpace) return 0
-    if (segments.length < 4) {
+    if (segments.length < 3) {
       throw new InvalidAtUriError(
         `Cannot set a record path on space URI "${this}" without an author`,
       )
     }
-    return 4
+    return 3
   }
 
   get spaceDid(): DidString | undefined {
@@ -214,14 +231,14 @@ export class AtUri {
     } else if (fragment && !fragment.startsWith('#')) {
       fragment = `#${fragment}`
     }
-    return `at://${this.host}${pathname}${qs}${fragment}` as AtUriString
+    return `${this.origin}${pathname}${qs}${fragment}` as AtUriString
   }
 }
 
 /**
  * A reference to a space, as distinct from a record within one:
  *
- *     at://{spaceDid}/space/{spaceType}/{skey}
+ *     at:space/{spaceDid}/{spaceType}/{skey}
  */
 export class SpaceRef {
   constructor(
@@ -260,12 +277,23 @@ export class SpaceRef {
   }
 
   toString(): SpaceRefString {
-    return `at://${this.spaceDid}/${SPACE_MARKER}/${this.spaceType}/${this.skey}`
+    return `${SPACE_URI_PREFIX}${this.spaceDid}/${this.spaceType}/${this.skey}`
+  }
+}
+
+/** A space URI is addressed under its space DID, never a handle. */
+function ensureValidHost(
+  host: string,
+  isSpace: boolean,
+): asserts host is AtIdentifierString {
+  if (isSpace) {
+    ensureValidDid(host)
+  } else {
+    ensureValidAtIdentifier(host)
   }
 }
 
 type AtUriPathParts = {
-  isSpace: boolean
   spaceDid?: DidString
   spaceType?: NsidString
   skey?: RecordKeyString
@@ -274,12 +302,15 @@ type AtUriPathParts = {
   rkey?: RecordKeyString
 }
 
-function parsePath(host: string, pathname: string): AtUriPathParts {
+function parsePath(
+  isSpace: boolean,
+  host: string,
+  pathname: string,
+): AtUriPathParts {
   const segments = pathname.split('/').filter(Boolean)
 
-  if (segments[0] !== SPACE_MARKER) {
+  if (!isSpace) {
     return {
-      isSpace: false,
       authorDid: parsePathPart(host, isValidDid),
       // @NOTE Historically, we allowed creation of AT URIs with invalid
       // collection/rkey values, so we don't validate them here.
@@ -289,13 +320,12 @@ function parsePath(host: string, pathname: string): AtUriPathParts {
   }
 
   return {
-    isSpace: true,
     spaceDid: parsePathPart(host, isValidDid),
-    spaceType: parsePathPart(segments[1], isValidNsid),
-    skey: parsePathPart(segments[2], isValidRecordKey),
-    authorDid: parsePathPart(segments[3], isValidDid),
-    collection: parsePathPart(segments[4], isValidNsid),
-    rkey: parsePathPart(segments[5], isValidRecordKey),
+    spaceType: parsePathPart(segments[0], isValidNsid),
+    skey: parsePathPart(segments[1], isValidRecordKey),
+    authorDid: parsePathPart(segments[2], isValidDid),
+    collection: parsePathPart(segments[3], isValidNsid),
+    rkey: parsePathPart(segments[4], isValidRecordKey),
   }
 }
 
@@ -317,7 +347,9 @@ function parsePathPart(
 }
 
 function parse(str: string) {
-  const match = str.match(ATP_URI_REGEX) as null | {
+  const isSpace = str.startsWith(SPACE_URI_PREFIX)
+  const regex = isSpace ? SPACE_URI_REGEX : ATP_URI_REGEX
+  const match = str.match(regex) as null | {
     0: string
     1: string | undefined // proto
     2: string // host
@@ -331,6 +363,7 @@ function parse(str: string) {
   }
 
   return {
+    isSpace,
     host: match[2],
     hash: match[5],
     pathname: match[3],

@@ -27,7 +27,7 @@ const CID_B = parseCid(
   'bafyreidpw4cbv6gr4ukh33z23pvvrpr3wi4gnpmi4doamlsl3sa4rgri2a',
 )
 
-const SPACE = 'at://did:example:space/space/app.bsky.group/test'
+const SPACE = 'at:space/did:example:space/app.bsky.group/test'
 const URI: AtUriString = `${SPACE}/did:example:alice/app.bsky.feed.post/1`
 const COMMIT_REQUEST = formatMacRequest(COMMIT_MAC_PROFILE, KEY_SHARE)
 const COMMIT_PARAMS = COMMIT_REQUEST.slice('mac='.length)

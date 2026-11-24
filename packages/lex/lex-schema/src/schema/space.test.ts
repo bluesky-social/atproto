@@ -65,7 +65,7 @@ describe(Space, () => {
     it('defaults the skey of a literal key', () => {
       const sp = space('literal:self', 'com.example.group', [])
       expect(sp.spaceRefFor('did:example:123').toString()).toBe(
-        'at://did:example:123/space/com.example.group/self',
+        'at:space/did:example:123/com.example.group/self',
       )
     })
 

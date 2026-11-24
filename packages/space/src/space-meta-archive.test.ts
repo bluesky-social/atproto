@@ -10,7 +10,7 @@ import {
 } from './space-meta-archive.js'
 
 const SPACE: SpaceRefString =
-  'at://did:example:forum/space/com.example.forum/general'
+  'at:space/did:example:forum/com.example.forum/general'
 
 const POLICY = { $type: 'com.example.policy', readAccess: 'members' }
 const MEMBER = { $type: 'com.example.member', read: true, write: true }
