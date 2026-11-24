@@ -15,10 +15,19 @@ import {
   getMain,
   paramsToURLSearchParams,
 } from '@atproto/lex-schema'
+import { throwIfAborted } from './abort.js'
 import type { Agent, AgentOptions } from './agent.js'
 import { buildAgent } from './agent.js'
+import {
+  asUint8ArrayArrayBuffer,
+  isAsyncIterable,
+  isBlobLike,
+  toReadableStream,
+} from './body.js'
 import type { XrpcFailure } from './errors.js'
 import { XrpcFetchError, XrpcResponseError, asXrpcFailure } from './errors.js'
+import type { XrpcRequestHeadersOptions } from './headers.js'
+import { buildXrpcRequestHeaders } from './headers.js'
 import type { IfXrpcStreamable, XrpcResponseOptions } from './response.js'
 import {
   XrpcResponse,
@@ -26,16 +35,7 @@ import {
   assertXrpcStreamable,
 } from './response.js'
 import type { BinaryBodyInit } from './types.js'
-import type { XrpcRequestHeadersOptions } from './util.js'
-import {
-  asUint8ArrayArrayBuffer,
-  buildXrpcRequestHeaders,
-  isAsyncIterable,
-  isBlobLike,
-  throwIfAborted,
-  toReadableStream,
-  wait,
-} from './util.js'
+import { wait } from './util.js'
 
 /**
  * The query/path parameters type for an XRPC method, inferred from its schema.
