@@ -244,6 +244,91 @@ describe('post version data plane', () => {
     expect(recreatedResponse.data.versions[0]).not.toHaveProperty('editedAt')
   })
 
+  it('uses canonical rule metadata when presenting every version', async () => {
+    const indexedAt = new Date('2026-01-01T01:00:00.000Z')
+    const rootUri = AtUri.make(
+      sc.dids.alice,
+      app.bsky.feed.post.$type,
+      TID.nextStr(),
+    )
+    const root = post('root', indexedAt.toISOString())
+    const rootCid = await cidForCbor(root)
+    await network.bsky.sub.indexingSvc.indexRecord(
+      rootUri,
+      rootCid,
+      root,
+      WriteOpAction.Create,
+      indexedAt.toISOString(),
+    )
+
+    const gateUri = AtUri.make(
+      sc.dids.alice,
+      app.bsky.feed.threadgate.$type,
+      rootUri.rkey,
+    )
+    const gate = app.bsky.feed.threadgate.main.$build({
+      post: rootUri.toString(),
+      createdAt: indexedAt.toISOString(),
+      allow: [],
+    })
+    await network.bsky.sub.indexingSvc.indexRecord(
+      gateUri,
+      await cidForCbor(gate),
+      gate,
+      WriteOpAction.Create,
+      indexedAt.toISOString(),
+    )
+
+    const replyUri = AtUri.make(
+      sc.dids.bob,
+      app.bsky.feed.post.$type,
+      TID.nextStr(),
+    )
+    const reply = {
+      ...post('original reply', indexedAt.toISOString()),
+      reply: {
+        root: com.atproto.repo.strongRef.main.$build({
+          uri: rootUri.toString(),
+          cid: rootCid.toString(),
+        }),
+        parent: com.atproto.repo.strongRef.main.$build({
+          uri: rootUri.toString(),
+          cid: rootCid.toString(),
+        }),
+      },
+    }
+    await network.bsky.sub.indexingSvc.indexRecord(
+      replyUri,
+      await cidForCbor(reply),
+      reply,
+      WriteOpAction.Create,
+      indexedAt.toISOString(),
+    )
+    const editedReply = { ...reply, text: 'edited reply' }
+    await network.bsky.sub.indexingSvc.indexRecord(
+      replyUri,
+      await cidForCbor(editedReply),
+      editedReply,
+      WriteOpAction.Update,
+      new Date(indexedAt.getTime() + 1000).toISOString(),
+    )
+    await network.bsky.sub.indexingSvc.deleteRecord(gateUri)
+
+    const response = await agent.app.bsky.feed.getPostVersions(
+      { uri: replyUri.toString() },
+      {
+        headers: await network.serviceHeaders(
+          sc.dids.bob,
+          ids.AppBskyFeedGetPostVersions,
+        ),
+      },
+    )
+    expect(response.data.versions).toHaveLength(2)
+    for (const version of response.data.versions) {
+      expect(version.viewer?.replyDisabled).toBe(true)
+    }
+  })
+
   it('maps unavailable posts to NotFound and lets the moderation service inspect takedowns', async () => {
     const indexedAt = new Date('2026-01-02T00:00:00.000Z')
     const [uri, cid, record, action, seenAt] = await preparePost(

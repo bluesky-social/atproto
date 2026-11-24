@@ -76,11 +76,8 @@ const hydration = async ({
   params: Params
   skeleton: Skeleton
 }): Promise<HydrationState> => {
-  const posts = new HydrationMap([[skeleton.uri, skeleton.versions[0]]])
   const [state, response] = await Promise.all([
-    ctx.hydrator.hydratePosts([{ uri: skeleton.uri }], params.hydrateCtx, {
-      posts,
-    }),
+    ctx.hydrator.hydratePosts([{ uri: skeleton.uri }], params.hydrateCtx),
     ctx.hydrator.dataplane.getPostVersionCounts({
       refs: skeleton.versions.map((version) => ({
         uri: skeleton.uri,
@@ -114,9 +111,17 @@ const presentation = ({
     throw new InternalServerError('Post version counts are missing')
   }
 
+  const canonical = hydration.posts?.get(skeleton.uri)
+  if (!canonical) throw notFound()
+
   const versions = skeleton.versions.map((version, index) => {
     const posts = new HydrationMap(hydration.posts)
-    posts.set(skeleton.uri, version)
+    posts.set(skeleton.uri, {
+      ...canonical,
+      record: version.record,
+      cid: version.cid,
+      editedAt: version.editedAt,
+    })
     const postAggs = new HydrationMap(hydration.postAggs)
     postAggs.set(skeleton.uri, skeleton.counts?.[index] ?? null)
     const view = ctx.views.post(skeleton.uri, {
