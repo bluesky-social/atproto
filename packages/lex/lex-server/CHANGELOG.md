@@ -1,5 +1,15 @@
 # @atproto/lex-server
 
+## 0.2.9
+
+### Patch Changes
+
+- [#6021](https://github.com/bluesky-social/atproto/pull/6021) [`fbe2ebb`](https://github.com/bluesky-social/atproto/commit/fbe2ebbf244d139f3c949b145ff2b461b425a5b1) Thanks [@matthieusieben](https://github.com/matthieusieben)! - `onHandlerError` is now only called for server errors (5xx), as documented. Client errors (4xx), such as invalid params or input, authentication failures, or a `LexServerError` with a 4xx status thrown by a handler, are no longer reported.
+- Updated dependencies [[`315aba7`](https://github.com/bluesky-social/atproto/commit/315aba7d157f2e7376b56e927e9bc088a3a622c1), [`58ca16d`](https://github.com/bluesky-social/atproto/commit/58ca16d32ccb50b30e1d4c800c6263af7511a4ff), [`315aba7`](https://github.com/bluesky-social/atproto/commit/315aba7d157f2e7376b56e927e9bc088a3a622c1), [`2ed73cc`](https://github.com/bluesky-social/atproto/commit/2ed73cc657769447d2617f1c3642b06f69b69dc5), [`58ca16d`](https://github.com/bluesky-social/atproto/commit/58ca16d32ccb50b30e1d4c800c6263af7511a4ff)]:
+  - @atproto/lex-rpc@0.3.0
+  - @atproto/lex-schema@0.3.2
+  - @atproto-labs/did-resolver@0.3.15
+
 ## 0.2.8
 
 ### Patch Changes

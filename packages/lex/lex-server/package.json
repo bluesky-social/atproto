@@ -1,6 +1,6 @@
 {
   "name": "@atproto/lex-server",
-  "version": "0.2.8",
+  "version": "0.2.9",
   "license": "MIT",
   "description": "Request router for Atproto Lexicon protocols and schemas",
   "keywords": [

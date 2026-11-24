@@ -1,5 +1,11 @@
 # @atproto/lex-schema
 
+## 0.3.2
+
+### Patch Changes
+
+- [#6018](https://github.com/bluesky-social/atproto/pull/6018) [`2ed73cc`](https://github.com/bluesky-social/atproto/commit/2ed73cc657769447d2617f1c3642b06f69b69dc5) Thanks [@matthieusieben](https://github.com/matthieusieben)! - `integer()` schemas now accept integers beyond `Number.MAX_SAFE_INTEGER` when validating with `strict: false`. The data model defines integers as 64-bit, so a single such value (e.g. a relay `listHosts` `seq`) no longer makes a whole XRPC response fail validation with `strictResponseProcessing: false`. Strict validation still only accepts safe integers.
+
 ## 0.3.1
 
 ### Patch Changes

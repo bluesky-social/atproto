@@ -1,5 +1,19 @@
 # @atproto/lex-installer
 
+## 0.2.13
+
+### Patch Changes
+
+- Updated dependencies [[`50ffa3a`](https://github.com/bluesky-social/atproto/commit/50ffa3a18cdae58b7dedf777aafc0bc0eb471c41), [`50ffa3a`](https://github.com/bluesky-social/atproto/commit/50ffa3a18cdae58b7dedf777aafc0bc0eb471c41), [`50ffa3a`](https://github.com/bluesky-social/atproto/commit/50ffa3a18cdae58b7dedf777aafc0bc0eb471c41), [`58ca16d`](https://github.com/bluesky-social/atproto/commit/58ca16d32ccb50b30e1d4c800c6263af7511a4ff), [`315aba7`](https://github.com/bluesky-social/atproto/commit/315aba7d157f2e7376b56e927e9bc088a3a622c1), [`58ca16d`](https://github.com/bluesky-social/atproto/commit/58ca16d32ccb50b30e1d4c800c6263af7511a4ff), [`315aba7`](https://github.com/bluesky-social/atproto/commit/315aba7d157f2e7376b56e927e9bc088a3a622c1), [`2ed73cc`](https://github.com/bluesky-social/atproto/commit/2ed73cc657769447d2617f1c3642b06f69b69dc5), [`58ca16d`](https://github.com/bluesky-social/atproto/commit/58ca16d32ccb50b30e1d4c800c6263af7511a4ff)]:
+  - @atproto-labs/fetch-node@0.5.0
+  - @atproto/lex-resolver@0.4.10
+  - @atproto/lex-rpc@0.3.0
+  - @atproto/lex-schema@0.3.2
+  - @atproto-labs/did-resolver@0.3.15
+  - @atproto-labs/handle-resolver-node@0.2.19
+  - @atproto/lex-builder@0.1.23
+  - @atproto/lex-document@0.1.19
+
 ## 0.2.12
 
 ### Patch Changes
