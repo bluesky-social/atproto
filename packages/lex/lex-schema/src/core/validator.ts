@@ -176,7 +176,7 @@ export type ValidationOptions = {
 
   /**
    * Whether to enforce strict validation rules (e.g., MIME type matching, size
-   * limits, datetime format).
+   * limits, datetime format, safe integer range).
    *
    * This is typically useful to allow more lax validation when parsing server
    * responses, while enforcing strict validation for user input.

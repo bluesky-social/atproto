@@ -82,6 +82,12 @@ const testQueryGetBlobRef = l.query(
   }),
 )
 
+const testQueryWithInteger = l.query(
+  'io.example.testQueryWithInteger',
+  l.params(),
+  l.jsonPayload({ seq: l.integer() }),
+)
+
 /**
  * Removes a global until disposed, to simulate environments that do not define
  * it (e.g. React Native and ReadableStream). Since Node's own fetch()
@@ -1704,6 +1710,37 @@ describe(xrpcSafe, () => {
       expect(result.message).toMatch('Unable to parse response payload')
       assert(result.cause instanceof TypeError)
       expect(result.cause.message).toBe('Invalid non-integer number: 1.5')
+    })
+
+    // 64-bit integers are valid per the data model, and emitted in practice
+    // (e.g. relay listHosts `seq`), but exceed Number.MAX_SAFE_INTEGER
+    const jsonResponseWithUnsafeInteger: FetchHandler = async () => {
+      return new Response('{"seq":459639262114836124}', {
+        status: 200,
+        headers: { 'content-type': 'application/json' },
+      })
+    }
+
+    it('returns error for unsafe integers by default (strict parsing)', async () => {
+      const fetchHandler = vi.fn<FetchHandler>(jsonResponseWithUnsafeInteger)
+
+      const result = await xrpcSafe(fetchHandler, testQueryWithInteger, {})
+
+      assert(!result.success)
+      expect(result).toBeInstanceOf(XrpcInvalidResponseError)
+      expect(result.message).toMatch('Unable to parse response payload')
+    })
+
+    it('accepts and validates unsafe integers when strict processing is disabled', async () => {
+      const fetchHandler = vi.fn<FetchHandler>(jsonResponseWithUnsafeInteger)
+
+      const result = await xrpcSafe(fetchHandler, testQueryWithInteger, {
+        strictResponseProcessing: false,
+        validateResponse: true,
+      })
+
+      assert(result.success)
+      expect(result.body).toEqual({ seq: Number('459639262114836124') })
     })
   })
 
