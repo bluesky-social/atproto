@@ -1,5 +1,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { FetchResponseError, peekJson } from './fetch-response.js'
+import {
+  FetchResponseError,
+  fetchJsonProcessor,
+  fetchMaxSizeProcessor,
+  peekJson,
+} from './fetch-response.js'
 
 const encoder = new TextEncoder()
 
@@ -105,5 +110,56 @@ describe(peekJson, () => {
         error: 'use_dpop_nonce',
       })
     })
+  })
+})
+
+describe(fetchJsonProcessor, () => {
+  it('parses a JSON body', async () => {
+    const response = streamedJsonResponse(['{"foo":', '"bar"}'])
+
+    await expect(fetchJsonProcessor()(response)).resolves.toEqual({
+      response,
+      json: { foo: 'bar' },
+    })
+  })
+
+  it('rejects an invalid JSON body as a parse error', async () => {
+    const response = streamedJsonResponse(['{"foo":'])
+
+    const result = fetchJsonProcessor()(response)
+    await expect(result).rejects.toBeInstanceOf(FetchResponseError)
+    await expect(result).rejects.toMatchObject({
+      statusCode: 502,
+      message: 'Unable to parse response as JSON',
+      cause: expect.any(SyntaxError),
+    })
+  })
+
+  it('rejects a streamed body larger than fetchMaxSizeProcessor allows as too large', async () => {
+    const response = await fetchMaxSizeProcessor(10)(
+      streamedJsonResponse(['{"error":', '"use_dpop_nonce"}']),
+    )
+
+    const result = fetchJsonProcessor()(response)
+    await expect(result).rejects.toBeInstanceOf(FetchResponseError)
+    await expect(result).rejects.toMatchObject({
+      statusCode: 502,
+      message: 'Response too large',
+    })
+  })
+
+  it('propagates body read errors as they are', async () => {
+    const error = new Error('Connection reset')
+    const body = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(encoder.encode('{"foo":'))
+        controller.error(error)
+      },
+    })
+    const response = new Response(body, {
+      headers: { 'Content-Type': 'application/json' },
+    })
+
+    await expect(fetchJsonProcessor()(response)).rejects.toBe(error)
   })
 })

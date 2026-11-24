@@ -25,7 +25,11 @@ export class MaxBytesTransformStream extends TransformStream<
   Uint8Array,
   Uint8Array
 > {
-  constructor(maxBytes: number) {
+  /**
+   * @param createError - Builds the error the stream fails with once more than
+   * `maxBytes` were read.
+   */
+  constructor(maxBytes: number, createError: () => unknown) {
     // Note: negation accounts for invalid value types (NaN, non numbers)
     if (!(maxBytes >= 0)) {
       throw new TypeError('maxBytes must be a non-negative number')
@@ -41,7 +45,7 @@ export class MaxBytesTransformStream extends TransformStream<
         if ((bytesRead += chunk.length) <= maxBytes) {
           ctrl.enqueue(chunk)
         } else {
-          ctrl.error(new Error('Response too large'))
+          ctrl.error(createError())
         }
       },
     })
