@@ -259,6 +259,48 @@ describe(safeFetchWrap, () => {
       expect(target.requests).toEqual(['GET /final '])
     })
   })
+
+  describe('disposal', () => {
+    it('destroys the dispatcher', async () => {
+      const target = await recordingServer()
+      const safeFetch = safeFetchWrap({
+        ssrfProtection: false,
+        forbiddenDomainNames: [],
+      })
+
+      const res = await safeFetch(`${target.origin()}/final`, {
+        redirect: 'error',
+      })
+      await expect(res.text()).resolves.toBe('final')
+
+      await safeFetch[Symbol.asyncDispose]()
+
+      await expect(
+        safeFetch(`${target.origin()}/final`, { redirect: 'error' }),
+      ).rejects.toSatisfy(causedBy('The client is destroyed'))
+      expect(target.requests).toHaveLength(1)
+    })
+
+    it('aborts requests in flight', async () => {
+      let onRequest!: () => void
+      const received = new Promise<void>((resolve) => (onRequest = resolve))
+      // Never responds: disposal must not wait for the request to complete.
+      const target = await startServer(() => onRequest())
+      const safeFetch = safeFetchWrap({
+        ssrfProtection: false,
+        forbiddenDomainNames: [],
+      })
+
+      const pending = safeFetch(`${target.origin()}/`, { redirect: 'error' })
+      await received
+
+      await safeFetch[Symbol.asyncDispose]()
+
+      await expect(pending).rejects.toSatisfy(
+        causedBy('The client is destroyed'),
+      )
+    })
+  })
 })
 
 /**

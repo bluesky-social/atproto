@@ -89,7 +89,7 @@ export function safeFetchWrap<C>({
   timeout = 10e3,
   forbiddenDomainNames = DEFAULT_FORBIDDEN_DOMAIN_NAMES as Iterable<string>,
   allowImplicitRedirect = false,
-}: SafeFetchWrapOptions<C> = {}) {
+}: SafeFetchWrapOptions<C> = {}): AsyncDisposable & Fetch<C> {
   /**
    * Prevent using http:, file: or data: protocols.
    */
@@ -117,7 +117,26 @@ export function safeFetchWrap<C>({
     checkForbiddenDomainNamePolicy(url, forbiddenDomainNameSet) ??
     (allowPrivateIps ? undefined : checkUnicastPolicy(url))
 
-  return pipe(
+  /**
+   * Since we will be fetching from the network based on user provided
+   * input, we need to make sure that the request is not vulnerable to SSRF
+   * attacks.
+   *
+   * @note The dispatcher is installed even when private IPs are allowed:
+   * relaxing the unicast requirement must not silently disable the
+   * remaining per-hop checks. Only the DNS guard is conditional.
+   */
+  const innerFetch = safeDispatchFetchWrap({
+    fetch,
+    checkUrl,
+    lookup: allowPrivateIps
+      ? lookup
+      : lookup
+        ? unicastLookupWrap(lookup)
+        : unicastLookup,
+  })
+
+  const composedFetch = pipe(
     /**
      * Require explicit {@link RequestInit['redirect']} mode
      */
@@ -148,24 +167,7 @@ export function safeFetchWrap<C>({
     timedFetch(
       timeout,
 
-      /**
-       * Since we will be fetching from the network based on user provided
-       * input, we need to make sure that the request is not vulnerable to SSRF
-       * attacks.
-       *
-       * @note The dispatcher is installed even when private IPs are allowed:
-       * relaxing the unicast requirement must not silently disable the
-       * remaining per-hop checks. Only the DNS guard is conditional.
-       */
-      safeDispatchFetchWrap({
-        fetch,
-        checkUrl,
-        lookup: allowPrivateIps
-          ? lookup
-          : lookup
-            ? unicastLookupWrap(lookup)
-            : unicastLookup,
-      }),
+      innerFetch,
     ),
 
     /**
@@ -174,4 +176,12 @@ export function safeFetchWrap<C>({
      */
     fetchMaxSizeProcessor(responseMaxSize),
   ) satisfies Fetch<unknown>
+
+  Object.defineProperty(composedFetch, Symbol.asyncDispose, {
+    value: async () => innerFetch[Symbol.asyncDispose](),
+    enumerable: false,
+    configurable: true,
+  })
+
+  return composedFetch as Fetch<C> & AsyncDisposable
 }

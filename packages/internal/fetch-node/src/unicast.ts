@@ -55,14 +55,17 @@ export function checkUnicastPolicy(url: URL): UrlPolicyReason | undefined {
 export function unicastFetchWrap<C = FetchContext>({
   fetch = globalThis.fetch,
   lookup,
-}: UnicastFetchWrapOptions<C> = {}): Fetch<C> {
+}: UnicastFetchWrapOptions<C> = {}): Fetch<C> & AsyncDisposable {
   const dispatchFetch = safeDispatchFetchWrap<C>({
     fetch,
     checkUrl: checkUnicastPolicy,
     lookup: lookup ? unicastLookupWrap(lookup) : unicastLookup,
   })
 
-  return async function (this: C, input, init): Promise<Response> {
+  const wrappedFetch: Fetch<C> = async function (
+    input,
+    init,
+  ): Promise<Response> {
     // @NOTE The dispatcher guard already applies this check to every request,
     // including redirect hops. It is repeated here so that a rejection of the
     // *initial* url happens before any body is consumed, and so that the error
@@ -79,6 +82,14 @@ export function unicastFetchWrap<C = FetchContext>({
 
     return dispatchFetch.call(this, input, init)
   }
+
+  Object.defineProperty(wrappedFetch, Symbol.asyncDispose, {
+    value: async () => dispatchFetch[Symbol.asyncDispose](),
+    enumerable: false,
+    configurable: true,
+  })
+
+  return wrappedFetch as Fetch<C> & AsyncDisposable
 }
 
 export const unicastLookup: LookupFunction = unicastLookupWrap(

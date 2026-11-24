@@ -188,6 +188,20 @@ describe(unicastFetchWrap, () => {
     })
   })
 
+  describe('disposal', () => {
+    it('destroys the dispatcher', async () => {
+      using lookup = staticLookup('1.2.3.4', 4)
+      const fetch = unicastFetchWrap({ lookup })
+
+      await fetch[Symbol.asyncDispose]()
+
+      await expect(fetch('http://valid.com/test')).rejects.toSatisfy(
+        fetchFailedErrorCauseBy('The client is destroyed'),
+      )
+      expect(lookup).not.toHaveBeenCalled()
+    })
+  })
+
   describe('version handling', () => {
     it('should throw an error if undici version is too old', () => {
       using _ = vi
