@@ -123,7 +123,15 @@ export function unicastLookupWrap(lookup: LookupFunction): LookupFunction {
         ? address.map((entry) => parseLookupAddress(entry?.address))
         : [parseLookupAddress(address)]
 
-      if (ips.includes(null)) {
+      if (ips.length === 0) {
+        // @NOTE `net.connect` throws an uncaught exception when an `all`
+        // lookup succeeds without any address.
+        callback(
+          new Error('Hostname did not resolve to any address'),
+          address,
+          family,
+        )
+      } else if (ips.includes(null)) {
         callback(
           new Error('Hostname resolved to an invalid address'),
           address,

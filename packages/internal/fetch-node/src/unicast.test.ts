@@ -166,6 +166,19 @@ describe(unicastFetchWrap, () => {
       },
     )
 
+    it('rejects an empty result', async () => {
+      // `net.connect` throws an uncaught exception when an `all` lookup
+      // succeeds without any address.
+      using lookup = vi.fn<LookupFunction>((_hostname, _options, callback) => {
+        setTimeout(callback, 0, null, [])
+      })
+      const fetch = unicastFetchWrap({ lookup })
+
+      await expect(fetch('http://valid.com/test')).rejects.toSatisfy(
+        fetchFailedErrorCauseBy('Hostname did not resolve to any address'),
+      )
+    })
+
     it('derives the family from the address, not from the lookup', async () => {
       // Parsing by the reported family would throw from the (asynchronous)
       // callback, escaping as an uncaught exception instead of a rejection.
