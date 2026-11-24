@@ -16,10 +16,21 @@ import {
 } from '@atproto-labs/fetch'
 import { pipe } from '@atproto-labs/pipe'
 import { safeDispatchFetchWrap } from './dispatch.js'
-import { checkUnicastPolicy, unicastLookup } from './unicast.js'
+import {
+  type UnicastFetchWrapOptions,
+  checkUnicastPolicy,
+  unicastLookup,
+  unicastLookupWrap,
+} from './unicast.js'
 
 export type SafeFetchWrapOptions<C> = {
   fetch?: Fetch<C>
+  /**
+   * @see {@link UnicastFetchWrapOptions.lookup}
+   * @note The unicast check is applied to its result unless
+   * {@link SafeFetchWrapOptions.allowPrivateIps} is `true`.
+   */
+  lookup?: UnicastFetchWrapOptions['lookup']
   responseMaxSize?: number
   ssrfProtection?: boolean
   allowCustomPort?: boolean
@@ -67,6 +78,7 @@ export type SafeFetchWrapOptions<C> = {
  */
 export function safeFetchWrap<C>({
   fetch = globalThis.fetch as Fetch<C>,
+  lookup,
   responseMaxSize = 512 * 1024, // 512kB
   ssrfProtection = true,
   allowCustomPort = !ssrfProtection,
@@ -148,7 +160,11 @@ export function safeFetchWrap<C>({
       safeDispatchFetchWrap({
         fetch,
         checkUrl,
-        lookup: allowPrivateIps ? undefined : unicastLookup,
+        lookup: allowPrivateIps
+          ? lookup
+          : lookup
+            ? unicastLookupWrap(lookup)
+            : unicastLookup,
       }),
     ),
 

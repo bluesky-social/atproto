@@ -1,3 +1,4 @@
+import type { LookupFunction } from 'node:net'
 import { assert, describe, expect, it, vi } from 'vitest'
 import {
   checkUnicastPolicy,
@@ -114,6 +115,69 @@ describe(unicastFetchWrap, () => {
     })
   })
 
+  describe('custom lookup', () => {
+    it('applies the unicast check to its result', async () => {
+      // `valid.com` resolves to a public IP through the mocked `dns.lookup`:
+      // the rejection proves the custom lookup replaced it.
+      using lookup = staticLookup('127.0.0.1', 4)
+      const fetch = unicastFetchWrap({ lookup })
+
+      await expect(fetch('http://valid.com/test')).rejects.toSatisfy(
+        fetchFailedErrorCauseBy('Hostname resolved to non-unicast address'),
+      )
+      expect(lookup).toHaveBeenCalledWith(
+        'valid.com',
+        expect.anything(),
+        expect.any(Function),
+      )
+    })
+
+    it('is not called for hostnames that are not public domain tlds', async () => {
+      using lookup = staticLookup('1.2.3.4', 4)
+      const fetch = unicastFetchWrap({ lookup })
+
+      await expect(fetch('http://localhost/test')).rejects.toSatisfy(
+        fetchFailedErrorCauseBy('Hostname is not a public domain'),
+      )
+      expect(lookup).not.toHaveBeenCalled()
+    })
+
+    it('forwards its errors', async () => {
+      using lookup = vi.fn<LookupFunction>((_hostname, _options, callback) => {
+        setTimeout(callback, 0, new Error('Lookup timed out'), [])
+      })
+      const fetch = unicastFetchWrap({ lookup })
+
+      await expect(fetch('http://valid.com/test')).rejects.toSatisfy(
+        fetchFailedErrorCauseBy('Lookup timed out'),
+      )
+    })
+
+    it.each(['010.0.0.1', '0x7f.0.0.1', 'valid.com', ''])(
+      'rejects the invalid address %j',
+      async (address) => {
+        // `ipaddr.js` would read `010.0.0.1` as the unicast `8.0.0.1`
+        using lookup = staticLookup(address, 4)
+        const fetch = unicastFetchWrap({ lookup })
+
+        await expect(fetch('http://valid.com/test')).rejects.toSatisfy(
+          fetchFailedErrorCauseBy('Hostname resolved to an invalid address'),
+        )
+      },
+    )
+
+    it('derives the family from the address, not from the lookup', async () => {
+      // Parsing by the reported family would throw from the (asynchronous)
+      // callback, escaping as an uncaught exception instead of a rejection.
+      using lookup = staticLookup('127.0.0.1', 6)
+      const fetch = unicastFetchWrap({ lookup })
+
+      await expect(fetch('http://valid.com/test')).rejects.toSatisfy(
+        fetchFailedErrorCauseBy('Hostname resolved to non-unicast address'),
+      )
+    })
+  })
+
   describe('expected successes', () => {
     // Let's avoid calling actual services in tests. There is no easy way to
     // ensure this works without a real public domain hostname that resolves to
@@ -150,6 +214,17 @@ describe(unicastFetchWrap, () => {
     })
   })
 })
+
+/**
+ * A lookup that answers every hostname with {@link address}, honoring
+ * `options.all` as `net.connect` requires.
+ */
+function staticLookup(address: string, family: number) {
+  return vi.fn<LookupFunction>((_hostname, options, callback) => {
+    if (options.all) setTimeout(callback, 0, null, [{ address, family }])
+    else setTimeout(callback, 0, null, address, family)
+  })
+}
 
 function fetchFailedErrorCauseBy(message: string) {
   return (err: unknown) => {
