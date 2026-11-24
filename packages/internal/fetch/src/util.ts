@@ -156,3 +156,35 @@ export const extractUrl = (input: Request | string | URL) =>
     : input instanceof URL
       ? input
       : new URL(input.url)
+
+/**
+ * Uses the native `AbortSignal.throwIfAborted()` when available, falling back
+ * for older implementations such as React Native's `abort-controller`.
+ */
+export function throwIfAborted(signal?: AbortSignal): void {
+  if (!signal) return
+  if (typeof signal.throwIfAborted === 'function') {
+    signal.throwIfAborted()
+    return
+  }
+  if (signal.aborted) throw getAbortReason(signal)
+}
+
+export function getAbortReason(signal: AbortSignal): unknown {
+  if ('reason' in signal) return signal.reason
+  return buildAbortReason()
+}
+
+export function buildAbortReason(
+  message = 'Aborted',
+  name = 'AbortError',
+): unknown {
+  // Fallback for runtimes without a DOMException (React Native)
+  if (typeof DOMException === 'undefined') {
+    const error = new Error(message)
+    Object.defineProperty(error, 'name', { value: name })
+    return error
+  }
+
+  return new DOMException(message, name)
+}
