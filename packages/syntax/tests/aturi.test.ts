@@ -8,6 +8,8 @@ import {
   InvalidRecordKeyError,
   type NsidString,
   SpaceRef,
+  isAtUriString,
+  isSpaceRefString,
 } from '../src/index.js'
 import { readInteropFile } from './_utils.js'
 
@@ -155,6 +157,14 @@ describe(AtUri, () => {
         '',
         'foo=bar',
         '#hash',
+      ],
+
+      [
+        'at://did:web:foo_bar.example.com/foo',
+        'did:web:foo_bar.example.com',
+        '/foo',
+        '',
+        '',
       ],
 
       ['did:web:localhost%3A1234', 'did:web:localhost%3A1234', '', '', ''],
@@ -478,6 +488,21 @@ describe(AtUri, () => {
       ]) {
         expect(() => new AtUri(invalid)).toThrow(InvalidAtUriError)
       }
+    })
+
+    it.each([
+      'did:web:example.com',
+      'did:web:foo_bar.example.com',
+      'did:web:localhost%3A1234',
+    ])('accepts any valid DID as the space DID: %s', (spaceDid) => {
+      const ref = `at:space/${spaceDid}/com.example.group/default`
+      expect(isSpaceRefString(ref)).toBe(true)
+      expect(new AtUri(ref)).toMatchObject({ spaceDid, host: spaceDid })
+      expect(SpaceRef.parse(ref).toString()).toBe(ref)
+
+      const legacy = `at://${spaceDid}/space/com.example.group/default`
+      expect(isAtUriString(legacy, { strict: false })).toBe(true)
+      expect(new AtUri(legacy).toString()).toBe(ref)
     })
 
     it('requires the space DID to be a DID', () => {

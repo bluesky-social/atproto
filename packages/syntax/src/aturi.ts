@@ -29,10 +29,10 @@ export type Stringifiable = { toString: () => string }
 
 export const ATP_URI_REGEX =
   // proto-    --did--------------   --name----------------   --path----   --query--   --hash--
-  /^(at:\/\/)?((?:did:[a-z0-9:%-]+)|(?:[a-z0-9][a-z0-9.:-]*))(\/[^?#\s]*)?(\?[^#\s]+)?(#[^\s]+)?$/i
+  /^(at:\/\/)?((?:did:[a-z0-9._:%-]+)|(?:[a-z0-9][a-z0-9.:-]*))(\/[^?#\s]*)?(\?[^#\s]+)?(#[^\s]+)?$/i
 const SPACE_URI_REGEX =
-  // proto------   --did-----------   --path----   --query--   --hash--
-  /^(at:space\/)(did:[a-z0-9:%-]+)(\/[^?#\s]*)?(\?[^#\s]+)?(#[^\s]+)?$/i
+  // proto------   --did-------------   --path----   --query--   --hash--
+  /^(at:space\/)(did:[a-z0-9._:%-]+)(\/[^?#\s]*)?(\?[^#\s]+)?(#[^\s]+)?$/i
 //                       --path-----   --query--  --hash--
 const RELATIVE_REGEX = /^(\/[^?#\s]*)?(\?[^#\s]+)?(#[^\s]+)?$/i
 
