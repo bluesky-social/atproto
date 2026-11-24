@@ -20,6 +20,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   getListItemRecords: getRecords(db, app.bsky.graph.listitem),
   getListRecords: getRecords(db, app.bsky.graph.list),
   getPostRecords: getPostRecords(db),
+  getPostVersions: getPostVersions(db),
   getProfileRecords: getRecords(db, app.bsky.actor.profile),
   getRepostRecords: getRecords(db, app.bsky.feed.repost),
   getThreadGateRecords: getRecords(db, app.bsky.feed.threadgate),
@@ -52,29 +53,74 @@ export const getRecords = (db: Database, ns?: l.Main<l.RecordSchema>) => {
           .execute()
       : []
     const byUri = keyBy(res, 'uri')
-    const records: Record[] = req.uris.map((uri) => {
-      const row = byUri.get(uri)
-      const json = row ? row.json : JSON.stringify(null)
-      const createdAtRaw = new Date(JSON.parse(json)?.['createdAt'])
-      const createdAt = !isNaN(createdAtRaw.getTime())
-        ? Timestamp.fromDate(createdAtRaw)
-        : undefined
-      const indexedAt = row?.indexedAt
-        ? Timestamp.fromDate(new Date(row?.indexedAt))
-        : undefined
-      const recordBytes = ui8.fromString(json, 'utf8')
-      return new Record({
-        record: recordBytes as Uint8Array<ArrayBuffer>,
-        cid: row?.cid,
-        createdAt,
-        indexedAt,
-        sortedAt: compositeTime(createdAt, indexedAt),
-        takenDown: !!row?.takedownRef,
-        takedownRef: row?.takedownRef ?? undefined,
-        tags: row?.tags ?? undefined,
-      })
-    })
+    const records = req.uris.map((uri) => recordFromRow(byUri.get(uri)))
     return { records }
+  }
+}
+
+type RecordRow = {
+  cid?: string
+  json: string
+  indexedAt?: string
+  editedAt?: string | null
+  takedownRef?: string | null
+  tags?: string[] | null
+}
+
+function recordFromRow(row?: RecordRow): Record {
+  const json = row?.json ?? JSON.stringify(null)
+  const createdAtRaw = new Date(JSON.parse(json)?.['createdAt'])
+  const createdAt = !isNaN(createdAtRaw.getTime())
+    ? Timestamp.fromDate(createdAtRaw)
+    : undefined
+  const indexedAt = row?.indexedAt
+    ? Timestamp.fromDate(new Date(row.indexedAt))
+    : undefined
+  const editedAt = row?.editedAt
+    ? Timestamp.fromDate(new Date(row.editedAt))
+    : undefined
+  const recordBytes = ui8.fromString(json, 'utf8')
+  return new Record({
+    record: recordBytes as Uint8Array<ArrayBuffer>,
+    cid: row?.cid,
+    createdAt,
+    indexedAt,
+    editedAt,
+    sortedAt: compositeTime(createdAt, indexedAt),
+    takenDown: !!row?.takedownRef,
+    takedownRef: row?.takedownRef ?? undefined,
+    tags: row?.tags ?? undefined,
+  })
+}
+
+export function getPostVersions(db: Database) {
+  return async (req: { uri: string }): Promise<{ versions: Record[] }> => {
+    const current = await db.db
+      .selectFrom('record')
+      .where('uri', '=', req.uri)
+      .selectAll()
+      .executeTakeFirst()
+    if (!current) return { versions: [] }
+
+    const previous = await db.db
+      .selectFrom('post_version')
+      .where('uri', '=', req.uri)
+      .selectAll()
+      .orderBy('editedAt', (ob) => ob.desc().nullsLast())
+      .execute()
+    return {
+      versions: [
+        recordFromRow(current),
+        ...previous.map((version) =>
+          recordFromRow({
+            ...current,
+            cid: version.cid,
+            json: version.json,
+            editedAt: version.editedAt,
+          }),
+        ),
+      ],
+    }
   }
 }
 

@@ -39,9 +39,9 @@ type Notif = Insertable<Notification>
 
 export class RecordProcessor<TSchema extends l.RecordSchema, TRow> {
   constructor(
-    private appDb: Database,
-    private background: BackgroundQueue<Database>,
-    private options: RecordProcessorOptions<TSchema, TRow>,
+    protected appDb: Database,
+    protected background: BackgroundQueue<Database>,
+    protected options: RecordProcessorOptions<TSchema, TRow>,
   ) {}
 
   get db() {
@@ -130,6 +130,16 @@ export class RecordProcessor<TSchema extends l.RecordSchema, TRow> {
         indexedAt: timestamp,
       })
       .execute()
+    await this.replaceIndexedRecord(uri, cid, obj, timestamp, opts)
+  }
+
+  protected async replaceIndexedRecord(
+    uri: AtUri,
+    cid: Cid,
+    obj: l.InferInput<TSchema>,
+    timestamp: string,
+    opts?: { disableNotifs?: boolean },
+  ) {
     // If the updated record was a dupe, update dupe info for it
     const dupe = await this.options.findDuplicate(this.db, uri, obj)
     if (dupe) {

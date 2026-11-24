@@ -21,6 +21,7 @@ import {
   HydrationMap,
   type ItemRef,
   type RecordInfo,
+  parseDate,
   parseRecord,
   parseString,
   split,
@@ -31,6 +32,7 @@ export type Post = RecordInfo<PostRecord> & {
   violatesEmbeddingRules: boolean
   hasThreadGate: boolean
   hasPostGate: boolean
+  editedAt?: Date
   opThreadPostIndex?: number
   opThreadPostCount?: number
   tags: Set<string>
@@ -180,6 +182,7 @@ export class FeedHydrator {
                 violatesEmbeddingRules,
                 hasThreadGate,
                 hasPostGate,
+                editedAt: parseDate(res.records[i].editedAt),
                 opThreadPostIndex: opThread?.index,
                 opThreadPostCount: opThread?.count,
                 tags,

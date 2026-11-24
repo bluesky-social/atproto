@@ -30,6 +30,11 @@
         "likeCount": { "type": "integer" },
         "quoteCount": { "type": "integer" },
         "indexedAt": { "type": "string", "format": "datetime" },
+        "editedAt": {
+          "type": "string",
+          "format": "datetime",
+          "description": "Present if the post has been edited. Timestamp when the version of the post in this view was indexed. indexedAt is unchanged by edits."
+        },
         "viewer": { "type": "ref", "ref": "#viewerState" },
         "labels": {
           "type": "array",

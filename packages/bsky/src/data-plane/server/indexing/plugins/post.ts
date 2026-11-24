@@ -1,6 +1,6 @@
 import { type Insertable, type Selectable, sql } from 'kysely'
 import { type Cid, getBlobCidString } from '@atproto/lex-data'
-import { lexParse } from '@atproto/lex-json'
+import { lexParse, lexStringify } from '@atproto/lex-json'
 import type { $Typed } from '@atproto/lex-schema'
 import { AtUri, normalizeDatetimeAlways } from '@atproto/syntax'
 import { NOTIFICATION_REASON } from '../../../../api/app/bsky/notification/constants.js'
@@ -26,6 +26,13 @@ import {
   invalidReplyRoot as checkInvalidReplyRoot,
   violatesThreadGate as checkViolatesThreadGate,
 } from '../../util.js'
+import {
+  POST_EDIT_LIMIT,
+  POST_EDIT_WINDOW_MS,
+  PostEditLimitError,
+  PostEditWindowError,
+  validatePostEdit,
+} from '../post-edit.js'
 import { RecordProcessor } from '../processor.js'
 
 type Notif = Insertable<Notification>
@@ -128,6 +135,7 @@ const insertFn = async (
         .executeTakeFirst()
     }
     // Denormalized OP replies per thread, mirroring the production dataplane.
+    // Updates replace derived rows, so the conflict path revives a soft-deleted reply.
     // Includes all OP replies, regardless of where they occur in the tree.
     if (obj.reply.parent.uri && post.creator === uriToDid(obj.reply.root.uri)) {
       await db
@@ -138,7 +146,12 @@ const insertFn = async (
           uri: post.uri,
           deletedAt: null,
         })
-        .onConflict((oc) => oc.doNothing())
+        .onConflict((oc) =>
+          oc.columns(['rootUri', 'uri']).doUpdateSet({
+            parentUri: excluded(db, 'parentUri'),
+            deletedAt: null,
+          }),
+        )
         .execute()
     }
   }
@@ -428,7 +441,6 @@ const deleteFn = async (
       .set({ deletedAt: new Date().toISOString() })
       .executeTakeFirst(),
   ])
-  await db.deleteFrom('quote').where('subject', '=', uriStr).execute()
   const deletedEmbeds: (
     | PostEmbedImage[]
     | PostEmbedExternal
@@ -562,12 +574,88 @@ const updateAggregates = async (db: DatabaseSchema, postIdx: IndexedPost) => {
   await Promise.all([replyCountQb?.execute(), postsCountQb.execute()])
 }
 
+export class PostRecordProcessor extends RecordProcessor<
+  typeof app.bsky.feed.post.main,
+  IndexedPost
+> {
+  override async deleteRecord(uri: AtUri, cascading = false) {
+    await super.deleteRecord(uri, cascading)
+    await this.db
+      .deleteFrom('quote')
+      .where('subject', '=', uri.toString())
+      .execute()
+  }
+
+  override async updateRecord(
+    uri: AtUri,
+    cid: Cid,
+    obj: unknown,
+    timestamp: string,
+    opts?: { disableNotifs?: boolean },
+  ) {
+    this.assertValidRecord(obj)
+    const uriString = uri.toString()
+    const cidString = cid.toString()
+    const current = await this.db
+      .selectFrom('record')
+      .where('uri', '=', uriString)
+      .select(['cid', 'json', 'indexedAt', 'editedAt'])
+      .forUpdate()
+      .executeTakeFirst()
+
+    if (!current) {
+      return super.updateRecord(uri, cid, obj, timestamp, opts)
+    }
+    if (current.cid === cidString) return
+
+    const timestampMs = new Date(timestamp).getTime()
+    const currentVersionAt = current.editedAt ?? current.indexedAt
+    if (timestampMs < new Date(currentVersionAt).getTime()) return
+    if (
+      timestampMs >
+      new Date(current.indexedAt).getTime() + POST_EDIT_WINDOW_MS
+    ) {
+      throw new PostEditWindowError('Post edit window expired')
+    }
+
+    const retainedVersions = await this.db
+      .selectFrom('post_version')
+      .where('uri', '=', uriString)
+      .select(({ fn }) => fn.countAll<number>().as('count'))
+      .executeTakeFirstOrThrow()
+    if (retainedVersions.count >= POST_EDIT_LIMIT) {
+      throw new PostEditLimitError('Post edit limit reached')
+    }
+
+    validatePostEdit(lexParse(current.json), obj)
+    await this.db
+      .insertInto('post_version')
+      .values({
+        uri: uriString,
+        cid: current.cid,
+        json: current.json,
+        editedAt: current.editedAt,
+      })
+      .execute()
+    await this.db
+      .updateTable('record')
+      .where('uri', '=', uriString)
+      .set({
+        cid: cidString,
+        json: lexStringify(obj),
+        editedAt: timestamp,
+      })
+      .execute()
+    await this.replaceIndexedRecord(uri, cid, obj, timestamp, opts)
+  }
+}
+
 export type PluginType = ReturnType<typeof makePlugin>
-export const makePlugin = (
+export function makePlugin(
   db: Database,
   background: BackgroundQueue<Database>,
-) => {
-  return new RecordProcessor(db, background, {
+): PostRecordProcessor {
+  return new PostRecordProcessor(db, background, {
     schema: app.bsky.feed.post.main,
     insertFn,
     findDuplicate,

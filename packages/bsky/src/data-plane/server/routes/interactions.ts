@@ -1,6 +1,8 @@
 import type { ServiceImpl } from '@connectrpc/connect'
+import { sql } from 'kysely'
 import { DAY, keyBy } from '@atproto/common'
 import type { Service } from '../../../proto/bsky_connect.js'
+import { PostVersionCounts } from '../../../proto/bsky_pb.js'
 import type { Database } from '../db/index.js'
 import { countAll } from '../db/util.js'
 
@@ -22,6 +24,60 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       reposts: uris.map((uri) => byUri.get(uri)?.repostCount ?? 0),
       quotes: uris.map((uri) => byUri.get(uri)?.quoteCount ?? 0),
       bookmarks: uris.map((uri) => byUri.get(uri)?.bookmarkCount ?? 0),
+    }
+  },
+  async getPostVersionCounts(req) {
+    if (req.refs.length === 0) return { counts: [] }
+
+    const uris = req.refs.map((ref) => ref.uri)
+    const cids = req.refs.map((ref) => ref.cid)
+    const { rows } = await sql<{
+      ordinal: string
+      likes: number
+      reposts: number
+      replies: number
+      quotes: number
+      bookmarks: number
+    }>`
+      select
+        refs.ordinal,
+        (
+          select count(*)::int from "like"
+          where "like".subject = refs.uri and "like"."subjectCid" = refs.cid
+        ) as likes,
+        (
+          select count(*)::int from repost
+          where repost.subject = refs.uri and repost."subjectCid" = refs.cid
+        ) as reposts,
+        (
+          select count(*)::int from post
+          where post."replyParent" = refs.uri and post."replyParentCid" = refs.cid
+        ) as replies,
+        (
+          select count(*)::int from quote
+          where quote.subject = refs.uri and quote."subjectCid" = refs.cid
+        ) as quotes,
+        (
+          select count(*)::int from bookmark
+          where bookmark."subjectUri" = refs.uri and bookmark."subjectCid" = refs.cid
+        ) as bookmarks
+      from unnest(${uris}::varchar[], ${cids}::varchar[]) with ordinality
+        as refs(uri, cid, ordinal)
+      order by refs.ordinal
+    `.execute(db.db)
+
+    return {
+      counts: rows.map(
+        (row, index) =>
+          new PostVersionCounts({
+            ref: req.refs[index],
+            likes: row.likes,
+            reposts: row.reposts,
+            replies: row.replies,
+            quotes: row.quotes,
+            bookmarks: row.bookmarks,
+          }),
+      ),
     }
   },
   async getCountsForUsers(req) {

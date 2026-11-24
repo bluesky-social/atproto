@@ -1173,6 +1173,7 @@ export class Views {
       likeCount: aggs?.likes ?? 0,
       quoteCount: aggs?.quotes ?? 0,
       indexedAt: this.indexedAt(post).toISOString() as DatetimeString,
+      editedAt: post.editedAt?.toISOString() as DatetimeString | undefined,
       viewer: viewer
         ? {
             repost: viewer.repost,
@@ -2700,6 +2701,7 @@ export class Views {
       opThreadPostIndex: postInfo?.opThreadPostIndex,
       opThreadPostCount: postInfo?.opThreadPostCount,
       indexedAt: postView.indexedAt,
+      editedAt: postView.editedAt,
       embeds: depth > 1 ? undefined : postView.embed ? [postView.embed] : [],
     })
   }

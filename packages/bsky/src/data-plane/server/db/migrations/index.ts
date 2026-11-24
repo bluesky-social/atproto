@@ -64,3 +64,4 @@ export * as _20260819T170000000Z from './20260819T170000000Z-add-like-subject-so
 export * as _20260827T200000000Z from './20260827T200000000Z-reference-list-opt-outs.js'
 export * as _20260904T130000000Z from './20260904T130000000Z-remove-last-seen-priority-notifs.js'
 export * as _20260918T214110000Z from './20260918T214110000Z-remove-priority-notifs.js'
+export * as _20261124T032500000Z from './20261124T032500000Z-post-versions.js'

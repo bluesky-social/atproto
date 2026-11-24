@@ -34,6 +34,11 @@
           "description": "Approximate number of times the post has been viewed. Only included in authenticated responses to the post's author when eligible to see the count. Counts less than 100 are omitted."
         },
         "indexedAt": { "type": "string", "format": "datetime" },
+        "editedAt": {
+          "type": "string",
+          "format": "datetime",
+          "description": "Present if the post has been edited. Timestamp when the version of the post in this view was indexed. indexedAt is unchanged by edits."
+        },
         "viewer": { "type": "ref", "ref": "#viewerState" },
         "labels": {
           "type": "array",
