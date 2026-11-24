@@ -1,21 +1,13 @@
-import { type Kysely, sql } from 'kysely'
+import type { Kysely } from 'kysely'
 
 export async function up(db: Kysely<unknown>): Promise<void> {
   await db.schema
     .createTable('space')
     .addColumn('uri', 'varchar', (col) => col.primaryKey())
+    .addColumn('authority', 'varchar', (col) => col.notNull())
     .addColumn('type', 'varchar', (col) => col.notNull())
     .addColumn('createdAt', 'varchar', (col) => col.notNull())
     .addColumn('deletedAt', 'varchar')
-    .execute()
-
-  // Serves listSpaces filtered by type. Partial, matching listSpaces' deletedAt
-  // filter. A filter by authority is a range of the uri primary key instead.
-  await db.schema
-    .createIndex('space_type_idx')
-    .on('space')
-    .columns(['type', 'uri'])
-    .where(sql.ref('deletedAt'), 'is', null)
     .execute()
 
   await db.schema
@@ -46,14 +38,18 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('indexedAt', 'varchar', (col) => col.notNull())
     .execute()
 
-  // Serves listCollections, clearRecords, importRepo's scan of existing records,
-  // deleteSpaceBlobs, and listRepoOps's join to the current record. Paging a
-  // space's records goes through the uri primary key instead (see uri-range.ts).
+  // Serves listRecords, which pages a space by (collection, rkey).
   await db.schema
     .createIndex('space_record_path_idx')
     .on('space_record')
     .columns(['space', 'collection', 'rkey'])
     .unique()
+    .execute()
+
+  await db.schema
+    .createIndex('space_record_rev_idx')
+    .on('space_record')
+    .columns(['space', 'repoRev'])
     .execute()
 
   // Keyed by record uri as record_blob is. Metadata stays in `blob`.
@@ -83,8 +79,8 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('space', 'varchar', (col) => col.notNull())
     .addColumn('rev', 'varchar', (col) => col.notNull())
     .addColumn('idx', 'integer', (col) => col.notNull())
-    // No uri or action: an op joins to its record by (space, collection, rkey),
-    // and its action follows from cid and prev.
+    .addColumn('action', 'varchar', (col) => col.notNull())
+    .addColumn('uri', 'varchar', (col) => col.notNull()) // used for joins
     .addColumn('collection', 'varchar', (col) => col.notNull())
     .addColumn('rkey', 'varchar', (col) => col.notNull())
     .addColumn('cid', 'varchar')

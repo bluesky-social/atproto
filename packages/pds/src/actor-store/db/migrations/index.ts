@@ -7,6 +7,7 @@ import * as spacePolicy from './006-space-policy.js'
 import * as spaceNotifyService from './007-space-notify-service.js'
 import * as spaceWriterRemoved from './008-space-writer-removed.js'
 import * as spaceNotifyRegistration from './009-space-notify-registration.js'
+import * as spaceRemodel from './010-space-remodel.js'
 
 export default {
   '001': init,
@@ -18,4 +19,5 @@ export default {
   '007': spaceNotifyService,
   '008': spaceWriterRemoved,
   '009': spaceNotifyRegistration,
+  '010': spaceRemodel,
 }
