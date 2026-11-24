@@ -451,7 +451,7 @@ Use `onHandlerError` to log or report unexpected errors:
 ```typescript
 const router = new LexRouter({
   onHandlerError: async ({ error, request, method }) => {
-    // Log errors (excluding expected abort signals)
+    // Only called for server errors (5xx)
     console.error(`Error in ${method.nsid}:`, error)
     await reportToSentry(error)
   },
@@ -460,7 +460,7 @@ const router = new LexRouter({
 
 > [!NOTE]
 >
-> The callback is only invoked for unexpected errors, not for `LexError` instances or request aborts.
+> The callback receives the error as a `LexServerError` and is only invoked when its `status` is 5xx. Client errors (4xx), such as invalid input or a `LexServerError` with a 4xx status thrown by a handler, and request aborts are not reported.
 
 ## Node.js Server
 

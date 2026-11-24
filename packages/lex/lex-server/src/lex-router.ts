@@ -461,8 +461,9 @@ export type LexRouterOptions = {
   upgradeWebSocket?: UpgradeWebSocket
   /**
    * Callback invoked when an error occurs during request handling. Useful for
-   * logging and error reporting. Not called for client-induced errors (e.g.,
-   * request abortion).
+   * logging and error reporting. Only called for server errors (5xx); not
+   * called for client errors (4xx, e.g. invalid input or a `LexServerError`
+   * with a 4xx status thrown by the handler) or request aborts.
    */
   onHandlerError?: HandlerErrorHook
   /**
@@ -942,8 +943,11 @@ export class LexRouter {
 
     const error = LexServerError.from(cause)
 
+    // Client errors (4xx) are part of the method's normal operation
     const { onHandlerError } = this.options
-    if (onHandlerError) await onHandlerError({ error, request, method })
+    if (onHandlerError && error.status >= 500) {
+      await onHandlerError({ error, request, method })
+    }
 
     return error.toResponse()
   }
