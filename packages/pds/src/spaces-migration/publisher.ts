@@ -112,6 +112,7 @@ export class SpacesMigrationPublisher implements AsyncDisposable {
   }
 
   start(): void {
+    if (this.destroyed) throw new Error('Destroyed')
     if (this.state === 'entryway' || this.opts.state !== 'enabled') return
     // A bumped account is due now, wherever it was bumped
     this.stopWakingOnBump ??= this.progress.onBump(() => this.wake())

@@ -67,19 +67,21 @@ describe('recovery', () => {
 
   const backup = async (dids: string[]) => {
     for (const did of dids) {
-      const { dbLocation, keyLocation } = await ctx.actorStore.getLocation(did)
+      const { dbLocation, signingKeyLocation } =
+        await ctx.actorStore.getLocation(did)
       await fs.copyFile(dbLocation, `${dbLocation}-backup`)
-      await fs.copyFile(keyLocation, `${keyLocation}-backup`)
+      await fs.copyFile(signingKeyLocation, `${signingKeyLocation}-backup`)
     }
   }
 
   const restore = async (dids: string[]) => {
     for (const did of dids) {
-      const { dbLocation, keyLocation } = await ctx.actorStore.getLocation(did)
+      const { dbLocation, signingKeyLocation } =
+        await ctx.actorStore.getLocation(did)
       await rmIfExists(dbLocation)
-      await rmIfExists(keyLocation)
+      await rmIfExists(signingKeyLocation)
       await renameIfExists(`${dbLocation}-backup`, dbLocation)
-      await renameIfExists(`${keyLocation}-backup`, keyLocation)
+      await renameIfExists(`${signingKeyLocation}-backup`, signingKeyLocation)
     }
   }
 

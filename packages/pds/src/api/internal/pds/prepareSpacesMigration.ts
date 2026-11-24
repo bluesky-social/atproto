@@ -8,9 +8,10 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ input }) => {
       const { did } = input.body
       // Opening the store migrates it. Throws NotFound if there is none.
-      await ctx.actorStore.read(did, () => {})
+      const signingKey = await ctx.actorStore.read(did, (store) => {
+        return store.keypair()
+      })
       const kemKey = await ctx.actorStore.ensureKemKeypair(did)
-      const signingKey = await ctx.actorStore.keypair(did)
       return {
         encoding: 'application/json' as const,
         body: { kemKey: kemKey.did(), signingKey: signingKey.did() },

@@ -72,6 +72,7 @@ export class SpacesMigrationSweep implements AsyncDisposable {
   }
 
   start(): void {
+    if (this.destroyed) throw new Error('Destroyed')
     if (this.opts.state !== 'enabled') return
     this.running ??= this.run()
   }
