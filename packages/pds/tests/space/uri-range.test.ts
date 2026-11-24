@@ -1,8 +1,4 @@
-import {
-  type DidString,
-  type NsidString,
-  SpaceRef,
-} from '@atproto/syntax'
+import { type DidString, type NsidString, SpaceRef } from '@atproto/syntax'
 import {
   type UriRange,
   authoritySpaceRange,

@@ -212,7 +212,11 @@ describe('listSpaces', () => {
     const paged: string[] = []
     let cursor: string | undefined
     for (;;) {
-      const page = await h.space.listSpaces({ limit: 1, authority: ALICE, cursor })
+      const page = await h.space.listSpaces({
+        limit: 1,
+        authority: ALICE,
+        cursor,
+      })
       if (page.length === 0) break
       paged.push(SpaceRef.parse(page[0].uri).skey)
       cursor = page[0].uri
@@ -453,7 +457,9 @@ describe('batches past the SQL variable limit', () => {
     seed({ records: true })
     // Y is also linked from one space record and from the public repo, so it stays.
     h.sqlite
-      .prepare(`insert into space_record_blob (blobCid, recordUri) values (?, ?)`)
+      .prepare(
+        `insert into space_record_blob (blobCid, recordUri) values (?, ?)`,
+      )
       .run(blobY, uriAt(20_000))
     h.sqlite
       .prepare(`insert into record_blob (blobCid, recordUri) values (?, ?)`)

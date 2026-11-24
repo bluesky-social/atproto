@@ -218,7 +218,11 @@ export class SpaceReader {
       .leftJoin('space_record', (join) =>
         join
           .onRef('space_record.space', '=', 'space_record_oplog.space')
-          .onRef('space_record.collection', '=', 'space_record_oplog.collection')
+          .onRef(
+            'space_record.collection',
+            '=',
+            'space_record_oplog.collection',
+          )
           .onRef('space_record.rkey', '=', 'space_record_oplog.rkey')
           .onRef('space_record.cid', '=', 'space_record_oplog.cid'),
       )

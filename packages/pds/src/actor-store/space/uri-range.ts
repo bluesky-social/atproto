@@ -36,6 +36,5 @@ export const collectionRecordRange = (
 ): UriRange<AtUriString> => prefixRange(`${space}/${did}/${collection}/`)
 
 /** The spaces whose authority is `did`. */
-export const authoritySpaceRange = (
-  did: DidString,
-): UriRange<SpaceRefString> => prefixRange(`at://${did}/space/`)
+export const authoritySpaceRange = (did: DidString): UriRange<SpaceRefString> =>
+  prefixRange(`at://${did}/space/`)
