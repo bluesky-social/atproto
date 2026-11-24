@@ -1,3 +1,6 @@
+import { encode } from '@atproto/lex-cbor'
+import { cidForCbor } from '@atproto/lex-data'
+import { WriteOpAction } from '@atproto/repo'
 import type { DidString, NsidString } from '@atproto/syntax'
 import { SpaceRef } from '@atproto/syntax'
 import {
@@ -220,5 +223,124 @@ describe('listSpaces', () => {
   it('lists a re-created space again', async () => {
     await h.space.ensureSpace(refs[4])
     expect(await skeys({ type: A, authority: ALICE })).toEqual(['1', '2', '4'])
+  })
+})
+
+describe('listRepoOps', () => {
+  let h: SpaceTestDb
+  const ref = new SpaceRef(SPACE_DID, TYPE, 'ops')
+  const space = ref.toString()
+  const revs: string[] = []
+
+  const list = (opts: {
+    limit?: number
+    since?: string
+    cursor?: { rev: string; idx: number }
+  }) => h.space.listRepoOps(space, { limit: 10, ...opts })
+
+  beforeAll(async () => {
+    h = await createSpaceTestDb()
+    const commit1 = await putRecords(h, ref, [
+      [FOO, 'a'],
+      [FOO, 'b'],
+    ])
+    const record = { $type: FOO, rkey: 'a', updated: true }
+    const cid = await cidForCbor(encode(record))
+    const commit2 = await h.transact((txn) =>
+      txn.applyWrites(ref, [
+        {
+          action: WriteOpAction.Update,
+          uri: ref.recordUri(txn.did, FOO, 'a'),
+          cid,
+          record,
+          blobs: [],
+        },
+      ]),
+    )
+    const commit3 = await putRecords(h, ref, [[FOO, 'c']])
+    revs.push(commit1!.rev, commit2!.rev, commit3!.rev)
+  })
+
+  afterAll(async () => {
+    await h.close()
+  })
+
+  it('the oplog keeps only what it serves', () => {
+    const columns = h.sqlite
+      .prepare('pragma table_info(space_record_oplog)')
+      .all()
+      .map((row) => (row as { name: string }).name)
+    expect(columns).toEqual([
+      'space',
+      'rev',
+      'idx',
+      'collection',
+      'rkey',
+      'cid',
+      'prev',
+    ])
+  })
+
+  it('seeks to the cursor and joins records by path', async () => {
+    await list({ cursor: { rev: revs[0], idx: 0 } })
+    const lines = h.plan(lastQueryOn(h.queries, 'space_record_oplog'))
+    expectIndexed(
+      lines,
+      /sqlite_autoindex_space_record_oplog_1 \(space=\? AND \(rev,idx\)>\(\?,\?\)\)/,
+    )
+    expect(lines).toEqual(
+      expect.arrayContaining([
+        expect.stringMatching(
+          /space_record_path_idx \(space=\? AND collection=\? AND rkey=\?\)/,
+        ),
+      ]),
+    )
+  })
+
+  it('serves values only for ops that are still current', async () => {
+    const ops = await list({})
+    expect(ops.map((op) => [op.rev, op.idx, op.rkey])).toEqual([
+      [revs[0], 0, 'a'],
+      [revs[0], 1, 'b'],
+      [revs[1], 0, 'a'],
+      [revs[2], 0, 'c'],
+    ])
+    expect(ops.map((op) => op.value !== undefined)).toEqual([
+      false,
+      true,
+      true,
+      true,
+    ])
+  })
+
+  it('pages from the cursor, within and across commits', async () => {
+    const first = await list({ cursor: { rev: revs[0], idx: 0 } })
+    expect(first.map((op) => op.rkey)).toEqual(['b', 'a', 'c'])
+
+    const paged: string[] = []
+    let cursor: { rev: string; idx: number } | undefined
+    for (;;) {
+      const [op] = await list({ limit: 1, cursor })
+      if (!op) break
+      paged.push(`${op.rev}/${op.idx}`)
+      cursor = { rev: op.rev, idx: op.idx }
+    }
+    expect(paged).toEqual([
+      `${revs[0]}/0`,
+      `${revs[0]}/1`,
+      `${revs[1]}/0`,
+      `${revs[2]}/0`,
+    ])
+  })
+
+  it('applies whichever of since and cursor is later', async () => {
+    const after = async (opts: Parameters<typeof list>[0]) =>
+      (await list(opts)).map((op) => op.rev)
+    expect(
+      await after({ since: revs[1], cursor: { rev: revs[0], idx: 0 } }),
+    ).toEqual([revs[2]])
+    expect(
+      await after({ since: revs[0], cursor: { rev: revs[1], idx: 0 } }),
+    ).toEqual([revs[2]])
   })
 })

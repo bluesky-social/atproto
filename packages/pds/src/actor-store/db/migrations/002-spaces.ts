@@ -83,8 +83,8 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('space', 'varchar', (col) => col.notNull())
     .addColumn('rev', 'varchar', (col) => col.notNull())
     .addColumn('idx', 'integer', (col) => col.notNull())
-    .addColumn('action', 'varchar', (col) => col.notNull())
-    .addColumn('uri', 'varchar', (col) => col.notNull()) // used for joins
+    // No uri or action: an op joins to its record by (space, collection, rkey),
+    // and its action follows from cid and prev.
     .addColumn('collection', 'varchar', (col) => col.notNull())
     .addColumn('rkey', 'varchar', (col) => col.notNull())
     .addColumn('cid', 'varchar')

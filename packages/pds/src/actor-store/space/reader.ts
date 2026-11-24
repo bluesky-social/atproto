@@ -210,14 +210,16 @@ export class SpaceReader {
     },
   ): Promise<(SpaceRecordOplog & { value?: LexMap })[]> {
     const { limit, since, cursor, excludeValues } = opts
-    // Joining on the op's cid as well as its uri means only the record's *current*
+    // Joining on the op's cid as well as its path means only the record's *current*
     // value comes back. An op a later one superseded joins to nothing, so its stale
     // value is left off rather than served.
     let builder = this.db.db
       .selectFrom('space_record_oplog')
       .leftJoin('space_record', (join) =>
         join
-          .onRef('space_record.uri', '=', 'space_record_oplog.uri')
+          .onRef('space_record.space', '=', 'space_record_oplog.space')
+          .onRef('space_record.collection', '=', 'space_record_oplog.collection')
+          .onRef('space_record.rkey', '=', 'space_record_oplog.rkey')
           .onRef('space_record.cid', '=', 'space_record_oplog.cid'),
       )
       .selectAll('space_record_oplog')
@@ -230,14 +232,13 @@ export class SpaceReader {
       builder = builder.where('space_record_oplog.rev', '>', since)
     }
     if (cursor) {
+      // As a row value, so the planner seeks to the cursor in the primary key.
       builder = builder.where((eb) =>
-        eb.or([
-          eb('space_record_oplog.rev', '>', cursor.rev),
-          eb.and([
-            eb('space_record_oplog.rev', '=', cursor.rev),
-            eb('space_record_oplog.idx', '>', cursor.idx),
-          ]),
-        ]),
+        eb(
+          eb.refTuple('space_record_oplog.rev', 'space_record_oplog.idx'),
+          '>',
+          eb.tuple(cursor.rev, cursor.idx),
+        ),
       )
     }
     const rows = await builder.execute()

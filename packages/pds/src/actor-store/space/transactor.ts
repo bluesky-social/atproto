@@ -282,8 +282,6 @@ export class SpaceTransactor extends SpaceReader {
         space,
         rev,
         idx: ops.length,
-        action: write.action,
-        uri,
         collection,
         rkey,
         cid: cid?.toString() ?? null,
