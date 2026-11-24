@@ -1,6 +1,4 @@
-import type { WriteOpAction } from '@atproto/repo'
 import type {
-  AtUriString,
   NsidString,
   RecordKeyString,
   SpaceRefString,
@@ -10,8 +8,6 @@ export interface SpaceRecordOplog {
   space: SpaceRefString
   rev: string
   idx: number
-  action: WriteOpAction
-  uri: AtUriString
   collection: NsidString
   rkey: RecordKeyString
   cid: string | null

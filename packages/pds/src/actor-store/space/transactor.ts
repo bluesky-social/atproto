@@ -1,4 +1,4 @@
-import { TID } from '@atproto/common'
+import { TID, chunkArray } from '@atproto/common'
 import { encode } from '@atproto/lex-cbor'
 import { type Cid, cidForCbor, enumBlobRefs, parseCid } from '@atproto/lex-data'
 import { WriteOpAction } from '@atproto/repo'
@@ -29,17 +29,16 @@ import { SpaceReader } from './reader.js'
 
 export class SpaceTransactor extends SpaceReader {
   constructor(
-    public did: string,
-    public db: ActorDb,
+    did: DidString,
+    db: ActorDb,
     public blob: BlobTransactor,
   ) {
-    super(db)
+    super(did, db)
   }
 
   async ensureSpace(ref: SpaceRef): Promise<void> {
     const uri = ref.toString()
     const space = {
-      authority: ref.spaceDid,
       type: ref.spaceType,
       createdAt: new Date().toISOString(),
       deletedAt: null,
@@ -283,8 +282,6 @@ export class SpaceTransactor extends SpaceReader {
         space,
         rev,
         idx: ops.length,
-        action: write.action,
-        uri,
         collection,
         rkey,
         cid: cid?.toString() ?? null,
@@ -298,7 +295,10 @@ export class SpaceTransactor extends SpaceReader {
       .set({ setHash, rev })
       .where('space', '=', space)
       .execute()
-    await this.db.db.insertInto('space_record_oplog').values(ops).execute()
+    // In chunks: a commit can carry more ops than SQLite will bind variables for.
+    for (const chunk of chunkArray(ops, 500)) {
+      await this.db.db.insertInto('space_record_oplog').values(chunk).execute()
+    }
 
     await this.blob.deleteDereferencedSpaceBlobs(writes)
     for (const write of writes) {
@@ -326,7 +326,7 @@ export class SpaceTransactor extends SpaceReader {
     this.db.assertTransaction()
     await this.ensureRepo(ref)
     const space = ref.toString()
-    const did = this.did as DidString
+    const did = this.did
 
     const existing = await this.db.db
       .selectFrom('space_record')
