@@ -86,12 +86,10 @@ export function getAbortReason(signal: AbortSignal): unknown {
 export function buildAbortReason(
   message = 'Aborted',
   name = 'AbortError',
-): unknown {
+): Error {
   // Fallback for runtimes without a DOMException (React Native)
-  if (typeof DOMException === 'undefined') {
-    const error = new Error(message)
-    Object.defineProperty(error, 'name', { value: name })
-    return error
+  if (typeof DOMException !== 'function') {
+    return Object.assign(new Error(message), { name })
   }
 
   return new DOMException(message, name)

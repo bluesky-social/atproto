@@ -15,7 +15,6 @@ import {
   type XrpcResponseBody,
   type XrpcStreamResponse,
   type XrpcStreamResult,
-  applyDefaults,
   buildAgent,
   isService,
   mergeHeaders,
@@ -58,6 +57,7 @@ import listRecords, {
 import putRecord from './lexicons/com/atproto/repo/putRecord.js'
 import uploadBlob from './lexicons/com/atproto/repo/uploadBlob.js'
 import getBlob from './lexicons/com/atproto/sync/getBlob.js'
+import { applyDefaults } from './util.js'
 import {
   WriteOperationHelper,
   type WriteOperationsFactory,

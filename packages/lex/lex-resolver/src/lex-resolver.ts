@@ -11,7 +11,7 @@ import {
   type LexiconDocument,
   lexiconDocumentSchema,
 } from '@atproto/lex-document'
-import { canParseUrl, rkeyFor, xrpcSafe } from '@atproto/lex-rpc'
+import { rkeyFor, xrpcSafe } from '@atproto/lex-rpc'
 import type { RecordSchema } from '@atproto/lex-schema'
 import {
   MST,
@@ -38,6 +38,7 @@ import {
 } from './lex-resolver-error.js'
 import { main as lexiconSchemaRecord } from './lexicons/com/atproto/lexicon/schema.defs.js'
 import { main as getRecord } from './lexicons/com/atproto/sync/getRecord.defs.js'
+import { canParseUrl } from './util.js'
 
 /**
  * Result returned when successfully resolving a lexicon document.

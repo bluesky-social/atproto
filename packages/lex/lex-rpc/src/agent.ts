@@ -1,5 +1,5 @@
 import type { DidString } from '@atproto/lex-schema'
-import { mergeHeaders } from './util.js'
+import { mergeHeaders } from './headers.js'
 
 /**
  * A function that performs HTTP requests towards a service endpoint.
