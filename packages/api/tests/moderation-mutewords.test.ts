@@ -848,6 +848,94 @@ describe(`matchMuteWords`, () => {
         expect(match).toBeTruthy()
       })
     })
+
+    // New horror game release announced
+    describe(`新作ホラーゲームが発売決定`, () => {
+      const rt = new RichText({
+        text: `新作ホラーゲームが発売決定`,
+      })
+      rt.detectFacetsWithoutResolution()
+
+      const muteWord = {
+        value: 'ホラーゲーム',
+        targets: ['content'],
+        actorTarget: 'all',
+      }
+
+      it(`match: ホラーゲーム, no langs`, () => {
+        const match = matchMuteWords({
+          mutedWords: [muteWord],
+          text: rt.text,
+          facets: rt.facets,
+          outlineTags: [],
+        })
+
+        expect(match).toEqual([{ word: muteWord, predicate: muteWord.value }])
+      })
+
+      it(`match: ホラーゲーム, langs ['en']`, () => {
+        const match = matchMuteWords({
+          mutedWords: [muteWord],
+          text: rt.text,
+          facets: rt.facets,
+          outlineTags: [],
+          languages: ['en'],
+        })
+
+        expect(match).toEqual([{ word: muteWord, predicate: muteWord.value }])
+      })
+
+      it(`match: ホラーゲーム, langs ['en', 'ja']`, () => {
+        const match = matchMuteWords({
+          mutedWords: [muteWord],
+          text: rt.text,
+          facets: rt.facets,
+          outlineTags: [],
+          languages: ['en', 'ja'],
+        })
+
+        expect(match).toEqual([{ word: muteWord, predicate: muteWord.value }])
+      })
+    })
+
+    it.each([
+      // I like playing games
+      [`游戏`, `我喜欢玩游戏`],
+      [`게임`, `게임을 했다`],
+      [`เกม`, `ฉันชอบเล่นเกม`],
+    ])(`match: %s in %s, no langs`, (value, text) => {
+      const match = matchMuteWords({
+        mutedWords: [{ value, targets: ['content'], actorTarget: 'all' }],
+        text,
+        outlineTags: [],
+      })
+
+      expect(match).toBeTruthy()
+    })
+
+    it(`match: Latin word inside Japanese text, langs ['en', 'ja']`, () => {
+      // Ado's new song
+      const match = matchMuteWords({
+        mutedWords: [
+          { value: 'Ado', targets: ['content'], actorTarget: 'all' },
+        ],
+        text: `Adoの新曲`,
+        outlineTags: [],
+        languages: ['en', 'ja'],
+      })
+
+      expect(match).toBeTruthy()
+    })
+
+    it(`no match: Latin word still needs a word boundary, no langs`, () => {
+      const match = matchMuteWords({
+        mutedWords: [{ value: 'ad', targets: ['content'], actorTarget: 'all' }],
+        text: `This is a bad idea`,
+        outlineTags: [],
+      })
+
+      expect(match).toBeUndefined()
+    })
   })
 
   describe(`facet with multiple features`, () => {
