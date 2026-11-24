@@ -899,6 +899,81 @@ describe('Routing', () => {
       expect(ctx.request).toBe(request)
     })
 
+    it.each([400, 401, 404, 429, 499])(
+      'does not call onHandlerError for a thrown %i LexServerError',
+      async (status) => {
+        const onHandlerError = vi.fn<HandlerErrorHook>()
+        const router = new LexRouter({ onHandlerError })
+
+        router.add(io.example.status, async () => {
+          throw new LexServerError(status, { error: 'TestError' })
+        })
+
+        const request = new Request(
+          'https://example.com/xrpc/io.example.status',
+        )
+        const response = await router.fetch(request)
+
+        expect(response.status).toBe(status)
+        expect(onHandlerError).not.toHaveBeenCalled()
+      },
+    )
+
+    it.each([500, 502, 503])(
+      'calls onHandlerError for a thrown %i LexServerError',
+      async (status) => {
+        const onHandlerError = vi.fn<HandlerErrorHook>()
+        const router = new LexRouter({ onHandlerError })
+
+        const error = new LexServerError(status, { error: 'TestError' })
+        router.add(io.example.status, async () => {
+          throw error
+        })
+
+        const request = new Request(
+          'https://example.com/xrpc/io.example.status',
+        )
+        const response = await router.fetch(request)
+
+        expect(response.status).toBe(status)
+        expect(onHandlerError).toHaveBeenCalledTimes(1)
+        expect(onHandlerError.mock.calls[0][0].error).toBe(error)
+      },
+    )
+
+    it('does not call onHandlerError for auth errors', async () => {
+      const onHandlerError = vi.fn<HandlerErrorHook>()
+      const router = new LexRouter({ onHandlerError })
+
+      router.add(io.example.status, {
+        auth: () => {
+          throw new LexServerAuthError('AuthenticationRequired', 'nope')
+        },
+        handler: handlers.status,
+      })
+
+      const request = new Request('https://example.com/xrpc/io.example.status')
+      const response = await router.fetch(request)
+
+      expect(response.status).toBe(401)
+      expect(onHandlerError).not.toHaveBeenCalled()
+    })
+
+    it('does not call onHandlerError for invalid params', async () => {
+      const onHandlerError = vi.fn<HandlerErrorHook>()
+      const router = new LexRouter({ onHandlerError })
+
+      router.add(io.example.paramsToBody, handlers.paramsToBody)
+
+      const request = new Request(
+        'https://example.com/xrpc/io.example.paramsToBody',
+      )
+      const response = await router.fetch(request)
+
+      expect(response.status).toBe(400)
+      expect(onHandlerError).not.toHaveBeenCalled()
+    })
+
     it('does not call onHandlerError for aborted requests', async () => {
       const onHandlerError = vi.fn<HandlerErrorHook>()
       const router = new LexRouter({ onHandlerError })
