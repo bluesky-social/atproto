@@ -47,6 +47,12 @@ import { SpaceReader } from './space-reader.js'
 import { SpaceWriteOperationHelper } from './write-operation-builder.js'
 
 export * from './space-reader.js'
+
+// Records written during the spaces alpha may embed space URIs in its
+// `at://{spaceDid}/space/...` form, which only lenient validation accepts.
+// @TODO remove before beta, with the alpha form.
+const LENIENT = { strict: false }
+
 export type {
   AccountAgent,
   Agent,
@@ -582,7 +588,7 @@ export class SpaceClient<S extends Space = Space> extends SpaceReader<S> {
     const schema = this.collectionSchema(collection)
     const rkey = schema.keySchema.parse(rkeyFor(schema, options.rkey))
     const response = await this.getRecord(collection, rkey, options)
-    const value = schema.validate(response.body.value)
+    const value = schema.validate(response.body.value, LENIENT)
     return { ...response.body, value }
   }
 

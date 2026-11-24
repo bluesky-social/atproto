@@ -16,7 +16,7 @@ import {
   verifySpaceToken,
 } from './credential.js'
 
-const SPACE: SpaceRefString = 'at://did:example:space/space/app.bsky.group/test'
+const SPACE: SpaceRefString = 'at:space/did:example:space/app.bsky.group/test'
 const USER: DidString = 'did:example:alice'
 const AUTHORITY: DidString = 'did:example:space'
 const SPACE_HOST = `${AUTHORITY}#atproto_pds`
@@ -315,7 +315,7 @@ describe(verifySpaceToken, () => {
     await expect(
       verifySpaceToken('delegation', await mint.delegation(), {
         getSigningKey: keyOf(userKey),
-        sub: 'at://did:example:space/space/app.bsky.group/other',
+        sub: 'at:space/did:example:space/app.bsky.group/other',
       }),
     ).rejects.toMatchObject(
       tokenError('BadJwtSub', /does not match the requested space/),

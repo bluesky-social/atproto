@@ -1263,7 +1263,9 @@ function recordClassifier(
       return invalid(new IssueInvalidValue(['$type'], $type, expected))
     }
 
-    const result = schema.safeValidate(value)
+    // Lenient, as records written during the spaces alpha may embed space URIs
+    // in its form. @TODO remove before beta.
+    const result = schema.safeValidate(value, { strict: false })
     return result.success
       ? { valid: true, value: result.value }
       : { valid: false, error: result.reason }

@@ -11,7 +11,12 @@ import { TestNetworkNoAppView } from '@atproto/dev-env'
 import type { CidString, Client } from '@atproto/lex-client'
 import { getBlobCidString } from '@atproto/lex-data'
 import { LexValidationError, l } from '@atproto/lex-schema'
-import { SpaceRef, type SpaceRefString, isValidTid } from '@atproto/syntax'
+import {
+  type AtUriString,
+  SpaceRef,
+  type SpaceRefString,
+  isValidTid,
+} from '@atproto/syntax'
 import { createDidResolver } from '@atproto-labs/did-resolver'
 import {
   type AtprotoDidResolver,
@@ -100,7 +105,7 @@ describe('SpaceClient', () => {
       })
       expect(created).toBeInstanceOf(SpaceClient)
       expect(created.uri).toBe(
-        `at://${alice.assertDid}/space/${group.spaceType}/created`,
+        `at:space/${alice.assertDid}/${group.spaceType}/created`,
       )
 
       await created.create(note.$build({ text: 'first' }))
@@ -176,7 +181,7 @@ describe('SpaceClient', () => {
         { agent: bob.agent },
       )
       expect(opened.uri).toBe(
-        `at://${alice.assertDid}/space/${bookmarks.spaceType}/self`,
+        `at:space/${alice.assertDid}/${bookmarks.spaceType}/self`,
       )
     })
   })
@@ -472,6 +477,39 @@ describe('SpaceClient', () => {
 
       const records = await collect(open(alice, uri).allRecords())
       expect(records.map((r) => r.repo)).toEqual([alice.assertDid])
+    })
+  })
+
+  // @TODO remove before beta, with the alpha form.
+  describe('records written during the spaces alpha', () => {
+    const reply = l.record(
+      'tid',
+      'com.example.spaceReply',
+      l.object({ parent: l.string({ format: 'at-uri' }) }),
+    )
+    const replyGroup = l.space('any', group.spaceType, [note, reply])
+
+    it('reads a space URI in its alpha form as valid', async () => {
+      const uri = await createGroup(alice)
+      const aliceSpace = SpaceClient.openSpace(replyGroup, uri, {
+        agent: alice.agent,
+        didResolver,
+      })
+      const parent = uri.replace(
+        /^at:space\/([^/]+)\//,
+        'at://$1/space/',
+      ) as AtUriString
+      // Written raw, as the record schema refuses the alpha form strictly.
+      expect(reply.$matches(reply.$build({ parent }))).toBe(false)
+      const { body } = await aliceSpace.createRecord(reply.$build({ parent }))
+      const rkey = rkeyOf(body.uri)
+
+      const got = await aliceSpace.get(reply.$type, { rkey })
+      expect(got.value.parent).toBe(parent)
+      const { records } = await aliceSpace.list(reply.$type)
+      expect(records).toEqual([expect.objectContaining({ valid: true })])
+      const all = await collect(aliceSpace.allRecords())
+      expect(all).toEqual([expect.objectContaining({ valid: true })])
     })
   })
 

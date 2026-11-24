@@ -17,7 +17,7 @@ const records = await Promise.all([
 ])
 
 const commit = RepoCommit.fromRecords(records).toCommit({
-  space: 'at://did:example:space/space/app.bsky.group/test',
+  space: 'at:space/did:example:space/app.bsky.group/test',
   repo: 'did:example:alice',
   rev: '3kbcq3p7ad42b',
 })

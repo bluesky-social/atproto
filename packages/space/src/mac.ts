@@ -142,7 +142,7 @@ export type CreateMacParams = MacRequest & {
 /**
  * The response headers for a commit: an `Atproto-Space-Commit` header describing
  * it, and a MAC covering that header. The header holds the commit's fields, e.g.
- * `ver=1, repo="did:example:alice", space="at://...", rev="3mwcj3b6uak2f", data=:q3J0...=:`
+ * `ver=1, repo="did:example:alice", space="at:space/...", rev="3mwcj3b6uak2f", data=:q3J0...=:`
  */
 export function createCommitMacHeaders(
   commit: SpaceCommit,
@@ -163,7 +163,7 @@ export function createCommitMacHeaders(
 /**
  * The response headers for a record: an `Atproto-Space-Record` header naming it,
  * and a MAC covering that header. The header holds the record's uri and cid, e.g.
- * `uri="at://...", cid="bafyrei..."`
+ * `uri="at:space/...", cid="bafyrei..."`
  */
 export function createRecordMacHeaders(
   uri: AtUriString,

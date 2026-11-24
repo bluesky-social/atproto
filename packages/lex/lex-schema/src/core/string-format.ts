@@ -69,6 +69,19 @@ export {
 export { type SpaceRefString, isSpaceRefString } from '@atproto/syntax'
 
 /**
+ * Lenient version of {@link isSpaceRefString} that does not enforce the validity
+ * of the space key, and accepts a space ref in its spaces alpha form,
+ * `at://{spaceDid}/space/{spaceType}/{skey}`.
+ *
+ * @see {@link isSpaceRefString}
+ */
+export function isSpaceRefStringLenient<I>(
+  input: I,
+): input is I & SpaceRefString {
+  return isSpaceRefString(input, { strict: false })
+}
+
+/**
  * Lenient version of {@link isAtUriString} that does not enforce the validity
  * of the record key (rkey) path component (if present).
  *
@@ -268,7 +281,7 @@ const stringFormatVerifiers: {
   language: [isLanguageString, isLanguageStringLenient],
   nsid: [isNsidString],
   'record-key': [isRecordKeyString],
-  'space-ref': [isSpaceRefString],
+  'space-ref': [isSpaceRefString, isSpaceRefStringLenient],
   tid: [isTidString],
   uri: [isUriString],
 })

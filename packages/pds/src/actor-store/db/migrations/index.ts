@@ -8,6 +8,7 @@ import * as spaceNotifyService from './007-space-notify-service.js'
 import * as spaceWriterRemoved from './008-space-writer-removed.js'
 import * as spaceNotifyRegistration from './009-space-notify-registration.js'
 import * as spaceRemodel from './010-space-remodel.js'
+import * as spaceUri from './011-space-uri.js'
 
 export default {
   '001': init,
@@ -20,4 +21,5 @@ export default {
   '008': spaceWriterRemoved,
   '009': spaceNotifyRegistration,
   '010': spaceRemodel,
+  '011': spaceUri,
 }
