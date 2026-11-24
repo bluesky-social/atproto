@@ -6,6 +6,7 @@ import { AtUri, SpaceRef } from '@atproto/syntax'
 import {
   SPACE_DID,
   type SpaceTestDb,
+  countOf,
   createSpaceTestDb,
   expectIndexed,
   lastQueryOn,
@@ -56,6 +57,30 @@ describe('space record paging', () => {
   it('streamRecords pages without sorting', async () => {
     await streamPaths()
     expectIndexed(h.plan(lastQueryOn(h.queries, 'space_record')), PK_RANGE)
+  })
+
+  // EXPLAIN QUERY PLAN prints (uri>? AND uri<?) whichever bound the seek
+  // starts from. With two bounds on one side, SQLite seeks on one and checks
+  // the other row by row, so a cursor must replace the range's bound.
+  it('seeks to the cursor rather than filtering by it', async () => {
+    await h.space.listRecords(space, {
+      limit: 2,
+      excludeValues: true,
+      cursor: uriOf(FOO, 'b'),
+    })
+    expect(countOf(lastQueryOn(h.queries, 'space_record'), '"uri" < ?')).toBe(1)
+
+    await h.space.listRecords(space, {
+      limit: 2,
+      excludeValues: true,
+      collection: FOO,
+      cursor: uriOf(FOO, 'b'),
+    })
+    expect(countOf(lastQueryOn(h.queries, 'space_record'), '"uri" < ?')).toBe(1)
+
+    // The last page streamRecords reads starts from a cursor.
+    await streamPaths()
+    expect(countOf(lastQueryOn(h.queries, 'space_record'), '"uri" > ?')).toBe(1)
   })
 
   it('listRecords pages without sorting', async () => {
@@ -224,6 +249,17 @@ describe('listSpaces', () => {
     expect(paged).toEqual(['1', '2', '3'])
   })
 
+  it('seeks to the cursor within an authority', async () => {
+    await skeys({ authority: ALICE, cursor: refs[1].toString() })
+    expect(countOf(lastQueryOn(h.queries, 'space'), '"space"."uri" > ?')).toBe(
+      1,
+    )
+    await skeys({ type: A, authority: ALICE, cursor: refs[1].toString() })
+    expect(countOf(lastQueryOn(h.queries, 'space'), '"space"."uri" > ?')).toBe(
+      1,
+    )
+  })
+
   it('lists a re-created space again', async () => {
     await h.space.ensureSpace(refs[4])
     expect(await skeys({ type: A, authority: ALICE })).toEqual(['1', '2', '4'])
@@ -337,6 +373,27 @@ describe('listRepoOps', () => {
     ])
   })
 
+  it('seeks from whichever of since and cursor is later', async () => {
+    const TUPLE =
+      '("space_record_oplog"."rev", "space_record_oplog"."idx") > (?, ?)'
+    const SINCE = '"space_record_oplog"."rev" > ?'
+    const bounds = async (opts: Parameters<typeof list>[0]) => {
+      await list(opts)
+      const q = lastQueryOn(h.queries, 'space_record_oplog')
+      return { tuple: countOf(q, TUPLE), since: countOf(q, SINCE) }
+    }
+    // As lex-space's syncRepo pages: since stays put while the cursor advances.
+    expect(
+      await bounds({ since: revs[0], cursor: { rev: revs[1], idx: 0 } }),
+    ).toEqual({ tuple: 1, since: 0 })
+    expect(
+      await bounds({ since: revs[1], cursor: { rev: revs[0], idx: 0 } }),
+    ).toEqual({ tuple: 0, since: 1 })
+    expect(
+      await bounds({ since: revs[0], cursor: { rev: revs[0], idx: 0 } }),
+    ).toEqual({ tuple: 0, since: 1 })
+  })
+
   it('applies whichever of since and cursor is later', async () => {
     const after = async (opts: Parameters<typeof list>[0]) =>
       (await list(opts)).map((op) => op.rev)
@@ -383,8 +440,22 @@ describe('isBlobInSpace', () => {
       h.plan(q),
       /COVERING INDEX sqlite_autoindex_space_record_blob_1 \(blobCid=\? AND recordUri>\? AND recordUri<\?\)/,
     )
-    expect(q.sql).not.toMatch(/join/i)
     expect(q.sql).toMatch(/limit/i)
+  })
+
+  // A link can outlive its record (a batch that creates and then deletes it).
+  // The blob is in the space only while a record there references it.
+  it('ignores a link whose record is gone', async () => {
+    await h.db.db
+      .insertInto('space_record_blob')
+      .values({
+        blobCid: 'bafyorphan',
+        recordUri: ref.recordUri(h.space.did, FOO, 'gone').toString(),
+      })
+      .execute()
+    expect(await h.space.isBlobInSpace(ref.toString(), 'bafyorphan')).toBe(
+      false,
+    )
   })
 
   it('finds the blob only in its own space', async () => {
@@ -407,7 +478,8 @@ describe('batches past the SQL variable limit', () => {
   const uriAt = (i: number) =>
     ref.recordUri(h.space.did, FOO, `r${i}`).toString()
 
-  const seed = (opts: { records: boolean }) => {
+  const MID = 20_000
+  const seed = (opts: { records: boolean; linkY?: boolean }) => {
     const now = new Date().toISOString()
     const insertBlob = h.sqlite.prepare(
       `insert into blob (cid, mimeType, size, createdAt) values (?, 'image/png', 1, ?)`,
@@ -424,6 +496,8 @@ describe('batches past the SQL variable limit', () => {
       for (let i = 0; i < N; i++) {
         if (opts.records) insertRecord.run(uriAt(i), space, FOO, `r${i}`, now)
         insertLink.run(blobX, uriAt(i))
+        // Mid-batch, so its link is dereferenced in a middle chunk.
+        if (opts.linkY && i === MID) insertLink.run(blobY, uriAt(i))
       }
     })()
   }
@@ -454,13 +528,14 @@ describe('batches past the SQL variable limit', () => {
   })
 
   it('deleteSpaceBlobs cleans up a blob linked from 33,000 records', async () => {
-    seed({ records: true })
     // Y is also linked from one space record and from the public repo, so it stays.
-    h.sqlite
+    seed({ records: true, linkY: true })
+    const { before } = h.sqlite
       .prepare(
-        `insert into space_record_blob (blobCid, recordUri) values (?, ?)`,
+        `select count(*) as before from space_record_blob where rowid < (select rowid from space_record_blob where blobCid = ?)`,
       )
-      .run(blobY, uriAt(20_000))
+      .get(blobY) as { before: number }
+    expect(before).toBe(MID + 1)
     h.sqlite
       .prepare(`insert into record_blob (blobCid, recordUri) values (?, ?)`)
       .run(blobY, `at://${h.space.did}/com.example.post/1`)

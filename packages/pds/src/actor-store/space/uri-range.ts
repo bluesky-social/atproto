@@ -38,3 +38,23 @@ export const collectionRecordRange = (
 /** The spaces whose authority is `did`. */
 export const authoritySpaceRange = (did: DidString): UriRange<SpaceRefString> =>
   prefixRange(`at://${did}/space/`)
+
+// A paging cursor replaces the range's bound on its side, rather than adding a
+// second bound there: given two lower (or upper) bounds on a column, SQLite
+// seeks on one and checks the other row by row, so later pages would read every
+// row before the cursor again. A range's bounds are ASCII, so comparing them to
+// a cursor in JS agrees with SQLite's byte order, whatever the cursor holds.
+
+/** The uris in `range` after `cursor`. */
+export const rangeAfter = <T extends string>(
+  range: UriRange<T>,
+  cursor?: T,
+): UriRange<T> =>
+  cursor !== undefined && cursor > range.gt ? { ...range, gt: cursor } : range
+
+/** The uris in `range` before `cursor`. */
+export const rangeBefore = <T extends string>(
+  range: UriRange<T>,
+  cursor?: T,
+): UriRange<T> =>
+  cursor !== undefined && cursor < range.lt ? { ...range, lt: cursor } : range

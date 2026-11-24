@@ -89,6 +89,11 @@ export function lastQueryOn(
   return found
 }
 
+/** How many times `text` occurs in the query's SQL. */
+export function countOf(q: CompiledQuery, text: string): number {
+  return q.sql.split(text).length - 1
+}
+
 /** Asserts the plan reads through `uses`, without a sort or a table scan. */
 export function expectIndexed(lines: string[], uses: RegExp): void {
   expect(lines).toEqual(expect.arrayContaining([expect.stringMatching(uses)]))

@@ -23,6 +23,8 @@ import type {
 import {
   authoritySpaceRange,
   collectionRecordRange,
+  rangeAfter,
+  rangeBefore,
   spaceRecordRange,
 } from './uri-range.js'
 
@@ -70,7 +72,14 @@ export class SpaceReader {
     type?: NsidString
     authority?: DidString
   }) {
-    const { limit, cursor, type, authority } = opts
+    const { limit, type, authority } = opts
+    let cursor: SpaceRefString | undefined
+    if (opts.cursor) {
+      if (!isSpaceRefString(opts.cursor)) {
+        throw new InvalidRequestError('Malformed cursor', 'InvalidCursor')
+      }
+      cursor = opts.cursor
+    }
     let builder = this.db.db
       .selectFrom('space')
       .leftJoin('space_repo', 'space_repo.space', 'space.uri')
@@ -86,19 +95,15 @@ export class SpaceReader {
       .orderBy('space.uri', 'asc')
       .limit(limit)
     if (authority) {
-      const range = authoritySpaceRange(authority)
+      const range = rangeAfter(authoritySpaceRange(authority), cursor)
       builder = builder
         .where('space.uri', '>', range.gt)
         .where('space.uri', '<', range.lt)
+    } else if (cursor) {
+      builder = builder.where('space.uri', '>', cursor)
     }
     if (type) {
       builder = builder.where('space.type', '=', type)
-    }
-    if (cursor) {
-      if (!isSpaceRefString(cursor)) {
-        throw new InvalidRequestError('Malformed cursor', 'InvalidCursor')
-      }
-      builder = builder.where('space.uri', '>', cursor)
     }
     return builder.execute()
   }
@@ -147,13 +152,23 @@ export class SpaceReader {
       excludeValues?: boolean
     },
   ): Promise<(Omit<SpaceRecord, 'value'> & { value?: LexMap })[]> {
-    const { limit, cursor, collection, excludeValues } = opts
+    const { limit, collection, excludeValues } = opts
+    let cursor: AtUriString | undefined
+    if (opts.cursor) {
+      if (!isAtUriString(opts.cursor)) {
+        throw new InvalidRequestError('Malformed cursor', 'InvalidCursor')
+      }
+      cursor = opts.cursor
+    }
     // A uri range rather than `space = ?`, which would have the planner choose
     // space_record_path_idx and sort the whole space on every page.
-    const range = collection
-      ? collectionRecordRange(space, this.did, collection)
-      : spaceRecordRange(space)
-    let builder = this.db.db
+    const range = rangeBefore(
+      collection
+        ? collectionRecordRange(space, this.did, collection)
+        : spaceRecordRange(space),
+      cursor,
+    )
+    const rows = await this.db.db
       .selectFrom('space_record')
       .select(RECORD_COLUMNS)
       .where('uri', '>', range.gt)
@@ -161,13 +176,7 @@ export class SpaceReader {
       .orderBy('uri', 'desc')
       .limit(limit)
       .$if(!excludeValues, (qb) => qb.select('value'))
-    if (cursor) {
-      if (!isAtUriString(cursor)) {
-        throw new InvalidRequestError('Malformed cursor', 'InvalidCursor')
-      }
-      builder = builder.where('uri', '<', cursor)
-    }
-    const rows = await builder.execute()
+      .execute()
     return rows.map((row) => ({
       ...row,
       value: row.value && cborToLexRecord(row.value),
@@ -175,23 +184,20 @@ export class SpaceReader {
   }
 
   async *streamRecords(space: SpaceRefString): AsyncGenerator<SpaceRecord> {
-    const range = spaceRecordRange(space)
     let cursor: AtUriString | undefined
     while (true) {
-      let builder = this.db.db
+      // A uri range, not `space = ?`: see listRecords.
+      const range = rangeAfter(spaceRecordRange(space), cursor)
+      const rows = await this.db.db
         .selectFrom('space_record')
         .selectAll()
-        // A uri range, not `space = ?`: see listRecords.
         .where('uri', '>', range.gt)
         .where('uri', '<', range.lt)
         // Every uri in a space repo shares a prefix, so this is also record path
         // order, as a serialized repo requires.
         .orderBy('uri', 'asc')
         .limit(500)
-      if (cursor) {
-        builder = builder.where('uri', '>', cursor)
-      }
-      const rows = await builder.execute()
+        .execute()
       for (const row of rows) {
         yield row
       }
@@ -232,11 +238,12 @@ export class SpaceReader {
       .orderBy('space_record_oplog.idx', 'asc')
       .limit(limit)
       .$if(!excludeValues, (qb) => qb.select('space_record.value'))
-    if (since) {
-      builder = builder.where('space_record_oplog.rev', '>', since)
-    }
-    if (cursor) {
-      // As a row value, so the planner seeks to the cursor in the primary key.
+    // Only the later of since and the cursor bounds the ops, since given both,
+    // SQLite seeks on one and checks the other row by row. A cursor after since
+    // implies it; one at or before it is implied by it. `since` is a TID, so
+    // comparing it in JS agrees with SQLite's byte order. The cursor is a row
+    // value, so the planner seeks to it in the primary key.
+    if (cursor && (!since || cursor.rev > since)) {
       builder = builder.where((eb) =>
         eb(
           eb.refTuple('space_record_oplog.rev', 'space_record_oplog.idx'),
@@ -244,6 +251,8 @@ export class SpaceReader {
           eb.tuple(cursor.rev, cursor.idx),
         ),
       )
+    } else if (since) {
+      builder = builder.where('space_record_oplog.rev', '>', since)
     }
     const rows = await builder.execute()
     return rows.map((row) => ({
@@ -285,10 +294,12 @@ export class SpaceReader {
     space: SpaceRefString,
     blobCid: string,
   ): Promise<boolean> {
-    // A link's record uri places it in the space, so no join is needed.
+    // The link's uri places it in the space. The join drops a link that outlived
+    // its record, which only costs a primary-key lookup per link.
     const range = spaceRecordRange(space)
     const row = await this.db.db
       .selectFrom('space_record_blob')
+      .innerJoin('space_record', 'space_record.uri', 'recordUri')
       .select('blobCid')
       .where('blobCid', '=', blobCid)
       .where('recordUri', '>', range.gt)
