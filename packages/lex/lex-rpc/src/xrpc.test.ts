@@ -1,3 +1,6 @@
+import { once } from 'node:events'
+import { createServer } from 'node:http'
+import type { AddressInfo } from 'node:net'
 import { assert, describe, expect, expectTypeOf, it, vi } from 'vitest'
 import { parseCid } from '@atproto/lex-data'
 import { lexToJson } from '@atproto/lex-json'
@@ -829,6 +832,127 @@ describe(xrpc, () => {
 
       expect(response.success).toBe(true)
       expect(response.body).toEqual({ id: 'valid' })
+    })
+  })
+
+  describe('redirect', () => {
+    it('follows redirects by default', async () => {
+      const fetchHandler = vi.fn<FetchHandler>(async (path) => {
+        return path.startsWith('/xrpc/io.example.testQuery')
+          ? Response.json({ value: 'ok' })
+          : Response.json({ id: 'ok' })
+      })
+
+      await xrpc(fetchHandler, testQuery)
+      await xrpc(fetchHandler, testProcedure, { body: { text: 'hello' } })
+
+      expect(fetchHandler.mock.calls.map(([, init]) => init.redirect)).toEqual([
+        'follow',
+        'follow',
+      ])
+    })
+
+    it('passes the redirect mode to the fetch handler', async () => {
+      const fetchHandler = vi.fn<FetchHandler>(async (path) => {
+        return path.startsWith('/xrpc/io.example.testQuery')
+          ? Response.json({ value: 'ok' })
+          : Response.json({ id: 'ok' })
+      })
+
+      await xrpc(fetchHandler, testQuery, { redirect: 'error' })
+      await xrpc(fetchHandler, testProcedure, {
+        body: { text: 'hello' },
+        redirect: 'manual',
+      })
+
+      expect(fetchHandler.mock.calls.map(([, init]) => init.redirect)).toEqual([
+        'error',
+        'manual',
+      ])
+    })
+
+    it('does not retry unfollowed redirects', async () => {
+      const fetchHandler = vi.fn<FetchHandler>(async () => {
+        return new Response(null, {
+          status: 302,
+          headers: {
+            location: 'https://example.com/xrpc/io.example.testQuery',
+          },
+        })
+      })
+
+      await expect(
+        xrpc(fetchHandler, testQuery, {
+          redirect: 'manual',
+          maxRetries: 2,
+          minRetryTimeout: 0,
+        }),
+      ).rejects.toSatisfy((err) => {
+        assert(err instanceof XrpcInvalidResponseError)
+        expect(err.shouldRetry()).toBe(false)
+        expect(err.response.headers.get('location')).toBe(
+          'https://example.com/xrpc/io.example.testQuery',
+        )
+        return true
+      })
+      expect(fetchHandler).toHaveBeenCalledOnce()
+    })
+
+    describe('with the global fetch', () => {
+      // Redirects /xrpc/* to /target/*, which answers with a JSON payload
+      async function startServer() {
+        const server = createServer((req, res) => {
+          if (req.url?.startsWith('/xrpc/')) {
+            res.writeHead(302, { location: `/target/${req.url.slice(6)}` })
+            res.end()
+          } else {
+            res.writeHead(200, { 'content-type': 'application/json' })
+            res.end(JSON.stringify({ value: 'redirected' }))
+          }
+        })
+        await once(server.listen(0), 'listening')
+        const { port } = server.address() as AddressInfo
+        return {
+          service: `http://localhost:${port}`,
+          async [Symbol.asyncDispose]() {
+            server.closeAllConnections()
+            await new Promise((resolve) => server.close(resolve))
+          },
+        }
+      }
+
+      it('follows redirects with "follow"', async () => {
+        await using server = await startServer()
+
+        const response = await xrpc(server.service, testQuery, {
+          redirect: 'follow',
+        })
+
+        expect(response.body).toEqual({ value: 'redirected' })
+      })
+
+      it('fails with XrpcFetchError with "error"', async () => {
+        await using server = await startServer()
+
+        await expect(
+          xrpc(server.service, testQuery, { redirect: 'error' }),
+        ).rejects.toBeInstanceOf(XrpcFetchError)
+      })
+
+      it('fails with XrpcInvalidResponseError with "manual"', async () => {
+        await using server = await startServer()
+
+        await expect(
+          xrpc(server.service, testQuery, { redirect: 'manual' }),
+        ).rejects.toSatisfy((err) => {
+          assert(err instanceof XrpcInvalidResponseError)
+          expect(err.response.status).toBe(302)
+          expect(err.response.headers.get('location')).toBe(
+            '/target/io.example.testQuery',
+          )
+          return true
+        })
+      })
     })
   })
 
