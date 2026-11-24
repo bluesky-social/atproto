@@ -1,5 +1,12 @@
 # @atproto/identity
 
+## 0.5.27
+
+### Patch Changes
+
+- Updated dependencies [[`50ffa3a`](https://github.com/bluesky-social/atproto/commit/50ffa3a18cdae58b7dedf777aafc0bc0eb471c41), [`50ffa3a`](https://github.com/bluesky-social/atproto/commit/50ffa3a18cdae58b7dedf777aafc0bc0eb471c41), [`50ffa3a`](https://github.com/bluesky-social/atproto/commit/50ffa3a18cdae58b7dedf777aafc0bc0eb471c41)]:
+  - @atproto-labs/fetch-node@0.5.0
+
 ## 0.5.26
 
 ### Patch Changes

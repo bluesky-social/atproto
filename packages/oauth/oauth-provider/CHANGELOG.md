@@ -1,5 +1,18 @@
 # @atproto/oauth-provider
 
+## 0.27.3
+
+### Patch Changes
+
+- Updated dependencies [[`50ffa3a`](https://github.com/bluesky-social/atproto/commit/50ffa3a18cdae58b7dedf777aafc0bc0eb471c41), [`50ffa3a`](https://github.com/bluesky-social/atproto/commit/50ffa3a18cdae58b7dedf777aafc0bc0eb471c41), [`50ffa3a`](https://github.com/bluesky-social/atproto/commit/50ffa3a18cdae58b7dedf777aafc0bc0eb471c41), [`58ca16d`](https://github.com/bluesky-social/atproto/commit/58ca16d32ccb50b30e1d4c800c6263af7511a4ff)]:
+  - @atproto-labs/fetch-node@0.5.0
+  - @atproto/lex-resolver@0.4.10
+  - @atproto-labs/did-resolver@0.3.15
+  - @atproto/oauth-provider-ui@0.11.2
+  - @atproto/oauth-resolver@0.0.5
+  - @atproto-labs/handle-resolver-node@0.2.19
+  - @atproto/lex-document@0.1.19
+
 ## 0.27.2
 
 ### Patch Changes

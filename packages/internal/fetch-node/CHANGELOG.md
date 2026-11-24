@@ -1,5 +1,19 @@
 # @atproto-labs/fetch-node
 
+## 0.5.0
+
+### Minor Changes
+
+- [#6015](https://github.com/bluesky-social/atproto/pull/6015) [`50ffa3a`](https://github.com/bluesky-social/atproto/commit/50ffa3a18cdae58b7dedf777aafc0bc0eb471c41) Thanks [@matthieusieben](https://github.com/matthieusieben)! - **Breaking:** `isIp`, `ifString`, `MaxBytesTransformStream`, `padLines`, `logCancellationError`, `stringifyMessage` and the `ThisParameterOverride` type are no longer exported from `@atproto-labs/fetch`, nor re-exported from `@atproto-labs/fetch-node`.
+
+### Patch Changes
+
+- [#6015](https://github.com/bluesky-social/atproto/pull/6015) [`50ffa3a`](https://github.com/bluesky-social/atproto/commit/50ffa3a18cdae58b7dedf777aafc0bc0eb471c41) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add a `lookup` option to `safeFetchWrap` and `unicastFetchWrap` to resolve hostnames with something other than `dns.lookup`. The unicast check still applies to its results, and an address that is not a valid IP is now rejected. `unicastLookupWrap(lookup)` applies the same check to any lookup function, for use with a custom dispatcher.
+
+- [#6015](https://github.com/bluesky-social/atproto/pull/6015) [`50ffa3a`](https://github.com/bluesky-social/atproto/commit/50ffa3a18cdae58b7dedf777aafc0bc0eb471c41) Thanks [@matthieusieben](https://github.com/matthieusieben)! - `safeFetchWrap`, `unicastFetchWrap` and `safeDispatchFetchWrap` now return an `AsyncDisposable` fetch function. Disposing it destroys its undici dispatcher, aborting any request still in flight.
+- Updated dependencies [[`c9d2ad9`](https://github.com/bluesky-social/atproto/commit/c9d2ad93cf0f3527622a72842d867c4cf70dc993), [`50ffa3a`](https://github.com/bluesky-social/atproto/commit/50ffa3a18cdae58b7dedf777aafc0bc0eb471c41), [`58ca16d`](https://github.com/bluesky-social/atproto/commit/58ca16d32ccb50b30e1d4c800c6263af7511a4ff), [`50ffa3a`](https://github.com/bluesky-social/atproto/commit/50ffa3a18cdae58b7dedf777aafc0bc0eb471c41)]:
+  - @atproto-labs/fetch@0.5.0
+
 ## 0.4.6
 
 ### Patch Changes

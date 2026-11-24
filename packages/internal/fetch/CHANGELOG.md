@@ -1,5 +1,19 @@
 # @atproto-labs/fetch
 
+## 0.5.0
+
+### Minor Changes
+
+- [#6015](https://github.com/bluesky-social/atproto/pull/6015) [`50ffa3a`](https://github.com/bluesky-social/atproto/commit/50ffa3a18cdae58b7dedf777aafc0bc0eb471c41) Thanks [@matthieusieben](https://github.com/matthieusieben)! - **Breaking:** `isIp`, `ifString`, `MaxBytesTransformStream`, `padLines`, `logCancellationError`, `stringifyMessage` and the `ThisParameterOverride` type are no longer exported from `@atproto-labs/fetch`, nor re-exported from `@atproto-labs/fetch-node`.
+
+### Patch Changes
+
+- [#6017](https://github.com/bluesky-social/atproto/pull/6017) [`c9d2ad9`](https://github.com/bluesky-social/atproto/commit/c9d2ad93cf0f3527622a72842d867c4cf70dc993) Thanks [@matthieusieben](https://github.com/matthieusieben)! - `fetchJsonProcessor` only reports a body that fails to parse as "Unable to parse response as JSON". Errors while reading the body now propagate as they are, and a streamed body exceeding `fetchMaxSizeProcessor`'s limit fails with a `FetchResponseError` (502, "Response too large"), as an oversized `Content-Length` already did.
+
+- [#6020](https://github.com/bluesky-social/atproto/pull/6020) [`58ca16d`](https://github.com/bluesky-social/atproto/commit/58ca16d32ccb50b30e1d4c800c6263af7511a4ff) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Ensure that abort errors have a `name` property on platforms that don't provide a DOMException class
+
+- [#6015](https://github.com/bluesky-social/atproto/pull/6015) [`50ffa3a`](https://github.com/bluesky-social/atproto/commit/50ffa3a18cdae58b7dedf777aafc0bc0eb471c41) Thanks [@matthieusieben](https://github.com/matthieusieben)! - `timedFetch` now rejects with the abort reason of the request's signal, rejects with a `TimeoutError` when its own timeout elapses, and no longer sends a request whose signal is already aborted.
+
 ## 0.4.3
 
 ### Patch Changes
