@@ -8,7 +8,7 @@ import type {
 } from '../src/auth-output.js'
 import { AuthScope } from '../src/auth-scope.js'
 
-const SPACE = 'at://did:plc:authority/space/com.atmoboards.forum/default'
+const SPACE = 'at:space/did:plc:authority/com.atmoboards.forum/default'
 const SPACE_REF = SpaceRef.parse(SPACE)
 const DID = 'did:plc:user' as DidString
 
@@ -88,9 +88,7 @@ describe('assertSpaceRead', () => {
     expect(() =>
       assertSpaceRead(
         auth,
-        SpaceRef.parse(
-          'at://did:plc:authority/space/com.atmoboards.forum/other',
-        ),
+        SpaceRef.parse('at:space/did:plc:authority/com.atmoboards.forum/other'),
         OTHER_DID,
       ),
     ).toThrow(/not scoped to this space/)

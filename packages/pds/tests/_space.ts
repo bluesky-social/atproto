@@ -167,7 +167,7 @@ export class SpaceClient {
     const spaceType = opts.spaceType ?? TEST_SPACE_TYPE
 
     const uri =
-      `at://${authority.did}/space/${spaceType}/${skey}` as SpaceRefString
+      `at:space/${authority.did}/${spaceType}/${skey}` as SpaceRefString
 
     if (!opts.ungoverned) {
       const res = await authority.client.call(

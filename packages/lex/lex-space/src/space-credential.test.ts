@@ -4,7 +4,7 @@ import { SpaceTokenError, createSpaceCredential } from '@atproto/space'
 import type { DidString } from '@atproto/syntax'
 import { SpaceCredential } from './space-credential.js'
 
-const SPACE = 'at://did:plc:authority/space/com.example.group/test'
+const SPACE = 'at:space/did:plc:authority/com.example.group/test'
 
 async function mintCredential(key: P256Keypair, expiresInSec = 600) {
   const authority = await P256Keypair.create()

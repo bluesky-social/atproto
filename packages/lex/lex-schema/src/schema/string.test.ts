@@ -369,6 +369,15 @@ describe('StringSchema', () => {
       expect(result.success).toBe(true)
     })
 
+    it('accepts space URIs', () => {
+      const space = 'at:space/did:plc:abc123/com.example.group/default'
+      expect(schema.safeParse(space).success).toBe(true)
+      expect(
+        schema.safeParse(`${space}/did:plc:user1/app.bsky.feed.post/xyz`)
+          .success,
+      ).toBe(true)
+    })
+
     it('rejects invalid AT URI', () => {
       const result = schema.safeParse('https://example.com')
       expect(result.success).toBe(false)
@@ -380,35 +389,35 @@ describe('StringSchema', () => {
     })
   })
 
-  // Space URIs validate through the at-uri format — they reuse the at:// scheme
-  // with a `space` marker segment.
+  // Space URIs validate through the at-uri format — they reuse the at scheme
+  // with an `at:space/` prefix.
   describe('format: at-uri (space URIs)', () => {
     const schema = string({ format: 'at-uri' })
 
     it('accepts a space-only URI', () => {
       const result = schema.safeParse(
-        'at://did:plc:abc123/space/com.example.group/default',
+        'at:space/did:plc:abc123/com.example.group/default',
       )
       expect(result.success).toBe(true)
     })
 
     it('accepts a fully-qualified record URI', () => {
       const result = schema.safeParse(
-        'at://did:plc:abc123/space/com.example.group/default/did:plc:user1/app.bsky.feed.post/3jzfcijpj2z2a',
+        'at:space/did:plc:abc123/com.example.group/default/did:plc:user1/app.bsky.feed.post/3jzfcijpj2z2a',
       )
       expect(result.success).toBe(true)
     })
 
     it('rejects a fully-qualified URI with an invalid author DID', () => {
       const result = schema.safeParse(
-        'at://did:plc:abc123/space/com.example.group/default/notadid/app.bsky.feed.post/3jzfcijpj2z2a',
+        'at:space/did:plc:abc123/com.example.group/default/notadid/app.bsky.feed.post/3jzfcijpj2z2a',
       )
       expect(result.success).toBe(false)
     })
 
     it('rejects a fully-qualified URI with an invalid collection NSID', () => {
       const result = schema.safeParse(
-        'at://did:plc:abc123/space/com.example.group/default/did:plc:user1/short/3jzfcijpj2z2a',
+        'at:space/did:plc:abc123/com.example.group/default/did:plc:user1/short/3jzfcijpj2z2a',
       )
       expect(result.success).toBe(false)
     })
@@ -416,6 +425,14 @@ describe('StringSchema', () => {
     it('rejects plain strings', () => {
       const result = schema.safeParse('not a uri')
       expect(result.success).toBe(false)
+    })
+
+    // @TODO remove before beta, with the alpha form.
+    it('accepts the spaces alpha form only in lenient mode', () => {
+      const uri =
+        'at://did:plc:abc123/space/com.example.group/default/did:plc:user1/app.bsky.feed.post/3jzfcijpj2z2a'
+      expect(schema.safeParse(uri).success).toBe(false)
+      expect(schema.safeParse(uri, { strict: false }).success).toBe(true)
     })
   })
 
@@ -434,15 +451,27 @@ describe('StringSchema', () => {
 
     it('accepts the three-part space form', () => {
       const result = schema.safeParse(
-        'at://did:plc:abc123/space/com.example.group/default',
+        'at:space/did:plc:abc123/com.example.group/default',
       )
       expect(result.success).toBe(true)
+    })
+
+    // @TODO remove before beta, with the alpha form.
+    it('accepts the spaces alpha form only in lenient mode', () => {
+      const ref = 'at://did:plc:abc123/space/com.example.group/default'
+      expect(schema.safeParse(ref).success).toBe(false)
+      expect(schema.safeParse(ref, { strict: false }).success).toBe(true)
+      expect(
+        schema.safeParse(`${ref}/did:plc:user1/app.bsky.feed.post/abc`, {
+          strict: false,
+        }).success,
+      ).toBe(false)
     })
 
     it('rejects a record URI within a space', () => {
       // Valid as an `at-uri`, but it names a record rather than a space.
       const result = schema.safeParse(
-        'at://did:plc:abc123/space/com.example.group/default/did:plc:user1/app.bsky.feed.post/3jzfcijpj2z2a',
+        'at:space/did:plc:abc123/com.example.group/default/did:plc:user1/app.bsky.feed.post/3jzfcijpj2z2a',
       )
       expect(result.success).toBe(false)
     })
@@ -454,34 +483,33 @@ describe('StringSchema', () => {
       expect(result.success).toBe(false)
     })
 
-    it('rejects a bare space marker with no type or skey', () => {
-      expect(schema.safeParse('at://did:plc:abc123/space').success).toBe(false)
+    it('rejects a space DID with no type or skey', () => {
+      expect(schema.safeParse('at:space/did:plc:abc123').success).toBe(false)
       expect(
-        schema.safeParse('at://did:plc:abc123/space/com.example.group').success,
+        schema.safeParse('at:space/did:plc:abc123/com.example.group').success,
       ).toBe(false)
     })
 
     it('rejects a non-NSID space type', () => {
-      const result = schema.safeParse('at://did:plc:abc123/space/short/default')
+      const result = schema.safeParse('at:space/did:plc:abc123/short/default')
       expect(result.success).toBe(false)
     })
 
     it('rejects a handle authority', () => {
       // Spaces are keyed on DIDs, even though a handle is a valid at-uri authority.
       const result = schema.safeParse(
-        'at://user.bsky.social/space/com.example.group/default',
+        'at:space/user.bsky.social/com.example.group/default',
       )
       expect(result.success).toBe(false)
     })
 
     it('rejects an skey that is not a valid record key', () => {
       expect(
-        schema.safeParse('at://did:plc:abc123/space/com.example.group/.')
-          .success,
+        schema.safeParse('at:space/did:plc:abc123/com.example.group/.').success,
       ).toBe(false)
       expect(
         schema.safeParse(
-          `at://did:plc:abc123/space/com.example.group/${'x'.repeat(513)}`,
+          `at:space/did:plc:abc123/com.example.group/${'x'.repeat(513)}`,
         ).success,
       ).toBe(false)
     })

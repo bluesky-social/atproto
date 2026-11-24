@@ -29,7 +29,7 @@ import {
 import { REPO_STAR_TYPE } from '../src/types.js'
 import { commitMacParams, recordMacParams } from './_util.js'
 
-const SPACE: SpaceRefString = 'at://did:example:space/space/app.bsky.group/test'
+const SPACE: SpaceRefString = 'at:space/did:example:space/app.bsky.group/test'
 const AUTHOR: DidString = 'did:example:alice'
 const REV = '3kbcq3p7ad42b'
 
@@ -212,7 +212,7 @@ describe('space sync', () => {
       await expect(
         verifyRepoStarFull([star], {
           ...params(),
-          space: 'at://did:example:space/space/app.bsky.group/other',
+          space: 'at:space/did:example:space/app.bsky.group/other',
         }),
       ).rejects.toThrow(/space/)
     })
@@ -399,7 +399,7 @@ describe('space sync', () => {
   // A syncer that fetches a single record checks it against its record MAC.
   describe('record verification', () => {
     const URI: SpaceAtUriString =
-      'at://did:example:space/space/app.bsky.group/test/did:example:alice/app.bsky.feed.post/3kbcq3p7ad401'
+      'at:space/did:example:space/app.bsky.group/test/did:example:alice/app.bsky.feed.post/3kbcq3p7ad401'
     const value = { text: 'hello' }
 
     // The getRecord response and the params a syncer verifies it with.
@@ -426,7 +426,7 @@ describe('space sync', () => {
     it('rejects a record other than the one requested', async () => {
       const { record, params } = await fetched()
       const other: SpaceAtUriString =
-        'at://did:example:space/space/app.bsky.group/test/did:example:alice/app.bsky.feed.post/3kbcq3p7ad402'
+        'at:space/did:example:space/app.bsky.group/test/did:example:alice/app.bsky.feed.post/3kbcq3p7ad402'
       await expect(
         verifyRecord(record, { ...params, uri: other }),
       ).rejects.toThrow(SpaceRepoVerificationError)

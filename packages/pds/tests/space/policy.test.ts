@@ -78,7 +78,7 @@ describe('space policy', () => {
       // There is no `did` param: a space is always under the caller's authority,
       // so there is no way to ask for one under someone else's.
       const space = await sc.createSpace(alice)
-      expect(space.startsWith(`at://${alice.did}/space/`)).toBe(true)
+      expect(space.startsWith(`at:space/${alice.did}/`)).toBe(true)
 
       const listed = await alice.client.call(
         com.atproto.space.listSpaces,
@@ -183,7 +183,7 @@ describe('space policy', () => {
       // authority's own space must exist first: a write never conjures one.
       const skey = 'lazy'
       const space =
-        `at://${alice.did}/space/${TEST_SPACE_TYPE}/${skey}` as SpaceRefString
+        `at:space/${alice.did}/${TEST_SPACE_TYPE}/${skey}` as SpaceRefString
       await expect(
         sc.write(alice, space, { text: 'too early' }),
       ).rejects.toMatchObject({ error: 'SpaceNotFound' })

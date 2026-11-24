@@ -43,7 +43,7 @@ describe('space notification retries', () => {
       respond: () => ({ status, body: error ? { error } : {} }),
     })
     space =
-      `at://${host.did}/space/com.example.group/notifications` as SpaceRefString
+      `at:space/${host.did}/com.example.group/notifications` as SpaceRefString
     const ctx = network.pds.ctx
     await ctx.spaceNotifications.destroy()
     notifications = ctx.spaceNotifications = new SpaceNotifications(ctx)
@@ -733,7 +733,7 @@ describe('space notification retries', () => {
         .insertInto('space_syncer_notification_retry')
         .values({
           space:
-            'at://did:plc:aaaaaaaaaaaaaaaaaaaaaaaa/space/com.example.group/gone' as SpaceRefString,
+            'at:space/did:plc:aaaaaaaaaaaaaaaaaaaaaaaa/com.example.group/gone' as SpaceRefString,
           endpoint: syncer.url,
           token: 'syncer-token',
           noticeJson: toJson(spaceDeleted.$build({})),

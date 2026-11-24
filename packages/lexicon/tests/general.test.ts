@@ -984,6 +984,11 @@ describe('Record validation', () => {
       $type: 'com.example.atUri',
       atUri: 'at://did:web:example.com/com.example.test/self',
     })
+    lex.assertValidRecord('com.example.atUri', {
+      $type: 'com.example.atUri',
+      atUri:
+        'at:space/did:plc:12345678abcdefghijklmnop/com.example.group/default/did:web:example.com/com.example.test/self',
+    })
     expect(() =>
       lex.assertValidRecord('com.example.atUri', {
         $type: 'com.example.atUri',
@@ -996,7 +1001,7 @@ describe('Record validation', () => {
     lex.assertValidRecord('com.example.spaceRef', {
       $type: 'com.example.spaceRef',
       space:
-        'at://did:plc:12345678abcdefghijklmnop/space/com.example.group/default',
+        'at:space/did:plc:12345678abcdefghijklmnop/com.example.group/default',
     })
 
     // Narrower than at-uri: a record URI inside a space is a valid at-uri but
@@ -1005,7 +1010,7 @@ describe('Record validation', () => {
       lex.assertValidRecord('com.example.spaceRef', {
         $type: 'com.example.spaceRef',
         space:
-          'at://did:plc:12345678abcdefghijklmnop/space/com.example.group/default/did:plc:12345678abcdefghijklmnoq/com.example.test/self',
+          'at:space/did:plc:12345678abcdefghijklmnop/com.example.group/default/did:plc:12345678abcdefghijklmnoq/com.example.test/self',
       }),
     ).toThrow('Record/space must be a valid space ref')
 
@@ -1020,7 +1025,7 @@ describe('Record validation', () => {
     expect(() =>
       lex.assertValidRecord('com.example.spaceRef', {
         $type: 'com.example.spaceRef',
-        space: 'at://test.bsky.social/space/com.example.group/default',
+        space: 'at:space/test.bsky.social/com.example.group/default',
       }),
     ).toThrow('Record/space must be a valid space ref')
 

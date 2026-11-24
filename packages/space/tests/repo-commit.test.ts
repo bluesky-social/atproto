@@ -24,7 +24,7 @@ const CID_B = parseCid(
 )
 
 const ctx: CommitCtx = {
-  space: 'at://did:example:space/space/app.bsky.group/test',
+  space: 'at:space/did:example:space/app.bsky.group/test',
   repo: 'did:example:alice',
   rev: '3kbcq3p7ad400',
 }
@@ -173,7 +173,7 @@ describe('RepoCommit', () => {
     })
 
     it.each<[string, Partial<SpaceCommit>]>([
-      ['space', { space: 'at://did:example:space/space/app.bsky.group/other' }],
+      ['space', { space: 'at:space/did:example:space/app.bsky.group/other' }],
       ['repo', { repo: 'did:example:bob' }],
     ])('rejects a commit for a different %s', (field, override) => {
       const commit = repo.toCommit(ctx)
@@ -185,7 +185,7 @@ describe('RepoCommit', () => {
     })
 
     it.each<[string, Partial<SpaceCommit>]>([
-      ['space', { space: 'at://did:example:space/space/app.bsky.group/other' }],
+      ['space', { space: 'at:space/did:example:space/app.bsky.group/other' }],
       ['repo', { repo: 'did:example:bob' }],
       ['rev', { rev: '3kbcq3p7ad999' }],
       ['data', { data: new RepoCommit().setHash.digest() }],

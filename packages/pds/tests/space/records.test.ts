@@ -1,7 +1,7 @@
 import { TestNetworkNoAppView } from '@atproto/dev-env'
 import { getBlobCidString, parseCid } from '@atproto/lex-data'
 import { MAX_RECORD_SIZE } from '@atproto/space'
-import { type NsidString, SpaceRef } from '@atproto/syntax'
+import { type NsidString, SpaceRef, type SpaceRefString } from '@atproto/syntax'
 import { com } from '../../src/lexicons/index.js'
 import { prepareCreate } from '../../src/repo/index.js'
 import {
@@ -561,6 +561,17 @@ describe('space records', () => {
       await expect(
         sc.write(alice, space, { text: 'strict', validate: true }),
       ).rejects.toThrow()
+    })
+
+    it('refuses a space param in its alpha form', async () => {
+      // Lenient validation still reads `at://{spaceDid}/space/...`, so records
+      // written in the alpha stay valid, but params are validated strictly, and
+      // handlers look a space up as given.
+      const space = await sc.createSpace(alice)
+      const legacy = space.replace(/^at:space\/([^/]+)\//, 'at://$1/space/')
+      await expect(
+        sc.write(alice, legacy as SpaceRefString),
+      ).rejects.toMatchObject({ error: 'InvalidRequest' })
     })
 
     it('refuses a record over the size limit', async () => {

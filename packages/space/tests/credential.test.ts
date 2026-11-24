@@ -14,7 +14,7 @@ import {
   verifySpaceToken,
 } from '../src/index.js'
 
-const SPACE = 'at://did:example:space/space/app.bsky.group/test'
+const SPACE = 'at:space/did:example:space/app.bsky.group/test'
 const USER = 'did:example:alice'
 const AUTHORITY = 'did:example:space'
 const SPACE_HOST = `${AUTHORITY}#atproto_pds`
@@ -102,7 +102,7 @@ describe('space tokens', () => {
         verifySpaceToken('delegation', jwt, {
           getSigningKey: getKey(userKey),
           aud: SPACE_HOST,
-          sub: 'at://did:example:space/space/app.bsky.group/other',
+          sub: 'at:space/did:example:space/app.bsky.group/other',
         }),
       ).rejects.toMatchObject({ code: 'BadJwtSub' })
     })

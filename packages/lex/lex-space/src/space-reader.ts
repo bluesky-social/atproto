@@ -874,7 +874,9 @@ export class SpaceReader<S extends Space = Space> {
           }
           const schema = schemas.find((s) => s.$type === record.collection)
           if (!schema) continue
-          const result = schema.safeValidate(record.record)
+          // Lenient, as records written during the spaces alpha may embed
+          // space URIs in its form. @TODO remove before beta.
+          const result = schema.safeValidate(record.record, { strict: false })
           yield result.success
             ? { ...item, valid: true, record: result.value }
             : { ...item, valid: false }

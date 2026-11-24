@@ -43,6 +43,12 @@ import { SpaceReader } from './space-reader.js'
 import { SpaceWriteOperationHelper } from './write-operation-builder.js'
 
 export * from './space-reader.js'
+
+// Records written during the spaces alpha may embed space URIs in its
+// `at://{spaceDid}/space/...` form, which only lenient validation accepts.
+// @TODO remove before beta, with the alpha form.
+const LENIENT = { strict: false }
+
 export type {
   AccountAgent,
   Agent,
@@ -589,7 +595,7 @@ export class SpaceClient<S extends Space = Space> extends SpaceReader<S> {
     if (options.validateRequest !== false) this.assertCollection(schema.$type)
     const rkey = schema.keySchema.parse(rkeyFor(schema, options.rkey))
     const response = await this.getRecord(schema.$type, rkey, options)
-    const value = schema.validate(response.body.value)
+    const value = schema.validate(response.body.value, LENIENT)
     return { ...response.body, value }
   }
 
@@ -659,7 +665,7 @@ function processListRecord<T extends RecordSchema>(
   this: T,
   record: SpaceReader.ListedRecord,
 ): SpaceClient.ListRecordItem<Infer<T>> {
-  const result = this.safeValidate(record.value)
+  const result = this.safeValidate(record.value, LENIENT)
   if (result.success) {
     return { ...record, valid: true, value: result.value }
   } else {

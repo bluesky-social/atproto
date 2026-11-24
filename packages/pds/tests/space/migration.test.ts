@@ -340,7 +340,7 @@ describe('space account migration', () => {
       encode('out of order'),
     ])
     const rkey = 'non-canonical' as RecordKeyString
-    const space: SpaceRefString = `at://${bob.did}/space/${TEST_SPACE_TYPE}/non-canonical`
+    const space: SpaceRefString = `at:space/${bob.did}/${TEST_SPACE_TYPE}/non-canonical`
     const commit = new RepoCommit()
       .add(TEST_COLLECTION, rkey, await cidForCbor(bytes))
       .toCommit({ space, repo: alice.did, rev: TID.nextStr() })
@@ -372,7 +372,7 @@ describe('space account migration', () => {
       archive: Omit<SpaceMetaArchive, 'space'>,
     ): AsyncIterable<Uint8Array> =>
       writeSpaceMetaStar({
-        space: `at://${alice.did}/space/${TEST_SPACE_TYPE}/${skey}`,
+        space: `at:space/${alice.did}/${TEST_SPACE_TYPE}/${skey}`,
         ...archive,
       })
 

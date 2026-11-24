@@ -18,7 +18,7 @@ import {
 } from '@atproto/lex-client'
 import { type Cid, getBlobCidString } from '@atproto/lex-data'
 import { l } from '@atproto/lex-schema'
-import type { SpaceRefString } from '@atproto/syntax'
+import type { AtUriString, SpaceRefString } from '@atproto/syntax'
 import { createDidResolver } from '@atproto-labs/did-resolver'
 import {
   type AtprotoDidResolver,
@@ -114,7 +114,7 @@ describe('SpaceClient', () => {
       )
       expect(created).toBeInstanceOf(SpaceClient)
       expect(created.uri).toBe(
-        `at://${alice.assertDid}/space/com.example.group/created`,
+        `at:space/${alice.assertDid}/com.example.group/created`,
       )
 
       await created.create(note, { text: 'first' })
@@ -511,6 +511,43 @@ describe('SpaceClient', () => {
         // @ts-expect-error not a collection of the space type
         aliceSpace.allRecords({ collections: [other] }).next(),
       ).rejects.toThrow(TypeError)
+    })
+  })
+
+  // @TODO remove before beta, with the alpha form.
+  describe('records written during the spaces alpha', () => {
+    const reply = l.record(
+      'tid',
+      'com.example.spaceReply',
+      l.object({ parent: l.string({ format: 'at-uri' }) }),
+    )
+
+    it('reads a space URI in its alpha form as valid', async () => {
+      const uri = await setupSpace(alice, 'alpha', [])
+      const aliceSpace = SpaceClient.openSpace(group, uri, {
+        agent: alice.agent,
+        didResolver,
+      })
+      const parent = uri.replace(
+        /^at:space\/([^/]+)\//,
+        'at://$1/space/',
+      ) as AtUriString
+      // Written raw, as the record schema refuses the alpha form strictly.
+      expect(reply.$matches(reply.$build({ parent }))).toBe(false)
+      const { body } = await aliceSpace.createRecord(reply.$build({ parent }))
+      const rkey = body.uri.split('/').pop()!
+      await processNotifications(network)
+
+      const got = await aliceSpace.get(reply, { rkey, validateRequest: false })
+      expect(got.value.parent).toBe(parent)
+      const { records } = await aliceSpace.list(reply, {
+        validateRequest: false,
+      })
+      expect(records).toEqual([expect.objectContaining({ valid: true })])
+      const all = await collect(
+        aliceSpace.allRecords({ collections: [reply], validateRequest: false }),
+      )
+      expect(all).toEqual([expect.objectContaining({ valid: true })])
     })
   })
 

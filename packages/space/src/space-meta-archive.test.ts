@@ -12,7 +12,7 @@ import {
 import { SPACE_META_STAR_TYPE } from './types.js'
 
 const SPACE =
-  'at://did:example:forum/space/com.example.forum/general' as SpaceRefString
+  'at:space/did:example:forum/com.example.forum/general' as SpaceRefString
 
 const POLICY = { $type: 'com.example.policy', readAccess: 'members' }
 const MEMBER = { $type: 'com.example.member', read: true, write: true }

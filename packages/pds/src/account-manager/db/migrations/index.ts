@@ -10,6 +10,7 @@ import * as mig009 from './009-space-deletion-and-macs.js'
 import * as mig010 from './010-space-status-notifications.js'
 import * as mig011 from './011-account-email-auth-factor.js'
 import * as mig012 from './012-space-notify-registration.js'
+import * as mig013 from './013-space-uri.js'
 
 // @TODO fix before merging to main. This ordering only works for DBs created
 // from the permissioned-data branch.
@@ -23,7 +24,7 @@ import * as mig012 from './012-space-notify-registration.js'
 // Released main DBs already recorded '008' as the email auth factor and are NOT
 // compatible with this ordering. Before merging, rewrite the spaces migrations
 // (008-010 and 012) to come after main's (e.g. squash them into a single
-// '009-spaces').
+// '009-spaces'). 013 only rewrites alpha data, so it can be dropped then.
 export default {
   '001': mig001,
   '002': mig002,
@@ -37,4 +38,5 @@ export default {
   '010': mig010,
   '011': mig011,
   '012': mig012,
+  '013': mig013,
 }
