@@ -75,19 +75,24 @@ export async function publishAccount(
     // A process that stalled past its lease mustn't publish over another's
     if (!(await holdsLease())) throw new LeaseLostError(did)
     try {
-      await boundPlc(did, plcTimeoutMs, () =>
-        ctx.plcClient.updateData(did, ctx.plcRotationKey, (op) => {
-          // updateData re-reads the doc, which may have changed since
-          const reason = whyUnpublishable(ctx, op, signingKey)
-          if (reason) throw new UnpublishableError(reason)
-          return {
-            ...op,
-            verificationMethods: {
-              ...op.verificationMethods,
-              atproto_kem: kemKey,
-            },
-          }
-        }),
+      await boundPlc(did, plcTimeoutMs, (signal) =>
+        ctx.plcClient.updateData(
+          did,
+          ctx.plcRotationKey,
+          (op) => {
+            // updateData re-reads the doc, which may have changed since
+            const reason = whyUnpublishable(ctx, op, signingKey)
+            if (reason) throw new UnpublishableError(reason)
+            return {
+              ...op,
+              verificationMethods: {
+                ...op.verificationMethods,
+                atproto_kem: kemKey,
+              },
+            }
+          },
+          { signal },
+        ),
       )
     } catch (err) {
       if (err instanceof UnpublishableError) {
@@ -135,7 +140,7 @@ export async function inspectKemKey(
     const lastOp = await boundPlc(
       did,
       opts.plcTimeoutMs ?? DEFAULT_PLC_TIMEOUT_MS,
-      () => ctx.plcClient.getLastOp(did),
+      (signal) => ctx.plcClient.getLastOp(did, { signal }),
     )
     if (lastOp.type === 'plc_tombstone') {
       return { published: false, unpublishableReason: 'tombstoned' }
@@ -167,7 +172,7 @@ export async function inspectKemKey(
     : { published: false, unpublishableReason: 'did-web' }
 }
 
-// The PLC client has no timeout of its own
+// Bound the whole PLC operation, including its reads and write.
 function boundPlc<T>(
   did: string,
   timeoutMs: number,
@@ -200,9 +205,7 @@ function whyUnpublishable(
 }
 
 // Rejects with `onTimeout()` once `signal` aborts, whether or not the call
-// settles: the timeout holds without the call's cooperation. The PLC client
-// can't take the signal yet, so a timed-out request isn't cancelled; its late
-// result is ignored. @TODO pass the signal through once @did-plc/lib accepts it.
+// settles: the timeout also holds for a custom client that ignores the signal.
 async function withSignal<T>(
   call: (signal: AbortSignal) => Promise<T>,
   signal: AbortSignal,

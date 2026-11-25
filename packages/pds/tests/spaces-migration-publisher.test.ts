@@ -17,6 +17,10 @@ import {
   trackStats,
 } from '../src/spaces-migration/progress.js'
 import {
+  PlcTimeoutError,
+  publishAccount,
+} from '../src/spaces-migration/publish.js'
+import {
   SpacesMigrationPublisher,
   type SpacesMigrationPublisherOptions,
 } from '../src/spaces-migration/publisher.js'
@@ -576,12 +580,46 @@ describe('spaces migration publisher', () => {
     await waitFor(async () => pub.state === 'backoff')
 
     expect(getLastOp).toHaveBeenCalledTimes(1)
+    expect(getLastOp.mock.calls[0][1]?.signal?.aborted).toBe(true)
     expect(await row(did)).toMatchObject({
       attempts: 0,
       lastError: null,
       leaseOwner: null,
       kemPublishedAt: null,
     })
+  })
+
+  it('cancels a timed-out PLC update before submitting an operation', async () => {
+    const did = await createPreSpacesAccount()
+    let reads = 0
+    let updateSignal: AbortSignal | null | undefined
+    const fetchPlc = jest.fn<typeof fetch>(async (url, init) => {
+      if (init?.method === 'GET' && ++reads === 2) {
+        updateSignal = init.signal
+        return new Promise<Response>((_, reject) => {
+          updateSignal?.addEventListener(
+            'abort',
+            () => reject(updateSignal?.reason),
+            { once: true },
+          )
+        })
+      }
+      return fetch(url, init)
+    })
+    const plcClient = new plc.Client(plcServer.url, { fetch: fetchPlc })
+
+    await expect(
+      publishAccount({ ...ctx, plcClient }, did, async () => true, {
+        plcTimeoutMs: 100,
+      }),
+    ).rejects.toBeInstanceOf(PlcTimeoutError)
+
+    expect(reads).toBe(2)
+    expect(updateSignal?.aborted).toBe(true)
+    expect(
+      fetchPlc.mock.calls.some(([, init]) => init?.method === 'POST'),
+    ).toBe(false)
+    expect(await publishedKem(did)).toBeUndefined()
   })
 
   it('leaves no shutdown timer behind after stopping', async () => {

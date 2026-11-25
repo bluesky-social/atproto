@@ -39,9 +39,9 @@ export class ActorStore {
     const directory = path.join(this.cfg.directory, didHash.slice(0, 2), did)
     const dbLocation = path.join(directory, `store.sqlite`)
     // @NOTE The signing key's file name predates KEM keys
-    const signingKeyLocation = path.join(directory, `key`)
+    const keyLocation = path.join(directory, `key`)
     const kemKeyLocation = path.join(directory, `kem_key`)
-    return { directory, dbLocation, signingKeyLocation, kemKeyLocation }
+    return { directory, dbLocation, keyLocation, kemKeyLocation }
   }
 
   async exists(did: string): Promise<boolean> {
@@ -76,8 +76,8 @@ export class ActorStore {
   }
 
   async keypair(did: string): Promise<Keypair> {
-    const { signingKeyLocation } = await this.getLocation(did)
-    const privKey = await fs.readFile(signingKeyLocation)
+    const { keyLocation } = await this.getLocation(did)
+    const privKey = await fs.readFile(keyLocation)
     return crypto.Secp256k1Keypair.import(privKey)
   }
 
@@ -169,7 +169,7 @@ export class ActorStore {
     keypair: ExportableKeypair,
     kemKeypair: ExportableKeypair,
   ) {
-    const { directory, dbLocation, signingKeyLocation, kemKeyLocation } =
+    const { directory, dbLocation, keyLocation, kemKeyLocation } =
       await this.getLocation(did)
     // ensure subdir exists
     await mkdir(directory, { recursive: true })
@@ -181,7 +181,7 @@ export class ActorStore {
     // was never published: replace it with the caller's key.
     await rmIfExists(kemKeyLocation)
     const privKey = await keypair.export()
-    await fs.writeFile(signingKeyLocation, privKey)
+    await fs.writeFile(keyLocation, privKey)
     const storedKem = await writeKemKeyNoClobber(kemKeyLocation, kemKeypair)
     assert(
       storedKem.did() === kemKeypair.did(),
@@ -270,25 +270,19 @@ export class ActorStore {
     return loadKemKey(path.join(this.reservedKemKeyDir, kemKeyOrDid))
   }
 
-  /**
-   * Clears the account's reservations, filed under its DID or under each of its
-   * keys. `create()` stores the reserved keys, so the account's store must
-   * exist: it names the reservations filed by key.
-   */
-  async clearReservedKeys(did: string) {
+  /** Clears the account's reservations, filed under its DID or under each key. */
+  async clearReservedKeys(
+    did: string,
+    keys: { signingKey: string; kemKey: string },
+  ) {
     assertSafePathPart(did)
-    const [signingKey, kemKey] = await Promise.all([
-      this.keypair(did),
-      this.kemKeypair(did),
-    ])
-    assert(kemKey, 'the account has no kem key')
-    assertSafePathPart(signingKey.did())
-    assertSafePathPart(kemKey.did())
+    assertSafePathPart(keys.signingKey)
+    assertSafePathPart(keys.kemKey)
     await Promise.all([
       rmIfExists(path.join(this.reservedSigningKeyDir, did)),
-      rmIfExists(path.join(this.reservedSigningKeyDir, signingKey.did())),
+      rmIfExists(path.join(this.reservedSigningKeyDir, keys.signingKey)),
       rmIfExists(path.join(this.reservedKemKeyDir, did)),
-      rmIfExists(path.join(this.reservedKemKeyDir, kemKey.did())),
+      rmIfExists(path.join(this.reservedKemKeyDir, keys.kemKey)),
     ])
   }
 

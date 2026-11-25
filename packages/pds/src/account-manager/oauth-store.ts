@@ -1,5 +1,5 @@
 import assert from 'node:assert'
-import type { Client } from '@did-plc/lib'
+import { type Client, createOp } from '@did-plc/lib'
 import type { Selectable } from 'kysely'
 import { DAY } from '@atproto/common'
 import { type Keypair, P256Keypair, Secp256k1Keypair } from '@atproto/crypto'
@@ -68,7 +68,6 @@ import type { ImageUrlBuilder } from '../image/image-url-builder.js'
 import { dbLogger } from '../logger.js'
 import type { ServerMailer } from '../mailer/index.js'
 import type { Sequencer } from '../sequencer/index.js'
-import { createPlcOp } from '../util/plc.js'
 import {
   type AccountManager,
   AuthFactorRequiredError,
@@ -174,7 +173,7 @@ export class OAuthStore
       // the user's did don't get tombstoned.
       true
 
-    const plc = await createPlcOp({
+    const plc = await createOp({
       signingKey: signingKeyDid,
       kemKey: kemKeyDid,
       rotationKeys: this.recoveryDidKey
@@ -214,14 +213,19 @@ export class OAuthStore
             await this.sequencer.sequenceAccountCreation(did, handle, commit)
 
             try {
-              await this.actorStore.clearReservedKeys(did).catch((err) => {
-                // @NOTE This is a cleanup operation so we won't fail the
-                // whole flow if it fails, but we log it just in case
-                dbLogger.error(
-                  { did, signingKeyDid, kemKeyDid, err },
-                  'Failed to clear reserved keys',
-                )
-              })
+              await this.actorStore
+                .clearReservedKeys(did, {
+                  signingKey: signingKeyDid,
+                  kemKey: kemKeyDid,
+                })
+                .catch((err) => {
+                  // @NOTE This is a cleanup operation so we won't fail the
+                  // whole flow if it fails, but we log it just in case
+                  dbLogger.error(
+                    { did, signingKeyDid, kemKeyDid, err },
+                    'Failed to clear reserved keys',
+                  )
+                })
 
               const account = await this.accountManager.getAccount(did)
               assert(account, 'Account not found after creation')

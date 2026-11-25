@@ -22,7 +22,6 @@ import {
   createPublicKeyObject,
 } from '../src/auth-verifier.js'
 import { com, internal } from '../src/lexicons/index.js'
-import { createPlcOp } from '../src/util/plc.js'
 
 interface Account {
   did: DidString
@@ -222,7 +221,7 @@ export class MockEntryway {
 
         // Create PLC operation, publishing a KEM key reserved on the PDS
         const plcCreate = settings.includeKemKey
-          ? await createPlcOp({
+          ? await plcLib.createOp({
               signingKey,
               kemKey: (
                 await pdsClient.call(com.atproto.server.reserveKemKey, {})

@@ -1,3 +1,4 @@
+import { createOp } from '@did-plc/lib'
 import { type Keypair, Secp256k1Keypair, randomStr } from '@atproto/crypto'
 import { TestPds, TestPlc } from '@atproto/dev-env'
 import { createPublicKeyObject } from '../src/auth-verifier.js'
@@ -7,7 +8,6 @@ import {
 } from '../src/entryway-attribution.js'
 import { com } from '../src/lexicons/index.js'
 import { canonicalIp } from '../src/util/ip.js'
-import { createPlcOp } from '../src/util/plc.js'
 
 const ENTRYWAY_DID = 'did:example:entryway'
 const GLOBAL_LIMIT = 3000
@@ -449,7 +449,7 @@ describe('entryway relay attribution', () => {
         },
       )
       const handle = 'rate-limited.test'
-      const plcCreate = await createPlcOp({
+      const plcCreate = await createOp({
         signingKey,
         kemKey,
         rotationKeys: [plcRotationKey.did()],
