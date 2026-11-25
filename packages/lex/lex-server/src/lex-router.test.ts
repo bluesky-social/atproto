@@ -1992,6 +1992,55 @@ describe('Subscription', () => {
     expect(sentCount).toBeLessThan(maxMessages)
   })
 
+  it.each([
+    { perMessageDeflate: undefined, extensions: '' },
+    { perMessageDeflate: false, extensions: '' },
+    { perMessageDeflate: true, extensions: 'permessage-deflate' },
+    {
+      perMessageDeflate: { serverNoContextTakeover: true, threshold: 0 },
+      extensions: 'permessage-deflate',
+    },
+  ])(
+    'negotiates "$extensions" with perMessageDeflate: $perMessageDeflate',
+    async ({ perMessageDeflate, extensions }) => {
+      const router = new LexRouter({ upgradeWebSocket }).add(
+        io.example.subscribe,
+        async function* ({ params: { message } }) {
+          for (let count = 1; count <= 3; count++) yield { message, count }
+        },
+      )
+
+      await using server = await serve(router, { port: 0, perMessageDeflate })
+
+      const { port } = server.address() as AddressInfo
+      // ws clients offer permessage-deflate by default
+      const ws = new WebSocket(
+        `ws://localhost:${port}/xrpc/io.example.subscribe?message=ping`,
+      )
+      ws.binaryType = 'arraybuffer'
+
+      const messages: unknown[] = []
+      ws.addEventListener('message', (event) => {
+        const bytes = new Uint8Array(event.data as ArrayBuffer)
+        messages.push([...decodeAll(bytes)])
+      })
+
+      const code = await new Promise<number>((resolve) => {
+        ws.addEventListener('close', (event) => resolve(event.code), {
+          once: true,
+        })
+      })
+
+      expect(ws.extensions).toBe(extensions)
+      expect(code).toBe(1000)
+      expect(messages).toStrictEqual([
+        [{ op: 1 }, { message: 'ping', count: 1 }],
+        [{ op: 1 }, { message: 'ping', count: 2 }],
+        [{ op: 1 }, { message: 'ping', count: 3 }],
+      ])
+    },
+  )
+
   it('returns 405 for non-GET request', async () => {
     const router = new LexRouter({ upgradeWebSocket }).add(
       io.example.subscribe,
