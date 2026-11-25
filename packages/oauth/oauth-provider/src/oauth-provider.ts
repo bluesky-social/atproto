@@ -829,7 +829,7 @@ export class OAuthProvider extends OAuthVerifier {
             )
           }),
         // @NOTE a handle is only ever displayed, so failing to resolve one
-        // leaves the consent screen showing the raw DID.
+        // doesn't fail the request: the consent screen shows `handle.invalid`.
         spaceHandles: await this.identityManager.getSpaceHandlesFromScope(
           parameters.scope,
           {

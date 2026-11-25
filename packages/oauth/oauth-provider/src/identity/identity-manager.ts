@@ -13,8 +13,8 @@ import type { HandleResolver } from '@atproto-labs/handle-resolver-node'
  * Resolves the space-authority DIDs named in `space:` scopes (including those
  * carried by `include:` permission sets) to handles, so the consent screen can
  * say "spaces on protocol-nerds.atmoboards.com" rather than "spaces on
- * did:plc:abc...". A DID that fails verification is omitted and the screen
- * renders the raw DID instead.
+ * did:plc:abc...". A DID that fails verification is omitted, and the screen
+ * shows it as `handle.invalid`.
  */
 export class IdentityManager {
   constructor(

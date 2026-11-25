@@ -26,6 +26,7 @@ export type ConsentFormProps = {
   permissionSets: PermissionSets
   spaces: Spaces
   spaceHandles: SpaceHandles
+  userDid: string
 
   scope?: string
 
@@ -64,6 +65,7 @@ export function ConsentForm({
   permissionSets,
   spaces,
   spaceHandles,
+  userDid,
 
   scope,
 
@@ -170,6 +172,7 @@ export function ConsentForm({
         permissionSets={permissionSets}
         spaces={spaces}
         spaceHandles={spaceHandles}
+        userDid={userDid}
         clientTrusted={clientTrusted}
         clientFirstParty={clientFirstParty}
         allowEmail={canUnsetEmail ? allowEmail : true}

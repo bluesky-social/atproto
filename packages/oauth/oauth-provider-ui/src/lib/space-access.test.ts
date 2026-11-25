@@ -91,11 +91,31 @@ describe(buildSpaceAccessRows, () => {
     expect(row?.manage).toEqual(new Set(['update', 'delete']))
   })
 
-  it('leaves the handle of an unverified authority unset', () => {
-    const [row] = buildSpaceAccessRows([parse(`space:*?authority=${DID}`)])
+  it("treats a grant naming the user's DID as one on their own spaces", () => {
+    const rows = buildSpaceAccessRows(
+      [
+        parse(`space:com.example.forum?authority=${DID}&action=read`),
+        parse('space:com.example.forum?authority=self&manage=update'),
+      ],
+      { userDid: DID },
+    )
 
-    expect(row?.level).toBe('authority')
-    expect(row?.authorityHandle).toBeUndefined()
+    expect(rows).toEqual([
+      expect.objectContaining({
+        authority: 'self',
+        level: 'broad',
+        read: true,
+      }),
+    ])
+  })
+
+  it('tells an unverified authority apart from one never looked up', () => {
+    const scope = [parse(`space:*?authority=${DID}`)]
+
+    expect(buildSpaceAccessRows(scope, { spaceHandles: {} })[0]).toEqual(
+      expect.objectContaining({ level: 'authority', authorityHandle: null }),
+    )
+    expect(buildSpaceAccessRows(scope)[0]?.authorityHandle).toBeUndefined()
   })
 
   it('ignores collections on grants that do not write', () => {

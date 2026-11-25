@@ -11,7 +11,13 @@ import {
   UserIcon,
   UsersIcon,
 } from 'lucide-react'
-import { Fragment, type HTMLAttributes, type ReactNode, useMemo } from 'react'
+import {
+  type ComponentProps,
+  Fragment,
+  type HTMLAttributes,
+  type ReactNode,
+  useMemo,
+} from 'react'
 import {
   type AudParam,
   BlobPermission,
@@ -35,6 +41,7 @@ import type {
 import {
   SPACE_ACCESS_LEVELS,
   type SpaceAccessContext,
+  type SpaceAccessLevel,
   type SpaceAccessRow,
   buildSpaceAccessRows,
   highestSpaceAccessLevel,
@@ -53,6 +60,8 @@ export type ScopeDescriptionProps = Override<
     permissionSets?: PermissionSets
     spaces?: Spaces
     spaceHandles?: SpaceHandles
+    /** The DID of the account the scope is (or would be) granted for. */
+    userDid?: string
 
     /**
      * Rendered on the consent screen, where space access is warned about and
@@ -70,6 +79,7 @@ export function ScopeDescription({
   permissionSets,
   spaces,
   spaceHandles,
+  userDid,
   clientTrusted = false,
   clientFirstParty = false,
   consent = false,
@@ -94,11 +104,12 @@ export function ScopeDescription({
     return new ScopePermissionsTransition(scope)
   }, [scope])
   const spaceContext = useMemo<SpaceAccessContext>(
-    () => ({ spaces, spaceHandles }),
-    [spaces, spaceHandles],
+    () => ({ spaces, spaceHandles, userDid }),
+    [spaces, spaceHandles, userDid],
   )
   // Only the spaces asked for directly. Those a permission set carries are
-  // described by its own card, and can only be of the set's own space types.
+  // described by its own card and never warn, even when broad: the set can
+  // only grant its own space types, and its publisher vouches for them.
   const spaceRows = useMemo(() => {
     return buildSpaceAccessRows(
       listSpacePermissions(permissions.scopes),
@@ -827,7 +838,8 @@ function RepoTable({ permissions, className, ...attrs }: RepoTableProps) {
 
 /**
  * Renders space access by how alarming it is (see `SpaceAccessLevel`): spaces
- * of one named authority are informational, and anything broader warns.
+ * of one named authority are informational, broad access cautions (yellow),
+ * and access to every space warns (red) and must be acknowledged.
  */
 function SpacePermissions({
   rows,
@@ -948,7 +960,7 @@ function BroadSpacesWarning() {
   return (
     <Notice
       role="note"
-      variant="error"
+      variant="warning"
       className="[&_h3]:text-sm"
       title={<Trans>Spaces can hold private data</Trans>}
     >
@@ -1032,30 +1044,36 @@ function SpaceSummary({
   )
 }
 
+// @NOTE The registry Badge has no warning variant, so broad access tints an
+// outline badge with the branded warning token, text left at foreground for
+// contrast (as Notice does).
+const SPACE_ACCESS_BADGE_PROPS = {
+  authority: { variant: 'secondary' },
+  broad: { variant: 'outline', className: 'border-warning/50 bg-warning/15' },
+  universal: { variant: 'destructive' },
+} as const satisfies Record<SpaceAccessLevel, ComponentProps<typeof Badge>>
+
 function SpaceAccessBadges({ row }: { row: SpaceAccessRow }) {
-  const variant =
-    row.level === 'broad' || row.level === 'universal'
-      ? 'destructive'
-      : 'secondary'
+  const badgeProps = SPACE_ACCESS_BADGE_PROPS[row.level]
 
   return (
     <span className="inline-flex flex-wrap gap-1">
       {row.read ? (
-        <Badge variant={variant}>
+        <Badge {...badgeProps}>
           <Trans context="SpaceAccess">Read</Trans>
         </Badge>
       ) : row.readSelf ? (
-        <Badge variant={variant}>
+        <Badge {...badgeProps}>
           <Trans context="SpaceAccess">Read own data</Trans>
         </Badge>
       ) : null}
       {row.writes.size > 0 && (
-        <Badge variant={variant}>
+        <Badge {...badgeProps}>
           <Trans context="SpaceAccess">Write</Trans>
         </Badge>
       )}
       {row.manage.size > 0 && (
-        <Badge variant={variant}>
+        <Badge {...badgeProps}>
           <Trans context="SpaceAccess">Manage</Trans>
         </Badge>
       )}
@@ -1265,19 +1283,29 @@ function SpaceTypeLabel({ type, space }: { type: string; space?: Space }) {
 /**
  * An authority by its verified handle. One that could not be verified renders
  * as `handle.invalid`, like an unverified account elsewhere in the network,
- * and the dialogs list its DID (see <SpaceAuthorityDid />).
+ * and the dialogs list its DID (see <SpaceAuthorityDid />). Where handles
+ * weren't looked up (the account page), the DID itself is shown.
  */
-function SpaceAuthority({ did, handle }: { did: string; handle?: string }) {
-  if (handle) {
+function SpaceAuthority({
+  did,
+  handle,
+}: {
+  did: string
+  handle?: string | null
+}) {
+  if (handle === undefined) {
+    return <code className="text-muted-foreground">{did}</code>
+  }
+  if (handle === null) {
     return (
-      <b className="text-text" title={did}>
-        {handle}
+      <b className="text-destructive" title={did}>
+        handle.invalid
       </b>
     )
   }
   return (
-    <b className="text-destructive" title={did}>
-      handle.invalid
+    <b className="text-text" title={did}>
+      {handle}
     </b>
   )
 }

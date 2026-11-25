@@ -25,10 +25,15 @@ export type SpaceAccessLevel = (typeof SPACE_ACCESS_LEVELS)[number]
 export type SpaceAccessContext = {
   spaces?: Spaces
   /**
-   * Verified handles of space authorities. An authority without one is shown
-   * as an invalid handle.
+   * Verified handles of space authorities, when they were looked up (on the
+   * consent screen). An authority missing from it failed verification.
    */
   spaceHandles?: SpaceHandles
+  /**
+   * The granting user's DID. `self` resolves to it at token issuance, so a
+   * grant naming it is shown and rated as one on the user's own spaces.
+   */
+  userDid?: string
 }
 
 export type SpaceWriteCell = {
@@ -46,7 +51,9 @@ export type SpaceAccessRow = {
   type: SpaceTypeParam
   space?: Space
   authority: SpaceAuthorityParam
-  authorityHandle?: string
+  // A DID authority's verified handle: `null` when it failed verification,
+  // `undefined` when handles weren't looked up.
+  authorityHandle?: string | null
   skey: SpaceKeyParam
   read: boolean
   // `read_self` without `read`: only the user's own data in the space.
@@ -57,14 +64,15 @@ export type SpaceAccessRow = {
   writes: Map<string, SpaceWriteCell>
 }
 
-export function spaceAccessLevel(
-  permission: SpacePermission,
-): SpaceAccessLevel {
-  if (permission.authority === '*') {
-    return permission.spaceType === '*' ? 'universal' : 'broad'
+export function spaceAccessLevel({
+  spaceType,
+  authority,
+}: Pick<SpacePermission, 'spaceType' | 'authority'>): SpaceAccessLevel {
+  if (authority === '*') {
+    return spaceType === '*' ? 'universal' : 'broad'
   }
 
-  if (permission.authority === 'self') return 'broad'
+  if (authority === 'self') return 'broad'
 
   return 'authority'
 }
@@ -84,18 +92,23 @@ export function buildSpaceAccessRows(
       ? raw.withDefaultCollections(space.collections)
       : raw
 
-    const key = `${parsed.spaceType}|${parsed.authority}|${parsed.skey}`
+    const authority =
+      context.userDid != null && parsed.authority === context.userDid
+        ? 'self'
+        : parsed.authority
+
+    const key = `${parsed.spaceType}|${authority}|${parsed.skey}`
     let row = map.get(key)
     if (!row) {
       row = {
         key,
-        level: spaceAccessLevel(parsed),
+        level: spaceAccessLevel({ spaceType: parsed.spaceType, authority }),
         type: parsed.spaceType,
         space,
-        authority: parsed.authority,
+        authority,
         authorityHandle:
-          parsed.authority !== '*' && parsed.authority !== 'self'
-            ? context.spaceHandles?.[parsed.authority]
+          authority !== '*' && authority !== 'self' && context.spaceHandles
+            ? (context.spaceHandles[authority] ?? null)
             : undefined,
         skey: parsed.skey,
         read: false,

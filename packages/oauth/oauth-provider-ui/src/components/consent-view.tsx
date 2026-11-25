@@ -66,6 +66,7 @@ export function ConsentView({
         permissionSets={permissionSets}
         spaces={spaces}
         spaceHandles={spaceHandles}
+        userDid={account.did}
         scope={scope}
         onBack={onBack}
         onConsent={onConsent}
