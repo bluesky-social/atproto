@@ -11,7 +11,7 @@ import { type SeedClient, TestNetwork, usersSeed } from '@atproto/dev-env'
 import type { Cid } from '@atproto/lex'
 import { lexParse } from '@atproto/lex-json'
 import { WriteOpAction } from '@atproto/repo'
-import { AtUri } from '@atproto/syntax'
+import { AtUri, toDatetimeString } from '@atproto/syntax'
 import type { IndexingService } from '../../src/data-plane/server/indexing/index.js'
 import { app, com } from '../../src/lexicons/index.js'
 
@@ -268,7 +268,7 @@ describe('post version data plane', () => {
     )
     const gate = app.bsky.feed.threadgate.main.$build({
       post: rootUri.toString(),
-      createdAt: indexedAt.toISOString(),
+      createdAt: toDatetimeString(indexedAt),
       allow: [],
     })
     await network.bsky.sub.indexingSvc.indexRecord(
