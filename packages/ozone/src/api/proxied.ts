@@ -79,6 +79,21 @@ export default function (server: Server, ctx: AppContext) {
     },
   })
 
+  server.add(app.bsky.feed.getPostVersions, {
+    auth: ctx.authVerifier.modOrAdminToken,
+    handler: async (request) => {
+      const body = await ctx.appviewClient.call(
+        app.bsky.feed.getPostVersions,
+        request.params,
+        await ctx.appviewAuth(app.bsky.feed.getPostVersions.$lxm),
+      )
+      return {
+        encoding: 'application/json',
+        body,
+      }
+    },
+  })
+
   server.add(app.bsky.feed.getFeedGenerator, {
     auth: ctx.authVerifier.moderator,
     handler: async (request) => {
