@@ -2,7 +2,11 @@ import { once } from 'node:events'
 import type { AddressInfo } from 'node:net'
 import { scheduler } from 'node:timers/promises'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-import { type Server, serve } from './nodejs.js'
+import { WebSocket } from 'ws'
+import { type Server, serve, upgradeWebSocket } from './nodejs.js'
+
+const urlOf = (server: Server) =>
+  `http://localhost:${(server.address() as AddressInfo).port}`
 
 describe('Node.js RequestListener', () => {
   let server: Server
@@ -107,9 +111,6 @@ describe('Node.js RequestListener', () => {
 })
 
 describe('request.signal', () => {
-  const urlOf = (server: Server) =>
-    `http://localhost:${(server.address() as AddressInfo).port}`
-
   it('is not aborted once the request body has been read', async () => {
     await using server = await serve(async (request) => {
       const before = request.signal.aborted
@@ -221,5 +222,56 @@ describe('request.signal', () => {
     await expect(res).rejects.toThrow()
 
     expect(await result).toEqual({ aborted: true, isReason: true })
+  })
+})
+
+describe('terminate()', () => {
+  it('lets in-flight requests complete by default', async () => {
+    let resolveStarted!: () => void
+    const started = new Promise<void>((resolve) => {
+      resolveStarted = resolve
+    })
+
+    const server = await serve(async () => {
+      resolveStarted()
+      await scheduler.wait(100)
+      return new Response('ok')
+    })
+
+    const res = fetch(urlOf(server))
+    await started
+
+    const [text] = await Promise.all([
+      res.then((r) => r.text()),
+      server.terminate(),
+    ])
+    expect(text).toBe('ok')
+  })
+
+  it('closes WebSockets upgraded while terminating', async () => {
+    let resolveStarted!: () => void
+    const started = new Promise<void>((resolve) => {
+      resolveStarted = resolve
+    })
+    let resolveTerminating!: () => void
+    const terminating = new Promise<void>((resolve) => {
+      resolveTerminating = resolve
+    })
+
+    const server = await serve(async (request) => {
+      resolveStarted()
+      await terminating
+      return upgradeWebSocket(request).response
+    })
+
+    const ws = new WebSocket(urlOf(server).replace(/^http/, 'ws'))
+    const close = once(ws, 'close')
+    await started
+
+    const terminated = server.terminate()
+    resolveTerminating()
+    await terminated
+
+    expect((await close)[0]).toBe(1001)
   })
 })

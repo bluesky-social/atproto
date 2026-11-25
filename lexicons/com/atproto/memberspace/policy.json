@@ -1,0 +1,40 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.memberspace.policy",
+  "defs": {
+    "main": {
+      "type": "object",
+      "description": "Space policy that grants access based on a member list.",
+      "properties": {
+        "publicRead": {
+          "type": "boolean",
+          "default": false,
+          "description": "If true, anyone may read the space. Otherwise, only members with read access."
+        },
+        "publicWrite": {
+          "type": "boolean",
+          "default": false,
+          "description": "If true, any account's writes are tracked in the writer set, except members without write access. Otherwise, only members with write access."
+        },
+        "allowedApps": {
+          "type": "array",
+          "description": "If set, only these apps (by OAuth client ID) may read the space.",
+          "items": {
+            "type": "string",
+            "format": "uri"
+          }
+        },
+        "publishPolicy": {
+          "type": "boolean",
+          "default": false,
+          "description": "Publish the policy as a com.atproto.space.policy record in the space."
+        },
+        "publishMembers": {
+          "type": "boolean",
+          "default": false,
+          "description": "Publish the member list as com.atproto.memberspace.member records in the space."
+        }
+      }
+    }
+  }
+}

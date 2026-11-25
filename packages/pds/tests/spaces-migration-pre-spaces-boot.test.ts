@@ -9,11 +9,15 @@ import { Secp256k1Keypair } from '@atproto/crypto'
 import { TestPds, TestPlc } from '@atproto/dev-env'
 import type { DidString } from '@atproto/syntax'
 
-// Tables added by the account DB's '009' migration
+// Tables added by the account DB's '009' and '010' migrations
 const ACCOUNT_SPACES_TABLES = [
   'spaces_migration',
   'spaces_migration_stats',
   'spaces_migration_state',
+  'space_notification_retry',
+  'space_syncer_notification_retry',
+  'space_notification_lease',
+  'revoked_space_credential',
 ]
 
 // Tables added by the actor store's '002' migration
@@ -131,7 +135,9 @@ describe('booting on a pre-spaces data directory', () => {
       }
       db.exec('drop index "actor_kem_key_state_unknown_idx"')
       db.exec('alter table "actor" drop column "kemKeyState"')
-      db.prepare("delete from kysely_migration where name = '009'").run()
+      db.prepare(
+        "delete from kysely_migration where name in ('009', '010')",
+      ).run()
     })
     expect(migrations(accountDbLoc).at(-1)).toBe('008')
     // Actor stores: migrated through '001' only, and no KEM key
@@ -153,7 +159,9 @@ describe('booting on a pre-spaces data directory', () => {
       spacesMigrationJitterWindowMs: 0,
     })
     const { ctx } = pds
-    expect(migrations(accountDbLoc)).toContain('009')
+    expect(migrations(accountDbLoc)).toEqual(
+      expect.arrayContaining(['009', '010']),
+    )
 
     const { progress } = ctx.spacesMigration
     for (const [i, did] of dids.entries()) {

@@ -33,8 +33,8 @@ export class CloseError extends WebSocketClientError {
 }
 
 export class SocketError extends WebSocketClientError {
-  constructor(cause: unknown) {
-    super('WebSocket transport error', { cause })
+  constructor(cause: unknown, message = 'WebSocket transport error') {
+    super(message, { cause })
   }
 
   /** Network trouble is transient. */
@@ -53,7 +53,8 @@ const RETRYABLE_HTTP_STATUS_CODES: ReadonlySet<number> = new Set([
 export class UnexpectedResponseError extends WebSocketClientError {
   constructor(
     readonly status: number,
-    readonly statusText?: string,
+    readonly statusText: string | undefined,
+    readonly headers: Headers,
   ) {
     super(
       `Unexpected server response to the WebSocket upgrade: ${status}${statusText ? ` ${statusText}` : ''}`,
@@ -66,6 +67,17 @@ export class UnexpectedResponseError extends WebSocketClientError {
    */
   override shouldRetry(): boolean {
     return RETRYABLE_HTTP_STATUS_CODES.has(this.status)
+  }
+}
+
+export class HandshakeTimeoutError extends WebSocketClientError {
+  constructor() {
+    super('WebSocket opening handshake timed out')
+  }
+
+  /** A stalled dial may succeed on the next attempt. */
+  override shouldRetry(): boolean {
+    return true
   }
 }
 
@@ -97,6 +109,17 @@ export class BufferOverflowError extends WebSocketClientError {
   }
 
   /** A local resource limit — reconnecting would overflow again. */
+  override shouldRetry(): boolean {
+    return false
+  }
+}
+
+export class MessageTooBigError extends WebSocketClientError {
+  constructor(readonly maxPayload: number) {
+    super(`WebSocket message exceeded maxPayload (${maxPayload} bytes)`)
+  }
+
+  /** The server would send the oversized message again. */
   override shouldRetry(): boolean {
     return false
   }

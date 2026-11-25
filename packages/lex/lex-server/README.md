@@ -305,6 +305,24 @@ Messages are CBOR-encoded and sent as WebSocket binary frames. The router handle
 - Graceful connection cleanup
 - Error frame encoding
 
+### Compression
+
+On Node.js, WebSocket compression (the permessage-deflate extension) is disabled by default. It is costly with many subscribers: each connection that compresses a message keeps a zlib stream (up to ~256 KB of native memory) until it closes, and all compression in the process goes through a single queue. Unless `serverNoContextTakeover` is negotiated, every message is compressed, however small.
+
+When messages are large enough to benefit from compression, enable it with the [`ws` options](https://github.com/websockets/ws/blob/master/doc/ws.md#new-websocketserveroptions-callback), preferably without context takeover and with a size threshold:
+
+```typescript
+const server = await serve(router, {
+  port: 3000,
+  perMessageDeflate: {
+    serverNoContextTakeover: true,
+    threshold: 1024, // bytes; smaller messages are sent uncompressed
+  },
+})
+```
+
+`createServer()` and `toRequestListener()` accept the same option.
+
 ## Authentication
 
 ### Custom Authentication
@@ -480,6 +498,8 @@ console.log('Server listening on port 3000')
 await server.terminate()
 ```
 
+`terminate()` stops accepting connections and closes WebSocket connections with a 1001 (Going Away) status code, which aborts their subscription handlers' `signal`. It then waits up to `gracefulTerminationTimeout` for in-flight requests and WebSocket closing handshakes to complete, before destroying the remaining connections.
+
 The server supports `AsyncDisposable`:
 
 ```typescript
@@ -493,7 +513,8 @@ Options:
 type StartServerOptions = {
   port?: number
   host?: string
-  gracefulTerminationTimeout?: number // ms to wait for connections to close
+  gracefulTerminationTimeout?: number // ms to wait for connections to close (default: 1000)
+  perMessageDeflate?: boolean | PerMessageDeflateOptions // WebSocket compression, off by default (see Compression)
 }
 ```
 
@@ -525,6 +546,8 @@ const app = express()
 
 // Mount the XRPC router
 app.use(toRequestListener(router.fetch))
+// or, with WebSocket compression:
+// app.use(toRequestListener(router.fetch, { perMessageDeflate: true }))
 
 app.listen(3000)
 ```

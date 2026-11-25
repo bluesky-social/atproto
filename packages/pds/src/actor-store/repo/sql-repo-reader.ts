@@ -12,7 +12,7 @@ import { countAll } from '../../db/index.js'
 import type { ActorDb } from '../db/index.js'
 
 export class SqlRepoReader extends ReadableBlockstore {
-  cache: BlockMap = new BlockMap()
+  cache = new BlockMap<Cid>()
 
   constructor(public db: ActorDb) {
     super()
@@ -53,12 +53,15 @@ export class SqlRepoReader extends ReadableBlockstore {
     return !!got
   }
 
-  async getBlocks(cids: Cid[]): Promise<{ blocks: BlockMap; missing: Cid[] }> {
+  async getBlocks(cids: Iterable<Cid>): Promise<{
+    blocks: BlockMap<Cid>
+    missing: Cid[]
+  }> {
     const cached = this.cache.getMany(cids)
     if (cached.missing.length < 1) return cached
     const missing = new CidSet(cached.missing)
-    const missingStr = cached.missing.map((c) => c.toString())
-    const blocks = new BlockMap()
+    const missingStr = Array.from(missing, (c) => c.toString())
+    const blocks = new BlockMap<Cid>()
     for (const batch of chunkArray(missingStr, 500)) {
       const res = await this.db.db
         .selectFrom('repo_block')
@@ -71,9 +74,9 @@ export class SqlRepoReader extends ReadableBlockstore {
         missing.delete(cid)
       }
     }
-    this.cache.addMap(blocks)
-    blocks.addMap(cached.blocks)
-    return { blocks, missing: missing.toList() }
+    this.cache.addBlocks(blocks)
+    blocks.addBlocks(cached.blocks)
+    return { blocks, missing: [...missing] }
   }
 
   async getCarStream(since?: string) {

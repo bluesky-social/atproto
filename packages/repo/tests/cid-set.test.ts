@@ -7,7 +7,7 @@ describe('CidSet.markVisited', () => {
     const set = new CidSet()
     set.markVisited(cid)
     expect(set.has(cid)).toBe(true)
-    expect(set.size()).toBe(1)
+    expect(set.size).toBe(1)
   })
 
   it('throws VisitedCidError when a CID is marked twice', async () => {
@@ -15,7 +15,7 @@ describe('CidSet.markVisited', () => {
     const set = new CidSet()
     set.markVisited(cid)
     expect(() => set.markVisited(cid)).toThrow(VisitedCidError)
-    expect(set.size()).toBe(1)
+    expect(set.size).toBe(1)
   })
 
   it('throws for a CID that was added with add()', async () => {
@@ -30,6 +30,6 @@ describe('CidSet.markVisited', () => {
     const set = new CidSet()
     set.markVisited(a)
     set.markVisited(b)
-    expect(set.size()).toBe(2)
+    expect(set.size).toBe(2)
   })
 })

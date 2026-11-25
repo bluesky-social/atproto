@@ -983,12 +983,32 @@ describe('Record validation', () => {
       $type: 'com.example.atUri',
       atUri: 'at://did:web:example.com/com.example.test/self',
     })
+    lex.assertValidRecord('com.example.atUri', {
+      $type: 'com.example.atUri',
+      atUri:
+        'at:space/did:plc:12345678abcdefghijklmnop/com.example.group/default/did:web:example.com/com.example.test/self',
+    })
     expect(() =>
       lex.assertValidRecord('com.example.atUri', {
         $type: 'com.example.atUri',
         atUri: 'http://not-atproto.com',
       }),
     ).toThrow('Record/atUri must be a valid at-uri')
+  })
+
+  it('Applies space-ref formatting constraint', () => {
+    lex.assertValidRecord('com.example.spaceRef', {
+      $type: 'com.example.spaceRef',
+      space:
+        'at:space/did:plc:12345678abcdefghijklmnop/com.example.group/default',
+    })
+    expect(() =>
+      lex.assertValidRecord('com.example.spaceRef', {
+        $type: 'com.example.spaceRef',
+        space:
+          'at:space/did:plc:12345678abcdefghijklmnop/com.example.group/default/did:plc:12345678abcdefghijklmnoq/com.example.test/self',
+      }),
+    ).toThrow('Record/space must be a valid space ref')
   })
 
   it('Applies did formatting constraint', () => {
@@ -1292,5 +1312,38 @@ describe('XRPC output validation', () => {
     expect(() =>
       lex.assertValidXrpcOutput('com.example.procedure', {}),
     ).toThrow('Output must have the property "object"')
+  })
+})
+
+describe('Space definitions', () => {
+  const spaceDoc = (defs: Record<string, unknown>) => ({
+    lexicon: 1,
+    id: 'com.example.group',
+    defs,
+  })
+  const space = (fields: Record<string, unknown> = {}) => ({
+    type: 'space',
+    key: 'any',
+    collections: ['com.example.post'],
+    ...fields,
+  })
+
+  it('accepts a space with or without a title', () => {
+    expect(() =>
+      parseLexiconDoc(spaceDoc({ main: space({ title: 'Group' }) })),
+    ).not.toThrow()
+    expect(() => parseLexiconDoc(spaceDoc({ main: space() }))).not.toThrow()
+  })
+
+  it('rejects an empty title', () => {
+    expect(() =>
+      parseLexiconDoc(spaceDoc({ main: space({ title: '' }) })),
+    ).toThrow('String must contain at least 1 character(s)')
+  })
+
+  it('must be the main definition', () => {
+    expect(() => parseLexiconDoc(spaceDoc({ other: space() }))).toThrow(
+      'spaces, procedures, queries, and subscriptions must be the main definition',
+    )
   })
 })

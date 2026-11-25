@@ -1,0 +1,82 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.space.defs",
+  "defs": {
+    "commit": {
+      "type": "object",
+      "description": "Commit to the current state of a space repo. Not signed; authenticated by the repo host with a MAC instead.",
+      "required": ["ver", "repo", "space", "rev", "data"],
+      "properties": {
+        "ver": {
+          "type": "integer",
+          "description": "Commit format version, currently 1."
+        },
+        "repo": {
+          "type": "string",
+          "format": "did"
+        },
+        "space": {
+          "type": "string",
+          "format": "space-ref"
+        },
+        "rev": {
+          "type": "string",
+          "format": "tid"
+        },
+        "data": {
+          "type": "bytes",
+          "description": "SHA-256 digest of the repo's LtHash state."
+        }
+      }
+    },
+    "repoWrite": {
+      "type": "object",
+      "description": "A repo in the space advanced to a new revision.",
+      "required": ["repo", "repoRev", "data", "spaceRev"],
+      "properties": {
+        "repo": {
+          "type": "string",
+          "format": "did"
+        },
+        "repoRev": {
+          "type": "string",
+          "format": "tid"
+        },
+        "data": {
+          "type": "bytes"
+        },
+        "spaceRev": {
+          "type": "string",
+          "format": "tid",
+          "description": "The space revision at which this update was sequenced."
+        },
+        "prevSpaceRev": {
+          "type": "string",
+          "format": "tid",
+          "description": "The space revision before this update, if any. Set in notifySpaceUpdate, where a gap indicates missed notifications, which can be recovered with listWriters."
+        }
+      }
+    },
+    "repoRemoved": {
+      "type": "object",
+      "description": "A repo was removed from the writer set.",
+      "required": ["repo", "spaceRev"],
+      "properties": {
+        "repo": {
+          "type": "string",
+          "format": "did"
+        },
+        "spaceRev": {
+          "type": "string",
+          "format": "tid",
+          "description": "The space revision at which this update was sequenced."
+        },
+        "prevSpaceRev": {
+          "type": "string",
+          "format": "tid",
+          "description": "The space revision before this update, if any. Set in notifySpaceUpdate, where a gap indicates missed notifications, which can be recovered with listWriters."
+        }
+      }
+    }
+  }
+}

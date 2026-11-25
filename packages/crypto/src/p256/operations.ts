@@ -28,7 +28,7 @@ export const verifySig = async (
   const allowMalleable = opts?.allowMalleableSig ?? false
   const msgHash = await sha256(data)
   return p256.verify(sig, msgHash, publicKey, {
-    format: allowMalleable ? undefined : 'compact', // prevent DER-encoded signatures
+    format: opts?.format ?? (allowMalleable ? undefined : 'compact'),
     lowS: !allowMalleable,
   })
 }

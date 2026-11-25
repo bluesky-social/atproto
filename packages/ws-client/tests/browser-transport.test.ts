@@ -3,6 +3,7 @@ import { CloseCode } from '../src/lib/close-codes.js'
 import {
   BufferOverflowError,
   CloseError,
+  HandshakeTimeoutError,
   IdleTimeoutError,
   SocketError,
   WebSocketClientError,
@@ -45,6 +46,7 @@ async function drain<M extends 'auto' | 'text' | 'binary'>(
 // API — a script calling `close()` doesn't synchronously raise a 'close' event.
 class FakeWebSocket {
   binaryType: 'blob' | 'arraybuffer' = 'blob'
+  readonly protocol = ''
   readonly closeCalls: Array<[number?, string?]> = []
   #listeners = new Map<string, Array<(ev: never) => void>>()
 
@@ -573,5 +575,114 @@ describe(createTransport, () => {
       done: true,
     })
     ac.abort(new Error('test cleanup'))
+  })
+
+  it('throws TypeError when a lookup is supplied', () => {
+    expect(() =>
+      createTransport(
+        {
+          ...transportOptionDefaults,
+          url: 'ws://localhost:1',
+          dataMode: 'auto',
+          signal: new AbortController().signal,
+          lookup: () => {},
+        },
+        FakeWebSocket as unknown as WebSocketCtor,
+      ),
+    ).toThrow(TypeError)
+  })
+
+  it('fails with HandshakeTimeoutError when the socket never opens', async () => {
+    const instances: FakeWebSocket[] = []
+    class CapturingWebSocket extends FakeWebSocket {
+      constructor(url: string | URL, protocols?: string | string[]) {
+        super(url, protocols)
+        instances.push(this)
+      }
+    }
+    const onClose = vi.fn()
+    const transport = createTransport(
+      {
+        ...transportOptionDefaults,
+        url: 'ws://localhost:1',
+        dataMode: 'auto',
+        signal: new AbortController().signal,
+        handshakeTimeoutMs: 20,
+        onClose,
+      },
+      CapturingWebSocket as unknown as WebSocketCtor,
+    )
+    const { error } = await drain(transport)
+    assert(error instanceof HandshakeTimeoutError)
+    expect(instances[0].closeCalls).toHaveLength(1)
+    expect(onClose).toHaveBeenCalledTimes(1)
+  })
+
+  describe('sender.close()', () => {
+    async function closeWith(code: number, reason?: string) {
+      let serverSaw: { code: number; reason: string } | undefined
+      await using server = await startServer((ws) => {
+        ws.on('close', (code, buf) => {
+          serverSaw = { code, reason: buf.toString() }
+        })
+      })
+      let sender!: Sender<'text'>
+      const transport = createTransport(
+        {
+          ...transportOptionDefaults,
+          url: server.url,
+          dataMode: 'text',
+          signal: new AbortController().signal,
+          onOpen: (s) => {
+            sender = s
+          },
+        },
+        globalWebSocket,
+      )
+      const drained = drain(transport)
+      await vi.waitFor(() => assert(sender))
+      sender.close(code, reason)
+      const { error } = await drained
+      await vi.waitFor(() => assert(serverSaw))
+      return { error, serverSaw }
+    }
+
+    it('ends the connection with a CloseError of that code', async () => {
+      const { error, serverSaw } = await closeWith(4000, 'bye')
+      assert(error instanceof CloseError)
+      expect([error.code, error.reason]).toEqual([4000, 'bye'])
+      expect(serverSaw).toEqual({ code: 4000, reason: 'bye' })
+    })
+
+    it('sends 1000 for a code the platform rejects, keeping it on the error', async () => {
+      const { error, serverSaw } = await closeWith(CloseCode.TryAgainLater)
+      assert(error instanceof CloseError)
+      expect(error.code).toBe(CloseCode.TryAgainLater)
+      expect(serverSaw?.code).toBe(CloseCode.Normal)
+    })
+  })
+
+  it('exposes the negotiated subprotocol on the sender', async () => {
+    await using server = await startServer(() => {}, {
+      handleProtocols: () => 'v2',
+    })
+    const controller = new AbortController()
+    let sender!: Sender<'text'>
+    createTransport(
+      {
+        ...transportOptionDefaults,
+        url: server.url,
+        dataMode: 'text',
+        signal: controller.signal,
+        protocols: ['v1', 'v2'],
+        onOpen: (s) => {
+          sender = s
+        },
+      },
+      globalWebSocket,
+    )
+    await vi.waitFor(() => assert(sender))
+    expect(sender.protocol).toBe('v2')
+    controller.abort(new Error('test cleanup'))
   })
 })

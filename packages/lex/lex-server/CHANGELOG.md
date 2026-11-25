@@ -1,5 +1,17 @@
 # @atproto/lex-server
 
+## 0.3.0
+
+### Minor Changes
+
+- [#6024](https://github.com/bluesky-social/atproto/pull/6024) [`59662dd`](https://github.com/bluesky-social/atproto/commit/59662dddf943cb616bc460c40bab859559e06f06) Thanks [@matthieusieben](https://github.com/matthieusieben)! - **Breaking:** WebSocket compression (permessage-deflate) is now disabled by default on Node.js, as in `ws`. It costs a zlib stream per connection and compresses every message, which limits how many subscribers a process can serve. Enable it with the new `perMessageDeflate` option of `serve()`, `createServer()`, `toRequestListener()` and `sendResponse()`, which accepts `ws`'s options, e.g. `{ serverNoContextTakeover: true, threshold: 1024 }`.
+
+### Patch Changes
+
+- [#6024](https://github.com/bluesky-social/atproto/pull/6024) [`59662dd`](https://github.com/bluesky-social/atproto/commit/59662dddf943cb616bc460c40bab859559e06f06) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Subscriptions yield to the event loop at least every 10ms. A handler that yields messages without awaiting, such as one replaying a backlog, no longer blocks I/O and timers, including the server's own termination, for as long as the socket accepts writes.
+
+- [#6024](https://github.com/bluesky-social/atproto/pull/6024) [`59662dd`](https://github.com/bluesky-social/atproto/commit/59662dddf943cb616bc460c40bab859559e06f06) Thanks [@matthieusieben](https://github.com/matthieusieben)! - `terminate()` now closes WebSocket connections with a 1001 (Going Away) status code, which aborts their subscription handlers, instead of leaving them open until `gracefulTerminationTimeout` expires. When `gracefulTerminationTimeout` is not set, `terminate()` now waits up to 1 second for in-flight requests to complete, instead of closing every connection immediately.
+
 ## 0.2.9
 
 ### Patch Changes

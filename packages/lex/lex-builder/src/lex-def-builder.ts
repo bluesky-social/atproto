@@ -25,6 +25,7 @@ import type {
   LexiconRecord,
   LexiconRef,
   LexiconRefUnion,
+  LexiconSpace,
   LexiconString,
   LexiconSubscription,
   LexiconToken,
@@ -73,7 +74,7 @@ export class LexDefBuilder {
     private readonly options: LexDefBuilderOptions,
     private readonly file: SourceFile,
     private readonly doc: LexiconDocument,
-    indexer: LexiconIndexer,
+    private readonly indexer: LexiconIndexer,
   ) {
     this.refResolver = new RefResolver(doc, file, indexer, options)
   }
@@ -156,6 +157,8 @@ export class LexDefBuilder {
     switch (def.type) {
       case 'permission-set':
         return this.addPermissionSet(hash, def)
+      case 'space':
+        return this.addSpace(hash, def)
       case 'procedure':
         return this.addProcedure(hash, def)
       case 'query':
@@ -199,6 +202,40 @@ export class LexDefBuilder {
         `l.permissionSet($nsid, [${permission.join(',')}], ${options})`,
       ),
     })
+  }
+
+  private async addSpace(hash: string, def: LexiconSpace) {
+    if (hash !== 'main') {
+      throw new Error(`Definition ${hash} cannot be of type ${def.type}`)
+    }
+
+    const collections = await Promise.all(
+      def.collections.map((nsid) => this.compileSpaceCollectionRef(nsid)),
+    )
+
+    await this.addSchema(hash, def, {
+      schema: markPure(
+        `l.space(${JSON.stringify(def.key)}, $nsid, [${collections.join(',')}])`,
+      ),
+    })
+
+    this.addExportedString('$spaceType', '$nsid')
+  }
+
+  private async compileSpaceCollectionRef(nsid: string): Promise<string> {
+    const doc = await this.indexer.get(nsid)
+    if (doc.defs.main?.type !== 'record') {
+      throw new Error(
+        `Collection ${nsid} of space ${this.doc.id} is not a record`,
+      )
+    }
+
+    const { varName } = await this.refResolver.resolve(nsid)
+    // @NOTE Unlike other refs, the type of the record schema is inferred (no
+    // "as any") so that the space retains the schema types of its collections.
+    // This cannot cause a circular inference since the type of a generated
+    // record schema is derived from its explicit type alias (see addRecord).
+    return markPure(`l.typedRef(() => ${varName})`)
   }
 
   private async addParameters(parameters?: LexiconParameters): Promise<string> {
@@ -861,6 +898,8 @@ export class LexDefBuilder {
         return 'l.LanguageString'
       case 'record-key':
         return 'l.RecordKeyString'
+      case 'space-ref':
+        return 'l.SpaceRefString'
       default:
         throw new Error(`Unknown string format: ${def.format}`)
     }

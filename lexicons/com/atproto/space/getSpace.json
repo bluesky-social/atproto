@@ -1,0 +1,43 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.space.getSpace",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "Get a space and its policy. Requires auth as the space authority, implemented by PDS.",
+      "parameters": {
+        "type": "params",
+        "required": ["space"],
+        "properties": {
+          "space": {
+            "type": "string",
+            "format": "space-ref"
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["space", "policy"],
+          "properties": {
+            "space": {
+              "type": "string",
+              "format": "space-ref"
+            },
+            "policy": {
+              "type": "union",
+              "description": "PDSes must support all of the listed policies. Other space hosts may support only some of them, and any host may support policies beyond those listed.",
+              "refs": [
+                "com.atproto.personalspace.policy",
+                "com.atproto.memberspace.policy",
+                "com.atproto.managedspace.policy"
+              ]
+            }
+          }
+        }
+      },
+      "errors": [{ "name": "SpaceNotFound" }, { "name": "NotAuthorized" }]
+    }
+  }
+}

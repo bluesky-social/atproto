@@ -1,3 +1,4 @@
+import { SpaceRef } from '@atproto/syntax'
 import { ScopeMissingError } from './scope-missing-error.js'
 import {
   AccountPermission,
@@ -19,6 +20,13 @@ import {
   RpcPermission,
   type RpcPermissionMatch,
 } from './scopes/rpc-permission.js'
+import {
+  SpacePermission,
+  type SpacePermissionMatch,
+  type SpacePermissionMatchOperation,
+  type SpacePermissionMatchReference,
+  type SpaceTarget,
+} from './scopes/space-permission.js'
 import { ScopesSet } from './scopes-set.js'
 
 export type {
@@ -27,6 +35,7 @@ export type {
   IdentityPermissionMatch,
   RepoPermissionMatch,
   RpcPermissionMatch,
+  SpacePermissionMatch,
 }
 
 export class ScopePermissions {
@@ -91,4 +100,36 @@ export class ScopePermissions {
       throw new ScopeMissingError(scope)
     }
   }
+
+  public allowsSpace(
+    target: SpaceTarget,
+    operation: SpacePermissionMatchOperation,
+  ): boolean {
+    return this.scopes.matches('space', {
+      ...toMatchReference(target),
+      ...operation,
+    })
+  }
+  public assertSpace(
+    target: SpaceTarget,
+    operation: SpacePermissionMatchOperation,
+  ): void {
+    if (!this.allowsSpace(target, operation)) {
+      const scope = SpacePermission.scopeNeededFor({
+        ...toMatchReference(target),
+        ...operation,
+      })
+      throw new ScopeMissingError(scope)
+    }
+  }
+}
+
+function toMatchReference(target: SpaceTarget): SpacePermissionMatchReference {
+  // A string must be a space ref: a record uri within a space is rejected
+  // rather than read as the space it belongs to.
+  const ref = typeof target === 'string' ? SpaceRef.parse(target) : target
+  if ('spaceDid' in ref) {
+    return { spaceType: ref.spaceType, authority: ref.spaceDid, skey: ref.skey }
+  }
+  return ref
 }

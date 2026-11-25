@@ -197,7 +197,7 @@ export const addBadCommit = async (
   const updatedData = await repo.data.add(`com.example.test/${TID.next()}`, cid)
   const dataCid = await updatedData.getPointer()
   const diff = await DataDiff.of(updatedData, repo.data)
-  newBlocks.addMap(diff.newMstBlocks)
+  newBlocks.addBlocks(diff.newMstBlocks)
   // we generate a bad sig by signing some other data
   const rev = TID.nextStr(repo.commit.rev)
   const commit: Commit = {
