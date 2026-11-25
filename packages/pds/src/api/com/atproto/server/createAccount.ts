@@ -7,6 +7,7 @@ import {
   type Keypair,
   P256Keypair,
   Secp256k1Keypair,
+  parseDidKey,
 } from '@atproto/crypto'
 import { type AtprotoData, ensureAtpDocument } from '@atproto/identity'
 import type { DidString } from '@atproto/syntax'
@@ -26,7 +27,6 @@ import type { AppContext } from '../../../../context.js'
 import { events } from '../../../../events.js'
 import { baseNormalizeAndValidate } from '../../../../handle/index.js'
 import { com } from '../../../../lexicons/index.js'
-import { createPlcOp } from '../../../../util/plc.js'
 import { safeResolveDidDoc } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
@@ -112,19 +112,24 @@ export default function (server: Server, ctx: AppContext) {
             }
 
             try {
-              await ctx.actorStore.clearReservedKeys(did).catch((err) => {
-                // @NOTE This is a cleanup operation so we won't fail the whole
-                // flow if it fails, but we log it just in case
-                req.log.error(
-                  {
-                    did,
-                    signingKeyDid: signingKey.did(),
-                    kemKeyDid: kemKey.did(),
-                    err,
-                  },
-                  'Failed to clear reserved keys',
-                )
-              })
+              await ctx.actorStore
+                .clearReservedKeys(did, {
+                  signingKey: signingKey.did(),
+                  kemKey: kemKey.did(),
+                })
+                .catch((err) => {
+                  // @NOTE This is a cleanup operation so we won't fail the whole
+                  // flow if it fails, but we log it just in case
+                  req.log.error(
+                    {
+                      did,
+                      signingKeyDid: signingKey.did(),
+                      kemKeyDid: kemKey.did(),
+                      err,
+                    },
+                    'Failed to clear reserved keys',
+                  )
+                })
 
               events.accountCreated({
                 source: com.atproto.server.createAccount.$lxm,
@@ -193,7 +198,11 @@ const validateInputsForEntrywayPds = async (
     )
   }
   try {
-    await plc.assureValidOp(plcOp)
+    // @NOTE Validate keys used as reservation paths before looking them up.
+    parseDidKey(plcOp.verificationMethods.atproto)
+    if (plcOp.verificationMethods.atproto_kem !== undefined) {
+      parseDidKey(plcOp.verificationMethods.atproto_kem)
+    }
     await plc.assureValidSig([plcRotationKey], plcOp)
   } catch (err) {
     throw new InvalidRequestError('invalid plc operation', 'IncompatibleDidDoc')
@@ -362,7 +371,7 @@ const formatDidAndPlcOp = async (
   if (input.recoveryKey) {
     rotationKeys.unshift(input.recoveryKey)
   }
-  return createPlcOp({
+  return plc.createOp({
     signingKey: signingKey.did(),
     kemKey: kemKey.did(),
     rotationKeys,

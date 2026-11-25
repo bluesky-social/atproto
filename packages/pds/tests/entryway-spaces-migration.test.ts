@@ -1,4 +1,5 @@
 import { rm } from 'node:fs/promises'
+import { createOp } from '@did-plc/lib'
 import { jest } from '@jest/globals'
 import getPort from 'get-port'
 import { AtpAgent } from '@atproto/api'
@@ -13,7 +14,6 @@ import {
 } from '@atproto/syntax'
 import { com, internal } from '../src/lexicons/index.js'
 import { trackStats } from '../src/spaces-migration/progress.js'
-import { createPlcOp } from '../src/util/plc.js'
 import { MockEntryway } from './entryway-mock.js'
 
 describe('entryway spaces migration', () => {
@@ -136,7 +136,7 @@ describe('entryway spaces migration', () => {
     )
     const handle = 'ewsunreserved.test' as HandleString
     const attempt = async (kemKey: string, rejection: object) => {
-      const { did, op } = await createPlcOp({
+      const { did, op } = await createOp({
         signingKey,
         kemKey,
         rotationKeys: [plcRotationKey.did()],
@@ -170,7 +170,7 @@ describe('entryway spaces migration', () => {
     )
     const { kemKey } = await client.call(com.atproto.server.reserveKemKey, {})
     const handle = 'ewsretry.test' as HandleString
-    const { did, op } = await createPlcOp({
+    const { did, op } = await createOp({
       signingKey,
       kemKey,
       rotationKeys: [plcRotationKey.did()],

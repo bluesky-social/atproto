@@ -50,19 +50,18 @@ const expected: Record<string, { cols: Col[]; indexes: Idx[] }> = {
   space: {
     cols: [
       ['uri', 'varchar', 0, null, 1],
-      ['authority', 'varchar', 1, null, 0],
       ['type', 'varchar', 1, null, 0],
       ['createdAt', 'varchar', 1, null, 0],
       ['deletedAt', 'varchar', 0, null, 0],
     ],
-    indexes: [],
+    indexes: [{ name: 'space_type_idx', unique: 0, columns: ['type', 'uri'] }],
   },
   memberspace_member: {
     cols: [
       ['space', 'varchar', 1, null, 1],
       ['did', 'varchar', 1, null, 2],
-      ['read', 'INTEGER', 1, '1', 0],
-      ['write', 'INTEGER', 1, '1', 0],
+      ['read', 'INTEGER', 1, null, 0],
+      ['write', 'INTEGER', 1, null, 0],
     ],
     indexes: [],
   },
@@ -89,11 +88,6 @@ const expected: Record<string, { cols: Col[]; indexes: Idx[] }> = {
         name: 'space_record_path_idx',
         unique: 1,
         columns: ['space', 'collection', 'rkey'],
-      },
-      {
-        name: 'space_record_rev_idx',
-        unique: 0,
-        columns: ['space', 'repoRev'],
       },
     ],
   },
@@ -123,8 +117,6 @@ const expected: Record<string, { cols: Col[]; indexes: Idx[] }> = {
       ['space', 'varchar', 1, null, 1],
       ['rev', 'varchar', 1, null, 2],
       ['idx', 'INTEGER', 1, null, 3],
-      ['action', 'varchar', 1, null, 0],
-      ['uri', 'varchar', 1, null, 0],
       ['collection', 'varchar', 1, null, 0],
       ['rkey', 'varchar', 1, null, 0],
       ['cid', 'varchar', 0, null, 0],
@@ -136,9 +128,9 @@ const expected: Record<string, { cols: Col[]; indexes: Idx[] }> = {
     cols: [
       ['space', 'varchar', 1, null, 1],
       ['did', 'varchar', 1, null, 2],
+      ['spaceRev', 'varchar', 1, null, 0],
       ['repoRev', 'varchar', 1, null, 0],
       ['data', 'BLOB', 1, null, 0],
-      ['spaceRev', 'varchar', 1, null, 0],
       ['removedAt', 'varchar', 0, null, 0],
     ],
     indexes: [

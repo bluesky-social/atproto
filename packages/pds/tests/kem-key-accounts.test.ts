@@ -92,7 +92,7 @@ describe('kem keys for new accounts', () => {
       const { did } = await makeAccount('rotatesign')
       const kem = await pds.ctx.actorStore.kemKeypair(did as DidString)
       const stray = await Secp256k1Keypair.create()
-      await pds.ctx.plcClient.updateAtprotoKey(
+      await pds.ctx.plcClient.updateAtprotoSigningKey(
         did,
         pds.ctx.plcRotationKey,
         stray.did(),
