@@ -269,6 +269,25 @@ export const eventSubjectFilter = (
   ])
 }
 
+/** Return the configured tags currently present on an account. */
+export async function getAppealableAccountTags(
+  db: Database,
+  subject: ModSubject,
+  tags: readonly string[],
+  lock = false,
+): Promise<string[]> {
+  if (!subject.isRepo() || !tags.length) return []
+  let query = db.db
+    .selectFrom('moderation_subject_status')
+    .where('did', '=', subject.did)
+    .where('recordPath', '=', '')
+    .where('convoId', '=', '')
+    .select('tags')
+  if (lock) query = query.forUpdate()
+  const current = await query.executeTakeFirst()
+  return tags.filter((tag) => current?.tags?.includes(tag))
+}
+
 export const findAppealedEvent = async (
   ctx: AppContext,
   subject: ModSubject,
@@ -461,6 +480,8 @@ export const assertAppealAllowed = async (
     actionAt?: DatetimeString
     unresolvedAction?: boolean
     windowMonths: number
+    appealableTags?: string[]
+    requireAppealableTag?: boolean
   },
 ) => {
   dbTxn.assertTransaction()
@@ -469,6 +490,20 @@ export const assertAppealAllowed = async (
   )`.execute(dbTxn.db)
 
   const eligibility = await findAppealEligibility(dbTxn, subject)
+  // @NOTE Tag writers lock the same status row before changing tags.
+  const activeTags =
+    options.requireAppealableTag ||
+    (!options.actionAt && eligibility.lastClosedAt)
+      ? await getAppealableAccountTags(
+          dbTxn,
+          subject,
+          options.appealableTags ?? [],
+          true,
+        )
+      : []
+  if (options.requireAppealableTag && !activeTags.length) {
+    throw new ForbiddenError('Subject is not appealable', 'NotAppealable')
+  }
   if (
     options.unresolvedAction &&
     (eligibility.hasActiveAppeal ||
@@ -490,7 +525,29 @@ export const assertAppealAllowed = async (
       .select('createdAt')
       .limit(1)
       .executeTakeFirst()
-    actionAt = latest?.createdAt ?? null
+    const tag = activeTags.length
+      ? await dbTxn.db
+          .selectFrom('moderation_event')
+          .where((eb) => eventSubjectFilter(eb, subject))
+          .where('action', '=', tools.ozone.moderation.defs.modEventTag.$type)
+          .where('createdAt', '>', eligibility.lastClosedAt)
+          .where(
+            sql<boolean>`EXISTS (
+            SELECT 1 FROM unnest(${activeTags}::text[]) AS allowed(tag)
+            WHERE "addedTags" ? allowed.tag
+              AND NOT (coalesce("removedTags", '[]'::jsonb) ? allowed.tag)
+          )`,
+          )
+          .orderBy('createdAt', 'desc')
+          .select('createdAt')
+          .limit(1)
+          .executeTakeFirst()
+      : undefined
+    actionAt =
+      [latest?.createdAt, tag?.createdAt]
+        .filter((at) => at != null)
+        .sort()
+        .at(-1) ?? null
     if (actionAt && !isAppealWindowOpen(actionAt, options.windowMonths)) {
       actionAt = null
     }
@@ -516,6 +573,8 @@ export type FileAppealInput = {
   /** Resolved moderation event ID, when one could be found. */
   resolvedActionId?: number
   resolvedActionAt?: DatetimeString
+  /** Eligibility depends on an active configured tag. */
+  requireAppealableTag?: boolean
   /** The action reference supplied by the caller. */
   action?: tools.ozone.inbox.appealActionedSubject.$InputBody['action']
   /** Optional: an appeal is a request for review, not an argued case. */
@@ -668,6 +727,7 @@ export const fileAppeal = async (
     subject,
     resolvedActionId,
     resolvedActionAt,
+    requireAppealableTag,
     action,
     reason,
     modTool,
@@ -686,6 +746,8 @@ export const fileAppeal = async (
       actionAt: resolvedActionAt,
       unresolvedAction: !!action && !resolvedActionAt,
       windowMonths: ctx.cfg.inbox.appealWindowMonths,
+      appealableTags: ctx.cfg.inbox.appealableTags,
+      requireAppealableTag,
     })
 
     // create event and report row

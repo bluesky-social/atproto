@@ -1,5 +1,66 @@
 # @atproto/ozone
 
+## 0.16.6
+
+### Patch Changes
+
+- Updated dependencies [[`50ffa3a`](https://github.com/bluesky-social/atproto/commit/50ffa3a18cdae58b7dedf777aafc0bc0eb471c41), [`50ffa3a`](https://github.com/bluesky-social/atproto/commit/50ffa3a18cdae58b7dedf777aafc0bc0eb471c41), [`50ffa3a`](https://github.com/bluesky-social/atproto/commit/50ffa3a18cdae58b7dedf777aafc0bc0eb471c41), [`58ca16d`](https://github.com/bluesky-social/atproto/commit/58ca16d32ccb50b30e1d4c800c6263af7511a4ff), [`315aba7`](https://github.com/bluesky-social/atproto/commit/315aba7d157f2e7376b56e927e9bc088a3a622c1), [`2ed73cc`](https://github.com/bluesky-social/atproto/commit/2ed73cc657769447d2617f1c3642b06f69b69dc5)]:
+  - @atproto-labs/fetch-node@0.5.0
+  - @atproto/lex-client@0.7.0
+  - @atproto/lex-schema@0.3.2
+  - @atproto/identity@0.5.27
+  - @atproto/lex-password-session@0.3.7
+  - @atproto/xrpc-server@0.13.17
+
+## 0.16.5
+
+### Patch Changes
+
+- [#6003](https://github.com/bluesky-social/atproto/pull/6003) [`ea36fae`](https://github.com/bluesky-social/atproto/commit/ea36fae222c5352629cd0b73808825550623668b) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Sync the external embed lexicon with followed-account liker and publication subscriber previews and counts.
+
+## 0.16.4
+
+### Patch Changes
+
+- [#5952](https://github.com/bluesky-social/atproto/pull/5952) [`67fc7db`](https://github.com/bluesky-social/atproto/commit/67fc7db6e644fe32880335c404195b31d3840acf) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Register the import-in-the-middle ESM loader hook in-thread with `module.registerHooks()` instead of the deprecated `module.register()` (DEP0205), and update `@opentelemetry/*` dependencies. `@atproto-labs/opentelemetry-node`, and the services that load it, now require Node.js `^22.22.3 || ^24.11.1 || >=25.1.0`.
+- Updated dependencies [[`67fc7db`](https://github.com/bluesky-social/atproto/commit/67fc7db6e644fe32880335c404195b31d3840acf)]:
+  - @atproto-labs/opentelemetry-node@0.6.0
+  - @atproto/lex-client@0.6.2
+  - @atproto/xrpc-server@0.13.16
+  - @atproto/common@0.8.13
+  - @atproto/identity@0.5.26
+  - @atproto/lex-password-session@0.3.6
+
+## 0.16.3
+
+### Patch Changes
+
+- [#5976](https://github.com/bluesky-social/atproto/pull/5976) [`58e882b`](https://github.com/bluesky-social/atproto/commit/58e882b7b0bbe6bb186fd0652be87dd88ba1e935) Thanks [@foysalit](https://github.com/foysalit)! - Allow inbox appeals for active, explicitly configured moderation tags.
+
+## 0.16.2
+
+### Patch Changes
+
+- [#5966](https://github.com/bluesky-social/atproto/pull/5966) [`1079900`](https://github.com/bluesky-social/atproto/commit/1079900b5ba5e8b31ef01d3efcd22a556a611a8a) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add optional `providerId` attribution to external article, publication, gallery, and livestream views. Detect providers server-side from known record types, Standard.site document content and publication theme type tags (including custom domains), and URL fallbacks. Attribution is best-effort and cosmetic, not verified provenance.
+
+- [#5973](https://github.com/bluesky-social/atproto/pull/5973) [`2c3b0a2`](https://github.com/bluesky-social/atproto/commit/2c3b0a20905a8269437ba8f7ba48e15c1ba9527e) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Use upstream Atmosphere and external embed lexicons in place of local overrides, and remove app store links from Atmosphere app cards.
+
+- [#5967](https://github.com/bluesky-social/atproto/pull/5967) [`b6408e5`](https://github.com/bluesky-social/atproto/commit/b6408e54bc62eb7d5d32c4d401865af6aec0085c) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add `viewer.like` to external article and gallery views, containing the requesting account's Standard.site recommendation or Grain favorite record URI.
+
+## 0.16.1
+
+### Patch Changes
+
+- [#5956](https://github.com/bluesky-social/atproto/pull/5956) [`1403383`](https://github.com/bluesky-social/atproto/commit/1403383ea89737ff1910346107a4ef822e4ef6d5) Thanks [@gcwill70](https://github.com/gcwill70)! - Add stat group details with an inbound report-type breakdown for a selected UTC date range.
+- Updated dependencies [[`ee63e5e`](https://github.com/bluesky-social/atproto/commit/ee63e5ede255e40251a9e761befec9d623dfb1ec), [`ee63e5e`](https://github.com/bluesky-social/atproto/commit/ee63e5ede255e40251a9e761befec9d623dfb1ec), [`33d620b`](https://github.com/bluesky-social/atproto/commit/33d620b2ffc4b9a5b4959cbcc1262c5138c8a506)]:
+  - @atproto/syntax@0.7.9
+  - @atproto/lex-schema@0.3.1
+  - @atproto/lex-client@0.6.1
+  - @atproto/lex-password-session@0.3.5
+  - @atproto/xrpc-server@0.13.15
+  - @atproto/common@0.8.12
+  - @atproto/identity@0.5.25
+
 ## 0.16.0
 
 ### Minor Changes

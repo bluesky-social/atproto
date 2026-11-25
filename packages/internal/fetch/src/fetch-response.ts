@@ -1,10 +1,10 @@
 import { type Transformer, pipe } from '@atproto-labs/pipe'
+import { cancelBody } from './cancel-body.js'
 import { FetchError } from './fetch-error.js'
+import type { Json } from './json.js'
 import { TransformedResponse } from './transformed-response.js'
 import {
-  type Json,
   MaxBytesTransformStream,
-  cancelBody,
   ifString,
   logCancellationError,
 } from './util.js'
@@ -248,7 +248,10 @@ export function fetchResponseMaxSizeChecker(
   // we will only rely on the Content-Length header.
   if (!response.body) return response
 
-  const transform = new MaxBytesTransformStream(maxBytes)
+  const transform = new MaxBytesTransformStream(
+    maxBytes,
+    () => new FetchResponseError(response, 502, 'Response too large'),
+  )
   return new TransformedResponse(response, transform)
 }
 
@@ -304,8 +307,12 @@ export type ParsedJsonResponse<T = Json> = {
 export async function fetchResponseJsonTransformer<T = Json>(
   response: Response,
 ): Promise<ParsedJsonResponse<T>> {
+  // Errors while reading the body (size limit, abort, network failure) are not
+  // parse errors: let them propagate as they are.
+  const text = await response.text()
+
   try {
-    const json = (await response.json()) as T
+    const json = JSON.parse(text) as T
     return { response, json }
   } catch (cause) {
     throw new FetchResponseError(

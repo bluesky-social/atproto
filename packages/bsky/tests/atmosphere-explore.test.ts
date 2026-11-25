@@ -19,6 +19,7 @@ import {
 import {
   type AtUriString,
   Client,
+  type DidString,
   type TypedLexMap,
   atUri,
   currentDatetimeString,
@@ -218,6 +219,7 @@ async function setup(config: unknown = {}, exploreEnabled = true) {
   const galleryItems = new Map<AtUriString, AtUriString[]>([
     [galleryUri, [itemUri]],
   ])
+  const viewerActions = new Map<AtUriString, AtUriString>()
   const takenDown = new Set<string>()
   const takenDownActors = new Set<string>()
   // Per-DID actor overrides; unlisted DIDs are existing, profile-less actors.
@@ -271,6 +273,22 @@ async function setup(config: unknown = {}, exploreEnabled = true) {
                   (uri) => ({ uri }),
                 )
               : [],
+        }),
+        getAtmosphereBacklinksByActor: ({
+          targetUris,
+          actorDid,
+          collection,
+        }) => ({
+          results: targetUris.map((targetUri) => {
+            const action =
+              actorDid === viewer
+                ? viewerActions.get(targetUri as AtUriString)
+                : undefined
+            return {
+              targetUri,
+              uris: action?.includes(`/${collection}/`) ? [action] : [],
+            }
+          }),
         }),
         getActors: ({ dids }) => ({
           actors: dids.map((did) => {
@@ -442,6 +460,7 @@ async function setup(config: unknown = {}, exploreEnabled = true) {
   return {
     records,
     galleryItems,
+    viewerActions,
     takenDown,
     takenDownActors,
     actors,
@@ -598,6 +617,48 @@ describe('Atmosphere Explore access gate', () => {
 })
 
 describe('Atmosphere Explore', () => {
+  it('populates subscriptions on publications and article publishers only for authenticated viewers', async () => {
+    await using fixture = await setup(curated)
+    const subscription = atUri(
+      viewer,
+      site.standard.graph.subscription.$type,
+      'sub',
+    )
+    fixture.viewerActions.set(pubUri, subscription)
+    using byActor = vi.spyOn(fixture.dataplane, 'getAtmosphereBacklinksByActor')
+    const publicationViewers = (
+      body: app.bsky.unspecced.getAtmosphereExploreTab.$OutputBody,
+    ) => [
+      ...body.publications.items.map(({ view }) => view.viewer),
+      ...body.articles.items.map(({ view }) => view.publisher?.viewer),
+    ]
+
+    const anonymous = await fixture.query()
+    expect(anonymous.status).toBe(200)
+    expect(publicationViewers(anonymous.body)).toEqual([
+      undefined,
+      undefined,
+      undefined,
+    ])
+    expect(byActor).not.toHaveBeenCalled()
+    const subscribed = await fixture.query(true)
+    expect(subscribed.status).toBe(200)
+    expect(publicationViewers(subscribed.body)).toEqual([
+      { subscription },
+      { subscription },
+      { subscription },
+    ])
+    expect(
+      byActor.mock.calls.filter(
+        ([req]) => req.collection === site.standard.graph.subscription.$type,
+      ),
+    ).toHaveLength(1)
+    fixture.viewerActions.clear()
+    const unsubscribed = await fixture.query(true)
+    expect(unsubscribed.status).toBe(200)
+    expect(publicationViewers(unsubscribed.body)).toEqual([{}, {}, {}])
+  })
+
   test.each([false, true])(
     'hydrates article and livestream posts over HTTP (authenticated: %s)',
     async (authenticated) => {
@@ -824,8 +885,11 @@ describe('Atmosphere Explore', () => {
     expect(hydrate).toHaveBeenCalledWith(
       [docUri, pubUri, galleryUri, liveUri],
       expect.objectContaining({ viewer: null }),
+      { knownInteractors: true },
     )
-    expect(hydrate.mock.calls.filter(([, , seen]) => !seen)).toHaveLength(1)
+    expect(
+      hydrate.mock.calls.filter(([, , options]) => !options?.seenRecordKeys),
+    ).toHaveLength(1)
     expect(lookup.mock.calls[0][0].uris).toEqual([
       docUri,
       pubUri,
@@ -1694,11 +1758,6 @@ describe('Atmosphere Explore', () => {
   })
 
   describe('apps endpoint', () => {
-    const storeLinks = {
-      appStoreUrl: 'https://apps.apple.com/app/example/id123?ct=explore',
-      googlePlayUrl:
-        'https://play.google.com/store/apps/details?id=com.example&referrer=explore',
-    }
     const apps = Array.from({ length: 12 }, (_, i) => ({
       id: `${i}`,
       category: i < 10 ? 'Social' : 'Writing',
@@ -1723,21 +1782,10 @@ describe('Atmosphere Explore', () => {
       expect(new Request(...fixture.fetchMock.mock.calls[0]).url).toBe(service)
     })
 
-    it('validates optional store links without requiring profiles', async () => {
-      const cards = [
-        { id: 'both', ...storeLinks },
-        { id: 'apple', appStoreUrl: storeLinks.appStoreUrl },
-        { id: 'google', googlePlayUrl: storeLinks.googlePlayUrl },
-        { id: 'neither' },
-      ]
+    it('returns cards without requiring profiles', async () => {
+      const cards = [{ id: 'one' }, { id: 'two' }]
       await using fixture = await setup({
-        apps: [
-          cards[0],
-          { ...cards[1], did: null, profileUrl: null },
-          ...cards.slice(2),
-          { id: 'invalid-apple', appStoreUrl: 'not a uri' },
-          { id: 'invalid-google', googlePlayUrl: 5 },
-        ],
+        apps: [cards[0], { ...cards[1], did: null, profileUrl: null }],
       })
       using profiles = vi.spyOn(fixture.hydrator, 'hydrateProfilesDetailed')
       const { status, body } = await fixture.queryApps()
@@ -1832,7 +1880,6 @@ describe('Atmosphere Explore', () => {
       await using fixture = await setup({
         apps: [appDid, missingDid].map((did) => ({
           did,
-          ...storeLinks,
           logo,
           backgroundImage: banner,
           overlayColor: '#000000',
@@ -1861,8 +1908,7 @@ describe('Atmosphere Explore', () => {
         images.getPresetUri('banner', appDid, photoCid),
       )
       expect(hydrated).not.toHaveProperty('backgroundImage')
-      expect(hydrated).toMatchObject(storeLinks)
-      expect(missing).toEqual({ logo, banner, ...storeLinks })
+      expect(missing).toEqual({ logo, banner })
     })
   })
 
@@ -1920,11 +1966,6 @@ describe('Atmosphere Explore', () => {
       logo: 'https://example.com/override-logo.png',
       backgroundImage: 'https://example.com/override-bg.png',
     }
-    const storeLinks = {
-      appStoreUrl: 'https://apps.apple.com/app/example/id123?ct=explore',
-      googlePlayUrl:
-        'https://play.google.com/store/apps/details?id=com.example&referrer=explore',
-    }
     const card = (id: string, extra: object = {}) => ({
       id,
       title: `App ${id}`,
@@ -1932,7 +1973,7 @@ describe('Atmosphere Explore', () => {
       ...extra,
     })
 
-    it('prefers profile images and preserves store links', async () => {
+    it('prefers profile images and preserves editorial metadata', async () => {
       const did = appDid('appone')
       const editorial = {
         id: 'one',
@@ -1943,7 +1984,6 @@ describe('Atmosphere Explore', () => {
         overlayColor: '#000000',
         textColor: '#ffffff',
         ...overrides,
-        ...storeLinks,
       }
       await using fixture = await setup({
         apps: [
@@ -2060,12 +2100,11 @@ describe('Atmosphere Explore', () => {
       const did = appDid('valid')
       await using fixture = await setup({
         apps: [
-          card('missing', { ...overrides, ...storeLinks }),
+          card('missing', overrides),
           card('null', {
             did: null,
             profileUrl: null,
             ...overrides,
-            ...storeLinks,
           }),
           card('invalid', { did: 'not-a-did' }),
           card('number', { did: 5 }),
@@ -2082,12 +2121,8 @@ describe('Atmosphere Explore', () => {
         'null',
         'valid',
       ])
-      expect(body.apps[0]).toEqual(
-        card('missing', { ...overrides, ...storeLinks }),
-      )
-      expect(body.apps[1]).toEqual(
-        card('null', { ...overrides, ...storeLinks }),
-      )
+      expect(body.apps[0]).toEqual(card('missing', overrides))
+      expect(body.apps[1]).toEqual(card('null', overrides))
       expect(body.apps[2].profile?.did).toBe(did)
     })
 
@@ -2181,8 +2216,9 @@ describe('Atmosphere Explore', () => {
           .status,
       ).toBe(200)
       return (
-        hydrate.mock.calls.find(([, , seen]) => !seen)?.[0] ??
-        ([] as AtUriString[])
+        hydrate.mock.calls.find(
+          ([, , options]) => !options?.seenRecordKeys,
+        )?.[0] ?? ([] as AtUriString[])
       )
     }
 
@@ -2246,7 +2282,11 @@ describe('Atmosphere Explore', () => {
         using lookup = vi.spyOn(fixture.dataplane, 'getRecordsByURI')
         expect((await fixture.query(false, {}, us)).status).toBe(200)
         const selected = [roots[11], ...roots.slice(0, 9)]
-        expect(hydrate.mock.calls.filter(([, , seen]) => !seen)).toHaveLength(1)
+        expect(
+          hydrate.mock.calls.filter(
+            ([, , options]) => !options?.seenRecordKeys,
+          ),
+        ).toHaveLength(1)
         expect(hydrate.mock.calls[0][0]).toEqual(selected)
         expect(lookup.mock.calls[0][0].uris).toEqual(selected)
         const looked = lookup.mock.calls.flatMap(([params]) => params.uris)
@@ -2830,36 +2870,24 @@ describe('Atmosphere Explore', () => {
     expect((await fixture.query()).body.articles.items).toEqual([])
   })
 
-  it('uses bounded, deduplicated profile previews', async () => {
+  it('uses bounded, deduplicated subscriber previews and no article previews', async () => {
     await using fixture = await setup({ articles: [group(docUri)] })
+    const subscription = (did: DidString, rkey: string) =>
+      atUri(did, site.standard.graph.subscription.$type, rkey)
     using backlinks = vi
       .spyOn(fixture.dataplane, 'getAtmosphereBacklinks')
-      .mockResolvedValue(
-        new GetAtmosphereBacklinksResponse({
-          backlinks: [
-            {
-              uri: atUri(
-                'did:plc:z',
-                site.standard.graph.recommend.$type,
-                'one',
-              ),
-            },
-            {
-              uri: atUri(
-                'did:plc:a',
-                site.standard.graph.recommend.$type,
-                'one',
-              ),
-            },
-            {
-              uri: atUri(
-                'did:plc:a',
-                site.standard.graph.recommend.$type,
-                'two',
-              ),
-            },
-          ],
-        }),
+      .mockImplementation(
+        async ({ collection }) =>
+          new GetAtmosphereBacklinksResponse({
+            backlinks:
+              collection === site.standard.graph.subscription.$type
+                ? [
+                    { uri: subscription('did:plc:z', 'one') },
+                    { uri: subscription('did:plc:a', 'one') },
+                    { uri: subscription('did:plc:a', 'two') },
+                  ]
+                : [],
+          }),
       )
     for (const [did, rkey] of [
       ['did:plc:z', 'one'],
@@ -2867,38 +2895,45 @@ describe('Atmosphere Explore', () => {
       ['did:plc:a', 'two'],
     ] as const) {
       fixture.records.set(
-        atUri(did, site.standard.graph.recommend.$type, rkey),
-        site.standard.graph.recommend.$build({
-          document: docUri,
-          createdAt: publishedAt,
-        }),
+        subscription(did, rkey),
+        site.standard.graph.subscription.$build({ publication: pubUri }),
       )
     }
     using lookup = vi.spyOn(fixture.dataplane, 'getRecordsByURI')
     const { body } = await fixture.query()
     expect(lookup).toHaveBeenCalledWith({
       uris: [
-        pubUri,
-        atUri('did:plc:z', site.standard.graph.recommend.$type, 'one'),
-        atUri('did:plc:a', site.standard.graph.recommend.$type, 'one'),
-        atUri('did:plc:a', site.standard.graph.recommend.$type, 'two'),
+        subscription('did:plc:z', 'one'),
+        subscription('did:plc:a', 'one'),
+        subscription('did:plc:a', 'two'),
       ],
     })
-    expect(body.articles.items[0].view.likers?.map(({ did }) => did)).toEqual([
+    const view = body.articles.items[0].view
+    expect(view).not.toHaveProperty('likers')
+    expect(view.publisher?.subscribers?.map(({ did }) => did)).toEqual([
       'did:plc:a',
       'did:plc:z',
     ])
-    expect(backlinks.mock.calls.every(([params]) => params.limit === 3)).toBe(
-      true,
-    )
+    expect(
+      backlinks.mock.calls.map(([params]) => params.collection),
+    ).not.toContain(site.standard.graph.recommend.$type)
+    expect(
+      backlinks.mock.calls
+        .filter(
+          ([params]) =>
+            params.collection === site.standard.graph.subscription.$type,
+        )
+        .every(([params]) => params.limit === 3),
+    ).toBe(true)
     for (const [uri, record] of fixture.records) {
-      if (site.standard.graph.recommend.$isTypeOf(record)) {
+      if (site.standard.graph.subscription.$isTypeOf(record)) {
         fixture.takenDown.add(uri)
       }
     }
     const moderated = (await fixture.query()).body.articles.items[0].view
-    expect(moderated.likers).toEqual([])
+    expect(moderated.publisher?.subscribers).toEqual([])
     expect(moderated.likeCount).toBe(7)
+    expect(moderated.publisher?.subscriptionCount).toBe(4)
   })
 
   it('rejects gallery items associated with a different gallery', async () => {
@@ -3093,8 +3128,6 @@ describe('Atmosphere Explore', () => {
             null,
             'app',
             { ...app(2), url: 5 },
-            { ...app(2), appStoreUrl: 'not a uri' },
-            { ...app(2), googlePlayUrl: 5 },
             app(3),
           ],
         })
@@ -3357,7 +3390,9 @@ describe('Atmosphere Explore list ordering and caps', () => {
     expect(
       second.body.publications.items.map(({ view }) => rootOf(view)),
     ).toEqual(expected)
-    expect(hydrate).toHaveBeenLastCalledWith(expected, expect.anything())
+    expect(hydrate).toHaveBeenLastCalledWith(expected, expect.anything(), {
+      knownInteractors: true,
+    })
   })
 
   it('shuffles Iris articles', async () => {
@@ -3512,8 +3547,11 @@ describe('Atmosphere Explore article source (gate on)', () => {
     expect(hydrate).toHaveBeenCalledWith(
       [doc2Uri, docUri, pubUri, galleryUri, liveUri],
       expect.objectContaining({ viewer: null }),
+      { knownInteractors: true },
     )
-    expect(hydrate.mock.calls.filter(([, , seen]) => !seen)).toHaveLength(1)
+    expect(
+      hydrate.mock.calls.filter(([, , options]) => !options?.seenRecordKeys),
+    ).toHaveLength(1)
     expect(lookup.mock.calls.flatMap(([params]) => params.uris)).not.toContain(
       missingUri,
     )
@@ -3641,6 +3679,7 @@ describe('Atmosphere Explore article source (gate on)', () => {
     expect(hydrate).toHaveBeenCalledWith(
       [docUri],
       expect.objectContaining({ viewer: null }),
+      { knownInteractors: true },
     )
     expect(body.articles.items).toHaveLength(1)
     expect(body.articles.recIdStr).toBe('rec-1')
@@ -4004,6 +4043,7 @@ describe('Atmosphere Explore Iris requirements and failures', () => {
       expect(hydrate).toHaveBeenCalledWith(
         [missingUri, docUri, pubUri, galleryUri, liveUri],
         expect.objectContaining({ viewer: null }),
+        { knownInteractors: true },
       )
       expect(fixture.fetchMock).toHaveBeenCalledOnce()
       expect(fixture.iris.fetchMock).toHaveBeenCalledOnce()
@@ -4307,6 +4347,77 @@ describe('Atmosphere Explore Iris galleries', () => {
 })
 
 describe('Atmosphere recommended activity', () => {
+  it('populates article subscriptions alongside article and gallery likes without preview hydration', async () => {
+    await using fixture = await setup()
+    fixture.iris.activityResponse = {
+      items: [docUri, galleryUri, doc2Uri].map((uri) => ({ uri })),
+      recIdStr: 'viewer-states',
+    }
+    const subscription = atUri(
+      viewer,
+      site.standard.graph.subscription.$type,
+      'sub',
+    )
+    const recommend = atUri(
+      viewer,
+      site.standard.graph.recommend.$type,
+      'recommend',
+    )
+    const favorite = atUri(viewer, social.grain.favorite.$type, 'favorite')
+    fixture.viewerActions.set(pubUri, subscription)
+    fixture.viewerActions.set(docUri, recommend)
+    fixture.viewerActions.set(galleryUri, favorite)
+    using byActor = vi.spyOn(fixture.dataplane, 'getAtmosphereBacklinksByActor')
+    using previews = vi.spyOn(fixture.dataplane, 'getAtmosphereBacklinks')
+    const anonymous = await fixture.queryRecommendedActivity()
+    expect(anonymous.status).toBe(200)
+    expect(
+      anonymous.body.items.map(({ view }) => {
+        assert(
+          app.bsky.embed.external.viewArticle.$isTypeOf(view) ||
+            app.bsky.embed.external.viewGallery.$isTypeOf(view),
+        )
+        return view.viewer
+      }),
+    ).toEqual([undefined, undefined, undefined])
+    const anonymousArticle = anonymous.body.items[0].view
+    assert(app.bsky.embed.external.viewArticle.$isTypeOf(anonymousArticle))
+    expect(anonymousArticle.publisher?.viewer).toBeUndefined()
+    expect(byActor).not.toHaveBeenCalled()
+
+    const subscribed = await fixture.queryRecommendedActivity(true)
+    expect(subscribed.status).toBe(200)
+    expect(subscribed.body.items).toMatchObject([
+      {
+        view: {
+          viewer: { like: recommend },
+          publisher: { viewer: { subscription } },
+        },
+      },
+      { view: { viewer: { like: favorite } } },
+      { view: { viewer: {}, publisher: { viewer: { subscription } } } },
+    ])
+    expect(
+      byActor.mock.calls.filter(
+        ([req]) => req.collection === site.standard.graph.subscription.$type,
+      ),
+    ).toHaveLength(1)
+    expect(
+      previews.mock.calls.every(
+        ([req]) => req.collection === grainGalleryItem.$type,
+      ),
+    ).toBe(true)
+
+    fixture.viewerActions.clear()
+    const unsubscribed = await fixture.queryRecommendedActivity(true)
+    expect(unsubscribed.status).toBe(200)
+    expect(unsubscribed.body.items).toMatchObject([
+      { view: { viewer: {}, publisher: { viewer: {} } } },
+      { view: { viewer: {} } },
+      { view: { viewer: {}, publisher: { viewer: {} } } },
+    ])
+  })
+
   test.each([false, true])(
     'preserves mixed recommendation order (authenticated: %s)',
     async (authenticated) => {
@@ -4340,7 +4451,7 @@ describe('Atmosphere recommended activity', () => {
           xrpcEndpoint:
             app.bsky.unspecced.getAtmosphereRecommendedActivity.$lxm,
         }),
-        { hydration: 'basic' },
+        { hydration: 'basic', knownInteractors: true },
       )
       const [input, init] = f.iris.fetchMock.mock.calls[0]
       const request = new Request(input, init)

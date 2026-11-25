@@ -1,5 +1,90 @@
 # @atproto/bsky
 
+## 0.5.21
+
+### Patch Changes
+
+- Updated dependencies [[`50ffa3a`](https://github.com/bluesky-social/atproto/commit/50ffa3a18cdae58b7dedf777aafc0bc0eb471c41), [`50ffa3a`](https://github.com/bluesky-social/atproto/commit/50ffa3a18cdae58b7dedf777aafc0bc0eb471c41), [`50ffa3a`](https://github.com/bluesky-social/atproto/commit/50ffa3a18cdae58b7dedf777aafc0bc0eb471c41), [`58ca16d`](https://github.com/bluesky-social/atproto/commit/58ca16d32ccb50b30e1d4c800c6263af7511a4ff), [`315aba7`](https://github.com/bluesky-social/atproto/commit/315aba7d157f2e7376b56e927e9bc088a3a622c1), [`2ed73cc`](https://github.com/bluesky-social/atproto/commit/2ed73cc657769447d2617f1c3642b06f69b69dc5)]:
+  - @atproto-labs/fetch-node@0.5.0
+  - @atproto/lex-client@0.7.0
+  - @atproto/lex-schema@0.3.2
+  - @atproto/identity@0.5.27
+  - @atproto/xrpc-server@0.13.17
+  - @atproto/sync@0.4.31
+  - @atproto-labs/xrpc-utils@0.1.38
+
+## 0.5.20
+
+### Patch Changes
+
+- [#6003](https://github.com/bluesky-social/atproto/pull/6003) [`ea36fae`](https://github.com/bluesky-social/atproto/commit/ea36fae222c5352629cd0b73808825550623668b) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Resolve the external embed lexicon from upstream now that viewer social proof fields are published.
+- Updated dependencies [[`ea36fae`](https://github.com/bluesky-social/atproto/commit/ea36fae222c5352629cd0b73808825550623668b)]:
+  - @atproto/api@0.32.7
+
+## 0.5.19
+
+### Patch Changes
+
+- [#5990](https://github.com/bluesky-social/atproto/pull/5990) [`4bcb150`](https://github.com/bluesky-social/atproto/commit/4bcb1507a9b399ac843c11a4c72bf4a3c41e899c) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Populate authenticated publication subscription viewer state consistently across modality views, including nested article publishers.
+
+- [#5993](https://github.com/bluesky-social/atproto/pull/5993) [`5b61edd`](https://github.com/bluesky-social/atproto/commit/5b61edd5a4611fc5669569a492bf69208f70d686) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Prepare opt-in follow-graph social proof on external modality viewer state. Retain the optional article and gallery liker fields in the schema as deprecated in favor of viewer known likers. Dataplane lookup integration is deferred.
+
+- [#5952](https://github.com/bluesky-social/atproto/pull/5952) [`67fc7db`](https://github.com/bluesky-social/atproto/commit/67fc7db6e644fe32880335c404195b31d3840acf) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Register the import-in-the-middle ESM loader hook in-thread with `module.registerHooks()` instead of the deprecated `module.register()` (DEP0205), and update `@opentelemetry/*` dependencies. `@atproto-labs/opentelemetry-node`, and the services that load it, now require Node.js `^22.22.3 || ^24.11.1 || >=25.1.0`.
+
+- [#5993](https://github.com/bluesky-social/atproto/pull/5993) [`5b61edd`](https://github.com/bluesky-social/atproto/commit/5b61edd5a4611fc5669569a492bf69208f70d686) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Skip external-record hydration inside Atmosphere V2 associated posts so their embeds cannot suppress social-proof hydration for later timeline activity.
+- Updated dependencies [[`67fc7db`](https://github.com/bluesky-social/atproto/commit/67fc7db6e644fe32880335c404195b31d3840acf), [`9901412`](https://github.com/bluesky-social/atproto/commit/9901412468741c11399c130a39aa44bc7dd06cb8)]:
+  - @atproto-labs/opentelemetry-node@0.6.0
+  - @atproto/lex-json@0.1.11
+  - @atproto/lex-client@0.6.2
+  - @atproto/xrpc-server@0.13.16
+  - @atproto/api@0.32.6
+  - @atproto/common@0.8.13
+  - @atproto/identity@0.5.26
+  - @atproto/repo@0.11.8
+  - @atproto/sync@0.4.30
+  - @atproto-labs/xrpc-utils@0.1.37
+
+## 0.5.18
+
+### Patch Changes
+
+- [#5980](https://github.com/bluesky-social/atproto/pull/5980) [`38aa4f4`](https://github.com/bluesky-social/atproto/commit/38aa4f4ddb7e3e2e726e152c66569d90c4e74304) Thanks [@haileyok](https://github.com/haileyok)! - `/blob-source` now returns 404 for the blobs of an account its PDS has taken down or deactivated (the appview's `upstreamStatus`) or that no longer exists, so a caller that reads the blob from the PDS's object storage instead of asking the PDS gets the answer `/blob` gives, where the PDS's `getBlob` refuses that account. The appview's own takedown and its tombstone are not the PDS's state, and `/blob` ignores them too, so they are not tested.
+
+## 0.5.17
+
+### Patch Changes
+
+- [#5966](https://github.com/bluesky-social/atproto/pull/5966) [`1079900`](https://github.com/bluesky-social/atproto/commit/1079900b5ba5e8b31ef01d3efcd22a556a611a8a) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add optional `providerId` attribution to external article, publication, gallery, and livestream views. Detect providers server-side from known record types, Standard.site document content and publication theme type tags (including custom domains), and URL fallbacks. Attribution is best-effort and cosmetic, not verified provenance.
+
+- [#5973](https://github.com/bluesky-social/atproto/pull/5973) [`2c3b0a2`](https://github.com/bluesky-social/atproto/commit/2c3b0a20905a8269437ba8f7ba48e15c1ba9527e) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Use upstream Atmosphere and external embed lexicons in place of local overrides, and remove app store links from Atmosphere app cards.
+
+- [#5967](https://github.com/bluesky-social/atproto/pull/5967) [`b6408e5`](https://github.com/bluesky-social/atproto/commit/b6408e54bc62eb7d5d32c4d401865af6aec0085c) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add `viewer.like` to external article and gallery views, containing the requesting account's Standard.site recommendation or Grain favorite record URI.
+- Updated dependencies [[`1079900`](https://github.com/bluesky-social/atproto/commit/1079900b5ba5e8b31ef01d3efcd22a556a611a8a), [`2c3b0a2`](https://github.com/bluesky-social/atproto/commit/2c3b0a20905a8269437ba8f7ba48e15c1ba9527e), [`b6408e5`](https://github.com/bluesky-social/atproto/commit/b6408e54bc62eb7d5d32c4d401865af6aec0085c)]:
+  - @atproto/api@0.32.5
+
+## 0.5.16
+
+### Patch Changes
+
+- [#5960](https://github.com/bluesky-social/atproto/pull/5960) [`2a3aa1d`](https://github.com/bluesky-social/atproto/commit/2a3aa1d1ae4b56c7a6db12d442e525ce951ba763) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - For a service JWT with `iss` `did:plc:x#atproto_labeler`, the `viewer` is set as `did:plc:x` instead of `did:plc:x#atproto_labeler`. Service JWTs with an `iss` service id other than `#atproto` and `#atproto_labeler` are rejected.
+
+- [#5961](https://github.com/bluesky-social/atproto/pull/5961) [`d9cdc54`](https://github.com/bluesky-social/atproto/commit/d9cdc5400d893880203bd625e0748434d99fd02b) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - getFeed rejects service JWTs whose `aud` doesn't match their `lxm`: the feed generator for getFeedSkeleton, AppView for getFeed.
+
+- [#5960](https://github.com/bluesky-social/atproto/pull/5960) [`2a3aa1d`](https://github.com/bluesky-social/atproto/commit/2a3aa1d1ae4b56c7a6db12d442e525ce951ba763) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Stop logging and counting labeler-signed service JWTs.
+
+- [#5961](https://github.com/bluesky-social/atproto/pull/5961) [`d9cdc54`](https://github.com/bluesky-social/atproto/commit/d9cdc5400d893880203bd625e0748434d99fd02b) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Service JWTs with `iss` `did:plc:x#atproto_labeler` now require `lxm`, like all other service JWTs.
+- Updated dependencies [[`ee63e5e`](https://github.com/bluesky-social/atproto/commit/ee63e5ede255e40251a9e761befec9d623dfb1ec), [`ee63e5e`](https://github.com/bluesky-social/atproto/commit/ee63e5ede255e40251a9e761befec9d623dfb1ec), [`33d620b`](https://github.com/bluesky-social/atproto/commit/33d620b2ffc4b9a5b4959cbcc1262c5138c8a506), [`1403383`](https://github.com/bluesky-social/atproto/commit/1403383ea89737ff1910346107a4ef822e4ef6d5)]:
+  - @atproto/syntax@0.7.9
+  - @atproto/lex-schema@0.3.1
+  - @atproto/api@0.32.4
+  - @atproto/repo@0.11.7
+  - @atproto/sync@0.4.29
+  - @atproto/lex-client@0.6.1
+  - @atproto/xrpc-server@0.13.15
+  - @atproto/common@0.8.12
+  - @atproto/identity@0.5.25
+  - @atproto-labs/xrpc-utils@0.1.36
+
 ## 0.5.15
 
 ### Patch Changes

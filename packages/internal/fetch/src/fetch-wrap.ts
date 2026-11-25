@@ -1,7 +1,13 @@
+import { cancelBody } from './cancel-body.js'
 import { FetchRequestError } from './fetch-request.js'
 import { type Fetch, type FetchContext, toRequestTransformer } from './fetch.js'
 import { TransformedResponse } from './transformed-response.js'
-import { padLines, stringifyMessage } from './util.js'
+import {
+  buildAbortReason,
+  getAbortReason,
+  padLines,
+  throwIfAborted,
+} from './util.js'
 
 type LogFn<Args extends unknown[]> = (...args: Args) => void | PromiseLike<void>
 
@@ -60,6 +66,41 @@ export function loggedFetch<C = FetchContext>({
   })
 }
 
+async function stringifyMessage(input: Body & { headers: Headers }) {
+  try {
+    const headers = stringifyHeaders(input.headers)
+    const payload = await stringifyBody(input)
+    return headers && payload ? `${headers}\n${payload}` : headers || payload
+  } finally {
+    void cancelBody(input, 'log')
+  }
+}
+
+function stringifyHeaders(headers: Headers) {
+  return Array.from(headers)
+    .map(([name, value]) => `${name}: ${value}`)
+    .join('\n')
+}
+
+async function stringifyBody(body: Body) {
+  try {
+    const blob = await body.blob()
+    if (blob.type?.startsWith('text/')) {
+      const text = await blob.text()
+      return JSON.stringify(text)
+    }
+
+    if (/application\/(?:\w+\+)?json/.test(blob.type)) {
+      const text = await blob.text()
+      return text.includes('\n') ? JSON.stringify(JSON.parse(text)) : text
+    }
+
+    return `[Body size: ${blob.size}, type: ${JSON.stringify(blob.type)} ]`
+  } catch {
+    return '[Body could not be read]'
+  }
+}
+
 export const timedFetch = <C = FetchContext>(
   timeout = 60e3,
   fetch: Fetch<C> = globalThis.fetch,
@@ -72,20 +113,32 @@ export const timedFetch = <C = FetchContext>(
     this: C,
     request,
   ): Promise<Response> {
+    // The `abort` event does not fire for a signal that is already aborted, and
+    // the `signal` passed to `fetch()` below replaces the request's own.
+    throwIfAborted(request.signal)
+
     const controller = new AbortController()
     const signal = controller.signal
 
-    const abort = () => {
-      controller.abort()
+    const onAbort = () => {
+      controller.abort(getAbortReason(request.signal))
+    }
+    const onTimeout = () => {
+      controller.abort(
+        buildAbortReason(
+          'The operation was aborted due to timeout',
+          'TimeoutError',
+        ),
+      )
     }
     const cleanup = () => {
       clearTimeout(timer)
-      request.signal?.removeEventListener('abort', abort)
+      request.signal?.removeEventListener('abort', onAbort)
     }
 
-    const timer = setTimeout(abort, timeout)
+    const timer = setTimeout(onTimeout, timeout)
     if (typeof timer === 'object') timer.unref?.() // only on node
-    request.signal?.addEventListener('abort', abort)
+    request.signal?.addEventListener('abort', onAbort)
 
     signal.addEventListener('abort', cleanup)
 

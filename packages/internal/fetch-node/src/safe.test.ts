@@ -1,6 +1,6 @@
 import { type RequestListener, createServer } from 'node:http'
-import type { AddressInfo } from 'node:net'
-import { afterEach, describe, expect, it } from 'vitest'
+import type { AddressInfo, LookupFunction } from 'node:net'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { safeFetchWrap } from './safe.js'
 
 type TestServer = AsyncDisposable & { origin: (host?: string) => string }
@@ -217,7 +217,102 @@ describe(safeFetchWrap, () => {
     expect(res.status).toBe(200)
     expect(target.requests).toEqual(['POST /final {"replayed":true}'])
   })
+
+  describe('custom lookup', () => {
+    it('applies the unicast check to its result', async () => {
+      const target = await recordingServer()
+      using lookup = loopbackLookup()
+
+      const safeFetch = safeFetchWrap({
+        allowHttp: true,
+        allowCustomPort: true,
+        forbiddenDomainNames: [],
+        lookup,
+      })
+
+      await expect(
+        safeFetch(`${target.origin('custom.com')}/final`, {
+          redirect: 'error',
+        }),
+      ).rejects.toSatisfy(causedBy('Hostname resolved to non-unicast address'))
+
+      expect(lookup).toHaveBeenCalled()
+      expect(target.requests).toEqual([])
+    })
+
+    it('is used as is when private ips are allowed', async () => {
+      const target = await recordingServer()
+      using lookup = loopbackLookup()
+
+      const safeFetch = safeFetchWrap({
+        ssrfProtection: false,
+        forbiddenDomainNames: [],
+        lookup,
+      })
+
+      const res = await safeFetch(`${target.origin('custom.com')}/final`, {
+        redirect: 'error',
+      })
+
+      expect(res.status).toBe(200)
+      expect(lookup).toHaveBeenCalled()
+      expect(target.requests).toEqual(['GET /final '])
+    })
+  })
+
+  describe('disposal', () => {
+    it('destroys the dispatcher', async () => {
+      const target = await recordingServer()
+      const safeFetch = safeFetchWrap({
+        ssrfProtection: false,
+        forbiddenDomainNames: [],
+      })
+
+      const res = await safeFetch(`${target.origin()}/final`, {
+        redirect: 'error',
+      })
+      await expect(res.text()).resolves.toBe('final')
+
+      await safeFetch[Symbol.asyncDispose]()
+
+      await expect(
+        safeFetch(`${target.origin()}/final`, { redirect: 'error' }),
+      ).rejects.toSatisfy(causedBy('The client is destroyed'))
+      expect(target.requests).toHaveLength(1)
+    })
+
+    it('aborts requests in flight', async () => {
+      let onRequest!: () => void
+      const received = new Promise<void>((resolve) => (onRequest = resolve))
+      // Never responds: disposal must not wait for the request to complete.
+      const target = await startServer(() => onRequest())
+      const safeFetch = safeFetchWrap({
+        ssrfProtection: false,
+        forbiddenDomainNames: [],
+      })
+
+      const pending = safeFetch(`${target.origin()}/`, { redirect: 'error' })
+      await received
+
+      await safeFetch[Symbol.asyncDispose]()
+
+      await expect(pending).rejects.toSatisfy(
+        causedBy('The client is destroyed'),
+      )
+    })
+  })
 })
+
+/**
+ * A lookup that resolves every hostname to the loopback address the test
+ * servers listen on.
+ */
+function loopbackLookup() {
+  return vi.fn<LookupFunction>((_hostname, options, callback) => {
+    if (options.all) callback(null, [{ address: '127.0.0.1', family: 4 }])
+    else callback(null, '127.0.0.1', 4)
+  })
+}
 
 function causedBy(message: string) {
   return (err: unknown) => {

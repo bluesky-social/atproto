@@ -32,7 +32,7 @@ export default function (server: Server, ctx: AppContext) {
         xrpcEndpoint: app.bsky.unspecced.getAtmosphereRecordView.$lxm,
       })
 
-      const options = { hydration: 'basic' } as const
+      const options = { hydration: 'basic', knownInteractors: true } as const
       const state =
         cid === undefined
           ? await ctx.hydrator.hydrateEmbedExternalViewFromUris(

@@ -3,6 +3,7 @@ import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
 import { AuthScope } from '../../../../auth-scope.js'
 import type { AppContext } from '../../../../context.js'
 import { app } from '../../../../lexicons/index.js'
+import { throwIfLimitExceeded } from '../../../../pipethrough.js'
 import { getDidDoc } from '../util/resolver.js'
 
 export default function (server: Server, ctx: AppContext) {
@@ -19,7 +20,7 @@ export default function (server: Server, ctx: AppContext) {
         // assert permissions here.
       },
     }),
-    handler: async ({ auth, input: { body } }) => {
+    handler: async ({ auth, input: { body }, res }) => {
       const { serviceDid } = body
       const { did } = auth.credentials
 
@@ -37,11 +38,12 @@ export default function (server: Server, ctx: AppContext) {
       )
 
       if (bskyAppView.did === serviceDid) {
-        await bskyAppView.client.call(
-          app.bsky.notification.registerPush,
-          body,
-          { headers },
-        )
+        await bskyAppView.client
+          .call(app.bsky.notification.registerPush, body, { headers })
+          .catch((err: unknown) => {
+            throwIfLimitExceeded(res, err)
+            throw err
+          })
         return
       }
 

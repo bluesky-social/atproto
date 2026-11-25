@@ -1,5 +1,30 @@
 # @atproto/oauth-client
 
+## 0.9.8
+
+### Patch Changes
+
+- [#6020](https://github.com/bluesky-social/atproto/pull/6020) [`58ca16d`](https://github.com/bluesky-social/atproto/commit/58ca16d32ccb50b30e1d4c800c6263af7511a4ff) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Ensure that abort errors have a `name` property on platforms that don't provide a DOMException class
+- Updated dependencies [[`c9d2ad9`](https://github.com/bluesky-social/atproto/commit/c9d2ad93cf0f3527622a72842d867c4cf70dc993), [`50ffa3a`](https://github.com/bluesky-social/atproto/commit/50ffa3a18cdae58b7dedf777aafc0bc0eb471c41), [`58ca16d`](https://github.com/bluesky-social/atproto/commit/58ca16d32ccb50b30e1d4c800c6263af7511a4ff), [`50ffa3a`](https://github.com/bluesky-social/atproto/commit/50ffa3a18cdae58b7dedf777aafc0bc0eb471c41)]:
+  - @atproto-labs/fetch@0.5.0
+  - @atproto-labs/did-resolver@0.3.15
+  - @atproto/oauth-resolver@0.0.5
+  - @atproto-labs/identity-resolver@0.4.15
+
+## 0.9.7
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/xrpc@0.8.21
+
+## 0.9.6
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/xrpc@0.8.20
+
 ## 0.9.5
 
 ### Patch Changes

@@ -24,11 +24,6 @@ export type AuthVerifierName =
   | 'modService'
   | 'anonymous'
 
-export type GetFeedServiceJwtKind =
-  'feedgen_skeleton' | 'appview_feed' | 'other'
-
-export type IssuerFragment = 'empty' | '#atproto' | '#atproto_labeler' | 'other'
-
 export type HydrationSource =
   'known_likers' | 'known_followers' | 'activity_subscriptions'
 
@@ -113,30 +108,6 @@ class EventReporter {
   }>('auth.verifier.requests', {
     description:
       'Requests by selected authentication verifier, including failed attempts; wrapper verifiers are not counted separately',
-    valueType: ValueType.INT,
-  })
-
-  #labelerServiceJwts = meter.createCounter<{
-    lxm: string
-  }>('auth.labeler_service_jwts', {
-    description:
-      'Labeler-signed service JWTs with a valid signature, by lxm. `mismatch` when lxm is not the method called, and `absent` when there is no lxm',
-    valueType: ValueType.INT,
-  })
-
-  #standardServiceJwtIssuerFragments = meter.createCounter<{
-    fragment: IssuerFragment
-  }>('auth.standard_service_jwt_issuer_fragments', {
-    description:
-      'Service JWTs with a valid signature in the standard verifier, by the fragment of `iss`. `empty` when there is no fragment, `other` for any fragment other than `#atproto` and `#atproto_labeler`',
-    valueType: ValueType.INT,
-  })
-
-  #getFeedServiceJwts = meter.createCounter<{
-    kind: GetFeedServiceJwtKind
-  }>('auth.get_feed_service_jwts', {
-    description:
-      'Service JWTs forwarded by getFeed to feed generators, by `aud` and `lxm`. `feedgen_skeleton`: `aud` is the feed generator, `lxm` is getFeedSkeleton. `appview_feed`: `aud` is AppView, `lxm` is getFeed. `other`: any other combination',
     valueType: ValueType.INT,
   })
 
@@ -342,64 +313,6 @@ class EventReporter {
       this.#authVerifierRequests.add(1, { verifier })
     } catch (err) {
       diag.error('Failed to record auth_verifier_request:', err)
-    }
-  }
-
-  labelerServiceJwt({
-    did,
-    lxm,
-    method,
-    modService,
-  }: {
-    did: string
-    lxm?: string
-    method: string
-    modService: boolean
-  }) {
-    // @NOTE Our own Ozone (the mod service) makes hundreds of these requests
-    // per second, so it's counted but not logged.
-    if (!modService) {
-      this.#log('labeler_service_jwt', { did, lxm })
-    }
-    try {
-      // @NOTE lxm is attacker-controlled, so the counter only records it when
-      // it is the method called, which is one of the methods AppView serves.
-      this.#labelerServiceJwts.add(1, {
-        lxm: lxm === undefined ? 'absent' : lxm === method ? lxm : 'mismatch',
-      })
-    } catch (err) {
-      diag.error('Failed to record labeler_service_jwt:', err)
-    }
-  }
-
-  standardServiceJwtIssuer(iss: string) {
-    const idx = iss.indexOf('#')
-    const did = idx === -1 ? iss : iss.slice(0, idx)
-    const value = idx === -1 ? undefined : iss.slice(idx)
-    const fragment: IssuerFragment =
-      value === undefined
-        ? 'empty'
-        : value === '#atproto' || value === '#atproto_labeler'
-          ? value
-          : 'other'
-    if (fragment === 'other') {
-      this.#log('standard_service_jwt_issuer_fragment', {
-        did,
-        fragment: value,
-      })
-    }
-    try {
-      this.#standardServiceJwtIssuerFragments.add(1, { fragment })
-    } catch (err) {
-      diag.error('Failed to record standard_service_jwt_issuer:', err)
-    }
-  }
-
-  getFeedServiceJwt(kind: GetFeedServiceJwtKind) {
-    try {
-      this.#getFeedServiceJwts.add(1, { kind })
-    } catch (err) {
-      diag.error('Failed to record get_feed_service_jwt:', err)
     }
   }
 

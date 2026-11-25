@@ -1,5 +1,42 @@
 # @atproto/oauth-provider
 
+## 0.27.3
+
+### Patch Changes
+
+- Updated dependencies [[`50ffa3a`](https://github.com/bluesky-social/atproto/commit/50ffa3a18cdae58b7dedf777aafc0bc0eb471c41), [`50ffa3a`](https://github.com/bluesky-social/atproto/commit/50ffa3a18cdae58b7dedf777aafc0bc0eb471c41), [`50ffa3a`](https://github.com/bluesky-social/atproto/commit/50ffa3a18cdae58b7dedf777aafc0bc0eb471c41), [`58ca16d`](https://github.com/bluesky-social/atproto/commit/58ca16d32ccb50b30e1d4c800c6263af7511a4ff)]:
+  - @atproto-labs/fetch-node@0.5.0
+  - @atproto/lex-resolver@0.4.10
+  - @atproto-labs/did-resolver@0.3.15
+  - @atproto/oauth-provider-ui@0.11.2
+  - @atproto/oauth-resolver@0.0.5
+  - @atproto-labs/handle-resolver-node@0.2.19
+  - @atproto/lex-document@0.1.19
+
+## 0.27.2
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/common@0.8.13
+  - @atproto/lex-resolver@0.4.9
+
+## 0.27.1
+
+### Patch Changes
+
+- [#5969](https://github.com/bluesky-social/atproto/pull/5969) [`3c869f7`](https://github.com/bluesky-social/atproto/commit/3c869f7431400053555f73628199028058df926e) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Export rate limit key function context types
+
+- [#5969](https://github.com/bluesky-social/atproto/pull/5969) [`3c869f7`](https://github.com/bluesky-social/atproto/commit/3c869f7431400053555f73628199028058df926e) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Rename internal type AuthorizationResultAuthorizePage to AuthorizationResultAuthorize
+- Updated dependencies [[`ee63e5e`](https://github.com/bluesky-social/atproto/commit/ee63e5ede255e40251a9e761befec9d623dfb1ec), [`6569065`](https://github.com/bluesky-social/atproto/commit/65690650c877cca4aa5c0b88136c865e64d60f56), [`33d620b`](https://github.com/bluesky-social/atproto/commit/33d620b2ffc4b9a5b4959cbcc1262c5138c8a506)]:
+  - @atproto/syntax@0.7.9
+  - @atproto/oauth-provider-ui@0.11.2
+  - @atproto/lex-resolver@0.4.8
+  - @atproto/oauth-provider-api@0.12.1
+  - @atproto/oauth-scopes@0.5.16
+  - @atproto/lex-document@0.1.18
+  - @atproto/common@0.8.12
+
 ## 0.27.0
 
 ### Minor Changes

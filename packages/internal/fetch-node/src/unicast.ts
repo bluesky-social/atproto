@@ -1,6 +1,5 @@
-import type { LookupAddress, LookupOptions } from 'node:dns'
-import { lookup } from 'node:dns'
-import type { LookupFunction } from 'node:net'
+import { lookup as dnsLookup } from 'node:dns'
+import { type LookupFunction, isIP } from 'node:net'
 import ipaddr from 'ipaddr.js'
 import {
   type Fetch,
@@ -17,6 +16,22 @@ const { IPv4, IPv6 } = ipaddr
 
 export type UnicastFetchWrapOptions<C = FetchContext> = {
   fetch?: Fetch<C>
+
+  /**
+   * Resolves hostnames at connect time. The unicast check is applied to
+   * whatever it returns, so a custom lookup cannot bypass it.
+   *
+   * @note `dns.lookup` runs `getaddrinfo` on libuv's threadpool and cannot be
+   * cancelled, so a few unresponsive nameservers can stall every other lookup
+   * (and any `fs`, `crypto` or `zlib` work) in the process. A lookup built on
+   * a `dns.Resolver` avoids the threadpool and supports per-query timeouts.
+   *
+   * @note Must honor `options.all`: `net.connect` requests every address when
+   * `autoSelectFamily` is enabled, which is the default.
+   *
+   * @default dns.lookup
+   */
+  lookup?: LookupFunction
 }
 
 /**
@@ -39,14 +54,18 @@ export function checkUnicastPolicy(url: URL): UrlPolicyReason | undefined {
  */
 export function unicastFetchWrap<C = FetchContext>({
   fetch = globalThis.fetch,
-}: UnicastFetchWrapOptions<C> = {}): Fetch<C> {
+  lookup,
+}: UnicastFetchWrapOptions<C> = {}): Fetch<C> & AsyncDisposable {
   const dispatchFetch = safeDispatchFetchWrap<C>({
     fetch,
     checkUrl: checkUnicastPolicy,
-    lookup: unicastLookup,
+    lookup: lookup ? unicastLookupWrap(lookup) : unicastLookup,
   })
 
-  return async function (this: C, input, init): Promise<Response> {
+  const wrappedFetch: Fetch<C> = async function (
+    input,
+    init,
+  ): Promise<Response> {
     // @NOTE The dispatcher guard already applies this check to every request,
     // including redirect hops. It is repeated here so that a rejection of the
     // *initial* url happens before any body is consumed, and so that the error
@@ -63,27 +82,62 @@ export function unicastFetchWrap<C = FetchContext>({
 
     return dispatchFetch.call(this, input, init)
   }
+
+  Object.defineProperty(wrappedFetch, Symbol.asyncDispose, {
+    value: async () => dispatchFetch[Symbol.asyncDispose](),
+    enumerable: false,
+    configurable: true,
+  })
+
+  return wrappedFetch as Fetch<C> & AsyncDisposable
 }
 
-export function unicastLookup(
-  hostname: string,
-  options: LookupOptions,
-  callback: Parameters<LookupFunction>[2],
-) {
-  if (isLocalHostname(hostname)) {
-    callback(new Error('Hostname is not a public domain'), [])
-    return
-  }
+export const unicastLookup: LookupFunction = unicastLookupWrap(
+  // @NOTE Resolved on every call rather than captured, so that instrumentation
+  // patching `dns.lookup` after this module is loaded still applies.
+  (hostname, options, callback) => dnsLookup(hostname, options, callback),
+)
 
-  lookup(hostname, options, (err, address, family) => {
-    if (err) {
-      callback(err, address, family)
-    } else {
+/**
+ * Applies the unicast check to the addresses returned by {@link lookup}.
+ *
+ * @note A custom lookup's result is not trusted to be well formed: an address
+ * that is not a valid IP is rejected (rather than thrown on, which would
+ * escape as an uncaught exception from an asynchronous callback), and the
+ * family is derived from the address rather than taken from the lookup.
+ */
+export function unicastLookupWrap(lookup: LookupFunction): LookupFunction {
+  return (hostname, options, callback) => {
+    if (isLocalHostname(hostname)) {
+      callback(new Error('Hostname is not a public domain'), [])
+      return
+    }
+
+    lookup(hostname, options, (err, address, family) => {
+      if (err) {
+        callback(err, address, family)
+        return
+      }
+
       const ips = Array.isArray(address)
-        ? address.map(parseLookupAddress)
-        : [parseLookupAddress({ address, family })]
+        ? address.map((entry) => parseLookupAddress(entry?.address))
+        : [parseLookupAddress(address)]
 
-      if (ips.some(isNotUnicast)) {
+      if (ips.length === 0) {
+        // @NOTE `net.connect` throws an uncaught exception when an `all`
+        // lookup succeeds without any address.
+        callback(
+          new Error('Hostname did not resolve to any address'),
+          address,
+          family,
+        )
+      } else if (ips.includes(null)) {
+        callback(
+          new Error('Hostname resolved to an invalid address'),
+          address,
+          family,
+        )
+      } else if (ips.some(isNotUnicast)) {
         callback(
           new Error('Hostname resolved to non-unicast address'),
           address,
@@ -92,8 +146,8 @@ export function unicastLookup(
       } else {
         callback(null, address, family)
       }
-    }
-  })
+    })
+  }
 }
 
 /**
@@ -115,15 +169,25 @@ function isLocalHostname(hostname: string): boolean {
   )
 }
 
-function isNotUnicast(ip: ipaddr.IPv4 | ipaddr.IPv6): boolean {
-  return ip.range() !== 'unicast'
+function isNotUnicast(ip: ipaddr.IPv4 | ipaddr.IPv6 | null): boolean {
+  return ip?.range() !== 'unicast'
 }
 
-function parseLookupAddress({
-  address,
-  family,
-}: LookupAddress): ipaddr.IPv4 | ipaddr.IPv6 {
-  const ip = family === 4 ? IPv4.parse(address) : IPv6.parse(address)
+function parseLookupAddress(
+  address: unknown,
+): ipaddr.IPv4 | ipaddr.IPv6 | null {
+  // @NOTE The address comes from a caller-provided lookup, so its type is not
+  // guaranteed. `isIP` coerces its argument to a string (accepting e.g. an
+  // `ipaddr.js` object) while `ipaddr.parse` throws on anything but a string,
+  // which would escape the lookup callback as an uncaught exception.
+  if (typeof address !== 'string') return null
+
+  // @NOTE `isIP` is the check `net.connect` applies to the address it dials,
+  // and is stricter than `ipaddr.parse`, which reads `010.0.0.1` as `8.0.0.1`.
+  const version = isIP(address)
+  if (version === 0) return null
+
+  const ip = version === 4 ? IPv4.parse(address) : IPv6.parse(address)
 
   if (ip instanceof IPv6 && ip.isIPv4MappedAddress()) {
     return ip.toIPv4Address()

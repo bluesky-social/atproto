@@ -30,12 +30,20 @@ export function timeoutSignal(ms: number): AbortSignal {
  * `DOMException` is available, and degrades to a plain `Error` in runtimes that
  * lack it.
  */
-function timeoutError(ms: number): unknown {
-  const message = `The operation timed out after ${ms} ms`
-  if (typeof DOMException === 'function') {
-    return new DOMException(message, 'TimeoutError')
+function timeoutError(ms: number): Error {
+  return buildAbortReason(
+    `The operation timed out after ${ms} ms`,
+    'TimeoutError',
+  )
+}
+
+function buildAbortReason(message: string, name: string): Error {
+  // Fallback for runtimes without a DOMException (React Native)
+  if (typeof DOMException !== 'function') {
+    return Object.assign(new Error(message), { name })
   }
-  return new Error(message)
+
+  return new DOMException(message, name)
 }
 
 export function combineSignals(

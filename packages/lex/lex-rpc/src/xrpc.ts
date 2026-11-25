@@ -15,10 +15,19 @@ import {
   getMain,
   paramsToURLSearchParams,
 } from '@atproto/lex-schema'
+import { throwIfAborted } from './abort.js'
 import type { Agent, AgentOptions } from './agent.js'
 import { buildAgent } from './agent.js'
+import {
+  asUint8ArrayArrayBuffer,
+  isAsyncIterable,
+  isBlobLike,
+  toReadableStream,
+} from './body.js'
 import type { XrpcFailure } from './errors.js'
 import { XrpcFetchError, XrpcResponseError, asXrpcFailure } from './errors.js'
+import type { XrpcRequestHeadersOptions } from './headers.js'
+import { buildXrpcRequestHeaders } from './headers.js'
 import type { IfXrpcStreamable, XrpcResponseOptions } from './response.js'
 import {
   XrpcResponse,
@@ -26,16 +35,7 @@ import {
   assertXrpcStreamable,
 } from './response.js'
 import type { BinaryBodyInit } from './types.js'
-import type { XrpcRequestHeadersOptions } from './util.js'
-import {
-  asUint8ArrayArrayBuffer,
-  buildXrpcRequestHeaders,
-  isAsyncIterable,
-  isBlobLike,
-  throwIfAborted,
-  toReadableStream,
-  wait,
-} from './util.js'
+import { wait } from './util.js'
 
 /**
  * The query/path parameters type for an XRPC method, inferred from its schema.
@@ -139,6 +139,24 @@ export type XrpcRequestProcessingOptions = {
    * debugging scenarios.
    */
   validateRequest?: boolean
+
+  /**
+   * The {@link RequestInit.redirect redirect mode} of the request, which is
+   * always passed explicitly to the fetch handler (as required by fetch
+   * wrappers that enforce an explicit redirect policy, such as
+   * `@atproto-labs/fetch-node`'s `safeFetchWrap`).
+   *
+   * - `"follow"`: redirects are followed by the fetch implementation.
+   * - `"error"`: a redirect makes the request fail with an
+   *   {@link XrpcFetchError}.
+   * - `"manual"`: a redirect response is returned unfollowed, and the request
+   *   fails with an {@link XrpcInvalidResponseError} exposing that response
+   *   (whose `location` header is readable in server environments, while
+   *   browsers return an opaque response with status `0`).
+   *
+   * @default "follow"
+   */
+  redirect?: RequestRedirect
 }
 
 /**
@@ -485,7 +503,7 @@ async function xrpcRequestInit<T extends Procedure | Query>(
 
     return {
       duplex: 'half',
-      redirect: 'follow',
+      redirect: options.redirect ?? 'follow',
       referrerPolicy: 'strict-origin-when-cross-origin', // (default)
       mode: 'cors', // (default)
       signal: options.signal,
@@ -498,7 +516,7 @@ async function xrpcRequestInit<T extends Procedure | Query>(
   // Requests without body
   return {
     duplex: 'half',
-    redirect: 'follow',
+    redirect: options.redirect ?? 'follow',
     referrerPolicy: 'strict-origin-when-cross-origin', // (default)
     mode: 'cors', // (default)
     signal: options.signal,

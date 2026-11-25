@@ -108,6 +108,18 @@ export function readEnv() {
     bskyAppViewUrl: envStr('PDS_BSKY_APP_VIEW_URL'),
     bskyAppViewDid: envStr('PDS_BSKY_APP_VIEW_DID'),
     bskyAppViewCdnUrlPattern: envStr('PDS_BSKY_APP_VIEW_CDN_URL_PATTERN'),
+    // @NOTE rate and concurrency limits are off by default (0). When enabled,
+    // requests can queue up to 1500 deep for up to 5000 ms; see BksyAppViewConfig.
+    bskyAppViewMaxRequestsPerSecond: envInt(
+      'PDS_BSKY_APP_VIEW_MAX_REQUESTS_PER_SECOND',
+    ),
+    bskyAppViewMaxConcurrentRequests: envInt(
+      'PDS_BSKY_APP_VIEW_MAX_CONCURRENT_REQUESTS',
+    ),
+    bskyAppViewMaxQueuedRequests: envInt(
+      'PDS_BSKY_APP_VIEW_MAX_QUEUED_REQUESTS',
+    ),
+    bskyAppViewMaxQueueMs: envInt('PDS_BSKY_APP_VIEW_MAX_QUEUE_MS'),
 
     // mod service
     modServiceUrl: envStr('PDS_MOD_SERVICE_URL'),

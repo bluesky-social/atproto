@@ -1,5 +1,41 @@
 # @atproto/api
 
+## 0.32.7
+
+### Patch Changes
+
+- [#6003](https://github.com/bluesky-social/atproto/pull/6003) [`ea36fae`](https://github.com/bluesky-social/atproto/commit/ea36fae222c5352629cd0b73808825550623668b) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Sync the external embed lexicon with followed-account liker and publication subscriber previews and counts.
+
+## 0.32.6
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/common-web@0.5.20
+  - @atproto/lexicon@0.7.22
+  - @atproto/xrpc@0.8.21
+
+## 0.32.5
+
+### Patch Changes
+
+- [#5966](https://github.com/bluesky-social/atproto/pull/5966) [`1079900`](https://github.com/bluesky-social/atproto/commit/1079900b5ba5e8b31ef01d3efcd22a556a611a8a) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add optional `providerId` attribution to external article, publication, gallery, and livestream views. Detect providers server-side from known record types, Standard.site document content and publication theme type tags (including custom domains), and URL fallbacks. Attribution is best-effort and cosmetic, not verified provenance.
+
+- [#5973](https://github.com/bluesky-social/atproto/pull/5973) [`2c3b0a2`](https://github.com/bluesky-social/atproto/commit/2c3b0a20905a8269437ba8f7ba48e15c1ba9527e) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Use upstream Atmosphere and external embed lexicons in place of local overrides, and remove app store links from Atmosphere app cards.
+
+- [#5967](https://github.com/bluesky-social/atproto/pull/5967) [`b6408e5`](https://github.com/bluesky-social/atproto/commit/b6408e54bc62eb7d5d32c4d401865af6aec0085c) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add `viewer.like` to external article and gallery views, containing the requesting account's Standard.site recommendation or Grain favorite record URI.
+
+## 0.32.4
+
+### Patch Changes
+
+- [#5956](https://github.com/bluesky-social/atproto/pull/5956) [`1403383`](https://github.com/bluesky-social/atproto/commit/1403383ea89737ff1910346107a4ef822e4ef6d5) Thanks [@gcwill70](https://github.com/gcwill70)! - Add stat group details with an inbound report-type breakdown for a selected UTC date range.
+- Updated dependencies [[`ee63e5e`](https://github.com/bluesky-social/atproto/commit/ee63e5ede255e40251a9e761befec9d623dfb1ec), [`33d620b`](https://github.com/bluesky-social/atproto/commit/33d620b2ffc4b9a5b4959cbcc1262c5138c8a506)]:
+  - @atproto/syntax@0.7.9
+  - @atproto/common-web@0.5.19
+  - @atproto/lexicon@0.7.21
+  - @atproto/xrpc@0.8.20
+
 ## 0.32.3
 
 ### Patch Changes

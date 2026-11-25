@@ -1,5 +1,29 @@
 # @atproto/tap
 
+## 0.4.24
+
+### Patch Changes
+
+- Updated dependencies [[`2ed73cc`](https://github.com/bluesky-social/atproto/commit/2ed73cc657769447d2617f1c3642b06f69b69dc5)]:
+  - @atproto/lex-schema@0.3.2
+
+## 0.4.23
+
+### Patch Changes
+
+- Updated dependencies [[`9901412`](https://github.com/bluesky-social/atproto/commit/9901412468741c11399c130a39aa44bc7dd06cb8)]:
+  - @atproto/lex-json@0.1.11
+  - @atproto/common@0.8.13
+
+## 0.4.22
+
+### Patch Changes
+
+- Updated dependencies [[`ee63e5e`](https://github.com/bluesky-social/atproto/commit/ee63e5ede255e40251a9e761befec9d623dfb1ec), [`ee63e5e`](https://github.com/bluesky-social/atproto/commit/ee63e5ede255e40251a9e761befec9d623dfb1ec), [`33d620b`](https://github.com/bluesky-social/atproto/commit/33d620b2ffc4b9a5b4959cbcc1262c5138c8a506)]:
+  - @atproto/syntax@0.7.9
+  - @atproto/lex-schema@0.3.1
+  - @atproto/common@0.8.12
+
 ## 0.4.21
 
 ### Patch Changes

@@ -282,7 +282,9 @@ async function hydration({
   ]
   const dids = [...new Set(mapDefined(skeleton.apps, ({ did }) => did))]
   const [externalState, appProfileState] = await Promise.all([
-    ctx.hydrator.hydrateEmbedExternalViewFromUris(uris, params.hydrateCtx),
+    ctx.hydrator.hydrateEmbedExternalViewFromUris(uris, params.hydrateCtx, {
+      knownInteractors: true,
+    }),
     dids.length
       ? ctx.hydrator.hydrateProfilesDetailed(dids, params.hydrateCtx, {
           knownFollowersDids: dids,
@@ -399,8 +401,6 @@ function presentation({
         overlayColor: card.overlayColor,
         textColor: card.textColor,
         url: card.url,
-        appStoreUrl: card.appStoreUrl,
-        googlePlayUrl: card.googlePlayUrl,
         category: card.category,
         profile,
       }
@@ -513,8 +513,6 @@ const APP_CARD_FIELDS = [
   'overlayColor',
   'textColor',
   'url',
-  'appStoreUrl',
-  'googlePlayUrl',
   'category',
 ] as const
 

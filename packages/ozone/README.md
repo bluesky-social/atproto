@@ -81,6 +81,8 @@ Reports are visible only when their `createdAt` is at or after the date, even if
 
 Account standing and current enforcement remain live: active restrictions, strikes and labels can predate the inbox start. Preferences and seen watermarks do not expose history; they retain their existing behavior. The cutoff is not a read watermark, so an item created exactly at the start date is initially unread.
 
+Set `OZONE_INBOX_APPEALABLE_TAGS` on the API to a comma-separated list to allow subject-only appeals for accounts that currently have any of those tags. It defaults to empty. Tags remain private and do not appear in inbox action history or affect inbox action lists or `availableActions`. Subject-only appeals retain their existing window rules; after a closed appeal, a new eligible tag addition can permit another appeal within the configured appeal window, even if that tag was already present.
+
 ## Moderation inbox push
 
 Push work is disabled by default. To enable it, set `OZONE_INBOX_PUSH_ENABLED` on both the API and daemon. Consumer endpoints require moderator or admin authentication. Configure the same inbox start date on both processes. Enabling push only queues new notifications; it does not backfill existing inbox history.

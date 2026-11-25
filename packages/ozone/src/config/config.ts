@@ -152,6 +152,13 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
 
   const inboxCfg: OzoneConfig['inbox'] = {
     appealWindowMonths: env.inboxAppealWindowMonths ?? 6,
+    appealableTags: [
+      ...new Set(
+        (env.inboxAppealableTags ?? [])
+          .map((tag) => tag.trim())
+          .filter(Boolean),
+      ),
+    ],
     policyDefaultUrl: env.inboxPolicyDefaultUrl ?? DEFAULT_INBOX_POLICY_URL,
     startAt: parseInboxStartAt(env.inboxStartAt),
     pushEnabled: env.inboxPushEnabled ?? false,
@@ -339,6 +346,8 @@ export type VerifierConfig = {
 
 export type InboxConfig = {
   pushEnabled?: boolean
+  /** Tags whose active additions may be appealed; empty disables tag appeals. */
+  appealableTags?: string[]
   /** Inclusive creation-time cutoff for inbox history; unset exposes all history. */
   startAt?: DatetimeString
   /**

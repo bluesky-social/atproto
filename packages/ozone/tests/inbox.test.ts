@@ -505,6 +505,27 @@ describe('inbox subject view', () => {
     expect(view?.isRead).toBe(false)
   })
 
+  it('keeps the status creation date unless a tag-only appeal hides it', () => {
+    const input = {
+      subject: ACCOUNT,
+      serviceDid: 'did:plc:modservice',
+      cfg: { appealWindowMonths: 6 },
+      snapshot: snapshot({
+        appealReport: {
+          id: 1,
+          status: 'open',
+          createdAt: '2026-02-01T00:00:00.000Z',
+          updatedAt: '2026-02-01T00:00:00.000Z',
+          closedAt: null,
+        },
+      }),
+    }
+    expect(toSubjectView(input)?.createdAt).toBe('2026-01-01T00:00:00.000Z')
+    expect(
+      toSubjectView({ ...input, hideStatusCreatedAt: true })?.createdAt,
+    ).toBe('2026-02-01T00:00:00.000Z')
+  })
+
   it('lets a later appeal move updatedAt past the newest action', () => {
     const view = compose({
       actionCount: 1,

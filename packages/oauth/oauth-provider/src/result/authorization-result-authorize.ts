@@ -5,7 +5,7 @@ import type { HandleString } from '@atproto/syntax'
 import type { Client } from '../client/client.js'
 import type { RequestUri } from '../request/request-uri.js'
 
-export type AuthorizationResultAuthorizePage = {
+export type AuthorizationResultAuthorize = {
   issuer: string
   client: Client
   parameters: OAuthAuthorizationRequestParameters

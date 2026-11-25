@@ -1,6 +1,6 @@
 {
   "name": "@atproto/lex-server",
-  "version": "0.2.6",
+  "version": "0.3.0",
   "license": "MIT",
   "description": "Request router for Atproto Lexicon protocols and schemas",
   "keywords": [
@@ -44,13 +44,13 @@
     "@atproto/lex-json": "workspace:^",
     "@atproto/lex-rpc": "workspace:^",
     "@atproto/lex-schema": "workspace:^",
+    "@types/ws": "^8.18.1",
     "http-terminator": "^3.2.0",
     "tslib": "^2.8.1",
     "ws": "^8.18.3"
   },
   "devDependencies": {
     "@atproto/lex-client": "workspace:^",
-    "@types/ws": "^8.18.1",
     "vitest": "^5.1.1"
   },
   "scripts": {

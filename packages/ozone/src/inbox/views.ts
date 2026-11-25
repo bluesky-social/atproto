@@ -243,6 +243,8 @@ export type SubjectViewInput = {
    * appealable.
    */
   requireVisibleActions?: boolean
+  /** Do not date a tag-only appeal response by its private status row. */
+  hideStatusCreatedAt?: boolean
 }
 
 export type EnforcementViewInput = {
@@ -454,6 +456,7 @@ export const toSubjectView = ({
   policyList = {},
   seenAt = null,
   requireVisibleActions = true,
+  hideStatusCreatedAt = false,
 }: SubjectViewInput): SubjectView | null => {
   if (!inboxHasStarted(cfg.startAt)) return null
   if (requireVisibleActions && cfg.startAt && !snapshot.actionCount) return null
@@ -502,7 +505,8 @@ export const toSubjectView = ({
   // opened a status row for it. A status row older than the inbox start would
   // date the subject by hidden history, so the visible appeal dates it instead.
   const statusCreatedAt =
-    cfg.startAt && snapshot.status && snapshot.status.createdAt < cfg.startAt
+    (hideStatusCreatedAt && !snapshot.actionCount) ||
+    (cfg.startAt && snapshot.status && snapshot.status.createdAt < cfg.startAt)
       ? null
       : snapshot.status?.createdAt
   const createdAt =
@@ -547,7 +551,10 @@ export const hydrateSubjectView = async (
   serviceDid: DidString,
   cfg: InboxConfig,
   seenAt?: DatetimeString | null,
-  options: Pick<SubjectViewInput, 'requireVisibleActions'> = {},
+  options: Pick<
+    SubjectViewInput,
+    'requireVisibleActions' | 'hideStatusCreatedAt'
+  > = {},
 ): Promise<SubjectView | null> => {
   const [snapshot, policyList] = await Promise.all([
     loadSubject(db, subject, cfg.startAt),

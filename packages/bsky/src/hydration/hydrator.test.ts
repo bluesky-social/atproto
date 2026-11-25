@@ -27,6 +27,7 @@ import { events } from '../telemetry/events.js'
 import type { Actors, ProfileLinks } from './actor.js'
 import {
   type ExternalPublicationSubscriptions,
+  type ExternalRecordLikes,
   MAX_EXTERNAL_HYDRATION_PASSES,
   genericRecordKey,
 } from './external.js'
@@ -285,6 +286,9 @@ const it = baseIt.extend<{ fixture: ReturnType<typeof createFixture> }>({
               .map((uri) => ({ uri })),
           }),
       )
+    using _viewerLinks = vi
+      .spyOn(dataplane, 'getAtmosphereBacklinksByActor')
+      .mockResolvedValue(new GetAtmosphereBacklinksByActorResponse())
     using _totals = vi
       .spyOn(dataplane, 'getAtmosphereBacklinkCounts')
       .mockImplementation(
@@ -325,7 +329,7 @@ const it = baseIt.extend<{ fixture: ReturnType<typeof createFixture> }>({
 })
 
 describe('Hydrator.hydrateExternalViewDependencies', () => {
-  it('hydrates publications, bounded backlink samples, counts, labels, and profiles', async ({
+  it('hydrates publications, bounded subscriber samples, counts, labels, and profiles', async ({
     fixture,
   }) => {
     const { hydrator, ctx, dataplane, seedBasic } = fixture
@@ -346,8 +350,9 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
     expect(state.externalRecordsByRef?.has(fetchedKey(pubUri))).toBe(true)
     expect(state.labels?.has(doc1)).toBe(true)
 
-    expect(state.externalRecordBacklinks?.get(doc1)).toEqual(recs.slice(0, 3))
-    expect(state.externalRecordBacklinks?.get(doc2)).toEqual([])
+    // Documents have no social-preview samples, only their counts.
+    expect(state.externalRecordBacklinks?.has(doc1)).toBe(false)
+    expect(state.externalRecordBacklinks?.has(doc2)).toBe(false)
     expect(state.externalRecordBacklinks?.get(pubUri)).toEqual(subs)
     expect(
       state.externalRecordBacklinkCounts?.get(doc1)?.[
@@ -360,24 +365,18 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
       ],
     ).toBe(17)
 
-    for (const uri of [...recs.slice(0, 3), ...subs]) {
+    for (const uri of subs) {
       expect(state.externalRecords?.get(uri)).toBeTruthy()
       expect(state.labels?.has(uri)).toBe(true)
     }
-    expect(state.externalRecords?.has(recs[3])).toBe(false)
-    for (const did of [
-      'did:plc:a',
-      'did:plc:s1',
-      'did:plc:pub',
-    ] as DidString[]) {
+    for (const uri of recs) expect(state.externalRecords?.has(uri)).toBe(false)
+    for (const did of ['did:plc:s1', 'did:plc:pub'] as DidString[]) {
       expect(state.actors?.has(did)).toBe(true)
     }
 
     expect(dataplane.getAtmosphereBacklinkCounts).toHaveBeenCalledTimes(2)
     expect(embedSpy).toHaveBeenCalledTimes(3)
-    expect(embedSpy.mock.calls[1][0].toSorted()).toEqual(
-      [pubUri, ...recs.slice(0, 3)].toSorted(),
-    )
+    expect(embedSpy.mock.calls[1][0]).toEqual([pubUri])
     expect(embedSpy.mock.calls[2][0].toSorted()).toEqual(subs.toSorted())
   })
 
@@ -397,7 +396,7 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
       .mocked(dataplane.getRecordsByURI)
       .mock.calls.flatMap(([req]) => req.uris)
     expect(lookups).not.toContain('https://example.com')
-    expect(state.externalRecordBacklinks?.has(httpDoc)).toBe(true)
+    expect(state.externalRecordBacklinkCounts?.has(httpDoc)).toBe(true)
     expect(state.externalRecordBacklinks?.has(badDoc)).toBe(false)
     expect(state.externalRecordBacklinks?.has(missingDoc)).toBe(false)
     expect(state.externalRecordBacklinkCounts?.has(badDoc)).toBe(false)
@@ -412,7 +411,7 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
 
   it.for([
     { kind: 'document', hydration: 'basic', maximum: 2 },
-    { kind: 'document', hydration: 'detailed', maximum: 8 },
+    { kind: 'document', hydration: 'detailed', maximum: 5 },
     { kind: 'publication', hydration: 'basic', maximum: 1 },
     { kind: 'publication', hydration: 'detailed', maximum: 4 },
     { kind: 'livestream', hydration: 'basic', maximum: 1 },
@@ -448,35 +447,37 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
     fixture,
   }) => {
     const { hydrator, ctx, records, dataplane } = fixture
-    records.set(doc1, { body: makeDoc('https://example.com') })
-    const rec = recommendUri('did:plc:a', '1')
-    records.set(rec, { body: makeRecommend(doc1) })
+    records.set(pubUri, { body: makePub() })
+    const sub = subscriptionUri('did:plc:a', '1')
+    records.set(sub, { body: makeSubscription(pubUri) })
     vi.mocked(dataplane.getAtmosphereBacklinks).mockResolvedValue(
       new GetAtmosphereBacklinksResponse({
         backlinks: [
-          { uri: rec },
-          { uri: rec },
-          { uri: subscriptionUri('did:plc:z', '1') },
+          { uri: sub },
+          { uri: sub },
+          { uri: recommendUri('did:plc:z', '1') },
           { uri: doc2 },
           { uri: 'at://did:plc:grain/' + social.grain.gallery.$type + '/1' },
-          { uri: rec + '?query' },
-          { uri: rec + '#fragment' },
+          { uri: sub + '?query' },
+          { uri: sub + '#fragment' },
           {
             uri:
-              'at://example.com/' + site.standard.graph.recommend.$type + '/1',
+              'at://example.com/' +
+              site.standard.graph.subscription.$type +
+              '/1',
           },
-          { uri: 'at://did:plc:a/' + site.standard.graph.recommend.$type },
+          { uri: 'at://did:plc:a/' + site.standard.graph.subscription.$type },
         ],
       }),
     )
-    const state = await hydrator.hydrateEmbedExternalViewFromUris([doc1], ctx)
+    const state = await hydrator.hydrateEmbedExternalViewFromUris([pubUri], ctx)
     // Only the queried collection is accepted, and duplicates are collapsed.
-    expect(state.externalRecordBacklinks?.get(doc1)).toEqual([rec])
+    expect(state.externalRecordBacklinks?.get(pubUri)).toEqual([sub])
     expect(
       vi
         .mocked(dataplane.getRecordsByURI)
         .mock.calls.flatMap(([req]) => req.uris ?? []),
-    ).toEqual([doc1, rec])
+    ).toEqual([pubUri, sub])
   })
 
   it('does not rehydrate seen records', async ({ fixture }) => {
@@ -485,7 +486,7 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
     using embedSpy = vi.spyOn(hydrator, 'hydrateEmbedExternalViewFromUris')
     await hydrator.hydrateEmbedExternalViewFromUris([doc1, pubUri], ctx)
     expect(embedSpy).toHaveBeenCalledTimes(2)
-    expect(embedSpy.mock.calls[1][0]).toHaveLength(5)
+    expect(embedSpy.mock.calls[1][0]).toHaveLength(2)
     expect(embedSpy.mock.calls[1][0]).not.toContain(pubUri)
 
     embedSpy.mockClear()
@@ -583,16 +584,16 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
 
   it('drops backlinks that are not AT-URIs', async ({ fixture }) => {
     const { hydrator, ctx, records, dataplane } = fixture
-    records.set(doc1, { body: makeDoc('https://example.com') })
-    const rec = recommendUri('did:plc:a', '1')
-    records.set(rec, { body: makeRecommend(doc1) })
+    records.set(pubUri, { body: makePub() })
+    const sub = subscriptionUri('did:plc:a', '1')
+    records.set(sub, { body: makeSubscription(pubUri) })
     vi.mocked(dataplane.getAtmosphereBacklinks).mockResolvedValue(
       new GetAtmosphereBacklinksResponse({
-        backlinks: [{ uri: 'not an at-uri' }, { uri: rec }],
+        backlinks: [{ uri: 'not an at-uri' }, { uri: sub }],
       }),
     )
-    const state = await hydrator.hydrateEmbedExternalViewFromUris([doc1], ctx)
-    expect(state.externalRecordBacklinks?.get(doc1)).toEqual([rec])
+    const state = await hydrator.hydrateEmbedExternalViewFromUris([pubUri], ctx)
+    expect(state.externalRecordBacklinks?.get(pubUri)).toEqual([sub])
   })
 
   describe('basic hydration', () => {
@@ -798,11 +799,11 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
       const backlinkTargets = vi
         .mocked(dataplane.getAtmosphereBacklinks)
         .mock.calls.map(([req]) => req.targetUri)
-      expect(backlinkTargets).toEqual(expect.arrayContaining([doc1, pubUri]))
-      expect(backlinkTargets).not.toContain(otherUri)
+      expect(backlinkTargets).toEqual([pubUri])
       expect(state.externalRecordBacklinks?.has(otherUri)).toBe(false)
       expect(state.externalRecordBacklinkCounts?.has(otherUri)).toBe(false)
-      expect(state.externalRecordBacklinks?.has(doc1)).toBe(true)
+      expect(state.externalRecordBacklinks?.has(doc1)).toBe(false)
+      expect(state.externalRecordBacklinkCounts?.has(doc1)).toBe(true)
       expect(state.externalRecords?.get(pubUri)).toBeTruthy()
     })
 
@@ -893,7 +894,7 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
       expect(state.externalRecords?.get(doc1)).toBeTruthy()
       expect(state.externalRecordsByRef?.get(fetchedKey(doc1))).toBeTruthy()
       expect(state.externalRecords?.get(pubUri)).toBeTruthy()
-      expect(backlinkTargets(dataplane)).toContain(doc1)
+      expect(countTargets(dataplane)).toContain(doc1)
     })
 
     it('does not hide a publication because a document is hidden', async ({
@@ -927,25 +928,25 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
       expect(lookups(dataplane)).not.toContain(subs[0])
     })
 
-    it('nulls takendown recommends and subscriptions, keeping counts and siblings', async ({
+    it('nulls takendown subscriptions, keeping counts and siblings', async ({
       fixture,
     }) => {
-      const { hydrator, ctx, seedBasic, takedownLabeled } = fixture
+      const { hydrator, ctx, dataplane, seedBasic, takedownLabeled } = fixture
       const { recs, subs } = seedBasic()
-      takedownLabeled.add(recs[0]).add(subs[0])
+      takedownLabeled.add(subs[0])
       const state = await hydrator.hydrateEmbedExternalViewFromUris([doc1], ctx)
 
-      for (const uri of [recs[0], subs[0]]) {
-        expect(state.externalRecords?.get(uri)).toBeNull()
-        expect(state.externalRecordsByRef?.get(fetchedKey(uri))).toBeNull()
-      }
-      expect(state.externalRecords?.get(recs[1])).toBeTruthy()
+      expect(state.externalRecords?.get(subs[0])).toBeNull()
+      expect(state.externalRecordsByRef?.get(fetchedKey(subs[0]))).toBeNull()
       expect(state.externalRecords?.get(subs[1])).toBeTruthy()
-      // The target documents and publication stay available.
+      // The target document and publication stay available.
       expect(state.externalRecords?.get(doc1)).toBeTruthy()
       expect(state.externalRecords?.get(pubUri)).toBeTruthy()
+      // Documents have no social-preview samples, so recommendations are
+      // never fetched.
+      for (const uri of recs) expect(lookups(dataplane)).not.toContain(uri)
       // Samples and aggregate counts are not adjusted for hidden sources.
-      expect(state.externalRecordBacklinks?.get(doc1)).toEqual(recs.slice(0, 3))
+      expect(state.externalRecordBacklinks?.has(doc1)).toBe(false)
       expect(state.externalRecordBacklinks?.get(pubUri)).toEqual(subs)
       expect(
         state.externalRecordBacklinkCounts?.get(doc1)?.[
@@ -963,14 +964,14 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
       fixture,
     }) => {
       const { hydrator, ctx, records, seedBasic, takedownLabeled } = fixture
-      const { recs } = seedBasic()
-      takedownLabeled.add(recs[0])
-      records.delete(recs[1])
+      const { subs } = seedBasic()
+      takedownLabeled.add(subs[0])
+      records.delete(subs[1])
       using embedSpy = vi.spyOn(hydrator, 'hydrateEmbedExternalViewFromUris')
       await hydrator.hydrateEmbedExternalViewFromUris([doc1, doc2], ctx)
       // Each dependency is requested by exactly one hydration pass.
       const requested = embedSpy.mock.calls.flatMap(([uris]) => uris)
-      for (const uri of [recs[0], recs[1], pubUri]) {
+      for (const uri of [subs[0], subs[1], pubUri]) {
         expect(requested.filter((u) => u === uri)).toHaveLength(1)
       }
     })
@@ -1004,12 +1005,12 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
       fixture,
     }) => {
       const { hydrator, ctx, seedBasic, unavailableOwners } = fixture
-      const { recs } = seedBasic()
-      unavailableOwners.add('did:plc:a')
+      const { subs } = seedBasic()
+      unavailableOwners.add('did:plc:s1')
       const state = await hydrator.hydrateEmbedExternalViewFromUris([doc1], ctx)
       expect(state.externalRecords?.get(doc1)).toBeTruthy()
-      expect(state.externalRecords?.get(recs[0])).toBeNull()
-      expect(state.externalRecords?.get(recs[1])).toBeTruthy()
+      expect(state.externalRecords?.get(subs[0])).toBeNull()
+      expect(state.externalRecords?.get(subs[1])).toBeTruthy()
     })
 
     it('hides records of owners taken down by account labels', async ({
@@ -1124,8 +1125,7 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
       const targets = vi
         .mocked(dataplane.getAtmosphereBacklinks)
         .mock.calls.map(([req]) => req.targetUri)
-      expect(targets).toEqual(expect.arrayContaining([doc1, pubUri]))
-      expect(targets).not.toContain(streamUri)
+      expect(targets).toEqual([pubUri])
       expect(state.externalRecordBacklinks?.has(streamUri)).toBe(false)
       expect(state.externalRecords?.get(pubUri)).toBeTruthy()
       expect(state.actors?.has('did:plc:streamer' as DidString)).toBe(true)
@@ -1234,7 +1234,7 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
       fixture,
     }) => {
       const { hydrator, ctx, dataplane, seedBasic } = fixture
-      const { recs, subs } = seedBasic()
+      const { subs } = seedBasic()
       const err = new Error('counts failure')
       vi.mocked(dataplane.getAtmosphereBacklinkCounts).mockRejectedValue(err)
       using warn = vi
@@ -1244,9 +1244,8 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
 
       expect(state.externalRecords?.get(doc1)).toBeTruthy()
       expect(state.externalRecords?.get(pubUri)).toBeTruthy()
-      expect(state.externalRecordBacklinks?.get(doc1)).toEqual(recs.slice(0, 3))
+      expect(state.externalRecordBacklinks?.has(doc1)).toBe(false)
       expect(state.externalRecordBacklinks?.get(pubUri)).toEqual(subs)
-      expect(state.externalRecords?.get(recs[0])).toBeTruthy()
       expect(state.externalRecords?.get(subs[0])).toBeTruthy()
       expect(state.externalRecordBacklinkCounts).toBeUndefined()
       // One failed lookup per pass that discovers backlink targets.
@@ -1257,17 +1256,19 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
       expect(traversalReports()).toMatchObject([{ outcome: 'partial' }])
     })
 
-    it('keeps sibling samples when recommendations fail, distinguishing empty from failed', async ({
+    it('keeps sibling samples when subscriptions fail, distinguishing empty from failed', async ({
       fixture,
     }) => {
-      const { hydrator, ctx, seedBasic } = fixture
+      const { hydrator, ctx, records, seedBasic } = fixture
       const { subs } = seedBasic()
-      const err = new Error('recommend failure')
+      records.set(pub2Uri, { body: makePub() })
+      records.set(doc2, { body: makeDoc(pub2Uri) })
+      const err = new Error('subscription failure')
       failBacklinkPages(
         fixture,
         ({ targetUri, collection }) =>
-          targetUri === doc1 &&
-          collection === site.standard.graph.recommend.$type,
+          targetUri === pubUri &&
+          collection === site.standard.graph.subscription.$type,
         err,
       )
       using warn = vi
@@ -1279,38 +1280,39 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
       )
 
       // Failed lookup is absent; a successful empty lookup is an empty sample.
-      expect(state.externalRecordBacklinks?.has(doc1)).toBe(false)
-      expect(state.externalRecordBacklinks?.get(doc2)).toEqual([])
-      expect(state.externalRecordBacklinks?.get(pubUri)).toEqual(subs)
+      expect(state.externalRecordBacklinks?.has(pubUri)).toBe(false)
+      expect(state.externalRecordBacklinks?.get(pub2Uri)).toEqual([])
       expect(state.externalRecords?.get(pubUri)).toBeTruthy()
-      expect(state.externalRecords?.get(subs[0])).toBeTruthy()
+      expect(state.externalRecords?.get(pub2Uri)).toBeTruthy()
+      for (const uri of subs)
+        expect(state.externalRecords?.has(uri)).toBe(false)
       expect(
-        state.externalRecordBacklinkCounts?.get(doc1)?.[
-          site.standard.graph.recommend.$type
+        state.externalRecordBacklinkCounts?.get(pubUri)?.[
+          site.standard.graph.subscription.$type
         ],
-      ).toBe(42)
+      ).toBe(17)
       expect(warn).toHaveBeenCalledTimes(1)
       expect(warn.mock.calls[0][0]).toMatchObject({
         err,
-        uri: doc1,
-        collection: site.standard.graph.recommend.$type,
+        uri: pubUri,
+        collection: site.standard.graph.subscription.$type,
       })
       expect(traversalReports()).toEqual([
         {
           root: 'uris',
           outcome: 'partial',
-          recordLookups: 5,
-          batches: 3,
-          maxPass: 3,
+          recordLookups: 4,
+          batches: 2,
+          maxPass: 2,
         },
       ])
     })
 
-    it('keeps recommendations and the publication when subscriptions fail', async ({
+    it('keeps the document and the publication when subscriptions fail', async ({
       fixture,
     }) => {
       const { hydrator, ctx, seedBasic } = fixture
-      const { recs } = seedBasic()
+      seedBasic()
       failBacklinkPages(
         fixture,
         ({ collection }) =>
@@ -1322,10 +1324,9 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
         .mockImplementation(() => {})
       const state = await hydrator.hydrateEmbedExternalViewFromUris([doc1], ctx)
 
-      expect(state.externalRecordBacklinks?.get(doc1)).toEqual(recs.slice(0, 3))
+      expect(state.externalRecords?.get(doc1)).toBeTruthy()
       expect(state.externalRecordBacklinks?.has(pubUri)).toBe(false)
       expect(state.externalRecords?.get(pubUri)).toBeTruthy()
-      expect(state.externalRecords?.get(recs[0])).toBeTruthy()
       expect(
         state.externalRecordBacklinkCounts?.get(pubUri)?.[
           site.standard.graph.subscription.$type
@@ -1337,25 +1338,24 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
       fixture,
     }) => {
       const { hydrator, ctx, dataplane, records } = fixture
-      const docs = Array.from({ length: 10 }, (_, i) =>
-        atUri('did:plc:author', site.standard.document.$type, `fan${i}`),
+      const pubs = Array.from({ length: 10 }, (_, i) =>
+        atUri('did:plc:pub', site.standard.publication.$type, `fan${i}`),
       )
-      for (const doc of docs)
-        records.set(doc, { body: makeDoc('https://example.com') })
+      for (const pub of pubs) records.set(pub, { body: makePub() })
       failBacklinkPages(
         fixture,
-        ({ targetUri }) => targetUri === docs[0],
+        ({ targetUri }) => targetUri === pubs[0],
         new Error('fan-out'),
       )
       using _warn = vi
         .spyOn(hydrationLogger, 'warn')
         .mockImplementation(() => {})
-      const state = await hydrator.hydrateEmbedExternalViewFromUris(docs, ctx)
+      const state = await hydrator.hydrateEmbedExternalViewFromUris(pubs, ctx)
 
       expect(dataplane.getAtmosphereBacklinks).toHaveBeenCalledTimes(10)
-      expect(state.externalRecordBacklinks?.has(docs[0])).toBe(false)
-      for (const doc of docs.slice(1)) {
-        expect(state.externalRecordBacklinks?.get(doc)).toEqual([])
+      expect(state.externalRecordBacklinks?.has(pubs[0])).toBe(false)
+      for (const pub of pubs.slice(1)) {
+        expect(state.externalRecordBacklinks?.get(pub)).toEqual([])
       }
     })
 
@@ -1363,24 +1363,22 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
       fixture,
     }) => {
       const { hydrator, ctx, seedBasic } = fixture
-      const { recs, subs } = seedBasic()
+      const { subs } = seedBasic()
       const err = new Error('nested failure')
-      // @NOTE The root wrapper's legacy Standard.site fetch also resolves the
-      // publication, so fail on a source record that only nested passes fetch.
-      failRecordBatches(fixture, (uri) => uri === recs[0], err)
+      // Fail on a source record that only the last nested pass fetches.
+      failRecordBatches(fixture, (uri) => uri === subs[0], err)
       using warn = vi
         .spyOn(hydrationLogger, 'warn')
         .mockImplementation(() => {})
       const state = await hydrator.hydrateEmbedExternalViewFromUris([doc1], ctx)
 
       expect(state.externalRecords?.get(doc1)).toBeTruthy()
-      expect(state.externalRecordBacklinks?.get(doc1)).toEqual(recs.slice(0, 3))
-      expect(state.externalRecordBacklinks?.get(pubUri)).toBeUndefined()
+      expect(state.externalRecords?.get(pubUri)).toBeTruthy()
+      expect(state.externalRecordBacklinks?.get(pubUri)).toEqual(subs)
       expect(state.externalRecordBacklinkCounts?.get(doc1)).toBeTruthy()
       // The failed batch is skipped as a whole, including its siblings.
-      expect(state.externalRecords?.has(pubUri)).toBe(false)
-      expect(state.externalRecords?.has(recs[0])).toBe(false)
       expect(state.externalRecords?.has(subs[0])).toBe(false)
+      expect(state.externalRecords?.has(subs[1])).toBe(false)
       expect(warn).toHaveBeenCalledTimes(1)
       expect(warn.mock.calls[0][0]).toMatchObject({ err })
       expect(traversalReports()).toMatchObject([{ outcome: 'partial' }])
@@ -1463,7 +1461,7 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
       return { favUris, itemUris, photoUris }
     }
 
-    it('hydrates favorites, items, then photos with independent bounds and counts', async ({
+    it('hydrates items, then photos with independent bounds and counts, never sampling favorites', async ({
       fixture,
     }) => {
       const { hydrator, ctx, dataplane } = fixture
@@ -1481,18 +1479,14 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
         ctx,
       )
 
-      // Both source groups are retained, each bounded by its own limit.
-      expect(state.externalRecordBacklinks?.get(gallery)).toEqual([
-        ...favUris.slice(0, 3),
-        ...itemUris.slice(0, 10),
-      ])
+      // Only item sources are retained, bounded by their limit.
+      expect(state.externalRecordBacklinks?.get(gallery)).toEqual(
+        itemUris.slice(0, 10),
+      )
       const requestedLimits = vi
         .mocked(dataplane.getAtmosphereBacklinks)
         .mock.calls.map(([req]) => [req.collection, req.limit])
-      expect(requestedLimits).toEqual([
-        [social.grain.favorite.$type, 3],
-        [social.grain.gallery.item.$type, 10],
-      ])
+      expect(requestedLimits).toEqual([[social.grain.gallery.item.$type, 10]])
       // Counts are one batched call, independent of the samples.
       expect(dataplane.getAtmosphereBacklinkCounts).toHaveBeenCalledTimes(1)
       expect(state.externalRecordBacklinkCounts?.get(gallery)).toEqual({
@@ -1500,10 +1494,10 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
         [social.grain.gallery.item.$type]: 77,
       })
 
-      // Pass 1: gallery. Pass 2: sources together. Pass 3: photos together.
+      // Pass 1: gallery. Pass 2: items. Pass 3: photos together.
       expect(embedSpy).toHaveBeenCalledTimes(3)
       expect(embedSpy.mock.calls[1][0].toSorted()).toEqual(
-        [...favUris.slice(0, 3), ...itemUris.slice(0, 10)].toSorted(),
+        itemUris.slice(0, 10).toSorted(),
       )
       expect(embedSpy.mock.calls[2][0].toSorted()).toEqual(
         photoUris.slice(0, 10).toSorted(),
@@ -1517,6 +1511,8 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
       expect(state.labels?.has(photo)).toBe(true)
       expect(state.actors?.has('did:plc:photoowner' as DidString)).toBe(true)
       expect(state.externalRecords?.has(photoUris[10])).toBe(false)
+      for (const uri of favUris)
+        expect(state.externalRecords?.has(uri)).toBe(false)
     })
 
     it('keeps gallery items, photos and counts but skips favorite previews', async ({
@@ -1596,12 +1592,12 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
       seedGallery(fixture, gallery, 5, 12)
       await hydrator.hydrateEmbedExternalViewFromUris([gallery], ctx)
 
-      // Gallery, then 3 favorites and 10 items, then 10 photos.
+      // Gallery, then 10 items, then 10 photos.
       expect(traversalReports()).toEqual([
         {
           root: 'uris',
           outcome: 'completed',
-          recordLookups: 24,
+          recordLookups: 21,
           batches: 3,
           maxPass: 3,
         },
@@ -1609,7 +1605,7 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
       const fetched = vi
         .mocked(dataplane.getRecordsByURI)
         .mock.calls.flatMap(([req]) => req.uris ?? [])
-      expect(fetched).toHaveLength(24)
+      expect(fetched).toHaveLength(21)
     })
 
     // 11 galleries of 10 items each, so dependency passes exceed the request
@@ -1780,7 +1776,7 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
     it('bounds total backlink concurrency', async ({ fixture }) => {
       const { hydrator, ctx, dataplane } = fixture
       const galleries = Array.from({ length: 10 }, (_, i) => galleryOf(`g${i}`))
-      for (const gallery of galleries) seedGallery(fixture, gallery, 1, 1)
+      for (const gallery of galleries) seedGallery(fixture, gallery, 0, 1)
       const impl = vi
         .mocked(dataplane.getAtmosphereBacklinks)
         .getMockImplementation()!
@@ -1804,7 +1800,7 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
         .mock.calls.filter(([req]) =>
           (galleries as string[]).includes(req.targetUri ?? ''),
         )
-      expect(galleryQueries).toHaveLength(20)
+      expect(galleryQueries).toHaveLength(10)
       expect(peak).toBeLessThanOrEqual(8)
       expect(peak).toBeGreaterThan(1)
     })
@@ -1867,46 +1863,17 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
       const targets = vi
         .mocked(dataplane.getAtmosphereBacklinks)
         .mock.calls.map(([req]) => req.targetUri)
-      expect(targets).toEqual(expect.arrayContaining([doc1, pubUri, gallery]))
-      expect(targets).not.toContain(streamUri)
+      expect(targets.toSorted()).toEqual([gallery, pubUri].toSorted())
       expect(state.externalRecords?.get(pubUri)).toBeTruthy()
       expect(state.externalRecords?.get(photoUris[0])).toBeTruthy()
       expect(state.actors?.has('did:plc:streamer' as DidString)).toBe(true)
     })
-    it('keeps items and photos when favorites fail', async ({ fixture }) => {
-      const { hydrator, ctx } = fixture
-      const gallery = galleryOf('g1')
-      const { itemUris, photoUris } = seedGallery(fixture, gallery, 5, 2)
-      failBacklinkPages(
-        fixture,
-        ({ collection }) => collection === social.grain.favorite.$type,
-        new Error('favorites failure'),
-      )
-      using _warn = vi
-        .spyOn(hydrationLogger, 'warn')
-        .mockImplementation(() => {})
-      const state = await hydrator.hydrateEmbedExternalViewFromUris(
-        [gallery],
-        ctx,
-      )
-
-      expect(state.externalRecordBacklinks?.get(gallery)).toEqual(itemUris)
-      for (const uri of [...itemUris, ...photoUris]) {
-        expect(state.externalRecords?.get(uri)).toBeTruthy()
-      }
-      expect(
-        state.externalRecordBacklinkCounts?.get(gallery)?.[
-          social.grain.favorite.$type
-        ],
-      ).toBe(99)
-    })
-
-    it('keeps the gallery root when its item pages fail', async ({
+    it('keeps the gallery root and counts when its item pages fail', async ({
       fixture,
     }) => {
       const { hydrator, ctx } = fixture
       const gallery = galleryOf('g1')
-      const { favUris, itemUris } = seedGallery(fixture, gallery, 2, 2)
+      const { itemUris } = seedGallery(fixture, gallery, 2, 2)
       failBacklinkPages(
         fixture,
         ({ collection }) => collection === social.grain.gallery.item.$type,
@@ -1921,43 +1888,19 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
       )
 
       expect(state.externalRecords?.get(gallery)).toBeTruthy()
-      expect(state.externalRecordBacklinks?.get(gallery)).toEqual(favUris)
+      expect(state.externalRecordBacklinks?.has(gallery)).toBe(false)
+      expect(state.externalRecordBacklinkCounts?.get(gallery)).toBeTruthy()
       for (const uri of itemUris) {
         expect(state.externalRecords?.has(uri)).toBe(false)
       }
     })
 
-    it('omits the gallery sample entirely when all of its pages fail', async ({
+    it('keeps gallery and items when photo hydration fails', async ({
       fixture,
     }) => {
       const { hydrator, ctx } = fixture
       const gallery = galleryOf('g1')
-      seedGallery(fixture, gallery, 2, 2)
-      failBacklinkPages(fixture, () => true, new Error('pages failure'))
-      using _warn = vi
-        .spyOn(hydrationLogger, 'warn')
-        .mockImplementation(() => {})
-      const state = await hydrator.hydrateEmbedExternalViewFromUris(
-        [gallery],
-        ctx,
-      )
-
-      expect(state.externalRecords?.get(gallery)).toBeTruthy()
-      expect(state.externalRecordBacklinks?.has(gallery)).toBe(false)
-      expect(state.externalRecordBacklinkCounts?.get(gallery)).toBeTruthy()
-    })
-
-    it('keeps gallery, favorites, and items when photo hydration fails', async ({
-      fixture,
-    }) => {
-      const { hydrator, ctx } = fixture
-      const gallery = galleryOf('g1')
-      const { favUris, itemUris, photoUris } = seedGallery(
-        fixture,
-        gallery,
-        2,
-        2,
-      )
+      const { itemUris, photoUris } = seedGallery(fixture, gallery, 2, 2)
       failRecordBatches(
         fixture,
         (uri) => (photoUris as string[]).includes(uri),
@@ -1971,13 +1914,10 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
         ctx,
       )
 
-      for (const uri of [gallery, ...favUris, ...itemUris]) {
+      for (const uri of [gallery, ...itemUris]) {
         expect(state.externalRecords?.get(uri)).toBeTruthy()
       }
-      expect(state.externalRecordBacklinks?.get(gallery)).toEqual([
-        ...favUris,
-        ...itemUris,
-      ])
+      expect(state.externalRecordBacklinks?.get(gallery)).toEqual(itemUris)
       for (const uri of photoUris) {
         expect(state.externalRecords?.has(uri)).toBe(false)
       }
@@ -2127,6 +2067,247 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
       expect(warn).toHaveBeenCalledTimes(1)
     })
   })
+  it('runs viewer lookups concurrently with backlink counts and samples', async ({
+    fixture,
+  }) => {
+    const { hydrator, ctx, records, seedBasic } = fixture
+    seedBasic()
+    const viewer: DidString = 'did:plc:viewer'
+    const gallery = atUri('did:plc:gallery', social.grain.gallery.$type, '1')
+    records.set(gallery, {
+      body: social.grain.gallery.$build({
+        title: 'Gallery',
+        createdAt: '2026-10-01T00:00:00.000Z',
+      }),
+    })
+    const roots = [doc1, pubUri, gallery]
+    const externalRecords = await hydrator.external.getRecordsByURI(roots)
+    const gate = new EventEmitter()
+    const response = once(gate, 'response')
+    using byActor = vi
+      .spyOn(hydrator.external, 'getAtmosphereBacklinksByActor')
+      .mockImplementation(async (uris, _viewer, collection) => {
+        await response
+        return {
+          backlinks: new HydrationMap(
+            uris.map((uri) => [
+              uri,
+              [atUri(viewer, collection, 'interaction')],
+            ]),
+          ),
+          truncated: false,
+        }
+      })
+    using counts = vi
+      .spyOn(hydrator.external, 'getAtmosphereBacklinkCounts')
+      .mockImplementation(async () => {
+        await response
+        return new HydrationMap()
+      })
+    using samples = vi
+      .spyOn(hydrator.external, 'getAtmosphereBacklinks')
+      .mockImplementation(async () => {
+        await response
+        return { backlinks: [] }
+      })
+    const subscriptions: ExternalPublicationSubscriptions = new HydrationMap()
+    const likes: ExternalRecordLikes = new HydrationMap()
+    const scopedCtx = ctx.copy({ viewer })
+    const pending = hydrator.hydrateExternalViewDependencies(
+      { ctx: scopedCtx, externalRecords },
+      roots.map((uri) => ({ uri })),
+      scopedCtx,
+      {
+        seenRecordKeys: new Set(roots),
+        publicationSubscriptions: subscriptions,
+        recordLikes: likes,
+      },
+    )
+    try {
+      expect([...byActor.mock.calls]).toEqual([
+        [[pubUri], viewer, site.standard.graph.subscription.$type],
+        [[doc1], viewer, site.standard.graph.recommend.$type],
+        [[gallery], viewer, social.grain.favorite.$type],
+      ])
+      expect(counts).toHaveBeenCalledExactlyOnceWith(roots)
+      expect(samples).toHaveBeenCalledTimes(2)
+      expect([...subscriptions]).toEqual([[pubUri, null]])
+      expect([...likes]).toEqual([
+        [doc1, null],
+        [gallery, null],
+      ])
+    } finally {
+      gate.emit('response')
+      await pending
+    }
+    const state = await pending
+    expect(state.externalPublicationSubscriptions?.get(pubUri)).toBe(
+      subscriptionUri(viewer, 'interaction'),
+    )
+    expect(state.externalRecordLikes?.get(doc1)).toBe(
+      recommendUri(viewer, 'interaction'),
+    )
+    expect(state.externalRecordLikes?.get(gallery)).toBe(
+      atUri(viewer, social.grain.favorite.$type, 'interaction'),
+    )
+  })
+
+  describe.each([
+    {
+      name: 'recommendations',
+      targetCollection: site.standard.document.$type,
+      collection: site.standard.graph.recommend.$type,
+      record: makeDoc('https://example.com'),
+    },
+    {
+      name: 'favorites',
+      targetCollection: social.grain.gallery.$type,
+      collection: social.grain.favorite.$type,
+      record: social.grain.gallery.$build({
+        title: 'Gallery',
+        createdAt: '2026-10-01T00:00:00.000Z',
+      }),
+    },
+  ] as const)('viewer $name', ({ targetCollection, collection, record }) => {
+    const viewer: DidString = 'did:plc:viewer'
+    const target = (rkey: string) =>
+      atUri('did:plc:author', targetCollection, rkey)
+    const action = (rkey: string) => atUri(viewer, collection, rkey)
+
+    it.for(['basic', 'detailed'] as const)(
+      'hydrates viewer actions independently of previews at %s level, sharing URI and exact lookups',
+      async (hydration, { fixture }) => {
+        const { hydrator, ctx, records, dataplane } = fixture
+        const uri = target('liked')
+        records.set(uri, { body: record })
+        using byActor = vi
+          .spyOn(dataplane, 'getAtmosphereBacklinksByActor')
+          .mockResolvedValue(
+            new GetAtmosphereBacklinksByActorResponse({
+              results: [{ targetUri: uri, uris: [action('like')] }],
+            }),
+          )
+        using _refs = vi.spyOn(dataplane, 'getRecordsByRef').mockResolvedValue(
+          new GetRecordsByRefResponse({
+            results: [
+              {
+                ref: { uri },
+                status: RecordLookupStatus.FOUND,
+                record: {
+                  cid: 'pinned',
+                  record: Buffer.from(lexStringify(record)),
+                },
+              },
+            ],
+          }),
+        )
+        const scopedCtx = ctx.copy({ viewer })
+        const exact = await hydrator.hydrateEmbedExternalViewFromRefs(
+          [{ uri, cid: 'pinned' }],
+          scopedCtx,
+          { hydration },
+        )
+        const latest = await hydrator.hydrateEmbedExternalViewFromUris(
+          [uri],
+          scopedCtx,
+          { hydration, recordLikes: exact.externalRecordLikes },
+        )
+        const state = mergeStates(exact, latest)
+
+        expect(state.externalRecordLikes?.get(uri)).toBe(action('like'))
+        expect(state.externalRecordBacklinks?.get(uri) ?? []).not.toContain(
+          action('like'),
+        )
+        expect(byActor).toHaveBeenCalledExactlyOnceWith({
+          targetUris: [uri],
+          actorDid: viewer,
+          collection,
+        })
+      },
+    )
+
+    it('bounds and caches validated, absent, truncated, and failed outcomes without failing content hydration', async ({
+      fixture,
+    }) => {
+      const { hydrator, ctx, records, dataplane } = fixture
+      const uris = Array.from({ length: 205 }, (_, i) => target(`target${i}`))
+      for (const uri of uris) records.set(uri, { body: record })
+      const err = new Error('viewer lookup failed')
+      using warn = vi
+        .spyOn(hydrationLogger, 'warn')
+        .mockImplementation(() => {})
+      using byActor = vi
+        .spyOn(dataplane, 'getAtmosphereBacklinksByActor')
+        .mockImplementation(async ({ targetUris = [] }) => {
+          assertRecordLimit(targetUris.length)
+          if (targetUris[0] === uris[100]) throw err
+          return new GetAtmosphereBacklinksByActorResponse({
+            truncated: targetUris[0] === uris[0],
+            results: [
+              {
+                targetUri: uris[0],
+                uris: [
+                  atUri('did:plc:other', collection, 'wrong-owner'),
+                  subscriptionUri(viewer, 'wrong-collection'),
+                  action('query') + '?query',
+                  action('fragment') + '#fragment',
+                  `at://${viewer}/${collection}`,
+                  `at://viewer.test/${collection}/handle`,
+                  action('valid'),
+                ],
+              },
+            ],
+          })
+        })
+      const likes: ExternalRecordLikes = new HydrationMap()
+      const options = { hydration: 'basic' as const, recordLikes: likes }
+      const scopedCtx = ctx.copy({ viewer })
+      const state = await hydrator.hydrateEmbedExternalViewFromUris(
+        uris,
+        scopedCtx,
+        options,
+      )
+      await hydrator.hydrateEmbedExternalViewFromUris(uris, scopedCtx, options)
+
+      expect(state.externalRecordLikes).toBe(likes)
+      expect([...likes]).toEqual(
+        uris.map((uri, i) => [
+          uri,
+          i === 0 ? action('valid') : i < 200 ? null : false,
+        ]),
+      )
+      expect(byActor.mock.calls.map(([req]) => req.targetUris?.length)).toEqual(
+        [100, 100, 5],
+      )
+      expect(state.externalRecords?.get(uris[100])?.record).toEqual(record)
+      expect(warn).toHaveBeenCalledExactlyOnceWith(
+        { err, collection },
+        'failed to hydrate external record viewer state',
+      )
+      expect(fullTraversalReports().map(({ outcome }) => outcome)).toEqual([
+        'partial',
+        'completed',
+      ])
+    })
+
+    it('does not query viewer actions for unauthenticated requests or moderated roots', async ({
+      fixture,
+    }) => {
+      const { hydrator, ctx, records, dataplane, takedownLabeled } = fixture
+      const uri = target('hidden')
+      records.set(uri, { body: record })
+      await hydrator.hydrateEmbedExternalViewFromUris([uri], ctx)
+      takedownLabeled.add(uri)
+      const state = await hydrator.hydrateEmbedExternalViewFromUris(
+        [uri],
+        ctx.copy({ viewer }),
+      )
+
+      expect(dataplane.getAtmosphereBacklinksByActor).not.toHaveBeenCalled()
+      expect(state.externalRecordLikes?.size).toBe(0)
+    })
+  })
+
   describe('publication subscriptions', () => {
     const viewer: DidString = 'did:plc:viewer'
 
@@ -2177,7 +2358,7 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
           [pub2Uri, truncated ? null : false],
           [missingPub, truncated ? null : false],
         ])
-        expect(byActor).toHaveBeenCalledExactlyOnceWith({
+        expect(byActor).toHaveBeenCalledWith({
           targetUris: [pubUri, pub2Uri, missingPub],
           actorDid: viewer,
           collection: site.standard.graph.subscription.$type,
@@ -2251,12 +2432,16 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
           i === 0 ? subscriptionUri(viewer, '1') : i < 200 ? null : false,
         ]),
       )
-      const batches = byActor.mock.calls.map(([req]) => req.targetUris ?? [])
+      const batches = byActor.mock.calls
+        .filter(
+          ([req]) => req.collection === site.standard.graph.subscription.$type,
+        )
+        .map(([req]) => req.targetUris ?? [])
       expect(batches.map((batch) => batch.length)).toEqual([100, 100, 5])
       expect(batches.flat()).toEqual(publications)
       expect(warn).toHaveBeenCalledExactlyOnceWith(
-        { err },
-        'failed to hydrate external publication subscriptions',
+        { err, collection: site.standard.graph.subscription.$type },
+        'failed to hydrate external record viewer state',
       )
       expect(fullTraversalReports().map(({ outcome }) => outcome)).toEqual([
         'partial',
@@ -2274,7 +2459,10 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
       const response = once(gate, 'response')
       using byActor = vi
         .spyOn(dataplane, 'getAtmosphereBacklinksByActor')
-        .mockImplementation(async () => {
+        .mockImplementation(async ({ collection }) => {
+          if (collection !== site.standard.graph.subscription.$type) {
+            return new GetAtmosphereBacklinksByActorResponse()
+          }
           gate.emit('started')
           const [result] = await response
           return result
@@ -2307,7 +2495,11 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
       )
       const state = mergeStates(await first, next)
 
-      expect(byActor).toHaveBeenCalledTimes(1)
+      expect(
+        byActor.mock.calls.filter(
+          ([req]) => req.collection === site.standard.graph.subscription.$type,
+        ),
+      ).toHaveLength(1)
       expect(state.externalPublicationSubscriptions?.get(pubUri)).toBe(
         subscriptionUri(viewer, '1'),
       )
@@ -2346,28 +2538,112 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
       expect(byActor).not.toHaveBeenCalled()
     })
 
-    it.for([
-      { viewer, optIn: false },
-      { viewer: null, optIn: true },
-      { viewer: null, optIn: false },
-    ])(
-      'makes no subscription calls for $viewer with opt-in $optIn',
-      async ({ viewer, optIn }, { fixture }) => {
+    it.for(
+      (['basic', 'detailed'] as const).flatMap((hydration) =>
+        (['uris', 'refs', 'dependencies'] as const).map((root) => ({
+          hydration,
+          root,
+        })),
+      ),
+    )(
+      'automatically hydrates subscriptions through $root with $hydration hydration',
+      async ({ hydration, root }, { fixture }) => {
         const { hydrator, ctx, dataplane, seedBasic } = fixture
         seedBasic()
-        using byActor = vi.spyOn(dataplane, 'getAtmosphereBacklinksByActor')
+        using byActor = vi
+          .spyOn(dataplane, 'getAtmosphereBacklinksByActor')
+          .mockResolvedValue(
+            new GetAtmosphereBacklinksByActorResponse({
+              results: [
+                { targetUri: pubUri, uris: [subscriptionUri(viewer, 'sub')] },
+              ],
+            }),
+          )
+        using _refs = vi.spyOn(dataplane, 'getRecordsByRef').mockResolvedValue(
+          new GetRecordsByRefResponse({
+            results: [
+              {
+                ref: { uri: pubUri },
+                status: RecordLookupStatus.FOUND,
+                record: {
+                  cid: 'pinned',
+                  record: Buffer.from(lexStringify(makePub())),
+                },
+              },
+            ],
+          }),
+        )
+        const scopedCtx = ctx.copy({ viewer })
+        const state =
+          root === 'uris'
+            ? await hydrator.hydrateEmbedExternalViewFromUris(
+                [doc1, doc2],
+                scopedCtx,
+                { hydration },
+              )
+            : root === 'refs'
+              ? await hydrator.hydrateEmbedExternalViewFromRefs(
+                  [{ uri: pubUri, cid: 'pinned' }],
+                  scopedCtx,
+                  { hydration },
+                )
+              : await hydrator.hydrateExternalViewDependencies(
+                  await hydrator.hydrateEmbedExternalViewFromUris(
+                    [pubUri],
+                    ctx,
+                    { hydration },
+                  ),
+                  [{ uri: pubUri }],
+                  scopedCtx,
+                  { hydration },
+                )
+
+        expect(state.externalPublicationSubscriptions?.get(pubUri)).toBe(
+          subscriptionUri(viewer, 'sub'),
+        )
+        const next = await hydrator.hydrateExternalViewDependencies(
+          state,
+          [{ uri: pubUri }],
+          scopedCtx,
+          { hydration },
+        )
+        expect(next.externalPublicationSubscriptions).toBe(
+          state.externalPublicationSubscriptions,
+        )
+        expect(
+          byActor.mock.calls.filter(
+            ([req]) =>
+              req.collection === site.standard.graph.subscription.$type,
+          ),
+        ).toEqual([
+          [
+            {
+              targetUris: [pubUri],
+              actorDid: viewer,
+              collection: site.standard.graph.subscription.$type,
+            },
+          ],
+        ])
+      },
+    )
+
+    it.for([false, true])(
+      'makes no subscription calls for anonymous requests with shared cache %s',
+      async (sharedCache, { fixture }) => {
+        const { hydrator, ctx, dataplane, seedBasic } = fixture
+        seedBasic()
         const subscriptions: ExternalPublicationSubscriptions | undefined =
-          optIn ? new HydrationMap() : undefined
+          sharedCache ? new HydrationMap() : undefined
         const state = await hydrator.hydrateEmbedExternalViewFromUris(
           [doc1],
-          ctx.copy({ viewer }),
+          ctx,
           { hydration: 'basic', publicationSubscriptions: subscriptions },
         )
 
         expect(state.externalRecords?.get(pubUri)?.record).toEqual(makePub())
         expect(state.externalPublicationSubscriptions).toBe(subscriptions)
         expect(subscriptions?.size ?? 0).toBe(0)
-        expect(byActor).not.toHaveBeenCalled()
+        expect(dataplane.getAtmosphereBacklinksByActor).not.toHaveBeenCalled()
       },
     )
   })
@@ -2463,10 +2739,14 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
         [pubUri, false],
         [pub2Uri, subscriptionUri(viewer, '1')],
       ])
-      expect(byActor.mock.calls.map(([req]) => req.targetUris)).toEqual([
-        [pubUri],
-        [pub2Uri],
-      ])
+      expect(
+        byActor.mock.calls
+          .filter(
+            ([req]) =>
+              req.collection === site.standard.graph.subscription.$type,
+          )
+          .map(([req]) => req.targetUris),
+      ).toEqual([[pubUri], [pub2Uri]])
       expect(state.externalRecordsByRef?.get(key(doc1, '1'))?.record).toEqual(
         makeDoc(pubUri),
       )
@@ -2513,18 +2793,17 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
       expect(seen.has(key(doc1, '2'))).toBe(true)
       expect(seen.has(doc1)).toBe(false)
 
-      // Both versions' publications are discovered in one nested batch, and
-      // the shared document is a single backlink target.
+      // Both versions' publications are discovered in one nested batch, then
+      // the publication's subscriptions in another.
       expect(embedSpy).toHaveBeenCalledTimes(2)
-      // The recommend sources of the shared document ride in the same batch.
-      expect(embedSpy.mock.calls[0][0]).toHaveLength(5)
-      expect(embedSpy.mock.calls[0][0]).toEqual(
-        expect.arrayContaining([pubUri, pub2Uri]),
+      expect(embedSpy.mock.calls[0][0].toSorted()).toEqual(
+        [pubUri, pub2Uri].toSorted(),
       )
+      // Documents are never sampled for recommendations.
       const targets = vi
         .mocked(dataplane.getAtmosphereBacklinks)
         .mock.calls.map(([req]) => req.targetUri)
-      expect(targets.filter((t) => t === doc1)).toHaveLength(1)
+      expect(targets).not.toContain(doc1)
       expect(state.externalRecords?.get(pubUri)).toBeTruthy()
       expect(state.externalRecords?.get(pub2Uri)).toBeTruthy()
       expect(state.labels?.has(doc1)).toBe(true)
@@ -2746,7 +3025,7 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
       const targets = vi
         .mocked(dataplane.getAtmosphereBacklinks)
         .mock.calls.map(([req]) => req.targetUri)
-      expect(targets.filter((t) => t === doc1)).toHaveLength(1)
+      expect(targets.filter((t) => t === pubUri)).toHaveLength(1)
       const countTargets = vi
         .mocked(dataplane.getAtmosphereBacklinkCounts)
         .mock.calls.flatMap(([req]) => req.targetUris ?? [])
@@ -2853,11 +3132,10 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
 
       expect(traversalReports()).toEqual([
         {
-          // 3 exact roots, then 2 publications and 3 recommends, then 2
-          // subscriptions.
+          // 3 exact roots, then 2 publications, then 2 subscriptions.
           root: 'refs',
           outcome: 'completed',
-          recordLookups: 10,
+          recordLookups: 7,
           batches: 3,
           maxPass: 3,
         },
@@ -2906,8 +3184,8 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
       expect(state.externalRecordsByRef?.get(key(doc2, '1'))).toBeTruthy()
       // Hidden roots trigger no dependency work; only doc2 is a target.
       const targets = vi
-        .mocked(dataplane.getAtmosphereBacklinks)
-        .mock.calls.map(([req]) => req.targetUri)
+        .mocked(dataplane.getAtmosphereBacklinkCounts)
+        .mock.calls.flatMap(([req]) => req.targetUris ?? [])
       expect(targets).toEqual([doc2])
 
       // includeTakedowns keeps labeled versions but not unavailable owners.
@@ -3016,7 +3294,7 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
         vi.spyOn(hydrator, 'hydrateStarterPacksBasic').mockResolvedValue({})
       }
 
-      it('shares URI subscription outcomes with pinned post roots without treating discarded refs as targets', async ({
+      it('shares URI viewer interactions with pinned post roots without treating discarded refs as targets', async ({
         fixture,
       }) => {
         const { hydrator, ctx, records, dataplane, seedBasic } = fixture
@@ -3041,11 +3319,15 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
         using byActor = vi
           .spyOn(dataplane, 'getAtmosphereBacklinksByActor')
           .mockImplementation(
-            async ({ targetUris = [] }) =>
+            async ({ targetUris = [], collection }) =>
               new GetAtmosphereBacklinksByActorResponse({
                 results: targetUris.map((targetUri) => ({
                   targetUri,
-                  uris: [subscriptionUri(viewer, '1')],
+                  uris: [
+                    collection === site.standard.graph.subscription.$type
+                      ? subscriptionUri(viewer, '1')
+                      : recommendUri(viewer, '1'),
+                  ],
                 })),
               }),
           )
@@ -3066,10 +3348,7 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
           [{ uri: feedUri }, { uri: rootUri }],
           scopedCtx,
           uriState,
-          {
-            externalSeenRecordKeys: seenRecordKeys,
-            externalPublicationSubscriptions: subscriptions,
-          },
+          { externalSeenRecordKeys: seenRecordKeys },
         )
         const state = mergeStates(uriState, postState)
 
@@ -3078,9 +3357,15 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
           [pubUri, subscriptionUri(viewer, '1')],
           [pub2Uri, subscriptionUri(viewer, '1')],
         ])
+        expect([...state.externalRecordLikes!]).toEqual([
+          [doc1, recommendUri(viewer, '1')],
+          [doc2, recommendUri(viewer, '1')],
+        ])
         expect(byActor.mock.calls.map(([req]) => req.targetUris)).toEqual([
           [pubUri],
+          [doc1],
           [pub2Uri],
+          [doc2],
         ])
         expect(state.externalRecordsByRef?.get(key(doc1, '1'))?.record).toEqual(
           makeDoc(pubUri),
@@ -3378,13 +3663,12 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
       await hydrator.hydrateEmbedExternalViewFromUris([doc1, doc1, doc2], ctx)
 
       expect(embedSpy).toHaveBeenCalledTimes(3)
-      // 2 documents, then the publication and 3 recommends, then 2
-      // subscriptions.
+      // 2 documents, then the publication, then 2 subscriptions.
       expect(traversalReports()).toEqual([
         {
           root: 'uris',
           outcome: 'completed',
-          recordLookups: 8,
+          recordLookups: 5,
           batches: 3,
           maxPass: 3,
         },
@@ -3581,16 +3865,16 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
       fixture,
     }) => {
       const { hydrator, ctx, records } = fixture
-      records.set(doc1, { body: makeDoc(missingPub) })
+      records.set(doc1, { body: makeDoc(pubUri) })
+      records.set(pubUri, { body: makePub() })
       using warn = vi.spyOn(hydrationLogger, 'warn')
       const state = await hydrator.hydrateEmbedExternalViewFromUris(
         [doc1, missingDoc],
         ctx,
       )
 
-      expect(state.externalRecordBacklinks?.get(doc1)).toEqual([])
+      expect(state.externalRecordBacklinks?.get(pubUri)).toEqual([])
       expect(state.externalRecords?.get(missingDoc)).toBeNull()
-      expect(state.externalRecords?.get(missingPub)).toBeNull()
       expect(warn).not.toHaveBeenCalled()
       expect(traversalReports()).toEqual([
         {
@@ -3646,15 +3930,12 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
     // doc1 links its publication and one recommendation; the publication has
     // one subscription.
     const seedLinkedDoc = ({ records, backlinks }: Fixture) => {
-      const rec = recommendUri('did:plc:a', '1')
       const sub = subscriptionUri('did:plc:s1', '1')
       records.set(doc1, { body: makeDoc(pubUri) })
       records.set(pubUri, { body: makePub() })
-      records.set(rec, { body: makeRecommend(doc1) })
       records.set(sub, { body: makeSubscription(pubUri) })
-      backlinks.set(doc1, [rec])
       backlinks.set(pubUri, [sub])
-      return { rec, sub }
+      return { sub }
     }
 
     it('reports the context XRPC endpoint from every entry point, or unknown, with a duration', async ({
@@ -3704,15 +3985,14 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
       seedLinkedDoc(fixture)
       await hydrator.hydrateEmbedExternalViewFromUris([doc1, missingDoc], ctx)
 
-      // Pass 2 fetches the publication and recommendation, pass 3 the
-      // subscription.
+      // Pass 2 fetches the publication, pass 3 the subscription.
       const [report] = fullTraversalReports()
-      expect(report).toMatchObject({ outcome: 'completed', recordLookups: 5 })
+      expect(report).toMatchObject({ outcome: 'completed', recordLookups: 4 })
       expect(counts(report)).toEqual({
         roots: 2,
         rootsResolved: 1,
-        dependencies: 3,
-        dependenciesResolved: 3,
+        dependencies: 2,
+        dependenciesResolved: 2,
       })
     })
 
@@ -3729,8 +4009,8 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
       expect(counts(fullTraversalReports()[0])).toEqual({
         roots: 1,
         rootsResolved: 1,
-        dependencies: 2,
-        dependenciesResolved: 1,
+        dependencies: 1,
+        dependenciesResolved: 0,
       })
     })
 
@@ -3816,15 +4096,15 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
       fixture,
     }) => {
       const { hydrator, ctx, dataplane, records } = fixture
-      records.set(doc1, { body: makeDoc('https://example.com') })
-      const externalRecords = await hydrator.external.getRecordsByURI([doc1])
+      records.set(pubUri, { body: makePub() })
+      const externalRecords = await hydrator.external.getRecordsByURI([pubUri])
       vi.mocked(dataplane.getRecordsByURI).mockClear()
       vi.mocked(dataplane.getAtmosphereBacklinks).mockClear()
       vi.mocked(dataplane.getAtmosphereBacklinkCounts).mockClear()
 
       await hydrator.hydrateExternalViewDependencies(
         { ctx, externalRecords },
-        [{ uri: doc1 }],
+        [{ uri: pubUri }],
         ctx,
       )
 

@@ -1,3 +1,5 @@
+import { isAbsolute } from 'node:path'
+import { pathToFileURL } from 'node:url'
 import {
   type Instrumentation,
   InstrumentationBase,
@@ -49,6 +51,28 @@ function assertSharedInstrumentationBase(instrumentations: Instrumentation[]) {
       `Instrumentation(s) ${names} use a different copy of @opentelemetry/instrumentation than @atproto-labs/opentelemetry-node, so ESM imports of the modules they target would not be instrumented. Make them resolve the same @opentelemetry/instrumentation (e.g. with a package manager override), or use instrumentations built on it.`,
     )
   }
+}
+
+/**
+ * The modules `instrumentations` target, in the form import-in-the-middle's
+ * `include` option accepts (it rejects absolute paths, but not file URLs).
+ *
+ * @note getModuleDefinitions() re-runs the instrumentation's `init()` rather
+ * than returning the definitions it enabled, so the names match the ones it
+ * hooks only as long as `init()` is deterministic.
+ */
+export function getInstrumentedModules(
+  instrumentations: Instrumentation[],
+): string[] {
+  return instrumentations.flatMap((i) =>
+    i instanceof InstrumentationBase
+      ? i
+          .getModuleDefinitions()
+          .map(({ name }) =>
+            isAbsolute(name) ? pathToFileURL(name).href : name,
+          )
+      : [],
+  )
 }
 
 type DefaultAtprotoInstrumentationsOptions = {

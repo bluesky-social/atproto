@@ -1,5 +1,19 @@
 # @atproto/lex-schema
 
+## 0.3.2
+
+### Patch Changes
+
+- [#6018](https://github.com/bluesky-social/atproto/pull/6018) [`2ed73cc`](https://github.com/bluesky-social/atproto/commit/2ed73cc657769447d2617f1c3642b06f69b69dc5) Thanks [@matthieusieben](https://github.com/matthieusieben)! - `integer()` schemas now accept integers beyond `Number.MAX_SAFE_INTEGER` when validating with `strict: false`. The data model defines integers as 64-bit, so a single such value (e.g. a relay `listHosts` `seq`) no longer makes a whole XRPC response fail validation with `strictResponseProcessing: false`. Strict validation still only accepts safe integers.
+
+## 0.3.1
+
+### Patch Changes
+
+- [#5958](https://github.com/bluesky-social/atproto/pull/5958) [`ee63e5e`](https://github.com/bluesky-social/atproto/commit/ee63e5ede255e40251a9e761befec9d623dfb1ec) Thanks [@mozzius](https://github.com/mozzius)! - Speed up parsing of absent optional values. `OptionalSchema` now works out once whether its inner schema replaces `undefined` with a value (eg. a default), and only runs it on absent values when it does, instead of running it (and building then discarding a `LexValidationError`) for every absent optional value.
+- Updated dependencies [[`ee63e5e`](https://github.com/bluesky-social/atproto/commit/ee63e5ede255e40251a9e761befec9d623dfb1ec), [`33d620b`](https://github.com/bluesky-social/atproto/commit/33d620b2ffc4b9a5b4959cbcc1262c5138c8a506)]:
+  - @atproto/syntax@0.7.9
+
 ## 0.3.0
 
 ### Minor Changes

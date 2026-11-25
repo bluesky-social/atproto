@@ -1,5 +1,39 @@
 # @atproto/lex-installer
 
+## 0.2.13
+
+### Patch Changes
+
+- Updated dependencies [[`50ffa3a`](https://github.com/bluesky-social/atproto/commit/50ffa3a18cdae58b7dedf777aafc0bc0eb471c41), [`50ffa3a`](https://github.com/bluesky-social/atproto/commit/50ffa3a18cdae58b7dedf777aafc0bc0eb471c41), [`50ffa3a`](https://github.com/bluesky-social/atproto/commit/50ffa3a18cdae58b7dedf777aafc0bc0eb471c41), [`58ca16d`](https://github.com/bluesky-social/atproto/commit/58ca16d32ccb50b30e1d4c800c6263af7511a4ff), [`315aba7`](https://github.com/bluesky-social/atproto/commit/315aba7d157f2e7376b56e927e9bc088a3a622c1), [`58ca16d`](https://github.com/bluesky-social/atproto/commit/58ca16d32ccb50b30e1d4c800c6263af7511a4ff), [`315aba7`](https://github.com/bluesky-social/atproto/commit/315aba7d157f2e7376b56e927e9bc088a3a622c1), [`2ed73cc`](https://github.com/bluesky-social/atproto/commit/2ed73cc657769447d2617f1c3642b06f69b69dc5), [`58ca16d`](https://github.com/bluesky-social/atproto/commit/58ca16d32ccb50b30e1d4c800c6263af7511a4ff)]:
+  - @atproto-labs/fetch-node@0.5.0
+  - @atproto/lex-resolver@0.4.10
+  - @atproto/lex-rpc@0.3.0
+  - @atproto/lex-schema@0.3.2
+  - @atproto-labs/did-resolver@0.3.15
+  - @atproto-labs/handle-resolver-node@0.2.19
+  - @atproto/lex-builder@0.1.23
+  - @atproto/lex-document@0.1.19
+
+## 0.2.12
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/lex-rpc@0.2.2
+  - @atproto/lex-resolver@0.4.9
+
+## 0.2.11
+
+### Patch Changes
+
+- Updated dependencies [[`ee63e5e`](https://github.com/bluesky-social/atproto/commit/ee63e5ede255e40251a9e761befec9d623dfb1ec), [`ee63e5e`](https://github.com/bluesky-social/atproto/commit/ee63e5ede255e40251a9e761befec9d623dfb1ec), [`603f55b`](https://github.com/bluesky-social/atproto/commit/603f55b801b2bab56972ce18b71ad75236e7a613), [`33d620b`](https://github.com/bluesky-social/atproto/commit/33d620b2ffc4b9a5b4959cbcc1262c5138c8a506)]:
+  - @atproto/syntax@0.7.9
+  - @atproto/lex-schema@0.3.1
+  - @atproto/lex-builder@0.1.22
+  - @atproto/lex-resolver@0.4.8
+  - @atproto/lex-document@0.1.18
+  - @atproto/lex-rpc@0.2.1
+
 ## 0.2.10
 
 ### Patch Changes

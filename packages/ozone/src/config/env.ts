@@ -63,6 +63,7 @@ export const readEnv = (): OzoneEnvironment => {
     assignmentQueueDurationMs: envInt('OZONE_ASSIGNMENT_QUEUE_DURATION_MS'),
     assignmentReportDurationMs: envInt('OZONE_ASSIGNMENT_REPORT_DURATION_MS'),
     inboxAppealWindowMonths: envInt('OZONE_INBOX_APPEAL_WINDOW_MONTHS'),
+    inboxAppealableTags: envList('OZONE_INBOX_APPEALABLE_TAGS'),
     inboxStartAt: envStr('OZONE_INBOX_START_AT'),
     inboxPushEnabled: envBool('OZONE_INBOX_PUSH_ENABLED'),
     inboxPolicyDefaultUrl: envStr('OZONE_INBOX_POLICY_DEFAULT_URL'),
@@ -78,6 +79,7 @@ export type OzoneEnvironment = {
   nodeEnv?: string
   strikeSuspensionConfig?: string
   inboxAppealWindowMonths?: number
+  inboxAppealableTags?: string[]
   inboxStartAt?: string
   inboxPushEnabled?: boolean
   inboxPolicyDefaultUrl?: string

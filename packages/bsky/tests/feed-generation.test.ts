@@ -847,7 +847,7 @@ describe('feed generation', () => {
         {
           headers: await network.serviceHeaders(
             alice,
-            ids.AppBskyFeedGetFeed,
+            ids.AppBskyFeedGetFeedSkeleton,
             gen.did,
           ),
         },
@@ -886,7 +886,7 @@ describe('feed generation', () => {
           {
             headers: await network.serviceHeaders(
               alice,
-              ids.AppBskyFeedGetFeed,
+              ids.AppBskyFeedGetFeedSkeleton,
               gen.did,
             ),
           },
@@ -915,7 +915,7 @@ describe('feed generation', () => {
         {
           headers: await network.serviceHeaders(
             alice,
-            ids.AppBskyFeedGetFeed,
+            ids.AppBskyFeedGetFeedSkeleton,
             gen.did,
           ),
         },
@@ -933,7 +933,7 @@ describe('feed generation', () => {
         {
           headers: await network.serviceHeaders(
             alice,
-            ids.AppBskyFeedGetFeed,
+            ids.AppBskyFeedGetFeedSkeleton,
             gen.did,
           ),
         },
@@ -954,7 +954,7 @@ describe('feed generation', () => {
         {
           headers: await network.serviceHeaders(
             alice,
-            ids.AppBskyFeedGetFeed,
+            ids.AppBskyFeedGetFeedSkeleton,
             gen.did,
           ),
         },
@@ -970,7 +970,7 @@ describe('feed generation', () => {
         {
           headers: await network.serviceHeaders(
             alice,
-            ids.AppBskyFeedGetFeed,
+            ids.AppBskyFeedGetFeedSkeleton,
             gen.did,
           ),
         },
@@ -998,7 +998,7 @@ describe('feed generation', () => {
         {
           headers: await network.serviceHeaders(
             alice,
-            ids.AppBskyFeedGetFeed,
+            ids.AppBskyFeedGetFeedSkeleton,
             gen.did,
           ),
         },
@@ -1036,6 +1036,52 @@ describe('feed generation', () => {
       )
     })
 
+    it('accepts a getFeed service JWT for AppView.', async () => {
+      const feed = await agent.api.app.bsky.feed.getFeed(
+        { feed: feedUriEven },
+        {
+          headers: await network.serviceHeaders(alice, ids.AppBskyFeedGetFeed),
+        },
+      )
+      expect(feed.data['$auth']).toMatchObject({
+        aud: network.bsky.ctx.cfg.serverDid,
+        lxm: ids.AppBskyFeedGetFeed,
+      })
+    })
+
+    it('rejects a getFeedSkeleton service JWT not for the feed generator.', async () => {
+      const tryGetFeed = agent.api.app.bsky.feed.getFeed(
+        { feed: feedUriEven },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyFeedGetFeedSkeleton,
+          ),
+        },
+      )
+      await expect(tryGetFeed).rejects.toMatchObject({
+        status: 401,
+        error: 'BadJwtAudience',
+      })
+    })
+
+    it('rejects a getFeed service JWT not for AppView.', async () => {
+      const tryGetFeed = agent.api.app.bsky.feed.getFeed(
+        { feed: feedUriEven },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyFeedGetFeed,
+            gen.did,
+          ),
+        },
+      )
+      await expect(tryGetFeed).rejects.toMatchObject({
+        status: 401,
+        error: 'BadJwtAudience',
+      })
+    })
+
     it('passes through auth error from feed.', async () => {
       const tryGetFeed = agent.api.app.bsky.feed.getFeed({
         feed: feedUriNeedsAuth,
@@ -1052,7 +1098,7 @@ describe('feed generation', () => {
         {
           headers: await network.serviceHeaders(
             alice,
-            ids.AppBskyFeedGetFeed,
+            ids.AppBskyFeedGetFeedSkeleton,
             gen.did,
           ),
         },
@@ -1068,7 +1114,7 @@ describe('feed generation', () => {
         {
           headers: await network.serviceHeaders(
             alice,
-            ids.AppBskyFeedGetFeed,
+            ids.AppBskyFeedGetFeedSkeleton,
             gen.did,
           ),
         },
@@ -1114,6 +1160,25 @@ describe('feed generation', () => {
         })
       })
 
+      it('rejects a wrapped service JWT not for the feed generator.', async () => {
+        const { authorization } = await network.serviceHeaders(
+          alice,
+          ids.AppBskyFeedGetFeedSkeleton,
+        )
+        const tryGetFeed = agent.api.app.bsky.feed.getFeed(
+          { feed: feedUriEven },
+          {
+            headers: await bsgHeaders({
+              service_auth: authorization.slice('Bearer '.length),
+            }),
+          },
+        )
+        await expect(tryGetFeed).rejects.toMatchObject({
+          status: 401,
+          error: 'BadJwtAudience',
+        })
+      })
+
       it('rejects a BSG token with a user but without a service JWT.', async () => {
         const tryGetFeed = agent.api.app.bsky.feed.getFeed(
           { feed: feedUriEven },
@@ -1133,7 +1198,7 @@ describe('feed generation', () => {
         {
           headers: await network.serviceHeaders(
             alice,
-            ids.AppBskyFeedGetFeed,
+            ids.AppBskyFeedGetFeedSkeleton,
             gen.did,
           ),
         },

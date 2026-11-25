@@ -1,5 +1,12 @@
 # @atproto-labs/did-resolver
 
+## 0.3.15
+
+### Patch Changes
+
+- Updated dependencies [[`c9d2ad9`](https://github.com/bluesky-social/atproto/commit/c9d2ad93cf0f3527622a72842d867c4cf70dc993), [`50ffa3a`](https://github.com/bluesky-social/atproto/commit/50ffa3a18cdae58b7dedf777aafc0bc0eb471c41), [`58ca16d`](https://github.com/bluesky-social/atproto/commit/58ca16d32ccb50b30e1d4c800c6263af7511a4ff), [`50ffa3a`](https://github.com/bluesky-social/atproto/commit/50ffa3a18cdae58b7dedf777aafc0bc0eb471c41)]:
+  - @atproto-labs/fetch@0.5.0
+
 ## 0.3.14
 
 ### Patch Changes

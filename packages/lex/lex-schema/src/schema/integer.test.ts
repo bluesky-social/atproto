@@ -80,6 +80,45 @@ describe('IntegerSchema', () => {
       const result = schema.safeParse(-Infinity)
       expect(result.success).toBe(false)
     })
+
+    it.each([
+      Number.MAX_SAFE_INTEGER + 1,
+      Number.MIN_SAFE_INTEGER - 1,
+      2 ** 63,
+      -(2 ** 63),
+    ])('rejects unsafe integer %s', (value) => {
+      expect(schema.safeParse(value).success).toBe(false)
+    })
+  })
+
+  describe('non-strict mode', () => {
+    const schema = integer()
+    const options = { strict: false }
+
+    it.each([
+      Number.MAX_SAFE_INTEGER + 1,
+      Number.MIN_SAFE_INTEGER - 1,
+      2 ** 63,
+      -(2 ** 63),
+    ])('accepts unsafe integer %s', (value) => {
+      expect(schema.safeParse(value, options)).toMatchObject({
+        success: true,
+        value,
+      })
+    })
+
+    it.each([3.14, NaN, Infinity, -Infinity])(
+      'still rejects non-integer number %s',
+      (value) => {
+        expect(schema.safeParse(value, options).success).toBe(false)
+      },
+    )
+
+    it('still enforces range constraints', () => {
+      const ranged = integer({ minimum: 0, maximum: Number.MAX_SAFE_INTEGER })
+      expect(ranged.safeParse(-(2 ** 63), options).success).toBe(false)
+      expect(ranged.safeParse(2 ** 63, options).success).toBe(false)
+    })
   })
 
   describe('default value', () => {

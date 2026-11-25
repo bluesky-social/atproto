@@ -54,6 +54,7 @@ import { fetchLogger, lexiconResolverLogger, oauthLogger } from './logger.js'
 import { ServerMailer } from './mailer/index.js'
 import { ModerationMailer } from './mailer/moderation.js'
 import { buildProxyAgent } from './pipethrough.js'
+import { ProxyLimiter, limiterFetch } from './proxy-limiter.js'
 import { buildOAuthRateLimiterFactory } from './rate-limits.js'
 import {
   LocalViewer,
@@ -272,10 +273,33 @@ export class AppContext implements AsyncDisposable {
       ? new FailOpenReplayStore(redisScratch)
       : undefined
 
+    // One limiter for every request this PDS sends to the AppView: those it
+    // proxies (appViewProxyAgent, below) and those its own handlers make
+    // (bskyAppView.client). Counting only the first kind would leave the
+    // second free to add to a surge the limit is there to hold back.
+    const appViewLimiter =
+      cfg.bskyAppView &&
+      (cfg.bskyAppView.maxRequestsPerSecond > 0 ||
+        cfg.bskyAppView.maxConcurrentRequests > 0)
+        ? new ProxyLimiter(
+            {
+              maxRequestsPerSecond: cfg.bskyAppView.maxRequestsPerSecond,
+              maxConcurrentRequests: cfg.bskyAppView.maxConcurrentRequests,
+              maxQueuedRequests: cfg.bskyAppView.maxQueuedRequests,
+              maxQueueMs: cfg.bskyAppView.maxQueueMs,
+            },
+            {
+              granted: (waitMs) => events.appViewRequestGranted({ waitMs }),
+              rejected: (reason) => events.appViewRequestRejected({ reason }),
+            },
+          )
+        : undefined
+
     const bskyAppView = cfg.bskyAppView
       ? new BskyAppView({
           ...cfg.bskyAppView,
           validateResponse: cfg.service.devMode,
+          fetch: appViewLimiter && limiterFetch(appViewLimiter),
         })
       : undefined
 
@@ -463,8 +487,15 @@ export class AppContext implements AsyncDisposable {
     const proxyAgent = buildProxyAgent(cfg.proxy)
     // The operator sets the AppView's URL, so unlike a DID document's service
     // endpoint, it is allowed to resolve to a private address.
+    //
+    // Only this agent is limited. The other one serves whatever service a
+    // user names in `atproto-proxy`: a shared cap there would let one user's
+    // slow service hold every slot and starve all other proxied services.
     const appViewProxyAgent = cfg.bskyAppView
-      ? buildProxyAgent({ ...cfg.proxy, disableSsrfProtection: true })
+      ? buildProxyAgent(
+          { ...cfg.proxy, disableSsrfProtection: true },
+          appViewLimiter,
+        )
       : undefined
 
     const oauthProvider = cfg.oauth.provider

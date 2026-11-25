@@ -13,9 +13,8 @@ type StrongRef = com.atproto.repo.strongRef.Main
  * Persistence policy, not render-time hydration: the canonical record (when
  * available, whatever its collection) plus only the additional collections
  * opted in here, so records baked into a post stay slim. Hydration still holds
- * the full state (e.g. recommendation, subscription and favorite records that
- * back the rendered `likers`/`subscribers` previews); those are deliberately
- * not persisted. An absent entry means no additional collections. Add a
+ * the full state (e.g. subscription records backing subscriber previews);
+ * those are deliberately not persisted. An absent entry means no additional collections. Add a
  * collection here only when a post must carry it.
  * @NOTE New dependencies must also be selected by the per-root walk in
  * `api/app/bsky/unspecced/getAtmosphereRecordViews.ts`.

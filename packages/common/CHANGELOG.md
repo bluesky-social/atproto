@@ -1,5 +1,19 @@
 # @atproto/common
 
+## 0.8.13
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/common-web@0.5.20
+
+## 0.8.12
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/common-web@0.5.19
+
 ## 0.8.11
 
 ### Patch Changes

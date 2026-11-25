@@ -1,5 +1,35 @@
 # @atproto/lex-resolver
 
+## 0.4.10
+
+### Patch Changes
+
+- [#6020](https://github.com/bluesky-social/atproto/pull/6020) [`58ca16d`](https://github.com/bluesky-social/atproto/commit/58ca16d32ccb50b30e1d4c800c6263af7511a4ff) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Use a local `canParseUrl` instead of the one exported by `@atproto/lex-rpc`.
+- Updated dependencies [[`315aba7`](https://github.com/bluesky-social/atproto/commit/315aba7d157f2e7376b56e927e9bc088a3a622c1), [`58ca16d`](https://github.com/bluesky-social/atproto/commit/58ca16d32ccb50b30e1d4c800c6263af7511a4ff), [`315aba7`](https://github.com/bluesky-social/atproto/commit/315aba7d157f2e7376b56e927e9bc088a3a622c1), [`2ed73cc`](https://github.com/bluesky-social/atproto/commit/2ed73cc657769447d2617f1c3642b06f69b69dc5), [`58ca16d`](https://github.com/bluesky-social/atproto/commit/58ca16d32ccb50b30e1d4c800c6263af7511a4ff)]:
+  - @atproto/lex-rpc@0.3.0
+  - @atproto/lex-schema@0.3.2
+  - @atproto-labs/did-resolver@0.3.15
+  - @atproto/lex-document@0.1.19
+
+## 0.4.9
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/lex-rpc@0.2.2
+  - @atproto/repo@0.11.8
+
+## 0.4.8
+
+### Patch Changes
+
+- Updated dependencies [[`ee63e5e`](https://github.com/bluesky-social/atproto/commit/ee63e5ede255e40251a9e761befec9d623dfb1ec), [`ee63e5e`](https://github.com/bluesky-social/atproto/commit/ee63e5ede255e40251a9e761befec9d623dfb1ec), [`33d620b`](https://github.com/bluesky-social/atproto/commit/33d620b2ffc4b9a5b4959cbcc1262c5138c8a506)]:
+  - @atproto/syntax@0.7.9
+  - @atproto/lex-schema@0.3.1
+  - @atproto/repo@0.11.7
+  - @atproto/lex-document@0.1.18
+  - @atproto/lex-rpc@0.2.1
+
 ## 0.4.7
 
 ### Patch Changes

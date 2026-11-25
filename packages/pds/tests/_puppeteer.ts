@@ -25,11 +25,6 @@ export class PageHelper implements AsyncDisposable {
     return this.page.isClosed()
   }
 
-  async title() {
-    await this.waitForNetworkIdle()
-    return this.page.title()
-  }
-
   async waitForNetworkIdle() {
     await this.page.waitForNetworkIdle()
   }
@@ -85,7 +80,12 @@ export class PageHelper implements AsyncDisposable {
   }
 
   async assertTitle(expected: string) {
-    await expect(this.title()).resolves.toBe(expected)
+    const result = await this.page.waitForFunction(
+      (title) => document.title === title,
+      {},
+      expected,
+    )
+    await result.dispose()
   }
 
   async clickOn(selector: string) {

@@ -435,6 +435,7 @@
     "tools.ozone.report.getLatestReport",
     "tools.ozone.report.getLiveStats",
     "tools.ozone.report.getReport",
+    "tools.ozone.report.getStatGroupDetails",
     "tools.ozone.report.listActivities",
     "tools.ozone.report.queryActivities",
     "tools.ozone.report.queryModeratorActivity",
@@ -655,8 +656,8 @@
       "cid": "bafyreibvucawor4ulbdorsclmbqdmknh27smp6xgswnxrfwthpeymebcxu"
     },
     "app.bsky.embed.external": {
-      "uri": "file://../../lexicons-overrides/app/bsky/embed/external.json",
-      "cid": "bafyreigywbqnjqqhwjsoaip7nvoubdimn3efbzm242u5ou3dllgjrlgtfq"
+      "uri": "https://raw.githubusercontent.com/bluesky-social/bsky/refs/heads/main/lexicons/app/bsky/embed/external.json",
+      "cid": "bafyreicj23y55jj33krl4bhvgwojnepqmxutkkusnr5pon5cuxjrmoeu5q"
     },
     "app.bsky.embed.gallery": {
       "uri": "https://raw.githubusercontent.com/bluesky-social/bsky/refs/heads/main/lexicons/app/bsky/embed/gallery.json",
@@ -995,23 +996,23 @@
       "cid": "bafyreih4xza4elgwnr7oazzbuftplgvnbye2eleiaui7zfkrtlgmhiidfm"
     },
     "app.bsky.unspecced.getAtmosphereApps": {
-      "uri": "file://../../lexicons-overrides/app/bsky/unspecced/getAtmosphereApps.json",
-      "cid": "bafyreibhdohdekwztogxf7fp6x2y2vtgj24r7se2vfshpyodn6wih2i5jq"
+      "uri": "https://raw.githubusercontent.com/bluesky-social/bsky/refs/heads/main/lexicons/app/bsky/unspecced/getAtmosphereApps.json",
+      "cid": "bafyreifl5smpd6l4caewvgxdpybnjhbwxla54wj4gkzqjvar3wvwdqf33u"
     },
     "app.bsky.unspecced.getAtmosphereExploreArticleRecommendations": {
       "uri": "https://raw.githubusercontent.com/bluesky-social/bsky/refs/heads/main/lexicons/app/bsky/unspecced/getAtmosphereExploreArticleRecommendations.json",
       "cid": "bafyreial4vi2raxz7nfbwovdx6m4pdlb5hnpf37teistounxjxe6svbdsi"
     },
     "app.bsky.unspecced.getAtmosphereExploreTab": {
-      "uri": "file://../../lexicons-overrides/app/bsky/unspecced/getAtmosphereExploreTab.json",
-      "cid": "bafyreicztq47cvaj4xyswhr2m7whyuug5z5hxoxx3os6qh4ke5cq5s42ey"
+      "uri": "https://raw.githubusercontent.com/bluesky-social/bsky/refs/heads/main/lexicons/app/bsky/unspecced/getAtmosphereExploreTab.json",
+      "cid": "bafyreiam6dyovbegt4oudus25a23m7ss2cca2v5rzdcxxkm4bsew3dr724"
     },
     "app.bsky.unspecced.getAtmosphereTimeline": {
-      "uri": "file://../../lexicons-overrides/app/bsky/unspecced/getAtmosphereTimeline.json",
+      "uri": "https://raw.githubusercontent.com/bluesky-social/bsky/refs/heads/main/lexicons/app/bsky/unspecced/getAtmosphereTimeline.json",
       "cid": "bafyreicspzwzz74a2xovpvz5qt5v6f362j7j3o3epuqsxfeowqkclycgbm"
     },
     "app.bsky.unspecced.getAtmosphereTimelineV2": {
-      "uri": "file://../../lexicons-overrides/app/bsky/unspecced/getAtmosphereTimelineV2.json",
+      "uri": "https://raw.githubusercontent.com/bluesky-social/bsky/refs/heads/main/lexicons/app/bsky/unspecced/getAtmosphereTimelineV2.json",
       "cid": "bafyreieczkg6w4bhosu3dhl7jtos7elsz7vsrljf67coqjox24esdw4vum"
     },
     "app.bsky.unspecced.getConfig": {
@@ -2161,6 +2162,10 @@
     "tools.ozone.report.getReport": {
       "uri": "file://../../lexicons/tools/ozone/report/getReport.json",
       "cid": "bafyreidj4ypkkit6t5gxr7nxxnlhy4agrgblxlr2kwezs4too6vmazpygi"
+    },
+    "tools.ozone.report.getStatGroupDetails": {
+      "uri": "file://../../lexicons/tools/ozone/report/getStatGroupDetails.json",
+      "cid": "bafyreicdol3rhz6r6vmof6wgb4og5ni35adf22i2ocybzohtjgbxzcxtw4"
     },
     "tools.ozone.report.listActivities": {
       "uri": "file://../../lexicons/tools/ozone/report/listActivities.json",

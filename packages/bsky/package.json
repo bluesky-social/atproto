@@ -1,6 +1,6 @@
 {
   "name": "@atproto/bsky",
-  "version": "0.5.15",
+  "version": "0.5.21",
   "license": "MIT",
   "description": "Reference implementation of app.bsky App View (Bluesky API)",
   "keywords": [
@@ -31,7 +31,7 @@
     "./package.json": "./package.json"
   },
   "engines": {
-    "node": ">=22"
+    "node": "^22.22.3 || ^24.11.1 || >=25.1.0"
   },
   "dependencies": {
     "@atproto-labs/fetch-node": "workspace:^",

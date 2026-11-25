@@ -1,6 +1,6 @@
 {
   "name": "@atproto/bsync",
-  "version": "0.1.11",
+  "version": "0.1.13",
   "license": "MIT",
   "description": "Sychronizing service for app.bsky App View (Bluesky API)",
   "keywords": [
@@ -34,7 +34,7 @@
     }
   },
   "engines": {
-    "node": ">=22"
+    "node": "^22.22.3 || ^24.11.1 || >=25.1.0"
   },
   "dependencies": {
     "@atproto-labs/opentelemetry-node": "workspace:^",

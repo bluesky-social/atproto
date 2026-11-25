@@ -1530,4 +1530,36 @@ describe(Client, () => {
       })
     })
   })
+
+  describe('redirect option', () => {
+    it('follows redirects by default', async () => {
+      const fetchHandler = vi.fn<FetchHandler>(async () => {
+        return Response.json({ preferences: [] })
+      })
+
+      await new Client(fetchHandler).xrpc(com.example.actor.getPreferences)
+
+      expect(fetchHandler).toHaveBeenCalledOnce()
+      const [, init] = fetchHandler.mock.calls[0]
+      expect(init.redirect).toBe('follow')
+    })
+
+    it('applies the client-wide redirect mode, unless overridden per request', async () => {
+      const fetchHandler = vi.fn<FetchHandler>(async () => {
+        return Response.json({ preferences: [] })
+      })
+
+      const client = new Client(fetchHandler, { redirect: 'error' })
+
+      await client.xrpc(com.example.actor.getPreferences)
+      await client.xrpc(com.example.actor.getPreferences, {
+        redirect: 'manual',
+      })
+
+      expect(fetchHandler.mock.calls.map(([, init]) => init.redirect)).toEqual([
+        'error',
+        'manual',
+      ])
+    })
+  })
 })

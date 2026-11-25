@@ -282,8 +282,92 @@ describe('record modality views', () => {
       val: 'nudity',
       cts: createdAt,
     })
-    expect(view.likers).toBeUndefined()
   })
+
+  test.each([
+    { url: 'https://pckt.blog', providerId: 'pckt.blog' },
+    { url: 'https://author.pckt.blog', providerId: 'pckt.blog' },
+    { url: 'https://Author.Leaflet.Pub', providerId: 'leaflet.pub' },
+    { url: 'https://offprint.app/publication', providerId: 'offprint.app' },
+    { url: 'https://custom.example.com', providerId: undefined },
+    { url: 'https://leaflet.pub.evil.com', providerId: undefined },
+    { url: 'https://notpckt.blog', providerId: undefined },
+  ])('attributes Standard.site views from $url', ({ url, providerId }) => {
+    const state = createState()
+    addPublication(state)
+    state.externalRecords.get(pubUri)!.record.url = url
+    addArticle(state)
+
+    const publication = views.externalRecordView(pubUri, state)
+    assert(publication)
+    assertValid(publication)
+    expect(publication.providerId).toBe(providerId)
+
+    const article = views.externalRecordView(docUri, state)
+    assert(article && app.bsky.embed.external.viewArticle.$isTypeOf(article))
+    assertValid(article)
+    expect(article.providerId).toBe(providerId)
+    expect(article.publisher?.providerId).toBe(providerId)
+
+    addArticle(state, url)
+    const looseArticle = views.externalRecordView(docUri, state)
+    assert(looseArticle)
+    assertValid(looseArticle)
+    expect(looseArticle.providerId).toBe(providerId)
+  })
+
+  test.each([
+    {
+      providerId: 'pckt.blog',
+      contentType: 'blog.pckt.content',
+      themeType: 'blog.pckt.theme',
+    },
+    {
+      providerId: 'leaflet.pub',
+      contentType: 'pub.leaflet.content',
+      themeType: 'pub.leaflet.publication#theme',
+    },
+    {
+      providerId: 'offprint.app',
+      contentType: 'app.offprint.content',
+      themeType: 'app.offprint.theme',
+    },
+  ])(
+    'attributes custom-domain records to $providerId',
+    ({ providerId, contentType, themeType }) => {
+      const state = createState()
+      addPublication(state)
+      const publicationRecord = state.externalRecords.get(pubUri)!.record
+      publicationRecord.theme = { $type: themeType }
+      const publication = views.externalRecordView(pubUri, state)
+      assert(publication)
+      assertValid(publication)
+      expect(publication.providerId).toBe(providerId)
+
+      addArticle(state)
+      const inherited = views.externalRecordView(docUri, state)
+      assert(
+        inherited && app.bsky.embed.external.viewArticle.$isTypeOf(inherited),
+      )
+      assertValid(inherited)
+      expect(inherited.providerId).toBe(providerId)
+      expect(inherited.publisher?.providerId).toBe(providerId)
+
+      publicationRecord.theme = { $type: 'blog.pckt.theme' }
+      state.externalRecords.get(docUri)!.record.content = { $type: contentType }
+      const article = views.externalRecordView(docUri, state)
+      assert(article)
+      assertValid(article)
+      expect(article.providerId).toBe(providerId)
+
+      addArticle(state, 'https://pckt.blog')
+      state.externalRecords.get(docUri)!.record.content = { $type: contentType }
+      const loose = views.externalRecordView(docUri, state)
+      assert(loose)
+      assertValid(loose)
+      expect(loose.providerId).toBe(providerId)
+    },
+  )
 
   it('checks only the supplied record, never the latest map entry', () => {
     const state = createState()
@@ -312,47 +396,119 @@ describe('record modality views', () => {
     expect(view.associatedProfiles).toEqual([])
   })
 
-  it('includes publication viewer state only when requested and known', () => {
-    const state = {
-      ...createState(),
-      externalPublicationSubscriptions: new HydrationMap<
-        AtUriString,
-        AtUriString | false
-      >(),
-    }
-    addPublication(state)
-    addArticle(state)
-    const subscription = atUri(
-      'did:plc:viewer',
-      site.standard.graph.subscription.$type,
-      'sub',
-    )
-    const viewer = (
-      uri: AtUriString,
-      options?: { publicationViewer?: boolean },
-    ) => {
-      const view = views.externalRecordView(uri, state, 0, undefined, options)
-      assert(view)
-      assertValid(view)
-      return app.bsky.embed.external.viewArticle.$isTypeOf(view)
-        ? view.publisher?.viewer
-        : app.bsky.embed.external.viewArticlePublication.$isTypeOf(view)
-          ? view.viewer
-          : undefined
-    }
+  test.each([
+    {
+      name: 'article',
+      uri: docUri,
+      collection: site.standard.graph.recommend.$type,
+      add: addArticle,
+    },
+    {
+      name: 'gallery',
+      uri: galleryUri,
+      collection: social.grain.favorite.$type,
+      add: addGallery,
+    },
+  ] as const)(
+    'includes the viewer-owned like URI on a $name only when authenticated and known',
+    ({ uri, collection, add }) => {
+      const viewerDid: DidString = 'did:plc:viewer'
+      const state = {
+        ...createState(),
+        ctx: new HydrateCtx({
+          viewer: viewerDid,
+          labelers: { dids: [], redact: new Set() },
+          features: {} as never,
+        }),
+        externalRecordLikes: new HydrationMap<
+          AtUriString,
+          AtUriString | false
+        >(),
+      }
+      addPublication(state)
+      add(state)
+      const like = atUri(viewerDid, collection, 'like')
+      const viewer = (cid?: string) => {
+        const view = views.externalRecordView(uri, state, 0, cid)
+        assert(
+          view &&
+            (app.bsky.embed.external.viewArticle.$isTypeOf(view) ||
+              app.bsky.embed.external.viewGallery.$isTypeOf(view)),
+        )
+        assertValid(view)
+        return view.viewer
+      }
+      const info = state.externalRecords.get(uri)!
+      state.externalRecordsByRef.set(genericRecordKey({ uri, cid }), info)
 
-    state.externalPublicationSubscriptions.set(pubUri, subscription)
-    expect(viewer(pubUri)).toBeUndefined()
-    for (const uri of [pubUri, docUri]) {
-      expect(viewer(uri, { publicationViewer: true })).toEqual({
-        subscription,
-      })
-    }
-    state.externalPublicationSubscriptions.set(pubUri, false)
-    expect(viewer(pubUri, { publicationViewer: true })).toEqual({})
-    state.externalPublicationSubscriptions.set(pubUri, null)
-    expect(viewer(pubUri, { publicationViewer: true })).toBeUndefined()
-  })
+      expect(viewer()).toBeUndefined()
+      state.externalRecordLikes.set(uri, like)
+      expect(viewer()).toEqual({ like })
+      expect(viewer(cid)).toEqual({ like })
+      state.externalRecordLikes.set(uri, false)
+      expect(viewer()).toEqual({})
+      state.externalRecordLikes.set(uri, null)
+      expect(viewer()).toBeUndefined()
+      state.externalRecordLikes.set(uri, like)
+      state.ctx = state.ctx.copy({ viewer: null })
+      expect(viewer()).toBeUndefined()
+    },
+  )
+
+  test.each([
+    { name: 'publication', uri: pubUri },
+    { name: 'article publisher', uri: docUri },
+  ])(
+    'includes $name viewer state only when authenticated and known',
+    ({ uri }) => {
+      const viewerDid: DidString = 'did:plc:viewer'
+      const state = {
+        ...createState(),
+        ctx: new HydrateCtx({
+          viewer: viewerDid,
+          labelers: { dids: [], redact: new Set() },
+          features: {} as never,
+        }),
+        externalPublicationSubscriptions: new HydrationMap<
+          AtUriString,
+          AtUriString | false
+        >(),
+      }
+      addPublication(state)
+      addArticle(state)
+      const subscription = atUri(
+        viewerDid,
+        site.standard.graph.subscription.$type,
+        'sub',
+      )
+      const info = state.externalRecords.get(uri)!
+      state.externalRecordsByRef.set(genericRecordKey({ uri, cid }), info)
+      const viewer = (cid?: string) => {
+        const view = views.externalRecordView(uri, state, 0, cid)
+        assert(view)
+        assertValid(view)
+        return app.bsky.embed.external.viewArticle.$isTypeOf(view)
+          ? view.publisher?.viewer
+          : app.bsky.embed.external.viewArticlePublication.$isTypeOf(view)
+            ? view.viewer
+            : undefined
+      }
+
+      for (const version of [undefined, cid]) {
+        expect(viewer(version)).toBeUndefined()
+        state.externalPublicationSubscriptions.set(pubUri, subscription)
+        expect(viewer(version)).toEqual({ subscription })
+        state.externalPublicationSubscriptions.set(pubUri, false)
+        expect(viewer(version)).toEqual({})
+        state.externalPublicationSubscriptions.set(pubUri, null)
+        expect(viewer(version)).toBeUndefined()
+      }
+      state.externalPublicationSubscriptions.set(pubUri, subscription)
+      state.ctx = state.ctx.copy({ viewer: null })
+      expect(viewer()).toBeUndefined()
+      expect(viewer(cid)).toBeUndefined()
+    },
+  )
 
   it('builds a loose document and omits reading time for blank text', () => {
     const state = createState()
@@ -409,6 +565,7 @@ describe('record modality views', () => {
     assert(view && app.bsky.embed.external.viewGallery.$isTypeOf(view))
     assertValid(view)
     expect(view.uri).toBe(`https://grain.social/profile/${did}/gallery/gallery`)
+    expect(view.providerId).toBe('grain.social')
     expect(view.description).toBe('')
     expect(
       view.items
@@ -590,6 +747,7 @@ describe('record modality views', () => {
       const view = streamView(fields)
       assert(view && app.bsky.embed.external.viewLivestream.$isTypeOf(view))
       assertValid(view)
+      expect(view.providerId).toBe('stream.place')
       return view.active
     }
 
@@ -688,52 +846,54 @@ describe('record modality views', () => {
     },
   )
 
-  it('deduplicates and sorts available liker profiles by DID, caps at three, and keeps total counts', () => {
+  it('deduplicates and sorts available subscriber profiles by DID, caps at three, and keeps total counts', () => {
     const state = createState()
-    addGallery(state)
+    addPublication(state)
     const backlinks: AtUriString[] = []
     for (const name of ['e', 'b', 'c', 'a', 'd', 'b']) {
       const actorDid = `did:plc:${name}` as const
       const uri = atUri(
         actorDid,
-        social.grain.favorite.$type,
+        site.standard.graph.subscription.$type,
         String(backlinks.length),
       )
       addRecord(
         state,
         uri,
-        social.grain.favorite.$build({ subject: galleryUri, createdAt }),
+        site.standard.graph.subscription.$build({ publication: pubUri }),
       )
       if (name !== 'a') addActor(state, actorDid)
       backlinks.push(uri)
     }
     const unrelated = atUri(
       'did:plc:unrelated',
-      social.grain.favorite.$type,
-      'like',
+      site.standard.graph.subscription.$type,
+      'subscription',
     )
     addRecord(
       state,
       unrelated,
-      social.grain.favorite.$build({ subject: docUri, createdAt }),
+      site.standard.graph.subscription.$build({ publication: docUri }),
     )
     addActor(state, 'did:plc:unrelated')
     backlinks.push(unrelated)
-    state.externalRecordBacklinks.set(galleryUri, backlinks)
-    state.externalRecordBacklinkCounts.set(galleryUri, {
-      [social.grain.favorite.$type]: 100,
+    state.externalRecordBacklinks.set(pubUri, backlinks)
+    state.externalRecordBacklinkCounts.set(pubUri, {
+      [site.standard.graph.subscription.$type]: 100,
     })
-    const view = views.externalRecordView(galleryUri, state)
-    assert(view && app.bsky.embed.external.viewGallery.$isTypeOf(view))
+    const view = views.externalRecordView(pubUri, state)
+    assert(
+      view && app.bsky.embed.external.viewArticlePublication.$isTypeOf(view),
+    )
     assertValid(view)
-    expect(view.likeCount).toBe(100)
-    expect(view.likers?.map((p) => p.did)).toEqual([
+    expect(view.subscriptionCount).toBe(100)
+    expect(view.subscribers?.map((p) => p.did)).toEqual([
       'did:plc:b',
       'did:plc:c',
       'did:plc:d',
     ])
-    state.externalRecordBacklinks.set(galleryUri, backlinks.toReversed())
-    expect(views.externalRecordView(galleryUri, state)).toEqual(view)
+    state.externalRecordBacklinks.set(pubUri, backlinks.toReversed())
+    expect(views.externalRecordView(pubUri, state)).toEqual(view)
 
     state.profileViewers.set('did:plc:c', {
       did: 'did:plc:c',
@@ -741,20 +901,23 @@ describe('record modality views', () => {
     })
     addLabel(
       state,
-      atUri('did:plc:d', social.grain.favorite.$type, '4'),
+      atUri('did:plc:d', site.standard.graph.subscription.$type, '4'),
       '!takedown',
       true,
     )
-    const filtered = views.externalRecordView(galleryUri, state)
-    assert(filtered && app.bsky.embed.external.viewGallery.$isTypeOf(filtered))
-    expect(filtered.likers?.map((p) => p.did)).toEqual([
+    const filtered = views.externalRecordView(pubUri, state)
+    assert(
+      filtered &&
+        app.bsky.embed.external.viewArticlePublication.$isTypeOf(filtered),
+    )
+    expect(filtered.subscribers?.map((p) => p.did)).toEqual([
       'did:plc:b',
       'did:plc:e',
     ])
-    expect(filtered.likeCount).toBe(100)
+    expect(filtered.subscriptionCount).toBe(100)
   })
 
-  it('selects recommendation and subscription previews using the correct target fields', () => {
+  it('selects subscriber previews using the correct target field and no article or gallery previews', () => {
     const state = createState()
     addPublication(state)
     addArticle(state)
@@ -784,7 +947,7 @@ describe('record modality views', () => {
     const view = views.externalRecordView(docUri, state)
     assert(view && app.bsky.embed.external.viewArticle.$isTypeOf(view))
     assertValid(view)
-    expect(view.likers?.map((p) => p.did)).toEqual(['did:plc:reader'])
+    expect(view).not.toHaveProperty('likers')
     expect(view.publisher?.subscribers?.map((p) => p.did)).toEqual([
       'did:plc:reader',
     ])
@@ -804,7 +967,6 @@ describe('record modality views', () => {
       expect(view.likeCount).toBe(
         count === undefined || count === 0 ? 0 : undefined,
       )
-      expect(view.likers).toBeUndefined()
     },
   )
 
@@ -949,7 +1111,7 @@ describe('record modality views', () => {
     )
 
     test.each(Object.keys(unavailableStatuses) as Status[])(
-      'drops gallery photos and likers from a %s actor without changing counts',
+      'drops gallery photos from a %s actor without changing counts',
       async (status) => {
         const state = createState()
         addGallery(state)
@@ -971,15 +1133,7 @@ describe('record modality views', () => {
             position: -1,
           }),
         )
-        const favoriteUri = atUri(reader, social.grain.favorite.$type, 'fav')
-        addRecord(
-          state,
-          favoriteUri,
-          social.grain.favorite.$build({ subject: galleryUri, createdAt }),
-        )
-        state.externalRecordBacklinks
-          .get(galleryUri)!
-          .push(linkUri, favoriteUri)
+        state.externalRecordBacklinks.get(galleryUri)!.push(linkUri)
         state.externalRecordBacklinkCounts.set(galleryUri, {
           [social.grain.favorite.$type]: 7,
         })
@@ -999,7 +1153,6 @@ describe('record modality views', () => {
           kept.photoUri,
         ])
         expect(view.associatedProfiles?.map((p) => p.did)).toEqual([did])
-        expect(view.likers).toEqual([])
         expect(view.likeCount).toBe(7)
       },
     )
@@ -1093,31 +1246,18 @@ describe('record modality views', () => {
       ])
     })
 
-    it('omits backlink samples with timezone-less timestamps but keeps counts', () => {
+    it('omits subscriber samples with timezone-less timestamps but keeps counts', () => {
       const state = createState()
       addPublication(state)
       addArticle(state)
       addGallery(state)
       const reader = 'did:plc:reader'
       addActor(state, reader)
-      const recommend = atUri(
-        reader,
-        site.standard.graph.recommend.$type,
-        'recommend',
-      )
       const subscribe = atUri(
         reader,
         site.standard.graph.subscription.$type,
         'subscription',
       )
-      const favorite = atUri(reader, social.grain.favorite.$type, 'favorite')
-      addRecord(state, recommend, {
-        ...site.standard.graph.recommend.$build({
-          document: docUri,
-          createdAt,
-        }),
-        createdAt: naive,
-      })
       addRecord(
         state,
         subscribe,
@@ -1127,13 +1267,7 @@ describe('record modality views', () => {
         }),
       )
       state.externalRecords.get(subscribe)!.record.createdAt = naive
-      addRecord(state, favorite, {
-        ...social.grain.favorite.$build({ subject: galleryUri, createdAt }),
-        createdAt: naive,
-      })
-      state.externalRecordBacklinks.set(docUri, [recommend])
       state.externalRecordBacklinks.set(pubUri, [subscribe])
-      state.externalRecordBacklinks.set(galleryUri, [favorite])
       state.externalRecordBacklinkCounts.set(docUri, {
         [site.standard.graph.recommend.$type]: 3,
       })
@@ -1147,14 +1281,12 @@ describe('record modality views', () => {
       const article = views.externalRecordView(docUri, state)
       assert(article && app.bsky.embed.external.viewArticle.$isTypeOf(article))
       assertValid(article)
-      expect(article.likers).toEqual([])
       expect(article.likeCount).toBe(3)
       expect(article.publisher?.subscribers).toEqual([])
       expect(article.publisher?.subscriptionCount).toBe(4)
       const gallery = views.externalRecordView(galleryUri, state)
       assert(gallery && app.bsky.embed.external.viewGallery.$isTypeOf(gallery))
       assertValid(gallery)
-      expect(gallery.likers).toEqual([])
       expect(gallery.likeCount).toBe(5)
     })
 

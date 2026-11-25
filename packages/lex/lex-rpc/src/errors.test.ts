@@ -1,5 +1,9 @@
-import { describe, expect, it } from 'vitest'
+import { once } from 'node:events'
+import { createServer } from 'node:http'
+import type { AddressInfo } from 'node:net'
+import { assert, describe, expect, it, vi } from 'vitest'
 import { IssueInvalidType, LexValidationError, l } from '@atproto/lex-schema'
+import type { FetchHandler } from './agent.js'
 import {
   RETRYABLE_ERROR_CODES,
   XrpcAuthenticationError,
@@ -10,6 +14,7 @@ import {
   XrpcResponseValidationError,
   asXrpcFailure,
 } from './errors.js'
+import { xrpc } from './xrpc.js'
 
 // Minimal method fixture
 const testQuery = l.query(
@@ -24,6 +29,10 @@ const testQueryNoErrors = l.query(
   l.params(),
   l.jsonPayload({ value: l.string() }),
 )
+
+function withCode(code: string, message: string): Error {
+  return Object.assign(new Error(message), { code })
+}
 
 // ============================================================================
 // XrpcResponseError
@@ -593,6 +602,94 @@ describe(XrpcFetchError, () => {
   it('is retryable', () => {
     const err = new XrpcFetchError(testQuery, new Error('network timeout'))
     expect(err.shouldRetry()).toBe(true)
+  })
+
+  // Error shapes from Node.js' fetch() (undici), once unwrapped from their
+  // "fetch failed" TypeError
+  it.each([
+    ['a refused redirect', new Error('unexpected redirect')],
+    ['too many redirects', new Error('redirect count exceeded')],
+    ['an unknown host', withCode('ENOTFOUND', 'getaddrinfo ENOTFOUND x.test')],
+    [
+      'an invalid certificate',
+      withCode('DEPTH_ZERO_SELF_SIGNED_CERT', 'self-signed certificate'),
+    ],
+    [
+      'a wrapped permanent failure',
+      new Error('Wrapped', {
+        cause: new TypeError('fetch failed', {
+          cause: new Error('unexpected redirect'),
+        }),
+      }),
+    ],
+  ])('is not retryable for %s', (_, cause) => {
+    const err = new XrpcFetchError(testQuery, cause)
+    expect(err.shouldRetry()).toBe(false)
+  })
+
+  it.each([
+    ['a refused connection', withCode('ECONNREFUSED', 'connect ECONNREFUSED')],
+    [
+      'a connection refused on every address',
+      Object.assign(new AggregateError([withCode('ECONNREFUSED', '')]), {
+        code: 'ECONNREFUSED',
+      }),
+    ],
+    ['a closed socket', withCode('UND_ERR_SOCKET', 'other side closed')],
+    ['a temporary DNS failure', withCode('EAI_AGAIN', 'getaddrinfo EAI_AGAIN')],
+    ['an opaque (browser) failure', new TypeError('Failed to fetch')],
+    ['a non-Error cause', 'unexpected redirect'],
+  ])('is retryable for %s', (_, cause) => {
+    const err = new XrpcFetchError(testQuery, cause)
+    expect(err.shouldRetry()).toBe(true)
+  })
+
+  describe('with the global fetch', () => {
+    it('does not retry redirects refused by the redirect mode', async () => {
+      const server = createServer((_req, res) => {
+        res.writeHead(302, { location: '/' })
+        res.end()
+      })
+      await once(server.listen(0, '127.0.0.1'), 'listening')
+      await using _ = {
+        [Symbol.asyncDispose]: () =>
+          new Promise<void>((resolve) => server.close(() => resolve())),
+      }
+      const { port } = server.address() as AddressInfo
+
+      const fetchHandler = vi.fn<FetchHandler>((path, init) =>
+        fetch(new URL(path, `http://127.0.0.1:${port}`), {
+          ...init,
+          redirect: 'error',
+        }),
+      )
+
+      await expect(
+        xrpc(fetchHandler, testQuery, { maxRetries: 2, minRetryTimeout: 0 }),
+      ).rejects.toSatisfy((err) => {
+        assert(err instanceof XrpcFetchError)
+        expect(err.shouldRetry()).toBe(false)
+        return true
+      })
+      expect(fetchHandler).toHaveBeenCalledOnce()
+    })
+
+    it('retries refused connections', async () => {
+      // A port nothing listens on anymore
+      const server = createServer()
+      await once(server.listen(0, '127.0.0.1'), 'listening')
+      const { port } = server.address() as AddressInfo
+      await new Promise((resolve) => server.close(resolve))
+
+      const fetchHandler = vi.fn<FetchHandler>((path, init) =>
+        fetch(new URL(path, `http://127.0.0.1:${port}`), init),
+      )
+
+      await expect(
+        xrpc(fetchHandler, testQuery, { maxRetries: 2, minRetryTimeout: 0 }),
+      ).rejects.toBeInstanceOf(XrpcFetchError)
+      expect(fetchHandler).toHaveBeenCalledTimes(3)
+    })
   })
 
   it('toJSON does not expose internal details', () => {

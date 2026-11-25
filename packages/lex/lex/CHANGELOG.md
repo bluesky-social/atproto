@@ -1,5 +1,42 @@
 # @atproto/lex
 
+## 0.7.0
+
+### Minor Changes
+
+- [#6020](https://github.com/bluesky-social/atproto/pull/6020) [`58ca16d`](https://github.com/bluesky-social/atproto/commit/58ca16d32ccb50b30e1d4c800c6263af7511a4ff) Thanks [@matthieusieben](https://github.com/matthieusieben)! - **Breaking:** `applyDefaults`, `asUint8ArrayArrayBuffer`, `canParseUrl`, `isAsyncIterable`, `isBlobLike`, `toReadableStream`, `toReadableStreamPonyfill`, `trim`, `wait` and the `WithDefaults` type are no longer exported from `@atproto/lex-rpc`, nor re-exported from `@atproto/lex-client` and `@atproto/lex`.
+
+### Patch Changes
+
+- [#6019](https://github.com/bluesky-social/atproto/pull/6019) [`315aba7`](https://github.com/bluesky-social/atproto/commit/315aba7d157f2e7376b56e927e9bc088a3a622c1) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add a `redirect` option to XRPC requests and to the `Client` constructor, setting the redirect mode passed to `fetch()` (still `"follow"` by default).
+- Updated dependencies [[`315aba7`](https://github.com/bluesky-social/atproto/commit/315aba7d157f2e7376b56e927e9bc088a3a622c1), [`58ca16d`](https://github.com/bluesky-social/atproto/commit/58ca16d32ccb50b30e1d4c800c6263af7511a4ff), [`315aba7`](https://github.com/bluesky-social/atproto/commit/315aba7d157f2e7376b56e927e9bc088a3a622c1), [`2ed73cc`](https://github.com/bluesky-social/atproto/commit/2ed73cc657769447d2617f1c3642b06f69b69dc5), [`58ca16d`](https://github.com/bluesky-social/atproto/commit/58ca16d32ccb50b30e1d4c800c6263af7511a4ff)]:
+  - @atproto/lex-rpc@0.3.0
+  - @atproto/lex-client@0.7.0
+  - @atproto/lex-schema@0.3.2
+  - @atproto/lex-installer@0.2.13
+  - @atproto/lex-builder@0.1.23
+
+## 0.6.2
+
+### Patch Changes
+
+- Updated dependencies [[`9901412`](https://github.com/bluesky-social/atproto/commit/9901412468741c11399c130a39aa44bc7dd06cb8)]:
+  - @atproto/lex-json@0.1.11
+  - @atproto/lex-client@0.6.2
+  - @atproto/lex-rpc@0.2.2
+  - @atproto/lex-installer@0.2.12
+
+## 0.6.1
+
+### Patch Changes
+
+- Updated dependencies [[`ee63e5e`](https://github.com/bluesky-social/atproto/commit/ee63e5ede255e40251a9e761befec9d623dfb1ec), [`603f55b`](https://github.com/bluesky-social/atproto/commit/603f55b801b2bab56972ce18b71ad75236e7a613)]:
+  - @atproto/lex-schema@0.3.1
+  - @atproto/lex-builder@0.1.22
+  - @atproto/lex-installer@0.2.11
+  - @atproto/lex-client@0.6.1
+  - @atproto/lex-rpc@0.2.1
+
 ## 0.6.0
 
 ### Minor Changes

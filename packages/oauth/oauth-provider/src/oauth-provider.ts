@@ -99,6 +99,9 @@ import {
 import { RateLimitManager } from './rate-limit/rate-limit-manager.js'
 import {
   DEFAULT_RATE_LIMIT_POLICIES,
+  type RateLimitClientContext,
+  type RateLimitContext,
+  type RateLimitDeviceContext,
   type RateLimitKeyGetter,
   type RateLimitPolicies,
   type RateLimitPolicy,
@@ -123,7 +126,7 @@ import { RequestManager } from './request/request-manager.js'
 import { type RequestStore, asRequestStore } from './request/request-store.js'
 import { parseRequestUri } from './request/request-uri.js'
 import type { AuthorizationRedirectParameters } from './result/authorization-redirect-parameters.js'
-import type { AuthorizationResultAuthorizePage } from './result/authorization-result-authorize-page.js'
+import type { AuthorizationResultAuthorize } from './result/authorization-result-authorize.js'
 import type { AuthorizationResultRedirect } from './result/authorization-result-redirect.js'
 import type { ErrorHandler } from './router/error-handler.js'
 import type { AccessTokenPayload } from './signer/access-token-payload.js'
@@ -155,7 +158,7 @@ export {
 export type {
   AccessTokenPayload,
   AuthorizationRedirectParameters,
-  AuthorizationResultAuthorizePage as AuthorizationResultAuthorize,
+  AuthorizationResultAuthorize,
   AuthorizationResultRedirect,
   Branding,
   BrandingConfig,
@@ -168,6 +171,9 @@ export type {
   LoopbackMetadataGetter,
   MultiLangString,
   OAuthAuthorizationServerMetadata,
+  RateLimitClientContext,
+  RateLimitContext,
+  RateLimitDeviceContext,
   RateLimitKeyGetter,
   RateLimitPolicies,
   RateLimitPolicy,
@@ -678,7 +684,7 @@ export class OAuthProvider extends OAuthVerifier {
       OAuthAuthorizationRequestUri
     >,
     { deviceId, deviceMetadata }: DeviceInfo,
-  ): Promise<AuthorizationResultRedirect | AuthorizationResultAuthorizePage> {
+  ): Promise<AuthorizationResultRedirect | AuthorizationResultAuthorize> {
     const { issuer } = this
 
     const client = await this.clientManager.getClient(query.client_id)

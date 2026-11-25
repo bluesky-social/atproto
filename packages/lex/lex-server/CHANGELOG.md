@@ -1,5 +1,44 @@
 # @atproto/lex-server
 
+## 0.3.0
+
+### Minor Changes
+
+- [#6024](https://github.com/bluesky-social/atproto/pull/6024) [`59662dd`](https://github.com/bluesky-social/atproto/commit/59662dddf943cb616bc460c40bab859559e06f06) Thanks [@matthieusieben](https://github.com/matthieusieben)! - **Breaking:** WebSocket compression (permessage-deflate) is now disabled by default on Node.js, as in `ws`. It costs a zlib stream per connection and compresses every message, which limits how many subscribers a process can serve. Enable it with the new `perMessageDeflate` option of `serve()`, `createServer()`, `toRequestListener()` and `sendResponse()`, which accepts `ws`'s options, e.g. `{ serverNoContextTakeover: true, threshold: 1024 }`.
+
+### Patch Changes
+
+- [#6024](https://github.com/bluesky-social/atproto/pull/6024) [`59662dd`](https://github.com/bluesky-social/atproto/commit/59662dddf943cb616bc460c40bab859559e06f06) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Subscriptions yield to the event loop at least every 10ms. A handler that yields messages without awaiting, such as one replaying a backlog, no longer blocks I/O and timers, including the server's own termination, for as long as the socket accepts writes.
+
+- [#6024](https://github.com/bluesky-social/atproto/pull/6024) [`59662dd`](https://github.com/bluesky-social/atproto/commit/59662dddf943cb616bc460c40bab859559e06f06) Thanks [@matthieusieben](https://github.com/matthieusieben)! - `terminate()` now closes WebSocket connections with a 1001 (Going Away) status code, which aborts their subscription handlers, instead of leaving them open until `gracefulTerminationTimeout` expires. When `gracefulTerminationTimeout` is not set, `terminate()` now waits up to 1 second for in-flight requests to complete, instead of closing every connection immediately.
+
+## 0.2.9
+
+### Patch Changes
+
+- [#6021](https://github.com/bluesky-social/atproto/pull/6021) [`fbe2ebb`](https://github.com/bluesky-social/atproto/commit/fbe2ebbf244d139f3c949b145ff2b461b425a5b1) Thanks [@matthieusieben](https://github.com/matthieusieben)! - `onHandlerError` is now only called for server errors (5xx), as documented. Client errors (4xx), such as invalid params or input, authentication failures, or a `LexServerError` with a 4xx status thrown by a handler, are no longer reported.
+- Updated dependencies [[`315aba7`](https://github.com/bluesky-social/atproto/commit/315aba7d157f2e7376b56e927e9bc088a3a622c1), [`58ca16d`](https://github.com/bluesky-social/atproto/commit/58ca16d32ccb50b30e1d4c800c6263af7511a4ff), [`315aba7`](https://github.com/bluesky-social/atproto/commit/315aba7d157f2e7376b56e927e9bc088a3a622c1), [`2ed73cc`](https://github.com/bluesky-social/atproto/commit/2ed73cc657769447d2617f1c3642b06f69b69dc5), [`58ca16d`](https://github.com/bluesky-social/atproto/commit/58ca16d32ccb50b30e1d4c800c6263af7511a4ff)]:
+  - @atproto/lex-rpc@0.3.0
+  - @atproto/lex-schema@0.3.2
+  - @atproto-labs/did-resolver@0.3.15
+
+## 0.2.8
+
+### Patch Changes
+
+- Updated dependencies [[`9901412`](https://github.com/bluesky-social/atproto/commit/9901412468741c11399c130a39aa44bc7dd06cb8)]:
+  - @atproto/lex-json@0.1.11
+  - @atproto/lex-rpc@0.2.2
+
+## 0.2.7
+
+### Patch Changes
+
+- [#5789](https://github.com/bluesky-social/atproto/pull/5789) [`57c2b30`](https://github.com/bluesky-social/atproto/commit/57c2b3086b17bccd13b48ab7555292ef4ecf29c2) Thanks [@kuldeepsinh19](https://github.com/kuldeepsinh19)! - Fix `request.signal` being aborted by `@atproto/lex-server/nodejs` as soon as the request body was read. The signal is now aborted when the response closes before completing (e.g. the client disconnected).
+- Updated dependencies [[`ee63e5e`](https://github.com/bluesky-social/atproto/commit/ee63e5ede255e40251a9e761befec9d623dfb1ec)]:
+  - @atproto/lex-schema@0.3.1
+  - @atproto/lex-rpc@0.2.1
+
 ## 0.2.6
 
 ### Patch Changes
