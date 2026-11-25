@@ -1,12 +1,12 @@
-import { z } from 'zod'
+import { BlockMap, type CarBlock } from '@atproto/car'
+import { check } from '@atproto/common-web'
 import { cidForLex, encode } from '@atproto/lex-cbor'
 import { type Cid, cidForCbor } from '@atproto/lex-data'
-import { BlockMap } from '../block-map.js'
 import { CidSet } from '../cid-set.js'
 import { MissingBlockError, MissingBlocksError } from '../error.js'
 import * as parse from '../parse.js'
+import { nodeDataSchema } from '../schemas.js'
 import type { ReadableBlockstore } from '../storage/index.js'
-import { type CarBlock, schema } from '../types.js'
 import * as util from './util.js'
 
 /**
@@ -42,23 +42,9 @@ import * as util from './util.js'
  * Then the first will be described as `prefix: 0, key: 'bsky/posts/abcdefg'`,
  * and the second will be described as `prefix: 16, key: 'hi'.`
  */
-const subTreePointer = z.nullable(schema.cid)
-const treeEntry = z.object({
-  p: z.number(), // prefix count of ascii chars that this key shares with the prev key
-  k: schema.bytes, // the rest of the key outside the shared prefix
-  v: schema.cid, // value
-  t: subTreePointer, // next subtree (to the right of leaf)
-})
-const nodeData = z.object({
-  l: subTreePointer, // left-most subtree
-  e: z.array(treeEntry), //entries
-})
-export type NodeData = z.infer<typeof nodeData>
 
-export const nodeDataDef = {
-  name: 'mst node',
-  schema: nodeData,
-}
+export const nodeDataDef = check.buildDef('mst node', nodeDataSchema)
+export type NodeData = check.InferDef<typeof nodeDataDef>
 
 export type NodeEntry = MST | Leaf
 
@@ -224,7 +210,7 @@ export class MST {
     for (const entry of entries) {
       if (entry.isTree()) {
         const subtree = await entry.getUnstoredBlocksInner(seen)
-        blocks.addMap(subtree.blocks)
+        blocks.addBlocks(subtree.blocks)
       }
     }
     return { root: pointer, blocks: blocks }
@@ -787,13 +773,13 @@ export class MST {
     let toFetch = new CidSet()
     toFetch.add(await this.getPointer())
     this.markVisited(seen)
-    while (toFetch.size() > 0) {
+    while (toFetch.size > 0) {
       const nextLayer = new CidSet()
-      const fetched = await this.storage.getBlocks(toFetch.toList())
+      const fetched = await this.storage.getBlocks(toFetch)
       if (fetched.missing.length > 0) {
         throw new MissingBlocksError('mst node', fetched.missing)
       }
-      for (const cid of toFetch.toList()) {
+      for (const cid of toFetch) {
         const found = await parse.getAndParseByDef(
           fetched.blocks,
           cid,
@@ -815,14 +801,12 @@ export class MST {
       }
       toFetch = nextLayer
     }
-    const leafData = await this.storage.getBlocks(leaves.toList())
+    const leafData = await this.storage.getBlocks(leaves)
     if (leafData.missing.length > 0) {
       throw new MissingBlocksError('mst leaf', leafData.missing)
     }
 
-    for (const leaf of leafData.blocks.entries()) {
-      yield leaf
-    }
+    yield* leafData.blocks
   }
 
   async cidsForPath(key: string): Promise<Cid[]> {
@@ -849,7 +833,7 @@ export class MST {
       this.proofForLeftSib(key),
       this.proofForRightSib(key),
     ])
-    return self.addMap(left).addMap(right)
+    return self.addBlocks(left).addBlocks(right)
   }
 
   async proofForKey(key: string): Promise<BlockMap> {

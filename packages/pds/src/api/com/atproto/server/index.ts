@@ -21,6 +21,7 @@ import requestDelete from './requestAccountDelete.js'
 import requestEmailConfirmation from './requestEmailConfirmation.js'
 import requestEmailUpdate from './requestEmailUpdate.js'
 import requestPasswordReset from './requestPasswordReset.js'
+import reserveKemKey from './reserveKemKey.js'
 import reserveSigningKey from './reserveSigningKey.js'
 import resetPassword from './resetPassword.js'
 import revokeAppPassword from './revokeAppPassword.js'
@@ -33,6 +34,7 @@ export default function (server: Server, ctx: AppContext) {
   createInviteCodes(server, ctx)
   getAccountInviteCodes(server, ctx)
   reserveSigningKey(server, ctx)
+  reserveKemKey(server, ctx)
   requestDelete(server, ctx)
   deleteAccount(server, ctx)
   requestPasswordReset(server, ctx)

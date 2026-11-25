@@ -9,7 +9,7 @@ import {
 } from '@atproto/common'
 import { randomStr } from '@atproto/crypto'
 import { type SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
-import type { Cid } from '@atproto/lex-data'
+import { type CborCid, type Cid, isCborCid } from '@atproto/lex-data'
 import * as repo from '@atproto/repo'
 import { readCar } from '@atproto/repo'
 import type { DidString } from '@atproto/syntax'
@@ -182,10 +182,10 @@ describe('repo subscribe repos', () => {
   ) => {
     const fromRpc = await getRepo(did)
     const contents = {} as Record<string, Record<string, Cid>>
-    const allBlocks = new repo.BlockMap()
+    const allBlocks = new repo.BlockMap<CborCid>()
     for (const evt of evts) {
       const car = await readCar(evt.blocks)
-      allBlocks.addMap(car.blocks)
+      allBlocks.addBlocks(car.blocks)
       for (const op of evt.ops) {
         const { collection, rkey } = repo.parseDataKey(op.path)
         if (op.action === 'delete') {
@@ -206,6 +206,9 @@ describe('repo subscribe repos', () => {
     const lastCommit = evts.at(-1)?.commit
     if (!lastCommit) {
       throw new Error('no last commit')
+    }
+    if (!isCborCid(lastCommit)) {
+      throw new Error('last commit is not a CBOR CID')
     }
     const signingKey = await network.pds.ctx.actorStore.keypair(did)
     const fromStream = await repo.verifyRepo(

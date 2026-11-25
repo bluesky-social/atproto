@@ -1,5 +1,5 @@
 import type { ScopePermissions } from '@atproto/oauth-scopes'
-import type { DidString } from '@atproto/syntax'
+import type { DidString, SpaceRefString } from '@atproto/syntax'
 import type { AuthScope } from './auth-scope.js'
 
 export type UnauthenticatedOutput = {
@@ -31,6 +31,7 @@ export type AccessOutput<S extends AuthScope = AuthScope> = {
     type: 'access'
     did: DidString
     scope: S
+    permissions?: undefined
   }
 }
 
@@ -56,4 +57,30 @@ export type UserServiceAuthOutput = {
     type: 'user_service_auth'
     did: DidString
   }
+}
+
+export type ServiceAuthOutput = {
+  credentials: {
+    type: 'service_auth'
+    iss: DidString
+    aud: string
+    lxm: string
+  }
+}
+
+export type SpaceCredentialOutput = {
+  credentials: {
+    type: 'space_credential'
+    audience: DidString
+    iss: DidString
+    space: SpaceRefString
+  }
+}
+
+export function isSpaceCredentialOutput<
+  T extends { credentials: { type: string } },
+>(
+  output: T,
+): output is Extract<T, { credentials: { type: 'space_credential' } }> {
+  return output.credentials.type === 'space_credential'
 }

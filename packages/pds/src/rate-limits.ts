@@ -69,6 +69,17 @@ export const buildRateLimitsConfig = (
         durationMs: DAY,
         points: 35000, // creates=3, puts=2, deletes=1
       },
+      // Space writes are counted apart from public repo writes.
+      {
+        name: 'space-write-hour',
+        durationMs: HOUR,
+        points: 5000, // creates=3, puts=2, deletes=1
+      },
+      {
+        name: 'space-write-day',
+        durationMs: DAY,
+        points: 35000, // creates=3, puts=2, deletes=1
+      },
     ],
   }
 }

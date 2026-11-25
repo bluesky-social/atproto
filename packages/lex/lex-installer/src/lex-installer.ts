@@ -400,6 +400,9 @@ export class LexInstaller implements AsyncDisposable {
       for (const nsid of listDocumentNsidRefs(document, {
         // @TODO should we make this configurable?
         includeKnownValues: false,
+        // The schema of a space references the record schemas of its
+        // collections, which are thus required to build it.
+        includeScopeCollections: true,
       })) {
         if (!this.workingLexicons.has(nsid)) {
           missing.add(nsid)

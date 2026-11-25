@@ -20,8 +20,11 @@ export const transportOptionDefaults: Omit<
 > = Object.freeze({
   heartbeat: undefined,
   idleTimeoutMs: undefined,
+  handshakeTimeoutMs: undefined,
   highWaterMark: undefined,
   maxBufferedBytes: undefined,
+  maxPayload: undefined,
+  lookup: undefined,
   headers: undefined,
   protocols: undefined,
   onOpen: () => {},

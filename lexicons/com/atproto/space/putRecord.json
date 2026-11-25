@@ -1,0 +1,68 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.space.putRecord",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Write a record in a space repo, creating or updating it as needed. Requires auth, implemented by PDS.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["space", "repo", "collection", "rkey", "record"],
+          "properties": {
+            "space": {
+              "type": "string",
+              "format": "space-ref"
+            },
+            "repo": {
+              "type": "string",
+              "format": "did"
+            },
+            "collection": {
+              "type": "string",
+              "format": "nsid"
+            },
+            "rkey": {
+              "type": "string",
+              "format": "record-key"
+            },
+            "validate": {
+              "type": "boolean",
+              "description": "Can be set to 'false' to skip Lexicon schema validation of record data, 'true' to require it, or leave unset to validate only for known Lexicons."
+            },
+            "record": {
+              "type": "unknown"
+            }
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["uri", "cid"],
+          "properties": {
+            "uri": {
+              "type": "string",
+              "format": "at-uri"
+            },
+            "cid": {
+              "type": "string",
+              "format": "cid"
+            },
+            "validationStatus": {
+              "type": "string",
+              "knownValues": ["valid", "unknown"]
+            }
+          }
+        }
+      },
+      "errors": [
+        {
+          "name": "SpaceNotFound"
+        }
+      ]
+    }
+  }
+}

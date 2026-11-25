@@ -1,0 +1,43 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.memberspace.putMembers",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Add members to a space, or update existing members' access, in a single commit. Requires auth as the space authority, implemented by PDS.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["space", "members"],
+          "properties": {
+            "space": {
+              "type": "string",
+              "format": "space-ref"
+            },
+            "members": {
+              "type": "array",
+              "maxLength": 100,
+              "items": {
+                "type": "ref",
+                "ref": "com.atproto.memberspace.defs#member"
+              }
+            }
+          }
+        }
+      },
+      "errors": [
+        {
+          "name": "SpaceNotFound"
+        },
+        {
+          "name": "NotAuthorized"
+        },
+        {
+          "name": "PolicyMismatch",
+          "description": "The space does not have a memberspace policy."
+        }
+      ]
+    }
+  }
+}

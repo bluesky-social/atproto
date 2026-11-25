@@ -39,6 +39,10 @@ export default function (server: Server, ctx: AppContext) {
       if (op.verificationMethods['atproto'] !== signingKey.did()) {
         throw new InvalidRequestError('Incorrect signing key')
       }
+      const kemKey = await ctx.actorStore.kemKeypair(requester)
+      if (kemKey && op.verificationMethods['atproto_kem'] !== kemKey.did()) {
+        throw new InvalidRequestError('Incorrect KEM key')
+      }
       const account = await ctx.accountManager.getAccount(requester, {
         includeDeactivated: true,
       })

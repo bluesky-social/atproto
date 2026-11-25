@@ -369,6 +369,15 @@ describe('StringSchema', () => {
       expect(result.success).toBe(true)
     })
 
+    it('accepts space URIs', () => {
+      const space = 'at:space/did:plc:abc123/com.example.group/default'
+      expect(schema.safeParse(space).success).toBe(true)
+      expect(
+        schema.safeParse(`${space}/did:plc:user1/app.bsky.feed.post/xyz`)
+          .success,
+      ).toBe(true)
+    })
+
     it('rejects invalid AT URI', () => {
       const result = schema.safeParse('https://example.com')
       expect(result.success).toBe(false)
@@ -376,6 +385,24 @@ describe('StringSchema', () => {
 
     it('rejects plain strings', () => {
       const result = schema.safeParse('not an at-uri')
+      expect(result.success).toBe(false)
+    })
+  })
+
+  describe('format: space-ref', () => {
+    const schema = string({ format: 'space-ref' })
+
+    it('accepts a space ref', () => {
+      const result = schema.safeParse(
+        'at:space/did:plc:abc123/com.example.group/default',
+      )
+      expect(result.success).toBe(true)
+    })
+
+    it('rejects a record URI within a space', () => {
+      const result = schema.safeParse(
+        'at:space/did:plc:abc123/com.example.group/default/did:plc:user1/app.bsky.feed.post/3jzfcijpj2z2a',
+      )
       expect(result.success).toBe(false)
     })
   })

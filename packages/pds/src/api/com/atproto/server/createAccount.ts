@@ -2,11 +2,7 @@ import * as plc from '@did-plc/lib'
 import { isEmailValid } from '@hapi/address'
 import { isDisposableEmail } from 'disposable-email-domains-js'
 import { MINUTE, check } from '@atproto/common'
-import {
-  type ExportableKeypair,
-  type Keypair,
-  Secp256k1Keypair,
-} from '@atproto/crypto'
+import { type Keypair, P256Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import { type AtprotoData, ensureAtpDocument } from '@atproto/identity'
 import type { DidString } from '@atproto/syntax'
 import {
@@ -25,6 +21,7 @@ import type { AppContext } from '../../../../context.js'
 import { events } from '../../../../events.js'
 import { baseNormalizeAndValidate } from '../../../../handle/index.js'
 import { com } from '../../../../lexicons/index.js'
+import { createPlcOp } from '../../../../util/plc.js'
 import { safeResolveDidDoc } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
@@ -62,13 +59,14 @@ export default function (server: Server, ctx: AppContext) {
         password,
         inviteCode,
         signingKey,
+        kemKey,
         plcOp,
         deactivated,
       } = ctx.entrywayClient
         ? await validateInputsForEntrywayPds(ctx, input.body)
         : await validateInputsForLocalPds(ctx, input.body, requester)
 
-      await ctx.actorStore.create(did, signingKey)
+      await ctx.actorStore.create(did, signingKey, kemKey)
 
       try {
         const commit = await ctx.actorStore.transact(did, (actorTxn) => {
@@ -108,13 +106,21 @@ export default function (server: Server, ctx: AppContext) {
 
             try {
               await ctx.actorStore
-                .clearReservedKeypair(signingKey.did(), did)
+                .clearReservedKeys(did, {
+                  signingKey: signingKey.did(),
+                  kemKey: kemKey.did(),
+                })
                 .catch((err) => {
                   // @NOTE This is a cleanup operation so we won't fail the whole
                   // flow if it fails, but we log it just in case
                   req.log.error(
-                    { did, signingKeyDid: signingKey.did(), err },
-                    'Failed to clear reserved keypair',
+                    {
+                      did,
+                      signingKeyDid: signingKey.did(),
+                      kemKeyDid: kemKey.did(),
+                      err,
+                    },
+                    'Failed to clear reserved keys',
                   )
                 })
 
@@ -191,23 +197,32 @@ const validateInputsForEntrywayPds = async (
     throw new InvalidRequestError('invalid plc operation', 'IncompatibleDidDoc')
   }
   const doc = plc.formatDidDoc({ did, ...plcOp })
-  const data = ensureAtpDocument(doc)
+  const data: AtprotoData & { kemKey?: string } = {
+    ...ensureAtpDocument(doc),
+    kemKey: plcOp.verificationMethods['atproto_kem'],
+  }
 
-  let signingKey: ExportableKeypair | undefined
-  if (input.did) {
-    signingKey = await ctx.actorStore.getReservedKeypair(input.did)
-  }
-  if (!signingKey) {
-    signingKey = await ctx.actorStore.getReservedKeypair(data.signingKey)
-  }
+  const signingKey =
+    (await ctx.actorStore.getReservedSigningKeypair(did)) ??
+    (await ctx.actorStore.getReservedSigningKeypair(data.signingKey))
   if (!signingKey) {
     throw new InvalidRequestError('reserved signing key does not exist')
+  }
+  // @NOTE An entryway can reserve a KEM key and include it in the op. If it
+  // omits the key, generate one locally and leave it unpublished.
+  const kemKey = data.kemKey
+    ? ((await ctx.actorStore.getReservedKemKeypair(did)) ??
+      (await ctx.actorStore.getReservedKemKeypair(data.kemKey)))
+    : await P256Keypair.create({ exportable: true })
+  if (!kemKey) {
+    throw new InvalidRequestError('reserved KEM key does not exist')
   }
 
   validateAtprotoData(data, {
     handle,
     pds: ctx.cfg.service.publicUrl,
     signingKey: signingKey.did(),
+    kemKey: kemKey.did(),
   })
 
   return {
@@ -217,6 +232,7 @@ const validateInputsForEntrywayPds = async (
     password: undefined,
     inviteCode: undefined,
     signingKey,
+    kemKey,
     plcOp,
     deactivated: false,
   }
@@ -283,6 +299,7 @@ const validateInputsForLocalPds = async (
   // determine the did & any plc ops we need to send
   // if the provided did document is poorly setup, we throw
   const signingKey = await Secp256k1Keypair.create({ exportable: true })
+  const kemKey = await P256Keypair.create({ exportable: true })
 
   let did: DidString
   let plcOp: plc.Operation | null
@@ -297,7 +314,13 @@ const validateInputsForLocalPds = async (
     plcOp = null
     deactivated = true
   } else {
-    const formatted = await formatDidAndPlcOp(ctx, handle, input, signingKey)
+    const formatted = await formatDidAndPlcOp(
+      ctx,
+      handle,
+      input,
+      signingKey,
+      kemKey,
+    )
     did = formatted.did as DidString
     plcOp = formatted.op
   }
@@ -309,6 +332,7 @@ const validateInputsForLocalPds = async (
     password,
     inviteCode,
     signingKey,
+    kemKey,
     plcOp,
     deactivated,
   }
@@ -319,6 +343,7 @@ const formatDidAndPlcOp = async (
   handle: string,
   input: com.atproto.server.createAccount.$InputBody,
   signingKey: Keypair,
+  kemKey: Keypair,
 ) => {
   // if the user is not bringing a DID, then we format a create op for PLC
   const rotationKeys = [ctx.plcRotationKey.did()]
@@ -328,8 +353,9 @@ const formatDidAndPlcOp = async (
   if (input.recoveryKey) {
     rotationKeys.unshift(input.recoveryKey)
   }
-  return plc.createOp({
+  return createPlcOp({
     signingKey: signingKey.did(),
+    kemKey: kemKey.did(),
     rotationKeys,
     handle,
     pds: ctx.cfg.service.publicUrl,
@@ -337,11 +363,12 @@ const formatDidAndPlcOp = async (
   })
 }
 const validateAtprotoData = (
-  data: AtprotoData,
+  data: AtprotoData & { kemKey?: string },
   expected: {
     handle: string
     pds: string
     signingKey: string
+    kemKey: string
   },
 ) => {
   // if the user is bringing their own did:
@@ -360,6 +387,11 @@ const validateAtprotoData = (
   } else if (data.signingKey !== expected.signingKey) {
     throw new InvalidRequestError(
       'DID document signing key does not match service signing key',
+      'IncompatibleDidDoc',
+    )
+  } else if (data.kemKey && data.kemKey !== expected.kemKey) {
+    throw new InvalidRequestError(
+      'DID document KEM key does not match service KEM key',
       'IncompatibleDidDoc',
     )
   }

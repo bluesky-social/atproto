@@ -6,7 +6,8 @@
  * them locally to describe how a connection ended ({@link CloseCode.NoStatus},
  * {@link CloseCode.Abnormal}, {@link CloseCode.TlsHandshake}).
  *
- * https://www.rfc-editor.org/rfc/rfc6455#section-7.4.1
+ * @see {@link https://www.rfc-editor.org/rfc/rfc6455#section-7.4.1 RFC 6455 §7.4.1}
+ * @see {@link https://www.iana.org/assignments/websocket#close-code-number iana WebSocket Close Code Number registry}
  */
 export enum CloseCode {
   /** 1000: normal closure — the purpose of the connection has been fulfilled. */
@@ -31,6 +32,10 @@ export enum CloseCode {
   MandatoryExtension = 1010,
   /** 1011: server is terminating due to an unexpected condition. */
   InternalError = 1011,
+  /** 1012: server is restarting. */
+  ServiceRestart = 1012,
+  /** 1013: try again later (e.g. the server is overloaded). */
+  TryAgainLater = 1013,
   /** 1015: TLS handshake failure. Never sent on the wire. */
   TlsHandshake = 1015,
 }

@@ -1,108 +1,62 @@
-import { z } from 'zod'
-import { type Cid, type LexMap, ifCid } from '@atproto/lex-data'
+import type { BlockMap } from '@atproto/car'
+import { check } from '@atproto/common-web'
+import type { Cid, LexMap } from '@atproto/lex-data'
 import type { NsidString, RecordKeyString } from '@atproto/syntax'
-import type { BlockMap } from './block-map.js'
 import type { CidSet } from './cid-set.js'
+import {
+  bytesSchema,
+  carHeaderSchema,
+  cidSchema,
+  commitSchema,
+  legacyV2CommitSchema,
+  mapSchema,
+  stringSchema,
+  unknownSchema,
+  versionedCommitSchema,
+} from './schemas.js'
 
 // Repo nodes
 // ---------------
 
-const cidSchema = z.unknown().transform((input, ctx): Cid => {
-  const cid = ifCid(input)
-  if (cid) return cid
+export type { Cid }
+const cid = check.buildDef('cid', cidSchema)
 
-  ctx.addIssue({
-    code: z.ZodIssueCode.custom,
-    message: 'Not a valid CID',
-  })
-  return z.NEVER
-})
+export type UnsignedCommit = Omit<Commit, 'sig'> & { sig?: never }
 
-const _unsignedCommit = z.object({
-  did: z.string(),
-  version: z.literal(3),
-  data: cidSchema,
-  rev: z.string(),
-  // `prev` added for backwards compatibility with v2, no requirement of keeping around history
-  prev: cidSchema.nullable(),
-})
-export type UnsignedCommit = z.infer<typeof _unsignedCommit> & { sig?: never }
+const commit = check.buildDef('commit', commitSchema)
+export type Commit = check.InferDef<typeof commit>
 
-const commit = z.object({
-  did: z.string(),
-  version: z.literal(3),
-  data: cidSchema,
-  rev: z.string(),
-  prev: cidSchema.nullable(),
-  sig: z.instanceof(Uint8Array<ArrayBufferLike>),
-})
-export type Commit = z.infer<typeof commit>
+const legacyV2Commit = check.buildDef('legacyV2Commit', legacyV2CommitSchema)
+export type LegacyV2Commit = check.InferDef<typeof legacyV2Commit>
 
-const legacyV2Commit = z.object({
-  did: z.string(),
-  version: z.literal(2),
-  data: cidSchema,
-  rev: z.string().optional(),
-  prev: cidSchema.nullable(),
-  sig: z.instanceof(Uint8Array<ArrayBufferLike>),
-})
-export type LegacyV2Commit = z.infer<typeof legacyV2Commit>
+const versionedCommit = check.buildDef('versionedCommit', versionedCommitSchema)
+export type VersionedCommit = check.InferDef<typeof versionedCommit>
 
-const versionedCommit = z.discriminatedUnion('version', [
-  commit,
-  legacyV2Commit,
-])
-export type VersionedCommit = z.infer<typeof versionedCommit>
+const carHeader = check.buildDef('CAR header', carHeaderSchema)
+export type CarHeader = check.InferDef<typeof carHeader>
 
-export const schema = {
-  cid: cidSchema,
-  carHeader: z.object({
-    version: z.literal(1),
-    roots: z.array(cidSchema),
-  }),
-  bytes: z.instanceof(Uint8Array<ArrayBufferLike>),
-  string: z.string(),
-  array: z.array(z.unknown()),
-  map: z.record(z.string(), z.unknown()),
-  unknown: z.unknown(),
+const bytes = check.buildDef('bytes', bytesSchema)
+export type Bytes = check.InferDef<typeof bytes>
+
+const string = check.buildDef('string', stringSchema)
+export type String = check.InferDef<typeof string>
+
+const map = check.buildDef('map', mapSchema)
+export type Map = check.InferDef<typeof map>
+
+const unknown = check.buildDef('unknown', unknownSchema)
+export type Unknown = check.InferDef<typeof unknown>
+
+export const def = {
+  cid,
+  carHeader,
+  bytes,
+  string,
+  map,
+  unknown,
   commit,
   legacyV2Commit,
   versionedCommit,
-}
-
-export const def = {
-  cid: {
-    name: 'cid',
-    schema: schema.cid,
-  },
-  carHeader: {
-    name: 'CAR header',
-    schema: schema.carHeader,
-  },
-  bytes: {
-    name: 'bytes',
-    schema: schema.bytes,
-  },
-  string: {
-    name: 'string',
-    schema: schema.string,
-  },
-  map: {
-    name: 'map',
-    schema: schema.map,
-  },
-  unknown: {
-    name: 'unknown',
-    schema: schema.unknown,
-  },
-  commit: {
-    name: 'commit',
-    schema: schema.commit,
-  },
-  versionedCommit: {
-    name: 'versioned_commit',
-    schema: schema.versionedCommit,
-  },
 }
 
 // Repo Operations
@@ -217,9 +171,4 @@ export type VerifiedDiff = {
 export type VerifiedRepo = {
   creates: RecordCreateDescript[]
   commit: CommitData
-}
-
-export type CarBlock = {
-  cid: Cid
-  bytes: Uint8Array
 }

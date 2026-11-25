@@ -1,5 +1,6 @@
 import { isAtIdentifierString } from './at-identifier.js'
 import type { AtIdentifierString } from './at-identifier.js'
+import { type DidString, isValidDid } from './did.js'
 import type { Result } from './lib/result.js'
 import { failure, success } from './lib/result.js'
 import type { NsidString } from './nsid.js'
@@ -10,6 +11,7 @@ export type AtUriStringBase =
   | `at://${AtIdentifierString}`
   | `at://${AtIdentifierString}/${NsidString}`
   | `at://${AtIdentifierString}/${NsidString}/${string}`
+  | `at:space/${DidString}/${NsidString}/${string}`
 
 export type AtUriStringFragment = `#/${string}`
 
@@ -51,7 +53,17 @@ export type AtUriStringFragment = `#/${string}`
  * - An optional query part is allowed, following generic URI syntax restrictions
  * - An optional fragment part is allowed, using JSON Path syntax
  *
+ * Permissioned space data is addressed by space URIs instead, which reuse the
+ * `at` scheme with a `space/` prefix in place of the `//` authority. Both the
+ * space and the author are identified by DID:
+ *
+ * ```bnf
+ * SPACE-AT-URI = "at:space/" SPACE-DID "/" SPACE-TYPE "/" SKEY
+ *                [ "/" AUTHOR-DID "/" COLLECTION "/" RKEY ]
+ * ```
+ *
  * @example "at://did:plc:ewvi7nxzyoun6zhxrhs64oiz/app.bsky.actor.profile/self"
+ * @example "at:space/did:plc:ewvi7nxzyoun6zhxrhs64oiz/app.bsky.group/default"
  *
  * @see {@link https://atproto.com/specs/at-uri-scheme AT protocol - AT URI Scheme}
  */
@@ -179,7 +191,7 @@ export type ParseAtUriStringOptions = {
   detailed?: boolean
 }
 
-export type AtUriParts = {
+type AtUriPartsBase = {
   authority: AtIdentifierString
   query?: string
   hash?: string
@@ -188,9 +200,27 @@ export type AtUriParts = {
   | { collection: NsidString; rkey?: string }
 )
 
+export type PublicAtUriParts = AtUriPartsBase & {
+  isSpace: false
+}
+
+export type SpaceAtUriParts = AtUriPartsBase & {
+  isSpace: true
+  authority: DidString
+  spaceType: NsidString
+  skey: string
+  authorDid?: DidString
+}
+
+export type AtUriParts = PublicAtUriParts | SpaceAtUriParts
+
 const INVALID_CHAR_REGEXP = /[^a-zA-Z0-9._~:@!$&'()*+,;=%/\\[\]#?-]/
 const AT_URI_REGEXP =
   /^(?<uri>at:\/\/(?<authority>[^/?#\s]+)(?:\/(?<collection>[^/?#\s]+)(?:\/(?<rkey>[^/?#\s]+))?)?(?<trailingSlash>\/)?)(?:\?(?<query>[^#\s]*))?(?:#(?<hash>[^\s]*))?$/
+
+export const SPACE_URI_PREFIX = 'at:space/'
+const SPACE_AT_URI_REGEXP =
+  /^at:space\/(?<authority>[^/?#\s]+)\/(?<spaceType>[^/?#\s]+)\/(?<skey>[^/?#\s]+)(?:\/(?<authorDid>[^/?#\s]+)\/(?<collection>[^/?#\s]+)\/(?<rkey>[^/?#\s]+))?(?<trailingSlash>\/)?(?:\?(?<query>[^#\s]*))?(?:#(?<hash>[^\s]*))?$/
 
 /**
  * Parses a valid {@link AtUriString} into a {@link AtUriParts} object, or
@@ -214,6 +244,10 @@ export function parseAtUriString(
     return failure('Disallowed characters in ATURI (ASCII)')
   }
 
+  if (isSpaceUri(input)) {
+    return parseSpaceAtUriString(input, options)
+  }
+
   const match = input.match(AT_URI_REGEXP)
   const groups = match?.groups
   if (!groups) {
@@ -222,7 +256,7 @@ export function parseAtUriString(
     // a generic error.
     if (options?.detailed) {
       if (!input.startsWith('at://')) {
-        return failure('ATURI must start with "at://"')
+        return failure('ATURI must start with "at://" or "at:space/"')
       }
 
       if (input.includes(' ')) {
@@ -285,7 +319,119 @@ export function parseAtUriString(
     }
   }
 
-  return success(groups as AtUriParts)
+  return success({ ...groups, isSpace: false } as PublicAtUriParts)
+}
+
+/**
+ * Whether a string addresses permissioned space data. Checks only for the
+ * `at:space/` prefix — use {@link isAtUriString} to validate the URI itself.
+ */
+function isSpaceUri(input: unknown): boolean {
+  return typeof input === 'string' && input.startsWith(SPACE_URI_PREFIX)
+}
+
+/** Whether a string is a valid ATURI addressing public repo data. */
+export function isPublicAtUriString<I>(
+  input: I,
+  options?: Omit<ParseAtUriStringOptions, 'detailed'>,
+): input is I & AtUriString {
+  return !isSpaceUri(input) && isAtUriString(input, options)
+}
+
+/**
+ * An ATURI addressing permissioned space data: either a space ref or a record
+ * within a space.
+ *
+ * @example "at:space/did:plc:ewvi7nxzyoun6zhxrhs64oiz/app.bsky.group/default/did:plc:44ybard66vv44zksje25o7dz/app.bsky.feed.post/3jui7kd54zh2y"
+ */
+export type SpaceAtUriString = AtUriString & `at:space/${string}`
+
+/** Whether a string is a valid ATURI addressing permissioned space data. */
+export function isSpaceAtUriString<I>(
+  input: I,
+  options?: Omit<ParseAtUriStringOptions, 'detailed'>,
+): input is I & SpaceAtUriString {
+  return isSpaceUri(input) && isAtUriString(input, options)
+}
+
+/**
+ * A reference to a space, as distinct from a record within one.
+ *
+ * @example "at:space/did:plc:ewvi7nxzyoun6zhxrhs64oiz/app.bsky.group/default"
+ */
+export type SpaceRefString = `at:space/${DidString}/${NsidString}/${string}`
+
+/**
+ * Whether a string is a valid space ref — the three-part form only. A URI naming
+ * a record within a space is not a space ref.
+ */
+export function isSpaceRefString<I>(input: I): input is I & SpaceRefString {
+  if (!isSpaceAtUriString(input)) return false
+  const result = parseAtUriString(input)
+  return (
+    result.success && result.value.isSpace && result.value.authorDid == null
+  )
+}
+
+/**
+ * A space's identity and membership are keyed on DIDs, so unlike a public ATURI
+ * neither the authority nor the author may be a handle.
+ */
+function parseSpaceAtUriString(
+  input: string,
+  options?: ParseAtUriStringOptions,
+): Result<AtUriParts> {
+  const groups = input.match(SPACE_AT_URI_REGEXP)?.groups
+  if (!groups) {
+    return failure('Space ATURI does not match expected format')
+  }
+
+  if (!isValidDid(groups.authority)) {
+    return failure('Space ATURI authority must be a DID')
+  }
+
+  if (!isValidNsid(groups.spaceType)) {
+    return failure('Space ATURI has invalid space type')
+  }
+
+  if (groups.authorDid != null) {
+    if (!isValidDid(groups.authorDid)) {
+      return failure('Space ATURI author must be a DID')
+    }
+    if (!isValidNsid(groups.collection)) {
+      return failure('Space ATURI has invalid collection')
+    }
+  }
+
+  if (groups.hash != null) {
+    const result = parseJsonPointer(groups.hash, options)
+    if (result.success) {
+      groups.hash = result.value
+    } else {
+      return failure(`Space ATURI has invalid fragment (${result.message})`)
+    }
+  }
+
+  if (options?.strict !== false) {
+    if (groups.trailingSlash != null) {
+      return failure('Space ATURI can not have a trailing slash')
+    }
+
+    if (groups.query != null) {
+      return failure('Space ATURI query part is not allowed')
+    }
+
+    // A space key carries the same syntax requirements as a record key.
+    if (!isValidRecordKey(groups.skey)) {
+      return failure('Space ATURI has invalid space key')
+    }
+
+    if (groups.rkey != null && !isValidRecordKey(groups.rkey)) {
+      return failure('Space ATURI has invalid record key')
+    }
+  }
+
+  return success({ ...groups, isSpace: true } as SpaceAtUriParts)
 }
 
 const BASIC_JSON_POINTER_REGEXP = /^\/[a-zA-Z0-9._~:@!$&')(*+,;=%[\]/-]*$/

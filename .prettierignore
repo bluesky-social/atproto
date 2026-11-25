@@ -1,5 +1,6 @@
 node_modules
 interop-test-files
+packages/star/tests/interop
 __snapshots__
 dist
 pnpm-lock.yaml
