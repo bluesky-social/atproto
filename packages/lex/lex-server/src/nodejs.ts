@@ -13,7 +13,11 @@ import { Readable } from 'node:stream'
 import { pipeline } from 'node:stream/promises'
 import type { ReadableStream as NodeReadableStream } from 'node:stream/web'
 import { createHttpTerminator } from 'http-terminator'
-import { WebSocket as WebSocketPonyfill, WebSocketServer } from 'ws'
+import {
+  type PerMessageDeflateOptions,
+  WebSocket as WebSocketPonyfill,
+  WebSocketServer,
+} from 'ws'
 import type { FetchHandler } from './lex-router.js'
 
 // @ts-expect-error
@@ -100,9 +104,31 @@ export function upgradeWebSocket(request: Request): {
 
 const kUpgradeEvent = Symbol.for('@atproto/lex-server:upgrade')
 
+/**
+ * Options for the WebSocket connections upgraded by {@link sendResponse}.
+ */
+export type WebSocketOptions = {
+  /**
+   * Enables the permessage-deflate (compression) WebSocket extension, when
+   * offered by the client. Accepts the `ws` package's options.
+   *
+   * This is costly with many subscribers: each connection that compresses a
+   * message keeps a zlib stream (up to ~256 KB of native memory) until it
+   * closes, and all compression in the process goes through a single queue
+   * (`concurrencyLimit`). Unless `serverNoContextTakeover` is negotiated,
+   * every message is compressed, whatever its size (`threshold` is ignored).
+   * When messages are large enough to benefit from compression, prefer
+   * `{ serverNoContextTakeover: true, threshold: <bytes> }`.
+   *
+   * @default false
+   */
+  perMessageDeflate?: boolean | PerMessageDeflateOptions
+}
+
 function handleWebSocketUpgrade(
   req: IncomingMessage,
   response: Response,
+  options?: WebSocketOptions,
 ): void {
   const ws = (response as { [kResponseWs]?: WebSocketPonyfill })[kResponseWs]
   if (!ws) throw new TypeError('Response not created by upgradeWebSocket()')
@@ -112,7 +138,7 @@ function handleWebSocketUpgrade(
     autoPong: true,
     noServer: true,
     clientTracking: false,
-    perMessageDeflate: true,
+    perMessageDeflate: options?.perMessageDeflate ?? false,
     // @ts-expect-error
     WebSocket: function () {
       // Return the websocket that was created earlier instead of a new instance
@@ -128,11 +154,7 @@ function handleWebSocketUpgrade(
     }
   })
 
-  wss.handleUpgrade(req, req.socket, Buffer.alloc(0), (_socket) => {
-    // @TODO find a way to properly "close" the _socket when the server is
-    // shutting down (might require replacing http-terminator with a local
-    // implementation)
-
+  wss.handleUpgrade(req, req.socket, Buffer.alloc(0), () => {
     req.emit(kUpgradeEvent, ws)
   })
 }
@@ -149,6 +171,7 @@ function handleWebSocketUpgrade(
  * @param req - The Node.js IncomingMessage
  * @param res - The Node.js ServerResponse to write to
  * @param response - The fetch API Response to send
+ * @param options - Options for the WebSocket connection, if upgrading
  * @throws {TypeError} If headers have already been sent
  *
  * @example
@@ -168,6 +191,7 @@ export async function sendResponse(
   req: IncomingMessage,
   res: ServerResponse,
   response: Response,
+  options?: WebSocketOptions,
 ): Promise<void> {
   // Invalid usage
   if (res.headersSent) {
@@ -175,7 +199,7 @@ export async function sendResponse(
   }
 
   if (response.status === 101) {
-    return handleWebSocketUpgrade(req, response)
+    return handleWebSocketUpgrade(req, response, options)
   }
 
   res.statusCode = response.status
@@ -363,11 +387,12 @@ async function handleRequest(
   req: IncomingMessage,
   res: ServerResponse,
   fetchHandler: FetchHandler,
+  options?: WebSocketOptions,
 ) {
   const request = toRequest(req, res)
   const info = toConnectionInfo(req)
   const response = await fetchHandler(request, info)
-  await sendResponse(req, res, response)
+  await sendResponse(req, res, response, options)
 }
 
 function toConnectionInfo(req: IncomingMessage): NodeConnectionInfo {
@@ -395,6 +420,7 @@ function toConnectionInfo(req: IncomingMessage): NodeConnectionInfo {
  * @typeParam Request - The request class type (default: IncomingMessage)
  * @typeParam Response - The response class type (default: ServerResponse)
  * @param fetchHandler - The fetch-style handler function
+ * @param options - Options for upgraded WebSocket connections
  * @returns A Node.js RequestListener compatible with http.createServer
  *
  * @example Using as Express middleware
@@ -416,13 +442,13 @@ export function toRequestListener<
   Request extends typeof IncomingMessage = typeof IncomingMessage,
   Response extends typeof ServerResponse<InstanceType<Request>> =
     typeof ServerResponse,
->(fetchHandler: FetchHandler) {
+>(fetchHandler: FetchHandler, options?: WebSocketOptions) {
   return ((
     req: InstanceType<Request>,
     res: InstanceType<Response> & { req: InstanceType<Request> },
     next?: (err?: unknown) => void,
   ): void => {
-    handleRequest(req, res, fetchHandler).catch((err) => {
+    handleRequest(req, res, fetchHandler, options).catch((err) => {
       if (next) next(err)
       else {
         if (!res.headersSent) {
@@ -440,21 +466,26 @@ export function toRequestListener<
 /**
  * Options for creating an XRPC server.
  *
- * Extends Node.js {@link ServerOptions} with additional options for graceful shutdown.
+ * Extends Node.js {@link ServerOptions} with {@link WebSocketOptions} and
+ * additional options for graceful shutdown.
  */
 export type CreateServerOptions<
   Request extends typeof IncomingMessage = typeof IncomingMessage,
   Response extends typeof ServerResponse<InstanceType<Request>> =
     typeof ServerResponse,
-> = ServerOptions<Request, Response> & {
-  /**
-   * Timeout in milliseconds for graceful termination.
-   *
-   * When `terminate()` is called, the server will wait up to this duration
-   * for active connections to complete before forcibly closing them.
-   */
-  gracefulTerminationTimeout?: number
-}
+> = ServerOptions<Request, Response> &
+  WebSocketOptions & {
+    /**
+     * Timeout in milliseconds for graceful termination.
+     *
+     * When `terminate()` is called, the server will wait up to this duration
+     * for active connections to complete, and for WebSocket connections to
+     * complete their closing handshake, before forcibly closing them.
+     *
+     * @default 1000
+     */
+    gracefulTerminationTimeout?: number
+  }
 
 /**
  * Extended HTTP server with graceful shutdown support.
@@ -493,8 +524,9 @@ export interface Server<
   /**
    * Gracefully terminates the server.
    *
-   * Stops accepting new connections and waits for active connections
-   * to complete (up to `gracefulTerminationTimeout`).
+   * Stops accepting new connections, closes WebSocket connections with a
+   * 1001 (Going Away) status code, and waits for active connections to
+   * complete (up to `gracefulTerminationTimeout`).
    *
    * @returns Promise that resolves when the server is fully stopped
    */
@@ -551,19 +583,41 @@ export function createServer<
   const fetchHandler =
     typeof handler === 'function' ? handler : handler.fetch.bind(handler)
 
-  const listener = toRequestListener(fetchHandler)
+  const listener = toRequestListener(fetchHandler, options)
   const server = createHttpServer(options, listener)
 
+  const { gracefulTerminationTimeout } = options
   const terminator = createHttpTerminator({
     server: server as HttpServer,
-    gracefulTerminationTimeout: options?.gracefulTerminationTimeout,
+    // @NOTE An explicit undefined would override http-terminator's default
+    ...(gracefulTerminationTimeout !== undefined && {
+      gracefulTerminationTimeout,
+    }),
+  })
+
+  // Upgraded connections are only closed by their peer, so they need to be
+  // closed explicitly on termination. http-terminator then waits for the
+  // closing handshake to complete.
+  let terminating = false
+  const webSockets = new Set<WebSocket>()
+
+  server.on('request', (req: IncomingMessage) => {
+    req.once(kUpgradeEvent, (ws: WebSocket) => {
+      if (terminating) {
+        ws.close(1001)
+      } else {
+        webSockets.add(ws)
+        ws.addEventListener('close', () => webSockets.delete(ws))
+      }
+    })
   })
 
   const terminate = async function terminate(this: Server<Request, Response>) {
     if (this !== server) {
       throw new TypeError('Server.terminate called with incorrect context')
     }
-    // @TODO properly close all active WebSocket connections
+    terminating = true
+    for (const ws of webSockets) ws.close(1001)
     return terminator.terminate()
   }
 

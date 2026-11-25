@@ -26,9 +26,14 @@ import {
 } from '@atproto/lex-schema'
 import { LexServerError } from './errors.js'
 import { drainWebsocket } from './lib/drain-websocket.js'
+import { yieldToEventLoop } from './lib/yield-to-event-loop.js'
 
 const XRPC_PATH_PREFIX = '/xrpc/'
 const XRPC_HEALTH_CHECK_PATH = '/xrpc/_health'
+
+// Maximum time a subscription may send messages without yielding to the event
+// loop
+const EVENT_LOOP_BUDGET_MS = 10
 
 type Awaitable<T> = T | Promise<T>
 
@@ -871,6 +876,8 @@ export class LexRouter {
               )
             }
 
+            let yieldedAt = performance.now()
+
             while (!signal.aborted && socket.readyState === 1) {
               const result = await iterator.next()
               if (result.done) break
@@ -884,6 +891,15 @@ export class LexRouter {
               // Apply backpressure by waiting for the buffered data to drain
               // before generating the next message
               await drainWebsocket(socket, signal, this.options)
+
+              // A handler that yields without awaiting (e.g. replaying a
+              // backlog) would otherwise keep this loop in the microtask
+              // queue for as long as the socket accepts writes, starving I/O
+              // and timers, including the server's own termination.
+              if (performance.now() - yieldedAt > EVENT_LOOP_BUDGET_MS) {
+                await yieldToEventLoop()
+                yieldedAt = performance.now()
+              }
             }
 
             if (socket.readyState === 1) {
