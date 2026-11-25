@@ -154,11 +154,7 @@ function handleWebSocketUpgrade(
     }
   })
 
-  wss.handleUpgrade(req, req.socket, Buffer.alloc(0), (_socket) => {
-    // @TODO find a way to properly "close" the _socket when the server is
-    // shutting down (might require replacing http-terminator with a local
-    // implementation)
-
+  wss.handleUpgrade(req, req.socket, Buffer.alloc(0), () => {
     req.emit(kUpgradeEvent, ws)
   })
 }
@@ -483,7 +479,10 @@ export type CreateServerOptions<
      * Timeout in milliseconds for graceful termination.
      *
      * When `terminate()` is called, the server will wait up to this duration
-     * for active connections to complete before forcibly closing them.
+     * for active connections to complete, and for WebSocket connections to
+     * complete their closing handshake, before forcibly closing them.
+     *
+     * @default 1000
      */
     gracefulTerminationTimeout?: number
   }
@@ -525,8 +524,9 @@ export interface Server<
   /**
    * Gracefully terminates the server.
    *
-   * Stops accepting new connections and waits for active connections
-   * to complete (up to `gracefulTerminationTimeout`).
+   * Stops accepting new connections, closes WebSocket connections with a
+   * 1001 (Going Away) status code, and waits for active connections to
+   * complete (up to `gracefulTerminationTimeout`).
    *
    * @returns Promise that resolves when the server is fully stopped
    */
@@ -586,16 +586,38 @@ export function createServer<
   const listener = toRequestListener(fetchHandler, options)
   const server = createHttpServer(options, listener)
 
+  const { gracefulTerminationTimeout } = options
   const terminator = createHttpTerminator({
     server: server as HttpServer,
-    gracefulTerminationTimeout: options?.gracefulTerminationTimeout,
+    // @NOTE An explicit undefined would override http-terminator's default
+    ...(gracefulTerminationTimeout !== undefined && {
+      gracefulTerminationTimeout,
+    }),
+  })
+
+  // Upgraded connections are only closed by their peer, so they need to be
+  // closed explicitly on termination. http-terminator then waits for the
+  // closing handshake to complete.
+  let terminating = false
+  const webSockets = new Set<WebSocket>()
+
+  server.on('request', (req: IncomingMessage) => {
+    req.once(kUpgradeEvent, (ws: WebSocket) => {
+      if (terminating) {
+        ws.close(1001)
+      } else {
+        webSockets.add(ws)
+        ws.addEventListener('close', () => webSockets.delete(ws))
+      }
+    })
   })
 
   const terminate = async function terminate(this: Server<Request, Response>) {
     if (this !== server) {
       throw new TypeError('Server.terminate called with incorrect context')
     }
-    // @TODO properly close all active WebSocket connections
+    terminating = true
+    for (const ws of webSockets) ws.close(1001)
     return terminator.terminate()
   }
 

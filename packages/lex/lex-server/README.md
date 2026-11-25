@@ -498,6 +498,8 @@ console.log('Server listening on port 3000')
 await server.terminate()
 ```
 
+`terminate()` stops accepting connections and closes WebSocket connections with a 1001 (Going Away) status code, which aborts their subscription handlers' `signal`. It then waits up to `gracefulTerminationTimeout` for in-flight requests and WebSocket closing handshakes to complete, before destroying the remaining connections.
+
 The server supports `AsyncDisposable`:
 
 ```typescript
@@ -511,7 +513,7 @@ Options:
 type StartServerOptions = {
   port?: number
   host?: string
-  gracefulTerminationTimeout?: number // ms to wait for connections to close
+  gracefulTerminationTimeout?: number // ms to wait for connections to close (default: 1000)
   perMessageDeflate?: boolean | PerMessageDeflateOptions // WebSocket compression, off by default (see Compression)
 }
 ```
