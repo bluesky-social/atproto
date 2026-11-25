@@ -13,7 +13,13 @@ import {
 } from 'file-type'
 import PQueue from 'p-queue'
 import { fromStream } from 'strtok3'
-import { HashPassThrough, MaxSizeChecker, SECOND, Tee } from '@atproto/common'
+import {
+  HashPassThrough,
+  MaxSizeChecker,
+  SECOND,
+  Tee,
+  chunkArray,
+} from '@atproto/common'
 import {
   type BlobRef,
   type Cid,
@@ -256,31 +262,32 @@ export class BlobTransactor extends BlobReader {
   ) {
     if (dereferencedCids.length === 0) return
 
-    const [stillInRepo, stillInSpaces] = await Promise.all([
-      this.db.db
-        .selectFrom('record_blob')
-        .where('blobCid', 'in', dereferencedCids)
-        .select('blobCid')
-        .execute(),
-      this.db.db
-        .selectFrom('space_record_blob')
-        .where('blobCid', 'in', dereferencedCids)
-        .select('blobCid')
-        .execute(),
-    ])
-
-    const keep = new Set([
-      ...keepCids,
-      ...stillInRepo.map((row) => row.blobCid),
-      ...stillInSpaces.map((row) => row.blobCid),
-    ])
+    // In chunks: a space can link one blob from more records than SQLite will
+    // bind variables in a single statement.
+    const keep = new Set(keepCids)
+    for (const chunk of chunkArray(dereferencedCids, 500)) {
+      const [stillInRepo, stillInSpaces] = await Promise.all([
+        this.db.db
+          .selectFrom('record_blob')
+          .where('blobCid', 'in', chunk)
+          .select('blobCid')
+          .execute(),
+        this.db.db
+          .selectFrom('space_record_blob')
+          .where('blobCid', 'in', chunk)
+          .select('blobCid')
+          .execute(),
+      ])
+      for (const row of [...stillInRepo, ...stillInSpaces]) {
+        keep.add(row.blobCid)
+      }
+    }
     const cidsToDelete = dereferencedCids.filter((cid) => !keep.has(cid))
     if (cidsToDelete.length === 0) return
 
-    await this.db.db
-      .deleteFrom('blob')
-      .where('cid', 'in', cidsToDelete)
-      .execute()
+    for (const chunk of chunkArray(cidsToDelete, 500)) {
+      await this.db.db.deleteFrom('blob').where('cid', 'in', chunk).execute()
+    }
 
     if (skipBlobStore) return
     this.db.onCommit(() => {
@@ -394,11 +401,15 @@ export class BlobTransactor extends BlobReader {
     const uris = [...deletes, ...updates].map((w) => w.uri.toString())
     if (uris.length === 0) return
 
-    const dereferenced = await this.db.db
-      .deleteFrom('space_record_blob')
-      .where('recordUri', 'in', uris)
-      .returning('blobCid')
-      .execute()
+    const dereferenced: { blobCid: string }[] = []
+    for (const chunk of chunkArray(uris, 500)) {
+      const rows = await this.db.db
+        .deleteFrom('space_record_blob')
+        .where('recordUri', 'in', chunk)
+        .returning('blobCid')
+        .execute()
+      dereferenced.push(...rows)
+    }
 
     const keepCids = writes
       .filter((w) => isUpdate(w) || isCreate(w))

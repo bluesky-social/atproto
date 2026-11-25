@@ -26,7 +26,7 @@ export class ActorStoreReader implements AsyncDisposable {
     this.repo = new RepoReader(db, this.blobstore, did)
     this.record = new RecordReader(db, did)
     this.pref = new PreferenceReader(db)
-    this.space = new SpaceReader(db)
+    this.space = new SpaceReader(did, db)
 
     // Invoke "keypair" once. Also avoids leaking "this" as keypair context.
     let keypairPromise: Promise<Keypair>

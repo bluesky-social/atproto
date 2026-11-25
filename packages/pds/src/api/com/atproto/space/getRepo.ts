@@ -46,7 +46,7 @@ export default function (server: Server, ctx: AppContext) {
       // Held open for the life of the stream so records page out lazily.
       const actorDb = await ctx.actorStore.openDb(repo)
       try {
-        const reader = new SpaceReader(actorDb)
+        const reader = new SpaceReader(repo, actorDb)
         const state = await reader.getRepoState(space)
         const commit = buildCommit({ spaceUri: space, repo, state })
         if (!commit) {
