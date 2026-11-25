@@ -69,7 +69,7 @@ import { SpacesMigrationProgress } from './spaces-migration/progress.js'
 import { SpacesMigrationPublisher } from './spaces-migration/publisher.js'
 import {
   type GrantsSpaceAccess,
-  neverGrantsSpaceAccess,
+  grantsSpaceAccess as defaultGrantsSpaceAccess,
 } from './spaces-migration/scope.js'
 import { SpacesMigrationSweep } from './spaces-migration/sweep.js'
 
@@ -543,7 +543,7 @@ export class AppContext implements AsyncDisposable {
       accountManager.db,
     )
     const grantsSpaceAccess =
-      overrides?.grantsSpaceAccess ?? neverGrantsSpaceAccess
+      overrides?.grantsSpaceAccess ?? defaultGrantsSpaceAccess
 
     const oauthProvider = cfg.oauth.provider
       ? new OAuthProvider({
