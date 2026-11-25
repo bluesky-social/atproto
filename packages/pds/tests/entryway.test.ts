@@ -7,7 +7,6 @@ import { P256Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import { SeedClient, TestPds, TestPlc, mockResolvers } from '@atproto/dev-env'
 import { isDidString } from '@atproto/lex'
 import type { DidString, HandleString } from '@atproto/syntax'
-import { createPlcOp } from '../src/util/plc.js'
 import { MockEntryway } from './entryway-mock.js'
 
 describe('entryway', () => {
@@ -245,7 +244,7 @@ describe('entryway', () => {
       data: { signingKey },
     } = await pdsAgent.api.com.atproto.server.reserveSigningKey({})
     const kemKey = await P256Keypair.create()
-    const plcCreate = await createPlcOp({
+    const plcCreate = await plcLib.createOp({
       signingKey,
       kemKey: kemKey.did(),
       rotationKeys: [entryway.plcRotationKey.did()],
@@ -258,8 +257,6 @@ describe('entryway', () => {
       plcOp: plcCreate.op,
       handle: 'unreserved-kem.test',
     })
-    await expect(tryCreateAccount).rejects.toThrow(
-      'reserved KEM key does not exist',
-    )
+    await expect(tryCreateAccount).rejects.toThrow('Unknown KEM key')
   })
 })

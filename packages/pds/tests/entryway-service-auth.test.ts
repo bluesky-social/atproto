@@ -4,7 +4,6 @@ import { TestPds, TestPlc } from '@atproto/dev-env'
 import type { DidString, HandleString } from '@atproto/syntax'
 import { createServiceAuthHeaders } from '@atproto/xrpc-server'
 import { com } from '../src/lexicons/index.js'
-import { createPlcOp } from '../src/util/plc.js'
 
 const ENTRYWAY_DID = 'did:example:entryway'
 const PDS_DID = 'did:example:pds'
@@ -146,7 +145,7 @@ describe('entryway service auth', () => {
         encoding: 'application/json',
       },
     )
-    const plcCreate = await createPlcOp({
+    const plcCreate = await plcLib.createOp({
       signingKey,
       kemKey,
       rotationKeys: [plcRotationKey.did()],

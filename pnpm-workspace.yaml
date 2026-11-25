@@ -22,6 +22,7 @@ minimumReleaseAgeExclude:
   - '@puppeteer/browsers@3.2.6'
   - puppeteer-core@25.16.0
   - puppeteer@25.16.0
+  - '@did-plc/lib@1.0.0-next.0'
 
 overrides:
   cookie: ^0.7.2

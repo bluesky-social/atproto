@@ -155,13 +155,11 @@ const assertValidDocContents = async (
   }
 
   // @TODO An entryway could reserve and publish KEM keys before requiring them here.
+  // @NOTE Until the spaces migration is complete, a held KEM key may not be
+  // published yet: a deactivated account's waits for its activation.
+  if (ctx.cfg.entryway || ctx.cfg.spacesMigration.state !== 'complete') return
   const kemKeypair = await ctx.actorStore.kemKeypair(did)
-  if (
-    kemKeypair &&
-    !ctx.cfg.entryway &&
-    !allowMissingKemKey &&
-    kemKey !== kemKeypair.did()
-  ) {
+  if (kemKeypair && !allowMissingKemKey && kemKey !== kemKeypair.did()) {
     throw new InvalidRequestError(
       'DID document verification method does not match expected KEM key',
     )

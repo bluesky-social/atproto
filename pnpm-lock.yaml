@@ -2276,8 +2276,8 @@ importers:
         specifier: workspace:^
         version: link:../xrpc-server
       '@did-plc/lib':
-        specifier: ^0.0.4
-        version: 0.0.4(debug@4.4.3(supports-color@8.1.1))
+        specifier: 1.0.0-next.0
+        version: 1.0.0-next.0
       '@hapi/address':
         specifier: ^5.1.1
         version: 5.1.1
@@ -2725,14 +2725,42 @@ importers:
 
 packages:
 
+  '@atproto/common-web@0.5.20':
+    resolution: {integrity: sha512-DluUg40waDOEG7EVaBreiEkNkXlJ1mUvhCrZjuXewUZj78dbmQ19nztgNcgqZ1viHOhiZ5gpH1JkykhnQNjKvA==}
+    engines: {node: '>=22'}
+
   '@atproto/common@0.1.0':
     resolution: {integrity: sha512-OB5tWE2R19jwiMIs2IjQieH5KTUuMb98XGCn9h3xuu6NanwjlmbCYMv08fMYwIp3UQ6jcq//84cDT3Bu6fJD+A==}
 
   '@atproto/common@0.1.1':
     resolution: {integrity: sha512-GYwot5wF/z8iYGSPjrLHuratLc0CVgovmwfJss7+BUOB6y2/Vw8+1Vw0n9DDI0gb5vmx3UI8z0uJgC8aa8yuJg==}
 
+  '@atproto/common@0.8.1':
+    resolution: {integrity: sha512-WvgY0CDgodmTS7B1KDVFt868h1b85iQtQZeoDVI+6oOZmg1jINWUl+bZ1rwf59Tk1PqcMz5OzH6OS2J7Mb9/Iw==}
+    engines: {node: '>=22'}
+
   '@atproto/crypto@0.1.0':
     resolution: {integrity: sha512-9xgFEPtsCiJEPt9o3HtJT30IdFTGw5cQRSJVIy5CFhqBA4vDLcdXiRDLCjkzHEVbtNCsHUW6CrlfOgbeLPcmcg==}
+
+  '@atproto/crypto@0.5.4':
+    resolution: {integrity: sha512-UR0BkuYNYuFtw+dA+y/oPPxzX0SWRnGJ+1Cfh/jGP1BvjRUyezK3omjpeLms5fYrXbM9vnfX+ckJFJqkBgLOdw==}
+    engines: {node: '>=22'}
+
+  '@atproto/lex-cbor@0.1.11':
+    resolution: {integrity: sha512-gcsGIMLJNh9Wxc3h8NxeBvVsFUWpXiGAmwZ6otOqgakdmH8XyUkpVhvdaFRFFIktOeHn95RTYvK29B4FuFg62g==}
+    engines: {node: '>=22'}
+
+  '@atproto/lex-data@0.1.11':
+    resolution: {integrity: sha512-m4fZaj9tGcGlRdsP9fLr8+UCutv8ahClYNGkrS+29ZGcen9E4336wggUyzq/XTOKo69Qa2FRVG79pareXh7mFQ==}
+    engines: {node: '>=22'}
+
+  '@atproto/lex-json@0.1.11':
+    resolution: {integrity: sha512-ZsU6qtE0eM5P+gzdZseHwRjOAXIt8K5Q+5Q+clMo6y0VV72ieTUK5WcffNFkj6+NUJIBKGy3QmlbnI6eu4xBZA==}
+    engines: {node: '>=22'}
+
+  '@atproto/syntax@0.7.9':
+    resolution: {integrity: sha512-jC4JsFc2MdDS69+AuLdJo2dyI1K4UJiCn5ys77Ml8jxG6YdvcIO86jJW4gmNNALP9+VROBGE5MtbyJlUNm/LHQ==}
+    engines: {node: '>=22'}
 
   '@aws-crypto/crc32@5.2.0':
     resolution: {integrity: sha512-nLbCWqQNgUiwwtFsen1AdzAtvuLRsQS8rYgMuxCrdKf9kOssamGLuPwyTY9wyYblNr9+1XM8v6zoDTPPSIeANg==}
@@ -3657,6 +3685,10 @@ packages:
   '@did-plc/lib@0.0.4':
     resolution: {integrity: sha512-Omeawq3b8G/c/5CtkTtzovSOnWuvIuCI4GTJNrt1AmCskwEQV7zbX5d6km1mjJNbE0gHuQPTVqZxLVqetNbfwA==}
 
+  '@did-plc/lib@1.0.0-next.0':
+    resolution: {integrity: sha512-zYcpMT9Pe0KDElE3ZLDwc1HNNh0kSy5bRBeQAioWNpzmD8sdcd8k7F9LuDcFcMHn7Us5ZcXFQRUXCowAhrIgGw==}
+    engines: {node: '>=22.18'}
+
   '@did-plc/server@0.0.1':
     resolution: {integrity: sha512-GtxxHcOrOQ6fNI1ufq3Zqjc2PtWqPZOdsuzlwtxiH9XibUGwDkb0GmaBHyU5GiOxOKZEW1GspZ8mreBA6XOlTQ==}
 
@@ -4088,6 +4120,9 @@ packages:
 
   '@ipld/dag-cbor@7.0.3':
     resolution: {integrity: sha512-1VVh2huHsuohdXC1bGJNE8WR72slZ9XE2T3wbBBq31dm7ZBatmKLLxrB+XAqafxfRFjv08RZmj/W/ZqaM13AuA==}
+
+  '@ipld/dag-cbor@9.2.7':
+    resolution: {integrity: sha512-ZmfXmElRWATr+hoUTSAOr6HUcjVhOcNHDqgczc76qte2DHHFEK0ZhNzUcdTDQhF/VSIvf2ioaRTRLWwLc83sNw==}
 
   '@isaacs/cliui@8.0.2':
     resolution: {integrity: sha512-O8jcjabXaleOG9DQ0+ARXWZBTfnP4WNAqzuiJK7ll44AmxGKv/J2M4TPjxjY3znBCfvBXFzucm1twdyFybFqEA==}
@@ -6997,6 +7032,10 @@ packages:
 
   cborg@4.5.8:
     resolution: {integrity: sha512-6/viltD51JklRhq4L7jC3zgy6gryuG5xfZ3kzpE+PravtyeQLeQmCYLREhQH7pWENg5pY4Yu/XCd6a7dKScVlw==}
+    hasBin: true
+
+  cborg@5.1.11:
+    resolution: {integrity: sha512-oc6Pzg/gkTobxHZNgMmny+G99dOeBMbAmnGHcZWMKtolxZBIVwfi0Pj0khxEtNU8HMFdbT5sK0HmtgecDUPP0A==}
     hasBin: true
 
   chai@6.3.0:
@@ -10862,6 +10901,13 @@ packages:
 
 snapshots:
 
+  '@atproto/common-web@0.5.20':
+    dependencies:
+      '@atproto/lex-data': 0.1.11
+      '@atproto/lex-json': 0.1.11
+      '@atproto/syntax': 0.7.9
+      zod: 3.24.2
+
   '@atproto/common@0.1.0':
     dependencies:
       '@ipld/dag-cbor': 7.0.3
@@ -10876,6 +10922,14 @@ snapshots:
       pino: 8.21.0
       zod: 3.23.8
 
+  '@atproto/common@0.8.1':
+    dependencies:
+      '@atproto/common-web': 0.5.20
+      '@atproto/lex-cbor': 0.1.11
+      '@atproto/lex-data': 0.1.11
+      multiformats: 13.4.2
+      pino: 10.3.1
+
   '@atproto/crypto@0.1.0':
     dependencies:
       '@noble/secp256k1': 1.7.1
@@ -10883,6 +10937,34 @@ snapshots:
       multiformats: 9.9.0
       one-webcrypto: 1.0.3
       uint8arrays: 3.0.0
+
+  '@atproto/crypto@0.5.4':
+    dependencies:
+      '@noble/curves': 1.8.0
+      '@noble/hashes': 1.7.0
+      uint8arrays: 5.1.1
+
+  '@atproto/lex-cbor@0.1.11':
+    dependencies:
+      '@atproto/lex-data': 0.1.11
+      cborg: 4.5.8
+      tslib: 2.8.1
+
+  '@atproto/lex-data@0.1.11':
+    dependencies:
+      multiformats: 13.4.2
+      tslib: 2.8.1
+      unicode-segmenter: 0.14.0
+
+  '@atproto/lex-json@0.1.11':
+    dependencies:
+      '@atproto/lex-data': 0.1.11
+      tslib: 2.8.1
+
+  '@atproto/syntax@0.7.9':
+    dependencies:
+      iso-datestring-validator: 2.2.2
+      tslib: 2.8.1
 
   '@aws-crypto/crc32@5.2.0':
     dependencies:
@@ -12466,6 +12548,15 @@ snapshots:
     transitivePeerDependencies:
       - debug
 
+  '@did-plc/lib@1.0.0-next.0':
+    dependencies:
+      '@atproto/common': 0.8.1
+      '@atproto/crypto': 0.5.4
+      '@ipld/dag-cbor': 9.2.7
+      multiformats: 13.4.2
+      uint8arrays: 5.1.1
+      zod: 3.24.2
+
   '@did-plc/server@0.0.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)':
     dependencies:
       '@atproto/common': 0.1.0
@@ -13079,6 +13170,11 @@ snapshots:
     dependencies:
       cborg: 1.10.2
       multiformats: 9.9.0
+
+  '@ipld/dag-cbor@9.2.7':
+    dependencies:
+      cborg: 5.1.11
+      multiformats: 13.4.2
 
   '@isaacs/cliui@8.0.2':
     dependencies:
@@ -16414,6 +16510,8 @@ snapshots:
   cborg@1.10.2: {}
 
   cborg@4.5.8: {}
+
+  cborg@5.1.11: {}
 
   chai@6.3.0: {}
 

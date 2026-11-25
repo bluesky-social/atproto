@@ -11,6 +11,8 @@ import type { DidString } from '@atproto/syntax'
 import type { com } from './lexicons.js'
 import { eventsLogger } from './logger.js'
 
+export type SpacesMigrationStep = 'sweep' | 'publish'
+
 const meter: Meter = metrics.getMeter('@atproto/pds')
 const logger: Logger = logs.getLogger('@atproto/pds')
 
@@ -84,6 +86,55 @@ class EventReporter {
       "Requests to the AppView that this PDS's own request limit turned away (never sent to the AppView)",
     valueType: ValueType.INT,
   })
+
+  #spacesStoreMigratedCounter = meter.createCounter(
+    'spaces_migration.store_migrated',
+    {
+      description: 'Actor stores migrated by the spaces migration sweep',
+      valueType: ValueType.INT,
+    },
+  )
+
+  #spacesKemPublishedCounter = meter.createCounter(
+    'spaces_migration.kem_published',
+    {
+      description: 'KEM keys published by the spaces migration',
+      valueType: ValueType.INT,
+    },
+  )
+
+  #spacesUnpublishableCounter = meter.createCounter<{ reason: string }>(
+    'spaces_migration.unpublishable',
+    {
+      description: 'Accounts whose KEM key this host cannot publish',
+      valueType: ValueType.INT,
+    },
+  )
+
+  #spacesFailureCounter = meter.createCounter<{
+    step: SpacesMigrationStep
+    status: string
+  }>('spaces_migration.failure', {
+    description: 'Failed spaces migration steps',
+    valueType: ValueType.INT,
+  })
+
+  #spacesPlcBackoffCounter = meter.createCounter(
+    'spaces_migration.plc_backoff',
+    {
+      description: 'Times the spaces migration backed off because of PLC',
+      valueType: ValueType.INT,
+    },
+  )
+
+  #spacesStatsDriftCounter = meter.createCounter(
+    'spaces_migration.stats_drift',
+    {
+      description:
+        'Writes after which the spaces migration stats were impossible',
+      valueType: ValueType.INT,
+    },
+  )
 
   /**
    * Fans a single event out to both the pino logger (stdout/stderr) and the
@@ -202,6 +253,33 @@ class EventReporter {
     reason: 'queue_full' | 'queue_timeout'
   }) {
     this.#appViewRequestRejectedCounter.add(1, { reason })
+  }
+
+  // The spaces migration's counters. Its workers log each event themselves, on
+  // the `spaces-migration` logger.
+
+  spacesMigrationStoreMigrated() {
+    this.#spacesStoreMigratedCounter.add(1)
+  }
+
+  spacesMigrationKemPublished() {
+    this.#spacesKemPublishedCounter.add(1)
+  }
+
+  spacesMigrationUnpublishable(reason: string) {
+    this.#spacesUnpublishableCounter.add(1, { reason })
+  }
+
+  spacesMigrationFailure(step: SpacesMigrationStep, status: string) {
+    this.#spacesFailureCounter.add(1, { step, status })
+  }
+
+  spacesMigrationPlcBackoff() {
+    this.#spacesPlcBackoffCounter.add(1)
+  }
+
+  spacesMigrationStatsDrift() {
+    this.#spacesStatsDriftCounter.add(1)
   }
 }
 

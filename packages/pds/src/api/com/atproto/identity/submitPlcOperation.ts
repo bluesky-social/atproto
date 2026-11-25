@@ -39,10 +39,37 @@ export default function (server: Server, ctx: AppContext) {
       if (op.verificationMethods['atproto'] !== signingKey.did()) {
         throw new InvalidRequestError('Incorrect signing key')
       }
-      const kemKey = await ctx.actorStore.kemKeypair(requester)
-      if (kemKey && op.verificationMethods['atproto_kem'] !== kemKey.did()) {
-        throw new InvalidRequestError('Incorrect KEM key')
+
+      const ourKemKey = (await ctx.actorStore.kemKeypair(requester))?.did()
+      const opKemKey = op.verificationMethods['atproto_kem']
+      if (ctx.cfg.spacesMigration.state === 'complete') {
+        // Every key we hold is published, so an op must keep ours. Set
+        // wrongly, this only refuses an op that omits a key we hold.
+        if (opKemKey !== ourKemKey) {
+          throw new InvalidRequestError(
+            opKemKey === undefined
+              ? 'Operation would remove the KEM key'
+              : 'Incorrect KEM key',
+            'IncorrectKemKey',
+          )
+        }
+      } else if (opKemKey === undefined) {
+        // Keyed to the current PLC doc so inbound migrations from tools that
+        // build their own op (and so omit the kem key) still work.
+        // Omitting it is only a problem if it would drop the published one.
+        const current = await ctx.plcClient.getDocumentData(requester)
+        const currentKemKey = current.verificationMethods['atproto_kem']
+        if (currentKemKey !== undefined && currentKemKey === ourKemKey) {
+          throw new InvalidRequestError(
+            'Operation would remove the KEM key',
+            'IncorrectKemKey',
+          )
+        }
+      } else if (opKemKey !== ourKemKey) {
+        // names a key the PDS does not hold
+        throw new InvalidRequestError('Incorrect KEM key', 'IncorrectKemKey')
       }
+
       const account = await ctx.accountManager.getAccount(requester, {
         includeDeactivated: true,
       })
