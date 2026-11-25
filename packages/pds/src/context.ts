@@ -65,6 +65,13 @@ import { FailOpenReplayStore } from './replay-store.js'
 import { Sequencer } from './sequencer/index.js'
 import { SpaceNotifications } from './space-notifications.js'
 import { SpacePolicyManager } from './space-policy/manager.js'
+import { SpacesMigrationProgress } from './spaces-migration/progress.js'
+import { SpacesMigrationPublisher } from './spaces-migration/publisher.js'
+import {
+  type GrantsSpaceAccess,
+  neverGrantsSpaceAccess,
+} from './spaces-migration/scope.js'
+import { SpacesMigrationSweep } from './spaces-migration/sweep.js'
 
 export type AppContextOptions = {
   actorStore: ActorStore
@@ -94,6 +101,19 @@ export type AppContextOptions = {
   authVerifier: AuthVerifier
   plcRotationKey: crypto.Keypair
   cfg: ServerConfig
+  /**
+   * Whether a token's scope, with permission sets expanded, grants space
+   * access. Injected because nothing does until spaces are served: tests, and
+   * the release that serves spaces, supply it. Defaults to never.
+   */
+  grantsSpaceAccess?: GrantsSpaceAccess
+  spacesMigrationProgress: SpacesMigrationProgress
+}
+
+export type SpacesMigrationWorkers = {
+  progress: SpacesMigrationProgress
+  publisher: SpacesMigrationPublisher
+  sweep: SpacesMigrationSweep
 }
 
 export class AppContext implements AsyncDisposable {
@@ -125,6 +145,7 @@ export class AppContext implements AsyncDisposable {
   public oauthProvider?: OAuthProvider
   public plcRotationKey: crypto.Keypair
   public cfg: ServerConfig
+  public spacesMigration: SpacesMigrationWorkers
 
   constructor(opts: AppContextOptions) {
     this.actorStore = opts.actorStore
@@ -155,6 +176,25 @@ export class AppContext implements AsyncDisposable {
     this.plcRotationKey = opts.plcRotationKey
     this.cfg = opts.cfg
     this.spaceNotifications = new SpaceNotifications(this)
+
+    // Built here rather than in fromConfig: the publisher needs the context
+    const progress = opts.spacesMigrationProgress
+    const publisher = new SpacesMigrationPublisher(
+      this,
+      progress,
+      this.cfg.spacesMigration,
+    )
+    this.spacesMigration = {
+      progress,
+      publisher,
+      // Only the sweep seeds; the publisher may have idled before it did
+      sweep: new SpacesMigrationSweep(
+        this,
+        progress,
+        this.cfg.spacesMigration,
+        () => publisher.wake(),
+      ),
+    }
   }
 
   static async fromEnv(
@@ -498,6 +538,13 @@ export class AppContext implements AsyncDisposable {
         )
       : undefined
 
+    // The OAuth provider's hooks prioritize accounts granted space access
+    const spacesMigrationProgress = new SpacesMigrationProgress(
+      accountManager.db,
+    )
+    const grantsSpaceAccess =
+      overrides?.grantsSpaceAccess ?? neverGrantsSpaceAccess
+
     const oauthProvider = cfg.oauth.provider
       ? new OAuthProvider({
           issuer: cfg.oauth.issuer,
@@ -593,12 +640,24 @@ export class AppContext implements AsyncDisposable {
               clientConfidential: client.isConfidential,
             })
           },
-          onTokenCreated({ account, client }) {
+          async onTokenCreated({ account, client, scope }) {
             events.sessionCreated({
               source: 'oauth',
               did: account.did,
               clientId: client.id,
             })
+            // The scope has permission sets expanded. A throw here would
+            // revoke the token, and nothing here may wait on PLC.
+            try {
+              if (grantsSpaceAccess(scope)) {
+                await spacesMigrationProgress.bump(account.did)
+              }
+            } catch (err) {
+              oauthLogger.error(
+                { err, did: account.did },
+                'failed to prioritize space authorization',
+              )
+            }
           },
           onTokenRefreshed({ account, client }) {
             events.sessionRefreshed({
@@ -676,7 +735,7 @@ export class AppContext implements AsyncDisposable {
       },
     )
 
-    return new AppContext({
+    const ctx = new AppContext({
       actorStore,
       blobstore,
       localViewer,
@@ -704,8 +763,10 @@ export class AppContext implements AsyncDisposable {
       oauthProvider,
       plcRotationKey,
       cfg,
+      spacesMigrationProgress,
       ...(overrides ?? {}),
     })
+    return ctx
   }
 
   async appviewAuthHeaders(did: string, lxm: string) {
@@ -765,6 +826,8 @@ export class AppContext implements AsyncDisposable {
     // widely available.
     await this.spaceNotifications.destroy()
     try {
+      await this.spacesMigration.publisher.destroy()
+      await this.spacesMigration.sweep.destroy()
       await this.backgroundQueue.destroy()
     } finally {
       try {

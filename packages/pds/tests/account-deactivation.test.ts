@@ -207,6 +207,20 @@ describe('account deactivation', () => {
     )
     expect(adminRes.data.deactivatedAt).toBeUndefined()
   })
+})
+
+describe('account reactivation once the spaces migration is complete', () => {
+  let network: TestNetworkNoAppView
+
+  beforeAll(async () => {
+    network = await TestNetworkNoAppView.create({
+      pds: { spacesMigration: 'complete' },
+    })
+  })
+
+  afterAll(async () => {
+    await network?.close()
+  })
 
   it.each(['missing', 'matching', 'mismatched', 'unsupported', 'malformed'])(
     'checks a did:web account with a %s KEM key when reactivating',

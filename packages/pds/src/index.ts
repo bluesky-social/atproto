@@ -35,7 +35,6 @@ import {
   entrywayRateLimitBypass,
 } from './entryway-attribution.js'
 import * as error from './error.js'
-import { KemKeyBackfill } from './kem-key-backfill.js'
 import type { app } from './lexicons.js'
 import { loggerMiddleware, pdsLogger } from './logger.js'
 import { proxyHandler } from './pipethrough.js'
@@ -75,7 +74,6 @@ export class PDS implements AsyncDisposable {
   public app: express.Application
   public server?: http.Server
   private terminator?: HttpTerminator
-  private kemKeyBackfill?: KemKeyBackfill
 
   constructor(opts: { ctx: AppContext; app: express.Application }) {
     this.ctx = opts.ctx
@@ -242,20 +240,19 @@ export class PDS implements AsyncDisposable {
 
   async start(): Promise<http.Server> {
     await this.ctx.sequencer.start()
+    this.ctx.spacesMigration.publisher.start()
+    this.ctx.spacesMigration.sweep.start()
     const server = this.app.listen(this.ctx.cfg.service.port)
     this.server = server
     this.server.keepAliveTimeout = 90_000
     this.terminator = createHttpTerminator({ server })
     await events.once(server, 'listening')
     this.ctx.spaceNotifications.start()
-    this.kemKeyBackfill = new KemKeyBackfill(this.ctx)
-    this.kemKeyBackfill.start()
     return server
   }
 
   async destroy(): Promise<void> {
     try {
-      await this.kemKeyBackfill?.destroy()
       await this.terminator?.terminate()
     } finally {
       await this.ctx.destroy()

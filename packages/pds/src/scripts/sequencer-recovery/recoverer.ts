@@ -162,6 +162,8 @@ const processRepoCreation = async (
   blocks: BlockMap,
 ) => {
   const did = evt.repo
+  // Recovery re-creates stores with fresh keys, which `rotate-keys-recovery`
+  // publishes afterwards.
   const keypair = await Secp256k1Keypair.create({ exportable: true })
   const kemKeypair = await P256Keypair.create({ exportable: true })
   await ctx.actorStore.create(did, keypair, kemKeypair)

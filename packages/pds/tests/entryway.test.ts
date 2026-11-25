@@ -258,8 +258,6 @@ describe('entryway', () => {
       plcOp: plcCreate.op,
       handle: 'unreserved-kem.test',
     })
-    await expect(tryCreateAccount).rejects.toThrow(
-      'reserved KEM key does not exist',
-    )
+    await expect(tryCreateAccount).rejects.toThrow('Unknown KEM key')
   })
 })

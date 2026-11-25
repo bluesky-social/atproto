@@ -20,7 +20,7 @@ Publishes an identity event on the PDS's outgoing firehose for the relevant DID.
 
 ### rotate-keys
 
-Ensures that an account's signing key and `#atproto_kem` key in their PLC DID document match the keys that the PDS is holding for them locally. If not, then update their PLC document. Does not work for `did:web`s. Intended to be used in recovery situations where an accounts' signing key is lost and it needs to be re-generated. This script _does not_ regenerate the key.
+Ensures that an account's signing key and KEM key in their PLC DID document match the keys that the PDS is holding for them locally. If not, then update their PLC document. Does not work for `did:web`s. Intended to be used in recovery situations where an accounts' signing key is lost and it needs to be re-generated. This script _does not_ regenerate the key.
 
 `node run-script.js rotate-keys DID`
 `node run-script.js rotate-keys DID1 DID2 DID3 ...`

@@ -1,20 +1,23 @@
 import assert from 'node:assert'
+import { randomUUID } from 'node:crypto'
 import fs, { mkdir } from 'node:fs/promises'
 import path from 'node:path'
+import { sql } from 'kysely'
 import { fileExists, readIfExists, rmIfExists } from '@atproto/common'
 import * as crypto from '@atproto/crypto'
 import type { ExportableKeypair, Keypair } from '@atproto/crypto'
 import type { DidString } from '@atproto/lex-schema'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import type { ActorStoreConfig } from '../config/index.js'
-import { retrySqlite } from '../db/index.js'
+import { MIGRATION_TABLE, retrySqlite } from '../db/index.js'
 import { DiskBlobStore } from '../disk-blobstore.js'
-import { blobStoreLogger } from '../logger.js'
+import { blobStoreLogger, pdsLogger } from '../logger.js'
 import { ActorStoreReader } from './actor-store-reader.js'
 import type { ActorStoreResources } from './actor-store-resources.js'
 import { ActorStoreTransactor } from './actor-store-transactor.js'
 import { ActorStoreWriter } from './actor-store-writer.js'
 import { type ActorDb, getDb, getMigrator } from './db/index.js'
+import { LATEST_ACTOR_MIGRATION } from './db/latest.js'
 
 export class ActorStore {
   reservedSigningKeyDir: string
@@ -24,7 +27,8 @@ export class ActorStore {
     public cfg: ActorStoreConfig,
     public resources: ActorStoreResources,
   ) {
-    // @NOTE /reserved_keys dir holds signing keys only. The name predates KEM keys, and is kept so that reservations made before an upgrade survive it.
+    // @NOTE /reserved_keys dir holds signing keys only. The name predates KEM
+    // keys, and is kept so that reservations made before an upgrade survive it.
     this.reservedSigningKeyDir = path.join(cfg.directory, 'reserved_keys')
     this.reservedKemKeyDir = path.join(cfg.directory, 'reserved_kem_keys')
   }
@@ -34,6 +38,7 @@ export class ActorStore {
     const didHash = await crypto.sha256Hex(did)
     const directory = path.join(this.cfg.directory, didHash.slice(0, 2), did)
     const dbLocation = path.join(directory, `store.sqlite`)
+    // @NOTE The signing key's file name predates KEM keys
     const keyLocation = path.join(directory, `key`)
     const kemKeyLocation = path.join(directory, `kem_key`)
     return { directory, dbLocation, keyLocation, kemKeyLocation }
@@ -44,22 +49,36 @@ export class ActorStore {
     return await fileExists(location.dbLocation)
   }
 
+  async kemKeypair(did: string): Promise<crypto.P256Keypair | undefined> {
+    const { kemKeyLocation } = await this.getLocation(did)
+    return loadKemKey(kemKeyLocation)
+  }
+
+  // A DID doc must never name a KEM key we do not hold, so the key file is
+  // written once and never overwritten. The account's directory must already
+  // exist: this must not leave a key behind for an account that is gone.
+  async ensureKemKeypair(did: string): Promise<crypto.P256Keypair> {
+    const { kemKeyLocation } = await this.getLocation(did)
+    const existing = await loadKemKey(kemKeyLocation)
+    if (existing) return existing
+    try {
+      return await writeKemKeyNoClobber(
+        kemKeyLocation,
+        await crypto.P256Keypair.create({ exportable: true }),
+      )
+    } catch (err) {
+      // The write never creates the account's directory
+      if ((err as NodeJS.ErrnoException)?.code === 'ENOENT') {
+        throw new Error('Cannot create a kem key: the account has no store')
+      }
+      throw err
+    }
+  }
+
   async keypair(did: string): Promise<Keypair> {
     const { keyLocation } = await this.getLocation(did)
     const privKey = await fs.readFile(keyLocation)
     return crypto.Secp256k1Keypair.import(privKey)
-  }
-
-  /**
-   * The account's `#atproto_kem` key, used to establish shared secrets for space
-   * MACs. Undefined for an account created before KEM keys existed, until it is
-   * backfilled.
-   */
-  async kemKeypair(did: string): Promise<crypto.P256Keypair | undefined> {
-    const { kemKeyLocation } = await this.getLocation(did)
-    const privKey = await readIfExists(kemKeyLocation)
-    if (!privKey) return undefined
-    return crypto.P256Keypair.import(privKey)
   }
 
   async openDb(did: string): Promise<ActorDb> {
@@ -74,22 +93,33 @@ export class ActorStore {
     // run a simple select with retry logic to ensure the db is ready (not in wal recovery mode).
     // synchronous is per-connection and its pragma can hit the same busy error, so it shares the retry.
     try {
-      await retrySqlite(async () => {
+      const migrated = await retrySqlite(async () => {
         if (this.cfg.synchronousFull) {
           await db.ensureSynchronousFull()
         }
-        return db.db.selectFrom('repo_root').selectAll().execute()
+        // the one cheap read: it surfaces wal recovery, and tells us whether
+        // this store is behind the latest migration
+        return atLatestMigration(db)
       })
-
-      // @TODO ONLY FOR USE DURING THE SPACE ALPH
-      // Remove this line before cutting the production build!
-      await getMigrator(db).migrateToLatestOrThrow()
+      if (!migrated) {
+        await getMigrator(db).migrateToLatestOrThrow()
+      }
     } catch (err) {
       await db.close()
       throw err
     }
 
     return db
+  }
+
+  /** Whether the store is at the latest migration. Does not migrate it. */
+  async isMigrated(did: string): Promise<boolean> {
+    const { dbLocation } = await this.getLocation(did)
+    if (!(await fileExists(dbLocation))) {
+      throw new InvalidRequestError('Repo not found', 'NotFound')
+    }
+    await using db = getDb(dbLocation, this.cfg.disableWalAutoCheckpoint)
+    return await retrySqlite(() => atLatestMigration(db))
   }
 
   async read<T>(
@@ -147,8 +177,16 @@ export class ActorStore {
     if (exists) {
       throw new InvalidRequestError('Repo already exists', 'AlreadyExists')
     }
-    await fs.writeFile(keyLocation, await keypair.export())
-    await fs.writeFile(kemKeyLocation, await kemKeypair.export())
+    // A kem key with no store beside it is the orphan of a failed create and
+    // was never published: replace it with the caller's key.
+    await rmIfExists(kemKeyLocation)
+    const privKey = await keypair.export()
+    await fs.writeFile(keyLocation, privKey)
+    const storedKem = await writeKemKeyNoClobber(kemKeyLocation, kemKeypair)
+    assert(
+      storedKem.did() === kemKeypair.did(),
+      'a different kem key is already stored for this account',
+    )
 
     const db: ActorDb = getDb(dbLocation, this.cfg.disableWalAutoCheckpoint)
     try {
@@ -181,31 +219,55 @@ export class ActorStore {
   }
 
   async reserveSigningKeypair(did?: string): Promise<string> {
-    return reserveKey(this.reservedSigningKeyDir, crypto.Secp256k1Keypair, did)
+    let keyLoc: string | undefined
+    if (did) {
+      assertSafePathPart(did)
+      keyLoc = path.join(this.reservedSigningKeyDir, did)
+      const maybeKey = await loadKey(keyLoc)
+      if (maybeKey) {
+        return maybeKey.did()
+      }
+    }
+    const keypair = await crypto.Secp256k1Keypair.create({ exportable: true })
+    const keyDid = keypair.did()
+    keyLoc = keyLoc ?? path.join(this.reservedSigningKeyDir, keyDid)
+    await mkdir(this.reservedSigningKeyDir, { recursive: true })
+    await fs.writeFile(keyLoc, await keypair.export())
+    return keyDid
   }
 
   async getReservedSigningKeypair(
     signingKeyOrDid: string,
   ): Promise<ExportableKeypair | undefined> {
     assertSafePathPart(signingKeyOrDid)
-    return loadKey(
-      path.join(this.reservedSigningKeyDir, signingKeyOrDid),
-      crypto.Secp256k1Keypair,
-    )
+    return loadKey(path.join(this.reservedSigningKeyDir, signingKeyOrDid))
   }
 
+  // Written no-clobber: a genesis op may name the key as soon as it's returned
   async reserveKemKeypair(did?: string): Promise<string> {
-    return reserveKey(this.reservedKemKeyDir, crypto.P256Keypair, did)
+    let keyLoc: string | undefined
+    if (did) {
+      assertSafePathPart(did)
+      keyLoc = path.join(this.reservedKemKeyDir, did)
+      const maybeKey = await loadKemKey(keyLoc)
+      if (maybeKey) {
+        return maybeKey.did()
+      }
+    }
+    const keypair = await crypto.P256Keypair.create({ exportable: true })
+    keyLoc = keyLoc ?? path.join(this.reservedKemKeyDir, keypair.did())
+    await mkdir(this.reservedKemKeyDir, { recursive: true })
+    const stored = await writeKemKeyNoClobber(keyLoc, keypair)
+    return stored.did()
   }
 
+  // A reservation is filed under the account's DID if one was given, else
+  // under the KEM public key (did:key), like reserved signing keys
   async getReservedKemKeypair(
     kemKeyOrDid: string,
   ): Promise<ExportableKeypair | undefined> {
     assertSafePathPart(kemKeyOrDid)
-    return loadKey(
-      path.join(this.reservedKemKeyDir, kemKeyOrDid),
-      crypto.P256Keypair,
-    )
+    return loadKemKey(path.join(this.reservedKemKeyDir, kemKeyOrDid))
   }
 
   /** Clears the account's reservations, filed under its DID or under each key. */
@@ -243,44 +305,72 @@ export class ActorStore {
   }
 }
 
-type ReservableKeypair = {
-  create(opts: { exportable: true }): Promise<ExportableKeypair>
-  import(
-    privKey: Uint8Array,
-    opts: { exportable: true },
-  ): Promise<ExportableKeypair>
+// Migrations are additive and run in order, so a store at or past ours has run
+// ours. A lookup by name avoids comparing names, unlike `order by name`.
+// Kysely's Migrator.getMigrations() would read every row after checking the
+// table exists: two queries where opening a store gets one.
+const atLatestMigration = async (db: ActorDb): Promise<boolean> => {
+  const result = await sql<{ name: string }>`
+    select name from ${sql.table(MIGRATION_TABLE)}
+    where name = ${LATEST_ACTOR_MIGRATION}
+  `.execute(db.db)
+  // an empty table is treated as behind, and left to the migrator
+  return result.rows.length > 0
 }
 
-// A key reserved for a DID is filed under the DID, otherwise under its own did:key
-async function reserveKey(
-  dir: string,
-  keyType: ReservableKeypair,
-  did?: string,
-): Promise<string> {
-  let keyLoc: string | undefined
-  if (did) {
-    assertSafePathPart(did)
-    keyLoc = path.join(dir, did)
-    const maybeKey = await loadKey(keyLoc, keyType)
-    if (maybeKey) {
-      return maybeKey.did()
-    }
-  }
-  const keypair = await keyType.create({ exportable: true })
-  const keyDid = keypair.did()
-  keyLoc = keyLoc ?? path.join(dir, keyDid)
-  await mkdir(dir, { recursive: true })
-  await fs.writeFile(keyLoc, await keypair.export())
-  return keyDid
-}
-
-async function loadKey(
-  loc: string,
-  keyType: ReservableKeypair,
-): Promise<ExportableKeypair | undefined> {
+const loadKey = async (loc: string): Promise<ExportableKeypair | undefined> => {
   const privKey = await readIfExists(loc)
   if (!privKey) return undefined
-  return keyType.import(privKey, { exportable: true })
+  return crypto.Secp256k1Keypair.import(privKey, { exportable: true })
+}
+
+const loadKemKey = async (
+  loc: string,
+): Promise<crypto.P256Keypair | undefined> => {
+  const privKey = await readIfExists(loc)
+  if (!privKey) return undefined
+  return crypto.P256Keypair.import(privKey, { exportable: true })
+}
+
+// Appears whole or not at all (tmp + link), and never replaces an existing
+// file: on conflict the winner's key is returned. `rename` is deliberately
+// not used since it would overwrite. The tmp file sits beside `loc`, since a
+// hard link can't cross filesystems.
+const writeKemKeyNoClobber = async <K extends ExportableKeypair>(
+  loc: string,
+  keypair: K,
+): Promise<K | crypto.P256Keypair> => {
+  const tmp = `${loc}.${randomUUID()}.tmp`
+  try {
+    const handle = await fs.open(tmp, 'wx')
+    try {
+      await handle.writeFile(await keypair.export())
+      await handle.sync()
+    } finally {
+      await handle.close()
+    }
+    try {
+      await fs.link(tmp, loc)
+    } catch (err) {
+      if ((err as NodeJS.ErrnoException)?.code !== 'EEXIST') throw err
+      const winner = await loadKemKey(loc)
+      assert(winner, 'kem key vanished after EEXIST')
+      return winner
+    }
+    // make the new directory entry durable
+    const dirHandle = await fs.open(path.dirname(loc), 'r')
+    try {
+      await dirHandle.sync()
+    } finally {
+      await dirHandle.close()
+    }
+    return keypair
+  } finally {
+    // Neither fail a write that succeeded nor mask the error of one that didn't
+    await rmIfExists(tmp).catch((err) => {
+      pdsLogger.warn({ err, tmp }, 'failed to clean up tmp kem key file')
+    })
+  }
 }
 
 function assertSafePathPart(part: string) {

@@ -36,6 +36,10 @@ import { httpLogger } from '../logger.js'
 import type { ServerMailer } from '../mailer/index.js'
 import type { Sequencer } from '../sequencer/index.js'
 import {
+  registerSpacesMigration,
+  unparkSpacesMigration,
+} from '../spaces-migration/progress.js'
+import {
   type AccountDb,
   type EmailTokenPurpose,
   getDb,
@@ -267,6 +271,7 @@ export class AccountManager {
     inviteCode,
     deactivated,
     refreshJwt,
+    kemPublished,
   }: {
     did: DidString
     handle: HandleString
@@ -277,6 +282,11 @@ export class AccountManager {
     inviteCode?: string
     deactivated?: boolean
     refreshJwt?: string
+    /**
+     * The account's genesis op published its KEM key, so the spaces migration
+     * has nothing left to do for it.
+     */
+    kemPublished?: boolean
   }) {
     if (password && password.length > scrypt.NEW_PASSWORD_MAX_LENGTH) {
       throw new InvalidRequestError('Password too long')
@@ -316,6 +326,8 @@ export class AccountManager {
       }
 
       await repo.updateRoot(dbTxn, did, repoCid, repoRev)
+
+      await registerSpacesMigration(dbTxn, did, { kemPublished })
     })
   }
 
@@ -328,6 +340,7 @@ export class AccountManager {
     repoRev: string
     inviteCode?: string
     deactivated?: boolean
+    kemPublished?: boolean
   }) {
     const { accessJwt, refreshJwt } = await auth.createTokens({
       did: opts.did,
@@ -498,10 +511,15 @@ export class AccountManager {
   async activateAccount(did: DidString) {
     await assertValidDidDocumentForService(this, did)
 
-    const found = await accountHelpers.activateAccount(this.db, did, {
-      // We cannot activate a takendown account
-      includeTakenDown: false,
-      includeDeactivated: true,
+    const found = await this.db.transaction(async (dbTxn) => {
+      const activated = await accountHelpers.activateAccount(dbTxn, did, {
+        // We cannot activate a takendown account
+        includeTakenDown: false,
+        includeDeactivated: true,
+      })
+      // Its KEM key waited for activation, see SpacesMigrationPublisher
+      if (activated) await unparkSpacesMigration(dbTxn, did)
+      return activated
     })
     if (!found) {
       throw new InvalidRequestError('user not found', 'AccountNotFound')

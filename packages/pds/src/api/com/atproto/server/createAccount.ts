@@ -2,7 +2,13 @@ import * as plc from '@did-plc/lib'
 import { isEmailValid } from '@hapi/address'
 import { isDisposableEmail } from 'disposable-email-domains-js'
 import { MINUTE, check } from '@atproto/common'
-import { type Keypair, P256Keypair, Secp256k1Keypair } from '@atproto/crypto'
+import {
+  type ExportableKeypair,
+  type Keypair,
+  P256Keypair,
+  Secp256k1Keypair,
+  parseDidKey,
+} from '@atproto/crypto'
 import { type AtprotoData, ensureAtpDocument } from '@atproto/identity'
 import type { DidString } from '@atproto/syntax'
 import {
@@ -21,7 +27,6 @@ import type { AppContext } from '../../../../context.js'
 import { events } from '../../../../events.js'
 import { baseNormalizeAndValidate } from '../../../../handle/index.js'
 import { com } from '../../../../lexicons/index.js'
-import { createPlcOp } from '../../../../util/plc.js'
 import { safeResolveDidDoc } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
@@ -61,6 +66,7 @@ export default function (server: Server, ctx: AppContext) {
         signingKey,
         kemKey,
         plcOp,
+        kemPublished,
         deactivated,
       } = ctx.entrywayClient
         ? await validateInputsForEntrywayPds(ctx, input.body)
@@ -96,6 +102,7 @@ export default function (server: Server, ctx: AppContext) {
             repoRev: commit.rev,
             inviteCode,
             deactivated,
+            kemPublished,
           })
 
           try {
@@ -191,16 +198,17 @@ const validateInputsForEntrywayPds = async (
     )
   }
   try {
-    await plc.assureValidOp(plcOp)
+    // @NOTE Validate keys used as reservation paths before looking them up.
+    parseDidKey(plcOp.verificationMethods.atproto)
+    if (plcOp.verificationMethods.atproto_kem !== undefined) {
+      parseDidKey(plcOp.verificationMethods.atproto_kem)
+    }
     await plc.assureValidSig([plcRotationKey], plcOp)
   } catch (err) {
     throw new InvalidRequestError('invalid plc operation', 'IncompatibleDidDoc')
   }
   const doc = plc.formatDidDoc({ did, ...plcOp })
-  const data: AtprotoData & { kemKey?: string } = {
-    ...ensureAtpDocument(doc),
-    kemKey: plcOp.verificationMethods['atproto_kem'],
-  }
+  const data = ensureAtpDocument(doc)
 
   const signingKey =
     (await ctx.actorStore.getReservedSigningKeypair(did)) ??
@@ -208,22 +216,26 @@ const validateInputsForEntrywayPds = async (
   if (!signingKey) {
     throw new InvalidRequestError('reserved signing key does not exist')
   }
-  // @NOTE An entryway can reserve a KEM key and include it in the op. If it
-  // omits the key, generate one locally and leave it unpublished.
-  const kemKey = data.kemKey
-    ? ((await ctx.actorStore.getReservedKemKeypair(did)) ??
-      (await ctx.actorStore.getReservedKemKeypair(data.kemKey)))
-    : await P256Keypair.create({ exportable: true })
-  if (!kemKey) {
-    throw new InvalidRequestError('reserved KEM key does not exist')
-  }
 
   validateAtprotoData(data, {
     handle,
     pds: ctx.cfg.service.publicUrl,
     signingKey: signingKey.did(),
-    kemKey: kemKey.did(),
   })
+
+  // A genesis op that names a KEM key must name one reserved here: a DID doc
+  // must never name a KEM key we do not hold.
+  const opKemKey = plcOp.verificationMethods.atproto_kem
+  let kemKey: ExportableKeypair | undefined
+  if (opKemKey !== undefined) {
+    kemKey = await ctx.actorStore.getReservedKemKeypair(did)
+    if (kemKey?.did() !== opKemKey) {
+      kemKey = await ctx.actorStore.getReservedKemKeypair(opKemKey)
+    }
+    if (kemKey?.did() !== opKemKey) {
+      throw new InvalidRequestError('Unknown KEM key', 'IncorrectKemKey')
+    }
+  }
 
   return {
     did,
@@ -232,8 +244,12 @@ const validateInputsForEntrywayPds = async (
     password: undefined,
     inviteCode: undefined,
     signingKey,
-    kemKey,
+    // Without one in the genesis op, the account gets an unpublished key that
+    // the entryway publishes later
+    kemKey: kemKey ?? (await P256Keypair.create({ exportable: true })),
     plcOp,
+    // In the genesis op, which is sent to PLC before the account is recorded
+    kemPublished: opKemKey !== undefined,
     deactivated: false,
   }
 }
@@ -334,6 +350,8 @@ const validateInputsForLocalPds = async (
     signingKey,
     kemKey,
     plcOp,
+    // The genesis op names the KEM key. A brought DID publishes it later.
+    kemPublished: plcOp !== null,
     deactivated,
   }
 }
@@ -353,7 +371,7 @@ const formatDidAndPlcOp = async (
   if (input.recoveryKey) {
     rotationKeys.unshift(input.recoveryKey)
   }
-  return createPlcOp({
+  return plc.createOp({
     signingKey: signingKey.did(),
     kemKey: kemKey.did(),
     rotationKeys,
@@ -363,12 +381,11 @@ const formatDidAndPlcOp = async (
   })
 }
 const validateAtprotoData = (
-  data: AtprotoData & { kemKey?: string },
+  data: AtprotoData,
   expected: {
     handle: string
     pds: string
     signingKey: string
-    kemKey: string
   },
 ) => {
   // if the user is bringing their own did:
@@ -387,11 +404,6 @@ const validateAtprotoData = (
   } else if (data.signingKey !== expected.signingKey) {
     throw new InvalidRequestError(
       'DID document signing key does not match service signing key',
-      'IncompatibleDidDoc',
-    )
-  } else if (data.kemKey && data.kemKey !== expected.kemKey) {
-    throw new InvalidRequestError(
-      'DID document KEM key does not match service KEM key',
       'IncompatibleDidDoc',
     )
   }

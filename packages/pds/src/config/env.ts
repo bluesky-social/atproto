@@ -171,6 +171,18 @@ export function readEnv() {
 
     // lexicon resolution
     lexiconDidAuthority: envStr('PDS_LEXICON_AUTHORITY_DID'),
+
+    // spaces migration
+    spacesMigration: envStr('PDS_SPACES_MIGRATION'),
+    spacesMigrationPublishIntervalMs: envInt(
+      'PDS_SPACES_MIGRATION_PUBLISH_INTERVAL_MS',
+    ),
+    spacesMigrationJitterWindowMs: envInt(
+      'PDS_SPACES_MIGRATION_JITTER_WINDOW_MS',
+    ),
+    spacesMigrationSweepIntervalMs: envInt(
+      'PDS_SPACES_MIGRATION_SWEEP_INTERVAL_MS',
+    ),
   }
 }
 

@@ -8,12 +8,12 @@ import type * as authorizedClient from './authorized-client.js'
 import type * as device from './device.js'
 import type * as emailToken from './email-token.js'
 import type * as inviteCode from './invite-code.js'
-import type * as kemKeyBackfill from './kem-key-backfill.js'
 import type * as lexicon from './lexicon.js'
 import type * as refreshToken from './refresh-token.js'
 import type * as repoRoot from './repo-root.js'
 import type * as revokedSpaceCredential from './revoked-space-credential.js'
 import type * as spaceNotification from './space-notification.js'
+import type * as spacesMigration from './spaces-migration.js'
 import type * as token from './token.js'
 import type * as usedRefreshToken from './used-refresh-token.js'
 
@@ -31,10 +31,10 @@ export type DatabaseSchema = actor.PartialDB &
   repoRoot.PartialDB &
   revokedSpaceCredential.PartialDB &
   spaceNotification.PartialDB &
-  kemKeyBackfill.PartialDB &
   inviteCode.PartialDB &
   lexicon.PartialDB &
-  emailToken.PartialDB
+  emailToken.PartialDB &
+  spacesMigration.PartialDB
 
 export type { Actor, ActorEntry } from './actor.js'
 export type { Account, AccountEntry } from './account.js'
@@ -54,3 +54,8 @@ export type { RevokedSpaceCredential } from './revoked-space-credential.js'
 export type { AppPassword } from './app-password.js'
 export type { InviteCode, InviteCodeUse } from './invite-code.js'
 export type { EmailToken, EmailTokenPurpose } from './email-token.js'
+export type {
+  SpacesMigration,
+  SpacesMigrationState,
+  SpacesMigrationStats,
+} from './spaces-migration.js'

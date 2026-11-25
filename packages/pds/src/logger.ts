@@ -41,6 +41,7 @@ export const sessionLogger = createLogger('pds:session', {
 })
 export const spaceLogger = createLogger('pds:space')
 export const lexiconResolverLogger = createLogger('pds:lexicon-resolver')
+export const spacesMigrationLogger = createLogger('pds:spaces-migration')
 
 export const loggerMiddleware = pinoHttp({
   logger: httpLogger,
