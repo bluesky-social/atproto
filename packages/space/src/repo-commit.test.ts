@@ -23,7 +23,7 @@ const CID_B = parseCid(
 )
 
 const ctx: CommitCtx = {
-  space: 'at://did:example:space/space/app.bsky.group/test',
+  space: 'at:space/did:example:space/app.bsky.group/test',
   repo: 'did:example:alice',
   rev: '3kbcq3p7ad400',
 }
@@ -162,7 +162,7 @@ describe(verifyCommit, () => {
   it.each([
     {
       note: 'space',
-      request: { space: 'at://did:example:space/space/app.bsky.group/other' },
+      request: { space: 'at:space/did:example:space/app.bsky.group/other' },
       message: /commit is for another space/,
     },
     {

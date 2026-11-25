@@ -8,6 +8,7 @@ import {
   InvalidRecordKeyError,
   type NsidString,
   SpaceRef,
+  isSpaceRefString,
 } from '../src/index.js'
 import { readInteropFile } from './_utils.js'
 
@@ -155,6 +156,14 @@ describe(AtUri, () => {
         '',
         'foo=bar',
         '#hash',
+      ],
+
+      [
+        'at://did:web:foo_bar.example.com/foo',
+        'did:web:foo_bar.example.com',
+        '/foo',
+        '',
+        '',
       ],
 
       ['did:web:localhost%3A1234', 'did:web:localhost%3A1234', '', '', ''],
@@ -426,12 +435,13 @@ describe(AtUri, () => {
   })
 
   describe('space URIs', () => {
-    const SPACE = 'at://did:plc:asdf123/space/com.example.group/default'
+    const SPACE = 'at:space/did:plc:asdf123/com.example.group/default'
     const RECORD = `${SPACE}/did:plc:user1/com.atproto.feed.post/abc123`
 
     it('reads the parts of a space ref', () => {
       expect(new AtUri(SPACE)).toMatchObject({
         isSpace: true,
+        origin: 'at:space/did:plc:asdf123',
         spaceDid: 'did:plc:asdf123',
         spaceType: 'com.example.group',
         skey: 'default',
@@ -466,14 +476,74 @@ describe(AtUri, () => {
       ).toBeUndefined()
     })
 
-    it('reads invalid space parts as undefined', () => {
+    it('rejects invalid space parts', () => {
+      for (const invalid of [
+        'at:space/did:plc:asdf123/short/default',
+        'at:space/did:plc:asdf123/com.example.group/..',
+        `${SPACE}/user.bsky.social/com.atproto.feed.post/abc123`,
+        `${SPACE}/did:plc:user1/short/abc123`,
+        `${SPACE}/did:plc:user1/com.atproto.feed.post/..`,
+        `${SPACE}?foo=bar`,
+      ]) {
+        expect(() => new AtUri(invalid)).toThrow(InvalidAtUriError)
+      }
+    })
+
+    it.each([
+      'did:web:example.com',
+      'did:web:foo_bar.example.com',
+      'did:web:localhost%3A1234',
+    ])('accepts any valid DID as the space DID: %s', (spaceDid) => {
+      const ref = `at:space/${spaceDid}/com.example.group/default`
+      expect(isSpaceRefString(ref)).toBe(true)
+      expect(new AtUri(ref)).toMatchObject({ spaceDid, host: spaceDid })
+      expect(SpaceRef.parse(ref).toString()).toBe(ref)
+    })
+
+    it('requires the space DID to be a DID', () => {
       expect(
-        new AtUri('at://user.bsky.social/space/com.example.group/default')
-          .spaceDid,
-      ).toBeUndefined()
+        () => new AtUri('at:space/user.bsky.social/com.example.group/default'),
+      ).toThrow()
       expect(
-        new AtUri('at://did:plc:asdf123/space/short/default').spaceType,
-      ).toBeUndefined()
+        () => new AtUri('at:space/did:plc/com.example.group/default'),
+      ).toThrow(InvalidDidError)
+
+      const uri = new AtUri(SPACE)
+      expect(() => (uri.hostname = 'user.bsky.social')).toThrow(InvalidDidError)
+      expect(uri.toString()).toBe(SPACE)
+    })
+
+    it('references only a space or a record in a space', () => {
+      for (const invalid of [
+        'at:space/did:plc:asdf123',
+        'at:space/did:plc:asdf123/com.example.group',
+        `${SPACE}/did:plc:user1`,
+        `${SPACE}/did:plc:user1/com.atproto.feed.post`,
+        `${RECORD}/extra`,
+      ]) {
+        expect(() => new AtUri(invalid)).toThrow(InvalidAtUriError)
+      }
+      expect(() => new AtUri('/com.example.group', new AtUri(SPACE))).toThrow(
+        InvalidAtUriError,
+      )
+    })
+
+    it('reads the `space` path segment as a public collection', () => {
+      expect(
+        new AtUri('at://did:plc:asdf123/space/com.example.group/default'),
+      ).toMatchObject({
+        isSpace: false,
+        collection: 'space',
+        spaceDid: undefined,
+      })
+    })
+
+    it('keeps the space prefix when resolving a relative path', () => {
+      const uri = new AtUri('/com.example.group/other', new AtUri(SPACE))
+      expect(uri.isSpace).toBe(true)
+      expect(uri.toString()).toBe(
+        'at:space/did:plc:asdf123/com.example.group/other',
+      )
     })
 
     it('sets the record part after the author', () => {
@@ -497,7 +567,7 @@ describe(AtUri, () => {
 })
 
 describe(SpaceRef, () => {
-  const SPACE = 'at://did:plc:asdf123/space/com.example.group/default'
+  const SPACE = 'at:space/did:plc:asdf123/com.example.group/default'
   const RECORD = `${SPACE}/did:plc:user1/com.atproto.feed.post/abc123`
 
   it('parses a space ref', () => {

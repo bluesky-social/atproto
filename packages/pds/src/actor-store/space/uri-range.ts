@@ -1,8 +1,9 @@
-import type {
-  AtUriString,
-  DidString,
-  NsidString,
-  SpaceRefString,
+import {
+  type AtUriString,
+  type DidString,
+  type NsidString,
+  SPACE_URI_PREFIX,
+  type SpaceRefString,
 } from '@atproto/syntax'
 
 /**
@@ -12,7 +13,7 @@ import type {
 export type UriRange<T extends string = string> = { gt: T; lt: T }
 
 // A space record uri is `{space}/{authorDid}/{collection}/{rkey}`, and a space
-// uri is `at://{authorityDid}/space/{type}/{skey}`. No DID, NSID, skey or rkey
+// uri is `at:space/{authorityDid}/{type}/{skey}`. No DID, NSID, skey or rkey
 // contains '/', and an actor store holds the records of a single author DID. So
 // every uri that starts with one of these '/'-terminated prefixes lies strictly
 // between the prefix and the prefix with its '/' replaced by '0', the byte after
@@ -37,7 +38,7 @@ export const collectionRecordRange = (
 
 /** The spaces whose authority is `did`. */
 export const authoritySpaceRange = (did: DidString): UriRange<SpaceRefString> =>
-  prefixRange(`at://${did}/space/`)
+  prefixRange(`${SPACE_URI_PREFIX}${did}/`)
 
 // A paging cursor replaces the range's bound on its side, rather than adding a
 // second bound there: given two lower (or upper) bounds on a column, SQLite

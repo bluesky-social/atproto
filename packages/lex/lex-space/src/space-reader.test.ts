@@ -28,7 +28,7 @@ const task = l.record(
 )
 
 const group = l.space('any', 'com.example.group', [note, task])
-const SPACE = `at://${AUTHORITY}/space/${group.spaceType}/main` as const
+const SPACE = `at:space/${AUTHORITY}/${group.spaceType}/main` as const
 
 type Route = (request: Request) => Response | Promise<Response>
 

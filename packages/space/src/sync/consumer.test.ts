@@ -31,7 +31,7 @@ import {
 } from './consumer.js'
 import { serializeRecord, writeRepoStar } from './provider.js'
 
-const SPACE: SpaceRefString = 'at://did:example:space/space/app.bsky.group/test'
+const SPACE: SpaceRefString = 'at:space/did:example:space/app.bsky.group/test'
 const ctx: CommitCtx = {
   space: SPACE,
   repo: 'did:example:alice',
@@ -284,7 +284,7 @@ describe(verifyRepoStar, () => {
 
 describe(verifyRecord, () => {
   const uri: SpaceAtUriString =
-    'at://did:example:space/space/app.bsky.group/test/did:example:alice/app.bsky.feed.post/3kbcq3p7ad401'
+    'at:space/did:example:space/app.bsky.group/test/did:example:alice/app.bsky.feed.post/3kbcq3p7ad401'
   const { cid, record: value } = verified[1]
   const record = { uri, cid: cid.toString(), value }
 
@@ -303,7 +303,7 @@ describe(verifyRecord, () => {
 
   it('rejects a record other than the one requested', async () => {
     const other: SpaceAtUriString =
-      'at://did:example:space/space/app.bsky.group/test/did:example:alice/app.bsky.feed.post/3kbcq3p7ad402'
+      'at:space/did:example:space/app.bsky.group/test/did:example:alice/app.bsky.feed.post/3kbcq3p7ad402'
     await expect(
       verifyRecord(record, { ...(await recordParams()), uri: other }),
     ).rejects.toThrow(/record is not the one requested/)

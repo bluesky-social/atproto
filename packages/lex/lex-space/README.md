@@ -51,7 +51,7 @@ for await (const { repo, collection, record } of space.allRecords()) {
 
 ## Concepts
 
-- A **space** is identified by its authority, its type and its key, in a URI: `at://{authority}/space/{type}/{skey}` (e.g. `at://did:plc:abc/space/com.example.forum/general`).
+- A **space** is identified by its authority, its type and its key, in a URI: `at:space/{authority}/{type}/{skey}` (e.g. `at:space/did:plc:abc/com.example.forum/general`).
 - A **space type** is declared by a Lexicon (`"type": "space"`): its key type, an optional title, and the record collections clients should expect in its spaces. Its generated schema (`l.space()`) references the record schemas of those collections, and is required to open, create or read a space.
 - The space **authority** is the DID at the root of the space. Its PDS is the **space host**, which decides who may read the space.
 - Each account writing to a space holds its own **repo** in it, on its own PDS. The accounts holding a repo in a space form its **writer set**.
@@ -107,7 +107,7 @@ import { SpaceClient } from '@atproto/lex-space'
 // By URI
 const space = SpaceClient.openSpace(
   com.example.forum,
-  'at://did:plc:abc/space/com.example.forum/general',
+  'at:space/did:plc:abc/com.example.forum/general',
   { agent: client.agent },
 )
 
