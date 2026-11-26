@@ -1,3 +1,4 @@
+import { isDidPlc } from '@atproto/did'
 import type { Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
@@ -22,11 +23,15 @@ export default function (server: Server, ctx: AppContext) {
         ? [`at://${account.handle}`]
         : undefined
 
-      const plcRotationKey =
-        ctx.cfg.entryway?.plcRotationKey ?? ctx.plcRotationKey.did()
-      const rotationKeys = [plcRotationKey]
-      if (ctx.cfg.identity.recoveryDidKey) {
-        rotationKeys.unshift(ctx.cfg.identity.recoveryDidKey)
+      // Rotation keys only apply to did:plc
+      let rotationKeys: string[] | undefined
+      if (isDidPlc(requester)) {
+        const plcRotationKey =
+          ctx.cfg.entryway?.plcRotationKey ?? ctx.plcRotationKey.did()
+        rotationKeys = [plcRotationKey]
+        if (ctx.cfg.identity.recoveryDidKey) {
+          rotationKeys.unshift(ctx.cfg.identity.recoveryDidKey)
+        }
       }
 
       const services = {

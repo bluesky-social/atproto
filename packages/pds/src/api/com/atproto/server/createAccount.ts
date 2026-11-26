@@ -8,7 +8,7 @@ import {
   Secp256k1Keypair,
 } from '@atproto/crypto'
 import { type AtprotoData, ensureAtpDocument } from '@atproto/identity'
-import type { DidString } from '@atproto/syntax'
+import type { DidString, HandleString } from '@atproto/syntax'
 import {
   AuthRequiredError,
   InvalidRequestError,
@@ -65,7 +65,7 @@ export default function (server: Server, ctx: AppContext) {
         plcOp,
         deactivated,
       } = ctx.entrywayClient
-        ? await validateInputsForEntrywayPds(ctx, input.body)
+        ? await validateInputsForEntrywayPds(ctx, input.body, auth)
         : await validateInputsForLocalPds(ctx, input.body, requester)
 
       await ctx.actorStore.create(did, signingKey)
@@ -165,14 +165,16 @@ export default function (server: Server, ctx: AppContext) {
 const validateInputsForEntrywayPds = async (
   ctx: AppContext,
   input: com.atproto.server.createAccount.$InputBody,
+  auth: EntrywayServiceOutput | UserServiceAuthOutput | UnauthenticatedOutput,
 ) => {
   const handle = baseNormalizeAndValidate(input.handle)
 
   const { did, plcOp } = input
-  if (!did || !plcOp) {
-    throw new InvalidRequestError(
-      'non-entryway pds requires bringing a DID and plcOp',
-    )
+  if (!did) {
+    throw new InvalidRequestError('entryway pds requires bringing a DID')
+  }
+  if (!plcOp) {
+    return validateInputsForEntrywayMigration(ctx, did, handle, auth)
   }
   if (!check.is(plcOp, plc.def.operation)) {
     throw new InvalidRequestError('invalid plc operation', 'IncompatibleDidDoc')
@@ -219,6 +221,54 @@ const validateInputsForEntrywayPds = async (
     signingKey,
     plcOp,
     deactivated: false,
+  }
+}
+
+/**
+ * Migrating an existing account (did:plc or did:web) into a PDS that sits
+ * behind an entryway. The entryway owns the user's credentials and is
+ * responsible for verifying that the user controls the DID (e.g. via a service
+ * auth token minted by their current PDS) before calling this route with its
+ * own service JWT.
+ */
+const validateInputsForEntrywayMigration = async (
+  ctx: AppContext,
+  did: DidString,
+  handle: HandleString,
+  auth: EntrywayServiceOutput | UserServiceAuthOutput | UnauthenticatedOutput,
+) => {
+  if (auth.credentials?.type !== 'entryway_service') {
+    throw new AuthRequiredError(
+      'entryway pds requires a plcOp, or entryway service auth to migrate an existing DID',
+    )
+  }
+
+  // the entryway is authoritative for handles, but the handle must still be
+  // available on this pds.
+  const existing = await ctx.accountManager.getAccount(handle, {
+    includeTakenDown: true,
+    includeDeactivated: true,
+  })
+  if (existing) {
+    throw new InvalidRequestError(
+      `Handle already taken: ${handle}`,
+      'HandleNotAvailable',
+    )
+  }
+
+  const signingKey =
+    (await ctx.actorStore.getReservedKeypair(did)) ??
+    (await Secp256k1Keypair.create({ exportable: true }))
+
+  return {
+    did,
+    handle,
+    email: undefined,
+    password: undefined,
+    inviteCode: undefined,
+    signingKey,
+    plcOp: null,
+    deactivated: true,
   }
 }
 
