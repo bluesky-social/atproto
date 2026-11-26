@@ -196,6 +196,15 @@ describe('entryway service auth', () => {
   const getSubjectStatus = (target: TestPds, did: string, headers: Headers) =>
     target.getAgent().com.atproto.admin.getSubjectStatus({ did }, { headers })
 
+  const getAccountPreferenceStats = (
+    target: TestPds,
+    did: string,
+    headers: Headers,
+  ) =>
+    target
+      .getAgent()
+      .com.atproto.admin.getAccountPreferenceStats({ did }, { headers })
+
   const reserveSigningKey = (target: TestPds, headers: Headers) =>
     target
       .getAgent()
@@ -236,6 +245,11 @@ describe('entryway service auth', () => {
     {
       lxm: com.atproto.admin.getSubjectStatus.$lxm,
       call: (target, headers) => getSubjectStatus(target, carol, headers),
+    },
+    {
+      lxm: com.atproto.admin.getAccountPreferenceStats.$lxm,
+      call: (target, headers) =>
+        getAccountPreferenceStats(target, carol, headers),
     },
     {
       lxm: com.atproto.server.reserveSigningKey.$lxm,
@@ -449,6 +463,40 @@ describe('entryway service auth', () => {
         await modServiceHeaders(pds, com.atproto.admin.getSubjectStatus.$lxm),
       )
       expect(res.data.subject).toMatchObject({ did: carol })
+    })
+
+    it('accepts an entryway service JWT on getAccountPreferenceStats.', async () => {
+      const res = await getAccountPreferenceStats(
+        pds,
+        carol,
+        await entrywayHeaders(
+          pds,
+          com.atproto.admin.getAccountPreferenceStats.$lxm,
+        ),
+      )
+      expect(res.data).toMatchObject({ did: carol, preferenceCount: 0 })
+    })
+
+    it('accepts the admin password on getAccountPreferenceStats.', async () => {
+      const res = await getAccountPreferenceStats(
+        pds,
+        carol,
+        pds.adminAuthHeaders(),
+      )
+      expect(res.data).toMatchObject({ did: carol, preferenceCount: 0 })
+    })
+
+    it('refuses the mod service on getAccountPreferenceStats.', async () => {
+      await expect(
+        getAccountPreferenceStats(
+          pds,
+          carol,
+          await modServiceHeaders(
+            pds,
+            com.atproto.admin.getAccountPreferenceStats.$lxm,
+          ),
+        ),
+      ).rejects.toThrow('Untrusted issuer')
     })
   })
 
@@ -762,6 +810,28 @@ describe('entryway service auth', () => {
         ),
       )
       expect(res.data.subject).toMatchObject({ did: dave })
+    })
+
+    it('refuses the admin password on getAccountPreferenceStats.', async () => {
+      await expect(
+        getAccountPreferenceStats(
+          strictPds,
+          dave,
+          strictPds.adminAuthHeaders(),
+        ),
+      ).rejects.toThrow('Entryway service auth required')
+    })
+
+    it('accepts an entryway service JWT on getAccountPreferenceStats.', async () => {
+      const res = await getAccountPreferenceStats(
+        strictPds,
+        dave,
+        await entrywayHeaders(
+          strictPds,
+          com.atproto.admin.getAccountPreferenceStats.$lxm,
+        ),
+      )
+      expect(res.data).toMatchObject({ did: dave, preferenceCount: 0 })
     })
   })
 
