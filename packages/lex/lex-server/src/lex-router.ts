@@ -438,6 +438,7 @@ export type UpgradeWebSocket = (request: Request) => {
 
 export type HealthCheckHandler = (
   request: Request,
+  connection?: ConnectionInfo,
 ) => Awaitable<{ [x: string]: unknown; status: 'ok' }>
 
 /**
@@ -1002,7 +1003,6 @@ export class LexRouter {
     connection?: ConnectionInfo,
   ): Promise<Response> => {
     const { pathname } = new URL(request.url)
-    const atprotoProxy = request.headers.get('atproto-proxy')
 
     if (!pathname.startsWith(XRPC_PATH_PREFIX)) {
       // Handle non XRPC paths
@@ -1011,8 +1011,10 @@ export class LexRouter {
       return new Response('Not Found', { status: 404 })
     }
 
+    const atprotoProxy = request.headers.get('atproto-proxy')
+
     if (pathname === XRPC_HEALTH_CHECK_PATH) {
-      if (request.method !== 'GET') {
+      if (request.method !== 'GET' && request.method !== 'HEAD') {
         return invalidRequestResponse('Method not allowed', 405)
       }
       if (atprotoProxy != null) {
@@ -1021,10 +1023,18 @@ export class LexRouter {
         )
       }
 
-      const { healthCheck } = this.options
-      const data = healthCheck ? await healthCheck(request) : { status: 'ok' }
+      try {
+        const { healthCheck } = this.options
+        const data = healthCheck
+          ? await healthCheck(request, connection)
+          : { status: 'ok' }
 
-      return Response.json(data)
+        return Response.json(data)
+      } catch (err) {
+        return err instanceof LexServerError
+          ? err.toResponse()
+          : invalidRequestResponse('Health check failed', 500)
+      }
     }
 
     const subPath = pathname.slice(XRPC_PATH_PREFIX.length)
