@@ -436,10 +436,14 @@ export type UpgradeWebSocket = (request: Request) => {
   response: Response
 }
 
+export type HealthCheckData = {
+  [x: string]: unknown
+  status: 'ok'
+}
 export type HealthCheckHandler = (
   request: Request,
   connection?: ConnectionInfo,
-) => Awaitable<{ [x: string]: unknown; status: 'ok' }>
+) => Awaitable<HealthCheckData>
 
 /**
  * Configuration options for the {@link LexRouter}.
@@ -1025,7 +1029,8 @@ export class LexRouter {
 
       try {
         const { healthCheck } = this.options
-        const data = healthCheck
+
+        const data: HealthCheckData = healthCheck
           ? await healthCheck(request, connection)
           : { status: 'ok' }
 
