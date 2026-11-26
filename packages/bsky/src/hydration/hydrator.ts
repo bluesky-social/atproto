@@ -296,7 +296,7 @@ export class Hydrator {
     this.config = config
     this.actor = new ActorHydrator(dataplane)
     this.external = new ExternalHydrator(dataplane)
-    this.feed = new FeedHydrator(dataplane)
+    this.feed = new FeedHydrator(dataplane, (uris) => this.resolveUris(uris))
     this.graph = new GraphHydrator(dataplane)
     this.label = new LabelHydrator(dataplane, config.needsReviewTagSources)
     this.serviceLabelers = new Set(serviceLabelers)
@@ -678,7 +678,12 @@ export class Hydrator {
     state: HydrationState = {},
     options: HydratePostsOptions = {},
   ): Promise<HydrationState> {
-    const uris = refs.map((ref) => ref.uri)
+    const resolvedUris = await this.resolveUris(refs.map((ref) => ref.uri))
+    const resolvedRefs = refs.map((ref, i) => ({
+      ...ref,
+      uri: resolvedUris[i],
+    }))
+    const uris = resolvedRefs.map((ref) => ref.uri)
 
     const knownLikersPromise = options.knownLikers
       ? this.hydrateKnownLikers(options.knownLikers, ctx)
@@ -780,7 +785,7 @@ export class Hydrator {
       mergeManyMaps(postsLayer0, postsLayer1, postsLayer2) ?? postsLayer0
     const allPostUris = [...posts.keys()]
     const allRefs = [
-      ...refs,
+      ...resolvedRefs,
       ...embedPostUrisLayer1.map(uriToRef), // supports aggregates on embed #viewRecords
       ...embedPostUrisLayer2.map(uriToRef),
     ]
@@ -2527,11 +2532,26 @@ export class Hydrator {
   }
 
   async resolveUri(uriStr: AtUriString): Promise<AtUriString> {
-    const uri = new AtUri(uriStr)
-    const [did] = await this.actor.getDids([uri.host])
-    if (!did) return uriStr
-    uri.hostname = did
-    return uri.toString()
+    const [resolved] = await this.resolveUris([uriStr])
+    return resolved
+  }
+
+  /**
+   * Resolves handle authorities in at-uris to DIDs, preserving each uri's
+   * path, query, and fragment. DIDs and unresolvable handles pass through.
+   */
+  async resolveUris(uris: AtUriString[]): Promise<AtUriString[]> {
+    const parsed = uris.map((uri) => new AtUri(uri))
+    const hosts = dedupeStrs(parsed.map((uri) => uri.host))
+    const dids = await this.actor.getDids(hosts)
+    const didByHost = new Map(hosts.map((host, i) => [host, dids[i]]))
+    return uris.map((uri, i) => {
+      const parsedUri = parsed[i]
+      const did = didByHost.get(parsedUri.host)
+      if (!did || did === parsedUri.host) return uri
+      parsedUri.hostname = did
+      return parsedUri.toString()
+    })
   }
 }
 
