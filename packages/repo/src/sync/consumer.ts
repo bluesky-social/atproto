@@ -2,8 +2,10 @@ import type { Cid } from '@atproto/lex-data'
 import type { BlockMap } from '../block-map.js'
 import { readCarWithRoot } from '../car.js'
 import { DataDiff } from '../data-diff.js'
+import { RepoVerificationError } from '../error.js'
 import { MST } from '../mst/index.js'
 import { ReadableRepo } from '../readable-repo.js'
+import { assertValidRepoStructure } from '../repo-validate.js'
 import {
   MemoryBlockstore,
   type ReadableBlockstore,
@@ -17,6 +19,8 @@ import {
   def,
 } from '../types.js'
 import * as util from '../util.js'
+
+export { RepoVerificationError }
 
 export const verifyRepoCar = async (
   carBytes: Uint8Array,
@@ -72,6 +76,7 @@ export const verifyDiff = async (
     did,
     signingKey,
   )
+  await assertValidRepoStructure(updateStorage, updated.data.pointer)
   const diff = await DataDiff.of(updated.data, repo?.data ?? null)
   const writes = await util.diffToWriteDescripts(diff)
   const newBlocks = diff.newMstBlocks
@@ -203,5 +208,3 @@ export const verifyRecords = async (
   }
   return records
 }
-
-export class RepoVerificationError extends Error {}

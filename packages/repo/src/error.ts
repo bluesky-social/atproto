@@ -50,3 +50,5 @@ export class UnexpectedObjectError extends Error {
     super(`unexpected object at ${cid.toString()}, expected: ${def}`)
   }
 }
+
+export class RepoVerificationError extends Error {}
