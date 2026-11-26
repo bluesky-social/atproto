@@ -1038,9 +1038,7 @@ export class LexRouter {
           headers: { 'cache-control': 'max-age=5' },
         })
       } catch (err) {
-        return err instanceof LexServerError
-          ? err.toResponse()
-          : invalidRequestResponse('Health check failed', 500)
+        return LexServerError.from(err).toResponse()
       }
     }
 

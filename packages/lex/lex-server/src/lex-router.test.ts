@@ -669,7 +669,7 @@ describe('Routing', () => {
       const request = new Request('https://example.com/xrpc/_health')
       const response = await router.fetch(request)
 
-      expect(healthCheck).toHaveBeenCalledWith(request)
+      expect(healthCheck).toHaveBeenCalledWith(request, undefined)
       expect(response.status).toBe(200)
       expect(await response.json()).toEqual({ status: 'ok', version: '1.0.0' })
     })
@@ -712,6 +712,41 @@ describe('Routing', () => {
 
       expect(healthCheck).not.toHaveBeenCalled()
       expect(response.status).toBe(400)
+    })
+
+    it('returns 500 InternalServerError when healthCheck throws', async () => {
+      const router = new LexRouter({
+        healthCheck: () => {
+          throw new Error('database unreachable')
+        },
+      })
+      const request = new Request('https://example.com/xrpc/_health')
+      const response = await router.fetch(request)
+
+      expect(response.status).toBe(500)
+      expect(await response.json()).toEqual({
+        error: 'InternalServerError',
+        message: 'An internal error occurred',
+      })
+    })
+
+    it('returns the LexServerError thrown by healthCheck', async () => {
+      const router = new LexRouter({
+        healthCheck: () => {
+          throw new LexServerError(503, {
+            error: 'ServiceUnavailable',
+            message: 'Draining',
+          })
+        },
+      })
+      const request = new Request('https://example.com/xrpc/_health')
+      const response = await router.fetch(request)
+
+      expect(response.status).toBe(503)
+      expect(await response.json()).toEqual({
+        error: 'ServiceUnavailable',
+        message: 'Draining',
+      })
     })
   })
 
