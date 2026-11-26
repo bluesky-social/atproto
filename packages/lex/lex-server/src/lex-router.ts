@@ -1034,7 +1034,9 @@ export class LexRouter {
           ? await healthCheck(request, connection)
           : { status: 'ok' }
 
-        return Response.json(data)
+        return Response.json(data, {
+          headers: { 'cache-control': 'max-age=5' },
+        })
       } catch (err) {
         return err instanceof LexServerError
           ? err.toResponse()
