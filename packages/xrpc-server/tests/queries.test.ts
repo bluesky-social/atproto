@@ -1,6 +1,7 @@
 import { once } from 'node:events'
 import * as http from 'node:http'
 import type { AddressInfo } from 'node:net'
+import { Readable } from 'node:stream'
 import type { LexiconDoc } from '@atproto/lexicon'
 import { XrpcClient } from '@atproto/xrpc'
 import type * as xrpcServer from '../src/index.js'
@@ -258,6 +259,43 @@ for (const buildServer of [buildMethodLexicons, buildAddLexicons]) {
       await new Promise((r) => setTimeout(r, 50))
       expect(handlerSignal?.aborted).toBe(false)
       proceed.resolve()
+    })
+
+    test('destroys a returned stream when the client disconnects before the handler resolves', async () => {
+      const started = deferred<void>()
+      const stream = new Readable({ read() {} })
+      // pipeline() may destroy the stream with a premature-close error
+      // depending on timing; the test only asserts it closes.
+      stream.on('error', () => {})
+      const server = await buildServer(LEXICONS, {
+        ...handlers,
+        'io.example.pingOne': async (ctx: xrpcServer.HandlerContext) => {
+          started.resolve()
+          // Wait until the disconnect is observed, like a handler that
+          // keeps working after the client goes away (eg. getBlob).
+          await new Promise<void>((resolve) =>
+            ctx.signal.aborted
+              ? resolve()
+              : ctx.signal.addEventListener('abort', () => resolve(), {
+                  once: true,
+                }),
+          )
+          return { encoding: 'text/plain', body: stream }
+        },
+      })
+      await using localServer = await createServer(server)
+      const { port } = localServer.address() as AddressInfo
+      const request = http.get(
+        `http://localhost:${port}/xrpc/io.example.pingOne?message=hello`,
+      )
+      request.on('error', () => {})
+
+      await started.promise
+      request.destroy()
+
+      // events.once() would reject if the stream errors before closing.
+      await new Promise<void>((resolve) => stream.once('close', resolve))
+      expect(stream.destroyed).toBe(true)
     })
   })
 }

@@ -787,10 +787,18 @@ export class Server {
 }
 
 // pipeline() adds 7 'close' listeners to a ServerResponse. 0 means unlimited.
-function pipeToResponse(stream: Readable, res: ServerResponse) {
+async function pipeToResponse(stream: Readable, res: ServerResponse) {
   const max = res.getMaxListeners()
   if (max > 0) res.setMaxListeners(max + 7)
-  return pipeline(stream, res)
+  try {
+    await pipeline(stream, res)
+  } catch (err) {
+    // The client may disconnect while an async handler is still resolving;
+    // pipeline() then rejects without destroying the source, leaking the
+    // upstream connection (eg. remote storage).
+    stream.destroy()
+    throw err
+  }
 }
 
 function createErrorMiddleware({
