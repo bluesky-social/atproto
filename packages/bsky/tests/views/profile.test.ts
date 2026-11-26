@@ -259,6 +259,75 @@ describe('pds profile views', () => {
     expect(forSnapshot(aliceForAlice.data)).toMatchSnapshot()
   })
 
+  it('presents avatar & banner alt text only with its image', async () => {
+    const grace = await sc.createAccount('grace', {
+      handle: 'grace.test',
+      email: 'grace@test.com',
+      password: 'grace-pass',
+    })
+    const bannerImg = await fs.readFile(
+      '../dev-env/assets/key-landscape-small.jpg',
+    )
+    const bannerRes = await pdsAgent.api.com.atproto.repo.uploadBlob(
+      bannerImg,
+      { headers: sc.getHeaders(grace.did), encoding: 'image/jpeg' },
+    )
+    // the seed client always sets an avatar
+    await sc.createProfile(
+      grace.did,
+      'grace',
+      `It's me, grace`,
+      undefined,
+      undefined,
+      {
+        avatarAlt: 'A cat asleep on a keyboard',
+        banner: bannerRes.data.blob,
+        bannerAlt: 'Mountains at sunset',
+      },
+    )
+    await network.processAll()
+
+    const headers = await network.serviceHeaders(
+      alice,
+      ids.AppBskyActorGetProfile,
+    )
+    const { data: detailed } = await agent.app.bsky.actor.getProfile(
+      { actor: grace.did },
+      { headers },
+    )
+    expect(detailed.avatarAlt).toBe('A cat asleep on a keyboard')
+    expect(detailed.bannerAlt).toBe('Mountains at sunset')
+
+    const { data: typeahead } =
+      await agent.app.bsky.actor.searchActorsTypeahead(
+        { q: 'grace' },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyActorSearchActorsTypeahead,
+          ),
+        },
+      )
+    const basic = typeahead.actors.find((actor) => actor.did === grace.did)
+    expect(basic?.avatarAlt).toBe('A cat asleep on a keyboard')
+
+    // removing the images leaves the alt text in the record, but not in views
+    await updateProfile(grace.did, {
+      displayName: 'grace',
+      avatarAlt: 'A cat asleep on a keyboard',
+      bannerAlt: 'Mountains at sunset',
+    })
+    await network.processAll()
+
+    const { data: imageless } = await agent.app.bsky.actor.getProfile(
+      { actor: grace.did },
+      { headers },
+    )
+    expect(imageless.avatar).toBeUndefined()
+    expect(imageless.avatarAlt).toBeUndefined()
+    expect(imageless.bannerAlt).toBeUndefined()
+  })
+
   it('fetches profile by handle', async () => {
     const byDid = await agent.api.app.bsky.actor.getProfile(
       { actor: alice },

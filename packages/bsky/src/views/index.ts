@@ -346,6 +346,7 @@ export class Views {
             getBlobCidString(actor.profile.banner),
           )
         : undefined,
+      bannerAlt: actor.profile?.banner ? actor.profile.bannerAlt : undefined,
       followersCount: profileAggs?.followers ?? 0,
       followsCount: profileAggs?.follows ?? 0,
       postsCount: profileAggs?.posts ?? 0,
@@ -466,6 +467,8 @@ export class Views {
             getBlobCidString(actor.profile.avatar),
           )
         : undefined,
+      // alt text describes the image, so it's dropped when there's no image
+      avatarAlt: actor.profile?.avatar ? actor.profile.avatarAlt : undefined,
       // associated.feedgens and associated.lists info not necessarily included
       // on profile and profile-basic views, but should be on profile-detailed.
       associated: {
