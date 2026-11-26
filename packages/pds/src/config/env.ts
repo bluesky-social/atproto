@@ -97,6 +97,7 @@ export function readEnv() {
     emailDisableConfirmationLink: envBool(
       'PDS_EMAIL_DISABLE_CONFIRMATION_LINK',
     ),
+    emailConfirmationUrl: envStr('PDS_EMAIL_CONFIRMATION_URL'),
     moderationEmailSmtpUrl: envStr('PDS_MODERATION_EMAIL_SMTP_URL'),
     moderationEmailAddress: envStr('PDS_MODERATION_EMAIL_ADDRESS'),
 

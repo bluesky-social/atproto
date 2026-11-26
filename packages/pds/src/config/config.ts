@@ -172,6 +172,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
       smtpUrl: env.emailSmtpUrl,
       fromAddress: env.emailFromAddress,
       disableConfirmationLink: env.emailDisableConfirmationLink ?? false,
+      confirmationUrl: env.emailConfirmationUrl,
     }
   }
 
@@ -558,6 +559,7 @@ export type EmailConfig = {
   smtpUrl: string
   fromAddress: string
   disableConfirmationLink: boolean
+  confirmationUrl?: string
 }
 
 export type SubscriptionConfig = {

@@ -12,6 +12,8 @@ const DEFAULT_LOGO_URL =
 const DEFAULT_MARK_URL =
   'https://bsky.social/about/images/email/email_mark_dark.png'
 const DEFAULT_HOME_URL = 'https://bsky.app'
+const DEFAULT_CONFIRMATION_URL =
+  'https://bsky.app/intent/verify-email?code={token}'
 const DEFAULT_PRIMARY_COLOR = '#067df7'
 
 export class ServerMailer {
@@ -65,10 +67,17 @@ export class ServerMailer {
     mailOpts: SendMailOptions,
   ) {
     // @TODO (later) handle locale in the template
-    await this.sendTemplate('confirmEmail', params, {
-      subject: 'Email Confirmation',
-      ...mailOpts,
-    })
+    const confirmationUrl = (
+      this.email?.confirmationUrl ?? DEFAULT_CONFIRMATION_URL
+    ).replaceAll('{token}', params.token)
+    await this.sendTemplate(
+      'confirmEmail',
+      { ...params, confirmationUrl },
+      {
+        subject: 'Email Confirmation',
+        ...mailOpts,
+      },
+    )
   }
 
   async sendUpdateEmail(
