@@ -48,6 +48,7 @@ export class InboxNotificationService {
     const affectsStanding =
       defs.modEventTakedown.$isTypeOf(event) ||
       defs.modEventReverseTakedown.$isTypeOf(event) ||
+      defs.modEventStrike.$isTypeOf(event) ||
       (defs.modEventEmail.$isTypeOf(event) &&
         event.strikeCount !== undefined) ||
       (subject.isRepo() &&

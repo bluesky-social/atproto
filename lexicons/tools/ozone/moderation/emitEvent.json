@@ -15,6 +15,7 @@
               "type": "union",
               "refs": [
                 "tools.ozone.moderation.defs#modEventTakedown",
+                "tools.ozone.moderation.defs#modEventStrike",
                 "tools.ozone.moderation.defs#modEventAcknowledge",
                 "tools.ozone.moderation.defs#modEventEscalate",
                 "tools.ozone.moderation.defs#modEventComment",

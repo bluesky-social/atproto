@@ -276,6 +276,58 @@ describe('report linkage between accounts and content', () => {
     },
   )
 
+  it.each(['current', 'types', 'allOwned'] as const)(
+    'records strikes without a takedown and links the %s report scope',
+    async (scope) => {
+      const f = await fixture()
+      const current = await report(f.message)
+      const account = await report(f.account)
+      const record = await report(f.records[0])
+      const expiresAt = '2099-01-01T00:00:00.000Z'
+      const strike = tools.ozone.moderation.defs.modEventStrike.$build({
+        policies: ['example-policy'],
+        severityLevel: 'sev-2',
+        strikeCount: 2,
+        strikeExpiresAt: expiresAt,
+      })
+      const event = await mod.emitEvent({
+        subject: f.account,
+        event: strike,
+        reportAction: {
+          ids: [current.id],
+          ...(scope === 'allOwned'
+            ? { allOwned: true }
+            : scope === 'types'
+              ? {
+                  subjects: [f.message],
+                  types: [com.atproto.moderation.defs.ReasonSpam],
+                }
+              : { subjectTypes: ['message'] as ReportSubjectTypes }),
+        },
+      })
+
+      expect(event.event).toMatchObject(strike)
+      const { events } = await mod.queryEvents({
+        subject: f.did,
+        withStrike: true,
+      })
+      expect(events).toMatchObject([{ id: event.id, event: strike }])
+      const { subjectStatuses } = await mod.queryStatuses({ subject: f.did })
+      expect(subjectStatuses[0]?.accountStrike?.activeStrikeCount).toBe(2)
+      expect(subjectStatuses[0]?.takendown).not.toBe(true)
+      expect(events[0]?.event).not.toHaveProperty('durationInHours')
+
+      const closed = { status: 'closed', actionEventIds: [event.id] }
+      expect(await detail(current.id)).toMatchObject(closed)
+      expect(await detail(account.id)).toMatchObject(
+        scope === 'current' ? { status: 'open' } : closed,
+      )
+      expect(await detail(record.id)).toMatchObject(
+        scope === 'allOwned' ? closed : { status: 'open' },
+      )
+    },
+  )
+
   it('combines exact records and messages while always retaining the account subject', async () => {
     const f = await fixture()
     const selected = [

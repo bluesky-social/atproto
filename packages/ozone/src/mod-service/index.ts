@@ -648,7 +648,8 @@ export class ModerationService {
     }
 
     if (
-      tools.ozone.moderation.defs.modEventTakedown.$isTypeOf(event) &&
+      (tools.ozone.moderation.defs.modEventTakedown.$isTypeOf(event) ||
+        tools.ozone.moderation.defs.modEventStrike.$isTypeOf(event)) &&
       event.policies?.length
     ) {
       meta.policies = event.policies.join(',')
@@ -695,6 +696,7 @@ export class ModerationService {
     if (
       tools.ozone.moderation.defs.modEventTakedown.$isTypeOf(event) ||
       tools.ozone.moderation.defs.modEventEmail.$isTypeOf(event) ||
+      tools.ozone.moderation.defs.modEventStrike.$isTypeOf(event) ||
       tools.ozone.moderation.defs.modEventReverseTakedown.$isTypeOf(event)
     ) {
       // Store severityLevel if provided (for display/tracking)

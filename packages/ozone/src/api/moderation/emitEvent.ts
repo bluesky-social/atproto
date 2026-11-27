@@ -50,10 +50,21 @@ const handleModerationEvent = async ({
     tools.ozone.moderation.defs.modEventReverseTakedown.$isTypeOf(event)
   const isLabelEvent =
     tools.ozone.moderation.defs.modEventLabel.$isTypeOf(event)
+  const isStrikeEvent =
+    tools.ozone.moderation.defs.modEventStrike.$isTypeOf(event)
   const subject = subjectFromInput(
     input.body.subject,
     input.body.subjectBlobCids,
   )
+
+  if (isStrikeEvent) {
+    if (!access.isModerator) {
+      throw new AuthRequiredError('Must be a full moderator to apply strikes')
+    }
+    if (!subject.isRepo()) {
+      throw new InvalidRequestError('Strikes must target an account')
+    }
+  }
 
   // Ozone dispatches takedown enforcement only for repositories and records.
   if (subject.isMessage() && (isTakedownEvent || isReverseTakedownEvent)) {
@@ -217,7 +228,7 @@ const handleModerationEvent = async ({
 
   const isTakedownOrReverseTakedownEvent =
     isTakedownEvent || isReverseTakedownEvent
-  if (isTakedownOrReverseTakedownEvent || isLabelEvent) {
+  if (isTakedownOrReverseTakedownEvent || isLabelEvent || isStrikeEvent) {
     const status = await moderationService.getStatus(subject)
 
     if (status?.takendown && isTakedownEvent) {

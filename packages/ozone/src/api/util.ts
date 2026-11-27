@@ -150,6 +150,7 @@ const reviewStates = new Set([
 
 const eventTypes = new Set([
   tools.ozone.moderation.defs.modEventTakedown.$type,
+  tools.ozone.moderation.defs.modEventStrike.$type,
   tools.ozone.moderation.defs.modEventAcknowledge.$type,
   tools.ozone.moderation.defs.modEventEscalate.$type,
   tools.ozone.moderation.defs.modEventComment.$type,

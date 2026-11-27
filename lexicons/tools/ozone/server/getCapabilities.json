@@ -12,6 +12,10 @@
             "notifications": {
               "type": "ref",
               "ref": "#notificationConfig"
+            },
+            "strikeOnly": {
+              "type": "boolean",
+              "description": "Whether moderation.emitEvent supports applying strikes without suspending the account."
             }
           }
         }

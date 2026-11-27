@@ -18,6 +18,7 @@
           "type": "union",
           "refs": [
             "#modEventTakedown",
+            "#modEventStrike",
             "#modEventReverseTakedown",
             "#modEventComment",
             "#modEventReport",
@@ -77,6 +78,7 @@
           "type": "union",
           "refs": [
             "#modEventTakedown",
+            "#modEventStrike",
             "#modEventReverseTakedown",
             "#modEventComment",
             "#modEventReport",
@@ -343,6 +345,36 @@
           "type": "string",
           "format": "datetime",
           "description": "When the strike should expire. If not provided, the strike never expires."
+        }
+      }
+    },
+    "modEventStrike": {
+      "type": "object",
+      "description": "Apply strikes to an account without suspending or taking it down.",
+      "required": ["strikeCount", "policies", "severityLevel"],
+      "properties": {
+        "strikeCount": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2147483647
+        },
+        "policies": {
+          "type": "array",
+          "minLength": 1,
+          "maxLength": 5,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "severityLevel": {
+          "type": "string",
+          "minLength": 1
+        },
+        "strikeExpiresAt": {
+          "type": "string",
+          "format": "datetime",
+          "description": "When the strike should expire. If omitted, the strike never expires."
+        },
+        "comment": {
+          "type": "string"
         }
       }
     },

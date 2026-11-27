@@ -84,6 +84,13 @@ const EVENT_TYPE_MAP = new Map<
     },
   ],
   [
+    tools.ozone.moderation.defs.modEventStrike.$type,
+    {
+      status: 'closed',
+      activityType: 'closeActivity',
+    },
+  ],
+  [
     tools.ozone.moderation.defs.modEventLabel.$type,
     {
       status: 'closed',

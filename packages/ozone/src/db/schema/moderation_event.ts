@@ -14,6 +14,7 @@ export interface ModerationEvent {
   id: Generated<number>
   action:
     | $TypeOf<tools.ozone.moderation.defs.ModEventTakedown>
+    | $TypeOf<tools.ozone.moderation.defs.ModEventStrike>
     | $TypeOf<tools.ozone.moderation.defs.ModEventAcknowledge>
     | $TypeOf<tools.ozone.moderation.defs.ModEventEscalate>
     | $TypeOf<tools.ozone.moderation.defs.ModEventComment>

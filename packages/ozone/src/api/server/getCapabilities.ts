@@ -6,6 +6,7 @@ export default function (server: Server, ctx: AppContext) {
   server.add(tools.ozone.server.getCapabilities, async () => ({
     encoding: 'application/json' as const,
     body: {
+      strikeOnly: true,
       notifications: {
         channels: ctx.cfg.inbox.pushEnabled ? ['inApp', 'push'] : ['inApp'],
       },

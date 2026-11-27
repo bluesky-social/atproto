@@ -144,6 +144,21 @@ describe('protected-tags', () => {
         }),
       ).rejects.toThrow(/Can not manage tag vip/gi)
 
+      await expect(
+        modClient.emitEvent({
+          subject: {
+            $type: 'com.atproto.admin.defs#repoRef',
+            did: sc.dids.bob,
+          },
+          event: {
+            $type: 'tools.ozone.moderation.defs#modEventStrike',
+            strikeCount: 2,
+            policies: ['example-policy'],
+            severityLevel: 'sev-2',
+          },
+        }),
+      ).rejects.toThrow(/Not allowed to action on protected tag: vip/)
+
       // Verify that since admins are configured to manage this tag, admin actions go through
       const removeTag = await modClient.emitEvent(
         {
