@@ -797,32 +797,42 @@ describe('bulk moderation events', () => {
     expect(conversations.events).toHaveLength(2)
   })
 
-  it.each([
-    'modEventTakedown',
-    'modEventReverseTakedown',
-    'modEventLabel',
-  ] as const)(
-    'rejects message %s without changing its reports',
-    async (kind) => {
-      const f = await fixture()
-      const row = await report(f.message)
-      const event =
-        kind === 'modEventLabel'
-          ? tools.ozone.moderation.defs.modEventLabel.$build({
-              createLabelVals: ['spam'],
-              negateLabelVals: [],
-            })
-          : tools.ozone.moderation.defs[kind].$build({})
-      const result = await modClient.emitEvents({
-        event,
-        subjects: [{ subject: f.message, reportAction: { ids: [row.id] } }],
-      })
-      expect(result.events).toEqual([])
-      expect(result.failedEvents).toHaveLength(1)
-      expect(result.failedEvents[0].error).toContain('Message')
-      expect((await detail(row.id)).status).toBe('open')
-    },
-  )
+  it('closes a message report with a takedown and allows reversal', async () => {
+    const f = await fixture()
+    const row = await report(f.message)
+    const defs = tools.ozone.moderation.defs
+    const result = await modClient.emitEvents({
+      event: defs.modEventTakedown.$build({}),
+      subjects: [{ subject: f.message, reportAction: { ids: [row.id] } }],
+    })
+    expect(result.failedEvents).toEqual([])
+    expect(await detail(row.id)).toMatchObject({
+      status: 'closed',
+      actionEventIds: [result.events[0].id],
+    })
+    const reverse = await modClient.emitEvents({
+      event: defs.modEventReverseTakedown.$build({}),
+      subjects: [{ subject: f.message }],
+    })
+    expect(reverse.failedEvents).toEqual([])
+    expect(reverse.events).toMatchObject([{ subject: f.message }])
+  })
+
+  it('rejects message labels without changing the report', async () => {
+    const f = await fixture()
+    const row = await report(f.message)
+    const result = await modClient.emitEvents({
+      event: tools.ozone.moderation.defs.modEventLabel.$build({
+        createLabelVals: ['spam'],
+        negateLabelVals: [],
+      }),
+      subjects: [{ subject: f.message, reportAction: { ids: [row.id] } }],
+    })
+    expect(result.events).toEqual([])
+    expect(result.failedEvents).toHaveLength(1)
+    expect(result.failedEvents[0].error).toContain('Message')
+    expect((await detail(row.id)).status).toBe('open')
+  })
 
   it('links account-wide acknowledge cascades to owned reports', async () => {
     const f = await fixture()
