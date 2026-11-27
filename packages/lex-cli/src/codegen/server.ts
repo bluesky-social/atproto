@@ -1,13 +1,16 @@
 import {
   IndentationText,
+  type MethodDeclarationStructure,
+  type OptionalKind,
   Project,
-  type SourceFile,
+  type PropertyDeclarationStructure,
+  type PropertySignatureStructure,
   VariableDeclarationKind,
 } from 'ts-morph'
 import { type LexiconDoc, Lexicons } from '@atproto/lexicon'
 import { NSID } from '@atproto/syntax'
 import type { GeneratedAPI } from '../types.js'
-import { gen, lexiconsTs, utilTs } from './common.js'
+import { type GenFile, gen, lexiconsTs, utilTs } from './common.js'
 import {
   genCommonImports,
   genImports,
@@ -40,7 +43,7 @@ export async function genServerApi(
   for (const lexiconDoc of lexiconDocs) {
     api.files.push(await lexiconTs(project, lexicons, lexiconDoc))
   }
-  api.files.push(await utilTs(project))
+  api.files.push(await utilTs())
   api.files.push(await lexiconsTs(project, lexiconDocs))
   api.files.push(await indexTs(project, lexiconDocs, nsidTree, nsidTokens))
   return api
@@ -66,13 +69,10 @@ const indexTs = (
       ],
     })
     //= import {schemas} from './lexicons.js'
-    file
-      .addImportDeclaration({
-        moduleSpecifier: './lexicons.js',
-      })
-      .addNamedImport({
-        name: 'schemas',
-      })
+    file.addImportDeclaration({
+      moduleSpecifier: './lexicons.js',
+      namedImports: [{ name: 'schemas' }],
+    })
 
     // generate type imports
     for (const lexiconDoc of lexiconDocs) {
@@ -83,11 +83,10 @@ const indexTs = (
       ) {
         continue
       }
-      file
-        .addImportDeclaration({
-          moduleSpecifier: `./types/${lexiconDoc.id.split('.').join('/')}.js`,
-        })
-        .setNamespaceImport(toTitleCase(lexiconDoc.id))
+      file.addImportDeclaration({
+        moduleSpecifier: `./types/${lexiconDoc.id.split('.').join('/')}.js`,
+        namespaceImport: toTitleCase(lexiconDoc.id),
+      })
     }
 
     // generate token enums
@@ -115,101 +114,75 @@ const indexTs = (
     }
 
     //= export function createServer(options?: XrpcOptions) { ... }
-    const createServerFn = file.addFunction({
+    file.addFunction({
       name: 'createServer',
       returnType: 'Server',
       parameters: [
         { name: 'options', type: 'XrpcOptions', hasQuestionToken: true },
       ],
       isExported: true,
+      statements: [`return new Server(options)`],
     })
-    createServerFn.setBodyText(`return new Server(options)`)
 
     //= export class Server {...}
-    const serverCls = file.addClass({
+    file.addClass({
       name: 'Server',
       isExported: true,
-    })
-    //= xrpc: XrpcServer = createXrpcServer(methodSchemas)
-    serverCls.addProperty({
-      name: 'xrpc',
-      type: 'XrpcServer',
+      properties: [
+        //= xrpc: XrpcServer = createXrpcServer(methodSchemas)
+        {
+          name: 'xrpc',
+          type: 'XrpcServer',
+        },
+        //= ns: NS
+        ...nsidTree.map((ns) => ({
+          name: ns.propName,
+          type: ns.className,
+        })),
+      ],
+      //= constructor (options?: XrpcOptions) {
+      //=  this.xrpc = createXrpcServer(schemas, options)
+      //=  {namespace declarations}
+      //= }
+      ctors: [
+        {
+          parameters: [
+            { name: 'options', type: 'XrpcOptions', hasQuestionToken: true },
+          ],
+          statements: [
+            [
+              'this.xrpc = createXrpcServer(schemas, options)',
+              ...nsidTree.map(
+                (ns) => `this.${ns.propName} = new ${ns.className}(this)`,
+              ),
+            ].join('\n'),
+          ],
+        },
+      ],
     })
 
     // generate classes for the schemas
     for (const ns of nsidTree) {
-      //= ns: NS
-      serverCls.addProperty({
-        name: ns.propName,
-        type: ns.className,
-      })
-
-      // class...
       genNamespaceCls(file, ns)
     }
-
-    //= constructor (options?: XrpcOptions) {
-    //=  this.xrpc = createXrpcServer(schemas, options)
-    //=  {namespace declarations}
-    //= }
-    serverCls
-      .addConstructor({
-        parameters: [
-          { name: 'options', type: 'XrpcOptions', hasQuestionToken: true },
-        ],
-      })
-      .setBodyText(
-        [
-          'this.xrpc = createXrpcServer(schemas, options)',
-          ...nsidTree.map(
-            (ns) => `this.${ns.propName} = new ${ns.className}(this)`,
-          ),
-        ].join('\n'),
-      )
   })
 
-function genNamespaceCls(file: SourceFile, ns: DefTreeNode) {
-  //= export class {ns}NS {...}
-  const cls = file.addClass({
-    name: ns.className,
-    isExported: true,
-  })
+function genNamespaceCls(file: GenFile, ns: DefTreeNode) {
   //= _server: Server
-  cls.addProperty({
-    name: '_server',
-    type: 'Server',
-  })
+  const properties: OptionalKind<PropertyDeclarationStructure>[] = [
+    { name: '_server', type: 'Server' },
+  ]
 
   for (const child of ns.children) {
     //= child: ChildNS
-    cls.addProperty({
+    properties.push({
       name: child.propName,
       type: child.className,
     })
-
-    // recurse
-    genNamespaceCls(file, child)
   }
 
-  //= constructor(server: Server) {
-  //=  this._server = server
-  //=  {child namespace declarations}
-  //= }
-  const cons = cls.addConstructor()
-  cons.addParameter({
-    name: 'server',
-    type: 'Server',
-  })
-  cons.setBodyText(
-    [
-      `this._server = server`,
-      ...ns.children.map(
-        (ns) => `this.${ns.propName} = new ${ns.className}(server)`,
-      ),
-    ].join('\n'),
-  )
-
   // methods
+  const methods: OptionalKind<MethodDeclarationStructure>[] = []
   for (const userType of ns.userTypes) {
     if (
       userType.def.type !== 'query' &&
@@ -221,7 +194,8 @@ function genNamespaceCls(file: SourceFile, ns: DefTreeNode) {
     const moduleName = toTitleCase(userType.nsid)
     const name = toCamelCase(NSID.parse(userType.nsid).name || '')
     const isSubscription = userType.def.type === 'subscription'
-    const method = cls.addMethod({
+    const methodType = isSubscription ? 'streamMethod' : 'method'
+    methods.push({
       name,
       typeParameters: [
         {
@@ -230,31 +204,67 @@ function genNamespaceCls(file: SourceFile, ns: DefTreeNode) {
           default: 'void',
         },
       ],
-    })
-    method.addParameter({
-      name: 'cfg',
-      type: isSubscription
-        ? `StreamConfigOrHandler<
+      parameters: [
+        {
+          name: 'cfg',
+          type: isSubscription
+            ? `StreamConfigOrHandler<
           A,
           ${moduleName}.QueryParams,
           ${moduleName}.HandlerOutput,
         >`
-        : `MethodConfigOrHandler<
+            : `MethodConfigOrHandler<
           A,
           ${moduleName}.QueryParams,
           ${moduleName}.HandlerInput,
           ${moduleName}.HandlerOutput,
         >`,
+        },
+      ],
+      statements: [
+        [
+          // Placing schema on separate line, since the following one was being formatted
+          // into multiple lines and causing the ts-ignore to ignore the wrong line.
+          `const nsid = '${userType.nsid}' // @ts-ignore`,
+          `return this._server.xrpc.${methodType}(nsid, cfg)`,
+        ].join('\n'),
+      ],
     })
-    const methodType = isSubscription ? 'streamMethod' : 'method'
-    method.setBodyText(
-      [
-        // Placing schema on separate line, since the following one was being formatted
-        // into multiple lines and causing the ts-ignore to ignore the wrong line.
-        `const nsid = '${userType.nsid}' // @ts-ignore`,
-        `return this._server.xrpc.${methodType}(nsid, cfg)`,
-      ].join('\n'),
-    )
+  }
+
+  //= export class {ns}NS {...}
+  file.addClass({
+    name: ns.className,
+    isExported: true,
+    properties,
+    //= constructor(server: Server) {
+    //=  this._server = server
+    //=  {child namespace declarations}
+    //= }
+    ctors: [
+      {
+        parameters: [
+          {
+            name: 'server',
+            type: 'Server',
+          },
+        ],
+        statements: [
+          [
+            `this._server = server`,
+            ...ns.children.map(
+              (ns) => `this.${ns.propName} = new ${ns.className}(server)`,
+            ),
+          ].join('\n'),
+        ],
+      },
+    ],
+    methods,
+  })
+
+  // recurse
+  for (const child of ns.children) {
+    genNamespaceCls(file, child)
   }
 }
 
@@ -315,7 +325,7 @@ const lexiconTs = (
   )
 
 function genServerXrpcMethod(
-  file: SourceFile,
+  file: GenFile,
   lexicons: Lexicons,
   lexUri: string,
 ) {
@@ -323,25 +333,26 @@ function genServerXrpcMethod(
 
   //= export interface HandlerInput {...}
   if (def.type === 'procedure' && def.input?.encoding) {
-    const handlerInput = file.addInterface({
+    file.addInterface({
       name: 'HandlerInput',
       isExported: true,
-    })
-
-    handlerInput.addProperty({
-      name: 'encoding',
-      type: def.input.encoding
-        .split(',')
-        .map((v) => `'${v.trim()}'`)
-        .join(' | '),
-    })
-    handlerInput.addProperty({
-      name: 'body',
-      type: def.input.schema
-        ? def.input.encoding.includes(',')
-          ? 'InputSchema | stream.Readable'
-          : 'InputSchema'
-        : 'stream.Readable',
+      properties: [
+        {
+          name: 'encoding',
+          type: def.input.encoding
+            .split(',')
+            .map((v) => `'${v.trim()}'`)
+            .join(' | '),
+        },
+        {
+          name: 'body',
+          type: def.input.schema
+            ? def.input.encoding.includes(',')
+              ? 'InputSchema | stream.Readable'
+              : 'InputSchema'
+            : 'stream.Readable',
+        },
+      ],
     })
   } else {
     file.addTypeAlias({
@@ -355,13 +366,10 @@ function genServerXrpcMethod(
   let hasHandlerSuccess = false
   if (def.output?.schema || def.output?.encoding) {
     hasHandlerSuccess = true
-    const handlerSuccess = file.addInterface({
-      name: 'HandlerSuccess',
-      isExported: true,
-    })
+    const handlerSuccess: OptionalKind<PropertySignatureStructure>[] = []
 
     if (def.output.encoding) {
-      handlerSuccess.addProperty({
+      handlerSuccess.push({
         name: 'encoding',
         type: def.output.encoding
           .split(',')
@@ -371,40 +379,47 @@ function genServerXrpcMethod(
     }
     if (def.output?.schema) {
       if (def.output.encoding.includes(',')) {
-        handlerSuccess.addProperty({
+        handlerSuccess.push({
           name: 'body',
           type: 'OutputSchema | Uint8Array | stream.Readable',
         })
       } else {
-        handlerSuccess.addProperty({ name: 'body', type: 'OutputSchema' })
+        handlerSuccess.push({ name: 'body', type: 'OutputSchema' })
       }
     } else if (def.output?.encoding) {
-      handlerSuccess.addProperty({
+      handlerSuccess.push({
         name: 'body',
         type: 'Uint8Array | stream.Readable',
       })
     }
-    handlerSuccess.addProperty({
+    handlerSuccess.push({
       name: 'headers?',
       type: '{ [key: string]: string }',
+    })
+
+    file.addInterface({
+      name: 'HandlerSuccess',
+      isExported: true,
+      properties: handlerSuccess,
     })
   }
 
   // export interface HandlerError {...}
-  const handlerError = file.addInterface({
-    name: 'HandlerError',
-    isExported: true,
-  })
-  handlerError.addProperties([
+  const handlerError: OptionalKind<PropertySignatureStructure>[] = [
     { name: 'status', type: 'number' },
     { name: 'message?', type: 'string' },
-  ])
+  ]
   if (def.errors?.length) {
-    handlerError.addProperty({
+    handlerError.push({
       name: 'error?',
       type: def.errors.map((err) => `'${err.name}'`).join(' | '),
     })
   }
+  file.addInterface({
+    name: 'HandlerError',
+    isExported: true,
+    properties: handlerError,
+  })
 
   // export type HandlerOutput = ...
   file.addTypeAlias({
@@ -415,7 +430,7 @@ function genServerXrpcMethod(
 }
 
 function genServerXrpcStreaming(
-  file: SourceFile,
+  file: GenFile,
   lexicons: Lexicons,
   lexUri: string,
 ) {

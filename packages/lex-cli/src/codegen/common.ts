@@ -1,8 +1,18 @@
 import { type Options as PrettierOptions, format } from 'prettier'
 import {
+  type ClassDeclarationStructure,
+  type ExportDeclarationStructure,
+  type FunctionDeclarationStructure,
+  type ImportDeclarationStructure,
+  type InterfaceDeclarationStructure,
+  type OptionalKind,
   type Project,
   type SourceFile,
+  type StatementStructures,
+  StructureKind,
+  type TypeAliasDeclarationStructure,
   VariableDeclarationKind,
+  type VariableStatementStructure,
 } from 'ts-morph'
 import type { LexiconDoc } from '@atproto/lexicon'
 import type { GeneratedFile } from '../types.js'
@@ -16,9 +26,10 @@ const PRETTIER_OPTS: PrettierOptions = {
   trailingComma: 'all',
 }
 
-export const utilTs = (project: Project) =>
-  gen(project, '/util.ts', async (file) => {
-    file.replaceWithText(`
+export const utilTs = () =>
+  formatFile(
+    '/util.ts',
+    `
 import { type ValidationResult } from '@atproto/lexicon'
 
 export type OmitKey<T, K extends keyof T> = {
@@ -134,33 +145,31 @@ export function asPredicate<V extends Validator>(validate: V) {
     return validate(v).success
   }
 }
-`)
-  })
+`,
+  )
 
 export const lexiconsTs = (project: Project, lexicons: LexiconDoc[]) =>
   gen(project, '/lexicons.ts', async (file) => {
     //= import { type LexiconDoc, Lexicons } from '@atproto/lexicon'
-    file
-      .addImportDeclaration({
-        moduleSpecifier: '@atproto/lexicon',
-      })
-      .addNamedImports([
+    file.addImportDeclaration({
+      moduleSpecifier: '@atproto/lexicon',
+      namedImports: [
         { name: 'LexiconDoc', isTypeOnly: true },
         { name: 'Lexicons' },
         { name: 'ValidationError' },
         { name: 'ValidationResult', isTypeOnly: true },
-      ])
+      ],
+    })
 
     //= import { is$typed, maybe$typed, type $Typed } from './util.js'
-    file
-      .addImportDeclaration({
-        moduleSpecifier: './util.js',
-      })
-      .addNamedImports([
+    file.addImportDeclaration({
+      moduleSpecifier: './util.js',
+      namedImports: [
         { name: '$Typed', isTypeOnly: true },
         { name: 'is$typed' },
         { name: 'maybe$typed' },
-      ])
+      ],
+    })
 
     //= export const schemaDict = {...} as const satisfies Record<string, LexiconDoc>
     file.addVariableStatement({
@@ -265,17 +274,118 @@ export const lexiconsTs = (project: Project, lexicons: LexiconDoc[]) =>
     })
   })
 
+/**
+ * The top-level statements of a generated file, as ts-morph structures.
+ *
+ * ts-morph re-parses the whole file after every manipulation, which makes
+ * building a file node by node quadratic in its size. Generators instead
+ * describe each statement in full, and {@link GenFile.toProjectSourceFile}
+ * inserts them in as few manipulations as possible. The `add*` methods mirror
+ * the {@link SourceFile} ones, including the insertion of imports after the
+ * last import.
+ */
+export class GenFile {
+  readonly #imports: ImportDeclarationStructure[] = []
+  readonly #statements: StatementStructures[] = []
+
+  addImportDeclaration(structure: OptionalKind<ImportDeclarationStructure>) {
+    this.#imports.push({ ...structure, kind: StructureKind.ImportDeclaration })
+  }
+
+  addExportDeclaration(structure: OptionalKind<ExportDeclarationStructure>) {
+    this.#statements.push({
+      ...structure,
+      kind: StructureKind.ExportDeclaration,
+    })
+  }
+
+  addClass(structure: OptionalKind<ClassDeclarationStructure>) {
+    this.#statements.push({ ...structure, kind: StructureKind.Class })
+  }
+
+  addInterface(structure: OptionalKind<InterfaceDeclarationStructure>) {
+    this.#statements.push({ ...structure, kind: StructureKind.Interface })
+  }
+
+  addTypeAlias(structure: OptionalKind<TypeAliasDeclarationStructure>) {
+    this.#statements.push({ ...structure, kind: StructureKind.TypeAlias })
+  }
+
+  addVariableStatement(structure: OptionalKind<VariableStatementStructure>) {
+    this.#statements.push({
+      ...structure,
+      kind: StructureKind.VariableStatement,
+    })
+  }
+
+  addFunction(structure: OptionalKind<FunctionDeclarationStructure>) {
+    this.#statements.push({ ...structure, kind: StructureKind.Function })
+  }
+
+  toProjectSourceFile(project: Project, path: string): SourceFile {
+    const file = project.createSourceFile(path)
+    GenFile.#insertStatements(file, [...this.#imports, ...this.#statements])
+    return file
+  }
+
+  /**
+   * Inserts each run of consecutive statements of the same kind in a single
+   * manipulation. ts-morph separates the statements of a run the same way as
+   * when they are added one by one, so the resulting text is identical.
+   */
+  static #insertStatements(
+    file: SourceFile,
+    statements: StatementStructures[],
+  ) {
+    for (let start = 0; start < statements.length;) {
+      const { kind } = statements[start]
+      let end = start + 1
+      while (end < statements.length && statements[end].kind === kind) end++
+      const run = statements.slice(start, end)
+      switch (kind) {
+        case StructureKind.ImportDeclaration:
+          file.addImportDeclarations(run as ImportDeclarationStructure[])
+          break
+        case StructureKind.ExportDeclaration:
+          file.addExportDeclarations(run as ExportDeclarationStructure[])
+          break
+        case StructureKind.Class:
+          file.addClasses(run as ClassDeclarationStructure[])
+          break
+        case StructureKind.Interface:
+          file.addInterfaces(run as InterfaceDeclarationStructure[])
+          break
+        case StructureKind.TypeAlias:
+          file.addTypeAliases(run as TypeAliasDeclarationStructure[])
+          break
+        case StructureKind.VariableStatement:
+          file.addVariableStatements(run as VariableStatementStructure[])
+          break
+        case StructureKind.Function:
+          file.addFunctions(run as FunctionDeclarationStructure[])
+          break
+        default:
+          throw new Error(`Unsupported statement kind: ${StructureKind[kind]}`)
+      }
+      start = end
+    }
+  }
+}
+
 export async function gen(
   project: Project,
   path: string,
-  gen: (file: SourceFile) => Promise<void>,
+  gen: (file: GenFile) => Promise<void>,
 ): Promise<GeneratedFile> {
-  const file = project.createSourceFile(path)
-  await gen(file)
+  const genFile = new GenFile()
+  await gen(genFile)
+  const file = genFile.toProjectSourceFile(project, path)
   await file.save() // Save in the "in memory" file system
-  const src = `${banner()}${file.getFullText()}`
-  const content = await format(src, PRETTIER_OPTS)
+  return formatFile(path, file.getFullText())
+}
 
+async function formatFile(path: string, text: string): Promise<GeneratedFile> {
+  const content = await format(`${banner()}${text}`, PRETTIER_OPTS)
   return { path, content }
 }
 

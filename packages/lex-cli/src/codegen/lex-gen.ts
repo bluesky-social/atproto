@@ -1,5 +1,10 @@
 import { relative as getRelativePath } from 'node:path/posix'
-import { type JSDoc, type SourceFile, VariableDeclarationKind } from 'ts-morph'
+import {
+  type JSDocStructure,
+  type OptionalKind,
+  type PropertySignatureStructure,
+  VariableDeclarationKind,
+} from 'ts-morph'
 import type {
   LexArray,
   LexBlob,
@@ -11,62 +16,52 @@ import type {
   LexToken,
   Lexicons,
 } from '@atproto/lexicon'
+import type { GenFile } from './common.js'
 import { toCamelCase, toScreamingSnakeCase, toTitleCase } from './util.js'
 
-interface Commentable {
-  addJsDoc: ({ description }: { description: string }) => JSDoc
-}
-export function genComment<T extends Commentable>(
-  commentable: T,
-  def: { description?: string },
-): T {
-  if (def.description) {
-    commentable.addJsDoc({ description: def.description })
-  }
-  return commentable
+function genDocs(def: {
+  description?: string
+}): OptionalKind<JSDocStructure>[] | undefined {
+  return def.description ? [{ description: def.description }] : undefined
 }
 
-export function genCommonImports(file: SourceFile, baseNsid: string) {
+export function genCommonImports(file: GenFile, baseNsid: string) {
   //= import {ValidationResult, BlobRef} from '@atproto/lexicon'
-  file
-    .addImportDeclaration({
-      moduleSpecifier: '@atproto/lexicon',
-    })
-    .addNamedImports([
+  file.addImportDeclaration({
+    moduleSpecifier: '@atproto/lexicon',
+    namedImports: [
       { name: 'ValidationResult', isTypeOnly: true },
       { name: 'BlobRef' },
-    ])
+    ],
+  })
 
   //= import {CID} from 'multiformats/cid'
-  file
-    .addImportDeclaration({
-      moduleSpecifier: 'multiformats/cid',
-    })
-    .addNamedImports([{ name: 'CID' }])
+  file.addImportDeclaration({
+    moduleSpecifier: 'multiformats/cid',
+    namedImports: [{ name: 'CID' }],
+  })
 
   //= import { validate as _validate } from '../../lexicons.ts'
-  file
-    .addImportDeclaration({
-      moduleSpecifier: `${baseNsid
-        .split('.')
-        .map((_str) => '..')
-        .join('/')}/lexicons.js`,
-    })
-    .addNamedImports([{ name: 'validate', alias: '_validate' }])
+  file.addImportDeclaration({
+    moduleSpecifier: `${baseNsid
+      .split('.')
+      .map((_str) => '..')
+      .join('/')}/lexicons.js`,
+    namedImports: [{ name: 'validate', alias: '_validate' }],
+  })
 
   //= import { type $Typed, is$typed as _is$typed, type OmitKey } from '../[...]/util.ts'
-  file
-    .addImportDeclaration({
-      moduleSpecifier: `${baseNsid
-        .split('.')
-        .map((_str) => '..')
-        .join('/')}/util.js`,
-    })
-    .addNamedImports([
+  file.addImportDeclaration({
+    moduleSpecifier: `${baseNsid
+      .split('.')
+      .map((_str) => '..')
+      .join('/')}/util.js`,
+    namedImports: [
       { name: '$Typed', isTypeOnly: true },
       { name: 'is$typed', alias: '_is$typed' },
       { name: 'OmitKey', isTypeOnly: true },
-    ])
+    ],
+  })
 
   // TypeScript adds protection against circular imports, which hurts bundle
   // size. Since we know that lexicon.ts and util.ts do not depend on the file
@@ -91,7 +86,7 @@ export function genCommonImports(file: SourceFile, baseNsid: string) {
 }
 
 export function genImports(
-  file: SourceFile,
+  file: GenFile,
   imports: Set<string>,
   baseNsid: string,
 ) {
@@ -112,7 +107,7 @@ export function genImports(
 }
 
 export function genUserType(
-  file: SourceFile,
+  file: GenFile,
   imports: Set<string>,
   lexicons: Lexicons,
   lexUri: string,
@@ -154,7 +149,7 @@ export function genUserType(
 }
 
 function genObject(
-  file: SourceFile,
+  file: GenFile,
   imports: Set<string>,
   lexUri: string,
   def: LexObject,
@@ -169,18 +164,14 @@ function genObject(
     typeProperty?: boolean | 'required'
   } = {},
 ) {
-  const iface = file.addInterface({
-    name: ifaceName,
-    isExported: true,
-  })
-  genComment(iface, def)
+  const properties: OptionalKind<PropertySignatureStructure>[] = []
 
   if (typeProperty) {
     const hash = getHash(lexUri)
     const baseNsid = stripScheme(stripHash(lexUri))
 
     //= $type?: <uri>
-    iface.addProperty({
+    properties.push({
       name: typeProperty === 'required' ? `$type` : `$type?`,
       type:
         // Not using $Type here because it is less readable than a plain string
@@ -210,7 +201,7 @@ function genObject(
         if (propDef.type === 'union' && !propDef.closed) {
           types.push('{ $type: string }')
         }
-        iface.addProperty({
+        properties.push({
           name: `${propKey}${req ? '' : '?'}`,
           type: makeType(types, { nullable: propNullable }),
         })
@@ -218,22 +209,19 @@ function genObject(
       } else {
         if (propDef.type === 'array') {
           //= propName: type[]
-          let propAst
+          let type: string
           if (propDef.items.type === 'ref') {
-            propAst = iface.addProperty({
-              name: `${propKey}${req ? '' : '?'}`,
-              type: makeType(
-                refToType(
-                  propDef.items.ref,
-                  stripScheme(stripHash(lexUri)),
-                  imports,
-                ),
-                {
-                  nullable: propNullable,
-                  array: true,
-                },
+            type = makeType(
+              refToType(
+                propDef.items.ref,
+                stripScheme(stripHash(lexUri)),
+                imports,
               ),
-            })
+              {
+                nullable: propNullable,
+                array: true,
+              },
+            )
           } else if (propDef.items.type === 'union') {
             const types = propDef.items.refs.map((ref) =>
               refToUnionType(ref, lexUri, imports),
@@ -241,69 +229,68 @@ function genObject(
             if (!propDef.items.closed) {
               types.push('{ $type: string }')
             }
-            propAst = iface.addProperty({
-              name: `${propKey}${req ? '' : '?'}`,
-              type: makeType(types, {
-                nullable: propNullable,
-                array: true,
-              }),
+            type = makeType(types, {
+              nullable: propNullable,
+              array: true,
             })
           } else {
-            propAst = iface.addProperty({
-              name: `${propKey}${req ? '' : '?'}`,
-              type: makeType(primitiveOrBlobToType(propDef.items), {
-                nullable: propNullable,
-                array: true,
-              }),
+            type = makeType(primitiveOrBlobToType(propDef.items), {
+              nullable: propNullable,
+              array: true,
             })
           }
-          genComment(propAst, propDef)
+          properties.push({
+            name: `${propKey}${req ? '' : '?'}`,
+            type,
+            docs: genDocs(propDef),
+          })
         } else {
           //= propName: type
-          genComment(
-            iface.addProperty({
-              name: `${propKey}${req ? '' : '?'}`,
-              type: makeType(primitiveOrBlobToType(propDef), {
-                nullable: propNullable,
-              }),
+          properties.push({
+            name: `${propKey}${req ? '' : '?'}`,
+            type: makeType(primitiveOrBlobToType(propDef), {
+              nullable: propNullable,
             }),
-            propDef,
-          )
+            docs: genDocs(propDef),
+          })
         }
       }
     }
 
     if (allowUnknownProperties) {
       //= [k: string]: unknown
-      iface.addIndexSignature({
-        keyName: 'k',
-        keyType: 'string',
-        returnType: 'unknown',
-      })
+      // @NOTE Not an index signature, as ts-morph prints those before the
+      // properties.
+      properties.push({ name: '[k: string]', type: 'unknown' })
     }
   }
+
+  file.addInterface({
+    name: ifaceName,
+    isExported: true,
+    docs: genDocs(def),
+    properties,
+  })
 }
 
-export function genToken(file: SourceFile, lexUri: string, def: LexToken) {
+export function genToken(file: GenFile, lexUri: string, def: LexToken) {
   //= /** <comment> */
   //= export const <TOKEN> = `${id}#<token>`
-  genComment(
-    file.addVariableStatement({
-      isExported: true,
-      declarationKind: VariableDeclarationKind.Const,
-      declarations: [
-        {
-          name: toScreamingSnakeCase(getHash(lexUri)),
-          initializer: `\`\${id}#${getHash(lexUri)}\``,
-        },
-      ],
-    }),
-    def,
-  )
+  file.addVariableStatement({
+    isExported: true,
+    declarationKind: VariableDeclarationKind.Const,
+    declarations: [
+      {
+        name: toScreamingSnakeCase(getHash(lexUri)),
+        initializer: `\`\${id}#${getHash(lexUri)}\``,
+      },
+    ],
+    docs: genDocs(def),
+  })
 }
 
 export function genArray(
-  file: SourceFile,
+  file: GenFile,
   imports: Set<string>,
   lexUri: string,
   def: LexArray,
@@ -331,34 +318,30 @@ export function genArray(
       isExported: true,
     })
   } else {
-    genComment(
-      file.addTypeAlias({
-        name: toTitleCase(getHash(lexUri)),
-        type: `${primitiveOrBlobToType(def.items)}[]`,
-        isExported: true,
-      }),
-      def,
-    )
+    file.addTypeAlias({
+      name: toTitleCase(getHash(lexUri)),
+      type: `${primitiveOrBlobToType(def.items)}[]`,
+      isExported: true,
+      docs: genDocs(def),
+    })
   }
 }
 
 export function genPrimitiveOrBlob(
-  file: SourceFile,
+  file: GenFile,
   lexUri: string,
   def: LexPrimitive | LexBlob | LexIpldType,
 ) {
-  genComment(
-    file.addTypeAlias({
-      name: toTitleCase(getHash(lexUri)),
-      type: primitiveOrBlobToType(def),
-      isExported: true,
-    }),
-    def,
-  )
+  file.addTypeAlias({
+    name: toTitleCase(getHash(lexUri)),
+    type: primitiveOrBlobToType(def),
+    isExported: true,
+    docs: genDocs(def),
+  })
 }
 
 export function genXrpcParams(
-  file: SourceFile,
+  file: GenFile,
   lexicons: Lexicons,
   lexUri: string,
   defaultsArePresent = true,
@@ -383,11 +366,10 @@ export function genXrpcParams(
 
   //= export type QueryParams = {...}
   if (def.parameters) {
-    genComment(
-      file.addTypeAlias({
-        name: 'QueryParams',
-        isExported: true,
-        type: `{
+    file.addTypeAlias({
+      name: 'QueryParams',
+      isExported: true,
+      type: `{
           ${Object.entries(def.parameters.properties)
             .map(([paramKey, paramDef]) => {
               const req =
@@ -406,9 +388,8 @@ export function genXrpcParams(
             })
             .join('\n')}
         }`,
-      }),
-      def.parameters,
-    )
+      docs: genDocs(def.parameters),
+    })
   } else {
     file.addTypeAlias({
       name: 'QueryParams',
@@ -419,7 +400,7 @@ export function genXrpcParams(
 }
 
 export function genXrpcInput(
-  file: SourceFile,
+  file: GenFile,
   imports: Set<string>,
   lexicons: Lexicons,
   lexUri: string,
@@ -476,7 +457,7 @@ export function genXrpcInput(
 }
 
 export function genXrpcOutput(
-  file: SourceFile,
+  file: GenFile,
   imports: Set<string>,
   lexicons: Lexicons,
   lexUri: string,
@@ -515,7 +496,7 @@ export function genXrpcOutput(
 }
 
 export function genRecord(
-  file: SourceFile,
+  file: GenFile,
   imports: Set<string>,
   lexicons: Lexicons,
   lexUri: string,
@@ -562,7 +543,7 @@ export function genRecord(
 }
 
 function genObjHelpers(
-  file: SourceFile,
+  file: GenFile,
   lexUri: string,
   ifaceName: string,
   {
@@ -584,28 +565,26 @@ function genObjHelpers(
   const isX = toCamelCase(`is-${ifaceName}`)
 
   //= export function is{X}<V>(v: V) {...}
-  file
-    .addFunction({
-      name: isX,
-      typeParameters: [{ name: `V` }],
-      parameters: [{ name: `v`, type: `V` }],
-      isExported: true,
-    })
-    .setBodyText(`return is$typed(v, id, ${hashVar})`)
+  file.addFunction({
+    name: isX,
+    typeParameters: [{ name: `V` }],
+    parameters: [{ name: `v`, type: `V` }],
+    isExported: true,
+    statements: [`return is$typed(v, id, ${hashVar})`],
+  })
 
   const validateX = toCamelCase(`validate-${ifaceName}`)
 
   //= export function validate{X}(v: unknown) {...}
-  file
-    .addFunction({
-      name: validateX,
-      typeParameters: [{ name: `V` }],
-      parameters: [{ name: `v`, type: `V` }],
-      isExported: true,
-    })
-    .setBodyText(
+  file.addFunction({
+    name: validateX,
+    typeParameters: [{ name: `V` }],
+    parameters: [{ name: `v`, type: `V` }],
+    isExported: true,
+    statements: [
       `return validate<${ifaceName} & V>(v, id, ${hashVar}${requireTypeProperty ? ', true' : ''})`,
-    )
+    ],
+  })
 }
 
 export function stripScheme(uri: string): string {
