@@ -81,7 +81,7 @@ try {
 
 ## Reconnects
 
-By default a dropped connection is retried with jittered exponential backoff, capped by `maxReconnectSeconds` (default `64`), and the backoff resets to its base after each connection that opens.
+By default a dropped connection is retried with exponential backoff (1s, 2s, 4s, …), capped by `maxReconnectSeconds` (default `64`), each delay jittered down to half of itself so that clients dropped together don't all come back at once — even once capped. The backoff starts over after a connection that stayed up for `stableAfterMs` (default `5000`). A connection that fails sooner, such as a server that accepts the upgrade and then sends an error or closes, or a message the consumer rejects with `throw()`, counts as one more consecutive failure, so such an endpoint is retried ever more slowly rather than every second. `stableAfterMs: 0` starts the backoff over after any connection that opens.
 
 - `url` may be a function: `() => string | URL | Promise<string | URL>`. It's re-invoked on every attempt, including reconnects — the idiom for resuming a stream at a cursor (see the firehose example below). A throw (or rejection) fails that attempt, and is classified by `shouldReconnect` like any connection failure.
 - `shouldReconnect` controls whether a failure is retried:

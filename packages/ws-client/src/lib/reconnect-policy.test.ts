@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { CloseCode } from './close-codes.js'
 import { CloseError, SocketError, WebSocketClientError } from './errors.js'
 import { backoffMs, defaultShouldReconnect } from './reconnect-policy.js'
@@ -28,14 +28,30 @@ describe(defaultShouldReconnect, () => {
 })
 
 describe(backoffMs, () => {
-  it('escalates roughly exponentially from ~1s', () => {
-    expect(backoffMs(0, 64_000)).toBeGreaterThan(400)
-    expect(backoffMs(0, 64_000)).toBeLessThan(1600)
-    expect(backoffMs(3, 64_000)).toBeGreaterThan(7000)
-    expect(backoffMs(3, 64_000)).toBeLessThan(9000)
+  it('escalates exponentially from 1s, jittered down to half', () => {
+    for (let i = 0; i < 100; i++) {
+      expect(backoffMs(0, 64_000)).toBeGreaterThanOrEqual(500)
+      expect(backoffMs(0, 64_000)).toBeLessThan(1000)
+      expect(backoffMs(3, 64_000)).toBeGreaterThanOrEqual(4000)
+      expect(backoffMs(3, 64_000)).toBeLessThan(8000)
+    }
   })
 
-  it('caps at maxMs', () => {
-    expect(backoffMs(20, 5000)).toBe(5000)
+  it('never exceeds maxMs', () => {
+    for (let i = 0; i < 100; i++) {
+      expect(backoffMs(20, 5000)).toBeGreaterThanOrEqual(2500)
+      expect(backoffMs(20, 5000)).toBeLessThanOrEqual(5000)
+    }
+    // Even once 2 ** attempt overflows
+    expect(backoffMs(2000, 5000)).toBeLessThanOrEqual(5000)
+  })
+
+  it('keeps jittering once capped', () => {
+    using _random = vi
+      .spyOn(Math, 'random')
+      .mockReturnValueOnce(0)
+      .mockReturnValueOnce(0.5)
+    expect(backoffMs(20, 5000)).toBe(2500)
+    expect(backoffMs(20, 5000)).toBe(3750)
   })
 })
