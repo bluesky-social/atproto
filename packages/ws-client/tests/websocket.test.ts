@@ -625,7 +625,7 @@ describe(createWebSocket, () => {
 
   describe('backoff', () => {
     // The backoffs before each of two reconnects: the second follows a
-    // connection that opened, then failed. Each is drawn at 3/4 of its cap
+    // connection that opened, then failed. Each is drawn at 125% of its base
     // (1s, then 2s unless the backoff started over).
     async function backoffs(options: WebSocketOptions<'auto'> = {}) {
       using _random = vi.spyOn(Math, 'random').mockReturnValue(0.75)
@@ -655,7 +655,7 @@ describe(createWebSocket, () => {
 
     it('escalates across connections that fail before stableAfterMs', async () => {
       // A scripted connection fails as soon as its messages are read.
-      expect(await backoffs()).toEqual([750, 1500])
+      expect(await backoffs()).toEqual([1250, 2500])
     })
 
     it('starts over after a connection that stayed up for stableAfterMs', async () => {
@@ -664,11 +664,11 @@ describe(createWebSocket, () => {
         .spyOn(performance, 'now')
         .mockImplementation(() => (now += 5000))
       // Both first-attempt-sized: the second connection was up for 5s.
-      expect(await backoffs()).toEqual([750, 750])
+      expect(await backoffs()).toEqual([1250, 1250])
     })
 
     it('starts over after any connection that opens with a stableAfterMs of 0', async () => {
-      expect(await backoffs({ stableAfterMs: 0 })).toEqual([750, 750])
+      expect(await backoffs({ stableAfterMs: 0 })).toEqual([1250, 1250])
     })
   })
 })

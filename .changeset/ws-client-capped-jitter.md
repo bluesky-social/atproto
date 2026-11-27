@@ -1,5 +1,6 @@
 ---
 '@atproto/ws-client': patch
+'@atproto/sync': patch
 ---
 
-Use "full jitter" for the reconnect backoff: each delay is now drawn at random below its exponential base (`2^attempt` seconds), capped at `maxReconnectSeconds`, rather than within ±0.5s of that base and then capped. Clients dropped together now keep spreading out once capped, instead of all retrying every `maxReconnectSeconds`, and spread over the whole first second when they reconnect after a server shuts down.
+Jitter the reconnect backoff by ±50% around its exponential base (`2^attempt` seconds), after capping that base at `maxReconnectSeconds`, rather than by ±0.5s and then capping the delay. Clients dropped together now keep spreading out once capped, instead of all retrying every `maxReconnectSeconds`. A capped delay is now between 0.5 and 1.5 times `maxReconnectSeconds`.

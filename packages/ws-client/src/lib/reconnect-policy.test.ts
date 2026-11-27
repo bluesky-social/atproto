@@ -28,23 +28,25 @@ describe(defaultShouldReconnect, () => {
 })
 
 describe(backoffMs, () => {
-  it('escalates exponentially from 1s, with full jitter', () => {
+  it('escalates exponentially from 1s, jittered by ±50%', () => {
     for (let i = 0; i < 100; i++) {
-      expect(backoffMs(0, 64_000)).toBeGreaterThanOrEqual(0)
-      expect(backoffMs(0, 64_000)).toBeLessThan(1000)
-      expect(backoffMs(3, 64_000)).toBeLessThan(8000)
+      expect(backoffMs(0, 64_000)).toBeGreaterThanOrEqual(500)
+      expect(backoffMs(0, 64_000)).toBeLessThan(1500)
+      expect(backoffMs(3, 64_000)).toBeGreaterThanOrEqual(4000)
+      expect(backoffMs(3, 64_000)).toBeLessThan(12_000)
     }
     using _random = vi.spyOn(Math, 'random').mockReturnValue(0.5)
-    expect(backoffMs(0, 64_000)).toBe(500)
-    expect(backoffMs(3, 64_000)).toBe(4000)
+    expect(backoffMs(0, 64_000)).toBe(1000)
+    expect(backoffMs(3, 64_000)).toBe(8000)
   })
 
-  it('never exceeds maxMs', () => {
+  it('caps the base at maxMs', () => {
     for (let i = 0; i < 100; i++) {
-      expect(backoffMs(20, 5000)).toBeLessThan(5000)
+      expect(backoffMs(20, 5000)).toBeGreaterThanOrEqual(2500)
+      expect(backoffMs(20, 5000)).toBeLessThan(7500)
     }
     // Even once 2 ** attempt overflows
-    expect(backoffMs(2000, 5000)).toBeLessThan(5000)
+    expect(backoffMs(2000, 5000)).toBeLessThan(7500)
   })
 
   it('keeps jittering once capped', () => {
@@ -52,7 +54,7 @@ describe(backoffMs, () => {
       .spyOn(Math, 'random')
       .mockReturnValueOnce(0.25)
       .mockReturnValueOnce(0.75)
-    expect(backoffMs(20, 5000)).toBe(1250)
     expect(backoffMs(20, 5000)).toBe(3750)
+    expect(backoffMs(20, 5000)).toBe(6250)
   })
 })

@@ -37,15 +37,18 @@ type ConnectionOptions<M extends DataMode> = Partial<
 export interface WebSocketOptions<
   M extends DataMode,
 > extends ConnectionOptions<M> {
-  /** Exponential-backoff ceiling in seconds. Default 64. */
+  /**
+   * Ceiling of the exponential backoff's base, in seconds. Default 64. Each
+   * delay is jittered by ±50% around its base, so a capped one is up to 1.5
+   * times this.
+   */
   maxReconnectSeconds?: number
   /**
    * How long a connection must stay up for the backoff to start over, in
    * milliseconds. Default 5000. A connection that opens and then fails sooner
    * (an error frame or a close right after the upgrade, a message the consumer
    * rejects) counts as one more failure, so an endpoint that accepts and then
-   * drops every connection is retried ever more slowly rather than within a
-   * second each time.
+   * drops every connection is retried ever more slowly rather than every ~1s.
    * `0` restarts the backoff after any connection that opens.
    */
   stableAfterMs?: number
@@ -293,7 +296,7 @@ export async function* websocketFactory<M extends DataMode = 'auto'>(
         // the top of the loop, because the other three exits (a fatal error
         // rethrowing, a non-reconnectable clean close returning, a consumer
         // `break` resuming at the `yield*`) must not be delayed by it.
-        // Post-increment so the first reconnect waits up to 1s (2^0) and each
+        // Post-increment so the first reconnect waits ~1s (2^0) and each
         // consecutive failure escalates; a stable connection resets to 0.
         await sleep(backoffMs(retries++, maxMs), signal)
         // Loop: the check at the top catches an abort that landed during the
