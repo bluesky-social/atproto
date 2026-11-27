@@ -39,16 +39,20 @@ const RESOURCE_DETECTORS = new Map<string, ResourceDetector[]>([
  */
 export function getResourceDetectors(): ResourceDetector[] {
   const names = getStringListFromEnv('OTEL_NODE_RESOURCE_DETECTORS') ?? ['all']
-  if (names.includes('all')) return [...RESOURCE_DETECTORS.values()].flat()
-  if (names.includes('none')) return []
 
-  return names.flatMap((name) => {
-    const detectors = RESOURCE_DETECTORS.get(name)
-    if (!detectors) {
+  // @NOTE Checked before handling "all" and "none", so that unsupported names
+  // listed alongside them are reported too.
+  for (const name of names) {
+    if (name === 'all' || name === 'none') continue
+    if (!RESOURCE_DETECTORS.has(name)) {
       diag.warn(
         `Unsupported resource detector "${name}" specified in the environment variable OTEL_NODE_RESOURCE_DETECTORS`,
       )
     }
-    return detectors ?? []
-  })
+  }
+
+  if (names.includes('all')) return [...RESOURCE_DETECTORS.values()].flat()
+  if (names.includes('none')) return []
+
+  return names.flatMap((name) => RESOURCE_DETECTORS.get(name) ?? [])
 }

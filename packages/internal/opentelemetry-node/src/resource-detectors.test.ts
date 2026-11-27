@@ -59,4 +59,17 @@ describe(getResourceDetectors, () => {
     ])
     expect(warn).toHaveBeenCalledTimes(2)
   })
+
+  test.each([
+    { value: 'gcp,all', expected: all },
+    { value: 'gcp,none', expected: [] },
+  ])(
+    'warns about cloud provider detectors in "$value"',
+    ({ value, expected }) => {
+      using warn = vi.spyOn(diag, 'warn').mockImplementation(() => {})
+      vi.stubEnv('OTEL_NODE_RESOURCE_DETECTORS', value)
+      expect(getResourceDetectors()).toEqual(expected)
+      expect(warn).toHaveBeenCalledOnce()
+    },
+  )
 })
