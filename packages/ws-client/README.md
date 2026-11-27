@@ -81,13 +81,13 @@ try {
 
 ## Reconnects
 
-By default a dropped connection is retried with exponential backoff (1s, 2s, 4s, …), its base capped by `maxReconnectSeconds` (default `64`). Each delay is jittered by ±50% around its base, so that clients dropped together don't all come back at once — even once capped, where a delay is up to 1.5 times `maxReconnectSeconds`. The backoff starts over after a connection that stayed up for `stableAfterMs` (default `5000`). A connection that fails sooner, such as a server that accepts the upgrade and then sends an error or closes, or a message the consumer rejects with `throw()`, counts as one more consecutive failure, so such an endpoint is retried ever more slowly rather than every second or so. `stableAfterMs: 0` starts the backoff over after any connection that opens.
+By default a dropped connection is retried with exponential backoff (1s, 2s, 4s, …), its base capped by `maxReconnectSeconds` (default `64`). Each delay is jittered by ±50% around its base, so that clients dropped together don't all come back at once — even once capped, where a delay is up to 1.5 times `maxReconnectSeconds`. The backoff starts over after a connection that stayed up for `stableAfterMs` (default `5000`), or that the server ended with a normal close (`1000`, only reconnected under a custom `shouldReconnect`). A connection that fails sooner, such as a server that accepts the upgrade and then sends an error or closes, or a message the consumer rejects with `throw()`, counts as one more consecutive failure, so such an endpoint is retried ever more slowly rather than every second or so. `stableAfterMs: 0` starts the backoff over after any connection that opens.
 
 - `url` may be a function: `() => string | URL | Promise<string | URL>`. It's re-invoked on every attempt, including reconnects — the idiom for resuming a stream at a cursor (see the firehose example below). A throw (or rejection) fails that attempt, and is classified by `shouldReconnect` like any connection failure.
 - `shouldReconnect` controls whether a failure is retried:
   - `true` (default) — the built-in policy: each typed error self-classifies, and close codes are classified per RFC 6455.
   - `false` — never reconnect; the first end is terminal.
-  - `(error, attempt) => boolean` — replaces the default classification.
+  - `(error, attempt) => boolean` — replaces the default classification. `attempt` counts consecutive failures since the backoff last started over, a connection that opened and then failed within `stableAfterMs` included.
 
 ```ts
 websocket(url, {
