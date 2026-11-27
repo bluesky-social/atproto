@@ -1,4 +1,9 @@
 import { once } from 'node:events'
+import {
+  type IncomingMessage,
+  type ServerResponse,
+  request as httpRequest,
+} from 'node:http'
 import type { AddressInfo } from 'node:net'
 import { scheduler } from 'node:timers/promises'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
@@ -273,5 +278,58 @@ describe('terminate()', () => {
     await terminated
 
     expect((await close)[0]).toBe(1001)
+  })
+})
+
+describe('res.statusCode', () => {
+  // @NOTE HTTP server metrics read the status once the response closes
+  function statusOnClose(server: Server): Promise<number> {
+    return new Promise((resolve) => {
+      server.once('request', (_req: IncomingMessage, res: ServerResponse) => {
+        res.once('close', () => resolve(res.statusCode))
+      })
+    })
+  }
+
+  it('is 101 for an upgraded WebSocket', async () => {
+    await using server = await serve(
+      async (request) => upgradeWebSocket(request).response,
+    )
+    const status = statusOnClose(server)
+
+    const ws = new WebSocket(urlOf(server).replace(/^http/, 'ws'))
+    await once(ws, 'open')
+    ws.close()
+
+    expect(await status).toBe(101)
+  })
+
+  it('is not 101 when the WebSocket handshake is rejected', async () => {
+    await using server = await serve(
+      async (request) => upgradeWebSocket(request).response,
+    )
+    const status = statusOnClose(server)
+
+    // @NOTE Without a Sec-WebSocket-Key, ws answers 400 on the socket itself
+    const req = httpRequest(urlOf(server), {
+      headers: { Connection: 'Upgrade', Upgrade: 'websocket' },
+    }).end()
+    const [res] = (await once(req, 'response')) as [IncomingMessage]
+    res.resume()
+
+    expect(res.statusCode).toBe(400)
+    expect(await status).not.toBe(101)
+  })
+
+  it('is the response status for a regular request', async () => {
+    await using server = await serve(
+      async () => new Response('Not Found', { status: 404 }),
+    )
+    const status = statusOnClose(server)
+
+    const res = await fetch(urlOf(server))
+    await res.text()
+
+    expect(await status).toBe(404)
   })
 })

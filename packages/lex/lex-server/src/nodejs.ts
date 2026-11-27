@@ -127,6 +127,7 @@ export type WebSocketOptions = {
 
 function handleWebSocketUpgrade(
   req: IncomingMessage,
+  res: ServerResponse,
   response: Response,
   options?: WebSocketOptions,
 ): void {
@@ -155,6 +156,9 @@ function handleWebSocketUpgrade(
   })
 
   wss.handleUpgrade(req, req.socket, Buffer.alloc(0), () => {
+    // @NOTE ws writes the 101 response straight to the socket. Reflect it on
+    // res, whose statusCode HTTP server metrics read once it closes.
+    res.statusCode = 101
     req.emit(kUpgradeEvent, ws)
   })
 }
@@ -199,7 +203,7 @@ export async function sendResponse(
   }
 
   if (response.status === 101) {
-    return handleWebSocketUpgrade(req, response, options)
+    return handleWebSocketUpgrade(req, res, response, options)
   }
 
   res.statusCode = response.status
