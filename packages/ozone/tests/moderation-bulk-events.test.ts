@@ -11,7 +11,7 @@ import {
 } from '@atproto/dev-env'
 import { app, chat, com, tools } from '../src/lexicons/index.js'
 import { ProtectedTagSettingKey } from '../src/setting/constants.js'
-import { reportForEvent } from './_inbox.js'
+import { createReports, pooled } from './_inbox.js'
 
 describe('bulk moderation events', () => {
   let network: TestNetwork
@@ -511,7 +511,8 @@ describe('bulk moderation events', () => {
   })
 
   let fixtureNumber = 0
-  async function fixture() {
+  const fixture = pooled(createFixture, () => network.processAll())
+  async function createFixture() {
     const name = `bulkfixture${++fixtureNumber}`
     const { did } = await sc.createAccount(name, {
       handle: `${name}.test`,
@@ -525,7 +526,6 @@ describe('bulk moderation events', () => {
     const records = posts.map(({ ref }) =>
       com.atproto.repo.strongRef.$build({ uri: ref.uriStr, cid: ref.cidStr }),
     )
-    await network.processAll()
     return {
       did,
       account: com.atproto.admin.defs.repoRef.$build({ did }),
@@ -542,20 +542,26 @@ describe('bulk moderation events', () => {
     }
   }
 
-  type Fixture = Awaited<ReturnType<typeof fixture>>
+  type Fixture = Awaited<ReturnType<typeof createFixture>>
   type Subject =
     Fixture['account' | 'message' | 'conversation'] | Fixture['records'][number]
-  async function report(
-    subject: Subject,
-    reasonType: string = com.atproto.moderation.defs.ReasonSpam,
+  /** File reports from bob in order; subjects without a reason are spam. */
+  async function reports(
+    inputs: (Subject | { subject: Subject; reasonType: string })[],
   ) {
-    const event = await sc.createReport({
-      subject,
-      reasonType,
-      reportedBy: sc.dids.bob,
-    })
-    await network.processAll()
-    return reportForEvent(modClient, event.id)
+    return createReports(
+      network,
+      sc,
+      inputs.map((input) => ({
+        reasonType: com.atproto.moderation.defs.ReasonSpam,
+        reportedBy: sc.dids.bob,
+        ...('subject' in input ? input : { subject: input }),
+      })),
+    )
+  }
+  async function report(subject: Subject) {
+    const [row] = await reports([subject])
+    return row
   }
   async function detail(id: number) {
     return (
@@ -574,16 +580,18 @@ describe('bulk moderation events', () => {
 
   it('targets different report IDs per entry and records notes and activity metadata', async () => {
     const fixtures = [await fixture(), await fixture()]
-    const reports = await Promise.all(fixtures.map((f) => report(f.account)))
-    const untouched = await Promise.all(
-      fixtures.map((f) => report(f.records[0])),
-    )
+    const created = await reports([
+      ...fixtures.map((f) => f.account),
+      ...fixtures.map((f) => f.records[0]),
+    ])
+    const targeted = created.slice(0, 2)
+    const untouched = created.slice(2)
     const result = await modClient.emitEvents({
       event: acknowledge(),
       subjects: fixtures.map((f, i) => ({
         subject: f.account,
         reportAction: {
-          ids: [reports[i].id],
+          ids: [targeted[i].id],
           note: `Review ${i}`,
           isAutomated: true,
         },
@@ -599,7 +607,7 @@ describe('bulk moderation events', () => {
     })
     expect(result.failedEvents).toEqual([])
     expect(result.events).toHaveLength(2)
-    for (const [i, row] of reports.entries()) {
+    for (const [i, row] of targeted.entries()) {
       const action = result.events[i]
       expect(await detail(row.id)).toMatchObject({
         status: 'closed',
@@ -636,16 +644,15 @@ describe('bulk moderation events', () => {
     async (mode) => {
       const f = await fixture()
       const subjects = [f.account, ...f.records, f.message, f.conversation]
-      const reports = [] as Awaited<ReturnType<typeof report>>[]
-      for (const [i, subject] of subjects.entries())
-        reports.push(
-          await report(
-            subject,
+      const created = await reports(
+        subjects.map((subject, i) => ({
+          subject,
+          reasonType:
             i === 2
               ? com.atproto.moderation.defs.ReasonMisleading
               : com.atproto.moderation.defs.ReasonSpam,
-          ),
-        )
+        })),
+      )
       const targeting: tools.ozone.moderation.emitEvent.ReportAction =
         mode === 'allOwned'
           ? { allOwned: true }
@@ -672,7 +679,7 @@ describe('bulk moderation events', () => {
             : mode === 'all'
               ? [0]
               : [0, 1]
-      for (const [i, row] of reports.entries()) {
+      for (const [i, row] of created.entries()) {
         const current = await detail(row.id)
         expect(current.status).toBe(selected.includes(i) ? 'closed' : 'open')
         if (selected.includes(i))
@@ -684,8 +691,7 @@ describe('bulk moderation events', () => {
   it('rolls back a failed entry without changing its reports or losing successful entries', async () => {
     const first = await fixture()
     const second = await fixture()
-    const a = await report(first.account)
-    const b = await report(second.account)
+    const [a, b] = await reports([first.account, second.account])
     const before = (
       await modClient.queryEvents({ subject: first.did })
     ).events.map((e) => e.id)
@@ -768,9 +774,7 @@ describe('bulk moderation events', () => {
       { ...f.message, convoId: 'other-convo' },
       { ...f.message, messageId: 'other-message' },
     ]
-    const reports = [] as Awaited<ReturnType<typeof report>>[]
-    for (const subject of [...messages, f.conversation])
-      reports.push(await report(subject))
+    const created = await reports([...messages, f.conversation])
     const result = await modClient.emitEvents({
       event: acknowledge(),
       subjects: messages
@@ -779,7 +783,7 @@ describe('bulk moderation events', () => {
     })
     expect(result.events).toHaveLength(2)
     expect(result.failedEvents).toEqual([])
-    for (const [i, row] of reports.entries())
+    for (const [i, row] of created.entries())
       expect((await detail(row.id)).status).toBe(i < 2 ? 'closed' : 'open')
     await expect(
       modClient.emitEvents({
@@ -826,11 +830,7 @@ describe('bulk moderation events', () => {
 
   it('links account-wide acknowledge cascades to owned reports', async () => {
     const f = await fixture()
-    const reports = [
-      await report(f.records[0]),
-      await report(f.message),
-      await report(f.conversation),
-    ]
+    const created = await reports([f.records[0], f.message, f.conversation])
     const result = await modClient.emitEvents({
       event: tools.ozone.moderation.defs.modEventAcknowledge.$build({
         acknowledgeAccountSubjects: true,
@@ -839,7 +839,7 @@ describe('bulk moderation events', () => {
       modTool: { name: 'example-cascade' },
     })
     expect(result.failedEvents).toEqual([])
-    for (const row of reports)
+    for (const row of created)
       expect(await detail(row.id)).toMatchObject({
         status: 'closed',
         actionEventIds: [result.events[0].id],
