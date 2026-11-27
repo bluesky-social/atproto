@@ -92,7 +92,7 @@ Each service package (`pds`, `ozone`, `bsky`, etc.) should define its own **opti
   - `OTEL_<SIGNAL>_EXPORTER=none` disables a signal, even when other exporter names or a signal endpoint are also configured.
   - `OTEL_SDK_DISABLED` remains a kill switch, per spec.
   - A signal the operator did not opt into exports **nothing** — it does not let `NodeSDK` fall back to its default OTLP pipeline on `http://localhost:4318`.
-- Uses `@opentelemetry/auto-instrumentations-node`'s `getResourceDetectors` for resource detection (honours `OTEL_NODE_RESOURCE_DETECTORS` and `OTEL_RESOURCE_ATTRIBUTES`, and includes the `container` detector), and sets default resource attributes (service name, version, `atproto` namespace, and deployment environment) that the service may extend or override through the `defaultResourceAttributes` option.
+- Detects resources with `@opentelemetry/sdk-node`'s local detectors plus the `container` one (honours `OTEL_NODE_RESOURCE_DETECTORS` and `OTEL_RESOURCE_ATTRIBUTES`). It never probes cloud provider metadata endpoints, so it doesn't depend on `@opentelemetry/auto-instrumentations-node`. It also sets default resource attributes (service name, version, `atproto` namespace, and deployment environment) that the service may extend or override through the `defaultResourceAttributes` option.
 - Shuts down gracefully: listens for the process `beforeExit` event and calls `sdk.shutdown()` to flush pending telemetry. This works because services exit by emptying the event loop (below).
 
 `setup()` already installs the instrumentations shared by every atproto service: the Node runtime, HTTP, Express, Undici and Pino instrumentations. These bring:
