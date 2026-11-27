@@ -1056,7 +1056,7 @@ export class LexRouter {
           headers: { 'cache-control': 'max-age=5' },
         })
       } catch (cause) {
-        if (isAbortReason(request.signal, cause)) {
+        if (isCausedBySignal(cause, request.signal)) {
           return Response.json({ error: 'RequestAborted' }, { status: 499 })
         }
 
