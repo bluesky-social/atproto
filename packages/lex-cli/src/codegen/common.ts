@@ -279,46 +279,96 @@ export const lexiconsTs = (project: Project, lexicons: LexiconDoc[]) =>
  *
  * ts-morph re-parses the whole file after every manipulation, which makes
  * building a file node by node quadratic in its size. Generators instead
- * describe each statement in full, and {@link gen} inserts them in as few
- * manipulations as possible. The `add*` methods mirror the {@link SourceFile}
- * ones, including the insertion of imports after the last import.
+ * describe each statement in full, and {@link GenFile.toProjectSourceFile}
+ * inserts them in as few manipulations as possible. The `add*` methods mirror
+ * the {@link SourceFile} ones, including the insertion of imports after the
+ * last import.
  */
 export class GenFile {
-  readonly imports: ImportDeclarationStructure[] = []
-  readonly statements: StatementStructures[] = []
+  readonly #imports: ImportDeclarationStructure[] = []
+  readonly #statements: StatementStructures[] = []
 
   addImportDeclaration(structure: OptionalKind<ImportDeclarationStructure>) {
-    this.imports.push({ ...structure, kind: StructureKind.ImportDeclaration })
+    this.#imports.push({ ...structure, kind: StructureKind.ImportDeclaration })
   }
 
   addExportDeclaration(structure: OptionalKind<ExportDeclarationStructure>) {
-    this.statements.push({
+    this.#statements.push({
       ...structure,
       kind: StructureKind.ExportDeclaration,
     })
   }
 
   addClass(structure: OptionalKind<ClassDeclarationStructure>) {
-    this.statements.push({ ...structure, kind: StructureKind.Class })
+    this.#statements.push({ ...structure, kind: StructureKind.Class })
   }
 
   addInterface(structure: OptionalKind<InterfaceDeclarationStructure>) {
-    this.statements.push({ ...structure, kind: StructureKind.Interface })
+    this.#statements.push({ ...structure, kind: StructureKind.Interface })
   }
 
   addTypeAlias(structure: OptionalKind<TypeAliasDeclarationStructure>) {
-    this.statements.push({ ...structure, kind: StructureKind.TypeAlias })
+    this.#statements.push({ ...structure, kind: StructureKind.TypeAlias })
   }
 
   addVariableStatement(structure: OptionalKind<VariableStatementStructure>) {
-    this.statements.push({
+    this.#statements.push({
       ...structure,
       kind: StructureKind.VariableStatement,
     })
   }
 
   addFunction(structure: OptionalKind<FunctionDeclarationStructure>) {
-    this.statements.push({ ...structure, kind: StructureKind.Function })
+    this.#statements.push({ ...structure, kind: StructureKind.Function })
+  }
+
+  toProjectSourceFile(project: Project, path: string): SourceFile {
+    const file = project.createSourceFile(path)
+    GenFile.#insertStatements(file, [...this.#imports, ...this.#statements])
+    return file
+  }
+
+  /**
+   * Inserts each run of consecutive statements of the same kind in a single
+   * manipulation. ts-morph separates the statements of a run the same way as
+   * when they are added one by one, so the resulting text is identical.
+   */
+  static #insertStatements(
+    file: SourceFile,
+    statements: StatementStructures[],
+  ) {
+    for (let start = 0; start < statements.length;) {
+      const { kind } = statements[start]
+      let end = start + 1
+      while (end < statements.length && statements[end].kind === kind) end++
+      const run = statements.slice(start, end)
+      switch (kind) {
+        case StructureKind.ImportDeclaration:
+          file.addImportDeclarations(run as ImportDeclarationStructure[])
+          break
+        case StructureKind.ExportDeclaration:
+          file.addExportDeclarations(run as ExportDeclarationStructure[])
+          break
+        case StructureKind.Class:
+          file.addClasses(run as ClassDeclarationStructure[])
+          break
+        case StructureKind.Interface:
+          file.addInterfaces(run as InterfaceDeclarationStructure[])
+          break
+        case StructureKind.TypeAlias:
+          file.addTypeAliases(run as TypeAliasDeclarationStructure[])
+          break
+        case StructureKind.VariableStatement:
+          file.addVariableStatements(run as VariableStatementStructure[])
+          break
+        case StructureKind.Function:
+          file.addFunctions(run as FunctionDeclarationStructure[])
+          break
+        default:
+          throw new Error(`Unsupported statement kind: ${StructureKind[kind]}`)
+      }
+      start = end
+    }
   }
 }
 
@@ -329,50 +379,9 @@ export async function gen(
 ): Promise<GeneratedFile> {
   const genFile = new GenFile()
   await gen(genFile)
-  const file = project.createSourceFile(path)
-  insertStatements(file, [...genFile.imports, ...genFile.statements])
+  const file = genFile.toProjectSourceFile(project, path)
   await file.save() // Save in the "in memory" file system
   return formatFile(path, file.getFullText())
-}
-
-/**
- * Inserts each run of consecutive statements of the same kind in a single
- * manipulation. ts-morph separates the statements of a run the same way as
- * when they are added one by one, so the resulting text is identical.
- */
-function insertStatements(file: SourceFile, statements: StatementStructures[]) {
-  for (let start = 0; start < statements.length;) {
-    const { kind } = statements[start]
-    let end = start + 1
-    while (end < statements.length && statements[end].kind === kind) end++
-    const run = statements.slice(start, end)
-    switch (kind) {
-      case StructureKind.ImportDeclaration:
-        file.addImportDeclarations(run as ImportDeclarationStructure[])
-        break
-      case StructureKind.ExportDeclaration:
-        file.addExportDeclarations(run as ExportDeclarationStructure[])
-        break
-      case StructureKind.Class:
-        file.addClasses(run as ClassDeclarationStructure[])
-        break
-      case StructureKind.Interface:
-        file.addInterfaces(run as InterfaceDeclarationStructure[])
-        break
-      case StructureKind.TypeAlias:
-        file.addTypeAliases(run as TypeAliasDeclarationStructure[])
-        break
-      case StructureKind.VariableStatement:
-        file.addVariableStatements(run as VariableStatementStructure[])
-        break
-      case StructureKind.Function:
-        file.addFunctions(run as FunctionDeclarationStructure[])
-        break
-      default:
-        throw new Error(`Unsupported statement kind: ${StructureKind[kind]}`)
-    }
-    start = end
-  }
 }
 
 async function formatFile(path: string, text: string): Promise<GeneratedFile> {
