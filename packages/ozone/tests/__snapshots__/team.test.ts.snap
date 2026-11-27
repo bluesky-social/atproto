@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`team management addMember only allows admins to add member 1`] = `
+exports[`team management > addMember > only allows admins to add member 1`] = `
 {
   "createdAt": "1970-01-01T00:00:00.000Z",
   "did": "user(0)",
@@ -11,7 +11,7 @@ exports[`team management addMember only allows admins to add member 1`] = `
 }
 `;
 
-exports[`team management listMembers allows all members to list all members 1`] = `
+exports[`team management > listMembers > allows all members to list all members 1`] = `
 [
   {
     "createdAt": "1970-01-01T00:00:00.000Z",
@@ -200,7 +200,7 @@ exports[`team management listMembers allows all members to list all members 1`] 
 ]
 `;
 
-exports[`team management listMembers allows all members to list all members 2`] = `
+exports[`team management > listMembers > allows all members to list all members 2`] = `
 [
   {
     "createdAt": "1970-01-01T00:00:00.000Z",

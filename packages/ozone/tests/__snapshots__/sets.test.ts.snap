@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`ozone-sets querySets returns all sets when no parameters are provided 1`] = `
+exports[`ozone-sets > querySets > returns all sets when no parameters are provided 1`] = `
 [
   {
     "createdAt": "1970-01-01T00:00:00.000Z",
@@ -25,7 +25,7 @@ exports[`ozone-sets querySets returns all sets when no parameters are provided 1
 ]
 `;
 
-exports[`ozone-sets upsertSet creates a new set 1`] = `
+exports[`ozone-sets > upsertSet > creates a new set 1`] = `
 {
   "createdAt": "1970-01-01T00:00:00.000Z",
   "description": "A new test set",
@@ -35,7 +35,7 @@ exports[`ozone-sets upsertSet creates a new set 1`] = `
 }
 `;
 
-exports[`ozone-sets upsertSet updates an existing set 1`] = `
+exports[`ozone-sets > upsertSet > updates an existing set 1`] = `
 {
   "createdAt": "1970-01-01T00:00:00.000Z",
   "description": "Updated description",

@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`blob divert sends blobs to configured divert service and marks divert date 1`] = `
+exports[`blob divert > sends blobs to configured divert service and marks divert date 1`] = `
 {
   "createdAt": "1970-01-01T00:00:00.000Z",
   "createdBy": "user(0)",
@@ -21,7 +21,7 @@ exports[`blob divert sends blobs to configured divert service and marks divert d
 }
 `;
 
-exports[`blob divert sends blobs to configured divert service and marks divert date 2`] = `
+exports[`blob divert > sends blobs to configured divert service and marks divert date 2`] = `
 {
   "createdAt": "1970-01-01T00:00:00.000Z",
   "createdBy": "user(1)",

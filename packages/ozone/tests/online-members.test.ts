@@ -1,6 +1,14 @@
-import { jest } from '@jest/globals'
 import type { CompiledQuery, Kysely } from 'kysely'
 import { sql } from 'kysely'
+import {
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest'
 import type { AtpAgent } from '@atproto/api'
 import { type SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { type DidString, toDatetimeString } from '@atproto/lex'
@@ -256,7 +264,7 @@ describe('online team members', () => {
       await seed(upper, now)
       await seed(old, now - 5 * 60 * 1000 - 1)
       await seed(future, now + 1)
-      using _clock = jest.spyOn(Date, 'now').mockReturnValue(now)
+      using _clock = vi.spyOn(Date, 'now').mockReturnValue(now)
       expect((await online()).members.map((m) => m.did)).toEqual([upper, lower])
     },
   )
@@ -276,7 +284,7 @@ describe('online team members', () => {
       const seed = source === 'event' ? event : activity
       await seed(lower, now - activeWindowMs)
       await seed(old, now - activeWindowMs - 1)
-      using _clock = jest.spyOn(Date, 'now').mockReturnValue(now)
+      using _clock = vi.spyOn(Date, 'now').mockReturnValue(now)
       expect(await online()).toEqual({
         members: [
           { did: lower, lastActive: toDatetimeString(now - activeWindowMs) },
@@ -333,7 +341,7 @@ describe('online team members', () => {
     await activity(did, Date.now() - 1000)
     let query: CompiledQuery<unknown> | undefined
     {
-      using queries = jest.spyOn(
+      using queries = vi.spyOn(
         network.ozone.ctx.db.db.getExecutor(),
         'executeQuery',
       )

@@ -1,3 +1,4 @@
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import {
   ComAtprotoModerationDefs,
   ToolsOzoneModerationDefs,
@@ -70,7 +71,7 @@ describe('moderation-appeals', () => {
       await assertBobsPostStatus(ToolsOzoneModerationDefs.REVIEWOPEN, undefined)
 
       // Create a report as normal user with appeal type
-      expect(
+      await expect(
         sc.createReport({
           reportedBy: sc.dids.carol,
           reasonType: ComAtprotoModerationDefs.REASONAPPEAL,

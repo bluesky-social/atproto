@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`admin get starter pack view getStarterPack() gets a starterpack by uri 1`] = `
+exports[`admin get starter pack view > getStarterPack() > gets a starterpack by uri 1`] = `
 {
   "starterPack": {
     "cid": "cids(0)",
@@ -185,7 +185,7 @@ exports[`admin get starter pack view getStarterPack() gets a starterpack by uri 
 }
 `;
 
-exports[`admin get starter pack view getStarterPack() gets a starterpack while taken down 1`] = `
+exports[`admin get starter pack view > getStarterPack() > gets a starterpack while taken down 1`] = `
 {
   "cid": "cids(0)",
   "creator": {
@@ -373,7 +373,7 @@ exports[`admin get starter pack view getStarterPack() gets a starterpack while t
 }
 `;
 
-exports[`admin get starter pack view getStarterPack() gets a starterpack while taken down 2`] = `
+exports[`admin get starter pack view > getStarterPack() > gets a starterpack while taken down 2`] = `
 {
   "cid": "cids(0)",
   "creator": {

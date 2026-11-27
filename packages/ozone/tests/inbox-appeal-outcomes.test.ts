@@ -1,5 +1,5 @@
-import { jest } from '@jest/globals'
 import type { CompiledQuery } from 'kysely'
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 import {
   type ModeratorClient,
   type SeedClient,
@@ -413,7 +413,7 @@ describe('viewer appeal outcomes', () => {
     let query: CompiledQuery<unknown> | undefined
     let subjectCount: number
     {
-      using queries = jest.spyOn(
+      using queries = vi.spyOn(
         network.ozone.ctx.db.db.getExecutor(),
         'executeQuery',
       )

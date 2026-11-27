@@ -1,4 +1,4 @@
-import { jest } from '@jest/globals'
+import { describe, expect, it, vi } from 'vitest'
 import type { IdResolver } from '@atproto/identity'
 import { Client } from '@atproto/lex'
 import { com } from '../src/lexicons/index.js'
@@ -22,7 +22,7 @@ const requestHeaders = (call: readonly unknown[] | undefined): Headers => {
 // reference to the real fetch. The response is discarded: only the outbound
 // request matters.
 const headersSentBy = async (makeClient: () => Client): Promise<Headers> => {
-  const fetch = jest.spyOn(globalThis, 'fetch').mockResolvedValue(
+  const fetch = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
     new Response('{}', {
       status: 200,
       headers: { 'content-type': 'application/json' },
@@ -70,7 +70,7 @@ describe('configured PDS client headers', () => {
   // the same name must win. Service auth passes `authorization` per call; a
   // configured header must never displace it.
   it('does not override a per-request header of the same name', async () => {
-    const fetch = jest.spyOn(globalThis, 'fetch').mockResolvedValue(
+    const fetch = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
       new Response('{}', {
         status: 200,
         headers: { 'content-type': 'application/json' },

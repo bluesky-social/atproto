@@ -1,4 +1,4 @@
-import { jest } from '@jest/globals'
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 import {
   type ModeratorClient,
   type SeedClient,
@@ -59,7 +59,7 @@ describe('viewer inbox subjects', () => {
     })
     await label({ $type: 'com.atproto.admin.defs#repoRef', did: sc.dids.alice })
     await label({ $type: 'com.atproto.admin.defs#repoRef', did: sc.dids.bob })
-    using queries = jest.spyOn(
+    using queries = vi.spyOn(
       network.ozone.ctx.db.db.getExecutor(),
       'executeQuery',
     )
@@ -217,7 +217,7 @@ describe('viewer inbox subjects', () => {
     expect(data.enforcement).toMatchObject({ state: 'takendown', scope: 'app' })
     expect(data.availableActions).toContain('appeal')
 
-    using unavailable = jest.spyOn(network.ozone.ctx.appviewClient, 'xrpcSafe')
+    using unavailable = vi.spyOn(network.ozone.ctx.appviewClient, 'xrpcSafe')
     unavailable.mockRejectedValue(new Error('Profile service unavailable'))
     const { data: fallback } = await call(
       account.did,

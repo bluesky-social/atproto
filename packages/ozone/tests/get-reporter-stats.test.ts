@@ -1,5 +1,5 @@
-import { jest } from '@jest/globals'
 import { type CompiledQuery, sql } from 'kysely'
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 import {
   ComAtprotoModerationDefs,
   type ToolsOzoneModerationDefs,
@@ -305,7 +305,7 @@ describe('reporter-stats', () => {
         .where('eventId', '=', reports[index].id)
         .execute()
     }
-    using _clock = jest.spyOn(Date, 'now').mockReturnValue(now)
+    using _clock = vi.spyOn(Date, 'now').mockReturnValue(now)
     expect(await getReporterStats(reporter)).toEqual({
       did: reporter,
       accountReportCount: 1,
@@ -329,7 +329,7 @@ describe('reporter-stats', () => {
     const reporter = sc.dids.alice
     let query: CompiledQuery<unknown> | undefined
     {
-      using queries = jest.spyOn(
+      using queries = vi.spyOn(
         network.ozone.ctx.db.db.getExecutor(),
         'executeQuery',
       )

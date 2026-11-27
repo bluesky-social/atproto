@@ -1,13 +1,13 @@
-import { afterEach, describe, expect, it, jest } from '@jest/globals'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { VideoInvalidator } from '../src/video-invalidator.js'
 
 describe('VideoInvalidator', () => {
   afterEach(() => {
-    jest.restoreAllMocks()
+    vi.restoreAllMocks()
   })
 
   it('purges the video by did and cid', async () => {
-    const fetch = jest
+    const fetch = vi
       .spyOn(globalThis, 'fetch')
       .mockResolvedValue(new Response(null, { status: 200 }))
     const invalidator = new VideoInvalidator({
@@ -28,9 +28,9 @@ describe('VideoInvalidator', () => {
   })
 
   it('throws when the purge fails', async () => {
-    jest
-      .spyOn(globalThis, 'fetch')
-      .mockResolvedValue(new Response(null, { status: 500 }))
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(null, { status: 500 }),
+    )
     const invalidator = new VideoInvalidator({
       url: 'https://video.example/xrpc/app.bsky.video.purgeVideo',
       helperKey: 'secret',

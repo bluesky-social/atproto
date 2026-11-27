@@ -1,4 +1,5 @@
 import { performance } from 'node:perf_hooks'
+import { expect, it } from 'vitest'
 import { BackfillRateLimiter } from '../src/sequencer/backfill-rate-limiter.js'
 
 it.each([0, -1, NaN, Infinity, 1.5, Number.MAX_SAFE_INTEGER + 1])(

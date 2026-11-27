@@ -1,3 +1,4 @@
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { ComAtprotoModerationDefs } from '@atproto/api'
 import {
   type ModeratorClient,

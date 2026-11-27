@@ -1,5 +1,5 @@
-import { jest } from '@jest/globals'
 import { sql } from 'kysely'
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 import { ids } from '@atproto/api'
 import type AtpAgent from '@atproto/api'
 import {
@@ -1207,19 +1207,19 @@ describe('report-stats', () => {
         const startedAt = toDatetimeString(midnight - 1)
         const date = startedAt.slice(0, 10) as DateString
         const computeStats = service['computeBatchedStats'].bind(service)
-        using advanceClock = jest
+        using advanceClock = vi
           .spyOn(
             service as unknown as { computeBatchedStats: typeof computeStats },
             'computeBatchedStats',
           )
           .mockImplementationOnce(async (...args) => {
             const stats = await computeStats(...args)
-            jest.setSystemTime(midnight + 1)
+            vi.setSystemTime(midnight + 1)
             return stats
           })
-        jest.useFakeTimers({
+        vi.useFakeTimers({
           now: midnight - 1,
-          doNotFake: [
+          toNotFake: [
             'hrtime',
             'nextTick',
             'performance',
@@ -1239,7 +1239,7 @@ describe('report-stats', () => {
             queueIds: queueOnly ? [spamQueueId] : undefined,
           })
         } finally {
-          jest.useRealTimers()
+          vi.useRealTimers()
         }
         expect(advanceClock).toHaveBeenCalled()
         const row = await db.db

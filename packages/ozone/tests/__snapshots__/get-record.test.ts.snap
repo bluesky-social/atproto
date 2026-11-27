@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`admin get record view gets a record by uri and cid. 1`] = `
+exports[`admin get record view > gets a record by uri and cid. 1`] = `
 {
   "blobCids": [],
   "blobs": [],
@@ -108,7 +108,7 @@ exports[`admin get record view gets a record by uri and cid. 1`] = `
 }
 `;
 
-exports[`admin get record view gets a record by uri, even when taken down. 1`] = `
+exports[`admin get record view > gets a record by uri, even when taken down. 1`] = `
 {
   "blobCids": [],
   "blobs": [],
@@ -216,7 +216,7 @@ exports[`admin get record view gets a record by uri, even when taken down. 1`] =
 }
 `;
 
-exports[`admin get record view gets record from pds if appview does not have it. 1`] = `
+exports[`admin get record view > gets record from pds if appview does not have it. 1`] = `
 {
   "blobCids": [],
   "blobs": [],

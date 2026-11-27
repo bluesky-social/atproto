@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { jest } from '@jest/globals'
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 import { ADMIN_PASSWORD, TestNetwork } from '@atproto/dev-env'
 import { Client } from '@atproto/lex-client'
 import { verifyJwt } from '@atproto/xrpc-server'
@@ -35,7 +35,7 @@ describe('get Atmosphere record views through Ozone', () => {
   })
 
   it('forwards the CID and labelers using method-scoped Ozone credentials', async () => {
-    using upstream = jest
+    using upstream = vi
       .spyOn(network.ozone.ctx.appviewClient, 'call')
       .mockResolvedValue(output)
     const incomingAuth = await network.ozone.modHeaders(schema.$lxm)
@@ -79,7 +79,7 @@ describe('get Atmosphere record views through Ozone', () => {
   })
 
   it('allows the admin token', async () => {
-    using upstream = jest
+    using upstream = vi
       .spyOn(network.ozone.ctx.appviewClient, 'call')
       .mockResolvedValue(output)
     const authorization = `Basic ${Buffer.from(`admin:${ADMIN_PASSWORD}`).toString('base64')}`
@@ -97,10 +97,7 @@ describe('get Atmosphere record views through Ozone', () => {
   })
 
   it('reaches AppView with moderation visibility', async () => {
-    using hydrateContext = jest.spyOn(
-      network.bsky.ctx.hydrator,
-      'createContext',
-    )
+    using hydrateContext = vi.spyOn(network.bsky.ctx.hydrator, 'createContext')
 
     const result = await client.call(
       schema,
@@ -121,7 +118,7 @@ describe('get Atmosphere record views through Ozone', () => {
   })
 
   it('rejects unauthenticated requests before calling AppView', async () => {
-    using upstream = jest.spyOn(network.ozone.ctx.appviewClient, 'call')
+    using upstream = vi.spyOn(network.ozone.ctx.appviewClient, 'call')
 
     await expect(client.call(schema, { uri })).rejects.toMatchObject({
       status: 401,

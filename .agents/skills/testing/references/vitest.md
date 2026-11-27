@@ -15,7 +15,7 @@ Repo-specific conventions and setup. Assumes working knowledge of vitest itself 
    })
    ```
 
-   `defineProject` (not `defineConfig`) is what makes the package composable into the root workspace runner. Add `setupFiles`, `testTimeout`, `resolve.alias`, etc. only when the package actually needs them — [packages/bsky](../../../../packages/bsky/vitest.config.ts) and [packages/ws-client](../../../../packages/ws-client/vitest.config.ts) are the only two that do.
+   `defineProject` (not `defineConfig`) is what makes the package composable into the root workspace runner. Add `setupFiles`, `testTimeout`, `resolve.alias`, etc. only when the package actually needs them — [packages/bsky](../../../../packages/bsky/vitest.config.ts), [packages/ozone](../../../../packages/ozone/vitest.config.ts) and [packages/ws-client](../../../../packages/ws-client/vitest.config.ts) are the only ones that do.
 
    **Exception:** if the package already has a `vite.config.*`, don't create `vitest.config.ts` — see [Vite-based packages](#vite-based-packages).
 

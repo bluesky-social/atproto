@@ -74,14 +74,13 @@
     "@atproto/lexicon": "workspace:^",
     "@atproto/pds": "workspace:^",
     "@did-plc/server": "^0.0.1",
-    "@jest/globals": "^30.0.0",
     "@types/cors": "^2.8.12",
     "@types/express": "^4.17.13",
     "@types/express-serve-static-core": "^4.17.36",
     "@types/pg": "^8.15.5",
     "@types/qs": "^6.15.1",
     "@types/ws": "^8.18.1",
-    "jest": "^30.5.2"
+    "vitest": "^5.1.1"
   },
   "scripts": {
     "lex:build": "lex build --clear --indexFile --lib @atproto/lex-schema",
@@ -93,8 +92,8 @@
     "prebuild": "pnpm run '/^(codegen:.+)$/'",
     "build": "tsc --build tsconfig.build.json",
     "start": "node --enable-source-maps dist/bin.js",
-    "test": "NODE_OPTIONS=--experimental-vm-modules ../dev-infra/with-test-redis-and-db.sh jest",
-    "test:updateSnapshot": "NODE_OPTIONS=--experimental-vm-modules ../dev-infra/with-test-redis-and-db.sh jest --updateSnapshot",
+    "test": "../dev-infra/with-test-redis-and-db.sh vitest run",
+    "test:updateSnapshot": "../dev-infra/with-test-redis-and-db.sh vitest run --update",
     "migration:create": "node ./bin/migration-create.ts"
   }
 }

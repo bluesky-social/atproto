@@ -1,4 +1,5 @@
 import type { AddressInfo } from 'node:net'
+import { describe, expect, it } from 'vitest'
 import { WebSocketServer } from 'ws'
 import { Jetstream } from '../src/jetstream/service.js'
 

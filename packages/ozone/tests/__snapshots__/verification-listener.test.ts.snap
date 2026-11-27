@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`verification-listener indexes new and revoked verifications 1`] = `
+exports[`verification-listener > indexes new and revoked verifications 1`] = `
 [
   {
     "$type": "tools.ozone.verification.defs#verificationView",

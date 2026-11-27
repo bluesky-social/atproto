@@ -1,14 +1,14 @@
-import { jest } from '@jest/globals'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { envToCfg } from '../src/config/config.js'
 import { readEnv } from '../src/config/env.js'
 
 describe('online team member configuration', () => {
   afterEach(() => {
-    jest.restoreAllMocks()
+    vi.restoreAllMocks()
   })
 
   function configure(env: NodeJS.ProcessEnv = {}) {
-    jest.replaceProperty(process, 'env', env)
+    vi.spyOn(process, 'env', 'get').mockReturnValue(env)
     return envToCfg({
       ...readEnv(),
       publicUrl: 'https://ozone.example.com',

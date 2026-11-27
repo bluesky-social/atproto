@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`scheduled action management listScheduledActions allows moderators to list all scheduled actions 1`] = `
+exports[`scheduled action management > listScheduledActions > allows moderators to list all scheduled actions 1`] = `
 [
   {
     "action": "takedown",

@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`safelink management addRule allows admins to add rules 1`] = `
+exports[`safelink management > addRule > allows admins to add rules 1`] = `
 {
   "action": "block",
   "comment": "Known phishing domain targeting users",
@@ -15,7 +15,7 @@ exports[`safelink management addRule allows admins to add rules 1`] = `
 }
 `;
 
-exports[`safelink management queryEvents allows querying safelink events 1`] = `
+exports[`safelink management > queryEvents > allows querying safelink events 1`] = `
 [
   {
     "action": "block",
@@ -137,7 +137,7 @@ exports[`safelink management queryEvents allows querying safelink events 1`] = `
 ]
 `;
 
-exports[`safelink management queryRules allows querying all active rules 1`] = `
+exports[`safelink management > queryRules > allows querying all active rules 1`] = `
 [
   {
     "action": "warn",
