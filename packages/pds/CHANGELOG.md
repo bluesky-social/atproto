@@ -1,5 +1,16 @@
 # @atproto/pds
 
+## 0.5.67
+
+### Patch Changes
+
+- [#6042](https://github.com/bluesky-social/atproto/pull/6042) [`62410de`](https://github.com/bluesky-social/atproto/commit/62410de90098039dbf71ef544b2bc5194f11e84a) Thanks [@ofri-peretz](https://github.com/ofri-peretz)! - Compare the admin Basic-auth password in constant time.
+- Updated dependencies []:
+  - @atproto/lex-client@0.7.1
+  - @atproto/xrpc-server@0.13.18
+  - @atproto/oauth-provider@0.27.4
+  - @atproto-labs/xrpc-utils@0.1.39
+
 ## 0.5.66
 
 ### Patch Changes

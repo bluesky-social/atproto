@@ -1,5 +1,13 @@
 # @atproto/sync
 
+## 0.4.32
+
+### Patch Changes
+
+- [#6037](https://github.com/bluesky-social/atproto/pull/6037) [`6a61eaf`](https://github.com/bluesky-social/atproto/commit/6a61eafd85b32fcefa37f327b2a51b7f923692ac) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Jitter the reconnect backoff by ±50% around its exponential base (`2^attempt` seconds), after capping that base at `maxReconnectSeconds`, rather than by ±0.5s and then capping the delay. Clients dropped together now keep spreading out once capped, instead of all retrying every `maxReconnectSeconds`. A capped delay is now between 0.5 and 1.5 times `maxReconnectSeconds`.
+- Updated dependencies []:
+  - @atproto/xrpc-server@0.13.18
+
 ## 0.4.31
 
 ### Patch Changes

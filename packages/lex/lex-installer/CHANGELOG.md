@@ -1,5 +1,13 @@
 # @atproto/lex-installer
 
+## 0.2.14
+
+### Patch Changes
+
+- Updated dependencies [[`2fdc0de`](https://github.com/bluesky-social/atproto/commit/2fdc0ded580ff56b7c1c24926234ef98ce7da3d7), [`6a61eaf`](https://github.com/bluesky-social/atproto/commit/6a61eafd85b32fcefa37f327b2a51b7f923692ac)]:
+  - @atproto/lex-rpc@0.3.1
+  - @atproto/lex-resolver@0.4.11
+
 ## 0.2.13
 
 ### Patch Changes

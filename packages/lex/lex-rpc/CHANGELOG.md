@@ -1,5 +1,15 @@
 # @atproto/lex-rpc
 
+## 0.3.1
+
+### Patch Changes
+
+- [#6040](https://github.com/bluesky-social/atproto/pull/6040) [`2fdc0de`](https://github.com/bluesky-social/atproto/commit/2fdc0ded580ff56b7c1c24926234ef98ce7da3d7) Thanks [@matthieusieben](https://github.com/matthieusieben)! - `isCausedBySignal` matches the abort reason anywhere in the error's cause chain (up to 8 levels), not only as the error itself or its direct cause
+
+- [#6037](https://github.com/bluesky-social/atproto/pull/6037) [`6a61eaf`](https://github.com/bluesky-social/atproto/commit/6a61eafd85b32fcefa37f327b2a51b7f923692ac) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Re-export the connection errors of `@atproto/ws-client` from `@atproto/lex-rpc/subscription` (and so from `@atproto/lex`): `CloseCode`, `CloseError`, `SocketError`, `IdleTimeoutError`, `HeartbeatTimeoutError`, `UnexpectedResponseError`, `BufferOverflowError`, `DataModeError`, `WebSocketClientError` and `isReconnectableClose`. They are what a `createWebSocketFactory()`'s `shouldReconnect`, `onReconnect` and `onError` receive for a failed connection, and can now be told apart without depending on `@atproto/ws-client` directly.
+- Updated dependencies [[`6a61eaf`](https://github.com/bluesky-social/atproto/commit/6a61eafd85b32fcefa37f327b2a51b7f923692ac), [`6a61eaf`](https://github.com/bluesky-social/atproto/commit/6a61eafd85b32fcefa37f327b2a51b7f923692ac)]:
+  - @atproto/ws-client@0.2.3
+
 ## 0.3.0
 
 ### Minor Changes
