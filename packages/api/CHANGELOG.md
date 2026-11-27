@@ -1,5 +1,11 @@
 # @atproto/api
 
+## 0.32.8
+
+### Patch Changes
+
+- [#6050](https://github.com/bluesky-social/atproto/pull/6050) [`f6d3902`](https://github.com/bluesky-social/atproto/commit/f6d3902d523f2e35a8b47a57a055936b946ce8e9) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Regenerate the client on every codegen run, now that `gen-api` is fast
+
 ## 0.32.7
 
 ### Patch Changes
