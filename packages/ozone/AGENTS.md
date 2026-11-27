@@ -16,3 +16,7 @@
 - Use explicit predicates for partial indexes on heavy tables. Report pagination seeks report.reporterDid/time indexes, validates source ownership before LIMIT by lateral primary-key lookup, and materializes only the page before hydration. Reporter backfill/catch-up is a deployment prerequisite.
 - OZONE_INBOX_START_AT bounds history by inclusive creation time before pagination/aggregation, including details and notification targets. Express the cutoff on the sort/seek index's own column (report updatedAt pages also bound `updatedAt`), join per-DID aggregates to statuses on indexed columns (`recordPath`), and bind the viewer DID as a constant in correlated `EXISTS` checks: PostgreSQL may hash such subplans and drop correlation. Keep live standing/enforcement and historical appeal eligibility authoritative; only display post-cutoff appeal history.
 - Migrations that use report.reporterDid must run after _20261002T000000000Z. Pre-create large indexes concurrently in production and verify they are valid and ready before running transactional migrations.
+
+## Tests
+
+- Create reports with `createReports` and other fixtures with `pooled` (`tests/_inbox.ts`), not a `network.processAll()` per item: each flush waits for a full firehose catch-up, while `ModerationService.logEvent` writes a report row in its event's transaction, so reports only need queue routing.
