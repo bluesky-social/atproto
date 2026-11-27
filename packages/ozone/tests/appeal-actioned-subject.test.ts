@@ -21,7 +21,7 @@ import {
   RecordSubject,
   RepoSubject,
 } from '../src/mod-service/subject.js'
-import { reportForEvent } from './_inbox.js'
+import { reportForEvent, reportsForEvents } from './_inbox.js'
 
 describe('appealActionedSubject', () => {
   let network: TestNetwork
@@ -192,7 +192,10 @@ describe('appealActionedSubject', () => {
     })
     const appealEvent = events[0]
     if (!appealEvent) throw new Error('No appeal event returned')
-    return { ...(await reportForEvent(modClient, appealEvent.id)), did }
+    const [report] = await reportsForEvents(modClient, [
+      { eventId: appealEvent.id, did },
+    ])
+    return { ...report, did }
   }
 
   async function closeLatestAppeal(did: DidString) {
@@ -280,7 +283,7 @@ describe('appealActionedSubject', () => {
         createdBy: network.ozone.adminAccnt.did,
       })
     await network.ozone.daemon.ctx.queueRouter.routeReports()
-    const source = await reportForEvent(modClient, sourceReport.id)
+    const source = await reportForEvent(modClient, sourceReport.id, subject.uri)
     const action = await takedown(subject, [source.id])
 
     const response = await appeal(action.id, sc.dids.bob)
@@ -367,10 +370,10 @@ describe('appealActionedSubject', () => {
         subject,
         appeal: { state: 'pending' },
       })
-      expect(await latestAppealReport(sc.dids.alice)).toMatchObject({
+      const appealReport = await latestAppealReport(sc.dids.alice)
+      expect(appealReport).toMatchObject({
         actionEventIds: [action.id],
       })
-      const appealReport = await latestAppealReport(sc.dids.alice)
       const { events } = await modClient.queryEvents({
         subject: subject.uri,
         types: [tools.ozone.moderation.defs.modEventReport.$type],
@@ -408,7 +411,7 @@ describe('appealActionedSubject', () => {
       },
       subject,
     })
-    const source = await reportForEvent(modClient, sourceReport.id)
+    const source = await reportForEvent(modClient, sourceReport.id, subject.uri)
     const action = await label(subject, [source.id])
 
     await appealLabel('!warn', subject, sc.dids.alice)
@@ -429,7 +432,7 @@ describe('appealActionedSubject', () => {
       subject,
     })
     await network.ozone.daemon.ctx.queueRouter.routeReports()
-    const source = await reportForEvent(modClient, sourceReport.id)
+    const source = await reportForEvent(modClient, sourceReport.id, subject.uri)
     const action = await takedown(subject, [source.id])
 
     await appealTakedown(subject, sc.dids.alice)
@@ -603,12 +606,12 @@ describe('appealActionedSubject', () => {
         await tagAccount(did, [reporterTag])
 
         await appeal(action.id, did)
-        expect(await latestAppealReport(did)).toMatchObject({
+        const report = await latestAppealReport(did)
+        expect(report).toMatchObject({
           queueId: sourceQueue.id,
           actionEventIds: [action.id],
           status: 'queued',
         })
-        const report = await latestAppealReport(did)
         expect(await activities(report.id)).toEqual([])
         await router.routeReports()
         expect((await latestAppealReport(did)).queueId).toBe(sourceQueue.id)
@@ -672,12 +675,12 @@ describe('appealActionedSubject', () => {
           },
         )
 
-        expect(await latestAppealReport(did)).toMatchObject({
+        const report = await latestAppealReport(did)
+        expect(report).toMatchObject({
           queueId: affectedTagged ? reporting.id : ordinary.id,
           reportedBy: did,
           actionEventIds: [action.id],
         })
-        const report = await latestAppealReport(did)
         const history = await activities(report.id)
         if (affectedTagged) {
           expect(history).toHaveLength(1)
