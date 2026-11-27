@@ -436,9 +436,25 @@ export type UpgradeWebSocket = (request: Request) => {
   response: Response
 }
 
+export type HealthCheckData = {
+  [x: string]: unknown
+  status: 'ok'
+}
+
 export type HealthCheckHandler = (
   request: Request,
-) => Awaitable<{ [x: string]: unknown; status: 'ok' }>
+  connection?: ConnectionInfo,
+) => Awaitable<HealthCheckData>
+
+export type HealthCheckErrorContext = {
+  request: Request
+  connection?: ConnectionInfo
+  error: LexServerError
+}
+
+export type HealthCheckErrorHook = (
+  ctx: HealthCheckErrorContext,
+) => void | Promise<void>
 
 /**
  * Configuration options for the {@link LexRouter}.
@@ -484,6 +500,12 @@ export type LexRouterOptions = {
    * default JSON response of `{ status: 'ok' }`.
    */
   healthCheck?: HealthCheckHandler
+  /**
+   * Callback invoked when the {@link LexRouterOptions.healthCheck} handler
+   * throws. Only called for server errors (5xx); not called for a
+   * `LexServerError` with a 4xx status or for request aborts.
+   */
+  onHealthCheckError?: HealthCheckErrorHook
   /**
    * Optional fallback handler for requests that are not /xrpc/ paths. Can be
    * used to serve static files or other routes. If not provided, non-/xrpc/
@@ -1002,7 +1024,6 @@ export class LexRouter {
     connection?: ConnectionInfo,
   ): Promise<Response> => {
     const { pathname } = new URL(request.url)
-    const atprotoProxy = request.headers.get('atproto-proxy')
 
     if (!pathname.startsWith(XRPC_PATH_PREFIX)) {
       // Handle non XRPC paths
@@ -1011,8 +1032,10 @@ export class LexRouter {
       return new Response('Not Found', { status: 404 })
     }
 
+    const atprotoProxy = request.headers.get('atproto-proxy')
+
     if (pathname === XRPC_HEALTH_CHECK_PATH) {
-      if (request.method !== 'GET') {
+      if (request.method !== 'GET' && request.method !== 'HEAD') {
         return invalidRequestResponse('Method not allowed', 405)
       }
       if (atprotoProxy != null) {
@@ -1021,10 +1044,29 @@ export class LexRouter {
         )
       }
 
-      const { healthCheck } = this.options
-      const data = healthCheck ? await healthCheck(request) : { status: 'ok' }
+      const { healthCheck, onHealthCheckError } = this.options
 
-      return Response.json(data)
+      try {
+        const data: HealthCheckData = healthCheck
+          ? await healthCheck(request, connection)
+          : { status: 'ok' }
+
+        return Response.json(data, {
+          headers: { 'cache-control': 'max-age=5' },
+        })
+      } catch (cause) {
+        if (isAbortReason(request.signal, cause)) {
+          return Response.json({ error: 'RequestAborted' }, { status: 499 })
+        }
+
+        const error = LexServerError.from(cause)
+
+        if (onHealthCheckError && error.status >= 500) {
+          await onHealthCheckError({ error, request, connection })
+        }
+
+        return error.toResponse()
+      }
     }
 
     const subPath = pathname.slice(XRPC_PATH_PREFIX.length)
@@ -1225,7 +1267,7 @@ function hasUpperCase(str: string, start = 0, end = str.length): boolean {
   return false
 }
 
-function invalidRequestResponse(
+export function invalidRequestResponse(
   message: string,
   status = 400,
   headers?: HeadersInit,

@@ -11,6 +11,7 @@ import { LexError, LexServerAuthError, LexServerError } from './errors.js'
 import {
   type ConnectionInfo,
   type HandlerErrorHook,
+  type HealthCheckErrorHook,
   type HealthCheckHandler,
   LexRouter,
   type LexRouterAuth,
@@ -669,10 +670,24 @@ describe('Routing', () => {
       const request = new Request('https://example.com/xrpc/_health')
       const response = await router.fetch(request)
 
-      expect(healthCheck).toHaveBeenCalledWith(request)
+      expect(healthCheck).toHaveBeenCalledWith(request, undefined)
       expect(response.status).toBe(200)
       expect(await response.json()).toEqual({ status: 'ok', version: '1.0.0' })
     })
+
+    it.each(['GET', 'HEAD'])(
+      'responds to %s requests with a cache-control header',
+      async (method) => {
+        const router = new LexRouter()
+        const request = new Request('https://example.com/xrpc/_health', {
+          method,
+        })
+        const response = await router.fetch(request)
+
+        expect(response.status).toBe(200)
+        expect(response.headers.get('cache-control')).toBe('max-age=5')
+      },
+    )
 
     it('returns 405 for non-GET requests', async () => {
       const router = new LexRouter()
@@ -712,6 +727,128 @@ describe('Routing', () => {
 
       expect(healthCheck).not.toHaveBeenCalled()
       expect(response.status).toBe(400)
+    })
+
+    it('returns 500 InternalServerError when healthCheck throws', async () => {
+      const router = new LexRouter({
+        healthCheck: () => {
+          throw new Error('database unreachable')
+        },
+      })
+      const request = new Request('https://example.com/xrpc/_health')
+      const response = await router.fetch(request)
+
+      expect(response.status).toBe(500)
+      expect(await response.json()).toEqual({
+        error: 'InternalServerError',
+        message: 'An internal error occurred',
+      })
+    })
+
+    it('returns the LexServerError thrown by healthCheck', async () => {
+      const router = new LexRouter({
+        healthCheck: () => {
+          throw new LexServerError(503, {
+            error: 'ServiceUnavailable',
+            message: 'Draining',
+          })
+        },
+      })
+      const request = new Request('https://example.com/xrpc/_health')
+      const response = await router.fetch(request)
+
+      expect(response.status).toBe(503)
+      expect(await response.json()).toEqual({
+        error: 'ServiceUnavailable',
+        message: 'Draining',
+      })
+    })
+
+    it('onHealthCheckError receives LexServerError', async () => {
+      const cause = new Error('database unreachable')
+      const onHealthCheckError = vi.fn<HealthCheckErrorHook>()
+      const router = new LexRouter({
+        healthCheck: () => {
+          throw cause
+        },
+        onHealthCheckError,
+      })
+
+      const request = new Request('https://example.com/xrpc/_health')
+      const connection: ConnectionInfo = {
+        completed: Promise.resolve(),
+        remoteAddr: { hostname: '127.0.0.1', port: 3000, transport: 'tcp' },
+      }
+      const response = await router.fetch(request, connection)
+
+      expect(response.status).toBe(500)
+      expect(onHealthCheckError).toHaveBeenCalledTimes(1)
+      const ctx = onHealthCheckError.mock.calls[0][0]
+      expect(ctx.error).toBeInstanceOf(LexServerError)
+      expect(ctx.error.status).toBe(500)
+      expect(ctx.error.cause).toBe(cause)
+      expect(ctx.request).toBe(request)
+      expect(ctx.connection).toBe(connection)
+    })
+
+    it.each([400, 404, 429])(
+      'does not call onHealthCheckError for a thrown %i LexServerError',
+      async (status) => {
+        const onHealthCheckError = vi.fn<HealthCheckErrorHook>()
+        const router = new LexRouter({
+          healthCheck: () => {
+            throw new LexServerError(status, { error: 'TestError' })
+          },
+          onHealthCheckError,
+        })
+
+        const request = new Request('https://example.com/xrpc/_health')
+        const response = await router.fetch(request)
+
+        expect(response.status).toBe(status)
+        expect(onHealthCheckError).not.toHaveBeenCalled()
+      },
+    )
+
+    it.each([500, 503])(
+      'calls onHealthCheckError for a thrown %i LexServerError',
+      async (status) => {
+        const onHealthCheckError = vi.fn<HealthCheckErrorHook>()
+        const error = new LexServerError(status, { error: 'TestError' })
+        const router = new LexRouter({
+          healthCheck: () => {
+            throw error
+          },
+          onHealthCheckError,
+        })
+
+        const request = new Request('https://example.com/xrpc/_health')
+        const response = await router.fetch(request)
+
+        expect(response.status).toBe(status)
+        expect(onHealthCheckError).toHaveBeenCalledTimes(1)
+        expect(onHealthCheckError.mock.calls[0][0].error).toBe(error)
+      },
+    )
+
+    it('does not call onHealthCheckError when the request is aborted', async () => {
+      const onHealthCheckError = vi.fn<HealthCheckErrorHook>()
+      const controller = new AbortController()
+      const request = new Request('https://example.com/xrpc/_health', {
+        signal: controller.signal,
+      })
+      const router = new LexRouter({
+        healthCheck: (req) => {
+          controller.abort()
+          throw req.signal.reason
+        },
+        onHealthCheckError,
+      })
+
+      const response = await router.fetch(request)
+
+      expect(response.status).toBe(499)
+      expect(onHealthCheckError).not.toHaveBeenCalled()
     })
   })
 
