@@ -1025,6 +1025,72 @@ describe('Routing', () => {
       const data = await response.json()
       expect(data.error).toBe('RequestAborted')
     })
+
+    it.each(['Client disconnected', { code: 'ECONNRESET' }])(
+      'returns 499 for a non-Error abort reason (%j)',
+      async (reason) => {
+        const onHandlerError = vi.fn<HandlerErrorHook>()
+        const controller = new AbortController()
+        controller.abort(reason)
+
+        const router = new LexRouter({ onHandlerError })
+        router.add(io.example.status, async ({ signal }) => {
+          throw signal.reason
+        })
+
+        const request = new Request(
+          'https://example.com/xrpc/io.example.status',
+          { signal: controller.signal },
+        )
+        const response = await router.fetch(request)
+
+        expect(response.status).toBe(499)
+        expect(onHandlerError).not.toHaveBeenCalled()
+      },
+    )
+
+    it('returns 499 when the abort reason is deeper in the cause chain', async () => {
+      const onHandlerError = vi.fn<HandlerErrorHook>()
+      const controller = new AbortController()
+      const reason = new Error('Client disconnected')
+      controller.abort(reason)
+
+      const router = new LexRouter({ onHandlerError })
+      router.add(io.example.status, async () => {
+        throw new Error('outer', {
+          cause: new Error('inner', { cause: reason }),
+        })
+      })
+
+      const request = new Request(
+        'https://example.com/xrpc/io.example.status',
+        { signal: controller.signal },
+      )
+      const response = await router.fetch(request)
+
+      expect(response.status).toBe(499)
+      expect(onHandlerError).not.toHaveBeenCalled()
+    })
+
+    it('does not treat a null abort reason as an abort', async () => {
+      const onHandlerError = vi.fn<HandlerErrorHook>()
+      const controller = new AbortController()
+      controller.abort(null)
+
+      const router = new LexRouter({ onHandlerError })
+      router.add(io.example.status, async ({ signal }) => {
+        throw signal.reason
+      })
+
+      const request = new Request(
+        'https://example.com/xrpc/io.example.status',
+        { signal: controller.signal },
+      )
+      const response = await router.fetch(request)
+
+      expect(response.status).toBe(500)
+      expect(onHandlerError).toHaveBeenCalledTimes(1)
+    })
   })
 })
 

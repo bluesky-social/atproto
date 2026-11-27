@@ -1,3 +1,5 @@
+import { walkErrorCauses } from './error.js'
+
 /**
  * Uses the native `AbortSignal.throwIfAborted()` when available, falling back
  * for older implementations such as React Native's `abort-controller`.
@@ -27,9 +29,12 @@ function buildAbortReason(message = 'Aborted', name = 'AbortError'): Error {
 
 export function isCausedBySignal(err: unknown, signal?: AbortSignal) {
   if (!signal?.aborted) return false
-  if (signal.reason == null) return false // Ignore nullish reasons
-  return (
-    err === signal.reason ||
-    (err instanceof Error && err.cause === signal.reason)
-  )
+  const { reason } = signal
+  if (reason == null) return false // Ignore nullish reasons
+  if (reason === err) return true
+  for (const cause of walkErrorCauses(err)) {
+    if (cause === reason) return true
+  }
+
+  return false
 }

@@ -21,6 +21,7 @@ import {
   type WebSocketHandlerOptions,
   buildAgent,
 } from './agent.js'
+import type { TransientError } from './errors.js'
 import {
   XrpcSubscriptionConnectionError,
   XrpcSubscriptionError,
@@ -38,7 +39,6 @@ import {
   defaultWebsocket,
   xrpcSubscribe,
 } from './subscription.js'
-import type { TransientError } from './types.ts'
 
 // Spied on (calling through) to check the options `createWebSocketFactory`
 // passes to it.

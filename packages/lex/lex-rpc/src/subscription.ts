@@ -15,7 +15,6 @@ import {
   defaultShouldReconnect,
   websocket as wsClientWebsocket,
 } from '@atproto/ws-client'
-import { isCausedBySignal } from './abort.js'
 import {
   type Agent,
   type AgentConfig,
@@ -25,6 +24,9 @@ import {
   buildAgent,
   isAgent,
 } from './agent.js'
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { type TransientError, isTransientError } from './errors.js'
+import { isCausedBySignal } from './lib/abort.js'
 import {
   XrpcSubscriptionConnectionError,
   XrpcSubscriptionError,
@@ -34,8 +36,6 @@ import {
   XrpcSubscriptionServerError,
   isRetryableSubscriptionError,
 } from './subscription-errors.js'
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { type TransientError, isTransientError } from './types.js'
 import { type XrpcRequestParamsOptions, xrpcRequestUrl } from './xrpc.js'
 
 // The errors of the connection itself, as `@atproto/ws-client` reports them to

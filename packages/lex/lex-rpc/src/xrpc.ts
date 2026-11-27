@@ -15,7 +15,6 @@ import {
   getMain,
   paramsToURLSearchParams,
 } from '@atproto/lex-schema'
-import { throwIfAborted } from './abort.js'
 import type { Agent, AgentOptions } from './agent.js'
 import { buildAgent } from './agent.js'
 import {
@@ -28,6 +27,8 @@ import type { XrpcFailure } from './errors.js'
 import { XrpcFetchError, XrpcResponseError, asXrpcFailure } from './errors.js'
 import type { XrpcRequestHeadersOptions } from './headers.js'
 import { buildXrpcRequestHeaders } from './headers.js'
+import { throwIfAborted } from './lib/abort.js'
+import { sleep } from './lib/timer.js'
 import type { IfXrpcStreamable, XrpcResponseOptions } from './response.js'
 import {
   XrpcResponse,
@@ -35,7 +36,6 @@ import {
   assertXrpcStreamable,
 } from './response.js'
 import type { BinaryBodyInit } from './types.js'
-import { wait } from './util.js'
 
 /**
  * The query/path parameters type for an XRPC method, inferred from its schema.
@@ -422,7 +422,7 @@ async function xrpcRequest<M extends Query | Procedure, R>(
         return failure
       }
 
-      await wait(waitTime, options)
+      await sleep(waitTime, options)
     }
   }
 }

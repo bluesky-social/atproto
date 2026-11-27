@@ -7,6 +7,7 @@ import {
   ui8Concat,
 } from '@atproto/lex-data'
 import { lexParse, lexToJson } from '@atproto/lex-json'
+import { isCausedBySignal } from '@atproto/lex-rpc'
 import {
   type DidString,
   type InferMethodInput,
@@ -927,7 +928,7 @@ export class LexRouter {
               }
             }
 
-            if (onSocketError && !isAbortReason(signal, error)) {
+            if (onSocketError && !isCausedBySignal(error, signal)) {
               await onSocketError({ request, method, error })
             }
           } finally {
@@ -953,7 +954,7 @@ export class LexRouter {
     cause: unknown,
   ) {
     // Only report unexpected processing errors
-    if (isAbortReason(request.signal, cause)) {
+    if (isCausedBySignal(cause, request.signal)) {
       return Response.json({ error: 'RequestAborted' }, { status: 499 })
     }
 
@@ -1164,15 +1165,6 @@ function encodeMessageFrame(
   }
 
   return ui8Concat([UNKNOWN_MESSAGE_FRAME_HEADER, encode(value)])
-}
-
-function isAbortReason(signal: AbortSignal, error: unknown): boolean {
-  return (
-    signal.aborted &&
-    signal.reason != null &&
-    error instanceof Error &&
-    (error === signal.reason || error.cause === signal.reason)
-  )
 }
 
 export type ServiceProxyInfo = {

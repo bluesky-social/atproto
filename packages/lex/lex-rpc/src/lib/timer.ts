@@ -1,6 +1,6 @@
 import { getAbortReason, throwIfAborted } from './abort.js'
 
-export function wait(
+export function sleep(
   ms: number,
   { signal }: { signal?: AbortSignal } = {},
 ): Promise<void> {
@@ -25,14 +25,4 @@ export function wait(
 
     signal?.addEventListener('abort', onAbort)
   })
-}
-
-export function* walkErrorCauses(
-  error: unknown,
-): Generator<Error, void, unknown> {
-  let current: unknown = error
-  for (let depth = 0; depth < 8 && current instanceof Error; depth++) {
-    yield current
-    current = current.cause
-  }
 }

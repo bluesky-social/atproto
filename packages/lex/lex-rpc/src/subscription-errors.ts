@@ -5,8 +5,12 @@ import type {
   LexValidationError,
   Subscription,
 } from '@atproto/lex-schema'
-import { type RetryableErrorCode, isRetryableErrorCode } from './errors.js'
-import { type TransientError, isTransientError } from './types.js'
+import {
+  type RetryableErrorCode,
+  type TransientError,
+  isRetryableErrorCode,
+  isTransientError,
+} from './errors.js'
 
 /**
  * Abstract base class for every error originating from an XRPC subscription:
