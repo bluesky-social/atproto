@@ -2,4 +2,4 @@
 '@atproto/oauth-provider': patch
 ---
 
-Pass the token's scope, with `include:` permission sets expanded, to the `onTokenCreated` hook.
+Provide the permissions granted by a new token to the `onTokenCreated` hook through its `scope` field. This includes permissions granted through `include:` permission sets.

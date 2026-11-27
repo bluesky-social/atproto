@@ -376,9 +376,9 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
   }
   const spacesMigrationCfg: ServerConfig['spacesMigration'] = {
     state: spacesMigrationState,
-    publishIntervalMs: env.spacesMigrationPublishIntervalMs ?? 5 * SECOND,
+    publishIntervalMs: env.spacesMigrationPublishIntervalMs ?? 4_500,
     jitterWindowMs: env.spacesMigrationJitterWindowMs ?? DAY,
-    sweepIntervalMs: env.spacesMigrationSweepIntervalMs ?? 50,
+    sweepIntervalMs: env.spacesMigrationSweepIntervalMs ?? 25,
   }
 
   return {

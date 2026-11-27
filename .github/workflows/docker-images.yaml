@@ -3,7 +3,6 @@ on:
   push:
     branches:
       - main
-      - divy/pds-spaces-migration
 
 # Each registry has its own job, so that each only holds its own credentials.
 # Both build the same images concurrently: only the image-ghcr jobs write the
@@ -18,8 +17,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Only the PDS is needed for the staging spaces migration rehearsal.
-        service: ${{ github.ref_name == 'divy/pds-spaces-migration' && fromJSON('["pds"]') || fromJSON('["bsky", "bsync", "ozone", "pds"]') }}
+        service: [bsky, bsync, ozone, pds]
 
     steps:
       - name: Checkout repository
@@ -61,7 +59,7 @@ jobs:
           cache-to: type=gha,scope=${{ matrix.service }},mode=max,ignore-error=true,ghtoken=${{ secrets.GITHUB_TOKEN }}
 
   image-aws:
-    if: github.repository == 'bluesky-social/atproto' && github.ref == 'refs/heads/main'
+    if: github.repository == 'bluesky-social/atproto'
     runs-on: ubuntu-latest
     permissions:
       contents: read
