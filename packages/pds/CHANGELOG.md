@@ -1,5 +1,12 @@
 # @atproto/pds
 
+## 0.5.68
+
+### Patch Changes
+
+- Updated dependencies [[`88bf64a`](https://github.com/bluesky-social/atproto/commit/88bf64a4372741a93f894afd06915eb504e6931e)]:
+  - @atproto-labs/opentelemetry-node@0.7.0
+
 ## 0.5.67
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # @atproto-labs/opentelemetry-node
 
+## 0.7.0
+
+### Minor Changes
+
+- [#6051](https://github.com/bluesky-social/atproto/pull/6051) [`88bf64a`](https://github.com/bluesky-social/atproto/commit/88bf64a4372741a93f894afd06915eb504e6931e) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Drop the `@opentelemetry/auto-instrumentations-node` dependency. Resource detection now only uses `@opentelemetry/sdk-node`'s local detectors plus the `container` one, so the cloud provider detectors (`alibaba`, `aws`, `azure`, `gcp`) no longer probe metadata endpoints at startup, and `OTEL_NODE_RESOURCE_DETECTORS` ignores their names with a warning.
+
 ## 0.6.0
 
 ### Minor Changes

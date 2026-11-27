@@ -1,5 +1,15 @@
 # @atproto/ozone
 
+## 0.16.8
+
+### Patch Changes
+
+- [#6056](https://github.com/bluesky-social/atproto/pull/6056) [`6d6ec75`](https://github.com/bluesky-social/atproto/commit/6d6ec75578ec1512ca677e63c76db4fe753ec1e7) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Migrate tests from jest to vitest, loading the dev-env graph once per worker
+
+- [#6053](https://github.com/bluesky-social/atproto/pull/6053) [`32e4abf`](https://github.com/bluesky-social/atproto/commit/32e4abfe030783b1289a1e9d628d163b826418b2) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Speed up and rebalance the slowest report integration tests.
+- Updated dependencies [[`88bf64a`](https://github.com/bluesky-social/atproto/commit/88bf64a4372741a93f894afd06915eb504e6931e)]:
+  - @atproto-labs/opentelemetry-node@0.7.0
+
 ## 0.16.7
 
 ### Patch Changes

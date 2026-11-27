@@ -1,5 +1,11 @@
 # @atproto/lex-server
 
+## 0.3.2
+
+### Patch Changes
+
+- [#6055](https://github.com/bluesky-social/atproto/pull/6055) [`3d7a1a6`](https://github.com/bluesky-social/atproto/commit/3d7a1a6eed43878e0ad52015a22706733eda5678) Thanks [@matthieusieben](https://github.com/matthieusieben)! - On Node.js, a request upgraded to a WebSocket now has a 101 `statusCode` on its `ServerResponse` once the handshake completes. HTTP server metrics, which read it when the response closes, no longer report subscriptions as 200 responses lasting the whole connection.
+
 ## 0.3.1
 
 ### Patch Changes

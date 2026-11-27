@@ -1,5 +1,14 @@
 # @atproto/bsky
 
+## 0.5.23
+
+### Patch Changes
+
+- [#6052](https://github.com/bluesky-social/atproto/pull/6052) [`d7799ea`](https://github.com/bluesky-social/atproto/commit/d7799ead850aeed35aa38874854d086efdcb2695) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Speed up the test suite: integration tests share a worker and load workspace packages natively instead of re-transforming and re-importing the dev-env graph in every file
+- Updated dependencies [[`f6d3902`](https://github.com/bluesky-social/atproto/commit/f6d3902d523f2e35a8b47a57a055936b946ce8e9), [`88bf64a`](https://github.com/bluesky-social/atproto/commit/88bf64a4372741a93f894afd06915eb504e6931e)]:
+  - @atproto/api@0.32.8
+  - @atproto-labs/opentelemetry-node@0.7.0
+
 ## 0.5.22
 
 ### Patch Changes
