@@ -422,6 +422,11 @@ function forwardSpaceUpdate(
  * Deliver an update to each active registration, on a best-effort basis. A
  * registration that has lapsed since the last update is sent an expiry notice in
  * place of the update, which is delivered reliably.
+ *
+ * Nothing is delivered while the authority is taken down or deactivated. Its
+ * spaces are suspended, so a registration that lapses then keeps its expiry
+ * notice for the first update after they resume. Active registrations see the
+ * gap in `prevSpaceRev` and catch up through listWriters.
  */
 async function deliverSpaceUpdate(
   ctx: AppContext,
@@ -429,6 +434,12 @@ async function deliverSpaceUpdate(
   update: WriterSetUpdate,
   signal: AbortSignal,
 ): Promise<void> {
+  const authority = await ctx.accountManager.getAccount(ref.spaceDid, {
+    includeDeactivated: true,
+    includeTakenDown: true,
+  })
+  if (!authority || authority.takedownRef || authority.deactivatedAt) return
+
   const space = ref.toString()
   const registrations = await ctx.actorStore.read(ref.spaceDid, (store) =>
     store.space.getNotifyRegistrations(space),

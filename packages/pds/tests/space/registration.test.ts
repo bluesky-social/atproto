@@ -140,6 +140,33 @@ describe('syncer registration', () => {
     ])
   })
 
+  it.each(['deactivated', 'takendown'] as const)(
+    'notifies no one while the authority is %s, then prompts a lapsed registration on the first update after',
+    async (status) => {
+      await using active = await createSyncer()
+      await using lapsed = await createSyncer()
+      const space = await sc.createSpace(alice, { members: [carol] })
+      await register(space, active)
+      await register(space, lapsed)
+      {
+        await using _ = await sc.withStatus(alice, status)
+        await sc.lapseRegistration(space, lapsed.url)
+        await sc.write(carol, space)
+        await network.pds.ctx.backgroundQueue.processAll()
+        expect(active.spaceUpdates()).toEqual([])
+        expect(lapsed.spaceUpdates()).toEqual([])
+      }
+
+      await writeAndForward(space)
+      expect(active.spaceUpdates()).toEqual([
+        expect.objectContaining({ $type: repoWrite.$type, repo: alice.did }),
+      ])
+      expect(lapsed.spaceUpdates()).toEqual([
+        expect.objectContaining({ $type: registrationExpired.$type }),
+      ])
+    },
+  )
+
   it('unregisters a syncer that rejects its expiry notice', async () => {
     await using syncer = await createSyncer({
       respond: () => ({ status: 400, body: { error: 'InvalidToken' } }),
