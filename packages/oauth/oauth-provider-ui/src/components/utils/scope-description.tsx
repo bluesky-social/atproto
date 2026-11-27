@@ -9,8 +9,15 @@ import {
   MailIcon,
   MessageCircleMoreIcon,
   UserIcon,
+  UsersIcon,
 } from 'lucide-react'
-import { Fragment, type HTMLAttributes, type ReactNode, useMemo } from 'react'
+import {
+  type ComponentProps,
+  Fragment,
+  type HTMLAttributes,
+  type ReactNode,
+  useMemo,
+} from 'react'
 import {
   type AudParam,
   BlobPermission,
@@ -20,9 +27,25 @@ import {
   RepoPermission,
   RpcPermission,
   ScopePermissionsTransition,
+  listSpacePermissions,
 } from '@atproto/oauth-scopes'
 import { Notice } from '#/components/feedback/notice.tsx'
-import type { PermissionSet, PermissionSets } from '#/hydration-data.d.ts'
+import { Badge } from '#/components/ui/badge.tsx'
+import type {
+  PermissionSet,
+  PermissionSets,
+  Space,
+  SpaceHandles,
+  Spaces,
+} from '#/hydration-data.d.ts'
+import {
+  SPACE_ACCESS_LEVELS,
+  type SpaceAccessContext,
+  type SpaceAccessLevel,
+  type SpaceAccessRow,
+  buildSpaceAccessRows,
+  highestSpaceAccessLevel,
+} from '#/lib/space-access.ts'
 import type { Override } from '#/lib/util'
 import { DescriptionCard } from './description-card.tsx'
 import { ButterflyIcon } from './icons.tsx'
@@ -35,6 +58,16 @@ export type ScopeDescriptionProps = Override<
     clientFirstParty?: boolean
     scope?: string
     permissionSets?: PermissionSets
+    spaces?: Spaces
+    spaceHandles?: SpaceHandles
+    /** The DID of the account the scope is (or would be) granted for. */
+    userDid?: string
+
+    /**
+     * Rendered on the consent screen, where space access is warned about and
+     * access to every space must be acknowledged before authorizing.
+     */
+    consent?: boolean
 
     allowEmail?: boolean
     onAllowEmail?: (allowed: boolean) => void
@@ -44,8 +77,12 @@ export type ScopeDescriptionProps = Override<
 export function ScopeDescription({
   scope,
   permissionSets,
+  spaces,
+  spaceHandles,
+  userDid,
   clientTrusted = false,
   clientFirstParty = false,
+  consent = false,
   allowEmail,
   onAllowEmail,
 
@@ -66,6 +103,19 @@ export function ScopeDescription({
   const permissions = useMemo(() => {
     return new ScopePermissionsTransition(scope)
   }, [scope])
+  const spaceContext = useMemo<SpaceAccessContext>(
+    () => ({ spaces, spaceHandles, userDid }),
+    [spaces, spaceHandles, userDid],
+  )
+  // Only the spaces asked for directly. Those a permission set carries are
+  // described by its own card and never warn, even when broad: the set can
+  // only grant its own space types, and its publisher vouches for them.
+  const spaceRows = useMemo(() => {
+    return buildSpaceAccessRows(
+      listSpacePermissions(permissions.scopes),
+      spaceContext,
+    )
+  }, [permissions, spaceContext])
 
   if (permissions.scopes.size === 0) return null
   if (permissions.scopes.size === 1 && permissions.scopes.has('atproto')) {
@@ -89,9 +139,12 @@ export function ScopeDescription({
       <IncludedPermissions
         includeScopes={includeScopes}
         permissionSets={permissionSets}
+        spaceContext={spaceContext}
       />
 
       <FineGrainedPermissions permissions={permissions} />
+
+      <SpacePermissions rows={spaceRows} consent={consent} />
 
       {(!clientFirstParty || !clientTrusted) && (
         <IdentityWarning permissions={permissions} />
@@ -103,15 +156,18 @@ export function ScopeDescription({
 function IncludedPermissions({
   includeScopes,
   permissionSets,
+  spaceContext,
 }: {
   includeScopes: IncludeScope[]
   permissionSets?: PermissionSets
+  spaceContext: SpaceAccessContext
 }): ReactNode {
   return includeScopes.map((includeScope, i) => (
     <IncludeScopePermissions
       key={i}
       includeScope={includeScope}
       permissionSet={permissionSets?.[includeScope.nsid]}
+      spaceContext={spaceContext}
     />
   ))
 }
@@ -119,9 +175,11 @@ function IncludedPermissions({
 function IncludeScopePermissions({
   includeScope,
   permissionSet,
+  spaceContext,
 }: {
   includeScope: IncludeScope
   permissionSet?: PermissionSet
+  spaceContext: SpaceAccessContext
 }) {
   const { nsid } = includeScope
 
@@ -129,6 +187,14 @@ function IncludeScopePermissions({
     if (!permissionSet) return null
     return new ScopePermissionsTransition(includeScope.toScopes(permissionSet))
   }, [includeScope, permissionSet])
+
+  const spaceRows = useMemo(() => {
+    if (!permissions) return []
+    return buildSpaceAccessRows(
+      listSpacePermissions(permissions.scopes),
+      spaceContext,
+    )
+  }, [permissions, spaceContext])
 
   return (
     <DescriptionCard
@@ -162,6 +228,7 @@ function IncludeScopePermissions({
           <>
             <RpcMethodsTable className="mt-2" permissions={permissions} />
             <RepoTable className="mt-2" permissions={permissions} />
+            <SpaceDetails className="mt-2" rows={spaceRows} />
           </>
         ) : null
       }
@@ -313,6 +380,9 @@ function hasOnlyBskyAppSpecificPermissions(
  * app.bsky or chat.bsky specific permissions, in which case the
  * <BlueskyAppviewPermissions /> and <BlueskyChatPermissions /> components cover
  * them.
+ *
+ * @NOTE Space permissions are not covered by the Bluesky components, so they
+ * are rendered by <SpacePermissions /> regardless.
  */
 function FineGrainedPermissions({
   permissions,
@@ -763,6 +833,496 @@ function RepoTable({ permissions, className, ...attrs }: RepoTableProps) {
         )}
       </tbody>
     </table>
+  )
+}
+
+/**
+ * Renders space access by how alarming it is (see `SpaceAccessLevel`): spaces
+ * of one named authority are informational, broad access cautions (yellow),
+ * and access to every space warns (red) and must be acknowledged.
+ */
+function SpacePermissions({
+  rows,
+  consent,
+}: {
+  rows: readonly SpaceAccessRow[]
+  consent: boolean
+}) {
+  const groups = useMemo(() => {
+    const authorities = new Map<string, SpaceAccessRow[]>()
+    const broad: SpaceAccessRow[] = []
+
+    for (const row of rows) {
+      if (row.level === 'authority') {
+        const list = authorities.get(row.authority)
+        if (list) list.push(row)
+        else authorities.set(row.authority, [row])
+      } else {
+        broad.push(row)
+      }
+    }
+
+    // The most alarming first, so a long list never hides it.
+    broad.sort(
+      (a, b) =>
+        SPACE_ACCESS_LEVELS.indexOf(b.level) -
+        SPACE_ACCESS_LEVELS.indexOf(a.level),
+    )
+
+    return { authorities: Array.from(authorities), broad }
+  }, [rows])
+
+  const level = useMemo(() => highestSpaceAccessLevel(rows), [rows])
+
+  return (
+    <>
+      {groups.authorities.map(([authority, authorityRows]) => (
+        <AuthoritySpaces
+          key={authority}
+          authority={authority}
+          rows={authorityRows}
+        />
+      ))}
+      {groups.broad.length > 0 && <BroadSpaces rows={groups.broad} />}
+
+      {consent && level === 'broad' && <BroadSpacesWarning />}
+      {consent && level === 'universal' && <UniversalSpacesWarning />}
+    </>
+  )
+}
+
+/**
+ * Spaces of one authority, named by its verified handle.
+ */
+function AuthoritySpaces({
+  authority,
+  rows,
+}: {
+  authority: string
+  rows: readonly SpaceAccessRow[]
+}) {
+  return (
+    <DescriptionCard
+      role="listitem"
+      image={<UsersIcon className="size-6" />}
+      title={
+        <Trans>
+          Spaces on{' '}
+          <SpaceAuthority did={authority} handle={rows[0]?.authorityHandle} />
+        </Trans>
+      }
+      description={<SpaceSummary rows={rows} hideAuthority />}
+      extra={
+        <>
+          <SpaceAuthorityDid className="mt-2" authority={authority} />
+          <SpaceDetails className="mt-2" rows={rows} hideAuthority />
+        </>
+      }
+    >
+      <Trans>
+        Permissioned spaces (such as group chats, forums, or shared albums) hold
+        data that's only visible to their members. The application requests the
+        following access:
+      </Trans>
+    </DescriptionCard>
+  )
+}
+
+/**
+ * Spaces not tied to any one authority: a space type anywhere, the spaces the
+ * user owns, or every space on the network.
+ */
+function BroadSpaces({ rows }: { rows: readonly SpaceAccessRow[] }) {
+  const { t } = useLingui()
+
+  return (
+    <DescriptionCard
+      role="listitem"
+      image={<UsersIcon className="size-6" />}
+      title={t`Spaces`}
+      description={<SpaceSummary rows={rows} />}
+      extra={<SpaceDetails className="mt-2" rows={rows} />}
+    >
+      <Trans>
+        Permissioned spaces (such as group chats, forums, or shared albums) hold
+        data that's only visible to their members. The application requests the
+        following access:
+      </Trans>
+    </DescriptionCard>
+  )
+}
+
+/**
+ * @NOTE The title is brought down to the body's size, so the warning reads no
+ * louder than the permissions it accompanies.
+ */
+function BroadSpacesWarning() {
+  return (
+    <Notice
+      role="note"
+      variant="warning"
+      className="[&_h3]:text-sm"
+      title={<Trans>Spaces can hold private data</Trans>}
+    >
+      <Trans>Use caution when granting apps access.</Trans>
+    </Notice>
+  )
+}
+
+/**
+ * @NOTE The checkbox is `required`, so the browser refuses to submit the
+ * consent form until it is ticked.
+ */
+function UniversalSpacesWarning() {
+  return (
+    <Notice
+      role="note"
+      variant="error"
+      title={<Trans>This app wants every private space you're in</Trans>}
+      append={
+        <label className="text-foreground mt-3 flex cursor-pointer items-start gap-2 font-medium">
+          <input
+            type="checkbox"
+            required
+            className="accent-destructive mt-0.5 size-4 shrink-0"
+          />
+          <span>
+            <Trans>
+              I understand this app can access all of my private space data
+            </Trans>
+          </span>
+        </label>
+      }
+    >
+      <Trans>
+        Very few apps need this. If you don't know why this one does, deny
+        access.
+      </Trans>
+    </Notice>
+  )
+}
+
+// Beyond this many lines, the summary defers the rest to the details dialog.
+const SPACE_SUMMARY_MAX_LINES = 3
+
+/**
+ * One line per space, with its access as badges. Phrasing content only, as it
+ * renders inside the card's description paragraph.
+ */
+function SpaceSummary({
+  rows,
+  hideAuthority = false,
+}: {
+  rows: readonly SpaceAccessRow[]
+  hideAuthority?: boolean
+}) {
+  const shown =
+    rows.length > SPACE_SUMMARY_MAX_LINES
+      ? rows.slice(0, SPACE_SUMMARY_MAX_LINES - 1)
+      : rows
+  const more = rows.length - shown.length
+
+  return (
+    <>
+      {shown.map((row) => (
+        <span
+          key={row.key}
+          className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1"
+        >
+          <span className="text-foreground">
+            <SpaceLabel row={row} hideAuthority={hideAuthority} />
+          </span>
+          <SpaceAccessBadges row={row} />
+        </span>
+      ))}
+      {more > 0 && (
+        <span className="mt-1 block">
+          <Trans>+{more} more</Trans>
+        </span>
+      )}
+    </>
+  )
+}
+
+// @NOTE The registry Badge has no warning variant, so broad access tints an
+// outline badge with the branded warning token, text left at foreground for
+// contrast (as Notice does).
+const SPACE_ACCESS_BADGE_PROPS = {
+  authority: { variant: 'secondary' },
+  broad: { variant: 'outline', className: 'border-warning/50 bg-warning/15' },
+  universal: { variant: 'destructive' },
+} as const satisfies Record<SpaceAccessLevel, ComponentProps<typeof Badge>>
+
+function SpaceAccessBadges({ row }: { row: SpaceAccessRow }) {
+  const badgeProps = SPACE_ACCESS_BADGE_PROPS[row.level]
+
+  return (
+    <span className="inline-flex flex-wrap gap-1">
+      {row.read ? (
+        <Badge {...badgeProps}>
+          <Trans context="SpaceAccess">Read</Trans>
+        </Badge>
+      ) : row.readSelf ? (
+        <Badge {...badgeProps}>
+          <Trans context="SpaceAccess">Read own data</Trans>
+        </Badge>
+      ) : null}
+      {row.writes.size > 0 && (
+        <Badge {...badgeProps}>
+          <Trans context="SpaceAccess">Write</Trans>
+        </Badge>
+      )}
+      {row.manage.size > 0 && (
+        <Badge {...badgeProps}>
+          <Trans context="SpaceAccess">Manage</Trans>
+        </Badge>
+      )}
+      {!row.read && !row.readSelf && !row.writes.size && !row.manage.size && (
+        <Badge variant="outline">
+          <Trans context="SpaceAccess">No access</Trans>
+        </Badge>
+      )}
+    </span>
+  )
+}
+
+type SpaceDetailsProps = Override<
+  HTMLAttributes<HTMLDivElement>,
+  {
+    rows: readonly SpaceAccessRow[]
+    hideAuthority?: boolean
+    children?: never
+  }
+>
+function SpaceDetails({
+  rows,
+  hideAuthority = false,
+  className = '',
+  ...attrs
+}: SpaceDetailsProps) {
+  if (!rows.length) return null
+
+  return (
+    <div className={`flex flex-col gap-3 ${className}`} {...attrs}>
+      {rows.map((row) => (
+        <SpaceRow key={row.key} row={row} hideAuthority={hideAuthority} />
+      ))}
+    </div>
+  )
+}
+
+function SpaceRow({
+  row,
+  hideAuthority,
+}: {
+  row: SpaceAccessRow
+  hideAuthority: boolean
+}) {
+  const { t } = useLingui()
+  const writeEntries = useMemo(
+    () =>
+      Array.from(row.writes.entries()).sort(([a], [b]) => a.localeCompare(b)),
+    [row.writes],
+  )
+  const starWrites = row.writes.get('*')
+
+  return (
+    <div className="flex flex-col gap-1">
+      <div className="text-sm">
+        <SpaceLabel row={row} hideAuthority={hideAuthority} />
+      </div>
+
+      {!hideAuthority && row.authority !== '*' && row.authority !== 'self' && (
+        <SpaceAuthorityDid authority={row.authority} />
+      )}
+
+      {row.manage.has('create') && (
+        <div className="text-muted-foreground text-xs">
+          <Trans>
+            <b>Create</b> spaces.
+          </Trans>
+        </div>
+      )}
+      {row.manage.has('update') && (
+        <div className="text-muted-foreground text-xs">
+          <Trans>
+            <b>Update</b> spaces: change their settings and members.
+          </Trans>
+        </div>
+      )}
+      {row.manage.has('delete') && (
+        <div className="text-muted-foreground text-xs">
+          <Trans>
+            <b>Delete</b> spaces.
+          </Trans>
+        </div>
+      )}
+
+      {!row.read && row.readSelf && (
+        <div className="text-muted-foreground text-xs">
+          <Trans>Read only your own data.</Trans>
+        </div>
+      )}
+
+      {writeEntries.length === 0 ? (
+        <div className="text-muted-foreground text-xs">
+          {row.read ? (
+            row.manage.size ? null : (
+              <Trans>Read-only access.</Trans>
+            )
+          ) : row.readSelf || row.manage.size ? null : (
+            <Trans>No access.</Trans>
+          )}
+        </div>
+      ) : (
+        <table className="w-full table-auto text-left">
+          <thead>
+            <tr className="text-xs">
+              <th className="font-normal">{t`Data`}</th>
+              <th className="text-center font-normal">{t`Create`}</th>
+              <th className="text-center font-normal">{t`Update`}</th>
+              <th className="text-center font-normal">{t`Delete`}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {writeEntries.map(([coll, actions]) => (
+              <tr key={coll} className="text-xs">
+                <td>
+                  <Collection coll={coll as CollectionParam} />
+                </td>
+                <td className="text-center">
+                  {starWrites?.create || actions.create ? (
+                    <CheckIcon className="inline-block size-3" />
+                  ) : null}
+                </td>
+                <td className="text-center">
+                  {starWrites?.update || actions.update ? (
+                    <CheckIcon className="inline-block size-3" />
+                  ) : null}
+                </td>
+                <td className="text-center">
+                  {starWrites?.delete || actions.delete ? (
+                    <CheckIcon className="inline-block size-3" />
+                  ) : null}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </div>
+  )
+}
+
+/**
+ * @param hideAuthority - The row's authority is already named around it (as
+ * in a card titled after it), so only the space type is described.
+ */
+function SpaceLabel({
+  row,
+  hideAuthority = false,
+}: {
+  row: SpaceAccessRow
+  hideAuthority?: boolean
+}) {
+  const { type, space, authority, authorityHandle } = row
+
+  if (hideAuthority) {
+    return type === '*' ? (
+      <Trans>All spaces</Trans>
+    ) : (
+      <Trans>
+        <SpaceTypeLabel type={type} space={space} /> spaces
+      </Trans>
+    )
+  }
+
+  if (authority === 'self') {
+    return type === '*' ? (
+      <Trans>All spaces you own</Trans>
+    ) : (
+      <Trans>
+        <SpaceTypeLabel type={type} space={space} /> spaces you own
+      </Trans>
+    )
+  }
+
+  if (authority === '*') {
+    return type === '*' ? (
+      <Trans>All spaces on the network</Trans>
+    ) : (
+      <Trans>
+        All <SpaceTypeLabel type={type} space={space} /> spaces
+      </Trans>
+    )
+  }
+
+  return type === '*' ? (
+    <Trans>
+      All spaces on <SpaceAuthority did={authority} handle={authorityHandle} />
+    </Trans>
+  ) : (
+    <Trans>
+      <SpaceTypeLabel type={type} space={space} /> spaces on{' '}
+      <SpaceAuthority did={authority} handle={authorityHandle} />
+    </Trans>
+  )
+}
+
+function SpaceTypeLabel({ type, space }: { type: string; space?: Space }) {
+  if (space) {
+    return (
+      <b>
+        <LangProp object={space} property="title" fallback={type} />
+      </b>
+    )
+  }
+  return <b>{type}</b>
+}
+
+/**
+ * An authority by its verified handle. One that could not be verified renders
+ * as `handle.invalid`, like an unverified account elsewhere in the network,
+ * and the dialogs list its DID (see <SpaceAuthorityDid />). Where handles
+ * weren't looked up (the account page), the DID itself is shown.
+ */
+function SpaceAuthority({
+  did,
+  handle,
+}: {
+  did: string
+  handle?: string | null
+}) {
+  if (handle === undefined) {
+    return <code className="text-muted-foreground">{did}</code>
+  }
+  if (handle === null) {
+    return (
+      <b className="text-destructive" title={did}>
+        handle.invalid
+      </b>
+    )
+  }
+  return (
+    <b className="text-text" title={did}>
+      {handle}
+    </b>
+  )
+}
+
+function SpaceAuthorityDid({
+  authority,
+  className = '',
+}: {
+  authority: string
+  className?: string
+}) {
+  return (
+    <p className={`text-muted-foreground text-xs break-all ${className}`}>
+      <Trans>
+        DID: <code>{authority}</code>
+      </Trans>
+    </p>
   )
 }
 

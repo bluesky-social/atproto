@@ -1,0 +1,111 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.space.listRepoOps",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "List operations on a space repo after a given revision. Used for incremental sync. Hosts may truncate the log, so use getRepo for a full sync. Responses are authenticated with a MAC. Requires auth as the repo's account or with a space credential; implemented by PDS.",
+      "parameters": {
+        "type": "params",
+        "required": ["space", "repo"],
+        "properties": {
+          "space": {
+            "type": "string",
+            "format": "space-ref"
+          },
+          "repo": {
+            "type": "string",
+            "format": "did"
+          },
+          "since": {
+            "type": "string",
+            "format": "tid"
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1000,
+            "default": 100
+          },
+          "cursor": {
+            "type": "string"
+          },
+          "excludeValues": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["ops", "commit"],
+          "properties": {
+            "ops": {
+              "type": "array",
+              "items": {
+                "type": "ref",
+                "ref": "#opEntry"
+              }
+            },
+            "commit": {
+              "type": "ref",
+              "ref": "com.atproto.space.defs#commit",
+              "description": "The repo's current commit. A syncer compares it against its own set hash once it has applied the last page, which has no cursor."
+            },
+            "cursor": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "errors": [
+        {
+          "name": "InvalidSpaceMac",
+          "description": "The MAC requested in the Accept-Signature header is missing or invalid."
+        },
+        { "name": "SpaceNotFound" },
+        { "name": "RepoNotFound" },
+        { "name": "RepoTakendown" },
+        { "name": "RepoSuspended" },
+        { "name": "RepoDeactivated" },
+        { "name": "InvalidCursor" }
+      ]
+    },
+    "opEntry": {
+      "type": "object",
+      "description": "Operations that share a rev were applied in the same commit.",
+      "required": ["rev", "collection", "rkey", "cid", "prev"],
+      "nullable": ["cid", "prev"],
+      "properties": {
+        "rev": {
+          "type": "string",
+          "format": "tid"
+        },
+        "collection": {
+          "type": "string",
+          "format": "nsid"
+        },
+        "rkey": {
+          "type": "string",
+          "format": "record-key"
+        },
+        "cid": {
+          "type": "string",
+          "format": "cid",
+          "description": "CID of the record after the operation. Null for deletes."
+        },
+        "prev": {
+          "type": "string",
+          "format": "cid",
+          "description": "CID of the record before the operation. Null for creates."
+        },
+        "value": {
+          "type": "unknown",
+          "description": "Omitted for deletes, if excludeValues is set, or if the record has since changed."
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,52 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.space.listBlobs",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "List blob CIDs referenced by records in a space repo. Requires auth as the repo's account or with a space credential; implemented by PDS.",
+      "parameters": {
+        "type": "params",
+        "required": ["space", "repo"],
+        "properties": {
+          "space": {
+            "type": "string",
+            "format": "space-ref"
+          },
+          "repo": {
+            "type": "string",
+            "format": "did"
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1000,
+            "default": 500
+          },
+          "cursor": { "type": "string" }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["cids"],
+          "properties": {
+            "cursor": { "type": "string" },
+            "cids": {
+              "type": "array",
+              "items": { "type": "string", "format": "cid" }
+            }
+          }
+        }
+      },
+      "errors": [
+        { "name": "SpaceNotFound" },
+        { "name": "RepoNotFound" },
+        { "name": "RepoTakendown" },
+        { "name": "RepoSuspended" },
+        { "name": "RepoDeactivated" }
+      ]
+    }
+  }
+}

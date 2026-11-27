@@ -17,11 +17,13 @@ import {
   type RecordWriteOp,
   WriteOpAction,
 } from '@atproto/repo'
+import { MAX_RECORD_SIZE } from '@atproto/space'
 import {
   AtUri,
   type DidString,
   type NsidString,
   type RecordKeyString,
+  type SpaceRef,
   isValidRecordKey,
 } from '@atproto/syntax'
 import { hasExplicitSlur } from '../handle/explicit-slurs.js'
@@ -44,7 +46,7 @@ const knownSchemas = new Map<string, RecordSchema>(
     .map((s) => [s.$type, s]),
 )
 
-const validateRecord = (
+export const validateRecord = (
   record: TypedLexMap,
   rkey: RecordKeyString,
   opts: {
@@ -91,6 +93,7 @@ const validateRecord = (
 
 export const prepareCreate = async (opts: {
   did: DidString
+  space?: SpaceRef
   collection: NsidString
   rkey?: RecordKeyString
   swapCid?: Cid | null
@@ -113,6 +116,7 @@ export const prepareCreate = async (opts: {
 
 export const prepareUpdate = async (opts: {
   did: DidString
+  space?: SpaceRef
   collection: NsidString
   rkey: RecordKeyString
   swapCid?: Cid | null
@@ -133,8 +137,10 @@ export const prepareUpdate = async (opts: {
   }
 }
 
-async function prepareWrite(opts: {
-  did: string
+export async function prepareWrite(opts: {
+  did: DidString
+  // Set for a permissioned space record, whose uri nests under the space ref.
+  space?: SpaceRef
   collection: NsidString
   rkey?: RecordKeyString
   record: LexMap
@@ -173,6 +179,13 @@ async function prepareWrite(opts: {
   const nextRkey = TID.next()
   const rkey = opts.rkey || nextRkey.toString()
 
+  const bytes = encode(record)
+  if (opts.space && bytes.length > MAX_RECORD_SIZE) {
+    throw new InvalidRecordError(
+      `Record too large: ${bytes.length} bytes, max ${MAX_RECORD_SIZE}`,
+    )
+  }
+
   return {
     record,
     // @NOTE we validate before enumerating blobs, so that we can provide more
@@ -196,21 +209,26 @@ async function prepareWrite(opts: {
         return blob
       },
     ),
-    uri: AtUri.make(opts.did, opts.collection, rkey),
-    cid: await cidForCbor(encode(record)),
+    uri: opts.space
+      ? opts.space.recordUri(opts.did, opts.collection, rkey)
+      : AtUri.make(opts.did, opts.collection, rkey),
+    cid: await cidForCbor(bytes),
   }
 }
 
 export const prepareDelete = (opts: {
   did: DidString
+  space?: SpaceRef
   collection: NsidString
   rkey: RecordKeyString
   swapCid?: Cid | null
 }): PreparedDelete => {
-  const { did, collection, rkey, swapCid } = opts
+  const { did, space, collection, rkey, swapCid } = opts
   return {
     action: WriteOpAction.Delete,
-    uri: AtUri.make(did, collection, rkey),
+    uri: space
+      ? space.recordUri(did, collection, rkey)
+      : AtUri.make(did, collection, rkey),
     swapCid,
   }
 }

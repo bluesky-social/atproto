@@ -21,6 +21,9 @@ export default function (server: Server, ctx: AppContext) {
 
       const cid = parseCid(params.cid)
       const found = await ctx.actorStore.read(params.did, async (store) => {
+        if (!(await store.repo.blob.hasRecordsForBlob(cid))) {
+          throw new InvalidRequestError('Blob not found', 'BlobNotFound')
+        }
         try {
           return await store.repo.blob.getBlob(cid)
         } catch (err) {

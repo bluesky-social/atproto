@@ -5,6 +5,7 @@ export { ZodError as ValidationError } from 'zod'
 
 export * from './alg.js'
 export * from './errors.js'
+export * from './jkt.js'
 export * from './jwk.js'
 export * from './jwks.js'
 export * from './jwt-decode.js'

@@ -1,0 +1,52 @@
+import type { Server } from '@atproto/xrpc-server'
+import { ACCESS_FULL } from '../../../../auth-scope.js'
+import type { AppContext } from '../../../../context.js'
+import { com } from '../../../../lexicons/index.js'
+import {
+  assertSpaceAuthority,
+  forwardWriterRemoved,
+  toSpaceRef,
+} from './util.js'
+
+export default function (server: Server, ctx: AppContext) {
+  server.add(com.atproto.space.removeWriter, {
+    auth: ctx.authVerifier.authorization({
+      scopes: ACCESS_FULL,
+      checkTakedown: true,
+      checkDeactivated: true,
+      authorize: () => {
+        // Performed in the handler as it requires the request body
+      },
+    }),
+    rateLimit: [
+      {
+        name: 'space-write-hour',
+        calcKey: ({ auth }) => auth.credentials.did,
+        calcPoints: () => 1,
+      },
+      {
+        name: 'space-write-day',
+        calcKey: ({ auth }) => auth.credentials.did,
+        calcPoints: () => 1,
+      },
+    ],
+    handler: async ({ input: { body }, auth }) => {
+      const authorityDid = auth.credentials.did
+      const { space, repo } = body
+
+      const ref = toSpaceRef(space)
+      assertSpaceAuthority(auth, ref, { manage: 'update' })
+
+      const removed = await ctx.actorStore.transact(
+        authorityDid,
+        async (actorTxn) => {
+          await actorTxn.space.getActiveSpacePolicy(space)
+          return actorTxn.space.removeWriter(space, repo)
+        },
+      )
+      if (removed) {
+        forwardWriterRemoved(ctx, ref, { repo, ...removed })
+      }
+    },
+  })
+}

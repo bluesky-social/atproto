@@ -61,7 +61,7 @@ export const rebuildRepo = async (
       }
     }
     const mstCids = await mst.allCids()
-    const toDelete = new CidSet(existingCids.toList()).subtractSet(mstCids)
+    const toDelete = new CidSet(existingCids).subtractSet(mstCids)
     const newCommit = await signCommit(
       {
         did,
@@ -76,8 +76,8 @@ export const rebuildRepo = async (
 
     if (promptUser) {
       console.log('Record count: ', records.length)
-      console.log('Existing blocks: ', existingCids.toList().length)
-      console.log('Deleting blocks:', toDelete.toList().length)
+      console.log('Existing blocks: ', existingCids.size)
+      console.log('Deleting blocks:', toDelete.size)
       console.log('Adding blocks: ', newBlocks.size)
 
       const shouldContinue = await promptContinue()
@@ -86,7 +86,7 @@ export const rebuildRepo = async (
       }
     }
 
-    await store.repo.storage.deleteMany(toDelete.toList())
+    await store.repo.storage.deleteMany(toDelete)
     await store.repo.storage.putMany(newBlocks, rev)
     await store.repo.storage.updateRoot(commitCid, rev)
     return {

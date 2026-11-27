@@ -9,6 +9,7 @@ export type OAuthSessionDetailsDialogProps = {
   clientName: string
   clientIdentifier: string
   scope?: string
+  userDid?: string
   onRevoke: () => void | PromiseLike<void>
   children: ReactElement
 }
@@ -17,6 +18,7 @@ export function OAuthSessionDetailsDialog({
   clientName,
   clientIdentifier,
   scope,
+  userDid,
   onRevoke,
   children,
 }: OAuthSessionDetailsDialogProps) {
@@ -66,7 +68,7 @@ export function OAuthSessionDetailsDialog({
                 permissions:
               </Trans>
             </p>
-            <ScopeDescription scope={scope} />
+            <ScopeDescription scope={scope} userDid={userDid} />
           </>
         )}
       </FormShell>

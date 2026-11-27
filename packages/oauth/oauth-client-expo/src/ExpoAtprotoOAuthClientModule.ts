@@ -16,8 +16,12 @@ export type NativeJwk = {
   alg: 'ES256'
 }
 
+// @NOTE All/part of this could probably be replaced by "expo-crypto"
 declare class ExpoAtprotoOAuthClientModule extends NativeModule<ExpoAtprotoOAuthClientModuleEvents> {
-  digest(data: Uint8Array, algo: string): Promise<Uint8Array>
+  digest(
+    data: Uint8Array,
+    algo: 'sha256' | 'sha384' | 'sha512',
+  ): Promise<Uint8Array>
 
   getRandomValues(byteLength: number): Promise<Uint8Array>
 

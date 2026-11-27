@@ -13,6 +13,8 @@ export interface Def<T> {
   schema: Checkable<T>
 }
 
+export type InferDef<T> = T extends Def<infer U> ? U : never
+
 export const is = <T>(obj: unknown, def: Checkable<T>): obj is T => {
   return def.safeParse(obj).success
 }
@@ -28,4 +30,8 @@ export const assure = <T>(def: Checkable<T>, obj: unknown): T => {
 
 export const isObject = (obj: unknown): obj is Record<string, unknown> => {
   return typeof obj === 'object' && obj !== null
+}
+
+export function buildDef<T>(name: string, schema: Checkable<T>): Def<T> {
+  return { name, schema }
 }

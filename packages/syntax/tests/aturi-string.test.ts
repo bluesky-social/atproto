@@ -1,8 +1,13 @@
-import { describe, expect, test } from 'vitest'
+import { describe, expect, expectTypeOf, test } from 'vitest'
 import {
   InvalidAtUriError,
+  type SpaceAtUriString,
   assertAtUriString,
   isAtUriString,
+  isPublicAtUriString,
+  isSpaceAtUriString,
+  isSpaceRefString,
+  parseAtUriString,
 } from '../src/index.js'
 import { readInteropFile } from './_utils.js'
 
@@ -180,6 +185,83 @@ describe('custom cases', () => {
     testInvalid('at://did:plc:asdf123##')
     testInvalid('#at://did:plc:asdf123')
     testInvalid('at://did:plc:asdf123#/asdf#/asdf')
+  })
+
+  describe('space URIs', () => {
+    const SPACE = 'at:space/did:plc:asdf123/com.example.group/default'
+
+    testValid(SPACE)
+    testValid(`${SPACE}/did:plc:user1/com.atproto.feed.post/abc123`)
+    testValid(`${SPACE}#/frag`)
+
+    testInvalid('at:space')
+    testInvalid('at:space/did:plc:asdf123')
+    testInvalid('at:space/did:plc:asdf123/com.example.group')
+    testInvalid('at:space/did:plc:asdf123/short/default')
+    testInvalid('at:space/user.bsky.social/com.example.group/default')
+    testInvalid('at:space//did:plc:asdf123/com.example.group/default')
+    testInvalid(`${SPACE}/user.bsky.social/com.atproto.feed.post/abc123`)
+    testInvalid(`${SPACE}/did:plc:user1`)
+    testInvalid(`${SPACE}/did:plc:user1/com.atproto.feed.post`)
+    testInvalid(`${SPACE}/did:plc:user1/com.atproto.feed.post/abc123/extra`)
+    testInvalid(`${SPACE}/did:plc:user1/short/abc123`)
+    testInvalid(`${SPACE}#`)
+    // the `space` path segment no longer marks a space URI
+    testInvalid('at://did:plc:asdf123/space/com.example.group/default')
+
+    // record keys, including the skey, are only checked in strict mode
+    testLoose('at:space/did:plc:asdf123/com.example.group/..')
+    testLoose(`${SPACE}/did:plc:user1/com.atproto.feed.post/%%%`)
+    testLoose(`${SPACE}?foo=bar`)
+    testLoose(`${SPACE}/`)
+  })
+
+  describe('space and public validators', () => {
+    const SPACE = 'at:space/did:plc:asdf123/com.example.group/default'
+    const RECORD = `${SPACE}/did:plc:user1/com.atproto.feed.post/abc123`
+    const PUBLIC = 'at://did:plc:asdf123/com.atproto.feed.post/abc'
+
+    test('isSpaceAtUriString and isPublicAtUriString tell the kinds apart', () => {
+      expect(isSpaceAtUriString(SPACE)).toBe(true)
+      expect(isSpaceAtUriString(RECORD)).toBe(true)
+      expect(isSpaceAtUriString(PUBLIC)).toBe(false)
+      expect(isSpaceAtUriString('at:space/did:plc:asdf123')).toBe(false)
+
+      expect(isPublicAtUriString(PUBLIC)).toBe(true)
+      expect(isPublicAtUriString(SPACE)).toBe(false)
+      expect(isPublicAtUriString('hello')).toBe(false)
+    })
+
+    test('isSpaceAtUriString narrows to SpaceAtUriString', () => {
+      const input: unknown = SPACE
+      if (!isSpaceAtUriString(input)) throw new Error('expected a space uri')
+      expectTypeOf(input).toExtend<SpaceAtUriString>()
+    })
+
+    test('isSpaceRefString accepts only a space ref', () => {
+      expect(isSpaceRefString(SPACE)).toBe(true)
+      expect(isSpaceRefString(RECORD)).toBe(false)
+      expect(isSpaceRefString(PUBLIC)).toBe(false)
+    })
+
+    test('parseAtUriString discriminates on isSpace', () => {
+      expect(parseAtUriString(PUBLIC)).toMatchObject({
+        success: true,
+        value: { isSpace: false },
+      })
+      expect(parseAtUriString(RECORD)).toMatchObject({
+        success: true,
+        value: {
+          isSpace: true,
+          authority: 'did:plc:asdf123',
+          spaceType: 'com.example.group',
+          skey: 'default',
+          authorDid: 'did:plc:user1',
+          collection: 'com.atproto.feed.post',
+          rkey: 'abc123',
+        },
+      })
+    })
   })
 })
 

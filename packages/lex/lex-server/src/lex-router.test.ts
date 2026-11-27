@@ -1,6 +1,7 @@
+import { once } from 'node:events'
 import type { AddressInfo } from 'node:net'
 import { scheduler } from 'node:timers/promises'
-import { describe, expect, it, vi } from 'vitest'
+import { assert, describe, expect, it, vi } from 'vitest'
 import { WebSocket } from 'ws'
 import { decodeAll } from '@atproto/lex-cbor'
 import { buildAgent, xrpc } from '@atproto/lex-client'
@@ -1990,6 +1991,135 @@ describe('Subscription', () => {
     expect(messages.length).toBeGreaterThanOrEqual(3)
     expect(sentCount).toBeGreaterThanOrEqual(3)
     expect(sentCount).toBeLessThan(maxMessages)
+  })
+
+  it.each([
+    { perMessageDeflate: undefined, extensions: '' },
+    { perMessageDeflate: false, extensions: '' },
+    { perMessageDeflate: true, extensions: 'permessage-deflate' },
+    {
+      perMessageDeflate: { serverNoContextTakeover: true, threshold: 0 },
+      extensions: 'permessage-deflate',
+    },
+  ])(
+    'negotiates "$extensions" with perMessageDeflate: $perMessageDeflate',
+    async ({ perMessageDeflate, extensions }) => {
+      const router = new LexRouter({ upgradeWebSocket }).add(
+        io.example.subscribe,
+        async function* ({ params: { message } }) {
+          for (let count = 1; count <= 3; count++) yield { message, count }
+        },
+      )
+
+      await using server = await serve(router, { port: 0, perMessageDeflate })
+
+      const { port } = server.address() as AddressInfo
+      // ws clients offer permessage-deflate by default
+      const ws = new WebSocket(
+        `ws://localhost:${port}/xrpc/io.example.subscribe?message=ping`,
+      )
+      ws.binaryType = 'arraybuffer'
+
+      const messages: unknown[] = []
+      ws.addEventListener('message', (event) => {
+        const bytes = new Uint8Array(event.data as ArrayBuffer)
+        messages.push([...decodeAll(bytes)])
+      })
+
+      const code = await new Promise<number>((resolve) => {
+        ws.addEventListener('close', (event) => resolve(event.code), {
+          once: true,
+        })
+      })
+
+      expect(ws.extensions).toBe(extensions)
+      expect(code).toBe(1000)
+      expect(messages).toStrictEqual([
+        [{ op: 1 }, { message: 'ping', count: 1 }],
+        [{ op: 1 }, { message: 'ping', count: 2 }],
+        [{ op: 1 }, { message: 'ping', count: 3 }],
+      ])
+    },
+  )
+
+  it('closes subscriptions with 1001 when the server terminates', async () => {
+    let handlerSignal: AbortSignal | undefined
+    const handlerDone = defer()
+
+    const serverSockets: WebSocket[] = []
+    const router = new LexRouter({
+      upgradeWebSocket: (request) => {
+        const result = upgradeWebSocket(request)
+        serverSockets.push(result.socket as unknown as WebSocket)
+        return result
+      },
+    }).add(io.example.subscribe, async function* ({ signal }) {
+      handlerSignal = signal
+      try {
+        yield { message: 'ping', count: 1 }
+        await scheduler.wait(60_000, { signal })
+      } finally {
+        handlerDone.resolve()
+      }
+    })
+
+    const gracefulTerminationTimeout = 2_000
+    const server = await serve(router, { port: 0, gracefulTerminationTimeout })
+
+    const { port } = server.address() as AddressInfo
+    const ws = new WebSocket(`ws://localhost:${port}/xrpc/io.example.subscribe`)
+    await once(ws, 'message')
+
+    const clientClose = once(ws, 'close')
+    const serverClose = once(serverSockets[0], 'close')
+
+    const start = performance.now()
+    await server.terminate()
+    expect(performance.now() - start).toBeLessThan(gracefulTerminationTimeout)
+
+    // Client was sent a 1001 close frame
+    expect((await clientClose)[0]).toBe(1001)
+    // Server received the client's close frame (1006 if it was destroyed first)
+    expect((await serverClose)[0]).toBe(1001)
+
+    await handlerDone.promise
+    expect(handlerSignal?.aborted).toBe(true)
+  })
+
+  it('finalizes all subscriptions when the server terminates', async () => {
+    const subscriberCount = 3
+    let finalized = 0
+
+    const router = new LexRouter({ upgradeWebSocket }).add(
+      io.example.subscribe,
+      async function* ({ signal, params: { message } }) {
+        let count = 0
+        try {
+          while (true) {
+            yield { message, count: ++count }
+          }
+        } finally {
+          assert(signal.aborted)
+          finalized++
+        }
+      },
+    )
+
+    const server = await serve(router, { port: 0 })
+
+    const { port } = server.address() as AddressInfo
+    const sockets = Array.from(
+      { length: subscriberCount },
+      () => new WebSocket(`ws://localhost:${port}/xrpc/io.example.subscribe`),
+    )
+
+    // Make sure every subscription is running
+    await Promise.all(sockets.map((ws) => once(ws, 'message')))
+    expect(finalized).toBe(0)
+
+    await server.terminate()
+
+    expect(finalized).toBe(subscriberCount)
   })
 
   it('returns 405 for non-GET request', async () => {

@@ -5,6 +5,7 @@ import {
   type JWTVerifyOptions,
   type KeyLike,
   SignJWT,
+  calculateJwkThumbprint,
   errors,
   exportJWK,
   generateKeyPair,
@@ -59,6 +60,12 @@ export class JoseKey<J extends Jwk = Jwk> extends Key<J> {
     } catch (cause) {
       throw new JwkError('Failed to import JWK', undefined, { cause })
     }
+  }
+
+  async deriveJwkThumbprint(
+    digestAlgorithm: 'sha256' | 'sha384' | 'sha512' = 'sha256',
+  ): Promise<string> {
+    return calculateJwkThumbprint(this.jwk as JWK, digestAlgorithm)
   }
 
   async createJwt(header: JwtHeader, payload: JwtPayload): Promise<SignedJwt> {

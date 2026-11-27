@@ -19,6 +19,10 @@ import {
   RpcPermission,
   type RpcPermissionMatch,
 } from './scopes/rpc-permission.js'
+import {
+  SpacePermission,
+  type SpacePermissionMatch,
+} from './scopes/space-permission.js'
 
 export { ScopeMissingError }
 
@@ -28,6 +32,7 @@ export type ScopeMatchingOptionsByResource = {
   repo: RepoPermissionMatch
   rpc: RpcPermissionMatch
   blob: BlobPermissionMatch
+  space: SpacePermissionMatch
 }
 
 /**
@@ -99,6 +104,8 @@ function scopeNeededFor<R extends keyof ScopeMatchingOptionsByResource>(
       return RpcPermission.scopeNeededFor(options as RpcPermissionMatch)
     case 'blob':
       return BlobPermission.scopeNeededFor(options as BlobPermissionMatch)
+    case 'space':
+      return SpacePermission.scopeNeededFor(options as SpacePermissionMatch)
   }
   // @ts-expect-error
   throw new TypeError(`Unknown resource: ${resource}`)
@@ -131,6 +138,8 @@ function parsePermissionScope(resource: string, scope: string) {
       return RpcPermission.fromString(scope)
     case 'blob':
       return BlobPermission.fromString(scope)
+    case 'space':
+      return SpacePermission.fromString(scope)
     default:
       return null
   }

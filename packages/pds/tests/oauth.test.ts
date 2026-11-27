@@ -760,4 +760,65 @@ describe('oauth', () => {
       })
     })
   })
+
+  describe('access to every space', () => {
+    let spaceAppUrl: string
+
+    beforeAll(async () => {
+      const sc = network.getSeedClient()
+
+      await sc.createAccount('carol', {
+        email: 'carol@test.com',
+        handle: 'carol.test',
+        password: 'carol-pass',
+      })
+
+      const url = new URL(appUrl)
+      url.searchParams.set('scope', 'space:*?authority=*')
+      spaceAppUrl = url.href
+    })
+
+    it('must be acknowledged before authorizing', async () => {
+      await using page = await PageHelper.from(browser, { languages })
+
+      await page.goto(spaceAppUrl)
+
+      await page.assertTitle('OAuth Client Example')
+
+      const input = await page.typeInInput('identifier', 'carol.test')
+
+      await page.navigationAction(async () => input.press('Enter'))
+
+      await page.assertTitle('Connexion')
+
+      await page.typeInInput('password', 'carol-pass')
+
+      await page.clickOnText('Se connecter')
+
+      await page.assertTitle('Autoriser')
+
+      await page.ensureTextVisibility(
+        'Cette application veut accéder à tous vos espaces privés',
+        'h3',
+      )
+
+      // The acknowledgement checkbox is required, so the browser refuses to
+      // submit the consent form and focuses the checkbox instead.
+      await page.clickOnText('Autoriser')
+
+      await page.clickOn('input[type="checkbox"]:focus')
+
+      await page.navigationClick('Autoriser')
+
+      await page.assertTitle('OAuth Client Example')
+
+      await page.ensureTextVisibility('Token info', 'h2')
+
+      await page.clickOnAriaLabel('User menu')
+
+      await page.clickOnText('Sign out')
+
+      await page.waitForNetworkIdle()
+    })
+  })
 })

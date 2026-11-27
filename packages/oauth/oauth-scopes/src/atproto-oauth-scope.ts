@@ -1,3 +1,5 @@
+import type { NsidString } from '@atproto/syntax'
+import type { LexiconPermissionSet } from './lib/lexicon.js'
 import { type ScopeStringFor, isScopeStringFor } from './lib/syntax.js'
 import { isNonNullable } from './lib/util.js'
 import { AccountPermission } from './scopes/account-permission.js'
@@ -6,6 +8,7 @@ import { IdentityPermission } from './scopes/identity-permission.js'
 import { IncludeScope } from './scopes/include-scope.js'
 import { RepoPermission } from './scopes/repo-permission.js'
 import { RpcPermission } from './scopes/rpc-permission.js'
+import { SpacePermission } from './scopes/space-permission.js'
 
 export { type ScopeStringFor, isScopeStringFor }
 
@@ -29,6 +32,7 @@ export type AtprotoOauthScope =
   | ScopeStringFor<'include'>
   | ScopeStringFor<'repo'>
   | ScopeStringFor<'rpc'>
+  | ScopeStringFor<'space'>
 
 /**
  * @note This function does not only verify the scope string format (with
@@ -45,7 +49,8 @@ export function isAtprotoOauthScope(value: string): value is AtprotoOauthScope {
     IdentityPermission.fromString(value) != null ||
     IncludeScope.fromString(value) != null ||
     RepoPermission.fromString(value) != null ||
-    RpcPermission.fromString(value) != null
+    RpcPermission.fromString(value) != null ||
+    SpacePermission.fromString(value) != null
   )
 }
 
@@ -70,10 +75,40 @@ export function normalizeAtprotoOauthScopeValue(
     IncludeScope,
     RepoPermission,
     RpcPermission,
+    SpacePermission,
   ]) {
     const parsed = Scope.fromString(value)
     if (parsed) return parsed.toString()
   }
 
   return null
+}
+
+/**
+ * The space permissions among `scopes`, including those carried by `include:`
+ * scopes. An `include:` whose permission set `getPermissionSet` does not
+ * provide is skipped.
+ */
+export function listSpacePermissions(
+  scopes: Iterable<string>,
+  getPermissionSet?: (nsid: NsidString) => LexiconPermissionSet | undefined,
+): SpacePermission[] {
+  const result: SpacePermission[] = []
+
+  for (const scope of scopes) {
+    const include = IncludeScope.fromString(scope)
+    if (include) {
+      const permissionSet = getPermissionSet?.(include.nsid)
+      if (!permissionSet) continue
+      for (const permission of include.toPermissions(permissionSet)) {
+        if (permission instanceof SpacePermission) result.push(permission)
+      }
+      continue
+    }
+
+    const permission = SpacePermission.fromString(scope)
+    if (permission) result.push(permission)
+  }
+
+  return result
 }

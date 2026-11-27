@@ -51,6 +51,7 @@ The modern, type-safe Lexicon toolchain. Most consumers only need [`@atproto/lex
 - [`crypto`](./crypto): Cryptographic keys and signing.
 - [`repo`](./repo): The atproto repository implementation (a Merkle Search Tree) and CAR handling.
 - [`sync`](./sync): Firehose consumption and repo synchronization.
+- [`star`](./star): Reading and writing [STAR](https://dasl.ing/star.html) archives.
 - [`tap`](./tap): Client for the atproto tap (event stream) interface.
 - [`ws-client`](./ws-client): Long-lived WebSocket client connections.
 - [`lexicon-resolver`](./lexicon-resolver): Network resolution of Lexicon documents.
