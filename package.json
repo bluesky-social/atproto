@@ -45,7 +45,7 @@
     "dev": "NODE_ENV=development pnpm run --recursive --parallel --stream '/^(dev|dev:.+)$/'",
     "dev:ts": "tsc --build tsconfig.json --preserveWatchOutput --watch",
     "test": "LOG_ENABLED=false ./packages/dev-infra/with-test-redis-and-db.sh pnpm --recursive --stream test",
-    "test:withFlags": "pnpm run test",
+    "test:integration": "LOG_ENABLED=false ./packages/dev-infra/with-test-redis-and-db.sh pnpm --recursive --stream --no-sort --workspace-concurrency=Infinity --filter @atproto/bsky --filter @atproto/bsync --filter @atproto/ozone --filter @atproto/pds --filter @atproto/sync test",
     "test:unit": "vitest --run",
     "bench": "vitest bench --run --reporter=verbose",
     "changeset": "changeset",

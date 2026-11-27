@@ -74,6 +74,30 @@ jobs:
             packages/api/src/client
             packages/api/src/moderation/const/labels.ts
 
+  # Packages whose tests don't need dev-infra. They run once here, instead of
+  # in every shard of the "test" matrix below.
+  test-unit:
+    name: Test (unit)
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          cache: pnpm
+          # @NOTE Same Node version as the "test" job below.
+          node-version: '^22.23.4'
+      - run: pnpm install --frozen-lockfile
+        env:
+          PUPPETEER_SKIP_DOWNLOAD: true
+      - uses: actions/download-artifact@v8
+        with:
+          name: build-artifacts
+          path: packages
+      - run: pnpm test:unit
+
+  # Packages whose tests need dev-infra (postgres & redis).
   test:
     name: Test
     needs: build
@@ -109,7 +133,7 @@ jobs:
         with:
           name: build-artifacts
           path: packages
-      - run: pnpm test:withFlags --maxWorkers=1 --shard=${{ matrix.shard }} --passWithNoTests
+      - run: pnpm test:integration --maxWorkers=1 --shard=${{ matrix.shard }} --passWithNoTests
 
   verify:
     name: Verify
