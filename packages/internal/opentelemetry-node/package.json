@@ -44,7 +44,6 @@
   },
   "dependencies": {
     "@opentelemetry/api": "^1.10.0",
-    "@opentelemetry/auto-instrumentations-node": "^0.83.1",
     "@opentelemetry/core": "^3.1.1",
     "@opentelemetry/instrumentation": "^0.301.2",
     "@opentelemetry/instrumentation-express": "^0.73.0",

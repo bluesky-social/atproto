@@ -1,5 +1,4 @@
 import { type Attributes, diag } from '@opentelemetry/api'
-import { getResourceDetectors } from '@opentelemetry/auto-instrumentations-node'
 import {
   getBooleanFromEnv,
   getStringFromEnv,
@@ -25,6 +24,7 @@ import {
   getInstrumentedModules,
 } from './instrumentations.js'
 import { FilteredW3CTraceContextPropagator } from './propagators/filtered-w3c-trace-context-propagator.js'
+import { getResourceDetectors } from './resource-detectors.js'
 
 export type { Attributes, Instrumentation }
 export { InstrumentationMismatchError }
@@ -100,7 +100,7 @@ export async function setup(getOptions: () => SetupOptions): Promise<void> {
         }),
       ),
       // @NOTE Unlike sdk-node's default detectors, these include the
-      // "container" detector.
+      // "container" detector. Cloud provider detectors are left out.
       resourceDetectors: getResourceDetectors(),
       instrumentations,
 
