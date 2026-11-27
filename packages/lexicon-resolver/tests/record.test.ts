@@ -68,7 +68,7 @@ describe('Record resolution', () => {
     const bobkey = await network.pds.ctx.actorStore.keypair(sc.dids.bob)
     const post = await sc.post(sc.dids.alice, 'post3')
     // switch alice's key away from the one used by her pds
-    await network.pds.ctx.plcClient.updateAtprotoKey(
+    await network.pds.ctx.plcClient.updateAtprotoSigningKey(
       sc.dids.alice,
       network.pds.ctx.plcRotationKey,
       bobkey.did(),
@@ -79,7 +79,7 @@ describe('Record resolution', () => {
       }),
     ).rejects.toThrow('Invalid signature on commit')
     // reset alice's key
-    await network.pds.ctx.plcClient.updateAtprotoKey(
+    await network.pds.ctx.plcClient.updateAtprotoSigningKey(
       sc.dids.alice,
       network.pds.ctx.plcRotationKey,
       alicekey.did(),
