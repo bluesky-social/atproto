@@ -416,7 +416,7 @@ importers:
         version: 1.3.0(@bufbuild/protobuf@1.6.0)(@connectrpc/connect@1.3.0(@bufbuild/protobuf@1.6.0))
       '@did-plc/lib':
         specifier: ^0.0.1
-        version: 0.0.1(debug@4.4.3(supports-color@8.1.1))
+        version: 0.0.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
       '@growthbook/growthbook':
         specifier: ^1.6.2
         version: 1.6.2
@@ -727,7 +727,7 @@ importers:
         version: link:../xrpc-server
       '@did-plc/lib':
         specifier: ^0.0.1
-        version: 0.0.1(debug@4.4.3(supports-color@8.1.1))
+        version: 0.0.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
       '@did-plc/server':
         specifier: ^0.0.1
         version: 0.0.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
@@ -781,7 +781,7 @@ importers:
     devDependencies:
       '@did-plc/lib':
         specifier: ^0.0.1
-        version: 0.0.1(debug@4.4.3(supports-color@8.1.1))
+        version: 0.0.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
       '@did-plc/server':
         specifier: ^0.0.1
         version: 0.0.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
@@ -2023,7 +2023,7 @@ importers:
         version: link:../xrpc-server
       '@did-plc/lib':
         specifier: ^0.0.1
-        version: 0.0.1(debug@4.4.3(supports-color@8.1.1))
+        version: 0.0.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
       '@opentelemetry/instrumentation-pg':
         specifier: ^0.78.0
         version: 0.78.0(@opentelemetry/api@1.10.0)(supports-color@8.1.1)
@@ -6255,6 +6255,10 @@ packages:
     engines: {node: '>=0.4.0'}
     hasBin: true
 
+  agent-base@6.0.2:
+    resolution: {integrity: sha512-RZNwNclF7+MS/8bDg70amg32dyeZGZxiDuQmZxKLAlQjr3jGyLx+4Kkk58UO7D2QdgFIQCovuSuZESne6RG6XQ==}
+    engines: {node: '>= 6.0.0'}
+
   agent-base@7.1.4:
     resolution: {integrity: sha512-MnA+YT8fwfJPgBx3m60MNqakm30XOkyIoH1y6huTQvC0PwZG7ki8NacLBcrPbNoo8vEZy7Jpuk7+jMO+CUovTQ==}
     engines: {node: '>= 14'}
@@ -6359,8 +6363,8 @@ packages:
   await-lock@3.0.0:
     resolution: {integrity: sha512-eO6fLiSnrJrMdjWMNK8zbVRXPs2TKJg78iKZd9wDpN3na5tcoV6EoeiOlMgk2QaAQ1gIrK1YuMsJHXWqz89tSA==}
 
-  axios@1.6.7:
-    resolution: {integrity: sha512-/hDJGff6/c7u0hDkvkGxR/oy6CbCs8ziCsC7SqmhjfozqiJGc8Z11wrv9z9lYfY4K8l+H9TpjcMDX0xOZmx+RA==}
+  axios@1.21.1:
+    resolution: {integrity: sha512-6eI5Q/Y4u/Um9dDlsRoq5pY2rxnUTv+L4PpLitnbk/i4jb3MxLZ5CsN5Ih3IysbeRYK4pR+P7qfMsOQl9fwwFQ==}
 
   babel-dead-code-elimination@1.0.12:
     resolution: {integrity: sha512-GERT7L2TiYcYDtYk1IpD+ASAYXjKbLTDPhBtYj7X1NuRMDTMtAx9kyBenub1Ev41lo91OHCKdmP+egTDmfQ7Ig==}
@@ -7478,8 +7482,8 @@ packages:
   flow-enums-runtime@0.0.6:
     resolution: {integrity: sha512-3PYnM29RFXwvAN6Pc/scUfkI7RwhQ/xqyLUyPNlXUp9S40zI8nup9tUSrTLSVnWGBN38FNiGWbwZOB6uR4OGdw==}
 
-  follow-redirects@1.15.5:
-    resolution: {integrity: sha512-vSFWUON1B+yAw1VN4xMfxgn5fTUiaOzAJCKBwIIgT/+7CuGy9+r+5gITvP62j3RmaD5Ph65UaERdOSRGUzZtgw==}
+  follow-redirects@1.16.3:
+    resolution: {integrity: sha512-toOSoqN6d51Wjf1aOFJYcoVv1aND9rj/CwjLU0Vz40oDuSpWDayCeKe4JpL5NL0WdFvoOOCI3BRo69HahjbR1A==}
     engines: {node: '>=4.0'}
     peerDependencies:
       debug: '*'
@@ -7734,6 +7738,10 @@ packages:
   http-terminator@3.2.0:
     resolution: {integrity: sha512-JLjck1EzPaWjsmIf8bziM3p9fgR1Y3JoUKAkyYEbZmFrIvJM6I8vVJfBGWlEtV9IWOvzNnaTtjuwZeBY2kwB4g==}
     engines: {node: '>=14'}
+
+  https-proxy-agent@5.0.1:
+    resolution: {integrity: sha512-dFcAjpTQFgoLMzC2VwU+C/CbS7uRL0lWmxDITmqm7C+7F0Odmj6s9l6alZc6AELXhrnggM2CeWSXHGOdX2YtwA==}
+    engines: {node: '>= 6'}
 
   https-proxy-agent@7.0.6:
     resolution: {integrity: sha512-vK9P5/iUfdl95AI+JVyUuIcVtd4ofvtrOr3HNtM2yxC9bnMbEdp3x01OhQNnjb8IJYi38VlTE3mBXwcfvywuSw==}
@@ -9162,8 +9170,9 @@ packages:
     resolution: {integrity: sha512-llQsMLSUDUPT44jdrU/O37qlnifitDP+ZwrmmZcoSKyLKvtZxpyV0n2/bD/N4tBAAZ/gJEdZU7KMraoK1+XYAg==}
     engines: {node: '>= 0.10'}
 
-  proxy-from-env@1.1.0:
-    resolution: {integrity: sha512-D+zkORCbA9f1tdWRK0RaCR3GPv50cMxcrz4X8k5LTSUD1Dkw47mKJEZQNunItRTkWwgtaUSo1RVFRIG9ZXiFYg==}
+  proxy-from-env@2.1.0:
+    resolution: {integrity: sha512-cJ+oHTW1VAEa8cJslgmUZrc+sjRKgAKl3Zyse6+PV38hZe/V6Z14TbCuXcan9F9ghlz4QrFr2c92TNF82UkYHA==}
+    engines: {node: '>=10'}
 
   pseudolocale@3.1.0:
     resolution: {integrity: sha512-jBidehQu5WO8zbFUod0ETJYoVPxZ0ixsdI9B8ilkE0eA+YTydxHA7ujNdU4YhTexD5yH5Griv9r5CuXx+nwFUA==}
@@ -12001,29 +12010,31 @@ snapshots:
       '@jridgewell/trace-mapping': 0.3.9
     optional: true
 
-  '@did-plc/lib@0.0.1(debug@4.4.3(supports-color@8.1.1))':
+  '@did-plc/lib@0.0.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)':
     dependencies:
       '@atproto/common': 0.1.0
       '@atproto/crypto': 0.1.0
       '@ipld/dag-cbor': 7.0.3
-      axios: 1.6.7(debug@4.4.3(supports-color@8.1.1))
+      axios: 1.21.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
       multiformats: 9.9.0
       uint8arrays: 3.0.0
       zod: 3.25.76
     transitivePeerDependencies:
       - debug
+      - supports-color
 
-  '@did-plc/lib@0.0.4(debug@4.4.3(supports-color@8.1.1))':
+  '@did-plc/lib@0.0.4(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)':
     dependencies:
       '@atproto/common': 0.1.1
       '@atproto/crypto': 0.1.0
       '@ipld/dag-cbor': 7.0.3
-      axios: 1.6.7(debug@4.4.3(supports-color@8.1.1))
+      axios: 1.21.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
       multiformats: 9.9.0
       uint8arrays: 3.0.0
       zod: 3.23.8
     transitivePeerDependencies:
       - debug
+      - supports-color
 
   '@did-plc/lib@1.0.0':
     dependencies:
@@ -12038,8 +12049,8 @@ snapshots:
     dependencies:
       '@atproto/common': 0.1.0
       '@atproto/crypto': 0.1.0
-      '@did-plc/lib': 0.0.4(debug@4.4.3(supports-color@8.1.1))
-      axios: 1.6.7(debug@4.4.3(supports-color@8.1.1))
+      '@did-plc/lib': 0.0.4(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
+      axios: 1.21.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
       cors: 2.8.5
       express: 4.18.2(supports-color@8.1.1)
       express-async-errors: 3.1.1(express@4.18.2(supports-color@8.1.1))
@@ -15105,6 +15116,12 @@ snapshots:
 
   acorn@8.18.0: {}
 
+  agent-base@6.0.2(supports-color@8.1.1):
+    dependencies:
+      debug: 4.4.3(supports-color@8.1.1)
+    transitivePeerDependencies:
+      - supports-color
+
   agent-base@7.1.4: {}
 
   agent-cli-detector@0.1.5: {}
@@ -15189,13 +15206,15 @@ snapshots:
 
   await-lock@3.0.0: {}
 
-  axios@1.6.7(debug@4.4.3(supports-color@8.1.1)):
+  axios@1.21.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1):
     dependencies:
-      follow-redirects: 1.15.5(debug@4.4.3(supports-color@8.1.1))
+      follow-redirects: 1.16.3(debug@4.4.3(supports-color@8.1.1))
       form-data: 4.0.6
-      proxy-from-env: 1.1.0
+      https-proxy-agent: 5.0.1(supports-color@8.1.1)
+      proxy-from-env: 2.1.0
     transitivePeerDependencies:
       - debug
+      - supports-color
 
   babel-dead-code-elimination@1.0.12(supports-color@8.1.1):
     dependencies:
@@ -15978,7 +15997,7 @@ snapshots:
       es-errors: 1.3.0
       get-intrinsic: 1.3.0
       has-tostringtag: 1.0.2
-      hasown: 2.0.2
+      hasown: 2.0.4
 
   escalade@3.2.0: {}
 
@@ -16477,7 +16496,7 @@ snapshots:
 
   flow-enums-runtime@0.0.6: {}
 
-  follow-redirects@1.15.5(debug@4.4.3(supports-color@8.1.1)):
+  follow-redirects@1.16.3(debug@4.4.3(supports-color@8.1.1)):
     optionalDependencies:
       debug: 4.4.3(supports-color@8.1.1)
 
@@ -16749,6 +16768,13 @@ snapshots:
       p-wait-for: 3.2.0
       roarr: 7.15.1
       type-fest: 2.19.0
+
+  https-proxy-agent@5.0.1(supports-color@8.1.1):
+    dependencies:
+      agent-base: 6.0.2(supports-color@8.1.1)
+      debug: 4.4.3(supports-color@8.1.1)
+    transitivePeerDependencies:
+      - supports-color
 
   https-proxy-agent@7.0.6(supports-color@8.1.1):
     dependencies:
@@ -18535,7 +18561,7 @@ snapshots:
       forwarded: 0.2.0
       ipaddr.js: 1.9.1
 
-  proxy-from-env@1.1.0: {}
+  proxy-from-env@2.1.0: {}
 
   pseudolocale@3.1.0:
     dependencies:
