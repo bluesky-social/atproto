@@ -280,11 +280,13 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
 
   const fetchCfg: ServerConfig['fetch'] = {
     disableSsrfProtection: env.disableSsrfProtection ?? env.devMode ?? false,
+    useSystemDnsLookup: env.useSystemDnsLookup ?? false,
     maxResponseSize: env.fetchMaxResponseSize ?? 512 * 1024, // 512kb
   }
 
   const proxyCfg: ServerConfig['proxy'] = {
     disableSsrfProtection: env.disableSsrfProtection ?? env.devMode ?? false,
+    useSystemDnsLookup: env.useSystemDnsLookup ?? false,
     allowHTTP2: env.proxyAllowHTTP2 ?? false,
     headersTimeout: env.proxyHeadersTimeout ?? 10e3,
     bodyTimeout: env.proxyBodyTimeout ?? 30e3,
@@ -525,11 +527,22 @@ export type EntrywayConfig = {
 
 export type FetchConfig = {
   disableSsrfProtection: boolean
+  /**
+   * Resolve the hostnames of user provided urls with `dns.lookup` (e.g.
+   * through `/etc/hosts`) instead of querying DNS through a `dns.Resolver`.
+   * `dns.lookup` holds a libuv threadpool thread until the system resolver
+   * gives up, so hosts with unresponsive nameservers can stall the process.
+   * Irrelevant when {@link disableSsrfProtection} is set, as `dns.lookup` is
+   * then used regardless.
+   */
+  useSystemDnsLookup: boolean
   maxResponseSize: number
 }
 
 export type ProxyConfig = {
   disableSsrfProtection: boolean
+  /** @see {@link FetchConfig.useSystemDnsLookup} */
+  useSystemDnsLookup: boolean
   allowHTTP2: boolean
   headersTimeout: number
   bodyTimeout: number

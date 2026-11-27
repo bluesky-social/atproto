@@ -1,4 +1,5 @@
 import assert from 'node:assert'
+import dns from 'node:dns'
 import * as plc from '@did-plc/lib'
 import type express from 'express'
 import type { Redis } from 'ioredis'
@@ -23,7 +24,7 @@ import {
   createServiceAuthHeaders,
   createServiceJwt,
 } from '@atproto/xrpc-server'
-import { type Fetch, safeFetchWrap } from '@atproto-labs/fetch-node'
+import { type Fetch, createSafeFetch } from '@atproto-labs/fetch-node'
 import { AccountManager } from './account-manager/account-manager.js'
 import { OAuthStore } from './account-manager/oauth-store.js'
 import { ScopeReferenceGetter } from './account-manager/scope-reference-getter.js'
@@ -245,13 +246,15 @@ export class AppContext implements AsyncDisposable {
      *
      * @note **DO NOT** wrap `safeFetch` with any logging or other transforms as
      * this might prevent the use of explicit `redirect: "follow"` init from
-     * working. See {@link safeFetchWrap}.
+     * working. See {@link createSafeFetch}.
      */
-    const safeFetch = safeFetchWrap({
+    const safeFetch = createSafeFetch({
       allowIpHost: false,
       allowImplicitRedirect: false,
       responseMaxSize: cfg.fetch.maxResponseSize,
       ssrfProtection: !cfg.fetch.disableSsrfProtection,
+      // Defaults to a `dns.Resolver` based lookup
+      lookup: cfg.fetch.useSystemDnsLookup ? dns.lookup : undefined,
 
       fetch: function (input, init) {
         const method =

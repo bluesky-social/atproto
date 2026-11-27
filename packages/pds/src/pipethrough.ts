@@ -1,3 +1,4 @@
+import dns from 'node:dns'
 import type { IncomingHttpHeaders, ServerResponse } from 'node:http'
 import {
   type Duplex,
@@ -26,7 +27,11 @@ import {
   excludeErrorResult,
   parseReqNsid,
 } from '@atproto/xrpc-server'
-import { isUnicastIp, unicastLookup } from '@atproto-labs/fetch-node'
+import {
+  createResolverLookup,
+  createUnicastLookup,
+  isUnicastIp,
+} from '@atproto-labs/fetch-node'
 import { buildProxiedContentEncoding } from '@atproto-labs/xrpc-utils'
 import { AuthScope, isAccessPrivileged } from './auth-scope.js'
 import type { ProxyConfig } from './config/config.js'
@@ -62,7 +67,14 @@ export function buildProxyAgent(
           return new Pool(origin, opts)
         },
     connect: {
-      lookup: cfg.disableSsrfProtection ? undefined : unicastLookup,
+      // @NOTE Hostnames come from DID documents, so whoever controls one picks
+      // the nameservers that answer: `createResolverLookup` keeps unresponsive
+      // ones off libuv's threadpool.
+      lookup: cfg.disableSsrfProtection
+        ? undefined
+        : createUnicastLookup(
+            cfg.useSystemDnsLookup ? dns.lookup : createResolverLookup(),
+          ),
     },
   })
 
