@@ -37,7 +37,17 @@ export class LexiconManager {
           .concat(otherScopes)
       : otherScopes
 
-    return this.getSpaces(extractSpaceTypeNsids(concreteScopes))
+    // As at token issuance, only a bare grant needs its declaration, for the
+    // collections it implies. A grant that names its collections is looked up
+    // for display only, which can do without the declaration.
+    const { required, optional } = extractSpaceTypeNsids(concreteScopes)
+    const entries = await Promise.all([
+      ...Array.from(required, this.getSpaceEntry, this),
+      ...Array.from(optional, (nsid) =>
+        this.getSpaceEntry(nsid).catch(() => null),
+      ),
+    ])
+    return new Map(entries.filter((entry) => entry != null))
   }
 
   /**
@@ -176,15 +186,21 @@ function resolveSpaceSelfAuthority(value: string, userDid: DidString): string {
   return parsed.withResolvedAuthority(userDid).toString()
 }
 
-function extractSpaceTypeNsids(scopes: readonly string[]): Set<NsidString> {
-  const nsids = new Set<NsidString>()
+/**
+ * The space types named in `scopes`, split by whether a grant needs the type's
+ * declaration: a bare grant takes its collections from it.
+ */
+function extractSpaceTypeNsids(scopes: readonly string[]) {
+  const required = new Set<NsidString>()
+  const optional = new Set<NsidString>()
   for (const value of scopes) {
     const parsed = SpacePermission.fromString(value)
-    if (!parsed) continue
-    if (parsed.spaceType === '*') continue
-    nsids.add(parsed.spaceType)
+    if (!parsed || parsed.spaceType === '*') continue
+    if (parsed.hasCollections) optional.add(parsed.spaceType)
+    else required.add(parsed.spaceType)
   }
-  return nsids
+  for (const nsid of required) optional.delete(nsid)
+  return { required, optional }
 }
 
 function parseScope(scope?: string) {

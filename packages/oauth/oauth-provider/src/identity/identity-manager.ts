@@ -1,16 +1,20 @@
 import { chunkArray } from '@atproto/common'
 import type { DidString } from '@atproto/oauth-provider-api'
-import { SpacePermission } from '@atproto/oauth-scopes'
+import {
+  type LexiconPermissionSet,
+  listSpacePermissions,
+} from '@atproto/oauth-scopes'
 import { type HandleString, isValidHandle } from '@atproto/syntax'
 import type { DidResolver } from '@atproto-labs/did-resolver'
 import { extractAtprotoData } from '@atproto-labs/did-resolver'
 import type { HandleResolver } from '@atproto-labs/handle-resolver-node'
 
 /**
- * Resolves the space-authority DIDs named in `space:` scopes to handles, so the
- * consent screen can say "spaces on protocol-nerds.atmoboards.com" rather than
- * "spaces on did:plc:abc...". A DID that fails verification is omitted and the
- * screen renders the raw DID instead.
+ * Resolves the space-authority DIDs named in `space:` scopes (including those
+ * carried by `include:` permission sets) to handles, so the consent screen can
+ * say "spaces on protocol-nerds.atmoboards.com" rather than "spaces on
+ * did:plc:abc...". A DID that fails verification is omitted, and the screen
+ * shows it as `handle.invalid`.
  */
 export class IdentityManager {
   constructor(
@@ -21,16 +25,22 @@ export class IdentityManager {
   public async getSpaceHandlesFromScope(
     scope?: string,
     {
+      permissionSets,
       onError = (did, error) => {
         throw error
       },
     }: {
+      /**
+       * The permission sets the scope's `include:` values name, so authorities
+       * in the space permissions they carry get resolved too.
+       */
+      permissionSets?: ReadonlyMap<string, LexiconPermissionSet>
       onError?: (did: DidString, error: unknown) => void
     } = {},
   ): Promise<Map<DidString, HandleString>> {
     const map = new Map<DidString, HandleString>()
 
-    const dids = extractSpaceDids(scope)
+    const dids = extractSpaceDids(scope, permissionSets)
     if (dids.size === 0) return map
 
     // We don't want to resolve more than a handful of DIDs at once.
@@ -75,20 +85,24 @@ export class IdentityManager {
   }
 }
 
-function extractSpaceDids(scope?: string): Set<DidString> {
+function extractSpaceDids(
+  scope?: string,
+  permissionSets?: ReadonlyMap<string, LexiconPermissionSet>,
+): Set<DidString> {
   const dids = new Set<DidString>()
   if (!scope) return dids
 
-  for (const value of scope.split(' ')) {
-    const parsed = SpacePermission.fromString(value)
+  const permissions = listSpacePermissions(scope.split(' '), (nsid) =>
+    permissionSets?.get(nsid),
+  )
 
-    // Invalid scope
-    if (!parsed) continue
-
+  for (const permission of permissions) {
     // Only include DID authorities
-    if (parsed.authority === '*' || parsed.authority === 'self') continue
+    if (permission.authority === '*' || permission.authority === 'self') {
+      continue
+    }
 
-    dids.add(parsed.authority)
+    dids.add(permission.authority)
   }
 
   return dids

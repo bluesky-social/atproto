@@ -1,6 +1,6 @@
 import { Trans, useLingui } from '@lingui/react/macro'
-import { type ReactNode, useState } from 'react'
-import { AccountPermission } from '@atproto/oauth-scopes'
+import { type ReactNode, useMemo, useState } from 'react'
+import { AccountPermission, listSpacePermissions } from '@atproto/oauth-scopes'
 import type { OAuthClientMetadata } from '@atproto/oauth-types'
 import { ClientAvatar } from '#/components/identity/client-avatar.tsx'
 import { ClientName } from '#/components/identity/client-name.tsx'
@@ -10,6 +10,10 @@ import type {
   SpaceHandles,
   Spaces,
 } from '#/hydration-data.d.ts'
+import {
+  buildSpaceAccessRows,
+  highestSpaceAccessLevel,
+} from '#/lib/space-access.ts'
 import { ActionButton, FormShell } from './forms/form-shell.tsx'
 import { DescriptionCard } from './utils/description-card.tsx'
 import { ScopeDescription } from './utils/scope-description.tsx'
@@ -22,6 +26,7 @@ export type ConsentFormProps = {
   permissionSets: PermissionSets
   spaces: Spaces
   spaceHandles: SpaceHandles
+  userDid: string
 
   scope?: string
 
@@ -60,6 +65,7 @@ export function ConsentForm({
   permissionSets,
   spaces,
   spaceHandles,
+  userDid,
 
   scope,
 
@@ -76,6 +82,15 @@ export function ConsentForm({
 
   const [allowEmail, setAllowEmail] = useState(true)
 
+  // Access to every space on the network turns the submit button destructive,
+  // on top of the warning <ScopeDescription /> renders.
+  const universalSpaceAccess = useMemo(() => {
+    const rows = buildSpaceAccessRows(
+      listSpacePermissions(scope?.split(' ') ?? []),
+    )
+    return highestSpaceAccessLevel(rows) === 'universal'
+  }, [scope])
+
   return (
     <FormShell
       onBack={onBack}
@@ -83,6 +98,7 @@ export function ConsentForm({
       onValues={() => action.reset()}
       loading={action.loading}
       submitLabel={<Trans context="OAuthConsent">Authorize</Trans>}
+      submitVariant={universalSpaceAccess ? 'destructive' : 'default'}
       handler={() => {
         return onConsent({
           scope:
@@ -151,10 +167,12 @@ export function ConsentForm({
       </DescriptionCard>
 
       <ScopeDescription
+        consent
         scope={scope}
         permissionSets={permissionSets}
         spaces={spaces}
         spaceHandles={spaceHandles}
+        userDid={userDid}
         clientTrusted={clientTrusted}
         clientFirstParty={clientFirstParty}
         allowEmail={canUnsetEmail ? allowEmail : true}

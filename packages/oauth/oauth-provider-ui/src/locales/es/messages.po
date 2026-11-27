@@ -33,11 +33,19 @@ msgid "{remaining, plural, one {Please try again in # second.} other {Please try
 msgstr ""
 
 #: src/components/utils/scope-description.tsx
+msgid "+{more} more"
+msgstr ""
+
+#: src/components/utils/scope-description.tsx
 msgid "<0/> spaces"
 msgstr ""
 
 #: src/components/utils/scope-description.tsx
 msgid "<0/> spaces on <1/>"
+msgstr ""
+
+#: src/components/utils/scope-description.tsx
+msgid "<0/> spaces you own"
 msgstr ""
 
 #: src/routes/account/u/$accountId/-about/en.tsx
@@ -48,16 +56,24 @@ msgstr ""
 msgid "<0>Bluesky Social</0> — General information about the network"
 msgstr ""
 
+#: src/components/utils/scope-description.tsx
+msgid "<0>Create</0> spaces."
+msgstr ""
+
+#: src/components/utils/scope-description.tsx
+msgid "<0>Delete</0> spaces."
+msgstr ""
+
 #: src/routes/account/u/$accountId/-about/en.tsx
 msgid "<0>Learn more</0><1>Want to learn more about the technology and network behind your Atmosphere account?</1>"
 msgstr ""
 
-#: src/components/utils/scope-description.tsx
-msgid "<0>Manage</0> the space: create new spaces, add and remove members."
-msgstr ""
-
 #: src/routes/account/u/$accountId/-about/en.tsx
 msgid "<0>This website: your account control center</0><1>The website you're on right now is your <2>account management hub</2>. Here you can:</1><3><4>Update your email address and password</4><5>Manage your personal data and security settings</5><6>View and manage active sessions across devices (browsers where you're signed in)</6></3><7>This place is where you control the fundamental aspects of your Atmosphere identity, independently of any app-specific details like the profile you have on the <8>Bluesky social app</8>.</7><9>Your Atmosphere account is currently hosted by <10/>, one of many hosting providers in the Atmosphere network. You can switch to a different one at any time without losing your account, identity, or data.</9>"
+msgstr ""
+
+#: src/components/utils/scope-description.tsx
+msgid "<0>Update</0> spaces: change their settings and members."
 msgstr ""
 
 #: src/routes/account/u/$accountId/-about/en.tsx
@@ -94,10 +110,6 @@ msgstr "Un servicio controlado por <0>{domain}</0>"
 
 #: src/routes/account/u/$accountId/route.tsx
 msgid "About"
-msgstr ""
-
-#: src/components/utils/scope-description.tsx
-msgid "Access permissioned spaces"
 msgstr ""
 
 #: src/components/utils/scope-description.tsx
@@ -173,11 +185,23 @@ msgid "alice@example.com"
 msgstr ""
 
 #: src/components/utils/scope-description.tsx
+msgid "All <0/> spaces"
+msgstr ""
+
+#: src/components/utils/scope-description.tsx
+msgid "All spaces"
+msgstr ""
+
+#: src/components/utils/scope-description.tsx
 msgid "All spaces on <0/>"
 msgstr ""
 
 #: src/components/utils/scope-description.tsx
 msgid "All spaces on the network"
+msgstr ""
+
+#: src/components/utils/scope-description.tsx
+msgid "All spaces you own"
 msgstr ""
 
 #: src/components/disable-email-auth-factor-dialog.tsx
@@ -483,6 +507,10 @@ msgstr ""
 msgid "Devices"
 msgstr ""
 
+#: src/components/utils/scope-description.tsx
+msgid "DID: <0>{authority}</0>"
+msgstr ""
+
 #: src/components/forms/fields/token-field.tsx
 msgid "Didn't receive a code? <0>Click here to resend.</0>"
 msgstr ""
@@ -762,6 +790,10 @@ msgid "HTTP"
 msgstr ""
 
 #: src/components/utils/scope-description.tsx
+msgid "I understand this app can access all of my private space data"
+msgstr ""
+
+#: src/components/utils/scope-description.tsx
 msgid "Identity"
 msgstr "Identidad"
 
@@ -846,6 +878,11 @@ msgstr ""
 msgid "Make visible"
 msgstr "Hacer visible"
 
+#: src/components/utils/scope-description.tsx
+msgctxt "SpaceAccess"
+msgid "Manage"
+msgstr ""
+
 #: src/routes/account/u/$accountId/route.tsx
 msgid "Manage applications that have access to your account"
 msgstr ""
@@ -915,6 +952,11 @@ msgstr "Nueva contraseña"
 #: src/components/reset-password-view.tsx
 msgid "Next"
 msgstr "Siguiente"
+
+#: src/components/utils/scope-description.tsx
+msgctxt "SpaceAccess"
+msgid "No access"
+msgstr ""
 
 #: src/components/utils/scope-description.tsx
 msgid "No access."
@@ -1051,6 +1093,11 @@ msgid "Reactivating makes your profile and content visible again."
 msgstr "Al reactivar, tu perfil y tu contenido volverán a ser visibles."
 
 #: src/components/utils/scope-description.tsx
+msgctxt "SpaceAccess"
+msgid "Read"
+msgstr ""
+
+#: src/components/utils/scope-description.tsx
 msgid "Read and send messages"
 msgstr "Leer y enviar mensajes"
 
@@ -1060,6 +1107,11 @@ msgstr "Leer y actualizar la dirección de correo electrónico de tu cuenta"
 
 #: src/components/utils/scope-description.tsx
 msgid "Read only your own data."
+msgstr ""
+
+#: src/components/utils/scope-description.tsx
+msgctxt "SpaceAccess"
+msgid "Read own data"
 msgstr ""
 
 #: src/components/utils/scope-description.tsx
@@ -1196,6 +1248,14 @@ msgstr "Algo salió mal"
 msgid "Spaces"
 msgstr ""
 
+#: src/components/utils/scope-description.tsx
+msgid "Spaces can hold private data"
+msgstr ""
+
+#: src/components/utils/scope-description.tsx
+msgid "Spaces on <0/>"
+msgstr ""
+
 #: src/components/feedback/error-details.tsx
 msgctxt "Error"
 msgid "Stack"
@@ -1311,13 +1371,13 @@ msgstr ""
 msgid "This app has access to your account with the following permissions:"
 msgstr ""
 
+#: src/components/utils/scope-description.tsx
+msgid "This app wants every private space you're in"
+msgstr ""
+
 #: src/components/consent-form.tsx
 msgid "This application identifies itself as:"
 msgstr "Esta aplicación se identifica como:"
-
-#: src/components/utils/scope-description.tsx
-msgid "This application is requesting access to <0>every space on the network</0>. This is a very broad permission. Only grant it to applications you deeply trust."
-msgstr ""
 
 #: src/components/consent-form.tsx
 msgid "This application is requesting the following permissions (scopes) to access your account:"
@@ -1451,6 +1511,10 @@ msgstr ""
 msgid "Use a domain name I own"
 msgstr ""
 
+#: src/components/utils/scope-description.tsx
+msgid "Use caution when granting apps access."
+msgstr ""
+
 #: src/components/forms/fields/handle-field.tsx
 #: src/routes/account/u/$accountId/manage.tsx
 msgid "Username"
@@ -1516,6 +1580,10 @@ msgstr "Verifica que eres humano"
 msgid "Verify your email"
 msgstr ""
 
+#: src/components/utils/scope-description.tsx
+msgid "Very few apps need this. If you don't know why this one does, deny access."
+msgstr ""
+
 #. placeholder {0}: error.issuer
 #: src/components/reset-password-request-form.tsx
 msgid "Visit <0>{0}</0> to manage this account."
@@ -1560,6 +1628,11 @@ msgstr "Dónde has iniciado sesión. Cierra la sesión en cualquier dispositivo 
 
 #: src/routes/account/u/$accountId/apps.tsx
 msgid "Why is this time so recent?"
+msgstr ""
+
+#: src/components/utils/scope-description.tsx
+msgctxt "SpaceAccess"
+msgid "Write"
 msgstr ""
 
 #: src/lib/api.ts

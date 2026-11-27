@@ -197,6 +197,7 @@ function DetailsButton({
       clientName={clientName}
       clientIdentifier={friendlyClientId}
       scope={session.scope ?? session.clientMetadata?.scope}
+      userDid={did}
       onRevoke={async () => {
         await revokeSession({ did, tokenId: session.tokenId })
       }}
