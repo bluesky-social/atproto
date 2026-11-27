@@ -1027,19 +1027,15 @@ export class LexRouter {
         )
       }
 
-      try {
-        const { healthCheck } = this.options
+      const { healthCheck } = this.options
 
-        const data: HealthCheckData = healthCheck
-          ? await healthCheck(request, connection)
-          : { status: 'ok' }
+      const data: HealthCheckData = healthCheck
+        ? await healthCheck(request, connection)
+        : { status: 'ok' }
 
-        return Response.json(data, {
-          headers: { 'cache-control': 'max-age=5' },
-        })
-      } catch (err) {
-        return LexServerError.from(err).toResponse()
-      }
+      return Response.json(data, {
+        headers: { 'cache-control': 'max-age=5' },
+      })
     }
 
     const subPath = pathname.slice(XRPC_PATH_PREFIX.length)
@@ -1240,7 +1236,7 @@ function hasUpperCase(str: string, start = 0, end = str.length): boolean {
   return false
 }
 
-function invalidRequestResponse(
+export function invalidRequestResponse(
   message: string,
   status = 400,
   headers?: HeadersInit,
