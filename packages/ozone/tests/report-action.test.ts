@@ -5,6 +5,7 @@ import {
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
+import { tools } from '../src/lexicons/index.js'
 
 describe('report-action', () => {
   let network: TestNetwork
@@ -63,17 +64,6 @@ describe('report-action', () => {
       })
       expect(target.reports).toHaveLength(1)
       expect(target.reports[0].subject.status?.subject).toMatchObject(message)
-      await expect(
-        modClient.emitEvent({
-          subject: message,
-          event: { $type: 'tools.ozone.moderation.defs#modEventTakedown' },
-          reportAction: { ids: [target.reports[0].id] },
-        }),
-      ).rejects.toThrow('Message takedowns are not supported')
-      expect(
-        (await modClient.queryReports({ status: 'open', subject: uri }))
-          .reports,
-      ).toHaveLength(1)
       const messageEvents = await modClient.queryEvents({ subject: uri })
       expect(messageEvents.events.length).toBeGreaterThan(0)
       for (const event of messageEvents.events)
@@ -82,11 +72,28 @@ describe('report-action', () => {
       expect(convoEvents.events.length).toBeGreaterThan(0)
       for (const event of convoEvents.events)
         expect(event.subject).toEqual(conversation)
-      await modClient.emitEvent({
+      const action = await modClient.emitEvent({
         subject: message,
-        event: { $type: 'tools.ozone.moderation.defs#modEventAcknowledge' },
+        event: tools.ozone.moderation.defs.modEventTakedown.$build({
+          strikeCount: 2,
+        }),
         reportAction: { ids: [target.reports[0].id] },
       })
+      expect(action.subject).toEqual(message)
+      expect(action.event).toMatchObject({ strikeCount: 2 })
+      const readInboxReport = (id: number) =>
+        sc.agent.call(tools.ozone.inbox.getReport.$lxm, { id }, undefined, {
+          headers: {
+            ...sc.getHeaders(sc.dids.alice),
+            'atproto-proxy': `${network.ozone.ctx.cfg.service.did}#atproto_labeler`,
+          },
+        })
+      const { data: inboxReport } = await readInboxReport(target.reports[0].id)
+      expect(inboxReport.resolution).toMatchObject({
+        outcome: 'actionTaken',
+        actionTaken: 'actionTaken',
+      })
+      expect(inboxReport.resolution.scope).toBeUndefined()
 
       expect(
         (
@@ -123,10 +130,15 @@ describe('report-action', () => {
       )
       for (const subject of [otherUri, convoUri, did]) {
         const status = await modClient.queryStatuses({ subject })
+        expect(status.subjectStatuses[0].takendown).toBe(false)
         expect(status.subjectStatuses[0].reviewState).toBe(
           'tools.ozone.moderation.defs#reviewOpen',
         )
       }
+      const accountStatus = await modClient.queryStatuses({ subject: did })
+      expect(
+        accountStatus.subjectStatuses[0].accountStrike?.activeStrikeCount,
+      ).toBe(2)
       const sameIdOtherConvo = { ...message, convoId: 'another-conversation' }
       await sc.createReport({
         reasonType: ComAtprotoModerationDefs.REASONSPAM,
@@ -167,9 +179,14 @@ describe('report-action', () => {
       ).toMatchObject(sameIdOtherConvo)
       await modClient.emitEvent({
         subject: message,
-        event: { $type: 'tools.ozone.moderation.defs#modEventAcknowledge' },
+        event: tools.ozone.moderation.defs.modEventReverseTakedown.$build({
+          strikeCount: -2,
+        }),
         reportAction: { all: true },
       })
+      const { data: reversed } = await readInboxReport(sameConvo.reports[0].id)
+      expect(reversed.resolution.outcome).toBe('other')
+      expect(reversed.resolution.actionTaken).toBeUndefined()
       expect(
         (
           await modClient.queryReports({ status: 'open', subject: uri })

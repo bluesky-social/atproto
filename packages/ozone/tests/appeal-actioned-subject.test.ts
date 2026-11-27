@@ -231,18 +231,6 @@ describe('appealActionedSubject', () => {
     })
   }
 
-  // Historical message takedowns can exist even though new ones are rejected.
-  async function legacyMessageTakedown(subject: MessageSubject) {
-    const { event } = await network.ozone.ctx.db.transaction((dbTxn) =>
-      network.ozone.ctx.modService(dbTxn).logEvent({
-        event: tools.ozone.moderation.defs.modEventTakedown.$build({}),
-        subject,
-        createdBy: network.ozone.adminAccnt.did,
-      }),
-    )
-    return event
-  }
-
   async function label(subject: EmitSubject, reportIds?: number[]) {
     return modClient.emitEvent({
       event: {
@@ -1740,9 +1728,7 @@ describe('appealActionedSubject', () => {
       $type: 'com.atproto.admin.defs#repoRef',
       did: account.did,
     })
-    await legacyMessageTakedown(
-      new MessageSubject(account.did, convoId, messageId),
-    )
+    await takedown(new MessageSubject(account.did, convoId, messageId).lex())
     // Exercise a distinct event on the conversation.
     await label({
       $type: 'chat.bsky.convo.defs#convoRef',
@@ -1783,9 +1769,7 @@ describe('appealActionedSubject', () => {
       messageId,
     })
 
-    const action = await legacyMessageTakedown(
-      new MessageSubject(account.did, 'convo-a', messageId),
-    )
+    const action = await takedown(subject('convo-a'))
     await expect(
       callAppeal(
         {

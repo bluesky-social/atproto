@@ -55,12 +55,6 @@ const handleModerationEvent = async ({
     input.body.subjectBlobCids,
   )
 
-  // Ozone dispatches takedown enforcement only for repositories and records.
-  if (subject.isMessage() && (isTakedownEvent || isReverseTakedownEvent)) {
-    throw new InvalidRequestError(
-      'Message takedowns are not supported; apply the action to the account instead',
-    )
-  }
   if (subject.isMessage() && isLabelEvent) {
     throw new InvalidRequestError(
       'Message labels are not supported; apply labels to the account instead',

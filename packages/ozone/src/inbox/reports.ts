@@ -1,9 +1,9 @@
 import { sql } from 'kysely'
 import type { DatetimeString, DidString } from '@atproto/lex-schema'
 import type { Database } from '../db/index.js'
-import { tools } from '../lexicons/index.js'
+import { chat, tools } from '../lexicons/index.js'
 import { subjectFromEventRow } from '../mod-service/subject.js'
-import { APPEAL_REASON_TYPE, REVERSE_TAKEDOWN } from './appeal.js'
+import { APPEAL_REASON_TYPE, REVERSE_TAKEDOWN, TAKEDOWN } from './appeal.js'
 import { isRead } from './seen.js'
 import { inboxHasStarted } from './start.js'
 import { parseSubjectCursor } from './subjects.js'
@@ -284,6 +284,12 @@ export function toReportDetail(
 function latestReportAction(row: InboxReportRow, actions: ReportActions) {
   const event = findClosingEvent(row, actions)
   if (!event) return null
+  // @NOTE Message takedowns record a decision without deleting the message.
+  if (event.subjectType === chat.bsky.convo.defs.messageRef.$type) {
+    if (event.action === TAKEDOWN)
+      return { type: 'actionTaken', scope: undefined }
+    if (event.action === REVERSE_TAKEDOWN) return null
+  }
   if (event.action === REVERSE_TAKEDOWN) {
     return {
       type: event.subjectUri ? 'contentRestored' : 'accountRestored',
