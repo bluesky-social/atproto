@@ -573,19 +573,13 @@ export class SpacesMigrationProgress {
    * When the publisher starts. The first process to ask fixes it, and every
    * later start (restarts, rollbacks, re-upgrades) reads it back.
    */
-  async publishStartAt(
-    hostname: string,
-    windowMs: number,
-    now: number,
-  ): Promise<number> {
+  async publishStartAt(windowMs: number, now: number): Promise<number> {
     await this.db.executeWithRetry(
       this.db.db
         .insertInto('spaces_migration_state')
         .values({
           id: 1,
-          publishStartAt: toDatetimeString(
-            now + jitterDelayMs(hostname, windowMs),
-          ),
+          publishStartAt: toDatetimeString(now + jitterDelayMs(windowMs)),
         })
         .onConflict((oc) => oc.doNothing()),
     )
