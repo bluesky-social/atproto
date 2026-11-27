@@ -1,5 +1,5 @@
 import assert from 'node:assert'
-import { jest } from '@jest/globals'
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 import type { ToolsOzoneModerationDefs } from '@atproto/api'
 import {
   type ModeratorClient,
@@ -36,14 +36,12 @@ describe('blob divert', () => {
   const mockReportServiceResponse = (succeeds: boolean) => {
     const blobDiverter = network.ozone.ctx.blobDiverter
     assert(blobDiverter)
-    return jest
-      .spyOn(blobDiverter, 'uploadBlob')
-      .mockImplementation(async () => {
-        if (!succeeds) {
-          // A status-less UpstreamHttpError is what retryHttp always retries
-          throw new UpstreamHttpError(undefined, 'upload failed')
-        }
-      })
+    return vi.spyOn(blobDiverter, 'uploadBlob').mockImplementation(async () => {
+      if (!succeeds) {
+        // A status-less UpstreamHttpError is what retryHttp always retries
+        throw new UpstreamHttpError(undefined, 'upload failed')
+      }
+    })
   }
 
   const getSubject = () => ({

@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest'
 import { com } from '../src/lexicons/index.js'
 import {
   CHAT_CONVO_COLLECTION,

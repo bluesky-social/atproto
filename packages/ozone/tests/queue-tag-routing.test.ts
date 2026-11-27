@@ -1,5 +1,14 @@
-import { jest } from '@jest/globals'
 import pg from 'pg'
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest'
 import {
   type AtpAgent,
   type ToolsOzoneQueueCreateQueue,
@@ -136,17 +145,18 @@ describe('tag-based queue routing', () => {
 
   function failRoutingNoteInsert() {
     const originalQuery = pg.Client.prototype.query
-    return jest
-      .spyOn(pg.Client.prototype, 'query')
-      .mockImplementation(function (this: pg.Client, ...args) {
-        if (
-          typeof args[0] === 'string' &&
-          args[0].startsWith('insert into "report_activity"')
-        ) {
-          return Promise.reject(new Error('routing note write failed'))
-        }
-        return Reflect.apply(originalQuery, this, args)
-      })
+    return vi.spyOn(pg.Client.prototype, 'query').mockImplementation(function (
+      this: pg.Client,
+      ...args
+    ) {
+      if (
+        typeof args[0] === 'string' &&
+        args[0].startsWith('insert into "report_activity"')
+      ) {
+        return Promise.reject(new Error('routing note write failed'))
+      }
+      return Reflect.apply(originalQuery, this, args)
+    })
   }
 
   async function unassign(reportId: number, comment?: string) {
@@ -847,7 +857,7 @@ describe('tag-based queue routing', () => {
     await createQueue({ reporterTags: [reporterTag] })
     await tagAccount(sc.dids.alice, [reporterTag])
     for (let count = 0; count < 5; count++) await report()
-    using queries = jest.spyOn(pg.Client.prototype, 'query')
+    using queries = vi.spyOn(pg.Client.prototype, 'query')
     await network.ozone.daemon.ctx.queueRouter.routeReports()
     const lookups = queries.mock.calls.filter(
       ([text]) => typeof text === 'string' && text.startsWith(tagQueryPrefix),
@@ -872,7 +882,7 @@ describe('tag-based queue routing', () => {
 
   it('skips the tag lookup when enabled automatic queues do not use tags', async () => {
     await report()
-    using queries = jest.spyOn(pg.Client.prototype, 'query')
+    using queries = vi.spyOn(pg.Client.prototype, 'query')
     await network.ozone.daemon.ctx.queueRouter.routeReports()
     expect(
       queries.mock.calls.filter(
@@ -889,7 +899,7 @@ describe('tag-based queue routing', () => {
     const cursor = await router.getCursor()
     const originalQuery = pg.Client.prototype.query
     {
-      using queries = jest
+      using queries = vi
         .spyOn(pg.Client.prototype, 'query')
         .mockImplementation(function (this: pg.Client, ...args) {
           if (

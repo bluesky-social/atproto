@@ -1,3 +1,4 @@
+import { beforeAll, describe, expect, it } from 'vitest'
 import { ids } from '@atproto/api'
 import type { ModeratorClient, TestNetwork } from '@atproto/dev-env'
 import { com, tools } from '../src/lexicons/index.js'

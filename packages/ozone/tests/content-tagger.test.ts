@@ -1,4 +1,4 @@
-import { jest } from '@jest/globals'
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 import { ComAtprotoModerationDefs } from '@atproto/api'
 import {
   type ModeratorClient,
@@ -16,13 +16,12 @@ describe('moderation subject content tagging', () => {
   let modClient: ModeratorClient
 
   beforeAll(async () => {
-    const env = jest.replaceProperty(process, 'env', {
-      ...process.env,
-      OZONE_LANGUAGE_TAG_RECORD_TYPES:
-        '["app.bsky.*","site.standard.document"]',
-    })
+    vi.stubEnv(
+      'OZONE_LANGUAGE_TAG_RECORD_TYPES',
+      '["app.bsky.*","site.standard.document"]',
+    )
     const { languageTagRecordTypes } = readEnv()
-    env.restore()
+    vi.unstubAllEnvs()
     network = await TestNetwork.create({
       dbPostgresSchema: 'ozone_content_tagger_test',
       ozone: { languageTagRecordTypes },
@@ -134,7 +133,7 @@ describe('moderation subject content tagging', () => {
       await network.processAll()
 
       const views = network.ozone.ctx.modService(network.ozone.ctx.db).views
-      using fetchRecords = jest.spyOn(
+      using fetchRecords = vi.spyOn(
         Object.getPrototypeOf(views) as typeof views,
         'fetchRecords',
       )

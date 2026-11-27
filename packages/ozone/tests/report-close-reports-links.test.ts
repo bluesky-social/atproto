@@ -1,4 +1,5 @@
 import { sql } from 'kysely'
+import { describe, expect, it } from 'vitest'
 import { ComAtprotoModerationDefs, ids } from '@atproto/api'
 import { chat, com, tools } from '../src/lexicons/index.js'
 import {

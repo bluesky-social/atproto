@@ -2,10 +2,10 @@ import { createHash } from 'node:crypto'
 import { once } from 'node:events'
 import { createServer } from 'node:http'
 import type { AddressInfo } from 'node:net'
-import { jest } from '@jest/globals'
 import { CID } from 'multiformats/cid'
 import * as Digest from 'multiformats/hashes/digest'
 import * as undici from 'undici'
+import { expect, it, vi } from 'vitest'
 import { envToCfg } from '../src/config/config.js'
 import { readEnv } from '../src/config/env.js'
 import { BlobDiverter } from '../src/daemon/blob-diverter.js'
@@ -40,7 +40,7 @@ it('diverts a large blob and does not repeat an upload after a response timeout'
   try {
     const serviceUrl =
       `http://127.0.0.1:${(server.address() as AddressInfo).port}` as const
-    jest.replaceProperty(process, 'env', {
+    vi.spyOn(process, 'env', 'get').mockReturnValue({
       OZONE_BLOB_DIVERT_MAX_BYTES: String(101 * 1024 * 1024),
     })
     const config = envToCfg({
@@ -59,25 +59,23 @@ it('diverts a large blob and does not repeat an upload after a response timeout'
     for (let i = 0; i < 101; i++) hash.update(chunk)
     const digest = hash.digest()
     const cid = CID.createV1(0x55, Digest.create(0x12, digest)).toString()
-    using fetch = jest
-      .spyOn(globalThis, 'fetch')
-      .mockImplementation(async () => {
-        let remaining = 101
-        return new Response(
-          new ReadableStream({
-            pull(controller) {
-              if (remaining-- > 0) controller.enqueue(chunk)
-              else controller.close()
-            },
-          }),
-          {
-            headers: {
-              'content-type': 'video/mp4',
-              'content-length': String(101 * chunk.length),
-            },
+    using fetch = vi.spyOn(globalThis, 'fetch').mockImplementation(async () => {
+      let remaining = 101
+      return new Response(
+        new ReadableStream({
+          pull(controller) {
+            if (remaining-- > 0) controller.enqueue(chunk)
+            else controller.close()
           },
-        )
-      })
+        }),
+        {
+          headers: {
+            'content-type': 'video/mp4',
+            'content-length': String(101 * chunk.length),
+          },
+        },
+      )
+    })
     const diverter = new BlobDiverter(null as never, {
       idResolver: {
         did: {
@@ -155,7 +153,7 @@ it('diverts a large blob and does not repeat an upload after a response timeout'
       await agent.close()
     }
   } finally {
-    jest.restoreAllMocks()
+    vi.restoreAllMocks()
     server.closeAllConnections()
     await new Promise<void>((resolve, reject) =>
       server.close((err) => (err ? reject(err) : resolve())),

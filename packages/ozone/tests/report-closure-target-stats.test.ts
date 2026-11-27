@@ -1,4 +1,12 @@
-import { jest } from '@jest/globals'
+import {
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest'
 import type { AtpAgent } from '@atproto/api'
 import { type SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { type DidString, toDatetimeString } from '@atproto/lex'
@@ -88,9 +96,9 @@ describe('report closure target statistics', () => {
   }
 
   async function computeLive() {
-    jest.useFakeTimers({
+    vi.useFakeTimers({
       now,
-      doNotFake: [
+      toNotFake: [
         'hrtime',
         'nextTick',
         'performance',
@@ -108,7 +116,7 @@ describe('report closure target statistics', () => {
         .reportStatsService(network.ozone.ctx.db)
         .materializeAll({ force: true })
     } finally {
-      jest.useRealTimers()
+      vi.useRealTimers()
     }
   }
 

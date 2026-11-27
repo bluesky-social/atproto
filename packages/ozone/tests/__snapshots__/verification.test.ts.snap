@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`verification list returns paginated list of verifications 1`] = `
+exports[`verification > list > returns paginated list of verifications 1`] = `
 {
   "$type": "tools.ozone.verification.defs#verificationView",
   "createdAt": "1970-01-01T00:00:00.000Z",
@@ -170,7 +170,7 @@ exports[`verification list returns paginated list of verifications 1`] = `
 }
 `;
 
-exports[`verification list returns paginated list of verifications 2`] = `
+exports[`verification > list > returns paginated list of verifications 2`] = `
 {
   "$type": "tools.ozone.verification.defs#verificationView",
   "createdAt": "1970-01-01T00:00:00.000Z",

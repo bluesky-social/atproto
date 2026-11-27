@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest'
 import { ids } from '@atproto/api'
 import { com, tools } from '../src/lexicons/index.js'
 import {

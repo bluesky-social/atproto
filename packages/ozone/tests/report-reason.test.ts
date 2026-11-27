@@ -1,5 +1,5 @@
-import { jest } from '@jest/globals'
 import { Registry, register as defaultRegistry } from 'prom-client'
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 import type AtpAgent from '@atproto/api'
 import { type SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { OzoneService } from '@atproto/ozone'
@@ -77,7 +77,7 @@ describe('report reason', () => {
 
   beforeAll(async () => {
     const createOzone = OzoneService.create
-    using _ = jest
+    using _ = vi
       .spyOn(OzoneService, 'create')
       .mockImplementation((cfg, secrets, overrides) =>
         createOzone(cfg, secrets, overrides, metricsRegistry),
@@ -458,7 +458,7 @@ describe('report reason', () => {
       )
 
       {
-        using _ = jest.spyOn(Date, 'now').mockReturnValue(cachePopulatedAt)
+        using _ = vi.spyOn(Date, 'now').mockReturnValue(cachePopulatedAt)
         await expect(
           moderationServiceProfile.validateReasonType(
             'tools.ozone.report.defs#reasonHarassmentFake',
@@ -471,7 +471,7 @@ describe('report reason', () => {
 
       // immediately after the update, the reason type still fails due to cache
       {
-        using _ = jest.spyOn(Date, 'now').mockReturnValue(cachePopulatedAt)
+        using _ = vi.spyOn(Date, 'now').mockReturnValue(cachePopulatedAt)
         await expect(
           moderationServiceProfile.validateReasonType(
             'tools.ozone.report.defs#reasonHarassmentFake',
@@ -481,7 +481,7 @@ describe('report reason', () => {
       }
 
       {
-        using _ = jest
+        using _ = vi
           .spyOn(Date, 'now')
           .mockReturnValue(cachePopulatedAt + cacheTTL + 1)
 

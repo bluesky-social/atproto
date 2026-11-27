@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`moderation-statuses query statuses returns statuses filtered by subject language 1`] = `
+exports[`moderation-statuses > query statuses > returns statuses filtered by subject language 1`] = `
 [
   {
     "ageAssuranceState": "unknown",
@@ -56,7 +56,7 @@ exports[`moderation-statuses query statuses returns statuses filtered by subject
 ]
 `;
 
-exports[`moderation-statuses query statuses returns statuses for subjects that received moderation events 1`] = `
+exports[`moderation-statuses > query statuses > returns statuses for subjects that received moderation events 1`] = `
 [
   {
     "ageAssuranceState": "unknown",

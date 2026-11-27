@@ -1,4 +1,4 @@
-import { jest } from '@jest/globals'
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 import {
   ComAtprotoModerationDefs,
   type ToolsOzoneModerationDefs,
@@ -442,7 +442,7 @@ describe('bulk moderation events', () => {
 
     it('dispatches bulk credential revocations for account subjects', async () => {
       const subjects = [(await fixture()).account, (await fixture()).account]
-      using revoke = jest
+      using revoke = vi
         .spyOn(network.ozone.ctx.pdsClient!, 'call')
         .mockResolvedValue(undefined)
 
@@ -926,7 +926,7 @@ describe('bulk moderation events', () => {
     const fixtures = [await fixture(), await fixture()]
     const service = network.ozone.ctx.modService(network.ozone.ctx.db)
     const prototype: typeof service = Object.getPrototypeOf(service)
-    using sendEmail = jest
+    using sendEmail = vi
       .spyOn(prototype, 'sendEmail')
       .mockImplementation(async ({ recipientDid }) => {
         if (recipientDid === fixtures[1].did)
@@ -954,7 +954,7 @@ describe('bulk moderation events', () => {
     const f = await fixture()
     const profile = network.ozone.ctx.moderationServiceProfile()
     const prototype: typeof profile = Object.getPrototypeOf(profile)
-    using validateReason = jest
+    using validateReason = vi
       .spyOn(prototype, 'validateReasonType')
       .mockRejectedValueOnce(new Error('Invalid reason type'))
     const event = tools.ozone.moderation.defs.modEventReport.$build({
@@ -968,11 +968,9 @@ describe('bulk moderation events', () => {
       tools.ozone.moderation.emitEvents.$lxm,
     )
     validateReason.mockRestore()
-    const disabled = jest.replaceProperty(
-      network.ozone.ctx.cfg.service,
-      'reportTagsDisabled',
-      true,
-    )
+    const disabled = vi
+      .spyOn(network.ozone.ctx.cfg.service, 'reportTagsDisabled', 'get')
+      .mockReturnValue(true)
     try {
       const result = await modClient.emitEvents({
         event,
@@ -984,7 +982,7 @@ describe('bulk moderation events', () => {
         'report:spam',
       )
     } finally {
-      disabled.restore()
+      disabled.mockRestore()
     }
   })
 

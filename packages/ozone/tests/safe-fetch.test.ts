@@ -1,4 +1,4 @@
-import { jest } from '@jest/globals'
+import { describe, expect, it, vi } from 'vitest'
 import { createSafeFetch } from '../src/safe-fetch.js'
 
 describe('safe fetch', () => {
@@ -14,7 +14,7 @@ describe('safe fetch', () => {
   })
 
   it('disables redirects', async () => {
-    const fetch = jest
+    using fetch = vi
       .spyOn(globalThis, 'fetch')
       .mockResolvedValue(new Response(null, { status: 200 }))
     const safeFetch = createSafeFetch()
@@ -24,11 +24,10 @@ describe('safe fetch', () => {
     const request = fetch.mock.calls[0][0]
     expect(request).toBeInstanceOf(Request)
     expect((request as Request).redirect).toBe('error')
-    fetch.mockRestore()
   })
 
   it('allows nonstandard HTTPS ports', async () => {
-    const fetch = jest
+    using fetch = vi
       .spyOn(globalThis, 'fetch')
       .mockResolvedValue(new Response(null, { status: 200 }))
     const safeFetch = createSafeFetch()
@@ -36,6 +35,5 @@ describe('safe fetch', () => {
     await safeFetch('https://api.bsky.app:8443')
 
     expect(fetch).toHaveBeenCalled()
-    fetch.mockRestore()
   })
 })

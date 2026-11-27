@@ -1,5 +1,5 @@
-import { jest } from '@jest/globals'
 import { sql } from 'kysely'
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 import { ComAtprotoModerationDefs } from '@atproto/api'
 import { wait } from '@atproto/common'
 import {
@@ -417,7 +417,7 @@ describe('expiring tags', () => {
       const released = new Promise<void>((resolve) => {
         release = resolve
       })
-      using _reportSpy = jest
+      using _reportSpy = vi
         .spyOn(prototype, 'report')
         .mockImplementation(async function (this: typeof prototype, info) {
           const result = await originalReport.call(this, info)

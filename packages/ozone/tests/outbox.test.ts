@@ -1,7 +1,7 @@
 import EventEmitter, { getEventListeners, once } from 'node:events'
 import type { AddressInfo } from 'node:net'
-import { jest } from '@jest/globals'
 import express from 'express'
+import { describe, expect, it, vi } from 'vitest'
 import { WebSocket } from 'ws'
 import { createDeferrable } from '@atproto/common'
 import { Frame, Server } from '@atproto/xrpc-server'
@@ -17,7 +17,7 @@ function createSequencer() {
   const sequencer = new EventEmitter() as Sequencer
   sequencer.lastSeen = 0
   sequencer.destroyed = false
-  sequencer.requestLabelRange = jest
+  sequencer.requestLabelRange = vi
     .fn<Sequencer['requestLabelRange']>()
     .mockResolvedValue([])
   return sequencer
@@ -30,7 +30,7 @@ function event(seq: number): LabelsEvt {
 describe('outbox lifecycle', () => {
   it('bounds a paused consumer without interrupting another subscriber', async () => {
     const sequencer = createSequencer()
-    const onOverflow = jest.fn()
+    const onOverflow = vi.fn()
     const slow = new Outbox(sequencer, { maxBufferSize: 2, onOverflow })
     const healthy = new Outbox(sequencer, { maxBufferSize: 2 })
     const slowStream = slow.events()
@@ -125,7 +125,7 @@ describe('outbox lifecycle', () => {
   it('stops backfill when the sequencer closes during a query', async () => {
     const sequencer = createSequencer()
     const query = createDeferrable<LabelsEvt[]>()
-    using request = jest
+    using request = vi
       .spyOn(sequencer, 'requestLabelRange')
       .mockReturnValueOnce(query.complete)
     const ac = new AbortController()
@@ -149,7 +149,7 @@ describe('outbox lifecycle', () => {
   it('does not start cutover while sequencer shutdown is waiting to close', async () => {
     const sequencer = createSequencer()
     const query = createDeferrable<LabelsEvt[]>()
-    using request = jest
+    using request = vi
       .spyOn(sequencer, 'requestLabelRange')
       .mockReturnValueOnce(query.complete)
     const ac = new AbortController()
@@ -175,7 +175,7 @@ describe('outbox lifecycle', () => {
   it('does not fetch another backfill page after cancellation', async () => {
     const sequencer = createSequencer()
     sequencer.lastSeen = 1000
-    using request = jest
+    using request = vi
       .spyOn(sequencer, 'requestLabelRange')
       .mockResolvedValueOnce([event(1)])
     const ac = new AbortController()
@@ -193,14 +193,14 @@ describe('outbox lifecycle', () => {
     const sequencer = createSequencer()
     const started = createDeferrable()
     const query = createDeferrable<LabelsEvt[]>()
-    using request = jest
+    using request = vi
       .spyOn(sequencer, 'requestLabelRange')
       .mockResolvedValueOnce([])
       .mockImplementationOnce(() => {
         started.resolve()
         return query.complete
       })
-    const onOverflow = jest.fn()
+    const onOverflow = vi.fn()
     const outbox = new Outbox(sequencer, { maxBufferSize: 2, onOverflow })
     const stream = outbox.events(0)
     const next = expect(stream.next()).rejects.toThrow(
@@ -223,7 +223,7 @@ describe('outbox lifecycle', () => {
     const sequencer = createSequencer()
     const started = createDeferrable()
     const query = createDeferrable<LabelsEvt[]>()
-    using _request = jest
+    using _request = vi
       .spyOn(sequencer, 'requestLabelRange')
       .mockResolvedValueOnce([])
       .mockImplementationOnce(() => {
@@ -246,11 +246,11 @@ describe('outbox lifecycle', () => {
 
   it('rejects a cutover query that exceeds the limit', async () => {
     const sequencer = createSequencer()
-    using request = jest
+    using request = vi
       .spyOn(sequencer, 'requestLabelRange')
       .mockResolvedValueOnce([])
       .mockResolvedValueOnce([event(1), event(2), event(3)])
-    const onOverflow = jest.fn()
+    const onOverflow = vi.fn()
     const outbox = new Outbox(sequencer, { maxBufferSize: 2, onOverflow })
     await expect(outbox.events(0).next()).rejects.toThrow(
       'Stream consumer too slow',
@@ -264,7 +264,7 @@ describe('outbox lifecycle', () => {
   it('propagates cutover query failures and removes the listener', async () => {
     const sequencer = createSequencer()
     const error = new Error('query failed')
-    using _request = jest
+    using _request = vi
       .spyOn(sequencer, 'requestLabelRange')
       .mockResolvedValueOnce([])
       .mockRejectedValueOnce(error)
@@ -279,7 +279,7 @@ describe('historical label replay budget', () => {
   it('shares the budget across fast subscribers and wakes cancelled waiters', async () => {
     const sequencer = createSequencer()
     sequencer.lastSeen = 10000
-    using request = jest
+    using request = vi
       .spyOn(sequencer, 'requestLabelRange')
       .mockResolvedValue([event(1)])
     const backfillLimiter = new BackfillRateLimiter(500)
@@ -365,7 +365,7 @@ it('disconnects a stalled label socket before its send callback completes', asyn
   await once(healthy, 'open')
   const sending = createDeferrable()
   let pendingSend: ((error?: Error) => void) | undefined
-  using send = jest
+  using send = vi
     .spyOn(socket, 'send')
     .mockImplementation((_data, _opts, cb) => {
       pendingSend = cb
@@ -399,12 +399,12 @@ it('disconnects a stalled label socket before its send callback completes', asyn
 it('attributes an upgraded replay connection without logging secret headers', async () => {
   const sequencer = createSequencer()
   sequencer.lastSeen = 1
-  sequencer.curr = jest.fn<Sequencer['curr']>().mockResolvedValue(1)
-  using _request = jest
+  sequencer.curr = vi.fn<Sequencer['curr']>().mockResolvedValue(1)
+  using _request = vi
     .spyOn(sequencer, 'requestLabelRange')
     .mockResolvedValueOnce([event(1)])
   const closed = createDeferrable()
-  using info = jest
+  using info = vi
     .spyOn(labelStreamLogger, 'info')
     .mockImplementation((...args) => {
       if (args[1] === 'label subscription closed') closed.resolve()

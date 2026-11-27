@@ -1,5 +1,6 @@
 import assert from 'node:assert'
 import EventEmitter, { once } from 'node:events'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import {
   ComAtprotoAdminDefs,
   ComAtprotoModerationDefs,

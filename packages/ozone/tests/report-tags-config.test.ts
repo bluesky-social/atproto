@@ -1,10 +1,10 @@
-import { jest } from '@jest/globals'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { envToCfg } from '../src/config/config.js'
 import { readEnv } from '../src/config/env.js'
 
 describe('report tagging configuration', () => {
   afterEach(() => {
-    jest.restoreAllMocks()
+    vi.restoreAllMocks()
   })
 
   it.each([
@@ -15,7 +15,7 @@ describe('report tagging configuration', () => {
     ['false', false],
     ['0', false],
   ])('OZONE_REPORT_TAGS_DISABLED=%s disables tags: %s', (value, disabled) => {
-    jest.replaceProperty(process, 'env', {
+    vi.spyOn(process, 'env', 'get').mockReturnValue({
       ...(value === undefined ? {} : { OZONE_REPORT_TAGS_DISABLED: value }),
     })
 

@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest'
 import { ComAtprotoModerationDefs } from '@atproto/api'
 import { TestNetwork, basicSeed } from '@atproto/dev-env'
 import { tools } from '../src/lexicons/index.js'

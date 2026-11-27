@@ -1,3 +1,4 @@
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { type SeedClient, TestNetwork, usersSeed } from '@atproto/dev-env'
 import type { Client } from '@atproto/lex'
 import { app, tools } from '../src/lexicons/index.js'

@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`ozone-settings listOptions returns all personal settings 1`] = `
+exports[`ozone-settings > listOptions > returns all personal settings 1`] = `
 [
   {
     "createdAt": "1970-01-01T00:00:00.000Z",

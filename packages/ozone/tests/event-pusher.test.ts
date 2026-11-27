@@ -1,4 +1,4 @@
-import { jest } from '@jest/globals'
+import { describe, expect, it, vi } from 'vitest'
 import { XrpcInternalError, XrpcResponseError } from '@atproto/lex'
 import { EventPusher } from '../src/daemon/event-pusher.js'
 import { com } from '../src/lexicons/index.js'
@@ -48,7 +48,7 @@ describe('EventPusher', () => {
     'confirms events when the target account does not exist (%s)',
     async (error, message) => {
       const pusher = createPusher()
-      const updateSubjectStatus = jest
+      const updateSubjectStatus = vi
         .fn<() => Promise<never>>()
         .mockRejectedValue(responseError(400, error, message))
       pusher.pds!.client.call = updateSubjectStatus as any
@@ -61,13 +61,11 @@ describe('EventPusher', () => {
   it('defers events until the target service rate limit resets', async () => {
     const pusher = createPusher()
     const resetAt = Math.ceil(Date.now() / 1000) + 60
-    const updateSubjectStatus = jest
-      .fn<() => Promise<never>>()
-      .mockRejectedValue(
-        responseError(429, 'RateLimitExceeded', 'Rate Limit Exceeded', {
-          'ratelimit-reset': String(resetAt),
-        }),
-      )
+    const updateSubjectStatus = vi.fn<() => Promise<never>>().mockRejectedValue(
+      responseError(429, 'RateLimitExceeded', 'Rate Limit Exceeded', {
+        'ratelimit-reset': String(resetAt),
+      }),
+    )
     pusher.pds!.client.call = updateSubjectStatus as any
 
     await expect(updateSubject(pusher)).resolves.toBe('deferred')
@@ -78,7 +76,7 @@ describe('EventPusher', () => {
 
   it('retries transport failures', async () => {
     const pusher = createPusher()
-    const updateSubjectStatus = jest
+    const updateSubjectStatus = vi
       .fn<() => Promise<unknown>>()
       .mockRejectedValueOnce(
         new XrpcInternalError(updateSubjectStatusMethod, 'Transport failure'),
@@ -93,7 +91,7 @@ describe('EventPusher', () => {
   it('does not clear a rate limit set by a concurrent request', async () => {
     const pusher = createPusher()
     const rateLimitedUntil = Date.now() + 60_000
-    const updateSubjectStatus = jest
+    const updateSubjectStatus = vi
       .fn<() => Promise<unknown>>()
       .mockImplementation(async () => {
         pusher.pds!.rateLimitedUntil = rateLimitedUntil
