@@ -1,0 +1,33 @@
+{
+  "lexicon": 1,
+  "id": "internal.pds.completeSpacesMigration",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Confirm that an account's DID document lists its KEM key, then emit an identity event and record the key published. PDS-internal and temporary: it exists for the migration into spaces.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["did"],
+          "properties": {
+            "did": { "type": "string", "format": "did" }
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "properties": {}
+        }
+      },
+      "errors": [
+        {
+          "name": "KemKeyNotPublished",
+          "description": "The account's DID document does not list its KEM key."
+        }
+      ]
+    }
+  }
+}

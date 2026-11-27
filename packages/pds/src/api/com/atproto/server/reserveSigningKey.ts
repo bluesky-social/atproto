@@ -8,7 +8,9 @@ export default function (server: Server, ctx: AppContext) {
       ? ctx.authVerifier.entrywayServiceOptional
       : undefined,
     handler: async ({ input }) => {
-      const signingKey = await ctx.actorStore.reserveKeypair(input.body.did)
+      const signingKey = await ctx.actorStore.reserveSigningKeypair(
+        input.body.did,
+      )
       return {
         encoding: 'application/json' as const,
         body: { signingKey },

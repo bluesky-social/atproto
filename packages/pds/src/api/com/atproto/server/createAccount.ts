@@ -5,7 +5,9 @@ import { MINUTE, check } from '@atproto/common'
 import {
   type ExportableKeypair,
   type Keypair,
+  P256Keypair,
   Secp256k1Keypair,
+  parseDidKey,
 } from '@atproto/crypto'
 import { type AtprotoData, ensureAtpDocument } from '@atproto/identity'
 import type { DidString } from '@atproto/syntax'
@@ -62,13 +64,15 @@ export default function (server: Server, ctx: AppContext) {
         password,
         inviteCode,
         signingKey,
+        kemKey,
         plcOp,
+        kemPublished,
         deactivated,
       } = ctx.entrywayClient
         ? await validateInputsForEntrywayPds(ctx, input.body)
         : await validateInputsForLocalPds(ctx, input.body, requester)
 
-      await ctx.actorStore.create(did, signingKey)
+      await ctx.actorStore.create(did, signingKey, kemKey)
 
       try {
         const commit = await ctx.actorStore.transact(did, (actorTxn) => {
@@ -98,6 +102,7 @@ export default function (server: Server, ctx: AppContext) {
             repoRev: commit.rev,
             inviteCode,
             deactivated,
+            kemPublished,
           })
 
           try {
@@ -108,13 +113,21 @@ export default function (server: Server, ctx: AppContext) {
 
             try {
               await ctx.actorStore
-                .clearReservedKeypair(signingKey.did(), did)
+                .clearReservedKeys(did, {
+                  signingKey: signingKey.did(),
+                  kemKey: kemKey.did(),
+                })
                 .catch((err) => {
                   // @NOTE This is a cleanup operation so we won't fail the whole
                   // flow if it fails, but we log it just in case
                   req.log.error(
-                    { did, signingKeyDid: signingKey.did(), err },
-                    'Failed to clear reserved keypair',
+                    {
+                      did,
+                      signingKeyDid: signingKey.did(),
+                      kemKeyDid: kemKey.did(),
+                      err,
+                    },
+                    'Failed to clear reserved keys',
                   )
                 })
 
@@ -185,7 +198,11 @@ const validateInputsForEntrywayPds = async (
     )
   }
   try {
-    await plc.assureValidOp(plcOp)
+    // @NOTE Validate keys used as reservation paths before looking them up.
+    parseDidKey(plcOp.verificationMethods.atproto)
+    if (plcOp.verificationMethods.atproto_kem !== undefined) {
+      parseDidKey(plcOp.verificationMethods.atproto_kem)
+    }
     await plc.assureValidSig([plcRotationKey], plcOp)
   } catch (err) {
     throw new InvalidRequestError('invalid plc operation', 'IncompatibleDidDoc')
@@ -193,13 +210,9 @@ const validateInputsForEntrywayPds = async (
   const doc = plc.formatDidDoc({ did, ...plcOp })
   const data = ensureAtpDocument(doc)
 
-  let signingKey: ExportableKeypair | undefined
-  if (input.did) {
-    signingKey = await ctx.actorStore.getReservedKeypair(input.did)
-  }
-  if (!signingKey) {
-    signingKey = await ctx.actorStore.getReservedKeypair(data.signingKey)
-  }
+  const signingKey =
+    (await ctx.actorStore.getReservedSigningKeypair(did)) ??
+    (await ctx.actorStore.getReservedSigningKeypair(data.signingKey))
   if (!signingKey) {
     throw new InvalidRequestError('reserved signing key does not exist')
   }
@@ -210,6 +223,20 @@ const validateInputsForEntrywayPds = async (
     signingKey: signingKey.did(),
   })
 
+  // A genesis op that names a KEM key must name one reserved here: a DID doc
+  // must never name a KEM key we do not hold.
+  const opKemKey = plcOp.verificationMethods.atproto_kem
+  let kemKey: ExportableKeypair | undefined
+  if (opKemKey !== undefined) {
+    kemKey = await ctx.actorStore.getReservedKemKeypair(did)
+    if (kemKey?.did() !== opKemKey) {
+      kemKey = await ctx.actorStore.getReservedKemKeypair(opKemKey)
+    }
+    if (kemKey?.did() !== opKemKey) {
+      throw new InvalidRequestError('Unknown KEM key', 'IncorrectKemKey')
+    }
+  }
+
   return {
     did,
     handle,
@@ -217,7 +244,12 @@ const validateInputsForEntrywayPds = async (
     password: undefined,
     inviteCode: undefined,
     signingKey,
+    // Without one in the genesis op, the account gets an unpublished key that
+    // the entryway publishes later
+    kemKey: kemKey ?? (await P256Keypair.create({ exportable: true })),
     plcOp,
+    // In the genesis op, which is sent to PLC before the account is recorded
+    kemPublished: opKemKey !== undefined,
     deactivated: false,
   }
 }
@@ -283,6 +315,7 @@ const validateInputsForLocalPds = async (
   // determine the did & any plc ops we need to send
   // if the provided did document is poorly setup, we throw
   const signingKey = await Secp256k1Keypair.create({ exportable: true })
+  const kemKey = await P256Keypair.create({ exportable: true })
 
   let did: DidString
   let plcOp: plc.Operation | null
@@ -297,7 +330,13 @@ const validateInputsForLocalPds = async (
     plcOp = null
     deactivated = true
   } else {
-    const formatted = await formatDidAndPlcOp(ctx, handle, input, signingKey)
+    const formatted = await formatDidAndPlcOp(
+      ctx,
+      handle,
+      input,
+      signingKey,
+      kemKey,
+    )
     did = formatted.did as DidString
     plcOp = formatted.op
   }
@@ -309,7 +348,10 @@ const validateInputsForLocalPds = async (
     password,
     inviteCode,
     signingKey,
+    kemKey,
     plcOp,
+    // The genesis op names the KEM key. A brought DID publishes it later.
+    kemPublished: plcOp !== null,
     deactivated,
   }
 }
@@ -319,6 +361,7 @@ const formatDidAndPlcOp = async (
   handle: string,
   input: com.atproto.server.createAccount.$InputBody,
   signingKey: Keypair,
+  kemKey: Keypair,
 ) => {
   // if the user is not bringing a DID, then we format a create op for PLC
   const rotationKeys = [ctx.plcRotationKey.did()]
@@ -330,6 +373,7 @@ const formatDidAndPlcOp = async (
   }
   return plc.createOp({
     signingKey: signingKey.did(),
+    kemKey: kemKey.did(),
     rotationKeys,
     handle,
     pds: ctx.cfg.service.publicUrl,

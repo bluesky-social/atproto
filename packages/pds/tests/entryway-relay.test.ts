@@ -1,4 +1,4 @@
-import * as plcLib from '@did-plc/lib'
+import { createOp } from '@did-plc/lib'
 import { type Keypair, Secp256k1Keypair, randomStr } from '@atproto/crypto'
 import { TestPds, TestPlc } from '@atproto/dev-env'
 import { createPublicKeyObject } from '../src/auth-verifier.js'
@@ -423,9 +423,10 @@ describe('entryway relay attribution', () => {
     })
 
     it('bypass the rate limit of createAccount.', async () => {
+      const agent = pds.getAgent()
       const {
         data: { signingKey },
-      } = await pds.getAgent().com.atproto.server.reserveSigningKey(
+      } = await agent.com.atproto.server.reserveSigningKey(
         {},
         {
           headers: await serviceHeaders(
@@ -435,9 +436,22 @@ describe('entryway relay attribution', () => {
           encoding: 'application/json',
         },
       )
+      const {
+        data: { kemKey },
+      } = await agent.com.atproto.server.reserveKemKey(
+        {},
+        {
+          headers: await serviceHeaders(
+            pds,
+            com.atproto.server.reserveKemKey.$lxm,
+          ),
+          encoding: 'application/json',
+        },
+      )
       const handle = 'rate-limited.test'
-      const plcCreate = await plcLib.createOp({
+      const plcCreate = await createOp({
         signingKey,
+        kemKey,
         rotationKeys: [plcRotationKey.did()],
         handle,
         pds: pds.ctx.cfg.service.publicUrl,

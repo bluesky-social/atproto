@@ -164,11 +164,7 @@ export function safeFetchWrap<C>({
      * @note This budget covers the entire redirect chain, since `fetch()`
      * follows redirects within this single call.
      */
-    timedFetch(
-      timeout,
-
-      innerFetch,
-    ),
+    timedFetch(timeout, innerFetch),
 
     /**
      * Since we will be fetching user owned data, we need to make sure that an

@@ -1,3 +1,4 @@
+import assert from 'node:assert'
 import { jest } from '@jest/globals'
 import { AtUri, type AtpAgent } from '@atproto/api'
 import {
@@ -13,6 +14,7 @@ import type { AppContext } from '../src/index.js'
 describe('account migration', () => {
   let network: TestNetworkNoAppView
   let newPds: TestPds
+  let completePds: TestPds
 
   let sc: SeedClient
   let oldAgent: AtpAgent
@@ -31,6 +33,11 @@ describe('account migration', () => {
       didPlcUrl: network.plc.url,
     })
     mockNetworkUtilities(newPds)
+    completePds = await TestPds.create({
+      didPlcUrl: network.plc.url,
+      spacesMigration: 'complete',
+    })
+    mockNetworkUtilities(completePds)
 
     sc = network.getSeedClient()
     oldAgent = network.pds.getAgent()
@@ -84,6 +91,7 @@ describe('account migration', () => {
   })
 
   afterAll(async () => {
+    await completePds?.close()
     await newPds?.close()
     await network?.close()
   })
@@ -113,6 +121,17 @@ describe('account migration', () => {
     await newAgent.login({
       identifier: 'new-alice.test',
       password: 'alice-pass',
+    })
+
+    // The brought DID doesn't name the new kem key yet: left for the publisher
+    const progress = await newPds.ctx.accountManager.db.db
+      .selectFrom('spaces_migration')
+      .selectAll()
+      .where('did', '=', alice.did)
+      .executeTakeFirst()
+    expect(progress).toMatchObject({
+      kemPublishedAt: null,
+      storeMigratedAt: expect.any(String),
     })
 
     const statusRes1 = await newAgent.com.atproto.server.checkAccountStatus()
@@ -238,5 +257,103 @@ describe('account migration', () => {
     expect(fetchedPost.value.text).toEqual('new pds!')
     const statusRes5 = await newAgent.com.atproto.server.checkAccountStatus()
     expect(statusRes5.data.indexedRecords).toBe(104)
+  })
+
+  // Creates the account on the target and points its DID document there
+  // without its KEM key, as a client submitting the op straight to PLC could
+  const migrateWithoutKemKey = async (name: string, target: TestPds) => {
+    await sc.createAccount(name, {
+      email: `${name}@test.com`,
+      handle: `${name}.test`,
+      password: `${name}-pass`,
+    })
+    const account = sc.accounts[sc.dids[name]]
+    const oldAccountAgent = network.pds.getAgent()
+    await oldAccountAgent.login({
+      identifier: account.handle,
+      password: account.password,
+    })
+
+    const targetAgent = target.getAgent()
+    const describeRes = await targetAgent.com.atproto.server.describeServer()
+    const serviceJwtRes =
+      await oldAccountAgent.com.atproto.server.getServiceAuth({
+        aud: describeRes.data.did,
+        lxm: 'com.atproto.server.createAccount',
+      })
+    await targetAgent.com.atproto.server.createAccount(
+      {
+        handle: `new-${name}.test`,
+        email: account.email,
+        password: account.password,
+        did: account.did,
+      },
+      {
+        headers: { authorization: `Bearer ${serviceJwtRes.data.token}` },
+        encoding: 'application/json',
+      },
+    )
+    await targetAgent.login({
+      identifier: `new-${name}.test`,
+      password: account.password,
+    })
+
+    const signingKey = await target.ctx.actorStore.keypair(account.did)
+    const kemKey = await target.ctx.actorStore.kemKeypair(account.did)
+    assert(kemKey)
+    await network.pds.ctx.plcClient.updateData(
+      account.did,
+      network.pds.ctx.plcRotationKey,
+      (op) => ({
+        ...op,
+        rotationKeys: [target.ctx.plcRotationKey.did()],
+        services: {
+          atproto_pds: {
+            type: 'AtprotoPersonalDataServer',
+            endpoint: target.ctx.cfg.service.publicUrl,
+          },
+        },
+        verificationMethods: { atproto: signingKey.did() },
+      }),
+    )
+    return { did: account.did, kemKey, agent: targetAgent }
+  }
+
+  it('activates an account without its KEM key until the spaces migration is complete', async () => {
+    const { agent } = await migrateWithoutKemKey('carol', newPds)
+
+    // The publisher publishes it once the account is active
+    await agent.com.atproto.server.activateAccount()
+    const statusRes = await agent.com.atproto.server.checkAccountStatus()
+    expect(statusRes.data).toMatchObject({ activated: true, validDid: true })
+  })
+
+  it('does not activate an account until its DID document has its KEM key', async () => {
+    const { did, kemKey, agent } = await migrateWithoutKemKey(
+      'bob',
+      completePds,
+    )
+
+    await expect(agent.com.atproto.server.activateAccount()).rejects.toThrow(
+      'does not match expected KEM key',
+    )
+    const statusRes1 = await agent.com.atproto.server.checkAccountStatus()
+    expect(statusRes1.data).toMatchObject({ activated: false, validDid: false })
+
+    await completePds.ctx.plcClient.updateData(
+      did,
+      completePds.ctx.plcRotationKey,
+      (op) => ({
+        ...op,
+        verificationMethods: {
+          ...op.verificationMethods,
+          atproto_kem: kemKey.did(),
+        },
+      }),
+    )
+
+    await agent.com.atproto.server.activateAccount()
+    const statusRes2 = await agent.com.atproto.server.checkAccountStatus()
+    expect(statusRes2.data).toMatchObject({ activated: true, validDid: true })
   })
 })

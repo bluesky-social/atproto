@@ -1,8 +1,8 @@
 import assert from 'node:assert'
-import { type Client, createOp as createPlcOp } from '@did-plc/lib'
+import { type Client, createOp } from '@did-plc/lib'
 import type { Selectable } from 'kysely'
 import { DAY } from '@atproto/common'
-import { type Keypair, Secp256k1Keypair } from '@atproto/crypto'
+import { type Keypair, P256Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import { getBlobCidString } from '@atproto/lex-data'
 import type { DidString, HandleString } from '@atproto/lex-schema'
 import {
@@ -164,6 +164,8 @@ export class OAuthStore
 
     const signingKey = await Secp256k1Keypair.create({ exportable: true })
     const signingKeyDid = signingKey.did()
+    const kemKey = await P256Keypair.create({ exportable: true })
+    const kemKeyDid = kemKey.did()
 
     const canTombstone =
       // @NOTE IMPORTANT We don't support "bring your own DID" here (yet?). If
@@ -171,8 +173,9 @@ export class OAuthStore
       // the user's did don't get tombstoned.
       true
 
-    const plc = await createPlcOp({
+    const plc = await createOp({
       signingKey: signingKeyDid,
+      kemKey: kemKeyDid,
       rotationKeys: this.recoveryDidKey
         ? [this.recoveryDidKey, this.plcRotationKey.did()]
         : [this.plcRotationKey.did()],
@@ -184,7 +187,7 @@ export class OAuthStore
     const did = plc.did as DidString
 
     try {
-      await this.actorStore.create(did, signingKey)
+      await this.actorStore.create(did, signingKey, kemKey)
 
       try {
         const commit = await this.actorStore.transact(did, (actorTxn) => {
@@ -202,6 +205,8 @@ export class OAuthStore
             inviteCode,
             repoCid: commit.cid,
             repoRev: commit.rev,
+            // The genesis op names the KEM key
+            kemPublished: true,
           })
 
           try {
@@ -209,13 +214,16 @@ export class OAuthStore
 
             try {
               await this.actorStore
-                .clearReservedKeypair(signingKeyDid, did)
+                .clearReservedKeys(did, {
+                  signingKey: signingKeyDid,
+                  kemKey: kemKeyDid,
+                })
                 .catch((err) => {
                   // @NOTE This is a cleanup operation so we won't fail the
                   // whole flow if it fails, but we log it just in case
                   dbLogger.error(
-                    { did, signingKeyDid, err },
-                    'Failed to clear reserved keypair',
+                    { did, signingKeyDid, kemKeyDid, err },
+                    'Failed to clear reserved keys',
                   )
                 })
 

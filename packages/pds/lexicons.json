@@ -132,6 +132,7 @@
     "com.atproto.server.requestEmailConfirmation",
     "com.atproto.server.requestEmailUpdate",
     "com.atproto.server.requestPasswordReset",
+    "com.atproto.server.reserveKemKey",
     "com.atproto.server.reserveSigningKey",
     "com.atproto.server.resetPassword",
     "com.atproto.server.revokeAppPassword",
@@ -161,6 +162,10 @@
     "com.atproto.temp.requestPhoneVerification",
     "com.atproto.temp.revokeAccountCredentials",
     "com.germnetwork.declaration",
+    "internal.pds.checkSpacesMigration",
+    "internal.pds.completeSpacesMigration",
+    "internal.pds.prepareSpacesMigration",
+    "internal.pds.recountSpacesMigration",
     "place.stream.chat.pinnedRecord",
     "place.stream.chat.profile",
     "place.stream.livestream",
@@ -753,6 +758,10 @@
       "uri": "file://../../lexicons/com/atproto/server/requestPasswordReset.json",
       "cid": "bafyreibs4jk6ndisvztiqprofgm24rluzkotwqbzbqn6i26upcaxa4xr2y"
     },
+    "com.atproto.server.reserveKemKey": {
+      "uri": "file://../../lexicons/com/atproto/server/reserveKemKey.json",
+      "cid": "bafyreifctrk262us4lkvxycv4o7onigvuqarup5ulcwf5qlwkwzudroehy"
+    },
     "com.atproto.server.reserveSigningKey": {
       "uri": "file://../../lexicons/com/atproto/server/reserveSigningKey.json",
       "cid": "bafyreiamtsl3vm5js4f5verpzj7hd7v67e2zulrkc4nacalwzhq6mg7pae"
@@ -868,6 +877,22 @@
     "com.germnetwork.declaration": {
       "uri": "file://../../lexicons-overrides/com/germnetwork/declaration.json",
       "cid": "bafyreiekwjmxshje655olra4mata7npso7bbgytc4fop77ycjtrbewwi3y"
+    },
+    "internal.pds.checkSpacesMigration": {
+      "uri": "file://./lexicons/internal/pds/checkSpacesMigration.json",
+      "cid": "bafyreifwvue5ju6nihnuqfpy2nawh3zjglsyypoobo4nw5jolz7cg6apje"
+    },
+    "internal.pds.completeSpacesMigration": {
+      "uri": "file://./lexicons/internal/pds/completeSpacesMigration.json",
+      "cid": "bafyreievan2dfejyk62unkhqcnns4tveavytoz765d53u3t5ohh5ydkequ"
+    },
+    "internal.pds.prepareSpacesMigration": {
+      "uri": "file://./lexicons/internal/pds/prepareSpacesMigration.json",
+      "cid": "bafyreiad7guval4aprydqggy5d3f42n3zgmybcuvbrarughumif5soa4v4"
+    },
+    "internal.pds.recountSpacesMigration": {
+      "uri": "file://./lexicons/internal/pds/recountSpacesMigration.json",
+      "cid": "bafyreihylqh4nuhafdppexx7voymolqgszgoylcwrunr5xsjaphogwvtsu"
     },
     "place.stream.badge.defs": {
       "uri": "file://../../lexicons-overrides/place/stream/badge/defs.json",

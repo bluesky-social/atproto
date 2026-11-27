@@ -118,7 +118,7 @@ describe('Lexicon resolution', () => {
       sc.getHeaders(sc.dids.alice),
     )
     // switch alice's key away from the one used by her pds
-    await network.pds.ctx.plcClient.updateAtprotoKey(
+    await network.pds.ctx.plcClient.updateAtprotoSigningKey(
       sc.dids.alice,
       network.pds.ctx.plcRotationKey,
       bobkey.did(),
@@ -139,7 +139,7 @@ describe('Lexicon resolution', () => {
       }),
     )
     // reset alice's key
-    await network.pds.ctx.plcClient.updateAtprotoKey(
+    await network.pds.ctx.plcClient.updateAtprotoSigningKey(
       sc.dids.alice,
       network.pds.ctx.plcRotationKey,
       alicekey.did(),
