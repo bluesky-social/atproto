@@ -64,10 +64,12 @@ export class SqlRepoTransactor extends SqlRepoReader implements RepoStorage {
   async deleteMany(cids: Cid[]) {
     if (cids.length < 1) return
     const cidStrs = cids.map((c) => c.toString())
-    await this.db.db
-      .deleteFrom('repo_block')
-      .where('cid', 'in', cidStrs)
-      .execute()
+    for (const batch of chunkArray(cidStrs, 500)) {
+      await this.db.db
+        .deleteFrom('repo_block')
+        .where('cid', 'in', batch)
+        .execute()
+    }
   }
 
   async applyCommit(commit: CommitData, isCreate?: boolean) {
