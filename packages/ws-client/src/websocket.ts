@@ -49,7 +49,9 @@ export interface WebSocketOptions<
    * (an error frame or a close right after the upgrade, a message the consumer
    * rejects) counts as one more failure, so an endpoint that accepts and then
    * drops every connection is retried ever more slowly rather than every ~1s.
-   * `0` restarts the backoff after any connection that opens.
+   * A normal close (1000) from the server is not a failure, and starts the
+   * backoff over however soon it comes. `0` restarts the backoff after any
+   * connection that opens.
    */
   stableAfterMs?: number
   /** Abort to end the stream permanently; the iterator rejects with the reason. */
@@ -162,9 +164,10 @@ export async function* websocketFactory<M extends DataMode = 'auto'>(
   const stableAfterMs = options.stableAfterMs ?? 5000
   const shouldReconnect = normalizeShouldReconnect(options.shouldReconnect)
 
-  // Consecutive failed connections since the last stable one, so the backoff
-  // restarts from 1s after a connection that stayed up for `stableAfterMs`, and
-  // only escalates across repeated failures with nothing working in between.
+  // Consecutive failed connections since the last one that worked: one that
+  // stayed up for `stableAfterMs`, or that the peer ended with a normal close.
+  // So the backoff restarts from 1s after either, and only escalates across
+  // repeated failures with nothing working in between.
   let retries = 0
   let firstOpen = true
   // How the last connection ended, recorded by the transport's `onClose` below.
@@ -269,17 +272,25 @@ export async function* websocketFactory<M extends DataMode = 'auto'>(
         // surface the reason rather than classifying it as retryable.
         signal?.throwIfAborted()
 
-        const willReconnect = shouldReconnect(error, retries)
-        // A 1000 close goes to the policy like anything else, so an override can
-        // re-dial a server that closes after each batch. But when the policy
-        // declines, a peer that ended the session normally is a *completed*
-        // stream, not a failure the consumer has to catch.
-        //
         // Keyed on the code rather than on `wasClean`, which asks a different
         // question: whether the closing handshake completed. A fatal 1002
         // protocol close completes its handshake too, and must still reject.
         const endedNormally =
           error instanceof CloseError && error.code === CloseCode.Normal
+
+        // A peer's 1000 means the connection did its job (RFC 6455 §7.4.1),
+        // however briefly it was up: the backoff starts over, as after a stable
+        // connection. Decided here on the error rather than in `onClose` on the
+        // code, which can read 1000 for a close this side initiated too — a
+        // consumer's `throw()` closes with 1000. That rejection lands here as
+        // its own error, and must still count as a failure.
+        if (endedNormally) retries = 0
+
+        const willReconnect = shouldReconnect(error, retries)
+        // A 1000 close goes to the policy like anything else, so an override can
+        // re-dial a server that closes after each batch. But when the policy
+        // declines, a peer that ended the session normally is a *completed*
+        // stream, not a failure the consumer has to catch.
         if (!willReconnect && endedNormally) return
 
         // Two hooks rather than one with an optional argument, because they
@@ -297,7 +308,8 @@ export async function* websocketFactory<M extends DataMode = 'auto'>(
         // rethrowing, a non-reconnectable clean close returning, a consumer
         // `break` resuming at the `yield*`) must not be delayed by it.
         // Post-increment so the first reconnect waits ~1s (2^0) and each
-        // consecutive failure escalates; a stable connection resets to 0.
+        // consecutive failure escalates; a stable connection or a normal close
+        // resets to 0.
         await sleep(backoffMs(retries++, maxMs), signal)
         // Loop: the check at the top catches an abort that landed during the
         // backoff, then the url is re-resolved and redialed.

@@ -269,8 +269,8 @@ describe(createWebSocket, () => {
         },
       })
       await expect(drain(gen)).rejects.toBeInstanceOf(CloseError)
-      // The second reports attempt 1: the first connection closed as soon as it
-      // opened, too soon to reset the counter (see stableAfterMs).
+      // The second reports attempt 1: its connection closed (1002) as soon as it
+      // opened, too soon to start the backoff over (see stableAfterMs).
       expect(attempts).toEqual([0, 1])
     })
   })
@@ -625,17 +625,21 @@ describe(createWebSocket, () => {
 
   describe('backoff', () => {
     // The backoffs before each of two reconnects: the second follows a
-    // connection that opened, then failed. Each is drawn at 125% of its base
-    // (1s, then 2s unless the backoff started over).
-    async function backoffs(options: WebSocketOptions<'auto'> = {}) {
+    // connection that opened, then ended as `second` does (by default, failed).
+    // Each is drawn at 125% of its base (1s, then 2s unless the backoff started
+    // over).
+    async function backoffs(
+      options: WebSocketOptions<'auto'> = {},
+      second: Step = {
+        messages: ['a'],
+        end: 'error',
+        error: new SocketError(new Error('2')),
+      },
+    ) {
       using _random = vi.spyOn(Math, 'random').mockReturnValue(0.75)
       const { createTransport } = scripted([
         { messages: [], end: 'error', error: new SocketError(new Error('1')) },
-        {
-          messages: ['a'],
-          end: 'error',
-          error: new SocketError(new Error('2')),
-        },
+        second,
         { messages: [], end: 'clean' },
       ])
       const delays: number[] = []
@@ -665,6 +669,24 @@ describe(createWebSocket, () => {
         .mockImplementation(() => (now += 5000))
       // Both first-attempt-sized: the second connection was up for 5s.
       expect(await backoffs()).toEqual([1250, 1250])
+    })
+
+    it('starts over after a normal close, however soon it comes', async () => {
+      // A server that closes after each batch, re-dialed by the policy. The
+      // last connection's plain 1000 ends the stream.
+      const delays = await backoffs(
+        {
+          shouldReconnect: (error) =>
+            error instanceof SocketError ||
+            (error instanceof CloseError && error.reason === 'batch'),
+        },
+        {
+          messages: ['a'],
+          end: 'clean',
+          detail: { code: CloseCode.Normal, reason: 'batch', wasClean: true },
+        },
+      )
+      expect(delays).toEqual([1250, 1250])
     })
 
     it('starts over after any connection that opens with a stableAfterMs of 0', async () => {
