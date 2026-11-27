@@ -1,5 +1,11 @@
 # @atproto/oauth-provider
 
+## 0.27.5
+
+### Patch Changes
+
+- [#5981](https://github.com/bluesky-social/atproto/pull/5981) [`32e537e`](https://github.com/bluesky-social/atproto/commit/32e537ed8d6d1b1392c69638affc892209b9d492) Thanks [@devinivy](https://github.com/devinivy)! - Provide the permissions granted by a new token to the `onTokenCreated` hook through its `scope` field. This includes permissions granted through `include:` permission sets.
+
 ## 0.27.4
 
 ### Patch Changes
