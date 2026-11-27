@@ -625,8 +625,10 @@ describe(createWebSocket, () => {
 
   describe('backoff', () => {
     // The backoffs before each of two reconnects: the second follows a
-    // connection that opened, then failed.
+    // connection that opened, then failed. Each is drawn at 3/4 of its cap
+    // (1s, then 2s unless the backoff started over).
     async function backoffs(options: WebSocketOptions<'auto'> = {}) {
+      using _random = vi.spyOn(Math, 'random').mockReturnValue(0.75)
       const { createTransport } = scripted([
         { messages: [], end: 'error', error: new SocketError(new Error('1')) },
         {
@@ -653,9 +655,7 @@ describe(createWebSocket, () => {
 
     it('escalates across connections that fail before stableAfterMs', async () => {
       // A scripted connection fails as soon as its messages are read.
-      const [first, second] = await backoffs()
-      expect(first).toBeLessThan(1000) // attempt 0: 0.5s .. 1s
-      expect(second).toBeGreaterThanOrEqual(1000) // attempt 1: 1s .. 2s
+      expect(await backoffs()).toEqual([750, 1500])
     })
 
     it('starts over after a connection that stayed up for stableAfterMs', async () => {
@@ -663,16 +663,12 @@ describe(createWebSocket, () => {
       using _now = vi
         .spyOn(performance, 'now')
         .mockImplementation(() => (now += 5000))
-      const [first, second] = await backoffs()
       // Both first-attempt-sized: the second connection was up for 5s.
-      expect(first).toBeLessThan(1000)
-      expect(second).toBeLessThan(1000)
+      expect(await backoffs()).toEqual([750, 750])
     })
 
     it('starts over after any connection that opens with a stableAfterMs of 0', async () => {
-      const [first, second] = await backoffs({ stableAfterMs: 0 })
-      expect(first).toBeLessThan(1000)
-      expect(second).toBeLessThan(1000)
+      expect(await backoffs({ stableAfterMs: 0 })).toEqual([750, 750])
     })
   })
 })

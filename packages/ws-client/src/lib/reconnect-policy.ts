@@ -13,12 +13,14 @@ export function defaultShouldReconnect(error: unknown): boolean {
 }
 
 /**
- * Exponential backoff capped at maxMs, jittered down to half of it. The jitter
- * is proportional and applied after the cap, so that clients that failed
+ * Exponential backoff capped at maxMs, with "full jitter": a delay drawn
+ * anywhere below that cap. Applied after the cap, so that clients that failed
  * together keep spreading out once capped, rather than all retrying in
- * lockstep every maxMs.
+ * lockstep every maxMs, and over the whole first second, when the most clients
+ * come back at once (those of a server that shut down, whose backoff had
+ * started over).
  */
 export function backoffMs(attempt: number, maxMs: number): number {
   const ms = Math.min(1000 * 2 ** attempt, maxMs) // 1s, 2s, 4s, ... maxMs
-  return ms * (0.5 + Math.random() / 2) // 50% .. 100%
+  return ms * Math.random()
 }

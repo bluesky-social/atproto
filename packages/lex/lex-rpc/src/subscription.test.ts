@@ -890,6 +890,49 @@ describe(createWebSocketFactory, () => {
   })
 })
 
+describe('ws-client errors', () => {
+  it.each([
+    'BufferOverflowError',
+    'CloseCode',
+    'CloseError',
+    'DataModeError',
+    'HeartbeatTimeoutError',
+    'IdleTimeoutError',
+    'SocketError',
+    'UnexpectedResponseError',
+    'WebSocketClientError',
+    'isReconnectableClose',
+  ] as const)(
+    're-exports %s, as the instance ws-client reports',
+    async (name) => {
+      const subscription = await import('./subscription.js')
+      const wsClient = await import('@atproto/ws-client')
+      expect(subscription[name]).toBeDefined()
+      expect(subscription[name]).toBe(wsClient[name])
+    },
+  )
+
+  it('tells apart the closes reported to the reconnect hooks', async () => {
+    const subscription = await import('./subscription.js')
+    await using server = await startServer(({ ws, index }) => {
+      if (index === 0) ws.close(CloseCode.GoingAway)
+      else ws.send(eventFrame(1), () => ws.close(CloseCode.Normal))
+    })
+    const onReconnect = vi.fn()
+    const messages = await drain(
+      xrpcSubscribe(wsAgent(server.origin, { onReconnect }), subscribeEvents),
+    )
+    expect(messages).toHaveLength(1)
+    expect(onReconnect).toHaveBeenCalledExactlyOnceWith(
+      expect.any(subscription.CloseError),
+      { attempt: 0 },
+    )
+    expect(onReconnect.mock.calls[0][0]).toMatchObject({
+      code: subscription.CloseCode.GoingAway,
+    })
+  })
+})
+
 describe(defaultSubscriptionShouldReconnect, () => {
   it.each([
     ['a ws-client connection failure', new SocketError(null), true],

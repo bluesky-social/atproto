@@ -44,7 +44,8 @@ export interface WebSocketOptions<
    * milliseconds. Default 5000. A connection that opens and then fails sooner
    * (an error frame or a close right after the upgrade, a message the consumer
    * rejects) counts as one more failure, so an endpoint that accepts and then
-   * drops every connection is retried ever more slowly rather than every ~1s.
+   * drops every connection is retried ever more slowly rather than within a
+   * second each time.
    * `0` restarts the backoff after any connection that opens.
    */
   stableAfterMs?: number
@@ -159,7 +160,7 @@ export async function* websocketFactory<M extends DataMode = 'auto'>(
   const shouldReconnect = normalizeShouldReconnect(options.shouldReconnect)
 
   // Consecutive failed connections since the last stable one, so the backoff
-  // restarts at ~1s after a connection that stayed up for `stableAfterMs`, and
+  // restarts from 1s after a connection that stayed up for `stableAfterMs`, and
   // only escalates across repeated failures with nothing working in between.
   let retries = 0
   let firstOpen = true
@@ -292,7 +293,7 @@ export async function* websocketFactory<M extends DataMode = 'auto'>(
         // the top of the loop, because the other three exits (a fatal error
         // rethrowing, a non-reconnectable clean close returning, a consumer
         // `break` resuming at the `yield*`) must not be delayed by it.
-        // Post-increment so the first reconnect waits ~1s (2^0) and each
+        // Post-increment so the first reconnect waits up to 1s (2^0) and each
         // consecutive failure escalates; a stable connection resets to 0.
         await sleep(backoffMs(retries++, maxMs), signal)
         // Loop: the check at the top catches an abort that landed during the
