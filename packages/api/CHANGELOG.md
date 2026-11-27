@@ -1,5 +1,11 @@
 # @atproto/api
 
+## 0.32.9
+
+### Patch Changes
+
+- [#5981](https://github.com/bluesky-social/atproto/pull/5981) [`32e537e`](https://github.com/bluesky-social/atproto/commit/32e537ed8d6d1b1392c69638affc892209b9d492) Thanks [@devinivy](https://github.com/devinivy)! - Add client support for `com.atproto.server.reserveKemKey`, which lets an entryway reserve an account's encryption (KEM) key on a PDS before creating the account.
+
 ## 0.32.8
 
 ### Patch Changes
