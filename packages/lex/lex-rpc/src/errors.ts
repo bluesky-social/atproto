@@ -1,4 +1,3 @@
-import './polyfill.js'
 import type { LexErrorCode, LexErrorData, LexValue } from '@atproto/lex-data'
 import { LexError } from '@atproto/lex-data'
 import {
@@ -9,12 +8,32 @@ import {
   type ResultFailure,
   lexErrorDataSchema,
 } from '@atproto/lex-schema'
+import './polyfill.js'
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import type { Agent } from './agent.js'
-import type { TransientError, XrpcUnknownResponsePayload } from './types.js'
-import { walkErrorCauses } from './util.js'
-import type { WWWAuthenticate } from './www-authenticate.js'
-import { parseWWWAuthenticateHeader } from './www-authenticate.js'
+import { walkErrorCauses } from './lib/error.js'
+import {
+  type WWWAuthenticate,
+  parseWWWAuthenticateHeader,
+} from './lib/www-authenticate.js'
+import type { XrpcUnknownResponsePayload } from './types.js'
+
+/**
+ * Represents an error that may or may not be transient, indicating whether a
+ * retry should be attempted.
+ */
+export interface TransientError extends Error {
+  shouldRetry(): boolean
+}
+
+export function isTransientError(error: unknown): error is TransientError {
+  return (
+    error instanceof Error &&
+    'shouldRetry' in error &&
+    typeof error.shouldRetry === 'function' &&
+    error.shouldRetry.length === 0
+  )
+}
 
 /**
  * Mapping that allows generating an XRPC error code from an HTTP status code
