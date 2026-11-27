@@ -36,7 +36,7 @@
     "@atproto/lex-data": "workspace:^",
     "@atproto/syntax": "workspace:^",
     "varint": "^6.0.0",
-    "zod": "^3.23.8"
+    "zod": "^4.6.6"
   },
   "devDependencies": {
     "jest": "^30.5.2"

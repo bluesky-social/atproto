@@ -32,7 +32,7 @@
     "@atproto/common-web": "workspace:^",
     "@atproto/syntax": "workspace:^",
     "multiformats": "^13.0.0",
-    "zod": "^3.23.8"
+    "zod": "^4.6.6"
   },
   "devDependencies": {
     "jest": "^30.5.2"

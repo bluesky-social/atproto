@@ -34,7 +34,7 @@
     "@atproto-labs/simple-store": "workspace:^",
     "@atproto-labs/simple-store-memory": "workspace:^",
     "@atproto/did": "workspace:^",
-    "zod": "^3.23.8"
+    "zod": "^4.6.6"
   },
   "scripts": {
     "build": "tsc --build tsconfig.build.json"

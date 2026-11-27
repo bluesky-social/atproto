@@ -44,7 +44,7 @@
     "@atproto/xrpc": "workspace:^",
     "core-js": "^3.50.0",
     "multiformats": "^13.0.0",
-    "zod": "^3.23.8"
+    "zod": "^4.6.6"
   },
   "devDependencies": {
     "vitest": "^5.1.1"

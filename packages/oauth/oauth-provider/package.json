@@ -89,7 +89,7 @@
     "http-errors": "^2.0.0",
     "ioredis": "^6.0.0",
     "jose": "^5.2.0",
-    "zod": "^3.23.8"
+    "zod": "^4.6.6"
   },
   "devDependencies": {
     "@atproto-labs/rolldown-plugin-bundle-manifest": "workspace:^",
