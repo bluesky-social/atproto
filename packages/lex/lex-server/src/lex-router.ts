@@ -440,10 +440,21 @@ export type HealthCheckData = {
   [x: string]: unknown
   status: 'ok'
 }
+
 export type HealthCheckHandler = (
   request: Request,
   connection?: ConnectionInfo,
 ) => Awaitable<HealthCheckData>
+
+export type HealthCheckErrorContext = {
+  request: Request
+  connection?: ConnectionInfo
+  error: LexServerError
+}
+
+export type HealthCheckErrorHook = (
+  ctx: HealthCheckErrorContext,
+) => void | Promise<void>
 
 /**
  * Configuration options for the {@link LexRouter}.
@@ -489,6 +500,12 @@ export type LexRouterOptions = {
    * default JSON response of `{ status: 'ok' }`.
    */
   healthCheck?: HealthCheckHandler
+  /**
+   * Callback invoked when the {@link LexRouterOptions.healthCheck} handler
+   * throws. Only called for server errors (5xx); not called for a
+   * `LexServerError` with a 4xx status or for request aborts.
+   */
+  onHealthCheckError?: HealthCheckErrorHook
   /**
    * Optional fallback handler for requests that are not /xrpc/ paths. Can be
    * used to serve static files or other routes. If not provided, non-/xrpc/
@@ -1027,15 +1044,29 @@ export class LexRouter {
         )
       }
 
-      const { healthCheck } = this.options
+      const { healthCheck, onHealthCheckError } = this.options
 
-      const data: HealthCheckData = healthCheck
-        ? await healthCheck(request, connection)
-        : { status: 'ok' }
+      try {
+        const data: HealthCheckData = healthCheck
+          ? await healthCheck(request, connection)
+          : { status: 'ok' }
 
-      return Response.json(data, {
-        headers: { 'cache-control': 'max-age=5' },
-      })
+        return Response.json(data, {
+          headers: { 'cache-control': 'max-age=5' },
+        })
+      } catch (cause) {
+        if (isAbortReason(request.signal, cause)) {
+          return Response.json({ error: 'RequestAborted' }, { status: 499 })
+        }
+
+        const error = LexServerError.from(cause)
+
+        if (onHealthCheckError && error.status >= 500) {
+          await onHealthCheckError({ error, request, connection })
+        }
+
+        return error.toResponse()
+      }
     }
 
     const subPath = pathname.slice(XRPC_PATH_PREFIX.length)
