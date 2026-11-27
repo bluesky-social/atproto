@@ -1,5 +1,11 @@
 # @atproto/oauth-client-expo
 
+## 0.2.17
+
+### Patch Changes
+
+- [#5978](https://github.com/bluesky-social/atproto/pull/5978) [`665c90c`](https://github.com/bluesky-social/atproto/commit/665c90c82545af323d9334a480074b31eb5d51d7) Thanks [@Till3005](https://github.com/Till3005)! - Fix `ExpoOAuthClient` failing to resolve in Metro by importing `./expo-oauth-client` without an extension so platform-specific builds (`.native.js`/`.web.js`) are used.
+
 ## 0.2.16
 
 ### Patch Changes

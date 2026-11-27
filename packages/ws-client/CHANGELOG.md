@@ -1,5 +1,13 @@
 # @atproto/ws-client
 
+## 0.2.3
+
+### Patch Changes
+
+- [#6037](https://github.com/bluesky-social/atproto/pull/6037) [`6a61eaf`](https://github.com/bluesky-social/atproto/commit/6a61eafd85b32fcefa37f327b2a51b7f923692ac) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Jitter the reconnect backoff by ±50% around its exponential base (`2^attempt` seconds), after capping that base at `maxReconnectSeconds`, rather than by ±0.5s and then capping the delay. Clients dropped together now keep spreading out once capped, instead of all retrying every `maxReconnectSeconds`. A capped delay is now between 0.5 and 1.5 times `maxReconnectSeconds`.
+
+- [#6037](https://github.com/bluesky-social/atproto/pull/6037) [`6a61eaf`](https://github.com/bluesky-social/atproto/commit/6a61eafd85b32fcefa37f327b2a51b7f923692ac) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Only start the reconnect backoff over after a connection that stayed up for `stableAfterMs` (a new option, default `5000`) or that the server ended with a normal close (`1000`), rather than after any connection that opens. An endpoint that accepts connections and then fails them right away (an error frame, an immediate close with any other code, a message the consumer rejects with `throw()`) is now retried with an escalating backoff instead of every ~1s. The `attempt` a custom `shouldReconnect` receives keeps counting across such connections, so a policy like `attempt < 5` now gives up after five of them. `stableAfterMs: 0` restores the previous behavior.
+
 ## 0.2.2
 
 ### Patch Changes

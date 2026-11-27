@@ -1,5 +1,12 @@
 # @atproto/tap
 
+## 0.4.25
+
+### Patch Changes
+
+- Updated dependencies [[`6a61eaf`](https://github.com/bluesky-social/atproto/commit/6a61eafd85b32fcefa37f327b2a51b7f923692ac), [`6a61eaf`](https://github.com/bluesky-social/atproto/commit/6a61eafd85b32fcefa37f327b2a51b7f923692ac)]:
+  - @atproto/ws-client@0.2.3
+
 ## 0.4.24
 
 ### Patch Changes

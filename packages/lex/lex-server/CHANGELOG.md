@@ -1,5 +1,21 @@
 # @atproto/lex-server
 
+## 0.3.1
+
+### Patch Changes
+
+- [#6035](https://github.com/bluesky-social/atproto/pull/6035) [`813ad0c`](https://github.com/bluesky-social/atproto/commit/813ad0c29a0423aaeb6e9fcc7271019d3f942c53) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add `onHealthCheckError` option, called with a `LexServerError` when the `healthCheck` handler throws a server error (5xx)
+
+- [#6035](https://github.com/bluesky-social/atproto/pull/6035) [`813ad0c`](https://github.com/bluesky-social/atproto/commit/813ad0c29a0423aaeb6e9fcc7271019d3f942c53) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Accept `HEAD` requests on `/xrpc/_health`, pass the `ConnectionInfo` to the `healthCheck` handler, and set `cache-control: max-age=5` on its response
+
+- [#6040](https://github.com/bluesky-social/atproto/pull/6040) [`2fdc0de`](https://github.com/bluesky-social/atproto/commit/2fdc0ded580ff56b7c1c24926234ef98ce7da3d7) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Detect request aborts with `isCausedBySignal` from `@atproto/lex-rpc`: an error that is a non-`Error` abort reason, or that has the abort reason deeper in its cause chain, now produces a 499 and is not reported to `onHandlerError` or `onSocketError`
+
+- [#6035](https://github.com/bluesky-social/atproto/pull/6035) [`813ad0c`](https://github.com/bluesky-social/atproto/commit/813ad0c29a0423aaeb6e9fcc7271019d3f942c53) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Export `invalidRequestResponse(message, status = 400, headers?)` helper, which builds an XRPC `InvalidRequest` JSON error `Response`
+
+- [#6035](https://github.com/bluesky-social/atproto/pull/6035) [`813ad0c`](https://github.com/bluesky-social/atproto/commit/813ad0c29a0423aaeb6e9fcc7271019d3f942c53) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Properly handle error thrown from the healthCheck function
+- Updated dependencies [[`2fdc0de`](https://github.com/bluesky-social/atproto/commit/2fdc0ded580ff56b7c1c24926234ef98ce7da3d7), [`6a61eaf`](https://github.com/bluesky-social/atproto/commit/6a61eafd85b32fcefa37f327b2a51b7f923692ac)]:
+  - @atproto/lex-rpc@0.3.1
+
 ## 0.3.0
 
 ### Minor Changes
