@@ -171,7 +171,63 @@ describe('buildProxyAgent hostname resolution', () => {
       await agent.close()
     }
   })
+
+  it('runs one dns.lookup at a time with useSystemDnsLookup, across agents', async () => {
+    // Answered (with loopback) when the test says so
+    const answers: (() => void)[] = []
+    using lookup = jest.spyOn(dns, 'lookup').mockImplementation(((
+      _hostname,
+      options,
+      callback,
+    ) => {
+      answers.push(() => {
+        if (options.all) callback(null, [{ address: '127.0.0.1', family: 4 }])
+        else callback(null, '127.0.0.1', 4)
+      })
+    }) satisfies LookupFunction as typeof dns.lookup)
+
+    const cfg = {
+      ...proxyConfig,
+      disableSsrfProtection: false,
+      useSystemDnsLookup: true,
+      // A retry would queue another lookup, never answered
+      maxRetries: 0,
+    }
+    const agents = [buildProxyAgent(cfg), buildProxyAgent(cfg)]
+    try {
+      const requests = agents.map((agent, i) =>
+        agent
+          .request({
+            origin: `https://pds${i}.example.social`,
+            path: '/',
+            method: 'GET',
+          })
+          .catch((err: unknown) => err),
+      )
+
+      await until(() => lookup.mock.calls.length > 0)
+      // Long enough for the other agent's connection to reach its lookup
+      await new Promise((resolve) => setTimeout(resolve, 100))
+      expect(lookup).toHaveBeenCalledTimes(1)
+
+      answers[0]()
+      await until(() => lookup.mock.calls.length > 1)
+      answers[1]()
+
+      for (const err of await Promise.all(requests)) {
+        expect(err).toMatchObject({
+          message: 'Hostname resolved to non-unicast address',
+        })
+      }
+    } finally {
+      await Promise.all(agents.map((agent) => agent.close()))
+    }
+  })
 })
+
+async function until(condition: () => boolean) {
+  while (!condition()) await new Promise((resolve) => setImmediate(resolve))
+}
 
 describe('retryAfterSeconds', () => {
   it('spreads clients over 5 seconds past the time the queue needs to drain', () => {

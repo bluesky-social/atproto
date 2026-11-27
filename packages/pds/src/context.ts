@@ -1,5 +1,4 @@
 import assert from 'node:assert'
-import dns from 'node:dns'
 import * as plc from '@did-plc/lib'
 import type express from 'express'
 import type { Redis } from 'ioredis'
@@ -53,7 +52,7 @@ import { ImageUrlBuilder } from './image/image-url-builder.js'
 import { fetchLogger, lexiconResolverLogger, oauthLogger } from './logger.js'
 import { ServerMailer } from './mailer/index.js'
 import { ModerationMailer } from './mailer/moderation.js'
-import { buildProxyAgent } from './pipethrough.js'
+import { buildProxyAgent, systemDnsLookup } from './pipethrough.js'
 import { ProxyLimiter, limiterFetch } from './proxy-limiter.js'
 import { buildOAuthRateLimiterFactory } from './rate-limits.js'
 import {
@@ -253,8 +252,12 @@ export class AppContext implements AsyncDisposable {
       allowImplicitRedirect: false,
       responseMaxSize: cfg.fetch.maxResponseSize,
       ssrfProtection: !cfg.fetch.disableSsrfProtection,
-      // Defaults to a `dns.Resolver` based lookup
-      lookup: cfg.fetch.useSystemDnsLookup ? dns.lookup : undefined,
+      // Defaults to a `dns.Resolver` based lookup, or to `dns.lookup` without
+      // SSRF protection
+      lookup:
+        cfg.fetch.useSystemDnsLookup && !cfg.fetch.disableSsrfProtection
+          ? systemDnsLookup
+          : undefined,
 
       fetch: function (input, init) {
         const method =

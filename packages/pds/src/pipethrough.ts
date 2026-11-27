@@ -28,6 +28,7 @@ import {
   parseReqNsid,
 } from '@atproto/xrpc-server'
 import {
+  createLimitedLookup,
   createResolverLookup,
   createUnicastLookup,
   isUnicastIp,
@@ -43,6 +44,17 @@ import {
   type ProxyLimiter,
   limiterInterceptor,
 } from './proxy-limiter.js'
+
+/**
+ * `dns.lookup`, one call at a time: how user named hosts are resolved with
+ * `PDS_USE_SYSTEM_DNS_LOOKUP`. Shared by `safeFetch` and every proxy agent, so
+ * that together they hold one libuv threadpool thread at most.
+ */
+export const systemDnsLookup = createLimitedLookup(
+  // @NOTE Resolved on every call, so that instrumentation patching
+  // `dns.lookup` after this module is loaded still applies.
+  (hostname, options, callback) => dns.lookup(hostname, options, callback),
+)
 
 export function buildProxyAgent(
   cfg: ProxyConfig,
@@ -73,7 +85,7 @@ export function buildProxyAgent(
       lookup: cfg.disableSsrfProtection
         ? undefined
         : createUnicastLookup(
-            cfg.useSystemDnsLookup ? dns.lookup : createResolverLookup(),
+            cfg.useSystemDnsLookup ? systemDnsLookup : createResolverLookup(),
           ),
     },
   })

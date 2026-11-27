@@ -530,10 +530,11 @@ export type FetchConfig = {
   /**
    * Resolve the hostnames of user provided urls with `dns.lookup` (e.g.
    * through `/etc/hosts`) instead of querying DNS through a `dns.Resolver`.
-   * `dns.lookup` holds a libuv threadpool thread until the system resolver
-   * gives up, so hosts with unresponsive nameservers can stall the process.
-   * Irrelevant when {@link disableSsrfProtection} is set, as `dns.lookup` is
-   * then used regardless.
+   * As each `dns.lookup` call holds a libuv threadpool thread until the
+   * system resolver gives up, they run one at a time: a host whose nameservers
+   * don't answer then delays the resolution of others rather than stall the
+   * process. Ignored when {@link disableSsrfProtection} is set, as plain
+   * `dns.lookup` is then used.
    */
   useSystemDnsLookup: boolean
   maxResponseSize: number
