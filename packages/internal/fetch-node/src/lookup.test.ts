@@ -165,15 +165,26 @@ describe(createResolverLookup, () => {
     ).rejects.toMatchObject({ code: 'ENOTFOUND' })
   })
 
-  it('fails with ENODATA for a name without addresses', async () => {
-    await using ns = await startNameserver(zone)
+  // `dns.lookup` folds getaddrinfo's EAI_NODATA into ENOTFOUND, the only code
+  // error classifiers know for a host without addresses.
+  it.each([
+    ['empty.com', {}],
+    ['ipv6.com', { family: 4 }],
+  ] as const)(
+    'fails with ENOTFOUND for %s, which has no addresses (%j)',
+    async (hostname, options) => {
+      await using ns = await startNameserver(zone)
 
-    await expect(
-      lookupAsync(ns.lookup, 'empty.com', { all: true }),
-    ).rejects.toMatchObject({ code: 'ENODATA' })
-  })
+      await expect(
+        lookupAsync(ns.lookup, hostname, { ...options, all: true }),
+      ).rejects.toMatchObject({
+        code: 'ENOTFOUND',
+        message: `getaddrinfo ENOTFOUND ${hostname}`,
+      })
+    },
+  )
 
-  it("reports why a query failed rather than the other family's ENODATA", async () => {
+  it('reports why a query failed rather than the lack of addresses', async () => {
     await using ns = await startNameserver(zone)
 
     await expect(

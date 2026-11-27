@@ -18,7 +18,9 @@ import { type LookupFunction, isIP } from 'node:net'
  *
  * Unlike `dns.lookup`, it doesn't read `/etc/hosts` nor apply the system's
  * search domains, so it suits public hostnames only. IPv4 addresses come
- * first.
+ * first. As with `dns.lookup`, a name without addresses fails with
+ * `ENOTFOUND`, while other failures keep the resolver's code (e.g.
+ * `ETIMEOUT`, where `dns.lookup` would report `EAI_AGAIN`).
  *
  * @see {@link https://nodejs.org/api/dns.html#implementation-considerations}
  */
@@ -36,12 +38,17 @@ export function createResolverLookup(
 
   return (hostname, { family = 0, all = false }, callback) => {
     const only = family === 'IPv4' ? 4 : family === 'IPv6' ? 6 : family
+    // @NOTE The callback runs on its own tick (as with `util.callbackify`): an
+    // exception it throws must be uncaught, as with `dns.lookup`, rather than
+    // reject a promise nothing handles.
     resolveAddresses(resolver, hostname, only).then(
-      (addresses) => {
-        if (all) callback(null, addresses)
-        else callback(null, addresses[0].address, addresses[0].family)
-      },
-      (err: NodeJS.ErrnoException) => callback(err, all ? [] : ''),
+      (addresses) =>
+        process.nextTick(() => {
+          if (all) callback(null, addresses)
+          else callback(null, addresses[0].address, addresses[0].family)
+        }),
+      (err: NodeJS.ErrnoException) =>
+        process.nextTick(callback, err, all ? [] : ''),
     )
   }
 }
@@ -77,14 +84,22 @@ async function resolveAddresses(
   ]
   if (addresses.length > 0) return addresses
 
-  // Neither resolved: report why, rather than the other family's ENODATA
-  const errors = [v4, v6].flatMap((r) => (r.status === 'rejected' ? [r] : []))
-  const reason = errors.find((r) => r.reason?.code !== 'ENODATA') ?? errors[0]
-  if (reason) throw reason.reason
-
-  // e.g. a CNAME to a name without records, which getaddrinfo reports so
+  // @NOTE A query that failed (e.g. ETIMEOUT) is reported as is. Otherwise, the
+  // name has no addresses (ENOTFOUND, ENODATA, or e.g. a CNAME to a name
+  // without records), which `dns.lookup` reports as ENOTFOUND: error
+  // classifiers, such as `@atproto-labs/fetch`'s, only know that code.
+  for (const result of [v4, v6]) {
+    if (
+      result.status === 'rejected' &&
+      !NO_ADDRESS_CODES.has(result.reason?.code)
+    ) {
+      throw result.reason
+    }
+  }
   throw notFoundError(hostname)
 }
+
+const NO_ADDRESS_CODES = new Set(['ENOTFOUND', 'ENODATA'])
 
 function notFoundError(hostname: string) {
   return Object.assign(new Error(`getaddrinfo ENOTFOUND ${hostname}`), {
