@@ -269,9 +269,9 @@ describe(createWebSocket, () => {
         },
       })
       await expect(drain(gen)).rejects.toBeInstanceOf(CloseError)
-      // Both report attempt 0: each connection opened before closing, and a
-      // stable open resets the counter.
-      expect(attempts).toEqual([0, 0])
+      // The second reports attempt 1: the first connection closed as soon as it
+      // opened, too soon to reset the counter (see stableAfterMs).
+      expect(attempts).toEqual([0, 1])
     })
   })
 
@@ -623,27 +623,52 @@ describe(createWebSocket, () => {
     })
   })
 
-  it('resets the backoff after a successful open', async () => {
-    const { createTransport } = scripted([
-      { messages: [], end: 'error', error: new SocketError(new Error('1')) },
-      { messages: ['a'], end: 'error', error: new SocketError(new Error('2')) },
-      { messages: [], end: 'clean' },
-    ])
-    const delays: number[] = []
-    using _spy = vi.spyOn(globalThis, 'setTimeout').mockImplementation(((
-      fn: () => void,
-      ms?: number,
-    ) => {
-      delays.push(ms ?? 0)
-      fn()
-      return 0
-    }) as unknown as typeof setTimeout)
-    const websocket = createWebSocket(createTransport)
-    await drain(websocket('ws://x'))
-    // Both backoffs are first-attempt-sized — ~1s, not 1s then 2s — because the
-    // second failure followed a successful open, which resets the counter.
-    expect(delays).toHaveLength(2)
-    expect(delays[0]).toBeLessThan(2000)
-    expect(delays[1]).toBeLessThan(2000)
+  describe('backoff', () => {
+    // The backoffs before each of two reconnects: the second follows a
+    // connection that opened, then failed. Each is drawn at 125% of its base
+    // (1s, then 2s unless the backoff started over).
+    async function backoffs(options: WebSocketOptions<'auto'> = {}) {
+      using _random = vi.spyOn(Math, 'random').mockReturnValue(0.75)
+      const { createTransport } = scripted([
+        { messages: [], end: 'error', error: new SocketError(new Error('1')) },
+        {
+          messages: ['a'],
+          end: 'error',
+          error: new SocketError(new Error('2')),
+        },
+        { messages: [], end: 'clean' },
+      ])
+      const delays: number[] = []
+      using _spy = vi.spyOn(globalThis, 'setTimeout').mockImplementation(((
+        fn: () => void,
+        ms?: number,
+      ) => {
+        delays.push(ms ?? 0)
+        fn()
+        return 0
+      }) as unknown as typeof setTimeout)
+      const websocket = createWebSocket(createTransport)
+      await drain(websocket('ws://x', options))
+      expect(delays).toHaveLength(2)
+      return delays
+    }
+
+    it('escalates across connections that fail before stableAfterMs', async () => {
+      // A scripted connection fails as soon as its messages are read.
+      expect(await backoffs()).toEqual([1250, 2500])
+    })
+
+    it('starts over after a connection that stayed up for stableAfterMs', async () => {
+      let now = 0
+      using _now = vi
+        .spyOn(performance, 'now')
+        .mockImplementation(() => (now += 5000))
+      // Both first-attempt-sized: the second connection was up for 5s.
+      expect(await backoffs()).toEqual([1250, 1250])
+    })
+
+    it('starts over after any connection that opens with a stableAfterMs of 0', async () => {
+      expect(await backoffs({ stableAfterMs: 0 })).toEqual([1250, 1250])
+    })
   })
 })

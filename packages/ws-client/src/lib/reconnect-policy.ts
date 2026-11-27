@@ -12,10 +12,15 @@ export function defaultShouldReconnect(error: unknown): boolean {
   return error instanceof WebSocketClientError && error.shouldRetry()
 }
 
-/** Exponential backoff with ±0.5s jitter, capped at maxMs. Ported from WebSocketKeepAlive. */
+/**
+ * Exponential backoff, its base capped at maxMs, jittered by ±50%. Applied
+ * after the cap, so that clients that failed together keep spreading out once
+ * capped (up to 1.5 × maxMs), rather than all retrying in lockstep every maxMs.
+ * Never below half the base, so a retry is never immediate, even on the first
+ * attempt, when the most clients come back at once (those of a server that
+ * shut down, whose backoff had started over).
+ */
 export function backoffMs(attempt: number, maxMs: number): number {
-  const baseSec = Math.pow(2, attempt) // 1, 2, 4, 8, ...
-  const jitterSec = Math.random() - 0.5 // -0.5 .. +0.5
-  const ms = 1000 * (baseSec + jitterSec)
-  return Math.min(ms, maxMs)
+  const ms = Math.min(1000 * 2 ** attempt, maxMs) // 1s, 2s, 4s, ... maxMs
+  return ms * (0.5 + Math.random()) // 50% .. 150%
 }

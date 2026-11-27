@@ -38,6 +38,25 @@ import {
 import { type TransientError, isTransientError } from './types.js'
 import { type XrpcRequestParamsOptions, xrpcRequestUrl } from './xrpc.js'
 
+// The errors of the connection itself, as `@atproto/ws-client` reports them to
+// a factory's `shouldReconnect`, `onReconnect` and `onError` (alongside the
+// subscription's own, from `./subscription-errors.js`). Re-exported so that
+// they can be told apart without depending on `@atproto/ws-client` directly,
+// which could resolve to another copy than this package's, failing every
+// `instanceof` check.
+export {
+  BufferOverflowError,
+  CloseCode,
+  CloseError,
+  DataModeError,
+  HeartbeatTimeoutError,
+  IdleTimeoutError,
+  SocketError,
+  UnexpectedResponseError,
+  WebSocketClientError,
+  isReconnectableClose,
+} from '@atproto/ws-client'
+
 /**
  * The default reconnect policy of {@link createWebSocketFactory} (and so of
  * {@link defaultWebsocket}): `@atproto/ws-client`'s `defaultShouldReconnect()`

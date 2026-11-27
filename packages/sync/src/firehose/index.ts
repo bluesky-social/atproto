@@ -40,7 +40,10 @@ export type FirehoseOptions = {
 
   service?: string
   subscriptionReconnectDelay?: number
-  /** Exponential-backoff ceiling for reconnects, in seconds. */
+  /**
+   * Ceiling of the exponential backoff's base for reconnects, in seconds. Each
+   * delay is jittered by ±50% around its base.
+   */
   maxReconnectSeconds?: number
   /** Heartbeat interval; omit to use the default. */
   heartbeatIntervalMs?: number

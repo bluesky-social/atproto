@@ -37,8 +37,21 @@ type ConnectionOptions<M extends DataMode> = Partial<
 export interface WebSocketOptions<
   M extends DataMode,
 > extends ConnectionOptions<M> {
-  /** Exponential-backoff ceiling in seconds. Default 64. */
+  /**
+   * Ceiling of the exponential backoff's base, in seconds. Default 64. Each
+   * delay is jittered by ±50% around its base, so a capped one is up to 1.5
+   * times this.
+   */
   maxReconnectSeconds?: number
+  /**
+   * How long a connection must stay up for the backoff to start over, in
+   * milliseconds. Default 5000. A connection that opens and then fails sooner
+   * (an error frame or a close right after the upgrade, a message the consumer
+   * rejects) counts as one more failure, so an endpoint that accepts and then
+   * drops every connection is retried ever more slowly rather than every ~1s.
+   * `0` restarts the backoff after any connection that opens.
+   */
+  stableAfterMs?: number
   /** Abort to end the stream permanently; the iterator rejects with the reason. */
   signal?: AbortSignal
   /**
@@ -85,8 +98,9 @@ export interface WebSocketOptions<
   onError?: (error: unknown) => void
   /**
    * A connection ended with an error and a retry is coming, `attempt` counting
-   * consecutive failures since the last successful open (so `0` is the first
-   * retry of a cycle).
+   * consecutive failures since the last stable connection (see
+   * {@link WebSocketOptions.stableAfterMs}), so `0` is the first retry of a
+   * cycle.
    *
    * Unlike `onError` this is the *only* place such a failure surfaces: the stream
    * swallows it and keeps going, so a caller that wants to see transient trouble
@@ -145,11 +159,12 @@ export async function* websocketFactory<M extends DataMode = 'auto'>(
 ): WebSocketIterable<M> {
   const { signal } = options
   const maxMs = 1000 * (options.maxReconnectSeconds ?? 64)
+  const stableAfterMs = options.stableAfterMs ?? 5000
   const shouldReconnect = normalizeShouldReconnect(options.shouldReconnect)
 
-  // Consecutive failed connections since the last successful open, so the
-  // backoff restarts at ~1s after any stable open and only escalates across
-  // repeated failures with nothing working in between.
+  // Consecutive failed connections since the last stable one, so the backoff
+  // restarts from 1s after a connection that stayed up for `stableAfterMs`, and
+  // only escalates across repeated failures with nothing working in between.
   let retries = 0
   let firstOpen = true
   // How the last connection ended, recorded by the transport's `onClose` below.
@@ -174,6 +189,7 @@ export async function* websocketFactory<M extends DataMode = 'auto'>(
       const teardown = new AbortController()
       forwardAbort(signal, teardown)
       let opened = false
+      let openedAt = 0
       // Per-attempt, and cleared here rather than only written on success: a
       // detail left over from an earlier connection would otherwise be reported
       // as this stream's ending.
@@ -204,8 +220,8 @@ export async function* websocketFactory<M extends DataMode = 'auto'>(
           // rejects once this connection is no longer open, which the
           // transport knows the moment its socket closes, errors, or aborts.
           onOpen: (sender) => {
-            retries = 0 // a stable open: the backoff starts over
             opened = true
+            openedAt = performance.now()
             // onOpen bookends the stream and fires once, before the first
             // onConnect; onConnect fires for every connection including this
             // one.
@@ -221,6 +237,10 @@ export async function* websocketFactory<M extends DataMode = 'auto'>(
             // this is what makes onConnect/onDisconnect pair exactly.
             if (opened) {
               opened = false
+              // A stable connection: the backoff starts over. Timed here rather
+              // than in the `catch` below, which only runs once the consumer
+              // pulls again, possibly long after the socket closed.
+              if (performance.now() - openedAt >= stableAfterMs) retries = 0
               invokeHook(options.onDisconnect)
             }
           },
@@ -277,7 +297,7 @@ export async function* websocketFactory<M extends DataMode = 'auto'>(
         // rethrowing, a non-reconnectable clean close returning, a consumer
         // `break` resuming at the `yield*`) must not be delayed by it.
         // Post-increment so the first reconnect waits ~1s (2^0) and each
-        // consecutive failure escalates; a successful open resets to 0.
+        // consecutive failure escalates; a stable connection resets to 0.
         await sleep(backoffMs(retries++, maxMs), signal)
         // Loop: the check at the top catches an abort that landed during the
         // backoff, then the url is re-resolved and redialed.
