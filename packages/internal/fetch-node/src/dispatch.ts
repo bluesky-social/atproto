@@ -30,7 +30,7 @@ interface UnknownAgent {
   destroy(): Promise<void>
 }
 
-export type SafeDispatchFetchWrapOptions<C = FetchContext> = {
+export type DispatcherFetchOptions<C = FetchContext> = {
   fetch?: Fetch<C>
 
   /**
@@ -61,14 +61,14 @@ export type SafeDispatchFetchWrapOptions<C = FetchContext> = {
  * Wraps a fetch function so that every request it issues — including every
  * redirect hop — is dispatched through a guarded undici Agent.
  */
-export function safeDispatchFetchWrap<C = FetchContext>({
+export function createDispatcherFetch<C = FetchContext>({
   fetch = globalThis.fetch,
   checkUrl,
   lookup,
-}: SafeDispatchFetchWrapOptions<C> = {}): Fetch<C> & AsyncDisposable {
+}: DispatcherFetchOptions<C> = {}): Fetch<C> & AsyncDisposable {
   const dispatcher = buildDispatcher({ checkUrl, lookup })
 
-  const wrappedFetch: Fetch<C> = async function safeDispatchFetch(
+  const wrappedFetch: Fetch<C> = async function dispatcherFetch(
     input,
     init,
   ): Promise<Response> {
@@ -106,7 +106,7 @@ export function safeDispatchFetchWrap<C = FetchContext>({
 function buildDispatcher({
   checkUrl,
   lookup,
-}: SafeDispatchFetchWrapOptions): UnknownAgent {
+}: DispatcherFetchOptions): UnknownAgent {
   // @NOTE we parse here instead of top-level to allow version mocking in tests.
   const nodeUndiciVersion = parseVersion(process.versions.undici)
 

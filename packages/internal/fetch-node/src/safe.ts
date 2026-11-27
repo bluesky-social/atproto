@@ -15,22 +15,24 @@ import {
   timedFetch,
 } from '@atproto-labs/fetch'
 import { pipe } from '@atproto-labs/pipe'
-import { safeDispatchFetchWrap } from './dispatch.js'
+import { createDispatcherFetch } from './dispatch.js'
+import { createResolverLookup } from './lookup.js'
 import {
-  type UnicastFetchWrapOptions,
+  type UnicastFetchOptions,
   checkUnicastPolicy,
-  unicastLookup,
-  unicastLookupWrap,
+  createUnicastLookup,
 } from './unicast.js'
 
-export type SafeFetchWrapOptions<C> = {
+export type SafeFetchOptions<C> = {
   fetch?: Fetch<C>
   /**
-   * @see {@link UnicastFetchWrapOptions.lookup}
+   * @see {@link UnicastFetchOptions.lookup}
    * @note The unicast check is applied to its result unless
-   * {@link SafeFetchWrapOptions.allowPrivateIps} is `true`.
+   * {@link SafeFetchOptions.allowPrivateIps} is `true`.
+   * @default createResolverLookup(), or `dns.lookup` when
+   * {@link SafeFetchOptions.allowPrivateIps} is `true`
    */
-  lookup?: UnicastFetchWrapOptions['lookup']
+  lookup?: UnicastFetchOptions['lookup']
   responseMaxSize?: number
   ssrfProtection?: boolean
   allowCustomPort?: boolean
@@ -63,7 +65,7 @@ export type SafeFetchWrapOptions<C> = {
  * hops: `fetch()` follows redirects internally, above the dispatcher, so a
  * transform only ever observes the url it was handed.
  *
- * @note When {@link SafeFetchWrapOptions.allowImplicitRedirect} is `false`
+ * @note When {@link SafeFetchOptions.allowImplicitRedirect} is `false`
  * (default), then the returned function **must** be called setting the second
  * argument's `redirect` property to one of the allowed values. Otherwise, if
  * the returned fetch function is called with a `Request` object (and no
@@ -71,12 +73,12 @@ export type SafeFetchWrapOptions<C> = {
  * to determine if the `redirect` property was explicitly set or based on the
  * default value (`follow`), causing it to preventively block the request (throw
  * an error). For this reason, unless you set
- * {@link SafeFetchWrapOptions.allowImplicitRedirect} to `true`, you should
+ * {@link SafeFetchOptions.allowImplicitRedirect} to `true`, you should
  * **not** wrap the returned function into another function that creates a
  * {@link Request} object before passing it to the function (as a e.g. a logging
  * function would).
  */
-export function safeFetchWrap<C>({
+export function createSafeFetch<C>({
   fetch = globalThis.fetch as Fetch<C>,
   lookup,
   responseMaxSize = 512 * 1024, // 512kB
@@ -89,7 +91,7 @@ export function safeFetchWrap<C>({
   timeout = 10e3,
   forbiddenDomainNames = DEFAULT_FORBIDDEN_DOMAIN_NAMES as Iterable<string>,
   allowImplicitRedirect = false,
-}: SafeFetchWrapOptions<C> = {}): AsyncDisposable & Fetch<C> {
+}: SafeFetchOptions<C> = {}): AsyncDisposable & Fetch<C> {
   /**
    * Prevent using http:, file: or data: protocols.
    */
@@ -125,15 +127,17 @@ export function safeFetchWrap<C>({
    * @note The dispatcher is installed even when private IPs are allowed:
    * relaxing the unicast requirement must not silently disable the
    * remaining per-hop checks. Only the DNS guard is conditional.
+   *
+   * @note Private IPs are allowed to reach local services, which are commonly
+   * named through `/etc/hosts` or search domains: these fall back to
+   * `dns.lookup`, as {@link createResolverLookup} only suits public hostnames.
    */
-  const innerFetch = safeDispatchFetchWrap({
+  const innerFetch = createDispatcherFetch({
     fetch,
     checkUrl,
     lookup: allowPrivateIps
       ? lookup
-      : lookup
-        ? unicastLookupWrap(lookup)
-        : unicastLookup,
+      : createUnicastLookup(lookup ?? createResolverLookup()),
   })
 
   const composedFetch = pipe(
