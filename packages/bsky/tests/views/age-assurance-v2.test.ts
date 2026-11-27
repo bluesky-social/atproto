@@ -16,13 +16,14 @@ import {
 } from 'vitest'
 import {
   type AppBskyAgeassuranceBegin,
-  type AppBskyAgeassuranceDefs,
   type AppBskyAgeassuranceGetState,
   type AtpAgent,
-  ageAssuranceRuleIDs as ruleIds,
   ids,
 } from '@atproto/api'
 import { type SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import { AGE_ASSURANCE_CONFIG } from '../../dist/api/age-assurance/const.js'
+import { KWS_V2_COUNTRIES } from '../../dist/api/age-assurance/kws/const.js'
+import { app } from '../../dist/lexicons/index.js'
 import {
   type KWSWebhookAgeVerified,
   serializeKWSAgeVerifiedStatus,
@@ -38,60 +39,39 @@ type Database = TestNetwork['bsky']['db']
 
 const BSKY_REDIRECT_URL = 'http://bsky'
 
-vi.mock('../../dist/api/age-assurance/const.js', () => {
-  const AGE_ASSURANCE_CONFIG: AppBskyAgeassuranceDefs.Config = {
-    regions: [
-      {
-        countryCode: 'AA',
-        regionCode: undefined,
-        minAccessAge: 13,
-        rules: [
-          {
-            $type: ruleIds.IfAssuredOverAge,
-            age: 18,
-            access: 'full',
-          },
-          {
-            $type: ruleIds.Default,
-            access: 'safe',
-          },
-        ],
-      },
-      {
-        countryCode: 'BB',
-        regionCode: undefined,
-        minAccessAge: 13,
-        rules: [
-          {
-            $type: ruleIds.IfAssuredOverAge,
-            age: 18,
-            access: 'full',
-          },
-          {
-            $type: ruleIds.Default,
-            access: 'safe',
-          },
-        ],
-      },
-    ],
-  }
-  return {
-    AGE_ASSURANCE_CONFIG,
-  }
-})
-
-vi.mock('../../dist/api/age-assurance/kws/const.js', async () => {
-  const actual = await vi.importActual<Record<string, unknown>>(
-    '../../dist/api/age-assurance/kws/const.js',
-  )
-  const KWS_V2_COUNTRIES = new Set(['AA'])
-  return {
-    ...actual,
-    KWS_V2_COUNTRIES,
-  }
-})
+const TEST_REGIONS = ['AA', 'BB'].map((countryCode) => ({
+  countryCode,
+  regionCode: undefined,
+  minAccessAge: 13,
+  rules: [
+    app.bsky.ageassurance.defs.configRegionRuleIfAssuredOverAge.$build({
+      age: 18,
+      access: 'full',
+    }),
+    app.bsky.ageassurance.defs.configRegionRuleDefault.$build({
+      access: 'safe',
+    }),
+  ],
+}))
 
 describe('age assurance v2 views', () => {
+  // @NOTE The AppView runs from natively-loaded `dist`, which `vi.mock` can't
+  // reach, so the test regions are swapped into the shared constants instead.
+  const originalRegions = AGE_ASSURANCE_CONFIG.regions
+  const originalV2Countries = [...KWS_V2_COUNTRIES]
+
+  beforeAll(() => {
+    AGE_ASSURANCE_CONFIG.regions = TEST_REGIONS
+    KWS_V2_COUNTRIES.clear()
+    KWS_V2_COUNTRIES.add('AA')
+  })
+
+  afterAll(() => {
+    AGE_ASSURANCE_CONFIG.regions = originalRegions
+    KWS_V2_COUNTRIES.clear()
+    for (const country of originalV2Countries) KWS_V2_COUNTRIES.add(country)
+  })
+
   let network: TestNetwork
   let db: Database
   let agent: AtpAgent

@@ -219,7 +219,9 @@ vi.mock('./const.js', async () => {
 })
 ```
 
-Note that `bsky` integration tests mock the **compiled** path (`../../dist/api/…`), not `../../src/…`, because the service under test is loaded from `dist`. Match whatever the module graph actually resolves, or the mock silently won't apply.
+### Integration configs
+
+A package whose tests boot `@atproto/dev-env` should externalize workspace `dist` (`server.deps.external: [/\/packages\/.+\/dist\//]`) and run its `./tests` files in a separate project with `isolate: false`, as [bsky](../../../../packages/bsky/vitest.config.ts) does. Workspace packages resolve outside `node_modules`, so vitest otherwise transforms the whole service graph and re-imports it in every file. In such a project, `vi.mock` can't replace a module the service under test imports and module state outlives the file: patch the shared instance imported from `../../dist/…` instead, and restore it in `afterAll`.
 
 ## Running tests
 
