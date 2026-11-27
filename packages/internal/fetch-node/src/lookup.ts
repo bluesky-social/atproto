@@ -1,7 +1,12 @@
 // @NOTE The promises API is reached through `node:dns` rather than imported
 // from `node:dns/promises`, which tests commonly replace with a partial mock
 // (to stub `resolveTxt`), while this runs as soon as a fetch is wrapped.
-import { type LookupAddress, type ResolverOptions, promises } from 'node:dns'
+import {
+  type LookupAddress,
+  type ResolverOptions,
+  lookup as dnsLookup,
+  promises,
+} from 'node:dns'
 import type { Resolver } from 'node:dns/promises'
 import { type LookupFunction, isIP } from 'node:net'
 
@@ -104,6 +109,108 @@ const NO_ADDRESS_CODES = new Set(['ENOTFOUND', 'ENODATA'])
 function notFoundError(hostname: string) {
   return Object.assign(new Error(`getaddrinfo ENOTFOUND ${hostname}`), {
     code: 'ENOTFOUND',
+    hostname,
+  })
+}
+
+export type LimitedLookupOptions = {
+  /**
+   * How many lookups may run at once.
+   *
+   * @default 1
+   */
+  concurrency?: number
+
+  /**
+   * How long (in ms) a lookup may wait for its turn and run before it fails
+   * with `ETIMEOUT`. A lookup that timed out while running keeps its slot until
+   * it completes, as a `dns.lookup` call cannot be cancelled.
+   *
+   * @default 5000
+   */
+  timeout?: number
+}
+
+/**
+ * Bounds how many calls to {@link lookup} (`dns.lookup` by default) run at
+ * once, queueing the others.
+ *
+ * Each `dns.lookup` call holds one of libuv's threadpool threads (4 by default,
+ * shared with `fs`, `crypto` and `zlib`) until the system resolver answers or
+ * gives up. Bounding them leaves the rest of the threadpool to the rest of the
+ * process. Lookups still wait on each other though: a host whose nameservers
+ * don't answer holds its slot until the system resolver gives up, and the
+ * lookups queued behind it time out meanwhile. {@link createResolverLookup}
+ * has no such limit, and should be preferred for hosts users name unless they
+ * must be resolved as the rest of the system does (e.g. through `/etc/hosts`).
+ *
+ * @note The limit only holds among the lookups going through the returned
+ * function: share it rather than creating one per agent.
+ */
+export function createLimitedLookup(
+  // @NOTE Resolved on every call rather than captured, so that instrumentation
+  // patching `dns.lookup` after this module is loaded still applies.
+  lookup: LookupFunction = (hostname, options, callback) =>
+    dnsLookup(hostname, options, callback),
+  { concurrency = 1, timeout = 5_000 }: LimitedLookupOptions = {},
+): LookupFunction {
+  let running = 0
+  const queue = new Set<() => void>()
+
+  const next = () => {
+    for (const start of queue) {
+      if (running >= concurrency) return
+      queue.delete(start)
+      start()
+    }
+  }
+
+  return (hostname, options, callback) => {
+    let settled = false
+    const settle: typeof callback = (err, address, family) => {
+      if (settled) return
+      settled = true
+      clearTimeout(timer)
+      callback(err, address, family)
+    }
+
+    const timer = setTimeout(() => {
+      // Still queued, or running (in which case it keeps its slot)
+      queue.delete(start)
+      settle(timeoutError(hostname), options.all ? [] : '')
+    }, timeout)
+
+    const start = () => {
+      running++
+      let released = false
+      const release = () => {
+        if (released) return
+        released = true
+        running--
+        next()
+      }
+
+      try {
+        lookup(hostname, options, (err, address, family) => {
+          // @NOTE Released before calling back, so that an exception thrown by
+          // the callback cannot hold the slot.
+          release()
+          settle(err, address, family)
+        })
+      } catch (err) {
+        release()
+        process.nextTick(settle, err, options.all ? [] : '')
+      }
+    }
+
+    queue.add(start)
+    next()
+  }
+}
+
+function timeoutError(hostname: string) {
+  return Object.assign(new Error(`Lookup of ${hostname} timed out`), {
+    code: 'ETIMEOUT',
     hostname,
   })
 }

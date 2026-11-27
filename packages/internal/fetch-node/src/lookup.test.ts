@@ -3,8 +3,8 @@ import type { LookupAddress, LookupOptions } from 'node:dns'
 import { Resolver } from 'node:dns/promises'
 import type { AddressInfo, LookupFunction } from 'node:net'
 import ipaddr from 'ipaddr.js'
-import { describe, expect, it } from 'vitest'
-import { createResolverLookup } from './lookup.js'
+import { describe, expect, it, vi } from 'vitest'
+import { createLimitedLookup, createResolverLookup } from './lookup.js'
 
 const A = 1
 const AAAA = 28
@@ -223,5 +223,141 @@ describe(createResolverLookup, () => {
       lookupAsync(ns.lookup, address, { family: family === 4 ? 6 : 4 }),
     ).rejects.toMatchObject({ code: 'ENOTFOUND' })
     expect(ns.queries).toEqual([])
+  })
+})
+
+/**
+ * A lookup whose calls complete when the test says so.
+ */
+function heldLookup() {
+  const calls: {
+    hostname: string
+    complete: (address: string) => void
+  }[] = []
+  const lookup = vi.fn<LookupFunction>((hostname, options, callback) => {
+    calls.push({
+      hostname,
+      complete: (address) => {
+        if (options.all) callback(null, [{ address, family: 4 }])
+        else callback(null, address, 4)
+      },
+    })
+  })
+  return {
+    lookup,
+    calls,
+    started: () => calls.map((call) => call.hostname),
+    [Symbol.dispose]: () => lookup.mockRestore(),
+  }
+}
+
+describe(createLimitedLookup, () => {
+  it('runs one lookup at a time by default', async () => {
+    using held = heldLookup()
+    const lookup = createLimitedLookup(held.lookup)
+
+    const first = lookupAsync(lookup, 'a.com', { all: true })
+    const second = lookupAsync(lookup, 'b.com', { all: true })
+    expect(held.started()).toEqual(['a.com'])
+
+    held.calls[0].complete('192.0.2.1')
+    await expect(first).resolves.toEqual({
+      address: [{ address: '192.0.2.1', family: 4 }],
+    })
+    expect(held.started()).toEqual(['a.com', 'b.com'])
+
+    held.calls[1].complete('192.0.2.2')
+    await expect(second).resolves.toEqual({
+      address: [{ address: '192.0.2.2', family: 4 }],
+    })
+  })
+
+  it('runs up to `concurrency` lookups at once', async () => {
+    using held = heldLookup()
+    const lookup = createLimitedLookup(held.lookup, { concurrency: 2 })
+
+    const results = ['a.com', 'b.com', 'c.com'].map((hostname) =>
+      lookupAsync(lookup, hostname, {}),
+    )
+    expect(held.started()).toEqual(['a.com', 'b.com'])
+
+    held.calls[1].complete('192.0.2.2')
+    await expect(results[1]).resolves.toEqual({
+      address: '192.0.2.2',
+      family: 4,
+    })
+    expect(held.started()).toEqual(['a.com', 'b.com', 'c.com'])
+
+    held.calls[0].complete('192.0.2.1')
+    held.calls[2].complete('192.0.2.3')
+    await Promise.all(results)
+  })
+
+  it('fails lookups that take too long, and keeps the slot of a running one until it completes', async () => {
+    using held = heldLookup()
+    const lookup = createLimitedLookup(held.lookup, { timeout: 50 })
+
+    const running = vi.fn()
+    lookup('a.com', {}, running)
+    const queued = lookupAsync(lookup, 'b.com', {})
+
+    await expect(queued).rejects.toMatchObject({ code: 'ETIMEOUT' })
+    expect(running).toHaveBeenCalledOnce()
+    expect(running.mock.calls[0][0]).toMatchObject({ code: 'ETIMEOUT' })
+
+    // `dns.lookup` cannot be cancelled: the slot stays taken until it completes
+    const next = lookupAsync(lookup, 'c.com', {})
+    expect(held.started()).toEqual(['a.com'])
+
+    held.calls[0].complete('192.0.2.1')
+    expect(running).toHaveBeenCalledTimes(1)
+    // The lookup that timed out while queued never runs
+    expect(held.started()).toEqual(['a.com', 'c.com'])
+
+    held.calls[1].complete('192.0.2.3')
+    await expect(next).resolves.toEqual({ address: '192.0.2.3', family: 4 })
+  })
+
+  it('frees the slot of a lookup that throws', async () => {
+    const lookup = createLimitedLookup((hostname, _options, callback) => {
+      if (hostname === 'bad') throw new TypeError('Invalid hostname')
+      callback(null, '192.0.2.1', 4)
+    })
+
+    await expect(lookupAsync(lookup, 'bad', {})).rejects.toThrow(
+      'Invalid hostname',
+    )
+    await expect(lookupAsync(lookup, 'good.com', {})).resolves.toEqual({
+      address: '192.0.2.1',
+      family: 4,
+    })
+  })
+
+  it('frees the slot of a lookup whose callback throws', async () => {
+    using held = heldLookup()
+    const lookup = createLimitedLookup(held.lookup)
+
+    lookup('a.com', {}, () => {
+      throw new Error('Callback failed')
+    })
+    const next = lookupAsync(lookup, 'b.com', {})
+
+    expect(() => held.calls[0].complete('192.0.2.1')).toThrow('Callback failed')
+    expect(held.started()).toEqual(['a.com', 'b.com'])
+
+    held.calls[1].complete('192.0.2.2')
+    await expect(next).resolves.toEqual({ address: '192.0.2.2', family: 4 })
+  })
+
+  it('uses dns.lookup by default', async () => {
+    // Only the system resolver reads /etc/hosts
+    const { address } = await lookupAsync(createLimitedLookup(), 'localhost', {
+      all: true,
+    })
+
+    expect(address).not.toHaveLength(0)
+    for (const { address: ip } of address as LookupAddress[]) {
+      expect(ipaddr.parse(ip).range()).toBe('loopback')
+    }
   })
 })
