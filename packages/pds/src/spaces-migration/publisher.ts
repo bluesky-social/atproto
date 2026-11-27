@@ -61,7 +61,7 @@ const PLC_BACKOFF_CAP_MS = HOUR
 
 /**
  * Publishes every account's KEM key, one account at a time at a gentle pace,
- * starting after a delay derived from the hostname so that hosts don't all
+ * starting after a random delay so that hosts don't all
  * load PLC at once. Prioritized accounts skip the delay and the pace. When PLC
  * pushes back (429 or 5xx) the whole publisher backs off, not just the account.
  * Several processes can run one each: rows are leased.
@@ -168,7 +168,6 @@ export class SpacesMigrationPublisher implements AsyncDisposable {
       // The sweep, which migrates the stores of the rows claimed here, runs
       // wherever the publisher does
       this.startAt = await this.progress.publishStartAt(
-        this.ctx.cfg.service.hostname,
         this.opts.jitterWindowMs,
         Date.now(),
       )

@@ -2179,8 +2179,8 @@ importers:
         specifier: workspace:^
         version: link:../xrpc-server
       '@did-plc/lib':
-        specifier: 1.0.0-next.0
-        version: 1.0.0-next.0
+        specifier: 1.0.0
+        version: 1.0.0
       '@hapi/address':
         specifier: ^5.1.1
         version: 5.1.1
@@ -3547,8 +3547,8 @@ packages:
   '@did-plc/lib@0.0.4':
     resolution: {integrity: sha512-Omeawq3b8G/c/5CtkTtzovSOnWuvIuCI4GTJNrt1AmCskwEQV7zbX5d6km1mjJNbE0gHuQPTVqZxLVqetNbfwA==}
 
-  '@did-plc/lib@1.0.0-next.0':
-    resolution: {integrity: sha512-zYcpMT9Pe0KDElE3ZLDwc1HNNh0kSy5bRBeQAioWNpzmD8sdcd8k7F9LuDcFcMHn7Us5ZcXFQRUXCowAhrIgGw==}
+  '@did-plc/lib@1.0.0':
+    resolution: {integrity: sha512-lv2g4cOgVS2heZuDAp6fH0wvU+vDphC6F4X9d3R11gsOk2SDSICWVUCgVOtj3EArUkeDVyTZlGx3D8i+kvjncg==}
     engines: {node: '>=22.18'}
 
   '@did-plc/server@0.0.1':
@@ -12025,7 +12025,7 @@ snapshots:
     transitivePeerDependencies:
       - debug
 
-  '@did-plc/lib@1.0.0-next.0':
+  '@did-plc/lib@1.0.0':
     dependencies:
       '@atproto/common': 0.8.1
       '@atproto/crypto': 0.5.4

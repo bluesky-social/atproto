@@ -3,18 +3,15 @@ import { backoffMs, jitterDelayMs } from './pacing.js'
 describe('jitterDelayMs', () => {
   const window = 24 * 60 * 60 * 1000
 
-  it('is deterministic per hostname', () => {
-    expect(jitterDelayMs('pds.example.com', window)).toBe(
-      jitterDelayMs('pds.example.com', window),
-    )
-    expect(jitterDelayMs('pds.example.com', window)).not.toBe(
-      jitterDelayMs('other.example.com', window),
-    )
+  it('samples across the window', () => {
+    expect(jitterDelayMs(window, () => 0)).toBe(0)
+    expect(jitterDelayMs(window, () => 0.5)).toBe(window / 2)
+    expect(jitterDelayMs(window, () => 1 - Number.EPSILON)).toBe(window - 1)
   })
 
   it('falls within the window', () => {
     for (let i = 0; i < 100; i++) {
-      const delay = jitterDelayMs(`host${i}.example.com`, 1000)
+      const delay = jitterDelayMs(1000)
       expect(Number.isInteger(delay)).toBe(true)
       expect(delay).toBeGreaterThanOrEqual(0)
       expect(delay).toBeLessThan(1000)
@@ -22,7 +19,7 @@ describe('jitterDelayMs', () => {
   })
 
   it('is zero with an empty window', () => {
-    expect(jitterDelayMs('pds.example.com', 0)).toBe(0)
+    expect(jitterDelayMs(0)).toBe(0)
   })
 })
 

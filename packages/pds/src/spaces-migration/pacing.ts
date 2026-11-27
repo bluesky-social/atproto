@@ -1,13 +1,12 @@
-import { createHash } from 'node:crypto'
-
 /**
- * A delay in [0, windowMs) derived from the hostname, so that hosts spread
- * their start over the window and a host's restarts don't reshuffle it.
+ * A random delay in [0, windowMs) to spread hosts' publishing starts.
  */
-export function jitterDelayMs(hostname: string, windowMs: number): number {
+export function jitterDelayMs(
+  windowMs: number,
+  random: () => number = Math.random,
+): number {
   if (windowMs <= 0) return 0
-  const hash = createHash('sha256').update(hostname).digest()
-  return hash.readUIntBE(0, 6) % Math.floor(windowMs)
+  return Math.floor(random() * windowMs)
 }
 
 /**
