@@ -1,5 +1,5 @@
 {
-  "extends": ["../../tsconfig/jest.tsconfig.json"],
+  "extends": ["../../tsconfig/vitest.tsconfig.json"],
   "include": ["./tests", "./src/**/*.test.ts"],
   "references": [
     { "path": "../lex/lex-document/tsconfig.build.json" },

@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest'
 import { cidForLex } from '@atproto/lex-cbor'
 import { CidSet, VisitedCidError } from '../src/index.js'
 

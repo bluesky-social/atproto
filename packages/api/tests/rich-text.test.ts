@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest'
 import { RichText } from '../src/index.js'
 
 describe('RichText', () => {

@@ -1,4 +1,5 @@
 import assert from 'node:assert'
+import { beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { type Cid, parseCid } from '@atproto/lex-data'
 import {
   type DataAdd,

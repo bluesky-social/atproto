@@ -1,4 +1,5 @@
 import * as uint8arrays from 'uint8arrays'
+import { describe, expect, it } from 'vitest'
 import {
   P256Keypair,
   Secp256k1Keypair,

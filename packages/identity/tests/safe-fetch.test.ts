@@ -1,10 +1,10 @@
-import { jest } from '@jest/globals'
+import { describe, expect, it, vi } from 'vitest'
 import { safeFetchWrap } from '@atproto-labs/fetch-node'
 import { DidResolver, HandleResolver } from '../src/index.js'
 
 describe('injected fetch', () => {
   it('routes the handle well-known request through the injected fetch', async () => {
-    const fetch = jest.fn(async () => new Response('did:plc:abc123\n'))
+    const fetch = vi.fn(async () => new Response('did:plc:abc123\n'))
     const resolver = new HandleResolver({ fetch })
 
     expect(await resolver.resolveHttp('alice.test')).toBe('did:plc:abc123')
@@ -16,7 +16,7 @@ describe('injected fetch', () => {
   })
 
   it('routes did:plc through the injected fetch', async () => {
-    const fetch = jest.fn(async () => Response.json({ id: 'did:plc:abc123' }))
+    const fetch = vi.fn(async () => Response.json({ id: 'did:plc:abc123' }))
     const resolver = new DidResolver({
       plcUrl: 'https://plc.example.com',
       timeout: 1000,
@@ -31,7 +31,7 @@ describe('injected fetch', () => {
   })
 
   it('routes did:web through the injected fetch', async () => {
-    const fetch = jest.fn(async () =>
+    const fetch = vi.fn(async () =>
       Response.json({ id: 'did:web:example.com' }),
     )
     const resolver = new DidResolver({ timeout: 1000, fetch })
@@ -44,7 +44,7 @@ describe('injected fetch', () => {
   })
 
   it('still infers http for a localhost did:web', async () => {
-    const fetch = jest.fn(async () =>
+    const fetch = vi.fn(async () =>
       Response.json({ id: 'did:web:localhost%3A2583' }),
     )
     const resolver = new DidResolver({ timeout: 1000, fetch })
@@ -75,7 +75,7 @@ describe('injected fetch', () => {
 describe('timeouts', () => {
   function hangingFetch() {
     const seen: { reason?: Error } = {}
-    const fetch = jest.fn(
+    const fetch = vi.fn(
       (_input: string | Request | URL, init: RequestInit = {}) =>
         new Promise<Response>((_resolve, reject) => {
           init.signal?.addEventListener('abort', () => {
@@ -121,7 +121,7 @@ describe('response body cancellation', () => {
 
   it('cancels the body when did:plc returns 404', async () => {
     const { body, state } = cancellableBody()
-    const fetch = jest.fn(async () => new Response(body, { status: 404 }))
+    const fetch = vi.fn(async () => new Response(body, { status: 404 }))
     const resolver = new DidResolver({
       plcUrl: 'https://plc.example.com',
       timeout: 1000,
@@ -134,7 +134,7 @@ describe('response body cancellation', () => {
 
   it('cancels the body when did:plc returns a server error', async () => {
     const { body, state } = cancellableBody()
-    const fetch = jest.fn(
+    const fetch = vi.fn(
       async () => new Response(body, { status: 500, statusText: 'Nope' }),
     )
     const resolver = new DidResolver({
@@ -151,7 +151,7 @@ describe('response body cancellation', () => {
 
   it('cancels the body when did:web returns a non-ok status', async () => {
     const { body, state } = cancellableBody()
-    const fetch = jest.fn(async () => new Response(body, { status: 500 }))
+    const fetch = vi.fn(async () => new Response(body, { status: 500 }))
     const resolver = new DidResolver({ timeout: 1000, fetch })
 
     expect(await resolver.resolveNoCheck('did:web:example.com')).toBeNull()
@@ -165,95 +165,66 @@ describe('default fetch is SSRF-protected', () => {
   // 127.0.0.1:443 fails with ECONNREFUSED anyway. Spying on globalThis.fetch
   // separates "blocked by policy" from "connection refused". safeFetchWrap
   // captures globalThis.fetch when the resolver is constructed, so the spy has
-  // to be installed first. mockRestore in a finally, matching the neighbouring
-  // jest precedent in packages/ozone/tests/safe-fetch.test.ts.
+  // to be installed first.
 
   it('refuses did:web on a loopback address without dialing', async () => {
-    const spy = jest
+    using spy = vi
       .spyOn(globalThis, 'fetch')
       .mockRejectedValue(new Error('should not be dialed'))
-    try {
-      const resolver = new DidResolver({ timeout: 1000 })
-      await expect(
-        resolver.resolveNoCheck('did:web:127.0.0.1'),
-      ).rejects.toThrow()
-      expect(spy).not.toHaveBeenCalled()
-    } finally {
-      spy.mockRestore()
-    }
+    const resolver = new DidResolver({ timeout: 1000 })
+    await expect(resolver.resolveNoCheck('did:web:127.0.0.1')).rejects.toThrow()
+    expect(spy).not.toHaveBeenCalled()
   })
 
   it('refuses did:web on a link-local address without dialing', async () => {
-    const spy = jest
+    using spy = vi
       .spyOn(globalThis, 'fetch')
       .mockRejectedValue(new Error('should not be dialed'))
-    try {
-      const resolver = new DidResolver({ timeout: 1000 })
-      await expect(
-        resolver.resolveNoCheck('did:web:169.254.169.254'),
-      ).rejects.toThrow()
-      expect(spy).not.toHaveBeenCalled()
-    } finally {
-      spy.mockRestore()
-    }
+    const resolver = new DidResolver({ timeout: 1000 })
+    await expect(
+      resolver.resolveNoCheck('did:web:169.254.169.254'),
+    ).rejects.toThrow()
+    expect(spy).not.toHaveBeenCalled()
   })
 
   it('refuses did:web on a custom port without dialing', async () => {
-    const spy = jest
+    using spy = vi
       .spyOn(globalThis, 'fetch')
       .mockRejectedValue(new Error('should not be dialed'))
-    try {
-      const resolver = new DidResolver({ timeout: 1000 })
-      await expect(
-        resolver.resolveNoCheck('did:web:example.social%3A3000'),
-      ).rejects.toThrow()
-      expect(spy).not.toHaveBeenCalled()
-    } finally {
-      spy.mockRestore()
-    }
+    const resolver = new DidResolver({ timeout: 1000 })
+    await expect(
+      resolver.resolveNoCheck('did:web:example.social%3A3000'),
+    ).rejects.toThrow()
+    expect(spy).not.toHaveBeenCalled()
   })
 
   it('refuses did:web on localhost without dialing', async () => {
-    const spy = jest
+    using spy = vi
       .spyOn(globalThis, 'fetch')
       .mockRejectedValue(new Error('should not be dialed'))
-    try {
-      const resolver = new DidResolver({ timeout: 1000 })
-      await expect(
-        resolver.resolveNoCheck('did:web:localhost'),
-      ).rejects.toThrow()
-      expect(spy).not.toHaveBeenCalled()
-    } finally {
-      spy.mockRestore()
-    }
+    const resolver = new DidResolver({ timeout: 1000 })
+    await expect(resolver.resolveNoCheck('did:web:localhost')).rejects.toThrow()
+    expect(spy).not.toHaveBeenCalled()
   })
 
   it('refuses a loopback handle host without dialing', async () => {
-    const spy = jest
+    using spy = vi
       .spyOn(globalThis, 'fetch')
       .mockRejectedValue(new Error('should not be dialed'))
-    try {
-      const resolver = new HandleResolver({ timeout: 1000 })
-      // resolveHttp swallows every error, so a block surfaces as undefined.
-      expect(await resolver.resolveHttp('127.0.0.1')).toBeUndefined()
-      expect(spy).not.toHaveBeenCalled()
-    } finally {
-      spy.mockRestore()
-    }
+    const resolver = new HandleResolver({ timeout: 1000 })
+    // resolveHttp swallows every error, so a block surfaces as undefined.
+    expect(await resolver.resolveHttp('127.0.0.1')).toBeUndefined()
+    expect(spy).not.toHaveBeenCalled()
   })
 
   it('dials through the default fetch for a public host', async () => {
-    const spy = jest
+    using spy = vi
       .spyOn(globalThis, 'fetch')
       .mockResolvedValue(Response.json({ id: 'did:web:example.social' }))
-    try {
-      // The spy must be installed before construction: safeFetchWrap captures
-      // globalThis.fetch when createDefaultFetch() runs, which is at construction.
-      const resolver = new DidResolver({ timeout: 1000 })
-      await resolver.resolveNoCheck('did:web:example.social')
-      expect(spy).toHaveBeenCalled()
-    } finally {
-      spy.mockRestore()
-    }
+    // The spy must be installed before construction: safeFetchWrap captures
+    // globalThis.fetch when createDefaultFetch() runs, which is at construction.
+    const resolver = new DidResolver({ timeout: 1000 })
+    await resolver.resolveNoCheck('did:web:example.social')
+    expect(spy).toHaveBeenCalled()
   })
 })

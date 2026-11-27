@@ -1,5 +1,6 @@
 import assert from 'node:assert'
 import { CID } from 'multiformats/cid'
+import { describe, expect, it } from 'vitest'
 import {
   BlobRef,
   type LexiconDoc,

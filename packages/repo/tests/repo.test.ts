@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest'
 import { TID } from '@atproto/common-web'
 import type * as crypto from '@atproto/crypto'
 import { Secp256k1Keypair } from '@atproto/crypto'

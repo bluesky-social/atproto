@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest'
 import { encode } from '@atproto/lex-cbor'
 import { ui8Equals } from '@atproto/lex-data'
 import { ErrorFrame, Frame, FrameType, MessageFrame } from '../src/index.js'

@@ -1,6 +1,7 @@
 import { once } from 'node:events'
 import * as http from 'node:http'
 import type { AddressInfo } from 'node:net'
+import { describe, expect, it } from 'vitest'
 import { WebSocket } from 'ws'
 import { XRPCError } from '@atproto/xrpc'
 import {

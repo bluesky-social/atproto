@@ -1,6 +1,7 @@
-import { jest } from '@jest/globals'
+import { beforeAll, describe, expect, it, vi } from 'vitest'
+import { HandleResolver } from '../src/index.js'
 
-jest.unstable_mockModule('node:dns/promises', () => {
+vi.mock('node:dns/promises', () => {
   return {
     resolveTxt: (handle: string) => {
       if (handle === '_atproto.simple.test') {
@@ -35,8 +36,6 @@ jest.unstable_mockModule('node:dns/promises', () => {
     },
   }
 })
-
-const { HandleResolver } = await import('../src/index.js')
 
 describe('handle resolver', () => {
   let resolver: InstanceType<typeof HandleResolver>

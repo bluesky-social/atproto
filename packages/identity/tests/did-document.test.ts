@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest'
 import { DidResolver, ensureAtpDocument } from '../src/index.js'
 
 describe('did parsing', () => {

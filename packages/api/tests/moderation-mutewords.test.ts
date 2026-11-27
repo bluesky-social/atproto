@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest'
 import type { $Typed } from '../src/client/util.js'
 import {
   type AppBskyEmbedGallery,

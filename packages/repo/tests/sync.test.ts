@@ -1,3 +1,4 @@
+import { beforeAll, describe, expect, it } from 'vitest'
 import * as crypto from '@atproto/crypto'
 import {
   CidSet,

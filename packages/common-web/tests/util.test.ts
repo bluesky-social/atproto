@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest'
 import { util } from '../src/index.js'
 
 describe('util', () => {

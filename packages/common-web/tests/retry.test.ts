@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest'
 import { retry } from '../src/index.js'
 
 describe('retry', () => {

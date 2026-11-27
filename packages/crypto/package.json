@@ -35,10 +35,10 @@
   },
   "devDependencies": {
     "@atproto/common": "workspace:^",
-    "jest": "^30.5.2"
+    "vitest": "^5.1.1"
   },
   "scripts": {
-    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
+    "test": "vitest run",
     "build": "tsc --build tsconfig.build.json"
   }
 }

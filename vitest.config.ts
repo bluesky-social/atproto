@@ -12,16 +12,24 @@ export default defineConfig({
       ],
     },
     projects: [
+      'packages/api',
       'packages/aws',
       'packages/common',
+      'packages/common-web',
+      'packages/crypto',
+      'packages/did',
+      'packages/identity',
       'packages/internal/*',
       'packages/lex/*',
       'packages/lex-cli',
+      'packages/lexicon',
       'packages/lexicon-resolver',
       'packages/oauth/*',
+      'packages/repo',
       'packages/syntax',
       'packages/tap',
       'packages/ws-client',
+      'packages/xrpc-server',
 
       // The following packages use vitest but require dev-infra to be started &
       // stopped between runs, we don't enable it here (when running "pnpm

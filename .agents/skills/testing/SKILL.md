@@ -21,7 +21,7 @@ Full workflow, `PageHelper` API, and dev-env boot instructions: [playwright skil
 
 ## Choosing a runner
 
-Vitest is the standard and now covers the majority of the repo — including `bsky`, `ozone`, all of `packages/lex/*`, `packages/oauth/*`, and the tested `packages/internal/*`. Jest remains in about a dozen unmigrated packages, among them `pds`, `api`, `repo`, and `xrpc-server`. Jest is deprecated: don't introduce it anywhere new, and prefer migrating a file to vitest over deepening its jest usage.
+Vitest is the standard and covers nearly the whole repo — including `bsky`, `ozone`, `api`, `repo`, `xrpc-server`, all of `packages/lex/*`, `packages/oauth/*`, and the tested `packages/internal/*`. Jest remains only in the dev-infra packages `pds`, `bsync`, and `sync`. Jest is deprecated: don't introduce it anywhere new, and prefer migrating a file to vitest over deepening its jest usage.
 
 Decide from the package's own config files, not from a memorized list — they are the only drift-proof signal:
 
@@ -38,7 +38,7 @@ If the test imports `@atproto/lex` or any `@atproto/lex-*` package, also read th
 - **Integration / end-to-end tests** go in the package's top-level `./tests` folder (`packages/{pds,bsky,ozone}/tests`, `packages/lex/lex/tests`, …). Use it for tests that boot real services, hit a database, or exercise several modules together.
 - **Shared helpers** go in `./tests/_util.ts` (or a `./tests/_util/` directory). The leading underscore keeps them out of glob-based test discovery — see [packages/bsky/tests/\_util.ts](../../../packages/bsky/tests/_util.ts) and [packages/ws-client/tests/\_util/](../../../packages/ws-client/tests/_util).
 
-Jest packages predate the colocation convention and keep everything in `./tests` — `packages/api/src/age-assurance.test.ts` is the lone exception. Don't relocate existing files just to match the convention.
+Older packages (`pds`, `ozone`, `api`, `repo`, `xrpc-server`, …) predate the colocation convention and keep nearly everything in `./tests`. Don't relocate existing files just to match the convention.
 
 ## Integration tests use the dev-env fixture
 
@@ -73,11 +73,11 @@ Tested packages split their TS config, each part referenced from the package's `
 
 - `tsconfig.build.json` — `./src`, excludes `**/*.test.ts`, emits to `./dist`.
 - `tsconfig.test.json` — test code, extending `tsconfig/vitest.tsconfig.json` or `tsconfig/jest.tsconfig.json`. Both set `noEmit` and `composite: false`; the jest one additionally pulls in `@types/jest`. `include` is `["./tests", "./src/**/*.test.ts"]` in nearly every package, regardless of runner.
-- `tsconfig.config.json` — root-level config/script files (`vitest.config.ts`, `jest.config.cjs`, …) that neither of the above covers, extending [tsconfig/config.tsconfig.json](../../../tsconfig/config.tsconfig.json) with `include: ["./*.ts", "./*.js", "./*.cjs", "./*.mjs"]`. `exclude` any root file that imports `./src` or `./tests` (e.g. a `jest.setup.ts`), or it drags the whole tree into this stricter program. Present whenever the package has such a file — which is nearly all of them.
+- `tsconfig.config.json` — root-level config/script files (`vitest.config.ts`, `jest.config.cjs`, …) that neither of the above covers, extending [tsconfig/config.tsconfig.json](../../../tsconfig/config.tsconfig.json) with `include: ["./*.ts", "./*.js", "./*.cjs", "./*.mjs"]`. `exclude` any root file that imports `./src` or `./tests` (e.g. a `vitest.setup.ts`), or it drags the whole tree into this stricter program. Present whenever the package has such a file — which is nearly all of them.
 
 The build is a TS project graph, so `references` is what makes imports resolve. `./tsconfig.build.json` alone covers anything the package already depends on at build time — which is most workspace imports. Add a further entry only for a package the tests import but `src` doesn't: in practice that means `{ "path": "../dev-env/tsconfig.build.json" }`, and only in the six packages with integration tests (`api`, `bsky`, `lexicon-resolver`, `ozone`, `pds`, `sync`).
 
-Create `tsconfig.test.json` before writing the first test in a package that lacks one — `packages/did` has jest tests without one, so don't take its layout as the pattern. Exact contents per runner: [vitest](references/vitest.md#adopting-vitest-in-a-new-package) / [jest](references/jest.md#typescript-config).
+Create `tsconfig.test.json` before writing the first test in a package that lacks one. Exact contents per runner: [vitest](references/vitest.md#adopting-vitest-in-a-new-package) / [jest](references/jest.md#typescript-config).
 
 ## Running tests
 

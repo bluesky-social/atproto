@@ -39,11 +39,11 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
-    "jest": "^30.5.2"
+    "vitest": "^5.1.1"
   },
   "scripts": {
-    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
-    "test:profile": "node --experimental-vm-modules --inspect ../../node_modules/.bin/jest",
+    "test": "vitest run",
+    "test:profile": "vitest run --inspect --no-file-parallelism",
     "build": "tsc --build tsconfig.build.json"
   }
 }

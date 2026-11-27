@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest'
 import { wait } from '@atproto/common-web'
 import { encode } from '@atproto/lex-cbor'
 import {

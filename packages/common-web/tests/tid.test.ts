@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest'
 import { TID } from '../src/tid.js'
 
 describe('TIDs', () => {

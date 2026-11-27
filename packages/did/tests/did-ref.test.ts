@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest'
 import { isAtprotoDidRefAbsolute } from '../src/atproto.js'
 import { isDidRefRelative } from '../src/did-ref.js'
 

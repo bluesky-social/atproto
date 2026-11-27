@@ -1,4 +1,5 @@
 import * as uint8arrays from 'uint8arrays'
+import { describe, expect, it } from 'vitest'
 import * as did from '../src/did.js'
 import { P256Keypair, Secp256k1Keypair } from '../src/index.js'
 import { decompressPubkey as p256Decompress } from '../src/p256/encoding.js'

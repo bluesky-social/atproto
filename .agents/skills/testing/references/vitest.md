@@ -15,13 +15,13 @@ Repo-specific conventions and setup. Assumes working knowledge of vitest itself 
    })
    ```
 
-   `defineProject` (not `defineConfig`) is what makes the package composable into the root workspace runner. Add `setupFiles`, `testTimeout`, `resolve.alias`, etc. only when the package actually needs them — [packages/bsky](../../../../packages/bsky/vitest.config.ts), [packages/ozone](../../../../packages/ozone/vitest.config.ts) and [packages/ws-client](../../../../packages/ws-client/vitest.config.ts) are the only ones that do.
+   `defineProject` (not `defineConfig`) is what makes the package composable into the root workspace runner. Add `setupFiles`, `testTimeout`, `resolve.alias`, etc. only when the package actually needs them — [packages/api](../../../../packages/api/vitest.config.ts), [packages/bsky](../../../../packages/bsky/vitest.config.ts), [packages/ozone](../../../../packages/ozone/vitest.config.ts) and [packages/ws-client](../../../../packages/ws-client/vitest.config.ts) are the only ones that do.
 
    **Exception:** if the package already has a `vite.config.*`, don't create `vitest.config.ts` — see [Vite-based packages](#vite-based-packages).
 
 3. Register the package in the root [vitest.config.ts](../../../../vitest.config.ts) under `test.projects` so `pnpm test:unit` and the VSCode Vitest extension pick it up. Several entries are globs (`packages/lex/*`, `packages/oauth/*`, `packages/internal/*`), so a package placed under one of those directories needs no edit.
 
-   **Skip this step if the tests need dev-infra** (the postgres + redis docker stack). The workspace runner doesn't start dev-infra, so those tests would fail when invoked from the root. That's why `packages/bsky` is commented out of the list — it must run from its own directory via `pnpm test`, which goes through [with-test-redis-and-db.sh](../../../../packages/dev-infra/with-test-redis-and-db.sh). `packages/lexicon-resolver` is also missing from the list, but without a comment and without a dev-infra wrapper on its `test` script, so treat its absence as an oversight rather than a pattern to copy.
+   **Skip this step if the tests need dev-infra** (the postgres + redis docker stack). The workspace runner doesn't start dev-infra, so those tests would fail when invoked from the root. That's why `packages/bsky` and `packages/ozone` are left out of the list — they must run from their own directory via `pnpm test`, which goes through [with-test-redis-and-db.sh](../../../../packages/dev-infra/with-test-redis-and-db.sh).
 
 4. Create `tsconfig.test.json` extending the shared vitest config (never the jest one, which pulls in `@types/jest`):
 
@@ -180,6 +180,10 @@ For deliberately invalid arguments, `// @ts-expect-error` with a reason:
 // @ts-expect-error intentionally passing invalid params
 params: { limit: 'not-a-number' },
 ```
+
+### Custom matchers
+
+Register them with `expect.extend` in a `setupFiles` entry, and type them in that same file with a `declare module 'vitest'` augmentation of `interface Matchers<R>`, each matcher returning `R`. Include the setup file in `tsconfig.test.json` and exclude it from `tsconfig.config.json`. See [packages/api/vitest.setup.ts](../../../../packages/api/vitest.setup.ts).
 
 ## Mocks and spies
 
