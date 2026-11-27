@@ -1,0 +1,3963 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`genClientApi > generates the client API > /index.ts 1`] = `
+"/**
+ * GENERATED CODE - DO NOT MODIFY
+ */
+import {
+  XrpcClient,
+  type FetchHandler,
+  type FetchHandlerOptions,
+} from '@atproto/xrpc'
+import { schemas } from './lexicons.js'
+import { CID } from 'multiformats/cid'
+import { type OmitKey, type Un$Typed } from './util.js'
+import * as ComExampleDefs from './types/com/example/defs.js'
+import * as ComExampleToken from './types/com/example/token.js'
+import * as ComExampleAuth from './types/com/example/auth.js'
+import * as ComExampleFeedPost from './types/com/example/feed/post.js'
+import * as ComExampleActorProfile from './types/com/example/actor/profile.js'
+import * as ComExampleFeedGetPosts from './types/com/example/feed/getPosts.js'
+import * as ComExampleFeedGetThread from './types/com/example/feed/getThread.js'
+import * as ComExampleFeedThreadMute from './types/com/example/feed/thread/mute.js'
+import * as ComExampleFeedCreatePost from './types/com/example/feed/createPost.js'
+import * as ComExampleFeedReact from './types/com/example/feed/react.js'
+import * as ComExampleFeedPing from './types/com/example/feed/ping.js'
+import * as ComExampleBlobUpload from './types/com/example/blob/upload.js'
+import * as ComExampleBlobDownload from './types/com/example/blob/download.js'
+import * as ComExampleBlobConvert from './types/com/example/blob/convert.js'
+import * as ComExampleSyncSubscribe from './types/com/example/sync/subscribe.js'
+import * as ComExampleSyncListen from './types/com/example/sync/listen.js'
+import * as OrgSampleThing from './types/org/sample/thing.js'
+import * as OrgSampleGetThing from './types/org/sample/getThing.js'
+
+export * as ComExampleDefs from './types/com/example/defs.js'
+export * as ComExampleToken from './types/com/example/token.js'
+export * as ComExampleAuth from './types/com/example/auth.js'
+export * as ComExampleFeedPost from './types/com/example/feed/post.js'
+export * as ComExampleActorProfile from './types/com/example/actor/profile.js'
+export * as ComExampleFeedGetPosts from './types/com/example/feed/getPosts.js'
+export * as ComExampleFeedGetThread from './types/com/example/feed/getThread.js'
+export * as ComExampleFeedThreadMute from './types/com/example/feed/thread/mute.js'
+export * as ComExampleFeedCreatePost from './types/com/example/feed/createPost.js'
+export * as ComExampleFeedReact from './types/com/example/feed/react.js'
+export * as ComExampleFeedPing from './types/com/example/feed/ping.js'
+export * as ComExampleBlobUpload from './types/com/example/blob/upload.js'
+export * as ComExampleBlobDownload from './types/com/example/blob/download.js'
+export * as ComExampleBlobConvert from './types/com/example/blob/convert.js'
+export * as ComExampleSyncSubscribe from './types/com/example/sync/subscribe.js'
+export * as ComExampleSyncListen from './types/com/example/sync/listen.js'
+export * as OrgSampleThing from './types/org/sample/thing.js'
+export * as OrgSampleGetThing from './types/org/sample/getThing.js'
+
+export const COM_EXAMPLE = {
+  DefsToken: 'com.example.defs#token',
+  DefsUndocumentedToken: 'com.example.defs#undocumentedToken',
+  Token: 'com.example.token',
+}
+
+export class AtpBaseClient extends XrpcClient {
+  com: ComNS
+  org: OrgNS
+
+  constructor(options: FetchHandler | FetchHandlerOptions) {
+    super(options, schemas)
+    this.com = new ComNS(this)
+    this.org = new OrgNS(this)
+  }
+
+  /** @deprecated use \`this\` instead */
+  get xrpc(): XrpcClient {
+    return this
+  }
+}
+
+export class ComNS {
+  _client: XrpcClient
+  example: ComExampleNS
+
+  constructor(client: XrpcClient) {
+    this._client = client
+    this.example = new ComExampleNS(client)
+  }
+}
+
+export class ComExampleNS {
+  _client: XrpcClient
+  feed: ComExampleFeedNS
+  actor: ComExampleActorNS
+  blob: ComExampleBlobNS
+  sync: ComExampleSyncNS
+
+  constructor(client: XrpcClient) {
+    this._client = client
+    this.feed = new ComExampleFeedNS(client)
+    this.actor = new ComExampleActorNS(client)
+    this.blob = new ComExampleBlobNS(client)
+    this.sync = new ComExampleSyncNS(client)
+  }
+}
+
+export class ComExampleFeedNS {
+  _client: XrpcClient
+  post: ComExampleFeedPostRecord
+  thread: ComExampleFeedThreadNS
+
+  constructor(client: XrpcClient) {
+    this._client = client
+    this.thread = new ComExampleFeedThreadNS(client)
+    this.post = new ComExampleFeedPostRecord(client)
+  }
+
+  getPosts(
+    params?: ComExampleFeedGetPosts.QueryParams,
+    opts?: ComExampleFeedGetPosts.CallOptions,
+  ): Promise<ComExampleFeedGetPosts.Response> {
+    return this._client
+      .call('com.example.feed.getPosts', params, undefined, opts)
+      .catch((e) => {
+        throw ComExampleFeedGetPosts.toKnownErr(e)
+      })
+  }
+
+  getThread(
+    params?: ComExampleFeedGetThread.QueryParams,
+    opts?: ComExampleFeedGetThread.CallOptions,
+  ): Promise<ComExampleFeedGetThread.Response> {
+    return this._client.call(
+      'com.example.feed.getThread',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  createPost(
+    data?: ComExampleFeedCreatePost.InputSchema,
+    opts?: ComExampleFeedCreatePost.CallOptions,
+  ): Promise<ComExampleFeedCreatePost.Response> {
+    return this._client
+      .call('com.example.feed.createPost', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComExampleFeedCreatePost.toKnownErr(e)
+      })
+  }
+
+  react(
+    data?: ComExampleFeedReact.InputSchema,
+    opts?: ComExampleFeedReact.CallOptions,
+  ): Promise<ComExampleFeedReact.Response> {
+    return this._client.call('com.example.feed.react', opts?.qp, data, opts)
+  }
+
+  ping(
+    data?: ComExampleFeedPing.InputSchema,
+    opts?: ComExampleFeedPing.CallOptions,
+  ): Promise<ComExampleFeedPing.Response> {
+    return this._client.call('com.example.feed.ping', opts?.qp, data, opts)
+  }
+}
+
+export class ComExampleFeedThreadNS {
+  _client: XrpcClient
+
+  constructor(client: XrpcClient) {
+    this._client = client
+  }
+
+  mute(
+    data?: ComExampleFeedThreadMute.InputSchema,
+    opts?: ComExampleFeedThreadMute.CallOptions,
+  ): Promise<ComExampleFeedThreadMute.Response> {
+    return this._client.call(
+      'com.example.feed.thread.mute',
+      opts?.qp,
+      data,
+      opts,
+    )
+  }
+}
+
+export class ComExampleFeedPostRecord {
+  _client: XrpcClient
+
+  constructor(client: XrpcClient) {
+    this._client = client
+  }
+
+  async list(
+    params: OmitKey<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
+  ): Promise<{
+    cursor?: string
+    records: { uri: string; value: ComExampleFeedPost.Record }[]
+  }> {
+    const res = await this._client.call('com.atproto.repo.listRecords', {
+      collection: 'com.example.feed.post',
+      ...params,
+    })
+    return res.data
+  }
+
+  async get(
+    params: OmitKey<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
+  ): Promise<{ uri: string; cid: string; value: ComExampleFeedPost.Record }> {
+    const res = await this._client.call('com.atproto.repo.getRecord', {
+      collection: 'com.example.feed.post',
+      ...params,
+    })
+    return res.data
+  }
+
+  async create(
+    params: OmitKey<
+      ComAtprotoRepoCreateRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: Un$Typed<ComExampleFeedPost.Record>,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    const collection = 'com.example.feed.post'
+    const res = await this._client.call(
+      'com.atproto.repo.createRecord',
+      undefined,
+      { collection, ...params, record: { ...record, $type: collection } },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async put(
+    params: OmitKey<
+      ComAtprotoRepoPutRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: Un$Typed<ComExampleFeedPost.Record>,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    const collection = 'com.example.feed.post'
+    const res = await this._client.call(
+      'com.atproto.repo.putRecord',
+      undefined,
+      { collection, ...params, record: { ...record, $type: collection } },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async delete(
+    params: OmitKey<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
+    headers?: Record<string, string>,
+  ): Promise<void> {
+    await this._client.call(
+      'com.atproto.repo.deleteRecord',
+      undefined,
+      { collection: 'com.example.feed.post', ...params },
+      { headers },
+    )
+  }
+}
+
+export class ComExampleActorNS {
+  _client: XrpcClient
+  profile: ComExampleActorProfileRecord
+
+  constructor(client: XrpcClient) {
+    this._client = client
+    this.profile = new ComExampleActorProfileRecord(client)
+  }
+}
+
+export class ComExampleActorProfileRecord {
+  _client: XrpcClient
+
+  constructor(client: XrpcClient) {
+    this._client = client
+  }
+
+  async list(
+    params: OmitKey<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
+  ): Promise<{
+    cursor?: string
+    records: { uri: string; value: ComExampleActorProfile.Record }[]
+  }> {
+    const res = await this._client.call('com.atproto.repo.listRecords', {
+      collection: 'com.example.actor.profile',
+      ...params,
+    })
+    return res.data
+  }
+
+  async get(
+    params: OmitKey<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
+  ): Promise<{
+    uri: string
+    cid: string
+    value: ComExampleActorProfile.Record
+  }> {
+    const res = await this._client.call('com.atproto.repo.getRecord', {
+      collection: 'com.example.actor.profile',
+      ...params,
+    })
+    return res.data
+  }
+
+  async create(
+    params: OmitKey<
+      ComAtprotoRepoCreateRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: Un$Typed<ComExampleActorProfile.Record>,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    const collection = 'com.example.actor.profile'
+    const res = await this._client.call(
+      'com.atproto.repo.createRecord',
+      undefined,
+      {
+        collection,
+        rkey: 'self',
+        ...params,
+        record: { ...record, $type: collection },
+      },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async put(
+    params: OmitKey<
+      ComAtprotoRepoPutRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: Un$Typed<ComExampleActorProfile.Record>,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    const collection = 'com.example.actor.profile'
+    const res = await this._client.call(
+      'com.atproto.repo.putRecord',
+      undefined,
+      { collection, ...params, record: { ...record, $type: collection } },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async delete(
+    params: OmitKey<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
+    headers?: Record<string, string>,
+  ): Promise<void> {
+    await this._client.call(
+      'com.atproto.repo.deleteRecord',
+      undefined,
+      { collection: 'com.example.actor.profile', ...params },
+      { headers },
+    )
+  }
+}
+
+export class ComExampleBlobNS {
+  _client: XrpcClient
+
+  constructor(client: XrpcClient) {
+    this._client = client
+  }
+
+  upload(
+    data?: ComExampleBlobUpload.InputSchema,
+    opts?: ComExampleBlobUpload.CallOptions,
+  ): Promise<ComExampleBlobUpload.Response> {
+    return this._client.call('com.example.blob.upload', opts?.qp, data, opts)
+  }
+
+  download(
+    params?: ComExampleBlobDownload.QueryParams,
+    opts?: ComExampleBlobDownload.CallOptions,
+  ): Promise<ComExampleBlobDownload.Response> {
+    return this._client.call(
+      'com.example.blob.download',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  convert(
+    data?: ComExampleBlobConvert.InputSchema,
+    opts?: ComExampleBlobConvert.CallOptions,
+  ): Promise<ComExampleBlobConvert.Response> {
+    return this._client.call('com.example.blob.convert', opts?.qp, data, opts)
+  }
+}
+
+export class ComExampleSyncNS {
+  _client: XrpcClient
+
+  constructor(client: XrpcClient) {
+    this._client = client
+  }
+}
+
+export class OrgNS {
+  _client: XrpcClient
+  sample: OrgSampleNS
+
+  constructor(client: XrpcClient) {
+    this._client = client
+    this.sample = new OrgSampleNS(client)
+  }
+}
+
+export class OrgSampleNS {
+  _client: XrpcClient
+
+  constructor(client: XrpcClient) {
+    this._client = client
+  }
+
+  getThing(
+    params?: OrgSampleGetThing.QueryParams,
+    opts?: OrgSampleGetThing.CallOptions,
+  ): Promise<OrgSampleGetThing.Response> {
+    return this._client.call('org.sample.getThing', params, undefined, opts)
+  }
+}
+"
+`;
+
+exports[`genClientApi > generates the client API > /lexicons.ts 1`] = `
+"/**
+ * GENERATED CODE - DO NOT MODIFY
+ */
+import {
+  type LexiconDoc,
+  Lexicons,
+  ValidationError,
+  type ValidationResult,
+} from '@atproto/lexicon'
+import { type $Typed, is$typed, maybe$typed } from './util.js'
+
+export const schemaDict = {
+  ComExampleDefs: {
+    lexicon: 1,
+    id: 'com.example.defs',
+    defs: {
+      kitchenSink: {
+        type: 'object',
+        description: 'An object with every kind of property.',
+        required: ['str', 'ref'],
+        nullable: ['nullableStr', 'nullableRef'],
+        properties: {
+          str: {
+            type: 'string',
+            description: 'A plain string.',
+          },
+          knownValues: {
+            type: 'string',
+            knownValues: ['com.example.defs#token', 'other'],
+          },
+          enumStr: {
+            type: 'string',
+            enum: ['a', 'b'],
+          },
+          constStr: {
+            type: 'string',
+            const: 'fixed',
+          },
+          defaultStr: {
+            type: 'string',
+            default: 'dflt',
+          },
+          nullableStr: {
+            type: 'string',
+          },
+          int: {
+            type: 'integer',
+            minimum: 0,
+          },
+          enumInt: {
+            type: 'integer',
+            enum: [1, 2],
+          },
+          constInt: {
+            type: 'integer',
+            const: 3,
+          },
+          bool: {
+            type: 'boolean',
+          },
+          constBool: {
+            type: 'boolean',
+            const: true,
+          },
+          blob: {
+            type: 'blob',
+            accept: ['image/*'],
+          },
+          bytes: {
+            type: 'bytes',
+          },
+          cid: {
+            type: 'cid-link',
+          },
+          unknown: {
+            type: 'unknown',
+          },
+          ref: {
+            type: 'ref',
+            ref: 'lex:com.example.defs#other',
+          },
+          nullableRef: {
+            type: 'ref',
+            ref: 'lex:com.example.feed.post#entity',
+          },
+          externalRef: {
+            type: 'ref',
+            ref: 'lex:org.sample.thing',
+          },
+          openUnion: {
+            type: 'union',
+            refs: [
+              'lex:com.example.defs#other',
+              'lex:com.example.feed.post#entity',
+            ],
+          },
+          closedUnion: {
+            type: 'union',
+            refs: ['lex:com.example.defs#other'],
+            closed: true,
+          },
+          refArray: {
+            type: 'array',
+            description: 'An array of refs.',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.example.defs#other',
+            },
+          },
+          openUnionArray: {
+            type: 'array',
+            items: {
+              type: 'union',
+              refs: ['lex:com.example.defs#other', 'lex:org.sample.thing'],
+            },
+          },
+          closedUnionArray: {
+            type: 'array',
+            items: {
+              type: 'union',
+              refs: ['lex:com.example.defs#other'],
+              closed: true,
+            },
+          },
+          stringArray: {
+            type: 'array',
+            items: {
+              type: 'string',
+              maxLength: 10,
+            },
+          },
+          blobArray: {
+            type: 'array',
+            items: {
+              type: 'blob',
+            },
+          },
+        },
+      },
+      other: {
+        type: 'object',
+        properties: {
+          value: {
+            type: 'string',
+          },
+        },
+      },
+      empty: {
+        type: 'object',
+        properties: {},
+      },
+      token: {
+        type: 'token',
+        description: 'A token.',
+      },
+      undocumentedToken: {
+        type: 'token',
+      },
+      refList: {
+        type: 'array',
+        items: {
+          type: 'ref',
+          ref: 'lex:com.example.defs#other',
+        },
+      },
+      openUnionList: {
+        type: 'array',
+        items: {
+          type: 'union',
+          refs: ['lex:com.example.defs#other', 'lex:org.sample.thing'],
+        },
+      },
+      closedUnionList: {
+        type: 'array',
+        items: {
+          type: 'union',
+          refs: ['lex:com.example.defs#other'],
+          closed: true,
+        },
+      },
+      stringList: {
+        type: 'array',
+        description: 'A list of strings.',
+        items: {
+          type: 'string',
+        },
+      },
+      string: {
+        type: 'string',
+        description: 'A string.',
+        knownValues: ['x', 'y'],
+      },
+      integer: {
+        type: 'integer',
+      },
+      boolean: {
+        type: 'boolean',
+      },
+      blob: {
+        type: 'blob',
+      },
+      bytes: {
+        type: 'bytes',
+      },
+      cidLink: {
+        type: 'cid-link',
+      },
+      unknown: {
+        type: 'unknown',
+      },
+    },
+  },
+  ComExampleToken: {
+    lexicon: 1,
+    id: 'com.example.token',
+    defs: {
+      main: {
+        type: 'token',
+        description: 'A main token.',
+      },
+    },
+  },
+  ComExampleAuth: {
+    lexicon: 1,
+    id: 'com.example.auth',
+    defs: {
+      main: {
+        type: 'permission-set',
+        permissions: [
+          {
+            type: 'permission',
+            resource: 'repo',
+            collection: ['com.example.feed.post'],
+          },
+        ],
+      },
+    },
+  },
+  ComExampleFeedPost: {
+    lexicon: 1,
+    id: 'com.example.feed.post',
+    defs: {
+      main: {
+        type: 'record',
+        description: 'A post.',
+        key: 'tid',
+        record: {
+          type: 'object',
+          required: ['text', 'createdAt'],
+          properties: {
+            text: {
+              type: 'string',
+              maxLength: 300,
+            },
+            entities: {
+              type: 'array',
+              items: {
+                type: 'ref',
+                ref: 'lex:com.example.feed.post#entity',
+              },
+            },
+            embed: {
+              type: 'union',
+              refs: ['lex:com.example.defs#other', 'lex:org.sample.thing'],
+            },
+            createdAt: {
+              type: 'string',
+              format: 'datetime',
+            },
+          },
+        },
+      },
+      entity: {
+        type: 'object',
+        required: ['index'],
+        properties: {
+          index: {
+            type: 'integer',
+          },
+        },
+      },
+    },
+  },
+  ComExampleActorProfile: {
+    lexicon: 1,
+    id: 'com.example.actor.profile',
+    defs: {
+      main: {
+        type: 'record',
+        key: 'literal:self',
+        record: {
+          type: 'object',
+          properties: {
+            displayName: {
+              type: 'string',
+            },
+            avatar: {
+              type: 'blob',
+              accept: ['image/png'],
+            },
+          },
+        },
+      },
+    },
+  },
+  ComExampleFeedGetPosts: {
+    lexicon: 1,
+    id: 'com.example.feed.getPosts',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get posts.',
+        parameters: {
+          type: 'params',
+          description: 'The query parameters.',
+          required: ['uris'],
+          properties: {
+            uris: {
+              type: 'array',
+              description: 'The post URIs.',
+              items: {
+                type: 'string',
+                format: 'at-uri',
+              },
+            },
+            limit: {
+              type: 'integer',
+              default: 50,
+            },
+            sort: {
+              type: 'string',
+              knownValues: ['new', 'old'],
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['posts'],
+            properties: {
+              posts: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:com.example.feed.post#entity',
+                },
+              },
+              cursor: {
+                type: 'string',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'NotFound',
+          },
+          {
+            name: 'BlockedError',
+            description: 'Blocked.',
+          },
+        ],
+      },
+    },
+  },
+  ComExampleFeedGetThread: {
+    lexicon: 1,
+    id: 'com.example.feed.getThread',
+    defs: {
+      main: {
+        type: 'query',
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'union',
+            refs: [
+              'lex:com.example.feed.getThread#threadView',
+              'lex:com.example.defs#other',
+            ],
+          },
+        },
+      },
+      threadView: {
+        type: 'object',
+        properties: {
+          replies: {
+            type: 'array',
+            items: {
+              type: 'union',
+              refs: ['lex:com.example.feed.getThread#threadView'],
+            },
+          },
+        },
+      },
+    },
+  },
+  ComExampleFeedThreadMute: {
+    lexicon: 1,
+    id: 'com.example.feed.thread.mute',
+    defs: {
+      main: {
+        type: 'procedure',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['root'],
+            properties: {
+              root: {
+                type: 'string',
+                format: 'at-uri',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ComExampleFeedCreatePost: {
+    lexicon: 1,
+    id: 'com.example.feed.createPost',
+    defs: {
+      main: {
+        type: 'procedure',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:com.example.feed.post',
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['uri'],
+            properties: {
+              uri: {
+                type: 'string',
+                format: 'at-uri',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'InvalidPost',
+          },
+        ],
+      },
+    },
+  },
+  ComExampleFeedReact: {
+    lexicon: 1,
+    id: 'com.example.feed.react',
+    defs: {
+      main: {
+        type: 'procedure',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'union',
+            refs: ['lex:com.example.defs#other', 'lex:org.sample.thing'],
+            closed: true,
+          },
+        },
+      },
+    },
+  },
+  ComExampleFeedPing: {
+    lexicon: 1,
+    id: 'com.example.feed.ping',
+    defs: {
+      main: {
+        type: 'procedure',
+      },
+    },
+  },
+  ComExampleBlobUpload: {
+    lexicon: 1,
+    id: 'com.example.blob.upload',
+    defs: {
+      main: {
+        type: 'procedure',
+        input: {
+          encoding: '*/*',
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['blob'],
+            properties: {
+              blob: {
+                type: 'blob',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ComExampleBlobDownload: {
+    lexicon: 1,
+    id: 'com.example.blob.download',
+    defs: {
+      main: {
+        type: 'query',
+        parameters: {
+          type: 'params',
+          required: ['cid'],
+          properties: {
+            cid: {
+              type: 'string',
+              format: 'cid',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/octet-stream',
+        },
+      },
+    },
+  },
+  ComExampleBlobConvert: {
+    lexicon: 1,
+    id: 'com.example.blob.convert',
+    defs: {
+      main: {
+        type: 'procedure',
+        input: {
+          encoding: 'application/json, application/cbor',
+          schema: {
+            type: 'ref',
+            ref: 'lex:com.example.defs#other',
+          },
+        },
+        output: {
+          encoding: 'application/json, application/cbor',
+          schema: {
+            type: 'ref',
+            ref: 'lex:com.example.defs#other',
+          },
+        },
+      },
+    },
+  },
+  ComExampleSyncSubscribe: {
+    lexicon: 1,
+    id: 'com.example.sync.subscribe',
+    defs: {
+      main: {
+        type: 'subscription',
+        parameters: {
+          type: 'params',
+          properties: {
+            cursor: {
+              type: 'integer',
+            },
+          },
+        },
+        message: {
+          schema: {
+            type: 'union',
+            refs: [
+              'lex:com.example.sync.subscribe#commit',
+              'lex:com.example.sync.subscribe#info',
+            ],
+          },
+        },
+        errors: [
+          {
+            name: 'FutureCursor',
+          },
+        ],
+      },
+      commit: {
+        type: 'object',
+        required: ['seq'],
+        properties: {
+          seq: {
+            type: 'integer',
+          },
+        },
+      },
+      info: {
+        type: 'object',
+        properties: {
+          name: {
+            type: 'string',
+            knownValues: ['Outdated'],
+          },
+        },
+      },
+    },
+  },
+  ComExampleSyncListen: {
+    lexicon: 1,
+    id: 'com.example.sync.listen',
+    defs: {
+      main: {
+        type: 'subscription',
+        message: {
+          schema: {
+            type: 'union',
+            refs: [],
+          },
+        },
+      },
+    },
+  },
+  OrgSampleThing: {
+    lexicon: 1,
+    id: 'org.sample.thing',
+    defs: {
+      main: {
+        type: 'object',
+        properties: {
+          kitchenSink: {
+            type: 'ref',
+            ref: 'lex:com.example.defs#kitchenSink',
+          },
+        },
+      },
+    },
+  },
+  OrgSampleGetThing: {
+    lexicon: 1,
+    id: 'org.sample.getThing',
+    defs: {
+      main: {
+        type: 'query',
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:org.sample.thing',
+          },
+        },
+      },
+    },
+  },
+} as const satisfies Record<string, LexiconDoc>
+export const schemas = Object.values(schemaDict) satisfies LexiconDoc[]
+export const lexicons: Lexicons = new Lexicons(schemas)
+
+export function validate<T extends { $type: string }>(
+  v: unknown,
+  id: string,
+  hash: string,
+  requiredType: true,
+): ValidationResult<T>
+export function validate<T extends { $type?: string }>(
+  v: unknown,
+  id: string,
+  hash: string,
+  requiredType?: false,
+): ValidationResult<T>
+export function validate(
+  v: unknown,
+  id: string,
+  hash: string,
+  requiredType?: boolean,
+): ValidationResult {
+  return (requiredType ? is$typed : maybe$typed)(v, id, hash)
+    ? lexicons.validate(\`\${id}#\${hash}\`, v)
+    : {
+        success: false,
+        error: new ValidationError(
+          \`Must be an object with "\${hash === 'main' ? id : \`\${id}#\${hash}\`}" $type property\`,
+        ),
+      }
+}
+
+export const ids = {
+  ComExampleDefs: 'com.example.defs',
+  ComExampleToken: 'com.example.token',
+  ComExampleAuth: 'com.example.auth',
+  ComExampleFeedPost: 'com.example.feed.post',
+  ComExampleActorProfile: 'com.example.actor.profile',
+  ComExampleFeedGetPosts: 'com.example.feed.getPosts',
+  ComExampleFeedGetThread: 'com.example.feed.getThread',
+  ComExampleFeedThreadMute: 'com.example.feed.thread.mute',
+  ComExampleFeedCreatePost: 'com.example.feed.createPost',
+  ComExampleFeedReact: 'com.example.feed.react',
+  ComExampleFeedPing: 'com.example.feed.ping',
+  ComExampleBlobUpload: 'com.example.blob.upload',
+  ComExampleBlobDownload: 'com.example.blob.download',
+  ComExampleBlobConvert: 'com.example.blob.convert',
+  ComExampleSyncSubscribe: 'com.example.sync.subscribe',
+  ComExampleSyncListen: 'com.example.sync.listen',
+  OrgSampleThing: 'org.sample.thing',
+  OrgSampleGetThing: 'org.sample.getThing',
+} as const
+"
+`;
+
+exports[`genClientApi > generates the client API > /types/com/example/actor/profile.ts 1`] = `
+"/**
+ * GENERATED CODE - DO NOT MODIFY
+ */
+import { type ValidationResult, BlobRef } from '@atproto/lexicon'
+import { CID } from 'multiformats/cid'
+import { validate as _validate } from '../../../../lexicons.js'
+import {
+  type $Typed,
+  is$typed as _is$typed,
+  type OmitKey,
+} from '../../../../util.js'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'com.example.actor.profile'
+
+export interface Main {
+  $type: 'com.example.actor.profile'
+  displayName?: string
+  avatar?: BlobRef
+  [k: string]: unknown
+}
+
+const hashMain = 'main'
+
+export function isMain<V>(v: V) {
+  return is$typed(v, id, hashMain)
+}
+
+export function validateMain<V>(v: V) {
+  return validate<Main & V>(v, id, hashMain, true)
+}
+
+export {
+  type Main as Record,
+  isMain as isRecord,
+  validateMain as validateRecord,
+}
+"
+`;
+
+exports[`genClientApi > generates the client API > /types/com/example/auth.ts 1`] = `
+"/**
+ * GENERATED CODE - DO NOT MODIFY
+ */
+import { type ValidationResult, BlobRef } from '@atproto/lexicon'
+import { CID } from 'multiformats/cid'
+import { validate as _validate } from '../../../lexicons.js'
+import {
+  type $Typed,
+  is$typed as _is$typed,
+  type OmitKey,
+} from '../../../util.js'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'com.example.auth'
+"
+`;
+
+exports[`genClientApi > generates the client API > /types/com/example/blob/convert.ts 1`] = `
+"/**
+ * GENERATED CODE - DO NOT MODIFY
+ */
+import { type HeadersMap, XRPCError } from '@atproto/xrpc'
+import { type ValidationResult, BlobRef } from '@atproto/lexicon'
+import { CID } from 'multiformats/cid'
+import { validate as _validate } from '../../../../lexicons.js'
+import {
+  type $Typed,
+  is$typed as _is$typed,
+  type OmitKey,
+} from '../../../../util.js'
+import type * as ComExampleDefs from '../defs.js'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'com.example.blob.convert'
+
+export type QueryParams = {}
+export type InputSchema = ComExampleDefs.Other
+export type OutputSchema = ComExampleDefs.Other
+
+export interface CallOptions {
+  signal?: AbortSignal
+  headers?: HeadersMap
+  qp?: QueryParams
+  encoding?: 'application/json' | 'application/cbor'
+}
+
+export interface Response {
+  success: boolean
+  headers: HeadersMap
+  data: OutputSchema | Uint8Array
+}
+
+export function toKnownErr(e: any) {
+  return e
+}
+"
+`;
+
+exports[`genClientApi > generates the client API > /types/com/example/blob/download.ts 1`] = `
+"/**
+ * GENERATED CODE - DO NOT MODIFY
+ */
+import { type HeadersMap, XRPCError } from '@atproto/xrpc'
+import { type ValidationResult, BlobRef } from '@atproto/lexicon'
+import { CID } from 'multiformats/cid'
+import { validate as _validate } from '../../../../lexicons.js'
+import {
+  type $Typed,
+  is$typed as _is$typed,
+  type OmitKey,
+} from '../../../../util.js'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'com.example.blob.download'
+
+export type QueryParams = {
+  cid: string
+}
+export type InputSchema = undefined
+
+export interface CallOptions {
+  signal?: AbortSignal
+  headers?: HeadersMap
+}
+
+export interface Response {
+  success: boolean
+  headers: HeadersMap
+  data: Uint8Array
+}
+
+export function toKnownErr(e: any) {
+  return e
+}
+"
+`;
+
+exports[`genClientApi > generates the client API > /types/com/example/blob/upload.ts 1`] = `
+"/**
+ * GENERATED CODE - DO NOT MODIFY
+ */
+import { type HeadersMap, XRPCError } from '@atproto/xrpc'
+import { type ValidationResult, BlobRef } from '@atproto/lexicon'
+import { CID } from 'multiformats/cid'
+import { validate as _validate } from '../../../../lexicons.js'
+import {
+  type $Typed,
+  is$typed as _is$typed,
+  type OmitKey,
+} from '../../../../util.js'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'com.example.blob.upload'
+
+export type QueryParams = {}
+export type InputSchema = string | Uint8Array | Blob
+
+export interface OutputSchema {
+  blob: BlobRef
+}
+
+export interface CallOptions {
+  signal?: AbortSignal
+  headers?: HeadersMap
+  qp?: QueryParams
+  encoding?: string
+}
+
+export interface Response {
+  success: boolean
+  headers: HeadersMap
+  data: OutputSchema
+}
+
+export function toKnownErr(e: any) {
+  return e
+}
+"
+`;
+
+exports[`genClientApi > generates the client API > /types/com/example/defs.ts 1`] = `
+"/**
+ * GENERATED CODE - DO NOT MODIFY
+ */
+import { type ValidationResult, BlobRef } from '@atproto/lexicon'
+import { CID } from 'multiformats/cid'
+import { validate as _validate } from '../../../lexicons.js'
+import {
+  type $Typed,
+  is$typed as _is$typed,
+  type OmitKey,
+} from '../../../util.js'
+import type * as ComExampleFeedPost from './feed/post.js'
+import type * as OrgSampleThing from '../../org/sample/thing.js'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'com.example.defs'
+
+/** An object with every kind of property. */
+export interface KitchenSink {
+  $type?: 'com.example.defs#kitchenSink'
+  /** A plain string. */
+  str: string
+  knownValues?: 'com.example.defs#token' | 'other' | (string & {})
+  enumStr?: 'a' | 'b'
+  constStr?: 'fixed'
+  defaultStr: string
+  nullableStr?: string | null
+  int?: number
+  enumInt?: 1 | 2
+  constInt?: 3
+  bool?: boolean
+  constBool?: true
+  blob?: BlobRef
+  bytes?: Uint8Array
+  cid?: CID
+  unknown?: { [_ in string]: unknown }
+  ref: Other
+  nullableRef?: ComExampleFeedPost.Entity | null
+  externalRef?: OrgSampleThing.Main
+  openUnion?:
+    $Typed<Other> | $Typed<ComExampleFeedPost.Entity> | { $type: string }
+  closedUnion?: $Typed<Other>
+  /** An array of refs. */
+  refArray?: Other[]
+  openUnionArray?: (
+    $Typed<Other> | $Typed<OrgSampleThing.Main> | { $type: string }
+  )[]
+  closedUnionArray?: $Typed<Other>[]
+  stringArray?: string[]
+  blobArray?: BlobRef[]
+}
+
+const hashKitchenSink = 'kitchenSink'
+
+export function isKitchenSink<V>(v: V) {
+  return is$typed(v, id, hashKitchenSink)
+}
+
+export function validateKitchenSink<V>(v: V) {
+  return validate<KitchenSink & V>(v, id, hashKitchenSink)
+}
+
+export interface Other {
+  $type?: 'com.example.defs#other'
+  value?: string
+}
+
+const hashOther = 'other'
+
+export function isOther<V>(v: V) {
+  return is$typed(v, id, hashOther)
+}
+
+export function validateOther<V>(v: V) {
+  return validate<Other & V>(v, id, hashOther)
+}
+
+export interface Empty {
+  $type?: 'com.example.defs#empty'
+}
+
+const hashEmpty = 'empty'
+
+export function isEmpty<V>(v: V) {
+  return is$typed(v, id, hashEmpty)
+}
+
+export function validateEmpty<V>(v: V) {
+  return validate<Empty & V>(v, id, hashEmpty)
+}
+
+/** A token. */
+export const TOKEN = \`\${id}#token\`
+export const UNDOCUMENTEDTOKEN = \`\${id}#undocumentedToken\`
+
+export type RefList = Other[]
+export type OpenUnionList = (
+  $Typed<Other> | $Typed<OrgSampleThing.Main> | { $type: string }
+)[]
+export type ClosedUnionList = $Typed<Other>[]
+/** A list of strings. */
+export type StringList = string[]
+/** A string. */
+export type String = 'x' | 'y' | (string & {})
+export type Integer = number
+export type Boolean = boolean
+export type Blob = BlobRef
+export type Bytes = Uint8Array
+export type CidLink = CID
+export type Unknown = { [_ in string]: unknown }
+"
+`;
+
+exports[`genClientApi > generates the client API > /types/com/example/feed/createPost.ts 1`] = `
+"/**
+ * GENERATED CODE - DO NOT MODIFY
+ */
+import { type HeadersMap, XRPCError } from '@atproto/xrpc'
+import { type ValidationResult, BlobRef } from '@atproto/lexicon'
+import { CID } from 'multiformats/cid'
+import { validate as _validate } from '../../../../lexicons.js'
+import {
+  type $Typed,
+  is$typed as _is$typed,
+  type OmitKey,
+} from '../../../../util.js'
+import type * as ComExampleFeedPost from './post.js'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'com.example.feed.createPost'
+
+export type QueryParams = {}
+export type InputSchema = ComExampleFeedPost.Main
+
+export interface OutputSchema {
+  uri: string
+}
+
+export interface CallOptions {
+  signal?: AbortSignal
+  headers?: HeadersMap
+  qp?: QueryParams
+  encoding?: 'application/json'
+}
+
+export interface Response {
+  success: boolean
+  headers: HeadersMap
+  data: OutputSchema
+}
+
+export class InvalidPostError extends XRPCError {
+  constructor(src: XRPCError) {
+    super(src.status, src.error, src.message, src.headers, { cause: src })
+  }
+}
+
+export function toKnownErr(e: any) {
+  if (e instanceof XRPCError) {
+    if (e.error === 'InvalidPost') return new InvalidPostError(e)
+  }
+
+  return e
+}
+"
+`;
+
+exports[`genClientApi > generates the client API > /types/com/example/feed/getPosts.ts 1`] = `
+"/**
+ * GENERATED CODE - DO NOT MODIFY
+ */
+import { type HeadersMap, XRPCError } from '@atproto/xrpc'
+import { type ValidationResult, BlobRef } from '@atproto/lexicon'
+import { CID } from 'multiformats/cid'
+import { validate as _validate } from '../../../../lexicons.js'
+import {
+  type $Typed,
+  is$typed as _is$typed,
+  type OmitKey,
+} from '../../../../util.js'
+import type * as ComExampleFeedPost from './post.js'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'com.example.feed.getPosts'
+
+/** The query parameters. */
+export type QueryParams = {
+  /** The post URIs. */
+  uris: string[]
+  limit?: number
+  sort?: 'new' | 'old' | (string & {})
+  cursor?: string
+}
+export type InputSchema = undefined
+
+export interface OutputSchema {
+  posts: ComExampleFeedPost.Entity[]
+  cursor?: string
+}
+
+export interface CallOptions {
+  signal?: AbortSignal
+  headers?: HeadersMap
+}
+
+export interface Response {
+  success: boolean
+  headers: HeadersMap
+  data: OutputSchema
+}
+
+export class NotFoundError extends XRPCError {
+  constructor(src: XRPCError) {
+    super(src.status, src.error, src.message, src.headers, { cause: src })
+  }
+}
+
+export class BlockedError extends XRPCError {
+  constructor(src: XRPCError) {
+    super(src.status, src.error, src.message, src.headers, { cause: src })
+  }
+}
+
+export function toKnownErr(e: any) {
+  if (e instanceof XRPCError) {
+    if (e.error === 'NotFound') return new NotFoundError(e)
+    if (e.error === 'BlockedError') return new BlockedError(e)
+  }
+
+  return e
+}
+"
+`;
+
+exports[`genClientApi > generates the client API > /types/com/example/feed/getThread.ts 1`] = `
+"/**
+ * GENERATED CODE - DO NOT MODIFY
+ */
+import { type HeadersMap, XRPCError } from '@atproto/xrpc'
+import { type ValidationResult, BlobRef } from '@atproto/lexicon'
+import { CID } from 'multiformats/cid'
+import { validate as _validate } from '../../../../lexicons.js'
+import {
+  type $Typed,
+  is$typed as _is$typed,
+  type OmitKey,
+} from '../../../../util.js'
+import type * as ComExampleDefs from '../defs.js'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'com.example.feed.getThread'
+
+export type QueryParams = {}
+export type InputSchema = undefined
+export type OutputSchema =
+  $Typed<ThreadView> | $Typed<ComExampleDefs.Other> | { $type: string }
+
+export interface CallOptions {
+  signal?: AbortSignal
+  headers?: HeadersMap
+}
+
+export interface Response {
+  success: boolean
+  headers: HeadersMap
+  data: OutputSchema
+}
+
+export function toKnownErr(e: any) {
+  return e
+}
+
+export interface ThreadView {
+  $type?: 'com.example.feed.getThread#threadView'
+  replies?: ($Typed<ThreadView> | { $type: string })[]
+}
+
+const hashThreadView = 'threadView'
+
+export function isThreadView<V>(v: V) {
+  return is$typed(v, id, hashThreadView)
+}
+
+export function validateThreadView<V>(v: V) {
+  return validate<ThreadView & V>(v, id, hashThreadView)
+}
+"
+`;
+
+exports[`genClientApi > generates the client API > /types/com/example/feed/ping.ts 1`] = `
+"/**
+ * GENERATED CODE - DO NOT MODIFY
+ */
+import { type HeadersMap, XRPCError } from '@atproto/xrpc'
+import { type ValidationResult, BlobRef } from '@atproto/lexicon'
+import { CID } from 'multiformats/cid'
+import { validate as _validate } from '../../../../lexicons.js'
+import {
+  type $Typed,
+  is$typed as _is$typed,
+  type OmitKey,
+} from '../../../../util.js'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'com.example.feed.ping'
+
+export type QueryParams = {}
+export type InputSchema = undefined
+
+export interface CallOptions {
+  signal?: AbortSignal
+  headers?: HeadersMap
+  qp?: QueryParams
+}
+
+export interface Response {
+  success: boolean
+  headers: HeadersMap
+}
+
+export function toKnownErr(e: any) {
+  return e
+}
+"
+`;
+
+exports[`genClientApi > generates the client API > /types/com/example/feed/post.ts 1`] = `
+"/**
+ * GENERATED CODE - DO NOT MODIFY
+ */
+import { type ValidationResult, BlobRef } from '@atproto/lexicon'
+import { CID } from 'multiformats/cid'
+import { validate as _validate } from '../../../../lexicons.js'
+import {
+  type $Typed,
+  is$typed as _is$typed,
+  type OmitKey,
+} from '../../../../util.js'
+import type * as ComExampleDefs from '../defs.js'
+import type * as OrgSampleThing from '../../../org/sample/thing.js'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'com.example.feed.post'
+
+export interface Main {
+  $type: 'com.example.feed.post'
+  text: string
+  entities?: Entity[]
+  embed?:
+    | $Typed<ComExampleDefs.Other>
+    | $Typed<OrgSampleThing.Main>
+    | { $type: string }
+  createdAt: string
+  [k: string]: unknown
+}
+
+const hashMain = 'main'
+
+export function isMain<V>(v: V) {
+  return is$typed(v, id, hashMain)
+}
+
+export function validateMain<V>(v: V) {
+  return validate<Main & V>(v, id, hashMain, true)
+}
+
+export {
+  type Main as Record,
+  isMain as isRecord,
+  validateMain as validateRecord,
+}
+
+export interface Entity {
+  $type?: 'com.example.feed.post#entity'
+  index: number
+}
+
+const hashEntity = 'entity'
+
+export function isEntity<V>(v: V) {
+  return is$typed(v, id, hashEntity)
+}
+
+export function validateEntity<V>(v: V) {
+  return validate<Entity & V>(v, id, hashEntity)
+}
+"
+`;
+
+exports[`genClientApi > generates the client API > /types/com/example/feed/react.ts 1`] = `
+"/**
+ * GENERATED CODE - DO NOT MODIFY
+ */
+import { type HeadersMap, XRPCError } from '@atproto/xrpc'
+import { type ValidationResult, BlobRef } from '@atproto/lexicon'
+import { CID } from 'multiformats/cid'
+import { validate as _validate } from '../../../../lexicons.js'
+import {
+  type $Typed,
+  is$typed as _is$typed,
+  type OmitKey,
+} from '../../../../util.js'
+import type * as ComExampleDefs from '../defs.js'
+import type * as OrgSampleThing from '../../../org/sample/thing.js'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'com.example.feed.react'
+
+export type QueryParams = {}
+export type InputSchema =
+  $Typed<ComExampleDefs.Other> | $Typed<OrgSampleThing.Main>
+
+export interface CallOptions {
+  signal?: AbortSignal
+  headers?: HeadersMap
+  qp?: QueryParams
+  encoding?: 'application/json'
+}
+
+export interface Response {
+  success: boolean
+  headers: HeadersMap
+}
+
+export function toKnownErr(e: any) {
+  return e
+}
+"
+`;
+
+exports[`genClientApi > generates the client API > /types/com/example/feed/thread/mute.ts 1`] = `
+"/**
+ * GENERATED CODE - DO NOT MODIFY
+ */
+import { type HeadersMap, XRPCError } from '@atproto/xrpc'
+import { type ValidationResult, BlobRef } from '@atproto/lexicon'
+import { CID } from 'multiformats/cid'
+import { validate as _validate } from '../../../../../lexicons.js'
+import {
+  type $Typed,
+  is$typed as _is$typed,
+  type OmitKey,
+} from '../../../../../util.js'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'com.example.feed.thread.mute'
+
+export type QueryParams = {}
+
+export interface InputSchema {
+  root: string
+}
+
+export interface CallOptions {
+  signal?: AbortSignal
+  headers?: HeadersMap
+  qp?: QueryParams
+  encoding?: 'application/json'
+}
+
+export interface Response {
+  success: boolean
+  headers: HeadersMap
+}
+
+export function toKnownErr(e: any) {
+  return e
+}
+"
+`;
+
+exports[`genClientApi > generates the client API > /types/com/example/sync/listen.ts 1`] = `
+"/**
+ * GENERATED CODE - DO NOT MODIFY
+ */
+import { type HeadersMap, XRPCError } from '@atproto/xrpc'
+import { type ValidationResult, BlobRef } from '@atproto/lexicon'
+import { CID } from 'multiformats/cid'
+import { validate as _validate } from '../../../../lexicons.js'
+import {
+  type $Typed,
+  is$typed as _is$typed,
+  type OmitKey,
+} from '../../../../util.js'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'com.example.sync.listen'
+"
+`;
+
+exports[`genClientApi > generates the client API > /types/com/example/sync/subscribe.ts 1`] = `
+"/**
+ * GENERATED CODE - DO NOT MODIFY
+ */
+import { type HeadersMap, XRPCError } from '@atproto/xrpc'
+import { type ValidationResult, BlobRef } from '@atproto/lexicon'
+import { CID } from 'multiformats/cid'
+import { validate as _validate } from '../../../../lexicons.js'
+import {
+  type $Typed,
+  is$typed as _is$typed,
+  type OmitKey,
+} from '../../../../util.js'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'com.example.sync.subscribe'
+
+export interface Commit {
+  $type?: 'com.example.sync.subscribe#commit'
+  seq: number
+}
+
+const hashCommit = 'commit'
+
+export function isCommit<V>(v: V) {
+  return is$typed(v, id, hashCommit)
+}
+
+export function validateCommit<V>(v: V) {
+  return validate<Commit & V>(v, id, hashCommit)
+}
+
+export interface Info {
+  $type?: 'com.example.sync.subscribe#info'
+  name?: 'Outdated' | (string & {})
+}
+
+const hashInfo = 'info'
+
+export function isInfo<V>(v: V) {
+  return is$typed(v, id, hashInfo)
+}
+
+export function validateInfo<V>(v: V) {
+  return validate<Info & V>(v, id, hashInfo)
+}
+"
+`;
+
+exports[`genClientApi > generates the client API > /types/com/example/token.ts 1`] = `
+"/**
+ * GENERATED CODE - DO NOT MODIFY
+ */
+import { type ValidationResult, BlobRef } from '@atproto/lexicon'
+import { CID } from 'multiformats/cid'
+import { validate as _validate } from '../../../lexicons.js'
+import {
+  type $Typed,
+  is$typed as _is$typed,
+  type OmitKey,
+} from '../../../util.js'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'com.example.token'
+/** A main token. */
+export const MAIN = \`\${id}#main\`
+"
+`;
+
+exports[`genClientApi > generates the client API > /types/org/sample/getThing.ts 1`] = `
+"/**
+ * GENERATED CODE - DO NOT MODIFY
+ */
+import { type HeadersMap, XRPCError } from '@atproto/xrpc'
+import { type ValidationResult, BlobRef } from '@atproto/lexicon'
+import { CID } from 'multiformats/cid'
+import { validate as _validate } from '../../../lexicons.js'
+import {
+  type $Typed,
+  is$typed as _is$typed,
+  type OmitKey,
+} from '../../../util.js'
+import type * as OrgSampleThing from './thing.js'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'org.sample.getThing'
+
+export type QueryParams = {}
+export type InputSchema = undefined
+export type OutputSchema = OrgSampleThing.Main
+
+export interface CallOptions {
+  signal?: AbortSignal
+  headers?: HeadersMap
+}
+
+export interface Response {
+  success: boolean
+  headers: HeadersMap
+  data: OutputSchema
+}
+
+export function toKnownErr(e: any) {
+  return e
+}
+"
+`;
+
+exports[`genClientApi > generates the client API > /types/org/sample/thing.ts 1`] = `
+"/**
+ * GENERATED CODE - DO NOT MODIFY
+ */
+import { type ValidationResult, BlobRef } from '@atproto/lexicon'
+import { CID } from 'multiformats/cid'
+import { validate as _validate } from '../../../lexicons.js'
+import {
+  type $Typed,
+  is$typed as _is$typed,
+  type OmitKey,
+} from '../../../util.js'
+import type * as ComExampleDefs from '../../com/example/defs.js'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'org.sample.thing'
+
+export interface Main {
+  $type?: 'org.sample.thing'
+  kitchenSink?: ComExampleDefs.KitchenSink
+}
+
+const hashMain = 'main'
+
+export function isMain<V>(v: V) {
+  return is$typed(v, id, hashMain)
+}
+
+export function validateMain<V>(v: V) {
+  return validate<Main & V>(v, id, hashMain)
+}
+"
+`;
+
+exports[`genClientApi > generates the client API > /util.ts 1`] = `
+"/**
+ * GENERATED CODE - DO NOT MODIFY
+ */
+
+import { type ValidationResult } from '@atproto/lexicon'
+
+export type OmitKey<T, K extends keyof T> = {
+  [K2 in keyof T as K2 extends K ? never : K2]: T[K2]
+}
+
+export type $Typed<V, T extends string = string> = V & { $type: T }
+export type Un$Typed<V extends { $type?: string }> = OmitKey<V, '$type'>
+
+export type $Type<Id extends string, Hash extends string> = Hash extends 'main'
+  ? Id
+  : \`\${Id}#\${Hash}\`
+
+function isObject<V>(v: V): v is V & object {
+  return v != null && typeof v === 'object'
+}
+
+function is$type<Id extends string, Hash extends string>(
+  $type: unknown,
+  id: Id,
+  hash: Hash,
+): $type is $Type<Id, Hash> {
+  return hash === 'main'
+    ? $type === id
+    : // $type === \`\${id}#\${hash}\`
+      typeof $type === 'string' &&
+        $type.length === id.length + 1 + hash.length &&
+        $type.charCodeAt(id.length) === 35 /* '#' */ &&
+        $type.startsWith(id) &&
+        $type.endsWith(hash)
+}
+
+export type $TypedObject<
+  V,
+  Id extends string,
+  Hash extends string,
+> = V extends {
+  $type: $Type<Id, Hash>
+}
+  ? V
+  : V extends { $type?: string }
+    ? V extends { $type?: infer T extends $Type<Id, Hash> }
+      ? V & { $type: T }
+      : never
+    : V & { $type: $Type<Id, Hash> }
+
+export function is$typed<V, Id extends string, Hash extends string>(
+  v: V,
+  id: Id,
+  hash: Hash,
+): v is $TypedObject<V, Id, Hash> {
+  return isObject(v) && '$type' in v && is$type(v.$type, id, hash)
+}
+
+export function maybe$typed<V, Id extends string, Hash extends string>(
+  v: V,
+  id: Id,
+  hash: Hash,
+): v is V & object & { $type?: $Type<Id, Hash> } {
+  return (
+    isObject(v) &&
+    ('$type' in v ? v.$type === undefined || is$type(v.$type, id, hash) : true)
+  )
+}
+
+export type Validator<R = unknown> = (v: unknown) => ValidationResult<R>
+export type ValidatorParam<V extends Validator> =
+  V extends Validator<infer R> ? R : never
+
+/**
+ * Utility function that allows to convert a "validate*" utility function into a
+ * type predicate.
+ */
+export function asPredicate<V extends Validator>(validate: V) {
+  return function <T>(v: T): v is T & ValidatorParam<V> {
+    return validate(v).success
+  }
+}
+"
+`;
+
+exports[`genClientApi > generates the client API > files 1`] = `
+[
+  "/types/com/example/defs.ts",
+  "/types/com/example/token.ts",
+  "/types/com/example/auth.ts",
+  "/types/com/example/feed/post.ts",
+  "/types/com/example/actor/profile.ts",
+  "/types/com/example/feed/getPosts.ts",
+  "/types/com/example/feed/getThread.ts",
+  "/types/com/example/feed/thread/mute.ts",
+  "/types/com/example/feed/createPost.ts",
+  "/types/com/example/feed/react.ts",
+  "/types/com/example/feed/ping.ts",
+  "/types/com/example/blob/upload.ts",
+  "/types/com/example/blob/download.ts",
+  "/types/com/example/blob/convert.ts",
+  "/types/com/example/sync/subscribe.ts",
+  "/types/com/example/sync/listen.ts",
+  "/types/org/sample/thing.ts",
+  "/types/org/sample/getThing.ts",
+  "/util.ts",
+  "/lexicons.ts",
+  "/index.ts",
+]
+`;
+
+exports[`genServerApi > generates the server API > /index.ts 1`] = `
+"/**
+ * GENERATED CODE - DO NOT MODIFY
+ */
+import {
+  type Auth,
+  type Options as XrpcOptions,
+  Server as XrpcServer,
+  type StreamConfigOrHandler,
+  type MethodConfigOrHandler,
+  createServer as createXrpcServer,
+} from '@atproto/xrpc-server'
+import { schemas } from './lexicons.js'
+import * as ComExampleFeedGetPosts from './types/com/example/feed/getPosts.js'
+import * as ComExampleFeedGetThread from './types/com/example/feed/getThread.js'
+import * as ComExampleFeedThreadMute from './types/com/example/feed/thread/mute.js'
+import * as ComExampleFeedCreatePost from './types/com/example/feed/createPost.js'
+import * as ComExampleFeedReact from './types/com/example/feed/react.js'
+import * as ComExampleFeedPing from './types/com/example/feed/ping.js'
+import * as ComExampleBlobUpload from './types/com/example/blob/upload.js'
+import * as ComExampleBlobDownload from './types/com/example/blob/download.js'
+import * as ComExampleBlobConvert from './types/com/example/blob/convert.js'
+import * as ComExampleSyncSubscribe from './types/com/example/sync/subscribe.js'
+import * as ComExampleSyncListen from './types/com/example/sync/listen.js'
+import * as OrgSampleGetThing from './types/org/sample/getThing.js'
+
+export const COM_EXAMPLE = {
+  DefsToken: 'com.example.defs#token',
+  DefsUndocumentedToken: 'com.example.defs#undocumentedToken',
+  Token: 'com.example.token',
+}
+
+export function createServer(options?: XrpcOptions): Server {
+  return new Server(options)
+}
+
+export class Server {
+  xrpc: XrpcServer
+  com: ComNS
+  org: OrgNS
+
+  constructor(options?: XrpcOptions) {
+    this.xrpc = createXrpcServer(schemas, options)
+    this.com = new ComNS(this)
+    this.org = new OrgNS(this)
+  }
+}
+
+export class ComNS {
+  _server: Server
+  example: ComExampleNS
+
+  constructor(server: Server) {
+    this._server = server
+    this.example = new ComExampleNS(server)
+  }
+}
+
+export class ComExampleNS {
+  _server: Server
+  feed: ComExampleFeedNS
+  actor: ComExampleActorNS
+  blob: ComExampleBlobNS
+  sync: ComExampleSyncNS
+
+  constructor(server: Server) {
+    this._server = server
+    this.feed = new ComExampleFeedNS(server)
+    this.actor = new ComExampleActorNS(server)
+    this.blob = new ComExampleBlobNS(server)
+    this.sync = new ComExampleSyncNS(server)
+  }
+}
+
+export class ComExampleFeedNS {
+  _server: Server
+  thread: ComExampleFeedThreadNS
+
+  constructor(server: Server) {
+    this._server = server
+    this.thread = new ComExampleFeedThreadNS(server)
+  }
+
+  getPosts<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ComExampleFeedGetPosts.QueryParams,
+      ComExampleFeedGetPosts.HandlerInput,
+      ComExampleFeedGetPosts.HandlerOutput
+    >,
+  ) {
+    const nsid = 'com.example.feed.getPosts' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getThread<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ComExampleFeedGetThread.QueryParams,
+      ComExampleFeedGetThread.HandlerInput,
+      ComExampleFeedGetThread.HandlerOutput
+    >,
+  ) {
+    const nsid = 'com.example.feed.getThread' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  createPost<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ComExampleFeedCreatePost.QueryParams,
+      ComExampleFeedCreatePost.HandlerInput,
+      ComExampleFeedCreatePost.HandlerOutput
+    >,
+  ) {
+    const nsid = 'com.example.feed.createPost' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  react<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ComExampleFeedReact.QueryParams,
+      ComExampleFeedReact.HandlerInput,
+      ComExampleFeedReact.HandlerOutput
+    >,
+  ) {
+    const nsid = 'com.example.feed.react' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  ping<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ComExampleFeedPing.QueryParams,
+      ComExampleFeedPing.HandlerInput,
+      ComExampleFeedPing.HandlerOutput
+    >,
+  ) {
+    const nsid = 'com.example.feed.ping' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
+export class ComExampleFeedThreadNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  mute<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ComExampleFeedThreadMute.QueryParams,
+      ComExampleFeedThreadMute.HandlerInput,
+      ComExampleFeedThreadMute.HandlerOutput
+    >,
+  ) {
+    const nsid = 'com.example.feed.thread.mute' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
+export class ComExampleActorNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+}
+
+export class ComExampleBlobNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  upload<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ComExampleBlobUpload.QueryParams,
+      ComExampleBlobUpload.HandlerInput,
+      ComExampleBlobUpload.HandlerOutput
+    >,
+  ) {
+    const nsid = 'com.example.blob.upload' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  download<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ComExampleBlobDownload.QueryParams,
+      ComExampleBlobDownload.HandlerInput,
+      ComExampleBlobDownload.HandlerOutput
+    >,
+  ) {
+    const nsid = 'com.example.blob.download' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  convert<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ComExampleBlobConvert.QueryParams,
+      ComExampleBlobConvert.HandlerInput,
+      ComExampleBlobConvert.HandlerOutput
+    >,
+  ) {
+    const nsid = 'com.example.blob.convert' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
+export class ComExampleSyncNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  subscribe<A extends Auth = void>(
+    cfg: StreamConfigOrHandler<
+      A,
+      ComExampleSyncSubscribe.QueryParams,
+      ComExampleSyncSubscribe.HandlerOutput
+    >,
+  ) {
+    const nsid = 'com.example.sync.subscribe' // @ts-ignore
+    return this._server.xrpc.streamMethod(nsid, cfg)
+  }
+
+  listen<A extends Auth = void>(
+    cfg: StreamConfigOrHandler<
+      A,
+      ComExampleSyncListen.QueryParams,
+      ComExampleSyncListen.HandlerOutput
+    >,
+  ) {
+    const nsid = 'com.example.sync.listen' // @ts-ignore
+    return this._server.xrpc.streamMethod(nsid, cfg)
+  }
+}
+
+export class OrgNS {
+  _server: Server
+  sample: OrgSampleNS
+
+  constructor(server: Server) {
+    this._server = server
+    this.sample = new OrgSampleNS(server)
+  }
+}
+
+export class OrgSampleNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  getThing<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      OrgSampleGetThing.QueryParams,
+      OrgSampleGetThing.HandlerInput,
+      OrgSampleGetThing.HandlerOutput
+    >,
+  ) {
+    const nsid = 'org.sample.getThing' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+}
+"
+`;
+
+exports[`genServerApi > generates the server API > /lexicons.ts 1`] = `
+"/**
+ * GENERATED CODE - DO NOT MODIFY
+ */
+import {
+  type LexiconDoc,
+  Lexicons,
+  ValidationError,
+  type ValidationResult,
+} from '@atproto/lexicon'
+import { type $Typed, is$typed, maybe$typed } from './util.js'
+
+export const schemaDict = {
+  ComExampleDefs: {
+    lexicon: 1,
+    id: 'com.example.defs',
+    defs: {
+      kitchenSink: {
+        type: 'object',
+        description: 'An object with every kind of property.',
+        required: ['str', 'ref'],
+        nullable: ['nullableStr', 'nullableRef'],
+        properties: {
+          str: {
+            type: 'string',
+            description: 'A plain string.',
+          },
+          knownValues: {
+            type: 'string',
+            knownValues: ['com.example.defs#token', 'other'],
+          },
+          enumStr: {
+            type: 'string',
+            enum: ['a', 'b'],
+          },
+          constStr: {
+            type: 'string',
+            const: 'fixed',
+          },
+          defaultStr: {
+            type: 'string',
+            default: 'dflt',
+          },
+          nullableStr: {
+            type: 'string',
+          },
+          int: {
+            type: 'integer',
+            minimum: 0,
+          },
+          enumInt: {
+            type: 'integer',
+            enum: [1, 2],
+          },
+          constInt: {
+            type: 'integer',
+            const: 3,
+          },
+          bool: {
+            type: 'boolean',
+          },
+          constBool: {
+            type: 'boolean',
+            const: true,
+          },
+          blob: {
+            type: 'blob',
+            accept: ['image/*'],
+          },
+          bytes: {
+            type: 'bytes',
+          },
+          cid: {
+            type: 'cid-link',
+          },
+          unknown: {
+            type: 'unknown',
+          },
+          ref: {
+            type: 'ref',
+            ref: 'lex:com.example.defs#other',
+          },
+          nullableRef: {
+            type: 'ref',
+            ref: 'lex:com.example.feed.post#entity',
+          },
+          externalRef: {
+            type: 'ref',
+            ref: 'lex:org.sample.thing',
+          },
+          openUnion: {
+            type: 'union',
+            refs: [
+              'lex:com.example.defs#other',
+              'lex:com.example.feed.post#entity',
+            ],
+          },
+          closedUnion: {
+            type: 'union',
+            refs: ['lex:com.example.defs#other'],
+            closed: true,
+          },
+          refArray: {
+            type: 'array',
+            description: 'An array of refs.',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.example.defs#other',
+            },
+          },
+          openUnionArray: {
+            type: 'array',
+            items: {
+              type: 'union',
+              refs: ['lex:com.example.defs#other', 'lex:org.sample.thing'],
+            },
+          },
+          closedUnionArray: {
+            type: 'array',
+            items: {
+              type: 'union',
+              refs: ['lex:com.example.defs#other'],
+              closed: true,
+            },
+          },
+          stringArray: {
+            type: 'array',
+            items: {
+              type: 'string',
+              maxLength: 10,
+            },
+          },
+          blobArray: {
+            type: 'array',
+            items: {
+              type: 'blob',
+            },
+          },
+        },
+      },
+      other: {
+        type: 'object',
+        properties: {
+          value: {
+            type: 'string',
+          },
+        },
+      },
+      empty: {
+        type: 'object',
+        properties: {},
+      },
+      token: {
+        type: 'token',
+        description: 'A token.',
+      },
+      undocumentedToken: {
+        type: 'token',
+      },
+      refList: {
+        type: 'array',
+        items: {
+          type: 'ref',
+          ref: 'lex:com.example.defs#other',
+        },
+      },
+      openUnionList: {
+        type: 'array',
+        items: {
+          type: 'union',
+          refs: ['lex:com.example.defs#other', 'lex:org.sample.thing'],
+        },
+      },
+      closedUnionList: {
+        type: 'array',
+        items: {
+          type: 'union',
+          refs: ['lex:com.example.defs#other'],
+          closed: true,
+        },
+      },
+      stringList: {
+        type: 'array',
+        description: 'A list of strings.',
+        items: {
+          type: 'string',
+        },
+      },
+      string: {
+        type: 'string',
+        description: 'A string.',
+        knownValues: ['x', 'y'],
+      },
+      integer: {
+        type: 'integer',
+      },
+      boolean: {
+        type: 'boolean',
+      },
+      blob: {
+        type: 'blob',
+      },
+      bytes: {
+        type: 'bytes',
+      },
+      cidLink: {
+        type: 'cid-link',
+      },
+      unknown: {
+        type: 'unknown',
+      },
+    },
+  },
+  ComExampleToken: {
+    lexicon: 1,
+    id: 'com.example.token',
+    defs: {
+      main: {
+        type: 'token',
+        description: 'A main token.',
+      },
+    },
+  },
+  ComExampleAuth: {
+    lexicon: 1,
+    id: 'com.example.auth',
+    defs: {
+      main: {
+        type: 'permission-set',
+        permissions: [
+          {
+            type: 'permission',
+            resource: 'repo',
+            collection: ['com.example.feed.post'],
+          },
+        ],
+      },
+    },
+  },
+  ComExampleFeedPost: {
+    lexicon: 1,
+    id: 'com.example.feed.post',
+    defs: {
+      main: {
+        type: 'record',
+        description: 'A post.',
+        key: 'tid',
+        record: {
+          type: 'object',
+          required: ['text', 'createdAt'],
+          properties: {
+            text: {
+              type: 'string',
+              maxLength: 300,
+            },
+            entities: {
+              type: 'array',
+              items: {
+                type: 'ref',
+                ref: 'lex:com.example.feed.post#entity',
+              },
+            },
+            embed: {
+              type: 'union',
+              refs: ['lex:com.example.defs#other', 'lex:org.sample.thing'],
+            },
+            createdAt: {
+              type: 'string',
+              format: 'datetime',
+            },
+          },
+        },
+      },
+      entity: {
+        type: 'object',
+        required: ['index'],
+        properties: {
+          index: {
+            type: 'integer',
+          },
+        },
+      },
+    },
+  },
+  ComExampleActorProfile: {
+    lexicon: 1,
+    id: 'com.example.actor.profile',
+    defs: {
+      main: {
+        type: 'record',
+        key: 'literal:self',
+        record: {
+          type: 'object',
+          properties: {
+            displayName: {
+              type: 'string',
+            },
+            avatar: {
+              type: 'blob',
+              accept: ['image/png'],
+            },
+          },
+        },
+      },
+    },
+  },
+  ComExampleFeedGetPosts: {
+    lexicon: 1,
+    id: 'com.example.feed.getPosts',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get posts.',
+        parameters: {
+          type: 'params',
+          description: 'The query parameters.',
+          required: ['uris'],
+          properties: {
+            uris: {
+              type: 'array',
+              description: 'The post URIs.',
+              items: {
+                type: 'string',
+                format: 'at-uri',
+              },
+            },
+            limit: {
+              type: 'integer',
+              default: 50,
+            },
+            sort: {
+              type: 'string',
+              knownValues: ['new', 'old'],
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['posts'],
+            properties: {
+              posts: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:com.example.feed.post#entity',
+                },
+              },
+              cursor: {
+                type: 'string',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'NotFound',
+          },
+          {
+            name: 'BlockedError',
+            description: 'Blocked.',
+          },
+        ],
+      },
+    },
+  },
+  ComExampleFeedGetThread: {
+    lexicon: 1,
+    id: 'com.example.feed.getThread',
+    defs: {
+      main: {
+        type: 'query',
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'union',
+            refs: [
+              'lex:com.example.feed.getThread#threadView',
+              'lex:com.example.defs#other',
+            ],
+          },
+        },
+      },
+      threadView: {
+        type: 'object',
+        properties: {
+          replies: {
+            type: 'array',
+            items: {
+              type: 'union',
+              refs: ['lex:com.example.feed.getThread#threadView'],
+            },
+          },
+        },
+      },
+    },
+  },
+  ComExampleFeedThreadMute: {
+    lexicon: 1,
+    id: 'com.example.feed.thread.mute',
+    defs: {
+      main: {
+        type: 'procedure',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['root'],
+            properties: {
+              root: {
+                type: 'string',
+                format: 'at-uri',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ComExampleFeedCreatePost: {
+    lexicon: 1,
+    id: 'com.example.feed.createPost',
+    defs: {
+      main: {
+        type: 'procedure',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:com.example.feed.post',
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['uri'],
+            properties: {
+              uri: {
+                type: 'string',
+                format: 'at-uri',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'InvalidPost',
+          },
+        ],
+      },
+    },
+  },
+  ComExampleFeedReact: {
+    lexicon: 1,
+    id: 'com.example.feed.react',
+    defs: {
+      main: {
+        type: 'procedure',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'union',
+            refs: ['lex:com.example.defs#other', 'lex:org.sample.thing'],
+            closed: true,
+          },
+        },
+      },
+    },
+  },
+  ComExampleFeedPing: {
+    lexicon: 1,
+    id: 'com.example.feed.ping',
+    defs: {
+      main: {
+        type: 'procedure',
+      },
+    },
+  },
+  ComExampleBlobUpload: {
+    lexicon: 1,
+    id: 'com.example.blob.upload',
+    defs: {
+      main: {
+        type: 'procedure',
+        input: {
+          encoding: '*/*',
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['blob'],
+            properties: {
+              blob: {
+                type: 'blob',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ComExampleBlobDownload: {
+    lexicon: 1,
+    id: 'com.example.blob.download',
+    defs: {
+      main: {
+        type: 'query',
+        parameters: {
+          type: 'params',
+          required: ['cid'],
+          properties: {
+            cid: {
+              type: 'string',
+              format: 'cid',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/octet-stream',
+        },
+      },
+    },
+  },
+  ComExampleBlobConvert: {
+    lexicon: 1,
+    id: 'com.example.blob.convert',
+    defs: {
+      main: {
+        type: 'procedure',
+        input: {
+          encoding: 'application/json, application/cbor',
+          schema: {
+            type: 'ref',
+            ref: 'lex:com.example.defs#other',
+          },
+        },
+        output: {
+          encoding: 'application/json, application/cbor',
+          schema: {
+            type: 'ref',
+            ref: 'lex:com.example.defs#other',
+          },
+        },
+      },
+    },
+  },
+  ComExampleSyncSubscribe: {
+    lexicon: 1,
+    id: 'com.example.sync.subscribe',
+    defs: {
+      main: {
+        type: 'subscription',
+        parameters: {
+          type: 'params',
+          properties: {
+            cursor: {
+              type: 'integer',
+            },
+          },
+        },
+        message: {
+          schema: {
+            type: 'union',
+            refs: [
+              'lex:com.example.sync.subscribe#commit',
+              'lex:com.example.sync.subscribe#info',
+            ],
+          },
+        },
+        errors: [
+          {
+            name: 'FutureCursor',
+          },
+        ],
+      },
+      commit: {
+        type: 'object',
+        required: ['seq'],
+        properties: {
+          seq: {
+            type: 'integer',
+          },
+        },
+      },
+      info: {
+        type: 'object',
+        properties: {
+          name: {
+            type: 'string',
+            knownValues: ['Outdated'],
+          },
+        },
+      },
+    },
+  },
+  ComExampleSyncListen: {
+    lexicon: 1,
+    id: 'com.example.sync.listen',
+    defs: {
+      main: {
+        type: 'subscription',
+        message: {
+          schema: {
+            type: 'union',
+            refs: [],
+          },
+        },
+      },
+    },
+  },
+  OrgSampleThing: {
+    lexicon: 1,
+    id: 'org.sample.thing',
+    defs: {
+      main: {
+        type: 'object',
+        properties: {
+          kitchenSink: {
+            type: 'ref',
+            ref: 'lex:com.example.defs#kitchenSink',
+          },
+        },
+      },
+    },
+  },
+  OrgSampleGetThing: {
+    lexicon: 1,
+    id: 'org.sample.getThing',
+    defs: {
+      main: {
+        type: 'query',
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:org.sample.thing',
+          },
+        },
+      },
+    },
+  },
+} as const satisfies Record<string, LexiconDoc>
+export const schemas = Object.values(schemaDict) satisfies LexiconDoc[]
+export const lexicons: Lexicons = new Lexicons(schemas)
+
+export function validate<T extends { $type: string }>(
+  v: unknown,
+  id: string,
+  hash: string,
+  requiredType: true,
+): ValidationResult<T>
+export function validate<T extends { $type?: string }>(
+  v: unknown,
+  id: string,
+  hash: string,
+  requiredType?: false,
+): ValidationResult<T>
+export function validate(
+  v: unknown,
+  id: string,
+  hash: string,
+  requiredType?: boolean,
+): ValidationResult {
+  return (requiredType ? is$typed : maybe$typed)(v, id, hash)
+    ? lexicons.validate(\`\${id}#\${hash}\`, v)
+    : {
+        success: false,
+        error: new ValidationError(
+          \`Must be an object with "\${hash === 'main' ? id : \`\${id}#\${hash}\`}" $type property\`,
+        ),
+      }
+}
+
+export const ids = {
+  ComExampleDefs: 'com.example.defs',
+  ComExampleToken: 'com.example.token',
+  ComExampleAuth: 'com.example.auth',
+  ComExampleFeedPost: 'com.example.feed.post',
+  ComExampleActorProfile: 'com.example.actor.profile',
+  ComExampleFeedGetPosts: 'com.example.feed.getPosts',
+  ComExampleFeedGetThread: 'com.example.feed.getThread',
+  ComExampleFeedThreadMute: 'com.example.feed.thread.mute',
+  ComExampleFeedCreatePost: 'com.example.feed.createPost',
+  ComExampleFeedReact: 'com.example.feed.react',
+  ComExampleFeedPing: 'com.example.feed.ping',
+  ComExampleBlobUpload: 'com.example.blob.upload',
+  ComExampleBlobDownload: 'com.example.blob.download',
+  ComExampleBlobConvert: 'com.example.blob.convert',
+  ComExampleSyncSubscribe: 'com.example.sync.subscribe',
+  ComExampleSyncListen: 'com.example.sync.listen',
+  OrgSampleThing: 'org.sample.thing',
+  OrgSampleGetThing: 'org.sample.getThing',
+} as const
+"
+`;
+
+exports[`genServerApi > generates the server API > /types/com/example/actor/profile.ts 1`] = `
+"/**
+ * GENERATED CODE - DO NOT MODIFY
+ */
+import { type ValidationResult, BlobRef } from '@atproto/lexicon'
+import { CID } from 'multiformats/cid'
+import { validate as _validate } from '../../../../lexicons.js'
+import {
+  type $Typed,
+  is$typed as _is$typed,
+  type OmitKey,
+} from '../../../../util.js'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'com.example.actor.profile'
+
+export interface Main {
+  $type: 'com.example.actor.profile'
+  displayName?: string
+  avatar?: BlobRef
+  [k: string]: unknown
+}
+
+const hashMain = 'main'
+
+export function isMain<V>(v: V) {
+  return is$typed(v, id, hashMain)
+}
+
+export function validateMain<V>(v: V) {
+  return validate<Main & V>(v, id, hashMain, true)
+}
+
+export {
+  type Main as Record,
+  isMain as isRecord,
+  validateMain as validateRecord,
+}
+"
+`;
+
+exports[`genServerApi > generates the server API > /types/com/example/auth.ts 1`] = `
+"/**
+ * GENERATED CODE - DO NOT MODIFY
+ */
+import { type ValidationResult, BlobRef } from '@atproto/lexicon'
+import { CID } from 'multiformats/cid'
+import { validate as _validate } from '../../../lexicons.js'
+import {
+  type $Typed,
+  is$typed as _is$typed,
+  type OmitKey,
+} from '../../../util.js'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'com.example.auth'
+"
+`;
+
+exports[`genServerApi > generates the server API > /types/com/example/blob/convert.ts 1`] = `
+"/**
+ * GENERATED CODE - DO NOT MODIFY
+ */
+import { type ValidationResult, BlobRef } from '@atproto/lexicon'
+import { CID } from 'multiformats/cid'
+import { validate as _validate } from '../../../../lexicons.js'
+import {
+  type $Typed,
+  is$typed as _is$typed,
+  type OmitKey,
+} from '../../../../util.js'
+import type * as ComExampleDefs from '../defs.js'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'com.example.blob.convert'
+
+export type QueryParams = {}
+export type InputSchema = ComExampleDefs.Other
+export type OutputSchema = ComExampleDefs.Other
+
+export interface HandlerInput {
+  encoding: 'application/json' | 'application/cbor'
+  body: InputSchema | stream.Readable
+}
+
+export interface HandlerSuccess {
+  encoding: 'application/json' | 'application/cbor'
+  body: OutputSchema | Uint8Array | stream.Readable
+  headers?: { [key: string]: string }
+}
+
+export interface HandlerError {
+  status: number
+  message?: string
+}
+
+export type HandlerOutput = HandlerError | HandlerSuccess
+"
+`;
+
+exports[`genServerApi > generates the server API > /types/com/example/blob/download.ts 1`] = `
+"/**
+ * GENERATED CODE - DO NOT MODIFY
+ */
+import stream from 'node:stream'
+import { type ValidationResult, BlobRef } from '@atproto/lexicon'
+import { CID } from 'multiformats/cid'
+import { validate as _validate } from '../../../../lexicons.js'
+import {
+  type $Typed,
+  is$typed as _is$typed,
+  type OmitKey,
+} from '../../../../util.js'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'com.example.blob.download'
+
+export type QueryParams = {
+  cid: string
+}
+export type InputSchema = undefined
+export type HandlerInput = void
+
+export interface HandlerSuccess {
+  encoding: 'application/octet-stream'
+  body: Uint8Array | stream.Readable
+  headers?: { [key: string]: string }
+}
+
+export interface HandlerError {
+  status: number
+  message?: string
+}
+
+export type HandlerOutput = HandlerError | HandlerSuccess
+"
+`;
+
+exports[`genServerApi > generates the server API > /types/com/example/blob/upload.ts 1`] = `
+"/**
+ * GENERATED CODE - DO NOT MODIFY
+ */
+import stream from 'node:stream'
+import { type ValidationResult, BlobRef } from '@atproto/lexicon'
+import { CID } from 'multiformats/cid'
+import { validate as _validate } from '../../../../lexicons.js'
+import {
+  type $Typed,
+  is$typed as _is$typed,
+  type OmitKey,
+} from '../../../../util.js'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'com.example.blob.upload'
+
+export type QueryParams = {}
+export type InputSchema = string | Uint8Array | Blob
+
+export interface OutputSchema {
+  blob: BlobRef
+}
+
+export interface HandlerInput {
+  encoding: '*/*'
+  body: stream.Readable
+}
+
+export interface HandlerSuccess {
+  encoding: 'application/json'
+  body: OutputSchema
+  headers?: { [key: string]: string }
+}
+
+export interface HandlerError {
+  status: number
+  message?: string
+}
+
+export type HandlerOutput = HandlerError | HandlerSuccess
+"
+`;
+
+exports[`genServerApi > generates the server API > /types/com/example/defs.ts 1`] = `
+"/**
+ * GENERATED CODE - DO NOT MODIFY
+ */
+import { type ValidationResult, BlobRef } from '@atproto/lexicon'
+import { CID } from 'multiformats/cid'
+import { validate as _validate } from '../../../lexicons.js'
+import {
+  type $Typed,
+  is$typed as _is$typed,
+  type OmitKey,
+} from '../../../util.js'
+import type * as ComExampleFeedPost from './feed/post.js'
+import type * as OrgSampleThing from '../../org/sample/thing.js'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'com.example.defs'
+
+/** An object with every kind of property. */
+export interface KitchenSink {
+  $type?: 'com.example.defs#kitchenSink'
+  /** A plain string. */
+  str: string
+  knownValues?: 'com.example.defs#token' | 'other' | (string & {})
+  enumStr?: 'a' | 'b'
+  constStr?: 'fixed'
+  defaultStr: string
+  nullableStr?: string | null
+  int?: number
+  enumInt?: 1 | 2
+  constInt?: 3
+  bool?: boolean
+  constBool?: true
+  blob?: BlobRef
+  bytes?: Uint8Array
+  cid?: CID
+  unknown?: { [_ in string]: unknown }
+  ref: Other
+  nullableRef?: ComExampleFeedPost.Entity | null
+  externalRef?: OrgSampleThing.Main
+  openUnion?:
+    $Typed<Other> | $Typed<ComExampleFeedPost.Entity> | { $type: string }
+  closedUnion?: $Typed<Other>
+  /** An array of refs. */
+  refArray?: Other[]
+  openUnionArray?: (
+    $Typed<Other> | $Typed<OrgSampleThing.Main> | { $type: string }
+  )[]
+  closedUnionArray?: $Typed<Other>[]
+  stringArray?: string[]
+  blobArray?: BlobRef[]
+}
+
+const hashKitchenSink = 'kitchenSink'
+
+export function isKitchenSink<V>(v: V) {
+  return is$typed(v, id, hashKitchenSink)
+}
+
+export function validateKitchenSink<V>(v: V) {
+  return validate<KitchenSink & V>(v, id, hashKitchenSink)
+}
+
+export interface Other {
+  $type?: 'com.example.defs#other'
+  value?: string
+}
+
+const hashOther = 'other'
+
+export function isOther<V>(v: V) {
+  return is$typed(v, id, hashOther)
+}
+
+export function validateOther<V>(v: V) {
+  return validate<Other & V>(v, id, hashOther)
+}
+
+export interface Empty {
+  $type?: 'com.example.defs#empty'
+}
+
+const hashEmpty = 'empty'
+
+export function isEmpty<V>(v: V) {
+  return is$typed(v, id, hashEmpty)
+}
+
+export function validateEmpty<V>(v: V) {
+  return validate<Empty & V>(v, id, hashEmpty)
+}
+
+/** A token. */
+export const TOKEN = \`\${id}#token\`
+export const UNDOCUMENTEDTOKEN = \`\${id}#undocumentedToken\`
+
+export type RefList = Other[]
+export type OpenUnionList = (
+  $Typed<Other> | $Typed<OrgSampleThing.Main> | { $type: string }
+)[]
+export type ClosedUnionList = $Typed<Other>[]
+/** A list of strings. */
+export type StringList = string[]
+/** A string. */
+export type String = 'x' | 'y' | (string & {})
+export type Integer = number
+export type Boolean = boolean
+export type Blob = BlobRef
+export type Bytes = Uint8Array
+export type CidLink = CID
+export type Unknown = { [_ in string]: unknown }
+"
+`;
+
+exports[`genServerApi > generates the server API > /types/com/example/feed/createPost.ts 1`] = `
+"/**
+ * GENERATED CODE - DO NOT MODIFY
+ */
+import { type ValidationResult, BlobRef } from '@atproto/lexicon'
+import { CID } from 'multiformats/cid'
+import { validate as _validate } from '../../../../lexicons.js'
+import {
+  type $Typed,
+  is$typed as _is$typed,
+  type OmitKey,
+} from '../../../../util.js'
+import type * as ComExampleFeedPost from './post.js'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'com.example.feed.createPost'
+
+export type QueryParams = {}
+export type InputSchema = ComExampleFeedPost.Main
+
+export interface OutputSchema {
+  uri: string
+}
+
+export interface HandlerInput {
+  encoding: 'application/json'
+  body: InputSchema
+}
+
+export interface HandlerSuccess {
+  encoding: 'application/json'
+  body: OutputSchema
+  headers?: { [key: string]: string }
+}
+
+export interface HandlerError {
+  status: number
+  message?: string
+  error?: 'InvalidPost'
+}
+
+export type HandlerOutput = HandlerError | HandlerSuccess
+"
+`;
+
+exports[`genServerApi > generates the server API > /types/com/example/feed/getPosts.ts 1`] = `
+"/**
+ * GENERATED CODE - DO NOT MODIFY
+ */
+import { type ValidationResult, BlobRef } from '@atproto/lexicon'
+import { CID } from 'multiformats/cid'
+import { validate as _validate } from '../../../../lexicons.js'
+import {
+  type $Typed,
+  is$typed as _is$typed,
+  type OmitKey,
+} from '../../../../util.js'
+import type * as ComExampleFeedPost from './post.js'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'com.example.feed.getPosts'
+
+/** The query parameters. */
+export type QueryParams = {
+  /** The post URIs. */
+  uris: string[]
+  limit: number
+  sort?: 'new' | 'old' | (string & {})
+  cursor?: string
+}
+export type InputSchema = undefined
+
+export interface OutputSchema {
+  posts: ComExampleFeedPost.Entity[]
+  cursor?: string
+}
+
+export type HandlerInput = void
+
+export interface HandlerSuccess {
+  encoding: 'application/json'
+  body: OutputSchema
+  headers?: { [key: string]: string }
+}
+
+export interface HandlerError {
+  status: number
+  message?: string
+  error?: 'NotFound' | 'BlockedError'
+}
+
+export type HandlerOutput = HandlerError | HandlerSuccess
+"
+`;
+
+exports[`genServerApi > generates the server API > /types/com/example/feed/getThread.ts 1`] = `
+"/**
+ * GENERATED CODE - DO NOT MODIFY
+ */
+import { type ValidationResult, BlobRef } from '@atproto/lexicon'
+import { CID } from 'multiformats/cid'
+import { validate as _validate } from '../../../../lexicons.js'
+import {
+  type $Typed,
+  is$typed as _is$typed,
+  type OmitKey,
+} from '../../../../util.js'
+import type * as ComExampleDefs from '../defs.js'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'com.example.feed.getThread'
+
+export type QueryParams = {}
+export type InputSchema = undefined
+export type OutputSchema =
+  $Typed<ThreadView> | $Typed<ComExampleDefs.Other> | { $type: string }
+export type HandlerInput = void
+
+export interface HandlerSuccess {
+  encoding: 'application/json'
+  body: OutputSchema
+  headers?: { [key: string]: string }
+}
+
+export interface HandlerError {
+  status: number
+  message?: string
+}
+
+export type HandlerOutput = HandlerError | HandlerSuccess
+
+export interface ThreadView {
+  $type?: 'com.example.feed.getThread#threadView'
+  replies?: ($Typed<ThreadView> | { $type: string })[]
+}
+
+const hashThreadView = 'threadView'
+
+export function isThreadView<V>(v: V) {
+  return is$typed(v, id, hashThreadView)
+}
+
+export function validateThreadView<V>(v: V) {
+  return validate<ThreadView & V>(v, id, hashThreadView)
+}
+"
+`;
+
+exports[`genServerApi > generates the server API > /types/com/example/feed/ping.ts 1`] = `
+"/**
+ * GENERATED CODE - DO NOT MODIFY
+ */
+import { type ValidationResult, BlobRef } from '@atproto/lexicon'
+import { CID } from 'multiformats/cid'
+import { validate as _validate } from '../../../../lexicons.js'
+import {
+  type $Typed,
+  is$typed as _is$typed,
+  type OmitKey,
+} from '../../../../util.js'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'com.example.feed.ping'
+
+export type QueryParams = {}
+export type InputSchema = undefined
+export type HandlerInput = void
+
+export interface HandlerError {
+  status: number
+  message?: string
+}
+
+export type HandlerOutput = HandlerError | void
+"
+`;
+
+exports[`genServerApi > generates the server API > /types/com/example/feed/post.ts 1`] = `
+"/**
+ * GENERATED CODE - DO NOT MODIFY
+ */
+import { type ValidationResult, BlobRef } from '@atproto/lexicon'
+import { CID } from 'multiformats/cid'
+import { validate as _validate } from '../../../../lexicons.js'
+import {
+  type $Typed,
+  is$typed as _is$typed,
+  type OmitKey,
+} from '../../../../util.js'
+import type * as ComExampleDefs from '../defs.js'
+import type * as OrgSampleThing from '../../../org/sample/thing.js'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'com.example.feed.post'
+
+export interface Main {
+  $type: 'com.example.feed.post'
+  text: string
+  entities?: Entity[]
+  embed?:
+    | $Typed<ComExampleDefs.Other>
+    | $Typed<OrgSampleThing.Main>
+    | { $type: string }
+  createdAt: string
+  [k: string]: unknown
+}
+
+const hashMain = 'main'
+
+export function isMain<V>(v: V) {
+  return is$typed(v, id, hashMain)
+}
+
+export function validateMain<V>(v: V) {
+  return validate<Main & V>(v, id, hashMain, true)
+}
+
+export {
+  type Main as Record,
+  isMain as isRecord,
+  validateMain as validateRecord,
+}
+
+export interface Entity {
+  $type?: 'com.example.feed.post#entity'
+  index: number
+}
+
+const hashEntity = 'entity'
+
+export function isEntity<V>(v: V) {
+  return is$typed(v, id, hashEntity)
+}
+
+export function validateEntity<V>(v: V) {
+  return validate<Entity & V>(v, id, hashEntity)
+}
+"
+`;
+
+exports[`genServerApi > generates the server API > /types/com/example/feed/react.ts 1`] = `
+"/**
+ * GENERATED CODE - DO NOT MODIFY
+ */
+import { type ValidationResult, BlobRef } from '@atproto/lexicon'
+import { CID } from 'multiformats/cid'
+import { validate as _validate } from '../../../../lexicons.js'
+import {
+  type $Typed,
+  is$typed as _is$typed,
+  type OmitKey,
+} from '../../../../util.js'
+import type * as ComExampleDefs from '../defs.js'
+import type * as OrgSampleThing from '../../../org/sample/thing.js'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'com.example.feed.react'
+
+export type QueryParams = {}
+export type InputSchema =
+  $Typed<ComExampleDefs.Other> | $Typed<OrgSampleThing.Main>
+
+export interface HandlerInput {
+  encoding: 'application/json'
+  body: InputSchema
+}
+
+export interface HandlerError {
+  status: number
+  message?: string
+}
+
+export type HandlerOutput = HandlerError | void
+"
+`;
+
+exports[`genServerApi > generates the server API > /types/com/example/feed/thread/mute.ts 1`] = `
+"/**
+ * GENERATED CODE - DO NOT MODIFY
+ */
+import { type ValidationResult, BlobRef } from '@atproto/lexicon'
+import { CID } from 'multiformats/cid'
+import { validate as _validate } from '../../../../../lexicons.js'
+import {
+  type $Typed,
+  is$typed as _is$typed,
+  type OmitKey,
+} from '../../../../../util.js'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'com.example.feed.thread.mute'
+
+export type QueryParams = {}
+
+export interface InputSchema {
+  root: string
+}
+
+export interface HandlerInput {
+  encoding: 'application/json'
+  body: InputSchema
+}
+
+export interface HandlerError {
+  status: number
+  message?: string
+}
+
+export type HandlerOutput = HandlerError | void
+"
+`;
+
+exports[`genServerApi > generates the server API > /types/com/example/sync/listen.ts 1`] = `
+"/**
+ * GENERATED CODE - DO NOT MODIFY
+ */
+import { type ValidationResult, BlobRef } from '@atproto/lexicon'
+import { CID } from 'multiformats/cid'
+import { validate as _validate } from '../../../../lexicons.js'
+import {
+  type $Typed,
+  is$typed as _is$typed,
+  type OmitKey,
+} from '../../../../util.js'
+import { ErrorFrame } from '@atproto/xrpc-server'
+import { IncomingMessage } from 'node:http'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'com.example.sync.listen'
+
+export type QueryParams = {}
+export type OutputSchema = { $type: string }
+export type HandlerError = ErrorFrame<never>
+export type HandlerOutput = HandlerError | OutputSchema
+"
+`;
+
+exports[`genServerApi > generates the server API > /types/com/example/sync/subscribe.ts 1`] = `
+"/**
+ * GENERATED CODE - DO NOT MODIFY
+ */
+import { type ValidationResult, BlobRef } from '@atproto/lexicon'
+import { CID } from 'multiformats/cid'
+import { validate as _validate } from '../../../../lexicons.js'
+import {
+  type $Typed,
+  is$typed as _is$typed,
+  type OmitKey,
+} from '../../../../util.js'
+import { ErrorFrame } from '@atproto/xrpc-server'
+import { IncomingMessage } from 'node:http'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'com.example.sync.subscribe'
+
+export type QueryParams = {
+  cursor?: number
+}
+export type OutputSchema = $Typed<Commit> | $Typed<Info> | { $type: string }
+export type HandlerError = ErrorFrame<'FutureCursor'>
+export type HandlerOutput = HandlerError | OutputSchema
+
+export interface Commit {
+  $type?: 'com.example.sync.subscribe#commit'
+  seq: number
+}
+
+const hashCommit = 'commit'
+
+export function isCommit<V>(v: V) {
+  return is$typed(v, id, hashCommit)
+}
+
+export function validateCommit<V>(v: V) {
+  return validate<Commit & V>(v, id, hashCommit)
+}
+
+export interface Info {
+  $type?: 'com.example.sync.subscribe#info'
+  name?: 'Outdated' | (string & {})
+}
+
+const hashInfo = 'info'
+
+export function isInfo<V>(v: V) {
+  return is$typed(v, id, hashInfo)
+}
+
+export function validateInfo<V>(v: V) {
+  return validate<Info & V>(v, id, hashInfo)
+}
+"
+`;
+
+exports[`genServerApi > generates the server API > /types/com/example/token.ts 1`] = `
+"/**
+ * GENERATED CODE - DO NOT MODIFY
+ */
+import { type ValidationResult, BlobRef } from '@atproto/lexicon'
+import { CID } from 'multiformats/cid'
+import { validate as _validate } from '../../../lexicons.js'
+import {
+  type $Typed,
+  is$typed as _is$typed,
+  type OmitKey,
+} from '../../../util.js'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'com.example.token'
+/** A main token. */
+export const MAIN = \`\${id}#main\`
+"
+`;
+
+exports[`genServerApi > generates the server API > /types/org/sample/getThing.ts 1`] = `
+"/**
+ * GENERATED CODE - DO NOT MODIFY
+ */
+import { type ValidationResult, BlobRef } from '@atproto/lexicon'
+import { CID } from 'multiformats/cid'
+import { validate as _validate } from '../../../lexicons.js'
+import {
+  type $Typed,
+  is$typed as _is$typed,
+  type OmitKey,
+} from '../../../util.js'
+import type * as OrgSampleThing from './thing.js'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'org.sample.getThing'
+
+export type QueryParams = {}
+export type InputSchema = undefined
+export type OutputSchema = OrgSampleThing.Main
+export type HandlerInput = void
+
+export interface HandlerSuccess {
+  encoding: 'application/json'
+  body: OutputSchema
+  headers?: { [key: string]: string }
+}
+
+export interface HandlerError {
+  status: number
+  message?: string
+}
+
+export type HandlerOutput = HandlerError | HandlerSuccess
+"
+`;
+
+exports[`genServerApi > generates the server API > /types/org/sample/thing.ts 1`] = `
+"/**
+ * GENERATED CODE - DO NOT MODIFY
+ */
+import { type ValidationResult, BlobRef } from '@atproto/lexicon'
+import { CID } from 'multiformats/cid'
+import { validate as _validate } from '../../../lexicons.js'
+import {
+  type $Typed,
+  is$typed as _is$typed,
+  type OmitKey,
+} from '../../../util.js'
+import type * as ComExampleDefs from '../../com/example/defs.js'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'org.sample.thing'
+
+export interface Main {
+  $type?: 'org.sample.thing'
+  kitchenSink?: ComExampleDefs.KitchenSink
+}
+
+const hashMain = 'main'
+
+export function isMain<V>(v: V) {
+  return is$typed(v, id, hashMain)
+}
+
+export function validateMain<V>(v: V) {
+  return validate<Main & V>(v, id, hashMain)
+}
+"
+`;
+
+exports[`genServerApi > generates the server API > /util.ts 1`] = `
+"/**
+ * GENERATED CODE - DO NOT MODIFY
+ */
+
+import { type ValidationResult } from '@atproto/lexicon'
+
+export type OmitKey<T, K extends keyof T> = {
+  [K2 in keyof T as K2 extends K ? never : K2]: T[K2]
+}
+
+export type $Typed<V, T extends string = string> = V & { $type: T }
+export type Un$Typed<V extends { $type?: string }> = OmitKey<V, '$type'>
+
+export type $Type<Id extends string, Hash extends string> = Hash extends 'main'
+  ? Id
+  : \`\${Id}#\${Hash}\`
+
+function isObject<V>(v: V): v is V & object {
+  return v != null && typeof v === 'object'
+}
+
+function is$type<Id extends string, Hash extends string>(
+  $type: unknown,
+  id: Id,
+  hash: Hash,
+): $type is $Type<Id, Hash> {
+  return hash === 'main'
+    ? $type === id
+    : // $type === \`\${id}#\${hash}\`
+      typeof $type === 'string' &&
+        $type.length === id.length + 1 + hash.length &&
+        $type.charCodeAt(id.length) === 35 /* '#' */ &&
+        $type.startsWith(id) &&
+        $type.endsWith(hash)
+}
+
+export type $TypedObject<
+  V,
+  Id extends string,
+  Hash extends string,
+> = V extends {
+  $type: $Type<Id, Hash>
+}
+  ? V
+  : V extends { $type?: string }
+    ? V extends { $type?: infer T extends $Type<Id, Hash> }
+      ? V & { $type: T }
+      : never
+    : V & { $type: $Type<Id, Hash> }
+
+export function is$typed<V, Id extends string, Hash extends string>(
+  v: V,
+  id: Id,
+  hash: Hash,
+): v is $TypedObject<V, Id, Hash> {
+  return isObject(v) && '$type' in v && is$type(v.$type, id, hash)
+}
+
+export function maybe$typed<V, Id extends string, Hash extends string>(
+  v: V,
+  id: Id,
+  hash: Hash,
+): v is V & object & { $type?: $Type<Id, Hash> } {
+  return (
+    isObject(v) &&
+    ('$type' in v ? v.$type === undefined || is$type(v.$type, id, hash) : true)
+  )
+}
+
+export type Validator<R = unknown> = (v: unknown) => ValidationResult<R>
+export type ValidatorParam<V extends Validator> =
+  V extends Validator<infer R> ? R : never
+
+/**
+ * Utility function that allows to convert a "validate*" utility function into a
+ * type predicate.
+ */
+export function asPredicate<V extends Validator>(validate: V) {
+  return function <T>(v: T): v is T & ValidatorParam<V> {
+    return validate(v).success
+  }
+}
+"
+`;
+
+exports[`genServerApi > generates the server API > files 1`] = `
+[
+  "/types/com/example/defs.ts",
+  "/types/com/example/token.ts",
+  "/types/com/example/auth.ts",
+  "/types/com/example/feed/post.ts",
+  "/types/com/example/actor/profile.ts",
+  "/types/com/example/feed/getPosts.ts",
+  "/types/com/example/feed/getThread.ts",
+  "/types/com/example/feed/thread/mute.ts",
+  "/types/com/example/feed/createPost.ts",
+  "/types/com/example/feed/react.ts",
+  "/types/com/example/feed/ping.ts",
+  "/types/com/example/blob/upload.ts",
+  "/types/com/example/blob/download.ts",
+  "/types/com/example/blob/convert.ts",
+  "/types/com/example/sync/subscribe.ts",
+  "/types/com/example/sync/listen.ts",
+  "/types/org/sample/thing.ts",
+  "/types/org/sample/getThing.ts",
+  "/util.ts",
+  "/lexicons.ts",
+  "/index.ts",
+]
+`;

@@ -16,6 +16,7 @@ export default defineConfig({
       'packages/common',
       'packages/internal/*',
       'packages/lex/*',
+      'packages/lex-cli',
       'packages/lexicon-resolver',
       'packages/oauth/*',
       'packages/syntax',

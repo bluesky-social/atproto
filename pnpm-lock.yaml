@@ -1042,6 +1042,10 @@ importers:
       zod:
         specifier: ^3.23.8
         version: 3.24.2
+    devDependencies:
+      vitest:
+        specifier: ^5.1.1
+        version: 5.1.1(@opentelemetry/api@1.10.0)(@types/node@22.20.4)(@vitest/coverage-v8@5.1.1)(vite@8.3.8(@types/node@22.20.4)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.1))
 
   packages/lex/lex:
     dependencies:

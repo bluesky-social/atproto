@@ -41,7 +41,11 @@
     "yesno": "^0.4.0",
     "zod": "^3.23.8"
   },
+  "devDependencies": {
+    "vitest": "^5.1.1"
+  },
   "scripts": {
+    "test": "vitest run",
     "build": "tsc --build tsconfig.build.json"
   }
 }
