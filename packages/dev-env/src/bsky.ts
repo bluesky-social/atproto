@@ -7,6 +7,7 @@ import { Secp256k1Keypair } from '@atproto/crypto'
 import { Client } from '@atproto/lex-client'
 import type { UriString } from '@atproto/lex-schema'
 import type { DidString } from '@atproto/syntax'
+import { withCleanupOnError } from './cleanup-on-error.js'
 import { ADMIN_PASSWORD, EXAMPLE_LABELER } from './const.js'
 import getPort from './get-port.js'
 import type { BskyConfig } from './types.js'
@@ -54,102 +55,110 @@ export class TestBsky {
       return x
     })
 
-    // shared across server, ingester, and indexer in order to share pool, avoid too many pg connections.
-    const db = new bsky.Database({
-      url: cfg.dbPostgresUrl,
-      schema: cfg.dbPostgresSchema,
-      poolSize: 10,
+    return withCleanupOnError(async (onError) => {
+      // shared across server, ingester, and indexer in order to share pool, avoid too many pg connections.
+      const db = new bsky.Database({
+        url: cfg.dbPostgresUrl,
+        schema: cfg.dbPostgresSchema,
+        poolSize: 10,
+      })
+      onError(() => db.close())
+
+      const dataplanePort = await getPort()
+      const dataplane = await bsky.DataPlaneServer.create(
+        db,
+        dataplanePort,
+        cfg.plcUrl,
+        // Resolves against an in-process PLC on localhost.
+        globalThis.fetch,
+      )
+      onError(() => dataplane.destroy())
+
+      const config = new bsky.ServerConfig({
+        version: 'unknown',
+        port,
+        didPlcUrl: cfg.plcUrl,
+        publicUrl: 'https://bsky.public.url',
+        serverDid,
+        alternateAudienceDids: [],
+        dataplaneUrls: [`http://localhost:${dataplanePort}`],
+        dataplaneHttpVersion: '1.1',
+        bsyncHttpVersion: '1.1',
+        bsyncApiKey: 'bsync-api-key',
+        modServiceDid: cfg.modServiceDid ?? 'did:example:invalidMod',
+        labelsFromIssuerDids: [EXAMPLE_LABELER],
+        bigThreadUris: new Set(),
+        maxThreadParents: cfg.maxThreadParents ?? 50,
+        disableSsrfProtection: true,
+        searchTagsHide: new Set(),
+        searchTagsHideAll: new Set(),
+        threadTagsBumpDown: new Set(),
+        threadTagsHide: new Set(),
+        visibilityTagHide: '',
+        visibilityTagRankPrefix: '',
+        debugFieldAllowedDids: new Set(),
+        draftsLimit: 500,
+        feedGenSkeletonTimeout: 5 * SECOND,
+        ...cfg,
+        notificationsV2MinRawLimit: cfg.notificationsV2MinRawLimit ?? 300,
+        notificationsV2MaxRawItems: cfg.notificationsV2MaxRawItems ?? 3000,
+        notificationsV2MaxFetches: cfg.notificationsV2MaxFetches ?? 3,
+        notificationsV2MaxGroupItemsWithRelatedViews:
+          cfg.notificationsV2MaxGroupItemsWithRelatedViews ?? 10,
+        bskyFeedgenDids: cfg.bskyFeedgenDids ?? new Set(),
+        adminPasswords: [ADMIN_PASSWORD],
+        etcdHosts: [],
+      })
+
+      // Separate migration db in case migration changes some connection state that we need in the tests, e.g. "alter database ... set ..."
+      const migrationDb = new bsky.Database({
+        url: cfg.dbPostgresUrl,
+        schema: cfg.dbPostgresSchema,
+      })
+      try {
+        if (cfg.migration) {
+          await migrationDb.migrateToOrThrow(cfg.migration)
+        } else {
+          await migrationDb.migrateToLatestOrThrow()
+        }
+      } finally {
+        await migrationDb.close()
+      }
+
+      // api server
+      const server = bsky.BskyAppView.create({
+        config,
+        signingKey: serviceKeypair,
+      })
+      onError(() => server.destroy())
+
+      const bsyncSub = new bsky.BsyncSubscription({
+        config,
+        db,
+      })
+
+      const sub = new bsky.RepoSubscription({
+        service: cfg.repoProvider,
+        db,
+        idResolver: dataplane.idResolver,
+      })
+
+      await server.start()
+
+      bsyncSub.start()
+      void sub.start()
+
+      return new TestBsky(
+        url,
+        port,
+        db,
+        server,
+        dataplane,
+        bsyncSub,
+        sub,
+        serverDid,
+      )
     })
-
-    const dataplanePort = await getPort()
-    const dataplane = await bsky.DataPlaneServer.create(
-      db,
-      dataplanePort,
-      cfg.plcUrl,
-      // Resolves against an in-process PLC on localhost.
-      globalThis.fetch,
-    )
-
-    const config = new bsky.ServerConfig({
-      version: 'unknown',
-      port,
-      didPlcUrl: cfg.plcUrl,
-      publicUrl: 'https://bsky.public.url',
-      serverDid,
-      alternateAudienceDids: [],
-      dataplaneUrls: [`http://localhost:${dataplanePort}`],
-      dataplaneHttpVersion: '1.1',
-      bsyncHttpVersion: '1.1',
-      bsyncApiKey: 'bsync-api-key',
-      modServiceDid: cfg.modServiceDid ?? 'did:example:invalidMod',
-      labelsFromIssuerDids: [EXAMPLE_LABELER],
-      bigThreadUris: new Set(),
-      maxThreadParents: cfg.maxThreadParents ?? 50,
-      disableSsrfProtection: true,
-      searchTagsHide: new Set(),
-      searchTagsHideAll: new Set(),
-      threadTagsBumpDown: new Set(),
-      threadTagsHide: new Set(),
-      visibilityTagHide: '',
-      visibilityTagRankPrefix: '',
-      debugFieldAllowedDids: new Set(),
-      draftsLimit: 500,
-      feedGenSkeletonTimeout: 5 * SECOND,
-      ...cfg,
-      notificationsV2MinRawLimit: cfg.notificationsV2MinRawLimit ?? 300,
-      notificationsV2MaxRawItems: cfg.notificationsV2MaxRawItems ?? 3000,
-      notificationsV2MaxFetches: cfg.notificationsV2MaxFetches ?? 3,
-      notificationsV2MaxGroupItemsWithRelatedViews:
-        cfg.notificationsV2MaxGroupItemsWithRelatedViews ?? 10,
-      bskyFeedgenDids: cfg.bskyFeedgenDids ?? new Set(),
-      adminPasswords: [ADMIN_PASSWORD],
-      etcdHosts: [],
-    })
-
-    // Separate migration db in case migration changes some connection state that we need in the tests, e.g. "alter database ... set ..."
-    const migrationDb = new bsky.Database({
-      url: cfg.dbPostgresUrl,
-      schema: cfg.dbPostgresSchema,
-    })
-    if (cfg.migration) {
-      await migrationDb.migrateToOrThrow(cfg.migration)
-    } else {
-      await migrationDb.migrateToLatestOrThrow()
-    }
-    await migrationDb.close()
-
-    // api server
-    const server = bsky.BskyAppView.create({
-      config,
-      signingKey: serviceKeypair,
-    })
-
-    const bsyncSub = new bsky.BsyncSubscription({
-      config,
-      db,
-    })
-
-    const sub = new bsky.RepoSubscription({
-      service: cfg.repoProvider,
-      db,
-      idResolver: dataplane.idResolver,
-    })
-
-    await server.start()
-
-    bsyncSub.start()
-    void sub.start()
-
-    return new TestBsky(
-      url,
-      port,
-      db,
-      server,
-      dataplane,
-      bsyncSub,
-      sub,
-      serverDid,
-    )
   }
 
   get ctx(): bsky.AppContext {

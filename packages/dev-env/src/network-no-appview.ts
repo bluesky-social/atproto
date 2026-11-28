@@ -1,4 +1,5 @@
 import type { SkeletonHandler } from '@atproto/pds'
+import { withCleanupOnError } from './cleanup-on-error.js'
 import { TestFeedGen } from './feed-gen.js'
 import { TestPds } from './pds.js'
 import { TestPlc } from './plc.js'
@@ -16,15 +17,19 @@ export class TestNetworkNoAppView implements AsyncDisposable {
   static async create(
     params: Partial<TestServerParams> = {},
   ): Promise<TestNetworkNoAppView> {
-    const plc = await TestPlc.create(params.plc ?? {})
-    const pds = await TestPds.create({
-      didPlcUrl: plc.url,
-      ...params.pds,
+    return withCleanupOnError(async (onError) => {
+      const plc = await TestPlc.create(params.plc ?? {})
+      onError(() => plc.close())
+      const pds = await TestPds.create({
+        didPlcUrl: plc.url,
+        ...params.pds,
+      })
+      onError(() => pds.close())
+
+      mockNetworkUtilities(pds)
+
+      return new TestNetworkNoAppView(plc, pds)
     })
-
-    mockNetworkUtilities(pds)
-
-    return new TestNetworkNoAppView(plc, pds)
   }
 
   async createFeedGen(

@@ -13,6 +13,7 @@ import {
   PDS,
   createSecretKeyObject,
 } from '@atproto/pds'
+import { withCleanupOnError } from './cleanup-on-error.js'
 import { ADMIN_PASSWORD, EXAMPLE_LABELER, JWT_SECRET } from './const.js'
 import getPort from './get-port.js'
 import type { PdsConfig } from './types.js'
@@ -76,7 +77,10 @@ export class TestPds {
       overrides,
     )
 
-    await server.start()
+    await withCleanupOnError(async (onError) => {
+      onError(() => server.destroy())
+      await server.start()
+    })
 
     return new TestPds(url, port, server)
   }
