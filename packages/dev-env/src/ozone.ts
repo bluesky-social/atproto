@@ -6,6 +6,7 @@ import { Client } from '@atproto/lex-client'
 import type { DidString } from '@atproto/lex-schema'
 import * as ozone from '@atproto/ozone'
 import { createServiceJwt } from '@atproto/xrpc-server'
+import { withCleanupOnError } from './cleanup-on-error.js'
 import { ADMIN_PASSWORD, EXAMPLE_LABELER } from './const.js'
 import getPort from './get-port.js'
 import { ModeratorClient } from './moderator-client.js'
@@ -77,29 +78,36 @@ export class TestOzone {
       schema: config.dbPostgresSchema,
       url: config.dbPostgresUrl,
     })
-    if (config.migration) {
-      await migrationDb.migrateToOrThrow(config.migration)
-    } else {
-      await migrationDb.migrateToLatestOrThrow()
+    try {
+      if (config.migration) {
+        await migrationDb.migrateToOrThrow(config.migration)
+      } else {
+        await migrationDb.migrateToLatestOrThrow()
+      }
+    } finally {
+      await migrationDb.close()
     }
-    await migrationDb.close()
 
     const cfg = ozone.envToCfg(env)
     const secrets = ozone.envToSecrets(env)
 
-    // api server
-    const server = await ozone.OzoneService.create(cfg, secrets, {
-      imgInvalidator: config.imgInvalidator,
-      videoInvalidator: config.videoInvalidator,
+    return withCleanupOnError(async (onError) => {
+      // api server
+      const server = await ozone.OzoneService.create(cfg, secrets, {
+        imgInvalidator: config.imgInvalidator,
+        videoInvalidator: config.videoInvalidator,
+      })
+      onError(() => server.destroy())
+      await server.start()
+
+      const daemon = await ozone.OzoneDaemon.create(cfg, secrets)
+      onError(() => daemon.destroy())
+      await daemon.start()
+      // don't do event reversal in dev-env
+      await daemon.ctx.eventReverser.destroy()
+
+      return new TestOzone(url, port, server, daemon, admin, moderator, triage)
     })
-    await server.start()
-
-    const daemon = await ozone.OzoneDaemon.create(cfg, secrets)
-    await daemon.start()
-    // don't do event reversal in dev-env
-    await daemon.ctx.eventReverser.destroy()
-
-    return new TestOzone(url, port, server, daemon, admin, moderator, triage)
   }
 
   get ctx(): ozone.AppContext {
