@@ -22,10 +22,16 @@ export class RepoSubscription {
     service,
     db,
     idResolver,
+    backgroundConcurrency = Number.POSITIVE_INFINITY,
   }: {
     service: string
     db: Database
     idResolver: IdResolver
+    /**
+     * How many of the indexer's background tasks (the count recounts queued
+     * after each commit) run at once. Unlimited by default.
+     */
+    backgroundConcurrency?: number
   }) {
     this.service = service
     this.idResolver = idResolver
@@ -33,7 +39,7 @@ export class RepoSubscription {
       // @TODO This has historically been using the default concurrency
       // (Infinity) but we may want to limit this in the future to avoid
       // overloading the database with indexing tasks.
-      concurrency: Number.POSITIVE_INFINITY,
+      concurrency: backgroundConcurrency,
     })
     this.indexingSvc = new IndexingService(db, idResolver, this.background)
   }
