@@ -13,9 +13,9 @@ import {
   PDS,
   createSecretKeyObject,
 } from '@atproto/pds'
-import { withCleanupOnError } from './cleanup-on-error.js'
 import { ADMIN_PASSWORD, EXAMPLE_LABELER, JWT_SECRET } from './const.js'
 import getPort from './get-port.js'
+import { SetupStack } from './setup-stack.js'
 import type { PdsConfig } from './types.js'
 
 // Re-export types that are part of the public API
@@ -37,6 +37,8 @@ export class TestPds {
 
     const port = env.port || (await getPort())
     const url: UriString = `http://localhost:${port}`
+
+    await using stack = new SetupStack()
 
     const server = await PDS.fromEnv(
       {
@@ -76,12 +78,11 @@ export class TestPds {
       },
       overrides,
     )
+    stack.use(server)
 
-    await withCleanupOnError(async (onError) => {
-      onError(() => server.destroy())
-      await server.start()
-    })
+    await server.start()
 
+    stack.move()
     return new TestPds(url, port, server)
   }
 

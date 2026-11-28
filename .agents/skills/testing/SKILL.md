@@ -50,7 +50,7 @@ Almost every integration test in `pds`, `bsky`, `ozone`, and `lexicon-resolver` 
 - `network.getSeedClient()` plus a seed exported from `@atproto/dev-env` (`basicSeed`, `usersSeed`, `quotesSeed`, …) populates accounts and records.
 - `await network.processAll()` flushes the firehose so the AppView has caught up before you assert.
 
-Tear down with `afterAll(async () => network?.close())` — the prevailing pattern, and the only option for `TestNetworkNoAppView`, which exposes `close()` but no `Symbol.asyncDispose`. Only `TestNetwork` implements it.
+Tear down with `afterAll(async () => network?.close())` — the prevailing pattern. Every fixture (both networks, `TestPds`, `TestPlc`, `TestBsky`, `TestBsync`, `TestOzone`, `TestFeedGen`) also implements `Symbol.asyncDispose`, so `await using` works when the fixture lives in a single scope.
 
 A test that resolves identities (handles, `did:plc`, `did:web`) against localhost must construct its resolver with `fetch: globalThis.fetch` — `@atproto/identity`'s default fetch is SSRF-protected and refuses localhost/private-IP targets silently.
 

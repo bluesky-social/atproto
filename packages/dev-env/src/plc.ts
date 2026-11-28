@@ -30,4 +30,8 @@ export class TestPlc {
   async close() {
     await this.server.destroy()
   }
+
+  async [Symbol.asyncDispose]() {
+    await this.close()
+  }
 }

@@ -8,20 +8,25 @@ import { TestPlc } from './plc.js'
 import { LexiconAuthorityProfile } from './service-profile-lexicon.js'
 import { OzoneServiceProfile } from './service-profile-ozone.js'
 
+// @NOTE Disposing a fixture closes it, so both go through the same mock.
+function fixture<T extends object>(members: T) {
+  const close = vi.fn(async () => {})
+  return { ...members, close, [Symbol.asyncDispose]: close }
+}
+
 // @NOTE Every service TestNetwork.create starts is replaced by a fake that only
 // has the members create() touches, so these tests need no postgres or redis.
 function stubServices() {
   const idResolver = () => ({ did: {}, handle: {} })
   const services = {
-    plc: { url: 'http://localhost:1', close: vi.fn() },
-    thirdPartyPds: { processAll: vi.fn(), close: vi.fn() },
-    bsync: {
+    plc: fixture({ url: 'http://localhost:1' }),
+    thirdPartyPds: fixture({ processAll: vi.fn() }),
+    bsync: fixture({
       url: 'http://localhost:2',
       ctx: {},
       getStreamHeads: vi.fn(async () => ({})),
-      close: vi.fn(),
-    },
-    bsky: {
+    }),
+    bsky: fixture({
       url: 'http://localhost:3',
       ctx: {
         cfg: { serverDid: 'did:example:bsky' },
@@ -31,24 +36,21 @@ function stubServices() {
       dataplane: { idResolver: idResolver() },
       sub: { processAll: vi.fn() },
       bsyncSub: { processAll: vi.fn() },
-      close: vi.fn(),
-    },
-    pds: {
+    }),
+    pds: fixture({
       url: 'http://localhost:4',
       ctx: {
         cfg: { service: { did: 'did:example:pds' } },
         idResolver: idResolver(),
       },
       processAll: vi.fn(),
-      close: vi.fn(),
-    },
-    ozone: {
+    }),
+    ozone: fixture({
       daemon: { ctx: { cfg: {} } },
       addAdminDid: vi.fn(),
       createPolicies: vi.fn(),
       processAll: vi.fn(),
-      close: vi.fn(),
-    },
+    }),
   }
   const ozoneProfile = {
     did: 'did:example:ozone',

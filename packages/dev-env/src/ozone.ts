@@ -6,10 +6,10 @@ import { Client } from '@atproto/lex-client'
 import type { DidString } from '@atproto/lex-schema'
 import * as ozone from '@atproto/ozone'
 import { createServiceJwt } from '@atproto/xrpc-server'
-import { withCleanupOnError } from './cleanup-on-error.js'
 import { ADMIN_PASSWORD, EXAMPLE_LABELER } from './const.js'
 import getPort from './get-port.js'
 import { ModeratorClient } from './moderator-client.js'
+import { SetupStack } from './setup-stack.js'
 import type { DidAndKey, OzoneConfig } from './types.js'
 import { createDidAndKey } from './util.js'
 
@@ -91,23 +91,24 @@ export class TestOzone {
     const cfg = ozone.envToCfg(env)
     const secrets = ozone.envToSecrets(env)
 
-    return withCleanupOnError(async (onError) => {
-      // api server
-      const server = await ozone.OzoneService.create(cfg, secrets, {
-        imgInvalidator: config.imgInvalidator,
-        videoInvalidator: config.videoInvalidator,
-      })
-      onError(() => server.destroy())
-      await server.start()
+    await using stack = new SetupStack()
 
-      const daemon = await ozone.OzoneDaemon.create(cfg, secrets)
-      onError(() => daemon.destroy())
-      await daemon.start()
-      // don't do event reversal in dev-env
-      await daemon.ctx.eventReverser.destroy()
-
-      return new TestOzone(url, port, server, daemon, admin, moderator, triage)
+    // api server
+    const server = await ozone.OzoneService.create(cfg, secrets, {
+      imgInvalidator: config.imgInvalidator,
+      videoInvalidator: config.videoInvalidator,
     })
+    stack.defer(() => server.destroy())
+    await server.start()
+
+    const daemon = await ozone.OzoneDaemon.create(cfg, secrets)
+    stack.defer(() => daemon.destroy())
+    await daemon.start()
+    // don't do event reversal in dev-env
+    await daemon.ctx.eventReverser.destroy()
+
+    stack.move()
+    return new TestOzone(url, port, server, daemon, admin, moderator, triage)
   }
 
   get ctx(): ozone.AppContext {
