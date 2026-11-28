@@ -883,6 +883,7 @@ exports[`indexing > indexes posts. 2`] = `
       },
       "bookmarkCount": 0,
       "cid": "cids(0)",
+      "editedAt": "1970-01-01T00:00:00.000Z",
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "labels": [],
       "likeCount": 0,
@@ -899,12 +900,12 @@ exports[`indexing > indexes posts. 2`] = `
               },
             ],
             "index": {
-              "byteEnd": 11,
+              "byteEnd": 9,
               "byteStart": 0,
             },
           },
         ],
-        "text": "@carol.test how are you?",
+        "text": "@bob.test how are you now?",
       },
       "replyCount": 0,
       "repostCount": 0,
@@ -939,7 +940,7 @@ exports[`indexing > indexes posts. 3`] = `
   "updateNotifications": [
     {
       "author": "user(1)",
-      "did": "user(2)",
+      "did": "user(0)",
       "id": 0,
       "reason": "mention",
       "reasonSubject": null,

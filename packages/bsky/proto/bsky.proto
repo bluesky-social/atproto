@@ -18,6 +18,7 @@ message Record {
   google.protobuf.Timestamp sorted_at = 7;
   string takedown_ref = 8;
   repeated string tags = 9;
+  google.protobuf.Timestamp edited_at = 10;
 }
 
 message GetBlockRecordsRequest {
@@ -102,6 +103,15 @@ message GetPostRecordsResponse {
   // Complete canonical OP threads for roots represented by the requested
   // posts. AppView derives each post's index and count from these chains.
   repeated OpThread op_threads = 3;
+}
+
+message GetPostVersionsRequest {
+  string uri = 1;
+}
+
+message GetPostVersionsResponse {
+  // Accepted versions, newest first. Empty means the post is missing or deleted.
+  repeated Record versions = 1;
 }
 
 message OpThread {
@@ -413,6 +423,23 @@ message GetInteractionCountsResponse {
   repeated int32 replies = 3;
   repeated int32 quotes = 4;
   repeated int32 bookmarks = 5;
+}
+
+message PostVersionCounts {
+  RecordRef ref = 1;
+  int32 likes = 2;
+  int32 reposts = 3;
+  int32 replies = 4;
+  int32 quotes = 5;
+  int32 bookmarks = 6;
+}
+
+message GetPostVersionCountsRequest {
+  repeated RecordRef refs = 1;
+}
+
+message GetPostVersionCountsResponse {
+  repeated PostVersionCounts counts = 1;
 }
 
 message GetCountsForUsersRequest {
@@ -1857,6 +1884,7 @@ service Service {
   rpc GetListItemRecords(GetListItemRecordsRequest) returns (GetListItemRecordsResponse);
   rpc GetListRecords(GetListRecordsRequest) returns (GetListRecordsResponse);
   rpc GetPostRecords(GetPostRecordsRequest) returns (GetPostRecordsResponse);
+  rpc GetPostVersions(GetPostVersionsRequest) returns (GetPostVersionsResponse);
   rpc GetProfileRecords(GetProfileRecordsRequest) returns (GetProfileRecordsResponse);
   rpc GetActorChatDeclarationRecords(GetActorChatDeclarationRecordsRequest) returns (GetActorChatDeclarationRecordsResponse);
   rpc GetNotificationDeclarationRecords(GetNotificationDeclarationRecordsRequest) returns (GetNotificationDeclarationRecordsResponse);
@@ -1904,6 +1932,7 @@ service Service {
 
   // Interaction Counts
   rpc GetInteractionCounts(GetInteractionCountsRequest) returns (GetInteractionCountsResponse);
+  rpc GetPostVersionCounts(GetPostVersionCountsRequest) returns (GetPostVersionCountsResponse);
   rpc GetCountsForUsers(GetCountsForUsersRequest) returns (GetCountsForUsersResponse);
   rpc GetStarterPackCounts(GetStarterPackCountsRequest) returns (GetStarterPackCountsResponse);
   rpc GetListCounts(GetListCountsRequest) returns (GetListCountsResponse);

@@ -78,6 +78,7 @@
     "app.bsky.feed.getLikes",
     "app.bsky.feed.getListFeed",
     "app.bsky.feed.getPostThread",
+    "app.bsky.feed.getPostVersions",
     "app.bsky.feed.getPosts",
     "app.bsky.feed.getQuotes",
     "app.bsky.feed.getRepostedBy",
@@ -633,8 +634,8 @@
       "cid": "bafyreicujlvqddnkymznsffom2b767rjlhqqsmda22425nxmgykfumfofq"
     },
     "app.bsky.embed.record": {
-      "uri": "https://raw.githubusercontent.com/bluesky-social/bsky/refs/heads/main/lexicons/app/bsky/embed/record.json",
-      "cid": "bafyreig7kqu32lllooaykppcwsrbvyrp2pkuufmjalduv6b3gvf5j26kai"
+      "uri": "https://raw.githubusercontent.com/bluesky-social/bsky/33f9bcb4b43f6905357611e6270ce61605cc4772/lexicons/app/bsky/embed/record.json",
+      "cid": "bafyreifz7sor4mllq4qr6jurueccc4gnl7hzdyygo3zyv2d4pvxaeifkp4"
     },
     "app.bsky.embed.recordWithMedia": {
       "uri": "https://raw.githubusercontent.com/bluesky-social/bsky/refs/heads/main/lexicons/app/bsky/embed/recordWithMedia.json",
@@ -646,7 +647,7 @@
     },
     "app.bsky.feed.defs": {
       "uri": "https://raw.githubusercontent.com/bluesky-social/bsky/refs/heads/main/lexicons/app/bsky/feed/defs.json",
-      "cid": "bafyreihkshyata32ry6z6akz6upbvcogvomocptg5vdigrwswgugt2g7iy"
+      "cid": "bafyreiffvegm3vgicpnshatr6545nqbzhrf26kz2jcemmpfiqtsc6ptnk4"
     },
     "app.bsky.feed.describeFeedGenerator": {
       "uri": "https://raw.githubusercontent.com/bluesky-social/bsky/refs/heads/main/lexicons/app/bsky/feed/describeFeedGenerator.json",
@@ -695,6 +696,10 @@
     "app.bsky.feed.getPostThread": {
       "uri": "https://raw.githubusercontent.com/bluesky-social/bsky/refs/heads/main/lexicons/app/bsky/feed/getPostThread.json",
       "cid": "bafyreifrbtqzngmes4twwgtfqad4vcolcof3o3oqdmsinhp6wwbt5l23lu"
+    },
+    "app.bsky.feed.getPostVersions": {
+      "uri": "https://raw.githubusercontent.com/bluesky-social/bsky/33f9bcb4b43f6905357611e6270ce61605cc4772/lexicons/app/bsky/feed/getPostVersions.json",
+      "cid": "bafyreielk5efjlctfpvmlwuoiawpr2nq35iv5bdlmvxulphmcqo7jgv5ym"
     },
     "app.bsky.feed.getPosts": {
       "uri": "https://raw.githubusercontent.com/bluesky-social/bsky/refs/heads/main/lexicons/app/bsky/feed/getPosts.json",

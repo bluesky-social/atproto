@@ -98,14 +98,14 @@ describe('indexing', () => {
       rkey: uri.rkey,
       record: {
         $type: ids.AppBskyFeedPost,
-        text: '@carol.test how are you?',
+        text: '@bob.test how are you now?',
         facets: [
           {
-            index: { byteStart: 0, byteEnd: 11 },
+            index: { byteStart: 0, byteEnd: 9 },
             features: [
               {
                 $type: `${ids.AppBskyRichtextFacet}#mention` as const,
-                did: sc.dids.carol,
+                did: sc.dids.bob,
               },
             ],
           },

@@ -73,7 +73,12 @@
             ]
           }
         },
-        "indexedAt": { "type": "string", "format": "datetime" }
+        "indexedAt": { "type": "string", "format": "datetime" },
+        "editedAt": {
+          "type": "string",
+          "format": "datetime",
+          "description": "Present if the record has been edited. Timestamp when the current version of the record was indexed. indexedAt is unchanged by edits."
+        }
       }
     },
     "viewNotFound": {

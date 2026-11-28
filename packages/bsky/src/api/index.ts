@@ -33,6 +33,7 @@ import getFeedGenerators from './app/bsky/feed/getFeedGenerators.js'
 import getLikes from './app/bsky/feed/getLikes.js'
 import getListFeed from './app/bsky/feed/getListFeed.js'
 import getPostThread from './app/bsky/feed/getPostThread.js'
+import getPostVersions from './app/bsky/feed/getPostVersions.js'
 import getPosts from './app/bsky/feed/getPosts.js'
 import getQuotes from './app/bsky/feed/getQuotes.js'
 import getRepostedBy from './app/bsky/feed/getRepostedBy.js'
@@ -153,6 +154,7 @@ export default function (server: Server, ctx: AppContext) {
   getPostThread(server, ctx)
   getPostThreadOtherV2(server, ctx)
   getPostThreadV2(server, ctx)
+  getPostVersions(server, ctx)
   getPosts(server, ctx)
   searchPosts(server, ctx)
   searchPostsV2(server, ctx)
