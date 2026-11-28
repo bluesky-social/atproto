@@ -90,7 +90,7 @@ pnpm test path/to/file.test.ts   # single file
 
 Packages whose tests need docker infra wrap the runner in a dev-infra script — `bsky`, `pds`, `ozone`, and `sync` use [with-test-redis-and-db.sh](../../../packages/dev-infra/with-test-redis-and-db.sh); `bsync` uses `with-test-db.sh`. Always go through `pnpm test`; invoking `vitest` or `jest` directly skips the script, so postgres and redis aren't running and the suite dies on connection errors. `pds` also offers `pnpm test:sqlite` for a faster loop that skips the docker infra.
 
-From the repo root, `pnpm test` runs every package's suite with infra up, and `pnpm test:unit` runs only the projects registered in [vitest.config.ts](../../../vitest.config.ts). That list is not the full set of vitest packages: `bsky` is commented out because it needs infra, and `lexicon-resolver` is simply absent. Run either from its own directory.
+From the repo root, `pnpm test` runs every package's suite with infra up. CI splits the same suites into two disjoint sets: `pnpm test:unit` runs the projects registered in [vitest.config.ts](../../../vitest.config.ts) without infra, and `pnpm test:integration` runs the dev-infra packages named in its `--filter` list in the root `package.json`, unsorted and concurrently. A new tested package must join one of the two, or CI never runs it.
 
 ## Logs
 
