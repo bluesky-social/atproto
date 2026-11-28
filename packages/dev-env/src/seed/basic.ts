@@ -22,20 +22,10 @@ export default async function basicSeed(
     createdAt: new Date().toISOString().replace('Z', '+00:00'), // iso timezone format
   })
 
-  // @NOTE bsky's indexer can lose a count update (likes, reposts or replies of
-  // a post, followers of an actor). After each commit it recounts in a
-  // background task, with one `INSERT … VALUES ((SELECT count(*) …)) ON
-  // CONFLICT DO UPDATE` whose count is read from the statement's start
-  // snapshot. When two writes to the same count are indexed concurrently, as
-  // commits from different DIDs are, the recount that missed the other write
-  // can finish last (e.g. replyCount 1 with two replies). Until the indexer
-  // serializes these recounts (`updateAggregates` in its indexing plugins),
-  // the `processAll()` calls tagged "counts" index such writes one at a time.
   await sc.follow(alice, bob)
   await sc.follow(alice, carol)
   await sc.follow(alice, dan)
   await sc.follow(carol, alice)
-  await sc.network.processAll() // counts: followers
   await sc.follow(bob, alice)
   await sc.follow(bob, carol, createdAtMicroseconds())
   await sc.follow(dan, bob, createdAtTimezone())
@@ -108,13 +98,10 @@ export default async function basicSeed(
   )
   await sc.like(bob, sc.posts[alice][1].ref)
   await sc.like(bob, sc.posts[alice][2].ref)
-  await sc.network.processAll() // counts: likes
   await sc.like(carol, sc.posts[alice][1].ref)
   await sc.like(carol, sc.posts[alice][2].ref)
-  await sc.network.processAll() // counts: likes
   await sc.like(dan, sc.posts[alice][1].ref)
   await sc.like(alice, sc.posts[carol][0].ref, createdAtMicroseconds())
-  await sc.network.processAll() // counts: likes
   await sc.like(bob, sc.posts[carol][0].ref, createdAtTimezone())
 
   const replyImg = await sc.uploadFile(
@@ -132,7 +119,6 @@ export default async function basicSeed(
     undefined,
     [replyImg],
   )
-  await sc.network.processAll() // counts: replies
   await sc.reply(
     carol,
     sc.posts[alice][1].ref,

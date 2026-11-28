@@ -133,6 +133,16 @@ export class TestBsky {
       service: cfg.repoProvider,
       db,
       idResolver: dataplane.idResolver,
+      // @NOTE After each commit the indexer recounts the counts it touched
+      // (likes, reposts, replies, posts, follows) in a background task, with
+      // one `INSERT … VALUES ((SELECT count(*) …)) ON CONFLICT DO UPDATE` whose
+      // count is read from the statement's start snapshot. Two concurrent
+      // recounts of the same row, for writes from different DIDs or the same
+      // one, can leave the stale count (e.g. replyCount 1 with two replies).
+      // Each recount is queued after its commit, so running them one at a time
+      // makes the last recount of a row see every write, in every seed and
+      // test. The real fix belongs in the indexer (`updateAggregates`).
+      backgroundConcurrency: 1,
     })
 
     await server.start()
