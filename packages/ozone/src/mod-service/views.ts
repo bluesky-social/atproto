@@ -392,6 +392,12 @@ export class ModerationViews {
     })
     if (res.success) return res.body
     if (res.error !== 'RecordNotFound') return null
+
+    // An edited post no longer has its earlier CIDs, in the AppView or in the
+    // repo, so look a reported version up in the post's version history.
+    const version = await this.fetchPostVersion(params)
+    if (version) return version
+
     // @NOTE we only support dids (lexicon defines AtIdentifierString)
     if (!isDidString(params.repo)) return null
 
@@ -411,6 +417,26 @@ export class ModerationViews {
     } catch (error) {
       return null
     }
+  }
+
+  async fetchPostVersion(
+    params: com.atproto.repo.getRecord.$Params,
+  ): Promise<com.atproto.repo.getRecord.$OutputBody | null> {
+    const { repo, collection, rkey, cid } = params
+    if (!cid || collection !== app.bsky.feed.post.$type) return null
+    const uri = AtUri.make(repo, collection, rkey).toString()
+    const res = await this.appviewClient.xrpcSafe(
+      app.bsky.feed.getPostVersions,
+      {
+        params: { uri },
+        ...(await this.appviewAuth(app.bsky.feed.getPostVersions.$lxm)),
+      },
+    )
+    // Also covers AppViews that don't implement post versions yet.
+    if (!res.success) return null
+    const version = res.body.versions.find((v) => v.cid === cid)
+    if (!version) return null
+    return { uri: version.uri, cid: version.cid, value: version.record }
   }
 
   async fetchRecords(
