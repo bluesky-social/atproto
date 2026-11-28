@@ -72,13 +72,32 @@ export const mockMailer = (pds: TestPds) => {
   }
 }
 
-const usedLockIds = new Set()
-export const uniqueLockId = () => {
-  let lockId: number
-  do {
-    lockId = 1000 + Math.ceil(1000 * Math.random())
-  } while (usedLockIds.has(lockId))
-  usedLockIds.add(lockId)
+const LOCK_ID_MIN = 1001
+const LOCK_ID_MAX = 2000
+const unusedLockIds = Array.from(
+  { length: LOCK_ID_MAX - LOCK_ID_MIN + 1 },
+  (_, i) => LOCK_ID_MIN + i,
+)
+
+/**
+ * Returns a random Postgres advisory lock id between 1001 and 2000, never
+ * the same one twice within a process. Ids are random rather than sequential
+ * so that concurrent test processes sharing one database are unlikely to
+ * collide.
+ *
+ * @throws {RangeError} once all 1000 ids have been handed out
+ */
+export function uniqueLockId(): number {
+  if (unusedLockIds.length === 0) {
+    throw new RangeError(
+      `uniqueLockId: all ${LOCK_ID_MAX - LOCK_ID_MIN + 1} lock ids (${LOCK_ID_MIN}-${LOCK_ID_MAX}) have been used`,
+    )
+  }
+  // @NOTE swap-remove a random entry, so each call is O(1) and never retries
+  const index = Math.floor(Math.random() * unusedLockIds.length)
+  const lockId = unusedLockIds[index]
+  unusedLockIds[index] = unusedLockIds[unusedLockIds.length - 1]
+  unusedLockIds.pop()
   return lockId
 }
 
