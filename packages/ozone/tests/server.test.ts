@@ -42,9 +42,9 @@ describe('server', () => {
   })
 
   it('healthcheck succeeds when database is available.', async () => {
-    const response = await fetch(`${network.bsky.url}/xrpc/_health`)
+    const response = await fetch(`${ozone.url}/xrpc/_health`)
     expect(response.status).toEqual(200)
-    await expect(response.json()).resolves.toEqual({ version: 'unknown' })
+    await expect(response.json()).resolves.toEqual({ version: '0.0.0' })
   })
 
   it('healthcheck fails when database is unavailable.', async () => {
