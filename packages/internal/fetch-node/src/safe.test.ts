@@ -1,7 +1,8 @@
 import { type RequestListener, createServer } from 'node:http'
 import type { AddressInfo, LookupFunction } from 'node:net'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { safeFetchWrap } from './safe.js'
+import { stubResolvers } from '../tests/_util.js'
+import { createSafeFetch } from './safe.js'
 
 type TestServer = AsyncDisposable & { origin: (host?: string) => string }
 
@@ -48,12 +49,12 @@ async function redirectingServer(location: () => string, status = 302) {
   })
 }
 
-describe(safeFetchWrap, () => {
+describe(createSafeFetch, () => {
   it('follows a redirect to an allowed destination', async () => {
     const target = await recordingServer()
     const entry = await redirectingServer(() => `${target.origin()}/final`)
 
-    const safeFetch = safeFetchWrap({
+    const safeFetch = createSafeFetch({
       ssrfProtection: false,
       forbiddenDomainNames: [],
     })
@@ -74,7 +75,7 @@ describe(safeFetchWrap, () => {
     // The entry point is reached over `localhost`; the redirect hop lands on
     // `127.0.0.1`, which the deny list forbids. Only a per-hop check can catch
     // it — the initial url is perfectly acceptable.
-    const safeFetch = safeFetchWrap({
+    const safeFetch = createSafeFetch({
       ssrfProtection: false,
       forbiddenDomainNames: ['127.0.0.1'],
     })
@@ -101,7 +102,7 @@ describe(safeFetchWrap, () => {
 
     // `ssrfProtection: false` relaxes the unicast requirement. It must not
     // silently disable the remaining per-hop checks.
-    const safeFetch = safeFetchWrap({
+    const safeFetch = createSafeFetch({
       ssrfProtection: false,
       allowPrivateIps: true,
       forbiddenDomainNames: ['127.0.0.1'],
@@ -122,7 +123,7 @@ describe(safeFetchWrap, () => {
     // domain name, so only a per-hop check can see the `127.0.0.1` hop. This
     // stands in for the case the connect-time DNS guard structurally cannot
     // catch: NodeJS performs no lookup for a literal ip.
-    const safeFetch = safeFetchWrap({
+    const safeFetch = createSafeFetch({
       ssrfProtection: false,
       allowIpHost: false,
       forbiddenDomainNames: [],
@@ -145,7 +146,7 @@ describe(safeFetchWrap, () => {
       () => `${target.origin()}//evil.example.com/final`,
     )
 
-    const safeFetch = safeFetchWrap({
+    const safeFetch = createSafeFetch({
       ssrfProtection: false,
       allowIpHost: false,
       forbiddenDomainNames: [],
@@ -170,7 +171,7 @@ describe(safeFetchWrap, () => {
       () => `${target.origin('[::1]')}//evil.example.com/final`,
     )
 
-    const safeFetch = safeFetchWrap({
+    const safeFetch = createSafeFetch({
       ssrfProtection: false,
       allowIpHost: false,
       forbiddenDomainNames: [],
@@ -188,7 +189,7 @@ describe(safeFetchWrap, () => {
   })
 
   it('still rejects a forbidden domain on the initial url', async () => {
-    const safeFetch = safeFetchWrap({
+    const safeFetch = createSafeFetch({
       ssrfProtection: false,
       forbiddenDomainNames: ['example.com'],
     })
@@ -202,7 +203,7 @@ describe(safeFetchWrap, () => {
     const target = await recordingServer()
     const entry = await redirectingServer(() => `${target.origin()}/final`, 307)
 
-    const safeFetch = safeFetchWrap({
+    const safeFetch = createSafeFetch({
       ssrfProtection: false,
       forbiddenDomainNames: [],
     })
@@ -223,7 +224,7 @@ describe(safeFetchWrap, () => {
       const target = await recordingServer()
       using lookup = loopbackLookup()
 
-      const safeFetch = safeFetchWrap({
+      const safeFetch = createSafeFetch({
         allowHttp: true,
         allowCustomPort: true,
         forbiddenDomainNames: [],
@@ -244,7 +245,7 @@ describe(safeFetchWrap, () => {
       const target = await recordingServer()
       using lookup = loopbackLookup()
 
-      const safeFetch = safeFetchWrap({
+      const safeFetch = createSafeFetch({
         ssrfProtection: false,
         forbiddenDomainNames: [],
         lookup,
@@ -260,10 +261,53 @@ describe(safeFetchWrap, () => {
     })
   })
 
+  describe('default lookup', () => {
+    it('is a dns.Resolver', async () => {
+      const target = await recordingServer()
+      using resolvers = stubResolvers({ 'custom.com': ['127.0.0.1'] })
+
+      const safeFetch = createSafeFetch({
+        allowHttp: true,
+        allowCustomPort: true,
+        forbiddenDomainNames: [],
+      })
+
+      await expect(
+        safeFetch(`${target.origin('custom.com')}/final`, {
+          redirect: 'error',
+        }),
+      ).rejects.toSatisfy(causedBy('Hostname resolved to non-unicast address'))
+
+      expect(resolvers.resolve4).toHaveBeenCalledWith('custom.com')
+      expect(target.requests).toEqual([])
+    })
+
+    it('is dns.lookup when private ips are allowed', async () => {
+      const target = await recordingServer()
+      using resolvers = stubResolvers({})
+
+      // Local services are commonly named in /etc/hosts, which only
+      // `dns.lookup` reads.
+      const safeFetch = createSafeFetch({
+        ssrfProtection: false,
+        forbiddenDomainNames: [],
+      })
+
+      const res = await safeFetch(`${target.origin('localhost')}/final`, {
+        redirect: 'error',
+      })
+
+      expect(res.status).toBe(200)
+      expect(target.requests).toEqual(['GET /final '])
+      expect(resolvers.resolve4).not.toHaveBeenCalled()
+      expect(resolvers.resolve6).not.toHaveBeenCalled()
+    })
+  })
+
   describe('disposal', () => {
     it('destroys the dispatcher', async () => {
       const target = await recordingServer()
-      const safeFetch = safeFetchWrap({
+      const safeFetch = createSafeFetch({
         ssrfProtection: false,
         forbiddenDomainNames: [],
       })
@@ -286,7 +330,7 @@ describe(safeFetchWrap, () => {
       const received = new Promise<void>((resolve) => (onRequest = resolve))
       // Never responds: disposal must not wait for the request to complete.
       const target = await startServer(() => onRequest())
-      const safeFetch = safeFetchWrap({
+      const safeFetch = createSafeFetch({
         ssrfProtection: false,
         forbiddenDomainNames: [],
       })

@@ -7,26 +7,28 @@ Fetch helpers for Node.js 22+ that help protect services when fetching URLs supp
 Create a fetch wrapper once and reuse it:
 
 ```js
-import { safeFetchWrap } from '@atproto-labs/fetch-node'
+import { createSafeFetch } from '@atproto-labs/fetch-node'
 
-const safeFetch = safeFetchWrap()
+const safeFetch = createSafeFetch()
 const response = await safeFetch('https://api.github.com/repos/nodejs/node', {
   redirect: 'follow',
 })
 const data = await response.json()
 ```
 
-By default, `safeFetchWrap` allows HTTPS on port 443, blocks private and reserved IP addresses and a list of forbidden domains, sets a 10-second timeout, and limits response bodies to 512 KiB. Destination checks also apply to redirects, and IP addresses are checked when connecting.
+By default, `createSafeFetch` allows HTTPS on port 443, blocks private and reserved IP addresses and a list of forbidden domains, sets a 10-second timeout, and limits response bodies to 512 KiB. Destination checks also apply to redirects, and IP addresses are checked when connecting.
 
 Pass `redirect` explicitly on each call: use `'follow'`, `'manual'`, or `'error'`. Configure the wrapper with options such as `timeout` (milliseconds), `responseMaxSize` (bytes), and `forbiddenDomainNames`. If you supply a custom `fetch`, it must honor Undici's `dispatcher` option; do not pass a separate dispatcher on individual calls.
 
-Hostnames are resolved with `dns.lookup`, which runs on libuv's threadpool and cannot be cancelled, so a few slow nameservers can stall every other lookup in the process. To avoid this, pass a `lookup` function with the signature of `net.connect`'s `lookup` option, for example one built on a `dns.Resolver` with a `timeout`. It must honor `options.all`. Its results are still checked for private and reserved IP addresses.
+Hostnames are resolved with `createResolverLookup()`, which queries DNS through a `dns.Resolver` with a 2-second timeout per query. Unlike `dns.lookup`, it doesn't use libuv's threadpool, so a few slow nameservers cannot stall every other lookup, file read or hash in the process. It doesn't read `/etc/hosts` or apply search domains either. To resolve hostnames as the rest of the process does (for example through `/etc/hosts`), pass `lookup: createLimitedLookup()`, which calls `dns.lookup` one hostname at a time, or `lookup: dns.lookup` with no limit. You can also pass any function with the signature of `net.connect`'s `lookup` option that honors `options.all`. Its results are still checked for private and reserved IP addresses. When private IPs are allowed (`allowPrivateIps: true`, the default when `ssrfProtection` is `false`), `dns.lookup` is the default instead, so local services named in `/etc/hosts` stay reachable.
 
 ## Other helpers
 
-- `unicastFetchWrap()` restricts destinations to public IP addresses, including redirects, without adding the HTTPS, timeout, or response-size rules.
-- `safeDispatchFetchWrap({ checkUrl, lookup })` lets you supply your own destination checks. `checkUrl` receives the origin of each request, including redirects, and returns a reason string to block it or `undefined` to allow it.
-- `unicastLookup` checks DNS results before connecting, and `unicastLookupWrap(lookup)` applies the same check to a custom lookup function. `isUnicastIpHostname(hostname)` checks a literal IP address and returns `undefined` for a domain name.
+- `createUnicastFetch()` restricts destinations to public IP addresses, including redirects, without adding the HTTPS, timeout, or response-size rules.
+- `createDispatcherFetch({ checkUrl, lookup })` lets you supply your own destination checks. `checkUrl` receives the origin of each request, including redirects, and returns a reason string to block it or `undefined` to allow it.
+- `createResolverLookup(options?)` returns a lookup function for `net.connect` (or an Undici `Agent`'s `connect` option) that queries DNS through a `dns.Resolver`. Pass `dns.Resolver` options, such as `timeout` and `tries`, or your own `dns/promises` `Resolver`. IPv4 addresses come first.
+- `createLimitedLookup(lookup?, { concurrency, timeout })` runs at most `concurrency` calls (1 by default) to `lookup` (`dns.lookup` by default) at once, so that `dns.lookup` cannot take every libuv threadpool thread. A lookup that waits and runs longer than `timeout` (5 seconds by default) fails with `ETIMEOUT`. One that is already running keeps its slot until it completes, because `dns.lookup` cannot be cancelled, so a host whose nameservers don't answer delays every lookup queued behind it. The limit only applies to lookups made through the same function, so create one and share it.
+- `createUnicastLookup(lookup?)` rejects DNS results that are not public IP addresses before connecting. It checks the results of `createResolverLookup()` unless you pass another lookup function, such as `dns.lookup`. `unicastLookup` is `createUnicastLookup(dns.lookup)`. `isUnicastIpHostname(hostname)` checks a literal IP address and returns `undefined` for a domain name.
 - This package also exports the helpers from `@atproto-labs/fetch` for working with requests, responses, errors, and fetch wrappers.
 
 ## Temporary eMudhra TLS mitigation

@@ -1,30 +1,32 @@
+import { lookup as dnsLookup } from 'node:dns'
 import type { LookupFunction } from 'node:net'
 import { assert, describe, expect, it, vi } from 'vitest'
+import { stubResolvers } from '../tests/_util.js'
 import {
   checkUnicastPolicy,
-  unicastFetchWrap,
+  createUnicastFetch,
+  createUnicastLookup,
   unicastLookup,
 } from './unicast.js'
 
 vi.mock(import('node:dns'), async (importOriginal) => {
   const dns = await importOriginal()
-  return {
-    ...dns,
-    lookup: ((hostname, options, callback) => {
-      if (hostname === 'invalid.com') {
-        setTimeout(callback, 0, null, '127.2.2.2', 4)
-        return
-      }
+  const lookup = ((hostname, options, callback) => {
+    if (hostname === 'invalid.com') {
+      setTimeout(callback, 0, null, '127.2.2.2', 4)
+      return
+    }
 
-      if (hostname === 'valid.com') {
-        setTimeout(callback, 0, null, '1.2.3.4', 4)
-        return
-      }
+    if (hostname === 'valid.com') {
+      setTimeout(callback, 0, null, '1.2.3.4', 4)
+      return
+    }
 
-      // @ts-ignore
-      return dns.lookup(hostname, options, callback)
-    }) as typeof dns.lookup,
-  }
+    // @ts-ignore
+    return dns.lookup(hostname, options, callback)
+  }) as typeof dns.lookup
+  // `unicastLookup` reads `lookup` from the module object (default export)
+  return { ...dns, lookup, default: { ...dns.default, lookup } }
 })
 
 describe(checkUnicastPolicy, () => {
@@ -80,24 +82,24 @@ describe(unicastLookup, () => {
   })
 })
 
-describe(unicastFetchWrap, () => {
+describe(createUnicastFetch, () => {
   describe('expected failures', () => {
     it('should reject private IPv4 hostnames', async () => {
-      const fetch = unicastFetchWrap()
+      const fetch = createUnicastFetch()
       await expect(fetch('http://127.0.0.1/test')).rejects.toSatisfy(
         fetchFailedErrorCauseBy('Hostname is a non-unicast address'),
       )
     })
 
     it('should reject private IPv6 hostnames', async () => {
-      const fetch = unicastFetchWrap()
+      const fetch = createUnicastFetch()
       await expect(fetch('http://[::1]/test')).rejects.toSatisfy(
         fetchFailedErrorCauseBy('Hostname is a non-unicast address'),
       )
     })
 
     it('should reject hostnames that are not public domain tlds', async () => {
-      const fetch = unicastFetchWrap()
+      const fetch = createUnicastFetch()
       await expect(fetch('http://localhost/test')).rejects.toSatisfy(
         fetchFailedErrorCauseBy('Hostname is not a public domain'),
       )
@@ -108,10 +110,37 @@ describe(unicastFetchWrap, () => {
     })
 
     it('should reject hostnames that resolve to private IPs', async () => {
-      const fetch = unicastFetchWrap()
+      using _ = stubResolvers({ 'invalid.com': ['127.2.2.2'] })
+      const fetch = createUnicastFetch()
       await expect(fetch('http://invalid.com/test')).rejects.toSatisfy(
         fetchFailedErrorCauseBy('Hostname resolved to non-unicast address'),
       )
+    })
+  })
+
+  describe('hostname resolution', () => {
+    // The mocked `dns.lookup` and the stubbed resolvers disagree on these
+    // hostnames: which address is rejected tells which one resolved them.
+
+    it('uses a dns.Resolver by default', async () => {
+      using resolvers = stubResolvers({ 'valid.com': ['127.0.0.1'] })
+      const fetch = createUnicastFetch()
+
+      await expect(fetch('http://valid.com/test')).rejects.toSatisfy(
+        fetchFailedErrorCauseBy('Hostname resolved to non-unicast address'),
+      )
+      expect(resolvers.resolve4).toHaveBeenCalledWith('valid.com')
+    })
+
+    it('uses dns.lookup when given as lookup', async () => {
+      using resolvers = stubResolvers({ 'invalid.com': ['1.2.3.4'] })
+      const fetch = createUnicastFetch({ lookup: dnsLookup })
+
+      await expect(fetch('http://invalid.com/test')).rejects.toSatisfy(
+        fetchFailedErrorCauseBy('Hostname resolved to non-unicast address'),
+      )
+      expect(resolvers.resolve4).not.toHaveBeenCalled()
+      expect(resolvers.resolve6).not.toHaveBeenCalled()
     })
   })
 
@@ -120,7 +149,7 @@ describe(unicastFetchWrap, () => {
       // `valid.com` resolves to a public IP through the mocked `dns.lookup`:
       // the rejection proves the custom lookup replaced it.
       using lookup = staticLookup('127.0.0.1', 4)
-      const fetch = unicastFetchWrap({ lookup })
+      const fetch = createUnicastFetch({ lookup })
 
       await expect(fetch('http://valid.com/test')).rejects.toSatisfy(
         fetchFailedErrorCauseBy('Hostname resolved to non-unicast address'),
@@ -134,7 +163,7 @@ describe(unicastFetchWrap, () => {
 
     it('is not called for hostnames that are not public domain tlds', async () => {
       using lookup = staticLookup('1.2.3.4', 4)
-      const fetch = unicastFetchWrap({ lookup })
+      const fetch = createUnicastFetch({ lookup })
 
       await expect(fetch('http://localhost/test')).rejects.toSatisfy(
         fetchFailedErrorCauseBy('Hostname is not a public domain'),
@@ -146,7 +175,7 @@ describe(unicastFetchWrap, () => {
       using lookup = vi.fn<LookupFunction>((_hostname, _options, callback) => {
         setTimeout(callback, 0, new Error('Lookup timed out'), [])
       })
-      const fetch = unicastFetchWrap({ lookup })
+      const fetch = createUnicastFetch({ lookup })
 
       await expect(fetch('http://valid.com/test')).rejects.toSatisfy(
         fetchFailedErrorCauseBy('Lookup timed out'),
@@ -158,10 +187,34 @@ describe(unicastFetchWrap, () => {
       async (address) => {
         // `ipaddr.js` would read `010.0.0.1` as the unicast `8.0.0.1`
         using lookup = staticLookup(address, 4)
-        const fetch = unicastFetchWrap({ lookup })
+        const fetch = createUnicastFetch({ lookup })
 
         await expect(fetch('http://valid.com/test')).rejects.toSatisfy(
           fetchFailedErrorCauseBy('Hostname resolved to an invalid address'),
+        )
+      },
+    )
+
+    it.each([true, false])(
+      'reports the family of the address, not the one from the lookup (all: %s)',
+      async (all) => {
+        using lookup = staticLookup('1.2.3.4', 6)
+
+        const result = await new Promise((resolve, reject) => {
+          createUnicastLookup(lookup)(
+            'valid.com',
+            { all },
+            (err, address, family) => {
+              if (err) reject(err)
+              else resolve({ address, family })
+            },
+          )
+        })
+
+        expect(result).toEqual(
+          all
+            ? { address: [{ address: '1.2.3.4', family: 4 }] }
+            : { address: '1.2.3.4', family: 4 },
         )
       },
     )
@@ -172,7 +225,7 @@ describe(unicastFetchWrap, () => {
       using lookup = vi.fn<LookupFunction>((_hostname, _options, callback) => {
         setTimeout(callback, 0, null, [])
       })
-      const fetch = unicastFetchWrap({ lookup })
+      const fetch = createUnicastFetch({ lookup })
 
       await expect(fetch('http://valid.com/test')).rejects.toSatisfy(
         fetchFailedErrorCauseBy('Hostname did not resolve to any address'),
@@ -183,7 +236,7 @@ describe(unicastFetchWrap, () => {
       // Parsing by the reported family would throw from the (asynchronous)
       // callback, escaping as an uncaught exception instead of a rejection.
       using lookup = staticLookup('127.0.0.1', 6)
-      const fetch = unicastFetchWrap({ lookup })
+      const fetch = createUnicastFetch({ lookup })
 
       await expect(fetch('http://valid.com/test')).rejects.toSatisfy(
         fetchFailedErrorCauseBy('Hostname resolved to non-unicast address'),
@@ -196,7 +249,7 @@ describe(unicastFetchWrap, () => {
     // ensure this works without a real public domain hostname that resolves to
     // a public IP. So we skip this test for now.
     it.skip('should allow public domain hostnames that resolve to public IPs', async () => {
-      const fetch = unicastFetchWrap()
+      const fetch = createUnicastFetch()
       await fetch('http://atproto.com/@atproto/node-fetch/test')
     })
   })
@@ -204,7 +257,7 @@ describe(unicastFetchWrap, () => {
   describe('disposal', () => {
     it('destroys the dispatcher', async () => {
       using lookup = staticLookup('1.2.3.4', 4)
-      const fetch = unicastFetchWrap({ lookup })
+      const fetch = createUnicastFetch({ lookup })
 
       await fetch[Symbol.asyncDispose]()
 
@@ -221,7 +274,7 @@ describe(unicastFetchWrap, () => {
         .spyOn(process.versions, 'undici', 'get')
         .mockReturnValue('6.11.0')
       expect(process.versions.undici).toBe('6.11.0')
-      expect(() => unicastFetchWrap()).toThrowError()
+      expect(() => createUnicastFetch()).toThrowError()
     })
 
     it('should support undici version 6.11.1', () => {
@@ -229,7 +282,7 @@ describe(unicastFetchWrap, () => {
         .spyOn(process.versions, 'undici', 'get')
         .mockReturnValue('6.11.1')
       expect(process.versions.undici).toBe('6.11.1')
-      expect(() => unicastFetchWrap()).not.toThrowError()
+      expect(() => createUnicastFetch()).not.toThrowError()
     })
 
     it('should throw an error if undici version is too new', () => {
@@ -237,7 +290,7 @@ describe(unicastFetchWrap, () => {
         .spyOn(process.versions, 'undici', 'get')
         .mockReturnValue('9.0.0')
       expect(process.versions.undici).toBe('9.0.0')
-      expect(() => unicastFetchWrap()).toThrowError()
+      expect(() => createUnicastFetch()).toThrowError()
     })
   })
 })

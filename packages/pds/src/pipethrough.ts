@@ -1,3 +1,4 @@
+import dns from 'node:dns'
 import type { IncomingHttpHeaders, ServerResponse } from 'node:http'
 import {
   type Duplex,
@@ -26,7 +27,12 @@ import {
   excludeErrorResult,
   parseReqNsid,
 } from '@atproto/xrpc-server'
-import { isUnicastIp, unicastLookup } from '@atproto-labs/fetch-node'
+import {
+  createLimitedLookup,
+  createResolverLookup,
+  createUnicastLookup,
+  isUnicastIp,
+} from '@atproto-labs/fetch-node'
 import { buildProxiedContentEncoding } from '@atproto-labs/xrpc-utils'
 import { AuthScope, isAccessPrivileged } from './auth-scope.js'
 import type { ProxyConfig } from './config/config.js'
@@ -38,6 +44,17 @@ import {
   type ProxyLimiter,
   limiterInterceptor,
 } from './proxy-limiter.js'
+
+/**
+ * `dns.lookup`, one call at a time: how user named hosts are resolved with
+ * `PDS_USE_SYSTEM_DNS_LOOKUP`. Shared by `safeFetch` and every proxy agent, so
+ * that together they hold one libuv threadpool thread at most.
+ */
+export const systemDnsLookup = createLimitedLookup(
+  // @NOTE Resolved on every call, so that instrumentation patching
+  // `dns.lookup` after this module is loaded still applies.
+  (hostname, options, callback) => dns.lookup(hostname, options, callback),
+)
 
 export function buildProxyAgent(
   cfg: ProxyConfig,
@@ -62,7 +79,14 @@ export function buildProxyAgent(
           return new Pool(origin, opts)
         },
     connect: {
-      lookup: cfg.disableSsrfProtection ? undefined : unicastLookup,
+      // @NOTE Hostnames come from DID documents, so whoever controls one picks
+      // the nameservers that answer: `createResolverLookup` keeps unresponsive
+      // ones off libuv's threadpool.
+      lookup: cfg.disableSsrfProtection
+        ? undefined
+        : createUnicastLookup(
+            cfg.useSystemDnsLookup ? systemDnsLookup : createResolverLookup(),
+          ),
     },
   })
 

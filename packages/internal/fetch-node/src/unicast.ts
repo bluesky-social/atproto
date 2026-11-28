@@ -1,4 +1,4 @@
-import { lookup as dnsLookup } from 'node:dns'
+import dns from 'node:dns'
 import { type LookupFunction, isIP } from 'node:net'
 import ipaddr from 'ipaddr.js'
 import {
@@ -9,27 +9,27 @@ import {
   asRequest,
   extractUrl,
 } from '@atproto-labs/fetch'
-import { safeDispatchFetchWrap } from './dispatch.js'
+import { createDispatcherFetch } from './dispatch.js'
+import { createResolverLookup } from './lookup.js'
 import { isUnicastIpHostname } from './util.js'
 
 const { IPv4, IPv6 } = ipaddr
 
-export type UnicastFetchWrapOptions<C = FetchContext> = {
+export type UnicastFetchOptions<C = FetchContext> = {
   fetch?: Fetch<C>
 
   /**
    * Resolves hostnames at connect time. The unicast check is applied to
    * whatever it returns, so a custom lookup cannot bypass it.
    *
-   * @note `dns.lookup` runs `getaddrinfo` on libuv's threadpool and cannot be
-   * cancelled, so a few unresponsive nameservers can stall every other lookup
-   * (and any `fs`, `crypto` or `zlib` work) in the process. A lookup built on
-   * a `dns.Resolver` avoids the threadpool and supports per-query timeouts.
+   * Pass `dns.lookup` to resolve them as the rest of the process does (e.g.
+   * through `/etc/hosts`), at the cost described in
+   * {@link createResolverLookup}.
    *
    * @note Must honor `options.all`: `net.connect` requests every address when
    * `autoSelectFamily` is enabled, which is the default.
    *
-   * @default dns.lookup
+   * @default createResolverLookup()
    */
   lookup?: LookupFunction
 }
@@ -52,14 +52,14 @@ export function checkUnicastPolicy(url: URL): UrlPolicyReason | undefined {
 /**
  * @see {@link https://owasp.org/Top10/A10_2021-Server-Side_Request_Forgery_%28SSRF%29/}
  */
-export function unicastFetchWrap<C = FetchContext>({
+export function createUnicastFetch<C = FetchContext>({
   fetch = globalThis.fetch,
-  lookup,
-}: UnicastFetchWrapOptions<C> = {}): Fetch<C> & AsyncDisposable {
-  const dispatchFetch = safeDispatchFetchWrap<C>({
+  lookup = createResolverLookup(),
+}: UnicastFetchOptions<C> = {}): Fetch<C> & AsyncDisposable {
+  const dispatchFetch = createDispatcherFetch<C>({
     fetch,
     checkUrl: checkUnicastPolicy,
-    lookup: lookup ? unicastLookupWrap(lookup) : unicastLookup,
+    lookup: createUnicastLookup(lookup),
   })
 
   const wrappedFetch: Fetch<C> = async function (
@@ -92,21 +92,29 @@ export function unicastFetchWrap<C = FetchContext>({
   return wrappedFetch as Fetch<C> & AsyncDisposable
 }
 
-export const unicastLookup: LookupFunction = unicastLookupWrap(
-  // @NOTE Resolved on every call rather than captured, so that instrumentation
-  // patching `dns.lookup` after this module is loaded still applies.
-  (hostname, options, callback) => dnsLookup(hostname, options, callback),
+/**
+ * {@link createUnicastLookup} over the system's `dns.lookup`, which hosts users
+ * name are better not resolved with: see {@link createResolverLookup}.
+ */
+export const unicastLookup: LookupFunction = createUnicastLookup(
+  // @NOTE Read from the module object on every call, so that instrumentation
+  // patching `dns.lookup` after this module is loaded still applies (a named
+  // import of a builtin is only updated by `syncBuiltinESMExports()`).
+  (hostname, options, callback) => dns.lookup(hostname, options, callback),
 )
 
 /**
- * Applies the unicast check to the addresses returned by {@link lookup}.
+ * Applies the unicast check to the addresses returned by {@link lookup}
+ * ({@link createResolverLookup} by default).
  *
  * @note A custom lookup's result is not trusted to be well formed: an address
  * that is not a valid IP is rejected (rather than thrown on, which would
  * escape as an uncaught exception from an asynchronous callback), and the
  * family is derived from the address rather than taken from the lookup.
  */
-export function unicastLookupWrap(lookup: LookupFunction): LookupFunction {
+export function createUnicastLookup(
+  lookup: LookupFunction = createResolverLookup(),
+): LookupFunction {
   return (hostname, options, callback) => {
     if (isLocalHostname(hostname)) {
       callback(new Error('Hostname is not a public domain'), [])
@@ -143,8 +151,15 @@ export function unicastLookupWrap(lookup: LookupFunction): LookupFunction {
           address,
           family,
         )
+      } else if (Array.isArray(address)) {
+        // @NOTE `net.connect` dials each address by its family, which is
+        // derived from the address here too.
+        callback(
+          null,
+          address.map((entry) => ({ ...entry, family: isIP(entry.address) })),
+        )
       } else {
-        callback(null, address, family)
+        callback(null, address, isIP(address))
       }
     })
   }

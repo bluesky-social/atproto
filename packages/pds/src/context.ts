@@ -23,7 +23,7 @@ import {
   createServiceAuthHeaders,
   createServiceJwt,
 } from '@atproto/xrpc-server'
-import { type Fetch, safeFetchWrap } from '@atproto-labs/fetch-node'
+import { type Fetch, createSafeFetch } from '@atproto-labs/fetch-node'
 import { AccountManager } from './account-manager/account-manager.js'
 import { OAuthStore } from './account-manager/oauth-store.js'
 import { ScopeReferenceGetter } from './account-manager/scope-reference-getter.js'
@@ -52,7 +52,7 @@ import { ImageUrlBuilder } from './image/image-url-builder.js'
 import { fetchLogger, lexiconResolverLogger, oauthLogger } from './logger.js'
 import { ServerMailer } from './mailer/index.js'
 import { ModerationMailer } from './mailer/moderation.js'
-import { buildProxyAgent } from './pipethrough.js'
+import { buildProxyAgent, systemDnsLookup } from './pipethrough.js'
 import { ProxyLimiter, limiterFetch } from './proxy-limiter.js'
 import { buildOAuthRateLimiterFactory } from './rate-limits.js'
 import {
@@ -245,13 +245,19 @@ export class AppContext implements AsyncDisposable {
      *
      * @note **DO NOT** wrap `safeFetch` with any logging or other transforms as
      * this might prevent the use of explicit `redirect: "follow"` init from
-     * working. See {@link safeFetchWrap}.
+     * working. See {@link createSafeFetch}.
      */
-    const safeFetch = safeFetchWrap({
+    const safeFetch = createSafeFetch({
       allowIpHost: false,
       allowImplicitRedirect: false,
       responseMaxSize: cfg.fetch.maxResponseSize,
       ssrfProtection: !cfg.fetch.disableSsrfProtection,
+      // Defaults to a `dns.Resolver` based lookup, or to `dns.lookup` without
+      // SSRF protection
+      lookup:
+        cfg.fetch.useSystemDnsLookup && !cfg.fetch.disableSsrfProtection
+          ? systemDnsLookup
+          : undefined,
 
       fetch: function (input, init) {
         const method =

@@ -157,6 +157,7 @@ export function readEnv() {
 
     // user provided url http requests
     disableSsrfProtection: envBool('PDS_DISABLE_SSRF_PROTECTION'),
+    useSystemDnsLookup: envBool('PDS_USE_SYSTEM_DNS_LOOKUP'),
 
     // fetch
     fetchMaxResponseSize: envInt('PDS_FETCH_MAX_RESPONSE_SIZE'),
